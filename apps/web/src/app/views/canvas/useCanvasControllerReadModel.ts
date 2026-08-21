@@ -118,6 +118,7 @@ export function useCanvasControllerReadModel({
   const [selectedColumnLineageEdgeId, setSelectedColumnLineageEdgeId] = useState<string | null>(
     null
   );
+  const presentsColumnLineage = activeCanvasKind === 'transformation' || activeCanvasKind === 'dbt';
   const transformationValidation = useMemo(
     () =>
       validateTransformationGraph({
@@ -134,7 +135,7 @@ export function useCanvasControllerReadModel({
     ]
   );
   const projectedColumnLineage = useMemo(() => {
-    if (activeCanvasKind !== 'transformation') return [];
+    if (!presentsColumnLineage) return [];
     const expandedNodeIds = new Set(
       graphModel.nodes
         .filter((node) => node.data.columnDisclosureExpanded === true)
@@ -146,8 +147,8 @@ export function useCanvasControllerReadModel({
       expandedNodeIds,
     });
   }, [
-    activeCanvasKind,
     graphModel.nodes,
+    presentsColumnLineage,
     visibleScope.canonicalEdges,
     visibleScope.canonicalNodes,
   ]);
@@ -212,12 +213,9 @@ export function useCanvasControllerReadModel({
               ? node.data.onColumnPortActivate
               : undefined,
             onAutomapColumns: canAuthorColumnMappings ? node.data.onAutomapColumns : undefined,
-            columns:
-              activeCanvasKind === 'transformation'
-                ? projectInteractiveColumns(node)
-                : node.data.columns,
+            columns: presentsColumnLineage ? projectInteractiveColumns(node) : node.data.columns,
             columnPortDirections:
-              activeCanvasKind === 'transformation' && canonicalNode != null
+              presentsColumnLineage && canonicalNode != null
                 ? canonicalNode.role === 'transform' &&
                   !canAuthorColumnMappings &&
                   !hasReadOnlyColumnLineage
@@ -249,11 +247,12 @@ export function useCanvasControllerReadModel({
       runtimeCapabilities,
       uiScope.selectedNodeIds,
       readOnlyColumnLineageNodeIds,
+      presentsColumnLineage,
     ]
   );
 
   const edgesWithImpact = useMemo(() => {
-    if (activeCanvasKind !== 'transformation') return graphModel.edges;
+    if (!presentsColumnLineage) return graphModel.edges;
     const lineageEdges = projectedColumnLineage.map((edge) => ({
       ...edge,
       selected: edge.id === selectedColumnLineageEdgeId,
@@ -269,9 +268,9 @@ export function useCanvasControllerReadModel({
     }));
     return [...graphModel.edges, ...lineageEdges];
   }, [
-    activeCanvasKind,
     graphHandlers.handleRemoveColumnMapping,
     graphModel.edges,
+    presentsColumnLineage,
     projectedColumnLineage,
     selectedColumnLineageEdgeId,
   ]);

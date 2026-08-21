@@ -321,13 +321,7 @@ describe('useCanvasControllerReadModel', () => {
       pluginId: 'dbt',
       kind: 'dbt:model',
       role: 'transform',
-      metadata: {
-        dbt: {
-          packageName: 'analytics',
-          materialized: 'view',
-          selectedSourceId: sourceNode.id,
-        },
-      },
+      metadata: { typeLabel: 'Model' },
     } satisfies CanonicalNode;
     const dependency = {
       id: 'source-to-dbt-model',
@@ -367,6 +361,7 @@ describe('useCanvasControllerReadModel', () => {
         selectedNodeIds: [],
         workspaceNodeIds: [sourceNode.id, modelNode.id],
       },
+      activeCanvasKind: 'dbt',
     };
     const mounted = await renderReadModel(args);
 

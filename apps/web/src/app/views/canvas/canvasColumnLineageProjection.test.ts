@@ -263,13 +263,7 @@ describe('Canvas column lineage projection', () => {
     const model = {
       ...buildNode('dbt-model', 'dbt:model', 'transform'),
       pluginId: 'dbt',
-      metadata: {
-        dbt: {
-          packageName: 'analytics',
-          materialized: 'view',
-          selectedSourceId: source.id,
-        },
-      },
+      metadata: { typeLabel: 'Model' },
     } satisfies CanonicalNode;
 
     const projected = projectCanvasColumnLineage({
