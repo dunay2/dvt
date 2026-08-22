@@ -27,6 +27,9 @@ mitigations:
   - Remove the obsolete canonical package path and its aliases.
   - Require direct consumer imports and dependencies instead of domain-package re-exports.
   - Keep retired duplicate paths absent through the architecture dependency guard.
+  - Keep tooling, Planning DB rails, and golden-path checks on the shared crypto primitives.
+  - Preserve domain preimages, delimiters, truncation, and operation-ID injection seams during
+    migration.
   - Complete the remaining bounded consumer cuts under GitHub issue 2191 before closing this risk.
 review_after: 2026-11-22
 ---

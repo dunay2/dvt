@@ -21,6 +21,10 @@ code_refs:
   - packages/@dvt/contracts/src/schema-packs/plan-records.ts
   - packages/@dvt/planner/src/domain/hashing.ts
   - packages/@dvt/plan-verifier/src/verify.ts
+  - packages/@dvt/cli/run-golden-paths.cjs
+  - scripts/planning-db-operate.cjs
+  - scripts/documentation-publication.cjs
+  - tools/ci/architecture-dependency-guard.test.mjs
 evidence:
   tests:
     - pnpm --filter @dvt/crypto test
@@ -36,6 +40,10 @@ evidence:
     - node --test tools/ci/architecture-dependency-guard.test.mjs
     - pnpm arch:deps
     - pnpm verify:prepush
+    - pnpm golden:validate
+    - node scripts/compare-hashes.cjs
+    - node --test scripts/planning-db-operate.test.cjs
+    - node --test scripts/documentation-publication.test.cjs scripts/governance-refresh.test.cjs scripts/verify-prepush.test.cjs
 ---
 
 ## Decision
@@ -74,3 +82,15 @@ authority directly. Cross-realm byte vectors prove browser compatibility, and
 Plan Verifier retains its public missing-TextEncoder error. No compatibility
 alias, forwarding module, fallback, store, planner, or second serialization
 format was added.
+
+## Cut 4 Tooling Retirement
+
+Repository tooling, Planning DB command rails, documentation assembly,
+validation fingerprints, HET fixture checks, and golden-path validation now
+call `@dvt/crypto` directly. The unreferenced root golden-path runner was
+deleted; the CLI runner remains the sole implementation.
+
+Golden hashes, operation payloads, NUL delimiters, truncation lengths, binary
+content hashing, and caller-supplied operation IDs remain unchanged. A tracked
+architecture guard rejects restored Node SHA/UUID mechanics throughout active
+scripts, tools, the CLI, and the Engine golden-hash contract test.
