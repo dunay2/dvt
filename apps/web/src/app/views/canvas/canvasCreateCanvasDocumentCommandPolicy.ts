@@ -1,5 +1,5 @@
 /** Owned concern: decide create-canvas document CAS eligibility and draft save input semantics. */
-import { createCanvasDraftIdempotencyKey } from './canvasDraftIdempotencyKey';
+import { createBrowserIdempotencyKey } from '../../services/idempotency/createBrowserIdempotencyKey';
 import type { CanvasCreateCanvasDocumentCommandDto } from './canvasDraftLifecycle.types';
 import {
   buildDraftWithCreatedProjectCanvas,
@@ -91,7 +91,7 @@ export function buildBlankCanvasDocumentDraftInput({
 }): SaveGraphDraftInput {
   return {
     expectedRevision,
-    idempotencyKey: createCanvasDraftIdempotencyKey(),
+    idempotencyKey: createBrowserIdempotencyKey('canvas-draft'),
     draft: buildInitialProjectCanvasDraft(command),
   };
 }
@@ -106,7 +106,7 @@ export function buildCreateCanvasDocumentDraftInput({
   if (command.mode === 'create_new') {
     return {
       expectedRevision,
-      idempotencyKey: createCanvasDraftIdempotencyKey(),
+      idempotencyKey: createBrowserIdempotencyKey('canvas-draft'),
       draft: buildDraftWithCreatedProjectCanvas({
         currentDraft: currentDraftPayload,
         command,

@@ -2,7 +2,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import { createCanvasDraftIdempotencyKey } from './canvasDraftIdempotencyKey';
+import { createBrowserIdempotencyKey } from '../../services/idempotency/createBrowserIdempotencyKey';
 import type {
   CanvasDraftLifecycle,
   CanvasDraftLifecycleDto,
@@ -91,7 +91,7 @@ export function useCanvasDraftLifecycle({
     setDraftSaveStatus,
     invalidateInFlightSaveAttempt,
     applyReloadedRemoteDraft,
-    createDraftIdempotencyKey: createCanvasDraftIdempotencyKey,
+    createDraftIdempotencyKey: () => createBrowserIdempotencyKey('canvas-draft'),
   });
   const effectiveDraftSaveStatus =
     draftSession.syncState === 'editing' &&
@@ -192,7 +192,7 @@ export function useCanvasDraftLifecycle({
     setDraftSession,
     setDraftSaveStatus,
     invalidateInFlightSaveAttempt,
-    createDraftIdempotencyKey: createCanvasDraftIdempotencyKey,
+    createDraftIdempotencyKey: () => createBrowserIdempotencyKey('canvas-draft'),
   });
   const canExportProjectSnapshot =
     graphDraftQuery.data?.record != null &&

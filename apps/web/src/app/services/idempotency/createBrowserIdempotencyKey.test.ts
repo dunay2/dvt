@@ -7,10 +7,17 @@ describe('createBrowserIdempotencyKey', () => {
     vi.unstubAllGlobals();
   });
 
-  it('uses the browser UUID implementation when the context exposes it', () => {
-    vi.stubGlobal('crypto', { randomUUID: () => 'native-uuid' });
+  it('prefixes a secure UUID from the shared crypto authority', () => {
+    vi.stubGlobal('crypto', {
+      getRandomValues: (target: Uint8Array) => {
+        target.fill(0);
+        return target;
+      },
+    });
 
-    expect(createBrowserIdempotencyKey('source-import')).toBe('source-import:native-uuid');
+    expect(createBrowserIdempotencyKey('source-import')).toBe(
+      'source-import:00000000-0000-4000-8000-000000000000'
+    );
   });
 
   it('creates an RFC 4122 version 4 identity from Web Crypto bytes in non-secure HTTP contexts', () => {
