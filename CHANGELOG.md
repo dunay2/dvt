@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.1 (2026-08-22)
+
+## What's Changed
+* fix(api): Bind dbt analysis identity to semantic evidence by @dunay2 in https://github.com/dunay2/dvt/pull/2610
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.7.0...v0.7.1
+
 ## 0.7.0 (2026-08-22)
 
 ## What's Changed
