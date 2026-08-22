@@ -1,4 +1,5 @@
-import { sha256HexUtf8, type PublishGraphDbtWorkspaceArtifactsRequest } from '@dvt/contracts';
+import { type PublishGraphDbtWorkspaceArtifactsRequest } from '@dvt/contracts';
+import { sha256HexUtf8 } from '@dvt/crypto';
 import { describe, expect, it, vi } from 'vitest';
 
 import {

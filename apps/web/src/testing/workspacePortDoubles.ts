@@ -1,5 +1,6 @@
 /** Owned concern: provide test-only workspace capability ports backed by fixture state. */
-import { buildRelationalSourceObjectId, sha256HexUtf8 } from '@dvt/contracts';
+import { buildRelationalSourceObjectId } from '@dvt/contracts';
+import { sha256HexUtf8 } from '@dvt/crypto';
 
 import {
   mockAuditLog,

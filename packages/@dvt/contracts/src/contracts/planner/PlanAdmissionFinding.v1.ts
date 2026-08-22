@@ -11,8 +11,9 @@
  * @consequence Admission authorities can expose structured rejection evidence without creating a parallel result hierarchy.
  * @version 1.0.0
  */
+import { sha256HexUtf8 } from '@dvt/crypto';
+
 import type { PlanRef } from '../../types/contracts.js';
-import { sha256HexUtf8 } from '../../utils/sha256HexUtf8.js';
 
 import type { ExecutabilityRejectionCode } from './PlanExecutabilityValidation.v1.js';
 

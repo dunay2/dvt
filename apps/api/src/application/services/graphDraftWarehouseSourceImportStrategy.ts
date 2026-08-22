@@ -3,13 +3,12 @@ import {
   WORKSPACE_GRAPH_AUTHORING_NODE_ROLE,
   WORKSPACE_GRAPH_AUTHORING_NODE_STATUS,
   WorkspaceGraphAuthoringDraftSchema,
-  jcsCanonicalize,
-  sha256HexUtf8,
   type CanvasAuthoringAuthorityBinding,
   type ConnectedSourceRef,
   type WorkspaceGraphAuthoringDraft,
   type WorkspaceGraphAuthoringNode,
 } from '@dvt/contracts';
+import { jcsCanonicalize, sha256HexUtf8 } from '@dvt/crypto';
 
 import {
   WarehouseSourceImportDraftConflictError,

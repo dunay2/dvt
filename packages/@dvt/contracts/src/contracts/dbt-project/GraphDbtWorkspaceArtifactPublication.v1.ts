@@ -7,9 +7,8 @@
  * @consequence A browser cannot partially publish graph-derived dbt project files.
  * @version 1.0.0
  */
+import { sha256HexUtf8 } from '@dvt/crypto';
 import { z } from 'zod';
-
-import { sha256HexUtf8 } from '../../utils/sha256HexUtf8.js';
 
 const NonBlankStringSchema = z.string().trim().min(1);
 const Sha256HexStringSchema = z.string().regex(/^[a-f0-9]{64}$/u);

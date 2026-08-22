@@ -1,9 +1,9 @@
+import { sha256HexUtf8 } from '@dvt/crypto';
 import { describe, expect, it } from 'vitest';
 
 import {
   GraphDbtWorkspaceArtifactPublicationResultSchema,
   PublishGraphDbtWorkspaceArtifactsRequestSchema,
-  sha256HexUtf8,
   type PublishGraphDbtWorkspaceArtifactsRequest,
 } from '../src/index.js';
 

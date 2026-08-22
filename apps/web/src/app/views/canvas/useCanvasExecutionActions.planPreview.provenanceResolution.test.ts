@@ -1,4 +1,4 @@
-import { sha256HexUtf8 } from '@dvt/contracts';
+import { sha256HexUtf8 } from '@dvt/crypto';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { SaveWorkspaceFileContentInput } from '../../ports/workspace';

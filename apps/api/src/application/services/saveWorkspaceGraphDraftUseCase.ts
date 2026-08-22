@@ -12,10 +12,8 @@ import {
   WORKSPACE_GRAPH_DRAFT_AUDIT_ACTION,
   WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME,
   WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE,
-  jcsCanonicalize,
   parseWorkspaceGraphDraftSaveResponse,
   resolveWorkspaceGraphDraftCanvasIds,
-  sha256HexUtf8,
   WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
   WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
   type WorkspaceGraphDraftAuditOutcome,
@@ -23,6 +21,7 @@ import {
   type WorkspaceGraphDraftSaveRequest,
   type WorkspaceGraphDraftSaveResponse,
 } from '@dvt/contracts';
+import { jcsCanonicalize, sha256HexUtf8 } from '@dvt/crypto';
 
 import { WorkspaceFileRevisionConflictError } from '../ports/workspaceFiles.js';
 import type {

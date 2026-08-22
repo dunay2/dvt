@@ -1,4 +1,4 @@
-import { jcsCanonicalize } from '@dvt/contracts';
+import { jcsCanonicalize } from '@dvt/crypto';
 import { afterAll, expect, test } from 'vitest';
 
 import {

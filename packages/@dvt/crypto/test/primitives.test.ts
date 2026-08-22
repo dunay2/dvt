@@ -1,3 +1,5 @@
+import { runInNewContext } from 'node:vm';
+
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -26,6 +28,13 @@ describe('UTF-8 and SHA-256', () => {
 
   it('hashes explicit UTF-8 text', () => {
     expect(sha256HexUtf8('abc')).toBe(sha256Vectors[1].hex);
+  });
+
+  it('accepts Uint8Array values created in another JavaScript realm', () => {
+    const crossRealmBytes = runInNewContext('new Uint8Array([97, 98, 99])') as Uint8Array;
+
+    expect(sha256Hex(crossRealmBytes)).toBe(sha256Vectors[1].hex);
+    expect(md5Hex(crossRealmBytes)).toBe(md5Vectors[1].hex);
   });
 
   it('keeps incremental hashing equivalent to one-shot hashing', () => {

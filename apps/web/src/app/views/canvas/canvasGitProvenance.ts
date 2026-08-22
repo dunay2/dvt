@@ -1,5 +1,6 @@
 /** Owned concern: read workspace SQL provenance through the file query port. */
-import { asSha256HexString, sha256HexUtf8 } from '@dvt/contracts';
+import { asSha256HexString } from '@dvt/contracts';
+import { sha256HexUtf8 } from '@dvt/crypto';
 
 import type { GitArtifactRef } from '../../ports/plans';
 import type {
