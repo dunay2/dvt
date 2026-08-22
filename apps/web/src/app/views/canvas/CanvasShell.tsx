@@ -19,7 +19,6 @@ import type {
 } from './canvasShell.types';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { SqlContextWorkbench, type SqlContextWorkbenchHandle } from './SqlContextWorkbench';
-import { useCanvasRouteIntentHandler } from './useCanvasRouteIntentHandler';
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
@@ -66,7 +65,6 @@ export default function CanvasShell({
   canvasCommands,
   runControls,
   workspaceCommands,
-  routeIntentRequest,
   canvasContextScreenToFlowPosition,
   sourceImportInitialSelection,
   onSourceImportInitialSelectionConsumed,
@@ -388,13 +386,6 @@ export default function CanvasShell({
     }),
     [graphOwnedPaths, hasRouteOwnedCodeContribution, inspectorWorkspaceFilePath, panels]
   );
-  useCanvasRouteIntentHandler({
-    request: routeIntentRequest ?? null,
-    columnLevelLineageEnabled: chromeState.columnLevelLineageEnabled,
-    canOpenProjectCode: activeContextualWorkbenchOwnerKey != null,
-    onOpenProjectCode,
-    onToggleColumnLevelLineage: chromeCommands.onToggleColumns,
-  });
   const onOpenProjectExplorer =
     workspaceCommands?.canOpenProjectExplorer === false ? undefined : openProjectExplorer;
   const contextMenuPresenter = useCanvasContextMenuPresenter({

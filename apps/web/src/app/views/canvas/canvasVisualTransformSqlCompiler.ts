@@ -52,7 +52,7 @@ function fail(code: VisualTransformSqlCompilationErrorCode, message: string): ne
   throw new VisualTransformSqlCompilationError(code, message);
 }
 
-function quoteIdentifier(value: string): string {
+export function quoteSqlIdentifier(value: string): string {
   return `"${value.replaceAll('"', '""')}"`;
 }
 
@@ -126,7 +126,7 @@ function compileExpression(
         `Visual SQL input node ${input.nodeId} is not the bound Preview source.`
       );
     }
-    return `${quoteIdentifier(sourceBinding.alias)}.${quoteIdentifier(input.columnName)}`;
+    return `${quoteSqlIdentifier(sourceBinding.alias)}.${quoteSqlIdentifier(input.columnName)}`;
   });
   if (current.length === 0) current = null;
   else if (current.length === 1) current = current[0]!;
@@ -175,7 +175,7 @@ function compileFilter(
       `Visual SQL filter input node ${filter.input.nodeId} is not the bound Preview source.`
     );
   }
-  const input = `${quoteIdentifier(sourceBinding.alias)}.${quoteIdentifier(filter.input.columnName)}`;
+  const input = `${quoteSqlIdentifier(sourceBinding.alias)}.${quoteSqlIdentifier(filter.input.columnName)}`;
   if ('value' in filter && filter.value === null) {
     if (filter.operator === 'equals') return `${input} is null`;
     if (filter.operator === 'not_equals') return `${input} is not null`;
@@ -228,14 +228,14 @@ export function compileVisualTransformRecipeToPostgresSql({
 
   const selectLines = recipe.outputs.map(
     (output, index) =>
-      `  ${compileExpression(output.expression, sourceBinding)} as ${quoteIdentifier(output.name)}${
+      `  ${compileExpression(output.expression, sourceBinding)} as ${quoteSqlIdentifier(output.name)}${
         index === recipe.outputs.length - 1 ? '' : ','
       }`
   );
   const sql = [
     'select',
     ...selectLines,
-    `from ${quoteIdentifier(sourceBinding.schema)}.${quoteIdentifier(sourceBinding.table)} as ${quoteIdentifier(sourceBinding.alias)}`,
+    `from ${quoteSqlIdentifier(sourceBinding.schema)}.${quoteSqlIdentifier(sourceBinding.table)} as ${quoteSqlIdentifier(sourceBinding.alias)}`,
   ];
   if (recipe.filters.length > 0) {
     sql.push(

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
-import { asSha256HexString, sha256HexUtf8 } from '@dvt/contracts';
+import { asSha256HexString } from '@dvt/contracts';
+import { sha256HexUtf8 } from '@dvt/crypto';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';

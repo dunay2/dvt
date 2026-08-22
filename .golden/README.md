@@ -92,8 +92,8 @@ The `.github/workflows/golden-paths.yml` workflow:
 ## References
 
 - [examples/](../examples/) - Golden path implementations
-- [scripts/run-golden-paths.js](../scripts/run-golden-paths.js) - Execution script
-- [scripts/compare-hashes.js](../scripts/compare-hashes.js) - Hash comparison script
+- [packages/@dvt/cli/run-golden-paths.cjs](../packages/@dvt/cli/run-golden-paths.cjs) - Execution script
+- [scripts/compare-hashes.cjs](../scripts/compare-hashes.cjs) - Hash comparison script
 - [Issue #10](https://github.com/dunay2/dvt/issues/10) - Golden Paths implementation (completed)
 - [ROADMAP.md](../ROADMAP.md) - Phase 1 MVP success criteria
 

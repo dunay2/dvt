@@ -34,6 +34,9 @@ importers:
       '@commitlint/config-conventional':
         specifier: ^20.4.1
         version: 20.4.1
+      '@dvt/crypto':
+        specifier: workspace:*
+        version: link:packages/@dvt/crypto
       '@eslint/compat':
         specifier: ^2.0.5
         version: 2.0.5(eslint@10.7.0(jiti@2.6.1))
@@ -114,7 +117,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 3.2.4
-        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
       zod-to-json-schema:
         specifier: ^3.25.1
         version: 3.25.1(zod@4.3.6)
@@ -135,7 +138,7 @@ importers:
         version: link:../../packages/@dvt/contracts
       '@dvt/crypto':
         specifier: workspace:*
-        version: link:../../packages/@dvt/canonical
+        version: link:../../packages/@dvt/crypto
       '@dvt/delivery':
         specifier: workspace:*
         version: link:../../packages/@dvt/delivery
@@ -220,7 +223,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 3.2.4
-        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
 
   apps/lineage-worker:
     dependencies:
@@ -251,7 +254,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 3.2.4
-        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
 
   apps/outbox-worker:
     dependencies:
@@ -294,7 +297,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 3.2.4
-        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
 
   apps/projector-worker:
     dependencies:
@@ -322,7 +325,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 3.2.4
-        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
 
   apps/temporal-worker:
     dependencies:
@@ -368,7 +371,7 @@ importers:
     devDependencies:
       '@dvt/crypto':
         specifier: workspace:*
-        version: link:../../packages/@dvt/canonical
+        version: link:../../packages/@dvt/crypto
       '@temporalio/testing':
         specifier: 1.20.3
         version: 1.20.3(lightningcss@1.32.0)(tslib@2.8.1)
@@ -392,13 +395,16 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 3.2.4
-        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
 
   apps/web:
     dependencies:
       '@dvt/contracts':
         specifier: workspace:*
         version: link:../../packages/@dvt/contracts
+      '@dvt/crypto':
+        specifier: workspace:*
+        version: link:../../packages/@dvt/crypto
       '@emotion/react':
         specifier: 11.14.0
         version: 11.14.0(@types/react@18.3.28)(react@18.3.1)
@@ -633,7 +639,7 @@ importers:
         version: 1.7.0(axe-core@4.13.0)(cypress@15.18.1)
       jsdom:
         specifier: ^29.1.0
-        version: 29.1.0
+        version: 29.1.0(@noble/hashes@2.3.0)
       start-server-and-test:
         specifier: ^2.0.11
         version: 2.1.5
@@ -652,6 +658,9 @@ importers:
       '@dvt/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@dvt/crypto':
+        specifier: workspace:*
+        version: link:../crypto
       '@dvt/delivery':
         specifier: workspace:*
         version: link:../delivery
@@ -682,7 +691,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 3.2.4
-        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/@dvt/adapter-temporal:
     dependencies:
@@ -694,7 +703,7 @@ importers:
         version: link:../contracts
       '@dvt/crypto':
         specifier: workspace:*
-        version: link:../canonical
+        version: link:../crypto
       '@dvt/delivery':
         specifier: workspace:*
         version: link:../delivery
@@ -734,7 +743,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 3.2.4
-        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/@dvt/artifacts:
     dependencies:
@@ -750,22 +759,16 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 3.2.4
-        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
-
-  packages/@dvt/canonical:
-    devDependencies:
-      typescript:
-        specifier: 5.9.3
-        version: 5.9.3
-      vitest:
-        specifier: 3.2.4
-        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/@dvt/cli:
     dependencies:
       '@dvt/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@dvt/crypto':
+        specifier: workspace:*
+        version: link:../crypto
       '@dvt/engine':
         specifier: workspace:*
         version: link:../engine
@@ -775,10 +778,13 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 3.2.4
-        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/@dvt/contracts:
     dependencies:
+      '@dvt/crypto':
+        specifier: workspace:*
+        version: link:../crypto
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -788,7 +794,26 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 3.2.4
-        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/@dvt/crypto:
+    dependencies:
+      '@noble/hashes':
+        specifier: ^2.3.0
+        version: 2.3.0
+      json-canonicalize:
+        specifier: ^2.0.0
+        version: 2.0.0
+      uuid:
+        specifier: ^11.1.1
+        version: 11.1.1
+    devDependencies:
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: 3.2.4
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/@dvt/delivery:
     dependencies:
@@ -801,7 +826,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 3.2.4
-        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/@dvt/dsl:
     dependencies:
@@ -814,7 +839,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 3.2.4
-        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/@dvt/engine:
     dependencies:
@@ -826,7 +851,7 @@ importers:
         version: link:../contracts
       '@dvt/crypto':
         specifier: workspace:*
-        version: link:../canonical
+        version: link:../crypto
       '@dvt/delivery':
         specifier: workspace:*
         version: link:../delivery
@@ -842,7 +867,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 3.2.4
-        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/@dvt/observability:
     devDependencies:
@@ -851,7 +876,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 3.2.4
-        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/@dvt/observability-otel:
     dependencies:
@@ -879,7 +904,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 3.2.4
-        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/@dvt/plan-interpreter:
     devDependencies:
@@ -888,20 +913,23 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 3.2.4
-        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/@dvt/plan-verifier:
     dependencies:
       '@dvt/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@dvt/crypto':
+        specifier: workspace:*
+        version: link:../crypto
     devDependencies:
       typescript:
         specifier: 5.9.3
         version: 5.9.3
       vitest:
         specifier: 3.2.4
-        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/@dvt/planner:
     dependencies:
@@ -911,19 +939,9 @@ importers:
       '@dvt/contracts':
         specifier: workspace:*
         version: link:../contracts
-      json-canonicalize:
-        specifier: ^2.0.0
-        version: 2.0.0
-    devDependencies:
-      typescript:
-        specifier: 5.9.3
-        version: 5.9.3
-
-  packages/@dvt/planner-contracts:
-    dependencies:
-      '@dvt/contracts':
+      '@dvt/crypto':
         specifier: workspace:*
-        version: link:../contracts
+        version: link:../crypto
     devDependencies:
       typescript:
         specifier: 5.9.3
@@ -940,7 +958,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 3.2.4
-        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/@dvt/state-store:
     dependencies:
@@ -952,7 +970,7 @@ importers:
         version: link:../contracts
       '@dvt/crypto':
         specifier: workspace:*
-        version: link:../canonical
+        version: link:../crypto
       '@dvt/engine':
         specifier: workspace:*
         version: link:../engine
@@ -962,7 +980,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 3.2.4
-        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/@dvt/temporal-dbt-plugin:
     dependencies:
@@ -987,7 +1005,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 3.2.4
-        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/@dvt/temporal-http-json-plugin:
     dependencies:
@@ -1006,7 +1024,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 3.2.4
-        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/@dvt/temporal-object-file-postgres-plugin:
     dependencies:
@@ -1025,7 +1043,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 3.2.4
-        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/@dvt/traceability-service:
     dependencies:
@@ -1053,7 +1071,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 3.2.4
-        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
 
 packages:
 
@@ -2242,6 +2260,10 @@ packages:
     peerDependencies:
       '@emnapi/core': ^1.7.1
       '@emnapi/runtime': ^1.7.1
+
+  '@noble/hashes@2.3.0':
+    resolution: {integrity: sha512-oN+QwyX7VSHotibwubG3kpzbwKrfnyR6OOO+3Nk/53ADL7FmgHHz4TgrbaYKvvOw09u6QTx0oiH1cNCIOuN0CQ==}
+    engines: {node: '>= 20.19.0'}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -9694,7 +9716,9 @@ snapshots:
       '@eslint/core': 1.2.1
       levn: 0.4.1
 
-  '@exodus/bytes@1.15.0': {}
+  '@exodus/bytes@1.15.0(@noble/hashes@2.3.0)':
+    optionalDependencies:
+      '@noble/hashes': 2.3.0
 
   '@fastify/ajv-compiler@4.0.5':
     dependencies:
@@ -10117,6 +10141,8 @@ snapshots:
       '@emnapi/runtime': 1.9.2
       '@tybys/wasm-util': 0.10.1
     optional: true
+
+  '@noble/hashes@2.3.0': {}
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -12627,7 +12653,7 @@ snapshots:
       std-env: 3.10.0
       test-exclude: 7.0.1
       tinyrainbow: 2.0.0
-      vitest: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
+      vitest: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
     transitivePeerDependencies:
       - supports-color
 
@@ -12676,7 +12702,7 @@ snapshots:
       sirv: 3.0.2
       tinyglobby: 0.2.15
       tinyrainbow: 2.0.0
-      vitest: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
+      vitest: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2)
 
   '@vitest/utils@3.2.4':
     dependencies:
@@ -13399,10 +13425,10 @@ snapshots:
     dependencies:
       assert-plus: 1.0.0
 
-  data-urls@7.0.0:
+  data-urls@7.0.0(@noble/hashes@2.3.0):
     dependencies:
       whatwg-mimetype: 5.0.0
-      whatwg-url: 16.0.1
+      whatwg-url: 16.0.1(@noble/hashes@2.3.0)
     transitivePeerDependencies:
       - '@noble/hashes'
 
@@ -14312,9 +14338,9 @@ snapshots:
     dependencies:
       lru-cache: 6.0.0
 
-  html-encoding-sniffer@6.0.0:
+  html-encoding-sniffer@6.0.0(@noble/hashes@2.3.0):
     dependencies:
-      '@exodus/bytes': 1.15.0
+      '@exodus/bytes': 1.15.0(@noble/hashes@2.3.0)
     transitivePeerDependencies:
       - '@noble/hashes'
 
@@ -14636,17 +14662,17 @@ snapshots:
 
   jsbn@0.1.1: {}
 
-  jsdom@29.1.0:
+  jsdom@29.1.0(@noble/hashes@2.3.0):
     dependencies:
       '@asamuzakjp/css-color': 5.1.11
       '@asamuzakjp/dom-selector': 7.1.1
       '@bramus/specificity': 2.4.2
       '@csstools/css-syntax-patches-for-csstree': 1.1.3(css-tree@3.2.1)
-      '@exodus/bytes': 1.15.0
+      '@exodus/bytes': 1.15.0(@noble/hashes@2.3.0)
       css-tree: 3.2.1
-      data-urls: 7.0.0
+      data-urls: 7.0.0(@noble/hashes@2.3.0)
       decimal.js: 10.6.0
-      html-encoding-sniffer: 6.0.0
+      html-encoding-sniffer: 6.0.0(@noble/hashes@2.3.0)
       is-potential-custom-element-name: 1.0.1
       lru-cache: 11.3.5
       parse5: 8.0.1
@@ -14657,7 +14683,7 @@ snapshots:
       w3c-xmlserializer: 5.0.0
       webidl-conversions: 8.0.1
       whatwg-mimetype: 5.0.0
-      whatwg-url: 16.0.1
+      whatwg-url: 16.0.1(@noble/hashes@2.3.0)
       xml-name-validator: 5.0.0
     transitivePeerDependencies:
       - '@noble/hashes'
@@ -16679,7 +16705,7 @@ snapshots:
       tsx: 4.21.0
       yaml: 2.8.2
 
-  vitest@3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0)(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2):
+  vitest@3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/expect': 3.2.4
@@ -16708,7 +16734,7 @@ snapshots:
       '@types/debug': 4.1.13
       '@types/node': 26.1.1
       '@vitest/ui': 3.2.4(vitest@3.2.4)
-      jsdom: 29.1.0
+      jsdom: 29.1.0(@noble/hashes@2.3.0)
     transitivePeerDependencies:
       - jiti
       - less
@@ -16791,9 +16817,9 @@ snapshots:
 
   whatwg-mimetype@5.0.0: {}
 
-  whatwg-url@16.0.1:
+  whatwg-url@16.0.1(@noble/hashes@2.3.0):
     dependencies:
-      '@exodus/bytes': 1.15.0
+      '@exodus/bytes': 1.15.0(@noble/hashes@2.3.0)
       tr46: 6.0.0
       webidl-conversions: 8.0.1
     transitivePeerDependencies:

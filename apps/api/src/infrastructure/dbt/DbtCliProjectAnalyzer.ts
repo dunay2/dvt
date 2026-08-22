@@ -34,6 +34,8 @@ const DEFAULT_TIMEOUT_MS = 30_000;
 const DEFAULT_MAX_OUTPUT_BYTES = 1_000_000;
 const INVALID_PROJECT_DIAGNOSTIC_MESSAGE =
   'dbt parse rejected the project. Review it in a trusted dbt environment.';
+const INVALID_COMPILE_DIAGNOSTIC_MESSAGE =
+  'dbt compile rejected the selected models. Review them in a trusted dbt environment.';
 
 export type DbtCliProjectAnalyzerOptions = Readonly<{
   workspaceFilesRoot: string;
@@ -82,6 +84,7 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
   }
 
   public async analyze(input: AnalyzeDbtProjectInput): Promise<DbtProjectAnalysis> {
+    const operation = input.operation ?? { kind: 'parse' as const };
     const analyzedAt = this.now().toISOString();
     const unavailableRevision = (reason: string) =>
       this.buildRevision(input.projectRoot, sha256Hex(reason), analyzedAt);
@@ -131,7 +134,12 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
             error.contentSetSha256,
             analyzedAt
           );
-          return this.invalid(invalidRevision, error.contentSetSha256);
+          return this.invalid(
+            invalidRevision,
+            error.contentSetSha256,
+            EMPTY_DBT_PROJECT_SEMANTIC_EVIDENCE,
+            operation.kind
+          );
         }
         return this.unavailable(
           unavailableRevision(`unreadable:${input.projectRoot}`),
@@ -151,7 +159,12 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
       projectRevision = this.buildRevision(input.projectRoot, contentSetSha256, analyzedAt);
       const pathPolicy = await evaluateDbtProjectSnapshotPathPolicy(snapshotDirectory);
       if (!pathPolicy.ok) {
-        return this.invalid(projectRevision, contentSetSha256, snapshotSemanticEvidence);
+        return this.invalid(
+          projectRevision,
+          contentSetSha256,
+          snapshotSemanticEvidence,
+          operation.kind
+        );
       }
 
       const profilesDirectory = await this.resolveProfilesDirectory();
@@ -171,7 +184,7 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
       const processResult = await this.processRunner.run({
         executable: this.dbtExecutable,
         args: [
-          'parse',
+          operation.kind === 'compile' ? 'compile' : 'parse',
           '--no-partial-parse',
           '--no-use-colors',
           '--project-dir',
@@ -182,6 +195,7 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
           targetPath,
           '--log-path',
           logPath,
+          ...(operation.kind === 'compile' ? ['--select', ...operation.selectors] : []),
         ],
         cwd: snapshotDirectory,
         env: buildSanitizedProcessEnvironment(this.processEnvironment, analysisRoot),
@@ -199,7 +213,12 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
       }
 
       if (processResult.exitCode !== 0) {
-        return this.invalid(projectRevision, contentSetSha256, snapshotSemanticEvidence);
+        return this.invalid(
+          projectRevision,
+          contentSetSha256,
+          snapshotSemanticEvidence,
+          operation.kind
+        );
       }
 
       const manifest = JSON.parse(
@@ -304,13 +323,17 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
   private invalid(
     projectRevision: DbtProjectAnalysis['projectRevision'],
     contentSetSha256: string,
-    semanticEvidence = EMPTY_DBT_PROJECT_SEMANTIC_EVIDENCE
+    semanticEvidence = EMPTY_DBT_PROJECT_SEMANTIC_EVIDENCE,
+    operation: NonNullable<AnalyzeDbtProjectInput['operation']>['kind'] = 'parse'
   ): DbtProjectAnalysis {
     const diagnostics = [
       {
         code: 'dbt_project_invalid',
         severity: 'error' as const,
-        message: INVALID_PROJECT_DIAGNOSTIC_MESSAGE,
+        message:
+          operation === 'compile'
+            ? INVALID_COMPILE_DIAGNOSTIC_MESSAGE
+            : INVALID_PROJECT_DIAGNOSTIC_MESSAGE,
       },
     ];
     return {

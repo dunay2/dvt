@@ -27,7 +27,6 @@ const PLANNING_DB_WITH_CI_CONTRACT_FIXTURE = [
   'scripts/planning-db/governed-source-refresh-write-rail.cjs',
   'tools/ci/sync-docs-status-policy.test.mjs',
   'tools/planning-db/schema.sql',
-  'tools/planning-db/state/canonical-state.json',
   'tools/planning-db/state/db-governance-surfaces.json',
 ];
 

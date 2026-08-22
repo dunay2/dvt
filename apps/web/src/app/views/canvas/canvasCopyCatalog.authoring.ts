@@ -190,19 +190,19 @@ export const canvasViewAuthoringCopyByKey = {
   },
   nodePresentationDeclaredColumnsDetailTemplate: {
     key: 'canvas.nodePresentation.declaredColumnsDetailTemplate',
-    fallback: '{count} columns declared by this node.',
+    fallback: 'Inherited: 0 · Declared: {count}',
   },
   nodePresentationInheritedColumnsDetailTemplate: {
     key: 'canvas.nodePresentation.inheritedColumnsDetailTemplate',
-    fallback: '{count} columns inherited from connected inputs; none declared by this node.',
+    fallback: 'Inherited: {count} · Declared: 0',
   },
   nodePresentationMixedColumnsDetailTemplate: {
     key: 'canvas.nodePresentation.mixedColumnsDetailTemplate',
-    fallback: 'Mapped columns: {declared}. Available input columns: {available}.',
+    fallback: 'Inherited: {available} · Declared: {declared}',
   },
   nodePresentationNoColumnsDetail: {
     key: 'canvas.nodePresentation.noColumnsDetail',
-    fallback: 'No declared or inherited columns are available for this node.',
+    fallback: 'Inherited: 0 · Declared: 0',
   },
   nodePresentationCodeLabel: {
     key: 'canvas.nodePresentation.codeLabel',
@@ -896,6 +896,10 @@ export const canvasViewAuthoringCopyByKey = {
   inspectorErrorDbtTestColumnInvalid: {
     key: 'canvas.inspector.authoring.errorDbtTestColumnInvalid',
     fallback: 'Enter a valid target column identifier.',
+  },
+  inspectorErrorDbtTestColumnNotDeclared: {
+    key: 'canvas.inspector.authoring.errorDbtTestColumnNotDeclared',
+    fallback: 'Select a column declared by the connected DBT model.',
   },
   inspectorErrorDbtTestSeverityInvalid: {
     key: 'canvas.inspector.authoring.errorDbtTestSeverityInvalid',

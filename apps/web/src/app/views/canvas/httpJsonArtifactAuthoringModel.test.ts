@@ -1,7 +1,9 @@
 import { ACQUIRE_HTTP_JSON_ARTIFACT_MAX_BYTES } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
+import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
 import type { CanonicalNode } from '../../types/canonical';
+import { projectCanonicalNodeToAuthoringNode } from './canvasDraftAuthoring';
 import {
   applyHttpJsonArtifactAuthoringDraft,
   createHttpJsonArtifactAuthoringDraft,
@@ -99,6 +101,89 @@ describe('HTTP JSON artifact Canvas authoring', () => {
         request: { endpointRef: 'http-endpoint:orders' },
       },
     });
+  });
+
+  it.each([
+    ['json', 'application/json'],
+    ['jsonl', 'application/x-ndjson'],
+  ] as const)(
+    'keeps %s format aligned across request, response, Apply and Preview',
+    (format, mediaType) => {
+      const draft = createHttpJsonArtifactAuthoringDraft(NODE)!;
+      const applied = applyHttpJsonArtifactAuthoringDraft(
+        NODE,
+        { ...draft, format },
+        WORKSPACE_SCOPE
+      );
+
+      expect(applied.metadata?.httpJsonArtifact).toMatchObject({
+        request: { headers: { accept: mediaType } },
+        response: { format, mediaType },
+      });
+      expect(
+        projectHttpJsonArtifactStepTypeConfig({ node: applied, executionScope: WORKSPACE_SCOPE })
+      ).toMatchObject({
+        ok: true,
+        stepTypeConfig: {
+          request: { headers: { accept: mediaType } },
+          response: { format, mediaType },
+        },
+      });
+    }
+  );
+
+  it('keeps the optional HTTP auth reference absent through Apply and Preview', () => {
+    const draft = createHttpJsonArtifactAuthoringDraft(NODE)!;
+    const applied = applyHttpJsonArtifactAuthoringDraft(
+      NODE,
+      { ...draft, authCredentialRef: '' },
+      WORKSPACE_SCOPE
+    );
+
+    expect(
+      (applied.metadata?.httpJsonArtifact as { request?: Record<string, unknown> })?.request
+    ).not.toHaveProperty('authCredentialRef');
+    expect(
+      projectHttpJsonArtifactStepTypeConfig({ node: applied, executionScope: WORKSPACE_SCOPE })
+    ).toMatchObject({ ok: true });
+  });
+
+  it.each([
+    [
+      'endpointRef',
+      { endpointRef: 'https://orders.example.test' },
+      'http_json_endpoint_ref_invalid',
+    ],
+    ['authCredentialRef', { authCredentialRef: 'secret' }, 'http_json_auth_credential_ref_invalid'],
+    ['expectedSha256', { expectedSha256: 'not-a-sha' }, 'http_json_sha256_invalid'],
+    [
+      'artifactCredentialRef',
+      { artifactCredentialRef: 'postgres:wrong-namespace' },
+      'http_json_artifact_credential_ref_invalid',
+    ],
+    ['maxRedirects', { maxRedirects: '1.5' }, 'http_json_redirect_limit_invalid'],
+  ] as const)('maps invalid %s through its existing field error', (field, patch, error) => {
+    const draft = createHttpJsonArtifactAuthoringDraft(NODE)!;
+
+    expect(
+      validateHttpJsonArtifactAuthoringDraft({ ...draft, ...patch }, WORKSPACE_SCOPE)
+    ).toMatchObject({ ok: false, errors: { [field]: error } });
+  });
+
+  it('preserves HTTP artifact metadata through the protected Graph Draft projection', () => {
+    const authoringNode = projectCanonicalNodeToAuthoringNode(NODE);
+    const reopened = projectWorkspaceGraphAuthoringDraftSemanticGraph({
+      canvas: { kind: 'transformation', title: 'Plugin authoring proof' },
+      nodeIds: [NODE.id],
+      nodePositions: { [NODE.id]: { x: 0, y: 0 } },
+      nodes: [authoringNode],
+      edges: [],
+    }).canonicalNodes[0];
+
+    expect(reopened?.metadata?.httpJsonArtifact).toEqual(NODE.metadata?.httpJsonArtifact);
+    expect(
+      projectHttpJsonArtifactStepTypeConfig({ node: reopened!, executionScope: WORKSPACE_SCOPE })
+    ).toMatchObject({ ok: true, stepTypeConfig: { scope: WORKSPACE_SCOPE } });
   });
 
   it('rejects another tenant artifact before applying the draft', () => {

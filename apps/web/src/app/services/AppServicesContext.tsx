@@ -4,6 +4,7 @@ import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import type { CapabilitiesPort } from '../ports/capabilities';
 import type { ICostAttributionSummaryPort } from '../ports/cost';
 import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../ports/graphDbtWorkspaceArtifactPublication';
+import type { IGraphDbtModelCompilationQueryPort } from '../ports/graphDbtModelCompilation';
 import type { IPlansPort } from '../ports/plans';
 import type { IRunsPort } from '../ports/runs';
 import type { SessionContextPort } from '../ports/sessionContext';
@@ -62,6 +63,7 @@ export function AppServicesProvider({ children, overrides }: AppServicesProvider
       overrides?.warehouseSourceDataSampleQuery,
       overrides?.workspaceFileContentCommand,
       overrides?.graphDbtWorkspaceArtifactPublicationCommand,
+      overrides?.graphDbtModelCompilationQuery,
       overrides?.workspaceGraphDraftAuthoringPort,
       overrides?.dbtProjectGraphQueryPort,
       overrides?.dbtProjectImportPort,
@@ -127,6 +129,10 @@ export function useWorkspaceFileContentCommandPort(): IWorkspaceFileContentComma
 
 export function useGraphDbtWorkspaceArtifactPublicationCommandPort(): IGraphDbtWorkspaceArtifactPublicationCommandPort {
   return useRequiredAppServicesContext().graphDbtWorkspaceArtifactPublicationCommand;
+}
+
+export function useGraphDbtModelCompilationQueryPort(): IGraphDbtModelCompilationQueryPort {
+  return useRequiredAppServicesContext().graphDbtModelCompilationQuery;
 }
 
 export function useWorkspaceGraphDraftAuthoringPort(): IWorkspaceGraphDraftAuthoringPort {

@@ -170,24 +170,20 @@ function assertCanvasPropertiesFitsViewport(width: number, height: number): void
   assertViewportHasNoGlobalHorizontalOverflow(width);
 }
 
-function assertDirectionalMarkers(): void {
-  cy.get('.react-flow__edge-path')
+function assertDependencyDirectionCues(): void {
+  cy.get('[data-slot="canvas-dependency-direction-cue"]')
     .should('have.length.at.least', 2)
-    .each(($edge) => {
-      const markerEnd = $edge.attr('marker-end');
-      expect(markerEnd).to.match(/^url\(/);
-      const normalizedMarkerEnd = decodeURIComponent(markerEnd!);
-      const marker = Array.from($edge.get(0).ownerDocument.querySelectorAll('marker')).find(
-        (candidate) => normalizedMarkerEnd.includes(`#${candidate.id}`)
-      );
-      expect(marker).not.to.equal(null);
-      expect(marker).not.to.equal(undefined);
-      expect(marker?.getAttribute('markerWidth')).to.equal('28');
-      expect(marker?.getAttribute('markerHeight')).to.equal('28');
-      expect(marker?.getAttribute('orient')).to.contain('auto');
-      const arrowShape = marker?.querySelector('path, polyline, polygon');
-      expect(arrowShape).not.to.equal(null);
-      expect(getComputedStyle(arrowShape!).fill).not.to.equal('none');
+    .each(($cue) => {
+      const cue = $cue.get(0) as SVGGraphicsElement;
+      const bounds = cue.getBBox();
+      const edgePath = cue.closest('.react-flow__edge')?.querySelector('.react-flow__edge-path');
+
+      expect(bounds.width).to.equal(12);
+      expect(bounds.height).to.equal(10);
+      expect(cue.getAttribute('aria-hidden')).to.equal('true');
+      expect(getComputedStyle(cue).fill).not.to.equal('none');
+      expect(getComputedStyle(cue).pointerEvents).to.equal('none');
+      expect(edgePath?.getAttribute('marker-end')).to.equal(null);
     });
 }
 
@@ -971,7 +967,7 @@ describe('Canvas workbench screen composition', () => {
     });
 
     waitForE2eApiCall('/workspace/graph/draft', 'GET');
-    assertDirectionalMarkers();
+    assertDependencyDirectionCues();
 
     cy.get('.react-flow__node[data-id="model_orders"]').as('modelNode').should('be.visible');
     cy.get('.react-flow__node[data-id="orphan_metrics"]').as('orphanNode').should('be.visible');
@@ -1015,12 +1011,12 @@ describe('Canvas workbench screen composition', () => {
     );
     cy.get('body').type('{esc}');
     cy.get('@modelNode').find('[data-slot="graph-node-card-play"]').should('not.exist');
-    assertDirectionalMarkers();
+    assertDependencyDirectionCues();
 
     cy.get('[data-slot="canvas-viewport-context-surface"]').type('{ctrl}f');
     cy.get('[data-slot="canvas-graph-search-control"] input').type('orders');
     cy.get('.react-flow__edge.canvas-graph-search-relevant-edge').should('have.length.at.least', 1);
-    assertDirectionalMarkers();
+    assertDependencyDirectionCues();
     cy.get('[data-slot="canvas-graph-search-control"] input').type('{esc}');
 
     cy.get('@modelNode').find('[data-slot="canvas-node-shell"]').dblclick();
@@ -1075,7 +1071,7 @@ describe('Canvas workbench screen composition', () => {
 
     assertNoSeriousAccessibilityViolations('[data-slot="canvas-viewport-context-surface"]');
     emulateAccessibilityMedia();
-    assertDirectionalMarkers();
+    assertDependencyDirectionCues();
     cy.get('.react-flow__node[data-id="model_orders"]').focus().should('be.focused');
     cy.get('.react-flow__node[data-id="model_orders"]').should(($node) => {
       expect(getComputedStyle($node.get(0)).outlineStyle).not.to.equal('none');

@@ -564,34 +564,34 @@ The implementation author cannot self-certify this gate. The reviewer executes
 the manual against the committed candidate and reports the first confusion
 instead of compensating with product knowledge.
 
-## Retired Diff And Artifacts Peer Routes
+## Retired Peer Workbench Compatibility
 
 ### User expectation
 
-`/canvas/diff` and `/canvas/artifacts` are retired peer workbench routes. Their
-deep links redirect to the Process Map with an explicit unavailable intent;
-they do not render a second graph, fixed panel, or replacement read model.
+Historical peer workbench deep links are not supported Canvas entry points.
+They do not redirect into the Process Map, publish a one-shot route intent, or
+render a second graph, fixed panel, or replacement read model.
 
 Current behavior:
 
-- the redirect preserves the fact that a retired surface was requested;
-- Canvas explains that no equivalent permanent surface is available;
+- canonical Canvas navigation enters through `/canvas`;
+- unsupported historical paths are outside the active route contract;
 - Code and file history retain their existing contextual owners;
 - a future comparison capability requires its own GitHub issue and must reuse
   the authoritative workspace-file rails.
 
 ### Primary user stories
 
-- As a reviewer, I want retired deep links to preserve intent and explain the
-  supported alternative rather than fail silently.
+- As a reviewer, I want current navigation to expose only capabilities with a
+  canonical owner and executable rail.
 - As a maintainer, I want comparison and artifact review to gain one canonical
   owner before they become visible product surfaces.
 
 ### Expected states
 
-- Redirected: return to Canvas and publish the unavailable retired-surface
-  intent.
-- Unknown retired surface: fail closed with generic unavailable guidance.
+- Canonical: `/canvas` renders the governed Canvas route.
+- Unsupported historical path: no compatibility route or intent protocol is
+  registered.
 
 ## Execution Templates And Source Generation
 

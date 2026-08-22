@@ -36,6 +36,7 @@ import { graphStatusBadgeClasses, graphStatusRingClasses } from '../graph/graphV
 import { buildGraphNodeCardReadModel } from '../graph/graphNodeCardReadModel';
 import type { GraphNodeOperationalDetail } from '../graph/graphNodeCardStrategyContracts';
 import { GraphNodeCardView } from '../graph/GraphNodeCardView';
+import { resolveGraphNodeColumnInteractionProps } from '../graph/GraphNodeColumnSection';
 import { resolveGraphNodeTagActionProps } from '../graph/GraphNodeTagList';
 import { CANVAS_NODE_KINDS } from '../nodeTypeCatalog';
 
@@ -246,6 +247,11 @@ export function DbtNodeRenderer({
       )
     : node.tags.map((tag) => ({ value: tag, label: tag }));
   const tagActionProps = resolveGraphNodeTagActionProps(data);
+  const columnInteractionProps = resolveGraphNodeColumnInteractionProps({
+    nodeId: node.id,
+    nodeRole: node.role,
+    data,
+  });
 
   return (
     <GraphNodeCardView
@@ -262,6 +268,7 @@ export function DbtNodeRenderer({
       dimmed={dimmed}
       overlayStyle={overlayProps.style}
       {...tagActionProps}
+      {...columnInteractionProps}
       onOpenCode={
         data.canOpenNodeCode !== false && typeof inspectNode === 'function'
           ? () => inspectNode(node.id, 'code')

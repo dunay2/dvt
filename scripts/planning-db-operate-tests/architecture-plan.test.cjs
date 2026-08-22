@@ -1,5 +1,5 @@
 const test = require('node:test');
-const crypto = require('node:crypto');
+const { sha256Hex } = require('@dvt/crypto');
 const {
   assert,
   assertArchitectureDesignIdempotentReplayMatches,
@@ -1355,7 +1355,7 @@ test('feature mechanization retirement uses design scope, CAS, and audited delet
     '--expected-revision',
     '1',
     '--reason',
-    'Reuse RestorePlanningDbCanonicalArchitectureState.',
+    'Reuse ImportPlanningGovernanceQueryStore.',
     '--source-ref',
     'scripts/planning-db-import.cjs',
     '--source-content-sha256',
@@ -1590,14 +1590,8 @@ test('architecture execution evidence writer persists proof before its audit row
 test('architecture evidence rejects forged CI origin and source hash drift', async () => {
   const committedSourceBytes = Buffer.from('committed architecture evidence source\n', 'utf8');
   const committedImplementationBytes = Buffer.from('committed implementation source\n', 'utf8');
-  const committedSourceSha256 = crypto
-    .createHash('sha256')
-    .update(committedSourceBytes)
-    .digest('hex');
-  const committedImplementationSha256 = crypto
-    .createHash('sha256')
-    .update(committedImplementationBytes)
-    .digest('hex');
+  const committedSourceSha256 = sha256Hex(committedSourceBytes);
+  const committedImplementationSha256 = sha256Hex(committedImplementationBytes);
   const command = parseArgs([
     'architecture-evidence',
     'record-execution',

@@ -65,14 +65,14 @@ describe('OperationalDrawerSelectionRecoveryView', () => {
       );
     });
 
-    expect(container.textContent).toContain('Requested roots');
+    expect(container.textContent).toContain('Selected nodes');
     expect(container.textContent).toContain('model.removed');
-    expect(container.textContent).toContain('Unavailable roots');
-    expect(container.textContent).toContain('Non-executable roots');
-    expect(container.textContent).toContain('Admitted scope');
+    expect(container.textContent).toContain('Nodes no longer available');
+    expect(container.textContent).toContain('Nodes that cannot run');
+    expect(container.textContent).toContain('Nodes to run');
     expect(container.textContent).toContain('None');
     expect(container.textContent).toContain('analysis-sha-1');
-    expect(container.textContent).toContain('Kept requested roots');
+    expect(container.textContent).toContain('Kept selected nodes');
 
     const buttons = [...container.querySelectorAll('button')];
     const click = async (label: string): Promise<void> => {
@@ -81,9 +81,9 @@ describe('OperationalDrawerSelectionRecoveryView', () => {
       await act(async () => button?.click());
     };
 
-    await click('Discard unavailable selection');
-    await click('Use workspace scope');
-    await click('Keep blocked and refresh analysis');
+    await click('Remove unavailable nodes');
+    await click('Run entire flow');
+    await click('Check again');
 
     expect(commands.discardUnavailable).toHaveBeenCalledTimes(1);
     expect(commands.useWorkspaceScope).toHaveBeenCalledTimes(1);
@@ -127,7 +127,7 @@ describe('OperationalDrawerSelectionRecoveryView', () => {
       );
     });
 
-    expect(container.textContent).toContain('No se pudo actualizar el análisis autoritativo.');
+    expect(container.textContent).toContain('No se pudo volver a comprobar la selección.');
     expect(container.textContent).not.toContain('POST /workspace/dbt-project/graph');
     expect(container.textContent).not.toContain('internal adapter details');
   });

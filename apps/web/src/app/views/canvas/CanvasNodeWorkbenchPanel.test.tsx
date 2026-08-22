@@ -10,6 +10,8 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { dvtCanvasSurfaceStrategy } from '../../plugins/dvt/dvtCanvasSurfaceStrategy';
 import type { CanvasNodeWorkbenchSectionPolicyId } from '../../plugins/canvasSurfaceStrategyContracts';
 import CanvasNodeWorkbenchPanelSource from './CanvasNodeWorkbenchPanel.tsx?raw';
+import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
+import { mapCanonicalNodeToCanvasNode } from './canvasNodeMapper';
 import {
   CanvasNodeWorkbenchPanel,
   type CanvasNodeWorkbenchPanelProps,
@@ -30,7 +32,7 @@ vi.mock('../../components/monaco/MonacoCodeEditor', () => ({
     <textarea
       data-language={language}
       data-path={path}
-      data-testid="dvt-transform-sql-editor"
+      data-testid="monaco-code-editor"
       onChange={(event) => onChange(event.currentTarget.value)}
       value={value}
     />
@@ -143,9 +145,12 @@ const CONNECTED_TEST_NODE: CanonicalNode = {
   lastDuration: 1.7,
   tags: [],
   metadata: {
-    testType: 'not_null',
-    testTargetColumn: 'order_id',
-    severity: 'error',
+    dbtTest: {
+      testType: 'not_null',
+      targetModelId: MODEL_NODE.id,
+      targetColumn: 'order_id',
+      severity: 'error',
+    },
     selectedForExecution: true,
   },
 };
@@ -378,7 +383,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
       fireEvent.click(codeTab!);
     });
 
-    expect(container.querySelector('textarea[name="dbt-model-sql"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="monaco-code-editor"]')).not.toBeNull();
   });
 
   it('does not synthesize a duplicate code action for a file-backed node', () => {
@@ -396,7 +401,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
       );
     });
 
-    expect(container.querySelector('textarea[name="dbt-model-sql"]')).toBeNull();
+    expect(container.querySelector('[data-testid="monaco-code-editor"]')).toBeNull();
   });
 
   it('keeps the accessible movement handle separate from the close command', () => {
@@ -484,6 +489,54 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(container.querySelector('[data-slot="canvas-node-workbench-authoring"]')).not.toBeNull();
   });
 
+  it('projects saved business tags to the card only after Apply', () => {
+    const node = { ...DVT_TRANSFORM_NODE, tags: ['authoring'] };
+    const onApplyNodeDraft = vi.fn();
+    renderNodePanel(root, node, 'general', { canEditNode: true, onApplyNodeDraft });
+
+    const tagsInput = container.querySelector<HTMLInputElement>('input[name="node-tags"]');
+    expect(tagsInput).not.toBeNull();
+    expect(
+      mapCanonicalNodeToCanvasNode({
+        canonicalNode: node,
+        index: 0,
+        showColumns: false,
+        locale: 'es',
+      }).data.displayTags
+    ).toEqual([{ value: 'authoring', label: 'En edición' }]);
+
+    act(() => {
+      fireEvent.input(tagsInput!, { target: { value: 'finance, critical' } });
+    });
+
+    expect(onApplyNodeDraft).not.toHaveBeenCalled();
+
+    const applyButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent === 'Apply'
+    );
+    expect(applyButton).toBeDefined();
+
+    act(() => {
+      fireEvent.click(applyButton!);
+    });
+
+    const submittedDraft = onApplyNodeDraft.mock.calls[0]?.[0];
+    expect(submittedDraft).toBeDefined();
+    const appliedNode = applyCanvasInspectorNodeDraft(node, submittedDraft);
+    expect(
+      mapCanonicalNodeToCanvasNode({
+        canonicalNode: appliedNode,
+        index: 0,
+        showColumns: false,
+        locale: 'es',
+      }).data.displayTags
+    ).toEqual([
+      { value: 'authoring', label: 'En edición' },
+      { value: 'finance', label: 'finance' },
+      { value: 'critical', label: 'critical' },
+    ]);
+  });
+
   it('keeps a read-only workbench factual without rendering disabled authoring controls', () => {
     renderNodePanel(root, SOURCE_NODE, 'general', {
       canEditNode: false,
@@ -549,7 +602,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(
       columnsSection?.querySelector('[data-slot="canvas-node-workbench-authoring"]')
     ).toBeNull();
-    expect(container.querySelector('[data-testid="dvt-transform-sql-editor"]')).toBeNull();
+    expect(container.querySelector('[data-testid="monaco-code-editor"]')).toBeNull();
   });
 
   it('renders DVT transform SQL editing inside the Code tab', () => {
@@ -557,7 +610,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
 
     const codeSection = container.querySelector('[data-slot="canvas-node-workbench-code-section"]');
     const sqlEditor = codeSection?.querySelector<HTMLTextAreaElement>(
-      '[data-testid="dvt-transform-sql-editor"]'
+      '[data-testid="monaco-code-editor"]'
     );
 
     expect(codeSection).not.toBeNull();
@@ -573,7 +626,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     renderNodePanel(root, DVT_VISUAL_TRANSFORM_NODE, 'code');
 
     const codeSection = container.querySelector('[data-slot="canvas-node-workbench-code-section"]');
-    expect(codeSection?.querySelector('[data-testid="dvt-transform-sql-editor"]')).toBeNull();
+    expect(codeSection?.querySelector('[data-testid="monaco-code-editor"]')).toBeNull();
     const codeViewer = codeSection?.querySelector<HTMLElement>(
       '[data-testid="monaco-code-viewer"]'
     );
@@ -648,14 +701,18 @@ describe('CanvasNodeWorkbenchPanel', () => {
 
     const codeSection = container.querySelector('[data-slot="canvas-node-workbench-code-section"]');
     const sqlEditor = codeSection?.querySelector<HTMLTextAreaElement>(
-      'textarea[name="dbt-model-sql"]'
+      '[data-testid="monaco-code-editor"]'
     );
 
     expect(codeSection).not.toBeNull();
-    expect(sqlEditor?.value).toContain('select *');
+    expect(sqlEditor?.value).toContain('origin."order_id" as "order_id"');
+    expect(sqlEditor?.value).toContain('origin."discount_code" as "discount_code"');
+    expect(sqlEditor?.value).not.toContain('select *');
     expect(sqlEditor?.value).toContain('{{ source(');
+    expect(sqlEditor?.dataset.language).toBe('sql');
+    expect(sqlEditor?.dataset.path).toBe('models/orders_model.sql');
     expect(codeSection?.querySelector('pre')).toBeNull();
-    expect(codeSection?.querySelectorAll('textarea[name="dbt-model-sql"]')).toHaveLength(1);
+    expect(codeSection?.querySelectorAll('[data-testid="monaco-code-editor"]')).toHaveLength(1);
     expect(codeSection?.textContent).not.toContain('No properties are recorded for this section.');
   });
 
@@ -663,9 +720,9 @@ describe('CanvasNodeWorkbenchPanel', () => {
     renderNodePanel(root, MODEL_NODE, 'code');
 
     const sqlEditor = container.querySelector<HTMLTextAreaElement>(
-      'textarea[name="dbt-model-sql"]'
+      '[data-testid="monaco-code-editor"]'
     );
-    expect(sqlEditor?.value).toContain('select *');
+    expect(sqlEditor?.value).toContain('origin."order_id" as "order_id"');
 
     act(() => {
       fireEvent.change(sqlEditor!, { target: { value: '' } });
@@ -688,7 +745,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     );
 
     expect(
-      container.querySelector<HTMLTextAreaElement>('textarea[name="dbt-model-sql"]')?.value
+      container.querySelector<HTMLTextAreaElement>('[data-testid="monaco-code-editor"]')?.value
     ).toBe('');
 
     renderNodePanel(
@@ -709,7 +766,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     );
 
     expect(
-      container.querySelector<HTMLTextAreaElement>('textarea[name="dbt-model-sql"]')?.value
+      container.querySelector<HTMLTextAreaElement>('[data-testid="monaco-code-editor"]')?.value
     ).toBe('');
   });
 
@@ -762,7 +819,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     });
 
     const sqlEditor = container.querySelector<HTMLTextAreaElement>(
-      '[data-testid="dvt-transform-sql-editor"]'
+      '[data-testid="monaco-code-editor"]'
     );
     expect(sqlEditor).not.toBeNull();
 
@@ -797,7 +854,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     );
 
     const restoredSqlEditor = container.querySelector<HTMLTextAreaElement>(
-      '[data-testid="dvt-transform-sql-editor"]'
+      '[data-testid="monaco-code-editor"]'
     );
     expect(restoredSqlEditor?.value).toBe('select customer from source.orders');
 

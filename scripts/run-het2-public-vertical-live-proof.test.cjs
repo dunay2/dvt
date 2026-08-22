@@ -1,10 +1,10 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createHash } = require('node:crypto');
 const { EventEmitter } = require('node:events');
 const { readFileSync } = require('node:fs');
 const { request } = require('node:https');
 const path = require('node:path');
+const { sha256Hex } = require('@dvt/crypto');
 
 const {
   buildHet2Env,
@@ -36,6 +36,16 @@ test('validates the tenant-scoped HET2 fixture before infrastructure startup', (
     () => validateHttpJsonFixture(fixtureContent, { ...fixtureManifest, objectKey: 'wrong' }),
     /tenant-scoped content hash/
   );
+});
+
+test('keeps the HET2 fixture non-unique for the controlled dbt failure proof', () => {
+  const rows = fixtureContent
+    .toString('utf8')
+    .trim()
+    .split('\n')
+    .map((line) => JSON.parse(line));
+  assert.equal(rows.length, 2);
+  assert.equal(rows[0].order_id, rows[1].order_id);
 });
 
 test('starts the pinned MinIO image on loopback only', () => {
@@ -81,7 +91,7 @@ test('serves only the authorized JSONL fixture over TLS', async (context) => {
   const response = await requestFixture({ port, cert, token: 'het2-fixture-bearer-token' });
   const bytes = response.body;
   assert.equal(response.statusCode, 200);
-  assert.equal(createHash('sha256').update(bytes).digest('hex'), fixtureManifest.sha256);
+  assert.equal(sha256Hex(bytes), fixtureManifest.sha256);
   const denied = await requestFixture({ port, cert, token: 'wrong' });
   assert.equal(denied.statusCode, 401);
   const failed = await requestFixture({
@@ -98,10 +108,7 @@ test('serves only the authorized JSONL fixture over TLS', async (context) => {
     requestPath: '/integrity-mismatch',
   });
   assert.equal(mismatched.statusCode, 200);
-  assert.notEqual(
-    createHash('sha256').update(mismatched.body).digest('hex'),
-    fixtureManifest.sha256
-  );
+  assert.notEqual(sha256Hex(mismatched.body), fixtureManifest.sha256);
   assert.equal(mismatched.body.byteLength, fixtureManifest.sizeBytes);
 });
 

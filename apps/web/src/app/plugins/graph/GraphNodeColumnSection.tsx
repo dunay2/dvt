@@ -33,6 +33,38 @@ export type GraphNodeColumnSectionProps = Readonly<{
   onAutomap?: () => void;
 }>;
 
+export function resolveGraphNodeColumnInteractionProps(args: {
+  nodeId: string;
+  nodeRole: string;
+  data: Record<string, unknown>;
+}) {
+  const { data } = args;
+  return {
+    nodeId: args.nodeId,
+    columnPortDirections: Array.isArray(data.columnPortDirections)
+      ? (data.columnPortDirections as readonly GraphNodeColumnPortDirection[])
+      : [],
+    activeColumnHandleId:
+      typeof data.activeColumnHandleId === 'string' ? data.activeColumnHandleId : null,
+    onColumnPortActivate:
+      typeof data.onColumnPortActivate === 'function'
+        ? (data.onColumnPortActivate as (identity: GraphNodeColumnPortIdentity) => void)
+        : undefined,
+    onColumnDisclosureChange:
+      typeof data.onColumnDisclosureChange === 'function'
+        ? (data.onColumnDisclosureChange as (nodeId: string, expanded: boolean) => void)
+        : undefined,
+    onColumnLayoutChange:
+      typeof data.onColumnLayoutChange === 'function'
+        ? (data.onColumnLayoutChange as () => void)
+        : undefined,
+    onAutomapColumns:
+      args.nodeRole === 'transform' && typeof data.onAutomapColumns === 'function'
+        ? (data.onAutomapColumns as (nodeId: string, columns: readonly GraphNodeColumn[]) => void)
+        : undefined,
+  };
+}
+
 const MAX_PREVIEW_COLUMNS = 5;
 
 export function GraphNodeColumnSection({
@@ -50,6 +82,7 @@ export function GraphNodeColumnSection({
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = resolveGraphNodeCardCopy(applicationLanguage);
   const columnListId = useId();
+  const portDirectionKey = portDirections.join(':');
   const visibleColumns = showAllColumns ? columns : columns.slice(0, MAX_PREVIEW_COLUMNS);
   const remainingColumnCount = Math.max(columns.length - MAX_PREVIEW_COLUMNS, 0);
   const remainderActionLabel = copy.remainingColumnsLabelTemplate.replace(
@@ -67,7 +100,13 @@ export function GraphNodeColumnSection({
 
   useEffect(() => {
     onColumnLayoutChange?.();
-  }, [columnsExpanded, onColumnLayoutChange, showAllColumns, visibleColumns.length]);
+  }, [
+    columnsExpanded,
+    onColumnLayoutChange,
+    portDirectionKey,
+    showAllColumns,
+    visibleColumns.length,
+  ]);
 
   return (
     <div data-slot="graph-node-column-section" className={graphNodeColumnClasses.shell}>

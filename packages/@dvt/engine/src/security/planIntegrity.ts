@@ -16,10 +16,9 @@ import {
   type RunExecutionPolicy,
   type ScopedPlanRef,
 } from '@dvt/contracts';
-import { jcsCanonicalize } from '@dvt/crypto';
+import { jcsCanonicalize, sha256Hex, sha256HexUtf8 } from '@dvt/crypto';
 
 import { type IClock, parseIsoUtcToEpochMs } from '../utils/clock.js';
-import { sha256Hex } from '../utils/sha256.js';
 
 export class PlanIntegrityValidator {
   private readonly clock: IClock;
@@ -102,5 +101,5 @@ function derivePlanId(plan: ExecutionPlan): string {
     },
     steps: plan.steps,
   });
-  return sha256Hex(canonical);
+  return sha256HexUtf8(canonical);
 }

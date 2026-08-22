@@ -1,5 +1,4 @@
 const assert = require('node:assert/strict');
-const crypto = require('node:crypto');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -9,141 +8,25 @@ const yaml = require('js-yaml');
 const {
   PlanningDbExportRunner,
   canonicalArtifactPaths,
-  canonicalStateArtifactPath,
   governanceUnitManifestPath,
   governanceUnitNavigationPath,
   planStoreNavigationPath,
 } = require('./planning-db-export.cjs');
-const { architectureStateTableNames } = require('./planning-db-architecture-state.cjs');
-
-function emptyArchitectureState() {
-  return Object.fromEntries(architectureStateTableNames.map((tableName) => [tableName, []]));
-}
-
-function createCanonicalStateFixture(repoRoot) {
+function createPublicationFixture(repoRoot) {
   const runner = new PlanningDbExportRunner({
     fs,
     os,
     path,
     repoRoot,
     schemaName: 'planning_query_store',
-    readArchitectureState: async () => architectureState,
   });
-  const rail = {
-    railId: 'local#MVP#query#readcomponent',
-    featureId: 'MVP',
-    mechanizationStatus: 'implemented',
-    railName: 'ReadComponent',
-    normalizedRailName: 'readcomponent',
-    railType: 'query',
-    dddOwner: 'ArchitectureCatalog',
-    railStatus: 'implemented',
-    symbolRefs: ['scripts/planning-db-export.cjs#PlanningDbExportRunner'],
-    implementationRefs: ['scripts/planning-db-export.cjs#PlanningDbExportRunner'],
-    documentationRefs: [],
-    governingSources: ['docs/architecture/command-query-rail-governance.md'],
-    allowedImplementationSurfaces: ['scripts/planning-db-export.cjs'],
-    architectureGuards: ['node --test scripts/planning-db-export.test.cjs'],
-    completionGate: ['pnpm verify:prepush'],
-    sourcePath: 'scripts/planning-db-export.cjs',
-    sourceContentSha256: 'a'.repeat(64),
-    rawRail: { name: 'ReadComponent', type: 'query' },
-    rawManifest: { featureId: 'MVP' },
-    revision: 1,
-    createdBy: 'codex',
-    createdAt: '2026-07-31T10:00:00.000Z',
-  };
-  const operation = {
-    operationId: 'feature-mechanization:test-operation',
-    idempotencyKey: 'feature-mechanization-test-operation',
-    operationType: 'feature_mechanization_rail_record',
-    actor: 'codex',
-    railId: rail.railId,
-    sourcePath: rail.sourcePath,
-    sourceContentSha256: rail.sourceContentSha256,
-    expectedRevision: null,
-    previousRevision: null,
-    resultingRevision: 1,
-    payload: { railName: rail.railName },
-    createdAt: '2026-07-31T10:00:00.000Z',
-  };
-  const architectureState = emptyArchitectureState();
-  architectureState.design = [
-    {
-      design_id: 'TEST-GOVERNANCE-PROJECTION',
-      created_at: '2026-08-09T08:00:00.000Z',
-      updated_at: '2026-08-10T12:00:00.000Z',
-    },
-  ];
-  architectureState.component = [
-    {
-      component_id: 'SYS-WEB-EXAMPLE',
-      status: 'deprecated',
-    },
-  ];
-  const componentDefinition = {
-    componentId: 'SYS-API-DOCS',
-    sourcePath: 'docs/architecture/components/api/index.md',
-    sourceContentSha256: 'b'.repeat(64),
-    revision: 1,
-    name: 'API local documentation',
-    level: 'component',
-    parentComponentId: 'SYS-API-ROOT',
-    rootUnit: 'SYS-DVT',
-    domainUnit: 'SYS-API',
-    status: 'superseded',
-    childrenRequired: false,
-    ownedConcern: 'Retired API-local documentation ownership.',
-    dddOwner: 'INFRA',
-    cqRails: 'none - API local documentation',
-    createdBy: 'codex',
-    createdAt: '2026-08-10T20:00:00.000Z',
-  };
-  const componentOperation = {
-    operationId: 'component-revise:test-operation',
-    idempotencyKey: 'component-revise-test-operation',
-    operationType: 'component_revise',
-    actor: 'codex',
-    componentId: componentDefinition.componentId,
-    sourcePath: componentDefinition.sourcePath,
-    sourceContentSha256: componentDefinition.sourceContentSha256,
-    expectedRevision: 0,
-    previousRevision: 0,
-    resultingRevision: 1,
-    payload: { status: 'superseded' },
-    createdAt: componentDefinition.createdAt,
-  };
-  const fowlerDisposition = {
-    documentPath: 'docs/architecture/example.md',
-    dispositionStatus: 'accepted',
-    dispositionKind: 'db_authority_historical',
-    canonicalTargetPath: null,
-    reason: 'Planning DB is current authority.',
-    sourceContentSha256: 'c'.repeat(64),
-    recordedBy: 'codex',
-    recordedAt: '2026-08-11T12:00:00.000Z',
-    rawDisposition: { dispositionKind: 'db_authority_historical' },
-  };
-  const fowlerOperation = {
-    operationId: 'fowler-analysis:test-operation',
-    idempotencyKey: 'fowler-analysis-test-operation',
-    operationType: 'fowler_analysis_disposition_record',
-    actor: 'codex',
-    documentPath: fowlerDisposition.documentPath,
-    targetPath: null,
-    referencePath: null,
-    relationType: null,
-    sourceContentSha256: fowlerDisposition.sourceContentSha256,
-    payload: { dispositionKind: 'db_authority_historical' },
-    createdAt: fowlerDisposition.recordedAt,
-  };
   const dbGovernanceSurface = {
     surfaceName: 'Governance component definition',
     canonicalSource: 'DB-authored component definitions',
     writeRail: 'pnpm planning:db:operate component create|revise|reparent',
     writeRailKind: 'db_command',
     readQueryRail: 'pnpm planning:db:query component-tree|component-metadata',
-    projection: 'Explicit canonical export',
+    projection: 'Explicit publication',
     validation: 'pnpm planning:db:current-schema:check',
     authorityMode: 'database',
   };
@@ -222,47 +105,25 @@ function createCanonicalStateFixture(repoRoot) {
       if (text.includes('governance_unit_query definition')) {
         return { rows: effectiveComponentDefinitions };
       }
-      if (text.includes('feature_mechanization_local_operations operation')) {
-        return { rows: [operation] };
-      }
-      if (text.includes('feature_mechanization_local_rails rail')) {
-        return { rows: [rail] };
-      }
-      if (text.includes('governance_component_local_definitions definition')) {
-        return { rows: [componentDefinition] };
-      }
-      if (text.includes('governance_component_local_operations operation')) {
-        return { rows: [componentOperation] };
-      }
       if (text.includes('db_governance_surfaces surface')) {
         return { rows: [dbGovernanceSurface] };
       }
-      if (text.includes('fowler_analysis_dispositions disposition')) {
-        return { rows: [fowlerDisposition] };
-      }
-      if (text.includes('fowler_analysis_operations operation')) {
-        return { rows: [fowlerOperation] };
+      if (text.includes('from architecture.design design')) {
+        return { rows: [{ lastReviewedAt: '2026-08-10T12:00:00.000Z' }] };
       }
       return { rows: [] };
     },
   };
 
   return {
-    architectureState,
     client,
-    componentDefinition,
-    componentOperation,
     dbGovernanceSurface,
     effectiveComponentDefinitions,
-    fowlerDisposition,
-    fowlerOperation,
-    operation,
-    rail,
     runner,
   };
 }
 
-test('planning DB export accepts canonical-state options only', () => {
+test('planning DB export exposes only explicit derived publication artifacts', () => {
   const runner = new PlanningDbExportRunner();
 
   assert.deepEqual(runner.parseArgs(['--check', '--output-root', 'tmp/export']), {
@@ -271,12 +132,25 @@ test('planning DB export accepts canonical-state options only', () => {
   });
   assert.throws(() => runner.parseArgs(['--lane', 'E']), /Unknown planning DB export option/);
   assert.deepEqual(canonicalArtifactPaths, [
-    canonicalStateArtifactPath,
     'tools/planning-db/state/db-governance-surfaces.json',
     governanceUnitManifestPath,
     governanceUnitNavigationPath,
     planStoreNavigationPath,
   ]);
+});
+
+test('governance surface validations never make DB export a routine gate', () => {
+  const catalog = JSON.parse(
+    fs.readFileSync(
+      path.resolve(__dirname, '..', 'tools', 'planning-db', 'state', 'db-governance-surfaces.json'),
+      'utf8'
+    )
+  );
+
+  for (const surface of catalog.surfaces) {
+    assert.doesNotMatch(surface.validation, /(?:planning|governance):db:export(?::check)?/u);
+    assert.doesNotMatch(surface.writeRail, /then export/iu);
+  }
 });
 
 test('planning DB export compares governance YAML by structured meaning', () => {
@@ -290,76 +164,42 @@ test('planning DB export compares governance YAML by structured meaning', () => 
   );
 });
 
-test('planning DB export reads current architecture state and every current feature rail', async () => {
+test('planning DB export reads only the rows required by explicit derived projections', async () => {
   const capturedSql = [];
-  let architectureReads = 0;
   const runner = new PlanningDbExportRunner({
     schemaName: 'planning_query_store',
-    readArchitectureState: async () => {
-      architectureReads += 1;
-      return emptyArchitectureState();
-    },
   });
   const client = {
     async query(sql) {
-      capturedSql.push(String(sql));
+      const text = String(sql);
+      capturedSql.push(text);
+      if (text.includes('from architecture.design design')) {
+        return { rows: [{ lastReviewedAt: '2026-08-10T12:00:00.000Z' }] };
+      }
       return { rows: [] };
     },
   };
 
-  await runner.readCanonicalStateRows(client);
+  await runner.readPublicationRows(client);
 
-  assert.ok(capturedSql.some((sql) => /feature_mechanization_local_rails/u.test(sql)));
-  assert.ok(capturedSql.some((sql) => /feature_mechanization_local_operations/u.test(sql)));
-  const operationExportSql = capturedSql.find((sql) =>
-    /feature_mechanization_local_operations/u.test(sql)
-  );
-  assert.doesNotMatch(operationExportSql, /where exists[\s\S]*feature_mechanization_local_rails/u);
-  assert.ok(capturedSql.some((sql) => /governance_component_local_definitions/u.test(sql)));
-  assert.ok(capturedSql.some((sql) => /governance_component_local_ownership_patterns/u.test(sql)));
-  assert.ok(capturedSql.some((sql) => /governance_component_local_semantic_items/u.test(sql)));
-  assert.ok(capturedSql.some((sql) => /governance_component_local_operations/u.test(sql)));
   assert.ok(capturedSql.some((sql) => /db_governance_surfaces/u.test(sql)));
   assert.ok(capturedSql.some((sql) => /governance_unit_query/u.test(sql)));
-  assert.ok(capturedSql.some((sql) => /fowler_analysis_dispositions/u.test(sql)));
-  assert.ok(capturedSql.some((sql) => /fowler_analysis_operations/u.test(sql)));
-  assert.equal(architectureReads, 1);
+  assert.ok(capturedSql.some((sql) => /architecture\.design/u.test(sql)));
+  assert.ok(capturedSql.every((sql) => !/feature_mechanization_local_/u.test(sql)));
+  assert.ok(capturedSql.every((sql) => !/governance_component_local_/u.test(sql)));
+  assert.ok(capturedSql.every((sql) => !/fowler_analysis_/u.test(sql)));
 });
 
-test('planning DB export writes deterministic current architecture state', async () => {
-  const outputRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'planning-db-canonical-state-'));
-  const {
-    architectureState,
-    client,
-    componentDefinition,
-    componentOperation,
-    dbGovernanceSurface,
-    fowlerDisposition,
-    fowlerOperation,
-    operation,
-    rail,
-    runner,
-  } = createCanonicalStateFixture('C:/repo');
+test('planning DB export writes derived projections without an integral database snapshot', async () => {
+  const outputRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'planning-db-publication-'));
+  const { client, dbGovernanceSurface, runner } = createPublicationFixture('C:/repo');
 
   try {
     const result = await runner.exportPlanningDerivedSurfaces({ client, outputRoot });
-    const snapshot = JSON.parse(
-      fs.readFileSync(path.join(outputRoot, canonicalStateArtifactPath), 'utf8')
+    assert.equal(
+      fs.existsSync(path.join(outputRoot, 'tools', 'planning-db', 'state', 'canonical-state.json')),
+      false
     );
-
-    assert.equal(snapshot.schemaVersion, 1);
-    assert.deepEqual(snapshot.architectureState, architectureState);
-    assert.deepEqual(snapshot.featureMechanizationRails, [rail]);
-    assert.deepEqual(snapshot.featureMechanizationRailOperations, [operation]);
-    assert.deepEqual(snapshot.governanceComponentDefinitions, [componentDefinition]);
-    assert.deepEqual(snapshot.governanceComponentOperations, [componentOperation]);
-    assert.deepEqual(snapshot.governanceComponentOwnershipPatterns, []);
-    assert.deepEqual(snapshot.governanceComponentSemanticItems, []);
-    assert.deepEqual(snapshot.fowlerAnalysisDispositions, [fowlerDisposition]);
-    assert.deepEqual(snapshot.fowlerAnalysisCanonicalTargets, []);
-    assert.deepEqual(snapshot.fowlerAnalysisReferenceResolutions, []);
-    assert.deepEqual(snapshot.fowlerAnalysisRetirementDecisions, []);
-    assert.deepEqual(snapshot.fowlerAnalysisOperations, [fowlerOperation]);
     assert.deepEqual(
       JSON.parse(
         fs.readFileSync(
@@ -435,48 +275,28 @@ test('planning DB export writes deterministic current architecture state', async
   }
 });
 
-test('planning DB export hashes text rails identically for CRLF and LF worktrees', async () => {
-  const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'planning-db-export-eol-'));
-  const sourcePath = path.join(repoRoot, 'scripts', 'planning-db-export.cjs');
-  fs.mkdirSync(path.dirname(sourcePath), { recursive: true });
-  fs.writeFileSync(sourcePath, 'first\r\nsecond\r\n', 'utf8');
-  const { client, runner } = createCanonicalStateFixture(repoRoot);
-
-  try {
-    const rows = await runner.readCanonicalStateRows(client);
-    assert.equal(
-      rows.featureMechanizationRails[0].sourceContentSha256,
-      crypto.createHash('sha256').update('first\nsecond\n').digest('hex')
-    );
-  } finally {
-    fs.rmSync(repoRoot, { recursive: true, force: true });
-  }
-});
-
-test('planning DB export check rejects canonical architecture-state drift', async () => {
+test('planning DB export check rejects derived publication drift', async () => {
   const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'planning-db-export-check-'));
-  const { client, runner } = createCanonicalStateFixture(repoRoot);
-  const canonicalPath = path.join(repoRoot, canonicalStateArtifactPath);
+  const { client, runner } = createPublicationFixture(repoRoot);
+  const catalogPath = path.join(
+    repoRoot,
+    'tools',
+    'planning-db',
+    'state',
+    'db-governance-surfaces.json'
+  );
 
   try {
-    fs.mkdirSync(path.dirname(canonicalPath), { recursive: true });
+    fs.mkdirSync(path.dirname(catalogPath), { recursive: true });
     fs.writeFileSync(
-      canonicalPath,
-      `${JSON.stringify(
-        {
-          schemaVersion: 1,
-          featureMechanizationRails: [],
-          featureMechanizationRailOperations: [],
-        },
-        null,
-        2
-      )}\n`,
+      catalogPath,
+      `${JSON.stringify({ schemaVersion: 1, surfaces: [] }, null, 2)}\n`,
       'utf8'
     );
 
     await assert.rejects(
       runner.exportPlanningDerivedSurfaces({ check: true, client }),
-      /canonical-state\.json/
+      /db-governance-surfaces\.json/
     );
   } finally {
     fs.rmSync(repoRoot, { recursive: true, force: true });

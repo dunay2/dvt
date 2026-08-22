@@ -9,6 +9,8 @@ export const canvasViewExecutionCopyEs = {
     'Código de proyecto contiene una edición más reciente en {path}. El Preview se ha detenido sin sobrescribirla. Continúa desde un proyecto DBT con autoridad de archivos o restaura la revisión generada por el Canvas.',
   planGraphAuthorityRefusedMessage:
     'La previsualización se detuvo porque este Canvas no tiene autoridad graph-draft exclusiva. Abre el proyecto con autoridad de ficheros o resuelve el conflicto de autoridad del Canvas.',
+  planGraphDbtCompilationFailedMessage:
+    'La previsualización se detuvo porque la compilación nativa de DBT no validó los modelos generados. Revisa el SQL del modelo y la configuración del destino.',
   previewProvenanceTransformPathRequiredMessage:
     'Execution Preview necesita contenido SQL. Selecciona un fichero SQL del workspace para el SQL transform o usa un transform creado en el canvas para que DVT lo cree.',
   previewProvenanceWorkspaceNotConfiguredMessage:
@@ -176,7 +178,7 @@ export const canvasViewExecutionCopyEs = {
   operationalDrawerInfoSeverity: 'Información',
   operationalDrawerWarningSeverity: 'Advertencia',
   operationalDrawerErrorSeverity: 'Error',
-  operationalDrawerPlanIntegrityBlocker: 'Integridad del Execution Preview',
+  operationalDrawerPlanIntegrityBlocker: 'Vista previa',
   operationalDrawerBackpressureBlocker: 'Saturación temporal',
   operationalDrawerCapabilityMismatchBlocker: 'Capacidad incompatible',
   operationalDrawerAdapterDegradedBlocker: 'Adaptador degradado',
@@ -185,29 +187,29 @@ export const canvasViewExecutionCopyEs = {
     'La admisión del runtime está temporalmente saturada. Reinténtalo cuando se recupere la capacidad.',
   planStatusAdapterDegradedMessage:
     'El adaptador de ejecución está degradado. El arranque seguirá bloqueado hasta que se recupere el runtime.',
-  selectionRecoveryTitle: 'Selección de ejecución',
+  selectionRecoveryTitle: 'Qué se va a ejecutar',
   selectionRecoveryReadyStatus: 'lista',
   selectionRecoveryBlockedStatus: 'bloqueada',
-  selectionRecoveryRequestedRootsLabel: 'Raíces solicitadas',
-  selectionRecoveryUnavailableRootsLabel: 'Raíces no disponibles',
-  selectionRecoveryNonExecutableRootsLabel: 'Raíces no ejecutables',
-  selectionRecoveryDerivedDependenciesLabel: 'Dependencias derivadas',
-  selectionRecoveryAdmittedScopeLabel: 'Alcance admitido',
-  selectionRecoveryLastPreviewRevisionLabel: 'Última revisión del preview',
+  selectionRecoveryRequestedRootsLabel: 'Nodos seleccionados',
+  selectionRecoveryUnavailableRootsLabel: 'Nodos que ya no están disponibles',
+  selectionRecoveryNonExecutableRootsLabel: 'Nodos que no se pueden ejecutar',
+  selectionRecoveryDerivedDependenciesLabel: 'Dependencias incluidas',
+  selectionRecoveryAdmittedScopeLabel: 'Nodos que se ejecutarán',
+  selectionRecoveryLastPreviewRevisionLabel: 'Última vista previa',
   selectionRecoveryEmptyValue: 'Ninguno',
-  selectionRecoveryDiscardUnavailableAction: 'Descartar selección no disponible',
-  selectionRecoveryUseWorkspaceScopeAction: 'Usar alcance del workspace',
-  selectionRecoveryRefreshAnalysisAction: 'Mantener bloqueo y actualizar análisis',
-  selectionRecoveryRefreshingAnalysisAction: 'Actualizando análisis autoritativo...',
-  selectionRecoveryRefreshFailureMessage: 'No se pudo actualizar el análisis autoritativo.',
-  selectionRecoveryProblemSummary: 'La selección de ejecución requiere recuperación.',
+  selectionRecoveryDiscardUnavailableAction: 'Quitar nodos no disponibles',
+  selectionRecoveryUseWorkspaceScopeAction: 'Ejecutar todo el flujo',
+  selectionRecoveryRefreshAnalysisAction: 'Volver a comprobar',
+  selectionRecoveryRefreshingAnalysisAction: 'Comprobando la selección...',
+  selectionRecoveryRefreshFailureMessage: 'No se pudo volver a comprobar la selección.',
+  selectionRecoveryProblemSummary: 'No se puede crear la vista previa con la selección actual.',
   selectionRecoveryProblemDetail:
-    'Las raíces solicitadas no disponibles o no ejecutables deben resolverse antes del Preview.',
-  selectionRecoveryBlockerLabel: 'Selección de ejecución',
+    'Selecciona un modelo, una prueba o una instantánea, o ejecuta todo el flujo. Los orígenes aportan datos, pero no se ejecutan por sí solos.',
+  selectionRecoveryBlockerLabel: 'Selección para ejecutar',
   selectionRecoveryDiscardReceiptTemplate:
-    'Raíces no disponibles descartadas: {affected}. Raíces explícitas conservadas: {retained}.',
+    'Nodos no disponibles retirados: {affected}. Nodos seleccionados conservados: {retained}.',
   selectionRecoveryWorkspaceReceiptTemplate:
-    'Raíces explícitas reemplazadas: {affected} por el alcance del workspace.',
+    'Nodos seleccionados sustituidos: {affected} por todo el flujo.',
   selectionRecoveryRefreshReceiptTemplate:
-    'Raíces solicitadas conservadas: {retained}. Análisis autoritativo actualizado.',
+    'Nodos seleccionados conservados: {retained}. Selección comprobada de nuevo.',
 } satisfies Partial<CanvasViewCopy>;

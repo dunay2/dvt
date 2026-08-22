@@ -4,8 +4,8 @@
  * Command/query rails: `GeneratePlanningDerivedSurfaces`, `ReadArchitectureDesignAuthority`,
  * `QueryDocumentationConsultationPath`, and `ListDocumentationLifecycleFacts`.
  */
-const { createHash } = require('node:crypto');
 const { spawnSync } = require('node:child_process');
+const { createSha256Hasher, sha256Hex, sha256HexUtf8, utf8Bytes } = require('@dvt/crypto');
 const {
   cpSync,
   existsSync,
@@ -500,20 +500,20 @@ class DocumentationPublicationAssembler {
   }
 
   static hashValue(value) {
-    return createHash('sha256').update(value).digest('hex');
+    return typeof value === 'string' ? sha256HexUtf8(value) : sha256Hex(value);
   }
 
   static hashSources(sources) {
-    const hash = createHash('sha256');
+    const hash = createSha256Hasher();
     for (const source of [...sources].sort((left, right) =>
       left.sourcePath.localeCompare(right.sourcePath, 'en')
     )) {
-      hash.update(source.sourcePath);
-      hash.update('\0');
+      hash.update(utf8Bytes(source.sourcePath));
+      hash.update(utf8Bytes('\0'));
       hash.update(readFileSync(source.absolutePath));
-      hash.update('\0');
+      hash.update(utf8Bytes('\0'));
     }
-    return hash.digest('hex');
+    return hash.digestHex();
   }
 
   buildLifecycleState(lifecycleRows, authoredSources, options = {}) {
@@ -657,17 +657,17 @@ class DocumentationPublicationAssembler {
   }
 
   static hashFiles(root) {
-    const hash = createHash('sha256');
+    const hash = createSha256Hasher();
     const files = DocumentationPublicationPolicy.walkFiles(root).sort((left, right) =>
       left.localeCompare(right, 'en')
     );
     for (const absolutePath of files) {
-      hash.update(DocumentationPublicationPolicy.toPosix(relative(root, absolutePath)));
-      hash.update('\0');
+      hash.update(utf8Bytes(DocumentationPublicationPolicy.toPosix(relative(root, absolutePath))));
+      hash.update(utf8Bytes('\0'));
       hash.update(readFileSync(absolutePath));
-      hash.update('\0');
+      hash.update(utf8Bytes('\0'));
     }
-    return hash.digest('hex');
+    return hash.digestHex();
   }
 
   async assemble(options = {}) {

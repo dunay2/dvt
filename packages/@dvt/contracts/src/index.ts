@@ -438,7 +438,5 @@ export * from './errorContract.js';
 export * from './errors.js';
 export * from './schemas.js';
 export * from './step-registry/StepTypeRegistry.js';
-export * from './utils/jcsCanonicalize.js';
-export * from './utils/sha256HexUtf8.js';
 export * from './utils/contractPrimitives.js';
 export * from './validation.js';

@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 
-import { jcsCanonicalize, type PlanStoreScope, type PlannerBuildResultV1 } from '@dvt/contracts';
+import { type PlanStoreScope, type PlannerBuildResultV1 } from '@dvt/contracts';
+import { jcsCanonicalize } from '@dvt/crypto';
 import { Client } from 'pg';
 import { describe } from 'vitest';
 

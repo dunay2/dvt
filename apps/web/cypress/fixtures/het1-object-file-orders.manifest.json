@@ -1,8 +1,8 @@
 {
   "bucket": "het1-fixtures",
-  "objectKey": "tenants/tenant/3ff52e79a7b084a0ad5bb48a3250c85645e12435caecc84950cffbe1cc88b88f",
-  "storageUri": "s3://het1-fixtures/tenants/tenant/3ff52e79a7b084a0ad5bb48a3250c85645e12435caecc84950cffbe1cc88b88f",
-  "sha256": "3ff52e79a7b084a0ad5bb48a3250c85645e12435caecc84950cffbe1cc88b88f",
+  "objectKey": "tenants/tenant/51c4952aa52f656a05452c883c67fc0198699fef68e030685ef1e2b5206f415c",
+  "storageUri": "s3://het1-fixtures/tenants/tenant/51c4952aa52f656a05452c883c67fc0198699fef68e030685ef1e2b5206f415c",
+  "sha256": "51c4952aa52f656a05452c883c67fc0198699fef68e030685ef1e2b5206f415c",
   "integrityMismatchObject": {
     "objectKey": "tenants/tenant/0000000000000000000000000000000000000000000000000000000000000000",
     "storageUri": "s3://het1-fixtures/tenants/tenant/0000000000000000000000000000000000000000000000000000000000000000",

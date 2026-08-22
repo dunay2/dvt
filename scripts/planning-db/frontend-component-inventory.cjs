@@ -1,7 +1,7 @@
 /** Owned concern: import and query frontend component reflection as a DB-first read model. */
-const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
+const { sha256HexUtf8 } = require('@dvt/crypto');
 
 const { schemaName } = require('../planning-db-schema.cjs');
 const {
@@ -129,10 +129,6 @@ const requiredHeadersBySection = {
   ],
 };
 
-function sha256(value) {
-  return crypto.createHash('sha256').update(value).digest('hex');
-}
-
 function toPosix(filePath) {
   return filePath.replace(/\\/g, '/');
 }
@@ -226,7 +222,7 @@ function sectionTableRows(documentContent, sectionName) {
 }
 
 function parseInventoryDocument(document) {
-  const sourceContentSha256 = sha256(document.content);
+  const sourceContentSha256 = sha256HexUtf8(document.content);
   const components = sectionTableRows(document.content, 'Frontend Components').map(
     ({ cells, indexes, headers }) => {
       const componentId = rowValue(cells, indexes, 'Component ID');

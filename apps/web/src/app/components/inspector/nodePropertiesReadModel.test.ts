@@ -11,10 +11,10 @@ import {
 
 const presentationCopy = {
   columnsLabel: 'Columns',
-  declaredColumnsDetailTemplate: '{count} declared columns.',
-  inheritedColumnsDetailTemplate: '{count} inherited columns.',
-  mixedColumnsDetailTemplate: '{declared} mapped and {available} available columns.',
-  noColumnsDetail: 'No columns.',
+  declaredColumnsDetailTemplate: 'Inherited: 0 · Declared: {count}',
+  inheritedColumnsDetailTemplate: 'Inherited: {count} · Declared: 0',
+  mixedColumnsDetailTemplate: 'Inherited: {available} · Declared: {declared}',
+  noColumnsDetail: 'Inherited: 0 · Declared: 0',
   codeLabel: 'Code',
   workspaceCodeDetailTemplate: 'Code lives at {path}.',
   generatedCodeDetailTemplate: 'Generated code at {path}.',
@@ -248,6 +248,80 @@ describe('nodePropertiesReadModel', () => {
   });
 
   it.each([
+    { locale: 'en', connectionLabel: 'Connection' },
+    { locale: 'es', connectionLabel: 'Conexión' },
+  ])(
+    'projects inherited transform connection context in Inputs / Outputs for $locale',
+    ({ locale, connectionLabel }) => {
+      const source = buildSourceNode();
+      const model = buildNodePropertiesReadModel({
+        node: downstreamNode,
+        nodes: [source, downstreamNode],
+        edges: graphEdges,
+        presentationCopy: buildCanvasNodePresentationCopy(resolveCanvasViewCopy(locale), locale),
+      });
+      const inputsOutputs = sectionById(model, 'inputs-outputs');
+
+      expect(inputsOutputs.columnLabels).toMatchObject({ connection: connectionLabel });
+      expectTableCells(inputsOutputs, 'input:edge-source-transform', {
+        direction: locale === 'es' ? 'Entrada' : 'Input',
+        node: 'Orders Source',
+        connection: 'postgres · warehouse-prod',
+      });
+    }
+  );
+
+  it('projects a fan-in transform connection once on the input branch that supplies it', () => {
+    const primarySource = buildSourceNode();
+    const secondarySource = buildSourceNode({
+      id: 'src-returns',
+      name: 'Returns Source',
+      metadata: {
+        ...buildSourceNode().metadata,
+        connectedSourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'warehouse-secondary',
+            provider: 'postgres',
+          },
+          sourceObjectId: 'relation/analytics/raw/returns',
+        },
+      },
+    });
+    const fanInEdges: readonly CanonicalEdge[] = [
+      graphEdges[0]!,
+      {
+        id: 'edge-returns-transform',
+        sourceId: secondarySource.id,
+        targetId: downstreamNode.id,
+        relation: 'lineage',
+      },
+    ];
+    const model = buildNodePropertiesReadModel({
+      node: downstreamNode,
+      nodes: [primarySource, secondarySource, downstreamNode],
+      edges: fanInEdges,
+      presentationCopy,
+    });
+    const inputsOutputs = sectionById(model, 'inputs-outputs');
+
+    expectTableCells(inputsOutputs, 'input:edge-source-transform', {
+      node: 'Orders Source',
+    });
+    expect(
+      inputsOutputs.tableRows.find((row) => row.id === 'input:edge-source-transform')?.cells
+    ).not.toHaveProperty('connection');
+    expectTableCells(inputsOutputs, 'input:edge-returns-transform', {
+      node: 'Returns Source',
+      connection: 'postgres · warehouse-secondary',
+    });
+    expect(
+      inputsOutputs.tableRows.filter((row) => row.cells.connection !== undefined)
+    ).toHaveLength(1);
+  });
+
+  it.each([
     { locale: 'en', label: 'Connection' },
     { locale: 'es', label: 'Conexión' },
   ])('exposes the complete read-only connection binding in $locale', ({ locale, label }) => {
@@ -365,10 +439,12 @@ describe('nodePropertiesReadModel', () => {
       status: 'idle',
       tags: [],
       metadata: {
-        testTargetModel: 'orders',
-        testTargetColumn: 'order_id',
-        severity: 'error',
-        testType: 'not_null',
+        dbtTest: {
+          targetModelId: 'orders',
+          targetColumn: 'order_id',
+          severity: 'error',
+          testType: 'not_null',
+        },
       },
     };
 
@@ -797,7 +873,7 @@ describe('nodePropertiesReadModel', () => {
       reference: 'source-orders.customer',
       selection: 'selected',
     });
-    expect(sectionById(model, 'columns').description).toBe('2 inherited columns.');
+    expect(sectionById(model, 'columns').description).toBe('Inherited: 2 · Declared: 0');
     const codeSection = sectionById(model, 'code');
     expect(codeSection).toMatchObject({
       label: 'Code',

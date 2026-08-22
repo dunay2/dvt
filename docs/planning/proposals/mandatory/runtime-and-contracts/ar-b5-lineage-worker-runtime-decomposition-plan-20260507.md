@@ -12,8 +12,8 @@ archived_record: docs/planning/archive/proposals/ar-b5-lineage-worker-runtime-de
 The lineage runtime bounded context owns its internal orchestration application
 port. Production behavior remains in the engine and Temporal adapters; this
 contract does not assert a Planning DB rail for that runtime-only behavior.
-Planning DB contains only current component, relation, responsibility, and
-evidence facts in `tools/planning-db/state/canonical-state.json`.
+Planning DB contains current component, relation, responsibility, and evidence
+facts and exposes them through governed queries.
 
 Validation is the affected engine and Temporal package tests, architecture
 integrity checks, and `pnpm verify:prepush`. Product runtime persistence remains

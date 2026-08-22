@@ -67,7 +67,7 @@ Key design decisions:
 - **Shared Kernel surface area**: `@dvt/contracts` combines Zod validation,
   TypeScript types, and runtime schema parsing in a single package. As the
   contract surface grows, this creates a heavy transitive dependency for
-  lightweight consumers (e.g., `@dvt/canonical`, `@dvt/dsl`) that only need
+  lightweight consumers (e.g., `@dvt/crypto`, `@dvt/dsl`) that only need
   types, not Zod runtime. Splitting into `@dvt/contracts-types` (zero-runtime)
   and `@dvt/contracts-schemas` (Zod) would reduce bundle weight for leaf
   packages.
@@ -106,11 +106,10 @@ flowchart TB
 
   subgraph Planning["Planning Domain"]
     planner["@dvt/planner<br/>Plan generation"]:::impl
-    plancontracts["@dvt/planner-contracts<br/>Planner interfaces"]:::impl
     interpreter["@dvt/plan-interpreter<br/>Plan parsing"]:::impl
     verifier["@dvt/plan-verifier<br/>Plan verification"]:::impl
     dsl["@dvt/dsl<br/>Workflow DSL"]:::impl
-    canonical["@dvt/canonical<br/>Canonical forms"]:::impl
+    canonical["@dvt/crypto<br/>Crypto primitives"]:::impl
   end
 
   subgraph Delivery["Delivery Domain"]
@@ -137,7 +136,6 @@ flowchart TB
   rundomain --> contracts
   delivery --> contracts
   planner --> contracts
-  planner --> plancontracts
   interpreter --> contracts
   temporal --> contracts
   postgres --> contracts
@@ -306,10 +304,9 @@ flowchart LR
   obsotel["@dvt/observability-otel"]:::impl
   artifacts["@dvt/artifacts"]:::impl
   planner["@dvt/planner"]:::impl
-  plancontracts["@dvt/planner-contracts"]:::impl
   interpreter["@dvt/plan-interpreter"]:::impl
   verifier["@dvt/plan-verifier"]:::impl
-  canonical["@dvt/canonical"]:::impl
+  canonical["@dvt/crypto"]:::impl
   dsl["@dvt/dsl"]:::impl
   statestore["@dvt/state-store"]:::impl
   cli["@dvt/cli"]:::impl
@@ -326,7 +323,6 @@ flowchart LR
   delivery --> contracts
   delivery --> obs
   planner --> contracts
-  planner --> plancontracts
   interpreter --> contracts
   verifier --> contracts
   canonical --> contracts

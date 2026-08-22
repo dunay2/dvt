@@ -86,6 +86,33 @@ describe('ObjectFilePostgresAuthoringFields', () => {
     ).toHaveLength(2);
   });
 
+  it('removes added mappings but keeps the contract-required final row', () => {
+    act(() => root.render(<Harness />));
+
+    const removeLabel = 'Remove column mapping';
+    expect(
+      container.querySelector<HTMLButtonElement>(`button[aria-label="${removeLabel}"]`)?.disabled
+    ).toBe(true);
+
+    const addColumn = Array.from(container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Add column mapping')
+    );
+    act(() => addColumn?.click());
+
+    const removeButtons = container.querySelectorAll<HTMLButtonElement>(
+      `button[aria-label="${removeLabel}"]`
+    );
+    expect(removeButtons).toHaveLength(2);
+    expect(removeButtons[1]?.disabled).toBe(false);
+
+    act(() => removeButtons[1]?.click());
+
+    expect(container.querySelector('[data-slot="column-count-draft"]')?.textContent).toBe('1');
+    expect(
+      container.querySelector<HTMLButtonElement>(`button[aria-label="${removeLabel}"]`)?.disabled
+    ).toBe(true);
+  });
+
   it('renders actionable localized validation errors at their owning fields', () => {
     act(() => root.render(<Harness />));
 

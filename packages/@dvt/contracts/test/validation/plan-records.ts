@@ -1,7 +1,6 @@
+import { jcsCanonicalize, sha256HexUtf8 } from '@dvt/crypto';
 import { describe, expect, it } from 'vitest';
 
-import { jcsCanonicalize } from '../../src/utils/jcsCanonicalize.js';
-import { sha256HexUtf8 } from '../../src/utils/sha256HexUtf8.js';
 import {
   ContractValidationError,
   parsePlanAdmissionLink,

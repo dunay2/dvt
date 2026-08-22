@@ -67,13 +67,10 @@ export const canvasViewAuthoringCopyEs = {
   inspectorEditablePropertiesDescription:
     'Nombre, etiquetas y descripción guardados con este canvas.',
   nodePresentationColumnsLabel: 'Columnas',
-  nodePresentationDeclaredColumnsDetailTemplate: '{count} columnas declaradas por este nodo.',
-  nodePresentationInheritedColumnsDetailTemplate:
-    '{count} columnas heredadas de las entradas conectadas; ninguna declarada por este nodo.',
-  nodePresentationMixedColumnsDetailTemplate:
-    'Columnas asignadas: {declared}. Columnas de entrada disponibles: {available}.',
-  nodePresentationNoColumnsDetail:
-    'No hay columnas declaradas ni heredadas disponibles para este nodo.',
+  nodePresentationDeclaredColumnsDetailTemplate: 'Heredadas: 0 · Declaradas: {count}',
+  nodePresentationInheritedColumnsDetailTemplate: 'Heredadas: {count} · Declaradas: 0',
+  nodePresentationMixedColumnsDetailTemplate: 'Heredadas: {available} · Declaradas: {declared}',
+  nodePresentationNoColumnsDetail: 'Heredadas: 0 · Declaradas: 0',
   nodePresentationCodeLabel: 'Código',
   nodePresentationWorkspaceCodeDetailTemplate:
     'El código está en el archivo {path} del workspace. Abre Código para inspeccionarlo o editarlo.',
@@ -259,6 +256,8 @@ export const canvasViewAuthoringCopyEs = {
   inspectorErrorDbtTestTypeInvalid: 'Elige una regla de validación DBT admitida.',
   inspectorErrorDbtTestTargetRequired: 'Conecta y selecciona el modelo DBT que valida este test.',
   inspectorErrorDbtTestColumnInvalid: 'Introduce un identificador de columna válido.',
+  inspectorErrorDbtTestColumnNotDeclared:
+    'Selecciona una columna declarada por el modelo DBT conectado.',
   inspectorErrorDbtTestSeverityInvalid:
     'La severidad debe bloquear la ejecución o informar una advertencia.',
   inspectorErrorDvtSchemaRequired: 'El esquema es obligatorio.',

@@ -5,6 +5,10 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { projectDbtModelArtifact } from './canvasDbtModelArtifactProjection';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { DVT_TRANSFORM_AUTHORING_MODE, type VisualTransformRecipeV1 } from '@dvt/contracts';
+import {
+  isObjectFilePostgresNode,
+  resolveObjectFilePostgresAuthoringMetadata,
+} from './objectFilePostgresAuthoringModel';
 import { resolveAuthoringSqlArtifactPath } from './previewGraphNodePayloads';
 import { compileDvtVisualTransformNodeToPostgresSql } from './canvasVisualTransformSql';
 import { readDvtTransformLineageProvenance } from './canvasTransformationSqlMirror';
@@ -38,6 +42,23 @@ function projectCanvasNodePresentationTruthInternal(
     artifactProjection.ok && artifactProjection.artifact.provenance === 'generated'
       ? artifactProjection.artifact
       : null;
+  const objectFileMetadata = isObjectFilePostgresNode(args.node)
+    ? resolveObjectFilePostgresAuthoringMetadata(args.node)
+    : null;
+  const presentationNode =
+    objectFileMetadata == null
+      ? args.node
+      : {
+          ...args.node,
+          metadata: {
+            ...args.node.metadata,
+            columns: objectFileMetadata.columns.map((column) => ({
+              name: column.targetColumn,
+              type: column.dataType,
+              nullable: column.nullable,
+            })),
+          },
+        };
   let visualRecipe: VisualTransformRecipeV1 | null = null;
   let lineageRecipe: VisualTransformRecipeV1 | null = null;
   if (args.node.pluginId === 'dvt' && args.node.kind === 'dvt:sql_transform') {
@@ -85,6 +106,7 @@ function projectCanvasNodePresentationTruthInternal(
 
   const baseTruth = buildCanvasNodePresentationTruth({
     ...args,
+    node: presentationNode,
     generatedCodeIsAuthoritative: visualGeneratedCode != null,
     ...(generatedArtifact == null && visualGeneratedCode == null
       ? {}
@@ -98,23 +120,31 @@ function projectCanvasNodePresentationTruthInternal(
             } as const),
         }),
   });
-  if (args.node.role === 'output') {
-    const upstreamNodeIds = new Set(
-      args.edges.filter((edge) => edge.targetId === args.node.id).map((edge) => edge.sourceId)
+  const shouldProjectUpstreamColumns =
+    args.node.role === 'output' ||
+    (args.node.role === 'transform' &&
+      baseTruth.columns.declared.length === 0 &&
+      baseTruth.columns.inherited.length === 0);
+  const upstreamNodeIds = shouldProjectUpstreamColumns
+    ? new Set(
+        args.edges.filter((edge) => edge.targetId === args.node.id).map((edge) => edge.sourceId)
+      )
+    : new Set<string>();
+  const upstreamVisibleColumns = args.nodes
+    .filter((node) => upstreamNodeIds.has(node.id) && !nextAncestorNodeIds.has(node.id))
+    .flatMap((node) =>
+      projectCanvasNodePresentationTruthInternal(
+        { node, nodes: args.nodes, edges: args.edges },
+        nextAncestorNodeIds
+      ).columns.visible.map((column) => ({
+        ...column,
+        provenance: 'inherited' as const,
+        sourceNodeId: column.sourceNodeId ?? node.id,
+        sourceNodeName: column.sourceNodeName ?? node.name,
+      }))
     );
-    const inherited = args.nodes
-      .filter((node) => upstreamNodeIds.has(node.id) && !nextAncestorNodeIds.has(node.id))
-      .flatMap((node) =>
-        projectCanvasNodePresentationTruthInternal(
-          { node, nodes: args.nodes, edges: args.edges },
-          nextAncestorNodeIds
-        ).columns.visible.map((column) => ({
-          ...column,
-          provenance: 'inherited' as const,
-          sourceNodeId: column.sourceNodeId ?? node.id,
-          sourceNodeName: column.sourceNodeName ?? node.name,
-        }))
-      );
+  if (args.node.role === 'output') {
+    const inherited = upstreamVisibleColumns;
     const visible = baseTruth.columns.declared.length > 0 ? baseTruth.columns.declared : inherited;
     return {
       ...baseTruth,
@@ -134,8 +164,26 @@ function projectCanvasNodePresentationTruthInternal(
       },
     };
   }
+  const presentationTruth =
+    shouldProjectUpstreamColumns && args.node.role === 'transform'
+      ? (() => {
+          const inherited = upstreamVisibleColumns;
+          return {
+            ...baseTruth,
+            columns: {
+              declared: baseTruth.columns.declared,
+              inherited,
+              visible: inherited,
+              declaredCount: 0,
+              inheritedCount: inherited.length,
+              visibleCount: inherited.length,
+              visibleProvenance: inherited.length > 0 ? ('inherited' as const) : ('none' as const),
+            },
+          };
+        })()
+      : baseTruth;
   if (lineageRecipe == null) {
-    return baseTruth;
+    return presentationTruth;
   }
   const declared = lineageRecipe.outputs.map((output) => ({
     name: output.name,
@@ -144,18 +192,18 @@ function projectCanvasNodePresentationTruthInternal(
     reference: output.id,
   }));
   const declaredNames = new Set(declared.map((column) => column.name));
-  const prospective = baseTruth.columns.inherited.filter(
+  const prospective = presentationTruth.columns.inherited.filter(
     (column) => !declaredNames.has(column.name)
   );
   const visible = [...declared, ...prospective];
   return {
-    ...baseTruth,
+    ...presentationTruth,
     columns: {
       declared,
-      inherited: baseTruth.columns.inherited,
+      inherited: presentationTruth.columns.inherited,
       visible,
       declaredCount: declared.length,
-      inheritedCount: baseTruth.columns.inheritedCount,
+      inheritedCount: presentationTruth.columns.inheritedCount,
       visibleCount: visible.length,
       visibleProvenance:
         declared.length > 0 && prospective.length > 0

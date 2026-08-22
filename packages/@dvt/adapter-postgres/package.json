@@ -16,6 +16,7 @@
   "dependencies": {
     "@dvt/artifacts": "workspace:*",
     "@dvt/contracts": "workspace:*",
+    "@dvt/crypto": "workspace:*",
     "@dvt/delivery": "workspace:*",
     "@dvt/engine": "workspace:*",
     "@dvt/planner": "workspace:*",

@@ -28,13 +28,13 @@
       "writeRailKind": "db_command",
       "readQueryRail": "pnpm planning:db:query architecture-designs|architecture-components|architecture-relations",
       "projection": "Current architecture rows and generated architecture evidence reports on explicit export",
-      "validation": "pnpm test:planning:db:current-schema; pnpm planning:db:current-schema:check; pnpm planning:db:export:check",
+      "validation": "pnpm test:planning:db:current-schema; pnpm planning:db:current-schema:check",
       "authorityMode": "database"
     },
     {
       "surfaceName": "Command/query rail catalog",
       "canonicalSource": "Feature manifests, explicit rail documentation, and current canonical rail decisions",
-      "writeRail": "Use the owning bounded-context rail, then export the current Planning DB state",
+      "writeRail": "Use the owning bounded-context rail; publish derived projections only on explicit request",
       "writeRailKind": "import",
       "readQueryRail": "pnpm planning:db:query command-query-rails; pnpm planning:db:query creation-intent",
       "projection": "planning_query_store.command_query_rail_query rows",
@@ -77,8 +77,8 @@
       "writeRail": "pnpm planning:db:operate component create|revise|reparent",
       "writeRailKind": "db_command",
       "readQueryRail": "pnpm planning:db:query component-tree|component-metadata",
-      "projection": "Effective definitions, ownership and canonical recovery state generated only by explicit refresh or export",
-      "validation": "pnpm test:planning:db:current-schema; pnpm planning:db:current-schema:check; pnpm planning:db:export:check",
+      "projection": "Effective definitions and ownership queried from Planning DB; derived human-review projections generated only by explicit export",
+      "validation": "pnpm test:planning:db:current-schema; pnpm planning:db:current-schema:check",
       "authorityMode": "database"
     },
     {
@@ -88,7 +88,7 @@
       "writeRailKind": "import",
       "readQueryRail": "pnpm governance:db:query files|components|drift",
       "projection": "docs/.manifest.json and generated governance indexes",
-      "validation": "pnpm governance:db:check; pnpm governance:db:export:check",
+      "validation": "pnpm governance:db:check",
       "authorityMode": "hybrid-indexed"
     },
     {

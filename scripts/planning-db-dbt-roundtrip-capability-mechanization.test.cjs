@@ -11,15 +11,6 @@ const featureId = 'E-DBT-PROJECT-ROUNDTRIP-P4-TRUTH-SYNC';
 const proposalRelativePath =
   'docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md';
 const proposalPath = path.join(__dirname, '..', ...proposalRelativePath.split('/'));
-const canonicalStatePath = path.join(
-  __dirname,
-  '..',
-  'tools',
-  'planning-db',
-  'state',
-  'canonical-state.json'
-);
-
 test('DBT round-trip capability mechanization is proposal-owned and symbol-complete', () => {
   const manifests = extractFeatureMechanizationManifests(
     fs.readFileSync(proposalPath, 'utf8'),
@@ -55,14 +46,4 @@ test('DBT round-trip capability mechanization is proposal-owned and symbol-compl
       'docs/architecture/fowler-opportunity-planning-governance.md'
     )
   );
-});
-
-test('current state keeps the proposal-owned feature without a parallel local copy', () => {
-  const snapshot = JSON.parse(fs.readFileSync(canonicalStatePath, 'utf8'));
-
-  assert.equal(
-    snapshot.featureMechanizationRails.some((rail) => rail.featureId === featureId),
-    false
-  );
-  assert.doesNotMatch(JSON.stringify(snapshot.featureMechanizationRails), /planning-db-migrate/iu);
 });

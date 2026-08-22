@@ -17,7 +17,7 @@ import {
   type PlanRef,
   type ResolvedRunContext,
 } from '@dvt/contracts';
-import { jcsCanonicalize, sha256Hex } from '@dvt/crypto';
+import { jcsCanonicalize, sha256HexUtf8 } from '@dvt/crypto';
 
 import { validateTemporalAdapterConfig, type TemporalAdapterConfig } from '../../src/config.js';
 
@@ -108,7 +108,7 @@ export function createExecutionPlan(args: {
   observability?: ExecutionPlan['observability'];
 }): ExecutionPlan {
   const inputHashSha256 = args.inputHashSha256 ?? 'a'.repeat(64);
-  const planId = sha256Hex(
+  const planId = sha256HexUtf8(
     jcsCanonicalize({
       metadata: {
         planVersion: CURRENT_EXECUTION_PLAN_VERSION,

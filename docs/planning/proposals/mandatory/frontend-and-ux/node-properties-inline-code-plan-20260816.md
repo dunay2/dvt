@@ -164,7 +164,6 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/code-workbench-workspace-files-component.md
   - docs/architecture/components/web/frontend-component-inventory.md
   - docs/planning/proposals/mandatory/frontend-and-ux/node-properties-inline-code-plan-20260816.md
-  - tools/planning-db/state/canonical-state.json
 forbiddenImplementationSurfaces:
   - apps/api/**
   - packages/@dvt/contracts/**

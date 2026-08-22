@@ -293,6 +293,98 @@ describe('useCanvasControllerReadModel', () => {
     }
   });
 
+  it('renders generated DBT identity lineage with read-only model anchors', async () => {
+    const columns = [{ name: 'order_id', type: 'integer' }];
+    const sourceNode = {
+      ...testNode,
+      pluginId: 'dvt.warehouse-source',
+      metadata: {
+        connectedSourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'local-postgres-proof',
+            provider: 'postgres',
+          },
+          sourceObjectId: 'relation/dvt/public/orders',
+        },
+        sourceName: 'local_postgres_proof_dvt_public',
+        schema: 'public',
+        tableName: 'orders',
+        columns,
+      },
+    } satisfies CanonicalNode;
+    const modelNode = {
+      ...testNode,
+      id: 'dbt-model-orders',
+      name: 'Orders Model',
+      pluginId: 'dbt',
+      kind: 'dbt:model',
+      role: 'transform',
+      metadata: { typeLabel: 'Model' },
+    } satisfies CanonicalNode;
+    const dependency = {
+      id: 'source-to-dbt-model',
+      sourceId: sourceNode.id,
+      targetId: modelNode.id,
+      relation: 'lineage' as const,
+    };
+    const base = buildReadModelArgs({ canMutateGraph: true });
+    const graphNodes = [sourceNode, modelNode].map((node, index) => {
+      const mapped = mapCanonicalNodeToCanvasNode({
+        canonicalNode: node,
+        index,
+        showColumns: true,
+      });
+      return {
+        ...mapped,
+        data: {
+          ...mapped.data,
+          columns,
+          columnDisclosureExpanded: true,
+        },
+      };
+    });
+    const args: ReadModelArgs = {
+      ...base,
+      graphModel: {
+        nodes: graphNodes,
+        edges: [],
+        canonicalNodesById: new Map([sourceNode, modelNode].map((node) => [node.id, node])),
+        onEdgesChange: vi.fn(),
+      },
+      visibleScope: {
+        canonicalNodes: [sourceNode, modelNode],
+        canonicalEdges: [dependency],
+      },
+      executionScope: {
+        selectedNodeIds: [],
+        workspaceNodeIds: [sourceNode.id, modelNode.id],
+      },
+      activeCanvasKind: 'dbt',
+    };
+    const mounted = await renderReadModel(args);
+
+    try {
+      const state = mounted.readState();
+      expect(state?.edgesWithImpact).toEqual([
+        expect.objectContaining({
+          type: 'columnLineage',
+          source: sourceNode.id,
+          target: modelNode.id,
+          ariaLabel: 'order_id → order_id',
+          data: expect.objectContaining({ removable: false }),
+        }),
+      ]);
+      expect((state?.nodesWithImpact[1]?.data as ReadModelNodeData).columnPortDirections).toEqual([
+        'target',
+        'source',
+      ]);
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
   it('does not offer column mapping controls for a transform with nonblank SQL authority', async () => {
     const sqlTransform = {
       ...testNode,

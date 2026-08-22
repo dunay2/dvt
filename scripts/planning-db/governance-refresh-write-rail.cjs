@@ -1,5 +1,5 @@
 /** Owned concern: record governance refresh executions through a DB-first command rail. */
-const crypto = require('node:crypto');
+const { randomUuidV4, sha256HexUtf8 } = require('@dvt/crypto');
 
 const { Client } = require('pg');
 
@@ -22,7 +22,7 @@ function toIso(value) {
 }
 
 function stableHash(parts) {
-  return crypto.createHash('sha256').update(parts.join('\0')).digest('hex');
+  return sha256HexUtf8(parts.join('\0'));
 }
 
 function normalizeOptionalText(value, fallback = '') {
@@ -415,7 +415,7 @@ async function applyGovernanceRefreshRunRecordOperation(command, options = {}) {
     const planned = planGovernanceRefreshRunRecordOperation({
       command,
       existingRun,
-      operationId: options.operationId || crypto.randomUUID(),
+      operationId: options.operationId || randomUuidV4(),
       now: options.now || new Date(),
     });
 

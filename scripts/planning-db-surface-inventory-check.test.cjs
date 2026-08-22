@@ -270,7 +270,10 @@ test('package scripts expose and gate the DB surface inventory check', () => {
     /planning-db-schema\.test\.cjs/
   );
   assert.match(packageJson.scripts['ci:docs'], /planning:db:inventory:check/);
-  assert.equal(packageJson.scripts['verify:changed'], 'node scripts/verify-changed.cjs');
+  assert.equal(
+    packageJson.scripts['verify:changed'],
+    'pnpm --filter @dvt/crypto build && node scripts/verify-changed.cjs'
+  );
   assert.equal(packageJson.scripts['verify:prepush'], 'node scripts/verify-prepush.cjs');
 
   assert.match(

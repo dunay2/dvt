@@ -9,7 +9,7 @@ import {
   type RunExecutionContext,
   type RunExecutionContextRef,
 } from '@dvt/contracts';
-import { jcsCanonicalize, sha256Hex } from '@dvt/crypto';
+import { jcsCanonicalize, sha256Hex, sha256HexUtf8 } from '@dvt/crypto';
 
 import {
   createDbtStepActivityRegistry,
@@ -97,7 +97,7 @@ export function createDbtRunExecutionContextRef(
   const runExecutionContext = createDbtRunExecutionContext(ctx, planRef);
   return parseRunExecutionContextRef({
     uri: `s3://bucket/runctx/${ctx.runId}/${planRef.planId}.json`,
-    sha256: sha256Hex(jcsCanonicalize(runExecutionContext)),
+    sha256: sha256HexUtf8(jcsCanonicalize(runExecutionContext)),
     schemaVersion: runExecutionContext.schemaVersion,
     planId: planRef.planId,
     planVersion: planRef.planVersion,

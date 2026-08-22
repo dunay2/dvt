@@ -104,9 +104,7 @@ export type CanvasEdgeChangeContracts = {
 
 export type CanvasSourceImportEffects = {
   setDraftSession: CanvasDraftSessionSetter;
-  setSelectedNodes: (nodeIds: string[]) => void;
   setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
-  showInspectorPanel: () => void;
   setCurrentPlan: (value: null) => void;
   onLayoutComplete: CanvasLayoutCompletionHandler;
   invalidateInFlightSaveAttempt: () => void;

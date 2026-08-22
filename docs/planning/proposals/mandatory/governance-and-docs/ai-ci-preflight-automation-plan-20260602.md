@@ -15,7 +15,7 @@ existing current-schema import/check rail; there is no second preparation
 command.
 
 Workflow behavior lives in `.github/workflows`, `package.json`, and `scripts`.
-Current rail evidence is in `tools/planning-db/state/canonical-state.json`.
+Current rail evidence is read directly from Planning DB through governed queries.
 Validation is `node --test scripts/governance-refresh.test.cjs scripts/pr-closeout.test.cjs`,
 the changed workflow checks, and `pnpm verify:prepush`.
 

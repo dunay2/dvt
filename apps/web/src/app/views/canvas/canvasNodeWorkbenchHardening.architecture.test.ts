@@ -181,4 +181,15 @@ describe('Canvas Node Workbench W4 hardening contracts', () => {
     expect(CanvasNodePresentationCopySource).toContain("input: 'Input'");
     expect(CanvasNodePresentationCopySource).toContain("input: 'Entrada'");
   });
+
+  it('keeps one SQL editor and moves inherited connection context out of the Code surface', () => {
+    expect(DvtSqlTransformAuthoringSectionSource.match(/<MonacoCodeEditor/g)).toHaveLength(1);
+    expect(DvtSqlTransformAuthoringSectionSource).not.toContain(
+      'canvasViewCopy.inspectorDvtSqlBodyLabel'
+    );
+    expect(DvtSqlTransformAuthoringSectionSource).not.toContain(
+      'canvasViewCopy.inspectorDvtInheritedConnectionLabel'
+    );
+    expect(DvtSqlTransformAuthoringSectionSource).not.toContain('normalizedSqlLines');
+  });
 });

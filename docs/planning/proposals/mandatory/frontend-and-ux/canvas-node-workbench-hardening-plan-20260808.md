@@ -364,7 +364,6 @@ allowedImplementationSurfaces:
   - docs/planning/status/system-governance-unit-index.units.yaml
   - scripts/run-selected-closure-live-proof.cjs
   - scripts/run-selected-closure-live-proof.test.cjs
-  - tools/planning-db/state/canonical-state.json
 forbiddenImplementationSurfaces:
   - packages/@dvt/contracts/**
   - packages/@dvt/engine/**

@@ -5,9 +5,9 @@ import {
   type ExecutionPlan,
   type IStepTypeRegistry,
 } from '@dvt/contracts';
-import { describe, it, expect } from 'vitest';
+import { sha256Hex, utf8Bytes } from '@dvt/crypto';
+import { describe, it, expect, vi } from 'vitest';
 
-import { sha256Hex, utf8Encode } from '../src/crypto.js';
 import { PlanVerifierError } from '../src/errors.js';
 import {
   parseAndVerifyStepTypeConfigsOrThrow,
@@ -40,7 +40,7 @@ function makeExecutionPlan(stepOverrides: Partial<ExecutionPlan['steps'][number]
 describe('@dvt/plan-verifier', () => {
   it('verifies planId for canonicalPlanCoreJson (happy path)', async () => {
     const canonical = '{"a":1,"b":[true,false,null],"c":"x"}';
-    const planId = await sha256Hex(utf8Encode(canonical));
+    const planId = sha256Hex(utf8Bytes(canonical));
     await expect(
       verifyPlanIdOrThrow({ canonicalPlanCoreJson: canonical, planId })
     ).resolves.toBeUndefined();
@@ -53,9 +53,20 @@ describe('@dvt/plan-verifier', () => {
     ).rejects.toThrow();
   });
 
+  it('preserves the missing TextEncoder error contract', async () => {
+    vi.stubGlobal('TextEncoder', undefined);
+    try {
+      await expect(
+        verifyPlanIdOrThrow({ canonicalPlanCoreJson: '{"a":1}', planId: 'deadbeef' })
+      ).rejects.toMatchObject({ code: 'MISSING_TEXT_ENCODER' });
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('fails on unsupported admitted planVersion', async () => {
     const canonical = '{"a":1}';
-    const planId = await sha256Hex(utf8Encode(canonical));
+    const planId = sha256Hex(utf8Bytes(canonical));
     await expect(
       verifyPlanOrThrow({
         canonicalPlanCoreJson: canonical,
@@ -69,7 +80,7 @@ describe('@dvt/plan-verifier', () => {
 
   it('fails when schemaVersion is not admitted for an otherwise admitted planVersion', async () => {
     const canonical = '{"a":1}';
-    const planId = await sha256Hex(utf8Encode(canonical));
+    const planId = sha256Hex(utf8Bytes(canonical));
     await expect(
       verifyPlanOrThrow({
         canonicalPlanCoreJson: canonical,
@@ -83,7 +94,7 @@ describe('@dvt/plan-verifier', () => {
 
   it('passes on admitted planVersion/schemaVersion pair', async () => {
     const canonical = '{"a":1}';
-    const planId = await sha256Hex(utf8Encode(canonical));
+    const planId = sha256Hex(utf8Bytes(canonical));
     await expect(
       verifyPlanOrThrow({
         canonicalPlanCoreJson: canonical,

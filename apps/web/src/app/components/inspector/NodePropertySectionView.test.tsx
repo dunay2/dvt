@@ -92,6 +92,41 @@ describe('NodePropertySectionView', () => {
     ).toBe('2 columns inherited from the connected source.');
   });
 
+  it('keeps long relationship values legible through horizontal table overflow', () => {
+    ({ container, root } = renderSection({
+      id: 'inputs-outputs',
+      label: 'Inputs / Outputs',
+      rows: [],
+      tableRows: [
+        {
+          id: 'source-to-transform',
+          cells: {
+            direction: 'Input',
+            node: 'source_1',
+            nodeId: 'src_postgresql_local_2333_dvt_public_source_1',
+            relation: 'Lineage',
+          },
+        },
+      ],
+    }));
+
+    const table = container.querySelector('table');
+    const scrollRegion = table?.parentElement;
+    const longValueCell = Array.from(container.querySelectorAll('td')).find(
+      (cell) => cell.textContent === 'src_postgresql_local_2333_dvt_public_source_1'
+    );
+
+    expect(scrollRegion?.getAttribute('role')).toBe('region');
+    expect(scrollRegion?.getAttribute('aria-label')).toBe('Inputs / Outputs');
+    expect(scrollRegion?.tabIndex).toBe(0);
+    expect(scrollRegion?.className).toContain('bg-(--surface-panel)');
+    expect(table?.className).toContain('min-w-max');
+    expect(table?.className).not.toContain('table-fixed');
+    expect(longValueCell?.className).toContain('whitespace-nowrap');
+    expect(longValueCell?.className).not.toContain('break-words');
+    expect(container.textContent).toContain('Lineage');
+  });
+
   it('renders scalar rows and code through shared Monaco without involving the tabs coordinator', () => {
     ({ container, root } = renderSection({
       id: 'general',

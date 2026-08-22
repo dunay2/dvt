@@ -2,8 +2,8 @@
 import {
   GRAPH_DBT_MODEL_DIVERGENCE_MARKER_PREFIX,
   parseGraphDbtModelDivergenceMarker,
-  sha256HexUtf8,
 } from '@dvt/contracts';
+import { sha256HexUtf8 } from '@dvt/crypto';
 
 import type { ExpectedWorkspaceFileRevision } from '../../ports/workspace';
 

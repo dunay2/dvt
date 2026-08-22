@@ -1,5 +1,24 @@
 /** Owned concern: resolve the canonical DBT model targets connected to a DBT test. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
+
+export function readEffectiveDbtModelColumnNames(args: {
+  node: CanonicalNode | undefined;
+  nodes: readonly CanonicalNode[];
+  edges: readonly CanonicalEdge[];
+}): readonly string[] {
+  if (args.node?.pluginId !== 'dbt' || args.node.kind !== 'dbt:model') return [];
+
+  return [
+    ...new Set(
+      projectCanvasNodePresentationTruth({
+        node: args.node,
+        nodes: args.nodes,
+        edges: args.edges,
+      }).columns.visible.map((column) => column.name)
+    ),
+  ];
+}
 
 export function resolveConnectedDbtTestTargets(args: {
   testNodeId: string;

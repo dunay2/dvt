@@ -57,7 +57,8 @@ const APPLIED_RECEIPT = DbtYamlDescriptionAppliedReceiptSchema.parse({
   expectedContentSha256: PROPOSAL.expectedContentSha256,
   appliedContentSha256: PROPOSAL.candidateContentSha256,
   proposalDigest: PROPOSAL.proposalDigest,
-  idempotencyKey: 'dbt-description-apply:model.analytics.orders:fixed-uuid',
+  idempotencyKey:
+    'dbt-description-apply:model.analytics.orders:00000000-0000-4000-8000-000000000000',
   requestHash: '5'.repeat(64),
   deduplicated: false,
   analysis: {
@@ -78,7 +79,8 @@ const REVERTED_RECEIPT = DbtYamlDescriptionRevertedReceiptSchema.parse({
   restoredDescription: PROPOSAL.previousDescription,
   expectedContentSha256: APPLIED_RECEIPT.appliedContentSha256,
   revertedContentSha256: '9'.repeat(64),
-  idempotencyKey: 'dbt-description-revert:model.analytics.orders:fixed-uuid',
+  idempotencyKey:
+    'dbt-description-revert:model.analytics.orders:00000000-0000-4000-8000-000000000000',
   requestHash: 'a'.repeat(64),
   deduplicated: false,
   analysis: {
@@ -100,7 +102,12 @@ describe('DbtYamlDescriptionEditor', () => {
     (
       globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
     ).IS_REACT_ACT_ENVIRONMENT = true;
-    vi.stubGlobal('crypto', { randomUUID: () => 'fixed-uuid' });
+    vi.stubGlobal('crypto', {
+      getRandomValues: (target: Uint8Array) => {
+        target.fill(0);
+        return target;
+      },
+    });
   });
 
   afterEach(() => {

@@ -179,6 +179,53 @@ describe('DbtCliProjectAnalyzer', () => {
     await expect(stat(isolatedProjectDirectory)).rejects.toThrow();
   });
 
+  it('runs selected model compilation through the same isolated DBT boundary', async () => {
+    const run = vi.fn().mockImplementation(async (input: { args: readonly string[] }) => {
+      const targetPath = readFlag(input.args, '--target-path');
+      await mkdir(targetPath, { recursive: true });
+      await writeFile(
+        path.join(targetPath, 'manifest.json'),
+        JSON.stringify({
+          ...manifest(),
+          nodes: {
+            ...((manifest().nodes as Record<string, unknown>) ?? {}),
+            'model.analytics.orders': {
+              ...((manifest().nodes as Record<string, Record<string, unknown>>)[
+                'model.analytics.orders'
+              ] ?? {}),
+              compiled_code: 'select * from raw.orders',
+            },
+          },
+        }),
+        'utf8'
+      );
+      return { kind: 'completed' as const, exitCode: 0, stdout: '', stderr: '' };
+    });
+    const analyzer = new DbtCliProjectAnalyzer({
+      workspaceFilesRoot,
+      profilesDirectory,
+      processRunner: { run },
+      now: () => new Date('2026-07-13T10:00:00.000Z'),
+    });
+
+    const result = await analyzer.analyze({
+      scope: SCOPE,
+      projectRoot: 'analytics',
+      operation: { kind: 'compile', selectors: ['orders'] },
+    });
+
+    expect(result.status).toBe('valid');
+    expect(
+      result.resources.find((resource) => resource.uniqueId === 'model.analytics.orders')
+    ).toEqual(expect.objectContaining({ compiledSql: 'select * from raw.orders' }));
+    expect(run).toHaveBeenCalledWith(
+      expect.objectContaining({
+        args: expect.arrayContaining(['compile', '--select', 'orders']),
+      })
+    );
+    expect(run.mock.calls[0]?.[0].args).not.toContain('parse');
+  });
+
   it('returns deterministic hashes for unchanged project content and normalized analysis', async () => {
     const processRunner = {
       run: vi.fn().mockImplementation(async (input: { args: readonly string[] }) => {

@@ -13,3 +13,4 @@ export * from './DbtSelectedModelAnalysis.v1.js';
 export * from './DbtDependencyEdit.v1.js';
 export * from './DbtYamlDescriptionEdit.v1.js';
 export * from './GraphDbtWorkspaceArtifactPublication.v1.js';
+export * from './GraphDbtModelCompilation.v1.js';

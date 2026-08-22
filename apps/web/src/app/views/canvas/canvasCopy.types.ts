@@ -22,9 +22,6 @@ export type CanvasViewCopy = {
   readonly routeErrorTitle: string;
   readonly routeErrorFallbackMessage: string;
   readonly routeErrorMessage: string;
-  readonly retiredDiffSurfaceMessage: string;
-  readonly retiredArtifactsSurfaceMessage: string;
-  readonly retiredUnknownSurfaceMessage: string;
   readonly unsupportedCanvasKindMessagePrefix: string;
   readonly unsupportedCanvasKindMessageSuffix: string;
   readonly disabledCanvasPluginMessagePrefix: string;
@@ -226,6 +223,7 @@ export type CanvasViewCopy = {
   readonly planUnableToCreateMessage: string;
   readonly planGraphModelSqlDivergenceMessageTemplate: string;
   readonly planGraphAuthorityRefusedMessage: string;
+  readonly planGraphDbtCompilationFailedMessage: string;
   readonly previewProvenanceTransformPathRequiredMessage: string;
   readonly previewProvenanceWorkspaceNotConfiguredMessage: string;
   readonly previewProvenanceExplicitGitRevisionRequiredMessage: string;
@@ -599,6 +597,7 @@ export type CanvasViewCopy = {
   readonly inspectorErrorDbtTestTypeInvalid: string;
   readonly inspectorErrorDbtTestTargetRequired: string;
   readonly inspectorErrorDbtTestColumnInvalid: string;
+  readonly inspectorErrorDbtTestColumnNotDeclared: string;
   readonly inspectorErrorDbtTestSeverityInvalid: string;
   readonly inspectorErrorDvtSchemaRequired: string;
   readonly inspectorErrorDvtTableRequired: string;

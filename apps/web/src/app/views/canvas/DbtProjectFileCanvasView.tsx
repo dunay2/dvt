@@ -3,7 +3,7 @@ import { useRef, type ReactNode } from 'react';
 import { cn } from '../../components/ui/utils';
 import { dbtProjectFileCanvasSurfaceStrategy } from '../../plugins/dbt/dbtProjectFileCanvasSurfaceStrategy';
 import { DBT_NODE_KINDS } from '../../plugins/nodeTypeCatalog.dbt';
-import type { CanvasShellProps, CanvasShellRouteIntentRequest } from './canvasShell.types';
+import type { CanvasShellProps } from './canvasShell.types';
 import CanvasShell from './CanvasShell';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
@@ -120,14 +120,12 @@ export function DbtProjectFileCanvasView({
   onDbtProjectImported,
   sourceImportInitialSelection,
   onSourceImportInitialSelectionConsumed,
-  routeIntentRequest,
 }: Readonly<{
   controller: DbtProjectFileCanvasController;
   screenToFlowPosition: NonNullable<CanvasShellProps['canvasContextScreenToFlowPosition']>;
   onDbtProjectImported: NonNullable<CanvasShellProps['onDbtProjectImported']>;
   sourceImportInitialSelection?: CanvasShellProps['sourceImportInitialSelection'];
   onSourceImportInitialSelectionConsumed?: CanvasShellProps['onSourceImportInitialSelectionConsumed'];
-  routeIntentRequest?: CanvasShellRouteIntentRequest;
 }>): JSX.Element {
   const codeWorkbenchRef = useRef<SqlContextWorkbenchHandle>(null);
   const runControls = useCanvasRunControlSurface(
@@ -263,7 +261,6 @@ export function DbtProjectFileCanvasView({
         void controller.openProjectCode();
       },
     },
-    routeIntentRequest,
     canvasContextScreenToFlowPosition: screenToFlowPosition,
     sourceImportInitialSelection,
     onSourceImportInitialSelectionConsumed,

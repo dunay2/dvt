@@ -1,6 +1,7 @@
 /**
  * Owned concern: validate scoped plan-store record contracts.
  */
+import { jcsCanonicalize, sha256HexUtf8 } from '@dvt/crypto';
 import { z } from 'zod';
 
 import {
@@ -15,8 +16,6 @@ import type {
 } from '../contracts/planner/PlanExecutabilityRecord.v1.js';
 import { EXECUTABILITY_REJECTION_CODES } from '../contracts/planner/PlanExecutabilityValidation.v1.js';
 import type { PlanRecord } from '../contracts/planner/PlanRecord.v1.js';
-import { jcsCanonicalize } from '../utils/jcsCanonicalize.js';
-import { sha256HexUtf8 } from '../utils/sha256HexUtf8.js';
 
 import { NonBlankStringSchema } from './common.js';
 import { ExecutionPlanSchema, PlanVersionSchema } from './execution-plan.js';

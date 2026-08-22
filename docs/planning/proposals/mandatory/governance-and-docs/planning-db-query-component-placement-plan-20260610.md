@@ -15,7 +15,7 @@ queries are routed by `scripts/planning-db-query.cjs`; the router contains no
 business semantics.
 
 Query structures live only in `tools/planning-db/schema.sql`; component and
-rail evidence lives in `tools/planning-db/state/canonical-state.json`.
+rail evidence lives in Planning DB and is read through governed queries.
 Validation is `node --test scripts/planning-db-query.test.cjs scripts/planning-db-import.test.cjs`
 and `pnpm verify:prepush`.
 

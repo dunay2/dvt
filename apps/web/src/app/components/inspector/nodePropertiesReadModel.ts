@@ -16,6 +16,7 @@ import {
 } from '../../services/workspace/sourceObjectMetricEvidencePresentation';
 import { buildDbtTestRows } from './dbtTestRowsReadModel';
 import { buildCanvasNodePresentationTruth } from '../canvas/canvasNodePresentationTruth';
+import { resolveInheritedDvtConnectionRef } from '../../views/canvas/canvasDvtAuthoringModel';
 
 export type NodePropertySectionId =
   | 'general'
@@ -646,10 +647,30 @@ function buildInputsOutputsRows(
 ): readonly NodePropertyTableRow[] {
   const nodeById = new Map(nodes.map((candidate) => [candidate.id, candidate]));
   const rows: NodePropertyTableRow[] = [];
+  const inheritedConnectionRef =
+    node.pluginId === 'dvt' && node.kind === 'dvt:sql_transform'
+      ? resolveInheritedDvtConnectionRef({ node, nodes, edges })
+      : undefined;
+  const inheritedConnection =
+    inheritedConnectionRef == null
+      ? undefined
+      : `${inheritedConnectionRef.provider} · ${inheritedConnectionRef.connectionId}`;
+  let inheritedConnectionProjected = false;
 
   for (const edge of edges) {
     if (edge.targetId === node.id) {
       const upstreamNode = nodeById.get(edge.sourceId);
+      const upstreamConnectionRef =
+        upstreamNode == null || inheritedConnectionRef == null
+          ? undefined
+          : resolveInheritedDvtConnectionRef({ node: upstreamNode, nodes, edges });
+      const projectsInheritedConnection: boolean =
+        !inheritedConnectionProjected &&
+        inheritedConnectionRef != null &&
+        upstreamConnectionRef != null &&
+        inheritedConnectionRef.provider === upstreamConnectionRef.provider &&
+        inheritedConnectionRef.connectionId === upstreamConnectionRef.connectionId;
+      inheritedConnectionProjected ||= projectsInheritedConnection;
       rows.push({
         id: `input:${edge.id}`,
         cells: {
@@ -657,6 +678,9 @@ function buildInputsOutputsRows(
           node: upstreamNode?.name ?? edge.sourceId,
           nodeId: edge.sourceId,
           relation: edge.relation,
+          ...(projectsInheritedConnection && inheritedConnection != null
+            ? { connection: inheritedConnection }
+            : {}),
         },
       });
     }
