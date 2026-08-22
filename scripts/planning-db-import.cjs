@@ -154,17 +154,13 @@ function repoRelative(filePath) {
   return toPosix(path.relative(repoRoot, filePath));
 }
 
-function sha256(value) {
-  return typeof value === 'string' ? sha256HexUtf8(value) : sha256Hex(value);
-}
-
 function readYamlSource(filePath) {
   const raw = fs.readFileSync(filePath, 'utf8');
   return {
     absolutePath: filePath,
     sourcePath: repoRelative(filePath),
     raw,
-    contentSha256: sha256(raw),
+    contentSha256: sha256HexUtf8(raw),
     sourceBytes: Buffer.byteLength(raw, 'utf8'),
     parsed: yaml.load(raw),
     rawSourceText: raw,
@@ -191,7 +187,7 @@ function buildGeneratedYamlSource(sourcePath, parsed, options = {}) {
     absolutePath,
     sourcePath,
     raw,
-    contentSha256: sha256(raw),
+    contentSha256: sha256HexUtf8(raw),
     sourceBytes: Buffer.byteLength(raw, 'utf8'),
     parsed,
     rawSourceText,
@@ -416,7 +412,7 @@ function buildCoverageRows(coverageSource) {
   for (const document of report.governanceDocuments || []) {
     const documentPath = normalizeText(document.path);
     pushRow({
-      coverageId: `governance_document.${sha256(documentPath).slice(0, 16)}`,
+      coverageId: `governance_document.${sha256HexUtf8(documentPath).slice(0, 16)}`,
       coverageKind: 'governance_document',
       name: documentPath,
       fileCount: normalizeNumber(document.fileCount),
@@ -819,7 +815,7 @@ async function buildRepositoryCommandSnapshot() {
   const packageJsonPath = path.join(repoRoot, 'package.json');
   const packageJsonRaw = fs.readFileSync(packageJsonPath, 'utf8');
   const packageJson = JSON.parse(packageJsonRaw);
-  const packageJsonHash = sha256(packageJsonRaw);
+  const packageJsonHash = sha256HexUtf8(packageJsonRaw);
   const catalogModule = await loadRepositoryCommandCatalogModule();
   const catalog = catalogModule.buildRepositoryCommandCatalog(
     packageJson,
@@ -862,7 +858,7 @@ async function buildRepositoryCommandSnapshot() {
       ),
       referencedFiles: [],
       sourcePath,
-      sourceContentSha256: sha256(fileRaw),
+      sourceContentSha256: sha256HexUtf8(fileRaw),
       rawCommand: fileCommand,
     });
   }
@@ -942,7 +938,7 @@ function readTrackedDocumentPaths(gitPathspecs, options = {}) {
 function readTrackedDocuments(gitPathspecs) {
   return readTrackedDocumentPaths(gitPathspecs).map((sourcePath) => {
     const raw = fs.readFileSync(path.join(repoRoot, sourcePath), 'utf8');
-    return { sourcePath, raw, contentSha256: sha256(raw) };
+    return { sourcePath, raw, contentSha256: sha256HexUtf8(raw) };
   });
 }
 
@@ -970,7 +966,7 @@ function readTrackedRepositoryTextDocuments() {
     .filter((sourcePath) => repositoryReferenceTextFilePattern.test(sourcePath))
     .map((sourcePath) => {
       const raw = fs.readFileSync(path.join(repoRoot, sourcePath), 'utf8');
-      return { sourcePath, raw, contentSha256: sha256(raw) };
+      return { sourcePath, raw, contentSha256: sha256HexUtf8(raw) };
     });
 }
 
@@ -994,7 +990,7 @@ function buildKnowledgeIntakeRepositoryReferenceSnapshot(options = {}) {
     }
 
     const raw = normalizeText(document.raw);
-    const sourceContentSha256 = normalizeText(document.contentSha256) || sha256(raw);
+    const sourceContentSha256 = normalizeText(document.contentSha256) || sha256HexUtf8(raw);
     for (const [lineIndex, line] of raw.split(/\r?\n/).entries()) {
       buzonReferencePattern.lastIndex = 0;
       const matches = [...line.matchAll(buzonReferencePattern)];
@@ -1013,7 +1009,7 @@ function buildKnowledgeIntakeRepositoryReferenceSnapshot(options = {}) {
           targetDocumentPath,
         ].join('\0');
         references.push({
-          referenceId: sha256(referenceIdentity),
+          referenceId: sha256HexUtf8(referenceIdentity),
           targetDocumentPath,
           sourcePath,
           relationType: 'repository_path_reference',
@@ -1076,7 +1072,7 @@ function listTrackedRiskDocuments() {
     .sort()
     .map((sourcePath) => {
       const raw = fs.readFileSync(path.join(repoRoot, sourcePath), 'utf8');
-      return { sourcePath, raw, contentSha256: sha256(raw) };
+      return { sourcePath, raw, contentSha256: sha256HexUtf8(raw) };
     });
 }
 
@@ -1148,7 +1144,7 @@ function buildRiskDebtSnapshot(options = {}) {
     }
 
     const raw = normalizeText(sourceDocument.raw);
-    const contentSha256 = normalizeText(sourceDocument.contentSha256) || sha256(raw);
+    const contentSha256 = normalizeText(sourceDocument.contentSha256) || sha256HexUtf8(raw);
     const { frontmatter } = parseMarkdownFrontmatter(raw);
     const riskId =
       normalizeText(frontmatter.id) || path.basename(sourcePath).replace(/\.(md|ya?ml)$/i, '');
@@ -1271,7 +1267,7 @@ function buildPendingMarkerRows(document) {
     }
 
     rows.push({
-      markerId: `doc-marker:${sha256(`${document.sourcePath}:${markerKind}`).slice(0, 32)}`,
+      markerId: `doc-marker:${sha256HexUtf8(`${document.sourcePath}:${markerKind}`).slice(0, 32)}`,
       documentPath: document.sourcePath,
       markerKind,
       occurrenceCount,
@@ -1544,10 +1540,9 @@ function extractTaskLikeReferences(
         featureMechanizationCycleIdSet
       );
       return {
-        referenceId: `doc-reference:${sha256(`${document.sourcePath}:${entry.referenceText}`).slice(
-          0,
-          32
-        )}`,
+        referenceId: `doc-reference:${sha256HexUtf8(
+          `${document.sourcePath}:${entry.referenceText}`
+        ).slice(0, 32)}`,
         documentPath: document.sourcePath,
         referenceText: entry.referenceText,
         referencePrefix: referencePrefix(entry.referenceText),
@@ -1590,7 +1585,7 @@ function buildDocsDispositionActions(document, references, pendingHotspotThresho
 
   function pushAction({ priority, actionKind, referenceText = null, reason, blocking, evidence }) {
     actions.push({
-      actionId: `doc-action:${sha256(
+      actionId: `doc-action:${sha256HexUtf8(
         `${document.documentPath}:${actionKind}:${referenceText || ''}`
       ).slice(0, 32)}`,
       priority,
@@ -1708,7 +1703,7 @@ function buildDocsDispositionSnapshot(options = {}) {
   for (const sourceDocument of sourceDocuments) {
     const sourcePath = toPosix(normalizeText(sourceDocument.sourcePath));
     const raw = normalizeText(sourceDocument.raw);
-    const contentSha256 = normalizeText(sourceDocument.contentSha256) || sha256(raw);
+    const contentSha256 = normalizeText(sourceDocument.contentSha256) || sha256HexUtf8(raw);
     const { frontmatter } = parseMarkdownFrontmatter(raw);
     const isArchive = isArchivedDocumentPath(sourcePath);
     const documentInput = { sourcePath, raw, contentSha256 };
@@ -2529,7 +2524,7 @@ function readDbGovernanceSurfaceCatalog(catalogPath = dbGovernanceSurfaceCatalog
 async function restoreDbGovernanceSurfaceCatalog(client, catalog, options = {}) {
   const catalogPath = options.catalogPath || dbGovernanceSurfaceCatalogPath;
   const sourceRef = path.relative(repoRoot, catalogPath).replaceAll('\\', '/');
-  const sourceContentSha256 = sha256(fs.readFileSync(catalogPath));
+  const sourceContentSha256 = sha256Hex(fs.readFileSync(catalogPath));
 
   await client.query(`delete from ${schemaName}.db_governance_surfaces`);
   await insertRows(
@@ -3799,7 +3794,7 @@ function documentSourceHashRows(documents) {
       const raw = normalizeText(document.raw);
       return {
         sourcePath: toPosix(normalizeText(document.sourcePath)),
-        sourceContentSha256: normalizeText(document.contentSha256) || sha256(raw),
+        sourceContentSha256: normalizeText(document.contentSha256) || sha256HexUtf8(raw),
       };
     })
   );
@@ -4349,7 +4344,6 @@ module.exports = {
   restoreDbGovernanceSurfaceCatalog,
   restoreDbtProjectRoundtripCapabilityCatalog,
   runPlanningImport,
-  sha256,
 };
 
 if (require.main === module) {

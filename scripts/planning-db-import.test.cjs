@@ -1,5 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { sha256HexUtf8 } = require('@dvt/crypto');
 
 const planningDbImport = require('./planning-db-import.cjs');
 const {
@@ -38,7 +39,6 @@ const {
   restoreDbGovernanceSurfaceCatalog,
   restoreDbtProjectRoundtripCapabilityCatalog,
   runPlanningImport,
-  sha256,
 } = planningDbImport;
 const { governanceGeneratedPath } = require('./governance-generated-paths.cjs');
 const { schemaName } = require('./planning-db-schema.cjs');
@@ -49,7 +49,7 @@ function generatedSourceFixture(sourcePath, parsed, rawSourceText = JSON.stringi
     parsed,
     raw: rawSourceText,
     rawSourceText,
-    contentSha256: sha256(rawSourceText),
+    contentSha256: sha256HexUtf8(rawSourceText),
     sourceBytes: Buffer.byteLength(rawSourceText, 'utf8'),
     sourceMode: 'in-memory-generator',
   };
@@ -976,7 +976,7 @@ test('governance auxiliary source state hashes only knowledge-surface documents 
   assert.deepEqual(state.knowledgeDocuments, [
     {
       sourcePath: 'docs/planning/proposals/example.md',
-      sourceContentSha256: sha256(proposalRaw),
+      sourceContentSha256: sha256HexUtf8(proposalRaw),
     },
   ]);
 });

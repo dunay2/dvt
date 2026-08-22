@@ -25,10 +25,6 @@ const impactReportPath = governanceGeneratedPath(
 const sourcePath = repoRelative(fileIndexPath);
 const baselineShardDirRelativePath = repoRelative(baselineShardDir);
 
-function sha256(value) {
-  return sha256HexUtf8(value);
-}
-
 function renderYaml(payload) {
   return yaml.dump(payload, {
     lineWidth: 100,
@@ -51,7 +47,7 @@ function readFingerprintBaselineFromDisk(manifestPath = baselinePath) {
   for (const shard of Array.isArray(manifest.shards) ? manifest.shards : []) {
     const shardPath = path.join(repoRoot, ...shard.path.split('/'));
     const content = fs.readFileSync(shardPath, 'utf8');
-    if (shard.contentHash && sha256(content) !== shard.contentHash) {
+    if (shard.contentHash && sha256HexUtf8(content) !== shard.contentHash) {
       throw new Error(`Governance fingerprint shard hash mismatch: ${shard.path}`);
     }
     shards[shard.path] = yaml.load(content);
@@ -118,7 +114,7 @@ function buildFingerprintBaseline(currentEntries, options = {}) {
         id: shardId,
         path: shardPath,
         fileCount: sortedFiles.length,
-        contentHash: sha256(content),
+        contentHash: sha256HexUtf8(content),
       };
     });
 

@@ -16,9 +16,6 @@ const { assertPlanningDbCurrentSchemaReady, schemaName } = require('./planning-d
 const componentEngineeringSchemaName = 'component_engineering';
 const { runArchitectureFitnessScan } = require('./planning-db/architecture-fitness/scan.cjs');
 
-function sha256(value) {
-  return typeof value === 'string' ? sha256HexUtf8(value) : sha256Hex(value);
-}
 const {
   allowedDbSurfaceAuthorityModes,
   allowedDbSurfaceWriteRailKinds,
@@ -2820,7 +2817,7 @@ async function assertArchitectureEvidenceOriginAuthenticity(command, options = {
     ) {
       throw new Error('GitHub Actions evidence does not prove the current commit');
     }
-    const committedSourceSha256 = sha256(
+    const committedSourceSha256 = sha256Hex(
       readGitFileAtCommit(currentGitSha, command.sourcePath, options)
     );
     if (committedSourceSha256 !== command.sourceContentSha256) {
@@ -2849,7 +2846,7 @@ async function assertArchitectureEvidenceOriginAuthenticity(command, options = {
         ]),
       ]);
       for (const [implementationPath, expectedHash] of implementationInputs) {
-        const committedImplementationSha256 = sha256(
+        const committedImplementationSha256 = sha256Hex(
           readGitFileAtCommit(currentGitSha, implementationPath, options)
         );
         if (committedImplementationSha256 !== expectedHash) {

@@ -129,10 +129,6 @@ const requiredHeadersBySection = {
   ],
 };
 
-function sha256(value) {
-  return sha256HexUtf8(value);
-}
-
 function toPosix(filePath) {
   return filePath.replace(/\\/g, '/');
 }
@@ -226,7 +222,7 @@ function sectionTableRows(documentContent, sectionName) {
 }
 
 function parseInventoryDocument(document) {
-  const sourceContentSha256 = sha256(document.content);
+  const sourceContentSha256 = sha256HexUtf8(document.content);
   const components = sectionTableRows(document.content, 'Frontend Components').map(
     ({ cells, indexes, headers }) => {
       const componentId = rowValue(cells, indexes, 'Component ID');

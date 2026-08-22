@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { sha256Hex, sha256HexUtf8 } = require('@dvt/crypto');
+const { sha256HexUtf8 } = require('@dvt/crypto');
 const {
   buildComponentEntries,
   buildComponentFileMapManifest,
@@ -69,10 +69,6 @@ const units = [
   },
 ];
 
-function sha256(value) {
-  return typeof value === 'string' ? sha256HexUtf8(value) : sha256Hex(value);
-}
-
 function stableStringify(value) {
   if (Array.isArray(value)) {
     return `[${value.map(stableStringify).join(',')}]`;
@@ -89,16 +85,16 @@ function stableStringify(value) {
 }
 
 function expectedFingerprints(filePath, content, governancePayload) {
-  const pathHash = sha256(`dvt:file-path:v1:${filePath}`);
-  const contentHash = sha256(content);
-  const governanceHash = sha256(stableStringify(governancePayload));
+  const pathHash = sha256HexUtf8(`dvt:file-path:v1:${filePath}`);
+  const contentHash = sha256HexUtf8(content);
+  const governanceHash = sha256HexUtf8(stableStringify(governancePayload));
 
   return {
-    fileId: `F-${sha256(`dvt:file:v1:${filePath}`).slice(0, 12).toUpperCase()}`,
+    fileId: `F-${sha256HexUtf8(`dvt:file:v1:${filePath}`).slice(0, 12).toUpperCase()}`,
     pathHash,
     contentHash,
     governanceHash,
-    stateFingerprint: sha256(
+    stateFingerprint: sha256HexUtf8(
       stableStringify({
         contentHash,
         governanceHash,

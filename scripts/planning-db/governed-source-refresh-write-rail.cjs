@@ -16,10 +16,6 @@ function databaseUrl() {
   return process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
 }
 
-function sha256(value) {
-  return typeof value === 'string' ? sha256HexUtf8(value) : sha256Hex(value);
-}
-
 function stableStringify(value) {
   if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`;
   if (value && typeof value === 'object') {
@@ -50,7 +46,7 @@ function normalizeGovernedSourcePath(value) {
 }
 
 function canonicalSourceContentHash(contentBytes) {
-  return sha256(normalizeTextBytesForHash(Buffer.from(contentBytes)));
+  return sha256Hex(normalizeTextBytesForHash(Buffer.from(contentBytes)));
 }
 
 function defaultGit(args, cwd) {
@@ -133,7 +129,7 @@ function defaultGovernedSourceRefreshIdempotencyKey(command, snapshot) {
   return [
     command.kind,
     command.actor || 'anonymous',
-    sha256(
+    sha256HexUtf8(
       stableStringify({
         paths: command.paths,
         expectedContentSha256ByPath: command.expectedContentSha256ByPath || {},
@@ -188,7 +184,7 @@ function planGovernedSourceRefreshOperation({
     return {
       path: snapshot.path,
       contentHash: snapshot.contentHash,
-      stateFingerprint: sha256(
+      stateFingerprint: sha256HexUtf8(
         stableStringify({
           contentHash: snapshot.contentHash,
           governanceHash: governed.governanceHash,

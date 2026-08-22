@@ -2,7 +2,7 @@
 const childProcess = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
-const { createSha256Hasher, sha256Hex, sha256HexUtf8, utf8Bytes } = require('@dvt/crypto');
+const { createSha256Hasher, sha256Hex, utf8Bytes } = require('@dvt/crypto');
 
 const {
   applyGovernanceRefreshRunRecordOperation,
@@ -131,10 +131,6 @@ function runText(command, args) {
   return result.stdout ?? '';
 }
 
-function sha256(content) {
-  return typeof content === 'string' ? sha256HexUtf8(content) : sha256Hex(content);
-}
-
 function readUntrackedFileHashes() {
   const output = runText('git', ['ls-files', '--others', '--exclude-standard', '-z']);
   const files = output.split('\0').filter(Boolean).sort();
@@ -147,7 +143,7 @@ function readUntrackedFileHashes() {
         return `${file}\0missing-or-non-file`;
       }
 
-      return `${file}\0${stat.size}\0${sha256(fs.readFileSync(absolutePath))}`;
+      return `${file}\0${stat.size}\0${sha256Hex(fs.readFileSync(absolutePath))}`;
     })
     .join('\0');
 }
@@ -178,7 +174,7 @@ function readGeneratedGovernanceArtifactHashes(rootPath = repoRoot) {
     .map((file) => {
       const stat = fs.statSync(file);
       const relativePath = path.relative(rootPath, file).replace(/\\/g, '/');
-      return `${relativePath}\0${stat.size}\0${sha256(fs.readFileSync(file))}`;
+      return `${relativePath}\0${stat.size}\0${sha256Hex(fs.readFileSync(file))}`;
     })
     .join('\0');
 }
@@ -270,7 +266,7 @@ function defaultRefreshRunId(now = new Date()) {
 }
 
 function readGovernanceRefreshSourceContentSha256() {
-  return sha256(fs.readFileSync(__filename));
+  return sha256Hex(fs.readFileSync(__filename));
 }
 
 function buildGovernanceRefreshRunRecordCommand(record) {
@@ -427,7 +423,6 @@ module.exports = {
   readGeneratedGovernanceArtifactHashes,
   runPnpmScript,
   runText,
-  sha256,
   readUntrackedFileHashes,
   readWorktreeFingerprint,
   runGovernanceRefresh,

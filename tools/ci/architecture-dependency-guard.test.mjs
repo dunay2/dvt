@@ -1613,6 +1613,9 @@ test('Cut 4 tooling crypto mechanics and duplicate runner stay retired', () => {
     if (/\b(?:crypto\.)?randomUUID\s*\(/u.test(source)) {
       findings.push(`${sourcePath}: randomUUID`);
     }
+    if (/\bfunction\s+sha256\s*\(/u.test(source)) {
+      findings.push(`${sourcePath}: local sha256 facade`);
+    }
   }
 
   assert.deepEqual(findings.sort(), []);

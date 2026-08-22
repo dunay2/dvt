@@ -572,10 +572,6 @@ function readFeatureMechanizationDocs(scanRoot = defaultScanRoot) {
   }));
 }
 
-function sha256(value) {
-  return sha256HexUtf8(value);
-}
-
 function pushMissingObjectField(errors, owner, field, value) {
   if (!isNonEmptyString(value)) {
     errors.push(`${owner} missing ${field}.`);
@@ -1066,7 +1062,7 @@ function readCurrentSourceHashes(sourcePaths) {
       continue;
     }
 
-    sourceHashes.set(sourcePath, sha256(fs.readFileSync(absolutePath, 'utf8')));
+    sourceHashes.set(sourcePath, sha256HexUtf8(fs.readFileSync(absolutePath, 'utf8')));
   }
 
   return sourceHashes;

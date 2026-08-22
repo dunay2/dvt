@@ -1,5 +1,5 @@
 const assert = require('node:assert/strict');
-const { sha256Hex, sha256HexUtf8 } = require('@dvt/crypto');
+const { sha256Hex } = require('@dvt/crypto');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -39,10 +39,6 @@ function assertOrdinaryWorkflowsDoNotPublishDocumentation() {
   }
 }
 
-function sha256(value) {
-  return typeof value === 'string' ? sha256HexUtf8(value) : sha256Hex(value);
-}
-
 function lifecycleRow(root, documentPath, fields = {}) {
   return {
     document_path: documentPath,
@@ -52,7 +48,7 @@ function lifecycleRow(root, documentPath, fields = {}) {
     lifecycle_gap_kind: 'none',
     duplicate_count: 0,
     is_duplicate: false,
-    source_content_sha256: sha256(fs.readFileSync(path.join(root, documentPath))),
+    source_content_sha256: sha256Hex(fs.readFileSync(path.join(root, documentPath))),
     ...fields,
   };
 }
@@ -265,8 +261,8 @@ test('reports every owner and source hash for a duplicate publishable canonical 
   fs.writeFileSync(path.join(root, 'docs', 'second.md'), '# Second\n', 'utf8');
   const firstPath = 'docs/index.md';
   const secondPath = 'docs/second.md';
-  const firstHash = sha256(fs.readFileSync(path.join(root, firstPath)));
-  const secondHash = sha256(fs.readFileSync(path.join(root, secondPath)));
+  const firstHash = sha256Hex(fs.readFileSync(path.join(root, firstPath)));
+  const secondHash = sha256Hex(fs.readFileSync(path.join(root, secondPath)));
 
   await assert.rejects(
     new DocumentationPublicationAssembler(
@@ -633,10 +629,10 @@ test('rejects duplicate source and generated routes', async () => {
   );
   fs.writeFileSync(path.join(root, 'zensical.yml'), 'site_name: Test\ndocs_dir: docs\n', 'utf8');
 
-  const manualHash = sha256(
+  const manualHash = sha256Hex(
     fs.readFileSync(path.join(root, 'docs', 'concepts', 'repository-map.md'))
   );
-  const generatedHash = sha256(
+  const generatedHash = sha256Hex(
     fs.readFileSync(path.join(root, '.generated-docs', 'concepts', 'repository-map.md'))
   );
 

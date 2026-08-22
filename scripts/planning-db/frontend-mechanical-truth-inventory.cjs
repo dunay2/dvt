@@ -28,10 +28,6 @@ const validScreenStates = new Set([
   'experimental',
 ]);
 
-function sha256(value) {
-  return sha256HexUtf8(value);
-}
-
 function toPosix(filePath) {
   return filePath.replace(/\\/g, '/');
 }
@@ -69,7 +65,7 @@ const requiredHeaders = [
 
 function parseInventoryTable(document) {
   const lines = document.content.split(/\r?\n/);
-  const sourceContentSha256 = sha256(document.content);
+  const sourceContentSha256 = sha256HexUtf8(document.content);
   const surfaces = [];
   let indexes = null;
 

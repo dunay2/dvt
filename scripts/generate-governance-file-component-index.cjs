@@ -61,10 +61,6 @@ function compareText(left, right) {
   return left < right ? -1 : 1;
 }
 
-function sha256(value) {
-  return typeof value === 'string' ? sha256HexUtf8(value) : sha256Hex(value);
-}
-
 function stableStringify(value) {
   if (Array.isArray(value)) {
     return `[${value.map(stableStringify).join(',')}]`;
@@ -322,16 +318,16 @@ function deriveGovernanceSemantics(unitStatus, ownerLevel) {
 }
 
 function buildFileFingerprints(filePath, contentBytes, governancePayload) {
-  const pathHash = sha256(`dvt:file-path:v1:${filePath}`);
-  const contentHash = sha256(contentBytes);
-  const governanceHash = sha256(stableStringify(governancePayload));
+  const pathHash = sha256HexUtf8(`dvt:file-path:v1:${filePath}`);
+  const contentHash = sha256Hex(contentBytes);
+  const governanceHash = sha256HexUtf8(stableStringify(governancePayload));
 
   return {
-    fileId: `F-${sha256(`dvt:file:v1:${filePath}`).slice(0, 12).toUpperCase()}`,
+    fileId: `F-${sha256HexUtf8(`dvt:file:v1:${filePath}`).slice(0, 12).toUpperCase()}`,
     pathHash,
     contentHash,
     governanceHash,
-    stateFingerprint: sha256(
+    stateFingerprint: sha256HexUtf8(
       stableStringify({
         contentHash,
         governanceHash,
@@ -471,7 +467,7 @@ function buildFileIndexManifest(fileEntries, options = {}) {
         id: shardId,
         path: shardPath,
         fileCount: files.length,
-        contentHash: sha256(content),
+        contentHash: sha256HexUtf8(content),
       };
     });
 
@@ -553,7 +549,7 @@ function buildComponentFileMapManifest(componentEntries, fileEntries, options = 
         fileCount: payload.fileCount,
         driftFileCount: payload.driftFileCount,
         legacyFileCount: payload.legacyFileCount,
-        contentHash: sha256(content),
+        contentHash: sha256HexUtf8(content),
       };
     });
 
@@ -686,7 +682,7 @@ function readFileIndexFromDisk(manifestPath = fileYamlPath, options = {}) {
   for (const shard of Array.isArray(manifest.shards) ? manifest.shards : []) {
     const shardPath = path.join(repoRoot, shard.path);
     const content = fs.readFileSync(shardPath, 'utf8');
-    if (shard.contentHash && sha256(content) !== shard.contentHash) {
+    if (shard.contentHash && sha256HexUtf8(content) !== shard.contentHash) {
       throw new Error(`Governance shard hash mismatch: ${shard.path}`);
     }
     shardsByPath[shard.path] = yaml.load(content);

@@ -71,7 +71,7 @@ function main() {
 
       const formulaVersion = String(v.formulaVersion || payload.formulaVersion || 'v1');
       const material = buildMaterial(v, formulaVersion);
-      const actual = sha256(material);
+      const actual = sha256HexUtf8(material);
       const expected = String(v.expectedDigest || '').toLowerCase();
 
       if (!/^[a-f0-9]{64}$/.test(expected)) {
@@ -124,10 +124,6 @@ function buildMaterial(v, formulaVersion) {
     String(v.eventType),
     String(v.planVersion),
   ].join('|');
-}
-
-function sha256(input) {
-  return sha256HexUtf8(input);
 }
 
 function collectVectorFiles(dir) {

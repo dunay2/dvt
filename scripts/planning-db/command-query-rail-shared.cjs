@@ -14,10 +14,6 @@ function createCommandQueryRailSharedComponent(deps = {}) {
     return normalizeText(filePath).replace(/\\/g, '/');
   }
 
-  function sha256(value) {
-    return sha256HexUtf8(value);
-  }
-
   function normalizeRailName(value) {
     return normalizeText(value).trim().toLowerCase();
   }
@@ -51,7 +47,7 @@ function createCommandQueryRailSharedComponent(deps = {}) {
     return {
       sourcePath,
       raw,
-      contentSha256: document.contentSha256 || sha256(raw),
+      contentSha256: document.contentSha256 || sha256HexUtf8(raw),
     };
   }
 
@@ -145,7 +141,7 @@ function createCommandQueryRailSharedComponent(deps = {}) {
     normalizeRailName,
     normalizeRailStatus,
     normalizeText,
-    sha256,
+    sha256HexUtf8,
     toPosix,
   };
 }

@@ -14,10 +14,6 @@ const ignoredDirectoryNames = new Set([
 ]);
 const ignoredRepoPathPrefixes = ['.generated-docs', 'buzon', 'docs', 'infra/prototypes'];
 
-function sha256(text) {
-  return sha256HexUtf8(text);
-}
-
 function toRepoPath(filePath, rootDir) {
   return path.relative(rootDir, filePath).replace(/\\/g, '/');
 }
@@ -471,7 +467,7 @@ function runArchitectureFitnessScan(options) {
       ].join('|');
 
       observations.push({
-        observationId: `obs-${sha256(observationSeed).slice(0, 24)}`,
+        observationId: `obs-${sha256HexUtf8(observationSeed).slice(0, 24)}`,
         scanId,
         designId,
         sourcePath: sourceRepoPath,
@@ -479,7 +475,7 @@ function runArchitectureFitnessScan(options) {
         importLiteral: importInfo.importLiteral,
         workspaceName: '',
         packageName: '',
-        sourceContentSha256: sha256(sourceText),
+        sourceContentSha256: sha256HexUtf8(sourceText),
         isTest: isTestPath(sourceRepoPath),
         sourceComponentId: sourceMapping.componentId,
         targetComponentId: targetMapping.componentId,
