@@ -2476,6 +2476,7 @@ function collectRuntimeModuleSpecifiers(
     true,
     ts.ScriptKind.JS
   );
+  const needsCallableModuleResolution = /\b(?:import|require)\s*\(/u.test(emittedSource);
   const runtimeModuleSpecifiers = new Set<string>();
   const runtimeReExportedSpecifiers = new Set<string>();
   const runtimeImportedBindings = new Map<string, string>();
@@ -4089,9 +4090,11 @@ function collectRuntimeModuleSpecifiers(
       }
     }
   }
-  collectLexicalBindingInitializers(sourceFile);
-  collectLexicalBindingAssignments(sourceFile);
-  collectCallableInvocations(sourceFile);
+  if (needsCallableModuleResolution) {
+    collectLexicalBindingInitializers(sourceFile);
+    collectLexicalBindingAssignments(sourceFile);
+    collectCallableInvocations(sourceFile);
+  }
 
   let discoveredExportedObjectAlias = true;
   while (discoveredExportedObjectAlias) {
