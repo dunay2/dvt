@@ -2,7 +2,7 @@
 title: Crypto Package
 status: Active
 owner: Architecture / Platform
-last_reviewed: 2026-03-08
+last_reviewed: 2026-08-22
 ---
 
 # Crypto Package
@@ -11,15 +11,18 @@ This page is the canonical package reference for `@dvt/crypto`.
 
 ## Current Reality
 
-The package name is `@dvt/crypto`, but the workspace path is
-`packages/@dvt/canonical`.
+The package name and workspace path now agree: `@dvt/crypto` lives in
+`packages/@dvt/crypto`.
 
-That mismatch is easy to miss, so it has to be documented explicitly.
+The package owns these repository-wide primitives:
 
-Today the package exposes two repository-wide helpers:
-
+- `utf8Bytes()`
 - `jcsCanonicalize()`
-- `sha256Hex()`
+- `sha256Hex()` and `sha256HexUtf8()`
+- `createSha256Hasher()`
+- compatibility-only `md5Hex()` and `md5HexUtf8()`
+- `secureRandomBytes()`
+- `randomUuidV4()` and `randomUuidV7()`
 
 These utilities are used where deterministic canonicalization or stable hashing
 matters across engine and adapter boundaries.
@@ -27,11 +30,11 @@ matters across engine and adapter boundaries.
 ## Primary Code Anchors
 
 - Public package entrypoint:
-  [packages/@dvt/canonical/src/index.ts](../../../packages/@dvt/canonical/src/index.ts)
+  [packages/@dvt/crypto/src/index.ts](../../../packages/@dvt/crypto/src/index.ts)
 - JCS canonicalization:
-  [packages/@dvt/canonical/src/jcs.ts](../../../packages/@dvt/canonical/src/jcs.ts)
+  [packages/@dvt/crypto/src/jcs.ts](../../../packages/@dvt/crypto/src/jcs.ts)
 - SHA-256 helper:
-  [packages/@dvt/canonical/src/sha256.ts](../../../packages/@dvt/canonical/src/sha256.ts)
+  [packages/@dvt/crypto/src/sha256.ts](../../../packages/@dvt/crypto/src/sha256.ts)
 - Engine re-exports:
   [packages/@dvt/engine/src/utils/jcs.ts](../../../packages/@dvt/engine/src/utils/jcs.ts)
   and
@@ -39,18 +42,17 @@ matters across engine and adapter boundaries.
 - Engine consumers:
   [packages/@dvt/engine/src/core/SnapshotProjector.ts](../../../packages/@dvt/engine/src/core/SnapshotProjector.ts)
 - Package tests:
-  [packages/@dvt/canonical/test/canonical.test.ts](../../../packages/@dvt/canonical/test/canonical.test.ts)
+  [packages/@dvt/crypto/test/primitives.test.ts](../../../packages/@dvt/crypto/test/primitives.test.ts)
 
 ## Verification
 
 - `pnpm --filter @dvt/crypto test`
 
-## Open Gaps
+## Boundary Rule
 
-- The path/package-name mismatch still hurts discoverability unless linked from
-  central docs.
-- This package is foundational enough that it should never be left undocumented
-  again.
+Domain packages own their preimages and identity prefixes. This package owns
+only the portable primitives; it is not a generic identity service or a second
+domain authority.
 
 ## Related Docs
 

@@ -19,7 +19,7 @@ import {
   type EngineRunRef,
   type RunId,
 } from '@dvt/contracts';
-import { jcsCanonicalize, sha256Hex } from '@dvt/crypto';
+import { jcsCanonicalize, sha256HexUtf8 } from '@dvt/crypto';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -154,7 +154,7 @@ function makePluginBearingPlan(): ExecutionPlan {
       dependsOn: [],
     },
   ];
-  const planId = sha256Hex(
+  const planId = sha256HexUtf8(
     jcsCanonicalize({
       metadata: {
         planVersion: basePlan.metadata.planVersion,

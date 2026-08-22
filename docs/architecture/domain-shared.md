@@ -47,7 +47,7 @@ flowchart LR
 - [ExecutionPlan.v1.ts](../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts)
 - [observability index](../../packages/@dvt/observability/src/index.ts)
 - [StepStartedLineageMapper.ts](../../packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts)
-- [crypto index](../../packages/@dvt/canonical/src/index.ts)
+- [crypto index](../../packages/@dvt/crypto/src/index.ts)
 
 ## Current Posture
 

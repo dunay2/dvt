@@ -343,7 +343,7 @@ export const TEST_SCOPE_PATTERNS = {
     WORKFLOW_SCOPE_POLICY.workspace_temporal_object_file_postgres_plugin,
   web: ['apps/web/**', ...WEB_FRONTEND_TEST_GOVERNANCE_PATTERNS],
   artifacts: ['packages/@dvt/artifacts/**'],
-  crypto: ['packages/@dvt/canonical/**'],
+  crypto: ['packages/@dvt/crypto/**'],
   delivery: ['packages/@dvt/delivery/**'],
   dsl: ['packages/@dvt/dsl/**'],
   observability: ['packages/@dvt/observability/**'],

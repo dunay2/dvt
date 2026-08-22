@@ -8,15 +8,24 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
+      "require": "./dist/index.js",
       "default": "./dist/index.js"
     }
   },
   "private": true,
   "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "pnpm -C ../../.. exec vitest run packages/@dvt/canonical/test/canonical.test.ts"
+    "test": "pnpm run build && pnpm -C ../../.. exec vitest run packages/@dvt/crypto/test"
+  },
+  "dependencies": {
+    "@noble/hashes": "^2.3.0",
+    "json-canonicalize": "^2.0.0",
+    "uuid": "^11.1.1"
   },
   "devDependencies": {
     "typescript": "5.9.3",
