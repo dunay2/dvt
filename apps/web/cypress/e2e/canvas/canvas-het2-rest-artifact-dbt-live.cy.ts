@@ -69,7 +69,7 @@ const HET2_FORBIDDEN_EVIDENCE = [
   'het2-fixture-bearer-token',
   'https://127.0.0.1',
   '{"order_id":1,"amount":10.25}',
-  '{"order_id":2,"amount":20.50}',
+  '{"order_id":1,"amount":20.50}',
 ] as const;
 const DBT_GRAPH_IDENTITY: Het1PublicGraphIdentity = {
   objectNodeId: OBJECT_NODE_ID,
