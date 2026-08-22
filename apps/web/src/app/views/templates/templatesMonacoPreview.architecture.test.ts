@@ -639,6 +639,16 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     expectedViolation: 'MonacoCodeSurface outside a governed owner',
   },
   {
+    label: 'A capability cannot assign a Monaco dynamic import target after declaration',
+    modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
+    source: [
+      "let target = '';",
+      "target = '../../../app/components/monaco/MonacoCodeSurface';",
+      'void import(target);',
+    ].join('\n'),
+    expectedViolation: 'MonacoCodeSurface outside a governed owner',
+  },
+  {
     label: 'Templates cannot import an allowlisted Canvas editable leaf',
     modulePath: 'app/views/templates/TemplatesRouteWorkbench.tsx',
     source: [
@@ -2229,6 +2239,14 @@ function collectRuntimeModuleSpecifiers(
   const runtimeImportedBindings = new Map<string, string>();
   const runtimeLocalBindingInitializers = new Map<string, ts.Expression>();
   const runtimeLexicalBindingInitializers = new Map<ts.Node, Map<string, ts.Expression>>();
+  const runtimeLexicalDeclaredBindings = new Map<ts.Node, Set<string>>();
+  const runtimeLexicalBindingAssignments = new Map<
+    ts.Node,
+    Map<
+      string,
+      Array<Readonly<{ expression: ts.Expression; executionScope: ts.Node; position: number }>>
+    >
+  >();
   const runtimeExportedBindings = new Set<string>();
   const reactCreateElementBindings = new Set<string>();
   const reactNamespaceBindings = new Set<string>();
@@ -2306,6 +2324,16 @@ function collectRuntimeModuleSpecifiers(
     }
   }
 
+  function addDeclaredBindingNames(name: ts.BindingName, bindings: Set<string>): void {
+    if (ts.isIdentifier(name)) {
+      bindings.add(name.text);
+      return;
+    }
+    for (const element of name.elements) {
+      if (!ts.isOmittedExpression(element)) addDeclaredBindingNames(element.name, bindings);
+    }
+  }
+
   function readLexicalScope(node: ts.Node): ts.Node {
     let scope = node.parent;
     while (scope && !ts.isSourceFile(scope) && !ts.isBlock(scope) && !ts.isFunctionLike(scope)) {
@@ -2314,27 +2342,85 @@ function collectRuntimeModuleSpecifiers(
     return scope ?? sourceFile;
   }
 
+  function readExecutionScope(node: ts.Node): ts.Node {
+    let scope: ts.Node | undefined = node.parent;
+    while (scope && !ts.isSourceFile(scope) && !ts.isFunctionLike(scope)) scope = scope.parent;
+    return scope ?? sourceFile;
+  }
+
   function collectLexicalBindingInitializers(node: ts.Node): void {
-    if ((ts.isVariableDeclaration(node) || ts.isParameter(node)) && node.initializer) {
+    if (ts.isVariableDeclaration(node) || ts.isParameter(node)) {
       const scope = readLexicalScope(node);
-      let bindings = runtimeLexicalBindingInitializers.get(scope);
-      if (!bindings) {
-        bindings = new Map<string, ts.Expression>();
-        runtimeLexicalBindingInitializers.set(scope, bindings);
+      let declaredBindings = runtimeLexicalDeclaredBindings.get(scope);
+      if (!declaredBindings) {
+        declaredBindings = new Set<string>();
+        runtimeLexicalDeclaredBindings.set(scope, declaredBindings);
       }
-      addLocalBindingInitializers(node.name, node.initializer, bindings);
+      addDeclaredBindingNames(node.name, declaredBindings);
+      if (node.initializer) {
+        let bindings = runtimeLexicalBindingInitializers.get(scope);
+        if (!bindings) {
+          bindings = new Map<string, ts.Expression>();
+          runtimeLexicalBindingInitializers.set(scope, bindings);
+        }
+        addLocalBindingInitializers(node.name, node.initializer, bindings);
+      }
     }
     ts.forEachChild(node, collectLexicalBindingInitializers);
   }
 
-  function readLexicalBindingInitializer(identifier: ts.Identifier): ts.Expression | undefined {
+  function collectLexicalBindingAssignments(node: ts.Node): void {
+    if (
+      ts.isBinaryExpression(node) &&
+      node.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
+      ts.isIdentifier(node.left)
+    ) {
+      let scope: ts.Node | undefined = node.parent;
+      while (scope && !runtimeLexicalDeclaredBindings.get(scope)?.has(node.left.text)) {
+        scope = scope.parent;
+      }
+      if (scope) {
+        let assignments = runtimeLexicalBindingAssignments.get(scope);
+        if (!assignments) {
+          assignments = new Map();
+          runtimeLexicalBindingAssignments.set(scope, assignments);
+        }
+        const bindingAssignments = assignments.get(node.left.text) ?? [];
+        bindingAssignments.push({
+          expression: node.right,
+          executionScope: readExecutionScope(node),
+          position: node.getStart(sourceFile),
+        });
+        assignments.set(node.left.text, bindingAssignments);
+      }
+    }
+    ts.forEachChild(node, collectLexicalBindingAssignments);
+  }
+
+  function readLexicalBindingCandidates(identifier: ts.Identifier): ts.Expression[] {
+    const executionScope = readExecutionScope(identifier);
     let scope: ts.Node | undefined = identifier.parent;
     while (scope) {
-      const initializer = runtimeLexicalBindingInitializers.get(scope)?.get(identifier.text);
-      if (initializer) return initializer;
+      if (runtimeLexicalDeclaredBindings.get(scope)?.has(identifier.text)) {
+        const candidates: ts.Expression[] = [];
+        const initializer = runtimeLexicalBindingInitializers.get(scope)?.get(identifier.text);
+        if (initializer) candidates.push(initializer);
+        for (const assignment of runtimeLexicalBindingAssignments
+          .get(scope)
+          ?.get(identifier.text) ?? []) {
+          if (
+            assignment.executionScope === executionScope &&
+            assignment.position < identifier.getStart(sourceFile)
+          ) {
+            candidates.push(assignment.expression);
+          }
+        }
+        return candidates;
+      }
       scope = scope.parent;
     }
-    return runtimeLocalBindingInitializers.get(identifier.text);
+    const initializer = runtimeLocalBindingInitializers.get(identifier.text);
+    return initializer ? [initializer] : [];
   }
 
   function addExportedBindings(statement: ts.Statement): void {
@@ -3138,15 +3224,15 @@ function collectRuntimeModuleSpecifiers(
     }
   }
 
-  function readVariableImportPattern(
+  function readVariableImportPatterns(
     node: ts.Expression,
     resolvingBindings: ReadonlySet<string> = new Set()
-  ): {
+  ): Array<{
     pattern: string;
     hasStaticText: boolean;
-  } {
+  }> {
     if (ts.isStringLiteralLike(node)) {
-      return { pattern: node.text, hasStaticText: node.text.length > 0 };
+      return [{ pattern: node.text, hasStaticText: node.text.length > 0 }];
     }
 
     if (ts.isTemplateExpression(node)) {
@@ -3156,26 +3242,29 @@ function collectRuntimeModuleSpecifiers(
         pattern += `*${span.literal.text}`;
         hasStaticText ||= span.literal.text.length > 0;
       }
-      return { pattern, hasStaticText };
+      return [{ pattern, hasStaticText }];
     }
 
     if (ts.isIdentifier(node) && !resolvingBindings.has(node.text)) {
-      const initializer = readLexicalBindingInitializer(node);
-      if (initializer) {
-        return readVariableImportPattern(initializer, new Set([...resolvingBindings, node.text]));
-      }
+      const candidates = readLexicalBindingCandidates(node);
+      if (candidates.length > 0)
+        return candidates.flatMap((candidate) =>
+          readVariableImportPatterns(candidate, new Set([...resolvingBindings, node.text]))
+        );
     }
 
     if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.PlusToken) {
-      const left = readVariableImportPattern(node.left, resolvingBindings);
-      const right = readVariableImportPattern(node.right, resolvingBindings);
-      return {
-        pattern: `${left.pattern}${right.pattern}`,
-        hasStaticText: left.hasStaticText || right.hasStaticText,
-      };
+      const leftPatterns = readVariableImportPatterns(node.left, resolvingBindings);
+      const rightPatterns = readVariableImportPatterns(node.right, resolvingBindings);
+      return leftPatterns.flatMap((left) =>
+        rightPatterns.map((right) => ({
+          pattern: `${left.pattern}${right.pattern}`,
+          hasStaticText: left.hasStaticText || right.hasStaticText,
+        }))
+      );
     }
 
-    return { pattern: '*', hasStaticText: false };
+    return [{ pattern: '*', hasStaticText: false }];
   }
 
   function addDynamicImportSpecifiers(node: ts.Expression): void {
@@ -3184,20 +3273,21 @@ function collectRuntimeModuleSpecifiers(
       return;
     }
 
-    const variableImport = readVariableImportPattern(node);
-    if (!variableImport.hasStaticText) return;
+    for (const variableImport of readVariableImportPatterns(node)) {
+      if (!variableImport.hasStaticText) continue;
 
-    const pattern = variableImport.pattern.replaceAll('\\', '/');
-    if (!pattern.startsWith('.') && !pattern.startsWith('/') && !resolveWebViteAlias(pattern)) {
-      runtimeModuleSpecifiers.add(pattern);
-      return;
-    }
+      const pattern = variableImport.pattern.replaceAll('\\', '/');
+      if (!pattern.startsWith('.') && !pattern.startsWith('/') && !resolveWebViteAlias(pattern)) {
+        runtimeModuleSpecifiers.add(pattern);
+        continue;
+      }
 
-    const resolvedPattern = resolveViteGlobPattern(modulePath, pattern, undefined);
-    runtimeModuleSpecifiers.add(resolvedPattern);
-    const matches = picomatch(resolvedPattern);
-    for (const authorityPath of MONACO_INTERNAL_AUTHORITY_SOURCE_PATHS) {
-      if (matches(authorityPath)) runtimeModuleSpecifiers.add(authorityPath);
+      const resolvedPattern = resolveViteGlobPattern(modulePath, pattern, undefined);
+      runtimeModuleSpecifiers.add(resolvedPattern);
+      const matches = picomatch(resolvedPattern);
+      for (const authorityPath of MONACO_INTERNAL_AUTHORITY_SOURCE_PATHS) {
+        if (matches(authorityPath)) runtimeModuleSpecifiers.add(authorityPath);
+      }
     }
   }
 
@@ -3411,6 +3501,7 @@ function collectRuntimeModuleSpecifiers(
     }
   }
   collectLexicalBindingInitializers(sourceFile);
+  collectLexicalBindingAssignments(sourceFile);
 
   let discoveredExportedObjectAlias = true;
   while (discoveredExportedObjectAlias) {
