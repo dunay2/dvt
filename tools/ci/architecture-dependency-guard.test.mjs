@@ -1573,6 +1573,39 @@ test('Cut 3 command identity mechanics stay retired', () => {
   );
 });
 
+test('Cut 4 tooling crypto mechanics and duplicate runner stay retired', () => {
+  assert.equal(
+    existsSync('scripts/run-golden-paths.cjs'),
+    false,
+    'the unreferenced root golden-path runner must not be restored'
+  );
+
+  const trackedFiles = spawnSync(
+    'git',
+    ['ls-files', '--', 'scripts', 'tools', 'packages/@dvt/cli'],
+    { encoding: 'utf8' }
+  );
+  assert.equal(trackedFiles.stderr, '');
+  assert.equal(trackedFiles.status, 0);
+
+  const findings = [];
+  for (const sourcePath of trackedFiles.stdout.split(/\r?\n/u).filter(Boolean)) {
+    if (!/\.[cm]?[jt]sx?$/u.test(sourcePath)) {
+      continue;
+    }
+
+    const source = readText(sourcePath);
+    if (/\b(?:crypto\.)?createHash\s*\(/u.test(source)) {
+      findings.push(`${sourcePath}: createHash`);
+    }
+    if (/\b(?:crypto\.)?randomUUID\s*\(/u.test(source)) {
+      findings.push(`${sourcePath}: randomUUID`);
+    }
+  }
+
+  assert.deepEqual(findings.sort(), []);
+});
+
 test('repository consumers import crypto primitives from their authority', () => {
   const trackedFiles = spawnSync('git', ['ls-files', '--', 'apps', 'packages'], {
     encoding: 'utf8',
