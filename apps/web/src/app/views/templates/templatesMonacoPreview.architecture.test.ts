@@ -307,6 +307,17 @@ const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
       'void import(targets.chosen);',
     ].join('\n'),
   },
+  {
+    label: 'A straight-line safe assignment overrides a Monaco initializer',
+    surface: 'canvas-production',
+    modulePath: 'views/canvas/SafeCapabilityPanel.tsx',
+    source: [
+      "const monacoPath = '../../components/monaco/MonacoCodeSurface';",
+      'let target = monacoPath;',
+      "target = './SafeSurface';",
+      'void import(target);',
+    ].join('\n'),
+  },
 ];
 
 const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
@@ -709,6 +720,17 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
     source: [
       "const targets = [...['../../../app/components/monaco/MonacoCodeSurface']];",
+      'void import(targets[0]);',
+    ].join('\n'),
+    expectedViolation: 'MonacoCodeSurface outside a governed owner',
+  },
+  {
+    label: 'A capability cannot spread a member-backed Monaco import target',
+    modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
+    source: [
+      "const monacoPath = '../../../app/components/monaco/MonacoCodeSurface';",
+      'const groups = { targets: [monacoPath] };',
+      'const targets = [...groups.targets];',
       'void import(targets[0]);',
     ].join('\n'),
     expectedViolation: 'MonacoCodeSurface outside a governed owner',
@@ -2568,6 +2590,12 @@ function collectRuntimeModuleSpecifiers(
     executionScope: ts.Node;
     beforePosition: number;
   }>;
+  type RuntimeBindingAssignment = Readonly<{
+    expression: ts.Expression;
+    executionScope: ts.Node;
+    position: number;
+    straightLineOwner?: ts.Block | ts.SourceFile;
+  }>;
   const runtimeLexicalParameterBindings = new Map<ts.Node, Map<string, RuntimeParameterBinding>>();
   const runtimeLexicalCallableBindings = new Map<
     ts.Node,
@@ -2575,10 +2603,7 @@ function collectRuntimeModuleSpecifiers(
   >();
   const runtimeLexicalBindingAssignments = new Map<
     ts.Node,
-    Map<
-      string,
-      Array<Readonly<{ expression: ts.Expression; executionScope: ts.Node; position: number }>>
-    >
+    Map<string, RuntimeBindingAssignment[]>
   >();
   const runtimeCallableInvocations = new Map<ts.SignatureDeclaration, ts.CallExpression[]>();
   const runtimeMemberCallableBindings = new Map<string, ts.FunctionLikeDeclaration[]>();
@@ -2681,6 +2706,22 @@ function collectRuntimeModuleSpecifiers(
     let scope: ts.Node | undefined = node.parent;
     while (scope && !ts.isSourceFile(scope) && !ts.isFunctionLike(scope)) scope = scope.parent;
     return scope ?? sourceFile;
+  }
+
+  function readStraightLineStatementOwner(node: ts.Node): ts.Block | ts.SourceFile | undefined {
+    let candidate: ts.Node = node;
+    let nearestStatement: ts.Statement | undefined;
+    while (candidate.parent) {
+      if (ts.isStatement(candidate)) {
+        if (nearestStatement) return undefined;
+        nearestStatement = candidate;
+      }
+      if (ts.isBlock(candidate.parent) || ts.isSourceFile(candidate.parent)) {
+        return nearestStatement === candidate ? candidate.parent : undefined;
+      }
+      candidate = candidate.parent;
+    }
+    return undefined;
   }
 
   function addLexicalCallableBinding(
@@ -2870,6 +2911,7 @@ function collectRuntimeModuleSpecifiers(
           expression: node.right,
           executionScope: readExecutionScope(node),
           position: node.getStart(sourceFile),
+          straightLineOwner: readStraightLineStatementOwner(node),
         });
         assignments.set(node.left.text, bindingAssignments);
       }
@@ -3018,6 +3060,36 @@ function collectRuntimeModuleSpecifiers(
         new Set([...resolvingBindings, candidate.text])
       );
     }
+    if (
+      (ts.isPropertyAccessExpression(candidate) || ts.isElementAccessExpression(candidate)) &&
+      consumer
+    ) {
+      const projection = readStaticMemberProjection(candidate);
+      if (projection.path.length > 0) {
+        const rootCandidates =
+          ts.isIdentifier(projection.root) && !resolvingBindings.has(projection.root.text)
+            ? readLexicalBindingCandidates(projection.root, consumer)
+            : [projection.root];
+        const nextResolving = ts.isIdentifier(projection.root)
+          ? new Set([...resolvingBindings, projection.root.text])
+          : resolvingBindings;
+        const arrayCandidates = rootCandidates
+          .flatMap((rootCandidate) =>
+            readArgumentProjectionCandidates(
+              rootCandidate,
+              projection.path,
+              consumer,
+              nextResolving
+            )
+          )
+          .map((projectedCandidate) =>
+            readStaticArrayElements(projectedCandidate, consumer, nextResolving)
+          )
+          .filter((elements): elements is Array<ts.Expression | undefined> => elements != null);
+        const [arrayCandidate] = arrayCandidates;
+        if (arrayCandidates.length === 1 && arrayCandidate) return arrayCandidate;
+      }
+    }
     if (!ts.isArrayLiteralExpression(candidate)) return undefined;
 
     const elements: Array<ts.Expression | undefined> = [];
@@ -3130,22 +3202,38 @@ function collectRuntimeModuleSpecifiers(
       if (runtimeLexicalDeclaredBindings.get(scope)?.has(identifier.text)) {
         const candidates: ts.Expression[] = [];
         const initializer = runtimeLexicalBindingInitializers.get(scope)?.get(identifier.text);
-        if (initializer) candidates.push(initializer);
-        for (const assignment of runtimeLexicalBindingAssignments
-          .get(scope)
-          ?.get(identifier.text) ?? []) {
-          const identifierPosition = identifier.getStart(sourceFile);
+        const identifierPosition = identifier.getStart(sourceFile);
+        const reachingAssignments = (
+          runtimeLexicalBindingAssignments.get(scope)?.get(identifier.text) ?? []
+        ).filter((assignment) =>
+          assignment.executionScope === executionScope
+            ? assignment.position < identifierPosition
+            : executionScopeMayRunBefore(
+                assignment.executionScope,
+                executionScope,
+                identifierPosition
+              )
+        );
+        const straightLineOwner = readStraightLineStatementOwner(identifier);
+        const lastStraightLineAssignment = reachingAssignments
+          .filter(
+            (assignment) =>
+              assignment.executionScope === executionScope &&
+              assignment.straightLineOwner != null &&
+              assignment.straightLineOwner === straightLineOwner
+          )
+          .sort((left, right) => left.position - right.position)
+          .at(-1);
+        if (initializer && !lastStraightLineAssignment) candidates.push(initializer);
+        for (const assignment of reachingAssignments) {
           if (
-            assignment.executionScope === executionScope
-              ? assignment.position < identifierPosition
-              : executionScopeMayRunBefore(
-                  assignment.executionScope,
-                  executionScope,
-                  identifierPosition
-                )
+            lastStraightLineAssignment &&
+            assignment.executionScope === executionScope &&
+            assignment.position < lastStraightLineAssignment.position
           ) {
-            candidates.push(assignment.expression);
+            continue;
           }
+          candidates.push(assignment.expression);
         }
         const parameterBinding = runtimeLexicalParameterBindings.get(scope)?.get(identifier.text);
         const parameterOwner = parameterBinding?.parameter.parent;
