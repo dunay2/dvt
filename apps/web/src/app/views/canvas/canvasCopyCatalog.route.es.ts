@@ -30,11 +30,6 @@ export const canvasViewRouteCopyEs = {
   routeErrorFallbackMessage: 'No se ha podido cargar el grafo del workspace para Canvas.',
   routeErrorMessage:
     'Canvas no ha podido cargar el grafo actual del workspace. Reintenta cuando el servicio del workspace vuelva a estar disponible.',
-  retiredDiffSurfaceMessage:
-    'La antigua ruta Diferencias no tiene una superficie permanente equivalente en Canvas. Revisa los cambios desde Codigo contextual.',
-  retiredArtifactsSurfaceMessage:
-    'La antigua ruta Artefactos no tiene una superficie permanente equivalente en Canvas. Abre los recursos del proyecto desde Workspace.',
-  retiredUnknownSurfaceMessage: 'Esta antigua ruta del workbench de Canvas ya no esta disponible.',
   unsupportedCanvasKindMessagePrefix: 'Canvas no puede abrir el tipo de canvas persistido ',
   unsupportedCanvasKindMessageSuffix: ' porque no hay un registro de runtime disponible.',
   disabledCanvasPluginMessagePrefix: 'Canvas no puede abrir el tipo de canvas persistido ',

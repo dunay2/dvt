@@ -122,17 +122,16 @@ Reading rule:
 
 ## Route Matrix
 
-| Route id                                | Path           | Mode        | Owner family                    |
-| --------------------------------------- | -------------- | ----------- | ------------------------------- |
-| `dbt.canvas`                            | `/canvas`      | `published` | Canvas draft presentation state |
-| `dvt.templates`                         | `/templates`   | `published` | Governed source generation      |
-| `monitoring.runs`                       | `/runs`        | `published` | Runs route bootstrap            |
-| `monitoring.run-detail`                 | `/runs/:runId` | `published` | Runs route bootstrap            |
-| `cost.dashboard`                        | `/cost`        | `published` | Cost route bootstrap            |
-| `shell.default-core-redirect`           | `/`            | `published` | Redirect posture handoff        |
-| `dbt.canvas.retired-workbench-redirect` | `/canvas/*`    | `static`    | One-shot retired-surface intent |
-| `shell.plugins`                         | `/plugins`     | `static`    | Static shell route              |
-| `shell.admin`                           | `/admin`       | `static`    | Static shell route              |
+| Route id                      | Path           | Mode        | Owner family                    |
+| ----------------------------- | -------------- | ----------- | ------------------------------- |
+| `dbt.canvas`                  | `/canvas`      | `published` | Canvas draft presentation state |
+| `dvt.templates`               | `/templates`   | `published` | Governed source generation      |
+| `monitoring.runs`             | `/runs`        | `published` | Runs route bootstrap            |
+| `monitoring.run-detail`       | `/runs/:runId` | `published` | Runs route bootstrap            |
+| `cost.dashboard`              | `/cost`        | `published` | Cost route bootstrap            |
+| `shell.default-core-redirect` | `/`            | `published` | Redirect posture handoff        |
+| `shell.plugins`               | `/plugins`     | `static`    | Static shell route              |
+| `shell.admin`                 | `/admin`       | `static`    | Static shell route              |
 
 Special case:
 
@@ -157,8 +156,8 @@ As of 2026-08-02:
 - SRP split is implemented and validated
 - Canvas, Templates, Runs, Run Detail, and Cost use explicit startup handles
 - Code and Lineage are contextual Canvas surfaces, not peer routes
-- retired `/canvas/*` workbench URLs publish one-shot intent through a static
-  redirect rather than restoring obsolete route ownership
+- `/canvas` is the only Canvas route authority; exhausted workbench URL
+  translation and its one-shot query transport are absent
 - static settlement exists only through the explicit static boundary
 - bootstrap errors are typed and locale-resolved
 - fallback behavior remains restricted to test runtime

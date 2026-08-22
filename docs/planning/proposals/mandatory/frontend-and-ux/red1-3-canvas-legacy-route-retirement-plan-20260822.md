@@ -256,6 +256,7 @@ forbiddenImplementationSurfaces:
 commandQueryRails:
   - name: ResolveLegacyCanvasRouteIntent
     type: query
+    status: retired
     dddOwner: Web Canvas navigation - retire with no replacement
   - name: ListShellNavigationItems
     type: query

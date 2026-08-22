@@ -17,7 +17,6 @@ import type {
   CanvasShellLayout,
   CanvasShellPanels,
   CanvasShellProps,
-  CanvasShellRouteIntentRequest,
   CanvasShellWorkspaceCommands,
 } from './canvasShell.types';
 import { canvasViewCopy } from './copy';
@@ -80,7 +79,6 @@ export type CanvasShellPropsOverrides = {
   chromeCommands?: Partial<CanvasShellChromeCommands>;
   canvasCommands?: Partial<CanvasShellCanvasCommands>;
   workspaceCommands?: CanvasShellWorkspaceCommands;
-  routeIntentRequest?: CanvasShellRouteIntentRequest;
   warehouseSourceImport?: IWarehouseSourceImportPort;
   warehouseSourceDataSampleQuery?: IWarehouseSourceDataSampleQueryPort;
   runSnapshot?: CanvasShellProps['runSnapshot'];
@@ -249,7 +247,6 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
     },
     runControls: overrides?.runControls ?? null,
     workspaceCommands: overrides?.workspaceCommands,
-    routeIntentRequest: overrides?.routeIntentRequest,
     warehouseSourceImport: overrides?.warehouseSourceImport,
     warehouseSourceDataSampleQuery: overrides?.warehouseSourceDataSampleQuery,
     runSnapshot: overrides?.runSnapshot,
