@@ -262,6 +262,20 @@ const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
       'void import(target);',
     ].join('\n'),
   },
+  {
+    label: 'A later Monaco helper call does not change an earlier safe dynamic import',
+    surface: 'canvas-production',
+    modulePath: 'views/canvas/SafeCapabilityPanel.tsx',
+    source: [
+      "let target = './InitialSafeSurface';",
+      'function selectTarget(value) {',
+      '  target = value;',
+      '}',
+      "selectTarget('./SafeSurface');",
+      'void import(target);',
+      "selectTarget('../../components/monaco/MonacoCodeSurface');",
+    ].join('\n'),
+  },
 ];
 
 const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
@@ -696,6 +710,33 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
       '  target = value;',
       '}',
       "selectTarget('../../../app/components/monaco/MonacoCodeSurface');",
+      'void import(target);',
+    ].join('\n'),
+    expectedViolation: 'MonacoCodeSurface outside a governed owner',
+  },
+  {
+    label:
+      'A capability cannot pass a Monaco import target through a destructured helper parameter',
+    modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
+    source: [
+      "let target = '';",
+      'function selectTarget({ value }) {',
+      '  target = value;',
+      '}',
+      "selectTarget({ value: '../../../app/components/monaco/MonacoCodeSurface' });",
+      'void import(target);',
+    ].join('\n'),
+    expectedViolation: 'MonacoCodeSurface outside a governed owner',
+  },
+  {
+    label: 'A capability cannot pass a Monaco import target through an object method',
+    modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
+    source: [
+      "let target = '';",
+      'const helpers = {',
+      '  selectTarget(value) { target = value; },',
+      '};',
+      "helpers.selectTarget('../../../app/components/monaco/MonacoCodeSurface');",
       'void import(target);',
     ].join('\n'),
     expectedViolation: 'MonacoCodeSurface outside a governed owner',
@@ -2108,53 +2149,72 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
     localCallableBindings.set(name, callables);
   }
 
+  function addLocalCallableAlias(targetPath: string, sourcePath: string): void {
+    const aliases = localCallableAliases.get(targetPath) ?? new Set<string>();
+    aliases.add(sourcePath);
+    localCallableAliases.set(targetPath, aliases);
+  }
+
+  function collectLocalCallableMembers(rootPath: string, expression: ts.Expression): void {
+    const initializer = unwrapExpression(expression);
+    if (isRuntimeFunctionLike(initializer)) {
+      addLocalCallableBinding(rootPath, initializer);
+      return;
+    }
+    const initializerPath = readExpressionPath(initializer);
+    if (initializerPath) addLocalCallableAlias(rootPath, initializerPath);
+    if (!ts.isObjectLiteralExpression(initializer)) return;
+    for (const property of initializer.properties) {
+      const propertyName =
+        'name' in property && property.name ? readStaticPropertyName(property.name) : undefined;
+      if (!propertyName) continue;
+      const memberPath = `${rootPath}.${propertyName}`;
+      if (isRuntimeFunctionLike(property)) {
+        addLocalCallableBinding(memberPath, property);
+      } else if (ts.isPropertyAssignment(property)) {
+        collectLocalCallableMembers(memberPath, property.initializer);
+      } else if (ts.isShorthandPropertyAssignment(property)) {
+        addLocalCallableAlias(memberPath, property.name.text);
+      }
+    }
+  }
+
   function collectLocalCallableBindings(node: ts.Node): void {
     if (ts.isFunctionDeclaration(node) && node.name) {
       addLocalCallableBinding(node.name.text, node);
     }
     if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer) {
-      const initializer = unwrapExpression(node.initializer);
-      if (isRuntimeFunctionLike(initializer)) addLocalCallableBinding(node.name.text, initializer);
-      if (ts.isIdentifier(initializer)) {
-        const aliases = localCallableAliases.get(node.name.text) ?? new Set<string>();
-        aliases.add(initializer.text);
-        localCallableAliases.set(node.name.text, aliases);
-      }
+      collectLocalCallableMembers(node.name.text, node.initializer);
     }
     if (
       ts.isBinaryExpression(node) &&
       node.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
-      ts.isIdentifier(node.left)
+      readExpressionPath(node.left)
     ) {
-      const initializer = unwrapExpression(node.right);
-      if (isRuntimeFunctionLike(initializer)) addLocalCallableBinding(node.left.text, initializer);
-      if (ts.isIdentifier(initializer)) {
-        const aliases = localCallableAliases.get(node.left.text) ?? new Set<string>();
-        aliases.add(initializer.text);
-        localCallableAliases.set(node.left.text, aliases);
-      }
+      collectLocalCallableMembers(readExpressionPath(node.left)!, node.right);
     }
     ts.forEachChild(node, collectLocalCallableBindings);
   }
   collectLocalCallableBindings(sourceFile);
 
-  function readInvokedLocalCallables(
-    expression: ts.Expression,
+  function readLocalCallablesByPath(
+    candidatePath: string,
     resolvingAliases: ReadonlySet<string> = new Set()
   ): RuntimeFunctionLike[] {
-    const candidate = unwrapExpression(expression);
-    if (isRuntimeFunctionLike(candidate)) return [candidate];
-    if (!ts.isIdentifier(candidate) || resolvingAliases.has(candidate.text)) return [];
-    const resolved = new Set(localCallableBindings.get(candidate.text) ?? []);
-    for (const alias of localCallableAliases.get(candidate.text) ?? []) {
-      for (const callable of readInvokedLocalCallables(
-        ts.factory.createIdentifier(alias),
-        new Set([...resolvingAliases, candidate.text])
-      )) {
-        resolved.add(callable);
-      }
+    if (resolvingAliases.has(candidatePath)) return [];
+    const resolved = new Set(localCallableBindings.get(candidatePath) ?? []);
+    const nextResolving = new Set([...resolvingAliases, candidatePath]);
+    for (const alias of localCallableAliases.get(candidatePath) ?? []) {
+      for (const callable of readLocalCallablesByPath(alias, nextResolving)) resolved.add(callable);
     }
     return [...resolved];
+  }
+
+  function readInvokedLocalCallables(expression: ts.Expression): RuntimeFunctionLike[] {
+    const candidate = unwrapExpression(expression);
+    if (isRuntimeFunctionLike(candidate)) return [candidate];
+    const candidatePath = readExpressionPath(candidate);
+    return candidatePath ? readLocalCallablesByPath(candidatePath) : [];
   }
 
   function discoverInvokedParameterBindings(node: ts.CallExpression): boolean {
@@ -2407,7 +2467,15 @@ function collectRuntimeModuleSpecifiers(
   const runtimeLocalBindingInitializers = new Map<string, ts.Expression>();
   const runtimeLexicalBindingInitializers = new Map<ts.Node, Map<string, ts.Expression>>();
   const runtimeLexicalDeclaredBindings = new Map<ts.Node, Set<string>>();
-  const runtimeLexicalParameterBindings = new Map<ts.Node, Map<string, ts.ParameterDeclaration>>();
+  type RuntimeParameterBinding = Readonly<{
+    parameter: ts.ParameterDeclaration;
+    path: readonly (string | number)[];
+  }>;
+  type RuntimeImportConsumer = Readonly<{
+    executionScope: ts.Node;
+    beforePosition: number;
+  }>;
+  const runtimeLexicalParameterBindings = new Map<ts.Node, Map<string, RuntimeParameterBinding>>();
   const runtimeLexicalCallableBindings = new Map<
     ts.Node,
     Map<string, ts.FunctionLikeDeclaration>
@@ -2420,6 +2488,7 @@ function collectRuntimeModuleSpecifiers(
     >
   >();
   const runtimeCallableInvocations = new Map<ts.SignatureDeclaration, ts.CallExpression[]>();
+  const runtimeMemberCallableBindings = new Map<string, ts.FunctionLikeDeclaration[]>();
   const runtimeExportedBindings = new Set<string>();
   const reactCreateElementBindings = new Set<string>();
   const reactNamespaceBindings = new Set<string>();
@@ -2537,6 +2606,13 @@ function collectRuntimeModuleSpecifiers(
   function readFunctionLikeInitializer(
     expression: ts.Expression
   ): ts.FunctionLikeDeclaration | undefined {
+    const candidate = unwrapRuntimeExpression(expression);
+    return ts.isArrowFunction(candidate) || ts.isFunctionExpression(candidate)
+      ? candidate
+      : undefined;
+  }
+
+  function unwrapRuntimeExpression(expression: ts.Expression): ts.Expression {
     let candidate = expression;
     while (
       ts.isParenthesizedExpression(candidate) ||
@@ -2546,9 +2622,52 @@ function collectRuntimeModuleSpecifiers(
     ) {
       candidate = candidate.expression;
     }
-    return ts.isArrowFunction(candidate) || ts.isFunctionExpression(candidate)
-      ? candidate
-      : undefined;
+    return candidate;
+  }
+
+  function readRuntimeExpressionPath(expression: ts.Expression): string | undefined {
+    const candidate = unwrapRuntimeExpression(expression);
+    if (ts.isIdentifier(candidate)) return candidate.text;
+    if (ts.isPropertyAccessExpression(candidate)) {
+      const ownerPath = readRuntimeExpressionPath(candidate.expression);
+      return ownerPath ? `${ownerPath}.${candidate.name.text}` : undefined;
+    }
+    if (
+      ts.isElementAccessExpression(candidate) &&
+      candidate.argumentExpression &&
+      ts.isStringLiteralLike(candidate.argumentExpression)
+    ) {
+      const ownerPath = readRuntimeExpressionPath(candidate.expression);
+      return ownerPath ? `${ownerPath}.${candidate.argumentExpression.text}` : undefined;
+    }
+    return undefined;
+  }
+
+  function addRuntimeMemberCallableBinding(
+    memberPath: string,
+    callable: ts.FunctionLikeDeclaration
+  ): void {
+    const callables = runtimeMemberCallableBindings.get(memberPath) ?? [];
+    callables.push(callable);
+    runtimeMemberCallableBindings.set(memberPath, callables);
+  }
+
+  function collectRuntimeCallableMembers(rootPath: string, expression: ts.Expression): void {
+    const initializer = unwrapRuntimeExpression(expression);
+    if (!ts.isObjectLiteralExpression(initializer)) return;
+    for (const property of initializer.properties) {
+      const propertyName =
+        'name' in property && property.name ? readStaticPropertyName(property.name) : undefined;
+      if (!propertyName) continue;
+      const memberPath = `${rootPath}.${propertyName}`;
+      if (ts.isMethodDeclaration(property)) {
+        addRuntimeMemberCallableBinding(memberPath, property);
+      } else if (ts.isPropertyAssignment(property)) {
+        const callable = readFunctionLikeInitializer(property.initializer);
+        if (callable) addRuntimeMemberCallableBinding(memberPath, callable);
+        collectRuntimeCallableMembers(memberPath, property.initializer);
+      }
+    }
   }
 
   function readCallableAliasIdentifier(expression: ts.Expression): ts.Identifier | undefined {
@@ -2562,6 +2681,40 @@ function collectRuntimeModuleSpecifiers(
       candidate = candidate.expression;
     }
     return ts.isIdentifier(candidate) ? candidate : undefined;
+  }
+
+  function addRuntimeParameterBindings(
+    scope: ts.Node,
+    parameter: ts.ParameterDeclaration,
+    name: ts.BindingName = parameter.name,
+    bindingPath: readonly (string | number)[] = []
+  ): void {
+    let parameters = runtimeLexicalParameterBindings.get(scope);
+    if (!parameters) {
+      parameters = new Map<string, RuntimeParameterBinding>();
+      runtimeLexicalParameterBindings.set(scope, parameters);
+    }
+    if (ts.isIdentifier(name)) {
+      parameters.set(name.text, { parameter, path: bindingPath });
+      return;
+    }
+    for (const [index, element] of name.elements.entries()) {
+      if (ts.isOmittedExpression(element)) continue;
+      if (element.dotDotDotToken) {
+        addRuntimeParameterBindings(scope, parameter, element.name, bindingPath);
+        continue;
+      }
+      const segment = ts.isObjectBindingPattern(name)
+        ? element.propertyName
+          ? readStaticPropertyName(element.propertyName)
+          : ts.isIdentifier(element.name)
+            ? element.name.text
+            : undefined
+        : index;
+      if (segment != null) {
+        addRuntimeParameterBindings(scope, parameter, element.name, [...bindingPath, segment]);
+      }
+    }
   }
 
   function collectLexicalBindingInitializers(node: ts.Node): void {
@@ -2583,14 +2736,7 @@ function collectRuntimeModuleSpecifiers(
         runtimeLexicalDeclaredBindings.set(scope, declaredBindings);
       }
       addDeclaredBindingNames(node.name, declaredBindings);
-      if (ts.isParameter(node) && ts.isIdentifier(node.name)) {
-        let parameters = runtimeLexicalParameterBindings.get(scope);
-        if (!parameters) {
-          parameters = new Map<string, ts.ParameterDeclaration>();
-          runtimeLexicalParameterBindings.set(scope, parameters);
-        }
-        parameters.set(node.name.text, node);
-      }
+      if (ts.isParameter(node)) addRuntimeParameterBindings(scope, node);
       if (node.initializer) {
         let bindings = runtimeLexicalBindingInitializers.get(scope);
         if (!bindings) {
@@ -2601,6 +2747,9 @@ function collectRuntimeModuleSpecifiers(
         const callable = readFunctionLikeInitializer(node.initializer);
         if (callable && ts.isIdentifier(node.name)) {
           addLexicalCallableBinding(scope, node.name.text, callable);
+        }
+        if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name)) {
+          collectRuntimeCallableMembers(node.name.text, node.initializer);
         }
       }
     }
@@ -2687,7 +2836,9 @@ function collectRuntimeModuleSpecifiers(
   function readInvokedExecutionScopes(expression: ts.Expression): ts.FunctionLikeDeclaration[] {
     const callable = readFunctionLikeInitializer(expression);
     if (callable) return [callable];
-    return ts.isIdentifier(expression) ? readLexicalCallableBindings(expression) : [];
+    if (ts.isIdentifier(expression)) return readLexicalCallableBindings(expression);
+    const memberPath = readRuntimeExpressionPath(expression);
+    return memberPath ? (runtimeMemberCallableBindings.get(memberPath) ?? []) : [];
   }
 
   function collectDirectInvokedExecutionScopes(
@@ -2744,7 +2895,57 @@ function collectRuntimeModuleSpecifiers(
     ts.forEachChild(node, collectCallableInvocations);
   }
 
-  function readLexicalBindingCandidates(identifier: ts.Identifier): ts.Expression[] {
+  function invocationMayRunBefore(
+    invocation: ts.CallExpression,
+    consumer: RuntimeImportConsumer
+  ): boolean {
+    const invocationScope = readExecutionScope(invocation);
+    return invocationScope === consumer.executionScope
+      ? invocation.getStart(sourceFile) < consumer.beforePosition
+      : executionScopeMayRunBefore(
+          invocationScope,
+          consumer.executionScope,
+          consumer.beforePosition
+        );
+  }
+
+  function readArgumentProjectionCandidates(
+    expression: ts.Expression,
+    bindingPath: readonly (string | number)[]
+  ): ts.Expression[] {
+    if (bindingPath.length === 0) return [expression];
+    const [segment, ...remainingPath] = bindingPath;
+    const candidate = unwrapRuntimeExpression(expression);
+    if (typeof segment === 'number' && ts.isArrayLiteralExpression(candidate)) {
+      const element = candidate.elements[segment];
+      if (!element || ts.isOmittedExpression(element)) return [];
+      return readArgumentProjectionCandidates(
+        ts.isSpreadElement(element) ? element.expression : element,
+        remainingPath
+      );
+    }
+    if (typeof segment !== 'string' || !ts.isObjectLiteralExpression(candidate)) return [];
+    const projected: ts.Expression[] = [];
+    for (const property of candidate.properties) {
+      if (ts.isSpreadAssignment(property)) {
+        projected.push(...readArgumentProjectionCandidates(property.expression, bindingPath));
+        continue;
+      }
+      if (ts.isShorthandPropertyAssignment(property) && property.name.text === segment) {
+        projected.push(...readArgumentProjectionCandidates(property.name, remainingPath));
+        continue;
+      }
+      if (ts.isPropertyAssignment(property) && readStaticPropertyName(property.name) === segment) {
+        projected.push(...readArgumentProjectionCandidates(property.initializer, remainingPath));
+      }
+    }
+    return projected;
+  }
+
+  function readLexicalBindingCandidates(
+    identifier: ts.Identifier,
+    consumer?: RuntimeImportConsumer
+  ): ts.Expression[] {
     const executionScope = readExecutionScope(identifier);
     let scope: ts.Node | undefined = identifier.parent;
     while (scope) {
@@ -2768,12 +2969,16 @@ function collectRuntimeModuleSpecifiers(
             candidates.push(assignment.expression);
           }
         }
-        const parameter = runtimeLexicalParameterBindings.get(scope)?.get(identifier.text);
-        if (parameter && ts.isFunctionLike(parameter.parent)) {
-          const parameterIndex = parameter.parent.parameters.indexOf(parameter);
-          for (const invocation of runtimeCallableInvocations.get(parameter.parent) ?? []) {
+        const parameterBinding = runtimeLexicalParameterBindings.get(scope)?.get(identifier.text);
+        const parameterOwner = parameterBinding?.parameter.parent;
+        if (parameterBinding && parameterOwner && ts.isFunctionLike(parameterOwner)) {
+          const parameterIndex = parameterOwner.parameters.indexOf(parameterBinding.parameter);
+          for (const invocation of runtimeCallableInvocations.get(parameterOwner) ?? []) {
+            if (consumer && !invocationMayRunBefore(invocation, consumer)) continue;
             const argument = invocation.arguments[parameterIndex];
-            if (argument) candidates.push(argument);
+            if (argument) {
+              candidates.push(...readArgumentProjectionCandidates(argument, parameterBinding.path));
+            }
           }
         }
         return candidates;
@@ -3587,7 +3792,11 @@ function collectRuntimeModuleSpecifiers(
 
   function readVariableImportPatterns(
     node: ts.Expression,
-    resolvingBindings: ReadonlySet<string> = new Set()
+    resolvingBindings: ReadonlySet<string> = new Set(),
+    consumer: RuntimeImportConsumer = {
+      executionScope: readExecutionScope(node),
+      beforePosition: node.getStart(sourceFile),
+    }
   ): Array<{
     pattern: string;
     hasStaticText: boolean;
@@ -3607,16 +3816,20 @@ function collectRuntimeModuleSpecifiers(
     }
 
     if (ts.isIdentifier(node) && !resolvingBindings.has(node.text)) {
-      const candidates = readLexicalBindingCandidates(node);
+      const candidates = readLexicalBindingCandidates(node, consumer);
       if (candidates.length > 0)
         return candidates.flatMap((candidate) =>
-          readVariableImportPatterns(candidate, new Set([...resolvingBindings, node.text]))
+          readVariableImportPatterns(
+            candidate,
+            new Set([...resolvingBindings, node.text]),
+            consumer
+          )
         );
     }
 
     if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.PlusToken) {
-      const leftPatterns = readVariableImportPatterns(node.left, resolvingBindings);
-      const rightPatterns = readVariableImportPatterns(node.right, resolvingBindings);
+      const leftPatterns = readVariableImportPatterns(node.left, resolvingBindings, consumer);
+      const rightPatterns = readVariableImportPatterns(node.right, resolvingBindings, consumer);
       return leftPatterns.flatMap((left) =>
         rightPatterns.map((right) => ({
           pattern: `${left.pattern}${right.pattern}`,
@@ -4423,6 +4636,20 @@ describe('Templates Monaco preview architecture', () => {
           'export function MonacoCodeViewer() {',
           '  const Surface = useMonacoCodeSurface();',
           '  return <><Surface readOnly />{renderSurface(Surface)}</>;',
+          '}',
+        ].join('\n')
+      )
+    ).toContain('MonacoCodeViewer rendered a writable or dynamic surface');
+    expect(
+      collectMonacoViewerReadOnlyViolations(
+        [
+          'function useMonacoCodeSurface() { return null; }',
+          'const helpers = {',
+          '  renderSurface(Component) { return <Component readOnly={false} />; },',
+          '};',
+          'export function MonacoCodeViewer() {',
+          '  const Surface = useMonacoCodeSurface();',
+          '  return <><Surface readOnly />{helpers.renderSurface(Surface)}</>;',
           '}',
         ].join('\n')
       )
