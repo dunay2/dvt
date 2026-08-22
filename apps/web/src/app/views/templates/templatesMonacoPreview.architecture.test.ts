@@ -856,23 +856,28 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
     return undefined;
   }
 
-  function addSurfaceBinding(binding: string): boolean {
-    if (surfaceBindings.has(binding)) return false;
-    surfaceBindings.add(binding);
+  function addBinding(bindings: Set<string>, binding: string): boolean {
+    if (bindings.has(binding)) return false;
+    bindings.add(binding);
     return true;
   }
 
-  function copySurfaceMembers(sourcePath: string, targetPath: string): boolean {
+  function copyBindingMembers(
+    bindings: Set<string>,
+    sourcePath: string,
+    targetPath: string
+  ): boolean {
     let discovered = false;
-    for (const binding of [...surfaceBindings]) {
+    for (const binding of [...bindings]) {
       if (!binding.startsWith(`${sourcePath}.`)) continue;
       discovered =
-        addSurfaceBinding(`${targetPath}${binding.slice(sourcePath.length)}`) || discovered;
+        addBinding(bindings, `${targetPath}${binding.slice(sourcePath.length)}`) || discovered;
     }
     return discovered;
   }
 
-  function discoverObjectSurfaceBindings(
+  function discoverObjectBindings(
+    bindings: Set<string>,
     objectPath: string,
     objectLiteral: ts.ObjectLiteralExpression
   ): boolean {
@@ -881,8 +886,8 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
       if (ts.isShorthandPropertyAssignment(property)) {
         const targetPath = `${objectPath}.${property.name.text}`;
         discovered =
-          (surfaceBindings.has(property.name.text) && addSurfaceBinding(targetPath)) || discovered;
-        discovered = copySurfaceMembers(property.name.text, targetPath) || discovered;
+          (bindings.has(property.name.text) && addBinding(bindings, targetPath)) || discovered;
+        discovered = copyBindingMembers(bindings, property.name.text, targetPath) || discovered;
         continue;
       }
       if (!ts.isPropertyAssignment(property)) continue;
@@ -893,11 +898,11 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
       const initializerPath = readExpressionPath(initializer);
       if (initializerPath) {
         discovered =
-          (surfaceBindings.has(initializerPath) && addSurfaceBinding(targetPath)) || discovered;
-        discovered = copySurfaceMembers(initializerPath, targetPath) || discovered;
+          (bindings.has(initializerPath) && addBinding(bindings, targetPath)) || discovered;
+        discovered = copyBindingMembers(bindings, initializerPath, targetPath) || discovered;
       }
       if (ts.isObjectLiteralExpression(initializer)) {
-        discovered = discoverObjectSurfaceBindings(targetPath, initializer) || discovered;
+        discovered = discoverObjectBindings(bindings, targetPath, initializer) || discovered;
       }
     }
     return discovered;
@@ -908,16 +913,46 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
       !ts.isImportDeclaration(statement) ||
       !ts.isStringLiteralLike(statement.moduleSpecifier) ||
       !/\/?useMonacoCodeSurface(?:\.[cm]?[jt]s)?$/.test(statement.moduleSpecifier.text) ||
-      !statement.importClause?.namedBindings ||
-      !ts.isNamedImports(statement.importClause.namedBindings)
+      !statement.importClause?.namedBindings
     ) {
       continue;
     }
-    for (const element of statement.importClause.namedBindings.elements) {
+    const namedBindings = statement.importClause.namedBindings;
+    if (ts.isNamespaceImport(namedBindings)) {
+      hookBindings.add(`${namedBindings.name.text}.useMonacoCodeSurface`);
+      continue;
+    }
+    for (const element of namedBindings.elements) {
       if ((element.propertyName ?? element.name).text === 'useMonacoCodeSurface') {
         hookBindings.add(element.name.text);
       }
     }
+  }
+
+  let discoveredHookBinding = true;
+  while (discoveredHookBinding) {
+    discoveredHookBinding = false;
+    function discoverHookBindings(node: ts.Node): void {
+      if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer) {
+        const initializer = unwrapExpression(node.initializer);
+        const initializerPath = readExpressionPath(initializer);
+        if (initializerPath && hookBindings.has(initializerPath)) {
+          discoveredHookBinding = addBinding(hookBindings, node.name.text) || discoveredHookBinding;
+        }
+        if (initializerPath) {
+          discoveredHookBinding =
+            copyBindingMembers(hookBindings, initializerPath, node.name.text) ||
+            discoveredHookBinding;
+        }
+        if (ts.isObjectLiteralExpression(initializer)) {
+          discoveredHookBinding =
+            discoverObjectBindings(hookBindings, node.name.text, initializer) ||
+            discoveredHookBinding;
+        }
+      }
+      ts.forEachChild(node, discoverHookBindings);
+    }
+    discoverHookBindings(sourceFile);
   }
 
   let discoveredSurfaceBinding = true;
@@ -928,19 +963,21 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
         const initializer = unwrapExpression(node.initializer);
         const isHookResult =
           ts.isCallExpression(initializer) &&
-          ts.isIdentifier(initializer.expression) &&
-          hookBindings.has(initializer.expression.text);
+          hookBindings.has(readExpressionPath(initializer.expression) ?? '');
         const initializerPath = readExpressionPath(initializer);
         if (isHookResult || (initializerPath && surfaceBindings.has(initializerPath))) {
-          discoveredSurfaceBinding = addSurfaceBinding(node.name.text) || discoveredSurfaceBinding;
+          discoveredSurfaceBinding =
+            addBinding(surfaceBindings, node.name.text) || discoveredSurfaceBinding;
         }
         if (initializerPath) {
           discoveredSurfaceBinding =
-            copySurfaceMembers(initializerPath, node.name.text) || discoveredSurfaceBinding;
+            copyBindingMembers(surfaceBindings, initializerPath, node.name.text) ||
+            discoveredSurfaceBinding;
         }
         if (ts.isObjectLiteralExpression(initializer)) {
           discoveredSurfaceBinding =
-            discoverObjectSurfaceBindings(node.name.text, initializer) || discoveredSurfaceBinding;
+            discoverObjectBindings(surfaceBindings, node.name.text, initializer) ||
+            discoveredSurfaceBinding;
         }
       }
       ts.forEachChild(node, discoverSurfaceBindings);
@@ -1945,6 +1982,19 @@ describe('Templates Monaco preview architecture', () => {
           'export function MonacoCodeViewer({ editable }: { editable: boolean }) {',
           '  const Surface = useMonacoCodeSurface();',
           '  return editable ? <Surface readOnly={false} /> : <Surface readOnly={true} />;',
+          '}',
+        ].join('\n')
+      )
+    ).toContain('MonacoCodeViewer rendered a writable or dynamic surface');
+    expect(
+      collectMonacoViewerReadOnlyViolations(
+        [
+          'function useMonacoCodeSurface() { return null; }',
+          'export function MonacoCodeViewer() {',
+          '  const Loaders = { useMonacoCodeSurface };',
+          '  const Safe = useMonacoCodeSurface();',
+          '  const Writable = Loaders.useMonacoCodeSurface();',
+          '  return <><Safe readOnly /><Writable readOnly={false} /></>;',
           '}',
         ].join('\n')
       )
