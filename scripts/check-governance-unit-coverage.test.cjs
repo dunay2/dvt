@@ -433,7 +433,7 @@ test('real manifest subdivides runtime package files below the runtime root modu
     ['SYS-RUNTIME-PLAN-VERIFICATION']
   );
   assert.deepEqual(
-    findOwnerMatches('packages/@dvt/canonical/src/index.ts', units).map((unit) => unit.id),
+    findOwnerMatches('packages/@dvt/crypto/src/index.ts', units).map((unit) => unit.id),
     ['SYS-RUNTIME-DETERMINISM-UTILITIES']
   );
   assert.deepEqual(

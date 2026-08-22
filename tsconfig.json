@@ -29,10 +29,8 @@
     "rootDir": ".",
     "types": ["node", "vitest/globals"],
     "paths": {
-      "@dvt/crypto": ["./packages/@dvt/canonical/src/index.ts"],
-      "@dvt/crypto/*": ["./packages/@dvt/canonical/src/*"],
-      "@dvt/canonical": ["./packages/@dvt/canonical/src/index.ts"],
-      "@dvt/canonical/*": ["./packages/@dvt/canonical/src/*"],
+      "@dvt/crypto": ["./packages/@dvt/crypto/src/index.ts"],
+      "@dvt/crypto/*": ["./packages/@dvt/crypto/src/*"],
       "@dvt/dsl": ["./packages/@dvt/dsl/src/index.ts"],
       "@dvt/dsl/*": ["./packages/@dvt/dsl/src/*"],
       "@dvt/engine": ["./packages/@dvt/engine/src/index.ts"],
