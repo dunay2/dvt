@@ -67,6 +67,27 @@ const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
     source: "import Editor from '@monaco-editor/react';",
     expectedViolation: '@monaco-editor/react',
   },
+  {
+    label: 'Templates preview cannot import the underlying code surface directly',
+    surface: 'templates-preview',
+    modulePath: 'views/templates/TemplateMonacoPreviewPanel.tsx',
+    source: "import MonacoCodeSurface from '../../components/monaco/MonacoCodeSurface';",
+    expectedViolation: 'MonacoCodeSurface',
+  },
+  {
+    label: 'Canvas authoring cannot import the underlying code surface directly',
+    surface: 'canvas-production',
+    modulePath: 'views/canvas/DvtSqlTransformAuthoringSection.tsx',
+    source: "import MonacoCodeSurface from '../../components/monaco/MonacoCodeSurface';",
+    expectedViolation: 'MonacoCodeSurface',
+  },
+  {
+    label: 'Canvas production cannot import the underlying diff surface directly',
+    surface: 'canvas-production',
+    modulePath: 'views/canvas/CanvasShell.tsx',
+    source: "import MonacoDiffSurface from '../../components/monaco/MonacoDiffSurface';",
+    expectedViolation: 'MonacoDiffSurface',
+  },
 ];
 
 function readAppSource(relativePath: string): string {
@@ -104,19 +125,35 @@ function collectMonacoAuthorityViolations({
   }
 
   if (surface === 'templates-route') {
-    for (const gateway of ['MonacoCodeEditor', 'MonacoCodeViewer', 'MonacoDiffViewer']) {
+    for (const gateway of [
+      'MonacoCodeEditor',
+      'MonacoCodeViewer',
+      'MonacoDiffViewer',
+      'MonacoCodeSurface',
+      'MonacoDiffSurface',
+    ]) {
       if (source.includes(gateway)) violations.push(gateway);
     }
   }
 
   if (surface === 'templates-preview') {
-    for (const gateway of ['MonacoCodeEditor', 'MonacoDiffViewer']) {
+    for (const gateway of [
+      'MonacoCodeEditor',
+      'MonacoDiffViewer',
+      'MonacoCodeSurface',
+      'MonacoDiffSurface',
+    ]) {
       if (source.includes(gateway)) violations.push(gateway);
     }
   }
 
   if (surface === 'canvas-production') {
-    for (const gateway of ['MonacoCodeViewer', 'MonacoDiffViewer']) {
+    for (const gateway of [
+      'MonacoCodeViewer',
+      'MonacoDiffViewer',
+      'MonacoCodeSurface',
+      'MonacoDiffSurface',
+    ]) {
       if (source.includes(gateway)) violations.push(gateway);
     }
 
