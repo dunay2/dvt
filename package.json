@@ -93,7 +93,7 @@
     "test:coverage:engine": "pnpm --filter @dvt/engine test -- --coverage",
     "test:ci-tools": "node tools/ci/ci-tool-test-suite.mjs all",
     "test:ci-tools:static": "node tools/ci/ci-tool-test-suite.mjs static",
-    "test:ci-tools:executable": "node tools/ci/ci-tool-test-suite.mjs executable",
+    "test:ci-tools:executable": "pnpm --filter @dvt/crypto build && node tools/ci/ci-tool-test-suite.mjs executable",
     "arch:deps": "node tools/ci/check-architecture-dependencies.mjs",
     "validate:contracts": "pnpm --filter @dvt/contracts run build && pnpm --filter @dvt/cli validate-contracts",
     "gen:ai-index": "node scripts/gen-ai-index.js",
