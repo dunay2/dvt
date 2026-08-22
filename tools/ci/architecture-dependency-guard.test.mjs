@@ -1547,6 +1547,32 @@ test('Cut 1 crypto facades and duplicate implementations stay retired', () => {
   }
 });
 
+test('Cut 3 command identity mechanics stay retired', () => {
+  assert.equal(
+    existsSync('apps/web/src/app/views/canvas/canvasDraftIdempotencyKey.ts'),
+    false,
+    'the Canvas-specific identity helper must not be restored'
+  );
+
+  const browserIdentity = readText(
+    'apps/web/src/app/services/idempotency/createBrowserIdempotencyKey.ts'
+  );
+  assert.match(browserIdentity, /import \{ randomUuidV4 \} from '@dvt\/crypto';/u);
+  assert.doesNotMatch(
+    browserIdentity,
+    /getRandomValues|randomUUID|Date\.now|Math\.random/u,
+    'Web command identities must not reimplement UUID or weak fallback mechanics'
+  );
+
+  const startRunIdentity = readText('apps/api/src/entrypoints/http/startRunIdentity.ts');
+  assert.match(startRunIdentity, /import \{ randomUuidV7 \} from '@dvt\/crypto';/u);
+  assert.doesNotMatch(
+    startRunIdentity,
+    /node:crypto|randomBytes|function generateUuidV7|function formatUuid/u,
+    'Start Run must not reimplement UUIDv7 mechanics'
+  );
+});
+
 test('repository consumers import crypto primitives from their authority', () => {
   const trackedFiles = spawnSync('git', ['ls-files', '--', 'apps', 'packages'], {
     encoding: 'utf8',
