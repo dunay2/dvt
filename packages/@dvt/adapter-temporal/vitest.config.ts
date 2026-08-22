@@ -6,7 +6,7 @@ import { defineConfig } from 'vitest/config';
 const repoPackageRoot = path.dirname(fileURLToPath(import.meta.url));
 const adapterTemporalSourceEntry = path.resolve(repoPackageRoot, 'src/index.ts');
 const adapterPostgresDistEntry = path.resolve(repoPackageRoot, '../adapter-postgres/dist/index.js');
-const cryptoDistEntry = path.resolve(repoPackageRoot, '../canonical/dist/index.js');
+const cryptoDistEntry = path.resolve(repoPackageRoot, '../crypto/dist/index.js');
 const temporalDbtPluginSourceEntry = path.resolve(
   repoPackageRoot,
   '../temporal-dbt-plugin/src/index.ts'
