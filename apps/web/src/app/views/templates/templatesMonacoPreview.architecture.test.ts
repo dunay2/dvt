@@ -675,6 +675,20 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     expectedViolation: 'MonacoCodeSurface outside a governed owner',
   },
   {
+    label: 'A capability cannot invoke a Monaco target helper through a local alias',
+    modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
+    source: [
+      "let target = '';",
+      'function selectTarget() {',
+      "  target = '../../../app/components/monaco/MonacoCodeSurface';",
+      '}',
+      'const invoke = selectTarget;',
+      'invoke();',
+      'void import(target);',
+    ].join('\n'),
+    expectedViolation: 'MonacoCodeSurface outside a governed owner',
+  },
+  {
     label: 'Templates cannot import an allowlisted Canvas editable leaf',
     modulePath: 'app/views/templates/TemplatesRouteWorkbench.tsx',
     source: [
@@ -2408,6 +2422,19 @@ function collectRuntimeModuleSpecifiers(
       : undefined;
   }
 
+  function readCallableAliasIdentifier(expression: ts.Expression): ts.Identifier | undefined {
+    let candidate = expression;
+    while (
+      ts.isParenthesizedExpression(candidate) ||
+      ts.isAsExpression(candidate) ||
+      ts.isSatisfiesExpression(candidate) ||
+      ts.isNonNullExpression(candidate)
+    ) {
+      candidate = candidate.expression;
+    }
+    return ts.isIdentifier(candidate) ? candidate : undefined;
+  }
+
   function collectLexicalBindingInitializers(node: ts.Node): void {
     if (ts.isFunctionDeclaration(node) && node.name) {
       const scope = readLexicalScope(node);
@@ -2472,13 +2499,23 @@ function collectRuntimeModuleSpecifiers(
   }
 
   function readLexicalCallableBinding(
-    identifier: ts.Identifier
+    identifier: ts.Identifier,
+    resolvingAliases: ReadonlySet<ts.Expression> = new Set()
   ): ts.FunctionLikeDeclaration | undefined {
     let scope: ts.Node | undefined = identifier.parent;
     while (scope) {
       const callable = runtimeLexicalCallableBindings.get(scope)?.get(identifier.text);
       if (callable) return callable;
-      if (runtimeLexicalDeclaredBindings.get(scope)?.has(identifier.text)) return undefined;
+      if (runtimeLexicalDeclaredBindings.get(scope)?.has(identifier.text)) {
+        const initializer = runtimeLexicalBindingInitializers.get(scope)?.get(identifier.text);
+        if (initializer && !resolvingAliases.has(initializer)) {
+          const alias = readCallableAliasIdentifier(initializer);
+          if (alias) {
+            return readLexicalCallableBinding(alias, new Set([...resolvingAliases, initializer]));
+          }
+        }
+        return undefined;
+      }
       scope = scope.parent;
     }
     return undefined;
