@@ -7,14 +7,18 @@
  *   validation, idempotency, and audit semantics before projections consume them.
  * @version 1.2.0
  */
-const crypto = require('node:crypto');
 const { spawnSync } = require('node:child_process');
 const { Client } = require('pg');
+const { randomUuidV4, sha256Hex, sha256HexUtf8 } = require('@dvt/crypto');
 
 const { defaultPgUrl } = require('./planning-db-run.cjs');
 const { assertPlanningDbCurrentSchemaReady, schemaName } = require('./planning-db-schema.cjs');
 const componentEngineeringSchemaName = 'component_engineering';
 const { runArchitectureFitnessScan } = require('./planning-db/architecture-fitness/scan.cjs');
+
+function sha256(value) {
+  return typeof value === 'string' ? sha256HexUtf8(value) : sha256Hex(value);
+}
 const {
   allowedDbSurfaceAuthorityModes,
   allowedDbSurfaceWriteRailKinds,
@@ -1583,11 +1587,7 @@ function operationPayload(command) {
       command.documentPath || 'no-document',
       command.targetPath || command.referencePath || 'no-subject',
       command.relationType || 'no-relation',
-      crypto
-        .createHash('sha256')
-        .update(canonicalJson(operationPayload(command)))
-        .digest('hex')
-        .slice(0, 16),
+      sha256HexUtf8(canonicalJson(operationPayload(command))).slice(0, 16),
     ].join(':');
   }
 
@@ -1610,11 +1610,7 @@ function defaultIdempotencyKey(command) {
       command.issueKind,
       command.documentPath || 'no-document',
       command.referenceText || 'no-reference',
-      crypto
-        .createHash('sha256')
-        .update(canonicalJson(docsResolutionIdempotencyPayload(command)))
-        .digest('hex')
-        .slice(0, 16),
+      sha256HexUtf8(canonicalJson(docsResolutionIdempotencyPayload(command))).slice(0, 16),
     ].join(':');
   }
 
@@ -1628,11 +1624,7 @@ function defaultIdempotencyKey(command) {
       command.actor || 'anonymous',
       command.componentId || 'all',
       command.expectedRevision ?? 'latest',
-      crypto
-        .createHash('sha256')
-        .update(canonicalJson(operationPayload(command)))
-        .digest('hex')
-        .slice(0, 16),
+      sha256HexUtf8(canonicalJson(operationPayload(command))).slice(0, 16),
     ].join(':');
   }
 
@@ -1644,11 +1636,7 @@ function defaultIdempotencyKey(command) {
       command.kind,
       command.actor || 'anonymous',
       command.designId || 'all',
-      crypto
-        .createHash('sha256')
-        .update(canonicalJson(operationPayload(command)))
-        .digest('hex')
-        .slice(0, 16),
+      sha256HexUtf8(canonicalJson(operationPayload(command))).slice(0, 16),
     ].join(':');
   }
 
@@ -1681,11 +1669,7 @@ function defaultIdempotencyKey(command) {
         command.observabilityId ||
         command.evidenceId ||
         'no-subject',
-      crypto
-        .createHash('sha256')
-        .update(canonicalJson(operationPayload(command)))
-        .digest('hex')
-        .slice(0, 16),
+      sha256HexUtf8(canonicalJson(operationPayload(command))).slice(0, 16),
     ].join(':');
   }
 
@@ -1694,11 +1678,7 @@ function defaultIdempotencyKey(command) {
       command.kind,
       command.actor || 'anonymous',
       command.surfaceName || 'all',
-      crypto
-        .createHash('sha256')
-        .update(canonicalJson(operationPayload(command)))
-        .digest('hex')
-        .slice(0, 16),
+      sha256HexUtf8(canonicalJson(operationPayload(command))).slice(0, 16),
     ].join(':');
   }
 
@@ -1713,11 +1693,7 @@ function defaultIdempotencyKey(command) {
       command.railType || 'no-type',
       command.normalizedRailName || 'no-rail',
       command.expectedRevision ?? 'latest',
-      crypto
-        .createHash('sha256')
-        .update(canonicalJson(operationPayload(command)))
-        .digest('hex')
-        .slice(0, 16),
+      sha256HexUtf8(canonicalJson(operationPayload(command))).slice(0, 16),
     ].join(':');
   }
 
@@ -1725,11 +1701,7 @@ function defaultIdempotencyKey(command) {
     command.kind,
     command.actor || 'anonymous',
     command.expectedRevision ?? 'latest',
-    crypto
-      .createHash('sha256')
-      .update(JSON.stringify(operationPayload(command)))
-      .digest('hex')
-      .slice(0, 16),
+    sha256HexUtf8(JSON.stringify(operationPayload(command))).slice(0, 16),
   ].join(':');
 }
 
@@ -2848,10 +2820,9 @@ async function assertArchitectureEvidenceOriginAuthenticity(command, options = {
     ) {
       throw new Error('GitHub Actions evidence does not prove the current commit');
     }
-    const committedSourceSha256 = crypto
-      .createHash('sha256')
-      .update(readGitFileAtCommit(currentGitSha, command.sourcePath, options))
-      .digest('hex');
+    const committedSourceSha256 = sha256(
+      readGitFileAtCommit(currentGitSha, command.sourcePath, options)
+    );
     if (committedSourceSha256 !== command.sourceContentSha256) {
       throw new Error(
         `source bytes at the proven commit hash to ${committedSourceSha256}, not ${command.sourceContentSha256}`
@@ -2878,10 +2849,9 @@ async function assertArchitectureEvidenceOriginAuthenticity(command, options = {
         ]),
       ]);
       for (const [implementationPath, expectedHash] of implementationInputs) {
-        const committedImplementationSha256 = crypto
-          .createHash('sha256')
-          .update(readGitFileAtCommit(currentGitSha, implementationPath, options))
-          .digest('hex');
+        const committedImplementationSha256 = sha256(
+          readGitFileAtCommit(currentGitSha, implementationPath, options)
+        );
         if (committedImplementationSha256 !== expectedHash) {
           throw new Error(
             `implementation bytes at the proven commit for ${implementationPath} hash to ${committedImplementationSha256}, not ${expectedHash}`
@@ -3812,10 +3782,7 @@ function buildComponentSemanticItems(command) {
 }
 
 function componentDefinitionSourceHash(command) {
-  return crypto
-    .createHash('sha256')
-    .update(canonicalJson(operationPayload(command)))
-    .digest('hex');
+  return sha256HexUtf8(canonicalJson(operationPayload(command)));
 }
 
 function planArchitectureDesignCreateOperation({ command, existingDesign, operationId, now }) {
@@ -5483,7 +5450,7 @@ function buildResolutionKey(source) {
     source.referenceText || '',
   ].join('\0');
 
-  return `${source.resolutionScope}:${crypto.createHash('sha256').update(seed).digest('hex')}`;
+  return `${source.resolutionScope}:${sha256HexUtf8(seed)}`;
 }
 
 function normalizeDocsResolutionSource(command, sourceRow) {
@@ -7134,7 +7101,7 @@ async function applyDocsResolutionOperation(command, options = {}) {
     const planned = planDocsResolutionOperation({
       command: materializedCommand,
       sourceRow,
-      operationId: options.operationId || crypto.randomUUID(),
+      operationId: options.operationId || randomUuidV4(),
       now: options.now || new Date(),
     });
 
@@ -7175,7 +7142,7 @@ async function applyArchitectureDesignCreateOperation(command, options = {}) {
     const planned = planArchitectureDesignCreateOperation({
       command,
       existingDesign,
-      operationId: options.operationId || crypto.randomUUID(),
+      operationId: options.operationId || randomUuidV4(),
       now: options.now || new Date(),
     });
 
@@ -7221,7 +7188,7 @@ async function applyArchitectureDesignTransitionOperation(command, options = {})
       command,
       existingDesign,
       implementationViolations,
-      operationId: options.operationId || crypto.randomUUID(),
+      operationId: options.operationId || randomUuidV4(),
       now: options.now || new Date(),
     });
 
@@ -7270,7 +7237,7 @@ async function applyArchitectureComponentRecordOperation(command, options = {}) 
       designScopes,
       existingComponent,
       parentComponent,
-      operationId: options.operationId || crypto.randomUUID(),
+      operationId: options.operationId || randomUuidV4(),
       now: options.now || new Date(),
     });
 
@@ -7312,7 +7279,7 @@ async function applyArchitectureComponentResponsibilityRetireOperation(command, 
       design,
       designScopes,
       existingResponsibility,
-      operationId: options.operationId || crypto.randomUUID(),
+      operationId: options.operationId || randomUuidV4(),
       now: options.now || new Date(),
     });
     await writePlannedArchitectureComponentResponsibilityRetireOperation(client, planned);
@@ -7358,7 +7325,7 @@ async function applyArchitectureRelationRecordOperation(command, options = {}) {
       sourceComponent,
       targetComponent,
       existingRelation,
-      operationId: options.operationId || crypto.randomUUID(),
+      operationId: options.operationId || randomUuidV4(),
       now: options.now || new Date(),
     });
 
@@ -7405,7 +7372,7 @@ async function applyArchitectureContractRecordOperation(command, options = {}) {
       designScopes,
       ownerComponent,
       existingContract,
-      operationId: options.operationId || crypto.randomUUID(),
+      operationId: options.operationId || randomUuidV4(),
       now: options.now || new Date(),
     });
 
@@ -7460,7 +7427,7 @@ async function applyArchitecturePortRecordOperation(command, options = {}) {
       inputContract,
       outputContract,
       existingPort,
-      operationId: options.operationId || crypto.randomUUID(),
+      operationId: options.operationId || randomUuidV4(),
       now: options.now || new Date(),
     });
 
@@ -7511,7 +7478,7 @@ async function applyArchitectureStorageIoRecordOperation(command, options = {}) 
       component,
       contract,
       existingStorageIo,
-      operationId: options.operationId || crypto.randomUUID(),
+      operationId: options.operationId || randomUuidV4(),
       now: options.now || new Date(),
     });
 
@@ -7563,7 +7530,7 @@ async function applyArchitectureFitnessScanOperation(command, options = {}) {
       command,
       design,
       scanResult,
-      operationId: options.operationId || crypto.randomUUID(),
+      operationId: options.operationId || randomUuidV4(),
       now: options.now || new Date(),
     });
 
@@ -7610,7 +7577,7 @@ async function applyArchitectureTestRecordOperation(command, options = {}) {
       designScopes,
       component,
       existingTest,
-      operationId: options.operationId || crypto.randomUUID(),
+      operationId: options.operationId || randomUuidV4(),
       now: options.now || new Date(),
     });
 
@@ -7652,7 +7619,7 @@ async function applyArchitectureTestRetireOperation(command, options = {}) {
       design,
       designScopes,
       existingTest,
-      operationId: options.operationId || crypto.randomUUID(),
+      operationId: options.operationId || randomUuidV4(),
       now: options.now || new Date(),
     });
     await writePlannedArchitectureTestRetireOperation(client, planned);
@@ -7699,7 +7666,7 @@ async function applyArchitectureObservabilityRecordOperation(command, options = 
       designScopes,
       component,
       existingObservability,
-      operationId: options.operationId || crypto.randomUUID(),
+      operationId: options.operationId || randomUuidV4(),
       now: options.now || new Date(),
     });
 
@@ -7759,7 +7726,7 @@ async function applyArchitectureEvidenceRecordOperation(command, options = {}) {
       designScopes,
       sourceFile,
       subjectImplementation,
-      operationId: options.operationId || crypto.randomUUID(),
+      operationId: options.operationId || randomUuidV4(),
       now: options.now || new Date(),
     });
 
@@ -7801,7 +7768,7 @@ async function applyArchitectureEvidenceRetireOperation(command, options = {}) {
       design,
       designScopes,
       existingEvidence,
-      operationId: options.operationId || crypto.randomUUID(),
+      operationId: options.operationId || randomUuidV4(),
       now: options.now || new Date(),
     });
     await writePlannedArchitectureEvidenceRetireOperation(client, planned);
@@ -7841,7 +7808,7 @@ async function applyComponentCreateOperation(command, options = {}) {
       command,
       parentUnit,
       existingComponent,
-      operationId: options.operationId || crypto.randomUUID(),
+      operationId: options.operationId || randomUuidV4(),
       now: options.now || new Date(),
     });
 
@@ -7889,7 +7856,7 @@ async function applyComponentReviseOperation(command, options = {}) {
       designScopes,
       existingComponent,
       latestOperation,
-      operationId: options.operationId || crypto.randomUUID(),
+      operationId: options.operationId || randomUuidV4(),
       now: options.now || new Date(),
     });
 
@@ -7938,7 +7905,7 @@ async function applyComponentReparentOperation(command, options = {}) {
       existingComponent,
       parentPathRows,
       latestOperation,
-      operationId: options.operationId || crypto.randomUUID(),
+      operationId: options.operationId || randomUuidV4(),
       now: options.now || new Date(),
     });
 
@@ -7979,7 +7946,7 @@ async function applyDbSurfaceUpsertOperation(command, options = {}) {
     const planned = planDbSurfaceUpsertOperation({
       command,
       existingSurface,
-      operationId: options.operationId || crypto.randomUUID(),
+      operationId: options.operationId || randomUuidV4(),
       now: options.now || new Date(),
     });
 
@@ -8028,7 +7995,7 @@ async function applyFeatureMechanizationRailRecordOperation(command, options = {
     const planned = planFeatureMechanizationRailRecordOperation({
       command,
       existingRail,
-      operationId: options.operationId || crypto.randomUUID(),
+      operationId: options.operationId || randomUuidV4(),
       now: options.now || new Date(),
     });
 
@@ -8073,7 +8040,7 @@ async function applyFeatureMechanizationRailRetireOperation(command, options = {
       design,
       designScopes,
       existingRail,
-      operationId: options.operationId || crypto.randomUUID(),
+      operationId: options.operationId || randomUuidV4(),
       now: options.now || new Date(),
     });
     await writePlannedFeatureMechanizationRailRetireOperation(client, planned);
@@ -8109,7 +8076,7 @@ async function applyFowlerAnalysisOperation(command, options = {}) {
 
     const planned = planFowlerAnalysisOperation({
       command,
-      operationId: options.operationId || crypto.randomUUID(),
+      operationId: options.operationId || randomUuidV4(),
       now: options.now || new Date(),
     });
 
