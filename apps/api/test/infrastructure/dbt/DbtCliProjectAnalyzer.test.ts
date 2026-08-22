@@ -4,6 +4,7 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { deriveDbtAnalysisSha256 } from '../../../src/infrastructure/dbt/dbtAnalysisIdentity.js';
 import { DbtCliProjectAnalyzer } from '../../../src/infrastructure/dbt/DbtCliProjectAnalyzer.js';
 import { hashProjectContent } from '../../../src/infrastructure/dbt/dbtProjectContentRevision.js';
 import { resolveWorkspaceScopeStorageRoot } from '../../../src/infrastructure/workspaceFiles/workspaceScopeStoragePath.js';
@@ -13,6 +14,10 @@ const SCOPE = {
   projectId: 'project-a',
   environmentId: 'env-a',
 } as const;
+
+const LEGACY_V1_ANALYSIS_SHA256 =
+  'c624060ca1dfab85fd29fda134e46268ff7663cb08a5a22f24c80c8200de5846';
+const V2_ANALYSIS_SHA256 = '59cb46b63fb4e7c4ec89383386df21260defa523e27f1039e64da1104ad16055';
 
 describe('DbtCliProjectAnalyzer', () => {
   let workspaceFilesRoot: string;
@@ -247,6 +252,48 @@ describe('DbtCliProjectAnalyzer', () => {
 
     expect(second.projectRevision.contentSetSha256).toBe(first.projectRevision.contentSetSha256);
     expect(second.analysisSha256).toBe(first.analysisSha256);
+    expect(first.analysisSha256).toBe(V2_ANALYSIS_SHA256);
+    expect(first.analysisSha256).not.toBe(LEGACY_V1_ANALYSIS_SHA256);
+  });
+
+  it('changes analysis identity when semantic evidence changes', () => {
+    const identityInput = {
+      status: 'valid' as const,
+      contentSetSha256: 'content-sha',
+      analyzerVersion: 'dvt-dbt-analyzer.v2',
+      resources: [],
+      dependencies: [],
+      diagnostics: [],
+      semanticEvidence: {
+        files: [],
+        identities: [],
+        regions: [],
+        diagnostics: [],
+      },
+    };
+
+    const baseline = deriveDbtAnalysisSha256(identityInput);
+    const changed = deriveDbtAnalysisSha256({
+      ...identityInput,
+      semanticEvidence: {
+        ...identityInput.semanticEvidence,
+        regions: [
+          {
+            regionId: 'region-1',
+            ownerUniqueIds: ['model.analytics.orders'],
+            path: 'models/orders.sql',
+            kind: 'source',
+            range: { startByte: 14, endByte: 40 },
+            sourceSha256: 'source-sha',
+            classification: 'supported',
+            targetUniqueId: 'source.analytics.raw.orders',
+          },
+        ],
+      },
+    });
+
+    expect(deriveDbtAnalysisSha256(identityInput)).toBe(baseline);
+    expect(changed).not.toBe(baseline);
   });
 
   it('excludes generated artifacts while preserving installed dependencies for parsing', async () => {

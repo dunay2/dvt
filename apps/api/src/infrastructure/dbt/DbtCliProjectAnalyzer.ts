@@ -2,13 +2,15 @@ import { mkdir, mkdtemp, readFile, realpath, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
+import { sha256HexUtf8 } from '@dvt/crypto';
+
 import type {
   AnalyzeDbtProjectInput,
   DbtProjectAnalysis,
   IDbtProjectAnalyzerPort,
 } from '../../application/ports/dbtProjectAnalysis.js';
 
-import { hashDbtAnalysis, sha256Hex } from './dbtAnalysisHash.js';
+import { deriveDbtAnalysisSha256 } from './dbtAnalysisIdentity.js';
 import {
   buildSanitizedProcessEnvironment,
   NODE_DBT_PROCESS_RUNNER,
@@ -29,7 +31,7 @@ import {
 } from './dbtProjectSourceSnapshot.js';
 import { resolveDbtProjectDirectory } from './dbtProjectWorkspaceBoundary.js';
 
-const ANALYZER_VERSION = 'dvt-dbt-analyzer.v1';
+const ANALYZER_VERSION = 'dvt-dbt-analyzer.v2';
 const DEFAULT_TIMEOUT_MS = 30_000;
 const DEFAULT_MAX_OUTPUT_BYTES = 1_000_000;
 const INVALID_PROJECT_DIAGNOSTIC_MESSAGE =
@@ -87,7 +89,7 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
     const operation = input.operation ?? { kind: 'parse' as const };
     const analyzedAt = this.now().toISOString();
     const unavailableRevision = (reason: string) =>
-      this.buildRevision(input.projectRoot, sha256Hex(reason), analyzedAt);
+      this.buildRevision(input.projectRoot, sha256HexUtf8(reason), analyzedAt);
 
     let projectDirectory: string;
     let projectRevision = unavailableRevision(`analysis:${input.projectRoot}`);
@@ -238,13 +240,17 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
           projectName: projection.projectName,
           ...(projection.dbtVersion === undefined ? {} : { dbtVersion: projection.dbtVersion }),
         },
-        analysisSha256: hashDbtAnalysis(
-          'valid',
+        analysisSha256: deriveDbtAnalysisSha256({
+          status: 'valid',
           contentSetSha256,
-          projection.resources,
-          projection.dependencies,
-          projection.diagnostics
-        ),
+          analyzerVersion: ANALYZER_VERSION,
+          ...(projection.dbtVersion === undefined ? {} : { dbtVersion: projection.dbtVersion }),
+          ...(projection.adapterType === undefined ? {} : { adapterType: projection.adapterType }),
+          resources: projection.resources,
+          dependencies: projection.dependencies,
+          diagnostics: projection.diagnostics,
+          semanticEvidence,
+        }),
         resources: projection.resources,
         dependencies: projection.dependencies,
         diagnostics: projection.diagnostics,
@@ -306,13 +312,18 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
     return {
       status: 'unavailable',
       projectRevision,
-      analysisSha256: hashDbtAnalysis(
-        'unavailable',
-        projectRevision.contentSetSha256,
-        [],
-        [],
-        diagnostics
-      ),
+      analysisSha256: deriveDbtAnalysisSha256({
+        status: 'unavailable',
+        contentSetSha256: projectRevision.contentSetSha256,
+        analyzerVersion: projectRevision.analyzerVersion,
+        ...(projectRevision.dbtVersion === undefined
+          ? {}
+          : { dbtVersion: projectRevision.dbtVersion }),
+        resources: [],
+        dependencies: [],
+        diagnostics,
+        semanticEvidence,
+      }),
       resources: [],
       dependencies: [],
       diagnostics,
@@ -339,7 +350,18 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
     return {
       status: 'invalid',
       projectRevision,
-      analysisSha256: hashDbtAnalysis('invalid', contentSetSha256, [], [], diagnostics),
+      analysisSha256: deriveDbtAnalysisSha256({
+        status: 'invalid',
+        contentSetSha256,
+        analyzerVersion: projectRevision.analyzerVersion,
+        ...(projectRevision.dbtVersion === undefined
+          ? {}
+          : { dbtVersion: projectRevision.dbtVersion }),
+        resources: [],
+        dependencies: [],
+        diagnostics,
+        semanticEvidence,
+      }),
       resources: [],
       dependencies: [],
       diagnostics,
