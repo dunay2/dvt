@@ -236,6 +236,19 @@ const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
       ']);',
     ].join('\n'),
   },
+  {
+    label: 'An uninvoked helper does not change a dynamic import target',
+    surface: 'canvas-production',
+    modulePath: 'views/canvas/SafeCapabilityPanel.tsx',
+    source: [
+      "let target = './SafeSurface';",
+      'function selectInternalSurface() {',
+      "  target = '../../components/monaco/MonacoCodeSurface';",
+      '}',
+      'void selectInternalSurface;',
+      'void import(target);',
+    ].join('\n'),
+  },
 ];
 
 const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
@@ -644,6 +657,19 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     source: [
       "let target = '';",
       "target = '../../../app/components/monaco/MonacoCodeSurface';",
+      'void import(target);',
+    ].join('\n'),
+    expectedViolation: 'MonacoCodeSurface outside a governed owner',
+  },
+  {
+    label: 'A capability cannot assign a Monaco import target through an invoked helper',
+    modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
+    source: [
+      "let target = '';",
+      'function selectTarget() {',
+      "  target = '../../../app/components/monaco/MonacoCodeSurface';",
+      '}',
+      'selectTarget();',
       'void import(target);',
     ].join('\n'),
     expectedViolation: 'MonacoCodeSurface outside a governed owner',
@@ -2240,6 +2266,10 @@ function collectRuntimeModuleSpecifiers(
   const runtimeLocalBindingInitializers = new Map<string, ts.Expression>();
   const runtimeLexicalBindingInitializers = new Map<ts.Node, Map<string, ts.Expression>>();
   const runtimeLexicalDeclaredBindings = new Map<ts.Node, Set<string>>();
+  const runtimeLexicalCallableBindings = new Map<
+    ts.Node,
+    Map<string, ts.FunctionLikeDeclaration>
+  >();
   const runtimeLexicalBindingAssignments = new Map<
     ts.Node,
     Map<
@@ -2348,7 +2378,47 @@ function collectRuntimeModuleSpecifiers(
     return scope ?? sourceFile;
   }
 
+  function addLexicalCallableBinding(
+    scope: ts.Node,
+    name: string,
+    callable: ts.FunctionLikeDeclaration
+  ): void {
+    let bindings = runtimeLexicalCallableBindings.get(scope);
+    if (!bindings) {
+      bindings = new Map();
+      runtimeLexicalCallableBindings.set(scope, bindings);
+    }
+    bindings.set(name, callable);
+  }
+
+  function readFunctionLikeInitializer(
+    expression: ts.Expression
+  ): ts.FunctionLikeDeclaration | undefined {
+    let candidate = expression;
+    while (
+      ts.isParenthesizedExpression(candidate) ||
+      ts.isAsExpression(candidate) ||
+      ts.isSatisfiesExpression(candidate) ||
+      ts.isNonNullExpression(candidate)
+    ) {
+      candidate = candidate.expression;
+    }
+    return ts.isArrowFunction(candidate) || ts.isFunctionExpression(candidate)
+      ? candidate
+      : undefined;
+  }
+
   function collectLexicalBindingInitializers(node: ts.Node): void {
+    if (ts.isFunctionDeclaration(node) && node.name) {
+      const scope = readLexicalScope(node);
+      let declaredBindings = runtimeLexicalDeclaredBindings.get(scope);
+      if (!declaredBindings) {
+        declaredBindings = new Set<string>();
+        runtimeLexicalDeclaredBindings.set(scope, declaredBindings);
+      }
+      declaredBindings.add(node.name.text);
+      addLexicalCallableBinding(scope, node.name.text, node);
+    }
     if (ts.isVariableDeclaration(node) || ts.isParameter(node)) {
       const scope = readLexicalScope(node);
       let declaredBindings = runtimeLexicalDeclaredBindings.get(scope);
@@ -2364,6 +2434,10 @@ function collectRuntimeModuleSpecifiers(
           runtimeLexicalBindingInitializers.set(scope, bindings);
         }
         addLocalBindingInitializers(node.name, node.initializer, bindings);
+        const callable = readFunctionLikeInitializer(node.initializer);
+        if (callable && ts.isIdentifier(node.name)) {
+          addLexicalCallableBinding(scope, node.name.text, callable);
+        }
       }
     }
     ts.forEachChild(node, collectLexicalBindingInitializers);
@@ -2397,6 +2471,71 @@ function collectRuntimeModuleSpecifiers(
     ts.forEachChild(node, collectLexicalBindingAssignments);
   }
 
+  function readLexicalCallableBinding(
+    identifier: ts.Identifier
+  ): ts.FunctionLikeDeclaration | undefined {
+    let scope: ts.Node | undefined = identifier.parent;
+    while (scope) {
+      const callable = runtimeLexicalCallableBindings.get(scope)?.get(identifier.text);
+      if (callable) return callable;
+      if (runtimeLexicalDeclaredBindings.get(scope)?.has(identifier.text)) return undefined;
+      scope = scope.parent;
+    }
+    return undefined;
+  }
+
+  function readInvokedExecutionScope(
+    expression: ts.Expression
+  ): ts.FunctionLikeDeclaration | undefined {
+    const callable = readFunctionLikeInitializer(expression);
+    if (callable) return callable;
+    return ts.isIdentifier(expression) ? readLexicalCallableBinding(expression) : undefined;
+  }
+
+  function collectDirectInvokedExecutionScopes(
+    executionScope: ts.Node,
+    beforePosition: number
+  ): ts.FunctionLikeDeclaration[] {
+    const invoked = new Set<ts.FunctionLikeDeclaration>();
+    const functionBody =
+      ts.isFunctionLike(executionScope) && 'body' in executionScope
+        ? executionScope.body
+        : undefined;
+    const root = ts.isSourceFile(executionScope) ? executionScope : functionBody;
+    if (!root) return [];
+
+    function visit(node: ts.Node): void {
+      if (node !== root && ts.isFunctionLike(node)) return;
+      if (ts.isCallExpression(node) && node.getStart(sourceFile) < beforePosition) {
+        const callable = readInvokedExecutionScope(node.expression);
+        if (callable) invoked.add(callable);
+      }
+      ts.forEachChild(node, visit);
+    }
+    visit(root);
+    return [...invoked];
+  }
+
+  function executionScopeMayRunBefore(
+    candidate: ts.Node,
+    consumer: ts.Node,
+    beforePosition: number,
+    visiting: ReadonlySet<ts.Node> = new Set()
+  ): boolean {
+    if (candidate === consumer) return true;
+    if (visiting.has(consumer)) return false;
+    const nextVisiting = new Set([...visiting, consumer]);
+    for (const invoked of collectDirectInvokedExecutionScopes(consumer, beforePosition)) {
+      if (
+        invoked === candidate ||
+        executionScopeMayRunBefore(candidate, invoked, Number.POSITIVE_INFINITY, nextVisiting)
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   function readLexicalBindingCandidates(identifier: ts.Identifier): ts.Expression[] {
     const executionScope = readExecutionScope(identifier);
     let scope: ts.Node | undefined = identifier.parent;
@@ -2408,9 +2547,15 @@ function collectRuntimeModuleSpecifiers(
         for (const assignment of runtimeLexicalBindingAssignments
           .get(scope)
           ?.get(identifier.text) ?? []) {
+          const identifierPosition = identifier.getStart(sourceFile);
           if (
-            assignment.executionScope === executionScope &&
-            assignment.position < identifier.getStart(sourceFile)
+            assignment.executionScope === executionScope
+              ? assignment.position < identifierPosition
+              : executionScopeMayRunBefore(
+                  assignment.executionScope,
+                  executionScope,
+                  identifierPosition
+                )
           ) {
             candidates.push(assignment.expression);
           }
