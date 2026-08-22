@@ -2,6 +2,8 @@
 import type {
   VisualTransformExpressionV1,
   VisualTransformFilterV1,
+  VisualTransformHavingFilterV1,
+  VisualTransformOperationV1,
   VisualTransformRecipeV1,
 } from '@dvt/contracts';
 
@@ -20,7 +22,10 @@ export type VisualTransformSqlCompilationErrorCode =
   | 'constant_with_inputs'
   | 'unsupported_cast_type'
   | 'invalid_filter_value'
-  | 'invalid_function_arguments';
+  | 'invalid_function_arguments'
+  | 'invalid_aggregate'
+  | 'invalid_group_by'
+  | 'invalid_having';
 
 export class VisualTransformSqlCompilationError extends Error {
   constructor(
@@ -47,6 +52,13 @@ const POSTGRES_CAST_TYPES = new Set([
 ]);
 
 type SqlExpression = string | readonly string[] | null;
+type AggregateOperation = Extract<VisualTransformOperationV1, { kind: 'aggregate' }>;
+type CompiledExpression = Readonly<{ sql: string; aggregate: boolean }>;
+type CompiledOutput = Readonly<{
+  id: string;
+  name: string;
+  expression: CompiledExpression;
+}>;
 
 function fail(code: VisualTransformSqlCompilationErrorCode, message: string): never {
   throw new VisualTransformSqlCompilationError(code, message);
@@ -115,10 +127,36 @@ function compileFunction(
   return `${functionId}(${expression})`;
 }
 
+function compileAggregate(operation: AggregateOperation, current: SqlExpression): string {
+  if (operation.functionId === 'count') {
+    if (current === null) {
+      if (operation.distinct === true) {
+        return fail('invalid_aggregate', 'COUNT DISTINCT requires one input expression.');
+      }
+      return 'count(*)';
+    }
+    if (typeof current !== 'string') {
+      return fail('invalid_aggregate', 'COUNT accepts at most one input expression.');
+    }
+    return operation.distinct === true ? `count(distinct ${current})` : `count(${current})`;
+  }
+
+  if (operation.distinct === true) {
+    return fail('invalid_aggregate', 'DISTINCT is supported only by COUNT in the VTX2 MVP.');
+  }
+  if (typeof current !== 'string') {
+    return fail(
+      'invalid_aggregate',
+      `${operation.functionId.toUpperCase()} requires exactly one input expression.`
+    );
+  }
+  return `${operation.functionId}(${current})`;
+}
+
 function compileExpression(
   expression: VisualTransformExpressionV1,
   sourceBinding: VisualTransformSourceBinding
-): string {
+): CompiledExpression {
   let current: SqlExpression = expression.inputs.map((input) => {
     if (input.nodeId !== sourceBinding.nodeId) {
       return fail(
@@ -131,7 +169,11 @@ function compileExpression(
   if (current.length === 0) current = null;
   else if (current.length === 1) current = current[0]!;
 
+  let aggregate = false;
   for (const operation of expression.operations) {
+    if (aggregate) {
+      return fail('invalid_aggregate', 'Aggregate operation must be the final output operation.');
+    }
     switch (operation.kind) {
       case 'passthrough':
         current = requireSingleExpression(current, operation.kind);
@@ -159,10 +201,55 @@ function compileExpression(
         }
         current = quoteLiteral(operation.value);
         break;
+      case 'aggregate':
+        current = compileAggregate(operation, current);
+        aggregate = true;
+        break;
     }
   }
 
-  return requireSingleExpression(current, 'output');
+  return { sql: requireSingleExpression(current, 'output'), aggregate };
+}
+
+function requireComparisonValue(
+  predicate: VisualTransformFilterV1 | VisualTransformHavingFilterV1
+): string | number | boolean | null {
+  if (!('value' in predicate)) {
+    return fail('invalid_filter_value', `Visual SQL filter ${predicate.operator} requires a value.`);
+  }
+  return predicate.value;
+}
+
+function compileComparison(
+  predicate: VisualTransformFilterV1 | VisualTransformHavingFilterV1,
+  input: string
+): string {
+  if ('value' in predicate && predicate.value === null) {
+    if (predicate.operator === 'equals') return `${input} is null`;
+    if (predicate.operator === 'not_equals') return `${input} is not null`;
+    return fail(
+      'invalid_filter_value',
+      `Visual SQL filter ${predicate.operator} cannot compare an ordered value with null.`
+    );
+  }
+  switch (predicate.operator) {
+    case 'equals':
+      return `${input} = ${quoteLiteral(requireComparisonValue(predicate))}`;
+    case 'not_equals':
+      return `${input} <> ${quoteLiteral(requireComparisonValue(predicate))}`;
+    case 'greater_than':
+      return `${input} > ${quoteLiteral(requireComparisonValue(predicate))}`;
+    case 'greater_than_or_equal':
+      return `${input} >= ${quoteLiteral(requireComparisonValue(predicate))}`;
+    case 'less_than':
+      return `${input} < ${quoteLiteral(requireComparisonValue(predicate))}`;
+    case 'less_than_or_equal':
+      return `${input} <= ${quoteLiteral(requireComparisonValue(predicate))}`;
+    case 'is_null':
+      return `${input} is null`;
+    case 'is_not_null':
+      return `${input} is not null`;
+  }
 }
 
 function compileFilter(
@@ -176,32 +263,7 @@ function compileFilter(
     );
   }
   const input = `${quoteSqlIdentifier(sourceBinding.alias)}.${quoteSqlIdentifier(filter.input.columnName)}`;
-  if ('value' in filter && filter.value === null) {
-    if (filter.operator === 'equals') return `${input} is null`;
-    if (filter.operator === 'not_equals') return `${input} is not null`;
-    return fail(
-      'invalid_filter_value',
-      `Visual SQL filter ${filter.operator} cannot compare an ordered value with null.`
-    );
-  }
-  switch (filter.operator) {
-    case 'equals':
-      return `${input} = ${quoteLiteral(filter.value)}`;
-    case 'not_equals':
-      return `${input} <> ${quoteLiteral(filter.value)}`;
-    case 'greater_than':
-      return `${input} > ${quoteLiteral(filter.value)}`;
-    case 'greater_than_or_equal':
-      return `${input} >= ${quoteLiteral(filter.value)}`;
-    case 'less_than':
-      return `${input} < ${quoteLiteral(filter.value)}`;
-    case 'less_than_or_equal':
-      return `${input} <= ${quoteLiteral(filter.value)}`;
-    case 'is_null':
-      return `${input} is null`;
-    case 'is_not_null':
-      return `${input} is not null`;
-  }
+  return compileComparison(filter, input);
 }
 
 function assertSourceBinding(sourceBinding: VisualTransformSourceBinding): void {
@@ -212,6 +274,44 @@ function assertSourceBinding(sourceBinding: VisualTransformSourceBinding): void 
   ) {
     fail('invalid_source_binding', 'Visual SQL requires one complete source binding.');
   }
+}
+
+function resolveGroupBy(
+  groupBy: readonly string[],
+  outputsById: ReadonlyMap<string, CompiledOutput>
+): readonly string[] {
+  const seen = new Set<string>();
+  return groupBy.map((outputId) => {
+    if (seen.has(outputId)) {
+      return fail('invalid_group_by', `Visual SQL group output ${outputId} is duplicated.`);
+    }
+    seen.add(outputId);
+    const output = outputsById.get(outputId);
+    if (output == null) {
+      return fail('invalid_group_by', `Visual SQL group output ${outputId} does not exist.`);
+    }
+    if (output.expression.aggregate) {
+      return fail('invalid_group_by', `Visual SQL aggregate output ${outputId} cannot be grouped.`);
+    }
+    return output.expression.sql;
+  });
+}
+
+function compileHaving(
+  filter: VisualTransformHavingFilterV1,
+  outputsById: ReadonlyMap<string, CompiledOutput>
+): string {
+  const output = outputsById.get(filter.outputId);
+  if (output == null) {
+    return fail('invalid_having', `Visual SQL HAVING output ${filter.outputId} does not exist.`);
+  }
+  if (!output.expression.aggregate) {
+    return fail(
+      'invalid_having',
+      `Visual SQL HAVING output ${filter.outputId} must reference an aggregate output.`
+    );
+  }
+  return compileComparison(filter, output.expression.sql);
 }
 
 export function compileVisualTransformRecipeToPostgresSql({
@@ -226,10 +326,36 @@ export function compileVisualTransformRecipeToPostgresSql({
     fail('empty_outputs', 'Visual SQL requires at least one output column.');
   }
 
-  const selectLines = recipe.outputs.map(
+  const compiledOutputs: readonly CompiledOutput[] = recipe.outputs.map((output) => ({
+    id: output.id,
+    name: output.name,
+    expression: compileExpression(output.expression, sourceBinding),
+  }));
+  const outputsById = new Map(compiledOutputs.map((output) => [output.id, output] as const));
+  const groupByIds = recipe.groupBy ?? [];
+  const groupBy = resolveGroupBy(groupByIds, outputsById);
+  const groupedOutputIds = new Set(groupByIds);
+  const hasAggregate = compiledOutputs.some((output) => output.expression.aggregate);
+
+  if (hasAggregate) {
+    const ungroupedOutput = compiledOutputs.find(
+      (output) => !output.expression.aggregate && !groupedOutputIds.has(output.id)
+    );
+    if (ungroupedOutput != null) {
+      fail(
+        'invalid_group_by',
+        `Visual SQL non-aggregate output ${ungroupedOutput.id} must be grouped in an aggregate recipe.`
+      );
+    }
+  }
+  if ((recipe.having?.length ?? 0) > 0 && !hasAggregate) {
+    fail('invalid_having', 'Visual SQL HAVING requires at least one aggregate output.');
+  }
+
+  const selectLines = compiledOutputs.map(
     (output, index) =>
-      `  ${compileExpression(output.expression, sourceBinding)} as ${quoteSqlIdentifier(output.name)}${
-        index === recipe.outputs.length - 1 ? '' : ','
+      `  ${output.expression.sql} as ${quoteSqlIdentifier(output.name)}${
+        index === compiledOutputs.length - 1 ? '' : ','
       }`
   );
   const sql = [
@@ -241,6 +367,16 @@ export function compileVisualTransformRecipeToPostgresSql({
     sql.push(
       `where ${compileFilter(recipe.filters[0]!, sourceBinding)}`,
       ...recipe.filters.slice(1).map((filter) => `  and ${compileFilter(filter, sourceBinding)}`)
+    );
+  }
+  if (groupBy.length > 0) {
+    sql.push(`group by ${groupBy[0]}`, ...groupBy.slice(1).map((expression) => `  , ${expression}`));
+  }
+  if ((recipe.having?.length ?? 0) > 0) {
+    const having = recipe.having!;
+    sql.push(
+      `having ${compileHaving(having[0]!, outputsById)}`,
+      ...having.slice(1).map((filter) => `  and ${compileHaving(filter, outputsById)}`)
     );
   }
   sql[sql.length - 1] = `${sql.at(-1)};`;
