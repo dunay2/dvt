@@ -2,6 +2,7 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 
+import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../../..');
@@ -35,6 +36,12 @@ const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
     modulePath,
     source: "import { MonacoCodeEditor } from '../../components/monaco/MonacoCodeEditor';",
   })),
+  {
+    label: 'Canvas production may consume Monaco compile-time types without runtime authority',
+    surface: 'canvas-production',
+    modulePath: 'views/canvas/canvasMonacoTypes.ts',
+    source: "import type { editor } from 'monaco-editor';",
+  },
 ];
 
 const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
@@ -89,6 +96,13 @@ const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
     source: "import MonacoDiffSurface from '../../components/monaco/MonacoDiffSurface';",
     expectedViolation: 'MonacoDiffSurface',
   },
+  {
+    label: 'Canvas route cannot acquire raw Monaco runtime authority',
+    surface: 'canvas-production',
+    modulePath: 'views/Canvas.tsx',
+    source: "import { editor } from 'monaco-editor';",
+    expectedViolation: 'monaco-editor runtime import',
+  },
 ];
 
 function readAppSource(relativePath: string): string {
@@ -114,6 +128,61 @@ function collectProductionSourceFiles(root: string): string[] {
   });
 }
 
+function hasRuntimeMonacoPackageImport(source: string): boolean {
+  const sourceFile = ts.createSourceFile(
+    'monaco-authority-fixture.tsx',
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX
+  );
+  let hasRuntimeImport = false;
+
+  function isRawMonacoSpecifier(node: ts.Expression): boolean {
+    return (
+      ts.isStringLiteralLike(node) &&
+      (node.text === 'monaco-editor' || node.text.startsWith('monaco-editor/'))
+    );
+  }
+
+  function visit(node: ts.Node): void {
+    if (
+      ts.isImportDeclaration(node) &&
+      isRawMonacoSpecifier(node.moduleSpecifier) &&
+      !node.importClause?.isTypeOnly
+    ) {
+      hasRuntimeImport = true;
+      return;
+    }
+
+    if (
+      ts.isExportDeclaration(node) &&
+      node.moduleSpecifier &&
+      isRawMonacoSpecifier(node.moduleSpecifier) &&
+      !node.isTypeOnly
+    ) {
+      hasRuntimeImport = true;
+      return;
+    }
+
+    if (
+      ts.isCallExpression(node) &&
+      (node.expression.kind === ts.SyntaxKind.ImportKeyword ||
+        (ts.isIdentifier(node.expression) && node.expression.text === 'require')) &&
+      node.arguments[0] &&
+      isRawMonacoSpecifier(node.arguments[0])
+    ) {
+      hasRuntimeImport = true;
+      return;
+    }
+
+    if (!hasRuntimeImport) ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  return hasRuntimeImport;
+}
+
 function collectMonacoAuthorityViolations({
   surface,
   modulePath,
@@ -123,6 +192,10 @@ function collectMonacoAuthorityViolations({
 
   if (source.includes('@monaco-editor/react')) {
     violations.push('@monaco-editor/react');
+  }
+
+  if (hasRuntimeMonacoPackageImport(source)) {
+    violations.push('monaco-editor runtime import');
   }
 
   if (surface === 'templates-route') {
@@ -300,6 +373,14 @@ describe('Templates Monaco preview architecture', () => {
     expect(monacoSurface).toContain('createMonacoCodeOptions({ ariaLabel, readOnly: isReadOnly })');
     expect(monacoVisualTokens).toContain('readOnly,');
     expect(monacoVisualTokens).toContain('domReadOnly: readOnly');
+
+    expect(
+      collectMonacoAuthorityViolations({
+        surface: 'canvas-production',
+        modulePath: 'views/Canvas.tsx',
+        source: readAppSource('views/Canvas.tsx'),
+      })
+    ).toEqual([]);
 
     for (const templatesModule of collectProductionSourceFiles(
       path.join(APP_ROOT, 'views/templates')
