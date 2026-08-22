@@ -411,6 +411,13 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     expectedViolation: 'MonacoCodeSurface outside a governed owner',
   },
   {
+    label: 'A capability cannot reach Monaco through a leading double-star Vite glob',
+    modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
+    source:
+      "export const panels = import.meta.glob('**/app/components/monaco/MonacoCodeSurface.tsx');",
+    expectedViolation: 'MonacoCodeSurface outside a governed owner',
+  },
+  {
     label: 'A capability cannot reach Monaco through the configured source alias',
     modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
     source: "export const panels = import.meta.glob('@/app/components/monaco/*.tsx');",
@@ -474,6 +481,16 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     source: [
       "import { useMonacoCodeSurface } from './useMonacoCodeSurface';",
       'export const internals = { load: () => useMonacoCodeSurface };',
+    ].join('\n'),
+    expectedViolation: 'useMonacoCodeSurface re-exported',
+  },
+  {
+    label: 'A governed viewer cannot pass its loader through an exported identity call',
+    modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
+    source: [
+      "import { useMonacoCodeSurface } from './useMonacoCodeSurface';",
+      'declare function identity<T>(value: T): T;',
+      'export const internals = identity(useMonacoCodeSurface);',
     ].join('\n'),
     expectedViolation: 'useMonacoCodeSurface re-exported',
   },
@@ -604,7 +621,9 @@ function resolveViteGlobPattern(
     ? aliasedPattern
     : pattern.startsWith('/')
       ? pattern.slice(1)
-      : path.posix.join(baseDirectory, pattern);
+      : pattern.startsWith('**')
+        ? pattern
+        : path.posix.join(baseDirectory, pattern);
 
   return `${negated ? '!' : ''}${path.posix.normalize(resolvedPattern)}`;
 }
@@ -683,7 +702,17 @@ function collectRuntimeModuleSpecifiers(
       const importedSpecifier = getImportedSpecifier(node);
       if (importedSpecifier) runtimeReExportedSpecifiers.add(importedSpecifier);
     }
-    if (ts.isCallExpression(node) || ts.isNewExpression(node)) return;
+    if (ts.isCallExpression(node) || ts.isNewExpression(node)) {
+      const calledSpecifier = getImportedSpecifier(node.expression);
+      const isJsxRuntimeCall =
+        ts.isCallExpression(node) &&
+        (calledSpecifier === 'react/jsx-runtime' || calledSpecifier === 'react/jsx-dev-runtime');
+      if (!isJsxRuntimeCall) {
+        if (calledSpecifier) runtimeReExportedSpecifiers.add(calledSpecifier);
+        for (const argument of node.arguments ?? []) addReExportedExpression(argument);
+      }
+      return;
+    }
     ts.forEachChild(node, addReExportedExpression);
   }
 
