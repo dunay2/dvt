@@ -28,6 +28,7 @@ const MONACO_INTERNAL_AUTHORITIES = [
   'MonacoDiffViewer',
   'MonacoCodeSurface',
   'MonacoDiffSurface',
+  'useMonacoCodeSurface',
 ] as const;
 const MONACO_AUTHORITY_SOURCE_SIGNALS = [
   '@monaco-editor/react',
@@ -132,6 +133,16 @@ const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
       'void MonacoCodeSurface;',
     ].join('\n'),
     expectedViolation: 'MonacoCodeSurface',
+  },
+  {
+    label: 'Templates preview cannot bypass the viewer through the code-surface loader',
+    surface: 'templates-preview',
+    modulePath: 'views/templates/TemplateMonacoPreviewPanel.tsx',
+    source: [
+      "import { useMonacoCodeSurface } from '../../components/monaco/useMonacoCodeSurface';",
+      'void useMonacoCodeSurface();',
+    ].join('\n'),
+    expectedViolation: 'useMonacoCodeSurface',
   },
   {
     label: 'Canvas authoring cannot import the underlying code surface directly',
@@ -314,6 +325,7 @@ function collectMonacoAuthorityViolations({
       'MonacoDiffViewer',
       'MonacoCodeSurface',
       'MonacoDiffSurface',
+      'useMonacoCodeSurface',
     ] as const) {
       if (containsInternalAuthoritySpecifier(runtimeModuleSpecifiers, gateway)) {
         violations.push(gateway);
@@ -327,6 +339,7 @@ function collectMonacoAuthorityViolations({
       'MonacoDiffViewer',
       'MonacoCodeSurface',
       'MonacoDiffSurface',
+      'useMonacoCodeSurface',
     ] as const) {
       if (containsInternalAuthoritySpecifier(runtimeModuleSpecifiers, gateway)) {
         violations.push(gateway);
