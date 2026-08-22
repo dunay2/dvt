@@ -531,6 +531,18 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     expectedViolation: 'MonacoCodeEditor re-exported',
   },
   {
+    label: 'A governed viewer cannot return a function-local alias of its loader',
+    modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
+    source: [
+      "import { useMonacoCodeSurface } from './useMonacoCodeSurface';",
+      'export function getSurface() {',
+      '  const Local = useMonacoCodeSurface;',
+      '  return Local;',
+      '}',
+    ].join('\n'),
+    expectedViolation: 'useMonacoCodeSurface re-exported',
+  },
+  {
     label: 'A governed editor consumer cannot expose its editor through an exported class',
     modulePath: 'app/views/code/CodeWorkspaceFileSurface.tsx',
     source: [
@@ -538,6 +550,27 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
       'export class EditorRegistry { getEditor() { return MonacoCodeEditor; } }',
     ].join('\n'),
     expectedViolation: 'MonacoCodeEditor re-exported',
+  },
+] as const;
+
+const ACCEPTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
+  {
+    label: 'A governed editor consumer may render its editor through React createElement',
+    modulePath: 'app/views/code/CodeWorkspaceFileSurface.tsx',
+    source: [
+      "import { createElement as renderElement } from 'react';",
+      "import { MonacoCodeEditor } from '../../components/monaco/MonacoCodeEditor';",
+      'export const Panel = () => renderElement(MonacoCodeEditor, {});',
+    ].join('\n'),
+  },
+  {
+    label: 'A governed editor consumer may render its editor through React namespace access',
+    modulePath: 'app/views/code/CodeWorkspaceFileSurface.tsx',
+    source: [
+      "import * as React from 'react';",
+      "import { MonacoCodeEditor } from '../../components/monaco/MonacoCodeEditor';",
+      'export const Panel = () => React.createElement(MonacoCodeEditor, {});',
+    ].join('\n'),
   },
 ] as const;
 
@@ -642,6 +675,8 @@ function collectRuntimeModuleSpecifiers(
   const runtimeModuleSpecifiers = new Set<string>();
   const runtimeReExportedSpecifiers = new Set<string>();
   const runtimeImportedBindings = new Map<string, string>();
+  const reactCreateElementBindings = new Set<string>();
+  const reactNamespaceBindings = new Set<string>();
 
   function addSpecifier(node: ts.Expression): void {
     if (ts.isStringLiteralLike(node)) {
@@ -662,75 +697,124 @@ function collectRuntimeModuleSpecifiers(
     const moduleSpecifier = node.moduleSpecifier.text;
     if (node.importClause.name) {
       runtimeImportedBindings.set(node.importClause.name.text, moduleSpecifier);
+      if (moduleSpecifier === 'react') reactNamespaceBindings.add(node.importClause.name.text);
     }
 
     const namedBindings = node.importClause.namedBindings;
     if (namedBindings && ts.isNamespaceImport(namedBindings)) {
       runtimeImportedBindings.set(namedBindings.name.text, moduleSpecifier);
+      if (moduleSpecifier === 'react') reactNamespaceBindings.add(namedBindings.name.text);
     }
     if (namedBindings && ts.isNamedImports(namedBindings)) {
       for (const element of namedBindings.elements) {
         runtimeImportedBindings.set(element.name.text, moduleSpecifier);
+        if (
+          moduleSpecifier === 'react' &&
+          (element.propertyName ?? element.name).text === 'createElement'
+        ) {
+          reactCreateElementBindings.add(element.name.text);
+        }
       }
     }
   }
 
-  function addAliasedBindingNames(name: ts.BindingName, moduleSpecifier: string): void {
+  function addAliasedBindingNames(
+    name: ts.BindingName,
+    moduleSpecifier: string,
+    bindings: Map<string, string> = runtimeImportedBindings
+  ): void {
     if (ts.isIdentifier(name)) {
-      runtimeImportedBindings.set(name.text, moduleSpecifier);
+      bindings.set(name.text, moduleSpecifier);
       return;
     }
 
     for (const element of name.elements) {
       if (!ts.isOmittedExpression(element)) {
-        addAliasedBindingNames(element.name, moduleSpecifier);
+        addAliasedBindingNames(element.name, moduleSpecifier, bindings);
       }
     }
   }
 
-  function getImportedSpecifier(node: ts.Expression): string | undefined {
-    if (ts.isIdentifier(node)) return runtimeImportedBindings.get(node.text);
-    if (ts.isParenthesizedExpression(node)) return getImportedSpecifier(node.expression);
+  function getImportedSpecifier(
+    node: ts.Expression,
+    bindings: ReadonlyMap<string, string> = runtimeImportedBindings
+  ): string | undefined {
+    if (ts.isIdentifier(node)) return bindings.get(node.text);
+    if (ts.isParenthesizedExpression(node)) return getImportedSpecifier(node.expression, bindings);
     if (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) {
-      return getImportedSpecifier(node.expression);
+      return getImportedSpecifier(node.expression, bindings);
     }
     return undefined;
   }
 
-  function addReExportedExpression(node: ts.Node): void {
+  function isReactCreateElementCall(node: ts.CallExpression): boolean {
+    if (ts.isIdentifier(node.expression)) {
+      return reactCreateElementBindings.has(node.expression.text);
+    }
+    return (
+      ts.isPropertyAccessExpression(node.expression) &&
+      node.expression.name.text === 'createElement' &&
+      ts.isIdentifier(node.expression.expression) &&
+      reactNamespaceBindings.has(node.expression.expression.text)
+    );
+  }
+
+  function addReExportedExpression(
+    node: ts.Node,
+    bindings: ReadonlyMap<string, string> = runtimeImportedBindings
+  ): void {
     if (ts.isExpression(node)) {
-      const importedSpecifier = getImportedSpecifier(node);
+      const importedSpecifier = getImportedSpecifier(node, bindings);
       if (importedSpecifier) runtimeReExportedSpecifiers.add(importedSpecifier);
     }
     if (ts.isCallExpression(node) || ts.isNewExpression(node)) {
-      const calledSpecifier = getImportedSpecifier(node.expression);
+      const calledSpecifier = getImportedSpecifier(node.expression, bindings);
       const isJsxRuntimeCall =
         ts.isCallExpression(node) &&
         (calledSpecifier === 'react/jsx-runtime' || calledSpecifier === 'react/jsx-dev-runtime');
-      if (!isJsxRuntimeCall) {
+      const isRenderCall = ts.isCallExpression(node) && isReactCreateElementCall(node);
+      if (!isJsxRuntimeCall && !isRenderCall) {
         if (calledSpecifier) runtimeReExportedSpecifiers.add(calledSpecifier);
-        for (const argument of node.arguments ?? []) addReExportedExpression(argument);
+        for (const argument of node.arguments ?? []) addReExportedExpression(argument, bindings);
       }
       return;
     }
-    ts.forEachChild(node, addReExportedExpression);
+    ts.forEachChild(node, (child) => addReExportedExpression(child, bindings));
   }
 
   function addExportedDeclarationAuthorities(
     node: ts.FunctionDeclaration | ts.ClassDeclaration
   ): void {
+    const declarationBindings = new Map(runtimeImportedBindings);
+    let discoveredAlias = true;
+    while (discoveredAlias) {
+      discoveredAlias = false;
+      function discoverDeclarationAlias(child: ts.Node): void {
+        if (ts.isVariableDeclaration(child) && child.initializer) {
+          const importedSpecifier = getImportedSpecifier(child.initializer, declarationBindings);
+          const bindingCountBefore = declarationBindings.size;
+          if (importedSpecifier) {
+            addAliasedBindingNames(child.name, importedSpecifier, declarationBindings);
+          }
+          if (declarationBindings.size > bindingCountBefore) discoveredAlias = true;
+        }
+        ts.forEachChild(child, discoverDeclarationAlias);
+      }
+      ts.forEachChild(node, discoverDeclarationAlias);
+    }
+
     function visitExportedDeclaration(child: ts.Node): void {
       if (ts.isReturnStatement(child) && child.expression) {
-        addReExportedExpression(child.expression);
+        addReExportedExpression(child.expression, declarationBindings);
         return;
       }
       if (ts.isPropertyDeclaration(child) && child.initializer) {
-        addReExportedExpression(child.initializer);
+        addReExportedExpression(child.initializer, declarationBindings);
         return;
       }
       if (ts.isHeritageClause(child)) {
         for (const heritageType of child.types) {
-          addReExportedExpression(heritageType.expression);
+          addReExportedExpression(heritageType.expression, declarationBindings);
         }
         return;
       }
@@ -1193,6 +1277,10 @@ describe('Templates Monaco preview architecture', () => {
       expect(collectRepositoryMonacoOwnerViolations(fixture), fixture.label).toContain(
         fixture.expectedViolation
       );
+    }
+
+    for (const fixture of ACCEPTED_REPOSITORY_MONACO_OWNER_FIXTURES) {
+      expect(collectRepositoryMonacoOwnerViolations(fixture), fixture.label).toEqual([]);
     }
   });
 
