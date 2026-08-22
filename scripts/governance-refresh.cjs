@@ -1,8 +1,8 @@
 /** Owned concern: refresh generated governance surfaces and validate DB-backed projections. */
 const childProcess = require('node:child_process');
-const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
+const { createSha256Hasher, sha256Hex, sha256HexUtf8, utf8Bytes } = require('@dvt/crypto');
 
 const {
   applyGovernanceRefreshRunRecordOperation,
@@ -132,7 +132,7 @@ function runText(command, args) {
 }
 
 function sha256(content) {
-  return crypto.createHash('sha256').update(content).digest('hex');
+  return typeof content === 'string' ? sha256HexUtf8(content) : sha256Hex(content);
 }
 
 function readUntrackedFileHashes() {
@@ -184,18 +184,18 @@ function readGeneratedGovernanceArtifactHashes(rootPath = repoRoot) {
 }
 
 function readWorktreeFingerprint() {
-  const hash = crypto.createHash('sha256');
+  const hash = createSha256Hasher();
 
-  hash.update('unstaged\0');
-  hash.update(runText('git', ['diff', '--binary', '--', '.']));
-  hash.update('\0staged\0');
-  hash.update(runText('git', ['diff', '--cached', '--binary', '--', '.']));
-  hash.update('\0untracked\0');
-  hash.update(readUntrackedFileHashes());
-  hash.update('\0generated-governance\0');
-  hash.update(readGeneratedGovernanceArtifactHashes());
+  hash.update(utf8Bytes('unstaged\0'));
+  hash.update(utf8Bytes(runText('git', ['diff', '--binary', '--', '.'])));
+  hash.update(utf8Bytes('\0staged\0'));
+  hash.update(utf8Bytes(runText('git', ['diff', '--cached', '--binary', '--', '.'])));
+  hash.update(utf8Bytes('\0untracked\0'));
+  hash.update(utf8Bytes(readUntrackedFileHashes()));
+  hash.update(utf8Bytes('\0generated-governance\0'));
+  hash.update(utf8Bytes(readGeneratedGovernanceArtifactHashes()));
 
-  return hash.digest('hex');
+  return hash.digestHex();
 }
 
 function assertPositiveInteger(value, name) {
