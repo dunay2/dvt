@@ -134,7 +134,7 @@ describe('Code Monaco editable access architecture', () => {
     expect(sqlContextWorkbench).not.toContain('useCodeWorkingTreeSync');
 
     expect(cypressSpec).toContain(
-      'Owned concern: prove retired Code routes and contextual Canvas Code working-tree synchronization'
+      'Owned concern: prove canonical Canvas Project Code working-tree synchronization'
     );
     expect(cypressSpec).toContain("visitWithE2eWorkspaceSession('/canvas')");
     expect(cypressSpec).toContain('canvas-workspace-open-project-code-command');

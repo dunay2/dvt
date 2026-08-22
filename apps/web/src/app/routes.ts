@@ -27,7 +27,6 @@ import { useShellRuntime } from './shell/useShellRuntime';
 import AdminView from './views/AdminView';
 import LoginView from './views/LoginView';
 import PluginsView from './views/PluginsView';
-import { CanvasLegacyWorkbenchRedirect } from './routes/CanvasLegacyWorkbenchRedirect';
 
 function normalizeChildPath(path: string): string {
   return path.startsWith('/') ? path.slice(1) : path;
@@ -207,12 +206,6 @@ export function createAppRoutes(): RouteObject[] {
           element: createElement(DefaultCoreRouteRedirect),
         },
         ...pluginRoutes,
-        {
-          id: 'dbt.canvas.retired-workbench-redirect',
-          path: 'canvas/*',
-          handle: createStaticShellRouteHandle('Canvas redirect'),
-          element: createElement(CanvasLegacyWorkbenchRedirect),
-        },
         ...shellRoutes,
       ],
     },

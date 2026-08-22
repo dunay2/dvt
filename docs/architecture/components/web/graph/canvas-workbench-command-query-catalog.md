@@ -152,6 +152,16 @@ DDD ownership rules:
 
 <!-- markdownlint-enable MD060 -->
 
+## Retired Rail Disposition
+
+`ResolveLegacyCanvasRouteIntent` is retired by RED1.3. It previously translated
+historical peer-workbench paths into a one-shot Canvas query parameter. No
+supported caller or independent compatibility lifecycle remained, so its route
+adapter, transport token, handler, and propagated request type were deleted
+together. No replacement rail exists. Canonical Canvas navigation continues
+through `ListShellNavigationItems`, `ResolveShellNavigationDisposition`, and
+`RenderCanvasContextualGraphSurface`.
+
 ## Rail Flow
 
 ```mermaid

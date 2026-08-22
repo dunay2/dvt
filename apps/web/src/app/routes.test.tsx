@@ -418,16 +418,11 @@ describe('app routes', () => {
     expect(capabilitiesPort.loadCapabilities).toHaveBeenCalledTimes(1);
   });
 
-  it('declares retired Canvas workbench deep links as a redirect instead of a tab route', () => {
+  it('keeps retired Canvas workbench route shapes out of active routing', () => {
     const rootRoute = getRootRoute(createAppRoutes());
-    const retiredWorkbenchRedirect = findChildRouteByPath(rootRoute, 'canvas/*');
 
     expect(findChildRouteByPath(rootRoute, 'canvas/:workbenchTab')).toBeUndefined();
-    expect(retiredWorkbenchRedirect?.id).toBe('dbt.canvas.retired-workbench-redirect');
-    expect(retiredWorkbenchRedirect?.handle).toMatchObject({
-      routeBootstrap: { mode: 'static' },
-    });
-    expect(retiredWorkbenchRedirect?.element).toBeTruthy();
+    expect(findChildRouteByPath(rootRoute, 'canvas/*')).toBeUndefined();
   });
 
   it(

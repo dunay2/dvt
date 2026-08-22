@@ -34,10 +34,6 @@ import type {
   CanvasExecutionSelectionRecoveryCommands,
   CanvasExecutionSelectionRecoveryReadModel,
 } from '../../types/canvasExecutionSelectionRecovery';
-import type {
-  CanvasRouteIntent,
-  CanvasUnavailableLegacySurfaceId,
-} from './canvasLegacyRouteIntent';
 import type { OperationalDrawerRunControls } from '../../components/shell/operationalDrawerContributionStore';
 import type { IRunsPort, RunSnapshot } from '../../ports/runs';
 
@@ -182,12 +178,6 @@ export type CanvasShellWorkspaceCommands = Readonly<{
   onOpenProjectCode?: () => void;
 }>;
 
-export type CanvasShellRouteIntentRequest = Readonly<{
-  intent: CanvasRouteIntent;
-  onUnavailableLegacySurface: (surfaceId: CanvasUnavailableLegacySurfaceId) => void;
-  onConsumed: () => void;
-}>;
-
 export type CanvasShellProps = Readonly<{
   layout: CanvasShellLayout;
   panels: CanvasShellPanels;
@@ -198,7 +188,6 @@ export type CanvasShellProps = Readonly<{
   canvasCommands: CanvasShellCanvasCommands;
   runControls: OperationalDrawerRunControls | null;
   workspaceCommands?: CanvasShellWorkspaceCommands;
-  routeIntentRequest?: CanvasShellRouteIntentRequest;
   warehouseSourceImport?: IWarehouseSourceImportPort;
   warehouseSourceDataSampleQuery?: IWarehouseSourceDataSampleQueryPort;
   runSnapshot?: RunSnapshot | null;
