@@ -14,6 +14,7 @@ breaking: false
 code_refs:
   - packages/@dvt/crypto/src/index.ts
   - packages/@dvt/crypto/src/sha256.ts
+  - packages/@dvt/crypto/src/encoding.ts
   - packages/@dvt/crypto/src/jcs.ts
   - packages/@dvt/engine/src/security/planIntegrity.ts
   - packages/@dvt/state-store/src/lifecycle/archiveArtifacts.ts
@@ -28,6 +29,9 @@ evidence:
     - pnpm --filter @dvt/contracts test
     - pnpm --filter @dvt/planner test
     - pnpm --filter @dvt/plan-verifier test
+    - pnpm --filter @dvt/adapter-postgres test
+    - pnpm --filter dvt-api test:unit
+    - pnpm --filter @dvt/web test:ci
     - pnpm --filter @dvt/engine test
     - node --test tools/ci/architecture-dependency-guard.test.mjs
     - pnpm arch:deps
@@ -64,6 +68,9 @@ the original packages.
 The implementation branch deleted the obsolete Contracts SHA/JCS
 implementations, Planner primitive mechanics, Plan Verifier WebCrypto helper,
 Engine facades, and duplicate primitive-only Contracts test before repairing
-consumers. The expected missing-import failures exposed no unclassified Cut 1
-consumer. No compatibility alias, forwarding module, fallback, store, planner,
-or second serialization format was added.
+consumers. A repository AST guard then exposed 22 additional API, Web, and
+Postgres adapter imports through Contracts; all now import the existing Crypto
+authority directly. Cross-realm byte vectors prove browser compatibility, and
+Plan Verifier retains its public missing-TextEncoder error. No compatibility
+alias, forwarding module, fallback, store, planner, or second serialization
+format was added.
