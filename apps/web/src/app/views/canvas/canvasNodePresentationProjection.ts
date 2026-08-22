@@ -5,6 +5,10 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { projectDbtModelArtifact } from './canvasDbtModelArtifactProjection';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { DVT_TRANSFORM_AUTHORING_MODE, type VisualTransformRecipeV1 } from '@dvt/contracts';
+import {
+  isObjectFilePostgresNode,
+  resolveObjectFilePostgresAuthoringMetadata,
+} from './objectFilePostgresAuthoringModel';
 import { resolveAuthoringSqlArtifactPath } from './previewGraphNodePayloads';
 import { compileDvtVisualTransformNodeToPostgresSql } from './canvasVisualTransformSql';
 import { readDvtTransformLineageProvenance } from './canvasTransformationSqlMirror';
@@ -38,6 +42,23 @@ function projectCanvasNodePresentationTruthInternal(
     artifactProjection.ok && artifactProjection.artifact.provenance === 'generated'
       ? artifactProjection.artifact
       : null;
+  const objectFileMetadata = isObjectFilePostgresNode(args.node)
+    ? resolveObjectFilePostgresAuthoringMetadata(args.node)
+    : null;
+  const presentationNode =
+    objectFileMetadata == null
+      ? args.node
+      : {
+          ...args.node,
+          metadata: {
+            ...args.node.metadata,
+            columns: objectFileMetadata.columns.map((column) => ({
+              name: column.targetColumn,
+              type: column.dataType,
+              nullable: column.nullable,
+            })),
+          },
+        };
   let visualRecipe: VisualTransformRecipeV1 | null = null;
   let lineageRecipe: VisualTransformRecipeV1 | null = null;
   if (args.node.pluginId === 'dvt' && args.node.kind === 'dvt:sql_transform') {
@@ -85,6 +106,7 @@ function projectCanvasNodePresentationTruthInternal(
 
   const baseTruth = buildCanvasNodePresentationTruth({
     ...args,
+    node: presentationNode,
     generatedCodeIsAuthoritative: visualGeneratedCode != null,
     ...(generatedArtifact == null && visualGeneratedCode == null
       ? {}

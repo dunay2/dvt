@@ -349,6 +349,69 @@ describe('canvasInspectorAuthoringModel', () => {
     ).toEqual({ dbtTest: { targetColumn: 'dbt_test_column_not_declared' } });
   });
 
+  it('accepts a DBT test column projected through its connected generated model', () => {
+    const sourceNode: CanonicalNode = {
+      id: 'dbt-source-orders',
+      name: 'Raw orders',
+      pluginId: 'dbt',
+      kind: 'dbt:source',
+      role: 'input',
+      status: 'idle',
+      tags: [],
+      metadata: { columns: [{ name: 'order_id', type: 'bigint' }] },
+    };
+    const modelNode: CanonicalNode = {
+      id: 'dbt-model-orders',
+      name: 'Orders',
+      pluginId: 'dbt',
+      kind: 'dbt:model',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+      metadata: {},
+    };
+    const testNode: CanonicalNode = {
+      id: 'dbt-test-key',
+      name: 'Key required',
+      pluginId: 'dbt',
+      kind: 'dbt:test',
+      role: 'check',
+      status: 'idle',
+      tags: [],
+    };
+    const edges: readonly CanonicalEdge[] = [
+      {
+        id: 'source-model',
+        sourceId: sourceNode.id,
+        targetId: modelNode.id,
+        relation: 'lineage',
+      },
+      {
+        id: 'model-test',
+        sourceId: modelNode.id,
+        targetId: testNode.id,
+        relation: 'validation',
+      },
+    ];
+    const draft = {
+      ...createCanvasInspectorNodeDraft(testNode),
+      dbtTest: {
+        testType: 'not_null',
+        targetModelId: modelNode.id,
+        targetColumn: 'order_id',
+        severity: 'error',
+      },
+    };
+
+    expect(
+      validateCanvasInspectorNodeDraft(draft, {
+        node: testNode,
+        nodes: [sourceNode, modelNode, testNode],
+        edges,
+      })
+    ).toEqual({});
+  });
+
   it('projects a submitted draft through the same canonical rules as the authoring command', () => {
     const explicitEmptyDraft = {
       name: '  Orders Model  ',

@@ -1,7 +1,7 @@
 /** Owned concern: project connected DBT model targets and their columns for test authoring. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
-  readDeclaredDbtModelColumnNames,
+  readEffectiveDbtModelColumnNames,
   resolveConnectedDbtTestTargets,
 } from './canvasDbtTestTargetPolicy';
 
@@ -41,6 +41,10 @@ export function buildDbtTestAuthoringFieldsModel(
   return {
     targetOptions,
     selectedTargetModelId,
-    columnOptions: readDeclaredDbtModelColumnNames(nodeById.get(selectedTargetModelId)),
+    columnOptions: readEffectiveDbtModelColumnNames({
+      node: nodeById.get(selectedTargetModelId),
+      nodes: args.nodes,
+      edges: args.edges,
+    }),
   };
 }
