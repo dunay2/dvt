@@ -20,6 +20,7 @@ const CANVAS_MONACO_EDITOR_OWNERS = new Set([
   'views/canvas/DbtModelCodeAuthoringSection.tsx',
   'views/canvas/DvtSqlTransformAuthoringSection.tsx',
 ]);
+const TEMPLATES_MONACO_PREVIEW_OWNER = 'views/templates/TemplateMonacoPreviewPanel.tsx';
 
 const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
   {
@@ -165,6 +166,10 @@ function collectMonacoAuthorityViolations({
   return violations;
 }
 
+function resolveTemplatesMonacoAuthoritySurface(modulePath: string): MonacoAuthoritySurface {
+  return modulePath === TEMPLATES_MONACO_PREVIEW_OWNER ? 'templates-preview' : 'templates-route';
+}
+
 describe('Templates Monaco preview architecture', () => {
   it('distinguishes accepted and rejected Templates and Canvas Monaco authority fixtures', () => {
     for (const fixture of ACCEPTED_MONACO_AUTHORITY_FIXTURES) {
@@ -295,6 +300,21 @@ describe('Templates Monaco preview architecture', () => {
     expect(monacoSurface).toContain('createMonacoCodeOptions({ ariaLabel, readOnly: isReadOnly })');
     expect(monacoVisualTokens).toContain('readOnly,');
     expect(monacoVisualTokens).toContain('domReadOnly: readOnly');
+
+    for (const templatesModule of collectProductionSourceFiles(
+      path.join(APP_ROOT, 'views/templates')
+    )) {
+      const source = readFileSync(templatesModule, 'utf8');
+      const modulePath = path.relative(APP_ROOT, templatesModule).replaceAll('\\', '/');
+      expect(
+        collectMonacoAuthorityViolations({
+          surface: resolveTemplatesMonacoAuthoritySurface(modulePath),
+          modulePath,
+          source,
+        }),
+        modulePath
+      ).toEqual([]);
+    }
 
     for (const canvasModule of collectProductionSourceFiles(path.join(APP_ROOT, 'views/canvas'))) {
       const source = readFileSync(canvasModule, 'utf8');
