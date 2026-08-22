@@ -31,7 +31,6 @@ packages/@dvt/
   plan-interpreter/
   plan-verifier/
   planner/
-  planner-contracts/
   state-contracts/
   state-store/
   traceability-service/

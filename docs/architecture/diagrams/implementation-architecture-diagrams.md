@@ -106,7 +106,6 @@ flowchart TB
 
   subgraph Planning["Planning Domain"]
     planner["@dvt/planner<br/>Plan generation"]:::impl
-    plancontracts["@dvt/planner-contracts<br/>Planner interfaces"]:::impl
     interpreter["@dvt/plan-interpreter<br/>Plan parsing"]:::impl
     verifier["@dvt/plan-verifier<br/>Plan verification"]:::impl
     dsl["@dvt/dsl<br/>Workflow DSL"]:::impl
@@ -137,7 +136,6 @@ flowchart TB
   rundomain --> contracts
   delivery --> contracts
   planner --> contracts
-  planner --> plancontracts
   interpreter --> contracts
   temporal --> contracts
   postgres --> contracts
@@ -306,7 +304,6 @@ flowchart LR
   obsotel["@dvt/observability-otel"]:::impl
   artifacts["@dvt/artifacts"]:::impl
   planner["@dvt/planner"]:::impl
-  plancontracts["@dvt/planner-contracts"]:::impl
   interpreter["@dvt/plan-interpreter"]:::impl
   verifier["@dvt/plan-verifier"]:::impl
   canonical["@dvt/canonical"]:::impl
@@ -326,7 +323,6 @@ flowchart LR
   delivery --> contracts
   delivery --> obs
   planner --> contracts
-  planner --> plancontracts
   interpreter --> contracts
   verifier --> contracts
   canonical --> contracts

@@ -188,7 +188,6 @@
   "workspace_plan_interpreter": ["packages/@dvt/plan-interpreter/**"],
   "workspace_plan_verifier": ["packages/@dvt/plan-verifier/**"],
   "workspace_planner": ["packages/@dvt/planner/**"],
-  "workspace_planner_contracts": ["packages/@dvt/planner-contracts/**"],
   "workspace_run_domain": ["packages/@dvt/run-domain/**"],
   "workspace_state_store": ["packages/@dvt/state-store/**"],
   "workspace_traceability_service": ["packages/@dvt/traceability-service/**"],

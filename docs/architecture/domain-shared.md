@@ -17,7 +17,6 @@ ownerless business logic.
 ## Scope
 
 - `@dvt/contracts`
-- `@dvt/planner-contracts`
 - `@dvt/observability`
 - `@dvt/observability-otel`
 - `@dvt/traceability-service`

@@ -19,20 +19,12 @@ import { DbtProjectFileCanvas, InvalidCanvasAuthority } from './canvas/DbtProjec
 import { useCanvasRoutePresentationSync } from './canvas/useCanvasRoutePresentationSync';
 import { useCanvasController } from './canvas/useCanvasController';
 import {
-  useShellFeedback,
   useRunsService,
   useWarehouseSourceDataSampleQueryPort,
   useWarehouseSourceImportPort,
 } from '../services/AppServicesContext';
-import {
-  removeCanvasRouteIntent,
-  resolveCanvasRouteIntent,
-  type CanvasUnavailableLegacySurfaceId,
-} from './canvas/canvasLegacyRouteIntent';
-import { resolveCanvasViewCopy } from './canvas/canvasCopyCatalog';
-import type { CanvasShellProps, CanvasShellRouteIntentRequest } from './canvas/canvasShell.types';
+import type { CanvasShellProps } from './canvas/canvasShell.types';
 import { useCanvasRunControlSurface } from './canvas/useCanvasRunControlSurface';
-import { useApplicationLanguageStore } from '../stores/applicationLanguageStore';
 import {
   resolveDbtSourceImportContinuation,
   useCanvasDbtSourceImportContinuationStore,
@@ -41,11 +33,9 @@ import { useRunSnapshotQuery } from '../queries/runsQueries';
 
 function GraphDraftCanvasContent({
   onDbtProjectImported,
-  routeIntentRequest,
   referencedRunId,
 }: Readonly<{
   onDbtProjectImported: NonNullable<CanvasShellProps['onDbtProjectImported']>;
-  routeIntentRequest?: CanvasShellRouteIntentRequest;
   referencedRunId?: string;
 }>): JSX.Element {
   const reactFlow = useReactFlow<Node, Edge>();
@@ -83,7 +73,6 @@ function GraphDraftCanvasContent({
           reactFlow.screenToFlowPosition(screenPosition)
         }
         onDbtProjectImported={onDbtProjectImported}
-        routeIntentRequest={routeIntentRequest}
       />
       <CanvasModalHost {...modalHostProps} />
     </>
@@ -91,11 +80,8 @@ function GraphDraftCanvasContent({
 }
 
 function CanvasContent(): JSX.Element {
-  const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const feedback = useShellFeedback();
-  const copy = resolveCanvasViewCopy(applicationLanguage);
+  const [searchParams] = useSearchParams();
   const pendingSourceImport = useCanvasDbtSourceImportContinuationStore((state) => state.pending);
   const enqueueSourceImport = useCanvasDbtSourceImportContinuationStore((state) => state.enqueue);
   const consumeSourceImport = useCanvasDbtSourceImportContinuationStore((state) => state.consume);
@@ -121,46 +107,13 @@ function CanvasContent(): JSX.Element {
     },
     [enqueueSourceImport, navigate]
   );
-  const routeIntent = useMemo(() => resolveCanvasRouteIntent(searchParams), [searchParams]);
   const referencedRunId = searchParams.get('runId')?.trim() || undefined;
-  const onUnavailableLegacySurface = useCallback(
-    (surfaceId: CanvasUnavailableLegacySurfaceId) => {
-      const message =
-        surfaceId === 'diff'
-          ? copy.retiredDiffSurfaceMessage
-          : surfaceId === 'artifacts'
-            ? copy.retiredArtifactsSurfaceMessage
-            : copy.retiredUnknownSurfaceMessage;
-      feedback.error(message);
-    },
-    [
-      copy.retiredArtifactsSurfaceMessage,
-      copy.retiredDiffSurfaceMessage,
-      copy.retiredUnknownSurfaceMessage,
-      feedback,
-    ]
-  );
-  const onRouteIntentConsumed = useCallback(() => {
-    setSearchParams(removeCanvasRouteIntent(searchParams), { replace: true });
-  }, [searchParams, setSearchParams]);
-  const routeIntentRequest = useMemo<CanvasShellRouteIntentRequest | undefined>(
-    () =>
-      routeIntent == null
-        ? undefined
-        : {
-            intent: routeIntent,
-            onUnavailableLegacySurface,
-            onConsumed: onRouteIntentConsumed,
-          },
-    [onRouteIntentConsumed, onUnavailableLegacySurface, routeIntent]
-  );
 
   switch (authorityResolution.kind) {
     case 'graph-draft':
       return (
         <GraphDraftCanvasContent
           onDbtProjectImported={onDbtProjectImported}
-          routeIntentRequest={routeIntentRequest}
           referencedRunId={referencedRunId}
         />
       );
@@ -177,7 +130,6 @@ function CanvasContent(): JSX.Element {
           onSourceImportInitialSelectionConsumed={() =>
             consumeSourceImport(authorityResolution.binding)
           }
-          routeIntentRequest={routeIntentRequest}
         />
       );
     }

@@ -1,4 +1,4 @@
-/** Owned concern: prove retired Code routes and contextual Canvas Code working-tree synchronization. */
+/** Owned concern: prove canonical Canvas Project Code working-tree synchronization. */
 import { stubCanvasDraftRead } from '../../support/canvasDraftAuthoring';
 import { getLastE2eApiCall, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
 import {
@@ -62,21 +62,7 @@ function stubContextualCodeWorkbenchApis(): void {
   });
 }
 
-describe('Retired Canvas Code workbench routes', () => {
-  it('preserves a direct Code route intent in the contextual Canvas workbench', () => {
-    stubContextualCodeWorkbenchApis();
-
-    visitWithE2eWorkspaceSession('/canvas/code');
-
-    waitForE2eApiCall('/workspace/files', 'GET');
-    waitForE2eApiCall(/\/workspace\/files\/.+/, 'GET');
-    cy.location('pathname').should('eq', '/canvas');
-    cy.location('search').should('eq', '');
-    cy.contains('Sales canvas').should('be.visible');
-    cy.get('[data-slot="canvas-workbench-tab-strip"]').should('not.exist');
-    cy.get('[data-slot="canvas-contextual-workbench"]').should('be.visible');
-  });
-
+describe('Canvas Project Code working-tree synchronization', () => {
   it('synchronizes contextual project Code into the working tree without a Save action', () => {
     stubContextualCodeWorkbenchApis();
 

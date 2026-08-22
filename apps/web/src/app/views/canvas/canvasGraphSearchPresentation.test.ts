@@ -18,7 +18,7 @@ const edges: Edge[] = [
 const globalStyles = readFileSync(
   resolve(import.meta.dirname, '../../../styles/index.css'),
   'utf8'
-);
+).replaceAll('\r\n', '\n');
 const themeStyles = readFileSync(resolve(import.meta.dirname, '../../../styles/theme.css'), 'utf8');
 
 describe('projectCanvasGraphSearchPresentation', () => {
