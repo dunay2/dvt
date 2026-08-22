@@ -362,6 +362,28 @@ const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
     expectedViolation: 'MonacoCodeSurface',
   },
   {
+    label: 'Templates route cannot hide a Monaco Vite glob behind a computed base property',
+    surface: 'templates-route',
+    modulePath: 'views/templates/TemplatesRouteWorkbench.tsx',
+    source: [
+      "void import.meta.glob('./*.tsx', {",
+      "  ['base']: '../../components/monaco',",
+      '  eager: true,',
+      '});',
+    ].join('\n'),
+    expectedViolation: 'MonacoCodeSurface',
+  },
+  {
+    label: 'Templates route cannot hide a Monaco Vite glob behind static spread options',
+    surface: 'templates-route',
+    modulePath: 'views/templates/TemplatesRouteWorkbench.tsx',
+    source: [
+      "const sharedOptions = { base: '../../components/monaco' };",
+      "void import.meta.glob('./*.tsx', { ...sharedOptions, eager: true });",
+    ].join('\n'),
+    expectedViolation: 'MonacoCodeSurface',
+  },
+  {
     label: 'Templates route cannot reach Monaco through a broad parent-directory glob',
     surface: 'templates-route',
     modulePath: 'views/templates/TemplatesRouteWorkbench.tsx',
@@ -1021,23 +1043,70 @@ function collectRuntimeModuleSpecifiers(
     );
   }
 
-  function readStaticViteGlobBase(node: ts.CallExpression): string | undefined {
-    const options = node.arguments[1];
-    if (!options || !ts.isObjectLiteralExpression(options)) return undefined;
-
-    for (const property of options.properties) {
-      if (!ts.isPropertyAssignment(property)) continue;
-
-      const propertyName = property.name;
-      const isBaseProperty =
-        (ts.isIdentifier(propertyName) && propertyName.text === 'base') ||
-        (ts.isStringLiteralLike(propertyName) && propertyName.text === 'base');
-      if (isBaseProperty && ts.isStringLiteralLike(property.initializer)) {
-        return property.initializer.text;
+  function readStaticString(
+    expression: ts.Expression,
+    resolvingBindings: ReadonlySet<string> = new Set()
+  ): string | undefined {
+    if (ts.isStringLiteralLike(expression)) return expression.text;
+    if (ts.isParenthesizedExpression(expression)) {
+      return readStaticString(expression.expression, resolvingBindings);
+    }
+    if (ts.isIdentifier(expression) && !resolvingBindings.has(expression.text)) {
+      const initializer = runtimeLocalBindingInitializers.get(expression.text);
+      if (initializer) {
+        return readStaticString(initializer, new Set([...resolvingBindings, expression.text]));
       }
     }
-
     return undefined;
+  }
+
+  function readStaticPropertyName(name: ts.PropertyName): string | undefined {
+    if (ts.isIdentifier(name) || ts.isStringLiteralLike(name) || ts.isNumericLiteral(name)) {
+      return name.text;
+    }
+    if (ts.isComputedPropertyName(name)) return readStaticString(name.expression);
+    return undefined;
+  }
+
+  function readStaticViteGlobBaseFromExpression(
+    expression: ts.Expression,
+    resolvingBindings: ReadonlySet<string> = new Set()
+  ): string | undefined {
+    if (ts.isParenthesizedExpression(expression)) {
+      return readStaticViteGlobBaseFromExpression(expression.expression, resolvingBindings);
+    }
+    if (ts.isIdentifier(expression) && !resolvingBindings.has(expression.text)) {
+      const initializer = runtimeLocalBindingInitializers.get(expression.text);
+      if (initializer) {
+        return readStaticViteGlobBaseFromExpression(
+          initializer,
+          new Set([...resolvingBindings, expression.text])
+        );
+      }
+      return undefined;
+    }
+    if (!ts.isObjectLiteralExpression(expression)) return undefined;
+
+    let base: string | undefined;
+    for (const property of expression.properties) {
+      if (ts.isSpreadAssignment(property)) {
+        base = readStaticViteGlobBaseFromExpression(property.expression, resolvingBindings) ?? base;
+        continue;
+      }
+      if (ts.isPropertyAssignment(property) && readStaticPropertyName(property.name) === 'base') {
+        base = readStaticString(property.initializer, resolvingBindings) ?? base;
+        continue;
+      }
+      if (ts.isShorthandPropertyAssignment(property) && property.name.text === 'base') {
+        base = readStaticString(property.name, resolvingBindings) ?? base;
+      }
+    }
+    return base;
+  }
+
+  function readStaticViteGlobBase(node: ts.CallExpression): string | undefined {
+    const options = node.arguments[1];
+    return options ? readStaticViteGlobBaseFromExpression(options) : undefined;
   }
 
   function addViteGlobSpecifiers(node: ts.CallExpression): void {
