@@ -31,6 +31,11 @@ const MONACO_INTERNAL_AUTHORITIES = [
   'MonacoDiffSurface',
   'useMonacoCodeSurface',
 ] as const;
+const MONACO_INTERNAL_AUTHORITY_SOURCE_PATHS = MONACO_INTERNAL_AUTHORITIES.map((authority) =>
+  authority === 'useMonacoCodeSurface'
+    ? `src/app/components/monaco/${authority}.ts`
+    : `src/app/components/monaco/${authority}.tsx`
+);
 const MONACO_AUTHORITY_SOURCE_SIGNALS = [
   '@monaco-editor/react',
   'monaco-editor',
@@ -111,6 +116,17 @@ const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
     surface: 'canvas-production',
     modulePath: 'views/canvas/canvasAnalytics.ts',
     source: "const analyticsLabel = 'MonacoCodeSurface'; void analyticsLabel;",
+  },
+  {
+    label: 'Canvas production may explicitly exclude Monaco from a broad Vite glob',
+    surface: 'canvas-production',
+    modulePath: 'views/canvas/canvasAnalytics.ts',
+    source: [
+      'void import.meta.glob([',
+      "  '../../components/**/*.tsx',",
+      "  '!../../components/monaco/**',",
+      ']);',
+    ].join('\n'),
   },
 ];
 
@@ -244,6 +260,13 @@ const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
     expectedViolation: 'MonacoCodeSurface',
   },
   {
+    label: 'Templates route cannot reach Monaco through a broad parent-directory glob',
+    surface: 'templates-route',
+    modulePath: 'views/templates/TemplatesRouteWorkbench.tsx',
+    source: "void import.meta.glob('../../components/**/*.tsx', { eager: true });",
+    expectedViolation: 'MonacoCodeSurface',
+  },
+  {
     label: 'Canvas route cannot acquire raw Monaco runtime authority',
     surface: 'canvas-production',
     modulePath: 'views/Canvas.tsx',
@@ -289,6 +312,12 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     ].join('\n'),
     expectedViolation: 'MonacoCodeSurface outside a governed owner',
   },
+  {
+    label: 'A capability cannot reach Monaco through a broad source-root glob',
+    modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
+    source: "export const panels = import.meta.glob('../../../app/components/**/*.tsx');",
+    expectedViolation: 'MonacoCodeSurface outside a governed owner',
+  },
 ] as const;
 
 function readAppSource(relativePath: string): string {
@@ -329,7 +358,40 @@ function emitWebModuleSource(source: string): string {
   }).outputText;
 }
 
-function collectRuntimeModuleSpecifiers(emittedSource: string): ReadonlySet<string> {
+function resolveWebPackageModulePath(modulePath: string): string {
+  const normalizedModulePath = modulePath.replaceAll('\\', '/');
+  return normalizedModulePath.startsWith('app/') ||
+    normalizedModulePath.startsWith('capabilities/') ||
+    normalizedModulePath.startsWith('testing/') ||
+    !normalizedModulePath.includes('/')
+    ? `src/${normalizedModulePath}`
+    : `src/app/${normalizedModulePath}`;
+}
+
+function resolveViteGlobPattern(
+  modulePath: string,
+  globPattern: string,
+  base: string | undefined
+): string {
+  const negated = globPattern.startsWith('!');
+  const pattern = (negated ? globPattern.slice(1) : globPattern).replaceAll('\\', '/');
+  const importerDirectory = path.posix.dirname(resolveWebPackageModulePath(modulePath));
+  const baseDirectory = base
+    ? base.startsWith('/')
+      ? base.slice(1)
+      : path.posix.join(importerDirectory, base)
+    : importerDirectory;
+  const resolvedPattern = pattern.startsWith('/')
+    ? pattern.slice(1)
+    : path.posix.join(baseDirectory, pattern);
+
+  return `${negated ? '!' : ''}${path.posix.normalize(resolvedPattern)}`;
+}
+
+function collectRuntimeModuleSpecifiers(
+  emittedSource: string,
+  modulePath: string
+): ReadonlySet<string> {
   const sourceFile = ts.createSourceFile(
     'monaco-authority-emitted.js',
     emittedSource,
@@ -386,22 +448,35 @@ function collectRuntimeModuleSpecifiers(emittedSource: string): ReadonlySet<stri
   }
 
   function addViteGlobSpecifiers(node: ts.CallExpression): void {
-    const patterns = new Set<string>();
+    const patterns: string[] = [];
     const pattern = node.arguments[0];
     if (pattern) {
-      if (ts.isStringLiteralLike(pattern)) patterns.add(pattern.text);
+      if (ts.isStringLiteralLike(pattern)) patterns.push(pattern.text);
       if (ts.isArrayLiteralExpression(pattern)) {
         for (const element of pattern.elements) {
-          if (ts.isStringLiteralLike(element)) patterns.add(element.text);
+          if (ts.isStringLiteralLike(element)) patterns.push(element.text);
         }
       }
     }
 
     const base = readStaticViteGlobBase(node)?.replaceAll('\\', '/');
-    for (const globPattern of patterns) {
-      runtimeModuleSpecifiers.add(globPattern);
-      if (base && globPattern.startsWith('.')) {
-        runtimeModuleSpecifiers.add(path.posix.join(base, globPattern));
+    const resolvedPatterns = patterns.map((globPattern) =>
+      resolveViteGlobPattern(modulePath, globPattern, base)
+    );
+    const positivePatterns = resolvedPatterns.filter((globPattern) => !globPattern.startsWith('!'));
+    const negativePatterns = resolvedPatterns
+      .filter((globPattern) => globPattern.startsWith('!'))
+      .map((globPattern) => globPattern.slice(1));
+
+    for (const authorityPath of MONACO_INTERNAL_AUTHORITY_SOURCE_PATHS) {
+      const matchesPositivePattern = positivePatterns.some((globPattern) =>
+        path.matchesGlob(authorityPath, globPattern)
+      );
+      const matchesNegativePattern = negativePatterns.some((globPattern) =>
+        path.matchesGlob(authorityPath, globPattern)
+      );
+      if (matchesPositivePattern && !matchesNegativePattern) {
+        runtimeModuleSpecifiers.add(authorityPath);
       }
     }
   }
@@ -441,12 +516,16 @@ function collectRuntimeModuleSpecifiers(emittedSource: string): ReadonlySet<stri
 
 const RUNTIME_MODULE_SPECIFIER_CACHE = new Map<string, ReadonlySet<string>>();
 
-function getRuntimeModuleSpecifiers(source: string): ReadonlySet<string> {
-  const cachedSpecifiers = RUNTIME_MODULE_SPECIFIER_CACHE.get(source);
+function getRuntimeModuleSpecifiers(modulePath: string, source: string): ReadonlySet<string> {
+  const cacheKey = `${modulePath}\0${source}`;
+  const cachedSpecifiers = RUNTIME_MODULE_SPECIFIER_CACHE.get(cacheKey);
   if (cachedSpecifiers) return cachedSpecifiers;
 
-  const runtimeModuleSpecifiers = collectRuntimeModuleSpecifiers(emitWebModuleSource(source));
-  RUNTIME_MODULE_SPECIFIER_CACHE.set(source, runtimeModuleSpecifiers);
+  const runtimeModuleSpecifiers = collectRuntimeModuleSpecifiers(
+    emitWebModuleSource(source),
+    modulePath
+  );
+  RUNTIME_MODULE_SPECIFIER_CACHE.set(cacheKey, runtimeModuleSpecifiers);
   return runtimeModuleSpecifiers;
 }
 
@@ -463,15 +542,7 @@ function containsInternalAuthoritySpecifier(
   return [...specifiers].some((specifier) => {
     const normalizedSpecifier = specifier.replaceAll('\\', '/');
     const moduleName = normalizedSpecifier.split('/').at(-1);
-    if (moduleName?.replace(/\.[cm]?[jt]sx?$/, '') === authority) return true;
-
-    if (!normalizedSpecifier.includes('/monaco/') || !moduleName) return false;
-
-    const modulePattern = moduleName.replace(/\.[cm]?[jt]sx?$/, '');
-    if (!/[*?[\]{}]/.test(modulePattern)) return false;
-
-    const staticPrefix = modulePattern.split(/[*?[\]{}]/, 1)[0] ?? '';
-    return staticPrefix === '' || authority.startsWith(staticPrefix);
+    return moduleName?.replace(/\.[cm]?[jt]sx?$/, '') === authority;
   });
 }
 
@@ -485,7 +556,7 @@ function collectMonacoAuthorityViolations({
     return violations;
   }
 
-  const runtimeModuleSpecifiers = getRuntimeModuleSpecifiers(source);
+  const runtimeModuleSpecifiers = getRuntimeModuleSpecifiers(modulePath, source);
 
   if (containsPackageSpecifier(runtimeModuleSpecifiers, '@monaco-editor/react')) {
     violations.push('@monaco-editor/react');
@@ -550,7 +621,7 @@ function collectRepositoryMonacoOwnerViolations({
     return violations;
   }
 
-  const runtimeModuleSpecifiers = getRuntimeModuleSpecifiers(source);
+  const runtimeModuleSpecifiers = getRuntimeModuleSpecifiers(modulePath, source);
   for (const [authority, owners] of Object.entries(MONACO_RUNTIME_AUTHORITY_OWNERS)) {
     const importsAuthority =
       authority === '@monaco-editor/react' || authority === 'monaco-editor runtime import'
