@@ -135,7 +135,6 @@ const SCRIPT_FILE_RULES = [
   [/^scripts\/compare-hashes\.cjs$/u, 'contracts'],
   [/^scripts\/generate-contract-index\.cjs$/u, 'contracts'],
   [/^scripts\/rebuild-snapshots\.js$/u, 'contracts'],
-  [/^scripts\/run-golden-paths\.cjs$/u, 'contracts'],
   [
     /^scripts\/validate-(contracts|executable-examples|glossary-usage|idempotency-vectors|references|rfc2119)\.cjs$/u,
     'contracts',

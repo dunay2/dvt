@@ -1,8 +1,8 @@
 /** Owned concern: refresh exact-HEAD content identity for existing governed sources. */
-const crypto = require('node:crypto');
 const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
+const { randomUuidV4, sha256Hex, sha256HexUtf8 } = require('@dvt/crypto');
 
 const { Client } = require('pg');
 
@@ -14,10 +14,6 @@ const repoRoot = path.resolve(__dirname, '..', '..');
 
 function databaseUrl() {
   return process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
-}
-
-function sha256(value) {
-  return crypto.createHash('sha256').update(value).digest('hex');
 }
 
 function stableStringify(value) {
@@ -50,7 +46,7 @@ function normalizeGovernedSourcePath(value) {
 }
 
 function canonicalSourceContentHash(contentBytes) {
-  return sha256(normalizeTextBytesForHash(Buffer.from(contentBytes)));
+  return sha256Hex(normalizeTextBytesForHash(Buffer.from(contentBytes)));
 }
 
 function defaultGit(args, cwd) {
@@ -133,7 +129,7 @@ function defaultGovernedSourceRefreshIdempotencyKey(command, snapshot) {
   return [
     command.kind,
     command.actor || 'anonymous',
-    sha256(
+    sha256HexUtf8(
       stableStringify({
         paths: command.paths,
         expectedContentSha256ByPath: command.expectedContentSha256ByPath || {},
@@ -188,7 +184,7 @@ function planGovernedSourceRefreshOperation({
     return {
       path: snapshot.path,
       contentHash: snapshot.contentHash,
-      stateFingerprint: sha256(
+      stateFingerprint: sha256HexUtf8(
         stableStringify({
           contentHash: snapshot.contentHash,
           governanceHash: governed.governanceHash,
@@ -357,7 +353,7 @@ async function applyGovernedSourceRefreshOperation(command, options = {}) {
       snapshots: snapshot.sources,
       governedRows,
       existingOverrides: governedRows,
-      operationId: options.operationId || crypto.randomUUID(),
+      operationId: options.operationId || randomUuidV4(),
       now: options.now || new Date(),
     });
     await writePlan(client, planned);

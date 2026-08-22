@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /** Owned concern: provide the real content-addressed object required by the public HET1 proof. */
 const { spawn, spawnSync } = require('node:child_process');
-const { createHash } = require('node:crypto');
 const { readFile } = require('node:fs/promises');
 const path = require('node:path');
+const { sha256Hex } = require('@dvt/crypto');
 
 const { allocateFreePort } = require('./run-dev-stack.temporal.cjs');
 
@@ -24,7 +24,7 @@ const SELECTED_CLOSURE_RUNNER = 'scripts/run-selected-closure-live-proof.cjs';
 const HET1_CYPRESS_SPEC = 'apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts';
 
 function validateObjectFileFixture(content, manifest) {
-  const sha256 = createHash('sha256').update(content).digest('hex');
+  const sha256 = sha256Hex(content);
 
   if (content.byteLength !== manifest.sizeBytes) {
     throw new Error(

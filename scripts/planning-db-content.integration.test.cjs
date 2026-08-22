@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const crypto = require('node:crypto');
+const { randomUuidV4 } = require('@dvt/crypto');
 const { Client } = require('pg');
 
 const { defaultPgUrl } = require('./planning-db-run.cjs');
@@ -37,9 +37,7 @@ function withDatabase(connectionString, databaseName) {
 }
 
 test.before(async () => {
-  isolatedDatabaseName = `dvt_planning_test_${process.pid}_${crypto
-    .randomUUID()
-    .replaceAll('-', '')}`;
+  isolatedDatabaseName = `dvt_planning_test_${process.pid}_${randomUuidV4().replaceAll('-', '')}`;
   adminClient = new Client({ connectionString: authoritativeDbUrl() });
   await adminClient.connect();
   await adminClient.query(`create database ${quoteDatabase(isolatedDatabaseName)}`);

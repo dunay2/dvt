@@ -34,6 +34,9 @@ importers:
       '@commitlint/config-conventional':
         specifier: ^20.4.1
         version: 20.4.1
+      '@dvt/crypto':
+        specifier: workspace:*
+        version: link:packages/@dvt/crypto
       '@eslint/compat':
         specifier: ^2.0.5
         version: 2.0.5(eslint@10.7.0(jiti@2.6.1))
@@ -769,6 +772,9 @@ importers:
       '@dvt/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@dvt/crypto':
+        specifier: workspace:*
+        version: link:../crypto
       '@dvt/engine':
         specifier: workspace:*
         version: link:../engine

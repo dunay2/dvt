@@ -16,6 +16,7 @@ export const EXECUTABLE_CI_TOOL_TESTS = Object.freeze([
   'tools/ci/docs-changed-governance-policy.test.mjs',
   'tools/ci/docs-frontmatter-bom.test.mjs',
   'tools/ci/docs-manifest-contract.test.mjs',
+  'tools/ci/generated-docs-single-writer-policy.test.mjs',
   'tools/ci/github-collaboration-governance.test.mjs',
   'tools/ci/sync-docs-status-policy.test.mjs',
   'tools/ci/workflow-pattern-parity.test.mjs',

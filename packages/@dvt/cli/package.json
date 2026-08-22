@@ -15,6 +15,7 @@
   "license": "MIT",
   "dependencies": {
     "@dvt/contracts": "workspace:*",
+    "@dvt/crypto": "workspace:*",
     "@dvt/engine": "workspace:*"
   },
   "scripts": {

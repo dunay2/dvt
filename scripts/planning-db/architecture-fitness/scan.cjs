@@ -1,7 +1,7 @@
-const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const ts = require('typescript');
+const { sha256HexUtf8 } = require('@dvt/crypto');
 
 const sourceExtensions = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'];
 const ignoredDirectoryNames = new Set([
@@ -13,10 +13,6 @@ const ignoredDirectoryNames = new Set([
   'playwright-report',
 ]);
 const ignoredRepoPathPrefixes = ['.generated-docs', 'buzon', 'docs', 'infra/prototypes'];
-
-function sha256(text) {
-  return crypto.createHash('sha256').update(text).digest('hex');
-}
 
 function toRepoPath(filePath, rootDir) {
   return path.relative(rootDir, filePath).replace(/\\/g, '/');
@@ -471,7 +467,7 @@ function runArchitectureFitnessScan(options) {
       ].join('|');
 
       observations.push({
-        observationId: `obs-${sha256(observationSeed).slice(0, 24)}`,
+        observationId: `obs-${sha256HexUtf8(observationSeed).slice(0, 24)}`,
         scanId,
         designId,
         sourcePath: sourceRepoPath,
@@ -479,7 +475,7 @@ function runArchitectureFitnessScan(options) {
         importLiteral: importInfo.importLiteral,
         workspaceName: '',
         packageName: '',
-        sourceContentSha256: sha256(sourceText),
+        sourceContentSha256: sha256HexUtf8(sourceText),
         isTest: isTestPath(sourceRepoPath),
         sourceComponentId: sourceMapping.componentId,
         targetComponentId: targetMapping.componentId,

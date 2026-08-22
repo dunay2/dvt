@@ -1573,6 +1573,54 @@ test('Cut 3 command identity mechanics stay retired', () => {
   );
 });
 
+test('Cut 4 tooling crypto mechanics and duplicate runner stay retired', () => {
+  assert.equal(
+    existsSync('scripts/run-golden-paths.cjs'),
+    false,
+    'the unreferenced root golden-path runner must not be restored'
+  );
+
+  const rootPackage = JSON.parse(readText('package.json'));
+  const cliPackage = JSON.parse(readText('packages/@dvt/cli/package.json'));
+  assert.equal(rootPackage.devDependencies['@dvt/crypto'], 'workspace:*');
+  assert.equal(cliPackage.dependencies['@dvt/crypto'], 'workspace:*');
+
+  const trackedFiles = spawnSync(
+    'git',
+    [
+      'ls-files',
+      '--',
+      'scripts',
+      'tools',
+      'packages/@dvt/cli',
+      'packages/@dvt/engine/test/contracts/run-golden-paths.hash.test.ts',
+    ],
+    { encoding: 'utf8' }
+  );
+  assert.equal(trackedFiles.stderr, '');
+  assert.equal(trackedFiles.status, 0);
+
+  const findings = [];
+  for (const sourcePath of trackedFiles.stdout.split(/\r?\n/u).filter(Boolean)) {
+    if (!existsSync(sourcePath) || !/\.[cm]?[jt]sx?$/u.test(sourcePath)) {
+      continue;
+    }
+
+    const source = readText(sourcePath);
+    if (/\b(?:crypto\.)?createHash\s*\(/u.test(source)) {
+      findings.push(`${sourcePath}: createHash`);
+    }
+    if (/\b(?:crypto\.)?randomUUID\s*\(/u.test(source)) {
+      findings.push(`${sourcePath}: randomUUID`);
+    }
+    if (/\bfunction\s+sha256\s*\(/u.test(source)) {
+      findings.push(`${sourcePath}: local sha256 facade`);
+    }
+  }
+
+  assert.deepEqual(findings.sort(), []);
+});
+
 test('repository consumers import crypto primitives from their authority', () => {
   const trackedFiles = spawnSync('git', ['ls-files', '--', 'apps', 'packages'], {
     encoding: 'utf8',
