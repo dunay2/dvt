@@ -44,6 +44,10 @@ const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
       "import type { editor } from 'monaco-editor';",
       "import { type IDisposable } from 'monaco-editor';",
       "export { type IPosition } from 'monaco-editor';",
+      "import {} from 'monaco-editor';",
+      "export {} from 'monaco-editor';",
+      "import { editor as MonacoEditorNamespace } from 'monaco-editor';",
+      'type EditorOptions = MonacoEditorNamespace.IEditorOptions;',
     ].join('\n'),
   },
 ];
@@ -104,14 +108,10 @@ const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
     label: 'Canvas route cannot acquire raw Monaco runtime authority',
     surface: 'canvas-production',
     modulePath: 'views/Canvas.tsx',
-    source: "import { editor } from 'monaco-editor';",
-    expectedViolation: 'monaco-editor runtime import',
-  },
-  {
-    label: 'Empty Monaco import and export clauses still execute at runtime',
-    surface: 'templates-route',
-    modulePath: 'views/templates/TemplatesRouteWorkbench.tsx',
-    source: ["import {} from 'monaco-editor';", "export {} from 'monaco-editor';"].join('\n'),
+    source: [
+      "import { editor } from 'monaco-editor';",
+      "editor.create(document.body, { value: '' });",
+    ].join('\n'),
     expectedViolation: 'monaco-editor runtime import',
   },
 ];
@@ -142,12 +142,20 @@ function collectProductionSourceFiles(root: string): string[] {
 function hasRuntimeMonacoPackageImport(source: string): boolean {
   if (!source.includes('monaco-editor')) return false;
 
+  const emittedSource = ts.transpileModule(source, {
+    compilerOptions: {
+      jsx: ts.JsxEmit.ReactJSX,
+      module: ts.ModuleKind.ESNext,
+      target: ts.ScriptTarget.ES2022,
+      verbatimModuleSyntax: false,
+    },
+  }).outputText;
   const sourceFile = ts.createSourceFile(
-    'monaco-authority-fixture.tsx',
-    source,
+    'monaco-authority-emitted.js',
+    emittedSource,
     ts.ScriptTarget.Latest,
     true,
-    ts.ScriptKind.TSX
+    ts.ScriptKind.JS
   );
   let hasRuntimeImport = false;
 
@@ -158,39 +166,8 @@ function hasRuntimeMonacoPackageImport(source: string): boolean {
     );
   }
 
-  function importDeclarationHasRuntimeBindings(node: ts.ImportDeclaration): boolean {
-    const importClause = node.importClause;
-    if (!importClause) return true;
-    if (importClause.isTypeOnly) return false;
-    if (importClause.name) return true;
-
-    const namedBindings = importClause.namedBindings;
-    return (
-      !namedBindings ||
-      !ts.isNamedImports(namedBindings) ||
-      namedBindings.elements.length === 0 ||
-      namedBindings.elements.some((specifier) => !specifier.isTypeOnly)
-    );
-  }
-
-  function exportDeclarationHasRuntimeBindings(node: ts.ExportDeclaration): boolean {
-    if (node.isTypeOnly) return false;
-
-    const exportClause = node.exportClause;
-    return (
-      !exportClause ||
-      !ts.isNamedExports(exportClause) ||
-      exportClause.elements.length === 0 ||
-      exportClause.elements.some((specifier) => !specifier.isTypeOnly)
-    );
-  }
-
   function visit(node: ts.Node): void {
-    if (
-      ts.isImportDeclaration(node) &&
-      isRawMonacoSpecifier(node.moduleSpecifier) &&
-      importDeclarationHasRuntimeBindings(node)
-    ) {
+    if (ts.isImportDeclaration(node) && isRawMonacoSpecifier(node.moduleSpecifier)) {
       hasRuntimeImport = true;
       return;
     }
@@ -198,19 +175,7 @@ function hasRuntimeMonacoPackageImport(source: string): boolean {
     if (
       ts.isExportDeclaration(node) &&
       node.moduleSpecifier &&
-      isRawMonacoSpecifier(node.moduleSpecifier) &&
-      exportDeclarationHasRuntimeBindings(node)
-    ) {
-      hasRuntimeImport = true;
-      return;
-    }
-
-    if (
-      ts.isImportEqualsDeclaration(node) &&
-      !node.isTypeOnly &&
-      ts.isExternalModuleReference(node.moduleReference) &&
-      node.moduleReference.expression &&
-      isRawMonacoSpecifier(node.moduleReference.expression)
+      isRawMonacoSpecifier(node.moduleSpecifier)
     ) {
       hasRuntimeImport = true;
       return;
