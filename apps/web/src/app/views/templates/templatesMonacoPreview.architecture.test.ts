@@ -823,6 +823,34 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     expectedViolation: 'useMonacoCodeSurface re-exported',
   },
   {
+    label: 'A method override cannot hide render delegation behind Function call helpers',
+    modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
+    source: [
+      "import { useMonacoCodeSurface } from './useMonacoCodeSurface';",
+      'export function MonacoCodeViewer({ render }) {',
+      '  const Surface = useMonacoCodeSurface();',
+      '  const callbacks = { invoke(value) { return render.call(null, value); } };',
+      '  const content = callbacks.invoke(useMonacoCodeSurface());',
+      '  return <>{content}<Surface readOnly /></>;',
+      '}',
+    ].join('\n'),
+    expectedViolation: 'useMonacoCodeSurface re-exported',
+  },
+  {
+    label: 'A method override cannot hide render delegation behind Reflect apply',
+    modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
+    source: [
+      "import { useMonacoCodeSurface } from './useMonacoCodeSurface';",
+      'export function MonacoCodeViewer({ render }) {',
+      '  const Surface = useMonacoCodeSurface();',
+      '  const callbacks = { invoke(value) { return Reflect.apply(render, null, [value]); } };',
+      '  const content = callbacks.invoke(useMonacoCodeSurface());',
+      '  return <>{content}<Surface readOnly /></>;',
+      '}',
+    ].join('\n'),
+    expectedViolation: 'useMonacoCodeSurface re-exported',
+  },
+  {
     label: 'A governed viewer cannot pass its loader through an inline composite member alias',
     modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
     source: [
@@ -2504,7 +2532,20 @@ function collectRuntimeModuleSpecifiers(
         const sources = new Set<string>();
         function visitDelegate(child: ts.Node): void {
           if (ts.isCallExpression(child)) {
-            for (const source of readParameterAliasRoots(child.expression)) sources.add(source);
+            const invokedSources = readParameterAliasRoots(child.expression);
+            for (const source of invokedSources) {
+              sources.add(source);
+              const helperMatch = /^(.*)\.(?:apply|bind|call)$/.exec(source);
+              if (helperMatch?.[1]) sources.add(helperMatch[1]);
+            }
+            if (
+              readParameterAliasPath(child.expression) === 'Reflect.apply' &&
+              child.arguments[0]
+            ) {
+              for (const source of readParameterAliasRoots(child.arguments[0])) {
+                sources.add(source);
+              }
+            }
           }
           if (ts.isReturnStatement(child) && child.expression) {
             for (const source of readParameterAliasRoots(child.expression)) sources.add(source);
