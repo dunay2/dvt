@@ -572,6 +572,21 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     expectedViolation: 'useMonacoCodeSurface re-exported',
   },
   {
+    label: 'A governed viewer cannot attach its loader through an exported namespace merge',
+    modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
+    source: [
+      "import { useMonacoCodeSurface } from './useMonacoCodeSurface';",
+      'export function MonacoCodeViewer() {',
+      '  const Surface = useMonacoCodeSurface();',
+      '  return <Surface readOnly />;',
+      '}',
+      'export namespace MonacoCodeViewer {',
+      '  export const loadSurface = useMonacoCodeSurface;',
+      '}',
+    ].join('\n'),
+    expectedViolation: 'useMonacoCodeSurface re-exported',
+  },
+  {
     label: 'Templates cannot acquire the editable workspace-file wrapper',
     modulePath: 'app/views/templates/TemplatesRouteWorkbench.tsx',
     source: [
@@ -593,6 +608,21 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
       "import { EditablePreview } from '../../testing/EditablePreview';",
       'void EditablePreview;',
     ].join('\n'),
+    expectedViolation: 'production import from test support',
+  },
+  {
+    label: 'Templates cannot import an executable sibling with an excluded test-support suffix',
+    modulePath: 'app/views/templates/TemplatesRouteWorkbench.tsx',
+    source: [
+      "import { EditablePreview } from './EditablePreview.test.support';",
+      'void EditablePreview;',
+    ].join('\n'),
+    expectedViolation: 'production import from test support',
+  },
+  {
+    label: 'Templates cannot dynamically assemble an excluded test-support import',
+    modulePath: 'app/views/templates/TemplatesRouteWorkbench.tsx',
+    source: "void import('./EditablePreview.' + 'test.support');",
     expectedViolation: 'production import from test support',
   },
   {
@@ -689,11 +719,13 @@ function collectProductionSourceFiles(root: string): string[] {
   });
 }
 
+const EXCLUDED_TEST_SOURCE_PATH_PATTERN = /\.(?:test(?:Fixtures|Harness|Support)?|spec)(?:\.|$)/i;
+
 function isProductionSourceFileName(fileName: string): boolean {
   return (
     /\.(?:[cm]?[jt]sx?)$/.test(fileName) &&
     !/\.d\.[cm]?ts$/.test(fileName) &&
-    !/\.(?:test(?:Fixtures|Harness|Support)?|spec)\./i.test(fileName)
+    !EXCLUDED_TEST_SOURCE_PATH_PATTERN.test(fileName)
   );
 }
 
@@ -713,6 +745,15 @@ function collectPrefilterModuleSpecifiers(source: string): ReadonlySet<string> {
       ts.isStringLiteralLike(node.moduleSpecifier)
     ) {
       specifiers.add(node.moduleSpecifier.text);
+      return;
+    }
+    if (
+      ts.isCallExpression(node) &&
+      node.expression.kind === ts.SyntaxKind.ImportKeyword &&
+      node.arguments[0] &&
+      ts.isStringLiteralLike(node.arguments[0])
+    ) {
+      specifiers.add(node.arguments[0].text);
       return;
     }
     if (
@@ -1518,6 +1559,7 @@ function collectRuntimeModuleSpecifiers(
   const runtimeReExportedSpecifiers = new Set<string>();
   const runtimeImportedBindings = new Map<string, string>();
   const runtimeLocalBindingInitializers = new Map<string, ts.Expression>();
+  const runtimeExportedBindings = new Set<string>();
   const reactCreateElementBindings = new Set<string>();
   const reactNamespaceBindings = new Set<string>();
 
@@ -1588,6 +1630,39 @@ function collectRuntimeModuleSpecifiers(
         addLocalBindingInitializers(element.name, initializer);
       }
     }
+  }
+
+  function addExportedBindings(statement: ts.Statement): void {
+    if (ts.isExportDeclaration(statement) && statement.exportClause) {
+      if (ts.isNamedExports(statement.exportClause) && !statement.moduleSpecifier) {
+        for (const element of statement.exportClause.elements) {
+          runtimeExportedBindings.add((element.propertyName ?? element.name).text);
+        }
+      }
+      return;
+    }
+    const modifiers = ts.canHaveModifiers(statement) ? ts.getModifiers(statement) : undefined;
+    if (!modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)) return;
+    if (
+      (ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement)) &&
+      statement.name
+    ) {
+      runtimeExportedBindings.add(statement.name.text);
+    }
+    if (ts.isVariableStatement(statement)) {
+      for (const declaration of statement.declarationList.declarations) {
+        for (const name of collectBindingNames(declaration.name)) runtimeExportedBindings.add(name);
+      }
+    }
+  }
+
+  function readMutationRoot(expression: ts.Expression): string | undefined {
+    if (ts.isIdentifier(expression)) return expression.text;
+    if (ts.isParenthesizedExpression(expression)) return readMutationRoot(expression.expression);
+    if (ts.isPropertyAccessExpression(expression) || ts.isElementAccessExpression(expression)) {
+      return readMutationRoot(expression.expression);
+    }
+    return undefined;
   }
 
   function getImportedSpecifier(
@@ -1910,7 +1985,27 @@ function collectRuntimeModuleSpecifiers(
       addExportedDeclarationAuthorities(node);
     }
 
+    if (
+      ts.isBinaryExpression(node) &&
+      node.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
+      runtimeExportedBindings.has(readMutationRoot(node.left) ?? '')
+    ) {
+      addReExportedExpression(node.right);
+    }
+
     if (ts.isCallExpression(node) && node.arguments[0]) {
+      const mutationMethod =
+        ts.isPropertyAccessExpression(node.expression) &&
+        ts.isIdentifier(node.expression.expression) &&
+        node.expression.expression.text === 'Object'
+          ? node.expression.name.text
+          : undefined;
+      if (
+        (mutationMethod === 'assign' || mutationMethod === 'defineProperty') &&
+        runtimeExportedBindings.has(readMutationRoot(node.arguments[0]) ?? '')
+      ) {
+        for (const argument of node.arguments.slice(1)) addReExportedExpression(argument);
+      }
       if (isViteGlobCall(node)) {
         addViteGlobSpecifiers(node);
         return;
@@ -1931,6 +2026,7 @@ function collectRuntimeModuleSpecifiers(
   }
 
   for (const statement of sourceFile.statements) {
+    addExportedBindings(statement);
     if (ts.isImportDeclaration(statement)) addImportedBindings(statement);
     if (ts.isVariableStatement(statement)) {
       for (const declaration of statement.declarationList.declarations) {
@@ -2070,9 +2166,13 @@ function containsTestSupportSpecifier(
   specifiers: ReadonlySet<string>,
   modulePath: string
 ): boolean {
-  return [...specifiers].some((specifier) =>
-    /(^|\/)test(?:ing)?(?:\/|$)/.test(resolveWebRuntimeModuleSpecifier(modulePath, specifier))
-  );
+  return [...specifiers].some((specifier) => {
+    const resolvedSpecifier = resolveWebRuntimeModuleSpecifier(modulePath, specifier);
+    return (
+      /(^|\/)test(?:ing)?(?:\/|$)/.test(resolvedSpecifier) ||
+      EXCLUDED_TEST_SOURCE_PATH_PATTERN.test(resolvedSpecifier)
+    );
+  });
 }
 
 function collectMonacoAuthorityViolations({
@@ -2174,15 +2274,24 @@ function collectRepositoryMonacoOwnerViolations({
 }: Pick<MonacoAuthorityFixture, 'modulePath' | 'source'>): string[] {
   const violations: string[] = [];
   let runtimeModuleAccess: RuntimeModuleAccess | undefined;
-  if (/test(?:ing)?[\\/]/i.test(source)) {
+  const hasEscapedSpecifier = /\\(?:u(?:\{[\dA-Fa-f]+\}|[\dA-Fa-f]{4})|x[\dA-Fa-f]{2})/.test(
+    source
+  );
+  const hasTestSupportSignal =
+    /test(?:Fixtures|Harness|Support|ing)?[\\/.]/i.test(source) ||
+    /\.spec(?:\.|['"`])/i.test(source);
+  const prefilterModuleSpecifiers = hasEscapedSpecifier
+    ? collectPrefilterModuleSpecifiers(source)
+    : new Set<string>();
+  if (hasTestSupportSignal) {
     runtimeModuleAccess = getRuntimeModuleSpecifiers(modulePath, source);
     if (containsTestSupportSpecifier(runtimeModuleAccess.specifiers, modulePath)) {
       violations.push('production import from test support');
     }
   }
   const hasEscapedStaticAuthority =
-    /\\(?:u(?:\{[\dA-Fa-f]+\}|[\dA-Fa-f]{4})|x[\dA-Fa-f]{2})/.test(source) &&
-    containsPotentialStaticMonacoAuthority(collectPrefilterModuleSpecifiers(source), modulePath);
+    hasEscapedSpecifier &&
+    containsPotentialStaticMonacoAuthority(prefilterModuleSpecifiers, modulePath);
   if (
     !MONACO_AUTHORITY_SOURCE_SIGNALS.some((signal) => source.includes(signal)) &&
     !/\bimport\s*\(/.test(source) &&
@@ -2241,6 +2350,7 @@ describe('Templates Monaco preview architecture', () => {
     expect(isProductionSourceFileName('MonacoCodeSurface.testHarness.tsx')).toBe(false);
     expect(isProductionSourceFileName('MonacoCodeSurface.testFixtures.ts')).toBe(false);
     expect(isProductionSourceFileName('MonacoCodeSurface.testSupport.ts')).toBe(false);
+    expect(isProductionSourceFileName('MonacoCodeSurface.test.support.ts')).toBe(false);
     expect(isProductionSourceFileName('MonacoCodeSurface.tsx')).toBe(true);
     for (const executableFile of [
       'MonacoCodeSurface.js',
