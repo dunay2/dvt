@@ -318,6 +318,20 @@ const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
       'void import(target);',
     ].join('\n'),
   },
+  {
+    label: 'A straight-line safe assignment overrides an earlier Monaco helper write',
+    surface: 'canvas-production',
+    modulePath: 'views/canvas/SafeCapabilityPanel.tsx',
+    source: [
+      "let target = './InitialSafeSurface';",
+      'function selectMonaco() {',
+      "  target = '../../components/monaco/MonacoCodeSurface';",
+      '}',
+      'selectMonaco();',
+      "target = './SafeSurface';",
+      'void import(target);',
+    ].join('\n'),
+  },
 ];
 
 const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
@@ -730,6 +744,30 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     source: [
       "const monacoPath = '../../../app/components/monaco/MonacoCodeSurface';",
       'const groups = { targets: [monacoPath] };',
+      'const targets = [...groups.targets];',
+      'void import(targets[0]);',
+    ].join('\n'),
+    expectedViolation: 'MonacoCodeSurface outside a governed owner',
+  },
+  {
+    label: 'A capability cannot hide a Monaco initializer behind a conditional safe write',
+    modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
+    source: [
+      "let target = '../../../app/components/monaco/MonacoCodeSurface';",
+      "enabled && (target = './SafeSurface');",
+      'void import(target);',
+    ].join('\n'),
+    expectedViolation: 'MonacoCodeSurface outside a governed owner',
+  },
+  {
+    label: 'A capability cannot hide a Monaco target in an alternate member-backed spread',
+    modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
+    source: [
+      "const monacoPath = '../../../app/components/monaco/MonacoCodeSurface';",
+      "let groups = { targets: ['./SafeSurface'] };",
+      'if (enabled) {',
+      '  groups = { targets: [monacoPath] };',
+      '}',
       'const targets = [...groups.targets];',
       'void import(targets[0]);',
     ].join('\n'),
@@ -2708,7 +2746,7 @@ function collectRuntimeModuleSpecifiers(
     return scope ?? sourceFile;
   }
 
-  function readStraightLineStatementOwner(node: ts.Node): ts.Block | ts.SourceFile | undefined {
+  function readStatementListOwner(node: ts.Node): ts.Block | ts.SourceFile | undefined {
     let candidate: ts.Node = node;
     let nearestStatement: ts.Statement | undefined;
     while (candidate.parent) {
@@ -2722,6 +2760,22 @@ function collectRuntimeModuleSpecifiers(
       candidate = candidate.parent;
     }
     return undefined;
+  }
+
+  function readStraightLineAssignmentOwner(
+    assignment: ts.BinaryExpression
+  ): ts.Block | ts.SourceFile | undefined {
+    let candidate: ts.Node = assignment;
+    while (
+      ts.isParenthesizedExpression(candidate.parent) &&
+      candidate.parent.expression === candidate
+    ) {
+      candidate = candidate.parent;
+    }
+    if (!ts.isExpressionStatement(candidate.parent) || candidate.parent.expression !== candidate) {
+      return undefined;
+    }
+    return readStatementListOwner(candidate.parent);
   }
 
   function addLexicalCallableBinding(
@@ -2911,7 +2965,7 @@ function collectRuntimeModuleSpecifiers(
           expression: node.right,
           executionScope: readExecutionScope(node),
           position: node.getStart(sourceFile),
-          straightLineOwner: readStraightLineStatementOwner(node),
+          straightLineOwner: readStraightLineAssignmentOwner(node),
         });
         assignments.set(node.left.text, bindingAssignments);
       }
@@ -3044,20 +3098,44 @@ function collectRuntimeModuleSpecifiers(
         );
   }
 
-  function readStaticArrayElements(
+  function readInvocationPositionsInScope(
+    callableScope: ts.Node,
+    targetScope: ts.Node,
+    beforePosition: number,
+    visiting: ReadonlySet<ts.Node> = new Set()
+  ): number[] {
+    if (!ts.isFunctionLike(callableScope) || visiting.has(callableScope)) return [];
+    const positions = new Set<number>();
+    const nextVisiting = new Set([...visiting, callableScope]);
+    for (const invocation of runtimeCallableInvocations.get(callableScope) ?? []) {
+      const invocationScope = readExecutionScope(invocation);
+      if (invocationScope === targetScope) {
+        const position = invocation.getStart(sourceFile);
+        if (position < beforePosition) positions.add(position);
+        continue;
+      }
+      for (const position of readInvocationPositionsInScope(
+        invocationScope,
+        targetScope,
+        beforePosition,
+        nextVisiting
+      )) {
+        positions.add(position);
+      }
+    }
+    return [...positions];
+  }
+
+  function readStaticArrayCandidates(
     expression: ts.Expression,
     consumer?: RuntimeImportConsumer,
     resolvingBindings: ReadonlySet<string> = new Set()
-  ): Array<ts.Expression | undefined> | undefined {
+  ): Array<Array<ts.Expression | undefined>> {
     const candidate = unwrapRuntimeExpression(expression);
     if (ts.isIdentifier(candidate) && consumer && !resolvingBindings.has(candidate.text)) {
-      const bindingCandidates = readLexicalBindingCandidates(candidate, consumer);
-      const [bindingCandidate] = bindingCandidates;
-      if (bindingCandidates.length !== 1 || !bindingCandidate) return undefined;
-      return readStaticArrayElements(
-        bindingCandidate,
-        consumer,
-        new Set([...resolvingBindings, candidate.text])
+      const nextResolving = new Set([...resolvingBindings, candidate.text]);
+      return readLexicalBindingCandidates(candidate, consumer).flatMap((bindingCandidate) =>
+        readStaticArrayCandidates(bindingCandidate, consumer, nextResolving)
       );
     }
     if (
@@ -3073,7 +3151,7 @@ function collectRuntimeModuleSpecifiers(
         const nextResolving = ts.isIdentifier(projection.root)
           ? new Set([...resolvingBindings, projection.root.text])
           : resolvingBindings;
-        const arrayCandidates = rootCandidates
+        return rootCandidates
           .flatMap((rootCandidate) =>
             readArgumentProjectionCandidates(
               rootCandidate,
@@ -3082,35 +3160,34 @@ function collectRuntimeModuleSpecifiers(
               nextResolving
             )
           )
-          .map((projectedCandidate) =>
-            readStaticArrayElements(projectedCandidate, consumer, nextResolving)
-          )
-          .filter((elements): elements is Array<ts.Expression | undefined> => elements != null);
-        const [arrayCandidate] = arrayCandidates;
-        if (arrayCandidates.length === 1 && arrayCandidate) return arrayCandidate;
+          .flatMap((projectedCandidate) =>
+            readStaticArrayCandidates(projectedCandidate, consumer, nextResolving)
+          );
       }
     }
-    if (!ts.isArrayLiteralExpression(candidate)) return undefined;
+    if (!ts.isArrayLiteralExpression(candidate)) return [];
 
-    const elements: Array<ts.Expression | undefined> = [];
+    let arrayCandidates: Array<Array<ts.Expression | undefined>> = [[]];
     for (const element of candidate.elements) {
       if (ts.isOmittedExpression(element)) {
-        elements.push(undefined);
+        arrayCandidates = arrayCandidates.map((elements) => [...elements, undefined]);
         continue;
       }
       if (ts.isSpreadElement(element)) {
-        const spreadElements = readStaticArrayElements(
+        const spreadCandidates = readStaticArrayCandidates(
           element.expression,
           consumer,
           resolvingBindings
         );
-        if (!spreadElements) return undefined;
-        elements.push(...spreadElements);
+        if (spreadCandidates.length === 0) return [];
+        arrayCandidates = arrayCandidates.flatMap((elements) =>
+          spreadCandidates.map((spreadElements) => [...elements, ...spreadElements])
+        );
         continue;
       }
-      elements.push(element);
+      arrayCandidates = arrayCandidates.map((elements) => [...elements, element]);
     }
-    return elements;
+    return arrayCandidates;
   }
 
   function readArgumentProjectionCandidates(
@@ -3123,9 +3200,14 @@ function collectRuntimeModuleSpecifiers(
     const [segment, ...remainingPath] = bindingPath;
     const candidate = unwrapRuntimeExpression(expression);
     if (typeof segment === 'number') {
-      const element = readStaticArrayElements(candidate, consumer, resolvingBindings)?.[segment];
-      if (!element) return [];
-      return readArgumentProjectionCandidates(element, remainingPath, consumer, resolvingBindings);
+      return readStaticArrayCandidates(candidate, consumer, resolvingBindings).flatMap(
+        (elements) => {
+          const element = elements[segment];
+          return element
+            ? readArgumentProjectionCandidates(element, remainingPath, consumer, resolvingBindings)
+            : [];
+        }
+      );
     }
     if (typeof segment !== 'string' || !ts.isObjectLiteralExpression(candidate)) return [];
     let projected: ts.Expression[] = [];
@@ -3205,31 +3287,46 @@ function collectRuntimeModuleSpecifiers(
         const identifierPosition = identifier.getStart(sourceFile);
         const reachingAssignments = (
           runtimeLexicalBindingAssignments.get(scope)?.get(identifier.text) ?? []
-        ).filter((assignment) =>
-          assignment.executionScope === executionScope
-            ? assignment.position < identifierPosition
-            : executionScopeMayRunBefore(
-                assignment.executionScope,
-                executionScope,
-                identifierPosition
-              )
-        );
-        const straightLineOwner = readStraightLineStatementOwner(identifier);
+        ).flatMap((assignment) => {
+          if (assignment.executionScope === executionScope) {
+            return assignment.position < identifierPosition
+              ? [{ assignment, effectivePosition: assignment.position }]
+              : [];
+          }
+          const invocationPositions = readInvocationPositionsInScope(
+            assignment.executionScope,
+            executionScope,
+            identifierPosition
+          );
+          if (invocationPositions.length > 0) {
+            return invocationPositions.map((effectivePosition) => ({
+              assignment,
+              effectivePosition,
+            }));
+          }
+          return executionScopeMayRunBefore(
+            assignment.executionScope,
+            executionScope,
+            identifierPosition
+          )
+            ? [{ assignment, effectivePosition: Number.NEGATIVE_INFINITY }]
+            : [];
+        });
+        const straightLineOwner = readStatementListOwner(identifier);
         const lastStraightLineAssignment = reachingAssignments
           .filter(
-            (assignment) =>
+            ({ assignment }) =>
               assignment.executionScope === executionScope &&
               assignment.straightLineOwner != null &&
               assignment.straightLineOwner === straightLineOwner
           )
-          .sort((left, right) => left.position - right.position)
+          .sort((left, right) => left.effectivePosition - right.effectivePosition)
           .at(-1);
         if (initializer && !lastStraightLineAssignment) candidates.push(initializer);
-        for (const assignment of reachingAssignments) {
+        for (const { assignment, effectivePosition } of reachingAssignments) {
           if (
             lastStraightLineAssignment &&
-            assignment.executionScope === executionScope &&
-            assignment.position < lastStraightLineAssignment.position
+            effectivePosition < lastStraightLineAssignment.effectivePosition
           ) {
             continue;
           }
