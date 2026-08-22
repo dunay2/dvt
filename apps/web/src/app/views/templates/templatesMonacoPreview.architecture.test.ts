@@ -629,6 +629,16 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     expectedViolation: 'MonacoCodeSurface outside a governed owner',
   },
   {
+    label: 'A capability cannot default a dynamic import parameter to a Monaco surface',
+    modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
+    source: [
+      "export function loadSurface(target = '../../../app/components/monaco/MonacoCodeSurface') {",
+      '  return import(target);',
+      '}',
+    ].join('\n'),
+    expectedViolation: 'MonacoCodeSurface outside a governed owner',
+  },
+  {
     label: 'Templates cannot import an allowlisted Canvas editable leaf',
     modulePath: 'app/views/templates/TemplatesRouteWorkbench.tsx',
     source: [
@@ -896,6 +906,23 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
       '  const Surface = useMonacoCodeSurface();',
       '  const callbacks = { invoke(value) {',
       '    const { apply } = Reflect;',
+      '    return apply(render, null, [value]);',
+      '  } };',
+      '  const content = callbacks.invoke(useMonacoCodeSurface());',
+      '  return <>{content}<Surface readOnly /></>;',
+      '}',
+    ].join('\n'),
+    expectedViolation: 'useMonacoCodeSurface re-exported',
+  },
+  {
+    label: 'A method override cannot default a destructured alias of Reflect apply',
+    modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
+    source: [
+      "import { useMonacoCodeSurface } from './useMonacoCodeSurface';",
+      'export function MonacoCodeViewer({ render }) {',
+      '  const Surface = useMonacoCodeSurface();',
+      '  const callbacks = { invoke(value) {',
+      '    const { apply = Reflect.apply } = {};',
       '    return apply(render, null, [value]);',
       '  } };',
       '  const content = callbacks.invoke(useMonacoCodeSurface());',
@@ -2288,7 +2315,7 @@ function collectRuntimeModuleSpecifiers(
   }
 
   function collectLexicalBindingInitializers(node: ts.Node): void {
-    if (ts.isVariableDeclaration(node) && node.initializer) {
+    if ((ts.isVariableDeclaration(node) || ts.isParameter(node)) && node.initializer) {
       const scope = readLexicalScope(node);
       let bindings = runtimeLexicalBindingInitializers.get(scope);
       if (!bindings) {
@@ -2636,6 +2663,12 @@ function collectRuntimeModuleSpecifiers(
                   : undefined;
               if (propertyName) {
                 collectReflectApplyPathAliases(element.name, `${sourcePath}.${propertyName}`);
+                if (
+                  element.initializer &&
+                  !(sourcePath === 'Reflect' && propertyName === 'apply')
+                ) {
+                  collectReflectApplyBindingAliases(element.name, element.initializer);
+                }
               }
             }
             return;
@@ -2643,6 +2676,9 @@ function collectRuntimeModuleSpecifiers(
           for (const [index, element] of bindingName.elements.entries()) {
             if (!ts.isOmittedExpression(element)) {
               collectReflectApplyPathAliases(element.name, `${sourcePath}.${index}`);
+              if (element.initializer) {
+                collectReflectApplyBindingAliases(element.name, element.initializer);
+              }
             }
           }
         }
@@ -2676,6 +2712,8 @@ function collectRuntimeModuleSpecifiers(
                 collectReflectApplyBindingAliases(element.name, property.initializer);
               } else if (property && ts.isShorthandPropertyAssignment(property)) {
                 collectReflectApplyBindingAliases(element.name, property.name);
+              } else if (!property && element.initializer) {
+                collectReflectApplyBindingAliases(element.name, element.initializer);
               }
             }
             return;
@@ -2691,6 +2729,8 @@ function collectRuntimeModuleSpecifiers(
                 element.name,
                 ts.isSpreadElement(sourceElement) ? sourceElement.expression : sourceElement
               );
+            } else if (element.initializer) {
+              collectReflectApplyBindingAliases(element.name, element.initializer);
             }
           }
         }
