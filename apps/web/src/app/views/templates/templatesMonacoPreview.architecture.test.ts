@@ -107,6 +107,13 @@ const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
     source: "import { editor } from 'monaco-editor';",
     expectedViolation: 'monaco-editor runtime import',
   },
+  {
+    label: 'Empty Monaco import and export clauses still execute at runtime',
+    surface: 'templates-route',
+    modulePath: 'views/templates/TemplatesRouteWorkbench.tsx',
+    source: ["import {} from 'monaco-editor';", "export {} from 'monaco-editor';"].join('\n'),
+    expectedViolation: 'monaco-editor runtime import',
+  },
 ];
 
 function readAppSource(relativePath: string): string {
@@ -161,6 +168,7 @@ function hasRuntimeMonacoPackageImport(source: string): boolean {
     return (
       !namedBindings ||
       !ts.isNamedImports(namedBindings) ||
+      namedBindings.elements.length === 0 ||
       namedBindings.elements.some((specifier) => !specifier.isTypeOnly)
     );
   }
@@ -172,6 +180,7 @@ function hasRuntimeMonacoPackageImport(source: string): boolean {
     return (
       !exportClause ||
       !ts.isNamedExports(exportClause) ||
+      exportClause.elements.length === 0 ||
       exportClause.elements.some((specifier) => !specifier.isTypeOnly)
     );
   }
