@@ -206,6 +206,16 @@ const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
     expectedViolation: 'MonacoCodeEditor',
   },
   {
+    label: 'Templates preview cannot import an alternate export from the viewer gateway',
+    surface: 'templates-preview',
+    modulePath: 'views/templates/TemplateMonacoPreviewPanel.tsx',
+    source: [
+      "import { EditableViewer } from '../../components/monaco/MonacoCodeViewer';",
+      'void EditableViewer;',
+    ].join('\n'),
+    expectedViolation: 'MonacoCodeViewer public API',
+  },
+  {
     label: 'Templates route cannot bypass its preview panel',
     surface: 'templates-route',
     modulePath: 'views/templates/TemplatesRouteWorkbench.tsx',
@@ -620,6 +630,83 @@ function emitWebModuleSource(source: string): string {
       verbatimModuleSyntax: false,
     },
   }).outputText;
+}
+
+function collectBindingNames(name: ts.BindingName): string[] {
+  if (ts.isIdentifier(name)) return [name.text];
+  return name.elements.flatMap((element) =>
+    ts.isOmittedExpression(element) ? [] : collectBindingNames(element.name)
+  );
+}
+
+function collectRuntimeExportedNames(source: string): string[] {
+  const sourceFile = ts.createSourceFile(
+    'monaco-viewer-public-api.js',
+    emitWebModuleSource(source),
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.JS
+  );
+  const exportedNames = new Set<string>();
+  for (const statement of sourceFile.statements) {
+    if (ts.isExportAssignment(statement)) {
+      exportedNames.add('default');
+      continue;
+    }
+    if (ts.isExportDeclaration(statement) && statement.exportClause) {
+      if (ts.isNamedExports(statement.exportClause)) {
+        for (const element of statement.exportClause.elements) exportedNames.add(element.name.text);
+      }
+      continue;
+    }
+    const isExported = statement.modifiers?.some(
+      (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword
+    );
+    if (!isExported) continue;
+    if (
+      (ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement)) &&
+      statement.name
+    ) {
+      exportedNames.add(statement.name.text);
+    }
+    if (ts.isVariableStatement(statement)) {
+      for (const declaration of statement.declarationList.declarations) {
+        for (const name of collectBindingNames(declaration.name)) exportedNames.add(name);
+      }
+    }
+  }
+  return [...exportedNames].sort();
+}
+
+function collectMonacoViewerImportViolations(source: string): string[] {
+  const sourceFile = ts.createSourceFile(
+    'templates-monaco-viewer-imports.js',
+    emitWebModuleSource(source),
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.JS
+  );
+  for (const statement of sourceFile.statements) {
+    if (
+      !ts.isImportDeclaration(statement) ||
+      !ts.isStringLiteralLike(statement.moduleSpecifier) ||
+      !/\/?MonacoCodeViewer(?:\.[cm]?[jt]sx?)?$/.test(statement.moduleSpecifier.text)
+    ) {
+      continue;
+    }
+    const importClause = statement.importClause;
+    if (!importClause) continue;
+    if (importClause.name || !importClause.namedBindings) return ['MonacoCodeViewer public API'];
+    if (ts.isNamespaceImport(importClause.namedBindings)) return ['MonacoCodeViewer public API'];
+    if (
+      importClause.namedBindings.elements.some(
+        (element) => (element.propertyName ?? element.name).text !== 'MonacoCodeViewer'
+      )
+    ) {
+      return ['MonacoCodeViewer public API'];
+    }
+  }
+  return [];
 }
 
 function resolveWebPackageModulePath(modulePath: string): string {
@@ -1187,6 +1274,10 @@ function collectMonacoAuthorityViolations({
 
   const { specifiers: runtimeModuleSpecifiers } = getRuntimeModuleSpecifiers(modulePath, source);
 
+  if (surface === 'templates-preview') {
+    violations.push(...collectMonacoViewerImportViolations(source));
+  }
+
   if (
     (surface === 'templates-route' || surface === 'templates-preview') &&
     containsCanvasAuthoringContextSpecifier(runtimeModuleSpecifiers, modulePath)
@@ -1447,6 +1538,7 @@ describe('Templates Monaco preview architecture', () => {
 
     expect(monacoViewer).toContain('useMonacoCodeSurface()');
     expect(monacoViewer).toContain('readOnly={true}');
+    expect(collectRuntimeExportedNames(monacoViewer)).toEqual(['MonacoCodeViewer']);
     expect(monacoLoader).toContain("import('./MonacoCodeSurface')");
     expect(monacoLoader).toContain('active = false');
     expect(monacoSurface).toContain('<Editor');
