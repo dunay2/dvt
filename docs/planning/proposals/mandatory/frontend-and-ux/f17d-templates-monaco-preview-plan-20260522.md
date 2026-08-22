@@ -181,6 +181,14 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/views/templates/templatesMonacoPreview.architecture.test.ts
     cypressCoverage: N/A
     unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/views/templates/templatesMonacoPreview.architecture.test.ts]
+  - name: normalizeRuntimeModuleSpecifier
+    path: apps/web/src/app/views/templates/templatesMonacoPreview.architecture.test.ts
+    dddOwner: Templates Monaco runtime-specifier policy
+    cqRails: [GenerateExecutionTemplatePreview]
+    fowlerSignals: [Hidden authority, Semantic Fitness Function]
+    architectureGuard: pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/views/templates/templatesMonacoPreview.architecture.test.ts
+    cypressCoverage: N/A
+    unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/views/templates/templatesMonacoPreview.architecture.test.ts]
   - name: REPO_ROOT
     path: apps/web/src/app/views/templates/templatesMonacoPreview.architecture.test.ts
     dddOwner: Templates Monaco architecture test support

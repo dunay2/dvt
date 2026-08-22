@@ -254,6 +254,26 @@ const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
     expectedViolation: 'MonacoCodeViewer',
   },
   {
+    label: 'Templates route cannot hide its viewer import behind a Vite query',
+    surface: 'templates-route',
+    modulePath: 'views/templates/TemplatesRouteWorkbench.tsx',
+    source: [
+      "import { MonacoCodeViewer } from '../../components/monaco/MonacoCodeViewer?v=1';",
+      'void MonacoCodeViewer;',
+    ].join('\n'),
+    expectedViolation: 'MonacoCodeViewer',
+  },
+  {
+    label: 'Templates route cannot hide its viewer import behind a URL fragment',
+    surface: 'templates-route',
+    modulePath: 'views/templates/TemplatesRouteWorkbench.tsx',
+    source: [
+      "import { MonacoCodeViewer } from '../../components/monaco/MonacoCodeViewer#preview';",
+      'void MonacoCodeViewer;',
+    ].join('\n'),
+    expectedViolation: 'MonacoCodeViewer',
+  },
+  {
     label: 'Templates route cannot mount Monaco through the inspector viewer wrapper',
     surface: 'templates-route',
     modulePath: 'views/templates/TemplatesRouteWorkbench.tsx',
@@ -2237,9 +2257,17 @@ function getRuntimeModuleSpecifiers(modulePath: string, source: string): Runtime
   return runtimeModuleAccess;
 }
 
+function normalizeRuntimeModuleSpecifier(specifier: string): string {
+  const suffixIndex = specifier.search(/[?#]/);
+  const bareSpecifier = suffixIndex === -1 ? specifier : specifier.slice(0, suffixIndex);
+  return bareSpecifier.replaceAll('\\', '/');
+}
+
 function containsPackageSpecifier(specifiers: ReadonlySet<string>, packageName: string): boolean {
   return [...specifiers].some(
-    (specifier) => specifier === packageName || specifier.startsWith(`${packageName}/`)
+    (specifier) =>
+      normalizeRuntimeModuleSpecifier(specifier) === packageName ||
+      normalizeRuntimeModuleSpecifier(specifier).startsWith(`${packageName}/`)
   );
 }
 
@@ -2248,7 +2276,7 @@ function containsInternalAuthoritySpecifier(
   authority: (typeof MONACO_INTERNAL_AUTHORITIES)[number]
 ): boolean {
   return [...specifiers].some((specifier) => {
-    const normalizedSpecifier = specifier.replaceAll('\\', '/');
+    const normalizedSpecifier = normalizeRuntimeModuleSpecifier(specifier);
     const moduleName = normalizedSpecifier.split('/').at(-1);
     return moduleName?.replace(/\.[cm]?[jt]sx?$/, '') === authority;
   });
@@ -2280,7 +2308,7 @@ function containsPotentialStaticMonacoAuthority(
 }
 
 function resolveWebRuntimeModuleSpecifier(modulePath: string, specifier: string): string {
-  const normalizedSpecifier = specifier.replaceAll('\\', '/');
+  const normalizedSpecifier = normalizeRuntimeModuleSpecifier(specifier);
   const aliasedSpecifier = resolveWebViteAlias(normalizedSpecifier);
   if (aliasedSpecifier) return aliasedSpecifier;
   if (normalizedSpecifier.startsWith('.')) {
