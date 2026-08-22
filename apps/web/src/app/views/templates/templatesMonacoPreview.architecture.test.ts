@@ -693,6 +693,19 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     expectedViolation: 'useMonacoCodeSurface re-exported',
   },
   {
+    label: 'A governed viewer cannot pass its loader through an invoked render prop',
+    modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
+    source: [
+      "import { useMonacoCodeSurface } from './useMonacoCodeSurface';",
+      'export function MonacoCodeViewer({ render }) {',
+      '  const Surface = useMonacoCodeSurface();',
+      '  const content = render(useMonacoCodeSurface());',
+      '  return <>{content}<Surface readOnly /></>;',
+      '}',
+    ].join('\n'),
+    expectedViolation: 'useMonacoCodeSurface re-exported',
+  },
+  {
     label: 'A governed viewer cannot separately export a local object that exposes its loader',
     modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
     source: [
@@ -1536,6 +1549,49 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
     const body = node.body;
     if (!ts.isBlock(body)) return expressionProducesHookResult(body);
 
+    const localSurfaceBindings = new Set<string>();
+    let discoveredLocalSurfaceBinding = true;
+    while (discoveredLocalSurfaceBinding) {
+      discoveredLocalSurfaceBinding = false;
+      function discoverLocalSurfaceBindings(candidate: ts.Node): void {
+        if (candidate !== body && isRuntimeFunctionLike(candidate)) return;
+        if (ts.isVariableDeclaration(candidate) && candidate.initializer) {
+          const initializer = unwrapExpression(candidate.initializer);
+          if (ts.isIdentifier(candidate.name)) {
+            discoveredLocalSurfaceBinding =
+              discoverCompositeBindings(
+                localSurfaceBindings,
+                candidate.name.text,
+                initializer,
+                expressionProducesHookResult
+              ) || discoveredLocalSurfaceBinding;
+          } else {
+            discoveredLocalSurfaceBinding =
+              discoverBindingPatternBindings(
+                localSurfaceBindings,
+                candidate.name,
+                initializer,
+                expressionProducesHookResult
+              ) || discoveredLocalSurfaceBinding;
+          }
+        }
+        if (
+          ts.isBinaryExpression(candidate) &&
+          candidate.operatorToken.kind === ts.SyntaxKind.EqualsToken
+        ) {
+          discoveredLocalSurfaceBinding =
+            discoverAssignmentTargetBindings(
+              localSurfaceBindings,
+              candidate.left,
+              candidate.right,
+              expressionProducesHookResult
+            ) || discoveredLocalSurfaceBinding;
+        }
+        ts.forEachChild(candidate, discoverLocalSurfaceBindings);
+      }
+      discoverLocalSurfaceBindings(body);
+    }
+
     let returnsHookResult = false;
     function visitReturn(candidate: ts.Node): void {
       if (returnsHookResult) return;
@@ -1543,7 +1599,11 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
       if (
         ts.isReturnStatement(candidate) &&
         candidate.expression &&
-        expressionProducesHookResult(candidate.expression)
+        expressionProducesBinding(
+          localSurfaceBindings,
+          candidate.expression,
+          expressionProducesHookResult
+        )
       ) {
         returnsHookResult = true;
         return;
@@ -1912,14 +1972,18 @@ function collectRuntimeModuleSpecifiers(
     }
   }
 
-  function addLocalBindingInitializers(name: ts.BindingName, initializer: ts.Expression): void {
+  function addLocalBindingInitializers(
+    name: ts.BindingName,
+    initializer: ts.Expression,
+    bindings: Map<string, ts.Expression> = runtimeLocalBindingInitializers
+  ): void {
     if (ts.isIdentifier(name)) {
-      runtimeLocalBindingInitializers.set(name.text, initializer);
+      bindings.set(name.text, initializer);
       return;
     }
     for (const element of name.elements) {
       if (!ts.isOmittedExpression(element)) {
-        addLocalBindingInitializers(element.name, initializer);
+        addLocalBindingInitializers(element.name, initializer, bindings);
       }
     }
   }
@@ -2019,7 +2083,8 @@ function collectRuntimeModuleSpecifiers(
   function addReExportedExpression(
     node: ts.Node,
     bindings: ReadonlyMap<string, string> = runtimeImportedBindings,
-    resolvingLocalBindings: ReadonlySet<string> = new Set()
+    resolvingLocalBindings: ReadonlySet<string> = new Set(),
+    localBindingInitializers: ReadonlyMap<string, ts.Expression> = runtimeLocalBindingInitializers
   ): void {
     if (ts.isExpression(node)) {
       const importedSpecifier = getImportedSpecifier(node, bindings);
@@ -2030,12 +2095,13 @@ function collectRuntimeModuleSpecifiers(
       !bindings.has(node.text) &&
       !resolvingLocalBindings.has(node.text)
     ) {
-      const initializer = runtimeLocalBindingInitializers.get(node.text);
+      const initializer = localBindingInitializers.get(node.text);
       if (initializer) {
         addReExportedExpression(
           initializer,
           bindings,
-          new Set([...resolvingLocalBindings, node.text])
+          new Set([...resolvingLocalBindings, node.text]),
+          localBindingInitializers
         );
       }
       return;
@@ -2048,18 +2114,28 @@ function collectRuntimeModuleSpecifiers(
       const isRenderCall = ts.isCallExpression(node) && isReactCreateElementCall(node);
       if (isJsxRuntimeCall || isRenderCall) {
         for (const argument of (node.arguments ?? []).slice(1)) {
-          addReExportedExpression(argument, bindings, resolvingLocalBindings);
+          addReExportedExpression(
+            argument,
+            bindings,
+            resolvingLocalBindings,
+            localBindingInitializers
+          );
         }
         return;
       }
       if (calledSpecifier) runtimeReExportedSpecifiers.add(calledSpecifier);
       for (const argument of node.arguments ?? []) {
-        addReExportedExpression(argument, bindings, resolvingLocalBindings);
+        addReExportedExpression(
+          argument,
+          bindings,
+          resolvingLocalBindings,
+          localBindingInitializers
+        );
       }
       return;
     }
     ts.forEachChild(node, (child) =>
-      addReExportedExpression(child, bindings, resolvingLocalBindings)
+      addReExportedExpression(child, bindings, resolvingLocalBindings, localBindingInitializers)
     );
   }
 
@@ -2084,25 +2160,64 @@ function collectRuntimeModuleSpecifiers(
       ts.forEachChild(node, discoverDeclarationAlias);
     }
 
-    function visitExportedDeclaration(child: ts.Node): void {
+    function visitReturnedAuthority(child: ts.Node, callableRoot: ts.Node): void {
+      if (child !== callableRoot && ts.isFunctionLike(child)) return;
       if (ts.isReturnStatement(child) && child.expression) {
         addReExportedExpression(child.expression, declarationBindings);
         return;
       }
-      if (ts.isPropertyDeclaration(child) && child.initializer) {
-        addReExportedExpression(child.initializer, declarationBindings);
-        return;
-      }
-      if (ts.isHeritageClause(child)) {
-        for (const heritageType of child.types) {
-          addReExportedExpression(heritageType.expression, declarationBindings);
-        }
-        return;
-      }
-      ts.forEachChild(child, visitExportedDeclaration);
+      ts.forEachChild(child, (nestedChild) => visitReturnedAuthority(nestedChild, callableRoot));
     }
 
-    ts.forEachChild(node, visitExportedDeclaration);
+    function visitInvokedParameterAuthorities(
+      parameters: readonly ts.ParameterDeclaration[],
+      body: ts.Block
+    ): void {
+      const parameterBindings = new Set(
+        parameters.flatMap((parameter) => collectBindingNames(parameter.name))
+      );
+      function visitInvocation(child: ts.Node): void {
+        if (
+          ts.isCallExpression(child) &&
+          parameterBindings.has(readMutationRoot(child.expression) ?? '')
+        ) {
+          for (const argument of child.arguments) {
+            addReExportedExpression(argument, declarationBindings);
+          }
+        }
+        ts.forEachChild(child, visitInvocation);
+      }
+      visitInvocation(body);
+    }
+
+    if (ts.isFunctionDeclaration(node)) {
+      if (node.body) {
+        visitReturnedAuthority(node.body, node.body);
+        visitInvokedParameterAuthorities(node.parameters, node.body);
+      }
+      return;
+    }
+
+    for (const heritageClause of node.heritageClauses ?? []) {
+      for (const heritageType of heritageClause.types) {
+        addReExportedExpression(heritageType.expression, declarationBindings);
+      }
+    }
+    for (const member of node.members) {
+      if (ts.isPropertyDeclaration(member) && member.initializer) {
+        addReExportedExpression(member.initializer, declarationBindings);
+      }
+      if (
+        (ts.isMethodDeclaration(member) ||
+          ts.isGetAccessorDeclaration(member) ||
+          ts.isSetAccessorDeclaration(member) ||
+          ts.isConstructorDeclaration(member)) &&
+        member.body
+      ) {
+        visitReturnedAuthority(member.body, member.body);
+        visitInvokedParameterAuthorities(member.parameters, member.body);
+      }
+    }
   }
 
   function readVariableImportPattern(node: ts.Expression): {
@@ -2910,6 +3025,22 @@ describe('Templates Monaco preview architecture', () => {
         [
           'function useMonacoCodeSurface() { return null; }',
           'function useWrappedSurface() { return useMonacoCodeSurface(); }',
+          'export function MonacoCodeViewer() {',
+          '  const Safe = useMonacoCodeSurface();',
+          '  const Writable = useWrappedSurface();',
+          '  return <><Safe readOnly /><Writable readOnly={false} /></>;',
+          '}',
+        ].join('\n')
+      )
+    ).toContain('MonacoCodeViewer rendered a writable or dynamic surface');
+    expect(
+      collectMonacoViewerReadOnlyViolations(
+        [
+          'function useMonacoCodeSurface() { return null; }',
+          'function useWrappedSurface() {',
+          '  const Result = useMonacoCodeSurface();',
+          '  return Result;',
+          '}',
           'export function MonacoCodeViewer() {',
           '  const Safe = useMonacoCodeSurface();',
           '  const Writable = useWrappedSurface();',
