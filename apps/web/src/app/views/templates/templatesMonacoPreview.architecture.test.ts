@@ -36,6 +36,13 @@ const CANVAS_WORKSPACE_FILE_CODE_CONTRIBUTION_AUTHORITIES = [
   'dbtWorkspaceFileCodeContribution',
   'graphDraftWorkspaceFileCodeContribution',
 ] as const;
+const TRANSITIVE_MONACO_VIEWER_AUTHORITIES = [
+  'NodePropertySectionView',
+  'NodePropertiesTabs',
+  'ArtifactMonacoPreviewPanel',
+  'ArtifactPreviewTabs',
+  'ArtifactsView',
+] as const;
 const TEMPLATES_MONACO_PREVIEW_OWNER = 'views/templates/TemplateMonacoPreviewPanel.tsx';
 const MONACO_INTERNAL_AUTHORITIES = [
   'MonacoCodeEditor',
@@ -47,6 +54,7 @@ const MONACO_INTERNAL_AUTHORITIES = [
   'CodeWorkspaceFileSurface',
   'WorkspaceFileCodeEditor',
   'CodeView',
+  ...TRANSITIVE_MONACO_VIEWER_AUTHORITIES,
   ...CANVAS_WORKSPACE_FILE_CODE_CONTRIBUTION_AUTHORITIES,
   ...CANVAS_EDITABLE_MONACO_LEAVES,
 ] as const;
@@ -61,11 +69,22 @@ const MONACO_INTERNAL_AUTHORITY_SOURCE_PATHS = MONACO_INTERNAL_AUTHORITIES.map((
       ? `src/app/views/canvas/${authority}.tsx`
       : authority === 'CodeView'
         ? 'src/app/views/CodeView.tsx'
-        : authority === 'CodeWorkspaceFileSurface' || authority === 'WorkspaceFileCodeEditor'
-          ? `src/app/views/code/${authority}.tsx`
-          : authority === 'useMonacoCodeSurface'
-            ? `src/app/components/monaco/${authority}.ts`
-            : `src/app/components/monaco/${authority}.tsx`
+        : authority === 'NodePropertySectionView'
+          ? 'src/app/components/inspector/NodePropertySectionView.tsx'
+          : authority === 'NodePropertiesTabs'
+            ? 'src/app/components/inspector/NodePropertiesTabs.tsx'
+            : authority === 'ArtifactMonacoPreviewPanel'
+              ? 'src/app/views/artifacts/ArtifactMonacoPreviewPanel.tsx'
+              : authority === 'ArtifactPreviewTabs'
+                ? 'src/app/views/artifacts/ArtifactPreviewTabs.tsx'
+                : authority === 'ArtifactsView'
+                  ? 'src/app/views/ArtifactsView.tsx'
+                  : authority === 'CodeWorkspaceFileSurface' ||
+                      authority === 'WorkspaceFileCodeEditor'
+                    ? `src/app/views/code/${authority}.tsx`
+                    : authority === 'useMonacoCodeSurface'
+                      ? `src/app/components/monaco/${authority}.ts`
+                      : `src/app/components/monaco/${authority}.tsx`
 );
 const MONACO_AUTHORITY_SOURCE_SIGNALS = [
   '@monaco-editor/react',
@@ -114,6 +133,11 @@ const MONACO_RUNTIME_AUTHORITY_OWNERS = {
     'app/views/canvas/graphDraftWorkspaceFileCodeContribution.tsx',
   ]),
   CodeView: new Set(['app/views/canvas/SqlContextWorkbench.tsx']),
+  NodePropertySectionView: new Set(['app/components/inspector/NodePropertiesTabs.tsx']),
+  NodePropertiesTabs: new Set(['app/views/canvas/CanvasNodeWorkbenchPanel.tsx']),
+  ArtifactMonacoPreviewPanel: new Set(['app/views/artifacts/ArtifactPreviewTabs.tsx']),
+  ArtifactPreviewTabs: new Set(['app/views/ArtifactsView.tsx']),
+  ArtifactsView: new Set<string>(),
   dbtWorkspaceFileCodeContribution: new Set(['app/views/canvas/DbtProjectFileCanvasView.tsx']),
   graphDraftWorkspaceFileCodeContribution: new Set(['app/views/canvas/CanvasShell.tsx']),
   DbtModelCodeAuthoringSection: new Set(['app/views/canvas/DbtAuthoringFields.tsx']),
@@ -228,6 +252,33 @@ const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
       'void MonacoCodeViewer;',
     ].join('\n'),
     expectedViolation: 'MonacoCodeViewer',
+  },
+  {
+    label: 'Templates route cannot mount Monaco through the inspector viewer wrapper',
+    surface: 'templates-route',
+    modulePath: 'views/templates/TemplatesRouteWorkbench.tsx',
+    source: [
+      "import { NodePropertySectionView } from '../../components/inspector/NodePropertySectionView';",
+      'void NodePropertySectionView;',
+    ].join('\n'),
+    expectedViolation: 'NodePropertySectionView',
+  },
+  {
+    label: 'Templates route cannot mount Monaco through the artifact viewer wrapper',
+    surface: 'templates-route',
+    modulePath: 'views/templates/TemplatesRouteWorkbench.tsx',
+    source: [
+      "import { ArtifactMonacoPreviewPanel } from '../artifacts/ArtifactMonacoPreviewPanel';",
+      'void ArtifactMonacoPreviewPanel;',
+    ].join('\n'),
+    expectedViolation: 'ArtifactMonacoPreviewPanel',
+  },
+  {
+    label: 'Templates route cannot mount Monaco through the artifact route wrapper chain',
+    surface: 'templates-route',
+    modulePath: 'views/templates/TemplatesRouteWorkbench.tsx',
+    source: ["import ArtifactsView from '../ArtifactsView';", 'void ArtifactsView;'].join('\n'),
+    expectedViolation: 'ArtifactsView',
   },
   {
     label: 'Canvas shell cannot become an editable Monaco owner',
@@ -692,6 +743,38 @@ const ACCEPTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
       "import * as React from 'react';",
       "import { MonacoCodeEditor } from '../../components/monaco/MonacoCodeEditor';",
       'export const Panel = () => React.createElement(MonacoCodeEditor, {});',
+    ].join('\n'),
+  },
+  {
+    label: 'The inspector tabs may consume their governed Monaco viewer wrapper',
+    modulePath: 'app/components/inspector/NodePropertiesTabs.tsx',
+    source: [
+      "import { NodePropertySectionView } from './NodePropertySectionView';",
+      'void NodePropertySectionView;',
+    ].join('\n'),
+  },
+  {
+    label: 'The artifact tabs may consume their governed Monaco viewer wrapper',
+    modulePath: 'app/views/artifacts/ArtifactPreviewTabs.tsx',
+    source: [
+      "import { ArtifactMonacoPreviewPanel } from './ArtifactMonacoPreviewPanel';",
+      'void ArtifactMonacoPreviewPanel;',
+    ].join('\n'),
+  },
+  {
+    label: 'The Canvas node workbench may consume the inspector wrapper chain',
+    modulePath: 'app/views/canvas/CanvasNodeWorkbenchPanel.tsx',
+    source: [
+      "import { NodePropertiesTabs } from '../../components/inspector/NodePropertiesTabs';",
+      'void NodePropertiesTabs;',
+    ].join('\n'),
+  },
+  {
+    label: 'The Artifacts route may consume its governed preview tabs wrapper',
+    modulePath: 'app/views/ArtifactsView.tsx',
+    source: [
+      "import { ArtifactPreviewTabs } from './artifacts/ArtifactPreviewTabs';",
+      'void ArtifactPreviewTabs;',
     ].join('\n'),
   },
 ] as const;
@@ -2236,6 +2319,7 @@ function collectMonacoAuthorityViolations({
       'MonacoCodeSurface',
       'MonacoDiffSurface',
       'useMonacoCodeSurface',
+      ...TRANSITIVE_MONACO_VIEWER_AUTHORITIES,
       ...CANVAS_EDITABLE_MONACO_LEAVES,
     ] as const) {
       if (containsInternalAuthoritySpecifier(runtimeModuleSpecifiers, gateway)) {
