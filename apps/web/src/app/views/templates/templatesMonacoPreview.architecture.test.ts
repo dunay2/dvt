@@ -40,6 +40,8 @@ const MONACO_INTERNAL_AUTHORITIES = [
   'MonacoCodeSurface',
   'MonacoDiffSurface',
   'useMonacoCodeSurface',
+  'CodeWorkspaceFileSurface',
+  'WorkspaceFileCodeEditor',
   ...CANVAS_EDITABLE_MONACO_LEAVES,
 ] as const;
 const MONACO_INTERNAL_AUTHORITY_SOURCE_PATHS = MONACO_INTERNAL_AUTHORITIES.map((authority) =>
@@ -47,9 +49,11 @@ const MONACO_INTERNAL_AUTHORITY_SOURCE_PATHS = MONACO_INTERNAL_AUTHORITIES.map((
     authority as (typeof CANVAS_EDITABLE_MONACO_LEAVES)[number]
   )
     ? `src/app/views/canvas/${authority}.tsx`
-    : authority === 'useMonacoCodeSurface'
-      ? `src/app/components/monaco/${authority}.ts`
-      : `src/app/components/monaco/${authority}.tsx`
+    : authority === 'CodeWorkspaceFileSurface' || authority === 'WorkspaceFileCodeEditor'
+      ? `src/app/views/code/${authority}.tsx`
+      : authority === 'useMonacoCodeSurface'
+        ? `src/app/components/monaco/${authority}.ts`
+        : `src/app/components/monaco/${authority}.tsx`
 );
 const MONACO_AUTHORITY_SOURCE_SIGNALS = [
   '@monaco-editor/react',
@@ -90,6 +94,12 @@ const MONACO_RUNTIME_AUTHORITY_OWNERS = {
   useMonacoCodeSurface: new Set([
     'app/components/monaco/MonacoCodeEditor.tsx',
     'app/components/monaco/MonacoCodeViewer.tsx',
+  ]),
+  CodeWorkspaceFileSurface: new Set(['app/views/code/WorkspaceFileCodeEditor.tsx']),
+  WorkspaceFileCodeEditor: new Set([
+    'app/views/CodeView.tsx',
+    'app/views/canvas/dbtWorkspaceFileCodeContribution.tsx',
+    'app/views/canvas/graphDraftWorkspaceFileCodeContribution.tsx',
   ]),
   DbtModelCodeAuthoringSection: new Set(['app/views/canvas/DbtAuthoringFields.tsx']),
   DvtSqlTransformAuthoringSection: new Set(['app/views/canvas/DvtAuthoringFields.tsx']),
@@ -279,6 +289,16 @@ const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
     expectedViolation: 'Canvas authoring context',
   },
   {
+    label: 'Templates route cannot acquire the editable workspace-file wrapper',
+    surface: 'templates-route',
+    modulePath: 'views/templates/TemplatesRouteWorkbench.tsx',
+    source: [
+      "import { WorkspaceFileCodeEditor } from '../code/WorkspaceFileCodeEditor';",
+      'void WorkspaceFileCodeEditor;',
+    ].join('\n'),
+    expectedViolation: 'WorkspaceFileCodeEditor',
+  },
+  {
     label: 'Templates route cannot re-export an internal Monaco surface',
     surface: 'templates-route',
     modulePath: 'views/templates/TemplatesRouteWorkbench.tsx',
@@ -446,6 +466,33 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     ].join('\n'),
     expectedViolation: 'useMonacoCodeSurface re-exported',
   },
+  {
+    label: 'Templates cannot acquire the editable workspace-file wrapper',
+    modulePath: 'app/views/templates/TemplatesRouteWorkbench.tsx',
+    source: [
+      "import { WorkspaceFileCodeEditor } from '../code/WorkspaceFileCodeEditor';",
+      'void WorkspaceFileCodeEditor;',
+    ].join('\n'),
+    expectedViolation: 'WorkspaceFileCodeEditor outside a governed owner',
+  },
+  {
+    label: 'A governed editor consumer cannot return its editor from an exported function',
+    modulePath: 'app/views/code/CodeWorkspaceFileSurface.tsx',
+    source: [
+      "import { MonacoCodeEditor } from '../../components/monaco/MonacoCodeEditor';",
+      'export function getEditor() { return MonacoCodeEditor; }',
+    ].join('\n'),
+    expectedViolation: 'MonacoCodeEditor re-exported',
+  },
+  {
+    label: 'A governed editor consumer cannot expose its editor through an exported class',
+    modulePath: 'app/views/code/CodeWorkspaceFileSurface.tsx',
+    source: [
+      "import { MonacoCodeEditor } from '../../components/monaco/MonacoCodeEditor';",
+      'export class EditorRegistry { getEditor() { return MonacoCodeEditor; } }',
+    ].join('\n'),
+    expectedViolation: 'MonacoCodeEditor re-exported',
+  },
 ] as const;
 
 function readAppSource(relativePath: string): string {
@@ -607,7 +654,32 @@ function collectRuntimeModuleSpecifiers(
       const importedSpecifier = getImportedSpecifier(node);
       if (importedSpecifier) runtimeReExportedSpecifiers.add(importedSpecifier);
     }
+    if (ts.isCallExpression(node) || ts.isNewExpression(node)) return;
     ts.forEachChild(node, addReExportedExpression);
+  }
+
+  function addExportedDeclarationAuthorities(
+    node: ts.FunctionDeclaration | ts.ClassDeclaration
+  ): void {
+    function visitExportedDeclaration(child: ts.Node): void {
+      if (ts.isReturnStatement(child) && child.expression) {
+        addReExportedExpression(child.expression);
+        return;
+      }
+      if (ts.isPropertyDeclaration(child) && child.initializer) {
+        addReExportedExpression(child.initializer);
+        return;
+      }
+      if (ts.isHeritageClause(child)) {
+        for (const heritageType of child.types) {
+          addReExportedExpression(heritageType.expression);
+        }
+        return;
+      }
+      ts.forEachChild(child, visitExportedDeclaration);
+    }
+
+    ts.forEachChild(node, visitExportedDeclaration);
   }
 
   function readVariableImportPattern(node: ts.Expression): {
@@ -763,6 +835,13 @@ function collectRuntimeModuleSpecifiers(
       for (const declaration of node.declarationList.declarations) {
         if (declaration.initializer) addReExportedExpression(declaration.initializer);
       }
+    }
+
+    if (
+      (ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node)) &&
+      node.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)
+    ) {
+      addExportedDeclarationAuthorities(node);
     }
 
     if (ts.isCallExpression(node) && node.arguments[0]) {
