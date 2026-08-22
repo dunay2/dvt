@@ -14,6 +14,9 @@ const SCOPE = {
   environmentId: 'env-a',
 } as const;
 
+const LEGACY_V1_ANALYSIS_SHA256 =
+  'c624060ca1dfab85fd29fda134e46268ff7663cb08a5a22f24c80c8200de5846';
+
 describe('DbtCliProjectAnalyzer', () => {
   let workspaceFilesRoot: string;
   let profilesDirectory: string;
@@ -247,6 +250,7 @@ describe('DbtCliProjectAnalyzer', () => {
 
     expect(second.projectRevision.contentSetSha256).toBe(first.projectRevision.contentSetSha256);
     expect(second.analysisSha256).toBe(first.analysisSha256);
+    expect(first.analysisSha256).toBe(LEGACY_V1_ANALYSIS_SHA256);
   });
 
   it('excludes generated artifacts while preserving installed dependencies for parsing', async () => {
