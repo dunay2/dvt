@@ -28,6 +28,10 @@ const CANVAS_MONACO_EDITOR_OWNERS = new Set([
   'views/canvas/DbtModelCodeAuthoringSection.tsx',
   'views/canvas/DvtSqlTransformAuthoringSection.tsx',
 ]);
+const CANVAS_EDITABLE_MONACO_LEAVES = [
+  'DbtModelCodeAuthoringSection',
+  'DvtSqlTransformAuthoringSection',
+] as const;
 const TEMPLATES_MONACO_PREVIEW_OWNER = 'views/templates/TemplateMonacoPreviewPanel.tsx';
 const MONACO_INTERNAL_AUTHORITIES = [
   'MonacoCodeEditor',
@@ -36,11 +40,16 @@ const MONACO_INTERNAL_AUTHORITIES = [
   'MonacoCodeSurface',
   'MonacoDiffSurface',
   'useMonacoCodeSurface',
+  ...CANVAS_EDITABLE_MONACO_LEAVES,
 ] as const;
 const MONACO_INTERNAL_AUTHORITY_SOURCE_PATHS = MONACO_INTERNAL_AUTHORITIES.map((authority) =>
-  authority === 'useMonacoCodeSurface'
-    ? `src/app/components/monaco/${authority}.ts`
-    : `src/app/components/monaco/${authority}.tsx`
+  CANVAS_EDITABLE_MONACO_LEAVES.includes(
+    authority as (typeof CANVAS_EDITABLE_MONACO_LEAVES)[number]
+  )
+    ? `src/app/views/canvas/${authority}.tsx`
+    : authority === 'useMonacoCodeSurface'
+      ? `src/app/components/monaco/${authority}.ts`
+      : `src/app/components/monaco/${authority}.tsx`
 );
 const MONACO_AUTHORITY_SOURCE_SIGNALS = [
   '@monaco-editor/react',
@@ -76,6 +85,8 @@ const MONACO_RUNTIME_AUTHORITY_OWNERS = {
     'app/components/monaco/MonacoCodeEditor.tsx',
     'app/components/monaco/MonacoCodeViewer.tsx',
   ]),
+  DbtModelCodeAuthoringSection: new Set(['app/views/canvas/DbtAuthoringFields.tsx']),
+  DvtSqlTransformAuthoringSection: new Set(['app/views/canvas/DvtAuthoringFields.tsx']),
 } as const;
 
 const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
@@ -117,6 +128,12 @@ const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
     modulePath: 'views/canvas/canvasMonacoTypes.ts',
     source:
       "import type { MonacoCodeSurfaceProps } from '../../components/monaco/MonacoCodeSurface';",
+  },
+  {
+    label: 'Templates may consume erased Canvas authoring types without runtime authority',
+    surface: 'templates-route',
+    modulePath: 'views/templates/templateCanvasTypes.ts',
+    source: "import type { DbtAuthoringFieldsProps } from '../canvas/DbtAuthoringFields';",
   },
   {
     label: 'Canvas production may mention a Monaco surface without importing its authority',
@@ -246,6 +263,16 @@ const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
     expectedViolation: 'MonacoCodeSurface',
   },
   {
+    label: 'Templates route cannot acquire a parent Canvas authoring surface',
+    surface: 'templates-route',
+    modulePath: 'views/templates/TemplatesRouteWorkbench.tsx',
+    source: [
+      "import { DbtAuthoringFields } from '../canvas/DbtAuthoringFields';",
+      'void DbtAuthoringFields;',
+    ].join('\n'),
+    expectedViolation: 'Canvas authoring context',
+  },
+  {
     label: 'Templates route cannot re-export an internal Monaco surface',
     surface: 'templates-route',
     modulePath: 'views/templates/TemplatesRouteWorkbench.tsx',
@@ -360,6 +387,15 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
       "void import('../../../app/components/monaco/' + surface + '.tsx');",
     ].join('\n'),
     expectedViolation: 'MonacoCodeSurface outside a governed owner',
+  },
+  {
+    label: 'Templates cannot import an allowlisted Canvas editable leaf',
+    modulePath: 'app/views/templates/TemplatesRouteWorkbench.tsx',
+    source: [
+      "import { DbtModelCodeAuthoringSection } from '../canvas/DbtModelCodeAuthoringSection';",
+      'void DbtModelCodeAuthoringSection;',
+    ].join('\n'),
+    expectedViolation: 'DbtModelCodeAuthoringSection outside a governed owner',
   },
   {
     label: 'A governed viewer cannot re-export its underlying Monaco loader',
@@ -593,6 +629,7 @@ function collectRuntimeModuleSpecifiers(
     }
 
     const resolvedPattern = resolveViteGlobPattern(modulePath, pattern, undefined);
+    runtimeModuleSpecifiers.add(resolvedPattern);
     const matches = picomatch(resolvedPattern);
     for (const authorityPath of MONACO_INTERNAL_AUTHORITY_SOURCE_PATHS) {
       if (matches(authorityPath)) runtimeModuleSpecifiers.add(authorityPath);
@@ -781,6 +818,25 @@ function containsInternalAuthoritySpecifier(
   });
 }
 
+function containsCanvasAuthoringContextSpecifier(
+  specifiers: ReadonlySet<string>,
+  modulePath: string
+): boolean {
+  const importerDirectory = path.posix.dirname(resolveWebPackageModulePath(modulePath));
+  return [...specifiers].some((specifier) => {
+    const normalizedSpecifier = specifier.replaceAll('\\', '/');
+    const aliasedSpecifier = resolveWebViteAlias(normalizedSpecifier);
+    const resolvedSpecifier = aliasedSpecifier
+      ? aliasedSpecifier
+      : normalizedSpecifier.startsWith('.')
+        ? path.posix.normalize(path.posix.join(importerDirectory, normalizedSpecifier))
+        : normalizedSpecifier.startsWith('/')
+          ? normalizedSpecifier.slice(1)
+          : normalizedSpecifier;
+    return resolvedSpecifier.startsWith('src/app/views/canvas/');
+  });
+}
+
 function collectMonacoAuthorityViolations({
   surface,
   modulePath,
@@ -789,12 +845,20 @@ function collectMonacoAuthorityViolations({
   const violations: string[] = [];
   if (
     !MONACO_AUTHORITY_SOURCE_SIGNALS.some((signal) => source.includes(signal)) &&
-    !/\bimport\s*\(/.test(source)
+    !/\bimport\s*\(/.test(source) &&
+    !/['"`][^'"`]*\/canvas(?:\/|['"`])/.test(source)
   ) {
     return violations;
   }
 
   const { specifiers: runtimeModuleSpecifiers } = getRuntimeModuleSpecifiers(modulePath, source);
+
+  if (
+    (surface === 'templates-route' || surface === 'templates-preview') &&
+    containsCanvasAuthoringContextSpecifier(runtimeModuleSpecifiers, modulePath)
+  ) {
+    violations.push('Canvas authoring context');
+  }
 
   if (containsPackageSpecifier(runtimeModuleSpecifiers, '@monaco-editor/react')) {
     violations.push('@monaco-editor/react');
@@ -819,6 +883,7 @@ function collectMonacoAuthorityViolations({
       'MonacoCodeSurface',
       'MonacoDiffSurface',
       'useMonacoCodeSurface',
+      ...CANVAS_EDITABLE_MONACO_LEAVES,
     ] as const) {
       if (containsInternalAuthoritySpecifier(runtimeModuleSpecifiers, gateway)) {
         violations.push(gateway);
