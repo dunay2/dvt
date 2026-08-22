@@ -224,6 +224,16 @@ const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
     expectedViolation: 'MonacoCodeSurface',
   },
   {
+    label: 'Templates route cannot dynamically import a variable Monaco surface',
+    surface: 'templates-route',
+    modulePath: 'views/templates/TemplatesRouteWorkbench.tsx',
+    source: [
+      "const surface = 'MonacoCodeSurface';",
+      'void import(`../../components/monaco/${surface}.tsx`);',
+    ].join('\n'),
+    expectedViolation: 'MonacoCodeSurface',
+  },
+  {
     label: 'Templates route cannot re-export an internal Monaco surface',
     surface: 'templates-route',
     modulePath: 'views/templates/TemplatesRouteWorkbench.tsx',
@@ -322,6 +332,15 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     label: 'A capability cannot reach Monaco through a broad source-root glob',
     modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
     source: "export const panels = import.meta.glob('../../../app/components/**/*.tsx');",
+    expectedViolation: 'MonacoCodeSurface outside a governed owner',
+  },
+  {
+    label: 'A capability cannot concatenate a variable Monaco dynamic import',
+    modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
+    source: [
+      "const surface = 'MonacoCodeSurface';",
+      "void import('../../../app/components/monaco/' + surface + '.tsx');",
+    ].join('\n'),
     expectedViolation: 'MonacoCodeSurface outside a governed owner',
   },
   {
@@ -493,6 +512,58 @@ function collectRuntimeModuleSpecifiers(
     if (importedSpecifier) runtimeReExportedSpecifiers.add(importedSpecifier);
   }
 
+  function readVariableImportPattern(node: ts.Expression): {
+    pattern: string;
+    hasStaticText: boolean;
+  } {
+    if (ts.isStringLiteralLike(node)) {
+      return { pattern: node.text, hasStaticText: node.text.length > 0 };
+    }
+
+    if (ts.isTemplateExpression(node)) {
+      let pattern = node.head.text;
+      let hasStaticText = node.head.text.length > 0;
+      for (const span of node.templateSpans) {
+        pattern += `*${span.literal.text}`;
+        hasStaticText ||= span.literal.text.length > 0;
+      }
+      return { pattern, hasStaticText };
+    }
+
+    if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.PlusToken) {
+      const left = readVariableImportPattern(node.left);
+      const right = readVariableImportPattern(node.right);
+      return {
+        pattern: `${left.pattern}${right.pattern}`,
+        hasStaticText: left.hasStaticText || right.hasStaticText,
+      };
+    }
+
+    return { pattern: '*', hasStaticText: false };
+  }
+
+  function addDynamicImportSpecifiers(node: ts.Expression): void {
+    if (ts.isStringLiteralLike(node)) {
+      addSpecifier(node);
+      return;
+    }
+
+    const variableImport = readVariableImportPattern(node);
+    if (!variableImport.hasStaticText) return;
+
+    const pattern = variableImport.pattern.replaceAll('\\', '/');
+    if (!pattern.startsWith('.') && !pattern.startsWith('/')) {
+      runtimeModuleSpecifiers.add(pattern);
+      return;
+    }
+
+    const resolvedPattern = resolveViteGlobPattern(modulePath, pattern, undefined);
+    const matches = picomatch(resolvedPattern);
+    for (const authorityPath of MONACO_INTERNAL_AUTHORITY_SOURCE_PATHS) {
+      if (matches(authorityPath)) runtimeModuleSpecifiers.add(authorityPath);
+    }
+  }
+
   function isViteGlobCall(node: ts.CallExpression): boolean {
     if (!ts.isPropertyAccessExpression(node.expression)) return false;
     if (node.expression.name.text !== 'glob' && node.expression.name.text !== 'globEager') {
@@ -601,10 +672,12 @@ function collectRuntimeModuleSpecifiers(
         return;
       }
 
-      if (
-        node.expression.kind === ts.SyntaxKind.ImportKeyword ||
-        (ts.isIdentifier(node.expression) && node.expression.text === 'require')
-      ) {
+      if (node.expression.kind === ts.SyntaxKind.ImportKeyword) {
+        addDynamicImportSpecifiers(node.arguments[0]);
+        return;
+      }
+
+      if (ts.isIdentifier(node.expression) && node.expression.text === 'require') {
         addSpecifier(node.arguments[0]);
         return;
       }
@@ -679,7 +752,10 @@ function collectMonacoAuthorityViolations({
   source,
 }: Omit<MonacoAuthorityFixture, 'label'>): string[] {
   const violations: string[] = [];
-  if (!MONACO_AUTHORITY_SOURCE_SIGNALS.some((signal) => source.includes(signal))) {
+  if (
+    !MONACO_AUTHORITY_SOURCE_SIGNALS.some((signal) => source.includes(signal)) &&
+    !/\bimport\s*\(/.test(source)
+  ) {
     return violations;
   }
 
@@ -744,7 +820,10 @@ function collectRepositoryMonacoOwnerViolations({
   source,
 }: Pick<MonacoAuthorityFixture, 'modulePath' | 'source'>): string[] {
   const violations: string[] = [];
-  if (!MONACO_AUTHORITY_SOURCE_SIGNALS.some((signal) => source.includes(signal))) {
+  if (
+    !MONACO_AUTHORITY_SOURCE_SIGNALS.some((signal) => source.includes(signal)) &&
+    !/\bimport\s*\(/.test(source)
+  ) {
     return violations;
   }
 
