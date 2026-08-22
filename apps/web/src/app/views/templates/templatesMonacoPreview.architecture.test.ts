@@ -587,6 +587,15 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     expectedViolation: 'CodeView outside a governed owner',
   },
   {
+    label: 'Templates cannot import an executable wrapper from test support',
+    modulePath: 'app/views/templates/TemplatesRouteWorkbench.tsx',
+    source: [
+      "import { EditablePreview } from '../../testing/EditablePreview';",
+      'void EditablePreview;',
+    ].join('\n'),
+    expectedViolation: 'production import from test support',
+  },
+  {
     label: 'An external wrapper cannot acquire the editable dbt Canvas contribution factory',
     modulePath: 'app/components/DbtCodeContributionWrapper.tsx',
     source: [
@@ -684,7 +693,7 @@ function isProductionSourceFileName(fileName: string): boolean {
   return (
     /\.(?:[cm]?[jt]sx?)$/.test(fileName) &&
     !/\.d\.[cm]?ts$/.test(fileName) &&
-    !/\.(?:test|spec)\./.test(fileName)
+    !/\.(?:test(?:Fixtures|Harness|Support)?|spec)\./i.test(fileName)
   );
 }
 
@@ -822,6 +831,7 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
   );
   const hookBindings = new Set(['useMonacoCodeSurface']);
   const surfaceBindings = new Set<string>();
+  const createElementBindings = new Set(['createElement']);
 
   function unwrapExpression(expression: ts.Expression): ts.Expression {
     let unwrapped = expression;
@@ -1146,6 +1156,27 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
 
   for (const statement of sourceFile.statements) {
     if (
+      ts.isImportDeclaration(statement) &&
+      ts.isStringLiteralLike(statement.moduleSpecifier) &&
+      statement.moduleSpecifier.text === 'react' &&
+      statement.importClause
+    ) {
+      if (statement.importClause.name) {
+        createElementBindings.add(`${statement.importClause.name.text}.createElement`);
+      }
+      const reactBindings = statement.importClause.namedBindings;
+      if (reactBindings && ts.isNamespaceImport(reactBindings)) {
+        createElementBindings.add(`${reactBindings.name.text}.createElement`);
+      }
+      if (reactBindings && ts.isNamedImports(reactBindings)) {
+        for (const element of reactBindings.elements) {
+          if ((element.propertyName ?? element.name).text === 'createElement') {
+            createElementBindings.add(element.name.text);
+          }
+        }
+      }
+    }
+    if (
       !ts.isImportDeclaration(statement) ||
       !ts.isStringLiteralLike(statement.moduleSpecifier) ||
       !/\/?useMonacoCodeSurface(?:\.[cm]?[jt]s)?$/.test(statement.moduleSpecifier.text) ||
@@ -1189,6 +1220,32 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
       ts.forEachChild(node, discoverHookBindings);
     }
     discoverHookBindings(sourceFile);
+  }
+
+  let discoveredCreateElementBinding = true;
+  while (discoveredCreateElementBinding) {
+    discoveredCreateElementBinding = false;
+    function discoverCreateElementBindings(node: ts.Node): void {
+      if (ts.isVariableDeclaration(node) && node.initializer) {
+        const initializer = unwrapExpression(node.initializer);
+        if (ts.isIdentifier(node.name)) {
+          discoveredCreateElementBinding =
+            discoverCompositeBindings(createElementBindings, node.name.text, initializer) ||
+            discoveredCreateElementBinding;
+        } else {
+          discoveredCreateElementBinding =
+            discoverBindingPatternBindings(createElementBindings, node.name, initializer) ||
+            discoveredCreateElementBinding;
+        }
+      }
+      if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.EqualsToken) {
+        discoveredCreateElementBinding =
+          discoverAssignmentTargetBindings(createElementBindings, node.left, node.right) ||
+          discoveredCreateElementBinding;
+      }
+      ts.forEachChild(node, discoverCreateElementBindings);
+    }
+    discoverCreateElementBindings(sourceFile);
   }
 
   let discoveredSurfaceBinding = true;
@@ -1278,9 +1335,7 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
     }
     if (
       ts.isCallExpression(node) &&
-      ((ts.isIdentifier(node.expression) && node.expression.text === 'createElement') ||
-        (ts.isPropertyAccessExpression(node.expression) &&
-          node.expression.name.text === 'createElement')) &&
+      createElementBindings.has(readExpressionPath(node.expression) ?? '') &&
       node.arguments[0] &&
       surfaceBindings.has(readExpressionPath(node.arguments[0]) ?? '')
     ) {
@@ -1905,6 +1960,15 @@ function collectExternalCanvasComponentImports(
   return violations;
 }
 
+function containsTestSupportSpecifier(
+  specifiers: ReadonlySet<string>,
+  modulePath: string
+): boolean {
+  return [...specifiers].some((specifier) =>
+    /(^|\/)test(?:ing)?(?:\/|$)/.test(resolveWebRuntimeModuleSpecifier(modulePath, specifier))
+  );
+}
+
 function collectMonacoAuthorityViolations({
   surface,
   modulePath,
@@ -2003,6 +2067,13 @@ function collectRepositoryMonacoOwnerViolations({
   source,
 }: Pick<MonacoAuthorityFixture, 'modulePath' | 'source'>): string[] {
   const violations: string[] = [];
+  let runtimeModuleAccess: RuntimeModuleAccess | undefined;
+  if (/test(?:ing)?[\\/]/i.test(source)) {
+    runtimeModuleAccess = getRuntimeModuleSpecifiers(modulePath, source);
+    if (containsTestSupportSpecifier(runtimeModuleAccess.specifiers, modulePath)) {
+      violations.push('production import from test support');
+    }
+  }
   const hasEscapedStaticAuthority =
     /\\(?:u(?:\{[\dA-Fa-f]+\}|[\dA-Fa-f]{4})|x[\dA-Fa-f]{2})/.test(source) &&
     containsPotentialStaticMonacoAuthority(collectPrefilterModuleSpecifiers(source), modulePath);
@@ -2016,7 +2087,7 @@ function collectRepositoryMonacoOwnerViolations({
   }
 
   const { specifiers: runtimeModuleSpecifiers, reExportedSpecifiers: runtimeReExportedSpecifiers } =
-    getRuntimeModuleSpecifiers(modulePath, source);
+    runtimeModuleAccess ?? getRuntimeModuleSpecifiers(modulePath, source);
   violations.push(...collectExternalCanvasComponentImports(runtimeModuleSpecifiers, modulePath));
   for (const [authority, owners] of Object.entries(MONACO_RUNTIME_AUTHORITY_OWNERS)) {
     const importsAuthority =
@@ -2061,6 +2132,9 @@ describe('Templates Monaco preview architecture', () => {
     expect(isProductionSourceFileName('MonacoCodeSurface.test.tsx')).toBe(false);
     expect(isProductionSourceFileName('MonacoCodeSurface.spec.tsx')).toBe(false);
     expect(isProductionSourceFileName('monacoAuthority.architecture.test.ts')).toBe(false);
+    expect(isProductionSourceFileName('MonacoCodeSurface.testHarness.tsx')).toBe(false);
+    expect(isProductionSourceFileName('MonacoCodeSurface.testFixtures.ts')).toBe(false);
+    expect(isProductionSourceFileName('MonacoCodeSurface.testSupport.ts')).toBe(false);
     expect(isProductionSourceFileName('MonacoCodeSurface.tsx')).toBe(true);
     for (const executableFile of [
       'MonacoCodeSurface.js',
@@ -2233,6 +2307,19 @@ describe('Templates Monaco preview architecture', () => {
           '  const Surface = useMonacoCodeSurface();',
           '  const Wrapped = identity(Surface);',
           '  return <><Surface readOnly /><Wrapped readOnly={false} /></>;',
+          '}',
+        ].join('\n')
+      )
+    ).toContain('MonacoCodeViewer rendered a writable or dynamic surface');
+    expect(
+      collectMonacoViewerReadOnlyViolations(
+        [
+          "import * as React from 'react';",
+          'function useMonacoCodeSurface() { return null; }',
+          'export function MonacoCodeViewer() {',
+          '  const Surface = useMonacoCodeSurface();',
+          '  const h = React.createElement;',
+          '  return <><Surface readOnly />{h(Surface, { readOnly: false })}</>;',
           '}',
         ].join('\n')
       )
