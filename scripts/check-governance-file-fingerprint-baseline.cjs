@@ -5,7 +5,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
-const crypto = require('node:crypto');
+const { sha256HexUtf8 } = require('@dvt/crypto');
 const yaml = require('js-yaml');
 const { readFileIndexFromDisk } = require('./generate-governance-file-component-index.cjs');
 const {
@@ -26,7 +26,7 @@ const sourcePath = repoRelative(fileIndexPath);
 const baselineShardDirRelativePath = repoRelative(baselineShardDir);
 
 function sha256(value) {
-  return crypto.createHash('sha256').update(value).digest('hex');
+  return sha256HexUtf8(value);
 }
 
 function renderYaml(payload) {

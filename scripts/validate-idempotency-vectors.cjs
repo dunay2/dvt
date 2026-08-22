@@ -2,7 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto');
+const { sha256HexUtf8 } = require('@dvt/crypto');
 
 const ROOT = path.resolve(__dirname, '..');
 const ENGINE_CONTRACTS_DIR = path.join(
@@ -127,7 +127,7 @@ function buildMaterial(v, formulaVersion) {
 }
 
 function sha256(input) {
-  return crypto.createHash('sha256').update(input, 'utf8').digest('hex');
+  return sha256HexUtf8(input);
 }
 
 function collectVectorFiles(dir) {

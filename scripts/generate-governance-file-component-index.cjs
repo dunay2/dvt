@@ -6,10 +6,10 @@
  */
 
 const { execFileSync } = require('node:child_process');
-const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const yaml = require('js-yaml');
+const { sha256Hex, sha256HexUtf8 } = require('@dvt/crypto');
 const { buildOwnerMatcher, readManifest } = require('./check-governance-unit-coverage.cjs');
 const {
   generatedStatusDir,
@@ -62,7 +62,7 @@ function compareText(left, right) {
 }
 
 function sha256(value) {
-  return crypto.createHash('sha256').update(value).digest('hex');
+  return typeof value === 'string' ? sha256HexUtf8(value) : sha256Hex(value);
 }
 
 function stableStringify(value) {

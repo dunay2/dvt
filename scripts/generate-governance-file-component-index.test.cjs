@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const crypto = require('node:crypto');
+const { sha256Hex, sha256HexUtf8 } = require('@dvt/crypto');
 const {
   buildComponentEntries,
   buildComponentFileMapManifest,
@@ -70,7 +70,7 @@ const units = [
 ];
 
 function sha256(value) {
-  return crypto.createHash('sha256').update(value).digest('hex');
+  return typeof value === 'string' ? sha256HexUtf8(value) : sha256Hex(value);
 }
 
 function stableStringify(value) {

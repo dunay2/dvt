@@ -1,7 +1,7 @@
 /** Owned concern: import and query frontend component reflection as a DB-first read model. */
-const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
+const { sha256HexUtf8 } = require('@dvt/crypto');
 
 const { schemaName } = require('../planning-db-schema.cjs');
 const {
@@ -130,7 +130,7 @@ const requiredHeadersBySection = {
 };
 
 function sha256(value) {
-  return crypto.createHash('sha256').update(value).digest('hex');
+  return sha256HexUtf8(value);
 }
 
 function toPosix(filePath) {

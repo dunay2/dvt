@@ -1,8 +1,8 @@
 /** Owned concern: materialize code-symbol ownership facts for Planning DB diagnostics. */
-const crypto = require('node:crypto');
 const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
+const { sha256HexUtf8 } = require('@dvt/crypto');
 
 const repoRoot = path.resolve(__dirname, '..', '..');
 const codeFileExtensions = new Set(['.cjs', '.mjs', '.js', '.jsx', '.ts', '.tsx']);
@@ -17,7 +17,7 @@ const includedSourceRoots = [
 ];
 
 function sha256(value) {
-  return crypto.createHash('sha256').update(value).digest('hex');
+  return sha256HexUtf8(value);
 }
 
 function toPosix(filePath) {

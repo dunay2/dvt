@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const fs = require('node:fs');
 const path = require('node:path');
-const crypto = require('node:crypto');
+const { sha256HexUtf8 } = require('@dvt/crypto');
 
 const repoRoot = path.resolve(__dirname, '..');
 const docsRoot = path.join(repoRoot, 'docs');
@@ -110,7 +110,7 @@ function digestContent(raw) {
     .trim();
   return {
     normalized,
-    hash: crypto.createHash('sha256').update(normalized, 'utf8').digest('hex'),
+    hash: sha256HexUtf8(normalized),
   };
 }
 

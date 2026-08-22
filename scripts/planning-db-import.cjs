@@ -1,9 +1,9 @@
 /** Owned concern: project Git-owned governance into the Planning DB query store. */
-const crypto = require('node:crypto');
 const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
+const { sha256Hex, sha256HexUtf8 } = require('@dvt/crypto');
 const { Client } = require('pg');
 const yaml = require('js-yaml');
 
@@ -155,7 +155,7 @@ function repoRelative(filePath) {
 }
 
 function sha256(value) {
-  return crypto.createHash('sha256').update(value).digest('hex');
+  return typeof value === 'string' ? sha256HexUtf8(value) : sha256Hex(value);
 }
 
 function readYamlSource(filePath) {

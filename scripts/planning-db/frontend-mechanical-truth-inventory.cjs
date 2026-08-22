@@ -2,9 +2,9 @@
  * Owned concern: import and query frontend route capability truth as a DB-first read model.
  * Command/query rails: `ListFrontendMechanicalTruthSurfaces`.
  */
-const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
+const { sha256HexUtf8 } = require('@dvt/crypto');
 
 const { schemaName } = require('../planning-db-schema.cjs');
 const {
@@ -29,7 +29,7 @@ const validScreenStates = new Set([
 ]);
 
 function sha256(value) {
-  return crypto.createHash('sha256').update(value).digest('hex');
+  return sha256HexUtf8(value);
 }
 
 function toPosix(filePath) {

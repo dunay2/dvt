@@ -1,7 +1,7 @@
-const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const ts = require('typescript');
+const { sha256HexUtf8 } = require('@dvt/crypto');
 
 const sourceExtensions = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'];
 const ignoredDirectoryNames = new Set([
@@ -15,7 +15,7 @@ const ignoredDirectoryNames = new Set([
 const ignoredRepoPathPrefixes = ['.generated-docs', 'buzon', 'docs', 'infra/prototypes'];
 
 function sha256(text) {
-  return crypto.createHash('sha256').update(text).digest('hex');
+  return sha256HexUtf8(text);
 }
 
 function toRepoPath(filePath, rootDir) {
