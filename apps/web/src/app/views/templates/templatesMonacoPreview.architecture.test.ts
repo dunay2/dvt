@@ -618,6 +618,17 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     expectedViolation: 'MonacoCodeSurface outside a governed owner',
   },
   {
+    label: 'A capability cannot store a function-local Monaco dynamic import specifier',
+    modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
+    source: [
+      'export function loadSurface() {',
+      "  const target = '../../../app/components/monaco/MonacoCodeSurface';",
+      '  return import(target);',
+      '}',
+    ].join('\n'),
+    expectedViolation: 'MonacoCodeSurface outside a governed owner',
+  },
+  {
     label: 'Templates cannot import an allowlisted Canvas editable leaf',
     modulePath: 'app/views/templates/TemplatesRouteWorkbench.tsx',
     source: [
@@ -868,6 +879,23 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
       '  const Surface = useMonacoCodeSurface();',
       '  const callbacks = { invoke(value) {',
       '    const apply = Reflect.apply;',
+      '    return apply(render, null, [value]);',
+      '  } };',
+      '  const content = callbacks.invoke(useMonacoCodeSurface());',
+      '  return <>{content}<Surface readOnly /></>;',
+      '}',
+    ].join('\n'),
+    expectedViolation: 'useMonacoCodeSurface re-exported',
+  },
+  {
+    label: 'A method override cannot destructure an alias of Reflect apply',
+    modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
+    source: [
+      "import { useMonacoCodeSurface } from './useMonacoCodeSurface';",
+      'export function MonacoCodeViewer({ render }) {',
+      '  const Surface = useMonacoCodeSurface();',
+      '  const callbacks = { invoke(value) {',
+      '    const { apply } = Reflect;',
       '    return apply(render, null, [value]);',
       '  } };',
       '  const content = callbacks.invoke(useMonacoCodeSurface());',
@@ -2173,6 +2201,7 @@ function collectRuntimeModuleSpecifiers(
   const runtimeReExportedSpecifiers = new Set<string>();
   const runtimeImportedBindings = new Map<string, string>();
   const runtimeLocalBindingInitializers = new Map<string, ts.Expression>();
+  const runtimeLexicalBindingInitializers = new Map<ts.Node, Map<string, ts.Expression>>();
   const runtimeExportedBindings = new Set<string>();
   const reactCreateElementBindings = new Set<string>();
   const reactNamespaceBindings = new Set<string>();
@@ -2248,6 +2277,37 @@ function collectRuntimeModuleSpecifiers(
         addLocalBindingInitializers(element.name, initializer, bindings);
       }
     }
+  }
+
+  function readLexicalScope(node: ts.Node): ts.Node {
+    let scope = node.parent;
+    while (scope && !ts.isSourceFile(scope) && !ts.isBlock(scope) && !ts.isFunctionLike(scope)) {
+      scope = scope.parent;
+    }
+    return scope ?? sourceFile;
+  }
+
+  function collectLexicalBindingInitializers(node: ts.Node): void {
+    if (ts.isVariableDeclaration(node) && node.initializer) {
+      const scope = readLexicalScope(node);
+      let bindings = runtimeLexicalBindingInitializers.get(scope);
+      if (!bindings) {
+        bindings = new Map<string, ts.Expression>();
+        runtimeLexicalBindingInitializers.set(scope, bindings);
+      }
+      addLocalBindingInitializers(node.name, node.initializer, bindings);
+    }
+    ts.forEachChild(node, collectLexicalBindingInitializers);
+  }
+
+  function readLexicalBindingInitializer(identifier: ts.Identifier): ts.Expression | undefined {
+    let scope: ts.Node | undefined = identifier.parent;
+    while (scope) {
+      const initializer = runtimeLexicalBindingInitializers.get(scope)?.get(identifier.text);
+      if (initializer) return initializer;
+      scope = scope.parent;
+    }
+    return runtimeLocalBindingInitializers.get(identifier.text);
   }
 
   function addExportedBindings(statement: ts.Statement): void {
@@ -2558,10 +2618,85 @@ function collectRuntimeModuleSpecifiers(
         const sources = new Set<string>();
         const reflectApplyBindings = new Set(['Reflect.apply']);
         const reflectApplyAliasEdges: Array<Readonly<{ source: string; target: string }>> = [];
+        function collectReflectApplyPathAliases(
+          bindingName: ts.BindingName,
+          sourcePath: string
+        ): void {
+          if (ts.isIdentifier(bindingName)) {
+            reflectApplyAliasEdges.push({ source: sourcePath, target: bindingName.text });
+            return;
+          }
+          if (ts.isObjectBindingPattern(bindingName)) {
+            for (const element of bindingName.elements) {
+              if (element.dotDotDotToken) continue;
+              const propertyName = element.propertyName
+                ? readStaticPropertyName(element.propertyName)
+                : ts.isIdentifier(element.name)
+                  ? element.name.text
+                  : undefined;
+              if (propertyName) {
+                collectReflectApplyPathAliases(element.name, `${sourcePath}.${propertyName}`);
+              }
+            }
+            return;
+          }
+          for (const [index, element] of bindingName.elements.entries()) {
+            if (!ts.isOmittedExpression(element)) {
+              collectReflectApplyPathAliases(element.name, `${sourcePath}.${index}`);
+            }
+          }
+        }
+        function collectReflectApplyBindingAliases(
+          bindingName: ts.BindingName,
+          initializer: ts.Expression
+        ): void {
+          const candidate = unwrapParameterAliasExpression(initializer);
+          const sourcePath = readParameterAliasPath(candidate);
+          if (sourcePath) {
+            collectReflectApplyPathAliases(bindingName, sourcePath);
+            return;
+          }
+          if (ts.isObjectBindingPattern(bindingName) && ts.isObjectLiteralExpression(candidate)) {
+            for (const element of bindingName.elements) {
+              if (element.dotDotDotToken) continue;
+              const propertyName = element.propertyName
+                ? readStaticPropertyName(element.propertyName)
+                : ts.isIdentifier(element.name)
+                  ? element.name.text
+                  : undefined;
+              if (!propertyName) continue;
+              const property = [...candidate.properties]
+                .reverse()
+                .find(
+                  (candidateProperty) =>
+                    !ts.isSpreadAssignment(candidateProperty) &&
+                    readStaticPropertyName(candidateProperty.name) === propertyName
+                );
+              if (property && ts.isPropertyAssignment(property)) {
+                collectReflectApplyBindingAliases(element.name, property.initializer);
+              } else if (property && ts.isShorthandPropertyAssignment(property)) {
+                collectReflectApplyBindingAliases(element.name, property.name);
+              }
+            }
+            return;
+          }
+          if (!ts.isArrayBindingPattern(bindingName) || !ts.isArrayLiteralExpression(candidate)) {
+            return;
+          }
+          for (const [index, element] of bindingName.elements.entries()) {
+            if (ts.isOmittedExpression(element)) continue;
+            const sourceElement = candidate.elements[index];
+            if (sourceElement && !ts.isOmittedExpression(sourceElement)) {
+              collectReflectApplyBindingAliases(
+                element.name,
+                ts.isSpreadElement(sourceElement) ? sourceElement.expression : sourceElement
+              );
+            }
+          }
+        }
         function collectReflectApplyAliases(child: ts.Node): void {
-          if (ts.isVariableDeclaration(child) && ts.isIdentifier(child.name) && child.initializer) {
-            const source = readParameterAliasPath(child.initializer);
-            if (source) reflectApplyAliasEdges.push({ source, target: child.name.text });
+          if (ts.isVariableDeclaration(child) && child.initializer) {
+            collectReflectApplyBindingAliases(child.name, child.initializer);
           }
           if (
             ts.isBinaryExpression(child) &&
@@ -2985,7 +3120,7 @@ function collectRuntimeModuleSpecifiers(
     }
 
     if (ts.isIdentifier(node) && !resolvingBindings.has(node.text)) {
-      const initializer = runtimeLocalBindingInitializers.get(node.text);
+      const initializer = readLexicalBindingInitializer(node);
       if (initializer) {
         return readVariableImportPattern(initializer, new Set([...resolvingBindings, node.text]));
       }
@@ -3235,6 +3370,7 @@ function collectRuntimeModuleSpecifiers(
       }
     }
   }
+  collectLexicalBindingInitializers(sourceFile);
 
   let discoveredExportedObjectAlias = true;
   while (discoveredExportedObjectAlias) {
