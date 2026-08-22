@@ -994,6 +994,74 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
     return discovered;
   }
 
+  function discoverAssignmentTargetBindings(
+    bindings: Set<string>,
+    target: ts.Expression,
+    initializer: ts.Expression,
+    isDirectBinding: (candidate: ts.Expression) => boolean = () => false
+  ): boolean {
+    const unwrappedTarget = unwrapExpression(target);
+    const targetPath = readExpressionPath(unwrappedTarget);
+    if (targetPath) {
+      return discoverCompositeBindings(bindings, targetPath, initializer, isDirectBinding);
+    }
+
+    const rootPath = `__assigned_${unwrappedTarget.pos}`;
+    let discovered = discoverCompositeBindings(bindings, rootPath, initializer, isDirectBinding);
+
+    function bindTarget(candidate: ts.Expression, sourcePath: string): void {
+      const unwrappedCandidate = unwrapExpression(candidate);
+      const candidatePath = readExpressionPath(unwrappedCandidate);
+      if (candidatePath) {
+        discovered =
+          (bindings.has(sourcePath) && addBinding(bindings, candidatePath)) || discovered;
+        discovered = copyBindingMembers(bindings, sourcePath, candidatePath) || discovered;
+        return;
+      }
+      if (
+        ts.isBinaryExpression(unwrappedCandidate) &&
+        unwrappedCandidate.operatorToken.kind === ts.SyntaxKind.EqualsToken
+      ) {
+        bindTarget(unwrappedCandidate.left, sourcePath);
+        return;
+      }
+      if (ts.isObjectLiteralExpression(unwrappedCandidate)) {
+        for (const property of unwrappedCandidate.properties) {
+          if (ts.isSpreadAssignment(property)) {
+            const restPath = readExpressionPath(unwrapExpression(property.expression));
+            if (restPath) {
+              discovered = copyBindingMembers(bindings, sourcePath, restPath) || discovered;
+            }
+            continue;
+          }
+          if (ts.isShorthandPropertyAssignment(property)) {
+            bindTarget(property.name, `${sourcePath}.${property.name.text}`);
+            continue;
+          }
+          if (!ts.isPropertyAssignment(property)) continue;
+          const propertyName = readStaticPropertyName(property.name);
+          if (propertyName) bindTarget(property.initializer, `${sourcePath}.${propertyName}`);
+        }
+        return;
+      }
+      if (!ts.isArrayLiteralExpression(unwrappedCandidate)) return;
+      for (const [index, element] of unwrappedCandidate.elements.entries()) {
+        if (ts.isOmittedExpression(element)) continue;
+        if (ts.isSpreadElement(element)) {
+          const restPath = readExpressionPath(unwrapExpression(element.expression));
+          if (restPath) {
+            discovered = copyBindingMembers(bindings, sourcePath, restPath) || discovered;
+          }
+          continue;
+        }
+        bindTarget(element, `${sourcePath}.${index}`);
+      }
+    }
+
+    bindTarget(unwrappedTarget, rootPath);
+    return discovered;
+  }
+
   for (const statement of sourceFile.statements) {
     if (
       !ts.isImportDeclaration(statement) ||
@@ -1031,6 +1099,11 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
             discoveredHookBinding;
         }
       }
+      if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.EqualsToken) {
+        discoveredHookBinding =
+          discoverAssignmentTargetBindings(hookBindings, node.left, node.right) ||
+          discoveredHookBinding;
+      }
       ts.forEachChild(node, discoverHookBindings);
     }
     discoverHookBindings(sourceFile);
@@ -1057,6 +1130,11 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
             discoverBindingPatternBindings(surfaceBindings, node.name, initializer, isHookResult) ||
             discoveredSurfaceBinding;
         }
+      }
+      if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.EqualsToken) {
+        discoveredSurfaceBinding =
+          discoverAssignmentTargetBindings(surfaceBindings, node.left, node.right, isHookResult) ||
+          discoveredSurfaceBinding;
       }
       ts.forEachChild(node, discoverSurfaceBindings);
     }
@@ -2060,6 +2138,45 @@ describe('Templates Monaco preview architecture', () => {
           'export function MonacoCodeViewer({ editable }: { editable: boolean }) {',
           '  const Surface = useMonacoCodeSurface();',
           '  return editable ? <Surface readOnly={false} /> : <Surface readOnly={true} />;',
+          '}',
+        ].join('\n')
+      )
+    ).toContain('MonacoCodeViewer rendered a writable or dynamic surface');
+    expect(
+      collectMonacoViewerReadOnlyViolations(
+        [
+          'function useMonacoCodeSurface() { return null; }',
+          'export function MonacoCodeViewer() {',
+          '  const Safe = useMonacoCodeSurface();',
+          '  let Writable;',
+          '  Writable = useMonacoCodeSurface();',
+          '  return <><Safe readOnly /><Writable readOnly={false} /></>;',
+          '}',
+        ].join('\n')
+      )
+    ).toContain('MonacoCodeViewer rendered a writable or dynamic surface');
+    expect(
+      collectMonacoViewerReadOnlyViolations(
+        [
+          'function useMonacoCodeSurface() { return null; }',
+          'export function MonacoCodeViewer() {',
+          '  const Safe = useMonacoCodeSurface();',
+          '  let Writable;',
+          '  ({ Writable } = { Writable: useMonacoCodeSurface() });',
+          '  return <><Safe readOnly /><Writable readOnly={false} /></>;',
+          '}',
+        ].join('\n')
+      )
+    ).toContain('MonacoCodeViewer rendered a writable or dynamic surface');
+    expect(
+      collectMonacoViewerReadOnlyViolations(
+        [
+          'function useMonacoCodeSurface() { return null; }',
+          'export function MonacoCodeViewer() {',
+          '  const Safe = useMonacoCodeSurface();',
+          '  let Writable;',
+          '  [Writable] = [useMonacoCodeSurface()];',
+          '  return <><Safe readOnly /><Writable readOnly={false} /></>;',
           '}',
         ].join('\n')
       )
