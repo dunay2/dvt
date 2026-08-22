@@ -32,7 +32,8 @@
   },
   "dependencies": {
     "@dvt/artifacts": "workspace:*",
-    "@dvt/contracts": "workspace:*"
+    "@dvt/contracts": "workspace:*",
+    "@dvt/crypto": "workspace:*"
   },
   "devDependencies": {
     "typescript": "5.9.3"

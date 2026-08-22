@@ -1,9 +1,8 @@
+import { jcsCanonicalize, sha256HexUtf8 } from '@dvt/crypto';
 import { z } from 'zod';
 
 import type { PlanCore } from '../contracts/planner/ExecutionPlan.v1.js';
 import { PlannerPolicyClassSetSchema } from '../contracts/planner/PlannerPolicyVocabulary.v2.js';
-import { jcsCanonicalize } from '../utils/jcsCanonicalize.js';
-import { sha256HexUtf8 } from '../utils/sha256HexUtf8.js';
 
 import { NonBlankStringSchema, RunExecutionPolicySchema } from './common.js';
 import { ExecutionPlanSchema, PlanCoreSchema } from './execution-plan.js';

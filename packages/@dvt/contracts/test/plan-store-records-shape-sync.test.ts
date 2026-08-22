@@ -1,3 +1,4 @@
+import { jcsCanonicalize, sha256HexUtf8 } from '@dvt/crypto';
 import Ajv from 'ajv/dist/2020.js';
 import { describe, expect, it } from 'vitest';
 
@@ -9,8 +10,6 @@ import {
   PlanExecutabilityRecordSchema,
   PlanRecordShapeSchema,
 } from '../src/index.js';
-import { jcsCanonicalize } from '../src/utils/jcsCanonicalize.js';
-import { sha256HexUtf8 } from '../src/utils/sha256HexUtf8.js';
 
 import { VALID_EXECUTION_PLAN_V1_FIXTURE } from './fixtures/planner-contract.fixtures.js';
 

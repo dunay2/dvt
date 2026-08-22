@@ -770,6 +770,9 @@ importers:
 
   packages/@dvt/contracts:
     dependencies:
+      '@dvt/crypto':
+        specifier: workspace:*
+        version: link:../crypto
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -905,6 +908,9 @@ importers:
       '@dvt/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@dvt/crypto':
+        specifier: workspace:*
+        version: link:../crypto
     devDependencies:
       typescript:
         specifier: 5.9.3
@@ -921,9 +927,9 @@ importers:
       '@dvt/contracts':
         specifier: workspace:*
         version: link:../contracts
-      json-canonicalize:
-        specifier: ^2.0.0
-        version: 2.0.0
+      '@dvt/crypto':
+        specifier: workspace:*
+        version: link:../crypto
     devDependencies:
       typescript:
         specifier: 5.9.3

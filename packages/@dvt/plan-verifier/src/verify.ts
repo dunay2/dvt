@@ -1,4 +1,5 @@
-import { sha256Hex, utf8Encode } from './crypto.js';
+import { sha256Hex, utf8Bytes } from '@dvt/crypto';
+
 import { PlanVerifierError } from './errors.js';
 import { type PlanRuntime, verifyPlanAdmissionOrThrow } from './planVersion.js';
 
@@ -12,8 +13,8 @@ export async function verifyPlanIdOrThrow(params: {
   canonicalPlanCoreJson: string;
   planId: string;
 }): Promise<void> {
-  const bytes = utf8Encode(params.canonicalPlanCoreJson);
-  const actual = await sha256Hex(bytes);
+  const bytes = utf8Bytes(params.canonicalPlanCoreJson);
+  const actual = sha256Hex(bytes);
   const expected = params.planId.toLowerCase();
   if (actual !== expected) {
     throw new PlanVerifierError(

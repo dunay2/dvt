@@ -7,7 +7,7 @@
  *   expectations in the provider adapter path (`PENDING` until completion events are present).
  */
 import { CURRENT_SIGNAL_SEMANTICS_VERSION, type ScopedPlanRef } from '@dvt/contracts';
-import { jcsCanonicalize } from '@dvt/crypto';
+import { jcsCanonicalize, sha256Hex, sha256HexUtf8 } from '@dvt/crypto';
 import { createNoopObservability } from '@dvt/observability';
 import { describe, it, expect, vi } from 'vitest';
 
@@ -27,7 +27,6 @@ import { PlanIntegrityValidator } from '../../src/security/planIntegrity.js';
 import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
-import { sha256Hex, sha256HexUtf8 } from '../../src/utils/sha256.js';
 import {
   createWorkflowEngineFixture,
   makePlanFetcherForPlan,

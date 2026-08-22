@@ -24,6 +24,7 @@
     "vitest": "3.2.4"
   },
   "dependencies": {
+    "@dvt/crypto": "workspace:*",
     "zod": "^4.3.6"
   }
 }
