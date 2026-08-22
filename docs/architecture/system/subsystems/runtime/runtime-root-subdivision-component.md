@@ -72,7 +72,7 @@ flowchart LR
   Engine --> Interpreter["@dvt/plan-interpreter"]
   Api --> Verifier["@dvt/plan-verifier"]
   Interpreter --> Dsl["@dvt/dsl"]
-  Verifier --> Canonical["@dvt/canonical"]
+  Verifier --> Canonical["@dvt/crypto"]
   Cli["@dvt/cli"] --> Verifier
   Engine -. plan-ref exception .-> PlanStore["SYS-PLANSTORE-ENGINE-FETCH"]
 ```

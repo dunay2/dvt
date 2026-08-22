@@ -20,7 +20,7 @@ import { InMemoryProviderAdapter } from '../../src/adapters/inMemory/InMemoryPro
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
-import { sha256Hex } from '../../src/utils/sha256.js';
+import { sha256Hex, sha256HexUtf8 } from '../../src/utils/sha256.js';
 import {
   createWorkflowEngineFixture,
   makePlanFetcherForPlan,
@@ -94,7 +94,7 @@ function makeMinimalPlan(): ExecutionPlan {
   const steps: ExecutionPlan['steps'] = [];
   return {
     metadata: {
-      planId: sha256Hex(
+      planId: sha256HexUtf8(
         jcsCanonicalize({
           metadata: {
             planVersion: '1.0',
@@ -202,7 +202,7 @@ describe('ExecutionPlan — provenance metadata is inert at runtime', (): void =
   it('plan with all provenance fields executes without error', async (): Promise<void> => {
     const plan: ExecutionPlan = {
       metadata: {
-        planId: sha256Hex(
+        planId: sha256HexUtf8(
           jcsCanonicalize({
             metadata: {
               planVersion: '1.0',

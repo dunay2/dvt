@@ -49,6 +49,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Contract mapper boundary type aliases can drift from schema-level non-blank semantics](R-20260410-CONTRACT-MAPPER-BOUNDARY-TYPE-SEMANTICS.yaml)
 - [Contract tests could depend on absent on-demand documentation snapshots](R-20260810-ON-DEMAND-STATUS-TEST-OWNERSHIP.yaml)
 - [Contracts hash-compare scope change lacks PR-runtime E2E validation](R-20260515-CI-CONTRACTS-HASH-SCOPE-E2E.yaml)
+- [Crypto primitive implementations could drift across repository boundaries](R-20260822-CRYPTO-AUTHORITY-DRIFT.yaml)
 - [dbt import authority or atomic file mutation can diverge under runtime failure](R-20260714-DBT-PROJECT-IMPORT-AUTHORITY.yaml)
 - [dbt manifest or analysis-profile drift can make file projection unavailable](R-20260713-DBT-PROJECT-FILE-PROJECTION.yaml)
 - [DBT plan-store replay reuse must keep canonical payload comparison stable](R-20260526-DBT-PLAN-STORE-REUSE.yaml)

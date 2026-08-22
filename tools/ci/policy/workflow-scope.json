@@ -178,7 +178,7 @@
   ],
   "workspace_web": ["apps/web/**"],
   "workspace_artifacts": ["packages/@dvt/artifacts/**"],
-  "workspace_crypto": ["packages/@dvt/canonical/**"],
+  "workspace_crypto": ["packages/@dvt/crypto/**"],
   "workspace_delivery": ["packages/@dvt/delivery/**"],
   "workspace_dsl": ["packages/@dvt/dsl/**"],
   "workspace_contracts": ["packages/@dvt/contracts/**"],

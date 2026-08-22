@@ -1,5 +1,5 @@
 import type { ScopedPlanRef } from '@dvt/contracts';
-import { jcsCanonicalize, sha256Hex } from '@dvt/crypto';
+import { jcsCanonicalize, sha256HexUtf8 } from '@dvt/crypto';
 import { describe, expect, it } from 'vitest';
 
 import { createExecutionPlan } from './helpers/contractFixtures.js';
@@ -28,7 +28,7 @@ function createPlanBytes(
   return Buffer.from(
     JSON.stringify(
       createExecutionPlan({
-        inputHashSha256: sha256Hex(jcsCanonicalize({ planId })),
+        inputHashSha256: sha256HexUtf8(jcsCanonicalize({ planId })),
         createdAtIso: '2026-04-20T00:00:00.000Z',
         steps,
       })
@@ -64,8 +64,8 @@ describe('dbtRuntimeFixtures', () => {
     expect(firstRef.uri).toContain('/run-1/');
     expect(secondRef.uri).toContain('/run-2/');
     expect(firstRef).not.toEqual(secondRef);
-    expect(firstRef.sha256).toBe(sha256Hex(jcsCanonicalize(firstRunExecutionContext)));
-    expect(secondRef.sha256).toBe(sha256Hex(jcsCanonicalize(secondRunExecutionContext)));
+    expect(firstRef.sha256).toBe(sha256HexUtf8(jcsCanonicalize(firstRunExecutionContext)));
+    expect(secondRef.sha256).toBe(sha256HexUtf8(jcsCanonicalize(secondRunExecutionContext)));
   });
 
   it('keeps the runExecutionContextRef hash stable when object property order changes', () => {
@@ -95,7 +95,7 @@ describe('dbtRuntimeFixtures', () => {
 
     const ref = createDbtRunExecutionContextRef(firstContext, planRef);
 
-    expect(ref.sha256).toBe(sha256Hex(jcsCanonicalize(reorderedRunExecutionContext)));
+    expect(ref.sha256).toBe(sha256HexUtf8(jcsCanonicalize(reorderedRunExecutionContext)));
   });
 
   it('resolves only the registered run execution context for each run ref', async () => {

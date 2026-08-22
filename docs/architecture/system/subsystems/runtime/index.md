@@ -31,7 +31,7 @@ flowchart TB
   Interpret["SYS-RUNTIME-PLAN-INTERPRETATION<br/>@dvt/plan-interpreter"]
   Verify["SYS-RUNTIME-PLAN-VERIFICATION<br/>@dvt/plan-verifier"]
   Dsl["SYS-RUNTIME-DSL<br/>@dvt/dsl"]
-  Canonical["SYS-RUNTIME-DETERMINISM-UTILITIES<br/>@dvt/canonical"]
+  Canonical["SYS-RUNTIME-DETERMINISM-UTILITIES<br/>@dvt/crypto"]
   Cli["SYS-RUNTIME-CLI-VALIDATION<br/>@dvt/cli and packages/cli"]
   PlanStore["SYS-PLANSTORE-ENGINE-FETCH<br/>plan-ref exception"]
 
