@@ -1343,6 +1343,23 @@ function isProductionSourceFileName(fileName: string): boolean {
   );
 }
 
+const WEB_PRODUCTION_SOURCE_FILES = collectProductionSourceFiles(WEB_SOURCE_ROOT);
+const APP_VIEWS_ROOT = path.join(APP_ROOT, 'views');
+const REPOSITORY_MONACO_OWNER_SCAN_GROUPS = [
+  {
+    label: 'views',
+    sourceModules: WEB_PRODUCTION_SOURCE_FILES.filter((sourceModule) =>
+      sourceModule.startsWith(`${APP_VIEWS_ROOT}${path.sep}`)
+    ),
+  },
+  {
+    label: 'production outside views',
+    sourceModules: WEB_PRODUCTION_SOURCE_FILES.filter(
+      (sourceModule) => !sourceModule.startsWith(`${APP_VIEWS_ROOT}${path.sep}`)
+    ),
+  },
+] as const;
+
 function collectPrefilterModuleSpecifiers(source: string): ReadonlySet<string> {
   const sourceFile = ts.createSourceFile(
     'monaco-authority-prefilter.tsx',
@@ -4693,18 +4710,21 @@ describe('Templates Monaco preview architecture', () => {
     }
   });
 
-  it('enforces Monaco owners and test-support boundaries across Web production', () => {
-    for (const sourceModule of collectProductionSourceFiles(WEB_SOURCE_ROOT)) {
-      const modulePath = path.relative(WEB_SOURCE_ROOT, sourceModule).replaceAll('\\', '/');
-      if (/(^|\/)test(ing)?\//.test(modulePath)) continue;
+  it.each(REPOSITORY_MONACO_OWNER_SCAN_GROUPS)(
+    'enforces Monaco owners and test-support boundaries across Web $label',
+    ({ sourceModules }) => {
+      for (const sourceModule of sourceModules) {
+        const modulePath = path.relative(WEB_SOURCE_ROOT, sourceModule).replaceAll('\\', '/');
+        if (/(^|\/)test(ing)?\//.test(modulePath)) continue;
 
-      expect(
-        collectRepositoryMonacoOwnerViolations({
-          modulePath,
-          source: readFileSync(sourceModule, 'utf8'),
-        }),
-        modulePath
-      ).toEqual([]);
+        expect(
+          collectRepositoryMonacoOwnerViolations({
+            modulePath,
+            source: readFileSync(sourceModule, 'utf8'),
+          }),
+          modulePath
+        ).toEqual([]);
+      }
     }
-  });
+  );
 });
