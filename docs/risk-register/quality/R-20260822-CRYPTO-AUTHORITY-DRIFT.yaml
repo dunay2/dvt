@@ -1,0 +1,26 @@
+---
+id: R-20260822-CRYPTO-AUTHORITY-DRIFT
+title: Crypto primitive implementations could drift across repository boundaries
+status: Closed
+date: 2026-08-22
+owners:
+  - packages/@dvt/crypto
+  - packages/@dvt/engine
+  - packages/@dvt/state-store
+severity: High
+probability: Low
+context: >
+  Deterministic plan identities, idempotency keys, and archive checksums depend on identical
+  encoding, canonicalization, and digest behavior across packages and runtimes.
+risk: >
+  Parallel helpers or an ambiguous physical package path could produce different identities for the
+  same domain preimage or hide an unsupported compatibility branch.
+mitigations:
+  - Keep one strict public primitive API under the matching packages/@dvt/crypto path.
+  - Distinguish byte and UTF-8 text digest functions without overloads.
+  - Reuse maintained JCS, digest, and UUID libraries rather than handwritten algorithms.
+  - Preserve existing domain preimages and prove them through Engine and State Store vectors.
+  - Fail closed when secure randomness or valid JSON input is unavailable.
+  - Remove the obsolete canonical package path and its aliases.
+review_after: 2026-11-22
+---

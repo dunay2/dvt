@@ -129,6 +129,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED 20260817 Temporal Native Cancel Finalization](ED-20260817-temporal-native-cancel-finalization.md)
 - [ED 20260818 Dbt Target Connection Binding](ED-20260818-dbt-target-connection-binding.md)
 - [ED 20260819 Graph Dbt Model Compilation](ED-20260819-graph-dbt-model-compilation.md)
+- [ED 20260822 Crypto Primitive Authority](ED-20260822-crypto-primitive-authority.md)
 - [ED-20260402 RC-G1 governance startup and health reconciliation](ED-20260402-rc-g1-governance-startup-reconciliation.md)
 - [ED-20260402 S05 envelope boundary hardening](ED-20260402-s05-envelope-boundary-hardening.md)
 - [ED-20260402 S08 contract-layer hardening](ED-20260402-s08-contract-layer-hardening.md)

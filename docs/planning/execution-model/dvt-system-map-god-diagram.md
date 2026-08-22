@@ -286,7 +286,7 @@ All invariants are ADR-backed and reflected in the implementation.
 - **State store owns event ordering.** `runSeq` is the only authoritative per-run
   ordering key; provider timestamps are not trusted. ✅ (ADR-0004)
 - **Artifact store owns immutability.** Plans are content-addressed by SHA-256;
-  engine receives only a `PlanRef`. ✅ (ADR-0012, `@dvt/plan-verifier`, `@dvt/canonical`)
+  engine receives only a `PlanRef`. ✅ (ADR-0012, `@dvt/plan-verifier`, `@dvt/crypto`)
 - **Projector builds derived read models.** `WorkflowSnapshot` is derived, never
   authoritative over the event log. ✅ (`SnapshotProjector`)
 - **UI never executes workflows.** Commands flow through API → Engine boundary only. ✅

@@ -932,8 +932,11 @@ units:
     parent: SYS-RUNTIME-ROOT
     level: component
     status: coverage-required
+    ownedConcern:
+      Shared portable encoding, digest, JCS, secure entropy, and UUID primitives without domain
+      identity policy
     owns:
-      - packages/@dvt/canonical/**
+      - packages/@dvt/crypto/**
     childrenRequired: false
     dddOwner: DS
     cqRails: none - deterministic utility library
