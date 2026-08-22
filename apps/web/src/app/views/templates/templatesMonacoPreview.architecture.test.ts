@@ -681,10 +681,12 @@ function collectRuntimeExportedNames(source: string): string[] {
       }
       continue;
     }
-    const isExported =
-      ts.canHaveModifiers(statement) &&
-      ts.getModifiers(statement)?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword);
+    const modifiers = ts.canHaveModifiers(statement) ? ts.getModifiers(statement) : undefined;
+    const isExported = modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword);
     if (!isExported) continue;
+    if (modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.DefaultKeyword)) {
+      exportedNames.add('default');
+    }
     if (
       (ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement)) &&
       statement.name
@@ -1472,6 +1474,7 @@ describe('Templates Monaco preview architecture', () => {
     expect(readRepoDoc('apps/web/vite.config.ts')).toContain(
       "'@': fileURLToPath(new URL('./src', import.meta.url))"
     );
+    expect(collectRuntimeExportedNames('export default function () {}')).toEqual(['default']);
   });
 
   it('distinguishes accepted and rejected Templates and Canvas Monaco authority fixtures', () => {
