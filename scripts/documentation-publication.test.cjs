@@ -1,5 +1,5 @@
 const assert = require('node:assert/strict');
-const { createHash } = require('node:crypto');
+const { sha256Hex, sha256HexUtf8 } = require('@dvt/crypto');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -40,7 +40,7 @@ function assertOrdinaryWorkflowsDoNotPublishDocumentation() {
 }
 
 function sha256(value) {
-  return createHash('sha256').update(value).digest('hex');
+  return typeof value === 'string' ? sha256HexUtf8(value) : sha256Hex(value);
 }
 
 function lifecycleRow(root, documentPath, fields = {}) {
