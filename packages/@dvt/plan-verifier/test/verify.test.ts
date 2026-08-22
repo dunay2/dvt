@@ -6,7 +6,7 @@ import {
   type IStepTypeRegistry,
 } from '@dvt/contracts';
 import { sha256Hex, utf8Bytes } from '@dvt/crypto';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 import { PlanVerifierError } from '../src/errors.js';
 import {
@@ -51,6 +51,17 @@ describe('@dvt/plan-verifier', () => {
     await expect(
       verifyPlanIdOrThrow({ canonicalPlanCoreJson: canonical, planId: 'deadbeef' })
     ).rejects.toThrow();
+  });
+
+  it('preserves the missing TextEncoder error contract', async () => {
+    vi.stubGlobal('TextEncoder', undefined);
+    try {
+      await expect(
+        verifyPlanIdOrThrow({ canonicalPlanCoreJson: '{"a":1}', planId: 'deadbeef' })
+      ).rejects.toMatchObject({ code: 'MISSING_TEXT_ENCODER' });
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it('fails on unsupported admitted planVersion', async () => {

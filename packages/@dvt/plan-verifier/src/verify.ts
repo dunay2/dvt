@@ -13,6 +13,12 @@ export async function verifyPlanIdOrThrow(params: {
   canonicalPlanCoreJson: string;
   planId: string;
 }): Promise<void> {
+  if (!globalThis.TextEncoder) {
+    throw new PlanVerifierError(
+      'MISSING_TEXT_ENCODER',
+      'TextEncoder is not available on globalThis. Provide a runtime/polyfill with TextEncoder support.'
+    );
+  }
   const bytes = utf8Bytes(params.canonicalPlanCoreJson);
   const actual = sha256Hex(bytes);
   const expected = params.planId.toLowerCase();
