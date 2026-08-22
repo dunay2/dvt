@@ -876,35 +876,121 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
     return discovered;
   }
 
-  function discoverObjectBindings(
+  function discoverCompositeBindings(
     bindings: Set<string>,
-    objectPath: string,
-    objectLiteral: ts.ObjectLiteralExpression
+    targetPath: string,
+    expression: ts.Expression,
+    isDirectBinding: (candidate: ts.Expression) => boolean = () => false
   ): boolean {
     let discovered = false;
-    for (const property of objectLiteral.properties) {
-      if (ts.isShorthandPropertyAssignment(property)) {
-        const targetPath = `${objectPath}.${property.name.text}`;
+    const initializer = unwrapExpression(expression);
+    const initializerPath = readExpressionPath(initializer);
+    if (isDirectBinding(initializer)) {
+      discovered = addBinding(bindings, targetPath) || discovered;
+    }
+    if (initializerPath) {
+      discovered =
+        (bindings.has(initializerPath) && addBinding(bindings, targetPath)) || discovered;
+      discovered = copyBindingMembers(bindings, initializerPath, targetPath) || discovered;
+    }
+    if (ts.isArrayLiteralExpression(initializer)) {
+      for (const [index, element] of initializer.elements.entries()) {
+        if (ts.isOmittedExpression(element)) continue;
+        if (ts.isSpreadElement(element)) {
+          discovered =
+            discoverCompositeBindings(bindings, targetPath, element.expression, isDirectBinding) ||
+            discovered;
+          continue;
+        }
         discovered =
-          (bindings.has(property.name.text) && addBinding(bindings, targetPath)) || discovered;
-        discovered = copyBindingMembers(bindings, property.name.text, targetPath) || discovered;
+          discoverCompositeBindings(bindings, `${targetPath}.${index}`, element, isDirectBinding) ||
+          discovered;
+      }
+      return discovered;
+    }
+    if (!ts.isObjectLiteralExpression(initializer)) return discovered;
+
+    for (const property of initializer.properties) {
+      if (ts.isSpreadAssignment(property)) {
+        discovered =
+          discoverCompositeBindings(bindings, targetPath, property.expression, isDirectBinding) ||
+          discovered;
+        continue;
+      }
+      if (ts.isShorthandPropertyAssignment(property)) {
+        discovered =
+          discoverCompositeBindings(
+            bindings,
+            `${targetPath}.${property.name.text}`,
+            property.name,
+            isDirectBinding
+          ) || discovered;
         continue;
       }
       if (!ts.isPropertyAssignment(property)) continue;
       const propertyName = readStaticPropertyName(property.name);
       if (!propertyName) continue;
-      const targetPath = `${objectPath}.${propertyName}`;
-      const initializer = unwrapExpression(property.initializer);
-      const initializerPath = readExpressionPath(initializer);
-      if (initializerPath) {
-        discovered =
-          (bindings.has(initializerPath) && addBinding(bindings, targetPath)) || discovered;
-        discovered = copyBindingMembers(bindings, initializerPath, targetPath) || discovered;
+      discovered =
+        discoverCompositeBindings(
+          bindings,
+          `${targetPath}.${propertyName}`,
+          property.initializer,
+          isDirectBinding
+        ) || discovered;
+    }
+    return discovered;
+  }
+
+  function discoverBindingPatternBindings(
+    bindings: Set<string>,
+    pattern: ts.BindingPattern,
+    initializer: ts.Expression,
+    isDirectBinding: (candidate: ts.Expression) => boolean = () => false
+  ): boolean {
+    const rootPath = `__destructured_${pattern.pos}`;
+    let discovered = discoverCompositeBindings(bindings, rootPath, initializer, isDirectBinding);
+
+    function bindName(name: ts.BindingName, sourcePath: string): void {
+      if (ts.isIdentifier(name)) {
+        discovered = (bindings.has(sourcePath) && addBinding(bindings, name.text)) || discovered;
+        discovered = copyBindingMembers(bindings, sourcePath, name.text) || discovered;
+        return;
       }
-      if (ts.isObjectLiteralExpression(initializer)) {
-        discovered = discoverObjectBindings(bindings, targetPath, initializer) || discovered;
+      bindPattern(name, sourcePath);
+    }
+
+    function bindPattern(bindingPattern: ts.BindingPattern, sourcePath: string): void {
+      if (ts.isObjectBindingPattern(bindingPattern)) {
+        for (const element of bindingPattern.elements) {
+          if (element.dotDotDotToken) {
+            if (ts.isIdentifier(element.name)) {
+              discovered =
+                copyBindingMembers(bindings, sourcePath, element.name.text) || discovered;
+            }
+            continue;
+          }
+          const propertyName = element.propertyName
+            ? readStaticPropertyName(element.propertyName)
+            : ts.isIdentifier(element.name)
+              ? element.name.text
+              : undefined;
+          if (propertyName) bindName(element.name, `${sourcePath}.${propertyName}`);
+        }
+        return;
+      }
+      for (const [index, element] of bindingPattern.elements.entries()) {
+        if (ts.isOmittedExpression(element)) continue;
+        if (element.dotDotDotToken) {
+          if (ts.isIdentifier(element.name)) {
+            discovered = copyBindingMembers(bindings, sourcePath, element.name.text) || discovered;
+          }
+          continue;
+        }
+        bindName(element.name, `${sourcePath}.${index}`);
       }
     }
+
+    bindPattern(pattern, rootPath);
     return discovered;
   }
 
@@ -933,20 +1019,15 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
   while (discoveredHookBinding) {
     discoveredHookBinding = false;
     function discoverHookBindings(node: ts.Node): void {
-      if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer) {
+      if (ts.isVariableDeclaration(node) && node.initializer) {
         const initializer = unwrapExpression(node.initializer);
-        const initializerPath = readExpressionPath(initializer);
-        if (initializerPath && hookBindings.has(initializerPath)) {
-          discoveredHookBinding = addBinding(hookBindings, node.name.text) || discoveredHookBinding;
-        }
-        if (initializerPath) {
+        if (ts.isIdentifier(node.name)) {
           discoveredHookBinding =
-            copyBindingMembers(hookBindings, initializerPath, node.name.text) ||
+            discoverCompositeBindings(hookBindings, node.name.text, initializer) ||
             discoveredHookBinding;
-        }
-        if (ts.isObjectLiteralExpression(initializer)) {
+        } else {
           discoveredHookBinding =
-            discoverObjectBindings(hookBindings, node.name.text, initializer) ||
+            discoverBindingPatternBindings(hookBindings, node.name, initializer) ||
             discoveredHookBinding;
         }
       }
@@ -956,27 +1037,24 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
   }
 
   let discoveredSurfaceBinding = true;
+  function isHookResult(candidate: ts.Expression): boolean {
+    return (
+      ts.isCallExpression(candidate) &&
+      hookBindings.has(readExpressionPath(candidate.expression) ?? '')
+    );
+  }
   while (discoveredSurfaceBinding) {
     discoveredSurfaceBinding = false;
     function discoverSurfaceBindings(node: ts.Node): void {
-      if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer) {
+      if (ts.isVariableDeclaration(node) && node.initializer) {
         const initializer = unwrapExpression(node.initializer);
-        const isHookResult =
-          ts.isCallExpression(initializer) &&
-          hookBindings.has(readExpressionPath(initializer.expression) ?? '');
-        const initializerPath = readExpressionPath(initializer);
-        if (isHookResult || (initializerPath && surfaceBindings.has(initializerPath))) {
+        if (ts.isIdentifier(node.name)) {
           discoveredSurfaceBinding =
-            addBinding(surfaceBindings, node.name.text) || discoveredSurfaceBinding;
-        }
-        if (initializerPath) {
-          discoveredSurfaceBinding =
-            copyBindingMembers(surfaceBindings, initializerPath, node.name.text) ||
+            discoverCompositeBindings(surfaceBindings, node.name.text, initializer, isHookResult) ||
             discoveredSurfaceBinding;
-        }
-        if (ts.isObjectLiteralExpression(initializer)) {
+        } else {
           discoveredSurfaceBinding =
-            discoverObjectBindings(surfaceBindings, node.name.text, initializer) ||
+            discoverBindingPatternBindings(surfaceBindings, node.name, initializer, isHookResult) ||
             discoveredSurfaceBinding;
         }
       }
@@ -1982,6 +2060,30 @@ describe('Templates Monaco preview architecture', () => {
           'export function MonacoCodeViewer({ editable }: { editable: boolean }) {',
           '  const Surface = useMonacoCodeSurface();',
           '  return editable ? <Surface readOnly={false} /> : <Surface readOnly={true} />;',
+          '}',
+        ].join('\n')
+      )
+    ).toContain('MonacoCodeViewer rendered a writable or dynamic surface');
+    expect(
+      collectMonacoViewerReadOnlyViolations(
+        [
+          'function useMonacoCodeSurface() { return null; }',
+          'export function MonacoCodeViewer() {',
+          '  const Safe = useMonacoCodeSurface();',
+          '  const { Writable } = { Writable: useMonacoCodeSurface() };',
+          '  return <><Safe readOnly /><Writable readOnly={false} /></>;',
+          '}',
+        ].join('\n')
+      )
+    ).toContain('MonacoCodeViewer rendered a writable or dynamic surface');
+    expect(
+      collectMonacoViewerReadOnlyViolations(
+        [
+          'function useMonacoCodeSurface() { return null; }',
+          'export function MonacoCodeViewer() {',
+          '  const Safe = useMonacoCodeSurface();',
+          '  const [Writable] = [useMonacoCodeSurface()];',
+          '  return <><Safe readOnly /><Writable readOnly={false} /></>;',
           '}',
         ].join('\n')
       )
