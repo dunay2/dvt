@@ -793,6 +793,21 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     expectedViolation: 'useMonacoCodeSurface re-exported',
   },
   {
+    label: 'A later governed spread retains render prop authority over an earlier local member',
+    modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
+    source: [
+      "import { useMonacoCodeSurface } from './useMonacoCodeSurface';",
+      'export function MonacoCodeViewer({ render }) {',
+      '  const Surface = useMonacoCodeSurface();',
+      '  const base = { invoke: render };',
+      '  const callbacks = { invoke: () => null, ...base };',
+      '  const content = callbacks.invoke(useMonacoCodeSurface());',
+      '  return <>{content}<Surface readOnly /></>;',
+      '}',
+    ].join('\n'),
+    expectedViolation: 'useMonacoCodeSurface re-exported',
+  },
+  {
     label: 'A governed viewer cannot pass its loader through an inline composite member alias',
     modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
     source: [
@@ -1014,6 +1029,20 @@ const ACCEPTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
       '  const callbacks = { invoke: () => null, retained: render };',
       '  const { invoke } = callbacks;',
       '  const content = invoke(useMonacoCodeSurface());',
+      '  return <>{content}<Surface readOnly /></>;',
+      '}',
+    ].join('\n'),
+  },
+  {
+    label: 'A governed viewer respects a local member that overrides an earlier governed spread',
+    modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
+    source: [
+      "import { useMonacoCodeSurface } from './useMonacoCodeSurface';",
+      'export function MonacoCodeViewer({ render }) {',
+      '  const Surface = useMonacoCodeSurface();',
+      '  const base = { invoke: render };',
+      '  const callbacks = { ...base, invoke: () => null };',
+      '  const content = callbacks.invoke(useMonacoCodeSurface());',
       '  return <>{content}<Surface readOnly /></>;',
       '}',
     ].join('\n'),
@@ -2423,7 +2452,7 @@ function collectRuntimeModuleSpecifiers(
       }
       const parameterAliasEdges: Array<Readonly<{ sources: string[]; targets: string[] }>> = [];
       const parameterMemberAliasEdges: Array<
-        Readonly<{ sourcePrefix: string; targetPrefix: string }>
+        Readonly<{ sourcePrefix: string; targetPrefix: string; excludedMembers: string[] }>
       > = [];
       function addParameterAliasEdge(sources: string[], targets: string[]): void {
         const uniqueSources = [...new Set(sources)];
@@ -2431,8 +2460,16 @@ function collectRuntimeModuleSpecifiers(
         if (uniqueSources.length === 0 || uniqueTargets.length === 0) return;
         parameterAliasEdges.push({ sources: uniqueSources, targets: uniqueTargets });
       }
-      function addParameterMemberAliasEdge(sourcePrefix: string, targetPrefix: string): void {
-        parameterMemberAliasEdges.push({ sourcePrefix, targetPrefix });
+      function addParameterMemberAliasEdge(
+        sourcePrefix: string,
+        targetPrefix: string,
+        excludedMembers: string[] = []
+      ): void {
+        parameterMemberAliasEdges.push({
+          sourcePrefix,
+          targetPrefix,
+          excludedMembers: [...new Set(excludedMembers)],
+        });
       }
       function collectExpressionAliasEdges(targetPath: string, initializer: ts.Expression): void {
         const candidate = unwrapParameterAliasExpression(initializer);
@@ -2443,15 +2480,30 @@ function collectRuntimeModuleSpecifiers(
           return;
         }
         if (ts.isObjectLiteralExpression(candidate)) {
-          for (const property of candidate.properties) {
+          for (const [propertyIndex, property] of candidate.properties.entries()) {
             if (ts.isSpreadAssignment(property)) {
               addParameterAliasEdge(readParameterAliasRoots(property.expression), [targetPath]);
               const spreadPath = readParameterAliasPath(property.expression);
-              if (spreadPath) addParameterMemberAliasEdge(spreadPath, targetPath);
+              if (spreadPath) {
+                const overriddenMembers = candidate.properties
+                  .slice(propertyIndex + 1)
+                  .filter((laterProperty) => !ts.isSpreadAssignment(laterProperty))
+                  .map((laterProperty) => readStaticPropertyName(laterProperty.name))
+                  .filter((propertyName): propertyName is string => propertyName != null);
+                addParameterMemberAliasEdge(spreadPath, targetPath, overriddenMembers);
+              }
               continue;
             }
             const propertyName = readStaticPropertyName(property.name);
             if (!propertyName) continue;
+            const isOverridden = candidate.properties
+              .slice(propertyIndex + 1)
+              .some(
+                (laterProperty) =>
+                  !ts.isSpreadAssignment(laterProperty) &&
+                  readStaticPropertyName(laterProperty.name) === propertyName
+              );
+            if (isOverridden) continue;
             if (ts.isPropertyAssignment(property)) {
               collectExpressionAliasEdges(`${targetPath}.${propertyName}`, property.initializer);
             } else if (ts.isShorthandPropertyAssignment(property)) {
@@ -2478,11 +2530,21 @@ function collectRuntimeModuleSpecifiers(
           return;
         }
         if (ts.isObjectBindingPattern(bindingName)) {
+          const explicitlyBoundMembers = bindingName.elements
+            .filter((element) => !element.dotDotDotToken)
+            .map((element) =>
+              element.propertyName
+                ? readStaticPropertyName(element.propertyName)
+                : ts.isIdentifier(element.name)
+                  ? element.name.text
+                  : undefined
+            )
+            .filter((propertyName): propertyName is string => propertyName != null);
           for (const element of bindingName.elements) {
             if (element.initializer) collectBindingAliasEdges(element.name, element.initializer);
             if (element.dotDotDotToken) {
               if (ts.isIdentifier(element.name)) {
-                addParameterMemberAliasEdge(sourcePath, element.name.text);
+                addParameterMemberAliasEdge(sourcePath, element.name.text, explicitlyBoundMembers);
               }
               continue;
             }
@@ -2692,7 +2754,10 @@ function collectRuntimeModuleSpecifiers(
         for (const edge of parameterMemberAliasEdges) {
           for (const binding of [...parameterBindings]) {
             if (!binding.startsWith(`${edge.sourcePrefix}.`)) continue;
-            const targetBinding = `${edge.targetPrefix}${binding.slice(edge.sourcePrefix.length)}`;
+            const memberSuffix = binding.slice(edge.sourcePrefix.length + 1);
+            const rootMember = memberSuffix.split('.')[0];
+            if (rootMember && edge.excludedMembers.includes(rootMember)) continue;
+            const targetBinding = `${edge.targetPrefix}.${memberSuffix}`;
             if (!parameterBindings.has(targetBinding)) {
               parameterBindings.add(targetBinding);
               discoveredParameterAlias = true;
