@@ -1,8 +1,8 @@
 /** Owned concern: refresh exact-HEAD content identity for existing governed sources. */
-const crypto = require('node:crypto');
 const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
+const { randomUuidV4, sha256Hex, sha256HexUtf8 } = require('@dvt/crypto');
 
 const { Client } = require('pg');
 
@@ -17,7 +17,7 @@ function databaseUrl() {
 }
 
 function sha256(value) {
-  return crypto.createHash('sha256').update(value).digest('hex');
+  return typeof value === 'string' ? sha256HexUtf8(value) : sha256Hex(value);
 }
 
 function stableStringify(value) {
@@ -357,7 +357,7 @@ async function applyGovernedSourceRefreshOperation(command, options = {}) {
       snapshots: snapshot.sources,
       governedRows,
       existingOverrides: governedRows,
-      operationId: options.operationId || crypto.randomUUID(),
+      operationId: options.operationId || randomUuidV4(),
       now: options.now || new Date(),
     });
     await writePlan(client, planned);
