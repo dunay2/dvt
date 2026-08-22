@@ -706,6 +706,20 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     expectedViolation: 'useMonacoCodeSurface re-exported',
   },
   {
+    label: 'A governed viewer cannot pass its loader through an aliased render prop',
+    modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
+    source: [
+      "import { useMonacoCodeSurface } from './useMonacoCodeSurface';",
+      'export function MonacoCodeViewer({ render }) {',
+      '  const Surface = useMonacoCodeSurface();',
+      '  const invoke = render;',
+      '  const content = invoke(useMonacoCodeSurface());',
+      '  return <>{content}<Surface readOnly /></>;',
+      '}',
+    ].join('\n'),
+    expectedViolation: 'useMonacoCodeSurface re-exported',
+  },
+  {
     label: 'A governed viewer cannot separately export a local object that exposes its loader',
     modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
     source: [
@@ -1155,7 +1169,7 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
   function expressionProducesBinding(
     bindings: Set<string>,
     expression: ts.Expression,
-    isDirectBinding: (candidate: ts.Expression) => boolean
+    isDirectBinding: (candidate: ts.Node) => boolean
   ): boolean {
     const candidate = unwrapExpression(expression);
     if (isDirectBinding(candidate)) return true;
@@ -1196,7 +1210,7 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
   function expressionContainsBinding(
     bindings: Set<string>,
     expression: ts.Expression,
-    isDirectBinding: (candidate: ts.Expression) => boolean
+    isDirectBinding: (candidate: ts.Node) => boolean
   ): boolean {
     const candidate = unwrapExpression(expression);
     if (expressionProducesBinding(bindings, candidate, isDirectBinding)) return true;
@@ -1230,7 +1244,7 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
     bindings: Set<string>,
     targetPath: string,
     expression: ts.Expression,
-    isDirectBinding: (candidate: ts.Expression) => boolean = () => false
+    isDirectBinding: (candidate: ts.Node) => boolean = () => false
   ): boolean {
     let discovered = false;
     const initializer = unwrapExpression(expression);
@@ -1277,6 +1291,13 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
           ) || discovered;
         continue;
       }
+      if (ts.isMethodDeclaration(property)) {
+        const propertyName = readStaticPropertyName(property.name);
+        if (propertyName && isDirectBinding(property)) {
+          discovered = addBinding(bindings, `${targetPath}.${propertyName}`) || discovered;
+        }
+        continue;
+      }
       if (!ts.isPropertyAssignment(property)) continue;
       const propertyName = readStaticPropertyName(property.name);
       if (!propertyName) continue;
@@ -1295,7 +1316,7 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
     bindings: Set<string>,
     pattern: ts.BindingPattern,
     initializer: ts.Expression,
-    isDirectBinding: (candidate: ts.Expression) => boolean = () => false
+    isDirectBinding: (candidate: ts.Node) => boolean = () => false
   ): boolean {
     const rootPath = `__destructured_${pattern.pos}`;
     let discovered = discoverCompositeBindings(bindings, rootPath, initializer, isDirectBinding);
@@ -1358,7 +1379,7 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
     bindings: Set<string>,
     target: ts.Expression,
     initializer: ts.Expression,
-    isDirectBinding: (candidate: ts.Expression) => boolean = () => false
+    isDirectBinding: (candidate: ts.Node) => boolean = () => false
   ): boolean {
     const unwrappedTarget = unwrapExpression(target);
     const targetPath = readExpressionPath(unwrappedTarget);
@@ -1490,7 +1511,8 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
     }
   }
 
-  function expressionProducesHookResult(expression: ts.Expression): boolean {
+  function expressionProducesHookResult(expression: ts.Node): boolean {
+    if (!ts.isExpression(expression)) return false;
     const candidate = unwrapExpression(expression);
     if (
       ts.isCallExpression(candidate) &&
@@ -1614,7 +1636,7 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
     return returnsHookResult;
   }
 
-  function isHookResult(candidate: ts.Expression): boolean {
+  function isHookResult(candidate: ts.Node): boolean {
     return expressionProducesHookResult(candidate);
   }
 
@@ -1661,7 +1683,7 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
 
   function discoverCallableBindings(
     bindings: Set<string>,
-    isDirectBinding: (candidate: ts.Expression) => boolean = () => false
+    isDirectBinding: (candidate: ts.Node) => boolean = () => false
   ): void {
     let discoveredBinding = true;
     while (discoveredBinding) {
@@ -1786,7 +1808,8 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
     return preservesReadOnly;
   }
 
-  function isSurfaceElementExpression(expression: ts.Expression): boolean {
+  function isSurfaceElementExpression(expression: ts.Node): boolean {
+    if (!ts.isExpression(expression)) return false;
     const candidate = unwrapExpression(expression);
     if (ts.isJsxElement(candidate)) {
       return surfaceBindings.has(readExpressionPath(candidate.openingElement.tagName) ?? '');
@@ -2143,6 +2166,8 @@ function collectRuntimeModuleSpecifiers(
     node: ts.FunctionDeclaration | ts.ClassDeclaration
   ): void {
     const declarationBindings = new Map(runtimeImportedBindings);
+    const guardsViewerRenderPropAuthority =
+      modulePath === 'app/components/monaco/MonacoCodeViewer.tsx';
     let discoveredAlias = true;
     while (discoveredAlias) {
       discoveredAlias = false;
@@ -2176,6 +2201,73 @@ function collectRuntimeModuleSpecifiers(
       const parameterBindings = new Set(
         parameters.flatMap((parameter) => collectBindingNames(parameter.name))
       );
+      function readParameterAliasRoots(expression: ts.Expression): string[] {
+        const rootBinding = readMutationRoot(expression);
+        if (rootBinding) return [rootBinding];
+        if (ts.isConditionalExpression(expression)) {
+          return [
+            ...readParameterAliasRoots(expression.whenTrue),
+            ...readParameterAliasRoots(expression.whenFalse),
+          ];
+        }
+        if (ts.isBinaryExpression(expression)) {
+          switch (expression.operatorToken.kind) {
+            case ts.SyntaxKind.AmpersandAmpersandToken:
+            case ts.SyntaxKind.BarBarToken:
+            case ts.SyntaxKind.QuestionQuestionToken:
+            case ts.SyntaxKind.CommaToken:
+            case ts.SyntaxKind.EqualsToken:
+              return [
+                ...readParameterAliasRoots(expression.left),
+                ...readParameterAliasRoots(expression.right),
+              ];
+            default:
+              return [];
+          }
+        }
+        if (ts.isAwaitExpression(expression)) {
+          return readParameterAliasRoots(expression.expression);
+        }
+        return [];
+      }
+      const parameterAliasEdges: Array<Readonly<{ sources: string[]; targets: string[] }>> = [];
+      function collectParameterAliasEdges(child: ts.Node): void {
+        if (ts.isVariableDeclaration(child) && child.initializer) {
+          const sources = readParameterAliasRoots(child.initializer);
+          if (sources.length > 0) {
+            parameterAliasEdges.push({
+              sources,
+              targets: collectBindingNames(child.name),
+            });
+          }
+        }
+        if (
+          ts.isBinaryExpression(child) &&
+          child.operatorToken.kind === ts.SyntaxKind.EqualsToken
+        ) {
+          const assignedBinding = readMutationRoot(child.left);
+          const sources = readParameterAliasRoots(child.right);
+          if (assignedBinding && sources.length > 0) {
+            parameterAliasEdges.push({ sources, targets: [assignedBinding] });
+          }
+        }
+        ts.forEachChild(child, collectParameterAliasEdges);
+      }
+      collectParameterAliasEdges(body);
+
+      let discoveredParameterAlias = true;
+      while (discoveredParameterAlias) {
+        discoveredParameterAlias = false;
+        for (const edge of parameterAliasEdges) {
+          if (!edge.sources.some((source) => parameterBindings.has(source))) continue;
+          for (const target of edge.targets) {
+            if (!parameterBindings.has(target)) {
+              parameterBindings.add(target);
+              discoveredParameterAlias = true;
+            }
+          }
+        }
+      }
       function visitInvocation(child: ts.Node): void {
         if (
           ts.isCallExpression(child) &&
@@ -2193,7 +2285,9 @@ function collectRuntimeModuleSpecifiers(
     if (ts.isFunctionDeclaration(node)) {
       if (node.body) {
         visitReturnedAuthority(node.body, node.body);
-        visitInvokedParameterAuthorities(node.parameters, node.body);
+        if (guardsViewerRenderPropAuthority) {
+          visitInvokedParameterAuthorities(node.parameters, node.body);
+        }
       }
       return;
     }
@@ -2215,7 +2309,9 @@ function collectRuntimeModuleSpecifiers(
         member.body
       ) {
         visitReturnedAuthority(member.body, member.body);
-        visitInvokedParameterAuthorities(member.parameters, member.body);
+        if (guardsViewerRenderPropAuthority) {
+          visitInvokedParameterAuthorities(member.parameters, member.body);
+        }
       }
     }
   }
@@ -3044,6 +3140,21 @@ describe('Templates Monaco preview architecture', () => {
           'export function MonacoCodeViewer() {',
           '  const Safe = useMonacoCodeSurface();',
           '  const Writable = useWrappedSurface();',
+          '  return <><Safe readOnly /><Writable readOnly={false} /></>;',
+          '}',
+        ].join('\n')
+      )
+    ).toContain('MonacoCodeViewer rendered a writable or dynamic surface');
+    expect(
+      collectMonacoViewerReadOnlyViolations(
+        [
+          'function useMonacoCodeSurface() { return null; }',
+          'const hooks = {',
+          '  useWrappedSurface() { return useMonacoCodeSurface(); },',
+          '};',
+          'export function MonacoCodeViewer() {',
+          '  const Safe = useMonacoCodeSurface();',
+          '  const Writable = hooks.useWrappedSurface();',
           '  return <><Safe readOnly /><Writable readOnly={false} /></>;',
           '}',
         ].join('\n')
