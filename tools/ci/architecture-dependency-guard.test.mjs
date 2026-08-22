@@ -1521,6 +1521,31 @@ test('dependency-cruiser boundary rules allow governed package entrypoints', () 
   assert.equal(violations.includes('no-cross-package-deep-imports'), false);
 });
 
+test('contracts can import the runtime-neutral crypto authority', () => {
+  const violations = collectDependencyViolations({
+    'packages/@dvt/contracts/src/index.ts':
+      "import { sha256HexUtf8 } from '../../crypto/src/index.js'; export default sha256HexUtf8;\n",
+    'packages/@dvt/crypto/src/index.ts': 'export const sha256HexUtf8 = (value) => value;\n',
+  });
+
+  assert.equal(violations.includes('no-contracts-to-dvt-runtime'), false);
+});
+
+test('Cut 1 crypto facades and duplicate implementations stay retired', () => {
+  const retiredPaths = [
+    'packages/@dvt/contracts/src/utils/jcsCanonicalize.ts',
+    'packages/@dvt/contracts/src/utils/sha256HexUtf8.ts',
+    'packages/@dvt/contracts/test/sha256HexUtf8.test.ts',
+    'packages/@dvt/engine/src/utils/jcs.ts',
+    'packages/@dvt/engine/src/utils/sha256.ts',
+    'packages/@dvt/plan-verifier/src/crypto.ts',
+  ];
+
+  for (const retiredPath of retiredPaths) {
+    assert.equal(existsSync(retiredPath), false, `${retiredPath} must not be restored`);
+  }
+});
+
 test('type-only cycles enrich reachability without becoming runtime cycle violations', () => {
   const violations = collectDependencyViolations({
     'packages/@dvt/engine/src/a.ts':
