@@ -1,5 +1,163 @@
 # Changelog
 
+## 0.7.0 (2026-08-22)
+
+## What's Changed
+* test(web): Prove Canvas graph search and filtering by @dunay2 in https://github.com/dunay2/dvt/pull/2222
+* feat(contracts): Admit bounded object-file Postgres step by @dunay2 in https://github.com/dunay2/dvt/pull/2224
+* feat(temporal): Execute object-file PostgreSQL loads by @dunay2 in https://github.com/dunay2/dvt/pull/2225
+* feat(web): Prove the public HET1 object-file DBT route by @dunay2 in https://github.com/dunay2/dvt/pull/2227
+* feat(web): Prove the public HET2 REST artifact DBT route by @dunay2 in https://github.com/dunay2/dvt/pull/2226
+* feat(web): Complete localized Canvas workbench UX by @dunay2 in https://github.com/dunay2/dvt/pull/2248
+* fix(web): Localize Canvas operational drawer by @dunay2 in https://github.com/dunay2/dvt/pull/2250
+* docs: Project repository map from Git and Planning DB by @dunay2 in https://github.com/dunay2/dvt/pull/2150
+* feat(ci): Cut Planning DB over to current schema by @dunay2 in https://github.com/dunay2/dvt/pull/2252
+* test(temporal): Make cancellation integration deterministic by @dunay2 in https://github.com/dunay2/dvt/pull/2276
+* feat(contracts): Harden connected-source product truth by @dunay2 in https://github.com/dunay2/dvt/pull/2258
+* refactor(web): Harden Canvas Node Workbench interaction by @dunay2 in https://github.com/dunay2/dvt/pull/2266
+* refactor(web): Converge Canvas node interaction on Properties by @dunay2 in https://github.com/dunay2/dvt/pull/2278
+* fix(web): Complete Canvas node Properties live proof by @dunay2 in https://github.com/dunay2/dvt/pull/2287
+* feat(docs): Publish DB-first documentation on demand by @dunay2 in https://github.com/dunay2/dvt/pull/2288
+* feat(docs): Generate the Component Map from Planning DB by @dunay2 in https://github.com/dunay2/dvt/pull/2289
+* feat(docs): Generate feature traceability from Planning DB by @dunay2 in https://github.com/dunay2/dvt/pull/2290
+* feat(docs): Generate System Delivery Status from DB facts by @dunay2 in https://github.com/dunay2/dvt/pull/2292
+* feat(docs): Enforce DB-owned documentation lifecycle by @dunay2 in https://github.com/dunay2/dvt/pull/2294
+* docs(docs): Harden active provider documentation truth by @dunay2 in https://github.com/dunay2/dvt/pull/2295
+* refactor(api): Retire compiled API governance by @dunay2 in https://github.com/dunay2/dvt/pull/2296
+* fix(api): Require explicit route operational dependencies by @dunay2 in https://github.com/dunay2/dvt/pull/2297
+* feat(ci): Classify API production reachability by @dunay2 in https://github.com/dunay2/dvt/pull/2298
+* refactor(api): Disposition inert API implementations by @dunay2 in https://github.com/dunay2/dvt/pull/2299
+* feat(docs): Enforce DB-first document evidence authority by @dunay2 in https://github.com/dunay2/dvt/pull/2300
+* fix(web): Localize and unclip Source Import by @dunay2 in https://github.com/dunay2/dvt/pull/2304
+* fix(web): Keep Source Import actions visible by @dunay2 in https://github.com/dunay2/dvt/pull/2305
+* feat(web): Complete Node Properties authoring roundtrip by @dunay2 in https://github.com/dunay2/dvt/pull/2307
+* refactor(web): Converge Canvas contextual interaction surfaces by @dunay2 in https://github.com/dunay2/dvt/pull/2311
+* fix(planner): Retire removed Canvas primitive authority by @dunay2 in https://github.com/dunay2/dvt/pull/2315
+* feat(planner): Add governed source content refresh rail by @dunay2 in https://github.com/dunay2/dvt/pull/2316
+* ci(ci): Remove inert PR work and implicit docs publication by @dunay2 in https://github.com/dunay2/dvt/pull/2314
+* fix(web): Remove redundant Node Properties code chrome by @dunay2 in https://github.com/dunay2/dvt/pull/2320
+* fix(web): Remove redundant General section chrome by @dunay2 in https://github.com/dunay2/dvt/pull/2322
+* fix(ci): Route heavyweight validation by affected product scope by @dunay2 in https://github.com/dunay2/dvt/pull/2323
+* refactor(api): Converge stored plan authority by @dunay2 in https://github.com/dunay2/dvt/pull/2324
+* refactor(api): Collapse plan lifecycle rail by @dunay2 in https://github.com/dunay2/dvt/pull/2325
+* refactor(api): Collapse run lifecycle to canonical rails by @dunay2 in https://github.com/dunay2/dvt/pull/2326
+* refactor(api): Converge project workspace and graph authority by @dunay2 in https://github.com/dunay2/dvt/pull/2334
+* fix(web): Align DVT properties with executable consumers by @dunay2 in https://github.com/dunay2/dvt/pull/2336
+* fix(ci): Keep local project onboarding grant-governed by @dunay2 in https://github.com/dunay2/dvt/pull/2337
+* fix(ci): Recognize explicit Test command rails by @dunay2 in https://github.com/dunay2/dvt/pull/2339
+* feat(ci): Add architecture responsibility retirement rail by @dunay2 in https://github.com/dunay2/dvt/pull/2342
+* fix(ci): Align responsibility lifecycle with component state by @dunay2 in https://github.com/dunay2/dvt/pull/2344
+* fix(ci): Admit responsibility retirement audit rows by @dunay2 in https://github.com/dunay2/dvt/pull/2345
+* fix(ci): Measure Planning DB snapshots semantically by @dunay2 in https://github.com/dunay2/dvt/pull/2347
+* fix(web): Simplify organization selection in project onboarding by @dunay2 in https://github.com/dunay2/dvt/pull/2349
+* feat(web): Add active project creation flow by @dunay2 in https://github.com/dunay2/dvt/pull/2356
+* fix(web): Clarify and standardize project creation by @dunay2 in https://github.com/dunay2/dvt/pull/2358
+* fix(web): Consolidate Canvas properties into one contextual window by @dunay2 in https://github.com/dunay2/dvt/pull/2361
+* fix(web): Compact successful connection-test feedback by @dunay2 in https://github.com/dunay2/dvt/pull/2363
+* fix(web): Make Canvas node tags actionable by @dunay2 in https://github.com/dunay2/dvt/pull/2365
+* feat(web): Allow renaming governed warehouse connections by @dunay2 in https://github.com/dunay2/dvt/pull/2368
+* feat(adapters): Bind SQL-first execution to governed PostgreSQL connections by @dunay2 in https://github.com/dunay2/dvt/pull/2340
+* fix(web): Anchor Source Import connection feedback by @dunay2 in https://github.com/dunay2/dvt/pull/2370
+* fix(web): Explain duplicate warehouse connection creation by @dunay2 in https://github.com/dunay2/dvt/pull/2372
+* fix(web): Explain invalid warehouse credential references by @dunay2 in https://github.com/dunay2/dvt/pull/2376
+* fix(web): Show imported table names on Canvas cards by @dunay2 in https://github.com/dunay2/dvt/pull/2378
+* feat(web): Show governed source identity on table title by @dunay2 in https://github.com/dunay2/dvt/pull/2380
+* fix(web): Remove execution toggle from node cards by @dunay2 in https://github.com/dunay2/dvt/pull/2388
+* fix(web): Separate Impact Highlight from execution selection by @dunay2 in https://github.com/dunay2/dvt/pull/2390
+* test(web): Restore CanvasShell QueryClient test authority by @dunay2 in https://github.com/dunay2/dvt/pull/2393
+* fix(web): Bound Canvas card columns to five rows by @dunay2 in https://github.com/dunay2/dvt/pull/2394
+* fix(web): Open backing files from Canvas cards by @dunay2 in https://github.com/dunay2/dvt/pull/2396
+* feat(web): Bind imported dbt sources to governed connections by @dunay2 in https://github.com/dunay2/dvt/pull/2398
+* fix(api): Emit dbt source metadata through config by @dunay2 in https://github.com/dunay2/dvt/pull/2402
+* feat(web): Embed node code in Properties by @dunay2 in https://github.com/dunay2/dvt/pull/2405
+* feat(contracts): Add visual transform recipe authority by @dunay2 in https://github.com/dunay2/dvt/pull/2406
+* feat(web): Add governed column lineage mappings by @dunay2 in https://github.com/dunay2/dvt/pull/2407
+* fix(ci): Stop evidence from triggering executable self-tests by @dunay2 in https://github.com/dunay2/dvt/pull/2409
+* feat(web): Open bounded source samples from Canvas nodes by @dunay2 in https://github.com/dunay2/dvt/pull/2418
+* fix(web): Stabilize expanded node anchors and Raven icons by @dunay2 in https://github.com/dunay2/dvt/pull/2413
+* fix(web): Localize node operational summaries by @dunay2 in https://github.com/dunay2/dvt/pull/2416
+* feat(web): Compile visual recipes for Preview by @dunay2 in https://github.com/dunay2/dvt/pull/2419
+* fix(web): Map columns when confirming stage links by @dunay2 in https://github.com/dunay2/dvt/pull/2414
+* fix(web): Compact Source Import table selection by @dunay2 in https://github.com/dunay2/dvt/pull/2421
+* fix(web): Localize Runs workbench tokens by @dunay2 in https://github.com/dunay2/dvt/pull/2423
+* feat(web): Organize run details into semantic tabs by @dunay2 in https://github.com/dunay2/dvt/pull/2425
+* fix(temporal): Preserve terminal events during native cancellation by @dunay2 in https://github.com/dunay2/dvt/pull/2427
+* fix(web): Render generated node SQL with shared Monaco by @dunay2 in https://github.com/dunay2/dvt/pull/2428
+* fix(web): Localize the complete execution preview modal by @dunay2 in https://github.com/dunay2/dvt/pull/2430
+* fix(web): Use grab cursors for Canvas connectors by @dunay2 in https://github.com/dunay2/dvt/pull/2432
+* fix(web): Use provider-neutral Canvas connection labels by @dunay2 in https://github.com/dunay2/dvt/pull/2434
+* fix(web): Keep renamed source title consistent by @dunay2 in https://github.com/dunay2/dvt/pull/2436
+* fix(web): Keep imported source identity read-only by @dunay2 in https://github.com/dunay2/dvt/pull/2438
+* fix(web): Keep source sample values inside a readable grid by @dunay2 in https://github.com/dunay2/dvt/pull/2440
+* fix(web): Describe recovery as running the plan again by @dunay2 in https://github.com/dunay2/dvt/pull/2442
+* fix(web): Project current run status on Canvas node cards by @dunay2 in https://github.com/dunay2/dvt/pull/2444
+* feat(web): Show bounded materialized result rows by @dunay2 in https://github.com/dunay2/dvt/pull/2446
+* feat(web): Show current sink schema and results by @dunay2 in https://github.com/dunay2/dvt/pull/2448
+* fix(api): Reconcile source YAML after node removal by @dunay2 in https://github.com/dunay2/dvt/pull/2449
+* test(web): Run selected closure proofs without Docker by @dunay2 in https://github.com/dunay2/dvt/pull/2450
+* fix(web): Resolve DBT node files inside the active project root by @dunay2 in https://github.com/dunay2/dvt/pull/2452
+* fix(api): Project DBT sources through the canonical graph boundary by @dunay2 in https://github.com/dunay2/dvt/pull/2453
+* fix(web): Restore the Canvas graph handler boundary by @dunay2 in https://github.com/dunay2/dvt/pull/2455
+* fix(web): Stabilize large Canvas graph layout by @dunay2 in https://github.com/dunay2/dvt/pull/2457
+* feat(api): Bind DBT targets to governed connections by @dunay2 in https://github.com/dunay2/dvt/pull/2456
+* fix(web): Restore persisted sink result truth by @dunay2 in https://github.com/dunay2/dvt/pull/2458
+* feat(web): Edit visual recipes in node properties by @dunay2 in https://github.com/dunay2/dvt/pull/2459
+* feat(web): Convert visual transforms to SQL authority by @dunay2 in https://github.com/dunay2/dvt/pull/2460
+* fix(web): Hide invalid SQL lineage controls by @dunay2 in https://github.com/dunay2/dvt/pull/2461
+* feat(api): Validate PostgreSQL transform SQL readiness by @dunay2 in https://github.com/dunay2/dvt/pull/2462
+* fix(web): Preserve converted SQL column lineage by @dunay2 in https://github.com/dunay2/dvt/pull/2463
+* fix(web): Persist edge removal through graph lifecycle by @dunay2 in https://github.com/dunay2/dvt/pull/2464
+* fix(web): Simplify source browser density by @dunay2 in https://github.com/dunay2/dvt/pull/2465
+* fix(web): Collapse source schemas on demand by @dunay2 in https://github.com/dunay2/dvt/pull/2466
+* fix(web): Centralize Canvas connection admission by @dunay2 in https://github.com/dunay2/dvt/pull/2467
+* fix(web): Localize connection rejection feedback by @dunay2 in https://github.com/dunay2/dvt/pull/2468
+* test(web): Cover the complete DVT connection matrix by @dunay2 in https://github.com/dunay2/dvt/pull/2469
+* test(web): Cover the complete dbt connection matrix by @dunay2 in https://github.com/dunay2/dvt/pull/2470
+* test(web): Prove the heterogeneous bridge through Canvas by @dunay2 in https://github.com/dunay2/dvt/pull/2471
+* test(web): Prove persisted edges across reload and inspector by @dunay2 in https://github.com/dunay2/dvt/pull/2472
+* fix(web): Project persisted Canvas edges into Preview by @dunay2 in https://github.com/dunay2/dvt/pull/2475
+* test(web): Prove removed edges stay absent after reload by @dunay2 in https://github.com/dunay2/dvt/pull/2476
+* test(web): Prove upstream column reprojection after reconnect by @dunay2 in https://github.com/dunay2/dvt/pull/2480
+* test(web): Prove rejected edges stop at Canvas boundaries by @dunay2 in https://github.com/dunay2/dvt/pull/2481
+* fix(web): Retire the unsupported Cost graph bridge by @dunay2 in https://github.com/dunay2/dvt/pull/2482
+* fix(web): Retire the unsupported dbt to DVT bridge by @dunay2 in https://github.com/dunay2/dvt/pull/2483
+* fix(web): Retire the unsupported DVT to dbt bridge by @dunay2 in https://github.com/dunay2/dvt/pull/2485
+* test(web): Prove Object-file runtime isolation by @dunay2 in https://github.com/dunay2/dvt/pull/2503
+* fix(web): Limit dbt manual authoring catalog by @dunay2 in https://github.com/dunay2/dvt/pull/2520
+* fix(web): Localize HTTP JSON authoring fields by @dunay2 in https://github.com/dunay2/dvt/pull/2522
+* fix(web): Explain Object-file size limits by @dunay2 in https://github.com/dunay2/dvt/pull/2526
+* fix(web): Explain HTTP expected-size limits by @dunay2 in https://github.com/dunay2/dvt/pull/2528
+* fix(web): Complete whole-byte validation copy by @dunay2 in https://github.com/dunay2/dvt/pull/2530
+* fix(web): Complete HTTP timeout validation copy by @dunay2 in https://github.com/dunay2/dvt/pull/2534
+* fix(web): Bind artifact authoring to workspace scope by @dunay2 in https://github.com/dunay2/dvt/pull/2536
+* test(web): Prove plugin authoring field parity by @dunay2 in https://github.com/dunay2/dvt/pull/2541
+* fix(web): Reuse Monaco for dbt model SQL by @dunay2 in https://github.com/dunay2/dvt/pull/2543
+* test(web): Align Workbench DBT SQL tests with Monaco by @dunay2 in https://github.com/dunay2/dvt/pull/2545
+* feat(api): Compile Graph Draft DBT models before Preview by @dunay2 in https://github.com/dunay2/dvt/pull/2547
+* fix(web): Bind DBT test columns to connected targets by @dunay2 in https://github.com/dunay2/dvt/pull/2549
+* fix(web): Project canonical DBT tests in Workbench by @dunay2 in https://github.com/dunay2/dvt/pull/2551
+* fix(web): Keep workbench property columns readable by @dunay2 in https://github.com/dunay2/dvt/pull/2554
+* fix(web): Simplify SQL transform properties by @dunay2 in https://github.com/dunay2/dvt/pull/2558
+* fix(web): Make Canvas dependency direction legible by @dunay2 in https://github.com/dunay2/dvt/pull/2556
+* refactor(planner): Retire tracked Planning DB snapshot by @dunay2 in https://github.com/dunay2/dvt/pull/2560
+* fix(docs): Exclude generated planning pages from docs manifest by @dunay2 in https://github.com/dunay2/dvt/pull/2562
+* fix(web): Keep DBT Preview stable after source import by @dunay2 in https://github.com/dunay2/dvt/pull/2564
+* fix(web): Keep Canvas interaction and column facts legible by @dunay2 in https://github.com/dunay2/dvt/pull/2566
+* fix(web): Keep REST health signal at right edge by @dunay2 in https://github.com/dunay2/dvt/pull/2577
+* fix(web): Generate explicit DBT model columns by @dunay2 in https://github.com/dunay2/dvt/pull/2584
+* fix(web): Project DBT model-to-snapshot column lineage by @dunay2 in https://github.com/dunay2/dvt/pull/2592
+* refactor(planner): Retire obsolete planner contracts workspace by @dunay2 in https://github.com/dunay2/dvt/pull/2593
+* refactor(web): Retire Canvas legacy route intent by @dunay2 in https://github.com/dunay2/dvt/pull/2601
+* test(web): Harden Monaco authority boundaries by @dunay2 in https://github.com/dunay2/dvt/pull/2602
+* fix(web): Restore HET plugin authoring proof by @dunay2 in https://github.com/dunay2/dvt/pull/2604
+* feat(deps): Establish crypto primitive authority by @dunay2 in https://github.com/dunay2/dvt/pull/2605
+* refactor(deps): Retire Cut 1 crypto duplicates by @dunay2 in https://github.com/dunay2/dvt/pull/2606
+* refactor(deps): Retire duplicate command identity mechanics by @dunay2 in https://github.com/dunay2/dvt/pull/2607
+* refactor(ci): Retire duplicate tooling crypto mechanics by @dunay2 in https://github.com/dunay2/dvt/pull/2608
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.6.0...v0.7.0
+
 ## 0.6.0 (2026-08-04)
 
 ## What's Changed
