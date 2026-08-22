@@ -96,6 +96,77 @@ const RECIPE: VisualTransformRecipeV1 = {
   ],
 };
 
+const GROUPED_RECIPE: VisualTransformRecipeV1 = {
+  version: 'v1',
+  outputs: [
+    {
+      id: 'output-country',
+      name: 'country',
+      expression: {
+        inputs: [{ nodeId: 'source-orders', columnName: 'country' }],
+        operations: [{ kind: 'passthrough' }],
+      },
+    },
+    {
+      id: 'output-customers',
+      name: 'customers',
+      expression: {
+        inputs: [{ nodeId: 'source-orders', columnName: 'customer_id' }],
+        operations: [{ kind: 'aggregate', functionId: 'count', distinct: true }],
+      },
+    },
+    {
+      id: 'output-orders',
+      name: 'orders',
+      expression: {
+        inputs: [{ nodeId: 'source-orders', columnName: 'order_id' }],
+        operations: [{ kind: 'aggregate', functionId: 'count' }],
+      },
+    },
+    {
+      id: 'output-revenue',
+      name: 'revenue',
+      expression: {
+        inputs: [{ nodeId: 'source-orders', columnName: 'amount' }],
+        operations: [{ kind: 'aggregate', functionId: 'sum' }],
+      },
+    },
+    {
+      id: 'output-average-ticket',
+      name: 'avg_ticket',
+      expression: {
+        inputs: [{ nodeId: 'source-orders', columnName: 'amount' }],
+        operations: [{ kind: 'aggregate', functionId: 'avg' }],
+      },
+    },
+    {
+      id: 'output-rows',
+      name: 'rows',
+      expression: {
+        inputs: [],
+        operations: [{ kind: 'aggregate', functionId: 'count' }],
+      },
+    },
+  ],
+  filters: [
+    {
+      id: 'filter-paid',
+      input: { nodeId: 'source-orders', columnName: 'status' },
+      operator: 'equals',
+      value: 'PAID',
+    },
+  ],
+  groupBy: ['output-country'],
+  having: [
+    {
+      id: 'having-orders',
+      outputId: 'output-orders',
+      operator: 'greater_than',
+      value: 10,
+    },
+  ],
+};
+
 describe('Visual transform PostgreSQL compiler', () => {
   it('compiles the bounded V1 recipe into deterministic, safely quoted SQL', () => {
     const sql = compileVisualTransformRecipeToPostgresSql({
@@ -124,6 +195,30 @@ describe('Visual transform PostgreSQL compiler', () => {
         sourceBinding: { ...SOURCE_BINDING },
       })
     ).toBe(sql);
+  });
+
+  it('compiles GROUP BY, bounded aggregates, COUNT(*) and HAVING through the same compiler', () => {
+    const sql = compileVisualTransformRecipeToPostgresSql({
+      recipe: GROUPED_RECIPE,
+      sourceBinding: SOURCE_BINDING,
+    });
+
+    expect(sql).toBe(
+      [
+        'select',
+        '  "source orders"."country" as "country",',
+        '  count(distinct "source orders"."customer_id") as "customers",',
+        '  count("source orders"."order_id") as "orders",',
+        '  sum("source orders"."amount") as "revenue",',
+        '  avg("source orders"."amount") as "avg_ticket",',
+        '  count(*) as "rows"',
+        'from "raw"."orders" as "source orders"',
+        `where "source orders"."status" = 'PAID'`,
+        'group by "source orders"."country"',
+        'having count("source orders"."order_id") > 10;',
+        '',
+      ].join('\n')
+    );
   });
 
   it('fails closed for missing outputs, unrelated inputs, unsafe casts, and invalid function args', () => {
@@ -181,6 +276,36 @@ describe('Visual transform PostgreSQL compiler', () => {
         compileVisualTransformRecipeToPostgresSql({ recipe, sourceBinding: SOURCE_BINDING })
       ).toThrowError(expect.objectContaining({ code: expectedCode }));
     }
+  });
+
+  it('fails closed for invalid aggregate and mixed-grain recipes', () => {
+    const mixedGrain: VisualTransformRecipeV1 = {
+      ...GROUPED_RECIPE,
+      groupBy: [],
+    };
+    const distinctStar: VisualTransformRecipeV1 = {
+      ...GROUPED_RECIPE,
+      outputs: [
+        GROUPED_RECIPE.outputs[0]!,
+        {
+          id: 'output-invalid',
+          name: 'invalid',
+          expression: {
+            inputs: [],
+            operations: [{ kind: 'aggregate', functionId: 'count', distinct: true }],
+          },
+        },
+      ],
+      groupBy: ['output-country'],
+      having: [],
+    };
+
+    expect(() =>
+      compileVisualTransformRecipeToPostgresSql({ recipe: mixedGrain, sourceBinding: SOURCE_BINDING })
+    ).toThrowError(expect.objectContaining({ code: 'invalid_group_by' }));
+    expect(() =>
+      compileVisualTransformRecipeToPostgresSql({ recipe: distinctStar, sourceBinding: SOURCE_BINDING })
+    ).toThrowError(expect.objectContaining({ code: 'invalid_aggregate' }));
   });
 
   it('does not let constant operations silently discard lineage inputs', () => {
