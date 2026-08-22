@@ -232,6 +232,18 @@ const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
     expectedViolation: 'MonacoCodeSurface',
   },
   {
+    label: 'Templates route cannot hide a Monaco Vite glob behind a static base option',
+    surface: 'templates-route',
+    modulePath: 'views/templates/TemplatesRouteWorkbench.tsx',
+    source: [
+      "void import.meta.glob('./*.tsx', {",
+      "  base: '../../components/monaco',",
+      '  eager: true,',
+      '});',
+    ].join('\n'),
+    expectedViolation: 'MonacoCodeSurface',
+  },
+  {
     label: 'Canvas route cannot acquire raw Monaco runtime authority',
     surface: 'canvas-production',
     modulePath: 'views/Canvas.tsx',
@@ -264,6 +276,17 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
     source:
       "export const panels = import.meta.glob('../../../app/components/monaco/MonacoCodeSurface.tsx', { eager: true });",
+    expectedViolation: 'MonacoCodeSurface outside a governed owner',
+  },
+  {
+    label: 'A capability cannot relocate a Monaco Vite glob through its base option',
+    modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
+    source: [
+      "export const panels = import.meta.glob(['./*.tsx'], {",
+      "  base: '../../../app/components/monaco',",
+      '  eager: true,',
+      '});',
+    ].join('\n'),
     expectedViolation: 'MonacoCodeSurface outside a governed owner',
   },
 ] as const;
@@ -339,6 +362,46 @@ function collectRuntimeModuleSpecifiers(emittedSource: string): ReadonlySet<stri
     );
   }
 
+  function readStaticViteGlobBase(node: ts.CallExpression): string | undefined {
+    const options = node.arguments[1];
+    if (!options || !ts.isObjectLiteralExpression(options)) return undefined;
+
+    for (const property of options.properties) {
+      if (!ts.isPropertyAssignment(property)) continue;
+
+      const propertyName = property.name;
+      const isBaseProperty =
+        (ts.isIdentifier(propertyName) && propertyName.text === 'base') ||
+        (ts.isStringLiteralLike(propertyName) && propertyName.text === 'base');
+      if (isBaseProperty && ts.isStringLiteralLike(property.initializer)) {
+        return property.initializer.text;
+      }
+    }
+
+    return undefined;
+  }
+
+  function addViteGlobSpecifiers(node: ts.CallExpression): void {
+    const patterns = new Set<string>();
+    const pattern = node.arguments[0];
+    if (pattern) {
+      if (ts.isStringLiteralLike(pattern)) patterns.add(pattern.text);
+      if (ts.isArrayLiteralExpression(pattern)) {
+        for (const element of pattern.elements) {
+          if (ts.isStringLiteralLike(element)) patterns.add(element.text);
+        }
+      }
+    }
+
+    const base = readStaticViteGlobBase(node)?.replaceAll('\\', '/');
+    for (const globPattern of patterns) {
+      runtimeModuleSpecifiers.add(globPattern);
+      if (base && globPattern.startsWith('.')) {
+        runtimeModuleSpecifiers.add(path.posix.join(base, globPattern));
+      }
+    }
+  }
+
   function visit(node: ts.Node): void {
     if (ts.isImportDeclaration(node)) {
       addSpecifier(node.moduleSpecifier);
@@ -350,15 +413,19 @@ function collectRuntimeModuleSpecifiers(emittedSource: string): ReadonlySet<stri
       return;
     }
 
-    if (
-      ts.isCallExpression(node) &&
-      (node.expression.kind === ts.SyntaxKind.ImportKeyword ||
-        (ts.isIdentifier(node.expression) && node.expression.text === 'require') ||
-        isViteGlobCall(node)) &&
-      node.arguments[0]
-    ) {
-      addSpecifier(node.arguments[0]);
-      return;
+    if (ts.isCallExpression(node) && node.arguments[0]) {
+      if (isViteGlobCall(node)) {
+        addViteGlobSpecifiers(node);
+        return;
+      }
+
+      if (
+        node.expression.kind === ts.SyntaxKind.ImportKeyword ||
+        (ts.isIdentifier(node.expression) && node.expression.text === 'require')
+      ) {
+        addSpecifier(node.arguments[0]);
+        return;
+      }
     }
 
     ts.forEachChild(node, visit);
