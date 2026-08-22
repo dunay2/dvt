@@ -6,6 +6,7 @@ import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../../..');
+const WEB_SOURCE_ROOT = path.resolve(__dirname, '../../..');
 const APP_ROOT = path.resolve(__dirname, '../..');
 
 type MonacoAuthoritySurface = 'templates-route' | 'templates-preview' | 'canvas-production';
@@ -33,31 +34,35 @@ const MONACO_INTERNAL_AUTHORITIES = [
 const MONACO_AUTHORITY_SOURCE_SIGNALS = [
   '@monaco-editor/react',
   'monaco-editor',
+  'import.meta.glob',
   ...MONACO_INTERNAL_AUTHORITIES,
 ] as const;
 const MONACO_RUNTIME_AUTHORITY_OWNERS = {
   '@monaco-editor/react': new Set([
-    'components/monaco/MonacoCodeSurface.tsx',
-    'components/monaco/MonacoDiffSurface.tsx',
-    'components/monaco/monacoLocalWorkers.ts',
+    'app/components/monaco/MonacoCodeSurface.tsx',
+    'app/components/monaco/MonacoDiffSurface.tsx',
+    'app/components/monaco/monacoLocalWorkers.ts',
   ]),
-  'monaco-editor runtime import': new Set(['components/monaco/monacoLocalWorkers.ts']),
+  'monaco-editor runtime import': new Set(['app/components/monaco/monacoLocalWorkers.ts']),
   MonacoCodeEditor: new Set([
-    ...CANVAS_MONACO_EDITOR_OWNERS,
-    'views/code/CodeWorkspaceFileSurface.tsx',
+    ...[...CANVAS_MONACO_EDITOR_OWNERS].map((owner) => `app/${owner}`),
+    'app/views/code/CodeWorkspaceFileSurface.tsx',
   ]),
   MonacoCodeViewer: new Set([
-    TEMPLATES_MONACO_PREVIEW_OWNER,
-    'components/inspector/NodePropertySectionView.tsx',
-    'views/artifacts/ArtifactMonacoPreviewPanel.tsx',
-    'views/code/CodeWorkspaceFileSurface.tsx',
+    `app/${TEMPLATES_MONACO_PREVIEW_OWNER}`,
+    'app/components/inspector/NodePropertySectionView.tsx',
+    'app/views/artifacts/ArtifactMonacoPreviewPanel.tsx',
+    'app/views/code/CodeWorkspaceFileSurface.tsx',
   ]),
-  MonacoDiffViewer: new Set(['views/diff/CatalogDiffPanel.tsx', 'views/diff/SqlDiffPanel.tsx']),
-  MonacoCodeSurface: new Set(['components/monaco/useMonacoCodeSurface.ts']),
-  MonacoDiffSurface: new Set(['components/monaco/MonacoDiffViewer.tsx']),
+  MonacoDiffViewer: new Set([
+    'app/views/diff/CatalogDiffPanel.tsx',
+    'app/views/diff/SqlDiffPanel.tsx',
+  ]),
+  MonacoCodeSurface: new Set(['app/components/monaco/useMonacoCodeSurface.ts']),
+  MonacoDiffSurface: new Set(['app/components/monaco/MonacoDiffViewer.tsx']),
   useMonacoCodeSurface: new Set([
-    'components/monaco/MonacoCodeEditor.tsx',
-    'components/monaco/MonacoCodeViewer.tsx',
+    'app/components/monaco/MonacoCodeEditor.tsx',
+    'app/components/monaco/MonacoCodeViewer.tsx',
   ]),
 } as const;
 
@@ -212,6 +217,21 @@ const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
     expectedViolation: 'MonacoDiffSurface',
   },
   {
+    label: 'Templates route cannot eagerly load a Monaco surface through a Vite glob',
+    surface: 'templates-route',
+    modulePath: 'views/templates/TemplatesRouteWorkbench.tsx',
+    source:
+      "void import.meta.glob('../../components/monaco/MonacoCodeSurface.tsx', { eager: true });",
+    expectedViolation: 'MonacoCodeSurface',
+  },
+  {
+    label: 'Canvas production cannot load Monaco surfaces through the legacy Vite glob helper',
+    surface: 'canvas-production',
+    modulePath: 'views/canvas/CanvasShell.tsx',
+    source: "void import.meta.globEager('../../components/monaco/*.tsx');",
+    expectedViolation: 'MonacoCodeSurface',
+  },
+  {
     label: 'Canvas route cannot acquire raw Monaco runtime authority',
     surface: 'canvas-production',
     modulePath: 'views/Canvas.tsx',
@@ -226,7 +246,7 @@ const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
 const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
   {
     label: 'An external wrapper cannot become an editable Monaco gateway',
-    modulePath: 'components/EditableCodePanel.tsx',
+    modulePath: 'app/components/EditableCodePanel.tsx',
     source: [
       "import { MonacoCodeEditor } from './monaco/MonacoCodeEditor';",
       'export const EditableCodePanel = MonacoCodeEditor;',
@@ -235,9 +255,16 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
   },
   {
     label: 'An external wrapper cannot import the raw Monaco React package',
-    modulePath: 'components/RawMonacoPanel.tsx',
+    modulePath: 'app/components/RawMonacoPanel.tsx',
     source: ["import Editor from '@monaco-editor/react';", 'void Editor;'].join('\n'),
     expectedViolation: '@monaco-editor/react outside a governed owner',
+  },
+  {
+    label: 'A capability cannot hide a Monaco surface behind a Vite glob wrapper',
+    modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
+    source:
+      "export const panels = import.meta.glob('../../../app/components/monaco/MonacoCodeSurface.tsx', { eager: true });",
+    expectedViolation: 'MonacoCodeSurface outside a governed owner',
   },
 ] as const;
 
@@ -286,7 +313,30 @@ function collectRuntimeModuleSpecifiers(emittedSource: string): ReadonlySet<stri
   const runtimeModuleSpecifiers = new Set<string>();
 
   function addSpecifier(node: ts.Expression): void {
-    if (ts.isStringLiteralLike(node)) runtimeModuleSpecifiers.add(node.text);
+    if (ts.isStringLiteralLike(node)) {
+      runtimeModuleSpecifiers.add(node.text);
+      return;
+    }
+
+    if (ts.isArrayLiteralExpression(node)) {
+      for (const element of node.elements) {
+        if (ts.isStringLiteralLike(element)) runtimeModuleSpecifiers.add(element.text);
+      }
+    }
+  }
+
+  function isViteGlobCall(node: ts.CallExpression): boolean {
+    if (!ts.isPropertyAccessExpression(node.expression)) return false;
+    if (node.expression.name.text !== 'glob' && node.expression.name.text !== 'globEager') {
+      return false;
+    }
+
+    const receiver = node.expression.expression;
+    return (
+      ts.isMetaProperty(receiver) &&
+      receiver.keywordToken === ts.SyntaxKind.ImportKeyword &&
+      receiver.name.text === 'meta'
+    );
   }
 
   function visit(node: ts.Node): void {
@@ -303,7 +353,8 @@ function collectRuntimeModuleSpecifiers(emittedSource: string): ReadonlySet<stri
     if (
       ts.isCallExpression(node) &&
       (node.expression.kind === ts.SyntaxKind.ImportKeyword ||
-        (ts.isIdentifier(node.expression) && node.expression.text === 'require')) &&
+        (ts.isIdentifier(node.expression) && node.expression.text === 'require') ||
+        isViteGlobCall(node)) &&
       node.arguments[0]
     ) {
       addSpecifier(node.arguments[0]);
@@ -339,8 +390,17 @@ function containsInternalAuthoritySpecifier(
   authority: (typeof MONACO_INTERNAL_AUTHORITIES)[number]
 ): boolean {
   return [...specifiers].some((specifier) => {
-    const moduleName = specifier.replaceAll('\\', '/').split('/').at(-1);
-    return moduleName?.replace(/\.[cm]?[jt]sx?$/, '') === authority;
+    const normalizedSpecifier = specifier.replaceAll('\\', '/');
+    const moduleName = normalizedSpecifier.split('/').at(-1);
+    if (moduleName?.replace(/\.[cm]?[jt]sx?$/, '') === authority) return true;
+
+    if (!normalizedSpecifier.includes('/monaco/') || !moduleName) return false;
+
+    const modulePattern = moduleName.replace(/\.[cm]?[jt]sx?$/, '');
+    if (!/[*?[\]{}]/.test(modulePattern)) return false;
+
+    const staticPrefix = modulePattern.split(/[*?[\]{}]/, 1)[0] ?? '';
+    return staticPrefix === '' || authority.startsWith(staticPrefix);
   });
 }
 
@@ -613,14 +673,14 @@ describe('Templates Monaco preview architecture', () => {
       ).toEqual([]);
     }
 
-    for (const appModule of collectProductionSourceFiles(APP_ROOT)) {
-      const modulePath = path.relative(APP_ROOT, appModule).replaceAll('\\', '/');
-      if (modulePath.includes('/test/')) continue;
+    for (const sourceModule of collectProductionSourceFiles(WEB_SOURCE_ROOT)) {
+      const modulePath = path.relative(WEB_SOURCE_ROOT, sourceModule).replaceAll('\\', '/');
+      if (/(^|\/)test(ing)?\//.test(modulePath)) continue;
 
       expect(
         collectRepositoryMonacoOwnerViolations({
           modulePath,
-          source: readFileSync(appModule, 'utf8'),
+          source: readFileSync(sourceModule, 'utf8'),
         }),
         modulePath
       ).toEqual([]);
