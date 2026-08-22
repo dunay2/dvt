@@ -18,8 +18,6 @@ type Het1RunEventResponse = Readonly<{
   items?: readonly Het1RunEvent[];
 }>;
 
-const MAX_RUN_STATUS_POLL_ATTEMPTS = 300;
-
 export function readHet1RunEvents(runId: string): Cypress.Chainable<readonly Het1RunEvent[]> {
   return readLiveRunEvents(runId).then((response) => {
     expect(response.status).to.equal(200);
@@ -53,7 +51,7 @@ export function waitForHet1RunStatus(
         );
       });
     }
-    if (attempt >= MAX_RUN_STATUS_POLL_ATTEMPTS) {
+    if (attempt >= 120) {
       throw new Error(`Timed out waiting for HET1 live run ${runId} to become ${expectedStatus}.`);
     }
 
