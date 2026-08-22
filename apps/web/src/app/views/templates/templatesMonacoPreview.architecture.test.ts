@@ -40,7 +40,11 @@ const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
     label: 'Canvas production may consume Monaco compile-time types without runtime authority',
     surface: 'canvas-production',
     modulePath: 'views/canvas/canvasMonacoTypes.ts',
-    source: "import type { editor } from 'monaco-editor';",
+    source: [
+      "import type { editor } from 'monaco-editor';",
+      "import { type IDisposable } from 'monaco-editor';",
+      "export { type IPosition } from 'monaco-editor';",
+    ].join('\n'),
   },
 ];
 
@@ -129,6 +133,8 @@ function collectProductionSourceFiles(root: string): string[] {
 }
 
 function hasRuntimeMonacoPackageImport(source: string): boolean {
+  if (!source.includes('monaco-editor')) return false;
+
   const sourceFile = ts.createSourceFile(
     'monaco-authority-fixture.tsx',
     source,
@@ -145,11 +151,36 @@ function hasRuntimeMonacoPackageImport(source: string): boolean {
     );
   }
 
+  function importDeclarationHasRuntimeBindings(node: ts.ImportDeclaration): boolean {
+    const importClause = node.importClause;
+    if (!importClause) return true;
+    if (importClause.isTypeOnly) return false;
+    if (importClause.name) return true;
+
+    const namedBindings = importClause.namedBindings;
+    return (
+      !namedBindings ||
+      !ts.isNamedImports(namedBindings) ||
+      namedBindings.elements.some((specifier) => !specifier.isTypeOnly)
+    );
+  }
+
+  function exportDeclarationHasRuntimeBindings(node: ts.ExportDeclaration): boolean {
+    if (node.isTypeOnly) return false;
+
+    const exportClause = node.exportClause;
+    return (
+      !exportClause ||
+      !ts.isNamedExports(exportClause) ||
+      exportClause.elements.some((specifier) => !specifier.isTypeOnly)
+    );
+  }
+
   function visit(node: ts.Node): void {
     if (
       ts.isImportDeclaration(node) &&
       isRawMonacoSpecifier(node.moduleSpecifier) &&
-      !node.importClause?.isTypeOnly
+      importDeclarationHasRuntimeBindings(node)
     ) {
       hasRuntimeImport = true;
       return;
@@ -159,7 +190,18 @@ function hasRuntimeMonacoPackageImport(source: string): boolean {
       ts.isExportDeclaration(node) &&
       node.moduleSpecifier &&
       isRawMonacoSpecifier(node.moduleSpecifier) &&
-      !node.isTypeOnly
+      exportDeclarationHasRuntimeBindings(node)
+    ) {
+      hasRuntimeImport = true;
+      return;
+    }
+
+    if (
+      ts.isImportEqualsDeclaration(node) &&
+      !node.isTypeOnly &&
+      ts.isExternalModuleReference(node.moduleReference) &&
+      node.moduleReference.expression &&
+      isRawMonacoSpecifier(node.moduleReference.expression)
     ) {
       hasRuntimeImport = true;
       return;
