@@ -164,25 +164,27 @@ export function proveControlledHet1DbtTestFailure(args: {
   openHet1PlanPreview(identity);
   startPreviewedHet1Run().then(({ runId, planId }) => {
     assertHet1RunUsesPlan(runId, planId);
-    waitForHet1RunStatus(runId, 'failed');
-    readHet1RunEvents(runId).then((events) => {
-      assertStepEventSet(events, 'StepCompleted', [
-        ...(args.upstreamCompletedStepIds ?? []),
-        identity.objectNodeId,
-        identity.modelNodeId,
-      ]);
-      assertStepEventSet(events, 'StepFailed', [identity.testNodeId]);
-      assertObjectLoadEvidence({
-        events,
-        stepId: identity.objectNodeId,
-        expectedRows: 2,
-        expectedSha256: manifest.sha256,
-        expectedSizeBytes: manifest.sizeBytes,
-        expectedPublicationOutcomes: ['replaced'],
+    return waitForHet1RunStatus(runId, 'failed')
+      .then(() => waitForHet1RunEvent({ runId, eventType: 'RunFailed' }))
+      .then(() => readHet1RunEvents(runId))
+      .then((events) => {
+        assertStepEventSet(events, 'StepCompleted', [
+          ...(args.upstreamCompletedStepIds ?? []),
+          identity.objectNodeId,
+          identity.modelNodeId,
+        ]);
+        assertStepEventSet(events, 'StepFailed', [identity.testNodeId]);
+        assertObjectLoadEvidence({
+          events,
+          stepId: identity.objectNodeId,
+          expectedRows: 2,
+          expectedSha256: manifest.sha256,
+          expectedSizeBytes: manifest.sizeBytes,
+          expectedPublicationOutcomes: ['replaced'],
+        });
+        expect(events.map((event) => event.eventType)).to.include('RunFailed');
+        assertNoSensitiveEvidence(events, args.additionalForbiddenValues);
       });
-      expect(events.map((event) => event.eventType)).to.include('RunFailed');
-      assertNoSensitiveEvidence(events, args.additionalForbiddenValues);
-    });
   });
   assertRunTimeline('RunFailed');
 }
