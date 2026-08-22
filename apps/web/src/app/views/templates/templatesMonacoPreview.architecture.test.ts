@@ -282,6 +282,12 @@ const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
     modulePath: 'views/canvas/SafeCapabilityPanel.tsx',
     source: ["const target = './SafeSurface';", 'void require(target);'].join('\n'),
   },
+  {
+    label: 'A conditional dynamic import with only non-Monaco branches remains allowed',
+    surface: 'canvas-production',
+    modulePath: 'views/canvas/SafeCapabilityPanel.tsx',
+    source: "void import(enabled ? './SafeSurface' : './FallbackSurface');",
+  },
 ];
 
 const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
@@ -661,6 +667,13 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
       "const target = '../../../app/components/monaco/MonacoCodeSurface';",
       'void import(target);',
     ].join('\n'),
+    expectedViolation: 'MonacoCodeSurface outside a governed owner',
+  },
+  {
+    label: 'A capability cannot hide a Monaco dynamic import in a conditional branch',
+    modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
+    source:
+      "void import(enabled ? '../../../app/components/monaco/MonacoCodeSurface' : './SafeSurface');",
     expectedViolation: 'MonacoCodeSurface outside a governed owner',
   },
   {
@@ -3817,6 +3830,10 @@ function collectRuntimeModuleSpecifiers(
     pattern: string;
     hasStaticText: boolean;
   }> {
+    const unwrapped = unwrapRuntimeExpression(node);
+    if (unwrapped !== node) {
+      return readVariableImportPatterns(unwrapped, resolvingBindings, consumer);
+    }
     if (ts.isStringLiteralLike(node)) {
       return [{ pattern: node.text, hasStaticText: node.text.length > 0 }];
     }
@@ -3843,6 +3860,12 @@ function collectRuntimeModuleSpecifiers(
         );
     }
 
+    if (ts.isConditionalExpression(node)) {
+      return [node.whenTrue, node.whenFalse].flatMap((branch) =>
+        readVariableImportPatterns(branch, resolvingBindings, consumer)
+      );
+    }
+
     if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.PlusToken) {
       const leftPatterns = readVariableImportPatterns(node.left, resolvingBindings, consumer);
       const rightPatterns = readVariableImportPatterns(node.right, resolvingBindings, consumer);
@@ -3852,6 +3875,21 @@ function collectRuntimeModuleSpecifiers(
           hasStaticText: left.hasStaticText || right.hasStaticText,
         }))
       );
+    }
+    if (ts.isBinaryExpression(node)) {
+      switch (node.operatorToken.kind) {
+        case ts.SyntaxKind.AmpersandAmpersandToken:
+        case ts.SyntaxKind.BarBarToken:
+        case ts.SyntaxKind.QuestionQuestionToken:
+          return [node.left, node.right].flatMap((branch) =>
+            readVariableImportPatterns(branch, resolvingBindings, consumer)
+          );
+        case ts.SyntaxKind.CommaToken:
+        case ts.SyntaxKind.EqualsToken:
+          return readVariableImportPatterns(node.right, resolvingBindings, consumer);
+        default:
+          break;
+      }
     }
 
     return [{ pattern: '*', hasStaticText: false }];
