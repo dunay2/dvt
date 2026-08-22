@@ -196,7 +196,7 @@ export const VisualTransformOutputColumnV1Schema = z
   })
   .strict();
 
-function createValueComparisonSchema(targetShape: z.ZodRawShape) {
+function createValueComparisonSchema<T extends z.ZodRawShape>(targetShape: T) {
   return z
     .object({
       id: NonBlankStringSchema,
@@ -207,7 +207,7 @@ function createValueComparisonSchema(targetShape: z.ZodRawShape) {
     .strict();
 }
 
-function createNullComparisonSchema(targetShape: z.ZodRawShape) {
+function createNullComparisonSchema<T extends z.ZodRawShape>(targetShape: T) {
   return z
     .object({
       id: NonBlankStringSchema,
