@@ -24,4 +24,5 @@ runs:
         done
 
         node scripts/planning-db-schema.cjs
+        pnpm --filter @dvt/crypto build
         pnpm planning:db:import
