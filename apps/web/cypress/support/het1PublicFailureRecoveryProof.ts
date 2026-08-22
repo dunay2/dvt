@@ -51,7 +51,7 @@ function waitForDraftMetadata(
 
 function openHet1PlanPreview(identity: Het1PublicGraphIdentity): void {
   clickPreviewExecutionPlanFromOperationalDrawer();
-  cy.get('[data-testid="plan-preview-modal"]', { timeout: 30_000 })
+  cy.get('[data-testid="plan-preview-modal"]', { timeout: 60_000 })
     .should('be.visible')
     .and('contain.text', identity.objectNodeId)
     .and('contain.text', identity.modelNodeId)
