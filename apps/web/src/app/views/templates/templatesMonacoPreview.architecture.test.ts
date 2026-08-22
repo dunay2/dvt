@@ -22,14 +22,17 @@ const CANVAS_MONACO_EDITOR_OWNERS = new Set([
   'views/canvas/DvtSqlTransformAuthoringSection.tsx',
 ]);
 const TEMPLATES_MONACO_PREVIEW_OWNER = 'views/templates/TemplateMonacoPreviewPanel.tsx';
-const MONACO_AUTHORITY_SOURCE_SIGNALS = [
-  '@monaco-editor/react',
-  'monaco-editor',
+const MONACO_INTERNAL_AUTHORITIES = [
   'MonacoCodeEditor',
   'MonacoCodeViewer',
   'MonacoDiffViewer',
   'MonacoCodeSurface',
   'MonacoDiffSurface',
+] as const;
+const MONACO_AUTHORITY_SOURCE_SIGNALS = [
+  '@monaco-editor/react',
+  'monaco-editor',
+  ...MONACO_INTERNAL_AUTHORITIES,
 ] as const;
 
 const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
@@ -71,6 +74,12 @@ const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
     modulePath: 'views/canvas/canvasMonacoTypes.ts',
     source:
       "import type { MonacoCodeSurfaceProps } from '../../components/monaco/MonacoCodeSurface';",
+  },
+  {
+    label: 'Canvas production may mention a Monaco surface without importing its authority',
+    surface: 'canvas-production',
+    modulePath: 'views/canvas/canvasAnalytics.ts',
+    source: "const analyticsLabel = 'MonacoCodeSurface'; void analyticsLabel;",
   },
 ];
 
@@ -145,6 +154,28 @@ const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
     expectedViolation: 'MonacoDiffSurface',
   },
   {
+    label: 'Templates route cannot dynamically import an internal Monaco surface',
+    surface: 'templates-route',
+    modulePath: 'views/templates/TemplatesRouteWorkbench.tsx',
+    source: "void import('../../components/monaco/MonacoCodeSurface');",
+    expectedViolation: 'MonacoCodeSurface',
+  },
+  {
+    label: 'Templates route cannot re-export an internal Monaco surface',
+    surface: 'templates-route',
+    modulePath: 'views/templates/TemplatesRouteWorkbench.tsx',
+    source:
+      "export { default as MonacoCodeSurface } from '../../components/monaco/MonacoCodeSurface';",
+    expectedViolation: 'MonacoCodeSurface',
+  },
+  {
+    label: 'Canvas production cannot require an internal Monaco surface',
+    surface: 'canvas-production',
+    modulePath: 'views/canvas/CanvasShell.tsx',
+    source: "void require('../../components/monaco/MonacoDiffSurface');",
+    expectedViolation: 'MonacoDiffSurface',
+  },
+  {
     label: 'Canvas route cannot acquire raw Monaco runtime authority',
     surface: 'canvas-production',
     modulePath: 'views/Canvas.tsx',
@@ -190,9 +221,7 @@ function emitWebModuleSource(source: string): string {
   }).outputText;
 }
 
-function hasRuntimeMonacoPackageImport(emittedSource: string): boolean {
-  if (!emittedSource.includes('monaco-editor')) return false;
-
+function collectRuntimeModuleSpecifiers(emittedSource: string): ReadonlySet<string> {
   const sourceFile = ts.createSourceFile(
     'monaco-authority-emitted.js',
     emittedSource,
@@ -200,27 +229,20 @@ function hasRuntimeMonacoPackageImport(emittedSource: string): boolean {
     true,
     ts.ScriptKind.JS
   );
-  let hasRuntimeImport = false;
+  const runtimeModuleSpecifiers = new Set<string>();
 
-  function isRawMonacoSpecifier(node: ts.Expression): boolean {
-    return (
-      ts.isStringLiteralLike(node) &&
-      (node.text === 'monaco-editor' || node.text.startsWith('monaco-editor/'))
-    );
+  function addSpecifier(node: ts.Expression): void {
+    if (ts.isStringLiteralLike(node)) runtimeModuleSpecifiers.add(node.text);
   }
 
   function visit(node: ts.Node): void {
-    if (ts.isImportDeclaration(node) && isRawMonacoSpecifier(node.moduleSpecifier)) {
-      hasRuntimeImport = true;
+    if (ts.isImportDeclaration(node)) {
+      addSpecifier(node.moduleSpecifier);
       return;
     }
 
-    if (
-      ts.isExportDeclaration(node) &&
-      node.moduleSpecifier &&
-      isRawMonacoSpecifier(node.moduleSpecifier)
-    ) {
-      hasRuntimeImport = true;
+    if (ts.isExportDeclaration(node) && node.moduleSpecifier) {
+      addSpecifier(node.moduleSpecifier);
       return;
     }
 
@@ -228,18 +250,33 @@ function hasRuntimeMonacoPackageImport(emittedSource: string): boolean {
       ts.isCallExpression(node) &&
       (node.expression.kind === ts.SyntaxKind.ImportKeyword ||
         (ts.isIdentifier(node.expression) && node.expression.text === 'require')) &&
-      node.arguments[0] &&
-      isRawMonacoSpecifier(node.arguments[0])
+      node.arguments[0]
     ) {
-      hasRuntimeImport = true;
+      addSpecifier(node.arguments[0]);
       return;
     }
 
-    if (!hasRuntimeImport) ts.forEachChild(node, visit);
+    ts.forEachChild(node, visit);
   }
 
   visit(sourceFile);
-  return hasRuntimeImport;
+  return runtimeModuleSpecifiers;
+}
+
+function containsPackageSpecifier(specifiers: ReadonlySet<string>, packageName: string): boolean {
+  return [...specifiers].some(
+    (specifier) => specifier === packageName || specifier.startsWith(`${packageName}/`)
+  );
+}
+
+function containsInternalAuthoritySpecifier(
+  specifiers: ReadonlySet<string>,
+  authority: (typeof MONACO_INTERNAL_AUTHORITIES)[number]
+): boolean {
+  return [...specifiers].some((specifier) => {
+    const moduleName = specifier.replaceAll('\\', '/').split('/').at(-1);
+    return moduleName?.replace(/\.[cm]?[jt]sx?$/, '') === authority;
+  });
 }
 
 function collectMonacoAuthorityViolations({
@@ -253,24 +290,21 @@ function collectMonacoAuthorityViolations({
   }
 
   const emittedSource = emitWebModuleSource(source);
+  const runtimeModuleSpecifiers = collectRuntimeModuleSpecifiers(emittedSource);
 
-  if (emittedSource.includes('@monaco-editor/react')) {
+  if (containsPackageSpecifier(runtimeModuleSpecifiers, '@monaco-editor/react')) {
     violations.push('@monaco-editor/react');
   }
 
-  if (hasRuntimeMonacoPackageImport(emittedSource)) {
+  if (containsPackageSpecifier(runtimeModuleSpecifiers, 'monaco-editor')) {
     violations.push('monaco-editor runtime import');
   }
 
   if (surface === 'templates-route') {
-    for (const gateway of [
-      'MonacoCodeEditor',
-      'MonacoCodeViewer',
-      'MonacoDiffViewer',
-      'MonacoCodeSurface',
-      'MonacoDiffSurface',
-    ]) {
-      if (emittedSource.includes(gateway)) violations.push(gateway);
+    for (const gateway of MONACO_INTERNAL_AUTHORITIES) {
+      if (containsInternalAuthoritySpecifier(runtimeModuleSpecifiers, gateway)) {
+        violations.push(gateway);
+      }
     }
   }
 
@@ -280,8 +314,10 @@ function collectMonacoAuthorityViolations({
       'MonacoDiffViewer',
       'MonacoCodeSurface',
       'MonacoDiffSurface',
-    ]) {
-      if (emittedSource.includes(gateway)) violations.push(gateway);
+    ] as const) {
+      if (containsInternalAuthoritySpecifier(runtimeModuleSpecifiers, gateway)) {
+        violations.push(gateway);
+      }
     }
   }
 
@@ -291,12 +327,14 @@ function collectMonacoAuthorityViolations({
       'MonacoDiffViewer',
       'MonacoCodeSurface',
       'MonacoDiffSurface',
-    ]) {
-      if (emittedSource.includes(gateway)) violations.push(gateway);
+    ] as const) {
+      if (containsInternalAuthoritySpecifier(runtimeModuleSpecifiers, gateway)) {
+        violations.push(gateway);
+      }
     }
 
     if (
-      emittedSource.includes('MonacoCodeEditor') &&
+      containsInternalAuthoritySpecifier(runtimeModuleSpecifiers, 'MonacoCodeEditor') &&
       !CANVAS_MONACO_EDITOR_OWNERS.has(modulePath)
     ) {
       violations.push('MonacoCodeEditor outside a governed Canvas authoring leaf');
