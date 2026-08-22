@@ -2,6 +2,7 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 
+import picomatch from 'picomatch';
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 
@@ -16,6 +17,11 @@ interface MonacoAuthorityFixture {
   surface: MonacoAuthoritySurface;
   modulePath: string;
   source: string;
+}
+
+interface RuntimeModuleAccess {
+  specifiers: ReadonlySet<string>;
+  reExportedSpecifiers: ReadonlySet<string>;
 }
 
 const CANVAS_MONACO_EDITOR_OWNERS = new Set([
@@ -318,6 +324,31 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     source: "export const panels = import.meta.glob('../../../app/components/**/*.tsx');",
     expectedViolation: 'MonacoCodeSurface outside a governed owner',
   },
+  {
+    label: 'A governed viewer cannot re-export its underlying Monaco loader',
+    modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
+    source: "export { useMonacoCodeSurface } from './useMonacoCodeSurface';",
+    expectedViolation: 'useMonacoCodeSurface re-exported',
+  },
+  {
+    label: 'A governed editor consumer cannot leak an imported editor binding',
+    modulePath: 'app/views/code/CodeWorkspaceFileSurface.tsx',
+    source: [
+      "import { MonacoCodeEditor as InternalEditor } from '../../components/monaco/MonacoCodeEditor';",
+      'export { InternalEditor as EditableSurface };',
+    ].join('\n'),
+    expectedViolation: 'MonacoCodeEditor re-exported',
+  },
+  {
+    label: 'A governed editor consumer cannot leak an aliased editor binding',
+    modulePath: 'app/views/code/CodeWorkspaceFileSurface.tsx',
+    source: [
+      "import { MonacoCodeEditor as InternalEditor } from '../../components/monaco/MonacoCodeEditor';",
+      'const LeakedEditor = InternalEditor;',
+      'export { LeakedEditor };',
+    ].join('\n'),
+    expectedViolation: 'MonacoCodeEditor re-exported',
+  },
 ] as const;
 
 function readAppSource(relativePath: string): string {
@@ -391,7 +422,7 @@ function resolveViteGlobPattern(
 function collectRuntimeModuleSpecifiers(
   emittedSource: string,
   modulePath: string
-): ReadonlySet<string> {
+): RuntimeModuleAccess {
   const sourceFile = ts.createSourceFile(
     'monaco-authority-emitted.js',
     emittedSource,
@@ -400,6 +431,8 @@ function collectRuntimeModuleSpecifiers(
     ts.ScriptKind.JS
   );
   const runtimeModuleSpecifiers = new Set<string>();
+  const runtimeReExportedSpecifiers = new Set<string>();
+  const runtimeImportedBindings = new Map<string, string>();
 
   function addSpecifier(node: ts.Expression): void {
     if (ts.isStringLiteralLike(node)) {
@@ -412,6 +445,52 @@ function collectRuntimeModuleSpecifiers(
         if (ts.isStringLiteralLike(element)) runtimeModuleSpecifiers.add(element.text);
       }
     }
+  }
+
+  function addImportedBindings(node: ts.ImportDeclaration): void {
+    if (!ts.isStringLiteralLike(node.moduleSpecifier) || !node.importClause) return;
+
+    const moduleSpecifier = node.moduleSpecifier.text;
+    if (node.importClause.name) {
+      runtimeImportedBindings.set(node.importClause.name.text, moduleSpecifier);
+    }
+
+    const namedBindings = node.importClause.namedBindings;
+    if (namedBindings && ts.isNamespaceImport(namedBindings)) {
+      runtimeImportedBindings.set(namedBindings.name.text, moduleSpecifier);
+    }
+    if (namedBindings && ts.isNamedImports(namedBindings)) {
+      for (const element of namedBindings.elements) {
+        runtimeImportedBindings.set(element.name.text, moduleSpecifier);
+      }
+    }
+  }
+
+  function addAliasedBindingNames(name: ts.BindingName, moduleSpecifier: string): void {
+    if (ts.isIdentifier(name)) {
+      runtimeImportedBindings.set(name.text, moduleSpecifier);
+      return;
+    }
+
+    for (const element of name.elements) {
+      if (!ts.isOmittedExpression(element)) {
+        addAliasedBindingNames(element.name, moduleSpecifier);
+      }
+    }
+  }
+
+  function getImportedSpecifier(node: ts.Expression): string | undefined {
+    if (ts.isIdentifier(node)) return runtimeImportedBindings.get(node.text);
+    if (ts.isParenthesizedExpression(node)) return getImportedSpecifier(node.expression);
+    if (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) {
+      return getImportedSpecifier(node.expression);
+    }
+    return undefined;
+  }
+
+  function addReExportedExpression(node: ts.Expression): void {
+    const importedSpecifier = getImportedSpecifier(node);
+    if (importedSpecifier) runtimeReExportedSpecifiers.add(importedSpecifier);
   }
 
   function isViteGlobCall(node: ts.CallExpression): boolean {
@@ -463,18 +542,16 @@ function collectRuntimeModuleSpecifiers(
     const resolvedPatterns = patterns.map((globPattern) =>
       resolveViteGlobPattern(modulePath, globPattern, base)
     );
-    const positivePatterns = resolvedPatterns.filter((globPattern) => !globPattern.startsWith('!'));
-    const negativePatterns = resolvedPatterns
+    const positiveMatchers = resolvedPatterns
+      .filter((globPattern) => !globPattern.startsWith('!'))
+      .map((globPattern) => picomatch(globPattern));
+    const negativeMatchers = resolvedPatterns
       .filter((globPattern) => globPattern.startsWith('!'))
-      .map((globPattern) => globPattern.slice(1));
+      .map((globPattern) => picomatch(globPattern.slice(1)));
 
     for (const authorityPath of MONACO_INTERNAL_AUTHORITY_SOURCE_PATHS) {
-      const matchesPositivePattern = positivePatterns.some((globPattern) =>
-        path.matchesGlob(authorityPath, globPattern)
-      );
-      const matchesNegativePattern = negativePatterns.some((globPattern) =>
-        path.matchesGlob(authorityPath, globPattern)
-      );
+      const matchesPositivePattern = positiveMatchers.some((matches) => matches(authorityPath));
+      const matchesNegativePattern = negativeMatchers.some((matches) => matches(authorityPath));
       if (matchesPositivePattern && !matchesNegativePattern) {
         runtimeModuleSpecifiers.add(authorityPath);
       }
@@ -489,7 +566,33 @@ function collectRuntimeModuleSpecifiers(
 
     if (ts.isExportDeclaration(node) && node.moduleSpecifier) {
       addSpecifier(node.moduleSpecifier);
+      if (ts.isStringLiteralLike(node.moduleSpecifier)) {
+        runtimeReExportedSpecifiers.add(node.moduleSpecifier.text);
+      }
       return;
+    }
+
+    if (ts.isExportDeclaration(node) && node.exportClause && ts.isNamedExports(node.exportClause)) {
+      for (const element of node.exportClause.elements) {
+        const localBinding = element.propertyName ?? element.name;
+        const importedSpecifier = runtimeImportedBindings.get(localBinding.text);
+        if (importedSpecifier) runtimeReExportedSpecifiers.add(importedSpecifier);
+      }
+      return;
+    }
+
+    if (ts.isExportAssignment(node)) {
+      addReExportedExpression(node.expression);
+      return;
+    }
+
+    if (
+      ts.isVariableStatement(node) &&
+      node.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)
+    ) {
+      for (const declaration of node.declarationList.declarations) {
+        if (declaration.initializer) addReExportedExpression(declaration.initializer);
+      }
     }
 
     if (ts.isCallExpression(node) && node.arguments[0]) {
@@ -510,23 +613,47 @@ function collectRuntimeModuleSpecifiers(
     ts.forEachChild(node, visit);
   }
 
+  for (const statement of sourceFile.statements) {
+    if (ts.isImportDeclaration(statement)) addImportedBindings(statement);
+  }
+
+  let discoveredAlias = true;
+  while (discoveredAlias) {
+    discoveredAlias = false;
+    for (const statement of sourceFile.statements) {
+      if (!ts.isVariableStatement(statement)) continue;
+
+      for (const declaration of statement.declarationList.declarations) {
+        if (!declaration.initializer) continue;
+
+        const importedSpecifier = getImportedSpecifier(declaration.initializer);
+        const bindingCountBefore = runtimeImportedBindings.size;
+        if (importedSpecifier) addAliasedBindingNames(declaration.name, importedSpecifier);
+        if (runtimeImportedBindings.size > bindingCountBefore) discoveredAlias = true;
+      }
+    }
+  }
+
   visit(sourceFile);
-  return runtimeModuleSpecifiers;
+  return {
+    specifiers: runtimeModuleSpecifiers,
+    reExportedSpecifiers: runtimeReExportedSpecifiers,
+  };
 }
 
-const RUNTIME_MODULE_SPECIFIER_CACHE = new Map<string, ReadonlySet<string>>();
+const RUNTIME_MODULE_SPECIFIER_CACHE = new Map<string, RuntimeModuleAccess>();
 
-function getRuntimeModuleSpecifiers(modulePath: string, source: string): ReadonlySet<string> {
+function getRuntimeModuleSpecifiers(modulePath: string, source: string): RuntimeModuleAccess {
   const cacheKey = `${modulePath}\0${source}`;
   const cachedSpecifiers = RUNTIME_MODULE_SPECIFIER_CACHE.get(cacheKey);
   if (cachedSpecifiers) return cachedSpecifiers;
 
-  const runtimeModuleSpecifiers = collectRuntimeModuleSpecifiers(
+  const runtimeModuleAccess = collectRuntimeModuleSpecifiers(
     emitWebModuleSource(source),
     modulePath
   );
-  RUNTIME_MODULE_SPECIFIER_CACHE.set(cacheKey, runtimeModuleSpecifiers);
-  return runtimeModuleSpecifiers;
+  RUNTIME_MODULE_SPECIFIER_CACHE.set(cacheKey, runtimeModuleAccess);
+  return runtimeModuleAccess;
 }
 
 function containsPackageSpecifier(specifiers: ReadonlySet<string>, packageName: string): boolean {
@@ -556,7 +683,7 @@ function collectMonacoAuthorityViolations({
     return violations;
   }
 
-  const runtimeModuleSpecifiers = getRuntimeModuleSpecifiers(modulePath, source);
+  const { specifiers: runtimeModuleSpecifiers } = getRuntimeModuleSpecifiers(modulePath, source);
 
   if (containsPackageSpecifier(runtimeModuleSpecifiers, '@monaco-editor/react')) {
     violations.push('@monaco-editor/react');
@@ -621,7 +748,8 @@ function collectRepositoryMonacoOwnerViolations({
     return violations;
   }
 
-  const runtimeModuleSpecifiers = getRuntimeModuleSpecifiers(modulePath, source);
+  const { specifiers: runtimeModuleSpecifiers, reExportedSpecifiers: runtimeReExportedSpecifiers } =
+    getRuntimeModuleSpecifiers(modulePath, source);
   for (const [authority, owners] of Object.entries(MONACO_RUNTIME_AUTHORITY_OWNERS)) {
     const importsAuthority =
       authority === '@monaco-editor/react' || authority === 'monaco-editor runtime import'
@@ -636,6 +764,20 @@ function collectRepositoryMonacoOwnerViolations({
 
     if (importsAuthority && !owners.has(modulePath)) {
       violations.push(`${authority} outside a governed owner`);
+    }
+
+    const reExportsAuthority =
+      authority === '@monaco-editor/react' || authority === 'monaco-editor runtime import'
+        ? containsPackageSpecifier(
+            runtimeReExportedSpecifiers,
+            authority === '@monaco-editor/react' ? authority : 'monaco-editor'
+          )
+        : containsInternalAuthoritySpecifier(
+            runtimeReExportedSpecifiers,
+            authority as (typeof MONACO_INTERNAL_AUTHORITIES)[number]
+          );
+    if (reExportsAuthority) {
+      violations.push(`${authority} re-exported`);
     }
   }
 

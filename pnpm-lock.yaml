@@ -607,6 +607,9 @@ importers:
       '@tailwindcss/vite':
         specifier: 4.2.2
         version: 4.2.2(vite@8.0.8(@types/node@26.1.1)(esbuild@0.27.7)(jiti@2.6.1)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2))
+      '@types/picomatch':
+        specifier: 4.0.3
+        version: 4.0.3
       '@types/react':
         specifier: ^18.3.12
         version: 18.3.28
@@ -634,6 +637,9 @@ importers:
       jsdom:
         specifier: ^29.1.0
         version: 29.1.0
+      picomatch:
+        specifier: 4.0.5
+        version: 4.0.5
       start-server-and-test:
         specifier: ^2.0.11
         version: 2.1.5
@@ -4554,6 +4560,9 @@ packages:
   '@types/pg@8.16.0':
     resolution: {integrity: sha512-RmhMd/wD+CF8Dfo+cVIy3RR5cl8CyfXQ0tGgW6XBL8L4LM/UTEbNXYRbLwU6w+CgrKBNbrQWt4FUtTfaU5jSYQ==}
 
+  '@types/picomatch@4.0.3':
+    resolution: {integrity: sha512-iG0T6+nYJ9FAPmx9SsUlnwcq1ZVRuCXcVEvWnntoPlrOpwtSTKNDC9uVAxTsC3PUvJ+99n4RpAcNgBbHX3JSnQ==}
+
   '@types/prop-types@15.7.15':
     resolution: {integrity: sha512-F6bEyamV9jKGAFBEmlQnesRPGOQqS2+Uwi0Em15xenOxHaf2hv6L8YCVn3rPdPJOiJfPiCnLIRyvwVaqMY3MIw==}
 
@@ -7328,10 +7337,6 @@ packages:
 
   picomatch@4.0.3:
     resolution: {integrity: sha512-5gTmgEY/sqK6gFXLIsQNH19lWb4ebPDLA4SdLP7dsWkIXHWlG66oPuVvXSGFPppYZz8ZDZq0dYYrbHfBCVUb1Q==}
-    engines: {node: '>=12'}
-
-  picomatch@4.0.4:
-    resolution: {integrity: sha512-QP88BAKvMam/3NxH6vj2o21R6MjxZUAd6nlwAS/pnGvN9IVLocLHxGYIzFhg6fUQ+5th6P4dv4eW9jX3DSIj7A==}
     engines: {node: '>=12'}
 
   picomatch@4.0.5:
@@ -12419,6 +12424,8 @@ snapshots:
       pg-protocol: 1.11.0
       pg-types: 2.2.0
 
+  '@types/picomatch@4.0.3': {}
+
   '@types/prop-types@15.7.15': {}
 
   '@types/react-dom@18.3.7(@types/react@18.3.28)':
@@ -14017,10 +14024,6 @@ snapshots:
     dependencies:
       reusify: 1.1.0
 
-  fdir@6.5.0(picomatch@4.0.4):
-    optionalDependencies:
-      picomatch: 4.0.4
-
   fdir@6.5.0(picomatch@4.0.5):
     optionalDependencies:
       picomatch: 4.0.5
@@ -15487,8 +15490,6 @@ snapshots:
 
   picomatch@4.0.3: {}
 
-  picomatch@4.0.4: {}
-
   picomatch@4.0.5: {}
 
   pidtree@0.6.0: {}
@@ -16328,13 +16329,13 @@ snapshots:
 
   tinyglobby@0.2.15:
     dependencies:
-      fdir: 6.5.0(picomatch@4.0.4)
-      picomatch: 4.0.4
+      fdir: 6.5.0(picomatch@4.0.5)
+      picomatch: 4.0.5
 
   tinyglobby@0.2.16:
     dependencies:
-      fdir: 6.5.0(picomatch@4.0.4)
-      picomatch: 4.0.4
+      fdir: 6.5.0(picomatch@4.0.5)
+      picomatch: 4.0.5
 
   tinyglobby@0.2.17:
     dependencies:
@@ -16656,7 +16657,7 @@ snapshots:
   vite@8.0.8(@types/node@26.1.1)(esbuild@0.27.7)(jiti@2.6.1)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.2):
     dependencies:
       lightningcss: 1.32.0
-      picomatch: 4.0.4
+      picomatch: 4.0.5
       postcss: 8.5.9
       rolldown: 1.0.0-rc.15
       tinyglobby: 0.2.16
