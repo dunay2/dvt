@@ -1,7 +1,7 @@
 import { sha256 } from '@noble/hashes/sha2.js';
 import { bytesToHex } from '@noble/hashes/utils.js';
 
-import { utf8Bytes } from './encoding.js';
+import { requireBytes, utf8Bytes } from './encoding.js';
 
 export interface Sha256Hasher {
   update(bytes: Uint8Array): Sha256Hasher;
@@ -40,11 +40,4 @@ export function createSha256Hasher(): Sha256Hasher {
   };
 
   return api;
-}
-
-function requireBytes(bytes: Uint8Array): Uint8Array {
-  if (!(bytes instanceof Uint8Array)) {
-    throw new TypeError('CRYPTO_BYTES_REQUIRED');
-  }
-  return bytes;
 }
