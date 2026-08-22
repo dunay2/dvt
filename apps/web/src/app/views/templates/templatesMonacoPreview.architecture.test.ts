@@ -778,6 +778,21 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     expectedViolation: 'useMonacoCodeSurface re-exported',
   },
   {
+    label: 'A governed viewer cannot destructure a stored composite render prop alias',
+    modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
+    source: [
+      "import { useMonacoCodeSurface } from './useMonacoCodeSurface';",
+      'export function MonacoCodeViewer({ render }) {',
+      '  const Surface = useMonacoCodeSurface();',
+      '  const callbacks = { invoke: render };',
+      '  const { invoke } = callbacks;',
+      '  const content = invoke(useMonacoCodeSurface());',
+      '  return <>{content}<Surface readOnly /></>;',
+      '}',
+    ].join('\n'),
+    expectedViolation: 'useMonacoCodeSurface re-exported',
+  },
+  {
     label: 'A governed viewer cannot pass its loader through an inline composite member alias',
     modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
     source: [
@@ -985,6 +1000,20 @@ const ACCEPTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
       '  const Surface = useMonacoCodeSurface();',
       '  const callbacks = { invoke: () => null, retained: render };',
       '  const content = callbacks.invoke(useMonacoCodeSurface());',
+      '  return <>{content}<Surface readOnly /></>;',
+      '}',
+    ].join('\n'),
+  },
+  {
+    label: 'A governed viewer preserves member precision while destructuring a stored composite',
+    modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
+    source: [
+      "import { useMonacoCodeSurface } from './useMonacoCodeSurface';",
+      'export function MonacoCodeViewer({ render }) {',
+      '  const Surface = useMonacoCodeSurface();',
+      '  const callbacks = { invoke: () => null, retained: render };',
+      '  const { invoke } = callbacks;',
+      '  const content = invoke(useMonacoCodeSurface());',
       '  return <>{content}<Surface readOnly /></>;',
       '}',
     ].join('\n'),
@@ -2393,18 +2422,32 @@ function collectRuntimeModuleSpecifiers(
         return [];
       }
       const parameterAliasEdges: Array<Readonly<{ sources: string[]; targets: string[] }>> = [];
+      const parameterMemberAliasEdges: Array<
+        Readonly<{ sourcePrefix: string; targetPrefix: string }>
+      > = [];
       function addParameterAliasEdge(sources: string[], targets: string[]): void {
         const uniqueSources = [...new Set(sources)];
         const uniqueTargets = [...new Set(targets)];
         if (uniqueSources.length === 0 || uniqueTargets.length === 0) return;
         parameterAliasEdges.push({ sources: uniqueSources, targets: uniqueTargets });
       }
+      function addParameterMemberAliasEdge(sourcePrefix: string, targetPrefix: string): void {
+        parameterMemberAliasEdges.push({ sourcePrefix, targetPrefix });
+      }
       function collectExpressionAliasEdges(targetPath: string, initializer: ts.Expression): void {
         const candidate = unwrapParameterAliasExpression(initializer);
+        const candidatePath = readParameterAliasPath(candidate);
+        if (candidatePath) {
+          addParameterAliasEdge([candidatePath], [targetPath]);
+          addParameterMemberAliasEdge(candidatePath, targetPath);
+          return;
+        }
         if (ts.isObjectLiteralExpression(candidate)) {
           for (const property of candidate.properties) {
             if (ts.isSpreadAssignment(property)) {
               addParameterAliasEdge(readParameterAliasRoots(property.expression), [targetPath]);
+              const spreadPath = readParameterAliasPath(property.expression);
+              if (spreadPath) addParameterMemberAliasEdge(spreadPath, targetPath);
               continue;
             }
             const propertyName = readStaticPropertyName(property.name);
@@ -2429,6 +2472,37 @@ function collectRuntimeModuleSpecifiers(
         }
         addParameterAliasEdge(readParameterAliasRoots(candidate), [targetPath]);
       }
+      function collectBindingPathAliasEdges(bindingName: ts.BindingName, sourcePath: string): void {
+        if (ts.isIdentifier(bindingName)) {
+          addParameterAliasEdge([sourcePath], [bindingName.text]);
+          return;
+        }
+        if (ts.isObjectBindingPattern(bindingName)) {
+          for (const element of bindingName.elements) {
+            if (element.initializer) collectBindingAliasEdges(element.name, element.initializer);
+            if (element.dotDotDotToken) {
+              if (ts.isIdentifier(element.name)) {
+                addParameterMemberAliasEdge(sourcePath, element.name.text);
+              }
+              continue;
+            }
+            const propertyName = element.propertyName
+              ? readStaticPropertyName(element.propertyName)
+              : ts.isIdentifier(element.name)
+                ? element.name.text
+                : undefined;
+            if (propertyName) {
+              collectBindingPathAliasEdges(element.name, `${sourcePath}.${propertyName}`);
+            }
+          }
+          return;
+        }
+        for (const [index, element] of bindingName.elements.entries()) {
+          if (ts.isOmittedExpression(element)) continue;
+          if (element.initializer) collectBindingAliasEdges(element.name, element.initializer);
+          collectBindingPathAliasEdges(element.name, `${sourcePath}.${index}`);
+        }
+      }
       function collectBindingAliasEdges(
         bindingName: ts.BindingName,
         initializer: ts.Expression
@@ -2436,6 +2510,11 @@ function collectRuntimeModuleSpecifiers(
         const candidate = unwrapParameterAliasExpression(initializer);
         if (ts.isIdentifier(bindingName)) {
           collectExpressionAliasEdges(bindingName.text, candidate);
+          return;
+        }
+        const initializerPath = readParameterAliasPath(candidate);
+        if (initializerPath) {
+          collectBindingPathAliasEdges(bindingName, initializerPath);
           return;
         }
 
@@ -2490,6 +2569,46 @@ function collectRuntimeModuleSpecifiers(
         const targetPath = readParameterAliasPath(assignmentTarget);
         if (targetPath) {
           collectExpressionAliasEdges(targetPath, initializerCandidate);
+          return;
+        }
+        const initializerPath = readParameterAliasPath(initializerCandidate);
+        if (initializerPath) {
+          function collectAssignmentTargetPathEdges(
+            candidateTarget: ts.Expression,
+            sourcePath: string
+          ): void {
+            const targetCandidate = unwrapParameterAliasExpression(candidateTarget);
+            const candidatePath = readParameterAliasPath(targetCandidate);
+            if (candidatePath) {
+              addParameterAliasEdge([sourcePath], [candidatePath]);
+              return;
+            }
+            if (ts.isObjectLiteralExpression(targetCandidate)) {
+              for (const property of targetCandidate.properties) {
+                if (ts.isSpreadAssignment(property)) continue;
+                const propertyName = readStaticPropertyName(property.name);
+                if (!propertyName) continue;
+                if (ts.isShorthandPropertyAssignment(property)) {
+                  collectAssignmentTargetPathEdges(property.name, `${sourcePath}.${propertyName}`);
+                } else if (ts.isPropertyAssignment(property)) {
+                  collectAssignmentTargetPathEdges(
+                    property.initializer,
+                    `${sourcePath}.${propertyName}`
+                  );
+                }
+              }
+              return;
+            }
+            if (!ts.isArrayLiteralExpression(targetCandidate)) return;
+            for (const [index, element] of targetCandidate.elements.entries()) {
+              if (ts.isOmittedExpression(element)) continue;
+              collectAssignmentTargetPathEdges(
+                ts.isSpreadElement(element) ? element.expression : element,
+                `${sourcePath}.${index}`
+              );
+            }
+          }
+          collectAssignmentTargetPathEdges(assignmentTarget, initializerPath);
           return;
         }
         if (
@@ -2566,6 +2685,16 @@ function collectRuntimeModuleSpecifiers(
           for (const target of edge.targets) {
             if (!parameterBindings.has(target)) {
               parameterBindings.add(target);
+              discoveredParameterAlias = true;
+            }
+          }
+        }
+        for (const edge of parameterMemberAliasEdges) {
+          for (const binding of [...parameterBindings]) {
+            if (!binding.startsWith(`${edge.sourcePrefix}.`)) continue;
+            const targetBinding = `${edge.targetPrefix}${binding.slice(edge.sourcePrefix.length)}`;
+            if (!parameterBindings.has(targetBinding)) {
+              parameterBindings.add(targetBinding);
               discoveredParameterAlias = true;
             }
           }
