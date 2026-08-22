@@ -297,6 +297,16 @@ const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
       'void import(targets.selected);',
     ].join('\n'),
   },
+  {
+    label: 'A later safe object property overrides a Monaco spread member',
+    surface: 'canvas-production',
+    modulePath: 'views/canvas/SafeCapabilityPanel.tsx',
+    source: [
+      "const monacoPath = '../../components/monaco/MonacoCodeSurface';",
+      "const targets = { ...{ chosen: monacoPath }, chosen: './SafeSurface' };",
+      'void import(targets.chosen);',
+    ].join('\n'),
+  },
 ];
 
 const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
@@ -690,6 +700,15 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
     source: [
       "const targets = ['../../../app/components/monaco/MonacoCodeSurface', './SafeSurface'];",
+      'void import(targets[0]);',
+    ].join('\n'),
+    expectedViolation: 'MonacoCodeSurface outside a governed owner',
+  },
+  {
+    label: 'A capability cannot store a Monaco dynamic import in a spread array member',
+    modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
+    source: [
+      "const targets = [...['../../../app/components/monaco/MonacoCodeSurface']];",
       'void import(targets[0]);',
     ].join('\n'),
     expectedViolation: 'MonacoCodeSurface outside a governed owner',
@@ -2956,34 +2975,95 @@ function collectRuntimeModuleSpecifiers(
         );
   }
 
+  function readStaticArrayElements(
+    expression: ts.Expression,
+    consumer?: RuntimeImportConsumer,
+    resolvingBindings: ReadonlySet<string> = new Set()
+  ): Array<ts.Expression | undefined> | undefined {
+    const candidate = unwrapRuntimeExpression(expression);
+    if (ts.isIdentifier(candidate) && consumer && !resolvingBindings.has(candidate.text)) {
+      const bindingCandidates = readLexicalBindingCandidates(candidate, consumer);
+      const [bindingCandidate] = bindingCandidates;
+      if (bindingCandidates.length !== 1 || !bindingCandidate) return undefined;
+      return readStaticArrayElements(
+        bindingCandidate,
+        consumer,
+        new Set([...resolvingBindings, candidate.text])
+      );
+    }
+    if (!ts.isArrayLiteralExpression(candidate)) return undefined;
+
+    const elements: Array<ts.Expression | undefined> = [];
+    for (const element of candidate.elements) {
+      if (ts.isOmittedExpression(element)) {
+        elements.push(undefined);
+        continue;
+      }
+      if (ts.isSpreadElement(element)) {
+        const spreadElements = readStaticArrayElements(
+          element.expression,
+          consumer,
+          resolvingBindings
+        );
+        if (!spreadElements) return undefined;
+        elements.push(...spreadElements);
+        continue;
+      }
+      elements.push(element);
+    }
+    return elements;
+  }
+
   function readArgumentProjectionCandidates(
     expression: ts.Expression,
-    bindingPath: readonly (string | number)[]
+    bindingPath: readonly (string | number)[],
+    consumer?: RuntimeImportConsumer,
+    resolvingBindings: ReadonlySet<string> = new Set()
   ): ts.Expression[] {
     if (bindingPath.length === 0) return [expression];
     const [segment, ...remainingPath] = bindingPath;
     const candidate = unwrapRuntimeExpression(expression);
-    if (typeof segment === 'number' && ts.isArrayLiteralExpression(candidate)) {
-      const element = candidate.elements[segment];
-      if (!element || ts.isOmittedExpression(element)) return [];
-      return readArgumentProjectionCandidates(
-        ts.isSpreadElement(element) ? element.expression : element,
-        remainingPath
-      );
+    if (typeof segment === 'number') {
+      const element = readStaticArrayElements(candidate, consumer, resolvingBindings)?.[segment];
+      if (!element) return [];
+      return readArgumentProjectionCandidates(element, remainingPath, consumer, resolvingBindings);
     }
     if (typeof segment !== 'string' || !ts.isObjectLiteralExpression(candidate)) return [];
-    const projected: ts.Expression[] = [];
+    let projected: ts.Expression[] = [];
     for (const property of candidate.properties) {
       if (ts.isSpreadAssignment(property)) {
-        projected.push(...readArgumentProjectionCandidates(property.expression, bindingPath));
+        const spreadExpression = unwrapRuntimeExpression(property.expression);
+        const spreadSources =
+          ts.isIdentifier(spreadExpression) &&
+          consumer &&
+          !resolvingBindings.has(spreadExpression.text)
+            ? readLexicalBindingCandidates(spreadExpression, consumer)
+            : [property.expression];
+        const nextResolving = ts.isIdentifier(spreadExpression)
+          ? new Set([...resolvingBindings, spreadExpression.text])
+          : resolvingBindings;
+        const spreadCandidates = spreadSources.flatMap((spreadSource) =>
+          readArgumentProjectionCandidates(spreadSource, bindingPath, consumer, nextResolving)
+        );
+        if (spreadCandidates.length > 0) projected = spreadCandidates;
         continue;
       }
       if (ts.isShorthandPropertyAssignment(property) && property.name.text === segment) {
-        projected.push(...readArgumentProjectionCandidates(property.name, remainingPath));
+        projected = readArgumentProjectionCandidates(
+          property.name,
+          remainingPath,
+          consumer,
+          resolvingBindings
+        );
         continue;
       }
       if (ts.isPropertyAssignment(property) && readStaticPropertyName(property.name) === segment) {
-        projected.push(...readArgumentProjectionCandidates(property.initializer, remainingPath));
+        projected = readArgumentProjectionCandidates(
+          property.initializer,
+          remainingPath,
+          consumer,
+          resolvingBindings
+        );
       }
     }
     return projected;
@@ -3048,7 +3128,20 @@ function collectRuntimeModuleSpecifiers(
             if (consumer && !invocationMayRunBefore(invocation, consumer)) continue;
             const argument = invocation.arguments[parameterIndex];
             if (argument) {
-              candidates.push(...readArgumentProjectionCandidates(argument, parameterBinding.path));
+              const argumentExpression = unwrapRuntimeExpression(argument);
+              const argumentCandidates =
+                consumer && ts.isIdentifier(argumentExpression)
+                  ? readLexicalBindingCandidates(argumentExpression, consumer)
+                  : [argument];
+              candidates.push(
+                ...argumentCandidates.flatMap((argumentCandidate) =>
+                  readArgumentProjectionCandidates(
+                    argumentCandidate,
+                    parameterBinding.path,
+                    consumer
+                  )
+                )
+              );
             }
           }
         }
@@ -3913,7 +4006,7 @@ function collectRuntimeModuleSpecifiers(
           ? new Set([...resolvingBindings, projection.root.text])
           : resolvingBindings;
         const projectedCandidates = rootCandidates.flatMap((candidate) =>
-          readArgumentProjectionCandidates(candidate, projection.path)
+          readArgumentProjectionCandidates(candidate, projection.path, consumer)
         );
         if (projectedCandidates.length > 0) {
           return projectedCandidates.flatMap((candidate) =>
