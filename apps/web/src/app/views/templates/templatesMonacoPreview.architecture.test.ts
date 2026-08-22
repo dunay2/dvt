@@ -689,6 +689,21 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     expectedViolation: 'MonacoCodeSurface outside a governed owner',
   },
   {
+    label: 'A capability cannot assign a Monaco target helper alias after declaration',
+    modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
+    source: [
+      "let target = '';",
+      'function selectTarget() {',
+      "  target = '../../../app/components/monaco/MonacoCodeSurface';",
+      '}',
+      'let invoke;',
+      'invoke = selectTarget;',
+      'invoke();',
+      'void import(target);',
+    ].join('\n'),
+    expectedViolation: 'MonacoCodeSurface outside a governed owner',
+  },
+  {
     label: 'Templates cannot import an allowlisted Canvas editable leaf',
     modulePath: 'app/views/templates/TemplatesRouteWorkbench.tsx',
     source: [
@@ -2498,35 +2513,59 @@ function collectRuntimeModuleSpecifiers(
     ts.forEachChild(node, collectLexicalBindingAssignments);
   }
 
-  function readLexicalCallableBinding(
+  function readLexicalCallableBindings(
     identifier: ts.Identifier,
     resolvingAliases: ReadonlySet<ts.Expression> = new Set()
-  ): ts.FunctionLikeDeclaration | undefined {
+  ): ts.FunctionLikeDeclaration[] {
+    const identifierPosition = identifier.getStart(sourceFile);
+    const executionScope = readExecutionScope(identifier);
     let scope: ts.Node | undefined = identifier.parent;
     while (scope) {
+      const resolved = new Set<ts.FunctionLikeDeclaration>();
       const callable = runtimeLexicalCallableBindings.get(scope)?.get(identifier.text);
-      if (callable) return callable;
+      if (callable) resolved.add(callable);
       if (runtimeLexicalDeclaredBindings.get(scope)?.has(identifier.text)) {
         const initializer = runtimeLexicalBindingInitializers.get(scope)?.get(identifier.text);
-        if (initializer && !resolvingAliases.has(initializer)) {
-          const alias = readCallableAliasIdentifier(initializer);
-          if (alias) {
-            return readLexicalCallableBinding(alias, new Set([...resolvingAliases, initializer]));
+        const aliasCandidates = initializer ? [initializer] : [];
+        for (const assignment of runtimeLexicalBindingAssignments
+          .get(scope)
+          ?.get(identifier.text) ?? []) {
+          if (
+            assignment.executionScope === executionScope &&
+            assignment.position < identifierPosition
+          ) {
+            aliasCandidates.push(assignment.expression);
           }
         }
-        return undefined;
+        for (const candidate of aliasCandidates) {
+          if (resolvingAliases.has(candidate)) continue;
+          const directCallable = readFunctionLikeInitializer(candidate);
+          if (directCallable) {
+            resolved.add(directCallable);
+            continue;
+          }
+          const alias = readCallableAliasIdentifier(candidate);
+          if (alias) {
+            for (const aliasedCallable of readLexicalCallableBindings(
+              alias,
+              new Set([...resolvingAliases, candidate])
+            )) {
+              resolved.add(aliasedCallable);
+            }
+          }
+        }
+        return [...resolved];
       }
+      if (resolved.size > 0) return [...resolved];
       scope = scope.parent;
     }
-    return undefined;
+    return [];
   }
 
-  function readInvokedExecutionScope(
-    expression: ts.Expression
-  ): ts.FunctionLikeDeclaration | undefined {
+  function readInvokedExecutionScopes(expression: ts.Expression): ts.FunctionLikeDeclaration[] {
     const callable = readFunctionLikeInitializer(expression);
-    if (callable) return callable;
-    return ts.isIdentifier(expression) ? readLexicalCallableBinding(expression) : undefined;
+    if (callable) return [callable];
+    return ts.isIdentifier(expression) ? readLexicalCallableBindings(expression) : [];
   }
 
   function collectDirectInvokedExecutionScopes(
@@ -2544,8 +2583,7 @@ function collectRuntimeModuleSpecifiers(
     function visit(node: ts.Node): void {
       if (node !== root && ts.isFunctionLike(node)) return;
       if (ts.isCallExpression(node) && node.getStart(sourceFile) < beforePosition) {
-        const callable = readInvokedExecutionScope(node.expression);
-        if (callable) invoked.add(callable);
+        for (const callable of readInvokedExecutionScopes(node.expression)) invoked.add(callable);
       }
       ts.forEachChild(node, visit);
     }
