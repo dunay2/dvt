@@ -16,7 +16,7 @@ does not revive names that are absent from the current catalog.
 
 Hierarchy DDL and query views are declared only in
 `tools/planning-db/schema.sql`; current components, relations, ownership, and
-rules are exported only through `tools/planning-db/state/canonical-state.json`.
+rules live in Planning DB and are read through governed queries.
 Validation is `node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-integrity-check.test.cjs`
 and `pnpm verify:prepush`.
 

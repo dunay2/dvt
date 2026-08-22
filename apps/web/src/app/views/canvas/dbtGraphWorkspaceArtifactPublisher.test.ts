@@ -1,4 +1,5 @@
-import { PublishGraphDbtWorkspaceArtifactsRequestSchema, sha256HexUtf8 } from '@dvt/contracts';
+import { PublishGraphDbtWorkspaceArtifactsRequestSchema } from '@dvt/contracts';
+import { sha256HexUtf8 } from '@dvt/crypto';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';

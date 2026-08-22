@@ -82,7 +82,7 @@ describe('useCanvasController source import contract', () => {
     harness.cleanup();
   });
 
-  it('invalidates the protected draft query and prepares focus when imported sources complete', async () => {
+  it('invalidates the protected draft query and prepares focus without changing selection', async () => {
     const storeState = harness.state.store as Record<string, unknown>;
     storeState.inspectorPanelVisible = false;
     await harness.renderProbe();
@@ -105,10 +105,7 @@ describe('useCanvasController source import contract', () => {
     });
 
     expect(harness.state.store.setCurrentPlan).toHaveBeenCalledWith(null);
-    expect(harness.state.store.setSelectedNodes).toHaveBeenCalledWith([
-      'src_erp_orders',
-      'src_erp_customers',
-    ]);
+    expect(harness.state.store.setSelectedNodes).not.toHaveBeenCalled();
     expect(harness.state.store.setInspectorNode).toHaveBeenCalledWith('src_erp_orders');
     expect(harness.state.store.showInspectorPanel).not.toHaveBeenCalled();
     expect(harness.state.queryClient.invalidateQueries).toHaveBeenCalledWith({

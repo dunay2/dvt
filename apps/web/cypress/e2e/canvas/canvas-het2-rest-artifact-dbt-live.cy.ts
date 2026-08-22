@@ -14,6 +14,7 @@ import {
   openNodeWorkbenchSection,
 } from '../../support/canvasGraphAuthoring';
 import {
+  assertStepEventAbsent,
   type Het1PublicGraphIdentity,
   proveControlledHet1DbtTestFailure,
 } from '../../support/het1PublicFailureRecoveryProof';
@@ -68,7 +69,7 @@ const HET2_FORBIDDEN_EVIDENCE = [
   'het2-fixture-bearer-token',
   'https://127.0.0.1',
   '{"order_id":1,"amount":10.25}',
-  '{"order_id":2,"amount":20.50}',
+  '{"order_id":1,"amount":20.50}',
 ] as const;
 const DBT_GRAPH_IDENTITY: Het1PublicGraphIdentity = {
   objectNodeId: OBJECT_NODE_ID,
@@ -219,14 +220,19 @@ describe('HET2 public REST artifact DBT vertical', () => {
       connectCanvasNodes(OBJECT_NODE_NAME, MODEL_NODE_NAME);
       confirmCanvasDependency();
       openNodeWorkbench(MODEL_NODE_NAME);
+      openNodeWorkbenchSection('general');
       cy.get('select[name="dbt-materialized"]').select('table');
       cy.get('select[name="dbt-origin"]').select(OBJECT_NODE_ID);
       applyNodeWorkbench();
       openNodeWorkbenchSection('code');
-      cy.get('textarea[name="dbt-model-sql"]').should(
-        'contain.value',
-        `{{ source('staging', '${TARGET_RELATION}') }}`
-      );
+      cy.get('[data-testid="monaco-code-editor"]', { timeout: 20_000 })
+        .find('.view-lines')
+        .invoke('text')
+        .should((renderedCode) => {
+          expect(renderedCode.replaceAll('\u00a0', ' ')).to.contain(
+            `{{ source('staging', '${TARGET_RELATION}') }}`
+          );
+        });
       closeNodeWorkbench();
 
       addCatalogNode(1060, 240, 'dbt:test');
@@ -389,13 +395,7 @@ describe('HET2 public REST artifact DBT vertical', () => {
           .then(() => cancelHet1Run(sourceRunId))
           .then(() => readHet1RunEvents(sourceRunId))
           .then((events) => {
-            assertStepEventSet(events, 'StepCompleted', [ACQUISITION_NODE_ID]);
-            assertAcquisitionEvidence({
-              events,
-              manifest,
-              endpointRef: SLOW_ONCE_ENDPOINT_REF,
-              publicationOutcome: 'verified-existing',
-            });
+            assertStepEventAbsent(events, 'StepCompleted', [ACQUISITION_NODE_ID]);
             assertStepStartedAbsent(events, [OBJECT_NODE_ID, MODEL_NODE_ID, TEST_NODE_ID]);
             expect(events.map((event) => event.eventType)).to.include.members([
               'RunCancelRequested',

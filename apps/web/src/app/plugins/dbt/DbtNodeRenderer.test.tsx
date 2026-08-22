@@ -4,6 +4,7 @@ import { createAppServicesTestOverrides } from '../../../testing/appServicesTest
 import { createMockRunsService } from '../../../testing/runsPortDoubles';
 import { asIsoUtcString, asNonBlankString, asStepId, type EventEnvelope } from '@dvt/contracts';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactFlowProvider } from '@xyflow/react';
 import { fireEvent } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -294,6 +295,57 @@ describe('DbtNodeRenderer history panel', () => {
       document.querySelector('[data-slot="graph-node-metric-hotspot"][aria-label="Columns: 1"]')
         ?.textContent
     ).toBe('1');
+  });
+
+  it('forwards shared column lineage interactions to the DBT card', async () => {
+    const onColumnDisclosureChange = vi.fn();
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    (
+      globalThis as typeof globalThis & {
+        IS_REACT_ACT_ENVIRONMENT?: boolean;
+      }
+    ).IS_REACT_ACT_ENVIRONMENT = true;
+
+    await act(async () => {
+      root?.render(
+        <ReactFlowProvider>
+          <DbtNodeRenderer
+            node={buildNode()}
+            selected={false}
+            hovered={false}
+            overlayDecoration={null}
+            badges={[]}
+            graphNodeCardStrategies={[dbtGraphNodeCardStrategy]}
+            data={{
+              showColumns: true,
+              columns: [
+                {
+                  id: 'order_id',
+                  name: 'order_id',
+                  type: 'integer',
+                  targetHandleId: 'column:target:model_orders:order_id',
+                },
+              ],
+              columnPortDirections: ['target'],
+              onColumnDisclosureChange,
+            }}
+          />
+        </ReactFlowProvider>
+      );
+    });
+
+    act(() => {
+      fireEvent.click(
+        container!.querySelector<HTMLButtonElement>('[data-slot="graph-node-column-toggle"]')!
+      );
+    });
+
+    expect(onColumnDisclosureChange).toHaveBeenCalledWith('model_orders', true);
+    expect(
+      container.querySelector('[data-slot="canvas-node-port-handle"][data-port="target"]')
+    ).not.toBeNull();
   });
 
   it('opens the authoritative dbt file from the card File metric', async () => {

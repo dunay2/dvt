@@ -22,7 +22,7 @@ function createCommandQueryRailCatalogComponent(deps = {}) {
     normalizeRailName,
     normalizeRailStatus,
     normalizeText,
-    sha256,
+    sha256HexUtf8,
     toPosix,
   } = shared;
   const { extractDocumentedRailRows, normalizeDocumentedRailStatus, splitMarkdownTableRow } =
@@ -59,7 +59,7 @@ function createCommandQueryRailCatalogComponent(deps = {}) {
   function readTrackedDocuments(gitPathspecs) {
     return readTrackedDocumentPaths(gitPathspecs).map((sourcePath) => {
       const raw = fs.readFileSync(path.join(repoRoot, sourcePath), 'utf8');
-      return { sourcePath, raw, contentSha256: sha256(raw) };
+      return { sourcePath, raw, contentSha256: sha256HexUtf8(raw) };
     });
   }
 

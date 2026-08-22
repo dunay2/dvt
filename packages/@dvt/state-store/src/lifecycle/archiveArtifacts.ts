@@ -6,7 +6,7 @@
  * @consequence Exporters, verifiers, and snapshot pinning share one canonical artifact surface
  */
 import type { EventEnvelope, RunStatus, WorkflowSnapshot } from '@dvt/contracts';
-import { jcsCanonicalize, sha256Hex } from '@dvt/crypto';
+import { jcsCanonicalize, sha256HexUtf8 } from '@dvt/crypto';
 
 import { parseArchiveUnitKey } from '../archiveLifecycle.js';
 
@@ -90,10 +90,10 @@ export function calculateArchiveEventChecksum(events: readonly EventEnvelope[]):
     throw new Error('ARCHIVE_EVENTS_REQUIRED');
   }
 
-  let rollingDigest = sha256Hex('');
+  let rollingDigest = sha256HexUtf8('');
 
   for (const event of events) {
-    rollingDigest = sha256Hex(`${rollingDigest}\n${jcsCanonicalize(event)}`);
+    rollingDigest = sha256HexUtf8(`${rollingDigest}\n${jcsCanonicalize(event)}`);
   }
 
   return rollingDigest;
@@ -155,7 +155,7 @@ export function buildArchiveUnitManifest(
   return {
     manifest,
     canonicalManifestJson,
-    manifestSha256: sha256Hex(canonicalManifestJson),
+    manifestSha256: sha256HexUtf8(canonicalManifestJson),
   };
 }
 

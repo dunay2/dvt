@@ -4,6 +4,7 @@
  */
 import type { IPlansPort, PlanPreviewOutcome, PreviewedPlanViewModel } from '../../ports/plans';
 import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
+import type { IGraphDbtModelCompilationQueryPort } from '../../ports/graphDbtModelCompilation';
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type {
@@ -111,6 +112,7 @@ export async function executeCanvasPlanAction({
   workspaceFilesQuery,
   workspaceFileContentCommand,
   graphDbtWorkspaceArtifactPublicationCommand,
+  graphDbtModelCompilationQuery,
 }: {
   graphDraftCanvasId: string | null;
   canPlan: boolean;
@@ -129,6 +131,7 @@ export async function executeCanvasPlanAction({
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
   workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
   graphDbtWorkspaceArtifactPublicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
+  graphDbtModelCompilationQuery: IGraphDbtModelCompilationQueryPort;
 }): Promise<CanvasPlanActionResult> {
   if (!canPlan) {
     return { ok: false, message: canvasViewCopy.planPermissionDeniedMessage };
@@ -198,6 +201,20 @@ export async function executeCanvasPlanAction({
           };
         }
         writtenArtifactPaths.push(...publication.writtenArtifactPaths);
+
+        const compilation = await graphDbtModelCompilationQuery.compile({
+          canvasId: graphDraftCanvasId,
+          selectors: [...artifactProjection.modelSelectors],
+        });
+        if (compilation.kind !== 'compiled') {
+          return {
+            ok: false,
+            message:
+              compilation.kind === 'authority_refused'
+                ? canvasViewCopy.planGraphAuthorityRefusedMessage
+                : canvasViewCopy.planGraphDbtCompilationFailedMessage,
+          };
+        }
       }
 
       const previewOutcome = await plansService.previewPlan({

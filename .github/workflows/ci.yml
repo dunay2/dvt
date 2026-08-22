@@ -142,6 +142,7 @@ jobs:
         run: pnpm ci:full
         env:
           DVT_CI: '1'
+          PLANNING_DB_INTEGRITY_SCOPE: bootstrap
           NODE_OPTIONS: --max-old-space-size=4096
           TURBO_TOKEN: ${{ github.event_name != 'pull_request' && secrets.TURBO_TOKEN || '' }}
           TURBO_TEAM: ${{ github.event_name != 'pull_request' && secrets.TURBO_TEAM || '' }}

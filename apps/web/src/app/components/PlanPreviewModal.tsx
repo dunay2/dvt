@@ -144,11 +144,13 @@ function PlanPreviewField({
   children,
   long = false,
   mono = false,
+  dataSlot,
 }: Readonly<{
   label: string;
   children: ReactNode;
   long?: boolean;
   mono?: boolean;
+  dataSlot?: string;
 }>) {
   const valueClassName = long
     ? 'block min-w-0 break-all font-mono text-xs leading-5 text-blue-300'
@@ -161,6 +163,7 @@ function PlanPreviewField({
       <div className="text-[11px] font-medium uppercase tracking-wide text-slate-400">{label}</div>
       <div
         aria-label={label}
+        data-slot={dataSlot}
         data-testid={long ? 'plan-preview-long-value' : undefined}
         className={`mt-1 ${valueClassName}`}
       >
@@ -402,7 +405,11 @@ export function PlanPreviewModal({
               caption={messages.planPreviewIdentityCaption}
             >
               <div className="grid min-w-0 gap-3 md:grid-cols-2">
-                <PlanPreviewField label={messages.planPreviewIdLabel} long>
+                <PlanPreviewField
+                  label={messages.planPreviewIdLabel}
+                  dataSlot="plan-preview-id"
+                  long
+                >
                   {plan.planId}
                 </PlanPreviewField>
                 <PlanPreviewField label={messages.planPreviewVersionLabel}>
@@ -664,6 +671,7 @@ export function PlanPreviewModal({
             {messages.planPreviewExportJsonAction}
           </Button>
           <Button
+            data-slot="plan-preview-start-run"
             disabled={startRunDisabled || validation != null}
             onClick={() => {
               onStartRun();

@@ -271,21 +271,34 @@ function buildConnectedTestRows({
       }
 
       const testMetadata = asRecord(testNode.metadata);
-      const test = readConnectedDbtTest(testMetadata);
+      const canonicalMetadata = asRecord(testMetadata.dbtTest);
+      const test =
+        Object.keys(canonicalMetadata).length === 0
+          ? readConnectedDbtTest(testMetadata)
+          : buildDbtTestSemanticsInput(readString(canonicalMetadata.testType) ?? '', {
+              ...testMetadata,
+              ...canonicalMetadata,
+            });
       const targetColumn = readFirstString(
+        canonicalMetadata.targetColumn,
         testMetadata.testTargetColumn,
         testMetadata.targetColumn,
         testMetadata.column
       );
+      const targetModelReference = readFirstString(
+        canonicalMetadata.targetModelId,
+        testMetadata.testTargetModel,
+        testMetadata.targetModel,
+        testMetadata.model
+      );
       const targetModel =
-        readFirstString(
-          testMetadata.testTargetModel,
-          testMetadata.targetModel,
-          testMetadata.model
-        ) ?? node.name;
+        nodes.find((candidate) => candidate.id === targetModelReference)?.name ??
+        targetModelReference ??
+        node.name;
       const target =
-        readFirstString(testMetadata.testTarget, testMetadata.target) ??
-        [targetModel, targetColumn].filter(Boolean).join('.');
+        (Object.keys(canonicalMetadata).length === 0
+          ? readFirstString(testMetadata.testTarget, testMetadata.target)
+          : undefined) ?? [targetModel, targetColumn].filter(Boolean).join('.');
       const lastRunDurationMs =
         test.lastRunDurationMs ??
         (testNode.lastDuration == null ? undefined : testNode.lastDuration * 1000);
@@ -313,22 +326,35 @@ function buildConnectedTestRows({
 
 function buildFallbackTestNodeRows(
   node: CanonicalNode,
-  metadata: Record<string, unknown>
+  metadata: Record<string, unknown>,
+  nodes: readonly CanonicalNode[]
 ): readonly DbtTestTableRow[] {
   const canonicalTestLastRunStatus = node.kind.endsWith(':test') ? node.status : undefined;
   const canonicalTestLastRunDurationMs =
     node.kind.endsWith(':test') && node.lastDuration != null ? node.lastDuration * 1000 : undefined;
-  const testTargetModel = readFirstString(metadata.testTargetModel, metadata.targetModel);
-  const testTargetColumn = readFirstString(metadata.testTargetColumn, metadata.targetColumn);
-  const testTarget = readFirstString(metadata.testTarget);
-  const severity = readString(metadata.severity);
-  const testType = readFirstString(metadata.testType, metadata.type);
+  const canonicalMetadata = asRecord(metadata.dbtTest);
+  const targetModelReference = readFirstString(
+    canonicalMetadata.targetModelId,
+    metadata.testTargetModel,
+    metadata.targetModel
+  );
+  const targetModel =
+    nodes.find((candidate) => candidate.id === targetModelReference)?.name ?? targetModelReference;
+  const targetColumn = readFirstString(
+    canonicalMetadata.targetColumn,
+    metadata.testTargetColumn,
+    metadata.targetColumn
+  );
+  const target =
+    Object.keys(canonicalMetadata).length === 0 ? readString(metadata.testTarget) : undefined;
+  const severity = readFirstString(canonicalMetadata.severity, metadata.severity);
+  const testType = readFirstString(canonicalMetadata.testType, metadata.testType, metadata.type);
 
   if (
     !node.kind.endsWith(':test') &&
-    testTargetModel == null &&
-    testTargetColumn == null &&
-    testTarget == null &&
+    targetModel == null &&
+    targetColumn == null &&
+    target == null &&
     severity == null &&
     testType == null
   ) {
@@ -341,8 +367,8 @@ function buildFallbackTestNodeRows(
       cells: {
         name: node.name,
         type: testType ?? '',
-        target: testTarget ?? [testTargetModel, testTargetColumn].filter(Boolean).join('.'),
-        column: testTargetColumn ?? '',
+        target: target ?? [targetModel, targetColumn].filter(Boolean).join('.'),
+        column: targetColumn ?? '',
         severity: severity ?? '',
         ...testSemanticCells({
           type: testType ?? '',
@@ -386,5 +412,7 @@ export function buildDbtTestRows({
     ...buildConnectedTestRows({ node, nodes, edges }),
   ];
 
-  return projectedRows.length > 0 ? projectedRows : buildFallbackTestNodeRows(node, metadata);
+  return projectedRows.length > 0
+    ? projectedRows
+    : buildFallbackTestNodeRows(node, metadata, nodes);
 }

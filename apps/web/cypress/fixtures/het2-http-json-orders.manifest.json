@@ -1,8 +1,8 @@
 {
   "bucket": "het2-artifacts",
-  "objectKey": "tenants/tenant/2bc4bcd1fa28c941e211ee853f08c6d09bb8db1fa182e9961ac39d9bb525082c",
-  "storageUri": "s3://het2-artifacts/tenants/tenant/2bc4bcd1fa28c941e211ee853f08c6d09bb8db1fa182e9961ac39d9bb525082c",
-  "sha256": "2bc4bcd1fa28c941e211ee853f08c6d09bb8db1fa182e9961ac39d9bb525082c",
+  "objectKey": "tenants/tenant/128464f479d56e2f01e3319a715e38f1a7d9a4fa6e9c8a9bd78d2612ef2417f4",
+  "storageUri": "s3://het2-artifacts/tenants/tenant/128464f479d56e2f01e3319a715e38f1a7d9a4fa6e9c8a9bd78d2612ef2417f4",
+  "sha256": "128464f479d56e2f01e3319a715e38f1a7d9a4fa6e9c8a9bd78d2612ef2417f4",
   "sizeBytes": 60,
   "endpointRef": "http-endpoint:het2-orders",
   "authCredentialRef": "http-auth:het2-orders",

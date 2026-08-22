@@ -348,7 +348,7 @@ test('real frontend component inventory maps Canvas contextual UX components wit
 
   assert.equal(
     componentsById.get('web.component.canvas.NodeWorkbench')?.componentStatus,
-    'partial'
+    'current'
   );
   assert.equal(componentsById.has('web.component.canvas.CanvasWorkbenchTabs'), false);
   assert.ok(

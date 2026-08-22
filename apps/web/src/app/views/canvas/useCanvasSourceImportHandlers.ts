@@ -72,7 +72,6 @@ export function useCanvasSourceImportHandlers({
   const { graphModel } = state;
   const {
     setDraftSession,
-    setSelectedNodes,
     setInspectorNode,
     setCurrentPlan,
     onLayoutComplete,
@@ -104,7 +103,6 @@ export function useCanvasSourceImportHandlers({
       });
 
       if (nextImportedNodeIds.length > 0) {
-        setSelectedNodes(nextImportedNodeIds);
         setInspectorNode(nextImportedNodeIds[0] ?? null);
         setImportedNodeFocusIds(nextImportedNodeIds);
         const contextualPositions = buildContextualSourceImportNodePositions(
@@ -128,7 +126,6 @@ export function useCanvasSourceImportHandlers({
       setCurrentPlan,
       setDraftSession,
       setInspectorNode,
-      setSelectedNodes,
       workspaceLayoutKey,
     ]
   );

@@ -2,7 +2,7 @@
  * Owned concern: preflight and publish the complete graph-derived DBT artifact
  * set through one protected atomic application command.
  */
-import { sha256HexUtf8 } from '@dvt/contracts';
+import { sha256HexUtf8 } from '@dvt/crypto';
 
 import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
 import type {

@@ -1,5 +1,6 @@
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
-import { asSha256HexString, sha256HexUtf8 } from '@dvt/contracts';
+import { asSha256HexString, GraphDbtModelCompilationResultSchema } from '@dvt/contracts';
+import { sha256HexUtf8 } from '@dvt/crypto';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { vi } from 'vitest';
@@ -9,6 +10,7 @@ import { createTestQueryClient } from '../../../testing/reactQueryHarness';
 import { createMockRunsService } from '../../../testing/runsPortDoubles';
 import type { IPlansPort } from '../../ports/plans';
 import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
+import type { IGraphDbtModelCompilationQueryPort } from '../../ports/graphDbtModelCompilation';
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
@@ -52,6 +54,7 @@ type ExecutionActionsHookCommonProps = Readonly<{
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
   workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
   graphDbtWorkspaceArtifactPublicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
+  graphDbtModelCompilationQuery: IGraphDbtModelCompilationQueryPort;
   previewProvenanceConfig: PreviewProvenanceConfig;
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
@@ -91,6 +94,7 @@ export type RenderExecutionActionsHarnessArgs = {
   workspaceFilesQuery?: IWorkspaceFilesQueryPort;
   workspaceFileContentCommand?: IWorkspaceFileContentCommandPort;
   graphDbtWorkspaceArtifactPublicationCommand?: IGraphDbtWorkspaceArtifactPublicationCommandPort;
+  graphDbtModelCompilationQuery?: IGraphDbtModelCompilationQueryPort;
   previewProvenanceConfig?: Partial<PreviewProvenanceConfig>;
   canonicalNodes?: CanonicalNode[];
   canonicalEdges?: CanonicalEdge[];
@@ -122,6 +126,7 @@ type ResolvedExecutionActionsHarnessArgs = Omit<
   | 'workspaceFilesQuery'
   | 'workspaceFileContentCommand'
   | 'graphDbtWorkspaceArtifactPublicationCommand'
+  | 'graphDbtModelCompilationQuery'
   | 'previewProvenanceConfig'
   | 'flushDraftForExecution'
   | 'canPlan'
@@ -140,6 +145,7 @@ type ResolvedExecutionActionsHarnessArgs = Omit<
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
   workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
   graphDbtWorkspaceArtifactPublicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
+  graphDbtModelCompilationQuery: IGraphDbtModelCompilationQueryPort;
   previewProvenanceConfig: Partial<PreviewProvenanceConfig>;
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
@@ -243,6 +249,7 @@ function resolveCommonHookProps(
     workspaceFilesQuery: args.workspaceFilesQuery,
     workspaceFileContentCommand: args.workspaceFileContentCommand,
     graphDbtWorkspaceArtifactPublicationCommand: args.graphDbtWorkspaceArtifactPublicationCommand,
+    graphDbtModelCompilationQuery: args.graphDbtModelCompilationQuery,
     previewProvenanceConfig: args.previewProvenanceConfig as PreviewProvenanceConfig,
     canonicalNodes: args.canonicalNodes,
     canonicalEdges: args.canonicalEdges,
@@ -293,6 +300,8 @@ function resolveHarnessArgs(
     graphDbtWorkspaceArtifactPublicationCommand:
       args.graphDbtWorkspaceArtifactPublicationCommand ??
       createGraphDbtWorkspaceArtifactPublicationCommandMock(),
+    graphDbtModelCompilationQuery:
+      args.graphDbtModelCompilationQuery ?? createGraphDbtModelCompilationQueryMock(),
     previewProvenanceConfig: args.previewProvenanceConfig ?? DEFAULT_PREVIEW_PROVENANCE_CONFIG,
     canonicalNodes: args.canonicalNodes ?? buildCanonicalNodes(),
     canonicalEdges: args.canonicalEdges ?? buildCanonicalEdges(),
@@ -480,6 +489,40 @@ export function createGraphDbtWorkspaceArtifactPublicationCommandMock(): IGraphD
   };
 }
 
+export function createGraphDbtModelCompilationQueryMock(): IGraphDbtModelCompilationQueryPort {
+  return {
+    compile: vi.fn<IGraphDbtModelCompilationQueryPort['compile']>(async (request) =>
+      GraphDbtModelCompilationResultSchema.parse({
+        schemaVersion: 'graph-dbt-model-compilation.v1',
+        kind: 'compiled',
+        canvasId: request.canvasId,
+        authorityBinding: {
+          schemaVersion: 'canvas-authoring-authority-binding.v1',
+          canvasId: request.canvasId,
+          authority: { kind: 'graph-draft' },
+        },
+        projectRevision: {
+          projectRoot: '.',
+          projectName: 'analytics',
+          contentSetSha256: 'a'.repeat(64),
+          analyzedAt: '2026-08-19T22:00:00.000Z',
+          analyzerVersion: 'dvt-dbt-analyzer.v1',
+          dbtVersion: '1.10.0',
+        },
+        analysisSha256: 'b'.repeat(64),
+        models: request.selectors
+          .slice()
+          .sort((left, right) => left.localeCompare(right))
+          .map((selector) => ({
+            selector,
+            uniqueId: `model.analytics.${selector}`,
+            compiledSql: `select * from ${selector}`,
+          })),
+      })
+    ),
+  };
+}
+
 export function createPlansServiceMock(plan: PlanViewModel = mockExecutionPlan): IPlansPort {
   return {
     previewPlan: vi.fn(async () => ({
@@ -584,6 +627,7 @@ export function renderExecutionActionsHarness(initialArgs: RenderExecutionAction
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
   workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
   graphDbtWorkspaceArtifactPublicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
+  graphDbtModelCompilationQuery: IGraphDbtModelCompilationQueryPort;
   setBottomDrawerHeight: ResolvedExecutionActionsHarnessArgs['setBottomDrawerHeight'];
   toggleBottomDrawer: ResolvedExecutionActionsHarnessArgs['toggleBottomDrawer'];
   queryClient: QueryClient;
@@ -651,6 +695,7 @@ export function renderExecutionActionsHarness(initialArgs: RenderExecutionAction
     workspaceFileContentCommand: currentArgs.workspaceFileContentCommand,
     graphDbtWorkspaceArtifactPublicationCommand:
       currentArgs.graphDbtWorkspaceArtifactPublicationCommand,
+    graphDbtModelCompilationQuery: currentArgs.graphDbtModelCompilationQuery,
     setBottomDrawerHeight: currentArgs.setBottomDrawerHeight,
     toggleBottomDrawer: currentArgs.toggleBottomDrawer,
     queryClient,

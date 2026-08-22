@@ -97,12 +97,6 @@ export function ShellTopBar({
           data-slot="shell-top-bar-command-cluster"
           className="flex w-full min-w-0 flex-wrap items-center justify-end gap-1 sm:w-auto sm:shrink-0 sm:flex-nowrap sm:gap-2"
         >
-          <ShellConnectionStatus
-            isConnectionChecking={isConnectionChecking}
-            effectiveConnectionStatus={effectiveConnectionStatus}
-            connectionDetail={connectionDetail}
-            copy={copy}
-          />
           <ShellRunStatusIndicator contribution={operationalDrawerContribution} copy={copy} />
           {exposeWorkspaceNavigationMenu && (
             <ShellMenu
@@ -130,6 +124,12 @@ export function ShellTopBar({
             gitSha={workspaceBootstrap.gitSha}
             toggleBottomDrawer={toggleBottomDrawer}
             toggleFocusMode={toggleFocusMode}
+            copy={copy}
+          />
+          <ShellConnectionStatus
+            isConnectionChecking={isConnectionChecking}
+            effectiveConnectionStatus={effectiveConnectionStatus}
+            connectionDetail={connectionDetail}
             copy={copy}
           />
         </div>

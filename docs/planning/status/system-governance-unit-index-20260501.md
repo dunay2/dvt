@@ -24,7 +24,7 @@ pnpm planning:db:query architecture-scopes
 pnpm planning:db:query filesystem-coverage --no-refresh
 ```
 
-Publish tracked recovery projections only when explicitly requested:
+Publish derived human-review projections only when explicitly requested:
 
 ```bash
 pnpm planning:db:export --output-root .

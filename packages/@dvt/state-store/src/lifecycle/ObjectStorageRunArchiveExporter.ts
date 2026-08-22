@@ -2,7 +2,7 @@
  * @ownedConcern Owns object-store archive artifact export, verification, and cold-payload redaction.
  */
 import type { EventEnvelope } from '@dvt/contracts';
-import { jcsCanonicalize, sha256Hex } from '@dvt/crypto';
+import { jcsCanonicalize, sha256HexUtf8 } from '@dvt/crypto';
 
 import { buildArchiveUnitManifest } from './archiveArtifacts.js';
 import type {
@@ -87,7 +87,7 @@ export class ObjectStorageRunArchiveExporter implements IRunArchiveExporter {
 
       const existingManifest = parseArchiveManifest(manifestBuffer);
       const canonicalExistingManifest = jcsCanonicalize(existingManifest);
-      const existingManifestSha256 = sha256Hex(canonicalExistingManifest);
+      const existingManifestSha256 = sha256HexUtf8(canonicalExistingManifest);
       const rebuiltFromExistingManifest = buildArchiveUnitManifest({
         archiveUnitKey: input.archiveUnitKey,
         tenantBucket: input.tenantBucket,
@@ -177,7 +177,7 @@ export class ObjectStorageRunArchiveExporter implements IRunArchiveExporter {
     const manifest = parseArchiveManifest(manifestBuffer);
 
     const canonicalManifestJson = jcsCanonicalize(manifest);
-    const manifestSha256 = sha256Hex(canonicalManifestJson);
+    const manifestSha256 = sha256HexUtf8(canonicalManifestJson);
     if (checksumBuffer.toString('utf8').trim() !== manifestSha256) {
       throw new Error('ARCHIVE_MANIFEST_CHECKSUM_MISMATCH');
     }

@@ -17,6 +17,7 @@ const INSPECTOR_DRAFT_ERROR_COPY_KEYS = [
   ['dbt_schema_required', 'inspectorErrorDbtSchemaRequired'],
   ['dbt_table_required', 'inspectorErrorDbtTableRequired'],
   ['dbt_materialization_invalid', 'inspectorErrorDbtMaterializationInvalid'],
+  ['dbt_test_column_not_declared', 'inspectorErrorDbtTestColumnNotDeclared'],
   ['dvt_schema_required', 'inspectorErrorDvtSchemaRequired'],
   ['dvt_table_required', 'inspectorErrorDvtTableRequired'],
   ['dvt_alias_required', 'inspectorErrorDvtAliasRequired'],
@@ -49,6 +50,32 @@ const INSPECTOR_DRAFT_ERROR_COPY_KEYS = [
 ])[];
 
 describe('canvas copy catalog', () => {
+  it('summarizes inherited and declared columns without explanatory prose', () => {
+    const englishCopy = resolveCanvasViewCopy('en-US');
+    const spanishCopy = resolveCanvasViewCopy('es-ES');
+
+    expect(englishCopy.nodePresentationInheritedColumnsDetailTemplate).toBe(
+      'Inherited: {count} · Declared: 0'
+    );
+    expect(englishCopy.nodePresentationDeclaredColumnsDetailTemplate).toBe(
+      'Inherited: 0 · Declared: {count}'
+    );
+    expect(englishCopy.nodePresentationMixedColumnsDetailTemplate).toBe(
+      'Inherited: {available} · Declared: {declared}'
+    );
+    expect(englishCopy.nodePresentationNoColumnsDetail).toBe('Inherited: 0 · Declared: 0');
+    expect(spanishCopy.nodePresentationInheritedColumnsDetailTemplate).toBe(
+      'Heredadas: {count} · Declaradas: 0'
+    );
+    expect(spanishCopy.nodePresentationDeclaredColumnsDetailTemplate).toBe(
+      'Heredadas: 0 · Declaradas: {count}'
+    );
+    expect(spanishCopy.nodePresentationMixedColumnsDetailTemplate).toBe(
+      'Heredadas: {available} · Declaradas: {declared}'
+    );
+    expect(spanishCopy.nodePresentationNoColumnsDetail).toBe('Heredadas: 0 · Declaradas: 0');
+  });
+
   it('exposes draft access posture copy in English and Spanish', () => {
     expect(canvasViewCopy.sessionRequiredDraftLabel).toBe('Session required');
     expect(canvasViewCopy.readOnlyDraftLabel).toBe('Read-only draft');
@@ -88,9 +115,20 @@ describe('canvas copy catalog', () => {
     expect(spanishCopy.draftSavedLabel).toBe('Borrador guardado');
     expect(spanishCopy.draftSaveFailedLabel).toBe('Guardado del borrador fallido');
     expect(spanishCopy.newCanvasLabel).toBe('Nuevo canvas');
-    expect(canvasViewCopy.selectionRecoveryRequestedRootsLabel).toBe('Requested roots');
-    expect(spanishCopy.selectionRecoveryRequestedRootsLabel).toBe('Raíces solicitadas');
-    expect(spanishCopy.selectionRecoveryUseWorkspaceScopeAction).toBe('Usar alcance del workspace');
+    expect(canvasViewCopy.selectionRecoveryRequestedRootsLabel).toBe('Selected nodes');
+    expect(spanishCopy.selectionRecoveryRequestedRootsLabel).toBe('Nodos seleccionados');
+    expect(canvasViewCopy.selectionRecoveryNonExecutableRootsLabel).toBe('Nodes that cannot run');
+    expect(spanishCopy.selectionRecoveryNonExecutableRootsLabel).toBe(
+      'Nodos que no se pueden ejecutar'
+    );
+    expect(canvasViewCopy.selectionRecoveryUseWorkspaceScopeAction).toBe('Run entire flow');
+    expect(spanishCopy.selectionRecoveryUseWorkspaceScopeAction).toBe('Ejecutar todo el flujo');
+    expect(spanishCopy.selectionRecoveryProblemSummary).toBe(
+      'No se puede crear la vista previa con la selección actual.'
+    );
+    expect(spanishCopy.selectionRecoveryProblemDetail).toBe(
+      'Selecciona un modelo, una prueba o una instantánea, o ejecuta todo el flujo. Los orígenes aportan datos, pero no se ejecutan por sí solos.'
+    );
   });
 
   it('resolves Canvas Inspector authoring copy in English and Spanish', () => {

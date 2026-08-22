@@ -56,7 +56,6 @@ function readWorkflowScopePolicy() {
     'workspace_plan_interpreter',
     'workspace_plan_verifier',
     'workspace_planner',
-    'workspace_planner_contracts',
     'workspace_run_domain',
     'workspace_state_store',
     'workspace_traceability_service',
@@ -211,12 +210,6 @@ export const WORKSPACE_ENTRIES = [
     patterns: WORKFLOW_SCOPE_POLICY.workspace_planner,
   },
   {
-    key: 'planner_contracts',
-    name: 'planner-contracts',
-    pkg: '@dvt/planner-contracts',
-    patterns: WORKFLOW_SCOPE_POLICY.workspace_planner_contracts,
-  },
-  {
     key: 'run_domain',
     name: 'run-domain',
     pkg: '@dvt/run-domain',
@@ -350,7 +343,7 @@ export const TEST_SCOPE_PATTERNS = {
     WORKFLOW_SCOPE_POLICY.workspace_temporal_object_file_postgres_plugin,
   web: ['apps/web/**', ...WEB_FRONTEND_TEST_GOVERNANCE_PATTERNS],
   artifacts: ['packages/@dvt/artifacts/**'],
-  crypto: ['packages/@dvt/canonical/**'],
+  crypto: ['packages/@dvt/crypto/**'],
   delivery: ['packages/@dvt/delivery/**'],
   dsl: ['packages/@dvt/dsl/**'],
   observability: ['packages/@dvt/observability/**'],
@@ -468,7 +461,6 @@ export const SCOPE_MODES = {
 const EXCLUDED_TEST_PACKAGE_NAMES = new Set([
   '@dvt/adapter-postgres',
   '@dvt/adapter-temporal',
-  '@dvt/planner-contracts',
   '@dvt/web',
 ]);
 

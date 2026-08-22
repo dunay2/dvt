@@ -261,69 +261,6 @@ describe('CanvasShell contextual dialogs', () => {
     });
     expect(onConsumed).toHaveBeenCalledTimes(1);
   });
-
-  it('opens contextual project Code from a one-shot route intent', async () => {
-    const onConsumed = vi.fn();
-    const onUnavailableLegacySurface = vi.fn();
-
-    await renderShell({
-      routeIntentRequest: {
-        intent: { kind: 'open-contextual-workbench', workbenchId: 'project-code' },
-        onConsumed,
-        onUnavailableLegacySurface,
-      },
-    });
-
-    expect(container.querySelector('[data-slot="canvas-contextual-workbench"]')).not.toBeNull();
-    expect(onConsumed).toHaveBeenCalledTimes(1);
-    expect(onUnavailableLegacySurface).not.toHaveBeenCalled();
-
-    const closeButton = container.querySelector<HTMLButtonElement>(
-      '[data-slot="canvas-contextual-workbench-close"]'
-    );
-    expect(closeButton).not.toBeNull();
-
-    await act(async () => {
-      closeButton?.click();
-    });
-
-    await waitFor(() =>
-      expect(container.querySelector('[data-slot="canvas-contextual-workbench"]')).toBeNull()
-    );
-  });
-
-  it('routes a legacy Lineage intent through the existing Canvas lens command', async () => {
-    const onToggleColumns = vi.fn();
-    const onConsumed = vi.fn();
-
-    await renderShell({
-      chromeCommands: { onToggleColumns },
-      routeIntentRequest: {
-        intent: { kind: 'enable-lens', lensId: 'column-lineage' },
-        onConsumed,
-        onUnavailableLegacySurface: vi.fn(),
-      },
-    });
-
-    expect(onToggleColumns).toHaveBeenCalledTimes(1);
-    expect(onConsumed).toHaveBeenCalledTimes(1);
-  });
-
-  it('reports an unavailable legacy surface through the route-owned feedback command', async () => {
-    const onUnavailableLegacySurface = vi.fn();
-    const onConsumed = vi.fn();
-
-    await renderShell({
-      routeIntentRequest: {
-        intent: { kind: 'unavailable-legacy-surface', surfaceId: 'diff' },
-        onConsumed,
-        onUnavailableLegacySurface,
-      },
-    });
-
-    expect(onUnavailableLegacySurface).toHaveBeenCalledWith('diff');
-    expect(onConsumed).toHaveBeenCalledTimes(1);
-  });
 });
 
 function getViewportCommand(commandName: DialogViewportCommand): (() => void) | undefined {

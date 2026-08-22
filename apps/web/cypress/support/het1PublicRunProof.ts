@@ -63,14 +63,14 @@ export function startPreviewedHet1Run(): Cypress.Chainable<PreviewedHet1Run> {
   return cy
     .get('[data-testid="plan-preview-modal"]', { timeout: 30_000 })
     .should('be.visible')
-    .find('[aria-label="Preview ID value"]')
+    .find('[data-slot="plan-preview-id"]')
     .invoke('text')
     .then((previewId) => {
       const planId = previewId.trim();
       expect(planId).to.match(/^[a-f0-9]{64}$/u);
 
       cy.get('[data-testid="plan-preview-modal"]').within(() => {
-        cy.contains('button', 'Start Run').should('be.enabled').click();
+        cy.get('[data-slot="plan-preview-start-run"]').should('be.enabled').click();
       });
 
       return cy

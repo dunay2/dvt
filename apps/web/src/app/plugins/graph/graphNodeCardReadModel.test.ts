@@ -433,9 +433,74 @@ describe('buildGraphNodeCardReadModel', () => {
     expect(model.operationalMetrics).toEqual([
       { id: 'last-run', label: 'Last run', value: '2026-06-12T20:45:00Z', icon: 'clock' },
       { id: 'duration', label: 'Duration', value: '1m 15s', icon: 'timer' },
-      { id: 'rows', label: 'Rows', value: '1.2k', icon: 'rows' },
+      {
+        id: 'rows',
+        label: 'Rows',
+        value: '1.2k',
+        detail: '1,210 rows.',
+        icon: 'rows',
+      },
+      {
+        id: 'size',
+        label: 'Size',
+        value: '2 KB',
+        detail: '2,048 B (2 KB).',
+        icon: 'database',
+        tone: 'success',
+      },
     ]);
   });
+
+  it('keeps empty Rows and Size facts when only partial execution evidence exists', () => {
+    const model = buildGraphNodeCardReadModel(
+      buildNode({
+        kind: 'dvt:sql_transform',
+        pluginId: 'dvt',
+        role: 'transform',
+        name: 'customer_rollup',
+        metadata: {
+          lastRunAt: '2026-06-12T20:45:00Z',
+        },
+      }),
+      {},
+      [dvtGraphNodeCardStrategy]
+    );
+
+    expect(model.operationalMetrics).toEqual([
+      { id: 'last-run', label: 'Last run', value: '2026-06-12T20:45:00Z', icon: 'clock' },
+      { id: 'rows', label: 'Rows', value: '—', icon: 'rows' },
+      { id: 'size', label: 'Size', value: '—', icon: 'database' },
+    ]);
+  });
+
+  it.each([
+    { locale: 'en', presentationCopy: undefined, rowsLabel: 'Rows', sizeLabel: 'Size' },
+    {
+      locale: 'es',
+      presentationCopy: { ...SPANISH_PRESENTATION_COPY, locale: 'es' },
+      rowsLabel: 'Filas',
+      sizeLabel: 'Tamaño',
+    },
+  ])(
+    'reserves truthful empty Rows and Size metrics for a DVT SQL transform in $locale',
+    ({ presentationCopy, rowsLabel, sizeLabel }) => {
+      const model = buildGraphNodeCardReadModel(
+        buildNode({
+          kind: 'dvt:sql_transform',
+          pluginId: 'dvt',
+          role: 'transform',
+          name: 'customer_rollup',
+        }),
+        presentationCopy == null ? {} : { presentationCopy },
+        [dvtGraphNodeCardStrategy]
+      );
+
+      expect(model.operationalMetrics).toEqual([
+        { id: 'rows', label: rowsLabel, value: '—', icon: 'rows' },
+        { id: 'size', label: sizeLabel, value: '—', icon: 'database' },
+      ]);
+    }
+  );
 
   it('keeps DVT canonical runtime metrics on strategy-owned cards', () => {
     const model = buildGraphNodeCardReadModel(

@@ -11,6 +11,34 @@ import { createCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel'
 import { DbtModelCodeAuthoringSection } from './DbtModelCodeAuthoringSection';
 import { buildDbtAuthoringModelProjection } from './dbtAuthoringFieldsModel';
 
+vi.mock('../../components/monaco/MonacoCodeEditor', () => ({
+  MonacoCodeEditor: ({
+    ariaLabel,
+    language,
+    onChange,
+    path,
+    readOnly,
+    value,
+  }: {
+    ariaLabel: string;
+    language: string;
+    onChange: (value: string) => void;
+    path?: string;
+    readOnly?: boolean;
+    value: string;
+  }) => (
+    <textarea
+      aria-label={ariaLabel}
+      data-language={language}
+      data-path={path}
+      data-read-only={readOnly ? 'true' : 'false'}
+      data-testid="dbt-model-sql-editor"
+      onChange={(event) => onChange(event.currentTarget.value)}
+      value={value}
+    />
+  ),
+}));
+
 const source: CanonicalNode = {
   id: 'source-orders',
   name: 'Raw orders',
@@ -19,7 +47,13 @@ const source: CanonicalNode = {
   role: 'input',
   status: 'idle',
   tags: [],
-  metadata: { dbt: { sourceName: 'raw', schemaName: 'raw', tableName: 'orders' } },
+  metadata: {
+    dbt: { sourceName: 'raw', schemaName: 'raw', tableName: 'orders' },
+    columns: [
+      { name: 'order_id', type: 'bigint' },
+      { name: 'customer', type: 'text' },
+    ],
+  },
 };
 
 const model: CanonicalNode = {
@@ -40,7 +74,7 @@ const edge: CanonicalEdge = {
   relation: 'lineage',
 };
 
-function Harness(): JSX.Element {
+function Harness({ disabled = false }: Readonly<{ disabled?: boolean }>): JSX.Element {
   const [draft, setDraft] = useState<CanvasInspectorNodeDraft>(() =>
     createCanvasInspectorNodeDraft(model)
   );
@@ -57,7 +91,7 @@ function Harness(): JSX.Element {
     <>
       <DbtModelCodeAuthoringSection
         node={model}
-        disabled={false}
+        disabled={disabled}
         draft={dbtDraft}
         projection={projection}
         onChange={setDraft}
@@ -112,8 +146,12 @@ describe('DbtModelCodeAuthoringSection', () => {
   it('shows generated SQL with provenance and turns edits into authored draft SQL', () => {
     act(() => root.render(<Harness />));
 
-    const editor = container.querySelector<HTMLTextAreaElement>('textarea[name="dbt-model-sql"]');
-    expect(editor?.value).toBe("select *\nfrom {{ source('raw', 'orders') }}");
+    const editor = container.querySelector<HTMLTextAreaElement>(
+      '[data-testid="dbt-model-sql-editor"]'
+    );
+    expect(editor?.value).toBe(
+      'select\n  origin."order_id" as "order_id",\n  origin."customer" as "customer"\nfrom {{ source(\'raw\', \'orders\') }} as origin'
+    );
     expect(
       container.querySelector('[data-slot="dbt-model-code-provenance"]')?.textContent
     ).toContain('models/orders_model.sql');
@@ -135,7 +173,9 @@ describe('DbtModelCodeAuthoringSection', () => {
   it('keeps an explicitly cleared editor empty instead of restoring generated SQL', () => {
     act(() => root.render(<Harness />));
 
-    const editor = container.querySelector<HTMLTextAreaElement>('textarea[name="dbt-model-sql"]');
+    const editor = container.querySelector<HTMLTextAreaElement>(
+      '[data-testid="dbt-model-sql-editor"]'
+    );
     act(() => {
       fireEvent.input(editor!, { target: { value: '' } });
     });
@@ -148,34 +188,18 @@ describe('DbtModelCodeAuthoringSection', () => {
     act(() => root.render(<UnconnectedHarness />));
 
     expect(container.querySelector('label')?.textContent).toBe('Model SQL');
-    expect(container.querySelector('textarea[name="dbt-model-sql"]')).not.toBeNull();
+    const editor = container.querySelector<HTMLElement>('[data-testid="dbt-model-sql-editor"]');
+    expect(editor).not.toBeNull();
+    expect(editor?.dataset.language).toBe('sql');
+    expect(editor?.dataset.path).toBe('models/orders_model.sql');
     expect(container.querySelector('[data-slot="dbt-model-code-provenance"]')).toBeNull();
     expect(container.textContent).not.toContain('Define the SQL this node runs.');
   });
 
-  it('opts the SQL editor out of React Flow global keyboard commands', () => {
-    act(() => root.render(<Harness />));
+  it('delegates disabled authoring to Monaco read-only mode', () => {
+    act(() => root.render(<Harness disabled />));
 
-    const editor = container.querySelector<HTMLTextAreaElement>('textarea[name="dbt-model-sql"]');
-
-    expect(editor?.classList).toContain('nokey');
-  });
-
-  it.each(['Backspace', 'Delete'])('keeps the %s editing key inside the SQL editor', (key) => {
-    act(() => root.render(<Harness />));
-
-    const editor = container.querySelector<HTMLTextAreaElement>('textarea[name="dbt-model-sql"]');
-    const leakedKeyDown = vi.fn();
-    const leakedKeyUp = vi.fn();
-    document.addEventListener('keydown', leakedKeyDown);
-    document.addEventListener('keyup', leakedKeyUp);
-
-    fireEvent.keyDown(editor!, { key });
-    fireEvent.keyUp(editor!, { key });
-
-    expect(leakedKeyDown).not.toHaveBeenCalled();
-    expect(leakedKeyUp).not.toHaveBeenCalled();
-    document.removeEventListener('keydown', leakedKeyDown);
-    document.removeEventListener('keyup', leakedKeyUp);
+    const editor = container.querySelector<HTMLElement>('[data-testid="dbt-model-sql-editor"]');
+    expect(editor?.dataset.readOnly).toBe('true');
   });
 });

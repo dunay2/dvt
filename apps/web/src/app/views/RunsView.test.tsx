@@ -253,6 +253,9 @@ describe('RunsView', () => {
     expect(mounted.container.textContent).toContain('Run run_failed');
     expect(mounted.container.textContent).toContain('Executor');
     expect(mounted.container.textContent).toContain('postgres');
+    expect(
+      mounted.container.querySelector('[data-slot="run-detail-diagnostics-tab"]')
+    ).not.toBeNull();
 
     await selectRunDetailTab(mounted.container, 'Diagnostics and events');
 

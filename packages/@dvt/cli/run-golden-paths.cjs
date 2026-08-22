@@ -8,7 +8,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
-const crypto = require('node:crypto');
+const { sha256HexUtf8 } = require('@dvt/crypto');
 
 const REPO_ROOT = path.resolve(__dirname, '../../..');
 const GOLDEN_HASHES = path.join(REPO_ROOT, '.golden/hashes.json');
@@ -31,7 +31,7 @@ function normalizeJson(value) {
 
 function computePlanHash(plan) {
   const normalized = JSON.stringify(normalizeJson(plan));
-  return crypto.createHash('sha256').update(normalized).digest('hex').substring(0, 16);
+  return sha256HexUtf8(normalized).substring(0, 16);
 }
 
 function resolvePlanFile(pathName, pathConfig) {

@@ -1,7 +1,8 @@
 import { createHash } from 'node:crypto';
 
+import { jcsCanonicalize } from '@dvt/crypto';
+
 import { CURRENT_EXECUTION_PLAN_VERSION } from '../../src/index.js';
-import { jcsCanonicalize } from '../../src/utils/jcsCanonicalize.js';
 
 /**
  * Fixtures mínimos para validar el contrato normativo del planner (GAP-P0-02).

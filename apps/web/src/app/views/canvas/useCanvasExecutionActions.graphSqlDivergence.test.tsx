@@ -24,6 +24,7 @@ const nodes: readonly CanonicalNode[] = [
     status: 'idle',
     tags: [],
     metadata: {
+      columns: [{ name: 'order_id', type: 'bigint' }],
       dbt: {
         packageName: 'analytics',
         sourceName: 'raw',

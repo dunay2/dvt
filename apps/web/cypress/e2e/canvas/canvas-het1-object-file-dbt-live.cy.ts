@@ -108,13 +108,19 @@ describe('HET1 public object-file DBT vertical', () => {
       confirmCanvasDependency();
 
       openNodeWorkbench(MODEL_NODE_NAME);
+      openNodeWorkbenchSection('general');
       cy.get('select[name="dbt-materialized"]').should('be.enabled').select('table');
       cy.get('select[name="dbt-origin"]').should('be.enabled').select(OBJECT_NODE_ID);
       applyNodeWorkbench();
       openNodeWorkbenchSection('code');
-      cy.get('textarea[name="dbt-model-sql"]')
-        .should('be.visible')
-        .and('contain.value', `{{ source('staging', '${TARGET_RELATION}') }}`);
+      cy.get('[data-testid="monaco-code-editor"]', { timeout: 20_000 })
+        .find('.view-lines')
+        .invoke('text')
+        .should((renderedCode) => {
+          expect(renderedCode.replaceAll('\u00a0', ' ')).to.contain(
+            `{{ source('staging', '${TARGET_RELATION}') }}`
+          );
+        });
       closeNodeWorkbench();
 
       addCatalogNode(980, 260, 'dbt:test');
@@ -266,12 +272,13 @@ describe('HET1 public object-file DBT vertical', () => {
             'minioadmin',
             'order_id,amount',
             '1,10.25',
-            '2,20.50',
+            '1,20.50',
           ]);
         });
       });
 
       cy.contains(/^Run /u, { timeout: 30_000 }).should('exist');
+      cy.get('[data-slot="run-detail-diagnostics-tab"]', { timeout: 30_000 }).click();
       cy.get('[data-slot="run-event-timeline-table"]', { timeout: 30_000 })
         .scrollIntoView()
         .should('be.visible')

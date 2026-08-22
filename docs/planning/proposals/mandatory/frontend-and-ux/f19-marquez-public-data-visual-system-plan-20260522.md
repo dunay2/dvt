@@ -118,7 +118,6 @@ completionGate:
   - pnpm docs:sync
   - pnpm docs:status:generate
   - pnpm planning:db:import -- --planning-only
-  - pnpm planning:db:export:check
   - pnpm verify:prepush
 redGreenCycles:
   - id: f19-marquez-public-data-architecture

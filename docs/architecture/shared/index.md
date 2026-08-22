@@ -2,7 +2,7 @@
 title: Shared Package Architecture
 status: Active
 owner: Architecture / Platform
-last_reviewed: 2026-03-08
+last_reviewed: 2026-08-22
 ---
 
 # Shared Package Architecture
@@ -29,8 +29,8 @@ silently.
   what it can and cannot do.
 - `@dvt/plan-interpreter` carried deterministic scheduling semantics without a
   visible documentation entry point.
-- `@dvt/crypto` lived in `packages/@dvt/canonical`, which is a naming mismatch
-  that makes discovery worse unless explicitly documented.
+- `@dvt/crypto` centralizes portable primitives without taking ownership of
+  domain-specific identity preimages.
 
 ## Reading Order
 
@@ -41,12 +41,12 @@ silently.
 
 ## Current Posture
 
-| Package                 | Role                                      | Current posture                                                             |
-| ----------------------- | ----------------------------------------- | --------------------------------------------------------------------------- |
-| `@dvt/plan-interpreter` | Deterministic DAG analysis                | Useful and tested, but previously under-documented                          |
-| `@dvt/dsl`              | Gateway condition parsing and evaluation  | Implemented as a very small deterministic DSL, not a rich policy language   |
-| `@dvt/crypto`           | Canonicalization and hashing helpers      | Cross-cutting and important, but easy to miss because of path/name mismatch |
-| `@dvt/cli`              | Validation and golden-path script surface | Script-driven and still not a real exported CLI surface                     |
+| Package                 | Role                                            | Current posture                                                           |
+| ----------------------- | ----------------------------------------------- | ------------------------------------------------------------------------- |
+| `@dvt/plan-interpreter` | Deterministic DAG analysis                      | Useful and tested, but previously under-documented                        |
+| `@dvt/dsl`              | Gateway condition parsing and evaluation        | Implemented as a very small deterministic DSL, not a rich policy language |
+| `@dvt/crypto`           | Portable crypto and canonicalization primitives | Single physical and package-name authority                                |
+| `@dvt/cli`              | Validation and golden-path script surface       | Script-driven and still not a real exported CLI surface                   |
 
 ## Rules
 

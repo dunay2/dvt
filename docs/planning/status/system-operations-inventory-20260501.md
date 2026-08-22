@@ -2,7 +2,7 @@
 title: System Operations Inventory (DDD / C&Q / Legacy classification)
 status: Review
 owner: Architecture
-last_reviewed: 2026-08-02
+last_reviewed: 2026-08-22
 planning_type: status
 ---
 
@@ -108,7 +108,7 @@ Covered in this pass:
 - `@dvt/delivery`
 - `@dvt/traceability-service`
 - `@dvt/observability` and `@dvt/observability-otel`
-- `@dvt/plan-interpreter`, `@dvt/plan-verifier`, `@dvt/canonical`, `@dvt/dsl`,
+- `@dvt/plan-interpreter`, `@dvt/plan-verifier`, `@dvt/crypto`, `@dvt/dsl`,
   `@dvt/cli`
 - `apps/api`
 - `apps/temporal-worker`, `apps/outbox-worker`, `apps/projector-worker`,
@@ -1037,20 +1037,20 @@ OpenLineage emission. 36 source files.
 
 **Verdict**: well-shaped. Worker runtime + ports + adapters + pure mappers.
 
-## 12. Support packages — `@dvt/plan-interpreter`, `@dvt/plan-verifier`, `@dvt/canonical`, `@dvt/dsl`, `@dvt/cli`
+## 12. Support packages — `@dvt/plan-interpreter`, `@dvt/plan-verifier`, `@dvt/crypto`, `@dvt/dsl`, `@dvt/cli`
 
-| Package                 | File / symbol                                                              | DDD                 | C&Q               | Legacy      | Notes                                                                                                                                                                                                                                |
-| ----------------------- | -------------------------------------------------------------------------- | ------------------- | ----------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `@dvt/plan-interpreter` | `dagAnalyzer.{planExecutionLayers, validateDag, collectDownstreamStepIds}` | `DS` (DAG analysis) | `QRY` (pure)      | `OK`        |                                                                                                                                                                                                                                      |
-| `@dvt/plan-interpreter` | `errors.ts`, `types.ts`                                                    | `INFRA`/DTO         | `N/A`             | `OK`        |                                                                                                                                                                                                                                      |
-| `@dvt/plan-verifier`    | `verify.ts.verifyPlanVersionOrThrow(...)`                                  | `DS` (verifier)     | `QRY` (assertion) | `OK`        |                                                                                                                                                                                                                                      |
-| `@dvt/plan-verifier`    | `crypto.ts`, `planVersion.ts`, `stepTypeConfig.ts`                         | `INFRA`/`DS`        | `QRY` (pure)      | `OK`        |                                                                                                                                                                                                                                      |
-| `@dvt/canonical`        | `jcs.ts`, `sha256.ts`                                                      | `INFRA`             | `QRY` (pure)      | **`SUPER`** | This is the canonical hashing package, but `@dvt/contracts/utils`, `@dvt/engine/utils`, `@dvt/planner/domain/hashing`, `@dvt/artifacts/compiledCode/sha256` all duplicate or re-implement parts. ADR-0018 boundary cleanup required. |
-| `@dvt/dsl`              | `v1/{ast,parser,evaluator}.ts`                                             | `DS` (mini DSL)     | `QRY` (pure)      | `OK`        | Pure functional.                                                                                                                                                                                                                     |
-| `@dvt/cli`              | `index.ts`                                                                 | `ENTRY` (CLI)       | `CMD`             | `OK`        |                                                                                                                                                                                                                                      |
+| Package                 | File / symbol                                                              | DDD                 | C&Q               | Legacy | Notes                                                                                                            |
+| ----------------------- | -------------------------------------------------------------------------- | ------------------- | ----------------- | ------ | ---------------------------------------------------------------------------------------------------------------- |
+| `@dvt/plan-interpreter` | `dagAnalyzer.{planExecutionLayers, validateDag, collectDownstreamStepIds}` | `DS` (DAG analysis) | `QRY` (pure)      | `OK`   |                                                                                                                  |
+| `@dvt/plan-interpreter` | `errors.ts`, `types.ts`                                                    | `INFRA`/DTO         | `N/A`             | `OK`   |                                                                                                                  |
+| `@dvt/plan-verifier`    | `verify.ts.verifyPlanVersionOrThrow(...)`                                  | `DS` (verifier)     | `QRY` (assertion) | `OK`   |                                                                                                                  |
+| `@dvt/plan-verifier`    | `crypto.ts`, `planVersion.ts`, `stepTypeConfig.ts`                         | `INFRA`/`DS`        | `QRY` (pure)      | `OK`   |                                                                                                                  |
+| `@dvt/crypto`           | `encoding.ts`, `jcs.ts`, `sha256.ts`, `md5.ts`, `random.ts`, `uuid.ts`     | `INFRA`             | `QRY` (pure)      | `OK`   | Single primitive authority established by #2189; bounded consumer and wrapper retirement remains owned by #2191. |
+| `@dvt/dsl`              | `v1/{ast,parser,evaluator}.ts`                                             | `DS` (mini DSL)     | `QRY` (pure)      | `OK`   | Pure functional.                                                                                                 |
+| `@dvt/cli`              | `index.ts`                                                                 | `ENTRY` (CLI)       | `CMD`             | `OK`   |                                                                                                                  |
 
 **Verdict**: support packages are clean except for the
-`@dvt/canonical` ↔ duplicated-utils drift across packages.
+consumer-level duplicate retirement remains tracked by #2191.
 
 ## 13. `apps/api`
 
@@ -1362,22 +1362,22 @@ PostgresExecutableBlobRepository.legacyValidationStateMigration()
 The composer (`PostgresPlanStoreComposer`) remains the single composition point;
 it does not re-expose retired behavior ports.
 
-### 18.4 `@dvt/canonical` ↔ duplicated hashing utils (boundary drift)
+### 18.4 `@dvt/crypto` primitive authority and consumer retirement
 
-**Current**: `@dvt/canonical/{jcs, sha256}.ts`, `@dvt/contracts/utils/{jcsCanonicalize, sha256HexUtf8}.ts`,
-`@dvt/engine/utils/{jcs, sha256}.ts`, `@dvt/planner/domain/hashing.ts`,
-`@dvt/artifacts/compiledCode/sha256.ts` all implement variations of the same
-canonical hash primitives.
+**Current**: `@dvt/crypto` is the only physical/public primitive package.
+`@dvt/contracts/utils`, `@dvt/engine/utils`, `@dvt/planner/domain/hashing.ts`
+and `@dvt/artifacts/compiledCode/sha256.ts` remain bounded consumer-migration
+surfaces for #2191; their domain preimages remain owned by those domains.
 
 **Target**:
 
 ```
-@dvt/canonical (shared kernel — deterministic hashing/canonicalization)
+@dvt/crypto (shared primitive authority)
         ^                ^                ^                 ^
         |                |                |                 |
    @dvt/contracts    @dvt/engine     @dvt/planner      @dvt/artifacts
    (re-exports     (depends on,    (depends on,       (depends on,
-    from canonical) NO duplicate)   NO duplicate)      NO duplicate)
+    from crypto)    NO duplicate)   NO duplicate)      NO duplicate)
 ```
 
 ADR-0018 (shared-kernel ownership) is the rule: one implementation, many
@@ -1404,7 +1404,7 @@ on `@dvt/run-domain`. The current setup is a silent boundary violation
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
 | Plan-store artifact ports      | `@dvt/contracts.StoredPlanArtifactValidation.v1` as DTO vocabulary, `@dvt/artifacts.ports.{IPlanStoreReader,IPlanStoreWriter,IStoredPlanArtifactStore}`, `@dvt/adapter-postgres.PostgresPlanStore.*`, `apps/api.application.services.{PreviewPlanUseCase, PlannerBackedStartRunUseCase, ImportPlanUseCase, StoredExecutablePlanResolver, StoredPlanExecutabilityValidator, WorkflowEngineFactory, modules/types.ts}`, `apps/temporal-worker.runtime.{temporalWorkerStores, temporalWorkerRuntimeResources, temporalWorkerRuntimeHandle, runtimeTypes}` | Closed by the scoped S08 artifact-port migration; remaining work is adapter decomposition, not duplicate port semantics. |
 | Engine plan integrity boundary | `@dvt/engine.ports.IPlanIntegrityValidator`, `@dvt/engine.security.{planIntegrity, planRefPolicy, RunAccessPolicy}`                                                                                                                                                                                                                                                                                                                                                                                                                                    | Scoped artifact fetch is canonical; architecture tests require the artifacts port instead of engine/API local ports.     |
-| Boundary / duplication drift   | `@dvt/engine.core.SnapshotProjector` (duplicates `@dvt/run-domain.applyRunEvent`); `@dvt/engine.utils.{jcs,sha256}` (duplicates `@dvt/contracts.utils`); `@dvt/planner.domain.hashing` and `@dvt/artifacts.compiledCode.sha256` (duplicate `@dvt/canonical`)                                                                                                                                                                                                                                                                                           | New scoped ADR / planning slice covering shared-kernel cleanup (ADR-0018).                                               |
+| Boundary / duplication drift   | `@dvt/engine.core.SnapshotProjector` (duplicates `@dvt/run-domain.applyRunEvent`); primitive consumer wrappers and duplicate implementations outside `@dvt/crypto` remain explicitly bounded by #2191.                                                                                                                                                                                                                                                                                                                                                 | Complete existing #2191 against the `@dvt/crypto` authority; do not open another cleanup front.                          |
 | Error-code drift               | `@dvt/state-store.inMemoryRunStateCommandPort` throws plain `Error('RUN_NOT_FOUND')` etc.                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Replace with typed errors per ADR-0012A.                                                                                 |
 
 ### 19.2 Non-DDD shapes flagged

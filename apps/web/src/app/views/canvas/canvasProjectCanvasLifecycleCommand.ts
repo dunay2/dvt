@@ -1,9 +1,10 @@
 /** Owned concern: persist project-canvas lifecycle commands through protected draft CAS semantics. */
+import { createBrowserIdempotencyKey } from '../../services/idempotency/createBrowserIdempotencyKey';
+
 import type {
   CanvasProjectCanvasLifecycleCommandDto,
   CanvasUpdateCanvasDocumentCommand,
 } from './canvasDraftLifecycle.types';
-import { createCanvasDraftIdempotencyKey } from './canvasDraftIdempotencyKey';
 import {
   applyCanvasDocumentSaveConflict,
   applyCanvasDocumentSaveSuccess,
@@ -22,8 +23,7 @@ function resolveExpectedRevision({
   graphDraftQuery,
   canPersistGraphDraft,
 }: Pick<CanvasProjectCanvasLifecycleCommandDto, 'graphDraftQuery' | 'canPersistGraphDraft'>):
-  | string
-  | null {
+  string | null {
   if (!canPersistGraphDraft || graphDraftQuery.isPending || graphDraftQuery.isError) {
     return null;
   }
@@ -83,7 +83,7 @@ export async function executeSelectCanvasDocumentCommand(
       ? null
       : {
           expectedRevision,
-          idempotencyKey: createCanvasDraftIdempotencyKey(),
+          idempotencyKey: createBrowserIdempotencyKey('canvas-draft'),
           draft,
         }
   );
@@ -107,7 +107,7 @@ export async function executeUpdateCanvasDocumentCommand(
       ? null
       : {
           expectedRevision,
-          idempotencyKey: createCanvasDraftIdempotencyKey(),
+          idempotencyKey: createBrowserIdempotencyKey('canvas-draft'),
           draft,
         }
   );
@@ -128,7 +128,7 @@ export async function executeDeleteCanvasDocumentCommand(
       ? null
       : {
           expectedRevision,
-          idempotencyKey: createCanvasDraftIdempotencyKey(),
+          idempotencyKey: createBrowserIdempotencyKey('canvas-draft'),
           draft,
         }
   );

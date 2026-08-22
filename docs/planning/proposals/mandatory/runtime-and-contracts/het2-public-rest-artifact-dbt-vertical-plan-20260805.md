@@ -259,7 +259,6 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/runtime-and-contracts/het2-public-rest-artifact-dbt-vertical-plan-20260805.md
   - docs/evidence/ED-20260805-het2-public-rest-artifact-dbt-vertical.md
   - docs/risk-register/quality/R-20260805-HET2-PUBLIC-VERTICAL.yaml
-  - tools/planning-db/state/canonical-state.json
 forbiddenImplementationSurfaces:
   - packages/@dvt/engine/src/**
   - apps/api/src/entrypoints/http/**

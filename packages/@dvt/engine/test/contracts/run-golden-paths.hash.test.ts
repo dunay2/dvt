@@ -11,11 +11,11 @@
  * Scope: plan-level hash determinism only. Does NOT execute plans.
  * See issue #70 for full execution golden paths.
  */
-import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+import { sha256HexUtf8 } from '@dvt/crypto';
 import { describe, expect, it } from 'vitest';
 
 // ESM-safe __dirname equivalent
@@ -42,7 +42,7 @@ function normalize(obj: unknown): unknown {
 
 function computeHash(plan: unknown): string {
   const normalized = JSON.stringify(normalize(plan));
-  return crypto.createHash('sha256').update(normalized).digest('hex').substring(0, 16);
+  return sha256HexUtf8(normalized).substring(0, 16);
 }
 
 // ────────────────────────────────────────────────────────────────────────────

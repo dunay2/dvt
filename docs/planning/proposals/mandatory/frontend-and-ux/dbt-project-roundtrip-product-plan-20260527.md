@@ -15,8 +15,8 @@ synchronization. Current rails are `ProjectDbtGraphFromFiles`,
 `GetWorkspaceFileContent`, and `RunDbtAuthorCodeRunLiveProof`.
 
 Product behavior lives in the DBT application ports and the web/API adapters.
-Current capability and architecture facts are exported through
-`tools/planning-db/state/canonical-state.json`. Planning DB structure, when
+Current capability and architecture facts live in Planning DB and are read
+through governed queries. Planning DB structure, when
 needed by its read models, is declared only in `tools/planning-db/schema.sql`.
 The former `ExportDbtProject` rail is retired; file round-trip uses the current
 workspace file rails above.

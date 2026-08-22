@@ -20,6 +20,7 @@ export const HTTP_ERROR_REASON = Object.freeze({
   invalidEnrichedFlag: 'invalid_enriched_flag',
   invalidGraphDbtWorkspaceArtifactPublicationRequest:
     'invalid_graph_dbt_workspace_artifact_publication_request',
+  invalidGraphDbtModelCompilationRequest: 'invalid_graph_dbt_model_compilation_request',
   invalidEnvironmentId: 'invalid_environment_id',
   invalidLimit: 'invalid_limit',
   invalidPreviewProfile: 'invalid_preview_profile',

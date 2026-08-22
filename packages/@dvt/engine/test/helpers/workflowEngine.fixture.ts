@@ -15,7 +15,7 @@ import {
   type RunExecutionPolicy,
   type ScopedPlanRef,
 } from '@dvt/contracts';
-import { jcsCanonicalize, sha256Hex } from '@dvt/crypto';
+import { jcsCanonicalize, sha256Hex, sha256HexUtf8 } from '@dvt/crypto';
 import { createNoopObservability } from '@dvt/observability';
 import type { IObservability } from '@dvt/observability';
 
@@ -266,7 +266,7 @@ export function makePlanFetcherForPlan(
 export function makeDefaultExecutionPlan(): ExecutionPlan {
   const inputHashSha256 = '1'.repeat(64);
   const steps: ExecutionPlan['steps'] = [];
-  const planId = sha256Hex(
+  const planId = sha256HexUtf8(
     jcsCanonicalize({
       metadata: {
         planVersion: '1.0',

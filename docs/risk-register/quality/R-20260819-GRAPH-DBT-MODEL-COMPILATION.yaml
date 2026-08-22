@@ -1,0 +1,27 @@
+---
+id: R-20260819-GRAPH-DBT-MODEL-COMPILATION
+title: Graph Draft Preview could bypass native DBT model compilation
+status: Closed
+date: 2026-08-19
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+  - apps/web
+severity: High
+probability: Low
+context: >
+  Canvas-authored DBT models are projected to workspace files before the persisted Preview is
+  created, while DBT remains the authority for Jinja, macros, references, and adapter-aware SQL.
+risk: >
+  Preview could accept a graph projection that DBT cannot compile, or a parallel compiler could
+  drift from the same model semantics.
+mitigations:
+  - 'Require exclusive Graph Draft authority before compilation.'
+  - 'Reuse the existing DBT analyzer, source snapshot, sanitized environment, timeout, and process
+    runner.'
+  - 'Invoke native dbt compile with a bounded, validated model selection after artifact publication.'
+  - 'Block Preview unless every selected model has native compiled SQL.'
+  - 'Keep compiled SQL ephemeral and out of graph state, files, stores, and planner representations.'
+  - 'Prove file-backed DBT execution remains on its existing authority path.'
+review_after: 2026-11-19
+---

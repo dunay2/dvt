@@ -49,6 +49,7 @@
   },
   "dependencies": {
     "@dvt/contracts": "workspace:*",
+    "@dvt/crypto": "workspace:*",
     "@emotion/react": "11.14.0",
     "@emotion/styled": "11.14.1",
     "@fontsource/ibm-plex-mono": "5.3.0",

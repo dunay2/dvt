@@ -1,8 +1,8 @@
 /** Owned concern: materialize code-symbol ownership facts for Planning DB diagnostics. */
-const crypto = require('node:crypto');
 const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
+const { sha256HexUtf8 } = require('@dvt/crypto');
 
 const repoRoot = path.resolve(__dirname, '..', '..');
 const codeFileExtensions = new Set(['.cjs', '.mjs', '.js', '.jsx', '.ts', '.tsx']);
@@ -15,10 +15,6 @@ const includedSourceRoots = [
   '.github/',
   'vitest.config',
 ];
-
-function sha256(value) {
-  return crypto.createHash('sha256').update(value).digest('hex');
-}
 
 function toPosix(filePath) {
   return filePath.replace(/\\/g, '/');
@@ -278,7 +274,7 @@ function symbolRecordsForRegex(content, regex, kind) {
 function extractCodeSymbolsFromFile(file, ownershipByPath) {
   const sourcePath = normalizeSourcePath(file.path || file.sourcePath || '');
   const content = String(file.content ?? '');
-  const contentSha256 = sha256(content);
+  const contentSha256 = sha256HexUtf8(content);
   const importRefs = extractImports(content);
   const ownership = ownershipByPath.get(sourcePath) || {};
   const candidates = [
@@ -297,10 +293,10 @@ function extractCodeSymbolsFromFile(file, ownershipByPath) {
   return candidates.map((symbol) => {
     const startLine = lineNumberAt(content, symbol.startIndex);
     const endLine = lineNumberAt(content, symbol.endIndex);
-    const bodySha256 = sha256(symbol.normalizedBody);
+    const bodySha256 = sha256HexUtf8(symbol.normalizedBody);
     const signature = normalizeSignature(symbol.signature);
     return {
-      symbolId: sha256(`${sourcePath}:${symbol.symbolName}:${startLine}:${bodySha256}`),
+      symbolId: sha256HexUtf8(`${sourcePath}:${symbol.symbolName}:${startLine}:${bodySha256}`),
       sourcePath,
       sourceContentSha256: contentSha256,
       filePath: sourcePath,
@@ -312,7 +308,7 @@ function extractCodeSymbolsFromFile(file, ownershipByPath) {
       symbolKind: symbol.symbolKind,
       exportKind: symbol.exportKind,
       signature,
-      signatureSha256: sha256(signature),
+      signatureSha256: sha256HexUtf8(signature),
       startLine,
       endLine,
       bodySha256,

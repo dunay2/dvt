@@ -15,7 +15,7 @@ import { DbtProjectFileCanvasView } from './DbtProjectFileCanvasView';
 import { CanvasErrorStateView } from './CanvasStateViews';
 import CanvasModalHost from './CanvasModalHost';
 import { useDbtProjectFileCanvasController } from './useDbtProjectFileCanvasController';
-import type { CanvasShellProps, CanvasShellRouteIntentRequest } from './canvasShell.types';
+import type { CanvasShellProps } from './canvasShell.types';
 
 export function InvalidCanvasAuthority({ message }: Readonly<{ message: string }>): JSX.Element {
   const bootstrapPresentation = useMemo(
@@ -32,13 +32,11 @@ export function DbtProjectFileCanvas({
   onDbtProjectImported,
   sourceImportInitialSelection,
   onSourceImportInitialSelectionConsumed,
-  routeIntentRequest,
 }: Readonly<{
   authorityBinding: DbtProjectFilesAuthorityBinding;
   onDbtProjectImported: NonNullable<CanvasShellProps['onDbtProjectImported']>;
   sourceImportInitialSelection?: CanvasShellProps['sourceImportInitialSelection'];
   onSourceImportInitialSelectionConsumed?: CanvasShellProps['onSourceImportInitialSelectionConsumed'];
-  routeIntentRequest?: CanvasShellRouteIntentRequest;
 }>): JSX.Element {
   const reactFlow = useReactFlow<Node, Edge>();
   const controller = useDbtProjectFileCanvasController(authorityBinding);
@@ -79,7 +77,6 @@ export function DbtProjectFileCanvas({
         onDbtProjectImported={onDbtProjectImported}
         sourceImportInitialSelection={sourceImportInitialSelection}
         onSourceImportInitialSelectionConsumed={onSourceImportInitialSelectionConsumed}
-        routeIntentRequest={routeIntentRequest}
       />
       <CanvasModalHost
         planPreview={{

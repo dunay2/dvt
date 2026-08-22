@@ -1,8 +1,8 @@
 import {
-  sha256HexUtf8,
   type GraphDbtWorkspaceArtifactPublicationResult,
   type PublishGraphDbtWorkspaceArtifactsRequest,
 } from '@dvt/contracts';
+import { sha256HexUtf8 } from '@dvt/crypto';
 import Fastify from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
 

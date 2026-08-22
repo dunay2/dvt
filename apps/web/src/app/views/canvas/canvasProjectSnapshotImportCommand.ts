@@ -1,7 +1,7 @@
 /** Owned concern: import validated Canvas project snapshots through the authoritative draft save rail. */
 import { toast } from 'sonner';
 
-import { createCanvasDraftIdempotencyKey } from './canvasDraftIdempotencyKey';
+import { createBrowserIdempotencyKey } from '../../services/idempotency/createBrowserIdempotencyKey';
 import type { CanvasImportProjectSnapshotCommandDto } from './canvasDraftLifecycle.types';
 import {
   applyCanvasDocumentSaveConflict,
@@ -41,7 +41,7 @@ export async function executeImportProjectSnapshotCommand({
 
     const result = await draftRepository.saveGraphDraft({
       expectedRevision: graphDraftQuery.data?.record?.revision ?? null,
-      idempotencyKey: createCanvasDraftIdempotencyKey(),
+      idempotencyKey: createBrowserIdempotencyKey('canvas-draft'),
       draft: validation.snapshot.draft,
     });
 

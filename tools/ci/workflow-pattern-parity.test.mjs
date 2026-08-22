@@ -246,7 +246,8 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
     "steps.scope.outputs.planning_db_inventory_relevant == 'true'"
   );
   assertWorkflowContains(prQualityGate, 'run: pnpm planning:db:inventory:check');
-  assertWorkflowContains(prQualityGate, 'run: pnpm planning:db:integrity:check');
+  assertWorkflowContains(prQualityGate, 'run: pnpm planning:db:integrity:check --bootstrap');
+  assertWorkflowExcludes(prQualityGate, 'run: pnpm planning:db:integrity:check -- --bootstrap');
 
   const preparePlanningDb = prQualityGate.indexOf(
     '- name: Prepare planning DB for DB-backed validation'
@@ -462,36 +463,25 @@ test('PR quality gate prepares planning DB before DB-first feature implementatio
     prQualityGate,
     'Prepare planning DB for DB-backed validation'
   );
-  const capabilityTruthStep = namedWorkflowStep(
-    prQualityGate,
-    'Validate DBT round-trip capability truth'
-  );
   const prepareDbIndex = prQualityGate.indexOf('Prepare planning DB for DB-backed validation');
   const prepareDbActionIndex = prQualityGate.indexOf('uses: ./.github/actions/prepare-planning-db');
   const implementationGateIndex = prQualityGate.indexOf(
     'pnpm docs:feature-mechanization:implementation'
   );
-  const capabilityStatusGateIndex = prQualityGate.indexOf(
-    'pnpm docs:dbt-roundtrip-capabilities:check'
-  );
 
   assert.notEqual(prepareDbIndex, -1);
   assert.notEqual(prepareDbActionIndex, -1);
   assert.notEqual(implementationGateIndex, -1);
-  assert.notEqual(capabilityStatusGateIndex, -1);
   assert.ok(prepareDbIndex < prepareDbActionIndex);
   assert.ok(prepareDbActionIndex < implementationGateIndex);
-  assert.ok(prepareDbActionIndex < capabilityStatusGateIndex);
   assertWorkflowContains(prQualityGate, "github.event_name == 'push'");
   assertWorkflowContains(
     prQualityGate,
     "steps.scope.outputs.feature_mechanization_relevant == 'true'"
   );
   assertWorkflowContains(prepareDbStep, "steps.scope.outputs.governance_global_relevant == 'true'");
-  assertWorkflowContains(
-    capabilityTruthStep,
-    "steps.scope.outputs.governance_global_relevant == 'true'"
-  );
+  assertWorkflowExcludes(prQualityGate, 'pnpm docs:dbt-roundtrip-capabilities:check');
+  assertWorkflowExcludes(prQualityGate, 'DVT_GIT_EVIDENCE_REPO');
   assert.doesNotMatch(prQualityGate, /import-governance:/u);
   assertWorkflowContains(preparePlanningDbAction, 'pnpm planning:db:import');
   assert.doesNotMatch(preparePlanningDbAction, /planning:db:migrate/u);
@@ -536,6 +526,7 @@ test('main full CI prepares Planning DB before the full validation baseline', ()
   assert.doesNotMatch(ciWorkflow, /import-governance:/u);
   assertWorkflowContains(preparePlanningDbAction, 'pnpm planning:db:import');
   assert.doesNotMatch(preparePlanningDbAction, /planning:db:migrate/u);
+  assertWorkflowContains(ciWorkflow, 'PLANNING_DB_INTEGRITY_SCOPE: bootstrap');
 });
 
 test('PR quality traceability runs after implementation mechanization to avoid dirty generated diffs', () => {
@@ -572,9 +563,9 @@ test('scope diff consumers use shallow checkout instead of full PR history', () 
   assert.doesNotMatch(prQualityGate, /uses: \.\/\.github\/actions\/fetch-scope-base/u);
   assertWorkflowContains(prQualityGate, 'fetch-depth: 2');
   assertWorkflowContains(prQualityGate, 'github.event.pull_request.base.sha');
-  assertWorkflowContains(prQualityGate, 'name: Checkout reviewed-commit evidence history');
-  assertWorkflowContains(prQualityGate, 'path: .git-evidence');
-  assert.equal((prQualityGate.match(/fetch-depth:\s*0/gu) ?? []).length, 1);
+  assertWorkflowExcludes(prQualityGate, 'name: Checkout reviewed-commit evidence history');
+  assertWorkflowExcludes(prQualityGate, 'path: .git-evidence');
+  assert.equal((prQualityGate.match(/fetch-depth:\s*0/gu) ?? []).length, 0);
 
   assertWorkflowContains(workflowBundle, 'fetch-depth: 1');
   assert.doesNotMatch(

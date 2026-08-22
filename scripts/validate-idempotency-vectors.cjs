@@ -2,7 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto');
+const { sha256HexUtf8 } = require('@dvt/crypto');
 
 const ROOT = path.resolve(__dirname, '..');
 const ENGINE_CONTRACTS_DIR = path.join(
@@ -71,7 +71,7 @@ function main() {
 
       const formulaVersion = String(v.formulaVersion || payload.formulaVersion || 'v1');
       const material = buildMaterial(v, formulaVersion);
-      const actual = sha256(material);
+      const actual = sha256HexUtf8(material);
       const expected = String(v.expectedDigest || '').toLowerCase();
 
       if (!/^[a-f0-9]{64}$/.test(expected)) {
@@ -124,10 +124,6 @@ function buildMaterial(v, formulaVersion) {
     String(v.eventType),
     String(v.planVersion),
   ].join('|');
-}
-
-function sha256(input) {
-  return crypto.createHash('sha256').update(input, 'utf8').digest('hex');
 }
 
 function collectVectorFiles(dir) {

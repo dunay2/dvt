@@ -92,20 +92,6 @@ export const canvasViewRouteCopyByKey = {
     fallback:
       'Canvas could not load the current workspace graph. Retry after the workspace service is available again.',
   },
-  retiredDiffSurfaceMessage: {
-    key: 'canvas.route.retiredDiffSurfaceMessage',
-    fallback:
-      'The former Diff route has no equivalent permanent Canvas surface. Review changes from contextual Code.',
-  },
-  retiredArtifactsSurfaceMessage: {
-    key: 'canvas.route.retiredArtifactsSurfaceMessage',
-    fallback:
-      'The former Artifacts route has no equivalent permanent Canvas surface. Open project resources from Workspace.',
-  },
-  retiredUnknownSurfaceMessage: {
-    key: 'canvas.route.retiredUnknownSurfaceMessage',
-    fallback: 'This former Canvas workbench route is no longer available.',
-  },
   unsupportedCanvasKindMessagePrefix: {
     key: 'canvas.route.unsupportedCanvasKindMessagePrefix',
     fallback: 'Canvas cannot open persisted canvas kind ',

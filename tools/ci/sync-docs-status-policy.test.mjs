@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import test from 'node:test';
@@ -10,9 +9,6 @@ const {
   shouldIncludePlanningDoc,
   splitFrontmatter,
 } = require('../../scripts/sync-docs.cjs');
-const {
-  normalizeTextBytesForHash,
-} = require('../../scripts/generate-governance-file-component-index.cjs');
 
 test('docs sync waits for Planning DB readiness before importing', () => {
   const packageJson = JSON.parse(
@@ -23,27 +19,6 @@ test('docs sync waits for Planning DB readiness before importing', () => {
     packageJson.scripts['docs:sync'],
     'pnpm planning:db:up && pnpm planning:db:health --wait && pnpm planning:db:import && node scripts/sync-docs.cjs'
   );
-});
-
-test('Planning DB runtime evidence binds the productive docs sync composition', () => {
-  const packageSource = normalizeTextBytesForHash(
-    readFileSync(new URL('../../package.json', import.meta.url))
-  );
-  const canonicalState = JSON.parse(
-    readFileSync(
-      new URL('../../tools/planning-db/state/canonical-state.json', import.meta.url),
-      'utf8'
-    )
-  );
-  const rail = canonicalState.featureMechanizationRails.find(
-    ({ railName }) => railName === 'PreparePlanningDbRuntime'
-  );
-
-  assert.ok(rail, 'Expected the canonical PreparePlanningDbRuntime rail');
-  assert.ok(rail.implementationRefs.includes('package.json#docs:sync'));
-  assert.ok(rail.symbolRefs.includes('package.json#docs:sync'));
-  assert.equal(rail.sourcePath, 'package.json');
-  assert.equal(rail.sourceContentSha256, createHash('sha256').update(packageSource).digest('hex'));
 });
 
 test('planning doc index generation excludes superseded and archived docs', () => {
