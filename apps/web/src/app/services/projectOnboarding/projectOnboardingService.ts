@@ -27,11 +27,6 @@ type ProjectOnboardingServiceDeps = {
   readonly createIdempotencyKey?: () => string;
 };
 
-function createBrowserIdempotencyKey(): string {
-  const randomUuid = globalThis.crypto?.randomUUID?.();
-  return randomUuid ?? `project-${Date.now().toString(36)}`;
-}
-
 export function createProjectOnboardingService(
   apiClient: ApiClient = createApiClient(),
   deps: ProjectOnboardingServiceDeps = {}
