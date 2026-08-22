@@ -85,6 +85,7 @@ governingSources:
   - docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md
   - docs/architecture/components/web/templates/execution-template-source-generation-component.md
 allowedImplementationSurfaces:
+  - apps/web/package.json
   - apps/web/src/app/views/TemplatesView.test.tsx
   - apps/web/src/app/views/templates/TemplatesRouteWorkbench.tsx
   - apps/web/src/app/views/templates/TemplateMonacoPreviewPanel.tsx
@@ -93,6 +94,7 @@ allowedImplementationSurfaces:
   - apps/web/cypress/e2e/templates/templates-workbench.cy.ts
   - apps/web/src/app/components/monaco/MonacoCodeViewer.tsx
   - apps/web/src/app/components/monaco/MonacoCodeSurface.tsx
+  - pnpm-lock.yaml
   - buzon/20260522-f17d-fowler-templates-monaco-preview-analysis.md
   - docs/.manifest.json
   - docs/architecture/components/web/index.md
@@ -171,6 +173,14 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/views/templates/templatesMonacoPreview.architecture.test.ts
     cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/templates/templates-workbench.cy.ts
     unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/views/templates/TemplateMonacoPreviewPanel.test.tsx]
+  - name: TRANSITIVE_MONACO_VIEWER_AUTHORITIES
+    path: apps/web/src/app/views/templates/templatesMonacoPreview.architecture.test.ts
+    dddOwner: Templates Monaco transitive authority catalog
+    cqRails: [GenerateExecutionTemplatePreview]
+    fowlerSignals: [Hidden authority, Semantic Fitness Function]
+    architectureGuard: pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/views/templates/templatesMonacoPreview.architecture.test.ts
+    cypressCoverage: N/A
+    unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/views/templates/templatesMonacoPreview.architecture.test.ts]
   - name: REPO_ROOT
     path: apps/web/src/app/views/templates/templatesMonacoPreview.architecture.test.ts
     dddOwner: Templates Monaco architecture test support

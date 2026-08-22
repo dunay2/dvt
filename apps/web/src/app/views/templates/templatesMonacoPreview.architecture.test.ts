@@ -638,6 +638,20 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     expectedViolation: 'useMonacoCodeSurface re-exported',
   },
   {
+    label: 'A governed viewer cannot mutate its exported gateway through a local alias',
+    modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
+    source: [
+      "import { useMonacoCodeSurface } from './useMonacoCodeSurface';",
+      'export function MonacoCodeViewer() {',
+      '  const Surface = useMonacoCodeSurface();',
+      '  return <Surface readOnly />;',
+      '}',
+      'const PublicViewer = MonacoCodeViewer;',
+      'PublicViewer.loadSurface = useMonacoCodeSurface;',
+    ].join('\n'),
+    expectedViolation: 'useMonacoCodeSurface re-exported',
+  },
+  {
     label: 'Templates cannot acquire the editable workspace-file wrapper',
     modulePath: 'app/views/templates/TemplatesRouteWorkbench.tsx',
     source: [
@@ -1748,6 +1762,41 @@ function collectRuntimeModuleSpecifiers(
     return undefined;
   }
 
+  function expressionMayReferenceExportedObject(expression: ts.Expression): boolean {
+    if (ts.isParenthesizedExpression(expression)) {
+      return expressionMayReferenceExportedObject(expression.expression);
+    }
+    if (ts.isIdentifier(expression)) return runtimeExportedBindings.has(expression.text);
+    if (ts.isConditionalExpression(expression)) {
+      return (
+        expressionMayReferenceExportedObject(expression.whenTrue) ||
+        expressionMayReferenceExportedObject(expression.whenFalse)
+      );
+    }
+    if (ts.isBinaryExpression(expression)) {
+      switch (expression.operatorToken.kind) {
+        case ts.SyntaxKind.AmpersandAmpersandToken:
+        case ts.SyntaxKind.BarBarToken:
+        case ts.SyntaxKind.QuestionQuestionToken:
+        case ts.SyntaxKind.CommaToken:
+        case ts.SyntaxKind.EqualsToken:
+          return (
+            expressionMayReferenceExportedObject(expression.left) ||
+            expressionMayReferenceExportedObject(expression.right)
+          );
+        default:
+          return false;
+      }
+    }
+    if (ts.isAwaitExpression(expression)) {
+      return expressionMayReferenceExportedObject(expression.expression);
+    }
+    if (ts.isCallExpression(expression) || ts.isNewExpression(expression)) {
+      return (expression.arguments ?? []).some(expressionMayReferenceExportedObject);
+    }
+    return false;
+  }
+
   function getImportedSpecifier(
     node: ts.Expression,
     bindings: ReadonlyMap<string, string> = runtimeImportedBindings
@@ -2118,6 +2167,35 @@ function collectRuntimeModuleSpecifiers(
         }
       }
     }
+  }
+
+  let discoveredExportedObjectAlias = true;
+  while (discoveredExportedObjectAlias) {
+    discoveredExportedObjectAlias = false;
+    function discoverExportedObjectAliases(node: ts.Node): void {
+      if (
+        ts.isVariableDeclaration(node) &&
+        ts.isIdentifier(node.name) &&
+        node.initializer &&
+        expressionMayReferenceExportedObject(node.initializer) &&
+        !runtimeExportedBindings.has(node.name.text)
+      ) {
+        runtimeExportedBindings.add(node.name.text);
+        discoveredExportedObjectAlias = true;
+      }
+      if (
+        ts.isBinaryExpression(node) &&
+        node.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
+        ts.isIdentifier(node.left) &&
+        expressionMayReferenceExportedObject(node.right) &&
+        !runtimeExportedBindings.has(node.left.text)
+      ) {
+        runtimeExportedBindings.add(node.left.text);
+        discoveredExportedObjectAlias = true;
+      }
+      ts.forEachChild(node, discoverExportedObjectAliases);
+    }
+    discoverExportedObjectAliases(sourceFile);
   }
 
   let discoveredAlias = true;
