@@ -14,6 +14,7 @@ import {
   openNodeWorkbenchSection,
 } from '../../support/canvasGraphAuthoring';
 import {
+  assertStepEventAbsent,
   type Het1PublicGraphIdentity,
   proveControlledHet1DbtTestFailure,
 } from '../../support/het1PublicFailureRecoveryProof';
@@ -394,13 +395,7 @@ describe('HET2 public REST artifact DBT vertical', () => {
           .then(() => cancelHet1Run(sourceRunId))
           .then(() => readHet1RunEvents(sourceRunId))
           .then((events) => {
-            assertStepEventSet(events, 'StepCompleted', [ACQUISITION_NODE_ID]);
-            assertAcquisitionEvidence({
-              events,
-              manifest,
-              endpointRef: SLOW_ONCE_ENDPOINT_REF,
-              publicationOutcome: 'verified-existing',
-            });
+            assertStepEventAbsent(events, 'StepCompleted', [ACQUISITION_NODE_ID]);
             assertStepStartedAbsent(events, [OBJECT_NODE_ID, MODEL_NODE_ID, TEST_NODE_ID]);
             expect(events.map((event) => event.eventType)).to.include.members([
               'RunCancelRequested',

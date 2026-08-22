@@ -66,7 +66,7 @@ function assertRunTimeline(eventType: string): void {
     .and('contain.text', eventType);
 }
 
-function assertStepEventAbsent(
+export function assertStepEventAbsent(
   events: readonly Readonly<{ eventType?: string; stepId?: string }>[],
   eventType: string,
   stepIds: readonly string[]
