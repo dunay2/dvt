@@ -431,6 +431,12 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     expectedViolation: 'MonacoCodeSurface outside a governed owner',
   },
   {
+    label: 'A CommonJS wrapper cannot hide the raw Monaco package behind a Unicode escape',
+    modulePath: 'app/components/RawMonacoPanel.cjs',
+    source: "void require('@monaco\\u002deditor/react');",
+    expectedViolation: '@monaco-editor/react outside a governed owner',
+  },
+  {
     label: 'A capability cannot hide a Monaco surface behind a Vite glob wrapper',
     modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
     source:
@@ -659,7 +665,7 @@ function isProductionSourceFileName(fileName: string): boolean {
   );
 }
 
-function collectStaticModuleSpecifiers(source: string): ReadonlySet<string> {
+function collectPrefilterModuleSpecifiers(source: string): ReadonlySet<string> {
   const sourceFile = ts.createSourceFile(
     'monaco-authority-prefilter.tsx',
     source,
@@ -668,15 +674,28 @@ function collectStaticModuleSpecifiers(source: string): ReadonlySet<string> {
     ts.ScriptKind.TSX
   );
   const specifiers = new Set<string>();
-  for (const statement of sourceFile.statements) {
+  function visit(node: ts.Node): void {
     if (
-      (ts.isImportDeclaration(statement) || ts.isExportDeclaration(statement)) &&
-      statement.moduleSpecifier &&
-      ts.isStringLiteralLike(statement.moduleSpecifier)
+      (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) &&
+      node.moduleSpecifier &&
+      ts.isStringLiteralLike(node.moduleSpecifier)
     ) {
-      specifiers.add(statement.moduleSpecifier.text);
+      specifiers.add(node.moduleSpecifier.text);
+      return;
     }
+    if (
+      ts.isCallExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      node.expression.text === 'require' &&
+      node.arguments[0] &&
+      ts.isStringLiteralLike(node.arguments[0])
+    ) {
+      specifiers.add(node.arguments[0].text);
+      return;
+    }
+    ts.forEachChild(node, visit);
   }
+  visit(sourceFile);
   return specifiers;
 }
 
@@ -1390,7 +1409,7 @@ function collectMonacoAuthorityViolations({
   const violations: string[] = [];
   const hasEscapedStaticAuthority =
     /\\(?:u(?:\{[\dA-Fa-f]+\}|[\dA-Fa-f]{4})|x[\dA-Fa-f]{2})/.test(source) &&
-    containsPotentialStaticMonacoAuthority(collectStaticModuleSpecifiers(source), modulePath);
+    containsPotentialStaticMonacoAuthority(collectPrefilterModuleSpecifiers(source), modulePath);
   if (
     !MONACO_AUTHORITY_SOURCE_SIGNALS.some((signal) => source.includes(signal)) &&
     !/\bimport\s*\(/.test(source) &&
@@ -1475,7 +1494,7 @@ function collectRepositoryMonacoOwnerViolations({
   const violations: string[] = [];
   const hasEscapedStaticAuthority =
     /\\(?:u(?:\{[\dA-Fa-f]+\}|[\dA-Fa-f]{4})|x[\dA-Fa-f]{2})/.test(source) &&
-    containsPotentialStaticMonacoAuthority(collectStaticModuleSpecifiers(source), modulePath);
+    containsPotentialStaticMonacoAuthority(collectPrefilterModuleSpecifiers(source), modulePath);
   if (
     !MONACO_AUTHORITY_SOURCE_SIGNALS.some((signal) => source.includes(signal)) &&
     !/\bimport\s*\(/.test(source) &&
