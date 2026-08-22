@@ -42,6 +42,7 @@ const MONACO_INTERNAL_AUTHORITIES = [
   'useMonacoCodeSurface',
   'CodeWorkspaceFileSurface',
   'WorkspaceFileCodeEditor',
+  'dbtWorkspaceFileCodeContribution',
   ...CANVAS_EDITABLE_MONACO_LEAVES,
 ] as const;
 const MONACO_INTERNAL_AUTHORITY_SOURCE_PATHS = MONACO_INTERNAL_AUTHORITIES.map((authority) =>
@@ -49,11 +50,13 @@ const MONACO_INTERNAL_AUTHORITY_SOURCE_PATHS = MONACO_INTERNAL_AUTHORITIES.map((
     authority as (typeof CANVAS_EDITABLE_MONACO_LEAVES)[number]
   )
     ? `src/app/views/canvas/${authority}.tsx`
-    : authority === 'CodeWorkspaceFileSurface' || authority === 'WorkspaceFileCodeEditor'
-      ? `src/app/views/code/${authority}.tsx`
-      : authority === 'useMonacoCodeSurface'
-        ? `src/app/components/monaco/${authority}.ts`
-        : `src/app/components/monaco/${authority}.tsx`
+    : authority === 'dbtWorkspaceFileCodeContribution'
+      ? `src/app/views/canvas/${authority}.tsx`
+      : authority === 'CodeWorkspaceFileSurface' || authority === 'WorkspaceFileCodeEditor'
+        ? `src/app/views/code/${authority}.tsx`
+        : authority === 'useMonacoCodeSurface'
+          ? `src/app/components/monaco/${authority}.ts`
+          : `src/app/components/monaco/${authority}.tsx`
 );
 const MONACO_AUTHORITY_SOURCE_SIGNALS = [
   '@monaco-editor/react',
@@ -101,6 +104,7 @@ const MONACO_RUNTIME_AUTHORITY_OWNERS = {
     'app/views/canvas/dbtWorkspaceFileCodeContribution.tsx',
     'app/views/canvas/graphDraftWorkspaceFileCodeContribution.tsx',
   ]),
+  dbtWorkspaceFileCodeContribution: new Set(['app/views/canvas/DbtProjectFileCanvasView.tsx']),
   DbtModelCodeAuthoringSection: new Set(['app/views/canvas/DbtAuthoringFields.tsx']),
   DvtSqlTransformAuthoringSection: new Set(['app/views/canvas/DvtAuthoringFields.tsx']),
 } as const;
@@ -474,6 +478,15 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
       'void WorkspaceFileCodeEditor;',
     ].join('\n'),
     expectedViolation: 'WorkspaceFileCodeEditor outside a governed owner',
+  },
+  {
+    label: 'An external wrapper cannot acquire the editable dbt Canvas contribution factory',
+    modulePath: 'app/components/DbtCodeContributionWrapper.tsx',
+    source: [
+      "import { buildDbtWorkspaceFileCodeContributions } from '../views/canvas/dbtWorkspaceFileCodeContribution';",
+      'export const buildCodeContributions = buildDbtWorkspaceFileCodeContributions;',
+    ].join('\n'),
+    expectedViolation: 'dbtWorkspaceFileCodeContribution outside a governed owner',
   },
   {
     label: 'A governed editor consumer cannot return its editor from an exported function',
