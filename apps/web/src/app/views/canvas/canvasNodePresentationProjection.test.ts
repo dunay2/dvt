@@ -99,6 +99,86 @@ describe('projectCanvasNodePresentationTruth', () => {
     ]);
   });
 
+  it('projects object-file target mappings through a generated DBT model', () => {
+    const objectFileSource: CanonicalNode = {
+      id: 'object-file.orders',
+      name: 'Load orders',
+      pluginId: 'dvt.object-file-postgres',
+      kind: 'dvt:object_file_load',
+      role: 'input',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        objectFilePostgres: {
+          source: {
+            storageUri: `s3://dvt-fixtures/tenants/tenant/${'a'.repeat(64)}`,
+            sha256: 'a'.repeat(64),
+            sizeBytes: 62,
+            maxBytes: 1_000,
+            encoding: 'utf-8',
+            format: 'csv',
+            mediaType: 'text/csv',
+            header: true,
+            delimiter: ',',
+            credentialRef: 'object-store:het1-fixture',
+          },
+          target: {
+            dialect: 'postgres',
+            schema: 'staging',
+            relation: 'orders',
+            loadMode: 'replace',
+            credentialRef: 'postgres:het1-target',
+          },
+          columns: [
+            {
+              sourceField: 'order_id',
+              targetColumn: 'order_id',
+              dataType: 'bigint',
+              nullable: false,
+            },
+            {
+              sourceField: 'amount',
+              targetColumn: 'amount',
+              dataType: 'numeric',
+              nullable: true,
+            },
+          ],
+        },
+      },
+    };
+    const generatedModel: CanonicalNode = {
+      ...model,
+      metadata: {
+        dbt: {
+          materialized: 'table',
+          selectedSourceId: objectFileSource.id,
+        },
+      },
+    };
+    const dependency: CanonicalEdge = {
+      ...edge,
+      sourceId: objectFileSource.id,
+      targetId: generatedModel.id,
+    };
+    const graph = {
+      nodes: [objectFileSource, generatedModel],
+      edges: [dependency],
+    };
+
+    expect(
+      projectCanvasNodePresentationTruth({ node: objectFileSource, ...graph }).columns.visible
+    ).toEqual([
+      expect.objectContaining({ name: 'order_id', type: 'bigint', provenance: 'declared' }),
+      expect.objectContaining({ name: 'amount', type: 'numeric', provenance: 'declared' }),
+    ]);
+    expect(
+      projectCanvasNodePresentationTruth({ node: generatedModel, ...graph }).columns.visible
+    ).toEqual([
+      expect.objectContaining({ name: 'order_id', type: 'bigint', provenance: 'inherited' }),
+      expect.objectContaining({ name: 'amount', type: 'numeric', provenance: 'inherited' }),
+    ]);
+  });
+
   it('preserves authored SQL as inline authority', () => {
     const authoredModel: CanonicalNode = {
       ...model,

@@ -38,6 +38,16 @@ test('validates the tenant-scoped HET2 fixture before infrastructure startup', (
   );
 });
 
+test('keeps the HET2 fixture non-unique for the controlled dbt failure proof', () => {
+  const rows = fixtureContent
+    .toString('utf8')
+    .trim()
+    .split('\n')
+    .map((line) => JSON.parse(line));
+  assert.equal(rows.length, 2);
+  assert.equal(rows[0].order_id, rows[1].order_id);
+});
+
 test('starts the pinned MinIO image on loopback only', () => {
   const args = buildMinioDockerArgs({ containerName: 'dvt-het2-proof', port: 19000 });
   assert.equal(args[0], 'run');

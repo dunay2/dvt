@@ -587,7 +587,11 @@ export function RunWorkspaceStateView({
             <TabsTrigger value="provenance" className={routeWorkbenchTabTriggerClassName}>
               {copy.runProvenanceTabLabel}
             </TabsTrigger>
-            <TabsTrigger value="diagnostics" className={routeWorkbenchTabTriggerClassName}>
+            <TabsTrigger
+              value="diagnostics"
+              className={routeWorkbenchTabTriggerClassName}
+              data-slot="run-detail-diagnostics-tab"
+            >
               {copy.runDiagnosticsEventsTabLabel}
             </TabsTrigger>
           </TabsList>

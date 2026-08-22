@@ -144,6 +144,8 @@ describe('PlanPreviewModal', () => {
     );
     expect(longValues.length).toBeGreaterThan(0);
     expect(longValues.every((value) => value.className.includes('break-all'))).toBe(true);
+    expect(document.querySelector('[data-slot="plan-preview-id"]')?.textContent).toBe(plan.planId);
+    expect(document.querySelector('[data-slot="plan-preview-start-run"]')).not.toBeNull();
   });
 
   it('renders the complete accepted preview surface in Spanish without English UI copy', async () => {

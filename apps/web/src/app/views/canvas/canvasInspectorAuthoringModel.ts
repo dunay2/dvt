@@ -27,7 +27,7 @@ import {
 } from './objectFilePostgresAuthoringModel';
 import { resolveCompatibleDbtModelOrigins } from './canvasDbtModelArtifactProjection';
 import {
-  readDeclaredDbtModelColumnNames,
+  readEffectiveDbtModelColumnNames,
   resolveConnectedDbtTestTargets,
 } from './canvasDbtTestTargetPolicy';
 import {
@@ -154,7 +154,11 @@ export function validateCanvasInspectorNodeDraft(
         dbtTestErrors.targetModelId = 'dbt_test_target_required';
       } else if (
         !dbtTestErrors.targetColumn &&
-        !readDeclaredDbtModelColumnNames(selectedTarget).includes(draft.dbtTest.targetColumn.trim())
+        !readEffectiveDbtModelColumnNames({
+          node: selectedTarget,
+          nodes: context.nodes,
+          edges: context.edges,
+        }).includes(draft.dbtTest.targetColumn.trim())
       ) {
         dbtTestErrors.targetColumn = 'dbt_test_column_not_declared';
       }

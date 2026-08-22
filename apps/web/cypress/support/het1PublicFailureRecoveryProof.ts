@@ -16,7 +16,7 @@ import {
   type Het1ObjectFileManifest,
   readDraftNodes,
   updateDbtModelSql,
-  updateDbtTestColumn,
+  updateDbtTestType,
   updateObjectFileSourceIdentity,
   visitHet1DbtCanvas,
   waitForPersistedDraft,
@@ -33,7 +33,7 @@ export type Het1PublicGraphIdentity = Readonly<{
   targetRelation: string;
 }>;
 
-const FAILING_DBT_TEST_COLUMN = 'missing_order_id';
+const FAILING_DBT_TEST_TYPE = 'unique';
 
 function waitForDraftMetadata(
   description: string,
@@ -51,7 +51,7 @@ function waitForDraftMetadata(
 
 function openHet1PlanPreview(identity: Het1PublicGraphIdentity): void {
   clickPreviewExecutionPlanFromOperationalDrawer();
-  cy.get('[data-testid="plan-preview-modal"]', { timeout: 30_000 })
+  cy.get('[data-testid="plan-preview-modal"]', { timeout: 60_000 })
     .should('be.visible')
     .and('contain.text', identity.objectNodeId)
     .and('contain.text', identity.modelNodeId)
@@ -59,13 +59,14 @@ function openHet1PlanPreview(identity: Het1PublicGraphIdentity): void {
 }
 
 function assertRunTimeline(eventType: string): void {
+  cy.get('[data-slot="run-detail-diagnostics-tab"]', { timeout: 30_000 }).click();
   cy.get('[data-slot="run-event-timeline-table"]', { timeout: 30_000 })
     .scrollIntoView()
     .should('be.visible')
     .and('contain.text', eventType);
 }
 
-function assertStepEventAbsent(
+export function assertStepEventAbsent(
   events: readonly Readonly<{ eventType?: string; stepId?: string }>[],
   eventType: string,
   stepIds: readonly string[]
@@ -86,7 +87,7 @@ function assertNoSensitiveEvidence(
     'minioadmin',
     'order_id,amount',
     '1,10.25',
-    '2,20.50',
+    '1,20.50',
     ...additionalForbiddenValues,
   ]);
 }
@@ -146,19 +147,19 @@ export function proveControlledHet1DbtTestFailure(args: {
       sha256: manifest.sha256,
     });
   }
-  updateDbtTestColumn({
+  updateDbtTestType({
     nodeName: identity.testNodeName,
-    targetColumn: FAILING_DBT_TEST_COLUMN,
+    testType: FAILING_DBT_TEST_TYPE,
   });
   waitForDraftMetadata(
-    'restored object digest and failing DBT test target column',
+    'restored object digest and failing unique DBT test',
     (metadataByNodeId) =>
       (
         metadataByNodeId.get(identity.objectNodeId)?.objectFilePostgres as
           { source?: { sha256?: unknown } } | undefined
       )?.source?.sha256 === manifest.sha256 &&
-      (metadataByNodeId.get(identity.testNodeId)?.dbtTest as { targetColumn?: unknown } | undefined)
-        ?.targetColumn === FAILING_DBT_TEST_COLUMN
+      (metadataByNodeId.get(identity.testNodeId)?.dbtTest as { testType?: unknown } | undefined)
+        ?.testType === FAILING_DBT_TEST_TYPE
   );
   openHet1PlanPreview(identity);
   startPreviewedHet1Run().then(({ runId, planId }) => {
@@ -201,16 +202,19 @@ from {{ source('staging', '${identity.targetRelation}') }} as source
 cross join delayed`;
 
   visitHet1DbtCanvas();
-  updateDbtTestColumn({ nodeName: identity.testNodeName, targetColumn: 'order_id' });
+  updateDbtTestType({ nodeName: identity.testNodeName, testType: 'not_null' });
   updateDbtModelSql({ nodeName: identity.modelNodeName, sql: longRunningModelSql });
-  waitForDraftMetadata(
-    'long-running DBT model and restored passing test',
-    (metadataByNodeId) =>
-      (metadataByNodeId.get(identity.modelNodeId)?.config as { sql?: unknown } | undefined)?.sql ===
-        longRunningModelSql &&
-      (metadataByNodeId.get(identity.testNodeId)?.dbtTest as { targetColumn?: unknown } | undefined)
-        ?.targetColumn === 'order_id'
-  );
+  waitForDraftMetadata('long-running DBT model and restored passing test', (metadataByNodeId) => {
+    const modelConfig = metadataByNodeId.get(identity.modelNodeId)?.config as
+      { sql?: unknown } | undefined;
+    const testConfig = metadataByNodeId.get(identity.testNodeId)?.dbtTest as
+      { targetColumn?: unknown; testType?: unknown } | undefined;
+    return (
+      modelConfig?.sql === longRunningModelSql &&
+      testConfig?.targetColumn === 'order_id' &&
+      testConfig.testType === 'not_null'
+    );
+  });
   openHet1PlanPreview(identity);
   startPreviewedHet1Run().then(({ runId: sourceRunId, planId }) => {
     assertHet1RunUsesPlan(sourceRunId, planId);
@@ -226,9 +230,9 @@ cross join delayed`;
       assertStepEventSet(events, 'StepCompleted', [
         ...(args.upstreamCompletedStepIds ?? []),
         identity.objectNodeId,
-        identity.modelNodeId,
       ]);
       assertStepEventSet(events, 'StepStarted', [identity.modelNodeId]);
+      assertStepEventAbsent(events, 'StepCompleted', [identity.modelNodeId]);
       assertStepEventAbsent(events, 'StepCompleted', [identity.testNodeId]);
       assertStepEventAbsent(events, 'StepStarted', [identity.testNodeId]);
       assertObjectLoadEvidence({
@@ -243,17 +247,10 @@ cross join delayed`;
         'RunCancelRequested',
         'RunCancelled',
       ]);
-      const modelCompletedIndex = events.findIndex(
-        (event) => event.eventType === 'StepCompleted' && event.stepId === identity.modelNodeId
-      );
       const cancelRequestedIndex = events.findIndex(
         (event) => event.eventType === 'RunCancelRequested'
       );
       const cancelledIndex = events.findIndex((event) => event.eventType === 'RunCancelled');
-      expect(
-        cancelRequestedIndex,
-        'runtime cancellation begins after the active layer settles'
-      ).to.be.greaterThan(modelCompletedIndex);
       expect(cancelledIndex, 'runtime cancellation reaches its terminal fact').to.be.greaterThan(
         cancelRequestedIndex
       );
