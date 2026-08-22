@@ -1580,9 +1580,21 @@ test('Cut 4 tooling crypto mechanics and duplicate runner stay retired', () => {
     'the unreferenced root golden-path runner must not be restored'
   );
 
+  const rootPackage = JSON.parse(readText('package.json'));
+  const cliPackage = JSON.parse(readText('packages/@dvt/cli/package.json'));
+  assert.equal(rootPackage.devDependencies['@dvt/crypto'], 'workspace:*');
+  assert.equal(cliPackage.dependencies['@dvt/crypto'], 'workspace:*');
+
   const trackedFiles = spawnSync(
     'git',
-    ['ls-files', '--', 'scripts', 'tools', 'packages/@dvt/cli'],
+    [
+      'ls-files',
+      '--',
+      'scripts',
+      'tools',
+      'packages/@dvt/cli',
+      'packages/@dvt/engine/test/contracts/run-golden-paths.hash.test.ts',
+    ],
     { encoding: 'utf8' }
   );
   assert.equal(trackedFiles.stderr, '');
