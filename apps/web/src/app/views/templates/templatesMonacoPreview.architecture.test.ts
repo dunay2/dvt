@@ -609,6 +609,15 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     expectedViolation: 'MonacoCodeSurface outside a governed owner',
   },
   {
+    label: 'A capability cannot store a direct Monaco dynamic import specifier',
+    modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
+    source: [
+      "const target = '../../../app/components/monaco/MonacoCodeSurface';",
+      'void import(target);',
+    ].join('\n'),
+    expectedViolation: 'MonacoCodeSurface outside a governed owner',
+  },
+  {
     label: 'Templates cannot import an allowlisted Canvas editable leaf',
     modulePath: 'app/views/templates/TemplatesRouteWorkbench.tsx',
     source: [
@@ -844,6 +853,23 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
       'export function MonacoCodeViewer({ render }) {',
       '  const Surface = useMonacoCodeSurface();',
       '  const callbacks = { invoke(value) { return Reflect.apply(render, null, [value]); } };',
+      '  const content = callbacks.invoke(useMonacoCodeSurface());',
+      '  return <>{content}<Surface readOnly /></>;',
+      '}',
+    ].join('\n'),
+    expectedViolation: 'useMonacoCodeSurface re-exported',
+  },
+  {
+    label: 'A method override cannot hide render delegation behind an aliased Reflect apply',
+    modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
+    source: [
+      "import { useMonacoCodeSurface } from './useMonacoCodeSurface';",
+      'export function MonacoCodeViewer({ render }) {',
+      '  const Surface = useMonacoCodeSurface();',
+      '  const callbacks = { invoke(value) {',
+      '    const apply = Reflect.apply;',
+      '    return apply(render, null, [value]);',
+      '  } };',
       '  const content = callbacks.invoke(useMonacoCodeSurface());',
       '  return <>{content}<Surface readOnly /></>;',
       '}',
@@ -2530,6 +2556,34 @@ function collectRuntimeModuleSpecifiers(
       }
       function collectCallableDelegateSources(callable: ts.FunctionLikeDeclaration): string[] {
         const sources = new Set<string>();
+        const reflectApplyBindings = new Set(['Reflect.apply']);
+        const reflectApplyAliasEdges: Array<Readonly<{ source: string; target: string }>> = [];
+        function collectReflectApplyAliases(child: ts.Node): void {
+          if (ts.isVariableDeclaration(child) && ts.isIdentifier(child.name) && child.initializer) {
+            const source = readParameterAliasPath(child.initializer);
+            if (source) reflectApplyAliasEdges.push({ source, target: child.name.text });
+          }
+          if (
+            ts.isBinaryExpression(child) &&
+            child.operatorToken.kind === ts.SyntaxKind.EqualsToken
+          ) {
+            const source = readParameterAliasPath(child.right);
+            const target = readParameterAliasPath(child.left);
+            if (source && target) reflectApplyAliasEdges.push({ source, target });
+          }
+          ts.forEachChild(child, collectReflectApplyAliases);
+        }
+        if (callable.body) collectReflectApplyAliases(callable.body);
+        let discoveredReflectApplyAlias = true;
+        while (discoveredReflectApplyAlias) {
+          discoveredReflectApplyAlias = false;
+          for (const edge of reflectApplyAliasEdges) {
+            if (reflectApplyBindings.has(edge.source) && !reflectApplyBindings.has(edge.target)) {
+              reflectApplyBindings.add(edge.target);
+              discoveredReflectApplyAlias = true;
+            }
+          }
+        }
         function visitDelegate(child: ts.Node): void {
           if (ts.isCallExpression(child)) {
             const invokedSources = readParameterAliasRoots(child.expression);
@@ -2539,7 +2593,7 @@ function collectRuntimeModuleSpecifiers(
               if (helperMatch?.[1]) sources.add(helperMatch[1]);
             }
             if (
-              readParameterAliasPath(child.expression) === 'Reflect.apply' &&
+              reflectApplyBindings.has(readParameterAliasPath(child.expression) ?? '') &&
               child.arguments[0]
             ) {
               for (const source of readParameterAliasRoots(child.arguments[0])) {
@@ -2909,7 +2963,10 @@ function collectRuntimeModuleSpecifiers(
     }
   }
 
-  function readVariableImportPattern(node: ts.Expression): {
+  function readVariableImportPattern(
+    node: ts.Expression,
+    resolvingBindings: ReadonlySet<string> = new Set()
+  ): {
     pattern: string;
     hasStaticText: boolean;
   } {
@@ -2927,9 +2984,16 @@ function collectRuntimeModuleSpecifiers(
       return { pattern, hasStaticText };
     }
 
+    if (ts.isIdentifier(node) && !resolvingBindings.has(node.text)) {
+      const initializer = runtimeLocalBindingInitializers.get(node.text);
+      if (initializer) {
+        return readVariableImportPattern(initializer, new Set([...resolvingBindings, node.text]));
+      }
+    }
+
     if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.PlusToken) {
-      const left = readVariableImportPattern(node.left);
-      const right = readVariableImportPattern(node.right);
+      const left = readVariableImportPattern(node.left, resolvingBindings);
+      const right = readVariableImportPattern(node.right, resolvingBindings);
       return {
         pattern: `${left.pattern}${right.pattern}`,
         hasStaticText: left.hasStaticText || right.hasStaticText,
