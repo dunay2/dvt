@@ -59,7 +59,7 @@ const VALIDATION_REPORT = DbtProjectImportValidationReportSchema.parse({
 const IMPORT_RESULT = DbtProjectImportResultSchema.parse({
   schemaVersion: 'dbt-project-import-result.v1',
   success: true,
-  idempotencyKey: 'dbt-project-import:warehouse-analytics:fixed-uuid',
+  idempotencyKey: 'dbt-project-import:warehouse-analytics:00000000-0000-4000-8000-000000000000',
   authorityBinding: {
     schemaVersion: 'canvas-authoring-authority-binding.v1',
     canvasId: 'warehouse-analytics',
@@ -87,7 +87,12 @@ describe('DbtProjectImportDialog', () => {
     (
       globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
     ).IS_REACT_ACT_ENVIRONMENT = true;
-    vi.stubGlobal('crypto', { randomUUID: () => 'fixed-uuid' });
+    vi.stubGlobal('crypto', {
+      getRandomValues: (target: Uint8Array) => {
+        target.fill(0);
+        return target;
+      },
+    });
   });
 
   afterEach(() => {
@@ -162,7 +167,8 @@ describe('DbtProjectImportDialog', () => {
         schemaVersion: 'import-dbt-project-command.v1',
         canvasId: 'warehouse-analytics',
         conflictPolicy: 'require-unbound-canvas',
-        idempotencyKey: 'dbt-project-import:warehouse-analytics:fixed-uuid',
+        idempotencyKey:
+          'dbt-project-import:warehouse-analytics:00000000-0000-4000-8000-000000000000',
         validationReceipt: VALIDATION_REPORT.status === 'accepted' && VALIDATION_REPORT.receipt,
       });
       expect(onImported).toHaveBeenCalledWith(

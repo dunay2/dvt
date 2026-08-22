@@ -10,6 +10,7 @@ import {
 } from '@dvt/contracts';
 
 import { type ApiClient, createApiClient } from '../api/createApiClient';
+import { createBrowserIdempotencyKey } from '../idempotency/createBrowserIdempotencyKey';
 
 export type {
   CreateProjectResponse,
@@ -27,16 +28,12 @@ type ProjectOnboardingServiceDeps = {
   readonly createIdempotencyKey?: () => string;
 };
 
-function createBrowserIdempotencyKey(): string {
-  const randomUuid = globalThis.crypto?.randomUUID?.();
-  return randomUuid ?? `project-${Date.now().toString(36)}`;
-}
-
 export function createProjectOnboardingService(
   apiClient: ApiClient = createApiClient(),
   deps: ProjectOnboardingServiceDeps = {}
 ): ProjectOnboardingService {
-  const createIdempotencyKey = deps.createIdempotencyKey ?? createBrowserIdempotencyKey;
+  const createIdempotencyKey =
+    deps.createIdempotencyKey ?? (() => createBrowserIdempotencyKey('project'));
 
   return {
     listProjects: async () =>

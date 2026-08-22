@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { generatePlatformRunId } from '../../../src/entrypoints/http/startRunIdentity.js';
 import { parseStartRunBody } from '../../../src/entrypoints/http/startRunRouteParser.js';
@@ -33,6 +33,10 @@ const VALID_START_RUN_BODY = {
 };
 
 describe('start-run platform identity', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it('rejects caller-owned identity before allocating a platform identity', () => {
     let generatorCalled = false;
 
@@ -68,5 +72,11 @@ describe('start-run platform identity', () => {
     );
     expect(timestampMs).toBeGreaterThanOrEqual(before);
     expect(timestampMs).toBeLessThanOrEqual(after);
+  });
+
+  it('fails closed when the shared crypto authority has no secure entropy', () => {
+    vi.stubGlobal('crypto', undefined);
+
+    expect(() => generatePlatformRunId()).toThrow('CRYPTO_SECURE_RANDOM_UNAVAILABLE');
   });
 });
