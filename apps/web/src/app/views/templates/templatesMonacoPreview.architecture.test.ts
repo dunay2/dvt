@@ -58,6 +58,12 @@ const MONACO_AUTHORITY_SOURCE_SIGNALS = [
   ...MONACO_INTERNAL_AUTHORITIES,
 ] as const;
 const WEB_VITE_ALIAS_ROOTS = new Map([['@', 'src']]);
+const CANVAS_COMPONENT_PUBLIC_CONSUMERS = {
+  CanvasWorkspaceMenuControls: new Set([
+    'app/components/TopAppBar.tsx',
+    'app/components/shell/ShellMenu.tsx',
+  ]),
+} as const;
 const MONACO_RUNTIME_AUTHORITY_OWNERS = {
   '@monaco-editor/react': new Set([
     'app/components/monaco/MonacoCodeSurface.tsx',
@@ -398,6 +404,15 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     expectedViolation: 'DbtModelCodeAuthoringSection outside a governed owner',
   },
   {
+    label: 'An external wrapper cannot acquire a Canvas authoring parent',
+    modulePath: 'app/components/CanvasAuthoringWrapper.tsx',
+    source: [
+      "import { DbtAuthoringFields } from '../views/canvas/DbtAuthoringFields';",
+      'export const CanvasAuthoringWrapper = DbtAuthoringFields;',
+    ].join('\n'),
+    expectedViolation: 'DbtAuthoringFields outside the Canvas bounded context',
+  },
+  {
     label: 'A governed viewer cannot re-export its underlying Monaco loader',
     modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
     source: "export { useMonacoCodeSurface } from './useMonacoCodeSurface';",
@@ -421,6 +436,15 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
       'export { LeakedEditor };',
     ].join('\n'),
     expectedViolation: 'MonacoCodeEditor re-exported',
+  },
+  {
+    label: 'A governed viewer cannot hide its loader inside an exported callback',
+    modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
+    source: [
+      "import { useMonacoCodeSurface } from './useMonacoCodeSurface';",
+      'export const internals = { load: () => useMonacoCodeSurface };',
+    ].join('\n'),
+    expectedViolation: 'useMonacoCodeSurface re-exported',
   },
 ] as const;
 
@@ -578,9 +602,12 @@ function collectRuntimeModuleSpecifiers(
     return undefined;
   }
 
-  function addReExportedExpression(node: ts.Expression): void {
-    const importedSpecifier = getImportedSpecifier(node);
-    if (importedSpecifier) runtimeReExportedSpecifiers.add(importedSpecifier);
+  function addReExportedExpression(node: ts.Node): void {
+    if (ts.isExpression(node)) {
+      const importedSpecifier = getImportedSpecifier(node);
+      if (importedSpecifier) runtimeReExportedSpecifiers.add(importedSpecifier);
+    }
+    ts.forEachChild(node, addReExportedExpression);
   }
 
   function readVariableImportPattern(node: ts.Expression): {
@@ -822,19 +849,53 @@ function containsCanvasAuthoringContextSpecifier(
   specifiers: ReadonlySet<string>,
   modulePath: string
 ): boolean {
-  const importerDirectory = path.posix.dirname(resolveWebPackageModulePath(modulePath));
-  return [...specifiers].some((specifier) => {
-    const normalizedSpecifier = specifier.replaceAll('\\', '/');
-    const aliasedSpecifier = resolveWebViteAlias(normalizedSpecifier);
-    const resolvedSpecifier = aliasedSpecifier
-      ? aliasedSpecifier
-      : normalizedSpecifier.startsWith('.')
-        ? path.posix.normalize(path.posix.join(importerDirectory, normalizedSpecifier))
-        : normalizedSpecifier.startsWith('/')
-          ? normalizedSpecifier.slice(1)
-          : normalizedSpecifier;
-    return resolvedSpecifier.startsWith('src/app/views/canvas/');
-  });
+  return [...specifiers].some((specifier) =>
+    resolveWebRuntimeModuleSpecifier(modulePath, specifier).startsWith('src/app/views/canvas/')
+  );
+}
+
+function resolveWebRuntimeModuleSpecifier(modulePath: string, specifier: string): string {
+  const normalizedSpecifier = specifier.replaceAll('\\', '/');
+  const aliasedSpecifier = resolveWebViteAlias(normalizedSpecifier);
+  if (aliasedSpecifier) return aliasedSpecifier;
+  if (normalizedSpecifier.startsWith('.')) {
+    return path.posix.normalize(
+      path.posix.join(
+        path.posix.dirname(resolveWebPackageModulePath(modulePath)),
+        normalizedSpecifier
+      )
+    );
+  }
+  return normalizedSpecifier.startsWith('/') ? normalizedSpecifier.slice(1) : normalizedSpecifier;
+}
+
+function collectExternalCanvasComponentImports(
+  specifiers: ReadonlySet<string>,
+  modulePath: string
+): string[] {
+  if (modulePath.startsWith('app/views/canvas/') || modulePath === 'app/views/Canvas.tsx')
+    return [];
+
+  const violations: string[] = [];
+  for (const specifier of specifiers) {
+    const resolvedSpecifier = resolveWebRuntimeModuleSpecifier(modulePath, specifier);
+    if (!resolvedSpecifier.startsWith('src/app/views/canvas/')) continue;
+
+    const componentName = resolvedSpecifier
+      .split('/')
+      .at(-1)
+      ?.replace(/\.[cm]?[jt]sx?$/, '');
+    if (!componentName || !/^[A-Z]/.test(componentName)) continue;
+
+    const publicConsumers =
+      CANVAS_COMPONENT_PUBLIC_CONSUMERS[
+        componentName as keyof typeof CANVAS_COMPONENT_PUBLIC_CONSUMERS
+      ];
+    if (!publicConsumers?.has(modulePath)) {
+      violations.push(`${componentName} outside the Canvas bounded context`);
+    }
+  }
+  return violations;
 }
 
 function collectMonacoAuthorityViolations({
@@ -922,13 +983,15 @@ function collectRepositoryMonacoOwnerViolations({
   const violations: string[] = [];
   if (
     !MONACO_AUTHORITY_SOURCE_SIGNALS.some((signal) => source.includes(signal)) &&
-    !/\bimport\s*\(/.test(source)
+    !/\bimport\s*\(/.test(source) &&
+    !/['"`][^'"`]*\/canvas(?:\/|['"`])/.test(source)
   ) {
     return violations;
   }
 
   const { specifiers: runtimeModuleSpecifiers, reExportedSpecifiers: runtimeReExportedSpecifiers } =
     getRuntimeModuleSpecifiers(modulePath, source);
+  violations.push(...collectExternalCanvasComponentImports(runtimeModuleSpecifiers, modulePath));
   for (const [authority, owners] of Object.entries(MONACO_RUNTIME_AUTHORITY_OWNERS)) {
     const importsAuthority =
       authority === '@monaco-editor/react' || authority === 'monaco-editor runtime import'
