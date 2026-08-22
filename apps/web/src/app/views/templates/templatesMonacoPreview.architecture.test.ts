@@ -825,7 +825,15 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
 
   function unwrapExpression(expression: ts.Expression): ts.Expression {
     let unwrapped = expression;
-    while (ts.isParenthesizedExpression(unwrapped)) unwrapped = unwrapped.expression;
+    while (
+      ts.isParenthesizedExpression(unwrapped) ||
+      ts.isAsExpression(unwrapped) ||
+      ts.isTypeAssertionExpression(unwrapped) ||
+      ts.isNonNullExpression(unwrapped) ||
+      ts.isSatisfiesExpression(unwrapped)
+    ) {
+      unwrapped = unwrapped.expression;
+    }
     return unwrapped;
   }
 
@@ -876,6 +884,80 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
     return discovered;
   }
 
+  function expressionProducesBinding(
+    bindings: Set<string>,
+    expression: ts.Expression,
+    isDirectBinding: (candidate: ts.Expression) => boolean
+  ): boolean {
+    const candidate = unwrapExpression(expression);
+    if (isDirectBinding(candidate)) return true;
+    const candidatePath = readExpressionPath(candidate);
+    if (candidatePath && bindings.has(candidatePath)) return true;
+    if (ts.isConditionalExpression(candidate)) {
+      return (
+        expressionProducesBinding(bindings, candidate.whenTrue, isDirectBinding) ||
+        expressionProducesBinding(bindings, candidate.whenFalse, isDirectBinding)
+      );
+    }
+    if (ts.isBinaryExpression(candidate)) {
+      switch (candidate.operatorToken.kind) {
+        case ts.SyntaxKind.AmpersandAmpersandToken:
+        case ts.SyntaxKind.BarBarToken:
+        case ts.SyntaxKind.QuestionQuestionToken:
+        case ts.SyntaxKind.CommaToken:
+        case ts.SyntaxKind.EqualsToken:
+          return (
+            expressionProducesBinding(bindings, candidate.left, isDirectBinding) ||
+            expressionProducesBinding(bindings, candidate.right, isDirectBinding)
+          );
+        default:
+          return false;
+      }
+    }
+    if (ts.isAwaitExpression(candidate)) {
+      return expressionProducesBinding(bindings, candidate.expression, isDirectBinding);
+    }
+    if (ts.isCallExpression(candidate) || ts.isNewExpression(candidate)) {
+      return (candidate.arguments ?? []).some((argument) =>
+        expressionContainsBinding(bindings, argument, isDirectBinding)
+      );
+    }
+    return false;
+  }
+
+  function expressionContainsBinding(
+    bindings: Set<string>,
+    expression: ts.Expression,
+    isDirectBinding: (candidate: ts.Expression) => boolean
+  ): boolean {
+    const candidate = unwrapExpression(expression);
+    if (expressionProducesBinding(bindings, candidate, isDirectBinding)) return true;
+    if (ts.isArrayLiteralExpression(candidate)) {
+      return candidate.elements.some(
+        (element) =>
+          !ts.isOmittedExpression(element) &&
+          expressionContainsBinding(
+            bindings,
+            ts.isSpreadElement(element) ? element.expression : element,
+            isDirectBinding
+          )
+      );
+    }
+    if (!ts.isObjectLiteralExpression(candidate)) return false;
+    return candidate.properties.some((property) => {
+      if (ts.isSpreadAssignment(property)) {
+        return expressionContainsBinding(bindings, property.expression, isDirectBinding);
+      }
+      if (ts.isShorthandPropertyAssignment(property)) {
+        return bindings.has(property.name.text);
+      }
+      return (
+        ts.isPropertyAssignment(property) &&
+        expressionContainsBinding(bindings, property.initializer, isDirectBinding)
+      );
+    });
+  }
+
   function discoverCompositeBindings(
     bindings: Set<string>,
     targetPath: string,
@@ -885,7 +967,7 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
     let discovered = false;
     const initializer = unwrapExpression(expression);
     const initializerPath = readExpressionPath(initializer);
-    if (isDirectBinding(initializer)) {
+    if (expressionProducesBinding(bindings, initializer, isDirectBinding)) {
       discovered = addBinding(bindings, targetPath) || discovered;
     }
     if (initializerPath) {
@@ -2138,6 +2220,19 @@ describe('Templates Monaco preview architecture', () => {
           'export function MonacoCodeViewer({ editable }: { editable: boolean }) {',
           '  const Surface = useMonacoCodeSurface();',
           '  return editable ? <Surface readOnly={false} /> : <Surface readOnly={true} />;',
+          '}',
+        ].join('\n')
+      )
+    ).toContain('MonacoCodeViewer rendered a writable or dynamic surface');
+    expect(
+      collectMonacoViewerReadOnlyViolations(
+        [
+          'function useMonacoCodeSurface() { return null; }',
+          'function identity<T>(value: T): T { return value; }',
+          'export function MonacoCodeViewer() {',
+          '  const Surface = useMonacoCodeSurface();',
+          '  const Wrapped = identity(Surface);',
+          '  return <><Surface readOnly /><Wrapped readOnly={false} /></>;',
           '}',
         ].join('\n')
       )
