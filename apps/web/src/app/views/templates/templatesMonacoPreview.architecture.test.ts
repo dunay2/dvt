@@ -22,19 +22,34 @@ const CANVAS_MONACO_EDITOR_OWNERS = new Set([
   'views/canvas/DvtSqlTransformAuthoringSection.tsx',
 ]);
 const TEMPLATES_MONACO_PREVIEW_OWNER = 'views/templates/TemplateMonacoPreviewPanel.tsx';
+const MONACO_AUTHORITY_SOURCE_SIGNALS = [
+  '@monaco-editor/react',
+  'monaco-editor',
+  'MonacoCodeEditor',
+  'MonacoCodeViewer',
+  'MonacoDiffViewer',
+  'MonacoCodeSurface',
+  'MonacoDiffSurface',
+] as const;
 
 const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
   {
     label: 'Templates preview delegates read-only rendering to MonacoCodeViewer',
     surface: 'templates-preview',
     modulePath: 'views/templates/TemplateMonacoPreviewPanel.tsx',
-    source: "import { MonacoCodeViewer } from '../../components/monaco/MonacoCodeViewer';",
+    source: [
+      "import { MonacoCodeViewer } from '../../components/monaco/MonacoCodeViewer';",
+      'void MonacoCodeViewer;',
+    ].join('\n'),
   },
   ...[...CANVAS_MONACO_EDITOR_OWNERS].map((modulePath) => ({
     label: `${modulePath} owns a focused Canvas authoring editor`,
     surface: 'canvas-production' as const,
     modulePath,
-    source: "import { MonacoCodeEditor } from '../../components/monaco/MonacoCodeEditor';",
+    source: [
+      "import { MonacoCodeEditor } from '../../components/monaco/MonacoCodeEditor';",
+      'void MonacoCodeEditor;',
+    ].join('\n'),
   })),
   {
     label: 'Canvas production may consume Monaco compile-time types without runtime authority',
@@ -50,6 +65,13 @@ const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
       'type EditorOptions = MonacoEditorNamespace.IEditorOptions;',
     ].join('\n'),
   },
+  {
+    label: 'Canvas production may consume internal Monaco surface types without hosting them',
+    surface: 'canvas-production',
+    modulePath: 'views/canvas/canvasMonacoTypes.ts',
+    source:
+      "import type { MonacoCodeSurfaceProps } from '../../components/monaco/MonacoCodeSurface';",
+  },
 ];
 
 const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
@@ -59,49 +81,67 @@ const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
     label: 'Templates preview cannot acquire editable Monaco authority',
     surface: 'templates-preview',
     modulePath: 'views/templates/TemplateMonacoPreviewPanel.tsx',
-    source: "import { MonacoCodeEditor } from '../../components/monaco/MonacoCodeEditor';",
+    source: [
+      "import { MonacoCodeEditor } from '../../components/monaco/MonacoCodeEditor';",
+      'void MonacoCodeEditor;',
+    ].join('\n'),
     expectedViolation: 'MonacoCodeEditor',
   },
   {
     label: 'Templates route cannot bypass its preview panel',
     surface: 'templates-route',
     modulePath: 'views/templates/TemplatesRouteWorkbench.tsx',
-    source: "import { MonacoCodeViewer } from '../../components/monaco/MonacoCodeViewer';",
+    source: [
+      "import { MonacoCodeViewer } from '../../components/monaco/MonacoCodeViewer';",
+      'void MonacoCodeViewer;',
+    ].join('\n'),
     expectedViolation: 'MonacoCodeViewer',
   },
   {
     label: 'Canvas shell cannot become an editable Monaco owner',
     surface: 'canvas-production',
     modulePath: 'views/canvas/CanvasShell.tsx',
-    source: "import { MonacoCodeEditor } from '../../components/monaco/MonacoCodeEditor';",
+    source: [
+      "import { MonacoCodeEditor } from '../../components/monaco/MonacoCodeEditor';",
+      'void MonacoCodeEditor;',
+    ].join('\n'),
     expectedViolation: 'MonacoCodeEditor outside a governed Canvas authoring leaf',
   },
   {
     label: 'Canvas authoring cannot bypass the shared lazy Monaco gateway',
     surface: 'canvas-production',
     modulePath: 'views/canvas/DvtSqlTransformAuthoringSection.tsx',
-    source: "import Editor from '@monaco-editor/react';",
+    source: ["import Editor from '@monaco-editor/react';", 'void Editor;'].join('\n'),
     expectedViolation: '@monaco-editor/react',
   },
   {
     label: 'Templates preview cannot import the underlying code surface directly',
     surface: 'templates-preview',
     modulePath: 'views/templates/TemplateMonacoPreviewPanel.tsx',
-    source: "import MonacoCodeSurface from '../../components/monaco/MonacoCodeSurface';",
+    source: [
+      "import MonacoCodeSurface from '../../components/monaco/MonacoCodeSurface';",
+      'void MonacoCodeSurface;',
+    ].join('\n'),
     expectedViolation: 'MonacoCodeSurface',
   },
   {
     label: 'Canvas authoring cannot import the underlying code surface directly',
     surface: 'canvas-production',
     modulePath: 'views/canvas/DvtSqlTransformAuthoringSection.tsx',
-    source: "import MonacoCodeSurface from '../../components/monaco/MonacoCodeSurface';",
+    source: [
+      "import MonacoCodeSurface from '../../components/monaco/MonacoCodeSurface';",
+      'void MonacoCodeSurface;',
+    ].join('\n'),
     expectedViolation: 'MonacoCodeSurface',
   },
   {
     label: 'Canvas production cannot import the underlying diff surface directly',
     surface: 'canvas-production',
     modulePath: 'views/canvas/CanvasShell.tsx',
-    source: "import MonacoDiffSurface from '../../components/monaco/MonacoDiffSurface';",
+    source: [
+      "import MonacoDiffSurface from '../../components/monaco/MonacoDiffSurface';",
+      'void MonacoDiffSurface;',
+    ].join('\n'),
     expectedViolation: 'MonacoDiffSurface',
   },
   {
@@ -139,10 +179,8 @@ function collectProductionSourceFiles(root: string): string[] {
   });
 }
 
-function hasRuntimeMonacoPackageImport(source: string): boolean {
-  if (!source.includes('monaco-editor')) return false;
-
-  const emittedSource = ts.transpileModule(source, {
+function emitWebModuleSource(source: string): string {
+  return ts.transpileModule(source, {
     compilerOptions: {
       jsx: ts.JsxEmit.ReactJSX,
       module: ts.ModuleKind.ESNext,
@@ -150,6 +188,11 @@ function hasRuntimeMonacoPackageImport(source: string): boolean {
       verbatimModuleSyntax: false,
     },
   }).outputText;
+}
+
+function hasRuntimeMonacoPackageImport(emittedSource: string): boolean {
+  if (!emittedSource.includes('monaco-editor')) return false;
+
   const sourceFile = ts.createSourceFile(
     'monaco-authority-emitted.js',
     emittedSource,
@@ -205,12 +248,17 @@ function collectMonacoAuthorityViolations({
   source,
 }: Omit<MonacoAuthorityFixture, 'label'>): string[] {
   const violations: string[] = [];
+  if (!MONACO_AUTHORITY_SOURCE_SIGNALS.some((signal) => source.includes(signal))) {
+    return violations;
+  }
 
-  if (source.includes('@monaco-editor/react')) {
+  const emittedSource = emitWebModuleSource(source);
+
+  if (emittedSource.includes('@monaco-editor/react')) {
     violations.push('@monaco-editor/react');
   }
 
-  if (hasRuntimeMonacoPackageImport(source)) {
+  if (hasRuntimeMonacoPackageImport(emittedSource)) {
     violations.push('monaco-editor runtime import');
   }
 
@@ -222,7 +270,7 @@ function collectMonacoAuthorityViolations({
       'MonacoCodeSurface',
       'MonacoDiffSurface',
     ]) {
-      if (source.includes(gateway)) violations.push(gateway);
+      if (emittedSource.includes(gateway)) violations.push(gateway);
     }
   }
 
@@ -233,7 +281,7 @@ function collectMonacoAuthorityViolations({
       'MonacoCodeSurface',
       'MonacoDiffSurface',
     ]) {
-      if (source.includes(gateway)) violations.push(gateway);
+      if (emittedSource.includes(gateway)) violations.push(gateway);
     }
   }
 
@@ -244,10 +292,13 @@ function collectMonacoAuthorityViolations({
       'MonacoCodeSurface',
       'MonacoDiffSurface',
     ]) {
-      if (source.includes(gateway)) violations.push(gateway);
+      if (emittedSource.includes(gateway)) violations.push(gateway);
     }
 
-    if (source.includes('MonacoCodeEditor') && !CANVAS_MONACO_EDITOR_OWNERS.has(modulePath)) {
+    if (
+      emittedSource.includes('MonacoCodeEditor') &&
+      !CANVAS_MONACO_EDITOR_OWNERS.has(modulePath)
+    ) {
       violations.push('MonacoCodeEditor outside a governed Canvas authoring leaf');
     }
   }
