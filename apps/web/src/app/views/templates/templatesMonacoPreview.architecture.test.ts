@@ -35,6 +35,31 @@ const MONACO_AUTHORITY_SOURCE_SIGNALS = [
   'monaco-editor',
   ...MONACO_INTERNAL_AUTHORITIES,
 ] as const;
+const MONACO_RUNTIME_AUTHORITY_OWNERS = {
+  '@monaco-editor/react': new Set([
+    'components/monaco/MonacoCodeSurface.tsx',
+    'components/monaco/MonacoDiffSurface.tsx',
+    'components/monaco/monacoLocalWorkers.ts',
+  ]),
+  'monaco-editor runtime import': new Set(['components/monaco/monacoLocalWorkers.ts']),
+  MonacoCodeEditor: new Set([
+    ...CANVAS_MONACO_EDITOR_OWNERS,
+    'views/code/CodeWorkspaceFileSurface.tsx',
+  ]),
+  MonacoCodeViewer: new Set([
+    TEMPLATES_MONACO_PREVIEW_OWNER,
+    'components/inspector/NodePropertySectionView.tsx',
+    'views/artifacts/ArtifactMonacoPreviewPanel.tsx',
+    'views/code/CodeWorkspaceFileSurface.tsx',
+  ]),
+  MonacoDiffViewer: new Set(['views/diff/CatalogDiffPanel.tsx', 'views/diff/SqlDiffPanel.tsx']),
+  MonacoCodeSurface: new Set(['components/monaco/useMonacoCodeSurface.ts']),
+  MonacoDiffSurface: new Set(['components/monaco/MonacoDiffViewer.tsx']),
+  useMonacoCodeSurface: new Set([
+    'components/monaco/MonacoCodeEditor.tsx',
+    'components/monaco/MonacoCodeViewer.tsx',
+  ]),
+} as const;
 
 const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
   {
@@ -198,6 +223,24 @@ const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
   },
 ];
 
+const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
+  {
+    label: 'An external wrapper cannot become an editable Monaco gateway',
+    modulePath: 'components/EditableCodePanel.tsx',
+    source: [
+      "import { MonacoCodeEditor } from './monaco/MonacoCodeEditor';",
+      'export const EditableCodePanel = MonacoCodeEditor;',
+    ].join('\n'),
+    expectedViolation: 'MonacoCodeEditor outside a governed owner',
+  },
+  {
+    label: 'An external wrapper cannot import the raw Monaco React package',
+    modulePath: 'components/RawMonacoPanel.tsx',
+    source: ["import Editor from '@monaco-editor/react';", 'void Editor;'].join('\n'),
+    expectedViolation: '@monaco-editor/react outside a governed owner',
+  },
+] as const;
+
 function readAppSource(relativePath: string): string {
   return readFileSync(path.join(APP_ROOT, relativePath), 'utf8');
 }
@@ -274,6 +317,17 @@ function collectRuntimeModuleSpecifiers(emittedSource: string): ReadonlySet<stri
   return runtimeModuleSpecifiers;
 }
 
+const RUNTIME_MODULE_SPECIFIER_CACHE = new Map<string, ReadonlySet<string>>();
+
+function getRuntimeModuleSpecifiers(source: string): ReadonlySet<string> {
+  const cachedSpecifiers = RUNTIME_MODULE_SPECIFIER_CACHE.get(source);
+  if (cachedSpecifiers) return cachedSpecifiers;
+
+  const runtimeModuleSpecifiers = collectRuntimeModuleSpecifiers(emitWebModuleSource(source));
+  RUNTIME_MODULE_SPECIFIER_CACHE.set(source, runtimeModuleSpecifiers);
+  return runtimeModuleSpecifiers;
+}
+
 function containsPackageSpecifier(specifiers: ReadonlySet<string>, packageName: string): boolean {
   return [...specifiers].some(
     (specifier) => specifier === packageName || specifier.startsWith(`${packageName}/`)
@@ -300,8 +354,7 @@ function collectMonacoAuthorityViolations({
     return violations;
   }
 
-  const emittedSource = emitWebModuleSource(source);
-  const runtimeModuleSpecifiers = collectRuntimeModuleSpecifiers(emittedSource);
+  const runtimeModuleSpecifiers = getRuntimeModuleSpecifiers(source);
 
   if (containsPackageSpecifier(runtimeModuleSpecifiers, '@monaco-editor/react')) {
     violations.push('@monaco-editor/react');
@@ -357,6 +410,36 @@ function collectMonacoAuthorityViolations({
   return violations;
 }
 
+function collectRepositoryMonacoOwnerViolations({
+  modulePath,
+  source,
+}: Pick<MonacoAuthorityFixture, 'modulePath' | 'source'>): string[] {
+  const violations: string[] = [];
+  if (!MONACO_AUTHORITY_SOURCE_SIGNALS.some((signal) => source.includes(signal))) {
+    return violations;
+  }
+
+  const runtimeModuleSpecifiers = getRuntimeModuleSpecifiers(source);
+  for (const [authority, owners] of Object.entries(MONACO_RUNTIME_AUTHORITY_OWNERS)) {
+    const importsAuthority =
+      authority === '@monaco-editor/react' || authority === 'monaco-editor runtime import'
+        ? containsPackageSpecifier(
+            runtimeModuleSpecifiers,
+            authority === '@monaco-editor/react' ? authority : 'monaco-editor'
+          )
+        : containsInternalAuthoritySpecifier(
+            runtimeModuleSpecifiers,
+            authority as (typeof MONACO_INTERNAL_AUTHORITIES)[number]
+          );
+
+    if (importsAuthority && !owners.has(modulePath)) {
+      violations.push(`${authority} outside a governed owner`);
+    }
+  }
+
+  return violations;
+}
+
 function resolveTemplatesMonacoAuthoritySurface(modulePath: string): MonacoAuthoritySurface {
   return modulePath === TEMPLATES_MONACO_PREVIEW_OWNER ? 'templates-preview' : 'templates-route';
 }
@@ -369,6 +452,12 @@ describe('Templates Monaco preview architecture', () => {
 
     for (const fixture of REJECTED_MONACO_AUTHORITY_FIXTURES) {
       expect(collectMonacoAuthorityViolations(fixture), fixture.label).toContain(
+        fixture.expectedViolation
+      );
+    }
+
+    for (const fixture of REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES) {
+      expect(collectRepositoryMonacoOwnerViolations(fixture), fixture.label).toContain(
         fixture.expectedViolation
       );
     }
@@ -520,6 +609,19 @@ describe('Templates Monaco preview architecture', () => {
       const modulePath = path.relative(APP_ROOT, canvasModule).replaceAll('\\', '/');
       expect(
         collectMonacoAuthorityViolations({ surface: 'canvas-production', modulePath, source }),
+        modulePath
+      ).toEqual([]);
+    }
+
+    for (const appModule of collectProductionSourceFiles(APP_ROOT)) {
+      const modulePath = path.relative(APP_ROOT, appModule).replaceAll('\\', '/');
+      if (modulePath.includes('/test/')) continue;
+
+      expect(
+        collectRepositoryMonacoOwnerViolations({
+          modulePath,
+          source: readFileSync(appModule, 'utf8'),
+        }),
         modulePath
       ).toEqual([]);
     }
