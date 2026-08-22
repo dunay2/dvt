@@ -1590,7 +1590,7 @@ test('Cut 4 tooling crypto mechanics and duplicate runner stay retired', () => {
 
   const findings = [];
   for (const sourcePath of trackedFiles.stdout.split(/\r?\n/u).filter(Boolean)) {
-    if (!/\.[cm]?[jt]sx?$/u.test(sourcePath)) {
+    if (!existsSync(sourcePath) || !/\.[cm]?[jt]sx?$/u.test(sourcePath)) {
       continue;
     }
 
