@@ -191,6 +191,24 @@ const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
     source: "import type { DbtAuthoringFieldsProps } from '../canvas/DbtAuthoringFields';",
   },
   {
+    label: 'Templates may import Monaco viewer source as non-executable Vite raw text',
+    surface: 'templates-route',
+    modulePath: 'views/templates/templateSourceAsset.ts',
+    source: [
+      "import viewerSource from '../../components/monaco/MonacoCodeViewer.tsx?raw';",
+      'void viewerSource;',
+    ].join('\n'),
+  },
+  {
+    label: 'Templates may import a Monaco viewer URL without acquiring its authority',
+    surface: 'templates-route',
+    modulePath: 'views/templates/templateSourceAsset.ts',
+    source: [
+      "import viewerUrl from '../../components/monaco/MonacoCodeViewer.tsx?url';",
+      'void viewerUrl;',
+    ].join('\n'),
+  },
+  {
     label: 'Canvas production may mention a Monaco surface without importing its authority',
     surface: 'canvas-production',
     modulePath: 'views/canvas/canvasAnalytics.ts',
@@ -761,6 +779,21 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
 ] as const;
 
 const ACCEPTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
+  {
+    label: 'A production module may import Monaco viewer source as non-executable Vite raw text',
+    modulePath: 'app/components/MonacoViewerSourceAsset.ts',
+    source: [
+      "import viewerSource from './monaco/MonacoCodeViewer.tsx?raw';",
+      'void viewerSource;',
+    ].join('\n'),
+  },
+  {
+    label: 'A production module may import a Monaco viewer URL without acquiring its authority',
+    modulePath: 'app/components/MonacoViewerSourceAsset.ts',
+    source: ["import viewerUrl from './monaco/MonacoCodeViewer.tsx?url';", 'void viewerUrl;'].join(
+      '\n'
+    ),
+  },
   {
     label: 'A governed editor consumer may render its editor through React createElement',
     modulePath: 'app/views/code/CodeWorkspaceFileSurface.tsx',
@@ -2257,18 +2290,26 @@ function getRuntimeModuleSpecifiers(modulePath: string, source: string): Runtime
   return runtimeModuleAccess;
 }
 
-function normalizeRuntimeModuleSpecifier(specifier: string): string {
-  const suffixIndex = specifier.search(/[?#]/);
-  const bareSpecifier = suffixIndex === -1 ? specifier : specifier.slice(0, suffixIndex);
-  return bareSpecifier.replaceAll('\\', '/');
+function normalizeRuntimeModuleSpecifier(specifier: string): string | undefined {
+  const normalizedSeparators = specifier.replaceAll('\\', '/');
+  const fragmentIndex = normalizedSeparators.indexOf('#');
+  const preFragmentSpecifier =
+    fragmentIndex === -1 ? normalizedSeparators : normalizedSeparators.slice(0, fragmentIndex);
+  const queryIndex = preFragmentSpecifier.indexOf('?');
+  if (queryIndex === -1) return preFragmentSpecifier;
+
+  const query = preFragmentSpecifier.slice(queryIndex + 1);
+  if (/(?:^|&)(?:raw|url)(?:[=&]|$)/.test(query)) return undefined;
+  return preFragmentSpecifier.slice(0, queryIndex);
 }
 
 function containsPackageSpecifier(specifiers: ReadonlySet<string>, packageName: string): boolean {
-  return [...specifiers].some(
-    (specifier) =>
-      normalizeRuntimeModuleSpecifier(specifier) === packageName ||
-      normalizeRuntimeModuleSpecifier(specifier).startsWith(`${packageName}/`)
-  );
+  return [...specifiers].some((specifier) => {
+    const normalizedSpecifier = normalizeRuntimeModuleSpecifier(specifier);
+    return (
+      normalizedSpecifier === packageName || normalizedSpecifier?.startsWith(`${packageName}/`)
+    );
+  });
 }
 
 function containsInternalAuthoritySpecifier(
@@ -2277,7 +2318,7 @@ function containsInternalAuthoritySpecifier(
 ): boolean {
   return [...specifiers].some((specifier) => {
     const normalizedSpecifier = normalizeRuntimeModuleSpecifier(specifier);
-    const moduleName = normalizedSpecifier.split('/').at(-1);
+    const moduleName = normalizedSpecifier?.split('/').at(-1);
     return moduleName?.replace(/\.[cm]?[jt]sx?$/, '') === authority;
   });
 }
@@ -2309,6 +2350,7 @@ function containsPotentialStaticMonacoAuthority(
 
 function resolveWebRuntimeModuleSpecifier(modulePath: string, specifier: string): string {
   const normalizedSpecifier = normalizeRuntimeModuleSpecifier(specifier);
+  if (!normalizedSpecifier) return '';
   const aliasedSpecifier = resolveWebViteAlias(normalizedSpecifier);
   if (aliasedSpecifier) return aliasedSpecifier;
   if (normalizedSpecifier.startsWith('.')) {
