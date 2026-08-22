@@ -6,6 +6,9 @@ owners:
   - packages/@dvt/crypto
   - packages/@dvt/engine
   - packages/@dvt/state-store
+  - packages/@dvt/contracts
+  - packages/@dvt/planner
+  - packages/@dvt/plan-verifier
 arc_level: ARC-2
 breaking: false
 code_refs:
@@ -14,11 +17,20 @@ code_refs:
   - packages/@dvt/crypto/src/jcs.ts
   - packages/@dvt/engine/src/security/planIntegrity.ts
   - packages/@dvt/state-store/src/lifecycle/archiveArtifacts.ts
+  - packages/@dvt/contracts/src/schema-packs/plan-records.ts
+  - packages/@dvt/planner/src/domain/hashing.ts
+  - packages/@dvt/plan-verifier/src/verify.ts
 evidence:
   tests:
     - pnpm --filter @dvt/crypto test
     - pnpm exec vitest run packages/@dvt/engine/test/idempotency.vectors.test.ts packages/@dvt/engine/test/contracts/engine.test.ts packages/@dvt/engine/test/contracts/executionPlan.contract.test.ts packages/@dvt/engine/test/core/WorkflowEngine.test.ts packages/@dvt/state-store/test/archiveArtifacts.test.ts packages/@dvt/state-store/test/ObjectStorageRunArchiveExporter.test.ts
     - pnpm type-check
+    - pnpm --filter @dvt/contracts test
+    - pnpm --filter @dvt/planner test
+    - pnpm --filter @dvt/plan-verifier test
+    - pnpm --filter @dvt/engine test
+    - node --test tools/ci/architecture-dependency-guard.test.mjs
+    - pnpm arch:deps
     - pnpm verify:prepush
 ---
 
@@ -41,3 +53,17 @@ randomness failure, and deterministic UUID cases. Runtime parity proves that
 Node 22 import and synchronous require resolve the same ESM artifact. Existing
 Engine integrity/idempotency and State Store archive vectors prove that the
 package move does not alter persisted hashes.
+
+## Cut 1 Consumer Retirement
+
+Contracts, Planner, Plan Verifier, and Engine now import portable primitives
+directly from `@dvt/crypto`. Their domain preimages, versions, validation
+rules, public asynchronous boundaries, and error vocabulary remain owned by
+the original packages.
+
+The implementation branch deleted the obsolete Contracts SHA/JCS
+implementations, Planner primitive mechanics, Plan Verifier WebCrypto helper,
+Engine facades, and duplicate primitive-only Contracts test before repairing
+consumers. The expected missing-import failures exposed no unclassified Cut 1
+consumer. No compatibility alias, forwarding module, fallback, store, planner,
+or second serialization format was added.

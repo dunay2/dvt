@@ -1,11 +1,14 @@
 ---
 id: R-20260822-CRYPTO-AUTHORITY-DRIFT
 title: Crypto primitive implementations could drift across repository boundaries
-status: Closed
+status: Open
 date: 2026-08-22
 owners:
   - packages/@dvt/crypto
   - packages/@dvt/engine
+  - packages/@dvt/contracts
+  - packages/@dvt/planner
+  - packages/@dvt/plan-verifier
   - packages/@dvt/state-store
 severity: High
 probability: Low
@@ -22,5 +25,8 @@ mitigations:
   - Preserve existing domain preimages and prove them through Engine and State Store vectors.
   - Fail closed when secure randomness or valid JSON input is unavailable.
   - Remove the obsolete canonical package path and its aliases.
+  - Require direct consumer imports and dependencies instead of domain-package re-exports.
+  - Keep retired duplicate paths absent through the architecture dependency guard.
+  - Complete the remaining bounded consumer cuts under GitHub issue 2191 before closing this risk.
 review_after: 2026-11-22
 ---
