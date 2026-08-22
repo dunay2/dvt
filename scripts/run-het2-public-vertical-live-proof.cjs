@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /** Owned concern: run the public HET2 HTTPS JSON -> artifact -> PostgreSQL -> DBT proof. */
 const { spawn, spawnSync } = require('node:child_process');
-const { createHash } = require('node:crypto');
 const { readFile } = require('node:fs/promises');
 const { createServer } = require('node:https');
 const path = require('node:path');
+const { sha256Hex } = require('@dvt/crypto');
 
 const { allocateFreePort } = require('./run-dev-stack.temporal.cjs');
 
@@ -23,7 +23,7 @@ const SELECTED_CLOSURE_RUNNER = 'scripts/run-selected-closure-live-proof.cjs';
 const HET2_CYPRESS_SPEC = 'apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts';
 
 function validateHttpJsonFixture(content, manifest) {
-  const sha256 = createHash('sha256').update(content).digest('hex');
+  const sha256 = sha256Hex(content);
   if (content.byteLength !== manifest.sizeBytes) {
     throw new Error(
       `HET2 fixture size does not match the manifest: expected ${manifest.sizeBytes}, received ${content.byteLength}.`

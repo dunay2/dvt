@@ -1,10 +1,10 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createHash } = require('node:crypto');
 const { EventEmitter } = require('node:events');
 const { readFileSync } = require('node:fs');
 const { request } = require('node:https');
 const path = require('node:path');
+const { sha256Hex } = require('@dvt/crypto');
 
 const {
   buildHet2Env,
@@ -91,7 +91,7 @@ test('serves only the authorized JSONL fixture over TLS', async (context) => {
   const response = await requestFixture({ port, cert, token: 'het2-fixture-bearer-token' });
   const bytes = response.body;
   assert.equal(response.statusCode, 200);
-  assert.equal(createHash('sha256').update(bytes).digest('hex'), fixtureManifest.sha256);
+  assert.equal(sha256Hex(bytes), fixtureManifest.sha256);
   const denied = await requestFixture({ port, cert, token: 'wrong' });
   assert.equal(denied.statusCode, 401);
   const failed = await requestFixture({
@@ -108,10 +108,7 @@ test('serves only the authorized JSONL fixture over TLS', async (context) => {
     requestPath: '/integrity-mismatch',
   });
   assert.equal(mismatched.statusCode, 200);
-  assert.notEqual(
-    createHash('sha256').update(mismatched.body).digest('hex'),
-    fixtureManifest.sha256
-  );
+  assert.notEqual(sha256Hex(mismatched.body), fixtureManifest.sha256);
   assert.equal(mismatched.body.byteLength, fixtureManifest.sizeBytes);
 });
 
