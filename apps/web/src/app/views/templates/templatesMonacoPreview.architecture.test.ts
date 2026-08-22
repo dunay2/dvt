@@ -2418,15 +2418,9 @@ describe('Templates Monaco preview architecture', () => {
     expect(monacoSurface).toContain('createMonacoCodeOptions({ ariaLabel, readOnly: isReadOnly })');
     expect(monacoVisualTokens).toContain('readOnly,');
     expect(monacoVisualTokens).toContain('domReadOnly: readOnly');
+  });
 
-    expect(
-      collectMonacoAuthorityViolations({
-        surface: 'canvas-production',
-        modulePath: 'views/Canvas.tsx',
-        source: readAppSource('views/Canvas.tsx'),
-      })
-    ).toEqual([]);
-
+  it('scans every Templates production module for Monaco authority', () => {
     for (const templatesModule of collectProductionSourceFiles(
       path.join(APP_ROOT, 'views/templates')
     )) {
@@ -2441,6 +2435,16 @@ describe('Templates Monaco preview architecture', () => {
         modulePath
       ).toEqual([]);
     }
+  });
+
+  it('scans every Canvas production module for Monaco authority', () => {
+    expect(
+      collectMonacoAuthorityViolations({
+        surface: 'canvas-production',
+        modulePath: 'views/Canvas.tsx',
+        source: readAppSource('views/Canvas.tsx'),
+      })
+    ).toEqual([]);
 
     for (const canvasModule of collectProductionSourceFiles(path.join(APP_ROOT, 'views/canvas'))) {
       const source = readFileSync(canvasModule, 'utf8');
@@ -2450,7 +2454,9 @@ describe('Templates Monaco preview architecture', () => {
         modulePath
       ).toEqual([]);
     }
+  });
 
+  it('enforces Monaco owners and test-support boundaries across Web production', () => {
     for (const sourceModule of collectProductionSourceFiles(WEB_SOURCE_ROOT)) {
       const modulePath = path.relative(WEB_SOURCE_ROOT, sourceModule).replaceAll('\\', '/');
       if (/(^|\/)test(ing)?\//.test(modulePath)) continue;
