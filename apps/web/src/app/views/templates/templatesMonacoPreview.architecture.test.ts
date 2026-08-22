@@ -485,6 +485,16 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     expectedViolation: 'useMonacoCodeSurface re-exported',
   },
   {
+    label: 'A governed viewer cannot separately export a local object that exposes its loader',
+    modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
+    source: [
+      "import { useMonacoCodeSurface } from './useMonacoCodeSurface';",
+      'const internals = { load: () => useMonacoCodeSurface };',
+      'export { internals };',
+    ].join('\n'),
+    expectedViolation: 'useMonacoCodeSurface re-exported',
+  },
+  {
     label: 'A governed viewer cannot pass its loader through an exported identity call',
     modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
     source: [
@@ -675,6 +685,7 @@ function collectRuntimeModuleSpecifiers(
   const runtimeModuleSpecifiers = new Set<string>();
   const runtimeReExportedSpecifiers = new Set<string>();
   const runtimeImportedBindings = new Map<string, string>();
+  const runtimeLocalBindingInitializers = new Map<string, ts.Expression>();
   const reactCreateElementBindings = new Set<string>();
   const reactNamespaceBindings = new Set<string>();
 
@@ -735,6 +746,18 @@ function collectRuntimeModuleSpecifiers(
     }
   }
 
+  function addLocalBindingInitializers(name: ts.BindingName, initializer: ts.Expression): void {
+    if (ts.isIdentifier(name)) {
+      runtimeLocalBindingInitializers.set(name.text, initializer);
+      return;
+    }
+    for (const element of name.elements) {
+      if (!ts.isOmittedExpression(element)) {
+        addLocalBindingInitializers(element.name, initializer);
+      }
+    }
+  }
+
   function getImportedSpecifier(
     node: ts.Expression,
     bindings: ReadonlyMap<string, string> = runtimeImportedBindings
@@ -761,11 +784,27 @@ function collectRuntimeModuleSpecifiers(
 
   function addReExportedExpression(
     node: ts.Node,
-    bindings: ReadonlyMap<string, string> = runtimeImportedBindings
+    bindings: ReadonlyMap<string, string> = runtimeImportedBindings,
+    resolvingLocalBindings: ReadonlySet<string> = new Set()
   ): void {
     if (ts.isExpression(node)) {
       const importedSpecifier = getImportedSpecifier(node, bindings);
       if (importedSpecifier) runtimeReExportedSpecifiers.add(importedSpecifier);
+    }
+    if (
+      ts.isIdentifier(node) &&
+      !bindings.has(node.text) &&
+      !resolvingLocalBindings.has(node.text)
+    ) {
+      const initializer = runtimeLocalBindingInitializers.get(node.text);
+      if (initializer) {
+        addReExportedExpression(
+          initializer,
+          bindings,
+          new Set([...resolvingLocalBindings, node.text])
+        );
+      }
+      return;
     }
     if (ts.isCallExpression(node) || ts.isNewExpression(node)) {
       const calledSpecifier = getImportedSpecifier(node.expression, bindings);
@@ -775,11 +814,15 @@ function collectRuntimeModuleSpecifiers(
       const isRenderCall = ts.isCallExpression(node) && isReactCreateElementCall(node);
       if (!isJsxRuntimeCall && !isRenderCall) {
         if (calledSpecifier) runtimeReExportedSpecifiers.add(calledSpecifier);
-        for (const argument of node.arguments ?? []) addReExportedExpression(argument, bindings);
+        for (const argument of node.arguments ?? []) {
+          addReExportedExpression(argument, bindings, resolvingLocalBindings);
+        }
       }
       return;
     }
-    ts.forEachChild(node, (child) => addReExportedExpression(child, bindings));
+    ts.forEachChild(node, (child) =>
+      addReExportedExpression(child, bindings, resolvingLocalBindings)
+    );
   }
 
   function addExportedDeclarationAuthorities(
@@ -961,6 +1004,8 @@ function collectRuntimeModuleSpecifiers(
         const localBinding = element.propertyName ?? element.name;
         const importedSpecifier = runtimeImportedBindings.get(localBinding.text);
         if (importedSpecifier) runtimeReExportedSpecifiers.add(importedSpecifier);
+        const initializer = runtimeLocalBindingInitializers.get(localBinding.text);
+        if (initializer) addReExportedExpression(initializer);
       }
       return;
     }
@@ -1008,6 +1053,13 @@ function collectRuntimeModuleSpecifiers(
 
   for (const statement of sourceFile.statements) {
     if (ts.isImportDeclaration(statement)) addImportedBindings(statement);
+    if (ts.isVariableStatement(statement)) {
+      for (const declaration of statement.declarationList.declarations) {
+        if (declaration.initializer) {
+          addLocalBindingInitializers(declaration.name, declaration.initializer);
+        }
+      }
+    }
   }
 
   let discoveredAlias = true;
