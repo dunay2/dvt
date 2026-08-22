@@ -489,6 +489,10 @@ test('PR quality gate prepares planning DB before DB-first feature implementatio
   assert.notEqual(cryptoBuildIndex, -1);
   assert.ok(cryptoBuildIndex < planningImportIndex);
   assertWorkflowContains(preparePlanningDbAction, 'pnpm planning:db:import');
+  const cryptoBuildIndex = preparePlanningDbAction.indexOf('pnpm --filter @dvt/crypto build');
+  const planningImportIndex = preparePlanningDbAction.indexOf('pnpm planning:db:import');
+  assert.notEqual(cryptoBuildIndex, -1);
+  assert.ok(cryptoBuildIndex < planningImportIndex);
   assert.doesNotMatch(preparePlanningDbAction, /planning:db:migrate/u);
   assert.equal(
     countWorkflowCommand(prepareDbStep, "steps.scope.outputs.governance_global_relevant == 'true'"),
