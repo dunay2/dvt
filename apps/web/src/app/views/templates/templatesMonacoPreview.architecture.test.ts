@@ -48,6 +48,7 @@ const MONACO_AUTHORITY_SOURCE_SIGNALS = [
   'import.meta.glob',
   ...MONACO_INTERNAL_AUTHORITIES,
 ] as const;
+const WEB_VITE_ALIAS_ROOTS = new Map([['@', 'src']]);
 const MONACO_RUNTIME_AUTHORITY_OWNERS = {
   '@monaco-editor/react': new Set([
     'app/components/monaco/MonacoCodeSurface.tsx',
@@ -131,6 +132,17 @@ const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
       'void import.meta.glob([',
       "  '../../components/**/*.tsx',",
       "  '!../../components/monaco/**',",
+      ']);',
+    ].join('\n'),
+  },
+  {
+    label: 'Canvas production may exclude Monaco from a source-alias Vite glob',
+    surface: 'canvas-production',
+    modulePath: 'views/canvas/canvasAnalytics.ts',
+    source: [
+      'void import.meta.glob([',
+      "  '@/app/components/**/*.tsx',",
+      "  '!@/app/components/monaco/**',",
       ']);',
     ].join('\n'),
   },
@@ -335,6 +347,12 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     expectedViolation: 'MonacoCodeSurface outside a governed owner',
   },
   {
+    label: 'A capability cannot reach Monaco through the configured source alias',
+    modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
+    source: "export const panels = import.meta.glob('@/app/components/monaco/*.tsx');",
+    expectedViolation: 'MonacoCodeSurface outside a governed owner',
+  },
+  {
     label: 'A capability cannot concatenate a variable Monaco dynamic import',
     modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
     source: [
@@ -418,6 +436,17 @@ function resolveWebPackageModulePath(modulePath: string): string {
     : `src/app/${normalizedModulePath}`;
 }
 
+function resolveWebViteAlias(modulePath: string): string | undefined {
+  const normalizedModulePath = modulePath.replaceAll('\\', '/');
+  for (const [alias, root] of WEB_VITE_ALIAS_ROOTS) {
+    if (normalizedModulePath === alias) return root;
+    if (normalizedModulePath.startsWith(`${alias}/`)) {
+      return path.posix.join(root, normalizedModulePath.slice(alias.length + 1));
+    }
+  }
+  return undefined;
+}
+
 function resolveViteGlobPattern(
   modulePath: string,
   globPattern: string,
@@ -426,14 +455,20 @@ function resolveViteGlobPattern(
   const negated = globPattern.startsWith('!');
   const pattern = (negated ? globPattern.slice(1) : globPattern).replaceAll('\\', '/');
   const importerDirectory = path.posix.dirname(resolveWebPackageModulePath(modulePath));
-  const baseDirectory = base
-    ? base.startsWith('/')
-      ? base.slice(1)
-      : path.posix.join(importerDirectory, base)
-    : importerDirectory;
-  const resolvedPattern = pattern.startsWith('/')
-    ? pattern.slice(1)
-    : path.posix.join(baseDirectory, pattern);
+  const aliasedBase = base ? resolveWebViteAlias(base) : undefined;
+  const baseDirectory = aliasedBase
+    ? aliasedBase
+    : base
+      ? base.startsWith('/')
+        ? base.slice(1)
+        : path.posix.join(importerDirectory, base)
+      : importerDirectory;
+  const aliasedPattern = resolveWebViteAlias(pattern);
+  const resolvedPattern = aliasedPattern
+    ? aliasedPattern
+    : pattern.startsWith('/')
+      ? pattern.slice(1)
+      : path.posix.join(baseDirectory, pattern);
 
   return `${negated ? '!' : ''}${path.posix.normalize(resolvedPattern)}`;
 }
@@ -552,7 +587,7 @@ function collectRuntimeModuleSpecifiers(
     if (!variableImport.hasStaticText) return;
 
     const pattern = variableImport.pattern.replaceAll('\\', '/');
-    if (!pattern.startsWith('.') && !pattern.startsWith('/')) {
+    if (!pattern.startsWith('.') && !pattern.startsWith('/') && !resolveWebViteAlias(pattern)) {
       runtimeModuleSpecifiers.add(pattern);
       return;
     }
@@ -873,6 +908,9 @@ describe('Templates Monaco preview architecture', () => {
     expect(isProductionSourceFileName('MonacoCodeSurface.spec.tsx')).toBe(false);
     expect(isProductionSourceFileName('monacoAuthority.architecture.test.ts')).toBe(false);
     expect(isProductionSourceFileName('MonacoCodeSurface.tsx')).toBe(true);
+    expect(readRepoDoc('apps/web/vite.config.ts')).toContain(
+      "'@': fileURLToPath(new URL('./src', import.meta.url))"
+    );
   });
 
   it('distinguishes accepted and rejected Templates and Canvas Monaco authority fixtures', () => {
