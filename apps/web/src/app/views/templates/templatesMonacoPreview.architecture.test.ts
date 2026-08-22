@@ -306,12 +306,16 @@ function collectProductionSourceFiles(root: string): string[] {
       return collectProductionSourceFiles(fullPath);
     }
 
-    if (!/\.(ts|tsx)$/.test(entry) || /\.test\./.test(entry)) {
+    if (!isProductionSourceFileName(entry)) {
       return [];
     }
 
     return [fullPath];
   });
+}
+
+function isProductionSourceFileName(fileName: string): boolean {
+  return /\.(?:ts|tsx)$/.test(fileName) && !/\.(?:test|spec)\./.test(fileName);
 }
 
 function emitWebModuleSource(source: string): string {
@@ -572,6 +576,13 @@ function resolveTemplatesMonacoAuthoritySurface(modulePath: string): MonacoAutho
 }
 
 describe('Templates Monaco preview architecture', () => {
+  it('excludes every Web Vitest suffix from production owner discovery', () => {
+    expect(isProductionSourceFileName('MonacoCodeSurface.test.tsx')).toBe(false);
+    expect(isProductionSourceFileName('MonacoCodeSurface.spec.tsx')).toBe(false);
+    expect(isProductionSourceFileName('monacoAuthority.architecture.test.ts')).toBe(false);
+    expect(isProductionSourceFileName('MonacoCodeSurface.tsx')).toBe(true);
+  });
+
   it('distinguishes accepted and rejected Templates and Canvas Monaco authority fixtures', () => {
     for (const fixture of ACCEPTED_MONACO_AUTHORITY_FIXTURES) {
       expect(collectMonacoAuthorityViolations(fixture), fixture.label).toEqual([]);
