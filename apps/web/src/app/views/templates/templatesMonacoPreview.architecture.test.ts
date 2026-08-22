@@ -292,6 +292,26 @@ const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
     expectedViolation: 'MonacoCodeViewer',
   },
   {
+    label: 'Templates route cannot treat a valued raw query as non-executable',
+    surface: 'templates-route',
+    modulePath: 'views/templates/TemplatesRouteWorkbench.tsx',
+    source: [
+      "import { MonacoCodeViewer } from '../../components/monaco/MonacoCodeViewer?raw=false';",
+      'void MonacoCodeViewer;',
+    ].join('\n'),
+    expectedViolation: 'MonacoCodeViewer',
+  },
+  {
+    label: 'Templates route cannot treat a valued URL query as non-executable',
+    surface: 'templates-route',
+    modulePath: 'views/templates/TemplatesRouteWorkbench.tsx',
+    source: [
+      "import { MonacoCodeViewer } from '../../components/monaco/MonacoCodeViewer?url=false';",
+      'void MonacoCodeViewer;',
+    ].join('\n'),
+    expectedViolation: 'MonacoCodeViewer',
+  },
+  {
     label: 'Templates route cannot mount Monaco through the inspector viewer wrapper',
     surface: 'templates-route',
     modulePath: 'views/templates/TemplatesRouteWorkbench.tsx',
@@ -2299,7 +2319,7 @@ function normalizeRuntimeModuleSpecifier(specifier: string): string | undefined 
   if (queryIndex === -1) return preFragmentSpecifier;
 
   const query = preFragmentSpecifier.slice(queryIndex + 1);
-  if (/(?:^|&)(?:raw|url)(?:[=&]|$)/.test(query)) return undefined;
+  if (/(?:^|&)(?:raw|url)(?:&|$)/.test(query)) return undefined;
   return preFragmentSpecifier.slice(0, queryIndex);
 }
 
