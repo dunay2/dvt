@@ -419,6 +419,18 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     expectedViolation: '@monaco-editor/react outside a governed owner',
   },
   {
+    label: 'An external wrapper cannot hide the raw Monaco package behind a Unicode escape',
+    modulePath: 'app/components/RawMonacoPanel.js',
+    source: ["import Editor from '@monaco\\u002deditor/react';", 'void Editor;'].join('\n'),
+    expectedViolation: '@monaco-editor/react outside a governed owner',
+  },
+  {
+    label: 'An external wrapper cannot hide an internal surface behind a Unicode escape',
+    modulePath: 'app/components/RawMonacoPanel.mjs',
+    source: ["import Surface from './monaco/Monaco\\u0043odeSurface';", 'void Surface;'].join('\n'),
+    expectedViolation: 'MonacoCodeSurface outside a governed owner',
+  },
+  {
     label: 'A capability cannot hide a Monaco surface behind a Vite glob wrapper',
     modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
     source:
@@ -640,7 +652,32 @@ function collectProductionSourceFiles(root: string): string[] {
 }
 
 function isProductionSourceFileName(fileName: string): boolean {
-  return /\.(?:ts|tsx)$/.test(fileName) && !/\.(?:test|spec)\./.test(fileName);
+  return (
+    /\.(?:[cm]?[jt]sx?)$/.test(fileName) &&
+    !/\.d\.[cm]?ts$/.test(fileName) &&
+    !/\.(?:test|spec)\./.test(fileName)
+  );
+}
+
+function collectStaticModuleSpecifiers(source: string): ReadonlySet<string> {
+  const sourceFile = ts.createSourceFile(
+    'monaco-authority-prefilter.tsx',
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX
+  );
+  const specifiers = new Set<string>();
+  for (const statement of sourceFile.statements) {
+    if (
+      (ts.isImportDeclaration(statement) || ts.isExportDeclaration(statement)) &&
+      statement.moduleSpecifier &&
+      ts.isStringLiteralLike(statement.moduleSpecifier)
+    ) {
+      specifiers.add(statement.moduleSpecifier.text);
+    }
+  }
+  return specifiers;
 }
 
 function emitWebModuleSource(source: string): string {
@@ -1285,6 +1322,22 @@ function containsCanvasAuthoringContextSpecifier(
   );
 }
 
+function containsPotentialStaticMonacoAuthority(
+  specifiers: ReadonlySet<string>,
+  modulePath: string
+): boolean {
+  if (
+    containsPackageSpecifier(specifiers, '@monaco-editor/react') ||
+    containsPackageSpecifier(specifiers, 'monaco-editor') ||
+    containsCanvasAuthoringContextSpecifier(specifiers, modulePath)
+  ) {
+    return true;
+  }
+  return MONACO_INTERNAL_AUTHORITIES.some((authority) =>
+    containsInternalAuthoritySpecifier(specifiers, authority)
+  );
+}
+
 function resolveWebRuntimeModuleSpecifier(modulePath: string, specifier: string): string {
   const normalizedSpecifier = specifier.replaceAll('\\', '/');
   const aliasedSpecifier = resolveWebViteAlias(normalizedSpecifier);
@@ -1335,10 +1388,14 @@ function collectMonacoAuthorityViolations({
   source,
 }: Omit<MonacoAuthorityFixture, 'label'>): string[] {
   const violations: string[] = [];
+  const hasEscapedStaticAuthority =
+    /\\(?:u(?:\{[\dA-Fa-f]+\}|[\dA-Fa-f]{4})|x[\dA-Fa-f]{2})/.test(source) &&
+    containsPotentialStaticMonacoAuthority(collectStaticModuleSpecifiers(source), modulePath);
   if (
     !MONACO_AUTHORITY_SOURCE_SIGNALS.some((signal) => source.includes(signal)) &&
     !/\bimport\s*\(/.test(source) &&
-    !/['"`][^'"`]*\/canvas(?:\/|['"`])/.test(source)
+    !/['"`][^'"`]*\/canvas(?:\/|['"`])/.test(source) &&
+    !hasEscapedStaticAuthority
   ) {
     return violations;
   }
@@ -1416,10 +1473,14 @@ function collectRepositoryMonacoOwnerViolations({
   source,
 }: Pick<MonacoAuthorityFixture, 'modulePath' | 'source'>): string[] {
   const violations: string[] = [];
+  const hasEscapedStaticAuthority =
+    /\\(?:u(?:\{[\dA-Fa-f]+\}|[\dA-Fa-f]{4})|x[\dA-Fa-f]{2})/.test(source) &&
+    containsPotentialStaticMonacoAuthority(collectStaticModuleSpecifiers(source), modulePath);
   if (
     !MONACO_AUTHORITY_SOURCE_SIGNALS.some((signal) => source.includes(signal)) &&
     !/\bimport\s*\(/.test(source) &&
-    !/['"`][^'"`]*\/canvas(?:\/|['"`])/.test(source)
+    !/['"`][^'"`]*\/canvas(?:\/|['"`])/.test(source) &&
+    !hasEscapedStaticAuthority
   ) {
     return violations;
   }
@@ -1471,6 +1532,17 @@ describe('Templates Monaco preview architecture', () => {
     expect(isProductionSourceFileName('MonacoCodeSurface.spec.tsx')).toBe(false);
     expect(isProductionSourceFileName('monacoAuthority.architecture.test.ts')).toBe(false);
     expect(isProductionSourceFileName('MonacoCodeSurface.tsx')).toBe(true);
+    for (const executableFile of [
+      'MonacoCodeSurface.js',
+      'MonacoCodeSurface.jsx',
+      'MonacoCodeSurface.mjs',
+      'MonacoCodeSurface.mts',
+      'MonacoCodeSurface.cjs',
+      'MonacoCodeSurface.cts',
+    ]) {
+      expect(isProductionSourceFileName(executableFile), executableFile).toBe(true);
+    }
+    expect(isProductionSourceFileName('MonacoCodeSurface.d.ts')).toBe(false);
     expect(readRepoDoc('apps/web/vite.config.ts')).toContain(
       "'@': fileURLToPath(new URL('./src', import.meta.url))"
     );
