@@ -46,6 +46,7 @@ const MONACO_INTERNAL_AUTHORITIES = [
   'useMonacoCodeSurface',
   'CodeWorkspaceFileSurface',
   'WorkspaceFileCodeEditor',
+  'CodeView',
   ...CANVAS_WORKSPACE_FILE_CODE_CONTRIBUTION_AUTHORITIES,
   ...CANVAS_EDITABLE_MONACO_LEAVES,
 ] as const;
@@ -58,11 +59,13 @@ const MONACO_INTERNAL_AUTHORITY_SOURCE_PATHS = MONACO_INTERNAL_AUTHORITIES.map((
           authority as (typeof CANVAS_WORKSPACE_FILE_CODE_CONTRIBUTION_AUTHORITIES)[number]
         )
       ? `src/app/views/canvas/${authority}.tsx`
-      : authority === 'CodeWorkspaceFileSurface' || authority === 'WorkspaceFileCodeEditor'
-        ? `src/app/views/code/${authority}.tsx`
-        : authority === 'useMonacoCodeSurface'
-          ? `src/app/components/monaco/${authority}.ts`
-          : `src/app/components/monaco/${authority}.tsx`
+      : authority === 'CodeView'
+        ? 'src/app/views/CodeView.tsx'
+        : authority === 'CodeWorkspaceFileSurface' || authority === 'WorkspaceFileCodeEditor'
+          ? `src/app/views/code/${authority}.tsx`
+          : authority === 'useMonacoCodeSurface'
+            ? `src/app/components/monaco/${authority}.ts`
+            : `src/app/components/monaco/${authority}.tsx`
 );
 const MONACO_AUTHORITY_SOURCE_SIGNALS = [
   '@monaco-editor/react',
@@ -110,6 +113,7 @@ const MONACO_RUNTIME_AUTHORITY_OWNERS = {
     'app/views/canvas/dbtWorkspaceFileCodeContribution.tsx',
     'app/views/canvas/graphDraftWorkspaceFileCodeContribution.tsx',
   ]),
+  CodeView: new Set(['app/views/canvas/SqlContextWorkbench.tsx']),
   dbtWorkspaceFileCodeContribution: new Set(['app/views/canvas/DbtProjectFileCanvasView.tsx']),
   graphDraftWorkspaceFileCodeContribution: new Set(['app/views/canvas/CanvasShell.tsx']),
   DbtModelCodeAuthoringSection: new Set(['app/views/canvas/DbtAuthoringFields.tsx']),
@@ -318,6 +322,13 @@ const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
       'void WorkspaceFileCodeEditor;',
     ].join('\n'),
     expectedViolation: 'WorkspaceFileCodeEditor',
+  },
+  {
+    label: 'Templates route cannot acquire the editable Code workbench wrapper',
+    surface: 'templates-route',
+    modulePath: 'views/templates/TemplatesRouteWorkbench.tsx',
+    source: ["import CodeView from '../CodeView';", 'void CodeView;'].join('\n'),
+    expectedViolation: 'CodeView',
   },
   {
     label: 'Templates route cannot re-export an internal Monaco surface',
@@ -570,6 +581,12 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     expectedViolation: 'WorkspaceFileCodeEditor outside a governed owner',
   },
   {
+    label: 'Templates cannot acquire the editable Code workbench wrapper',
+    modulePath: 'app/views/templates/TemplatesRouteWorkbench.tsx',
+    source: ["import CodeView from '../CodeView';", 'void CodeView;'].join('\n'),
+    expectedViolation: 'CodeView outside a governed owner',
+  },
+  {
     label: 'An external wrapper cannot acquire the editable dbt Canvas contribution factory',
     modulePath: 'app/components/DbtCodeContributionWrapper.tsx',
     source: [
@@ -806,6 +823,86 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
   const hookBindings = new Set(['useMonacoCodeSurface']);
   const surfaceBindings = new Set<string>();
 
+  function unwrapExpression(expression: ts.Expression): ts.Expression {
+    let unwrapped = expression;
+    while (ts.isParenthesizedExpression(unwrapped)) unwrapped = unwrapped.expression;
+    return unwrapped;
+  }
+
+  function readExpressionPath(node: ts.Node): string | undefined {
+    if (ts.isIdentifier(node)) return node.text;
+    if (ts.isPropertyAccessExpression(node)) {
+      const ownerPath = readExpressionPath(node.expression);
+      return ownerPath ? `${ownerPath}.${node.name.text}` : undefined;
+    }
+    if (
+      ts.isElementAccessExpression(node) &&
+      node.argumentExpression &&
+      ts.isStringLiteralLike(node.argumentExpression)
+    ) {
+      const ownerPath = readExpressionPath(node.expression);
+      return ownerPath ? `${ownerPath}.${node.argumentExpression.text}` : undefined;
+    }
+    return undefined;
+  }
+
+  function readStaticPropertyName(name: ts.PropertyName): string | undefined {
+    if (ts.isIdentifier(name) || ts.isStringLiteralLike(name) || ts.isNumericLiteral(name)) {
+      return name.text;
+    }
+    if (ts.isComputedPropertyName(name) && ts.isStringLiteralLike(name.expression)) {
+      return name.expression.text;
+    }
+    return undefined;
+  }
+
+  function addSurfaceBinding(binding: string): boolean {
+    if (surfaceBindings.has(binding)) return false;
+    surfaceBindings.add(binding);
+    return true;
+  }
+
+  function copySurfaceMembers(sourcePath: string, targetPath: string): boolean {
+    let discovered = false;
+    for (const binding of [...surfaceBindings]) {
+      if (!binding.startsWith(`${sourcePath}.`)) continue;
+      discovered =
+        addSurfaceBinding(`${targetPath}${binding.slice(sourcePath.length)}`) || discovered;
+    }
+    return discovered;
+  }
+
+  function discoverObjectSurfaceBindings(
+    objectPath: string,
+    objectLiteral: ts.ObjectLiteralExpression
+  ): boolean {
+    let discovered = false;
+    for (const property of objectLiteral.properties) {
+      if (ts.isShorthandPropertyAssignment(property)) {
+        const targetPath = `${objectPath}.${property.name.text}`;
+        discovered =
+          (surfaceBindings.has(property.name.text) && addSurfaceBinding(targetPath)) || discovered;
+        discovered = copySurfaceMembers(property.name.text, targetPath) || discovered;
+        continue;
+      }
+      if (!ts.isPropertyAssignment(property)) continue;
+      const propertyName = readStaticPropertyName(property.name);
+      if (!propertyName) continue;
+      const targetPath = `${objectPath}.${propertyName}`;
+      const initializer = unwrapExpression(property.initializer);
+      const initializerPath = readExpressionPath(initializer);
+      if (initializerPath) {
+        discovered =
+          (surfaceBindings.has(initializerPath) && addSurfaceBinding(targetPath)) || discovered;
+        discovered = copySurfaceMembers(initializerPath, targetPath) || discovered;
+      }
+      if (ts.isObjectLiteralExpression(initializer)) {
+        discovered = discoverObjectSurfaceBindings(targetPath, initializer) || discovered;
+      }
+    }
+    return discovered;
+  }
+
   for (const statement of sourceFile.statements) {
     if (
       !ts.isImportDeclaration(statement) ||
@@ -828,18 +925,22 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
     discoveredSurfaceBinding = false;
     function discoverSurfaceBindings(node: ts.Node): void {
       if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer) {
-        const initializer = ts.isParenthesizedExpression(node.initializer)
-          ? node.initializer.expression
-          : node.initializer;
+        const initializer = unwrapExpression(node.initializer);
         const isHookResult =
           ts.isCallExpression(initializer) &&
           ts.isIdentifier(initializer.expression) &&
           hookBindings.has(initializer.expression.text);
-        const isSurfaceAlias =
-          ts.isIdentifier(initializer) && surfaceBindings.has(initializer.text);
-        if ((isHookResult || isSurfaceAlias) && !surfaceBindings.has(node.name.text)) {
-          surfaceBindings.add(node.name.text);
-          discoveredSurfaceBinding = true;
+        const initializerPath = readExpressionPath(initializer);
+        if (isHookResult || (initializerPath && surfaceBindings.has(initializerPath))) {
+          discoveredSurfaceBinding = addSurfaceBinding(node.name.text) || discoveredSurfaceBinding;
+        }
+        if (initializerPath) {
+          discoveredSurfaceBinding =
+            copySurfaceMembers(initializerPath, node.name.text) || discoveredSurfaceBinding;
+        }
+        if (ts.isObjectLiteralExpression(initializer)) {
+          discoveredSurfaceBinding =
+            discoverObjectSurfaceBindings(node.name.text, initializer) || discoveredSurfaceBinding;
         }
       }
       ts.forEachChild(node, discoverSurfaceBindings);
@@ -893,8 +994,7 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
   function visit(node: ts.Node): void {
     if (
       (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) &&
-      ts.isIdentifier(node.tagName) &&
-      surfaceBindings.has(node.tagName.text)
+      surfaceBindings.has(readExpressionPath(node.tagName) ?? '')
     ) {
       renderedSurfaceCount += 1;
       if (!jsxAttributesAreReadOnly(node.attributes)) {
@@ -907,8 +1007,7 @@ function collectMonacoViewerReadOnlyViolations(source: string): string[] {
         (ts.isPropertyAccessExpression(node.expression) &&
           node.expression.name.text === 'createElement')) &&
       node.arguments[0] &&
-      ts.isIdentifier(node.arguments[0]) &&
-      surfaceBindings.has(node.arguments[0].text)
+      surfaceBindings.has(readExpressionPath(node.arguments[0]) ?? '')
     ) {
       renderedSurfaceCount += 1;
       if (!objectPropertiesAreReadOnly(node.arguments[1])) {
@@ -1846,6 +1945,18 @@ describe('Templates Monaco preview architecture', () => {
           'export function MonacoCodeViewer({ editable }: { editable: boolean }) {',
           '  const Surface = useMonacoCodeSurface();',
           '  return editable ? <Surface readOnly={false} /> : <Surface readOnly={true} />;',
+          '}',
+        ].join('\n')
+      )
+    ).toContain('MonacoCodeViewer rendered a writable or dynamic surface');
+    expect(
+      collectMonacoViewerReadOnlyViolations(
+        [
+          'function useMonacoCodeSurface() { return null; }',
+          'export function MonacoCodeViewer() {',
+          '  const Surface = useMonacoCodeSurface();',
+          '  const Surfaces = { Writable: Surface };',
+          '  return <><Surface readOnly /><Surfaces.Writable readOnly={false} /></>;',
           '}',
         ].join('\n')
       )
