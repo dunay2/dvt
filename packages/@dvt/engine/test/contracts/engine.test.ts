@@ -27,7 +27,7 @@ import { PlanIntegrityValidator } from '../../src/security/planIntegrity.js';
 import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
-import { sha256Hex } from '../../src/utils/sha256.js';
+import { sha256Hex, sha256HexUtf8 } from '../../src/utils/sha256.js';
 import {
   createWorkflowEngineFixture,
   makePlanFetcherForPlan,
@@ -40,7 +40,7 @@ function derivePlanId(
   steps: ExecutionPlan['steps'],
   inputHashSha256 = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
 ): string {
-  return sha256Hex(
+  return sha256HexUtf8(
     jcsCanonicalize({
       metadata: {
         planVersion: '1.0',

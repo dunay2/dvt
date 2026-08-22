@@ -12,7 +12,7 @@ import { randomUUID } from 'node:crypto';
 import type { Provider, SignalRequest } from '@dvt/contracts';
 
 import type { EventType } from '../contracts/runEvents.js';
-import { sha256Hex } from '../utils/sha256.js';
+import { sha256HexUtf8 } from '../utils/sha256.js';
 
 export interface EventIdempotencyInput {
   eventType: EventType;
@@ -40,7 +40,7 @@ export class IdempotencyKeyBuilder {
       e.planVersion,
     ].join('|');
 
-    return sha256Hex(preimage);
+    return sha256HexUtf8(preimage);
   }
 
   /**
@@ -66,7 +66,7 @@ export class IdempotencyKeyBuilder {
       params.planId,
       params.planVersion,
     ].join('|');
-    return sha256Hex(preimage);
+    return sha256HexUtf8(preimage);
   }
 
   /**
@@ -94,7 +94,7 @@ export class IdempotencyKeyBuilder {
       logicalAttemptId: normalizedLogicalAttemptId,
       ...(targetAdapter !== undefined ? { targetAdapter } : {}),
     });
-    return sha256Hex(canonicalPayload);
+    return sha256HexUtf8(canonicalPayload);
   }
 
   eventId(): string {
