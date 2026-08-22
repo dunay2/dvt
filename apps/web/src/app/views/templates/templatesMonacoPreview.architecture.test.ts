@@ -461,6 +461,12 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     expectedViolation: 'MonacoCodeSurface outside a governed owner',
   },
   {
+    label: 'A shared source-root module resolves Vite globs from its real directory',
+    modulePath: 'shared/EditablePanel.tsx',
+    source: "export const panels = import.meta.glob('../app/components/**/*.tsx');",
+    expectedViolation: 'MonacoCodeSurface outside a governed owner',
+  },
+  {
     label: 'A capability cannot reach Monaco through a leading double-star Vite glob',
     modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
     source:
@@ -789,14 +795,138 @@ function collectMonacoViewerImportViolations(source: string): string[] {
   return [];
 }
 
+function collectMonacoViewerReadOnlyViolations(source: string): string[] {
+  const sourceFile = ts.createSourceFile(
+    'monaco-viewer-read-only.tsx',
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX
+  );
+  const hookBindings = new Set(['useMonacoCodeSurface']);
+  const surfaceBindings = new Set<string>();
+
+  for (const statement of sourceFile.statements) {
+    if (
+      !ts.isImportDeclaration(statement) ||
+      !ts.isStringLiteralLike(statement.moduleSpecifier) ||
+      !/\/?useMonacoCodeSurface(?:\.[cm]?[jt]s)?$/.test(statement.moduleSpecifier.text) ||
+      !statement.importClause?.namedBindings ||
+      !ts.isNamedImports(statement.importClause.namedBindings)
+    ) {
+      continue;
+    }
+    for (const element of statement.importClause.namedBindings.elements) {
+      if ((element.propertyName ?? element.name).text === 'useMonacoCodeSurface') {
+        hookBindings.add(element.name.text);
+      }
+    }
+  }
+
+  let discoveredSurfaceBinding = true;
+  while (discoveredSurfaceBinding) {
+    discoveredSurfaceBinding = false;
+    function discoverSurfaceBindings(node: ts.Node): void {
+      if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer) {
+        const initializer = ts.isParenthesizedExpression(node.initializer)
+          ? node.initializer.expression
+          : node.initializer;
+        const isHookResult =
+          ts.isCallExpression(initializer) &&
+          ts.isIdentifier(initializer.expression) &&
+          hookBindings.has(initializer.expression.text);
+        const isSurfaceAlias =
+          ts.isIdentifier(initializer) && surfaceBindings.has(initializer.text);
+        if ((isHookResult || isSurfaceAlias) && !surfaceBindings.has(node.name.text)) {
+          surfaceBindings.add(node.name.text);
+          discoveredSurfaceBinding = true;
+        }
+      }
+      ts.forEachChild(node, discoverSurfaceBindings);
+    }
+    discoverSurfaceBindings(sourceFile);
+  }
+
+  function isStaticTrue(expression: ts.Expression): boolean {
+    return expression.kind === ts.SyntaxKind.TrueKeyword;
+  }
+
+  function jsxAttributesAreReadOnly(attributes: ts.JsxAttributes): boolean {
+    let readOnly: boolean | undefined;
+    for (const property of attributes.properties) {
+      if (ts.isJsxSpreadAttribute(property)) {
+        readOnly = undefined;
+        continue;
+      }
+      if (!ts.isIdentifier(property.name) || property.name.text !== 'readOnly') continue;
+      readOnly =
+        property.initializer == null ||
+        (ts.isJsxExpression(property.initializer) &&
+          property.initializer.expression != null &&
+          isStaticTrue(property.initializer.expression));
+    }
+    return readOnly === true;
+  }
+
+  function objectPropertiesAreReadOnly(expression: ts.Expression | undefined): boolean {
+    if (!expression || !ts.isObjectLiteralExpression(expression)) return false;
+    let readOnly: boolean | undefined;
+    for (const property of expression.properties) {
+      if (ts.isSpreadAssignment(property)) {
+        readOnly = undefined;
+        continue;
+      }
+      const propertyName =
+        ts.isPropertyAssignment(property) &&
+        (ts.isIdentifier(property.name) || ts.isStringLiteralLike(property.name))
+          ? property.name.text
+          : undefined;
+      if (ts.isPropertyAssignment(property) && propertyName === 'readOnly') {
+        readOnly = isStaticTrue(property.initializer);
+      }
+    }
+    return readOnly === true;
+  }
+
+  const violations: string[] = [];
+  let renderedSurfaceCount = 0;
+  function visit(node: ts.Node): void {
+    if (
+      (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) &&
+      ts.isIdentifier(node.tagName) &&
+      surfaceBindings.has(node.tagName.text)
+    ) {
+      renderedSurfaceCount += 1;
+      if (!jsxAttributesAreReadOnly(node.attributes)) {
+        violations.push('MonacoCodeViewer rendered a writable or dynamic surface');
+      }
+    }
+    if (
+      ts.isCallExpression(node) &&
+      ((ts.isIdentifier(node.expression) && node.expression.text === 'createElement') ||
+        (ts.isPropertyAccessExpression(node.expression) &&
+          node.expression.name.text === 'createElement')) &&
+      node.arguments[0] &&
+      ts.isIdentifier(node.arguments[0]) &&
+      surfaceBindings.has(node.arguments[0].text)
+    ) {
+      renderedSurfaceCount += 1;
+      if (!objectPropertiesAreReadOnly(node.arguments[1])) {
+        violations.push('MonacoCodeViewer rendered a writable or dynamic surface');
+      }
+    }
+    ts.forEachChild(node, visit);
+  }
+  visit(sourceFile);
+  if (renderedSurfaceCount === 0) violations.push('MonacoCodeViewer did not render its surface');
+  return violations;
+}
+
 function resolveWebPackageModulePath(modulePath: string): string {
   const normalizedModulePath = modulePath.replaceAll('\\', '/');
-  return normalizedModulePath.startsWith('app/') ||
-    normalizedModulePath.startsWith('capabilities/') ||
-    normalizedModulePath.startsWith('testing/') ||
-    !normalizedModulePath.includes('/')
-    ? `src/${normalizedModulePath}`
-    : `src/app/${normalizedModulePath}`;
+  return normalizedModulePath.startsWith('src/')
+    ? normalizedModulePath
+    : `src/${normalizedModulePath}`;
 }
 
 function resolveWebViteAlias(modulePath: string): string | undefined {
@@ -1407,9 +1537,13 @@ function collectMonacoAuthorityViolations({
   source,
 }: Omit<MonacoAuthorityFixture, 'label'>): string[] {
   const violations: string[] = [];
+  const sourceRootModulePath = modulePath.startsWith('app/') ? modulePath : `app/${modulePath}`;
   const hasEscapedStaticAuthority =
     /\\(?:u(?:\{[\dA-Fa-f]+\}|[\dA-Fa-f]{4})|x[\dA-Fa-f]{2})/.test(source) &&
-    containsPotentialStaticMonacoAuthority(collectPrefilterModuleSpecifiers(source), modulePath);
+    containsPotentialStaticMonacoAuthority(
+      collectPrefilterModuleSpecifiers(source),
+      sourceRootModulePath
+    );
   if (
     !MONACO_AUTHORITY_SOURCE_SIGNALS.some((signal) => source.includes(signal)) &&
     !/\bimport\s*\(/.test(source) &&
@@ -1419,7 +1553,10 @@ function collectMonacoAuthorityViolations({
     return violations;
   }
 
-  const { specifiers: runtimeModuleSpecifiers } = getRuntimeModuleSpecifiers(modulePath, source);
+  const { specifiers: runtimeModuleSpecifiers } = getRuntimeModuleSpecifiers(
+    sourceRootModulePath,
+    source
+  );
 
   if (surface === 'templates-preview') {
     violations.push(...collectMonacoViewerImportViolations(source));
@@ -1427,7 +1564,7 @@ function collectMonacoAuthorityViolations({
 
   if (
     (surface === 'templates-route' || surface === 'templates-preview') &&
-    containsCanvasAuthoringContextSpecifier(runtimeModuleSpecifiers, modulePath)
+    containsCanvasAuthoringContextSpecifier(runtimeModuleSpecifiers, sourceRootModulePath)
   ) {
     violations.push('Canvas authoring context');
   }
@@ -1700,8 +1837,19 @@ describe('Templates Monaco preview architecture', () => {
     ).toEqual([]);
 
     expect(monacoViewer).toContain('useMonacoCodeSurface()');
-    expect(monacoViewer).toContain('readOnly={true}');
     expect(collectRuntimeExportedNames(monacoViewer)).toEqual(['MonacoCodeViewer']);
+    expect(collectMonacoViewerReadOnlyViolations(monacoViewer)).toEqual([]);
+    expect(
+      collectMonacoViewerReadOnlyViolations(
+        [
+          'function useMonacoCodeSurface() { return null; }',
+          'export function MonacoCodeViewer({ editable }: { editable: boolean }) {',
+          '  const Surface = useMonacoCodeSurface();',
+          '  return editable ? <Surface readOnly={false} /> : <Surface readOnly={true} />;',
+          '}',
+        ].join('\n')
+      )
+    ).toContain('MonacoCodeViewer rendered a writable or dynamic surface');
     expect(monacoLoader).toContain("import('./MonacoCodeSurface')");
     expect(monacoLoader).toContain('active = false');
     expect(monacoSurface).toContain('<Editor');
