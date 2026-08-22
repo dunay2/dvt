@@ -808,6 +808,21 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     expectedViolation: 'useMonacoCodeSurface re-exported',
   },
   {
+    label: 'A method override that delegates to render retains render prop authority',
+    modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
+    source: [
+      "import { useMonacoCodeSurface } from './useMonacoCodeSurface';",
+      'export function MonacoCodeViewer({ render }) {',
+      '  const Surface = useMonacoCodeSurface();',
+      '  const base = { invoke: render };',
+      '  const callbacks = { ...base, invoke(value) { return render(value); } };',
+      '  const content = callbacks.invoke(useMonacoCodeSurface());',
+      '  return <>{content}<Surface readOnly /></>;',
+      '}',
+    ].join('\n'),
+    expectedViolation: 'useMonacoCodeSurface re-exported',
+  },
+  {
     label: 'A governed viewer cannot pass its loader through an inline composite member alias',
     modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
     source: [
@@ -1042,6 +1057,20 @@ const ACCEPTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
       '  const Surface = useMonacoCodeSurface();',
       '  const base = { invoke: render };',
       '  const callbacks = { ...base, invoke: () => null };',
+      '  const content = callbacks.invoke(useMonacoCodeSurface());',
+      '  return <>{content}<Surface readOnly /></>;',
+      '}',
+    ].join('\n'),
+  },
+  {
+    label: 'A governed viewer accepts a local method override that does not delegate to render',
+    modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
+    source: [
+      "import { useMonacoCodeSurface } from './useMonacoCodeSurface';",
+      'export function MonacoCodeViewer({ render }) {',
+      '  const Surface = useMonacoCodeSurface();',
+      '  const base = { invoke: render };',
+      '  const callbacks = { ...base, invoke() { return null; } };',
       '  const content = callbacks.invoke(useMonacoCodeSurface());',
       '  return <>{content}<Surface readOnly /></>;',
       '}',
@@ -2471,6 +2500,20 @@ function collectRuntimeModuleSpecifiers(
           excludedMembers: [...new Set(excludedMembers)],
         });
       }
+      function collectCallableDelegateSources(callable: ts.FunctionLikeDeclaration): string[] {
+        const sources = new Set<string>();
+        function visitDelegate(child: ts.Node): void {
+          if (ts.isCallExpression(child)) {
+            for (const source of readParameterAliasRoots(child.expression)) sources.add(source);
+          }
+          if (ts.isReturnStatement(child) && child.expression) {
+            for (const source of readParameterAliasRoots(child.expression)) sources.add(source);
+          }
+          ts.forEachChild(child, visitDelegate);
+        }
+        if (callable.body) visitDelegate(callable.body);
+        return [...sources];
+      }
       function collectExpressionAliasEdges(targetPath: string, initializer: ts.Expression): void {
         const candidate = unwrapParameterAliasExpression(initializer);
         const candidatePath = readParameterAliasPath(candidate);
@@ -2508,6 +2551,14 @@ function collectRuntimeModuleSpecifiers(
               collectExpressionAliasEdges(`${targetPath}.${propertyName}`, property.initializer);
             } else if (ts.isShorthandPropertyAssignment(property)) {
               collectExpressionAliasEdges(`${targetPath}.${propertyName}`, property.name);
+            } else if (
+              ts.isMethodDeclaration(property) ||
+              ts.isGetAccessorDeclaration(property) ||
+              ts.isSetAccessorDeclaration(property)
+            ) {
+              addParameterAliasEdge(collectCallableDelegateSources(property), [
+                `${targetPath}.${propertyName}`,
+              ]);
             }
           }
           return;
