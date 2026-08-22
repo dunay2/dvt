@@ -556,19 +556,12 @@ test('scope diff consumers use shallow checkout instead of full PR history', () 
     '+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}'
   );
 
-  for (const workflow of [ciWorkflow, contractsWorkflow, prQualityGate, testWorkflow]) {
+  for (const workflow of [ciWorkflow, contractsWorkflow, testWorkflow]) {
     assertWorkflowContains(workflow, 'uses: ./.github/actions/fetch-scope-base');
   }
 
-  const prQualityFetchBaseIndex = prQualityGate.indexOf('uses: ./.github/actions/fetch-scope-base');
-  const prQualityDetectScopeIndex = prQualityGate.indexOf(
-    'node tools/ci/emit-scope.mjs --mode workflow'
-  );
-  assert.notEqual(prQualityFetchBaseIndex, -1);
-  assert.notEqual(prQualityDetectScopeIndex, -1);
-  assert.ok(prQualityFetchBaseIndex < prQualityDetectScopeIndex);
-  assertWorkflowContains(prQualityGate, 'base-ref: ${{ github.base_ref }}');
-  assertWorkflowContains(prQualityGate, 'fetch-depth: 1');
+  assert.doesNotMatch(prQualityGate, /uses: \.\/\.github\/actions\/fetch-scope-base/u);
+  assertWorkflowContains(prQualityGate, 'fetch-depth: 2');
   assertWorkflowContains(prQualityGate, 'github.event.pull_request.base.sha');
   assertWorkflowExcludes(prQualityGate, 'name: Checkout reviewed-commit evidence history');
   assertWorkflowExcludes(prQualityGate, 'path: .git-evidence');
