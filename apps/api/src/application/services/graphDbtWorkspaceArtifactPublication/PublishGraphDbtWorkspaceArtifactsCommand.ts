@@ -2,9 +2,9 @@
 import {
   GraphDbtWorkspaceArtifactPublicationResultSchema,
   parseGraphDbtModelDivergenceMarker,
-  sha256HexUtf8,
   type GraphDbtWorkspaceArtifactPublicationItem,
 } from '@dvt/contracts';
+import { sha256HexUtf8 } from '@dvt/crypto';
 
 import type { IPublishGraphDbtWorkspaceArtifactsCommand } from '../../ports/graphDbtWorkspaceArtifactPublication.js';
 import {

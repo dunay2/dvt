@@ -14,8 +14,11 @@
   "private": true,
   "license": "MIT",
   "scripts": {
+    "prebuild": "node ../../../scripts/skip-prebuild-if-orchestrated.cjs || pnpm --filter \"@dvt/contracts^...\" build",
     "build": "tsc -b tsconfig.json",
+    "pretypecheck": "node ../../../scripts/skip-pretest-if-ci.cjs || pnpm --filter \"@dvt/contracts^...\" build",
     "typecheck": "tsc -b tsconfig.json --noEmit",
+    "pretest": "node ../../../scripts/skip-pretest-if-ci.cjs || pnpm --filter \"@dvt/contracts^...\" build",
     "test": "vitest run --passWithNoTests",
     "schema:verify": "vitest run --passWithNoTests test/schema-sync.test.ts"
   },

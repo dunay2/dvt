@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import test from 'node:test';
+import ts from 'typescript';
 
 import {
   API_REACHABILITY_CLASSIFICATIONS,
@@ -1544,6 +1545,53 @@ test('Cut 1 crypto facades and duplicate implementations stay retired', () => {
   for (const retiredPath of retiredPaths) {
     assert.equal(existsSync(retiredPath), false, `${retiredPath} must not be restored`);
   }
+});
+
+test('repository consumers import crypto primitives from their authority', () => {
+  const trackedFiles = spawnSync('git', ['ls-files', '--', 'apps', 'packages'], {
+    encoding: 'utf8',
+  });
+  assert.equal(trackedFiles.stderr, '');
+  assert.equal(trackedFiles.status, 0);
+
+  const forbiddenContractExports = new Set(['jcsCanonicalize', 'sha256HexUtf8']);
+  const findings = [];
+
+  for (const sourcePath of trackedFiles.stdout.split(/\r?\n/u).filter(Boolean)) {
+    if (!/\.[cm]?[jt]sx?$/u.test(sourcePath)) {
+      continue;
+    }
+
+    const sourceFile = ts.createSourceFile(
+      sourcePath,
+      readText(sourcePath),
+      ts.ScriptTarget.Latest,
+      true
+    );
+    for (const statement of sourceFile.statements) {
+      if (
+        !ts.isImportDeclaration(statement) ||
+        !ts.isStringLiteral(statement.moduleSpecifier) ||
+        statement.moduleSpecifier.text !== '@dvt/contracts'
+      ) {
+        continue;
+      }
+
+      const bindings = statement.importClause?.namedBindings;
+      if (!bindings || !ts.isNamedImports(bindings)) {
+        continue;
+      }
+
+      for (const element of bindings.elements) {
+        const importedName = element.propertyName?.text ?? element.name.text;
+        if (forbiddenContractExports.has(importedName)) {
+          findings.push(`${sourcePath}: ${importedName}`);
+        }
+      }
+    }
+  }
+
+  assert.deepEqual(findings.sort(), []);
 });
 
 test('type-only cycles enrich reachability without becoming runtime cycle violations', () => {

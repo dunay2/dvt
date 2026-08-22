@@ -1,6 +1,6 @@
 /** Owned concern: resolve stable dbt source YAML identities. */
 
-import { jcsCanonicalize } from '@dvt/contracts';
+import { jcsCanonicalize } from '@dvt/crypto';
 
 import {
   toCollisionResistantYamlIdentifierPart,

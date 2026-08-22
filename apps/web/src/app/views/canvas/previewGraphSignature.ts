@@ -1,4 +1,5 @@
-import { jcsCanonicalize, type ConnectionRef } from '@dvt/contracts';
+import { type ConnectionRef } from '@dvt/contracts';
+import { jcsCanonicalize } from '@dvt/crypto';
 
 import { resolvePreviewStepKind } from '../../plugins/nodeTypeRegistry';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';

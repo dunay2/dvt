@@ -399,6 +399,9 @@ importers:
       '@dvt/contracts':
         specifier: workspace:*
         version: link:../../packages/@dvt/contracts
+      '@dvt/crypto':
+        specifier: workspace:*
+        version: link:../../packages/@dvt/crypto
       '@emotion/react':
         specifier: 11.14.0
         version: 11.14.0(@types/react@18.3.28)(react@18.3.1)
@@ -652,6 +655,9 @@ importers:
       '@dvt/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@dvt/crypto':
+        specifier: workspace:*
+        version: link:../crypto
       '@dvt/delivery':
         specifier: workspace:*
         version: link:../delivery

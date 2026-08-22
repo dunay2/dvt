@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 
-import React from 'react';
-import { sha256HexUtf8 } from '@dvt/contracts';
+import { sha256HexUtf8 } from '@dvt/crypto';
 import { fireEvent } from '@testing-library/dom';
+import React from 'react';
 import { act } from 'react';
 import { vi } from 'vitest';
 

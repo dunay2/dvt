@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-import { jcsCanonicalize, sha256HexUtf8 } from '@dvt/contracts';
+import { jcsCanonicalize, sha256HexUtf8 } from '@dvt/crypto';
 import { expect, test } from 'vitest';
 
 import type { PostgresPlanStore } from '../src/PostgresPlanStore.js';
