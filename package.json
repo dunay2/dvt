@@ -35,7 +35,7 @@
     "test:ai-efficiency:adoption": "node --test scripts/check-ai-efficiency-adoption.test.cjs",
     "test:ai-preflight": "node --test scripts/ai-preflight.test.cjs",
     "test:postgit:format": "node --test scripts/format-git-operation-changes.test.cjs",
-    "verify:changed": "node scripts/verify-changed.cjs",
+    "verify:changed": "pnpm --filter @dvt/crypto build && node scripts/verify-changed.cjs",
     "closeout:changed": "node scripts/closeout-changed.cjs",
     "test:closeout-changed": "node --test scripts/closeout-changed.test.cjs",
     "test:verify-prepush": "node --test scripts/verify-prepush.test.cjs",
