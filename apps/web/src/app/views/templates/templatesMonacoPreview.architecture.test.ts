@@ -720,6 +720,78 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     expectedViolation: 'useMonacoCodeSurface re-exported',
   },
   {
+    label: 'A governed viewer cannot pass its loader through a destructured render prop alias',
+    modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
+    source: [
+      "import { useMonacoCodeSurface } from './useMonacoCodeSurface';",
+      'export function MonacoCodeViewer({ render }) {',
+      '  const Surface = useMonacoCodeSurface();',
+      '  const { invoke } = { invoke: render };',
+      '  const content = invoke(useMonacoCodeSurface());',
+      '  return <>{content}<Surface readOnly /></>;',
+      '}',
+    ].join('\n'),
+    expectedViolation: 'useMonacoCodeSurface re-exported',
+  },
+  {
+    label:
+      'A governed viewer cannot pass its loader through an array-destructured render prop alias',
+    modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
+    source: [
+      "import { useMonacoCodeSurface } from './useMonacoCodeSurface';",
+      'export function MonacoCodeViewer({ render }) {',
+      '  const Surface = useMonacoCodeSurface();',
+      '  const [invoke] = [render];',
+      '  const content = invoke(useMonacoCodeSurface());',
+      '  return <>{content}<Surface readOnly /></>;',
+      '}',
+    ].join('\n'),
+    expectedViolation: 'useMonacoCodeSurface re-exported',
+  },
+  {
+    label: 'A governed viewer cannot pass its loader through a composite render prop alias',
+    modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
+    source: [
+      "import { useMonacoCodeSurface } from './useMonacoCodeSurface';",
+      'export function MonacoCodeViewer({ render }) {',
+      '  const Surface = useMonacoCodeSurface();',
+      '  const callbacks = { invoke: render };',
+      '  const content = callbacks.invoke(useMonacoCodeSurface());',
+      '  return <>{content}<Surface readOnly /></>;',
+      '}',
+    ].join('\n'),
+    expectedViolation: 'useMonacoCodeSurface re-exported',
+  },
+  {
+    label: 'A governed viewer cannot pass its loader through a destructuring assignment alias',
+    modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
+    source: [
+      "import { useMonacoCodeSurface } from './useMonacoCodeSurface';",
+      'export function MonacoCodeViewer({ render }) {',
+      '  const Surface = useMonacoCodeSurface();',
+      '  let invoke;',
+      '  ({ invoke } = { invoke: render });',
+      '  const content = invoke(useMonacoCodeSurface());',
+      '  return <>{content}<Surface readOnly /></>;',
+      '}',
+    ].join('\n'),
+    expectedViolation: 'useMonacoCodeSurface re-exported',
+  },
+  {
+    label: 'A governed viewer cannot pass its loader through an inline composite member alias',
+    modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
+    source: [
+      "import { useMonacoCodeSurface } from './useMonacoCodeSurface';",
+      'export function MonacoCodeViewer({ render }) {',
+      '  const Surface = useMonacoCodeSurface();',
+      '  const invoke = ({ invoke: render }).invoke;',
+      '  const content = invoke(useMonacoCodeSurface());',
+      '  return <>{content}<Surface readOnly /></>;',
+      '}',
+    ].join('\n'),
+    expectedViolation: 'useMonacoCodeSurface re-exported',
+  },
+  {
     label: 'A governed viewer cannot separately export a local object that exposes its loader',
     modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
     source: [
@@ -889,6 +961,32 @@ const ACCEPTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
       "import * as React from 'react';",
       "import { MonacoCodeEditor } from '../../components/monaco/MonacoCodeEditor';",
       'export const Panel = () => React.createElement(MonacoCodeEditor, {});',
+    ].join('\n'),
+  },
+  {
+    label: 'A governed viewer does not treat an unrelated destructured callback as a render prop',
+    modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
+    source: [
+      "import { useMonacoCodeSurface } from './useMonacoCodeSurface';",
+      'export function MonacoCodeViewer({ render }) {',
+      '  const Surface = useMonacoCodeSurface();',
+      '  const { invoke } = { invoke: () => null, retained: render };',
+      '  const content = invoke(useMonacoCodeSurface());',
+      '  return <>{content}<Surface readOnly /></>;',
+      '}',
+    ].join('\n'),
+  },
+  {
+    label: 'A governed viewer tracks the precise callback member in a composite alias',
+    modulePath: 'app/components/monaco/MonacoCodeViewer.tsx',
+    source: [
+      "import { useMonacoCodeSurface } from './useMonacoCodeSurface';",
+      'export function MonacoCodeViewer({ render }) {',
+      '  const Surface = useMonacoCodeSurface();',
+      '  const callbacks = { invoke: () => null, retained: render };',
+      '  const content = callbacks.invoke(useMonacoCodeSurface());',
+      '  return <>{content}<Surface readOnly /></>;',
+      '}',
     ].join('\n'),
   },
   {
@@ -2201,9 +2299,73 @@ function collectRuntimeModuleSpecifiers(
       const parameterBindings = new Set(
         parameters.flatMap((parameter) => collectBindingNames(parameter.name))
       );
+      function unwrapParameterAliasExpression(expression: ts.Expression): ts.Expression {
+        let candidate = expression;
+        while (
+          ts.isParenthesizedExpression(candidate) ||
+          ts.isAsExpression(candidate) ||
+          ts.isTypeAssertionExpression(candidate) ||
+          ts.isNonNullExpression(candidate) ||
+          ts.isSatisfiesExpression(candidate)
+        ) {
+          candidate = candidate.expression;
+        }
+        return candidate;
+      }
+      function readParameterAliasPath(expression: ts.Expression): string | undefined {
+        expression = unwrapParameterAliasExpression(expression);
+        if (ts.isIdentifier(expression)) return expression.text;
+        if (ts.isPropertyAccessExpression(expression)) {
+          const ownerPath = readParameterAliasPath(expression.expression);
+          return ownerPath ? `${ownerPath}.${expression.name.text}` : undefined;
+        }
+        if (
+          ts.isElementAccessExpression(expression) &&
+          expression.argumentExpression &&
+          (ts.isStringLiteralLike(expression.argumentExpression) ||
+            ts.isNumericLiteral(expression.argumentExpression))
+        ) {
+          const ownerPath = readParameterAliasPath(expression.expression);
+          return ownerPath ? `${ownerPath}.${expression.argumentExpression.text}` : undefined;
+        }
+        return undefined;
+      }
       function readParameterAliasRoots(expression: ts.Expression): string[] {
-        const rootBinding = readMutationRoot(expression);
-        if (rootBinding) return [rootBinding];
+        expression = unwrapParameterAliasExpression(expression);
+        const bindingPath = readParameterAliasPath(expression);
+        if (bindingPath) return [bindingPath];
+        if (ts.isPropertyAccessExpression(expression)) {
+          const owner = unwrapParameterAliasExpression(expression.expression);
+          if (ts.isObjectLiteralExpression(owner)) {
+            const property = [...owner.properties]
+              .reverse()
+              .find(
+                (candidateProperty) =>
+                  !ts.isSpreadAssignment(candidateProperty) &&
+                  readStaticPropertyName(candidateProperty.name) === expression.name.text
+              );
+            if (property && ts.isPropertyAssignment(property)) {
+              return readParameterAliasRoots(property.initializer);
+            }
+            if (property && ts.isShorthandPropertyAssignment(property)) {
+              return readParameterAliasRoots(property.name);
+            }
+          }
+        }
+        if (ts.isElementAccessExpression(expression) && expression.argumentExpression) {
+          const owner = unwrapParameterAliasExpression(expression.expression);
+          if (
+            ts.isArrayLiteralExpression(owner) &&
+            ts.isNumericLiteral(expression.argumentExpression)
+          ) {
+            const element = owner.elements[Number(expression.argumentExpression.text)];
+            if (element && !ts.isOmittedExpression(element)) {
+              return readParameterAliasRoots(
+                ts.isSpreadElement(element) ? element.expression : element
+              );
+            }
+          }
+        }
         if (ts.isConditionalExpression(expression)) {
           return [
             ...readParameterAliasRoots(expression.whenTrue),
@@ -2231,25 +2393,166 @@ function collectRuntimeModuleSpecifiers(
         return [];
       }
       const parameterAliasEdges: Array<Readonly<{ sources: string[]; targets: string[] }>> = [];
+      function addParameterAliasEdge(sources: string[], targets: string[]): void {
+        const uniqueSources = [...new Set(sources)];
+        const uniqueTargets = [...new Set(targets)];
+        if (uniqueSources.length === 0 || uniqueTargets.length === 0) return;
+        parameterAliasEdges.push({ sources: uniqueSources, targets: uniqueTargets });
+      }
+      function collectExpressionAliasEdges(targetPath: string, initializer: ts.Expression): void {
+        const candidate = unwrapParameterAliasExpression(initializer);
+        if (ts.isObjectLiteralExpression(candidate)) {
+          for (const property of candidate.properties) {
+            if (ts.isSpreadAssignment(property)) {
+              addParameterAliasEdge(readParameterAliasRoots(property.expression), [targetPath]);
+              continue;
+            }
+            const propertyName = readStaticPropertyName(property.name);
+            if (!propertyName) continue;
+            if (ts.isPropertyAssignment(property)) {
+              collectExpressionAliasEdges(`${targetPath}.${propertyName}`, property.initializer);
+            } else if (ts.isShorthandPropertyAssignment(property)) {
+              collectExpressionAliasEdges(`${targetPath}.${propertyName}`, property.name);
+            }
+          }
+          return;
+        }
+        if (ts.isArrayLiteralExpression(candidate)) {
+          for (const [index, element] of candidate.elements.entries()) {
+            if (ts.isOmittedExpression(element)) continue;
+            collectExpressionAliasEdges(
+              `${targetPath}.${index}`,
+              ts.isSpreadElement(element) ? element.expression : element
+            );
+          }
+          return;
+        }
+        addParameterAliasEdge(readParameterAliasRoots(candidate), [targetPath]);
+      }
+      function collectBindingAliasEdges(
+        bindingName: ts.BindingName,
+        initializer: ts.Expression
+      ): void {
+        const candidate = unwrapParameterAliasExpression(initializer);
+        if (ts.isIdentifier(bindingName)) {
+          collectExpressionAliasEdges(bindingName.text, candidate);
+          return;
+        }
+
+        if (ts.isObjectBindingPattern(bindingName) && ts.isObjectLiteralExpression(candidate)) {
+          for (const element of bindingName.elements) {
+            if (element.initializer) collectBindingAliasEdges(element.name, element.initializer);
+            if (element.dotDotDotToken) continue;
+            const propertyName = element.propertyName
+              ? readStaticPropertyName(element.propertyName)
+              : ts.isIdentifier(element.name)
+                ? element.name.text
+                : undefined;
+            if (!propertyName) continue;
+            const property = [...candidate.properties]
+              .reverse()
+              .find(
+                (candidateProperty) =>
+                  !ts.isSpreadAssignment(candidateProperty) &&
+                  readStaticPropertyName(candidateProperty.name) === propertyName
+              );
+            if (property && ts.isPropertyAssignment(property)) {
+              collectBindingAliasEdges(element.name, property.initializer);
+            } else if (property && ts.isShorthandPropertyAssignment(property)) {
+              collectBindingAliasEdges(element.name, property.name);
+            }
+          }
+          return;
+        }
+
+        if (ts.isArrayBindingPattern(bindingName) && ts.isArrayLiteralExpression(candidate)) {
+          for (const [index, element] of bindingName.elements.entries()) {
+            if (ts.isOmittedExpression(element)) continue;
+            if (element.initializer) collectBindingAliasEdges(element.name, element.initializer);
+            const sourceElement = candidate.elements[index];
+            if (!sourceElement || ts.isOmittedExpression(sourceElement)) continue;
+            collectBindingAliasEdges(
+              element.name,
+              ts.isSpreadElement(sourceElement) ? sourceElement.expression : sourceElement
+            );
+          }
+          return;
+        }
+
+        addParameterAliasEdge(readParameterAliasRoots(candidate), collectBindingNames(bindingName));
+      }
+      function collectAssignmentAliasEdges(
+        target: ts.Expression,
+        initializer: ts.Expression
+      ): void {
+        const assignmentTarget = unwrapParameterAliasExpression(target);
+        const initializerCandidate = unwrapParameterAliasExpression(initializer);
+        const targetPath = readParameterAliasPath(assignmentTarget);
+        if (targetPath) {
+          collectExpressionAliasEdges(targetPath, initializerCandidate);
+          return;
+        }
+        if (
+          ts.isObjectLiteralExpression(assignmentTarget) &&
+          ts.isObjectLiteralExpression(initializerCandidate)
+        ) {
+          for (const targetProperty of assignmentTarget.properties) {
+            if (ts.isSpreadAssignment(targetProperty)) continue;
+            const propertyName = readStaticPropertyName(targetProperty.name);
+            if (!propertyName) continue;
+            const sourceProperty = [...initializerCandidate.properties]
+              .reverse()
+              .find(
+                (candidateProperty) =>
+                  !ts.isSpreadAssignment(candidateProperty) &&
+                  readStaticPropertyName(candidateProperty.name) === propertyName
+              );
+            if (!sourceProperty) continue;
+            const targetExpression = ts.isShorthandPropertyAssignment(targetProperty)
+              ? targetProperty.name
+              : ts.isPropertyAssignment(targetProperty)
+                ? targetProperty.initializer
+                : undefined;
+            const sourceExpression = ts.isShorthandPropertyAssignment(sourceProperty)
+              ? sourceProperty.name
+              : ts.isPropertyAssignment(sourceProperty)
+                ? sourceProperty.initializer
+                : undefined;
+            if (targetExpression && sourceExpression) {
+              collectAssignmentAliasEdges(targetExpression, sourceExpression);
+            }
+          }
+          return;
+        }
+        if (
+          ts.isArrayLiteralExpression(assignmentTarget) &&
+          ts.isArrayLiteralExpression(initializerCandidate)
+        ) {
+          for (const [index, targetElement] of assignmentTarget.elements.entries()) {
+            const sourceElement = initializerCandidate.elements[index];
+            if (
+              ts.isOmittedExpression(targetElement) ||
+              !sourceElement ||
+              ts.isOmittedExpression(sourceElement)
+            ) {
+              continue;
+            }
+            collectAssignmentAliasEdges(
+              ts.isSpreadElement(targetElement) ? targetElement.expression : targetElement,
+              ts.isSpreadElement(sourceElement) ? sourceElement.expression : sourceElement
+            );
+          }
+        }
+      }
       function collectParameterAliasEdges(child: ts.Node): void {
         if (ts.isVariableDeclaration(child) && child.initializer) {
-          const sources = readParameterAliasRoots(child.initializer);
-          if (sources.length > 0) {
-            parameterAliasEdges.push({
-              sources,
-              targets: collectBindingNames(child.name),
-            });
-          }
+          collectBindingAliasEdges(child.name, child.initializer);
         }
         if (
           ts.isBinaryExpression(child) &&
           child.operatorToken.kind === ts.SyntaxKind.EqualsToken
         ) {
-          const assignedBinding = readMutationRoot(child.left);
-          const sources = readParameterAliasRoots(child.right);
-          if (assignedBinding && sources.length > 0) {
-            parameterAliasEdges.push({ sources, targets: [assignedBinding] });
-          }
+          collectAssignmentAliasEdges(child.left, child.right);
         }
         ts.forEachChild(child, collectParameterAliasEdges);
       }
@@ -2269,9 +2572,13 @@ function collectRuntimeModuleSpecifiers(
         }
       }
       function visitInvocation(child: ts.Node): void {
+        const invokedPath = ts.isCallExpression(child)
+          ? readParameterAliasPath(child.expression)
+          : undefined;
         if (
           ts.isCallExpression(child) &&
-          parameterBindings.has(readMutationRoot(child.expression) ?? '')
+          ((invokedPath && parameterBindings.has(invokedPath)) ||
+            parameterBindings.has(readMutationRoot(child.expression) ?? ''))
         ) {
           for (const argument of child.arguments) {
             addReExportedExpression(argument, declarationBindings);
