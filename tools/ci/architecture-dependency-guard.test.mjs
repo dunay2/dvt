@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import test from 'node:test';
+import ts from 'typescript';
 
 import {
   API_REACHABILITY_CLASSIFICATIONS,
@@ -1519,6 +1520,78 @@ test('dependency-cruiser boundary rules allow governed package entrypoints', () 
   });
 
   assert.equal(violations.includes('no-cross-package-deep-imports'), false);
+});
+
+test('contracts can import the runtime-neutral crypto authority', () => {
+  const violations = collectDependencyViolations({
+    'packages/@dvt/contracts/src/index.ts':
+      "import { sha256HexUtf8 } from '../../crypto/src/index.js'; export default sha256HexUtf8;\n",
+    'packages/@dvt/crypto/src/index.ts': 'export const sha256HexUtf8 = (value) => value;\n',
+  });
+
+  assert.equal(violations.includes('no-contracts-to-dvt-runtime'), false);
+});
+
+test('Cut 1 crypto facades and duplicate implementations stay retired', () => {
+  const retiredPaths = [
+    'packages/@dvt/contracts/src/utils/jcsCanonicalize.ts',
+    'packages/@dvt/contracts/src/utils/sha256HexUtf8.ts',
+    'packages/@dvt/contracts/test/sha256HexUtf8.test.ts',
+    'packages/@dvt/engine/src/utils/jcs.ts',
+    'packages/@dvt/engine/src/utils/sha256.ts',
+    'packages/@dvt/plan-verifier/src/crypto.ts',
+  ];
+
+  for (const retiredPath of retiredPaths) {
+    assert.equal(existsSync(retiredPath), false, `${retiredPath} must not be restored`);
+  }
+});
+
+test('repository consumers import crypto primitives from their authority', () => {
+  const trackedFiles = spawnSync('git', ['ls-files', '--', 'apps', 'packages'], {
+    encoding: 'utf8',
+  });
+  assert.equal(trackedFiles.stderr, '');
+  assert.equal(trackedFiles.status, 0);
+
+  const forbiddenContractExports = new Set(['jcsCanonicalize', 'sha256HexUtf8']);
+  const findings = [];
+
+  for (const sourcePath of trackedFiles.stdout.split(/\r?\n/u).filter(Boolean)) {
+    if (!/\.[cm]?[jt]sx?$/u.test(sourcePath)) {
+      continue;
+    }
+
+    const sourceFile = ts.createSourceFile(
+      sourcePath,
+      readText(sourcePath),
+      ts.ScriptTarget.Latest,
+      true
+    );
+    for (const statement of sourceFile.statements) {
+      if (
+        !ts.isImportDeclaration(statement) ||
+        !ts.isStringLiteral(statement.moduleSpecifier) ||
+        statement.moduleSpecifier.text !== '@dvt/contracts'
+      ) {
+        continue;
+      }
+
+      const bindings = statement.importClause?.namedBindings;
+      if (!bindings || !ts.isNamedImports(bindings)) {
+        continue;
+      }
+
+      for (const element of bindings.elements) {
+        const importedName = element.propertyName?.text ?? element.name.text;
+        if (forbiddenContractExports.has(importedName)) {
+          findings.push(`${sourcePath}: ${importedName}`);
+        }
+      }
+    }
+  }
+
+  assert.deepEqual(findings.sort(), []);
 });
 
 test('type-only cycles enrich reachability without becoming runtime cycle violations', () => {

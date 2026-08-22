@@ -33,7 +33,7 @@
   "dependencies": {
     "@dvt/artifacts": "workspace:*",
     "@dvt/contracts": "workspace:*",
-    "json-canonicalize": "^2.0.0"
+    "@dvt/crypto": "workspace:*"
   },
   "devDependencies": {
     "typescript": "5.9.3"

@@ -24,8 +24,9 @@ The package owns these repository-wide primitives:
 - `secureRandomBytes()`
 - `randomUuidV4()` and `randomUuidV7()`
 
-These utilities are used where deterministic canonicalization or stable hashing
-matters across engine and adapter boundaries.
+These utilities are imported directly where deterministic canonicalization,
+stable hashing, secure entropy or UUID allocation is required. Domain packages
+do not re-export the primitives.
 
 ## Primary Code Anchors
 
@@ -35,12 +36,12 @@ matters across engine and adapter boundaries.
   [packages/@dvt/crypto/src/jcs.ts](../../../packages/@dvt/crypto/src/jcs.ts)
 - SHA-256 helper:
   [packages/@dvt/crypto/src/sha256.ts](../../../packages/@dvt/crypto/src/sha256.ts)
-- Engine re-exports:
-  [packages/@dvt/engine/src/utils/jcs.ts](../../../packages/@dvt/engine/src/utils/jcs.ts)
+- Direct Cut 1 consumers:
+  [packages/@dvt/contracts/src/schema-packs/plan-records.ts](../../../packages/@dvt/contracts/src/schema-packs/plan-records.ts),
+  [packages/@dvt/planner/src/domain/hashing.ts](../../../packages/@dvt/planner/src/domain/hashing.ts),
+  [packages/@dvt/plan-verifier/src/verify.ts](../../../packages/@dvt/plan-verifier/src/verify.ts),
   and
-  [packages/@dvt/engine/src/utils/sha256.ts](../../../packages/@dvt/engine/src/utils/sha256.ts)
-- Engine consumers:
-  [packages/@dvt/engine/src/core/SnapshotProjector.ts](../../../packages/@dvt/engine/src/core/SnapshotProjector.ts)
+  [packages/@dvt/engine/src/security/planIntegrity.ts](../../../packages/@dvt/engine/src/security/planIntegrity.ts)
 - Package tests:
   [packages/@dvt/crypto/test/primitives.test.ts](../../../packages/@dvt/crypto/test/primitives.test.ts)
 
@@ -50,9 +51,10 @@ matters across engine and adapter boundaries.
 
 ## Boundary Rule
 
-Domain packages own their preimages and identity prefixes. This package owns
-only the portable primitives; it is not a generic identity service or a second
-domain authority.
+Domain packages own their preimages, validation rules and identity prefixes.
+Contracts may depend on this runtime-neutral primitive package but not on
+runtime or adapter packages. This package is not a generic identity service or
+a second domain authority.
 
 ## Related Docs
 

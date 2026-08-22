@@ -10,9 +10,9 @@
 import { randomUUID } from 'node:crypto';
 
 import type { Provider, SignalRequest } from '@dvt/contracts';
+import { sha256HexUtf8 } from '@dvt/crypto';
 
 import type { EventType } from '../contracts/runEvents.js';
-import { sha256HexUtf8 } from '../utils/sha256.js';
 
 export interface EventIdempotencyInput {
   eventType: EventType;

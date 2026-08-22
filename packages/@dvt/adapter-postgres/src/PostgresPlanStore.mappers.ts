@@ -15,9 +15,8 @@ import {
   parsePlanRecord,
   type PlannerBuildResultV1,
   type RunExecutionPolicy,
-  jcsCanonicalize,
-  sha256HexUtf8,
 } from '@dvt/contracts';
+import { jcsCanonicalize, sha256HexUtf8 } from '@dvt/crypto';
 
 export type StoredPlanRow = {
   plan_id: string;

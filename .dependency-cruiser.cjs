@@ -5,7 +5,7 @@ module.exports = {
       name: 'no-contracts-to-dvt-runtime',
       severity: 'error',
       from: { path: '^packages/@dvt/contracts/(?:src/|index\\.ts$)' },
-      to: { path: '^packages/@dvt/(?!contracts(?:/|$))' },
+      to: { path: '^packages/@dvt/(?!contracts(?:/|$)|crypto(?:/|$))' },
     },
     {
       name: 'no-planner-to-engine-or-adapters',

@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { URL } from 'node:url';
 
+import { jcsCanonicalize } from '@dvt/crypto';
 import { describe, expect, it } from 'vitest';
 
 import type { ExecutionPlan as EngineVisibleExecutionPlan } from '../src/contracts/engine/RunStateVocabulary.v1.js';
@@ -19,7 +20,6 @@ import {
   PlannerInputEnvelopeV1Schema,
   type PlannerInputEnvelopeV1SchemaT,
 } from '../src/schemas.js';
-import { jcsCanonicalize } from '../src/utils/jcsCanonicalize.js';
 import { ContractValidationError, parsePlannerBuildResultV1 } from '../src/validation.js';
 
 import {

@@ -2,12 +2,8 @@
  * Owned concern: persist projects and project-creation idempotency after the
  * application boundary has authorized the command.
  */
-import {
-  jcsCanonicalize,
-  sha256HexUtf8,
-  type ProjectDescriptor,
-  type ProjectWorkspaceDescriptor,
-} from '@dvt/contracts';
+import { type ProjectDescriptor, type ProjectWorkspaceDescriptor } from '@dvt/contracts';
+import { jcsCanonicalize, sha256HexUtf8 } from '@dvt/crypto';
 import type { Pool, PoolClient } from 'pg';
 
 import type {

@@ -1,9 +1,6 @@
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
-import {
-  asSha256HexString,
-  GraphDbtModelCompilationResultSchema,
-  sha256HexUtf8,
-} from '@dvt/contracts';
+import { asSha256HexString, GraphDbtModelCompilationResultSchema } from '@dvt/contracts';
+import { sha256HexUtf8 } from '@dvt/crypto';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { vi } from 'vitest';
