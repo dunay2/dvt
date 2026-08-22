@@ -276,6 +276,12 @@ const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
       "selectTarget('../../components/monaco/MonacoCodeSurface');",
     ].join('\n'),
   },
+  {
+    label: 'A stored non-Monaco CommonJS module specifier remains allowed',
+    surface: 'canvas-production',
+    modulePath: 'views/canvas/SafeCapabilityPanel.tsx',
+    source: ["const target = './SafeSurface';", 'void require(target);'].join('\n'),
+  },
 ];
 
 const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
@@ -654,6 +660,15 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     source: [
       "const target = '../../../app/components/monaco/MonacoCodeSurface';",
       'void import(target);',
+    ].join('\n'),
+    expectedViolation: 'MonacoCodeSurface outside a governed owner',
+  },
+  {
+    label: 'A capability cannot store a direct Monaco CommonJS module specifier',
+    modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
+    source: [
+      "const target = '../../../app/components/monaco/MonacoCodeSurface';",
+      'void require(target);',
     ].join('\n'),
     expectedViolation: 'MonacoCodeSurface outside a governed owner',
   },
@@ -4055,7 +4070,7 @@ function collectRuntimeModuleSpecifiers(
       }
 
       if (ts.isIdentifier(node.expression) && node.expression.text === 'require') {
-        addSpecifier(node.arguments[0]);
+        addDynamicImportSpecifiers(node.arguments[0]);
         return;
       }
     }
