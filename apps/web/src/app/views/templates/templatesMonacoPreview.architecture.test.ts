@@ -288,6 +288,15 @@ const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
     modulePath: 'views/canvas/SafeCapabilityPanel.tsx',
     source: "void import(enabled ? './SafeSurface' : './FallbackSurface');",
   },
+  {
+    label: 'A stored non-Monaco composite member remains allowed',
+    surface: 'canvas-production',
+    modulePath: 'views/canvas/SafeCapabilityPanel.tsx',
+    source: [
+      "const targets = { selected: './SafeSurface' };",
+      'void import(targets.selected);',
+    ].join('\n'),
+  },
 ];
 
 const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
@@ -674,6 +683,15 @@ const REJECTED_REPOSITORY_MONACO_OWNER_FIXTURES = [
     modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
     source:
       "void import(enabled ? '../../../app/components/monaco/MonacoCodeSurface' : './SafeSurface');",
+    expectedViolation: 'MonacoCodeSurface outside a governed owner',
+  },
+  {
+    label: 'A capability cannot store a Monaco dynamic import in a composite member',
+    modulePath: 'capabilities/runtime-capabilities/presentation/MonacoCapabilityPanel.tsx',
+    source: [
+      "const targets = ['../../../app/components/monaco/MonacoCodeSurface', './SafeSurface'];",
+      'void import(targets[0]);',
+    ].join('\n'),
     expectedViolation: 'MonacoCodeSurface outside a governed owner',
   },
   {
@@ -2971,6 +2989,30 @@ function collectRuntimeModuleSpecifiers(
     return projected;
   }
 
+  function readStaticMemberProjection(expression: ts.Expression): Readonly<{
+    root: ts.Expression;
+    path: readonly (string | number)[];
+  }> {
+    const candidate = unwrapRuntimeExpression(expression);
+    if (ts.isPropertyAccessExpression(candidate)) {
+      const owner = readStaticMemberProjection(candidate.expression);
+      return { root: owner.root, path: [...owner.path, candidate.name.text] };
+    }
+    if (ts.isElementAccessExpression(candidate) && candidate.argumentExpression) {
+      const argument = unwrapRuntimeExpression(candidate.argumentExpression);
+      const segment = ts.isNumericLiteral(argument)
+        ? Number(argument.text)
+        : ts.isStringLiteralLike(argument)
+          ? argument.text
+          : undefined;
+      if (segment != null) {
+        const owner = readStaticMemberProjection(candidate.expression);
+        return { root: owner.root, path: [...owner.path, segment] };
+      }
+    }
+    return { root: candidate, path: [] };
+  }
+
   function readLexicalBindingCandidates(
     identifier: ts.Identifier,
     consumer?: RuntimeImportConsumer
@@ -3858,6 +3900,27 @@ function collectRuntimeModuleSpecifiers(
             consumer
           )
         );
+    }
+
+    if (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) {
+      const projection = readStaticMemberProjection(node);
+      if (projection.path.length > 0) {
+        const rootCandidates =
+          ts.isIdentifier(projection.root) && !resolvingBindings.has(projection.root.text)
+            ? readLexicalBindingCandidates(projection.root, consumer)
+            : [projection.root];
+        const nextResolving = ts.isIdentifier(projection.root)
+          ? new Set([...resolvingBindings, projection.root.text])
+          : resolvingBindings;
+        const projectedCandidates = rootCandidates.flatMap((candidate) =>
+          readArgumentProjectionCandidates(candidate, projection.path)
+        );
+        if (projectedCandidates.length > 0) {
+          return projectedCandidates.flatMap((candidate) =>
+            readVariableImportPatterns(candidate, nextResolving, consumer)
+          );
+        }
+      }
     }
 
     if (ts.isConditionalExpression(node)) {
