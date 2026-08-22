@@ -8,6 +8,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
+const { sha256HexUtf8 } = require('@dvt/crypto');
 const {
   extractFeatureMechanizationManifests,
 } = require('./lib/feature-mechanization-manifest.cjs');
@@ -571,10 +572,6 @@ function readFeatureMechanizationDocs(scanRoot = defaultScanRoot) {
   }));
 }
 
-function sha256(value) {
-  return require('node:crypto').createHash('sha256').update(value).digest('hex');
-}
-
 function pushMissingObjectField(errors, owner, field, value) {
   if (!isNonEmptyString(value)) {
     errors.push(`${owner} missing ${field}.`);
@@ -1065,7 +1062,7 @@ function readCurrentSourceHashes(sourcePaths) {
       continue;
     }
 
-    sourceHashes.set(sourcePath, sha256(fs.readFileSync(absolutePath, 'utf8')));
+    sourceHashes.set(sourcePath, sha256HexUtf8(fs.readFileSync(absolutePath, 'utf8')));
   }
 
   return sourceHashes;

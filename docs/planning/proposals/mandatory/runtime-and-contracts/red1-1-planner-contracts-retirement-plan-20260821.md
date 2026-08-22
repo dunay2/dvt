@@ -184,9 +184,6 @@ commandQueryRails:
   - name: ClassifyChangedCiScope
     type: query
     dddOwner: Repository CI scope policy
-  - name: none - product behavior is unchanged
-    type: query
-    dddOwner: Planner contract topology
 domainObjects:
   - name: PlannerPublicContractBoundary
     type: contract family

@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /** Owned concern: run the local pre-push validation command plan. */
 {
-  const crypto = require('node:crypto');
   const fs = require('node:fs');
   const path = require('node:path');
   const { execFileSync } = require('node:child_process');
+  const { createSha256Hasher, utf8Bytes } = require('@dvt/crypto');
 
   const {
     buildPrepushPlan,
@@ -70,7 +70,7 @@
 
   function untrackedFileFingerprint(changedFiles, options = {}) {
     const root = options.repoRootPath || repoRoot;
-    const hash = crypto.createHash('sha256');
+    const hash = createSha256Hasher();
     const untracked = safeRunGitText(['ls-files', '--others', '--exclude-standard'], options)
       .split(/\r?\n/)
       .map((line) => line.trim().replace(/\\/g, '/'))
@@ -79,19 +79,19 @@
       .sort();
 
     for (const filePath of untracked) {
-      hash.update(`path:${filePath}\0`);
+      hash.update(utf8Bytes(`path:${filePath}\0`));
       const absolutePath = path.resolve(root, filePath);
       if (fs.existsSync(absolutePath)) {
         hash.update(fs.readFileSync(absolutePath));
       }
-      hash.update('\0');
+      hash.update(utf8Bytes('\0'));
     }
 
-    return hash.digest('hex');
+    return hash.digestHex();
   }
 
   function computePrepushStateFingerprint(changedFiles, options = {}) {
-    const hash = crypto.createHash('sha256');
+    const hash = createSha256Hasher();
     const baseRef = process.env.GIT_BASE || 'origin/main';
     const parts = [
       ['rev-parse', '--verify', 'HEAD'],
@@ -103,19 +103,19 @@
       ['diff', '--binary', '--diff-filter=ACMRD'],
     ];
 
-    hash.update(JSON.stringify(changedFiles));
+    hash.update(utf8Bytes(JSON.stringify(changedFiles)));
     for (const args of parts) {
-      hash.update(`\n$ git ${args.join(' ')}\n`);
-      hash.update(safeRunGitText(args, options));
+      hash.update(utf8Bytes(`\n$ git ${args.join(' ')}\n`));
+      hash.update(utf8Bytes(safeRunGitText(args, options)));
     }
-    hash.update('\nuntracked\n');
-    hash.update(untrackedFileFingerprint(changedFiles, options));
+    hash.update(utf8Bytes('\nuntracked\n'));
+    hash.update(utf8Bytes(untrackedFileFingerprint(changedFiles, options)));
 
-    return hash.digest('hex');
+    return hash.digestHex();
   }
 
   function computePrepushValidationFingerprint(changedFiles, options = {}) {
-    const hash = crypto.createHash('sha256');
+    const hash = createSha256Hasher();
     const baseRef = process.env.GIT_BASE || 'origin/main';
     const parts = [
       ['rev-parse', '--verify', 'HEAD'],
@@ -125,15 +125,15 @@
       ['diff', '--binary', '--diff-filter=ACMRD'],
     ];
 
-    hash.update(JSON.stringify(changedFiles));
+    hash.update(utf8Bytes(JSON.stringify(changedFiles)));
     for (const args of parts) {
-      hash.update(`\n$ git ${args.join(' ')}\n`);
-      hash.update(safeRunGitText(args, options));
+      hash.update(utf8Bytes(`\n$ git ${args.join(' ')}\n`));
+      hash.update(utf8Bytes(safeRunGitText(args, options)));
     }
-    hash.update('\nuntracked\n');
-    hash.update(untrackedFileFingerprint(changedFiles, options));
+    hash.update(utf8Bytes('\nuntracked\n'));
+    hash.update(utf8Bytes(untrackedFileFingerprint(changedFiles, options)));
 
-    return hash.digest('hex');
+    return hash.digestHex();
   }
 
   function validationLevel(options = {}) {

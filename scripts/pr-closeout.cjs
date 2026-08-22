@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /** Owned concern: run the governed PR closeout rail without pre-commit/prepush duplication. */
 const { execFileSync, spawnSync } = require('node:child_process');
-const { createHash } = require('node:crypto');
 const fs = require('node:fs');
 const net = require('node:net');
 const path = require('node:path');
+const { sha256HexUtf8 } = require('@dvt/crypto');
 
 const { listLocalChangedFiles, parseGitLines, toPosix } = require('./git-local-changes.cjs');
 const { projectName: planningDbProjectName } = require('./planning-db-run.cjs');
@@ -44,7 +44,7 @@ function resolveCloseoutLockEndpoint(
     if (platform === 'win32') canonicalScope = canonicalScope.toLowerCase();
   }
 
-  const digest = createHash('sha256').update(canonicalScope).digest();
+  const digest = Buffer.from(sha256HexUtf8(canonicalScope), 'hex');
   const lockName = `dvt-pr-closeout-${digest.toString('hex').slice(0, 24)}`;
   if (platform === 'win32') {
     return { path: `\\\\.\\pipe\\${lockName}` };

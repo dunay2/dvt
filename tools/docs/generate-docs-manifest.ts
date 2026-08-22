@@ -17,7 +17,7 @@
  *   tsx tools/docs/generate-docs-manifest.ts [--stdout] [--full]
  *   (--stdout prints to stdout instead of writing docs/.manifest.json)
  */
-import { createHash } from 'node:crypto';
+import { sha256HexUtf8 } from '@dvt/crypto';
 import { writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -239,7 +239,7 @@ function createCatalogDigest<T>(
   return {
     name,
     count: entries.length,
-    contentSha256: createHash('sha256').update(JSON.stringify(entries)).digest('hex'),
+    contentSha256: sha256HexUtf8(JSON.stringify(entries)),
   };
 }
 

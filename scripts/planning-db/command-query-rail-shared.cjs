@@ -1,6 +1,6 @@
 /** Owned concern: normalize command/query rail catalog values and names. */
 function createCommandQueryRailSharedComponent(deps = {}) {
-  const crypto = deps.crypto || require('node:crypto');
+  const sha256HexUtf8 = deps.sha256HexUtf8 || require('@dvt/crypto').sha256HexUtf8;
 
   function normalizeText(value) {
     return value === undefined || value === null ? '' : String(value);
@@ -12,10 +12,6 @@ function createCommandQueryRailSharedComponent(deps = {}) {
 
   function toPosix(filePath) {
     return normalizeText(filePath).replace(/\\/g, '/');
-  }
-
-  function sha256(value) {
-    return crypto.createHash('sha256').update(value).digest('hex');
   }
 
   function normalizeRailName(value) {
@@ -51,7 +47,7 @@ function createCommandQueryRailSharedComponent(deps = {}) {
     return {
       sourcePath,
       raw,
-      contentSha256: document.contentSha256 || sha256(raw),
+      contentSha256: document.contentSha256 || sha256HexUtf8(raw),
     };
   }
 
@@ -145,7 +141,7 @@ function createCommandQueryRailSharedComponent(deps = {}) {
     normalizeRailName,
     normalizeRailStatus,
     normalizeText,
-    sha256,
+    sha256HexUtf8,
     toPosix,
   };
 }
