@@ -2,8 +2,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const { createHash } = require('crypto');
 const { spawnSync } = require('child_process');
+const { sha256Hex } = require('@dvt/crypto');
 const {
   parseExecutionPlan,
   parsePlanRef,
@@ -79,7 +79,7 @@ function validatePlanFile(filePath) {
       const bytes = Buffer.from(JSON.stringify(payload), 'utf8');
       parsePlanRef({
         uri: `repo://${rel(filePath)}`,
-        sha256: createHash('sha256').update(bytes).digest('hex'),
+        sha256: sha256Hex(bytes),
         schemaVersion: payload?.metadata?.schemaVersion,
         planId: payload?.metadata?.planId,
         planVersion: payload?.metadata?.planVersion,
