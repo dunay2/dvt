@@ -486,7 +486,7 @@ Even that is deferred until #2173 source authority is stable and #2617 accepts a
 |---|---:|---|---|---|---|
 | O0 — keep HTTP/log worker as-is | 0 immediate | current custom worker | no new direct Redpanda capability | architecture/runtime gap remains | valid only if HTTP sink is product decision |
 | O1 — add native Kafka/Redpanda `IEventBus` | provisional 5–9 person-days | low/medium; current worker remains | closes bus gap with minimal topology change | retains polling, claims, retries, fencing and mutable outbox | must be baseline alternative in #2613/#2616 |
-| O2 — Debezium outbox evaluation | 11–19 person-days | medium/high; Connect + slot/WAL | proves compatibility and possible simplification | no production value until hard cut | **recommended next evidence** |
+| O2 — Debezium outbox evaluation | 8–14 person-days | medium/high; Connect + slot/WAL | proves compatibility and possible simplification | no production value until hard cut | **recommended next evidence** |
 | O2 production cutover if accepted | additional 15–28 person-days | medium/high | potentially removes substantial custom delivery code | schema, ownership and live migration risk | gated by #2615/#2616 |
 | O3 — PostgreSQL CDC source feasibility contract | 3–6 person-days | none/minimal during study | identifies a bounded product vertical | no source capability delivered | recommended after relation authority refresh |
 | O3 minimal real CDC source vertical | 25–45 person-days | high; connector/source lifecycle | meaningful incremental/near-real-time product capability | API/Web/security/execution/ops scope | deferred pending #2617 |
@@ -501,11 +501,11 @@ All figures assume one experienced backend/data engineer, existing local Postgre
 | Build isolated Event Router PoC | #2614 | 2–4 pd | pinned disposable PostgreSQL → Connect/Debezium → Redpanda path |
 | Failure, ordering, duplicate, WAL and performance proof | #2615 | 3–5 pd | current-vs-candidate evidence and operational cost |
 | Retain/adopt/defer/reject decision and migration design | #2616 | 1.5–2.5 pd | one approved publisher path and delete-first plan |
-| **Outbox evaluation total** |  | **8–16 pd** | excludes optional CDC-source contract |
+| **Outbox evaluation total** |  | **8–14 pd** | excludes optional CDC-source contract |
 | CDC-source product contract gate | #2617 | 3–6 pd | independent product decision |
-| **Combined study programme** |  | **11–22 pd** | upper bound includes both independent decisions |
+| **Combined study programme** |  | **11–20 pd** | includes both independent decisions without assuming overlap |
 
-The epic uses 11–19 pd for the core evaluation based on overlapping documentation/measurement work; issue ranges are deliberately conservative and must be reconciled after #2613.
+The ranges are planning estimates. #2613 must freeze workload and evidence methods before later tasks narrow them.
 
 ## 9. Expected gain accounting
 
