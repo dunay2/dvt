@@ -28,6 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ffee4ee479b683e3346d5a96749229f798d4ca41
           fetch-depth: 0
       - uses: pnpm/action-setup@v4
         with:
@@ -40,10 +41,11 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Build Planning DB prerequisites
         run: pnpm --filter @dvt/crypto build
-      - name: Start and import Planning DB
+      - name: Bootstrap and import Planning DB baseline
         run: |
           pnpm planning:db:up
           pnpm planning:db:health --wait
+          node scripts/planning-db-schema.cjs
           pnpm planning:db:import
       - name: Capture architecture authority
         run: |
@@ -52,6 +54,7 @@ jobs:
           pnpm planning:db:query architecture-components --limit 200 --format json > spike-results/planning-db/architecture-components.json
           pnpm planning:db:query architecture-relations --limit 300 --format json > spike-results/planning-db/architecture-relations.json
           pnpm planning:db:query command-query-rails --limit 200 --format json > spike-results/planning-db/command-query-rails.json
+          printf '%s\n' 'ffee4ee479b683e3346d5a96749229f798d4ca41' > spike-results/planning-db/baseline-sha.txt
       - name: Upload architecture baseline
         uses: actions/upload-artifact@v4
         with:
