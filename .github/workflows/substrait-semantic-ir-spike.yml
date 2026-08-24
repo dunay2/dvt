@@ -1,0 +1,53 @@
+name: Substrait semantic IR spike
+
+on:
+  push:
+    branches:
+      - study/substrait-semantic-ir-spike
+    paths:
+      - '.github/workflows/substrait-semantic-ir-spike.yml'
+      - 'spikes/substrait-semantic-ir/**'
+      - 'docs/planning/reviews/20260824-substrait-semantic-ir-spike-plan.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  architecture-baseline:
+    name: Planning DB architecture baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Start and import Planning DB
+        run: |
+          pnpm planning:db:up
+          pnpm planning:db:health --wait
+          pnpm planning:db:import --if-stale
+      - name: Capture architecture authority
+        run: |
+          mkdir -p spike-results/planning-db
+          pnpm planning:db:query architecture-designs --limit 100 --format json > spike-results/planning-db/architecture-designs.json
+          pnpm planning:db:query architecture-components --limit 200 --format json > spike-results/planning-db/architecture-components.json
+          pnpm planning:db:query architecture-relations --limit 300 --format json > spike-results/planning-db/architecture-relations.json
+          pnpm planning:db:query command-query-rails --limit 200 --format json > spike-results/planning-db/command-query-rails.json
+      - name: Upload architecture baseline
+        uses: actions/upload-artifact@v4
+        with:
+          name: substrait-planning-db-baseline
+          path: spike-results/planning-db
+          if-no-files-found: error
+          retention-days: 14
+      - name: Stop Planning DB
+        if: always()
+        run: pnpm planning:db:down
