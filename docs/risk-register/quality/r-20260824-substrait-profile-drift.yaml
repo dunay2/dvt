@@ -1,0 +1,24 @@
+---
+id: R-20260824-SUBSTRAIT-PROFILE-DRIFT
+title: Substrait profile and tool version drift can change semantic portability
+status: Open
+date: 2026-08-24
+owners:
+  - architecture
+  - packages/@dvt/contracts
+severity: Medium
+probability: Medium
+---
+mitigation:
+  summary: >
+    ADR-0064 requires an exact pinned Substrait logical profile, explicit profile/version identity,
+    serialization and compatibility fixtures, fail-closed unsupported features, and provider-native
+    readiness after rendering. DVT stable RelationId/FieldId authoring identity remains outside raw
+    Substrait structural/positional field references.
+  evidence:
+    - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
+    - docs/evidence/ed-20260824-substrait-semantic-reference-traceability.md
+    - docs/planning/proposals/mandatory/runtime-and-contracts/vtx2-substrait-semantic-reference-design-20260824.md
+  follow_up:
+    - Issue #2595 pins the first production Substrait profile and DVT identity/provenance sidecar.
+    - Issue #2643 governs profile upgrades, version skew, compatibility fixtures, and fail-closed gaps.

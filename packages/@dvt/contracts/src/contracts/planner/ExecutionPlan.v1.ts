@@ -1,4 +1,11 @@
 /**
+ * @file packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts
+ * @baseline ADR-0064: Substrait semantic reference and bounded logical profile
+ * @decision Logical transformation semantics stay outside ExecutionPlan; plan steps represent runtime responsibilities only.
+ * @consequence Substrait relation/operator count cannot implicitly become ExecutionPlan step count.
+ * @version 1.0.0
+ * @date 2026-08-24
+ *
  * Planner-side ExecutionPlan types (v1).
  *
  * This is the planner-side subset of the normative ExecutionPlan contract.
