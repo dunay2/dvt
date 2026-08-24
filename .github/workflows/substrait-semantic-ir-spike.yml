@@ -44,7 +44,7 @@ jobs:
         run: |
           pnpm planning:db:up
           pnpm planning:db:health --wait
-          pnpm planning:db:import --if-stale
+          pnpm planning:db:import
       - name: Capture architecture authority
         run: |
           mkdir -p spike-results/planning-db
