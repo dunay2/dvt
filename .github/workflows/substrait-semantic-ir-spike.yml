@@ -8,6 +8,13 @@ on:
       - '.github/workflows/substrait-semantic-ir-spike.yml'
       - 'spikes/substrait-semantic-ir/**'
       - 'docs/planning/reviews/20260824-substrait-semantic-ir-spike-plan.md'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/substrait-semantic-ir-spike.yml'
+      - 'spikes/substrait-semantic-ir/**'
+      - 'docs/planning/reviews/20260824-substrait-semantic-ir-spike-plan.md'
   workflow_dispatch:
 
 permissions:
