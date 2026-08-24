@@ -50,10 +50,10 @@ jobs:
       - name: Capture architecture authority
         run: |
           mkdir -p spike-results/planning-db
-          pnpm planning:db:query architecture-designs --limit 100 --format json > spike-results/planning-db/architecture-designs.json
-          pnpm planning:db:query architecture-components --limit 200 --format json > spike-results/planning-db/architecture-components.json
-          pnpm planning:db:query architecture-relations --limit 300 --format json > spike-results/planning-db/architecture-relations.json
-          pnpm planning:db:query command-query-rails --limit 200 --format json > spike-results/planning-db/command-query-rails.json
+          pnpm planning:db:query architecture-designs --limit 100 > spike-results/planning-db/architecture-designs.json
+          pnpm planning:db:query architecture-components --limit 200 > spike-results/planning-db/architecture-components.json
+          pnpm planning:db:query architecture-relations --limit 300 > spike-results/planning-db/architecture-relations.json
+          pnpm planning:db:query command-query-rails --limit 200 > spike-results/planning-db/command-query-rails.json
           printf '%s\n' 'ffee4ee479b683e3346d5a96749229f798d4ca41' > spike-results/planning-db/baseline-sha.txt
       - name: Upload architecture baseline
         uses: actions/upload-artifact@v4
