@@ -99,3 +99,44 @@ jobs:
           path: spike-results/semantic/duckdb-${{ matrix.duckdb }}
           if-no-files-found: error
           retention-days: 14
+
+  typescript-bindings:
+    name: TypeScript bindings / Substrait v0.99.0
+    needs: architecture-baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: substrait-io/substrait
+          ref: v0.99.0
+          path: upstream-substrait
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install exact binding tool versions
+        working-directory: spikes/substrait-semantic-ir/typescript
+        run: npm install --no-audit --no-fund
+      - name: Generate, typecheck and roundtrip bindings
+        working-directory: spikes/substrait-semantic-ir/typescript
+        run: |
+          mkdir -p ../../../spike-results/typescript
+          started=$(date +%s%N)
+          npm run generate
+          finished=$(date +%s%N)
+          printf '{"generationMilliseconds": %.3f}\n' "$((finished-started))e-6" > ../../../spike-results/typescript/generation-time.json
+          npm run typecheck
+          npm run smoke > ../../../spike-results/typescript/smoke.json
+          DVT_TS_BINDING_REPORT=../../../spike-results/typescript/bindings.json npm run measure
+          npm ls --all --json > ../../../spike-results/typescript/npm-tree.json
+          cp package-lock.json ../../../spike-results/typescript/package-lock.json
+          du -sb node_modules | awk '{print "{\"nodeModulesBytes\":" $1 "}"}' > ../../../spike-results/typescript/install-size.json
+      - name: Upload TypeScript binding evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: substrait-typescript-v0.99.0
+          path: spike-results/typescript
+          if-no-files-found: error
+          retention-days: 14
