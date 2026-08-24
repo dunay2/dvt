@@ -1,4 +1,4 @@
-# SQLGlot integration study — derived column lineage for SQL-authoritative DVT transforms
+# SQLGlot integration study — static SQL readiness, product-first
 
 Date: 2026-08-24
 
@@ -10,328 +10,228 @@ DVT study baseline: `main@ffee4ee479b683e3346d5a96749229f798d4ca41`
 
 ## Corrected decision frame
 
-The useful question is no longer whether DVT should add a generic SQL semantic engine.
+The study is no longer centered on column lineage. Lineage is a possible secondary benefit of parsing SQL, not the product reason to introduce SQLGlot.
 
-The concrete product question is:
+The product question is:
 
-> Can SQLGlot be the smallest reliable implementation detail for deriving output-column lineage from SQL-authoritative `dvt:sql_transform` SQL, while SQL remains the authority and existing DVT lineage presentation remains the projection owner?
+> When DVT has a real user-facing capability that produces or executes SQL beyond the current PostgreSQL-only path, can SQLGlot provide bounded multi-dialect static analysis before provider-native preflight and execution?
 
-This correction matters because a broad `SqlSemanticAnalysis` abstraction would invite capabilities with no current consumer: generic ASTs, normalization, transpilation, optimizer output, schema engines and persistence. None of those is required to solve the identified product gap.
+Possible activating outcomes include:
 
-## Authority model
+- a first supported non-PostgreSQL SQL transform provider;
+- GPT-generated/repaired SQL with deterministic diagnostics before Preview/Run;
+- another named SQL capability that needs dialect-aware static analysis.
 
-### Visual mode
+No production dependency is justified solely to improve architecture.
 
-```text
-VisualTransformRecipeV1
-  = authoring authority
-        |
-        +--> existing deterministic PostgreSQL compiler
-        |
-        +--> recipe-derived column lineage
-```
+## Product-first delivery rule
 
-SQLGlot is not used here. Re-parsing generated SQL would recreate information already owned by the recipe and would add a second interpretation path.
-
-### SQL mode
+Implementation must flow from:
 
 ```text
-SQL text
-  = authoring authority
-        |
-        v
-bounded SQLGlot column-lineage analysis
-        |
-        v
-DVT relation/column lineage DTO
-        |
-        v
-existing graph/source binding resolution
-        |
-        v
-existing Canvas column-lineage projection
+user-visible outcome
+ -> acceptance case
+ -> current DVT authorities + mature reference systems
+ -> minimum architecture changes
+ -> technical microcommits
+ -> service/live proof
+ -> release
 ```
 
-SQL mode does not "lose visual provenance". No visual recipe is authoritative in SQL mode. SQLGlot derives a read model from SQL; it never reconstructs a visual recipe.
+Microcommits may be technical, but they are steps toward one product result. A standalone refactor with no user capability, defect or measured cost is not a release outcome.
 
-## Case matrix
+## Current DVT reference implementation
 
-| Case | Disposition | Reason |
-|---|---|---|
-| Visual DVT transform | KEEP existing | Recipe already owns inputs/outputs and visual lineage |
-| SQL-authoritative DVT transform | ADOPTION CANDIDATE | Concrete missing semantic projection: output -> input column lineage |
-| PostgreSQL readiness | EXCLUDE | #2333 owns `libpg-query` structural policy + real PostgreSQL readiness |
-| VTX2 generation | EXCLUDE | Existing TS compiler is smaller and deterministic |
-| dbt Jinja/source SQL | EXCLUDE from first slice | dbt-native analysis owns source semantics |
-| dbt compiled SQL | FUTURE ONLY | Analyze only if a concrete dbt lineage consumer is later justified |
-| OpenLineage | DOWNSTREAM ONLY | May consume DVT lineage later; never analysis authority |
-| Marquez | DOWNSTREAM ONLY | Projection/backend, never source of DVT lineage truth |
-| SQL rewrite/transpile | EXCLUDE | No current DVT product requirement; file/source fidelity risk |
-| Optimizer output | EXCLUDE | No consumer and would create a second planning semantic surface |
-| Analysis persistence/cache | EXCLUDE from MVP | Result is recomputable; add only from measured need |
+PostgreSQL already proves the desired product shape through #2333:
 
-## Minimum object model
-
-### `SqlColumnLineageAnalysis`
-
-Internal application result. Do not place it in public `@dvt/contracts` until a real cross-process/public consumer requires that promotion.
-
-```ts
-type SqlDialect = 'postgres' | 'snowflake' | 'bigquery' | 'databricks' | 'redshift';
-
-type SqlRelationRef = Readonly<{
-  catalog?: string;
-  schema?: string;
-  name: string;
-}>;
-
-type SqlColumnRef = Readonly<{
-  relation?: SqlRelationRef;
-  column: string;
-}>;
-
-type SqlOutputColumnLineage = Readonly<{
-  outputColumn: string;
-  inputs: readonly SqlColumnRef[];
-}>;
-
-type SqlColumnLineageAnalysis =
-  | Readonly<{
-      status: 'analyzed';
-      dialect: SqlDialect;
-      analyzer: Readonly<{
-        engine: 'sqlglot';
-        engineVersion: string;
-        contractVersion: 'sql-column-lineage.v1';
-      }>;
-      outputs: readonly SqlOutputColumnLineage[];
-    }>
-  | Readonly<{
-      status: 'unsupported' | 'unavailable';
-      diagnostics: readonly SqlColumnLineageDiagnostic[];
-    }>;
+```text
+SQL authoring
+ -> libpg-query structural parse/policy
+ -> governed ConnectionRef
+ -> PostgreSQL read-only EXPLAIN
+ -> Monaco diagnostics
+ -> Preview fail-closed before planner / PlanRef
+ -> Run
 ```
 
-The provenance fields make the derived result explainable and reproducible without promoting it to a persisted domain authority.
+Keep this path. SQLGlot must not replace `libpg-query` merely for uniformity.
 
-Do not add:
+A known ownership smell remains: readiness presentation/API currently hangs from Source Import boundaries. #2632 records the extraction blueprint but is closed `not_planned` as a standalone refactor. That cleanup should be absorbed only into the first real product vertical that needs broader SQL readiness.
 
-- SQLGlot AST nodes;
-- generic DVT SQL AST;
-- normalized SQL;
-- rewritten SQL;
-- optimizer/planner structures;
-- execution/readiness state;
-- cache identity;
-- persistence lifecycle.
+## Proven external pattern
 
-### `ISqlColumnLineageAnalyzer`
+DVT is not inventing a new SQL architecture. Mature systems already separate stages:
 
-One narrow application port:
+| Reference | Pattern |
+|---|---|
+| Apache Calcite | parse -> validate -> relational/planning stages |
+| Apache DataFusion | parser -> logical plan -> physical plan |
+| Trino | parser/analyzer + engine-native validation such as `EXPLAIN (TYPE VALIDATE)` |
+| SQLMesh | SQLGlot-backed SQL understanding and compile-time checks before warehouse execution |
+| SQLFluff | dialect-aware parsing/linting with bounded parser behavior |
+| PostgreSQL / BigQuery / Snowflake / Databricks | provider-native EXPLAIN/dry-run/preflight remains authoritative |
+
+For future architecture choices, record first:
+
+```text
+mature reference
+ -> pattern used there
+ -> DVT equivalent
+ -> minimum concept to reuse
+ -> deliberate DVT difference
+ -> evidence required for that difference
+```
+
+Prefer proven patterns over locally novel mechanisms.
+
+## Target admission model
+
+```text
+SQL producer
+ -> static SQL analysis
+ -> DVT structural/policy checks
+ -> provider-native preflight
+ -> Preview / PlanRef admission
+ -> Run
+```
+
+SQL producers may be:
+
+```text
+human authoring
+GPT generation/repair
+VisualTransformRecipeV1 -> existing compiler
+dbt/Jinja -> dbt-native compile
+```
+
+The producer never certifies readiness.
+
+## Responsibility split
+
+### SQL producer / compiler
+
+Produces SQL. The existing visual compiler remains a small deterministic recipe -> SQL producer.
+
+### Static SQL analysis
+
+Potential future responsibility:
+
+```text
+SQL + expected dialect
+ -> parse
+ -> statement classification
+ -> structural DVT policy
+ -> deterministic diagnostics
+ -> optional derived metadata for real consumers
+```
+
+SQLGlot is an `ADOPT-BOUNDED` candidate here when a second real dialect/product case appears.
+
+### Provider-native preflight
+
+Final authority for actual provider semantics:
+
+```text
+SQL + governed ConnectionRef
+ -> actual catalog/types/functions/permissions/provider version
+ -> EXPLAIN / dry-run / equivalent
+ -> ready | invalid | unavailable
+```
+
+Generic parser success is never equivalent to provider readiness.
+
+## Possible future seam
+
+Only after a second real implementation exists should DVT consider a shared port such as:
 
 ```ts
-interface ISqlColumnLineageAnalyzer {
-  analyze(input: Readonly<{
+interface ISqlStaticAnalyzer {
+  analyze(input: {
     sql: string;
     dialect: SqlDialect;
-    schema?: SqlColumnLineageSchemaContext;
-  }>): Promise<SqlColumnLineageAnalysis>;
+  }): Promise<SqlStaticAnalysisResult>;
 }
 ```
 
-The port owns only the question: "which input columns contribute to each output column?"
-
-It does not answer:
-
-- is this SQL executable?;
-- is it allowed by DVT policy?;
-- how should it be compiled?;
-- how should it be materialized?;
-- how should graph node IDs be assigned?;
-- how should OpenLineage be emitted?
-
-### `SqlGlotColumnLineageAnalyzer`
-
-Infrastructure adapter. It may use a small Python process because SQLGlot is Python-native, but the process boundary must remain bounded and replaceable.
-
-Responsibilities:
-
-1. accept the DVT request;
-2. enforce dialect allow-list and input size;
-3. invoke SQLGlot with timeout/output limits;
-4. optionally qualify with supplied schema context where semantics are well defined;
-5. extract physical relation refs and output-column lineage;
-6. map to strict DVT JSON/DTO;
-7. report SQLGlot engine version;
-8. discard every SQLGlot-native object before returning.
-
-It does not own network access, persistence, source identity, graph identity or SQL validation.
-
-### bounded process execution
-
-DVT already owns bounded process mechanics in the dbt analyzer: timeout, output limits, subprocess failure classification and sanitized environment.
-
-If implementation proceeds, extract/reuse only the genuinely generic mechanics into a `BoundedProcessRunner` if doing so reduces duplicate code. Add bounded stdin support so SQL is not placed in command-line arguments.
-
-Do not create:
-
-- `SqlGlotProcessManager`;
-- long-lived daemon;
-- HTTP microservice;
-- MCP server;
-- queue;
-- cache service;
-- second process framework.
-
-## Product projection boundary
-
-The analyzer must not know Canvas node IDs.
-
-It returns SQL identities:
+Likely shape:
 
 ```text
-catalog/schema/relation/column
+PostgreSQL -> existing libpg-query-backed implementation
+second supported dialect -> evaluate SQLGlot-backed implementation
 ```
 
-A DVT-owned projector resolves these against existing Graph/source bindings and emits the existing Canvas lineage representation.
+Do not create dialect registries, generic AST contracts or framework layers in advance.
 
-Conceptually:
+## GPT boundary
+
+GPT may generate or repair SQL but never acts as the admission authority:
 
 ```text
-SqlColumnLineageAnalysis
- + current DVT graph/source bindings
-        |
-        v
-SQL-authoritative transform column lineage projection
-        |
-        v
-existing Canvas column-lineage edges/read model
+GPT
+ -> SQL candidate
+ -> deterministic static diagnostics
+ -> provider preflight
+ -> deterministic diagnostics
+ -> Preview/PlanRef only after admission
 ```
 
-This preserves the authority split:
+Diagnostics may be fed back to GPT for another attempt, while the deterministic gates remain authoritative.
+
+## SQLGlot proof
+
+Evaluate representative fixtures for:
+
+- projection/filter/casts/functions;
+- joins and aliases;
+- GROUP BY/HAVING/aggregates;
+- CTE/subquery/windows;
+- quoted/case-sensitive identifiers;
+- syntax errors/multiple statements;
+- unsupported/vendor-specific syntax;
+- ambiguous identifiers;
+- deep/large SQL for resource limits.
+
+Record:
 
 ```text
-SQL = truth
-SQLGlot result = derived interpretation
-Graph/source bindings = DVT identity mapping
-Canvas lineage = presentation projection
-```
-
-## First proof slice
-
-The first proof must be lineage-centric rather than a tour of SQLGlot features.
-
-Fixtures:
-
-1. direct projection and rename/alias;
-2. cast and scalar function transformation;
-3. multiple input columns into one output;
-4. filters, proving predicates do not fabricate output lineage;
-5. GROUP BY plus aggregate outputs and HAVING;
-6. nested CTE and subquery;
-7. quoted/case-sensitive PostgreSQL identifiers;
-8. ambiguous/unqualified columns;
-9. one multi-relation JOIN fixture as future-boundary stress evidence;
-10. unsupported/provider-specific syntax;
-11. one large/deep query for process timeout/cost measurement.
-
-For every fixture record:
-
-```text
-input SQL
+SQLGlot version
 dialect
-optional schema context
-expected output columns
-expected input column refs per output
-actual result
-ambiguity/unsupported behavior
-elapsed process time
+parse/classification result
+diagnostic/location behavior
+cold/warm process cost
+input/output bounds
+provider-native preflight result
+cases where SQLGlot accepts SQL the provider rejects
 ```
 
-## Performance/provenance policy
+## Secondary benefits
 
-The analysis starts **ephemeral, reproducible and measured**.
+If SQLGlot is later adopted for static analysis, its parsed representation may support product consumers for:
 
-The analyzed result carries:
+- relation/column references;
+- column lineage;
+- impact analysis;
+- compatibility hints.
 
-- `contractVersion`;
-- SQLGlot engine/version;
-- dialect.
+These are secondary benefits, not reasons to introduce standalone infrastructure.
 
-Do not add durable analysis identity or cache yet.
+## Explicit exclusions
 
-A cache may be proposed later only if measurements show repeated identical SQL analysis is materially expensive. If added, its natural derivation key would be based on authoritative SQL identity + dialect + analyzer/contract version + relevant schema-context identity, but that is intentionally not part of this MVP.
+- no SQLGlot AST in public DVT contracts;
+- no automatic SQL rewrite/roundtrip;
+- no local query optimizer/planner replacement;
+- no visual compiler replacement for uniformity;
+- no browser Python runtime;
+- no daemon/MCP/microservice/cache by default;
+- no provider support claim merely because SQLGlot parses a dialect;
+- no standalone readiness-boundary cleanup without product value.
 
-## dbt boundary
+## Decision gate
 
-DVT already exposes dbt `compiledSql` in analysis resources, but availability is not a use case.
-
-Do not integrate SQLGlot into #2171 simply because compiled SQL exists.
-
-A future dbt lineage consumer would need to prove all of:
-
-1. a named product projection needs compiled-SQL column lineage;
-2. the existing dbt manifest/native analysis does not already provide sufficient truth;
-3. the same #2171 analysis snapshot can be reused without another dbt parse/compile;
-4. SQLGlot receives only compiled SQL, never raw Jinja as if it were executable SQL.
-
-Until then, dbt is outside the implementation slice.
-
-## PostgreSQL readiness boundary
-
-#2333 remains authoritative for PostgreSQL readiness.
-
-SQLGlot may successfully derive lineage from SQL that PostgreSQL later rejects. That is acceptable because the two outputs answer different questions:
-
-```text
-SQLGlot: what column dependencies can be derived from this SQL?
-#2333: is this SQL structurally allowed and valid/readable against the effective PostgreSQL connection?
-```
-
-Never promote SQLGlot parse success to readiness.
-
-## OpenLineage boundary
-
-If the derived DVT lineage later proves useful to OpenLineage, the transport consumes the DVT projection. The lineage worker/Marquez must not independently invoke SQLGlot and create a second interpretation path.
-
-## Go / no-go
-
-`ADOPT-BOUNDED` only if the complete product chain is clean:
-
-```text
-SQL-authoritative transform
- -> bounded SQLGlot analysis
- -> DVT column refs
- -> existing DVT binding resolution
- -> existing Canvas lineage presentation
-```
-
-Prefer `REFERENCE-ONLY` when:
-
-- process/runtime packaging is disproportionate to the value;
-- supported SQL produces too much ambiguous lineage;
-- the result requires exposing SQLGlot AST to be useful;
-- the integration requires a second store/cache/service to function;
-- the existing Canvas consumer cannot consume the result without a parallel lineage model.
-
-Reject when correctness is insufficient for the SQL surface DVT actually supports.
-
-## Explicit non-goals
-
-- generic semantic SQL engine;
-- SQL AST contract;
-- SQL parser replacement;
-- PostgreSQL validator replacement;
-- visual compiler replacement;
-- SQL -> Visual reconstruction;
-- dbt parser/compiler replacement;
-- SQL transpilation product;
-- query optimizer;
-- automatic SQL rewrite;
-- second lineage store;
-- analysis persistence subsystem;
-- browser Python/SQLGlot runtime.
+- `ADOPT-BOUNDED` only when a named upcoming product capability needs multi-dialect static analysis and SQLGlot demonstrates net reduction;
+- `REFERENCE-ONLY` if the knowledge is useful but no near-term product outcome justifies production dependency;
+- `REJECT` if correctness or boundedness is insufficient for DVT-supported SQL.
 
 ## Principle
 
-**Do not integrate SQLGlot. Solve SQL-authoritative column lineage with SQLGlot only if it is the smallest reliable mechanism.**
+**Start from the user-visible capability, reuse proven industry patterns, and introduce only the minimum mechanism required to deliver and prove that capability.**
