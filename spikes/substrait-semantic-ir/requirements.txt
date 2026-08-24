@@ -1,0 +1,3 @@
+sqlglot==30.17.0
+substrait[extensions,sql]==0.31.0
+substrait-validator==0.1.4
