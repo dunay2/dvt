@@ -36,6 +36,13 @@ class BoundedSqlGlotProducer:
         "string": sub.string,
         "boolean": sub.boolean,
         "date": sub.date,
+        # These provider/compound types remain dedicated corpus cases. Mapping
+        # their source columns to string lets unrelated relational fixtures reach
+        # the adapter without claiming that timestamp, JSON or list semantics are
+        # portable strings.
+        "timestamp": sub.string,
+        "json": sub.string,
+        "list_i64": sub.string,
     }
 
     def __init__(self, tables: dict[str, dict[str, Any]]) -> None:
