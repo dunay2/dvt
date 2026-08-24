@@ -1,0 +1,110 @@
+{
+  "snapshotDate": "2026-08-24",
+  "classification": ["CORE-STABLE", "CORE-MOVING", "EXTENSION", "GAP", "OUT-OF-SCOPE"],
+  "areas": [
+    {
+      "area": "logical-relations",
+      "classification": "CORE-MOVING",
+      "specStatus": "Complete",
+      "dvtImpact": "high",
+      "assessment": "Read, Project, Filter, Join, Set, Aggregate, Sort and Fetch cover the planned VTX2 logical core, but protobuf and individual semantics are still pre-1.0 and require a pinned profile.",
+      "sources": ["https://substrait.io/spec/specification/", "https://substrait.io/relations/logical_relations/", "https://github.com/substrait-io/substrait/issues/834"]
+    },
+    {
+      "area": "expressions-and-functions",
+      "classification": "CORE-MOVING",
+      "specStatus": "Complete",
+      "dvtImpact": "high",
+      "assessment": "Scalar, aggregate, window, cast and conditional concepts are present. Function declarations, signatures and extension identifiers continue to evolve and must be versioned with the plan profile.",
+      "sources": ["https://substrait.io/spec/specification/", "https://github.com/substrait-io/substrait/issues/829", "https://github.com/substrait-io/substrait/issues/828"]
+    },
+    {
+      "area": "types",
+      "classification": "CORE-MOVING",
+      "specStatus": "Complete",
+      "dvtImpact": "high",
+      "assessment": "Primitive, compound, nullable, variation and user-defined types exist. Timestamp, interval and UDT details still receive breaking or clarifying changes.",
+      "sources": ["https://substrait.io/types/type_system/", "https://github.com/substrait-io/substrait/issues/864", "https://github.com/substrait-io/substrait/issues/1166"]
+    },
+    {
+      "area": "field-references",
+      "classification": "CORE-MOVING",
+      "specStatus": "Complete",
+      "dvtImpact": "critical",
+      "assessment": "Substrait intentionally resolves fields structurally and positionally. DVT requires stable editable FieldId and RelationId across rename, reorder, reload and lineage, so direct persisted authoring requires a proven sidecar or a bounded authoring representation.",
+      "sources": ["https://substrait.io/expressions/field_references/", "https://github.com/substrait-io/substrait/issues/956"]
+    },
+    {
+      "area": "table-functions-generate",
+      "classification": "GAP",
+      "specStatus": "Designed / incomplete",
+      "dvtImpact": "medium",
+      "assessment": "UNNEST and EXPLODE require cardinality-changing semantics still under active design around table functions or GenerateRel. They should fail closed or use a temporary extension, not a private silent interpretation.",
+      "sources": ["https://substrait.io/spec/specification/", "https://github.com/substrait-io/substrait/issues/745", "https://github.com/substrait-io/substrait/issues/823"]
+    },
+    {
+      "area": "physical-relations",
+      "classification": "OUT-OF-SCOPE",
+      "specStatus": "Designed / incomplete",
+      "dvtImpact": "low",
+      "assessment": "Hash/merge joins, exchanges and physical aggregates do not block DVT semantic authoring because graphSource, Planner and ExecutionPlan remain the physical/runtime boundary.",
+      "sources": ["https://substrait.io/spec/specification/", "https://github.com/substrait-io/substrait/issues/870", "https://github.com/substrait-io/substrait/issues/458"]
+    },
+    {
+      "area": "protobuf-normalization",
+      "classification": "CORE-MOVING",
+      "specStatus": "1.0 blocker",
+      "dvtImpact": "medium",
+      "assessment": "Duplicated messages and deprecated fields are being normalized before 1.0. DVT can mitigate this only through exact version pins, compatibility fixtures and explicit migrations.",
+      "sources": ["https://github.com/substrait-io/substrait/issues/834", "https://github.com/substrait-io/substrait/issues/835", "https://github.com/substrait-io/substrait/issues/1069"]
+    },
+    {
+      "area": "semantic-portability-definition",
+      "classification": "CORE-MOVING",
+      "specStatus": "Open clarification",
+      "dvtImpact": "high",
+      "assessment": "Exact equality across engines remains nuanced for ordering, decimals, nulls and implementation-specific behavior. DVT must retain target capabilities and provider-native validation even when a plan is valid Substrait.",
+      "sources": ["https://github.com/substrait-io/substrait/issues/596", "https://github.com/substrait-io/substrait/issues/700", "https://github.com/substrait-io/substrait/issues/325"]
+    },
+    {
+      "area": "validator",
+      "classification": "GAP",
+      "specStatus": "Experimental and version-lagging",
+      "dvtImpact": "high",
+      "assessment": "The released validator targets substantially older spec versions than the current Python producer. Validation evidence must distinguish version incompatibility from an invalid plan.",
+      "sources": ["https://github.com/substrait-io/substrait-validator", "https://github.com/substrait-io/substrait/issues/845"]
+    },
+    {
+      "area": "text-format",
+      "classification": "CORE-MOVING",
+      "specStatus": "1.0 tooling blocker",
+      "dvtImpact": "low",
+      "assessment": "Text representation completeness is useful for diagnostics but not required for the canonical binary plan boundary if protobuf JSON is treated only as evidence/debug output.",
+      "sources": ["https://github.com/substrait-io/substrait/issues/844"]
+    },
+    {
+      "area": "typescript-library",
+      "classification": "GAP",
+      "specStatus": "Inactive official community library",
+      "dvtImpact": "high",
+      "assessment": "DVT is TypeScript-heavy. Generated protobuf bindings are possible, but maintained builders, inference and extension resolution are currently stronger in Python/Java/Rust than JavaScript. Integration cost must be measured rather than hidden behind wrappers.",
+      "sources": ["https://substrait.io/community/active_libraries/"]
+    },
+    {
+      "area": "independent-consumers",
+      "classification": "CORE-MOVING",
+      "specStatus": "Available with version skew",
+      "dvtImpact": "high",
+      "assessment": "DuckDB, DataFusion, Velox and other consumers exist, but producer/consumer spec lag can reject plans or even crash native integrations. Interoperability must be proven for the pinned profile and cannot be inferred from project logos.",
+      "sources": ["https://substrait.io/community/powered_by/", "https://github.com/substrait-io/substrait-python/blob/v0.31.0/tests/integration/test_sql_engine_roundtrip.py"]
+    },
+    {
+      "area": "json-local-files",
+      "classification": "GAP",
+      "specStatus": "Open proposal",
+      "dvtImpact": "low-for-vtx2-high-for-data-ingest",
+      "assessment": "JSON file read description is not yet core and implementations diverge. This does not block named relational tables in VTX2 but matters for future heterogeneous source plans.",
+      "sources": ["https://github.com/substrait-io/substrait/issues/1172"]
+    }
+  ]
+}
