@@ -36,6 +36,8 @@ jobs:
           cache: pnpm
       - name: Install workspace dependencies
         run: pnpm install --frozen-lockfile
+      - name: Build Planning DB prerequisites
+        run: pnpm --filter @dvt/crypto build
       - name: Start and import Planning DB
         run: |
           pnpm planning:db:up
