@@ -92,19 +92,19 @@ describe('DVT Substrait VTX2 profile', () => {
       generator: '@bufbuild/protoc-gen-es@2.14.0',
       buf: '@bufbuild/buf@1.72.0',
     });
-    expect(DVT_SUBSTRAIT_VTX2_PROFILE.logicalRelations).toEqual([
-      'ReadRel',
-      'ProjectRel',
-      'FilterRel',
-      'JoinRel',
-      'SetRel',
-      'AggregateRel',
-      'SortRel',
-      'FetchRel',
-    ]);
-    expect(DVT_SUBSTRAIT_VTX2_PROFILE.failClosedGaps).toEqual([
-      'cardinality-changing-table-functions',
-    ]);
+    expect(DVT_SUBSTRAIT_VTX2_PROFILE).toEqual({
+      schemaVersion: 'dvt-substrait-profile.v1',
+      profileId: 'dvt.vtx2.substrait.v1',
+      spec: {
+        version: '0.101.0',
+        tag: 'v0.101.0',
+        commitSha: '2653e55516c8c07529cde9bc81c64e4ae3537515',
+        planProto: 'proto/substrait/plan.proto',
+      },
+      protobufToolchain: DVT_SUBSTRAIT_PROTOBUF_TOOLCHAIN,
+    });
+    expect(Object.keys(DVT_SUBSTRAIT_VTX2_PROFILE)).not.toContain('logicalRelations');
+    expect(Object.keys(DVT_SUBSTRAIT_VTX2_PROFILE)).not.toContain('expressionFamilies');
   });
 
   it('reports version skew as an explicit compatibility mismatch', () => {

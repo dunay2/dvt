@@ -3,10 +3,13 @@
  * identity-only authoring sidecar that binds stable DVT relation/field ids to
  * one exact serialized Substrait Plan.
  *
- * This contract does not redefine Substrait relations, expressions, types, or
- * functions. It persists profile coordinates, opaque canonical Plan bytes,
- * and only the DVT identity/provenance information required for editable
- * cards. SQL rendering, SQL parsing, provider validation, planning, and runtime
+ * This contract does not redefine Substrait relations, expressions, types,
+ * functions, or capability admission. Those semantics remain upstream and the
+ * admitted capability catalog is owned separately by SUB1. This boundary
+ * persists profile coordinates, opaque canonical Plan bytes, and only the DVT
+ * identity/provenance information required for editable cards.
+ *
+ * SQL rendering, SQL parsing, provider validation, planning, and runtime
  * execution remain outside this boundary.
  *
  * @baseline ADR-0064: Substrait semantic reference and bounded logical profile
@@ -57,30 +60,9 @@ export const DVT_SUBSTRAIT_PROTOBUF_TOOLCHAIN = {
 } as const;
 
 /**
- * Admission metadata only. The names refer to the exact upstream protobuf
- * concepts in v0.101.0; DVT does not define replacement classes for them.
+ * Exact implementation pin only. Capability membership is intentionally not
+ * repeated here: #2640 owns the single machine-readable semantic catalog.
  */
-export const DVT_SUBSTRAIT_VTX2_LOGICAL_RELATIONS = [
-  'ReadRel',
-  'ProjectRel',
-  'FilterRel',
-  'JoinRel',
-  'SetRel',
-  'AggregateRel',
-  'SortRel',
-  'FetchRel',
-] as const;
-
-export const DVT_SUBSTRAIT_VTX2_EXPRESSION_FAMILIES = [
-  'FieldReference',
-  'Literal',
-  'ScalarFunction',
-  'Cast',
-  'IfThen',
-  'AggregateFunction',
-  'WindowFunction',
-] as const;
-
 export const DVT_SUBSTRAIT_VTX2_PROFILE = {
   schemaVersion: DVT_SUBSTRAIT_PROFILE_SCHEMA_VERSION,
   profileId: DVT_SUBSTRAIT_PROFILE_ID,
@@ -91,11 +73,6 @@ export const DVT_SUBSTRAIT_VTX2_PROFILE = {
     planProto: 'proto/substrait/plan.proto',
   },
   protobufToolchain: DVT_SUBSTRAIT_PROTOBUF_TOOLCHAIN,
-  logicalRelations: DVT_SUBSTRAIT_VTX2_LOGICAL_RELATIONS,
-  expressionFamilies: DVT_SUBSTRAIT_VTX2_EXPRESSION_FAMILIES,
-  typeAuthority: 'substrait.Type',
-  functionAuthority: 'substrait.extensions',
-  failClosedGaps: ['cardinality-changing-table-functions'],
 } as const;
 
 export const DVT_SUBSTRAIT_PROFILE_REF_V1 = {
