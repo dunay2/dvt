@@ -156,6 +156,19 @@ describe('DVT Substrait capability catalog V1', () => {
     ).toBe(false);
   });
 
+  it('orders entry ids by locale-independent code units', () => {
+    const upper = standardEntry('relation', { sourceKind: 'core', message: 'I' });
+    const lower = standardEntry('relation', { sourceKind: 'core', message: 'i' });
+    const serialized = serializeDvtSubstraitCapabilityCatalogV1({
+      schemaVersion: DVT_SUBSTRAIT_CAPABILITY_CATALOG_SCHEMA_VERSION,
+      profile: DVT_SUBSTRAIT_PROFILE_REF_V1,
+      entries: [lower, upper],
+    });
+    const parsed = JSON.parse(serialized) as { entries: Array<{ entryId: string }> };
+
+    expect(parsed.entries.map((entry) => entry.entryId)).toEqual([upper.entryId, lower.entryId]);
+  });
+
   it('rejects duplicate entries and serializes independently of input ordering', () => {
     const canonical = serializeDvtSubstraitCapabilityCatalogV1(DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1);
     const reversed = {
