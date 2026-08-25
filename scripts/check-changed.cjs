@@ -121,19 +121,15 @@ const existingPrettierFiles = prettierFiles.filter((f) => fs.existsSync(path.joi
 const existingEslintFiles = eslintFiles.filter((f) => fs.existsSync(path.join(repoRoot, f)));
 
 if (existingPrettierFiles.length) {
-  console.log('Running Prettier write for temporary CI formatting audit:');
+  console.log('Running Prettier check on changed files:');
   console.log(existingPrettierFiles.join('\n'));
   const status = runToolBatched(
     (args) => runNodeCli('Prettier', PRETTIER_CLI, args),
-    ['--write', '--end-of-line', 'auto'],
+    ['--check', '--end-of-line', 'auto'],
     existingPrettierFiles,
     'Prettier files'
   );
   if (status !== 0) process.exit(status);
-
-  console.log('Exact Prettier diff for temporary formatting audit:');
-  spawnSync('git', ['diff', '--', ...existingPrettierFiles], { stdio: 'inherit' });
-  process.exit(1);
 }
 
 if (existingEslintFiles.length) {

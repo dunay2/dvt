@@ -22,10 +22,12 @@ import { z } from 'zod';
 
 import { ConnectedSourceRefSchema } from '../source-import/ConnectedSourceRef.v1.js';
 
-const NonBlankStringSchema = z.string().refine(
-  (value) => value.length > 0 && value === value.trim(),
-  'Expected a non-blank string without exterior whitespace.'
-);
+const NonBlankStringSchema = z
+  .string()
+  .refine(
+    (value) => value.length > 0 && value === value.trim(),
+    'Expected a non-blank string without exterior whitespace.'
+  );
 const Sha256Schema = z.string().regex(/^[0-9a-f]{64}$/, 'Expected a lowercase SHA-256 hex digest.');
 const Base64Schema = z
   .string()
