@@ -109,29 +109,27 @@ if (changed.length === 0) {
 const prettierFiles = changed.filter((f) => /\.(ts|tsx|js|cjs|mjs|json|md|yml|yaml)$/.test(f));
 const eslintFiles = changed
   .filter((f) => /\.(ts|tsx|js|cjs|mjs)$/.test(f))
+  // Exclude declaration files: ESLint typically ignores them and emits
+  // "File ignored because of a matching ignore pattern" warnings.
   .filter((f) => !f.endsWith('.d.ts'))
+  // Frontend is not yet part of the repo's root TypeScript/ESLint project setup.
+  // Exclude it from pre-push checks until it has its own tsconfig + eslint config integration.
   .filter((f) => !f.startsWith('packages/frontend/'));
 
+// remove deleted files from the lists
 const existingPrettierFiles = prettierFiles.filter((f) => fs.existsSync(path.join(repoRoot, f)));
 const existingEslintFiles = eslintFiles.filter((f) => fs.existsSync(path.join(repoRoot, f)));
 
 if (existingPrettierFiles.length) {
-  console.log('Running Prettier write to inspect exact output:');
+  console.log('Running Prettier check on changed files:');
   console.log(existingPrettierFiles.join('\n'));
   const status = runToolBatched(
     (args) => runNodeCli('Prettier', PRETTIER_CLI, args),
-    ['--write', '--end-of-line', 'auto'],
+    ['--check', '--end-of-line', 'auto'],
     existingPrettierFiles,
     'Prettier files'
   );
   if (status !== 0) process.exit(status);
-  const diff = spawnSync('git', ['diff', '--', ...existingPrettierFiles], {
-    cwd: repoRoot,
-    encoding: 'utf8',
-  });
-  process.stdout.write(diff.stdout ?? '');
-  process.stderr.write(diff.stderr ?? '');
-  process.exit(1);
 }
 
 if (existingEslintFiles.length) {
