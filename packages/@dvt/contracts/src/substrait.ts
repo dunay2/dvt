@@ -4,5 +4,7 @@
  * Keep this surface separate from the generic planner barrel: it exposes only
  * the exact Substrait profile coordinates, semantic Plan envelope, and DVT
  * stable authoring bindings selected by ADR-0064.
+ *
+ * @baseline ADR-0064: Substrait semantic reference and bounded logical profile
  */
 export * from './contracts/planner/DvtSubstraitProfile.v1.js';
