@@ -17,10 +17,10 @@ mitigation:
     Substrait structural/positional field references. The production profile pins Substrait v0.101.0
     at commit 2653e55516c8c07529cde9bc81c64e4ae3537515 and rejects profile/spec version or commit
     skew as a compatibility mismatch rather than semantic-plan corruption. The SUB1 capability
-    catalog is bound to that exact profile and records only selected upstream identities plus explicit
-    product gaps; catalog presence does not imply provider execution, UI exposure, or semantic
-    admission. The audited v0.102.0 delta remains governed by #2643 rather than silently entering the
-    pinned catalog.
+    catalog is bound to that exact profile and records only selected upstream identities plus
+    explicit product gaps; catalog presence does not imply provider execution, UI exposure, or
+    semantic admission. The audited v0.102.0 delta remains governed by #2643 rather than silently
+    entering the pinned catalog.
   evidence:
     - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
     - docs/evidence/ed-20260824-substrait-semantic-reference-traceability.md
