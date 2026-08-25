@@ -126,6 +126,35 @@ describe('Visual transform PostgreSQL compiler', () => {
     ).toBe(sql);
   });
 
+  it('accepts the timestamptz cast exposed by visual authoring', () => {
+    const recipe: VisualTransformRecipeV1 = {
+      ...RECIPE,
+      outputs: [
+        {
+          id: 'output-event-time',
+          name: 'event_time',
+          dataType: 'timestamptz',
+          expression: {
+            inputs: [{ nodeId: 'source-orders', columnName: 'created_at' }],
+            operations: [{ kind: 'cast', targetType: 'timestamptz' }],
+          },
+        },
+      ],
+      filters: [],
+    };
+
+    expect(
+      compileVisualTransformRecipeToPostgresSql({ recipe, sourceBinding: SOURCE_BINDING })
+    ).toBe(
+      [
+        'select',
+        '  cast("source orders"."created_at" as timestamptz) as "event_time"',
+        'from "raw"."orders" as "source orders";',
+        '',
+      ].join('\n')
+    );
+  });
+
   it('fails closed for missing outputs, unrelated inputs, unsafe casts, and invalid function args', () => {
     const cases: readonly [VisualTransformRecipeV1, string][] = [
       [{ ...RECIPE, outputs: [] }, 'empty_outputs'],

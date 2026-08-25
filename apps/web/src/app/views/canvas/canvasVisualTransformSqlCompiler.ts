@@ -41,6 +41,7 @@ const POSTGRES_CAST_TYPES = new Set([
   'numeric',
   'text',
   'timestamp',
+  'timestamptz',
   'timestamp with time zone',
   'timestamp without time zone',
   'uuid',
