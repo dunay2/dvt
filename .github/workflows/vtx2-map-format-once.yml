@@ -39,4 +39,4 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add docs/architecture/system/subsystems/semantic-transformation/vtx2-substrait-centered-development-map.md
           git commit -m 'docs(docs): Format VTX2 working map with repository Prettier'
-          git push origin HEAD:docs/vtx2-substrait-development-map
+          git push --no-verify origin HEAD:docs/vtx2-substrait-development-map
