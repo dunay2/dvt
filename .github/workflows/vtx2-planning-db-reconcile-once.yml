@@ -27,6 +27,8 @@ jobs:
           node-version: '22'
           cache: pnpm
       - run: pnpm install --frozen-lockfile --prefer-offline
+      - name: Build Planning DB crypto prerequisite
+        run: pnpm --filter @dvt/crypto build
       - name: Import Planning DB if stale
         run: pnpm planning:db:import --if-stale
       - name: Query canonical architecture designs
