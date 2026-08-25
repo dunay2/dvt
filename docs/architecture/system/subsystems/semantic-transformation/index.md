@@ -2,7 +2,7 @@
 title: Semantic Transformation Subsystem - VTX2 Target
 status: Target
 owner: Architecture / VTX2
-last_reviewed: 2026-08-24
+last_reviewed: 2026-08-25
 ---
 
 # Semantic Transformation Subsystem - VTX2 Target
@@ -18,6 +18,7 @@ branch already implements the complete flow.
 
 Governing decision: [ADR-0064](../../../../adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md).
 Detailed design: [VTX2 Substrait Semantic Reference Design](../../../../planning/proposals/mandatory/runtime-and-contracts/vtx2-substrait-semantic-reference-design-20260824.md).
+Pilot development pattern: [VTX2 Substrait-centered development map](./vtx2-substrait-centered-development-map.md).
 
 ## System Boundary
 
@@ -288,6 +289,8 @@ Target convergence includes:
 - #2642 - UI capability projection
 - #2643 - profile upgrade governance
 - #2524 - semantic workload lowering / rigid topology retirement
+- #2650 - Substrait-centered projection/cutover epic
+- #2651 - current SQL keep/convert/retire inventory
 
 ## Non-Goals
 
