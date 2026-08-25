@@ -12,6 +12,7 @@ import {
   findDvtSubstraitCapabilityV1,
   serializeDvtSubstraitCapabilityCatalogV1,
   type DvtSubstraitCapabilityCategory,
+  type DvtSubstraitStandardCapabilityV1,
   type DvtSubstraitStandardSemanticIdentityV1,
 } from '../src/substrait.js';
 
@@ -20,13 +21,13 @@ const EVIDENCE = ['dvt:#2640'];
 function standardEntry(
   category: DvtSubstraitCapabilityCategory,
   identity: DvtSubstraitStandardSemanticIdentityV1
-) {
+): DvtSubstraitStandardCapabilityV1 {
   return {
-    kind: 'standard' as const,
+    kind: 'standard',
     entryId: buildDvtSubstraitStandardCapabilityId(category, identity),
     category,
     identity,
-    profileStatus: 'candidate-standard' as const,
+    profileStatus: 'candidate-standard',
     evidenceRefs: EVIDENCE,
   };
 }
