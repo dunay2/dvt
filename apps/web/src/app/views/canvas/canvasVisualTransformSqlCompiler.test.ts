@@ -143,7 +143,9 @@ describe('Visual transform PostgreSQL compiler', () => {
       filters: [],
     };
 
-    expect(compileVisualTransformRecipeToPostgresSql({ recipe, sourceBinding: SOURCE_BINDING })).toBe(
+    expect(
+      compileVisualTransformRecipeToPostgresSql({ recipe, sourceBinding: SOURCE_BINDING })
+    ).toBe(
       [
         'select',
         '  cast("source orders"."created_at" as timestamptz) as "event_time"',
