@@ -259,19 +259,13 @@ const STUDY = 'dvt:#2640';
 const ALGEBRA = [STUDY, 'substrait:v0.101.0:proto/substrait/algebra.proto'];
 const TYPES = [STUDY, 'substrait:v0.101.0:proto/substrait/type.proto'];
 const FUNCTIONS_STRING = [STUDY, 'substrait:v0.101.0:extensions/functions_string.yaml'];
-const FUNCTIONS_COMPARISON = [
-  STUDY,
-  'substrait:v0.101.0:extensions/functions_comparison.yaml',
-];
+const FUNCTIONS_COMPARISON = [STUDY, 'substrait:v0.101.0:extensions/functions_comparison.yaml'];
 const FUNCTIONS_BOOLEAN = [STUDY, 'substrait:v0.101.0:extensions/functions_boolean.yaml'];
 const FUNCTIONS_AGGREGATE = [
   STUDY,
   'substrait:v0.101.0:extensions/functions_aggregate_generic.yaml',
 ];
-const FUNCTIONS_ARITHMETIC = [
-  STUDY,
-  'substrait:v0.101.0:extensions/functions_arithmetic.yaml',
-];
+const FUNCTIONS_ARITHMETIC = [STUDY, 'substrait:v0.101.0:extensions/functions_arithmetic.yaml'];
 const FUNCTIONS_DECIMAL = [
   STUDY,
   'substrait:v0.101.0:extensions/functions_arithmetic_decimal.yaml',
