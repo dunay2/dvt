@@ -156,9 +156,7 @@ describe('DVT Substrait capability catalog V1', () => {
   });
 
   it('rejects duplicate entries and serializes independently of input ordering', () => {
-    const canonical = serializeDvtSubstraitCapabilityCatalogV1(
-      DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1
-    );
+    const canonical = serializeDvtSubstraitCapabilityCatalogV1(DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1);
     const reversed = {
       ...DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1,
       entries: [...DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries]
