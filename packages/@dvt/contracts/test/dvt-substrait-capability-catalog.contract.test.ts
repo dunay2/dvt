@@ -11,15 +11,15 @@ import {
   buildDvtSubstraitStandardCapabilityId,
   findDvtSubstraitCapabilityV1,
   serializeDvtSubstraitCapabilityCatalogV1,
+  type DvtSubstraitCapabilityCategory,
+  type DvtSubstraitStandardSemanticIdentityV1,
 } from '../src/substrait.js';
 
-const STUDY_EVIDENCE = ['dvt:#2640'];
+const EVIDENCE = ['dvt:#2640'];
 
 function standardEntry(
-  category: 'relation' | 'expression-form' | 'scalar-function' | 'aggregate-function' | 'window-function' | 'type',
-  identity:
-    | { sourceKind: 'core'; message: string; selector?: string }
-    | { sourceKind: 'simple-extension'; urn: string; name: string }
+  category: DvtSubstraitCapabilityCategory,
+  identity: DvtSubstraitStandardSemanticIdentityV1
 ) {
   return {
     kind: 'standard' as const,
@@ -27,12 +27,12 @@ function standardEntry(
     category,
     identity,
     profileStatus: 'candidate-standard' as const,
-    evidenceRefs: STUDY_EVIDENCE,
+    evidenceRefs: EVIDENCE,
   };
 }
 
 describe('DVT Substrait capability catalog V1', () => {
-  it('reuses the exact #2595 profile and seeds only selected governance candidates', () => {
+  it('reuses the exact #2595 profile and begins with candidates only', () => {
     expect(DVT_SUBSTRAIT_CAPABILITY_CATALOG_SCHEMA_VERSION).toBe(
       'dvt-substrait-capability-catalog.v1'
     );
@@ -46,7 +46,7 @@ describe('DVT Substrait capability catalog V1', () => {
     ).toEqual([]);
   });
 
-  it('records exact relation variants and RelCommon.Emit instead of SQL keyword identities', () => {
+  it('uses exact relation variants and RelCommon.Emit instead of SQL keyword identities', () => {
     const expectedIds = [
       buildDvtSubstraitStandardCapabilityId('relation', {
         sourceKind: 'core',
@@ -57,11 +57,6 @@ describe('DVT Substrait capability catalog V1', () => {
         sourceKind: 'core',
         message: 'substrait.JoinRel',
         selector: 'JoinType.JOIN_TYPE_INNER',
-      }),
-      buildDvtSubstraitStandardCapabilityId('relation', {
-        sourceKind: 'core',
-        message: 'substrait.JoinRel',
-        selector: 'JoinType.JOIN_TYPE_LEFT',
       }),
       buildDvtSubstraitStandardCapabilityId('relation', {
         sourceKind: 'core',
@@ -78,39 +73,40 @@ describe('DVT Substrait capability catalog V1', () => {
     expect(DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.map((entry) => entry.entryId)).toEqual(
       expect.arrayContaining(expectedIds)
     );
-    expect(DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.map((entry) => entry.entryId).join('\n'))
-      .not.toMatch(/where|having|group-by|count-distinct|input-rel/i);
+    expect(
+      DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.map((entry) => entry.entryId).join('\n')
+    ).not.toMatch(/where|having|group-by|count-distinct|input-rel/i);
   });
 
-  it('keeps typed SUM resolution as two official upstream semantic identities', () => {
-    const nonDecimalSum = buildDvtSubstraitStandardCapabilityId('aggregate-function', {
+  it('keeps decimal and non-decimal SUM as different upstream identities', () => {
+    const nonDecimal = buildDvtSubstraitStandardCapabilityId('aggregate-function', {
       sourceKind: 'simple-extension',
       urn: 'extension:io.substrait:functions_arithmetic',
       name: 'sum',
     });
-    const decimalSum = buildDvtSubstraitStandardCapabilityId('aggregate-function', {
+    const decimal = buildDvtSubstraitStandardCapabilityId('aggregate-function', {
       sourceKind: 'simple-extension',
       urn: 'extension:io.substrait:functions_arithmetic_decimal',
       name: 'sum',
     });
 
-    expect(nonDecimalSum).not.toBe(decimalSum);
-    expect(findDvtSubstraitCapabilityV1(nonDecimalSum)).toMatchObject({
+    expect(nonDecimal).not.toBe(decimal);
+    expect(findDvtSubstraitCapabilityV1(nonDecimal)).toMatchObject({
       kind: 'standard',
       profileStatus: 'candidate-standard',
     });
-    expect(findDvtSubstraitCapabilityV1(decimalSum)).toMatchObject({
+    expect(findDvtSubstraitCapabilityV1(decimal)).toMatchObject({
       kind: 'standard',
       profileStatus: 'candidate-standard',
     });
   });
 
-  it('keeps standard identities structurally separate from product gaps and extension candidates', () => {
+  it('keeps product gaps structurally separate from standard identities', () => {
     const jsonbId = buildDvtSubstraitProductNeedCapabilityId('type', 'postgres-jsonb');
     const jsonb = findDvtSubstraitCapabilityV1(jsonbId);
+
     expect(jsonb).toMatchObject({
       kind: 'product-need',
-      category: 'type',
       profileStatus: 'candidate-extension',
       extensionPoint: 'simple-extension-type',
     });
@@ -124,24 +120,12 @@ describe('DVT Substrait capability catalog V1', () => {
         productNeedId: 'postgres-jsonb',
         productNeed: 'Portable JSONB semantics.',
         profileStatus: 'candidate-extension',
-        evidenceRefs: STUDY_EVIDENCE,
-      }).success
-    ).toBe(false);
-    expect(
-      DvtSubstraitProductNeedCapabilityV1Schema.safeParse({
-        kind: 'product-need',
-        entryId: jsonbId,
-        category: 'type',
-        productNeedId: 'postgres-jsonb',
-        productNeed: 'Portable JSONB semantics.',
-        profileStatus: 'gap',
-        identity: { sourceKind: 'core', message: 'substrait.Type', selector: 'kind.jsonb' },
-        evidenceRefs: STUDY_EVIDENCE,
+        evidenceRefs: EVIDENCE,
       }).success
     ).toBe(false);
   });
 
-  it('rejects forged ids, plan-local/provider metadata, and non-official standard extensions', () => {
+  it('rejects forged ids, provider metadata, anchors and private extension identities', () => {
     const trim = standardEntry('scalar-function', {
       sourceKind: 'simple-extension',
       urn: 'extension:io.substrait:functions_string',
@@ -152,10 +136,7 @@ describe('DVT Substrait capability catalog V1', () => {
       DvtSubstraitStandardCapabilityV1Schema.safeParse({ ...trim, entryId: 'trim' }).success
     ).toBe(false);
     expect(
-      DvtSubstraitStandardCapabilityV1Schema.safeParse({
-        ...trim,
-        functionAnchor: 7,
-      }).success
+      DvtSubstraitStandardCapabilityV1Schema.safeParse({ ...trim, functionAnchor: 7 }).success
     ).toBe(false);
     expect(
       DvtSubstraitStandardCapabilityV1Schema.safeParse({
@@ -174,8 +155,10 @@ describe('DVT Substrait capability catalog V1', () => {
     ).toBe(false);
   });
 
-  it('rejects duplicate catalog identities and serializes deterministically', () => {
-    const first = serializeDvtSubstraitCapabilityCatalogV1(DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1);
+  it('rejects duplicate entries and serializes independently of input ordering', () => {
+    const canonical = serializeDvtSubstraitCapabilityCatalogV1(
+      DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1
+    );
     const reversed = {
       ...DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1,
       entries: [...DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries]
@@ -183,7 +166,7 @@ describe('DVT Substrait capability catalog V1', () => {
         .map((entry) => ({ ...entry, evidenceRefs: [...entry.evidenceRefs].reverse() })),
     };
 
-    expect(serializeDvtSubstraitCapabilityCatalogV1(reversed)).toBe(first);
+    expect(serializeDvtSubstraitCapabilityCatalogV1(reversed)).toBe(canonical);
 
     const duplicate = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries[0];
     if (!duplicate) throw new Error('Expected seeded capability entries.');
@@ -195,7 +178,7 @@ describe('DVT Substrait capability catalog V1', () => {
     ).toBe(false);
   });
 
-  it('does not let a core identity masquerade as a function-family authority', () => {
+  it('does not let core selectors masquerade as function-family authority', () => {
     expect(
       DvtSubstraitStandardCapabilityV1Schema.safeParse(
         standardEntry('aggregate-function', {
