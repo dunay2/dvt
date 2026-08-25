@@ -9,10 +9,14 @@ arc_level: ARC-2
 breaking: false
 code_refs:
   - packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts
+  - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProfile.v1.ts
+  - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts
+  - packages/@dvt/contracts/src/substrait.ts
 evidence:
   tests:
     - pnpm traceability:adr0
     - pnpm --filter @dvt/contracts typecheck
+    - pnpm --filter @dvt/contracts test -- test/dvt-substrait-profile.contract.test.ts test/dvt-substrait-capability-catalog.contract.test.ts
     - pnpm lint:md:changed
     - pnpm docs:gov:frontmatter:changed
     - pnpm docs:gov:links:changed
@@ -20,18 +24,21 @@ evidence:
 
 ## Summary
 
-This evidence records the normative traceability added for ADR-0064 while the
-full Substrait-backed semantic transformation subsystem remains target VTX2
-architecture.
+This evidence records the production traceability for ADR-0064 across two
+separate concerns:
 
-No runtime, planner, provider, persistence, or transformation behavior changes
-in this slice.
+- the exact pinned Substrait semantic Plan/profile plus DVT stable authoring
+  sidecar delivered by #2595/#2646;
+- the bounded SUB1 semantic capability catalog owned by #2640.
 
-## Implemented Consequence
+The catalog is product-governance metadata over selected upstream identities. It
+does not add another relational IR and it cannot enable provider execution or
+visual authoring by entry presence alone.
 
-`ExecutionPlan.v1.ts` already models generic runtime steps independently from
-SQL or relational operator taxonomy. ADR-0064 makes that existing separation an
-explicit architectural invariant:
+## Runtime boundary remains unchanged
+
+`ExecutionPlan.v1.ts` models generic runtime steps independently from SQL or
+relational operator taxonomy. ADR-0064 keeps this architectural invariant:
 
 ```text
 Substrait logical operator count
@@ -39,38 +46,56 @@ Substrait logical operator count
 != ExecutionPlan step count
 ```
 
-The source change in this PR is therefore comment-only traceability:
+No Substrait relation, expression, type or function becomes a runtime step kind
+through the capability catalog.
 
-- `@baseline ADR-0064` binds the existing `ExecutionPlan` contract to the
-  decision that logical transformation semantics stay outside runtime planning;
-- no Substrait plan, relation, expression, type, or function is added to
-  `ExecutionPlan`;
-- no step kinds, schemas, planner inputs, retries, dependencies, or runtime
-  behavior are changed.
+## Production Substrait profile
 
-## Target Architecture Evidence
+`DvtSubstraitProfile.v1.ts` owns the exact semantic profile boundary:
 
-The same PR adds target-only architecture documentation for the future semantic
-transformation subsystem:
+- Substrait `v0.101.0`;
+- commit `2653e55516c8c07529cde9bc81c64e4ae3537515`;
+- verified serialized Plan envelope;
+- stable DVT `RelationId` / `FieldId` authoring sidecar;
+- explicit profile/version compatibility diagnostics.
 
-- ADR-0064 - bounded Substrait semantic reference/profile;
-- VTX2 Substrait semantic reference design;
-- target semantic-transformation subsystem entry in system architecture.
+The capability catalog imports that profile reference rather than restating a
+second version authority.
 
-Those documents are explicitly marked as target architecture and are not used
-as evidence that the Substrait production profile/sidecar is already
-implemented.
+## Capability catalog consequence
+
+`DvtSubstraitCapabilityCatalog.v1.ts` adds one deterministic read model with two
+structurally distinct entry forms:
+
+1. standard-backed entries whose IDs are derived from exact Substrait core
+   selectors or official `extension:io.substrait:*` identities;
+2. DVT product needs that are explicitly `candidate-extension` or `gap` and
+   cannot pretend to own an upstream semantic identity.
+
+The initial seed is deliberately bounded to VTX2 and VTX1 migration needs. It
+records zero `supported-profile` entries because #2641 owns semantic admission
+and conformance evidence.
+
+Provider support remains a separate renderer/dialect projection. Visual labels
+and actions remain #2642 presentation metadata.
+
+## Current upstream drift review
+
+The #2640 study compared the pinned `v0.101.0` profile with current upstream
+`v0.102.0`. The material delta is limited to window-bound evolution and a
+decimal `negate` overload; it does not justify silently repinning the product
+profile. #2643 remains the only owner of profile upgrade and capability-delta
+admission.
 
 ## Validation
 
-Required gates for this slice are:
+Required gates for the catalog slice are:
 
-- changed-file Prettier/ESLint and Markdown lint;
+- focused contracts typecheck/tests and deterministic serialization tests;
 - ARC policy/document evidence validation;
 - ADR-0000 forward/reverse traceability;
-- contracts typecheck/tests selected by CI;
-- documentation filename/frontmatter/link/governance checks;
-- repository PR quality, contracts/determinism, test, CodeQL, and dependency
-  review workflows.
+- architecture dependency boundaries;
+- repository contracts/determinism, test, CodeQL and dependency-review
+  workflows.
 
 The PR is merged only after required checks complete successfully.

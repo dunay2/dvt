@@ -14,16 +14,24 @@ mitigation:
     ADR-0064 requires an exact pinned Substrait logical profile, explicit profile/version identity,
     serialization and compatibility fixtures, fail-closed unsupported features, and provider-native
     readiness after rendering. DVT stable RelationId/FieldId authoring identity remains outside raw
-    Substrait structural/positional field references. The first production contract now pins
-    Substrait v0.101.0 at commit 2653e55516c8c07529cde9bc81c64e4ae3537515 and rejects profile/spec
-    version or commit skew as a compatibility mismatch rather than semantic-plan corruption.
+    Substrait structural/positional field references. The production profile pins Substrait v0.101.0
+    at commit 2653e55516c8c07529cde9bc81c64e4ae3537515 and rejects profile/spec version or commit
+    skew as a compatibility mismatch rather than semantic-plan corruption. The SUB1 capability
+    catalog is bound to that exact profile and records only selected upstream identities plus
+    explicit product gaps; catalog presence does not imply provider execution, UI exposure, or
+    semantic admission. The audited v0.102.0 delta remains governed by #2643 rather than silently
+    entering the pinned catalog.
   evidence:
     - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
     - docs/evidence/ed-20260824-substrait-semantic-reference-traceability.md
     - docs/planning/proposals/mandatory/runtime-and-contracts/vtx2-substrait-semantic-reference-design-20260824.md
     - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProfile.v1.ts
+    - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts
     - packages/@dvt/contracts/test/dvt-substrait-profile.contract.test.ts
+    - packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts
   follow_up:
     - Issue #2597 must prove SQL AST/source mapping to the pinned semantic profile and governed target rendering.
+    - Issue #2641 owns semantic admission/conformance and the first promotion to supported-profile.
+    - Issue #2642 must project admitted capabilities into visual authoring without a second semantic registry.
     - Issue #2599 must prove semantic roundtrip and provider-native Preview against the exact profile.
-    - Issue #2643 governs future profile upgrades, version skew, compatibility fixtures, and fail-closed gaps.
+    - Issue #2643 governs future profile upgrades, version skew, capability deltas, compatibility fixtures, and fail-closed gaps.
