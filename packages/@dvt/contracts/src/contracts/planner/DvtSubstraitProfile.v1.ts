@@ -22,10 +22,12 @@ import { z } from 'zod';
 
 import { ConnectedSourceRefSchema } from '../source-import/ConnectedSourceRef.v1.js';
 
-const NonBlankStringSchema = z.string().refine(
-  (value) => value.length > 0 && value === value.trim(),
-  'Expected a non-blank string without exterior whitespace.'
-);
+const NonBlankStringSchema = z
+  .string()
+  .refine(
+    (value) => value.length > 0 && value === value.trim(),
+    'Expected a non-blank string without exterior whitespace.'
+  );
 const Sha256Schema = z.string().regex(/^[0-9a-f]{64}$/, 'Expected a lowercase SHA-256 hex digest.');
 const Base64Schema = z
   .string()
@@ -221,16 +223,10 @@ export const DvtSubstraitSemanticDocumentV1Schema = z
 
 export type DvtSubstraitProfileRefV1 = z.infer<typeof DvtSubstraitProfileRefV1Schema>;
 export type DvtSubstraitSemanticPlanV1 = z.infer<typeof DvtSubstraitSemanticPlanV1Schema>;
-export type DvtSubstraitRelationBindingV1 = z.infer<
-  typeof DvtSubstraitRelationBindingV1Schema
->;
+export type DvtSubstraitRelationBindingV1 = z.infer<typeof DvtSubstraitRelationBindingV1Schema>;
 export type DvtSubstraitFieldBindingV1 = z.infer<typeof DvtSubstraitFieldBindingV1Schema>;
-export type DvtSubstraitAuthoringSidecarV1 = z.infer<
-  typeof DvtSubstraitAuthoringSidecarV1Schema
->;
-export type DvtSubstraitSemanticDocumentV1 = z.infer<
-  typeof DvtSubstraitSemanticDocumentV1Schema
->;
+export type DvtSubstraitAuthoringSidecarV1 = z.infer<typeof DvtSubstraitAuthoringSidecarV1Schema>;
+export type DvtSubstraitSemanticDocumentV1 = z.infer<typeof DvtSubstraitSemanticDocumentV1Schema>;
 
 export type DvtSubstraitProfileCompatibility =
   | { status: 'compatible' }

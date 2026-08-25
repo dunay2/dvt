@@ -132,16 +132,10 @@ describe('DVT Substrait VTX2 profile', () => {
 
 describe('DVT Substrait semantic document and authoring sidecar', () => {
   it('accepts one exact semantic Plan envelope plus identity-only bindings', () => {
-    expect(DVT_SUBSTRAIT_SEMANTIC_DOCUMENT_SCHEMA_VERSION).toBe(
-      'dvt-substrait-semantic-document.v1'
-    );
-    expect(DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION).toBe(
-      'dvt-substrait-authoring-sidecar.v1'
-    );
+    expect(DVT_SUBSTRAIT_SEMANTIC_DOCUMENT_SCHEMA_VERSION).toBe('dvt-substrait-semantic-document.v1');
+    expect(DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION).toBe('dvt-substrait-authoring-sidecar.v1');
     expect(DVT_SUBSTRAIT_PLAN_ENCODING).toBe('substrait-plan-protobuf-base64');
-    expect(DvtSubstraitSemanticDocumentV1Schema.parse(SEMANTIC_DOCUMENT)).toEqual(
-      SEMANTIC_DOCUMENT
-    );
+    expect(DvtSubstraitSemanticDocumentV1Schema.parse(SEMANTIC_DOCUMENT)).toEqual(SEMANTIC_DOCUMENT);
   });
 
   it('verifies the declared SHA-256 against the actual serialized Plan bytes', () => {
