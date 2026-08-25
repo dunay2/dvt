@@ -22,12 +22,10 @@ import { z } from 'zod';
 
 import { ConnectedSourceRefSchema } from '../source-import/ConnectedSourceRef.v1.js';
 
-const NonBlankStringSchema = z
-  .string()
-  .refine(
-    (value) => value.length > 0 && value === value.trim(),
-    'Expected a non-blank string without exterior whitespace.'
-  );
+const NonBlankStringSchema = z.string().refine(
+  (value) => value.length > 0 && value === value.trim(),
+  'Expected a non-blank string without exterior whitespace.'
+);
 const Sha256Schema = z.string().regex(/^[0-9a-f]{64}$/, 'Expected a lowercase SHA-256 hex digest.');
 const Base64Schema = z
   .string()
@@ -45,8 +43,7 @@ export const DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION =
 export const DVT_SUBSTRAIT_PROFILE_ID = 'dvt.vtx2.substrait.v1' as const;
 export const DVT_SUBSTRAIT_SPEC_VERSION = '0.101.0' as const;
 export const DVT_SUBSTRAIT_SPEC_TAG = 'v0.101.0' as const;
-export const DVT_SUBSTRAIT_SPEC_COMMIT_SHA =
-  '2653e55516c8c07529cde9bc81c64e4ae3537515' as const;
+export const DVT_SUBSTRAIT_SPEC_COMMIT_SHA = '2653e55516c8c07529cde9bc81c64e4ae3537515' as const;
 export const DVT_SUBSTRAIT_PLAN_ENCODING = 'substrait-plan-protobuf-base64' as const;
 
 /**

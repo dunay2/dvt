@@ -84,9 +84,7 @@ describe('DVT Substrait VTX2 profile', () => {
     expect(DVT_SUBSTRAIT_PROFILE_SCHEMA_VERSION).toBe('dvt-substrait-profile.v1');
     expect(DVT_SUBSTRAIT_PROFILE_ID).toBe('dvt.vtx2.substrait.v1');
     expect(DVT_SUBSTRAIT_SPEC_VERSION).toBe('0.101.0');
-    expect(DVT_SUBSTRAIT_SPEC_COMMIT_SHA).toBe(
-      '2653e55516c8c07529cde9bc81c64e4ae3537515'
-    );
+    expect(DVT_SUBSTRAIT_SPEC_COMMIT_SHA).toBe('2653e55516c8c07529cde9bc81c64e4ae3537515');
     expect(DVT_SUBSTRAIT_PROTOBUF_TOOLCHAIN).toEqual({
       runtime: '@bufbuild/protobuf@2.14.0',
       generator: '@bufbuild/protoc-gen-es@2.14.0',
