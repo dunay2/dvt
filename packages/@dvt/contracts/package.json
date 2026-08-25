@@ -9,6 +9,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./substrait": {
+      "types": "./dist/substrait.d.ts",
+      "import": "./dist/substrait.js",
+      "default": "./dist/substrait.js"
     }
   },
   "private": true,

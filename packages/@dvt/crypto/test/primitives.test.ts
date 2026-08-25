@@ -3,6 +3,7 @@ import { runInNewContext } from 'node:vm';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  base64Bytes,
   createSha256Hasher,
   jcsCanonicalize,
   md5Hex,
@@ -17,9 +18,19 @@ import {
 
 import { deterministicUuidV7Vector, md5Vectors, sha256Vectors } from './vectors.js';
 
-describe('UTF-8 and SHA-256', () => {
+describe('UTF-8, base64, and SHA-256', () => {
   it('encodes text explicitly as UTF-8', () => {
     expect([...utf8Bytes('€')]).toEqual([0xe2, 0x82, 0xac]);
+  });
+
+  it('decodes canonical base64 without a Node Buffer dependency', () => {
+    expect([...base64Bytes('')]).toEqual([]);
+    expect([...base64Bytes('YQ==')]).toEqual([0x61]);
+    expect([...base64Bytes('YWI=')]).toEqual([0x61, 0x62]);
+    expect([...base64Bytes('YWJj')]).toEqual([0x61, 0x62, 0x63]);
+    expect([...base64Bytes('4oKs')]).toEqual([0xe2, 0x82, 0xac]);
+    expect(() => base64Bytes('not canonical base64')).toThrow('CRYPTO_BASE64_TEXT_INVALID');
+    expect(() => base64Bytes('YQ=')).toThrow('CRYPTO_BASE64_TEXT_INVALID');
   });
 
   it.each(sha256Vectors)('matches the $name byte vector', ({ bytes, hex }) => {
