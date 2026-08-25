@@ -98,6 +98,11 @@ function encodeCapabilitySegments(segments: readonly string[]): string {
   return segments.map((segment) => encodeURIComponent(segment)).join('/');
 }
 
+function compareCodeUnitStrings(left: string, right: string): number {
+  if (left === right) return 0;
+  return left < right ? -1 : 1;
+}
+
 export function buildDvtSubstraitStandardCapabilityId(
   category: DvtSubstraitCapabilityCategory,
   identity: DvtSubstraitStandardSemanticIdentityV1
@@ -246,8 +251,11 @@ export function canonicalizeDvtSubstraitCapabilityCatalogV1(
     schemaVersion: parsed.schemaVersion,
     profile: parsed.profile,
     entries: parsed.entries
-      .map((entry) => ({ ...entry, evidenceRefs: [...entry.evidenceRefs].sort() }))
-      .sort((left, right) => left.entryId.localeCompare(right.entryId)),
+      .map((entry) => ({
+        ...entry,
+        evidenceRefs: [...entry.evidenceRefs].sort(compareCodeUnitStrings),
+      }))
+      .sort((left, right) => compareCodeUnitStrings(left.entryId, right.entryId)),
   };
 }
 
