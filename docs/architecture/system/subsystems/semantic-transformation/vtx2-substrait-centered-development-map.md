@@ -76,18 +76,18 @@ Do not introduce `DvtRelationalIR`, `VisualTransformRecipeV2`, operation-specifi
 
 The names below describe responsibilities observed or required by the current pilot direction. They do **not** authorize a new class/module. Existing owners must be reused where present, and any missing public responsibility requires Planning DB reconciliation before architectural promotion.
 
-| Component / responsibility | Current posture | Pilot use | Rule |
-|---|---|---|---|
-| `@dvt/contracts/substrait` profile + sidecar + capability catalog | EXISTING | exact profile, stable IDs, semantic capability identities | reuse; do not duplicate |
-| generated Substrait v0.101.0 TypeScript bindings | VERIFY / MINIMUM NEED | typed `Plan`, `ReadRel`, `ProjectRel`, field references and scalar functions needed by pilot | reuse generated ownership if present; otherwise add only after owner/relation reconciliation |
-| existing DVT Card / Node Properties | EXISTING | first editable visual projection | reuse current surface |
-| existing Graph Draft Apply / Cancel / reload path | EXISTING | draft lifecycle | reuse; no new state authority |
-| existing persistence path | EXISTING / VERIFY | persist serialized recipe | reuse if source inspection proves compatible |
-| protobuf encode/decode + SHA integrity | EXISTING CONCERN / VERIFY OWNER | serialize typed Plan for storage/transport | infrastructure only; not semantic authority |
-| SQL projection responsibility | FUTURE AFTER PILOT / OWNER TBD | map admitted Substrait semantics to SQLGlot AST | no framework or public component until Planning DB/source ownership is reconciled |
-| SQLGlot | EXTERNAL CANDIDATE | target AST + dialect rendering | #2618 decides bounded outbound role |
-| provider-native SQL readiness / Preview / Run | EXISTING | final target validation/execution readiness | keep |
-| generated projection artifact identity/storage | DEFERRED | identify/store/cache derived outputs if evidence requires it | decide after real Substrait -> SQL evidence |
+| Component / responsibility                                        | Current posture                 | Pilot use                                                                                    | Rule                                                                                         |
+| ----------------------------------------------------------------- | ------------------------------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `@dvt/contracts/substrait` profile + sidecar + capability catalog | EXISTING                        | exact profile, stable IDs, semantic capability identities                                    | reuse; do not duplicate                                                                      |
+| generated Substrait v0.101.0 TypeScript bindings                  | VERIFY / MINIMUM NEED           | typed `Plan`, `ReadRel`, `ProjectRel`, field references and scalar functions needed by pilot | reuse generated ownership if present; otherwise add only after owner/relation reconciliation |
+| existing DVT Card / Node Properties                               | EXISTING                        | first editable visual projection                                                             | reuse current surface                                                                        |
+| existing Graph Draft Apply / Cancel / reload path                 | EXISTING                        | draft lifecycle                                                                              | reuse; no new state authority                                                                |
+| existing persistence path                                        | EXISTING / VERIFY               | persist serialized recipe                                                                    | reuse if source inspection proves compatible                                                 |
+| protobuf encode/decode + SHA integrity                            | EXISTING CONCERN / VERIFY OWNER | serialize typed Plan for storage/transport                                                    | infrastructure only; not semantic authority                                                  |
+| SQL projection responsibility                                    | FUTURE AFTER PILOT / OWNER TBD  | map admitted Substrait semantics to SQLGlot AST                                               | no framework or public component until Planning DB/source ownership is reconciled            |
+| SQLGlot                                                          | EXTERNAL CANDIDATE              | target AST + dialect rendering                                                               | #2618 decides bounded outbound role                                                          |
+| provider-native SQL readiness / Preview / Run                    | EXISTING                        | final target validation/execution readiness                                                   | keep                                                                                         |
+| generated projection artifact identity/storage                   | DEFERRED                        | identify/store/cache derived outputs if evidence requires it                                  | decide after real Substrait -> SQL evidence                                                  |
 
 ## Pilot implementation pattern
 
