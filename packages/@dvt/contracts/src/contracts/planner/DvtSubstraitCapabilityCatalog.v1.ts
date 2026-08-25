@@ -1,11 +1,9 @@
 /**
- * Owned concern: catalogue the selected Substrait semantic identities DVT may
+ * Owned concern: catalogue selected Substrait semantic identities that DVT may
  * admit into the exact pinned VTX2 profile without redefining their meaning.
  *
- * Substrait remains the semantic authority. This catalog owns only DVT product
- * governance state over selected upstream identities and explicit product gaps.
- * Provider execution support, visual exposure, SQL rendering and admission
- * conformance remain separate concerns.
+ * Provider execution, visual exposure, rendering and semantic admission remain
+ * separate concerns. This file owns only DVT product-governance state.
  *
  * @baseline ADR-0064: Substrait semantic reference and bounded logical profile
  * @decision Keep one small versioned governance overlay over exact Substrait identities instead of duplicating its algebra or provider capability model.
@@ -25,7 +23,7 @@ const NonBlankStringSchema = z
     (value) => value.length > 0 && value === value.trim(),
     'Expected a non-blank string without exterior whitespace.'
   );
-const OfficialSubstraitExtensionUrnSchema = z
+const OfficialExtensionUrnSchema = z
   .string()
   .regex(
     /^extension:io\.substrait:[a-z0-9_.-]+$/,
@@ -50,8 +48,8 @@ export const DVT_SUBSTRAIT_STANDARD_PROFILE_STATUS = [
 export const DVT_SUBSTRAIT_PRODUCT_NEED_STATUS = ['candidate-extension', 'gap'] as const;
 
 export const DvtSubstraitCapabilityCategorySchema = z.enum(DVT_SUBSTRAIT_CAPABILITY_CATEGORY);
-const DvtSubstraitStandardProfileStatusSchema = z.enum(DVT_SUBSTRAIT_STANDARD_PROFILE_STATUS);
-const DvtSubstraitProductNeedStatusSchema = z.enum(DVT_SUBSTRAIT_PRODUCT_NEED_STATUS);
+const StandardProfileStatusSchema = z.enum(DVT_SUBSTRAIT_STANDARD_PROFILE_STATUS);
+const ProductNeedStatusSchema = z.enum(DVT_SUBSTRAIT_PRODUCT_NEED_STATUS);
 
 export const DvtSubstraitCoreSemanticIdentityV1Schema = z
   .object({
@@ -64,7 +62,7 @@ export const DvtSubstraitCoreSemanticIdentityV1Schema = z
 export const DvtSubstraitSimpleExtensionSemanticIdentityV1Schema = z
   .object({
     sourceKind: z.literal('simple-extension'),
-    urn: OfficialSubstraitExtensionUrnSchema,
+    urn: OfficialExtensionUrnSchema,
     name: NonBlankStringSchema,
   })
   .strict();
@@ -78,31 +76,6 @@ export type DvtSubstraitCapabilityCategory = z.infer<typeof DvtSubstraitCapabili
 export type DvtSubstraitStandardSemanticIdentityV1 = z.infer<
   typeof DvtSubstraitStandardSemanticIdentityV1Schema
 >;
-
-function encodeCapabilitySegment(value: string): string {
-  return encodeURIComponent(value);
-}
-
-export function buildDvtSubstraitStandardCapabilityId(
-  category: DvtSubstraitCapabilityCategory,
-  identity: DvtSubstraitStandardSemanticIdentityV1
-): string {
-  const segments =
-    identity.sourceKind === 'core'
-      ? ['substrait', 'core', category, identity.message, identity.selector]
-      : ['substrait', 'simple-extension', category, identity.urn, identity.name];
-  return segments
-    .filter((segment): segment is string => segment !== undefined)
-    .map(encodeCapabilitySegment)
-    .join('/');
-}
-
-export function buildDvtSubstraitProductNeedCapabilityId(
-  category: DvtSubstraitCapabilityCategory,
-  productNeedId: string
-): string {
-  return ['dvt', 'product-need', category, productNeedId].map(encodeCapabilitySegment).join('/');
-}
 
 const EvidenceRefsSchema = z
   .array(NonBlankStringSchema)
@@ -121,35 +94,64 @@ const EvidenceRefsSchema = z
     });
   });
 
+function encodeCapabilitySegments(segments: readonly string[]): string {
+  return segments.map((segment) => encodeURIComponent(segment)).join('/');
+}
+
+export function buildDvtSubstraitStandardCapabilityId(
+  category: DvtSubstraitCapabilityCategory,
+  identity: DvtSubstraitStandardSemanticIdentityV1
+): string {
+  if (identity.sourceKind === 'core') {
+    return encodeCapabilitySegments(
+      ['substrait', 'core', category, identity.message, identity.selector].filter(
+        (segment): segment is string => segment !== undefined
+      )
+    );
+  }
+  return encodeCapabilitySegments([
+    'substrait',
+    'simple-extension',
+    category,
+    identity.urn,
+    identity.name,
+  ]);
+}
+
+export function buildDvtSubstraitProductNeedCapabilityId(
+  category: DvtSubstraitCapabilityCategory,
+  productNeedId: string
+): string {
+  return encodeCapabilitySegments(['dvt', 'product-need', category, productNeedId]);
+}
+
 export const DvtSubstraitStandardCapabilityV1Schema = z
   .object({
     kind: z.literal('standard'),
     entryId: NonBlankStringSchema,
     category: DvtSubstraitCapabilityCategorySchema,
     identity: DvtSubstraitStandardSemanticIdentityV1Schema,
-    profileStatus: DvtSubstraitStandardProfileStatusSchema,
+    profileStatus: StandardProfileStatusSchema,
     evidenceRefs: EvidenceRefsSchema,
   })
   .strict()
   .superRefine((entry, context) => {
-    const expectedEntryId = buildDvtSubstraitStandardCapabilityId(entry.category, entry.identity);
-    if (entry.entryId !== expectedEntryId) {
+    const expectedId = buildDvtSubstraitStandardCapabilityId(entry.category, entry.identity);
+    if (entry.entryId !== expectedId) {
       context.addIssue({
         code: 'custom',
-        message: `Capability entryId must be derived from the exact Substrait identity: ${expectedEntryId}.`,
+        message: `Capability entryId must be derived from the exact Substrait identity: ${expectedId}.`,
         path: ['entryId'],
       });
     }
 
-    const functionCategories = new Set<DvtSubstraitCapabilityCategory>([
-      'scalar-function',
-      'aggregate-function',
-      'window-function',
-    ]);
-    if (entry.identity.sourceKind === 'core' && functionCategories.has(entry.category)) {
+    const functionCategory = ['scalar-function', 'aggregate-function', 'window-function'].includes(
+      entry.category
+    );
+    if (entry.identity.sourceKind === 'core' && functionCategory) {
       context.addIssue({
         code: 'custom',
-        message: 'Substrait function families must use their official simple-extension identity.',
+        message: 'Substrait function families require their official simple-extension identity.',
         path: ['identity'],
       });
     }
@@ -159,7 +161,8 @@ export const DvtSubstraitStandardCapabilityV1Schema = z
     ) {
       context.addIssue({
         code: 'custom',
-        message: 'Relations and expression forms in the standard-backed catalog require core identity.',
+        message:
+          'Relations and expression forms in the standard-backed catalog require core identity.',
         path: ['identity'],
       });
     }
@@ -174,20 +177,20 @@ export const DvtSubstraitProductNeedCapabilityV1Schema = z
       .string()
       .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Expected a stable kebab-case product need id.'),
     productNeed: NonBlankStringSchema,
-    profileStatus: DvtSubstraitProductNeedStatusSchema,
+    profileStatus: ProductNeedStatusSchema,
     extensionPoint: NonBlankStringSchema.optional(),
     evidenceRefs: EvidenceRefsSchema,
   })
   .strict()
   .superRefine((entry, context) => {
-    const expectedEntryId = buildDvtSubstraitProductNeedCapabilityId(
+    const expectedId = buildDvtSubstraitProductNeedCapabilityId(
       entry.category,
       entry.productNeedId
     );
-    if (entry.entryId !== expectedEntryId) {
+    if (entry.entryId !== expectedId) {
       context.addIssue({
         code: 'custom',
-        message: `Product-need entryId must be derived from productNeedId: ${expectedEntryId}.`,
+        message: `Product-need entryId must be derived from productNeedId: ${expectedId}.`,
         path: ['entryId'],
       });
     }
@@ -213,16 +216,16 @@ export const DvtSubstraitCapabilityCatalogV1Schema = z
   })
   .strict()
   .superRefine((catalog, context) => {
-    const seenEntryIds = new Set<string>();
+    const seen = new Set<string>();
     catalog.entries.forEach((entry, index) => {
-      if (seenEntryIds.has(entry.entryId)) {
+      if (seen.has(entry.entryId)) {
         context.addIssue({
           code: 'custom',
           message: `Duplicate Substrait capability entry ${entry.entryId}.`,
           path: ['entries', index, 'entryId'],
         });
       }
-      seenEntryIds.add(entry.entryId);
+      seen.add(entry.entryId);
     });
   });
 
@@ -243,10 +246,7 @@ export function canonicalizeDvtSubstraitCapabilityCatalogV1(
     schemaVersion: parsed.schemaVersion,
     profile: parsed.profile,
     entries: parsed.entries
-      .map((entry) => ({
-        ...entry,
-        evidenceRefs: [...entry.evidenceRefs].sort(),
-      }))
+      .map((entry) => ({ ...entry, evidenceRefs: [...entry.evidenceRefs].sort() }))
       .sort((left, right) => left.entryId.localeCompare(right.entryId)),
   };
 }
@@ -255,11 +255,52 @@ export function serializeDvtSubstraitCapabilityCatalogV1(input: unknown): string
   return JSON.stringify(canonicalizeDvtSubstraitCapabilityCatalogV1(input));
 }
 
-function standardCandidate(
+const STUDY = 'dvt:#2640';
+const ALGEBRA = [STUDY, 'substrait:v0.101.0:proto/substrait/algebra.proto'];
+const TYPES = [STUDY, 'substrait:v0.101.0:proto/substrait/type.proto'];
+const FUNCTIONS_STRING = [STUDY, 'substrait:v0.101.0:extensions/functions_string.yaml'];
+const FUNCTIONS_COMPARISON = [
+  STUDY,
+  'substrait:v0.101.0:extensions/functions_comparison.yaml',
+];
+const FUNCTIONS_BOOLEAN = [STUDY, 'substrait:v0.101.0:extensions/functions_boolean.yaml'];
+const FUNCTIONS_AGGREGATE = [
+  STUDY,
+  'substrait:v0.101.0:extensions/functions_aggregate_generic.yaml',
+];
+const FUNCTIONS_ARITHMETIC = [
+  STUDY,
+  'substrait:v0.101.0:extensions/functions_arithmetic.yaml',
+];
+const FUNCTIONS_DECIMAL = [
+  STUDY,
+  'substrait:v0.101.0:extensions/functions_arithmetic_decimal.yaml',
+];
+
+function coreCandidate(
   category: DvtSubstraitCapabilityCategory,
-  identity: DvtSubstraitStandardSemanticIdentityV1,
+  message: string,
+  selector: string | undefined,
   evidenceRefs: readonly string[]
 ): DvtSubstraitStandardCapabilityV1 {
+  const identity = { sourceKind: 'core' as const, message, ...(selector ? { selector } : {}) };
+  return DvtSubstraitStandardCapabilityV1Schema.parse({
+    kind: 'standard',
+    entryId: buildDvtSubstraitStandardCapabilityId(category, identity),
+    category,
+    identity,
+    profileStatus: 'candidate-standard',
+    evidenceRefs: [...evidenceRefs],
+  });
+}
+
+function extensionCandidate(
+  category: 'scalar-function' | 'aggregate-function' | 'window-function',
+  urn: string,
+  name: string,
+  evidenceRefs: readonly string[]
+): DvtSubstraitStandardCapabilityV1 {
+  const identity = { sourceKind: 'simple-extension' as const, urn, name };
   return DvtSubstraitStandardCapabilityV1Schema.parse({
     kind: 'standard',
     entryId: buildDvtSubstraitStandardCapabilityId(category, identity),
@@ -285,191 +326,103 @@ function productNeed(
     productNeedId,
     productNeed: description,
     profileStatus,
-    ...(extensionPoint === undefined ? {} : { extensionPoint }),
+    ...(extensionPoint ? { extensionPoint } : {}),
     evidenceRefs: [...evidenceRefs],
   });
 }
 
-const DVT_STUDY_EVIDENCE = 'dvt:#2640';
-const ALGEBRA_EVIDENCE = [DVT_STUDY_EVIDENCE, 'substrait:v0.101.0:proto/substrait/algebra.proto'];
-const TYPE_EVIDENCE = [DVT_STUDY_EVIDENCE, 'substrait:v0.101.0:proto/substrait/type.proto'];
-const STRING_FUNCTION_EVIDENCE = [
-  DVT_STUDY_EVIDENCE,
-  'substrait:v0.101.0:extensions/functions_string.yaml',
+const CORE_RELATIONS: readonly [string, string?][] = [
+  ['substrait.ReadRel', 'read_type.named_table'],
+  ['substrait.RelCommon', 'emit_kind.emit'],
+  ['substrait.ProjectRel'],
+  ['substrait.FilterRel'],
+  ['substrait.JoinRel', 'JoinType.JOIN_TYPE_INNER'],
+  ['substrait.JoinRel', 'JoinType.JOIN_TYPE_LEFT'],
+  ['substrait.AggregateRel'],
+  ['substrait.SetRel', 'SetOp.SET_OP_UNION_DISTINCT'],
+  ['substrait.SetRel', 'SetOp.SET_OP_UNION_ALL'],
+  ['substrait.SetRel', 'SetOp.SET_OP_INTERSECTION_MULTISET'],
+  ['substrait.SetRel', 'SetOp.SET_OP_MINUS_PRIMARY'],
+  ['substrait.SortRel'],
+  ['substrait.FetchRel'],
 ];
-const COMPARISON_FUNCTION_EVIDENCE = [
-  DVT_STUDY_EVIDENCE,
-  'substrait:v0.101.0:extensions/functions_comparison.yaml',
-];
-const BOOLEAN_FUNCTION_EVIDENCE = [
-  DVT_STUDY_EVIDENCE,
-  'substrait:v0.101.0:extensions/functions_boolean.yaml',
-];
-const AGGREGATE_GENERIC_EVIDENCE = [
-  DVT_STUDY_EVIDENCE,
-  'substrait:v0.101.0:extensions/functions_aggregate_generic.yaml',
-];
-const ARITHMETIC_EVIDENCE = [
-  DVT_STUDY_EVIDENCE,
-  'substrait:v0.101.0:extensions/functions_arithmetic.yaml',
-];
-const ARITHMETIC_DECIMAL_EVIDENCE = [
-  DVT_STUDY_EVIDENCE,
-  'substrait:v0.101.0:extensions/functions_arithmetic_decimal.yaml',
-];
+const EXPRESSION_SELECTORS = [
+  'rex_type.literal',
+  'rex_type.selection',
+  'rex_type.scalar_function',
+  'rex_type.cast',
+  'rex_type.if_then',
+  'rex_type.window_function',
+] as const;
+const CORE_TYPES = [
+  'bool',
+  'i32',
+  'i64',
+  'fp64',
+  'string',
+  'date',
+  'decimal',
+  'precision_timestamp',
+  'precision_timestamp_tz',
+  'uuid',
+] as const;
 
 const STANDARD_SEED: DvtSubstraitStandardCapabilityV1[] = [
-  standardCandidate(
-    'relation',
-    { sourceKind: 'core', message: 'substrait.ReadRel', selector: 'read_type.named_table' },
-    ALGEBRA_EVIDENCE
+  ...CORE_RELATIONS.map(([message, selector]) =>
+    coreCandidate('relation', message, selector, ALGEBRA)
   ),
-  standardCandidate(
-    'relation',
-    { sourceKind: 'core', message: 'substrait.RelCommon', selector: 'emit_kind.emit' },
-    ALGEBRA_EVIDENCE
+  ...EXPRESSION_SELECTORS.map((selector) =>
+    coreCandidate('expression-form', 'substrait.Expression', selector, ALGEBRA)
   ),
-  standardCandidate('relation', { sourceKind: 'core', message: 'substrait.ProjectRel' }, ALGEBRA_EVIDENCE),
-  standardCandidate('relation', { sourceKind: 'core', message: 'substrait.FilterRel' }, ALGEBRA_EVIDENCE),
-  standardCandidate(
-    'relation',
-    { sourceKind: 'core', message: 'substrait.JoinRel', selector: 'JoinType.JOIN_TYPE_INNER' },
-    ALGEBRA_EVIDENCE
-  ),
-  standardCandidate(
-    'relation',
-    { sourceKind: 'core', message: 'substrait.JoinRel', selector: 'JoinType.JOIN_TYPE_LEFT' },
-    ALGEBRA_EVIDENCE
-  ),
-  standardCandidate('relation', { sourceKind: 'core', message: 'substrait.AggregateRel' }, ALGEBRA_EVIDENCE),
-  standardCandidate(
-    'relation',
-    { sourceKind: 'core', message: 'substrait.SetRel', selector: 'SetOp.SET_OP_UNION_DISTINCT' },
-    ALGEBRA_EVIDENCE
-  ),
-  standardCandidate(
-    'relation',
-    { sourceKind: 'core', message: 'substrait.SetRel', selector: 'SetOp.SET_OP_UNION_ALL' },
-    ALGEBRA_EVIDENCE
-  ),
-  standardCandidate(
-    'relation',
-    {
-      sourceKind: 'core',
-      message: 'substrait.SetRel',
-      selector: 'SetOp.SET_OP_INTERSECTION_MULTISET',
-    },
-    ALGEBRA_EVIDENCE
-  ),
-  standardCandidate(
-    'relation',
-    { sourceKind: 'core', message: 'substrait.SetRel', selector: 'SetOp.SET_OP_MINUS_PRIMARY' },
-    ALGEBRA_EVIDENCE
-  ),
-  standardCandidate('relation', { sourceKind: 'core', message: 'substrait.SortRel' }, ALGEBRA_EVIDENCE),
-  standardCandidate('relation', { sourceKind: 'core', message: 'substrait.FetchRel' }, ALGEBRA_EVIDENCE),
-
-  standardCandidate(
-    'expression-form',
-    { sourceKind: 'core', message: 'substrait.Expression', selector: 'rex_type.literal' },
-    ALGEBRA_EVIDENCE
-  ),
-  standardCandidate(
-    'expression-form',
-    { sourceKind: 'core', message: 'substrait.Expression', selector: 'rex_type.selection' },
-    ALGEBRA_EVIDENCE
-  ),
-  standardCandidate(
-    'expression-form',
-    { sourceKind: 'core', message: 'substrait.Expression', selector: 'rex_type.scalar_function' },
-    ALGEBRA_EVIDENCE
-  ),
-  standardCandidate(
-    'expression-form',
-    { sourceKind: 'core', message: 'substrait.Expression', selector: 'rex_type.cast' },
-    ALGEBRA_EVIDENCE
-  ),
-  standardCandidate(
-    'expression-form',
-    { sourceKind: 'core', message: 'substrait.Expression', selector: 'rex_type.if_then' },
-    ALGEBRA_EVIDENCE
-  ),
-  standardCandidate(
-    'expression-form',
-    { sourceKind: 'core', message: 'substrait.Expression', selector: 'rex_type.window_function' },
-    ALGEBRA_EVIDENCE
-  ),
-
   ...['trim', 'upper', 'lower', 'concat', 'concat_ws'].map((name) =>
-    standardCandidate(
+    extensionCandidate(
       'scalar-function',
-      { sourceKind: 'simple-extension', urn: 'extension:io.substrait:functions_string', name },
-      STRING_FUNCTION_EVIDENCE
+      'extension:io.substrait:functions_string',
+      name,
+      FUNCTIONS_STRING
     )
   ),
   ...['coalesce', 'equal', 'not_equal', 'gt', 'gte', 'lt', 'lte', 'is_null', 'is_not_null'].map(
     (name) =>
-      standardCandidate(
+      extensionCandidate(
         'scalar-function',
-        { sourceKind: 'simple-extension', urn: 'extension:io.substrait:functions_comparison', name },
-        COMPARISON_FUNCTION_EVIDENCE
+        'extension:io.substrait:functions_comparison',
+        name,
+        FUNCTIONS_COMPARISON
       )
   ),
-  standardCandidate(
+  extensionCandidate(
     'scalar-function',
-    { sourceKind: 'simple-extension', urn: 'extension:io.substrait:functions_boolean', name: 'and' },
-    BOOLEAN_FUNCTION_EVIDENCE
+    'extension:io.substrait:functions_boolean',
+    'and',
+    FUNCTIONS_BOOLEAN
   ),
-  standardCandidate(
+  extensionCandidate(
     'aggregate-function',
-    {
-      sourceKind: 'simple-extension',
-      urn: 'extension:io.substrait:functions_aggregate_generic',
-      name: 'count',
-    },
-    AGGREGATE_GENERIC_EVIDENCE
+    'extension:io.substrait:functions_aggregate_generic',
+    'count',
+    FUNCTIONS_AGGREGATE
   ),
-  standardCandidate(
+  extensionCandidate(
     'aggregate-function',
-    { sourceKind: 'simple-extension', urn: 'extension:io.substrait:functions_arithmetic', name: 'sum' },
-    ARITHMETIC_EVIDENCE
+    'extension:io.substrait:functions_arithmetic',
+    'sum',
+    FUNCTIONS_ARITHMETIC
   ),
-  standardCandidate(
+  extensionCandidate(
     'aggregate-function',
-    {
-      sourceKind: 'simple-extension',
-      urn: 'extension:io.substrait:functions_arithmetic_decimal',
-      name: 'sum',
-    },
-    ARITHMETIC_DECIMAL_EVIDENCE
+    'extension:io.substrait:functions_arithmetic_decimal',
+    'sum',
+    FUNCTIONS_DECIMAL
   ),
-  standardCandidate(
+  extensionCandidate(
     'window-function',
-    {
-      sourceKind: 'simple-extension',
-      urn: 'extension:io.substrait:functions_arithmetic',
-      name: 'row_number',
-    },
-    ARITHMETIC_EVIDENCE
+    'extension:io.substrait:functions_arithmetic',
+    'row_number',
+    FUNCTIONS_ARITHMETIC
   ),
-
-  ...[
-    'bool',
-    'i32',
-    'i64',
-    'fp64',
-    'string',
-    'date',
-    'decimal',
-    'precision_timestamp',
-    'precision_timestamp_tz',
-    'uuid',
-  ].map((selector) =>
-    standardCandidate(
-      'type',
-      { sourceKind: 'core', message: 'substrait.Type', selector: `kind.${selector}` },
-      TYPE_EVIDENCE
-    )
+  ...CORE_TYPES.map((selector) =>
+    coreCandidate('type', 'substrait.Type', `kind.${selector}`, TYPES)
   ),
 ];
 
@@ -479,7 +432,7 @@ const PRODUCT_NEED_SEED: DvtSubstraitProductNeedCapabilityV1[] = [
     'postgres-jsonb',
     'Portable PostgreSQL JSONB semantics without inventing a fake core JSON type.',
     'candidate-extension',
-    [DVT_STUDY_EVIDENCE, 'substrait:v0.101.0:extensions/'],
+    [STUDY, 'substrait:v0.101.0:extensions/'],
     'simple-extension-type'
   ),
   productNeed(
@@ -487,14 +440,14 @@ const PRODUCT_NEED_SEED: DvtSubstraitProductNeedCapabilityV1[] = [
     'postgres-unbounded-numeric',
     'Truthful mapping for PostgreSQL numeric without explicit precision and scale.',
     'gap',
-    TYPE_EVIDENCE
+    TYPES
   ),
   productNeed(
     'relation',
     'cardinality-changing-table-function',
     'Portable UNNEST/EXPLODE-style cardinality-changing table-function semantics.',
     'gap',
-    [DVT_STUDY_EVIDENCE, 'substrait:v0.101.0:table-functions']
+    [STUDY, 'substrait:v0.101.0:site/docs/expressions/table_functions.md']
   ),
 ];
 
