@@ -13,6 +13,7 @@ import {
   DVT_SUBSTRAIT_VTX2_PROFILE,
   DvtSubstraitAuthoringSidecarV1Schema,
   DvtSubstraitSemanticDocumentV1Schema,
+  DvtSubstraitSemanticPlanV1Schema,
   canonicalizeDvtSubstraitSemanticDocumentV1,
   evaluateDvtSubstraitProfileCompatibility,
   serializeDvtSubstraitSemanticDocumentV1,
@@ -143,6 +144,18 @@ describe('DVT Substrait semantic document and authoring sidecar', () => {
     );
   });
 
+  it('verifies the declared SHA-256 against the actual serialized Plan bytes', () => {
+    expect(DvtSubstraitSemanticPlanV1Schema.parse(SEMANTIC_DOCUMENT.semanticPlan)).toEqual(
+      SEMANTIC_DOCUMENT.semanticPlan
+    );
+    expect(
+      DvtSubstraitSemanticPlanV1Schema.safeParse({
+        ...SEMANTIC_DOCUMENT.semanticPlan,
+        bytesBase64: 'AAAA',
+      }).success
+    ).toBe(false);
+  });
+
   it('serializes deterministically in contract key order', () => {
     const first = serializeDvtSubstraitSemanticDocumentV1(SEMANTIC_DOCUMENT);
     const second = serializeDvtSubstraitSemanticDocumentV1({
@@ -182,7 +195,9 @@ describe('DVT Substrait semantic document and authoring sidecar', () => {
       'field-customer-name',
       'field-order-id',
     ]);
-    expect(reloaded.sidecar.fields.find((field) => field.fieldId === 'field-customer-name')).toMatchObject({
+    expect(
+      reloaded.sidecar.fields.find((field) => field.fieldId === 'field-customer-name')
+    ).toMatchObject({
       fieldId: 'field-customer-name',
       outputOrdinal: 0,
       displayName: 'display_name',

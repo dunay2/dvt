@@ -1,4 +1,4 @@
-export { utf8Bytes } from './encoding.js';
+export { base64Bytes, utf8Bytes } from './encoding.js';
 export { jcsCanonicalize } from './jcs.js';
 export { md5Hex, md5HexUtf8 } from './md5.js';
 export { secureRandomBytes } from './random.js';

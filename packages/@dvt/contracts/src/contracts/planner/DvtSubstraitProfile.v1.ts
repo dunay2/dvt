@@ -14,6 +14,7 @@
  * @consequence Rename/reorder/reload can preserve identity without a private DVT relational IR.
  * @version 1.0.0
  */
+import { base64Bytes, sha256Hex } from '@dvt/crypto';
 import { z } from 'zod';
 
 import { ConnectedSourceRefSchema } from '../source-import/ConnectedSourceRef.v1.js';
@@ -128,7 +129,17 @@ export const DvtSubstraitSemanticPlanV1Schema = z
     bytesBase64: Base64Schema,
     sha256: Sha256Schema,
   })
-  .strict();
+  .strict()
+  .superRefine((plan, context) => {
+    const actualSha256 = sha256Hex(base64Bytes(plan.bytesBase64));
+    if (actualSha256 !== plan.sha256) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Semantic Plan SHA-256 does not match the serialized Substrait bytes.',
+        path: ['sha256'],
+      });
+    }
+  });
 
 export const DvtSubstraitRelationBindingV1Schema = z
   .object({
