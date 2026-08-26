@@ -52,10 +52,16 @@ import {
   renameDvtSubstraitPilotOutput,
   type DvtSubstraitPilotDraft,
 } from './canvasDvtSubstraitPilot';
+import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import { resolveExecutableSqlText } from './canvasTransformationSqlMirror';
 
 const ZERO_SHA256 = '0'.repeat(64);
 const OUTPUT_FIELD_ID = 'field:customer-name';
+const PILOT_OUTPUTS = [
+  { name: 'name', fieldId: OUTPUT_FIELD_ID, outputOrdinal: 0 },
+  { name: 'email', fieldId: 'field:email', outputOrdinal: 1 },
+  { name: 'country', fieldId: 'field:country', outputOrdinal: 2 },
+] as const;
 
 function stringType() {
   return create(TypeSchema, {
@@ -191,6 +197,25 @@ function buildTransformNode(metadata: CanonicalNode['metadata'] = {}): Canonical
   };
 }
 
+function buildSourceNode(): CanonicalNode {
+  return {
+    id: 'source-customers',
+    name: 'customers',
+    pluginId: 'dvt',
+    kind: 'dvt:source',
+    role: 'input',
+    status: 'idle',
+    tags: ['authoring'],
+    metadata: {
+      columns: [
+        { name: 'name', type: 'string' },
+        { name: 'email', type: 'string' },
+        { name: 'country', type: 'string' },
+      ],
+    },
+  };
+}
+
 function editPilotDraft(draft: DvtSubstraitPilotDraft): DvtSubstraitPilotDraft {
   const trimmed = applyDvtSubstraitPilotFunction(draft, 'trim');
   const upper = applyDvtSubstraitPilotFunction(trimmed, 'upper');
@@ -210,6 +235,7 @@ describe('typed Substrait DVT card pilot', () => {
         outputName: 'name',
         fieldId: OUTPUT_FIELD_ID,
         operations: [],
+        outputs: PILOT_OUTPUTS,
       },
     });
 
@@ -226,6 +252,11 @@ describe('typed Substrait DVT card pilot', () => {
         outputName: 'customer_name',
         fieldId: OUTPUT_FIELD_ID,
         operations: ['trim', 'upper'],
+        outputs: [
+          { name: 'customer_name', fieldId: OUTPUT_FIELD_ID, outputOrdinal: 0 },
+          { name: 'email', fieldId: 'field:email', outputOrdinal: 1 },
+          { name: 'country', fieldId: 'field:country', outputOrdinal: 2 },
+        ],
       },
     });
     expect(persisted.sidecar.semanticPlanSha256).toBe(persisted.semanticPlan.sha256);
@@ -239,7 +270,7 @@ describe('typed Substrait DVT card pilot', () => {
     ).toEqual(['trim:str', 'upper:str']);
   });
 
-  it('uses the existing Inspector Apply and Graph Draft reload lifecycle without a second store', () => {
+  it('uses existing Apply, card projection, and Graph Draft reload without a second store', () => {
     const initialDocument = encodeDvtSubstraitPilotDocument(buildPilotDraft());
     const node = applyDvtSubstraitSemanticDocument(buildTransformNode(), initialDocument);
     const originalAuthority = readDvtTransformAuthoringAuthority(node);
@@ -263,6 +294,23 @@ describe('typed Substrait DVT card pilot', () => {
     const appliedAuthority = readDvtTransformAuthoringAuthority(appliedNode);
     expect(appliedAuthority.mode).toBe('substrait');
 
+    const sourceNode = buildSourceNode();
+    const presentation = projectCanvasNodePresentationTruth({
+      node: appliedNode,
+      nodes: [sourceNode, appliedNode],
+      edges: [{ sourceId: sourceNode.id, targetId: appliedNode.id }],
+    });
+    expect(presentation.columns.visible.map((column) => column.name)).toEqual([
+      'customer_name',
+      'email',
+      'country',
+    ]);
+    expect(presentation.columns.visible.map((column) => column.reference)).toEqual([
+      OUTPUT_FIELD_ID,
+      'field:email',
+      'field:country',
+    ]);
+
     const graphDraft = WorkspaceGraphAuthoringDraftSchema.parse({
       canvas: { id: 'canvas-1', kind: 'transformation', title: 'Transformation' },
       nodeIds: [appliedNode.id],
@@ -285,6 +333,11 @@ describe('typed Substrait DVT card pilot', () => {
         outputName: 'customer_name',
         fieldId: OUTPUT_FIELD_ID,
         operations: ['trim', 'upper'],
+        outputs: [
+          { name: 'customer_name', fieldId: OUTPUT_FIELD_ID, outputOrdinal: 0 },
+          { name: 'email', fieldId: 'field:email', outputOrdinal: 1 },
+          { name: 'country', fieldId: 'field:country', outputOrdinal: 2 },
+        ],
       },
     });
   });
