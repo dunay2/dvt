@@ -6,6 +6,10 @@ import {
   canonicalizeVisualTransformRecipeV1,
   type VisualTransformRecipeV1,
 } from '@dvt/contracts';
+import {
+  canonicalizeDvtSubstraitSemanticDocumentV1,
+  type DvtSubstraitSemanticDocumentV1,
+} from '@dvt/contracts/substrait';
 
 import type { CanonicalNode } from '../../types/canonical';
 import {
@@ -26,6 +30,11 @@ export type DvtTransformAuthoringAuthority =
       version: typeof VISUAL_TRANSFORM_RECIPE_VERSION;
       mode: typeof DVT_TRANSFORM_AUTHORING_MODE.visual;
       recipe: VisualTransformRecipeV1;
+    }>
+  | Readonly<{
+      version: typeof VISUAL_TRANSFORM_RECIPE_VERSION;
+      mode: typeof DVT_TRANSFORM_AUTHORING_MODE.substrait;
+      semanticDocument: DvtSubstraitSemanticDocumentV1;
     }>;
 
 function assertDvtTransformNode(node: CanonicalNode): void {
@@ -39,9 +48,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function hasEditableSqlMetadata(node: CanonicalNode): boolean {
-  if (node.metadata != null && Object.hasOwn(node.metadata, 'sql')) {
-    return true;
-  }
+  if (node.metadata != null && Object.hasOwn(node.metadata, 'sql')) return true;
   const config = node.metadata?.config;
   return isRecord(config) && Object.hasOwn(config, 'sql');
 }
@@ -56,7 +63,6 @@ function removeEditableSqlMetadata(node: CanonicalNode): Record<string, unknown>
     ...metadataWithoutTransformAuthority
   } = node.metadata ?? {};
   const { sql: _configSql, ...configWithoutSql } = isRecord(rawConfig) ? rawConfig : {};
-
   return {
     ...metadataWithoutTransformAuthority,
     ...(Object.keys(configWithoutSql).length > 0 ? { config: configWithoutSql } : {}),
@@ -71,17 +77,11 @@ export function readDvtTransformAuthoringAuthority(
   const sql = readDraftSqlText(node) ?? '';
 
   if (rawAuthority === undefined) {
-    return {
-      version: VISUAL_TRANSFORM_RECIPE_VERSION,
-      mode: DVT_TRANSFORM_AUTHORING_MODE.sql,
-      sql,
-    };
+    return { version: VISUAL_TRANSFORM_RECIPE_VERSION, mode: DVT_TRANSFORM_AUTHORING_MODE.sql, sql };
   }
 
   const result = DvtTransformAuthoringAuthorityV1Schema.safeParse(rawAuthority);
-  if (!result.success) {
-    throw new Error('DVT transform authoring authority metadata is invalid.');
-  }
+  if (!result.success) throw new Error('DVT transform authoring authority metadata is invalid.');
 
   if (result.data.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
     if (hasEditableSqlMetadata(node)) {
@@ -90,10 +90,14 @@ export function readDvtTransformAuthoringAuthority(
     return result.data;
   }
 
-  return {
-    ...result.data,
-    sql,
-  };
+  if (result.data.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+    if (hasEditableSqlMetadata(node)) {
+      throw new Error('Substrait DVT transform authority cannot coexist with editable SQL.');
+    }
+    return result.data;
+  }
+
+  return { ...result.data, sql };
 }
 
 export function applyDvtVisualTransformRecipe(
@@ -102,7 +106,6 @@ export function applyDvtVisualTransformRecipe(
 ): CanonicalNode {
   assertDvtTransformNode(node);
   const recipe = canonicalizeVisualTransformRecipeV1(recipeInput);
-
   return {
     ...node,
     metadata: {
@@ -116,6 +119,25 @@ export function applyDvtVisualTransformRecipe(
   };
 }
 
+export function applyDvtSubstraitSemanticDocument(
+  node: CanonicalNode,
+  documentInput: unknown
+): CanonicalNode {
+  assertDvtTransformNode(node);
+  const semanticDocument = canonicalizeDvtSubstraitSemanticDocumentV1(documentInput);
+  return {
+    ...node,
+    metadata: {
+      ...removeEditableSqlMetadata(node),
+      [DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY]: {
+        version: VISUAL_TRANSFORM_RECIPE_VERSION,
+        mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
+        semanticDocument,
+      },
+    },
+  };
+}
+
 export function convertDvtVisualTransformToSql(
   node: CanonicalNode,
   generatedSql: string
@@ -124,11 +146,9 @@ export function convertDvtVisualTransformToSql(
   if (currentAuthority.mode !== DVT_TRANSFORM_AUTHORING_MODE.visual) {
     throw new Error('Visual to SQL conversion requires current visual authority.');
   }
-
   if (generatedSql.trim().length === 0) {
     throw new Error('Visual to SQL conversion requires nonblank generated SQL.');
   }
-
   return {
     ...node,
     metadata: {
