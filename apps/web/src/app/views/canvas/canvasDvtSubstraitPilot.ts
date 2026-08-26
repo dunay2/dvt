@@ -2,19 +2,36 @@
 import { create, fromBinary, toBinary } from '@bufbuild/protobuf';
 import {
   ExpressionSchema,
+  Expression_FieldReferenceSchema,
+  Expression_FieldReference_RootReferenceSchema,
+  Expression_ReferenceSegmentSchema,
+  Expression_ReferenceSegment_StructFieldSchema,
   Expression_ScalarFunctionSchema,
   FunctionArgumentSchema,
+  ProjectRelSchema,
+  ReadRelSchema,
+  ReadRel_NamedTableSchema,
+  RelCommonSchema,
+  RelCommon_EmitSchema,
+  RelRootSchema,
+  RelSchema,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import { PlanSchema, type Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
+import {
+  PlanRelSchema,
+  PlanSchema,
+  type Plan,
+} from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import {
   SimpleExtensionDeclarationSchema,
   SimpleExtensionDeclaration_ExtensionFunctionSchema,
   SimpleExtensionURNSchema,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/extensions/extensions_pb.js';
 import {
+  NamedStructSchema,
   TypeSchema,
   Type_Nullability,
   Type_StringSchema,
+  Type_StructSchema,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import { base64Bytes, sha256Hex } from '@dvt/crypto';
 import {
@@ -29,6 +46,9 @@ import {
 } from '@dvt/contracts';
 
 const STRING_FUNCTION_URN = 'extension:io.substrait:functions_string';
+const ZERO_SHA256 = '0'.repeat(64);
+const PILOT_SOURCE_NAME = 'customers';
+const PILOT_FIELD_NAMES = ['name', 'email', 'country'] as const;
 
 type PilotFunctionName = 'trim' | 'upper';
 
@@ -71,13 +91,22 @@ function hasPinnedPlanVersion(plan: Plan): boolean {
   );
 }
 
-function findFunctionDeclaration(plan: Plan, functionReference: number): string | null {
+function resolveExtensionUrn(plan: Plan, extensionUrnReference: number): string | null {
+  return (
+    plan.extensionUrns.find((entry) => entry.extensionUrnAnchor === extensionUrnReference)?.urn ??
+    null
+  );
+}
+
+function findStringFunctionDeclaration(plan: Plan, functionReference: number): string | null {
   const declaration = plan.extensions.find(
     (entry) =>
       entry.mappingType.case === 'extensionFunction' &&
       entry.mappingType.value.functionAnchor === functionReference
   );
-  return declaration?.mappingType.case === 'extensionFunction'
+  if (declaration?.mappingType.case !== 'extensionFunction') return null;
+  return resolveExtensionUrn(plan, declaration.mappingType.value.extensionUrnReference) ===
+    STRING_FUNCTION_URN
     ? declaration.mappingType.value.name
     : null;
 }
@@ -90,6 +119,119 @@ function rootProject(plan: Plan) {
   return project.value;
 }
 
+function stringType() {
+  return create(TypeSchema, {
+    kind: {
+      case: 'string',
+      value: create(Type_StringSchema, { nullability: Type_Nullability.NULLABLE }),
+    },
+  });
+}
+
+function fieldReference(ordinal: number) {
+  return create(ExpressionSchema, {
+    rexType: {
+      case: 'selection',
+      value: create(Expression_FieldReferenceSchema, {
+        referenceType: {
+          case: 'directReference',
+          value: create(Expression_ReferenceSegmentSchema, {
+            referenceType: {
+              case: 'structField',
+              value: create(Expression_ReferenceSegment_StructFieldSchema, { field: ordinal }),
+            },
+          }),
+        },
+        rootType: {
+          case: 'rootReference',
+          value: create(Expression_FieldReference_RootReferenceSchema, {}),
+        },
+      }),
+    },
+  });
+}
+
+/**
+ * Create only the exact production-entry fixture owned by #2598. The caller is
+ * responsible for admitting the matching connected source before invoking it.
+ */
+export function createDvtSubstraitPilotDraft(args: {
+  sourceNodeId: string;
+  targetNodeId: string;
+}): DvtSubstraitPilotDraft {
+  const read = create(RelSchema, {
+    relType: {
+      case: 'read',
+      value: create(ReadRelSchema, {
+        common: create(RelCommonSchema, { relAnchor: 1 }),
+        baseSchema: create(NamedStructSchema, {
+          names: [...PILOT_FIELD_NAMES],
+          struct: create(Type_StructSchema, {
+            types: PILOT_FIELD_NAMES.map(() => stringType()),
+            nullability: Type_Nullability.REQUIRED,
+          }),
+        }),
+        readType: {
+          case: 'namedTable',
+          value: create(ReadRel_NamedTableSchema, { names: [PILOT_SOURCE_NAME] }),
+        },
+      }),
+    },
+  });
+  const project = create(RelSchema, {
+    relType: {
+      case: 'project',
+      value: create(ProjectRelSchema, {
+        common: create(RelCommonSchema, {
+          relAnchor: 2,
+          emitKind: {
+            case: 'emit',
+            value: create(RelCommon_EmitSchema, { outputMapping: [3, 1, 2] }),
+          },
+        }),
+        input: read,
+        expressions: [fieldReference(0)],
+      }),
+    },
+  });
+  const plan = create(PlanSchema, {
+    version: {
+      majorNumber: 0,
+      minorNumber: 101,
+      patchNumber: 0,
+      producer: 'dvt-vtx2-card-pilot',
+    },
+    relations: [
+      create(PlanRelSchema, {
+        relType: {
+          case: 'root',
+          value: create(RelRootSchema, { input: project, names: [...PILOT_FIELD_NAMES] }),
+        },
+      }),
+    ],
+  });
+  const projectRelationId = `relation:${args.targetNodeId}:project`;
+  const sidecar: DvtSubstraitAuthoringSidecarV1 = {
+    schemaVersion: DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION,
+    semanticPlanSha256: ZERO_SHA256,
+    relations: [
+      {
+        relationId: `relation:${args.sourceNodeId}`,
+        relAnchor: 1,
+        displayName: PILOT_SOURCE_NAME,
+      },
+      { relationId: projectRelationId, relAnchor: 2, displayName: PILOT_SOURCE_NAME },
+    ],
+    fields: PILOT_FIELD_NAMES.map((name, outputOrdinal) => ({
+      fieldId: `field:${args.targetNodeId}:${name}`,
+      relationId: projectRelationId,
+      outputOrdinal,
+      displayName: name,
+    })),
+  };
+  return { plan, sidecar };
+}
+
 function inspectExpression(
   plan: Plan,
   expression: NonNullable<ReturnType<typeof rootProject>>['expressions'][number]
@@ -98,7 +240,10 @@ function inspectExpression(
   let current = expression;
 
   while (current.rexType.case === 'scalarFunction') {
-    const signature = findFunctionDeclaration(plan, current.rexType.value.functionReference);
+    const signature = findStringFunctionDeclaration(
+      plan,
+      current.rexType.value.functionReference
+    );
     const name = signature === 'trim:str' ? 'trim' : signature === 'upper:str' ? 'upper' : null;
     if (name == null || current.rexType.value.arguments.length !== 1) return null;
     const argument = current.rexType.value.arguments[0]?.argType;
@@ -108,10 +253,10 @@ function inspectExpression(
   }
 
   if (current.rexType.case !== 'selection') return null;
-  const fieldReference = current.rexType.value;
-  if (fieldReference.rootType.case !== 'rootReference') return null;
-  if (fieldReference.referenceType.case !== 'directReference') return null;
-  const segment = fieldReference.referenceType.value.referenceType;
+  const field = current.rexType.value;
+  if (field.rootType.case !== 'rootReference') return null;
+  if (field.referenceType.case !== 'directReference') return null;
+  const segment = field.referenceType.value.referenceType;
   if (segment.case !== 'structField' || segment.value.field !== 0 || segment.value.child != null) {
     return null;
   }
@@ -123,6 +268,17 @@ function inspectExpression(
     return operations;
   }
   return null;
+}
+
+function hasPilotInputSchema(read: Readonly<ReturnType<typeof create<typeof ReadRelSchema>>>): boolean {
+  const baseSchema = read.baseSchema;
+  if (baseSchema == null || baseSchema.names.join(',') !== PILOT_FIELD_NAMES.join(',')) return false;
+  const types = baseSchema.struct?.types;
+  return (
+    types != null &&
+    types.length === PILOT_FIELD_NAMES.length &&
+    types.every((type) => type.kind.case === 'string')
+  );
 }
 
 export function inspectDvtSubstraitPilotDraft(
@@ -151,10 +307,10 @@ export function inspectDvtSubstraitPilotDraft(
   const readRel = project.input?.relType;
   if (readRel?.case !== 'read') return { ok: false };
   const read = readRel.value;
-  if (read.readType.case !== 'namedTable' || read.readType.value.names.join('.') !== 'customers') {
+  if (read.readType.case !== 'namedTable' || read.readType.value.names.join('.') !== PILOT_SOURCE_NAME) {
     return { ok: false };
   }
-  if (read.baseSchema?.names.join(',') !== 'name,email,country') return { ok: false };
+  if (!hasPilotInputSchema(read)) return { ok: false };
 
   const operations = inspectExpression(plan, project.expressions[0]!);
   if (operations == null) return { ok: false };
@@ -176,8 +332,8 @@ export function inspectDvtSubstraitPilotDraft(
   return {
     ok: true,
     projection: {
-      sourceName: 'customers',
-      inputFieldName: 'name',
+      sourceName: PILOT_SOURCE_NAME,
+      inputFieldName: PILOT_FIELD_NAMES[0],
       outputName: firstOutput.name,
       fieldId: firstOutput.fieldId,
       operations,
@@ -204,7 +360,9 @@ function ensureStringFunction(plan: Plan, name: PilotFunctionName): number {
   const signature = `${name}:str`;
   const existing = plan.extensions.find(
     (entry) =>
-      entry.mappingType.case === 'extensionFunction' && entry.mappingType.value.name === signature
+      entry.mappingType.case === 'extensionFunction' &&
+      entry.mappingType.value.name === signature &&
+      resolveExtensionUrn(plan, entry.mappingType.value.extensionUrnReference) === STRING_FUNCTION_URN
   );
   if (existing?.mappingType.case === 'extensionFunction') {
     return existing.mappingType.value.functionAnchor;
@@ -240,15 +398,6 @@ function ensureStringFunction(plan: Plan, name: PilotFunctionName): number {
     })
   );
   return functionAnchor;
-}
-
-function stringType() {
-  return create(TypeSchema, {
-    kind: {
-      case: 'string',
-      value: create(Type_StringSchema, { nullability: Type_Nullability.NULLABLE }),
-    },
-  });
 }
 
 export function applyDvtSubstraitPilotFunction(
