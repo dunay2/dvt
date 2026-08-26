@@ -97,7 +97,7 @@ export function DvtAuthoringFields({
 
   if (draft.dvt.kind === 'sql_transform') {
     if (draft.dvt.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
-      if (section !== 'all' && section !== 'columns') {
+      if (section !== 'all' && section !== 'columns' && section !== 'code') {
         return null;
       }
       return (
