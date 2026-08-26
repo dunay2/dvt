@@ -34,3 +34,5 @@ jobs:
           git reset -- .github/workflows/vtx2-governance-refresh-once.yml
           git commit -m 'docs(governance): Refresh VTX2 Substrait pilot indexes'
           git push --no-verify origin HEAD:agent/vtx2-substrait-card-pilot
+
+# Triggered after the final semantic review fixes.
