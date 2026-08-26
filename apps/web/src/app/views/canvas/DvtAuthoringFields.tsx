@@ -11,6 +11,7 @@ import { resolveInheritedDvtConnectionRef } from './canvasDvtAuthoringModel';
 import { DvtSinkAuthoringSection } from './DvtSinkAuthoringSection';
 import { DvtSourceAuthoringSection } from './DvtSourceAuthoringSection';
 import { DvtSqlTransformAuthoringSection } from './DvtSqlTransformAuthoringSection';
+import { DvtSubstraitPilotAuthoringSection } from './DvtSubstraitPilotAuthoringSection';
 import { DvtVisualTransformRecipeAuthoringSection } from './DvtVisualTransformRecipeAuthoringSection';
 
 type DvtAuthoringFieldsProps = Readonly<{
@@ -39,21 +40,12 @@ export function DvtAuthoringFields({
   section = 'all',
   onChange,
 }: DvtAuthoringFieldsProps): JSX.Element | null {
-  if (!draft.dvt) {
-    return null;
-  }
+  if (!draft.dvt) return null;
 
-  const inheritedConnectionRef = resolveInheritedDvtConnectionRef({
-    node,
-    nodes,
-    edges,
-  });
+  const inheritedConnectionRef = resolveInheritedDvtConnectionRef({ node, nodes, edges });
 
   if (draft.dvt.kind === 'source') {
-    if (section !== 'all' && section !== 'general') {
-      return null;
-    }
-
+    if (section !== 'all' && section !== 'general') return null;
     return (
       <DvtSourceAuthoringSection
         node={node}
@@ -67,10 +59,19 @@ export function DvtAuthoringFields({
   }
 
   if (draft.dvt.kind === 'sql_transform') {
+    if (draft.dvt.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+      if (section !== 'all' && section !== 'columns') return null;
+      return (
+        <DvtSubstraitPilotAuthoringSection
+          disabled={disabled}
+          draft={draft.dvt}
+          onChange={onChange}
+        />
+      );
+    }
+
     if (draft.dvt.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
-      if (section !== 'all' && section !== 'columns') {
-        return null;
-      }
+      if (section !== 'all' && section !== 'columns') return null;
       return (
         <DvtVisualTransformRecipeAuthoringSection
           node={node}
@@ -84,10 +85,7 @@ export function DvtAuthoringFields({
       );
     }
 
-    if (section !== 'all' && section !== 'code') {
-      return null;
-    }
-
+    if (section !== 'all' && section !== 'code') return null;
     return (
       <DvtSqlTransformAuthoringSection
         node={node}
@@ -101,10 +99,7 @@ export function DvtAuthoringFields({
     );
   }
 
-  if (section !== 'all' && section !== 'general') {
-    return null;
-  }
-
+  if (section !== 'all' && section !== 'general') return null;
   return (
     <DvtSinkAuthoringSection
       node={node}
