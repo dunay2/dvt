@@ -28,6 +28,7 @@ function readString(value: unknown): string | null {
 
 function readMetadataConfig(metadata: CanonicalNode['metadata']): Record<string, unknown> {
   const config = metadata?.config;
+
   return config !== null && typeof config === 'object' && !Array.isArray(config)
     ? (config as Record<string, unknown>)
     : {};
@@ -45,6 +46,7 @@ export function readDvtTransformLineageProvenance(
   node: CanonicalNode
 ): VisualTransformRecipeV1 | null {
   if (node.pluginId !== 'dvt' || node.kind !== 'dvt:sql_transform') return null;
+
   const result = VisualTransformRecipeV1Schema.safeParse(
     node.metadata?.[DVT_TRANSFORM_LINEAGE_PROVENANCE_METADATA_KEY]
   );
@@ -58,12 +60,29 @@ export function readTransformationSqlMirrorState(
   const compiledSql = readCompiledSqlText(node);
 
   if (draftSql && compiledSql) {
-    return { status: 'invalid_ambiguous', draftSql, compiledSql, executableSql: null };
+    return {
+      status: 'invalid_ambiguous',
+      draftSql,
+      compiledSql,
+      executableSql: null,
+    };
   }
+
   if (draftSql) {
-    return { status: 'draft_dirty', draftSql, compiledSql: null, executableSql: draftSql };
+    return {
+      status: 'draft_dirty',
+      draftSql,
+      compiledSql: null,
+      executableSql: draftSql,
+    };
   }
-  return { status: 'clean', draftSql: null, compiledSql, executableSql: compiledSql };
+
+  return {
+    status: 'clean',
+    draftSql: null,
+    compiledSql,
+    executableSql: compiledSql,
+  };
 }
 
 export function resolveExecutableSqlText(node: CanonicalNode): ExecutableSqlResolution {
@@ -76,13 +95,18 @@ export function resolveExecutableSqlText(node: CanonicalNode): ExecutableSqlReso
   }
 
   const mirrorState = readTransformationSqlMirrorState(node);
+
   if (mirrorState.status === 'invalid_ambiguous') {
     return {
       ok: false,
       message: `Preview graph artifact cannot choose between draft SQL and compiled SQL for transform node ${node.id}. Re-apply the SQL edit or regenerate compiled SQL before preview.`,
     };
   }
-  return { ok: true, sql: mirrorState.executableSql };
+
+  return {
+    ok: true,
+    sql: mirrorState.executableSql,
+  };
 }
 
 export function buildDvtSqlTransformMetadata(
