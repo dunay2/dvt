@@ -148,7 +148,10 @@ function createSourceMetadata(node: CanonicalNode): DvtSourceAuthoringMetadata {
 }
 
 function parseManualConnectionRef(value: unknown): ConnectionRef | undefined {
-  if (value === undefined) return undefined;
+  if (value === undefined) {
+    return undefined;
+  }
+
   const result = ConnectionRefSchema.safeParse(value);
   if (!result.success) {
     throw new Error('DVT source metadata.connectionRef must be a valid ConnectionRef.');
@@ -157,7 +160,10 @@ function parseManualConnectionRef(value: unknown): ConnectionRef | undefined {
 }
 
 function parseImportedConnectionRef(value: unknown): ConnectionRef | undefined {
-  if (value === undefined) return undefined;
+  if (value === undefined) {
+    return undefined;
+  }
+
   const result = ConnectedSourceRefSchema.safeParse(value);
   if (!result.success) {
     throw new Error('DVT imported source metadata.connectedSourceRef must be valid.');
@@ -196,7 +202,9 @@ export function resolveInheritedDvtConnectionRef(args: {
     }
     visited.add(current.id);
 
-    if (current.kind === 'dvt:source') return resolveEffectiveDvtConnectionRef(current);
+    if (current.kind === 'dvt:source') {
+      return resolveEffectiveDvtConnectionRef(current);
+    }
 
     const sourceId = sourceIdByTargetId.get(current.id);
     current = sourceId ? nodesById.get(sourceId) : undefined;
@@ -253,7 +261,9 @@ export function createDvtNodeAuthoringMetadata(
         ? createSourceMetadata(node)
         : undefined;
     case 'dvt:sql_transform':
-      return node.pluginId === DVT_AUTHORING_PLUGIN_ID ? createSqlTransformMetadata(node) : undefined;
+      return node.pluginId === DVT_AUTHORING_PLUGIN_ID
+        ? createSqlTransformMetadata(node)
+        : undefined;
     case 'dvt:sink':
       return node.pluginId === DVT_AUTHORING_PLUGIN_ID ? createSinkMetadata(node) : undefined;
     default:
@@ -267,8 +277,12 @@ export function validateDvtNodeAuthoringMetadata(
   const errors: DvtNodeAuthoringMetadataErrors = {};
 
   if (metadata.kind === 'source' || metadata.kind === 'sink') {
-    if (metadata.schema.trim().length === 0) errors.schema = 'dvt_schema_required';
-    if (metadata.table.trim().length === 0) errors.table = 'dvt_table_required';
+    if (metadata.schema.trim().length === 0) {
+      errors.schema = 'dvt_schema_required';
+    }
+    if (metadata.table.trim().length === 0) {
+      errors.table = 'dvt_table_required';
+    }
   }
 
   if (metadata.kind === 'source' && metadata.alias.trim().length === 0) {
@@ -367,7 +381,10 @@ export function applyDvtNodeAuthoringMetadata(
       );
     }
     const transformMetadata = buildDvtSqlTransformMetadata(node, metadata.sql);
-    return { ...node, metadata: transformMetadata };
+    return {
+      ...node,
+      metadata: transformMetadata,
+    };
   }
 
   return withConfig(node, {
