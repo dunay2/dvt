@@ -48,7 +48,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function hasEditableSqlMetadata(node: CanonicalNode): boolean {
-  if (node.metadata != null && Object.hasOwn(node.metadata, 'sql')) return true;
+  if (node.metadata != null && Object.hasOwn(node.metadata, 'sql')) {
+    return true;
+  }
   const config = node.metadata?.config;
   return isRecord(config) && Object.hasOwn(config, 'sql');
 }
@@ -63,6 +65,7 @@ function removeEditableSqlMetadata(node: CanonicalNode): Record<string, unknown>
     ...metadataWithoutTransformAuthority
   } = node.metadata ?? {};
   const { sql: _configSql, ...configWithoutSql } = isRecord(rawConfig) ? rawConfig : {};
+
   return {
     ...metadataWithoutTransformAuthority,
     ...(Object.keys(configWithoutSql).length > 0 ? { config: configWithoutSql } : {}),
@@ -77,11 +80,17 @@ export function readDvtTransformAuthoringAuthority(
   const sql = readDraftSqlText(node) ?? '';
 
   if (rawAuthority === undefined) {
-    return { version: VISUAL_TRANSFORM_RECIPE_VERSION, mode: DVT_TRANSFORM_AUTHORING_MODE.sql, sql };
+    return {
+      version: VISUAL_TRANSFORM_RECIPE_VERSION,
+      mode: DVT_TRANSFORM_AUTHORING_MODE.sql,
+      sql,
+    };
   }
 
   const result = DvtTransformAuthoringAuthorityV1Schema.safeParse(rawAuthority);
-  if (!result.success) throw new Error('DVT transform authoring authority metadata is invalid.');
+  if (!result.success) {
+    throw new Error('DVT transform authoring authority metadata is invalid.');
+  }
 
   if (result.data.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
     if (hasEditableSqlMetadata(node)) {
@@ -97,7 +106,10 @@ export function readDvtTransformAuthoringAuthority(
     return result.data;
   }
 
-  return { ...result.data, sql };
+  return {
+    ...result.data,
+    sql,
+  };
 }
 
 export function applyDvtVisualTransformRecipe(
@@ -106,6 +118,7 @@ export function applyDvtVisualTransformRecipe(
 ): CanonicalNode {
   assertDvtTransformNode(node);
   const recipe = canonicalizeVisualTransformRecipeV1(recipeInput);
+
   return {
     ...node,
     metadata: {
@@ -125,6 +138,7 @@ export function applyDvtSubstraitSemanticDocument(
 ): CanonicalNode {
   assertDvtTransformNode(node);
   const semanticDocument = canonicalizeDvtSubstraitSemanticDocumentV1(documentInput);
+
   return {
     ...node,
     metadata: {
@@ -146,9 +160,11 @@ export function convertDvtVisualTransformToSql(
   if (currentAuthority.mode !== DVT_TRANSFORM_AUTHORING_MODE.visual) {
     throw new Error('Visual to SQL conversion requires current visual authority.');
   }
+
   if (generatedSql.trim().length === 0) {
     throw new Error('Visual to SQL conversion requires nonblank generated SQL.');
   }
+
   return {
     ...node,
     metadata: {
