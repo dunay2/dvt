@@ -12,6 +12,7 @@ import {
   RelCommon_EmitSchema,
   RelRootSchema,
   RelSchema,
+  type Expression,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import {
   ExecutionBehaviorSchema,
@@ -25,6 +26,7 @@ import {
   Type_Nullability,
   Type_StringSchema,
   Type_StructSchema,
+  type Type,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import { WorkspaceGraphAuthoringDraftSchema } from '@dvt/contracts';
 import {
@@ -63,7 +65,7 @@ const PILOT_OUTPUTS = [
   { name: 'country', fieldId: 'field:country', outputOrdinal: 2 },
 ] as const;
 
-function stringType() {
+function stringType(): Type {
   return create(TypeSchema, {
     kind: {
       case: 'string',
@@ -72,7 +74,7 @@ function stringType() {
   });
 }
 
-function fieldRef(ordinal: number) {
+function fieldRef(ordinal: number): Expression {
   return create(ExpressionSchema, {
     rexType: {
       case: 'selection',
