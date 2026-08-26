@@ -1,0 +1,45 @@
+name: VTX2 web Substrait dependency lock
+
+on:
+  push:
+    branches:
+      - agent/vtx2-substrait-card-pilot
+    paths:
+      - '.github/workflows/vtx2-web-substrait-deps-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  lock:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/vtx2-substrait-card-pilot
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --prefer-offline
+      - name: Pin generated Substrait SDK for the web pilot
+        run: >-
+          pnpm --filter @dvt/web add --save-exact
+          '@bufbuild/protobuf@2.14.0'
+          '@buf/substrait_substrait.bufbuild_es@2.14.0-20260816025439-ce0808dab3ac.1'
+      - name: Commit package and lockfile
+        run: |
+          if git diff --quiet -- apps/web/package.json pnpm-lock.yaml; then
+            echo 'Dependency files already current.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add apps/web/package.json pnpm-lock.yaml
+          git commit -m 'chore(deps): Pin generated Substrait SDK for VTX2 pilot'
+          git push --no-verify origin HEAD:agent/vtx2-substrait-card-pilot
