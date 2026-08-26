@@ -68,6 +68,7 @@ function projectCanvasNodePresentationTruthInternal(
   let visualRecipe: VisualTransformRecipeV1 | null = null;
   let lineageRecipe: VisualTransformRecipeV1 | null = null;
   let substraitOutputs: DvtSubstraitPilotProjection['outputs'] | null = null;
+  let substraitRejected = false;
   if (args.node.pluginId === 'dvt' && args.node.kind === 'dvt:sql_transform') {
     try {
       const authority = readDvtTransformAuthoringAuthority(args.node);
@@ -75,10 +76,18 @@ function projectCanvasNodePresentationTruthInternal(
         visualRecipe = authority.recipe;
         lineageRecipe = authority.recipe;
       } else if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
-        const inspection = inspectDvtSubstraitPilotDraft(
-          decodeDvtSubstraitPilotDocument(authority.semanticDocument)
-        );
-        substraitOutputs = inspection.ok ? inspection.projection.outputs : null;
+        try {
+          const inspection = inspectDvtSubstraitPilotDraft(
+            decodeDvtSubstraitPilotDocument(authority.semanticDocument)
+          );
+          if (inspection.ok) {
+            substraitOutputs = inspection.projection.outputs;
+          } else {
+            substraitRejected = true;
+          }
+        } catch {
+          substraitRejected = true;
+        }
       } else {
         lineageRecipe = readDvtTransformLineageProvenance(args.node);
       }
@@ -133,6 +142,22 @@ function projectCanvasNodePresentationTruthInternal(
             } as const),
         }),
   });
+
+  if (substraitRejected) {
+    return {
+      ...baseTruth,
+      columns: {
+        declared: [],
+        inherited: [],
+        visible: [],
+        declaredCount: 0,
+        inheritedCount: 0,
+        visibleCount: 0,
+        visibleProvenance: 'none',
+      },
+    };
+  }
+
   const shouldProjectUpstreamColumns =
     args.node.role === 'output' ||
     (args.node.role === 'transform' &&
