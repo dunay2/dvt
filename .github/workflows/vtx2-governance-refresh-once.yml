@@ -20,6 +20,15 @@ jobs:
           ref: agent/vtx2-substrait-card-pilot
           fetch-depth: 0
       - uses: ./.github/actions/setup-node-pnpm
+      - name: Format review-touched source files
+        run: >-
+          pnpm exec prettier --write
+          apps/web/src/app/views/canvas/DvtSubstraitPilotEntry.test.tsx
+          apps/web/src/app/views/canvas/canvasDvtSubstraitPilot.ts
+          packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts
+          packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts
+          apps/web/src/app/views/canvas/canvasNodePresentationProjection.ts
+          apps/web/src/app/views/canvas/canvasSubstraitPresentationFailClosed.test.ts
       - name: Refresh governed repository surfaces
         run: pnpm governance:refresh
       - name: Commit generated governance surfaces
