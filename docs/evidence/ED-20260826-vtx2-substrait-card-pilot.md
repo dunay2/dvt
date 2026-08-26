@@ -1,6 +1,6 @@
 ---
 title: VTX2 typed Substrait card pilot evidence
-status: Review
+status: pending
 date: 2026-08-26
 owners:
   - web
