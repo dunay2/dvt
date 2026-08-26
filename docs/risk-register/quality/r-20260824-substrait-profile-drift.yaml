@@ -20,10 +20,13 @@ mitigation:
     catalog is bound to that exact profile and records only selected upstream identities plus
     explicit product gaps; catalog presence does not imply provider execution, UI exposure, or
     semantic admission. The audited v0.102.0 delta remains governed by #2643 rather than silently
-    entering the pinned catalog.
+    entering the pinned catalog. The #2598 card pilot consumes the exact generated v0.101.0 SDK,
+    edits only one admitted ReadRel/ProjectRel fixture, and fails closed instead of projecting or
+    executing unsupported Plan shapes or falling back to editable SQL.
   evidence:
     - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
     - docs/evidence/ed-20260824-substrait-semantic-reference-traceability.md
+    - docs/evidence/ED-20260826-vtx2-substrait-card-pilot.md
     - docs/planning/proposals/mandatory/runtime-and-contracts/vtx2-substrait-semantic-reference-design-20260824.md
     - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProfile.v1.ts
     - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts
