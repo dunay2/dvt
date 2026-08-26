@@ -15,7 +15,9 @@ import {
   RelCommon_EmitSchema,
   RelRootSchema,
   RelSchema,
+  type ProjectRel,
   type ReadRel,
+  type RelCommon,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import {
   PlanRelSchema,
@@ -112,7 +114,7 @@ function findStringFunctionDeclaration(plan: Plan, functionReference: number): s
     : null;
 }
 
-function rootProject(plan: Plan) {
+function rootProject(plan: Plan): ProjectRel | null {
   const rootRelation = plan.relations.length === 1 ? plan.relations[0]?.relType : undefined;
   if (rootRelation?.case !== 'root') return null;
   const project = rootRelation.value.input?.relType;
@@ -282,6 +284,37 @@ function hasPilotInputSchema(read: ReadRel): boolean {
   );
 }
 
+function commonHasNoHiddenSemantics(common: RelCommon | undefined): boolean {
+  return common != null && common.hint == null && common.advancedExtension == null;
+}
+
+function readHasOnlyPilotSemantics(read: ReadRel): boolean {
+  if (!commonHasNoHiddenSemantics(read.common) || read.common?.emitKind.case !== undefined) {
+    return false;
+  }
+  if (
+    read.filter != null ||
+    read.bestEffortFilter != null ||
+    read.projection != null ||
+    read.advancedExtension != null
+  ) {
+    return false;
+  }
+  return (
+    read.readType.case === 'namedTable' &&
+    read.readType.value.advancedExtension == null &&
+    read.readType.value.names.join('.') === PILOT_SOURCE_NAME
+  );
+}
+
+function projectHasOnlyPilotSemantics(project: ProjectRel): boolean {
+  return (
+    commonHasNoHiddenSemantics(project.common) &&
+    project.common?.emitKind.case === 'emit' &&
+    project.advancedExtension == null
+  );
+}
+
 export function inspectDvtSubstraitPilotDraft(
   draft: DvtSubstraitPilotDraft
 ): DvtSubstraitPilotInspection {
@@ -298,9 +331,10 @@ export function inspectDvtSubstraitPilotDraft(
   const projectRel = root.input?.relType;
   if (projectRel?.case !== 'project') return { ok: false };
   const project = projectRel.value;
-  if (project.expressions.length !== 1 || project.common?.emitKind.case !== 'emit') {
+  if (!projectHasOnlyPilotSemantics(project) || project.expressions.length !== 1) {
     return { ok: false };
   }
+  if (project.common?.emitKind.case !== 'emit') return { ok: false };
   if (project.common.emitKind.value.outputMapping.join(',') !== '3,1,2') return { ok: false };
   const projectAnchor = project.common.relAnchor;
   if (projectAnchor == null || projectAnchor <= 0) return { ok: false };
@@ -308,9 +342,8 @@ export function inspectDvtSubstraitPilotDraft(
   const readRel = project.input?.relType;
   if (readRel?.case !== 'read') return { ok: false };
   const read = readRel.value;
-  if (read.readType.case !== 'namedTable' || read.readType.value.names.join('.') !== PILOT_SOURCE_NAME) {
-    return { ok: false };
-  }
+  if (!readHasOnlyPilotSemantics(read)) return { ok: false };
+  if (read.common?.relAnchor == null || read.common.relAnchor <= 0) return { ok: false };
   if (!hasPilotInputSchema(read)) return { ok: false };
 
   const operations = inspectExpression(plan, project.expressions[0]!);
@@ -351,9 +384,9 @@ function requirePilotFunctionCapability(name: PilotFunctionName): void {
       entry.identity.sourceKind === 'simple-extension' &&
       entry.identity.urn === STRING_FUNCTION_URN &&
       entry.identity.name === name &&
-      entry.profileStatus !== 'out-of-scope'
+      entry.profileStatus === 'supported-profile'
   );
-  if (capability == null) throw new Error(`Substrait capability ${name} is not catalogued.`);
+  if (capability == null) throw new Error(`Substrait capability ${name} is not supported.`);
 }
 
 function ensureStringFunction(plan: Plan, name: PilotFunctionName): number {
