@@ -32,7 +32,7 @@ import { WorkspaceGraphAuthoringDraftSchema } from '@dvt/contracts';
 import {
   DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION,
   type DvtSubstraitAuthoringSidecarV1,
-} from '@dvt/contracts/substrait';
+} from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';

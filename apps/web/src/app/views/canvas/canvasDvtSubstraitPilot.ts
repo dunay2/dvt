@@ -26,7 +26,7 @@ import {
   canonicalizeDvtSubstraitSemanticDocumentV1,
   type DvtSubstraitAuthoringSidecarV1,
   type DvtSubstraitSemanticDocumentV1,
-} from '@dvt/contracts/substrait';
+} from '@dvt/contracts';
 
 const STRING_FUNCTION_URN = 'extension:io.substrait:functions_string';
 

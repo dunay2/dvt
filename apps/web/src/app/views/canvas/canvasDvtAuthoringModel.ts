@@ -8,7 +8,7 @@ import {
   type ConnectionRef,
   type VisualTransformRecipeV1,
 } from '@dvt/contracts';
-import type { DvtSubstraitAuthoringSidecarV1 } from '@dvt/contracts/substrait';
+import type { DvtSubstraitAuthoringSidecarV1 } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {

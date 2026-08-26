@@ -9,7 +9,7 @@ import {
 import {
   canonicalizeDvtSubstraitSemanticDocumentV1,
   type DvtSubstraitSemanticDocumentV1,
-} from '@dvt/contracts/substrait';
+} from '@dvt/contracts';
 
 import type { CanonicalNode } from '../../types/canonical';
 import {
