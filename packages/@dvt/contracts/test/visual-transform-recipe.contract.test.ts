@@ -51,6 +51,38 @@ const VISUAL_RECIPE = {
   ],
 } as const;
 
+const SUBSTRAIT_PLAN_BASE64 =
+  'MkQQZSIoMjY1M2U1NTUxNmM4YzA3NTI5Y2RlOWJjODFjNjRlNGFlMzUzNzUxNSoWZHZ0LXZ0eDItY29udHJhY3QtdGVzdFICCAE=';
+const SUBSTRAIT_PLAN_SHA256 =
+  '14b79e6263d90848e17e90613d5e5bf2dacdbd08eb6508847b197e7351342ecc';
+const SUBSTRAIT_DOCUMENT = {
+  schemaVersion: 'dvt-substrait-semantic-document.v1',
+  profile: {
+    schemaVersion: 'dvt-substrait-profile.v1',
+    profileId: 'dvt.vtx2.substrait.v1',
+    specVersion: '0.101.0',
+    specCommitSha: '2653e55516c8c07529cde9bc81c64e4ae3537515',
+  },
+  semanticPlan: {
+    encoding: 'substrait-plan-protobuf-base64',
+    bytesBase64: SUBSTRAIT_PLAN_BASE64,
+    sha256: SUBSTRAIT_PLAN_SHA256,
+  },
+  sidecar: {
+    schemaVersion: 'dvt-substrait-authoring-sidecar.v1',
+    semanticPlanSha256: SUBSTRAIT_PLAN_SHA256,
+    relations: [{ relationId: 'rel-result', relAnchor: 1 }],
+    fields: [
+      {
+        fieldId: 'field-customer-name',
+        relationId: 'rel-result',
+        outputOrdinal: 0,
+        displayName: 'customer_name',
+      },
+    ],
+  },
+} as const;
+
 describe('VisualTransformRecipeV1 contract', () => {
   it('accepts the bounded V1 recipe and preserves semantic array order', () => {
     expect(VisualTransformRecipeV1Schema.parse(VISUAL_RECIPE)).toEqual(VISUAL_RECIPE);
@@ -173,9 +205,20 @@ describe('DvtTransformAuthoringAuthorityV1 contract', () => {
       version: 'v1',
       mode: 'sql',
     });
+    expect(
+      DvtTransformAuthoringAuthorityV1Schema.parse({
+        version: 'v1',
+        mode: 'substrait',
+        semanticDocument: SUBSTRAIT_DOCUMENT,
+      })
+    ).toEqual({
+      version: 'v1',
+      mode: 'substrait',
+      semanticDocument: SUBSTRAIT_DOCUMENT,
+    });
   });
 
-  it('rejects a recipe on SQL authority and editable SQL on visual authority', () => {
+  it('rejects semantic payloads on the wrong authority mode', () => {
     expect(
       DvtTransformAuthoringAuthorityV1Schema.safeParse({
         version: 'v1',
@@ -188,6 +231,14 @@ describe('DvtTransformAuthoringAuthorityV1 contract', () => {
         version: 'v1',
         mode: 'visual',
         recipe: VISUAL_RECIPE,
+        sql: 'select * from orders',
+      }).success
+    ).toBe(false);
+    expect(
+      DvtTransformAuthoringAuthorityV1Schema.safeParse({
+        version: 'v1',
+        mode: 'substrait',
+        semanticDocument: SUBSTRAIT_DOCUMENT,
         sql: 'select * from orders',
       }).success
     ).toBe(false);
