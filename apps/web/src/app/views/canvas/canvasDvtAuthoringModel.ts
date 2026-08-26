@@ -1,4 +1,5 @@
 /** Owned concern: derive and apply route-owned DVT transformation authoring metadata. */
+import type { Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import {
   ConnectedSourceRefSchema,
   ConnectionRefSchema,
@@ -7,12 +8,18 @@ import {
   type ConnectionRef,
   type VisualTransformRecipeV1,
 } from '@dvt/contracts';
+import type { DvtSubstraitAuthoringSidecarV1 } from '@dvt/contracts/substrait';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
+  applyDvtSubstraitSemanticDocument,
   applyDvtVisualTransformRecipe,
   readDvtTransformAuthoringAuthority,
 } from './canvasDvtTransformAuthoringAuthority';
+import {
+  decodeDvtSubstraitPilotDocument,
+  encodeDvtSubstraitPilotDocument,
+} from './canvasDvtSubstraitPilot';
 import { buildDvtSqlTransformMetadata } from './canvasTransformationSqlMirror';
 import type { CanvasInspectorNodeDraftErrorCode } from './canvasInspectorAuthoringErrorCodes';
 
@@ -36,6 +43,13 @@ export type DvtVisualTransformAuthoringMetadata = Readonly<{
   recipe: VisualTransformRecipeV1;
 }>;
 
+export type DvtSubstraitTransformAuthoringMetadata = Readonly<{
+  kind: 'sql_transform';
+  mode: typeof DVT_TRANSFORM_AUTHORING_MODE.substrait;
+  plan: Plan;
+  sidecar: DvtSubstraitAuthoringSidecarV1;
+}>;
+
 export type DvtSinkAuthoringMetadata = Readonly<{
   kind: 'sink';
   schema: string;
@@ -48,6 +62,7 @@ export type DvtNodeAuthoringMetadata =
   | DvtSourceAuthoringMetadata
   | DvtSqlTransformAuthoringMetadata
   | DvtVisualTransformAuthoringMetadata
+  | DvtSubstraitTransformAuthoringMetadata
   | DvtSinkAuthoringMetadata;
 
 export type DvtNodeAuthoringMetadataErrors = Partial<
@@ -133,10 +148,7 @@ function createSourceMetadata(node: CanonicalNode): DvtSourceAuthoringMetadata {
 }
 
 function parseManualConnectionRef(value: unknown): ConnectionRef | undefined {
-  if (value === undefined) {
-    return undefined;
-  }
-
+  if (value === undefined) return undefined;
   const result = ConnectionRefSchema.safeParse(value);
   if (!result.success) {
     throw new Error('DVT source metadata.connectionRef must be a valid ConnectionRef.');
@@ -145,10 +157,7 @@ function parseManualConnectionRef(value: unknown): ConnectionRef | undefined {
 }
 
 function parseImportedConnectionRef(value: unknown): ConnectionRef | undefined {
-  if (value === undefined) {
-    return undefined;
-  }
-
+  if (value === undefined) return undefined;
   const result = ConnectedSourceRefSchema.safeParse(value);
   if (!result.success) {
     throw new Error('DVT imported source metadata.connectedSourceRef must be valid.');
@@ -187,9 +196,7 @@ export function resolveInheritedDvtConnectionRef(args: {
     }
     visited.add(current.id);
 
-    if (current.kind === 'dvt:source') {
-      return resolveEffectiveDvtConnectionRef(current);
-    }
+    if (current.kind === 'dvt:source') return resolveEffectiveDvtConnectionRef(current);
 
     const sourceId = sourceIdByTargetId.get(current.id);
     current = sourceId ? nodesById.get(sourceId) : undefined;
@@ -200,12 +207,20 @@ export function resolveInheritedDvtConnectionRef(args: {
 
 function createSqlTransformMetadata(
   node: CanonicalNode
-): DvtSqlTransformAuthoringMetadata | DvtVisualTransformAuthoringMetadata {
+):
+  | DvtSqlTransformAuthoringMetadata
+  | DvtVisualTransformAuthoringMetadata
+  | DvtSubstraitTransformAuthoringMetadata {
   const authority = readDvtTransformAuthoringAuthority(node);
 
-  return authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual
-    ? { kind: 'sql_transform', mode: authority.mode, recipe: authority.recipe }
-    : { kind: 'sql_transform', mode: authority.mode, sql: authority.sql };
+  if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
+    return { kind: 'sql_transform', mode: authority.mode, recipe: authority.recipe };
+  }
+  if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+    const draft = decodeDvtSubstraitPilotDocument(authority.semanticDocument);
+    return { kind: 'sql_transform', mode: authority.mode, plan: draft.plan, sidecar: draft.sidecar };
+  }
+  return { kind: 'sql_transform', mode: authority.mode, sql: authority.sql };
 }
 
 function createSinkMetadata(node: CanonicalNode): DvtSinkAuthoringMetadata {
@@ -238,9 +253,7 @@ export function createDvtNodeAuthoringMetadata(
         ? createSourceMetadata(node)
         : undefined;
     case 'dvt:sql_transform':
-      return node.pluginId === DVT_AUTHORING_PLUGIN_ID
-        ? createSqlTransformMetadata(node)
-        : undefined;
+      return node.pluginId === DVT_AUTHORING_PLUGIN_ID ? createSqlTransformMetadata(node) : undefined;
     case 'dvt:sink':
       return node.pluginId === DVT_AUTHORING_PLUGIN_ID ? createSinkMetadata(node) : undefined;
     default:
@@ -254,12 +267,8 @@ export function validateDvtNodeAuthoringMetadata(
   const errors: DvtNodeAuthoringMetadataErrors = {};
 
   if (metadata.kind === 'source' || metadata.kind === 'sink') {
-    if (metadata.schema.trim().length === 0) {
-      errors.schema = 'dvt_schema_required';
-    }
-    if (metadata.table.trim().length === 0) {
-      errors.table = 'dvt_table_required';
-    }
+    if (metadata.schema.trim().length === 0) errors.schema = 'dvt_schema_required';
+    if (metadata.table.trim().length === 0) errors.table = 'dvt_table_required';
   }
 
   if (metadata.kind === 'source' && metadata.alias.trim().length === 0) {
@@ -351,11 +360,14 @@ export function applyDvtNodeAuthoringMetadata(
     if (metadata.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
       return applyDvtVisualTransformRecipe(node, metadata.recipe);
     }
+    if (metadata.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+      return applyDvtSubstraitSemanticDocument(
+        node,
+        encodeDvtSubstraitPilotDocument({ plan: metadata.plan, sidecar: metadata.sidecar })
+      );
+    }
     const transformMetadata = buildDvtSqlTransformMetadata(node, metadata.sql);
-    return {
-      ...node,
-      metadata: transformMetadata,
-    };
+    return { ...node, metadata: transformMetadata };
   }
 
   return withConfig(node, {
