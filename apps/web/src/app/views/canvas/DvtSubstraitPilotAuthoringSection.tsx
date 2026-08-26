@@ -24,13 +24,12 @@ export function DvtSubstraitPilotAuthoringSection({
   onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
 }>): JSX.Element {
   const inspection = inspectDvtSubstraitPilotDraft(draft);
-  const [outputName, setOutputName] = useState(
-    inspection.ok ? inspection.projection.outputName : ''
-  );
+  const projectedOutputName = inspection.ok ? inspection.projection.outputName : '';
+  const [outputName, setOutputName] = useState(projectedOutputName);
 
   useEffect(() => {
-    if (inspection.ok) setOutputName(inspection.projection.outputName);
-  }, [inspection.ok, inspection.ok ? inspection.projection.outputName : '']);
+    setOutputName(projectedOutputName);
+  }, [projectedOutputName]);
 
   if (!inspection.ok) {
     return (
