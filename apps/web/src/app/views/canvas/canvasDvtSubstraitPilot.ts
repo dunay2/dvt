@@ -51,8 +51,7 @@ export type DvtSubstraitPilotProjection = Readonly<{
 }>;
 
 export type DvtSubstraitPilotInspection =
-  | Readonly<{ ok: true; projection: DvtSubstraitPilotProjection }>
-  | Readonly<{ ok: false }>;
+  Readonly<{ ok: true; projection: DvtSubstraitPilotProjection }> | Readonly<{ ok: false }>;
 
 function bytesToBase64(bytes: Uint8Array): string {
   let binary = '';
@@ -223,7 +222,9 @@ function ensureStringFunction(plan: Plan, name: PilotFunctionName): number {
     Math.max(
       0,
       ...plan.extensions.flatMap((entry) =>
-        entry.mappingType.case === 'extensionFunction' ? [entry.mappingType.value.functionAnchor] : []
+        entry.mappingType.case === 'extensionFunction'
+          ? [entry.mappingType.value.functionAnchor]
+          : []
       )
     ) + 1;
   plan.extensions.push(

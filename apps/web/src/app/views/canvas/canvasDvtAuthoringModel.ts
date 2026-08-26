@@ -226,7 +226,12 @@ function createSqlTransformMetadata(
   }
   if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
     const draft = decodeDvtSubstraitPilotDocument(authority.semanticDocument);
-    return { kind: 'sql_transform', mode: authority.mode, plan: draft.plan, sidecar: draft.sidecar };
+    return {
+      kind: 'sql_transform',
+      mode: authority.mode,
+      plan: draft.plan,
+      sidecar: draft.sidecar,
+    };
   }
   return { kind: 'sql_transform', mode: authority.mode, sql: authority.sql };
 }

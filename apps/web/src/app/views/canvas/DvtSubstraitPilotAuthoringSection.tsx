@@ -41,7 +41,9 @@ export function DvtSubstraitPilotAuthoringSection({
   }
 
   const mutate = (
-    update: (current: DvtSubstraitTransformAuthoringMetadata) => DvtSubstraitTransformAuthoringMetadata
+    update: (
+      current: DvtSubstraitTransformAuthoringMetadata
+    ) => DvtSubstraitTransformAuthoringMetadata
   ): void => {
     onChange((currentDraft) =>
       currentDraft.dvt?.kind === 'sql_transform' && currentDraft.dvt.mode === 'substrait'

@@ -86,7 +86,9 @@ export function readTransformationSqlMirrorState(
 }
 
 export function resolveExecutableSqlText(node: CanonicalNode): ExecutableSqlResolution {
-  const authority = DvtTransformAuthoringAuthorityV1Schema.safeParse(node.metadata?.transformAuthoring);
+  const authority = DvtTransformAuthoringAuthorityV1Schema.safeParse(
+    node.metadata?.transformAuthoring
+  );
   if (authority.success && authority.data.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
     return {
       ok: false,

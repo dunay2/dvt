@@ -378,7 +378,9 @@ export function CanvasNodeWorkbenchPanel({
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>{copy.inspectorVisualTransformConvertToSqlTitle}</AlertDialogTitle>
+                  <AlertDialogTitle>
+                    {copy.inspectorVisualTransformConvertToSqlTitle}
+                  </AlertDialogTitle>
                   <AlertDialogDescription>
                     {copy.inspectorVisualTransformConvertToSqlDescription}
                   </AlertDialogDescription>

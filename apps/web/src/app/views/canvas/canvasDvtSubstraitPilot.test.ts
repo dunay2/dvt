@@ -283,7 +283,10 @@ describe('typed Substrait DVT card pilot', () => {
       throw new Error('Expected Substrait Inspector draft.');
     }
 
-    const edited = editPilotDraft({ plan: inspectorDraft.dvt.plan, sidecar: inspectorDraft.dvt.sidecar });
+    const edited = editPilotDraft({
+      plan: inspectorDraft.dvt.plan,
+      sidecar: inspectorDraft.dvt.sidecar,
+    });
     const editedInspectorDraft = {
       ...inspectorDraft,
       dvt: { ...inspectorDraft.dvt, plan: edited.plan, sidecar: edited.sidecar },
@@ -320,13 +323,16 @@ describe('typed Substrait DVT card pilot', () => {
       nodes: [projectCanonicalNodeToAuthoringNode(appliedNode)],
       edges: [],
     });
-    const reopenedNode = projectWorkspaceGraphAuthoringDraftSemanticGraph(graphDraft).canonicalNodes[0];
+    const reopenedNode =
+      projectWorkspaceGraphAuthoringDraftSemanticGraph(graphDraft).canonicalNodes[0];
     if (reopenedNode == null) throw new Error('Expected reopened Substrait node.');
     const reopenedAuthority = readDvtTransformAuthoringAuthority(reopenedNode);
     if (reopenedAuthority.mode !== 'substrait') throw new Error('Expected Substrait authority.');
 
     expect(
-      inspectDvtSubstraitPilotDraft(decodeDvtSubstraitPilotDocument(reopenedAuthority.semanticDocument))
+      inspectDvtSubstraitPilotDraft(
+        decodeDvtSubstraitPilotDocument(reopenedAuthority.semanticDocument)
+      )
     ).toEqual({
       ok: true,
       projection: {
