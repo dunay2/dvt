@@ -43,6 +43,11 @@ export type DvtSubstraitPilotProjection = Readonly<{
   outputName: string;
   fieldId: string;
   operations: readonly PilotFunctionName[];
+  outputs: readonly Readonly<{
+    name: string;
+    fieldId: string;
+    outputOrdinal: number;
+  }>[];
 }>;
 
 export type DvtSubstraitPilotInspection =
@@ -78,7 +83,18 @@ function findFunctionDeclaration(plan: Plan, functionReference: number): string 
     : null;
 }
 
-function inspectExpression(plan: Plan, expression: NonNullable<ReturnType<typeof rootProject>>['expressions'][number]): readonly PilotFunctionName[] | null {
+function rootProject(plan: Plan) {
+  const rootRelation = plan.relations.length === 1 ? plan.relations[0]?.relType : undefined;
+  if (rootRelation?.case !== 'root') return null;
+  const project = rootRelation.value.input?.relType;
+  if (project?.case !== 'project') return null;
+  return project.value;
+}
+
+function inspectExpression(
+  plan: Plan,
+  expression: NonNullable<ReturnType<typeof rootProject>>['expressions'][number]
+): readonly PilotFunctionName[] | null {
   const outerToInner: PilotFunctionName[] = [];
   let current = expression;
 
@@ -108,14 +124,6 @@ function inspectExpression(plan: Plan, expression: NonNullable<ReturnType<typeof
     return operations;
   }
   return null;
-}
-
-function rootProject(plan: Plan) {
-  const rootRelation = plan.relations.length === 1 ? plan.relations[0]?.relType : undefined;
-  if (rootRelation?.case !== 'root') return null;
-  const project = rootRelation.value.input?.relType;
-  if (project?.case !== 'project') return null;
-  return project.value;
 }
 
 export function inspectDvtSubstraitPilotDraft(
@@ -154,19 +162,27 @@ export function inspectDvtSubstraitPilotDraft(
 
   const projectBinding = sidecar.relations.find((relation) => relation.relAnchor === projectAnchor);
   if (projectBinding == null) return { ok: false };
-  const fieldBinding = sidecar.fields.find(
-    (field) => field.relationId === projectBinding.relationId && field.outputOrdinal === 0
-  );
-  if (fieldBinding == null) return { ok: false };
+  const outputs = root.names.map((name, outputOrdinal) => {
+    const binding = sidecar.fields.find(
+      (field) =>
+        field.relationId === projectBinding.relationId && field.outputOrdinal === outputOrdinal
+    );
+    return binding == null ? null : { name, fieldId: binding.fieldId, outputOrdinal };
+  });
+  if (outputs.some((output) => output == null)) return { ok: false };
+  const resolvedOutputs = outputs.filter((output) => output != null);
+  const firstOutput = resolvedOutputs[0];
+  if (firstOutput == null) return { ok: false };
 
   return {
     ok: true,
     projection: {
       sourceName: 'customers',
       inputFieldName: 'name',
-      outputName: root.names[0] ?? '',
-      fieldId: fieldBinding.fieldId,
+      outputName: firstOutput.name,
+      fieldId: firstOutput.fieldId,
       operations,
+      outputs: resolvedOutputs,
     },
   };
 }
@@ -188,13 +204,17 @@ function ensureStringFunction(plan: Plan, name: PilotFunctionName): number {
   requirePilotFunctionCapability(name);
   const signature = `${name}:str`;
   const existing = plan.extensions.find(
-    (entry) => entry.mappingType.case === 'extensionFunction' && entry.mappingType.value.name === signature
+    (entry) =>
+      entry.mappingType.case === 'extensionFunction' && entry.mappingType.value.name === signature
   );
-  if (existing?.mappingType.case === 'extensionFunction') return existing.mappingType.value.functionAnchor;
+  if (existing?.mappingType.case === 'extensionFunction') {
+    return existing.mappingType.value.functionAnchor;
+  }
 
   let urn = plan.extensionUrns.find((entry) => entry.urn === STRING_FUNCTION_URN);
   if (urn == null) {
-    const extensionUrnAnchor = Math.max(0, ...plan.extensionUrns.map((entry) => entry.extensionUrnAnchor)) + 1;
+    const extensionUrnAnchor =
+      Math.max(0, ...plan.extensionUrns.map((entry) => entry.extensionUrnAnchor)) + 1;
     urn = create(SimpleExtensionURNSchema, { extensionUrnAnchor, urn: STRING_FUNCTION_URN });
     plan.extensionUrns.push(urn);
   }
@@ -269,23 +289,22 @@ export function renameDvtSubstraitPilotOutput(
   if (rootRelation?.case !== 'root') return draft;
   rootRelation.value.names[0] = outputName;
 
-  const fields = draft.sidecar.fields.map((field) =>
-    field.fieldId === inspection.projection.fieldId
-      ? {
-          ...field,
-          ...(outputName.trim().length > 0 ? { displayName: outputName } : { displayName: undefined }),
-        }
-      : field
-  );
+  const fields = draft.sidecar.fields.map((field) => {
+    if (field.fieldId !== inspection.projection.fieldId) return field;
+    const { displayName: _displayName, ...fieldWithoutDisplayName } = field;
+    return outputName.trim().length > 0
+      ? { ...fieldWithoutDisplayName, displayName: outputName }
+      : fieldWithoutDisplayName;
+  });
   return { plan, sidecar: { ...draft.sidecar, fields } };
 }
 
-export function decodeDvtSubstraitPilotDocument(
-  input: unknown
-): DvtSubstraitPilotDraft {
+export function decodeDvtSubstraitPilotDocument(input: unknown): DvtSubstraitPilotDraft {
   const document = canonicalizeDvtSubstraitSemanticDocumentV1(input);
   const plan = fromBinary(PlanSchema, base64Bytes(document.semanticPlan.bytesBase64));
-  if (!hasPinnedPlanVersion(plan)) throw new Error('Substrait Plan does not match the pinned DVT profile.');
+  if (!hasPinnedPlanVersion(plan)) {
+    throw new Error('Substrait Plan does not match the pinned DVT profile.');
+  }
   return { plan, sidecar: document.sidecar };
 }
 
