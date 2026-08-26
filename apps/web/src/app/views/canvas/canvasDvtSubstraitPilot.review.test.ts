@@ -64,6 +64,18 @@ describe('typed Substrait pilot review guards', () => {
     expect(applyDvtSubstraitPilotFunction(draft, 'trim')).toBe(draft);
   });
 
+  it('fails closed when ReadRel carries semantics the pilot does not surface', () => {
+    const draft = createDvtSubstraitPilotDraft({
+      sourceNodeId: 'source-customers',
+      targetNodeId: 'transform-customers',
+    });
+    const read = pilotRead(draft);
+    read.filter = projectExpression(draft);
+
+    expect(inspectDvtSubstraitPilotDraft(draft)).toEqual({ ok: false });
+    expect(applyDvtSubstraitPilotFunction(draft, 'trim')).toBe(draft);
+  });
+
   it('rejects wrong string-extension URNs and never reuses their function anchors', () => {
     const base = createDvtSubstraitPilotDraft({
       sourceNodeId: 'source-customers',
