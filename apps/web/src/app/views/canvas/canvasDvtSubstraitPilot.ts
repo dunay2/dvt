@@ -15,6 +15,7 @@ import {
   RelCommon_EmitSchema,
   RelRootSchema,
   RelSchema,
+  type ReadRel,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import {
   PlanRelSchema,
@@ -270,7 +271,7 @@ function inspectExpression(
   return null;
 }
 
-function hasPilotInputSchema(read: Readonly<ReturnType<typeof create<typeof ReadRelSchema>>>): boolean {
+function hasPilotInputSchema(read: ReadRel): boolean {
   const baseSchema = read.baseSchema;
   if (baseSchema == null || baseSchema.names.join(',') !== PILOT_FIELD_NAMES.join(',')) return false;
   const types = baseSchema.struct?.types;
