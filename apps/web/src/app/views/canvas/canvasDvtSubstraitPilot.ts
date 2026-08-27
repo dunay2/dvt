@@ -243,10 +243,7 @@ function inspectExpression(
   let current = expression;
 
   while (current.rexType.case === 'scalarFunction') {
-    const signature = findStringFunctionDeclaration(
-      plan,
-      current.rexType.value.functionReference
-    );
+    const signature = findStringFunctionDeclaration(plan, current.rexType.value.functionReference);
     const name = signature === 'trim:str' ? 'trim' : signature === 'upper:str' ? 'upper' : null;
     if (name == null || current.rexType.value.arguments.length !== 1) return null;
     const argument = current.rexType.value.arguments[0]?.argType;
@@ -275,7 +272,8 @@ function inspectExpression(
 
 function hasPilotInputSchema(read: ReadRel): boolean {
   const baseSchema = read.baseSchema;
-  if (baseSchema == null || baseSchema.names.join(',') !== PILOT_FIELD_NAMES.join(',')) return false;
+  if (baseSchema == null || baseSchema.names.join(',') !== PILOT_FIELD_NAMES.join(','))
+    return false;
   const types = baseSchema.struct?.types;
   return (
     types != null &&
@@ -396,7 +394,8 @@ function ensureStringFunction(plan: Plan, name: PilotFunctionName): number {
     (entry) =>
       entry.mappingType.case === 'extensionFunction' &&
       entry.mappingType.value.name === signature &&
-      resolveExtensionUrn(plan, entry.mappingType.value.extensionUrnReference) === STRING_FUNCTION_URN
+      resolveExtensionUrn(plan, entry.mappingType.value.extensionUrnReference) ===
+        STRING_FUNCTION_URN
   );
   if (existing?.mappingType.case === 'extensionFunction') {
     return existing.mappingType.value.functionAnchor;

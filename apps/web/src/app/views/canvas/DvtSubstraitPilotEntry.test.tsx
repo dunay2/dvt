@@ -101,7 +101,9 @@ describe('Substrait pilot entry through ConfigureCanvasDvtNode', () => {
     const transform = transformNode();
     act(() => root.render(<Harness source={source} transform={transform} />));
 
-    const entry = container.querySelector<HTMLButtonElement>('[data-slot="dvt-start-substrait-pilot"]');
+    const entry = container.querySelector<HTMLButtonElement>(
+      '[data-slot="dvt-start-substrait-pilot"]'
+    );
     expect(entry).not.toBeNull();
 
     act(() => {
