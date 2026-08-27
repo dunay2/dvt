@@ -50,7 +50,13 @@ function transformNode(sql = ''): CanonicalNode {
   };
 }
 
-function Harness({ source, transform }: { source: CanonicalNode; transform: CanonicalNode }) {
+function Harness({
+  source,
+  transform,
+}: {
+  source: CanonicalNode;
+  transform: CanonicalNode;
+}): JSX.Element {
   const [draft, setDraft] = useState(() => createCanvasInspectorNodeDraft(transform));
   const edges: readonly CanonicalEdge[] = [
     { id: 'source-transform', sourceId: source.id, targetId: transform.id, relation: 'lineage' },
@@ -98,7 +104,9 @@ describe('Substrait pilot entry through ConfigureCanvasDvtNode', () => {
     const entry = container.querySelector<HTMLButtonElement>('[data-slot="dvt-start-substrait-pilot"]');
     expect(entry).not.toBeNull();
 
-    act(() => fireEvent.click(entry!));
+    act(() => {
+      fireEvent.click(entry!);
+    });
 
     const draft = container.querySelector('[data-slot="dvt-draft-json"]')?.textContent ?? '';
     expect(draft).toContain('"mode":"substrait"');
