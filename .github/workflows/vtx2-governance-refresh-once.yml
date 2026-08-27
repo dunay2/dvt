@@ -20,6 +20,8 @@ jobs:
           ref: agent/vtx2-substrait-card-pilot
           fetch-depth: 0
       - uses: ./.github/actions/setup-node-pnpm
+      - name: Build governance runtime dependency
+        run: pnpm --filter @dvt/crypto build
       - name: Format review-touched source files
         run: >-
           pnpm exec prettier --write
