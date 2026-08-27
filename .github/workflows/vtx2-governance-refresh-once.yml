@@ -31,6 +31,10 @@ jobs:
           packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts
           apps/web/src/app/views/canvas/canvasNodePresentationProjection.ts
           apps/web/src/app/views/canvas/canvasSubstraitPresentationFailClosed.test.ts
+      - name: Start Planning DB
+        run: pnpm planning:db:up
+      - name: Wait for Planning DB
+        run: pnpm planning:db:health --wait
       - name: Refresh governed repository surfaces
         run: pnpm governance:refresh
       - name: Commit generated governance surfaces
