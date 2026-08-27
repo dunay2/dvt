@@ -1,4 +1,8 @@
 import { create } from '@bufbuild/protobuf';
+import type {
+  Expression,
+  ReadRel,
+} from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { TypeSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import { describe, expect, it } from 'vitest';
 
@@ -8,7 +12,7 @@ import {
   inspectDvtSubstraitPilotDraft,
 } from './canvasDvtSubstraitPilot';
 
-function projectExpression(draft: ReturnType<typeof createDvtSubstraitPilotDraft>) {
+function projectExpression(draft: ReturnType<typeof createDvtSubstraitPilotDraft>): Expression {
   const root = draft.plan.relations[0]?.relType;
   if (root?.case !== 'root') throw new Error('Expected pilot root relation.');
   const project = root.value.input?.relType;
@@ -17,7 +21,7 @@ function projectExpression(draft: ReturnType<typeof createDvtSubstraitPilotDraft
   return project.value.expressions[0];
 }
 
-function pilotRead(draft: ReturnType<typeof createDvtSubstraitPilotDraft>) {
+function pilotRead(draft: ReturnType<typeof createDvtSubstraitPilotDraft>): ReadRel {
   const root = draft.plan.relations[0]?.relType;
   if (root?.case !== 'root') throw new Error('Expected pilot root relation.');
   const project = root.value.input?.relType;
