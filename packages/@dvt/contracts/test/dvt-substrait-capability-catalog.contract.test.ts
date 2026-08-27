@@ -31,7 +31,9 @@ function standardEntry(
   };
 }
 
-function findCapability(entryId: string) {
+function findCapability(
+  entryId: string
+): (typeof DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries)[number] | undefined {
   return DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.find((entry) => entry.entryId === entryId);
 }
 
