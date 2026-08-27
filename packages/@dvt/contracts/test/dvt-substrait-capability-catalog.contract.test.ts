@@ -9,7 +9,6 @@ import {
   DvtSubstraitStandardCapabilityV1Schema,
   buildDvtSubstraitProductNeedCapabilityId,
   buildDvtSubstraitStandardCapabilityId,
-  findDvtSubstraitCapabilityV1,
   serializeDvtSubstraitCapabilityCatalogV1,
   type DvtSubstraitCapabilityCategory,
   type DvtSubstraitStandardCapabilityV1,
@@ -30,6 +29,10 @@ function standardEntry(
     profileStatus: 'candidate-standard',
     evidenceRefs: EVIDENCE,
   };
+}
+
+function findCapability(entryId: string) {
+  return DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.find((entry) => entry.entryId === entryId);
 }
 
 describe('DVT Substrait capability catalog V1', () => {
@@ -90,7 +93,7 @@ describe('DVT Substrait capability catalog V1', () => {
     expect(supported.every((entry) => entry.evidenceRefs.includes('dvt:#2598'))).toBe(true);
 
     expect(
-      findDvtSubstraitCapabilityV1(
+      findCapability(
         buildDvtSubstraitStandardCapabilityId('scalar-function', {
           sourceKind: 'simple-extension',
           urn: 'extension:io.substrait:functions_string',
@@ -99,7 +102,7 @@ describe('DVT Substrait capability catalog V1', () => {
       )
     ).toMatchObject({ profileStatus: 'candidate-standard' });
     expect(
-      findDvtSubstraitCapabilityV1(
+      findCapability(
         buildDvtSubstraitStandardCapabilityId('relation', {
           sourceKind: 'core',
           message: 'substrait.FilterRel',
@@ -153,11 +156,11 @@ describe('DVT Substrait capability catalog V1', () => {
     });
 
     expect(nonDecimal).not.toBe(decimal);
-    expect(findDvtSubstraitCapabilityV1(nonDecimal)).toMatchObject({
+    expect(findCapability(nonDecimal)).toMatchObject({
       kind: 'standard',
       profileStatus: 'candidate-standard',
     });
-    expect(findDvtSubstraitCapabilityV1(decimal)).toMatchObject({
+    expect(findCapability(decimal)).toMatchObject({
       kind: 'standard',
       profileStatus: 'candidate-standard',
     });
@@ -165,7 +168,7 @@ describe('DVT Substrait capability catalog V1', () => {
 
   it('keeps product gaps structurally separate from standard identities', () => {
     const jsonbId = buildDvtSubstraitProductNeedCapabilityId('type', 'postgres-jsonb');
-    const jsonb = findDvtSubstraitCapabilityV1(jsonbId);
+    const jsonb = findCapability(jsonbId);
 
     expect(jsonb).toMatchObject({
       kind: 'product-need',
