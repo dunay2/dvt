@@ -35,6 +35,8 @@ jobs:
         run: pnpm planning:db:up
       - name: Wait for Planning DB
         run: pnpm planning:db:health --wait
+      - name: Import current Planning DB schema and repository governance
+        run: pnpm planning:db:import
       - name: Refresh governed repository surfaces
         run: pnpm governance:refresh
       - name: Commit generated governance surfaces
