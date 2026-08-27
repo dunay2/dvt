@@ -56,5 +56,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
-          git commit -m 'docs(governance): Refresh VTX2 Substrait pilot indexes'
+          git commit -m 'docs(docs): Refresh VTX2 Substrait pilot indexes'
           git push --no-verify origin HEAD:agent/vtx2-substrait-card-pilot
