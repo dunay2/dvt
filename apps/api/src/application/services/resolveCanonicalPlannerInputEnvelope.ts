@@ -3,7 +3,6 @@ import type {
   GenericGraphSourceV1,
   PlannerInputEnvelopeV1,
   PlannerPolicyClassSet,
-  StartRunPlannerEnvironmentInput,
 } from '@dvt/contracts';
 
 export interface CanonicalPlannerInputEnvelopeInput {
@@ -11,7 +10,6 @@ export interface CanonicalPlannerInputEnvelopeInput {
   readonly selection: PlannerInputEnvelopeV1['selection'];
   readonly decisionScope?: PlannerInputEnvelopeV1['decisionScope'] | undefined;
   readonly policies?: PlannerPolicyClassSet | undefined;
-  readonly environment?: StartRunPlannerEnvironmentInput | undefined;
   readonly ownership?: PlannerInputEnvelopeV1['ownership'] | undefined;
   readonly observability?: ExecutionPlan['observability'] | undefined;
   readonly requestedBy?: string | undefined;
@@ -27,16 +25,6 @@ export function resolveCanonicalPlannerInputEnvelope(
     selection: input.selection,
     ...(input.decisionScope === undefined ? {} : { decisionScope: input.decisionScope }),
     ...(input.policies === undefined ? {} : { policies: input.policies }),
-    ...(input.environment === undefined
-      ? {}
-      : {
-          environment: {
-            ...(input.environment.environmentId === undefined
-              ? {}
-              : { environmentId: input.environment.environmentId }),
-            ...(input.environment.vars === undefined ? {} : { vars: input.environment.vars }),
-          },
-        }),
     ...(input.ownership === undefined ? {} : { ownership: input.ownership }),
     ...(input.observability === undefined ? {} : { observability: input.observability }),
     ...(input.requestedBy === undefined ? {} : { requestedBy: input.requestedBy }),
