@@ -1,0 +1,92 @@
+name: VTX2 map V0 renderer correction one-shot
+
+on:
+  push:
+    branches:
+      - docs/vtx2-substrait-development-map
+    paths:
+      - '.github/workflows/vtx2-map-v0-correction-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  correct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/vtx2-substrait-development-map
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --prefer-offline
+      - name: Apply bounded V0 renderer correction
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('docs/architecture/system/subsystems/semantic-transformation/vtx2-substrait-centered-development-map.md')
+          s = p.read_text()
+          replacements = {
+            'last_reviewed: 2026-08-25': 'last_reviewed: 2026-08-28',
+            '''      SQL view       future Python   other views
+          │
+          ▼
+     SQLGlot AST
+          │
+          ▼
+    target SQL dialect''': ''' PostgreSQL view    future Python   other views
+          │
+          ▼
+ bounded PostgreSQL AST
+          │
+          ▼
+ existing pgsql-deparser
+          │
+          ▼
+     PostgreSQL SQL''',
+            '| SQL projection responsibility                                     | FUTURE AFTER PILOT / OWNER TBD  | map admitted Substrait semantics to SQLGlot AST                                              | no framework or public component until Planning DB/source ownership is reconciled            |': '| PostgreSQL projection responsibility                            | LOCAL / BOUNDED V0              | map the admitted pilot Substrait shape to PostgreSQL AST                                      | local mapping only; no renderer framework                                                     |',
+            '| SQLGlot                                                           | EXTERNAL CANDIDATE              | target AST + dialect rendering                                                               | #2618 decides bounded outbound role                                                          |': '| `pgsql-deparser`                                                    | EXISTING                        | emit PostgreSQL SQL from the bounded PostgreSQL AST                                           | reuse the repository dependency                                                               |\n| SQLGlot                                                           | FUTURE CANDIDATE                | cross-dialect target layer only after a second real dialect exists                            | #2618 = REFERENCE-ONLY for V0                                                                 |',
+            '''typed Substrait.Plan
+ -> bounded Substrait-to-SQLGlot projection
+ -> SQLGlot AST
+ -> target SQL dialect
+ -> existing provider-native validation / Preview / Run''': '''typed Substrait.Plan
+ -> bounded Substrait-to-PostgreSQL-AST mapping
+ -> existing pgsql-deparser
+ -> PostgreSQL SQL
+ -> existing provider-native validation / Preview / Run''',
+            '#2597 Substrait -> SQLGlot AST -> governed SQL projection': '#2597 Substrait -> PostgreSQL AST -> governed SQL projection',
+          }
+          for old, new in replacements.items():
+              if old not in s:
+                  raise SystemExit(f'missing expected map text: {old[:80]!r}')
+              s = s.replace(old, new)
+          marker = 'The existing DVT sidecar remains limited to stable product identity/provenance'
+          note = ('For V0, PostgreSQL uses the repository-existing `pgsql-deparser`. SQLGlot is deliberately '
+                  'REFERENCE-ONLY until a second real SQL dialect demonstrates enough duplication to justify '
+                  'a cross-dialect target layer.\n\n')
+          if note not in s:
+              s = s.replace(marker, note + marker)
+          p.write_text(s)
+          PY
+      - name: Format and refresh governance
+        run: |
+          pnpm exec prettier --write docs/architecture/system/subsystems/semantic-transformation/vtx2-substrait-centered-development-map.md
+          pnpm governance:refresh
+      - name: Remove one-shot workflows and commit
+        run: |
+          rm -f .github/workflows/vtx2-map-format-once.yml
+          rm -f .github/workflows/vtx2-planning-db-reconcile-once.yml
+          rm -f .github/workflows/vtx2-map-v0-correction-once.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'docs(architecture): align VTX2 V0 PostgreSQL projection'
+          git push --no-verify origin HEAD:docs/vtx2-substrait-development-map
