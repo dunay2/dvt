@@ -8,13 +8,6 @@ export const PlannerSelectionSchema = z
   })
   .strict();
 
-export const PlannerEnvironmentContextSchema = z
-  .object({
-    environmentId: z.string().min(1).optional(),
-    vars: z.record(z.string(), z.unknown()).optional(),
-  })
-  .strict();
-
 export const PlannerObservabilitySchema = z
   .object({
     tags: z.record(z.string(), z.string()).optional(),
@@ -24,5 +17,4 @@ export const PlannerObservabilitySchema = z
   .optional();
 
 export type PlannerSelectionSchemaT = z.infer<typeof PlannerSelectionSchema>;
-export type PlannerEnvironmentContextSchemaT = z.infer<typeof PlannerEnvironmentContextSchema>;
 export type PlannerObservabilitySchemaT = z.infer<typeof PlannerObservabilitySchema>;
