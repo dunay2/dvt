@@ -264,6 +264,7 @@ export function serializeDvtSubstraitCapabilityCatalogV1(input: unknown): string
 }
 
 const STUDY = 'dvt:#2640';
+const PILOT = 'dvt:#2598';
 const ALGEBRA = [STUDY, 'substrait:v0.101.0:proto/substrait/algebra.proto'];
 const TYPES = [STUDY, 'substrait:v0.101.0:proto/substrait/type.proto'];
 const FUNCTIONS_STRING = [STUDY, 'substrait:v0.101.0:extensions/functions_string.yaml'];
@@ -428,6 +429,58 @@ const STANDARD_SEED: DvtSubstraitStandardCapabilityV1[] = [
   ),
 ];
 
+const PILOT_SUPPORTED_ENTRY_IDS = new Set([
+  buildDvtSubstraitStandardCapabilityId('relation', {
+    sourceKind: 'core',
+    message: 'substrait.ReadRel',
+    selector: 'read_type.named_table',
+  }),
+  buildDvtSubstraitStandardCapabilityId('relation', {
+    sourceKind: 'core',
+    message: 'substrait.RelCommon',
+    selector: 'emit_kind.emit',
+  }),
+  buildDvtSubstraitStandardCapabilityId('relation', {
+    sourceKind: 'core',
+    message: 'substrait.ProjectRel',
+  }),
+  buildDvtSubstraitStandardCapabilityId('expression-form', {
+    sourceKind: 'core',
+    message: 'substrait.Expression',
+    selector: 'rex_type.selection',
+  }),
+  buildDvtSubstraitStandardCapabilityId('expression-form', {
+    sourceKind: 'core',
+    message: 'substrait.Expression',
+    selector: 'rex_type.scalar_function',
+  }),
+  buildDvtSubstraitStandardCapabilityId('type', {
+    sourceKind: 'core',
+    message: 'substrait.Type',
+    selector: 'kind.string',
+  }),
+  buildDvtSubstraitStandardCapabilityId('scalar-function', {
+    sourceKind: 'simple-extension',
+    urn: 'extension:io.substrait:functions_string',
+    name: 'trim',
+  }),
+  buildDvtSubstraitStandardCapabilityId('scalar-function', {
+    sourceKind: 'simple-extension',
+    urn: 'extension:io.substrait:functions_string',
+    name: 'upper',
+  }),
+]);
+
+const ADMITTED_STANDARD_SEED = STANDARD_SEED.map((entry) =>
+  PILOT_SUPPORTED_ENTRY_IDS.has(entry.entryId)
+    ? DvtSubstraitStandardCapabilityV1Schema.parse({
+        ...entry,
+        profileStatus: 'supported-profile',
+        evidenceRefs: [...entry.evidenceRefs, PILOT],
+      })
+    : entry
+);
+
 const PRODUCT_NEED_SEED: DvtSubstraitProductNeedCapabilityV1[] = [
   productNeed(
     'type',
@@ -456,11 +509,5 @@ const PRODUCT_NEED_SEED: DvtSubstraitProductNeedCapabilityV1[] = [
 export const DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1 = canonicalizeDvtSubstraitCapabilityCatalogV1({
   schemaVersion: DVT_SUBSTRAIT_CAPABILITY_CATALOG_SCHEMA_VERSION,
   profile: DVT_SUBSTRAIT_PROFILE_REF_V1,
-  entries: [...STANDARD_SEED, ...PRODUCT_NEED_SEED],
+  entries: [...ADMITTED_STANDARD_SEED, ...PRODUCT_NEED_SEED],
 });
-
-export function findDvtSubstraitCapabilityV1(
-  entryId: string
-): DvtSubstraitCapabilityEntryV1 | undefined {
-  return DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.find((entry) => entry.entryId === entryId);
-}

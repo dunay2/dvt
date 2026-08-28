@@ -13,6 +13,8 @@
  */
 import { z } from 'zod';
 
+import { DvtSubstraitSemanticDocumentV1Schema } from './DvtSubstraitProfile.v1.js';
+
 const NonBlankStringSchema = z.string().trim().min(1);
 const JsonScalarSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
 
@@ -20,6 +22,7 @@ export const VISUAL_TRANSFORM_RECIPE_VERSION = 'v1' as const;
 export const DVT_TRANSFORM_AUTHORING_MODE = {
   sql: 'sql',
   visual: 'visual',
+  substrait: 'substrait',
 } as const;
 export const VISUAL_TRANSFORM_FUNCTION_ID = {
   trim: 'trim',
@@ -172,10 +175,18 @@ const VisualTransformAuthoringAuthorityV1Schema = z
     recipe: VisualTransformRecipeV1Schema,
   })
   .strict();
+const SubstraitTransformAuthoringAuthorityV1Schema = z
+  .object({
+    version: z.literal(VISUAL_TRANSFORM_RECIPE_VERSION),
+    mode: z.literal(DVT_TRANSFORM_AUTHORING_MODE.substrait),
+    semanticDocument: DvtSubstraitSemanticDocumentV1Schema,
+  })
+  .strict();
 
 export const DvtTransformAuthoringAuthorityV1Schema = z.discriminatedUnion('mode', [
   SqlTransformAuthoringAuthorityV1Schema,
   VisualTransformAuthoringAuthorityV1Schema,
+  SubstraitTransformAuthoringAuthorityV1Schema,
 ]);
 
 export type VisualTransformColumnInputRefV1 = z.infer<typeof VisualTransformColumnInputRefV1Schema>;

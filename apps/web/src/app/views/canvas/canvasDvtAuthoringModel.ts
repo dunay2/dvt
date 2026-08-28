@@ -1,4 +1,5 @@
 /** Owned concern: derive and apply route-owned DVT transformation authoring metadata. */
+import type { Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import {
   ConnectedSourceRefSchema,
   ConnectionRefSchema,
@@ -7,12 +8,18 @@ import {
   type ConnectionRef,
   type VisualTransformRecipeV1,
 } from '@dvt/contracts';
+import type { DvtSubstraitAuthoringSidecarV1 } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
+  applyDvtSubstraitSemanticDocument,
   applyDvtVisualTransformRecipe,
   readDvtTransformAuthoringAuthority,
 } from './canvasDvtTransformAuthoringAuthority';
+import {
+  decodeDvtSubstraitPilotDocument,
+  encodeDvtSubstraitPilotDocument,
+} from './canvasDvtSubstraitPilot';
 import { buildDvtSqlTransformMetadata } from './canvasTransformationSqlMirror';
 import type { CanvasInspectorNodeDraftErrorCode } from './canvasInspectorAuthoringErrorCodes';
 
@@ -36,6 +43,13 @@ export type DvtVisualTransformAuthoringMetadata = Readonly<{
   recipe: VisualTransformRecipeV1;
 }>;
 
+export type DvtSubstraitTransformAuthoringMetadata = Readonly<{
+  kind: 'sql_transform';
+  mode: typeof DVT_TRANSFORM_AUTHORING_MODE.substrait;
+  plan: Plan;
+  sidecar: DvtSubstraitAuthoringSidecarV1;
+}>;
+
 export type DvtSinkAuthoringMetadata = Readonly<{
   kind: 'sink';
   schema: string;
@@ -48,6 +62,7 @@ export type DvtNodeAuthoringMetadata =
   | DvtSourceAuthoringMetadata
   | DvtSqlTransformAuthoringMetadata
   | DvtVisualTransformAuthoringMetadata
+  | DvtSubstraitTransformAuthoringMetadata
   | DvtSinkAuthoringMetadata;
 
 export type DvtNodeAuthoringMetadataErrors = Partial<
@@ -200,12 +215,25 @@ export function resolveInheritedDvtConnectionRef(args: {
 
 function createSqlTransformMetadata(
   node: CanonicalNode
-): DvtSqlTransformAuthoringMetadata | DvtVisualTransformAuthoringMetadata {
+):
+  | DvtSqlTransformAuthoringMetadata
+  | DvtVisualTransformAuthoringMetadata
+  | DvtSubstraitTransformAuthoringMetadata {
   const authority = readDvtTransformAuthoringAuthority(node);
 
-  return authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual
-    ? { kind: 'sql_transform', mode: authority.mode, recipe: authority.recipe }
-    : { kind: 'sql_transform', mode: authority.mode, sql: authority.sql };
+  if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
+    return { kind: 'sql_transform', mode: authority.mode, recipe: authority.recipe };
+  }
+  if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+    const draft = decodeDvtSubstraitPilotDocument(authority.semanticDocument);
+    return {
+      kind: 'sql_transform',
+      mode: authority.mode,
+      plan: draft.plan,
+      sidecar: draft.sidecar,
+    };
+  }
+  return { kind: 'sql_transform', mode: authority.mode, sql: authority.sql };
 }
 
 function createSinkMetadata(node: CanonicalNode): DvtSinkAuthoringMetadata {
@@ -350,6 +378,12 @@ export function applyDvtNodeAuthoringMetadata(
   if (metadata.kind === 'sql_transform') {
     if (metadata.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
       return applyDvtVisualTransformRecipe(node, metadata.recipe);
+    }
+    if (metadata.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+      return applyDvtSubstraitSemanticDocument(
+        node,
+        encodeDvtSubstraitPilotDocument({ plan: metadata.plan, sidecar: metadata.sidecar })
+      );
     }
     const transformMetadata = buildDvtSqlTransformMetadata(node, metadata.sql);
     return {

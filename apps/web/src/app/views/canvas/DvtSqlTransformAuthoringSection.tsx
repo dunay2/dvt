@@ -7,6 +7,7 @@ import {
   type MonacoCodeDiagnostic,
 } from '../../components/monaco/MonacoCodeEditor';
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
+import { Button } from '../../components/ui/button';
 import type {
   PostgresTransformSqlDiagnostic,
   PostgresTransformSqlValidationResult,
@@ -28,6 +29,7 @@ export function DvtSqlTransformAuthoringSection({
   errors,
   section = 'all',
   inheritedConnectionRef,
+  onStartSubstraitPilot,
   onChange,
 }: Readonly<{
   node: CanonicalNode;
@@ -36,6 +38,7 @@ export function DvtSqlTransformAuthoringSection({
   errors: CanvasInspectorNodeDraftErrors['dvt'];
   section?: 'all' | 'code';
   inheritedConnectionRef?: ConnectionRef;
+  onStartSubstraitPilot?: () => void;
   onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
 }>): JSX.Element {
   const warehouseSourceImport = useOptionalWarehouseSourceImportPort();
@@ -90,6 +93,21 @@ export function DvtSqlTransformAuthoringSection({
           <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>
             {canvasViewCopy.inspectorDvtSqlTransformTitle}
           </h3>
+          {onStartSubstraitPilot == null ? null : (
+            <div className="flex items-center justify-between gap-3 rounded border border-[color:var(--border-default)] px-3 py-2">
+              <p className="text-xs text-(--text-muted)">customers · name → trim → upper</p>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={disabled}
+                data-slot="dvt-start-substrait-pilot"
+                onClick={onStartSubstraitPilot}
+              >
+                Substrait
+              </Button>
+            </div>
+          )}
           <div className="space-y-2">
             <h4 className={inspectorVisualClasses.contextPanelSectionTitle}>
               {canvasViewCopy.inspectorDvtSqlLabel}

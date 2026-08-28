@@ -1,10 +1,16 @@
 /** Owned concern: adapt plugin artifact queries into the shared Canvas node presentation DTO. */
+import { DVT_TRANSFORM_AUTHORING_MODE, type VisualTransformRecipeV1 } from '@dvt/contracts';
+
 import { buildCanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth';
 import type { CanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { projectDbtModelArtifact } from './canvasDbtModelArtifactProjection';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
-import { DVT_TRANSFORM_AUTHORING_MODE, type VisualTransformRecipeV1 } from '@dvt/contracts';
+import {
+  decodeDvtSubstraitPilotDocument,
+  inspectDvtSubstraitPilotDraft,
+  type DvtSubstraitPilotProjection,
+} from './canvasDvtSubstraitPilot';
 import {
   isObjectFilePostgresNode,
   resolveObjectFilePostgresAuthoringMetadata,
@@ -61,18 +67,34 @@ function projectCanvasNodePresentationTruthInternal(
         };
   let visualRecipe: VisualTransformRecipeV1 | null = null;
   let lineageRecipe: VisualTransformRecipeV1 | null = null;
+  let substraitOutputs: DvtSubstraitPilotProjection['outputs'] | null = null;
+  let substraitRejected = false;
   if (args.node.pluginId === 'dvt' && args.node.kind === 'dvt:sql_transform') {
     try {
       const authority = readDvtTransformAuthoringAuthority(args.node);
       if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
         visualRecipe = authority.recipe;
         lineageRecipe = authority.recipe;
+      } else if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+        try {
+          const inspection = inspectDvtSubstraitPilotDraft(
+            decodeDvtSubstraitPilotDocument(authority.semanticDocument)
+          );
+          if (inspection.ok) {
+            substraitOutputs = inspection.projection.outputs;
+          } else {
+            substraitRejected = true;
+          }
+        } catch {
+          substraitRejected = true;
+        }
       } else {
         lineageRecipe = readDvtTransformLineageProvenance(args.node);
       }
     } catch {
       visualRecipe = null;
       lineageRecipe = null;
+      substraitOutputs = null;
     }
   }
   let visualGeneratedCode: Readonly<{
@@ -120,6 +142,22 @@ function projectCanvasNodePresentationTruthInternal(
             } as const),
         }),
   });
+
+  if (substraitRejected) {
+    return {
+      ...baseTruth,
+      columns: {
+        declared: [],
+        inherited: [],
+        visible: [],
+        declaredCount: 0,
+        inheritedCount: 0,
+        visibleCount: 0,
+        visibleProvenance: 'none',
+      },
+    };
+  }
+
   const shouldProjectUpstreamColumns =
     args.node.role === 'output' ||
     (args.node.role === 'transform' &&
@@ -182,9 +220,29 @@ function projectCanvasNodePresentationTruthInternal(
           };
         })()
       : baseTruth;
-  if (lineageRecipe == null) {
-    return presentationTruth;
+
+  if (substraitOutputs != null) {
+    const declared = substraitOutputs.map((output) => ({
+      name: output.name,
+      type: 'string',
+      provenance: 'declared' as const,
+      reference: output.fieldId,
+    }));
+    return {
+      ...presentationTruth,
+      columns: {
+        declared,
+        inherited: presentationTruth.columns.inherited,
+        visible: declared,
+        declaredCount: declared.length,
+        inheritedCount: presentationTruth.columns.inheritedCount,
+        visibleCount: declared.length,
+        visibleProvenance: declared.length > 0 ? 'declared' : 'none',
+      },
+    };
   }
+
+  if (lineageRecipe == null) return presentationTruth;
   const declared = lineageRecipe.outputs.map((output) => ({
     name: output.name,
     type: output.dataType ?? 'unknown',

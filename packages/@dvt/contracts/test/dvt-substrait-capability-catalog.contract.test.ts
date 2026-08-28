@@ -9,7 +9,6 @@ import {
   DvtSubstraitStandardCapabilityV1Schema,
   buildDvtSubstraitProductNeedCapabilityId,
   buildDvtSubstraitStandardCapabilityId,
-  findDvtSubstraitCapabilityV1,
   serializeDvtSubstraitCapabilityCatalogV1,
   type DvtSubstraitCapabilityCategory,
   type DvtSubstraitStandardCapabilityV1,
@@ -32,19 +31,86 @@ function standardEntry(
   };
 }
 
+function findCapability(
+  entryId: string
+): (typeof DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries)[number] | undefined {
+  return DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.find((entry) => entry.entryId === entryId);
+}
+
 describe('DVT Substrait capability catalog V1', () => {
-  it('reuses the exact #2595 profile and begins with candidates only', () => {
+  it('reuses the exact #2595 profile and admits only the #2598 pilot semantics', () => {
     expect(DVT_SUBSTRAIT_CAPABILITY_CATALOG_SCHEMA_VERSION).toBe(
       'dvt-substrait-capability-catalog.v1'
     );
     expect(DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.profile).toEqual(DVT_SUBSTRAIT_PROFILE_REF_V1);
     expect(DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.profile.specVersion).toBe('0.101.0');
     expect(DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries).toHaveLength(51);
+
+    const supported = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.filter(
+      (entry) => entry.kind === 'standard' && entry.profileStatus === 'supported-profile'
+    );
+    expect(supported.map((entry) => entry.entryId)).toEqual(
+      [
+        buildDvtSubstraitStandardCapabilityId('relation', {
+          sourceKind: 'core',
+          message: 'substrait.ReadRel',
+          selector: 'read_type.named_table',
+        }),
+        buildDvtSubstraitStandardCapabilityId('relation', {
+          sourceKind: 'core',
+          message: 'substrait.RelCommon',
+          selector: 'emit_kind.emit',
+        }),
+        buildDvtSubstraitStandardCapabilityId('relation', {
+          sourceKind: 'core',
+          message: 'substrait.ProjectRel',
+        }),
+        buildDvtSubstraitStandardCapabilityId('expression-form', {
+          sourceKind: 'core',
+          message: 'substrait.Expression',
+          selector: 'rex_type.selection',
+        }),
+        buildDvtSubstraitStandardCapabilityId('expression-form', {
+          sourceKind: 'core',
+          message: 'substrait.Expression',
+          selector: 'rex_type.scalar_function',
+        }),
+        buildDvtSubstraitStandardCapabilityId('type', {
+          sourceKind: 'core',
+          message: 'substrait.Type',
+          selector: 'kind.string',
+        }),
+        buildDvtSubstraitStandardCapabilityId('scalar-function', {
+          sourceKind: 'simple-extension',
+          urn: 'extension:io.substrait:functions_string',
+          name: 'trim',
+        }),
+        buildDvtSubstraitStandardCapabilityId('scalar-function', {
+          sourceKind: 'simple-extension',
+          urn: 'extension:io.substrait:functions_string',
+          name: 'upper',
+        }),
+      ].sort()
+    );
+    expect(supported.every((entry) => entry.evidenceRefs.includes('dvt:#2598'))).toBe(true);
+
     expect(
-      DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.filter(
-        (entry) => entry.kind === 'standard' && entry.profileStatus === 'supported-profile'
+      findCapability(
+        buildDvtSubstraitStandardCapabilityId('scalar-function', {
+          sourceKind: 'simple-extension',
+          urn: 'extension:io.substrait:functions_string',
+          name: 'lower',
+        })
       )
-    ).toEqual([]);
+    ).toMatchObject({ profileStatus: 'candidate-standard' });
+    expect(
+      findCapability(
+        buildDvtSubstraitStandardCapabilityId('relation', {
+          sourceKind: 'core',
+          message: 'substrait.FilterRel',
+        })
+      )
+    ).toMatchObject({ profileStatus: 'candidate-standard' });
   });
 
   it('uses exact relation variants and RelCommon.Emit instead of SQL keyword identities', () => {
@@ -92,11 +158,11 @@ describe('DVT Substrait capability catalog V1', () => {
     });
 
     expect(nonDecimal).not.toBe(decimal);
-    expect(findDvtSubstraitCapabilityV1(nonDecimal)).toMatchObject({
+    expect(findCapability(nonDecimal)).toMatchObject({
       kind: 'standard',
       profileStatus: 'candidate-standard',
     });
-    expect(findDvtSubstraitCapabilityV1(decimal)).toMatchObject({
+    expect(findCapability(decimal)).toMatchObject({
       kind: 'standard',
       profileStatus: 'candidate-standard',
     });
@@ -104,7 +170,7 @@ describe('DVT Substrait capability catalog V1', () => {
 
   it('keeps product gaps structurally separate from standard identities', () => {
     const jsonbId = buildDvtSubstraitProductNeedCapabilityId('type', 'postgres-jsonb');
-    const jsonb = findDvtSubstraitCapabilityV1(jsonbId);
+    const jsonb = findCapability(jsonbId);
 
     expect(jsonb).toMatchObject({
       kind: 'product-need',

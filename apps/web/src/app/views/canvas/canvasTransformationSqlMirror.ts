@@ -1,5 +1,10 @@
 /** Owned concern: classify and materialize DVT transform SQL mirror state. */
-import { VisualTransformRecipeV1Schema, type VisualTransformRecipeV1 } from '@dvt/contracts';
+import {
+  DVT_TRANSFORM_AUTHORING_MODE,
+  DvtTransformAuthoringAuthorityV1Schema,
+  VisualTransformRecipeV1Schema,
+  type VisualTransformRecipeV1,
+} from '@dvt/contracts';
 
 import type { CanonicalNode } from '../../types/canonical';
 
@@ -81,6 +86,16 @@ export function readTransformationSqlMirrorState(
 }
 
 export function resolveExecutableSqlText(node: CanonicalNode): ExecutableSqlResolution {
+  const authority = DvtTransformAuthoringAuthorityV1Schema.safeParse(
+    node.metadata?.transformAuthoring
+  );
+  if (authority.success && authority.data.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+    return {
+      ok: false,
+      message: `SQL projection is not available yet for Substrait-authored transform node ${node.id}.`,
+    };
+  }
+
   const mirrorState = readTransformationSqlMirrorState(node);
 
   if (mirrorState.status === 'invalid_ambiguous') {

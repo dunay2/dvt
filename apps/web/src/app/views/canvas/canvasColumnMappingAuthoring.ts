@@ -122,6 +122,9 @@ function readEditableRecipe(
     if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
       return { outcome: 'ready', recipe: authority.recipe };
     }
+    if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.sql) {
+      return { outcome: 'rejected', reason: 'target_not_visual_transform' };
+    }
     if (authority.sql.trim().length > 0) {
       return { outcome: 'rejected', reason: 'sql_authority_not_empty' };
     }
@@ -153,6 +156,7 @@ export function resolveCanvasColumnMappingTarget(
             ...(output.dataType == null ? {} : { dataType: output.dataType }),
           };
     }
+    if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.sql) return null;
     const targetColumn = readColumns(targetNode).find((column) => column.name === columnId);
     return {
       nodeId: targetNode.id,

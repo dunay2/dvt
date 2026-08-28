@@ -6,6 +6,10 @@ import {
   canonicalizeVisualTransformRecipeV1,
   type VisualTransformRecipeV1,
 } from '@dvt/contracts';
+import {
+  canonicalizeDvtSubstraitSemanticDocumentV1,
+  type DvtSubstraitSemanticDocumentV1,
+} from '@dvt/contracts';
 
 import type { CanonicalNode } from '../../types/canonical';
 import {
@@ -26,6 +30,11 @@ export type DvtTransformAuthoringAuthority =
       version: typeof VISUAL_TRANSFORM_RECIPE_VERSION;
       mode: typeof DVT_TRANSFORM_AUTHORING_MODE.visual;
       recipe: VisualTransformRecipeV1;
+    }>
+  | Readonly<{
+      version: typeof VISUAL_TRANSFORM_RECIPE_VERSION;
+      mode: typeof DVT_TRANSFORM_AUTHORING_MODE.substrait;
+      semanticDocument: DvtSubstraitSemanticDocumentV1;
     }>;
 
 function assertDvtTransformNode(node: CanonicalNode): void {
@@ -90,6 +99,13 @@ export function readDvtTransformAuthoringAuthority(
     return result.data;
   }
 
+  if (result.data.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+    if (hasEditableSqlMetadata(node)) {
+      throw new Error('Substrait DVT transform authority cannot coexist with editable SQL.');
+    }
+    return result.data;
+  }
+
   return {
     ...result.data,
     sql,
@@ -111,6 +127,26 @@ export function applyDvtVisualTransformRecipe(
         version: VISUAL_TRANSFORM_RECIPE_VERSION,
         mode: DVT_TRANSFORM_AUTHORING_MODE.visual,
         recipe,
+      },
+    },
+  };
+}
+
+export function applyDvtSubstraitSemanticDocument(
+  node: CanonicalNode,
+  documentInput: unknown
+): CanonicalNode {
+  assertDvtTransformNode(node);
+  const semanticDocument = canonicalizeDvtSubstraitSemanticDocumentV1(documentInput);
+
+  return {
+    ...node,
+    metadata: {
+      ...removeEditableSqlMetadata(node),
+      [DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY]: {
+        version: VISUAL_TRANSFORM_RECIPE_VERSION,
+        mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
+        semanticDocument,
       },
     },
   };

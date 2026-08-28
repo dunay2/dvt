@@ -131,12 +131,14 @@ function resolveNodeWorkbenchHiddenGeneralRowIds(
   return rowIds;
 }
 
-function hasVisualDvtTransformAuthority(node: CanonicalNode): boolean {
-  if (node.pluginId !== 'dvt' || node.kind !== 'dvt:sql_transform') return false;
+function readDvtTransformAuthoringMode(
+  node: CanonicalNode
+): (typeof DVT_TRANSFORM_AUTHORING_MODE)[keyof typeof DVT_TRANSFORM_AUTHORING_MODE] | null {
+  if (node.pluginId !== 'dvt' || node.kind !== 'dvt:sql_transform') return null;
   try {
-    return readDvtTransformAuthoringAuthority(node).mode === DVT_TRANSFORM_AUTHORING_MODE.visual;
+    return readDvtTransformAuthoringAuthority(node).mode;
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -177,7 +179,7 @@ function buildNodeWorkbenchReadModel({
             (canEditNode &&
               node.pluginId === 'dvt' &&
               node.kind === 'dvt:sql_transform' &&
-              !hasVisualDvtTransformAuthority(node)))
+              readDvtTransformAuthoringMode(node) === DVT_TRANSFORM_AUTHORING_MODE.sql))
             ? (() => {
                 const {
                   code: _passiveCode,
@@ -256,7 +258,12 @@ export function CanvasNodeWorkbenchPanel({
     () => projectCanvasNodePresentationTruth({ node, nodes, edges }),
     [edges, node, nodes]
   );
-  const visualDvtTransformAuthority = hasVisualDvtTransformAuthority(node);
+  const dvtTransformAuthoringMode = readDvtTransformAuthoringMode(node);
+  const visualDvtTransformAuthority =
+    dvtTransformAuthoringMode === DVT_TRANSFORM_AUTHORING_MODE.visual;
+  const structuredDvtTransformAuthority =
+    visualDvtTransformAuthority ||
+    dvtTransformAuthoringMode === DVT_TRANSFORM_AUTHORING_MODE.substrait;
   const baseModel = buildNodePropertiesReadModel({
     node,
     nodes,
@@ -333,7 +340,7 @@ export function CanvasNodeWorkbenchPanel({
       </>
     );
     for (const sectionId of ['code', 'sink'] as const) {
-      if (sectionId === 'code' && visualDvtTransformAuthority) continue;
+      if (sectionId === 'code' && structuredDvtTransformAuthority) continue;
       sectionAfterChildren[sectionId] = (
         <>
           {sectionAfterChildren[sectionId]}
@@ -341,55 +348,56 @@ export function CanvasNodeWorkbenchPanel({
         </>
       );
     }
-    if (visualDvtTransformAuthority) {
+    if (structuredDvtTransformAuthority) {
       sectionAfterChildren.columns = (
         <>
           {sectionAfterChildren.columns}
           {renderAuthoringSection('columns')}
         </>
       );
-      if (
-        presentationTruth.code.kind === 'generated' &&
-        authoring.onConvertVisualTransformToSql != null
-      ) {
-        const generatedSql = presentationTruth.code.content;
-        sectionAfterChildren.code = (
-          <>
-            {sectionAfterChildren.code}
-            <div className="flex justify-end pt-1">
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    data-slot="canvas-node-workbench-convert-visual-to-sql"
+    }
+    if (
+      visualDvtTransformAuthority &&
+      presentationTruth.code.kind === 'generated' &&
+      authoring.onConvertVisualTransformToSql != null
+    ) {
+      const generatedSql = presentationTruth.code.content;
+      sectionAfterChildren.code = (
+        <>
+          {sectionAfterChildren.code}
+          <div className="flex justify-end pt-1">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  data-slot="canvas-node-workbench-convert-visual-to-sql"
+                >
+                  {copy.inspectorVisualTransformConvertToSqlLabel}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    {copy.inspectorVisualTransformConvertToSqlTitle}
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {copy.inspectorVisualTransformConvertToSqlDescription}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>{copy.inspectorCancelLabel}</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => authoring.onConvertVisualTransformToSql?.(generatedSql)}
                   >
                     {copy.inspectorVisualTransformConvertToSqlLabel}
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>
-                      {copy.inspectorVisualTransformConvertToSqlTitle}
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>
-                      {copy.inspectorVisualTransformConvertToSqlDescription}
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>{copy.inspectorCancelLabel}</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => authoring.onConvertVisualTransformToSql?.(generatedSql)}
-                    >
-                      {copy.inspectorVisualTransformConvertToSqlLabel}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          </>
-        );
-      }
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </>
+      );
     }
   }
 

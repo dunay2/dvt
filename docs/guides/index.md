@@ -26,6 +26,7 @@ Developer guides, contribution guides, and quality standards.
 - [F-04 Frontend Data Boundary User Manual](f04-frontend-data-boundary-user-manual-20260404.md)
 - [Gap 5 Operator Guide](gap-5-operator-guide-20260319.md)
 - [Gap 5 User Reference](gap-5-user-reference-20260319.md)
+- [GenericGraphSource Technical Manual](generic-graph-source-technical-manual-20260404.md)
 - [GenericGraphSource User Manual](generic-graph-source-user-manual-20260404.md)
 - [How To Add A New StepKind](how-to-add-step-kind-20260406.md)
 - [Manual de usuario de autoria en Canvas](canvas-authoring-user-manual-20260501.md)

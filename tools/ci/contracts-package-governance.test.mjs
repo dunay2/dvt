@@ -15,7 +15,7 @@ function readJson(path) {
   return JSON.parse(readFileSync(path, 'utf8'));
 }
 
-test('contracts package publishes one compiled package entrypoint', () => {
+test('contracts package publishes only governed compiled package entrypoints', () => {
   const packageJson = readJson(packageJsonPath);
 
   assert.equal(packageJson.name, '@dvt/contracts');
@@ -28,6 +28,11 @@ test('contracts package publishes one compiled package entrypoint', () => {
       types: './dist/index.d.ts',
       import: './dist/index.js',
       default: './dist/index.js',
+    },
+    './substrait': {
+      types: './dist/substrait.d.ts',
+      import: './dist/substrait.js',
+      default: './dist/substrait.js',
     },
   });
 

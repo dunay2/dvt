@@ -1,6 +1,7 @@
 export * from './types/contracts.js';
 export * from './types/artifacts.js';
 export * from './workflows.js';
+export * from './substrait.js';
 export * from './contracts/source-import/index.js';
 export * from './contracts/dbt-project/index.js';
 export * from './contracts/workspace/ProjectWorkspace.v1.js';
