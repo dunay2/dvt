@@ -1,0 +1,10 @@
+{
+  "$schema": "https://likec4.dev/schemas/config.json",
+  "name": "dvt-architecture-spike",
+  "title": "DVT+ Architecture — Visibility Spike",
+  "metadata": {
+    "status": "manual-spike",
+    "repository": "dunay2/dvt",
+    "baselineSha": "f892b48a805690053ed922825de2c99b84524fd9"
+  }
+}
