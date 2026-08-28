@@ -27,6 +27,7 @@ jobs:
           node-version: '22'
           cache: pnpm
       - run: pnpm install --frozen-lockfile --prefer-offline
+      - run: pnpm --filter @dvt/crypto build
       - name: Refresh governed indexes
         run: pnpm governance:refresh
       - name: Remove one-shot workflow and commit generated state
