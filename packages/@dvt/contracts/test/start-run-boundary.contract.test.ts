@@ -37,7 +37,18 @@ describe('contracts: StartRun boundary', () => {
 
     expect(command.planRef).toBeUndefined();
     expect(command.graphSource?.nodes).toHaveLength(1);
-    expect(command.environment?.environmentId).toBe('prod');
+  });
+
+  it('rejects retired planner environment input instead of silently ignoring it', () => {
+    expect(() =>
+      parseStartRunCommand({
+        ...VALID_START_RUN_PLANNER_BACKED_COMMAND_FIXTURE,
+        environment: {
+          environmentId: 'prod',
+          vars: { target_name: 'prod' },
+        },
+      })
+    ).toThrow(ContractValidationError);
   });
 
   it.each(['conductor', 'mock'] as const)(
@@ -69,7 +80,6 @@ describe('contracts: StartRun boundary', () => {
       parseStartRunCommand({
         ...VALID_START_RUN_PLAN_REF_COMMAND_FIXTURE,
         graphSource: VALID_START_RUN_PLANNER_BACKED_COMMAND_FIXTURE.graphSource,
-        environment: VALID_START_RUN_PLANNER_BACKED_COMMAND_FIXTURE.environment,
       })
     ).toThrow(ContractValidationError);
   });
