@@ -58,14 +58,6 @@
     "policies": {
       "$ref": "#/$defs/PlannerPolicyClassSet"
     },
-    "environment": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "environmentId": { "type": "string" },
-        "vars": { "type": "object", "additionalProperties": true }
-      }
-    },
     "observability": { "type": "object", "additionalProperties": true },
     "requestedBy": { "type": "string" },
     "requestId": { "type": "string" },
