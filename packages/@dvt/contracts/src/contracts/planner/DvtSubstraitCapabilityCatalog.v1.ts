@@ -265,6 +265,7 @@ export function serializeDvtSubstraitCapabilityCatalogV1(input: unknown): string
 
 const STUDY = 'dvt:#2640';
 const PILOT = 'dvt:#2598';
+const INNER_JOIN = 'dvt:#2634';
 const ALGEBRA = [STUDY, 'substrait:v0.101.0:proto/substrait/algebra.proto'];
 const TYPES = [STUDY, 'substrait:v0.101.0:proto/substrait/type.proto'];
 const FUNCTIONS_STRING = [STUDY, 'substrait:v0.101.0:extensions/functions_string.yaml'];
@@ -471,15 +472,40 @@ const PILOT_SUPPORTED_ENTRY_IDS = new Set([
   }),
 ]);
 
-const ADMITTED_STANDARD_SEED = STANDARD_SEED.map((entry) =>
-  PILOT_SUPPORTED_ENTRY_IDS.has(entry.entryId)
+const INNER_JOIN_SUPPORTED_ENTRY_IDS = new Set([
+  buildDvtSubstraitStandardCapabilityId('relation', {
+    sourceKind: 'core',
+    message: 'substrait.JoinRel',
+    selector: 'JoinType.JOIN_TYPE_INNER',
+  }),
+  buildDvtSubstraitStandardCapabilityId('scalar-function', {
+    sourceKind: 'simple-extension',
+    urn: 'extension:io.substrait:functions_comparison',
+    name: 'equal',
+  }),
+  buildDvtSubstraitStandardCapabilityId('type', {
+    sourceKind: 'core',
+    message: 'substrait.Type',
+    selector: 'kind.bool',
+  }),
+]);
+
+function admissionEvidenceRef(entryId: string): string | undefined {
+  if (PILOT_SUPPORTED_ENTRY_IDS.has(entryId)) return PILOT;
+  if (INNER_JOIN_SUPPORTED_ENTRY_IDS.has(entryId)) return INNER_JOIN;
+  return undefined;
+}
+
+const ADMITTED_STANDARD_SEED = STANDARD_SEED.map((entry) => {
+  const evidenceRef = admissionEvidenceRef(entry.entryId);
+  return evidenceRef
     ? DvtSubstraitStandardCapabilityV1Schema.parse({
         ...entry,
         profileStatus: 'supported-profile',
-        evidenceRefs: [...entry.evidenceRefs, PILOT],
+        evidenceRefs: [...entry.evidenceRefs, evidenceRef],
       })
-    : entry
-);
+    : entry;
+});
 
 const PRODUCT_NEED_SEED: DvtSubstraitProductNeedCapabilityV1[] = [
   productNeed(
