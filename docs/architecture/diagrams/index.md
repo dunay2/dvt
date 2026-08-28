@@ -15,7 +15,7 @@ planned (orange) elements.
 
 - [Architecture Problem Register](./architecture-problem-register.md) -
   source-first current problem graph with explicit issue/epic ownership and a
-  traceability rule preventing discovered problems from becoming lost work
+  maintained traceability rule preventing discovered problems from becoming lost work
 - [Implementation Architecture Diagrams](./implementation-architecture-diagrams.md) -
   overview, domain model, package dependency graph, extracted-diagram navigation,
   and consolidated desired-architecture delta
