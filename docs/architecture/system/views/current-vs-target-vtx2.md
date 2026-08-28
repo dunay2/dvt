@@ -49,7 +49,7 @@ flowchart LR
     Profile["Pinned Substrait profile\nv0.101.0 at this baseline"]
     PlanEnvelope["Serialized Substrait Plan envelope\nprotobuf-base64 + SHA-256"]
     Sidecar["DVT stable identity sidecar\nRelationId / FieldId / provenance"]
-    Catalog["Machine-readable semantic capability catalog"]
+    Catalog["Machine-readable semantic capability catalog\ngovernance metadata"]
     Contracts["@dvt/contracts/substrait"]
     Planner["Existing generic Planner"]
     ExecutionPlan["Existing generic ExecutionPlan"]
@@ -147,6 +147,12 @@ A catalog entry by itself does **not** imply:
 
 Those are distinct decisions.
 
+The independent audit confirmed an important baseline nuance: the catalog commit
+explicitly described the initial seed as governance metadata and recorded **zero
+`supported-profile` entries** pending separate semantic admission/conformance
+evidence. Therefore the existence of the catalog must never be used as evidence
+that the full VTX2 semantic profile is already executable or visually exposed.
+
 ### ExecutionPlan separation already exists
 
 The existing runtime `ExecutionPlan` remains generic and does not model every
@@ -192,6 +198,17 @@ runtime truth until source code commits to it.
 The broad Substrait universe is a reference dictionary, not an automatic DVT
 feature list. Capabilities must be admitted with conformance evidence and remain
 separate from provider/rendering/UI support.
+
+This means the target has at least four independent readiness questions:
+
+```text
+semantic admitted?
+renderer supported?
+provider supported?
+visually exposed?
+```
+
+A positive answer to one does not silently imply the others.
 
 ### Card projection
 
@@ -261,7 +278,7 @@ VTX2 explicitly does **not** require:
 | Provider execution | `IProviderAdapter` / Temporal | Add readiness after rendering; no provider authority inversion |
 | Relational semantics | Pinned Substrait profile contract exists | Complete source mapping/admission/projection/rendering path |
 | Stable editable identity | DVT sidecar exists | Use it through roundtrip and visual editing |
-| Capability governance | Machine-readable catalog exists | Add conformance/admission and product projections |
+| Capability governance | Machine-readable catalog exists | Promote only conformance-proven semantics and project them separately to renderer/provider/UI |
 | SQL | Existing SQL/dbt paths are not semantic authority | Map governed SQL through selected AST adapter into Substrait |
 | Canvas | Existing authoring model | Project/mutate admitted semantic model without second registry |
 | dbt | Concrete import/execution integration | Resolve dbt-native syntax before supported semantic mapping where required |
@@ -280,6 +297,14 @@ evidence demonstrates, at minimum:
 7. SQL -> semantic -> card -> governed SQL roundtrip is proven for the admitted profile;
 8. runtime execution still uses existing Planner/Engine/State/Artifacts authorities.
 
+## Independent audit result
+
+The second pass checked the VTX2 view against the accepted target subsystem,
+current Substrait contracts and the commit that introduced the capability
+catalog. No AS-IS/TARGET boundary needed to move. The only material refinement
+was to make explicit that **catalog presence is governance evidence, not
+supported-profile evidence** at this baseline.
+
 ## Sources
 
 - [`docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md`](../../../adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md)
@@ -288,3 +313,4 @@ evidence demonstrates, at minimum:
 - [`packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProfile.v1.ts`](../../../../packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProfile.v1.ts)
 - [`packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts`](../../../../packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts)
 - [`packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts`](../../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts)
+- [`docs/evidence/ed-20260824-substrait-semantic-reference-traceability.md`](../../../evidence/ed-20260824-substrait-semantic-reference-traceability.md)
