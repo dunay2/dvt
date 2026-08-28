@@ -1,0 +1,39 @@
+name: VTX2 pilot governance one-shot
+
+on:
+  push:
+    branches:
+      - agent/vtx2-substrait-card-pilot
+    paths:
+      - '.github/workflows/vtx2-pilot-governance-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/vtx2-substrait-card-pilot
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --prefer-offline
+      - name: Refresh governed indexes
+        run: pnpm governance:refresh
+      - name: Remove one-shot workflow and commit generated state
+        run: |
+          git rm .github/workflows/vtx2-pilot-governance-once.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'chore(governance): refresh VTX2 pilot indexes'
+          git push --no-verify origin HEAD:agent/vtx2-substrait-card-pilot
