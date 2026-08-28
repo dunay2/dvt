@@ -22,16 +22,26 @@ jobs:
       - uses: ./.github/actions/setup-node-pnpm
       - name: Remove one-shot from governed tree
         run: rm .github/workflows/vtx2-pilot-governance-once.yml
-      - name: Build governance runtime dependency
-        run: pnpm --filter @dvt/crypto build
-      - name: Prepare current-schema Planning DB
+      - run: pnpm --filter @dvt/crypto build
+      - name: Prepare current-schema Planning DB for document sync
         run: |
           pnpm planning:db:up
           pnpm planning:db:health --wait
           node scripts/planning-db-schema.cjs
           pnpm planning:db:import
-      - name: Refresh governance
-        run: pnpm governance:refresh
+      - name: Stabilize governed generated surfaces only
+        run: |
+          for pass in 1 2; do
+            echo "governance generation pass ${pass}/2"
+            node scripts/sync-docs.cjs
+            pnpm docs:status:generate --code-state-only
+            pnpm docs:capability:generate
+            pnpm docs:gov:manifest
+            pnpm docs:governance:document-unit-map
+            pnpm docs:governance:file-component-index
+            pnpm docs:governance:file-fingerprint-baseline
+            pnpm docs:governance:file-fingerprint-impact
+          done
       - name: Commit generated governance state
         run: |
           git diff --check
