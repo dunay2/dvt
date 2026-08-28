@@ -102,6 +102,7 @@
     "monaco-editor": "0.55.1",
     "motion": "12.23.24",
     "next-themes": "0.4.6",
+    "pgsql-deparser": "16.1.1",
     "react": "18.3.1",
     "react-colorful": "5.6.1",
     "react-day-picker": "9.14.0",
