@@ -33,11 +33,13 @@ The rule is:
 | Which semantic capabilities are candidates/admitted/out of scope | Substrait capability catalog | `DvtSubstraitCapabilityCatalog.v1` | PARTIAL VTX2 |
 | What graph/topology did the user author | Workspace graph authoring boundary | `apps/api` workspace graph draft + Web authoring | AS-IS |
 | What runtime responsibilities should execute | Planner / `ExecutionPlan` | `@dvt/planner` through `PlannerFacade` | AS-IS |
-| Is the stored plan admissible and executable | Plan verification | `@dvt/plan-verifier` + executability validation rail | AS-IS |
+| Does a stored plan parse and satisfy step-type configuration rules | Plan verifier | `@dvt/plan-verifier` | AS-IS |
+| May the current runtime execute the stored plan | Executability + Engine admission/integrity | API stored-plan validation + Engine start-run admission | AS-IS |
 | What are the execution DAG layers/downstream steps | Plan interpretation | `@dvt/plan-interpreter` | AS-IS |
 | What run lifecycle commands/status are exposed | Engine | `@dvt/engine` / `IWorkflowEngine` | AS-IS |
 | Which run/step transition is legal | Run domain | `@dvt/run-domain` | AS-IS |
-| What happened operationally | Ordered persisted run events | `IRunStateStore` / state persistence | AS-IS |
+| Which lifecycle facts are realized once provider execution begins | Provider runtime / worker | Temporal workflow + worker/plugin runtime | AS-IS |
+| What happened operationally in DVT | Ordered persisted run events | `IRunStateStore` / state persistence | AS-IS |
 | What is the canonical run status | Event log + derived snapshot | Engine read rail over persisted state | AS-IS |
 | What provider-native execution status exists | Provider adapter | `IProviderAdapter` / `TemporalAdapter` | AS-IS, diagnostic/enrichment |
 | Which exact immutable object was used/produced | Artifact boundary | `@dvt/artifacts` | AS-IS |
@@ -63,7 +65,8 @@ flowchart LR
     Draft["Workspace Graph Draft"]
     Planner["PlannerFacade"]
     Plan["ExecutionPlan"]
-    Verifier["Plan verification"]
+    Verifier["Plan parsing / step config verification"]
+    Admission["Executability + Engine admission / integrity"]
     Interpreter["DAG interpretation"]
   end
 
@@ -71,11 +74,12 @@ flowchart LR
     Engine["IWorkflowEngine"]
     Rules["@dvt/run-domain"]
     Provider["IProviderAdapter"]
-    Temporal["Temporal"]
+    Temporal["Temporal workflow / worker runtime"]
   end
 
   subgraph Evidence["Operational truth"]
-    Events["Ordered RunEvents"]
+    Facts["Provider-realized lifecycle facts"]
+    Events["Ordered persisted RunEvents"]
     Snapshot["Derived snapshot"]
     Artifacts["Exact artifacts"]
     Delivery["Outbox / Delivery"]
@@ -94,11 +98,14 @@ flowchart LR
   Draft --> Planner
   Planner --> Plan
   Plan --> Verifier
-  Verifier --> Engine
+  Verifier --> Admission
+  Admission --> Engine
   Interpreter -.-> Engine
   Engine --> Rules
   Engine --> Provider
   Provider --> Temporal
+  Temporal --> Facts
+  Facts --> Events
   Engine --> Events
   Events --> Rules
   Events --> Snapshot
@@ -124,12 +131,33 @@ architecture.
 - Engine accepts a plan reference/context and governs the run lifecycle.
 - Engine must not become a second planner.
 
+### Plan Verifier versus runtime admission
+
+`@dvt/plan-verifier` owns reusable plan parsing and step-type configuration
+verification. The API and Engine then apply runtime-specific executability,
+policy, capability, context and integrity gates.
+
+No single verifier package should be described as the owner of every StartRun
+admission rule.
+
 ### Engine versus provider
 
 - `IWorkflowEngine` is a DVT-owned application/domain boundary.
 - `IProviderAdapter` is the provider execution seam.
 - `TemporalAdapter` implements `IProviderAdapter`.
 - Temporal is infrastructure, not the source of DVT execution semantics.
+
+### Realized provider facts versus canonical product truth
+
+The canonical run-lifecycle subsystem distinguishes two moments:
+
+1. provider runtimes own the **realized lifecycle facts** once execution reaches
+   them;
+2. persisted ordered DVT `RunEvents` plus derived snapshots own canonical product
+   truth and canonical status.
+
+This lets a worker/runtime originate a fact without making provider memory the
+DVT system of record.
 
 ### State versus provider status
 
@@ -199,33 +227,37 @@ Substrait logical operator count
 ## Ownership summary
 
 ```text
-Semantic meaning          -> Substrait
-Stable interactive identity -> DVT Substrait sidecar
-Boundary vocabulary       -> @dvt/contracts
-Crypto primitives         -> @dvt/crypto
-Execution decisions       -> @dvt/planner
-Plan validation           -> @dvt/plan-verifier
-Execution layering        -> @dvt/plan-interpreter
-Lifecycle                 -> @dvt/engine
-Transition legality       -> @dvt/run-domain
-Operational truth         -> RunEvents / state store
-Exact immutable objects   -> @dvt/artifacts
-Provider translation      -> IProviderAdapter implementations
-Current workflow provider -> Temporal
-Async fact propagation    -> @dvt/delivery
-Read-model derivation     -> projector
-Lineage/evidence          -> lineage + traceability
+Semantic meaning             -> Substrait
+Stable interactive identity  -> DVT Substrait sidecar
+Boundary vocabulary          -> @dvt/contracts
+Crypto primitives            -> @dvt/crypto
+Execution decisions          -> @dvt/planner
+Plan parsing/config verify   -> @dvt/plan-verifier
+Runtime executability        -> API + Engine admission policies
+Execution layering           -> @dvt/plan-interpreter
+Lifecycle command/read rail  -> @dvt/engine
+Transition legality          -> @dvt/run-domain
+Provider-realized facts      -> provider workflow / workers / plugins
+Operational product truth    -> persisted RunEvents / state store
+Exact immutable objects      -> @dvt/artifacts
+Provider translation         -> IProviderAdapter implementations
+Current workflow provider    -> Temporal
+Async fact propagation       -> @dvt/delivery
+Read-model derivation        -> projector
+Lineage/evidence             -> lineage + traceability
 Authentication/authorization -> apps/api security boundary
-Presentation              -> apps/web
+Presentation                 -> apps/web
 ```
 
 ## Sources
 
+- [`docs/architecture/system/subsystems/canonical-run-lifecycle/index.md`](../subsystems/canonical-run-lifecycle/index.md)
 - [`packages/@dvt/engine/src/ports/IWorkflowEngine.ts`](../../../../packages/@dvt/engine/src/ports/IWorkflowEngine.ts)
 - [`packages/@dvt/engine/src/adapters/IProviderAdapter.ts`](../../../../packages/@dvt/engine/src/adapters/IProviderAdapter.ts)
 - [`packages/@dvt/run-domain/src/index.ts`](../../../../packages/@dvt/run-domain/src/index.ts)
 - [`packages/@dvt/planner/src/index.ts`](../../../../packages/@dvt/planner/src/index.ts)
 - [`packages/@dvt/plan-interpreter/src/index.ts`](../../../../packages/@dvt/plan-interpreter/src/index.ts)
+- [`apps/api/src/application/services/storedExecutablePlan.ts`](../../../../apps/api/src/application/services/storedExecutablePlan.ts)
 - [`packages/@dvt/artifacts/src/index.ts`](../../../../packages/@dvt/artifacts/src/index.ts)
 - [`packages/@dvt/delivery/src/contracts.ts`](../../../../packages/@dvt/delivery/src/contracts.ts)
 - [`packages/@dvt/contracts/src/contracts/engine/StartRunBoundary.v1.ts`](../../../../packages/@dvt/contracts/src/contracts/engine/StartRunBoundary.v1.ts)
