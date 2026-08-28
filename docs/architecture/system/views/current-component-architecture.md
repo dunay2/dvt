@@ -11,14 +11,20 @@ This page is a source-first derived view of the executable DVT architecture at
 `main@da5b97b4376789cc561d54fcdf6663c062727ece`.
 
 It does not replace the canonical [System Architecture](../index.md),
-[Reference Architecture](../../reference-architecture.md), component pages, or
-accepted ADRs. If this view conflicts with current source, tests, runtime wiring,
-or a newer canonical architecture page, the executable system wins.
+[Reference Architecture](../../reference-architecture.md), component pages, the
+Planning DB component model, or accepted ADRs. If this view conflicts with
+current source, tests, runtime wiring, or a newer canonical architecture page,
+the executable system wins.
 
 ## Scope
 
-This view answers one question: **which first-class components exist today and
-how do they compose at runtime?**
+This view answers one question: **which major runtime and bounded-context
+components explain the current system composition?**
+
+It is deliberately **not** a complete component inventory. Repository governance
+keeps the structured component inventory and exact directed relations outside
+this authored system view; component pages remain the single authored home for
+component-specific responsibilities.
 
 Classification:
 
@@ -41,7 +47,7 @@ flowchart LR
     Draft["Workspace Graph Draft / GenericGraphSource"]
     Planner["@dvt/planner\nPlannerFacade"]
     PlannerPort["IPlanner / IExecutionPlanner"]
-    Verify["@dvt/plan-verifier"]
+    Verify["@dvt/plan-verifier\nstored-plan parsing / step config verification"]
     Interpret["@dvt/plan-interpreter\nDAG validation + execution layers"]
   end
 
@@ -63,9 +69,9 @@ flowchart LR
 
   subgraph Persistence["State and artifacts — AS-IS"]
     StatePort["IRunStateStore / RunStateCommandPort"]
-    State["@dvt/state-store\nrun state + archive lifecycle"]
+    StateLifecycle["@dvt/state-store\narchive / retention / restore lifecycle"]
     PgAdapter["@dvt/adapter-postgres"]
-    Postgres[("PostgreSQL")]
+    Postgres[("PostgreSQL\nrun state + intent + plan + outbox persistence")]
     Artifacts["@dvt/artifacts\nplans + compiled code + bundles + CAS"]
     ObjectStore[("Filesystem / S3-compatible storage")]
   end
@@ -100,12 +106,14 @@ flowchart LR
   Draft --> Planner
   Planner -.-> PlannerPort
   Planner --> Artifacts
-  Planner --> Verify
+  Artifacts --> Verify
   Verify --> Engine
+  Engine -.-> Interpret
   Engine --> RunDomain
   Engine --> StatePort
   StatePort --> PgAdapter
   PgAdapter --> Postgres
+  StateLifecycle --> PgAdapter
   Engine --> ProviderPort
   TemporalAdapter -.-> ProviderPort
   ProviderPort --> TemporalAdapter
@@ -118,7 +126,7 @@ flowchart LR
   Engine --> Obs
   Obs --> OTel
   OTel --> OpenTelemetry
-  State --> Delivery
+  Postgres -->|"persisted outbox"| Delivery
   Delivery --> OutboxWorker
   OutboxWorker --> EventPort
   Delivery --> ProjectorWorker
@@ -155,17 +163,36 @@ lifecycle and delegates provider-specific execution through `IProviderAdapter`.
 
 `TemporalAdapter` implements `IProviderAdapter`, not `IWorkflowEngine`.
 
+### API executability validation and Engine integrity admission are distinct
+
+The current StartRun rail contains an API-side stored-plan executability gate and
+an Engine-owned start-run admission/integrity gate. The first prevents obviously
+unexecutable stored plans from reaching the Engine; the Engine still performs
+its own scoped plan-integrity and capability checks before provider side effects.
+
+The `@dvt/plan-verifier` package participates in parsing and step-type
+configuration verification of stored executable plans; it is not the sole owner
+of every runtime admission rule.
+
 ### State and provider status are different truths
 
 Canonical DVT run status is derived from the persisted event log and materialized
 snapshot. Provider-native status may be used for diagnostics/enrichment, but it
 does not replace canonical DVT state.
 
+Provider runtimes may originate realized lifecycle facts once work reaches the
+provider; those facts become canonical product truth only through the persisted
+DVT event/state rail.
+
 ### State and artifacts are separate bounded concerns
 
 - **State** answers: what happened to the run?
 - **Artifacts** answer: which exact immutable plan, compiled object, bundle or
   execution context was used or produced?
+
+`@dvt/state-store` also owns archive, retention, verification and restore
+lifecycle. The live operational PostgreSQL implementation is composed through
+`@dvt/adapter-postgres` and Engine-owned state ports.
 
 ### Delivery is not a universal bus
 
@@ -174,33 +201,29 @@ start-run backpressure. `IEventBus` is a delivery boundary. Current runtime
 implementations include HTTP and logging delivery; the architecture does not
 require all commands or queries to pass through a message bus.
 
-## Current component catalog
+## Key components shown in this view
 
-| Component | Status | Primary source | Responsibility |
-| --- | --- | --- | --- |
-| Web / Workspace | AS-IS | `apps/web` | Product UI, Canvas/workbench, projected plugin contributions |
-| API | AS-IS | `apps/api` | Authenticated command/query rails and composition root |
-| Planner | AS-IS | `packages/@dvt/planner` | Deterministic graph selection and `ExecutionPlan` construction |
-| Plan Verifier | AS-IS | `packages/@dvt/plan-verifier` | Admission, version/integrity/configuration validation |
-| Plan Interpreter | AS-IS | `packages/@dvt/plan-interpreter` | Adapter-agnostic DAG validation and execution layering |
-| Engine | AS-IS | `packages/@dvt/engine` | Run lifecycle, provider delegation, status/control/recovery |
-| Run Domain | AS-IS | `packages/@dvt/run-domain` | Event folding and legal state transitions |
-| State Store | AS-IS | `packages/@dvt/state-store` | Run-state boundary plus archive/retention/restore lifecycle |
-| Postgres Adapter | AS-IS | `packages/@dvt/adapter-postgres` | PostgreSQL implementations of current persistence boundaries |
-| Artifacts | AS-IS | `packages/@dvt/artifacts` | Plan/artifact/bundle/context persistence and integrity |
-| Temporal Adapter | AS-IS | `packages/@dvt/adapter-temporal` | `IProviderAdapter` implementation for Temporal |
-| Temporal Worker | AS-IS | `apps/temporal-worker` | Provider-side activity execution and plugin composition |
-| DBT step plugin | AS-IS | `packages/@dvt/temporal-dbt-plugin` | DBT execution outside the generic Temporal adapter |
-| HTTP JSON step plugin | AS-IS | `packages/@dvt/temporal-http-json-plugin` | HTTP JSON artifact acquisition |
-| Object→Postgres step plugin | AS-IS | `packages/@dvt/temporal-object-file-postgres-plugin` | Content-addressed object/file materialization into PostgreSQL |
-| Delivery | AS-IS | `packages/@dvt/delivery` | Outbox, sharding, retry/DLQ/replay rails and backpressure |
-| Outbox Worker | AS-IS | `apps/outbox-worker` | Async outbox delivery |
-| Projector Worker | AS-IS | `apps/projector-worker` | Derived projections/read models |
-| Lineage Worker | AS-IS | `apps/lineage-worker` | Lineage/evidence downstream processing |
-| Traceability | AS-IS | `packages/@dvt/traceability-service` | ADR/code traceability, validation and lineage evidence |
-| Observability | PARTIAL | `packages/@dvt/observability*` | Metrics, traces, logs and OTel integration |
-| Substrait semantic contract | PARTIAL | `packages/@dvt/contracts/src/substrait.ts` | Pinned semantic profile, DVT identity sidecar and capability catalog |
-| VTX2 semantic transformation E2E | TARGET | `docs/architecture/system/subsystems/semantic-transformation/` | Source languages → Substrait → projection/rendering → readiness → Planner |
+This is a **reading guide, not the repository component inventory**:
+
+- `apps/web` and `apps/api` form the primary product/API surface.
+- `@dvt/planner` owns deterministic execution planning.
+- `@dvt/engine` and `@dvt/run-domain` own lifecycle/control and transition rules.
+- `@dvt/artifacts`, Engine state ports and `@dvt/adapter-postgres` preserve exact
+  plan/context artifacts and operational persistence through separate boundaries.
+- `@dvt/adapter-temporal`, Temporal and `apps/temporal-worker` form the current
+  provider execution path.
+- concrete Temporal step plugins keep workload-specific behavior outside the
+  generic provider adapter.
+- `@dvt/delivery` plus outbox/projector/lineage workers move facts and build
+  downstream evidence/read models.
+- `@dvt/observability*`, security, contracts and crypto are cross-cutting
+  boundaries, not replacement domain authorities.
+- the Substrait profile/sidecar/catalog is implemented, while the full VTX2
+  semantic transformation route remains TARGET.
+
+For a complete component inventory use the repository's structured architecture
+publication/Planning DB model and the canonical component pages under
+`docs/architecture/components/`.
 
 ## External systems actually represented
 
@@ -217,7 +240,8 @@ shown because they are not current runtime implementations at this baseline.
 
 ## Sources
 
-- [`apps/api/src/modules/buildProtectedRuntimeModule.ts`](../../../apps/api/src/modules/buildProtectedRuntimeModule.ts)
+- [`apps/api/src/modules/buildProtectedRuntimeModule.ts`](../../../../apps/api/src/modules/buildProtectedRuntimeModule.ts)
+- [`apps/api/src/application/services/storedExecutablePlan.ts`](../../../../apps/api/src/application/services/storedExecutablePlan.ts)
 - [`packages/@dvt/planner/src/index.ts`](../../../../packages/@dvt/planner/src/index.ts)
 - [`packages/@dvt/engine/src/ports/IWorkflowEngine.ts`](../../../../packages/@dvt/engine/src/ports/IWorkflowEngine.ts)
 - [`packages/@dvt/engine/src/adapters/IProviderAdapter.ts`](../../../../packages/@dvt/engine/src/adapters/IProviderAdapter.ts)
@@ -227,4 +251,5 @@ shown because they are not current runtime implementations at this baseline.
 - [`packages/@dvt/artifacts/src/index.ts`](../../../../packages/@dvt/artifacts/src/index.ts)
 - [`packages/@dvt/delivery/src/index.ts`](../../../../packages/@dvt/delivery/src/index.ts)
 - [`docs/architecture/reference-architecture.md`](../../reference-architecture.md)
+- [`docs/architecture/system/subsystems/canonical-run-lifecycle/index.md`](../subsystems/canonical-run-lifecycle/index.md)
 - [`docs/architecture/system/subsystems/semantic-transformation/index.md`](../subsystems/semantic-transformation/index.md)
