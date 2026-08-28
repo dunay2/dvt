@@ -47,9 +47,9 @@ export const DBT_SNAPSHOT = 'DBT_SNAPSHOT';
 /**
  * Planner-internal raw input envelope (pre-normalization).
  *
- * Intentionally differs from the public PlannerInputEnvelopeV1 in @dvt/contracts:
- * - legacy DBT-native ingress such as `manifestRef` and inline `manifest` stay outside the planner kernel
- * - `environment` is not present - stripped by the API compatibility boundary before hand-off
+ * Intentionally differs from source-native/API inputs: legacy DBT-native
+ * ingress and environment-dependent configuration are resolved outside the
+ * planner kernel before admission.
  *
  * After InputEnvelopeValidator runs, the output is NormalizedPlannerInput where
  * `nodes` is always present.
