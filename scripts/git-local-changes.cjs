@@ -104,23 +104,31 @@ function listCommittedChangedFiles(options = {}) {
     throw new Error('GIT_BASE is required to read committed changed files.');
   }
 
+  const mergeBaseArgs = withPathspec(
+    ['diff', '--name-only', `--diff-filter=${diffFilter}`, `${baseRef}...${headRef}`],
+    pathspecs
+  );
+  const directTreeArgs = withPathspec(
+    ['diff', '--name-only', `--diff-filter=${diffFilter}`, baseRef, headRef],
+    pathspecs
+  );
+
   try {
-    return unique(
-      runGitLines(
-        withPathspec(
-          ['diff', '--name-only', `--diff-filter=${diffFilter}`, `${baseRef}...${headRef}`],
-          pathspecs
-        ),
-        repoOptions
-      )
-    ).sort();
-  } catch (error) {
-    throw new Error(
-      `Unable to read committed changed files between ${baseRef} and ${headRef}: ${
-        error instanceof Error ? error.message : String(error)
-      }`,
-      { cause: error }
-    );
+    return unique(runGitLines(mergeBaseArgs, repoOptions)).sort();
+  } catch (mergeBaseError) {
+    try {
+      // Shallow PR checkouts can contain both trees without enough ancestry to compute a merge base.
+      // A direct tree diff is fail-closed for governance scope: it may broaden the changed set, but it
+      // cannot hide a tree difference between the exact requested refs.
+      return unique(runGitLines(directTreeArgs, repoOptions)).sort();
+    } catch (directTreeError) {
+      throw new Error(
+        `Unable to read committed changed files between ${baseRef} and ${headRef}: ${
+          directTreeError instanceof Error ? directTreeError.message : String(directTreeError)
+        }`,
+        { cause: mergeBaseError }
+      );
+    }
   }
 }
 
@@ -181,6 +189,7 @@ module.exports = {
   listCommittedChangedFiles,
   listLocalChangedFiles,
   parseGitLines,
+  resolveDiffBaseRefs,
   toAbsoluteRepoPath,
   toPosix,
 };
