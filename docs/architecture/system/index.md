@@ -2,7 +2,7 @@
 title: System Architecture
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-08-24
+last_reviewed: 2026-08-28
 ---
 
 # System Architecture
@@ -25,6 +25,27 @@ Use it when the question is:
 4. [DVT Component Map](../component-map.md)
 5. [DVT Domain Map](../domain-map.md)
 6. [Semantic Transformation Subsystem - VTX2 Target](./subsystems/semantic-transformation/index.md)
+
+## Source-First Current Views
+
+The following pages are authored, source-first **derived views** pinned to an
+inspected `main` baseline. They improve system readability without replacing the
+Planning DB/generated component inventory, canonical component homes, contracts,
+or executable source:
+
+- [Current Component Architecture](./views/current-component-architecture.md) —
+  major AS-IS runtime/bounded-context composition plus the explicitly separated
+  VTX2 target boundary.
+- [Runtime and Authority Map](./views/runtime-and-authority-map.md) — which
+  boundary owns each kind of truth and which authority inversions are forbidden.
+- [Current versus Target VTX2](./views/current-vs-target-vtx2.md) — implemented
+  Substrait contract/profile/sidecar/catalog versus the still-target semantic
+  transformation flow.
+- [Start Run Runtime Sequence](./views/start-run-runtime-sequence.md) — outer API
+  admission plus the current Engine intent/bootstrap/provider-dispatch protocol.
+
+These views must be refreshed source-first when their recorded baseline stops
+matching current `main`.
 
 ## System To Subsystem Topology
 
