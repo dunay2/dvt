@@ -26,30 +26,30 @@ The rule is:
 
 ## Authority map
 
-| Question | Authority | Current owner | Status |
-| --- | --- | --- | --- |
-| What relational/expression/type/function semantics mean | Pinned Substrait profile | `@dvt/contracts/substrait` + upstream Substrait | PARTIAL VTX2 |
-| Which DVT relation/field is this across supported rename/reorder/reload | Stable authoring identity sidecar | `DvtSubstraitAuthoringSidecarV1` | PARTIAL VTX2 |
-| Which semantic capabilities are candidates/admitted/out of scope | Substrait capability catalog | `DvtSubstraitCapabilityCatalog.v1` | PARTIAL VTX2 |
-| What graph/topology did the user author | Workspace graph authoring boundary | `apps/api` workspace graph draft + Web authoring | AS-IS |
-| What runtime responsibilities should execute | Planner / `ExecutionPlan` | `@dvt/planner` through `PlannerFacade` | AS-IS |
-| Does a stored plan parse and satisfy step-type configuration rules | Plan verifier | `@dvt/plan-verifier` | AS-IS |
-| May the current runtime execute the stored plan | Executability + Engine admission/integrity | API stored-plan validation + Engine start-run admission | AS-IS |
-| What are the execution DAG layers/downstream steps | Plan interpretation | `@dvt/plan-interpreter` | AS-IS |
-| What run lifecycle commands/status are exposed | Engine | `@dvt/engine` / `IWorkflowEngine` | AS-IS |
-| Which run/step transition is legal | Run domain | `@dvt/run-domain` | AS-IS |
-| Which lifecycle facts are realized once provider execution begins | Provider runtime / worker | Temporal workflow + worker/plugin runtime | AS-IS |
-| What happened operationally in DVT | Ordered persisted run events | `IRunStateStore` / state persistence | AS-IS |
-| What is the canonical run status | Event log + derived snapshot | Engine read rail over persisted state | AS-IS |
-| What provider-native execution status exists | Provider adapter | `IProviderAdapter` / `TemporalAdapter` | AS-IS, diagnostic/enrichment |
-| Which exact immutable object was used/produced | Artifact boundary | `@dvt/artifacts` | AS-IS |
-| How facts propagate asynchronously | Delivery/outbox | `@dvt/delivery` + `apps/outbox-worker` | AS-IS |
-| What read model/projection is derived | Projector | `apps/projector-worker` / projector boundary | AS-IS |
-| How lineage/evidence is processed | Lineage/traceability | `apps/lineage-worker` + `@dvt/traceability-service` | AS-IS |
-| Who authenticates and authorizes commands | API security boundary | OIDC/JWKS + scoped authorization + audit | AS-IS |
-| How runtime telemetry is emitted | Observability contract | `IObservability` + `@dvt/observability-otel` | PARTIAL coverage |
-| How product state is presented and edited | Web/application rails | `apps/web` through governed API boundaries | AS-IS |
-| Which workflow provider currently executes start-run | Start-run adapter truth | `StartRunBoundary.v1` | AS-IS: Temporal only |
+| Question                                                                | Authority                                  | Current owner                                           | Status                       |
+| ----------------------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------- | ---------------------------- |
+| What relational/expression/type/function semantics mean                 | Pinned Substrait profile                   | `@dvt/contracts/substrait` + upstream Substrait         | PARTIAL VTX2                 |
+| Which DVT relation/field is this across supported rename/reorder/reload | Stable authoring identity sidecar          | `DvtSubstraitAuthoringSidecarV1`                        | PARTIAL VTX2                 |
+| Which semantic capabilities are candidates/admitted/out of scope        | Substrait capability catalog               | `DvtSubstraitCapabilityCatalog.v1`                      | PARTIAL VTX2                 |
+| What graph/topology did the user author                                 | Workspace graph authoring boundary         | `apps/api` workspace graph draft + Web authoring        | AS-IS                        |
+| What runtime responsibilities should execute                            | Planner / `ExecutionPlan`                  | `@dvt/planner` through `PlannerFacade`                  | AS-IS                        |
+| Does a stored plan parse and satisfy step-type configuration rules      | Plan verifier                              | `@dvt/plan-verifier`                                    | AS-IS                        |
+| May the current runtime execute the stored plan                         | Executability + Engine admission/integrity | API stored-plan validation + Engine start-run admission | AS-IS                        |
+| What are the execution DAG layers/downstream steps                      | Plan interpretation                        | `@dvt/plan-interpreter`                                 | AS-IS                        |
+| What run lifecycle commands/status are exposed                          | Engine                                     | `@dvt/engine` / `IWorkflowEngine`                       | AS-IS                        |
+| Which run/step transition is legal                                      | Run domain                                 | `@dvt/run-domain`                                       | AS-IS                        |
+| Which lifecycle facts are realized once provider execution begins       | Provider runtime / worker                  | Temporal workflow + worker/plugin runtime               | AS-IS                        |
+| What happened operationally in DVT                                      | Ordered persisted run events               | `IRunStateStore` / state persistence                    | AS-IS                        |
+| What is the canonical run status                                        | Event log + derived snapshot               | Engine read rail over persisted state                   | AS-IS                        |
+| What provider-native execution status exists                            | Provider adapter                           | `IProviderAdapter` / `TemporalAdapter`                  | AS-IS, diagnostic/enrichment |
+| Which exact immutable object was used/produced                          | Artifact boundary                          | `@dvt/artifacts`                                        | AS-IS                        |
+| How facts propagate asynchronously                                      | Delivery/outbox                            | `@dvt/delivery` + `apps/outbox-worker`                  | AS-IS                        |
+| What read model/projection is derived                                   | Projector                                  | `apps/projector-worker` / projector boundary            | AS-IS                        |
+| How lineage/evidence is processed                                       | Lineage/traceability                       | `apps/lineage-worker` + `@dvt/traceability-service`     | AS-IS                        |
+| Who authenticates and authorizes commands                               | API security boundary                      | OIDC/JWKS + scoped authorization + audit                | AS-IS                        |
+| How runtime telemetry is emitted                                        | Observability contract                     | `IObservability` + `@dvt/observability-otel`            | PARTIAL coverage             |
+| How product state is presented and edited                               | Web/application rails                      | `apps/web` through governed API boundaries              | AS-IS                        |
+| Which workflow provider currently executes start-run                    | Start-run adapter truth                    | `StartRunBoundary.v1`                                   | AS-IS: Temporal only         |
 
 ## Authority relationships
 
@@ -211,18 +211,18 @@ Substrait logical operator count
 
 ## Forbidden authority inversions
 
-| Invalid design | Why it is wrong |
-| --- | --- |
-| Temporal status becomes canonical run status | Provider availability/state must not replace persisted DVT truth |
-| `TemporalAdapter` implements product planning | Provider adapters translate/delegate; Planner owns decisions |
-| dbt becomes DVT semantic kernel | dbt is a concrete integration/execution capability |
-| SQL AST becomes universal semantic authority | VTX2 assigns semantic meaning to the pinned Substrait profile |
-| Canvas card becomes one runtime step by definition | Authoring scale and runtime-responsibility scale are independent |
-| Substrait operator becomes one runtime step | Logical semantics and execution responsibilities are independent |
-| Postgres adapter defines legal transitions | Run Domain owns transition semantics |
-| Outbox/event bus replaces command/query boundaries | Events propagate facts; commands/queries keep explicit rails |
-| Web registry claims backend runtime availability | Backend capability truth is server-projected |
-| New SHA/JCS/UUID implementation appears outside crypto authority | Repository crypto primitives are centralized in `@dvt/crypto` |
+| Invalid design                                                   | Why it is wrong                                                  |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Temporal status becomes canonical run status                     | Provider availability/state must not replace persisted DVT truth |
+| `TemporalAdapter` implements product planning                    | Provider adapters translate/delegate; Planner owns decisions     |
+| dbt becomes DVT semantic kernel                                  | dbt is a concrete integration/execution capability               |
+| SQL AST becomes universal semantic authority                     | VTX2 assigns semantic meaning to the pinned Substrait profile    |
+| Canvas card becomes one runtime step by definition               | Authoring scale and runtime-responsibility scale are independent |
+| Substrait operator becomes one runtime step                      | Logical semantics and execution responsibilities are independent |
+| Postgres adapter defines legal transitions                       | Run Domain owns transition semantics                             |
+| Outbox/event bus replaces command/query boundaries               | Events propagate facts; commands/queries keep explicit rails     |
+| Web registry claims backend runtime availability                 | Backend capability truth is server-projected                     |
+| New SHA/JCS/UUID implementation appears outside crypto authority | Repository crypto primitives are centralized in `@dvt/crypto`    |
 
 ## Ownership summary
 
