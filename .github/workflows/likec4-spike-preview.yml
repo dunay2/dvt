@@ -1,0 +1,39 @@
+name: LikeC4 spike preview
+
+on:
+  push:
+    branches:
+      - spike/likec4-architecture-visibility
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout spike
+        uses: actions/checkout@v5
+
+      - name: Build LikeC4 static site
+        uses: likec4/actions@v1
+        with:
+          action: build
+          path: architecture
+          output: dist
+          base: /dvt/
+
+      - name: Upload preview artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dvt-likec4-spike-preview
+          path: dist
+
+      - name: Publish disposable gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages
+          force_orphan: true
