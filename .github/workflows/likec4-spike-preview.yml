@@ -24,6 +24,14 @@ jobs:
       - name: Generate source-first Engine inventory
         run: node architecture/tools/generate-engine-inventory.mjs
 
+      - name: Stage machine-readable source evidence
+        run: |
+          mkdir -p .architecture-evidence
+          cp architecture/generated/engine-inventory.json .architecture-evidence/engine-inventory.json
+          cp architecture/generated/engine-source.c4 .architecture-evidence/engine-source.c4
+          cp architecture/engine-components.json .architecture-evidence/engine-components.json
+          cp architecture/source-baseline.json .architecture-evidence/source-baseline.json
+
       - name: Build LikeC4 static site
         uses: likec4/actions@v1
         with:
@@ -35,10 +43,7 @@ jobs:
       - name: Publish machine-readable source evidence
         run: |
           mkdir -p dist/source
-          cp architecture/generated/engine-inventory.json dist/source/engine-inventory.json
-          cp architecture/generated/engine-source.c4 dist/source/engine-source.c4
-          cp architecture/engine-components.json dist/source/engine-components.json
-          cp architecture/source-baseline.json dist/source/source-baseline.json
+          cp .architecture-evidence/* dist/source/
 
       - name: Upload preview artifact
         uses: actions/upload-artifact@v4
