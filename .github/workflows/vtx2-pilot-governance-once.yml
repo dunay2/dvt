@@ -13,26 +13,28 @@ permissions:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
           ref: agent/vtx2-substrait-card-pilot
           fetch-depth: 0
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.28.0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile --prefer-offline
-      - run: pnpm --filter @dvt/crypto build
-      - name: Refresh governed indexes
-        run: pnpm governance:refresh
-      - name: Remove one-shot workflow and commit generated state
+      - uses: ./.github/actions/setup-node-pnpm
+      - name: Remove one-shot from governed tree
+        run: rm .github/workflows/vtx2-pilot-governance-once.yml
+      - name: Build governance runtime dependency
+        run: pnpm --filter @dvt/crypto build
+      - name: Prepare current-schema Planning DB
         run: |
-          git rm .github/workflows/vtx2-pilot-governance-once.yml
+          pnpm planning:db:up
+          pnpm planning:db:health --wait
+          node scripts/planning-db-schema.cjs
+          pnpm planning:db:import
+      - name: Refresh governance
+        run: pnpm governance:refresh
+      - name: Commit generated governance state
+        run: |
+          git diff --check
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
