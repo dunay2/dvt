@@ -1,126 +1,181 @@
-# DVT+ Planner - source-first architectural study
+# DVT+ Planner - Source-First Architectural Study and Delivery Plan
 
-Status: Proposed / source-first study  
-Date: 2026-08-28  
-Audited baseline: `main@f892b48a805690053ed922825de2c99b84524fd9`  
-Repository: `dunay2/dvt`
+**Status:** Proposed / source-first study  
+**Date:** 2026-08-28  
+**Repository:** `dunay2/dvt`  
+**Audited baseline:** `main@f892b48a805690053ed922825de2c99b84524fd9`  
+**Scope:** Planner kernel, planner ingress/egress boundaries, semantic workload lowering, runtime policy boundary, planning evidence and residual package debt.
 
-## Executive conclusion
+## 1. Executive summary
 
-DVT+ already has a real, deterministic and reasonably well-bounded Planner. The current problem is not to create another Planner, but to preserve its purity while completing the boundaries around it.
+DVT+ already has a real, deterministic and reasonably well-bounded Planner. The current architectural problem is not to create a Planner, but to preserve its purity while completing the boundaries around it.
 
-The current Planner already owns generic graph validation, selection/closure, deterministic topological ordering, policy resolution, planning limits, step creation and validation, deterministic decision projection, plan assembly and plan identity. Runtime DAG interpretation is separately owned by `@dvt/plan-interpreter`, while plan admission/version/hash/config verification is separately owned by `@dvt/plan-verifier`.
+The Planner currently owns generic graph validation, selection and closure, deterministic topological ordering, policy resolution, limits, step construction/validation, deterministic decision projection, Plan assembly and plan identity. Runtime DAG interpretation and plan admission verification are already separated into `@dvt/plan-interpreter` and `@dvt/plan-verifier` respectively.
 
-The main current product gap is upstream of the Planner: VTX2 semantic cards/relations must be lowered into real executable semantic workloads before they become `GenericGraphSourceV1`. That work is already owned by #2524 and coordinated with #2594/#2595/#2597/#2599/#2634. Do not duplicate it under this programme.
+The main product gap is upstream of the Planner: VTX2 semantic relations/cards must be lowered into real executable semantic workloads before they become `GenericGraphSourceV1`. This is already owned by #2524 and coordinated with #2594/#2595/#2597/#2634. DVT must not create a second planner, a Substrait-aware planner, one execution step per relational operator, or a cost/provider introspector inside the Planner.
 
-One additional source-grounded contract defect is not currently owned by a dedicated issue: the public Planner input accepts `PlannerEnvironmentContext`, but `PlannerEnvelopeMapper` does not forward it into the Planner-domain input, and the internal Planner type explicitly states that `environment` is stripped before handoff. The final architecture must not accept and silently drop a declared Planner input.
+One additional source-grounded contract defect is not currently owned by an issue: the public Planner input accepts `PlannerEnvironmentContext`, while `PlannerEnvelopeMapper` does not copy it into the internal Planner input and the internal type explicitly states that `environment` is stripped before handoff. This is a truthful-contract problem: either environment resolution belongs upstream and the Planner contract must stop advertising the field, or the field has planner semantics and must be consumed explicitly. Silent acceptance-and-drop is not an acceptable final state.
 
-## Source of truth
+## 2. Source of truth and audit method
 
-The audit precedence is:
+This study uses the following precedence:
 
 1. current source on `main`;
-2. tests;
-3. executable contracts/configuration;
+2. current tests;
+3. executable contracts and configuration;
 4. runtime composition and package boundaries;
-5. issues/ADRs/docs as secondary context.
+5. open issues only after checking source ownership.
 
-Baseline commit:
+The audited main baseline is:
 
-https://github.com/dunay2/dvt/commit/f892b48a805690053ed922825de2c99b84524fd9
+- https://github.com/dunay2/dvt/commit/f892b48a805690053ed922825de2c99b84524fd9
 
-The baseline already includes the VTX2 typed Substrait card pilot (#2658), so this study supersedes the earlier `da5b97...` architectural snapshot.
+The baseline commit includes the VTX2 typed Substrait card pilot (#2658), so this study reflects the first integrated VTX2 semantic-authoring increment rather than the previous `da5b97...` state.
 
-## Current Planner architecture
+## 3. Current Planner architecture
 
-Current public/kernel anchors:
+### 3.1 Public boundary
+
+The Planner public surface is intentionally narrow and is exposed through `PlannerFacade` rather than direct use of the domain `Planner`.
+
+Relevant source:
 
 - `packages/@dvt/planner/src/index.ts`
 - `packages/@dvt/planner/src/application/PlannerFacade.ts`
-- `packages/@dvt/planner/src/application/PlannerEnvelopeMapper.ts`
 - `packages/@dvt/planner/src/domain/Planner.ts`
-- `packages/@dvt/planner/src/domain/PlanExecutionDecisionProjector.ts`
-- `packages/@dvt/planner/src/domain/hashing.ts`
-- `packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts`
 
-Planner package:
+Repository link:
 
-https://github.com/dunay2/dvt/tree/f892b48a805690053ed922825de2c99b84524fd9/packages/%40dvt/planner
+- https://github.com/dunay2/dvt/tree/f892b48a805690053ed922825de2c99b84524fd9/packages/%40dvt/planner
 
-The effective pipeline is:
+### 3.2 Current planning pipeline
+
+The implemented planning pipeline is conceptually:
 
 ```text
 GenericGraphSourceV1
-  -> contract/input validation
-  -> normalization
-  -> GraphBuilder + graph validation
-  -> policy resolution
-  -> NodeSelector / executable closure
-  -> stable topological ordering
-  -> planning limits
-  -> StepFactory
-  -> Step Registry/config validation
-  -> artifact-handoff validation
-  -> PlanExecutionDecision projection
-  -> PlanAssembler
-  -> ExecutionPlan + executionPolicy + canonicalPlanCoreJson
+        |
+        v
+contract/input validation
+        |
+        v
+normalization
+        |
+        v
+GraphBuilder + graph validation
+        |
+        v
+policy resolution
+        |
+        v
+NodeSelector / executable closure
+        |
+        v
+stable topological ordering
+        |
+        v
+planning limits
+        |
+        v
+StepFactory
+        |
+        v
+Step Registry + step config validation
+        |
+        v
+artifact-handoff validation
+        |
+        v
+PlanExecutionDecision projection
+        |
+        v
+PlanAssembler
+        |
+        v
+ExecutionPlan + executionPolicy + canonicalPlanCoreJson
 ```
 
-This is already a substantial Planner kernel. Do not recreate speculative `DAGAnalyzer`, `PartialExecutionResolver`, `RetryPolicyManager` or another `PlanAssembler` when those responsibilities already exist.
+This is already a substantial Planner kernel. The old conceptual decomposition into separate speculative services such as `DAGAnalyzer`, `PartialExecutionResolver`, `RetryPolicyManager` and `PlanAssembler` must not be recreated as new subsystems when equivalent responsibilities already exist.
 
-## Capability inventory
+## 4. Current capability inventory
 
-| Capability | Current status | Disposition |
-|---|---|---|
-| Generic graph ingress | Implemented | Keep `GenericGraphSourceV1` |
-| DAG/graph validation | Implemented | Keep |
-| Stable topological ordering | Implemented | Keep |
-| Selection + upstream/downstream closure | Implemented | Keep |
-| RUN/SKIP/PARTIAL selection explanation | Implemented | Keep; not semantic reuse |
-| Retry/timeout policy materialization | Implemented | Keep |
-| Concurrency vocabulary | Partial end-to-end | Coordinate #2663 |
-| Step config/capability validation | Implemented | Keep registry boundary |
-| Planning limits | Implemented | Keep |
-| Deterministic plan assembly/identity | Implemented | Keep |
-| Plan verification | Implemented elsewhere | Keep `@dvt/plan-verifier` |
-| Runtime DAG interpretation | Implemented elsewhere | Keep `@dvt/plan-interpreter` |
-| Environment semantics | Ambiguous/no-op | New bounded task |
-| Semantic workload lowering | Incomplete | Existing owner #2524 |
-| Safe materialization reuse | Research/delivery | Existing owners #2152/#2486/#2509 |
-| Provider-aware cost estimation | Not in Planner | Do not add provider I/O to Planner |
-| Substrait optimization | Not in Planner | Correctly out of scope |
+| Capability                                     | Status                      | Source-grounded disposition                                               |
+| ---------------------------------------------- | --------------------------- | ------------------------------------------------------------------------- |
+| Generic graph ingress                          | Implemented                 | Keep `GenericGraphSourceV1` as the planner ingress                        |
+| Graph/DAG validation                           | Implemented                 | Keep current graph validation; runtime interpretation remains separate    |
+| Stable topological ordering                    | Implemented                 | Keep deterministic ordering                                               |
+| Root selection and upstream/downstream closure | Implemented                 | Keep                                                                      |
+| RUN/SKIP/PARTIAL selection explanation         | Implemented                 | Keep; do not confuse with semantic result reuse                           |
+| Retry policy materialization                   | Implemented                 | Keep                                                                      |
+| Timeout policy materialization                 | Implemented                 | Keep                                                                      |
+| Concurrency vocabulary                         | Partially integrated        | Separate semantic run concurrency from Temporal worker capacity (#2663)   |
+| Step-kind/config validation                    | Implemented                 | Keep registry boundary                                                    |
+| Planning limits                                | Implemented                 | Keep                                                                      |
+| Deterministic Plan assembly                    | Implemented                 | Keep                                                                      |
+| RFC 8785/JCS + SHA-256 plan identity           | Implemented                 | Keep; shared primitive authority is `@dvt/crypto`                         |
+| Cross-runtime determinism proof                | Implemented                 | Keep regression proof                                                     |
+| Plan admission verification                    | Implemented elsewhere       | Keep in `@dvt/plan-verifier`                                              |
+| Runtime DAG layers/interpretation              | Implemented elsewhere       | Keep in `@dvt/plan-interpreter`                                           |
+| Planner environment semantics                  | Ambiguous/no-op             | New bounded task required                                                 |
+| Semantic workload lowering                     | Incomplete                  | Existing owner #2524; do not duplicate                                    |
+| Safe semantic materialization reuse            | Research/delivery programme | Existing owners #2152/#2509/DMF                                           |
+| Provider-aware cost estimation                 | Not in Planner              | Do not add provider I/O to Planner; consume evidence only if/when defined |
+| Substrait relational optimization              | Not in Planner              | Correctly out of scope                                                    |
 
-## Determinism is a strength
+## 5. Determinism and identity - current strength
 
-The Planner canonicalizes semantic plan-core JSON and hashes it through the shared `@dvt/crypto` authority. Tests prove stable identity across semantically equivalent node/dependency ordering and different timestamps, and verify that callers can recompute the plan identity from `canonicalPlanCoreJson`.
+Current Planner determinism is one of the strongest areas of the implementation.
 
-Sources:
+The Planner canonicalizes its semantic plan core and hashes it using the shared crypto authority. Volatile metadata such as `createdAtIso` is deliberately outside plan identity. Tests prove that semantically equivalent node/dependency ordering yields the same plan identity, that differing timestamps do not affect identity, and that the canonical plan core can be independently hashed by callers.
+
+Relevant sources:
+
+- `packages/@dvt/planner/src/domain/hashing.ts`
+- `packages/@dvt/planner/test/unit/determinism.test.ts`
+- `packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts`
+
+Links:
 
 - https://github.com/dunay2/dvt/blob/f892b48a805690053ed922825de2c99b84524fd9/packages/%40dvt/planner/src/domain/hashing.ts
 - https://github.com/dunay2/dvt/blob/f892b48a805690053ed922825de2c99b84524fd9/packages/%40dvt/planner/test/unit/determinism.test.ts
 - https://github.com/dunay2/dvt/blob/f892b48a805690053ed922825de2c99b84524fd9/packages/%40dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts
 
-Decision: this programme does not redesign plan identity. Any future evidence-aware extension must preserve or explicitly version identity semantics.
+**Decision:** do not redesign the plan identity model as part of this epic. Any future evidence-aware planning extension must preserve or explicitly version identity semantics.
 
-## RUN/SKIP/PARTIAL is selection, not result reuse
+## 6. RUN/SKIP/PARTIAL is selection, not semantic reuse
 
-`PlanExecutionDecisionProjector` currently explains selected root/closure, nodes outside the closure and bounded partial selection:
+`PlanExecutionDecisionProjector` currently explains selection and closure. Its decisions express selected roots, selected closure, nodes outside the selected closure and bounded partial selection.
 
-https://github.com/dunay2/dvt/blob/f892b48a805690053ed922825de2c99b84524fd9/packages/%40dvt/planner/src/domain/PlanExecutionDecisionProjector.ts
+Relevant source:
 
-Current `SKIP` therefore means approximately "outside the selected executable closure". It does not mean that DVT has verified that a prior materialization is semantically equivalent, authorized, retained and safe to reuse.
+- https://github.com/dunay2/dvt/blob/f892b48a805690053ed922825de2c99b84524fd9/packages/%40dvt/planner/src/domain/PlanExecutionDecisionProjector.ts
 
-That separate concern is correctly represented by #2509 and the DMF/R1 programmes. Selection decisions must remain distinct from future materialization decisions such as `RUN_REQUIRED` versus `REUSE_PINNED(...)`.
+This means current `SKIP` is approximately:
 
-Coordinating owners:
+```text
+node is outside the selected executable closure
+```
 
-- #2152 https://github.com/dunay2/dvt/issues/2152
-- #2486 https://github.com/dunay2/dvt/issues/2486
-- #2509 https://github.com/dunay2/dvt/issues/2509
+It does **not** mean:
 
-## Primary current gap: semantic workload lowering
+```text
+DVT proved that an existing prior output is semantically equivalent,
+verified, authorized, retained and safe to reuse.
+```
 
-VTX2 already establishes the critical invariant:
+That distinction is already correctly represented in the Materialization Fabric direction. #2509 proposes a separate materialization decision such as `RUN_REQUIRED` versus `REUSE_PINNED(...)` while preserving selection decisions.
+
+Existing owners:
+
+- #2152 - https://github.com/dunay2/dvt/issues/2152
+- #2486 - https://github.com/dunay2/dvt/issues/2486
+- #2509 - https://github.com/dunay2/dvt/issues/2509
+
+**Decision:** the new epic coordinates these programmes but does not duplicate or accelerate them around their scientific/evidence gates.
+
+## 7. Primary current gap: semantic workload lowering
+
+VTX2 deliberately separates three counts:
 
 ```text
 Substrait relation/operator count
@@ -128,116 +183,203 @@ Substrait relation/operator count
 != ExecutionPlan step count
 ```
 
-The target chain is:
+This invariant is already stated in `ExecutionPlan.v1.ts`: logical transformation semantics stay outside `ExecutionPlan`, and plan steps represent runtime responsibilities only.
+
+The correct path is:
 
 ```text
-Canvas / SQL / future frontend
-  -> pinned Substrait profile + DVT identity sidecar
-  -> provider renderer + provider-native readiness
-  -> semantic workload lowering
-  -> GenericGraphSourceV1
-  -> @dvt/planner
-  -> ExecutionPlan
+Canvas / SQL / future DataFrame frontend
+        |
+        v
+pinned Substrait logical profile + DVT identity sidecar
+        |
+        v
+provider renderer + provider-native readiness
+        |
+        v
+semantic workload lowering
+        |
+        v
+GenericGraphSourceV1
+        |
+        v
+@dvt/planner
+        |
+        v
+ExecutionPlan
 ```
 
-The Planner must not understand Join/Aggregate/Filter/Window, SQL formatting, Canvas presentation or Substrait protobuf structure.
+The Planner must not understand `Join`, `Aggregate`, `Filter`, `Window`, SQL formatting, Canvas card presentation or Substrait protobuf structure.
+
+The existing owner is #2524:
+
+- https://github.com/dunay2/dvt/issues/2524
+
+Coordinating VTX2 issues include:
+
+- #2594 - https://github.com/dunay2/dvt/issues/2594
+- #2595 - https://github.com/dunay2/dvt/issues/2595
+- #2597 - https://github.com/dunay2/dvt/issues/2597
+- #2599 - https://github.com/dunay2/dvt/issues/2599
+- #2634 - https://github.com/dunay2/dvt/issues/2634
+
+### Example target lowering
+
+A semantic card may internally contain:
+
+```text
+Read(orders)
+Join(customers)
+Join(countries)
+Filter(status = paid)
+Project(...)
+Aggregate(...)
+Window(...)
+```
+
+but if the provider can execute the whole transformation as one real query/workload, the resulting executable graph should be equivalent to:
+
+```text
+step: postgres_relational_workload
+  artifactRef: immutable governed SQL/code artifact
+  dependencies: only real execution dependencies
+  materialization intent: adapter-owned where applicable
+```
+
+It must not become one runtime step per relational operator or one fake Source/Join/Capture step merely because those concepts exist in the UI or semantic IR.
+
+## 8. New source-grounded defect: PlannerEnvironmentContext is accepted and dropped
+
+The public contract currently includes:
+
+```ts
+export interface PlannerEnvironmentContext {
+  environmentId?: string;
+  vars?: Record<string, unknown>;
+}
+```
+
+and `PlannerInputEnvelopeV1` contains:
+
+```ts
+environment?: PlannerEnvironmentContext;
+```
+
+Source:
+
+- https://github.com/dunay2/dvt/blob/f892b48a805690053ed922825de2c99b84524fd9/packages/%40dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts
+
+However, `PlannerEnvelopeMapper.toDomainBaseInput()` does not copy `environment` into the internal input:
+
+- https://github.com/dunay2/dvt/blob/f892b48a805690053ed922825de2c99b84524fd9/packages/%40dvt/planner/src/application/PlannerEnvelopeMapper.ts
+
+The internal Planner input explicitly says that `environment` is absent and stripped before handoff:
+
+- https://github.com/dunay2/dvt/blob/f892b48a805690053ed922825de2c99b84524fd9/packages/%40dvt/planner/src/domain/types.ts
+
+An open-issue search found #2675, which models `environment` as legal only in the planner-backed Start Run variant, but it does not resolve the Planner's accept-and-drop behavior:
+
+- #2675 - https://github.com/dunay2/dvt/issues/2675
+
+### Required decision
+
+Choose exactly one outcome from current source evidence:
+
+**A. Upstream-owned environment resolution (preferred unless a real Planner consumer is demonstrated)**
+
+```text
+project/environment config
+    -> application/workload resolution
+    -> fully resolved GenericGraphSource / policies
+    -> Planner
+```
+
+Then remove `environment` from the public Planner contract and any no-op Start Run planner input that cannot affect planning semantics.
+
+**B. Planner-owned environment semantics**
+
+Keep `environment` only if a current, explicit Planner decision depends on it. In that case define its exact deterministic semantics, canonical identity posture, validation and tests and make the mapper consume it.
+
+**Forbidden final state:** accept a field at the public contract and silently discard it.
+
+## 9. Concurrency boundary
+
+The Planner can materialize concurrency intent into step configuration, but Temporal worker concurrency/capacity is a process/task-queue operational concern.
 
 Existing owner:
 
-- #2524 https://github.com/dunay2/dvt/issues/2524
+- #2663 - https://github.com/dunay2/dvt/issues/2663
 
-Coordinating VTX2 issues:
-
-- #2594 https://github.com/dunay2/dvt/issues/2594
-- #2595 https://github.com/dunay2/dvt/issues/2595
-- #2597 https://github.com/dunay2/dvt/issues/2597
-- #2599 https://github.com/dunay2/dvt/issues/2599
-- #2634 https://github.com/dunay2/dvt/issues/2634
-
-Example: a card may contain Read + multiple Join + Filter + Project + Aggregate + Window in semantic IR, while the actual provider can execute it as one PostgreSQL workload. The executable graph should therefore contain the minimum real runtime responsibility, not one fake step per relation operator/source/card.
-
-## New source-grounded gap: PlannerEnvironmentContext
-
-The public contract declares `PlannerEnvironmentContext` and `PlannerInputEnvelopeV1.environment`:
-
-https://github.com/dunay2/dvt/blob/f892b48a805690053ed922825de2c99b84524fd9/packages/%40dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts
-
-But `PlannerEnvelopeMapper.toDomainBaseInput()` does not copy `environment`:
-
-https://github.com/dunay2/dvt/blob/f892b48a805690053ed922825de2c99b84524fd9/packages/%40dvt/planner/src/application/PlannerEnvelopeMapper.ts
-
-The internal Planner input explicitly documents that environment is absent/stripped before handoff:
-
-https://github.com/dunay2/dvt/blob/f892b48a805690053ed922825de2c99b84524fd9/packages/%40dvt/planner/src/domain/types.ts
-
-#2675 mentions environment in the planner-backed StartRun variant but does not resolve this accept-and-drop behavior:
-
-https://github.com/dunay2/dvt/issues/2675
-
-Required decision:
-
-- preferred if no real Planner semantic consumer exists: resolve environment upstream, remove the no-op Planner field, and pass only resolved graph/policy/step configuration to Planner;
-- alternative only if current source proves Planner ownership: define a strict deterministic environment contract and make it explicitly affect planning semantics/identity as required.
-
-Forbidden final state: a public Planner field that parses successfully and is silently ignored.
-
-## Concurrency boundary
-
-#2663 correctly identifies that semantic plan/run concurrency and Temporal worker capacity are different responsibilities:
-
-https://github.com/dunay2/dvt/issues/2663
-
-Keep:
+The architectural distinction must remain:
 
 ```text
-semantic execution concurrency = per-plan execution semantics
-operational worker capacity     = worker/task-queue slots/pollers/lifecycle config
+semantic execution concurrency
+  = what one plan/run is allowed to execute in parallel
+
+operational worker capacity
+  = slots/pollers/concurrency available to a Temporal worker lifecycle
 ```
 
-A per-plan value must never mutate shared worker capacity for unrelated runs.
+A per-plan policy must never mutate shared worker capacity for unrelated runs.
 
-## Cost/impact evidence: future input, not Planner I/O
+## 10. Cost and impact evidence - future opportunity, not a Planner service
 
-A provider-realistic cost estimate requires mutable external facts (provider capabilities, statistics, physical-plan evidence, materialization state, possibly pricing). The Planner must not open PostgreSQL/Snowflake/etc. to obtain these facts.
+The current Planner has no provider-aware cost estimator. This should not be treated as a missing class to create inside `@dvt/planner`.
 
-Preferred future pattern:
+A provider-realistic estimate requires external facts such as provider capabilities, data statistics, physical plan information, materialization state and possibly current pricing. Those are mutable provider facts and would destroy Planner purity if fetched directly.
+
+Preferred future architecture:
 
 ```text
-provider/statistics/materialization resolvers
-  -> immutable Cost/Impact Evidence Bundle
-  -> pure Planner decision
+provider/statistics/materialization evidence resolvers
+                    |
+                    v
+immutable Cost/Impact Evidence Bundle
+                    |
+                    v
+pure Planner policy decision
 ```
 
-This is the same purity pattern already selected for materialization reuse: mutable facts are resolved outside the Planner; verified immutable evidence enters planning.
+The same pattern applies to materialization reuse: mutable reads happen outside the Planner; only immutable verified evidence enters planning.
 
-## Package boundaries to preserve
+## 11. Package boundaries that must remain separate
 
-`@dvt/plan-interpreter` owns adapter-agnostic runtime DAG validation/layering:
+### `@dvt/plan-interpreter`
 
-https://github.com/dunay2/dvt/tree/f892b48a805690053ed922825de2c99b84524fd9/packages/%40dvt/plan-interpreter
+Owns adapter-agnostic runtime DAG interpretation and layering. It must not be reimplemented inside the Planner.
 
-`@dvt/plan-verifier` owns plan admission/version/hash/config verification:
+- https://github.com/dunay2/dvt/tree/f892b48a805690053ed922825de2c99b84524fd9/packages/%40dvt/plan-interpreter
 
-https://github.com/dunay2/dvt/tree/f892b48a805690053ed922825de2c99b84524fd9/packages/%40dvt/plan-verifier
+### `@dvt/plan-verifier`
 
-Do not absorb/reimplement either concern inside Planner merely to simplify the diagram.
+Owns plan admission/version/hash/step-type verification. It must not be absorbed into the Planner merely to reduce package count.
 
-## Residual package debt
+- https://github.com/dunay2/dvt/tree/f892b48a805690053ed922825de2c99b84524fd9/packages/%40dvt/plan-verifier
 
-The Planner still has compatibility exposure around the older compiled-code/artifact path. Existing owners #2661/#2669 are already determining whether that path is active and whether it should be retired:
+## 12. Residual Planner package debt
 
-- #2661 https://github.com/dunay2/dvt/issues/2661
-- #2669 https://github.com/dunay2/dvt/issues/2669
+The Planner public surface still contains compatibility exposure around compiled-code/artifact storage. Current artifact hardening work is already investigating whether this legacy path is active.
 
-If no real production consumer survives, remove Planner compatibility re-exports rather than preserve them behind aliases.
+Existing owners:
 
-## Proposed programme
+- #2661 - https://github.com/dunay2/dvt/issues/2661
+- #2669 - https://github.com/dunay2/dvt/issues/2669
 
-### EPICA-PLN1 Preserve Planner purity and complete semantic-workload admission
+If the legacy compiled-code path has no real current production consumer, the correct action is to retire it and remove Planner compatibility re-exports rather than preserve them behind a facade.
 
-Classification: Planner boundary hardening + VTX2 execution convergence. It coordinates existing work and adds only the missing environment-contract correction. It is not a Planner rewrite or optimizer programme.
+## 13. Proposed epic
 
-Target:
+### Title
+
+**EPICA-PLN1 Preserve Planner purity and complete semantic-workload admission**
+
+### Classification
+
+Planner boundary hardening + VTX2 execution convergence. This epic coordinates existing work and adds only the missing environment-contract correction. It is **not** a Planner rewrite and **not** a new optimization framework.
+
+### Objective
+
+Finish the current Planner architecture so that:
 
 ```text
 semantic authoring
@@ -248,52 +390,69 @@ semantic authoring
   -> existing verifier/interpreter/runtime
 ```
 
-Existing issues coordinated, not duplicated:
+without duplicating the relational IR, provider logic, runtime scheduler, state store, cost engine or materialization programmes.
 
-- #2524 semantic workload lowering / rigid topology retirement;
-- #2594/#2595/#2597/#2599/#2634 VTX2 semantic core/render/roundtrip/composition;
-- #2663 semantic concurrency vs worker capacity;
-- #2509/#2152/#2486 evidence-based reuse;
-- #2661/#2669 artifact compatibility reduction;
-- #2675 StartRun type hardening.
+### Existing issues coordinated, not duplicated
 
-Only new child proposed by this study: `PLN1.1` for environment-contract truth.
+- #2524 - semantic workload lowering and retirement of rigid SQL-first topology
+- #2594/#2595/#2597/#2599/#2634 - VTX2 semantic core, renderer, roundtrip and composition
+- #2663 - semantic concurrency versus Temporal worker capacity
+- #2509/#2152/#2486 - evidence-based materialization reuse and safe partial execution
+- #2661/#2669 - legacy compiled-code/artifact compatibility reduction
+- #2675 - StartRun planner-backed command type safety
 
-## Epic Definition of Ready
+### New child required
 
-- [ ] exact current main is refreshed at each implementation cut;
+- `PLN1.1` - reconcile `PlannerEnvironmentContext`; eliminate silent public accept-and-drop behavior.
+
+No other new implementation issue should be created until an existing-owner check proves a non-overlapping gap.
+
+## 14. Epic Definition of Ready
+
+The epic is Ready when:
+
+- [ ] exact `main` SHA is recorded at implementation start and every child refreshes it;
 - [ ] #2524 remains the sole owner of semantic-workload lowering;
-- [ ] #2595/#2597 are stable enough for #2524 lowering;
-- [ ] all Planner `environment` producers/consumers are inventoried before contract change;
-- [ ] #2675 overlap is refreshed;
-- [ ] #2663 owns semantic concurrency vs worker capacity;
-- [ ] R1/DMF evidence gates remain unchanged and current `SKIP` is not overloaded with reuse semantics;
-- [ ] artifact compatibility delegates to #2661/#2669;
-- [ ] no second Planner, graph IR, optimizer, scheduler, cost service, environment service or compatibility facade is required.
+- [ ] #2595/#2597 semantic profile/render boundary is sufficiently stable for #2524 lowering work;
+- [ ] all current `PlannerInputEnvelopeV1` producers and consumers are inventoried before changing `environment`;
+- [ ] #2675 overlap is refreshed and the environment change does not duplicate StartRun exclusivity work;
+- [ ] semantic run concurrency and operational Temporal capacity are explicitly separated under #2663;
+- [ ] existing materialization-reuse/R1 gates remain unchanged and no reuse shortcut is introduced into current `SKIP` semantics;
+- [ ] artifact compatibility work delegates to #2661/#2669 rather than creating Planner-local storage abstractions;
+- [ ] no new Planner, graph IR, optimizer, provider registry, scheduler, environment service, cost service or compatibility facade is required.
 
-## Epic Definition of Done
+## 15. Epic Definition of Done
 
-- [ ] supported VTX2 cards lower through one governed semantic-workload path into `GenericGraphSourceV1`;
-- [ ] new VTX2 admission is no longer governed by rigid source -> SQL transform -> sink topology;
-- [ ] visual/source/IR operators do not become fake ExecutionPlan steps;
-- [ ] Planner remains unaware of Substrait operator taxonomy and provider formatting;
-- [ ] `PlannerEnvironmentContext` is explicitly consumed or removed; no public Planner input is silently dropped;
-- [ ] semantic concurrency and Temporal worker capacity have separate truthful owners;
-- [ ] RUN/SKIP/PARTIAL remains selection semantics;
-- [ ] future reuse enters through #2509/#2486 evidence, never mutable provider reads from Planner;
-- [ ] legacy artifact/compiled-code exposure follows #2661/#2669 disposition;
-- [ ] verifier/interpreter responsibilities remain single-owned;
-- [ ] Planner determinism/golden vectors stay green;
-- [ ] focused contract/planner/API/VTX2/adapter/service-backed proofs and `pnpm verify:prepush` pass;
-- [ ] no second Planner, optimizer, scheduler, cost DB, environment subsystem or compatibility wrapper is introduced.
+The epic is Done when:
 
-## New task: PLN1.1
+- [ ] supported VTX2 semantic cards lower through one governed semantic-workload path into `GenericGraphSourceV1`;
+- [ ] current product admission no longer requires the rigid source -> SQL transform -> sink topology for new VTX2 plans;
+- [ ] no relational IR operator, consumed source card or visual-only node becomes a fake ExecutionPlan step;
+- [ ] Planner remains unaware of Substrait relational operator taxonomy and SQL/provider formatting;
+- [ ] `PlannerEnvironmentContext` has one explicit disposition: consumed with deterministic semantics or removed from the Planner contract; no accepted Planner input is silently dropped;
+- [ ] semantic concurrency and Temporal worker capacity are separately owned and executable/truthful;
+- [ ] current RUN/SKIP/PARTIAL semantics remain selection semantics and are not silently reused as materialization-cache semantics;
+- [ ] any future reuse decision enters through the evidence contracts owned by #2509/#2486 rather than mutable provider reads from Planner;
+- [ ] legacy compiled-code compatibility exposure is removed or retained only with evidenced production ownership from #2661/#2669;
+- [ ] `@dvt/plan-verifier` and `@dvt/plan-interpreter` remain the sole existing owners of their current responsibilities;
+- [ ] Planner determinism/golden vectors remain green and semantically equivalent inputs retain stable identities unless an explicit versioned contract change is accepted;
+- [ ] focused contracts/planner/API/VTX2/adapter tests and relevant service-backed proofs pass;
+- [ ] `pnpm verify:prepush` passes on exact final heads;
+- [ ] no second Planner, graph model, optimizer, scheduler, cost database, environment resolver subsystem or compatibility wrapper has been introduced.
 
-### TASK-PLN1.1 Reconcile PlannerEnvironmentContext and remove silent no-op planner input
+## 16. New task specification - PLN1.1
 
-Problem: public Planner input accepts `environment`; the mapper does not forward it; internal types say it is stripped. The contract therefore advertises an input that the Planner does not currently own.
+### Title
 
-Required audit:
+**TASK-PLN1.1 Reconcile PlannerEnvironmentContext and remove silent no-op planner input**
+
+### Problem
+
+The public Planner input accepts an `environment` field but the Planner mapper does not forward it and internal Planner types state that the value has been stripped. This creates a contract that advertises behavior which the Planner does not currently own.
+
+### Scope
+
+Inventory every current producer/consumer of:
 
 ```text
 PlannerEnvironmentContext
@@ -303,62 +462,169 @@ PlannerEnvelopeMapper
 internal PlannerInputEnvelopeV1
 ```
 
-Classify each use as real Planner semantic input, upstream application/workload-resolution input, compatibility-only, or test/docs-only.
+Classify every use as:
 
-Preferred solution if no Planner consumer is found:
+```text
+real planner semantic input
+application/workload-resolution input
+compatibility-only input
+test-only/documentation-only
+```
+
+### Preferred solution
+
+If no real Planner decision consumes environment values, move/keep environment resolution upstream and hard-cut the public Planner field:
 
 ```text
 project/environment state
-  -> application/workload resolver
-  -> resolved graph/step config/policy
-  -> Planner
+    -> application/workload resolver
+    -> resolved graph/step config/policy
+    -> Planner
 ```
 
-Then remove the Planner no-op field and coordinate only the necessary StartRun shape change with #2675. Do not create an `EnvironmentResolver` subsystem merely to preserve an unused field.
+Update #2675's planner-backed Start Run shape only as required so the HTTP/application boundary no longer forwards a Planner no-op. Do not add a new environment service merely to preserve the field.
 
-Alternative only if current code proves Planner ownership: freeze a strict deterministic environment contract with explicit validation, identity impact, no secret values and golden mutation tests.
+### Alternative solution
 
-PLN1.1 Definition of Ready:
+If current source proves the Planner must resolve an environment-dependent planning choice, define the smallest deterministic contract:
 
-- [ ] exact main refreshed;
-- [ ] repository-wide producers/consumers inventoried;
-- [ ] #2675 PR/issue overlap refreshed;
-- [ ] values classified for secrets and determinism;
-- [ ] ownership decision made before implementation;
-- [ ] compatibility posture explicitly assessed;
-- [ ] no new environment subsystem required.
+- exact allowed fields;
+- validation;
+- canonical identity inclusion/exclusion;
+- policy interaction;
+- no secret values;
+- deterministic tests proving which mutations change Plan identity/steps.
 
-PLN1.1 Definition of Done:
+### Example acceptance proof
 
-- [ ] no public Planner field is silently discarded;
-- [ ] one owner exists for environment resolution;
-- [ ] Planner purity remains intact;
-- [ ] secrets/arbitrary environment-variable bags do not enter Plan identity/evidence;
-- [ ] contracts/facade/mapper/API constructors/tests agree on the surviving shape;
-- [ ] determinism tests prove the selected semantics;
-- [ ] current docs/architecture checks and `pnpm verify:prepush` pass;
-- [ ] no deprecated alias, wrapper, second DTO or fake resolver remains.
-
-Non-goals: generic config service, secrets manager, provider discovery, worker config, SQL/dbt templating redesign, planner cost estimator, unrelated Plan-identity redesign.
-
-## Delivery order
+Before:
 
 ```text
-PLN1.1 environment contract truth       (independent small cut)
-
-#2595/#2597 semantic boundary
-        -> #2524 semantic workload lowering
-        -> #2599 VTX2 roundtrip/live proof
-
-#2663 concurrency boundary              (parallel bounded hardening)
-#2661/#2669 artifact compatibility      (parallel reduction)
-#2509/R1/DMF                            (research-gated future evolution)
+request.environment = { vars: { concurrency: 7 } }
+            |
+            v
+Planner contract accepts
+            |
+            v
+PlannerEnvelopeMapper drops
+            |
+            v
+same Plan as if field were absent
 ```
 
-## Explicit non-goals
+After preferred hard cut:
 
-Do not create `PlannerV2`, `SubstraitPlanner`, one execution step per relational operator, a provider-I/O `CostEstimator`, an environment subsystem to justify a no-op field, another DAG interpreter/verifier, another Flow IR, another scheduler, provider-specific SQL/materialization logic in Planner, another artifact store, or compatibility aliases around retired inputs.
+```text
+request/environment config
+            |
+            v
+application resolves allowed semantic value
+            |
+            v
+resolved policy/step config
+            |
+            v
+Planner receives only planning truth
+```
 
-## Success criterion
+or, if the field is proven Planner-owned:
 
-Authoring semantics can be rich while Planner inputs remain simple and truthful. `ExecutionPlan` contains only real runtime responsibilities. Mutable provider facts are resolved before planning. Runtime executes the immutable result without replanning. The target is more capability with fewer planning mechanisms, not a larger Planner.
+```text
+request.environment
+            |
+            v
+strict deterministic Planner environment mapping
+            |
+            v
+explicit plan/policy mutation
+            |
+            v
+golden determinism proof
+```
+
+### Definition of Ready
+
+- [ ] exact current main refreshed;
+- [ ] repository-wide producer/consumer search complete;
+- [ ] #2675 implementation/PR overlap refreshed;
+- [ ] all environment values classified for secrets and determinism;
+- [ ] authority decision is made before implementation: upstream-owned or Planner-owned;
+- [ ] compatibility obligation for persisted/public planner payloads is explicitly assessed;
+- [ ] no new environment subsystem is required.
+
+### Definition of Done
+
+- [ ] no public Planner field is accepted and silently discarded;
+- [ ] one owner exists for environment resolution;
+- [ ] Planner purity is preserved;
+- [ ] no secrets or arbitrary environment-variable bags enter Plan identity/evidence;
+- [ ] valid existing planner-backed start behavior remains compatible or uses an explicitly approved pre-alpha hard cut;
+- [ ] contract, facade, mapper, API constructors and tests agree on the surviving shape;
+- [ ] determinism tests prove the selected semantics;
+- [ ] source/docs/architecture checks and `pnpm verify:prepush` pass;
+- [ ] no wrapper, deprecated alias, second DTO or fake environment resolver remains.
+
+### Non-goals
+
+- generic configuration service;
+- secrets manager;
+- provider discovery;
+- runtime worker configuration;
+- SQL/dbt environment templating redesign;
+- planner cost estimator;
+- changing unrelated Plan identity semantics.
+
+## 17. Delivery order
+
+Recommended order:
+
+```text
+PLN1.1 environment contract truth       (small / independent)
+
+#2595/#2597 VTX2 semantic boundary
+            |
+            v
+#2524 semantic workload lowering
+            |
+            v
+#2599 VTX2 roundtrip/live proof
+
+#2663 semantic concurrency boundary     (parallel bounded hardening)
+
+#2661/#2669 artifact compatibility      (parallel reduction)
+
+#2509 / R1 / DMF                        (research-gated future planner evidence)
+```
+
+The epic should not wait for the complete Materialization Fabric to close if its current Planner-boundary objectives are satisfied; evidence-aware reuse remains coordinated future evolution unless explicitly promoted into this epic by a new source-grounded product decision.
+
+## 18. Explicit non-goals
+
+Do not create:
+
+- `PlannerV2` as a parallel implementation;
+- `SubstraitPlanner`;
+- one execution step per relational operator;
+- `CostEstimator` that opens provider/database connections from Planner;
+- `EnvironmentResolver` subsystem only to justify an unused input field;
+- another DAG interpreter;
+- another plan verifier;
+- a second graph/Flow IR;
+- a generic scheduler beside Temporal;
+- provider-specific SQL/materialization policy in Planner;
+- a second artifact store;
+- compatibility aliases around retired planner inputs.
+
+## 19. Success criterion
+
+DVT has succeeded when the Planner remains small, deterministic and evidence-driven while surrounding layers provide exactly the information it needs:
+
+```text
+Authoring semantics are rich.
+Planner inputs are simple and truthful.
+ExecutionPlan contains only real runtime responsibilities.
+Mutable provider facts are resolved before planning.
+Runtime executes the immutable result without replanning.
+```
+
+The architectural target is therefore **more capability with fewer planning mechanisms**, not a larger Planner.
