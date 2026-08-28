@@ -1,0 +1,21 @@
+model {
+  dvt = system 'DVT+' {
+    #asIs
+    description 'Visual, auditable and deterministic control plane for data transformations.'
+
+    metadata {
+      repository 'dunay2/dvt'
+      baselineSha 'f892b48a805690053ed922825de2c99b84524fd9'
+      status 'manual-spike'
+    }
+
+    link https://github.com/dunay2/dvt/tree/f892b48a805690053ed922825de2c99b84524fd9 'Source baseline'
+  }
+}
+
+views {
+  view index {
+    title 'DVT+ — Architecture Visibility Spike'
+    include dvt
+  }
+}
