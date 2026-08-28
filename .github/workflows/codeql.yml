@@ -65,20 +65,25 @@ jobs:
     needs: detect-security-scope
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    if: >-
-      needs.detect-security-scope.outputs.security_analysis_relevant == 'true'
     strategy:
       fail-fast: false
       matrix:
         language: [javascript-typescript]
     steps:
+      - name: Record scope-based CodeQL skip
+        if: needs.detect-security-scope.outputs.security_analysis_relevant != 'true'
+        run: echo "CodeQL analysis is not required for this change scope."
+
       - name: Checkout
+        if: needs.detect-security-scope.outputs.security_analysis_relevant == 'true'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Initialize CodeQL
+        if: needs.detect-security-scope.outputs.security_analysis_relevant == 'true'
         uses: github/codeql-action/init@7188fc363630916deb702c7fdcf4e481b751f97a # v4.37.1
         with:
           languages: ${{ matrix.language }}
 
       - name: Perform CodeQL analysis
+        if: needs.detect-security-scope.outputs.security_analysis_relevant == 'true'
         uses: github/codeql-action/analyze@7188fc363630916deb702c7fdcf4e481b751f97a # v4.37.1
