@@ -6,11 +6,7 @@ import { PlannerPolicyClassSetSchema } from '../contracts/planner/PlannerPolicyV
 
 import { NonBlankStringSchema, RunExecutionPolicySchema } from './common.js';
 import { ExecutionPlanSchema, PlanCoreSchema } from './execution-plan.js';
-import {
-  PlannerEnvironmentContextSchema,
-  PlannerObservabilitySchema,
-  PlannerSelectionSchema,
-} from './planner-context.js';
+import { PlannerObservabilitySchema, PlannerSelectionSchema } from './planner-context.js';
 import { GenericGraphSourceV1Schema } from './planner-graph.js';
 
 const PlanOwnershipSchema = z
@@ -53,7 +49,6 @@ export const PlannerInputEnvelopeV1Schema = z
     selection: PlannerSelectionSchema,
     decisionScope: PlannerDecisionScopeSchema.optional(),
     policies: PlannerPolicyClassSetSchema.optional(),
-    environment: PlannerEnvironmentContextSchema.optional(),
     ownership: PlanOwnershipSchema.optional(),
     observability: PlannerObservabilitySchema,
     requestedBy: z.string().min(1).optional(),
