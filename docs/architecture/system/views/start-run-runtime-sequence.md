@@ -320,22 +320,22 @@ Provider-native status remains a separate diagnostic/enrichment view.
 
 ## Failure boundaries
 
-| Failure point | Owning boundary | Expected behavior |
-| --- | --- | --- |
-| Authentication/authorization | API security | Reject before application command execution |
-| Duplicate/backpressure/capacity | API admission | Return typed non-provider `StartRunResult` |
-| Graph/selection invalid | Authoring/planning | Fail before Engine/provider dispatch |
-| Stored plan invalid/incompatible | API executability gate | `plan_rejected`; do not enter provider path |
-| Context/connection invalid | Execution-context binding | Fail before Engine/provider dispatch |
-| Engine PlanRef/integrity/capability invalid | Engine admission | Reject before provider side effect |
-| PENDING intent persistence fails | Engine intent rail | No provider dispatch |
-| Estimated-branch bootstrap fails | Engine/State | No provider workflow has started yet |
-| Provider start fails after estimated bootstrap | Provider + Engine failure policy | Preserve persisted metadata/failure semantics; do not fabricate success |
-| `markDispatched` fails after provider start | Engine intent rail | Raise post-start persistence error; reconciliation remains possible |
-| Estimated/actual provider ref reconciliation fails | Engine/Provider | Best-effort provider cancel + intent resolution; rethrow |
-| Fallback bootstrap fails after provider start | Engine/Provider | Best-effort `cancelRun` compensation |
-| Crash around provider dispatch | Engine intent/reconciliation | Reconcile persisted intent with provider lookup semantics |
-| Worker/plugin execution failure | Provider-side runtime | Emit realized lifecycle facts; canonical status follows persisted DVT events |
+| Failure point                                      | Owning boundary                  | Expected behavior                                                            |
+| -------------------------------------------------- | -------------------------------- | ---------------------------------------------------------------------------- |
+| Authentication/authorization                       | API security                     | Reject before application command execution                                  |
+| Duplicate/backpressure/capacity                    | API admission                    | Return typed non-provider `StartRunResult`                                   |
+| Graph/selection invalid                            | Authoring/planning               | Fail before Engine/provider dispatch                                         |
+| Stored plan invalid/incompatible                   | API executability gate           | `plan_rejected`; do not enter provider path                                  |
+| Context/connection invalid                         | Execution-context binding        | Fail before Engine/provider dispatch                                         |
+| Engine PlanRef/integrity/capability invalid        | Engine admission                 | Reject before provider side effect                                           |
+| PENDING intent persistence fails                   | Engine intent rail               | No provider dispatch                                                         |
+| Estimated-branch bootstrap fails                   | Engine/State                     | No provider workflow has started yet                                         |
+| Provider start fails after estimated bootstrap     | Provider + Engine failure policy | Preserve persisted metadata/failure semantics; do not fabricate success      |
+| `markDispatched` fails after provider start        | Engine intent rail               | Raise post-start persistence error; reconciliation remains possible          |
+| Estimated/actual provider ref reconciliation fails | Engine/Provider                  | Best-effort provider cancel + intent resolution; rethrow                     |
+| Fallback bootstrap fails after provider start      | Engine/Provider                  | Best-effort `cancelRun` compensation                                         |
+| Crash around provider dispatch                     | Engine intent/reconciliation     | Reconcile persisted intent with provider lookup semantics                    |
+| Worker/plugin execution failure                    | Provider-side runtime            | Emit realized lifecycle facts; canonical status follows persisted DVT events |
 
 ## Independent audit note
 
