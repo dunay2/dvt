@@ -7,7 +7,7 @@ specification {
   element component
   element port {
     style {
-      shape component
+      shape rectangle
     }
   }
   element adapter
@@ -20,15 +20,16 @@ specification {
   element external
   element contract {
     style {
-      shape document
+      shape rectangle
     }
   }
 
   // Source-inventory kinds are generated from the pinned Git tree.
+  element inventory
   element folder
   element file {
     style {
-      shape document
+      shape rectangle
     }
   }
 

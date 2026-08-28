@@ -66,6 +66,13 @@
       "rationale": "StartRunApplicationService explicitly sequences admission, intent creation, dispatch, telemetry and failure policy; the startRun service folder contains those phase implementations."
     },
     {
+      "id": "coordinator",
+      "fqn": "dvt.engine.startPipeline.coordinator",
+      "title": "StartRun coordinator",
+      "paths": ["src/application/StartRunApplicationService.ts"],
+      "rationale": "StartRunApplicationService is the application-layer coordinator that sequences the StartRun phases."
+    },
+    {
       "id": "admission",
       "fqn": "dvt.engine.startPipeline.admission",
       "title": "Admission & integrity",

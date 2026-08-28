@@ -32,42 +32,61 @@ model {
       description 'Owns canonical run lifecycle, command/read governance and provider delegation. It executes an admitted plan; it does not plan.'
       link https://github.com/dunay2/dvt/tree/77c338cf785cbaefc782490c4de22ee683274d46/packages/@dvt/engine/src 'Package source'
 
+      sourceEvidence = component 'Source evidence' {
+        #sourceDerived
+        description 'Generated from the pinned Git tree. Open this view to inspect every tracked Engine file by folder.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourceRoot 'packages/@dvt/engine'
+          baselineSha '77c338cf785cbaefc782490c4de22ee683274d46'
+        }
+        navigateTo engineSourceInventory
+      }
+
       workflowPort = port 'IWorkflowEngine' {
         #asIs
         description 'Application-facing behavior port: start, recover, cancel, canonical status and signal.'
         link https://github.com/dunay2/dvt/blob/77c338cf785cbaefc782490c4de22ee683274d46/packages/@dvt/engine/src/ports/IWorkflowEngine.ts 'Source'
+        navigateTo engineFiles_workflowPort
       }
 
       workflowFacade = component 'WorkflowEngine facade' {
         #asIs
         description 'Normalizes public inputs and delegates each operation to an explicit use case.'
         link https://github.com/dunay2/dvt/blob/77c338cf785cbaefc782490c4de22ee683274d46/packages/@dvt/engine/src/core/WorkflowEngine.ts 'Source'
+        navigateTo engineFiles_workflowFacade
       }
 
       useCases = component 'Workflow engine use cases' {
         #asIs
         description 'Explicit application operations behind the facade.'
+        navigateTo engineFiles_useCases
 
         startRun = component 'Start run' {
           #asIs
           description 'Resolves initial run context, opens telemetry context and delegates start-run orchestration.'
           link https://github.com/dunay2/dvt/blob/77c338cf785cbaefc782490c4de22ee683274d46/packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowStartRunUseCase.ts 'Source'
+          navigateTo engineFiles_startRun
         }
         recoverRun = component 'Recover run' {
           #asIs
           description 'Creates recovery execution through explicit recovery semantics.'
+          navigateTo engineFiles_recoverRun
         }
         cancelRun = component 'Cancel run' {
           #asIs
           description 'Applies canonical cancellation semantics.'
+          navigateTo engineFiles_cancelRun
         }
         status = component 'Canonical status' {
           #asIs
           description 'Reads canonical status from persisted event/snapshot state; never asks the provider.'
+          navigateTo engineFiles_status
         }
         signal = component 'Signal run' {
           #asIs
           description 'Validates and delegates governed lifecycle signals.'
+          navigateTo engineFiles_signal
         }
       }
 
@@ -75,22 +94,33 @@ model {
         #asIs
         description 'Coordinates admission, intent creation, provider dispatch, state writes, telemetry and failure handling.'
         link https://github.com/dunay2/dvt/blob/77c338cf785cbaefc782490c4de22ee683274d46/packages/@dvt/engine/src/application/StartRunApplicationService.ts 'Source'
+        navigateTo engineFiles_startPipeline
 
+        coordinator = component 'StartRun coordinator' {
+          #asIs
+          description 'Application-layer coordinator that sequences admission, intent, dispatch, telemetry and failure handling.'
+          link https://github.com/dunay2/dvt/blob/77c338cf785cbaefc782490c4de22ee683274d46/packages/@dvt/engine/src/application/StartRunApplicationService.ts 'Source'
+          navigateTo engineFiles_coordinator
+        }
         admission = component 'Admission & integrity' {
           #asIs
           description 'Admits the provider/capabilities and verifies immutable plan material before dispatch.'
+          navigateTo engineFiles_admission
         }
         intent = component 'Pre-dispatch intent' {
           #asIs
           description 'Records crash-consistent start intent before provider dispatch.'
+          navigateTo engineFiles_intent
         }
         execution = component 'Execution dispatch' {
           #asIs
           description 'Dispatches admitted execution through the provider port and persists lifecycle facts.'
+          navigateTo engineFiles_execution
         }
         failure = component 'Failure policy' {
           #asIs
           description 'Reconciles start failures while preserving canonical state and intent invariants.'
+          navigateTo engineFiles_failure
         }
       }
 
@@ -98,22 +128,29 @@ model {
         #asIs
         description 'Replaceable provider boundary for start, cancel, signal, capabilities and provider diagnostics.'
         link https://github.com/dunay2/dvt/blob/77c338cf785cbaefc782490c4de22ee683274d46/packages/@dvt/engine/src/adapters/IProviderAdapter.ts 'Source'
+        navigateTo engineFiles_providerPort
       }
 
       statePort = port 'IRunStateStore' {
         #asIs
         description 'Canonical run-event and snapshot persistence boundary.'
         link https://github.com/dunay2/dvt/blob/77c338cf785cbaefc782490c4de22ee683274d46/packages/@dvt/engine/src/ports/IRunStateStore.ts 'Source'
+        navigateTo engineFiles_statePort
       }
 
       planIntegrityPort = port 'IPlanIntegrityValidator' {
         #asIs
         description 'Verifies immutable plan identity before provider dispatch.'
+        navigateTo engineFiles_planIntegrityPort
       }
 
       workflowFacade .implements workflowPort 'implements public engine behavior'
       workflowFacade .delegates useCases 'delegates operations'
-      useCases.startRun .delegates startPipeline 'starts admitted run'
+      useCases.startRun .delegates startPipeline.coordinator 'starts admitted run'
+      startPipeline.coordinator .uses startPipeline.admission 'admit provider + verify plan'
+      startPipeline.coordinator .uses startPipeline.intent 'record pre-dispatch intent'
+      startPipeline.coordinator .uses startPipeline.execution 'dispatch admitted run'
+      startPipeline.coordinator .uses startPipeline.failure 'apply failure policy on error'
       startPipeline.admission .uses planIntegrityPort 'verifies plan integrity'
       startPipeline.execution .delegates providerPort 'dispatches admitted run'
       startPipeline.execution .persists statePort 'writes lifecycle facts'
@@ -186,11 +223,11 @@ views {
     dvt.api -> dvt.engine.workflowPort 'startRun(PlanRef, RunContext)'
     dvt.engine.workflowPort -> dvt.engine.workflowFacade 'public behavior contract'
     dvt.engine.workflowFacade -> dvt.engine.useCases.startRun 'normalize and delegate'
-    dvt.engine.useCases.startRun -> dvt.engine.startPipeline 'resolved context + trace context'
-    dvt.engine.startPipeline -> dvt.engine.startPipeline.admission 'admit provider + verify plan'
+    dvt.engine.useCases.startRun -> dvt.engine.startPipeline.coordinator 'resolved context + trace context'
+    dvt.engine.startPipeline.coordinator -> dvt.engine.startPipeline.admission 'admit provider + verify plan'
     dvt.engine.startPipeline.admission -> dvt.engine.planIntegrityPort 'verify immutable PlanRef'
-    dvt.engine.startPipeline -> dvt.engine.startPipeline.intent 'record pre-dispatch intent'
-    dvt.engine.startPipeline -> dvt.engine.startPipeline.execution 'dispatch admitted run'
+    dvt.engine.startPipeline.coordinator -> dvt.engine.startPipeline.intent 'record pre-dispatch intent'
+    dvt.engine.startPipeline.coordinator -> dvt.engine.startPipeline.execution 'dispatch admitted run'
     dvt.engine.startPipeline.execution -> dvt.engine.providerPort 'startRun'
     dvt.engine.providerPort -> dvt.temporalAdapter 'provider implementation'
     dvt.temporalAdapter -> temporal 'start Temporal workflow'

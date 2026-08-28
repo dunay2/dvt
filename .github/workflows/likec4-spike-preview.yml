@@ -42,8 +42,9 @@ jobs:
 
       - name: Publish machine-readable source evidence
         run: |
-          mkdir -p dist/source
-          cp .architecture-evidence/* dist/source/
+          sudo mkdir -p dist/source
+          sudo cp .architecture-evidence/* dist/source/
+          sudo chown -R "$USER":"$USER" dist
 
       - name: Upload preview artifact
         uses: actions/upload-artifact@v4

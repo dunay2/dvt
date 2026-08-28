@@ -191,29 +191,27 @@ function generateLikeC4(rootFolder, mappedComponents, inventoryData) {
   lines.push('// GENERATED FILE. DO NOT EDIT.');
   lines.push(`// Source: git tree ${repository}@${baselineSha}:${scope}`);
   lines.push('model {');
-  lines.push('  extend dvt.engine {');
-  lines.push("    sourceInventory = component 'Source inventory — generated from Git' {");
-  lines.push('      #sourceDerived');
-  lines.push("      description 'Machine-generated from the exact Git tree. Folder structure is STRUCTURE-DERIVED; file identity is SOURCE-DERIVED.'");
-  lines.push('      metadata {');
-  lines.push("        provenance 'SOURCE-DERIVED'");
-  lines.push(`        sourceRoot '${escapeDsl(scope)}'`);
-  lines.push(`        baselineSha '${baselineSha}'`);
-  lines.push(`        trackedFiles '${inventoryData.counts.trackedFiles}'`);
-  lines.push(`        sourceFiles '${inventoryData.counts.sourceFiles}'`);
-  lines.push(`        testFiles '${inventoryData.counts.testFiles}'`);
-  lines.push(`        inventorySha256 '${inventoryData.inventorySha256}'`);
-  lines.push('      }');
-  lines.push(`      link https://github.com/${repository}/tree/${baselineSha}/${encodeGitHubPath(scope)} 'Pinned package tree'`);
-  lines.push('      navigateTo engineSourceInventory');
-
-  emitFolderChildren(rootFolder, 'dvt.engine.sourceInventory', '      ', lines, pathToFqn);
+  lines.push("  engineSource = inventory 'Engine source inventory — generated from Git' {");
+  lines.push('    #sourceDerived');
+  lines.push("    description 'Machine-generated from the exact Git tree. Folder structure is STRUCTURE-DERIVED; file identity is SOURCE-DERIVED.'");
+  lines.push('    metadata {');
+  lines.push("      provenance 'SOURCE-DERIVED'");
+  lines.push("      architectureOwner 'dvt.engine'");
+  lines.push(`      sourceRoot '${escapeDsl(scope)}'`);
+  lines.push(`      baselineSha '${baselineSha}'`);
+  lines.push(`      trackedFiles '${inventoryData.counts.trackedFiles}'`);
+  lines.push(`      sourceFiles '${inventoryData.counts.sourceFiles}'`);
+  lines.push(`      testFiles '${inventoryData.counts.testFiles}'`);
+  lines.push(`      inventorySha256 '${inventoryData.inventorySha256}'`);
   lines.push('    }');
+  lines.push(`    link https://github.com/${repository}/tree/${baselineSha}/${encodeGitHubPath(scope)} 'Pinned package tree'`);
+  lines.push('    navigateTo engineSourceInventory');
+  emitFolderChildren(rootFolder, 'engineSource', '    ', lines, pathToFqn);
   lines.push('  }');
   lines.push('}');
   lines.push('');
   lines.push('views {');
-  lines.push('  view engineSourceInventory of dvt.engine.sourceInventory {');
+  lines.push('  view engineSourceInventory of engineSource {');
   lines.push("    title 'Engine — Complete source inventory'");
   lines.push(`    description 'Generated from Git at ${baselineSha.slice(0, 8)}. ${inventoryData.counts.trackedFiles} tracked files; drill into folders to reach every file.'`);
   lines.push('    include *');
@@ -221,7 +219,7 @@ function generateLikeC4(rootFolder, mappedComponents, inventoryData) {
   lines.push('  }');
   lines.push('');
 
-  emitFolderViews(rootFolder, 'dvt.engine.sourceInventory', lines, pathToFqn);
+  emitFolderViews(rootFolder, lines, pathToFqn);
 
   for (const component of mappedComponents) {
     const viewId = componentViewId(component.id);
@@ -289,7 +287,7 @@ function emitFiles(filesInFolder, parentFqn, indent, lines, pathToFqn) {
   }
 }
 
-function emitFolderViews(folder, parentFqn, lines, pathToFqn) {
+function emitFolderViews(folder, lines, pathToFqn) {
   for (const child of [...folder.folders.values()].sort((a, b) => a.name.localeCompare(b.name))) {
     const fqn = pathToFqn.get(`${child.relativePath}/`);
     lines.push(`  view ${folderViewId(child.relativePath)} of ${fqn} {`);
@@ -299,7 +297,7 @@ function emitFolderViews(folder, parentFqn, lines, pathToFqn) {
     lines.push('    autoLayout TopBottom');
     lines.push('  }');
     lines.push('');
-    emitFolderViews(child, fqn, lines, pathToFqn);
+    emitFolderViews(child, lines, pathToFqn);
   }
 }
 
