@@ -1,0 +1,42 @@
+specification {
+  // Architectural element kinds used by the visibility spike.
+  // Keep this intentionally small until the visual model is validated.
+  element system
+  element app
+  element package
+  element component
+  element port {
+    style {
+      shape component
+    }
+  }
+  element adapter
+  element worker
+  element store {
+    style {
+      shape cylinder
+    }
+  }
+  element external
+  element contract {
+    style {
+      shape document
+    }
+  }
+
+  // Source-first classification.
+  tag asIs
+  tag target
+  tag externalSystem
+
+  // Minimal relationship vocabulary for the first Engine slice.
+  relationship calls
+  relationship uses
+  relationship implements {
+    line dashed
+  }
+  relationship delegates
+  relationship persists
+  relationship publishes
+  relationship consumes
+}
