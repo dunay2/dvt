@@ -269,19 +269,19 @@ VTX2 explicitly does **not** require:
 
 ## Decision matrix
 
-| Concern | AS-IS authority | VTX2 target change |
-| --- | --- | --- |
-| Runtime plan | Generic `ExecutionPlan` | Keep unchanged as runtime responsibility model |
-| Runtime planner | `@dvt/planner` | Consume lowered semantic workload; do not absorb relational semantics |
-| Run lifecycle | `@dvt/engine` | No semantic-authority change |
-| State | RunEvents + snapshots | No semantic-authority change |
-| Provider execution | `IProviderAdapter` / Temporal | Add readiness after rendering; no provider authority inversion |
-| Relational semantics | Pinned Substrait profile contract exists | Complete source mapping/admission/projection/rendering path |
-| Stable editable identity | DVT sidecar exists | Use it through roundtrip and visual editing |
-| Capability governance | Machine-readable catalog exists | Promote only conformance-proven semantics and project them separately to renderer/provider/UI |
-| SQL | Existing SQL/dbt paths are not semantic authority | Map governed SQL through selected AST adapter into Substrait |
-| Canvas | Existing authoring model | Project/mutate admitted semantic model without second registry |
-| dbt | Concrete import/execution integration | Resolve dbt-native syntax before supported semantic mapping where required |
+| Concern                  | AS-IS authority                                   | VTX2 target change                                                                            |
+| ------------------------ | ------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Runtime plan             | Generic `ExecutionPlan`                           | Keep unchanged as runtime responsibility model                                                |
+| Runtime planner          | `@dvt/planner`                                    | Consume lowered semantic workload; do not absorb relational semantics                         |
+| Run lifecycle            | `@dvt/engine`                                     | No semantic-authority change                                                                  |
+| State                    | RunEvents + snapshots                             | No semantic-authority change                                                                  |
+| Provider execution       | `IProviderAdapter` / Temporal                     | Add readiness after rendering; no provider authority inversion                                |
+| Relational semantics     | Pinned Substrait profile contract exists          | Complete source mapping/admission/projection/rendering path                                   |
+| Stable editable identity | DVT sidecar exists                                | Use it through roundtrip and visual editing                                                   |
+| Capability governance    | Machine-readable catalog exists                   | Promote only conformance-proven semantics and project them separately to renderer/provider/UI |
+| SQL                      | Existing SQL/dbt paths are not semantic authority | Map governed SQL through selected AST adapter into Substrait                                  |
+| Canvas                   | Existing authoring model                          | Project/mutate admitted semantic model without second registry                                |
+| dbt                      | Concrete import/execution integration             | Resolve dbt-native syntax before supported semantic mapping where required                    |
 
 ## Completion criteria for the target flow
 
