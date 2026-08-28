@@ -108,7 +108,6 @@ export type {
   PlanOwnership,
   PlanCore,
   PlannerBuildResultV1,
-  PlannerEnvironmentContext,
   PlannerInputEnvelopeV1,
   PlannerSelection,
   StepKind,
