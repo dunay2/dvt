@@ -22,8 +22,6 @@ import {
   type GenericGraphSourceV1SchemaT,
   PlannerBuildResultV1Schema,
   type PlannerBuildResultV1SchemaT,
-  PlannerEnvironmentContextSchema,
-  type PlannerEnvironmentContextSchemaT,
   PlannerInputEnvelopeV1Schema,
   type PlannerInputEnvelopeV1SchemaT,
   PlannerObservabilitySchema,
@@ -109,10 +107,6 @@ export function parsePlannerSelection(input: unknown): PlannerSelectionSchemaT {
 
 export function parsePlannerPolicyClassSet(input: unknown): PlannerPolicyClassSetSchemaT {
   return parseWithSchema(PlannerPolicyClassSetSchema, input);
-}
-
-export function parsePlannerEnvironmentContext(input: unknown): PlannerEnvironmentContextSchemaT {
-  return parseWithSchema(PlannerEnvironmentContextSchema, input);
 }
 
 export function parsePlannerObservability(input: unknown): PlannerObservabilitySchemaT {
