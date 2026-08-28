@@ -13,7 +13,6 @@ Frozen historical documentation retained for reference.
 
 - [Architecture](architecture/index.md)
 - [Dvt Artifact Store Spec Pack](dvt_artifact_store_spec_pack/index.md)
-- [Dvt Traceability Pack V2 Lite R6](dvt-traceability-pack-v2-lite-R6/index.md)
 - [Historical Blueprints](historical-blueprints/index.md)
 - [Planner](planner/index.md)
 - [Planning](planning/index.md)

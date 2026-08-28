@@ -9,7 +9,6 @@ const docsRoot = path.join(repoRoot, 'docs');
 const LEGACY_PATH_SEGMENTS = ['dvt execution model'];
 const STALE_WARN_DAYS = 120;
 const STALE_FAIL_DAYS = 540;
-const STALE_METADATA_EXCLUDE_SEGMENTS = ['dvt-traceability-pack-v2-lite-r6'];
 
 function walk(dir) {
   const out = [];
@@ -168,14 +167,7 @@ function main() {
       }
     }
 
-    const skipStaleMetadataCheck = STALE_METADATA_EXCLUDE_SEGMENTS.some((segment) =>
-      relativeLower.includes(segment)
-    );
-    if (
-      relativeLower.startsWith('docs/planning/') &&
-      !relativeLower.endsWith('/index.md') &&
-      !skipStaleMetadataCheck
-    ) {
+    if (relativeLower.startsWith('docs/planning/') && !relativeLower.endsWith('/index.md')) {
       if (!frontmatter.last_reviewed) {
         warnings.push(`${relative} -> missing frontmatter key last_reviewed.`);
       } else {
