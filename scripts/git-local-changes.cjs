@@ -122,11 +122,12 @@ function listCommittedChangedFiles(options = {}) {
       // cannot hide a tree difference between the exact requested refs.
       return unique(runGitLines(directTreeArgs, repoOptions)).sort();
     } catch (directTreeError) {
+      const mergeBaseMessage =
+        mergeBaseError instanceof Error ? mergeBaseError.message : String(mergeBaseError);
       throw new Error(
-        `Unable to read committed changed files between ${baseRef} and ${headRef}: ${
-          directTreeError instanceof Error ? directTreeError.message : String(directTreeError)
-        }`,
-        { cause: mergeBaseError }
+        `Unable to read committed changed files between ${baseRef} and ${headRef}. ` +
+          `Merge-base diff failed (${mergeBaseMessage}); direct tree diff also failed.`,
+        { cause: directTreeError }
       );
     }
   }
