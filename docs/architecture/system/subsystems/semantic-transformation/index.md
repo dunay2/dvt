@@ -2,71 +2,86 @@
 title: Semantic Transformation Subsystem - VTX2 Target
 status: Target
 owner: Architecture / VTX2
-last_reviewed: 2026-08-24
+last_reviewed: 2026-08-28
 ---
 
 # Semantic Transformation Subsystem - VTX2 Target
 
 ## Purpose
 
-This subsystem describes how DVT will author, project, translate, validate, and
-lower language-neutral transformation semantics without turning SQL syntax,
-Canvas presentation, or workflow execution into the semantic authority.
+This subsystem describes how DVT authors, projects, translates, validates, and lowers
+language-neutral transformation semantics without turning SQL syntax, Canvas presentation,
+or workflow execution into the semantic authority.
 
-It is a **target VTX2 architecture**. It does not claim that the current main
-branch already implements the complete flow.
+The **complete subsystem remains target architecture**. Since the original target was
+written, however, one deliberately bounded Canvas -> typed Substrait authoring slice has
+landed on `main`. This page therefore separates the implemented slice from the still-target
+end-to-end route.
 
 Governing decision: [ADR-0064](../../../../adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md).
 Detailed design: [VTX2 Substrait Semantic Reference Design](../../../../planning/proposals/mandatory/runtime-and-contracts/vtx2-substrait-semantic-reference-design-20260824.md).
+Accepted pilot evidence: [ED-20260826 VTX2 typed Substrait card pilot](../../../../evidence/ED-20260826-vtx2-substrait-card-pilot.md).
+
+## Posture
+
+| Slice                                                                                 | Current posture                                           |
+| ------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Pinned Substrait profile, semantic document, SHA binding and DVT identity sidecar     | AS-IS                                                     |
+| Machine-readable Substrait capability catalog                                         | AS-IS governance surface                                  |
+| Exact Canvas typed-authoring pilot `customers.name -> trim -> upper -> customer_name` | AS-IS                                                     |
+| General Canvas semantic authoring grammar                                             | TARGET                                                    |
+| Governed SQL -> Substrait mapping                                                     | TARGET                                                    |
+| Resolved dbt -> Substrait mapping                                                     | TARGET                                                    |
+| Substrait -> governed target renderer                                                 | TARGET; bounded PostgreSQL work may exist in unmerged PRs |
+| Provider-native readiness after semantic rendering                                    | TARGET for the VTX2 semantic route                        |
+| Semantic workload lowering into the generic Planner                                   | TARGET                                                    |
+| General joins/sets/aggregates/windows authoring                                       | TARGET unless separately admitted and merged              |
+
+Open PRs and accepted proposals can refine target direction but do not change these AS-IS
+labels until their executable evidence is merged to `main`.
 
 ## System Boundary
 
 ```mermaid
 flowchart LR
-  subgraph Sources["Authoring / source representations"]
-    Canvas["Canvas card + field commands"]
-    SQL["Governed SQL input"]
-    DBT["dbt/Jinja after dbt-native resolution where required"]
-    Future["Future DataFrame / language frontend"]
+  subgraph Current["AS-IS bounded VTX2 slice"]
+    CanvasPilot["Existing DVT transform card\nexact admitted pilot"]
+    Profile["Pinned Substrait v0.101.0 profile"]
+    TypedPlan["Generated typed Substrait.Plan"]
+    Bindings["DVT RelationId / FieldId sidecar"]
+    Catalog["Capability catalog\nexplicit supported-profile entries"]
+    Draft["Existing Workspace Graph Draft\nApply / Cancel / reload"]
+
+    CanvasPilot --> TypedPlan
+    Profile --> TypedPlan
+    Catalog --> TypedPlan
+    Bindings --> TypedPlan
+    TypedPlan --> Draft
   end
 
-  subgraph Semantic["Semantic transformation authority"]
-    Profile["Pinned Substrait logical profile"]
-    Bindings["DVT RelationId / FieldId / provenance sidecar"]
-    Catalog["Substrait capability dictionary / supported profile"]
-  end
-
-  subgraph Projection["Product projections / adapters"]
-    Card["DVT card projection + visual language"]
+  subgraph Target["Broader semantic transformation subsystem — TARGET"]
+    Inputs["Canvas / governed SQL / resolved dbt / future frontend"]
+    Admission["Semantic admission + conformance"]
+    Projection["DVT card + field projection"]
     Renderer["Governed target renderer"]
     Diagnostics["Semantic / compatibility diagnostics"]
-  end
-
-  subgraph Readiness["Readiness and execution handoff"]
     Provider["Provider-native validation / preflight"]
     Workload["Semantic workload boundary"]
-    Planner["Generic graph / Planner / ExecutionPlan"]
-    Runtime["Provider / workflow runtime adapters"]
+    Planner["Generic Planner / ExecutionPlan"]
+    Runtime["Engine / provider runtime"]
+
+    Inputs --> Admission
+    Admission --> Projection
+    Projection --> Admission
+    Admission --> Renderer
+    Admission --> Diagnostics
+    Renderer --> Provider
+    Provider --> Workload
+    Workload --> Planner
+    Planner --> Runtime
   end
 
-  Canvas --> Profile
-  Canvas --> Bindings
-  SQL -->|"SQL AST adapter"| Profile
-  DBT -->|"compiled/resolved supported SQL"| Profile
-  Future --> Profile
-
-  Catalog --> Profile
-  Catalog -.-> Card
-  Profile --> Card
-  Bindings --> Card
-  Profile --> Renderer
-  Bindings --> Renderer
-  Profile --> Diagnostics
-
-  Renderer --> Provider
-  Provider --> Workload
-  Workload --> Planner
-  Planner --> Runtime
+  TypedPlan -.->|"future generalized semantic authority"| Admission
 ```
 
 ## Core Separation
@@ -80,59 +95,86 @@ Substrait logical operators
 ```
 
 - Substrait logical operators describe transformation meaning.
-- Canvas cards describe user-authored semantic flow boundaries.
-- ExecutionPlan steps describe real runtime responsibilities.
+- Canvas cards describe user-authored semantic/product flow boundaries.
+- `ExecutionPlan` steps describe real runtime responsibilities.
 
-A join, set, aggregate, window, project, or scalar function does not become a
-runtime step by existing in the semantic plan.
+A join, set, aggregate, window, project, or scalar function does not become a runtime step
+merely by existing in the semantic plan.
+
+Semantic validity is also independent from renderer support, provider readiness, and visual
+exposure.
 
 ## Authorities
 
-| Concern                                       | Authority                                 |
-| --------------------------------------------- | ----------------------------------------- |
-| relational/expression/type/function meaning   | pinned Substrait profile                  |
-| supported/candidate semantic capability state | #2639 capability dictionary               |
-| stable editable relation/field identity       | DVT binding sidecar                       |
-| Canvas/workflow topology                      | Workspace Graph Draft / canonical graph   |
-| card vocabulary and interaction               | DVT visual projection / #2635             |
-| SQL syntax representation                     | selected SQL parser AST adapter           |
-| canonical SQL architecture/style              | project query policy + renderer           |
-| provider/catalog/type/function readiness      | provider-native preflight                 |
-| runtime dependency/selection/steps            | generic planner / ExecutionPlan           |
-| persistence/materialization mechanics         | provider/materialization adapter boundary |
+| Concern                                      | Authority                                                   |
+| -------------------------------------------- | ----------------------------------------------------------- |
+| relational/expression/type/function meaning  | pinned Substrait profile                                    |
+| admitted/candidate semantic capability state | `DvtSubstraitCapabilityCatalog.v1`                          |
+| stable editable relation/field identity      | DVT Substrait authoring sidecar                             |
+| Canvas/workflow topology                     | protected Workspace Graph Draft / canonical authoring graph |
+| card vocabulary and interaction              | DVT visual projection                                       |
+| SQL syntax representation                    | selected SQL parser/AST adapter when implemented            |
+| canonical target SQL style                   | governed renderer + project query policy                    |
+| provider/catalog/type/function readiness     | provider-native validation/preflight                        |
+| runtime dependency/selection/steps           | generic Planner / `ExecutionPlan`                           |
+| run lifecycle                                | Engine / Run Domain / persisted run-event rail              |
+| persistence/materialization mechanics        | existing artifact/provider/materialization boundaries       |
 
 No downstream projection may silently replace an upstream authority.
 
-## Semantic Profile
+## AS-IS: First Typed Substrait Authoring Pilot
 
-The first admitted VTX2 profile is bounded to capabilities proven by product
-fixtures and draws from Substrait's standard logical semantics, including the
-families required for:
+Current `main` contains one narrow production-entry fixture implemented in the existing Web
+Canvas authoring rail:
 
 ```text
-Read/Input
-Project
-Filter
-Join
-Set
-Aggregate
-Sort
-Fetch
-scalar / aggregate / window expressions
-cast / conditional expressions
-required portable type/function identities
+customers(name, email, country)
+name -> trim -> upper -> customer_name
 ```
 
-The full upstream Substrait universe is a **reference dictionary**, not an
-automatic DVT feature list.
+The implementation:
 
-A new semantic operation enters DVT only through the standard-first admission
-owned by #2639/#2641.
+- constructs and edits generated Substrait v0.101.0 protobuf types directly;
+- uses a `ReadRel -> ProjectRel` shape with field selection and scalar functions;
+- keeps stable DVT relation/field identity in the existing sidecar;
+- requires exact `supported-profile` capability admission before authoring a pilot function;
+- re-encodes protobuf bytes, recomputes SHA-256, and binds the sidecar to that SHA on Apply;
+- reuses the existing Workspace Graph Draft Apply/Cancel/reload path;
+- fails closed for hidden or unsupported semantic shapes;
+- does not fall back silently to the VTX1 column-mapping or editable-SQL authority while the
+  Substrait mode is active.
+
+This proves a semantic-authoring pattern. It does **not** prove a general semantic editor,
+SQL rendering, provider execution, joins, aggregates, windows, or a universal visual grammar.
+
+## AS-IS: Exact Admitted Capability Set
+
+The capability catalog contains a broader standard-first candidate dictionary, but only a
+small pilot subset is currently promoted to `supported-profile` on `main`:
+
+| Category        | Supported pilot semantic identity                   |
+| --------------- | --------------------------------------------------- |
+| relation        | `substrait.ReadRel` / `read_type.named_table`       |
+| relation        | `substrait.RelCommon` / `emit_kind.emit`            |
+| relation        | `substrait.ProjectRel`                              |
+| expression form | `substrait.Expression` / `rex_type.selection`       |
+| expression form | `substrait.Expression` / `rex_type.scalar_function` |
+| type            | `substrait.Type` / `kind.string`                    |
+| scalar function | `extension:io.substrait:functions_string` / `trim`  |
+| scalar function | `extension:io.substrait:functions_string` / `upper` |
+
+Entries such as Filter, Join, Set, Aggregate, Sort, Fetch, additional types, aggregate/window
+functions, and other scalar functions may exist in the catalog as `candidate-standard` or
+product needs. Their presence is **not** evidence that DVT currently admits, renders,
+executes, or exposes them.
+
+This corrects the earlier broad wording that could be read as if all of those families were
+already inside the first admitted profile.
 
 ## Stable DVT Bindings
 
-Substrait structural/positional field references are not sufficient as
-interactive product identity.
+Substrait structural/positional field references are not sufficient as interactive product
+identity.
 
 DVT therefore binds stable authoring identity to the semantic plan:
 
@@ -140,16 +182,14 @@ DVT therefore binds stable authoring identity to the semantic plan:
 RelationId
 FieldId
 source/provenance identity
-semantic field/relation path or ordinal binding
+display identity where required by the product
+semantic field/relation ordinal binding
 ```
 
-These bindings survive supported rename/reorder/reload operations and allow
-lineage and presentation to refer to identity without embedding display names
-or Canvas coordinates in semantic meaning.
+These bindings support rename/reload identity guarantees without duplicating Substrait
+relation/expression semantics. The sidecar must not grow into a second relational IR.
 
-The binding layer must not duplicate Substrait relation/expression semantics.
-
-## Authoring Flow
+## TARGET: General Authoring And Translation Flow
 
 ### Visual -> semantic -> code
 
@@ -163,40 +203,44 @@ field/relation card command
  -> provider-native validation
 ```
 
-Dragging a function onto a field is one possible interaction. Keyboard/menu
-commands must reach the same semantic mutation.
+The current pilot proves only one field-function chain inside this direction. General
+operations remain separately admitted slices.
 
 ### SQL -> semantic -> card
 
 ```text
 SQL input
- -> dialect parser AST
+ -> selected dialect parser AST
  -> supported semantic mapping
  -> DVT stable binding resolution
  -> card projection
- -> optional visual semantic edit
- -> canonical project-governed SQL renderer
+ -> optional semantic edit
+ -> canonical governed target renderer
 ```
 
-The supported roundtrip preserves semantic meaning, not arbitrary source
-whitespace or formatting.
+The supported roundtrip preserves semantic meaning, not arbitrary source whitespace or
+formatting.
+
+A concrete parser/renderer library is an implementation choice, not semantic authority.
+Current V0 work may deliberately reuse PostgreSQL-native tooling already in the repository;
+SQLGlot remains a candidate rather than current architecture until code adopts it for a real
+need.
 
 ### dbt/Jinja
 
 ```text
 dbt/Jinja source
  -> dbt-native resolution/compile when required
- -> supported SQL/AST
+ -> supported SQL/source representation
  -> semantic mapping
 ```
 
-Unresolved arbitrary macros are not silently interpreted as relational
-semantics.
+Unresolved arbitrary macros are not silently interpreted as relational semantics.
 
-## Multi-Input Composition
+## TARGET: Multi-Input Composition
 
-A relation composition can collapse visible input cards in one branch into one
-resulting semantic card while retaining source/provenance identity internally.
+A relation composition may collapse visible input cards in one branch into one resulting
+semantic card while retaining source/provenance identity internally.
 
 For example:
 
@@ -205,102 +249,90 @@ Orders + Customers + Countries
        -> one semantic relation card
 ```
 
-may contain a recursive logical join structure without producing synthetic
-`Orders step`, `Customers step`, or `Join step` runtime work.
+may contain a recursive Substrait join structure without producing synthetic source or join
+runtime steps.
 
-Explicit materialization, provider-transfer, control/check, or reusable semantic
-boundaries remain separate when they have real product/runtime meaning.
+An open or stacked PR that demonstrates one exact join fixture is useful evidence for the
+next slice, but it remains target until merged and accepted on `main`.
 
-## Capability Dictionary
+## TARGET: Renderer, Readiness And Workload Lowering
 
-Epic #2639 establishes Substrait as the semantic operation dictionary DVT
-consults before defining any DVT-specific operation.
-
-The catalog distinguishes:
+The target keeps three concerns separate:
 
 ```text
-supported-profile
-candidate-standard
-candidate-extension
-gap
-out-of-scope
+semantic validity
+  -> governed target rendering
+  -> provider-native validation / preflight
+  -> semantic workload lowering
+  -> generic Planner
 ```
 
-and separately projects:
+Only real operational responsibilities enter the existing Planner. Logical operators do not
+become steps mechanically.
 
-```text
-renderer/provider support
-visual exposure
-```
-
-This lets DVT use a broad standard vocabulary without exposing or executing
-capabilities before the product admits them.
-
-## Versioning and Compatibility
-
-The product pins an exact Substrait profile/version/tool boundary.
-
-Profile upgrades must test:
-
-- semantic capability delta;
-- protobuf/serialization delta;
-- type/function extension delta;
-- producer/consumer/validator compatibility;
-- target renderer/provider behavior;
-- stable DVT binding compatibility.
-
-Known risk areas from #2638 include protobuf normalization, function extension
-identities, timestamp/interval/UDT details, ordering/decimal/null portability,
-validator version lag, consumer skew, and generated TypeScript binding changes.
-
-A version mismatch is not automatically an invalid semantic plan. Diagnostics
-must distinguish compatibility, semantic, renderer, and provider failures.
+Generated SQL/Python or other target text is a derived projection, not recipe authority.
+Storage/caching/versioning of generated projections should reuse existing artifact boundaries
+and be introduced only when executable evidence requires it.
 
 ## Current-To-Target Convergence
 
-VTX2 reuses the proven current rails but removes duplicate semantic authorities.
+VTX2 should remove duplicate semantic authorities rather than add another framework:
 
-Target convergence includes:
-
-- `VisualTransformRecipeV1` becomes a bounded compatibility input or is retired
-  after deterministic translation to the semantic profile;
-- `selectedColumns` ceases to be current authoring truth;
-- current recipe/compiler/UI operation catalogs converge on one semantic
-  capability catalog/projection;
-- SQL-specific `groupBy/having/join/window` top-level recipe growth is avoided;
-- fixed exactly-three-node SQL-first validation is removed from current product
-  admission under #2524;
-- provider validation, generic planning, run state, and materialization ownership
-  remain in their current bounded contexts.
-
-## Delivery Owners
-
-- #2594 - VTX2 parent semantic-card direction
-- #2595 - pinned Substrait profile + DVT stable identity sidecar
-- #2597 - SQL AST mapping and governed target SQL renderer
-- #2598 - card/field semantic authoring
-- #2599 - SQL <-> semantic profile/bindings <-> Card E2E proof
-- #2634 - multi-input composition
-- #2635 - DVT visual language
-- #2639 - Substrait capability dictionary
-- #2640 - machine-readable capability catalog
-- #2641 - standard-first admission/conformance
-- #2642 - UI capability projection
-- #2643 - profile upgrade governance
-- #2524 - semantic workload lowering / rigid topology retirement
+- `VisualTransformRecipeV1` remains compatibility/current product behavior where still wired,
+  but it must not become the VTX2 semantic center;
+- existing SQL-first compiler paths remain until a replacement slice proves equivalent
+  accepted behavior; they are retired deliberately, not speculatively;
+- one Substrait capability governance surface replaces parallel semantic operation catalogs;
+- provider validation, generic planning, run lifecycle, state and artifact ownership remain in
+  their existing bounded contexts;
+- no new store, service, builder framework, renderer framework, graph abstraction, or private
+  relational hierarchy is justified merely to make the first pilots look more generic.
 
 ## Non-Goals
 
-- Substrait physical-plan adoption as DVT runtime planning;
+- a private DVT relational IR parallel to Substrait;
+- one DVT class/node/step per relational operator;
+- a DVT-owned type or function system parallel to Substrait;
+- Substrait physical plans as DVT runtime planning;
 - query optimization or join reordering;
-- exposing all upstream capabilities in the UI;
-- a second DVT relational/type/function hierarchy;
+- automatic UI exposure of all upstream Substrait capabilities;
 - provider support inferred from semantic validity;
-- another graph or planner abstraction;
-- a bespoke TypeScript Substrait framework unless measured needs justify it.
+- another graph/planner abstraction;
+- a bespoke TypeScript Substrait framework without measured need.
+
+## Completion Criteria For The Broader Target
+
+The complete subsystem should not be promoted from TARGET until executable evidence proves,
+at minimum:
+
+1. supported source/authoring inputs map deterministically into the pinned semantic profile;
+2. unsupported semantics fail closed with useful diagnostics;
+3. stable `RelationId` / `FieldId` identity survives all supported edit/roundtrip cases;
+4. card projection and target rendering consume the same admitted semantic authority;
+5. provider-native validation remains distinct from semantic validation;
+6. semantic workload lowering produces generic Planner input without one-step-per-operator
+   expansion;
+7. the accepted SQL/semantic/card roundtrip profile is demonstrated end to end;
+8. runtime execution continues to use existing Planner, Engine, State and Artifacts
+   authorities.
+
+## Delivery State
+
+- #2598 / PR #2658 — **merged and accepted**: first typed Canvas/Substrait authoring pilot.
+- #2597 / PR #2659 — pending: bounded PostgreSQL projection from the typed pilot; not AS-IS
+  until merged.
+- #2634 / PR #2686 — stacked/draft: first bounded inner-join composition slice; not AS-IS.
+- #2640 — capability catalog exists on `main`; the admitted subset changed with #2658.
+- remaining VTX2 slices continue under their owning issues/PRs and must be re-evaluated from
+  `main` before their status is reflected here.
 
 ## References
 
+- [ADR-0064](../../../../adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md)
+- [Typed Substrait pilot evidence](../../../../evidence/ED-20260826-vtx2-substrait-card-pilot.md)
+- [`DvtSubstraitProfile.v1.ts`](../../../../../packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProfile.v1.ts)
+- [`DvtSubstraitCapabilityCatalog.v1.ts`](../../../../../packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts)
+- [`canvasDvtSubstraitPilot.ts`](../../../../../apps/web/src/app/views/canvas/canvasDvtSubstraitPilot.ts)
 - https://substrait.io/spec/specification/
 - https://substrait.io/relations/logical_relations/
 - https://substrait.io/expressions/field_references/
