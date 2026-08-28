@@ -13,16 +13,16 @@ Keep active docs aligned with current code, planning state, and archive policy w
 
 ## Minimum update rules by change type
 
-| Change type | Required documentation action |
-| --- | --- |
-| Runtime behavior or contract change | update the canonical spec or status doc that owns the behavior, then repair supporting maps that route readers there |
-| Code path rename or file move | update every active doc link that points to the old path; do not leave active docs pointing at renamed code |
-| New or renamed doc under `docs/` | run `pnpm docs:sync` so governed indexes stay current |
-| MVP task lifecycle change | update the governing GitHub issue; do not create a local task mirror |
-| `docs:doctor` reports missing planning `last_reviewed` metadata | run `pnpm docs:planning:last-reviewed:backfill`, then explicitly re-review any doc whose content changed materially |
-| Supersede a document | update the canonical replacement first; then archive or delete the old document according to the retention rule below |
-| Add or remove workspaces under `apps/` or `packages/` | run DB-free `pnpm docs:status:generate --code-state-only`; do not create or commit a Repository Map copy |
-| Explicitly publish documentation | run `pnpm docs:publish`; it imports Planning DB and assembles the untracked tree before `pnpm docs:serve` or `pnpm docs:build` |
+| Change type                                                     | Required documentation action                                                                                                  |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Runtime behavior or contract change                             | update the canonical spec or status doc that owns the behavior, then repair supporting maps that route readers there           |
+| Code path rename or file move                                   | update every active doc link that points to the old path; do not leave active docs pointing at renamed code                    |
+| New or renamed doc under `docs/`                                | run `pnpm docs:sync` so governed indexes stay current                                                                          |
+| MVP task lifecycle change                                       | update the governing GitHub issue; do not create a local task mirror                                                           |
+| `docs:doctor` reports missing planning `last_reviewed` metadata | run `pnpm docs:planning:last-reviewed:backfill`, then explicitly re-review any doc whose content changed materially            |
+| Supersede a document                                            | update the canonical replacement first; then archive or delete the old document according to the retention rule below          |
+| Add or remove workspaces under `apps/` or `packages/`           | run DB-free `pnpm docs:status:generate --code-state-only`; do not create or commit a Repository Map copy                       |
+| Explicitly publish documentation                                | run `pnpm docs:publish`; it imports Planning DB and assembles the untracked tree before `pnpm docs:serve` or `pnpm docs:build` |
 
 ## Architecture and design consultation
 
