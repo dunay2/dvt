@@ -1,9 +1,12 @@
-# ADR-0000: Code Generation with Enforced Normative Traceability (Automated)
+---
+title: ADR-0000 Code Generation with Enforced Normative Traceability (Automated)
+Status: Accepted
+Date: 2026-02-14
+Owners: Core Architecture / Engine / Adapters / AI Tooling
+last_reviewed: 2026-08-28
+---
 
-**Status:** Accepted  
-**Date:** 2026-02-14  
-**Updated:** 2026-08-28  
-**Owners:** Core Architecture / Engine / Adapters / AI Tooling
+# ADR-0000: Code Generation with Enforced Normative Traceability (Automated)
 
 ## 1. Context
 
