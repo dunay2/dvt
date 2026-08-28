@@ -128,8 +128,8 @@ Each entry has one explicit primary delivery owner. Coordinating issues are list
 
 ## Coverage result — 2026-08-28
 
-- **19 graph entries checked: 15 active problems and 4 explicit prerequisites/gates.**
-- **All active problems have an explicit issue/epic owner.**
+- **20 graph entries checked: 16 active problems and 4 explicit prerequisites/gates.**
+- **All 16 active problems have an explicit issue/epic owner.**
 - **0 unresolved defects are unowned.**
 - **0 new issues are required by this reconciliation.**
 - `#2595` is deliberately recorded as a **delivered prerequisite**, not reopened as backlog.
