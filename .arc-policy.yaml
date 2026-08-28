@@ -2,7 +2,6 @@ version: 1
 
 triggers:
   - name: contracts
-    guides: ['api-design']
     globs:
       - 'specs/contracts/**'
       - 'packages/@dvt/contracts/**'
@@ -12,7 +11,6 @@ triggers:
       risk_update: true
 
   - name: engine-core
-    guides: ['event-driven', 'observability', 'append-authority', 'determinism-replay']
     globs:
       - 'packages/@dvt/engine/**'
     min_arc_level: ARC-2
@@ -21,7 +19,6 @@ triggers:
       risk_update: true
 
   - name: planner-core
-    guides: ['observability', 'determinism-replay']
     globs:
       - 'packages/@dvt/planner/**'
     min_arc_level: ARC-2
@@ -30,7 +27,6 @@ triggers:
       risk_update: true
 
   - name: state-store
-    guides: ['event-driven', 'observability', 'append-authority', 'determinism-replay']
     globs:
       - 'packages/@dvt/state-store/**'
     min_arc_level: ARC-2
@@ -39,7 +35,6 @@ triggers:
       risk_update: true
 
   - name: security
-    guides: ['security-advanced', 'sbom-supplychain', 'lineage-openlineage-marquez']
     globs:
       - 'security/**'
       - 'docs/security/**'
@@ -51,7 +46,6 @@ triggers:
       compat_matrix: true
 
   - name: adapters
-    guides: ['adapter-semantics', 'determinism-replay']
     globs:
       - 'packages/@dvt/adapter-*/**'
     min_arc_level: ARC-2

@@ -18,8 +18,9 @@
  *  }
  *
  * Notes:
- *  - This script is intentionally minimal and avoids keyword heuristics.
+ *  - This script intentionally avoids keyword heuristics.
  *  - Declared ARC level can be provided via env DECLARED_ARC_LEVEL (optional).
+ *  - Policy enforcement is independent from documentation-guide discovery.
  */
 
 import fs from 'node:fs';
@@ -33,22 +34,17 @@ const declaredArcLevel = (process.env.DECLARED_ARC_LEVEL || 'NA').toUpperCase();
 
 function readPolicy(fp) {
   if (!fs.existsSync(fp)) throw new Error(`Policy file not found: ${fp}`);
-  const raw = fs.readFileSync(fp, 'utf8');
-  return yaml.load(raw);
+  return yaml.load(fs.readFileSync(fp, 'utf8'));
 }
 
-// Minimal glob matcher using picomatch-like behavior is ideal,
-// but to avoid extra deps, support ** and * with a simple conversion.
-// For production, consider adding `picomatch` (tiny, widely used).
 function globToRegExp(glob) {
-  // Escape regex special chars, then re-introduce glob semantics.
-  const esc = glob.replaceAll(/[.+^${}()|[\]\\]/g, String.raw`\$&`);
+  const escaped = glob.replaceAll(/[.+^${}()|[\]\\]/g, String.raw`\$&`);
   const doubleStarMarker = '__DOUBLESTAR__';
-  const re = esc
+  const expression = escaped
     .replaceAll('**', doubleStarMarker)
     .replaceAll('*', '[^/]*')
     .replaceAll(doubleStarMarker, '.*');
-  return new RegExp(`^${re}$`);
+  return new RegExp(`^${expression}$`);
 }
 
 function levelRank(level) {
@@ -77,43 +73,27 @@ let effective = 'ARC-0';
 const triggerHits = [];
 
 for (const trigger of policy.triggers || []) {
-  const globs = trigger.globs || [];
-  const regexes = globs.map(globToRegExp);
-
+  const regexes = (trigger.globs || []).map(globToRegExp);
   const hits = changedFiles.filter((file) => regexes.some((regex) => regex.test(file)));
-  if (hits.length > 0) {
-    effective = maxLevel(effective, String(trigger.min_arc_level || 'ARC-0').toUpperCase());
-    triggerHits.push({
-      name: trigger.name,
-      min_arc_level: String(trigger.min_arc_level || 'ARC-0').toUpperCase(),
-      guides: trigger.guides || [],
-      require: trigger.require || {},
-      hits: hits.slice(0, 200),
-    });
-  }
+  if (hits.length === 0) continue;
+
+  effective = maxLevel(effective, String(trigger.min_arc_level || 'ARC-0').toUpperCase());
+  triggerHits.push({
+    name: trigger.name,
+    min_arc_level: String(trigger.min_arc_level || 'ARC-0').toUpperCase(),
+    require: trigger.require || {},
+    hits: hits.slice(0, 200),
+  });
 }
 
 const isArc = levelRank(effective) > 0;
-
-// Aggregate guide hints (non-enforced)
-const guideSet = new Set();
-for (const hit of triggerHits) {
-  const guides = hit.guides || [];
-  if (Array.isArray(guides)) {
-    for (const guide of guides) {
-      guideSet.add(String(guide));
-    }
-  }
-}
-const recommendedGuides = Array.from(guideSet);
-
-// Aggregate requirements from triggers that matched at the effective level or higher.
 const requirements = {
   evidenceDoc: false,
   riskUpdate: false,
   rolloutNotes: false,
   compatMatrix: false,
 };
+
 for (const hit of triggerHits) {
   const requireConfig = hit.require || {};
   if (requireConfig.evidence_doc) requirements.evidenceDoc = true;
@@ -122,11 +102,9 @@ for (const hit of triggerHits) {
   if (requireConfig.compat_matrix) requirements.compatMatrix = true;
 }
 
-// Baseline requirements by level (ED for ARC-2/3)
 if (levelRank(effective) >= levelRank('ARC-2')) requirements.evidenceDoc = true;
 if (effective === 'ARC-3') requirements.riskUpdate = true;
 
-// Determine required checks
 const checks = policy.checks?.[effective] ?? ['lint', 'test'];
 
 const result = {
@@ -137,15 +115,11 @@ const result = {
   requirements,
   requiredChecks: checks,
   policyVersion: policy.version ?? 1,
-  recommendedGuides,
 };
 
 console.error(
   `[ARC] effective=${result.effectiveArcLevel} isArc=${result.isArc} checks=${result.requiredChecks.join(',')}`
 );
-if (result.recommendedGuides?.length) {
-  console.error(`[ARC] Recommended guides: ${result.recommendedGuides.join(', ')}`);
-}
 if (
   result.isArc &&
   result.effectiveArcLevel !== result.declaredArcLevel &&
