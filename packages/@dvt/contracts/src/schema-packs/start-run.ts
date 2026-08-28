@@ -20,13 +20,12 @@ import { EXECUTABILITY_REJECTION_CODES } from '../contracts/planner/PlanExecutab
 import { PlannerPolicyClassSetSchema } from '../contracts/planner/PlannerPolicyVocabulary.v2.js';
 
 import { NonBlankStringSchema, PlanRefSchema, RunExecutionContextRefSchema } from './common.js';
-import { PlannerEnvironmentContextSchema, PlannerObservabilitySchema } from './planner-context.js';
+import { PlannerObservabilitySchema } from './planner-context.js';
 import { GenericGraphSourceV1Schema } from './planner-graph.js';
 
 export const StartRunTargetAdapterSchema = z.enum(SUPPORTED_START_RUN_TARGET_ADAPTERS);
 
 export const StartRunPlanRefSchema = PlanRefSchema;
-export const StartRunPlannerEnvironmentInputSchema = PlannerEnvironmentContextSchema;
 
 function addStartRunCommandIssue(
   ctx: z.RefinementCtx,
@@ -46,7 +45,6 @@ export const StartRunCommandSchema = z
     runExecutionContextRef: RunExecutionContextRefSchema.optional(),
     graphSource: GenericGraphSourceV1Schema.optional(),
     policies: PlannerPolicyClassSetSchema.optional(),
-    environment: StartRunPlannerEnvironmentInputSchema.optional(),
     observability: PlannerObservabilitySchema,
     runId: NonBlankStringSchema,
     targetAdapter: StartRunTargetAdapterSchema,
@@ -70,13 +68,6 @@ export const StartRunCommandSchema = z
           ctx,
           ['policies'],
           'planRef startRun commands cannot include planner policies.'
-        );
-      }
-      if (command.environment !== undefined) {
-        addStartRunCommandIssue(
-          ctx,
-          ['environment'],
-          'planRef startRun commands cannot include planner environment.'
         );
       }
       if (command.observability !== undefined) {
@@ -164,8 +155,5 @@ export const StartRunResultSchema = z.discriminatedUnion('kind', [
 
 export type StartRunTargetAdapterSchemaT = z.infer<typeof StartRunTargetAdapterSchema>;
 export type StartRunPlanRefSchemaT = z.infer<typeof StartRunPlanRefSchema>;
-export type StartRunPlannerEnvironmentInputSchemaT = z.infer<
-  typeof StartRunPlannerEnvironmentInputSchema
->;
 export type StartRunCommandSchemaT = z.infer<typeof StartRunCommandSchema>;
 export type StartRunResultSchemaT = z.infer<typeof StartRunResultSchema>;
