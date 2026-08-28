@@ -24,10 +24,21 @@ specification {
     }
   }
 
+  // Source-inventory kinds are generated from the pinned Git tree.
+  element folder
+  element file {
+    style {
+      shape document
+    }
+  }
+
   // Source-first classification.
   tag asIs
   tag target
   tag externalSystem
+  tag sourceDerived
+  tag structureDerived
+  tag architectureDeclared
 
   // Minimal relationship vocabulary for the first Engine slice.
   relationship calls

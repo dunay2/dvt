@@ -15,6 +15,14 @@ jobs:
     steps:
       - name: Checkout spike
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Fetch source baseline
+        run: git fetch --no-tags origin main
+
+      - name: Generate source-first Engine inventory
+        run: node architecture/tools/generate-engine-inventory.mjs
 
       - name: Build LikeC4 static site
         uses: likec4/actions@v1
@@ -23,6 +31,14 @@ jobs:
           path: architecture
           output: dist
           base: ./
+
+      - name: Publish machine-readable source evidence
+        run: |
+          mkdir -p dist/source
+          cp architecture/generated/engine-inventory.json dist/source/engine-inventory.json
+          cp architecture/generated/engine-source.c4 dist/source/engine-source.c4
+          cp architecture/engine-components.json dist/source/engine-components.json
+          cp architecture/source-baseline.json dist/source/source-baseline.json
 
       - name: Upload preview artifact
         uses: actions/upload-artifact@v4
