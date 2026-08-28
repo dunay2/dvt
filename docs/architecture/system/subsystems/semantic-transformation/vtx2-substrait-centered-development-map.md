@@ -2,7 +2,7 @@
 title: VTX2 Substrait-centered development map
 status: Review
 owner: Architecture / VTX2
-last_reviewed: 2026-08-25
+last_reviewed: 2026-08-28
 ---
 
 # VTX2 Substrait-centered development map
@@ -29,19 +29,24 @@ The pilot may reuse source-owned components already proven on `main`. If impleme
                          │
           ┌──────────────┼──────────────┐
           ▼              ▼              ▼
-      SQL view       future Python   other views
+ PostgreSQL view    future Python   other views
           │
           ▼
-     SQLGlot AST
+ bounded PostgreSQL AST
           │
           ▼
-    target SQL dialect
+ existing pgsql-deparser
+          │
+          ▼
+     PostgreSQL SQL
           │
           ▼
 provider-native validation / Preview / Run
 ```
 
 The intended semantic center is `typed Substrait.Plan`. SQL, visual presentation, future Python/PySpark, JSON/debug and generated artifacts are projections/views of that same transformation meaning.
+
+For V0, PostgreSQL uses the repository-existing `pgsql-deparser`. SQLGlot is deliberately REFERENCE-ONLY until a second real SQL dialect demonstrates enough duplication to justify a cross-dialect target layer.
 
 The existing DVT sidecar remains limited to stable product identity/provenance that Substrait does not safely own for interactive authoring (`RelationId`, `FieldId`, source/provenance binding, display identity and lineage identity where required).
 
@@ -84,8 +89,9 @@ The names below describe responsibilities observed or required by the current pi
 | existing Graph Draft Apply / Cancel / reload path                 | EXISTING                        | draft lifecycle                                                                              | reuse; no new state authority                                                                |
 | existing persistence path                                         | EXISTING / VERIFY               | persist serialized recipe                                                                    | reuse if source inspection proves compatible                                                 |
 | protobuf encode/decode + SHA integrity                            | EXISTING CONCERN / VERIFY OWNER | serialize typed Plan for storage/transport                                                   | infrastructure only; not semantic authority                                                  |
-| SQL projection responsibility                                     | FUTURE AFTER PILOT / OWNER TBD  | map admitted Substrait semantics to SQLGlot AST                                              | no framework or public component until Planning DB/source ownership is reconciled            |
-| SQLGlot                                                           | EXTERNAL CANDIDATE              | target AST + dialect rendering                                                               | #2618 decides bounded outbound role                                                          |
+| PostgreSQL projection responsibility                              | LOCAL / BOUNDED V0              | map the admitted pilot Substrait shape to PostgreSQL AST                                     | local mapping only; no renderer framework                                                    |
+| `pgsql-deparser`                                                  | EXISTING                        | emit PostgreSQL SQL from the bounded PostgreSQL AST                                          | reuse the repository dependency                                                              |
+| SQLGlot                                                           | FUTURE CANDIDATE                | cross-dialect target layer only after a second real dialect exists                           | #2618 = REFERENCE-ONLY for V0                                                                |
 | provider-native SQL readiness / Preview / Run                     | EXISTING                        | final target validation/execution readiness                                                  | keep                                                                                         |
 | generated projection artifact identity/storage                    | DEFERRED                        | identify/store/cache derived outputs if evidence requires it                                 | decide after real Substrait -> SQL evidence                                                  |
 
@@ -137,9 +143,9 @@ Target direction after the pilot:
 
 ```text
 typed Substrait.Plan
- -> bounded Substrait-to-SQLGlot projection
- -> SQLGlot AST
- -> target SQL dialect
+ -> bounded Substrait-to-PostgreSQL-AST mapping
+ -> existing pgsql-deparser
+ -> PostgreSQL SQL
  -> existing provider-native validation / Preview / Run
 ```
 
@@ -194,7 +200,7 @@ working architecture map + Planning DB reconciliation gate
         ├──────────────► #2655 persistence freeze after pilot evidence
         ├──────────────► #2642 general visual projection after pilot evidence
         ↓
-#2597 Substrait -> SQLGlot AST -> governed SQL projection
+#2597 Substrait -> PostgreSQL AST -> governed SQL projection
         ↓
 #2652 Preview/provider cutover
         ↓
