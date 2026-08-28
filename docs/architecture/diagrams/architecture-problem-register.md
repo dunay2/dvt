@@ -87,34 +87,49 @@ flowchart LR
   E2 -.->|same fencing principle, different state owner| O1
 ```
 
-## Traceability matrix
+## Traceability register
 
-| ID | Current problem / gate | Current source evidence | Delivery issue | Parent epic / programme | Coverage |
-|---|---|---|---|---|---|
-| S1 | Semantic cards must lower to real executable workloads without fixed SQL-first topology | `GenericGraphSourceV1`, current SQL-first compiler/topology seams | [#2524](https://github.com/dunay2/dvt/issues/2524) | [#2690](https://github.com/dunay2/dvt/issues/2690), [#2594](https://github.com/dunay2/dvt/issues/2594) | OWNED |
-| S2 | Public Planner `environment` is accepted but silently dropped before domain Planner | `packages/@dvt/planner/src/application/PlannerEnvelopeMapper.ts` | [#2691](https://github.com/dunay2/dvt/issues/2691) | [#2690](https://github.com/dunay2/dvt/issues/2690) | OWNED |
-| S3 | Substrait identity/profile foundation exists; SQL projection remains active work | `@dvt/contracts/substrait`; renderer/projection path | [#2597](https://github.com/dunay2/dvt/issues/2597) | [#2594](https://github.com/dunay2/dvt/issues/2594), [#2650](https://github.com/dunay2/dvt/issues/2650) | OWNED; #2595 DELIVERED |
-| S4 | Materialization semantics must stay adapter-owned and capability-truthful | PostgreSQL relational execution capability | [#2523](https://github.com/dunay2/dvt/issues/2523) | [#2327](https://github.com/dunay2/dvt/issues/2327) | OWNED |
-| E1 | Admission rejection can flow through shared failure policy and mutate an existing run | `StartRunApplicationService.ts`, `StartRunFailurePolicy.ts` | [#2676](https://github.com/dunay2/dvt/issues/2676) | [#2673](https://github.com/dunay2/dvt/issues/2673) | OWNED |
-| E2 | Concurrent logical starts lack durable claim ownership/fenced transitions | intent service/store and PostgreSQL intent persistence | [#2678](https://github.com/dunay2/dvt/issues/2678) | [#2673](https://github.com/dunay2/dvt/issues/2673) | OWNED |
-| E3 | Timeout/read failure can create ambiguous provider outcome; unknown must not become missing | start execution timeout/failure/reconciliation seams | [#2679](https://github.com/dunay2/dvt/issues/2679) | [#2673](https://github.com/dunay2/dvt/issues/2673) | OWNED |
-| E4 | Control/enrichment must use persisted provider coordinates | run command/signal/enrichment services | [#2680](https://github.com/dunay2/dvt/issues/2680) | [#2673](https://github.com/dunay2/dvt/issues/2673) | OWNED |
-| E5 | `StartRunCommand` public TS type permits impossible combinations even though runtime rejects them | Start Run contracts/schema | [#2675](https://github.com/dunay2/dvt/issues/2675) | [#2674](https://github.com/dunay2/dvt/issues/2674) | OWNED |
-| E6 | Fresh start and recovery duplicate shared admission policy | `StartRunAdmissionService`, `RecoverRunApplicationService` | [#2682](https://github.com/dunay2/dvt/issues/2682) | [#2673](https://github.com/dunay2/dvt/issues/2673) | OWNED |
-| O1 | Outbox claim returns no immutable owner receipt and finalizes by ID only | `packages/@dvt/adapter-postgres/src/PostgresOutboxStore.ts` | [#2662](https://github.com/dunay2/dvt/issues/2662), [#2664](https://github.com/dunay2/dvt/issues/2664), [#2666](https://github.com/dunay2/dvt/issues/2666) | [#2662](https://github.com/dunay2/dvt/issues/2662) | OWNED |
-| O2 | Worker can treat a successful publish + failed/stale ack as publication failure and then call failure finalization | `packages/@dvt/delivery/src/application/OutboxWorker.ts` | [#2668](https://github.com/dunay2/dvt/issues/2668) | [#2662](https://github.com/dunay2/dvt/issues/2662) | OWNED |
-| O4 | Race invariant requires real PostgreSQL and operational proof | PostgreSQL smoke/worker/monitor rails | [#2670](https://github.com/dunay2/dvt/issues/2670), [#2672](https://github.com/dunay2/dvt/issues/2672) | [#2662](https://github.com/dunay2/dvt/issues/2662) | OWNED |
-| T1 | Planner/run concurrency and Temporal worker-process slot capacity have different lifecycle/owners | `TemporalPolicyMapper`, `TemporalWorkerHost`, worker config | [#2663](https://github.com/dunay2/dvt/issues/2663) | [#2660](https://github.com/dunay2/dvt/issues/2660) | OWNED |
-| T2 | Capacity/saturation lacks one bounded truthful operational projection | Temporal worker host/observability | [#2665](https://github.com/dunay2/dvt/issues/2665) | [#2660](https://github.com/dunay2/dvt/issues/2660) | OWNED |
-| A1 | Canonical CAS coexists with legacy SQL-specific compiled-code storage surface whose reachability must be decided | `@dvt/artifacts` CAS + `ICompiledCodeStorage` family | [#2661](https://github.com/dunay2/dvt/issues/2661) | [#2660](https://github.com/dunay2/dvt/issues/2660) | OWNED |
-| A2 | If legacy adapters survive, noop durability and filesystem publication semantics are unsafe/ambiguous | compiled-code adapters | [#2667](https://github.com/dunay2/dvt/issues/2667) | [#2660](https://github.com/dunay2/dvt/issues/2660) | OWNED |
-| A3 | DBT eligibility/resource policy is misplaced inside generic artifact core if retained | `attachCompiledCodeRefs()` | [#2669](https://github.com/dunay2/dvt/issues/2669) | [#2660](https://github.com/dunay2/dvt/issues/2660) | OWNED |
-| G1 | Governance compatibility JSON must not infer lower minor support or duplicate runtime admission authority | `PlanAdmission.v1.ts`, `contracts/compat/plan-compat.json`, Temporal support descriptor | [#2677](https://github.com/dunay2/dvt/issues/2677) | [#2674](https://github.com/dunay2/dvt/issues/2674) | OWNED |
+Each entry has one explicit primary delivery owner. Coordinating issues are listed only where they explain dependency order.
+
+### VTX2 / Planning
+
+- **S1 — Semantic workload lowering incomplete.** Current evidence: `GenericGraphSourceV1` plus current SQL-first compiler/topology seams. Primary delivery owner: [#2524](https://github.com/dunay2/dvt/issues/2524). Parent programmes: [#2690](https://github.com/dunay2/dvt/issues/2690) and [#2594](https://github.com/dunay2/dvt/issues/2594). Status: `OWNED`.
+- **S2 — Planner environment accepted but silently dropped.** Current evidence: `packages/@dvt/planner/src/application/PlannerEnvelopeMapper.ts`. Primary delivery owner: [#2691](https://github.com/dunay2/dvt/issues/2691). Parent: [#2690](https://github.com/dunay2/dvt/issues/2690). Status: `OWNED`.
+- **S3 — Substrait foundation delivered; SQL projection still active.** Current evidence: `@dvt/contracts/substrait` and the renderer/projection path. Active delivery owner: [#2597](https://github.com/dunay2/dvt/issues/2597). Parent programmes: [#2594](https://github.com/dunay2/dvt/issues/2594) and [#2650](https://github.com/dunay2/dvt/issues/2650). [#2595](https://github.com/dunay2/dvt/issues/2595) is a delivered prerequisite, not open debt.
+- **S4 — Materialization intent must stay adapter-owned and capability-truthful.** Current evidence: PostgreSQL relational execution capability. Primary delivery owner: [#2523](https://github.com/dunay2/dvt/issues/2523). Parent: [#2327](https://github.com/dunay2/dvt/issues/2327). Status: `OWNED`.
+
+### Engine / Start ownership
+
+- **E1 — Pre-ownership start failure may mutate an existing run.** Current evidence: `StartRunApplicationService.ts` and `StartRunFailurePolicy.ts`. Primary delivery owner: [#2676](https://github.com/dunay2/dvt/issues/2676). Parent: [#2673](https://github.com/dunay2/dvt/issues/2673). Status: `OWNED`.
+- **E2 — Concurrent starts lack durable claim ownership and fenced transitions.** Current evidence: intent service/store and PostgreSQL intent persistence. Primary delivery owner: [#2678](https://github.com/dunay2/dvt/issues/2678). Parent: [#2673](https://github.com/dunay2/dvt/issues/2673). Status: `OWNED`.
+- **E3 — Unknown provider outcome is not first-class.** Current evidence: start execution timeout, failure and reconciliation seams. Primary delivery owner: [#2679](https://github.com/dunay2/dvt/issues/2679). Parent: [#2673](https://github.com/dunay2/dvt/issues/2673). Status: `OWNED`.
+- **E4 — Provider operations must route through persisted provider identity.** Current evidence: run command, signal and enrichment services. Primary delivery owner: [#2680](https://github.com/dunay2/dvt/issues/2680). Parent: [#2673](https://github.com/dunay2/dvt/issues/2673). Status: `OWNED`.
+- **E5 — `StartRunCommand` permits impossible internal states.** Current evidence: Start Run contracts/schema. Primary delivery owner: [#2675](https://github.com/dunay2/dvt/issues/2675). Parent: [#2674](https://github.com/dunay2/dvt/issues/2674). Status: `OWNED`.
+- **E6 — Fresh start and recovery duplicate shared admission ownership.** Current evidence: `StartRunAdmissionService` and `RecoverRunApplicationService`. Primary delivery owner: [#2682](https://github.com/dunay2/dvt/issues/2682). Parent: [#2673](https://github.com/dunay2/dvt/issues/2673). Status: `OWNED`.
+
+### Transactional outbox
+
+- **O1 — Claim identity is lost before acknowledgement.** Current evidence: `packages/@dvt/adapter-postgres/src/PostgresOutboxStore.ts`. Primary programme owner: [#2662](https://github.com/dunay2/dvt/issues/2662), with contract and PostgreSQL implementation in [#2664](https://github.com/dunay2/dvt/issues/2664) and [#2666](https://github.com/dunay2/dvt/issues/2666). Status: `OWNED`.
+- **O2 — Publish failure and acknowledgement/finalization failure are conflated.** Current evidence: `packages/@dvt/delivery/src/application/OutboxWorker.ts`. Primary delivery owner: [#2668](https://github.com/dunay2/dvt/issues/2668). Parent: [#2662](https://github.com/dunay2/dvt/issues/2662). Status: `OWNED`.
+- **O3 — Claim receipt and fenced PostgreSQL finalization are explicit prerequisites.** Owners: [#2664](https://github.com/dunay2/dvt/issues/2664) and [#2666](https://github.com/dunay2/dvt/issues/2666). Parent: [#2662](https://github.com/dunay2/dvt/issues/2662). Status: `OWNED`.
+- **O4 — Race safety needs real PostgreSQL and operational proof.** Current evidence: PostgreSQL smoke, worker and monitor rails. Owners: [#2670](https://github.com/dunay2/dvt/issues/2670) and [#2672](https://github.com/dunay2/dvt/issues/2672). Parent: [#2662](https://github.com/dunay2/dvt/issues/2662). Status: `OWNED`.
+
+### Temporal / Artifacts
+
+- **T1 — Semantic concurrency and worker-process capacity have different owners/lifecycles.** Current evidence: `TemporalPolicyMapper`, `TemporalWorkerHost` and worker config. Primary delivery owner: [#2663](https://github.com/dunay2/dvt/issues/2663). Parent: [#2660](https://github.com/dunay2/dvt/issues/2660). Status: `OWNED`.
+- **T2 — Worker capacity/saturation lacks one bounded truthful projection.** Current evidence: Temporal worker host/observability. Primary delivery owner: [#2665](https://github.com/dunay2/dvt/issues/2665). Parent: [#2660](https://github.com/dunay2/dvt/issues/2660). Status: `OWNED`.
+- **A1 — Canonical CAS coexists with a legacy SQL-specific compiled-code storage surface whose reachability needs disposition.** Current evidence: `@dvt/artifacts` CAS plus `ICompiledCodeStorage`. Primary delivery owner: [#2661](https://github.com/dunay2/dvt/issues/2661). Parent: [#2660](https://github.com/dunay2/dvt/issues/2660). Status: `OWNED`.
+- **A2 — Retained legacy adapters must fail closed and publish safely.** Current evidence: compiled-code adapters. Primary delivery owner: [#2667](https://github.com/dunay2/dvt/issues/2667). Parent: [#2660](https://github.com/dunay2/dvt/issues/2660). Status: `OWNED`.
+- **A3 — DBT eligibility/resource policy is misplaced inside generic artifact core if retained.** Current evidence: `attachCompiledCodeRefs()`. Primary delivery owner: [#2669](https://github.com/dunay2/dvt/issues/2669). Parent: [#2660](https://github.com/dunay2/dvt/issues/2660). Status: `OWNED`.
+
+### Contract / Compatibility truth
+
+- **G1 — Adapter schema compatibility must be exact and must not become a second runtime admission authority.** Current evidence: `PlanAdmission.v1.ts`, `contracts/compat/plan-compat.json` and the Temporal support descriptor. Primary delivery owner: [#2677](https://github.com/dunay2/dvt/issues/2677). Parent: [#2674](https://github.com/dunay2/dvt/issues/2674). Status: `OWNED`.
 
 ## Coverage result — 2026-08-28
 
-- **18 current problem/gate entries checked.**
-- **18 have an explicit issue/epic owner.**
+- **19 graph entries checked: 15 active problems and 4 explicit prerequisites/gates.**
+- **All active problems have an explicit issue/epic owner.**
 - **0 unresolved defects are unowned.**
 - **0 new issues are required by this reconciliation.**
 - `#2595` is deliberately recorded as a **delivered prerequisite**, not reopened as backlog.
@@ -130,9 +145,9 @@ This register integrates the surviving architectural principles from the histori
 
 - Planner, Engine, State and UI remain distinct authorities.
 - Planning remains separate from orchestration.
-- persistent state outranks provider memory;
-- reuse-before-build and standards-before-private-semantics remain design heuristics;
-- Substrait is the bounded semantic center for VTX2, with DVT-owned stable identity/provenance;
+- Persistent state outranks provider memory.
+- Reuse-before-build and standards-before-private-semantics remain design heuristics.
+- Substrait is the bounded semantic center for VTX2, with DVT-owned stable identity/provenance.
 - Canvas cards, Substrait operators and runtime steps are deliberately different granularities.
 
 Historical V2 package trees, proposed providers and speculative components are not AS-IS evidence.
