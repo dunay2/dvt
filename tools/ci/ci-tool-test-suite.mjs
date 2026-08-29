@@ -29,10 +29,10 @@ const NODE_BUILTIN_SPECIFIERS = new Set([
 ]);
 
 const MODULE_SPECIFIER_PATTERNS = [
-  /\bimport\s+(?:[^'\"]*?\s+from\s+)?['\"]([^'\"]+)['\"]/gu,
-  /\bexport\s+[^'\"]*?\s+from\s+['\"]([^'\"]+)['\"]/gu,
-  /\bimport\s*\(\s*['\"]([^'\"]+)['\"]\s*\)/gu,
-  /\brequire\s*\(\s*['\"]([^'\"]+)['\"]\s*\)/gu,
+  /\bimport\s+(?:[^'"]*?\s+from\s+)?['"]([^'"]+)['"]/gu,
+  /\bexport\s+[^'"]*?\s+from\s+['"]([^'"]+)['"]/gu,
+  /\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/gu,
+  /\brequire\s*\(\s*['"]([^'"]+)['"]\s*\)/gu,
 ];
 
 function normalizePath(filePath) {
