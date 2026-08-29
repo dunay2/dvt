@@ -12,6 +12,7 @@ export const EXECUTABLE_CI_TOOL_TESTS = Object.freeze([
   'tools/ci/adapter-postgres-import-alias-regression.test.mjs',
   'tools/ci/arc-policy-state-store.test.mjs',
   'tools/ci/architecture-dependency-guard.test.mjs',
+  'tools/ci/state-store-role-binding-architecture.test.mjs',
   'tools/ci/contracts-package-governance.test.mjs',
   'tools/ci/docs-changed-governance-policy.test.mjs',
   'tools/ci/docs-frontmatter-bom.test.mjs',
@@ -28,10 +29,10 @@ const NODE_BUILTIN_SPECIFIERS = new Set([
 ]);
 
 const MODULE_SPECIFIER_PATTERNS = [
-  /\bimport\s+(?:[^'"]*?\s+from\s+)?['"]([^'"]+)['"]/gu,
-  /\bexport\s+[^'"]*?\s+from\s+['"]([^'"]+)['"]/gu,
-  /\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/gu,
-  /\brequire\s*\(\s*['"]([^'"]+)['"]\s*\)/gu,
+  /\bimport\s+(?:[^'\"]*?\s+from\s+)?['\"]([^'\"]+)['\"]/gu,
+  /\bexport\s+[^'\"]*?\s+from\s+['\"]([^'\"]+)['\"]/gu,
+  /\bimport\s*\(\s*['\"]([^'\"]+)['\"]\s*\)/gu,
+  /\brequire\s*\(\s*['\"]([^'\"]+)['\"]\s*\)/gu,
 ];
 
 function normalizePath(filePath) {
