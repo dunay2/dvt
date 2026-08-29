@@ -1,11 +1,12 @@
 # TST1 — Source-first audit of low-value negative tests and redundant CI proof
 
-**Status:** Study / proposal only  
-**Date:** 2026-08-28  
+**Status:** Study active; API implementation cut authorized  
+**Date:** 2026-08-28 / refined 2026-08-29  
 **Repository:** `dunay2/dvt`  
-**Baseline:** `main@4bfbacdd6accc46a80060095ca30b7e20175e2fc`  
+**Initial baseline:** `main@4bfbacdd6accc46a80060095ca30b7e20175e2fc`  
+**Refreshed implementation baseline:** `main@ef3a90894ffbb8f5b884aa58dd3592084985e04d`  
 **Epic:** #2697  
-**Implementation authorization:** **NOT GRANTED**. This study proposes dispositions; it does not authorize deleting or replacing tests.
+**First implementation:** #2734 for the approved bounded API cut under #2698
 
 ## 1. Question
 
@@ -15,34 +16,78 @@ The question is not:
 
 > Does this test contain `not`, `rejects`, `not.toHaveProperty` or another negative assertion?
 
-The question is:
+The first question is now:
 
-> What independent invariant does this test protect, how costly is a regression, and is this the cheapest authoritative proof of that invariant?
+> **What is the intention of the test, and which component should own that invariant?**
 
-A negative test is high value when it prevents a real security, data-integrity, lifecycle, interoperability or product failure. It is low value when it permanently tests implementation archaeology already made impossible or irrelevant by a stronger owner.
+Only then ask:
 
-## 2. Source-first rule
+> What independent failure does it detect, how costly is the regression, and is this the cheapest authoritative proof?
 
-This study uses current code/tests/configuration as authority. Issues and historical plans are used to find prior intent, not to classify a test as valuable merely because an old issue requested it.
+A negative test is high value when it prevents a real security, data-integrity, lifecycle, interoperability or product failure. A source-reading test can also be high value when it protects architecture. The error is not source inspection by itself; the error is proving the same architecture separately in many package suites, or keeping historical syntactic blacklists after the architectural rule has a stronger owner.
 
-Candidate discovery uses source-reading patterns such as `readFileSync`, repository-file readers, exact `toContain/not.toContain` source assertions, file-existence checks and historical-absence guards. These are **signals only**. A source-reading test can still be valuable, especially for security or deterministic-runtime boundaries, and a normal behavioral test can still be redundant.
+## 2. Intent-first owner routing
 
-## 3. Decision rule
+The audit classifies intent **before** KEEP / CONSOLIDATE / REPLACE / REMOVE.
 
-> A test earns recurring CI cost only when it protects a product, security, data-integrity, public-contract or architecture invariant that can actually regress and is not already proved by a cheaper authoritative check.
+| Test intention | Canonical owner | Preferred proof |
+| --- | --- | --- |
+| product/runtime behavior | owning module | direct behavior/command/query test |
+| security / tenant / integrity | owning security/domain boundary | fail-closed behavior + service-backed proof where needed |
+| public protocol/schema | `@dvt/contracts` | parse/serialize/schema boundary |
+| layer/package/dependency architecture | repository `arch:deps` | Dependency Cruiser |
+| semantic architecture not expressible as a dependency edge | existing central architecture guard under `tools/ci` | AST/reachability rule once, centrally |
+| package public surface | package/export boundary | actual consumer import/build/typecheck |
+| docs/governance | docs/governance CI | canonical docs checks |
+| deployment/configuration posture | deployment/CI owner | configuration/boot/deploy contract |
+| test-suite routing/duplication | CI test-routing owner | semantic manifest/scope proof |
 
-Every candidate receives one disposition:
+### Central architecture fact already present in the repository
 
-- `KEEP`: independent, high-value invariant; proof is appropriately placed.
-- `CONSOLIDATE`: useful invariant but repeated across equivalent cases or layers.
-- `REPLACE`: useful invariant, wrong proof mechanism; replace source/topology inspection with behavior/import/schema/dependency/live proof.
+The repository already has an architecture authority:
+
+```text
+pnpm arch:deps
+  -> tools/ci/check-architecture-dependencies.mjs
+  -> Dependency Cruiser rules
+  + central semantic AST/reachability checks
+```
+
+`arch:deps` is invoked by normal code-quality/pre-push rails. Therefore a local Vitest should not scan an entire workspace merely to re-prove a dependency/layer invariant already representable there.
+
+Important nuance: **Dependency Cruiser is not forced to express symbol-level semantics it cannot represent cleanly.** The existing central architecture guard already combines Dependency Cruiser with AST/reachability analysis. The correct rule is:
+
+```text
+plain dependency/layer rule -> Dependency Cruiser
+semantic architecture rule -> central architecture guard
+never -> copy the same source blacklist into every package suite
+```
+
+## 3. Source-first rule
+
+Current code, tests and configuration are authority. Issues and historical plans are used to recover intent, not to classify a test as valuable merely because an old issue requested it.
+
+Candidate discovery uses patterns such as `readFileSync`, repository-file readers, exact `toContain/not.toContain` source assertions, file-existence checks and historical-absence guards. These are **signals only**.
+
+A normal behavioral test can be redundant. A source-reading architecture test can be valuable but misplaced.
+
+## 4. Disposition rule
+
+After the test intention and owner are known, every candidate receives one disposition:
+
+- `KEEP`: independent high-value invariant and proof is already in the correct owner.
+- `CONSOLIDATE`: useful invariant repeated across equivalent cases/layers.
+- `RELOCATE`: useful invariant is in the wrong suite; move it to the existing owner without duplicating it.
+- `REPLACE`: useful invariant, wrong proof mechanism; use stronger behavior/import/schema/dependency/live proof.
 - `REMOVE`: no independent invariant remains or a stronger owner already proves it.
+
+`RELOCATE/REPLACE` is preferred over `REMOVE` when architectural intent is real.
 
 No deletion quota is defined.
 
-## 4. Negative tests we explicitly protect
+## 5. Negative tests explicitly protected
 
-The following categories are presumed `KEEP` unless source inspection shows they duplicate an equal or stronger proof:
+These categories are presumed `KEEP` unless source inspection proves equal or stronger duplication:
 
 - authentication and authorization denial;
 - tenant/project/environment isolation;
@@ -62,217 +107,228 @@ The following categories are presumed `KEEP` unless source inspection shows they
 - Substrait profile/version/skew/identity invariants;
 - deterministic planner/runtime behavior.
 
-Example of a negative assertion that is **not** a cleanup target by itself:
+Example: `packages/@dvt/planner/test/unit/dbt-step-factory.test.ts` proves that resolved Planner policy removes caller-owned retry/timeout/concurrency fields where Planner policy is authoritative. Those negative property assertions protect product semantics and are not cleanup targets.
 
-`packages/@dvt/planner/test/unit/dbt-step-factory.test.ts` proves that resolved Planner policy removes caller-owned retry/timeout/concurrency fields where the Planner is authoritative. The absence assertions protect real product policy precedence, not historical topology.
+## 6. Low-value / wrong-owner signals
 
-## 5. Low-value signals
+Strong review candidates include:
 
-A test becomes a strong review candidate when it does one or more of the following without an independent high-risk invariant:
+1. one product test reads source and asserts an exact internal symbol/call/import although `arch:deps` can own the boundary;
+2. many module tests repeat the same forbidden architecture dependency;
+3. an old file must remain absent after a completed migration although package resolution/scanner already proves the cut;
+4. exact re-export source strings replace an actual consumer import test;
+5. one historical object property is blacklisted although an explicit mapper and strict schema already fail if it leaks;
+6. exact test names/test filenames are treated as product contracts;
+7. `Owned concern` comments are asserted inside product suites;
+8. docs headings/user-story IDs/Mermaid are duplicated in Web/API tests;
+9. package-script strings are tested where the real intent is suite routing or deployment posture;
+10. the same parser/schema rejection branch is repeated with incidental literals;
+11. local source regexes duplicate Dependency Cruiser, typecheck, build or central governance checks;
+12. retired implementation names are blacklisted indefinitely;
+13. CSS/copy/DOM-string absence is asserted when rendered behavior/accessibility already owns the invariant;
+14. a workspace-wide AST/source scan runs inside one package suite although its concern is repository architecture.
 
-1. reads production source as text and checks exact symbols/calls/imports;
-2. checks that an old file no longer exists after a completed migration;
-3. checks exact internal file/folder ownership instead of public behavior;
-4. checks exact re-export source strings instead of importing the package as a consumer;
-5. blacklists one historical object property although a strict schema plus positive mapper already owns the boundary;
-6. asserts exact test names or test file names;
-7. asserts `/** Owned concern:` or another documentation comment in a product test;
-8. tests architecture documentation headings/user-story IDs/Mermaid inside Web/API unit suites;
-9. fixes exact package-script command strings although the execution manifest/CI can be verified semantically;
-10. repeats the same invalid-schema/parser branch with many incidental literals;
-11. duplicates repository dependency/type/build/governance checks in package-local source regexes;
-12. protects retired implementation names solely because a migration once removed them;
-13. checks CSS/copy/DOM-string absence where rendered behavior/accessibility already proves the user invariant;
-14. preserves current file topology through static inventories with no product/runtime consequence.
+## 7. First-pass source signals
 
-## 6. First-pass source signals at the baseline
-
-These are discovery counts, **not proposed deletion counts**.
+Discovery counts from the initial baseline are not deletion counts.
 
 | Area | Mechanical signal | Initial interpretation |
 | --- | ---: | --- |
-| `apps/api/test` | 6 `readFileSync` consumers | bounded residual source/topology family after prior API cleanup |
-| `apps/web` | 52 `readFileSync` occurrences | broad tree; includes support/config; classify, do not bulk delete |
-| Web `readRepoFile` consumers | 22 | first bounded Web architecture family to inspect |
-| `@dvt/contracts/test` | 12 `readFileSync` consumers | strict contract tests + architecture tests must be separated |
-| `@dvt/engine/test` | 13 `readFileSync` consumers | strong source/package-topology signal |
-| `@dvt/planner/test` | 2 `readFileSync` consumers | likely small audit; do not manufacture a cleanup target |
+| `apps/api/test` | 6 `readFileSync` consumers | bounded residual family after prior API cleanup |
+| `apps/web` | 52 `readFileSync` occurrences | broad tree; classify by intent |
+| Web `readRepoFile` consumers | 22 | first bounded Web architecture family |
+| `@dvt/contracts/test` | 12 `readFileSync` consumers | separate schema semantics from topology |
+| `@dvt/engine/test` | 13 `readFileSync` consumers | strong package/topology signal |
+| `@dvt/planner/test` | 2 `readFileSync` consumers | small audit; no artificial deletion target |
 | `@dvt/state-store/test` | 0 | no source-text smell found by this signal |
 | `@dvt/artifacts/test` | 0 | no source-text smell found by this signal |
 | `@dvt/delivery/test` | 2 | review two architecture tests |
-| `@dvt/adapter-postgres/test` | 4 | security-sensitive; replacement proof required before removal |
+| `@dvt/adapter-postgres/test` | 4 | security-sensitive; preserve intent |
 | `@dvt/adapter-temporal/test` | 5 | several architecture/literal guards |
-| Temporal step-plugin prefix | 0 | no source-reader signal in searched plugin prefix |
-| `apps/temporal-worker` | 1 test source reader + 1 production source reader | one architecture test candidate; production reader is unrelated |
-| `tools/**` | 40 `readFileSync` occurrences | mostly legitimate executable tooling; audit ownership/duplication, not count |
+| Temporal step-plugin prefix | 0 | no source-reader signal in searched prefix |
+| `apps/temporal-worker` | 1 test source reader + 1 production reader | one architecture candidate |
+| `tools/**` | 40 `readFileSync` occurrences | mostly legitimate repository tooling; audit duplication, not count |
 
-## 7. Confirmed initial candidates
+## 8. Confirmed candidates and intent
 
-### C-API-001 — dbt graph projection historical field blacklist
+### C-API-001 — dbt projection historical field blacklist
 
 **Path:** `apps/api/test/application/projectDbtGraphFromFilesUseCase.test.ts`
 
-**Current proof:** the analyzer resource includes `sourceTableDeclaration`; `ProjectDbtGraphFromFilesUseCase.projectAnalysisResource()` explicitly projects the supported graph fields; the final payload is parsed by strict `DbtProjectGraphProjectionSchema`.
+The analyzer fixture intentionally includes `sourceTableDeclaration`. Production `projectAnalysisResource()` explicitly enumerates the public projected fields, and `execute()` parses the complete output using strict `DbtProjectGraphProjectionSchema`.
 
-**Additional assertion:** projected source must `not.toHaveProperty('sourceTableDeclaration')`.
+The test also separately asserted:
 
-**Proposed disposition:** `CONSOLIDATE/REMOVE` the field-specific negative after proving that Contracts owns a generic unknown-field rejection for the strict graph node/schema. Keep the positive projection assertions and live dbt projection test.
+```text
+not.toHaveProperty('sourceTableDeclaration')
+```
 
-**Why:** otherwise every future analyzer-only field can generate another permanent blacklist test even though the mapper and strict schema already define the boundary.
+**Intent:** public projection must not leak analyzer-private fields.
 
-### C-API-002 — protected-runtime constructor/string topology
+**Owner:** explicit API projection + strict Contracts schema.
+
+**Disposition:** `REMOVE` the field-specific assertion while retaining the fixture field and positive use-case execution. This is stronger than deleting the scenario: if the mapper starts spreading analyzer fields, the same positive test fails during strict schema parsing before reaching the removed assertion.
+
+**Implementation:** #2734.
+
+### C-API-002 — deployment command posture
 
 **Path:** `apps/api/test/app.test.ts`
 
-The file contains important auth/runtime integration tests and must not be treated as disposable. Specific source-reading assertions around protected runtime construction are separate candidates.
+The original study incorrectly described this current file as protected-runtime constructor topology. Refreshed source proves otherwise.
 
-**Proposed disposition:** `REPLACE` exact source/constructor wiring checks with executable composition behavior or a module-level identity assertion if that invariant remains uncovered.
+The source-reading portion checks:
 
-### C-API-003 — exact test command strings
+- `Procfile`;
+- root/API Nixpacks configuration;
+- API Dockerfile;
+- pnpm vs npm command posture and exact API build/start commands.
+
+The same file also contains real app smoke/CORS/observability shutdown behavior.
+
+**Intent:** deployment packaging/entrypoint consistency, not application architecture.
+
+**Owner:** deployment/CI operations.
+
+**Disposition:** `REVIEW` under #2707. Do **not** delete or migrate it into `arch:deps` merely because it reads files.
+
+### C-API-003 — test execution manifest
 
 **Path:** `apps/api/test/testExecutionManifest.test.ts`
 
-**Valuable invariant:** API test suites must not be accidentally executed twice and supported commands must resolve to the intended suite.
+It imports actual unit/integration Vitest configs and proves the manifests are disjoint, then reads package scripts and asserts exact command strings.
 
-**Low-value mechanism:** exact package script string equality and regex parsing of Vitest config text.
+**Intent:** no omitted/duplicated API suite in full CI entrypoints.
 
-**Proposed disposition:** `REPLACE` exact command literals with a semantic execution-manifest/suite partition check, ideally reusing the repository CI authority. Coordinate with #2410.
+**Owner:** CI/test-routing policy.
+
+**Disposition:** keep the semantic manifest partition; review exact command-string assertions under #2707. Not part of the architecture cut.
+
+### C-API-004 — State Store role-binding architecture
+
+**Old path:** `apps/api/test/architecture/stateStoreRoleBoundary.architecture.test.ts`
+
+The test recursively parsed all API source and mixed two intentions:
+
+1. only `modules/` or `runtime/` composition code may import/use `bindStateStoreRoles`;
+2. no other file may reconstruct one exact three-role intersection/object-literal shape.
+
+Production `StateStoreRoleBindings` is already branded by an unexported unique symbol.
+
+**Intent 1:** architectural dependency/composition ownership.
+
+**Owner:** root `arch:deps` / Dependency Cruiser.
+
+**Disposition:** `RELOCATE`. #2734 adds one central Dependency Cruiser rule that rejects non-root runtime dependencies on `stateStoreRoles.ts` while allowing type-only dependency edges.
+
+**Intent 2:** prevent a syntactically similar aggregate from reappearing anywhere.
+
+**Owner decision:** no automatic new owner. The old AST patterns are implementation archaeology unless independent current risk is demonstrated beyond the branded type + binding dependency rule.
+
+**Disposition:** `REMOVE` the exact intersection/object-literal blacklists rather than reproduce them centrally by default.
+
+#2734 also adds a small central CI-tool contract for registration/shape of the Dependency Cruiser rule; it replaces a workspace-wide API scan with a constant-size repository architecture policy check.
 
 ### C-WEB-001 — Admin route architecture archaeology
 
 **Path:** `apps/web/src/app/views/AdminView.architecture.test.ts`
 
-The test reads:
+It reads production source, another test, architecture docs and a planning backlog, then asserts exact headings, Mermaid, story IDs, implementation symbols, absence of `useState`, test names and doc index/file presence.
 
-- `AdminView.tsx`;
-- `AdminView.test.tsx`;
-- architecture component docs;
-- a planning backlog.
+**Valuable intent:** selected Admin tab is route-authoritative and survives refresh.
 
-It asserts exact headings, Mermaid, user-story IDs, implementation symbols, an exact line of source, absence of `useState`, exact test names, route literal and documentation file/index presence.
+**Owner:** rendered/router behavior.
 
-**Valuable invariant:** selected Admin tab is route-authoritative and survives refresh.
+**Disposition:** `REMOVE` docs/test-name/source topology assertions; `KEEP/REPLACE` the actual refresh behavior. Docs lifecycle belongs to docs CI.
 
-**Proposed disposition:** `REMOVE` documentation/test-name/source-layout assertions; `KEEP/REPLACE` with the existing actual router/component refresh behavior. Docs lifecycle belongs to docs CI.
-
-### C-WEB-002 — TopAppBar exact implementation blacklist
+### C-WEB-002 — TopAppBar implementation blacklist
 
 **Path:** `apps/web/src/app/components/TopAppBar.architecture.test.ts`
 
-Current test checks exact component/import/data-slot symbols, requires `Owned concern` comments, blacklists historical setters/select components and checks large quantities of architecture/planning text.
+It requires exact component/import/data-slot symbols, `Owned concern` comments, historical setter/component absence and architecture/planning text.
 
-**Valuable invariant:** workspace identity is read-only in the active shell; governed scope changes use the approved selection rail.
+**Valuable intent:** workspace context is read-only and governed changes use the approved command rail.
 
-**Proposed disposition:** `REPLACE` with rendered read-only behavior, command-port effect and accessibility. Use dependency tooling for a genuinely forbidden import boundary. `REMOVE` docs/docblock/history assertions.
+**Owner:** rendered behavior + command boundary; actual forbidden package dependency belongs to `arch:deps` if one exists.
+
+**Disposition:** `REPLACE/RELOCATE`, not blind delete.
 
 ### C-WEB-003 — Web architecture support ownership
 
 **Path:** `apps/web/src/testing/vitestSuites.architecture.support.ts`
 
-This support recursively lists tests, counts tests/lines, reads repository files and scans raw paths.
+It lists tests, counts tests/lines, reads repository files and scans raw paths.
 
-**Proposed disposition:** `REVIEW`. Keep the minimum suite partition functionality actually consumed by current CI; retire source-reading/counting helpers when their only remaining consumers are low-value topology tests.
+**Disposition:** `REVIEW`. Keep only functionality consumed by current CI; helpers used solely by displaced topology tests retire with their consumers.
 
 ### C-CONTRACTS-001 — source-reading architecture family
 
-**Scope:** 12 current `readFileSync` consumers, including:
+**Scope:** 12 initial `readFileSync` consumers, including provider-adapter, plan-store-record and start-run architecture tests.
 
-- `provider-adapter.architecture.test.ts`;
-- `plan-store-records.architecture.test.ts`;
-- `start-run-boundary.architecture.test.ts`.
+**Intent split:** protocol/schema semantics stay in Contracts; dependency/package topology migrates to package import/build/`arch:deps` proof.
 
-**Proposed disposition:** per-test `REVIEW`; separate protocol/schema semantics from implementation/file/export topology. Strict schemas remain strict.
+### C-PLANNER-001 — private/topology guards
 
-### C-PLANNER-001 — source-reading private/topology guards
+Two initial source-reading tests were found.
 
-**Paths:**
-
-- `packages/@dvt/planner/test/unit/executable-subgraph-deriver.architecture.test.ts`;
-- `packages/@dvt/planner/test/unit/planner-private-ownership.architecture.test.ts`.
-
-**Proposed disposition:** `REVIEW/REPLACE` only if they protect topology rather than actual facade/dependency behavior. Planner determinism and policy negatives remain protected.
+**Rule:** planner determinism/policy/selection semantics stay local. Private file/layout ownership only survives if it expresses an actual dependency boundary and then belongs centrally.
 
 ### C-ENGINE-001 — historical `IWorkflowEngine` file ownership
 
-**Path:** `packages/@dvt/engine/test/contracts/package-surface.test.ts`
+`package-surface.test.ts` checks a useful public surface through exact internal path presence, legacy path absence and re-export strings.
 
-Current test checks:
+**Intent:** one supported public engine surface.
 
-- root export exists;
-- wildcard export does not exist;
-- exact `src/ports/IWorkflowEngine.ts` file exists;
-- exact legacy `src/contracts/IWorkflowEngine.v1.ts` file does not exist;
-- exact export line is present;
-- another index does not contain the name.
+**Owner:** package export/import contract.
 
-**Valuable invariant:** consumers see one supported public engine surface.
-
-**Proposed disposition:** `REPLACE` with actual package import/export resolution and typecheck. `REMOVE` exact internal path and historical-file absence assertions once the public surface is independently proved.
+**Disposition:** `REPLACE` with real consumer import/build/typecheck; remove historical path archaeology.
 
 ### C-DELIVERY-001 — source-reading architecture pair
 
-**Paths:**
-
-- `packages/@dvt/delivery/test/OutboxShardAssignment.architecture.test.ts`;
-- `packages/@dvt/delivery/test/OutboxInMemoryStorageOwnership.architecture.test.ts`.
-
-**Proposed disposition:** `REVIEW`. Shard assignment and ownership can be high-value; keep them behaviorally. Retire exact implementation topology if duplicated.
+Shard assignment and outbox ownership may be high-value. Behavior stays local; exact topology moves only if it represents a real central dependency rule.
 
 ### C-PG-001 — PostgreSQL source-reading architecture family
 
-Four source-reading tests were found, including tenant-isolation, service-access capability and retention-policy architecture tests.
-
-**Proposed disposition:** `REVIEW`, with a high bar for deletion. Tenant isolation/service access are security invariants. If current proof is brittle source inspection, prefer replacing it with real SQL/RLS/service-access tests; do not remove the invariant.
+Tenant isolation/service access are security invariants. Source-reading proof may be replaced, but the invariant cannot disappear. Prefer real RLS/service-backed proof; use central architecture only for actual dependency boundaries.
 
 ### C-TEMP-001 — Temporal workflow literal parity
 
-**Path:** `packages/@dvt/adapter-temporal/test/workflow-literals.test.ts`
+`workflow-literals.test.ts` checks exact workflow names/absence, signal source literals and activity-routing call strings.
 
-Current test reads workflow source and checks:
+**Intent split:** workflow registration/signals/determinism are real; historical function-name vocabulary is not automatically a permanent contract.
 
-- exact `runPlanWorkflow` function name;
-- absence of `runPlanWorkflowV2`;
-- signal definition literals;
-- absence of `parseDslV1`/`evaluateDslV1`;
-- exact activity-routing call strings.
-
-**Valuable invariants:** workflow registration matches public contract; PAUSE/RESUME/CANCEL are supported; non-deterministic/business DSL evaluation remains outside Temporal workflow code.
-
-**Proposed disposition:** `REPLACE` source literals with executable registration/signal tests plus bundle/dependency/determinism checks where possible. If one source-level restriction is still uniquely required by Temporal determinism, keep one justified guard rather than a vocabulary blacklist.
+**Disposition:** `REPLACE` with executable registration/signal/determinism/dependency proof where possible. Keep one source restriction only if Temporal determinism makes it uniquely necessary.
 
 ### C-WORKER-001 — Temporal worker SRP topology
 
-**Path:** `apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.srp.architecture.test.ts`
-
-**Proposed disposition:** `REVIEW/REPLACE` internal SRP/source placement with composed worker boot/capability/plugin behavior where possible.
+Internal folder/helper SRP assertions should become composed worker/capability behavior or one central dependency rule, not duplicated source placement tests.
 
 ### C-CI-001 — static proof overlap
 
-`tools/**` has substantial source-reading because many tools legitimately analyze the repository. That is not a smell by itself.
+`tools/**` legitimately reads repository source. The target here is duplicate ownership, not source reading itself.
 
-The audit target is duplicated ownership:
+Use #2410/#2707 to consolidate:
 
-- source regex duplicated by AST/dependency tooling;
-- product tests repeating docs/governance checks;
-- exact package script literals duplicated by CI routing;
-- several recurrence guards protecting the same retired mechanism;
-- suites executed twice through root and package paths.
+- repeated regex vs AST/dependency checks;
+- product tests repeating docs checks;
+- package scripts repeated as literal assertions;
+- multiple recurrence guards for one retired mechanism;
+- duplicated test execution paths.
 
-**Proposed disposition:** use #2410 as the existing static-test routing owner, measure runner seconds, and consolidate by invariant rather than by tool count.
+## 9. Replacement hierarchy
 
-## 8. Replacement hierarchy
+When a real invariant uses a brittle or misplaced proof, prefer:
 
-When a current test protects a real invariant but uses a brittle mechanism, prefer:
+1. direct behavior/command/query invocation;
+2. public consumer import/export/typecheck;
+3. strict schema at the contract owner;
+4. Dependency Cruiser for dependency/layer architecture;
+5. central semantic AST/reachability architecture guard where Dependency Cruiser cannot express the invariant;
+6. service-backed/live proof;
+7. docs/governance checks at their own CI owner;
+8. source-text scan only when no stronger proof exists and recurring cost is justified.
 
-1. behavior/command/query invocation;
-2. consumer package import/export/typecheck;
-3. strict schema + one generic unknown-field proof;
-4. dependency/reachability/AST check;
-5. service-backed/live product proof;
-6. dedicated docs/governance check;
-7. source-text scan only when no stronger executable proof exists and recurring cost is justified.
-
-## 9. Module issues
+## 10. Module issues
 
 - #2698 — API + dbt/source-import
 - #2699 — Web Canvas/Shell
@@ -285,45 +341,30 @@ When a current test protects a real invariant but uses a brittle mechanism, pref
 - #2706 — crypto / observability / traceability / DSL / CLI
 - #2707 — root CI / scripts / governance / static proof
 
-The order above is also the proposed implementation order **after approval**. Each module is audited to completion before an implementation cut is opened.
+A module may correctly conclude `no material cleanup`.
 
-## 10. Proposed implementation shape after approval
+## 11. Implementation discipline
 
-Do not make one giant test-removal PR.
-
-Preferred sequence:
+Do not make one repository-wide removal PR.
 
 ```text
-one approved module
--> record exact before test count/suite timing
--> remove/consolidate/replace only classified cases
--> run focused suite
--> run mandatory package/repo gates
--> record after count/timing + protected invariants
--> merge
--> next module
+identify intention
+-> identify current owner
+-> classify overlap
+-> choose KEEP | CONSOLIDATE | RELOCATE | REPLACE | REMOVE
+-> record before proof/cost
+-> implement one bounded cut
+-> run owner-specific proof + normal gates
+-> record after proof/cost
+-> next cut
 ```
 
-A module may close with `no material cleanup`.
+Implementation must never weaken a security/data-integrity/lifecycle invariant to save CI seconds.
 
-## 11. Metrics
+## 12. Authorization state
 
-Per implementation cut, record when practical:
+The product owner authorized continuing with the intent-first refinement on 2026-08-29.
 
-- test files removed/retained;
-- test cases removed/consolidated/replaced;
-- package suite wall time before/after;
-- CI runner seconds for affected jobs before/after;
-- number of source-text/topology assertions removed;
-- replacement proof type;
-- high-value negative cases deliberately retained.
+**Authorized now:** the bounded API cut represented by #2734.
 
-Do not optimize a test count at the cost of failure detection.
-
-## 12. Approval gate
-
-This study deliberately stops before implementation.
-
-No test, source file, CI check or threshold should be changed until the product owner reviews the proposed strategy and selects the first module cut.
-
-Recommended first implementation candidate, if approved: **#2698 API**, because it contains the motivating #2404 field-specific negative plus a small bounded set of six source readers and overlaps known prior cleanup work.
+**Not automatically authorized:** mass deletion in later modules. Each later module still needs source-first intent classification and a bounded implementation proposal before changes are made.
