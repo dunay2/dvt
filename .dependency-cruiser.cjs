@@ -120,6 +120,15 @@ module.exports = {
       to: { path: '^(?:fastify|@fastify|http|node:http)(?:/|$)' },
     },
     {
+      name: 'no-api-non-root-state-store-role-binding',
+      severity: 'error',
+      from: { path: '^apps/api/src/(?!modules/|runtime/)' },
+      to: {
+        path: '^apps/api/src/modules/stateStoreRoles\\.ts$',
+        dependencyTypesNot: ['type-only', 'type-import'],
+      },
+    },
+    {
       name: 'no-api-production-to-test-support',
       severity: 'error',
       from: { path: '^apps/api/src/' },
