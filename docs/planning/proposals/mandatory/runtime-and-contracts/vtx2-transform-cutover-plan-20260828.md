@@ -2,7 +2,7 @@
 title: VTX2 Transform Cutover Plan 2026-08-28
 status: Working proposal
 owner: Architecture / Product / Web / Planner / Runtime / PostgreSQL
-last_reviewed: 2026-08-28
+last_reviewed: 2026-08-29
 planning_type: mandatory-proposal
 feature_id: VTX2-TRANSFORM-CUTOVER
 parent_issue: 2650
@@ -13,13 +13,15 @@ parent_issue: 2650
 ## Purpose
 
 Define the smallest source-first programme that moves DVT from the current
-SQL-first compatibility vertical to one language-neutral **Transform** semantic
-boundary, then lowers it to real executable workloads without multiplying
-architectural mechanisms.
+SQL-first compatibility vertical to one direct, language-neutral **Transform**
+semantic boundary and then lowers it to real executable workloads.
 
-This proposal does not implement the programme. GitHub epic
-[#2650](https://github.com/dunay2/dvt/issues/2650) owns the programme and its
-bounded child issues own each implementation cut.
+The programme does **not** translate SQL into Substrait as part of the current
+product path. DVT authors and persists Substrait semantics directly. PostgreSQL
+appears downstream as the first target/provider and output/write boundary.
+
+GitHub epic [#2650](https://github.com/dunay2/dvt/issues/2650) owns the programme.
+Each child issue owns one bounded implementation cut.
 
 ## Governing sources
 
@@ -32,101 +34,62 @@ bounded child issues own each implementation cut.
 - ADR-0035, Planner public-contract evolution;
 - ADR-0064, bounded Substrait semantic authority;
 - current semantic-transformation subsystem architecture;
-- current source at `main@73b0d1a4784237937ca737a12c1e802dbf35178d`;
+- current source and tests;
 - epic #2594 and execution epic #2650.
 
-The Planning DB architecture-design query required by repository procedure must
-be executed and recorded before this proposal becomes implementation-ready. The
-GitHub connector used to prepare this draft cannot execute repository-local
-`pnpm planning:db:*` commands, so that gate remains explicit rather than being
-invented from files.
+Planning DB architecture and creation-intent queries remain mandatory before
+implementation readiness. This GitHub-connected environment cannot execute the
+repository-local `pnpm planning:db:*` commands, so those gates remain explicit.
 
-## Source-first AS-IS findings
+## Current source truth
 
-### Current product identity is still SQL-centered
+Current production is transitional:
 
-Production source still exposes:
+1. the native catalog still exposes `dvt:sql_transform` and `SQL transform`;
+2. authoring still carries SQL, VTX1 visual recipe and Substrait modes during
+   migration;
+3. the bounded Substrait -> PostgreSQL projection is delivered but is not yet
+   the production Preview source;
+4. legacy Preview still chooses the first input, transform and output by role;
+5. the current compiler still emits PREPARE, POSTGRES_SQL_TRANSFORM and
+   CAPTURE_EVIDENCE;
+6. PostgreSQL runtime still executes separate prepare/transform/evidence
+   activities and currently uses destructive `DROP + CTAS` for table replace.
 
-```text
-kind  = dvt:sql_transform
-label = SQL transform
-```
-
-The plugin catalog, Canvas copy, connection rules and authoring guards all use
-that identity.
-
-### Semantic cutover is partial
-
-The repository has already delivered:
-
-- a pinned typed Substrait profile;
-- the DVT RelationId/FieldId/provenance sidecar;
-- one typed card-authoring pilot;
-- one bounded Substrait-to-PostgreSQL projection;
-- a machine-readable semantic capability catalog.
-
-However the current authoring authority still carries SQL, VTX1 visual recipe
-and Substrait modes during migration. The bounded PostgreSQL projection is not
-yet the production Preview source.
-
-### Preview can silently truncate selected topology
-
-The current transformation Preview path filters the selected scope and then
-uses first-match role lookup for one input, transform and output. It emits only
-that chain. Additional selected nodes and edges can therefore be absent from the
-persisted plan.
-
-### Runtime still models technical phases as steps
-
-Current new-plan SQL-first execution emits:
-
-```text
-PREPARE_POSTGRES_TRANSFORM
-POSTGRES_SQL_TRANSFORM
-CAPTURE_MATERIALIZATION_EVIDENCE
-```
-
-The PostgreSQL implementation currently:
-
-```text
-PREPARE  -> CREATE SCHEMA IF NOT EXISTS
-TRANSFORM -> DROP TABLE IF EXISTS + CREATE TABLE AS
-EVIDENCE -> SELECT COUNT(*)
-```
-
-Connection resolution occurs when each activity acquires its governed plan
-session, and `StepCompleted` already supports `resultEvidence`.
-
-### Generic graph/planner authorities already exist
-
-DVT already owns:
-
-- `WorkspaceGraphAuthoringDraft`;
-- exact execution selection and closure;
-- dependency-gap and cycle diagnostics;
-- deterministic graph ordering;
-- `GenericGraphSourceV1` and the generic Planner/ExecutionPlan boundary.
-
-The target must reuse them rather than introduce another graph or Planner.
+Generic graph selection, cycle/dependency validation, deterministic ordering,
+Planner ingress and immutable ExecutionPlan already exist and must be reused.
 
 ## Product decision
 
-The current native semantic-card concept becomes:
+The current native semantic card becomes:
 
 ```text
 visible noun: Transform
 Graph Draft kind: dvt:transform
 role: transform
-semantic authority: typed Substrait Plan + DVT stable sidecar
+semantic authority: typed Substrait Plan + stable DVT sidecar
 ```
 
-SQL, Canvas commands and later resolved dbt are source representations or
-provenance. PostgreSQL SQL is a target projection. None of those representations
-becomes a second semantic authority.
+A Transform contains relational semantics represented by admitted Substrait
+relations, expressions, functions and types. It does not contain child Graph
+Draft nodes or a hidden workflow.
 
-A Transform is a semantic container for relational meaning. It may contain many
-Substrait relations/expressions/functions internally. It does **not** contain
-child Graph Draft nodes or a hidden subworkflow.
+SQL and PostgreSQL are not the same boundary:
+
+```text
+Substrait
+  = semantic authority
+
+PostgreSQL AST / rendered SQL
+  = target representation
+
+PostgreSQL database
+  = target/provider and output/write boundary
+```
+
+SQL-to-Substrait import is outside the current programme. Issue #2726 is closed
+`not_planned`. A future importer requires a separate real user story for
+importing an existing SQL-only asset into editable Transform semantics.
 
 ## Three-scale rule
 
@@ -138,26 +101,26 @@ Canvas Transform-card count
 ExecutionPlan workload/step count
 ```
 
-A runtime workload exists because there is an independent operational
-responsibility, not because a card or semantic operator exists.
+A workload exists because there is an independent operational responsibility,
+not because a semantic operator or visible card exists.
 
-## Target boundary
+## Target path
 
 ```mermaid
 flowchart LR
-  Sources["SQL source / Canvas commands / future resolved dbt"]
+  Canvas["Canvas Transform authoring"]
   Transform["Transform card\ndvt:transform"]
-  Semantic["Typed Substrait Plan\n+ DVT identity sidecar"]
-  Render["Governed target projection"]
-  Ready["Provider-native readiness"]
+  Semantic["Typed Substrait Plan\n+ DVT RelationId/FieldId/provenance sidecar"]
+  Render["PostgreSQL target projection\nAST -> pgsql-deparser -> SQL artifact"]
+  Ready["PostgreSQL provider-native readiness"]
   Select["Exact selected Graph Draft"]
   Lower["Semantic workload lowering"]
-  Planner["Generic Planner / ExecutionPlan"]
+  Planner["Generic Planner / immutable ExecutionPlan"]
   Runtime["DVT_TRANSFORM runtime activity"]
-  Publish["Safe output publication"]
-  Evidence["StepCompleted.resultEvidence"]
+  Target["PostgreSQL output/write target"]
+  Evidence["Canonical RunEvents + resultEvidence"]
 
-  Sources --> Transform
+  Canvas --> Transform
   Transform --> Semantic
   Semantic --> Render
   Render --> Ready
@@ -166,46 +129,48 @@ flowchart LR
   Ready --> Lower
   Lower --> Planner
   Planner --> Runtime
-  Runtime --> Publish
-  Publish --> Evidence
+  Runtime --> Target
+  Target --> Evidence
 ```
 
-## What this programme removes
+There is deliberately no `SQL -> Substrait` arrow.
 
-The accepted target removes or confines:
+## What the programme removes
+
+The accepted target removes or version-confines:
 
 - visible `SQL transform` as the native product noun;
-- current createable kind `dvt:sql_transform` after one governed migration;
+- createable `dvt:sql_transform` after one governed Graph Draft migration;
 - SQL and VTX1 visual recipe as parallel editable semantic authorities;
 - fixed `exactly one source + one transform + one sink` product topology;
 - first-role `.find()` Preview truncation;
-- current transformation-specific three-node compiler as the current path;
+- the transformation-specific three-node compiler as the current path;
 - PREPARE as a step without an independent lifecycle responsibility;
-- CAPTURE_EVIDENCE as a separate step when the completing workload can return
-  evidence;
-- legacy POSTGRES_SQL_TRANSFORM on new VTX2 plans;
+- CAPTURE_EVIDENCE as a separate step;
+- legacy POSTGRES_SQL_TRANSFORM emission on new VTX2 plans;
 - fake source/join/operator workload steps;
 - `selectedColumns` as a competing field-selection authority;
 - compatibility code after its exact persisted-draft/PlanRef obligation expires.
 
-## What this programme does not add
+## What the programme does not add
 
-- one node or class per Join/Filter/Aggregate/Set/Window operator;
-- a private DVT relational IR beside Substrait;
-- a second Graph Draft, Planner, state store or runtime;
-- a generic transform child-node container;
-- SQLGlot for the single PostgreSQL target;
-- a generic renderer framework before a second real target proves duplication;
-- query optimization or join reordering;
-- shared-build caching;
+- SQL-to-Substrait parser/mapping path;
+- SQLGlot runtime for PostgreSQL V0;
+- one native node/class/step per Join, Filter, Aggregate, Set or Window;
+- private DVT relational IR beside Substrait;
+- second Graph Draft, Planner, state store or runtime;
+- generic transform child-node container;
+- generic cross-target renderer framework before a second real target;
+- query optimizer or join reordering;
+- shared-build cache;
 - universal asset catalog;
-- generic materialization strategy framework;
-- reusable subflow/procedure framework;
+- generic materialization framework;
+- reusable procedure/subflow framework;
 - new provider merely to justify an abstraction.
 
 ## Workload-boundary rule
 
-Create a separate workload only when at least one real responsibility exists:
+Create a separate workload only for a real operational boundary such as:
 
 - independently published/addressable output;
 - explicit materialization boundary;
@@ -218,10 +183,36 @@ Do not create a workload solely for:
 
 - source/input reference;
 - internal Substrait relation/expression/function;
-- a visible card that can be structurally composed without semantic change;
+- a visible card that can be structurally composed;
 - connection/session setup;
 - evidence collection;
 - cleanup, logging, tracing or metrics.
+
+## PostgreSQL responsibility
+
+PostgreSQL remains necessary because it is the first execution and output target.
+The outbound path is:
+
+```text
+Substrait semantic document
+ -> bounded PostgreSQL AST
+ -> deterministic rendered PostgreSQL SQL artifact
+ -> PostgreSQL readiness
+ -> PostgreSQL execution/publication
+```
+
+The target renderer does not own semantics. Provider readiness does not replace
+semantic admission. Execution/publication does not rewrite the semantic
+document.
+
+Physical output guarantees are owned explicitly:
+
+- #2523 owns the bounded table/view and replace/append intent contract;
+- #2724 decides whether managed logical/physical version publication is adopted;
+- #2725 implements it only when #2724 accepts the principle.
+
+The programme must not claim rollback/version retention when only the smaller
+#2523 contract has been delivered.
 
 ## Current issue ownership
 
@@ -230,53 +221,57 @@ Do not create a workload solely for:
 | Issue | Delivered responsibility |
 | --- | --- |
 | #2595 | pinned Substrait profile, document and stable sidecar |
-| #2598 | typed card-authoring pilot |
-| #2597 | first bounded PostgreSQL projection |
+| #2598 | typed Transform-card authoring pilot |
+| #2597 | first bounded Substrait -> PostgreSQL projection |
 | #2640 | semantic capability catalog |
-| #2618 | SQLGlot reference-only decision for PostgreSQL V0 |
+| #2618 | SQLGlot/reference decision; no current SQL-import path |
 
-### Remaining concrete cuts
+### Remaining cuts
 
-| Order/lane | Issue | One owned outcome |
+| Lane | Issue | One owned outcome |
 | --- | --- | --- |
-| immediate | #2722 | legacy V2 fails closed; no silent selected-graph truncation |
-| product | #2635 | visual language and primary product noun |
-| product | #2721 | `SQL transform -> Transform`; `dvt:sql_transform -> dvt:transform` migration |
-| semantic persistence | #2655 | one durable Substrait recipe document on existing storage |
-| field identity | #2596 | remove `selectedColumns` semantic residue |
-| capability UI | #2642 | project admitted capabilities into current authoring surface |
-| Preview | #2652 | Preview consumes Substrait-derived PostgreSQL SQL |
-| projection identity | #2657 | decide destination/storage identity from real Preview evidence |
-| multi-input | #2634 | multiple inputs inside one semantic card |
-| lowering | #2524 | exact selected semantic DAG -> generic workload descriptors |
-| runtime | #2723 | execute `DVT_TRANSFORM`; stop new-plan PREPARE/legacy SQL/EVIDENCE |
-| materialization | #2523 | bounded general table/view + replace/append adapter contract |
-| publication ADR | #2724 | decide managed logical/physical publication and rollback semantics |
-| publication impl | #2725 | implement PostgreSQL managed table-replace only if ADR adopts it |
-| SQL source | #2726 | first bounded PostgreSQL SELECT -> admitted Substrait mapping |
-| acceptance | #2599 | consume completed cuts in one live semantic/Preview/Run proof |
-| deletion | #2600 | delete superseded VTX1 mechanisms after replacement evidence |
+| safety | #2722 | legacy V2 fails closed; no silent graph truncation |
+| product | #2635 | visual language around Transform |
+| product | #2721 | `SQL transform -> Transform`; `dvt:transform` migration |
+| persistence | #2655 | one durable Substrait semantic document |
+| field identity | #2596 | retire `selectedColumns` residue |
+| capability UI | #2642 | project admitted capabilities into current authoring |
+| target projection | #2652 | Preview consumes Substrait-derived PostgreSQL SQL |
+| target identity | #2657 | target artifact identity/destination/storage decision |
+| readiness | #2333 | PostgreSQL structural/provider-native validation |
+| multi-input | #2634 | multiple inputs inside one Transform card |
+| lowering | #2524 | exact selected semantic DAG -> generic workloads |
+| runtime | #2723 | execute DVT_TRANSFORM; stop new-plan technical activities |
+| materialization | #2523 | bounded table/view + replace/append contract |
+| publication ADR | #2724 | decide managed publication/rollback semantics |
+| publication impl | #2725 | PostgreSQL implementation only if ADR adopts it |
+| acceptance | #2599 | direct Transform/Substrait -> PostgreSQL Preview/Run proof |
+| deletion | #2600 | remove superseded VTX1 mechanisms |
 
-No separate dbt-to-Substrait implementation issue is created yet. It is opened
-only after the first SQL source adapter proves the reusable source boundary and
-current dbt source evidence justifies a concrete cut.
+### Closed speculative cut
+
+| Issue | Disposition |
+| --- | --- |
+| #2726 | closed `not_planned`; SQL -> Substrait import is outside VTX2 cutover |
+
+No dbt-to-Substrait or SQL-import issue is created until a concrete source-first
+consumer demonstrates that product requirement.
 
 ## Delivery order
 
 ```mermaid
 flowchart TD
   Safe["#2722 V2 fail-closed safety"]
-  Language["#2635 language decision"]
+  Language["#2635 Transform language"]
   Kind["#2721 Transform kind cut"]
-  Durable["#2655 durable semantic recipe"]
-  Preview["#2652 Preview cutover"]
+  Durable["#2655 durable Substrait document"]
+  Preview["#2652 PostgreSQL target projection in Preview"]
   Inputs["#2634 multi-input card"]
   Lower["#2524 semantic workload lowering"]
   PublishDecision["#2724 publication ADR"]
-  Publish["#2725 PostgreSQL publication"]
+  Publish["#2725 PostgreSQL publication if adopted"]
   Runtime["#2723 DVT_TRANSFORM runtime"]
-  SqlIn["#2726 SQL source adapter"]
-  E2E["#2599 live acceptance"]
+  E2E["#2599 direct Substrait -> PostgreSQL live proof"]
   Delete["#2600 reduction"]
 
   Language --> Kind
@@ -289,102 +284,65 @@ flowchart TD
   Publish --> Runtime
   Safe --> E2E
   Runtime --> E2E
-  SqlIn -. non-blocking for Canvas-first .-> E2E
   E2E --> Delete
 ```
 
-## Source-first rule for every child issue
+## Source-first protocol for every cut
 
-Before implementation, every cut records:
+Before implementation, every child records:
 
 1. exact current `main` SHA;
-2. overlapping open PRs and issues;
+2. overlapping open PRs/issues;
 3. production path and composition root;
 4. current tests and reproduced behavior;
 5. existing contract/store/command/query rail to reuse;
-6. all consumers of symbols to change/delete;
+6. every consumer of symbols to change/delete;
 7. red test or measured provider experiment;
-8. explicit `KEEP | REPLACE | DELETE | VERSION-CONFINE` disposition;
-9. refreshed DoR and DoD against source.
+8. `KEEP | REPLACE | DELETE | VERSION-CONFINE` disposition;
+9. refreshed DoR and DoD against observed source.
 
-Issue text, old proposals and closed PRs are context, not implementation proof.
-
-## Command/query rail posture
-
-The programme reuses current product intents:
-
-| Intent | Existing rail/owner |
-| --- | --- |
-| edit/apply semantic card | current Canvas DVT node configuration command / Graph Draft aggregate |
-| persist/reload graph | existing Workspace Graph Draft save/get rails |
-| select executable closure | current Canvas execution-selection and executable-subgraph query |
-| Preview/compile | current PreviewExecutionPlan/Planner boundary |
-| Start immutable plan | current StartRun/Engine boundary |
-| observe run/evidence | current run-state/event/read-model queries |
-
-The kind migration and internal workload lowering do not create a second user
-intent. If source inspection shows a genuinely missing externally observable
-command/query, it must be registered through the existing governance mechanism
-before implementation.
-
-## Fowler/DDD opportunity matrix
-
-| Finding | Smell/opportunity | Selected treatment | Owner |
-| --- | --- | --- | --- |
-| `dvt:sql_transform` also hosts visual/Substrait semantics | misleading type code / primitive obsession | rename one canonical kind after bounded migration | Transform authoring contract |
-| SQL, visual recipe and Substrait coexist as authorities | hidden/duplicate authority | converge on Substrait document; retain provenance only | semantic transformation context |
-| Preview chooses first node by role | silent data loss / feature envy | immediate fail-closed cut, then exact-DAG lowering | Preview / lowering boundary |
-| visible source/sink become technical steps | representation coupling | derive only real semantic workloads | lowering boundary |
-| PREPARE/EVIDENCE are activities without independent lifecycle | speculative responsibility | internal phases + observability | provider activity |
-| `DROP + CTAS` owns live target replacement | destructive coupling | explicit publication ADR and bounded implementation | PostgreSQL adapter/publication policy |
-| broad E2E issue contains missing implementation | responsibility overload | child implementation issues; E2E only consumes them | epic/acceptance |
-| adding operator node types | shotgun surgery / parallel semantics | keep operators inside Substrait semantic document | semantic authority |
+Issue text and old proposals are context, not implementation proof.
 
 ## Programme Definition of Ready
 
-The epic is ready for bounded work because its foundations and current code map
-exist. Each child issue has its own DoR.
-
 - [x] ADR-0064 accepted;
-- [x] semantic document/sidecar, pilot editing, first renderer and capability
-  catalog delivered;
-- [x] current code rechecked at `main@73b0d1a...`;
-- [x] every observed missing responsibility has one issue owner;
-- [x] broad #2524 narrowed to exact semantic workload lowering;
-- [x] missing cuts #2721-#2726 created;
-- [ ] Planning DB architecture-design/creation-intent queries recorded;
-- [ ] command/query rail catalog updated only where those queries prove a new rail
-  is required;
-- [ ] this proposal passes feature mechanization, docs/governance and prepush
-  checks before merge readiness.
+- [x] semantic document/sidecar, typed pilot, first PostgreSQL renderer and
+  capability catalog delivered;
+- [x] current code gaps reconciled source-first;
+- [x] concrete implementation responsibilities have bounded issue owners;
+- [x] #2524 narrowed to semantic workload lowering;
+- [x] SQL -> Substrait import removed from the programme;
+- [ ] Planning DB architecture/creation-intent queries recorded;
+- [ ] command/query rail catalog updated only if those queries prove a new rail;
+- [ ] feature mechanization, docs/governance and prepush checks pass before merge
+  readiness.
 
 ## Programme Definition of Done
 
-- [ ] product uses **Transform** as native semantic-card noun;
-- [ ] new Graph Drafts persist only `dvt:transform`;
+- [ ] product uses **Transform** and new drafts persist only `dvt:transform`;
 - [ ] one typed Substrait document + stable DVT sidecar is semantic authority;
-- [ ] source/target representations do not become parallel authorities;
-- [ ] Preview consumes deterministic target projection from the semantic document;
-- [ ] exact selected graph is lowered without ignored nodes, edges or outputs;
+- [ ] no SQL/visual/dbt parallel authority survives on the current path;
+- [ ] deterministic PostgreSQL target SQL derives from the exact semantic document;
+- [ ] PostgreSQL provider-native readiness validates the effective target;
+- [ ] exact selected graph lowers without ignored nodes, edges or outputs;
 - [ ] multi-input semantics create no fake source/join workloads;
-- [ ] generic Planner/Engine remain independent of relational/card/SQL taxonomy;
+- [ ] Planner/Engine remain independent of semantic operator and SQL taxonomy;
 - [ ] new plans execute real `DVT_TRANSFORM` workloads;
 - [ ] new path emits no PREPARE or separate CAPTURE_EVIDENCE step;
 - [ ] completing workload emits authoritative evidence;
-- [ ] physical output follows the explicitly accepted safe publication outcome;
+- [ ] PostgreSQL output follows the explicitly accepted safe publication outcome;
 - [ ] unsupported semantics/topology/provider/materialization fail closed;
-- [ ] first bounded SQL source adapter proves SQL is an input representation, not
-  authority;
+- [ ] no SQL-to-Substrait importer is required or present;
 - [ ] VTX1 compatibility is removed or version-confined with an exact exit;
 - [ ] no second IR, graph, Planner, store, runtime, renderer framework, command
   bus or operator taxonomy exists;
 - [ ] package/service/browser/live evidence and `pnpm verify:prepush` pass;
-- [ ] epic #2594 receives acceptance evidence before closure.
+- [ ] #2594 receives acceptance evidence before closure.
 
 ## Proposal PR validation
 
-This PR is planning/documentation only and claims no runtime behavior. Before
-merge readiness, repository-native execution must complete:
+This PR is documentation/planning only and claims no runtime behavior.
+Repository-native validation required before merge readiness:
 
 ```bash
 pnpm planning:db:import --if-stale
@@ -413,7 +371,6 @@ userStories:
   - https://github.com/dunay2/dvt/issues/2723
   - https://github.com/dunay2/dvt/issues/2724
   - https://github.com/dunay2/dvt/issues/2725
-  - https://github.com/dunay2/dvt/issues/2726
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -438,6 +395,8 @@ allowedImplementationSurfaces:
   - docs/evidence/**
   - docs/risk-register/quality/**
 forbiddenImplementationSurfaces:
+  - SQL-to-Substrait importer for the current programme
+  - SQLGlot runtime for PostgreSQL V0
   - new graph stores
   - new planners
   - new state stores
@@ -445,7 +404,6 @@ forbiddenImplementationSurfaces:
   - operator-specific native node taxonomies
   - hidden nested Graph Drafts inside Transform metadata
   - generic renderer frameworks without a second real target
-  - SQLGlot runtime for PostgreSQL V0
   - permanent compatibility aliases
 commandQueryRails:
   - name: ConfigureCanvasDvtNode
@@ -466,28 +424,6 @@ commandQueryRails:
   - name: ObserveRunEvidence
     type: query
     dddOwner: Canonical run read model
-fowlerSignals:
-  - Misleading SQL-centered card identity.
-  - Duplicate semantic authorities during cutover.
-  - Silent selected-graph truncation.
-  - Technical runtime phases modeled as product steps.
-  - Destructive live-target replacement without explicit publication policy.
-architectureGuards:
-  - proposed: Preview never silently drops selected nodes or edges
-  - proposed: one current native Transform kind after migration
-  - proposed: Planner and Engine do not parse Substrait or SQL semantics
-  - proposed: new plans contain no technical PREPARE/EVIDENCE activities
-  - proposed: no second graph/planner/store/IR authority
-cypressFlows:
-  - proposed: Transform Apply Cancel reload with stable semantic identity
-  - proposed: multi-input Transform to Preview and Run
-  - proposed: selected graph fan-out preserves all outputs
-completionGate:
-  - pnpm docs:feature-mechanization -- --feature VTX2-TRANSFORM-CUTOVER
-  - pnpm docs:feature-mechanization:implementation
-  - pnpm governance:refresh
-  - pnpm ci:docs
-  - pnpm verify:prepush
 redGreenCycles:
   - id: v2-no-silent-truncation
     redTest: selected V2 graph with extra Transform/output is silently reduced
@@ -497,6 +433,10 @@ redGreenCycles:
     redTest: current catalog persists and displays dvt:sql_transform / SQL transform
     expectedFailure: product identity remains SQL-centered
     greenTest: #2721 persists dvt:transform and migrates supported drafts
+  - id: direct-substrait-preview
+    redTest: current Preview does not consume the canonical Substrait-derived PostgreSQL artifact
+    expectedFailure: semantic authority is not the production Preview source
+    greenTest: #2652 Preview consumes deterministic target projection
   - id: exact-semantic-workload-lowering
     redTest: current compiler emits fixed three technical steps
     expectedFailure: selected semantic graph is not represented as real workloads
@@ -504,27 +444,22 @@ redGreenCycles:
   - id: single-transform-runtime-step
     redTest: new path emits PREPARE plus SQL_TRANSFORM plus EVIDENCE
     expectedFailure: technical phases produce synthetic lifecycle boundaries
-    greenTest: #2723 executes one real DVT_TRANSFORM workload and evidence
-  - id: safe-managed-publication
-    redTest: current table replace executes DROP TABLE against the logical target
-    expectedFailure: no post-commit rollback/version retention guarantee
-    greenTest: #2724 decision and #2725 implementation satisfy the accepted publication contract
+    greenTest: #2723 executes one DVT_TRANSFORM workload and evidence
 negativeTests:
   - Unknown or unsupported Substrait semantics fail closed.
   - Unsupported topology never produces a partial plan.
   - Mixed unsupported provider/connection graphs never invent transfer semantics.
   - A Transform cannot embed an arbitrary child Graph Draft.
   - SQL or visual recipe cannot survive as a second current semantic authority.
+  - SQL-to-Substrait import cannot enter the current cutover path.
 ```
 
 ## Planning disposition
 
 - #2594 owns the strategic Substrait/card direction.
 - #2650 owns the Transform cutover programme and acceptance.
-- child issues own bounded implementation cuts.
-- #2599 consumes completed cuts for live acceptance; it does not become an
-  implementation omnibus.
-- #2600 deletes superseded mechanisms only after replacement evidence and exact
-  compatibility expiry.
-- draft PR #2540 is superseded by this source-first proposal and must not remain
-  a competing current architecture plan.
+- bounded child issues own implementation cuts.
+- #2599 consumes completed cuts for live acceptance.
+- #2600 deletes superseded mechanisms after replacement evidence.
+- SQL import remains outside the programme until a separate source-first product
+  requirement justifies it.
