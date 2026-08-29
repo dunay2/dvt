@@ -101,6 +101,33 @@ function openHet2PlanPreview(): void {
     .and('contain.text', 'DBT_TEST');
 }
 
+function assertPersistedDbtTestWorkbenchRoundtrip(): void {
+  openNodeWorkbench(TEST_NODE_NAME);
+  cy.get('select[name="dbt-test-type"]').should('have.value', 'not_null');
+  cy.get('select[name="dbt-test-target"]').should('have.value', MODEL_NODE_ID);
+  cy.get('input[name="dbt-test-column"]').should('have.value', 'order_id');
+  cy.get('select[name="dbt-test-severity"]').should('have.value', 'error');
+  closeNodeWorkbench();
+
+  openNodeWorkbench(MODEL_NODE_NAME);
+  openNodeWorkbenchSection('tests');
+  cy.get('[data-slot="canvas-node-workbench-tests-content"]')
+    .should('be.visible')
+    .within(() => {
+      cy.get('tbody tr')
+        .should('have.length', 1)
+        .first()
+        .within(() => {
+          cy.get('td').eq(0).should('have.text', TEST_NODE_NAME);
+          cy.get('td').eq(1).should('have.text', 'not_null');
+          cy.get('td').eq(2).should('have.text', `${MODEL_NODE_NAME}.order_id`);
+          cy.get('td').eq(3).should('have.text', 'order_id');
+          cy.get('td').eq(4).should('have.text', 'error');
+        });
+    });
+  closeNodeWorkbench();
+}
+
 function assertAcquisitionEvidence(args: {
   events: Parameters<typeof assertRunEvidenceDoesNotLeak>[0];
   manifest: Het2HttpJsonManifest;
@@ -320,6 +347,7 @@ describe('HET2 public REST artifact DBT vertical', () => {
       });
 
       visitHet1DbtCanvas();
+      assertPersistedDbtTestWorkbenchRoundtrip();
       runSuccessfulRoute(manifest, 'created', ['created', 'replaced']);
 
       visitHet1DbtCanvas();
