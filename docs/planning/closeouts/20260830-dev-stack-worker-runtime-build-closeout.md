@@ -171,6 +171,20 @@ E-CANVAS-WORKFLOW-E2E-USABILITY-20260601` passed, followed by the global
   not touch DBT round-trip authority.
 - The corrected `pnpm verify:prepush` passed, including changed Markdown,
   global feature mechanization, Prettier, ESLint, and forbidden-file checks.
+- After #2745 and #2748 were integrated through #2750, the branch was rebased
+  onto the resulting `main` and `node --test scripts/run-dev-stack.test.cjs`
+  again passed all `32` tests.
+- The first post-rebase `pnpm dev:app:test` reached API, worker, and web
+  readiness but Vite honestly reported unresolved Substrait dependencies because
+  this existing workspace had not installed the dependencies newly introduced
+  on `main`. After the acceptance-sequence prerequisite
+  `pnpm install --frozen-lockfile`, the repeated `pnpm dev:app:test` reached all
+  three readiness points, shut down with status `0`, and emitted no dependency
+  resolution error.
+- The post-integration `pnpm governance:refresh` passed. It converged after two
+  generation passes, reported Planning DB governance `OK`, and covered all
+  `6247` governed files with `0` ungoverned, `0` drift, and `0` legacy files.
+  The former #2745 rail blocker did not recur.
 
 ## Closeout Evidence
 
@@ -184,5 +198,5 @@ E-CANVAS-WORKFLOW-E2E-USABILITY-20260601` passed, followed by the global
 - **No-stub evidence:** no placeholder, fake success path, TODO, or unfinished
   branch was added.
 - **Final status:** implementation, committed formatting, test-only shutdown,
-  live browser proof, and the pre-push gate are complete. Governance refresh
-  remains externally blocked by #2745 after successful convergence.
+  live browser proof, governance refresh, and the pre-push gate are complete.
+  The inherited #2745 blocker was resolved by #2750.
