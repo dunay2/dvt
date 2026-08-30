@@ -624,12 +624,14 @@ function validateRedGreenCycles(manifest, sourcePath, errors) {
 }
 
 function validateSymbols(manifest, sourcePath, errors) {
-  pushMissingArrayField(
-    errors,
-    `${sourcePath} feature ${manifest.featureId}`,
-    'symbols',
-    manifest.symbols
-  );
+  if (manifest.mechanizationStatus !== 'closed') {
+    pushMissingArrayField(
+      errors,
+      `${sourcePath} feature ${manifest.featureId}`,
+      'symbols',
+      manifest.symbols
+    );
+  }
 
   for (const [index, symbol] of (manifest.symbols || []).entries()) {
     const owner = `${sourcePath} feature ${manifest.featureId} symbols[${index}]`;

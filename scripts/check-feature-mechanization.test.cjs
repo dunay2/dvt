@@ -113,6 +113,31 @@ test('validateFeatureMechanizationManifest accepts a closed mechanical feature c
   assert.deepEqual(result.errors, []);
 });
 
+test('validateFeatureMechanizationManifest accepts a closed feature without implementation symbols', () => {
+  const result = validateFeatureMechanizationManifest(
+    {
+      ...validManifest,
+      symbols: [],
+    },
+    'plan.md'
+  );
+
+  assert.deepEqual(result.errors, []);
+});
+
+test('validateFeatureMechanizationManifest rejects an implemented feature without symbols', () => {
+  const result = validateFeatureMechanizationManifest(
+    {
+      ...validManifest,
+      mechanizationStatus: 'implemented',
+      symbols: [],
+    },
+    'plan.md'
+  );
+
+  assert.match(result.errors.join('\n'), /missing symbols/);
+});
+
 test('validateFeatureMechanizationManifest rejects open human decisions', () => {
   const result = validateFeatureMechanizationManifest(
     {

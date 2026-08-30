@@ -138,6 +138,8 @@ allowedImplementationSurfaces:
   - docs/planning/closeouts/20260830-2748-planning-db-operational-integrity-closeout.md
   - docs/.manifest.json
   - docs/**/index.md
+  - scripts/check-feature-mechanization.cjs
+  - scripts/check-feature-mechanization.test.cjs
   - scripts/planning-db-operate.cjs
   - scripts/planning-db-operate-tests/component-create.test.cjs
   - scripts/planning-db-operate-tests/feature-mechanization.test.cjs
@@ -188,6 +190,13 @@ redGreenCycles:
       - scripts/planning-db-operate.cjs
       - scripts/planning-db-operate-tests/component-create.test.cjs
     greenTest: node --test scripts/planning-db-operate.test.cjs
+  - id: terminal-feature-manifest-symbol-validation
+    redTest: node --test scripts/check-feature-mechanization.test.cjs
+    expectedFailure: A closed retired rail is rejected unless it declares a fake implementation symbol.
+    patchSurfaces:
+      - scripts/check-feature-mechanization.cjs
+      - scripts/check-feature-mechanization.test.cjs
+    greenTest: node --test scripts/check-feature-mechanization.test.cjs
 symbols:
   - name: validateFeatureMechanizationRecordCommand
     path: scripts/planning-db-operate.cjs
@@ -207,6 +216,15 @@ symbols:
     cypressCoverage: N/A - CLI command validation
     unitTests:
       - scripts/planning-db-operate-tests/component-create.test.cjs
+  - name: validateSymbols
+    path: scripts/check-feature-mechanization.cjs
+    dddOwner: FeatureMechanizationLocalRail
+    cqRails: [RecordFeatureMechanizationRail]
+    fowlerSignals: [State-specific invariant validation]
+    architectureGuard: node --test scripts/check-feature-mechanization.test.cjs
+    cypressCoverage: N/A - governance manifest validation
+    unitTests:
+      - scripts/check-feature-mechanization.test.cjs
 ```
 
 ## Validation and completion
