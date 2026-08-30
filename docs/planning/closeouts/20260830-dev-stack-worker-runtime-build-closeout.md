@@ -114,12 +114,59 @@ flowchart LR
 
 ## Implementation Evidence
 
-Pending implementation.
+- Added `prepareTemporalWorkerRuntimeDependencies()` to
+  `scripts/run-dev-stack.cjs`.
+- The precondition reuses `scripts/build-workspace-runtime-deps.cjs` for the
+  `dvt-temporal-worker` runtime closure.
+- The build runs only when protected-runtime posture requires the worker and
+  runs before API, worker, or web processes are spawned.
+- Non-zero build status is surfaced as an explicit startup error; no partial web
+  success is presented.
+- Added adjacent unit proofs for the required build, the worker-absent skip
+  path, and build failure.
 
 ## Validation Evidence
 
-Pending implementation.
+- Red: `node --test scripts/run-dev-stack.test.cjs` failed only the three new
+  tests because `prepareTemporalWorkerRuntimeDependencies` did not exist
+  (`29` passed, `3` failed).
+- Green: the same command passed all `32` tests after implementation.
+- Clean-artifact proof: immediately before `pnpm dev:app`, all three worker
+  plugin `dist/index.js` checks returned `False`. The wrapper emitted
+  `Building Temporal worker runtime workspace dependencies` and built the
+  closure without a manual build command.
+- The first post-build startup attempt reached the API but encountered a `401`
+  because orphaned API/worker/Vite processes from the previous worktree still
+  owned ports `3000`, `9468`, and `5173`. After identifying those exact PIDs by
+  command line and stopping only that prior stack, the same command completed.
+- Live probes on the corrected stack: API `/healthz` `200`, API `/db/ready`
+  `200`, worker `/readyz` `200` with state `running`, and web `/` `200`.
+- Browser verification on `http://127.0.0.1:5173/`: meaningful Canvas content
+  (`1001` text characters), no Vite/framework overlay, no captured console
+  errors, and interactive graph nodes and controls present.
+- `pnpm exec eslint scripts/run-dev-stack.cjs scripts/run-dev-stack.test.cjs`
+  passed.
+- `pnpm exec markdownlint-cli2` over the three touched Markdown files passed
+  with `0` issues.
+- `git diff --check` passed.
+- `pnpm governance:refresh` converged all generated surfaces in two passes,
+  indexed `6244` files, and then failed only at the inherited #2745 blocker:
+  `DBT round-trip capability ExportDbtProject is rail_missing`. This slice does
+  not touch DBT round-trip authority.
+- Pre-commit formatting, `pnpm dev:app:test`, and `pnpm verify:prepush` remain
+  for final closeout.
 
 ## Closeout Evidence
 
-Pending implementation.
+- **Governing sources:** `AGENTS.md`, ADR-0001,
+  `docs/guides/ai-work-protocol.md`, the backend MVP runbook, and the canonical
+  runtime-closure helper.
+- **Real work performed:** coordinated launcher, adjacent Node tests, script
+  reference, backend MVP runbook, and this closeout.
+- **No-debt evidence:** no rule was relaxed, no hook was bypassed, and no
+  separate runtime dependency graph was introduced.
+- **No-stub evidence:** no placeholder, fake success path, TODO, or unfinished
+  branch was added.
+- **Final status:** implementation and live browser proof are complete; final
+  commit/test-only/pre-push gates remain, with governance refresh externally
+  blocked by #2745 after successful convergence.

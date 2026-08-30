@@ -121,11 +121,18 @@ dev service and injects that runtime posture:
 - `TEMPORAL_TASK_QUEUE=dvt-temporal`
 - `DVT_TEMPORAL_WORKER_READYZ_URL=http://127.0.0.1:9468/readyz`
 
-The wrapper starts `dvt-temporal-worker` with the same Temporal/Postgres
-posture and waits for the worker `GET /readyz` probe before starting the API.
-If `TEMPORAL_ADDRESS` is explicitly set by the caller, the wrapper preserves
-that external Temporal posture and fails bootstrap if the configured Temporal
-runtime cannot be reached.
+The wrapper starts the API and then `dvt-temporal-worker` with the same
+Temporal/Postgres posture. It waits for the worker `GET /readyz` probe before
+starting the web dev server. If `TEMPORAL_ADDRESS` is explicitly set by the
+caller, the wrapper preserves that external Temporal posture and fails
+bootstrap if the configured Temporal runtime cannot be reached.
+
+When that protected-runtime posture requires the Temporal worker, the wrapper
+first builds the worker's runtime workspace dependency closure through the
+canonical `scripts/build-workspace-runtime-deps.cjs` helper. A dependency build
+failure aborts startup before the API, worker, or web processes are exposed.
+After preparation, startup order is API, Temporal worker readiness, and then the
+web dev server.
 
 When protected-runtime OIDC posture is otherwise absent, the coordinated dev
 stack now also bootstraps a local JWKS-backed auth posture for Canvas and other
