@@ -147,13 +147,11 @@ scripts/planning-db-dbt-roundtrip-capability-mechanization.test.cjs` passed.
 - The refresh updated `docs/.manifest.json` for this closeout and ADR content.
   It also incorporated the pre-existing `ADR-0065` file into the generated ADR
   index; no ADR-0065 content was changed by this slice.
-- `pnpm verify:prepush` reached the Planning DB progressive integrity gate and
-  failed on the inherited cross-cutting drift tracked by
-  [#2748](https://github.com/dunay2/dvt/issues/2748): `54/53` component evidence
-  gaps, `55/54` missing component authorities, `39/0` gap rails, and one GitHub
-  Issue URL classified as a missing source file. None of the reported rows is
-  `ExportDbtProject`, and this slice does not change the integrity queries or
-  baseline. The baseline was not raised or bypassed.
+- After integrating the #2748 reconciliation in the same branch,
+  `pnpm planning:db:integrity:check` passed with zero rail-vocabulary and
+  source-drift findings and no progressive-baseline violation. The baseline
+  was not raised or bypassed. The final full pre-push gate runs against the
+  combined hook-normalized tree after this closeout correction is committed.
 
 ## Closeout Evidence
 
@@ -164,11 +162,10 @@ scripts/planning-db-dbt-roundtrip-capability-mechanization.test.cjs` passed.
   current capability seed, governed status renderer, focused tests, and this
   closeout.
 - **No-debt evidence:** no debt or rule relaxation is approved for this slice.
-  The unrelated integrity drift is declared in #2748 rather than hidden in a
+  The inherited integrity drift is resolved by #2748 rather than hidden in a
   looser baseline.
 - **No-stub evidence:** no stub, placeholder, fake rail, or unfinished runtime
   branch is permitted.
-- **Final status:** implementation, focal validation, and governance refresh are
-  complete. The final pre-push gate is externally blocked by #2748; this slice
-  must remain draft until that gate is restored or its owning review provides a
-  standards-compliant disposition.
+- **Final status:** implementation, focal validation, and the original
+  governance refresh are complete. The external #2748 blocker is resolved; the
+  combined governance refresh and final pre-push gate follow this commit.
