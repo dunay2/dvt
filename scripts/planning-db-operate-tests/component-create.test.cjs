@@ -118,6 +118,20 @@ test('parseArgs builds a scoped component revise command with ownership deltas',
     'apps/api/docs/generated/**',
     '--remove-excludes',
     'apps/api/docs/archive/**',
+    '--responsibility',
+    'Publish typed API application errors.',
+    '--non-goal',
+    'Translate errors into HTTP responses.',
+    '--reason-to-change',
+    'Application failure semantics change.',
+    '--public-api',
+    'RunControlUnavailableError',
+    '--invariant',
+    'Every unavailable run control has a typed reason.',
+    '--transition',
+    'Runtime denial becomes a typed application failure.',
+    '--consumer',
+    'HTTP error translation',
     '--source-ref',
     'docs/architecture/components/api/index.md',
     '--source-content-sha256',
@@ -140,6 +154,13 @@ test('parseArgs builds a scoped component revise command with ownership deltas',
     'apps/api/docs/generated/**',
     'apps/api/docs/archive/**',
   ]);
+  assert.deepEqual(command.responsibilities, ['Publish typed API application errors.']);
+  assert.deepEqual(command.nonGoals, ['Translate errors into HTTP responses.']);
+  assert.deepEqual(command.reasonsToChange, ['Application failure semantics change.']);
+  assert.deepEqual(command.publicApi, ['RunControlUnavailableError']);
+  assert.deepEqual(command.invariants, ['Every unavailable run control has a typed reason.']);
+  assert.deepEqual(command.transitions, ['Runtime denial becomes a typed application failure.']);
+  assert.deepEqual(command.consumers, ['HTTP error translation']);
   assert.equal(command.expectedRevision, 0);
 });
 
@@ -342,6 +363,16 @@ test('component revise planner overlays imported semantics under design scope', 
     'Retired API-local documentation ownership.',
     '--remove-owns',
     'apps/api/docs/**',
+    '--responsibility',
+    'Retire API-local documentation ownership.',
+    '--public-api',
+    'Documentation disposition record',
+    '--invariant',
+    'Superseded components retain an audited disposition.',
+    '--transition',
+    'coverage-required to superseded',
+    '--consumer',
+    'Documentation governance',
     '--source-ref',
     'docs/architecture/components/api/index.md',
     '--source-content-sha256',
@@ -395,6 +426,15 @@ test('component revise planner overlays imported semantics under design scope', 
   assert.equal(planned.definition.status, 'superseded');
   assert.equal(planned.definition.ownedConcern, 'Retired API-local documentation ownership.');
   assert.equal(planned.definition.revision, 1);
+  assert.deepEqual(planned.definition.responsibilities, [
+    'Retire API-local documentation ownership.',
+  ]);
+  assert.deepEqual(planned.definition.publicApi, ['Documentation disposition record']);
+  assert.deepEqual(planned.definition.invariants, [
+    'Superseded components retain an audited disposition.',
+  ]);
+  assert.deepEqual(planned.definition.transitions, ['coverage-required to superseded']);
+  assert.deepEqual(planned.definition.consumers, ['Documentation governance']);
   assert.deepEqual(planned.ownershipPatterns, []);
   assert.deepEqual(
     planned.semanticItems.filter((item) => item.itemKind === 'governance_ref'),

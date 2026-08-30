@@ -132,17 +132,23 @@ The following existing rails remain canonical and are extended in place:
 
 `SaveDbtProjectFileEdit` and `RunPersistedDbtProject` remain retired synonyms.
 
-The following product intents are planned, not implemented:
+The following product intents were admitted for phased implementation:
 
 - `ValidateDbtProjectImport`
 - `ImportDbtProject`
 - `ProjectDbtGraphFromFiles`
-- `ExportDbtProject`
 
 They may be promoted only with a DDD owner, application port, adapter surface,
 scope policy, failure vocabulary, and negative tests. A structured visual-edit
 command is not accepted by this ADR; it must be introduced only when a concrete
 lossless edit operation requires it.
+
+`ExportDbtProject` is retired and is not a distinct product command. File-backed
+round-trip reads and writes use `ListWorkspaceFiles`,
+`GetWorkspaceFileContent`, and `SaveWorkspaceFileContent`. A future export
+intent may be admitted only if it introduces behavior that those rails do not
+own and receives a separate accepted command decision with the required port,
+scope policy, failure vocabulary, and negative tests.
 
 ## Workspace File Safety
 

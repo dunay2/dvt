@@ -180,11 +180,16 @@ userStories:
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
+  - docs/adr/ADR-0060-dbt-project-authoring-authority.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
 allowedImplementationSurfaces:
   - .github/workflows/pr-quality-gate.yml
+  - docs/.manifest.json
+  - docs/**/index.md
+  - docs/adr/ADR-0060-dbt-project-authoring-authority.md
   - docs/generated-docs-policy.json
+  - docs/planning/closeouts/20260830-2745-export-dbt-project-retirement-closeout.md
   - docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md
   - package.json
   - scripts/generate-dbt-project-roundtrip-capability-status.cjs
@@ -233,6 +238,16 @@ completionGate:
   - pnpm governance:refresh
   - pnpm verify:prepush
 redGreenCycles:
+  - id: dbt-roundtrip-retired-export-removal
+    redTest: node --test scripts/generate-dbt-project-roundtrip-capability-status.test.cjs scripts/planning-db-dbt-roundtrip-capability-status.test.cjs
+    expectedFailure: The current catalog and renderer still require the retired phase-6 ExportDbtProject gap.
+    patchSurfaces:
+      - docs/adr/ADR-0060-dbt-project-authoring-authority.md
+      - tools/planning-db/state/dbt-project-roundtrip-capabilities.json
+      - scripts/generate-dbt-project-roundtrip-capability-status.cjs
+      - scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+      - scripts/planning-db-dbt-roundtrip-capability-status.test.cjs
+    greenTest: node --test scripts/generate-dbt-project-roundtrip-capability-status.test.cjs scripts/planning-db-dbt-roundtrip-capability-status.test.cjs
   - id: dbt-roundtrip-current-capability-projection
     redTest: node --test scripts/planning-db-query-tests/dbt-roundtrip-capabilities.test.cjs scripts/planning-db-dbt-roundtrip-capability-status.test.cjs
     expectedFailure: The current schema lacks normalized phase evidence or the governed capability projection.

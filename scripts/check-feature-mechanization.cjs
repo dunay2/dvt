@@ -624,12 +624,22 @@ function validateRedGreenCycles(manifest, sourcePath, errors) {
 }
 
 function validateSymbols(manifest, sourcePath, errors) {
-  pushMissingArrayField(
-    errors,
-    `${sourcePath} feature ${manifest.featureId}`,
-    'symbols',
-    manifest.symbols
-  );
+  const commandQueryRails = Array.isArray(manifest.commandQueryRails)
+    ? manifest.commandQueryRails
+    : [];
+  const permitsEmptySymbols =
+    manifest.mechanizationStatus === 'closed' &&
+    commandQueryRails.length > 0 &&
+    commandQueryRails.every((rail) => rail?.status === 'retired' || rail?.status === 'deprecated');
+
+  if (!permitsEmptySymbols) {
+    pushMissingArrayField(
+      errors,
+      `${sourcePath} feature ${manifest.featureId}`,
+      'symbols',
+      manifest.symbols
+    );
+  }
 
   for (const [index, symbol] of (manifest.symbols || []).entries()) {
     const owner = `${sourcePath} feature ${manifest.featureId} symbols[${index}]`;

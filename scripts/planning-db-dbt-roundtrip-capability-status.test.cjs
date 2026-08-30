@@ -30,7 +30,7 @@ test('DBT round-trip capability current schema owns normalized phase evidence an
   );
 });
 
-test('DBT round-trip current catalog enumerates implemented and deferred rails without arrays', () => {
+test('DBT round-trip current catalog enumerates only current rails without retired history', () => {
   const catalog = readCapabilityCatalog();
   const phaseCounts = new Map(
     catalog.phases.map((phase) => [phase.phaseId, phase.expectedRailCount])
@@ -43,12 +43,10 @@ test('DBT round-trip current catalog enumerates implemented and deferred rails w
       ['phase-2', 1],
       ['phase-3', 2],
       ['phase-4', 4],
-      ['phase-6', 1],
     ]
   );
   assert.deepEqual(catalog.railEvidence.map((evidence) => evidence.railName).sort(), [
     'BuildDbtPlannerGraphSource',
-    'ExportDbtProject',
     'ImportDbtProject',
     'ObservePlanRunReadiness',
     'PreviewExecutionPlan',
@@ -56,13 +54,11 @@ test('DBT round-trip current catalog enumerates implemented and deferred rails w
     'StartRun',
     'ValidateDbtProjectImport',
   ]);
-  assert.equal(catalog.railEvidence.length, 8);
-  const exportEvidence = catalog.railEvidence.find(
-    (evidence) => evidence.railName === 'ExportDbtProject'
+  assert.equal(catalog.railEvidence.length, 7);
+  assert.equal(
+    catalog.railEvidence.some((evidence) => evidence.railName === 'ExportDbtProject'),
+    false
   );
-  assert.equal(exportEvidence.expectedRailStatus, 'retired');
-  assert.equal(exportEvidence.expectedMechanizationStatus, 'closed');
-  assert.equal(exportEvidence.expectedImplemented, false);
 });
 
 test('DBT round-trip current catalog contains no compatibility or history state', () => {
