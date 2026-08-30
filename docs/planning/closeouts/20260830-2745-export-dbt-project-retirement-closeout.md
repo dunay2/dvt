@@ -141,7 +141,13 @@ scripts/planning-db-dbt-roundtrip-capability-mechanization.test.cjs` passed.
 - `pnpm docs:dbt-roundtrip-capabilities:check` passed.
 - `pnpm docs:feature-mechanization:implementation` passed across `187` Planning
   DB manifests.
-- `pnpm governance:refresh` and final `pnpm verify:prepush` remain.
+- `pnpm governance:refresh` passed. Generated surfaces converged in two passes;
+  the DBT capability generator reported the projection current, governance DB
+  checks passed, and coverage remained `6244/6244` with no drift.
+- The refresh updated `docs/.manifest.json` for this closeout and ADR content.
+  It also incorporated the pre-existing `ADR-0065` file into the generated ADR
+  index; no ADR-0065 content was changed by this slice.
+- Final `pnpm verify:prepush` remains.
 
 ## Closeout Evidence
 
@@ -154,5 +160,5 @@ scripts/planning-db-dbt-roundtrip-capability-mechanization.test.cjs` passed.
 - **No-debt evidence:** no debt or rule relaxation is approved for this slice.
 - **No-stub evidence:** no stub, placeholder, fake rail, or unfinished runtime
   branch is permitted.
-- **Final status:** implementation and focal validation are complete; governance
-  refresh and the final pre-push gate remain.
+- **Final status:** implementation, focal validation, and governance refresh are
+  complete; the final pre-push gate remains.
