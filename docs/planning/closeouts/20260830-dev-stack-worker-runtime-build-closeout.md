@@ -169,7 +169,8 @@ E-CANVAS-WORKFLOW-E2E-USABILITY-20260601` passed, followed by the global
   indexed `6244` files, and then failed only at the inherited #2745 blocker:
   `DBT round-trip capability ExportDbtProject is rail_missing`. This slice does
   not touch DBT round-trip authority.
-- `pnpm verify:prepush` remains for final closeout.
+- The corrected `pnpm verify:prepush` passed, including changed Markdown,
+  global feature mechanization, Prettier, ESLint, and forbidden-file checks.
 
 ## Closeout Evidence
 
@@ -183,5 +184,5 @@ E-CANVAS-WORKFLOW-E2E-USABILITY-20260601` passed, followed by the global
 - **No-stub evidence:** no placeholder, fake success path, TODO, or unfinished
   branch was added.
 - **Final status:** implementation, committed formatting, test-only shutdown,
-  and live browser proof are complete; the final pre-push gate remains, with
-  governance refresh externally blocked by #2745 after successful convergence.
+  live browser proof, and the pre-push gate are complete. Governance refresh
+  remains externally blocked by #2745 after successful convergence.
