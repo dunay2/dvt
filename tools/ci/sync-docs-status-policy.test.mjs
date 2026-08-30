@@ -10,15 +10,13 @@ const {
   splitFrontmatter,
 } = require('../../scripts/sync-docs.cjs');
 
-test('docs sync waits for Planning DB readiness before importing', () => {
+test('docs sync reads existing Planning DB authority without provisioning or importing it', () => {
   const packageJson = JSON.parse(
     readFileSync(new URL('../../package.json', import.meta.url), 'utf8')
   );
 
-  assert.equal(
-    packageJson.scripts['docs:sync'],
-    'pnpm planning:db:up && pnpm planning:db:health --wait && pnpm planning:db:import && node scripts/sync-docs.cjs'
-  );
+  assert.equal(packageJson.scripts['docs:sync'], 'node scripts/sync-docs.cjs');
+  assert.doesNotMatch(packageJson.scripts['docs:sync'], /planning:db:(?:up|health|import)/u);
 });
 
 test('planning doc index generation excludes superseded and archived docs', () => {

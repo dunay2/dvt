@@ -120,9 +120,10 @@ pnpm governance:refresh
 
 This command owns the final quadrature for docs indexes, docs manifests,
 `system-governance-*` indexes, fingerprints, coverage, remediation outputs,
-and governance query-store import/checks. It must run before
-`pnpm ci:docs` or `pnpm verify:prepush` in affected slices, and it does not
-relax either gate.
+all derived from the current Git inventory. It may record a bounded execution
+audit in Planning DB, but it does not import or rebuild Planning DB. It must run
+before `pnpm ci:docs` or `pnpm verify:prepush` in affected slices, and it does
+not relax either gate.
 
 ## Task Modes
 

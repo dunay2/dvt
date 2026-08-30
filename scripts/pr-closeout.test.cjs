@@ -456,8 +456,8 @@ test('buildPrCloseoutPlan prepares generated code status before commit when need
   assert.ok(indexOf(ids, 'docs-status-code-state') < indexOf(ids, 'planning-db-ownership'));
   assert.ok(indexOf(ids, 'planning-db-ownership') < indexOf(ids, 'planning-db-up'));
   assert.ok(indexOf(ids, 'planning-db-up') < indexOf(ids, 'planning-db-health'));
-  assert.ok(indexOf(ids, 'planning-db-health') < indexOf(ids, 'planning-db-import'));
-  assert.ok(indexOf(ids, 'planning-db-import') < indexOf(ids, 'assert-no-unstaged'));
+  assert.equal(ids.includes('planning-db-import'), false);
+  assert.ok(indexOf(ids, 'planning-db-health') < indexOf(ids, 'assert-no-unstaged'));
   assert.ok(indexOf(ids, 'assert-no-unstaged') < indexOf(ids, 'commit'));
   assert.ok(indexOf(ids, 'verify-prepush') < indexOf(ids, 'planning-db-release'));
   assert.equal(ids.includes('docs-status-repository-map'), false);
@@ -496,8 +496,8 @@ test('buildPrCloseoutPlan leaves on-demand publication out of manifest-only clos
   const ids = stepIds(plan);
 
   assert.ok(indexOf(ids, 'docs-status-code-state') < indexOf(ids, 'planning-db-up'));
-  assert.ok(indexOf(ids, 'planning-db-health') < indexOf(ids, 'planning-db-import'));
-  assert.ok(indexOf(ids, 'planning-db-import') < indexOf(ids, 'commit'));
+  assert.ok(indexOf(ids, 'planning-db-health') < indexOf(ids, 'commit'));
+  assert.equal(ids.includes('planning-db-import'), false);
   assert.equal(ids.includes('docs-status-repository-map'), false);
 });
 
@@ -510,7 +510,8 @@ test('buildPrCloseoutPlan leaves on-demand publication out of documentation clos
   const ids = stepIds(plan);
 
   assert.ok(indexOf(ids, 'planning-db-ownership') < indexOf(ids, 'planning-db-up'));
-  assert.ok(indexOf(ids, 'planning-db-import') < indexOf(ids, 'commit'));
+  assert.ok(indexOf(ids, 'planning-db-health') < indexOf(ids, 'commit'));
+  assert.equal(ids.includes('planning-db-import'), false);
   assert.ok(indexOf(ids, 'verify-prepush') < indexOf(ids, 'planning-db-release'));
   assert.equal(ids.includes('docs-status-repository-map'), false);
 });
@@ -538,7 +539,7 @@ test('buildPrCloseoutPlan prepares workspace projections for root and non-standa
   }
 });
 
-test('buildPrCloseoutPlan prepares Planning DB for every full prepush invocation', () => {
+test('buildPrCloseoutPlan validates against existing Planning DB without rebuilding it', () => {
   const plan = buildPrCloseoutPlan({
     changedFiles: ['eslint.config.cjs'],
     stagedFiles: ['eslint.config.cjs'],
@@ -548,8 +549,8 @@ test('buildPrCloseoutPlan prepares Planning DB for every full prepush invocation
 
   assert.ok(indexOf(ids, 'planning-db-ownership') < indexOf(ids, 'planning-db-up'));
   assert.ok(indexOf(ids, 'planning-db-up') < indexOf(ids, 'planning-db-health'));
-  assert.ok(indexOf(ids, 'planning-db-health') < indexOf(ids, 'planning-db-import'));
-  assert.ok(indexOf(ids, 'planning-db-import') < indexOf(ids, 'commit'));
+  assert.ok(indexOf(ids, 'planning-db-health') < indexOf(ids, 'commit'));
+  assert.equal(ids.includes('planning-db-import'), false);
   assert.ok(indexOf(ids, 'commit') < indexOf(ids, 'verify-prepush'));
   assert.ok(indexOf(ids, 'verify-prepush') < indexOf(ids, 'planning-db-release'));
   assert.equal(ids.includes('governance-refresh'), false);

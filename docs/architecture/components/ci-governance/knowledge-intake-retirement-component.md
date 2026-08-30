@@ -66,10 +66,12 @@ view over those facts, not the authority.
 ## Generated Literature Surface
 
 ```bash
-pnpm governance:db:import -- --if-stale
 pnpm docs:knowledge-intake:generate
 pnpm docs:knowledge-intake:check
 ```
+
+These commands query existing Planning DB authority and do not import it.
+Bootstrap or recovery imports are separate, explicit operator operations.
 
 The generated literature source is local and ignored:
 

@@ -111,6 +111,7 @@ stable.
   `docs/architecture/components/web/frontend-command-query-rail-inventory.md`.
 - Do not mark a surface `operational-product` unless the evidence column names
   a runnable validation route.
-- After changes, run `pnpm planning:db:import` or
-  `pnpm planning:db:query frontend-surfaces --refresh
---confirm-expensive-governance-refresh` before relying on the DB projection.
+- After changes, validate this Git-owned inventory and its code evidence
+  directly. Do not rebuild Planning DB to make a physical repository inventory
+  current; DB architecture queries consume existing semantic authority and fail
+  closed when it is unavailable or stale.

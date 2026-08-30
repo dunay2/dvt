@@ -271,14 +271,6 @@ function buildPrCloseoutPlan(options = {}) {
     command: 'pnpm',
     args: ['planning:db:health', '--wait'],
   });
-  if (!governanceRefreshChanged) {
-    pushStepOnce(steps, {
-      id: 'planning-db-import',
-      command: 'pnpm',
-      args: ['planning:db:import'],
-    });
-  }
-
   if (governanceRefreshChanged) {
     pushStepOnce(steps, {
       id: 'governance-refresh',

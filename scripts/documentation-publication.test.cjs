@@ -101,6 +101,44 @@ afterEach(() => {
   }
 });
 
+test('publication runs declared generators without importing Planning DB', async () => {
+  const root = createMinimalFixture();
+  const policyPath = path.join(root, 'docs', 'generated-docs-policy.json');
+  fs.writeFileSync(
+    policyPath,
+    JSON.stringify({
+      version: 1,
+      artifactClasses: [
+        {
+          id: 'empty-publication-fixture',
+          artifacts: [],
+          generatorCommand: 'pnpm fixture:generate',
+          tracking: 'untracked',
+          manualEditPolicy: 'generator-owned',
+          publication: { enabled: true },
+        },
+      ],
+    }),
+    'utf8'
+  );
+  const commands = [];
+  const assembler = new DocumentationPublicationAssembler(
+    fixtureAssemblerOptions(root, {
+      lifecycleRows: [lifecycleRow(root, 'docs/index.md')],
+      readGitSha: () => 'fixture-head',
+      runCommand: (command) => commands.push(command),
+    })
+  );
+
+  await assembler.assemble();
+
+  assert.deepEqual(commands, ['pnpm fixture:generate']);
+  assert.equal(
+    commands.some((command) => /planning:db:import/u.test(command)),
+    false
+  );
+});
+
 test('assembles a deterministic tree and keeps historical pages out of default navigation', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-doc-publication-'));
   temporaryRoots.push(root);

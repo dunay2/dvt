@@ -20,7 +20,6 @@ placement, relations, command/query rails, design decisions, evidence, and
 documentation lifecycle. Before architecture or design consultation, run:
 
 ```bash
-pnpm planning:db:import --if-stale
 pnpm planning:db:query architecture-designs --limit 100 --no-refresh
 pnpm planning:db:query component-profile --component SYS-API-ROOT --no-refresh
 pnpm planning:db:query command-query-rails --filter API --no-refresh
@@ -30,7 +29,8 @@ pnpm planning:db:query documentation-lifecycle --component SYS-API-ROOT --no-ref
 Use the returned identities and evidence paths to select any further source or
 document. Generate repository, component, test, and traceability views only on
 explicit request with `pnpm docs:publish`; they are disposable projections, not
-authority.
+authority. Consultation is read-only: it fails closed on unavailable or stale
+authority instead of importing Planning DB as a side effect.
 
 ## Boundary
 

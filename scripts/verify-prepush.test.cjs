@@ -98,7 +98,7 @@
     const ids = stepIds(plan);
 
     assertIncludes(ids, 'verify-changed');
-    assertIncludes(ids, 'governance-db-import');
+    assertExcludes(ids, 'governance-db-import');
     assertIncludes(ids, 'planning-db-inventory-check');
     assertIncludes(ids, 'test-closeout-changed');
     assertIncludes(ids, 'test-verify-prepush');

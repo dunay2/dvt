@@ -4238,7 +4238,8 @@ function formatQueryError(error) {
   if (hasConnectionRefusal) {
     return [
       'Planning DB is unavailable.',
-      'Run `pnpm planning:db:up`, then `pnpm planning:db:import` to rebuild the current state.',
+      'Run `pnpm planning:db:up` to connect the existing authority.',
+      'Use `pnpm planning:db:import` only for an explicit bootstrap or recovery.',
       `Details: ${details.join('; ')}`,
     ].join(' ');
   }

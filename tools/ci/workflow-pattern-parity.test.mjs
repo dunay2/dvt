@@ -499,14 +499,12 @@ test('PR quality gate prepares planning DB before DB-first feature implementatio
   assertWorkflowContains(prQualityGate, 'GIT_HEAD: ${{ github.sha }}');
 });
 
-test('the canonical docs sync rail provisions and imports Planning DB for every caller', () => {
+test('the canonical docs sync rail consumes existing Planning DB authority without importing', () => {
   const packageScripts = JSON.parse(readFileSync('package.json', 'utf8')).scripts;
   const localDocsPreflight = readFileSync('scripts/docs-pr-local.cjs', 'utf8');
 
-  assert.match(
-    packageScripts['docs:sync'],
-    /^pnpm planning:db:up && pnpm planning:db:health --wait && pnpm planning:db:import && node scripts\/sync-docs\.cjs$/u
-  );
+  assert.equal(packageScripts['docs:sync'], 'node scripts/sync-docs.cjs');
+  assert.doesNotMatch(packageScripts['docs:sync'], /planning:db:(?:up|health|import)/u);
   assert.match(packageScripts['docs:sync:check'], /^pnpm docs:sync &&/u);
   assert.match(packageScripts['docs:ci'], /^pnpm docs:sync &&/u);
   assert.match(localDocsPreflight, /\['pnpm', \['docs:sync:check'\]\]/u);
