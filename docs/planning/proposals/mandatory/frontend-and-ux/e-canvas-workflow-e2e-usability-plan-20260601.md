@@ -1454,6 +1454,24 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
     unitTests:
       - scripts/run-dev-stack.test.cjs
+  - name: WORKSPACE_RUNTIME_DEPENDENCIES_BUILD_SCRIPT
+    path: scripts/run-dev-stack.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Worker startup must resolve its canonical runtime-closure builder explicitly.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
+  - name: prepareTemporalWorkerRuntimeDependencies
+    path: scripts/run-dev-stack.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Clean local startup must build worker runtime dependencies before exposing a partial stack.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
   - name: buildLocalPostgresProofSeedSql
     path: scripts/run-dev-stack.cjs
     dddOwner: WarehouseConnectionCatalog

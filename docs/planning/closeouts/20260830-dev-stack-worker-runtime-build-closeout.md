@@ -155,6 +155,16 @@ flowchart LR
   worker runtime closure, reached API, worker, and web readiness, emitted
   `Test-only mode complete, shutting down`, and exited with status `0`.
 - After test-only shutdown, ports `3000`, `5173`, and `9468` were all free.
+- The first `pnpm verify:prepush` run failed at
+  `docs:feature-mechanization:implementation` because the pre-implementation
+  route allowed the affected script but omitted the two new top-level symbols.
+  This was a planning deviation, not a product failure. The canonical
+  `E-CANVAS-WORKFLOW-E2E-USABILITY-20260601` manifest was corrected with both
+  symbols and their owner, `StartRun` rail, Fowler signal, and unit proof.
+- `pnpm docs:feature-mechanization -- --feature
+E-CANVAS-WORKFLOW-E2E-USABILITY-20260601` passed, followed by the global
+  `pnpm docs:feature-mechanization:implementation` check across `187` Planning
+  DB manifests.
 - `pnpm governance:refresh` converged all generated surfaces in two passes,
   indexed `6244` files, and then failed only at the inherited #2745 blocker:
   `DBT round-trip capability ExportDbtProject is rail_missing`. This slice does
