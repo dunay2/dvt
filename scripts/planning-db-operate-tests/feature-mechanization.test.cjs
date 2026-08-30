@@ -130,20 +130,40 @@ test('parseArgs builds a feature mechanization rail record command', () => {
   assert.equal(command.expectedRevision, 0);
 });
 
-test('parseArgs accepts deprecated and retired feature mechanization rail statuses', () => {
+test('parseArgs accepts closed deprecated and retired rails without implementation refs', () => {
   const deprecatedCommand = parseArgs(
     featureMechanizationRecordArgs({
-      extraArgs: ['--rail-status', 'deprecated'],
+      implementationRefs: [],
+      extraArgs: ['--mechanization-status', 'closed', '--rail-status', 'deprecated'],
     })
   );
   const retiredCommand = parseArgs(
     featureMechanizationRecordArgs({
-      extraArgs: ['--rail-status', 'retired'],
+      implementationRefs: [],
+      extraArgs: ['--mechanization-status', 'closed', '--rail-status', 'retired'],
     })
   );
 
   assert.equal(deprecatedCommand.railStatus, 'deprecated');
   assert.equal(retiredCommand.railStatus, 'retired');
+  assert.deepEqual(deprecatedCommand.implementationRefs, []);
+  assert.deepEqual(retiredCommand.implementationRefs, []);
+});
+
+test('parseArgs rejects active feature mechanization rails without implementation refs', () => {
+  assert.throws(
+    () => parseArgs(featureMechanizationRecordArgs({ implementationRefs: [] })),
+    /requires at least one --implementation-ref/
+  );
+  assert.throws(
+    () =>
+      parseArgs(
+        featureMechanizationRecordArgs({
+          extraArgs: ['--mechanization-status', 'closed', '--rail-status', 'implemented'],
+        })
+      ),
+    /closed mechanization requires a retired or deprecated rail status/
+  );
 });
 
 test('feature mechanization rail planner emits a local rail and audit row', () => {
@@ -233,6 +253,40 @@ test('feature mechanization rail planner promotes an imported manifest as local 
     'scripts/new-writer-helper.cjs#mergeImportedEvidence',
   ]);
   assert.equal(planned.rail.rawManifest.symbols.length, 2);
+});
+
+test('feature mechanization rail planner clears implementation evidence for a terminal rail', () => {
+  const command = parseArgs(
+    featureMechanizationRecordArgs({
+      implementationRefs: [],
+      extraArgs: ['--mechanization-status', 'closed', '--rail-status', 'retired'],
+    })
+  );
+  const planned = planFeatureMechanizationRailRecordOperation({
+    command,
+    existingRail: {
+      rail_id: command.railId,
+      revision: 3,
+      symbol_refs: ['scripts/retired-writer.cjs#recordRetiredEvidence'],
+      implementation_refs: ['scripts/retired-writer.cjs#recordRetiredEvidence'],
+      raw_manifest: {
+        symbols: [
+          {
+            path: 'scripts/retired-writer.cjs',
+            name: 'recordRetiredEvidence',
+          },
+        ],
+      },
+    },
+    operationId: 'op-feature-mechanization-terminal',
+    now: new Date('2026-08-30T12:00:00.000Z'),
+  });
+
+  assert.deepEqual(planned.rail.symbolRefs, []);
+  assert.deepEqual(planned.rail.implementationRefs, []);
+  assert.deepEqual(planned.rail.rawManifest.symbols, []);
+  assert.equal(planned.rail.rawRail.status, 'retired');
+  assert.equal(planned.rail.rawManifest.mechanizationStatus, 'closed');
 });
 
 test('feature mechanization rail planner extends existing evidence without restoring forbidden surfaces', () => {

@@ -319,7 +319,7 @@ const operationHelp = Object.freeze({
       'pnpm planning:db:operate component <create|revise|reparent> --component <SYS-ID> --actor <actor>',
     details: [
       'CreateGovernanceComponent records DB-authored governance component ownership.',
-      'ReviseGovernanceComponent overlays imported ownership and status through a scoped, audited DB command.',
+      'ReviseGovernanceComponent overlays imported ownership, status, and semantic metadata through a scoped, audited DB command.',
       'ReparentGovernanceComponent updates the imported governance component tree through an audited DB command rail.',
       'Required semantic fields include --name, --owned-concern, --owns or --children-required true, --ddd-owner, and --cq-rails.',
     ],
@@ -1504,6 +1504,15 @@ function operationPayload(command) {
       removeOwns: command.removeOwns || [],
       addExcludes: command.addExcludes || [],
       removeExcludes: command.removeExcludes || [],
+      responsibilities: command.responsibilities || [],
+      nonGoals: command.nonGoals || [],
+      reasonsToChange: command.reasonsToChange || [],
+      publicApi: command.publicApi || [],
+      invariants: command.invariants || [],
+      transitions: command.transitions || [],
+      consumers: command.consumers || [],
+      governance: command.governance || [],
+      fowlerSignals: command.fowlerSignals || [],
       sourceRef: command.sourceRef,
       sourceContentSha256: command.sourceContentSha256,
     };
@@ -2129,10 +2138,19 @@ function validateComponentReviseCommand(command) {
     ...(command.removeOwns || []),
     ...(command.addExcludes || []),
     ...(command.removeExcludes || []),
+    ...(command.responsibilities || []),
+    ...(command.nonGoals || []),
+    ...(command.reasonsToChange || []),
+    ...(command.publicApi || []),
+    ...(command.invariants || []),
+    ...(command.transitions || []),
+    ...(command.consumers || []),
+    ...(command.governance || []),
+    ...(command.fowlerSignals || []),
   ].filter((value) => value !== null && value !== undefined);
   if (changes.length === 0) {
     throw new Error(
-      `Governance component ${command.componentId} revise requires a status, children-required, or ownership delta.`
+      `Governance component ${command.componentId} revise requires a status, children-required, ownership delta, or semantic metadata.`
     );
   }
 
@@ -2195,6 +2213,15 @@ function parseComponentCommand(action, args) {
       removeOwns: normalizeListOption(options.removeOwns),
       addExcludes: normalizeListOption(options.addExcludes),
       removeExcludes: normalizeListOption(options.removeExcludes),
+      responsibilities: normalizeListOption(options.responsibility),
+      nonGoals: normalizeListOption(options.nonGoal),
+      reasonsToChange: normalizeListOption(options.reasonToChange),
+      publicApi: normalizeListOption(options.publicApi),
+      invariants: normalizeListOption(options.invariant),
+      transitions: normalizeListOption(options.transition),
+      consumers: normalizeListOption(options.consumer),
+      governance: normalizeListOption(options.governance),
+      fowlerSignals: normalizeListOption(options.fowlerSignal),
       sourceRef: requireOption(options, 'sourceRef'),
       sourceContentSha256: validateSha256(
         requireOption(options, 'sourceContentSha256'),
@@ -3142,7 +3169,6 @@ function validateFeatureMechanizationRecordCommand(command) {
   const requiredListFields = [
     ['component-guide', command.componentGuides],
     ['user-story', command.userStories],
-    ['implementation-ref', command.implementationRefs],
     ['documentation-ref', command.documentationRefs],
     ['governing-source', command.governingSources],
     ['allowed-surface', command.allowedImplementationSurfaces],
@@ -3167,7 +3193,27 @@ function validateFeatureMechanizationRecordCommand(command) {
     );
   }
 
-  if (!command.implementationRefs.some((implementationRef) => implementationRef.includes('#'))) {
+  const terminalRailStatus =
+    command.railStatus === 'retired' || command.railStatus === 'deprecated';
+  if (command.mechanizationStatus === 'closed' && !terminalRailStatus) {
+    throw new Error(
+      'RecordFeatureMechanizationRail closed mechanization requires a retired or deprecated rail status.'
+    );
+  }
+  if (terminalRailStatus && command.mechanizationStatus !== 'closed') {
+    throw new Error(
+      'RecordFeatureMechanizationRail retired or deprecated rail status requires closed mechanization.'
+    );
+  }
+  if (terminalRailStatus && command.implementationRefs.length > 0) {
+    throw new Error(
+      'RecordFeatureMechanizationRail closed retired or deprecated rails must not include --implementation-ref.'
+    );
+  }
+  if (
+    !terminalRailStatus &&
+    !command.implementationRefs.some((implementationRef) => implementationRef.includes('#'))
+  ) {
     throw new Error(
       'RecordFeatureMechanizationRail requires at least one --implementation-ref in path#symbol form.'
     );
@@ -4859,6 +4905,15 @@ function planComponentReviseOperation({
       command.addExcludes,
       command.removeExcludes
     ),
+    responsibilities: mergeUniqueValues(component.responsibilities, command.responsibilities),
+    nonGoals: mergeUniqueValues(component.nonGoals, command.nonGoals),
+    reasonsToChange: mergeUniqueValues(component.reasonsToChange, command.reasonsToChange),
+    publicApi: mergeUniqueValues(component.publicApi, command.publicApi),
+    invariants: mergeUniqueValues(component.invariants, command.invariants),
+    transitions: mergeUniqueValues(component.transitions, command.transitions),
+    consumers: mergeUniqueValues(component.consumers, command.consumers),
+    governance: mergeUniqueValues(component.governance, command.governance),
+    fowlerSignals: mergeUniqueValues(component.fowlerSignals, command.fowlerSignals),
     createdBy: command.actor,
     createdAt,
   };
@@ -5190,6 +5245,10 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
   const resultingRevision = previousRevision === null ? 0 : previousRevision + 1;
   const updatedAt = toIso(now);
   const createdAt = previous?.createdAt || updatedAt;
+  const terminalRailStatus =
+    command.railStatus === 'retired' || command.railStatus === 'deprecated';
+  const replaceImplementationRefs = command.replaceImplementationRefs || terminalRailStatus;
+  const mergeCommand = { ...command, replaceImplementationRefs };
   const rawRail = mergeFeatureMechanizationValue(previous?.rawRail || {}, {
     name: command.railName,
     type: command.railType,
@@ -5235,17 +5294,15 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
   const rawManifest = mergeFeatureMechanizationManifest(
     previous?.rawManifest,
     incomingManifest,
-    command
+    mergeCommand
   );
   const retained = (values) =>
     values.filter(
       (value) =>
         !excludesFeatureMechanizationSurface(value, command.forbiddenImplementationSurfaces)
     );
-  const previousSymbolRefs = command.replaceImplementationRefs ? [] : previous?.symbolRefs;
-  const previousImplementationRefs = command.replaceImplementationRefs
-    ? []
-    : previous?.implementationRefs;
+  const previousSymbolRefs = replaceImplementationRefs ? [] : previous?.symbolRefs;
+  const previousImplementationRefs = replaceImplementationRefs ? [] : previous?.implementationRefs;
   const rail = {
     railId: command.railId,
     featureId: command.featureId,
