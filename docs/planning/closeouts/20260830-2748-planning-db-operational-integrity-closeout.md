@@ -53,7 +53,11 @@ and TDD cycles are in the
 - Reconciled all 39 gap rails through `RecordFeatureMechanizationRail`: 20
   retain verified active implementation evidence and 19 prose-only,
   superseded, or one-time intents are explicitly `closed`/`retired` with zero
-  implementation refs.
+  implementation refs. Every local record now cites both command/query rail
+  governance and Fowler opportunity planning governance.
+- Aligned the feature-mechanization validator with that terminal invariant:
+  `closed` manifests may have zero symbols, while `implemented` manifests
+  still fail closed without symbol evidence.
 
 ## Red/green and query evidence
 
@@ -61,6 +65,9 @@ and TDD cycles are in the
   required fake refs and component revisions discarded semantic fields.
 - Green focused tests: `25/25` passed after the two command extensions.
 - Full Planning DB operate and integrity unit slice: `119/119` passed.
+- Combined Planning DB, integrity, and feature-mechanization validator slice:
+  `153/153` passed, including explicit positive terminal and negative active
+  symbol cases.
 - Before DB reconciliation, `pnpm planning:db:integrity:check` failed with 39
   `gap_rail` warnings and one `missing_source_file` warning. The newly recorded
   component initially exposed one `missing_maturity_evidence` error while its
@@ -84,10 +91,14 @@ and TDD cycles are in the
 - `pnpm planning:db:query component-integrity --component SYS-API-APPLICATION-ERRORS --limit 20`
   — zero rows.
 - `pnpm planning:db:integrity:check` — passed the progressive baseline.
+- `node --test scripts/check-feature-mechanization.test.cjs scripts/planning-db-operate.test.cjs scripts/planning-db-integrity-check.test.cjs`
+  — passed `153/153`.
+- `pnpm docs:feature-mechanization:implementation -- --feature GOV-PLANNING-DB-INTEGRITY-RECONCILIATION-20260830 --feature E-DBT-PROJECT-ROUNDTRIP-P4-TRUTH-SYNC`
+  — passed against `212` DB manifests and the combined real Git diff.
 
-The final governance refresh, feature-mechanization implementation check,
-committed-tree pre-push gate, and PR-title validation run after this closeout
-is hook-normalized and committed.
+The final governance refresh, committed-tree pre-push gate, ARC evaluation,
+and PR-title validation run after this closeout is hook-normalized and
+committed.
 
 ## Debt and stub evidence
 
