@@ -56,8 +56,10 @@ and TDD cycles are in the
   implementation refs. Every local record now cites both command/query rail
   governance and Fowler opportunity planning governance.
 - Aligned the feature-mechanization validator with that terminal invariant:
-  `closed` manifests may have zero symbols, while `implemented` manifests
-  still fail closed without symbol evidence.
+  only `closed` manifests whose declared rails are all terminal may have zero
+  symbols. Completed `closed` features with active rails still require symbol
+  evidence, and the DB command accepts those active rails when the evidence is
+  present.
 
 ## Red/green and query evidence
 
@@ -66,8 +68,8 @@ and TDD cycles are in the
 - Green focused tests: `25/25` passed after the two command extensions.
 - Full Planning DB operate and integrity unit slice: `119/119` passed.
 - Combined Planning DB, integrity, and feature-mechanization validator slice:
-  `153/153` passed, including explicit positive terminal and negative active
-  symbol cases.
+  `155/155` passed, including explicit positive terminal, negative active
+  symbol, and closed-feature/active-rail compatibility cases.
 - Before DB reconciliation, `pnpm planning:db:integrity:check` failed with 39
   `gap_rail` warnings and one `missing_source_file` warning. The newly recorded
   component initially exposed one `missing_maturity_evidence` error while its
@@ -92,7 +94,7 @@ and TDD cycles are in the
   — zero rows.
 - `pnpm planning:db:integrity:check` — passed the progressive baseline.
 - `node --test scripts/check-feature-mechanization.test.cjs scripts/planning-db-operate.test.cjs scripts/planning-db-integrity-check.test.cjs`
-  — passed `153/153`.
+  — passed `155/155`.
 - `pnpm docs:feature-mechanization:implementation -- --feature GOV-PLANNING-DB-INTEGRITY-RECONCILIATION-20260830 --feature E-DBT-PROJECT-ROUNDTRIP-P4-TRUTH-SYNC`
   — passed against `212` DB manifests and the combined real Git diff.
 

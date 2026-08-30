@@ -104,7 +104,9 @@ write path:
   - Port: `pnpm planning:db:operate feature-mechanization record`
   - Scope: repository-local audited writer with actor and compare-and-set revision
   - Negative proof: active rails without implementation refs remain rejected;
-    inconsistent closed/active status pairs are rejected.
+    terminal rails with active mechanization or implementation refs remain
+    rejected. A completed `closed` feature may retain an active rail only with
+    real `path#symbol` evidence.
 - Command: `ReviseGovernanceComponent`
   - Context: Planning DB component engineering
   - DDD object: `GovernanceComponentDefinition`
@@ -197,6 +199,15 @@ redGreenCycles:
       - scripts/check-feature-mechanization.cjs
       - scripts/check-feature-mechanization.test.cjs
     greenTest: node --test scripts/check-feature-mechanization.test.cjs
+  - id: closed-feature-active-rail-compatibility
+    redTest: node --test scripts/check-feature-mechanization.test.cjs scripts/planning-db-operate.test.cjs
+    expectedFailure: A completed closed feature with an active evidenced rail is rejected, while the static validator permits the same active rail to lose all symbols.
+    patchSurfaces:
+      - scripts/check-feature-mechanization.cjs
+      - scripts/check-feature-mechanization.test.cjs
+      - scripts/planning-db-operate.cjs
+      - scripts/planning-db-operate-tests/feature-mechanization.test.cjs
+    greenTest: node --test scripts/check-feature-mechanization.test.cjs scripts/planning-db-operate.test.cjs
 symbols:
   - name: validateFeatureMechanizationRecordCommand
     path: scripts/planning-db-operate.cjs

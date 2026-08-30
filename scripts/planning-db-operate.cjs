@@ -3195,11 +3195,6 @@ function validateFeatureMechanizationRecordCommand(command) {
 
   const terminalRailStatus =
     command.railStatus === 'retired' || command.railStatus === 'deprecated';
-  if (command.mechanizationStatus === 'closed' && !terminalRailStatus) {
-    throw new Error(
-      'RecordFeatureMechanizationRail closed mechanization requires a retired or deprecated rail status.'
-    );
-  }
   if (terminalRailStatus && command.mechanizationStatus !== 'closed') {
     throw new Error(
       'RecordFeatureMechanizationRail retired or deprecated rail status requires closed mechanization.'

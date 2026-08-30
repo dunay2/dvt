@@ -113,7 +113,23 @@ test('validateFeatureMechanizationManifest accepts a closed mechanical feature c
   assert.deepEqual(result.errors, []);
 });
 
-test('validateFeatureMechanizationManifest accepts a closed feature without implementation symbols', () => {
+test('validateFeatureMechanizationManifest accepts a closed terminal feature without implementation symbols', () => {
+  const result = validateFeatureMechanizationManifest(
+    {
+      ...validManifest,
+      commandQueryRails: validManifest.commandQueryRails.map((rail) => ({
+        ...rail,
+        status: 'retired',
+      })),
+      symbols: [],
+    },
+    'plan.md'
+  );
+
+  assert.deepEqual(result.errors, []);
+});
+
+test('validateFeatureMechanizationManifest rejects a closed active feature without symbols', () => {
   const result = validateFeatureMechanizationManifest(
     {
       ...validManifest,
@@ -122,7 +138,7 @@ test('validateFeatureMechanizationManifest accepts a closed feature without impl
     'plan.md'
   );
 
-  assert.deepEqual(result.errors, []);
+  assert.match(result.errors.join('\n'), /missing symbols/);
 });
 
 test('validateFeatureMechanizationManifest rejects an implemented feature without symbols', () => {

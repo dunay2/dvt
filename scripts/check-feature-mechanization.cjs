@@ -624,7 +624,15 @@ function validateRedGreenCycles(manifest, sourcePath, errors) {
 }
 
 function validateSymbols(manifest, sourcePath, errors) {
-  if (manifest.mechanizationStatus !== 'closed') {
+  const commandQueryRails = Array.isArray(manifest.commandQueryRails)
+    ? manifest.commandQueryRails
+    : [];
+  const permitsEmptySymbols =
+    manifest.mechanizationStatus === 'closed' &&
+    commandQueryRails.length > 0 &&
+    commandQueryRails.every((rail) => rail?.status === 'retired' || rail?.status === 'deprecated');
+
+  if (!permitsEmptySymbols) {
     pushMissingArrayField(
       errors,
       `${sourcePath} feature ${manifest.featureId}`,

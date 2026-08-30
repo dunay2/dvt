@@ -150,6 +150,18 @@ test('parseArgs accepts closed deprecated and retired rails without implementati
   assert.deepEqual(retiredCommand.implementationRefs, []);
 });
 
+test('parseArgs accepts a closed feature with an active evidenced rail', () => {
+  const command = parseArgs(
+    featureMechanizationRecordArgs({
+      extraArgs: ['--mechanization-status', 'closed', '--rail-status', 'implemented'],
+    })
+  );
+
+  assert.equal(command.mechanizationStatus, 'closed');
+  assert.equal(command.railStatus, 'implemented');
+  assert.equal(command.implementationRefs.length, 1);
+});
+
 test('parseArgs rejects active feature mechanization rails without implementation refs', () => {
   assert.throws(
     () => parseArgs(featureMechanizationRecordArgs({ implementationRefs: [] })),
@@ -159,10 +171,11 @@ test('parseArgs rejects active feature mechanization rails without implementatio
     () =>
       parseArgs(
         featureMechanizationRecordArgs({
+          implementationRefs: [],
           extraArgs: ['--mechanization-status', 'closed', '--rail-status', 'implemented'],
         })
       ),
-    /closed mechanization requires a retired or deprecated rail status/
+    /requires at least one --implementation-ref/
   );
 });
 
