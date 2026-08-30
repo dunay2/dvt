@@ -71,14 +71,6 @@ function completeCurrentRows() {
     currentRow({ rail_name: 'ObservePlanRunReadiness' }),
     currentRow(),
     currentRow({ rail_name: 'StartRun' }),
-    currentRow({
-      phase_id: 'phase-6',
-      phase_order: 6,
-      phase_name: 'Export',
-      phase_expected_rail_count: 1,
-      phase_actual_rail_count: 1,
-      rail_name: 'ExportDbtProject',
-    }),
   ];
 }
 
@@ -140,6 +132,24 @@ test('validateDbtRoundtripCapabilityRows rejects an incomplete governed phase an
       verifyCommit: async () => ({ exists: true, isAncestor: true }),
     }),
     /missing governed capabilities.*phase-3\/ImportDbtProject.*phase-3\/ValidateDbtProjectImport/i
+  );
+});
+
+test('validateDbtRoundtripCapabilityRows rejects the retired export capability as unexpected', async () => {
+  const retiredExportRow = currentRow({
+    phase_id: 'phase-6',
+    phase_order: 6,
+    phase_name: 'Export',
+    phase_expected_rail_count: 1,
+    phase_actual_rail_count: 1,
+    rail_name: 'ExportDbtProject',
+  });
+
+  await assert.rejects(
+    validateDbtRoundtripCapabilityRows([...completeCurrentRows(), retiredExportRow], {
+      verifyCommit: async () => ({ exists: true, isAncestor: true }),
+    }),
+    /unexpected governed capabilities.*phase-6\/ExportDbtProject/i
   );
 });
 
@@ -317,7 +327,7 @@ test('check validates governed truth when the ignored local artifact is absent',
       logger: { log: (message) => messages.push(message) },
     });
 
-    assert.deepEqual(result, { changed: false, outputPath, rowCount: 8 });
+    assert.deepEqual(result, { changed: false, outputPath, rowCount: 7 });
     assert.equal(fs.existsSync(outputPath), false);
     assert.match(messages.join('\n'), /governed truth is current/);
   } finally {

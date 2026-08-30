@@ -27,7 +27,6 @@ const governedCapabilityKeys = Object.freeze([
   'phase-4/ObservePlanRunReadiness',
   'phase-4/PreviewExecutionPlan',
   'phase-4/StartRun',
-  'phase-6/ExportDbtProject',
 ]);
 
 function databaseUrl() {

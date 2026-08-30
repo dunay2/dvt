@@ -112,19 +112,47 @@ flowchart LR
 
 ## Implementation Evidence
 
-Pending implementation.
+- ADR-0060 now declares `ExportDbtProject` retired and binds file-backed reads
+  and writes to the existing workspace-file rails.
+- Removed the obsolete phase-6 capability and evidence row from
+  `tools/planning-db/state/dbt-project-roundtrip-capabilities.json`.
+- Removed `phase-6/ExportDbtProject` from the renderer's exact governed key set.
+- Updated focused catalog and renderer tests to expect seven current rails.
+- Added negative proof that a reintroduced phase-6 export row is rejected as an
+  unexpected governed capability.
+- No product command, route, port, adapter, or runtime behavior was introduced.
 
 ## Validation Evidence
 
-Pending implementation.
+- Red: the two focused suites reported `8` passing and `7` failing tests after
+  expectations were changed first. Failures were the obsolete required phase-6
+  key, the retained seed row, and acceptance of the retired export row.
+- Green: `node --test
+scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+scripts/planning-db-dbt-roundtrip-capability-status.test.cjs
+scripts/planning-db-query-tests/dbt-roundtrip-capabilities.test.cjs` passed
+  all `21` tests.
+- `node --test
+scripts/planning-db-dbt-roundtrip-capability-mechanization.test.cjs` passed.
+- `pnpm planning:db:import` passed with the corrected current-state seed.
+- `pnpm planning:db:query dbt-roundtrip-capabilities --limit 20` returned seven
+  phase 2-4 rows, all with projection state `current`, and no phase 6 row.
+- `pnpm docs:dbt-roundtrip-capabilities:generate` passed.
+- `pnpm docs:dbt-roundtrip-capabilities:check` passed.
+- `pnpm docs:feature-mechanization:implementation` passed across `187` Planning
+  DB manifests.
+- `pnpm governance:refresh` and final `pnpm verify:prepush` remain.
 
 ## Closeout Evidence
 
 - **Governing sources:** governance inventory, command/query rail governance,
   ADR-0060, the active DBT round-trip plan, Planning DB capability query, and
   GitHub Issue #2745.
-- **Real work performed:** pending implementation.
+- **Real work performed:** normative ADR, mandatory proposal, Planning DB
+  current capability seed, governed status renderer, focused tests, and this
+  closeout.
 - **No-debt evidence:** no debt or rule relaxation is approved for this slice.
 - **No-stub evidence:** no stub, placeholder, fake rail, or unfinished runtime
   branch is permitted.
-- **Final status:** planned; implementation and validation remain.
+- **Final status:** implementation and focal validation are complete; governance
+  refresh and the final pre-push gate remain.
