@@ -149,12 +149,17 @@ flowchart LR
 - `pnpm exec markdownlint-cli2` over the three touched Markdown files passed
   with `0` issues.
 - `git diff --check` passed.
+- The implementation commit ran the repository pre-commit hook successfully;
+  lint-staged applied the canonical formatter and no hook was bypassed.
+- `pnpm dev:app:test` passed from the committed implementation. It built the
+  worker runtime closure, reached API, worker, and web readiness, emitted
+  `Test-only mode complete, shutting down`, and exited with status `0`.
+- After test-only shutdown, ports `3000`, `5173`, and `9468` were all free.
 - `pnpm governance:refresh` converged all generated surfaces in two passes,
   indexed `6244` files, and then failed only at the inherited #2745 blocker:
   `DBT round-trip capability ExportDbtProject is rail_missing`. This slice does
   not touch DBT round-trip authority.
-- Pre-commit formatting, `pnpm dev:app:test`, and `pnpm verify:prepush` remain
-  for final closeout.
+- `pnpm verify:prepush` remains for final closeout.
 
 ## Closeout Evidence
 
@@ -167,6 +172,6 @@ flowchart LR
   separate runtime dependency graph was introduced.
 - **No-stub evidence:** no placeholder, fake success path, TODO, or unfinished
   branch was added.
-- **Final status:** implementation and live browser proof are complete; final
-  commit/test-only/pre-push gates remain, with governance refresh externally
-  blocked by #2745 after successful convergence.
+- **Final status:** implementation, committed formatting, test-only shutdown,
+  and live browser proof are complete; the final pre-push gate remains, with
+  governance refresh externally blocked by #2745 after successful convergence.
