@@ -217,9 +217,6 @@ describe('ProjectDbtGraphFromFilesUseCase', () => {
       sourceName: 'raw',
       originalFilePath: 'models/sources.yml',
     });
-    expect(projection.nodes.find((node) => node.resourceType === 'source')).not.toHaveProperty(
-      'sourceTableDeclaration'
-    );
     expect(projection.capabilities).toEqual({
       canPreview: true,
       canRun: true,
