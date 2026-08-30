@@ -4,7 +4,7 @@ status: Approved direction
 owner: Architecture / VTX2
 last_reviewed: 2026-08-28
 planning_type: proposal
-baseline_sha: 03cbc1f8a287dcde65e278919d3802898da2d89c
+baseline_sha: 15d740e9f5fd8e92fdc0be7e76780708d5b1b6ba
 ---
 
 # VTX2 Substrait Semantic Reference Design
@@ -49,7 +49,7 @@ deterministic PostgreSQL SQL
 existing provider-native PostgreSQL readiness / EXPLAIN
 ```
 
-This is owned by #2597 / PR #2659.
+This target projection was delivered by #2597 / merged PR #2659.
 
 SQLGlot is **not** introduced into the V0 runtime or Web path merely to create an abstraction in advance. DVT already has a Node/TypeScript PostgreSQL path and an existing PostgreSQL AST/deparser capability; adding a Python/process boundary for one consumer would add mechanism without current product value.
 
@@ -122,6 +122,26 @@ card / field command
 
 The UI does not maintain a second Web-only function/operator model. Visual labels and gestures are presentation metadata over admitted semantic identities.
 
+## Command And Query Rail Ownership
+
+The V0 flow reuses the existing product rails. The pure Substrait-to-PostgreSQL
+projection is an internal policy invoked under Preview; it is not a parallel
+endpoint, service command, or independently authoritative query.
+
+| Product intent                                               | Rail                                                        | Type    | Owning bounded context / object                                    | Surface and authorization                                                              | Required negative proof                                                                                             |
+| ------------------------------------------------------------ | ----------------------------------------------------------- | ------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Mutate the canonical Substrait semantic document from Canvas | `ConfigureCanvasDvtNode`                                    | command | DVT transform authoring metadata                                   | Existing Node Properties/Canvas command surface; inherits current Canvas write posture | denied/read-only Apply writes nothing; unsupported semantic shape fails closed                                      |
+| Persist the exact semantic revision                          | `SaveCanvasAuthoringDraft` / `SaveWorkspaceGraphDraft`      | command | `WorkspaceGraphAuthoringDraft`                                     | Existing protected Graph Draft save port and API scope/CAS/idempotency policy          | stale revision, idempotency mismatch, authoring-authority conflict and unsupported schema fail closed               |
+| Reopen and project the persisted revision                    | `GetWorkspaceGraphDraft` plus `ProjectCanvasAuthoringDraft` | query   | `WorkspaceGraphDraft` / `CanvasAuthoringSemanticGraph` read models | Existing protected Graph Draft query and Web projection                                | corrupt/profile-mismatched document does not become editable or executable authority                                |
+| Request Preview from the selected Canvas graph               | `PreviewExecutionPlan`                                      | command | Canvas preview/readiness                                           | Existing Web Preview action; no direct renderer route                                  | missing selection, stale draft/projection and unsupported provider posture reject                                   |
+| Generate and admit the Preview plan                          | `PreviewPlan`                                               | command | Plan preview application service                                   | Existing protected API Preview route and authorization resolver                        | unsupported Substrait capability, SQL projection failure and provider-readiness failure reject without fallback SQL |
+| Persist the admitted plan used by Preview/Run                | `CreateStoredPlan`                                          | command | `PlanRecord` aggregate                                             | Existing scoped plan-store writer invoked by Preview                                   | missing scope, ownership mismatch and artifact conflict reject                                                      |
+
+The deterministic PostgreSQL AST/SQL mapping consumes the exact semantic
+document under `PreviewExecutionPlan` / `PreviewPlan`. If a future consumer
+needs that mapping as a separately addressable product query, its rail must be
+registered before adding a route, port or adapter surface.
+
 ## dbt / Jinja
 
 When dbt/Jinja participates in semantic transformation, dbt-native compilation/macro resolution occurs before mapping supported resulting semantics. Unresolved arbitrary macros are not silently interpreted as relational meaning.
@@ -182,8 +202,8 @@ A relation operator becomes a runtime step only when there is a real operational
 #2640 capability catalog                     DELIVERED
 #2598 typed Canvas/Substrait pilot            DELIVERED / PR #2658 merged
 #2618 SQLGlot study                          CLOSED: REFERENCE-ONLY for V0
-#2597 PostgreSQL target projection            ACTIVE / PR #2659
-#2652 Preview cutover                         NEXT after #2597
+#2597 PostgreSQL target projection            DELIVERED / PR #2659 merged
+#2652 Preview cutover                         AFTER #2655 durable revision proof
 #2655 durable recipe freeze                   OPEN
 #2642 broader visual capability projection    OPEN
 #2657 generated projection identity/storage   EVIDENCE-GATED
@@ -201,10 +221,13 @@ A relation operator becomes a runtime step only when there is a real operational
 
 ## Acceptance
 
-The next V0 proof is intentionally narrow:
+The target-specific renderer is delivered. The next V0 product proof is
+intentionally narrow and begins with the durable semantic revision owned by
+issue #2655:
 
 ```text
-accepted typed Substrait pilot recipe
+persisted canonical Substrait semantic revision
+ -> reload and validate exact profile / SHA / sidecar
  -> bounded PostgreSQL AST
  -> pgsql-deparser
  -> deterministic SQL
@@ -212,7 +235,10 @@ accepted typed Substrait pilot recipe
  -> Preview
 ```
 
-Only after that path exists should DVT decide generated projection identity/storage and retire superseded VTX1 SQL-authority mechanics.
+Only after that path exists should DVT decide generated projection
+identity/storage and retire superseded VTX1 SQL-authority mechanics. SQL is
+always generated from Substrait; no manual or persisted SQL input becomes a
+parallel semantic authority.
 
 A future second SQL dialect reopens the SQLGlot decision; it does not retroactively make SQLGlot necessary for the first consumer.
 
@@ -225,7 +251,7 @@ Repository work:
 - #2650 — Substrait-centered projection/cutover epic
 - #2598 / PR #2658 — typed Substrait Canvas pilot
 - #2618 — SQLGlot study; final V0 decision `REFERENCE-ONLY`
-- #2597 / PR #2659 — first PostgreSQL target projection
+- #2597 / merged PR #2659 — delivered first PostgreSQL target projection
 - #2652 — Preview cutover
 - #2655 — durable recipe document
 - #2657 — generated projection identity/destination/storage decision
