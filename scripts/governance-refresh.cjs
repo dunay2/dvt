@@ -1,4 +1,4 @@
-/** Owned concern: refresh generated governance surfaces and validate DB-backed projections. */
+/** Owned concern: refresh Git-derived governance surfaces without rebuilding Planning DB. */
 const childProcess = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -47,44 +47,16 @@ function buildRefreshStages() {
         id: 'file-fingerprint-impact',
         script: 'docs:governance:file-fingerprint-impact',
       },
-    ],
-    databaseStages: [
       {
-        id: 'planning-db-inventory-check',
-        script: 'planning:db:inventory:check',
-      },
-      {
-        id: 'db-surface-inventory',
-        script: 'docs:db-surface-inventory:generate',
-      },
-      {
-        id: 'governance-db-import-final',
-        script: 'governance:db:import',
-        args: ['--if-stale'],
-      },
-      {
-        id: 'dbt-roundtrip-capability-status',
-        script: 'docs:dbt-roundtrip-capabilities:generate',
-      },
-      {
-        id: 'knowledge-intake-literature',
-        script: 'docs:knowledge-intake:generate',
-      },
-      {
-        id: 'governance-db-check',
-        script: 'governance:db:check',
-      },
-      {
-        id: 'coverage-report-final',
+        id: 'coverage-report',
         script: 'docs:governance:coverage-report',
-        env: { DVT_GOVERNANCE_REPORT_SOURCE: 'db' },
       },
       {
-        id: 'remediation-queue-final',
+        id: 'remediation-queue',
         script: 'docs:governance:remediation-queue',
-        env: { DVT_GOVERNANCE_REPORT_SOURCE: 'db' },
       },
     ],
+    databaseStages: [],
   };
 }
 

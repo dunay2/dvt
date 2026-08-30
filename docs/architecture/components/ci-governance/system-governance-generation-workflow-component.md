@@ -16,14 +16,11 @@ explicit operational contract.
 The workflow remains deterministic, but the generated read side is no longer a
 tracked review surface. File indexes, component maps, fingerprints, coverage
 reports, remediation queues, and shard files are local artifacts under
-`.generated-docs/planning/status/`. The planning/governance Postgres read model
-rebuilds equivalent projections in memory from the same generator modules for
-query and drift checks. In the canonical `governance:refresh` path, coverage
-and remediation report generation read the imported DB query views after
-`planning:db:import`; the refresh then runs a final `planning:db:import` after
-those reports are regenerated so DB drift checks compare against the same pass.
-Their local file/in-memory source path remains only for standalone checks that
-run without a planning database.
+`.generated-docs/planning/status/`. Git is the physical inventory authority for
+paths, contents, hashes, symbols, and documentation structure. Planning DB is
+the semantic authority for architecture, component relations, rails, and
+mechanization. Routine governance refresh derives local inspection artifacts
+from Git and does not import or rebuild Planning DB.
 
 ## Governing Sources
 
@@ -85,10 +82,9 @@ flowchart TD
   FileComponent["docs:governance:file-component-index"]
   Fingerprint["docs:governance:file-fingerprint-baseline"]
   FingerprintImpact["docs:governance:file-fingerprint-impact"]
-  GovernanceImport["governance:db:import final"]
-  QueryStore["planning_query_store governance views"]
-  Coverage["docs:governance:coverage-report\nsource=db final"]
-  Remediation["docs:governance:remediation-queue\nsource=db final"]
+  Coverage["docs:governance:coverage-report\nsource=local Git inventory"]
+  Remediation["docs:governance:remediation-queue\nsource=local Git inventory"]
+  RunAudit["Planning DB bounded refresh-run audit"]
   ChangedFiles["docs:governance:changed-files:check"]
   Prepush["verify:prepush / ci:docs"]
 
@@ -114,18 +110,13 @@ flowchart TD
   FingerprintBaseline --> FingerprintImpact
   FingerprintShards --> FingerprintImpact
   FileIndex --> FingerprintImpact
-  ComponentIndex --> GovernanceImport
-  ComponentMap --> GovernanceImport
-  DocumentMapOutputs --> GovernanceImport
-  FingerprintBaseline --> GovernanceImport
-  FingerprintShards --> GovernanceImport
-  FingerprintImpact --> GovernanceImport
-  FileIndex --> GovernanceImport
-  GovernanceImport --> QueryStore
-  QueryStore --> Coverage
+  FileIndex --> Coverage
+  ComponentIndex --> Coverage
   Coverage --> CoverageOutputs[".generated-docs/.../system-governance-coverage-report.*"]
-  QueryStore --> Remediation
+  CoverageOutputs --> Remediation
+  FileIndex --> Remediation
   Remediation --> RemediationOutputs[".generated-docs/.../system-governance-remediation-queue.*"]
+  RemediationOutputs --> RunAudit
   FileIndex --> ChangedFiles
   FingerprintBaseline --> ChangedFiles
   FingerprintShards --> ChangedFiles
@@ -136,7 +127,7 @@ flowchart TD
   FingerprintImpact --> Prepush
   CoverageOutputs --> Prepush
   RemediationOutputs --> Prepush
-  GovernanceImport --> Prepush
+  RunAudit --> Prepush
   ChangedFiles --> Prepush
 ```
 
@@ -174,25 +165,17 @@ flowchart TD
   `.generated-docs/planning/status/system-governance-file-fingerprint-impact-20260501.md`,
   and its check command regenerates the ignored current impact report.
 - `Coverage report` runs `pnpm docs:governance:coverage-report` through
-  `scripts/generate-governance-coverage-report.cjs`. In the final
-  `governance:refresh` database-validation phase, the stage runs with
-  `DVT_GOVERNANCE_REPORT_SOURCE=db` and reads
-  `planning_query_store.governance_file_query` plus
-  `planning_query_store.governance_component_query` after
-  `governance:db:import`. Standalone checks without that source override retain
-  the deterministic local generated-input path, write
+  `scripts/generate-governance-coverage-report.cjs`. Routine
+  `governance:refresh` uses its deterministic local generated-input path, writes
   `.generated-docs/planning/status/system-governance-coverage-report.*`, and
-  regenerate the ignored artifact.
+  regenerates the ignored artifact. DB-source mode remains an explicit
+  diagnostic option and is not part of refresh or closeout.
 - `Remediation queue` runs `pnpm docs:governance:remediation-queue` through
-  `scripts/generate-governance-remediation-queue.cjs`. In the final
-  `governance:refresh` database-validation phase, the stage runs with
-  `DVT_GOVERNANCE_REPORT_SOURCE=db` and reads
-  `planning_query_store.governance_remediation_query` plus
-  `planning_query_store.governance_coverage_query` after
-  `governance:db:import`. Standalone checks without that source override retain
-  the deterministic local generated-input path, write
+  `scripts/generate-governance-remediation-queue.cjs`. Routine
+  `governance:refresh` uses its deterministic local generated-input path, writes
   `.generated-docs/planning/status/system-governance-remediation-queue.*`, and
-  regenerate the ignored artifact.
+  regenerates the ignored artifact. DB-source mode remains an explicit
+  diagnostic option and is not part of refresh or closeout.
 - `Changed-file validation` runs `pnpm docs:governance:changed-files:check`
   through `scripts/check-governance-changed-files.cjs`. It reads the current
   generated baseline, current generated file index, and local name-status diff,
@@ -201,8 +184,8 @@ flowchart TD
 ## Canonical Refresh Command
 
 `pnpm governance:refresh` is the canonical local command for refreshing local
-inspection artifacts, rebuilding the DB canonical operational source, and
-running drift/export checks.
+inspection artifacts from the current Git inventory. It does not import,
+rebuild, or replace Planning DB projections.
 Agents and contributors should prefer this command over manually remembering the
 individual generator order.
 
@@ -216,33 +199,25 @@ The command runs the docs and governance generation stages in this order:
 6. `docs:governance:file-component-index`
 7. `docs:governance:file-fingerprint-baseline`
 8. `docs:governance:file-fingerprint-impact`
-   After each generation pass, the runner hashes staged, unstaged, and untracked
-   non-ignored worktree state. It repeats generation until that fingerprint stops
-   changing, with a small maximum pass count. Coverage and remediation projections are built in-memory for
-   `governance:db:import`; their local artifacts are written only after the DB is
-   fresh. Only after generated outputs are stable does it run
-   `planning:db:inventory:check`, `docs:db-surface-inventory:generate`,
-   `governance:db:import`, `governance:db:check`, and DB-sourced
-   coverage/remediation generation. Export and publication commands are not
-   refresh stages and run only on explicit request.
+9. `docs:governance:coverage-report`
+10. `docs:governance:remediation-queue`
+
+After each generation pass, the runner hashes staged, unstaged, and untracked
+non-ignored worktree state. It repeats generation until that fingerprint stops
+changing, with a small maximum pass count. Once stable, it records the bounded
+refresh-run result in Planning DB. Import, DB projection drift, export, and
+publication commands are not refresh stages and run only on explicit request.
 
 The fingerprint is a convergence guard, not a new source of truth. Git-tracked
 sources, generated-docs policy, unit ownership, and generator scripts remain
 authoritative.
 
+When an operator explicitly bootstraps or recovers Planning DB,
 `governance:db:import` takes a transaction-scoped advisory lock before replacing
-governance read-model rows. This is required because the local Postgres volume
-is shared by all worktrees and agents on the same machine; two imports must not
-interleave their delete and insert phases.
-
-If the shared local Postgres volume rejects `planning:db:import` because an
-When the local Planning DB differs from the declarative current schema, the
-accepted repair path is
+governance read-model rows. The accepted destructive schema-recovery path is
 `pnpm planning:db:reset -- --confirm-destroy-shared-planning-db`, followed by
-`pnpm planning:db:import` and `pnpm governance:refresh`. Reset is intentionally
-destructive for the shared machine-local cache: it does not preserve local rows
-or compatibility state. Git-tracked current schema and canonical state are the
-only rebuild boundary.
+an explicit `pnpm planning:db:import`. Reset is intentionally destructive for
+the shared machine-local cache and is never a closeout or refresh side effect.
 
 ## Former Tracked Fan-Out
 
@@ -288,12 +263,12 @@ audit and overlay tables:
 
 The generation contract remains source-controlled: the unit manifest, the
 generated-docs policy, and generator scripts still define how generated
-governance artifacts are produced. The local database is now the operational
-coordination and query surface for generated governance state. Generated
-governance files are ignored local artifacts, not PR review files.
-`planning:db:import` must rebuild governance projections in memory from the
-same generator modules; `.generated-docs` files are local inspection outputs,
-not the database import source.
+governance artifacts are produced. The local database is the semantic
+coordination and query surface for governed architecture state. Generated
+governance files are ignored local artifacts, not PR review files. When an
+import is explicitly requested, it must rebuild its projections from Git-owned
+sources or the same generator modules; `.generated-docs` files are never the
+database import source.
 
 ## Invariants
 
@@ -307,9 +282,8 @@ not the database import source.
   and untracked non-ignored local files through the local name-status flow.
 - The fingerprint baseline is a current generated read-model artifact, not an
   accepted tracked review file.
-- A Postgres store may replace repetitive reads, local task coordination, and
-  review fan-out while preserving this stage contract through import and drift
-  checks.
+- A Postgres store may own semantic architecture queries, local audit, and
+  overlays, but it does not replace Git as physical repository inventory.
 - Postgres hash projections may derive file id, path hash, governance hash, and
   state fingerprint from imported governance file rows. The imported
   `content_hash` remains the byte-level input fact until repository file
@@ -333,17 +307,16 @@ GOV-S3 read model rails. It does not add product runtime behavior.
 - `RefreshGovernanceDerivedSurfaces` is a Docs governance command owned by
   `GovernanceRefreshWorkflow`. Its adapter surface is the package script runner
   plus Git worktree fingerprinting; repeated generation that does not stabilize
-  fails before database import or drift checks.
+  fails before the bounded Planning DB run audit is completed.
 - `QuerySystemGovernanceGenerationWorkflow` is a Docs governance query owned by
   `GovernanceGenerationWorkflow`. Its adapter surface is the file-system
   manifest plus generated-docs policy reader; missing generator ownership for a
   generated artifact fails closed.
 - `ValidateSystemGovernanceGenerationWorkflow` is a Docs governance query owned
-  by `GovernanceWorkflowDriftReport`. Its adapter surface is the generator/check
-  command adapter plus Postgres checker; missing `.generated-docs` artifacts or
-  imported DB drift fail closed. File fingerprint comparison uses the
-  DB-derived `governance_file_hash_projection` read model instead of treating
-  the generated fingerprint baseline as the comparison source.
+  by `GovernanceWorkflowDriftReport`. Its routine adapter surface is the
+  generator/check command adapter over Git-derived artifacts; missing
+  `.generated-docs` artifacts or local drift fail closed. Explicit DB diagnostic
+  checks remain separate from refresh and closeout.
 
 These rails are documentation and tooling rails. Runtime packages, API routes,
 web UI actions, engine contracts, and adapters must not depend on them.

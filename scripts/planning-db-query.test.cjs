@@ -2081,6 +2081,8 @@ test('formatQueryError preserves nested connection failures for unavailable DB',
   assert.match(message, /connect ECONNREFUSED ::1:55432/);
   assert.match(message, /connect ECONNREFUSED 127\.0\.0\.1:55432/);
   assert.match(message, /pnpm planning:db:up/);
+  assert.doesNotMatch(message, /then `pnpm planning:db:import`/u);
+  assert.match(message, /bootstrap or recovery/iu);
 });
 
 test('runQuery does not refresh governance projections by default for database reads', async () => {

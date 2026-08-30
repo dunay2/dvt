@@ -73,14 +73,16 @@ After the mandatory startup and before consulting architecture or design beyond
 the governance inventory, the agent MUST query the Planning DB authority:
 
 ```bash
-pnpm planning:db:import --if-stale
 pnpm planning:db:query architecture-designs --limit 100
 ```
 
 The agent must use the returned design identities, component relations, and
 canonical evidence paths to select any repository documents it reads next. It
 must not treat a filesystem search or a generated documentation page as the
-architecture authority.
+architecture authority. If the existing Planning DB authority is unavailable or
+stale, fail closed and report it; do not rebuild it as a side effect of
+consultation. `planning:db:import` is an explicit bootstrap or recovery
+operation, not a routine startup step.
 
 Documentation publication is an explicit operation. Run `pnpm docs:publish`
 only when publication is requested or required by a documentation-publication
@@ -352,9 +354,10 @@ publication, run:
 pnpm docs:publish
 ```
 
-The code-state command is deliberately DB-free. The publication command imports
-current Planning DB state, invokes the declared generators, and assembles the
-disposable Zensical input. `docs:serve` and `docs:build` do not generate it.
+The code-state command is deliberately DB-free. The publication command queries
+the existing Planning DB authority, invokes the declared generators, and
+assembles the disposable Zensical input. It does not import or rebuild the
+database. `docs:serve` and `docs:build` do not generate it.
 
 Whenever any file under `docs/` is added, removed, or renamed, the documentation index files go stale and CI fails. Always run:
 
@@ -378,8 +381,9 @@ pnpm governance:refresh
 Run it near final closeout, after the content/code slice is materially done and
 before `pnpm ci:docs` or `pnpm verify:prepush`. The command owns the final
 quadrature for docs indexes, docs manifests, `system-governance-*` indexes,
-fingerprints, coverage, remediation outputs, and governance query-store
-import/checks.
+fingerprints, coverage, and remediation outputs derived from the current Git
+inventory. It may record its bounded execution audit in Planning DB, but it
+MUST NOT import, rebuild, or replace Planning DB projections.
 
 `pnpm governance:refresh` is not a replacement for `pnpm verify:prepush`; it is
 the canonical refresh sequence that makes the later gates meaningful.
@@ -394,6 +398,12 @@ Planning DB remains canonical for architecture components, capabilities,
 relations, ownership, command/query rails, feature mechanization, and governed
 evidence. Do not create local task rows, `agent-lane-*` files, workboards,
 open-task routes, or DB-to-GitHub task projections.
+
+Git remains canonical for the physical repository inventory: tracked paths,
+contents, hashes, symbols, documentation structure, and Git-derived local
+indexes. Routine docs sync, governance refresh, closeout, and validation MUST
+NOT rebuild Planning DB from that inventory. Explicit imports are reserved for
+bootstrap or recovery workflows that declare that intent.
 
 See `docs/planning/state/github-mvp-issue-workflow.md` for the delivery flow.
 

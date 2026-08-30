@@ -74,9 +74,8 @@ sequence:
 
 - `pnpm governance:refresh`, which owns docs sync, generated code status,
   capability coverage, governance manifest, document-unit map, file-component
-  index, fingerprints, planning DB import, workboard generation, DB checks,
-  governance DB import/check/export, and DB-sourced coverage/remediation
-  generation;
+  index, fingerprints, and Git-derived coverage/remediation generation without
+  importing or rebuilding Planning DB;
 - `git diff --check` and `git diff --cached --check`;
 - an internal unresolved-conflict-marker scan over changed text files;
 - `pnpm verify:prepush`.
@@ -84,21 +83,19 @@ sequence:
 `closeout:changed` intentionally does not keep a manual copy of the
 `governance:refresh` substeps. That keeps changed-slice closeout aligned with
 the DB-first governance rail and prevents local helpers from running stale
-coverage/remediation or DB validation sequences. It also uses the normal
-pre-push rail after refresh, because `governance:refresh` already ran the
-global governance and DB quadrature. Use `pnpm verify:prepush -- --full`
+coverage/remediation sequences. It also uses the normal pre-push rail after
+refresh, because `governance:refresh` already stabilized the Git-derived
+governance surfaces. Use `pnpm verify:prepush -- --full`
 separately when the task explicitly requires a full repository baseline.
 
 The helper does not commit, push, create a PR, bypass hooks, relax checks, or
 replace package-specific tests required by the active slice. It only removes
 manual ordering and memory from the standard closeout path.
 
-The stale-aware DB import rail keeps repeated governance safety checks from
-becoming a fixed rebuild tax. `pnpm governance:db:import -- --if-stale` first
-compares source hashes for planning lanes, repository commands, PR readiness,
-docs disposition documents, knowledge documents, and risk debt documents. Only
-when that cheap invalidation layer finds staleness does it run the full
-auxiliary projection comparison and import path.
+Planning DB imports do not belong to closeout. `planning:db:import` and
+`governance:db:import` are explicit bootstrap or recovery operations; neither
+`closeout:changed`, `pr:closeout`, nor their pre-push validation may invoke them
+transitively.
 
 ## What `pr:closeout` Runs
 

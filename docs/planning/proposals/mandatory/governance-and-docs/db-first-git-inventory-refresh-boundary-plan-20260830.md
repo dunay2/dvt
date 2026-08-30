@@ -1,6 +1,6 @@
 ---
 title: DB-First Git Inventory Refresh Boundary Plan
-status: Active
+status: Implemented
 owner: Architecture / CI Governance / Planning DB
 last_reviewed: 2026-08-30
 planning_type: mandatory
@@ -172,6 +172,7 @@ governingSources:
   - docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md
   - docs/adr/ADR-0063-planning-db-current-schema-rebuild.md
   - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
   - docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
 allowedImplementationSurfaces:
   - AGENTS.md
@@ -186,9 +187,16 @@ allowedImplementationSurfaces:
   - scripts/verify-prepush.test.cjs
   - scripts/documentation-publication.cjs
   - scripts/documentation-publication.test.cjs
+  - scripts/planning-db-query.cjs
+  - scripts/planning-db-query.test.cjs
   - tools/ci/sync-docs-status-policy.test.mjs
   - tools/ci/workflow-pattern-parity.test.mjs
+  - docs/DOCS_README.md
+  - docs/architecture/components/api/index.md
   - docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
+  - docs/architecture/components/ci-governance/component-engineering-record-component.md
+  - docs/architecture/components/ci-governance/knowledge-intake-retirement-component.md
+  - docs/architecture/components/web/frontend-mechanical-truth-inventory.md
   - docs/guides/ai-work-protocol.md
   - docs/guides/documentation-maintenance-guide-20260407.md
   - docs/guides/testing-and-ci-capabilities.md
@@ -275,6 +283,13 @@ redGreenCycles:
       - scripts/documentation-publication.cjs
       - scripts/documentation-publication.test.cjs
     greenTest: node --test scripts/documentation-publication.test.cjs
+  - id: planning-query-fail-closed-guidance
+    redTest: node --test scripts/planning-db-query.test.cjs
+    expectedFailure: Connection refusal guidance still tells routine readers to rebuild Planning DB.
+    patchSurfaces:
+      - scripts/planning-db-query.cjs
+      - scripts/planning-db-query.test.cjs
+    greenTest: node --test scripts/planning-db-query.test.cjs
 symbols:
   - name: buildRefreshStages
     path: scripts/governance-refresh.cjs

@@ -76,12 +76,9 @@ test('buildVerifyChangedPlan keeps docs-only iteration on changed-file gates', (
 test('buildVerifyChangedPlan adds planning DB validation for planning query-store changes', () => {
   const labels = labelsFor(['scripts/planning-db-query.cjs', 'tools/planning-db/schema.sql']);
 
-  assert.equal(labels.filter((label) => label === 'pnpm governance:db:import').length, 1);
+  assert.equal(labels.filter((label) => label === 'pnpm governance:db:import').length, 0);
   assert.equal(labels.filter((label) => label === 'pnpm planning:db:inventory:check').length, 1);
   assert.equal(labels.filter((label) => label === 'pnpm planning:db:integrity:check').length, 1);
-  assert.ok(
-    labels.indexOf('pnpm governance:db:import') < labels.indexOf('pnpm planning:db:inventory:check')
-  );
   assert.ok(
     labels.indexOf('pnpm planning:db:inventory:check') <
       labels.indexOf('pnpm planning:db:integrity:check')
@@ -110,7 +107,7 @@ test('buildVerifyChangedPlan runs the buzon retirement guard before markdown gat
 test('buildVerifyChangedPlan routes schema-only changes to the current-schema suite', () => {
   const labels = labelsFor(['tools/planning-db/schema.sql']);
 
-  assert.equal(labels.filter((label) => label === 'pnpm governance:db:import').length, 1);
+  assert.equal(labels.filter((label) => label === 'pnpm governance:db:import').length, 0);
   assert.equal(labels.filter((label) => label === 'pnpm planning:db:inventory:check').length, 1);
   assert.equal(labels.filter((label) => label === 'pnpm planning:db:integrity:check').length, 1);
   assert.equal(

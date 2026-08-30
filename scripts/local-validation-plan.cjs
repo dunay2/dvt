@@ -144,7 +144,6 @@ const PREPUSH_GROUPS = Object.freeze({
     step('test-pr-closeout', 'pnpm', 'test:pr-closeout'),
   ]),
   planningDb: Object.freeze([
-    step('governance-db-import', 'pnpm', 'governance:db:import'),
     step('planning-db-inventory-check', 'pnpm', 'planning:db:inventory:check'),
     step('planning-db-integrity-check', 'pnpm', 'planning:db:integrity:check'),
   ]),
@@ -191,7 +190,6 @@ const PREPUSH_GROUPS = Object.freeze({
 const VERIFY_CHANGED_GROUPS = Object.freeze({
   web: Object.freeze([step('test-web-changed', 'pnpm', 'test:web:changed')]),
   planningDb: Object.freeze([
-    step('governance-db-import', 'pnpm', 'governance:db:import'),
     step('planning-db-inventory-check', 'pnpm', 'planning:db:inventory:check'),
     step('planning-db-integrity-check', 'pnpm', 'planning:db:integrity:check'),
     step('test-planning-db-current-schema', 'pnpm', 'test:planning:db:current-schema'),
@@ -379,7 +377,6 @@ function buildVerifyChangedPlan(files) {
   if (hasPlanningDbChange(changedFiles)) {
     pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[0]);
     pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[1]);
-    pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[2]);
   }
   pushSteps(plan, VERIFY_CHANGED_PRE_TEST_STEPS.slice(1));
   if (hasWebChange(changedFiles)) {
@@ -403,10 +400,10 @@ function buildFocusedChangedTestPlan(files) {
     (nextStep) => commandLabel(nextStep) === 'node --test scripts/planning-db-schema.test.cjs'
   );
   if (hasPlanningDbCurrentSchemaChange(changedFiles) && !runsCurrentSchemaTestDirectly) {
-    pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[3]);
+    pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[2]);
   }
   if (hasPlanningDbFullSuiteChange(changedFiles)) {
-    pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[4]);
+    pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[3]);
   }
   if (hasDeveloperWorkflowVerifierChange(changedFiles)) {
     for (const filePath of changedFiles) {

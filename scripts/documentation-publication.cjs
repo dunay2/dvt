@@ -672,7 +672,6 @@ class DocumentationPublicationAssembler {
 
   async assemble(options = {}) {
     if (options.runGenerators !== false) {
-      await this.run('pnpm planning:db:import --if-stale');
       for (const command of this.policy.generatorCommands()) {
         await this.run(command);
       }

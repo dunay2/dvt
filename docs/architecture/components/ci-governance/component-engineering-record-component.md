@@ -36,7 +36,7 @@ components, and every tracked file must resolve to exactly one leaf component.
 | ------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------- |
 | `pnpm docs:governance:unit-coverage`                                | command | Validates unit hierarchy, parent closure, and exact file ownership      |
 | `pnpm docs:governance:file-component-index`                         | command | Generates local file/component inspection artifacts                     |
-| `pnpm planning:db:import`                                           | command | Rebuilds the current component engineering tree and drift views         |
+| `pnpm planning:db:import`                                           | command | Explicitly rebuilds projections for bootstrap or recovery               |
 | `pnpm planning:db:query component-tree --component <component_id>`  | query   | Reads recursive component hierarchy rows                                |
 | `pnpm planning:db:query component-drift --component <component_id>` | query   | Reads mechanical component engineering drift rows                       |
 | `component_engineering_component_tree_query`                        | view    | DB-first component tree with parent, direct, and descendant file counts |
@@ -55,11 +55,10 @@ components, and every tracked file must resolve to exactly one leaf component.
   component before architecture closure is claimed.
 - Canonical components declare owned concern, public API, invariants,
   transitions, and consumers in the unit manifest.
-- Query rails read DB views; local files are not used as hidden architecture
-  checks after import.
-- Query rails that read governance projections run a stale-aware governance
-  import before reading, so routine inspection does not depend on a manual
-  refresh.
+- Query rails read existing DB semantic authority without importing it as a
+  side effect. Git-owned physical inventory is read and validated from Git.
+- A stale or unavailable DB query fails closed. Projection reconstruction is an
+  explicit bootstrap or recovery operation, never routine inspection.
 - Component engineering rules must be DB-backed; a Markdown invariant is not
   complete until the planning query store exposes its catalog row, evaluation
   state, drift code, and remediation metadata.
@@ -72,8 +71,8 @@ components, and every tracked file must resolve to exactly one leaf component.
 | --------------------------------- | --------------------------------------------- | ---------------------------------------------------------------------------- |
 | Root component becomes composite  | Broad component owns unrelated implementation | Add child components, set root `childrenRequired: true`, rerun unit coverage |
 | Child component becomes canonical | Docs, tests, contracts, and owners agree      | Add semantic metadata and run governance refresh                             |
-| File moves between components     | Source/test/doc path is renamed or extracted  | Update owns/excludes, regenerate file index, import DB views                 |
-| Query reads a stale projection    | Governance source hash differs from DB        | `planning:db:query` runs stale-aware governance import before the read       |
+| File moves between components     | Source/test/doc path is renamed or extracted  | Update owns/excludes and regenerate the Git-derived file index               |
+| Query reads a stale projection    | Governance source hash differs from DB        | Fail closed; reconstruct only through explicit bootstrap/recovery            |
 | Drift is detected                 | DB view emits a drift row                     | Fix manifest, docs, tests, or component split before closeout                |
 | Query rail changes                | New DB view/query behavior is added           | Update DB surface inventory, tests, migration, and plan manifest             |
 
@@ -123,9 +122,12 @@ not a blind source refactor. The residual is tracked by
 ```mermaid
 flowchart TB
   Manifest["system-governance-unit-index.units.yaml"]
+  GitFiles["Git tracked files"]
   UnitCoverage["docs:governance:unit-coverage"]
   FileIndex["docs:governance:file-component-index"]
-  Import["planning:db:import / governance:refresh"]
+  LocalInventory["Git-derived local component inventory"]
+  ExplicitImport["explicit planning:db:import\nbootstrap or recovery"]
+  PlanningDb[("Planning DB semantic authority")]
   Tree["component_engineering_component_tree_query"]
   Files["component_engineering_file_ownership_query"]
   Metadata["component_engineering_component_metadata_query"]
@@ -134,9 +136,14 @@ flowchart TB
 
   Manifest --> UnitCoverage
   Manifest --> FileIndex
-  FileIndex --> Import
-  Import --> Tree
-  Import --> Files
+  GitFiles --> UnitCoverage
+  GitFiles --> FileIndex
+  FileIndex --> LocalInventory
+  Manifest --> ExplicitImport
+  GitFiles --> ExplicitImport
+  ExplicitImport --> PlanningDb
+  PlanningDb --> Tree
+  PlanningDb --> Files
   Tree --> Metadata
   Tree --> Drift
   Files --> Drift

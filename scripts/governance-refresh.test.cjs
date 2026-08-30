@@ -12,7 +12,7 @@ const {
   runGovernanceRefreshCommand,
 } = require('./governance-refresh.cjs');
 
-test('governance refresh keeps DB-backed publication generation out of routine refresh', () => {
+test('governance refresh derives physical inventory from Git without rebuilding Planning DB', () => {
   const stages = buildRefreshStages();
 
   assert.deepEqual(
@@ -26,6 +26,8 @@ test('governance refresh keeps DB-backed publication generation out of routine r
       'docs:governance:file-component-index',
       'docs:governance:file-fingerprint-baseline',
       'docs:governance:file-fingerprint-impact',
+      'docs:governance:coverage-report',
+      'docs:governance:remediation-queue',
     ]
   );
   assert.deepEqual(stages.generationStages.find((stage) => stage.id === 'code-status-local').args, [
@@ -34,62 +36,25 @@ test('governance refresh keeps DB-backed publication generation out of routine r
   assert.equal(
     stages.generationStages.some((stage) => stage.script === 'governance:db:import'),
     false,
-    'generation passes must not run heavy governance DB imports before generated surfaces stabilize'
+    'routine generation must never rebuild Planning DB'
   );
   assert.equal(
     stages.generationStages.some((stage) => stage.id === 'coverage-report'),
-    false
+    true
   );
   assert.equal(
     stages.generationStages.some((stage) => stage.id === 'remediation-queue'),
-    false
+    true
   );
-  assert.deepEqual(
-    stages.databaseStages.map((stage) => stage.script),
-    [
-      'planning:db:inventory:check',
-      'docs:db-surface-inventory:generate',
-      'governance:db:import',
-      'docs:dbt-roundtrip-capabilities:generate',
-      'docs:knowledge-intake:generate',
-      'governance:db:check',
-      'docs:governance:coverage-report',
-      'docs:governance:remediation-queue',
-    ]
-  );
+  assert.deepEqual(stages.databaseStages, []);
   assert.equal(
-    stages.databaseStages.some((stage) => /export/u.test(stage.script)),
-    false,
-    'routine governance refresh must not export or check exported DB projections'
-  );
-  assert.deepEqual(
-    stages.databaseStages.find((stage) => stage.id === 'governance-db-import-final').args,
-    ['--if-stale']
-  );
-  assert.equal(
-    stages.databaseStages.some((stage) => stage.id === 'repository-map-final'),
+    stages.generationStages.some((stage) => stage.id === 'repository-map-final'),
     false,
     'Repository Map must be generated only by explicit documentation publication'
   );
   assert.equal(
-    stages.databaseStages.findIndex((stage) => stage.id === 'dbt-roundtrip-capability-status') >
-      stages.databaseStages.findIndex((stage) => stage.id === 'governance-db-import-final'),
-    true,
-    'DBT capability truth must render from the final imported governance catalog'
-  );
-  assert.equal(
-    stages.databaseStages.findIndex((stage) => stage.id === 'knowledge-intake-literature') >
-      stages.databaseStages.findIndex((stage) => stage.id === 'governance-db-import-final'),
-    true,
-    'knowledge intake literature must render after the governance DB import is fresh'
-  );
-  assert.deepEqual(
-    stages.databaseStages.find((stage) => stage.id === 'coverage-report-final').env,
-    { DVT_GOVERNANCE_REPORT_SOURCE: 'db' }
-  );
-  assert.deepEqual(
-    stages.databaseStages.find((stage) => stage.id === 'remediation-queue-final').env,
-    { DVT_GOVERNANCE_REPORT_SOURCE: 'db' }
+    stages.generationStages.some((stage) => stage.env),
+    false
   );
 });
 

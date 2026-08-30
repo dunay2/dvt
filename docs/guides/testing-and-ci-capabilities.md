@@ -228,6 +228,7 @@ Command semantics:
 - `pnpm docs:status:check` proves the DB-free local code-state generator;
   `pnpm docs:capability:check` remains the tracked capability drift gate.
 - `pnpm docs:publish` is the explicit DB-backed publication operation;
+  it queries existing Planning DB authority without importing it, while
   `docs:serve` and `docs:build` validate and consume its untracked output.
 - `pnpm docs:gov:manifest` regenerates the tracked compact docs inventory at `docs/.manifest.json`; use `pnpm exec tsx tools/docs/generate-docs-manifest.ts --full --stdout` for the exhaustive audit catalog.
 - `pnpm docs:gov:manifest:check` is the strict drift gate for that tracked docs governance manifest.
@@ -743,14 +744,11 @@ Frontend Tests` lane and the main/manual `Full CI` baseline both set the same we
 - `Adapter Postgres Integration Nightly` also uses the Turbo workspace wrapper
   for its dependency graph build, so scheduled smoke coverage can reuse the
   same local or remote task-cache path as pull-request test lanes.
-- `pnpm governance:refresh` keeps generated governance file surfaces stable
-  before DB validation, but no longer runs `governance:db:import` inside
-  generation passes and no longer pre-generates local coverage/remediation
-  reports before the DB import. It builds those report projections in-memory
-  for the import, performs the heavy governance DB import once in the final
-  database-validation phase, then runs `governance:db:check` and DB-sourced
-  final coverage/remediation report checks. Export checks remain explicit,
-  operator-requested publication operations.
+- `pnpm governance:refresh` stabilizes Git-derived governance surfaces,
+  including local coverage and remediation reports. It does not run
+  `planning:db:import`, `governance:db:import`, or DB projection drift checks.
+  Planning DB writes are limited to the bounded refresh-run audit; explicit
+  bootstrap/recovery imports and publication commands remain separate rails.
 - Default `pnpm verify:prepush` delegates changed-slice planning DB inventory
   validation to `pnpm verify:changed` instead of running
   `planning:db:inventory:check` a second time. Full pre-push mode still keeps

@@ -135,7 +135,7 @@
     "contracts:idempotency:validate": "node scripts/validate-idempotency-vectors.cjs",
     "contracts:examples:validate": "node scripts/validate-executable-examples.cjs",
     "golden:validate": "pnpm --filter @dvt/cli run-golden-paths",
-    "docs:sync": "pnpm planning:db:up && pnpm planning:db:health --wait && pnpm planning:db:import && node scripts/sync-docs.cjs",
+    "docs:sync": "node scripts/sync-docs.cjs",
     "docs:quality:check": "node scripts/docs-quality-check.cjs",
     "docs:doctor": "node scripts/docs-doctor.cjs",
     "docs:planning:last-reviewed:backfill": "node scripts/backfill-planning-last-reviewed.cjs",

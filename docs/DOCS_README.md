@@ -30,9 +30,10 @@ pnpm docs:publish
 pnpm docs:serve
 ```
 
-`pnpm docs:publish` is the explicit, DB-backed publication request. It imports
-current Planning DB state, runs only generators declared for publication, and
-assembles the untracked Zensical tree. `docs:serve` does not generate
+`pnpm docs:publish` is the explicit, DB-backed publication request. It queries
+existing Planning DB authority, runs only generators declared for publication,
+and assembles the untracked Zensical tree without importing or rebuilding the
+database. `docs:serve` does not generate
 documentation; it validates and serves that existing tree. `pnpm docs:build`
 uses the same tree and also fails with the publication command when it is absent.
 
@@ -40,12 +41,12 @@ Before consulting architecture or design, query the authority rather than
 guessing from the filesystem:
 
 ```bash
-pnpm planning:db:import --if-stale
 pnpm planning:db:query architecture-designs --limit 100
 ```
 
 Follow the returned canonical evidence paths for deeper reading. A rendered page
-is a disposable view, not architecture authority.
+is a disposable view, not architecture authority. If Planning DB is unavailable
+or stale, fail closed; import is an explicit bootstrap or recovery operation.
 
 For local docs validation and regeneration:
 
