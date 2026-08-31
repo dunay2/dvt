@@ -39,6 +39,7 @@ import {
   decodeDvtSubstraitInnerJoinDocument,
   inspectDvtSubstraitInnerJoinAcceptedDraft,
   resolveDvtSubstraitInnerJoinEntry,
+  resolveDvtSubstraitNInputJoinEntry,
 } from './canvasDvtSubstraitJoinComposition';
 import {
   decodeDvtSubstraitUnionAllDocument,
@@ -370,15 +371,20 @@ async function buildAuthoringPreviewSql({
         (edge) => scopedNodeIdSet.has(edge.sourceId) && scopedNodeIdSet.has(edge.targetId)
       );
       if (joinInspection.ok) {
-        if (!('left' in joinInspection.projection) || !('right' in joinInspection.projection)) {
-          throw new Error('Preview does not yet support N-input Substrait INNER JOIN revisions.');
-        }
-        const joinEntry = resolveDvtSubstraitInnerJoinEntry({
-          targetNode: transformNode,
-          nodes: scopedNodes,
-          edges: scopedEdges,
-          requirePersistedAuthority: true,
-        });
+        const joinEntry =
+          'left' in joinInspection.projection && 'right' in joinInspection.projection
+            ? resolveDvtSubstraitInnerJoinEntry({
+                targetNode: transformNode,
+                nodes: scopedNodes,
+                edges: scopedEdges,
+                requirePersistedAuthority: true,
+              })
+            : resolveDvtSubstraitNInputJoinEntry({
+                targetNode: transformNode,
+                nodes: scopedNodes,
+                edges: scopedEdges,
+                draft: joinDraft,
+              });
         if (joinEntry == null) {
           throw new Error(
             'Substrait INNER JOIN Preview source identities do not match the scoped graph.'

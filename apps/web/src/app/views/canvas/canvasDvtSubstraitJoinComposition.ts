@@ -430,6 +430,74 @@ export function resolveDvtSubstraitInnerJoinEntry(args: {
   return { left, right, targetNodeId: args.targetNode.id };
 }
 
+export function resolveDvtSubstraitNInputJoinEntry(args: {
+  targetNode: CanonicalNode;
+  nodes: readonly CanonicalNode[];
+  edges: readonly CanonicalEdge[];
+  draft?: DvtSubstraitInnerJoinDraft;
+}): DvtSubstraitNInputJoinEntry | null {
+  if (
+    args.targetNode.pluginId !== 'dvt' ||
+    args.targetNode.kind !== 'dvt:sql_transform' ||
+    args.targetNode.role !== 'transform'
+  ) {
+    return null;
+  }
+  let draft = args.draft;
+  if (draft == null) {
+    try {
+      const authority = readDvtTransformAuthoringAuthority(args.targetNode);
+      if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return null;
+      draft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
+    } catch {
+      return null;
+    }
+  }
+  const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+  if (!inspection.ok || inspection.projection.targetNodeId !== args.targetNode.id) return null;
+
+  const graphSourceIds = [
+    ...new Set(
+      args.edges.filter((edge) => edge.targetId === args.targetNode.id).map((edge) => edge.sourceId)
+    ),
+  ];
+  const semanticSourceIds = new Set(inspection.projection.inputs.map((input) => input.nodeId));
+  if (
+    graphSourceIds.length !== inspection.projection.inputs.length ||
+    graphSourceIds.some((sourceId) => !semanticSourceIds.has(sourceId))
+  ) {
+    return null;
+  }
+
+  const inputs: DvtSubstraitJoinInput[] = [];
+  for (const semanticInput of inspection.projection.inputs) {
+    const node = args.nodes.find((candidate) => candidate.id === semanticInput.nodeId);
+    const graphInput = node == null ? null : resolveJoinInput(node);
+    const semanticFields = semanticInput.fields.map((field) => field.name);
+    if (
+      graphInput == null ||
+      graphInput.source.schema !== semanticInput.schema ||
+      graphInput.source.table !== semanticInput.table ||
+      !hasSameConnectedSourceRef(graphInput.source.sourceRef, semanticInput.sourceRef) ||
+      graphInput.fields.length !== semanticFields.length ||
+      graphInput.fields.some((field, index) => field !== semanticFields[index])
+    ) {
+      return null;
+    }
+    inputs.push(graphInput);
+  }
+
+  return {
+    inputs,
+    predicates: inspection.projection.joins,
+    outputs: inspection.projection.outputs.map((output) => ({
+      name: output.name,
+      sourceFieldId: output.source.fieldId,
+    })),
+    targetNodeId: args.targetNode.id,
+  };
+}
+
 function bytesToBase64(bytes: Uint8Array): string {
   let binary = '';
   for (const byte of bytes) binary += String.fromCharCode(byte);
