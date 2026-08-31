@@ -56,6 +56,11 @@ jobs:
           cp architecture/planner-components.json .architecture-evidence/planner-components.json
           cp architecture/planner-source-baseline.json .architecture-evidence/planner-source-baseline.json
 
+      - name: Validate Planner LikeC4 model
+        run: |
+          cd .planner-likec4-preview
+          npx --yes likec4@1.59.2 validate
+
       - name: Build Planner LikeC4 static site
         uses: likec4/actions@v1
         with:
