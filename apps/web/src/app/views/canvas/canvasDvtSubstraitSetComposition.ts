@@ -63,12 +63,19 @@ export type DvtSubstraitUnionAllDraft = Readonly<{
   sidecar: DvtSubstraitAuthoringSidecarV1;
 }>;
 
+export type DvtSubstraitUnionAllFieldEdit =
+  | Readonly<{ kind: 'set-selected'; fieldKey: string; selected: boolean }>
+  | Readonly<{ kind: 'rename'; fieldKey: string; outputName: string }>
+  | Readonly<{ kind: 'move'; fieldKey: string; direction: 'up' | 'down' }>;
+
 export type DvtSubstraitUnionAllProjection = Readonly<{
   inputs: readonly [
     Readonly<{ schema: string; table: string; sourceRef: ConnectedSourceRef }>,
     Readonly<{ schema: string; table: string; sourceRef: ConnectedSourceRef }>,
   ];
+  availableFields: readonly Readonly<{ fieldKey: string; defaultName: string }>[];
   outputs: readonly Readonly<{
+    fieldKey: string;
     name: string;
     fieldId: string;
     outputOrdinal: number;
@@ -404,6 +411,10 @@ function hasPinnedPlanVersion(plan: Plan): boolean {
   );
 }
 
+function clonePlan(plan: Plan): Plan {
+  return fromBinary(PlanSchema, toBinary(PlanSchema, plan));
+}
+
 function tableIdentity(rel: Rel): Readonly<{
   schema: string;
   table: string;
@@ -518,9 +529,7 @@ export function inspectDvtSubstraitUnionAllDraft(
     setRelation.common?.relAnchor !== 3 ||
     setRelation.common.hint != null ||
     setRelation.common.advancedExtension != null ||
-    setRelation.common.emitKind.case !== 'emit' ||
-    setRelation.common.emitKind.value.outputMapping.length !== names.length ||
-    !setRelation.common.emitKind.value.outputMapping.every((value, index) => value === index)
+    setRelation.common.emitKind.case !== 'emit'
   ) {
     return { ok: false };
   }
@@ -528,13 +537,26 @@ export function inspectDvtSubstraitUnionAllDraft(
   const inputTables = setRelation.inputs.map(tableIdentity);
   if (
     inputTables.some((input) => input == null) ||
-    inputTables.some((input) => input?.fields.join('\u0000') !== names.join('\u0000'))
+    inputTables.some(
+      (input) => input?.fields.join('\u0000') !== inputTables[0]?.fields.join('\u0000')
+    )
   ) {
     return { ok: false };
   }
   const firstTable = inputTables[0];
   const secondTable = inputTables[1];
   if (firstTable == null || secondTable == null) return { ok: false };
+  const availableFields = firstTable.fields;
+  const outputMapping = setRelation.common.emitKind.value.outputMapping;
+  if (
+    outputMapping.length !== names.length ||
+    new Set(outputMapping).size !== outputMapping.length ||
+    outputMapping.some(
+      (mapping) => !Number.isInteger(mapping) || mapping < 0 || mapping >= availableFields.length
+    )
+  ) {
+    return { ok: false };
+  }
   if (
     setRelation.inputs[0]?.relType.case !== 'read' ||
     setRelation.inputs[0].relType.value.common?.relAnchor !== 1 ||
@@ -576,24 +598,45 @@ export function inspectDvtSubstraitUnionAllDraft(
       sidecar,
       relationId: firstBinding.relationId,
       nodeId: firstNodeId,
-      names,
+      names: availableFields,
     }) ||
     !validateFieldsForRelation({
       sidecar,
       relationId: secondBinding.relationId,
       nodeId: secondNodeId,
-      names,
-    }) ||
-    !validateFieldsForRelation({
-      sidecar,
-      relationId: resultBinding.relationId,
-      nodeId: targetNodeId,
-      names,
-    }) ||
-    sidecar.fields.length !== names.length * 3
+      names: availableFields,
+    })
   ) {
     return { ok: false };
   }
+  const resultFields = sidecar.fields
+    .filter((field) => field.relationId === resultBinding.relationId)
+    .sort((left, right) => left.outputOrdinal - right.outputOrdinal);
+  if (
+    resultFields.length !== names.length ||
+    sidecar.fields.length !== availableFields.length * 2 + names.length
+  ) {
+    return { ok: false };
+  }
+  const outputs = outputMapping.map((mapping, outputOrdinal) => {
+    const fieldKey = availableFields[mapping];
+    const name = names[outputOrdinal];
+    const binding = resultFields[outputOrdinal];
+    return fieldKey == null ||
+      name == null ||
+      binding == null ||
+      binding.outputOrdinal !== outputOrdinal ||
+      binding.fieldId !== `field:${targetNodeId}:${fieldKey}` ||
+      binding.displayName !== name
+      ? null
+      : {
+          fieldKey,
+          name,
+          fieldId: binding.fieldId,
+          outputOrdinal,
+        };
+  });
+  if (outputs.some((output) => output == null)) return { ok: false };
   const planSha256 = sha256Hex(toBinary(PlanSchema, plan));
   if (sidecar.semanticPlanSha256 !== ZERO_SHA256 && sidecar.semanticPlanSha256 !== planSha256) {
     return { ok: false };
@@ -614,13 +657,99 @@ export function inspectDvtSubstraitUnionAllDraft(
           sourceRef: secondBinding.sourceRef,
         },
       ],
-      outputs: names.map((name, outputOrdinal) => ({
-        name,
-        fieldId: `field:${targetNodeId}:${name}`,
-        outputOrdinal,
+      availableFields: availableFields.map((fieldKey) => ({
+        fieldKey,
+        defaultName: fieldKey,
       })),
+      outputs: outputs.filter((output) => output != null),
     },
   };
+}
+
+export function applyDvtSubstraitUnionAllFieldEdit(
+  draft: DvtSubstraitUnionAllDraft,
+  edit: DvtSubstraitUnionAllFieldEdit
+): DvtSubstraitUnionAllDraft {
+  const inspection = inspectDvtSubstraitUnionAllDraft(draft);
+  if (!inspection.ok) return draft;
+  const resultBinding = draft.sidecar.relations.find((relation) => relation.relAnchor === 3);
+  if (resultBinding == null) return draft;
+  const targetNodeId = targetNodeIdFromResultRelationId(resultBinding.relationId);
+  if (targetNodeId == null) return draft;
+
+  let outputs = inspection.projection.outputs.map((output) => ({ ...output }));
+  const currentIndex = outputs.findIndex((output) => output.fieldKey === edit.fieldKey);
+  const availableField = inspection.projection.availableFields.find(
+    (field) => field.fieldKey === edit.fieldKey
+  );
+  if (availableField == null) return draft;
+
+  if (edit.kind === 'set-selected') {
+    if (edit.selected === currentIndex >= 0) return draft;
+    if (!edit.selected) {
+      if (outputs.length === 1) return draft;
+      outputs = outputs.filter((output) => output.fieldKey !== edit.fieldKey);
+    } else {
+      if (outputs.some((output) => output.name === availableField.defaultName)) return draft;
+      outputs.push({
+        fieldKey: availableField.fieldKey,
+        name: availableField.defaultName,
+        fieldId: `field:${targetNodeId}:${availableField.fieldKey}`,
+        outputOrdinal: outputs.length,
+      });
+    }
+  } else if (edit.kind === 'rename') {
+    const output = outputs[currentIndex];
+    const outputName = edit.outputName.trim();
+    if (
+      output == null ||
+      outputName.length === 0 ||
+      outputs.some((candidate, index) => index !== currentIndex && candidate.name === outputName)
+    ) {
+      return draft;
+    }
+    outputs[currentIndex] = { ...output, name: outputName };
+  } else {
+    if (currentIndex < 0) return draft;
+    const nextIndex = edit.direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    const current = outputs[currentIndex];
+    const next = outputs[nextIndex];
+    if (nextIndex < 0 || nextIndex >= outputs.length || current == null || next == null) {
+      return draft;
+    }
+    outputs[currentIndex] = next;
+    outputs[nextIndex] = current;
+  }
+
+  const plan = clonePlan(draft.plan);
+  const root = plan.relations[0]?.relType;
+  if (root?.case !== 'root' || root.value.input?.relType.case !== 'set') return draft;
+  const setRelation = root.value.input.relType.value;
+  if (setRelation.common?.emitKind.case !== 'emit') return draft;
+  const outputMapping = outputs.map((output) =>
+    inspection.projection.availableFields.findIndex(
+      (available) => available.fieldKey === output.fieldKey
+    )
+  );
+  if (outputMapping.some((mapping) => mapping < 0)) return draft;
+  root.value.names = outputs.map((output) => output.name);
+  setRelation.common.emitKind.value.outputMapping = outputMapping;
+
+  const sidecar: DvtSubstraitAuthoringSidecarV1 = {
+    ...draft.sidecar,
+    semanticPlanSha256: ZERO_SHA256,
+    fields: [
+      ...draft.sidecar.fields.filter((field) => field.relationId !== resultBinding.relationId),
+      ...outputs.map((output, outputOrdinal) => ({
+        fieldId: output.fieldId,
+        relationId: resultBinding.relationId,
+        outputOrdinal,
+        displayName: output.name,
+      })),
+    ],
+  };
+  const edited = { plan, sidecar };
+  return inspectDvtSubstraitUnionAllDraft(edited).ok ? edited : draft;
 }
 
 export function decodeDvtSubstraitUnionAllDocument(input: unknown): DvtSubstraitUnionAllDraft {

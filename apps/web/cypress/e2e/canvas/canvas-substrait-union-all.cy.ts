@@ -72,8 +72,15 @@ describe('Canvas Substrait UNION ALL', () => {
     cy.get('[data-slot="dvt-substrait-union-all-authoring"]')
       .should('be.visible')
       .and('contain.text', 'customers_north')
-      .and('contain.text', 'customers_south')
-      .and('contain.text', 'customer_id, name, country');
+      .and('contain.text', 'customers_south');
+    cy.get('input[data-slot="dvt-substrait-union-all-field"][data-field-key="name"]').uncheck();
+    cy.get('input[data-slot="dvt-substrait-union-all-output-name"][data-field-key="country"]')
+      .clear()
+      .type('region')
+      .blur();
+    cy.get(
+      'button[data-action="move-substrait-union-all-field-up"][data-field-key="country"]'
+    ).click();
     cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
 
     cy.wrap(null).should(() => {
@@ -90,24 +97,36 @@ describe('Canvas Substrait UNION ALL', () => {
 
       expect(inspection.ok && inspection.projection.outputs).to.deep.equal([
         {
-          name: 'customer_id',
-          fieldId: 'field:union-transform:customer_id',
+          fieldKey: 'country',
+          name: 'region',
+          fieldId: 'field:union-transform:country',
           outputOrdinal: 0,
         },
-        { name: 'name', fieldId: 'field:union-transform:name', outputOrdinal: 1 },
-        { name: 'country', fieldId: 'field:union-transform:country', outputOrdinal: 2 },
+        {
+          fieldKey: 'customer_id',
+          name: 'customer_id',
+          fieldId: 'field:union-transform:customer_id',
+          outputOrdinal: 1,
+        },
       ]);
     });
 
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     visitCanvas();
     cy.get('.react-flow__node[data-id="union-transform"]')
-      .should('contain.text', 'Columns3')
+      .should('contain.text', 'Columns2')
       .find('[data-slot="canvas-node-shell"]')
       .dblclick();
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
-    cy.get('[data-slot="dvt-substrait-union-all-authoring"]')
-      .should('contain.text', 'public.customers_north UNION ALL public.customers_south')
-      .and('contain.text', 'customer_id, name, country');
+    cy.get('[data-slot="dvt-substrait-union-all-authoring"]').should(
+      'contain.text',
+      'public.customers_north UNION ALL public.customers_south'
+    );
+    cy.get(
+      'input[data-slot="dvt-substrait-union-all-output-name"][data-field-key="country"]'
+    ).should('have.value', 'region');
+    cy.get('input[data-slot="dvt-substrait-union-all-field"][data-field-key="name"]').should(
+      'not.be.checked'
+    );
   });
 });

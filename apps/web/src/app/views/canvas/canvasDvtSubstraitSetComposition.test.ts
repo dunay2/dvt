@@ -10,6 +10,7 @@ import {
 } from './canvasDvtAuthoringModel';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import {
+  applyDvtSubstraitUnionAllFieldEdit,
   createDvtSubstraitUnionAllDraft,
   decodeDvtSubstraitUnionAllDocument,
   encodeDvtSubstraitUnionAllDocument,
@@ -121,7 +122,12 @@ describe('VTX2 typed Substrait UNION ALL composition', () => {
             sourceRef: sourceRef('warehouse-main', 'public.customers_south'),
           },
         ],
+        availableFields: FIELD_NAMES.map((fieldKey) => ({
+          fieldKey,
+          defaultName: fieldKey,
+        })),
         outputs: FIELD_NAMES.map((name, outputOrdinal) => ({
+          fieldKey: name,
           name,
           fieldId: `field:transform-all-customers:${name}`,
           outputOrdinal,
@@ -150,6 +156,79 @@ describe('VTX2 typed Substrait UNION ALL composition', () => {
     expect(inspectDvtSubstraitUnionAllDraft(reopened)).toEqual(
       inspectDvtSubstraitUnionAllDraft(draft)
     );
+
+    const editedAfterReload = applyDvtSubstraitUnionAllFieldEdit(reopened, {
+      kind: 'rename',
+      fieldKey: 'country',
+      outputName: 'region',
+    });
+    expect(inspectDvtSubstraitUnionAllDraft(editedAfterReload)).toMatchObject({
+      ok: true,
+      projection: {
+        outputs: expect.arrayContaining([
+          {
+            fieldKey: 'country',
+            name: 'region',
+            fieldId: 'field:transform-all-customers:country',
+            outputOrdinal: 2,
+          },
+        ]),
+      },
+    });
+  });
+
+  it('selects, renames, and reorders union fields through SetRel emit mappings', () => {
+    let draft = fixture();
+    draft = applyDvtSubstraitUnionAllFieldEdit(draft, {
+      kind: 'rename',
+      fieldKey: 'country',
+      outputName: 'region',
+    });
+    draft = applyDvtSubstraitUnionAllFieldEdit(draft, {
+      kind: 'move',
+      fieldKey: 'country',
+      direction: 'up',
+    });
+    draft = applyDvtSubstraitUnionAllFieldEdit(draft, {
+      kind: 'move',
+      fieldKey: 'country',
+      direction: 'up',
+    });
+    draft = applyDvtSubstraitUnionAllFieldEdit(draft, {
+      kind: 'set-selected',
+      fieldKey: 'name',
+      selected: false,
+    });
+
+    const reopened = decodeDvtSubstraitUnionAllDocument(encodeDvtSubstraitUnionAllDocument(draft));
+    expect(inspectDvtSubstraitUnionAllDraft(reopened)).toMatchObject({
+      ok: true,
+      projection: {
+        availableFields: [
+          { fieldKey: 'customer_id', defaultName: 'customer_id' },
+          { fieldKey: 'name', defaultName: 'name' },
+          { fieldKey: 'country', defaultName: 'country' },
+        ],
+        outputs: [
+          {
+            fieldKey: 'country',
+            name: 'region',
+            fieldId: 'field:transform-all-customers:country',
+            outputOrdinal: 0,
+          },
+          {
+            fieldKey: 'customer_id',
+            name: 'customer_id',
+            fieldId: 'field:transform-all-customers:customer_id',
+            outputOrdinal: 1,
+          },
+        ],
+      },
+    });
+    const root = reopened.plan.relations[0]?.relType;
+    const setRelation = root?.case === 'root' ? root.value.input?.relType : null;
+    const emitKind = setRelation?.case === 'set' ? setRelation.value.common?.emitKind : null;
+    expect(emitKind?.case === 'emit' ? emitKind.value.outputMapping : null).toEqual([2, 0]);
   });
 
   it('persists, reopens, and presents one Transform card from the same revision', () => {
@@ -247,5 +326,16 @@ describe('VTX2 typed Substrait UNION ALL composition', () => {
 
     expect(inspectDvtSubstraitUnionAllDraft(draft)).toEqual({ ok: false });
     expect(() => encodeDvtSubstraitUnionAllDocument(draft)).toThrow(/unsupported/i);
+
+    const invalidMapping = fixture();
+    const invalidRoot = invalidMapping.plan.relations[0]?.relType;
+    if (invalidRoot?.case !== 'root' || invalidRoot.value.input?.relType.case !== 'set') {
+      throw new Error('Expected SetRel root.');
+    }
+    if (invalidRoot.value.input.relType.value.common?.emitKind.case !== 'emit') {
+      throw new Error('Expected SetRel emit mapping.');
+    }
+    invalidRoot.value.input.relType.value.common.emitKind.value.outputMapping = [0, 0];
+    expect(inspectDvtSubstraitUnionAllDraft(invalidMapping)).toEqual({ ok: false });
   });
 });

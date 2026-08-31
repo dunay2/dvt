@@ -22,7 +22,10 @@ import {
   applyDvtSubstraitInnerJoinFieldEdit,
   createDvtSubstraitInnerJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
-import { createDvtSubstraitUnionAllDraft } from './canvasDvtSubstraitSetComposition';
+import {
+  applyDvtSubstraitUnionAllFieldEdit,
+  createDvtSubstraitUnionAllDraft,
+} from './canvasDvtSubstraitSetComposition';
 
 function completedPilotDraft(): DvtSubstraitPilotDraft {
   let draft = createDvtSubstraitPilotDraft({
@@ -282,6 +285,73 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
 
     expect(normalized).toMatch(
       /^select customer_id, name, country from "tenant-data"\."customers-north" union all select customer_id, name, country from "tenant-data"\."customers-south";?$/
+    );
+  });
+
+  it('projects selected, renamed, and reordered fields from the same SetRel revision', async () => {
+    const connectionRef = {
+      schemaVersion: 'connection-ref.v1' as const,
+      connectionId: 'warehouse-main',
+      provider: 'postgres' as const,
+    };
+    const fields = ['customer_id', 'name', 'country'].map((name) => ({
+      name,
+      type: 'string' as const,
+    }));
+    let draft = createDvtSubstraitUnionAllDraft({
+      inputs: [
+        {
+          nodeId: 'source-north',
+          schema: 'public',
+          table: 'customers_north',
+          fields,
+          sourceRef: {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef,
+            sourceObjectId: 'public.customers_north',
+          },
+        },
+        {
+          nodeId: 'source-south',
+          schema: 'public',
+          table: 'customers_south',
+          fields,
+          sourceRef: {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef,
+            sourceObjectId: 'public.customers_south',
+          },
+        },
+      ],
+      targetNodeId: 'transform-all-customers',
+    });
+    draft = applyDvtSubstraitUnionAllFieldEdit(draft, {
+      kind: 'rename',
+      fieldKey: 'country',
+      outputName: 'region',
+    });
+    draft = applyDvtSubstraitUnionAllFieldEdit(draft, {
+      kind: 'move',
+      fieldKey: 'country',
+      direction: 'up',
+    });
+    draft = applyDvtSubstraitUnionAllFieldEdit(draft, {
+      kind: 'move',
+      fieldKey: 'country',
+      direction: 'up',
+    });
+    draft = applyDvtSubstraitUnionAllFieldEdit(draft, {
+      kind: 'set-selected',
+      fieldKey: 'name',
+      selected: false,
+    });
+
+    const normalized = (await projectDvtSubstraitUnionAllToPostgresSql(draft))
+      .replaceAll(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+    expect(normalized).toMatch(
+      /^select country as region, customer_id from public\.customers_north union all select country as region, customer_id from public\.customers_south;?$/
     );
   });
 });

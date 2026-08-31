@@ -505,7 +505,12 @@ function buildUnionAllInputPostgresAst(
   outputs: DvtSubstraitUnionAllProjection['outputs']
 ): PostgresAstNode {
   return {
-    targetList: outputs.map((output) => ({ ResTarget: { val: pgColumnRef(output.name) } })),
+    targetList: outputs.map((output) => ({
+      ResTarget: {
+        ...(output.name === output.fieldKey ? {} : { name: output.name }),
+        val: pgColumnRef(output.fieldKey),
+      },
+    })),
     fromClause: [pgRangeVar({ schema: input.schema, table: input.table })],
     limitOption: 'LIMIT_OPTION_DEFAULT',
     op: 'SETOP_NONE',

@@ -96,7 +96,13 @@ export function DvtAuthoringFields({
         );
       }
       if (draft.dvt.shape === 'union_all') {
-        return <DvtSubstraitUnionAllAuthoringSection draft={draft.dvt} />;
+        return (
+          <DvtSubstraitUnionAllAuthoringSection
+            disabled={disabled}
+            draft={draft.dvt}
+            onChange={onChange}
+          />
+        );
       }
       return (
         <DvtSubstraitPilotAuthoringSection
