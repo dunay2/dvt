@@ -228,6 +228,41 @@ describe('VTX2 typed Substrait INNER JOIN composition', () => {
     }
   });
 
+  it('does not reuse a preserved output FieldId after its display name changes', () => {
+    const draft = appendDvtSubstraitInnerJoinInput(fixture(), {
+      source: source('source-shipments', 'public', 'shipments'),
+      fields: ['shipment_id', 'customer_id'],
+      predicate: {
+        leftSourceFieldId: 'field:source-customers:customer_id',
+        rightFieldName: 'customer_id',
+      },
+      selectedFields: ['shipment_id'],
+    });
+    const renamed = applyDvtSubstraitInnerJoinFieldEdit(draft, {
+      kind: 'rename',
+      sourceFieldId: 'field:source-customers:customer_id',
+      outputName: 'customer_key',
+    });
+
+    const selected = applyDvtSubstraitInnerJoinFieldEdit(renamed, {
+      kind: 'set-selected',
+      sourceFieldId: 'field:source-shipments:customer_id',
+      selected: true,
+    });
+    const inspection = inspectDvtSubstraitNInputJoinDraft(selected);
+
+    expect(selected).not.toBe(renamed);
+    if (!inspection.ok) throw new Error('Expected collision-safe N-input field selection.');
+    expect(
+      inspection.projection.outputs.find(
+        (output) => output.source.fieldId === 'field:source-shipments:customer_id'
+      )
+    ).toMatchObject({
+      name: 'shipments_customer_id',
+      fieldId: 'field:transform-customer-orders:shipments_customer_id',
+    });
+  });
+
   it('fails N-input field edits closed for stale identities, duplicate names, and empty output', () => {
     const draft = appendDvtSubstraitInnerJoinInput(fixture(), {
       source: source('source-shipments', 'public', 'shipments'),

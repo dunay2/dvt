@@ -1410,12 +1410,17 @@ export function applyDvtSubstraitInnerJoinFieldEdit(
         outputs = outputs.filter((output) => output.sourceFieldId !== edit.sourceFieldId);
       } else {
         const usedNames = new Set(outputs.map((output) => output.name));
+        const usedFieldIds = new Set(outputs.map((output) => output.fieldId));
         const name = [
           availableField.field.name,
           `${availableField.input.table}_${availableField.field.name}`,
           `${availableField.input.schema}_${availableField.input.table}_${availableField.field.name}`,
           `${availableField.input.nodeId}_${availableField.field.name}`,
-        ].find((candidate) => !usedNames.has(candidate));
+        ].find(
+          (candidate) =>
+            !usedNames.has(candidate) &&
+            !usedFieldIds.has(`field:${projection.targetNodeId}:${candidate}`)
+        );
         if (name == null) return draft;
         outputs.push({
           name,
