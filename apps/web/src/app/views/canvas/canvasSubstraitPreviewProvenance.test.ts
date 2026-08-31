@@ -15,6 +15,7 @@ import {
   encodeDvtSubstraitInnerJoinDocument,
 } from './canvasDvtSubstraitJoinComposition';
 import {
+  applyDvtSubstraitUnionAllFieldEdit,
   createDvtSubstraitUnionAllDraft,
   encodeDvtSubstraitUnionAllDocument,
 } from './canvasDvtSubstraitSetComposition';
@@ -245,7 +246,7 @@ function buildSubstraitUnionAllPreviewGraph(): ReturnType<typeof buildSubstraitP
     connectionRef,
     sourceObjectId: `public.${table}`,
   });
-  const draft = createDvtSubstraitUnionAllDraft({
+  let draft = createDvtSubstraitUnionAllDraft({
     inputs: [
       {
         nodeId: 'source-customers-north',
@@ -263,6 +264,26 @@ function buildSubstraitUnionAllPreviewGraph(): ReturnType<typeof buildSubstraitP
       },
     ],
     targetNodeId: 'transform',
+  });
+  draft = applyDvtSubstraitUnionAllFieldEdit(draft, {
+    kind: 'rename',
+    fieldKey: 'country',
+    outputName: 'region',
+  });
+  draft = applyDvtSubstraitUnionAllFieldEdit(draft, {
+    kind: 'move',
+    fieldKey: 'country',
+    direction: 'up',
+  });
+  draft = applyDvtSubstraitUnionAllFieldEdit(draft, {
+    kind: 'move',
+    fieldKey: 'country',
+    direction: 'up',
+  });
+  draft = applyDvtSubstraitUnionAllFieldEdit(draft, {
+    kind: 'set-selected',
+    fieldKey: 'name',
+    selected: false,
   });
   const transform = applyDvtSubstraitSemanticDocument(
     {
@@ -544,7 +565,7 @@ describe('Substrait Preview provenance cutover', () => {
     if (!result.ok) throw new Error(result.message);
     const normalized = result.sqlText?.replaceAll(/\s+/g, ' ').trim().toLowerCase();
     expect(normalized).toMatch(
-      /^select customer_id, name, country from public\.customers_north union all select customer_id, name, country from public\.customers_south;?$/
+      /^select country as region, customer_id from public\.customers_north union all select country as region, customer_id from public\.customers_south;?$/
     );
     expect(savedContents).toContain(result.sqlText);
   });

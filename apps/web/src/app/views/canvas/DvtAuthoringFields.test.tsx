@@ -488,6 +488,31 @@ describe('DvtAuthoringFields', () => {
     expect(container.querySelector('[data-testid="dvt-transform-sql-editor"]')).toBeNull();
     expect(draftJson()).toContain('"shape":"union_all"');
     expect(draftJson()).toContain('"case":"set"');
+
+    const nameSelection = container.querySelector<HTMLInputElement>(
+      'input[data-slot="dvt-substrait-union-all-field"][data-field-key="name"]'
+    );
+    const countryOutput = container.querySelector<HTMLInputElement>(
+      'input[data-slot="dvt-substrait-union-all-output-name"][data-field-key="country"]'
+    );
+    expect(nameSelection?.checked).toBe(true);
+    expect(countryOutput?.value).toBe('country');
+
+    act(() => {
+      fireEvent.click(nameSelection!);
+      fireEvent.input(countryOutput!, { target: { value: 'region' } });
+      fireEvent.focusOut(countryOutput!);
+    });
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>(
+          'button[data-action="move-substrait-union-all-field-up"][data-field-key="country"]'
+        )!
+      );
+    });
+    expect(draftJson()).toContain('"names":["region","customer_id"]');
+    expect(draftJson()).toContain('"fieldId":"field:dvt-sql-transform:country"');
+    expect(draftJson()).toContain('"displayName":"region"');
   });
 
   it('keeps only the latest governed SQL validation and localizes its diagnostic', async () => {
