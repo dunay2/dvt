@@ -24,6 +24,13 @@ jobs:
       - name: Generate source-first Planner inventory
         run: node architecture/tools/generate-planner-preview.mjs
 
+      - name: Reject invalid navigation in generated source model
+        run: |
+          if grep -n -E '^\s*navigateTo\s+' architecture/generated/planner-source.c4; then
+            echo 'Generated Planner source model contains invalid model-level navigateTo' >&2
+            exit 1
+          fi
+
       - name: Stage Planner-only LikeC4 workspace
         run: |
           rm -rf .planner-likec4-preview
@@ -48,13 +55,6 @@ jobs:
           cp architecture/generated/planner-source.c4 .architecture-evidence/planner-source.c4
           cp architecture/planner-components.json .architecture-evidence/planner-components.json
           cp architecture/planner-source-baseline.json .architecture-evidence/planner-source-baseline.json
-
-      - name: Reject invalid model-level navigation
-        run: |
-          if grep -R -n -E '^\s*navigateTo\s+' .planner-likec4-preview/*.c4; then
-            echo 'Model-level navigateTo is not allowed in this preview' >&2
-            exit 1
-          fi
 
       - name: Build Planner LikeC4 static site
         uses: likec4/actions@v1
