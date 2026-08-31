@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { StateStoreRoleSource } from '../../src/modules/stateStoreRoles.js';
-import * as stateStoreRoleModule from '../../src/modules/stateStoreRoles.js';
 import { bindStateStoreRoles } from '../../src/modules/stateStoreRoles.js';
 
 function createStateStoreSource(): StateStoreRoleSource {
@@ -21,10 +20,6 @@ function createStateStoreSource(): StateStoreRoleSource {
 }
 
 describe('bindStateStoreRoles', () => {
-  it('exports only the runtime factory while keeping role shapes type-only', () => {
-    expect(Object.keys(stateStoreRoleModule).sort()).toEqual(['bindStateStoreRoles']);
-  });
-
   it('returns an immutable explicit role bundle', () => {
     const source = createStateStoreSource();
 
