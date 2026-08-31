@@ -581,6 +581,22 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtSubstraitRemoveAggregationLabel',
     fallback: 'Remove summary',
   },
+  inspectorDvtSubstraitAggregateWindowTitle: {
+    key: 'canvas.inspector.authoring.dvtSubstraitAggregateWindowTitle',
+    fallback: 'Rank grouped rows',
+  },
+  inspectorDvtSubstraitAggregateWindowOrderLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitAggregateWindowOrderLabel',
+    fallback: 'Order grouped rows by',
+  },
+  inspectorDvtSubstraitApplyAggregateWindowLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitApplyAggregateWindowLabel',
+    fallback: 'Rank groups',
+  },
+  inspectorDvtSubstraitRemoveAggregateWindowLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitRemoveAggregateWindowLabel',
+    fallback: 'Remove group ranking',
+  },
   inspectorDvtSubstraitWindowTitle: {
     key: 'canvas.inspector.authoring.dvtSubstraitWindowTitle',
     fallback: 'Partition and order',

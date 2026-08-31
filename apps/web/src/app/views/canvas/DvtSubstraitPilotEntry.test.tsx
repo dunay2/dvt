@@ -155,6 +155,36 @@ describe('Substrait pilot entry through ConfigureCanvasDvtNode', () => {
       container.querySelector('[data-slot="dvt-substrait-aggregation-authoring"]')
     ).not.toBeNull();
 
+    const rankName = container.querySelector<HTMLInputElement>(
+      '[data-slot="dvt-substrait-aggregate-window-output-name"]'
+    );
+    const rank = container.querySelector<HTMLButtonElement>(
+      '[data-slot="dvt-substrait-apply-aggregate-window"]'
+    );
+    expect(rankName?.value).toBe('count_rank');
+    expect(rank).not.toBeNull();
+
+    act(() => {
+      fireEvent.keyDown(rank!, { key: 'Enter' });
+    });
+    const composed = container.querySelector('[data-slot="dvt-draft-json"]')?.textContent ?? '';
+    expect(composed).toContain('field:transform-customers:aggregate-row-number');
+    expect(composed).toContain('"names":["country","customer_count","count_rank"]');
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-aggregate-window-authoring"]')
+    ).not.toBeNull();
+
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>(
+          '[data-slot="dvt-substrait-remove-aggregate-window"]'
+        )!
+      );
+    });
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-aggregation-authoring"]')
+    ).not.toBeNull();
+
     act(() => {
       fireEvent.click(
         container.querySelector<HTMLButtonElement>(

@@ -19,6 +19,12 @@ import {
   renameDvtSubstraitPilotCountOutput,
 } from './canvasDvtSubstraitAggregation';
 import {
+  applyDvtSubstraitPilotAggregateRowNumber,
+  inspectDvtSubstraitPilotAggregateWindowDraft,
+  removeDvtSubstraitPilotAggregateRowNumber,
+  renameDvtSubstraitPilotAggregateRowNumberOutput,
+} from './canvasDvtSubstraitAggregateWindow';
+import {
   applyDvtSubstraitPilotRowNumber,
   inspectDvtSubstraitPilotWindowDraft,
   removeDvtSubstraitPilotRowNumber,
@@ -37,6 +43,7 @@ export function DvtSubstraitPilotAuthoringSection({
 }>): JSX.Element {
   const pilotInspection = inspectDvtSubstraitPilotDraft(draft);
   const aggregateInspection = inspectDvtSubstraitPilotAggregationDraft(draft);
+  const aggregateWindowInspection = inspectDvtSubstraitPilotAggregateWindowDraft(draft);
   const windowInspection = inspectDvtSubstraitPilotWindowDraft(draft);
   const projectedOutputName = pilotInspection.ok ? pilotInspection.projection.outputName : '';
   const projectedCountName = aggregateInspection.ok
@@ -54,6 +61,9 @@ export function DvtSubstraitPilotAuthoringSection({
   const projectedWindowOutputName = windowInspection.ok
     ? windowInspection.projection.result.name
     : 'row_number';
+  const projectedAggregateWindowOutputName = aggregateWindowInspection.ok
+    ? aggregateWindowInspection.projection.result.name
+    : 'count_rank';
   const [outputName, setOutputName] = useState(projectedOutputName);
   const [grainFieldId, setGrainFieldId] = useState(defaultGrainFieldId);
   const [countOutputName, setCountOutputName] = useState(projectedCountName);
@@ -62,6 +72,9 @@ export function DvtSubstraitPilotAuthoringSection({
   );
   const [windowOrderFieldId, setWindowOrderFieldId] = useState(defaultWindowOrderFieldId);
   const [windowOutputName, setWindowOutputName] = useState(projectedWindowOutputName);
+  const [aggregateWindowOutputName, setAggregateWindowOutputName] = useState(
+    projectedAggregateWindowOutputName
+  );
 
   useEffect(() => {
     setOutputName(projectedOutputName);
@@ -89,6 +102,10 @@ export function DvtSubstraitPilotAuthoringSection({
     setWindowOutputName(projectedWindowOutputName);
   }, [projectedWindowOutputName]);
 
+  useEffect(() => {
+    setAggregateWindowOutputName(projectedAggregateWindowOutputName);
+  }, [projectedAggregateWindowOutputName]);
+
   const mutate = (
     update: (
       current: DvtSubstraitTransformAuthoringMetadata
@@ -100,6 +117,104 @@ export function DvtSubstraitPilotAuthoringSection({
         : currentDraft
     );
   };
+
+  if (aggregateWindowInspection.ok) {
+    const commitAggregateWindowOutputName = (): void => {
+      const normalized = aggregateWindowOutputName.trim();
+      if (
+        normalized.length === 0 ||
+        aggregateWindowInspection.projection.outputs
+          .slice(0, 2)
+          .some((output) => output.name === normalized)
+      ) {
+        setAggregateWindowOutputName(aggregateWindowInspection.projection.result.name);
+        return;
+      }
+      mutate((current) => ({
+        ...current,
+        ...renameDvtSubstraitPilotAggregateRowNumberOutput(current, normalized),
+      }));
+    };
+
+    return (
+      <div data-slot="dvt-substrait-pilot-authoring" className="space-y-4">
+        <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>Substrait</h3>
+        <div
+          data-slot="dvt-substrait-aggregate-window-authoring"
+          data-capability-id={aggregateWindowInspection.projection.result.capabilityId}
+          className="space-y-3"
+        >
+          <p className="text-xs font-medium text-(--text-default)">
+            {canvasViewCopy.inspectorDvtSubstraitAggregateWindowTitle}
+          </p>
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-(--text-default)">
+              {canvasViewCopy.inspectorDvtSubstraitGrainFieldLabel}
+            </p>
+            <div
+              data-slot="dvt-substrait-grain-field-readonly"
+              className="rounded border border-[color:var(--border-default)] px-2 py-1.5 text-xs"
+            >
+              {aggregateWindowInspection.projection.groupField.name}
+            </div>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-(--text-default)">
+              {canvasViewCopy.inspectorDvtSubstraitCountOutputLabel}
+            </p>
+            <div
+              data-slot="dvt-substrait-count-output-readonly"
+              className="rounded border border-[color:var(--border-default)] px-2 py-1.5 text-xs"
+            >
+              {aggregateWindowInspection.projection.measure.name}
+            </div>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-(--text-default)">
+              {canvasViewCopy.inspectorDvtSubstraitAggregateWindowOrderLabel}
+            </p>
+            <div
+              data-slot="dvt-substrait-aggregate-window-order-readonly"
+              className="rounded border border-[color:var(--border-default)] px-2 py-1.5 text-xs"
+            >
+              {aggregateWindowInspection.projection.measure.name} ↓
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="dvt-substrait-aggregate-window-output-name">
+              {canvasViewCopy.inspectorDvtSubstraitWindowOutputLabel}
+            </Label>
+            <Input
+              id="dvt-substrait-aggregate-window-output-name"
+              data-slot="dvt-substrait-aggregate-window-output-name"
+              disabled={disabled}
+              value={aggregateWindowOutputName}
+              onChange={(event) => setAggregateWindowOutputName(event.target.value)}
+              onBlur={commitAggregateWindowOutputName}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') event.currentTarget.blur();
+              }}
+            />
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            data-slot="dvt-substrait-remove-aggregate-window"
+            disabled={disabled}
+            onClick={() =>
+              mutate((current) => ({
+                ...current,
+                ...removeDvtSubstraitPilotAggregateRowNumber(current),
+              }))
+            }
+          >
+            {canvasViewCopy.inspectorDvtSubstraitRemoveAggregateWindowLabel}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (aggregateInspection.ok) {
     const commitCountOutputName = (): void => {
@@ -154,6 +269,66 @@ export function DvtSubstraitPilotAuthoringSection({
                 if (event.key === 'Enter') event.currentTarget.blur();
               }}
             />
+          </div>
+          <div className="space-y-3 border-t border-[color:var(--border-default)] pt-3">
+            <p className="text-xs font-medium text-(--text-default)">
+              {canvasViewCopy.inspectorDvtSubstraitAggregateWindowTitle}
+            </p>
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-(--text-default)">
+                {canvasViewCopy.inspectorDvtSubstraitAggregateWindowOrderLabel}
+              </p>
+              <div
+                data-slot="dvt-substrait-aggregate-window-order-readonly"
+                className="rounded border border-[color:var(--border-default)] px-2 py-1.5 text-xs"
+              >
+                {aggregateInspection.projection.measure.name} ↓
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="dvt-substrait-aggregate-window-output-name">
+                {canvasViewCopy.inspectorDvtSubstraitWindowOutputLabel}
+              </Label>
+              <Input
+                id="dvt-substrait-aggregate-window-output-name"
+                data-slot="dvt-substrait-aggregate-window-output-name"
+                disabled={disabled}
+                value={aggregateWindowOutputName}
+                onChange={(event) => setAggregateWindowOutputName(event.target.value)}
+              />
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              data-slot="dvt-substrait-apply-aggregate-window"
+              disabled={
+                disabled ||
+                aggregateWindowOutputName.trim().length === 0 ||
+                aggregateInspection.projection.outputs.some(
+                  (output) => output.name === aggregateWindowOutputName.trim()
+                )
+              }
+              onClick={() =>
+                mutate((current) => ({
+                  ...current,
+                  ...applyDvtSubstraitPilotAggregateRowNumber(current, {
+                    outputName: aggregateWindowOutputName,
+                  }),
+                }))
+              }
+              onKeyDown={(event) => {
+                if (event.key !== 'Enter' && event.key !== ' ') return;
+                event.preventDefault();
+                mutate((current) => ({
+                  ...current,
+                  ...applyDvtSubstraitPilotAggregateRowNumber(current, {
+                    outputName: aggregateWindowOutputName,
+                  }),
+                }));
+              }}
+            >
+              {canvasViewCopy.inspectorDvtSubstraitApplyAggregateWindowLabel}
+            </Button>
           </div>
           <Button
             type="button"
