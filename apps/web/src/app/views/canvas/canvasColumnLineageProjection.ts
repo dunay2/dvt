@@ -172,6 +172,7 @@ function readSubstraitJoinLineage(node: CanonicalNode): DvtSubstraitInnerJoinLin
     const draft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
     const nInput = inspectDvtSubstraitNInputJoinDraft(draft);
     if (nInput.ok && nInput.projection.inputs.length > 2) {
+      if (nInput.projection.targetNodeId !== node.id) return null;
       return {
         kind: 'n-input',
         inputs: nInput.projection.inputs,

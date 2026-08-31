@@ -522,6 +522,10 @@ describe('Canvas column lineage projection', () => {
       buildNode('model', 'dvt:sql_transform', 'transform'),
       encodeDvtSubstraitInnerJoinDocument(draft)
     );
+    const copiedModel = applyDvtSubstraitSemanticDocument(
+      buildNode('copied-model', 'dvt:sql_transform', 'transform'),
+      encodeDvtSubstraitInnerJoinDocument(draft)
+    );
     const staleShipments = {
       ...shipments,
       metadata: {
@@ -529,6 +533,17 @@ describe('Canvas column lineage projection', () => {
         connectedSourceRef: connectedSourceRef('other_shipments'),
       },
     };
+
+    expect(
+      projectCanvasColumnLineage({
+        nodes: [customers, orders, shipments, copiedModel],
+        edges: [customers, orders, shipments].map((node) => ({
+          sourceId: node.id,
+          targetId: copiedModel.id,
+        })),
+        expandedNodeIds: new Set([customers.id, orders.id, shipments.id, copiedModel.id]),
+      })
+    ).toEqual([]);
 
     expect(
       projectCanvasColumnLineage({
