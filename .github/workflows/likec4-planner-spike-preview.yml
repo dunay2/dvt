@@ -18,32 +18,49 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Fetch source baselines
+      - name: Fetch source baseline
         run: git fetch --no-tags origin main
 
-      - name: Generate source-first Engine inventory
-        run: node architecture/tools/generate-engine-inventory.mjs
-
       - name: Generate source-first Planner inventory
-        run: node architecture/tools/generate-planner-inventory.mjs
+        run: node architecture/tools/generate-planner-preview.mjs
 
-      - name: Stage machine-readable source evidence
+      - name: Stage Planner-only LikeC4 workspace
         run: |
-          mkdir -p .architecture-evidence
-          cp architecture/generated/engine-inventory.json .architecture-evidence/engine-inventory.json
-          cp architecture/generated/engine-source.c4 .architecture-evidence/engine-source.c4
-          cp architecture/engine-components.json .architecture-evidence/engine-components.json
-          cp architecture/source-baseline.json .architecture-evidence/engine-source-baseline.json
+          rm -rf .planner-likec4-preview
+          mkdir -p .planner-likec4-preview .architecture-evidence
+          cp architecture/specification.c4 .planner-likec4-preview/specification.c4
+          cp architecture/planner.c4 .planner-likec4-preview/planner.c4
+          cp architecture/generated/planner-source.c4 .planner-likec4-preview/planner-source.c4
+          cat > .planner-likec4-preview/likec4.config.json <<'JSON'
+          {
+            "$schema": "https://likec4.dev/schemas/config.json",
+            "name": "dvt-planner-source-first-spike",
+            "title": "DVT+ Planner — Source-first architecture",
+            "metadata": {
+              "status": "manual-spike",
+              "repository": "dunay2/dvt",
+              "baselineSha": "4e63f9a65e25f409ad975fa1da5620e569bb3a36",
+              "scope": "packages/@dvt/planner"
+            }
+          }
+          JSON
           cp architecture/generated/planner-inventory.json .architecture-evidence/planner-inventory.json
           cp architecture/generated/planner-source.c4 .architecture-evidence/planner-source.c4
           cp architecture/planner-components.json .architecture-evidence/planner-components.json
           cp architecture/planner-source-baseline.json .architecture-evidence/planner-source-baseline.json
 
-      - name: Build LikeC4 static site
+      - name: Reject invalid model-level navigation
+        run: |
+          if grep -R -n -E '^\s*navigateTo\s+' .planner-likec4-preview/*.c4; then
+            echo 'Model-level navigateTo is not allowed in this preview' >&2
+            exit 1
+          fi
+
+      - name: Build Planner LikeC4 static site
         uses: likec4/actions@v1
         with:
           action: build
-          path: architecture
+          path: .planner-likec4-preview
           output: dist
           base: ./
           likec4-version: 1.59.2
