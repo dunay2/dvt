@@ -770,6 +770,207 @@ describe('nodePropertiesReadModel', () => {
     });
   });
 
+  it('shows the exact input reference for a declared direct Transform output', () => {
+    const transform: CanonicalNode = {
+      id: 'transform-orders',
+      name: 'Transform orders',
+      pluginId: 'dvt',
+      kind: 'dvt:sql_transform',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+      metadata: {},
+    };
+
+    const model = buildNodePropertiesReadModel({
+      node: transform,
+      nodes: [transform],
+      edges: [],
+      presentationTruth: {
+        columns: {
+          declared: [
+            {
+              name: 'order_id',
+              type: 'integer',
+              nullable: false,
+              provenance: 'declared',
+              sourceNodeId: 'source-orders',
+              sourceNodeName: 'Orders source',
+              sourceReference: 'source-orders.order_id',
+              reference: 'output:order_id',
+            },
+          ],
+          inherited: [],
+          visible: [
+            {
+              name: 'order_id',
+              type: 'integer',
+              nullable: false,
+              provenance: 'declared',
+              sourceNodeId: 'source-orders',
+              sourceNodeName: 'Orders source',
+              sourceReference: 'source-orders.order_id',
+              reference: 'output:order_id',
+            },
+          ],
+          declaredCount: 1,
+          inheritedCount: 0,
+          visibleCount: 1,
+          visibleProvenance: 'declared',
+        },
+        code: { kind: 'unavailable' },
+      },
+    });
+
+    expectTableCells(sectionById(model, 'columns'), 'output:order_id', {
+      name: 'order_id',
+      type: 'integer',
+      nullable: 'not null',
+      source: 'Orders source',
+      reference: 'source-orders.order_id',
+      selection: 'available',
+    });
+  });
+
+  it('preserves declared SQL Transform column details when no source lineage is projected', () => {
+    const transform: CanonicalNode = {
+      id: 'transform-sql-orders',
+      name: 'SQL orders',
+      pluginId: 'dvt',
+      kind: 'dvt:sql_transform',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        columns: [
+          {
+            name: 'order_id',
+            type: 'integer',
+            nullable: false,
+            primaryKey: true,
+            defaultValue: '0',
+            comment: 'Canonical order key',
+          },
+        ],
+      },
+    };
+
+    const model = buildNodePropertiesReadModel({
+      node: transform,
+      nodes: [transform],
+      edges: [],
+    });
+    const cells = sectionById(model, 'columns').tableRows.find(
+      (row) => row.id === 'order_id'
+    )?.cells;
+
+    expect(cells).toMatchObject({
+      name: 'order_id',
+      type: 'integer',
+      nullable: 'not null',
+      key: 'PK',
+      default: '0',
+      comment: 'Canonical order key',
+    });
+    expect(cells).not.toHaveProperty('selection');
+  });
+
+  it('merges declared details and lineage per Transform output row', () => {
+    const transform: CanonicalNode = {
+      id: 'transform-partial-lineage',
+      name: 'Partially sourced Transform',
+      pluginId: 'dvt',
+      kind: 'dvt:sql_transform',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        columns: [
+          {
+            name: 'order_id',
+            type: 'integer',
+            primaryKey: true,
+            comment: 'Sourced order key',
+          },
+          {
+            name: 'constant_label',
+            type: 'text',
+            defaultValue: "'unknown'",
+            comment: 'Declared constant',
+          },
+        ],
+      },
+    };
+
+    const model = buildNodePropertiesReadModel({
+      node: transform,
+      nodes: [transform],
+      edges: [],
+      presentationTruth: {
+        columns: {
+          declared: [
+            {
+              name: 'order_id',
+              type: 'integer',
+              provenance: 'declared',
+              sourceNodeId: 'source-orders',
+              sourceNodeName: 'Orders source',
+              sourceReference: 'source-orders.order_id',
+              reference: 'output:order_id',
+            },
+            {
+              name: 'constant_label',
+              type: 'text',
+              provenance: 'declared',
+              reference: 'output:constant_label',
+            },
+          ],
+          inherited: [],
+          visible: [
+            {
+              name: 'order_id',
+              type: 'integer',
+              provenance: 'declared',
+              sourceNodeId: 'source-orders',
+              sourceNodeName: 'Orders source',
+              sourceReference: 'source-orders.order_id',
+              reference: 'output:order_id',
+            },
+            {
+              name: 'constant_label',
+              type: 'text',
+              provenance: 'declared',
+              reference: 'output:constant_label',
+            },
+          ],
+          declaredCount: 2,
+          inheritedCount: 0,
+          visibleCount: 2,
+          visibleProvenance: 'declared',
+        },
+        code: { kind: 'unavailable' },
+      },
+    });
+    const columnsSection = sectionById(model, 'columns');
+
+    expectTableCells(columnsSection, 'output:order_id', {
+      name: 'order_id',
+      key: 'PK',
+      comment: 'Sourced order key',
+      source: 'Orders source',
+      reference: 'source-orders.order_id',
+      selection: 'available',
+    });
+    expectTableCells(columnsSection, 'output:constant_label', {
+      name: 'constant_label',
+      default: "'unknown'",
+      comment: 'Declared constant',
+    });
+    expect(
+      columnsSection.tableRows.find((row) => row.id === 'output:constant_label')?.cells
+    ).not.toHaveProperty('selection');
+  });
+
   it('projects DVT sink target and write policy into a dedicated sink section', () => {
     const sink: CanonicalNode = {
       id: 'sink-orders',

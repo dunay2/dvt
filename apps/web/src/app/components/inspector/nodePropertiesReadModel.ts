@@ -422,10 +422,52 @@ function buildInheritedColumnRows(
       type: column.type,
       nullable: column.nullable === false ? 'not null' : column.nullable === true ? 'nullable' : '',
       source: column.sourceNodeName ?? column.sourceNodeId ?? '',
-      reference: column.reference ?? '',
+      reference: column.sourceReference ?? column.reference ?? '',
       selection: column.selected ? 'selected' : 'available',
     },
   }));
+}
+
+function buildDvtTransformColumnRows(
+  columns: readonly CanvasNodePresentationColumn[],
+  declaredColumns: readonly InspectorColumn[]
+): readonly NodePropertyTableRow[] {
+  if (columns.length === 0) {
+    return buildColumnRows(declaredColumns);
+  }
+
+  const declaredByName = new Map(declaredColumns.map((column) => [column.name, column]));
+  return columns.map((column) => {
+    const declared = declaredByName.get(column.name);
+    const nullable = column.nullable ?? declared?.nullable;
+    const carriesSourceProvenance =
+      column.sourceNodeId != null ||
+      column.sourceNodeName != null ||
+      column.sourceReference != null;
+
+    return {
+      id:
+        column.reference ??
+        (carriesSourceProvenance
+          ? `${column.sourceNodeId ?? 'input'}.${column.name}`
+          : column.name),
+      cells: {
+        name: column.name,
+        type: column.type === 'unknown' && declared != null ? declared.type : column.type,
+        nullable: nullable === false ? 'not null' : nullable === true ? 'nullable' : '',
+        key: declared?.primaryKey ? 'PK' : '',
+        default: declared?.defaultValue ?? '',
+        comment: declared?.comment ?? '',
+        ...(carriesSourceProvenance
+          ? {
+              source: column.sourceNodeName ?? column.sourceNodeId ?? '',
+              reference: column.sourceReference ?? column.reference ?? '',
+              selection: column.selected ? 'selected' : 'available',
+            }
+          : {}),
+      },
+    };
+  });
 }
 
 function interpolatePresentationTemplate(template: string, values: Record<string, string>): string {
@@ -750,12 +792,15 @@ export function buildNodePropertiesReadModel({
   const columns = readColumns(metadata.columns);
   const presentationTruth =
     suppliedPresentationTruth ?? buildCanvasNodePresentationTruth({ node, nodes, edges });
+  const projectsDvtTransformColumns = node.pluginId === 'dvt' && node.kind === 'dvt:sql_transform';
   const columnRows = localizePropertyTableRows(
-    presentationTruth.columns.visibleProvenance === 'declared'
-      ? buildColumnRows(columns)
-      : presentationTruth.columns.visibleProvenance === 'mixed'
-        ? buildInheritedColumnRows(presentationTruth.columns.visible)
-        : buildInheritedColumnRows(presentationTruth.columns.inherited),
+    projectsDvtTransformColumns
+      ? buildDvtTransformColumnRows(presentationTruth.columns.visible, columns)
+      : presentationTruth.columns.visibleProvenance === 'declared'
+        ? buildColumnRows(columns)
+        : presentationTruth.columns.visibleProvenance === 'mixed'
+          ? buildInheritedColumnRows(presentationTruth.columns.visible)
+          : buildInheritedColumnRows(presentationTruth.columns.inherited),
     presentationCopy
   );
   const keyRows = localizePropertyTableRows(buildKeyRows(metadata, columns), presentationCopy);

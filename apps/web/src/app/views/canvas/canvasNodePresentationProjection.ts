@@ -294,12 +294,39 @@ function projectCanvasNodePresentationTruthInternal(
   }
 
   if (lineageRecipe == null) return presentationTruth;
-  const declared = lineageRecipe.outputs.map((output) => ({
-    name: output.name,
-    type: output.dataType ?? 'unknown',
-    provenance: 'declared' as const,
-    reference: output.id,
-  }));
+  const declared = lineageRecipe.outputs.map((output) => {
+    const input = output.expression.inputs.length === 1 ? output.expression.inputs[0] : undefined;
+    const sourceColumn =
+      input == null
+        ? undefined
+        : presentationTruth.columns.inherited.find(
+            (column) => column.sourceNodeId === input.nodeId && column.name === input.columnName
+          );
+    const preservesNullability =
+      output.expression.operations.length === 1 &&
+      output.expression.operations[0]?.kind === 'passthrough';
+
+    return {
+      name: output.name,
+      type: output.dataType ?? (preservesNullability ? sourceColumn?.type : undefined) ?? 'unknown',
+      provenance: 'declared' as const,
+      reference: output.id,
+      ...(sourceColumn == null
+        ? {}
+        : {
+            ...(sourceColumn.sourceNodeId == null
+              ? {}
+              : { sourceNodeId: sourceColumn.sourceNodeId }),
+            ...(sourceColumn.sourceNodeName == null
+              ? {}
+              : { sourceNodeName: sourceColumn.sourceNodeName }),
+            ...(sourceColumn.reference == null ? {} : { sourceReference: sourceColumn.reference }),
+            ...(preservesNullability && sourceColumn.nullable != null
+              ? { nullable: sourceColumn.nullable }
+              : {}),
+          }),
+    };
+  });
   const declaredNames = new Set(declared.map((column) => column.name));
   const prospective = presentationTruth.columns.inherited.filter(
     (column) => !declaredNames.has(column.name)

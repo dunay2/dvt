@@ -249,6 +249,155 @@ describe('projectCanvasNodePresentationTruth', () => {
     expect(truth.columns.visibleProvenance).toBe('mixed');
   });
 
+  it('keeps exact connected input provenance on direct visual outputs', () => {
+    const orders: CanonicalNode = {
+      ...source,
+      id: 'src-postgres-dvt-raw-orders',
+      name: 'orders',
+      metadata: {
+        columns: [
+          { name: 'order_id', type: 'integer', nullable: false },
+          { name: 'customer', type: 'text', nullable: true },
+          { name: 'amount', type: 'numeric', nullable: false },
+        ],
+      },
+    };
+    const unrelatedWorkspaceDrafts: CanonicalNode = {
+      ...source,
+      id: 'src-postgres-dvt-workspace-graph-drafts',
+      name: 'workspace_graph_drafts',
+      metadata: {
+        columns: [
+          { name: 'order_id', type: 'integer', nullable: true },
+          { name: 'customer', type: 'text', nullable: false },
+        ],
+      },
+    };
+    const transform = applyDvtVisualTransformRecipe(
+      {
+        ...model,
+        id: 'transform.orders',
+        name: 'Transform 1',
+        pluginId: 'dvt',
+        kind: 'dvt:sql_transform',
+        metadata: {},
+      },
+      {
+        version: 'v1',
+        outputs: [
+          {
+            id: 'output:order_id',
+            name: 'order_id',
+            dataType: 'integer',
+            expression: {
+              inputs: [{ nodeId: orders.id, columnName: 'order_id' }],
+              operations: [{ kind: 'passthrough' }],
+            },
+          },
+          {
+            id: 'output:customer',
+            name: 'customer',
+            dataType: 'text',
+            expression: {
+              inputs: [{ nodeId: orders.id, columnName: 'customer' }],
+              operations: [{ kind: 'passthrough' }],
+            },
+          },
+        ],
+        filters: [],
+      }
+    );
+
+    const truth = projectCanvasNodePresentationTruth({
+      node: transform,
+      nodes: [orders, unrelatedWorkspaceDrafts, transform],
+      edges: [{ ...edge, sourceId: orders.id, targetId: transform.id }],
+    });
+
+    expect(truth.columns).toMatchObject({
+      declaredCount: 2,
+      inheritedCount: 3,
+      visibleCount: 3,
+      visibleProvenance: 'mixed',
+    });
+    expect(truth.columns.visible).toEqual([
+      expect.objectContaining({
+        name: 'order_id',
+        type: 'integer',
+        nullable: false,
+        provenance: 'declared',
+        sourceNodeId: orders.id,
+        sourceNodeName: orders.name,
+        sourceReference: `${orders.id}.order_id`,
+        reference: 'output:order_id',
+      }),
+      expect.objectContaining({
+        name: 'customer',
+        type: 'text',
+        nullable: true,
+        provenance: 'declared',
+        sourceNodeId: orders.id,
+        sourceNodeName: orders.name,
+        sourceReference: `${orders.id}.customer`,
+        reference: 'output:customer',
+      }),
+      expect.objectContaining({
+        name: 'amount',
+        type: 'numeric',
+        nullable: false,
+        provenance: 'inherited',
+        sourceNodeId: orders.id,
+        sourceNodeName: orders.name,
+        reference: `${orders.id}.amount`,
+      }),
+    ]);
+    expect(truth.columns.visible).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ sourceNodeId: unrelatedWorkspaceDrafts.id }),
+      ])
+    );
+  });
+
+  it('does not inherit an input type for a type-changing output without a declared type', () => {
+    const transform = applyDvtVisualTransformRecipe(
+      {
+        ...model,
+        id: 'transform.cast-order-id',
+        pluginId: 'dvt',
+        kind: 'dvt:sql_transform',
+        metadata: {},
+      },
+      {
+        version: 'v1',
+        outputs: [
+          {
+            id: 'output:order_id_text',
+            name: 'order_id_text',
+            expression: {
+              inputs: [{ nodeId: source.id, columnName: 'order_id' }],
+              operations: [{ kind: 'cast', targetType: 'text' }],
+            },
+          },
+        ],
+        filters: [],
+      }
+    );
+
+    const truth = projectCanvasNodePresentationTruth({
+      node: transform,
+      nodes: [source, transform],
+      edges: [{ ...edge, targetId: transform.id }],
+    });
+
+    expect(truth.columns.declared).toEqual([
+      expect.objectContaining({
+        name: 'order_id_text',
+        type: 'unknown',
+        sourceNodeId: source.id,
+      }),
+    ]);
+  });
+
   it('projects visual recipe SQL as generated read-only code from the connected source binding', () => {
     const dvtSource: CanonicalNode = {
       id: 'source.orders',
