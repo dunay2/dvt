@@ -537,6 +537,14 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtSubstraitSelectedFieldsLabel',
     fallback: 'Selected fields',
   },
+  inspectorDvtSubstraitMoveFieldUpLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitMoveFieldUpLabel',
+    fallback: 'Move field up',
+  },
+  inspectorDvtSubstraitMoveFieldDownLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitMoveFieldDownLabel',
+    fallback: 'Move field down',
+  },
   inspectorDvtSinkTitle: {
     key: 'canvas.inspector.authoring.dvtSinkTitle',
     fallback: 'DVT sink',

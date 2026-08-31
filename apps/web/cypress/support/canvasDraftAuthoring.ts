@@ -12,6 +12,10 @@ import {
   buildDraftReadOkResponse,
   buildDraftSaveSavedResponse,
 } from '../../src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures';
+import {
+  createDvtSubstraitInnerJoinDraft,
+  encodeDvtSubstraitInnerJoinDocument,
+} from '../../src/app/views/canvas/canvasDvtSubstraitJoinComposition';
 import { normalizeProjectCanvasDraft } from '../../src/app/views/canvas/canvasProjectCanvasLifecycle';
 
 import { stubE2eApi } from './e2eApiStub';
@@ -31,6 +35,7 @@ export type StubCanvasDraftReadOptions = {
   authoringGenerated?: boolean;
   columnMapping?: boolean;
   columnMappingDisconnected?: boolean;
+  substraitInnerJoin?: boolean;
   title?: string;
   readOnly?: boolean;
   largeGraph?: boolean;
@@ -54,6 +59,7 @@ export function buildCanvasAuthoringDraft({
   authoringGenerated = false,
   columnMapping = false,
   columnMappingDisconnected = false,
+  substraitInnerJoin = false,
   title,
   largeGraph = false,
 }: StubCanvasDraftReadOptions = {}): CanvasAuthoringDraft {
@@ -74,6 +80,124 @@ export function buildCanvasAuthoringDraft({
       nodePositions: {},
       nodes: [],
       edges: [],
+    });
+  }
+
+  if (substraitInnerJoin) {
+    const connectionRef = {
+      schemaVersion: 'connection-ref.v1' as const,
+      connectionId: 'warehouse-a',
+      provider: 'postgres' as const,
+    };
+    const semanticDocument = encodeDvtSubstraitInnerJoinDocument(
+      createDvtSubstraitInnerJoinDraft({
+        left: {
+          nodeId: 'source-customers',
+          schema: 'public',
+          table: 'customers',
+          sourceRef: {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef,
+            sourceObjectId: 'public.customers',
+          },
+        },
+        right: {
+          nodeId: 'source-orders',
+          schema: 'public',
+          table: 'orders',
+          sourceRef: {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef,
+            sourceObjectId: 'public.orders',
+          },
+        },
+        targetNodeId: 'join-transform',
+      })
+    );
+    return buildWorkspaceGraphAuthoringDraft({
+      canvas,
+      nodeIds: ['source-customers', 'source-orders', 'join-transform'],
+      nodePositions: {
+        'source-customers': { x: 40, y: 100 },
+        'source-orders': { x: 40, y: 340 },
+        'join-transform': { x: 420, y: 220 },
+      },
+      nodes: [
+        {
+          id: 'source-customers',
+          name: 'customers',
+          pluginId: 'dvt',
+          kind: 'dvt:source',
+          role: 'input',
+          status: 'idle',
+          tags: ['authoring'],
+          metadata: {
+            schema: 'public',
+            tableName: 'customers',
+            columns: [
+              { name: 'customer_id', type: 'string' },
+              { name: 'name', type: 'string' },
+            ],
+            connectedSourceRef: {
+              schemaVersion: 'connected-source-ref.v1',
+              connectionRef,
+              sourceObjectId: 'public.customers',
+            },
+          },
+        },
+        {
+          id: 'source-orders',
+          name: 'orders',
+          pluginId: 'dvt',
+          kind: 'dvt:source',
+          role: 'input',
+          status: 'idle',
+          tags: ['authoring'],
+          metadata: {
+            schema: 'public',
+            tableName: 'orders',
+            columns: [
+              { name: 'order_id', type: 'string' },
+              { name: 'customer_id', type: 'string' },
+            ],
+            connectedSourceRef: {
+              schemaVersion: 'connected-source-ref.v1',
+              connectionRef,
+              sourceObjectId: 'public.orders',
+            },
+          },
+        },
+        {
+          id: 'join-transform',
+          name: 'Customer orders',
+          pluginId: 'dvt',
+          kind: 'dvt:sql_transform',
+          role: 'transform',
+          status: 'idle',
+          tags: ['authoring'],
+          metadata: {
+            transformAuthoring: {
+              version: 'v1',
+              mode: 'substrait',
+              semanticDocument,
+            },
+          },
+        },
+      ],
+      edges: [
+        {
+          id: 'customers-join',
+          sourceId: 'source-customers',
+          targetId: 'join-transform',
+          relation: 'lineage',
+        },
+        {
+          id: 'orders-join',
+          sourceId: 'source-orders',
+          targetId: 'join-transform',
+          relation: 'lineage',
+        },
+      ],
     });
   }
 

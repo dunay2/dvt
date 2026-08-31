@@ -11,7 +11,10 @@ import {
   projectDvtSubstraitInnerJoinToPostgresSql,
   projectDvtSubstraitPilotToPostgresSql,
 } from './canvasDvtSubstraitPostgresProjection';
-import { createDvtSubstraitInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
+import {
+  applyDvtSubstraitInnerJoinFieldEdit,
+  createDvtSubstraitInnerJoinDraft,
+} from './canvasDvtSubstraitJoinComposition';
 
 function completedPilotDraft(): DvtSubstraitPilotDraft {
   let draft = createDvtSubstraitPilotDraft({
@@ -111,6 +114,59 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
 
     expect(normalized).toMatch(
       /^select left_source\.customer_id as customer_id, left_source\.name as name, right_source\.order_id as order_id from "tenant-data"\."customer-ledger" as left_source join "tenant-data"\."order-ledger" as right_source on left_source\.customer_id = right_source\.customer_id;?$/
+    );
+  });
+
+  it('projects selected, renamed, and reordered fields from the same INNER JOIN revision', async () => {
+    const connectionRef = {
+      schemaVersion: 'connection-ref.v1' as const,
+      connectionId: 'warehouse-main',
+      provider: 'postgres' as const,
+    };
+    let draft = createDvtSubstraitInnerJoinDraft({
+      left: {
+        nodeId: 'source-customers',
+        schema: 'public',
+        table: 'customers',
+        sourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef,
+          sourceObjectId: 'public.customers',
+        },
+      },
+      right: {
+        nodeId: 'source-orders',
+        schema: 'public',
+        table: 'orders',
+        sourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef,
+          sourceObjectId: 'public.orders',
+        },
+      },
+      targetNodeId: 'transform-customer-orders',
+    });
+    draft = applyDvtSubstraitInnerJoinFieldEdit(draft, {
+      kind: 'rename',
+      fieldKey: 'left.name',
+      outputName: 'customer_name',
+    });
+    draft = applyDvtSubstraitInnerJoinFieldEdit(draft, {
+      kind: 'move',
+      fieldKey: 'right.order_id',
+      direction: 'up',
+    });
+    draft = applyDvtSubstraitInnerJoinFieldEdit(draft, {
+      kind: 'set-selected',
+      fieldKey: 'left.customer_id',
+      selected: false,
+    });
+
+    const sql = await projectDvtSubstraitInnerJoinToPostgresSql(draft);
+    const normalized = sql.replaceAll(/\s+/g, ' ').trim().toLowerCase();
+
+    expect(normalized).toMatch(
+      /^select right_source\.order_id as order_id, left_source\.name as customer_name from public\.customers as left_source join public\.orders as right_source on left_source\.customer_id = right_source\.customer_id;?$/
     );
   });
 });

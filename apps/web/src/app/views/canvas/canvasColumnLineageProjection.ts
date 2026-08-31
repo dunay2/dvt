@@ -1,5 +1,10 @@
 /** Owned concern: derive stable Canvas column handles and lineage edges from semantic recipe truth. */
-import { DVT_TRANSFORM_AUTHORING_MODE, type VisualTransformRecipeV1 } from '@dvt/contracts';
+import {
+  DVT_TRANSFORM_AUTHORING_MODE,
+  ConnectedSourceRefSchema,
+  type ConnectedSourceRef,
+  type VisualTransformRecipeV1,
+} from '@dvt/contracts';
 import type { Edge } from '@xyflow/react';
 
 import { buildCanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth';
@@ -8,6 +13,11 @@ import { areCanvasColumnTypesCompatible } from './canvasColumnMappingAuthoring';
 import { projectDbtModelArtifact } from './canvasDbtModelArtifactProjection';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import {
+  decodeDvtSubstraitInnerJoinDocument,
+  inspectDvtSubstraitInnerJoinDraft,
+  type DvtSubstraitInnerJoinProjection,
+} from './canvasDvtSubstraitJoinComposition';
 import { readDvtTransformLineageProvenance } from './canvasTransformationSqlMirror';
 
 export type CanvasColumnPortDirection = 'source' | 'target';
@@ -117,6 +127,30 @@ function readLineageRecipe(node: CanonicalNode): LineageRecipe | null {
   } catch {
     return null;
   }
+}
+
+function readSubstraitJoinLineage(node: CanonicalNode): DvtSubstraitInnerJoinProjection | null {
+  if (node.pluginId !== 'dvt' || node.kind !== 'dvt:sql_transform') return null;
+  try {
+    const authority = readDvtTransformAuthoringAuthority(node);
+    if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return null;
+    const inspection = inspectDvtSubstraitInnerJoinDraft(
+      decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument)
+    );
+    return inspection.ok ? inspection.projection : null;
+  } catch {
+    return null;
+  }
+}
+
+function sameConnectedSourceRef(first: ConnectedSourceRef, second: ConnectedSourceRef): boolean {
+  return (
+    first.schemaVersion === second.schemaVersion &&
+    first.sourceObjectId === second.sourceObjectId &&
+    first.connectionRef.schemaVersion === second.connectionRef.schemaVersion &&
+    first.connectionRef.provider === second.connectionRef.provider &&
+    first.connectionRef.connectionId === second.connectionRef.connectionId
+  );
 }
 
 function createLineageEdgeId(parts: readonly string[]): string {
@@ -282,6 +316,45 @@ export function projectCanvasColumnLineage(args: {
             targetColumnName: targetColumn.name,
             targetColumnId: targetColumn.name,
             outputId: targetColumn.name,
+            terminal: false,
+            removable: false,
+          })
+        );
+      }
+      continue;
+    }
+
+    const substraitJoin = readSubstraitJoinLineage(model);
+    if (substraitJoin != null && args.expandedNodeIds.has(model.id)) {
+      for (const output of substraitJoin.outputs) {
+        const sourceIdentity =
+          output.source.relation === 'left' ? substraitJoin.left : substraitJoin.right;
+        const matchingSources = args.edges
+          .filter((edge) => edge.targetId === model.id)
+          .flatMap((edge) => {
+            const sourceNode = nodeById.get(edge.sourceId);
+            if (sourceNode == null || !args.expandedNodeIds.has(sourceNode.id)) return [];
+            const sourceRef = ConnectedSourceRefSchema.safeParse(
+              sourceNode.metadata?.connectedSourceRef
+            );
+            return sourceRef.success &&
+              sameConnectedSourceRef(sourceRef.data, sourceIdentity.sourceRef) &&
+              readColumns(sourceNode).some((column) => column.name === output.source.name)
+              ? [sourceNode]
+              : [];
+          });
+        if (matchingSources.length !== 1) continue;
+        const sourceNode = matchingSources[0];
+        if (sourceNode == null) continue;
+        projected.push(
+          buildLineageEdge({
+            sourceNodeId: sourceNode.id,
+            sourceColumnName: output.source.name,
+            sourceColumnId: output.source.name,
+            targetNodeId: model.id,
+            targetColumnName: output.name,
+            targetColumnId: output.fieldId,
+            outputId: output.fieldId,
             terminal: false,
             removable: false,
           })

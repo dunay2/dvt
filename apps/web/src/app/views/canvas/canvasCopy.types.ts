@@ -507,6 +507,8 @@ export type CanvasViewCopy = {
   readonly inspectorDvtSubstraitInnerJoinTitle: string;
   readonly inspectorDvtSubstraitJoinConditionLabel: string;
   readonly inspectorDvtSubstraitSelectedFieldsLabel: string;
+  readonly inspectorDvtSubstraitMoveFieldUpLabel: string;
+  readonly inspectorDvtSubstraitMoveFieldDownLabel: string;
   readonly inspectorDvtSinkTitle: string;
   readonly inspectorDvtDatabaseLabel: string;
   readonly inspectorDvtSchemaLabel: string;

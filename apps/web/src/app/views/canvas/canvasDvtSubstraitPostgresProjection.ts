@@ -158,36 +158,18 @@ function requireInnerJoinProjection(
 function buildInnerJoinPostgresAst(projection: DvtSubstraitInnerJoinProjection): PostgresAstNode {
   const leftAlias = 'left_source';
   const rightAlias = 'right_source';
-  const [customerId, name, orderId] = projection.outputs;
-  if (customerId == null || name == null || orderId == null) {
-    throw new DvtSubstraitPostgresProjectionError(
-      'unsupported_shape',
-      'PostgreSQL INNER JOIN projection requires the exact three admitted outputs.'
-    );
-  }
 
   return {
     SelectStmt: {
-      targetList: [
-        {
-          ResTarget: {
-            name: customerId.name,
-            val: pgQualifiedColumnRef(leftAlias, customerId.name),
-          },
+      targetList: projection.outputs.map((output) => ({
+        ResTarget: {
+          name: output.name,
+          val: pgQualifiedColumnRef(
+            output.source.relation === 'left' ? leftAlias : rightAlias,
+            output.source.name
+          ),
         },
-        {
-          ResTarget: {
-            name: name.name,
-            val: pgQualifiedColumnRef(leftAlias, name.name),
-          },
-        },
-        {
-          ResTarget: {
-            name: orderId.name,
-            val: pgQualifiedColumnRef(rightAlias, orderId.name),
-          },
-        },
-      ],
+      })),
       fromClause: [
         {
           JoinExpr: {

@@ -163,6 +163,8 @@ export const canvasViewAuthoringCopyEs = {
   inspectorDvtSubstraitInnerJoinTitle: 'INNER JOIN Substrait',
   inspectorDvtSubstraitJoinConditionLabel: 'Condición de unión',
   inspectorDvtSubstraitSelectedFieldsLabel: 'Campos seleccionados',
+  inspectorDvtSubstraitMoveFieldUpLabel: 'Subir campo',
+  inspectorDvtSubstraitMoveFieldDownLabel: 'Bajar campo',
   inspectorDvtSinkTitle: 'Salida DVT',
   inspectorDvtDatabaseLabel: 'Base de datos',
   inspectorDvtSchemaLabel: 'Esquema',

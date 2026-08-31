@@ -2,9 +2,15 @@ import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
 import {
+  applyDvtSubstraitSemanticDocument,
   applyDvtVisualTransformRecipe,
   convertDvtVisualTransformToSql,
 } from './canvasDvtTransformAuthoringAuthority';
+import {
+  applyDvtSubstraitInnerJoinFieldEdit,
+  createDvtSubstraitInnerJoinDraft,
+  encodeDvtSubstraitInnerJoinDocument,
+} from './canvasDvtSubstraitJoinComposition';
 import {
   createCanvasColumnHandleId,
   parseCanvasColumnHandleId,
@@ -153,6 +159,125 @@ describe('Canvas column lineage projection', () => {
     expect(projected.map((edge) => edge.data?.sourceColumnName)).toEqual([
       'first_name',
       'last_name',
+    ]);
+  });
+
+  it('derives selected INNER JOIN field lineage from Substrait and stable sidecar identity', () => {
+    const connectionRef = {
+      schemaVersion: 'connection-ref.v1' as const,
+      connectionId: 'warehouse-main',
+      provider: 'postgres' as const,
+    };
+    const customers = {
+      ...buildNode('source-customers', 'dvt:source', 'input', [
+        { name: 'customer_id', type: 'string' },
+        { name: 'name', type: 'string' },
+      ]),
+      name: 'customers',
+      metadata: {
+        tableName: 'customers',
+        schema: 'public',
+        columns: [
+          { name: 'customer_id', type: 'string' },
+          { name: 'name', type: 'string' },
+        ],
+        connectedSourceRef: {
+          schemaVersion: 'connected-source-ref.v1' as const,
+          connectionRef,
+          sourceObjectId: 'public.customers',
+        },
+      },
+    } satisfies CanonicalNode;
+    const orders = {
+      ...buildNode('source-orders', 'dvt:source', 'input', [
+        { name: 'order_id', type: 'string' },
+        { name: 'customer_id', type: 'string' },
+      ]),
+      name: 'orders',
+      metadata: {
+        tableName: 'orders',
+        schema: 'public',
+        columns: [
+          { name: 'order_id', type: 'string' },
+          { name: 'customer_id', type: 'string' },
+        ],
+        connectedSourceRef: {
+          schemaVersion: 'connected-source-ref.v1' as const,
+          connectionRef,
+          sourceObjectId: 'public.orders',
+        },
+      },
+    } satisfies CanonicalNode;
+    let draft = createDvtSubstraitInnerJoinDraft({
+      left: {
+        nodeId: customers.id,
+        schema: 'public',
+        table: 'customers',
+        sourceRef: customers.metadata.connectedSourceRef,
+      },
+      right: {
+        nodeId: orders.id,
+        schema: 'public',
+        table: 'orders',
+        sourceRef: orders.metadata.connectedSourceRef,
+      },
+      targetNodeId: 'model',
+    });
+    draft = applyDvtSubstraitInnerJoinFieldEdit(draft, {
+      kind: 'rename',
+      fieldKey: 'left.name',
+      outputName: 'customer_name',
+    });
+    draft = applyDvtSubstraitInnerJoinFieldEdit(draft, {
+      kind: 'set-selected',
+      fieldKey: 'left.customer_id',
+      selected: false,
+    });
+    const model = applyDvtSubstraitSemanticDocument(
+      buildNode('model', 'dvt:sql_transform', 'transform'),
+      encodeDvtSubstraitInnerJoinDocument(draft)
+    );
+
+    const projected = projectCanvasColumnLineage({
+      nodes: [customers, orders, model],
+      edges: [
+        { sourceId: customers.id, targetId: model.id },
+        { sourceId: orders.id, targetId: model.id },
+      ],
+      expandedNodeIds: new Set([customers.id, orders.id, model.id]),
+    });
+
+    expect(projected).toEqual([
+      expect.objectContaining({
+        source: customers.id,
+        target: model.id,
+        targetHandle: createCanvasColumnHandleId({
+          direction: 'target',
+          nodeId: model.id,
+          columnId: 'field:model:name',
+        }),
+        data: expect.objectContaining({
+          sourceColumnName: 'name',
+          targetColumnName: 'customer_name',
+          outputId: 'field:model:name',
+          removable: false,
+        }),
+      }),
+      expect.objectContaining({
+        source: orders.id,
+        target: model.id,
+        targetHandle: createCanvasColumnHandleId({
+          direction: 'target',
+          nodeId: model.id,
+          columnId: 'field:model:order_id',
+        }),
+        data: expect.objectContaining({
+          sourceColumnName: 'order_id',
+          targetColumnName: 'order_id',
+          outputId: 'field:model:order_id',
+          removable: false,
+        }),
+      }),
     ]);
   });
 
