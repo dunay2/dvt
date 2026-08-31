@@ -4,6 +4,7 @@ import {
   DesignGraphDraftSchema,
   RunExecutionContextSchema,
   TransformationSqlFirstCompilerGraphSourceSchema,
+  summarizeTransformationSqlFirstPlan,
   type ConnectionRef,
   type TransformationSqlFirstCompilerGraphSourceV2,
 } from '../src/index.js';
@@ -81,6 +82,123 @@ describe('SQL-first PostgreSQL connection authority', () => {
 
     const legacy = { ...graphSource(), sourceVersion: 'transformation-sql-first-v1' };
     expect(TransformationSqlFirstCompilerGraphSourceSchema.safeParse(legacy).success).toBe(false);
+  });
+
+  it('accepts one governed two-source compiler path and summarizes both source tables', () => {
+    const singleSource = graphSource();
+    const secondSource = {
+      ...singleSource.nodes[0],
+      nodeId: 'source-2',
+      stepTypeConfig: {
+        ...singleSource.nodes[0].stepTypeConfig,
+        sourceTable: 'customers',
+        sourceAlias: 'customers_src',
+      },
+    };
+    const twoSourceGraph = {
+      ...singleSource,
+      nodes: [
+        singleSource.nodes[0],
+        secondSource,
+        { ...singleSource.nodes[1], dependsOn: ['source-1', 'source-2'] },
+        singleSource.nodes[2],
+      ],
+    };
+
+    expect(TransformationSqlFirstCompilerGraphSourceSchema.safeParse(twoSourceGraph).success).toBe(
+      true
+    );
+    expect(
+      summarizeTransformationSqlFirstPlan({
+        steps: twoSourceGraph.nodes.map((node) => ({
+          stepId: node.nodeId,
+          kind: node.stepKind,
+          dependsOn: node.dependsOn,
+          stepTypeConfig: node.stepTypeConfig,
+        })),
+      })
+    ).toMatchObject({
+      nodeCount: 4,
+      stepCount: 4,
+      sourceTables: ['raw.customers', 'raw.orders'],
+    });
+
+    const missingDependency = {
+      ...twoSourceGraph,
+      nodes: [
+        twoSourceGraph.nodes[0],
+        twoSourceGraph.nodes[1],
+        { ...twoSourceGraph.nodes[2], dependsOn: ['source-1'] },
+        twoSourceGraph.nodes[3],
+      ],
+    };
+    expect(
+      TransformationSqlFirstCompilerGraphSourceSchema.safeParse(missingDependency).success
+    ).toBe(false);
+  });
+
+  it('accepts a governed design graph with two sources feeding one transform', () => {
+    const singleSource = graphSource();
+    const sourcePayload = singleSource.nodes[0].stepTypeConfig;
+    const parsed = DesignGraphDraftSchema.safeParse({
+      context: {
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'prod',
+        executionTarget: 'postgres',
+      },
+      nodes: [
+        {
+          id: 'source-1',
+          type: 'source',
+          payload: {
+            kind: 'postgres_table',
+            connectionRef: connectionA,
+            schema: sourcePayload.sourceSchema,
+            table: sourcePayload.sourceTable,
+            alias: sourcePayload.sourceAlias,
+          },
+        },
+        {
+          id: 'source-2',
+          type: 'source',
+          payload: {
+            kind: 'postgres_table',
+            connectionRef: connectionA,
+            schema: 'raw',
+            table: 'customers',
+            alias: 'customers_src',
+          },
+        },
+        {
+          id: 'transform-1',
+          type: 'sql_transform',
+          payload: {
+            dialect: 'postgres',
+            entrypoint: 'models/customer_orders.sql',
+            sqlArtifact: singleSource.nodes[1].stepTypeConfig.sqlArtifact,
+          },
+        },
+        {
+          id: 'sink-1',
+          type: 'sink',
+          payload: {
+            kind: 'postgres_table',
+            schema: 'analytics',
+            table: 'customer_orders',
+            materialization: 'table',
+            writeMode: 'replace',
+          },
+        },
+      ],
+      edges: [
+        { fromNodeId: 'source-1', toNodeId: 'transform-1' },
+        { fromNodeId: 'source-2', toNodeId: 'transform-1' },
+        { fromNodeId: 'transform-1', toNodeId: 'sink-1' },
+      ],
+    });
+
+    expect(parsed.success).toBe(true);
   });
 
   it('rejects missing, non-PostgreSQL, or divergent step connection identities', () => {

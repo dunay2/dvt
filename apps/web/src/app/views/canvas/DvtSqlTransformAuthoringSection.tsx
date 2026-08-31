@@ -30,6 +30,8 @@ export function DvtSqlTransformAuthoringSection({
   section = 'all',
   inheritedConnectionRef,
   onStartSubstraitPilot,
+  substraitInnerJoinSummary,
+  onStartSubstraitInnerJoin,
   onChange,
 }: Readonly<{
   node: CanonicalNode;
@@ -39,6 +41,8 @@ export function DvtSqlTransformAuthoringSection({
   section?: 'all' | 'code';
   inheritedConnectionRef?: ConnectionRef;
   onStartSubstraitPilot?: () => void;
+  substraitInnerJoinSummary?: string;
+  onStartSubstraitInnerJoin?: () => void;
   onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
 }>): JSX.Element {
   const warehouseSourceImport = useOptionalWarehouseSourceImportPort();
@@ -105,6 +109,21 @@ export function DvtSqlTransformAuthoringSection({
                 onClick={onStartSubstraitPilot}
               >
                 Substrait
+              </Button>
+            </div>
+          )}
+          {onStartSubstraitInnerJoin == null || substraitInnerJoinSummary == null ? null : (
+            <div className="flex items-center justify-between gap-3 rounded border border-[color:var(--border-default)] px-3 py-2">
+              <p className="text-xs text-(--text-muted)">{substraitInnerJoinSummary}</p>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={disabled}
+                data-slot="dvt-start-substrait-inner-join"
+                onClick={onStartSubstraitInnerJoin}
+              >
+                {canvasViewCopy.inspectorDvtSubstraitInnerJoinAction}
               </Button>
             </div>
           )}

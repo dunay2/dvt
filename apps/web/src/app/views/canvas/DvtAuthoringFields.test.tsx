@@ -85,6 +85,38 @@ function buildImportedWarehouseSourceNode(): CanonicalNode {
   };
 }
 
+function buildJoinWarehouseSourceNode(args: {
+  id: string;
+  table: string;
+  columns: readonly string[];
+  connectionId?: string;
+}): CanonicalNode {
+  return {
+    id: args.id,
+    name: args.table,
+    pluginId: 'dvt.warehouse-source',
+    kind: 'dvt:source',
+    role: 'input',
+    status: 'idle',
+    tags: ['source'],
+    metadata: {
+      sourceName: args.table,
+      tableName: args.table,
+      schema: 'public',
+      columns: args.columns.map((name) => ({ name, type: 'string', nullable: false })),
+      connectedSourceRef: {
+        schemaVersion: 'connected-source-ref.v1',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          provider: 'postgres',
+          connectionId: args.connectionId ?? 'warehouse-main',
+        },
+        sourceObjectId: `public.${args.table}`,
+      },
+    },
+  };
+}
+
 function DvtAuthoringFieldsHarness({
   node,
   nodes,
@@ -287,6 +319,88 @@ describe('DvtAuthoringFields', () => {
     });
 
     expect(draftJson()).toContain('"sql":"select id from public.orders"');
+  });
+
+  it('starts one typed Substrait INNER JOIN from two compatible connected datasets', () => {
+    const customers = buildJoinWarehouseSourceNode({
+      id: 'source-customers',
+      table: 'customers',
+      columns: ['customer_id', 'name'],
+    });
+    const orders = buildJoinWarehouseSourceNode({
+      id: 'source-orders',
+      table: 'orders',
+      columns: ['order_id', 'customer_id'],
+    });
+    const transform = buildDvtNode('dvt:sql_transform');
+    const edges: readonly CanonicalEdge[] = [
+      {
+        id: 'customers-transform',
+        sourceId: customers.id,
+        targetId: transform.id,
+        relation: 'lineage',
+      },
+      {
+        id: 'orders-transform',
+        sourceId: orders.id,
+        targetId: transform.id,
+        relation: 'lineage',
+      },
+    ];
+
+    renderFields(transform, undefined, undefined, [customers, orders, transform], edges, 'code');
+
+    const entry = container.querySelector<HTMLButtonElement>(
+      '[data-slot="dvt-start-substrait-inner-join"]'
+    );
+    expect(entry).not.toBeNull();
+
+    act(() => {
+      fireEvent.click(entry!);
+    });
+
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-inner-join-authoring"]')
+    ).not.toBeNull();
+    expect(container.textContent).toContain('customers');
+    expect(container.textContent).toContain('orders');
+    expect(container.textContent).toContain('customer_id');
+    expect(container.querySelector('[data-testid="dvt-transform-sql-editor"]')).toBeNull();
+    expect(draftJson()).toContain('"shape":"inner_join"');
+  });
+
+  it('does not offer INNER JOIN when the connected datasets use different connections', () => {
+    const customers = buildJoinWarehouseSourceNode({
+      id: 'source-customers',
+      table: 'customers',
+      columns: ['customer_id', 'name'],
+      connectionId: 'warehouse-a',
+    });
+    const orders = buildJoinWarehouseSourceNode({
+      id: 'source-orders',
+      table: 'orders',
+      columns: ['order_id', 'customer_id'],
+      connectionId: 'warehouse-b',
+    });
+    const transform = buildDvtNode('dvt:sql_transform');
+    const edges: readonly CanonicalEdge[] = [
+      {
+        id: 'customers-transform',
+        sourceId: customers.id,
+        targetId: transform.id,
+        relation: 'lineage',
+      },
+      {
+        id: 'orders-transform',
+        sourceId: orders.id,
+        targetId: transform.id,
+        relation: 'lineage',
+      },
+    ];
+
+    renderFields(transform, undefined, undefined, [customers, orders, transform], edges, 'code');
+
+    expect(container.querySelector('[data-slot="dvt-start-substrait-inner-join"]')).toBeNull();
   });
 
   it('keeps only the latest governed SQL validation and localizes its diagnostic', async () => {

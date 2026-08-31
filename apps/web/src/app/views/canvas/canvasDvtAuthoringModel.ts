@@ -19,7 +19,13 @@ import {
 import {
   decodeDvtSubstraitPilotDocument,
   encodeDvtSubstraitPilotDocument,
+  inspectDvtSubstraitPilotDraft,
 } from './canvasDvtSubstraitPilot';
+import {
+  decodeDvtSubstraitInnerJoinDocument,
+  encodeDvtSubstraitInnerJoinDocument,
+  inspectDvtSubstraitInnerJoinDraft,
+} from './canvasDvtSubstraitJoinComposition';
 import { buildDvtSqlTransformMetadata } from './canvasTransformationSqlMirror';
 import type { CanvasInspectorNodeDraftErrorCode } from './canvasInspectorAuthoringErrorCodes';
 
@@ -46,6 +52,7 @@ export type DvtVisualTransformAuthoringMetadata = Readonly<{
 export type DvtSubstraitTransformAuthoringMetadata = Readonly<{
   kind: 'sql_transform';
   mode: typeof DVT_TRANSFORM_AUTHORING_MODE.substrait;
+  shape: 'pilot' | 'inner_join';
   plan: Plan;
   sidecar: DvtSubstraitAuthoringSidecarV1;
 }>;
@@ -225,12 +232,26 @@ function createSqlTransformMetadata(
     return { kind: 'sql_transform', mode: authority.mode, recipe: authority.recipe };
   }
   if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
-    const draft = decodeDvtSubstraitPilotDocument(authority.semanticDocument);
+    const pilotDraft = decodeDvtSubstraitPilotDocument(authority.semanticDocument);
+    if (inspectDvtSubstraitPilotDraft(pilotDraft).ok) {
+      return {
+        kind: 'sql_transform',
+        mode: authority.mode,
+        shape: 'pilot',
+        plan: pilotDraft.plan,
+        sidecar: pilotDraft.sidecar,
+      };
+    }
+    const joinDraft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
+    if (!inspectDvtSubstraitInnerJoinDraft(joinDraft).ok) {
+      throw new Error('DVT Substrait authoring metadata uses an unsupported semantic shape.');
+    }
     return {
       kind: 'sql_transform',
       mode: authority.mode,
-      plan: draft.plan,
-      sidecar: draft.sidecar,
+      shape: 'inner_join',
+      plan: joinDraft.plan,
+      sidecar: joinDraft.sidecar,
     };
   }
   return { kind: 'sql_transform', mode: authority.mode, sql: authority.sql };
@@ -382,7 +403,12 @@ export function applyDvtNodeAuthoringMetadata(
     if (metadata.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
       return applyDvtSubstraitSemanticDocument(
         node,
-        encodeDvtSubstraitPilotDocument({ plan: metadata.plan, sidecar: metadata.sidecar })
+        metadata.shape === 'inner_join'
+          ? encodeDvtSubstraitInnerJoinDocument({
+              plan: metadata.plan,
+              sidecar: metadata.sidecar,
+            })
+          : encodeDvtSubstraitPilotDocument({ plan: metadata.plan, sidecar: metadata.sidecar })
       );
     }
     const transformMetadata = buildDvtSqlTransformMetadata(node, metadata.sql);

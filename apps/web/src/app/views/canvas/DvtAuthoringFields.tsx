@@ -10,10 +10,15 @@ import {
 } from './canvasInspectorAuthoringModel';
 import { resolveInheritedDvtConnectionRef } from './canvasDvtAuthoringModel';
 import { createDvtSubstraitPilotDraft } from './canvasDvtSubstraitPilot';
+import {
+  createDvtSubstraitInnerJoinDraft,
+  resolveDvtSubstraitInnerJoinEntry,
+} from './canvasDvtSubstraitJoinComposition';
 import { DvtSinkAuthoringSection } from './DvtSinkAuthoringSection';
 import { DvtSourceAuthoringSection } from './DvtSourceAuthoringSection';
 import { DvtSqlTransformAuthoringSection } from './DvtSqlTransformAuthoringSection';
 import { DvtSubstraitPilotAuthoringSection } from './DvtSubstraitPilotAuthoringSection';
+import { DvtSubstraitInnerJoinAuthoringSection } from './DvtSubstraitInnerJoinAuthoringSection';
 import { DvtVisualTransformRecipeAuthoringSection } from './DvtVisualTransformRecipeAuthoringSection';
 
 type DvtAuthoringFieldsProps = Readonly<{
@@ -100,7 +105,9 @@ export function DvtAuthoringFields({
       if (section !== 'all' && section !== 'columns' && section !== 'code') {
         return null;
       }
-      return (
+      return draft.dvt.shape === 'inner_join' ? (
+        <DvtSubstraitInnerJoinAuthoringSection draft={draft.dvt} />
+      ) : (
         <DvtSubstraitPilotAuthoringSection
           disabled={disabled}
           draft={draft.dvt}
@@ -132,6 +139,10 @@ export function DvtAuthoringFields({
 
     const pilotSourceId =
       draft.dvt.sql.trim().length === 0 ? resolveSubstraitPilotSourceId(node, nodes, edges) : null;
+    const innerJoinEntry =
+      draft.dvt.sql.trim().length === 0
+        ? resolveDvtSubstraitInnerJoinEntry({ targetNode: node, nodes, edges })
+        : null;
     return (
       <DvtSqlTransformAuthoringSection
         node={node}
@@ -161,8 +172,39 @@ export function DvtAuthoringFields({
                     dvt: {
                       kind: 'sql_transform',
                       mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
+                      shape: 'pilot',
                       plan: pilot.plan,
                       sidecar: pilot.sidecar,
+                    },
+                  };
+                })
+        }
+        substraitInnerJoinSummary={
+          innerJoinEntry == null
+            ? undefined
+            : `${innerJoinEntry.left.table} + ${innerJoinEntry.right.table} · customer_id`
+        }
+        onStartSubstraitInnerJoin={
+          innerJoinEntry == null
+            ? undefined
+            : () =>
+                onChange((currentDraft) => {
+                  if (
+                    currentDraft.dvt?.kind !== 'sql_transform' ||
+                    currentDraft.dvt.mode !== DVT_TRANSFORM_AUTHORING_MODE.sql ||
+                    currentDraft.dvt.sql.trim().length > 0
+                  ) {
+                    return currentDraft;
+                  }
+                  const join = createDvtSubstraitInnerJoinDraft(innerJoinEntry);
+                  return {
+                    ...currentDraft,
+                    dvt: {
+                      kind: 'sql_transform',
+                      mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
+                      shape: 'inner_join',
+                      plan: join.plan,
+                      sidecar: join.sidecar,
                     },
                   };
                 })

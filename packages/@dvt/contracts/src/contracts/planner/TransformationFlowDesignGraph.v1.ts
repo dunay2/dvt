@@ -186,11 +186,11 @@ export const DesignGraphDraftSchema = z
     const transformNodes = draft.nodes.filter((node) => node.type === 'sql_transform');
     const sinkNodes = draft.nodes.filter((node) => node.type === 'sink');
 
-    if (sourceNodes.length !== 1) {
+    if (sourceNodes.length < 1 || sourceNodes.length > 2) {
       ctx.addIssue({
         code: 'custom',
         path: ['nodes'],
-        message: 'DesignGraphDraft requires exactly one source node.',
+        message: 'DesignGraphDraft requires one or two source nodes.',
       });
     }
     if (transformNodes.length !== 1) {
@@ -208,11 +208,28 @@ export const DesignGraphDraftSchema = z
       });
     }
 
-    if (draft.edges.length !== 2) {
+    if (draft.edges.length !== sourceNodes.length + 1) {
       ctx.addIssue({
         code: 'custom',
         path: ['edges'],
-        message: 'DesignGraphDraft requires exactly two edges.',
+        message: 'DesignGraphDraft requires every source to feed the transform and one sink edge.',
+      });
+    }
+
+    const firstSourceConnection = sourceNodes[0]?.payload.connectionRef;
+    if (
+      firstSourceConnection !== undefined &&
+      sourceNodes.some(
+        (sourceNode) =>
+          sourceNode.payload.connectionRef.schemaVersion !== firstSourceConnection.schemaVersion ||
+          sourceNode.payload.connectionRef.provider !== firstSourceConnection.provider ||
+          sourceNode.payload.connectionRef.connectionId !== firstSourceConnection.connectionId
+      )
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['nodes'],
+        message: 'DesignGraphDraft sources must use the same complete ConnectionRef.',
       });
     }
 
@@ -238,12 +255,11 @@ export const DesignGraphDraftSchema = z
       edgeKeys.add(key);
     }
 
-    const sourceNode = sourceNodes[0];
     const transformNode = transformNodes[0];
     const sinkNode = sinkNodes[0];
-    if (sourceNode && transformNode && sinkNode) {
+    if (sourceNodes.length > 0 && transformNode && sinkNode) {
       const expectedEdges = new Set([
-        `${sourceNode.id}->${transformNode.id}`,
+        ...sourceNodes.map((sourceNode) => `${sourceNode.id}->${transformNode.id}`),
         `${transformNode.id}->${sinkNode.id}`,
       ]);
       if (edgeKeys.size !== expectedEdges.size) {
@@ -251,7 +267,7 @@ export const DesignGraphDraftSchema = z
           code: 'custom',
           path: ['edges'],
           message:
-            'DesignGraphDraft edges must match the governed source -> sql_transform -> sink chain.',
+            'DesignGraphDraft edges must match the governed source(s) -> sql_transform -> sink chain.',
         });
       }
       for (const expectedEdge of expectedEdges) {
@@ -260,7 +276,7 @@ export const DesignGraphDraftSchema = z
             code: 'custom',
             path: ['edges'],
             message:
-              'DesignGraphDraft edges must match the governed source -> sql_transform -> sink chain.',
+              'DesignGraphDraft edges must match the governed source(s) -> sql_transform -> sink chain.',
           });
           break;
         }

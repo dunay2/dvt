@@ -521,6 +521,22 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtSqlTransformTitle',
     fallback: 'DVT SQL transform',
   },
+  inspectorDvtSubstraitInnerJoinAction: {
+    key: 'canvas.inspector.authoring.dvtSubstraitInnerJoinAction',
+    fallback: 'INNER JOIN',
+  },
+  inspectorDvtSubstraitInnerJoinTitle: {
+    key: 'canvas.inspector.authoring.dvtSubstraitInnerJoinTitle',
+    fallback: 'Substrait INNER JOIN',
+  },
+  inspectorDvtSubstraitJoinConditionLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitJoinConditionLabel',
+    fallback: 'Join condition',
+  },
+  inspectorDvtSubstraitSelectedFieldsLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitSelectedFieldsLabel',
+    fallback: 'Selected fields',
+  },
   inspectorDvtSinkTitle: {
     key: 'canvas.inspector.authoring.dvtSinkTitle',
     fallback: 'DVT sink',

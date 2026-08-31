@@ -10,6 +10,10 @@ import { WorkspaceFileLoadError } from '../../services/workspace/workspaceErrors
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import {
+  createDvtSubstraitInnerJoinDraft,
+  encodeDvtSubstraitInnerJoinDocument,
+} from './canvasDvtSubstraitJoinComposition';
+import {
   applyDvtSubstraitPilotFunction,
   createDvtSubstraitPilotDraft,
   encodeDvtSubstraitPilotDocument,
@@ -110,6 +114,112 @@ function buildSubstraitPreviewGraph(
     ],
     edges: [
       { id: 'source-transform', sourceId: 'source', targetId: 'transform', relation: 'lineage' },
+      { id: 'transform-sink', sourceId: 'transform', targetId: 'sink', relation: 'lineage' },
+    ],
+  };
+}
+
+function buildSubstraitJoinPreviewGraph(): ReturnType<typeof buildSubstraitPreviewGraph> {
+  const transformPath = 'models/customer_orders.sql';
+  const connectionRef = buildTestPostgresConnectionRef();
+  const draft = createDvtSubstraitInnerJoinDraft({
+    left: {
+      nodeId: 'source-customers',
+      schema: 'public',
+      table: 'customers',
+      sourceRef: {
+        schemaVersion: 'connected-source-ref.v1',
+        connectionRef,
+        sourceObjectId: 'public.customers',
+      },
+    },
+    right: {
+      nodeId: 'source-orders',
+      schema: 'public',
+      table: 'orders',
+      sourceRef: {
+        schemaVersion: 'connected-source-ref.v1',
+        connectionRef,
+        sourceObjectId: 'public.orders',
+      },
+    },
+    targetNodeId: 'transform',
+  });
+  const transform = applyDvtSubstraitSemanticDocument(
+    {
+      id: 'transform',
+      name: 'Customer orders',
+      pluginId: 'dvt',
+      kind: 'dvt:sql_transform',
+      role: 'transform',
+      status: 'idle',
+      tags: ['authoring'],
+      path: transformPath,
+      metadata: { config: { dialect: 'postgres' } },
+    },
+    encodeDvtSubstraitInnerJoinDocument(draft)
+  );
+  const source = (id: string, table: string): CanonicalNode => ({
+    id,
+    name: table,
+    pluginId: 'dvt.warehouse-source',
+    kind: 'dvt:source',
+    role: 'input',
+    status: 'idle',
+    tags: ['source'],
+    metadata: {
+      sourceName: table,
+      schema: 'public',
+      tableName: table,
+      columns: (table === 'customers' ? ['customer_id', 'name'] : ['order_id', 'customer_id']).map(
+        (name) => ({ name, type: 'string' })
+      ),
+      connectedSourceRef: {
+        schemaVersion: 'connected-source-ref.v1',
+        connectionRef,
+        sourceObjectId: `public.${table}`,
+      },
+    },
+  });
+  const sink: CanonicalNode = {
+    id: 'sink',
+    name: 'Sink',
+    pluginId: 'dvt',
+    kind: 'dvt:sink',
+    role: 'output',
+    status: 'idle',
+    tags: ['authoring'],
+    metadata: {
+      config: {
+        schema: 'analytics',
+        table: 'customer_orders',
+        materialization: 'table',
+        writeMode: 'replace',
+      },
+    },
+  };
+
+  return {
+    transformPath,
+    nodes: [
+      source('source-customers', 'customers'),
+      source('source-orders', 'orders'),
+      transform,
+      sink,
+    ],
+    edges: [
+      {
+        id: 'customers-transform',
+        sourceId: 'source-customers',
+        targetId: 'transform',
+        relation: 'lineage',
+      },
+      {
+        id: 'orders-transform',
+        sourceId: 'source-orders',
+        targetId: 'transform',
+        relation: 'lineage',
+      },
       { id: 'transform-sink', sourceId: 'transform', targetId: 'sink', relation: 'lineage' },
     ],
   };
@@ -229,5 +339,66 @@ describe('Substrait Preview provenance cutover', () => {
     if (!result.ok) throw new Error(result.message);
     expect(result.sqlText?.toLowerCase()).toContain('from "tenant-data"."customer-ledger"');
     expect(result.sqlText?.toLowerCase()).not.toMatch(/from customers;?\s*$/);
+  });
+
+  it('routes the two-source INNER JOIN revision through the existing Preview artifact rail', async () => {
+    const graph = buildSubstraitJoinPreviewGraph();
+
+    const { result, savedContents } = await resolveGraphPreview(graph);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error(result.message);
+    const normalized = result.sqlText?.replaceAll(/\s+/g, ' ').trim().toLowerCase();
+    expect(normalized).toMatch(
+      /^select left_source\.customer_id as customer_id, left_source\.name as name, right_source\.order_id as order_id from public\.customers as left_source join public\.orders as right_source on left_source\.customer_id = right_source\.customer_id;?$/
+    );
+    expect(savedContents).toContain(result.sqlText);
+  });
+
+  it('fails closed when a scoped dataset identity diverges from the INNER JOIN sidecar', async () => {
+    const graph = buildSubstraitJoinPreviewGraph();
+    const nodes = graph.nodes.map((node) =>
+      node.id !== 'source-orders'
+        ? node
+        : {
+            ...node,
+            metadata: {
+              ...node.metadata,
+              tableName: 'other_orders',
+            },
+          }
+    );
+
+    const { result } = await resolveGraphPreview({ ...graph, nodes });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('Expected scoped source mismatch to fail closed.');
+    expect(result.message).toMatch(/source identities/i);
+  });
+
+  it('fails closed when a scoped dataset connection provider diverges from the sidecar', async () => {
+    const graph = buildSubstraitJoinPreviewGraph();
+    const nodes = graph.nodes.map((node) =>
+      node.id !== 'source-orders'
+        ? node
+        : {
+            ...node,
+            metadata: {
+              ...node.metadata,
+              connectedSourceRef: {
+                ...(node.metadata?.connectedSourceRef as Record<string, unknown>),
+                connectionRef: {
+                  ...((node.metadata?.connectedSourceRef as { connectionRef: object })
+                    .connectionRef ?? {}),
+                  provider: 'mysql',
+                },
+              },
+            },
+          }
+    );
+
+    const { result } = await resolveGraphPreview({ ...graph, nodes });
+
+    expect(result.ok).toBe(false);
   });
 });

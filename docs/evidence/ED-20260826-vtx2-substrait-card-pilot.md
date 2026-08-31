@@ -19,6 +19,10 @@ code_refs:
   - apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.ts
   - apps/web/src/app/views/canvas/canvasNodePresentationProjection.ts
   - apps/web/src/app/views/canvas/canvasTransformationSqlMirror.ts
+  - apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
+  - apps/web/src/app/views/canvas/DvtSubstraitInnerJoinAuthoringSection.tsx
+  - apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresProjection.ts
+  - apps/web/src/app/views/canvas/canvasPreviewProvenance.ts
   - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts
   - packages/@dvt/contracts/src/contracts/planner/VisualTransformRecipe.v1.ts
   - packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts
@@ -30,6 +34,14 @@ evidence:
     - Contracts Required for Merge on PR #2658
     - Package Tests (contracts) on PR #2658
     - Dependency Review on PR #2658
+    - pnpm --filter @dvt/contracts test
+    - pnpm --filter @dvt/contracts lint
+    - pnpm --filter @dvt/contracts typecheck
+    - pnpm --filter @dvt/web test
+    - pnpm --filter @dvt/web lint
+    - pnpm --filter @dvt/web typecheck
+    - pnpm docs:feature-mechanization:implementation -- --feature VTX2-SUBSTRAIT-INNER-JOIN-20260831
+    - pnpm verify:prepush
 ---
 
 # VTX2 typed Substrait card pilot evidence
@@ -118,6 +130,32 @@ to validate the persistent DB-first architecture authority discussed separately.
 This verdict is intentionally narrow: it approves the #2598 pilot boundary, not
 future SQL rendering, persistence policy, multi-relation authoring, or the final
 shape of later abstractions.
+
+## Extension evidence: first typed INNER JOIN card
+
+Issue #2634 extends the same card authority with one deliberately bounded
+multi-input shape. Two existing PostgreSQL source nodes on the same connection
+feed one existing `dvt:sql_transform` card whose semantic document is a pinned
+Substrait `ReadRel + ReadRel + INNER JoinRel(equal)` plan. The DVT sidecar keeps
+the two physical source identities and stable output field identities.
+
+The existing `ConfigureCanvasDvtNode`, Workspace Graph Draft, and
+`PreviewExecutionPlan` rails are reused. Node Properties offers the action only
+for the exact admitted source schemas, the card projects the plan's three
+declared outputs, and Preview requires both scoped graph sources to match the
+sidecar before projecting PostgreSQL SQL. Mixed connections, mismatched source
+identity, unsupported join kinds, unsupported functions, and unsupported plan
+shapes fail closed.
+
+Substrait remains the only semantic authority. This extension introduces no
+Canvas `JoinNode`, private relational IR, SQL editor, dbt model authority, new
+store, or parallel persistence rail. SQL is a generated provider projection;
+future dbt support may consume a generated compatibility projection only.
+
+Planning DB feature mechanization was written directly as two scoped rows for
+`ConfigureCanvasDvtNode` and `PreviewExecutionPlan`; no inventory import or
+database rebuild was performed. The next product cuts—field selection,
+grouping, and windows—remain separate capability admissions.
 
 ## Quality gates
 

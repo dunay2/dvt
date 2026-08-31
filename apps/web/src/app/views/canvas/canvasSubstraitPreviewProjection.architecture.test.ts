@@ -15,11 +15,14 @@ describe('VTX2 Substrait Preview cutover architecture', () => {
     expect(PREVIEW_PROVENANCE_SOURCE).toContain('DVT_TRANSFORM_AUTHORING_MODE.substrait');
     expect(PREVIEW_PROVENANCE_SOURCE).toContain('decodeDvtSubstraitPilotDocument(');
     expect(PREVIEW_PROVENANCE_SOURCE).toContain('projectDvtSubstraitPilotToPostgresSql(');
+    expect(PREVIEW_PROVENANCE_SOURCE).toContain('decodeDvtSubstraitInnerJoinDocument(');
+    expect(PREVIEW_PROVENANCE_SOURCE).toContain('projectDvtSubstraitInnerJoinToPostgresSql(');
     expect(PREVIEW_PROVENANCE_SOURCE).toContain('compileDvtVisualTransformNodeToPostgresSql(');
     expect(SUBSTRAIT_POSTGRES_PROJECTION_SOURCE).toContain(
-      'project only the #2598 typed Substrait pilot shape to PostgreSQL SQL'
+      'project only the admitted pilot and two-source INNER JOIN shapes to PostgreSQL'
     );
     expect(PREVIEW_PROVENANCE_SOURCE).not.toContain('SubstraitPreviewService');
     expect(PREVIEW_PROVENANCE_SOURCE).not.toContain('localStorage');
+    expect(PREVIEW_PROVENANCE_SOURCE).not.toContain('dbt');
   });
 });

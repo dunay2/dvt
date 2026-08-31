@@ -28,8 +28,19 @@ import {
   resolveExecutableSqlText,
 } from './canvasTransformationSqlMirror';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
-import { decodeDvtSubstraitPilotDocument } from './canvasDvtSubstraitPilot';
-import { projectDvtSubstraitPilotToPostgresSql } from './canvasDvtSubstraitPostgresProjection';
+import {
+  decodeDvtSubstraitPilotDocument,
+  inspectDvtSubstraitPilotDraft,
+} from './canvasDvtSubstraitPilot';
+import {
+  decodeDvtSubstraitInnerJoinDocument,
+  inspectDvtSubstraitInnerJoinDraft,
+  resolveDvtSubstraitInnerJoinEntry,
+} from './canvasDvtSubstraitJoinComposition';
+import {
+  projectDvtSubstraitInnerJoinToPostgresSql,
+  projectDvtSubstraitPilotToPostgresSql,
+} from './canvasDvtSubstraitPostgresProjection';
 import { compileDvtVisualTransformNodeToPostgresSql } from './canvasVisualTransformSql';
 
 export type PreviewProvenanceResolution =
@@ -197,6 +208,7 @@ async function savePreviewGraphArtifact(args: {
 async function resolvePreviewSqlArtifact(args: {
   transformArtifactSource: TransformArtifactSource;
   canonicalNodes: readonly CanonicalNode[];
+  canonicalEdges: readonly CanonicalEdge[];
   scopedNodeIds: readonly string[];
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
   workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
@@ -252,6 +264,7 @@ async function resolvePreviewSqlArtifact(args: {
   const sqlText = await buildAuthoringPreviewSql({
     transformNode: transformArtifactSource.node,
     canonicalNodes: args.canonicalNodes,
+    canonicalEdges: args.canonicalEdges,
     scopedNodeIds: args.scopedNodeIds,
   });
   const savedSqlArtifactReceipt = await args.workspaceFileContentCommand.saveFileContent({
@@ -278,10 +291,12 @@ async function resolvePreviewSqlArtifact(args: {
 async function buildAuthoringPreviewSql({
   transformNode,
   canonicalNodes,
+  canonicalEdges,
   scopedNodeIds,
 }: {
   transformNode: CanonicalNode;
   canonicalNodes: readonly CanonicalNode[];
+  canonicalEdges: readonly CanonicalEdge[];
   scopedNodeIds: readonly string[];
 }): Promise<string> {
   if (transformNode.pluginId === 'dvt' && transformNode.kind === 'dvt:sql_transform') {
@@ -294,13 +309,37 @@ async function buildAuthoringPreviewSql({
       });
     }
     if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
-      const scopedNodes = resolveScopedTransformationNodes(canonicalNodes, scopedNodeIds);
-      const source = requireSourcePayload(scopedNodes.source);
-      const draft = decodeDvtSubstraitPilotDocument(authority.semanticDocument);
-      const sql = await projectDvtSubstraitPilotToPostgresSql(draft, {
-        schema: source.payload.schema,
-        table: source.payload.table,
+      const pilotDraft = decodeDvtSubstraitPilotDocument(authority.semanticDocument);
+      if (inspectDvtSubstraitPilotDraft(pilotDraft).ok) {
+        const scopedNodes = resolveScopedTransformationNodes(canonicalNodes, scopedNodeIds);
+        const source = requireSourcePayload(scopedNodes.source);
+        const sql = await projectDvtSubstraitPilotToPostgresSql(pilotDraft, {
+          schema: source.payload.schema,
+          table: source.payload.table,
+        });
+        return sql.endsWith('\n') ? sql : `${sql}\n`;
+      }
+
+      const joinDraft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
+      const joinInspection = inspectDvtSubstraitInnerJoinDraft(joinDraft);
+      if (!joinInspection.ok) {
+        throw new Error('Preview does not support this Substrait semantic shape.');
+      }
+      const scopedNodeIdSet = new Set(scopedNodeIds);
+      const joinEntry = resolveDvtSubstraitInnerJoinEntry({
+        targetNode: transformNode,
+        nodes: canonicalNodes.filter((node) => scopedNodeIdSet.has(node.id)),
+        edges: canonicalEdges.filter(
+          (edge) => scopedNodeIdSet.has(edge.sourceId) && scopedNodeIdSet.has(edge.targetId)
+        ),
+        requirePersistedAuthority: true,
       });
+      if (joinEntry == null) {
+        throw new Error(
+          'Substrait INNER JOIN Preview source identities do not match the scoped graph.'
+        );
+      }
+      const sql = await projectDvtSubstraitInnerJoinToPostgresSql(joinDraft);
       return sql.endsWith('\n') ? sql : `${sql}\n`;
     }
   }
@@ -356,6 +395,7 @@ export async function resolvePreviewProvenance({
     const { sqlArtifact, sqlText } = await resolvePreviewSqlArtifact({
       transformArtifactSource,
       canonicalNodes,
+      canonicalEdges,
       scopedNodeIds,
       workspaceFilesQuery,
       workspaceFileContentCommand,

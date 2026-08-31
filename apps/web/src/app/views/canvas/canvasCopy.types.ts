@@ -503,6 +503,10 @@ export type CanvasViewCopy = {
   readonly inspectorDvtConnectionTestFailedMessage: string;
   readonly inspectorDvtInheritedConnectionLabel: string;
   readonly inspectorDvtSqlTransformTitle: string;
+  readonly inspectorDvtSubstraitInnerJoinAction: string;
+  readonly inspectorDvtSubstraitInnerJoinTitle: string;
+  readonly inspectorDvtSubstraitJoinConditionLabel: string;
+  readonly inspectorDvtSubstraitSelectedFieldsLabel: string;
   readonly inspectorDvtSinkTitle: string;
   readonly inspectorDvtDatabaseLabel: string;
   readonly inspectorDvtSchemaLabel: string;
