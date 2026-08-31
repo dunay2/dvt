@@ -457,7 +457,7 @@ describe('DvtAuthoringFields', () => {
     const shipments = buildJoinWarehouseSourceNode({
       id: 'source-shipments',
       table: 'shipments',
-      columns: ['shipment_id', 'customer_id'],
+      columns: ['shipment_id', 'customer_id', 'name'],
     });
     const tickets = buildJoinWarehouseSourceNode({
       id: 'source-tickets',
