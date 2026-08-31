@@ -22,6 +22,7 @@ import {
   applyDvtSubstraitInnerJoinFieldEdit,
   applyDvtSubstraitInnerJoinGroupedRowNumber,
   applyDvtSubstraitInnerJoinGrouping,
+  appendDvtSubstraitInnerJoinInput,
   createDvtSubstraitInnerJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import {
@@ -192,6 +193,81 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       /^select left_source\.customer_id as customer_id, left_source\.name as name, right_source\.order_id as order_id from "tenant-data"\."customer-ledger" as left_source join "tenant-data"\."order-ledger" as right_source on left_source\.customer_id = right_source\.customer_id;?$/
     );
   });
+
+  it.each([
+    {
+      appendedSources: [{ nodeId: 'source-shipments', table: 'shipments', output: 'shipment_id' }],
+      expectedSql:
+        'select left_source.customer_id as customer_id, left_source.name as name, right_source.order_id as order_id, join_source_3.shipment_id as shipment_id from public.customers as left_source join public.orders as right_source on left_source.customer_id = right_source.customer_id join public.shipments as join_source_3 on left_source.customer_id = join_source_3.customer_id',
+    },
+    {
+      appendedSources: [
+        { nodeId: 'source-shipments', table: 'shipments', output: 'shipment_id' },
+        { nodeId: 'source-tickets', table: 'tickets', output: 'ticket_id' },
+      ],
+      expectedSql:
+        'select left_source.customer_id as customer_id, left_source.name as name, right_source.order_id as order_id, join_source_3.shipment_id as shipment_id, join_source_4.ticket_id as ticket_id from public.customers as left_source join public.orders as right_source on left_source.customer_id = right_source.customer_id join public.shipments as join_source_3 on left_source.customer_id = join_source_3.customer_id join public.tickets as join_source_4 on left_source.customer_id = join_source_4.customer_id',
+    },
+  ])(
+    'projects $appendedSources.length appended inputs through one recursive path',
+    async (fixture) => {
+      const connectionRef = {
+        schemaVersion: 'connection-ref.v1' as const,
+        connectionId: 'warehouse-main',
+        provider: 'postgres' as const,
+      };
+      let draft = createDvtSubstraitInnerJoinDraft({
+        left: {
+          nodeId: 'source-customers',
+          schema: 'public',
+          table: 'customers',
+          sourceRef: {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef,
+            sourceObjectId: 'public.customers',
+          },
+        },
+        right: {
+          nodeId: 'source-orders',
+          schema: 'public',
+          table: 'orders',
+          sourceRef: {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef,
+            sourceObjectId: 'public.orders',
+          },
+        },
+        targetNodeId: 'transform-customer-orders',
+      });
+      for (const appended of fixture.appendedSources) {
+        draft = appendDvtSubstraitInnerJoinInput(draft, {
+          source: {
+            nodeId: appended.nodeId,
+            schema: 'public',
+            table: appended.table,
+            sourceRef: {
+              schemaVersion: 'connected-source-ref.v1',
+              connectionRef,
+              sourceObjectId: `public.${appended.table}`,
+            },
+          },
+          fields: [appended.output, 'customer_id'],
+          predicate: {
+            leftSourceFieldId: 'field:source-customers:customer_id',
+            rightFieldName: 'customer_id',
+          },
+          selectedFields: [appended.output],
+        });
+      }
+
+      const normalized = (await projectDvtSubstraitInnerJoinToPostgresSql(draft))
+        .replaceAll(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+
+      expect(normalized).toBe(fixture.expectedSql);
+    }
+  );
 
   it('projects selected, renamed, and reordered fields from the same INNER JOIN revision', async () => {
     const connectionRef = {

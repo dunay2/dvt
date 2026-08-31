@@ -25,12 +25,14 @@ import {
   inspectDvtSubstraitInnerJoinGroupedWindowDraft,
   inspectDvtSubstraitInnerJoinGroupingDraft,
   inspectDvtSubstraitInnerJoinDraft,
+  inspectDvtSubstraitNInputJoinDraft,
   removeDvtSubstraitInnerJoinGroupedRowNumber,
   removeDvtSubstraitInnerJoinGrouping,
   type DvtSubstraitInnerJoinDraft,
   type DvtSubstraitInnerJoinGroupedWindowProjection,
   type DvtSubstraitInnerJoinGroupingProjection,
   type DvtSubstraitInnerJoinProjection,
+  type DvtSubstraitNInputJoinProjection,
 } from './canvasDvtSubstraitJoinComposition';
 import {
   inspectDvtSubstraitUnionAllGroupedWindowDraft,
@@ -499,6 +501,85 @@ function buildInnerJoinPostgresAst(projection: DvtSubstraitInnerJoinProjection):
   };
 }
 
+function nInputJoinAlias(inputIndex: number): string {
+  if (inputIndex === 0) return 'left_source';
+  if (inputIndex === 1) return 'right_source';
+  return `join_source_${inputIndex + 1}`;
+}
+
+function buildNInputJoinPostgresAst(projection: DvtSubstraitNInputJoinProjection): PostgresAstNode {
+  const fieldBindings = new Map<string, Readonly<{ alias: string; name: string }>>();
+  projection.inputs.forEach((input, inputIndex) => {
+    const alias = nInputJoinAlias(inputIndex);
+    input.fields.forEach((field) => fieldBindings.set(field.fieldId, { alias, name: field.name }));
+  });
+  const requireFieldBinding = (fieldId: string): Readonly<{ alias: string; name: string }> => {
+    const binding = fieldBindings.get(fieldId);
+    if (binding == null) {
+      throw new DvtSubstraitPostgresProjectionError(
+        'unsupported_shape',
+        'The recursive INNER JOIN references a field outside its admitted inputs.'
+      );
+    }
+    return binding;
+  };
+
+  const firstInput = projection.inputs[0];
+  if (firstInput == null || projection.joins.length !== projection.inputs.length - 1) {
+    throw new DvtSubstraitPostgresProjectionError(
+      'unsupported_shape',
+      'The recursive INNER JOIN tree does not have one predicate per appended input.'
+    );
+  }
+  let joinedInputs = pgRangeVar({
+    schema: firstInput.schema,
+    table: firstInput.table,
+    alias: nInputJoinAlias(0),
+  });
+  for (let inputIndex = 1; inputIndex < projection.inputs.length; inputIndex += 1) {
+    const input = projection.inputs[inputIndex]!;
+    const predicate = projection.joins[inputIndex - 1]!;
+    const left = requireFieldBinding(predicate.leftSourceFieldId);
+    const right = requireFieldBinding(predicate.rightSourceFieldId);
+    joinedInputs = {
+      JoinExpr: {
+        jointype: 'JOIN_INNER',
+        larg: joinedInputs,
+        rarg: pgRangeVar({
+          schema: input.schema,
+          table: input.table,
+          alias: nInputJoinAlias(inputIndex),
+        }),
+        quals: {
+          A_Expr: {
+            kind: 'AEXPR_OP',
+            name: [pgString('=')],
+            lexpr: pgQualifiedColumnRef(left.alias, left.name),
+            rexpr: pgQualifiedColumnRef(right.alias, right.name),
+          },
+        },
+      },
+    };
+  }
+
+  return {
+    SelectStmt: {
+      targetList: projection.outputs.map((output) => {
+        const source = requireFieldBinding(output.source.fieldId);
+        return {
+          ResTarget: {
+            name: output.name,
+            val: pgQualifiedColumnRef(source.alias, source.name),
+          },
+        };
+      }),
+      fromClause: [joinedInputs],
+      limitOption: 'LIMIT_OPTION_DEFAULT',
+      op: 'SETOP_NONE',
+    },
+  };
+}
+
 function buildGroupedInnerJoinPostgresAst(
   composition:
     DvtSubstraitInnerJoinGroupingProjection | DvtSubstraitInnerJoinGroupedWindowProjection,
@@ -688,7 +769,12 @@ export async function projectDvtSubstraitInnerJoinToPostgresSql(
       buildGroupedInnerJoinPostgresAst(grouping.projection, innerJoin)
     );
   }
-  return deparseBoundedPostgresAst(buildInnerJoinPostgresAst(requireInnerJoinProjection(draft)));
+  const nInputJoin = inspectDvtSubstraitNInputJoinDraft(draft);
+  return deparseBoundedPostgresAst(
+    nInputJoin.ok
+      ? buildNInputJoinPostgresAst(nInputJoin.projection)
+      : buildInnerJoinPostgresAst(requireInnerJoinProjection(draft))
+  );
 }
 
 export async function projectDvtSubstraitUnionAllToPostgresSql(
