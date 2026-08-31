@@ -824,6 +824,7 @@ export function applyDvtSubstraitInnerJoinFieldEdit(
         fieldKey: field.fieldKey,
         name: field.defaultName,
         fieldId,
+        dataType: 'string',
         outputOrdinal: outputs.length,
         source: field.source,
       });
