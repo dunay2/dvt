@@ -9,6 +9,7 @@ import {
   convertDvtVisualTransformToSql,
 } from './canvasDvtTransformAuthoringAuthority';
 import {
+  appendDvtSubstraitInnerJoinInput,
   applyDvtSubstraitInnerJoinFieldEdit,
   applyDvtSubstraitInnerJoinGroupedRowNumber,
   applyDvtSubstraitInnerJoinGrouping,
@@ -354,6 +355,206 @@ describe('Canvas column lineage projection', () => {
         }),
       }),
     ]);
+  });
+
+  it.each([3, 4])(
+    'derives every selected N=%i INNER JOIN output from its stable source identity',
+    (inputCount) => {
+      const connectionRef = {
+        schemaVersion: 'connection-ref.v1' as const,
+        connectionId: 'warehouse-main',
+        provider: 'postgres' as const,
+      };
+      const source = (id: string, table: string, columns: readonly string[]): CanonicalNode => ({
+        ...buildNode(
+          id,
+          'dvt:source',
+          'input',
+          columns.map((name) => ({ name, type: 'string' }))
+        ),
+        name: table,
+        metadata: {
+          tableName: table,
+          schema: 'public',
+          columns: columns.map((name) => ({ name, type: 'string' })),
+          connectedSourceRef: {
+            schemaVersion: 'connected-source-ref.v1' as const,
+            connectionRef,
+            sourceObjectId: `public.${table}`,
+          },
+        },
+      });
+      const customers = source('source-customers', 'customers', ['customer_id', 'name']);
+      const orders = source('source-orders', 'orders', ['order_id', 'customer_id']);
+      const shipments = source('source-shipments', 'shipments', ['shipment_id', 'customer_id']);
+      const tickets = source('source-tickets', 'tickets', ['ticket_id', 'customer_id']);
+      const sources = [customers, orders, shipments, ...(inputCount === 4 ? [tickets] : [])];
+
+      let draft = createDvtSubstraitInnerJoinDraft({
+        left: {
+          nodeId: customers.id,
+          schema: 'public',
+          table: 'customers',
+          sourceRef: customers.metadata!.connectedSourceRef as ConnectedSourceRef,
+        },
+        right: {
+          nodeId: orders.id,
+          schema: 'public',
+          table: 'orders',
+          sourceRef: orders.metadata!.connectedSourceRef as ConnectedSourceRef,
+        },
+        targetNodeId: 'model',
+      });
+      for (const [node, field] of [
+        [shipments, 'shipment_id'],
+        ...(inputCount === 4 ? ([[tickets, 'ticket_id']] as const) : []),
+      ] as const) {
+        draft = appendDvtSubstraitInnerJoinInput(draft, {
+          source: {
+            nodeId: node.id,
+            schema: 'public',
+            table: node.metadata!.tableName as string,
+            sourceRef: node.metadata!.connectedSourceRef as ConnectedSourceRef,
+          },
+          fields: (node.metadata!.columns as readonly { name: string }[]).map(
+            (column) => column.name
+          ),
+          predicate: {
+            leftSourceFieldId: 'field:source-customers:customer_id',
+            rightFieldName: 'customer_id',
+          },
+          selectedFields: [field],
+        });
+      }
+      const model = applyDvtSubstraitSemanticDocument(
+        buildNode('model', 'dvt:sql_transform', 'transform'),
+        encodeDvtSubstraitInnerJoinDocument(draft)
+      );
+
+      const projected = projectCanvasColumnLineage({
+        nodes: [...sources, model],
+        edges: sources.map((node) => ({ sourceId: node.id, targetId: model.id })),
+        expandedNodeIds: new Set([...sources.map((node) => node.id), model.id]),
+      });
+
+      expect(projected.map((edge) => [edge.source, edge.data?.sourceColumnName])).toEqual([
+        [customers.id, 'customer_id'],
+        [customers.id, 'name'],
+        [orders.id, 'order_id'],
+        [shipments.id, 'shipment_id'],
+        ...(inputCount === 4 ? [[tickets.id, 'ticket_id']] : []),
+      ]);
+      expect(projected.map((edge) => edge.data?.outputId)).toEqual([
+        'field:model:customer_id',
+        'field:model:name',
+        'field:model:order_id',
+        'field:model:shipment_id',
+        ...(inputCount === 4 ? ['field:model:ticket_id'] : []),
+      ]);
+      expect(projected.map((edge) => edge.data?.sourceFieldId)).toEqual([
+        'field:source-customers:customer_id',
+        'field:source-customers:name',
+        'field:source-orders:order_id',
+        'field:source-shipments:shipment_id',
+        ...(inputCount === 4 ? ['field:source-tickets:ticket_id'] : []),
+      ]);
+    }
+  );
+
+  it('fails N-input lineage closed when one connected source identity is stale', () => {
+    const connectionRef = {
+      schemaVersion: 'connection-ref.v1' as const,
+      connectionId: 'warehouse-main',
+      provider: 'postgres' as const,
+    };
+    const connectedSourceRef = (table: string): ConnectedSourceRef => ({
+      schemaVersion: 'connected-source-ref.v1',
+      connectionRef,
+      sourceObjectId: `public.${table}`,
+    });
+    const source = (id: string, table: string, columns: readonly string[]): CanonicalNode => ({
+      ...buildNode(
+        id,
+        'dvt:source',
+        'input',
+        columns.map((name) => ({ name, type: 'string' }))
+      ),
+      metadata: {
+        schema: 'public',
+        tableName: table,
+        columns: columns.map((name) => ({ name, type: 'string' })),
+        connectedSourceRef: connectedSourceRef(table),
+      },
+    });
+    const customers = source('source-customers', 'customers', ['customer_id', 'name']);
+    const orders = source('source-orders', 'orders', ['order_id', 'customer_id']);
+    const shipments = source('source-shipments', 'shipments', ['shipment_id', 'customer_id']);
+    let draft = createDvtSubstraitInnerJoinDraft({
+      left: {
+        nodeId: customers.id,
+        schema: 'public',
+        table: 'customers',
+        sourceRef: connectedSourceRef('customers'),
+      },
+      right: {
+        nodeId: orders.id,
+        schema: 'public',
+        table: 'orders',
+        sourceRef: connectedSourceRef('orders'),
+      },
+      targetNodeId: 'model',
+    });
+    draft = appendDvtSubstraitInnerJoinInput(draft, {
+      source: {
+        nodeId: shipments.id,
+        schema: 'public',
+        table: 'shipments',
+        sourceRef: connectedSourceRef('shipments'),
+      },
+      fields: ['shipment_id', 'customer_id'],
+      predicate: {
+        leftSourceFieldId: 'field:source-customers:customer_id',
+        rightFieldName: 'customer_id',
+      },
+      selectedFields: ['shipment_id'],
+    });
+    const model = applyDvtSubstraitSemanticDocument(
+      buildNode('model', 'dvt:sql_transform', 'transform'),
+      encodeDvtSubstraitInnerJoinDocument(draft)
+    );
+    const copiedModel = applyDvtSubstraitSemanticDocument(
+      buildNode('copied-model', 'dvt:sql_transform', 'transform'),
+      encodeDvtSubstraitInnerJoinDocument(draft)
+    );
+    const staleShipments = {
+      ...shipments,
+      metadata: {
+        ...shipments.metadata,
+        connectedSourceRef: connectedSourceRef('other_shipments'),
+      },
+    };
+
+    expect(
+      projectCanvasColumnLineage({
+        nodes: [customers, orders, shipments, copiedModel],
+        edges: [customers, orders, shipments].map((node) => ({
+          sourceId: node.id,
+          targetId: copiedModel.id,
+        })),
+        expandedNodeIds: new Set([customers.id, orders.id, shipments.id, copiedModel.id]),
+      })
+    ).toEqual([]);
+
+    expect(
+      projectCanvasColumnLineage({
+        nodes: [customers, orders, staleShipments, model],
+        edges: [customers, orders, staleShipments].map((node) => ({
+          sourceId: node.id,
+          targetId: model.id,
+        })),
+        expandedNodeIds: new Set([customers.id, orders.id, staleShipments.id, model.id]),
+      })
+    ).toEqual([]);
   });
 
   it('derives each UNION ALL output from both contributing source fields', () => {
