@@ -564,6 +564,44 @@ describe('DvtAuthoringFields', () => {
     });
     expect(draftJson()).toContain('"fieldId":"field:dvt-sql-transform:shipments_customer_id"');
     expect(draftJson()).toContain('"displayName":"shipping_customer"');
+
+    const grainField = container.querySelector<HTMLSelectElement>(
+      '[data-slot="dvt-substrait-inner-join-grain-field"]'
+    );
+    const countOutput = container.querySelector<HTMLInputElement>(
+      '[data-slot="dvt-substrait-inner-join-count-output-name"]'
+    );
+    act(() => {
+      fireEvent.change(grainField!, {
+        target: { value: 'field:dvt-sql-transform:shipment_id' },
+      });
+      fireEvent.input(countOutput!, { target: { value: 'shipment_count' } });
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>(
+          '[data-slot="dvt-substrait-inner-join-apply-grouping"]'
+        )!
+      );
+    });
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-inner-join-grouping-authoring"]')
+    ).not.toBeNull();
+
+    const rankOutput = container.querySelector<HTMLInputElement>(
+      '[data-slot="dvt-substrait-inner-join-window-output-name"]'
+    );
+    act(() => {
+      fireEvent.input(rankOutput!, { target: { value: 'shipment_rank' } });
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>(
+          '[data-slot="dvt-substrait-inner-join-apply-window"]'
+        )!
+      );
+    });
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-inner-join-grouped-window-authoring"]')
+    ).not.toBeNull();
+    expect(draftJson()).toContain('"displayName":"shipment_count"');
+    expect(draftJson()).toContain('"displayName":"shipment_rank"');
   });
 
   it('does not offer INNER JOIN when the connected datasets use different connections', () => {

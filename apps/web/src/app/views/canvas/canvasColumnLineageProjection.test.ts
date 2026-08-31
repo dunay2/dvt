@@ -458,6 +458,30 @@ describe('Canvas column lineage projection', () => {
         'field:source-shipments:shipment_id',
         ...(inputCount === 4 ? ['field:source-tickets:ticket_id'] : []),
       ]);
+
+      const grouped = applyDvtSubstraitInnerJoinGrouping(draft, {
+        groupFieldId: 'field:model:shipment_id',
+        countOutputName: 'shipment_count',
+      });
+      const ranked = applyDvtSubstraitInnerJoinGroupedRowNumber(grouped, {
+        outputName: 'shipment_rank',
+      });
+      const rankedModel = applyDvtSubstraitSemanticDocument(
+        buildNode('model', 'dvt:sql_transform', 'transform'),
+        encodeDvtSubstraitInnerJoinDocument(ranked)
+      );
+      const groupedProjection = projectCanvasColumnLineage({
+        nodes: [...sources, rankedModel],
+        edges: sources.map((node) => ({ sourceId: node.id, targetId: rankedModel.id })),
+        expandedNodeIds: new Set([...sources.map((node) => node.id), rankedModel.id]),
+      });
+      expect(
+        groupedProjection.map((edge) => [
+          edge.source,
+          edge.data?.sourceFieldId,
+          edge.data?.targetColumnName,
+        ])
+      ).toEqual([['source-shipments', 'field:source-shipments:shipment_id', 'shipment_id']]);
     }
   );
 

@@ -67,22 +67,31 @@ export function DvtSubstraitInnerJoinAuthoringSection({
       {content}
     </div>
   );
-  const renderJoinSummary = (projection: {
-    left: { table: string };
-    right: { table: string };
-    leftKey: string;
-    rightKey: string;
-  }): JSX.Element => (
-    <div className="space-y-1 text-xs">
-      <p className="text-(--text-muted)">
-        {projection.left.table} + {projection.right.table}
+  const renderJoinSummary = (
+    projection:
+      | {
+          left: { table: string };
+          right: { table: string };
+          leftKey: string;
+          rightKey: string;
+        }
+      | Pick<DvtSubstraitNInputJoinProjection, 'inputs' | 'joins'>
+  ): JSX.Element =>
+    'inputs' in projection ? (
+      <p className="text-xs text-(--text-muted)">
+        {projection.inputs.map((input) => input.table).join(' + ')}
       </p>
-      <p>
-        {projection.left.table}.{projection.leftKey} = {projection.right.table}.
-        {projection.rightKey}
-      </p>
-    </div>
-  );
+    ) : (
+      <div className="space-y-1 text-xs">
+        <p className="text-(--text-muted)">
+          {projection.left.table} + {projection.right.table}
+        </p>
+        <p>
+          {projection.left.table}.{projection.leftKey} = {projection.right.table}.
+          {projection.rightKey}
+        </p>
+      </div>
+    );
   const nInputInspection = inspectDvtSubstraitNInputJoinDraft(semanticDraft);
   const renderAppendInput = (projection: DvtSubstraitNInputJoinProjection): ReactNode => {
     if (appendCandidates.length === 0) return null;
@@ -165,6 +174,72 @@ export function DvtSubstraitInnerJoinAuthoringSection({
         </label>
         <Button type="submit" size="sm" disabled={disabled} data-slot="dvt-substrait-append-submit">
           {canvasViewCopy.inspectorDvtSubstraitAppendInputAction}
+        </Button>
+      </form>
+    );
+  };
+  const renderGroupingForm = (
+    outputs: readonly Readonly<{ name: string; fieldId: string }>[]
+  ): JSX.Element => {
+    const applyGrouping = (form: HTMLFormElement): void => {
+      const formData = new FormData(form);
+      const groupFieldId = formData.get('grainFieldId');
+      const countOutputName = formData.get('countOutputName');
+      if (
+        typeof groupFieldId !== 'string' ||
+        typeof countOutputName !== 'string' ||
+        countOutputName.trim().length === 0
+      ) {
+        return;
+      }
+      mutateDraft((current) =>
+        applyDvtSubstraitInnerJoinGrouping(current, { groupFieldId, countOutputName })
+      );
+    };
+    return (
+      <form
+        className="space-y-2 border-t border-[color:var(--border-default)] pt-3"
+        onSubmit={(event) => {
+          event.preventDefault();
+          applyGrouping(event.currentTarget);
+        }}
+      >
+        <p className="text-xs font-medium text-(--text-default)">
+          {canvasViewCopy.inspectorDvtSubstraitAggregationTitle}
+        </p>
+        <select
+          data-slot="dvt-substrait-inner-join-grain-field"
+          name="grainFieldId"
+          aria-label={canvasViewCopy.inspectorDvtSubstraitGrainFieldLabel}
+          disabled={disabled}
+          defaultValue={outputs[0]?.fieldId}
+          className="h-8 w-full rounded border border-[color:var(--border-default)] bg-transparent px-2 text-xs"
+        >
+          {outputs.map((output) => (
+            <option key={output.fieldId} value={output.fieldId}>
+              {output.name}
+            </option>
+          ))}
+        </select>
+        <Input
+          data-slot="dvt-substrait-inner-join-count-output-name"
+          name="countOutputName"
+          aria-label={canvasViewCopy.inspectorDvtSubstraitCountOutputLabel}
+          disabled={disabled}
+          defaultValue="row_count"
+        />
+        <Button
+          type="submit"
+          size="sm"
+          data-slot="dvt-substrait-inner-join-apply-grouping"
+          disabled={disabled}
+          onKeyDown={(event) => {
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            event.preventDefault();
+            if (event.currentTarget.form != null) applyGrouping(event.currentTarget.form);
+          }}
+        >
+          {canvasViewCopy.inspectorDvtSubstraitApplyAggregationLabel}
         </Button>
       </form>
     );
@@ -461,6 +536,7 @@ export function DvtSubstraitInnerJoinAuthoringSection({
             </dd>
           </div>
         </dl>
+        {renderGroupingForm(projection.outputs)}
         {renderAppendInput(projection)}
       </div>
     );
@@ -471,21 +547,6 @@ export function DvtSubstraitInnerJoinAuthoringSection({
   const { projection } = inspection;
   const mutateField = (edit: DvtSubstraitInnerJoinFieldEdit): void => {
     mutateDraft((current) => applyDvtSubstraitInnerJoinFieldEdit(current, edit));
-  };
-  const applyGrouping = (form: HTMLFormElement): void => {
-    const formData = new FormData(form);
-    const groupFieldId = formData.get('grainFieldId');
-    const countOutputName = formData.get('countOutputName');
-    if (
-      typeof groupFieldId !== 'string' ||
-      typeof countOutputName !== 'string' ||
-      countOutputName.trim().length === 0
-    ) {
-      return;
-    }
-    mutateDraft((current) =>
-      applyDvtSubstraitInnerJoinGrouping(current, { groupFieldId, countOutputName })
-    );
   };
 
   return renderShell(
@@ -579,51 +640,7 @@ export function DvtSubstraitInnerJoinAuthoringSection({
           </dd>
         </div>
       </dl>
-      <form
-        className="space-y-2 border-t border-[color:var(--border-default)] pt-3"
-        onSubmit={(event) => {
-          event.preventDefault();
-          applyGrouping(event.currentTarget);
-        }}
-      >
-        <p className="text-xs font-medium text-(--text-default)">
-          {canvasViewCopy.inspectorDvtSubstraitAggregationTitle}
-        </p>
-        <select
-          data-slot="dvt-substrait-inner-join-grain-field"
-          name="grainFieldId"
-          aria-label={canvasViewCopy.inspectorDvtSubstraitGrainFieldLabel}
-          disabled={disabled}
-          defaultValue={projection.outputs[0]?.fieldId}
-          className="h-8 w-full rounded border border-[color:var(--border-default)] bg-transparent px-2 text-xs"
-        >
-          {projection.outputs.map((output) => (
-            <option key={output.fieldId} value={output.fieldId}>
-              {output.name}
-            </option>
-          ))}
-        </select>
-        <Input
-          data-slot="dvt-substrait-inner-join-count-output-name"
-          name="countOutputName"
-          aria-label={canvasViewCopy.inspectorDvtSubstraitCountOutputLabel}
-          disabled={disabled}
-          defaultValue="row_count"
-        />
-        <Button
-          type="submit"
-          size="sm"
-          data-slot="dvt-substrait-inner-join-apply-grouping"
-          disabled={disabled}
-          onKeyDown={(event) => {
-            if (event.key !== 'Enter' && event.key !== ' ') return;
-            event.preventDefault();
-            if (event.currentTarget.form != null) applyGrouping(event.currentTarget.form);
-          }}
-        >
-          {canvasViewCopy.inspectorDvtSubstraitApplyAggregationLabel}
-        </Button>
-      </form>
+      {renderGroupingForm(projection.outputs)}
       {nInputInspection.ok ? renderAppendInput(nInputInspection.projection) : null}
     </>
   );

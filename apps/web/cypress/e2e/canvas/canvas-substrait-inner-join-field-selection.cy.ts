@@ -2,7 +2,6 @@
 import {
   decodeDvtSubstraitInnerJoinDocument,
   inspectDvtSubstraitInnerJoinGroupedWindowDraft,
-  inspectDvtSubstraitNInputJoinDraft,
 } from '../../../src/app/views/canvas/canvasDvtSubstraitJoinComposition';
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
@@ -159,7 +158,7 @@ describe('Canvas Substrait N-input INNER JOIN authoring', () => {
     });
   });
 
-  it('appends two connected inputs through the same explicit predicate control and reloads them', () => {
+  it('appends, edits, groups, ranks, and reloads N-input joins through one revision', () => {
     visitCanvas();
 
     cy.get(
@@ -195,6 +194,19 @@ describe('Canvas Substrait N-input INNER JOIN authoring', () => {
     cy.get(
       'button[data-action="move-substrait-n-input-field-up"][data-source-field-id="field:source-shipments:customer_id"]'
     ).click();
+    cy.get('[data-slot="dvt-substrait-inner-join-grain-field"]').select(
+      'field:join-transform:shipment_id'
+    );
+    cy.get('[data-slot="dvt-substrait-inner-join-count-output-name"]')
+      .clear()
+      .type('shipment_count');
+    cy.get('[data-slot="dvt-substrait-inner-join-apply-grouping"]').click();
+    cy.get('[data-slot="dvt-substrait-inner-join-grouping-authoring"]').should('exist');
+    cy.get('[data-slot="dvt-substrait-inner-join-window-output-name"]')
+      .clear()
+      .type('shipment_rank');
+    cy.get('[data-slot="dvt-substrait-inner-join-apply-window"]').click();
+    cy.get('[data-slot="dvt-substrait-inner-join-grouped-window-authoring"]').should('exist');
     cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
 
     cy.wrap(null).should(() => {
@@ -205,22 +217,27 @@ describe('Canvas Substrait N-input INNER JOIN authoring', () => {
         .at(-1);
       const transformAuthoring = savedTransform?.metadata?.transformAuthoring as
         { semanticDocument?: unknown } | undefined;
-      const inspection = inspectDvtSubstraitNInputJoinDraft(
+      const inspection = inspectDvtSubstraitInnerJoinGroupedWindowDraft(
         decodeDvtSubstraitInnerJoinDocument(transformAuthoring?.semanticDocument)
       );
 
       expect(
-        inspection.ok && inspection.projection.inputs.map((input) => input.table)
-      ).to.deep.equal(['customers', 'orders', 'shipments', 'tickets']);
-      expect(
         inspection.ok &&
-          inspection.projection.outputs.find(
-            (output) => output.source.fieldId === 'field:source-shipments:customer_id'
-          )
-      ).to.deep.include({
-        name: 'shipping_customer',
-        fieldId: 'field:join-transform:shipments_customer_id',
-      });
+          inspection.projection.kind === 'n-input' &&
+          inspection.projection.inputs.map((input) => input.table)
+      ).to.deep.equal(['customers', 'orders', 'shipments', 'tickets']);
+      expect(inspection.ok && inspection.projection)
+        .to.have.property('groupField')
+        .that.deep.includes({
+          name: 'shipment_id',
+          fieldId: 'field:join-transform:shipment_id',
+        });
+      expect(inspection.ok && inspection.projection)
+        .to.have.property('result')
+        .that.deep.includes({ name: 'shipment_rank' });
+      expect(
+        inspection.ok && inspection.projection.outputs.map((output) => output.name)
+      ).to.deep.equal(['shipment_id', 'shipment_count', 'shipment_rank']);
     });
 
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
@@ -229,13 +246,14 @@ describe('Canvas Substrait N-input INNER JOIN authoring', () => {
       '.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]'
     ).dblclick();
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
-    cy.get('[data-slot="dvt-substrait-n-input-join-authoring"]').should(
+    cy.get('[data-slot="dvt-substrait-inner-join-grouped-window-authoring"]').should(
       'contain.text',
       'customers + orders + shipments + tickets'
     );
-    cy.get(
-      'input[data-slot="dvt-substrait-n-input-output-name"][data-source-field-id="field:source-shipments:customer_id"]'
-    ).should('have.value', 'shipping_customer');
+    cy.get('[data-slot="dvt-substrait-inner-join-window-output-name"]').should(
+      'have.value',
+      'shipment_rank'
+    );
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     for (const nodeId of [
       'source-customers',
@@ -246,15 +264,8 @@ describe('Canvas Substrait N-input INNER JOIN authoring', () => {
     ]) {
       toggleColumns(nodeId);
     }
-    cy.get(
-      '.react-flow__node[data-id="join-transform"] [data-slot="graph-node-column-remainder-toggle"]'
-    ).click();
-    cy.get('.react-flow__edge-columnLineage').should('have.length', 6);
+    cy.get('.react-flow__edge-columnLineage').should('have.length', 1);
     cy.get('.react-flow__edge-columnLineage[aria-label="shipment_id → shipment_id"]').should(
-      'exist'
-    );
-    cy.get('.react-flow__edge-columnLineage[aria-label="ticket_id → ticket_id"]').should('exist');
-    cy.get('.react-flow__edge-columnLineage[aria-label="customer_id → shipping_customer"]').should(
       'exist'
     );
   });

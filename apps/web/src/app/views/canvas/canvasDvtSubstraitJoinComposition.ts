@@ -167,18 +167,7 @@ export type DvtSubstraitInnerJoinProjection = Readonly<{
 export type DvtSubstraitInnerJoinInspection =
   Readonly<{ ok: true; projection: DvtSubstraitInnerJoinProjection }> | Readonly<{ ok: false }>;
 
-export type DvtSubstraitInnerJoinGroupingProjection = Readonly<{
-  left: DvtSubstraitInnerJoinProjection['left'];
-  right: DvtSubstraitInnerJoinProjection['right'];
-  leftKey: DvtSubstraitInnerJoinProjection['leftKey'];
-  rightKey: DvtSubstraitInnerJoinProjection['rightKey'];
-  groupField: Readonly<{
-    fieldKey: DvtSubstraitInnerJoinFieldKey;
-    name: string;
-    fieldId: string;
-    inputOrdinal: number;
-    source: Readonly<{ relation: 'left' | 'right'; name: string }>;
-  }>;
+type DvtSubstraitInnerJoinGroupingCommon = Readonly<{
   measure: Readonly<{ name: string; fieldId: string; capabilityId: string }>;
   outputs: readonly Readonly<{
     name: string;
@@ -188,16 +177,42 @@ export type DvtSubstraitInnerJoinGroupingProjection = Readonly<{
   }>[];
 }>;
 
+export type DvtSubstraitInnerJoinGroupingProjection =
+  | Readonly<
+      DvtSubstraitInnerJoinGroupingCommon & {
+        kind: 'binary';
+        left: DvtSubstraitInnerJoinProjection['left'];
+        right: DvtSubstraitInnerJoinProjection['right'];
+        leftKey: DvtSubstraitInnerJoinProjection['leftKey'];
+        rightKey: DvtSubstraitInnerJoinProjection['rightKey'];
+        groupField: Readonly<{
+          fieldKey: DvtSubstraitInnerJoinFieldKey;
+          name: string;
+          fieldId: string;
+          inputOrdinal: number;
+          source: Readonly<{ relation: 'left' | 'right'; name: string }>;
+        }>;
+      }
+    >
+  | Readonly<
+      DvtSubstraitInnerJoinGroupingCommon & {
+        kind: 'n-input';
+        inputs: DvtSubstraitNInputJoinProjection['inputs'];
+        joins: DvtSubstraitNInputJoinProjection['joins'];
+        groupField: Readonly<{
+          name: string;
+          fieldId: string;
+          inputOrdinal: number;
+          source: DvtSubstraitNInputJoinProjection['outputs'][number]['source'];
+        }>;
+      }
+    >;
+
 export type DvtSubstraitInnerJoinGroupingInspection =
   | Readonly<{ ok: true; projection: DvtSubstraitInnerJoinGroupingProjection }>
   | Readonly<{ ok: false }>;
 
-export type DvtSubstraitInnerJoinGroupedWindowProjection = Readonly<{
-  left: DvtSubstraitInnerJoinProjection['left'];
-  right: DvtSubstraitInnerJoinProjection['right'];
-  leftKey: DvtSubstraitInnerJoinProjection['leftKey'];
-  rightKey: DvtSubstraitInnerJoinProjection['rightKey'];
-  groupField: DvtSubstraitInnerJoinGroupingProjection['groupField'];
+type DvtSubstraitInnerJoinGroupedWindowCommon = Readonly<{
   measure: Readonly<{ name: string; fieldId: string }>;
   result: Readonly<{ name: string; fieldId: string; capabilityId: string }>;
   outputs: readonly Readonly<{
@@ -207,6 +222,32 @@ export type DvtSubstraitInnerJoinGroupedWindowProjection = Readonly<{
     outputOrdinal: number;
   }>[];
 }>;
+
+export type DvtSubstraitInnerJoinGroupedWindowProjection =
+  | Readonly<
+      DvtSubstraitInnerJoinGroupedWindowCommon & {
+        kind: 'binary';
+        left: DvtSubstraitInnerJoinProjection['left'];
+        right: DvtSubstraitInnerJoinProjection['right'];
+        leftKey: DvtSubstraitInnerJoinProjection['leftKey'];
+        rightKey: DvtSubstraitInnerJoinProjection['rightKey'];
+        groupField: Extract<
+          DvtSubstraitInnerJoinGroupingProjection,
+          { kind: 'binary' }
+        >['groupField'];
+      }
+    >
+  | Readonly<
+      DvtSubstraitInnerJoinGroupedWindowCommon & {
+        kind: 'n-input';
+        inputs: DvtSubstraitNInputJoinProjection['inputs'];
+        joins: DvtSubstraitNInputJoinProjection['joins'];
+        groupField: Extract<
+          DvtSubstraitInnerJoinGroupingProjection,
+          { kind: 'n-input' }
+        >['groupField'];
+      }
+    >;
 
 export type DvtSubstraitInnerJoinGroupedWindowInspection =
   | Readonly<{ ok: true; projection: DvtSubstraitInnerJoinGroupedWindowProjection }>
@@ -461,7 +502,14 @@ export function resolveDvtSubstraitNInputJoinEntry(args: {
       return null;
     }
   }
-  const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+  const groupedWindowInspection = inspectDvtSubstraitInnerJoinGroupedWindowDraft(draft);
+  const groupingInspection = inspectDvtSubstraitInnerJoinGroupingDraft(draft);
+  const joinDraft = groupedWindowInspection.ok
+    ? removeDvtSubstraitInnerJoinGrouping(removeDvtSubstraitInnerJoinGroupedRowNumber(draft))
+    : groupingInspection.ok
+      ? removeDvtSubstraitInnerJoinGrouping(draft)
+      : draft;
+  const inspection = inspectDvtSubstraitNInputJoinDraft(joinDraft);
   if (!inspection.ok || inspection.projection.targetNodeId !== args.targetNode.id) return null;
 
   const graphSourceIds = [
@@ -1528,8 +1576,17 @@ function hasCurrentInnerJoinSemanticHash(draft: DvtSubstraitInnerJoinDraft): boo
   );
 }
 
+function innerJoinResultBinding(
+  draft: DvtSubstraitInnerJoinDraft
+): DvtSubstraitAuthoringSidecarV1['relations'][number] | null {
+  const bindings = draft.sidecar.relations.filter(
+    (relation) => targetNodeIdFromResultRelationId(relation.relationId) != null
+  );
+  return bindings.length === 1 ? bindings[0]! : null;
+}
+
 function innerJoinTargetNodeId(draft: DvtSubstraitInnerJoinDraft): string | null {
-  const resultBinding = draft.sidecar.relations.find((relation) => relation.relAnchor === 3);
+  const resultBinding = innerJoinResultBinding(draft);
   return resultBinding == null ? null : targetNodeIdFromResultRelationId(resultBinding.relationId);
 }
 
@@ -1540,7 +1597,7 @@ function inspectValidInnerJoinGrouping(
     !hasPinnedPlanVersion(draft.plan) ||
     draft.plan.relations.length !== 1 ||
     draft.sidecar.schemaVersion !== DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION ||
-    draft.sidecar.relations.length !== 4 ||
+    draft.sidecar.relations.length < 4 ||
     !hasUniqueInnerJoinSidecarIdentity(draft) ||
     !hasCurrentInnerJoinSemanticHash(draft)
   ) {
@@ -1559,7 +1616,6 @@ function inspectValidInnerJoinGrouping(
   const aggregate = root.value.input.relType.value;
   if (
     aggregate.common?.relAnchor == null ||
-    aggregate.common.relAnchor <= 3 ||
     aggregate.common.emitKind.case !== undefined ||
     aggregate.common.hint != null ||
     aggregate.common.advancedExtension != null ||
@@ -1576,7 +1632,7 @@ function inspectValidInnerJoinGrouping(
   const groupInputOrdinal = readDvtSubstraitFieldReferenceOrdinal(aggregate.groupingExpressions[0]);
   if (groupInputOrdinal == null || groupInputOrdinal < 0) return null;
   const targetNodeId = innerJoinTargetNodeId(draft);
-  const joinBinding = draft.sidecar.relations.find((relation) => relation.relAnchor === 3);
+  const joinBinding = innerJoinResultBinding(draft);
   const aggregateBinding = draft.sidecar.relations.find(
     (relation) => relation.relAnchor === aggregate.common?.relAnchor
   );
@@ -1585,6 +1641,7 @@ function inspectValidInnerJoinGrouping(
   if (
     targetNodeId == null ||
     joinBinding == null ||
+    aggregate.common.relAnchor <= joinBinding.relAnchor ||
     aggregateBinding == null ||
     aggregateBinding.relationId !== aggregateRelationId ||
     aggregateBinding.sourceRef != null ||
@@ -1652,7 +1709,12 @@ function inspectValidInnerJoinGrouping(
       fields: baseFields,
     },
   };
-  const baseInspection = inspectDvtSubstraitInnerJoinDraft(baseDraft);
+  const nInputBaseInspection = inspectDvtSubstraitNInputJoinDraft(baseDraft);
+  const binaryBaseInspection = inspectDvtSubstraitInnerJoinDraft(baseDraft);
+  const baseInspection =
+    nInputBaseInspection.ok && nInputBaseInspection.projection.inputs.length > 2
+      ? nInputBaseInspection
+      : binaryBaseInspection;
   const baseGroupField = baseInspection.ok
     ? baseInspection.projection.outputs[groupInputOrdinal]
     : null;
@@ -1664,39 +1726,65 @@ function inspectValidInnerJoinGrouping(
   ) {
     return null;
   }
+  const common = {
+    measure: {
+      name: countDisplayName,
+      fieldId: countField.fieldId,
+      capabilityId: DVT_SUBSTRAIT_COUNT_CAPABILITY_ID,
+    },
+    outputs: [
+      {
+        name: groupDisplayName,
+        fieldId: groupField.fieldId,
+        dataType: 'string' as const,
+        outputOrdinal: 0,
+      },
+      {
+        name: countDisplayName,
+        fieldId: countField.fieldId,
+        dataType: 'i64' as const,
+        outputOrdinal: 1,
+      },
+    ],
+  };
+  if (nInputBaseInspection.ok && nInputBaseInspection.projection.inputs.length > 2) {
+    const nInputGroupField = nInputBaseInspection.projection.outputs[groupInputOrdinal];
+    if (nInputGroupField == null) return null;
+    return {
+      baseDraft,
+      projection: {
+        kind: 'n-input',
+        inputs: nInputBaseInspection.projection.inputs,
+        joins: nInputBaseInspection.projection.joins,
+        groupField: {
+          name: nInputGroupField.name,
+          fieldId: nInputGroupField.fieldId,
+          inputOrdinal: groupInputOrdinal,
+          source: nInputGroupField.source,
+        },
+        ...common,
+      },
+    };
+  }
+  if (!binaryBaseInspection.ok) return null;
+  const binaryGroupField = binaryBaseInspection.projection.outputs[groupInputOrdinal];
+  if (binaryGroupField == null) return null;
   return {
     baseDraft,
     projection: {
-      left: baseInspection.projection.left,
-      right: baseInspection.projection.right,
-      leftKey: baseInspection.projection.leftKey,
-      rightKey: baseInspection.projection.rightKey,
+      kind: 'binary',
+      left: binaryBaseInspection.projection.left,
+      right: binaryBaseInspection.projection.right,
+      leftKey: binaryBaseInspection.projection.leftKey,
+      rightKey: binaryBaseInspection.projection.rightKey,
       groupField: {
-        fieldKey: baseGroupField.fieldKey,
-        name: baseGroupField.name,
-        fieldId: baseGroupField.fieldId,
+        fieldKey: binaryGroupField.fieldKey,
+        name: binaryGroupField.name,
+        fieldId: binaryGroupField.fieldId,
         inputOrdinal: groupInputOrdinal,
-        source: baseGroupField.source,
+        source: binaryGroupField.source,
       },
-      measure: {
-        name: countDisplayName,
-        fieldId: countField.fieldId,
-        capabilityId: DVT_SUBSTRAIT_COUNT_CAPABILITY_ID,
-      },
-      outputs: [
-        {
-          name: groupDisplayName,
-          fieldId: groupField.fieldId,
-          dataType: 'string',
-          outputOrdinal: 0,
-        },
-        {
-          name: countDisplayName,
-          fieldId: countField.fieldId,
-          dataType: 'i64',
-          outputOrdinal: 1,
-        },
-      ],
+      ...common,
     },
   };
 }
@@ -1712,7 +1800,12 @@ export function applyDvtSubstraitInnerJoinGrouping(
   draft: DvtSubstraitInnerJoinDraft,
   args: Readonly<{ groupFieldId: string; countOutputName: string }>
 ): DvtSubstraitInnerJoinDraft {
-  const inspection = inspectDvtSubstraitInnerJoinDraft(draft);
+  const nInputInspection = inspectDvtSubstraitNInputJoinDraft(draft);
+  const binaryInspection = inspectDvtSubstraitInnerJoinDraft(draft);
+  const inspection =
+    nInputInspection.ok && nInputInspection.projection.inputs.length > 2
+      ? nInputInspection
+      : binaryInspection;
   const countOutputName = args.countOutputName.trim();
   if (!inspection.ok || countOutputName.length === 0) return draft;
   const groupField = inspection.projection.outputs.find(
@@ -1720,7 +1813,7 @@ export function applyDvtSubstraitInnerJoinGrouping(
   );
   if (groupField == null || groupField.name === countOutputName) return draft;
   const targetNodeId = innerJoinTargetNodeId(draft);
-  const joinBinding = draft.sidecar.relations.find((relation) => relation.relAnchor === 3);
+  const joinBinding = innerJoinResultBinding(draft);
   if (targetNodeId == null || joinBinding == null) return draft;
 
   const plan = clonePlan(draft.plan);
@@ -1831,7 +1924,7 @@ function inspectValidInnerJoinGroupedWindow(
     !hasPinnedPlanVersion(draft.plan) ||
     draft.plan.relations.length !== 1 ||
     draft.sidecar.schemaVersion !== DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION ||
-    draft.sidecar.relations.length !== 5 ||
+    draft.sidecar.relations.length < 5 ||
     !hasUniqueInnerJoinSidecarIdentity(draft) ||
     !hasCurrentInnerJoinSemanticHash(draft)
   ) {
@@ -1881,11 +1974,14 @@ function inspectValidInnerJoinGroupedWindow(
   const windowBinding = draft.sidecar.relations.find(
     (relation) => relation.relAnchor === project.common?.relAnchor
   );
-  const joinBinding = draft.sidecar.relations.find((relation) => relation.relAnchor === 3);
+  const joinBinding = innerJoinResultBinding(draft);
   const windowRelationId =
     targetNodeId == null ? null : `relation:${targetNodeId}:join-aggregate-window`;
   const aggregateRelationId =
     targetNodeId == null ? null : `relation:${targetNodeId}:join-aggregate`;
+  const aggregateBinding = draft.sidecar.relations.find(
+    (relation) => relation.relationId === aggregateRelationId
+  );
   const resultFieldId = targetNodeId == null ? null : `field:${targetNodeId}:join-count-rank`;
   if (
     targetNodeId == null ||
@@ -1895,6 +1991,8 @@ function inspectValidInnerJoinGroupedWindow(
     windowBinding.sourceRef != null ||
     windowBinding.displayName !== joinBinding.displayName ||
     aggregateRelationId == null ||
+    aggregateBinding == null ||
+    project.common.relAnchor <= aggregateBinding.relAnchor ||
     resultFieldId == null
   ) {
     return null;
@@ -1945,45 +2043,61 @@ function inspectValidInnerJoinGroupedWindow(
   ) {
     return null;
   }
-  return {
-    baseDraft,
-    projection: {
-      left: baseInspection.projection.left,
-      right: baseInspection.projection.right,
-      leftKey: baseInspection.projection.leftKey,
-      rightKey: baseInspection.projection.rightKey,
-      groupField: baseInspection.projection.groupField,
-      measure: {
-        name: baseInspection.projection.measure.name,
-        fieldId: baseInspection.projection.measure.fieldId,
+  const common = {
+    groupField: baseInspection.projection.groupField,
+    measure: {
+      name: baseInspection.projection.measure.name,
+      fieldId: baseInspection.projection.measure.fieldId,
+    },
+    result: {
+      name: root.value.names[2]!,
+      fieldId: resultFieldId,
+      capabilityId: DVT_SUBSTRAIT_ROW_NUMBER_CAPABILITY_ID,
+    },
+    outputs: [
+      {
+        name: root.value.names[0]!,
+        fieldId: outerFields[0]!.fieldId,
+        dataType: 'string' as const,
+        outputOrdinal: 0,
       },
-      result: {
+      {
+        name: root.value.names[1]!,
+        fieldId: outerFields[1]!.fieldId,
+        dataType: 'i64' as const,
+        outputOrdinal: 1,
+      },
+      {
         name: root.value.names[2]!,
         fieldId: resultFieldId,
-        capabilityId: DVT_SUBSTRAIT_ROW_NUMBER_CAPABILITY_ID,
+        dataType: 'i64' as const,
+        outputOrdinal: 2,
       },
-      outputs: [
-        {
-          name: root.value.names[0]!,
-          fieldId: outerFields[0]!.fieldId,
-          dataType: 'string',
-          outputOrdinal: 0,
-        },
-        {
-          name: root.value.names[1]!,
-          fieldId: outerFields[1]!.fieldId,
-          dataType: 'i64',
-          outputOrdinal: 1,
-        },
-        {
-          name: root.value.names[2]!,
-          fieldId: resultFieldId,
-          dataType: 'i64',
-          outputOrdinal: 2,
-        },
-      ],
-    },
+    ],
   };
+  return baseInspection.projection.kind === 'n-input'
+    ? {
+        baseDraft,
+        projection: {
+          kind: 'n-input',
+          inputs: baseInspection.projection.inputs,
+          joins: baseInspection.projection.joins,
+          ...common,
+          groupField: baseInspection.projection.groupField,
+        },
+      }
+    : {
+        baseDraft,
+        projection: {
+          kind: 'binary',
+          left: baseInspection.projection.left,
+          right: baseInspection.projection.right,
+          leftKey: baseInspection.projection.leftKey,
+          rightKey: baseInspection.projection.rightKey,
+          ...common,
+          groupField: baseInspection.projection.groupField,
+        },
+      };
 }
 
 export function inspectDvtSubstraitInnerJoinGroupedWindowDraft(
@@ -2007,7 +2121,7 @@ export function applyDvtSubstraitInnerJoinGroupedRowNumber(
     return draft;
   }
   const targetNodeId = innerJoinTargetNodeId(draft);
-  const joinBinding = draft.sidecar.relations.find((relation) => relation.relAnchor === 3);
+  const joinBinding = innerJoinResultBinding(draft);
   if (targetNodeId == null || joinBinding == null) return draft;
   const plan = clonePlan(draft.plan);
   const root = plan.relations[0]?.relType;
@@ -2424,7 +2538,9 @@ export function inspectDvtSubstraitInnerJoinAcceptedDraft(draft: DvtSubstraitInn
               outputOrdinal: number;
             }>[];
           }>
-        | DvtSubstraitNInputJoinProjection;
+        | DvtSubstraitNInputJoinProjection
+        | DvtSubstraitInnerJoinGroupingProjection
+        | DvtSubstraitInnerJoinGroupedWindowProjection;
     }>
   | Readonly<{ ok: false }> {
   const groupedWindow = inspectDvtSubstraitInnerJoinGroupedWindowDraft(draft);

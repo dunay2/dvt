@@ -135,10 +135,12 @@ function buildSubstraitPreviewGraph(
 }
 
 function buildSubstraitJoinPreviewGraph(
-  composition: 'base' | 'grouped-window' | 'n-input' | 'n-input-four' = 'base'
+  composition:
+    'base' | 'grouped-window' | 'n-input' | 'n-input-four' | 'n-input-grouped-window' = 'base'
 ): ReturnType<typeof buildSubstraitPreviewGraph> {
   const transformPath = 'models/customer_orders.sql';
   const connectionRef = buildTestPostgresConnectionRef();
+  const isNInput = composition.startsWith('n-input');
   let draft = createDvtSubstraitInnerJoinDraft({
     left: {
       nodeId: 'source-customers',
@@ -184,7 +186,7 @@ function buildSubstraitJoinPreviewGraph(
     });
     draft = applyDvtSubstraitInnerJoinGroupedRowNumber(draft, { outputName: 'count_rank' });
   }
-  if (composition === 'n-input' || composition === 'n-input-four') {
+  if (isNInput) {
     draft = appendDvtSubstraitInnerJoinInput(draft, {
       source: {
         nodeId: 'source-shipments',
@@ -222,6 +224,15 @@ function buildSubstraitJoinPreviewGraph(
         rightFieldName: 'customer_id',
       },
       selectedFields: ['ticket_id'],
+    });
+  }
+  if (composition === 'n-input-grouped-window') {
+    draft = applyDvtSubstraitInnerJoinGrouping(draft, {
+      groupFieldId: 'field:transform:shipment_id',
+      countOutputName: 'shipment_count',
+    });
+    draft = applyDvtSubstraitInnerJoinGroupedRowNumber(draft, {
+      outputName: 'shipment_rank',
     });
   }
   const transform = applyDvtSubstraitSemanticDocument(
@@ -288,9 +299,7 @@ function buildSubstraitJoinPreviewGraph(
     nodes: [
       source('source-customers', 'customers'),
       source('source-orders', 'orders'),
-      ...(composition === 'n-input' || composition === 'n-input-four'
-        ? [source('source-shipments', 'shipments')]
-        : []),
+      ...(isNInput ? [source('source-shipments', 'shipments')] : []),
       ...(composition === 'n-input-four' ? [source('source-tickets', 'tickets')] : []),
       transform,
       sink,
@@ -308,7 +317,7 @@ function buildSubstraitJoinPreviewGraph(
         targetId: 'transform',
         relation: 'lineage',
       },
-      ...(composition === 'n-input' || composition === 'n-input-four'
+      ...(isNInput
         ? [
             {
               id: 'shipments-transform',
@@ -609,8 +618,8 @@ describe('Substrait Preview provenance cutover', () => {
     const staleSql = 'select stale_column from customers;\n';
     const { result, workspaceFileContentCommand } = await resolveGraphPreview(graph, staleSql);
 
-    expect(result.ok).toBe(true);
     if (!result.ok) throw new Error(result.message);
+    expect(result.ok).toBe(true);
     const normalized = result.sqlText?.replaceAll(/\s+/g, ' ').trim().toLowerCase();
     expect(normalized).toMatch(
       /^select upper\(trim\(name\)\) as customer_name, email, country from public\.customers;?$/
@@ -678,6 +687,21 @@ describe('Substrait Preview provenance cutover', () => {
     if (!result.ok) throw new Error(result.message);
     const normalized = result.sqlText?.replaceAll(/\s+/g, ' ').trim().toLowerCase();
     expect(normalized).toContain(output);
+    expect(savedContents).toContain(result.sqlText);
+  });
+
+  it('previews grouping and ranking above the recursive INNER JOIN projection', async () => {
+    const { result, savedContents } = await resolveGraphPreview(
+      buildSubstraitJoinPreviewGraph('n-input-grouped-window')
+    );
+
+    if (!result.ok) throw new Error(result.message);
+    expect(result.ok).toBe(true);
+    const normalized = result.sqlText?.replaceAll(/\s+/g, ' ').trim().toLowerCase();
+    expect(normalized).toContain('join_source_3.shipment_id as shipment_id');
+    expect(normalized).toContain('count(*) as shipment_count');
+    expect(normalized).toContain('as shipment_rank');
+    expect(normalized).toContain('group by shipment_id');
     expect(savedContents).toContain(result.sqlText);
   });
 

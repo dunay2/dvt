@@ -278,6 +278,103 @@ describe('VTX2 typed Substrait INNER JOIN composition', () => {
     });
   });
 
+  it('groups and ranks the same three- and four-input recursive join revision', () => {
+    const threeInputs = appendDvtSubstraitInnerJoinInput(fixture(), {
+      source: source('source-shipments', 'public', 'shipments'),
+      fields: ['shipment_id', 'customer_id'],
+      predicate: {
+        leftSourceFieldId: 'field:source-customers:customer_id',
+        rightFieldName: 'customer_id',
+      },
+      selectedFields: ['shipment_id'],
+    });
+    const fourInputs = appendDvtSubstraitInnerJoinInput(threeInputs, {
+      source: source('source-tickets', 'public', 'tickets'),
+      fields: ['ticket_id', 'customer_id'],
+      predicate: {
+        leftSourceFieldId: 'field:source-customers:customer_id',
+        rightFieldName: 'customer_id',
+      },
+      selectedFields: ['ticket_id'],
+    });
+
+    for (const draft of [threeInputs, fourInputs]) {
+      const grouped = applyDvtSubstraitInnerJoinGrouping(draft, {
+        groupFieldId: 'field:transform-customer-orders:shipment_id',
+        countOutputName: 'shipment_count',
+      });
+      expect(inspectDvtSubstraitInnerJoinGroupingDraft(grouped)).toMatchObject({
+        ok: true,
+        projection: {
+          kind: 'n-input',
+          inputs: expect.arrayContaining([expect.objectContaining({ nodeId: 'source-shipments' })]),
+          groupField: {
+            name: 'shipment_id',
+            fieldId: 'field:transform-customer-orders:shipment_id',
+            source: {
+              nodeId: 'source-shipments',
+              fieldId: 'field:source-shipments:shipment_id',
+            },
+          },
+          measure: { name: 'shipment_count' },
+        },
+      });
+
+      const ranked = applyDvtSubstraitInnerJoinGroupedRowNumber(grouped, {
+        outputName: 'shipment_rank',
+      });
+      const reloaded = decodeDvtSubstraitInnerJoinDocument(
+        encodeDvtSubstraitInnerJoinDocument(ranked)
+      );
+      expect(inspectDvtSubstraitInnerJoinGroupedWindowDraft(reloaded)).toMatchObject({
+        ok: true,
+        projection: {
+          kind: 'n-input',
+          groupField: { name: 'shipment_id' },
+          measure: { name: 'shipment_count' },
+          result: { name: 'shipment_rank' },
+        },
+      });
+      expect(
+        encodeDvtSubstraitInnerJoinDocument(
+          removeDvtSubstraitInnerJoinGrouping(removeDvtSubstraitInnerJoinGroupedRowNumber(reloaded))
+        )
+      ).toEqual(encodeDvtSubstraitInnerJoinDocument(draft));
+    }
+  });
+
+  it('fails N-input grouping and ranking closed for stale fields and duplicate outputs', () => {
+    const draft = appendDvtSubstraitInnerJoinInput(fixture(), {
+      source: source('source-shipments', 'public', 'shipments'),
+      fields: ['shipment_id', 'customer_id'],
+      predicate: {
+        leftSourceFieldId: 'field:source-customers:customer_id',
+        rightFieldName: 'customer_id',
+      },
+      selectedFields: ['shipment_id'],
+    });
+    expect(
+      applyDvtSubstraitInnerJoinGrouping(draft, {
+        groupFieldId: 'field:transform-customer-orders:stale',
+        countOutputName: 'shipment_count',
+      })
+    ).toBe(draft);
+    expect(
+      applyDvtSubstraitInnerJoinGrouping(draft, {
+        groupFieldId: 'field:transform-customer-orders:shipment_id',
+        countOutputName: 'shipment_id',
+      })
+    ).toBe(draft);
+
+    const grouped = applyDvtSubstraitInnerJoinGrouping(draft, {
+      groupFieldId: 'field:transform-customer-orders:shipment_id',
+      countOutputName: 'shipment_count',
+    });
+    expect(
+      applyDvtSubstraitInnerJoinGroupedRowNumber(grouped, { outputName: 'shipment_count' })
+    ).toBe(grouped);
+  });
+
   it('rejects duplicate, stale-predicate and incompatible append attempts without mutation', () => {
     const draft = fixture();
     const append = (

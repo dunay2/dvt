@@ -269,6 +269,71 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     }
   );
 
+  it('projects grouping and ranking above the recursive N-input INNER JOIN', async () => {
+    const connectionRef = {
+      schemaVersion: 'connection-ref.v1' as const,
+      connectionId: 'warehouse-main',
+      provider: 'postgres' as const,
+    };
+    let draft = createDvtSubstraitInnerJoinDraft({
+      left: {
+        nodeId: 'source-customers',
+        schema: 'public',
+        table: 'customers',
+        sourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef,
+          sourceObjectId: 'public.customers',
+        },
+      },
+      right: {
+        nodeId: 'source-orders',
+        schema: 'public',
+        table: 'orders',
+        sourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef,
+          sourceObjectId: 'public.orders',
+        },
+      },
+      targetNodeId: 'transform-customer-orders',
+    });
+    draft = appendDvtSubstraitInnerJoinInput(draft, {
+      source: {
+        nodeId: 'source-shipments',
+        schema: 'public',
+        table: 'shipments',
+        sourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef,
+          sourceObjectId: 'public.shipments',
+        },
+      },
+      fields: ['shipment_id', 'customer_id'],
+      predicate: {
+        leftSourceFieldId: 'field:source-customers:customer_id',
+        rightFieldName: 'customer_id',
+      },
+      selectedFields: ['shipment_id'],
+    });
+    draft = applyDvtSubstraitInnerJoinGrouping(draft, {
+      groupFieldId: 'field:transform-customer-orders:shipment_id',
+      countOutputName: 'shipment_count',
+    });
+    draft = applyDvtSubstraitInnerJoinGroupedRowNumber(draft, {
+      outputName: 'shipment_rank',
+    });
+
+    const normalized = (await projectDvtSubstraitInnerJoinToPostgresSql(draft))
+      .replaceAll(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+
+    expect(normalized).toMatch(
+      /^select shipment_id, count\(\*\) as shipment_count, row_number\(\) over \(order by count\(\*\) desc nulls last, shipment_id asc nulls last\) as shipment_rank from \(\s*select left_source\.customer_id as customer_id, left_source\.name as name, right_source\.order_id as order_id, join_source_3\.shipment_id as shipment_id from public\.customers as left_source join public\.orders as right_source on left_source\.customer_id = right_source\.customer_id join public\.shipments as join_source_3 on left_source\.customer_id = join_source_3\.customer_id\s*\) as inner_join_input group by shipment_id;?$/
+    );
+  });
+
   it('projects selected, renamed, and reordered fields from the same INNER JOIN revision', async () => {
     const connectionRef = {
       schemaVersion: 'connection-ref.v1' as const,
