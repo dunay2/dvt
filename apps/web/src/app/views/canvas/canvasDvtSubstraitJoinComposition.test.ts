@@ -417,6 +417,51 @@ describe('VTX2 typed Substrait INNER JOIN composition', () => {
     }
   });
 
+  it('reserves grouping and ranking FieldIds from N-input source outputs', () => {
+    const draft = appendDvtSubstraitInnerJoinInput(fixture(), {
+      source: source('source-shipments', 'public', 'shipments'),
+      fields: ['shipment_id', 'customer_id', 'join-count', 'join-count-rank'],
+      predicate: {
+        leftSourceFieldId: 'field:source-customers:customer_id',
+        rightFieldName: 'customer_id',
+      },
+      selectedFields: ['shipment_id', 'join-count', 'join-count-rank'],
+    });
+    const draftInspection = inspectDvtSubstraitNInputJoinDraft(draft);
+    if (!draftInspection.ok) throw new Error('Expected admitted reserved-name fixture.');
+    expect(
+      draftInspection.projection.outputs
+        .filter((output) => output.source.nodeId === 'source-shipments')
+        .map((output) => ({ name: output.name, fieldId: output.fieldId }))
+    ).toEqual([
+      {
+        name: 'shipment_id',
+        fieldId: 'field:transform-customer-orders:shipment_id',
+      },
+      {
+        name: 'shipments_join-count',
+        fieldId: 'field:transform-customer-orders:shipments_join-count',
+      },
+      {
+        name: 'shipments_join-count-rank',
+        fieldId: 'field:transform-customer-orders:shipments_join-count-rank',
+      },
+    ]);
+
+    const grouped = applyDvtSubstraitInnerJoinGrouping(draft, {
+      groupFieldId: 'field:transform-customer-orders:shipment_id',
+      countOutputName: 'shipment_count',
+    });
+    const ranked = applyDvtSubstraitInnerJoinGroupedRowNumber(grouped, {
+      outputName: 'shipment_rank',
+    });
+
+    expect(grouped).not.toBe(draft);
+    expect(inspectDvtSubstraitInnerJoinGroupingDraft(grouped).ok).toBe(true);
+    expect(ranked).not.toBe(grouped);
+    expect(inspectDvtSubstraitInnerJoinGroupedWindowDraft(ranked).ok).toBe(true);
+  });
+
   it('fails N-input grouping and ranking closed for stale fields and duplicate outputs', () => {
     const draft = appendDvtSubstraitInnerJoinInput(fixture(), {
       source: source('source-shipments', 'public', 'shipments'),

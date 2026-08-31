@@ -1119,7 +1119,11 @@ function createCollisionSafeNInputOutput(
   }>
 ): Readonly<{ name: string; sourceFieldId: string; fieldId: string }> | null {
   const usedNames = new Set(args.outputs.map((output) => output.name));
-  const usedFieldIds = new Set(args.outputs.map((output) => output.fieldId));
+  const usedFieldIds = new Set([
+    ...args.outputs.map((output) => output.fieldId),
+    `field:${args.targetNodeId}:join-count`,
+    `field:${args.targetNodeId}:join-count-rank`,
+  ]);
   const name = [
     args.sourceName,
     `${args.input.table}_${args.sourceName}`,
