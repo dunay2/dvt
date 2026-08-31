@@ -21,10 +21,7 @@ import {
   TRANSFORMATION_DESIGN_GRAPH_SOURCE_FAMILY,
   TRANSFORMATION_SQL_FIRST_SOURCE_VERSION,
 } from './TransformationFlowDesignGraph.v1.js';
-import {
-  TRANSFORMATION_STEP_KIND,
-  type TransformationStepKind,
-} from './TransformationFlowStepKinds.v1.js';
+import { TRANSFORMATION_STEP_KIND } from './TransformationFlowStepKinds.v1.js';
 import {
   CaptureMaterializationEvidenceStepTypeConfigSchema,
   PostgresSqlTransformStepTypeConfigSchema,
@@ -88,7 +85,13 @@ const TransformationPostgresSqlGraphNodeSchema = z
   .object({
     nodeId: NonBlankStringSchema,
     stepKind: z.literal(TRANSFORMATION_STEP_KIND.postgresSqlTransform),
-    dependsOn: z.tuple([NonBlankStringSchema]),
+    dependsOn: z
+      .array(NonBlankStringSchema)
+      .min(1)
+      .max(2)
+      .refine((nodeIds) => new Set(nodeIds).size === nodeIds.length, {
+        message: 'POSTGRES_SQL_TRANSFORM dependencies must be unique.',
+      }),
     stepTypeConfig: PostgresSqlTransformStepTypeConfigSchema,
     metadata: TransformationNodeMetadataSchema,
   })
@@ -110,48 +113,50 @@ export const TransformationCompilerGraphNodeV1Schema = z.discriminatedUnion('ste
   TransformationCaptureGraphNodeSchema,
 ]);
 
-type ParsedTransformationCompilerGraphNode = z.infer<
-  typeof TransformationCompilerGraphNodeV1Schema
->;
-
 export const TransformationSqlFirstCompilerGraphSourceSchema = z
   .object({
     kind: z.literal(GENERIC_GRAPH_SOURCE_KIND),
     sourceFamily: z.literal(TRANSFORMATION_DESIGN_GRAPH_SOURCE_FAMILY),
     sourceVersion: z.literal(TRANSFORMATION_SQL_FIRST_SOURCE_VERSION),
-    nodes: z.array(TransformationCompilerGraphNodeV1Schema).length(3),
+    nodes: z.array(TransformationCompilerGraphNodeV1Schema).min(3).max(4),
   })
   .strict()
   .superRefine((graphSource, ctx) => {
-    const prepareNode = findCompilerNode(
-      graphSource.nodes,
-      TRANSFORMATION_STEP_KIND.preparePostgresTransform
+    const prepareNodes = graphSource.nodes.filter(
+      (node) => node.stepKind === TRANSFORMATION_STEP_KIND.preparePostgresTransform
     );
-    const transformNode = findCompilerNode(
-      graphSource.nodes,
-      TRANSFORMATION_STEP_KIND.postgresSqlTransform
+    const transformNodes = graphSource.nodes.filter(
+      (node) => node.stepKind === TRANSFORMATION_STEP_KIND.postgresSqlTransform
     );
-    const captureNode = findCompilerNode(
-      graphSource.nodes,
-      TRANSFORMATION_STEP_KIND.captureMaterializationEvidence
+    const captureNodes = graphSource.nodes.filter(
+      (node) => node.stepKind === TRANSFORMATION_STEP_KIND.captureMaterializationEvidence
     );
+    const transformNode = transformNodes[0];
+    const captureNode = captureNodes[0];
 
-    if (prepareNode === undefined || transformNode === undefined || captureNode === undefined) {
+    if (
+      prepareNodes.length < 1 ||
+      prepareNodes.length > 2 ||
+      transformNodes.length !== 1 ||
+      captureNodes.length !== 1 ||
+      transformNode === undefined ||
+      captureNode === undefined
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['nodes'],
         message:
-          'transformation-sql-first-v2 requires exactly one prepare, one transform, and one evidence node.',
+          'transformation-sql-first-v2 requires one or two prepares, one transform, and one evidence node.',
       });
       return;
     }
 
-    const prepareConfig = prepareNode.stepTypeConfig;
+    const prepareConfigs = prepareNodes.map((prepareNode) => prepareNode.stepTypeConfig);
     const transformConfig = transformNode.stepTypeConfig;
     const captureConfig = captureNode.stepTypeConfig;
 
     const connectionRefs = [
-      prepareConfig.connectionRef,
+      ...prepareConfigs.map((prepareConfig) => prepareConfig.connectionRef),
       transformConfig.connectionRef,
       captureConfig.connectionRef,
     ];
@@ -172,11 +177,15 @@ export const TransformationSqlFirstCompilerGraphSourceSchema = z
       });
     }
 
-    if (transformNode.dependsOn.length !== 1 || transformNode.dependsOn[0] !== prepareNode.nodeId) {
+    const prepareNodeIds = new Set(prepareNodes.map((prepareNode) => prepareNode.nodeId));
+    if (
+      transformNode.dependsOn.length !== prepareNodes.length ||
+      transformNode.dependsOn.some((nodeId) => !prepareNodeIds.has(nodeId))
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['nodes'],
-        message: 'POSTGRES_SQL_TRANSFORM must depend on the PREPARE_POSTGRES_TRANSFORM node id.',
+        message: 'POSTGRES_SQL_TRANSFORM must depend on every PREPARE_POSTGRES_TRANSFORM node id.',
       });
     }
 
@@ -189,7 +198,11 @@ export const TransformationSqlFirstCompilerGraphSourceSchema = z
       });
     }
 
-    if (prepareConfig.targetSchema !== transformConfig.sinkSchema) {
+    if (
+      prepareConfigs.some(
+        (prepareConfig) => prepareConfig.targetSchema !== transformConfig.sinkSchema
+      )
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['nodes'],
@@ -210,13 +223,3 @@ export const TransformationSqlFirstCompilerGraphSourceSchema = z
       });
     }
   });
-
-function findCompilerNode<TKind extends TransformationStepKind>(
-  nodes: readonly ParsedTransformationCompilerGraphNode[],
-  stepKind: TKind
-): Extract<ParsedTransformationCompilerGraphNode, { stepKind: TKind }> | undefined {
-  return nodes.find(
-    (node): node is Extract<ParsedTransformationCompilerGraphNode, { stepKind: TKind }> =>
-      node.stepKind === stepKind
-  );
-}

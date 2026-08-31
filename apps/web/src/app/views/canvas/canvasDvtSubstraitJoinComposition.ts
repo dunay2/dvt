@@ -43,6 +43,7 @@ import {
   DVT_SUBSTRAIT_PLAN_ENCODING,
   DVT_SUBSTRAIT_PROFILE_REF_V1,
   DVT_SUBSTRAIT_SEMANTIC_DOCUMENT_SCHEMA_VERSION,
+  DVT_TRANSFORM_AUTHORING_MODE,
   ConnectedSourceRefSchema,
   buildDvtSubstraitStandardCapabilityId,
   canonicalizeDvtSubstraitSemanticDocumentV1,
@@ -52,6 +53,7 @@ import {
 } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 
 const ZERO_SHA256 = '0'.repeat(64);
 const COMPARISON_FUNCTION_URN = 'extension:io.substrait:functions_comparison';
@@ -134,6 +136,7 @@ export function resolveDvtSubstraitInnerJoinEntry(args: {
   targetNode: CanonicalNode;
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
+  requirePersistedAuthority?: boolean;
 }): DvtSubstraitInnerJoinEntry | null {
   if (
     args.targetNode.pluginId !== 'dvt' ||
@@ -156,8 +159,43 @@ export function resolveDvtSubstraitInnerJoinEntry(args: {
   const left = sources.map((source) => resolveJoinSource(source, LEFT_FIELD_NAMES)).find(Boolean);
   const right = sources.map((source) => resolveJoinSource(source, RIGHT_FIELD_NAMES)).find(Boolean);
   if (left == null || right == null || left.nodeId === right.nodeId) return null;
-  if (left.sourceRef.connectionRef.connectionId !== right.sourceRef.connectionRef.connectionId) {
+  const sameConnectionRef = (
+    first: ConnectedSourceRef['connectionRef'],
+    second: ConnectedSourceRef['connectionRef']
+  ): boolean =>
+    first.schemaVersion === second.schemaVersion &&
+    first.provider === second.provider &&
+    first.connectionId === second.connectionId;
+  const sameSourceRef = (first: ConnectedSourceRef, second: ConnectedSourceRef): boolean =>
+    first.schemaVersion === second.schemaVersion &&
+    first.sourceObjectId === second.sourceObjectId &&
+    sameConnectionRef(first.connectionRef, second.connectionRef);
+
+  if (!sameConnectionRef(left.sourceRef.connectionRef, right.sourceRef.connectionRef)) {
     return null;
+  }
+
+  if (args.requirePersistedAuthority) {
+    try {
+      const authority = readDvtTransformAuthoringAuthority(args.targetNode);
+      if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return null;
+      const inspection = inspectDvtSubstraitInnerJoinDraft(
+        decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument)
+      );
+      if (!inspection.ok) return null;
+      if (
+        inspection.projection.left.schema !== left.schema ||
+        inspection.projection.left.table !== left.table ||
+        !sameSourceRef(inspection.projection.left.sourceRef, left.sourceRef) ||
+        inspection.projection.right.schema !== right.schema ||
+        inspection.projection.right.table !== right.table ||
+        !sameSourceRef(inspection.projection.right.sourceRef, right.sourceRef)
+      ) {
+        return null;
+      }
+    } catch {
+      return null;
+    }
   }
   return { left, right, targetNodeId: args.targetNode.id };
 }
@@ -279,6 +317,7 @@ function assertCompatibleSources(
   if (
     leftConnection.provider !== 'postgres' ||
     rightConnection.provider !== 'postgres' ||
+    leftConnection.schemaVersion !== rightConnection.schemaVersion ||
     leftConnection.connectionId !== rightConnection.connectionId
   ) {
     throw new Error('VTX2 INNER JOIN requires two PostgreSQL sources on the same connection.');
@@ -551,6 +590,7 @@ export function inspectDvtSubstraitInnerJoinDraft(
   if (
     leftSourceRef.connectionRef.provider !== 'postgres' ||
     rightSourceRef.connectionRef.provider !== 'postgres' ||
+    leftSourceRef.connectionRef.schemaVersion !== rightSourceRef.connectionRef.schemaVersion ||
     leftSourceRef.connectionRef.connectionId !== rightSourceRef.connectionRef.connectionId
   ) {
     return { ok: false };

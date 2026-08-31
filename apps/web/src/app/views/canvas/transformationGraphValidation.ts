@@ -18,6 +18,7 @@ import type {
 } from './transformationGraphValidation.types';
 import { TRANSFORMATION_REQUIRED_NODE_COUNT } from './transformationGraphValidation.types';
 import { resolveEffectiveDvtConnectionRef } from './canvasDvtAuthoringModel';
+import { resolveDvtSubstraitInnerJoinEntry } from './canvasDvtSubstraitJoinComposition';
 
 export type {
   TransformationGraphValidationResult,
@@ -73,6 +74,49 @@ export function validateTransformationGraph({
     selectedNodeIds,
     workspaceNodeIds,
   });
+
+  if (context.scopedNodes.length === 4) {
+    const transformNode = context.scopedNodes.find((node) => node.role === 'transform');
+    const sinkNode = context.scopedNodes.find((node) => node.role === 'output');
+    const sourceNodes = context.scopedNodes.filter((node) => node.role === 'input');
+    const joinEntry = transformNode
+      ? resolveDvtSubstraitInnerJoinEntry({
+          targetNode: transformNode,
+          nodes: context.scopedNodes,
+          edges: context.scopedEdges,
+          requirePersistedAuthority: true,
+        })
+      : null;
+
+    if (joinEntry && sinkNode && sourceNodes.length === 2 && context.scopedEdges.length === 3) {
+      const expectedEdges = new Set([
+        `${joinEntry.left.nodeId}->${transformNode?.id}`,
+        `${joinEntry.right.nodeId}->${transformNode?.id}`,
+        `${transformNode?.id}->${sinkNode.id}`,
+      ]);
+      const actualEdges = new Set(
+        context.scopedEdges.map((edge) => `${edge.sourceId}->${edge.targetId}`)
+      );
+      if (
+        actualEdges.size === expectedEdges.size &&
+        [...expectedEdges].every((edge) => actualEdges.has(edge))
+      ) {
+        return buildValidResult(
+          context,
+          Object.fromEntries(
+            context.scopedNodes.map((node) => [
+              node.id,
+              node.role === 'input'
+                ? 'source'
+                : node.role === 'transform'
+                  ? 'sql_transform'
+                  : 'sink',
+            ])
+          )
+        );
+      }
+    }
+  }
 
   if (context.scopedNodes.length !== TRANSFORMATION_REQUIRED_NODE_COUNT) {
     const executablePath = resolveExecutableTransformationPath(context);

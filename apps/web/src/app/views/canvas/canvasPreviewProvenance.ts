@@ -1,10 +1,6 @@
 /** Owned concern: resolve plan preview provenance through workspace file read/write ports. */
 import type { GitArtifactRef, TransformationGitArtifactsProvenance } from '@dvt/contracts';
-import {
-  ConnectedSourceRefSchema,
-  DVT_TRANSFORM_AUTHORING_MODE,
-  asSha256HexString,
-} from '@dvt/contracts';
+import { DVT_TRANSFORM_AUTHORING_MODE, asSha256HexString } from '@dvt/contracts';
 import type { WorkspaceScope } from '../../ports/sessionContext';
 import type {
   IWorkspaceFileContentCommandPort,
@@ -39,7 +35,7 @@ import {
 import {
   decodeDvtSubstraitInnerJoinDocument,
   inspectDvtSubstraitInnerJoinDraft,
-  type DvtSubstraitInnerJoinProjection,
+  resolveDvtSubstraitInnerJoinEntry,
 } from './canvasDvtSubstraitJoinComposition';
 import {
   projectDvtSubstraitInnerJoinToPostgresSql,
@@ -212,6 +208,7 @@ async function savePreviewGraphArtifact(args: {
 async function resolvePreviewSqlArtifact(args: {
   transformArtifactSource: TransformArtifactSource;
   canonicalNodes: readonly CanonicalNode[];
+  canonicalEdges: readonly CanonicalEdge[];
   scopedNodeIds: readonly string[];
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
   workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
@@ -267,6 +264,7 @@ async function resolvePreviewSqlArtifact(args: {
   const sqlText = await buildAuthoringPreviewSql({
     transformNode: transformArtifactSource.node,
     canonicalNodes: args.canonicalNodes,
+    canonicalEdges: args.canonicalEdges,
     scopedNodeIds: args.scopedNodeIds,
   });
   const savedSqlArtifactReceipt = await args.workspaceFileContentCommand.saveFileContent({
@@ -293,10 +291,12 @@ async function resolvePreviewSqlArtifact(args: {
 async function buildAuthoringPreviewSql({
   transformNode,
   canonicalNodes,
+  canonicalEdges,
   scopedNodeIds,
 }: {
   transformNode: CanonicalNode;
   canonicalNodes: readonly CanonicalNode[];
+  canonicalEdges: readonly CanonicalEdge[];
   scopedNodeIds: readonly string[];
 }): Promise<string> {
   if (transformNode.pluginId === 'dvt' && transformNode.kind === 'dvt:sql_transform') {
@@ -325,11 +325,20 @@ async function buildAuthoringPreviewSql({
       if (!joinInspection.ok) {
         throw new Error('Preview does not support this Substrait semantic shape.');
       }
-      requireScopedInnerJoinSources({
-        canonicalNodes,
-        scopedNodeIds,
-        projection: joinInspection.projection,
+      const scopedNodeIdSet = new Set(scopedNodeIds);
+      const joinEntry = resolveDvtSubstraitInnerJoinEntry({
+        targetNode: transformNode,
+        nodes: canonicalNodes.filter((node) => scopedNodeIdSet.has(node.id)),
+        edges: canonicalEdges.filter(
+          (edge) => scopedNodeIdSet.has(edge.sourceId) && scopedNodeIdSet.has(edge.targetId)
+        ),
+        requirePersistedAuthority: true,
       });
+      if (joinEntry == null) {
+        throw new Error(
+          'Substrait INNER JOIN Preview source identities do not match the scoped graph.'
+        );
+      }
       const sql = await projectDvtSubstraitInnerJoinToPostgresSql(joinDraft);
       return sql.endsWith('\n') ? sql : `${sql}\n`;
     }
@@ -348,41 +357,6 @@ async function buildAuthoringPreviewSql({
   const source = requireSourcePayload(scopedNodes.source);
 
   return `select *\nfrom ${source.payload.schema}.${source.payload.table};\n`;
-}
-
-function requireScopedInnerJoinSources(args: {
-  canonicalNodes: readonly CanonicalNode[];
-  scopedNodeIds: readonly string[];
-  projection: DvtSubstraitInnerJoinProjection;
-}): void {
-  const scopedNodeIdSet = new Set(args.scopedNodeIds);
-  const candidates = args.canonicalNodes
-    .filter((node) => scopedNodeIdSet.has(node.id) && node.role === 'input')
-    .map((node) => {
-      const sourceRef = ConnectedSourceRefSchema.safeParse(node.metadata?.connectedSourceRef);
-      if (!sourceRef.success) return null;
-      return { node, sourceRef: sourceRef.data, payload: requireSourcePayload(node).payload };
-    })
-    .filter((candidate) => candidate != null);
-  if (candidates.length !== 2) {
-    throw new Error('Substrait INNER JOIN Preview requires exactly two scoped connected sources.');
-  }
-
-  const matches = [args.projection.left, args.projection.right].map((expected) =>
-    candidates.find(
-      (candidate) =>
-        candidate.payload.schema === expected.schema &&
-        candidate.payload.table === expected.table &&
-        candidate.sourceRef.sourceObjectId === expected.sourceRef.sourceObjectId &&
-        candidate.sourceRef.connectionRef.connectionId ===
-          expected.sourceRef.connectionRef.connectionId
-    )
-  );
-  if (matches.some((match) => match == null) || matches[0]?.node.id === matches[1]?.node.id) {
-    throw new Error(
-      'Substrait INNER JOIN Preview source identities do not match the scoped graph.'
-    );
-  }
 }
 
 export async function resolvePreviewProvenance({
@@ -421,6 +395,7 @@ export async function resolvePreviewProvenance({
     const { sqlArtifact, sqlText } = await resolvePreviewSqlArtifact({
       transformArtifactSource,
       canonicalNodes,
+      canonicalEdges,
       scopedNodeIds,
       workspaceFilesQuery,
       workspaceFileContentCommand,

@@ -1,10 +1,15 @@
 // @vitest-environment jsdom
 
-import { asSha256HexString } from '@dvt/contracts';
+import { asSha256HexString, type ConnectedSourceRef } from '@dvt/contracts';
 import { sha256HexUtf8 } from '@dvt/crypto';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import {
+  createDvtSubstraitInnerJoinDraft,
+  encodeDvtSubstraitInnerJoinDocument,
+} from './canvasDvtSubstraitJoinComposition';
 import { canvasViewCopy } from './copy';
 import { buildPreviewDesignGraphArtifactContent } from './previewGraphSource';
 import {
@@ -153,6 +158,141 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
             path: 'models/dvt-sql-transform-1.sql',
           }),
         },
+      })
+    );
+    expect(harness.shellFeedback.success).toHaveBeenCalledWith(canvasViewCopy.planCreatedMessage);
+  });
+
+  it('plans the persisted two-source Substrait INNER JOIN through the real Canvas action', async () => {
+    const connectionRef = buildTestPostgresConnectionRef();
+    const connectedSourceRef = (table: string): ConnectedSourceRef => ({
+      schemaVersion: 'connected-source-ref.v1' as const,
+      connectionRef,
+      sourceObjectId: `public.${table}`,
+    });
+    const source = (id: string, table: string, columns: readonly string[]): CanonicalNode => ({
+      id,
+      name: table,
+      pluginId: 'dvt.warehouse-source',
+      kind: 'dvt:source',
+      role: 'input',
+      status: 'idle',
+      tags: ['source'],
+      metadata: {
+        sourceName: table,
+        schema: 'public',
+        tableName: table,
+        columns: columns.map((name) => ({ name, type: 'string' })),
+        connectedSourceRef: connectedSourceRef(table),
+      },
+    });
+    const draft = createDvtSubstraitInnerJoinDraft({
+      left: {
+        nodeId: 'source-customers',
+        schema: 'public',
+        table: 'customers',
+        sourceRef: connectedSourceRef('customers'),
+      },
+      right: {
+        nodeId: 'source-orders',
+        schema: 'public',
+        table: 'orders',
+        sourceRef: connectedSourceRef('orders'),
+      },
+      targetNodeId: 'join',
+    });
+    const transform = applyDvtSubstraitSemanticDocument(
+      {
+        id: 'join',
+        name: 'Customer orders',
+        pluginId: 'dvt',
+        kind: 'dvt:sql_transform',
+        role: 'transform',
+        status: 'idle',
+        tags: ['authoring'],
+        path: 'models/customer-orders.sql',
+        metadata: { config: { dialect: 'postgres' } },
+      },
+      encodeDvtSubstraitInnerJoinDocument(draft)
+    );
+    const canonicalNodes: CanonicalNode[] = [
+      source('source-customers', 'customers', ['customer_id', 'name']),
+      source('source-orders', 'orders', ['order_id', 'customer_id']),
+      transform,
+      {
+        id: 'sink',
+        name: 'Customer orders sink',
+        pluginId: 'dvt',
+        kind: 'dvt:sink',
+        role: 'output',
+        status: 'idle',
+        tags: ['authoring'],
+        metadata: {
+          config: {
+            schema: 'analytics',
+            table: 'customer_orders',
+            materialization: 'table',
+            writeMode: 'replace',
+          },
+        },
+      },
+    ];
+    const canonicalEdges: CanonicalEdge[] = [
+      {
+        id: 'customers-join',
+        sourceId: 'source-customers',
+        targetId: 'join',
+        relation: 'lineage',
+      },
+      {
+        id: 'orders-join',
+        sourceId: 'source-orders',
+        targetId: 'join',
+        relation: 'lineage',
+      },
+      { id: 'join-sink', sourceId: 'join', targetId: 'sink', relation: 'lineage' },
+    ];
+    const plansService = createPlansServiceMock();
+    const workspaceFilePorts = createWorkspaceFilePortMocks({});
+
+    harness = renderExecutionActionsHarness({
+      plansService,
+      runsService: createRunsServiceMock(),
+      ...workspaceFilePorts,
+      canonicalNodes,
+      canonicalEdges,
+      previewProvenanceConfig: {
+        gitBranch: 'main',
+        gitSha: 'abc123',
+        gitRepo: 'dunay2/dvt',
+        graphArtifactPath: 'pipelines/customer-orders.yaml',
+      },
+    });
+    await harness.render();
+
+    await harness.clickPlan();
+
+    expect(plansService.previewPlan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        previewProfile: 'transformation-sql-first-v2',
+        selection: {
+          mode: 'explicit',
+          nodeIds: ['source-customers', 'source-orders', 'join', 'sink'],
+        },
+        graphSource: expect.objectContaining({
+          nodes: [
+            expect.objectContaining({ nodeId: 'source-customers', dependsOn: [] }),
+            expect.objectContaining({ nodeId: 'source-orders', dependsOn: [] }),
+            expect.objectContaining({
+              nodeId: 'join',
+              dependsOn: ['source-customers', 'source-orders'],
+              stepTypeConfig: expect.objectContaining({
+                sql: expect.stringMatching(/join public\.orders as right_source/i),
+              }),
+            }),
+            expect.objectContaining({ nodeId: 'sink', dependsOn: ['join'] }),
+          ],
+        }),
       })
     );
     expect(harness.shellFeedback.success).toHaveBeenCalledWith(canvasViewCopy.planCreatedMessage);

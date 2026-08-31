@@ -171,6 +171,9 @@ function buildSubstraitJoinPreviewGraph(): ReturnType<typeof buildSubstraitPrevi
       sourceName: table,
       schema: 'public',
       tableName: table,
+      columns: (table === 'customers' ? ['customer_id', 'name'] : ['order_id', 'customer_id']).map(
+        (name) => ({ name, type: 'string' })
+      ),
       connectedSourceRef: {
         schemaVersion: 'connected-source-ref.v1',
         connectionRef,
@@ -371,5 +374,31 @@ describe('Substrait Preview provenance cutover', () => {
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error('Expected scoped source mismatch to fail closed.');
     expect(result.message).toMatch(/source identities/i);
+  });
+
+  it('fails closed when a scoped dataset connection provider diverges from the sidecar', async () => {
+    const graph = buildSubstraitJoinPreviewGraph();
+    const nodes = graph.nodes.map((node) =>
+      node.id !== 'source-orders'
+        ? node
+        : {
+            ...node,
+            metadata: {
+              ...node.metadata,
+              connectedSourceRef: {
+                ...(node.metadata?.connectedSourceRef as Record<string, unknown>),
+                connectionRef: {
+                  ...((node.metadata?.connectedSourceRef as { connectionRef: object })
+                    .connectionRef ?? {}),
+                  provider: 'mysql',
+                },
+              },
+            },
+          }
+    );
+
+    const { result } = await resolveGraphPreview({ ...graph, nodes });
+
+    expect(result.ok).toBe(false);
   });
 });

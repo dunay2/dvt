@@ -1,8 +1,5 @@
-import type { ExecutionPlan, ExecutionStep } from './ExecutionPlan.v1.js';
-import {
-  TRANSFORMATION_STEP_KIND,
-  type TransformationStepKind,
-} from './TransformationFlowStepKinds.v1.js';
+import type { ExecutionPlan } from './ExecutionPlan.v1.js';
+import { TRANSFORMATION_STEP_KIND } from './TransformationFlowStepKinds.v1.js';
 import {
   CaptureMaterializationEvidenceStepTypeConfigSchema,
   PostgresSqlTransformStepTypeConfigSchema,
@@ -11,36 +8,48 @@ import {
 
 export interface TransformationSqlFirstPlanSummary {
   executor: 'postgres';
-  nodeCount: 3;
-  stepCount: 3;
-  sourceTables: readonly [string];
+  nodeCount: 3 | 4;
+  stepCount: 3 | 4;
+  sourceTables: readonly [string] | readonly [string, string];
   sinkTables: readonly [string];
 }
 
 export function summarizeTransformationSqlFirstPlan(
   plan: Pick<ExecutionPlan, 'steps'>
 ): TransformationSqlFirstPlanSummary {
-  if (plan.steps.length !== 3) {
+  if (plan.steps.length < 3 || plan.steps.length > 4) {
     throw new Error(
-      'Transformation SQL-first plan requires exactly 3 steps: prepare, transform, and evidence.'
+      'Transformation SQL-first plan requires 3 or 4 steps: one or two prepares, transform, and evidence.'
     );
   }
 
-  const prepareStep = findPlanStep(plan.steps, TRANSFORMATION_STEP_KIND.preparePostgresTransform);
-  const transformStep = findPlanStep(plan.steps, TRANSFORMATION_STEP_KIND.postgresSqlTransform);
-  const captureStep = findPlanStep(
-    plan.steps,
-    TRANSFORMATION_STEP_KIND.captureMaterializationEvidence
+  const prepareSteps = plan.steps.filter(
+    (step) => step.kind === TRANSFORMATION_STEP_KIND.preparePostgresTransform
   );
+  const transformSteps = plan.steps.filter(
+    (step) => step.kind === TRANSFORMATION_STEP_KIND.postgresSqlTransform
+  );
+  const captureSteps = plan.steps.filter(
+    (step) => step.kind === TRANSFORMATION_STEP_KIND.captureMaterializationEvidence
+  );
+  const transformStep = transformSteps[0];
+  const captureStep = captureSteps[0];
 
-  if (prepareStep === undefined || transformStep === undefined || captureStep === undefined) {
+  if (
+    prepareSteps.length < 1 ||
+    prepareSteps.length > 2 ||
+    transformSteps.length !== 1 ||
+    captureSteps.length !== 1 ||
+    transformStep === undefined ||
+    captureStep === undefined
+  ) {
     throw new Error(
-      'Transformation SQL-first plan must contain the canonical prepare, transform, and evidence step kinds.'
+      'Transformation SQL-first plan must contain one or two prepares, one transform, and one evidence step.'
     );
   }
 
-  const prepareConfig = PreparePostgresTransformStepTypeConfigSchema.parse(
-    prepareStep.stepTypeConfig
+  const prepareConfigs = prepareSteps.map((prepareStep) =>
+    PreparePostgresTransformStepTypeConfigSchema.parse(prepareStep.stepTypeConfig)
   );
   const transformConfig = PostgresSqlTransformStepTypeConfigSchema.parse(
     transformStep.stepTypeConfig
@@ -49,9 +58,13 @@ export function summarizeTransformationSqlFirstPlan(
     captureStep.stepTypeConfig
   );
 
-  if (transformStep.dependsOn.length !== 1 || transformStep.dependsOn[0] !== prepareStep.stepId) {
+  const prepareStepIds = new Set(prepareSteps.map((prepareStep) => prepareStep.stepId));
+  if (
+    transformStep.dependsOn.length !== prepareSteps.length ||
+    transformStep.dependsOn.some((stepId) => !prepareStepIds.has(stepId))
+  ) {
     throw new Error(
-      'Transformation SQL-first plan requires POSTGRES_SQL_TRANSFORM to depend on PREPARE_POSTGRES_TRANSFORM.'
+      'Transformation SQL-first plan requires POSTGRES_SQL_TRANSFORM to depend on every PREPARE_POSTGRES_TRANSFORM.'
     );
   }
 
@@ -61,7 +74,11 @@ export function summarizeTransformationSqlFirstPlan(
     );
   }
 
-  if (prepareConfig.targetSchema !== transformConfig.sinkSchema) {
+  if (
+    prepareConfigs.some(
+      (prepareConfig) => prepareConfig.targetSchema !== transformConfig.sinkSchema
+    )
+  ) {
     throw new Error(
       'Transformation SQL-first plan requires prepare targetSchema to match transform sinkSchema.'
     );
@@ -75,21 +92,19 @@ export function summarizeTransformationSqlFirstPlan(
       'Transformation SQL-first plan requires transform and evidence steps to reference the same sink.'
     );
   }
+  const stepCount = plan.steps.length as 3 | 4;
 
   return {
     executor: 'postgres',
-    nodeCount: 3,
-    stepCount: 3,
-    sourceTables: [formatQualifiedTable(prepareConfig.sourceSchema, prepareConfig.sourceTable)],
+    nodeCount: stepCount,
+    stepCount,
+    sourceTables: prepareConfigs
+      .map((prepareConfig) =>
+        formatQualifiedTable(prepareConfig.sourceSchema, prepareConfig.sourceTable)
+      )
+      .sort() as [string] | [string, string],
     sinkTables: [formatQualifiedTable(captureConfig.sinkSchema, captureConfig.sinkTable)],
   };
-}
-
-function findPlanStep<TKind extends TransformationStepKind>(
-  steps: readonly ExecutionStep[],
-  stepKind: TKind
-): ExecutionStep | undefined {
-  return steps.find((step) => step.kind === stepKind);
 }
 
 function formatQualifiedTable(schema: string, table: string): `${string}.${string}` {

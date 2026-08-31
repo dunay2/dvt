@@ -1,6 +1,12 @@
+import type { ConnectedSourceRef } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import {
+  createDvtSubstraitInnerJoinDraft,
+  encodeDvtSubstraitInnerJoinDocument,
+} from './canvasDvtSubstraitJoinComposition';
 import { validateTransformationGraph } from './transformationGraphValidation';
 
 function buildNode(
@@ -48,6 +54,92 @@ function buildOrderedTransformationEdges(): CanonicalEdge[] {
   ];
 }
 
+function buildValidSubstraitInnerJoinGraph(): {
+  nodes: CanonicalNode[];
+  edges: CanonicalEdge[];
+} {
+  const connectionRef = {
+    schemaVersion: 'connection-ref.v1' as const,
+    connectionId: 'warehouse-a',
+    provider: 'postgres',
+  };
+  const connectedSourceRef = (table: string): ConnectedSourceRef => ({
+    schemaVersion: 'connected-source-ref.v1' as const,
+    connectionRef,
+    sourceObjectId: `public.${table}`,
+  });
+  const source = (id: string, table: string, columns: readonly string[]): CanonicalNode => ({
+    id,
+    name: table,
+    pluginId: 'dvt.warehouse-source',
+    kind: 'dvt:source',
+    role: 'input',
+    status: 'idle',
+    tags: ['source'],
+    metadata: {
+      sourceName: table,
+      schema: 'public',
+      tableName: table,
+      columns: columns.map((name) => ({ name, type: 'string' })),
+      connectedSourceRef: connectedSourceRef(table),
+    },
+  });
+  const draft = createDvtSubstraitInnerJoinDraft({
+    left: {
+      nodeId: 'customers',
+      schema: 'public',
+      table: 'customers',
+      sourceRef: connectedSourceRef('customers'),
+    },
+    right: {
+      nodeId: 'orders',
+      schema: 'public',
+      table: 'orders',
+      sourceRef: connectedSourceRef('orders'),
+    },
+    targetNodeId: 'join',
+  });
+  const transform = applyDvtSubstraitSemanticDocument(
+    {
+      id: 'join',
+      name: 'Customer orders',
+      pluginId: 'dvt',
+      kind: 'dvt:sql_transform',
+      role: 'transform',
+      status: 'idle',
+      tags: ['authoring'],
+      path: 'models/customer-orders.sql',
+      metadata: { config: { dialect: 'postgres' } },
+    },
+    encodeDvtSubstraitInnerJoinDocument(draft)
+  );
+  const nodes = [
+    source('customers', 'customers', ['customer_id', 'name']),
+    source('orders', 'orders', ['order_id', 'customer_id']),
+    transform,
+    buildNode({
+      id: 'sink',
+      name: 'Customer orders sink',
+      kind: 'dvt:sink',
+      role: 'output',
+      metadata: {
+        config: {
+          schema: 'analytics',
+          table: 'customer_orders',
+          materialization: 'table',
+          writeMode: 'replace',
+        },
+      },
+    }),
+  ];
+  const edges = [
+    buildEdge({ id: 'customers-join', sourceId: 'customers', targetId: 'join' }),
+    buildEdge({ id: 'orders-join', sourceId: 'orders', targetId: 'join' }),
+    buildEdge({ id: 'join-sink', sourceId: 'join', targetId: 'sink' }),
+  ];
+  return { nodes, edges };
+}
+
 function expectValidationSummary(
   result: ReturnType<typeof validateTransformationGraph>,
   args: {
@@ -69,6 +161,25 @@ describe('validateTransformationGraph', () => {
       valid: true,
       summaryCode: 'valid',
     });
+  });
+
+  it('accepts the exact persisted two-source Substrait INNER JOIN path', () => {
+    const { nodes, edges } = buildValidSubstraitInnerJoinGraph();
+
+    expectValidationSummary(
+      validateTransformationGraph({
+        nodes,
+        edges,
+        selectedNodeIds: nodes.map((node) => node.id),
+        workspaceNodeIds: nodes.map((node) => node.id),
+      }),
+      {
+        valid: true,
+        summaryCode: 'valid',
+        scopedNodeIds: ['customers', 'orders', 'join', 'sink'],
+        scopedEdgeIds: ['customers-join', 'orders-join', 'join-sink'],
+      }
+    );
   });
 
   it('accepts an executable path inside a larger DVT authoring canvas', () => {
