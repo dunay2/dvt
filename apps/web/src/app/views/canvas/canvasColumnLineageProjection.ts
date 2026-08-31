@@ -15,8 +15,9 @@ import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProj
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import {
   decodeDvtSubstraitInnerJoinDocument,
+  inspectDvtSubstraitInnerJoinGroupedWindowDraft,
+  inspectDvtSubstraitInnerJoinGroupingDraft,
   inspectDvtSubstraitInnerJoinDraft,
-  type DvtSubstraitInnerJoinProjection,
 } from './canvasDvtSubstraitJoinComposition';
 import {
   decodeDvtSubstraitUnionAllDocument,
@@ -135,14 +136,40 @@ function readLineageRecipe(node: CanonicalNode): LineageRecipe | null {
   }
 }
 
-function readSubstraitJoinLineage(node: CanonicalNode): DvtSubstraitInnerJoinProjection | null {
+type DvtSubstraitInnerJoinLineage = Readonly<{
+  left: Readonly<{ sourceRef: ConnectedSourceRef }>;
+  right: Readonly<{ sourceRef: ConnectedSourceRef }>;
+  outputs: readonly Readonly<{
+    fieldKey: string;
+    name: string;
+    fieldId: string;
+    source: Readonly<{ relation: 'left' | 'right'; name: string }>;
+  }>[];
+}>;
+
+function readSubstraitJoinLineage(node: CanonicalNode): DvtSubstraitInnerJoinLineage | null {
   if (node.pluginId !== 'dvt' || node.kind !== 'dvt:sql_transform') return null;
   try {
     const authority = readDvtTransformAuthoringAuthority(node);
     if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return null;
-    const inspection = inspectDvtSubstraitInnerJoinDraft(
-      decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument)
-    );
+    const draft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
+    const groupedWindow = inspectDvtSubstraitInnerJoinGroupedWindowDraft(draft);
+    if (groupedWindow.ok) {
+      return {
+        left: groupedWindow.projection.left,
+        right: groupedWindow.projection.right,
+        outputs: [groupedWindow.projection.groupField],
+      };
+    }
+    const grouping = inspectDvtSubstraitInnerJoinGroupingDraft(draft);
+    if (grouping.ok) {
+      return {
+        left: grouping.projection.left,
+        right: grouping.projection.right,
+        outputs: [grouping.projection.groupField],
+      };
+    }
+    const inspection = inspectDvtSubstraitInnerJoinDraft(draft);
     return inspection.ok ? inspection.projection : null;
   } catch {
     return null;

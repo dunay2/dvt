@@ -15,7 +15,7 @@ import { inspectDvtSubstraitPilotAggregateWindowDraft } from './canvasDvtSubstra
 import { inspectDvtSubstraitPilotWindowDraft } from './canvasDvtSubstraitWindow';
 import {
   decodeDvtSubstraitInnerJoinDocument,
-  inspectDvtSubstraitInnerJoinDraft,
+  inspectDvtSubstraitInnerJoinAcceptedDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import {
   decodeDvtSubstraitUnionAllDocument,
@@ -42,6 +42,7 @@ export function projectCanvasNodePresentationTruth(
 type DvtSubstraitPresentedOutput = Readonly<{
   name: string;
   fieldId: string;
+  dataType?: string;
 }>;
 
 function projectCanvasNodePresentationTruthInternal(
@@ -116,7 +117,7 @@ function projectCanvasNodePresentationTruthInternal(
                 if (windowInspection.ok) {
                   substraitOutputs = windowInspection.projection.outputs;
                 } else {
-                  const joinInspection = inspectDvtSubstraitInnerJoinDraft(
+                  const joinInspection = inspectDvtSubstraitInnerJoinAcceptedDraft(
                     decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument)
                   );
                   if (joinInspection.ok) {
@@ -274,7 +275,7 @@ function projectCanvasNodePresentationTruthInternal(
   if (substraitOutputs != null) {
     const declared = substraitOutputs.map((output) => ({
       name: output.name,
-      type: 'string',
+      type: output.dataType ?? 'string',
       provenance: 'declared' as const,
       reference: output.fieldId,
     }));

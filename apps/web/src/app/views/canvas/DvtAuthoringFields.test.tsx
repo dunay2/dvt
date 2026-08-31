@@ -404,6 +404,43 @@ describe('DvtAuthoringFields', () => {
     expect(draftJson()).toContain('"fieldId":"field:dvt-sql-transform:name"');
     expect(draftJson()).toContain('"displayName":"customer_name"');
     expect(draftJson()).not.toContain('selectedColumns');
+
+    const grainField = container.querySelector<HTMLSelectElement>(
+      '[data-slot="dvt-substrait-inner-join-grain-field"]'
+    );
+    const countOutput = container.querySelector<HTMLInputElement>(
+      '[data-slot="dvt-substrait-inner-join-count-output-name"]'
+    );
+    const applyGrouping = container.querySelector<HTMLButtonElement>(
+      '[data-slot="dvt-substrait-inner-join-apply-grouping"]'
+    );
+    expect(grainField).not.toBeNull();
+    expect(countOutput).not.toBeNull();
+    act(() => {
+      fireEvent.change(grainField!, { target: { value: 'field:dvt-sql-transform:name' } });
+      fireEvent.input(countOutput!, { target: { value: 'order_count' } });
+      fireEvent.click(applyGrouping!);
+    });
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-inner-join-grouping-authoring"]')
+    ).not.toBeNull();
+    expect(draftJson()).toContain('"case":"aggregate"');
+
+    const rankOutput = container.querySelector<HTMLInputElement>(
+      '[data-slot="dvt-substrait-inner-join-window-output-name"]'
+    );
+    const applyWindow = container.querySelector<HTMLButtonElement>(
+      '[data-slot="dvt-substrait-inner-join-apply-window"]'
+    );
+    act(() => {
+      fireEvent.input(rankOutput!, { target: { value: 'count_rank' } });
+      fireEvent.keyDown(applyWindow!, { key: 'Enter' });
+    });
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-inner-join-grouped-window-authoring"]')
+    ).not.toBeNull();
+    expect(draftJson()).toContain('"names":["customer_name","order_count","count_rank"]');
+    expect(draftJson()).toContain('"case":"windowFunction"');
   });
 
   it('does not offer INNER JOIN when the connected datasets use different connections', () => {

@@ -37,7 +37,7 @@ import { inspectDvtSubstraitPilotAggregateWindowDraft } from './canvasDvtSubstra
 import { inspectDvtSubstraitPilotWindowDraft } from './canvasDvtSubstraitWindow';
 import {
   decodeDvtSubstraitInnerJoinDocument,
-  inspectDvtSubstraitInnerJoinDraft,
+  inspectDvtSubstraitInnerJoinAcceptedDraft,
   resolveDvtSubstraitInnerJoinEntry,
 } from './canvasDvtSubstraitJoinComposition';
 import {
@@ -363,7 +363,7 @@ async function buildAuthoringPreviewSql({
       }
 
       const joinDraft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
-      const joinInspection = inspectDvtSubstraitInnerJoinDraft(joinDraft);
+      const joinInspection = inspectDvtSubstraitInnerJoinAcceptedDraft(joinDraft);
       const scopedNodeIdSet = new Set(scopedNodeIds);
       const scopedNodes = canonicalNodes.filter((node) => scopedNodeIdSet.has(node.id));
       const scopedEdges = canonicalEdges.filter(

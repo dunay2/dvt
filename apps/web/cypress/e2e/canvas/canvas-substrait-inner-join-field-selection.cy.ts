@@ -1,7 +1,7 @@
 /** Owned concern: prove Substrait INNER JOIN field authoring through the governed Canvas draft rail. */
 import {
   decodeDvtSubstraitInnerJoinDocument,
-  inspectDvtSubstraitInnerJoinDraft,
+  inspectDvtSubstraitInnerJoinGroupedWindowDraft,
 } from '../../../src/app/views/canvas/canvasDvtSubstraitJoinComposition';
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
@@ -58,7 +58,7 @@ describe('Canvas Substrait INNER JOIN field selection', () => {
     });
   });
 
-  it('selects, renames, reorders, persists, and reloads fields from Substrait authority', () => {
+  it('selects, groups, ranks, persists, and reloads fields from Substrait authority', () => {
     visitCanvas();
 
     cy.get(
@@ -73,6 +73,14 @@ describe('Canvas Substrait INNER JOIN field selection', () => {
     cy.get(
       'button[data-action="move-substrait-inner-join-field-up"][data-field-key="right.order_id"]'
     ).click();
+    cy.get('[data-slot="dvt-substrait-inner-join-grain-field"]').select(
+      'field:join-transform:name'
+    );
+    cy.get('[data-slot="dvt-substrait-inner-join-count-output-name"]').clear().type('order_count');
+    cy.get('[data-slot="dvt-substrait-inner-join-apply-grouping"]').click();
+    cy.get('[data-slot="dvt-substrait-inner-join-window-output-name"]').clear().type('count_rank');
+    cy.get('[data-slot="dvt-substrait-inner-join-apply-window"]').click();
+    cy.get('[data-slot="dvt-substrait-inner-join-grouped-window-authoring"]').should('exist');
     cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
 
     cy.wrap(null).should(() => {
@@ -83,24 +91,28 @@ describe('Canvas Substrait INNER JOIN field selection', () => {
         .at(-1);
       const transformAuthoring = savedTransform?.metadata?.transformAuthoring as
         { semanticDocument?: unknown } | undefined;
-      const inspection = inspectDvtSubstraitInnerJoinDraft(
+      const inspection = inspectDvtSubstraitInnerJoinGroupedWindowDraft(
         decodeDvtSubstraitInnerJoinDocument(transformAuthoring?.semanticDocument)
       );
 
       expect(inspection.ok && inspection.projection.outputs).to.deep.equal([
         {
-          fieldKey: 'right.order_id',
-          fieldId: 'field:join-transform:order_id',
-          name: 'order_id',
-          outputOrdinal: 0,
-          source: { relation: 'right', name: 'order_id' },
-        },
-        {
-          fieldKey: 'left.name',
           fieldId: 'field:join-transform:name',
           name: 'customer_name',
+          dataType: 'string',
+          outputOrdinal: 0,
+        },
+        {
+          fieldId: 'field:join-transform:join-count',
+          name: 'order_count',
+          dataType: 'i64',
           outputOrdinal: 1,
-          source: { relation: 'left', name: 'name' },
+        },
+        {
+          fieldId: 'field:join-transform:join-count-rank',
+          name: 'count_rank',
+          dataType: 'i64',
+          outputOrdinal: 2,
         },
       ]);
     });
@@ -111,11 +123,10 @@ describe('Canvas Substrait INNER JOIN field selection', () => {
       '.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]'
     ).dblclick();
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
-    cy.get('input[name="dvt-substrait-inner-join-field"][value="left.customer_id"]').should(
-      'not.be.checked'
+    cy.get('[data-slot="dvt-substrait-inner-join-grouped-window-authoring"]').should('exist');
+    cy.get('[data-slot="dvt-substrait-inner-join-window-output-name"]').should(
+      'have.value',
+      'count_rank'
     );
-    cy.get(
-      'input[data-slot="dvt-substrait-inner-join-output-name"][data-field-key="left.name"]'
-    ).should('have.value', 'customer_name');
   });
 });
