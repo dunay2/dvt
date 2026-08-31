@@ -99,16 +99,19 @@ describe('Canvas Substrait INNER JOIN field selection', () => {
         {
           fieldId: 'field:join-transform:name',
           name: 'customer_name',
+          dataType: 'string',
           outputOrdinal: 0,
         },
         {
           fieldId: 'field:join-transform:join-count',
           name: 'order_count',
+          dataType: 'i64',
           outputOrdinal: 1,
         },
         {
           fieldId: 'field:join-transform:join-count-rank',
           name: 'count_rank',
+          dataType: 'i64',
           outputOrdinal: 2,
         },
       ]);
