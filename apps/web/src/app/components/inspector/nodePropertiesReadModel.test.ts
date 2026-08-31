@@ -832,6 +832,49 @@ describe('nodePropertiesReadModel', () => {
     });
   });
 
+  it('preserves declared SQL Transform column details when no source lineage is projected', () => {
+    const transform: CanonicalNode = {
+      id: 'transform-sql-orders',
+      name: 'SQL orders',
+      pluginId: 'dvt',
+      kind: 'dvt:sql_transform',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        columns: [
+          {
+            name: 'order_id',
+            type: 'integer',
+            nullable: false,
+            primaryKey: true,
+            defaultValue: '0',
+            comment: 'Canonical order key',
+          },
+        ],
+      },
+    };
+
+    const model = buildNodePropertiesReadModel({
+      node: transform,
+      nodes: [transform],
+      edges: [],
+    });
+    const cells = sectionById(model, 'columns').tableRows.find(
+      (row) => row.id === 'order_id'
+    )?.cells;
+
+    expect(cells).toMatchObject({
+      name: 'order_id',
+      type: 'integer',
+      nullable: 'not null',
+      key: 'PK',
+      default: '0',
+      comment: 'Canonical order key',
+    });
+    expect(cells).not.toHaveProperty('selection');
+  });
+
   it('projects DVT sink target and write policy into a dedicated sink section', () => {
     const sink: CanonicalNode = {
       id: 'sink-orders',

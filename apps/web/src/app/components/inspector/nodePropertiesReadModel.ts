@@ -751,9 +751,19 @@ export function buildNodePropertiesReadModel({
   const presentationTruth =
     suppliedPresentationTruth ?? buildCanvasNodePresentationTruth({ node, nodes, edges });
   const projectsDvtTransformColumns = node.pluginId === 'dvt' && node.kind === 'dvt:sql_transform';
+  const projectsDvtTransformLineage =
+    projectsDvtTransformColumns &&
+    presentationTruth.columns.visible.some(
+      (column) =>
+        column.sourceNodeId != null ||
+        column.sourceNodeName != null ||
+        column.sourceReference != null
+    );
   const columnRows = localizePropertyTableRows(
     projectsDvtTransformColumns
-      ? buildInheritedColumnRows(presentationTruth.columns.visible)
+      ? projectsDvtTransformLineage || columns.length === 0
+        ? buildInheritedColumnRows(presentationTruth.columns.visible)
+        : buildColumnRows(columns)
       : presentationTruth.columns.visibleProvenance === 'declared'
         ? buildColumnRows(columns)
         : presentationTruth.columns.visibleProvenance === 'mixed'
