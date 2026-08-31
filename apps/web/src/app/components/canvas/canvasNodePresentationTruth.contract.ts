@@ -8,6 +8,7 @@ export type CanvasNodePresentationColumn = Readonly<{
   provenance: CanvasNodePresentationColumnProvenance;
   sourceNodeId?: string;
   sourceNodeName?: string;
+  sourceReference?: string;
   reference?: string;
   selected?: boolean;
 }>;

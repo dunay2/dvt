@@ -128,6 +128,41 @@ describe('Canvas column lineage projection', () => {
     ).toEqual([]);
   });
 
+  it('does not project lineage from an unrelated node with matching column names', () => {
+    const orders = buildNode('orders', 'dvt:source', 'input', [
+      { name: 'order_id', type: 'integer' },
+    ]);
+    const workspaceDrafts = buildNode('workspace_graph_drafts', 'dvt:source', 'input', [
+      { name: 'order_id', type: 'integer' },
+    ]);
+    const model = applyDvtVisualTransformRecipe(
+      buildNode('model', 'dvt:sql_transform', 'transform'),
+      {
+        version: 'v1',
+        outputs: [
+          {
+            id: 'output:order_id',
+            name: 'order_id',
+            dataType: 'integer',
+            expression: {
+              inputs: [{ nodeId: workspaceDrafts.id, columnName: 'order_id' }],
+              operations: [{ kind: 'passthrough' }],
+            },
+          },
+        ],
+        filters: [],
+      }
+    );
+
+    expect(
+      projectCanvasColumnLineage({
+        nodes: [orders, workspaceDrafts, model],
+        edges: [{ sourceId: orders.id, targetId: model.id }],
+        expandedNodeIds: new Set([orders.id, workspaceDrafts.id, model.id]),
+      })
+    ).toEqual([]);
+  });
+
   it('projects multi-input recipes without inventing a persisted mapping collection', () => {
     const first = buildNode('source-a', 'dvt:source', 'input', [
       { name: 'first_name', type: 'text' },

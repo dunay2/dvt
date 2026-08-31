@@ -422,7 +422,7 @@ function buildInheritedColumnRows(
       type: column.type,
       nullable: column.nullable === false ? 'not null' : column.nullable === true ? 'nullable' : '',
       source: column.sourceNodeName ?? column.sourceNodeId ?? '',
-      reference: column.reference ?? '',
+      reference: column.sourceReference ?? column.reference ?? '',
       selection: column.selected ? 'selected' : 'available',
     },
   }));
@@ -750,12 +750,15 @@ export function buildNodePropertiesReadModel({
   const columns = readColumns(metadata.columns);
   const presentationTruth =
     suppliedPresentationTruth ?? buildCanvasNodePresentationTruth({ node, nodes, edges });
+  const projectsDvtTransformColumns = node.pluginId === 'dvt' && node.kind === 'dvt:sql_transform';
   const columnRows = localizePropertyTableRows(
-    presentationTruth.columns.visibleProvenance === 'declared'
-      ? buildColumnRows(columns)
-      : presentationTruth.columns.visibleProvenance === 'mixed'
-        ? buildInheritedColumnRows(presentationTruth.columns.visible)
-        : buildInheritedColumnRows(presentationTruth.columns.inherited),
+    projectsDvtTransformColumns
+      ? buildInheritedColumnRows(presentationTruth.columns.visible)
+      : presentationTruth.columns.visibleProvenance === 'declared'
+        ? buildColumnRows(columns)
+        : presentationTruth.columns.visibleProvenance === 'mixed'
+          ? buildInheritedColumnRows(presentationTruth.columns.visible)
+          : buildInheritedColumnRows(presentationTruth.columns.inherited),
     presentationCopy
   );
   const keyRows = localizePropertyTableRows(buildKeyRows(metadata, columns), presentationCopy);

@@ -770,6 +770,68 @@ describe('nodePropertiesReadModel', () => {
     });
   });
 
+  it('shows the exact input reference for a declared direct Transform output', () => {
+    const transform: CanonicalNode = {
+      id: 'transform-orders',
+      name: 'Transform orders',
+      pluginId: 'dvt',
+      kind: 'dvt:sql_transform',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+      metadata: {},
+    };
+
+    const model = buildNodePropertiesReadModel({
+      node: transform,
+      nodes: [transform],
+      edges: [],
+      presentationTruth: {
+        columns: {
+          declared: [
+            {
+              name: 'order_id',
+              type: 'integer',
+              nullable: false,
+              provenance: 'declared',
+              sourceNodeId: 'source-orders',
+              sourceNodeName: 'Orders source',
+              sourceReference: 'source-orders.order_id',
+              reference: 'output:order_id',
+            },
+          ],
+          inherited: [],
+          visible: [
+            {
+              name: 'order_id',
+              type: 'integer',
+              nullable: false,
+              provenance: 'declared',
+              sourceNodeId: 'source-orders',
+              sourceNodeName: 'Orders source',
+              sourceReference: 'source-orders.order_id',
+              reference: 'output:order_id',
+            },
+          ],
+          declaredCount: 1,
+          inheritedCount: 0,
+          visibleCount: 1,
+          visibleProvenance: 'declared',
+        },
+        code: { kind: 'unavailable' },
+      },
+    });
+
+    expectTableCells(sectionById(model, 'columns'), 'output:order_id', {
+      name: 'order_id',
+      type: 'integer',
+      nullable: 'not null',
+      source: 'Orders source',
+      reference: 'source-orders.order_id',
+      selection: 'available',
+    });
+  });
+
   it('projects DVT sink target and write policy into a dedicated sink section', () => {
     const sink: CanonicalNode = {
       id: 'sink-orders',
