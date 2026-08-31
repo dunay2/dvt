@@ -2,6 +2,7 @@
 import {
   decodeDvtSubstraitInnerJoinDocument,
   inspectDvtSubstraitInnerJoinGroupedWindowDraft,
+  inspectDvtSubstraitNInputJoinDraft,
 } from '../../../src/app/views/canvas/canvasDvtSubstraitJoinComposition';
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
@@ -127,6 +128,70 @@ describe('Canvas Substrait INNER JOIN field selection', () => {
     cy.get('[data-slot="dvt-substrait-inner-join-window-output-name"]').should(
       'have.value',
       'count_rank'
+    );
+  });
+});
+
+describe('Canvas Substrait N-input INNER JOIN authoring', () => {
+  beforeEach(() => {
+    stubRuntimeCapabilities();
+    stubStatefulCanvasDraftAuthoring({
+      substraitNInputJoin: true,
+      title: 'Substrait N-input authoring',
+    });
+  });
+
+  it('appends two connected inputs through the same explicit predicate control and reloads them', () => {
+    visitCanvas();
+
+    cy.get(
+      '.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]'
+    ).dblclick();
+    cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
+    cy.get('[data-slot="dvt-substrait-append-right-field"]').select(
+      'source-shipments\u001fcustomer_id'
+    );
+    cy.get('[data-slot="dvt-substrait-append-submit"]').click();
+    cy.get('[data-slot="dvt-substrait-n-input-join-authoring"]').should(
+      'contain.text',
+      'customers + orders + shipments'
+    );
+    cy.get('[data-slot="dvt-substrait-append-right-field"]').select(
+      'source-tickets\u001fcustomer_id'
+    );
+    cy.get('[data-slot="dvt-substrait-append-submit"]').click();
+    cy.get('[data-slot="dvt-substrait-n-input-join-authoring"]').should(
+      'contain.text',
+      'customers + orders + shipments + tickets'
+    );
+    cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
+
+    cy.wrap(null).should(() => {
+      const savedTransform = getE2eApiCalls('/workspace/graph/draft', 'PUT')
+        .map((call) => call.body as CanvasDraftSaveRequestBody)
+        .map((body) => body.draft.nodes.find((node) => node.id === 'join-transform'))
+        .filter((node) => node != null)
+        .at(-1);
+      const transformAuthoring = savedTransform?.metadata?.transformAuthoring as
+        { semanticDocument?: unknown } | undefined;
+      const inspection = inspectDvtSubstraitNInputJoinDraft(
+        decodeDvtSubstraitInnerJoinDocument(transformAuthoring?.semanticDocument)
+      );
+
+      expect(
+        inspection.ok && inspection.projection.inputs.map((input) => input.table)
+      ).to.deep.equal(['customers', 'orders', 'shipments', 'tickets']);
+    });
+
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    visitCanvas();
+    cy.get(
+      '.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]'
+    ).dblclick();
+    cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
+    cy.get('[data-slot="dvt-substrait-n-input-join-authoring"]').should(
+      'contain.text',
+      'customers + orders + shipments + tickets'
     );
   });
 });

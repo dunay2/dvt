@@ -41,6 +41,7 @@ export type StubCanvasDraftReadOptions = {
   columnMapping?: boolean;
   columnMappingDisconnected?: boolean;
   substraitInnerJoin?: boolean;
+  substraitNInputJoin?: boolean;
   substraitUnionAll?: boolean;
   substraitPilot?: boolean;
   title?: string;
@@ -67,6 +68,7 @@ export function buildCanvasAuthoringDraft({
   columnMapping = false,
   columnMappingDisconnected = false,
   substraitInnerJoin = false,
+  substraitNInputJoin = false,
   substraitUnionAll = false,
   substraitPilot = false,
   title,
@@ -158,7 +160,7 @@ export function buildCanvasAuthoringDraft({
     });
   }
 
-  if (substraitInnerJoin) {
+  if (substraitInnerJoin || substraitNInputJoin) {
     const connectionRef = {
       schemaVersion: 'connection-ref.v1' as const,
       connectionId: 'warehouse-a',
@@ -191,10 +193,21 @@ export function buildCanvasAuthoringDraft({
     );
     return buildWorkspaceGraphAuthoringDraft({
       canvas,
-      nodeIds: ['source-customers', 'source-orders', 'join-transform'],
+      nodeIds: [
+        'source-customers',
+        'source-orders',
+        ...(substraitNInputJoin ? ['source-shipments', 'source-tickets'] : []),
+        'join-transform',
+      ],
       nodePositions: {
         'source-customers': { x: 40, y: 100 },
         'source-orders': { x: 40, y: 340 },
+        ...(substraitNInputJoin
+          ? {
+              'source-shipments': { x: 40, y: 580 },
+              'source-tickets': { x: 40, y: 820 },
+            }
+          : {}),
         'join-transform': { x: 420, y: 220 },
       },
       nodes: [
@@ -242,6 +255,54 @@ export function buildCanvasAuthoringDraft({
             },
           },
         },
+        ...(substraitNInputJoin
+          ? [
+              {
+                id: 'source-shipments',
+                name: 'shipments',
+                pluginId: 'dvt',
+                kind: 'dvt:source',
+                role: 'input' as const,
+                status: 'idle' as const,
+                tags: ['authoring'],
+                metadata: {
+                  schema: 'public',
+                  tableName: 'shipments',
+                  columns: [
+                    { name: 'shipment_id', type: 'string' },
+                    { name: 'customer_id', type: 'string' },
+                  ],
+                  connectedSourceRef: {
+                    schemaVersion: 'connected-source-ref.v1' as const,
+                    connectionRef,
+                    sourceObjectId: 'public.shipments',
+                  },
+                },
+              },
+              {
+                id: 'source-tickets',
+                name: 'tickets',
+                pluginId: 'dvt',
+                kind: 'dvt:source',
+                role: 'input' as const,
+                status: 'idle' as const,
+                tags: ['authoring'],
+                metadata: {
+                  schema: 'public',
+                  tableName: 'tickets',
+                  columns: [
+                    { name: 'ticket_id', type: 'string' },
+                    { name: 'customer_id', type: 'string' },
+                  ],
+                  connectedSourceRef: {
+                    schemaVersion: 'connected-source-ref.v1' as const,
+                    connectionRef,
+                    sourceObjectId: 'public.tickets',
+                  },
+                },
+              },
+            ]
+          : []),
         {
           id: 'join-transform',
           name: 'Customer orders',
@@ -272,6 +333,22 @@ export function buildCanvasAuthoringDraft({
           targetId: 'join-transform',
           relation: 'lineage',
         },
+        ...(substraitNInputJoin
+          ? [
+              {
+                id: 'shipments-join',
+                sourceId: 'source-shipments',
+                targetId: 'join-transform',
+                relation: 'lineage' as const,
+              },
+              {
+                id: 'tickets-join',
+                sourceId: 'source-tickets',
+                targetId: 'join-transform',
+                relation: 'lineage' as const,
+              },
+            ]
+          : []),
       ],
     });
   }
