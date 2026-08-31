@@ -565,6 +565,30 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtSubstraitRemoveAggregationLabel',
     fallback: 'Remove summary',
   },
+  inspectorDvtSubstraitWindowTitle: {
+    key: 'canvas.inspector.authoring.dvtSubstraitWindowTitle',
+    fallback: 'Partition and order',
+  },
+  inspectorDvtSubstraitWindowPartitionFieldLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitWindowPartitionFieldLabel',
+    fallback: 'Partition field',
+  },
+  inspectorDvtSubstraitWindowOrderFieldLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitWindowOrderFieldLabel',
+    fallback: 'Order field',
+  },
+  inspectorDvtSubstraitWindowOutputLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitWindowOutputLabel',
+    fallback: 'Row number output',
+  },
+  inspectorDvtSubstraitApplyWindowLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitApplyWindowLabel',
+    fallback: 'Add row numbers',
+  },
+  inspectorDvtSubstraitRemoveWindowLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitRemoveWindowLabel',
+    fallback: 'Remove row numbers',
+  },
   inspectorDvtSinkTitle: {
     key: 'canvas.inspector.authoring.dvtSinkTitle',
     fallback: 'DVT sink',

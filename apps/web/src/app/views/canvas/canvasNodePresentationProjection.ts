@@ -11,6 +11,7 @@ import {
   inspectDvtSubstraitPilotDraft,
 } from './canvasDvtSubstraitPilot';
 import { inspectDvtSubstraitPilotAggregationDraft } from './canvasDvtSubstraitAggregation';
+import { inspectDvtSubstraitPilotWindowDraft } from './canvasDvtSubstraitWindow';
 import {
   decodeDvtSubstraitInnerJoinDocument,
   inspectDvtSubstraitInnerJoinDraft,
@@ -98,13 +99,20 @@ function projectCanvasNodePresentationTruthInternal(
             if (aggregateInspection.ok) {
               substraitOutputs = aggregateInspection.projection.outputs;
             } else {
-              const joinInspection = inspectDvtSubstraitInnerJoinDraft(
-                decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument)
+              const windowInspection = inspectDvtSubstraitPilotWindowDraft(
+                decodeDvtSubstraitPilotDocument(authority.semanticDocument)
               );
-              if (joinInspection.ok) {
-                substraitOutputs = joinInspection.projection.outputs;
+              if (windowInspection.ok) {
+                substraitOutputs = windowInspection.projection.outputs;
               } else {
-                substraitRejected = true;
+                const joinInspection = inspectDvtSubstraitInnerJoinDraft(
+                  decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument)
+                );
+                if (joinInspection.ok) {
+                  substraitOutputs = joinInspection.projection.outputs;
+                } else {
+                  substraitRejected = true;
+                }
               }
             }
           }

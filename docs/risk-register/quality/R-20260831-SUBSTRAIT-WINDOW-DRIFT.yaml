@@ -1,0 +1,34 @@
+---
+id: R-20260831-SUBSTRAIT-WINDOW-DRIFT
+title: Bounded window authoring could drift from admitted Substrait semantics
+status: Open
+date: 2026-08-31
+owners:
+  - web
+  - packages/@dvt/contracts
+severity: Medium
+probability: Low
+---
+mitigation:
+  summary: >
+    The first Canvas window cut admits only pinned Substrait v0.101.0 Expression.WindowFunction and
+    the official functions_arithmetic row_number function with zero arguments, nullable i64 output,
+    one partition field, one ASC NULLS LAST ordering field, and no explicit frame. Authoring,
+    reload, card presentation, and PostgreSQL Preview inspect the same typed Plan and stable DVT
+    sidecar. Unsupported URNs, names, signatures, types, phases, invocations, sort semantics,
+    frames, mappings, and bindings fail closed. Other window functions, multiple keys,
+    aggregate/window composition, dbt projection, and generic window editing remain candidate or out
+    of scope.
+  evidence:
+    - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
+    - docs/evidence/ED-20260831-vtx2-substrait-row-number-window.md
+    - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts
+    - packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts
+    - apps/web/src/app/views/canvas/canvasDvtSubstraitWindow.ts
+    - apps/web/src/app/views/canvas/canvasDvtSubstraitWindow.test.ts
+    - apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresProjection.test.ts
+    - apps/web/cypress/e2e/canvas/canvas-substrait-window.cy.ts
+  follow_up:
+    - Issue #2642 owns later window capability projection into Canvas.
+    - Each additional window function or frame requires a separate #2641 admission fixture.
+    - Issue #2737 owns dbt projection and external compatibility; this risk does not authorize import.

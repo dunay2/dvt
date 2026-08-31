@@ -20,6 +20,7 @@ import {
   renameDvtSubstraitPilotOutput,
 } from './canvasDvtSubstraitPilot';
 import { applyDvtSubstraitPilotAggregation } from './canvasDvtSubstraitAggregation';
+import { applyDvtSubstraitPilotRowNumber } from './canvasDvtSubstraitWindow';
 import { resolvePreviewProvenance } from './canvasPreviewProvenance';
 import { buildTestPostgresConnectionRef } from './useCanvasExecutionActions.test.support';
 
@@ -246,6 +247,30 @@ function buildSubstraitAggregatePreviewGraph(): ReturnType<typeof buildSubstrait
   return graph;
 }
 
+function buildSubstraitWindowPreviewGraph(): ReturnType<typeof buildSubstraitPreviewGraph> {
+  const graph = buildSubstraitPreviewGraph();
+  let draft = createDvtSubstraitPilotDraft({
+    sourceNodeId: 'source',
+    targetNodeId: 'transform',
+  });
+  draft = applyDvtSubstraitPilotFunction(draft, 'trim');
+  draft = applyDvtSubstraitPilotFunction(draft, 'upper');
+  draft = renameDvtSubstraitPilotOutput(draft, 'customer_name');
+  draft = applyDvtSubstraitPilotRowNumber(draft, {
+    partitionFieldId: 'field:transform:country',
+    orderFieldId: 'field:transform:name',
+    outputName: 'country_row_number',
+  });
+  const transformIndex = graph.nodes.findIndex((node) => node.id === 'transform');
+  const transform = graph.nodes[transformIndex];
+  if (transform == null) throw new Error('Expected transform fixture.');
+  graph.nodes[transformIndex] = applyDvtSubstraitSemanticDocument(
+    transform,
+    encodeDvtSubstraitPilotDocument(draft)
+  );
+  return graph;
+}
+
 function buildWorkspacePorts(
   transformPath: string,
   staleSql?: string
@@ -386,6 +411,18 @@ describe('Substrait Preview provenance cutover', () => {
     const normalized = result.sqlText?.replaceAll(/\s+/g, ' ').trim().toLowerCase();
     expect(normalized).toMatch(
       /^select country as country, count\(\*\) as customer_count from public\.customers group by country;?$/
+    );
+    expect(savedContents).toContain(result.sqlText);
+  });
+
+  it('routes the row-number Substrait revision through the existing Preview artifact rail', async () => {
+    const { result, savedContents } = await resolveGraphPreview(buildSubstraitWindowPreviewGraph());
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error(result.message);
+    const normalized = result.sqlText?.replaceAll(/\s+/g, ' ').trim().toLowerCase();
+    expect(normalized).toMatch(
+      /^select upper\(trim\(name\)\) as customer_name, email, country, row_number\(\) over \( ?partition by country order by name asc nulls last ?\) as country_row_number from public\.customers;?$/
     );
     expect(savedContents).toContain(result.sqlText);
   });

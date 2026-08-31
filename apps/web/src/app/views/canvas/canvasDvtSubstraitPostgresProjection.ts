@@ -1,4 +1,4 @@
-/** Owned concern: project only the admitted pilot, grouping/count, and INNER JOIN shapes to PostgreSQL. */
+/** Owned concern: project only the admitted pilot, grouping/count, row-number window, and INNER JOIN shapes to PostgreSQL. */
 import { deparse } from 'pgsql-deparser';
 
 import {
@@ -11,6 +11,11 @@ import {
   removeDvtSubstraitPilotAggregation,
   type DvtSubstraitPilotAggregationProjection,
 } from './canvasDvtSubstraitAggregation';
+import {
+  inspectDvtSubstraitPilotWindowDraft,
+  removeDvtSubstraitPilotRowNumber,
+  type DvtSubstraitPilotWindowProjection,
+} from './canvasDvtSubstraitWindow';
 import {
   inspectDvtSubstraitInnerJoinDraft,
   type DvtSubstraitInnerJoinDraft,
@@ -85,6 +90,26 @@ function pgCountRows(): PostgresAstNode {
     FuncCall: {
       funcname: [pgString('count')],
       agg_star: true,
+    },
+  };
+}
+
+function pgRowNumber(partitionFieldName: string, orderFieldName: string): PostgresAstNode {
+  return {
+    FuncCall: {
+      funcname: [pgString('row_number')],
+      over: {
+        partitionClause: [pgColumnRef(partitionFieldName)],
+        orderClause: [
+          {
+            SortBy: {
+              node: pgColumnRef(orderFieldName),
+              sortby_dir: 'SORTBY_ASC',
+              sortby_nulls: 'SORTBY_NULLS_LAST',
+            },
+          },
+        ],
+      },
     },
   };
 }
@@ -224,6 +249,72 @@ function buildAggregatePostgresAst(
   };
 }
 
+function requireWindowProjection(draft: DvtSubstraitPilotDraft): Readonly<{
+  window: DvtSubstraitPilotWindowProjection;
+  base: DvtSubstraitPilotProjection;
+}> {
+  const windowInspection = inspectDvtSubstraitPilotWindowDraft(draft);
+  const baseInspection = inspectDvtSubstraitPilotDraft(removeDvtSubstraitPilotRowNumber(draft));
+  if (!windowInspection.ok || !baseInspection.ok) {
+    throw new DvtSubstraitPostgresProjectionError(
+      'unsupported_shape',
+      'PostgreSQL projection supports only the admitted VTX2 row-number window shape.'
+    );
+  }
+  return { window: windowInspection.projection, base: baseInspection.projection };
+}
+
+function buildWindowPostgresAst(
+  projections: Readonly<{
+    window: DvtSubstraitPilotWindowProjection;
+    base: DvtSubstraitPilotProjection;
+  }>,
+  sourceBinding?: DvtSubstraitPostgresSourceBinding
+): PostgresAstNode {
+  const physicalSource = sourceBinding == null ? null : requirePhysicalSourceBinding(sourceBinding);
+  const inputFieldNames = [
+    projections.base.inputFieldName,
+    ...projections.base.outputs.slice(1).map((output) => output.name),
+  ];
+  const partitionFieldName = inputFieldNames[projections.window.partitionField.inputOrdinal];
+  const orderFieldName = inputFieldNames[projections.window.orderField.inputOrdinal];
+  if (partitionFieldName == null || orderFieldName == null) {
+    throw new DvtSubstraitPostgresProjectionError(
+      'unsupported_shape',
+      'Window fields do not resolve to the admitted pilot input.'
+    );
+  }
+  return {
+    SelectStmt: {
+      targetList: [
+        {
+          ResTarget: {
+            name: projections.base.outputName,
+            val: buildPilotOutputExpression(projections.base),
+          },
+        },
+        ...projections.base.outputs.slice(1).map((output) => ({
+          ResTarget: { val: pgColumnRef(output.name) },
+        })),
+        {
+          ResTarget: {
+            name: projections.window.result.name,
+            val: pgRowNumber(partitionFieldName, orderFieldName),
+          },
+        },
+      ],
+      fromClause: [
+        pgRangeVar({
+          schema: physicalSource?.schema,
+          table: physicalSource?.table ?? projections.window.sourceName,
+        }),
+      ],
+      limitOption: 'LIMIT_OPTION_DEFAULT',
+      op: 'SETOP_NONE',
+    },
+  };
+}
+
 function requireInnerJoinProjection(
   draft: DvtSubstraitInnerJoinDraft
 ): DvtSubstraitInnerJoinProjection {
@@ -314,6 +405,15 @@ export async function projectDvtSubstraitPilotAggregationToPostgresSql(
 ): Promise<string> {
   return deparseBoundedPostgresAst(
     buildAggregatePostgresAst(requireAggregateProjection(draft), sourceBinding)
+  );
+}
+
+export async function projectDvtSubstraitPilotWindowToPostgresSql(
+  draft: DvtSubstraitPilotDraft,
+  sourceBinding?: DvtSubstraitPostgresSourceBinding
+): Promise<string> {
+  return deparseBoundedPostgresAst(
+    buildWindowPostgresAst(requireWindowProjection(draft), sourceBinding)
   );
 }
 

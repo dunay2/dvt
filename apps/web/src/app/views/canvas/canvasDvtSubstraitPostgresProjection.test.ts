@@ -9,10 +9,12 @@ import {
 import {
   DvtSubstraitPostgresProjectionError,
   projectDvtSubstraitPilotAggregationToPostgresSql,
+  projectDvtSubstraitPilotWindowToPostgresSql,
   projectDvtSubstraitInnerJoinToPostgresSql,
   projectDvtSubstraitPilotToPostgresSql,
 } from './canvasDvtSubstraitPostgresProjection';
 import { applyDvtSubstraitPilotAggregation } from './canvasDvtSubstraitAggregation';
+import { applyDvtSubstraitPilotRowNumber } from './canvasDvtSubstraitWindow';
 import {
   applyDvtSubstraitInnerJoinFieldEdit,
   createDvtSubstraitInnerJoinDraft,
@@ -98,6 +100,24 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
 
     expect(normalized).toMatch(
       /^select country as country, count\(\*\) as customer_count from public\.customers group by country;?$/
+    );
+  });
+
+  it('projects one admitted Substrait row_number partition and ordering', async () => {
+    const draft = applyDvtSubstraitPilotRowNumber(completedPilotDraft(), {
+      partitionFieldId: 'field:transform-customers:country',
+      orderFieldId: 'field:transform-customers:name',
+      outputName: 'country_row_number',
+    });
+
+    const sql = await projectDvtSubstraitPilotWindowToPostgresSql(draft, {
+      schema: 'public',
+      table: 'customers',
+    });
+    const normalized = sql.replaceAll(/\s+/g, ' ').trim().toLowerCase();
+
+    expect(normalized).toMatch(
+      /^select upper\(trim\(name\)\) as customer_name, email, country, row_number\(\) over \( ?partition by country order by name asc nulls last ?\) as country_row_number from public\.customers;?$/
     );
   });
 
