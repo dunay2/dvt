@@ -42,7 +42,7 @@ import {
 } from './canvasDvtSubstraitJoinComposition';
 import {
   decodeDvtSubstraitUnionAllDocument,
-  inspectDvtSubstraitUnionAllDraft,
+  inspectDvtSubstraitUnionAllAcceptedDraft,
   resolveDvtSubstraitUnionAllEntry,
 } from './canvasDvtSubstraitSetComposition';
 import {
@@ -386,7 +386,7 @@ async function buildAuthoringPreviewSql({
       }
 
       const unionAllDraft = decodeDvtSubstraitUnionAllDocument(authority.semanticDocument);
-      const unionAllInspection = inspectDvtSubstraitUnionAllDraft(unionAllDraft);
+      const unionAllInspection = inspectDvtSubstraitUnionAllAcceptedDraft(unionAllDraft);
       if (!unionAllInspection.ok) {
         throw new Error('Preview does not support this Substrait semantic shape.');
       }

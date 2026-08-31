@@ -1,4 +1,7 @@
-import { SetRel_SetOp } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import {
+  SetRel_SetOp,
+  SortField_SortDirection,
+} from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { describe, expect, it } from 'vitest';
 
 import { DVT_TRANSFORM_AUTHORING_MODE, type ConnectedSourceRef } from '@dvt/contracts';
@@ -10,11 +13,17 @@ import {
 } from './canvasDvtAuthoringModel';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import {
+  applyDvtSubstraitUnionAllGroupedRowNumber,
+  applyDvtSubstraitUnionAllGrouping,
   applyDvtSubstraitUnionAllFieldEdit,
   createDvtSubstraitUnionAllDraft,
   decodeDvtSubstraitUnionAllDocument,
   encodeDvtSubstraitUnionAllDocument,
+  inspectDvtSubstraitUnionAllGroupedWindowDraft,
+  inspectDvtSubstraitUnionAllGroupingDraft,
   inspectDvtSubstraitUnionAllDraft,
+  removeDvtSubstraitUnionAllGroupedRowNumber,
+  removeDvtSubstraitUnionAllGrouping,
   resolveDvtSubstraitUnionAllEntry,
   type DvtSubstraitUnionAllDraft,
   type DvtSubstraitUnionAllSource,
@@ -231,8 +240,93 @@ describe('VTX2 typed Substrait UNION ALL composition', () => {
     expect(emitKind?.case === 'emit' ? emitKind.value.outputMapping : null).toEqual([2, 0]);
   });
 
+  it('groups and ranks selected UNION ALL fields in the same canonical revision', () => {
+    let selected = fixture();
+    selected = applyDvtSubstraitUnionAllFieldEdit(selected, {
+      kind: 'rename',
+      fieldKey: 'country',
+      outputName: 'region',
+    });
+    selected = applyDvtSubstraitUnionAllFieldEdit(selected, {
+      kind: 'move',
+      fieldKey: 'country',
+      direction: 'up',
+    });
+    selected = applyDvtSubstraitUnionAllFieldEdit(selected, {
+      kind: 'move',
+      fieldKey: 'country',
+      direction: 'up',
+    });
+    selected = applyDvtSubstraitUnionAllFieldEdit(selected, {
+      kind: 'set-selected',
+      fieldKey: 'name',
+      selected: false,
+    });
+
+    const grouped = applyDvtSubstraitUnionAllGrouping(selected, {
+      groupFieldId: 'field:transform-all-customers:country',
+      countOutputName: 'customer_count',
+    });
+    expect(inspectDvtSubstraitUnionAllGroupingDraft(grouped)).toMatchObject({
+      ok: true,
+      projection: {
+        groupField: {
+          fieldKey: 'country',
+          name: 'region',
+          fieldId: 'field:transform-all-customers:country',
+          inputOrdinal: 0,
+        },
+        measure: {
+          name: 'customer_count',
+          fieldId: 'field:transform-all-customers:union-all-count',
+        },
+        outputs: [
+          {
+            name: 'region',
+            fieldId: 'field:transform-all-customers:country',
+            outputOrdinal: 0,
+          },
+          {
+            name: 'customer_count',
+            fieldId: 'field:transform-all-customers:union-all-count',
+            outputOrdinal: 1,
+          },
+        ],
+      },
+    });
+
+    const ranked = applyDvtSubstraitUnionAllGroupedRowNumber(grouped, {
+      outputName: 'count_rank',
+    });
+    const reopened = decodeDvtSubstraitUnionAllDocument(encodeDvtSubstraitUnionAllDocument(ranked));
+    expect(inspectDvtSubstraitUnionAllGroupedWindowDraft(reopened)).toMatchObject({
+      ok: true,
+      projection: {
+        outputs: [
+          expect.objectContaining({ name: 'region', outputOrdinal: 0 }),
+          expect.objectContaining({ name: 'customer_count', outputOrdinal: 1 }),
+          expect.objectContaining({ name: 'count_rank', outputOrdinal: 2 }),
+        ],
+      },
+    });
+
+    const restoredGrouped = removeDvtSubstraitUnionAllGroupedRowNumber(reopened);
+    expect(inspectDvtSubstraitUnionAllGroupingDraft(restoredGrouped).ok).toBe(true);
+    const restoredSelected = removeDvtSubstraitUnionAllGrouping(restoredGrouped);
+    expect(inspectDvtSubstraitUnionAllDraft(restoredSelected)).toEqual(
+      inspectDvtSubstraitUnionAllDraft(selected)
+    );
+  });
+
   it('persists, reopens, and presents one Transform card from the same revision', () => {
-    const draft = fixture();
+    let draft = fixture();
+    draft = applyDvtSubstraitUnionAllGrouping(draft, {
+      groupFieldId: 'field:transform-all-customers:country',
+      countOutputName: 'customer_count',
+    });
+    draft = applyDvtSubstraitUnionAllGroupedRowNumber(draft, {
+      outputName: 'count_rank',
+    });
     const persisted = applyDvtNodeAuthoringMetadata(targetNode(), {
       kind: 'sql_transform',
       mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
@@ -250,12 +344,17 @@ describe('VTX2 typed Substrait UNION ALL composition', () => {
     expect(
       projectCanvasNodePresentationTruth({ node: persisted, nodes: [persisted], edges: [] }).columns
         .visible
-    ).toMatchObject(
-      FIELD_NAMES.map((name) => ({
-        name,
-        reference: `field:transform-all-customers:${name}`,
-      }))
-    );
+    ).toMatchObject([
+      { name: 'country', reference: 'field:transform-all-customers:country' },
+      {
+        name: 'customer_count',
+        reference: 'field:transform-all-customers:union-all-count',
+      },
+      {
+        name: 'count_rank',
+        reference: 'field:transform-all-customers:union-all-count-rank',
+      },
+    ]);
   });
 
   it('offers the product action only for two same-connection sources with identical schemas', () => {
@@ -337,5 +436,64 @@ describe('VTX2 typed Substrait UNION ALL composition', () => {
     }
     invalidRoot.value.input.relType.value.common.emitKind.value.outputMapping = [0, 0];
     expect(inspectDvtSubstraitUnionAllDraft(invalidMapping)).toEqual({ ok: false });
+  });
+
+  it('fails closed for invalid grouping/window semantics, stale hashes, and duplicate bindings', () => {
+    const createGrouped = (): DvtSubstraitUnionAllDraft =>
+      applyDvtSubstraitUnionAllGrouping(fixture(), {
+        groupFieldId: 'field:transform-all-customers:country',
+        countOutputName: 'customer_count',
+      });
+
+    const wrongGroupingOrdinal = createGrouped();
+    const groupingRoot = wrongGroupingOrdinal.plan.relations[0]?.relType;
+    const groupingExpression =
+      groupingRoot?.case === 'root' && groupingRoot.value.input?.relType.case === 'aggregate'
+        ? groupingRoot.value.input.relType.value.groupingExpressions[0]?.rexType
+        : null;
+    const directReference =
+      groupingExpression?.case === 'selection' ? groupingExpression.value.referenceType : null;
+    const structField =
+      directReference?.case === 'directReference' ? directReference.value.referenceType : null;
+    if (structField?.case !== 'structField') throw new Error('Expected grouping field reference.');
+    structField.value.field = 99;
+    expect(inspectDvtSubstraitUnionAllGroupingDraft(wrongGroupingOrdinal)).toEqual({ ok: false });
+
+    const wrongWindowOrder = applyDvtSubstraitUnionAllGroupedRowNumber(createGrouped(), {
+      outputName: 'count_rank',
+    });
+    const windowRoot = wrongWindowOrder.plan.relations[0]?.relType;
+    const windowExpression =
+      windowRoot?.case === 'root' && windowRoot.value.input?.relType.case === 'project'
+        ? windowRoot.value.input.relType.value.expressions[0]?.rexType
+        : null;
+    const firstSort =
+      windowExpression?.case === 'windowFunction' ? windowExpression.value.sorts[0] : null;
+    if (firstSort?.sortKind.case !== 'direction') throw new Error('Expected window direction.');
+    firstSort.sortKind.value = SortField_SortDirection.ASC_NULLS_LAST;
+    expect(inspectDvtSubstraitUnionAllGroupedWindowDraft(wrongWindowOrder)).toEqual({ ok: false });
+
+    const hashed = decodeDvtSubstraitUnionAllDocument(
+      encodeDvtSubstraitUnionAllDocument(createGrouped())
+    );
+    const staleHash: DvtSubstraitUnionAllDraft = {
+      ...hashed,
+      sidecar: { ...hashed.sidecar, semanticPlanSha256: 'a'.repeat(64) },
+    };
+    expect(inspectDvtSubstraitUnionAllGroupingDraft(staleHash)).toEqual({ ok: false });
+
+    const grouped = createGrouped();
+    const unionRelationId = grouped.sidecar.relations[2]?.relationId;
+    if (unionRelationId == null) throw new Error('Expected UNION ALL binding.');
+    const duplicateBinding: DvtSubstraitUnionAllDraft = {
+      ...grouped,
+      sidecar: {
+        ...grouped.sidecar,
+        relations: grouped.sidecar.relations.map((relation, index) =>
+          index === 3 ? { ...relation, relationId: unionRelationId } : relation
+        ),
+      },
+    };
+    expect(inspectDvtSubstraitUnionAllGroupingDraft(duplicateBinding)).toEqual({ ok: false });
   });
 });

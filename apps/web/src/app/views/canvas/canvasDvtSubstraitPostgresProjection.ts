@@ -27,8 +27,14 @@ import {
   type DvtSubstraitInnerJoinProjection,
 } from './canvasDvtSubstraitJoinComposition';
 import {
+  inspectDvtSubstraitUnionAllGroupedWindowDraft,
+  inspectDvtSubstraitUnionAllGroupingDraft,
   inspectDvtSubstraitUnionAllDraft,
+  removeDvtSubstraitUnionAllGroupedRowNumber,
+  removeDvtSubstraitUnionAllGrouping,
   type DvtSubstraitUnionAllDraft,
+  type DvtSubstraitUnionAllGroupedWindowProjection,
+  type DvtSubstraitUnionAllGroupingProjection,
   type DvtSubstraitUnionAllProjection,
 } from './canvasDvtSubstraitSetComposition';
 
@@ -529,6 +535,50 @@ function buildUnionAllPostgresAst(projection: DvtSubstraitUnionAllProjection): P
   };
 }
 
+function pgRangeSubselect(subquery: PostgresAstNode, alias: string): PostgresAstNode {
+  return {
+    RangeSubselect: {
+      subquery,
+      alias: { aliasname: alias },
+    },
+  };
+}
+
+function buildGroupedUnionAllPostgresAst(
+  composition: DvtSubstraitUnionAllGroupingProjection | DvtSubstraitUnionAllGroupedWindowProjection,
+  unionAll: DvtSubstraitUnionAllProjection
+): PostgresAstNode {
+  const groupExpression = pgColumnRef(composition.groupField.name);
+  const groupedWindow = 'result' in composition ? composition : null;
+  return {
+    SelectStmt: {
+      targetList: [
+        { ResTarget: { val: groupExpression } },
+        {
+          ResTarget: {
+            name: composition.measure.name,
+            val: pgCountRows(),
+          },
+        },
+        ...(groupedWindow == null
+          ? []
+          : [
+              {
+                ResTarget: {
+                  name: groupedWindow.result.name,
+                  val: pgRowNumberOverCount(groupExpression),
+                },
+              },
+            ]),
+      ],
+      fromClause: [pgRangeSubselect(buildUnionAllPostgresAst(unionAll), 'union_all_input')],
+      groupClause: [groupExpression],
+      limitOption: 'LIMIT_OPTION_DEFAULT',
+      op: 'SETOP_NONE',
+    },
+  };
+}
+
 async function deparseBoundedPostgresAst(postgresAst: PostgresAstNode): Promise<string> {
   try {
     return await deparse(postgresAst as Parameters<typeof deparse>[0]);
@@ -590,5 +640,20 @@ export async function projectDvtSubstraitInnerJoinToPostgresSql(
 export async function projectDvtSubstraitUnionAllToPostgresSql(
   draft: DvtSubstraitUnionAllDraft
 ): Promise<string> {
+  const groupedWindow = inspectDvtSubstraitUnionAllGroupedWindowDraft(draft);
+  if (groupedWindow.ok) {
+    const groupingDraft = removeDvtSubstraitUnionAllGroupedRowNumber(draft);
+    const unionAll = requireUnionAllProjection(removeDvtSubstraitUnionAllGrouping(groupingDraft));
+    return deparseBoundedPostgresAst(
+      buildGroupedUnionAllPostgresAst(groupedWindow.projection, unionAll)
+    );
+  }
+  const grouping = inspectDvtSubstraitUnionAllGroupingDraft(draft);
+  if (grouping.ok) {
+    const unionAll = requireUnionAllProjection(removeDvtSubstraitUnionAllGrouping(draft));
+    return deparseBoundedPostgresAst(
+      buildGroupedUnionAllPostgresAst(grouping.projection, unionAll)
+    );
+  }
   return deparseBoundedPostgresAst(buildUnionAllPostgresAst(requireUnionAllProjection(draft)));
 }

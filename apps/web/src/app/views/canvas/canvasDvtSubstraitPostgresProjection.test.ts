@@ -23,6 +23,8 @@ import {
   createDvtSubstraitInnerJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import {
+  applyDvtSubstraitUnionAllGroupedRowNumber,
+  applyDvtSubstraitUnionAllGrouping,
   applyDvtSubstraitUnionAllFieldEdit,
   createDvtSubstraitUnionAllDraft,
 } from './canvasDvtSubstraitSetComposition';
@@ -352,6 +354,65 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       .toLowerCase();
     expect(normalized).toMatch(
       /^select country as region, customer_id from public\.customers_north union all select country as region, customer_id from public\.customers_south;?$/
+    );
+  });
+
+  it('projects grouping and deterministic ranking over the selected UNION ALL revision', async () => {
+    const connectionRef = {
+      schemaVersion: 'connection-ref.v1' as const,
+      connectionId: 'warehouse-main',
+      provider: 'postgres' as const,
+    };
+    const fields = ['customer_id', 'name', 'country'].map((name) => ({
+      name,
+      type: 'string' as const,
+    }));
+    let draft = createDvtSubstraitUnionAllDraft({
+      inputs: [
+        {
+          nodeId: 'source-north',
+          schema: 'public',
+          table: 'customers_north',
+          fields,
+          sourceRef: {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef,
+            sourceObjectId: 'public.customers_north',
+          },
+        },
+        {
+          nodeId: 'source-south',
+          schema: 'public',
+          table: 'customers_south',
+          fields,
+          sourceRef: {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef,
+            sourceObjectId: 'public.customers_south',
+          },
+        },
+      ],
+      targetNodeId: 'transform-all-customers',
+    });
+    draft = applyDvtSubstraitUnionAllFieldEdit(draft, {
+      kind: 'rename',
+      fieldKey: 'country',
+      outputName: 'region',
+    });
+    draft = applyDvtSubstraitUnionAllGrouping(draft, {
+      groupFieldId: 'field:transform-all-customers:country',
+      countOutputName: 'customer_count',
+    });
+    draft = applyDvtSubstraitUnionAllGroupedRowNumber(draft, {
+      outputName: 'count_rank',
+    });
+
+    const normalized = (await projectDvtSubstraitUnionAllToPostgresSql(draft))
+      .replaceAll(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+    expect(normalized).toMatch(
+      /^select region, count\(\*\) as customer_count, row_number\(\) over \(order by count\(\*\) desc nulls last, region asc nulls last\) as count_rank from \(\s*select customer_id, name, country as region from public\.customers_north union all select customer_id, name, country as region from public\.customers_south\s*\) as union_all_input group by region;?$/
     );
   });
 });

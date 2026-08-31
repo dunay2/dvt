@@ -20,8 +20,9 @@ import {
 } from './canvasDvtSubstraitJoinComposition';
 import {
   decodeDvtSubstraitUnionAllDocument,
+  inspectDvtSubstraitUnionAllGroupedWindowDraft,
+  inspectDvtSubstraitUnionAllGroupingDraft,
   inspectDvtSubstraitUnionAllDraft,
-  type DvtSubstraitUnionAllProjection,
 } from './canvasDvtSubstraitSetComposition';
 import { readDvtTransformLineageProvenance } from './canvasTransformationSqlMirror';
 
@@ -148,15 +149,36 @@ function readSubstraitJoinLineage(node: CanonicalNode): DvtSubstraitInnerJoinPro
   }
 }
 
-function readSubstraitUnionAllLineage(node: CanonicalNode): DvtSubstraitUnionAllProjection | null {
+type DvtSubstraitUnionAllLineage = Readonly<{
+  inputs: readonly [
+    Readonly<{ sourceRef: ConnectedSourceRef }>,
+    Readonly<{ sourceRef: ConnectedSourceRef }>,
+  ];
+  outputs: readonly Readonly<{ fieldKey: string; name: string; fieldId: string }>[];
+}>;
+
+function readSubstraitUnionAllLineage(node: CanonicalNode): DvtSubstraitUnionAllLineage | null {
   if (node.pluginId !== 'dvt' || node.kind !== 'dvt:sql_transform') return null;
   try {
     const authority = readDvtTransformAuthoringAuthority(node);
     if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return null;
-    const inspection = inspectDvtSubstraitUnionAllDraft(
-      decodeDvtSubstraitUnionAllDocument(authority.semanticDocument)
-    );
-    return inspection.ok ? inspection.projection : null;
+    const draft = decodeDvtSubstraitUnionAllDocument(authority.semanticDocument);
+    const groupedWindow = inspectDvtSubstraitUnionAllGroupedWindowDraft(draft);
+    if (groupedWindow.ok) {
+      return {
+        inputs: groupedWindow.projection.inputs,
+        outputs: [groupedWindow.projection.groupField],
+      };
+    }
+    const grouping = inspectDvtSubstraitUnionAllGroupingDraft(draft);
+    if (grouping.ok) {
+      return {
+        inputs: grouping.projection.inputs,
+        outputs: [grouping.projection.groupField],
+      };
+    }
+    const unionAll = inspectDvtSubstraitUnionAllDraft(draft);
+    return unionAll.ok ? unionAll.projection : null;
   } catch {
     return null;
   }

@@ -14,6 +14,8 @@ import {
   encodeDvtSubstraitInnerJoinDocument,
 } from './canvasDvtSubstraitJoinComposition';
 import {
+  applyDvtSubstraitUnionAllGroupedRowNumber,
+  applyDvtSubstraitUnionAllGrouping,
   applyDvtSubstraitUnionAllFieldEdit,
   createDvtSubstraitUnionAllDraft,
   encodeDvtSubstraitUnionAllDocument,
@@ -379,6 +381,45 @@ describe('Canvas column lineage projection', () => {
             nodeId: model.id,
             columnId: 'field:model:country',
           }),
+          data: expect.objectContaining({
+            sourceColumnName: 'country',
+            targetColumnName: 'region',
+          }),
+        }),
+      ])
+    );
+
+    draft = applyDvtSubstraitUnionAllGrouping(draft, {
+      groupFieldId: 'field:model:country',
+      countOutputName: 'customer_count',
+    });
+    draft = applyDvtSubstraitUnionAllGroupedRowNumber(draft, {
+      outputName: 'count_rank',
+    });
+    const groupedModel = applyDvtSubstraitSemanticDocument(
+      buildNode('model', 'dvt:sql_transform', 'transform'),
+      encodeDvtSubstraitUnionAllDocument(draft)
+    );
+    const groupedProjection = projectCanvasColumnLineage({
+      nodes: [north, south, groupedModel],
+      edges: [
+        { sourceId: north.id, targetId: groupedModel.id },
+        { sourceId: south.id, targetId: groupedModel.id },
+      ],
+      expandedNodeIds: new Set([north.id, south.id, groupedModel.id]),
+    });
+    expect(groupedProjection).toHaveLength(2);
+    expect(groupedProjection).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          source: north.id,
+          data: expect.objectContaining({
+            sourceColumnName: 'country',
+            targetColumnName: 'region',
+          }),
+        }),
+        expect.objectContaining({
+          source: south.id,
           data: expect.objectContaining({
             sourceColumnName: 'country',
             targetColumnName: 'region',
