@@ -308,7 +308,7 @@ function projectCanvasNodePresentationTruthInternal(
 
     return {
       name: output.name,
-      type: output.dataType ?? sourceColumn?.type ?? 'unknown',
+      type: output.dataType ?? (preservesNullability ? sourceColumn?.type : undefined) ?? 'unknown',
       provenance: 'declared' as const,
       reference: output.id,
       ...(sourceColumn == null

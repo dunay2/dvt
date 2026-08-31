@@ -358,6 +358,46 @@ describe('projectCanvasNodePresentationTruth', () => {
     );
   });
 
+  it('does not inherit an input type for a type-changing output without a declared type', () => {
+    const transform = applyDvtVisualTransformRecipe(
+      {
+        ...model,
+        id: 'transform.cast-order-id',
+        pluginId: 'dvt',
+        kind: 'dvt:sql_transform',
+        metadata: {},
+      },
+      {
+        version: 'v1',
+        outputs: [
+          {
+            id: 'output:order_id_text',
+            name: 'order_id_text',
+            expression: {
+              inputs: [{ nodeId: source.id, columnName: 'order_id' }],
+              operations: [{ kind: 'cast', targetType: 'text' }],
+            },
+          },
+        ],
+        filters: [],
+      }
+    );
+
+    const truth = projectCanvasNodePresentationTruth({
+      node: transform,
+      nodes: [source, transform],
+      edges: [{ ...edge, targetId: transform.id }],
+    });
+
+    expect(truth.columns.declared).toEqual([
+      expect.objectContaining({
+        name: 'order_id_text',
+        type: 'unknown',
+        sourceNodeId: source.id,
+      }),
+    ]);
+  });
+
   it('projects visual recipe SQL as generated read-only code from the connected source binding', () => {
     const dvtSource: CanonicalNode = {
       id: 'source.orders',
