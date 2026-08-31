@@ -1,0 +1,69 @@
+name: LikeC4 Planner source-first spike preview
+
+on:
+  push:
+    branches:
+      - spike/likec4-planner-source-first
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout spike
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Fetch source baselines
+        run: git fetch --no-tags origin main
+
+      - name: Generate source-first Engine inventory
+        run: node architecture/tools/generate-engine-inventory.mjs
+
+      - name: Generate source-first Planner inventory
+        run: node architecture/tools/generate-planner-inventory.mjs
+
+      - name: Stage machine-readable source evidence
+        run: |
+          mkdir -p .architecture-evidence
+          cp architecture/generated/engine-inventory.json .architecture-evidence/engine-inventory.json
+          cp architecture/generated/engine-source.c4 .architecture-evidence/engine-source.c4
+          cp architecture/engine-components.json .architecture-evidence/engine-components.json
+          cp architecture/source-baseline.json .architecture-evidence/engine-source-baseline.json
+          cp architecture/generated/planner-inventory.json .architecture-evidence/planner-inventory.json
+          cp architecture/generated/planner-source.c4 .architecture-evidence/planner-source.c4
+          cp architecture/planner-components.json .architecture-evidence/planner-components.json
+          cp architecture/planner-source-baseline.json .architecture-evidence/planner-source-baseline.json
+
+      - name: Build LikeC4 static site
+        uses: likec4/actions@v1
+        with:
+          action: build
+          path: architecture
+          output: dist
+          base: ./
+          likec4-version: 1.89.0
+
+      - name: Publish machine-readable source evidence
+        run: |
+          sudo mkdir -p dist/source
+          sudo cp .architecture-evidence/* dist/source/
+          sudo chown -R "$USER":"$USER" dist
+
+      - name: Upload preview artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dvt-likec4-planner-source-first-preview
+          path: dist
+
+      - name: Publish disposable gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages
+          force_orphan: true
