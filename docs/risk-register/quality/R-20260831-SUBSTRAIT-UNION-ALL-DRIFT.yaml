@@ -1,0 +1,33 @@
+---
+id: R-20260831-SUBSTRAIT-UNION-ALL-DRIFT
+title: Bounded set composition could drift from admitted Substrait semantics
+status: Open
+date: 2026-08-31
+owners:
+  - web
+  - packages/@dvt/contracts
+severity: Medium
+probability: Low
+---
+mitigation:
+  summary: >
+    The first Canvas set cut admits only pinned Substrait v0.101.0 SetRel with SET_OP_UNION_ALL,
+    exactly two distinct PostgreSQL inputs on one ConnectionRef, and identical ordered non-empty
+    string schemas. Authoring, reload, card presentation, lineage, graph validation, and PostgreSQL
+    Preview inspect the same typed Plan and stable DVT sidecar. Mismatched schemas, providers,
+    connections, input counts, operations, extensions, hashes, and bindings fail closed. Other set
+    operations, wider input cardinality, coercion, dbt projection, and hidden materialization remain
+    outside this evidence.
+  evidence:
+    - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
+    - docs/evidence/ED-20260831-vtx2-substrait-union-all.md
+    - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts
+    - packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts
+    - apps/web/src/app/views/canvas/canvasDvtSubstraitSetComposition.ts
+    - apps/web/src/app/views/canvas/canvasDvtSubstraitSetComposition.test.ts
+    - apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresProjection.test.ts
+    - apps/web/cypress/e2e/canvas/canvas-substrait-union-all.cy.ts
+  follow_up:
+    - Issue #2634 owns later multi-input and additional Set composition.
+    - Each additional Set operation requires separate #2641 admission and target conformance.
+    - Issue #2737 owns dbt projection; this risk does not authorize reverse import.

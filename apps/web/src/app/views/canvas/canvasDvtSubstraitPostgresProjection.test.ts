@@ -12,6 +12,7 @@ import {
   projectDvtSubstraitPilotWindowToPostgresSql,
   projectDvtSubstraitInnerJoinToPostgresSql,
   projectDvtSubstraitPilotToPostgresSql,
+  projectDvtSubstraitUnionAllToPostgresSql,
 } from './canvasDvtSubstraitPostgresProjection';
 import { applyDvtSubstraitPilotAggregation } from './canvasDvtSubstraitAggregation';
 import { applyDvtSubstraitPilotRowNumber } from './canvasDvtSubstraitWindow';
@@ -19,6 +20,7 @@ import {
   applyDvtSubstraitInnerJoinFieldEdit,
   createDvtSubstraitInnerJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
+import { createDvtSubstraitUnionAllDraft } from './canvasDvtSubstraitSetComposition';
 
 function completedPilotDraft(): DvtSubstraitPilotDraft {
   let draft = createDvtSubstraitPilotDraft({
@@ -209,6 +211,52 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
 
     expect(normalized).toMatch(
       /^select right_source\.order_id as order_id, left_source\.name as customer_name from public\.customers as left_source join public\.orders as right_source on left_source\.customer_id = right_source\.customer_id;?$/
+    );
+  });
+
+  it('projects the exact typed SetRel revision as PostgreSQL UNION ALL', async () => {
+    const connectionRef = {
+      schemaVersion: 'connection-ref.v1' as const,
+      connectionId: 'warehouse-main',
+      provider: 'postgres' as const,
+    };
+    const fields = ['customer_id', 'name', 'country'].map((name) => ({
+      name,
+      type: 'string' as const,
+    }));
+    const draft = createDvtSubstraitUnionAllDraft({
+      inputs: [
+        {
+          nodeId: 'source-customers-north',
+          schema: 'tenant-data',
+          table: 'customers-north',
+          fields,
+          sourceRef: {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef,
+            sourceObjectId: 'tenant-data.customers-north',
+          },
+        },
+        {
+          nodeId: 'source-customers-south',
+          schema: 'tenant-data',
+          table: 'customers-south',
+          fields,
+          sourceRef: {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef,
+            sourceObjectId: 'tenant-data.customers-south',
+          },
+        },
+      ],
+      targetNodeId: 'transform-all-customers',
+    });
+
+    const sql = await projectDvtSubstraitUnionAllToPostgresSql(draft);
+    const normalized = sql.replaceAll(/\s+/g, ' ').trim().toLowerCase();
+
+    expect(normalized).toMatch(
+      /^select customer_id, name, country from "tenant-data"\."customers-north" union all select customer_id, name, country from "tenant-data"\."customers-south";?$/
     );
   });
 });

@@ -132,12 +132,19 @@ describe('DVT Substrait capability catalog V1', () => {
         name: 'row_number',
       }),
     ];
+    const unionAllIds = [
+      buildDvtSubstraitStandardCapabilityId('relation', {
+        sourceKind: 'core',
+        message: 'substrait.SetRel',
+        selector: 'SetOp.SET_OP_UNION_ALL',
+      }),
+    ];
     const supported = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.filter(
       (entry) => entry.kind === 'standard' && entry.profileStatus === 'supported-profile'
     );
 
     expect(supported.map((entry) => entry.entryId)).toEqual(
-      [...pilotIds, ...innerJoinIds, ...aggregateIds, ...windowIds].sort()
+      [...pilotIds, ...innerJoinIds, ...aggregateIds, ...windowIds, ...unionAllIds].sort()
     );
     for (const entryId of pilotIds) {
       expect(findCapability(entryId)).toMatchObject({
@@ -161,6 +168,12 @@ describe('DVT Substrait capability catalog V1', () => {
       expect(findCapability(entryId)).toMatchObject({
         profileStatus: 'supported-profile',
         evidenceRefs: expect.arrayContaining(['dvt:#2641', 'dvt:#2642']),
+      });
+    }
+    for (const entryId of unionAllIds) {
+      expect(findCapability(entryId)).toMatchObject({
+        profileStatus: 'supported-profile',
+        evidenceRefs: expect.arrayContaining(['dvt:#2634']),
       });
     }
 

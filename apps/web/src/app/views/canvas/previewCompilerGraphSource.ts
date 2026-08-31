@@ -6,6 +6,7 @@ import {
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { resolveDvtSubstraitInnerJoinEntry } from './canvasDvtSubstraitJoinComposition';
+import { resolveDvtSubstraitUnionAllEntry } from './canvasDvtSubstraitSetComposition';
 
 import {
   buildPreviewMetadata,
@@ -49,13 +50,29 @@ export function buildPreviewGraphSource(
           requirePersistedAuthority: true,
         })
       : null;
-  if (inputNodes.length === 2 && joinEntry == null) {
-    throw new Error('Preview graph source requires the admitted persisted Substrait INNER JOIN.');
+  const unionAllEntry =
+    inputNodes.length === 2 && joinEntry == null
+      ? resolveDvtSubstraitUnionAllEntry({
+          targetNode: scopedNodes.transform,
+          nodes: args.nodes.filter((node) => scopedNodeIdSet.has(node.id)),
+          edges: args.edges.filter(
+            (edge) => scopedNodeIdSet.has(edge.sourceId) && scopedNodeIdSet.has(edge.targetId)
+          ),
+          requirePersistedAuthority: true,
+        })
+      : null;
+  if (inputNodes.length === 2 && joinEntry == null && unionAllEntry == null) {
+    throw new Error(
+      'Preview graph source requires an admitted persisted Substrait multi-input relation.'
+    );
   }
-  const orderedSourceNodes = joinEntry
-    ? [joinEntry.left.nodeId, joinEntry.right.nodeId].map((nodeId) => {
+  const orderedSourceNodeIds = joinEntry
+    ? [joinEntry.left.nodeId, joinEntry.right.nodeId]
+    : unionAllEntry?.inputs.map((input) => input.nodeId);
+  const orderedSourceNodes = orderedSourceNodeIds
+    ? orderedSourceNodeIds.map((nodeId) => {
         const node = inputNodes.find((candidate) => candidate.id === nodeId);
-        if (!node) throw new Error('Substrait INNER JOIN source is outside the Preview scope.');
+        if (!node) throw new Error('Substrait multi-input source is outside the Preview scope.');
         return node;
       })
     : inputNodes;

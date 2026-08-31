@@ -522,11 +522,20 @@ const WINDOW_SUPPORTED_ENTRY_IDS = new Set([
   }),
 ]);
 
+const UNION_ALL_SUPPORTED_ENTRY_IDS = new Set([
+  buildDvtSubstraitStandardCapabilityId('relation', {
+    sourceKind: 'core',
+    message: 'substrait.SetRel',
+    selector: 'SetOp.SET_OP_UNION_ALL',
+  }),
+]);
+
 function admissionEvidenceRefs(entryId: string): readonly string[] {
   if (PILOT_SUPPORTED_ENTRY_IDS.has(entryId)) return [PILOT];
   if (INNER_JOIN_SUPPORTED_ENTRY_IDS.has(entryId)) return [INNER_JOIN];
   if (AGGREGATE_SUPPORTED_ENTRY_IDS.has(entryId)) return AGGREGATE;
   if (WINDOW_SUPPORTED_ENTRY_IDS.has(entryId)) return WINDOW;
+  if (UNION_ALL_SUPPORTED_ENTRY_IDS.has(entryId)) return [INNER_JOIN];
   return [];
 }
 

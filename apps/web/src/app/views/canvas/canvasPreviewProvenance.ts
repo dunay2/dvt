@@ -40,10 +40,16 @@ import {
   resolveDvtSubstraitInnerJoinEntry,
 } from './canvasDvtSubstraitJoinComposition';
 import {
+  decodeDvtSubstraitUnionAllDocument,
+  inspectDvtSubstraitUnionAllDraft,
+  resolveDvtSubstraitUnionAllEntry,
+} from './canvasDvtSubstraitSetComposition';
+import {
   projectDvtSubstraitPilotAggregationToPostgresSql,
   projectDvtSubstraitPilotWindowToPostgresSql,
   projectDvtSubstraitInnerJoinToPostgresSql,
   projectDvtSubstraitPilotToPostgresSql,
+  projectDvtSubstraitUnionAllToPostgresSql,
 } from './canvasDvtSubstraitPostgresProjection';
 import { compileDvtVisualTransformNodeToPostgresSql } from './canvasVisualTransformSql';
 
@@ -346,24 +352,44 @@ async function buildAuthoringPreviewSql({
 
       const joinDraft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
       const joinInspection = inspectDvtSubstraitInnerJoinDraft(joinDraft);
-      if (!joinInspection.ok) {
+      const scopedNodeIdSet = new Set(scopedNodeIds);
+      const scopedNodes = canonicalNodes.filter((node) => scopedNodeIdSet.has(node.id));
+      const scopedEdges = canonicalEdges.filter(
+        (edge) => scopedNodeIdSet.has(edge.sourceId) && scopedNodeIdSet.has(edge.targetId)
+      );
+      if (joinInspection.ok) {
+        const joinEntry = resolveDvtSubstraitInnerJoinEntry({
+          targetNode: transformNode,
+          nodes: scopedNodes,
+          edges: scopedEdges,
+          requirePersistedAuthority: true,
+        });
+        if (joinEntry == null) {
+          throw new Error(
+            'Substrait INNER JOIN Preview source identities do not match the scoped graph.'
+          );
+        }
+        const sql = await projectDvtSubstraitInnerJoinToPostgresSql(joinDraft);
+        return sql.endsWith('\n') ? sql : `${sql}\n`;
+      }
+
+      const unionAllDraft = decodeDvtSubstraitUnionAllDocument(authority.semanticDocument);
+      const unionAllInspection = inspectDvtSubstraitUnionAllDraft(unionAllDraft);
+      if (!unionAllInspection.ok) {
         throw new Error('Preview does not support this Substrait semantic shape.');
       }
-      const scopedNodeIdSet = new Set(scopedNodeIds);
-      const joinEntry = resolveDvtSubstraitInnerJoinEntry({
+      const unionAllEntry = resolveDvtSubstraitUnionAllEntry({
         targetNode: transformNode,
-        nodes: canonicalNodes.filter((node) => scopedNodeIdSet.has(node.id)),
-        edges: canonicalEdges.filter(
-          (edge) => scopedNodeIdSet.has(edge.sourceId) && scopedNodeIdSet.has(edge.targetId)
-        ),
+        nodes: scopedNodes,
+        edges: scopedEdges,
         requirePersistedAuthority: true,
       });
-      if (joinEntry == null) {
+      if (unionAllEntry == null) {
         throw new Error(
-          'Substrait INNER JOIN Preview source identities do not match the scoped graph.'
+          'Substrait UNION ALL Preview source identities do not match the scoped graph.'
         );
       }
-      const sql = await projectDvtSubstraitInnerJoinToPostgresSql(joinDraft);
+      const sql = await projectDvtSubstraitUnionAllToPostgresSql(unionAllDraft);
       return sql.endsWith('\n') ? sql : `${sql}\n`;
     }
   }

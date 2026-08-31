@@ -203,6 +203,7 @@ Evidence documents that justify or validate relevant changes.
 - [Temporal worker DBT Docker canary](ed-20260514-temporal-worker-dbt-canary.md)
 - [VTX2 Substrait grouping and count authoring evidence](ED-20260831-vtx2-substrait-grouping.md)
 - [VTX2 Substrait row-number window authoring evidence](ED-20260831-vtx2-substrait-row-number-window.md)
+- [VTX2 Substrait UNION ALL authoring evidence](ED-20260831-vtx2-substrait-union-all.md)
 - [VTX2 typed Substrait card pilot evidence](ED-20260826-vtx2-substrait-card-pilot.md)
 - [WE-HX Parent Hardcut Closeout Evidence](ed-20260522-we-hx-parent-hardcut-closeout.md)
 - [WE-HX-0 Hardcut Canonical WorkflowEngine Map](ed-20260514-we-hx-0-hardcut-canonical-map.md)

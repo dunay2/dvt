@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import type { ConnectedSourceRef } from '@dvt/contracts';
+
 import type { CanonicalNode } from '../../types/canonical';
 import {
   applyDvtSubstraitSemanticDocument,
@@ -11,6 +13,10 @@ import {
   createDvtSubstraitInnerJoinDraft,
   encodeDvtSubstraitInnerJoinDocument,
 } from './canvasDvtSubstraitJoinComposition';
+import {
+  createDvtSubstraitUnionAllDraft,
+  encodeDvtSubstraitUnionAllDocument,
+} from './canvasDvtSubstraitSetComposition';
 import {
   createCanvasColumnHandleId,
   parseCanvasColumnHandleId,
@@ -279,6 +285,93 @@ describe('Canvas column lineage projection', () => {
         }),
       }),
     ]);
+  });
+
+  it('derives each UNION ALL output from both contributing source fields', () => {
+    const connectionRef = {
+      schemaVersion: 'connection-ref.v1' as const,
+      connectionId: 'warehouse-main',
+      provider: 'postgres' as const,
+    };
+    const fields = ['customer_id', 'name', 'country'];
+    const connectedSourceRef = (table: string): ConnectedSourceRef => ({
+      schemaVersion: 'connected-source-ref.v1',
+      connectionRef,
+      sourceObjectId: `public.${table}`,
+    });
+    const source = (id: string, table: string): CanonicalNode => ({
+      ...buildNode(
+        id,
+        'dvt:source',
+        'input',
+        fields.map((name) => ({ name, type: 'string' }))
+      ),
+      name: table,
+      metadata: {
+        tableName: table,
+        schema: 'public',
+        columns: fields.map((name) => ({ name, type: 'string' })),
+        connectedSourceRef: connectedSourceRef(table),
+      },
+    });
+    const north = source('source-north', 'customers_north');
+    const south = source('source-south', 'customers_south');
+    const draft = createDvtSubstraitUnionAllDraft({
+      inputs: [
+        {
+          nodeId: north.id,
+          schema: 'public',
+          table: 'customers_north',
+          fields: fields.map((name) => ({ name, type: 'string' as const })),
+          sourceRef: connectedSourceRef('customers_north'),
+        },
+        {
+          nodeId: south.id,
+          schema: 'public',
+          table: 'customers_south',
+          fields: fields.map((name) => ({ name, type: 'string' as const })),
+          sourceRef: connectedSourceRef('customers_south'),
+        },
+      ],
+      targetNodeId: 'model',
+    });
+    const model = applyDvtSubstraitSemanticDocument(
+      buildNode('model', 'dvt:sql_transform', 'transform'),
+      encodeDvtSubstraitUnionAllDocument(draft)
+    );
+
+    const projected = projectCanvasColumnLineage({
+      nodes: [north, south, model],
+      edges: [
+        { sourceId: north.id, targetId: model.id },
+        { sourceId: south.id, targetId: model.id },
+      ],
+      expandedNodeIds: new Set([north.id, south.id, model.id]),
+    });
+
+    expect(projected).toHaveLength(6);
+    expect(projected.filter((edge) => edge.source === north.id)).toHaveLength(3);
+    expect(projected.filter((edge) => edge.source === south.id)).toHaveLength(3);
+    expect(projected).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          source: north.id,
+          targetHandle: createCanvasColumnHandleId({
+            direction: 'target',
+            nodeId: model.id,
+            columnId: 'field:model:country',
+          }),
+        }),
+        expect.objectContaining({
+          source: south.id,
+          targetHandle: createCanvasColumnHandleId({
+            direction: 'target',
+            nodeId: model.id,
+            columnId: 'field:model:country',
+          }),
+        }),
+      ])
+    );
   });
 
   it('preserves exact column lineage after transferring visual authority to SQL', () => {

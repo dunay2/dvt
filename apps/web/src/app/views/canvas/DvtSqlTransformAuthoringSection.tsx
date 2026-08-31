@@ -32,6 +32,8 @@ export function DvtSqlTransformAuthoringSection({
   onStartSubstraitPilot,
   substraitInnerJoinSummary,
   onStartSubstraitInnerJoin,
+  substraitUnionAllSummary,
+  onStartSubstraitUnionAll,
   onChange,
 }: Readonly<{
   node: CanonicalNode;
@@ -43,6 +45,8 @@ export function DvtSqlTransformAuthoringSection({
   onStartSubstraitPilot?: () => void;
   substraitInnerJoinSummary?: string;
   onStartSubstraitInnerJoin?: () => void;
+  substraitUnionAllSummary?: string;
+  onStartSubstraitUnionAll?: () => void;
   onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
 }>): JSX.Element {
   const warehouseSourceImport = useOptionalWarehouseSourceImportPort();
@@ -124,6 +128,27 @@ export function DvtSqlTransformAuthoringSection({
                 onClick={onStartSubstraitInnerJoin}
               >
                 {canvasViewCopy.inspectorDvtSubstraitInnerJoinAction}
+              </Button>
+            </div>
+          )}
+          {onStartSubstraitUnionAll == null || substraitUnionAllSummary == null ? null : (
+            <div className="flex items-center justify-between gap-3 rounded border border-[color:var(--border-default)] px-3 py-2">
+              <p className="text-xs text-(--text-muted)">{substraitUnionAllSummary}</p>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={disabled}
+                data-slot="dvt-start-substrait-union-all"
+                onClick={onStartSubstraitUnionAll}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    onStartSubstraitUnionAll();
+                  }
+                }}
+              >
+                {canvasViewCopy.inspectorDvtSubstraitUnionAllAction}
               </Button>
             </div>
           )}
