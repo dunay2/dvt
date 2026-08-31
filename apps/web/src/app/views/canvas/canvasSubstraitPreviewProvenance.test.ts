@@ -14,6 +14,7 @@ import {
   applyDvtSubstraitInnerJoinFieldEdit,
   applyDvtSubstraitInnerJoinGroupedRowNumber,
   applyDvtSubstraitInnerJoinGrouping,
+  appendDvtSubstraitInnerJoinInput,
   createDvtSubstraitInnerJoinDraft,
   encodeDvtSubstraitInnerJoinDocument,
 } from './canvasDvtSubstraitJoinComposition';
@@ -134,7 +135,7 @@ function buildSubstraitPreviewGraph(
 }
 
 function buildSubstraitJoinPreviewGraph(
-  composition: 'base' | 'grouped-window' = 'base'
+  composition: 'base' | 'grouped-window' | 'n-input' = 'base'
 ): ReturnType<typeof buildSubstraitPreviewGraph> {
   const transformPath = 'models/customer_orders.sql';
   const connectionRef = buildTestPostgresConnectionRef();
@@ -183,6 +184,26 @@ function buildSubstraitJoinPreviewGraph(
     });
     draft = applyDvtSubstraitInnerJoinGroupedRowNumber(draft, { outputName: 'count_rank' });
   }
+  if (composition === 'n-input') {
+    draft = appendDvtSubstraitInnerJoinInput(draft, {
+      source: {
+        nodeId: 'source-shipments',
+        schema: 'public',
+        table: 'shipments',
+        sourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef,
+          sourceObjectId: 'public.shipments',
+        },
+      },
+      fields: ['shipment_id', 'customer_id'],
+      predicate: {
+        leftSourceFieldId: 'field:source-customers:customer_id',
+        rightFieldName: 'customer_id',
+      },
+      selectedFields: ['shipment_id'],
+    });
+  }
   const transform = applyDvtSubstraitSemanticDocument(
     {
       id: 'transform',
@@ -209,9 +230,12 @@ function buildSubstraitJoinPreviewGraph(
       sourceName: table,
       schema: 'public',
       tableName: table,
-      columns: (table === 'customers' ? ['customer_id', 'name'] : ['order_id', 'customer_id']).map(
-        (name) => ({ name, type: 'string' })
-      ),
+      columns: (table === 'customers'
+        ? ['customer_id', 'name']
+        : table === 'orders'
+          ? ['order_id', 'customer_id']
+          : ['shipment_id', 'customer_id']
+      ).map((name) => ({ name, type: 'string' })),
       connectedSourceRef: {
         schemaVersion: 'connected-source-ref.v1',
         connectionRef,
@@ -242,6 +266,7 @@ function buildSubstraitJoinPreviewGraph(
     nodes: [
       source('source-customers', 'customers'),
       source('source-orders', 'orders'),
+      ...(composition === 'n-input' ? [source('source-shipments', 'shipments')] : []),
       transform,
       sink,
     ],
@@ -258,6 +283,16 @@ function buildSubstraitJoinPreviewGraph(
         targetId: 'transform',
         relation: 'lineage',
       },
+      ...(composition === 'n-input'
+        ? [
+            {
+              id: 'shipments-transform',
+              sourceId: 'source-shipments',
+              targetId: 'transform',
+              relation: 'lineage' as const,
+            },
+          ]
+        : []),
       { id: 'transform-sink', sourceId: 'transform', targetId: 'sink', relation: 'lineage' },
     ],
   };
@@ -594,6 +629,15 @@ describe('Substrait Preview provenance cutover', () => {
       /^select left_source\.customer_id as customer_id, left_source\.name as name, right_source\.order_id as order_id from public\.customers as left_source join public\.orders as right_source on left_source\.customer_id = right_source\.customer_id;?$/
     );
     expect(savedContents).toContain(result.sqlText);
+  });
+
+  it('fails closed before N-input INNER JOIN Preview projection is admitted', async () => {
+    const { result } = await resolveGraphPreview(buildSubstraitJoinPreviewGraph('n-input'));
+
+    expect(result).toEqual({
+      ok: false,
+      message: 'Preview does not yet support N-input Substrait INNER JOIN revisions.',
+    });
   });
 
   it('routes grouped and ranked INNER JOIN through the same Preview artifact rail', async () => {
