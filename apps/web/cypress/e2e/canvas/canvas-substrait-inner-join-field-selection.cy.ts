@@ -43,11 +43,29 @@ function visitCanvas(): void {
         'dvt-web-application-language',
         JSON.stringify({ state: { language: 'en' }, version: 0 })
       );
+      window.localStorage.setItem(
+        'dvt-web-canvas-interaction',
+        JSON.stringify({
+          state: {
+            impactOverlayEnabled: false,
+            columnLevelLineageEnabled: true,
+            canvasLayouts: {},
+          },
+          version: 0,
+        })
+      );
     },
   });
   waitForE2eApiCall('/healthz', 'GET');
   waitForE2eApiCall('/capabilities', 'GET');
   waitForE2eApiCall('/workspace/graph/draft', 'GET');
+}
+
+function toggleColumns(nodeId: string): void {
+  cy.get(`.react-flow__node[data-id="${nodeId}"]`)
+    .find('button[aria-expanded]')
+    .contains(/Columns|Columnas/)
+    .click();
 }
 
 describe('Canvas Substrait INNER JOIN field selection', () => {
@@ -193,5 +211,20 @@ describe('Canvas Substrait N-input INNER JOIN authoring', () => {
       'contain.text',
       'customers + orders + shipments + tickets'
     );
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    for (const nodeId of [
+      'source-customers',
+      'source-orders',
+      'source-shipments',
+      'source-tickets',
+      'join-transform',
+    ]) {
+      toggleColumns(nodeId);
+    }
+    cy.get('.react-flow__edge-columnLineage').should('have.length', 5);
+    cy.get('.react-flow__edge-columnLineage[aria-label="shipment_id → shipment_id"]').should(
+      'exist'
+    );
+    cy.get('.react-flow__edge-columnLineage[aria-label="ticket_id → ticket_id"]').should('exist');
   });
 });

@@ -15,6 +15,7 @@ import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProj
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import {
   decodeDvtSubstraitInnerJoinDocument,
+  inspectDvtSubstraitNInputJoinDraft,
   inspectDvtSubstraitInnerJoinGroupedWindowDraft,
   inspectDvtSubstraitInnerJoinGroupingDraft,
   inspectDvtSubstraitInnerJoinDraft,
@@ -37,6 +38,7 @@ export type CanvasColumnLineageEdgeData = Readonly<{
   kind: 'column-lineage' | 'column-lineage-terminal';
   sourceNodeId: string;
   sourceColumnName: string;
+  sourceFieldId?: string;
   targetNodeId: string;
   targetColumnName: string;
   outputId: string;
@@ -136,16 +138,31 @@ function readLineageRecipe(node: CanonicalNode): LineageRecipe | null {
   }
 }
 
-type DvtSubstraitInnerJoinLineage = Readonly<{
-  left: Readonly<{ sourceRef: ConnectedSourceRef }>;
-  right: Readonly<{ sourceRef: ConnectedSourceRef }>;
-  outputs: readonly Readonly<{
-    fieldKey: string;
-    name: string;
-    fieldId: string;
-    source: Readonly<{ relation: 'left' | 'right'; name: string }>;
-  }>[];
-}>;
+type DvtSubstraitInnerJoinLineage =
+  | Readonly<{
+      kind: 'binary';
+      left: Readonly<{ sourceRef: ConnectedSourceRef }>;
+      right: Readonly<{ sourceRef: ConnectedSourceRef }>;
+      outputs: readonly Readonly<{
+        fieldKey: string;
+        name: string;
+        fieldId: string;
+        source: Readonly<{ relation: 'left' | 'right'; name: string }>;
+      }>[];
+    }>
+  | Readonly<{
+      kind: 'n-input';
+      inputs: readonly Readonly<{
+        nodeId: string;
+        sourceRef: ConnectedSourceRef;
+        fields: readonly Readonly<{ name: string; fieldId: string }>[];
+      }>[];
+      outputs: readonly Readonly<{
+        name: string;
+        fieldId: string;
+        source: Readonly<{ nodeId: string; name: string; fieldId: string }>;
+      }>[];
+    }>;
 
 function readSubstraitJoinLineage(node: CanonicalNode): DvtSubstraitInnerJoinLineage | null {
   if (node.pluginId !== 'dvt' || node.kind !== 'dvt:sql_transform') return null;
@@ -153,9 +170,18 @@ function readSubstraitJoinLineage(node: CanonicalNode): DvtSubstraitInnerJoinLin
     const authority = readDvtTransformAuthoringAuthority(node);
     if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return null;
     const draft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
+    const nInput = inspectDvtSubstraitNInputJoinDraft(draft);
+    if (nInput.ok && nInput.projection.inputs.length > 2) {
+      return {
+        kind: 'n-input',
+        inputs: nInput.projection.inputs,
+        outputs: nInput.projection.outputs,
+      };
+    }
     const groupedWindow = inspectDvtSubstraitInnerJoinGroupedWindowDraft(draft);
     if (groupedWindow.ok) {
       return {
+        kind: 'binary',
         left: groupedWindow.projection.left,
         right: groupedWindow.projection.right,
         outputs: [groupedWindow.projection.groupField],
@@ -164,13 +190,14 @@ function readSubstraitJoinLineage(node: CanonicalNode): DvtSubstraitInnerJoinLin
     const grouping = inspectDvtSubstraitInnerJoinGroupingDraft(draft);
     if (grouping.ok) {
       return {
+        kind: 'binary',
         left: grouping.projection.left,
         right: grouping.projection.right,
         outputs: [grouping.projection.groupField],
       };
     }
     const inspection = inspectDvtSubstraitInnerJoinDraft(draft);
-    return inspection.ok ? inspection.projection : null;
+    return inspection.ok ? { kind: 'binary', ...inspection.projection } : null;
   } catch {
     return null;
   }
@@ -229,6 +256,7 @@ function buildLineageEdge(args: {
   sourceNodeId: string;
   sourceColumnName: string;
   sourceColumnId: string;
+  sourceFieldId?: string;
   targetNodeId: string;
   targetColumnName: string;
   targetColumnId: string;
@@ -265,6 +293,7 @@ function buildLineageEdge(args: {
       kind: args.terminal ? 'column-lineage-terminal' : 'column-lineage',
       sourceNodeId: args.sourceNodeId,
       sourceColumnName: args.sourceColumnName,
+      ...(args.sourceFieldId == null ? {} : { sourceFieldId: args.sourceFieldId }),
       targetNodeId: args.targetNodeId,
       targetColumnName: args.targetColumnName,
       outputId: args.outputId,
@@ -431,6 +460,65 @@ export function projectCanvasColumnLineage(args: {
 
     const substraitJoin = readSubstraitJoinLineage(model);
     if (substraitJoin != null && args.expandedNodeIds.has(model.id)) {
+      if (substraitJoin.kind === 'n-input') {
+        const incomingEdges = args.edges.filter((edge) => edge.targetId === model.id);
+        const sourceByInputId = new Map<string, CanonicalNode>();
+        let exactClosure = incomingEdges.length === substraitJoin.inputs.length;
+        for (const input of substraitJoin.inputs) {
+          const matchingSources = incomingEdges.flatMap((edge) => {
+            if (edge.sourceId !== input.nodeId) return [];
+            const sourceNode = nodeById.get(edge.sourceId);
+            if (sourceNode == null || !args.expandedNodeIds.has(sourceNode.id)) return [];
+            const sourceRef = ConnectedSourceRefSchema.safeParse(
+              sourceNode.metadata?.connectedSourceRef
+            );
+            const sourceColumns = new Set(readColumns(sourceNode).map((column) => column.name));
+            return sourceRef.success &&
+              sameConnectedSourceRef(sourceRef.data, input.sourceRef) &&
+              input.fields.every((field) => sourceColumns.has(field.name))
+              ? [sourceNode]
+              : [];
+          });
+          if (matchingSources.length !== 1 || sourceByInputId.has(input.nodeId)) {
+            exactClosure = false;
+            break;
+          }
+          sourceByInputId.set(input.nodeId, matchingSources[0]!);
+        }
+        if (!exactClosure) continue;
+
+        const resolvedOutputs = substraitJoin.outputs.map((output) => {
+          const input = substraitJoin.inputs.find(
+            (candidate) => candidate.nodeId === output.source.nodeId
+          );
+          const sourceNode = sourceByInputId.get(output.source.nodeId);
+          const sourceField = input?.fields.find(
+            (field) => field.fieldId === output.source.fieldId && field.name === output.source.name
+          );
+          return sourceNode == null || sourceField == null
+            ? null
+            : { output, sourceNode, sourceField };
+        });
+        if (resolvedOutputs.some((output) => output == null)) continue;
+        for (const resolved of resolvedOutputs) {
+          if (resolved == null) continue;
+          projected.push(
+            buildLineageEdge({
+              sourceNodeId: resolved.sourceNode.id,
+              sourceColumnName: resolved.sourceField.name,
+              sourceColumnId: resolved.sourceField.name,
+              sourceFieldId: resolved.sourceField.fieldId,
+              targetNodeId: model.id,
+              targetColumnName: resolved.output.name,
+              targetColumnId: resolved.output.fieldId,
+              outputId: resolved.output.fieldId,
+              terminal: false,
+              removable: false,
+            })
+          );
+        }
+        continue;
+      }
       for (const output of substraitJoin.outputs) {
         const sourceIdentity =
           output.source.relation === 'left' ? substraitJoin.left : substraitJoin.right;
