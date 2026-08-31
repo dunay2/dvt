@@ -135,6 +135,34 @@ describe('VTX2 typed Substrait INNER JOIN composition', () => {
     expect(encodeDvtSubstraitInnerJoinDocument(reloaded)).toEqual(document);
   });
 
+  it('inspects appended sources using their actual compatible field counts', () => {
+    const appended = appendDvtSubstraitInnerJoinInput(fixture(), {
+      source: source('source-shipments', 'public', 'shipments'),
+      fields: ['shipment_id', 'customer_id', 'status'],
+      predicate: {
+        leftSourceFieldId: 'field:source-customers:customer_id',
+        rightFieldName: 'customer_id',
+      },
+      selectedFields: ['shipment_id', 'status'],
+    });
+
+    expect(inspectDvtSubstraitNInputJoinDraft(appended)).toMatchObject({
+      ok: true,
+      projection: {
+        inputs: [
+          {},
+          {},
+          {
+            nodeId: 'source-shipments',
+            fields: [{ name: 'shipment_id' }, { name: 'customer_id' }, { name: 'status' }],
+          },
+        ],
+        outputs: [{}, {}, {}, { name: 'shipment_id' }, { name: 'status' }],
+      },
+    });
+    expect(() => encodeDvtSubstraitInnerJoinDocument(appended)).not.toThrow();
+  });
+
   it('rejects duplicate, stale-predicate and incompatible append attempts without mutation', () => {
     const draft = fixture();
     const append = (

@@ -1043,7 +1043,7 @@ function directStructFieldOrdinal(expression: ReturnType<typeof fieldReference>)
   return segment.value.field;
 }
 
-function tableIdentity(rel: Rel): { schema: string; table: string } | null {
+function namedTableIdentity(rel: Rel): { schema: string; table: string } | null {
   if (rel.relType.case !== 'read') return null;
   const read = rel.relType.value;
   if (read.common?.emitKind.case !== undefined || read.common?.hint != null) return null;
@@ -1051,14 +1051,19 @@ function tableIdentity(rel: Rel): { schema: string; table: string } | null {
   if (read.filter != null || read.bestEffortFilter != null || read.projection != null) return null;
   if (read.readType.case !== 'namedTable' || read.readType.value.advancedExtension != null)
     return null;
-  if (read.baseSchema?.names.length !== 2) return null;
-  if (read.baseSchema.struct?.types.length !== 2) return null;
-  if (!read.baseSchema.struct.types.every((type) => type.kind.case === 'string')) return null;
   const names = read.readType.value.names;
   if (names.some((name) => name.trim().length === 0 || name !== name.trim())) return null;
   return names.length === 2 && names[0] != null && names[1] != null
     ? { schema: names[0], table: names[1] }
     : null;
+}
+
+function tableIdentity(rel: Rel): { schema: string; table: string } | null {
+  const identity = namedTableIdentity(rel);
+  if (identity == null || rel.relType.case !== 'read') return null;
+  const schema = rel.relType.value.baseSchema;
+  if (schema?.names.length !== 2 || schema.struct?.types.length !== 2) return null;
+  return schema.struct.types.every((type) => type.kind.case === 'string') ? identity : null;
 }
 
 function sourceRefForAnchor(
@@ -2065,10 +2070,12 @@ export function inspectDvtSubstraitNInputJoinDraft(
   for (const [index, readRel] of tree.reads.entries()) {
     const fieldNames =
       readRel.relType.case === 'read' ? readRel.relType.value.baseSchema?.names : undefined;
+    const fieldTypes =
+      readRel.relType.case === 'read' ? readRel.relType.value.baseSchema?.struct?.types : undefined;
     const binding = sidecar.relations.find((relation) => relation.relAnchor === index + 1);
     const sourceRef = binding?.sourceRef;
     const nodeId = binding == null ? null : sourceNodeIdFromRelationId(binding.relationId);
-    const table = tableIdentity(readRel);
+    const table = namedTableIdentity(readRel);
     if (
       readRel.relType.case !== 'read' ||
       readRel.relType.value.common?.relAnchor !== index + 1 ||
@@ -2076,6 +2083,9 @@ export function inspectDvtSubstraitNInputJoinDraft(
       fieldNames.length === 0 ||
       fieldNames.some((name) => name.length === 0 || name !== name.trim()) ||
       new Set(fieldNames).size !== fieldNames.length ||
+      fieldTypes == null ||
+      fieldTypes.length !== fieldNames.length ||
+      fieldTypes.some((type) => type.kind.case !== 'string') ||
       table == null ||
       binding == null ||
       binding.displayName !== table.table ||
