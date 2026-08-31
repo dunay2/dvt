@@ -144,7 +144,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     const normalized = sql.replaceAll(/\s+/g, ' ').trim().toLowerCase();
 
     expect(normalized).toMatch(
-      /^select country as country, count\(\*\) as customer_count, row_number\(\) over \( ?order by count\(\*\) desc nulls last ?\) as count_rank from public\.customers group by country;?$/
+      /^select country as country, count\(\*\) as customer_count, row_number\(\) over \( ?order by count\(\*\) desc nulls last, country asc nulls last ?\) as count_rank from public\.customers group by country;?$/
     );
   });
 

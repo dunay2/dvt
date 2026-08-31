@@ -85,6 +85,24 @@ describe('VTX2 typed Substrait aggregate and window composition', () => {
     expect(outerProject?.case === 'project' ? outerProject.value.input?.relType.case : null).toBe(
       'aggregate'
     );
+    const expression =
+      outerProject?.case === 'project' ? outerProject.value.expressions[0]?.rexType : null;
+    expect(
+      expression?.case === 'windowFunction'
+        ? expression.value.sorts.map((sort) => ({
+            ordinal:
+              sort.expr?.rexType.case === 'selection' &&
+              sort.expr.rexType.value.referenceType.case === 'directReference' &&
+              sort.expr.rexType.value.referenceType.value.referenceType.case === 'structField'
+                ? sort.expr.rexType.value.referenceType.value.referenceType.value.field
+                : null,
+            direction: sort.sortKind.case === 'direction' ? sort.sortKind.value : null,
+          }))
+        : null
+    ).toEqual([
+      { ordinal: 1, direction: SortField_SortDirection.DESC_NULLS_LAST },
+      { ordinal: 0, direction: SortField_SortDirection.ASC_NULLS_LAST },
+    ]);
   });
 
   it('renames and removes only the window while preserving the grouped revision and identities', () => {
@@ -169,6 +187,13 @@ describe('VTX2 typed Substrait aggregate and window composition', () => {
       case: 'direction',
       value: SortField_SortDirection.ASC_NULLS_LAST,
     };
+    expect(inspectDvtSubstraitPilotAggregateWindowDraft(ranked)).toEqual({ ok: false });
+
+    expression.value.sorts[0]!.sortKind = {
+      case: 'direction',
+      value: SortField_SortDirection.DESC_NULLS_LAST,
+    };
+    expression.value.sorts.pop();
     expect(inspectDvtSubstraitPilotAggregateWindowDraft(ranked)).toEqual({ ok: false });
     expect(removeDvtSubstraitPilotAggregateRowNumber(ranked)).toBe(ranked);
   });

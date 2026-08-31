@@ -186,10 +186,13 @@ function inspectValidAggregateWindow(draft: DvtSubstraitPilotDraft): ValidAggreg
   if (
     !isDvtSubstraitRowNumberFunction(draft.plan, windowFunction) ||
     windowFunction.partitions.length !== 0 ||
-    windowFunction.sorts.length !== 1 ||
+    windowFunction.sorts.length !== 2 ||
     readFieldReferenceOrdinal(windowFunction.sorts[0]?.expr) !== 1 ||
     windowFunction.sorts[0]?.sortKind.case !== 'direction' ||
-    windowFunction.sorts[0].sortKind.value !== SortField_SortDirection.DESC_NULLS_LAST
+    windowFunction.sorts[0].sortKind.value !== SortField_SortDirection.DESC_NULLS_LAST ||
+    readFieldReferenceOrdinal(windowFunction.sorts[1]?.expr) !== 0 ||
+    windowFunction.sorts[1]?.sortKind.case !== 'direction' ||
+    windowFunction.sorts[1].sortKind.value !== SortField_SortDirection.ASC_NULLS_LAST
   ) {
     return null;
   }
@@ -319,6 +322,13 @@ export function applyDvtSubstraitPilotAggregateRowNumber(
                     sortKind: {
                       case: 'direction',
                       value: SortField_SortDirection.DESC_NULLS_LAST,
+                    },
+                  }),
+                  create(SortFieldSchema, {
+                    expr: fieldReference(0),
+                    sortKind: {
+                      case: 'direction',
+                      value: SortField_SortDirection.ASC_NULLS_LAST,
                     },
                   }),
                 ],

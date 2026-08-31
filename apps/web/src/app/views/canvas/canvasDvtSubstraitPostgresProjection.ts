@@ -124,7 +124,7 @@ function pgRowNumber(partitionFieldName: string, orderFieldName: string): Postgr
   };
 }
 
-function pgRowNumberOverCount(): PostgresAstNode {
+function pgRowNumberOverCount(groupExpression: PostgresAstNode): PostgresAstNode {
   return {
     FuncCall: {
       funcname: [pgString('row_number')],
@@ -134,6 +134,13 @@ function pgRowNumberOverCount(): PostgresAstNode {
             SortBy: {
               node: pgCountRows(),
               sortby_dir: 'SORTBY_DESC',
+              sortby_nulls: 'SORTBY_NULLS_LAST',
+            },
+          },
+          {
+            SortBy: {
+              node: groupExpression,
+              sortby_dir: 'SORTBY_ASC',
               sortby_nulls: 'SORTBY_NULLS_LAST',
             },
           },
@@ -338,7 +345,7 @@ function buildAggregateWindowPostgresAst(
         {
           ResTarget: {
             name: projections.composition.result.name,
-            val: pgRowNumberOverCount(),
+            val: pgRowNumberOverCount(groupExpression),
           },
         },
       ],

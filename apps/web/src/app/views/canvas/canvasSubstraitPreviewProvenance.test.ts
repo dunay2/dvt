@@ -572,7 +572,7 @@ describe('Substrait Preview provenance cutover', () => {
     if (!result.ok) throw new Error(result.message);
     const normalized = result.sqlText?.replaceAll(/\s+/g, ' ').trim().toLowerCase();
     expect(normalized).toMatch(
-      /^select country as country, count\(\*\) as customer_count, row_number\(\) over \( ?order by count\(\*\) desc nulls last ?\) as count_rank from public\.customers group by country;?$/
+      /^select country as country, count\(\*\) as customer_count, row_number\(\) over \( ?order by count\(\*\) desc nulls last, country asc nulls last ?\) as count_rank from public\.customers group by country;?$/
     );
     expect(savedContents).toContain(result.sqlText);
   });
