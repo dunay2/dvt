@@ -22,7 +22,7 @@ jobs:
         run: git fetch --no-tags origin main
 
       - name: Generate source-first Planner inventory
-        run: node architecture/tools/generate-planner-preview.mjs
+        run: node architecture/tools/generate-planner-preview-v2.mjs
 
       - name: Reject invalid navigation in generated source model
         run: |
