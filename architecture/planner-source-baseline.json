@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "repository": "dunay2/dvt",
+  "baselineSha": "4e63f9a65e25f409ad975fa1da5620e569bb3a36",
+  "scope": "packages/@dvt/planner",
+  "modelId": "plannerSource",
+  "displayName": "Planner",
+  "architectureOwner": "dvt.planner"
+}
