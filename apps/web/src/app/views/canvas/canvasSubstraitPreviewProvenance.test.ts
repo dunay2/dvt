@@ -19,6 +19,7 @@ import {
   encodeDvtSubstraitPilotDocument,
   renameDvtSubstraitPilotOutput,
 } from './canvasDvtSubstraitPilot';
+import { applyDvtSubstraitPilotAggregation } from './canvasDvtSubstraitAggregation';
 import { resolvePreviewProvenance } from './canvasPreviewProvenance';
 import { buildTestPostgresConnectionRef } from './useCanvasExecutionActions.test.support';
 
@@ -225,6 +226,26 @@ function buildSubstraitJoinPreviewGraph(): ReturnType<typeof buildSubstraitPrevi
   };
 }
 
+function buildSubstraitAggregatePreviewGraph(): ReturnType<typeof buildSubstraitPreviewGraph> {
+  const graph = buildSubstraitPreviewGraph();
+  let draft = createDvtSubstraitPilotDraft({
+    sourceNodeId: 'source',
+    targetNodeId: 'transform',
+  });
+  draft = applyDvtSubstraitPilotAggregation(draft, {
+    groupFieldId: 'field:transform:country',
+    countOutputName: 'customer_count',
+  });
+  const transformIndex = graph.nodes.findIndex((node) => node.id === 'transform');
+  const transform = graph.nodes[transformIndex];
+  if (transform == null) throw new Error('Expected transform fixture.');
+  graph.nodes[transformIndex] = applyDvtSubstraitSemanticDocument(
+    transform,
+    encodeDvtSubstraitPilotDocument(draft)
+  );
+  return graph;
+}
+
 function buildWorkspacePorts(
   transformPath: string,
   staleSql?: string
@@ -351,6 +372,20 @@ describe('Substrait Preview provenance cutover', () => {
     const normalized = result.sqlText?.replaceAll(/\s+/g, ' ').trim().toLowerCase();
     expect(normalized).toMatch(
       /^select left_source\.customer_id as customer_id, left_source\.name as name, right_source\.order_id as order_id from public\.customers as left_source join public\.orders as right_source on left_source\.customer_id = right_source\.customer_id;?$/
+    );
+    expect(savedContents).toContain(result.sqlText);
+  });
+
+  it('routes the grouped Substrait revision through the existing Preview artifact rail', async () => {
+    const { result, savedContents } = await resolveGraphPreview(
+      buildSubstraitAggregatePreviewGraph()
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error(result.message);
+    const normalized = result.sqlText?.replaceAll(/\s+/g, ' ').trim().toLowerCase();
+    expect(normalized).toMatch(
+      /^select country as country, count\(\*\) as customer_count from public\.customers group by country;?$/
     );
     expect(savedContents).toContain(result.sqlText);
   });

@@ -104,11 +104,29 @@ describe('DVT Substrait capability catalog V1', () => {
         selector: 'kind.bool',
       }),
     ];
+    const aggregateIds = [
+      buildDvtSubstraitStandardCapabilityId('relation', {
+        sourceKind: 'core',
+        message: 'substrait.AggregateRel',
+      }),
+      buildDvtSubstraitStandardCapabilityId('aggregate-function', {
+        sourceKind: 'simple-extension',
+        urn: 'extension:io.substrait:functions_aggregate_generic',
+        name: 'count',
+      }),
+      buildDvtSubstraitStandardCapabilityId('type', {
+        sourceKind: 'core',
+        message: 'substrait.Type',
+        selector: 'kind.i64',
+      }),
+    ];
     const supported = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.filter(
       (entry) => entry.kind === 'standard' && entry.profileStatus === 'supported-profile'
     );
 
-    expect(supported.map((entry) => entry.entryId)).toEqual([...pilotIds, ...innerJoinIds].sort());
+    expect(supported.map((entry) => entry.entryId)).toEqual(
+      [...pilotIds, ...innerJoinIds, ...aggregateIds].sort()
+    );
     for (const entryId of pilotIds) {
       expect(findCapability(entryId)).toMatchObject({
         profileStatus: 'supported-profile',
@@ -119,6 +137,12 @@ describe('DVT Substrait capability catalog V1', () => {
       expect(findCapability(entryId)).toMatchObject({
         profileStatus: 'supported-profile',
         evidenceRefs: expect.arrayContaining(['dvt:#2634']),
+      });
+    }
+    for (const entryId of aggregateIds) {
+      expect(findCapability(entryId)).toMatchObject({
+        profileStatus: 'supported-profile',
+        evidenceRefs: expect.arrayContaining(['dvt:#2641', 'dvt:#2642']),
       });
     }
 
@@ -221,6 +245,15 @@ describe('DVT Substrait capability catalog V1', () => {
       kind: 'standard',
       profileStatus: 'candidate-standard',
     });
+    expect(
+      findCapability(
+        buildDvtSubstraitStandardCapabilityId('window-function', {
+          sourceKind: 'simple-extension',
+          urn: 'extension:io.substrait:functions_arithmetic',
+          name: 'row_number',
+        })
+      )
+    ).toMatchObject({ profileStatus: 'candidate-standard' });
   });
 
   it('keeps product gaps structurally separate from standard identities', () => {

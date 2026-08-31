@@ -33,6 +33,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [AR-D continuation safety residual capacity tuning](r-20260430-ar-d-continuation-safety.yaml)
 - [Archive redaction baseline can drift from runtime composition config](R-20260607-ARCHIVE-REDACTION-BASELINE.yaml)
 - [Automatic lineage DLQ replay may requeue persistent poison events repeatedly](R-20260330-LINEAGE-DLQ-AUTO-REPLAY.md)
+- [Bounded aggregation authoring could drift from admitted Substrait semantics](R-20260831-SUBSTRAIT-AGGREGATE-DRIFT.yaml)
 - [Bounded object parsing can pressure Temporal worker memory](R-20260804-OBJECT-FILE-POSTGRES-RUNTIME.yaml)
 - [Caller-visible freshness may be misinterpreted as read-your-writes guarantee](R-20260330-snapshot-staleness-caller-view.yaml)
 - [Cancel lifecycle ownership can regress to mixed engine/runtime emission](R-20260401-CANCEL-LIFECYCLE-OWNERSHIP-DRIFT.yaml)
