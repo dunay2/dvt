@@ -13,6 +13,7 @@ const {
   shouldBootstrapLocalTemporal,
   shouldStartTemporalWorker,
   resolveProcessStartupOrder,
+  prepareTemporalWorkerRuntimeDependencies,
   buildLocalPostgresProofSeedSql,
   buildLocalWarehouseConnectionRequest,
   ensureLocalWarehouseConnectionViaApi,
@@ -328,6 +329,68 @@ test('resolveProcessStartupOrder starts api before temporal worker to avoid dist
     'web',
   ]);
   assert.deepEqual(resolveProcessStartupOrder({}), ['api', 'web']);
+});
+
+test('prepareTemporalWorkerRuntimeDependencies invokes the canonical runtime-closure builder when the worker is required', () => {
+  const calls = [];
+  const protectedRuntimeEnv = {
+    DATABASE_URL: defaultPgUrl,
+    OIDC_JWKS_URI: 'http://127.0.0.1:4000/.well-known/jwks.json',
+    OIDC_ISSUER: 'https://issuer.local.dvt/',
+    OIDC_AUDIENCE: 'dvt-api',
+  };
+
+  const prepared = prepareTemporalWorkerRuntimeDependencies(protectedRuntimeEnv, {
+    spawnCommand: (file, args, options) => {
+      calls.push({ file, args, options });
+      return { status: 0 };
+    },
+  });
+
+  assert.equal(prepared, true);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].file, process.execPath);
+  assert.match(
+    calls[0].args[0].replace(/\\/g, '/'),
+    /\/scripts\/build-workspace-runtime-deps\.cjs$/
+  );
+  assert.deepEqual(calls[0].args.slice(1), ['dvt-temporal-worker']);
+  assert.equal(calls[0].options.stdio, 'inherit');
+  assert.equal(calls[0].options.windowsHide, true);
+});
+
+test('prepareTemporalWorkerRuntimeDependencies skips the build when the worker is not required', () => {
+  let spawned = false;
+
+  const prepared = prepareTemporalWorkerRuntimeDependencies(
+    {},
+    {
+      spawnCommand: () => {
+        spawned = true;
+        return { status: 0 };
+      },
+    }
+  );
+
+  assert.equal(prepared, false);
+  assert.equal(spawned, false);
+});
+
+test('prepareTemporalWorkerRuntimeDependencies fails clearly when the runtime build fails', () => {
+  const protectedRuntimeEnv = {
+    DATABASE_URL: defaultPgUrl,
+    OIDC_JWKS_URI: 'http://127.0.0.1:4000/.well-known/jwks.json',
+    OIDC_ISSUER: 'https://issuer.local.dvt/',
+    OIDC_AUDIENCE: 'dvt-api',
+  };
+
+  assert.throws(
+    () =>
+      prepareTemporalWorkerRuntimeDependencies(protectedRuntimeEnv, {
+        spawnCommand: () => ({ status: 17 }),
+      }),
+    /Temporal worker runtime dependency build failed with exit code 17/
+  );
 });
 
 test('buildLocalPostgresProofSeedSql creates real default source tables for Canvas runs', () => {

@@ -29,6 +29,10 @@ const DEFAULT_READY_TIMEOUT_MS = 240_000;
 const DEFAULT_POLL_INTERVAL_MS = 500;
 const PNPM_COMMAND = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
 const POSTGRES_BOOTSTRAP_SCRIPT = path.resolve(__dirname, 'run-temporal-postgres-proof.cjs');
+const WORKSPACE_RUNTIME_DEPENDENCIES_BUILD_SCRIPT = path.resolve(
+  __dirname,
+  'build-workspace-runtime-deps.cjs'
+);
 const DEFAULT_LOCAL_WORKSPACE_FILES_ROOT = path.resolve(
   __dirname,
   '../.dvt/dev-stack/workspace-files'
@@ -188,6 +192,35 @@ function ensureLocalPostgresReady(options, env = process.env) {
   if (result.status !== 0) {
     throw new Error(`Local Postgres bootstrap failed with exit code ${result.status}`);
   }
+}
+
+function prepareTemporalWorkerRuntimeDependencies(apiEnv, { spawnCommand = spawnSync } = {}) {
+  if (!shouldStartTemporalWorker(apiEnv)) {
+    return false;
+  }
+
+  console.log('[dev-stack] Building Temporal worker runtime workspace dependencies');
+  const result = spawnCommand(
+    process.execPath,
+    [WORKSPACE_RUNTIME_DEPENDENCIES_BUILD_SCRIPT, 'dvt-temporal-worker'],
+    {
+      stdio: 'inherit',
+      env: process.env,
+      windowsHide: true,
+    }
+  );
+
+  if (result.error) {
+    throw result.error;
+  }
+
+  if (result.status !== 0) {
+    throw new Error(
+      `Temporal worker runtime dependency build failed with exit code ${result.status}`
+    );
+  }
+
+  return true;
 }
 
 function buildLocalPostgresProofSeedSql() {
@@ -605,6 +638,8 @@ async function main() {
   try {
     const processStartupOrder = resolveProcessStartupOrder(apiEnv);
 
+    prepareTemporalWorkerRuntimeDependencies(apiEnv);
+
     registerProcess(spawnProcess('api', ['--filter', 'dvt-api', 'dev'], apiEnv));
 
     await waitForUrl(
@@ -729,6 +764,7 @@ module.exports = {
   shouldBootstrapLocalTemporal,
   shouldStartTemporalWorker,
   resolveProcessStartupOrder,
+  prepareTemporalWorkerRuntimeDependencies,
   buildLocalPostgresProofSeedSql,
   LOCAL_POSTGRES_CONNECTION_ID,
   buildLocalWarehouseConnectionRequest,

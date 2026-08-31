@@ -255,8 +255,12 @@ Behavior:
   `TEMPORAL_TASK_QUEUE=dvt-temporal` into the API and worker processes
 - preserves explicitly configured external `TEMPORAL_ADDRESS` posture instead
   of replacing it with the local dev service
-- starts `dvt-temporal-worker` with the same Temporal/Postgres posture and
-  waits for its `GET /readyz` probe before starting the API
+- explicitly builds the runtime workspace dependency closure for
+  `dvt-temporal-worker` before starting API, worker, or web processes when the
+  protected runtime requires that worker
+- starts the API, then `dvt-temporal-worker` with the same Temporal/Postgres
+  posture, and waits for the worker's `GET /readyz` probe before starting the
+  web dev server
 - fails bootstrap explicitly if the Temporal worker exits or never becomes
   ready, instead of allowing the API to surface a generic no-adapters error
 - enables `/db/ready` and waits for that probe before declaring the API ready
