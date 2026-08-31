@@ -163,6 +163,45 @@ describe('VTX2 typed Substrait INNER JOIN composition', () => {
     expect(() => encodeDvtSubstraitInnerJoinDocument(appended)).not.toThrow();
   });
 
+  it('does not reuse a preserved output FieldId when appending after a rename', () => {
+    const threeInputs = appendDvtSubstraitInnerJoinInput(fixture(), {
+      source: source('source-shipments', 'public', 'shipments'),
+      fields: ['shipment_id', 'customer_id'],
+      predicate: {
+        leftSourceFieldId: 'field:source-customers:customer_id',
+        rightFieldName: 'customer_id',
+      },
+      selectedFields: ['shipment_id'],
+    });
+    const renamed = applyDvtSubstraitInnerJoinFieldEdit(threeInputs, {
+      kind: 'rename',
+      sourceFieldId: 'field:source-orders:order_id',
+      outputName: 'order_key',
+    });
+
+    const appended = appendDvtSubstraitInnerJoinInput(renamed, {
+      source: source('source-tickets', 'public', 'tickets'),
+      fields: ['ticket_id', 'customer_id', 'order_id'],
+      predicate: {
+        leftSourceFieldId: 'field:source-customers:customer_id',
+        rightFieldName: 'customer_id',
+      },
+      selectedFields: ['order_id'],
+    });
+    const inspection = inspectDvtSubstraitNInputJoinDraft(appended);
+
+    expect(appended).not.toBe(renamed);
+    if (!inspection.ok) throw new Error('Expected collision-safe N-input append.');
+    expect(
+      inspection.projection.outputs.find(
+        (output) => output.source.fieldId === 'field:source-tickets:order_id'
+      )
+    ).toMatchObject({
+      name: 'tickets_order_id',
+      fieldId: 'field:transform-customer-orders:tickets_order_id',
+    });
+  });
+
   it('selects, renames, and reorders fields over the same three- and four-input join path', () => {
     const threeInputs = appendDvtSubstraitInnerJoinInput(fixture(), {
       source: source('source-shipments', 'public', 'shipments'),

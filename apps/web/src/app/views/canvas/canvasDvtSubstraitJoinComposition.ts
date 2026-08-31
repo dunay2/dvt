@@ -1109,6 +1109,35 @@ function createDvtSubstraitNInputJoinDraft(
   return { plan, sidecar };
 }
 
+function createCollisionSafeNInputOutput(
+  args: Readonly<{
+    targetNodeId: string;
+    input: Readonly<{ nodeId: string; schema: string; table: string }>;
+    sourceName: string;
+    sourceFieldId: string;
+    outputs: ReadonlyArray<Readonly<{ name: string; fieldId: string }>>;
+  }>
+): Readonly<{ name: string; sourceFieldId: string; fieldId: string }> | null {
+  const usedNames = new Set(args.outputs.map((output) => output.name));
+  const usedFieldIds = new Set(args.outputs.map((output) => output.fieldId));
+  const name = [
+    args.sourceName,
+    `${args.input.table}_${args.sourceName}`,
+    `${args.input.schema}_${args.input.table}_${args.sourceName}`,
+    `${args.input.nodeId}_${args.sourceName}`,
+  ].find(
+    (candidate) =>
+      !usedNames.has(candidate) && !usedFieldIds.has(`field:${args.targetNodeId}:${candidate}`)
+  );
+  return name == null
+    ? null
+    : {
+        name,
+        sourceFieldId: args.sourceFieldId,
+        fieldId: `field:${args.targetNodeId}:${name}`,
+      };
+}
+
 export function appendDvtSubstraitInnerJoinInput(
   draft: DvtSubstraitInnerJoinDraft,
   input: DvtSubstraitJoinAppendInput
@@ -1143,6 +1172,22 @@ export function appendDvtSubstraitInnerJoinInput(
     ) {
       return draft;
     }
+    const outputs = projection.outputs.map((output) => ({
+      name: output.name,
+      sourceFieldId: output.source.fieldId,
+      fieldId: output.fieldId,
+    }));
+    for (const field of input.selectedFields) {
+      const output = createCollisionSafeNInputOutput({
+        targetNodeId: projection.targetNodeId,
+        input: input.source,
+        sourceName: field,
+        sourceFieldId: sourceFieldId(input.source.nodeId, field),
+        outputs,
+      });
+      if (output == null) return draft;
+      outputs.push(output);
+    }
     return createDvtSubstraitNInputJoinDraft({
       inputs: [
         ...projection.inputs.map((existing) => ({
@@ -1160,17 +1205,7 @@ export function appendDvtSubstraitInnerJoinInput(
         ...projection.joins,
         { leftSourceFieldId: input.predicate.leftSourceFieldId, rightSourceFieldId },
       ],
-      outputs: [
-        ...projection.outputs.map((output) => ({
-          name: output.name,
-          sourceFieldId: output.source.fieldId,
-          fieldId: output.fieldId,
-        })),
-        ...input.selectedFields.map((field) => ({
-          name: field,
-          sourceFieldId: sourceFieldId(input.source.nodeId, field),
-        })),
-      ],
+      outputs,
       targetNodeId: projection.targetNodeId,
     });
   } catch {
@@ -1409,24 +1444,15 @@ export function applyDvtSubstraitInnerJoinFieldEdit(
         if (outputs.length === 1) return draft;
         outputs = outputs.filter((output) => output.sourceFieldId !== edit.sourceFieldId);
       } else {
-        const usedNames = new Set(outputs.map((output) => output.name));
-        const usedFieldIds = new Set(outputs.map((output) => output.fieldId));
-        const name = [
-          availableField.field.name,
-          `${availableField.input.table}_${availableField.field.name}`,
-          `${availableField.input.schema}_${availableField.input.table}_${availableField.field.name}`,
-          `${availableField.input.nodeId}_${availableField.field.name}`,
-        ].find(
-          (candidate) =>
-            !usedNames.has(candidate) &&
-            !usedFieldIds.has(`field:${projection.targetNodeId}:${candidate}`)
-        );
-        if (name == null) return draft;
-        outputs.push({
-          name,
+        const output = createCollisionSafeNInputOutput({
+          targetNodeId: projection.targetNodeId,
+          input: availableField.input,
+          sourceName: availableField.field.name,
           sourceFieldId: availableField.field.fieldId,
-          fieldId: `field:${projection.targetNodeId}:${name}`,
+          outputs,
         });
+        if (output == null) return draft;
+        outputs.push(output);
       }
     } else if (edit.kind === 'rename') {
       const output = outputs[currentIndex];
