@@ -28,6 +28,10 @@ import {
   encodeDvtSubstraitInnerJoinDocument,
   inspectDvtSubstraitInnerJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
+import {
+  decodeDvtSubstraitUnionAllDocument,
+  encodeDvtSubstraitUnionAllDocument,
+} from './canvasDvtSubstraitSetComposition';
 import { buildDvtSqlTransformMetadata } from './canvasTransformationSqlMirror';
 import type { CanvasInspectorNodeDraftErrorCode } from './canvasInspectorAuthoringErrorCodes';
 
@@ -54,7 +58,7 @@ export type DvtVisualTransformAuthoringMetadata = Readonly<{
 export type DvtSubstraitTransformAuthoringMetadata = Readonly<{
   kind: 'sql_transform';
   mode: typeof DVT_TRANSFORM_AUTHORING_MODE.substrait;
-  shape: 'pilot' | 'inner_join';
+  shape: 'pilot' | 'inner_join' | 'union_all';
   plan: Plan;
   sidecar: DvtSubstraitAuthoringSidecarV1;
 }>;
@@ -263,15 +267,22 @@ function createSqlTransformMetadata(
       };
     }
     const joinDraft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
-    if (!inspectDvtSubstraitInnerJoinDraft(joinDraft).ok) {
-      throw new Error('DVT Substrait authoring metadata uses an unsupported semantic shape.');
+    if (inspectDvtSubstraitInnerJoinDraft(joinDraft).ok) {
+      return {
+        kind: 'sql_transform',
+        mode: authority.mode,
+        shape: 'inner_join',
+        plan: joinDraft.plan,
+        sidecar: joinDraft.sidecar,
+      };
     }
+    const unionAllDraft = decodeDvtSubstraitUnionAllDocument(authority.semanticDocument);
     return {
       kind: 'sql_transform',
       mode: authority.mode,
-      shape: 'inner_join',
-      plan: joinDraft.plan,
-      sidecar: joinDraft.sidecar,
+      shape: 'union_all',
+      plan: unionAllDraft.plan,
+      sidecar: unionAllDraft.sidecar,
     };
   }
   return { kind: 'sql_transform', mode: authority.mode, sql: authority.sql };
@@ -428,7 +439,12 @@ export function applyDvtNodeAuthoringMetadata(
               plan: metadata.plan,
               sidecar: metadata.sidecar,
             })
-          : encodeDvtSubstraitPilotDocument({ plan: metadata.plan, sidecar: metadata.sidecar })
+          : metadata.shape === 'union_all'
+            ? encodeDvtSubstraitUnionAllDocument({
+                plan: metadata.plan,
+                sidecar: metadata.sidecar,
+              })
+            : encodeDvtSubstraitPilotDocument({ plan: metadata.plan, sidecar: metadata.sidecar })
       );
     }
     const transformMetadata = buildDvtSqlTransformMetadata(node, metadata.sql);

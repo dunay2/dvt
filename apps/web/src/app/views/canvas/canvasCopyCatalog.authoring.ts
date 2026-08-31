@@ -545,6 +545,22 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtSubstraitMoveFieldDownLabel',
     fallback: 'Move field down',
   },
+  inspectorDvtSubstraitUnionAllAction: {
+    key: 'canvas.inspector.authoring.dvtSubstraitUnionAllAction',
+    fallback: 'Union all',
+  },
+  inspectorDvtSubstraitUnionAllTitle: {
+    key: 'canvas.inspector.authoring.dvtSubstraitUnionAllTitle',
+    fallback: 'Substrait UNION ALL',
+  },
+  inspectorDvtSubstraitUnionAllInputsLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitUnionAllInputsLabel',
+    fallback: 'Inputs',
+  },
+  inspectorDvtSubstraitUnionAllFieldsLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitUnionAllFieldsLabel',
+    fallback: 'Compatible fields',
+  },
   inspectorDvtSubstraitAggregationTitle: {
     key: 'canvas.inspector.authoring.dvtSubstraitAggregationTitle',
     fallback: 'Grain and summary',

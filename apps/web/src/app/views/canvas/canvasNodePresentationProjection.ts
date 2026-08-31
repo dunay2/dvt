@@ -17,6 +17,10 @@ import {
   inspectDvtSubstraitInnerJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import {
+  decodeDvtSubstraitUnionAllDocument,
+  inspectDvtSubstraitUnionAllDraft,
+} from './canvasDvtSubstraitSetComposition';
+import {
   isObjectFilePostgresNode,
   resolveObjectFilePostgresAuthoringMetadata,
 } from './objectFilePostgresAuthoringModel';
@@ -111,7 +115,14 @@ function projectCanvasNodePresentationTruthInternal(
                 if (joinInspection.ok) {
                   substraitOutputs = joinInspection.projection.outputs;
                 } else {
-                  substraitRejected = true;
+                  const unionAllInspection = inspectDvtSubstraitUnionAllDraft(
+                    decodeDvtSubstraitUnionAllDocument(authority.semanticDocument)
+                  );
+                  if (unionAllInspection.ok) {
+                    substraitOutputs = unionAllInspection.projection.outputs;
+                  } else {
+                    substraitRejected = true;
+                  }
                 }
               }
             }

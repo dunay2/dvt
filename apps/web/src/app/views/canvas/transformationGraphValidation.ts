@@ -19,6 +19,7 @@ import type {
 import { TRANSFORMATION_REQUIRED_NODE_COUNT } from './transformationGraphValidation.types';
 import { resolveEffectiveDvtConnectionRef } from './canvasDvtAuthoringModel';
 import { resolveDvtSubstraitInnerJoinEntry } from './canvasDvtSubstraitJoinComposition';
+import { resolveDvtSubstraitUnionAllEntry } from './canvasDvtSubstraitSetComposition';
 
 export type {
   TransformationGraphValidationResult,
@@ -87,11 +88,22 @@ export function validateTransformationGraph({
           requirePersistedAuthority: true,
         })
       : null;
+    const unionAllEntry =
+      transformNode && joinEntry == null
+        ? resolveDvtSubstraitUnionAllEntry({
+            targetNode: transformNode,
+            nodes: context.scopedNodes,
+            edges: context.scopedEdges,
+            requirePersistedAuthority: true,
+          })
+        : null;
+    const sourceNodeIds = joinEntry
+      ? [joinEntry.left.nodeId, joinEntry.right.nodeId]
+      : unionAllEntry?.inputs.map((input) => input.nodeId);
 
-    if (joinEntry && sinkNode && sourceNodes.length === 2 && context.scopedEdges.length === 3) {
+    if (sourceNodeIds && sinkNode && sourceNodes.length === 2 && context.scopedEdges.length === 3) {
       const expectedEdges = new Set([
-        `${joinEntry.left.nodeId}->${transformNode?.id}`,
-        `${joinEntry.right.nodeId}->${transformNode?.id}`,
+        ...sourceNodeIds.map((nodeId) => `${nodeId}->${transformNode?.id}`),
         `${transformNode?.id}->${sinkNode.id}`,
       ]);
       const actualEdges = new Set(

@@ -440,6 +440,56 @@ describe('DvtAuthoringFields', () => {
     expect(container.querySelector('[data-slot="dvt-start-substrait-inner-join"]')).toBeNull();
   });
 
+  it('starts one typed Substrait UNION ALL from two compatible connected datasets', () => {
+    const north = buildJoinWarehouseSourceNode({
+      id: 'source-customers-north',
+      table: 'customers_north',
+      columns: ['customer_id', 'name', 'country'],
+    });
+    const south = buildJoinWarehouseSourceNode({
+      id: 'source-customers-south',
+      table: 'customers_south',
+      columns: ['customer_id', 'name', 'country'],
+    });
+    const transform = buildDvtNode('dvt:sql_transform');
+    const edges: readonly CanonicalEdge[] = [
+      {
+        id: 'north-transform',
+        sourceId: north.id,
+        targetId: transform.id,
+        relation: 'lineage',
+      },
+      {
+        id: 'south-transform',
+        sourceId: south.id,
+        targetId: transform.id,
+        relation: 'lineage',
+      },
+    ];
+
+    renderFields(transform, undefined, undefined, [north, south, transform], edges, 'code');
+
+    const entry = container.querySelector<HTMLButtonElement>(
+      '[data-slot="dvt-start-substrait-union-all"]'
+    );
+    expect(entry).not.toBeNull();
+    expect(container.querySelector('[data-slot="dvt-start-substrait-inner-join"]')).toBeNull();
+
+    act(() => {
+      fireEvent.keyDown(entry!, { key: 'Enter' });
+    });
+
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-union-all-authoring"]')
+    ).not.toBeNull();
+    expect(container.textContent).toContain('customers_north');
+    expect(container.textContent).toContain('customers_south');
+    expect(container.textContent).toContain('customer_id, name, country');
+    expect(container.querySelector('[data-testid="dvt-transform-sql-editor"]')).toBeNull();
+    expect(draftJson()).toContain('"shape":"union_all"');
+    expect(draftJson()).toContain('"case":"set"');
+  });
+
   it('keeps only the latest governed SQL validation and localizes its diagnostic', async () => {
     vi.useFakeTimers();
     useApplicationLanguageStore.setState({ language: 'es' });

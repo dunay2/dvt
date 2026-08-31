@@ -18,6 +18,11 @@ import {
   inspectDvtSubstraitInnerJoinDraft,
   type DvtSubstraitInnerJoinProjection,
 } from './canvasDvtSubstraitJoinComposition';
+import {
+  decodeDvtSubstraitUnionAllDocument,
+  inspectDvtSubstraitUnionAllDraft,
+  type DvtSubstraitUnionAllProjection,
+} from './canvasDvtSubstraitSetComposition';
 import { readDvtTransformLineageProvenance } from './canvasTransformationSqlMirror';
 
 export type CanvasColumnPortDirection = 'source' | 'target';
@@ -136,6 +141,20 @@ function readSubstraitJoinLineage(node: CanonicalNode): DvtSubstraitInnerJoinPro
     if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return null;
     const inspection = inspectDvtSubstraitInnerJoinDraft(
       decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument)
+    );
+    return inspection.ok ? inspection.projection : null;
+  } catch {
+    return null;
+  }
+}
+
+function readSubstraitUnionAllLineage(node: CanonicalNode): DvtSubstraitUnionAllProjection | null {
+  if (node.pluginId !== 'dvt' || node.kind !== 'dvt:sql_transform') return null;
+  try {
+    const authority = readDvtTransformAuthoringAuthority(node);
+    if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return null;
+    const inspection = inspectDvtSubstraitUnionAllDraft(
+      decodeDvtSubstraitUnionAllDocument(authority.semanticDocument)
     );
     return inspection.ok ? inspection.projection : null;
   } catch {
@@ -320,6 +339,43 @@ export function projectCanvasColumnLineage(args: {
             removable: false,
           })
         );
+      }
+      continue;
+    }
+
+    const substraitUnionAll = readSubstraitUnionAllLineage(model);
+    if (substraitUnionAll != null && args.expandedNodeIds.has(model.id)) {
+      for (const output of substraitUnionAll.outputs) {
+        for (const input of substraitUnionAll.inputs) {
+          const matchingSource = args.edges
+            .filter((edge) => edge.targetId === model.id)
+            .map((edge) => nodeById.get(edge.sourceId))
+            .find((sourceNode) => {
+              if (sourceNode == null || !args.expandedNodeIds.has(sourceNode.id)) return false;
+              const sourceRef = ConnectedSourceRefSchema.safeParse(
+                sourceNode.metadata?.connectedSourceRef
+              );
+              return (
+                sourceRef.success &&
+                sameConnectedSourceRef(sourceRef.data, input.sourceRef) &&
+                readColumns(sourceNode).some((column) => column.name === output.name)
+              );
+            });
+          if (matchingSource == null) continue;
+          projected.push(
+            buildLineageEdge({
+              sourceNodeId: matchingSource.id,
+              sourceColumnName: output.name,
+              sourceColumnId: output.name,
+              targetNodeId: model.id,
+              targetColumnName: output.name,
+              targetColumnId: output.fieldId,
+              outputId: output.fieldId,
+              terminal: false,
+              removable: false,
+            })
+          );
+        }
       }
       continue;
     }

@@ -1,4 +1,4 @@
-/** Owned concern: project only the admitted pilot, grouping/count, row-number window, and INNER JOIN shapes to PostgreSQL. */
+/** Owned concern: project only the admitted pilot, aggregate, window, INNER JOIN, and UNION ALL shapes to PostgreSQL. */
 import { deparse } from 'pgsql-deparser';
 
 import {
@@ -21,6 +21,11 @@ import {
   type DvtSubstraitInnerJoinDraft,
   type DvtSubstraitInnerJoinProjection,
 } from './canvasDvtSubstraitJoinComposition';
+import {
+  inspectDvtSubstraitUnionAllDraft,
+  type DvtSubstraitUnionAllDraft,
+  type DvtSubstraitUnionAllProjection,
+} from './canvasDvtSubstraitSetComposition';
 
 export type DvtSubstraitPostgresProjectionErrorCode =
   'unsupported_shape' | 'invalid_source_binding' | 'deparse_failed';
@@ -374,6 +379,43 @@ function buildInnerJoinPostgresAst(projection: DvtSubstraitInnerJoinProjection):
   };
 }
 
+function requireUnionAllProjection(
+  draft: DvtSubstraitUnionAllDraft
+): DvtSubstraitUnionAllProjection {
+  const inspection = inspectDvtSubstraitUnionAllDraft(draft);
+  if (!inspection.ok) {
+    throw new DvtSubstraitPostgresProjectionError(
+      'unsupported_shape',
+      'PostgreSQL projection supports only the admitted VTX2 two-source UNION ALL.'
+    );
+  }
+  return inspection.projection;
+}
+
+function buildUnionAllInputPostgresAst(
+  input: DvtSubstraitUnionAllProjection['inputs'][number],
+  outputs: DvtSubstraitUnionAllProjection['outputs']
+): PostgresAstNode {
+  return {
+    targetList: outputs.map((output) => ({ ResTarget: { val: pgColumnRef(output.name) } })),
+    fromClause: [pgRangeVar({ schema: input.schema, table: input.table })],
+    limitOption: 'LIMIT_OPTION_DEFAULT',
+    op: 'SETOP_NONE',
+  };
+}
+
+function buildUnionAllPostgresAst(projection: DvtSubstraitUnionAllProjection): PostgresAstNode {
+  return {
+    SelectStmt: {
+      op: 'SETOP_UNION',
+      all: true,
+      larg: buildUnionAllInputPostgresAst(projection.inputs[0], projection.outputs),
+      rarg: buildUnionAllInputPostgresAst(projection.inputs[1], projection.outputs),
+      limitOption: 'LIMIT_OPTION_DEFAULT',
+    },
+  };
+}
+
 async function deparseBoundedPostgresAst(postgresAst: PostgresAstNode): Promise<string> {
   try {
     return await deparse(postgresAst as Parameters<typeof deparse>[0]);
@@ -421,4 +463,10 @@ export async function projectDvtSubstraitInnerJoinToPostgresSql(
   draft: DvtSubstraitInnerJoinDraft
 ): Promise<string> {
   return deparseBoundedPostgresAst(buildInnerJoinPostgresAst(requireInnerJoinProjection(draft)));
+}
+
+export async function projectDvtSubstraitUnionAllToPostgresSql(
+  draft: DvtSubstraitUnionAllDraft
+): Promise<string> {
+  return deparseBoundedPostgresAst(buildUnionAllPostgresAst(requireUnionAllProjection(draft)));
 }

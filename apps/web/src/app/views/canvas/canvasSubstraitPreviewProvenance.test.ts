@@ -1,4 +1,5 @@
 import { sha256HexUtf8 } from '@dvt/crypto';
+import type { ConnectedSourceRef } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import type {
@@ -13,6 +14,10 @@ import {
   createDvtSubstraitInnerJoinDraft,
   encodeDvtSubstraitInnerJoinDocument,
 } from './canvasDvtSubstraitJoinComposition';
+import {
+  createDvtSubstraitUnionAllDraft,
+  encodeDvtSubstraitUnionAllDocument,
+} from './canvasDvtSubstraitSetComposition';
 import {
   applyDvtSubstraitPilotFunction,
   createDvtSubstraitPilotDraft,
@@ -227,6 +232,111 @@ function buildSubstraitJoinPreviewGraph(): ReturnType<typeof buildSubstraitPrevi
   };
 }
 
+function buildSubstraitUnionAllPreviewGraph(): ReturnType<typeof buildSubstraitPreviewGraph> {
+  const transformPath = 'models/all_customers.sql';
+  const connectionRef = buildTestPostgresConnectionRef();
+  const fields = ['customer_id', 'name', 'country'].map((name) => ({
+    name,
+    type: 'string' as const,
+  }));
+  const sourceRef = (table: string): ConnectedSourceRef => ({
+    schemaVersion: 'connected-source-ref.v1' as const,
+    connectionRef,
+    sourceObjectId: `public.${table}`,
+  });
+  const draft = createDvtSubstraitUnionAllDraft({
+    inputs: [
+      {
+        nodeId: 'source-customers-north',
+        schema: 'public',
+        table: 'customers_north',
+        fields,
+        sourceRef: sourceRef('customers_north'),
+      },
+      {
+        nodeId: 'source-customers-south',
+        schema: 'public',
+        table: 'customers_south',
+        fields,
+        sourceRef: sourceRef('customers_south'),
+      },
+    ],
+    targetNodeId: 'transform',
+  });
+  const transform = applyDvtSubstraitSemanticDocument(
+    {
+      id: 'transform',
+      name: 'All customers',
+      pluginId: 'dvt',
+      kind: 'dvt:sql_transform',
+      role: 'transform',
+      status: 'idle',
+      tags: ['authoring'],
+      path: transformPath,
+      metadata: { config: { dialect: 'postgres' } },
+    },
+    encodeDvtSubstraitUnionAllDocument(draft)
+  );
+  const source = (id: string, table: string): CanonicalNode => ({
+    id,
+    name: table,
+    pluginId: 'dvt.warehouse-source',
+    kind: 'dvt:source',
+    role: 'input',
+    status: 'idle',
+    tags: ['source'],
+    metadata: {
+      sourceName: table,
+      schema: 'public',
+      tableName: table,
+      columns: fields,
+      connectedSourceRef: sourceRef(table),
+    },
+  });
+  const sink: CanonicalNode = {
+    id: 'sink',
+    name: 'Sink',
+    pluginId: 'dvt',
+    kind: 'dvt:sink',
+    role: 'output',
+    status: 'idle',
+    tags: ['authoring'],
+    metadata: {
+      config: {
+        schema: 'analytics',
+        table: 'all_customers',
+        materialization: 'table',
+        writeMode: 'replace',
+      },
+    },
+  };
+
+  return {
+    transformPath,
+    nodes: [
+      source('source-customers-north', 'customers_north'),
+      source('source-customers-south', 'customers_south'),
+      transform,
+      sink,
+    ],
+    edges: [
+      {
+        id: 'north-transform',
+        sourceId: 'source-customers-north',
+        targetId: 'transform',
+        relation: 'lineage',
+      },
+      {
+        id: 'south-transform',
+        sourceId: 'source-customers-south',
+        targetId: 'transform',
+        relation: 'lineage',
+      },
+      { id: 'transform-sink', sourceId: 'transform', targetId: 'sink', relation: 'lineage' },
+    ],
+  };
+}
+
 function buildSubstraitAggregatePreviewGraph(): ReturnType<typeof buildSubstraitPreviewGraph> {
   const graph = buildSubstraitPreviewGraph();
   let draft = createDvtSubstraitPilotDraft({
@@ -397,6 +507,20 @@ describe('Substrait Preview provenance cutover', () => {
     const normalized = result.sqlText?.replaceAll(/\s+/g, ' ').trim().toLowerCase();
     expect(normalized).toMatch(
       /^select left_source\.customer_id as customer_id, left_source\.name as name, right_source\.order_id as order_id from public\.customers as left_source join public\.orders as right_source on left_source\.customer_id = right_source\.customer_id;?$/
+    );
+    expect(savedContents).toContain(result.sqlText);
+  });
+
+  it('routes the two-source UNION ALL revision through the existing Preview artifact rail', async () => {
+    const graph = buildSubstraitUnionAllPreviewGraph();
+
+    const { result, savedContents } = await resolveGraphPreview(graph);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error(result.message);
+    const normalized = result.sqlText?.replaceAll(/\s+/g, ' ').trim().toLowerCase();
+    expect(normalized).toMatch(
+      /^select customer_id, name, country from public\.customers_north union all select customer_id, name, country from public\.customers_south;?$/
     );
     expect(savedContents).toContain(result.sqlText);
   });

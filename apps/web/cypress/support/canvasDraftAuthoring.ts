@@ -12,6 +12,7 @@ import {
   buildDraftReadOkResponse,
   buildDraftSaveSavedResponse,
 } from '../../src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures';
+import type { CanonicalNode } from '../../src/app/types/canonical';
 import {
   createDvtSubstraitInnerJoinDraft,
   encodeDvtSubstraitInnerJoinDocument,
@@ -40,6 +41,7 @@ export type StubCanvasDraftReadOptions = {
   columnMapping?: boolean;
   columnMappingDisconnected?: boolean;
   substraitInnerJoin?: boolean;
+  substraitUnionAll?: boolean;
   substraitPilot?: boolean;
   title?: string;
   readOnly?: boolean;
@@ -65,6 +67,7 @@ export function buildCanvasAuthoringDraft({
   columnMapping = false,
   columnMappingDisconnected = false,
   substraitInnerJoin = false,
+  substraitUnionAll = false,
   substraitPilot = false,
   title,
   largeGraph = false,
@@ -86,6 +89,72 @@ export function buildCanvasAuthoringDraft({
       nodePositions: {},
       nodes: [],
       edges: [],
+    });
+  }
+
+  if (substraitUnionAll) {
+    const connectionRef = {
+      schemaVersion: 'connection-ref.v1' as const,
+      connectionId: 'warehouse-a',
+      provider: 'postgres' as const,
+    };
+    const fields = ['customer_id', 'name', 'country'];
+    const source = (id: string, table: string): CanonicalNode => ({
+      id,
+      name: table,
+      pluginId: 'dvt',
+      kind: 'dvt:source',
+      role: 'input' as const,
+      status: 'idle' as const,
+      tags: ['source'],
+      metadata: {
+        sourceName: table,
+        schema: 'public',
+        tableName: table,
+        columns: fields.map((name) => ({ name, type: 'string' })),
+        connectedSourceRef: {
+          schemaVersion: 'connected-source-ref.v1' as const,
+          connectionRef,
+          sourceObjectId: `public.${table}`,
+        },
+      },
+    });
+    return buildWorkspaceGraphAuthoringDraft({
+      canvas,
+      nodeIds: ['source-customers-north', 'source-customers-south', 'union-transform'],
+      nodePositions: {
+        'source-customers-north': { x: 40, y: 100 },
+        'source-customers-south': { x: 40, y: 340 },
+        'union-transform': { x: 420, y: 220 },
+      },
+      nodes: [
+        source('source-customers-north', 'customers_north'),
+        source('source-customers-south', 'customers_south'),
+        {
+          id: 'union-transform',
+          name: 'All customers',
+          pluginId: 'dvt',
+          kind: 'dvt:sql_transform',
+          role: 'transform',
+          status: 'idle',
+          tags: ['authoring'],
+          metadata: {},
+        },
+      ],
+      edges: [
+        {
+          id: 'north-union',
+          sourceId: 'source-customers-north',
+          targetId: 'union-transform',
+          relation: 'lineage',
+        },
+        {
+          id: 'south-union',
+          sourceId: 'source-customers-south',
+          targetId: 'union-transform',
+          relation: 'lineage',
+        },
+      ],
     });
   }
 

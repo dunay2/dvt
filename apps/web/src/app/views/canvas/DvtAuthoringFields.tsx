@@ -16,11 +16,16 @@ import {
   createDvtSubstraitInnerJoinDraft,
   resolveDvtSubstraitInnerJoinEntry,
 } from './canvasDvtSubstraitJoinComposition';
+import {
+  createDvtSubstraitUnionAllDraft,
+  resolveDvtSubstraitUnionAllEntry,
+} from './canvasDvtSubstraitSetComposition';
 import { DvtSinkAuthoringSection } from './DvtSinkAuthoringSection';
 import { DvtSourceAuthoringSection } from './DvtSourceAuthoringSection';
 import { DvtSqlTransformAuthoringSection } from './DvtSqlTransformAuthoringSection';
 import { DvtSubstraitPilotAuthoringSection } from './DvtSubstraitPilotAuthoringSection';
 import { DvtSubstraitInnerJoinAuthoringSection } from './DvtSubstraitInnerJoinAuthoringSection';
+import { DvtSubstraitUnionAllAuthoringSection } from './DvtSubstraitUnionAllAuthoringSection';
 import { DvtVisualTransformRecipeAuthoringSection } from './DvtVisualTransformRecipeAuthoringSection';
 
 type DvtAuthoringFieldsProps = Readonly<{
@@ -81,13 +86,19 @@ export function DvtAuthoringFields({
       if (section !== 'all' && section !== 'columns' && section !== 'code') {
         return null;
       }
-      return draft.dvt.shape === 'inner_join' ? (
-        <DvtSubstraitInnerJoinAuthoringSection
-          disabled={disabled}
-          draft={draft.dvt}
-          onChange={onChange}
-        />
-      ) : (
+      if (draft.dvt.shape === 'inner_join') {
+        return (
+          <DvtSubstraitInnerJoinAuthoringSection
+            disabled={disabled}
+            draft={draft.dvt}
+            onChange={onChange}
+          />
+        );
+      }
+      if (draft.dvt.shape === 'union_all') {
+        return <DvtSubstraitUnionAllAuthoringSection draft={draft.dvt} />;
+      }
+      return (
         <DvtSubstraitPilotAuthoringSection
           disabled={disabled}
           draft={draft.dvt}
@@ -124,6 +135,10 @@ export function DvtAuthoringFields({
     const innerJoinEntry =
       draft.dvt.sql.trim().length === 0
         ? resolveDvtSubstraitInnerJoinEntry({ targetNode: node, nodes, edges })
+        : null;
+    const unionAllEntry =
+      draft.dvt.sql.trim().length === 0
+        ? resolveDvtSubstraitUnionAllEntry({ targetNode: node, nodes, edges })
         : null;
     return (
       <DvtSqlTransformAuthoringSection
@@ -187,6 +202,36 @@ export function DvtAuthoringFields({
                       shape: 'inner_join',
                       plan: join.plan,
                       sidecar: join.sidecar,
+                    },
+                  };
+                })
+        }
+        substraitUnionAllSummary={
+          unionAllEntry == null
+            ? undefined
+            : `${unionAllEntry.inputs[0].table} + ${unionAllEntry.inputs[1].table} · ${unionAllEntry.inputs[0].fields.length} fields`
+        }
+        onStartSubstraitUnionAll={
+          unionAllEntry == null
+            ? undefined
+            : () =>
+                onChange((currentDraft) => {
+                  if (
+                    currentDraft.dvt?.kind !== 'sql_transform' ||
+                    currentDraft.dvt.mode !== DVT_TRANSFORM_AUTHORING_MODE.sql ||
+                    currentDraft.dvt.sql.trim().length > 0
+                  ) {
+                    return currentDraft;
+                  }
+                  const unionAll = createDvtSubstraitUnionAllDraft(unionAllEntry);
+                  return {
+                    ...currentDraft,
+                    dvt: {
+                      kind: 'sql_transform',
+                      mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
+                      shape: 'union_all',
+                      plan: unionAll.plan,
+                      sidecar: unionAll.sidecar,
                     },
                   };
                 })

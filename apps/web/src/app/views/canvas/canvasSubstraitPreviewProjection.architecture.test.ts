@@ -17,6 +17,10 @@ const SUBSTRAIT_WINDOW_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasDvtSubstraitWindow.ts'
 );
+const SUBSTRAIT_SET_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasDvtSubstraitSetComposition.ts'
+);
 const SUBSTRAIT_AUTHORING_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'DvtSubstraitPilotAuthoringSection.tsx'
@@ -33,13 +37,25 @@ describe('VTX2 Substrait Preview cutover architecture', () => {
     expect(PREVIEW_PROVENANCE_SOURCE).toContain('projectDvtSubstraitPilotWindowToPostgresSql(');
     expect(PREVIEW_PROVENANCE_SOURCE).toContain('decodeDvtSubstraitInnerJoinDocument(');
     expect(PREVIEW_PROVENANCE_SOURCE).toContain('projectDvtSubstraitInnerJoinToPostgresSql(');
+    expect(PREVIEW_PROVENANCE_SOURCE).toContain('decodeDvtSubstraitUnionAllDocument(');
+    expect(PREVIEW_PROVENANCE_SOURCE).toContain('projectDvtSubstraitUnionAllToPostgresSql(');
     expect(PREVIEW_PROVENANCE_SOURCE).toContain('compileDvtVisualTransformNodeToPostgresSql(');
     expect(SUBSTRAIT_POSTGRES_PROJECTION_SOURCE).toContain(
-      'project only the admitted pilot, grouping/count, row-number window, and INNER JOIN shapes to PostgreSQL'
+      'project only the admitted pilot, aggregate, window, INNER JOIN, and UNION ALL shapes to PostgreSQL'
     );
     expect(PREVIEW_PROVENANCE_SOURCE).not.toContain('SubstraitPreviewService');
     expect(PREVIEW_PROVENANCE_SOURCE).not.toContain('localStorage');
     expect(PREVIEW_PROVENANCE_SOURCE).not.toContain('dbt');
+  });
+
+  it('resolves UNION ALL from SetRel without a private relation or runtime taxonomy', () => {
+    expect(SUBSTRAIT_SET_SOURCE).toContain('DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1');
+    expect(SUBSTRAIT_SET_SOURCE).toContain("message: 'substrait.SetRel'");
+    expect(SUBSTRAIT_SET_SOURCE).toContain("selector: 'SetOp.SET_OP_UNION_ALL'");
+    expect(SUBSTRAIT_SET_SOURCE).toContain('SetRel_SetOp.UNION_ALL');
+    expect(SUBSTRAIT_SET_SOURCE).not.toContain('UnionNode');
+    expect(SUBSTRAIT_SET_SOURCE).not.toContain('UnionStep');
+    expect(SUBSTRAIT_SET_SOURCE).not.toContain('DvtSetRel');
   });
 
   it('resolves grouping semantics from the admitted catalog without a Web function registry', () => {
