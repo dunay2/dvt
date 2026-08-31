@@ -294,8 +294,13 @@ async function buildAuthoringPreviewSql({
       });
     }
     if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+      const scopedNodes = resolveScopedTransformationNodes(canonicalNodes, scopedNodeIds);
+      const source = requireSourcePayload(scopedNodes.source);
       const draft = decodeDvtSubstraitPilotDocument(authority.semanticDocument);
-      const sql = await projectDvtSubstraitPilotToPostgresSql(draft);
+      const sql = await projectDvtSubstraitPilotToPostgresSql(draft, {
+        schema: source.payload.schema,
+        table: source.payload.table,
+      });
       return sql.endsWith('\n') ? sql : `${sql}\n`;
     }
   }

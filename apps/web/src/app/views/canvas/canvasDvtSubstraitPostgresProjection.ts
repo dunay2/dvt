@@ -7,7 +7,13 @@ import {
   type DvtSubstraitPilotProjection,
 } from './canvasDvtSubstraitPilot';
 
-export type DvtSubstraitPostgresProjectionErrorCode = 'unsupported_shape' | 'deparse_failed';
+export type DvtSubstraitPostgresProjectionErrorCode =
+  'unsupported_shape' | 'invalid_source_binding' | 'deparse_failed';
+
+export type DvtSubstraitPostgresSourceBinding = Readonly<{
+  schema: string;
+  table: string;
+}>;
 
 export class DvtSubstraitPostgresProjectionError extends Error {
   constructor(
@@ -44,9 +50,7 @@ function pgFunction(name: 'trim' | 'upper', argument: PostgresAstNode): Postgres
   };
 }
 
-function requireFinalPilotProjection(
-  draft: DvtSubstraitPilotDraft
-): DvtSubstraitPilotProjection {
+function requireFinalPilotProjection(draft: DvtSubstraitPilotDraft): DvtSubstraitPilotProjection {
   const inspection = inspectDvtSubstraitPilotDraft(draft);
   if (!inspection.ok || inspection.projection.operations.join(',') !== 'trim,upper') {
     throw new DvtSubstraitPostgresProjectionError(
@@ -57,7 +61,25 @@ function requireFinalPilotProjection(
   return inspection.projection;
 }
 
-function buildPilotPostgresAst(projection: DvtSubstraitPilotProjection): PostgresAstNode {
+function requirePhysicalSourceBinding(
+  sourceBinding: DvtSubstraitPostgresSourceBinding
+): DvtSubstraitPostgresSourceBinding {
+  const schema = sourceBinding.schema.trim();
+  const table = sourceBinding.table.trim();
+  if (!schema || !table) {
+    throw new DvtSubstraitPostgresProjectionError(
+      'invalid_source_binding',
+      'PostgreSQL projection requires one complete physical source binding.'
+    );
+  }
+  return { schema, table };
+}
+
+function buildPilotPostgresAst(
+  projection: DvtSubstraitPilotProjection,
+  sourceBinding?: DvtSubstraitPostgresSourceBinding
+): PostgresAstNode {
+  const physicalSource = sourceBinding == null ? null : requirePhysicalSourceBinding(sourceBinding);
   const transformedInput = pgFunction(
     'upper',
     pgFunction('trim', pgColumnRef(projection.inputFieldName))
@@ -82,7 +104,8 @@ function buildPilotPostgresAst(projection: DvtSubstraitPilotProjection): Postgre
       fromClause: [
         {
           RangeVar: {
-            relname: projection.sourceName,
+            ...(physicalSource == null ? {} : { schemaname: physicalSource.schema }),
+            relname: physicalSource?.table ?? projection.sourceName,
             inh: true,
             relpersistence: 'p',
           },
@@ -99,10 +122,11 @@ function buildPilotPostgresAst(projection: DvtSubstraitPilotProjection): Postgre
  * shape fails closed until a second real use case earns a larger projection.
  */
 export async function projectDvtSubstraitPilotToPostgresSql(
-  draft: DvtSubstraitPilotDraft
+  draft: DvtSubstraitPilotDraft,
+  sourceBinding?: DvtSubstraitPostgresSourceBinding
 ): Promise<string> {
   const projection = requireFinalPilotProjection(draft);
-  const postgresAst = buildPilotPostgresAst(projection);
+  const postgresAst = buildPilotPostgresAst(projection, sourceBinding);
   try {
     return await deparse(postgresAst as Parameters<typeof deparse>[0]);
   } catch (error) {

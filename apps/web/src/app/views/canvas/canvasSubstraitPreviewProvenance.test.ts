@@ -1,7 +1,11 @@
 import { sha256HexUtf8 } from '@dvt/crypto';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { SaveWorkspaceFileContentInput } from '../../ports/workspace';
+import type {
+  IWorkspaceFileContentCommandPort,
+  IWorkspaceFilesQueryPort,
+  SaveWorkspaceFileContentInput,
+} from '../../ports/workspace';
 import { WorkspaceFileLoadError } from '../../services/workspace/workspaceErrors';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
@@ -14,7 +18,33 @@ import {
 import { resolvePreviewProvenance } from './canvasPreviewProvenance';
 import { buildTestPostgresConnectionRef } from './useCanvasExecutionActions.test.support';
 
-function buildSubstraitPreviewGraph(outputName = 'customer_name'): {
+type SubstraitPreviewSourceBinding = Readonly<{
+  schema: string;
+  table: string;
+  alias: string;
+}>;
+
+type SubstraitPreviewWorkspacePorts = Readonly<{
+  workspaceFilesQuery: IWorkspaceFilesQueryPort;
+  workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
+  savedContents: string[];
+}>;
+
+type ResolveGraphPreviewResult = SubstraitPreviewWorkspacePorts &
+  Readonly<{
+    result: Awaited<ReturnType<typeof resolvePreviewProvenance>>;
+  }>;
+
+const DEFAULT_SOURCE_BINDING: SubstraitPreviewSourceBinding = {
+  schema: 'public',
+  table: 'customers',
+  alias: 'customers',
+};
+
+function buildSubstraitPreviewGraph(
+  outputName = 'customer_name',
+  sourceBinding: SubstraitPreviewSourceBinding = DEFAULT_SOURCE_BINDING
+): {
   nodes: CanonicalNode[];
   edges: CanonicalEdge[];
   transformPath: string;
@@ -56,7 +86,7 @@ function buildSubstraitPreviewGraph(outputName = 'customer_name'): {
         tags: [],
         metadata: {
           connectionRef: buildTestPostgresConnectionRef(),
-          config: { schema: 'public', table: 'customers', alias: 'customers' },
+          config: sourceBinding,
         },
       },
       transform,
@@ -85,7 +115,10 @@ function buildSubstraitPreviewGraph(outputName = 'customer_name'): {
   };
 }
 
-function buildWorkspacePorts(transformPath: string, staleSql?: string) {
+function buildWorkspacePorts(
+  transformPath: string,
+  staleSql?: string
+): SubstraitPreviewWorkspacePorts {
   const savedContents: string[] = [];
   const workspaceFilesQuery = {
     listFiles: vi.fn(async () => []),
@@ -108,7 +141,10 @@ function buildWorkspacePorts(transformPath: string, staleSql?: string) {
       savedContents.push(input.content);
       return {
         kind: 'saved' as const,
-        disposition: staleSql !== undefined && input.path === transformPath ? ('updated' as const) : ('created' as const),
+        disposition:
+          staleSql !== undefined && input.path === transformPath
+            ? ('updated' as const)
+            : ('created' as const),
         path: input.path,
         contentSha256: sha256HexUtf8(input.content),
         lastModified: '2026-08-28T00:00:00Z',
@@ -121,7 +157,7 @@ function buildWorkspacePorts(transformPath: string, staleSql?: string) {
 async function resolveGraphPreview(
   graph: ReturnType<typeof buildSubstraitPreviewGraph>,
   staleSql?: string
-) {
+): Promise<ResolveGraphPreviewResult> {
   const ports = buildWorkspacePorts(graph.transformPath, staleSql);
   const result = await resolvePreviewProvenance({
     canonicalNodes: graph.nodes,
@@ -156,7 +192,7 @@ describe('Substrait Preview provenance cutover', () => {
     if (!result.ok) throw new Error(result.message);
     const normalized = result.sqlText?.replaceAll(/\s+/g, ' ').trim().toLowerCase();
     expect(normalized).toMatch(
-      /^select upper\(trim\(name\)\) as customer_name, email, country from customers;?$/
+      /^select upper\(trim\(name\)\) as customer_name, email, country from public\.customers;?$/
     );
     expect(result.sqlText).not.toBe(staleSql);
     expect(workspaceFileContentCommand.saveFileContent).toHaveBeenCalledWith(
@@ -178,5 +214,20 @@ describe('Substrait Preview provenance cutover', () => {
     expect(second.result.sqlText).toContain('customer_name_v2');
     expect(second.result.sqlText).not.toBe(first.result.sqlText);
     expect(second.savedContents.some((content) => content.includes('customer_name_v2'))).toBe(true);
+  });
+
+  it('binds generated SQL to the scoped PostgreSQL schema and table', async () => {
+    const graph = buildSubstraitPreviewGraph('customer_name', {
+      schema: 'tenant-data',
+      table: 'customer-ledger',
+      alias: 'customers',
+    });
+
+    const { result } = await resolveGraphPreview(graph);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error(result.message);
+    expect(result.sqlText?.toLowerCase()).toContain('from "tenant-data"."customer-ledger"');
+    expect(result.sqlText?.toLowerCase()).not.toMatch(/from customers;?\s*$/);
   });
 });
