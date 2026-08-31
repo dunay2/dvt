@@ -28,6 +28,8 @@ import {
   resolveExecutableSqlText,
 } from './canvasTransformationSqlMirror';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import { decodeDvtSubstraitPilotDocument } from './canvasDvtSubstraitPilot';
+import { projectDvtSubstraitPilotToPostgresSql } from './canvasDvtSubstraitPostgresProjection';
 import { compileDvtVisualTransformNodeToPostgresSql } from './canvasVisualTransformSql';
 
 export type PreviewProvenanceResolution =
@@ -120,7 +122,10 @@ function resolveTransformArtifactSource(
   const workspacePath = normalizeNonBlankString(transformNode.path);
   if (transformNode.pluginId === 'dvt' && transformNode.kind === 'dvt:sql_transform') {
     const authority = readDvtTransformAuthoringAuthority(transformNode);
-    if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
+    if (
+      authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual ||
+      authority.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait
+    ) {
       return {
         kind: 'authoring-generated',
         node: transformNode,
@@ -244,7 +249,7 @@ async function resolvePreviewSqlArtifact(args: {
     }
   }
 
-  const sqlText = buildAuthoringPreviewSql({
+  const sqlText = await buildAuthoringPreviewSql({
     transformNode: transformArtifactSource.node,
     canonicalNodes: args.canonicalNodes,
     scopedNodeIds: args.scopedNodeIds,
@@ -270,7 +275,7 @@ async function resolvePreviewSqlArtifact(args: {
   };
 }
 
-function buildAuthoringPreviewSql({
+async function buildAuthoringPreviewSql({
   transformNode,
   canonicalNodes,
   scopedNodeIds,
@@ -278,7 +283,7 @@ function buildAuthoringPreviewSql({
   transformNode: CanonicalNode;
   canonicalNodes: readonly CanonicalNode[];
   scopedNodeIds: readonly string[];
-}): string {
+}): Promise<string> {
   if (transformNode.pluginId === 'dvt' && transformNode.kind === 'dvt:sql_transform') {
     const authority = readDvtTransformAuthoringAuthority(transformNode);
     if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
@@ -287,6 +292,16 @@ function buildAuthoringPreviewSql({
         transformNode,
         sourceNode: scopedNodes.source,
       });
+    }
+    if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+      const scopedNodes = resolveScopedTransformationNodes(canonicalNodes, scopedNodeIds);
+      const source = requireSourcePayload(scopedNodes.source);
+      const draft = decodeDvtSubstraitPilotDocument(authority.semanticDocument);
+      const sql = await projectDvtSubstraitPilotToPostgresSql(draft, {
+        schema: source.payload.schema,
+        table: source.payload.table,
+      });
+      return sql.endsWith('\n') ? sql : `${sql}\n`;
     }
   }
 

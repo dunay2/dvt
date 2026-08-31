@@ -62,4 +62,15 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       code: 'unsupported_shape',
     });
   });
+
+  it('fails closed when a physical source binding is incomplete', async () => {
+    await expect(
+      projectDvtSubstraitPilotToPostgresSql(completedPilotDraft(), {
+        schema: ' ',
+        table: 'customers',
+      })
+    ).rejects.toMatchObject({
+      code: 'invalid_source_binding',
+    });
+  });
 });
