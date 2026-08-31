@@ -25,6 +25,7 @@ import {
   renameDvtSubstraitPilotOutput,
 } from './canvasDvtSubstraitPilot';
 import { applyDvtSubstraitPilotAggregation } from './canvasDvtSubstraitAggregation';
+import { applyDvtSubstraitPilotAggregateRowNumber } from './canvasDvtSubstraitAggregateWindow';
 import { applyDvtSubstraitPilotRowNumber } from './canvasDvtSubstraitWindow';
 import { resolvePreviewProvenance } from './canvasPreviewProvenance';
 import { buildTestPostgresConnectionRef } from './useCanvasExecutionActions.test.support';
@@ -357,6 +358,29 @@ function buildSubstraitAggregatePreviewGraph(): ReturnType<typeof buildSubstrait
   return graph;
 }
 
+function buildSubstraitAggregateWindowPreviewGraph(): ReturnType<
+  typeof buildSubstraitPreviewGraph
+> {
+  const graph = buildSubstraitPreviewGraph();
+  let draft = createDvtSubstraitPilotDraft({
+    sourceNodeId: 'source',
+    targetNodeId: 'transform',
+  });
+  draft = applyDvtSubstraitPilotAggregation(draft, {
+    groupFieldId: 'field:transform:country',
+    countOutputName: 'customer_count',
+  });
+  draft = applyDvtSubstraitPilotAggregateRowNumber(draft, { outputName: 'count_rank' });
+  const transformIndex = graph.nodes.findIndex((node) => node.id === 'transform');
+  const transform = graph.nodes[transformIndex];
+  if (transform == null) throw new Error('Expected transform fixture.');
+  graph.nodes[transformIndex] = applyDvtSubstraitSemanticDocument(
+    transform,
+    encodeDvtSubstraitPilotDocument(draft)
+  );
+  return graph;
+}
+
 function buildSubstraitWindowPreviewGraph(): ReturnType<typeof buildSubstraitPreviewGraph> {
   const graph = buildSubstraitPreviewGraph();
   let draft = createDvtSubstraitPilotDraft({
@@ -535,6 +559,20 @@ describe('Substrait Preview provenance cutover', () => {
     const normalized = result.sqlText?.replaceAll(/\s+/g, ' ').trim().toLowerCase();
     expect(normalized).toMatch(
       /^select country as country, count\(\*\) as customer_count from public\.customers group by country;?$/
+    );
+    expect(savedContents).toContain(result.sqlText);
+  });
+
+  it('routes the grouped-and-ranked revision through the existing Preview artifact rail', async () => {
+    const { result, savedContents } = await resolveGraphPreview(
+      buildSubstraitAggregateWindowPreviewGraph()
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error(result.message);
+    const normalized = result.sqlText?.replaceAll(/\s+/g, ' ').trim().toLowerCase();
+    expect(normalized).toMatch(
+      /^select country as country, count\(\*\) as customer_count, row_number\(\) over \( ?order by count\(\*\) desc nulls last, country asc nulls last ?\) as count_rank from public\.customers group by country;?$/
     );
     expect(savedContents).toContain(result.sqlText);
   });

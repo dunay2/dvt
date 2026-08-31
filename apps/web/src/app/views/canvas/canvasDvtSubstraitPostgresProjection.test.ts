@@ -9,12 +9,14 @@ import {
 import {
   DvtSubstraitPostgresProjectionError,
   projectDvtSubstraitPilotAggregationToPostgresSql,
+  projectDvtSubstraitPilotAggregateWindowToPostgresSql,
   projectDvtSubstraitPilotWindowToPostgresSql,
   projectDvtSubstraitInnerJoinToPostgresSql,
   projectDvtSubstraitPilotToPostgresSql,
   projectDvtSubstraitUnionAllToPostgresSql,
 } from './canvasDvtSubstraitPostgresProjection';
 import { applyDvtSubstraitPilotAggregation } from './canvasDvtSubstraitAggregation';
+import { applyDvtSubstraitPilotAggregateRowNumber } from './canvasDvtSubstraitAggregateWindow';
 import { applyDvtSubstraitPilotRowNumber } from './canvasDvtSubstraitWindow';
 import {
   applyDvtSubstraitInnerJoinFieldEdit,
@@ -120,6 +122,29 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
 
     expect(normalized).toMatch(
       /^select upper\(trim\(name\)\) as customer_name, email, country, row_number\(\) over \( ?partition by country order by name asc nulls last ?\) as country_row_number from public\.customers;?$/
+    );
+  });
+
+  it('projects grouped rows ranked globally by their count from one Substrait revision', async () => {
+    const grouped = applyDvtSubstraitPilotAggregation(
+      createDvtSubstraitPilotDraft({
+        sourceNodeId: 'source-customers',
+        targetNodeId: 'transform-customers',
+      }),
+      { groupFieldId: 'field:transform-customers:country', countOutputName: 'customer_count' }
+    );
+    const ranked = applyDvtSubstraitPilotAggregateRowNumber(grouped, {
+      outputName: 'count_rank',
+    });
+
+    const sql = await projectDvtSubstraitPilotAggregateWindowToPostgresSql(ranked, {
+      schema: 'public',
+      table: 'customers',
+    });
+    const normalized = sql.replaceAll(/\s+/g, ' ').trim().toLowerCase();
+
+    expect(normalized).toMatch(
+      /^select country as country, count\(\*\) as customer_count, row_number\(\) over \( ?order by count\(\*\) desc nulls last, country asc nulls last ?\) as count_rank from public\.customers group by country;?$/
     );
   });
 

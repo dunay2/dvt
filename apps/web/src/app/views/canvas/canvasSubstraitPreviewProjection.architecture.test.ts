@@ -17,6 +17,10 @@ const SUBSTRAIT_WINDOW_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasDvtSubstraitWindow.ts'
 );
+const SUBSTRAIT_AGGREGATE_WINDOW_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasDvtSubstraitAggregateWindow.ts'
+);
 const SUBSTRAIT_SET_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasDvtSubstraitSetComposition.ts'
@@ -34,6 +38,9 @@ describe('VTX2 Substrait Preview cutover architecture', () => {
     expect(PREVIEW_PROVENANCE_SOURCE).toContain(
       'projectDvtSubstraitPilotAggregationToPostgresSql('
     );
+    expect(PREVIEW_PROVENANCE_SOURCE).toContain(
+      'projectDvtSubstraitPilotAggregateWindowToPostgresSql('
+    );
     expect(PREVIEW_PROVENANCE_SOURCE).toContain('projectDvtSubstraitPilotWindowToPostgresSql(');
     expect(PREVIEW_PROVENANCE_SOURCE).toContain('decodeDvtSubstraitInnerJoinDocument(');
     expect(PREVIEW_PROVENANCE_SOURCE).toContain('projectDvtSubstraitInnerJoinToPostgresSql(');
@@ -41,7 +48,7 @@ describe('VTX2 Substrait Preview cutover architecture', () => {
     expect(PREVIEW_PROVENANCE_SOURCE).toContain('projectDvtSubstraitUnionAllToPostgresSql(');
     expect(PREVIEW_PROVENANCE_SOURCE).toContain('compileDvtVisualTransformNodeToPostgresSql(');
     expect(SUBSTRAIT_POSTGRES_PROJECTION_SOURCE).toContain(
-      'project only the admitted pilot, aggregate, window, INNER JOIN, and UNION ALL shapes to PostgreSQL'
+      'project only the admitted pilot, aggregate/window, Join and Set shapes to PostgreSQL'
     );
     expect(PREVIEW_PROVENANCE_SOURCE).not.toContain('SubstraitPreviewService');
     expect(PREVIEW_PROVENANCE_SOURCE).not.toContain('localStorage');
@@ -83,5 +90,18 @@ describe('VTX2 Substrait Preview cutover architecture', () => {
     expect(SUBSTRAIT_AUTHORING_SOURCE).toContain('windowInspection.projection.result.capabilityId');
     expect(SUBSTRAIT_AUTHORING_SOURCE).not.toMatch(/enum\s+.*(?:Window|Function)/);
     expect(SUBSTRAIT_WINDOW_SOURCE).not.toContain('DvtWindow');
+  });
+
+  it('composes aggregate and window relations without a parallel semantic model', () => {
+    expect(SUBSTRAIT_AGGREGATE_WINDOW_SOURCE).toContain('ProjectRelSchema');
+    expect(SUBSTRAIT_AGGREGATE_WINDOW_SOURCE).toContain('inspectDvtSubstraitPilotAggregationDraft');
+    expect(SUBSTRAIT_AGGREGATE_WINDOW_SOURCE).toContain('DVT_SUBSTRAIT_ROW_NUMBER_CAPABILITY_ID');
+    expect(SUBSTRAIT_AGGREGATE_WINDOW_SOURCE).toContain('isDvtSubstraitRowNumberFunction');
+    expect(SUBSTRAIT_AUTHORING_SOURCE).toContain(
+      'aggregateWindowInspection.projection.result.capabilityId'
+    );
+    expect(SUBSTRAIT_AGGREGATE_WINDOW_SOURCE).not.toMatch(
+      /(?:DvtAggregateWindow|AggregateWindowNode|AggregateWindowStep)/
+    );
   });
 });

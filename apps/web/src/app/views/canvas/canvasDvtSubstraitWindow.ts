@@ -39,11 +39,14 @@ import {
 
 const ROW_NUMBER_URN = 'extension:io.substrait:functions_arithmetic';
 const ROW_NUMBER_NAME = 'row_number';
-const ROW_NUMBER_CAPABILITY_ID = buildDvtSubstraitStandardCapabilityId('window-function', {
-  sourceKind: 'simple-extension',
-  urn: ROW_NUMBER_URN,
-  name: 'row_number',
-});
+export const DVT_SUBSTRAIT_ROW_NUMBER_CAPABILITY_ID = buildDvtSubstraitStandardCapabilityId(
+  'window-function',
+  {
+    sourceKind: 'simple-extension',
+    urn: ROW_NUMBER_URN,
+    name: 'row_number',
+  }
+);
 
 type WindowFieldProjection = Readonly<{
   name: string;
@@ -112,7 +115,7 @@ function readFieldReferenceOrdinal(expression: Expression | undefined): number |
   return segment.value.field;
 }
 
-function nullableI64Type() {
+export function createDvtSubstraitNullableI64Type() {
   return create(TypeSchema, {
     kind: {
       case: 'i64',
@@ -135,7 +138,7 @@ function requireWindowCapabilities(): void {
       message: 'substrait.Expression',
       selector: 'rex_type.window_function',
     }),
-    ROW_NUMBER_CAPABILITY_ID,
+    DVT_SUBSTRAIT_ROW_NUMBER_CAPABILITY_ID,
     buildDvtSubstraitStandardCapabilityId('type', {
       sourceKind: 'core',
       message: 'substrait.Type',
@@ -154,7 +157,7 @@ function requireWindowCapabilities(): void {
   }
 }
 
-function ensureRowNumberFunction(plan: Plan): number {
+export function ensureDvtSubstraitRowNumberFunction(plan: Plan): number {
   requireWindowCapabilities();
   const existing = plan.extensions.find(
     (entry) =>
@@ -199,7 +202,10 @@ function ensureRowNumberFunction(plan: Plan): number {
   return functionAnchor;
 }
 
-function isExactRowNumberFunction(plan: Plan, fn: Expression_WindowFunction): boolean {
+export function isDvtSubstraitRowNumberFunction(
+  plan: Plan,
+  fn: Expression_WindowFunction
+): boolean {
   if (
     fn.arguments.length !== 0 ||
     fn.options.length !== 0 ||
@@ -207,18 +213,9 @@ function isExactRowNumberFunction(plan: Plan, fn: Expression_WindowFunction): bo
     fn.outputType.kind.value.nullability !== Type_Nullability.NULLABLE ||
     fn.phase !== AggregationPhase.INITIAL_TO_RESULT ||
     fn.invocation !== AggregateFunction_AggregationInvocation.ALL ||
-    fn.partitions.length !== 1 ||
-    fn.sorts.length !== 1 ||
     fn.boundsType !== Expression_WindowFunction_BoundsType.UNSPECIFIED ||
     fn.lowerBound != null ||
     fn.upperBound != null
-  ) {
-    return false;
-  }
-  const sort = fn.sorts[0];
-  if (
-    sort?.sortKind.case !== 'direction' ||
-    sort.sortKind.value !== SortField_SortDirection.ASC_NULLS_LAST
   ) {
     return false;
   }
@@ -248,7 +245,7 @@ function parseTargetId(projectRelationId: string): string | null {
   return match?.[1] ?? null;
 }
 
-function removeRowNumberExtension(plan: Plan): void {
+export function removeDvtSubstraitRowNumberExtension(plan: Plan): void {
   plan.extensions = plan.extensions.filter(
     (entry) =>
       !(
@@ -292,7 +289,15 @@ function inspectValidWindow(draft: DvtSubstraitPilotDraft): ValidWindow | null {
   const windowExpression = project.expressions[1]?.rexType;
   if (windowExpression?.case !== 'windowFunction') return null;
   const windowFunction = windowExpression.value;
-  if (!isExactRowNumberFunction(draft.plan, windowFunction)) return null;
+  if (
+    !isDvtSubstraitRowNumberFunction(draft.plan, windowFunction) ||
+    windowFunction.partitions.length !== 1 ||
+    windowFunction.sorts.length !== 1 ||
+    windowFunction.sorts[0]?.sortKind.case !== 'direction' ||
+    windowFunction.sorts[0].sortKind.value !== SortField_SortDirection.ASC_NULLS_LAST
+  ) {
+    return null;
+  }
   const partitionInputOrdinal = readFieldReferenceOrdinal(windowFunction.partitions[0]);
   const orderInputOrdinal = readFieldReferenceOrdinal(windowFunction.sorts[0]?.expr);
   if (
@@ -335,7 +340,7 @@ function inspectValidWindow(draft: DvtSubstraitPilotDraft): ValidWindow | null {
     baseRoot.value.input.relType.value.expressions.slice(0, 1);
   if (baseRoot.value.input.relType.value.common?.emitKind.case !== 'emit') return null;
   baseRoot.value.input.relType.value.common.emitKind.value.outputMapping = [3, 1, 2];
-  removeRowNumberExtension(basePlan);
+  removeDvtSubstraitRowNumberExtension(basePlan);
   const baseSidecar: DvtSubstraitAuthoringSidecarV1 = {
     ...draft.sidecar,
     fields: draft.sidecar.fields.filter((field) => field.fieldId !== resultFieldId),
@@ -376,7 +381,7 @@ function inspectValidWindow(draft: DvtSubstraitPilotDraft): ValidWindow | null {
       result: {
         name: root.names[3]!,
         fieldId: resultFieldId,
-        capabilityId: ROW_NUMBER_CAPABILITY_ID,
+        capabilityId: DVT_SUBSTRAIT_ROW_NUMBER_CAPABILITY_ID,
       },
       outputs,
     },
@@ -422,14 +427,14 @@ export function applyDvtSubstraitPilotRowNumber(
   );
   const targetId = projectBinding == null ? null : parseTargetId(projectBinding.relationId);
   if (projectBinding == null || targetId == null) return draft;
-  const functionReference = ensureRowNumberFunction(plan);
+  const functionReference = ensureDvtSubstraitRowNumberFunction(plan);
   project.expressions.push(
     create(ExpressionSchema, {
       rexType: {
         case: 'windowFunction',
         value: create(Expression_WindowFunctionSchema, {
           functionReference,
-          outputType: nullableI64Type(),
+          outputType: createDvtSubstraitNullableI64Type(),
           phase: AggregationPhase.INITIAL_TO_RESULT,
           invocation: AggregateFunction_AggregationInvocation.ALL,
           partitions: [fieldReference(partitionField.outputOrdinal)],

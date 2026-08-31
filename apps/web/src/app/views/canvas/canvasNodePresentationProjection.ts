@@ -11,6 +11,7 @@ import {
   inspectDvtSubstraitPilotDraft,
 } from './canvasDvtSubstraitPilot';
 import { inspectDvtSubstraitPilotAggregationDraft } from './canvasDvtSubstraitAggregation';
+import { inspectDvtSubstraitPilotAggregateWindowDraft } from './canvasDvtSubstraitAggregateWindow';
 import { inspectDvtSubstraitPilotWindowDraft } from './canvasDvtSubstraitWindow';
 import {
   decodeDvtSubstraitInnerJoinDocument,
@@ -97,31 +98,38 @@ function projectCanvasNodePresentationTruthInternal(
           if (pilotInspection.ok) {
             substraitOutputs = pilotInspection.projection.outputs;
           } else {
-            const aggregateInspection = inspectDvtSubstraitPilotAggregationDraft(
+            const aggregateWindowInspection = inspectDvtSubstraitPilotAggregateWindowDraft(
               decodeDvtSubstraitPilotDocument(authority.semanticDocument)
             );
-            if (aggregateInspection.ok) {
-              substraitOutputs = aggregateInspection.projection.outputs;
+            if (aggregateWindowInspection.ok) {
+              substraitOutputs = aggregateWindowInspection.projection.outputs;
             } else {
-              const windowInspection = inspectDvtSubstraitPilotWindowDraft(
+              const aggregateInspection = inspectDvtSubstraitPilotAggregationDraft(
                 decodeDvtSubstraitPilotDocument(authority.semanticDocument)
               );
-              if (windowInspection.ok) {
-                substraitOutputs = windowInspection.projection.outputs;
+              if (aggregateInspection.ok) {
+                substraitOutputs = aggregateInspection.projection.outputs;
               } else {
-                const joinInspection = inspectDvtSubstraitInnerJoinDraft(
-                  decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument)
+                const windowInspection = inspectDvtSubstraitPilotWindowDraft(
+                  decodeDvtSubstraitPilotDocument(authority.semanticDocument)
                 );
-                if (joinInspection.ok) {
-                  substraitOutputs = joinInspection.projection.outputs;
+                if (windowInspection.ok) {
+                  substraitOutputs = windowInspection.projection.outputs;
                 } else {
-                  const unionAllInspection = inspectDvtSubstraitUnionAllDraft(
-                    decodeDvtSubstraitUnionAllDocument(authority.semanticDocument)
+                  const joinInspection = inspectDvtSubstraitInnerJoinDraft(
+                    decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument)
                   );
-                  if (unionAllInspection.ok) {
-                    substraitOutputs = unionAllInspection.projection.outputs;
+                  if (joinInspection.ok) {
+                    substraitOutputs = joinInspection.projection.outputs;
                   } else {
-                    substraitRejected = true;
+                    const unionAllInspection = inspectDvtSubstraitUnionAllDraft(
+                      decodeDvtSubstraitUnionAllDocument(authority.semanticDocument)
+                    );
+                    if (unionAllInspection.ok) {
+                      substraitOutputs = unionAllInspection.projection.outputs;
+                    } else {
+                      substraitRejected = true;
+                    }
                   }
                 }
               }

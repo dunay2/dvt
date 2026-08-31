@@ -518,6 +518,10 @@ export type CanvasViewCopy = {
   readonly inspectorDvtSubstraitCountOutputLabel: string;
   readonly inspectorDvtSubstraitApplyAggregationLabel: string;
   readonly inspectorDvtSubstraitRemoveAggregationLabel: string;
+  readonly inspectorDvtSubstraitAggregateWindowTitle: string;
+  readonly inspectorDvtSubstraitAggregateWindowOrderLabel: string;
+  readonly inspectorDvtSubstraitApplyAggregateWindowLabel: string;
+  readonly inspectorDvtSubstraitRemoveAggregateWindowLabel: string;
   readonly inspectorDvtSubstraitWindowTitle: string;
   readonly inspectorDvtSubstraitWindowPartitionFieldLabel: string;
   readonly inspectorDvtSubstraitWindowOrderFieldLabel: string;
