@@ -22,6 +22,7 @@ import {
   inspectDvtSubstraitPilotDraft,
 } from './canvasDvtSubstraitPilot';
 import { inspectDvtSubstraitPilotAggregationDraft } from './canvasDvtSubstraitAggregation';
+import { inspectDvtSubstraitPilotWindowDraft } from './canvasDvtSubstraitWindow';
 import {
   decodeDvtSubstraitInnerJoinDocument,
   encodeDvtSubstraitInnerJoinDocument,
@@ -244,6 +245,15 @@ function createSqlTransformMetadata(
       };
     }
     if (inspectDvtSubstraitPilotAggregationDraft(pilotDraft).ok) {
+      return {
+        kind: 'sql_transform',
+        mode: authority.mode,
+        shape: 'pilot',
+        plan: pilotDraft.plan,
+        sidecar: pilotDraft.sidecar,
+      };
+    }
+    if (inspectDvtSubstraitPilotWindowDraft(pilotDraft).ok) {
       return {
         kind: 'sql_transform',
         mode: authority.mode,

@@ -120,12 +120,24 @@ describe('DVT Substrait capability catalog V1', () => {
         selector: 'kind.i64',
       }),
     ];
+    const windowIds = [
+      buildDvtSubstraitStandardCapabilityId('expression-form', {
+        sourceKind: 'core',
+        message: 'substrait.Expression',
+        selector: 'rex_type.window_function',
+      }),
+      buildDvtSubstraitStandardCapabilityId('window-function', {
+        sourceKind: 'simple-extension',
+        urn: 'extension:io.substrait:functions_arithmetic',
+        name: 'row_number',
+      }),
+    ];
     const supported = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.filter(
       (entry) => entry.kind === 'standard' && entry.profileStatus === 'supported-profile'
     );
 
     expect(supported.map((entry) => entry.entryId)).toEqual(
-      [...pilotIds, ...innerJoinIds, ...aggregateIds].sort()
+      [...pilotIds, ...innerJoinIds, ...aggregateIds, ...windowIds].sort()
     );
     for (const entryId of pilotIds) {
       expect(findCapability(entryId)).toMatchObject({
@@ -140,6 +152,12 @@ describe('DVT Substrait capability catalog V1', () => {
       });
     }
     for (const entryId of aggregateIds) {
+      expect(findCapability(entryId)).toMatchObject({
+        profileStatus: 'supported-profile',
+        evidenceRefs: expect.arrayContaining(['dvt:#2641', 'dvt:#2642']),
+      });
+    }
+    for (const entryId of windowIds) {
       expect(findCapability(entryId)).toMatchObject({
         profileStatus: 'supported-profile',
         evidenceRefs: expect.arrayContaining(['dvt:#2641', 'dvt:#2642']),
@@ -250,10 +268,10 @@ describe('DVT Substrait capability catalog V1', () => {
         buildDvtSubstraitStandardCapabilityId('window-function', {
           sourceKind: 'simple-extension',
           urn: 'extension:io.substrait:functions_arithmetic',
-          name: 'row_number',
+          name: 'rank',
         })
       )
-    ).toMatchObject({ profileStatus: 'candidate-standard' });
+    ).toBeUndefined();
   });
 
   it('keeps product gaps structurally separate from standard identities', () => {

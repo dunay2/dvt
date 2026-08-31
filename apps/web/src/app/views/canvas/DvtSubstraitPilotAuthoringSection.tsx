@@ -18,6 +18,12 @@ import {
   removeDvtSubstraitPilotAggregation,
   renameDvtSubstraitPilotCountOutput,
 } from './canvasDvtSubstraitAggregation';
+import {
+  applyDvtSubstraitPilotRowNumber,
+  inspectDvtSubstraitPilotWindowDraft,
+  removeDvtSubstraitPilotRowNumber,
+  renameDvtSubstraitPilotRowNumberOutput,
+} from './canvasDvtSubstraitWindow';
 import { canvasViewCopy } from './copy';
 
 export function DvtSubstraitPilotAuthoringSection({
@@ -31,6 +37,7 @@ export function DvtSubstraitPilotAuthoringSection({
 }>): JSX.Element {
   const pilotInspection = inspectDvtSubstraitPilotDraft(draft);
   const aggregateInspection = inspectDvtSubstraitPilotAggregationDraft(draft);
+  const windowInspection = inspectDvtSubstraitPilotWindowDraft(draft);
   const projectedOutputName = pilotInspection.ok ? pilotInspection.projection.outputName : '';
   const projectedCountName = aggregateInspection.ok
     ? aggregateInspection.projection.measure.name
@@ -38,9 +45,23 @@ export function DvtSubstraitPilotAuthoringSection({
   const defaultGrainFieldId = pilotInspection.ok
     ? (pilotInspection.projection.outputs.at(-1)?.fieldId ?? '')
     : '';
+  const defaultWindowPartitionFieldId = pilotInspection.ok
+    ? (pilotInspection.projection.outputs.at(-1)?.fieldId ?? '')
+    : '';
+  const defaultWindowOrderFieldId = pilotInspection.ok
+    ? (pilotInspection.projection.outputs.at(0)?.fieldId ?? '')
+    : '';
+  const projectedWindowOutputName = windowInspection.ok
+    ? windowInspection.projection.result.name
+    : 'row_number';
   const [outputName, setOutputName] = useState(projectedOutputName);
   const [grainFieldId, setGrainFieldId] = useState(defaultGrainFieldId);
   const [countOutputName, setCountOutputName] = useState(projectedCountName);
+  const [windowPartitionFieldId, setWindowPartitionFieldId] = useState(
+    defaultWindowPartitionFieldId
+  );
+  const [windowOrderFieldId, setWindowOrderFieldId] = useState(defaultWindowOrderFieldId);
+  const [windowOutputName, setWindowOutputName] = useState(projectedWindowOutputName);
 
   useEffect(() => {
     setOutputName(projectedOutputName);
@@ -53,6 +74,20 @@ export function DvtSubstraitPilotAuthoringSection({
   useEffect(() => {
     if (defaultGrainFieldId.length > 0) setGrainFieldId(defaultGrainFieldId);
   }, [defaultGrainFieldId]);
+
+  useEffect(() => {
+    if (defaultWindowPartitionFieldId.length > 0) {
+      setWindowPartitionFieldId(defaultWindowPartitionFieldId);
+    }
+  }, [defaultWindowPartitionFieldId]);
+
+  useEffect(() => {
+    if (defaultWindowOrderFieldId.length > 0) setWindowOrderFieldId(defaultWindowOrderFieldId);
+  }, [defaultWindowOrderFieldId]);
+
+  useEffect(() => {
+    setWindowOutputName(projectedWindowOutputName);
+  }, [projectedWindowOutputName]);
 
   const mutate = (
     update: (
@@ -140,6 +175,93 @@ export function DvtSubstraitPilotAuthoringSection({
     );
   }
 
+  if (windowInspection.ok) {
+    const commitWindowOutputName = (): void => {
+      const normalized = windowOutputName.trim();
+      if (
+        normalized.length === 0 ||
+        windowInspection.projection.outputs
+          .slice(0, -1)
+          .some((output) => output.name === normalized)
+      ) {
+        setWindowOutputName(windowInspection.projection.result.name);
+        return;
+      }
+      mutate((current) => ({
+        ...current,
+        ...renameDvtSubstraitPilotRowNumberOutput(current, normalized),
+      }));
+    };
+
+    return (
+      <div data-slot="dvt-substrait-pilot-authoring" className="space-y-4">
+        <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>Substrait</h3>
+        <div
+          data-slot="dvt-substrait-window-authoring"
+          data-capability-id={windowInspection.projection.result.capabilityId}
+          className="space-y-3"
+        >
+          <p className="text-xs font-medium text-(--text-default)">
+            {canvasViewCopy.inspectorDvtSubstraitWindowTitle}
+          </p>
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-(--text-default)">
+              {canvasViewCopy.inspectorDvtSubstraitWindowPartitionFieldLabel}
+            </p>
+            <div
+              data-slot="dvt-substrait-window-partition-readonly"
+              className="rounded border border-[color:var(--border-default)] px-2 py-1.5 text-xs"
+            >
+              {windowInspection.projection.partitionField.name}
+            </div>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-(--text-default)">
+              {canvasViewCopy.inspectorDvtSubstraitWindowOrderFieldLabel}
+            </p>
+            <div
+              data-slot="dvt-substrait-window-order-readonly"
+              className="rounded border border-[color:var(--border-default)] px-2 py-1.5 text-xs"
+            >
+              {windowInspection.projection.orderField.name}
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="dvt-substrait-window-output-name">
+              {canvasViewCopy.inspectorDvtSubstraitWindowOutputLabel}
+            </Label>
+            <Input
+              id="dvt-substrait-window-output-name"
+              data-slot="dvt-substrait-window-output-name"
+              disabled={disabled}
+              value={windowOutputName}
+              onChange={(event) => setWindowOutputName(event.target.value)}
+              onBlur={commitWindowOutputName}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') event.currentTarget.blur();
+              }}
+            />
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            data-slot="dvt-substrait-remove-window"
+            disabled={disabled}
+            onClick={() =>
+              mutate((current) => ({
+                ...current,
+                ...removeDvtSubstraitPilotRowNumber(current),
+              }))
+            }
+          >
+            {canvasViewCopy.inspectorDvtSubstraitRemoveWindowLabel}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (!pilotInspection.ok) {
     return (
       <div data-slot="dvt-substrait-pilot-authoring" className="space-y-3">
@@ -177,6 +299,25 @@ export function DvtSubstraitPilotAuthoringSection({
       ...applyDvtSubstraitPilotAggregation(current, {
         groupFieldId: grainFieldId,
         countOutputName: normalizedCountOutputName,
+      }),
+    }));
+  };
+  const normalizedWindowOutputName = windowOutputName.trim();
+  const canApplyWindow =
+    windowPartitionFieldId.length > 0 &&
+    windowOrderFieldId.length > 0 &&
+    windowPartitionFieldId !== windowOrderFieldId &&
+    normalizedWindowOutputName.length > 0 &&
+    !pilotInspection.projection.outputs.some(
+      (output) => output.name === normalizedWindowOutputName
+    );
+  const applyWindow = (): void => {
+    mutate((current) => ({
+      ...current,
+      ...applyDvtSubstraitPilotRowNumber(current, {
+        partitionFieldId: windowPartitionFieldId,
+        orderFieldId: windowOrderFieldId,
+        outputName: normalizedWindowOutputName,
       }),
     }));
   };
@@ -301,6 +442,78 @@ export function DvtSubstraitPilotAuthoringSection({
           }}
         >
           {canvasViewCopy.inspectorDvtSubstraitApplyAggregationLabel}
+        </Button>
+      </div>
+
+      <div className="space-y-3">
+        <p className="text-xs font-medium text-(--text-default)">
+          {canvasViewCopy.inspectorDvtSubstraitWindowTitle}
+        </p>
+        <div className="space-y-1">
+          <Label htmlFor="dvt-substrait-window-partition-field">
+            {canvasViewCopy.inspectorDvtSubstraitWindowPartitionFieldLabel}
+          </Label>
+          <select
+            id="dvt-substrait-window-partition-field"
+            name="dvt-substrait-window-partition-field"
+            data-slot="dvt-substrait-window-partition-field"
+            className="h-9 w-full rounded-md border border-input bg-input-background px-3 text-sm"
+            disabled={disabled}
+            value={windowPartitionFieldId}
+            onChange={(event) => setWindowPartitionFieldId(event.currentTarget.value)}
+          >
+            {pilotInspection.projection.outputs.map((output) => (
+              <option key={output.fieldId} value={output.fieldId}>
+                {output.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="dvt-substrait-window-order-field">
+            {canvasViewCopy.inspectorDvtSubstraitWindowOrderFieldLabel}
+          </Label>
+          <select
+            id="dvt-substrait-window-order-field"
+            name="dvt-substrait-window-order-field"
+            data-slot="dvt-substrait-window-order-field"
+            className="h-9 w-full rounded-md border border-input bg-input-background px-3 text-sm"
+            disabled={disabled}
+            value={windowOrderFieldId}
+            onChange={(event) => setWindowOrderFieldId(event.currentTarget.value)}
+          >
+            {pilotInspection.projection.outputs.map((output) => (
+              <option key={output.fieldId} value={output.fieldId}>
+                {output.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="dvt-substrait-window-output-name">
+            {canvasViewCopy.inspectorDvtSubstraitWindowOutputLabel}
+          </Label>
+          <Input
+            id="dvt-substrait-window-output-name"
+            data-slot="dvt-substrait-window-output-name"
+            disabled={disabled}
+            value={windowOutputName}
+            onChange={(event) => setWindowOutputName(event.target.value)}
+          />
+        </div>
+        <Button
+          type="button"
+          size="sm"
+          data-slot="dvt-substrait-apply-window"
+          disabled={disabled || !canApplyWindow}
+          onClick={applyWindow}
+          onKeyDown={(event) => {
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            event.preventDefault();
+            applyWindow();
+          }}
+        >
+          {canvasViewCopy.inspectorDvtSubstraitApplyWindowLabel}
         </Button>
       </div>
     </div>
