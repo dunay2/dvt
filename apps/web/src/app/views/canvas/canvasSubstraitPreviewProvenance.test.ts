@@ -135,7 +135,7 @@ function buildSubstraitPreviewGraph(
 }
 
 function buildSubstraitJoinPreviewGraph(
-  composition: 'base' | 'grouped-window' | 'n-input' = 'base'
+  composition: 'base' | 'grouped-window' | 'n-input' | 'n-input-four' = 'base'
 ): ReturnType<typeof buildSubstraitPreviewGraph> {
   const transformPath = 'models/customer_orders.sql';
   const connectionRef = buildTestPostgresConnectionRef();
@@ -184,7 +184,7 @@ function buildSubstraitJoinPreviewGraph(
     });
     draft = applyDvtSubstraitInnerJoinGroupedRowNumber(draft, { outputName: 'count_rank' });
   }
-  if (composition === 'n-input') {
+  if (composition === 'n-input' || composition === 'n-input-four') {
     draft = appendDvtSubstraitInnerJoinInput(draft, {
       source: {
         nodeId: 'source-shipments',
@@ -202,6 +202,26 @@ function buildSubstraitJoinPreviewGraph(
         rightFieldName: 'customer_id',
       },
       selectedFields: ['shipment_id'],
+    });
+  }
+  if (composition === 'n-input-four') {
+    draft = appendDvtSubstraitInnerJoinInput(draft, {
+      source: {
+        nodeId: 'source-tickets',
+        schema: 'public',
+        table: 'tickets',
+        sourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef,
+          sourceObjectId: 'public.tickets',
+        },
+      },
+      fields: ['ticket_id', 'customer_id'],
+      predicate: {
+        leftSourceFieldId: 'field:source-customers:customer_id',
+        rightFieldName: 'customer_id',
+      },
+      selectedFields: ['ticket_id'],
     });
   }
   const transform = applyDvtSubstraitSemanticDocument(
@@ -230,11 +250,13 @@ function buildSubstraitJoinPreviewGraph(
       sourceName: table,
       schema: 'public',
       tableName: table,
-      columns: (table === 'customers'
-        ? ['customer_id', 'name']
-        : table === 'orders'
-          ? ['order_id', 'customer_id']
-          : ['shipment_id', 'customer_id']
+      columns: (
+        {
+          customers: ['customer_id', 'name'],
+          orders: ['order_id', 'customer_id'],
+          shipments: ['shipment_id', 'customer_id'],
+          tickets: ['ticket_id', 'customer_id'],
+        }[table] ?? []
       ).map((name) => ({ name, type: 'string' })),
       connectedSourceRef: {
         schemaVersion: 'connected-source-ref.v1',
@@ -266,7 +288,10 @@ function buildSubstraitJoinPreviewGraph(
     nodes: [
       source('source-customers', 'customers'),
       source('source-orders', 'orders'),
-      ...(composition === 'n-input' ? [source('source-shipments', 'shipments')] : []),
+      ...(composition === 'n-input' || composition === 'n-input-four'
+        ? [source('source-shipments', 'shipments')]
+        : []),
+      ...(composition === 'n-input-four' ? [source('source-tickets', 'tickets')] : []),
       transform,
       sink,
     ],
@@ -283,11 +308,21 @@ function buildSubstraitJoinPreviewGraph(
         targetId: 'transform',
         relation: 'lineage',
       },
-      ...(composition === 'n-input'
+      ...(composition === 'n-input' || composition === 'n-input-four'
         ? [
             {
               id: 'shipments-transform',
               sourceId: 'source-shipments',
+              targetId: 'transform',
+              relation: 'lineage' as const,
+            },
+          ]
+        : []),
+      ...(composition === 'n-input-four'
+        ? [
+            {
+              id: 'tickets-transform',
+              sourceId: 'source-tickets',
               targetId: 'transform',
               relation: 'lineage' as const,
             },
@@ -631,13 +666,63 @@ describe('Substrait Preview provenance cutover', () => {
     expect(savedContents).toContain(result.sqlText);
   });
 
-  it('fails closed before N-input INNER JOIN Preview projection is admitted', async () => {
-    const { result } = await resolveGraphPreview(buildSubstraitJoinPreviewGraph('n-input'));
+  it.each([
+    ['n-input' as const, 'join_source_3.shipment_id as shipment_id'],
+    ['n-input-four' as const, 'join_source_4.ticket_id as ticket_id'],
+  ])('previews %s through the recursive INNER JOIN projection', async (composition, output) => {
+    const { result, savedContents } = await resolveGraphPreview(
+      buildSubstraitJoinPreviewGraph(composition)
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error(result.message);
+    const normalized = result.sqlText?.replaceAll(/\s+/g, ' ').trim().toLowerCase();
+    expect(normalized).toContain(output);
+    expect(savedContents).toContain(result.sqlText);
+  });
+
+  it('fails closed when an appended source identity diverges from the N-input sidecar', async () => {
+    const graph = buildSubstraitJoinPreviewGraph('n-input');
+    const nodes = graph.nodes.map((node) =>
+      node.id !== 'source-shipments'
+        ? node
+        : { ...node, metadata: { ...node.metadata, tableName: 'other_shipments' } }
+    );
+
+    const { result } = await resolveGraphPreview({ ...graph, nodes });
 
     expect(result).toEqual({
       ok: false,
-      message: 'Preview does not yet support N-input Substrait INNER JOIN revisions.',
+      message: 'Substrait INNER JOIN Preview source identities do not match the scoped graph.',
     });
+  });
+
+  it('fails closed when an appended N-input source uses an unsupported provider', async () => {
+    const graph = buildSubstraitJoinPreviewGraph('n-input');
+    const nodes = graph.nodes.map((node) =>
+      node.id !== 'source-shipments'
+        ? node
+        : {
+            ...node,
+            metadata: {
+              ...node.metadata,
+              connectedSourceRef: {
+                ...(node.metadata?.connectedSourceRef as Record<string, unknown>),
+                connectionRef: {
+                  ...((node.metadata?.connectedSourceRef as { connectionRef: object })
+                    .connectionRef ?? {}),
+                  provider: 'mysql',
+                },
+              },
+            },
+          }
+    );
+
+    const { result } = await resolveGraphPreview({ ...graph, nodes });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('Expected unsupported N-input provider to fail closed.');
+    expect(result.message).toMatch(/source identities/i);
   });
 
   it('routes grouped and ranked INNER JOIN through the same Preview artifact rail', async () => {
