@@ -1,0 +1,114 @@
+model {
+  plannerModel = package '@dvt/planner' {
+    #asIs
+    description 'Deterministic planning bounded context. Validates canonical input, derives executable closure and builds immutable ExecutionPlan material. It does not execute or persist runtime state.'
+
+    metadata {
+      repository 'dunay2/dvt'
+      baselineSha '4e63f9a65e25f409ad975fa1da5620e569bb3a36'
+      sourceRoot 'packages/@dvt/planner'
+      provenance 'SOURCE-FIRST'
+    }
+
+    link https://github.com/dunay2/dvt/tree/4e63f9a65e25f409ad975fa1da5620e569bb3a36/packages/%40dvt/planner 'Pinned package tree'
+
+    sourceEvidence = component 'Source evidence' {
+      #sourceDerived
+      description 'Machine-generated from the pinned Git tree. Drill down through every tracked Planner folder and file.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourceRoot 'packages/@dvt/planner'
+        baselineSha '4e63f9a65e25f409ad975fa1da5620e569bb3a36'
+      }
+      navigateTo plannerSourceInventory
+    }
+
+    publicBoundary = component 'PlannerFacade + stable boundary' {
+      #asIs
+      description 'src/index.ts makes PlannerFacade the sole public entry point. The facade validates canonical contracts and delegates into planner-owned behavior.'
+      link https://github.com/dunay2/dvt/blob/4e63f9a65e25f409ad975fa1da5620e569bb3a36/packages/%40dvt/planner/src/index.ts 'Stable boundary'
+      navigateTo plannerFiles_publicBoundary
+    }
+
+    executableSubgraph = component 'Executable subgraph derivation' {
+      #asIs
+      description 'Derives the executable selected closure from workspace authoring truth plus canonical execution-selection intent.'
+      link https://github.com/dunay2/dvt/blob/4e63f9a65e25f409ad975fa1da5620e569bb3a36/packages/%40dvt/planner/src/application/ExecutableSubgraphDeriver.ts 'Source'
+      navigateTo plannerFiles_executableSubgraph
+    }
+
+    envelopeMapping = component 'Input normalization + graph mapping' {
+      #asIs
+      description 'Maps validated contract envelopes and manifest-derived graph sources into the planner domain input.'
+      navigateTo plannerFiles_envelopeMapping
+    }
+
+    planningPipeline = component 'Deterministic planning pipeline' {
+      #asIs
+      description 'Planner domain service orchestrates validation, graph construction, policies, selection, topological order, step construction, limits and immutable plan assembly.'
+      link https://github.com/dunay2/dvt/blob/4e63f9a65e25f409ad975fa1da5620e569bb3a36/packages/%40dvt/planner/src/domain/Planner.ts 'Source'
+      navigateTo plannerFiles_planningPipeline
+    }
+
+    graph = component 'Graph construction + topology' {
+      #asIs
+      description 'Builds validated dependency graphs, computes deterministic topological order and depth.'
+      navigateTo plannerFiles_graph
+    }
+
+    selection = component 'Node selection' {
+      #asIs
+      description 'Resolves which graph nodes participate in the run from canonical planner selection.'
+      navigateTo plannerFiles_selection
+    }
+
+    planAssembly = component 'Immutable plan assembly' {
+      #asIs
+      description 'Assembles canonical plan material, hashes deterministic inputs and projects execution decisions.'
+      navigateTo plannerFiles_planAssembly
+    }
+
+    stepFactory = component 'Execution-step factory' {
+      #asIs
+      description 'Maps graph nodes plus resolved policies into deterministic execution steps.'
+      navigateTo plannerFiles_stepFactory
+    }
+
+    behaviorContracts = contract 'Planner-owned behavior contracts' {
+      #asIs
+      description 'Explicit planner-owned extension/validation boundaries for custom policies, execution binding and plan executability.'
+      navigateTo plannerFiles_behaviorContracts
+    }
+
+    runtimeClock = component 'Runtime clock boundary' {
+      #asIs
+      description 'Small timing boundary used for timeout/metrics measurement; it is not part of canonical plan identity.'
+      navigateTo plannerFiles_runtimeClock
+    }
+
+    artifactCompatibilityBridge = component 'Artifact compatibility bridge' {
+      #asIs
+      description 'Transitional bridge only. ICompiledCodeStorage moved to @dvt/artifacts and this planner-local path is explicitly marked for removal.'
+      navigateTo plannerFiles_artifactCompatibilityBridge
+    }
+
+    publicBoundary .uses envelopeMapping 'normalizes canonical planner input'
+    publicBoundary .delegates planningPipeline 'buildPlan'
+    publicBoundary .delegates executableSubgraph 'deriveExecutableSubgraph'
+    publicBoundary .uses behaviorContracts 'planner-owned behavior boundaries'
+    planningPipeline .uses graph 'build + order dependency graph'
+    planningPipeline .uses selection 'resolve selected nodes'
+    planningPipeline .uses stepFactory 'create execution steps'
+    planningPipeline .delegates planAssembly 'assemble immutable plan'
+    planningPipeline .uses runtimeClock 'timeout + metrics timing only'
+  }
+}
+
+views {
+  view plannerBoundary of plannerModel {
+    title 'DVT+ Planner — Responsibilities, components and source evidence'
+    description 'Source-first Planner view pinned to main@4e63f9a. Every logical component links to its exact evidence files.'
+    include *
+    autoLayout LeftRight
+  }
+}
