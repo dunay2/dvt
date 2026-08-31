@@ -533,6 +533,22 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtSubstraitJoinConditionLabel',
     fallback: 'Join condition',
   },
+  inspectorDvtSubstraitAppendInputTitle: {
+    key: 'canvas.inspector.authoring.dvtSubstraitAppendInputTitle',
+    fallback: 'Add connected input',
+  },
+  inspectorDvtSubstraitExistingFieldLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitExistingFieldLabel',
+    fallback: 'Existing field',
+  },
+  inspectorDvtSubstraitConnectedFieldLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitConnectedFieldLabel',
+    fallback: 'Connected input field',
+  },
+  inspectorDvtSubstraitAppendInputAction: {
+    key: 'canvas.inspector.authoring.dvtSubstraitAppendInputAction',
+    fallback: 'Add input',
+  },
   inspectorDvtSubstraitSelectedFieldsLabel: {
     key: 'canvas.inspector.authoring.dvtSubstraitSelectedFieldsLabel',
     fallback: 'Selected fields',

@@ -443,6 +443,106 @@ describe('DvtAuthoringFields', () => {
     expect(draftJson()).toContain('"case":"windowFunction"');
   });
 
+  it('appends connected inputs repeatedly through one explicit field-predicate control', () => {
+    const customers = buildJoinWarehouseSourceNode({
+      id: 'source-customers',
+      table: 'customers',
+      columns: ['customer_id', 'name'],
+    });
+    const orders = buildJoinWarehouseSourceNode({
+      id: 'source-orders',
+      table: 'orders',
+      columns: ['order_id', 'customer_id'],
+    });
+    const shipments = buildJoinWarehouseSourceNode({
+      id: 'source-shipments',
+      table: 'shipments',
+      columns: ['shipment_id', 'customer_id'],
+    });
+    const tickets = buildJoinWarehouseSourceNode({
+      id: 'source-tickets',
+      table: 'tickets',
+      columns: ['ticket_id', 'customer_id'],
+    });
+    const transform = buildDvtNode('dvt:sql_transform');
+    const initialEdges: readonly CanonicalEdge[] = [
+      {
+        id: 'customers-transform',
+        sourceId: customers.id,
+        targetId: transform.id,
+        relation: 'lineage',
+      },
+      {
+        id: 'orders-transform',
+        sourceId: orders.id,
+        targetId: transform.id,
+        relation: 'lineage',
+      },
+    ];
+
+    renderFields(
+      transform,
+      undefined,
+      undefined,
+      [customers, orders, shipments, tickets, transform],
+      initialEdges,
+      'code'
+    );
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="dvt-start-substrait-inner-join"]')!
+      );
+    });
+
+    const allEdges: readonly CanonicalEdge[] = [
+      ...initialEdges,
+      {
+        id: 'shipments-transform',
+        sourceId: shipments.id,
+        targetId: transform.id,
+        relation: 'lineage',
+      },
+      {
+        id: 'tickets-transform',
+        sourceId: tickets.id,
+        targetId: transform.id,
+        relation: 'lineage',
+      },
+    ];
+    renderFields(
+      transform,
+      undefined,
+      undefined,
+      [customers, orders, shipments, tickets, transform],
+      allEdges,
+      'code'
+    );
+
+    const chooseConnectedField = (nodeId: string): void => {
+      const rightField = container.querySelector<HTMLSelectElement>(
+        '[data-slot="dvt-substrait-append-right-field"]'
+      );
+      act(() => {
+        fireEvent.change(rightField!, { target: { value: `${nodeId}\u001fcustomer_id` } });
+        fireEvent.click(
+          container.querySelector<HTMLButtonElement>('[data-slot="dvt-substrait-append-submit"]')!
+        );
+      });
+    };
+
+    chooseConnectedField(shipments.id);
+    expect(draftJson()).toContain('field:dvt-sql-transform:shipment_id');
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-n-input-join-authoring"]')
+    ).not.toBeNull();
+    expect(container.textContent).toContain('customers + orders + shipments');
+
+    chooseConnectedField(tickets.id);
+    expect(draftJson()).toContain('field:dvt-sql-transform:ticket_id');
+    expect(container.textContent).toContain('customers + orders + shipments + tickets');
+    expect(draftJson()).toContain('dvt-vtx2-n-input-inner-join-card');
+  });
+
   it('does not offer INNER JOIN when the connected datasets use different connections', () => {
     const customers = buildJoinWarehouseSourceNode({
       id: 'source-customers',

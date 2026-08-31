@@ -14,6 +14,7 @@ import {
 } from './canvasDvtSubstraitPilot';
 import {
   createDvtSubstraitInnerJoinDraft,
+  resolveDvtSubstraitJoinAppendCandidates,
   resolveDvtSubstraitInnerJoinEntry,
 } from './canvasDvtSubstraitJoinComposition';
 import {
@@ -87,10 +88,17 @@ export function DvtAuthoringFields({
         return null;
       }
       if (draft.dvt.shape === 'inner_join') {
+        const appendCandidates = resolveDvtSubstraitJoinAppendCandidates({
+          targetNode: node,
+          nodes,
+          edges,
+          draft: { plan: draft.dvt.plan, sidecar: draft.dvt.sidecar },
+        });
         return (
           <DvtSubstraitInnerJoinAuthoringSection
             disabled={disabled}
             draft={draft.dvt}
+            appendCandidates={appendCandidates}
             onChange={onChange}
           />
         );

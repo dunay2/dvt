@@ -11,25 +11,31 @@ import {
   applyDvtSubstraitInnerJoinFieldEdit,
   applyDvtSubstraitInnerJoinGroupedRowNumber,
   applyDvtSubstraitInnerJoinGrouping,
+  appendDvtSubstraitInnerJoinInput,
   inspectDvtSubstraitInnerJoinDraft,
   inspectDvtSubstraitInnerJoinGroupedWindowDraft,
   inspectDvtSubstraitInnerJoinGroupingDraft,
+  inspectDvtSubstraitNInputJoinDraft,
   removeDvtSubstraitInnerJoinGroupedRowNumber,
   removeDvtSubstraitInnerJoinGrouping,
   renameDvtSubstraitInnerJoinCountOutput,
   renameDvtSubstraitInnerJoinGroupedRowNumberOutput,
   type DvtSubstraitInnerJoinDraft,
   type DvtSubstraitInnerJoinFieldEdit,
+  type DvtSubstraitJoinInput,
+  type DvtSubstraitNInputJoinProjection,
 } from './canvasDvtSubstraitJoinComposition';
 import { canvasViewCopy } from './copy';
 
 export function DvtSubstraitInnerJoinAuthoringSection({
   disabled,
   draft,
+  appendCandidates,
   onChange,
 }: Readonly<{
   disabled: boolean;
   draft: DvtSubstraitTransformAuthoringMetadata;
+  appendCandidates: readonly DvtSubstraitJoinInput[];
   onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
 }>): JSX.Element | null {
   const semanticDraft = { plan: draft.plan, sidecar: draft.sidecar };
@@ -77,6 +83,89 @@ export function DvtSubstraitInnerJoinAuthoringSection({
       </p>
     </div>
   );
+  const nInputInspection = inspectDvtSubstraitNInputJoinDraft(semanticDraft);
+  const renderAppendInput = (projection: DvtSubstraitNInputJoinProjection): ReactNode => {
+    if (appendCandidates.length === 0) return null;
+    const candidateFieldSeparator = '\u001f';
+    const appendInput = (form: HTMLFormElement): void => {
+      const formData = new FormData(form);
+      const leftSourceFieldId = formData.get('leftSourceFieldId');
+      const candidateField = formData.get('candidateField');
+      if (typeof leftSourceFieldId !== 'string' || typeof candidateField !== 'string') return;
+      const separatorIndex = candidateField.indexOf(candidateFieldSeparator);
+      if (separatorIndex <= 0) return;
+      const candidateNodeId = candidateField.slice(0, separatorIndex);
+      const rightFieldName = candidateField.slice(separatorIndex + candidateFieldSeparator.length);
+      const candidate = appendCandidates.find(
+        (input) => input.source.nodeId === candidateNodeId && input.fields.includes(rightFieldName)
+      );
+      if (candidate == null) return;
+      const selectedFields = candidate.fields.filter((field) => field !== rightFieldName);
+      if (selectedFields.length === 0) return;
+      mutateDraft((current) =>
+        appendDvtSubstraitInnerJoinInput(current, {
+          source: candidate.source,
+          fields: candidate.fields,
+          predicate: { leftSourceFieldId, rightFieldName },
+          selectedFields,
+        })
+      );
+    };
+    return (
+      <form
+        className="space-y-2 border-t border-[color:var(--border-default)] pt-3"
+        data-slot="dvt-substrait-append-input"
+        onSubmit={(event) => {
+          event.preventDefault();
+          appendInput(event.currentTarget);
+        }}
+      >
+        <p className="text-xs font-medium text-(--text-default)">
+          {canvasViewCopy.inspectorDvtSubstraitAppendInputTitle}
+        </p>
+        <label className="block space-y-1 text-xs text-(--text-muted)">
+          <span>{canvasViewCopy.inspectorDvtSubstraitExistingFieldLabel}</span>
+          <select
+            name="leftSourceFieldId"
+            data-slot="dvt-substrait-append-left-field"
+            disabled={disabled}
+            className="h-8 w-full rounded border border-[color:var(--border-default)] bg-transparent px-2 text-xs"
+          >
+            {projection.outputs.map((output) => (
+              <option key={output.source.fieldId} value={output.source.fieldId}>
+                {output.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block space-y-1 text-xs text-(--text-muted)">
+          <span>{canvasViewCopy.inspectorDvtSubstraitConnectedFieldLabel}</span>
+          <select
+            name="candidateField"
+            data-slot="dvt-substrait-append-right-field"
+            disabled={disabled}
+            className="h-8 w-full rounded border border-[color:var(--border-default)] bg-transparent px-2 text-xs"
+          >
+            {appendCandidates.map((candidate) => (
+              <optgroup key={candidate.source.nodeId} label={candidate.source.table}>
+                {candidate.fields.map((field) => (
+                  <option
+                    key={`${candidate.source.nodeId}:${field}`}
+                    value={`${candidate.source.nodeId}${candidateFieldSeparator}${field}`}
+                  >
+                    {candidate.source.table}.{field}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </label>
+        <Button type="submit" size="sm" disabled={disabled} data-slot="dvt-substrait-append-submit">
+          {canvasViewCopy.inspectorDvtSubstraitAppendInputAction}
+        </Button>
+      </form>
+    );
+  };
 
   const groupedWindowInspection = inspectDvtSubstraitInnerJoinGroupedWindowDraft(semanticDraft);
   if (groupedWindowInspection.ok) {
@@ -232,6 +321,39 @@ export function DvtSubstraitInnerJoinAuthoringSection({
         >
           {canvasViewCopy.inspectorDvtSubstraitRemoveAggregationLabel}
         </Button>
+      </div>
+    );
+  }
+
+  if (nInputInspection.ok && nInputInspection.projection.inputs.length > 2) {
+    const projection = nInputInspection.projection;
+    return renderShell(
+      <div className="space-y-3" data-slot="dvt-substrait-n-input-join-authoring">
+        <p className="text-xs text-(--text-muted)">
+          {projection.inputs.map((input) => input.table).join(' + ')}
+        </p>
+        <ul className="space-y-1 text-xs" data-slot="dvt-substrait-n-input-predicates">
+          {projection.joins.map((join) => {
+            const leftInput = projection.inputs.find((input) =>
+              input.fields.some((field) => field.fieldId === join.leftSourceFieldId)
+            );
+            const rightInput = projection.inputs.find((input) =>
+              input.fields.some((field) => field.fieldId === join.rightSourceFieldId)
+            );
+            const leftField = leftInput?.fields.find(
+              (field) => field.fieldId === join.leftSourceFieldId
+            );
+            const rightField = rightInput?.fields.find(
+              (field) => field.fieldId === join.rightSourceFieldId
+            );
+            return (
+              <li key={`${join.leftSourceFieldId}:${join.rightSourceFieldId}`}>
+                {leftInput?.table}.{leftField?.name} = {rightInput?.table}.{rightField?.name}
+              </li>
+            );
+          })}
+        </ul>
+        {renderAppendInput(projection)}
       </div>
     );
   }
@@ -394,6 +516,7 @@ export function DvtSubstraitInnerJoinAuthoringSection({
           {canvasViewCopy.inspectorDvtSubstraitApplyAggregationLabel}
         </Button>
       </form>
+      {nInputInspection.ok ? renderAppendInput(nInputInspection.projection) : null}
     </>
   );
 }
