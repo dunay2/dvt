@@ -14,12 +14,14 @@ import {
   applyDvtSubstraitInnerJoinGroupedRowNumber,
   applyDvtSubstraitInnerJoinGrouping,
   applyDvtSubstraitInnerJoinFieldEdit,
+  appendDvtSubstraitInnerJoinInput,
   createDvtSubstraitInnerJoinDraft,
   decodeDvtSubstraitInnerJoinDocument,
   encodeDvtSubstraitInnerJoinDocument,
   inspectDvtSubstraitInnerJoinGroupedWindowDraft,
   inspectDvtSubstraitInnerJoinGroupingDraft,
   inspectDvtSubstraitInnerJoinDraft,
+  inspectDvtSubstraitNInputJoinDraft,
   removeDvtSubstraitInnerJoinGroupedRowNumber,
   removeDvtSubstraitInnerJoinGrouping,
   type DvtSubstraitInnerJoinDraft,
@@ -61,6 +63,105 @@ function fixture(): DvtSubstraitInnerJoinDraft {
 }
 
 describe('VTX2 typed Substrait INNER JOIN composition', () => {
+  it('repeats one append operation for three and four canonical join inputs', () => {
+    const threeInputs = appendDvtSubstraitInnerJoinInput(fixture(), {
+      source: source('source-shipments', 'public', 'shipments'),
+      fields: ['shipment_id', 'customer_id'],
+      predicate: {
+        leftSourceFieldId: 'field:source-customers:customer_id',
+        rightFieldName: 'customer_id',
+      },
+      selectedFields: ['shipment_id'],
+    });
+    const fourInputs = appendDvtSubstraitInnerJoinInput(threeInputs, {
+      source: source('source-tickets', 'public', 'tickets'),
+      fields: ['ticket_id', 'customer_id'],
+      predicate: {
+        leftSourceFieldId: 'field:source-customers:customer_id',
+        rightFieldName: 'customer_id',
+      },
+      selectedFields: ['ticket_id'],
+    });
+
+    expect(inspectDvtSubstraitNInputJoinDraft(threeInputs)).toMatchObject({
+      ok: true,
+      projection: {
+        inputs: [
+          { nodeId: 'source-customers', table: 'customers' },
+          { nodeId: 'source-orders', table: 'orders' },
+          { nodeId: 'source-shipments', table: 'shipments' },
+        ],
+        joins: [
+          {
+            leftSourceFieldId: 'field:source-customers:customer_id',
+            rightSourceFieldId: 'field:source-orders:customer_id',
+          },
+          {
+            leftSourceFieldId: 'field:source-customers:customer_id',
+            rightSourceFieldId: 'field:source-shipments:customer_id',
+          },
+        ],
+        outputs: [
+          { name: 'customer_id', fieldId: 'field:transform-customer-orders:customer_id' },
+          { name: 'name', fieldId: 'field:transform-customer-orders:name' },
+          { name: 'order_id', fieldId: 'field:transform-customer-orders:order_id' },
+          { name: 'shipment_id', fieldId: 'field:transform-customer-orders:shipment_id' },
+        ],
+      },
+    });
+    expect(inspectDvtSubstraitNInputJoinDraft(fourInputs)).toMatchObject({
+      ok: true,
+      projection: {
+        inputs: [
+          { nodeId: 'source-customers', table: 'customers' },
+          { nodeId: 'source-orders', table: 'orders' },
+          { nodeId: 'source-shipments', table: 'shipments' },
+          { nodeId: 'source-tickets', table: 'tickets' },
+        ],
+        outputs: [
+          { name: 'customer_id' },
+          { name: 'name' },
+          { name: 'order_id' },
+          { name: 'shipment_id' },
+          { name: 'ticket_id' },
+        ],
+      },
+    });
+    const document = encodeDvtSubstraitInnerJoinDocument(fourInputs);
+    const reloaded = decodeDvtSubstraitInnerJoinDocument(document);
+    expect(inspectDvtSubstraitNInputJoinDraft(reloaded)).toEqual(
+      inspectDvtSubstraitNInputJoinDraft(fourInputs)
+    );
+    expect(encodeDvtSubstraitInnerJoinDocument(reloaded)).toEqual(document);
+  });
+
+  it('rejects duplicate, stale-predicate and incompatible append attempts without mutation', () => {
+    const draft = fixture();
+    const append = (
+      overrides: {
+        source?: DvtSubstraitJoinSource;
+        leftSourceFieldId?: string;
+      } = {}
+    ): DvtSubstraitInnerJoinDraft =>
+      appendDvtSubstraitInnerJoinInput(draft, {
+        source: overrides.source ?? source('source-shipments', 'public', 'shipments'),
+        fields: ['shipment_id', 'customer_id'],
+        predicate: {
+          leftSourceFieldId: overrides.leftSourceFieldId ?? 'field:source-customers:customer_id',
+          rightFieldName: 'customer_id',
+        },
+        selectedFields: ['shipment_id'],
+      });
+
+    expect(append({ source: source('source-orders', 'public', 'orders') })).toBe(draft);
+    expect(append({ leftSourceFieldId: 'field:retired-source:customer_id' })).toBe(draft);
+    expect(
+      append({
+        source: source('source-shipments', 'public', 'shipments', 'warehouse-other'),
+      })
+    ).toBe(draft);
+  });
+
   it('represents two PostgreSQL sources as one exact semantic join card', () => {
     const draft = fixture();
     const inspection = inspectDvtSubstraitInnerJoinDraft(draft);
