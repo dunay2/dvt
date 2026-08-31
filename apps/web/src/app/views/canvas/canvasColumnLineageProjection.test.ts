@@ -14,6 +14,7 @@ import {
   encodeDvtSubstraitInnerJoinDocument,
 } from './canvasDvtSubstraitJoinComposition';
 import {
+  applyDvtSubstraitUnionAllFieldEdit,
   createDvtSubstraitUnionAllDraft,
   encodeDvtSubstraitUnionAllDocument,
 } from './canvasDvtSubstraitSetComposition';
@@ -316,7 +317,7 @@ describe('Canvas column lineage projection', () => {
     });
     const north = source('source-north', 'customers_north');
     const south = source('source-south', 'customers_south');
-    const draft = createDvtSubstraitUnionAllDraft({
+    let draft = createDvtSubstraitUnionAllDraft({
       inputs: [
         {
           nodeId: north.id,
@@ -334,6 +335,11 @@ describe('Canvas column lineage projection', () => {
         },
       ],
       targetNodeId: 'model',
+    });
+    draft = applyDvtSubstraitUnionAllFieldEdit(draft, {
+      kind: 'rename',
+      fieldKey: 'country',
+      outputName: 'region',
     });
     const model = applyDvtSubstraitSemanticDocument(
       buildNode('model', 'dvt:sql_transform', 'transform'),
@@ -361,6 +367,10 @@ describe('Canvas column lineage projection', () => {
             nodeId: model.id,
             columnId: 'field:model:country',
           }),
+          data: expect.objectContaining({
+            sourceColumnName: 'country',
+            targetColumnName: 'region',
+          }),
         }),
         expect.objectContaining({
           source: south.id,
@@ -368,6 +378,10 @@ describe('Canvas column lineage projection', () => {
             direction: 'target',
             nodeId: model.id,
             columnId: 'field:model:country',
+          }),
+          data: expect.objectContaining({
+            sourceColumnName: 'country',
+            targetColumnName: 'region',
           }),
         }),
       ])

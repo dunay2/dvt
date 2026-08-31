@@ -358,15 +358,15 @@ export function projectCanvasColumnLineage(args: {
               return (
                 sourceRef.success &&
                 sameConnectedSourceRef(sourceRef.data, input.sourceRef) &&
-                readColumns(sourceNode).some((column) => column.name === output.name)
+                readColumns(sourceNode).some((column) => column.name === output.fieldKey)
               );
             });
           if (matchingSource == null) continue;
           projected.push(
             buildLineageEdge({
               sourceNodeId: matchingSource.id,
-              sourceColumnName: output.name,
-              sourceColumnId: output.name,
+              sourceColumnName: output.fieldKey,
+              sourceColumnId: output.fieldKey,
               targetNodeId: model.id,
               targetColumnName: output.name,
               targetColumnId: output.fieldId,
