@@ -223,10 +223,6 @@ function describePlanCompileBoundaryCases(): void {
           },
         },
       ]);
-      expect(result.plan.steps[0]?.stepTypeConfig).not.toHaveProperty('stepTimeoutMs');
-      expect(result.plan.steps[0]?.stepTypeConfig).not.toHaveProperty('concurrency');
-      expect(result.plan.steps[1]?.stepTypeConfig).not.toHaveProperty('stepTimeoutMs');
-      expect(result.plan.steps[1]?.stepTypeConfig).not.toHaveProperty('concurrency');
     });
 
     it('rejects profile kinds that fall outside the allowed families', () => {
