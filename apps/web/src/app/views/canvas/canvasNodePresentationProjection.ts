@@ -15,7 +15,7 @@ import { inspectDvtSubstraitPilotAggregateWindowDraft } from './canvasDvtSubstra
 import { inspectDvtSubstraitPilotWindowDraft } from './canvasDvtSubstraitWindow';
 import {
   decodeDvtSubstraitInnerJoinDocument,
-  inspectDvtSubstraitInnerJoinDraft,
+  inspectDvtSubstraitInnerJoinAcceptedDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import {
   decodeDvtSubstraitUnionAllDocument,
@@ -116,7 +116,7 @@ function projectCanvasNodePresentationTruthInternal(
                 if (windowInspection.ok) {
                   substraitOutputs = windowInspection.projection.outputs;
                 } else {
-                  const joinInspection = inspectDvtSubstraitInnerJoinDraft(
+                  const joinInspection = inspectDvtSubstraitInnerJoinAcceptedDraft(
                     decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument)
                   );
                   if (joinInspection.ok) {

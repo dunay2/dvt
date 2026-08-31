@@ -11,6 +11,9 @@ import { WorkspaceFileLoadError } from '../../services/workspace/workspaceErrors
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import {
+  applyDvtSubstraitInnerJoinFieldEdit,
+  applyDvtSubstraitInnerJoinGroupedRowNumber,
+  applyDvtSubstraitInnerJoinGrouping,
   createDvtSubstraitInnerJoinDraft,
   encodeDvtSubstraitInnerJoinDocument,
 } from './canvasDvtSubstraitJoinComposition';
@@ -130,10 +133,12 @@ function buildSubstraitPreviewGraph(
   };
 }
 
-function buildSubstraitJoinPreviewGraph(): ReturnType<typeof buildSubstraitPreviewGraph> {
+function buildSubstraitJoinPreviewGraph(
+  composition: 'base' | 'grouped-window' = 'base'
+): ReturnType<typeof buildSubstraitPreviewGraph> {
   const transformPath = 'models/customer_orders.sql';
   const connectionRef = buildTestPostgresConnectionRef();
-  const draft = createDvtSubstraitInnerJoinDraft({
+  let draft = createDvtSubstraitInnerJoinDraft({
     left: {
       nodeId: 'source-customers',
       schema: 'public',
@@ -156,6 +161,28 @@ function buildSubstraitJoinPreviewGraph(): ReturnType<typeof buildSubstraitPrevi
     },
     targetNodeId: 'transform',
   });
+  if (composition === 'grouped-window') {
+    draft = applyDvtSubstraitInnerJoinFieldEdit(draft, {
+      kind: 'rename',
+      fieldKey: 'left.name',
+      outputName: 'customer_name',
+    });
+    draft = applyDvtSubstraitInnerJoinFieldEdit(draft, {
+      kind: 'move',
+      fieldKey: 'left.name',
+      direction: 'up',
+    });
+    draft = applyDvtSubstraitInnerJoinFieldEdit(draft, {
+      kind: 'set-selected',
+      fieldKey: 'left.customer_id',
+      selected: false,
+    });
+    draft = applyDvtSubstraitInnerJoinGrouping(draft, {
+      groupFieldId: 'field:transform:name',
+      countOutputName: 'order_count',
+    });
+    draft = applyDvtSubstraitInnerJoinGroupedRowNumber(draft, { outputName: 'count_rank' });
+  }
   const transform = applyDvtSubstraitSemanticDocument(
     {
       id: 'transform',
@@ -565,6 +592,20 @@ describe('Substrait Preview provenance cutover', () => {
     const normalized = result.sqlText?.replaceAll(/\s+/g, ' ').trim().toLowerCase();
     expect(normalized).toMatch(
       /^select left_source\.customer_id as customer_id, left_source\.name as name, right_source\.order_id as order_id from public\.customers as left_source join public\.orders as right_source on left_source\.customer_id = right_source\.customer_id;?$/
+    );
+    expect(savedContents).toContain(result.sqlText);
+  });
+
+  it('routes grouped and ranked INNER JOIN through the same Preview artifact rail', async () => {
+    const { result, savedContents } = await resolveGraphPreview(
+      buildSubstraitJoinPreviewGraph('grouped-window')
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error(result.message);
+    const normalized = result.sqlText?.replaceAll(/\s+/g, ' ').trim().toLowerCase();
+    expect(normalized).toMatch(
+      /^select customer_name, count\(\*\) as order_count, row_number\(\) over \( ?order by count\(\*\) desc nulls last, customer_name asc nulls last ?\) as count_rank from \(\s*select left_source\.name as customer_name, right_source\.order_id as order_id from public\.customers as left_source join public\.orders as right_source on left_source\.customer_id = right_source\.customer_id\s*\) as inner_join_input group by customer_name;?$/
     );
     expect(savedContents).toContain(result.sqlText);
   });

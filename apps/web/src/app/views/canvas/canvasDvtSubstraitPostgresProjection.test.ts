@@ -20,6 +20,8 @@ import { applyDvtSubstraitPilotAggregateRowNumber } from './canvasDvtSubstraitAg
 import { applyDvtSubstraitPilotRowNumber } from './canvasDvtSubstraitWindow';
 import {
   applyDvtSubstraitInnerJoinFieldEdit,
+  applyDvtSubstraitInnerJoinGroupedRowNumber,
+  applyDvtSubstraitInnerJoinGrouping,
   createDvtSubstraitInnerJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import {
@@ -241,6 +243,67 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
 
     expect(normalized).toMatch(
       /^select right_source\.order_id as order_id, left_source\.name as customer_name from public\.customers as left_source join public\.orders as right_source on left_source\.customer_id = right_source\.customer_id;?$/
+    );
+  });
+
+  it('projects grouping and deterministic ranking over the selected INNER JOIN revision', async () => {
+    const connectionRef = {
+      schemaVersion: 'connection-ref.v1' as const,
+      connectionId: 'warehouse-main',
+      provider: 'postgres' as const,
+    };
+    let draft = createDvtSubstraitInnerJoinDraft({
+      left: {
+        nodeId: 'source-customers',
+        schema: 'public',
+        table: 'customers',
+        sourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef,
+          sourceObjectId: 'public.customers',
+        },
+      },
+      right: {
+        nodeId: 'source-orders',
+        schema: 'public',
+        table: 'orders',
+        sourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef,
+          sourceObjectId: 'public.orders',
+        },
+      },
+      targetNodeId: 'transform-customer-orders',
+    });
+    draft = applyDvtSubstraitInnerJoinFieldEdit(draft, {
+      kind: 'rename',
+      fieldKey: 'left.name',
+      outputName: 'customer_name',
+    });
+    draft = applyDvtSubstraitInnerJoinFieldEdit(draft, {
+      kind: 'move',
+      fieldKey: 'left.name',
+      direction: 'up',
+    });
+    draft = applyDvtSubstraitInnerJoinFieldEdit(draft, {
+      kind: 'set-selected',
+      fieldKey: 'left.customer_id',
+      selected: false,
+    });
+    draft = applyDvtSubstraitInnerJoinGrouping(draft, {
+      groupFieldId: 'field:transform-customer-orders:name',
+      countOutputName: 'order_count',
+    });
+    draft = applyDvtSubstraitInnerJoinGroupedRowNumber(draft, {
+      outputName: 'count_rank',
+    });
+
+    const normalized = (await projectDvtSubstraitInnerJoinToPostgresSql(draft))
+      .replaceAll(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+    expect(normalized).toMatch(
+      /^select customer_name, count\(\*\) as order_count, row_number\(\) over \(order by count\(\*\) desc nulls last, customer_name asc nulls last\) as count_rank from \(\s*select left_source\.name as customer_name, right_source\.order_id as order_id from public\.customers as left_source join public\.orders as right_source on left_source\.customer_id = right_source\.customer_id\s*\) as inner_join_input group by customer_name;?$/
     );
   });
 

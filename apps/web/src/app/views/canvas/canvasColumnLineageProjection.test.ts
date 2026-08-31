@@ -10,6 +10,8 @@ import {
 } from './canvasDvtTransformAuthoringAuthority';
 import {
   applyDvtSubstraitInnerJoinFieldEdit,
+  applyDvtSubstraitInnerJoinGroupedRowNumber,
+  applyDvtSubstraitInnerJoinGrouping,
   createDvtSubstraitInnerJoinDraft,
   encodeDvtSubstraitInnerJoinDocument,
 } from './canvasDvtSubstraitJoinComposition';
@@ -285,6 +287,35 @@ describe('Canvas column lineage projection', () => {
           targetColumnName: 'order_id',
           outputId: 'field:model:order_id',
           removable: false,
+        }),
+      }),
+    ]);
+
+    draft = applyDvtSubstraitInnerJoinGrouping(draft, {
+      groupFieldId: 'field:model:name',
+      countOutputName: 'order_count',
+    });
+    draft = applyDvtSubstraitInnerJoinGroupedRowNumber(draft, { outputName: 'count_rank' });
+    const groupedModel = applyDvtSubstraitSemanticDocument(
+      buildNode('model', 'dvt:sql_transform', 'transform'),
+      encodeDvtSubstraitInnerJoinDocument(draft)
+    );
+    const groupedProjection = projectCanvasColumnLineage({
+      nodes: [customers, orders, groupedModel],
+      edges: [
+        { sourceId: customers.id, targetId: groupedModel.id },
+        { sourceId: orders.id, targetId: groupedModel.id },
+      ],
+      expandedNodeIds: new Set([customers.id, orders.id, groupedModel.id]),
+    });
+    expect(groupedProjection).toEqual([
+      expect.objectContaining({
+        source: customers.id,
+        target: groupedModel.id,
+        data: expect.objectContaining({
+          sourceColumnName: 'name',
+          targetColumnName: 'customer_name',
+          outputId: 'field:model:name',
         }),
       }),
     ]);

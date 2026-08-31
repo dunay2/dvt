@@ -22,8 +22,14 @@ import {
   type DvtSubstraitPilotWindowProjection,
 } from './canvasDvtSubstraitWindow';
 import {
+  inspectDvtSubstraitInnerJoinGroupedWindowDraft,
+  inspectDvtSubstraitInnerJoinGroupingDraft,
   inspectDvtSubstraitInnerJoinDraft,
+  removeDvtSubstraitInnerJoinGroupedRowNumber,
+  removeDvtSubstraitInnerJoinGrouping,
   type DvtSubstraitInnerJoinDraft,
+  type DvtSubstraitInnerJoinGroupedWindowProjection,
+  type DvtSubstraitInnerJoinGroupingProjection,
   type DvtSubstraitInnerJoinProjection,
 } from './canvasDvtSubstraitJoinComposition';
 import {
@@ -493,6 +499,37 @@ function buildInnerJoinPostgresAst(projection: DvtSubstraitInnerJoinProjection):
   };
 }
 
+function buildGroupedInnerJoinPostgresAst(
+  composition:
+    DvtSubstraitInnerJoinGroupingProjection | DvtSubstraitInnerJoinGroupedWindowProjection,
+  innerJoin: DvtSubstraitInnerJoinProjection
+): PostgresAstNode {
+  const groupExpression = pgColumnRef(composition.groupField.name);
+  const groupedWindow = 'result' in composition ? composition : null;
+  return {
+    SelectStmt: {
+      targetList: [
+        { ResTarget: { val: groupExpression } },
+        { ResTarget: { name: composition.measure.name, val: pgCountRows() } },
+        ...(groupedWindow == null
+          ? []
+          : [
+              {
+                ResTarget: {
+                  name: groupedWindow.result.name,
+                  val: pgRowNumberOverCount(groupExpression),
+                },
+              },
+            ]),
+      ],
+      fromClause: [pgRangeSubselect(buildInnerJoinPostgresAst(innerJoin), 'inner_join_input')],
+      groupClause: [groupExpression],
+      limitOption: 'LIMIT_OPTION_DEFAULT',
+      op: 'SETOP_NONE',
+    },
+  };
+}
+
 function requireUnionAllProjection(
   draft: DvtSubstraitUnionAllDraft
 ): DvtSubstraitUnionAllProjection {
@@ -634,6 +671,23 @@ export async function projectDvtSubstraitPilotWindowToPostgresSql(
 export async function projectDvtSubstraitInnerJoinToPostgresSql(
   draft: DvtSubstraitInnerJoinDraft
 ): Promise<string> {
+  const groupedWindow = inspectDvtSubstraitInnerJoinGroupedWindowDraft(draft);
+  if (groupedWindow.ok) {
+    const groupingDraft = removeDvtSubstraitInnerJoinGroupedRowNumber(draft);
+    const innerJoin = requireInnerJoinProjection(
+      removeDvtSubstraitInnerJoinGrouping(groupingDraft)
+    );
+    return deparseBoundedPostgresAst(
+      buildGroupedInnerJoinPostgresAst(groupedWindow.projection, innerJoin)
+    );
+  }
+  const grouping = inspectDvtSubstraitInnerJoinGroupingDraft(draft);
+  if (grouping.ok) {
+    const innerJoin = requireInnerJoinProjection(removeDvtSubstraitInnerJoinGrouping(draft));
+    return deparseBoundedPostgresAst(
+      buildGroupedInnerJoinPostgresAst(grouping.projection, innerJoin)
+    );
+  }
   return deparseBoundedPostgresAst(buildInnerJoinPostgresAst(requireInnerJoinProjection(draft)));
 }
 

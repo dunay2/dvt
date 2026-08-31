@@ -27,7 +27,7 @@ import { inspectDvtSubstraitPilotWindowDraft } from './canvasDvtSubstraitWindow'
 import {
   decodeDvtSubstraitInnerJoinDocument,
   encodeDvtSubstraitInnerJoinDocument,
-  inspectDvtSubstraitInnerJoinDraft,
+  inspectDvtSubstraitInnerJoinAcceptedDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import {
   decodeDvtSubstraitUnionAllDocument,
@@ -277,7 +277,7 @@ function createSqlTransformMetadata(
       };
     }
     const joinDraft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
-    if (inspectDvtSubstraitInnerJoinDraft(joinDraft).ok) {
+    if (inspectDvtSubstraitInnerJoinAcceptedDraft(joinDraft).ok) {
       return {
         kind: 'sql_transform',
         mode: authority.mode,
