@@ -32,12 +32,14 @@ import {
   decodeDvtSubstraitPilotDocument,
   inspectDvtSubstraitPilotDraft,
 } from './canvasDvtSubstraitPilot';
+import { inspectDvtSubstraitPilotAggregationDraft } from './canvasDvtSubstraitAggregation';
 import {
   decodeDvtSubstraitInnerJoinDocument,
   inspectDvtSubstraitInnerJoinDraft,
   resolveDvtSubstraitInnerJoinEntry,
 } from './canvasDvtSubstraitJoinComposition';
 import {
+  projectDvtSubstraitPilotAggregationToPostgresSql,
   projectDvtSubstraitInnerJoinToPostgresSql,
   projectDvtSubstraitPilotToPostgresSql,
 } from './canvasDvtSubstraitPostgresProjection';
@@ -314,6 +316,16 @@ async function buildAuthoringPreviewSql({
         const scopedNodes = resolveScopedTransformationNodes(canonicalNodes, scopedNodeIds);
         const source = requireSourcePayload(scopedNodes.source);
         const sql = await projectDvtSubstraitPilotToPostgresSql(pilotDraft, {
+          schema: source.payload.schema,
+          table: source.payload.table,
+        });
+        return sql.endsWith('\n') ? sql : `${sql}\n`;
+      }
+
+      if (inspectDvtSubstraitPilotAggregationDraft(pilotDraft).ok) {
+        const scopedNodes = resolveScopedTransformationNodes(canonicalNodes, scopedNodeIds);
+        const source = requireSourcePayload(scopedNodes.source);
+        const sql = await projectDvtSubstraitPilotAggregationToPostgresSql(pilotDraft, {
           schema: source.payload.schema,
           table: source.payload.table,
         });

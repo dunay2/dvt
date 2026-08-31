@@ -545,6 +545,26 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtSubstraitMoveFieldDownLabel',
     fallback: 'Move field down',
   },
+  inspectorDvtSubstraitAggregationTitle: {
+    key: 'canvas.inspector.authoring.dvtSubstraitAggregationTitle',
+    fallback: 'Grain and summary',
+  },
+  inspectorDvtSubstraitGrainFieldLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitGrainFieldLabel',
+    fallback: 'Grain field',
+  },
+  inspectorDvtSubstraitCountOutputLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitCountOutputLabel',
+    fallback: 'Row count output',
+  },
+  inspectorDvtSubstraitApplyAggregationLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitApplyAggregationLabel',
+    fallback: 'Summarize',
+  },
+  inspectorDvtSubstraitRemoveAggregationLabel: {
+    key: 'canvas.inspector.authoring.dvtSubstraitRemoveAggregationLabel',
+    fallback: 'Remove summary',
+  },
   inspectorDvtSinkTitle: {
     key: 'canvas.inspector.authoring.dvtSinkTitle',
     fallback: 'DVT sink',

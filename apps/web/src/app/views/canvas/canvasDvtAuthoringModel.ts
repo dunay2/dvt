@@ -21,6 +21,7 @@ import {
   encodeDvtSubstraitPilotDocument,
   inspectDvtSubstraitPilotDraft,
 } from './canvasDvtSubstraitPilot';
+import { inspectDvtSubstraitPilotAggregationDraft } from './canvasDvtSubstraitAggregation';
 import {
   decodeDvtSubstraitInnerJoinDocument,
   encodeDvtSubstraitInnerJoinDocument,
@@ -234,6 +235,15 @@ function createSqlTransformMetadata(
   if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
     const pilotDraft = decodeDvtSubstraitPilotDocument(authority.semanticDocument);
     if (inspectDvtSubstraitPilotDraft(pilotDraft).ok) {
+      return {
+        kind: 'sql_transform',
+        mode: authority.mode,
+        shape: 'pilot',
+        plan: pilotDraft.plan,
+        sidecar: pilotDraft.sidecar,
+      };
+    }
+    if (inspectDvtSubstraitPilotAggregationDraft(pilotDraft).ok) {
       return {
         kind: 'sql_transform',
         mode: authority.mode,

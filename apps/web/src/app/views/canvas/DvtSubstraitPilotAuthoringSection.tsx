@@ -1,4 +1,4 @@
-/** Owned concern: edit the single Substrait Plan shape admitted by VTX2 pilot #2598. */
+/** Owned concern: edit the admitted single-source Substrait projection in Node Properties. */
 import { useEffect, useState, type Dispatch, type SetStateAction } from 'react';
 
 import { Button } from '../../components/ui/button';
@@ -12,6 +12,12 @@ import {
   inspectDvtSubstraitPilotDraft,
   renameDvtSubstraitPilotOutput,
 } from './canvasDvtSubstraitPilot';
+import {
+  applyDvtSubstraitPilotAggregation,
+  inspectDvtSubstraitPilotAggregationDraft,
+  removeDvtSubstraitPilotAggregation,
+  renameDvtSubstraitPilotCountOutput,
+} from './canvasDvtSubstraitAggregation';
 import { canvasViewCopy } from './copy';
 
 export function DvtSubstraitPilotAuthoringSection({
@@ -23,22 +29,30 @@ export function DvtSubstraitPilotAuthoringSection({
   draft: DvtSubstraitTransformAuthoringMetadata;
   onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
 }>): JSX.Element {
-  const inspection = inspectDvtSubstraitPilotDraft(draft);
-  const projectedOutputName = inspection.ok ? inspection.projection.outputName : '';
+  const pilotInspection = inspectDvtSubstraitPilotDraft(draft);
+  const aggregateInspection = inspectDvtSubstraitPilotAggregationDraft(draft);
+  const projectedOutputName = pilotInspection.ok ? pilotInspection.projection.outputName : '';
+  const projectedCountName = aggregateInspection.ok
+    ? aggregateInspection.projection.measure.name
+    : 'row_count';
+  const defaultGrainFieldId = pilotInspection.ok
+    ? (pilotInspection.projection.outputs.at(-1)?.fieldId ?? '')
+    : '';
   const [outputName, setOutputName] = useState(projectedOutputName);
+  const [grainFieldId, setGrainFieldId] = useState(defaultGrainFieldId);
+  const [countOutputName, setCountOutputName] = useState(projectedCountName);
 
   useEffect(() => {
     setOutputName(projectedOutputName);
   }, [projectedOutputName]);
 
-  if (!inspection.ok) {
-    return (
-      <div data-slot="dvt-substrait-pilot-authoring" className="space-y-3">
-        <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>Substrait</h3>
-        <p className="text-xs text-(--text-muted)">{canvasViewCopy.inspectorNodeReadOnlyMessage}</p>
-      </div>
-    );
-  }
+  useEffect(() => {
+    setCountOutputName(projectedCountName);
+  }, [projectedCountName]);
+
+  useEffect(() => {
+    if (defaultGrainFieldId.length > 0) setGrainFieldId(defaultGrainFieldId);
+  }, [defaultGrainFieldId]);
 
   const mutate = (
     update: (
@@ -52,10 +66,93 @@ export function DvtSubstraitPilotAuthoringSection({
     );
   };
 
+  if (aggregateInspection.ok) {
+    const commitCountOutputName = (): void => {
+      const normalized = countOutputName.trim();
+      if (
+        normalized.length === 0 ||
+        normalized === aggregateInspection.projection.groupField.name
+      ) {
+        setCountOutputName(aggregateInspection.projection.measure.name);
+        return;
+      }
+      mutate((current) => ({
+        ...current,
+        ...renameDvtSubstraitPilotCountOutput(current, normalized),
+      }));
+    };
+
+    return (
+      <div data-slot="dvt-substrait-pilot-authoring" className="space-y-4">
+        <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>Substrait</h3>
+        <div
+          data-slot="dvt-substrait-aggregation-authoring"
+          data-capability-id={aggregateInspection.projection.measure.capabilityId}
+          className="space-y-3"
+        >
+          <p className="text-xs font-medium text-(--text-default)">
+            {canvasViewCopy.inspectorDvtSubstraitAggregationTitle}
+          </p>
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-(--text-default)">
+              {canvasViewCopy.inspectorDvtSubstraitGrainFieldLabel}
+            </p>
+            <div
+              data-slot="dvt-substrait-grain-field-readonly"
+              className="rounded border border-[color:var(--border-default)] px-2 py-1.5 text-xs"
+            >
+              {aggregateInspection.projection.groupField.name}
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="dvt-substrait-count-output-name">
+              {canvasViewCopy.inspectorDvtSubstraitCountOutputLabel}
+            </Label>
+            <Input
+              id="dvt-substrait-count-output-name"
+              data-slot="dvt-substrait-count-output-name"
+              disabled={disabled}
+              value={countOutputName}
+              onChange={(event) => setCountOutputName(event.target.value)}
+              onBlur={commitCountOutputName}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') event.currentTarget.blur();
+              }}
+            />
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            data-slot="dvt-substrait-remove-aggregation"
+            disabled={disabled}
+            onClick={() =>
+              mutate((current) => ({
+                ...current,
+                ...removeDvtSubstraitPilotAggregation(current),
+              }))
+            }
+          >
+            {canvasViewCopy.inspectorDvtSubstraitRemoveAggregationLabel}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!pilotInspection.ok) {
+    return (
+      <div data-slot="dvt-substrait-pilot-authoring" className="space-y-3">
+        <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>Substrait</h3>
+        <p className="text-xs text-(--text-muted)">{canvasViewCopy.inspectorNodeReadOnlyMessage}</p>
+      </div>
+    );
+  }
+
   const commitOutputName = (): void => {
     const normalized = outputName.trim();
     if (normalized.length === 0) {
-      setOutputName(inspection.projection.outputName);
+      setOutputName(pilotInspection.projection.outputName);
       return;
     }
     mutate((current) => ({
@@ -64,9 +161,25 @@ export function DvtSubstraitPilotAuthoringSection({
     }));
   };
 
-  const operations = inspection.projection.operations;
+  const operations = pilotInspection.projection.operations;
   const canAddTrim = operations.length === 0;
   const canAddUpper = operations.length === 1 && operations[0] === 'trim';
+  const normalizedCountOutputName = countOutputName.trim();
+  const canApplyAggregation =
+    grainFieldId.length > 0 &&
+    normalizedCountOutputName.length > 0 &&
+    !pilotInspection.projection.outputs.some(
+      (output) => output.fieldId === grainFieldId && output.name === normalizedCountOutputName
+    );
+  const applyAggregation = (): void => {
+    mutate((current) => ({
+      ...current,
+      ...applyDvtSubstraitPilotAggregation(current, {
+        groupFieldId: grainFieldId,
+        countOutputName: normalizedCountOutputName,
+      }),
+    }));
+  };
 
   return (
     <div data-slot="dvt-substrait-pilot-authoring" className="space-y-4">
@@ -94,7 +207,7 @@ export function DvtSubstraitPilotAuthoringSection({
           {canvasViewCopy.inspectorDvtVisualInputsLabel}
         </p>
         <div className="rounded border border-[color:var(--border-default)] px-2 py-1.5 text-xs">
-          {inspection.projection.sourceName} · {inspection.projection.inputFieldName}
+          {pilotInspection.projection.sourceName} · {pilotInspection.projection.inputFieldName}
         </div>
       </div>
 
@@ -133,10 +246,62 @@ export function DvtSubstraitPilotAuthoringSection({
           </Button>
         </div>
         <p className="font-mono text-xs text-(--text-muted)">
-          {inspection.projection.inputFieldName}
+          {pilotInspection.projection.inputFieldName}
           {operations.map((operation) => ` → ${operation}`).join('')}
-          {` → ${inspection.projection.outputName}`}
+          {` → ${pilotInspection.projection.outputName}`}
         </p>
+      </div>
+
+      <div className="space-y-3">
+        <p className="text-xs font-medium text-(--text-default)">
+          {canvasViewCopy.inspectorDvtSubstraitAggregationTitle}
+        </p>
+        <div className="space-y-1">
+          <Label htmlFor="dvt-substrait-grain-field">
+            {canvasViewCopy.inspectorDvtSubstraitGrainFieldLabel}
+          </Label>
+          <select
+            id="dvt-substrait-grain-field"
+            name="dvt-substrait-grain-field"
+            data-slot="dvt-substrait-grain-field"
+            className="h-9 w-full rounded-md border border-input bg-input-background px-3 text-sm"
+            disabled={disabled}
+            value={grainFieldId}
+            onChange={(event) => setGrainFieldId(event.currentTarget.value)}
+          >
+            {pilotInspection.projection.outputs.map((output) => (
+              <option key={output.fieldId} value={output.fieldId}>
+                {output.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="dvt-substrait-count-output-name">
+            {canvasViewCopy.inspectorDvtSubstraitCountOutputLabel}
+          </Label>
+          <Input
+            id="dvt-substrait-count-output-name"
+            data-slot="dvt-substrait-count-output-name"
+            disabled={disabled}
+            value={countOutputName}
+            onChange={(event) => setCountOutputName(event.target.value)}
+          />
+        </div>
+        <Button
+          type="button"
+          size="sm"
+          data-slot="dvt-substrait-apply-aggregation"
+          disabled={disabled || !canApplyAggregation}
+          onClick={applyAggregation}
+          onKeyDown={(event) => {
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            event.preventDefault();
+            applyAggregation();
+          }}
+        >
+          {canvasViewCopy.inspectorDvtSubstraitApplyAggregationLabel}
+        </Button>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-/** Owned concern: project only the admitted pilot and two-source INNER JOIN shapes to PostgreSQL. */
+/** Owned concern: project only the admitted pilot, grouping/count, and INNER JOIN shapes to PostgreSQL. */
 import { deparse } from 'pgsql-deparser';
 
 import {
@@ -6,6 +6,11 @@ import {
   type DvtSubstraitPilotDraft,
   type DvtSubstraitPilotProjection,
 } from './canvasDvtSubstraitPilot';
+import {
+  inspectDvtSubstraitPilotAggregationDraft,
+  removeDvtSubstraitPilotAggregation,
+  type DvtSubstraitPilotAggregationProjection,
+} from './canvasDvtSubstraitAggregation';
 import {
   inspectDvtSubstraitInnerJoinDraft,
   type DvtSubstraitInnerJoinDraft,
@@ -53,10 +58,10 @@ function pgQualifiedColumnRef(relationAlias: string, columnName: string): Postgr
   };
 }
 
-function pgRangeVar(args: { schema: string; table: string; alias?: string }): PostgresAstNode {
+function pgRangeVar(args: { schema?: string; table: string; alias?: string }): PostgresAstNode {
   return {
     RangeVar: {
-      schemaname: args.schema,
+      ...(args.schema == null ? {} : { schemaname: args.schema }),
       relname: args.table,
       inh: true,
       relpersistence: 'p',
@@ -73,6 +78,22 @@ function pgFunction(name: 'trim' | 'upper', argument: PostgresAstNode): Postgres
       funcformat: 'COERCE_EXPLICIT_CALL',
     },
   };
+}
+
+function pgCountRows(): PostgresAstNode {
+  return {
+    FuncCall: {
+      funcname: [pgString('count')],
+      agg_star: true,
+    },
+  };
+}
+
+function buildPilotOutputExpression(projection: DvtSubstraitPilotProjection): PostgresAstNode {
+  return projection.operations.reduce<PostgresAstNode>(
+    (expression, operation) => pgFunction(operation, expression),
+    pgColumnRef(projection.inputFieldName)
+  );
 }
 
 function requireFinalPilotProjection(draft: DvtSubstraitPilotDraft): DvtSubstraitPilotProjection {
@@ -105,10 +126,7 @@ function buildPilotPostgresAst(
   sourceBinding?: DvtSubstraitPostgresSourceBinding
 ): PostgresAstNode {
   const physicalSource = sourceBinding == null ? null : requirePhysicalSourceBinding(sourceBinding);
-  const transformedInput = pgFunction(
-    'upper',
-    pgFunction('trim', pgColumnRef(projection.inputFieldName))
-  );
+  const transformedInput = buildPilotOutputExpression(projection);
   const targetList: PostgresAstNode[] = [
     {
       ResTarget: {
@@ -136,6 +154,70 @@ function buildPilotPostgresAst(
           },
         },
       ],
+      limitOption: 'LIMIT_OPTION_DEFAULT',
+      op: 'SETOP_NONE',
+    },
+  };
+}
+
+function requireAggregateProjection(draft: DvtSubstraitPilotDraft): Readonly<{
+  aggregate: DvtSubstraitPilotAggregationProjection;
+  base: DvtSubstraitPilotProjection;
+}> {
+  const aggregateInspection = inspectDvtSubstraitPilotAggregationDraft(draft);
+  const baseInspection = inspectDvtSubstraitPilotDraft(removeDvtSubstraitPilotAggregation(draft));
+  if (!aggregateInspection.ok || !baseInspection.ok) {
+    throw new DvtSubstraitPostgresProjectionError(
+      'unsupported_shape',
+      'PostgreSQL projection supports only the admitted VTX2 grouping/count shape.'
+    );
+  }
+  return { aggregate: aggregateInspection.projection, base: baseInspection.projection };
+}
+
+function buildAggregatePostgresAst(
+  projections: Readonly<{
+    aggregate: DvtSubstraitPilotAggregationProjection;
+    base: DvtSubstraitPilotProjection;
+  }>,
+  sourceBinding?: DvtSubstraitPostgresSourceBinding
+): PostgresAstNode {
+  const physicalSource = sourceBinding == null ? null : requirePhysicalSourceBinding(sourceBinding);
+  const baseOutput = projections.base.outputs[projections.aggregate.groupField.inputOrdinal];
+  if (baseOutput == null) {
+    throw new DvtSubstraitPostgresProjectionError(
+      'unsupported_shape',
+      'Grouping field does not resolve to the admitted pilot input.'
+    );
+  }
+  const groupExpression =
+    projections.aggregate.groupField.inputOrdinal === 0
+      ? buildPilotOutputExpression(projections.base)
+      : pgColumnRef(baseOutput.name);
+
+  return {
+    SelectStmt: {
+      targetList: [
+        {
+          ResTarget: {
+            name: projections.aggregate.groupField.name,
+            val: groupExpression,
+          },
+        },
+        {
+          ResTarget: {
+            name: projections.aggregate.measure.name,
+            val: pgCountRows(),
+          },
+        },
+      ],
+      fromClause: [
+        pgRangeVar({
+          schema: physicalSource?.schema,
+          table: physicalSource?.table ?? projections.aggregate.sourceName,
+        }),
+      ],
+      groupClause: [groupExpression],
       limitOption: 'LIMIT_OPTION_DEFAULT',
       op: 'SETOP_NONE',
     },
@@ -224,6 +306,15 @@ export async function projectDvtSubstraitPilotToPostgresSql(
   const projection = requireFinalPilotProjection(draft);
   const postgresAst = buildPilotPostgresAst(projection, sourceBinding);
   return deparseBoundedPostgresAst(postgresAst);
+}
+
+export async function projectDvtSubstraitPilotAggregationToPostgresSql(
+  draft: DvtSubstraitPilotDraft,
+  sourceBinding?: DvtSubstraitPostgresSourceBinding
+): Promise<string> {
+  return deparseBoundedPostgresAst(
+    buildAggregatePostgresAst(requireAggregateProjection(draft), sourceBinding)
+  );
 }
 
 export async function projectDvtSubstraitInnerJoinToPostgresSql(

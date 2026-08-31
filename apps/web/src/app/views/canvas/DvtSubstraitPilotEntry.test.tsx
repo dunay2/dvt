@@ -118,6 +118,55 @@ describe('Substrait pilot entry through ConfigureCanvasDvtNode', () => {
     expect(container.querySelector('[data-testid="dvt-transform-sql-editor"]')).toBeNull();
   });
 
+  it('chooses a grain field and count output through the same Substrait draft', () => {
+    const source = sourceNode();
+    const transform = transformNode();
+    act(() => root.render(<Harness source={source} transform={transform} />));
+
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="dvt-start-substrait-pilot"]')!
+      );
+    });
+    const grain = container.querySelector<HTMLSelectElement>(
+      '[data-slot="dvt-substrait-grain-field"]'
+    );
+    const countName = container.querySelector<HTMLInputElement>(
+      '[data-slot="dvt-substrait-count-output-name"]'
+    );
+    const summarize = container.querySelector<HTMLButtonElement>(
+      '[data-slot="dvt-substrait-apply-aggregation"]'
+    );
+    expect(grain).not.toBeNull();
+    expect(countName?.value).toBe('row_count');
+    expect(summarize).not.toBeNull();
+
+    act(() => {
+      fireEvent.change(grain!, { target: { value: 'field:transform-customers:country' } });
+      fireEvent.input(countName!, { target: { value: 'customer_count' } });
+      fireEvent.click(summarize!);
+    });
+
+    const draft = container.querySelector('[data-slot="dvt-draft-json"]')?.textContent ?? '';
+    expect(draft).toContain('"case":"aggregate"');
+    expect(draft).toContain('"names":["country","customer_count"]');
+    expect(draft).toContain('field:transform-customers:count');
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-aggregation-authoring"]')
+    ).not.toBeNull();
+
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>(
+          '[data-slot="dvt-substrait-remove-aggregation"]'
+        )!
+      );
+    });
+    const restored = container.querySelector('[data-slot="dvt-draft-json"]')?.textContent ?? '';
+    expect(restored).toContain('"case":"project"');
+    expect(restored).not.toContain('"fieldId":"field:transform-customers:count"');
+  });
+
   it('does not offer the pilot for a non-string fixture or when SQL already has authority', () => {
     act(() =>
       root.render(

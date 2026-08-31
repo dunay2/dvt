@@ -8,9 +8,11 @@ import {
 } from './canvasDvtSubstraitPilot';
 import {
   DvtSubstraitPostgresProjectionError,
+  projectDvtSubstraitPilotAggregationToPostgresSql,
   projectDvtSubstraitInnerJoinToPostgresSql,
   projectDvtSubstraitPilotToPostgresSql,
 } from './canvasDvtSubstraitPostgresProjection';
+import { applyDvtSubstraitPilotAggregation } from './canvasDvtSubstraitAggregation';
 import {
   applyDvtSubstraitInnerJoinFieldEdit,
   createDvtSubstraitInnerJoinDraft,
@@ -77,6 +79,26 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     ).rejects.toMatchObject({
       code: 'invalid_source_binding',
     });
+  });
+
+  it('projects one admitted Substrait grain field and row count', async () => {
+    const draft = applyDvtSubstraitPilotAggregation(
+      createDvtSubstraitPilotDraft({
+        sourceNodeId: 'source-customers',
+        targetNodeId: 'transform-customers',
+      }),
+      { groupFieldId: 'field:transform-customers:country', countOutputName: 'customer_count' }
+    );
+
+    const sql = await projectDvtSubstraitPilotAggregationToPostgresSql(draft, {
+      schema: 'public',
+      table: 'customers',
+    });
+    const normalized = sql.replaceAll(/\s+/g, ' ').trim().toLowerCase();
+
+    expect(normalized).toMatch(
+      /^select country as country, count\(\*\) as customer_count from public\.customers group by country;?$/
+    );
   });
 
   it('projects the exact typed INNER JOIN from the canonical Substrait revision', async () => {

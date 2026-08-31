@@ -16,6 +16,10 @@ import {
   createDvtSubstraitInnerJoinDraft,
   encodeDvtSubstraitInnerJoinDocument,
 } from '../../src/app/views/canvas/canvasDvtSubstraitJoinComposition';
+import {
+  createDvtSubstraitPilotDraft,
+  encodeDvtSubstraitPilotDocument,
+} from '../../src/app/views/canvas/canvasDvtSubstraitPilot';
 import { normalizeProjectCanvasDraft } from '../../src/app/views/canvas/canvasProjectCanvasLifecycle';
 
 import { stubE2eApi } from './e2eApiStub';
@@ -36,6 +40,7 @@ export type StubCanvasDraftReadOptions = {
   columnMapping?: boolean;
   columnMappingDisconnected?: boolean;
   substraitInnerJoin?: boolean;
+  substraitPilot?: boolean;
   title?: string;
   readOnly?: boolean;
   largeGraph?: boolean;
@@ -60,6 +65,7 @@ export function buildCanvasAuthoringDraft({
   columnMapping = false,
   columnMappingDisconnected = false,
   substraitInnerJoin = false,
+  substraitPilot = false,
   title,
   largeGraph = false,
 }: StubCanvasDraftReadOptions = {}): CanvasAuthoringDraft {
@@ -195,6 +201,66 @@ export function buildCanvasAuthoringDraft({
           id: 'orders-join',
           sourceId: 'source-orders',
           targetId: 'join-transform',
+          relation: 'lineage',
+        },
+      ],
+    });
+  }
+
+  if (substraitPilot) {
+    const semanticDocument = encodeDvtSubstraitPilotDocument(
+      createDvtSubstraitPilotDraft({
+        sourceNodeId: 'source-customers',
+        targetNodeId: 'transform-customers',
+      })
+    );
+    return buildWorkspaceGraphAuthoringDraft({
+      canvas,
+      nodeIds: ['source-customers', 'transform-customers'],
+      nodePositions: {
+        'source-customers': { x: 40, y: 160 },
+        'transform-customers': { x: 420, y: 160 },
+      },
+      nodes: [
+        {
+          id: 'source-customers',
+          name: 'customers',
+          pluginId: 'dvt',
+          kind: 'dvt:source',
+          role: 'input',
+          status: 'idle',
+          tags: ['authoring'],
+          metadata: {
+            config: { schema: 'public', table: 'customers', alias: 'customers' },
+            columns: [
+              { name: 'name', type: 'string' },
+              { name: 'email', type: 'string' },
+              { name: 'country', type: 'string' },
+            ],
+          },
+        },
+        {
+          id: 'transform-customers',
+          name: 'Customer summary',
+          pluginId: 'dvt',
+          kind: 'dvt:sql_transform',
+          role: 'transform',
+          status: 'idle',
+          tags: ['authoring'],
+          metadata: {
+            transformAuthoring: {
+              version: 'v1',
+              mode: 'substrait',
+              semanticDocument,
+            },
+          },
+        },
+      ],
+      edges: [
+        {
+          id: 'customers-transform',
+          sourceId: 'source-customers',
+          targetId: 'transform-customers',
           relation: 'lineage',
         },
       ],
