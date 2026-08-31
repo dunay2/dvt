@@ -1,6 +1,16 @@
 /** Owned concern: build and inspect only the first two-source UNION ALL shape admitted by #2634. */
 import { create, fromBinary, toBinary } from '@bufbuild/protobuf';
 import {
+  AggregateFunction_AggregationInvocation,
+  AggregateFunctionSchema,
+  AggregateRelSchema,
+  AggregateRel_GroupingSchema,
+  AggregateRel_MeasureSchema,
+  AggregationPhase,
+  ExpressionSchema,
+  Expression_WindowFunctionSchema,
+  Expression_WindowFunction_BoundsType,
+  ProjectRelSchema,
   ReadRelSchema,
   ReadRel_NamedTableSchema,
   RelCommonSchema,
@@ -9,6 +19,8 @@ import {
   RelSchema,
   SetRelSchema,
   SetRel_SetOp,
+  SortFieldSchema,
+  SortField_SortDirection,
   type Rel,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import {
@@ -40,7 +52,23 @@ import {
 } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import {
+  createDvtSubstraitFieldReference,
+  createDvtSubstraitRequiredI64Type,
+  DVT_SUBSTRAIT_COUNT_CAPABILITY_ID,
+  ensureDvtSubstraitCountFunction,
+  isDvtSubstraitCountFunction,
+  readDvtSubstraitFieldReferenceOrdinal,
+  removeDvtSubstraitCountExtension,
+} from './canvasDvtSubstraitAggregation';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import {
+  createDvtSubstraitNullableI64Type,
+  DVT_SUBSTRAIT_ROW_NUMBER_CAPABILITY_ID,
+  ensureDvtSubstraitRowNumberFunction,
+  isDvtSubstraitRowNumberFunction,
+  removeDvtSubstraitRowNumberExtension,
+} from './canvasDvtSubstraitWindow';
 
 const ZERO_SHA256 = '0'.repeat(64);
 const UNION_ALL_PRODUCER = 'dvt-vtx2-union-all-card';
@@ -84,6 +112,53 @@ export type DvtSubstraitUnionAllProjection = Readonly<{
 
 export type DvtSubstraitUnionAllInspection =
   Readonly<{ ok: true; projection: DvtSubstraitUnionAllProjection }> | Readonly<{ ok: false }>;
+
+export type DvtSubstraitUnionAllGroupingProjection = Readonly<{
+  inputs: DvtSubstraitUnionAllProjection['inputs'];
+  groupField: Readonly<{
+    fieldKey: string;
+    name: string;
+    fieldId: string;
+    inputOrdinal: number;
+  }>;
+  measure: Readonly<{
+    name: string;
+    fieldId: string;
+    capabilityId: string;
+  }>;
+  outputs: readonly Readonly<{
+    name: string;
+    fieldId: string;
+    outputOrdinal: number;
+  }>[];
+}>;
+
+export type DvtSubstraitUnionAllGroupingInspection =
+  | Readonly<{ ok: true; projection: DvtSubstraitUnionAllGroupingProjection }>
+  | Readonly<{ ok: false }>;
+
+export type DvtSubstraitUnionAllGroupedWindowProjection = Readonly<{
+  inputs: DvtSubstraitUnionAllProjection['inputs'];
+  groupField: DvtSubstraitUnionAllGroupingProjection['groupField'];
+  measure: Readonly<{
+    name: string;
+    fieldId: string;
+  }>;
+  result: Readonly<{
+    name: string;
+    fieldId: string;
+    capabilityId: string;
+  }>;
+  outputs: readonly Readonly<{
+    name: string;
+    fieldId: string;
+    outputOrdinal: number;
+  }>[];
+}>;
+
+export type DvtSubstraitUnionAllGroupedWindowInspection =
+  | Readonly<{ ok: true; projection: DvtSubstraitUnionAllGroupedWindowProjection }>
+  | Readonly<{ ok: false }>;
 
 export type DvtSubstraitUnionAllEntry = Readonly<{
   inputs: readonly [DvtSubstraitUnionAllSource, DvtSubstraitUnionAllSource];
@@ -205,7 +280,7 @@ export function resolveDvtSubstraitUnionAllEntry(args: {
     try {
       const authority = readDvtTransformAuthoringAuthority(args.targetNode);
       if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return null;
-      const inspection = inspectDvtSubstraitUnionAllDraft(
+      const inspection = inspectDvtSubstraitUnionAllAcceptedDraft(
         decodeDvtSubstraitUnionAllDocument(authority.semanticDocument)
       );
       if (
@@ -752,11 +827,636 @@ export function applyDvtSubstraitUnionAllFieldEdit(
   return inspectDvtSubstraitUnionAllDraft(edited).ok ? edited : draft;
 }
 
+type ValidUnionAllGrouping = Readonly<{
+  baseDraft: DvtSubstraitUnionAllDraft;
+  baseProjection: DvtSubstraitUnionAllProjection;
+  projection: DvtSubstraitUnionAllGroupingProjection;
+}>;
+
+function hasUniqueSidecarIdentity(draft: DvtSubstraitUnionAllDraft): boolean {
+  return (
+    new Set(draft.sidecar.relations.map((relation) => relation.relationId)).size ===
+      draft.sidecar.relations.length &&
+    new Set(draft.sidecar.relations.map((relation) => relation.relAnchor)).size ===
+      draft.sidecar.relations.length &&
+    new Set(draft.sidecar.fields.map((field) => field.fieldId)).size === draft.sidecar.fields.length
+  );
+}
+
+function hasCurrentSemanticHash(draft: DvtSubstraitUnionAllDraft): boolean {
+  const planSha256 = sha256Hex(toBinary(PlanSchema, draft.plan));
+  return (
+    draft.sidecar.semanticPlanSha256 === ZERO_SHA256 ||
+    draft.sidecar.semanticPlanSha256 === planSha256
+  );
+}
+
+function unionTargetNodeId(draft: DvtSubstraitUnionAllDraft): string | null {
+  const resultBinding = draft.sidecar.relations.find((relation) => relation.relAnchor === 3);
+  return resultBinding == null ? null : targetNodeIdFromResultRelationId(resultBinding.relationId);
+}
+
+function inspectValidUnionAllGrouping(
+  draft: DvtSubstraitUnionAllDraft
+): ValidUnionAllGrouping | null {
+  if (
+    !hasPinnedPlanVersion(draft.plan) ||
+    draft.plan.relations.length !== 1 ||
+    draft.sidecar.schemaVersion !== DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION ||
+    draft.sidecar.relations.length !== 4 ||
+    !hasUniqueSidecarIdentity(draft) ||
+    !hasCurrentSemanticHash(draft)
+  ) {
+    return null;
+  }
+  const root = draft.plan.relations[0]?.relType;
+  if (
+    root?.case !== 'root' ||
+    root.value.names.length !== 2 ||
+    root.value.names.some((name) => name.length === 0 || name !== name.trim()) ||
+    new Set(root.value.names).size !== 2 ||
+    root.value.input?.relType.case !== 'aggregate'
+  ) {
+    return null;
+  }
+  const aggregate = root.value.input.relType.value;
+  if (
+    aggregate.common?.relAnchor == null ||
+    aggregate.common.relAnchor <= 3 ||
+    aggregate.common.emitKind.case !== undefined ||
+    aggregate.common.hint != null ||
+    aggregate.common.advancedExtension != null ||
+    aggregate.advancedExtension != null ||
+    aggregate.input?.relType.case !== 'set' ||
+    aggregate.groupings.length !== 1 ||
+    aggregate.groupings[0]?.expressionReferences.join(',') !== '0' ||
+    aggregate.groupingExpressions.length !== 1 ||
+    aggregate.measures.length !== 1 ||
+    !isDvtSubstraitCountFunction(draft.plan, aggregate)
+  ) {
+    return null;
+  }
+  const groupInputOrdinal = readDvtSubstraitFieldReferenceOrdinal(aggregate.groupingExpressions[0]);
+  if (groupInputOrdinal == null || groupInputOrdinal < 0) return null;
+  const targetNodeId = unionTargetNodeId(draft);
+  const unionBinding = draft.sidecar.relations.find((relation) => relation.relAnchor === 3);
+  const aggregateBinding = draft.sidecar.relations.find(
+    (relation) => relation.relAnchor === aggregate.common?.relAnchor
+  );
+  const aggregateRelationId =
+    targetNodeId == null ? null : `relation:${targetNodeId}:union-all-aggregate`;
+  if (
+    targetNodeId == null ||
+    unionBinding == null ||
+    aggregateBinding == null ||
+    aggregateBinding.relationId !== aggregateRelationId ||
+    aggregateBinding.sourceRef != null ||
+    aggregateBinding.displayName !== unionBinding.displayName
+  ) {
+    return null;
+  }
+  const aggregateFields = draft.sidecar.fields
+    .filter((field) => field.relationId === aggregateRelationId)
+    .sort((left, right) => left.outputOrdinal - right.outputOrdinal);
+  const groupField = aggregateFields[0];
+  const countField = aggregateFields[1];
+  const groupDisplayName = groupField?.displayName;
+  const countDisplayName = countField?.displayName;
+  if (
+    aggregateFields.length !== 2 ||
+    groupField?.outputOrdinal !== 0 ||
+    typeof groupDisplayName !== 'string' ||
+    groupDisplayName !== root.value.names[0] ||
+    countField?.outputOrdinal !== 1 ||
+    countField.fieldId !== `field:${targetNodeId}:union-all-count` ||
+    typeof countDisplayName !== 'string' ||
+    countDisplayName !== root.value.names[1]
+  ) {
+    return null;
+  }
+
+  const basePlan = clonePlan(draft.plan);
+  const baseRoot = basePlan.relations[0]?.relType;
+  if (baseRoot?.case !== 'root' || baseRoot.value.input?.relType.case !== 'aggregate') {
+    return null;
+  }
+  baseRoot.value.input = baseRoot.value.input.relType.value.input;
+  removeDvtSubstraitCountExtension(basePlan);
+  const baseFields = draft.sidecar.fields.flatMap((field) => {
+    if (field.fieldId === countField.fieldId) return [];
+    if (field.fieldId !== groupField.fieldId) return [field];
+    return [
+      {
+        ...field,
+        relationId: unionBinding.relationId,
+        outputOrdinal: groupInputOrdinal,
+        displayName: root.value.names[0]!,
+      },
+    ];
+  });
+  const baseOutputFields = baseFields
+    .filter((field) => field.relationId === unionBinding.relationId)
+    .sort((left, right) => left.outputOrdinal - right.outputOrdinal);
+  const baseOutputNames = baseOutputFields.map((field) => field.displayName);
+  if (
+    baseOutputFields.length === 0 ||
+    baseOutputFields.some((field, outputOrdinal) => field.outputOrdinal !== outputOrdinal) ||
+    baseOutputNames.some((name) => name == null)
+  ) {
+    return null;
+  }
+  baseRoot.value.names = baseOutputNames.flatMap((name) => (name == null ? [] : [name]));
+  const baseDraft: DvtSubstraitUnionAllDraft = {
+    plan: basePlan,
+    sidecar: {
+      ...draft.sidecar,
+      semanticPlanSha256: ZERO_SHA256,
+      relations: draft.sidecar.relations.filter(
+        (relation) => relation.relationId !== aggregateRelationId
+      ),
+      fields: baseFields,
+    },
+  };
+  const baseInspection = inspectDvtSubstraitUnionAllDraft(baseDraft);
+  const baseGroupField = baseInspection.ok
+    ? baseInspection.projection.outputs[groupInputOrdinal]
+    : null;
+  if (
+    !baseInspection.ok ||
+    baseGroupField == null ||
+    baseGroupField.fieldId !== groupField.fieldId ||
+    baseGroupField.name !== root.value.names[0]
+  ) {
+    return null;
+  }
+  return {
+    baseDraft,
+    baseProjection: baseInspection.projection,
+    projection: {
+      inputs: baseInspection.projection.inputs,
+      groupField: {
+        fieldKey: baseGroupField.fieldKey,
+        name: baseGroupField.name,
+        fieldId: baseGroupField.fieldId,
+        inputOrdinal: groupInputOrdinal,
+      },
+      measure: {
+        name: countDisplayName,
+        fieldId: countField.fieldId,
+        capabilityId: DVT_SUBSTRAIT_COUNT_CAPABILITY_ID,
+      },
+      outputs: [
+        { name: groupDisplayName, fieldId: groupField.fieldId, outputOrdinal: 0 },
+        { name: countDisplayName, fieldId: countField.fieldId, outputOrdinal: 1 },
+      ],
+    },
+  };
+}
+
+export function inspectDvtSubstraitUnionAllGroupingDraft(
+  draft: DvtSubstraitUnionAllDraft
+): DvtSubstraitUnionAllGroupingInspection {
+  const valid = inspectValidUnionAllGrouping(draft);
+  return valid == null ? { ok: false } : { ok: true, projection: valid.projection };
+}
+
+export function applyDvtSubstraitUnionAllGrouping(
+  draft: DvtSubstraitUnionAllDraft,
+  args: Readonly<{ groupFieldId: string; countOutputName: string }>
+): DvtSubstraitUnionAllDraft {
+  const inspection = inspectDvtSubstraitUnionAllDraft(draft);
+  const countOutputName = args.countOutputName.trim();
+  if (!inspection.ok || countOutputName.length === 0) return draft;
+  const groupField = inspection.projection.outputs.find(
+    (output) => output.fieldId === args.groupFieldId
+  );
+  if (groupField == null || groupField.name === countOutputName) return draft;
+  const targetNodeId = unionTargetNodeId(draft);
+  const unionBinding = draft.sidecar.relations.find((relation) => relation.relAnchor === 3);
+  if (targetNodeId == null || unionBinding == null) return draft;
+
+  const plan = clonePlan(draft.plan);
+  const root = plan.relations[0]?.relType;
+  if (root?.case !== 'root' || root.value.input?.relType.case !== 'set') return draft;
+  const setInput = root.value.input;
+  const aggregateAnchor =
+    Math.max(0, ...draft.sidecar.relations.map((relation) => relation.relAnchor)) + 1;
+  const countFunctionReference = ensureDvtSubstraitCountFunction(plan);
+  root.value.input = create(RelSchema, {
+    relType: {
+      case: 'aggregate',
+      value: create(AggregateRelSchema, {
+        common: create(RelCommonSchema, { relAnchor: aggregateAnchor }),
+        input: setInput,
+        groupings: [create(AggregateRel_GroupingSchema, { expressionReferences: [0] })],
+        groupingExpressions: [createDvtSubstraitFieldReference(groupField.outputOrdinal)],
+        measures: [
+          create(AggregateRel_MeasureSchema, {
+            measure: create(AggregateFunctionSchema, {
+              functionReference: countFunctionReference,
+              outputType: createDvtSubstraitRequiredI64Type(),
+              phase: AggregationPhase.INITIAL_TO_RESULT,
+              invocation: AggregateFunction_AggregationInvocation.ALL,
+            }),
+          }),
+        ],
+      }),
+    },
+  });
+  root.value.names = [groupField.name, countOutputName];
+  const aggregateRelationId = `relation:${targetNodeId}:union-all-aggregate`;
+  const sidecar: DvtSubstraitAuthoringSidecarV1 = {
+    ...draft.sidecar,
+    semanticPlanSha256: ZERO_SHA256,
+    relations: [
+      ...draft.sidecar.relations,
+      {
+        relationId: aggregateRelationId,
+        relAnchor: aggregateAnchor,
+        displayName: unionBinding.displayName,
+      },
+    ],
+    fields: [
+      ...draft.sidecar.fields.map((field) =>
+        field.fieldId === groupField.fieldId
+          ? {
+              ...field,
+              relationId: aggregateRelationId,
+              outputOrdinal: 0,
+              displayName: groupField.name,
+            }
+          : field
+      ),
+      {
+        fieldId: `field:${targetNodeId}:union-all-count`,
+        relationId: aggregateRelationId,
+        outputOrdinal: 1,
+        displayName: countOutputName,
+      },
+    ],
+  };
+  const grouped = { plan, sidecar };
+  return inspectValidUnionAllGrouping(grouped) == null ? draft : grouped;
+}
+
+export function renameDvtSubstraitUnionAllCountOutput(
+  draft: DvtSubstraitUnionAllDraft,
+  outputName: string
+): DvtSubstraitUnionAllDraft {
+  const valid = inspectValidUnionAllGrouping(draft);
+  const normalized = outputName.trim();
+  if (valid == null || normalized.length === 0 || normalized === valid.projection.groupField.name) {
+    return draft;
+  }
+  const plan = clonePlan(draft.plan);
+  const root = plan.relations[0]?.relType;
+  if (root?.case !== 'root') return draft;
+  root.value.names[1] = normalized;
+  const sidecar: DvtSubstraitAuthoringSidecarV1 = {
+    ...draft.sidecar,
+    semanticPlanSha256: ZERO_SHA256,
+    fields: draft.sidecar.fields.map((field) =>
+      field.fieldId === valid.projection.measure.fieldId
+        ? { ...field, displayName: normalized }
+        : field
+    ),
+  };
+  const renamed = { plan, sidecar };
+  return inspectValidUnionAllGrouping(renamed) == null ? draft : renamed;
+}
+
+export function removeDvtSubstraitUnionAllGrouping(
+  draft: DvtSubstraitUnionAllDraft
+): DvtSubstraitUnionAllDraft {
+  return inspectValidUnionAllGrouping(draft)?.baseDraft ?? draft;
+}
+
+type ValidUnionAllGroupedWindow = Readonly<{
+  baseDraft: DvtSubstraitUnionAllDraft;
+  projection: DvtSubstraitUnionAllGroupedWindowProjection;
+}>;
+
+function inspectValidUnionAllGroupedWindow(
+  draft: DvtSubstraitUnionAllDraft
+): ValidUnionAllGroupedWindow | null {
+  if (
+    !hasPinnedPlanVersion(draft.plan) ||
+    draft.plan.relations.length !== 1 ||
+    draft.sidecar.schemaVersion !== DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION ||
+    draft.sidecar.relations.length !== 5 ||
+    !hasUniqueSidecarIdentity(draft) ||
+    !hasCurrentSemanticHash(draft)
+  ) {
+    return null;
+  }
+  const root = draft.plan.relations[0]?.relType;
+  if (
+    root?.case !== 'root' ||
+    root.value.names.length !== 3 ||
+    root.value.names.some((name) => name.length === 0 || name !== name.trim()) ||
+    new Set(root.value.names).size !== 3 ||
+    root.value.input?.relType.case !== 'project'
+  ) {
+    return null;
+  }
+  const project = root.value.input.relType.value;
+  if (
+    project.common?.relAnchor == null ||
+    project.common.relAnchor <= 4 ||
+    project.common.emitKind.case !== 'emit' ||
+    project.common.emitKind.value.outputMapping.join(',') !== '0,1,2' ||
+    project.common.hint != null ||
+    project.common.advancedExtension != null ||
+    project.advancedExtension != null ||
+    project.input?.relType.case !== 'aggregate' ||
+    project.expressions.length !== 1
+  ) {
+    return null;
+  }
+  const expression = project.expressions[0]?.rexType;
+  if (expression?.case !== 'windowFunction') return null;
+  const windowFunction = expression.value;
+  if (
+    !isDvtSubstraitRowNumberFunction(draft.plan, windowFunction) ||
+    windowFunction.partitions.length !== 0 ||
+    windowFunction.sorts.length !== 2 ||
+    readDvtSubstraitFieldReferenceOrdinal(windowFunction.sorts[0]?.expr) !== 1 ||
+    windowFunction.sorts[0]?.sortKind.case !== 'direction' ||
+    windowFunction.sorts[0].sortKind.value !== SortField_SortDirection.DESC_NULLS_LAST ||
+    readDvtSubstraitFieldReferenceOrdinal(windowFunction.sorts[1]?.expr) !== 0 ||
+    windowFunction.sorts[1]?.sortKind.case !== 'direction' ||
+    windowFunction.sorts[1].sortKind.value !== SortField_SortDirection.ASC_NULLS_LAST
+  ) {
+    return null;
+  }
+  const targetNodeId = unionTargetNodeId(draft);
+  const windowBinding = draft.sidecar.relations.find(
+    (relation) => relation.relAnchor === project.common?.relAnchor
+  );
+  const unionBinding = draft.sidecar.relations.find((relation) => relation.relAnchor === 3);
+  const windowRelationId =
+    targetNodeId == null ? null : `relation:${targetNodeId}:union-all-aggregate-window`;
+  const aggregateRelationId =
+    targetNodeId == null ? null : `relation:${targetNodeId}:union-all-aggregate`;
+  const resultFieldId = targetNodeId == null ? null : `field:${targetNodeId}:union-all-count-rank`;
+  if (
+    targetNodeId == null ||
+    windowBinding == null ||
+    unionBinding == null ||
+    windowBinding.relationId !== windowRelationId ||
+    windowBinding.sourceRef != null ||
+    windowBinding.displayName !== unionBinding.displayName ||
+    aggregateRelationId == null ||
+    resultFieldId == null
+  ) {
+    return null;
+  }
+  const outerFields = draft.sidecar.fields
+    .filter((field) => field.relationId === windowRelationId)
+    .sort((left, right) => left.outputOrdinal - right.outputOrdinal);
+  if (
+    outerFields.length !== 3 ||
+    outerFields.some(
+      (field, outputOrdinal) =>
+        field.outputOrdinal !== outputOrdinal ||
+        field.displayName !== root.value.names[outputOrdinal]
+    ) ||
+    outerFields[2]?.fieldId !== resultFieldId
+  ) {
+    return null;
+  }
+
+  const basePlan = clonePlan(draft.plan);
+  const baseRoot = basePlan.relations[0]?.relType;
+  if (baseRoot?.case !== 'root' || baseRoot.value.input?.relType.case !== 'project') return null;
+  const aggregateInput = baseRoot.value.input.relType.value.input;
+  if (aggregateInput?.relType.case !== 'aggregate') return null;
+  baseRoot.value.input = aggregateInput;
+  baseRoot.value.names = baseRoot.value.names.slice(0, 2);
+  removeDvtSubstraitRowNumberExtension(basePlan);
+  const baseDraft: DvtSubstraitUnionAllDraft = {
+    plan: basePlan,
+    sidecar: {
+      ...draft.sidecar,
+      semanticPlanSha256: ZERO_SHA256,
+      relations: draft.sidecar.relations.filter(
+        (relation) => relation.relationId !== windowRelationId
+      ),
+      fields: draft.sidecar.fields.flatMap((field) => {
+        if (field.fieldId === resultFieldId) return [];
+        if (field.relationId !== windowRelationId) return [field];
+        return [{ ...field, relationId: aggregateRelationId }];
+      }),
+    },
+  };
+  const baseInspection = inspectDvtSubstraitUnionAllGroupingDraft(baseDraft);
+  if (
+    !baseInspection.ok ||
+    outerFields[0]?.fieldId !== baseInspection.projection.groupField.fieldId ||
+    outerFields[1]?.fieldId !== baseInspection.projection.measure.fieldId
+  ) {
+    return null;
+  }
+  return {
+    baseDraft,
+    projection: {
+      inputs: baseInspection.projection.inputs,
+      groupField: baseInspection.projection.groupField,
+      measure: {
+        name: baseInspection.projection.measure.name,
+        fieldId: baseInspection.projection.measure.fieldId,
+      },
+      result: {
+        name: root.value.names[2]!,
+        fieldId: resultFieldId,
+        capabilityId: DVT_SUBSTRAIT_ROW_NUMBER_CAPABILITY_ID,
+      },
+      outputs: [
+        {
+          name: root.value.names[0]!,
+          fieldId: outerFields[0]!.fieldId,
+          outputOrdinal: 0,
+        },
+        {
+          name: root.value.names[1]!,
+          fieldId: outerFields[1]!.fieldId,
+          outputOrdinal: 1,
+        },
+        { name: root.value.names[2]!, fieldId: resultFieldId, outputOrdinal: 2 },
+      ],
+    },
+  };
+}
+
+export function inspectDvtSubstraitUnionAllGroupedWindowDraft(
+  draft: DvtSubstraitUnionAllDraft
+): DvtSubstraitUnionAllGroupedWindowInspection {
+  const valid = inspectValidUnionAllGroupedWindow(draft);
+  return valid == null ? { ok: false } : { ok: true, projection: valid.projection };
+}
+
+export function applyDvtSubstraitUnionAllGroupedRowNumber(
+  draft: DvtSubstraitUnionAllDraft,
+  args: Readonly<{ outputName: string }>
+): DvtSubstraitUnionAllDraft {
+  const groupingInspection = inspectDvtSubstraitUnionAllGroupingDraft(draft);
+  const outputName = args.outputName.trim();
+  if (
+    !groupingInspection.ok ||
+    outputName.length === 0 ||
+    groupingInspection.projection.outputs.some((output) => output.name === outputName)
+  ) {
+    return draft;
+  }
+  const targetNodeId = unionTargetNodeId(draft);
+  const unionBinding = draft.sidecar.relations.find((relation) => relation.relAnchor === 3);
+  if (targetNodeId == null || unionBinding == null) return draft;
+  const plan = clonePlan(draft.plan);
+  const root = plan.relations[0]?.relType;
+  if (root?.case !== 'root' || root.value.input?.relType.case !== 'aggregate') return draft;
+  const aggregateInput = root.value.input;
+  const relationAnchor =
+    Math.max(0, ...draft.sidecar.relations.map((relation) => relation.relAnchor)) + 1;
+  const functionReference = ensureDvtSubstraitRowNumberFunction(plan);
+  root.value.input = create(RelSchema, {
+    relType: {
+      case: 'project',
+      value: create(ProjectRelSchema, {
+        common: create(RelCommonSchema, {
+          relAnchor: relationAnchor,
+          emitKind: {
+            case: 'emit',
+            value: create(RelCommon_EmitSchema, { outputMapping: [0, 1, 2] }),
+          },
+        }),
+        input: aggregateInput,
+        expressions: [
+          create(ExpressionSchema, {
+            rexType: {
+              case: 'windowFunction',
+              value: create(Expression_WindowFunctionSchema, {
+                functionReference,
+                outputType: createDvtSubstraitNullableI64Type(),
+                phase: AggregationPhase.INITIAL_TO_RESULT,
+                invocation: AggregateFunction_AggregationInvocation.ALL,
+                sorts: [
+                  create(SortFieldSchema, {
+                    expr: createDvtSubstraitFieldReference(1),
+                    sortKind: {
+                      case: 'direction',
+                      value: SortField_SortDirection.DESC_NULLS_LAST,
+                    },
+                  }),
+                  create(SortFieldSchema, {
+                    expr: createDvtSubstraitFieldReference(0),
+                    sortKind: {
+                      case: 'direction',
+                      value: SortField_SortDirection.ASC_NULLS_LAST,
+                    },
+                  }),
+                ],
+                boundsType: Expression_WindowFunction_BoundsType.UNSPECIFIED,
+              }),
+            },
+          }),
+        ],
+      }),
+    },
+  });
+  root.value.names.push(outputName);
+  const aggregateRelationId = `relation:${targetNodeId}:union-all-aggregate`;
+  const windowRelationId = `relation:${targetNodeId}:union-all-aggregate-window`;
+  const resultFieldId = `field:${targetNodeId}:union-all-count-rank`;
+  const sidecar: DvtSubstraitAuthoringSidecarV1 = {
+    ...draft.sidecar,
+    semanticPlanSha256: ZERO_SHA256,
+    relations: [
+      ...draft.sidecar.relations,
+      {
+        relationId: windowRelationId,
+        relAnchor: relationAnchor,
+        displayName: unionBinding.displayName,
+      },
+    ],
+    fields: [
+      ...draft.sidecar.fields.map((field) =>
+        field.relationId === aggregateRelationId
+          ? { ...field, relationId: windowRelationId }
+          : field
+      ),
+      {
+        fieldId: resultFieldId,
+        relationId: windowRelationId,
+        outputOrdinal: 2,
+        displayName: outputName,
+      },
+    ],
+  };
+  const composed = { plan, sidecar };
+  return inspectValidUnionAllGroupedWindow(composed) == null ? draft : composed;
+}
+
+export function renameDvtSubstraitUnionAllGroupedRowNumberOutput(
+  draft: DvtSubstraitUnionAllDraft,
+  outputName: string
+): DvtSubstraitUnionAllDraft {
+  const valid = inspectValidUnionAllGroupedWindow(draft);
+  const normalized = outputName.trim();
+  if (
+    valid == null ||
+    normalized.length === 0 ||
+    valid.projection.outputs.slice(0, 2).some((output) => output.name === normalized)
+  ) {
+    return draft;
+  }
+  const plan = clonePlan(draft.plan);
+  const root = plan.relations[0]?.relType;
+  if (root?.case !== 'root') return draft;
+  root.value.names[2] = normalized;
+  const sidecar: DvtSubstraitAuthoringSidecarV1 = {
+    ...draft.sidecar,
+    semanticPlanSha256: ZERO_SHA256,
+    fields: draft.sidecar.fields.map((field) =>
+      field.fieldId === valid.projection.result.fieldId
+        ? { ...field, displayName: normalized }
+        : field
+    ),
+  };
+  const renamed = { plan, sidecar };
+  return inspectValidUnionAllGroupedWindow(renamed) == null ? draft : renamed;
+}
+
+export function removeDvtSubstraitUnionAllGroupedRowNumber(
+  draft: DvtSubstraitUnionAllDraft
+): DvtSubstraitUnionAllDraft {
+  return inspectValidUnionAllGroupedWindow(draft)?.baseDraft ?? draft;
+}
+
+export function inspectDvtSubstraitUnionAllAcceptedDraft(draft: DvtSubstraitUnionAllDraft):
+  | Readonly<{
+      ok: true;
+      projection: Readonly<{
+        inputs: DvtSubstraitUnionAllProjection['inputs'];
+        outputs: readonly Readonly<{
+          name: string;
+          fieldId: string;
+          outputOrdinal: number;
+        }>[];
+      }>;
+    }>
+  | Readonly<{ ok: false }> {
+  const groupedWindow = inspectDvtSubstraitUnionAllGroupedWindowDraft(draft);
+  if (groupedWindow.ok) return groupedWindow;
+  const grouping = inspectDvtSubstraitUnionAllGroupingDraft(draft);
+  if (grouping.ok) return grouping;
+  return inspectDvtSubstraitUnionAllDraft(draft);
+}
+
 export function decodeDvtSubstraitUnionAllDocument(input: unknown): DvtSubstraitUnionAllDraft {
   const document = canonicalizeDvtSubstraitSemanticDocumentV1(input);
   const plan = fromBinary(PlanSchema, base64Bytes(document.semanticPlan.bytesBase64));
   const draft = { plan, sidecar: document.sidecar };
-  if (!inspectDvtSubstraitUnionAllDraft(draft).ok) {
+  if (!inspectDvtSubstraitUnionAllAcceptedDraft(draft).ok) {
     throw new Error('Unsupported VTX2 UNION ALL Substrait shape.');
   }
   return draft;
@@ -765,7 +1465,7 @@ export function decodeDvtSubstraitUnionAllDocument(input: unknown): DvtSubstrait
 export function encodeDvtSubstraitUnionAllDocument(
   draft: DvtSubstraitUnionAllDraft
 ): DvtSubstraitSemanticDocumentV1 {
-  if (!inspectDvtSubstraitUnionAllDraft(draft).ok) {
+  if (!inspectDvtSubstraitUnionAllAcceptedDraft(draft).ok) {
     throw new Error('Unsupported VTX2 UNION ALL Substrait shape.');
   }
   const bytes = toBinary(PlanSchema, draft.plan);

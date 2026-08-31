@@ -1,7 +1,7 @@
 /** Owned concern: prove two-source UNION ALL authoring through the governed Canvas Substrait draft rail. */
 import {
   decodeDvtSubstraitUnionAllDocument,
-  inspectDvtSubstraitUnionAllDraft,
+  inspectDvtSubstraitUnionAllGroupedWindowDraft,
 } from '../../../src/app/views/canvas/canvasDvtSubstraitSetComposition';
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
@@ -81,6 +81,26 @@ describe('Canvas Substrait UNION ALL', () => {
     cy.get(
       'button[data-action="move-substrait-union-all-field-up"][data-field-key="country"]'
     ).click();
+    cy.get('[data-slot="dvt-substrait-union-all-grain-field"]').select(
+      'field:union-transform:country'
+    );
+    cy.get('[data-slot="dvt-substrait-union-all-count-output-name"]')
+      .clear()
+      .type('customer_count');
+    cy.get('[data-slot="dvt-substrait-union-all-apply-grouping"]')
+      .focus()
+      .should('have.focus')
+      .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
+    cy.get('[data-slot="dvt-substrait-union-all-grouping-authoring"]')
+      .should('be.visible')
+      .and('contain.text', 'region')
+      .and('contain.text', 'customer_count');
+    cy.get('[data-slot="dvt-substrait-union-all-window-output-name"]').clear().type('count_rank');
+    cy.get('[data-slot="dvt-substrait-union-all-apply-window"]').click();
+    cy.get('[data-slot="dvt-substrait-union-all-grouped-window-authoring"]')
+      .should('be.visible')
+      .and('contain.text', 'region')
+      .and('contain.text', 'customer_count');
     cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
 
     cy.wrap(null).should(() => {
@@ -91,22 +111,25 @@ describe('Canvas Substrait UNION ALL', () => {
         .at(-1);
       const transformAuthoring = savedTransform?.metadata?.transformAuthoring as
         { semanticDocument?: unknown } | undefined;
-      const inspection = inspectDvtSubstraitUnionAllDraft(
+      const inspection = inspectDvtSubstraitUnionAllGroupedWindowDraft(
         decodeDvtSubstraitUnionAllDocument(transformAuthoring?.semanticDocument)
       );
 
       expect(inspection.ok && inspection.projection.outputs).to.deep.equal([
         {
-          fieldKey: 'country',
           name: 'region',
           fieldId: 'field:union-transform:country',
           outputOrdinal: 0,
         },
         {
-          fieldKey: 'customer_id',
-          name: 'customer_id',
-          fieldId: 'field:union-transform:customer_id',
+          name: 'customer_count',
+          fieldId: 'field:union-transform:union-all-count',
           outputOrdinal: 1,
+        },
+        {
+          name: 'count_rank',
+          fieldId: 'field:union-transform:union-all-count-rank',
+          outputOrdinal: 2,
         },
       ]);
     });
@@ -114,7 +137,7 @@ describe('Canvas Substrait UNION ALL', () => {
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     visitCanvas();
     cy.get('.react-flow__node[data-id="union-transform"]')
-      .should('contain.text', 'Columns2')
+      .should('contain.text', 'Columns3')
       .find('[data-slot="canvas-node-shell"]')
       .dblclick();
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
@@ -122,11 +145,12 @@ describe('Canvas Substrait UNION ALL', () => {
       'contain.text',
       'public.customers_north UNION ALL public.customers_south'
     );
-    cy.get(
-      'input[data-slot="dvt-substrait-union-all-output-name"][data-field-key="country"]'
-    ).should('have.value', 'region');
-    cy.get('input[data-slot="dvt-substrait-union-all-field"][data-field-key="name"]').should(
-      'not.be.checked'
+    cy.get('[data-slot="dvt-substrait-union-all-grouped-window-authoring"]')
+      .should('contain.text', 'region')
+      .and('contain.text', 'customer_count');
+    cy.get('[data-slot="dvt-substrait-union-all-window-output-name"]').should(
+      'have.value',
+      'count_rank'
     );
   });
 });

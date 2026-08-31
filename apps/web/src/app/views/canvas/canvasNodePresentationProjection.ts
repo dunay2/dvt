@@ -19,7 +19,7 @@ import {
 } from './canvasDvtSubstraitJoinComposition';
 import {
   decodeDvtSubstraitUnionAllDocument,
-  inspectDvtSubstraitUnionAllDraft,
+  inspectDvtSubstraitUnionAllAcceptedDraft,
 } from './canvasDvtSubstraitSetComposition';
 import {
   isObjectFilePostgresNode,
@@ -122,7 +122,7 @@ function projectCanvasNodePresentationTruthInternal(
                   if (joinInspection.ok) {
                     substraitOutputs = joinInspection.projection.outputs;
                   } else {
-                    const unionAllInspection = inspectDvtSubstraitUnionAllDraft(
+                    const unionAllInspection = inspectDvtSubstraitUnionAllAcceptedDraft(
                       decodeDvtSubstraitUnionAllDocument(authority.semanticDocument)
                     );
                     if (unionAllInspection.ok) {

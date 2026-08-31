@@ -41,11 +41,14 @@ import {
 
 const COUNT_URN = 'extension:io.substrait:functions_aggregate_generic';
 const COUNT_NAME = 'count';
-const COUNT_CAPABILITY_ID = buildDvtSubstraitStandardCapabilityId('aggregate-function', {
-  sourceKind: 'simple-extension',
-  urn: COUNT_URN,
-  name: COUNT_NAME,
-});
+export const DVT_SUBSTRAIT_COUNT_CAPABILITY_ID = buildDvtSubstraitStandardCapabilityId(
+  'aggregate-function',
+  {
+    sourceKind: 'simple-extension',
+    urn: COUNT_URN,
+    name: COUNT_NAME,
+  }
+);
 
 export type DvtSubstraitPilotAggregationProjection = Readonly<{
   sourceName: string;
@@ -79,7 +82,7 @@ function clonePlan(plan: Plan): Plan {
   return fromBinary(PlanSchema, toBinary(PlanSchema, plan));
 }
 
-function fieldReference(ordinal: number): Expression {
+export function createDvtSubstraitFieldReference(ordinal: number): Expression {
   return create(ExpressionSchema, {
     rexType: {
       case: 'selection',
@@ -102,7 +105,9 @@ function fieldReference(ordinal: number): Expression {
   });
 }
 
-function readFieldReferenceOrdinal(expression: Expression | undefined): number | null {
+export function readDvtSubstraitFieldReferenceOrdinal(
+  expression: Expression | undefined
+): number | null {
   if (expression?.rexType.case !== 'selection') return null;
   const selection = expression.rexType.value;
   if (selection.rootType.case !== 'rootReference') return null;
@@ -112,7 +117,7 @@ function readFieldReferenceOrdinal(expression: Expression | undefined): number |
   return segment.value.field;
 }
 
-function i64Type() {
+export function createDvtSubstraitRequiredI64Type() {
   return create(TypeSchema, {
     kind: {
       case: 'i64',
@@ -134,7 +139,7 @@ function requireAggregateCapabilities(): void {
       sourceKind: 'core',
       message: 'substrait.AggregateRel',
     }),
-    COUNT_CAPABILITY_ID,
+    DVT_SUBSTRAIT_COUNT_CAPABILITY_ID,
     buildDvtSubstraitStandardCapabilityId('type', {
       sourceKind: 'core',
       message: 'substrait.Type',
@@ -153,7 +158,7 @@ function requireAggregateCapabilities(): void {
   }
 }
 
-function ensureCountFunction(plan: Plan): number {
+export function ensureDvtSubstraitCountFunction(plan: Plan): number {
   requireAggregateCapabilities();
   const existing = plan.extensions.find(
     (entry) =>
@@ -198,7 +203,7 @@ function ensureCountFunction(plan: Plan): number {
   return functionAnchor;
 }
 
-function readCountFunctionReference(plan: Plan, aggregate: AggregateRel): boolean {
+export function isDvtSubstraitCountFunction(plan: Plan, aggregate: AggregateRel): boolean {
   const measure = aggregate.measures[0];
   const fn = measure?.measure;
   if (
@@ -224,6 +229,27 @@ function readCountFunctionReference(plan: Plan, aggregate: AggregateRel): boolea
     declaration?.mappingType.case === 'extensionFunction' &&
     declaration.mappingType.value.name === COUNT_NAME &&
     resolveExtensionUrn(plan, declaration.mappingType.value.extensionUrnReference) === COUNT_URN
+  );
+}
+
+export function removeDvtSubstraitCountExtension(plan: Plan): void {
+  plan.extensions = plan.extensions.filter(
+    (entry) =>
+      !(
+        entry.mappingType.case === 'extensionFunction' &&
+        entry.mappingType.value.name === COUNT_NAME &&
+        resolveExtensionUrn(plan, entry.mappingType.value.extensionUrnReference) === COUNT_URN
+      )
+  );
+  const referencedUrnAnchors = new Set(
+    plan.extensions.flatMap((entry) =>
+      entry.mappingType.case === 'extensionFunction'
+        ? [entry.mappingType.value.extensionUrnReference]
+        : []
+    )
+  );
+  plan.extensionUrns = plan.extensionUrns.filter(
+    (entry) => entry.urn !== COUNT_URN || referencedUrnAnchors.has(entry.extensionUrnAnchor)
   );
 }
 
@@ -258,11 +284,11 @@ function inspectValidAggregation(draft: DvtSubstraitPilotDraft): ValidAggregatio
     aggregate.groupingExpressions.length !== 1 ||
     aggregate.measures.length !== 1 ||
     aggregate.input?.relType.case !== 'project' ||
-    !readCountFunctionReference(draft.plan, aggregate)
+    !isDvtSubstraitCountFunction(draft.plan, aggregate)
   ) {
     return null;
   }
-  const groupInputOrdinal = readFieldReferenceOrdinal(aggregate.groupingExpressions[0]);
+  const groupInputOrdinal = readDvtSubstraitFieldReferenceOrdinal(aggregate.groupingExpressions[0]);
   if (groupInputOrdinal == null || groupInputOrdinal < 0 || groupInputOrdinal > 2) return null;
   const projectAnchor = aggregate.input.relType.value.common?.relAnchor;
   if (projectAnchor == null || projectAnchor <= 0) return null;
@@ -306,24 +332,7 @@ function inspectValidAggregation(draft: DvtSubstraitPilotDraft): ValidAggregatio
   if (baseRoot?.case !== 'root' || baseRoot.value.input?.relType.case !== 'aggregate') return null;
   baseRoot.value.input = baseRoot.value.input.relType.value.input;
   baseRoot.value.names = baseNames.filter((name): name is string => name != null);
-  basePlan.extensions = basePlan.extensions.filter(
-    (entry) =>
-      !(
-        entry.mappingType.case === 'extensionFunction' &&
-        entry.mappingType.value.name === COUNT_NAME &&
-        resolveExtensionUrn(basePlan, entry.mappingType.value.extensionUrnReference) === COUNT_URN
-      )
-  );
-  const referencedUrnAnchors = new Set(
-    basePlan.extensions.flatMap((entry) =>
-      entry.mappingType.case === 'extensionFunction'
-        ? [entry.mappingType.value.extensionUrnReference]
-        : []
-    )
-  );
-  basePlan.extensionUrns = basePlan.extensionUrns.filter(
-    (entry) => entry.urn !== COUNT_URN || referencedUrnAnchors.has(entry.extensionUrnAnchor)
-  );
+  removeDvtSubstraitCountExtension(basePlan);
   const baseSidecar: DvtSubstraitAuthoringSidecarV1 = {
     ...draft.sidecar,
     relations: draft.sidecar.relations.filter(
@@ -357,7 +366,7 @@ function inspectValidAggregation(draft: DvtSubstraitPilotDraft): ValidAggregatio
       measure: {
         name: root.names[1]!,
         fieldId: countField.fieldId,
-        capabilityId: COUNT_CAPABILITY_ID,
+        capabilityId: DVT_SUBSTRAIT_COUNT_CAPABILITY_ID,
       },
       outputs: [
         { name: root.names[0]!, fieldId: groupField.fieldId, outputOrdinal: 0 },
@@ -402,7 +411,7 @@ export function applyDvtSubstraitPilotAggregation(
 
   const aggregateAnchor =
     Math.max(0, ...draft.sidecar.relations.map((relation) => relation.relAnchor)) + 1;
-  const countFunctionReference = ensureCountFunction(plan);
+  const countFunctionReference = ensureDvtSubstraitCountFunction(plan);
   root.value.input = create(RelSchema, {
     relType: {
       case: 'aggregate',
@@ -410,12 +419,12 @@ export function applyDvtSubstraitPilotAggregation(
         common: create(RelCommonSchema, { relAnchor: aggregateAnchor }),
         input: project,
         groupings: [create(AggregateRel_GroupingSchema, { expressionReferences: [0] })],
-        groupingExpressions: [fieldReference(groupField.outputOrdinal)],
+        groupingExpressions: [createDvtSubstraitFieldReference(groupField.outputOrdinal)],
         measures: [
           create(AggregateRel_MeasureSchema, {
             measure: create(AggregateFunctionSchema, {
               functionReference: countFunctionReference,
-              outputType: i64Type(),
+              outputType: createDvtSubstraitRequiredI64Type(),
               phase: AggregationPhase.INITIAL_TO_RESULT,
               invocation: AggregateFunction_AggregationInvocation.ALL,
             }),

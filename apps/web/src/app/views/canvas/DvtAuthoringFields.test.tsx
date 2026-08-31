@@ -513,6 +513,45 @@ describe('DvtAuthoringFields', () => {
     expect(draftJson()).toContain('"names":["region","customer_id"]');
     expect(draftJson()).toContain('"fieldId":"field:dvt-sql-transform:country"');
     expect(draftJson()).toContain('"displayName":"region"');
+
+    const grainField = container.querySelector<HTMLSelectElement>(
+      '[data-slot="dvt-substrait-union-all-grain-field"]'
+    );
+    const countOutput = container.querySelector<HTMLInputElement>(
+      '[data-slot="dvt-substrait-union-all-count-output-name"]'
+    );
+    const applyGrouping = container.querySelector<HTMLButtonElement>(
+      '[data-slot="dvt-substrait-union-all-apply-grouping"]'
+    );
+    expect(grainField).not.toBeNull();
+    expect(countOutput).not.toBeNull();
+    act(() => {
+      fireEvent.change(grainField!, {
+        target: { value: 'field:dvt-sql-transform:country' },
+      });
+      fireEvent.input(countOutput!, { target: { value: 'customer_count' } });
+      fireEvent.keyDown(applyGrouping!, { key: 'Enter' });
+    });
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-union-all-grouping-authoring"]')
+    ).not.toBeNull();
+    expect(draftJson()).toContain('"case":"aggregate"');
+
+    const rankOutput = container.querySelector<HTMLInputElement>(
+      '[data-slot="dvt-substrait-union-all-window-output-name"]'
+    );
+    const applyWindow = container.querySelector<HTMLButtonElement>(
+      '[data-slot="dvt-substrait-union-all-apply-window"]'
+    );
+    act(() => {
+      fireEvent.input(rankOutput!, { target: { value: 'count_rank' } });
+      fireEvent.click(applyWindow!);
+    });
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-union-all-grouped-window-authoring"]')
+    ).not.toBeNull();
+    expect(draftJson()).toContain('"names":["region","customer_count","count_rank"]');
+    expect(draftJson()).toContain('"case":"windowFunction"');
   });
 
   it('keeps only the latest governed SQL validation and localizes its diagnostic', async () => {

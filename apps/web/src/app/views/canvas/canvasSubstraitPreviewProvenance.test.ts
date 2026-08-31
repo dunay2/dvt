@@ -15,6 +15,8 @@ import {
   encodeDvtSubstraitInnerJoinDocument,
 } from './canvasDvtSubstraitJoinComposition';
 import {
+  applyDvtSubstraitUnionAllGroupedRowNumber,
+  applyDvtSubstraitUnionAllGrouping,
   applyDvtSubstraitUnionAllFieldEdit,
   createDvtSubstraitUnionAllDraft,
   encodeDvtSubstraitUnionAllDocument,
@@ -234,7 +236,9 @@ function buildSubstraitJoinPreviewGraph(): ReturnType<typeof buildSubstraitPrevi
   };
 }
 
-function buildSubstraitUnionAllPreviewGraph(): ReturnType<typeof buildSubstraitPreviewGraph> {
+function buildSubstraitUnionAllPreviewGraph(
+  composition: 'fields' | 'grouped-window' = 'fields'
+): ReturnType<typeof buildSubstraitPreviewGraph> {
   const transformPath = 'models/all_customers.sql';
   const connectionRef = buildTestPostgresConnectionRef();
   const fields = ['customer_id', 'name', 'country'].map((name) => ({
@@ -285,6 +289,15 @@ function buildSubstraitUnionAllPreviewGraph(): ReturnType<typeof buildSubstraitP
     fieldKey: 'name',
     selected: false,
   });
+  if (composition === 'grouped-window') {
+    draft = applyDvtSubstraitUnionAllGrouping(draft, {
+      groupFieldId: 'field:transform:country',
+      countOutputName: 'customer_count',
+    });
+    draft = applyDvtSubstraitUnionAllGroupedRowNumber(draft, {
+      outputName: 'count_rank',
+    });
+  }
   const transform = applyDvtSubstraitSemanticDocument(
     {
       id: 'transform',
@@ -566,6 +579,20 @@ describe('Substrait Preview provenance cutover', () => {
     const normalized = result.sqlText?.replaceAll(/\s+/g, ' ').trim().toLowerCase();
     expect(normalized).toMatch(
       /^select country as region, customer_id from public\.customers_north union all select country as region, customer_id from public\.customers_south;?$/
+    );
+    expect(savedContents).toContain(result.sqlText);
+  });
+
+  it('routes grouped and ranked UNION ALL through the same Preview artifact rail', async () => {
+    const { result, savedContents } = await resolveGraphPreview(
+      buildSubstraitUnionAllPreviewGraph('grouped-window')
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error(result.message);
+    const normalized = result.sqlText?.replaceAll(/\s+/g, ' ').trim().toLowerCase();
+    expect(normalized).toMatch(
+      /^select region, count\(\*\) as customer_count, row_number\(\) over \( ?order by count\(\*\) desc nulls last, region asc nulls last ?\) as count_rank from \(\s*select country as region, customer_id from public\.customers_north union all select country as region, customer_id from public\.customers_south\s*\) as union_all_input group by region;?$/
     );
     expect(savedContents).toContain(result.sqlText);
   });
