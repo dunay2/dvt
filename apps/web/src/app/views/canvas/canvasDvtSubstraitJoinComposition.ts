@@ -151,6 +151,7 @@ export type DvtSubstraitInnerJoinProjection = Readonly<{
     fieldKey: DvtSubstraitInnerJoinFieldKey;
     name: string;
     fieldId: string;
+    dataType: 'string';
     outputOrdinal: number;
     source: Readonly<{ relation: 'left' | 'right'; name: string }>;
   }>[];
@@ -172,7 +173,12 @@ export type DvtSubstraitInnerJoinGroupingProjection = Readonly<{
     source: Readonly<{ relation: 'left' | 'right'; name: string }>;
   }>;
   measure: Readonly<{ name: string; fieldId: string; capabilityId: string }>;
-  outputs: readonly Readonly<{ name: string; fieldId: string; outputOrdinal: number }>[];
+  outputs: readonly Readonly<{
+    name: string;
+    fieldId: string;
+    dataType: 'string' | 'i64';
+    outputOrdinal: number;
+  }>[];
 }>;
 
 export type DvtSubstraitInnerJoinGroupingInspection =
@@ -187,7 +193,12 @@ export type DvtSubstraitInnerJoinGroupedWindowProjection = Readonly<{
   groupField: DvtSubstraitInnerJoinGroupingProjection['groupField'];
   measure: Readonly<{ name: string; fieldId: string }>;
   result: Readonly<{ name: string; fieldId: string; capabilityId: string }>;
-  outputs: readonly Readonly<{ name: string; fieldId: string; outputOrdinal: number }>[];
+  outputs: readonly Readonly<{
+    name: string;
+    fieldId: string;
+    dataType: 'string' | 'i64';
+    outputOrdinal: number;
+  }>[];
 }>;
 
 export type DvtSubstraitInnerJoinGroupedWindowInspection =
@@ -765,6 +776,7 @@ export function inspectDvtSubstraitInnerJoinDraft(
           fieldKey: field.fieldKey,
           name,
           fieldId: binding.fieldId,
+          dataType: 'string' as const,
           outputOrdinal,
           source: field.source,
         };
@@ -1051,8 +1063,18 @@ function inspectValidInnerJoinGrouping(
         capabilityId: DVT_SUBSTRAIT_COUNT_CAPABILITY_ID,
       },
       outputs: [
-        { name: groupDisplayName, fieldId: groupField.fieldId, outputOrdinal: 0 },
-        { name: countDisplayName, fieldId: countField.fieldId, outputOrdinal: 1 },
+        {
+          name: groupDisplayName,
+          fieldId: groupField.fieldId,
+          dataType: 'string',
+          outputOrdinal: 0,
+        },
+        {
+          name: countDisplayName,
+          fieldId: countField.fieldId,
+          dataType: 'i64',
+          outputOrdinal: 1,
+        },
       ],
     },
   };
@@ -1320,9 +1342,24 @@ function inspectValidInnerJoinGroupedWindow(
         capabilityId: DVT_SUBSTRAIT_ROW_NUMBER_CAPABILITY_ID,
       },
       outputs: [
-        { name: root.value.names[0]!, fieldId: outerFields[0]!.fieldId, outputOrdinal: 0 },
-        { name: root.value.names[1]!, fieldId: outerFields[1]!.fieldId, outputOrdinal: 1 },
-        { name: root.value.names[2]!, fieldId: resultFieldId, outputOrdinal: 2 },
+        {
+          name: root.value.names[0]!,
+          fieldId: outerFields[0]!.fieldId,
+          dataType: 'string',
+          outputOrdinal: 0,
+        },
+        {
+          name: root.value.names[1]!,
+          fieldId: outerFields[1]!.fieldId,
+          dataType: 'i64',
+          outputOrdinal: 1,
+        },
+        {
+          name: root.value.names[2]!,
+          fieldId: resultFieldId,
+          dataType: 'i64',
+          outputOrdinal: 2,
+        },
       ],
     },
   };
@@ -1478,7 +1515,12 @@ export function inspectDvtSubstraitInnerJoinAcceptedDraft(draft: DvtSubstraitInn
       projection: Readonly<{
         left: DvtSubstraitInnerJoinProjection['left'];
         right: DvtSubstraitInnerJoinProjection['right'];
-        outputs: readonly Readonly<{ name: string; fieldId: string; outputOrdinal: number }>[];
+        outputs: readonly Readonly<{
+          name: string;
+          fieldId: string;
+          dataType: 'string' | 'i64';
+          outputOrdinal: number;
+        }>[];
       }>;
     }>
   | Readonly<{ ok: false }> {

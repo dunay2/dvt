@@ -42,6 +42,7 @@ export function projectCanvasNodePresentationTruth(
 type DvtSubstraitPresentedOutput = Readonly<{
   name: string;
   fieldId: string;
+  dataType?: string;
 }>;
 
 function projectCanvasNodePresentationTruthInternal(
@@ -274,7 +275,7 @@ function projectCanvasNodePresentationTruthInternal(
   if (substraitOutputs != null) {
     const declared = substraitOutputs.map((output) => ({
       name: output.name,
-      type: 'string',
+      type: output.dataType ?? 'string',
       provenance: 'declared' as const,
       reference: output.fieldId,
     }));

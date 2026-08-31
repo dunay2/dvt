@@ -85,6 +85,7 @@ describe('VTX2 typed Substrait INNER JOIN composition', () => {
             fieldKey: 'left.customer_id',
             name: 'customer_id',
             fieldId: 'field:transform-customer-orders:customer_id',
+            dataType: 'string',
             outputOrdinal: 0,
             source: { relation: 'left', name: 'customer_id' },
           },
@@ -92,6 +93,7 @@ describe('VTX2 typed Substrait INNER JOIN composition', () => {
             fieldKey: 'left.name',
             name: 'name',
             fieldId: 'field:transform-customer-orders:name',
+            dataType: 'string',
             outputOrdinal: 1,
             source: { relation: 'left', name: 'name' },
           },
@@ -99,6 +101,7 @@ describe('VTX2 typed Substrait INNER JOIN composition', () => {
             fieldKey: 'right.order_id',
             name: 'order_id',
             fieldId: 'field:transform-customer-orders:order_id',
+            dataType: 'string',
             outputOrdinal: 2,
             source: { relation: 'right', name: 'order_id' },
           },
@@ -175,6 +178,7 @@ describe('VTX2 typed Substrait INNER JOIN composition', () => {
             fieldKey: 'right.order_id',
             fieldId: 'field:transform-customer-orders:order_id',
             name: 'order_id',
+            dataType: 'string',
             outputOrdinal: 0,
             source: { relation: 'right', name: 'order_id' },
           },
@@ -182,6 +186,7 @@ describe('VTX2 typed Substrait INNER JOIN composition', () => {
             fieldKey: 'left.name',
             fieldId: nameFieldId,
             name: 'customer_name',
+            dataType: 'string',
             outputOrdinal: 1,
             source: { relation: 'left', name: 'name' },
           },
@@ -277,9 +282,21 @@ describe('VTX2 typed Substrait INNER JOIN composition', () => {
       projectCanvasNodePresentationTruth({ node: persisted, nodes: [persisted], edges: [] }).columns
         .visible
     ).toMatchObject([
-      { name: 'customer_name', reference: 'field:transform-customer-orders:name' },
-      { name: 'order_count', reference: 'field:transform-customer-orders:join-count' },
-      { name: 'count_rank', reference: 'field:transform-customer-orders:join-count-rank' },
+      {
+        name: 'customer_name',
+        type: 'string',
+        reference: 'field:transform-customer-orders:name',
+      },
+      {
+        name: 'order_count',
+        type: 'i64',
+        reference: 'field:transform-customer-orders:join-count',
+      },
+      {
+        name: 'count_rank',
+        type: 'i64',
+        reference: 'field:transform-customer-orders:join-count-rank',
+      },
     ]);
 
     const restoredGrouped = removeDvtSubstraitInnerJoinGroupedRowNumber(reopened);
