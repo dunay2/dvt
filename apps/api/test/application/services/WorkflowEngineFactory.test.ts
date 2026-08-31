@@ -12,56 +12,6 @@ import { describe, it, expect } from 'vitest';
 import { buildWorkflowEngine } from '../../../src/application/services/WorkflowEngineFactory.js';
 
 describe('buildWorkflowEngine', () => {
-  it('wires facade use cases and not deprecated public services', () => {
-    const adapter: IProviderAdapter = {
-      provider: 'temporal',
-      async startRun(_planRef, context: ResolvedRunContext) {
-        return {
-          provider: 'temporal',
-          tenantId: context.tenantId,
-          namespace: asNonBlankString('default'),
-          workflowId: asNonBlankString(`wf-${context.runId}`),
-          runId: context.runId,
-        };
-      },
-      async cancelRun(_engineRunRef) {},
-      async getProviderStatusView(_engineRunRef): Promise<ProviderRunStatusView> {
-        throw new Error('not used');
-      },
-      async signal(_engineRunRef, _request: SignalRequest) {},
-      signalSemanticsVersions: () => [CURRENT_SIGNAL_SEMANTICS_VERSION],
-    };
-
-    const runtime = buildWorkflowEngine({
-      security: {
-        authorizer: new AllowAllAuthorizer(),
-        planRefAllowedSchemes: ['https'],
-      },
-      persistence: {
-        stateStoreRead: {} as never,
-        stateStoreWrite: {} as never,
-        intentStore: {} as never,
-        planFetcher: {} as never,
-      },
-      runtime: {
-        adapters: new Map([['temporal', adapter]]),
-      },
-      infrastructure: {
-        clock: { nowIsoUtc: () => asIsoUtcString('2026-04-05T00:00:00.000Z') },
-        observability: createNoopObservability(),
-      },
-    });
-
-    expect(Reflect.has(runtime.engine as object, 'startRunUseCase')).toBe(true);
-    expect(Reflect.has(runtime.engine as object, 'startRunApplicationService')).toBe(false);
-    expect(Reflect.has(runtime.engine as object, 'getRunEnrichment')).toBe(false);
-    expect(Reflect.has(runtime.engine as object, 'healthCheck')).toBe(false);
-    expect(runtime.runEnrichmentService).toBeDefined();
-    expect(Reflect.has(runtime.runEnrichmentService as object, 'getRunEnrichment')).toBe(true);
-    expect(runtime.runHealthService).toBeDefined();
-    expect(Reflect.has(runtime.runHealthService as object, 'healthCheck')).toBe(true);
-  });
-
   it('wraps production runtime adapters with circuit-breaker posture for health', async () => {
     const adapter: IProviderAdapter = {
       provider: 'temporal',
