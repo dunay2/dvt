@@ -370,6 +370,9 @@ async function buildAuthoringPreviewSql({
         (edge) => scopedNodeIdSet.has(edge.sourceId) && scopedNodeIdSet.has(edge.targetId)
       );
       if (joinInspection.ok) {
+        if (!('left' in joinInspection.projection) || !('right' in joinInspection.projection)) {
+          throw new Error('Preview does not yet support N-input Substrait INNER JOIN revisions.');
+        }
         const joinEntry = resolveDvtSubstraitInnerJoinEntry({
           targetNode: transformNode,
           nodes: scopedNodes,
