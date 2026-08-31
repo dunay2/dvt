@@ -10,6 +10,7 @@ import {
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 
 import {
+  applyDvtSubstraitInnerJoinFieldEdit,
   createDvtSubstraitInnerJoinDraft,
   decodeDvtSubstraitInnerJoinDocument,
   encodeDvtSubstraitInnerJoinDocument,
@@ -74,19 +75,25 @@ describe('VTX2 typed Substrait INNER JOIN composition', () => {
         rightKey: 'customer_id',
         outputs: [
           {
+            fieldKey: 'left.customer_id',
             name: 'customer_id',
             fieldId: 'field:transform-customer-orders:customer_id',
             outputOrdinal: 0,
+            source: { relation: 'left', name: 'customer_id' },
           },
           {
+            fieldKey: 'left.name',
             name: 'name',
             fieldId: 'field:transform-customer-orders:name',
             outputOrdinal: 1,
+            source: { relation: 'left', name: 'name' },
           },
           {
+            fieldKey: 'right.order_id',
             name: 'order_id',
             fieldId: 'field:transform-customer-orders:order_id',
             outputOrdinal: 2,
+            source: { relation: 'right', name: 'order_id' },
           },
         ],
       },
@@ -126,6 +133,93 @@ describe('VTX2 typed Substrait INNER JOIN composition', () => {
       fixture().sidecar.fields.map((field) => field.fieldId)
     );
     expect(encodeDvtSubstraitInnerJoinDocument(reloaded)).toEqual(first);
+  });
+
+  it('selects, renames, and reorders joined fields while preserving FieldId through reload', () => {
+    const original = inspectDvtSubstraitInnerJoinDraft(fixture());
+    if (!original.ok) throw new Error('Expected admitted INNER JOIN fixture.');
+    const nameFieldId = original.projection.outputs[1]?.fieldId;
+
+    let edited = applyDvtSubstraitInnerJoinFieldEdit(fixture(), {
+      kind: 'rename',
+      fieldKey: 'left.name',
+      outputName: 'customer_name',
+    });
+    edited = applyDvtSubstraitInnerJoinFieldEdit(edited, {
+      kind: 'move',
+      fieldKey: 'right.order_id',
+      direction: 'up',
+    });
+    edited = applyDvtSubstraitInnerJoinFieldEdit(edited, {
+      kind: 'set-selected',
+      fieldKey: 'left.customer_id',
+      selected: false,
+    });
+
+    const document = encodeDvtSubstraitInnerJoinDocument(edited);
+    const reloaded = decodeDvtSubstraitInnerJoinDocument(document);
+    const inspection = inspectDvtSubstraitInnerJoinDraft(reloaded);
+
+    expect(inspection).toEqual({
+      ok: true,
+      projection: expect.objectContaining({
+        outputs: [
+          {
+            fieldKey: 'right.order_id',
+            fieldId: 'field:transform-customer-orders:order_id',
+            name: 'order_id',
+            outputOrdinal: 0,
+            source: { relation: 'right', name: 'order_id' },
+          },
+          {
+            fieldKey: 'left.name',
+            fieldId: nameFieldId,
+            name: 'customer_name',
+            outputOrdinal: 1,
+            source: { relation: 'left', name: 'name' },
+          },
+        ],
+      }),
+    });
+    expect(encodeDvtSubstraitInnerJoinDocument(reloaded)).toEqual(document);
+
+    const restored = applyDvtSubstraitInnerJoinFieldEdit(reloaded, {
+      kind: 'set-selected',
+      fieldKey: 'left.customer_id',
+      selected: true,
+    });
+    const restoredInspection = inspectDvtSubstraitInnerJoinDraft(restored);
+    expect(restoredInspection.ok && restoredInspection.projection.outputs[2]).toMatchObject({
+      fieldKey: 'left.customer_id',
+      fieldId: 'field:transform-customer-orders:customer_id',
+      name: 'customer_id',
+    });
+  });
+
+  it('fails closed instead of excluding the last selected joined field', () => {
+    let edited = applyDvtSubstraitInnerJoinFieldEdit(fixture(), {
+      kind: 'set-selected',
+      fieldKey: 'left.name',
+      selected: false,
+    });
+    edited = applyDvtSubstraitInnerJoinFieldEdit(edited, {
+      kind: 'set-selected',
+      fieldKey: 'right.order_id',
+      selected: false,
+    });
+    const beforeRejectedEdit = edited;
+
+    edited = applyDvtSubstraitInnerJoinFieldEdit(edited, {
+      kind: 'set-selected',
+      fieldKey: 'left.customer_id',
+      selected: false,
+    });
+
+    expect(edited).toBe(beforeRejectedEdit);
+    expect(inspectDvtSubstraitInnerJoinDraft(edited)).toMatchObject({
+      ok: true,
+      projection: { outputs: [expect.objectContaining({ fieldKey: 'left.customer_id' })] },
+    });
   });
 
   it('persists and reopens the same INNER JOIN through ConfigureCanvasDvtNode metadata', () => {

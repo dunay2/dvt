@@ -713,7 +713,7 @@ describe('nodePropertiesReadModel', () => {
     });
   });
 
-  it('projects DVT transform input columns with source and selection state', () => {
+  it('projects DVT transform input columns as catalog availability without legacy selection truth', () => {
     const source: CanonicalNode = {
       id: 'source-orders',
       name: 'Orders source',
@@ -737,11 +737,7 @@ describe('nodePropertiesReadModel', () => {
       role: 'transform',
       status: 'idle',
       tags: [],
-      metadata: {
-        config: {
-          selectedColumns: ['source-orders.order_id'],
-        },
-      },
+      metadata: {},
     };
     const edge: CanonicalEdge = {
       id: 'edge-source-transform',
@@ -762,7 +758,7 @@ describe('nodePropertiesReadModel', () => {
       nullable: 'not null',
       source: 'Orders source',
       reference: 'source-orders.order_id',
-      selection: 'selected',
+      selection: 'available',
     });
     expectTableCells(sectionById(model, 'columns'), 'source-orders.customer', {
       name: 'customer',
@@ -812,7 +808,7 @@ describe('nodePropertiesReadModel', () => {
     });
   });
 
-  it('projects dbt model input columns with source and selection state when catalog output is not recorded yet', () => {
+  it('projects dbt inputs as catalog availability when catalog output is not recorded yet', () => {
     const source: CanonicalNode = {
       id: 'source-orders',
       name: 'Orders source',
@@ -837,11 +833,7 @@ describe('nodePropertiesReadModel', () => {
       status: 'idle',
       tags: [],
       path: 'models/orders.sql',
-      metadata: {
-        config: {
-          selectedColumns: ['source-orders.customer'],
-        },
-      },
+      metadata: {},
     };
     const edge: CanonicalEdge = {
       id: 'edge-source-model',
@@ -871,7 +863,7 @@ describe('nodePropertiesReadModel', () => {
       nullable: 'nullable',
       source: 'Orders source',
       reference: 'source-orders.customer',
-      selection: 'selected',
+      selection: 'available',
     });
     expect(sectionById(model, 'columns').description).toBe('Inherited: 2 · Declared: 0');
     const codeSection = sectionById(model, 'code');

@@ -367,6 +367,43 @@ describe('DvtAuthoringFields', () => {
     expect(container.textContent).toContain('customer_id');
     expect(container.querySelector('[data-testid="dvt-transform-sql-editor"]')).toBeNull();
     expect(draftJson()).toContain('"shape":"inner_join"');
+
+    const customerIdSelection = container.querySelector<HTMLInputElement>(
+      'input[name="dvt-substrait-inner-join-field"][value="left.customer_id"]'
+    );
+    const nameOutput = container.querySelector<HTMLInputElement>(
+      'input[data-slot="dvt-substrait-inner-join-output-name"][data-field-key="left.name"]'
+    );
+    const moveOrderUp = container.querySelector<HTMLButtonElement>(
+      'button[data-action="move-substrait-inner-join-field-up"][data-field-key="right.order_id"]'
+    );
+    expect(customerIdSelection?.checked).toBe(true);
+    expect(nameOutput?.value).toBe('name');
+    expect(moveOrderUp).not.toBeNull();
+
+    act(() => {
+      fireEvent.click(customerIdSelection!);
+    });
+    const currentNameOutput = container.querySelector<HTMLInputElement>(
+      'input[data-slot="dvt-substrait-inner-join-output-name"][data-field-key="left.name"]'
+    );
+    act(() => {
+      fireEvent.focus(currentNameOutput!);
+      fireEvent.input(currentNameOutput!, { target: { value: 'customer_name' } });
+      fireEvent.focusOut(currentNameOutput!);
+    });
+    const currentMoveOrderUp = container.querySelector<HTMLButtonElement>(
+      'button[data-action="move-substrait-inner-join-field-up"][data-field-key="right.order_id"]'
+    );
+    act(() => {
+      fireEvent.click(currentMoveOrderUp!);
+    });
+
+    expect(customerIdSelection?.checked).toBe(false);
+    expect(draftJson()).toContain('"names":["order_id","customer_name"]');
+    expect(draftJson()).toContain('"fieldId":"field:dvt-sql-transform:name"');
+    expect(draftJson()).toContain('"displayName":"customer_name"');
+    expect(draftJson()).not.toContain('selectedColumns');
   });
 
   it('does not offer INNER JOIN when the connected datasets use different connections', () => {

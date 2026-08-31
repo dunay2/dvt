@@ -5,10 +5,6 @@ import type {
   CanvasNodePresentationColumn,
   CanvasNodePresentationTruth,
 } from './canvasNodePresentationTruth.contract';
-import {
-  buildTransformColumnOptions,
-  readSelectedColumnRefs,
-} from '../inspector/dvtTransformColumnModel';
 import type { CanonicalNode } from '../../types/canonical';
 
 export type CanvasNodePresentationEdge = Readonly<{
@@ -84,26 +80,24 @@ function readInheritedColumns({
     return [];
   }
 
-  return buildTransformColumnOptions({
-    node,
-    nodes,
-    edges: edges.map((edge, index) => ({
-      id: `${edge.sourceId}->${edge.targetId}:${index}`,
-      sourceId: edge.sourceId,
-      targetId: edge.targetId,
-      relation: 'lineage',
-    })),
-    selectedColumnRefs: readSelectedColumnRefs(node.metadata),
-  }).map((column) => ({
-    name: column.columnName,
-    type: column.dataType,
-    nullable: column.nullable,
-    provenance: 'inherited' as const,
-    sourceNodeId: column.sourceNodeId,
-    sourceNodeName: column.sourceNodeName,
-    reference: column.columnRef,
-    selected: column.selected,
-  }));
+  const nodeById = new Map(nodes.map((candidate) => [candidate.id, candidate]));
+  const upstreamNodeIds = edges
+    .filter((edge) => edge.targetId === node.id)
+    .map((edge) => edge.sourceId);
+
+  return upstreamNodeIds.flatMap((sourceNodeId): readonly CanvasNodePresentationColumn[] => {
+    const sourceNode = nodeById.get(sourceNodeId);
+    if (sourceNode == null) return [];
+    return readDeclaredColumns(sourceNode.metadata?.columns).map((column) => ({
+      name: column.name,
+      type: column.type,
+      nullable: column.nullable,
+      provenance: 'inherited' as const,
+      sourceNodeId: sourceNode.id,
+      sourceNodeName: sourceNode.name,
+      reference: `${sourceNode.id}.${column.name}`,
+    }));
+  });
 }
 
 function resolveCodeLanguage(path: string | undefined): CanvasNodeCodeLanguage {

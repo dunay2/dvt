@@ -19,6 +19,7 @@ import CanvasShellPanelsBuilderSource from './canvasShellPanelsBuilder.ts?raw';
 import CanvasViewportSource from './CanvasViewport.tsx?raw';
 import CanvasViewportSurfaceViewSource from './CanvasViewportSurfaceView.tsx?raw';
 import DvtSqlTransformAuthoringSectionSource from './DvtSqlTransformAuthoringSection.tsx?raw';
+import DvtAuthoringFieldsSource from './DvtAuthoringFields.tsx?raw';
 import DbtProjectFileCanvasControllerSource from './useDbtProjectFileCanvasController.ts?raw';
 import DbtWorkspaceFileCodeContributionSource from './dbtWorkspaceFileCodeContribution.tsx?raw';
 import CanvasSelectionHandlersSource from './useCanvasSelectionHandlers.ts?raw';
@@ -174,6 +175,9 @@ describe('Canvas Node Workbench W4 hardening contracts', () => {
     }
 
     expect(DvtSqlTransformAuthoringSectionSource).not.toContain('name="dvt-transform-column"');
+    expect(DvtAuthoringFieldsSource).not.toContain('selectedColumns');
+    expect(DvtAuthoringFieldsSource).not.toContain('dvtTransformColumnModel');
+    expect(DvtAuthoringFieldsSource).toContain('resolveDvtSubstraitPilotEntry');
     expect(NodePropertiesReadModelSource).toContain('buildInheritedColumnRows');
     expect(NodePropertiesReadModelSource).toContain('presentationTruth.columns.inherited');
     expect(NodePropertiesReadModelSource).toContain('source: column.sourceNodeName');

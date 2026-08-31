@@ -48,6 +48,8 @@ import {
   type DvtSubstraitSemanticDocumentV1,
 } from '@dvt/contracts';
 
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+
 const STRING_FUNCTION_URN = 'extension:io.substrait:functions_string';
 const ZERO_SHA256 = '0'.repeat(64);
 const PILOT_SOURCE_NAME = 'customers';
@@ -75,6 +77,65 @@ export type DvtSubstraitPilotProjection = Readonly<{
 
 export type DvtSubstraitPilotInspection =
   Readonly<{ ok: true; projection: DvtSubstraitPilotProjection }> | Readonly<{ ok: false }>;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function readPilotSourceColumns(node: CanonicalNode): readonly Readonly<{
+  name: string;
+  type: string;
+}>[] {
+  const readColumn = (
+    candidate: unknown,
+    fallbackName?: string
+  ): readonly Readonly<{ name: string; type: string }>[] => {
+    if (!isRecord(candidate)) return [];
+    const rawName = typeof candidate.name === 'string' ? candidate.name : fallbackName;
+    const rawType =
+      typeof candidate.type === 'string'
+        ? candidate.type
+        : typeof candidate.dataType === 'string'
+          ? candidate.dataType
+          : undefined;
+    const name = rawName?.trim();
+    const type = rawType?.trim();
+    return name && type ? [{ name, type }] : [];
+  };
+  const columns = node.metadata?.columns;
+  if (Array.isArray(columns)) return columns.flatMap((column) => readColumn(column));
+  if (!isRecord(columns)) return [];
+  return Object.entries(columns).flatMap(([name, column]) => readColumn(column, name));
+}
+
+export function resolveDvtSubstraitPilotEntry(args: {
+  targetNode: CanonicalNode;
+  nodes: readonly CanonicalNode[];
+  edges: readonly CanonicalEdge[];
+}): string | null {
+  const sourceIds = [
+    ...new Set(
+      args.edges.filter((edge) => edge.targetId === args.targetNode.id).map((edge) => edge.sourceId)
+    ),
+  ];
+  if (sourceIds.length !== 1) return null;
+  const source = args.nodes.find((node) => node.id === sourceIds[0]);
+  if (
+    source?.kind !== 'dvt:source' ||
+    source.role !== 'input' ||
+    source.name !== PILOT_SOURCE_NAME
+  ) {
+    return null;
+  }
+  const columns = readPilotSourceColumns(source);
+  return columns.length === PILOT_FIELD_NAMES.length &&
+    columns.every(
+      (column, index) =>
+        column.name === PILOT_FIELD_NAMES[index] && column.type.toLowerCase() === 'string'
+    )
+    ? source.id
+    : null;
+}
 
 function bytesToBase64(bytes: Uint8Array): string {
   let binary = '';
