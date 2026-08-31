@@ -541,6 +541,29 @@ describe('DvtAuthoringFields', () => {
     expect(draftJson()).toContain('field:dvt-sql-transform:ticket_id');
     expect(container.textContent).toContain('customers + orders + shipments + tickets');
     expect(draftJson()).toContain('dvt-vtx2-n-input-inner-join-card');
+
+    const shipmentCustomerSelection = container.querySelector<HTMLInputElement>(
+      'input[name="dvt-substrait-n-input-field"][value="field:source-shipments:customer_id"]'
+    );
+    expect(shipmentCustomerSelection?.checked).toBe(false);
+    act(() => {
+      fireEvent.click(shipmentCustomerSelection!);
+    });
+    const shipmentCustomerOutput = container.querySelector<HTMLInputElement>(
+      'input[data-slot="dvt-substrait-n-input-output-name"][data-source-field-id="field:source-shipments:customer_id"]'
+    );
+    expect(shipmentCustomerOutput?.value).toBe('shipments_customer_id');
+    act(() => {
+      fireEvent.input(shipmentCustomerOutput!, { target: { value: 'shipping_customer' } });
+      fireEvent.focusOut(shipmentCustomerOutput!);
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>(
+          'button[data-action="move-substrait-n-input-field-up"][data-source-field-id="field:source-shipments:customer_id"]'
+        )!
+      );
+    });
+    expect(draftJson()).toContain('"fieldId":"field:dvt-sql-transform:shipments_customer_id"');
+    expect(draftJson()).toContain('"displayName":"shipping_customer"');
   });
 
   it('does not offer INNER JOIN when the connected datasets use different connections', () => {

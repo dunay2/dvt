@@ -182,6 +182,19 @@ describe('Canvas Substrait N-input INNER JOIN authoring', () => {
       'contain.text',
       'customers + orders + shipments + tickets'
     );
+    cy.get(
+      'input[name="dvt-substrait-n-input-field"][value="field:source-shipments:customer_id"]'
+    ).check();
+    cy.get(
+      'input[data-slot="dvt-substrait-n-input-output-name"][data-source-field-id="field:source-shipments:customer_id"]'
+    )
+      .should('have.value', 'shipments_customer_id')
+      .clear()
+      .type('shipping_customer')
+      .blur();
+    cy.get(
+      'button[data-action="move-substrait-n-input-field-up"][data-source-field-id="field:source-shipments:customer_id"]'
+    ).click();
     cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
 
     cy.wrap(null).should(() => {
@@ -199,6 +212,15 @@ describe('Canvas Substrait N-input INNER JOIN authoring', () => {
       expect(
         inspection.ok && inspection.projection.inputs.map((input) => input.table)
       ).to.deep.equal(['customers', 'orders', 'shipments', 'tickets']);
+      expect(
+        inspection.ok &&
+          inspection.projection.outputs.find(
+            (output) => output.source.fieldId === 'field:source-shipments:customer_id'
+          )
+      ).to.deep.include({
+        name: 'shipping_customer',
+        fieldId: 'field:join-transform:shipments_customer_id',
+      });
     });
 
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
@@ -211,6 +233,9 @@ describe('Canvas Substrait N-input INNER JOIN authoring', () => {
       'contain.text',
       'customers + orders + shipments + tickets'
     );
+    cy.get(
+      'input[data-slot="dvt-substrait-n-input-output-name"][data-source-field-id="field:source-shipments:customer_id"]'
+    ).should('have.value', 'shipping_customer');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     for (const nodeId of [
       'source-customers',
@@ -221,10 +246,16 @@ describe('Canvas Substrait N-input INNER JOIN authoring', () => {
     ]) {
       toggleColumns(nodeId);
     }
-    cy.get('.react-flow__edge-columnLineage').should('have.length', 5);
+    cy.get(
+      '.react-flow__node[data-id="join-transform"] [data-slot="graph-node-column-remainder-toggle"]'
+    ).click();
+    cy.get('.react-flow__edge-columnLineage').should('have.length', 6);
     cy.get('.react-flow__edge-columnLineage[aria-label="shipment_id → shipment_id"]').should(
       'exist'
     );
     cy.get('.react-flow__edge-columnLineage[aria-label="ticket_id → ticket_id"]').should('exist');
+    cy.get('.react-flow__edge-columnLineage[aria-label="customer_id → shipping_customer"]').should(
+      'exist'
+    );
   });
 });

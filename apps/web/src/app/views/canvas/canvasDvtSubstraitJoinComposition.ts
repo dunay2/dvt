@@ -113,22 +113,29 @@ export type DvtSubstraitInnerJoinFieldKey = (typeof INNER_JOIN_OUTPUT_FIELDS)[nu
 export const DVT_SUBSTRAIT_INNER_JOIN_FIELD_KEYS: readonly DvtSubstraitInnerJoinFieldKey[] =
   Object.freeze(INNER_JOIN_OUTPUT_FIELDS.map((field) => field.fieldKey));
 
+type DvtSubstraitInnerJoinFieldSelector =
+  | Readonly<{ fieldKey: DvtSubstraitInnerJoinFieldKey; sourceFieldId?: never }>
+  | Readonly<{ fieldKey?: never; sourceFieldId: string }>;
+
 export type DvtSubstraitInnerJoinFieldEdit =
-  | Readonly<{
-      kind: 'set-selected';
-      fieldKey: DvtSubstraitInnerJoinFieldKey;
-      selected: boolean;
-    }>
-  | Readonly<{
-      kind: 'rename';
-      fieldKey: DvtSubstraitInnerJoinFieldKey;
-      outputName: string;
-    }>
-  | Readonly<{
-      kind: 'move';
-      fieldKey: DvtSubstraitInnerJoinFieldKey;
-      direction: 'up' | 'down';
-    }>;
+  | Readonly<
+      DvtSubstraitInnerJoinFieldSelector & {
+        kind: 'set-selected';
+        selected: boolean;
+      }
+    >
+  | Readonly<
+      DvtSubstraitInnerJoinFieldSelector & {
+        kind: 'rename';
+        outputName: string;
+      }
+    >
+  | Readonly<
+      DvtSubstraitInnerJoinFieldSelector & {
+        kind: 'move';
+        direction: 'up' | 'down';
+      }
+    >;
 
 export type DvtSubstraitJoinSource = Readonly<{
   nodeId: string;
@@ -224,6 +231,7 @@ export type DvtSubstraitJoinPredicate = Readonly<{
 export type DvtSubstraitJoinOutputSelection = Readonly<{
   name: string;
   sourceFieldId: string;
+  fieldId?: string;
 }>;
 
 export type DvtSubstraitNInputJoinEntry = Readonly<{
@@ -871,10 +879,18 @@ function createDvtSubstraitNInputJoinDraft(
         output.name.length === 0 ||
         output.name !== output.name.trim() ||
         output.sourceFieldId.length === 0 ||
-        output.sourceFieldId !== output.sourceFieldId.trim()
+        output.sourceFieldId !== output.sourceFieldId.trim() ||
+        (output.fieldId != null &&
+          (output.fieldId.length === 0 ||
+            output.fieldId !== output.fieldId.trim() ||
+            !output.fieldId.startsWith(`field:${args.targetNodeId}:`) ||
+            output.fieldId.length <= `field:${args.targetNodeId}:`.length))
     ) ||
     new Set(args.outputs.map((output) => output.name)).size !== args.outputs.length ||
-    new Set(args.outputs.map((output) => output.sourceFieldId)).size !== args.outputs.length
+    new Set(args.outputs.map((output) => output.sourceFieldId)).size !== args.outputs.length ||
+    new Set(
+      args.outputs.map((output) => output.fieldId ?? `field:${args.targetNodeId}:${output.name}`)
+    ).size !== args.outputs.length
   ) {
     throw new Error('VTX2 INNER JOIN outputs must have unique names and source fields.');
   }
@@ -919,12 +935,23 @@ function createDvtSubstraitNInputJoinDraft(
       throw new Error('VTX2 INNER JOIN predicate references an unavailable source field.');
     }
     const available = [...currentFields, ...rightFields];
-    const selected = args.outputs
+    const selectedOutputs = args.outputs
       .filter(
         (output) => (inputIndexByFieldId.get(output.sourceFieldId) ?? Infinity) <= rightInputIndex
       )
       .map((output) => available.find((field) => field.sourceFieldId === output.sourceFieldId));
-    if (selected.length === 0 || selected.some((field) => field == null)) {
+    const futurePredicateFields = args.predicates
+      .slice(predicateIndex + 1)
+      .map((futurePredicate) =>
+        available.find((field) => field.sourceFieldId === futurePredicate.leftSourceFieldId)
+      )
+      .filter((field) => field != null);
+    const selected = [...selectedOutputs, ...futurePredicateFields].filter(
+      (field, index, fields) =>
+        field != null &&
+        fields.findIndex((candidate) => candidate?.sourceFieldId === field.sourceFieldId) === index
+    );
+    if (selected.length === 0 || selectedOutputs.some((field) => field == null)) {
       throw new Error('VTX2 INNER JOIN output is unavailable at its join stage.');
     }
     const nextFields = selected.filter((field) => field != null);
@@ -1017,14 +1044,15 @@ function createDvtSubstraitNInputJoinDraft(
         return fields.map((field, outputOrdinal) => {
           const output = args.outputs.find(
             (candidate) => candidate.sourceFieldId === field.sourceFieldId
-          )!;
+          );
+          const displayName = output?.name ?? field.sourceName;
           return {
             fieldId: finalStage
-              ? `field:${args.targetNodeId}:${output.name}`
-              : `field:${args.targetNodeId}:join-stage-${stageIndex + 1}:${output.name}`,
+              ? (output?.fieldId ?? `field:${args.targetNodeId}:${displayName}`)
+              : `field:${args.targetNodeId}:join-stage-${stageIndex + 1}:${displayName}`,
             relationId: joinRelationIds[stageIndex]!,
             outputOrdinal,
-            displayName: output.name,
+            displayName,
           };
         });
       }),
@@ -1088,6 +1116,7 @@ export function appendDvtSubstraitInnerJoinInput(
         ...projection.outputs.map((output) => ({
           name: output.name,
           sourceFieldId: output.source.fieldId,
+          fieldId: output.fieldId,
         })),
         ...input.selectedFields.map((field) => ({
           name: field,
@@ -1310,6 +1339,88 @@ export function applyDvtSubstraitInnerJoinFieldEdit(
   draft: DvtSubstraitInnerJoinDraft,
   edit: DvtSubstraitInnerJoinFieldEdit
 ): DvtSubstraitInnerJoinDraft {
+  const nInputInspection = inspectDvtSubstraitNInputJoinDraft(draft);
+  if (nInputInspection.ok && nInputInspection.projection.inputs.length > 2) {
+    if (!('sourceFieldId' in edit) || typeof edit.sourceFieldId !== 'string') return draft;
+    const { projection } = nInputInspection;
+    const availableField = projection.inputs
+      .flatMap((input) => input.fields.map((field) => ({ input, field })))
+      .find(({ field }) => field.fieldId === edit.sourceFieldId);
+    if (availableField == null) return draft;
+
+    let outputs = projection.outputs.map((output) => ({
+      name: output.name,
+      sourceFieldId: output.source.fieldId,
+      fieldId: output.fieldId,
+    }));
+    const currentIndex = outputs.findIndex((output) => output.sourceFieldId === edit.sourceFieldId);
+
+    if (edit.kind === 'set-selected') {
+      if (edit.selected === currentIndex >= 0) return draft;
+      if (!edit.selected) {
+        if (outputs.length === 1) return draft;
+        outputs = outputs.filter((output) => output.sourceFieldId !== edit.sourceFieldId);
+      } else {
+        const usedNames = new Set(outputs.map((output) => output.name));
+        const name = [
+          availableField.field.name,
+          `${availableField.input.table}_${availableField.field.name}`,
+          `${availableField.input.schema}_${availableField.input.table}_${availableField.field.name}`,
+          `${availableField.input.nodeId}_${availableField.field.name}`,
+        ].find((candidate) => !usedNames.has(candidate));
+        if (name == null) return draft;
+        outputs.push({
+          name,
+          sourceFieldId: availableField.field.fieldId,
+          fieldId: `field:${projection.targetNodeId}:${name}`,
+        });
+      }
+    } else if (edit.kind === 'rename') {
+      const output = outputs[currentIndex];
+      const outputName = edit.outputName.trim();
+      if (
+        output == null ||
+        outputName.length === 0 ||
+        outputs.some((candidate, index) => index !== currentIndex && candidate.name === outputName)
+      ) {
+        return draft;
+      }
+      outputs[currentIndex] = { ...output, name: outputName };
+    } else {
+      if (currentIndex < 0) return draft;
+      const nextIndex = edit.direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+      if (nextIndex < 0 || nextIndex >= outputs.length) return draft;
+      const current = outputs[currentIndex];
+      const next = outputs[nextIndex];
+      if (current == null || next == null) return draft;
+      outputs[currentIndex] = next;
+      outputs[nextIndex] = current;
+    }
+
+    try {
+      const edited = createDvtSubstraitNInputJoinDraft({
+        inputs: projection.inputs.map((input) => ({
+          source: {
+            nodeId: input.nodeId,
+            schema: input.schema,
+            table: input.table,
+            sourceRef: input.sourceRef,
+          },
+          fields: input.fields.map((field) => field.name),
+        })),
+        predicates: projection.joins,
+        outputs,
+        targetNodeId: projection.targetNodeId,
+      });
+      const editedInspection = inspectDvtSubstraitNInputJoinDraft(edited);
+      return editedInspection.ok && editedInspection.projection.inputs.length > 2 ? edited : draft;
+    } catch {
+      return draft;
+    }
+  }
+
+  if (!('fieldKey' in edit) || edit.fieldKey == null) return draft;
+  const fieldKey = edit.fieldKey;
   const inspection = inspectDvtSubstraitInnerJoinDraft(draft);
   if (!inspection.ok) return draft;
   const resultBinding = draft.sidecar.relations.find((relation) => relation.relAnchor === 3);
@@ -1318,18 +1429,16 @@ export function applyDvtSubstraitInnerJoinFieldEdit(
   if (targetNodeId == null) return draft;
 
   let outputs = inspection.projection.outputs.map((output) => ({ ...output }));
-  const currentIndex = outputs.findIndex((output) => output.fieldKey === edit.fieldKey);
+  const currentIndex = outputs.findIndex((output) => output.fieldKey === fieldKey);
 
   if (edit.kind === 'set-selected') {
     if (edit.selected === currentIndex >= 0) return draft;
     if (!edit.selected) {
       if (outputs.length === 1) return draft;
-      outputs = outputs.filter((output) => output.fieldKey !== edit.fieldKey);
+      outputs = outputs.filter((output) => output.fieldKey !== fieldKey);
     } else {
-      const field = INNER_JOIN_OUTPUT_FIELDS.find(
-        (candidate) => candidate.fieldKey === edit.fieldKey
-      );
-      const fieldId = innerJoinOutputFieldId(targetNodeId, edit.fieldKey);
+      const field = INNER_JOIN_OUTPUT_FIELDS.find((candidate) => candidate.fieldKey === fieldKey);
+      const fieldId = innerJoinOutputFieldId(targetNodeId, fieldKey);
       if (field == null || fieldId == null) return draft;
       outputs.push({
         fieldKey: field.fieldKey,
@@ -2263,14 +2372,16 @@ export function inspectDvtSubstraitNInputJoinDraft(
     if (
       stageFields.some((field, outputOrdinal) => {
         const name = names[outputOrdinal];
-        const expectedFieldId = finalStage
-          ? `field:${targetNodeId}:${name}`
-          : `field:${targetNodeId}:join-stage-${joinIndex + 1}:${name}`;
+        const expectedFieldId = `field:${targetNodeId}:join-stage-${joinIndex + 1}:${name}`;
+        const hasValidFieldId = finalStage
+          ? field.fieldId.startsWith(`field:${targetNodeId}:`) &&
+            field.fieldId.length > `field:${targetNodeId}:`.length
+          : field.fieldId === expectedFieldId;
         return (
           name == null ||
           field.outputOrdinal !== outputOrdinal ||
           field.displayName !== name ||
-          field.fieldId !== expectedFieldId
+          !hasValidFieldId
         );
       })
     ) {

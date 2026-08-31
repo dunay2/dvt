@@ -163,6 +163,121 @@ describe('VTX2 typed Substrait INNER JOIN composition', () => {
     expect(() => encodeDvtSubstraitInnerJoinDocument(appended)).not.toThrow();
   });
 
+  it('selects, renames, and reorders fields over the same three- and four-input join path', () => {
+    const threeInputs = appendDvtSubstraitInnerJoinInput(fixture(), {
+      source: source('source-shipments', 'public', 'shipments'),
+      fields: ['shipment_id', 'customer_id'],
+      predicate: {
+        leftSourceFieldId: 'field:source-customers:customer_id',
+        rightFieldName: 'customer_id',
+      },
+      selectedFields: ['shipment_id'],
+    });
+    const fourInputs = appendDvtSubstraitInnerJoinInput(threeInputs, {
+      source: source('source-tickets', 'public', 'tickets'),
+      fields: ['ticket_id', 'customer_id'],
+      predicate: {
+        leftSourceFieldId: 'field:source-customers:customer_id',
+        rightFieldName: 'customer_id',
+      },
+      selectedFields: ['ticket_id'],
+    });
+
+    for (const draft of [threeInputs, fourInputs]) {
+      const selected = applyDvtSubstraitInnerJoinFieldEdit(draft, {
+        kind: 'set-selected',
+        sourceFieldId: 'field:source-shipments:customer_id',
+        selected: true,
+      });
+      const selectedInspection = inspectDvtSubstraitNInputJoinDraft(selected);
+      if (!selectedInspection.ok) throw new Error('Expected admitted N-input field selection.');
+      const selectedOutput = selectedInspection.projection.outputs.find(
+        (output) => output.source.fieldId === 'field:source-shipments:customer_id'
+      );
+      expect(selectedOutput).toMatchObject({ name: 'shipments_customer_id' });
+
+      const renamed = applyDvtSubstraitInnerJoinFieldEdit(selected, {
+        kind: 'rename',
+        sourceFieldId: 'field:source-shipments:customer_id',
+        outputName: 'shipping_customer',
+      });
+      const moved = applyDvtSubstraitInnerJoinFieldEdit(renamed, {
+        kind: 'move',
+        sourceFieldId: 'field:source-shipments:customer_id',
+        direction: 'up',
+      });
+      const reloaded = decodeDvtSubstraitInnerJoinDocument(
+        encodeDvtSubstraitInnerJoinDocument(moved)
+      );
+      const inspection = inspectDvtSubstraitNInputJoinDraft(reloaded);
+      if (!inspection.ok) throw new Error('Expected admitted reloaded N-input field edit.');
+      const output = inspection.projection.outputs.find(
+        (candidate) => candidate.source.fieldId === 'field:source-shipments:customer_id'
+      );
+
+      expect(output).toMatchObject({
+        name: 'shipping_customer',
+        fieldId: selectedOutput?.fieldId,
+      });
+      expect(inspection.projection.outputs.at(-2)?.source.fieldId).toBe(
+        'field:source-shipments:customer_id'
+      );
+      expect(encodeDvtSubstraitInnerJoinDocument(reloaded)).toEqual(
+        encodeDvtSubstraitInnerJoinDocument(moved)
+      );
+    }
+  });
+
+  it('fails N-input field edits closed for stale identities, duplicate names, and empty output', () => {
+    const draft = appendDvtSubstraitInnerJoinInput(fixture(), {
+      source: source('source-shipments', 'public', 'shipments'),
+      fields: ['shipment_id', 'customer_id'],
+      predicate: {
+        leftSourceFieldId: 'field:source-customers:customer_id',
+        rightFieldName: 'customer_id',
+      },
+      selectedFields: ['shipment_id'],
+    });
+
+    expect(
+      applyDvtSubstraitInnerJoinFieldEdit(draft, {
+        kind: 'rename',
+        sourceFieldId: 'field:source-stale:missing',
+        outputName: 'ignored',
+      })
+    ).toBe(draft);
+    expect(
+      applyDvtSubstraitInnerJoinFieldEdit(draft, {
+        kind: 'rename',
+        sourceFieldId: 'field:source-shipments:shipment_id',
+        outputName: 'name',
+      })
+    ).toBe(draft);
+
+    let oneOutput = draft;
+    for (const sourceFieldId of [
+      'field:source-customers:customer_id',
+      'field:source-customers:name',
+      'field:source-orders:order_id',
+    ]) {
+      oneOutput = applyDvtSubstraitInnerJoinFieldEdit(oneOutput, {
+        kind: 'set-selected',
+        sourceFieldId,
+        selected: false,
+      });
+    }
+    const rejectedEmpty = applyDvtSubstraitInnerJoinFieldEdit(oneOutput, {
+      kind: 'set-selected',
+      sourceFieldId: 'field:source-shipments:shipment_id',
+      selected: false,
+    });
+    expect(rejectedEmpty).toBe(oneOutput);
+    expect(inspectDvtSubstraitNInputJoinDraft(oneOutput)).toMatchObject({
+      ok: true,
+      projection: { outputs: [{ source: { fieldId: 'field:source-shipments:shipment_id' } }] },
+    });
+  });
+
   it('rejects duplicate, stale-predicate and incompatible append attempts without mutation', () => {
     const draft = fixture();
     const append = (
