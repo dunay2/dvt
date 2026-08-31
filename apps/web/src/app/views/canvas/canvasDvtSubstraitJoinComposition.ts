@@ -43,12 +43,15 @@ import {
   DVT_SUBSTRAIT_PLAN_ENCODING,
   DVT_SUBSTRAIT_PROFILE_REF_V1,
   DVT_SUBSTRAIT_SEMANTIC_DOCUMENT_SCHEMA_VERSION,
+  ConnectedSourceRefSchema,
   buildDvtSubstraitStandardCapabilityId,
   canonicalizeDvtSubstraitSemanticDocumentV1,
   type ConnectedSourceRef,
   type DvtSubstraitAuthoringSidecarV1,
   type DvtSubstraitSemanticDocumentV1,
 } from '@dvt/contracts';
+
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 
 const ZERO_SHA256 = '0'.repeat(64);
 const COMPARISON_FUNCTION_URN = 'extension:io.substrait:functions_comparison';
@@ -78,8 +81,86 @@ export type DvtSubstraitInnerJoinProjection = Readonly<{
 }>;
 
 export type DvtSubstraitInnerJoinInspection =
-  | Readonly<{ ok: true; projection: DvtSubstraitInnerJoinProjection }>
-  | Readonly<{ ok: false }>;
+  Readonly<{ ok: true; projection: DvtSubstraitInnerJoinProjection }> | Readonly<{ ok: false }>;
+
+export type DvtSubstraitInnerJoinEntry = Readonly<{
+  left: DvtSubstraitJoinSource;
+  right: DvtSubstraitJoinSource;
+  targetNodeId: string;
+}>;
+
+function readMetadataText(node: CanonicalNode, key: string): string | null {
+  const value = node.metadata?.[key];
+  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
+}
+
+function readSourceColumnNames(node: CanonicalNode): readonly string[] | null {
+  const columns = node.metadata?.columns;
+  if (!Array.isArray(columns)) return null;
+  const names = columns.map((column) => {
+    if (column == null || typeof column !== 'object' || Array.isArray(column)) return null;
+    const name = (column as Record<string, unknown>).name;
+    const type = (column as Record<string, unknown>).type;
+    return typeof name === 'string' && name.trim().length > 0 && type === 'string'
+      ? name.trim()
+      : null;
+  });
+  return names.some((name) => name == null) ? null : names.filter((name) => name != null);
+}
+
+function resolveJoinSource(
+  node: CanonicalNode,
+  expectedColumns: readonly string[]
+): DvtSubstraitJoinSource | null {
+  if (node.kind !== 'dvt:source' || node.role !== 'input') return null;
+  const connectedSourceRef = ConnectedSourceRefSchema.safeParse(node.metadata?.connectedSourceRef);
+  const schema = readMetadataText(node, 'schema');
+  const table = readMetadataText(node, 'tableName');
+  const columns = readSourceColumnNames(node);
+  if (
+    !connectedSourceRef.success ||
+    connectedSourceRef.data.connectionRef.provider !== 'postgres' ||
+    schema == null ||
+    table == null ||
+    columns == null ||
+    columns.join(',') !== expectedColumns.join(',')
+  ) {
+    return null;
+  }
+  return { nodeId: node.id, schema, table, sourceRef: connectedSourceRef.data };
+}
+
+export function resolveDvtSubstraitInnerJoinEntry(args: {
+  targetNode: CanonicalNode;
+  nodes: readonly CanonicalNode[];
+  edges: readonly CanonicalEdge[];
+}): DvtSubstraitInnerJoinEntry | null {
+  if (
+    args.targetNode.pluginId !== 'dvt' ||
+    args.targetNode.kind !== 'dvt:sql_transform' ||
+    args.targetNode.role !== 'transform'
+  ) {
+    return null;
+  }
+  const sourceIds = [
+    ...new Set(
+      args.edges.filter((edge) => edge.targetId === args.targetNode.id).map((edge) => edge.sourceId)
+    ),
+  ];
+  if (sourceIds.length !== 2) return null;
+  const sources = sourceIds
+    .map((sourceId) => args.nodes.find((node) => node.id === sourceId))
+    .filter((node): node is CanonicalNode => node != null);
+  if (sources.length !== 2) return null;
+
+  const left = sources.map((source) => resolveJoinSource(source, LEFT_FIELD_NAMES)).find(Boolean);
+  const right = sources.map((source) => resolveJoinSource(source, RIGHT_FIELD_NAMES)).find(Boolean);
+  if (left == null || right == null || left.nodeId === right.nodeId) return null;
+  if (left.sourceRef.connectionRef.connectionId !== right.sourceRef.connectionRef.connectionId) {
+    return null;
+  }
+  return { left, right, targetNodeId: args.targetNode.id };
+}
 
 function bytesToBase64(bytes: Uint8Array): string {
   let binary = '';
@@ -189,7 +270,10 @@ function requireInnerJoinCapabilities(): void {
   );
 }
 
-function assertCompatibleSources(left: DvtSubstraitJoinSource, right: DvtSubstraitJoinSource): void {
+function assertCompatibleSources(
+  left: DvtSubstraitJoinSource,
+  right: DvtSubstraitJoinSource
+): void {
   const leftConnection = left.sourceRef.connectionRef;
   const rightConnection = right.sourceRef.connectionRef;
   if (
@@ -199,7 +283,14 @@ function assertCompatibleSources(left: DvtSubstraitJoinSource, right: DvtSubstra
   ) {
     throw new Error('VTX2 INNER JOIN requires two PostgreSQL sources on the same connection.');
   }
-  for (const value of [left.nodeId, left.schema, left.table, right.nodeId, right.schema, right.table]) {
+  for (const value of [
+    left.nodeId,
+    left.schema,
+    left.table,
+    right.nodeId,
+    right.schema,
+    right.table,
+  ]) {
     if (value.length === 0 || value !== value.trim()) {
       throw new Error('VTX2 INNER JOIN source identity must be non-blank and trimmed.');
     }
@@ -361,11 +452,13 @@ function tableIdentity(rel: Rel): { schema: string; table: string } | null {
   if (read.common?.emitKind.case !== undefined || read.common?.hint != null) return null;
   if (read.common?.advancedExtension != null || read.advancedExtension != null) return null;
   if (read.filter != null || read.bestEffortFilter != null || read.projection != null) return null;
-  if (read.readType.case !== 'namedTable' || read.readType.value.advancedExtension != null) return null;
+  if (read.readType.case !== 'namedTable' || read.readType.value.advancedExtension != null)
+    return null;
   if (read.baseSchema?.names.length !== 2) return null;
   if (read.baseSchema.struct?.types.length !== 2) return null;
   if (!read.baseSchema.struct.types.every((type) => type.kind.case === 'string')) return null;
   const names = read.readType.value.names;
+  if (names.some((name) => name.trim().length === 0 || name !== name.trim())) return null;
   return names.length === 2 && names[0] != null && names[1] != null
     ? { schema: names[0], table: names[1] }
     : null;
@@ -436,10 +529,12 @@ export function inspectDvtSubstraitInnerJoinDraft(
       entry.mappingType.value.functionAnchor === scalarFunction.functionReference
   );
   if (declaration?.mappingType.case !== 'extensionFunction') return { ok: false };
+  const declarationMapping = declaration.mappingType.value;
+  if (declarationMapping == null) return { ok: false };
   const urn = plan.extensionUrns.find(
-    (entry) => entry.extensionUrnAnchor === declaration.mappingType.value.extensionUrnReference
+    (entry) => entry.extensionUrnAnchor === declarationMapping.extensionUrnReference
   )?.urn;
-  if (urn !== COMPARISON_FUNCTION_URN || declaration.mappingType.value.name !== EQUAL_FUNCTION_NAME) {
+  if (urn !== COMPARISON_FUNCTION_URN || declarationMapping.name !== EQUAL_FUNCTION_NAME) {
     return { ok: false };
   }
   const leftArgument = scalarFunction.arguments[0]?.argType;
@@ -451,7 +546,8 @@ export function inspectDvtSubstraitInnerJoinDraft(
   const leftSourceRef = sourceRefForAnchor(sidecar, 1);
   const rightSourceRef = sourceRefForAnchor(sidecar, 2);
   const resultBinding = sidecar.relations.find((relation) => relation.relAnchor === 3);
-  if (leftSourceRef == null || rightSourceRef == null || resultBinding == null) return { ok: false };
+  if (leftSourceRef == null || rightSourceRef == null || resultBinding == null)
+    return { ok: false };
   if (
     leftSourceRef.connectionRef.provider !== 'postgres' ||
     rightSourceRef.connectionRef.provider !== 'postgres' ||
@@ -461,7 +557,8 @@ export function inspectDvtSubstraitInnerJoinDraft(
   }
   const outputs = OUTPUT_FIELD_NAMES.map((name, outputOrdinal) => {
     const binding = sidecar.fields.find(
-      (field) => field.relationId === resultBinding.relationId && field.outputOrdinal === outputOrdinal
+      (field) =>
+        field.relationId === resultBinding.relationId && field.outputOrdinal === outputOrdinal
     );
     return binding == null || binding.displayName !== name
       ? null

@@ -9,8 +9,11 @@ import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthorin
 import {
   decodeDvtSubstraitPilotDocument,
   inspectDvtSubstraitPilotDraft,
-  type DvtSubstraitPilotProjection,
 } from './canvasDvtSubstraitPilot';
+import {
+  decodeDvtSubstraitInnerJoinDocument,
+  inspectDvtSubstraitInnerJoinDraft,
+} from './canvasDvtSubstraitJoinComposition';
 import {
   isObjectFilePostgresNode,
   resolveObjectFilePostgresAuthoringMetadata,
@@ -28,6 +31,11 @@ export function projectCanvasNodePresentationTruth(
 ): CanvasNodePresentationTruth {
   return projectCanvasNodePresentationTruthInternal(args, new Set());
 }
+
+type DvtSubstraitPresentedOutput = Readonly<{
+  name: string;
+  fieldId: string;
+}>;
 
 function projectCanvasNodePresentationTruthInternal(
   args: Readonly<{
@@ -67,7 +75,7 @@ function projectCanvasNodePresentationTruthInternal(
         };
   let visualRecipe: VisualTransformRecipeV1 | null = null;
   let lineageRecipe: VisualTransformRecipeV1 | null = null;
-  let substraitOutputs: DvtSubstraitPilotProjection['outputs'] | null = null;
+  let substraitOutputs: readonly DvtSubstraitPresentedOutput[] | null = null;
   let substraitRejected = false;
   if (args.node.pluginId === 'dvt' && args.node.kind === 'dvt:sql_transform') {
     try {
@@ -77,13 +85,20 @@ function projectCanvasNodePresentationTruthInternal(
         lineageRecipe = authority.recipe;
       } else if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
         try {
-          const inspection = inspectDvtSubstraitPilotDraft(
+          const pilotInspection = inspectDvtSubstraitPilotDraft(
             decodeDvtSubstraitPilotDocument(authority.semanticDocument)
           );
-          if (inspection.ok) {
-            substraitOutputs = inspection.projection.outputs;
+          if (pilotInspection.ok) {
+            substraitOutputs = pilotInspection.projection.outputs;
           } else {
-            substraitRejected = true;
+            const joinInspection = inspectDvtSubstraitInnerJoinDraft(
+              decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument)
+            );
+            if (joinInspection.ok) {
+              substraitOutputs = joinInspection.projection.outputs;
+            } else {
+              substraitRejected = true;
+            }
           }
         } catch {
           substraitRejected = true;

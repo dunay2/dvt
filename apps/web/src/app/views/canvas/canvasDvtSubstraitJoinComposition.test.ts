@@ -1,12 +1,20 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ConnectedSourceRef } from '@dvt/contracts';
+import { DVT_TRANSFORM_AUTHORING_MODE, type ConnectedSourceRef } from '@dvt/contracts';
+
+import type { CanonicalNode } from '../../types/canonical';
+import {
+  applyDvtNodeAuthoringMetadata,
+  createDvtNodeAuthoringMetadata,
+} from './canvasDvtAuthoringModel';
+import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 
 import {
   createDvtSubstraitInnerJoinDraft,
   decodeDvtSubstraitInnerJoinDocument,
   encodeDvtSubstraitInnerJoinDocument,
   inspectDvtSubstraitInnerJoinDraft,
+  type DvtSubstraitInnerJoinDraft,
   type DvtSubstraitJoinSource,
 } from './canvasDvtSubstraitJoinComposition';
 
@@ -36,7 +44,7 @@ function source(
   };
 }
 
-function fixture() {
+function fixture(): DvtSubstraitInnerJoinDraft {
   return createDvtSubstraitInnerJoinDraft({
     left: source('source-customers', 'public', 'customers'),
     right: source('source-orders', 'public', 'orders'),
@@ -118,6 +126,52 @@ describe('VTX2 typed Substrait INNER JOIN composition', () => {
       fixture().sidecar.fields.map((field) => field.fieldId)
     );
     expect(encodeDvtSubstraitInnerJoinDocument(reloaded)).toEqual(first);
+  });
+
+  it('persists and reopens the same INNER JOIN through ConfigureCanvasDvtNode metadata', () => {
+    const transform: CanonicalNode = {
+      id: 'transform-customer-orders',
+      name: 'Customer orders',
+      pluginId: 'dvt',
+      kind: 'dvt:sql_transform',
+      role: 'transform',
+      status: 'idle',
+      tags: ['authoring'],
+      metadata: {},
+    };
+    const draft = fixture();
+
+    const persisted = applyDvtNodeAuthoringMetadata(transform, {
+      kind: 'sql_transform',
+      mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
+      shape: 'inner_join',
+      plan: draft.plan,
+      sidecar: draft.sidecar,
+    });
+    const reopened = createDvtNodeAuthoringMetadata(persisted);
+
+    expect(reopened).toMatchObject({
+      kind: 'sql_transform',
+      mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
+      shape: 'inner_join',
+    });
+    if (
+      reopened?.kind !== 'sql_transform' ||
+      reopened.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait
+    ) {
+      throw new Error('Expected reopened Substrait authoring metadata.');
+    }
+    expect(
+      encodeDvtSubstraitInnerJoinDocument({ plan: reopened.plan, sidecar: reopened.sidecar })
+    ).toEqual(encodeDvtSubstraitInnerJoinDocument(draft));
+    expect(
+      projectCanvasNodePresentationTruth({ node: persisted, nodes: [persisted], edges: [] }).columns
+        .visible
+    ).toMatchObject([
+      { name: 'customer_id', reference: 'field:transform-customer-orders:customer_id' },
+      { name: 'name', reference: 'field:transform-customer-orders:name' },
+      { name: 'order_id', reference: 'field:transform-customer-orders:order_id' },
+    ]);
   });
 
   it('fails closed when the sources do not share one PostgreSQL connection', () => {

@@ -8,8 +8,10 @@ import {
 } from './canvasDvtSubstraitPilot';
 import {
   DvtSubstraitPostgresProjectionError,
+  projectDvtSubstraitInnerJoinToPostgresSql,
   projectDvtSubstraitPilotToPostgresSql,
 } from './canvasDvtSubstraitPostgresProjection';
+import { createDvtSubstraitInnerJoinDraft } from './canvasDvtSubstraitJoinComposition';
 
 function completedPilotDraft(): DvtSubstraitPilotDraft {
   let draft = createDvtSubstraitPilotDraft({
@@ -72,5 +74,43 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     ).rejects.toMatchObject({
       code: 'invalid_source_binding',
     });
+  });
+
+  it('projects the exact typed INNER JOIN from the canonical Substrait revision', async () => {
+    const connectionRef = {
+      schemaVersion: 'connection-ref.v1' as const,
+      connectionId: 'warehouse-main',
+      provider: 'postgres' as const,
+    };
+    const draft = createDvtSubstraitInnerJoinDraft({
+      left: {
+        nodeId: 'source-customers',
+        schema: 'tenant-data',
+        table: 'customer-ledger',
+        sourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef,
+          sourceObjectId: 'tenant-data.customer-ledger',
+        },
+      },
+      right: {
+        nodeId: 'source-orders',
+        schema: 'tenant-data',
+        table: 'order-ledger',
+        sourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef,
+          sourceObjectId: 'tenant-data.order-ledger',
+        },
+      },
+      targetNodeId: 'transform-customer-orders',
+    });
+
+    const sql = await projectDvtSubstraitInnerJoinToPostgresSql(draft);
+    const normalized = sql.replaceAll(/\s+/g, ' ').trim().toLowerCase();
+
+    expect(normalized).toMatch(
+      /^select left_source\.customer_id as customer_id, left_source\.name as name, right_source\.order_id as order_id from "tenant-data"\."customer-ledger" as left_source join "tenant-data"\."order-ledger" as right_source on left_source\.customer_id = right_source\.customer_id;?$/
+    );
   });
 });
