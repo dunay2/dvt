@@ -42,6 +42,10 @@ type GraphNodeCardCopy = Readonly<{
   columnAvailableInputValue: string;
   columnOutputAriaLabelTemplate: string;
   columnAvailableInputAriaLabelTemplate: string;
+  columnFunctionCategoryLabels: Readonly<
+    Record<'text' | 'numeric' | 'date-time' | 'conversion' | 'aggregate' | 'window', string>
+  >;
+  noCompatibleColumnFunctionsLabel: string;
   sourceIdentityAriaLabelTemplate: string;
   sourceIdentityDatabaseLabel: string;
   sourceIdentityConnectionLabel: string;
@@ -105,6 +109,15 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   columnAvailableInputValue: 'Available input',
   columnOutputAriaLabelTemplate: '{column}, included in output',
   columnAvailableInputAriaLabelTemplate: '{column}, available input',
+  columnFunctionCategoryLabels: {
+    text: 'Text functions',
+    numeric: 'Numeric functions',
+    'date-time': 'Date and time functions',
+    conversion: 'Conversion functions',
+    aggregate: 'Aggregate functions',
+    window: 'Window functions',
+  },
+  noCompatibleColumnFunctionsLabel: 'No functions are compatible with this type and target.',
   sourceIdentityAriaLabelTemplate: 'View source identity for {table}',
   sourceIdentityDatabaseLabel: 'Database',
   sourceIdentityConnectionLabel: 'Connection',
@@ -168,6 +181,15 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   columnAvailableInputValue: 'Entrada disponible',
   columnOutputAriaLabelTemplate: '{column}, incluida en salida',
   columnAvailableInputAriaLabelTemplate: '{column}, entrada disponible',
+  columnFunctionCategoryLabels: {
+    text: 'Funciones de texto',
+    numeric: 'Funciones numéricas',
+    'date-time': 'Funciones de fecha y hora',
+    conversion: 'Funciones de conversión',
+    aggregate: 'Funciones de agregación',
+    window: 'Funciones de ventana',
+  },
+  noCompatibleColumnFunctionsLabel: 'No hay funciones compatibles con este tipo y destino.',
   sourceIdentityAriaLabelTemplate: 'Ver identidad de origen de {table}',
   sourceIdentityDatabaseLabel: 'Base de datos',
   sourceIdentityConnectionLabel: 'Conexión',

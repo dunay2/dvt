@@ -135,6 +135,8 @@ export const graphNodeColumnClasses = {
   disclosure: 'mt-2',
   list: 'space-y-1.5',
   row: 'relative',
+  keyboardMenuAnchor:
+    'pointer-events-none absolute left-1/2 top-1/2 size-px border-0 bg-transparent p-0 opacity-0',
   piece:
     'nodrag nopan flex min-h-8 w-full items-center gap-2 rounded-md border border-slate-700/90 bg-slate-950/90 px-3 py-1.5 text-xs shadow-sm transition hover:border-blue-400/70 hover:bg-slate-900 focus-visible:border-blue-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70',
   name: 'truncate font-mono text-white',
