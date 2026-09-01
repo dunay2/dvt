@@ -281,7 +281,7 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import": "^2.29.1",
-    "js-yaml": "^4.1.1",
+    "js-yaml": "^5.4.1",
     "lint-staged": "^16.2.7",
     "markdownlint-cli2": "^0.23.1",
     "prettier": "^3.9.5",
