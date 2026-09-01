@@ -35,6 +35,7 @@ import {
 import { resolveAuthoringSqlArtifactPath } from './previewGraphNodePayloads';
 import { compileDvtVisualTransformNodeToPostgresSql } from './canvasVisualTransformSql';
 import { readDvtTransformLineageProvenance } from './canvasTransformationSqlMirror';
+import { projectTransformColumnsInStableOrder } from './canvasTransformColumnOrderProjection';
 
 export function projectCanvasNodePresentationTruth(
   args: Readonly<{
@@ -339,23 +340,14 @@ function projectCanvasNodePresentationTruthInternal(
     const hasConnectedFieldProjection = substraitOutputs.every(
       (output) => output.sourceNodeId != null && output.sourceFieldName != null
     );
-    const projectedSourceFields = new Set(
-      substraitOutputs.flatMap((output) =>
-        output.sourceNodeId == null || output.sourceFieldName == null
-          ? []
-          : [`${output.sourceNodeId}\u0000${output.sourceFieldName}`]
-      )
-    );
-    const declaredNames = new Set(declared.map((column) => column.name));
-    const unmatchedInherited = hasConnectedFieldProjection
-      ? presentationTruth.columns.inherited.filter(
-          (column) =>
-            !declaredNames.has(column.name) &&
-            (column.sourceNodeId == null ||
-              !projectedSourceFields.has(`${column.sourceNodeId}\u0000${column.name}`))
-        )
-      : [];
-    const visible = [...declared, ...unmatchedInherited];
+    const visible = hasConnectedFieldProjection
+      ? projectTransformColumnsInStableOrder({
+          declared,
+          inherited: presentationTruth.columns.inherited,
+          outputs: substraitOutputs,
+        })
+      : declared;
+    const unmatchedInherited = visible.filter((column) => column.provenance === 'inherited');
     return {
       ...presentationTruth,
       columns: {
