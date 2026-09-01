@@ -142,6 +142,8 @@ export function GraphNodeCardView({
     (cardModel.subtitle !== cardModel.path || !pathIsRepresentedByCodeMetric)
       ? cardModel.subtitle
       : null;
+  const headerMetrics = cardModel.metrics.filter((metric) => metric.placement === 'header');
+  const bodyMetrics = cardModel.metrics.filter((metric) => metric.placement !== 'header');
   const { borderColor: overlayBorderColor, ...cardOverlayStyle } = overlayStyle ?? {};
   const hasCardOverlayStyle = Object.keys(cardOverlayStyle).length > 0;
 
@@ -159,7 +161,7 @@ export function GraphNodeCardView({
       {...(hasCardOverlayStyle ? { style: cardOverlayStyle } : {})}
     >
       <div className={graphNodeCardLayoutClasses.body}>
-        <div className={graphNodeCardLayoutClasses.header}>
+        <div data-slot="graph-node-card-header" className={graphNodeCardLayoutClasses.header}>
           <div className={graphNodeCardLayoutClasses.titleRow}>
             {Icon && (
               <Icon
@@ -174,6 +176,11 @@ export function GraphNodeCardView({
             )}
             <GraphNodeCardTitle cardModel={cardModel} />
           </div>
+          {headerMetrics.length === 0 ? null : (
+            <div className={graphNodeCardLayoutClasses.headerActions}>
+              <GraphNodeMetricRow metrics={headerMetrics} placement="header" />
+            </div>
+          )}
         </div>
 
         {cardModel.kindLabel != null && (
@@ -182,7 +189,7 @@ export function GraphNodeCardView({
           </div>
         )}
 
-        <GraphNodeMetricRow metrics={cardModel.metrics} onOpenCode={onOpenCode} />
+        <GraphNodeMetricRow metrics={bodyMetrics} onOpenCode={onOpenCode} />
 
         {visibleSubtitle && (
           <div className={graphNodeCardLayoutClasses.path}>{visibleSubtitle}</div>

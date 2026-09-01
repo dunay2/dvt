@@ -8,6 +8,7 @@ export type GraphNodeCardMetric = Readonly<{
   detail?: string;
   icon?: GraphNodeCardMetricIcon;
   tone?: GraphNodeCardStatusTone;
+  placement?: 'header' | 'body';
 }>;
 
 export type GraphNodeCardMetricIcon =

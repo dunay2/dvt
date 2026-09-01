@@ -110,7 +110,9 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     'materialization',
     'Mat.',
     materialization,
-    materializationIcon == null ? undefined : { icon: materializationIcon }
+    materializationIcon == null
+      ? { placement: 'header' }
+      : { icon: materializationIcon, placement: 'header' }
   );
   pushMetric(metrics, 'dependencies', 'Deps', arrayCount(metadata.dependencies));
   pushMetric(metrics, 'test-target', 'Target', testTarget);

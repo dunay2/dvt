@@ -45,7 +45,11 @@ export const graphNodeSourceIdentityTooltipClasses = {
 } as const;
 
 export const graphNodeMetricRowClasses = {
-  root: 'mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-300',
+  root: {
+    body: 'mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-300',
+    header:
+      'flex shrink-0 items-center rounded border border-blue-400/40 bg-blue-950/45 px-2 py-1 text-[11px] text-slate-300',
+  },
   item: 'inline-flex items-center gap-1',
   icon: 'inline-flex shrink-0 text-blue-300',
   iconSvg: 'size-3.5',

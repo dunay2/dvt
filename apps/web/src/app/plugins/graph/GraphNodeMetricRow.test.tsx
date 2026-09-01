@@ -91,6 +91,21 @@ describe('GraphNodeMetricRow', () => {
     expect(container.textContent).toBe(`Mat.${value}`);
   });
 
+  it('renders a header metric row without the body spacing contract', () => {
+    act(() => {
+      root.render(
+        <GraphNodeMetricRow
+          metrics={[{ id: 'materialization', label: 'Mat.', value: 'view', icon: 'eye' }]}
+          placement="header"
+        />
+      );
+    });
+
+    const row = container.querySelector('[data-slot="graph-node-metric-row"]');
+    expect(row?.getAttribute('data-placement')).toBe('header');
+    expect(row?.className).not.toContain('mt-3');
+  });
+
   it('marks measured and estimated values as accessible tone-aware hotspots', () => {
     act(() => {
       root.render(

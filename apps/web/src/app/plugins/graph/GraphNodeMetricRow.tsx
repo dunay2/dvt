@@ -24,6 +24,7 @@ const summaryMetricIconByName: Partial<Record<GraphNodeCardMetricIcon, LucideIco
 export type GraphNodeMetricRowProps = Readonly<{
   metrics: readonly GraphNodeCardMetric[];
   onOpenCode?: () => void;
+  placement?: 'body' | 'header';
 }>;
 
 function resolveMetricValueClassName(tone: GraphNodeCardStatusTone | undefined): string {
@@ -35,13 +36,18 @@ function resolveMetricValueClassName(tone: GraphNodeCardStatusTone | undefined):
 export function GraphNodeMetricRow({
   metrics,
   onOpenCode,
+  placement = 'body',
 }: GraphNodeMetricRowProps): ReactElement | null {
   if (metrics.length === 0) {
     return null;
   }
 
   return (
-    <div data-slot="graph-node-metric-row" className={graphNodeMetricRowClasses.root}>
+    <div
+      data-slot="graph-node-metric-row"
+      data-placement={placement}
+      className={graphNodeMetricRowClasses.root[placement]}
+    >
       {metrics.map((metric) => {
         const Icon = metric.icon == null ? null : summaryMetricIconByName[metric.icon];
 

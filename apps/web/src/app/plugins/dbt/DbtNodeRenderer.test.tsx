@@ -293,6 +293,14 @@ describe('DbtNodeRenderer history panel', () => {
       document.querySelector('[data-slot="graph-node-summary-icon"]')?.getAttribute('data-icon')
     ).toBe('refresh');
     expect(
+      document.querySelector('[data-slot="graph-node-metric-row"][data-placement="header"]')
+        ?.textContent
+    ).toBe('Mat.incremental');
+    expect(
+      document.querySelector('[data-slot="graph-node-metric-row"][data-placement="body"]')
+        ?.textContent
+    ).toBe('Deps2');
+    expect(
       document.querySelector('[data-slot="graph-node-metric-hotspot"][aria-label="Deps: 2"]')
         ?.textContent
     ).toBe('2');

@@ -121,6 +121,34 @@ describe('GraphNodeCardView', () => {
     ).not.toBe('model_1');
   });
 
+  it('places the complete materialization block at the top right without repeating it below', () => {
+    act(() => {
+      root.render(
+        <GraphNodeCardView
+          {...BASE_PROPS}
+          cardModel={{
+            ...BASE_PROPS.cardModel,
+            metrics: [
+              {
+                id: 'materialization',
+                label: 'Mat.',
+                value: 'incremental',
+                icon: 'refresh',
+                placement: 'header',
+              },
+              { id: 'dependencies', label: 'Deps', value: '2' },
+            ],
+          }}
+        />
+      );
+    });
+
+    const header = container.querySelector('[data-slot="graph-node-card-header"]');
+    expect(header?.querySelector('[data-placement="header"]')?.textContent).toBe('Mat.incremental');
+    expect(container.querySelector('[data-placement="body"]')?.textContent).toBe('Deps2');
+    expect(container.textContent?.match(/incremental/g)).toHaveLength(1);
+  });
+
   it('uses a stable professional card width from graph visual tokens', () => {
     act(() => {
       root.render(<GraphNodeCardView {...BASE_PROPS} />);
