@@ -44,6 +44,10 @@ const CANVAS_NODE_MAPPER_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../../views/canvas/canvasNodeMapper.ts'
 );
+const CANVAS_CONTROLLER_READ_MODEL_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  '../../views/canvas/useCanvasControllerReadModel.ts'
+);
 const DBT_NODE_CATALOG_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../nodeTypeCatalog.dbt.ts'
@@ -145,15 +149,16 @@ describe('React Flow visual token convergence architecture', () => {
     }
   });
 
-  it('keeps health borders semantic and status copy non-visual', () => {
+  it('keeps health borders semantic and exposes status through the focusable node', () => {
     expect(graphNodeHealthBorderClasses).toEqual({
       healthy: 'border-solid border-green-500',
       failed: 'border-dashed border-red-500',
       neutral: 'border-solid border-slate-700',
     });
-    expect(GRAPH_CARD_VIEW_SOURCE).toContain('graph-node-health-description');
-    expect(GRAPH_CARD_VIEW_SOURCE).toContain('sr-only');
     expect(GRAPH_CARD_VIEW_SOURCE).not.toContain('GraphNodeStatusChip');
+    expect(CANVAS_CONTROLLER_READ_MODEL_SOURCE).toContain('buildGraphNodeCardReadModel');
+    expect(CANVAS_CONTROLLER_READ_MODEL_SOURCE).toContain('ariaLabel:');
+    expect(CANVAS_CONTROLLER_READ_MODEL_SOURCE).toContain('accessibleLabel');
     expect(GRAPH_RENDERER_SOURCE).toContain('GraphNodeCardView');
     expect(GRAPH_RENDERER_SOURCE).not.toContain('graphNodeHealthBorderClasses');
     expect(GRAPH_RENDERER_SOURCE).not.toMatch(/\b(?:slate|gray|neutral|zinc)-\d{2,3}\b/);

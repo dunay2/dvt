@@ -46,8 +46,9 @@ projection, generic plugin graph node rendering, and graph-node card chrome.
   reinterpret health.
 - Cost, runtime, and other overlay borders render on an inner decoration layer;
   they never overwrite the outer health border.
-- Health copy remains available to assistive technology and is not repeated as
-  a visible status chip.
+- The focusable React Flow node label includes health from the same card read
+  model that selects the border; health is not repeated as a visible status
+  chip.
 - Plugin-specific behavior remains in plugin contracts; this component owns only
   presentation tokens.
 

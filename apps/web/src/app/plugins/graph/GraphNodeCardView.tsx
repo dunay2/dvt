@@ -200,9 +200,6 @@ export function GraphNodeCardView({
             <GraphNodeCardTitle cardModel={cardModel} />
           </div>
           <div className={graphNodeCardLayoutClasses.headerActions}>
-            <span data-slot="graph-node-health-description" className="sr-only">
-              {cardModel.health.label}
-            </span>
             <button
               type="button"
               data-slot="graph-node-card-actions"

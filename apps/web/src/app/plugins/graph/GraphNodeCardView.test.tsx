@@ -83,9 +83,6 @@ describe('GraphNodeCardView', () => {
     expect(container.querySelector('[data-slot="graph-node-card-play"]')).toBeNull();
     expect(container.querySelector('[data-slot="graph-node-card-actions"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="graph-node-status-chip"]')).toBeNull();
-    expect(
-      container.querySelector('[data-slot="graph-node-health-description"]')?.textContent
-    ).toBe('Draft');
   });
 
   it('opens governed node actions from the card action button without selecting the card', () => {
@@ -130,7 +127,7 @@ describe('GraphNodeCardView', () => {
     expect(card?.className).not.toContain('min-w-[220px]');
   });
 
-  it('renders semantic status, subtitle, tags, and operational rail without repeating the backing path', () => {
+  it('renders subtitle, tags, and operational rail without repeating the backing path', () => {
     act(() => {
       root.render(
         <GraphNodeCardView
@@ -174,7 +171,6 @@ describe('GraphNodeCardView', () => {
     expect(
       container.querySelector('[data-slot="graph-node-card-title"]')?.getAttribute('title')
     ).toBe('src_public_orders');
-    expect(container.textContent).toContain('Ready');
     expect(container.textContent).toContain('warehouse.public.orders');
     expect(container.textContent).not.toContain('models/sources/src_public.yml');
     expect(container.textContent).toContain('postgres');
@@ -439,13 +435,9 @@ describe('GraphNodeCardView', () => {
       });
 
       const card = container.querySelector('[data-slot="graph-node-card"]');
-      const description = container.querySelector('[data-slot="graph-node-health-description"]');
-
       expect(card?.className).toContain(borderClass);
       expect(card?.className).toContain(borderStyleClass);
       expect(card?.className).toContain('focus-within:ring-2');
-      expect(description?.className).toContain('sr-only');
-      expect(description?.textContent).toBe(label);
       expect(container.querySelector('[data-slot="graph-node-status-chip"]')).toBeNull();
     }
   );

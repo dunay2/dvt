@@ -188,6 +188,31 @@ describe('useCanvasControllerReadModel', () => {
     }
   });
 
+  it('projects semantic health into the focusable React Flow node label', async () => {
+    const args = buildReadModelArgs();
+    const mounted = await renderReadModel(args);
+
+    try {
+      expect(mounted.readState()?.nodesWithImpact[0]?.ariaLabel).toBe(
+        'Orders Source, Source, Ready'
+      );
+
+      await mounted.rerender({
+        ...args,
+        overlayModel: {
+          ...args.overlayModel,
+          runStatusByNodeId: new Map([[testNode.id, 'failed']]),
+        },
+      });
+
+      expect(mounted.readState()?.nodesWithImpact[0]?.ariaLabel).toBe(
+        'Orders Source, Source, Failed'
+      );
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
   it('derives visible column lineage and attaches interactions without changing graph edges', async () => {
     const sourceNode = {
       ...testNode,
