@@ -23,7 +23,7 @@ describe('Canvas first-authoring live protected runtime', () => {
       createButton: 'Transformation',
       emptyTitle: 'Start transformation canvas',
       addCatalogItem: 'Add transformation',
-      firstNodeName: /sql transform 1/i,
+      firstNodeName: /transform 1/i,
     },
     {
       id: 'dbt',

@@ -832,7 +832,7 @@ describe('nodePropertiesReadModel', () => {
     });
   });
 
-  it('preserves declared SQL Transform column details when no source lineage is projected', () => {
+  it('preserves declared Transform column details when no source lineage is projected', () => {
     const transform: CanonicalNode = {
       id: 'transform-sql-orders',
       name: 'SQL orders',

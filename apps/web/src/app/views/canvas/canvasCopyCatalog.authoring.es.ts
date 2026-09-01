@@ -162,7 +162,7 @@ export const canvasViewAuthoringCopyEs = {
   inspectorDvtConnectionTestPassedMessage: 'Conexión disponible.',
   inspectorDvtConnectionTestFailedMessage: 'Conexión no disponible.',
   inspectorDvtInheritedConnectionLabel: 'Conexión heredada',
-  inspectorDvtSqlTransformTitle: 'Transformación SQL DVT',
+  inspectorDvtSqlTransformTitle: 'Transform DVT',
   inspectorDvtSubstraitInnerJoinAction: 'INNER JOIN',
   inspectorDvtSubstraitInnerJoinTitle: 'INNER JOIN Substrait',
   inspectorDvtSubstraitJoinConditionLabel: 'Condición de unión',
