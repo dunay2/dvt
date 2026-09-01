@@ -1,0 +1,145 @@
+name: issue-2803-semantic-relocation
+
+on:
+  push:
+    branches: [chore/2803-canvas-test-layout]
+
+permissions:
+  contents: write
+
+jobs:
+  relocate-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: chore/2803-canvas-test-layout
+          fetch-depth: 0
+
+      - name: Freeze tested main baseline
+        run: |
+          git fetch origin main
+          BASE_SHA=$(git rev-parse HEAD^)
+          test "$BASE_SHA" = "$(git rev-parse origin/main)" || { echo "main moved before validation"; exit 1; }
+          echo "BASE_SHA=$BASE_SHA" >> "$GITHUB_ENV"
+          echo "TRIGGER_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build Web dependency graph exactly as CI does
+        run: node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/web^...
+
+      - name: Relocate Canvas tests with semantic path preservation
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import path from 'node:path';
+          import ts from 'typescript';
+
+          const root = path.resolve('apps/web/src/app/views/canvas');
+          const dest = path.join(root, '__tests__');
+          const workflow = path.resolve('.github/workflows/issue-2803-semantic-relocation.yml');
+          const testRe = /\.(?:test|spec)\.(?:ts|tsx)$/;
+          const norm = path.normalize;
+          const posix = (p) => p.split(path.sep).join('/');
+          const stringNode = (n) => ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n);
+          const kind = (p) => p.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
+
+          const tests = fs.readdirSync(root, {withFileTypes:true})
+            .filter(e => e.isFile() && testRe.test(e.name))
+            .map(e => path.join(root,e.name)).sort();
+          if (!tests.length) throw new Error('No root Canvas tests found');
+          if (fs.existsSync(dest) && fs.readdirSync(dest).length) throw new Error('__tests__ is not empty');
+          if (new Set(tests.map(path.basename)).size !== tests.length) throw new Error('Filename collision');
+
+          const before = fs.readdirSync(root,{withFileTypes:true}).filter(e=>e.isFile()).length;
+          const moves = new Map(tests.map(src => [norm(src), norm(path.join(dest,path.basename(src)))]));
+          const representations = new Map();
+          for (const [src,dst] of moves) {
+            const ext=path.extname(src), no=src.slice(0,-ext.length), dno=dst.slice(0,-path.extname(dst).length);
+            representations.set(src,dst); representations.set(no,dno);
+            if(ext==='.ts') representations.set(no+'.js',dno+'.js');
+            if(ext==='.tsx') representations.set(no+'.jsx',dno+'.jsx');
+          }
+
+          const moduleCall = (n) => {
+            if(!ts.isCallExpression(n)||!n.arguments.length||!stringNode(n.arguments[0])) return false;
+            if(n.expression.kind===ts.SyntaxKind.ImportKeyword) return true;
+            if(ts.isIdentifier(n.expression)&&n.expression.text==='require') return true;
+            if(!ts.isPropertyAccessExpression(n.expression)) return false;
+            const owner=n.expression.expression.getText(), method=n.expression.name.text;
+            return ((owner==='vi'||owner==='jest')&&['mock','doMock','unmock','importActual','importMock'].includes(method)) ||
+              (owner==='import.meta'&&['glob','globEager'].includes(method));
+          };
+          const moduleLiterals = (sf) => {
+            const out=[]; const visit=(n)=>{
+              if((ts.isImportDeclaration(n)||ts.isExportDeclaration(n))&&n.moduleSpecifier&&stringNode(n.moduleSpecifier)) out.push(n.moduleSpecifier);
+              else if(moduleCall(n)) out.push(n.arguments[0]);
+              else if(ts.isImportTypeNode(n)&&ts.isLiteralTypeNode(n.argument)&&stringNode(n.argument.literal)) out.push(n.argument.literal);
+              else if(ts.isExternalModuleReference(n)&&n.expression&&stringNode(n.expression)) out.push(n.expression);
+              ts.forEachChild(n,visit);
+            }; visit(sf); return out;
+          };
+          const stringCounts=(sf,excluded)=>{const m=new Map(); const visit=(n)=>{if(stringNode(n)&&!excluded.has(n))m.set(n.text,(m.get(n.text)||0)+1);ts.forEachChild(n,visit)};visit(sf);return m};
+          const target=(src,spec)=>{const m=spec.match(/^([^?#]+)([?#].*)?$/), p=m?.[1]??spec, suffix=m?.[2]??''; const authored=norm(path.resolve(path.dirname(src),p)); return {path:representations.get(authored)??authored,suffix}};
+          const rewritten=(src,dst,spec)=>{if(!spec.startsWith('.'))return spec;const t=target(src,spec);let r=posix(path.relative(path.dirname(dst),t.path));if(!r.startsWith('.'))r='./'+r;return r+t.suffix};
+          const isDir=(n)=>ts.isPropertyAccessExpression(n)&&n.name.text==='dirname'&&ts.isMetaProperty(n.expression)&&n.expression.keywordToken===ts.SyntaxKind.ImportKeyword&&n.expression.name.text==='meta';
+          const callName=(e)=>ts.isIdentifier(e)?e.text:ts.isPropertyAccessExpression(e)?e.name.text:null;
+          const movedStaticTarget=(src,call,i)=>{const rest=[...call.arguments].slice(i+1);if(!rest.length||!rest.every(stringNode))return false;return representations.has(norm(path.resolve(path.dirname(src),...rest.map(a=>a.text))))};
+          const apply=(text,edits)=>{edits.sort((a,b)=>b.start-a.start||b.end-a.end);let last=Infinity,out=text;for(const e of edits){if(e.end>last)throw new Error('overlap');out=out.slice(0,e.start)+e.text+out.slice(e.end);last=e.start}return out};
+
+          fs.mkdirSync(dest,{recursive:true});
+          const evidence=new Map(); let specs=0,bases=0;
+          for(const src of tests){
+            const dst=moves.get(norm(src)), text=fs.readFileSync(src,'utf8'), sf=ts.createSourceFile(src,text,ts.ScriptTarget.Latest,true,kind(src));
+            const literals=moduleLiterals(sf), excluded=new Set(literals), strings=stringCounts(sf,excluded), expected=[], edits=[];
+            for(const lit of literals){const spec=lit.text;if(!spec.startsWith('.')){expected.push(null);continue}const rw=rewritten(src,dst,spec), t=target(src,spec);expected.push(norm(t.path));if(rw!==spec){const q=text[lit.getStart(sf)];edits.push({start:lit.getStart(sf),end:lit.getEnd(),text:q+rw+q});specs++}}
+            const handled=new Set(); const visit=(n)=>{if(isDir(n)){const p=n.parent;if(ts.isCallExpression(p)){const i=[...p.arguments].findIndex(a=>a===n);if(i>=0&&!movedStaticTarget(src,p,i)){if(['resolve','join'].includes(callName(p.expression)))edits.push({start:n.getEnd(),end:n.getEnd(),text:", '..'"});else edits.push({start:n.getStart(sf),end:n.getEnd(),text:"(import.meta.dirname + '/..')"});bases++;handled.add(n)}}if(!handled.has(n)){edits.push({start:n.getStart(sf),end:n.getEnd(),text:"(import.meta.dirname + '/..')"});bases++;handled.add(n)}}ts.forEachChild(n,visit)};visit(sf);
+            fs.writeFileSync(dst,apply(text,edits)); fs.unlinkSync(src); evidence.set(norm(dst),{expected,strings});
+          }
+
+          for(const [dst,e] of evidence){const text=fs.readFileSync(dst,'utf8'),sf=ts.createSourceFile(dst,text,ts.ScriptTarget.Latest,true,kind(dst)),lits=moduleLiterals(sf);if(lits.length!==e.expected.length)throw new Error('module count changed '+dst);lits.forEach((lit,i)=>{const exp=e.expected[i];if(exp==null||!lit.text.startsWith('.'))return;const p=lit.text.match(/^([^?#]+)/)?.[1]??lit.text, actual=norm(path.resolve(path.dirname(dst),p));if(actual!==exp)throw new Error(`semantic import drift ${dst}: ${lit.text}`)});const counts=stringCounts(sf,new Set(lits));for(const [s,c] of e.strings)if((counts.get(s)||0)<c)throw new Error(`non-module string changed ${dst}: ${JSON.stringify(s)}`)}
+
+          const remaining=fs.readdirSync(root,{withFileTypes:true}).filter(e=>e.isFile()&&testRe.test(e.name));
+          const afterTests=fs.readdirSync(dest,{withFileTypes:true}).filter(e=>e.isFile()&&testRe.test(e.name));
+          if(remaining.length)throw new Error('root tests remain'); if(afterTests.length!==tests.length)throw new Error('test count drift');
+          const after=fs.readdirSync(root,{withFileTypes:true}).filter(e=>e.isFile()).length;
+          const metric=[`tests_moved=${tests.length}`,`root_files_before=${before}`,`root_files_after=${after}`,`root_clutter_reduction_pct=${(((before-after)/before)*100).toFixed(1)}`,`module_specifiers_rewritten=${specs}`,`directory_bases_relocated=${bases}`];
+          fs.writeFileSync('/tmp/issue-2803-metrics.txt',metric.join('\n')+'\n');console.log(metric.join('\n'));fs.unlinkSync(workflow);
+          NODE
+
+      - name: Structural and diff checks
+        run: |
+          git diff --check
+          cat /tmp/issue-2803-metrics.txt
+          test -z "$(find apps/web/src/app/views/canvas -maxdepth 1 -type f \( -name '*.test.ts' -o -name '*.test.tsx' -o -name '*.spec.ts' -o -name '*.spec.tsx' \) -print -quit)"
+
+      - name: Commit candidate locally through repository hooks
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "chore(web): Move Canvas tests under __tests__ (#2803)"
+
+      - name: Web typecheck
+        run: pnpm --filter @dvt/web typecheck
+      - name: Canvas focused tests
+        run: pnpm --filter @dvt/web test:canvas:run
+      - name: Web lint
+        run: pnpm --filter @dvt/web lint
+      - name: Full pre-push verification
+        run: pnpm verify:prepush
+
+      - name: Publish clean single-commit branch only if main is unchanged
+        run: |
+          git fetch origin main
+          test "$BASE_SHA" = "$(git rev-parse origin/main)" || { echo "main moved during validation; refusing untested publish"; exit 1; }
+          tree=$(git rev-parse 'HEAD^{tree}')
+          clean=$(printf '%s\n' 'chore(web): Move Canvas tests under __tests__ (#2803)' | git commit-tree "$tree" -p "$BASE_SHA")
+          git reset --hard "$clean"
+          git push --force-with-lease=refs/heads/chore/2803-canvas-test-layout:$TRIGGER_SHA origin HEAD:refs/heads/chore/2803-canvas-test-layout
+          echo "clean_commit=$clean" >> "$GITHUB_STEP_SUMMARY"
+          cat /tmp/issue-2803-metrics.txt >> "$GITHUB_STEP_SUMMARY"
