@@ -674,8 +674,14 @@ Frontend Tests` lane and the main/manual `Full CI` baseline both set the same we
   closeout command for every Temporal slice.
 - Local Node selection is pinned through `.node-version` and `.nvmrc` with the
   same Node 22 baseline that the shared CI setup already uses.
-- `pnpm run hooks:precommit` still runs `lint-staged` for every commit, but the
-  determinism gate now runs only when staged files touch
+- `pnpm run hooks:precommit` runs Prettier plus
+  `tools/ci/eslint-precommit.config.cjs` only for staged files. That projection
+  preserves non-type-aware rules and path restrictions, but does not load the
+  TypeScript project, TypeScript import resolver, promise rules, unresolved
+  import checks, or cycle checks. The canonical `eslint.config.cjs` remains
+  unchanged and enforces those semantic rules through changed-file pre-push
+  validation and CI.
+- The determinism gate runs only when staged files touch
   `packages/@dvt/engine/src/**`, `packages/@dvt/adapter-temporal/src/workflows/**`,
   or the config inputs that govern that gate.
 - Several package-level `typecheck` scripts intentionally retain

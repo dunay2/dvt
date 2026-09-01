@@ -210,15 +210,15 @@
   },
   "lint-staged": {
     "packages/@dvt/*/src/**/*.{ts,tsx}": [
-      "eslint --fix",
+      "eslint --fix --config tools/ci/eslint-precommit.config.cjs",
       "prettier --write"
     ],
     "packages/@dvt/*/test/**/*.{ts,tsx}": [
-      "eslint --fix",
+      "eslint --fix --config tools/ci/eslint-precommit.config.cjs",
       "prettier --write"
     ],
     "apps/**/*.{ts,tsx}": [
-      "eslint --fix",
+      "eslint --fix --config tools/ci/eslint-precommit.config.cjs",
       "prettier --write"
     ],
     "apps/**/*.{html,css}": [
@@ -229,11 +229,14 @@
       "node -e \"const fs=require('fs');const cp=require('child_process');const p='specs/contracts/README.md';if(fs.existsSync(p)){cp.execSync('git add -- '+p,{stdio:'inherit'})}\""
     ],
     "scripts/**/*.{cjs,mjs}": [
-      "eslint --fix",
+      "eslint --fix --config tools/ci/eslint-precommit.config.cjs",
       "prettier --write"
     ],
     "tools/ci/**/*.{mjs,js}": [
-      "eslint --fix",
+      "eslint --fix --config tools/ci/eslint-precommit.config.cjs",
+      "prettier --write"
+    ],
+    "tools/ci/**/*.cjs": [
       "prettier --write"
     ],
     "*.{js,json,md,yml,yaml}": [
