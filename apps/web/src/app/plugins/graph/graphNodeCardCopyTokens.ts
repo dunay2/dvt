@@ -4,6 +4,7 @@ type GraphNodeCardCopy = Readonly<{
   columnsLabel: string;
   rowsLabel: string;
   sizeLabel: string;
+  notCalculatedLabel: string;
   estimatedSizeLabel: string;
   freshnessLabel: string;
   lastRefreshLabel: string;
@@ -44,6 +45,7 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   columnsLabel: 'Columns',
   rowsLabel: 'Rows',
   sizeLabel: 'Size',
+  notCalculatedLabel: 'Not calculated',
   estimatedSizeLabel: 'Est. size',
   freshnessLabel: 'Freshness',
   lastRefreshLabel: 'Last refresh',
@@ -97,6 +99,7 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   columnsLabel: 'Columnas',
   rowsLabel: 'Filas',
   sizeLabel: 'Tamaño',
+  notCalculatedLabel: 'No calculado',
   estimatedSizeLabel: 'Tamaño estimado',
   freshnessLabel: 'Actualización',
   lastRefreshLabel: 'Última actualización',

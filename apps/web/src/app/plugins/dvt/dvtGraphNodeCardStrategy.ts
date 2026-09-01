@@ -141,7 +141,7 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
             ? (currentRows ?? {
                 id: 'rows',
                 label: operationalCopy.rowsLabel,
-                value: '—',
+                value: operationalCopy.notCalculatedLabel,
                 icon: 'rows' as const,
               })
             : { ...projectedRows, id: 'rows', icon: 'rows' as const },
@@ -149,7 +149,7 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
             ? (currentSize ?? {
                 id: 'size',
                 label: operationalCopy.sizeLabel,
-                value: '—',
+                value: operationalCopy.notCalculatedLabel,
                 icon: 'database' as const,
               })
             : { ...projectedSize, id: 'size', icon: 'database' as const },

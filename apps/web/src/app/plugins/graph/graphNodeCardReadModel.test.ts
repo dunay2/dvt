@@ -451,7 +451,7 @@ describe('buildGraphNodeCardReadModel', () => {
     ]);
   });
 
-  it('keeps empty Rows and Size facts when only partial execution evidence exists', () => {
+  it('marks Rows and Size as not calculated when only partial execution evidence exists', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({
         kind: 'dvt:sql_transform',
@@ -468,22 +468,29 @@ describe('buildGraphNodeCardReadModel', () => {
 
     expect(model.operationalMetrics).toEqual([
       { id: 'last-run', label: 'Last run', value: '2026-06-12T20:45:00Z', icon: 'clock' },
-      { id: 'rows', label: 'Rows', value: '—', icon: 'rows' },
-      { id: 'size', label: 'Size', value: '—', icon: 'database' },
+      { id: 'rows', label: 'Rows', value: 'Not calculated', icon: 'rows' },
+      { id: 'size', label: 'Size', value: 'Not calculated', icon: 'database' },
     ]);
   });
 
   it.each([
-    { locale: 'en', presentationCopy: undefined, rowsLabel: 'Rows', sizeLabel: 'Size' },
+    {
+      locale: 'en',
+      presentationCopy: undefined,
+      rowsLabel: 'Rows',
+      sizeLabel: 'Size',
+      notCalculatedLabel: 'Not calculated',
+    },
     {
       locale: 'es',
       presentationCopy: { ...SPANISH_PRESENTATION_COPY, locale: 'es' },
       rowsLabel: 'Filas',
       sizeLabel: 'Tamaño',
+      notCalculatedLabel: 'No calculado',
     },
   ])(
-    'reserves truthful empty Rows and Size metrics for a DVT SQL transform in $locale',
-    ({ presentationCopy, rowsLabel, sizeLabel }) => {
+    'reserves truthful uncalculated Rows and Size metrics for a DVT SQL transform in $locale',
+    ({ presentationCopy, rowsLabel, sizeLabel, notCalculatedLabel }) => {
       const model = buildGraphNodeCardReadModel(
         buildNode({
           kind: 'dvt:sql_transform',
@@ -496,8 +503,8 @@ describe('buildGraphNodeCardReadModel', () => {
       );
 
       expect(model.operationalMetrics).toEqual([
-        { id: 'rows', label: rowsLabel, value: '—', icon: 'rows' },
-        { id: 'size', label: sizeLabel, value: '—', icon: 'database' },
+        { id: 'rows', label: rowsLabel, value: notCalculatedLabel, icon: 'rows' },
+        { id: 'size', label: sizeLabel, value: notCalculatedLabel, icon: 'database' },
       ]);
     }
   );
