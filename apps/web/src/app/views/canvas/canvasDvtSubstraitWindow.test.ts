@@ -232,7 +232,7 @@ describe('VTX2 typed Substrait row-number window', () => {
         id: 'transform-customers',
         name: 'Customers numbered by country',
         pluginId: 'dvt',
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         role: 'transform',
         status: 'idle',
         tags: ['authoring'],
@@ -265,7 +265,7 @@ describe('VTX2 typed Substrait row-number window', () => {
       ['country_row_number', 'field:transform-customers:row-number'],
     ]);
     expect(createDvtNodeAuthoringMetadata(transform)).toMatchObject({
-      kind: 'sql_transform',
+      kind: 'transform',
       mode: 'substrait',
       shape: 'pilot',
     });

@@ -45,7 +45,7 @@ export function readCompiledSqlText(node: CanonicalNode): string | null {
 export function readDvtTransformLineageProvenance(
   node: CanonicalNode
 ): VisualTransformRecipeV1 | null {
-  if (node.pluginId !== 'dvt' || node.kind !== 'dvt:sql_transform') return null;
+  if (node.pluginId !== 'dvt' || node.kind !== 'dvt:transform') return null;
 
   const result = VisualTransformRecipeV1Schema.safeParse(
     node.metadata?.[DVT_TRANSFORM_LINEAGE_PROVENANCE_METADATA_KEY]

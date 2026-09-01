@@ -223,7 +223,7 @@ describe('useCanvasControllerReadModel', () => {
         ...testNode,
         id: 'model-orders',
         name: 'Orders Model',
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         role: 'transform',
       },
       {
@@ -415,7 +415,7 @@ describe('useCanvasControllerReadModel', () => {
       ...testNode,
       id: 'sql-transform-orders',
       name: 'Orders SQL',
-      kind: 'dvt:sql_transform',
+      kind: 'dvt:transform',
       role: 'transform',
       metadata: {
         sql: 'select order_id from public.orders',
@@ -466,7 +466,7 @@ describe('useCanvasControllerReadModel', () => {
       ...testNode,
       id: 'converted-sql-transform-orders',
       name: 'Converted orders SQL',
-      kind: 'dvt:sql_transform',
+      kind: 'dvt:transform',
       role: 'transform',
       metadata: {
         sql: 'select order_id from public.orders',

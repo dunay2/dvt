@@ -38,7 +38,7 @@ const DVT_TRANSFORM_NODE: CanonicalNode = {
   id: 'transform.orders',
   name: 'Clean Orders',
   pluginId: 'dvt',
-  kind: 'dvt:sql_transform',
+  kind: 'dvt:transform',
   role: 'transform',
   status: 'idle',
   tags: ['authoring'],
@@ -259,7 +259,7 @@ describe('useCanvasNodeWorkbenchDraftController', () => {
       harness.getController().onDraftChange((currentDraft) => ({
         ...currentDraft,
         dvt:
-          currentDraft.dvt?.kind === 'sql_transform'
+          currentDraft.dvt?.kind === 'transform'
             ? { ...currentDraft.dvt, sql: 'select order_id from raw.orders' }
             : currentDraft.dvt,
       }));
@@ -272,7 +272,7 @@ describe('useCanvasNodeWorkbenchDraftController', () => {
     await harness.renderNode(appliedNode);
 
     expect(harness.getController().draft.dvt).toEqual({
-      kind: 'sql_transform',
+      kind: 'transform',
       mode: 'sql',
       sql: 'select order_id from raw.orders',
     });

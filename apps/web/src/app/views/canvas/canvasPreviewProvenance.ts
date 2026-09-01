@@ -144,7 +144,7 @@ function resolveTransformArtifactSource(
   }
 
   const workspacePath = normalizeNonBlankString(transformNode.path);
-  if (transformNode.pluginId === 'dvt' && transformNode.kind === 'dvt:sql_transform') {
+  if (transformNode.pluginId === 'dvt' && transformNode.kind === 'dvt:transform') {
     const authority = readDvtTransformAuthoringAuthority(transformNode);
     if (
       authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual ||
@@ -312,7 +312,7 @@ async function buildAuthoringPreviewSql({
   canonicalEdges: readonly CanonicalEdge[];
   scopedNodeIds: readonly string[];
 }): Promise<string> {
-  if (transformNode.pluginId === 'dvt' && transformNode.kind === 'dvt:sql_transform') {
+  if (transformNode.pluginId === 'dvt' && transformNode.kind === 'dvt:transform') {
     const authority = readDvtTransformAuthoringAuthority(transformNode);
     if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
       const scopedNodes = resolveScopedTransformationNodes(canonicalNodes, scopedNodeIds);

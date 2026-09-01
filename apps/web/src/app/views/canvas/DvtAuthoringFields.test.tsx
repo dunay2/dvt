@@ -49,12 +49,12 @@ vi.mock('../../components/monaco/MonacoCodeEditor', () => ({
 }));
 
 function buildDvtNode(
-  kind: 'dvt:source' | 'dvt:sql_transform' | 'dvt:sink',
+  kind: 'dvt:source' | 'dvt:transform' | 'dvt:sink',
   metadata?: Record<string, unknown>
 ): CanonicalNode {
   return {
     id: `dvt-${kind.replace('dvt:', '').replace('_', '-')}`,
-    name: kind === 'dvt:sql_transform' ? 'Clean Orders' : 'Orders',
+    name: kind === 'dvt:transform' ? 'Clean Orders' : 'Orders',
     pluginId: 'dvt',
     kind,
     role: kind === 'dvt:source' ? 'input' : kind === 'dvt:sink' ? 'output' : 'transform',
@@ -293,9 +293,9 @@ describe('DvtAuthoringFields', () => {
     expect(draftJson()).toContain('"table":"orders_daily"');
   });
 
-  it('renders one SQL transform editor without a duplicate summary and updates the draft', () => {
+  it('renders one Transform editor without a duplicate summary and updates the draft', () => {
     renderFields(
-      buildDvtNode('dvt:sql_transform', {
+      buildDvtNode('dvt:transform', {
         config: {
           sql: 'select * from public.orders',
         },
@@ -306,13 +306,13 @@ describe('DvtAuthoringFields', () => {
       '[data-testid="dvt-transform-sql-editor"]'
     ) as HTMLTextAreaElement | null;
 
-    expect(container.textContent).toContain('DVT SQL transform');
+    expect(container.textContent).toContain('DVT Transform');
     expect(container.textContent).not.toContain('1 line');
     expect(container.textContent).not.toContain('SQL body');
     expect(sqlEditor).not.toBeNull();
     expect(sqlEditor?.value).toBe('select * from public.orders');
     expect(sqlEditor?.dataset.language).toBe('sql');
-    expect(sqlEditor?.dataset.path).toBe('canvas/dvt-sql-transform.sql');
+    expect(sqlEditor?.dataset.path).toBe('canvas/dvt-transform.sql');
 
     act(() => {
       fireEvent.input(sqlEditor!, { target: { value: 'select id from public.orders' } });
@@ -332,7 +332,7 @@ describe('DvtAuthoringFields', () => {
       table: 'orders',
       columns: ['order_id', 'customer_id'],
     });
-    const transform = buildDvtNode('dvt:sql_transform');
+    const transform = buildDvtNode('dvt:transform');
     const edges: readonly CanonicalEdge[] = [
       {
         id: 'customers-transform',
@@ -401,7 +401,7 @@ describe('DvtAuthoringFields', () => {
 
     expect(customerIdSelection?.checked).toBe(false);
     expect(draftJson()).toContain('"names":["order_id","customer_name"]');
-    expect(draftJson()).toContain('"fieldId":"field:dvt-sql-transform:name"');
+    expect(draftJson()).toContain('"fieldId":"field:dvt-transform:name"');
     expect(draftJson()).toContain('"displayName":"customer_name"');
     expect(draftJson()).not.toContain('selectedColumns');
 
@@ -417,7 +417,7 @@ describe('DvtAuthoringFields', () => {
     expect(grainField).not.toBeNull();
     expect(countOutput).not.toBeNull();
     act(() => {
-      fireEvent.change(grainField!, { target: { value: 'field:dvt-sql-transform:name' } });
+      fireEvent.change(grainField!, { target: { value: 'field:dvt-transform:name' } });
       fireEvent.input(countOutput!, { target: { value: 'order_count' } });
       fireEvent.click(applyGrouping!);
     });
@@ -469,7 +469,7 @@ describe('DvtAuthoringFields', () => {
       table: 'profiles',
       columns: ['customer_id', 'name'],
     });
-    const transform = buildDvtNode('dvt:sql_transform');
+    const transform = buildDvtNode('dvt:transform');
     const initialEdges: readonly CanonicalEdge[] = [
       {
         id: 'customers-transform',
@@ -542,19 +542,19 @@ describe('DvtAuthoringFields', () => {
     };
 
     chooseConnectedField(shipments.id);
-    expect(draftJson()).toContain('field:dvt-sql-transform:shipment_id');
+    expect(draftJson()).toContain('field:dvt-transform:shipment_id');
     expect(
       container.querySelector('[data-slot="dvt-substrait-n-input-join-authoring"]')
     ).not.toBeNull();
     expect(container.textContent).toContain('customers + orders + shipments');
 
     chooseConnectedField(tickets.id);
-    expect(draftJson()).toContain('field:dvt-sql-transform:ticket_id');
+    expect(draftJson()).toContain('field:dvt-transform:ticket_id');
     expect(container.textContent).toContain('customers + orders + shipments + tickets');
     expect(draftJson()).toContain('dvt-vtx2-n-input-inner-join-card');
 
     chooseConnectedField(profiles.id);
-    expect(draftJson()).toContain('field:dvt-sql-transform:profiles_name');
+    expect(draftJson()).toContain('field:dvt-transform:profiles_name');
     expect(container.textContent).toContain('customers + orders + shipments + tickets + profiles');
 
     const shipmentCustomerSelection = container.querySelector<HTMLInputElement>(
@@ -577,7 +577,7 @@ describe('DvtAuthoringFields', () => {
         )!
       );
     });
-    expect(draftJson()).toContain('"fieldId":"field:dvt-sql-transform:shipments_customer_id"');
+    expect(draftJson()).toContain('"fieldId":"field:dvt-transform:shipments_customer_id"');
     expect(draftJson()).toContain('"displayName":"shipping_customer"');
 
     const grainField = container.querySelector<HTMLSelectElement>(
@@ -588,7 +588,7 @@ describe('DvtAuthoringFields', () => {
     );
     act(() => {
       fireEvent.change(grainField!, {
-        target: { value: 'field:dvt-sql-transform:shipment_id' },
+        target: { value: 'field:dvt-transform:shipment_id' },
       });
       fireEvent.input(countOutput!, { target: { value: 'shipment_count' } });
       fireEvent.click(
@@ -632,7 +632,7 @@ describe('DvtAuthoringFields', () => {
       columns: ['order_id', 'customer_id'],
       connectionId: 'warehouse-b',
     });
-    const transform = buildDvtNode('dvt:sql_transform');
+    const transform = buildDvtNode('dvt:transform');
     const edges: readonly CanonicalEdge[] = [
       {
         id: 'customers-transform',
@@ -664,7 +664,7 @@ describe('DvtAuthoringFields', () => {
       table: 'customers_south',
       columns: ['customer_id', 'name', 'country'],
     });
-    const transform = buildDvtNode('dvt:sql_transform');
+    const transform = buildDvtNode('dvt:transform');
     const edges: readonly CanonicalEdge[] = [
       {
         id: 'north-transform',
@@ -724,7 +724,7 @@ describe('DvtAuthoringFields', () => {
       );
     });
     expect(draftJson()).toContain('"names":["region","customer_id"]');
-    expect(draftJson()).toContain('"fieldId":"field:dvt-sql-transform:country"');
+    expect(draftJson()).toContain('"fieldId":"field:dvt-transform:country"');
     expect(draftJson()).toContain('"displayName":"region"');
 
     const grainField = container.querySelector<HTMLSelectElement>(
@@ -740,7 +740,7 @@ describe('DvtAuthoringFields', () => {
     expect(countOutput).not.toBeNull();
     act(() => {
       fireEvent.change(grainField!, {
-        target: { value: 'field:dvt-sql-transform:country' },
+        target: { value: 'field:dvt-transform:country' },
       });
       fireEvent.input(countOutput!, { target: { value: 'customer_count' } });
       fireEvent.keyDown(applyGrouping!, { key: 'Enter' });
@@ -811,7 +811,7 @@ describe('DvtAuthoringFields', () => {
         },
       },
     };
-    const transform = buildDvtNode('dvt:sql_transform', {
+    const transform = buildDvtNode('dvt:transform', {
       config: { sql: 'select order_id from analytics.erp.orders' },
     });
     const edges: readonly CanonicalEdge[] = [
@@ -852,7 +852,7 @@ describe('DvtAuthoringFields', () => {
 
   it('does not present connected source columns as editable DVT transform inputs', () => {
     const source = buildImportedWarehouseSourceNode();
-    const transform = buildDvtNode('dvt:sql_transform', {
+    const transform = buildDvtNode('dvt:transform', {
       config: {
         sql: 'select id from analytics.erp.orders',
         selectedColumns: [`${source.id}.id`],
@@ -867,7 +867,7 @@ describe('DvtAuthoringFields', () => {
 
   it('edits the visual recipe from source inputs without creating another SQL editor', () => {
     const source = buildImportedWarehouseSourceNode();
-    const transform = buildDvtNode('dvt:sql_transform', {
+    const transform = buildDvtNode('dvt:transform', {
       transformAuthoring: {
         version: 'v1',
         mode: 'visual',
@@ -951,7 +951,7 @@ describe('DvtAuthoringFields', () => {
         ],
       },
     };
-    const transform = buildDvtNode('dvt:sql_transform', {
+    const transform = buildDvtNode('dvt:transform', {
       transformAuthoring: {
         version: 'v1',
         mode: 'visual',

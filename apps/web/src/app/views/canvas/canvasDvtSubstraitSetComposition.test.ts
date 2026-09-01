@@ -95,7 +95,7 @@ function targetNode(): CanonicalNode {
     id: 'transform-all-customers',
     name: 'All customers',
     pluginId: 'dvt',
-    kind: 'dvt:sql_transform',
+    kind: 'dvt:transform',
     role: 'transform',
     status: 'idle',
     tags: ['authoring'],
@@ -328,7 +328,7 @@ describe('VTX2 typed Substrait UNION ALL composition', () => {
       outputName: 'count_rank',
     });
     const persisted = applyDvtNodeAuthoringMetadata(targetNode(), {
-      kind: 'sql_transform',
+      kind: 'transform',
       mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
       shape: 'union_all',
       plan: draft.plan,
@@ -337,7 +337,7 @@ describe('VTX2 typed Substrait UNION ALL composition', () => {
     const reopened = createDvtNodeAuthoringMetadata(persisted);
 
     expect(reopened).toMatchObject({
-      kind: 'sql_transform',
+      kind: 'transform',
       mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
       shape: 'union_all',
     });

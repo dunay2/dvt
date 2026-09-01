@@ -44,7 +44,7 @@ export function DvtSubstraitInnerJoinAuthoringSection({
   ): void => {
     onChange((currentDraft) => {
       if (
-        currentDraft.dvt?.kind !== 'sql_transform' ||
+        currentDraft.dvt?.kind !== 'transform' ||
         currentDraft.dvt.mode !== 'substrait' ||
         currentDraft.dvt.shape !== 'inner_join'
       ) {

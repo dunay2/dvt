@@ -365,7 +365,7 @@ export const canvasViewToolbarCopyByKey = {
   },
   canvasAddNodeCatalogTransformationDescription: {
     key: 'canvas.addNodeCatalog.transformationDescription',
-    fallback: 'Add a SQL transformation between upstream sources and downstream outputs.',
+    fallback: 'Add a Transformation between upstream sources and downstream outputs.',
   },
   canvasAddNodeCatalogTestDescription: {
     key: 'canvas.addNodeCatalog.testDescription',

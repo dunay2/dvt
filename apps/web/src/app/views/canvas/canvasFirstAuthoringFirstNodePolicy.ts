@@ -14,9 +14,9 @@ export const FIRST_AUTHORING_DEFAULTS: readonly CanvasFirstAuthoringDefault[] = 
   {
     canvasKind: 'transformation',
     node: {
-      id: 'dvt-sql-transform-1',
-      kind: 'dvt:sql_transform',
-      name: 'SQL transform 1',
+      id: 'dvt-transform-1',
+      kind: 'dvt:transform',
+      name: 'Transform 1',
     },
   },
   {

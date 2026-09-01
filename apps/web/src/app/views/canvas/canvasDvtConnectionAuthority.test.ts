@@ -90,7 +90,7 @@ describe('Canvas DVT PostgreSQL connection authority', () => {
 
     const transform = node({
       id: 'transform-1',
-      kind: 'dvt:sql_transform',
+      kind: 'dvt:transform',
       role: 'transform',
       metadata: { config: { sql: 'select * from raw.orders' } },
     });
@@ -102,7 +102,7 @@ describe('Canvas DVT PostgreSQL connection authority', () => {
     const transform = node({
       id: 'transform-1',
       name: 'Orders transform',
-      kind: 'dvt:sql_transform',
+      kind: 'dvt:transform',
       role: 'transform',
       path: 'models/orders.sql',
     });

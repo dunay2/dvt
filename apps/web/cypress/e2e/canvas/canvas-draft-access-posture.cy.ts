@@ -179,7 +179,7 @@ describe('Canvas draft access posture', () => {
     assertUnsafeCanvasCommandsAreDisabled();
 
     cy.get('.react-flow__pane').rightclick(320, 260);
-    cy.contains('[role="menuitem"]', 'SQL transform').should('not.exist');
+    cy.contains('[role="menuitem"]', 'Transform').should('not.exist');
     cy.contains('[role="menuitem"]', 'Add source').should('not.exist');
   });
 });

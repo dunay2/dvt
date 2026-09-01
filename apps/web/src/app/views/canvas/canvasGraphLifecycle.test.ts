@@ -2,10 +2,7 @@ import type { Edge, Node } from '@xyflow/react';
 import { describe, expect, it } from 'vitest';
 
 import type { CanvasDraftSession } from './canvasDraftSession';
-import {
-  canvasGraphLifecycle,
-  type CanvasGraphLifecycleState,
-} from './canvasGraphLifecycle';
+import { canvasGraphLifecycle, type CanvasGraphLifecycleState } from './canvasGraphLifecycle';
 
 function buildDraftSession(): CanvasDraftSession {
   return {
@@ -55,19 +52,16 @@ describe('canvasGraphLifecycle', () => {
   });
 
   it('admits an explicit node through the aggregate owner', () => {
-    const nextSession = canvasGraphLifecycle.node.admitExplicit(
-      buildDraftSession(),
-      {
-        id: 'transform-node',
-        name: 'transform-node',
-        pluginId: 'dvt',
-        kind: 'dvt:sql_transform',
-        role: 'transform',
-        status: 'idle',
-        tags: [],
-        path: 'models/transform.sql',
-      }
-    );
+    const nextSession = canvasGraphLifecycle.node.admitExplicit(buildDraftSession(), {
+      id: 'transform-node',
+      name: 'transform-node',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+      path: 'models/transform.sql',
+    });
 
     expect(nextSession.workingSet.visibleNodeIds).toEqual([
       'source-node',

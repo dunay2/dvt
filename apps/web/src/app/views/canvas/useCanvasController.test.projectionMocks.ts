@@ -64,6 +64,7 @@ export function configureCanvasHarnessHookAndProjectionMocks(
   configureZustandLikeStoreMock(mocks.useSessionStore, state);
   mocks.useUiLayoutStore.mockImplementation(selectFromStore);
   mocks.useCapabilitiesQuery.mockReturnValue({ data: undefined });
+  mocks.getCanvasGraphNodeCardStrategies.mockReturnValue([]);
   mocks.resolveCanvasGraphStrategy.mockImplementation((strategyId?: unknown) =>
     strategyId === 'dbt' ? dbtGraphStrategy : transformationGraphStrategy
   );
@@ -153,7 +154,7 @@ export function configureCanvasHarnessHookAndProjectionMocks(
       emptyState: {
         title: 'Start transformation canvas',
         editableMessage:
-          'Start this transformation canvas by adding a governed source, SQL transform, or sink node.',
+          'Start this transformation canvas by adding a governed source, Transform, or sink node.',
       },
       nodeKinds: DVT_AUTHORING_NODE_KINDS,
     },

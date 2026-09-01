@@ -322,7 +322,7 @@ describe('Canvas workbench screen composition', () => {
       nodePositions: {
         ...alternateDraftFixture.nodePositions,
         'source-1': { x: 40, y: 140 },
-        'dvt-sql-transform-1': { x: 420, y: 140 },
+        'dvt-transform-1': { x: 420, y: 140 },
         'sink-1': { x: 800, y: 140 },
       },
     };

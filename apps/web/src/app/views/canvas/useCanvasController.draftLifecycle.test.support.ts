@@ -27,7 +27,7 @@ export const TRANSFORMATION_AUTHORING_CANONICAL_NODES: CanonicalNode[] = [
     id: 'node_2',
     name: 'orders_transform',
     pluginId: 'dvt',
-    kind: 'dvt:sql_transform',
+    kind: 'dvt:transform',
     role: 'transform',
     status: 'idle',
     tags: [],

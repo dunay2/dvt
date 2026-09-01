@@ -139,7 +139,7 @@ describe('DVT PostgreSQL connection authority', () => {
     assertNoSeriousAccessibilityViolations();
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
-    openNode('dvt-sql-transform-1');
+    openNode('dvt-transform-1');
     cy.contains('Inherited PostgreSQL connection').scrollIntoView().should('be.visible');
     cy.contains('code', CONNECTION_ID).should('be.visible');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();

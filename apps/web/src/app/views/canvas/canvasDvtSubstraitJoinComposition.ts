@@ -390,7 +390,7 @@ export function resolveDvtSubstraitJoinAppendCandidates(args: {
 }): readonly DvtSubstraitJoinInput[] {
   if (
     args.targetNode.pluginId !== 'dvt' ||
-    args.targetNode.kind !== 'dvt:sql_transform' ||
+    args.targetNode.kind !== 'dvt:transform' ||
     args.targetNode.role !== 'transform'
   ) {
     return [];
@@ -427,7 +427,7 @@ export function resolveDvtSubstraitInnerJoinEntry(args: {
 }): DvtSubstraitInnerJoinEntry | null {
   if (
     args.targetNode.pluginId !== 'dvt' ||
-    args.targetNode.kind !== 'dvt:sql_transform' ||
+    args.targetNode.kind !== 'dvt:transform' ||
     args.targetNode.role !== 'transform'
   ) {
     return null;
@@ -489,7 +489,7 @@ export function resolveDvtSubstraitNInputJoinEntry(args: {
 }): DvtSubstraitNInputJoinEntry | null {
   if (
     args.targetNode.pluginId !== 'dvt' ||
-    args.targetNode.kind !== 'dvt:sql_transform' ||
+    args.targetNode.kind !== 'dvt:transform' ||
     args.targetNode.role !== 'transform'
   ) {
     return null;

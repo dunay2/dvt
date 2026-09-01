@@ -43,7 +43,7 @@ describe('useCanvasController core', () => {
           id: 'node_2',
           data: expect.objectContaining({
             name: 'node_2',
-            pluginKind: 'dvt:sql_transform',
+            pluginKind: 'dvt:transform',
           }),
         }),
       ])
@@ -67,7 +67,7 @@ describe('useCanvasController core', () => {
         id: 'node_2',
         name: 'node_2',
         pluginId: 'dvt',
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         role: 'transform',
         path: 'models/node_2.sql',
         metadata: {
@@ -93,7 +93,7 @@ describe('useCanvasController core', () => {
         const nodes = call[0] as readonly DecoratedNode[];
         return (
           nodes.some((node) => node.id === 'node_1' && node.kind === 'dvt:source') &&
-          nodes.some((node) => node.id === 'node_2' && node.kind === 'dvt:sql_transform')
+          nodes.some((node) => node.id === 'node_2' && node.kind === 'dvt:transform')
         );
       }
     );

@@ -30,7 +30,7 @@ describe('evaluateConnection', () => {
 
     const connection = evaluateConnectionPolicy(
       buildNode('dvt.warehouse-source', 'dvt:source', 'input'),
-      buildNode('dvt', 'dvt:sql_transform', 'transform'),
+      buildNode('dvt', 'dvt:transform', 'transform'),
       pluginPortMap
     );
 
@@ -42,12 +42,12 @@ describe('evaluateConnection', () => {
 
     const sourceToTransform = evaluateConnection(
       buildNode('dbt', 'dbt:source', 'input'),
-      buildNode('dvt', 'dvt:sql_transform', 'transform'),
+      buildNode('dvt', 'dvt:transform', 'transform'),
       [],
       pluginPortMap
     );
     const transformToSink = evaluateConnection(
-      buildNode('dvt', 'dvt:sql_transform', 'transform'),
+      buildNode('dvt', 'dvt:transform', 'transform'),
       buildNode('dvt', 'dvt:sink', 'output'),
       [],
       pluginPortMap
@@ -64,12 +64,12 @@ describe('evaluateConnection', () => {
     expect(transformToSink).toEqual({ allowed: true });
   });
 
-  it('allows imported warehouse sources to feed the DVT SQL transform authoring path', () => {
+  it('allows imported warehouse sources to feed the DVT Transform authoring path', () => {
     const pluginPortMap = getPluginPortMap();
 
     const sourceToTransform = evaluateConnection(
       buildNode('dvt.warehouse-source', 'dvt:source', 'input'),
-      buildNode('dvt', 'dvt:sql_transform', 'transform'),
+      buildNode('dvt', 'dvt:transform', 'transform'),
       [],
       pluginPortMap
     );
@@ -99,7 +99,7 @@ describe('evaluateConnection', () => {
 
   it('rejects cross-plugin tabular bridges into dbt input resources', () => {
     const pluginPortMap = getPluginPortMap();
-    const dvtTransform = buildNode('dvt', 'dvt:sql_transform', 'transform');
+    const dvtTransform = buildNode('dvt', 'dvt:transform', 'transform');
 
     for (const target of [
       buildNode('dbt', 'dbt:source', 'input'),
@@ -120,7 +120,7 @@ describe('evaluateConnection', () => {
     const pluginPortMap = getPluginPortMap();
 
     const connection = evaluateConnection(
-      buildNode('dvt', 'dvt:sql_transform', 'transform'),
+      buildNode('dvt', 'dvt:transform', 'transform'),
       buildNode('dbt', 'dbt:model', 'transform'),
       [],
       pluginPortMap

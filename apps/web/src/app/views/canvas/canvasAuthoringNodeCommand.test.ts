@@ -6,10 +6,7 @@ import { buildAuthoringNodeCommand } from './canvasAuthoringNodeCommand';
 
 describe('buildAuthoringNodeCommand', () => {
   it('starts empty canvases from the first visible authoring slot', () => {
-    const command = buildAuthoringNodeCommand(
-      buildTestNodeKind('dvt:sql_transform', 'SQL transform'),
-      []
-    );
+    const command = buildAuthoringNodeCommand(buildTestNodeKind('dvt:transform', 'Transform'), []);
 
     expect(command.position).toEqual({ x: 160, y: 120 });
   });
@@ -23,7 +20,7 @@ describe('buildAuthoringNodeCommand', () => {
       },
       {
         id: 'model_orders',
-        data: { pluginKind: 'sql_transform' },
+        data: { pluginKind: 'transform' },
         position: { x: 320, y: 140 },
       },
       {
@@ -34,7 +31,7 @@ describe('buildAuthoringNodeCommand', () => {
     ];
 
     const command = buildAuthoringNodeCommand(
-      buildTestNodeKind('dvt:sql_transform', 'SQL transform'),
+      buildTestNodeKind('dvt:transform', 'Transform'),
       existingNodes
     );
 
@@ -53,7 +50,7 @@ describe('buildAuthoringNodeCommand', () => {
   it('applies governed template seed metadata while preserving the node kind identity', () => {
     const command = buildAuthoringNodeCommand(
       {
-        ...buildTestNodeKind('dvt:sql_transform', 'SQL transform'),
+        ...buildTestNodeKind('dvt:transform', 'Transform'),
         role: 'transform',
         allowsIncoming: true,
       },
@@ -73,14 +70,14 @@ describe('buildAuthoringNodeCommand', () => {
     );
 
     expect(command.canonicalNode).toMatchObject({
-      id: 'dvt-sql-transform-1',
+      id: 'dvt-transform-1',
       name: 'Filter rows 1',
       pluginId: 'dvt',
-      kind: 'dvt:sql_transform',
+      kind: 'dvt:transform',
       role: 'transform',
       tags: ['authoring', 'template:filter-rows'],
       metadata: {
-        typeLabel: 'SQL transform',
+        typeLabel: 'Transform',
         transformationTemplateId: 'filter-rows',
         sql: 'select * from {{ source }} where {{ condition }}',
         config: {

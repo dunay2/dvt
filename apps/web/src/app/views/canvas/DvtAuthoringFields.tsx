@@ -82,7 +82,7 @@ export function DvtAuthoringFields({
     );
   }
 
-  if (draft.dvt.kind === 'sql_transform') {
+  if (draft.dvt.kind === 'transform') {
     if (draft.dvt.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
       if (section !== 'all' && section !== 'columns' && section !== 'code') {
         return null;
@@ -168,7 +168,7 @@ export function DvtAuthoringFields({
             : () =>
                 onChange((currentDraft) => {
                   if (
-                    currentDraft.dvt?.kind !== 'sql_transform' ||
+                    currentDraft.dvt?.kind !== 'transform' ||
                     currentDraft.dvt.mode !== DVT_TRANSFORM_AUTHORING_MODE.sql ||
                     currentDraft.dvt.sql.trim().length > 0
                   ) {
@@ -181,7 +181,7 @@ export function DvtAuthoringFields({
                   return {
                     ...currentDraft,
                     dvt: {
-                      kind: 'sql_transform',
+                      kind: 'transform',
                       mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
                       shape: 'pilot',
                       plan: pilot.plan,
@@ -201,7 +201,7 @@ export function DvtAuthoringFields({
             : () =>
                 onChange((currentDraft) => {
                   if (
-                    currentDraft.dvt?.kind !== 'sql_transform' ||
+                    currentDraft.dvt?.kind !== 'transform' ||
                     currentDraft.dvt.mode !== DVT_TRANSFORM_AUTHORING_MODE.sql ||
                     currentDraft.dvt.sql.trim().length > 0
                   ) {
@@ -211,7 +211,7 @@ export function DvtAuthoringFields({
                   return {
                     ...currentDraft,
                     dvt: {
-                      kind: 'sql_transform',
+                      kind: 'transform',
                       mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
                       shape: 'inner_join',
                       plan: join.plan,
@@ -231,7 +231,7 @@ export function DvtAuthoringFields({
             : () =>
                 onChange((currentDraft) => {
                   if (
-                    currentDraft.dvt?.kind !== 'sql_transform' ||
+                    currentDraft.dvt?.kind !== 'transform' ||
                     currentDraft.dvt.mode !== DVT_TRANSFORM_AUTHORING_MODE.sql ||
                     currentDraft.dvt.sql.trim().length > 0
                   ) {
@@ -241,7 +241,7 @@ export function DvtAuthoringFields({
                   return {
                     ...currentDraft,
                     dvt: {
-                      kind: 'sql_transform',
+                      kind: 'transform',
                       mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
                       shape: 'union_all',
                       plan: unionAll.plan,

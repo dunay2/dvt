@@ -38,8 +38,8 @@ export type DvtTransformAuthoringAuthority =
     }>;
 
 function assertDvtTransformNode(node: CanonicalNode): void {
-  if (node.pluginId !== 'dvt' || node.kind !== 'dvt:sql_transform') {
-    throw new Error('DVT transform authoring authority requires a dvt:sql_transform node.');
+  if (node.pluginId !== 'dvt' || node.kind !== 'dvt:transform') {
+    throw new Error('DVT transform authoring authority requires a dvt:transform node.');
   }
 }
 

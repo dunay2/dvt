@@ -9,6 +9,10 @@ import {
   convertDvtVisualTransformToSql,
 } from './canvasDvtTransformAuthoringAuthority';
 import {
+  createDvtSubstraitPilotDraft,
+  encodeDvtSubstraitPilotDocument,
+} from './canvasDvtSubstraitPilot';
+import {
   appendDvtSubstraitInnerJoinInput,
   applyDvtSubstraitInnerJoinGroupedRowNumber,
   applyDvtSubstraitInnerJoinGrouping,
@@ -107,7 +111,7 @@ describe('projectCanvasNodePresentationTruth', () => {
           id: nodeId,
           name: nodeId,
           pluginId: 'dvt',
-          kind: 'dvt:sql_transform',
+          kind: 'dvt:transform',
           role: 'transform',
           status: 'idle',
           tags: [],
@@ -298,7 +302,7 @@ describe('projectCanvasNodePresentationTruth', () => {
       ...model,
       id: 'transform.orders',
       pluginId: 'dvt',
-      kind: 'dvt:sql_transform',
+      kind: 'dvt:transform',
       metadata: {},
     };
     const mappedModel = applyDvtVisualTransformRecipe(dvtModel, {
@@ -361,7 +365,7 @@ describe('projectCanvasNodePresentationTruth', () => {
         id: 'transform.orders',
         name: 'Transform 1',
         pluginId: 'dvt',
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         metadata: {},
       },
       {
@@ -446,7 +450,7 @@ describe('projectCanvasNodePresentationTruth', () => {
         ...model,
         id: 'transform.cast-order-id',
         pluginId: 'dvt',
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         metadata: {},
       },
       {
@@ -511,7 +515,7 @@ describe('projectCanvasNodePresentationTruth', () => {
         id: 'transform.orders',
         path: 'models/stale-visual-orders.sql',
         pluginId: 'dvt',
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         metadata: {},
       },
       {
@@ -550,13 +554,71 @@ describe('projectCanvasNodePresentationTruth', () => {
     });
   });
 
+  it('projects the canonical Substrait document instead of a generated SQL sibling', () => {
+    const semanticDocument = encodeDvtSubstraitPilotDocument(
+      createDvtSubstraitPilotDraft({
+        sourceNodeId: source.id,
+        targetNodeId: 'transform.substrait',
+      })
+    );
+    const transform = applyDvtSubstraitSemanticDocument(
+      {
+        ...model,
+        id: 'transform.substrait',
+        pluginId: 'dvt',
+        kind: 'dvt:transform',
+        path: 'models/generated-transform.sql',
+        metadata: {},
+      },
+      semanticDocument
+    );
+
+    const truth = projectCanvasNodePresentationTruth({
+      node: transform,
+      nodes: [source, transform],
+      edges: [{ ...edge, targetId: transform.id }],
+    });
+
+    expect(truth.code).toEqual({
+      kind: 'canonical',
+      content: JSON.stringify(semanticDocument, null, 2),
+      language: 'json',
+      schemaVersion: semanticDocument.schemaVersion,
+      digest: semanticDocument.semanticPlan.sha256,
+    });
+  });
+
+  it('fails closed when declared Substrait authority has no valid semantic document', () => {
+    const transform: CanonicalNode = {
+      ...model,
+      id: 'transform.invalid-substrait',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
+      metadata: {
+        sql: 'select * from raw.orders',
+        transformAuthoring: { version: 'v1', mode: 'substrait' },
+      },
+    };
+
+    const truth = projectCanvasNodePresentationTruth({
+      node: transform,
+      nodes: [source, transform],
+      edges: [{ ...edge, targetId: transform.id }],
+    });
+
+    expect(truth.code).toEqual({
+      kind: 'unavailable',
+      reason: 'invalid-canonical-substrait-document',
+    });
+  });
+
   it('keeps converted SQL output identities for read-only lineage anchors', () => {
     const dvtModel = applyDvtVisualTransformRecipe(
       {
         ...model,
         id: 'transform.converted',
         pluginId: 'dvt',
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         metadata: {},
       },
       {
@@ -606,7 +668,7 @@ describe('projectCanvasNodePresentationTruth', () => {
         ...model,
         id: 'transform.empty',
         pluginId: 'dvt',
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         metadata: {},
       },
       { version: 'v1', outputs: [], filters: [] }

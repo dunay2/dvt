@@ -113,7 +113,7 @@ function readEditableRecipe(
 ):
   | Readonly<{ outcome: 'ready'; recipe: VisualTransformRecipeV1 }>
   | Readonly<{ outcome: 'rejected'; reason: CanvasColumnMappingRejection }> {
-  if (targetNode.pluginId !== 'dvt' || targetNode.kind !== 'dvt:sql_transform') {
+  if (targetNode.pluginId !== 'dvt' || targetNode.kind !== 'dvt:transform') {
     return { outcome: 'rejected', reason: 'target_not_visual_transform' };
   }
 
@@ -142,7 +142,7 @@ export function resolveCanvasColumnMappingTarget(
   targetNode: CanonicalNode,
   columnId: string
 ): CanvasColumnMappingTarget | null {
-  if (targetNode.pluginId !== 'dvt' || targetNode.kind !== 'dvt:sql_transform') return null;
+  if (targetNode.pluginId !== 'dvt' || targetNode.kind !== 'dvt:transform') return null;
   try {
     const authority = readDvtTransformAuthoringAuthority(targetNode);
     if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {

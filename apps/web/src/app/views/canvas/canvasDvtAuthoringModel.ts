@@ -45,19 +45,19 @@ export type DvtSourceAuthoringMetadata = Readonly<{
 }>;
 
 export type DvtSqlTransformAuthoringMetadata = Readonly<{
-  kind: 'sql_transform';
+  kind: 'transform';
   mode: typeof DVT_TRANSFORM_AUTHORING_MODE.sql;
   sql: string;
 }>;
 
 export type DvtVisualTransformAuthoringMetadata = Readonly<{
-  kind: 'sql_transform';
+  kind: 'transform';
   mode: typeof DVT_TRANSFORM_AUTHORING_MODE.visual;
   recipe: VisualTransformRecipeV1;
 }>;
 
 export type DvtSubstraitTransformAuthoringMetadata = Readonly<{
-  kind: 'sql_transform';
+  kind: 'transform';
   mode: typeof DVT_TRANSFORM_AUTHORING_MODE.substrait;
   shape: 'pilot' | 'inner_join' | 'union_all';
   plan: Plan;
@@ -236,13 +236,13 @@ function createSqlTransformMetadata(
   const authority = readDvtTransformAuthoringAuthority(node);
 
   if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
-    return { kind: 'sql_transform', mode: authority.mode, recipe: authority.recipe };
+    return { kind: 'transform', mode: authority.mode, recipe: authority.recipe };
   }
   if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
     const pilotDraft = decodeDvtSubstraitPilotDocument(authority.semanticDocument);
     if (inspectDvtSubstraitPilotDraft(pilotDraft).ok) {
       return {
-        kind: 'sql_transform',
+        kind: 'transform',
         mode: authority.mode,
         shape: 'pilot',
         plan: pilotDraft.plan,
@@ -251,7 +251,7 @@ function createSqlTransformMetadata(
     }
     if (inspectDvtSubstraitPilotAggregateWindowDraft(pilotDraft).ok) {
       return {
-        kind: 'sql_transform',
+        kind: 'transform',
         mode: authority.mode,
         shape: 'pilot',
         plan: pilotDraft.plan,
@@ -260,7 +260,7 @@ function createSqlTransformMetadata(
     }
     if (inspectDvtSubstraitPilotAggregationDraft(pilotDraft).ok) {
       return {
-        kind: 'sql_transform',
+        kind: 'transform',
         mode: authority.mode,
         shape: 'pilot',
         plan: pilotDraft.plan,
@@ -269,7 +269,7 @@ function createSqlTransformMetadata(
     }
     if (inspectDvtSubstraitPilotWindowDraft(pilotDraft).ok) {
       return {
-        kind: 'sql_transform',
+        kind: 'transform',
         mode: authority.mode,
         shape: 'pilot',
         plan: pilotDraft.plan,
@@ -279,7 +279,7 @@ function createSqlTransformMetadata(
     const joinDraft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
     if (inspectDvtSubstraitInnerJoinAcceptedDraft(joinDraft).ok) {
       return {
-        kind: 'sql_transform',
+        kind: 'transform',
         mode: authority.mode,
         shape: 'inner_join',
         plan: joinDraft.plan,
@@ -288,14 +288,14 @@ function createSqlTransformMetadata(
     }
     const unionAllDraft = decodeDvtSubstraitUnionAllDocument(authority.semanticDocument);
     return {
-      kind: 'sql_transform',
+      kind: 'transform',
       mode: authority.mode,
       shape: 'union_all',
       plan: unionAllDraft.plan,
       sidecar: unionAllDraft.sidecar,
     };
   }
-  return { kind: 'sql_transform', mode: authority.mode, sql: authority.sql };
+  return { kind: 'transform', mode: authority.mode, sql: authority.sql };
 }
 
 function createSinkMetadata(node: CanonicalNode): DvtSinkAuthoringMetadata {
@@ -327,7 +327,7 @@ export function createDvtNodeAuthoringMetadata(
         node.pluginId === DVT_WAREHOUSE_SOURCE_PLUGIN_ID
         ? createSourceMetadata(node)
         : undefined;
-    case 'dvt:sql_transform':
+    case 'dvt:transform':
       return node.pluginId === DVT_AUTHORING_PLUGIN_ID
         ? createSqlTransformMetadata(node)
         : undefined;
@@ -359,7 +359,7 @@ export function validateDvtNodeAuthoringMetadata(
     errors.connectionRef = 'dvt_connection_required';
   }
   if (
-    metadata.kind === 'sql_transform' &&
+    metadata.kind === 'transform' &&
     metadata.mode === DVT_TRANSFORM_AUTHORING_MODE.visual &&
     !VisualTransformRecipeV1Schema.safeParse(metadata.recipe).success
   ) {
@@ -437,7 +437,7 @@ export function applyDvtNodeAuthoringMetadata(
     );
   }
 
-  if (metadata.kind === 'sql_transform') {
+  if (metadata.kind === 'transform') {
     if (metadata.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
       return applyDvtVisualTransformRecipe(node, metadata.recipe);
     }

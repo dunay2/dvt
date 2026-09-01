@@ -173,7 +173,7 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
         emptyState: {
           title: 'Start transformation canvas',
           editableMessage:
-            'Start this transformation canvas by adding a governed source, SQL transform, or sink node.',
+            'Start this transformation canvas by adding a governed source, Transform, or sink node.',
         },
         nodeKinds: DVT_AUTHORING_NODE_KINDS,
       },

@@ -76,6 +76,34 @@ describe('canvas copy catalog', () => {
     expect(spanishCopy.nodePresentationNoColumnsDetail).toBe('Heredadas: 0 · Declaradas: 0');
   });
 
+  it('describes generated code as a projection without assigning dbt authority', () => {
+    const englishCopy = resolveCanvasViewCopy('en-US');
+    const spanishCopy = resolveCanvasViewCopy('es-ES');
+
+    expect(englishCopy.nodePresentationGeneratedCodeDetailTemplate).toBe(
+      'Generated projection at {path}. The node semantic authority is unchanged.'
+    );
+    expect(spanishCopy.nodePresentationGeneratedCodeDetailTemplate).toBe(
+      'Proyección generada en {path}. La autoridad semántica del nodo no cambia.'
+    );
+    expect(
+      `${englishCopy.nodePresentationGeneratedCodeDetailTemplate} ${spanishCopy.nodePresentationGeneratedCodeDetailTemplate}`
+    ).not.toMatch(/dbt|artefacto|artifact/iu);
+  });
+
+  it('localizes canonical Substrait provenance and invalid-evidence states', () => {
+    const englishCopy = resolveCanvasViewCopy('en-US');
+    const spanishCopy = resolveCanvasViewCopy('es-ES');
+
+    expect(englishCopy.nodePresentationCanonicalSubstraitCodeDetailTemplate).toContain('{digest}');
+    expect(spanishCopy.nodePresentationCanonicalSubstraitCodeDetailTemplate).toBe(
+      'Documento Substrait canónico {schemaVersion} · SHA-256 {digest}'
+    );
+    expect(spanishCopy.nodePresentationInvalidCanonicalSubstraitCodeMessage).toBe(
+      'El documento Substrait canónico no existe o no es válido.'
+    );
+  });
+
   it('exposes draft access posture copy in English and Spanish', () => {
     expect(canvasViewCopy.sessionRequiredDraftLabel).toBe('Session required');
     expect(canvasViewCopy.readOnlyDraftLabel).toBe('Read-only draft');
@@ -138,10 +166,12 @@ describe('canvas copy catalog', () => {
     expect(canvasViewCopy.inspectorErrorDbtPackageRequired).toBe('Package is required.');
     expect(canvasViewCopy.inspectorDvtConnectionLabel).toBe('Connection');
     expect(canvasViewCopy.inspectorDvtInheritedConnectionLabel).toBe('Inherited connection');
+    expect(canvasViewCopy.inspectorDvtSqlTransformTitle).toBe('DVT Transform');
     expect(spanishCopy.inspectorDbtPackageLabel).toBe('Paquete');
     expect(spanishCopy.inspectorErrorDbtPackageRequired).toBe('El paquete es obligatorio.');
     expect(spanishCopy.inspectorDvtConnectionLabel).toBe('Conexión');
     expect(spanishCopy.inspectorDvtInheritedConnectionLabel).toBe('Conexión heredada');
+    expect(spanishCopy.inspectorDvtSqlTransformTitle).toBe('Transform DVT');
     expect(spanishCopy.inspectorDvtWriteModeLabel).toBe('Modo de escritura');
     expect(canvasViewCopy.inspectorErrorObjectFileSizeInvalid).toBe(
       'Object size must be a positive integer, no greater than 50000000 bytes, and no greater than maximum size.'
@@ -216,16 +246,16 @@ describe('canvas copy catalog', () => {
 
   it('formats transformation graph validation summaries from locale copy', () => {
     expect(formatTransformationGraphValidationSummary('requires_executable_path', 'en-US')).toBe(
-      'Execution Preview requires a connected source -> sql_transform -> sink path.'
+      'Execution Preview requires a connected source -> transform -> sink path.'
     );
     expect(formatTransformationGraphValidationSummary('ambiguous_executable_paths', 'en-US')).toBe(
-      'Execution Preview requires one selected source -> sql_transform -> sink path.'
+      'Execution Preview requires one selected source -> transform -> sink path.'
     );
     expect(formatTransformationGraphValidationSummary('requires_executable_path', 'es-ES')).toBe(
-      'El Execution Preview requiere una ruta conectada source -> sql_transform -> sink.'
+      'El Execution Preview requiere una ruta conectada source -> transform -> sink.'
     );
     expect(formatTransformationGraphValidationSummary('ambiguous_executable_paths', 'es-ES')).toBe(
-      'El Execution Preview requiere seleccionar una única ruta source -> sql_transform -> sink.'
+      'El Execution Preview requiere seleccionar una única ruta source -> transform -> sink.'
     );
   });
 

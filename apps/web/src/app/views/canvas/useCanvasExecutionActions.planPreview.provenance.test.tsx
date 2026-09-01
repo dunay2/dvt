@@ -55,14 +55,14 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
         },
       },
       {
-        id: 'dvt-sql-transform-1',
-        name: 'SQL transform 1',
+        id: 'dvt-transform-1',
+        name: 'Transform 1',
         pluginId: 'dvt',
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         role: 'transform' as const,
         status: 'idle' as const,
         tags: ['authoring'],
-        metadata: { typeLabel: 'SQL transform' },
+        metadata: { typeLabel: 'Transform' },
       },
       {
         id: 'sink-1',
@@ -79,12 +79,12 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
       {
         id: 'edge-source-transform',
         sourceId: 'source-2',
-        targetId: 'dvt-sql-transform-1',
+        targetId: 'dvt-transform-1',
         relation: 'lineage' as const,
       },
       {
         id: 'edge-transform-sink',
-        sourceId: 'dvt-sql-transform-1',
+        sourceId: 'dvt-transform-1',
         targetId: 'sink-1',
         relation: 'lineage' as const,
       },
@@ -107,14 +107,14 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
     await harness.clickPlan();
 
     expect(workspaceFilePorts.workspaceFileContentCommand.saveFileContent).toHaveBeenCalledWith({
-      path: 'models/dvt-sql-transform-1.sql',
+      path: 'models/dvt-transform-1.sql',
       content: 'select *\nfrom public.source_2;\n',
       expectedRevision: { kind: 'absent' },
     });
     expect(workspaceFilePorts.workspaceFileContentCommand.saveFileContent).toHaveBeenCalledWith(
       expect.objectContaining({
         path: 'pipelines/project-transformation-preview.yaml',
-        content: expect.stringContaining('entrypoint: "models/dvt-sql-transform-1.sql"'),
+        content: expect.stringContaining('entrypoint: "models/dvt-transform-1.sql"'),
         expectedRevision: { kind: 'absent' },
       })
     );
@@ -132,9 +132,9 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
               }),
             }),
             expect.objectContaining({
-              nodeId: 'dvt-sql-transform-1',
+              nodeId: 'dvt-transform-1',
               stepTypeConfig: expect.objectContaining({
-                entrypoint: 'models/dvt-sql-transform-1.sql',
+                entrypoint: 'models/dvt-transform-1.sql',
                 sql: 'select *\nfrom public.source_2;\n',
               }),
             }),
@@ -155,7 +155,7 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
           }),
           sqlArtifact: expect.objectContaining({
             repo: 'workspace://tenant/project',
-            path: 'models/dvt-sql-transform-1.sql',
+            path: 'models/dvt-transform-1.sql',
           }),
         },
       })
@@ -206,7 +206,7 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
         id: 'join',
         name: 'Customer orders',
         pluginId: 'dvt',
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         role: 'transform',
         status: 'idle',
         tags: ['authoring'],
@@ -317,7 +317,7 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
       id: 'visual-orders',
       name: 'Visual orders',
       pluginId: 'dvt',
-      kind: 'dvt:sql_transform',
+      kind: 'dvt:transform',
       role: 'transform',
       status: 'idle',
       tags: ['authoring'],
@@ -449,14 +449,14 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
         },
       },
       {
-        id: 'dvt-sql-transform-1',
-        name: 'SQL transform 1',
+        id: 'dvt-transform-1',
+        name: 'Transform 1',
         pluginId: 'dvt',
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         role: 'transform' as const,
         status: 'idle' as const,
         tags: ['authoring'],
-        metadata: { typeLabel: 'SQL transform' },
+        metadata: { typeLabel: 'Transform' },
       },
       {
         id: 'sink-1',
@@ -473,12 +473,12 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
       {
         id: 'edge-source-transform',
         sourceId: 'source-1',
-        targetId: 'dvt-sql-transform-1',
+        targetId: 'dvt-transform-1',
         relation: 'lineage' as const,
       },
       {
         id: 'edge-transform-sink',
-        sourceId: 'dvt-sql-transform-1',
+        sourceId: 'dvt-transform-1',
         targetId: 'sink-1',
         relation: 'lineage' as const,
       },
@@ -505,7 +505,7 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
 
     expect(plansService.previewPlan).toHaveBeenCalledTimes(1);
     expect(workspaceFilePorts.workspaceFileContentCommand.saveFileContent).toHaveBeenCalledWith({
-      path: 'models/dvt-sql-transform-1.sql',
+      path: 'models/dvt-transform-1.sql',
       content: 'select *\nfrom public.source_1;\n',
       expectedRevision: { kind: 'absent' },
     });

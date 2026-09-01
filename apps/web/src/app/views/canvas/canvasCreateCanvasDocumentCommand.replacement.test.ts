@@ -32,7 +32,7 @@ describe('canvasCreateCanvasDocumentCommand replacement modes', () => {
             id: 'model_orders',
             name: 'model_orders',
             pluginId: 'dvt',
-            kind: 'sql_transform',
+            kind: 'transform',
             role: 'transform',
             status: 'idle',
             tags: [],

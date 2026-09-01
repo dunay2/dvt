@@ -39,7 +39,7 @@ const downstreamNode: CanonicalNode = {
   id: 'transform-orders',
   name: 'Clean Orders',
   pluginId: 'dvt',
-  kind: 'dvt:sql_transform',
+  kind: 'dvt:transform',
   role: 'transform',
   status: 'idle',
   tags: [],
@@ -733,7 +733,7 @@ describe('nodePropertiesReadModel', () => {
       id: 'transform-orders',
       name: 'Clean orders',
       pluginId: 'dvt',
-      kind: 'dvt:sql_transform',
+      kind: 'dvt:transform',
       role: 'transform',
       status: 'idle',
       tags: [],
@@ -775,7 +775,7 @@ describe('nodePropertiesReadModel', () => {
       id: 'transform-orders',
       name: 'Transform orders',
       pluginId: 'dvt',
-      kind: 'dvt:sql_transform',
+      kind: 'dvt:transform',
       role: 'transform',
       status: 'idle',
       tags: [],
@@ -832,12 +832,12 @@ describe('nodePropertiesReadModel', () => {
     });
   });
 
-  it('preserves declared SQL Transform column details when no source lineage is projected', () => {
+  it('preserves declared Transform column details when no source lineage is projected', () => {
     const transform: CanonicalNode = {
       id: 'transform-sql-orders',
       name: 'SQL orders',
       pluginId: 'dvt',
-      kind: 'dvt:sql_transform',
+      kind: 'dvt:transform',
       role: 'transform',
       status: 'idle',
       tags: [],
@@ -880,7 +880,7 @@ describe('nodePropertiesReadModel', () => {
       id: 'transform-partial-lineage',
       name: 'Partially sourced Transform',
       pluginId: 'dvt',
-      kind: 'dvt:sql_transform',
+      kind: 'dvt:transform',
       role: 'transform',
       status: 'idle',
       tags: [],
@@ -1134,5 +1134,68 @@ describe('nodePropertiesReadModel', () => {
       codePath: 'models/orders.sql',
       description: 'Generated code at models/orders.sql.',
     });
+  });
+
+  it('renders canonical Substrait code with digest provenance in Spanish', () => {
+    const copy = buildCanvasNodePresentationCopy(resolveCanvasViewCopy('es-ES'), 'es-ES');
+    const model = buildNodePropertiesReadModel({
+      node: downstreamNode,
+      nodes: [downstreamNode],
+      edges: [],
+      presentationCopy: copy,
+      presentationTruth: {
+        columns: {
+          declared: [],
+          inherited: [],
+          visible: [],
+          declaredCount: 0,
+          inheritedCount: 0,
+          visibleCount: 0,
+          visibleProvenance: 'none',
+        },
+        code: {
+          kind: 'canonical',
+          content: '{"schemaVersion":"dvt-substrait-semantic-document.v1"}',
+          language: 'json',
+          schemaVersion: 'dvt-substrait-semantic-document.v1',
+          digest: 'b'.repeat(64),
+        },
+      },
+    });
+
+    expect(sectionById(model, 'code')).toMatchObject({
+      code: '{"schemaVersion":"dvt-substrait-semantic-document.v1"}',
+      codeLanguage: 'json',
+      description: `Documento Substrait canónico dvt-substrait-semantic-document.v1 · SHA-256 ${'b'.repeat(64)}`,
+    });
+  });
+
+  it('explains invalid canonical Substrait evidence instead of falling back to SQL', () => {
+    const copy = buildCanvasNodePresentationCopy(resolveCanvasViewCopy('en-US'), 'en-US');
+    const model = buildNodePropertiesReadModel({
+      node: downstreamNode,
+      nodes: [downstreamNode],
+      edges: [],
+      presentationCopy: copy,
+      presentationTruth: {
+        columns: {
+          declared: [],
+          inherited: [],
+          visible: [],
+          declaredCount: 0,
+          inheritedCount: 0,
+          visibleCount: 0,
+          visibleProvenance: 'none',
+        },
+        code: {
+          kind: 'unavailable',
+          reason: 'invalid-canonical-substrait-document',
+        },
+      },
+    });
+
+    expect(sectionById(model, 'code').emptyState).toBe(
+      'The canonical Substrait document is missing or invalid.'
+    );
   });
 });

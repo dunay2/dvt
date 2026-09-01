@@ -59,8 +59,8 @@ export function CanvasInspectorAuthoringSection({
     draft.dvt != null &&
     (section === 'all' ||
       (section === 'general' && draft.dvt.kind === 'source') ||
-      (section === 'code' && draft.dvt.kind === 'sql_transform') ||
-      (section === 'columns' && draft.dvt.kind === 'sql_transform') ||
+      (section === 'code' && draft.dvt.kind === 'transform') ||
+      (section === 'columns' && draft.dvt.kind === 'transform') ||
       (section === 'sink' && draft.dvt.kind === 'sink'));
   const showDbtAuthoring =
     (draft.dbt != null || draft.dbtTest != null) &&

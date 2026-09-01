@@ -72,7 +72,7 @@ function isEditableSection(
     return sectionId === 'code';
   }
 
-  if (nodeKind === 'dvt:sql_transform') {
+  if (nodeKind === 'dvt:transform') {
     return sectionId === 'code' || sectionId === 'columns';
   }
 

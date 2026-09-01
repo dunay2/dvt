@@ -59,7 +59,7 @@ describe('useCanvasGraphHandlers catalog node creation', () => {
     await harness.render();
 
     act(() => {
-      harness.latest()?.handleCreateAuthoringNode(requireAuthoringNodeKind('dvt:sql_transform'));
+      harness.latest()?.handleCreateAuthoringNode(requireAuthoringNodeKind('dvt:transform'));
     });
 
     expect(setNodes).not.toHaveBeenCalled();
@@ -95,18 +95,18 @@ describe('useCanvasGraphHandlers catalog node creation', () => {
     await harness.render();
 
     act(() => {
-      harness.latest()?.handleCreateAuthoringNode(requireAuthoringNodeKind('dvt:sql_transform'));
+      harness.latest()?.handleCreateAuthoringNode(requireAuthoringNodeKind('dvt:transform'));
     });
 
     expect(setNodes).toHaveBeenCalledTimes(1);
     expect(typeof setNodes.mock.calls[0]?.[0]).not.toBe('function');
     expect(currentNodes).toEqual([
       expect.objectContaining({
-        id: 'dvt-sql-transform-1',
+        id: 'dvt-transform-1',
         position: { x: 160, y: 120 },
         data: expect.objectContaining({
-          name: 'SQL transform 1',
-          pluginKind: 'dvt:sql_transform',
+          name: 'Transform 1',
+          pluginKind: 'dvt:transform',
           role: 'transform',
         }),
       }),
@@ -116,11 +116,11 @@ describe('useCanvasGraphHandlers catalog node creation', () => {
       setDraftSession.mock.calls[0]?.[0],
       draftSession
     );
-    expect(nextDraftSession.workingSet.visibleNodeIds).toContain('dvt-sql-transform-1');
-    expect(nextDraftSession.localNodeCatalog?.['dvt-sql-transform-1']).toEqual(
+    expect(nextDraftSession.workingSet.visibleNodeIds).toContain('dvt-transform-1');
+    expect(nextDraftSession.localNodeCatalog?.['dvt-transform-1']).toEqual(
       expect.objectContaining({
-        id: 'dvt-sql-transform-1',
-        kind: 'dvt:sql_transform',
+        id: 'dvt-transform-1',
+        kind: 'dvt:transform',
         role: 'transform',
       })
     );
@@ -201,7 +201,7 @@ describe('useCanvasGraphHandlers catalog node creation', () => {
     act(() => {
       harness
         .latest()
-        ?.handleCreateAuthoringNode(requireAuthoringNodeKind('dvt:sql_transform'), undefined, {
+        ?.handleCreateAuthoringNode(requireAuthoringNodeKind('dvt:transform'), undefined, {
           namePrefix: 'Filter rows',
           tags: ['template:filter-rows'],
           metadata: {
@@ -218,9 +218,9 @@ describe('useCanvasGraphHandlers catalog node creation', () => {
       setDraftSession.mock.calls[0]?.[0],
       buildDraftSession()
     );
-    expect(nextDraftSession.localNodeCatalog?.['dvt-sql-transform-1']).toEqual(
+    expect(nextDraftSession.localNodeCatalog?.['dvt-transform-1']).toEqual(
       expect.objectContaining({
-        id: 'dvt-sql-transform-1',
+        id: 'dvt-transform-1',
         name: 'Filter rows 1',
         tags: ['authoring', 'template:filter-rows'],
         metadata: expect.objectContaining({
@@ -322,7 +322,7 @@ describe('useCanvasGraphHandlers catalog node creation', () => {
     const authoringRequests = [
       { kind: 'dvt:source', position: { x: 100, y: 80 } },
       { kind: 'dbt:model', position: { x: 320, y: 80 } },
-      { kind: 'dvt:sql_transform', position: { x: 540, y: 80 } },
+      { kind: 'dvt:transform', position: { x: 540, y: 80 } },
       { kind: 'dbt:test', position: { x: 760, y: 80 } },
       { kind: 'dvt:sink', position: { x: 980, y: 80 } },
     ] as const;
@@ -338,7 +338,7 @@ describe('useCanvasGraphHandlers catalog node creation', () => {
     expect(currentNodes.map((node) => ({ id: node.id, position: node.position }))).toEqual([
       { id: 'dvt-source-1', position: { x: 100, y: 80 } },
       { id: 'dbt-model-1', position: { x: 320, y: 80 } },
-      { id: 'dvt-sql-transform-1', position: { x: 540, y: 80 } },
+      { id: 'dvt-transform-1', position: { x: 540, y: 80 } },
       { id: 'dbt-test-1', position: { x: 760, y: 80 } },
       { id: 'dvt-sink-1', position: { x: 980, y: 80 } },
     ]);
@@ -350,14 +350,14 @@ describe('useCanvasGraphHandlers catalog node creation', () => {
     expect(latestDraftSession.workingSet.visibleNodeIds).toEqual([
       'dvt-source-1',
       'dbt-model-1',
-      'dvt-sql-transform-1',
+      'dvt-transform-1',
       'dbt-test-1',
       'dvt-sink-1',
     ]);
     expect(Object.keys(latestDraftSession.localNodeCatalog ?? {})).toEqual([
       'dvt-source-1',
       'dbt-model-1',
-      'dvt-sql-transform-1',
+      'dvt-transform-1',
       'dbt-test-1',
       'dvt-sink-1',
     ]);

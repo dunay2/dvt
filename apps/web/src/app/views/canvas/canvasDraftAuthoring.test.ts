@@ -63,7 +63,7 @@ describe('canvasDraftAuthoring', () => {
       canonicalEdges: draft.edges,
     });
 
-    expect(result.nodes.map((node) => node.kind)).toEqual(['source', 'sql_transform', 'sink']);
+    expect(result.nodes.map((node) => node.kind)).toEqual(['source', 'transform', 'sink']);
   });
 
   it('marks dbt source-to-model authoring edges as reference-only for execution closure', () => {

@@ -39,10 +39,10 @@ type CanvasHarnessDraftInput = Pick<WorkspaceGraphAuthoringDraft, 'nodeIds' | 'n
 
 const EXPLICIT_NODE_KIND_BY_ID: Readonly<Record<string, AuthoringDraftNodeKind>> = {
   node_1: 'source',
-  node_2: 'sql_transform',
+  node_2: 'transform',
   node_3: 'sink',
   node_4: 'sink',
-  node_remote_only: 'sql_transform',
+  node_remote_only: 'transform',
 };
 
 function resolveAuthoringNodeRole(
@@ -73,7 +73,7 @@ function buildAuthoringDraftNode(
     tags: [],
   };
 
-  if (kind === 'sql_transform') {
+  if (kind === 'transform') {
     node.path = `models/${nodeId}.sql`;
     node.metadata = {
       config: {
@@ -124,7 +124,7 @@ function resolveAuthoringDraftNodeKind(
     return 'sink';
   }
 
-  return 'sql_transform';
+  return 'transform';
 }
 
 function buildCanvasHarnessAuthoringDraft(

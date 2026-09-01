@@ -183,7 +183,7 @@ describe('canvasInteractionCommandSurface', () => {
       canOpenCanvasSettings: true,
       authoringNodeKinds: [
         buildTestNodeKind('dvt:source', 'Source'),
-        buildTestNodeKind('dvt:sql_transform', 'SQL transform'),
+        buildTestNodeKind('dvt:transform', 'Transform'),
         buildTestNodeKind('dvt:sink', 'Sink'),
       ],
     });
@@ -205,7 +205,7 @@ describe('canvasInteractionCommandSurface', () => {
   it('uses role-level spatial add grammar for model, transformation, test and output nodes', () => {
     const modelKind = { ...buildTestNodeKind('dbt:model', 'Model'), role: 'transform' as const };
     const transformKind = {
-      ...buildTestNodeKind('dvt:sql_transform', 'SQL transform'),
+      ...buildTestNodeKind('dvt:transform', 'Transform'),
       role: 'transform' as const,
     };
     const testKind = {
@@ -241,7 +241,7 @@ describe('canvasInteractionCommandSurface', () => {
     ]);
     expect(model?.createNodeActions.map((action) => action.registration.kind)).toEqual([
       'dbt:model',
-      'dvt:sql_transform',
+      'dvt:transform',
       'dbt:test',
       'dvt:sink',
     ]);

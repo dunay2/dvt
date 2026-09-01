@@ -104,7 +104,7 @@ function buildValidSubstraitInnerJoinGraph(): {
       id: 'join',
       name: 'Customer orders',
       pluginId: 'dvt',
-      kind: 'dvt:sql_transform',
+      kind: 'dvt:transform',
       role: 'transform',
       status: 'idle',
       tags: ['authoring'],
@@ -335,7 +335,7 @@ describe('validateTransformationGraph', () => {
 
   it('changes draftSignature when projected graph source changes without changing ids', () => {
     const nodes = buildValidTransformationNodes({
-      transformNode: { kind: 'dvt:sql_transform' },
+      transformNode: { kind: 'dvt:transform' },
     });
     const edges = buildOrderedTransformationEdges();
     const [sourceNode, transformNode, sinkNode] = nodes;
@@ -361,7 +361,7 @@ describe('validateTransformationGraph', () => {
 
   it('keeps draftSignature stable when only raw metadata changes outside the preview projection', () => {
     const nodes = buildValidTransformationNodes({
-      transformNode: { kind: 'dvt:sql_transform' },
+      transformNode: { kind: 'dvt:transform' },
     });
     const edges = buildOrderedTransformationEdges();
     const [sourceNode, transformNode, sinkNode] = nodes;

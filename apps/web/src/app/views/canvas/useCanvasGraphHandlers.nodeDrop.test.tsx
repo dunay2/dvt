@@ -182,7 +182,7 @@ describe('useCanvasGraphHandlers node drop', () => {
       harness.latest()?.handleDrop(
         buildCanonicalDropEvent({
           ...buildCanonicalNode('drop-transform', 'transform'),
-          kind: 'dvt:sql_transform',
+          kind: 'dvt:transform',
         })
       );
     });
@@ -254,7 +254,7 @@ describe('useCanvasGraphHandlers node drop', () => {
         buildCanonicalDropEvent({
           ...buildCanonicalNode('transform-node', 'transform'),
           pluginId: 'dvt',
-          kind: 'dvt:sql_transform',
+          kind: 'dvt:transform',
         })
       );
     });

@@ -116,7 +116,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     };
     const model = {
       ...buildCanonicalNode('model-node', 'transform'),
-      kind: 'dvt:sql_transform' as const,
+      kind: 'dvt:transform' as const,
     };
     const draftSession = {
       ...buildDraftSession(),
@@ -171,7 +171,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     };
     const model = {
       ...buildCanonicalNode('model-node', 'transform'),
-      kind: 'dvt:sql_transform' as const,
+      kind: 'dvt:transform' as const,
     };
     const setDraftSession = vi.fn();
     const harness = renderGraphHandlersHook({
@@ -282,7 +282,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     };
     const transform = {
       ...buildCanonicalNode('transform-node', 'transform'),
-      kind: 'dvt:sql_transform' as const,
+      kind: 'dvt:transform' as const,
     };
     const draftSession = {
       ...buildDraftSession(),

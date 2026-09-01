@@ -185,7 +185,7 @@ describe('canvasPlanReadiness', () => {
           id: 'transform_1',
           name: 'Transform',
           pluginId: 'dvt',
-          kind: 'dvt:sql_transform',
+          kind: 'dvt:transform',
           role: 'transform',
           status: 'idle',
           tags: [],

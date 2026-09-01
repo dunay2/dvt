@@ -132,7 +132,7 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
   const currentRows = operationalSummary.metrics.find((metric) => metric.id === 'rows');
   const currentSize = operationalSummary.metrics.find((metric) => metric.id === 'size');
   const operationalMetrics =
-    node.kind === 'dvt:sql_transform'
+    node.kind === 'dvt:transform'
       ? [
           ...operationalSummary.metrics.filter(
             (metric) => metric.id !== 'rows' && metric.id !== 'size'
@@ -141,7 +141,7 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
             ? (currentRows ?? {
                 id: 'rows',
                 label: operationalCopy.rowsLabel,
-                value: '—',
+                value: operationalCopy.notCalculatedLabel,
                 icon: 'rows' as const,
               })
             : { ...projectedRows, id: 'rows', icon: 'rows' as const },
@@ -149,7 +149,7 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
             ? (currentSize ?? {
                 id: 'size',
                 label: operationalCopy.sizeLabel,
-                value: '—',
+                value: operationalCopy.notCalculatedLabel,
                 icon: 'database' as const,
               })
             : { ...projectedSize, id: 'size', icon: 'database' as const },

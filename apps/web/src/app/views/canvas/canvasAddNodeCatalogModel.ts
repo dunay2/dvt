@@ -3,14 +3,7 @@ import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import { canvasViewCopy, type CanvasViewCopy } from './copy';
 
 export type CanvasAddNodeCatalogCategory =
-  | 'source'
-  | 'model'
-  | 'seed'
-  | 'transformation'
-  | 'test'
-  | 'output'
-  | 'macro'
-  | 'node';
+  'source' | 'model' | 'seed' | 'transformation' | 'test' | 'output' | 'macro' | 'node';
 
 export type CanvasAddNodeCatalogItem = Readonly<{
   id: string;
@@ -65,7 +58,7 @@ export function inferCanvasAddNodeCatalogCategory(
     return 'seed';
   }
 
-  if (registration.kind === 'dvt:sql_transform' || registration.role === 'transform') {
+  if (registration.kind === 'dvt:transform' || registration.role === 'transform') {
     return 'transformation';
   }
 

@@ -134,7 +134,7 @@ function resolveNodeWorkbenchHiddenGeneralRowIds(
 function readDvtTransformAuthoringMode(
   node: CanonicalNode
 ): (typeof DVT_TRANSFORM_AUTHORING_MODE)[keyof typeof DVT_TRANSFORM_AUTHORING_MODE] | null {
-  if (node.pluginId !== 'dvt' || node.kind !== 'dvt:sql_transform') return null;
+  if (node.pluginId !== 'dvt' || node.kind !== 'dvt:transform') return null;
   try {
     return readDvtTransformAuthoringAuthority(node).mode;
   } catch {
@@ -178,7 +178,7 @@ function buildNodeWorkbenchReadModel({
             (canEditNode && node.pluginId === 'dbt' && node.kind === 'dbt:model') ||
             (canEditNode &&
               node.pluginId === 'dvt' &&
-              node.kind === 'dvt:sql_transform' &&
+              node.kind === 'dvt:transform' &&
               readDvtTransformAuthoringMode(node) === DVT_TRANSFORM_AUTHORING_MODE.sql))
             ? (() => {
                 const {

@@ -99,9 +99,9 @@ describe('buildProtectedRuntimeRouteDependencies', () => {
         },
         {
           id: 'transform-node',
-          name: 'SQL transform',
+          name: 'Transform',
           pluginId: 'dvt',
-          kind: 'sql_transform',
+          kind: 'transform',
           role: 'transform',
           status: 'idle',
           tags: ['authoring'],

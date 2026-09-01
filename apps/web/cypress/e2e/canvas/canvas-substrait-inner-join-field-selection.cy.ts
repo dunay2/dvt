@@ -76,6 +76,27 @@ describe('Canvas Substrait INNER JOIN field selection', () => {
     });
   });
 
+  it('shows canonical Substrait provenance without SQL or dbt authority in the Transform inspector', () => {
+    visitCanvas();
+
+    cy.get('.react-flow__node[data-id="join-transform"]')
+      .should('contain.text', 'Transform')
+      .and('contain.text', 'Not calculated')
+      .and('not.contain.text', 'SQL transform')
+      .and('not.contain.text', 'DBT artifact')
+      .find('[data-slot="canvas-node-shell"]')
+      .dblclick();
+    cy.get('[data-slot="canvas-node-workbench-tab-code"]').click();
+    cy.get('[data-slot="canvas-node-workbench-code-content"]')
+      .should('contain.text', 'Canonical Substrait document')
+      .and('contain.text', 'SHA-256');
+    cy.get('[data-testid="monaco-code-viewer"] .view-lines').should(($lines) => {
+      const code = $lines.text().replaceAll('\u00a0', ' ');
+      expect(code).to.contain('dvt-substrait-semantic-document.v1');
+      expect(code).to.contain('semanticPlan');
+    });
+  });
+
   it('selects, groups, ranks, persists, and reloads fields from Substrait authority', () => {
     visitCanvas();
 

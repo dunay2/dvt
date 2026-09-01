@@ -12,7 +12,7 @@ function transformNode(metadata: CanonicalNode['metadata']): CanonicalNode {
     id: 'transform',
     name: 'Transform',
     pluginId: 'dvt',
-    kind: 'dvt:sql_transform',
+    kind: 'dvt:transform',
     role: 'transform',
     status: 'idle',
     tags: ['authoring'],

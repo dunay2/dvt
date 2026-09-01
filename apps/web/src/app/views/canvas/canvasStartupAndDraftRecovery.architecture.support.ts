@@ -173,7 +173,7 @@ export function buildCanonicalNode(id: string): CanonicalNode {
     id,
     name: id,
     pluginId: 'dvt',
-    kind: 'dvt:sql_transform',
+    kind: 'dvt:transform',
     role: 'transform',
     status: 'idle',
     tags: [],

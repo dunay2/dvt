@@ -401,7 +401,7 @@ describe('buildGraphNodeCardReadModel', () => {
   it('adds DVT runtime metrics only from recorded metadata', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         pluginId: 'dvt',
         role: 'transform',
         name: 'customer_rollup',
@@ -451,10 +451,10 @@ describe('buildGraphNodeCardReadModel', () => {
     ]);
   });
 
-  it('keeps empty Rows and Size facts when only partial execution evidence exists', () => {
+  it('marks Rows and Size as not calculated when only partial execution evidence exists', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         pluginId: 'dvt',
         role: 'transform',
         name: 'customer_rollup',
@@ -468,25 +468,32 @@ describe('buildGraphNodeCardReadModel', () => {
 
     expect(model.operationalMetrics).toEqual([
       { id: 'last-run', label: 'Last run', value: '2026-06-12T20:45:00Z', icon: 'clock' },
-      { id: 'rows', label: 'Rows', value: '—', icon: 'rows' },
-      { id: 'size', label: 'Size', value: '—', icon: 'database' },
+      { id: 'rows', label: 'Rows', value: 'Not calculated', icon: 'rows' },
+      { id: 'size', label: 'Size', value: 'Not calculated', icon: 'database' },
     ]);
   });
 
   it.each([
-    { locale: 'en', presentationCopy: undefined, rowsLabel: 'Rows', sizeLabel: 'Size' },
+    {
+      locale: 'en',
+      presentationCopy: undefined,
+      rowsLabel: 'Rows',
+      sizeLabel: 'Size',
+      notCalculatedLabel: 'Not calculated',
+    },
     {
       locale: 'es',
       presentationCopy: { ...SPANISH_PRESENTATION_COPY, locale: 'es' },
       rowsLabel: 'Filas',
       sizeLabel: 'Tamaño',
+      notCalculatedLabel: 'No calculado',
     },
   ])(
-    'reserves truthful empty Rows and Size metrics for a DVT SQL transform in $locale',
-    ({ presentationCopy, rowsLabel, sizeLabel }) => {
+    'reserves truthful uncalculated Rows and Size metrics for a DVT Transform in $locale',
+    ({ presentationCopy, rowsLabel, sizeLabel, notCalculatedLabel }) => {
       const model = buildGraphNodeCardReadModel(
         buildNode({
-          kind: 'dvt:sql_transform',
+          kind: 'dvt:transform',
           pluginId: 'dvt',
           role: 'transform',
           name: 'customer_rollup',
@@ -496,8 +503,8 @@ describe('buildGraphNodeCardReadModel', () => {
       );
 
       expect(model.operationalMetrics).toEqual([
-        { id: 'rows', label: rowsLabel, value: '—', icon: 'rows' },
-        { id: 'size', label: sizeLabel, value: '—', icon: 'database' },
+        { id: 'rows', label: rowsLabel, value: notCalculatedLabel, icon: 'rows' },
+        { id: 'size', label: sizeLabel, value: notCalculatedLabel, icon: 'database' },
       ]);
     }
   );
@@ -505,7 +512,7 @@ describe('buildGraphNodeCardReadModel', () => {
   it('keeps DVT canonical runtime metrics on strategy-owned cards', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         pluginId: 'dvt',
         role: 'transform',
         name: 'customer_rollup',
@@ -533,7 +540,7 @@ describe('buildGraphNodeCardReadModel', () => {
   it('preserves canonical warning status when runtime status is not recorded', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         pluginId: 'dvt',
         name: 'customer_rollup',
         status: 'warn',
@@ -553,7 +560,7 @@ describe('buildGraphNodeCardReadModel', () => {
   it('preserves running status as a first-class card tone', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         pluginId: 'dvt',
         name: 'customer_rollup',
         status: 'running',
@@ -573,7 +580,7 @@ describe('buildGraphNodeCardReadModel', () => {
   it('projects recorded running runtime status as a first-class card tone', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         pluginId: 'dvt',
         name: 'customer_rollup',
         metadata: {
@@ -593,7 +600,7 @@ describe('buildGraphNodeCardReadModel', () => {
   it('projects the current run task status instead of a stale editorial fallback', () => {
     const node = buildNode({
       id: 'transform-1',
-      kind: 'dvt:sql_transform',
+      kind: 'dvt:transform',
       pluginId: 'dvt',
       role: 'transform',
       name: 'customer_rollup',
@@ -643,7 +650,7 @@ describe('buildGraphNodeCardReadModel', () => {
     (runStatus, label, tone) => {
       const node = buildNode({
         id: 'transform-1',
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         pluginId: 'dvt',
         role: 'transform',
         name: 'customer_rollup',
@@ -665,7 +672,7 @@ describe('buildGraphNodeCardReadModel', () => {
   it('does not project a runtime task status that belongs to another node', () => {
     const node = buildNode({
       id: 'transform-1',
-      kind: 'dvt:sql_transform',
+      kind: 'dvt:transform',
       pluginId: 'dvt',
       role: 'transform',
       name: 'customer_rollup',
@@ -785,10 +792,13 @@ describe('buildGraphNodeCardReadModel', () => {
         codeLabel: 'Código',
         workspaceCodeDetailTemplate: 'El código vive en {path}.',
         generatedCodeDetailTemplate: 'Código generado en {path}.',
+        canonicalSubstraitCodeDetailTemplate:
+          'Documento Substrait canónico {schemaVersion} · SHA-256 {digest}',
         codeUnavailableMessage: 'Sin código.',
         valueLabels: {
           authored: 'Escrito',
           generated: 'Generado',
+          canonical: 'Canónico',
           file: 'Archivo',
         },
       },
@@ -862,6 +872,36 @@ describe('buildGraphNodeCardReadModel', () => {
       },
       [dbtGraphNodeCardStrategy]
     );
+    const canonical = buildGraphNodeCardReadModel(
+      buildNode({
+        kind: 'dvt:transform',
+        pluginId: 'dvt',
+        role: 'transform',
+        name: 'orders',
+      }),
+      {
+        ...baseData,
+        presentationTruth: {
+          columns: {
+            declared: [],
+            inherited: [],
+            visible: [],
+            declaredCount: 0,
+            inheritedCount: 0,
+            visibleCount: 0,
+            visibleProvenance: 'none',
+          },
+          code: {
+            kind: 'canonical',
+            content: '{"schemaVersion":"dvt-substrait-semantic-document.v1"}',
+            language: 'json',
+            schemaVersion: 'dvt-substrait-semantic-document.v1',
+            digest: 'a'.repeat(64),
+          },
+        },
+      },
+      [dvtGraphNodeCardStrategy]
+    );
 
     expect(generated.metrics).toContainEqual({
       id: 'code',
@@ -879,6 +919,12 @@ describe('buildGraphNodeCardReadModel', () => {
       label: 'Código',
       value: 'Archivo',
       detail: 'El código vive en models/orders.sql.',
+    });
+    expect(canonical.metrics).toContainEqual({
+      id: 'code',
+      label: 'Código',
+      value: 'Canónico',
+      detail: `Documento Substrait canónico dvt-substrait-semantic-document.v1 · SHA-256 ${'a'.repeat(64)}`,
     });
   });
 

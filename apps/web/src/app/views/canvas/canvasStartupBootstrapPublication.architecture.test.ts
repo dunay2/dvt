@@ -232,7 +232,7 @@ describe('canvas startup bootstrap publication architecture', () => {
     expect(cypressSpecSource).not.toContain('this.skip()');
     expect(cypressSpecSource).toContain('waitForLiveFirstAuthoringLayoutPositionChange');
     expect(cypressSpecSource).not.toContain('waitForLiveFirstAuthoringDraftNodePositionChange');
-    expect(cypressSpecSource).toContain('/sql transform 1/i');
+    expect(cypressSpecSource).toContain('/transform 1/i');
     expect(cypressSpecSource).toContain('Model 1');
     expect(liveRunnerSource).toContain('CYPRESS_requireLiveProtectedRuntime=1');
     expect(liveRunnerSource).toContain('VITE_PROJECT_OPTIONS');

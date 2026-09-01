@@ -2,7 +2,10 @@
 import { DVT_TRANSFORM_AUTHORING_MODE, type VisualTransformRecipeV1 } from '@dvt/contracts';
 
 import { buildCanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth';
-import type { CanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
+import type {
+  CanvasNodeCodeTruth,
+  CanvasNodePresentationTruth,
+} from '../../components/canvas/canvasNodePresentationTruth.contract';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { projectDbtModelArtifact } from './canvasDbtModelArtifactProjection';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
@@ -45,6 +48,10 @@ type DvtSubstraitPresentedOutput = Readonly<{
   dataType?: string;
 }>;
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
 function projectCanvasNodePresentationTruthInternal(
   args: Readonly<{
     node: CanonicalNode;
@@ -85,13 +92,25 @@ function projectCanvasNodePresentationTruthInternal(
   let lineageRecipe: VisualTransformRecipeV1 | null = null;
   let substraitOutputs: readonly DvtSubstraitPresentedOutput[] | null = null;
   let substraitRejected = false;
-  if (args.node.pluginId === 'dvt' && args.node.kind === 'dvt:sql_transform') {
+  let canonicalSubstraitCode: Extract<CanvasNodeCodeTruth, { kind: 'canonical' }> | null = null;
+  let invalidCanonicalSubstraitDocument = false;
+  if (args.node.pluginId === 'dvt' && args.node.kind === 'dvt:transform') {
+    const rawAuthority = args.node.metadata?.transformAuthoring;
+    const declaresSubstraitAuthority =
+      isRecord(rawAuthority) && rawAuthority.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait;
     try {
       const authority = readDvtTransformAuthoringAuthority(args.node);
       if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
         visualRecipe = authority.recipe;
         lineageRecipe = authority.recipe;
       } else if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+        canonicalSubstraitCode = {
+          kind: 'canonical',
+          content: JSON.stringify(authority.semanticDocument, null, 2),
+          language: 'json',
+          schemaVersion: authority.semanticDocument.schemaVersion,
+          digest: authority.semanticDocument.semanticPlan.sha256,
+        };
         try {
           const pilotInspection = inspectDvtSubstraitPilotDraft(
             decodeDvtSubstraitPilotDocument(authority.semanticDocument)
@@ -154,6 +173,8 @@ function projectCanvasNodePresentationTruthInternal(
       visualRecipe = null;
       lineageRecipe = null;
       substraitOutputs = null;
+      invalidCanonicalSubstraitDocument = declaresSubstraitAuthority;
+      substraitRejected = declaresSubstraitAuthority;
     }
   }
   let visualGeneratedCode: Readonly<{
@@ -185,7 +206,7 @@ function projectCanvasNodePresentationTruthInternal(
     }
   }
 
-  const baseTruth = buildCanvasNodePresentationTruth({
+  const projectedTruth = buildCanvasNodePresentationTruth({
     ...args,
     node: presentationNode,
     generatedCodeIsAuthoritative: visualGeneratedCode != null,
@@ -201,6 +222,12 @@ function projectCanvasNodePresentationTruthInternal(
             } as const),
         }),
   });
+  const baseTruth: CanvasNodePresentationTruth = {
+    ...projectedTruth,
+    code: invalidCanonicalSubstraitDocument
+      ? { kind: 'unavailable', reason: 'invalid-canonical-substrait-document' }
+      : (canonicalSubstraitCode ?? projectedTruth.code),
+  };
 
   if (substraitRejected) {
     return {

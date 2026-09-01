@@ -37,7 +37,7 @@ export function DvtSubstraitUnionAllAuthoringSection({
   ): void => {
     onChange((currentDraft) => {
       if (
-        currentDraft.dvt?.kind !== 'sql_transform' ||
+        currentDraft.dvt?.kind !== 'transform' ||
         currentDraft.dvt.mode !== 'substrait' ||
         currentDraft.dvt.shape !== 'union_all'
       ) {

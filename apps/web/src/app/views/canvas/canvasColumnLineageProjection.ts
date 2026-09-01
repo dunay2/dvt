@@ -125,7 +125,7 @@ type LineageRecipe = Readonly<{
 }>;
 
 function readLineageRecipe(node: CanonicalNode): LineageRecipe | null {
-  if (node.pluginId !== 'dvt' || node.kind !== 'dvt:sql_transform') return null;
+  if (node.pluginId !== 'dvt' || node.kind !== 'dvt:transform') return null;
   try {
     const authority = readDvtTransformAuthoringAuthority(node);
     if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
@@ -165,7 +165,7 @@ type DvtSubstraitInnerJoinLineage =
     }>;
 
 function readSubstraitJoinLineage(node: CanonicalNode): DvtSubstraitInnerJoinLineage | null {
-  if (node.pluginId !== 'dvt' || node.kind !== 'dvt:sql_transform') return null;
+  if (node.pluginId !== 'dvt' || node.kind !== 'dvt:transform') return null;
   try {
     const authority = readDvtTransformAuthoringAuthority(node);
     if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return null;
@@ -229,7 +229,7 @@ type DvtSubstraitUnionAllLineage = Readonly<{
 }>;
 
 function readSubstraitUnionAllLineage(node: CanonicalNode): DvtSubstraitUnionAllLineage | null {
-  if (node.pluginId !== 'dvt' || node.kind !== 'dvt:sql_transform') return null;
+  if (node.pluginId !== 'dvt' || node.kind !== 'dvt:transform') return null;
   try {
     const authority = readDvtTransformAuthoringAuthority(node);
     if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return null;

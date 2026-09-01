@@ -42,7 +42,7 @@ function transformNode(sql = ''): CanonicalNode {
     id: 'transform-customers',
     name: 'Customers',
     pluginId: 'dvt',
-    kind: 'dvt:sql_transform',
+    kind: 'dvt:transform',
     role: 'transform',
     status: 'idle',
     tags: ['authoring'],
@@ -96,7 +96,7 @@ describe('Substrait pilot entry through ConfigureCanvasDvtNode', () => {
     container.remove();
   });
 
-  it('lets an empty SQL transform enter the exact connected customers fixture and edit before Apply', () => {
+  it('lets an empty Transform enter the exact connected customers fixture and edit before Apply', () => {
     const source = sourceNode();
     const transform = transformNode();
     act(() => root.render(<Harness source={source} transform={transform} />));

@@ -18,6 +18,7 @@ const state = vi.hoisted(() => ({})) as CanvasHarnessState;
 const mocks = vi.hoisted(() => ({
   useQuery: vi.fn(),
   useQueryClient: vi.fn(),
+  getCanvasGraphNodeCardStrategies: vi.fn(),
   findCanvasGraphStrategy: vi.fn(),
   findCanvasRuntimeRegistration: vi.fn(),
   resolveCanvasGraphStrategy: vi.fn(),
@@ -101,6 +102,7 @@ vi.mock('@xyflow/react', async () => {
 });
 vi.mock('../../components/canvas/DbtNodeComponent', () => ({ default: () => null }));
 vi.mock('../../plugins/graphStrategyRegistry', () => ({
+  getCanvasGraphNodeCardStrategies: mocks.getCanvasGraphNodeCardStrategies,
   findCanvasGraphStrategy: mocks.findCanvasGraphStrategy,
   findCanvasRuntimeRegistration: mocks.findCanvasRuntimeRegistration,
   resolveCanvasGraphStrategy: mocks.resolveCanvasGraphStrategy,
@@ -124,11 +126,15 @@ vi.mock('./canvasOverlayContext', () => ({
   buildOverlayContext: mocks.buildOverlayContext,
   buildNodeDecorations: mocks.buildNodeDecorations,
 }));
-vi.mock('./canvasNodeMapper', () => ({
-  createCanvasDirectionalEdge: (edge: { id: string; source: string; target: string }) => edge,
-  mapCanonicalEdgeToCanvasEdge: mocks.mapCanonicalEdgeToCanvasEdge,
-  mapCanonicalNodeToCanvasNode: mocks.mapCanonicalNodeToCanvasNode,
-}));
+vi.mock('./canvasNodeMapper', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./canvasNodeMapper')>();
+  return {
+    ...actual,
+    createCanvasDirectionalEdge: (edge: { id: string; source: string; target: string }) => edge,
+    mapCanonicalEdgeToCanvasEdge: mocks.mapCanonicalEdgeToCanvasEdge,
+    mapCanonicalNodeToCanvasNode: mocks.mapCanonicalNodeToCanvasNode,
+  };
+});
 vi.mock('../../plugins/registry', () => ({
   getAllOverlays: mocks.getAllOverlays,
   getAllCanvasKinds: mocks.getAllCanvasKinds,

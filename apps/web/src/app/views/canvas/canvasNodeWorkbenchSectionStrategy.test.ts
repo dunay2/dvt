@@ -83,7 +83,7 @@ describe('resolveCanvasNodeWorkbenchSectionModel', () => {
 
   it('keeps editor-only sections and contribution hosts even before they contain facts', () => {
     const result = resolveCanvasNodeWorkbenchSectionModel({
-      nodeKind: 'dvt:sql_transform',
+      nodeKind: 'dvt:transform',
       canEditNode: true,
       canOpenNodeCode: false,
       strategySectionIds: ['properties', 'columns', 'sql'],

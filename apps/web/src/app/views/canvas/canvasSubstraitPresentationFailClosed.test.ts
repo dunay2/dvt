@@ -32,7 +32,7 @@ function transformNode(): CanonicalNode {
     id: 'transform-customers',
     name: 'Customers',
     pluginId: 'dvt',
-    kind: 'dvt:sql_transform',
+    kind: 'dvt:transform',
     role: 'transform',
     status: 'idle',
     tags: ['authoring'],

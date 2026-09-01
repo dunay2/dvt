@@ -57,7 +57,7 @@ describe('CanvasEmptyStateView', () => {
     expect(container.querySelector('[data-slot="canvas-empty-authoring-catalog"]')).toBeNull();
     expect(document.body.querySelector('[data-slot="canvas-add-node-palette"]')).toBeNull();
     expect(container.querySelector('[data-slot="canvas-add-node-palette-trigger"]')).toBeNull();
-    expect(container.textContent).not.toContain('SQL transform');
+    expect(container.textContent).not.toContain('Transform');
     act(() => root.unmount());
   });
 

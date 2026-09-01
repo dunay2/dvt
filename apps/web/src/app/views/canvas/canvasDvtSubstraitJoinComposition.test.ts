@@ -769,14 +769,14 @@ describe('VTX2 typed Substrait INNER JOIN composition', () => {
       id: 'transform-customer-orders',
       name: 'Customer orders',
       pluginId: 'dvt',
-      kind: 'dvt:sql_transform',
+      kind: 'dvt:transform',
       role: 'transform',
       status: 'idle',
       tags: ['authoring'],
       metadata: {},
     };
     const persisted = applyDvtNodeAuthoringMetadata(transform, {
-      kind: 'sql_transform',
+      kind: 'transform',
       mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
       shape: 'inner_join',
       plan: reopened.plan,
@@ -842,7 +842,7 @@ describe('VTX2 typed Substrait INNER JOIN composition', () => {
       id: 'transform-customer-orders',
       name: 'Customer orders',
       pluginId: 'dvt',
-      kind: 'dvt:sql_transform',
+      kind: 'dvt:transform',
       role: 'transform',
       status: 'idle',
       tags: ['authoring'],
@@ -851,7 +851,7 @@ describe('VTX2 typed Substrait INNER JOIN composition', () => {
     const draft = fixture();
 
     const persisted = applyDvtNodeAuthoringMetadata(transform, {
-      kind: 'sql_transform',
+      kind: 'transform',
       mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
       shape: 'inner_join',
       plan: draft.plan,
@@ -860,12 +860,12 @@ describe('VTX2 typed Substrait INNER JOIN composition', () => {
     const reopened = createDvtNodeAuthoringMetadata(persisted);
 
     expect(reopened).toMatchObject({
-      kind: 'sql_transform',
+      kind: 'transform',
       mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
       shape: 'inner_join',
     });
     if (
-      reopened?.kind !== 'sql_transform' ||
+      reopened?.kind !== 'transform' ||
       reopened.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait
     ) {
       throw new Error('Expected reopened Substrait authoring metadata.');

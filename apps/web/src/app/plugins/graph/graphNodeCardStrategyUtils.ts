@@ -322,7 +322,7 @@ export function resolveNodeCardAccentTone(node: CanonicalNode): GraphNodeCardAcc
     node.kind.includes(':model') ||
     node.kind.includes(':snapshot') ||
     node.kind.includes(':seed') ||
-    node.kind.includes(':sql_transform')
+    node.kind.includes(':transform')
   ) {
     return 'model';
   }
@@ -382,6 +382,14 @@ function interpolatePath(template: string, path: string): string {
   return template.replaceAll('{path}', path);
 }
 
+function interpolateCanonicalSubstraitDetail(
+  template: string,
+  schemaVersion: string,
+  digest: string
+): string {
+  return template.replaceAll('{schemaVersion}', schemaVersion).replaceAll('{digest}', digest);
+}
+
 export function resolveCodeMetricPresentation(
   data: Record<string, unknown>
 ): GraphNodeCodeMetricPresentation | null {
@@ -407,6 +415,21 @@ export function resolveCodeMetricPresentation(
         copy == null
           ? `Generated code at ${truth.code.path}.`
           : interpolatePath(copy.generatedCodeDetailTemplate, truth.code.path),
+    };
+  }
+
+  if (truth.code.kind === 'canonical') {
+    return {
+      label,
+      value: copy?.valueLabels?.canonical ?? 'Canonical',
+      detail:
+        copy?.canonicalSubstraitCodeDetailTemplate == null
+          ? `Canonical Substrait document ${truth.code.schemaVersion} · SHA-256 ${truth.code.digest}`
+          : interpolateCanonicalSubstraitDetail(
+              copy.canonicalSubstraitCodeDetailTemplate,
+              truth.code.schemaVersion,
+              truth.code.digest
+            ),
     };
   }
 
