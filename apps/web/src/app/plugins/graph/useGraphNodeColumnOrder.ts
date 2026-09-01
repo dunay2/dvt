@@ -12,7 +12,11 @@ export type ActiveColumnPlacement = Readonly<{
   placement: 'before' | 'after';
 }>;
 
-function columnId(column: OrderableColumn): string {
+function columnOrderKey(column: OrderableColumn): string {
+  return column.name;
+}
+
+function columnCommandId(column: OrderableColumn): string {
   return column.id ?? column.name;
 }
 
@@ -38,26 +42,34 @@ function resolveActivePlacement(
 ): ActiveColumnPlacement | undefined {
   const movedIndex = orderedIds.indexOf(movedId);
   if (movedIndex < 0) return undefined;
-  const nextActiveId = orderedIds
+  const nextActiveKey = orderedIds
     .slice(movedIndex + 1)
     .find((id) => columnsById.get(id)?.output !== false);
-  if (nextActiveId != null) return { targetColumnId: nextActiveId, placement: 'before' };
-  const previousActiveId = orderedIds
+  if (nextActiveKey != null) {
+    return {
+      targetColumnId: columnCommandId(columnsById.get(nextActiveKey)!),
+      placement: 'before',
+    };
+  }
+  const previousActiveKey = orderedIds
     .slice(0, movedIndex)
     .reverse()
     .find((id) => columnsById.get(id)?.output !== false);
-  return previousActiveId == null
+  return previousActiveKey == null
     ? undefined
-    : { targetColumnId: previousActiveId, placement: 'after' };
+    : {
+        targetColumnId: columnCommandId(columnsById.get(previousActiveKey)!),
+        placement: 'after',
+      };
 }
 
 export function useGraphNodeColumnOrder<TColumn extends OrderableColumn>(
   columns: readonly TColumn[]
 ) {
-  const currentIds = columns.map(columnId);
+  const currentIds = columns.map(columnOrderKey);
   const currentIdsKey = currentIds.join('\u0000');
   const columnsById = useMemo(
-    () => new Map(columns.map((column) => [columnId(column), column] as const)),
+    () => new Map(columns.map((column) => [columnOrderKey(column), column] as const)),
     [columns]
   );
   const [orderedIds, setOrderedIds] = useState(currentIds);
@@ -87,7 +99,7 @@ export function useGraphNodeColumnOrder<TColumn extends OrderableColumn>(
       if (columnsById.get(movedId)?.output === false) return undefined;
       return columnsById.get(targetId)?.output === false
         ? resolveActivePlacement(next, movedId, columnsById)
-        : { targetColumnId: targetId, placement };
+        : { targetColumnId: columnCommandId(columnsById.get(targetId)!), placement };
     },
     resolveActivationPlacement(id: string): ActiveColumnPlacement | undefined {
       return resolveActivePlacement(orderedIds, id, columnsById);

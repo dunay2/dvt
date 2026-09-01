@@ -84,4 +84,43 @@ describe('GraphNodeColumnSection inactive field reorder', () => {
       placement: { targetColumnId: 'output:first', placement: 'before' },
     });
   });
+
+  it('keeps a field in place when its output identity changes', async () => {
+    const renderColumns = (columns: Parameters<typeof GraphNodeColumnSection>[0]['columns']) => {
+      root.render(
+        <GraphNodeColumnSection
+          nodeId="transform-orders"
+          columns={columns}
+          onColumnOutputToggle={vi.fn()}
+          onColumnReorder={vi.fn()}
+        />
+      );
+    };
+    await act(async () => {
+      renderColumns([
+        { id: 'output:customer', name: 'customer', type: 'text', output: true },
+        { id: 'amount', name: 'amount', type: 'numeric', output: false },
+        { id: 'output:order_id', name: 'order_id', type: 'integer', output: true },
+      ]);
+    });
+    await act(async () => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="graph-node-column-toggle"]')!
+      );
+    });
+
+    await act(async () => {
+      renderColumns([
+        { id: 'output:order_id', name: 'order_id', type: 'integer', output: true },
+        { id: 'customer', name: 'customer', type: 'text', output: false },
+        { id: 'amount', name: 'amount', type: 'numeric', output: false },
+      ]);
+    });
+
+    expect(
+      [...container.querySelectorAll<HTMLElement>('[data-slot="graph-node-column-piece"]')].map(
+        (piece) => piece.textContent
+      )
+    ).toEqual(['customertext', 'amountnumeric', 'order_idinteger']);
+  });
 });

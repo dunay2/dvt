@@ -172,7 +172,7 @@ export function GraphNodeColumnSection({
     : columnOrder.orderedColumns.slice(0, MAX_PREVIEW_COLUMNS);
   const remainingColumnCount = Math.max(columns.length - MAX_PREVIEW_COLUMNS, 0);
   const reorderableColumnIds = columnOrder.orderedColumns.flatMap((column) =>
-    column.id != null ? [column.id] : []
+    column.id != null ? [column.name] : []
   );
   const remainderActionLabel = copy.remainingColumnsLabelTemplate.replace(
     '{count}',
@@ -228,6 +228,7 @@ export function GraphNodeColumnSection({
           >
             {visibleColumns.map((column) => {
               const columnId = column.id ?? column.name;
+              const columnOrderKey = column.name;
               const isOutput = column.output !== false;
               const canReorder = column.id != null && nodeId != null && onColumnReorder != null;
               const metadataRows = [
@@ -264,9 +265,9 @@ export function GraphNodeColumnSection({
                   onDragStart={(event) => {
                     if (!canReorder) return;
                     event.stopPropagation();
-                    draggedColumnIdRef.current = column.id ?? null;
+                    draggedColumnIdRef.current = columnOrderKey;
                     event.dataTransfer.effectAllowed = 'move';
-                    event.dataTransfer.setData('text/plain', column.id ?? '');
+                    event.dataTransfer.setData('text/plain', columnOrderKey);
                   }}
                   onDragEnd={() => {
                     draggedColumnIdRef.current = null;
@@ -305,7 +306,7 @@ export function GraphNodeColumnSection({
                           output: !isOutput,
                           ...(!isOutput
                             ? {
-                                placement: columnOrder.resolveActivationPlacement(columnId),
+                                placement: columnOrder.resolveActivationPlacement(columnOrderKey),
                               }
                             : {}),
                         });
@@ -347,7 +348,11 @@ export function GraphNodeColumnSection({
                   className={graphNodeColumnClasses.row}
                   onDragOver={(event) => {
                     const draggedColumnId = draggedColumnIdRef.current;
-                    if (!canReorder || draggedColumnId == null || draggedColumnId === column.id) {
+                    if (
+                      !canReorder ||
+                      draggedColumnId == null ||
+                      draggedColumnId === columnOrderKey
+                    ) {
                       return;
                     }
                     event.preventDefault();
@@ -369,7 +374,7 @@ export function GraphNodeColumnSection({
                       !canReorder ||
                       nodeId == null ||
                       draggedColumnId == null ||
-                      draggedColumnId === column.id
+                      draggedColumnId === columnOrderKey
                     ) {
                       return;
                     }
@@ -380,13 +385,16 @@ export function GraphNodeColumnSection({
                     if (placement != null) {
                       const activePlacement = columnOrder.moveColumn(
                         draggedColumnId,
-                        columnId,
+                        columnOrderKey,
                         placement
                       );
                       if (activePlacement != null) {
+                        const draggedColumn = columnOrder.orderedColumns.find(
+                          (candidate) => candidate.name === draggedColumnId
+                        );
                         onColumnReorder?.({
                           nodeId,
-                          columnId: draggedColumnId,
+                          columnId: draggedColumn?.id ?? draggedColumnId,
                           ...activePlacement,
                         });
                       }
@@ -400,14 +408,14 @@ export function GraphNodeColumnSection({
                       event.altKey &&
                       (event.key === 'ArrowUp' || event.key === 'ArrowDown')
                     ) {
-                      const sourceIndex = reorderableColumnIds.indexOf(columnId);
+                      const sourceIndex = reorderableColumnIds.indexOf(columnOrderKey);
                       const targetIndex = sourceIndex + (event.key === 'ArrowUp' ? -1 : 1);
                       const targetColumnId = reorderableColumnIds[targetIndex];
                       if (targetColumnId != null) {
                         event.preventDefault();
                         event.stopPropagation();
                         const activePlacement = columnOrder.moveColumn(
-                          columnId,
+                          columnOrderKey,
                           targetColumnId,
                           event.key === 'ArrowUp' ? 'before' : 'after'
                         );
