@@ -147,9 +147,9 @@ describe('React Flow visual token convergence architecture', () => {
 
   it('keeps health borders semantic and status copy non-visual', () => {
     expect(graphNodeHealthBorderClasses).toEqual({
-      healthy: 'border-green-500',
-      failed: 'border-red-500',
-      neutral: 'border-slate-700',
+      healthy: 'border-solid border-green-500',
+      failed: 'border-dashed border-red-500',
+      neutral: 'border-solid border-slate-700',
     });
     expect(GRAPH_CARD_VIEW_SOURCE).toContain('graph-node-health-description');
     expect(GRAPH_CARD_VIEW_SOURCE).toContain('sr-only');

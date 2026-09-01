@@ -420,12 +420,12 @@ describe('GraphNodeCardView', () => {
   });
 
   it.each([
-    ['healthy', 'Ready', 'border-green-500'],
-    ['failed', 'Failed', 'border-red-500'],
-    ['neutral', 'Draft', 'border-slate-700'],
+    ['healthy', 'Ready', 'border-green-500', 'border-solid'],
+    ['failed', 'Failed', 'border-red-500', 'border-dashed'],
+    ['neutral', 'Draft', 'border-slate-700', 'border-solid'],
   ] as const)(
     'uses a %s health border without a visible status chip',
-    (tone, label, borderClass) => {
+    (tone, label, borderClass, borderStyleClass) => {
       act(() => {
         root.render(
           <GraphNodeCardView
@@ -442,6 +442,7 @@ describe('GraphNodeCardView', () => {
       const description = container.querySelector('[data-slot="graph-node-health-description"]');
 
       expect(card?.className).toContain(borderClass);
+      expect(card?.className).toContain(borderStyleClass);
       expect(card?.className).toContain('focus-within:ring-2');
       expect(description?.className).toContain('sr-only');
       expect(description?.textContent).toBe(label);

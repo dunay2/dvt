@@ -39,8 +39,9 @@ projection, generic plugin graph node rendering, and graph-node card chrome.
   `slate-*`, `gray-*`, `neutral-*`, or hex visual decisions.
 - Graph-node card presentation components consume responsibility-specific token
   groups instead of a shared catch-all class bag.
-- A card's base border comes only from its projected health: green for healthy,
-  red for failed, and neutral when evidence is absent or non-terminal.
+- A card's base border comes only from its projected health: solid green for
+  healthy, dashed red for failed, and solid neutral when evidence is absent or
+  non-terminal. The line style keeps failure distinguishable without color.
 - Selection and keyboard focus remain separate rings; they do not replace or
   reinterpret health.
 - Health copy remains available to assistive technology and is not repeated as

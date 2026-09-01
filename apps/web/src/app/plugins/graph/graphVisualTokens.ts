@@ -136,9 +136,9 @@ export const graphNodeColumnClasses = {
 } as const;
 
 export const graphNodeHealthBorderClasses = {
-  healthy: 'border-green-500',
-  failed: 'border-red-500',
-  neutral: 'border-slate-700',
+  healthy: 'border-solid border-green-500',
+  failed: 'border-dashed border-red-500',
+  neutral: 'border-solid border-slate-700',
 } as const;
 
 export const graphStatusBadgeClasses: Record<string, string> = {
