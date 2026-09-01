@@ -348,11 +348,13 @@ function projectCanvasNodePresentationTruthInternal(
           : [`${output.sourceNodeId}\u0000${output.sourceFieldName}`]
       )
     );
+    const declaredNames = new Set(declared.map((column) => column.name));
     const unmatchedInherited = hasConnectedFieldProjection
       ? presentationTruth.columns.inherited.filter(
           (column) =>
-            column.sourceNodeId == null ||
-            !projectedSourceFields.has(`${column.sourceNodeId}\u0000${column.name}`)
+            !declaredNames.has(column.name) &&
+            (column.sourceNodeId == null ||
+              !projectedSourceFields.has(`${column.sourceNodeId}\u0000${column.name}`))
         )
       : [];
     const visible = [...declared, ...unmatchedInherited];

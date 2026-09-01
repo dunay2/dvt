@@ -592,7 +592,7 @@ describe('projectCanvasNodePresentationTruth', () => {
     });
   });
 
-  it('keeps unmatched connected fields visible after a partial canonical Substrait projection', () => {
+  it('keeps only unconsumed and unoccupied fields visible after a partial projection', () => {
     const connectedSourceRef: ConnectedSourceRef = {
       schemaVersion: 'connected-source-ref.v1',
       connectionRef: {
@@ -635,7 +635,7 @@ describe('projectCanvasNodePresentationTruth', () => {
           ],
         },
         targetNodeId: 'transform-orders',
-        outputs: [{ fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' }],
+        outputs: [{ fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'customer' }],
       })
     );
     const transform = applyDvtSubstraitSemanticDocument(
@@ -665,14 +665,13 @@ describe('projectCanvasNodePresentationTruth', () => {
 
     expect(truth.code).toMatchObject({ kind: 'canonical', language: 'json' });
     expect(truth.columns.visible).toEqual([
-      expect.objectContaining({ name: 'order_id', type: 'integer', provenance: 'declared' }),
-      expect.objectContaining({ name: 'customer', type: 'text', provenance: 'inherited' }),
+      expect.objectContaining({ name: 'order_id', type: 'text', provenance: 'declared' }),
       expect.objectContaining({ name: 'amount', type: 'numeric', provenance: 'inherited' }),
     ]);
     expect(truth.columns).toMatchObject({
       declaredCount: 1,
       inheritedCount: 3,
-      visibleCount: 3,
+      visibleCount: 2,
       visibleProvenance: 'mixed',
     });
   });
