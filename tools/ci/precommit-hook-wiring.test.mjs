@@ -4,6 +4,8 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { ESLint } from 'eslint';
+
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 function readPackageJson() {
@@ -26,4 +28,52 @@ test('pre-commit hook wiring avoids pnpm commit lifecycle duplication', () => {
   assert.equal(packageJson.scripts['hooks:precommit'], 'lint-staged && pnpm precommit:determinism');
   assert.match(preCommitHook, /pnpm run hooks:precommit/);
   assert.doesNotMatch(preCommitHook, /pnpm run precommit(?:\s|$)/);
+});
+
+test('pre-commit lint stays untyped while the canonical ESLint gate stays type-aware', async () => {
+  const packageJson = readPackageJson();
+  const eslintCommands = Object.values(packageJson['lint-staged'])
+    .flat()
+    .filter((command) => command.startsWith('eslint '));
+
+  assert.ok(eslintCommands.length > 0, 'Expected lint-staged to invoke ESLint.');
+  assert.ok(
+    eslintCommands.every(
+      (command) => command === 'eslint --fix --config tools/ci/eslint-precommit.config.cjs'
+    ),
+    `Expected every staged ESLint command to use the fast config, received: ${eslintCommands.join(', ')}`
+  );
+
+  const stagedLint = new ESLint({
+    overrideConfigFile: path.join(repoRoot, 'tools', 'ci', 'eslint-precommit.config.cjs'),
+  });
+  const canonicalLint = new ESLint();
+  const stagedConfig = await stagedLint.calculateConfigForFile(
+    path.join(repoRoot, 'apps', 'web', 'src', 'app', 'AppProviders.tsx')
+  );
+  const canonicalConfig = await canonicalLint.calculateConfigForFile(
+    path.join(repoRoot, 'apps', 'web', 'src', 'app', 'AppProviders.tsx')
+  );
+  const stagedEngineConfig = await stagedLint.calculateConfigForFile(
+    path.join(repoRoot, 'packages', '@dvt', 'engine', 'src', 'WorkflowEngine.ts')
+  );
+
+  assert.equal(stagedConfig.languageOptions.parserOptions.project, false);
+  assert.equal(stagedConfig.rules['@typescript-eslint/no-floating-promises'][0], 0);
+  assert.equal(stagedConfig.rules['@typescript-eslint/no-misused-promises'][0], 0);
+  assert.equal(stagedConfig.rules['@typescript-eslint/await-thenable'][0], 0);
+  assert.equal(stagedConfig.rules['import/no-unresolved'][0], 0);
+  assert.equal(stagedConfig.rules['import/no-cycle'][0], 0);
+  assert.deepEqual(Object.keys(stagedConfig.settings['import/resolver']), ['node']);
+  assert.equal(stagedEngineConfig.rules['no-restricted-imports'][0], 2);
+
+  assert.deepEqual(canonicalConfig.languageOptions.parserOptions.project, [
+    './tsconfig.eslint.json',
+  ]);
+  assert.equal(canonicalConfig.rules['@typescript-eslint/no-floating-promises'][0], 2);
+  assert.equal(canonicalConfig.rules['@typescript-eslint/no-misused-promises'][0], 2);
+  assert.equal(canonicalConfig.rules['@typescript-eslint/await-thenable'][0], 2);
+  assert.equal(canonicalConfig.rules['import/no-unresolved'][0], 2);
+  assert.equal(canonicalConfig.rules['import/no-cycle'][0], 2);
+  assert.ok(Object.hasOwn(canonicalConfig.settings['import/resolver'], 'typescript'));
 });
