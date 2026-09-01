@@ -2,6 +2,7 @@
 import type { CanonicalNode } from '../../types/canonical';
 import type {
   GraphNodeCardMetric,
+  GraphNodeCardMetricIcon,
   GraphNodeCardReadModel,
   GraphNodeCardStrategy,
 } from '../graph/graphNodeCardStrategyContracts';
@@ -34,6 +35,26 @@ function resolveDbtMaterialization(metadata: Record<string, unknown>): string | 
   return stringValue(configRecord.materialized) ?? stringValue(configRecord.materialization);
 }
 
+function resolveDbtMaterializationIcon(
+  materialization: string | null
+): GraphNodeCardMetricIcon | null {
+  switch (materialization?.toLowerCase()) {
+    case 'view':
+      return 'eye';
+    case 'incremental':
+      return 'refresh';
+    case 'table':
+      return 'table';
+    case 'ephemeral':
+      return 'workflow';
+    case 'materialized_view':
+    case 'materialized-view':
+      return 'database';
+    default:
+      return null;
+  }
+}
+
 function buildDbtTitleDetail(node: CanonicalNode): string | null {
   const description = stringValue(node.description);
   const tags = node.tags
@@ -55,6 +76,7 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
   const relationPath = resolveGraphNodeRelationPath(metadata, data);
   const metrics: GraphNodeCardMetric[] = [];
   const materialization = resolveDbtMaterialization(metadata);
+  const materializationIcon = resolveDbtMaterializationIcon(materialization);
   const columnCount = resolveColumnCount(metadata, data);
   const targetModel =
     stringValue(metadata.testTargetModel) ??
@@ -83,7 +105,13 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     locale: presentationCopy?.locale,
   });
 
-  pushMetric(metrics, 'materialization', 'Mat.', materialization);
+  pushMetric(
+    metrics,
+    'materialization',
+    'Mat.',
+    materialization,
+    materializationIcon == null ? undefined : { icon: materializationIcon }
+  );
   pushMetric(metrics, 'dependencies', 'Deps', arrayCount(metadata.dependencies));
   pushMetric(metrics, 'test-target', 'Target', testTarget);
   pushMetric(metrics, 'severity', 'Severity', severity);

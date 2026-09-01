@@ -290,6 +290,9 @@ describe('DbtNodeRenderer history panel', () => {
       )?.textContent
     ).toBe('incremental');
     expect(
+      document.querySelector('[data-slot="graph-node-summary-icon"]')?.getAttribute('data-icon')
+    ).toBe('refresh');
+    expect(
       document.querySelector('[data-slot="graph-node-metric-hotspot"][aria-label="Deps: 2"]')
         ?.textContent
     ).toBe('2');

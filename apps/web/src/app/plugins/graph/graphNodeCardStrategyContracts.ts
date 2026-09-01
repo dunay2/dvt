@@ -11,7 +11,18 @@ export type GraphNodeCardMetric = Readonly<{
 }>;
 
 export type GraphNodeCardMetricIcon =
-  'clock' | 'refresh' | 'throughput' | 'database' | 'columns' | 'timer' | 'rows' | 'cost' | 'drift';
+  | 'clock'
+  | 'refresh'
+  | 'throughput'
+  | 'database'
+  | 'columns'
+  | 'timer'
+  | 'rows'
+  | 'cost'
+  | 'drift'
+  | 'eye'
+  | 'table'
+  | 'workflow';
 
 export type GraphNodeCardAccentTone =
   'source' | 'model' | 'test' | 'output' | 'control' | 'unknown';

@@ -46,7 +46,9 @@ export const graphNodeSourceIdentityTooltipClasses = {
 
 export const graphNodeMetricRowClasses = {
   root: 'mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-300',
-  item: 'inline-flex items-baseline gap-1',
+  item: 'inline-flex items-center gap-1',
+  icon: 'inline-flex shrink-0 text-blue-300',
+  iconSvg: 'size-3.5',
   label: 'text-slate-500',
   value: 'font-medium text-slate-200',
   interactiveValue: 'nodrag nopan',

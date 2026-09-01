@@ -757,7 +757,7 @@ describe('buildGraphNodeCardReadModel', () => {
     expect(model.path).toBe('models/marts/fct_orders.sql');
     expect(model.titleDetail).toBe('Daily finance orders · #finance #critical');
     expect(model.metrics).toEqual([
-      { id: 'materialization', label: 'Mat.', value: 'incremental' },
+      { id: 'materialization', label: 'Mat.', value: 'incremental', icon: 'refresh' },
       { id: 'dependencies', label: 'Deps', value: '2' },
     ]);
     expect(model.operationalMetrics).toEqual([

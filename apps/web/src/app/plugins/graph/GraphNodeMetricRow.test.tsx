@@ -72,6 +72,25 @@ describe('GraphNodeMetricRow', () => {
     expect(container.textContent).toBe('Rows10Rows8');
   });
 
+  it.each([
+    ['view', 'eye'],
+    ['incremental', 'refresh'],
+    ['table', 'table'],
+    ['ephemeral', 'workflow'],
+    ['materialized_view', 'database'],
+  ] as const)('renders the %s materialization with its %s icon', (value, icon) => {
+    act(() => {
+      root.render(
+        <GraphNodeMetricRow metrics={[{ id: 'materialization', label: 'Mat.', value, icon }]} />
+      );
+    });
+
+    expect(
+      container.querySelector('[data-slot="graph-node-summary-icon"]')?.getAttribute('data-icon')
+    ).toBe(icon);
+    expect(container.textContent).toBe(`Mat.${value}`);
+  });
+
   it('marks measured and estimated values as accessible tone-aware hotspots', () => {
     act(() => {
       root.render(
