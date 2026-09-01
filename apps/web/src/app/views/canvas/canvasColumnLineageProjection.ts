@@ -26,6 +26,11 @@ import {
   inspectDvtSubstraitUnionAllGroupingDraft,
   inspectDvtSubstraitUnionAllDraft,
 } from './canvasDvtSubstraitSetComposition';
+import {
+  decodeDvtSubstraitProjectionDocument,
+  inspectDvtSubstraitProjectionDraft,
+  type DvtSubstraitProjection,
+} from './canvasDvtSubstraitProjection';
 import { readDvtTransformLineageProvenance } from './canvasTransformationSqlMirror';
 
 export type CanvasColumnPortDirection = 'source' | 'target';
@@ -133,6 +138,22 @@ function readLineageRecipe(node: CanonicalNode): LineageRecipe | null {
     }
     const provenance = readDvtTransformLineageProvenance(node);
     return provenance == null ? null : { recipe: provenance, removable: false };
+  } catch {
+    return null;
+  }
+}
+
+function readSubstraitProjectionLineage(node: CanonicalNode): DvtSubstraitProjection | null {
+  if (node.pluginId !== 'dvt' || node.kind !== 'dvt:transform') return null;
+  try {
+    const authority = readDvtTransformAuthoringAuthority(node);
+    if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return null;
+    const inspection = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+    );
+    return inspection.ok && inspection.projection.targetNodeId === node.id
+      ? inspection.projection
+      : null;
   } catch {
     return null;
   }
@@ -432,6 +453,46 @@ export function projectCanvasColumnLineage(args: {
             outputId: targetColumn.name,
             terminal: false,
             removable: false,
+          })
+        );
+      }
+      continue;
+    }
+
+    const substraitProjection = readSubstraitProjectionLineage(model);
+    if (substraitProjection != null && args.expandedNodeIds.has(model.id)) {
+      const sourceNode = nodeById.get(substraitProjection.source.nodeId);
+      const sourceRef = ConnectedSourceRefSchema.safeParse(
+        sourceNode?.metadata?.connectedSourceRef
+      );
+      if (
+        sourceNode == null ||
+        !args.expandedNodeIds.has(sourceNode.id) ||
+        !hasDependency(args.edges, sourceNode.id, model.id) ||
+        !sourceRef.success ||
+        !sameConnectedSourceRef(sourceRef.data, substraitProjection.source.sourceRef)
+      ) {
+        continue;
+      }
+      const sourceColumns = new Set(readColumns(sourceNode).map((column) => column.name));
+      if (
+        substraitProjection.outputs.some((output) => !sourceColumns.has(output.sourceFieldName))
+      ) {
+        continue;
+      }
+      for (const output of substraitProjection.outputs) {
+        projected.push(
+          buildLineageEdge({
+            sourceNodeId: sourceNode.id,
+            sourceColumnName: output.sourceFieldName,
+            sourceColumnId: output.sourceFieldName,
+            sourceFieldId: output.sourceFieldId,
+            targetNodeId: model.id,
+            targetColumnName: output.name,
+            targetColumnId: output.fieldId,
+            outputId: output.fieldId,
+            terminal: false,
+            removable: true,
           })
         );
       }

@@ -32,6 +32,10 @@ import {
   decodeDvtSubstraitPilotDocument,
   inspectDvtSubstraitPilotDraft,
 } from './canvasDvtSubstraitPilot';
+import {
+  decodeDvtSubstraitProjectionDocument,
+  resolveDvtSubstraitProjectionEntry,
+} from './canvasDvtSubstraitProjection';
 import { inspectDvtSubstraitPilotAggregationDraft } from './canvasDvtSubstraitAggregation';
 import { inspectDvtSubstraitPilotAggregateWindowDraft } from './canvasDvtSubstraitAggregateWindow';
 import { inspectDvtSubstraitPilotWindowDraft } from './canvasDvtSubstraitWindow';
@@ -52,6 +56,7 @@ import {
   projectDvtSubstraitPilotWindowToPostgresSql,
   projectDvtSubstraitInnerJoinToPostgresSql,
   projectDvtSubstraitPilotToPostgresSql,
+  projectDvtSubstraitProjectionToPostgresSql,
   projectDvtSubstraitUnionAllToPostgresSql,
 } from './canvasDvtSubstraitPostgresProjection';
 import { compileDvtVisualTransformNodeToPostgresSql } from './canvasVisualTransformSql';
@@ -322,6 +327,23 @@ async function buildAuthoringPreviewSql({
       });
     }
     if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+      const scopedNodeIdSet = new Set(scopedNodeIds);
+      const scopedNodes = canonicalNodes.filter((node) => scopedNodeIdSet.has(node.id));
+      const scopedEdges = canonicalEdges.filter(
+        (edge) => scopedNodeIdSet.has(edge.sourceId) && scopedNodeIdSet.has(edge.targetId)
+      );
+      const projectionDraft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
+      const projectionEntry = resolveDvtSubstraitProjectionEntry({
+        targetNode: transformNode,
+        nodes: scopedNodes,
+        edges: scopedEdges,
+        draft: projectionDraft,
+      });
+      if (projectionEntry != null) {
+        const sql = await projectDvtSubstraitProjectionToPostgresSql(projectionDraft);
+        return sql.endsWith('\n') ? sql : `${sql}\n`;
+      }
+
       const pilotDraft = decodeDvtSubstraitPilotDocument(authority.semanticDocument);
       if (inspectDvtSubstraitPilotDraft(pilotDraft).ok) {
         const scopedNodes = resolveScopedTransformationNodes(canonicalNodes, scopedNodeIds);
@@ -365,11 +387,6 @@ async function buildAuthoringPreviewSql({
 
       const joinDraft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
       const joinInspection = inspectDvtSubstraitInnerJoinAcceptedDraft(joinDraft);
-      const scopedNodeIdSet = new Set(scopedNodeIds);
-      const scopedNodes = canonicalNodes.filter((node) => scopedNodeIdSet.has(node.id));
-      const scopedEdges = canonicalEdges.filter(
-        (edge) => scopedNodeIdSet.has(edge.sourceId) && scopedNodeIdSet.has(edge.targetId)
-      );
       if (joinInspection.ok) {
         const joinEntry =
           'left' in joinInspection.projection && 'right' in joinInspection.projection

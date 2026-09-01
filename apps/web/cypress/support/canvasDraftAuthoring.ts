@@ -571,7 +571,20 @@ export function buildCanvasAuthoringDraft({
           role: 'input',
           status: 'idle',
           tags: ['source'],
-          metadata: { columns },
+          metadata: {
+            schema: 'raw',
+            tableName: 'orders',
+            connectedSourceRef: {
+              schemaVersion: 'connected-source-ref.v1',
+              connectionRef: {
+                schemaVersion: 'connection-ref.v1',
+                connectionId: 'canvas-e2e-postgres',
+                provider: 'postgres',
+              },
+              sourceObjectId: 'raw.orders',
+            },
+            columns,
+          },
         },
         {
           id: 'model-orders',

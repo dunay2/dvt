@@ -31,6 +31,10 @@ import {
   encodeDvtSubstraitPilotDocument,
   renameDvtSubstraitPilotOutput,
 } from './canvasDvtSubstraitPilot';
+import {
+  createDvtSubstraitProjectionDraft,
+  encodeDvtSubstraitProjectionDocument,
+} from './canvasDvtSubstraitProjection';
 import { applyDvtSubstraitPilotAggregation } from './canvasDvtSubstraitAggregation';
 import { applyDvtSubstraitPilotAggregateRowNumber } from './canvasDvtSubstraitAggregateWindow';
 import { applyDvtSubstraitPilotRowNumber } from './canvasDvtSubstraitWindow';
@@ -129,6 +133,98 @@ function buildSubstraitPreviewGraph(
     ],
     edges: [
       { id: 'source-transform', sourceId: 'source', targetId: 'transform', relation: 'lineage' },
+      { id: 'transform-sink', sourceId: 'transform', targetId: 'sink', relation: 'lineage' },
+    ],
+  };
+}
+
+function buildConnectedProjectionPreviewGraph(): ReturnType<typeof buildSubstraitPreviewGraph> {
+  const transformPath = 'models/orders_transform.sql';
+  const connectionRef = buildTestPostgresConnectionRef();
+  const connectedSourceRef: ConnectedSourceRef = {
+    schemaVersion: 'connected-source-ref.v1',
+    connectionRef,
+    sourceObjectId: 'raw.orders',
+  };
+  const fields = [
+    { name: 'order_id', dataType: 'integer' },
+    { name: 'customer', dataType: 'text' },
+    { name: 'amount', dataType: 'numeric' },
+  ];
+  const transform = applyDvtSubstraitSemanticDocument(
+    {
+      id: 'transform',
+      name: 'Transform orders',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+      path: transformPath,
+      metadata: {},
+    },
+    encodeDvtSubstraitProjectionDocument(
+      createDvtSubstraitProjectionDraft({
+        source: {
+          nodeId: 'source-orders',
+          schema: 'raw',
+          table: 'orders',
+          sourceRef: connectedSourceRef,
+          fields,
+        },
+        targetNodeId: 'transform',
+        outputs: fields.map((field) => ({
+          fieldId: `output:${field.name}`,
+          name: field.name,
+          sourceFieldName: field.name,
+        })),
+      })
+    )
+  );
+  return {
+    transformPath,
+    nodes: [
+      {
+        id: 'source-orders',
+        name: 'orders',
+        pluginId: 'dvt.warehouse-source',
+        kind: 'dvt:source',
+        role: 'input',
+        status: 'idle',
+        tags: [],
+        metadata: {
+          schema: 'raw',
+          tableName: 'orders',
+          connectedSourceRef,
+          columns: fields.map((field) => ({ name: field.name, type: field.dataType })),
+        },
+      },
+      transform,
+      {
+        id: 'sink',
+        name: 'Sink',
+        pluginId: 'dvt',
+        kind: 'dvt:sink',
+        role: 'output',
+        status: 'idle',
+        tags: [],
+        metadata: {
+          config: {
+            schema: 'analytics',
+            table: 'orders',
+            materialization: 'table',
+            writeMode: 'replace',
+          },
+        },
+      },
+    ],
+    edges: [
+      {
+        id: 'source-transform',
+        sourceId: 'source-orders',
+        targetId: 'transform',
+        relation: 'lineage',
+      },
       { id: 'transform-sink', sourceId: 'transform', targetId: 'sink', relation: 'lineage' },
     ],
   };
@@ -613,6 +709,19 @@ async function resolveGraphPreview(
 }
 
 describe('Substrait Preview provenance cutover', () => {
+  it('derives Preview SQL from the connected-field Substrait authority', async () => {
+    const { result, savedContents } = await resolveGraphPreview(
+      buildConnectedProjectionPreviewGraph()
+    );
+
+    if (!result.ok) throw new Error(result.message);
+    expect(result.ok).toBe(true);
+    expect(result.sqlText?.replaceAll(/\s+/g, ' ').trim().toLowerCase()).toMatch(
+      /^select order_id, customer, amount from raw\.orders;?$/
+    );
+    expect(savedContents).toContain(result.sqlText);
+  });
+
   it('regenerates Preview SQL from current Substrait authority instead of a stale SQL artifact', async () => {
     const graph = buildSubstraitPreviewGraph();
     const staleSql = 'select stale_column from customers;\n';

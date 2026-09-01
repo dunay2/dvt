@@ -13,6 +13,10 @@ import {
   encodeDvtSubstraitPilotDocument,
 } from './canvasDvtSubstraitPilot';
 import {
+  createDvtSubstraitProjectionDraft,
+  encodeDvtSubstraitProjectionDocument,
+} from './canvasDvtSubstraitProjection';
+import {
   appendDvtSubstraitInnerJoinInput,
   applyDvtSubstraitInnerJoinGroupedRowNumber,
   applyDvtSubstraitInnerJoinGrouping,
@@ -586,6 +590,89 @@ describe('projectCanvasNodePresentationTruth', () => {
       schemaVersion: semanticDocument.schemaVersion,
       digest: semanticDocument.semanticPlan.sha256,
     });
+  });
+
+  it('projects connected orders fields and their catalog types from canonical Substrait', () => {
+    const connectedSourceRef: ConnectedSourceRef = {
+      schemaVersion: 'connected-source-ref.v1',
+      connectionRef: {
+        schemaVersion: 'connection-ref.v1',
+        connectionId: 'warehouse-main',
+        provider: 'postgres',
+      },
+      sourceObjectId: 'raw.orders',
+    };
+    const dvtSource: CanonicalNode = {
+      id: 'source-orders',
+      name: 'orders',
+      pluginId: 'dvt',
+      kind: 'dvt:source',
+      role: 'input',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        schema: 'raw',
+        tableName: 'orders',
+        connectedSourceRef,
+        columns: [
+          { name: 'order_id', type: 'integer' },
+          { name: 'customer', type: 'text' },
+          { name: 'amount', type: 'numeric' },
+        ],
+      },
+    };
+    const semanticDocument = encodeDvtSubstraitProjectionDocument(
+      createDvtSubstraitProjectionDraft({
+        source: {
+          nodeId: dvtSource.id,
+          schema: 'raw',
+          table: 'orders',
+          sourceRef: connectedSourceRef,
+          fields: [
+            { name: 'order_id', dataType: 'integer' },
+            { name: 'customer', dataType: 'text' },
+            { name: 'amount', dataType: 'numeric' },
+          ],
+        },
+        targetNodeId: 'transform-orders',
+        outputs: [
+          { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
+          { fieldId: 'output:customer', name: 'customer', sourceFieldName: 'customer' },
+          { fieldId: 'output:amount', name: 'amount', sourceFieldName: 'amount' },
+        ],
+      })
+    );
+    const transform = applyDvtSubstraitSemanticDocument(
+      {
+        id: 'transform-orders',
+        name: 'Transform orders',
+        pluginId: 'dvt',
+        kind: 'dvt:transform',
+        role: 'transform',
+        status: 'idle',
+        tags: [],
+        metadata: {},
+      },
+      semanticDocument
+    );
+
+    const truth = projectCanvasNodePresentationTruth({
+      node: transform,
+      nodes: [dvtSource, transform],
+      edges: [
+        {
+          sourceId: dvtSource.id,
+          targetId: transform.id,
+        },
+      ],
+    });
+
+    expect(truth.code).toMatchObject({ kind: 'canonical', language: 'json' });
+    expect(truth.columns.visible).toEqual([
+      expect.objectContaining({ name: 'order_id', type: 'integer' }),
+      expect.objectContaining({ name: 'customer', type: 'text' }),
+      expect.objectContaining({ name: 'amount', type: 'numeric' }),
+    ]);
   });
 
   it('fails closed when declared Substrait authority has no valid semantic document', () => {
