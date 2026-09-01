@@ -268,7 +268,7 @@
     "@eslint/compat": "^2.0.5",
     "@eslint/js": "^10.0.1",
     "@testing-library/dom": "^10.4.0",
-    "@types/node": "26.1.1",
+    "@types/node": "26.4.0",
     "@typescript-eslint/eslint-plugin": "^8.65.0",
     "@typescript-eslint/parser": "^8.65.0",
     "@vitest/coverage-v8": "3.2.4",
@@ -296,7 +296,7 @@
   },
   "pnpm": {
     "overrides": {
-      "@types/node": "26.1.1",
+      "@types/node": "26.4.0",
       "vitest": "3.2.4",
       "@vitest/ui": "3.2.4",
       "@vitest/coverage-v8": "3.2.4",

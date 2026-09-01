@@ -24,7 +24,7 @@
     "zod": "^3.0.0"
   },
   "devDependencies": {
-    "@types/node": "^26.1.1",
+    "@types/node": "^26.4.0",
     "@types/pg": "^8.11.10",
     "dependency-cruiser": "^17.3.9",
     "tsx": "^4.0.0",
