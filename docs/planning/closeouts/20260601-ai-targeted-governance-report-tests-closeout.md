@@ -60,6 +60,6 @@ planning_type: closeout
 - No stub, placeholder, fake success path, TODO, or debt entry was added.
 - No product command/query rail changed; this is local validation routing only.
 - The AGENTS-cited Lane C AI efficiency review path
-  `docs/planning/reviews/20260328-lane-c-ai-efficiency-and-cost-review.md` was
+  `docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md` was
   not present in this checkout, so the active governance inventory and testing
   guide governed this slice.

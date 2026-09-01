@@ -42,7 +42,7 @@ implementationPlan: docs/planning/proposals/mandatory/governance-and-docs/web-vi
 componentGuides:
   - docs/guides/testing-and-ci-capabilities.md
 userStories:
-  - docs/planning/reviews/20260328-lane-c-ai-efficiency-and-cost-review.md
+  - docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
