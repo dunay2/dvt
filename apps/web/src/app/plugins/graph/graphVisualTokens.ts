@@ -134,7 +134,7 @@ export const graphNodeColumnClasses = {
   toggleIcon: 'size-3',
   disclosure: 'mt-2',
   list: 'space-y-1.5',
-  row: 'relative',
+  row: 'relative px-1',
   keyboardMenuAnchor:
     'pointer-events-none absolute left-1/2 top-1/2 size-px border-0 bg-transparent p-0 opacity-0',
   piece:
@@ -145,7 +145,7 @@ export const graphNodeColumnClasses = {
   constraint:
     'rounded border border-slate-600 px-1 py-0.5 text-[9px] font-semibold tracking-wide text-slate-200',
   outputState:
-    'flex size-4 shrink-0 items-center justify-center rounded border border-slate-600 text-emerald-300',
+    'nodrag nopan flex size-4 shrink-0 cursor-pointer items-center justify-center rounded border border-slate-600 bg-transparent p-0 text-emerald-300 transition hover:border-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 disabled:cursor-default disabled:hover:border-slate-600',
   outputCheck: 'size-3',
   tooltip:
     'w-72 border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 shadow-xl shadow-slate-950/40',
