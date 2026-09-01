@@ -1,6 +1,13 @@
 /** Owned concern: author and inspect one connected-source field projection as canonical Substrait. */
 import { create, fromBinary, toBinary } from '@bufbuild/protobuf';
 import {
+  ExpressionSchema,
+  Expression_FieldReferenceSchema,
+  Expression_FieldReference_RootReferenceSchema,
+  Expression_ReferenceSegmentSchema,
+  Expression_ReferenceSegment_StructFieldSchema,
+  Expression_ScalarFunctionSchema,
+  FunctionArgumentSchema,
   ProjectRelSchema,
   ReadRelSchema,
   ReadRel_NamedTableSchema,
@@ -17,10 +24,21 @@ import {
   PlanSchema,
   type Plan,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
+import {
+  SimpleExtensionDeclarationSchema,
+  SimpleExtensionDeclaration_ExtensionFunctionSchema,
+  SimpleExtensionURNSchema,
+} from '@buf/substrait_substrait.bufbuild_es/substrait/extensions/extensions_pb.js';
+import {
+  TypeSchema,
+  Type_Nullability,
+  Type_StringSchema,
+} from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import { base64Bytes, sha256Hex } from '@dvt/crypto';
 import {
   ConnectedSourceRefSchema,
   DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION,
+  DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1,
   DVT_SUBSTRAIT_PLAN_ENCODING,
   DVT_SUBSTRAIT_PROFILE_REF_V1,
   DVT_SUBSTRAIT_SEMANTIC_DOCUMENT_SCHEMA_VERSION,
@@ -55,6 +73,13 @@ export type DvtSubstraitProjectionOutput = Readonly<{
   sourceFieldName: string;
   dataType: string;
   outputOrdinal: number;
+  operations?: readonly string[];
+}>;
+
+export type DvtSubstraitColumnFunction = Readonly<{
+  capabilityId: string;
+  name: string;
+  category: 'text';
 }>;
 
 export type DvtSubstraitProjectionDraft = Readonly<{
@@ -70,6 +95,33 @@ export type DvtSubstraitProjection = Readonly<{
 
 export type DvtSubstraitProjectionInspection =
   Readonly<{ ok: true; projection: DvtSubstraitProjection }> | Readonly<{ ok: false }>;
+
+export function resolveDvtSubstraitColumnFunctions(args: {
+  dataType: string;
+  provider: string;
+}): readonly DvtSubstraitColumnFunction[] {
+  const normalizedType = args.dataType.trim().toLowerCase().replaceAll(/\s+/g, ' ');
+  const stringTypes = new Set([
+    'text',
+    'string',
+    'varchar',
+    'character varying',
+    'char',
+    'character',
+    'bpchar',
+  ]);
+  if (args.provider !== 'postgres' || !stringTypes.has(normalizedType)) return [];
+
+  return DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.flatMap((entry) =>
+    entry.kind === 'standard' &&
+    entry.category === 'scalar-function' &&
+    entry.profileStatus === 'supported-profile' &&
+    entry.identity.sourceKind === 'simple-extension' &&
+    entry.identity.urn === 'extension:io.substrait:functions_string'
+      ? [{ capabilityId: entry.entryId, name: entry.identity.name, category: 'text' as const }]
+      : []
+  );
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -167,7 +219,6 @@ function projectHasOnlyFieldSelection(project: ProjectRel): boolean {
   return (
     commonHasNoHiddenSemantics(project.common) &&
     project.common?.emitKind.case === 'emit' &&
-    project.expressions.length === 0 &&
     project.advancedExtension == null
   );
 }
@@ -369,21 +420,116 @@ export function inspectDvtSubstraitProjectionDraft(
   ) {
     return { ok: false };
   }
-  const outputs = mappings.value.outputMapping.map((sourceOrdinal, outputOrdinal) => {
-    const sourceField = sourceFields[sourceOrdinal];
+  const usedExpressionOrdinals = new Set<number>();
+  const usedFunctionAnchors = new Set<number>();
+  const inspectExpression = (
+    expression: (typeof project.expressions)[number]
+  ): Readonly<{ sourceOrdinal: number; operations: readonly string[] }> | null => {
+    const outerToInner: string[] = [];
+    let current = expression;
+    while (current.rexType.case === 'scalarFunction') {
+      const scalarFunction = current.rexType.value;
+      const declaration = draft.plan.extensions.find(
+        (entry) =>
+          entry.mappingType.case === 'extensionFunction' &&
+          entry.mappingType.value.functionAnchor === scalarFunction.functionReference
+      );
+      if (declaration?.mappingType.case !== 'extensionFunction') return null;
+      const declarationValue = declaration.mappingType.value;
+      if (declarationValue == null) return null;
+      const urn = draft.plan.extensionUrns.find(
+        (entry) => entry.extensionUrnAnchor === declarationValue.extensionUrnReference
+      )?.urn;
+      const functionName = declarationValue.name.endsWith(':str')
+        ? declarationValue.name.slice(0, -':str'.length)
+        : null;
+      const capability =
+        functionName == null
+          ? null
+          : resolveDvtSubstraitColumnFunctions({ dataType: 'text', provider: 'postgres' }).find(
+              (entry) => entry.name === functionName
+            );
+      const argument = scalarFunction.arguments[0]?.argType;
+      if (
+        capability == null ||
+        urn !== 'extension:io.substrait:functions_string' ||
+        scalarFunction.arguments.length !== 1 ||
+        argument?.case !== 'value'
+      ) {
+        return null;
+      }
+      usedFunctionAnchors.add(scalarFunction.functionReference);
+      outerToInner.push(capability.name);
+      current = argument.value;
+    }
+    if (current.rexType.case !== 'selection') return null;
+    const fieldReference = current.rexType.value;
+    const segment =
+      fieldReference.referenceType.case === 'directReference'
+        ? fieldReference.referenceType.value.referenceType
+        : undefined;
+    if (
+      fieldReference.rootType.case !== 'rootReference' ||
+      segment?.case !== 'structField' ||
+      segment.value.child != null ||
+      segment.value.field < 0 ||
+      segment.value.field >= sourceFields.length
+    ) {
+      return null;
+    }
+    return { sourceOrdinal: segment.value.field, operations: outerToInner.reverse() };
+  };
+  const outputs = mappings.value.outputMapping.map((mapping, outputOrdinal) => {
+    const expressionOrdinal = mapping - sourceFields.length;
+    const resolvedExpression =
+      mapping < sourceFields.length
+        ? { sourceOrdinal: mapping, operations: [] as readonly string[] }
+        : expressionOrdinal >= 0 && expressionOrdinal < project.expressions.length
+          ? inspectExpression(project.expressions[expressionOrdinal]!)
+          : null;
+    if (expressionOrdinal >= 0 && resolvedExpression != null) {
+      usedExpressionOrdinals.add(expressionOrdinal);
+    }
+    const sourceField =
+      resolvedExpression == null ? undefined : sourceFields[resolvedExpression.sourceOrdinal];
     const targetField = targetFields[outputOrdinal];
-    return sourceField == null || targetField == null || sourceField.displayName == null
-      ? null
-      : {
-          fieldId: targetField.fieldId,
-          name: targetField.displayName ?? rootRelation.value.names[outputOrdinal]!,
-          sourceFieldId: sourceField.fieldId,
-          sourceFieldName: sourceField.displayName,
-          dataType: 'unknown',
-          outputOrdinal,
-        };
+    if (
+      resolvedExpression == null ||
+      sourceField == null ||
+      targetField == null ||
+      sourceField.displayName == null
+    ) {
+      return null;
+    }
+    return {
+      fieldId: targetField.fieldId,
+      name: targetField.displayName ?? rootRelation.value.names[outputOrdinal]!,
+      sourceFieldId: sourceField.fieldId,
+      sourceFieldName: sourceField.displayName,
+      dataType: 'unknown',
+      outputOrdinal,
+      ...(resolvedExpression.operations.length > 0
+        ? { operations: resolvedExpression.operations }
+        : {}),
+    };
   });
-  if (outputs.some((output) => output == null)) return { ok: false };
+  const declaredFunctionAnchors = draft.plan.extensions.flatMap((entry) =>
+    entry.mappingType.case === 'extensionFunction' ? [entry.mappingType.value.functionAnchor] : []
+  );
+  if (
+    outputs.some((output) => output == null) ||
+    usedExpressionOrdinals.size !== project.expressions.length ||
+    draft.plan.extensions.length !== declaredFunctionAnchors.length ||
+    new Set(declaredFunctionAnchors).size !== declaredFunctionAnchors.length ||
+    declaredFunctionAnchors.some((anchor) => !usedFunctionAnchors.has(anchor)) ||
+    usedFunctionAnchors.size !== declaredFunctionAnchors.length ||
+    (usedFunctionAnchors.size === 0
+      ? draft.plan.extensionUrns.length !== 0
+      : draft.plan.extensionUrns.length !== 1 ||
+        draft.plan.extensionUrns[0]?.urn !== 'extension:io.substrait:functions_string')
+  ) {
+    return { ok: false };
+  }
 
   return {
     ok: true,
@@ -402,6 +548,150 @@ export function inspectDvtSubstraitProjectionDraft(
       outputs: outputs.filter((output) => output != null),
     },
   };
+}
+
+export function applyDvtSubstraitProjectionFunction(
+  draft: DvtSubstraitProjectionDraft,
+  args: {
+    fieldId: string;
+    capabilityId: string;
+    dataType: string;
+    provider: string;
+  }
+): DvtSubstraitProjectionDraft {
+  const inspection = inspectDvtSubstraitProjectionDraft(draft);
+  const capability = resolveDvtSubstraitColumnFunctions({
+    dataType: args.dataType,
+    provider: args.provider,
+  }).find((entry) => entry.capabilityId === args.capabilityId);
+  const output = inspection.ok
+    ? inspection.projection.outputs.find((candidate) => candidate.fieldId === args.fieldId)
+    : undefined;
+  if (!inspection.ok || capability == null || output == null) return draft;
+
+  const plan = fromBinary(PlanSchema, toBinary(PlanSchema, draft.plan));
+  const rootRelation = plan.relations[0]?.relType;
+  const projectRelation =
+    rootRelation?.case === 'root' ? rootRelation.value.input?.relType : undefined;
+  if (projectRelation?.case !== 'project') {
+    return draft;
+  }
+  const project = projectRelation.value;
+  const emitKind = project.common?.emitKind;
+  if (emitKind?.case !== 'emit') return draft;
+  const outputMapping = emitKind.value.outputMapping;
+  const mapping = outputMapping[output.outputOrdinal];
+  const sourceFieldCount = inspection.projection.source.fields.length;
+  if (mapping == null) return draft;
+
+  const buildFieldReference = (ordinal: number) =>
+    create(ExpressionSchema, {
+      rexType: {
+        case: 'selection',
+        value: create(Expression_FieldReferenceSchema, {
+          referenceType: {
+            case: 'directReference',
+            value: create(Expression_ReferenceSegmentSchema, {
+              referenceType: {
+                case: 'structField',
+                value: create(Expression_ReferenceSegment_StructFieldSchema, { field: ordinal }),
+              },
+            }),
+          },
+          rootType: {
+            case: 'rootReference',
+            value: create(Expression_FieldReference_RootReferenceSchema, {}),
+          },
+        }),
+      },
+    });
+  const buildStringType = () =>
+    create(TypeSchema, {
+      kind: {
+        case: 'string',
+        value: create(Type_StringSchema, { nullability: Type_Nullability.NULLABLE }),
+      },
+    });
+  const functionEntry = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.find(
+    (entry) => entry.entryId === capability.capabilityId
+  );
+  if (
+    functionEntry == null ||
+    functionEntry.kind !== 'standard' ||
+    functionEntry.category !== 'scalar-function' ||
+    functionEntry.profileStatus !== 'supported-profile' ||
+    functionEntry.identity.sourceKind !== 'simple-extension'
+  ) {
+    return draft;
+  }
+  const functionIdentity = functionEntry.identity;
+  const signature = `${functionIdentity.name}:str`;
+  let extensionUrn = plan.extensionUrns.find((entry) => entry.urn === functionIdentity.urn);
+  if (extensionUrn == null) {
+    extensionUrn = create(SimpleExtensionURNSchema, {
+      extensionUrnAnchor:
+        Math.max(0, ...plan.extensionUrns.map((entry) => entry.extensionUrnAnchor)) + 1,
+      urn: functionIdentity.urn,
+    });
+    plan.extensionUrns.push(extensionUrn);
+  }
+  let extensionFunction = plan.extensions.find(
+    (entry) =>
+      entry.mappingType.case === 'extensionFunction' &&
+      entry.mappingType.value.name === signature &&
+      entry.mappingType.value.extensionUrnReference === extensionUrn.extensionUrnAnchor
+  );
+  if (extensionFunction?.mappingType.case !== 'extensionFunction') {
+    const functionAnchor =
+      Math.max(
+        0,
+        ...plan.extensions.flatMap((entry) =>
+          entry.mappingType.case === 'extensionFunction'
+            ? [entry.mappingType.value.functionAnchor]
+            : []
+        )
+      ) + 1;
+    extensionFunction = create(SimpleExtensionDeclarationSchema, {
+      mappingType: {
+        case: 'extensionFunction',
+        value: create(SimpleExtensionDeclaration_ExtensionFunctionSchema, {
+          extensionUrnReference: extensionUrn.extensionUrnAnchor,
+          functionAnchor,
+          name: signature,
+        }),
+      },
+    });
+    plan.extensions.push(extensionFunction);
+  }
+  if (extensionFunction.mappingType.case !== 'extensionFunction') return draft;
+  const expressionOrdinal = mapping - sourceFieldCount;
+  const inputExpression =
+    mapping < sourceFieldCount
+      ? buildFieldReference(mapping)
+      : expressionOrdinal >= 0 && expressionOrdinal < project.expressions.length
+        ? project.expressions[expressionOrdinal]
+        : undefined;
+  if (inputExpression == null) return draft;
+  const nextExpression = create(ExpressionSchema, {
+    rexType: {
+      case: 'scalarFunction',
+      value: create(Expression_ScalarFunctionSchema, {
+        functionReference: extensionFunction.mappingType.value.functionAnchor,
+        arguments: [
+          create(FunctionArgumentSchema, { argType: { case: 'value', value: inputExpression } }),
+        ],
+        outputType: buildStringType(),
+      }),
+    },
+  });
+  if (mapping < sourceFieldCount) {
+    project.expressions.push(nextExpression);
+    outputMapping[output.outputOrdinal] = sourceFieldCount + project.expressions.length - 1;
+  } else {
+    project.expressions[expressionOrdinal] = nextExpression;
+  }
+  const nextDraft = { plan, sidecar: draft.sidecar };
+  return inspectDvtSubstraitProjectionDraft(nextDraft).ok ? nextDraft : draft;
 }
 
 export function resolveDvtSubstraitProjectionEntry(args: {

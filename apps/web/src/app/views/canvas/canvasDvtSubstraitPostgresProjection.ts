@@ -104,7 +104,7 @@ function pgRangeVar(args: { schema?: string; table: string; alias?: string }): P
   };
 }
 
-function pgFunction(name: 'trim' | 'upper', argument: PostgresAstNode): PostgresAstNode {
+function pgFunction(name: string, argument: PostgresAstNode): PostgresAstNode {
   return {
     FuncCall: {
       funcname: [pgString(name)],
@@ -195,7 +195,10 @@ function buildConnectedFieldPostgresAst(projection: DvtSubstraitProjection): Pos
       targetList: projection.outputs.map((output) => ({
         ResTarget: {
           ...(output.name === output.sourceFieldName ? {} : { name: output.name }),
-          val: pgColumnRef(output.sourceFieldName),
+          val: (output.operations ?? []).reduce<PostgresAstNode>(
+            (expression, operation) => pgFunction(operation, expression),
+            pgColumnRef(output.sourceFieldName)
+          ),
         },
       })),
       fromClause: [
