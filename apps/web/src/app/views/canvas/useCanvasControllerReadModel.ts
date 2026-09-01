@@ -110,6 +110,7 @@ type UseCanvasControllerReadModelArgs = {
     | 'handleColumnPortActivate'
     | 'handleApplyDvtSubstraitColumnFunction'
     | 'handleToggleDvtSubstraitColumnOutput'
+    | 'handleReorderDvtSubstraitColumnOutput'
     | 'handleColumnDisclosureChange'
     | 'handleAutomapCanvasColumns'
     | 'handleRemoveColumnMapping'
@@ -206,6 +207,9 @@ export function useCanvasControllerReadModel({
             : undefined,
           onToggleDvtSubstraitColumnOutput: canMutateGraph
             ? graphHandlers.handleToggleDvtSubstraitColumnOutput
+            : undefined,
+          onReorderDvtSubstraitColumnOutput: canMutateGraph
+            ? graphHandlers.handleReorderDvtSubstraitColumnOutput
             : undefined,
           onColumnDisclosureChange: graphHandlers.handleColumnDisclosureChange,
           onAutomapColumns: canMutateGraph ? graphHandlers.handleAutomapCanvasColumns : undefined,
@@ -329,6 +333,9 @@ export function useCanvasControllerReadModel({
           onToggleDvtSubstraitColumnOutput: hasEditableProjection
             ? node.data.onToggleDvtSubstraitColumnOutput
             : undefined,
+          onReorderDvtSubstraitColumnOutput: hasEditableProjection
+            ? node.data.onReorderDvtSubstraitColumnOutput
+            : undefined,
           onAutomapColumns: canAuthorColumnMappings ? node.data.onAutomapColumns : undefined,
           columns: presentsColumnLineage
             ? projectInteractiveColumns(node, columnFunctionMenus)
@@ -364,6 +371,8 @@ export function useCanvasControllerReadModel({
       graphHandlers.handleColumnDisclosureChange,
       graphHandlers.handleColumnPortActivate,
       graphHandlers.handleApplyDvtSubstraitColumnFunction,
+      graphHandlers.handleReorderDvtSubstraitColumnOutput,
+      graphHandlers.handleToggleDvtSubstraitColumnOutput,
       onToggleExecutionSelection,
       graphModel.canonicalNodesById,
       graphModel.edges,

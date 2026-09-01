@@ -8,6 +8,7 @@ import { GraphNodeColumnSection, type GraphNodeColumn } from './GraphNodeColumnS
 import type {
   GraphNodeColumnPortDirection,
   GraphNodeColumnPortIdentity,
+  GraphNodeColumnReorderIdentity,
 } from './GraphNodeColumnSection';
 import { GraphNodeMetricRow } from './GraphNodeMetricRow';
 import { GraphNodeOperationalRail } from './GraphNodeOperationalRail';
@@ -61,6 +62,7 @@ export type GraphNodeCardViewProps = Readonly<{
     columnType: string;
     output: boolean;
   }) => void;
+  onColumnReorder?: (identity: GraphNodeColumnReorderIdentity) => void;
   onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;
   onColumnLayoutChange?: () => void;
   onAutomapColumns?: (nodeId: string, columns: readonly GraphNodeCardColumn[]) => void;
@@ -137,6 +139,7 @@ export function GraphNodeCardView({
   onColumnPortActivate,
   onColumnFunctionApply,
   onColumnOutputToggle,
+  onColumnReorder,
   onColumnDisclosureChange,
   onColumnLayoutChange,
   onAutomapColumns,
@@ -224,6 +227,7 @@ export function GraphNodeCardView({
             onColumnPortActivate={onColumnPortActivate}
             onColumnFunctionApply={onColumnFunctionApply}
             onColumnOutputToggle={onColumnOutputToggle}
+            onColumnReorder={onColumnReorder}
             onDisclosureChange={
               nodeId == null || onColumnDisclosureChange == null
                 ? undefined

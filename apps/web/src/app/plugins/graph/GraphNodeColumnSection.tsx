@@ -116,6 +116,12 @@ export function resolveGraphNodeColumnInteractionProps(args: {
             output: boolean;
           }) => void)
         : undefined,
+    onColumnReorder:
+      args.nodeRole === 'transform' && typeof data.onReorderDvtSubstraitColumnOutput === 'function'
+        ? (data.onReorderDvtSubstraitColumnOutput as (
+            identity: GraphNodeColumnReorderIdentity
+          ) => void)
+        : undefined,
     onColumnDisclosureChange:
       typeof data.onColumnDisclosureChange === 'function'
         ? (data.onColumnDisclosureChange as (nodeId: string, expanded: boolean) => void)

@@ -2,6 +2,7 @@ import type { Node } from '@xyflow/react';
 import type {
   GraphNodeColumn,
   GraphNodeColumnPortIdentity,
+  GraphNodeColumnReorderIdentity,
 } from '../../plugins/graph/GraphNodeColumnSection';
 
 type NodeActionHandlers = {
@@ -22,6 +23,7 @@ type NodeActionHandlers = {
     columnType: string;
     output: boolean;
   }) => void;
+  onReorderDvtSubstraitColumnOutput?: (identity: GraphNodeColumnReorderIdentity) => void;
   onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;
   onAutomapColumns?: (nodeId: string, columns: readonly GraphNodeColumn[]) => void;
 };
@@ -62,6 +64,7 @@ export function buildCanvasNodeInteractionPresentation({
       onColumnPortActivate: handlers.onColumnPortActivate,
       onApplyDvtSubstraitColumnFunction: handlers.onApplyDvtSubstraitColumnFunction,
       onToggleDvtSubstraitColumnOutput: handlers.onToggleDvtSubstraitColumnOutput,
+      onReorderDvtSubstraitColumnOutput: handlers.onReorderDvtSubstraitColumnOutput,
       onColumnDisclosureChange: handlers.onColumnDisclosureChange,
       onAutomapColumns: handlers.onAutomapColumns,
     },

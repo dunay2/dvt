@@ -98,6 +98,7 @@ function buildReadModelArgs(
       handleColumnPortActivate: vi.fn(),
       handleApplyDvtSubstraitColumnFunction: vi.fn(),
       handleToggleDvtSubstraitColumnOutput: vi.fn(),
+      handleReorderDvtSubstraitColumnOutput: vi.fn(),
       handleColumnDisclosureChange: vi.fn(),
       handleAutomapCanvasColumns: vi.fn(),
       handleRemoveColumnMapping: vi.fn(),
