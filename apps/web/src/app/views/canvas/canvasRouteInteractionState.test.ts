@@ -144,6 +144,41 @@ describe('canvasRouteInteractionState', () => {
     expect(interactionState.workbenchErrorMessage).toBeNull();
   });
 
+  it('keeps writable autosave from becoming a limited-access layout state', () => {
+    const draftAccessPosture = deriveCanvasDraftAccessPosture({
+      draftAccessMode: 'writable',
+      draftCapabilityReason: null,
+      draftFormatError: null,
+      authTransportPosture: 'none',
+      recoveryReason: null,
+      draftSaveStatus: 'saving',
+    });
+    const interactionState = deriveCanvasRouteInteractionState(
+      buildController({
+        draftAccessMode: 'writable',
+        draftAccessPosture,
+        draftSaveStatus: 'saving',
+        nodesWithImpact: buildReadyNodes(),
+        userPermissions: {
+          canPlan: true,
+          canRun: false,
+          canEditEdges: true,
+          canPersistGraphDraft: true,
+          canManagePlugins: false,
+          canManageRBAC: false,
+        },
+      }),
+      null
+    );
+
+    expect(interactionState.effectiveUserPermissions).toMatchObject({
+      canPlan: true,
+      canRun: false,
+      canEditEdges: true,
+    });
+    expect(interactionState.readOnlyState).toBeNull();
+  });
+
   it('blocks interactions before backend readiness is available', () => {
     const controller = buildController({
       backendReady: false,
