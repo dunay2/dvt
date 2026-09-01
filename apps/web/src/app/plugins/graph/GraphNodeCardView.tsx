@@ -13,6 +13,10 @@ import type {
 import { GraphNodeMetricRow } from './GraphNodeMetricRow';
 import { GraphNodeOperationalRail } from './GraphNodeOperationalRail';
 import { GraphNodeTagList } from './GraphNodeTagList';
+import {
+  GraphNodeAlgebraicDropZone,
+  type GraphNodeAlgebraicDrop,
+} from './GraphNodeAlgebraicDropZone';
 import type {
   GraphNodeCardReadModel,
   GraphNodeOperationalDetail,
@@ -66,6 +70,7 @@ export type GraphNodeCardViewProps = Readonly<{
   onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;
   onColumnLayoutChange?: () => void;
   onAutomapColumns?: (nodeId: string, columns: readonly GraphNodeCardColumn[]) => void;
+  algebraicDrop?: GraphNodeAlgebraicDrop;
 }>;
 
 function GraphNodeCardTitle({ cardModel }: { cardModel: GraphNodeCardReadModel }): ReactElement {
@@ -143,6 +148,7 @@ export function GraphNodeCardView({
   onColumnDisclosureChange,
   onColumnLayoutChange,
   onAutomapColumns,
+  algebraicDrop,
 }: GraphNodeCardViewProps): ReactElement {
   const operationalDetail = cardModel.operationalDetail;
   const interactiveOperationalDetail =
@@ -270,6 +276,7 @@ export function GraphNodeCardView({
           style={{ borderColor: overlayBorderColor }}
         />
       )}
+      {algebraicDrop == null ? null : <GraphNodeAlgebraicDropZone drop={algebraicDrop} />}
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { buildGraphNodeCardReadModel } from './graphNodeCardReadModel';
 import type { GraphNodeOperationalDetail } from './graphNodeCardStrategyContracts';
 import { GraphNodeCardView } from './GraphNodeCardView';
 import { resolveGraphNodeTagActionProps } from './GraphNodeTagList';
+import { resolveGraphNodeAlgebraicDrop } from './GraphNodeAlgebraicDropZone';
 
 type ColumnMeta = {
   name: string;
@@ -99,6 +100,7 @@ export function GraphNodeRenderer({
       overlayStyle={overlayProps.style}
       {...tagActionProps}
       {...columnInteractionProps}
+      algebraicDrop={resolveGraphNodeAlgebraicDrop(data.algebraicDrop)}
       onOpenCode={
         data.canOpenNodeCode !== false && typeof inspectNode === 'function'
           ? () => inspectNode(node.id, 'code')
