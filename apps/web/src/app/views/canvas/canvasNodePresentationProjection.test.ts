@@ -592,7 +592,7 @@ describe('projectCanvasNodePresentationTruth', () => {
     });
   });
 
-  it('projects connected orders fields and their catalog types from canonical Substrait', () => {
+  it('keeps unmatched connected fields visible after a partial canonical Substrait projection', () => {
     const connectedSourceRef: ConnectedSourceRef = {
       schemaVersion: 'connected-source-ref.v1',
       connectionRef: {
@@ -635,11 +635,7 @@ describe('projectCanvasNodePresentationTruth', () => {
           ],
         },
         targetNodeId: 'transform-orders',
-        outputs: [
-          { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
-          { fieldId: 'output:customer', name: 'customer', sourceFieldName: 'customer' },
-          { fieldId: 'output:amount', name: 'amount', sourceFieldName: 'amount' },
-        ],
+        outputs: [{ fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' }],
       })
     );
     const transform = applyDvtSubstraitSemanticDocument(
@@ -669,10 +665,16 @@ describe('projectCanvasNodePresentationTruth', () => {
 
     expect(truth.code).toMatchObject({ kind: 'canonical', language: 'json' });
     expect(truth.columns.visible).toEqual([
-      expect.objectContaining({ name: 'order_id', type: 'integer' }),
-      expect.objectContaining({ name: 'customer', type: 'text' }),
-      expect.objectContaining({ name: 'amount', type: 'numeric' }),
+      expect.objectContaining({ name: 'order_id', type: 'integer', provenance: 'declared' }),
+      expect.objectContaining({ name: 'customer', type: 'text', provenance: 'inherited' }),
+      expect.objectContaining({ name: 'amount', type: 'numeric', provenance: 'inherited' }),
     ]);
+    expect(truth.columns).toMatchObject({
+      declaredCount: 1,
+      inheritedCount: 3,
+      visibleCount: 3,
+      visibleProvenance: 'mixed',
+    });
   });
 
   it('fails closed when declared Substrait authority has no valid semantic document', () => {

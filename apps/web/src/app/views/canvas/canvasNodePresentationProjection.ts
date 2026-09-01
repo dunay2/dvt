@@ -50,6 +50,8 @@ type DvtSubstraitPresentedOutput = Readonly<{
   name: string;
   fieldId: string;
   dataType?: string;
+  sourceNodeId?: string;
+  sourceFieldName?: string;
 }>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -127,6 +129,8 @@ function projectCanvasNodePresentationTruthInternal(
               name: output.name,
               fieldId: output.fieldId,
               dataType: output.dataType,
+              sourceNodeId: projection.source.nodeId,
+              sourceFieldName: output.sourceFieldName,
             }));
           } else {
             const pilotInspection = inspectDvtSubstraitPilotDraft(
@@ -332,16 +336,43 @@ function projectCanvasNodePresentationTruthInternal(
       provenance: 'declared' as const,
       reference: output.fieldId,
     }));
+    const hasConnectedFieldProjection =
+      substraitOutputs.length > 0 &&
+      substraitOutputs.every(
+        (output) => output.sourceNodeId != null && output.sourceFieldName != null
+      );
+    const projectedSourceFields = new Set(
+      substraitOutputs.flatMap((output) =>
+        output.sourceNodeId == null || output.sourceFieldName == null
+          ? []
+          : [`${output.sourceNodeId}\u0000${output.sourceFieldName}`]
+      )
+    );
+    const unmatchedInherited = hasConnectedFieldProjection
+      ? presentationTruth.columns.inherited.filter(
+          (column) =>
+            column.sourceNodeId == null ||
+            !projectedSourceFields.has(`${column.sourceNodeId}\u0000${column.name}`)
+        )
+      : [];
+    const visible = [...declared, ...unmatchedInherited];
     return {
       ...presentationTruth,
       columns: {
         declared,
         inherited: presentationTruth.columns.inherited,
-        visible: declared,
+        visible,
         declaredCount: declared.length,
         inheritedCount: presentationTruth.columns.inheritedCount,
-        visibleCount: declared.length,
-        visibleProvenance: declared.length > 0 ? 'declared' : 'none',
+        visibleCount: visible.length,
+        visibleProvenance:
+          declared.length > 0 && unmatchedInherited.length > 0
+            ? 'mixed'
+            : declared.length > 0
+              ? 'declared'
+              : unmatchedInherited.length > 0
+                ? 'inherited'
+                : 'none',
       },
     };
   }
