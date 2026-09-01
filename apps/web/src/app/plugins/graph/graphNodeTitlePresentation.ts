@@ -102,10 +102,8 @@ export function buildGraphNodeTitlePresentation({
   }
 
   const humanTitle = titleCaseIdentifier(nodeName);
-  const suffix =
-    kind.endsWith(':model') && !humanTitle.toLowerCase().endsWith(' model') ? ' Model' : '';
   return {
-    title: `${humanTitle}${suffix}`,
+    title: humanTitle,
     technicalName: nodeName,
   };
 }

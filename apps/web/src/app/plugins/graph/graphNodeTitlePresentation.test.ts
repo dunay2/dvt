@@ -219,4 +219,18 @@ describe('buildGraphNodeTitlePresentation', () => {
       technicalName: 'orders_model',
     });
   });
+
+  it('does not append the node kind to model card titles', () => {
+    expect(
+      buildGraphNodeTitlePresentation({
+        nodeName: 'model_1',
+        kind: 'dbt:model',
+        metadata: {},
+        data: {},
+      })
+    ).toEqual({
+      title: 'Model 1',
+      technicalName: 'model_1',
+    });
+  });
 });

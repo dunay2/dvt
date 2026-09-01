@@ -14,6 +14,10 @@ import {
   readDvtTransformAuthoringAuthority,
 } from './canvasDvtTransformAuthoringAuthority';
 import {
+  decodeDvtSubstraitProjectionDocument,
+  inspectDvtSubstraitProjectionDraft,
+} from './canvasDvtSubstraitProjection';
+import {
   resolveCanvasEdgeConfirmationTransaction,
   resolveCanvasEdgeReconnectTransaction,
 } from './canvasEdgeAdmissionTransaction';
@@ -32,6 +36,29 @@ function buildCanonicalNode(
     role,
     status: 'idle',
     tags: [],
+  };
+}
+
+function buildConnectedSourceNode(
+  id: string,
+  columns: readonly Readonly<{ name: string; type: string }>[]
+): CanonicalNode {
+  return {
+    ...buildCanonicalNode(id, 'input', 'dvt:source'),
+    metadata: {
+      schema: 'raw',
+      tableName: id,
+      connectedSourceRef: {
+        schemaVersion: 'connected-source-ref.v1',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: 'warehouse-main',
+          provider: 'postgres',
+        },
+        sourceObjectId: `raw.${id}`,
+      },
+      columns,
+    },
   };
 }
 
@@ -97,15 +124,10 @@ describe('canvasEdgeAdmissionTransaction', () => {
   });
 
   it('creates deterministic column mappings in the same transaction as the stage edge', () => {
-    const source = {
-      ...buildCanonicalNode('source-node', 'input', 'dvt:source'),
-      metadata: {
-        columns: [
-          { name: 'order_id', type: 'integer' },
-          { name: 'customer', type: 'text' },
-        ],
-      },
-    };
+    const source = buildConnectedSourceNode('source-node', [
+      { name: 'order_id', type: 'integer' },
+      { name: 'customer', type: 'text' },
+    ]);
     const transform = buildCanonicalNode('transform-node', 'transform', 'dvt:transform');
     const canonicalNodesById = new Map<string, CanonicalNode>([
       [source.id, source],
@@ -137,49 +159,37 @@ describe('canvasEdgeAdmissionTransaction', () => {
       throw new Error('Expected the confirmed transaction to update the transform recipe');
     }
     const authority = readDvtTransformAuthoringAuthority(mappedTransform);
-    expect(authority.mode).toBe(DVT_TRANSFORM_AUTHORING_MODE.visual);
-    if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.visual) return;
-    expect(authority.recipe.outputs).toEqual([
+    expect(authority.mode).toBe(DVT_TRANSFORM_AUTHORING_MODE.substrait);
+    if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return;
+    const inspection = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+    );
+    expect(inspection.ok).toBe(true);
+    if (!inspection.ok) return;
+    expect(inspection.projection.source.nodeId).toBe(source.id);
+    expect(inspection.projection.outputs).toMatchObject([
       {
-        id: 'output:order_id',
+        fieldId: 'output:order_id',
         name: 'order_id',
-        dataType: 'integer',
-        expression: {
-          inputs: [{ nodeId: source.id, columnName: 'order_id' }],
-          operations: [{ kind: 'passthrough' }],
-        },
+        sourceFieldName: 'order_id',
       },
       {
-        id: 'output:customer',
+        fieldId: 'output:customer',
         name: 'customer',
-        dataType: 'text',
-        expression: {
-          inputs: [{ nodeId: source.id, columnName: 'customer' }],
-          operations: [{ kind: 'passthrough' }],
-        },
+        sourceFieldName: 'customer',
       },
     ]);
   });
 
-  it('skips ambiguous names instead of choosing a source column at random', () => {
-    const firstSource = {
-      ...buildCanonicalNode('source-node', 'input', 'dvt:source'),
-      metadata: {
-        columns: [
-          { name: 'shared_id', type: 'integer' },
-          { name: 'first_only', type: 'text' },
-        ],
-      },
-    };
-    const secondSource = {
-      ...buildCanonicalNode('second-source', 'input', 'dvt:source'),
-      metadata: {
-        columns: [
-          { name: 'shared_id', type: 'integer' },
-          { name: 'second_only', type: 'numeric' },
-        ],
-      },
-    };
+  it('confirms a second source without inventing a multi-source projection', () => {
+    const firstSource = buildConnectedSourceNode('source-node', [
+      { name: 'shared_id', type: 'integer' },
+      { name: 'first_only', type: 'text' },
+    ]);
+    const secondSource = buildConnectedSourceNode('second-source', [
+      { name: 'shared_id', type: 'integer' },
+      { name: 'second_only', type: 'numeric' },
+    ]);
     const transform = buildCanonicalNode('transform-node', 'transform', 'dvt:transform');
     const canonicalNodesById = new Map([
       [firstSource.id, firstSource],
@@ -217,38 +227,21 @@ describe('canvasEdgeAdmissionTransaction', () => {
     if (transaction.outcome !== 'confirmed') {
       throw new Error('Expected a confirmed edge transaction');
     }
-    const mappedTransform = transaction.draftSession.localNodeCatalog?.[transform.id];
-    if (mappedTransform == null) {
-      throw new Error('Expected unambiguous columns to be mapped');
-    }
-    const authority = readDvtTransformAuthoringAuthority(mappedTransform);
-    if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.visual) {
-      throw new Error('Expected visual transform authority');
-    }
-    expect(authority.recipe.outputs.map((output) => output.name)).toEqual([
-      'first_only',
-      'second_only',
+    expect(transaction.draftSession.workingSet.visibleEdges).toEqual([
+      { sourceId: firstSource.id, targetId: transform.id },
+      { sourceId: secondSource.id, targetId: transform.id },
     ]);
-    expect(authority.recipe.outputs.flatMap((output) => output.expression.inputs)).toEqual([
-      { nodeId: firstSource.id, columnName: 'first_only' },
-      { nodeId: secondSource.id, columnName: 'second_only' },
-    ]);
+    expect(transaction.draftSession.localNodeCatalog?.[transform.id]).toBeUndefined();
   });
 
-  it('preserves declared mappings when a new stage link exposes a matching column name', () => {
-    const firstSource = {
-      ...buildCanonicalNode('source-node', 'input', 'dvt:source'),
-      metadata: { columns: [{ name: 'customer', type: 'text' }] },
-    };
-    const secondSource = {
-      ...buildCanonicalNode('second-source', 'input', 'dvt:source'),
-      metadata: {
-        columns: [
-          { name: 'customer_label', type: 'text' },
-          { name: 'amount', type: 'numeric' },
-        ],
-      },
-    };
+  it('preserves declared mappings until a multi-source composition is selected', () => {
+    const firstSource = buildConnectedSourceNode('source-node', [
+      { name: 'customer', type: 'text' },
+    ]);
+    const secondSource = buildConnectedSourceNode('second-source', [
+      { name: 'customer_label', type: 'text' },
+      { name: 'amount', type: 'numeric' },
+    ]);
     const transform = applyDvtVisualTransformRecipe(
       buildCanonicalNode('transform-node', 'transform', 'dvt:transform'),
       {
@@ -317,15 +310,6 @@ describe('canvasEdgeAdmissionTransaction', () => {
         dataType: 'text',
         expression: {
           inputs: [{ nodeId: firstSource.id, columnName: 'customer' }],
-          operations: [{ kind: 'passthrough' }],
-        },
-      },
-      {
-        id: 'output:amount',
-        name: 'amount',
-        dataType: 'numeric',
-        expression: {
-          inputs: [{ nodeId: secondSource.id, columnName: 'amount' }],
           operations: [{ kind: 'passthrough' }],
         },
       },
