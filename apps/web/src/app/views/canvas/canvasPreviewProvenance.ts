@@ -28,37 +28,7 @@ import {
   resolveExecutableSqlText,
 } from './canvasTransformationSqlMirror';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
-import {
-  decodeDvtSubstraitPilotDocument,
-  inspectDvtSubstraitPilotDraft,
-} from './canvasDvtSubstraitPilot';
-import {
-  decodeDvtSubstraitProjectionDocument,
-  resolveDvtSubstraitProjectionEntry,
-} from './canvasDvtSubstraitProjection';
-import { inspectDvtSubstraitPilotAggregationDraft } from './canvasDvtSubstraitAggregation';
-import { inspectDvtSubstraitPilotAggregateWindowDraft } from './canvasDvtSubstraitAggregateWindow';
-import { inspectDvtSubstraitPilotWindowDraft } from './canvasDvtSubstraitWindow';
-import {
-  decodeDvtSubstraitInnerJoinDocument,
-  inspectDvtSubstraitInnerJoinAcceptedDraft,
-  resolveDvtSubstraitInnerJoinEntry,
-  resolveDvtSubstraitNInputJoinEntry,
-} from './canvasDvtSubstraitJoinComposition';
-import {
-  decodeDvtSubstraitUnionAllDocument,
-  inspectDvtSubstraitUnionAllAcceptedDraft,
-  resolveDvtSubstraitUnionAllEntry,
-} from './canvasDvtSubstraitSetComposition';
-import {
-  projectDvtSubstraitPilotAggregationToPostgresSql,
-  projectDvtSubstraitPilotAggregateWindowToPostgresSql,
-  projectDvtSubstraitPilotWindowToPostgresSql,
-  projectDvtSubstraitInnerJoinToPostgresSql,
-  projectDvtSubstraitPilotToPostgresSql,
-  projectDvtSubstraitProjectionToPostgresSql,
-  projectDvtSubstraitUnionAllToPostgresSql,
-} from './canvasDvtSubstraitPostgresProjection';
+import { projectDvtSubstraitTransformOutputToPostgresSql } from './canvasDvtSubstraitOutputProjection';
 import { compileDvtVisualTransformNodeToPostgresSql } from './canvasVisualTransformSql';
 
 export type PreviewProvenanceResolution =
@@ -332,102 +302,11 @@ async function buildAuthoringPreviewSql({
       const scopedEdges = canonicalEdges.filter(
         (edge) => scopedNodeIdSet.has(edge.sourceId) && scopedNodeIdSet.has(edge.targetId)
       );
-      const projectionDraft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
-      const projectionEntry = resolveDvtSubstraitProjectionEntry({
-        targetNode: transformNode,
+      const sql = await projectDvtSubstraitTransformOutputToPostgresSql({
+        transformNode,
         nodes: scopedNodes,
         edges: scopedEdges,
-        draft: projectionDraft,
       });
-      if (projectionEntry != null) {
-        const sql = await projectDvtSubstraitProjectionToPostgresSql(projectionDraft);
-        return sql.endsWith('\n') ? sql : `${sql}\n`;
-      }
-
-      const pilotDraft = decodeDvtSubstraitPilotDocument(authority.semanticDocument);
-      if (inspectDvtSubstraitPilotDraft(pilotDraft).ok) {
-        const scopedNodes = resolveScopedTransformationNodes(canonicalNodes, scopedNodeIds);
-        const source = requireSourcePayload(scopedNodes.source);
-        const sql = await projectDvtSubstraitPilotToPostgresSql(pilotDraft, {
-          schema: source.payload.schema,
-          table: source.payload.table,
-        });
-        return sql.endsWith('\n') ? sql : `${sql}\n`;
-      }
-
-      if (inspectDvtSubstraitPilotAggregateWindowDraft(pilotDraft).ok) {
-        const scopedNodes = resolveScopedTransformationNodes(canonicalNodes, scopedNodeIds);
-        const source = requireSourcePayload(scopedNodes.source);
-        const sql = await projectDvtSubstraitPilotAggregateWindowToPostgresSql(pilotDraft, {
-          schema: source.payload.schema,
-          table: source.payload.table,
-        });
-        return sql.endsWith('\n') ? sql : `${sql}\n`;
-      }
-
-      if (inspectDvtSubstraitPilotAggregationDraft(pilotDraft).ok) {
-        const scopedNodes = resolveScopedTransformationNodes(canonicalNodes, scopedNodeIds);
-        const source = requireSourcePayload(scopedNodes.source);
-        const sql = await projectDvtSubstraitPilotAggregationToPostgresSql(pilotDraft, {
-          schema: source.payload.schema,
-          table: source.payload.table,
-        });
-        return sql.endsWith('\n') ? sql : `${sql}\n`;
-      }
-
-      if (inspectDvtSubstraitPilotWindowDraft(pilotDraft).ok) {
-        const scopedNodes = resolveScopedTransformationNodes(canonicalNodes, scopedNodeIds);
-        const source = requireSourcePayload(scopedNodes.source);
-        const sql = await projectDvtSubstraitPilotWindowToPostgresSql(pilotDraft, {
-          schema: source.payload.schema,
-          table: source.payload.table,
-        });
-        return sql.endsWith('\n') ? sql : `${sql}\n`;
-      }
-
-      const joinDraft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
-      const joinInspection = inspectDvtSubstraitInnerJoinAcceptedDraft(joinDraft);
-      if (joinInspection.ok) {
-        const joinEntry =
-          'left' in joinInspection.projection && 'right' in joinInspection.projection
-            ? resolveDvtSubstraitInnerJoinEntry({
-                targetNode: transformNode,
-                nodes: scopedNodes,
-                edges: scopedEdges,
-                requirePersistedAuthority: true,
-              })
-            : resolveDvtSubstraitNInputJoinEntry({
-                targetNode: transformNode,
-                nodes: scopedNodes,
-                edges: scopedEdges,
-                draft: joinDraft,
-              });
-        if (joinEntry == null) {
-          throw new Error(
-            'Substrait INNER JOIN Preview source identities do not match the scoped graph.'
-          );
-        }
-        const sql = await projectDvtSubstraitInnerJoinToPostgresSql(joinDraft);
-        return sql.endsWith('\n') ? sql : `${sql}\n`;
-      }
-
-      const unionAllDraft = decodeDvtSubstraitUnionAllDocument(authority.semanticDocument);
-      const unionAllInspection = inspectDvtSubstraitUnionAllAcceptedDraft(unionAllDraft);
-      if (!unionAllInspection.ok) {
-        throw new Error('Preview does not support this Substrait semantic shape.');
-      }
-      const unionAllEntry = resolveDvtSubstraitUnionAllEntry({
-        targetNode: transformNode,
-        nodes: scopedNodes,
-        edges: scopedEdges,
-        requirePersistedAuthority: true,
-      });
-      if (unionAllEntry == null) {
-        throw new Error(
-          'Substrait UNION ALL Preview source identities do not match the scoped graph.'
-        );
-      }
-      const sql = await projectDvtSubstraitUnionAllToPostgresSql(unionAllDraft);
       return sql.endsWith('\n') ? sql : `${sql}\n`;
     }
   }
