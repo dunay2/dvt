@@ -83,19 +83,26 @@ export function projectCanvasNodeAccessibleHealth<TData extends Record<string, u
   data: TData;
   graphNodeCardStrategies: readonly GraphNodeCardStrategy[];
 }>): Node<TData> {
-  let healthLabel: string;
+  const projectAccessibleHealthLabel = (nextData: TData): string => {
+    let healthLabel: string;
 
-  try {
-    healthLabel = buildGraphNodeCardReadModel(canonicalNode, data, graphNodeCardStrategies).health
-      .label;
-  } catch {
-    healthLabel = buildGraphNodeCardReadModel(canonicalNode, data).health.label;
-  }
+    try {
+      healthLabel = buildGraphNodeCardReadModel(canonicalNode, nextData, graphNodeCardStrategies)
+        .health.label;
+    } catch {
+      healthLabel = buildGraphNodeCardReadModel(canonicalNode, nextData).health.label;
+    }
+
+    return `${node.ariaLabel ?? canonicalNode.name}, ${healthLabel}`;
+  };
 
   return {
     ...node,
-    ariaLabel: `${node.ariaLabel ?? canonicalNode.name}, ${healthLabel}`,
-    data,
+    ariaLabel: projectAccessibleHealthLabel(data),
+    data: {
+      ...data,
+      projectAccessibleHealthLabel,
+    },
   };
 }
 

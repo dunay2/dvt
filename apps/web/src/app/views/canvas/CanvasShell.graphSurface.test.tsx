@@ -18,6 +18,10 @@ import { canvasViewCopy } from './copy';
 import { resolveWorkspaceFilePath } from './CanvasShell';
 import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
+import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
+import type { CanonicalNode } from '../../types/canonical';
+import { dvtGraphNodeCardStrategy } from '../../plugins/dvt/dvtGraphNodeCardStrategy';
+import { projectCanvasNodeAccessibleHealth } from './canvasNodeMapper';
 
 describe('CanvasShell graph base surface', () => {
   let container: HTMLDivElement;
@@ -221,6 +225,45 @@ describe('CanvasShell graph base surface', () => {
       truncated: false,
       sampledAt: '2026-08-18T10:00:02.000Z',
     });
+    const sinkNodeData = {
+      name: 'Sink 1',
+      status: 'idle',
+      role: 'output',
+      pluginId: 'dvt',
+      pluginKind: 'dvt:sink',
+      metadata: {
+        config: {
+          schema: 'public',
+          table: 'sink_1',
+          materialization: 'table',
+          writeMode: 'replace',
+        },
+      },
+    } satisfies DbtNodeData;
+    const canonicalSink = {
+      id: 'sink-1',
+      name: sinkNodeData.name,
+      pluginId: 'dvt',
+      kind: 'dvt:sink',
+      role: 'output',
+      status: 'idle',
+      tags: [],
+      metadata: sinkNodeData.metadata,
+    } satisfies CanonicalNode;
+    const draftSinkNode = projectCanvasNodeAccessibleHealth({
+      node: {
+        id: canonicalSink.id,
+        type: 'dbtNode',
+        ariaLabel: 'Sink 1, Output',
+        position: { x: 0, y: 0 },
+        data: sinkNodeData,
+      },
+      canonicalNode: canonicalSink,
+      data: sinkNodeData,
+      graphNodeCardStrategies: [dvtGraphNodeCardStrategy],
+    });
+    expect(draftSinkNode.ariaLabel).toBe('Sink 1, Output, Draft');
+
     await renderShell({
       panels: { activeRunId: 'run-1' },
       runSnapshot: {
@@ -238,27 +281,7 @@ describe('CanvasShell graph base surface', () => {
       },
       runMaterializationSampleQuery: getRunMaterializationSample,
       graph: {
-        nodesWithImpact: [
-          {
-            id: 'sink-1',
-            type: 'dbtNode',
-            position: { x: 0, y: 0 },
-            data: {
-              name: 'Sink 1',
-              status: 'idle',
-              role: 'output',
-              pluginKind: 'dvt:sink',
-              metadata: {
-                config: {
-                  schema: 'public',
-                  table: 'sink_1',
-                  materialization: 'table',
-                  writeMode: 'replace',
-                },
-              },
-            },
-          },
-        ],
+        nodesWithImpact: [draftSinkNode],
       },
     } as unknown as CanvasShellPropsOverrides);
 
@@ -266,6 +289,7 @@ describe('CanvasShell graph base surface', () => {
       getCanvasShellState().canvasViewportProps?.nodesWithImpact as
         | Array<{
             id: string;
+            ariaLabel?: string;
             data: {
               rows?: number;
               durationMs?: number;
@@ -287,6 +311,7 @@ describe('CanvasShell graph base surface', () => {
       lastRunAt: '2026-08-18T10:00:01.500Z',
     });
     expect(forwardedNode?.data.runStatusByNodeId?.get('sink-1')).toBe('completed');
+    expect(forwardedNode?.ariaLabel).toBe('Sink 1, Output, Completed');
     expect(getRunMaterializationSample).toHaveBeenCalledWith('run-1', 20);
     expect(useOperationalDrawerContributionStore.getState()).toMatchObject({
       activeTab: 'data',

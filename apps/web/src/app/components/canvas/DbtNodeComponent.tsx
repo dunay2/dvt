@@ -68,6 +68,7 @@ export interface DbtNodeData extends Record<string, unknown> {
   presentationCopy?: CanvasNodePresentationCopy;
   activeRunId?: string | null;
   runStatusByNodeId?: ReadonlyMap<string, string>;
+  projectAccessibleHealthLabel?: (data: DbtNodeData) => string;
   canvasKind?: string;
   runtimeCapabilities?: RuntimeCapabilities;
   canMutateGraph?: boolean;

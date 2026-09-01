@@ -56,6 +56,8 @@ projection, generic plugin graph node rendering, and graph-node card chrome.
   failure cannot replace the Canvas route.
 - Draft-backed and dbt project-file Canvas controllers use the same accessible
   health projector.
+- Shell-owned runtime enrichment re-runs that projector from the final node data
+  so the focusable label and rendered border cannot diverge.
 - Plugin-specific behavior remains in plugin contracts; this component owns only
   presentation tokens.
 
