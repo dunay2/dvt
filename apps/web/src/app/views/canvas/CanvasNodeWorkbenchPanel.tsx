@@ -50,6 +50,7 @@ import { canvasNodeWorkbenchVisualTokens } from './canvasNodeWorkbenchVisualToke
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import { useCanvasNodeWorkbenchDraftController } from './useCanvasNodeWorkbenchDraftController';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import { DvtTransformOutputView } from './DvtTransformOutputView';
 
 export type CanvasNodeWorkbenchPanelProps = Readonly<{
   node: CanonicalNode;
@@ -176,6 +177,9 @@ function buildNodeWorkbenchReadModel({
           section.id === 'code' &&
           (contributedSectionIds.has(section.id) ||
             (canEditNode && node.pluginId === 'dbt' && node.kind === 'dbt:model') ||
+            (node.pluginId === 'dvt' &&
+              node.kind === 'dvt:transform' &&
+              readDvtTransformAuthoringMode(node) === DVT_TRANSFORM_AUTHORING_MODE.substrait) ||
             (canEditNode &&
               node.pluginId === 'dvt' &&
               node.kind === 'dvt:transform' &&
@@ -261,9 +265,10 @@ export function CanvasNodeWorkbenchPanel({
   const dvtTransformAuthoringMode = readDvtTransformAuthoringMode(node);
   const visualDvtTransformAuthority =
     dvtTransformAuthoringMode === DVT_TRANSFORM_AUTHORING_MODE.visual;
-  const structuredDvtTransformAuthority =
-    visualDvtTransformAuthority ||
+  const canonicalSubstraitTransformAuthority =
     dvtTransformAuthoringMode === DVT_TRANSFORM_AUTHORING_MODE.substrait;
+  const structuredDvtTransformAuthority =
+    visualDvtTransformAuthority || canonicalSubstraitTransformAuthority;
   const baseModel = buildNodePropertiesReadModel({
     node,
     nodes,
@@ -328,6 +333,25 @@ export function CanvasNodeWorkbenchPanel({
     contributionModel.afterBodyBySection,
     node.id
   );
+  if (canonicalSubstraitTransformAuthority && presentationTruth.code.kind === 'canonical') {
+    const codeDescription = baseModel.sections.find(
+      (section) => section.id === 'code'
+    )?.description;
+    sectionAfterChildren.code = (
+      <>
+        {sectionAfterChildren.code}
+        <DvtTransformOutputView
+          key={`${node.id}:${presentationTruth.code.digest}`}
+          transformNode={node}
+          nodes={nodes}
+          edges={edges}
+          canonicalContent={presentationTruth.code.content}
+          canonicalDescription={codeDescription}
+          copy={copy}
+        />
+      </>
+    );
+  }
   const handleActiveTabChange = (nextTabId: string): void => {
     setActiveTab(nextTabId);
   };

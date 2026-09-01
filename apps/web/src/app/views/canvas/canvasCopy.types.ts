@@ -468,6 +468,11 @@ export type CanvasViewCopy = {
   readonly inspectorVisualTransformConvertToSqlLabel: string;
   readonly inspectorVisualTransformConvertToSqlTitle: string;
   readonly inspectorVisualTransformConvertToSqlDescription: string;
+  readonly inspectorTransformOutputViewLabel: string;
+  readonly inspectorTransformOutputSubstraitLabel: string;
+  readonly inspectorTransformOutputPostgresSqlLabel: string;
+  readonly inspectorTransformOutputLoadingMessage: string;
+  readonly inspectorTransformOutputErrorMessage: string;
   readonly inspectorDbtCardTitle: string;
   readonly inspectorDbtPackageLabel: string;
   readonly inspectorDbtSourceLabel: string;

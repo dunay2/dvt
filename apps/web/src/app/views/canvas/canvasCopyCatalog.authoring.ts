@@ -377,6 +377,26 @@ export const canvasViewAuthoringCopyByKey = {
     fallback:
       'This replaces the visual recipe as the editing authority. Returning from SQL to Visual is not automatic.',
   },
+  inspectorTransformOutputViewLabel: {
+    key: 'canvas.inspector.authoring.transformOutputViewLabel',
+    fallback: 'Output view',
+  },
+  inspectorTransformOutputSubstraitLabel: {
+    key: 'canvas.inspector.authoring.transformOutputSubstraitLabel',
+    fallback: 'Substrait (canonical)',
+  },
+  inspectorTransformOutputPostgresSqlLabel: {
+    key: 'canvas.inspector.authoring.transformOutputPostgresSqlLabel',
+    fallback: 'PostgreSQL SQL (derived)',
+  },
+  inspectorTransformOutputLoadingMessage: {
+    key: 'canvas.inspector.authoring.transformOutputLoadingMessage',
+    fallback: 'Generating PostgreSQL SQL...',
+  },
+  inspectorTransformOutputErrorMessage: {
+    key: 'canvas.inspector.authoring.transformOutputErrorMessage',
+    fallback: 'PostgreSQL SQL could not be generated from this canonical revision.',
+  },
   inspectorDbtCardTitle: {
     key: 'canvas.inspector.authoring.dbtCardTitle',
     fallback: 'dbt card',
