@@ -3,6 +3,7 @@ import type { Connection, Edge } from '@xyflow/react';
 
 import type { PluginPortMap } from '../../plugins/contracts/ConnectionRules';
 import type { CanonicalNode } from '../../types/canonical';
+import { resolveCanvasDraftNodes } from './canvasDraftNodeCatalog';
 import {
   confirmConnection,
   confirmReconnect,
@@ -58,26 +59,12 @@ function buildAcceptedEdgeTransaction(args: {
   };
 }
 
-function resolveDraftNodes(
-  draftSession: CanvasDraftSession,
-  canonicalNodesById: ReadonlyMap<string, CanonicalNode>
-): CanonicalNode[] {
-  const nodesById = new Map(canonicalNodesById);
-  for (const node of Object.values(draftSession.localNodeCatalog ?? {})) {
-    nodesById.set(node.id, node);
-  }
-  return draftSession.workingSet.visibleNodeIds.flatMap((nodeId) => {
-    const node = nodesById.get(nodeId);
-    return node == null ? [] : [node];
-  });
-}
-
 function applyConfirmedConnectionColumnMappings(args: {
   transaction: AcceptedCanvasEdgeAdmissionTransaction;
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
   targetNodeId: string;
 }): AcceptedCanvasEdgeAdmissionTransaction {
-  const nodes = resolveDraftNodes(args.transaction.draftSession, args.canonicalNodesById);
+  const nodes = resolveCanvasDraftNodes(args.transaction.draftSession, args.canonicalNodesById);
   const targetNode = nodes.find((node) => node.id === args.targetNodeId);
   if (targetNode?.pluginId !== 'dvt' || targetNode.kind !== 'dvt:transform') {
     return args.transaction;
@@ -106,7 +93,7 @@ function applyConnectedDbtModelOrigin(args: {
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
   targetNodeId: string;
 }): AcceptedCanvasEdgeAdmissionTransaction {
-  const nodes = resolveDraftNodes(args.transaction.draftSession, args.canonicalNodesById);
+  const nodes = resolveCanvasDraftNodes(args.transaction.draftSession, args.canonicalNodesById);
   const targetNode = nodes.find((node) => node.id === args.targetNodeId);
   if (targetNode == null) return args.transaction;
 
