@@ -86,7 +86,9 @@ describe('GraphNodeColumnSection inactive field reorder', () => {
   });
 
   it('keeps a field in place when its output identity changes', async () => {
-    const renderColumns = (columns: Parameters<typeof GraphNodeColumnSection>[0]['columns']) => {
+    const renderColumns = (
+      columns: Parameters<typeof GraphNodeColumnSection>[0]['columns']
+    ): void => {
       root.render(
         <GraphNodeColumnSection
           nodeId="transform-orders"
