@@ -7,6 +7,11 @@ import {
   type DvtSubstraitPilotProjection,
 } from './canvasDvtSubstraitPilot';
 import {
+  inspectDvtSubstraitProjectionDraft,
+  type DvtSubstraitProjection,
+  type DvtSubstraitProjectionDraft,
+} from './canvasDvtSubstraitProjection';
+import {
   inspectDvtSubstraitPilotAggregationDraft,
   removeDvtSubstraitPilotAggregation,
   type DvtSubstraitPilotAggregationProjection,
@@ -169,6 +174,37 @@ function buildPilotOutputExpression(projection: DvtSubstraitPilotProjection): Po
     (expression, operation) => pgFunction(operation, expression),
     pgColumnRef(projection.inputFieldName)
   );
+}
+
+function requireConnectedFieldProjection(
+  draft: DvtSubstraitProjectionDraft
+): DvtSubstraitProjection {
+  const inspection = inspectDvtSubstraitProjectionDraft(draft);
+  if (!inspection.ok) {
+    throw new DvtSubstraitPostgresProjectionError(
+      'unsupported_shape',
+      'PostgreSQL projection supports only the admitted connected-field Substrait shape.'
+    );
+  }
+  return inspection.projection;
+}
+
+function buildConnectedFieldPostgresAst(projection: DvtSubstraitProjection): PostgresAstNode {
+  return {
+    SelectStmt: {
+      targetList: projection.outputs.map((output) => ({
+        ResTarget: {
+          ...(output.name === output.sourceFieldName ? {} : { name: output.name }),
+          val: pgColumnRef(output.sourceFieldName),
+        },
+      })),
+      fromClause: [
+        pgRangeVar({ schema: projection.source.schema, table: projection.source.table }),
+      ],
+      limitOption: 'LIMIT_OPTION_DEFAULT',
+      op: 'SETOP_NONE',
+    },
+  };
 }
 
 function requireFinalPilotProjection(draft: DvtSubstraitPilotDraft): DvtSubstraitPilotProjection {
@@ -720,6 +756,14 @@ async function deparseBoundedPostgresAst(postgresAst: PostgresAstNode): Promise<
  * Render the single accepted Substrait pilot fixture. Every broader Substrait
  * shape fails closed until a second real use case earns a larger projection.
  */
+export async function projectDvtSubstraitProjectionToPostgresSql(
+  draft: DvtSubstraitProjectionDraft
+): Promise<string> {
+  return deparseBoundedPostgresAst(
+    buildConnectedFieldPostgresAst(requireConnectedFieldProjection(draft))
+  );
+}
+
 export async function projectDvtSubstraitPilotToPostgresSql(
   draft: DvtSubstraitPilotDraft,
   sourceBinding?: DvtSubstraitPostgresSourceBinding
