@@ -301,6 +301,7 @@ export function CanvasViewportSurfaceView({
       <CanvasContextMenuView
         ariaLabel={contextMenuLabel}
         model={contextMenuPresenter.model}
+        keyboardMenuOpen={contextMenuPresenter.keyboardMenuOpen}
         menuRef={contextMenuPresenter.menuRef}
         onClose={() => contextMenuPresenter.closeContextMenu({ preserveCatalog: true })}
         onCatalogClose={contextMenuPresenter.closeContextMenu}
