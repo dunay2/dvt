@@ -197,6 +197,7 @@ export type DvtSubstraitInnerJoinGroupingProjection =
   | Readonly<
       DvtSubstraitInnerJoinGroupingCommon & {
         kind: 'n-input';
+        targetNodeId: DvtSubstraitNInputJoinProjection['targetNodeId'];
         inputs: DvtSubstraitNInputJoinProjection['inputs'];
         joins: DvtSubstraitNInputJoinProjection['joins'];
         groupField: Readonly<{
@@ -240,6 +241,7 @@ export type DvtSubstraitInnerJoinGroupedWindowProjection =
   | Readonly<
       DvtSubstraitInnerJoinGroupedWindowCommon & {
         kind: 'n-input';
+        targetNodeId: DvtSubstraitNInputJoinProjection['targetNodeId'];
         inputs: DvtSubstraitNInputJoinProjection['inputs'];
         joins: DvtSubstraitNInputJoinProjection['joins'];
         groupField: Extract<
@@ -1789,6 +1791,7 @@ function inspectValidInnerJoinGrouping(
       baseDraft,
       projection: {
         kind: 'n-input',
+        targetNodeId: nInputBaseInspection.projection.targetNodeId,
         inputs: nInputBaseInspection.projection.inputs,
         joins: nInputBaseInspection.projection.joins,
         groupField: {
@@ -2115,6 +2118,7 @@ function inspectValidInnerJoinGroupedWindow(
         baseDraft,
         projection: {
           kind: 'n-input',
+          targetNodeId: baseInspection.projection.targetNodeId,
           inputs: baseInspection.projection.inputs,
           joins: baseInspection.projection.joins,
           ...common,
