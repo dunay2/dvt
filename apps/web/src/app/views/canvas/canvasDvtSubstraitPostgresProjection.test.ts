@@ -20,6 +20,7 @@ import {
   applyDvtSubstraitProjectionFunction,
   createDvtSubstraitProjectionDraft,
   resolveDvtSubstraitColumnFunctions,
+  type DvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
 import { applyDvtSubstraitPilotAggregation } from './canvasDvtSubstraitAggregation';
 import { applyDvtSubstraitPilotAggregateRowNumber } from './canvasDvtSubstraitAggregateWindow';
@@ -48,7 +49,7 @@ function completedPilotDraft(): DvtSubstraitPilotDraft {
   return renameDvtSubstraitPilotOutput(draft, 'customer_name');
 }
 
-function connectedOrdersProjectionDraft() {
+function connectedOrdersProjectionDraft(): DvtSubstraitProjectionDraft {
   return createDvtSubstraitProjectionDraft({
     source: {
       nodeId: 'source-orders',
