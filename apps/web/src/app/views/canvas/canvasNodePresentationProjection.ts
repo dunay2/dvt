@@ -121,7 +121,15 @@ function projectCanvasNodePresentationTruthInternal(
                     decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument)
                   );
                   if (joinInspection.ok) {
-                    substraitOutputs = joinInspection.projection.outputs;
+                    const targetNodeId =
+                      'targetNodeId' in joinInspection.projection
+                        ? joinInspection.projection.targetNodeId
+                        : args.node.id;
+                    if (targetNodeId === args.node.id) {
+                      substraitOutputs = joinInspection.projection.outputs;
+                    } else {
+                      substraitRejected = true;
+                    }
                   } else {
                     const unionAllInspection = inspectDvtSubstraitUnionAllAcceptedDraft(
                       decodeDvtSubstraitUnionAllDocument(authority.semanticDocument)
