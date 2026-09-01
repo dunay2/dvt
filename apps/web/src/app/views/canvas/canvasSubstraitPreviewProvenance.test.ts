@@ -826,7 +826,7 @@ describe('Substrait Preview provenance cutover', () => {
 
     expect(result).toEqual({
       ok: false,
-      message: 'Substrait INNER JOIN Preview source identities do not match the scoped graph.',
+      message: 'Substrait INNER JOIN source identities do not match the connected graph.',
     });
   });
 
