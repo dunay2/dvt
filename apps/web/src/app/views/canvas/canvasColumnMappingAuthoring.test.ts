@@ -513,11 +513,12 @@ describe('Canvas column mapping authoring', () => {
   });
 
   it('reorders outputs while preserving their canonical field identities', () => {
-    const source = buildNode('source', 'dvt:source', 'input', [
+    const sourceColumns = [
       { name: 'first', type: 'text' },
       { name: 'second', type: 'text' },
       { name: 'third', type: 'text' },
-    ]);
+    ];
+    const source = buildNode('source', 'dvt:source', 'input', sourceColumns);
     const model = buildNode('model', 'dvt:transform', 'transform');
     const canonicalNodesById = new Map([
       [source.id, source],
@@ -528,7 +529,7 @@ describe('Canvas column mapping authoring', () => {
       draftSession: initial,
       canonicalNodesById,
       targetNodeId: model.id,
-      targetColumns: source.metadata.columns as readonly { name: string; type: string }[],
+      targetColumns: sourceColumns,
     });
     if (mapped.outcome !== 'applied') throw new Error('Expected mapped outputs.');
 
