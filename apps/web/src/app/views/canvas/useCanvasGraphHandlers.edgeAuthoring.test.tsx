@@ -726,7 +726,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     harness.cleanup();
   });
 
-  it('applies a card column function through ConfigureCanvasDvtNode into the draft session', async () => {
+  it('applies card column commands through ConfigureCanvasDvtNode into the draft session', async () => {
     const { applyDvtSubstraitSemanticDocument } = await vi.importActual<
       typeof import('./canvasDvtTransformAuthoringAuthority')
     >('./canvasDvtTransformAuthoringAuthority');
@@ -840,6 +840,30 @@ describe('useCanvasGraphHandlers edge authoring', () => {
             ?.operations
         : []
     ).toEqual(['trim']);
+
+    setDraftSession.mockClear();
+    act(() => {
+      harness.latest()?.handleToggleDvtSubstraitColumnOutput({
+        nodeId: transform.id,
+        columnId: 'output:customer',
+        columnType: 'text',
+        output: false,
+      });
+    });
+    expect(setDraftSession).toHaveBeenCalledOnce();
+    const toggledSession = setDraftSession.mock.calls[0]?.[0] as typeof draftSession;
+    const toggledNode = toggledSession.localNodeCatalog?.[transform.id];
+    if (toggledNode == null) throw new Error('Expected updated transform output selection.');
+    const toggledAuthority = readDvtTransformAuthoringAuthority(toggledNode);
+    if (toggledAuthority.mode !== 'substrait') throw new Error('Expected Substrait authority.');
+    const toggledInspection = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(toggledAuthority.semanticDocument)
+    );
+    expect(
+      toggledInspection.ok
+        ? toggledInspection.projection.outputs.map((output) => output.fieldId)
+        : []
+    ).toEqual(['output:order_id', 'output:amount']);
 
     harness.cleanup();
   });

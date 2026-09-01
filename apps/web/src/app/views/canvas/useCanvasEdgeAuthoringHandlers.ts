@@ -28,6 +28,7 @@ import {
   automapCanvasColumns,
   removeCanvasColumnMapping,
   resolveCanvasColumnMappingTarget,
+  setCanvasColumnOutputIncluded,
   type CanvasColumnMappingRejection,
 } from './canvasColumnMappingAuthoring';
 import {
@@ -55,6 +56,12 @@ type UseCanvasEdgeAuthoringHandlersResult = {
     nodeId: string,
     columns: readonly Readonly<{ name: string; type: string }>[]
   ) => void;
+  handleToggleDvtSubstraitColumnOutput: (identity: {
+    nodeId: string;
+    columnId: string;
+    columnType: string;
+    output: boolean;
+  }) => void;
   handleRemoveColumnMapping: (mapping: CanvasColumnLineageEdgeData) => void;
 };
 
@@ -243,6 +250,29 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
     [effects, policy.canEditEdges, state]
   );
 
+  const handleToggleDvtSubstraitColumnOutput = useCallback(
+    (identity: { nodeId: string; columnId: string; columnType: string; output: boolean }) => {
+      if (!policy.canEditEdges) {
+        toast.error(canvasViewCopy.mutationUnavailableMessage);
+        return;
+      }
+      const result = setCanvasColumnOutputIncluded({
+        draftSession: state.draftSession,
+        canonicalNodesById: state.canonicalNodesById,
+        targetNodeId: identity.nodeId,
+        columnId: identity.columnId,
+        columnType: identity.columnType,
+        output: identity.output,
+      });
+      if (result.outcome === 'rejected') {
+        toast.error(formatColumnMappingRejection(result.reason));
+        return;
+      }
+      effects.setDraftSession(result.draftSession);
+    },
+    [effects, policy.canEditEdges, state]
+  );
+
   const handleRemoveColumnMapping = useCallback(
     (mapping: CanvasColumnLineageEdgeData) => {
       if (!policy.canEditEdges || !mapping.removable) {
@@ -256,6 +286,7 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
       }
       const result = removeCanvasColumnMapping({
         draftSession: state.draftSession,
+        canonicalNodesById: state.canonicalNodesById,
         targetNode,
         outputId: mapping.outputId,
         source: {
@@ -278,6 +309,7 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
     activeColumnHandleId: pendingSource == null ? null : createCanvasColumnHandleId(pendingSource),
     handleColumnPortActivate,
     handleAutomapCanvasColumns,
+    handleToggleDvtSubstraitColumnOutput,
     handleRemoveColumnMapping,
   };
 }
@@ -456,6 +488,8 @@ export function useCanvasEdgeAuthoringHandlers({
     activeColumnHandleId: columnMappingHandlers.activeColumnHandleId,
     handleColumnPortActivate: columnMappingHandlers.handleColumnPortActivate,
     handleAutomapCanvasColumns: columnMappingHandlers.handleAutomapCanvasColumns,
+    handleToggleDvtSubstraitColumnOutput:
+      columnMappingHandlers.handleToggleDvtSubstraitColumnOutput,
     handleRemoveColumnMapping: columnMappingHandlers.handleRemoveColumnMapping,
   };
 }

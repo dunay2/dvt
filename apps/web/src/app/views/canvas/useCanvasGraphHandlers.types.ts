@@ -38,6 +38,12 @@ export type UseCanvasGraphHandlersResult = {
     columnId: string;
     capabilityId: string;
   }) => void;
+  handleToggleDvtSubstraitColumnOutput: (identity: {
+    nodeId: string;
+    columnId: string;
+    columnType: string;
+    output: boolean;
+  }) => void;
   handleColumnDisclosureChange: (nodeId: string, expanded: boolean) => void;
   handleAutomapCanvasColumns: (
     nodeId: string,

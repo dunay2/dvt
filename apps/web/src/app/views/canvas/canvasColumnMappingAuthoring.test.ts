@@ -6,8 +6,8 @@ import type { CanvasDraftSession } from './canvasDraftSession';
 import {
   applyCanvasColumnMapping,
   automapCanvasColumns,
-  removeCanvasColumnMapping,
   resolveCanvasColumnMappingTarget,
+  setCanvasColumnOutputIncluded,
 } from './canvasColumnMappingAuthoring';
 import {
   applyDvtSubstraitSemanticDocument,
@@ -439,7 +439,7 @@ describe('Canvas column mapping authoring', () => {
     expect(result.appliedCount).toBe(1);
   });
 
-  it('removes the selected semantic input relation instead of a persisted React Flow edge', () => {
+  it('toggles the last output without leaving canonical Substrait authority', () => {
     const source = buildNode('source', 'dvt:source', 'input', [
       { name: 'event_id', type: 'integer' },
     ]);
@@ -456,11 +456,17 @@ describe('Canvas column mapping authoring', () => {
     });
     const mapped = readMappedTransform(mappedResult);
 
-    const removed = removeCanvasColumnMapping({
+    const canonicalNodesById = new Map([
+      [source.id, source],
+      [model.id, model],
+    ]);
+    const removed = setCanvasColumnOutputIncluded({
       draftSession: mappedResult.outcome === 'applied' ? mappedResult.draftSession : initial,
-      targetNode: mapped,
-      outputId: 'output:event_id',
-      source: { nodeId: source.id, columnName: 'event_id' },
+      canonicalNodesById,
+      targetNodeId: mapped.id,
+      columnId: 'output:event_id',
+      columnType: 'integer',
+      output: false,
     });
 
     expect(removed.outcome).toBe('applied');
@@ -468,12 +474,38 @@ describe('Canvas column mapping authoring', () => {
     const updated = removed.draftSession.localNodeCatalog?.model;
     if (updated == null) throw new Error('Expected updated transform node.');
     const authority = readDvtTransformAuthoringAuthority(updated);
-    if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.visual) return;
-    expect(authority.recipe.outputs).toEqual([]);
-    expect(resolveCanvasColumnMappingTarget(updated, 'event_id')).toEqual({
-      nodeId: 'model',
-      columnName: 'event_id',
+    if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+      throw new Error('Expected canonical Substrait authority after exclusion.');
+    }
+    const excluded = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+    );
+    expect(excluded.ok && excluded.projection.outputs).toEqual([]);
+
+    const restored = setCanvasColumnOutputIncluded({
+      draftSession: removed.draftSession,
+      canonicalNodesById,
+      targetNodeId: mapped.id,
+      columnId: 'event_id',
+      columnType: 'integer',
+      output: true,
     });
+    expect(restored.outcome).toBe('applied');
+    if (restored.outcome !== 'applied') return;
+    const restoredNode = restored.draftSession.localNodeCatalog?.model;
+    if (restoredNode == null) throw new Error('Expected restored transform node.');
+    const restoredAuthority = readDvtTransformAuthoringAuthority(restoredNode);
+    if (restoredAuthority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+      throw new Error('Expected canonical Substrait authority after inclusion.');
+    }
+    const restoredProjection = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(restoredAuthority.semanticDocument)
+    );
+    expect(
+      restoredProjection.ok
+        ? restoredProjection.projection.outputs.map((output) => output.fieldId)
+        : []
+    ).toEqual(['output:event_id']);
     expect(removed.draftSession.workingSet.visibleEdges).toEqual([
       { sourceId: 'source', targetId: 'model' },
     ]);

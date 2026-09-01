@@ -12,7 +12,6 @@ import type { CanonicalNode } from '../../types/canonical';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import {
   applyDvtSubstraitSemanticDocument,
-  applyDvtVisualTransformRecipe,
   readDvtTransformAuthoringAuthority,
 } from './canvasDvtTransformAuthoringAuthority';
 import {
@@ -269,22 +268,22 @@ function persistProjectionRecipe(args: {
   targetNode: CanonicalNode;
   recipe: VisualTransformRecipeV1;
   resolveNode: (nodeId: string) => CanonicalNode | undefined;
+  sourceNodeIdHint?: string;
 }):
   | Readonly<{ outcome: 'applied'; node: CanonicalNode }>
   | Readonly<{
       outcome: 'rejected';
       reason: Extract<CanvasColumnMappingRejection, 'projection_requires_one_connected_source'>;
     }> {
-  if (args.recipe.outputs.length === 0) {
-    return {
-      outcome: 'applied',
-      node: applyDvtVisualTransformRecipe(args.targetNode, args.recipe),
-    };
-  }
   const sourceNodeIds = new Set(
     args.recipe.outputs.flatMap((output) => output.expression.inputs.map((input) => input.nodeId))
   );
-  const sourceNodeId = sourceNodeIds.size === 1 ? [...sourceNodeIds][0] : undefined;
+  const sourceNodeId =
+    sourceNodeIds.size === 1
+      ? [...sourceNodeIds][0]
+      : sourceNodeIds.size === 0
+        ? args.sourceNodeIdHint
+        : undefined;
   const sourceNode = sourceNodeId == null ? undefined : args.resolveNode(sourceNodeId);
   const source = sourceNode == null ? null : resolveDvtSubstraitProjectionSource(sourceNode);
   const functionNamesByOutput = args.recipe.outputs.map(readProjectionFunctionNames);
@@ -499,8 +498,54 @@ export function automapCanvasColumns(args: {
   };
 }
 
+export function setCanvasColumnOutputIncluded(args: {
+  draftSession: CanvasDraftSession;
+  canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
+  targetNodeId: string;
+  columnId: string;
+  columnType: string;
+  output: boolean;
+}): CanvasColumnMappingResult {
+  const targetNode = resolveSessionNode(
+    args.draftSession,
+    args.canonicalNodesById,
+    args.targetNodeId
+  );
+  if (targetNode == null) return { outcome: 'rejected', reason: 'target_node_not_found' };
+  const recipeResult = readEditableRecipe(targetNode);
+  if (recipeResult.outcome === 'rejected') return recipeResult;
+  const existingOutput = recipeResult.recipe.outputs.find(
+    (candidate) => candidate.id === args.columnId || candidate.name === args.columnId
+  );
+
+  if (args.output) {
+    if (existingOutput != null) {
+      return { outcome: 'applied', draftSession: args.draftSession };
+    }
+    return automapCanvasColumns({
+      draftSession: args.draftSession,
+      canonicalNodesById: args.canonicalNodesById,
+      targetNodeId: targetNode.id,
+      targetColumns: [{ name: args.columnId, type: args.columnType }],
+    });
+  }
+
+  const source = existingOutput?.expression.inputs[0];
+  if (existingOutput == null || source == null || existingOutput.expression.inputs.length !== 1) {
+    return { outcome: 'rejected', reason: 'mapping_not_found' };
+  }
+  return removeCanvasColumnMapping({
+    draftSession: args.draftSession,
+    canonicalNodesById: args.canonicalNodesById,
+    targetNode,
+    outputId: existingOutput.id,
+    source,
+  });
+}
+
 export function removeCanvasColumnMapping(args: {
   draftSession: CanvasDraftSession;
+  canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
   targetNode: CanonicalNode;
   outputId: string;
   source: CanvasColumnMappingSource;
@@ -528,7 +573,9 @@ export function removeCanvasColumnMapping(args: {
         );
   const projectionResult = persistProjectionRecipe({
     targetNode: args.targetNode,
-    resolveNode: (nodeId) => args.draftSession.localNodeCatalog?.[nodeId],
+    resolveNode: (nodeId) =>
+      args.draftSession.localNodeCatalog?.[nodeId] ?? args.canonicalNodesById.get(nodeId),
+    sourceNodeIdHint: args.source.nodeId,
     recipe: { ...recipeResult.recipe, outputs: nextOutputs },
   });
   if (projectionResult.outcome === 'rejected') return projectionResult;
