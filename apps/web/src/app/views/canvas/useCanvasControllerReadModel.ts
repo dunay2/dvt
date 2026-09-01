@@ -246,8 +246,11 @@ export function useCanvasControllerReadModel({
               metadata.shape === 'projection'
                 ? resolveDvtSubstraitProjectionEntry({
                     targetNode: canonicalNode,
-                    nodes: visibleScope.canonicalNodes,
-                    edges: visibleScope.canonicalEdges,
+                    nodes: [...graphModel.canonicalNodesById.values()],
+                    edges: graphModel.edges.map((edge) => ({
+                      sourceId: edge.source,
+                      targetId: edge.target,
+                    })),
                     draft: { plan: metadata.plan, sidecar: metadata.sidecar },
                   })
                 : null;
@@ -354,6 +357,7 @@ export function useCanvasControllerReadModel({
       graphHandlers.handleApplyDvtSubstraitColumnFunction,
       onToggleExecutionSelection,
       graphModel.canonicalNodesById,
+      graphModel.edges,
       graphModel.nodes,
       graphNodeCardStrategies,
       activeCanvasKind,
@@ -364,8 +368,6 @@ export function useCanvasControllerReadModel({
       uiScope.selectedNodeIds,
       readOnlyColumnLineageNodeIds,
       presentsColumnLineage,
-      visibleScope.canonicalEdges,
-      visibleScope.canonicalNodes,
     ]
   );
 

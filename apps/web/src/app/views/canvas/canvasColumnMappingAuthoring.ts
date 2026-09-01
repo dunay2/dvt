@@ -381,10 +381,14 @@ export function automapCanvasColumns(args: {
   if (targetNode == null) return { outcome: 'rejected', reason: 'target_node_not_found' };
   const recipeResult = readEditableRecipe(targetNode);
   if (recipeResult.outcome === 'rejected') return recipeResult;
+  const targetUsesVisualAuthority =
+    readDvtTransformAuthoringAuthority(targetNode).mode === DVT_TRANSFORM_AUTHORING_MODE.visual;
   const mappedInputs = new Set(
-    recipeResult.recipe.outputs.flatMap((output) =>
-      output.expression.inputs.map((input) => `${input.nodeId}\u0000${input.columnName}`)
-    )
+    targetUsesVisualAuthority
+      ? []
+      : recipeResult.recipe.outputs.flatMap((output) =>
+          output.expression.inputs.map((input) => `${input.nodeId}\u0000${input.columnName}`)
+        )
   );
   const upstreamNodes = args.draftSession.workingSet.visibleEdges
     .filter((edge) => edge.targetId === args.targetNodeId)

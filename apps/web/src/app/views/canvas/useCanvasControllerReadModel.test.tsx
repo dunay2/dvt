@@ -405,13 +405,19 @@ describe('useCanvasControllerReadModel', () => {
       ...base,
       graphModel: {
         nodes: graphNodes,
-        edges: [],
+        edges: [
+          {
+            id: dependency.id,
+            source: dependency.sourceId,
+            target: dependency.targetId,
+          },
+        ],
         canonicalNodesById: new Map([sourceNode, transformNode].map((node) => [node.id, node])),
         onEdgesChange: vi.fn(),
       },
       visibleScope: {
         canonicalNodes: [sourceNode, transformNode],
-        canonicalEdges: [dependency],
+        canonicalEdges: [],
       },
       executionScope: {
         selectedNodeIds: [],
