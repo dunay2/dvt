@@ -1,6 +1,7 @@
-// Pre-commit projects the canonical rules onto staged files without building
-// the TypeScript or import graphs. The canonical config remains the authority
-// for changed-file pre-push checks and CI.
+// Fast lint projects the canonical syntax rules without building TypeScript or
+// import graphs. Pre-commit uses it for staged files and affected-workspace lint
+// uses it for the full mechanical sweep. The canonical config remains the
+// authority for changed-file pre-push and PR checks.
 module.exports = require('../../eslint.config.cjs').map((config) => ({
   ...config,
   ...(config.languageOptions?.parserOptions?.project
