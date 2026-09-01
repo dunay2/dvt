@@ -548,6 +548,7 @@ export function setCanvasColumnOutputIncluded(args: {
   columnId: string;
   columnType: string;
   output: boolean;
+  placement?: Readonly<{ targetColumnId: string; placement: 'before' | 'after' }>;
 }): CanvasColumnMappingResult {
   const targetNode = resolveSessionNode(
     args.draftSession,
@@ -565,11 +566,23 @@ export function setCanvasColumnOutputIncluded(args: {
     if (existingOutput != null) {
       return { outcome: 'applied', draftSession: args.draftSession };
     }
-    return automapCanvasColumns({
+    const mapped = automapCanvasColumns({
       draftSession: args.draftSession,
       canonicalNodesById: args.canonicalNodesById,
       targetNodeId: targetNode.id,
       targetColumns: [{ name: args.columnId, type: args.columnType }],
+    });
+    if (mapped.outcome === 'rejected') return mapped;
+    if (args.placement == null) {
+      return { outcome: 'applied', draftSession: mapped.draftSession };
+    }
+    return reorderCanvasColumnOutput({
+      draftSession: mapped.draftSession,
+      canonicalNodesById: args.canonicalNodesById,
+      targetNodeId: targetNode.id,
+      columnId: createOutputId(args.columnId),
+      targetColumnId: args.placement.targetColumnId,
+      placement: args.placement.placement,
     });
   }
 

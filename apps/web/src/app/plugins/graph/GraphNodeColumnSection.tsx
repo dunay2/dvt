@@ -24,6 +24,7 @@ import {
 } from '../../components/ui/dropdown-menu';
 import { resolveGraphNodeCardCopy } from './graphNodeCardCopyTokens';
 import { graphNodeColumnClasses } from './graphVisualTokens';
+import { useGraphNodeColumnOrder, type ActiveColumnPlacement } from './useGraphNodeColumnOrder';
 
 export type GraphNodeColumnFunction = Readonly<{
   capabilityId: string;
@@ -58,6 +59,13 @@ export type GraphNodeColumnReorderIdentity = Readonly<{
   targetColumnId: string;
   placement: 'before' | 'after';
 }>;
+export type GraphNodeColumnOutputToggleIdentity = Readonly<{
+  nodeId: string;
+  columnId: string;
+  columnType: string;
+  output: boolean;
+  placement?: ActiveColumnPlacement;
+}>;
 
 export type GraphNodeColumnSectionProps = Readonly<{
   columns: readonly GraphNodeColumn[];
@@ -70,12 +78,7 @@ export type GraphNodeColumnSectionProps = Readonly<{
     columnId: string;
     capabilityId: string;
   }) => void;
-  onColumnOutputToggle?: (identity: {
-    nodeId: string;
-    columnId: string;
-    columnType: string;
-    output: boolean;
-  }) => void;
+  onColumnOutputToggle?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
   onColumnReorder?: (identity: GraphNodeColumnReorderIdentity) => void;
   onDisclosureChange?: (expanded: boolean) => void;
   onColumnLayoutChange?: () => void;
@@ -109,12 +112,9 @@ export function resolveGraphNodeColumnInteractionProps(args: {
         : undefined,
     onColumnOutputToggle:
       args.nodeRole === 'transform' && typeof data.onToggleDvtSubstraitColumnOutput === 'function'
-        ? (data.onToggleDvtSubstraitColumnOutput as (identity: {
-            nodeId: string;
-            columnId: string;
-            columnType: string;
-            output: boolean;
-          }) => void)
+        ? (data.onToggleDvtSubstraitColumnOutput as (
+            identity: GraphNodeColumnOutputToggleIdentity
+          ) => void)
         : undefined,
     onColumnReorder:
       args.nodeRole === 'transform' && typeof data.onReorderDvtSubstraitColumnOutput === 'function'
@@ -166,10 +166,13 @@ export function GraphNodeColumnSection({
   const copy = resolveGraphNodeCardCopy(applicationLanguage);
   const columnListId = useId();
   const portDirectionKey = portDirections.join(':');
-  const visibleColumns = showAllColumns ? columns : columns.slice(0, MAX_PREVIEW_COLUMNS);
+  const columnOrder = useGraphNodeColumnOrder(columns);
+  const visibleColumns = showAllColumns
+    ? columnOrder.orderedColumns
+    : columnOrder.orderedColumns.slice(0, MAX_PREVIEW_COLUMNS);
   const remainingColumnCount = Math.max(columns.length - MAX_PREVIEW_COLUMNS, 0);
-  const reorderableColumnIds = columns.flatMap((column) =>
-    column.output !== false && column.id != null ? [column.id] : []
+  const reorderableColumnIds = columnOrder.orderedColumns.flatMap((column) =>
+    column.id != null ? [column.id] : []
   );
   const remainderActionLabel = copy.remainingColumnsLabelTemplate.replace(
     '{count}',
@@ -226,8 +229,7 @@ export function GraphNodeColumnSection({
             {visibleColumns.map((column) => {
               const columnId = column.id ?? column.name;
               const isOutput = column.output !== false;
-              const canReorder =
-                isOutput && column.id != null && nodeId != null && onColumnReorder != null;
+              const canReorder = column.id != null && nodeId != null && onColumnReorder != null;
               const metadataRows = [
                 { label: copy.columnTypeLabel, value: column.type },
                 ...(column.nullable == null
@@ -301,6 +303,11 @@ export function GraphNodeColumnSection({
                           columnId,
                           columnType: column.type,
                           output: !isOutput,
+                          ...(!isOutput
+                            ? {
+                                placement: columnOrder.resolveActivationPlacement(columnId),
+                              }
+                            : {}),
                         });
                       }}
                     >
@@ -371,12 +378,18 @@ export function GraphNodeColumnSection({
                     const placement =
                       dropTarget?.columnId === columnId ? dropTarget.placement : null;
                     if (placement != null) {
-                      onColumnReorder?.({
-                        nodeId,
-                        columnId: draggedColumnId,
-                        targetColumnId: columnId,
-                        placement,
-                      });
+                      const activePlacement = columnOrder.moveColumn(
+                        draggedColumnId,
+                        columnId,
+                        placement
+                      );
+                      if (activePlacement != null) {
+                        onColumnReorder?.({
+                          nodeId,
+                          columnId: draggedColumnId,
+                          ...activePlacement,
+                        });
+                      }
                     }
                     draggedColumnIdRef.current = null;
                     setDropTarget(null);
@@ -393,12 +406,14 @@ export function GraphNodeColumnSection({
                       if (targetColumnId != null) {
                         event.preventDefault();
                         event.stopPropagation();
-                        onColumnReorder?.({
-                          nodeId,
+                        const activePlacement = columnOrder.moveColumn(
                           columnId,
                           targetColumnId,
-                          placement: event.key === 'ArrowUp' ? 'before' : 'after',
-                        });
+                          event.key === 'ArrowUp' ? 'before' : 'after'
+                        );
+                        if (activePlacement != null) {
+                          onColumnReorder?.({ nodeId, columnId, ...activePlacement });
+                        }
                       }
                       return;
                     }
