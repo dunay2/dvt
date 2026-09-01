@@ -351,7 +351,8 @@ export function GraphNodeColumnSection({
                     if (
                       !canReorder ||
                       draggedColumnId == null ||
-                      draggedColumnId === columnOrderKey
+                      draggedColumnId === columnOrderKey ||
+                      !columnOrder.canMoveColumn(draggedColumnId, columnOrderKey)
                     ) {
                       return;
                     }
@@ -374,7 +375,8 @@ export function GraphNodeColumnSection({
                       !canReorder ||
                       nodeId == null ||
                       draggedColumnId == null ||
-                      draggedColumnId === columnOrderKey
+                      draggedColumnId === columnOrderKey ||
+                      !columnOrder.canMoveColumn(draggedColumnId, columnOrderKey)
                     ) {
                       return;
                     }

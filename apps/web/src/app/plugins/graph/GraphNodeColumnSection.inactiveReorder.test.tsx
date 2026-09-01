@@ -125,4 +125,42 @@ describe('GraphNodeColumnSection inactive field reorder', () => {
       )
     ).toEqual(['customertext', 'amountnumeric', 'order_idinteger']);
   });
+
+  it('does not present inactive-only ordering as durable', async () => {
+    const onColumnReorder = vi.fn();
+    await act(async () => {
+      root.render(
+        <GraphNodeColumnSection
+          nodeId="transform-orders"
+          columns={[
+            { id: 'output:first', name: 'first', type: 'text', output: true },
+            { id: 'second', name: 'second', type: 'text', output: false },
+            { id: 'third', name: 'third', type: 'text', output: false },
+            { id: 'output:fourth', name: 'fourth', type: 'text', output: true },
+          ]}
+          onColumnOutputToggle={vi.fn()}
+          onColumnReorder={onColumnReorder}
+        />
+      );
+    });
+    await act(async () => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="graph-node-column-toggle"]')!
+      );
+    });
+    const pieces = [
+      ...container.querySelectorAll<HTMLElement>('[data-slot="graph-node-column-piece"]'),
+    ];
+
+    await act(async () => {
+      fireEvent.keyDown(pieces[1]!, { key: 'ArrowDown', altKey: true });
+    });
+
+    expect(
+      [...container.querySelectorAll<HTMLElement>('[data-slot="graph-node-column-piece"]')].map(
+        (piece) => piece.textContent
+      )
+    ).toEqual(['firsttext', 'secondtext', 'thirdtext', 'fourthtext']);
+    expect(onColumnReorder).not.toHaveBeenCalled();
+  });
 });
