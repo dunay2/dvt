@@ -336,11 +336,9 @@ function projectCanvasNodePresentationTruthInternal(
       provenance: 'declared' as const,
       reference: output.fieldId,
     }));
-    const hasConnectedFieldProjection =
-      substraitOutputs.length > 0 &&
-      substraitOutputs.every(
-        (output) => output.sourceNodeId != null && output.sourceFieldName != null
-      );
+    const hasConnectedFieldProjection = substraitOutputs.every(
+      (output) => output.sourceNodeId != null && output.sourceFieldName != null
+    );
     const projectedSourceFields = new Set(
       substraitOutputs.flatMap((output) =>
         output.sourceNodeId == null || output.sourceFieldName == null
