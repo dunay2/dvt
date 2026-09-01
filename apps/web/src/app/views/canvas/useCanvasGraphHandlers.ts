@@ -15,6 +15,15 @@ import { useCanvasEdgeAuthoringHandlers } from './useCanvasEdgeAuthoringHandlers
 import { useCanvasLayoutHandlers } from './useCanvasLayoutHandlers';
 import { useCanvasNodeAuthoringHandlers } from './useCanvasNodeAuthoringHandlers';
 import { useCanvasSelectionHandlers } from './useCanvasSelectionHandlers';
+import { canvasDraftSession } from './canvasDraftSession';
+import {
+  applyDvtNodeAuthoringMetadata,
+  createDvtNodeAuthoringMetadata,
+} from './canvasDvtAuthoringModel';
+import {
+  applyDvtSubstraitProjectionFunction,
+  resolveDvtSubstraitProjectionEntry,
+} from './canvasDvtSubstraitProjection';
 
 export function useCanvasGraphHandlers({
   graphStrategy,
@@ -88,6 +97,63 @@ export function useCanvasGraphHandlers({
       )
     );
   };
+  const handleApplyDvtSubstraitColumnFunction: UseCanvasGraphHandlersResult['handleApplyDvtSubstraitColumnFunction'] =
+    ({ nodeId, columnId, capabilityId }) => {
+      setDraftSession((currentSession) => {
+        const targetNode =
+          currentSession.localNodeCatalog?.[nodeId] ?? canonicalNodesById.get(nodeId);
+        if (
+          targetNode == null ||
+          targetNode.pluginId !== 'dvt' ||
+          targetNode.kind !== 'dvt:transform'
+        ) {
+          return currentSession;
+        }
+
+        try {
+          const metadata = createDvtNodeAuthoringMetadata(targetNode);
+          if (
+            metadata?.kind !== 'transform' ||
+            metadata.mode !== 'substrait' ||
+            metadata.shape !== 'projection'
+          ) {
+            return currentSession;
+          }
+          const nodeCatalog = new Map(canonicalNodesById);
+          Object.values(currentSession.localNodeCatalog ?? {}).forEach((node) =>
+            nodeCatalog.set(node.id, node)
+          );
+          const draft = { plan: metadata.plan, sidecar: metadata.sidecar };
+          const projection = resolveDvtSubstraitProjectionEntry({
+            targetNode,
+            nodes: [...nodeCatalog.values()],
+            edges: currentSession.workingSet.visibleEdges,
+            draft,
+          });
+          const output = projection?.outputs.find((candidate) => candidate.fieldId === columnId);
+          if (projection == null || output == null) return currentSession;
+
+          const nextDraft = applyDvtSubstraitProjectionFunction(draft, {
+            fieldId: output.fieldId,
+            capabilityId,
+            dataType: output.dataType,
+            provider: projection.source.sourceRef.connectionRef.provider,
+          });
+          if (nextDraft === draft) return currentSession;
+
+          return canvasDraftSession.workingSet.upsertNode(
+            currentSession,
+            applyDvtNodeAuthoringMetadata(targetNode, {
+              ...metadata,
+              plan: nextDraft.plan,
+              sidecar: nextDraft.sidecar,
+            })
+          );
+        } catch {
+          return currentSession;
+        }
+      });
+    };
   const selectionHandlers = useCanvasSelectionHandlers(
     canvasGraphHandlerContractBuilders.selection(interactionContracts)
   );
@@ -104,5 +170,6 @@ export function useCanvasGraphHandlers({
     ...layoutHandlers,
     ...nodeAuthoringHandlers,
     handleColumnDisclosureChange,
+    handleApplyDvtSubstraitColumnFunction,
   };
 }

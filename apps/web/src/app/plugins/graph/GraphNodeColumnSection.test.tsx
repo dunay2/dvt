@@ -184,6 +184,104 @@ describe('GraphNodeColumnSection', () => {
     expect(tooltip?.textContent).toContain('field:model:event_id');
   });
 
+  it('offers admitted column functions from the native pointer and keyboard context menu', async () => {
+    const onColumnFunctionApply = vi.fn();
+    await act(async () => {
+      root.render(
+        <GraphNodeColumnSection
+          nodeId="transform-orders"
+          columns={[
+            {
+              id: 'output:customer',
+              name: 'customer',
+              type: 'text',
+              functionMenu: {
+                category: 'text',
+                items: [
+                  { capabilityId: 'capability:trim', name: 'trim' },
+                  { capabilityId: 'capability:upper', name: 'upper' },
+                ],
+              },
+            },
+          ]}
+          onColumnFunctionApply={onColumnFunctionApply}
+        />
+      );
+    });
+    await act(async () => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="graph-node-column-toggle"]')!
+      );
+    });
+
+    const piece = container.querySelector<HTMLElement>('[data-slot="graph-node-column-piece"]')!;
+    await act(async () => {
+      piece.dispatchEvent(
+        new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 })
+      );
+      await Promise.resolve();
+    });
+
+    expect(document.body.textContent).toContain('Funciones de texto');
+    const upperItem = document.body.querySelector<HTMLElement>(
+      '[data-slot="graph-node-column-function"][data-capability-id="capability:upper"]'
+    );
+    expect(upperItem?.textContent).toBe('UPPER');
+    await act(async () => {
+      fireEvent.click(upperItem!);
+    });
+    expect(onColumnFunctionApply).toHaveBeenCalledWith({
+      nodeId: 'transform-orders',
+      columnId: 'output:customer',
+      capabilityId: 'capability:upper',
+    });
+
+    await act(async () => {
+      piece.focus();
+      fireEvent.keyDown(piece, { key: 'F10', shiftKey: true });
+      await Promise.resolve();
+    });
+    expect(
+      document.body.querySelector('[data-slot="graph-node-column-function-menu"]')
+    ).not.toBeNull();
+  });
+
+  it('explains truthfully when the connected profile admits no function for a type', async () => {
+    await act(async () => {
+      root.render(
+        <GraphNodeColumnSection
+          nodeId="transform-orders"
+          columns={[
+            {
+              id: 'output:amount',
+              name: 'amount',
+              type: 'numeric',
+              functionMenu: { category: 'numeric', items: [] },
+            },
+          ]}
+          onColumnFunctionApply={vi.fn()}
+        />
+      );
+    });
+    await act(async () => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="graph-node-column-toggle"]')!
+      );
+    });
+
+    const piece = container.querySelector<HTMLElement>('[data-slot="graph-node-column-piece"]')!;
+    await act(async () => {
+      piece.dispatchEvent(
+        new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 })
+      );
+      await Promise.resolve();
+    });
+
+    expect(document.body.textContent).toContain(
+      'No hay funciones compatibles con este tipo y destino.'
+    );
+  });
+
   it('renders a collapsed governed column disclosure with Spanish product copy', () => {
     act(() => {
       root.render(

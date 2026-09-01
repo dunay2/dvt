@@ -6,8 +6,29 @@ import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNo
 import { CanvasNodePortHandle } from '../../components/canvas/CanvasNodePortHandle';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuGroup,
+  ContextMenuItem,
+  ContextMenuLabel,
+  ContextMenuTrigger,
+} from '../../components/ui/context-menu';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '../../components/ui/dropdown-menu';
 import { resolveGraphNodeCardCopy } from './graphNodeCardCopyTokens';
 import { graphNodeColumnClasses } from './graphVisualTokens';
+
+export type GraphNodeColumnFunction = Readonly<{
+  capabilityId: string;
+  name: string;
+}>;
 
 export type GraphNodeColumn = Readonly<{
   id?: string;
@@ -20,6 +41,10 @@ export type GraphNodeColumn = Readonly<{
   reference?: string;
   sourceHandleId?: string;
   targetHandleId?: string;
+  functionMenu?: Readonly<{
+    category: 'text' | 'numeric' | 'date-time' | 'conversion' | 'aggregate' | 'window';
+    items: readonly GraphNodeColumnFunction[];
+  }>;
 }>;
 export type GraphNodeColumnPortDirection = 'source' | 'target';
 export type GraphNodeColumnPortIdentity = Readonly<{
@@ -34,6 +59,11 @@ export type GraphNodeColumnSectionProps = Readonly<{
   portDirections?: readonly GraphNodeColumnPortDirection[];
   activeColumnHandleId?: string | null;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
+  onColumnFunctionApply?: (identity: {
+    nodeId: string;
+    columnId: string;
+    capabilityId: string;
+  }) => void;
   onDisclosureChange?: (expanded: boolean) => void;
   onColumnLayoutChange?: () => void;
   onAutomap?: () => void;
@@ -55,6 +85,14 @@ export function resolveGraphNodeColumnInteractionProps(args: {
     onColumnPortActivate:
       typeof data.onColumnPortActivate === 'function'
         ? (data.onColumnPortActivate as (identity: GraphNodeColumnPortIdentity) => void)
+        : undefined,
+    onColumnFunctionApply:
+      args.nodeRole === 'transform' && typeof data.onApplyDvtSubstraitColumnFunction === 'function'
+        ? (data.onApplyDvtSubstraitColumnFunction as (identity: {
+            nodeId: string;
+            columnId: string;
+            capabilityId: string;
+          }) => void)
         : undefined,
     onColumnDisclosureChange:
       typeof data.onColumnDisclosureChange === 'function'
@@ -79,12 +117,16 @@ export function GraphNodeColumnSection({
   portDirections = [],
   activeColumnHandleId,
   onColumnPortActivate,
+  onColumnFunctionApply,
   onDisclosureChange,
   onColumnLayoutChange,
   onAutomap,
 }: GraphNodeColumnSectionProps): ReactElement {
   const [columnsExpanded, setColumnsExpanded] = useState(false);
   const [showAllColumns, setShowAllColumns] = useState(false);
+  const [keyboardFunctionMenuColumnId, setKeyboardFunctionMenuColumnId] = useState<string | null>(
+    null
+  );
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = resolveGraphNodeCardCopy(applicationLanguage);
   const columnListId = useId();
@@ -167,11 +209,73 @@ export function GraphNodeColumnSection({
                   value: isOutput ? copy.columnOutputValue : copy.columnAvailableInputValue,
                 },
               ];
+              const columnPiece = (
+                <div
+                  data-slot="graph-node-column-piece"
+                  data-output={String(isOutput)}
+                  tabIndex={0}
+                  aria-label={(isOutput
+                    ? copy.columnOutputAriaLabelTemplate
+                    : copy.columnAvailableInputAriaLabelTemplate
+                  ).replace('{column}', column.name)}
+                  className={graphNodeColumnClasses.piece}
+                >
+                  <span className={graphNodeColumnClasses.name}>{column.name}</span>
+                  <span className={graphNodeColumnClasses.metadata}>
+                    <span className={graphNodeColumnClasses.type}>{column.type}</span>
+                    {column.primaryKey === true ? (
+                      <span className={graphNodeColumnClasses.constraint}>PK</span>
+                    ) : null}
+                    {column.nullable === false ? (
+                      <span className={graphNodeColumnClasses.constraint}>NN</span>
+                    ) : null}
+                    <span
+                      data-slot="graph-node-column-output-state"
+                      className={graphNodeColumnClasses.outputState}
+                      aria-hidden="true"
+                    >
+                      {isOutput ? (
+                        <Check
+                          data-slot="graph-node-column-output-check"
+                          className={graphNodeColumnClasses.outputCheck}
+                        />
+                      ) : null}
+                    </span>
+                  </span>
+                </div>
+              );
+              const tooltipContent = (
+                <TooltipContent
+                  side="right"
+                  sideOffset={8}
+                  className={graphNodeColumnClasses.tooltip}
+                >
+                  <dl className={graphNodeColumnClasses.tooltipRows}>
+                    {metadataRows.map((row) => (
+                      <div key={row.label} className={graphNodeColumnClasses.tooltipRow}>
+                        <dt className={graphNodeColumnClasses.tooltipLabel}>{row.label}</dt>
+                        <dd className={graphNodeColumnClasses.tooltipValue}>{row.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </TooltipContent>
+              );
               return (
                 <div
                   key={columnId}
                   data-slot="graph-node-column-row"
                   className={graphNodeColumnClasses.row}
+                  onKeyDownCapture={(event) => {
+                    if (
+                      column.functionMenu != null &&
+                      onColumnFunctionApply != null &&
+                      ((event.key === 'F10' && event.shiftKey) || event.key === 'ContextMenu')
+                    ) {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      setKeyboardFunctionMenuColumnId(columnId);
+                    }
+                  }}
                 >
                   {nodeId != null &&
                     column.targetHandleId != null &&
@@ -188,57 +292,100 @@ export function GraphNodeColumnSection({
                         }
                       />
                     )}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div
-                        data-slot="graph-node-column-piece"
-                        data-output={String(isOutput)}
-                        tabIndex={0}
-                        aria-label={(isOutput
-                          ? copy.columnOutputAriaLabelTemplate
-                          : copy.columnAvailableInputAriaLabelTemplate
-                        ).replace('{column}', column.name)}
-                        className={graphNodeColumnClasses.piece}
+                  {nodeId != null &&
+                  column.functionMenu != null &&
+                  onColumnFunctionApply != null ? (
+                    <Tooltip>
+                      <ContextMenu>
+                        <ContextMenuTrigger asChild>
+                          <TooltipTrigger asChild>{columnPiece}</TooltipTrigger>
+                        </ContextMenuTrigger>
+                        <ContextMenuContent data-slot="graph-node-column-function-menu">
+                          <ContextMenuLabel>
+                            {copy.columnFunctionCategoryLabels[column.functionMenu.category]}
+                          </ContextMenuLabel>
+                          <ContextMenuGroup>
+                            {column.functionMenu.items.length === 0 ? (
+                              <ContextMenuItem disabled>
+                                {copy.noCompatibleColumnFunctionsLabel}
+                              </ContextMenuItem>
+                            ) : (
+                              column.functionMenu.items.map((item) => (
+                                <ContextMenuItem
+                                  key={item.capabilityId}
+                                  data-slot="graph-node-column-function"
+                                  data-capability-id={item.capabilityId}
+                                  onSelect={() =>
+                                    onColumnFunctionApply({
+                                      nodeId,
+                                      columnId,
+                                      capabilityId: item.capabilityId,
+                                    })
+                                  }
+                                >
+                                  {item.name.toUpperCase()}
+                                </ContextMenuItem>
+                              ))
+                            )}
+                          </ContextMenuGroup>
+                        </ContextMenuContent>
+                      </ContextMenu>
+                      <DropdownMenu
+                        open={keyboardFunctionMenuColumnId === columnId}
+                        onOpenChange={(open) =>
+                          setKeyboardFunctionMenuColumnId(open ? columnId : null)
+                        }
                       >
-                        <span className={graphNodeColumnClasses.name}>{column.name}</span>
-                        <span className={graphNodeColumnClasses.metadata}>
-                          <span className={graphNodeColumnClasses.type}>{column.type}</span>
-                          {column.primaryKey === true ? (
-                            <span className={graphNodeColumnClasses.constraint}>PK</span>
-                          ) : null}
-                          {column.nullable === false ? (
-                            <span className={graphNodeColumnClasses.constraint}>NN</span>
-                          ) : null}
-                          <span
-                            data-slot="graph-node-column-output-state"
-                            className={graphNodeColumnClasses.outputState}
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            tabIndex={-1}
                             aria-hidden="true"
-                          >
-                            {isOutput ? (
-                              <Check
-                                data-slot="graph-node-column-output-check"
-                                className={graphNodeColumnClasses.outputCheck}
-                              />
-                            ) : null}
-                          </span>
-                        </span>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent
-                      side="right"
-                      sideOffset={8}
-                      className={graphNodeColumnClasses.tooltip}
-                    >
-                      <dl className={graphNodeColumnClasses.tooltipRows}>
-                        {metadataRows.map((row) => (
-                          <div key={row.label} className={graphNodeColumnClasses.tooltipRow}>
-                            <dt className={graphNodeColumnClasses.tooltipLabel}>{row.label}</dt>
-                            <dd className={graphNodeColumnClasses.tooltipValue}>{row.value}</dd>
-                          </div>
-                        ))}
-                      </dl>
-                    </TooltipContent>
-                  </Tooltip>
+                            className={graphNodeColumnClasses.keyboardMenuAnchor}
+                          />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          data-slot="graph-node-column-function-menu"
+                          side="right"
+                          align="start"
+                        >
+                          <DropdownMenuLabel>
+                            {copy.columnFunctionCategoryLabels[column.functionMenu.category]}
+                          </DropdownMenuLabel>
+                          <DropdownMenuGroup>
+                            {column.functionMenu.items.length === 0 ? (
+                              <DropdownMenuItem disabled>
+                                {copy.noCompatibleColumnFunctionsLabel}
+                              </DropdownMenuItem>
+                            ) : (
+                              column.functionMenu.items.map((item) => (
+                                <DropdownMenuItem
+                                  key={item.capabilityId}
+                                  data-slot="graph-node-column-function"
+                                  data-capability-id={item.capabilityId}
+                                  onSelect={() =>
+                                    onColumnFunctionApply({
+                                      nodeId,
+                                      columnId,
+                                      capabilityId: item.capabilityId,
+                                    })
+                                  }
+                                >
+                                  {item.name.toUpperCase()}
+                                </DropdownMenuItem>
+                              ))
+                            )}
+                          </DropdownMenuGroup>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      {tooltipContent}
+                    </Tooltip>
+                  ) : (
+                    <Tooltip>
+                      <TooltipTrigger asChild>{columnPiece}</TooltipTrigger>
+                      {tooltipContent}
+                    </Tooltip>
+                  )}
                   {nodeId != null &&
                     column.sourceHandleId != null &&
                     portDirections.includes('source') && (

@@ -9,6 +9,10 @@ import { canvasViewCopy } from './copy';
 import { createCanvasColumnHandleId } from './canvasColumnLineageProjection';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import {
+  decodeDvtSubstraitProjectionDocument,
+  inspectDvtSubstraitProjectionDraft,
+} from './canvasDvtSubstraitProjection';
+import {
   buildDraftSession,
   buildCanonicalNode,
   evaluateGraphHandlerConnectionWith,
@@ -80,6 +84,30 @@ async function useRealConnectionAdmissionRail(): Promise<void> {
   );
 }
 
+function buildConnectedPostgresSource(
+  id: string,
+  columns: readonly Readonly<{ name: string; type: string }>[]
+): CanonicalNode {
+  return {
+    ...buildCanonicalNode(id, 'input'),
+    kind: 'dvt:source',
+    metadata: {
+      schema: 'raw',
+      tableName: 'orders',
+      columns,
+      connectedSourceRef: {
+        schemaVersion: 'connected-source-ref.v1',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: 'postgres',
+          provider: 'postgres',
+        },
+        sourceObjectId: 'relation/dvt/raw/orders',
+      },
+    },
+  };
+}
+
 describe('useCanvasGraphHandlers edge authoring', () => {
   beforeEach(() => {
     resetGraphHandlersTestDoubles();
@@ -109,11 +137,9 @@ describe('useCanvasGraphHandlers edge authoring', () => {
   });
 
   it('routes a pointer column connection into recipe authority without opening node-edge confirmation', async () => {
-    const source = {
-      ...buildCanonicalNode('source-node', 'input'),
-      kind: 'dvt:source' as const,
-      metadata: { columns: [{ name: 'order_id', type: 'integer' }] },
-    };
+    const source = buildConnectedPostgresSource('source-node', [
+      { name: 'order_id', type: 'integer' },
+    ]);
     const model = {
       ...buildCanonicalNode('model-node', 'transform'),
       kind: 'dvt:transform' as const,
@@ -158,17 +184,15 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     expect(typeof nextSession).toBe('object');
     const mapped = nextSession.localNodeCatalog?.[model.id];
     expect(mapped).toBeDefined();
-    expect(readDvtTransformAuthoringAuthority(mapped).mode).toBe('visual');
+    expect(readDvtTransformAuthoringAuthority(mapped).mode).toBe('substrait');
     expect(toastState.success).toHaveBeenCalledWith(canvasViewCopy.columnMappingAddedMessage);
     harness.cleanup();
   });
 
   it('uses the same mapping command for source and target handle keyboard activation', async () => {
-    const source = {
-      ...buildCanonicalNode('source-node', 'input'),
-      kind: 'dvt:source' as const,
-      metadata: { columns: [{ name: 'order_id', type: 'integer' }] },
-    };
+    const source = buildConnectedPostgresSource('source-node', [
+      { name: 'order_id', type: 'integer' },
+    ]);
     const model = {
       ...buildCanonicalNode('model-node', 'transform'),
       kind: 'dvt:transform' as const,
@@ -271,15 +295,10 @@ describe('useCanvasGraphHandlers edge authoring', () => {
   });
 
   it('commits the deterministic mappings produced by stage-edge confirmation', async () => {
-    const source = {
-      ...buildCanonicalNode('source-node', 'input'),
-      metadata: {
-        columns: [
-          { name: 'order_id', type: 'integer' },
-          { name: 'customer', type: 'text' },
-        ],
-      },
-    };
+    const source = buildConnectedPostgresSource('source-node', [
+      { name: 'order_id', type: 'integer' },
+      { name: 'customer', type: 'text' },
+    ]);
     const transform = {
       ...buildCanonicalNode('transform-node', 'transform'),
       kind: 'dvt:transform' as const,
@@ -320,11 +339,21 @@ describe('useCanvasGraphHandlers edge authoring', () => {
       throw new Error('Expected the edge command to commit the mapped transform');
     }
     const authority = readDvtTransformAuthoringAuthority(mappedTransform);
-    expect(authority.mode).toBe('visual');
-    if (authority.mode !== 'visual') return;
-    expect(authority.recipe.outputs.map((output) => output.expression.inputs)).toEqual([
-      [{ nodeId: source.id, columnName: 'order_id' }],
-      [{ nodeId: source.id, columnName: 'customer' }],
+    expect(authority.mode).toBe('substrait');
+    if (authority.mode !== 'substrait') return;
+    const inspection = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+    );
+    expect(inspection.ok).toBe(true);
+    if (!inspection.ok) return;
+    expect(
+      inspection.projection.outputs.map((output) => ({
+        name: output.name,
+        sourceFieldName: output.sourceFieldName,
+      }))
+    ).toEqual([
+      { name: 'order_id', sourceFieldName: 'order_id' },
+      { name: 'customer', sourceFieldName: 'customer' },
     ]);
 
     harness.cleanup();
@@ -693,6 +722,124 @@ describe('useCanvasGraphHandlers edge authoring', () => {
       'Connection not permitted by DVT authoring rules'
     );
     expect(harness.latest()?.confirmEdgeModal).toEqual({ open: false, edge: null });
+
+    harness.cleanup();
+  });
+
+  it('applies a card column function through ConfigureCanvasDvtNode into the draft session', async () => {
+    const { applyDvtSubstraitSemanticDocument } = await vi.importActual<
+      typeof import('./canvasDvtTransformAuthoringAuthority')
+    >('./canvasDvtTransformAuthoringAuthority');
+    const {
+      createDvtSubstraitProjectionDraft,
+      decodeDvtSubstraitProjectionDocument,
+      encodeDvtSubstraitProjectionDocument,
+      inspectDvtSubstraitProjectionDraft,
+      resolveDvtSubstraitColumnFunctions,
+    } = await vi.importActual<typeof import('./canvasDvtSubstraitProjection')>(
+      './canvasDvtSubstraitProjection'
+    );
+    const source = {
+      ...buildCanonicalNode('source-orders', 'input'),
+      metadata: {
+        schema: 'raw',
+        tableName: 'orders',
+        connectedSourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'warehouse-main',
+            provider: 'postgres',
+          },
+          sourceObjectId: 'raw.orders',
+        } as const,
+        columns: [
+          { name: 'order_id', type: 'integer' },
+          { name: 'customer', type: 'text' },
+          { name: 'amount', type: 'numeric' },
+        ],
+      },
+    } satisfies CanonicalNode;
+    const projection = createDvtSubstraitProjectionDraft({
+      source: {
+        nodeId: source.id,
+        schema: 'raw',
+        table: 'orders',
+        sourceRef: source.metadata.connectedSourceRef,
+        fields: source.metadata.columns.map((column) => ({
+          name: column.name,
+          dataType: column.type,
+        })),
+      },
+      targetNodeId: 'transform-orders',
+      outputs: source.metadata.columns.map((column) => ({
+        fieldId: `output:${column.name}`,
+        name: column.name,
+        sourceFieldName: column.name,
+      })),
+    });
+    const transform = applyDvtSubstraitSemanticDocument(
+      buildCanonicalNode('transform-orders', 'transform'),
+      encodeDvtSubstraitProjectionDocument(projection)
+    );
+    const draftSession = {
+      ...buildDraftSession(),
+      workingSet: {
+        visibleNodeIds: [source.id, transform.id],
+        visibleEdges: [{ sourceId: source.id, targetId: transform.id }],
+        pendingExplicitNodeIds: [],
+      },
+      localNodeCatalog: { [source.id]: source, [transform.id]: transform },
+    };
+    const setDraftSession = vi.fn();
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      canonicalNodes: [source, transform],
+      edges: [
+        {
+          id: 'source-orders->transform-orders',
+          source: source.id,
+          target: transform.id,
+        },
+      ],
+      draftSession,
+      setDraftSession,
+    });
+    await harness.render();
+    const trim = resolveDvtSubstraitColumnFunctions({
+      dataType: 'text',
+      provider: 'postgres',
+    }).find((item) => item.name === 'trim');
+    if (trim == null) throw new Error('Expected admitted trim capability.');
+
+    act(() => {
+      harness.latest()?.handleApplyDvtSubstraitColumnFunction({
+        nodeId: transform.id,
+        columnId: 'output:customer',
+        capabilityId: trim.capabilityId,
+      });
+    });
+
+    expect(setDraftSession).toHaveBeenCalledOnce();
+    const updateDraftSession = setDraftSession.mock.calls[0]?.[0] as (
+      current: typeof draftSession
+    ) => typeof draftSession;
+    const nextSession = updateDraftSession(draftSession);
+    const nextNode = nextSession.localNodeCatalog?.[transform.id];
+    if (nextNode == null) throw new Error('Expected updated transform.');
+    const authority = readDvtTransformAuthoringAuthority(nextNode);
+    if (authority.mode !== 'substrait') throw new Error('Expected Substrait authority.');
+    const inspection = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+    );
+
+    expect(inspection.ok).toBe(true);
+    expect(
+      inspection.ok
+        ? inspection.projection.outputs.find((output) => output.fieldId === 'output:customer')
+            ?.operations
+        : []
+    ).toEqual(['trim']);
 
     harness.cleanup();
   });

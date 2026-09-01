@@ -1,3 +1,8 @@
+import { create } from '@bufbuild/protobuf';
+import {
+  FunctionOptionSchema,
+  type Expression_ScalarFunction,
+} from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -16,7 +21,13 @@ import {
   projectDvtSubstraitProjectionToPostgresSql,
   projectDvtSubstraitUnionAllToPostgresSql,
 } from './canvasDvtSubstraitPostgresProjection';
-import { createDvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
+import {
+  applyDvtSubstraitProjectionFunction,
+  createDvtSubstraitProjectionDraft,
+  inspectDvtSubstraitProjectionDraft,
+  resolveDvtSubstraitColumnFunctions,
+  type DvtSubstraitProjectionDraft,
+} from './canvasDvtSubstraitProjection';
 import { applyDvtSubstraitPilotAggregation } from './canvasDvtSubstraitAggregation';
 import { applyDvtSubstraitPilotAggregateRowNumber } from './canvasDvtSubstraitAggregateWindow';
 import { applyDvtSubstraitPilotRowNumber } from './canvasDvtSubstraitWindow';
@@ -44,6 +55,36 @@ function completedPilotDraft(): DvtSubstraitPilotDraft {
   return renameDvtSubstraitPilotOutput(draft, 'customer_name');
 }
 
+function connectedOrdersProjectionDraft(): DvtSubstraitProjectionDraft {
+  return createDvtSubstraitProjectionDraft({
+    source: {
+      nodeId: 'source-orders',
+      schema: 'raw',
+      table: 'orders',
+      sourceRef: {
+        schemaVersion: 'connected-source-ref.v1',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: 'warehouse-main',
+          provider: 'postgres',
+        },
+        sourceObjectId: 'raw.orders',
+      },
+      fields: [
+        { name: 'order_id', dataType: 'integer' },
+        { name: 'customer', dataType: 'text' },
+        { name: 'amount', dataType: 'numeric' },
+      ],
+    },
+    targetNodeId: 'transform-orders',
+    outputs: [
+      { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
+      { fieldId: 'output:customer', name: 'buyer', sourceFieldName: 'customer' },
+      { fieldId: 'output:amount', name: 'amount', sourceFieldName: 'amount' },
+    ],
+  });
+}
+
 describe('VTX2 Substrait -> PostgreSQL projection', () => {
   it('renders the accepted typed pilot recipe through the PostgreSQL deparser', async () => {
     const sql = await projectDvtSubstraitPilotToPostgresSql(completedPilotDraft());
@@ -63,39 +104,139 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
   });
 
   it('renders connected-field Substrait as a derived PostgreSQL projection', async () => {
-    const draft = createDvtSubstraitProjectionDraft({
-      source: {
-        nodeId: 'source-orders',
-        schema: 'raw',
-        table: 'orders',
-        sourceRef: {
-          schemaVersion: 'connected-source-ref.v1',
-          connectionRef: {
-            schemaVersion: 'connection-ref.v1',
-            connectionId: 'warehouse-main',
-            provider: 'postgres',
-          },
-          sourceObjectId: 'raw.orders',
-        },
-        fields: [
-          { name: 'order_id', dataType: 'integer' },
-          { name: 'customer', dataType: 'text' },
-          { name: 'amount', dataType: 'numeric' },
-        ],
-      },
-      targetNodeId: 'transform-orders',
-      outputs: [
-        { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
-        { fieldId: 'output:customer', name: 'buyer', sourceFieldName: 'customer' },
-        { fieldId: 'output:amount', name: 'amount', sourceFieldName: 'amount' },
-      ],
-    });
+    const draft = connectedOrdersProjectionDraft();
 
     const sql = await projectDvtSubstraitProjectionToPostgresSql(draft);
 
     expect(sql.replaceAll(/\s+/g, ' ').trim().toLowerCase()).toMatch(
       /^select order_id, customer as buyer, amount from raw\.orders;?$/
     );
+  });
+
+  it('projects only admitted scalar functions compatible with the field type and target', () => {
+    const textFunctions = resolveDvtSubstraitColumnFunctions({
+      dataType: 'text',
+      provider: 'postgres',
+    });
+
+    expect(textFunctions.map((item) => item.name)).toEqual(['trim', 'upper']);
+    expect(textFunctions.every((item) => item.category === 'text')).toBe(true);
+    expect(textFunctions.every((item) => item.capabilityId.includes('scalar-function'))).toBe(true);
+    expect(
+      resolveDvtSubstraitColumnFunctions({ dataType: 'integer', provider: 'postgres' })
+    ).toEqual([]);
+    expect(
+      resolveDvtSubstraitColumnFunctions({ dataType: 'numeric', provider: 'postgres' })
+    ).toEqual([]);
+    expect(resolveDvtSubstraitColumnFunctions({ dataType: 'text', provider: 'duckdb' })).toEqual(
+      []
+    );
+  });
+
+  it('stacks admitted functions on one canonical field and derives SQL from that revision', async () => {
+    const functions = resolveDvtSubstraitColumnFunctions({
+      dataType: 'text',
+      provider: 'postgres',
+    });
+    const trim = functions.find((item) => item.name === 'trim');
+    const upper = functions.find((item) => item.name === 'upper');
+    if (trim == null || upper == null) throw new Error('Expected admitted text functions.');
+
+    const base = connectedOrdersProjectionDraft();
+    const withTrim = applyDvtSubstraitProjectionFunction(base, {
+      fieldId: 'output:customer',
+      capabilityId: trim.capabilityId,
+      dataType: 'text',
+      provider: 'postgres',
+    });
+    const withUpper = applyDvtSubstraitProjectionFunction(withTrim, {
+      fieldId: 'output:customer',
+      capabilityId: upper.capabilityId,
+      dataType: 'text',
+      provider: 'postgres',
+    });
+
+    expect(withTrim).not.toBe(base);
+    await expect(projectDvtSubstraitProjectionToPostgresSql(withUpper)).resolves.toMatch(
+      /upper\(trim\(customer\)\) AS buyer/i
+    );
+    expect(
+      applyDvtSubstraitProjectionFunction(base, {
+        fieldId: 'output:amount',
+        capabilityId: trim.capabilityId,
+        dataType: 'numeric',
+        provider: 'postgres',
+      })
+    ).toBe(base);
+  });
+
+  it('rejects scalar functions whose return type or behavioral options exceed the profile', () => {
+    const trim = resolveDvtSubstraitColumnFunctions({
+      dataType: 'text',
+      provider: 'postgres',
+    }).find((item) => item.name === 'trim');
+    if (trim == null) throw new Error('Expected admitted trim capability.');
+    const applyTrim = (): DvtSubstraitProjectionDraft =>
+      applyDvtSubstraitProjectionFunction(connectedOrdersProjectionDraft(), {
+        fieldId: 'output:customer',
+        capabilityId: trim.capabilityId,
+        dataType: 'text',
+        provider: 'postgres',
+      });
+    const readScalarFunction = (draft: DvtSubstraitProjectionDraft): Expression_ScalarFunction => {
+      const root = draft.plan.relations[0]?.relType;
+      const project = root?.case === 'root' ? root.value.input?.relType : undefined;
+      const expression = project?.case === 'project' ? project.value.expressions[0] : undefined;
+      if (expression?.rexType.case !== 'scalarFunction') {
+        throw new Error('Expected one scalar function expression.');
+      }
+      return expression.rexType.value;
+    };
+
+    const invalidReturnType = applyTrim();
+    readScalarFunction(invalidReturnType).outputType = undefined;
+    expect(inspectDvtSubstraitProjectionDraft(invalidReturnType)).toEqual({ ok: false });
+
+    const unsupportedOptions = applyTrim();
+    readScalarFunction(unsupportedOptions).options.push(
+      create(FunctionOptionSchema, { name: 'unsupported', preference: ['enabled'] })
+    );
+    expect(inspectDvtSubstraitProjectionDraft(unsupportedOptions)).toEqual({ ok: false });
+  });
+
+  it('applies a function only to the selected output when expressions are shared', () => {
+    const functions = resolveDvtSubstraitColumnFunctions({
+      dataType: 'text',
+      provider: 'postgres',
+    });
+    const trim = functions.find((item) => item.name === 'trim');
+    const upper = functions.find((item) => item.name === 'upper');
+    if (trim == null || upper == null) throw new Error('Expected admitted text functions.');
+    const withTrim = applyDvtSubstraitProjectionFunction(connectedOrdersProjectionDraft(), {
+      fieldId: 'output:customer',
+      capabilityId: trim.capabilityId,
+      dataType: 'text',
+      provider: 'postgres',
+    });
+    const root = withTrim.plan.relations[0]?.relType;
+    const project = root?.case === 'root' ? root.value.input?.relType : undefined;
+    const emitKind = project?.case === 'project' ? project.value.common?.emitKind : undefined;
+    if (emitKind?.case !== 'emit') throw new Error('Expected projection output mapping.');
+    emitKind.value.outputMapping[2] = emitKind.value.outputMapping[1]!;
+    expect(inspectDvtSubstraitProjectionDraft(withTrim).ok).toBe(true);
+
+    const withUpper = applyDvtSubstraitProjectionFunction(withTrim, {
+      fieldId: 'output:customer',
+      capabilityId: upper.capabilityId,
+      dataType: 'text',
+      provider: 'postgres',
+    });
+    const inspection = inspectDvtSubstraitProjectionDraft(withUpper);
+
+    expect(inspection.ok).toBe(true);
+    if (!inspection.ok) return;
+    expect(inspection.projection.outputs[1]?.operations).toEqual(['trim', 'upper']);
+    expect(inspection.projection.outputs[2]?.operations).toEqual(['trim']);
   });
 
   it('fails closed while the pilot recipe is incomplete', async () => {

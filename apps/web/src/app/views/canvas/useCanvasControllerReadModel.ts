@@ -23,8 +23,22 @@ import type { GraphNodeColumn } from '../../plugins/graph/GraphNodeColumnSection
 import { canAuthorCanvasColumnMappings } from './canvasColumnMappingAuthoring';
 import { readDvtTransformLineageProvenance } from './canvasTransformationSqlMirror';
 import { projectCanvasNodeAccessibleHealth } from './canvasNodeMapper';
+import { createDvtNodeAuthoringMetadata } from './canvasDvtAuthoringModel';
+import {
+  resolveDvtSubstraitColumnFunctions,
+  resolveDvtSubstraitProjectionEntry,
+} from './canvasDvtSubstraitProjection';
 
-function projectInteractiveColumns(node: Node): GraphNodeColumn[] {
+function projectInteractiveColumns(
+  node: Node,
+  functionMenus?: ReadonlyMap<
+    string,
+    Readonly<{
+      columnId: string;
+      menu: NonNullable<GraphNodeColumn['functionMenu']>;
+    }>
+  >
+): GraphNodeColumn[] {
   const columns = Array.isArray(node.data.columns)
     ? node.data.columns.filter(
         (column): column is Readonly<{ name: string; type: string }> =>
@@ -41,18 +55,21 @@ function projectInteractiveColumns(node: Node): GraphNodeColumn[] {
       presentationColumn?.provenance === 'declared'
         ? (presentationColumn.reference ?? column.name)
         : column.name;
+    const functionProjection = functionMenus?.get(id) ?? functionMenus?.get(column.name);
+    const interactiveId = functionProjection?.columnId ?? id;
     return {
       ...column,
-      id,
+      id: interactiveId,
+      ...(functionProjection == null ? {} : { functionMenu: functionProjection.menu }),
       sourceHandleId: createCanvasColumnHandleId({
         direction: 'source',
         nodeId: node.id,
-        columnId: id,
+        columnId: interactiveId,
       }),
       targetHandleId: createCanvasColumnHandleId({
         direction: 'target',
         nodeId: node.id,
-        columnId: id,
+        columnId: interactiveId,
       }),
     };
   });
@@ -91,6 +108,7 @@ type UseCanvasControllerReadModelArgs = {
     | 'handleAttachSchemaToNode'
     | 'activeColumnHandleId'
     | 'handleColumnPortActivate'
+    | 'handleApplyDvtSubstraitColumnFunction'
     | 'handleColumnDisclosureChange'
     | 'handleAutomapCanvasColumns'
     | 'handleRemoveColumnMapping'
@@ -182,6 +200,9 @@ export function useCanvasControllerReadModel({
           onToggleNodeSelection: canSelectExecution ? onToggleExecutionSelection : undefined,
           onAttachSchemaToNode: canMutateGraph ? graphHandlers.handleAttachSchemaToNode : undefined,
           onColumnPortActivate: canMutateGraph ? graphHandlers.handleColumnPortActivate : undefined,
+          onApplyDvtSubstraitColumnFunction: canMutateGraph
+            ? graphHandlers.handleApplyDvtSubstraitColumnFunction
+            : undefined,
           onColumnDisclosureChange: graphHandlers.handleColumnDisclosureChange,
           onAutomapColumns: canMutateGraph ? graphHandlers.handleAutomapCanvasColumns : undefined,
         },
@@ -203,6 +224,87 @@ export function useCanvasControllerReadModel({
                 canonicalNode != null && isDbtExecutionSelectableNode(canonicalNode),
               selectedForExecution,
             }));
+        let columnFunctionMenus:
+          | Map<
+              string,
+              Readonly<{
+                columnId: string;
+                menu: NonNullable<GraphNodeColumn['functionMenu']>;
+              }>
+            >
+          | undefined;
+        if (
+          canMutateGraph &&
+          canonicalNode?.pluginId === 'dvt' &&
+          canonicalNode.kind === 'dvt:transform'
+        ) {
+          try {
+            const metadata = createDvtNodeAuthoringMetadata(canonicalNode);
+            const projection =
+              metadata?.kind === 'transform' &&
+              metadata.mode === 'substrait' &&
+              metadata.shape === 'projection'
+                ? resolveDvtSubstraitProjectionEntry({
+                    targetNode: canonicalNode,
+                    nodes: [...graphModel.canonicalNodesById.values()],
+                    edges: graphModel.edges.map((edge) => ({
+                      sourceId: edge.source,
+                      targetId: edge.target,
+                    })),
+                    draft: { plan: metadata.plan, sidecar: metadata.sidecar },
+                  })
+                : null;
+            if (projection != null) {
+              const projectedMenus = new Map<
+                string,
+                Readonly<{
+                  columnId: string;
+                  menu: NonNullable<GraphNodeColumn['functionMenu']>;
+                }>
+              >();
+              projection.outputs.forEach((output) => {
+                const normalizedType = output.dataType.trim().toLowerCase().replaceAll(/\s+/g, ' ');
+                const category = [
+                  'text',
+                  'string',
+                  'varchar',
+                  'character varying',
+                  'char',
+                  'character',
+                  'bpchar',
+                ].includes(normalizedType)
+                  ? ('text' as const)
+                  : [
+                        'smallint',
+                        'integer',
+                        'bigint',
+                        'numeric',
+                        'decimal',
+                        'real',
+                        'double precision',
+                      ].includes(normalizedType)
+                    ? ('numeric' as const)
+                    : null;
+                if (category == null) return;
+                const projectionValue = {
+                  columnId: output.fieldId,
+                  menu: {
+                    category,
+                    items: resolveDvtSubstraitColumnFunctions({
+                      dataType: output.dataType,
+                      provider: projection.source.sourceRef.connectionRef.provider,
+                    }),
+                  },
+                };
+                projectedMenus.set(output.fieldId, projectionValue);
+                projectedMenus.set(output.name, projectionValue);
+              });
+              if (projectedMenus.size > 0) columnFunctionMenus = projectedMenus;
+            }
+          } catch {
+            columnFunctionMenus = undefined;
+          }
+        }
 
         const projectedNodeData = {
           ...node.data,
@@ -216,8 +318,12 @@ export function useCanvasControllerReadModel({
           onColumnPortActivate: canAuthorColumnMappings
             ? node.data.onColumnPortActivate
             : undefined,
+          onApplyDvtSubstraitColumnFunction:
+            columnFunctionMenus == null ? undefined : node.data.onApplyDvtSubstraitColumnFunction,
           onAutomapColumns: canAuthorColumnMappings ? node.data.onAutomapColumns : undefined,
-          columns: presentsColumnLineage ? projectInteractiveColumns(node) : node.data.columns,
+          columns: presentsColumnLineage
+            ? projectInteractiveColumns(node, columnFunctionMenus)
+            : node.data.columns,
           columnPortDirections:
             presentsColumnLineage && canonicalNode != null
               ? canonicalNode.role === 'transform' &&
@@ -248,8 +354,10 @@ export function useCanvasControllerReadModel({
       graphHandlers.handleAutomapCanvasColumns,
       graphHandlers.handleColumnDisclosureChange,
       graphHandlers.handleColumnPortActivate,
+      graphHandlers.handleApplyDvtSubstraitColumnFunction,
       onToggleExecutionSelection,
       graphModel.canonicalNodesById,
+      graphModel.edges,
       graphModel.nodes,
       graphNodeCardStrategies,
       activeCanvasKind,

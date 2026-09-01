@@ -50,6 +50,11 @@ export type GraphNodeCardViewProps = Readonly<{
   columnPortDirections?: readonly GraphNodeColumnPortDirection[];
   activeColumnHandleId?: string | null;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
+  onColumnFunctionApply?: (identity: {
+    nodeId: string;
+    columnId: string;
+    capabilityId: string;
+  }) => void;
   onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;
   onColumnLayoutChange?: () => void;
   onAutomapColumns?: (nodeId: string, columns: readonly GraphNodeCardColumn[]) => void;
@@ -124,6 +129,7 @@ export function GraphNodeCardView({
   columnPortDirections,
   activeColumnHandleId,
   onColumnPortActivate,
+  onColumnFunctionApply,
   onColumnDisclosureChange,
   onColumnLayoutChange,
   onAutomapColumns,
@@ -209,6 +215,7 @@ export function GraphNodeCardView({
             portDirections={columnPortDirections}
             activeColumnHandleId={activeColumnHandleId}
             onColumnPortActivate={onColumnPortActivate}
+            onColumnFunctionApply={onColumnFunctionApply}
             onDisclosureChange={
               nodeId == null || onColumnDisclosureChange == null
                 ? undefined
