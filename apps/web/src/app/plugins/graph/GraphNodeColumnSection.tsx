@@ -1,10 +1,11 @@
 /** Owned concern: render recorded graph-node columns as a compact disclosure. */
 import { useEffect, useId, useState, type ReactElement } from 'react';
-import { ChevronDown, ChevronUp, Table } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Table } from 'lucide-react';
 
 import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
 import { CanvasNodePortHandle } from '../../components/canvas/CanvasNodePortHandle';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
 import { resolveGraphNodeCardCopy } from './graphNodeCardCopyTokens';
 import { graphNodeColumnClasses } from './graphVisualTokens';
 
@@ -12,6 +13,11 @@ export type GraphNodeColumn = Readonly<{
   id?: string;
   name: string;
   type: string;
+  nullable?: boolean;
+  primaryKey?: boolean;
+  output?: boolean;
+  sourceNodeName?: string;
+  reference?: string;
   sourceHandleId?: string;
   targetHandleId?: string;
 }>;
@@ -139,6 +145,28 @@ export function GraphNodeColumnSection({
           >
             {visibleColumns.map((column) => {
               const columnId = column.id ?? column.name;
+              const isOutput = column.output !== false;
+              const metadataRows = [
+                { label: copy.columnTypeLabel, value: column.type },
+                ...(column.nullable == null
+                  ? []
+                  : [
+                      {
+                        label: copy.columnNullabilityLabel,
+                        value: column.nullable ? copy.columnNullableValue : copy.columnNotNullValue,
+                      },
+                    ]),
+                ...(column.sourceNodeName == null
+                  ? []
+                  : [{ label: copy.columnOriginLabel, value: column.sourceNodeName }]),
+                ...(column.reference == null
+                  ? []
+                  : [{ label: copy.columnReferenceLabel, value: column.reference }]),
+                {
+                  label: copy.columnsLabel,
+                  value: isOutput ? copy.columnOutputValue : copy.columnAvailableInputValue,
+                },
+              ];
               return (
                 <div
                   key={columnId}
@@ -160,8 +188,57 @@ export function GraphNodeColumnSection({
                         }
                       />
                     )}
-                  <span className={graphNodeColumnClasses.name}>{column.name}</span>
-                  <span className={graphNodeColumnClasses.type}>{column.type}</span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div
+                        data-slot="graph-node-column-piece"
+                        data-output={String(isOutput)}
+                        tabIndex={0}
+                        aria-label={(isOutput
+                          ? copy.columnOutputAriaLabelTemplate
+                          : copy.columnAvailableInputAriaLabelTemplate
+                        ).replace('{column}', column.name)}
+                        className={graphNodeColumnClasses.piece}
+                      >
+                        <span className={graphNodeColumnClasses.name}>{column.name}</span>
+                        <span className={graphNodeColumnClasses.metadata}>
+                          <span className={graphNodeColumnClasses.type}>{column.type}</span>
+                          {column.primaryKey === true ? (
+                            <span className={graphNodeColumnClasses.constraint}>PK</span>
+                          ) : null}
+                          {column.nullable === false ? (
+                            <span className={graphNodeColumnClasses.constraint}>NN</span>
+                          ) : null}
+                          <span
+                            data-slot="graph-node-column-output-state"
+                            className={graphNodeColumnClasses.outputState}
+                            aria-hidden="true"
+                          >
+                            {isOutput ? (
+                              <Check
+                                data-slot="graph-node-column-output-check"
+                                className={graphNodeColumnClasses.outputCheck}
+                              />
+                            ) : null}
+                          </span>
+                        </span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="right"
+                      sideOffset={8}
+                      className={graphNodeColumnClasses.tooltip}
+                    >
+                      <dl className={graphNodeColumnClasses.tooltipRows}>
+                        {metadataRows.map((row) => (
+                          <div key={row.label} className={graphNodeColumnClasses.tooltipRow}>
+                            <dt className={graphNodeColumnClasses.tooltipLabel}>{row.label}</dt>
+                            <dd className={graphNodeColumnClasses.tooltipValue}>{row.value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </TooltipContent>
+                  </Tooltip>
                   {nodeId != null &&
                     column.sourceHandleId != null &&
                     portDirections.includes('source') && (

@@ -85,7 +85,7 @@ describe('canvasNodeAdmissionTransaction', () => {
     expect(transaction.nodes[0]?.data).toEqual(
       expect.objectContaining({
         showColumns: true,
-        columns: [{ name: 'customer_id', type: 'varchar' }],
+        columns: [{ name: 'customer_id', type: 'varchar', output: true }],
       })
     );
   });

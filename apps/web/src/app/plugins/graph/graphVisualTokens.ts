@@ -133,10 +133,24 @@ export const graphNodeColumnClasses = {
   toggleLabel: 'flex items-center gap-1',
   toggleIcon: 'size-3',
   disclosure: 'mt-2',
-  list: 'space-y-1',
-  row: 'relative flex items-center justify-between rounded bg-slate-950 px-3 py-1 text-xs',
+  list: 'space-y-1.5',
+  row: 'relative',
+  piece:
+    'nodrag nopan flex min-h-8 w-full items-center gap-2 rounded-md border border-slate-700/90 bg-slate-950/90 px-3 py-1.5 text-xs shadow-sm transition hover:border-blue-400/70 hover:bg-slate-900 focus-visible:border-blue-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70',
   name: 'truncate font-mono text-white',
-  type: 'ml-2 shrink-0 text-slate-400',
+  metadata: 'ml-auto flex shrink-0 items-center gap-1.5',
+  type: 'rounded bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-300',
+  constraint:
+    'rounded border border-slate-600 px-1 py-0.5 text-[9px] font-semibold tracking-wide text-slate-200',
+  outputState:
+    'flex size-4 shrink-0 items-center justify-center rounded border border-slate-600 text-emerald-300',
+  outputCheck: 'size-3',
+  tooltip:
+    'w-72 border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 shadow-xl shadow-slate-950/40',
+  tooltipRows: 'space-y-1.5',
+  tooltipRow: 'grid grid-cols-[5.5rem_minmax(0,1fr)] gap-2',
+  tooltipLabel: 'text-slate-400',
+  tooltipValue: 'break-words font-medium text-slate-100',
   remainderToggle:
     'nodrag nopan mt-2 w-full cursor-pointer rounded border border-slate-700 bg-slate-900 px-2 py-1.5 text-left text-xs font-medium text-blue-200 transition hover:border-blue-400/60 hover:bg-slate-800 hover:text-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400',
   automap:

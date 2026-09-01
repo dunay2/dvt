@@ -28,6 +28,7 @@ type ColumnCandidate = Readonly<{
   name: string;
   type: string;
   nullable?: boolean;
+  primaryKey?: boolean;
 }>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -57,6 +58,7 @@ function readColumn(candidate: unknown, fallbackName?: string): readonly ColumnC
       name,
       type: readString(candidate.type) ?? readString(candidate.dataType) ?? 'unknown',
       nullable: readBoolean(candidate.nullable),
+      primaryKey: readBoolean(candidate.primaryKey),
     },
   ];
 }
@@ -92,6 +94,7 @@ function readInheritedColumns({
       name: column.name,
       type: column.type,
       nullable: column.nullable,
+      primaryKey: column.primaryKey,
       provenance: 'inherited' as const,
       sourceNodeId: sourceNode.id,
       sourceNodeName: sourceNode.name,

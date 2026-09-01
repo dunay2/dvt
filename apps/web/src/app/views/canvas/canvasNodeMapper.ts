@@ -122,9 +122,14 @@ export function mapCanonicalNodeToCanvasNode({
   const resolvedPresentationTruth =
     presentationTruth ??
     buildCanvasNodePresentationTruth({ node: canonicalNode, nodes: [canonicalNode], edges: [] });
-  const columns = resolvedPresentationTruth.columns.visible.map(({ name, type }) => ({
-    name,
-    type,
+  const columns = resolvedPresentationTruth.columns.visible.map((column) => ({
+    name: column.name,
+    type: column.type,
+    output: canonicalNode.kind !== 'dvt:transform' || column.provenance === 'declared',
+    ...(column.nullable == null ? {} : { nullable: column.nullable }),
+    ...(column.primaryKey == null ? {} : { primaryKey: column.primaryKey }),
+    ...(column.sourceNodeName == null ? {} : { sourceNodeName: column.sourceNodeName }),
+    ...(column.reference == null ? {} : { reference: column.reference }),
   }));
   const presentationCopy = buildCanvasNodePresentationCopy(copy, locale);
 
@@ -240,7 +245,15 @@ export function mapDroppedCanonicalNodeToCanvasNode(
     nodes: [canonicalNode],
     edges: [],
   });
-  const columns = presentationTruth.columns.visible.map(({ name, type }) => ({ name, type }));
+  const columns = presentationTruth.columns.visible.map((column) => ({
+    name: column.name,
+    type: column.type,
+    output: canonicalNode.kind !== 'dvt:transform' || column.provenance === 'declared',
+    ...(column.nullable == null ? {} : { nullable: column.nullable }),
+    ...(column.primaryKey == null ? {} : { primaryKey: column.primaryKey }),
+    ...(column.sourceNodeName == null ? {} : { sourceNodeName: column.sourceNodeName }),
+    ...(column.reference == null ? {} : { reference: column.reference }),
+  }));
   const presentationCopy = buildCanvasNodePresentationCopy(copy, locale);
   const typeLabelFromMetadata =
     typeof canonicalNode.metadata?.typeLabel === 'string'
