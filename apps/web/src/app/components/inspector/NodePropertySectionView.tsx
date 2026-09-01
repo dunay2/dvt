@@ -48,6 +48,40 @@ function renderSectionBody(
     const columnKeys = Array.from(
       new Set(section.tableRows.flatMap((row) => Object.keys(row.cells)))
     );
+    const resolveColumnLabel = (key: string): string =>
+      section.columnLabels?.[key] ?? key.replace(/([a-z])([A-Z])/g, '$1 $2');
+
+    if (surface === 'workbench' && section.id === 'columns') {
+      return (
+        <div
+          role="region"
+          aria-label={section.label}
+          tabIndex={0}
+          className="max-h-80 overflow-y-auto rounded border border-(--border-subtle) bg-(--surface-panel)"
+        >
+          <ul data-slot="node-property-column-list" className="divide-y divide-(--border-subtle)">
+            {section.tableRows.map((row) => (
+              <li key={row.id} data-slot="node-property-column-record" className="px-3 py-3">
+                <dl className="grid grid-cols-[minmax(6rem,0.34fr)_minmax(0,1fr)] gap-x-3 gap-y-2 text-xs">
+                  {columnKeys.map((key) => (
+                    <div key={`${row.id}:${key}`} className="contents">
+                      <dt className={inspectorVisualClasses.inspectorLabel}>
+                        {resolveColumnLabel(key)}
+                      </dt>
+                      <dd className="min-w-0 break-words text-(--text-primary)">
+                        {row.cells[key] || (
+                          <span className={inspectorVisualClasses.inspectorSubtle}>-</span>
+                        )}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </li>
+            ))}
+          </ul>
+        </div>
+      );
+    }
 
     return (
       <div
@@ -86,8 +120,7 @@ function renderSectionBody(
                     surface === 'workbench' && 'whitespace-nowrap'
                   )}
                 >
-                  {section.columnLabels?.[key] ??
-                    (surface === 'workbench' ? key.replace(/([a-z])([A-Z])/g, '$1 $2') : key)}
+                  {surface === 'workbench' ? resolveColumnLabel(key) : key}
                 </th>
               ))}
             </tr>

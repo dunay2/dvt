@@ -68,7 +68,7 @@ describe('NodePropertySectionView', () => {
     container?.remove();
   });
 
-  it('renders table metadata from the section read model', () => {
+  it('renders column metadata from the section read model', () => {
     ({ container, root } = renderSection({
       id: 'columns',
       label: 'Columns',
@@ -83,7 +83,9 @@ describe('NodePropertySectionView', () => {
     }));
 
     expect(container.querySelector('[data-slot="node-section-columns-section"]')).not.toBeNull();
-    expect(container.querySelector('table')).not.toBeNull();
+    expect(container.querySelector('[data-slot="node-property-column-list"]')).not.toBeNull();
+    expect(container.querySelector('dl')).not.toBeNull();
+    expect(container.querySelector('table')).toBeNull();
     expect(container.textContent).toContain('order_id');
     expect(container.textContent).toContain('integer');
     expect(container.textContent).toContain('not null');
@@ -125,6 +127,38 @@ describe('NodePropertySectionView', () => {
     expect(longValueCell?.className).toContain('whitespace-nowrap');
     expect(longValueCell?.className).not.toContain('break-words');
     expect(container.textContent).toContain('Lineage');
+  });
+
+  it('keeps every column field visible in a stacked record instead of clipping it horizontally', () => {
+    ({ container, root } = renderSection({
+      id: 'columns',
+      label: 'Columns',
+      rows: [],
+      tableRows: [
+        {
+          id: 'event_id',
+          cells: {
+            name: 'event_identifier_with_a_long_name',
+            type: 'text',
+            nullable: 'not null',
+            source: 'auth_audit_events',
+            reference: 'src_postgres_dvt_raw_auth_audit_events.event_identifier',
+          },
+        },
+      ],
+    }));
+
+    const record = container.querySelector('[data-slot="node-property-column-record"]');
+    const values = Array.from(record?.querySelectorAll('dd') ?? []);
+
+    expect(container.querySelector('table')).toBeNull();
+    expect(record?.textContent).toContain('event_identifier_with_a_long_name');
+    expect(record?.textContent).toContain('auth_audit_events');
+    expect(record?.textContent).toContain(
+      'src_postgres_dvt_raw_auth_audit_events.event_identifier'
+    );
+    expect(values).toHaveLength(5);
+    expect(values.every((value) => value.className.includes('break-words'))).toBe(true);
   });
 
   it('renders scalar rows and code through shared Monaco without involving the tabs coordinator', () => {
