@@ -91,7 +91,9 @@ describe('Canvas graph search and filtering live protected runtime', () => {
     cy.get('[data-slot="canvas-empty-state"]').should('be.visible');
 
     addDbtNode('dbt:model', 320, 250);
-    cy.contains('[data-slot="graph-node-card-title"]', 'Model 1').should('be.visible');
+    cy.contains('[data-slot="graph-node-card-title"]', 'Model 1')
+      .should('be.visible')
+      .and('have.text', 'Model 1');
     addDbtNode('dbt:model', 620, 250);
     cy.contains('[data-slot="graph-node-card-title"]', 'Model 2').should('be.visible');
     addDbtNode('dbt:seed', 900, 250);

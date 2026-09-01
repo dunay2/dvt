@@ -100,7 +100,7 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     technicalName: titlePresentation.technicalName,
     subtitle: stringValue(metadata.package) ?? relationPath ?? node.path ?? null,
     path: node.path ?? relationPath ?? null,
-    kindLabel: stringValue(data.typeLabel) ?? node.kind,
+    kindLabel: node.kind === 'dbt:model' ? null : (stringValue(data.typeLabel) ?? node.kind),
     accentTone: resolveNodeCardAccentTone(node),
     health: resolveNodeCardHealth(
       node,

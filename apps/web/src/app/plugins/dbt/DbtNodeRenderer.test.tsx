@@ -274,7 +274,9 @@ describe('DbtNodeRenderer history panel', () => {
       );
     });
 
-    expect(document.body.textContent).toContain('Fct Orders Model');
+    expect(document.querySelector('[data-slot="graph-node-card-title"]')?.textContent).toBe(
+      'Fct Orders'
+    );
     expect(
       document.querySelector('[data-slot="graph-node-card-title"]')?.getAttribute('title')
     ).toBe('fct_orders');
@@ -423,6 +425,10 @@ describe('DbtNodeRenderer history panel', () => {
 
     expect(container.querySelector('[data-slot="graph-node-card-play"]')).toBeNull();
     expect(container.querySelector('[data-slot="graph-node-card-actions"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="graph-node-card-title"]')?.textContent).toBe(
+      'Fct Orders'
+    );
+    expect(container.querySelector('[data-slot="graph-node-card-kind"]')).toBeNull();
     expect(toggleNodeSelection).not.toHaveBeenCalled();
   });
 

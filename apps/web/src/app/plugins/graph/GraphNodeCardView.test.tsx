@@ -13,9 +13,9 @@ import { GraphNodeRenderer } from './GraphNodeRenderer';
 
 const BASE_PROPS = {
   cardModel: {
-    title: 'Orders model',
-    technicalName: 'orders_model',
-    kindLabel: 'Model',
+    title: 'Model 1',
+    technicalName: 'model_1',
+    kindLabel: null,
     subtitle: 'analytics',
     path: 'models/marts/orders.sql',
     health: { label: 'Draft', tone: 'neutral' as const },
@@ -83,6 +83,20 @@ describe('GraphNodeCardView', () => {
     expect(container.querySelector('[data-slot="graph-node-card-play"]')).toBeNull();
     expect(container.querySelector('[data-slot="graph-node-card-actions"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="graph-node-status-chip"]')).toBeNull();
+  });
+
+  it('omits the redundant kind row from model cards', () => {
+    act(() => {
+      root.render(
+        <GraphNodeCardView
+          {...BASE_PROPS}
+          cardModel={{ ...BASE_PROPS.cardModel, subtitle: null, path: null }}
+        />
+      );
+    });
+
+    expect(container.textContent).toBe('Model 1');
+    expect(container.querySelector('[data-slot="graph-node-card-kind"]')).toBeNull();
   });
 
   it('opens governed node actions from the card action button without selecting the card', () => {
@@ -167,6 +181,10 @@ describe('GraphNodeCardView', () => {
     });
 
     expect(container.textContent).toContain('Postgres · public');
+    expect(container.textContent).toContain('Source');
+    expect(container.querySelector('[data-slot="graph-node-card-kind"]')?.textContent).toBe(
+      'Source'
+    );
     expect(container.textContent).not.toContain('src_public_orders');
     expect(
       container.querySelector('[data-slot="graph-node-card-title"]')?.getAttribute('title')

@@ -214,7 +214,11 @@ export function GraphNodeCardView({
           </div>
         </div>
 
-        <div className={graphNodeCardLayoutClasses.kind}>{cardModel.kindLabel || typeLabel}</div>
+        {cardModel.kindLabel != null && (
+          <div data-slot="graph-node-card-kind" className={graphNodeCardLayoutClasses.kind}>
+            {cardModel.kindLabel}
+          </div>
+        )}
 
         <GraphNodeMetricRow metrics={cardModel.metrics} onOpenCode={onOpenCode} />
 

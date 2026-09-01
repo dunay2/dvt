@@ -44,7 +44,7 @@ export type GraphNodeCardReadModel = Readonly<{
   technicalName: string | null;
   subtitle: string | null;
   path: string | null;
-  kindLabel: string;
+  kindLabel: string | null;
   accentTone: GraphNodeCardAccentTone;
   health: GraphNodeCardHealth;
   metrics: readonly GraphNodeCardMetric[];
