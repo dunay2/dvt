@@ -64,6 +64,12 @@ export type GraphNodeColumnSectionProps = Readonly<{
     columnId: string;
     capabilityId: string;
   }) => void;
+  onColumnOutputToggle?: (identity: {
+    nodeId: string;
+    columnId: string;
+    columnType: string;
+    output: boolean;
+  }) => void;
   onDisclosureChange?: (expanded: boolean) => void;
   onColumnLayoutChange?: () => void;
   onAutomap?: () => void;
@@ -94,6 +100,15 @@ export function resolveGraphNodeColumnInteractionProps(args: {
             capabilityId: string;
           }) => void)
         : undefined,
+    onColumnOutputToggle:
+      args.nodeRole === 'transform' && typeof data.onToggleDvtSubstraitColumnOutput === 'function'
+        ? (data.onToggleDvtSubstraitColumnOutput as (identity: {
+            nodeId: string;
+            columnId: string;
+            columnType: string;
+            output: boolean;
+          }) => void)
+        : undefined,
     onColumnDisclosureChange:
       typeof data.onColumnDisclosureChange === 'function'
         ? (data.onColumnDisclosureChange as (nodeId: string, expanded: boolean) => void)
@@ -118,6 +133,7 @@ export function GraphNodeColumnSection({
   activeColumnHandleId,
   onColumnPortActivate,
   onColumnFunctionApply,
+  onColumnOutputToggle,
   onDisclosureChange,
   onColumnLayoutChange,
   onAutomap,
@@ -229,10 +245,28 @@ export function GraphNodeColumnSection({
                     {column.nullable === false ? (
                       <span className={graphNodeColumnClasses.constraint}>NN</span>
                     ) : null}
-                    <span
+                    <button
+                      type="button"
                       data-slot="graph-node-column-output-state"
+                      {...canvasNodeEmbeddedControlProps}
+                      aria-label={(isOutput
+                        ? copy.columnOutputAriaLabelTemplate
+                        : copy.columnAvailableInputAriaLabelTemplate
+                      ).replace('{column}', column.name)}
+                      aria-pressed={isOutput}
+                      disabled={nodeId == null || onColumnOutputToggle == null}
                       className={graphNodeColumnClasses.outputState}
-                      aria-hidden="true"
+                      onPointerDown={(event) => event.stopPropagation()}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        if (nodeId == null) return;
+                        onColumnOutputToggle?.({
+                          nodeId,
+                          columnId,
+                          columnType: column.type,
+                          output: !isOutput,
+                        });
+                      }}
                     >
                       {isOutput ? (
                         <Check
@@ -240,7 +274,7 @@ export function GraphNodeColumnSection({
                           className={graphNodeColumnClasses.outputCheck}
                         />
                       ) : null}
-                    </span>
+                    </button>
                   </span>
                 </div>
               );

@@ -109,6 +109,7 @@ type UseCanvasControllerReadModelArgs = {
     | 'activeColumnHandleId'
     | 'handleColumnPortActivate'
     | 'handleApplyDvtSubstraitColumnFunction'
+    | 'handleToggleDvtSubstraitColumnOutput'
     | 'handleColumnDisclosureChange'
     | 'handleAutomapCanvasColumns'
     | 'handleRemoveColumnMapping'
@@ -203,6 +204,9 @@ export function useCanvasControllerReadModel({
           onApplyDvtSubstraitColumnFunction: canMutateGraph
             ? graphHandlers.handleApplyDvtSubstraitColumnFunction
             : undefined,
+          onToggleDvtSubstraitColumnOutput: canMutateGraph
+            ? graphHandlers.handleToggleDvtSubstraitColumnOutput
+            : undefined,
           onColumnDisclosureChange: graphHandlers.handleColumnDisclosureChange,
           onAutomapColumns: canMutateGraph ? graphHandlers.handleAutomapCanvasColumns : undefined,
         },
@@ -233,6 +237,7 @@ export function useCanvasControllerReadModel({
               }>
             >
           | undefined;
+        let hasEditableProjection = false;
         if (
           canMutateGraph &&
           canonicalNode?.pluginId === 'dvt' &&
@@ -255,6 +260,7 @@ export function useCanvasControllerReadModel({
                   })
                 : null;
             if (projection != null) {
+              hasEditableProjection = true;
               const projectedMenus = new Map<
                 string,
                 Readonly<{
@@ -320,6 +326,9 @@ export function useCanvasControllerReadModel({
             : undefined,
           onApplyDvtSubstraitColumnFunction:
             columnFunctionMenus == null ? undefined : node.data.onApplyDvtSubstraitColumnFunction,
+          onToggleDvtSubstraitColumnOutput: hasEditableProjection
+            ? node.data.onToggleDvtSubstraitColumnOutput
+            : undefined,
           onAutomapColumns: canAuthorColumnMappings ? node.data.onAutomapColumns : undefined,
           columns: presentsColumnLineage
             ? projectInteractiveColumns(node, columnFunctionMenus)
