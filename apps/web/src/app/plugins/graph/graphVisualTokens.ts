@@ -134,7 +134,7 @@ export const graphNodeColumnClasses = {
   toggleIcon: 'size-3',
   disclosure: 'mt-2',
   list: 'space-y-1.5',
-  row: 'relative px-1',
+  row: 'relative px-1 before:pointer-events-none before:absolute before:inset-x-2 before:z-10 before:h-0.5 before:rounded before:bg-blue-400 before:opacity-0 data-[drop-placement=before]:before:top-[-0.25rem] data-[drop-placement=after]:before:bottom-[-0.25rem] data-[drop-placement=before]:before:opacity-100 data-[drop-placement=after]:before:opacity-100',
   keyboardMenuAnchor:
     'pointer-events-none absolute left-1/2 top-1/2 size-px border-0 bg-transparent p-0 opacity-0',
   piece:

@@ -236,6 +236,55 @@ describe('GraphNodeColumnSection', () => {
     ]);
   });
 
+  it('emits the same semantic reorder command for pointer and keyboard movement', async () => {
+    const onColumnReorder = vi.fn();
+    await act(async () => {
+      root.render(
+        <GraphNodeColumnSection
+          nodeId="transform-orders"
+          columns={[
+            { id: 'output:first', name: 'first', type: 'text', output: true },
+            { id: 'output:second', name: 'second', type: 'text', output: true },
+            { id: 'output:third', name: 'third', type: 'text', output: true },
+          ]}
+          onColumnReorder={onColumnReorder}
+        />
+      );
+    });
+    await act(async () => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="graph-node-column-toggle"]')!
+      );
+    });
+
+    const rows = container.querySelectorAll<HTMLElement>('[data-slot="graph-node-column-row"]');
+    const pieces = container.querySelectorAll<HTMLElement>('[data-slot="graph-node-column-piece"]');
+    const dataTransfer = { effectAllowed: 'none', dropEffect: 'none', setData: vi.fn() };
+    await act(async () => {
+      fireEvent.dragStart(pieces[2]!, { dataTransfer });
+      fireEvent.dragOver(rows[0]!, { clientY: 11, dataTransfer });
+    });
+    await act(async () => {
+      fireEvent.drop(rows[0]!, { clientY: 11, dataTransfer });
+      fireEvent.keyDown(pieces[1]!, { key: 'ArrowUp', altKey: true });
+    });
+
+    expect(onColumnReorder.mock.calls.map(([command]) => command)).toEqual([
+      {
+        nodeId: 'transform-orders',
+        columnId: 'output:third',
+        targetColumnId: 'output:first',
+        placement: 'after',
+      },
+      {
+        nodeId: 'transform-orders',
+        columnId: 'output:second',
+        targetColumnId: 'output:first',
+        placement: 'before',
+      },
+    ]);
+  });
+
   it('offers admitted column functions from the native pointer and keyboard context menu', async () => {
     const onColumnFunctionApply = vi.fn();
     await act(async () => {
