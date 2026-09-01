@@ -5,7 +5,6 @@ import type {
   GraphNodeCardReadModel,
   GraphNodeCardStrategy,
 } from './graphNodeCardStrategyContracts';
-import { graphNodeCardCopyTokens } from './graphNodeCardCopyTokens';
 import {
   buildGraphNodeOperationalDetail,
   metadataOf,
@@ -43,6 +42,7 @@ function buildDefaultCard(
   );
   return {
     title: titlePresentation.title,
+    titleDetail: null,
     technicalName: titlePresentation.technicalName,
     subtitle: node.path ?? null,
     path: node.path ?? null,
@@ -53,7 +53,6 @@ function buildDefaultCard(
     operationalMetrics: [],
     operationalDetail: buildGraphNodeOperationalDetail(titlePresentation.title, []),
     sourceIdentity: null,
-    nodeActionsLabel: graphNodeCardCopyTokens.nodeActionsLabel,
   };
 }
 

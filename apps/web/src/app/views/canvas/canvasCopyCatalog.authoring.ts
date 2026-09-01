@@ -228,10 +228,6 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.nodePresentation.codeUnavailableMessage',
     fallback: 'No inline code or workspace file is recorded for this node.',
   },
-  nodePresentationActionsLabel: {
-    key: 'canvas.nodePresentation.actionsLabel',
-    fallback: 'More node actions',
-  },
   nodePresentationReadyStatusLabel: {
     key: 'canvas.nodePresentation.readyStatusLabel',
     fallback: 'Ready',

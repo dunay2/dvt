@@ -139,49 +139,6 @@ describe('CanvasNodeShell', () => {
     expect(onContextMenuAction).not.toHaveBeenCalled();
   });
 
-  it('opens node operations only for the explicit upper action request', async () => {
-    const onContextMenuAction = vi.fn();
-
-    act(() => {
-      root.render(
-        <CanvasNodeShell
-          contextMenuModel={CONTEXT_MENU_MODEL}
-          shouldShowSourceHandle={false}
-          shouldShowTargetHandle={false}
-          onContextMenuAction={onContextMenuAction}
-        >
-          <button type="button" data-testid="upper-node-actions">
-            More node actions
-          </button>
-        </CanvasNodeShell>
-      );
-    });
-
-    const event = new MouseEvent('contextmenu', {
-      bubbles: true,
-      cancelable: true,
-      button: 2,
-      clientX: 240,
-      clientY: 160,
-    });
-    Object.defineProperty(event, 'dvtNodeActionsRequest', { value: true });
-
-    await act(async () => {
-      container.querySelector('[data-testid="upper-node-actions"]')?.dispatchEvent(event);
-    });
-
-    expect(document.querySelector('[data-slot="canvas-node-context-menu"]')).not.toBeNull();
-    const duplicateAction = document.querySelector<HTMLElement>(
-      '[data-slot="canvas-node-context-menu-item"]'
-    );
-    expect(duplicateAction?.textContent).toContain('Duplicate');
-
-    await act(async () => {
-      duplicateAction?.click();
-    });
-    expect(onContextMenuAction).toHaveBeenCalledWith('duplicate-node');
-  });
-
   it('renders graph ports through component-owned presentation slots', () => {
     act(() => {
       root.render(

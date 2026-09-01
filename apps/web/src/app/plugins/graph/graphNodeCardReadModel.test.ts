@@ -128,7 +128,6 @@ describe('buildGraphNodeCardReadModel', () => {
     expect(model.accentTone).toBe('source');
     expect(model.technicalName).toBe('public.orders');
     expect(model.health).toEqual({ label: 'Ready', tone: 'healthy' });
-    expect(model.nodeActionsLabel).toBe('More node actions');
     expect(model.subtitle).toBe('warehouse.public.orders');
     expect(model.path).toBe('warehouse.public.orders');
     expect(model.metrics).toEqual([]);
@@ -736,6 +735,8 @@ describe('buildGraphNodeCardReadModel', () => {
         kind: 'dbt:model',
         pluginId: 'dbt',
         name: 'fct_orders',
+        description: 'Daily finance orders',
+        tags: ['finance', 'critical'],
         path: 'models/marts/fct_orders.sql',
         metadata: {
           package: 'analytics',
@@ -754,9 +755,14 @@ describe('buildGraphNodeCardReadModel', () => {
     expect(model.accentTone).toBe('model');
     expect(model.subtitle).toBe('analytics');
     expect(model.path).toBe('models/marts/fct_orders.sql');
+    expect(model.titleDetail).toBe('Daily finance orders · #finance #critical');
     expect(model.metrics).toEqual([
       { id: 'materialization', label: 'Mat.', value: 'incremental' },
       { id: 'dependencies', label: 'Deps', value: '2' },
+    ]);
+    expect(model.operationalMetrics).toEqual([
+      { id: 'rows', label: 'Rows', value: 'Not calculated', icon: 'rows' },
+      { id: 'size', label: 'Size', value: 'Not calculated', icon: 'database' },
     ]);
   });
 

@@ -279,7 +279,7 @@ describe('DbtNodeRenderer history panel', () => {
     );
     expect(
       document.querySelector('[data-slot="graph-node-card-title"]')?.getAttribute('title')
-    ).toBe('fct_orders');
+    ).toBeNull();
     expect(document.body.textContent).toContain('analytics');
     expect(document.body.textContent).toContain('Mat.');
     expect(document.body.textContent).toContain('Deps');
@@ -419,12 +419,40 @@ describe('DbtNodeRenderer history panel', () => {
     });
 
     expect(container.querySelector('[data-slot="graph-node-card-play"]')).toBeNull();
-    expect(container.querySelector('[data-slot="graph-node-card-actions"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="graph-node-card-actions"]')).toBeNull();
     expect(container.querySelector('[data-slot="graph-node-card-title"]')?.textContent).toBe(
       'Fct Orders'
     );
     expect(container.querySelector('[data-slot="graph-node-card-kind"]')).toBeNull();
     expect(toggleNodeSelection).not.toHaveBeenCalled();
+  });
+
+  it('keeps Rows and Size visible when a model has not been calculated', async () => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    (
+      globalThis as typeof globalThis & {
+        IS_REACT_ACT_ENVIRONMENT?: boolean;
+      }
+    ).IS_REACT_ACT_ENVIRONMENT = true;
+
+    await act(async () => {
+      root?.render(
+        <DbtNodeRenderer
+          node={buildNode({ id: 'model_orders', name: 'fct_orders' })}
+          selected={false}
+          hovered={false}
+          overlayDecoration={null}
+          badges={[]}
+          graphNodeCardStrategies={[dbtGraphNodeCardStrategy]}
+          data={{}}
+        />
+      );
+    });
+
+    expect(container.textContent).toContain('RowsNot calculated');
+    expect(container.textContent).toContain('SizeNot calculated');
   });
 
   it('renders node-scoped runtime events for the active run', async () => {

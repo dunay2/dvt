@@ -41,6 +41,7 @@ export type GraphNodeSourceIdentity = Readonly<{
 
 export type GraphNodeCardReadModel = Readonly<{
   title: string;
+  titleDetail: string | null;
   technicalName: string | null;
   subtitle: string | null;
   path: string | null;
@@ -51,7 +52,6 @@ export type GraphNodeCardReadModel = Readonly<{
   operationalMetrics: readonly GraphNodeCardMetric[];
   operationalDetail: GraphNodeOperationalDetail | null;
   sourceIdentity: GraphNodeSourceIdentity | null;
-  nodeActionsLabel: string;
 }>;
 
 export type GraphNodeCardStrategy = Readonly<{

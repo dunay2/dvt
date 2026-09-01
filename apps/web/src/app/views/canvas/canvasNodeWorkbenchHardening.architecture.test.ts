@@ -26,7 +26,7 @@ import CanvasContextMenuPresenterSource from './useCanvasContextMenuPresenter.ts
 import CanvasSelectionHandlersSource from './useCanvasSelectionHandlers.ts?raw';
 
 describe('Canvas Node Workbench W4 hardening contracts', () => {
-  it('maps node navigation gestures to one intent and keeps execution selection in ellipsis operations', () => {
+  it('maps node navigation gestures to one intent and keeps operations in the native node menu', () => {
     expect(CanvasNodeShellSource).toContain('data-slot="canvas-node-shell"');
     expect(CanvasNodeShellSource).toContain('onOpenNode?.();');
     expect(CanvasNodeShellSource).toContain('isCanvasNodeEmbeddedControlTarget(event.target)');
@@ -34,13 +34,13 @@ describe('Canvas Node Workbench W4 hardening contracts', () => {
     expect(CanvasContextMenuPresenterSource).toContain(
       'closest(\'[data-slot="canvas-node-shell"]\')'
     );
-    expect(CanvasContextMenuPresenterSource).toContain('dvtNodeActionsRequest');
+    expect(CanvasContextMenuPresenterSource).not.toContain('dvtNodeActionsRequest');
     expect(CanvasNodeShellSource).not.toContain('resolveCanvasNodeDoubleClickAction');
     expect(CanvasNodeShellSource).not.toContain('onOpenCode');
     expect(CanvasNodeShellSource).not.toContain('onOpenWorkbench');
 
-    expect(GraphNodeCardViewSource).toContain('data-slot="graph-node-card-actions"');
-    expect(GraphNodeCardViewSource).toContain("'dvtNodeActionsRequest'");
+    expect(GraphNodeCardViewSource).not.toContain('data-slot="graph-node-card-actions"');
+    expect(GraphNodeCardViewSource).not.toContain('dvtNodeActionsRequest');
     expect(GraphNodeCardViewSource).not.toContain('data-slot="graph-node-card-play"');
     expect(GraphNodeCardViewSource).not.toContain('GraphNodeCardPlayAction');
     expect(GraphNodeCardViewSource).not.toContain('playAction');

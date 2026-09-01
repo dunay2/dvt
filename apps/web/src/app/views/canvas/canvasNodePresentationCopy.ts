@@ -197,7 +197,6 @@ export function buildCanvasNodePresentationCopy(
     canonicalSubstraitCodeDetailTemplate: copy.nodePresentationCanonicalSubstraitCodeDetailTemplate,
     invalidCanonicalSubstraitCodeMessage: copy.nodePresentationInvalidCanonicalSubstraitCodeMessage,
     codeUnavailableMessage: copy.nodePresentationCodeUnavailableMessage,
-    nodeActionsLabel: copy.nodePresentationActionsLabel,
     readyStatusLabel: copy.nodePresentationReadyStatusLabel,
     draftStatusLabel: copy.nodePresentationDraftStatusLabel,
     authoringTagLabel: copy.nodePresentationAuthoringTagLabel,

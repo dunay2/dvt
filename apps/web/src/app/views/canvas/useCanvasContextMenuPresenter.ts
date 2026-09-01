@@ -149,31 +149,16 @@ export function useCanvasContextMenuPresenter({
       }
 
       openCanvasContextMenu(position, { opener: event.currentTarget });
-      event.currentTarget.dispatchEvent(
-        new MouseEvent('contextmenu', {
-          bubbles: true,
-          cancelable: true,
-          button: 2,
-          buttons: 2,
-          clientX: position.x,
-          clientY: position.y,
-        })
-      );
     },
     [openCanvasContextMenu]
   );
 
   const handleViewportContextMenuEvent = useCallback(
     (event: ContextMenuEvent) => {
-      const sourceEvent = event.nativeEvent ?? event;
       const targetsNodeShell =
         event.target instanceof Element &&
         event.target.closest('[data-slot="canvas-node-shell"]') != null;
-      if (
-        (sourceEvent as MouseEvent & Readonly<{ dvtNodeActionsRequest?: boolean }>)
-          .dvtNodeActionsRequest === true ||
-        targetsNodeShell
-      ) {
+      if (targetsNodeShell) {
         return;
       }
 

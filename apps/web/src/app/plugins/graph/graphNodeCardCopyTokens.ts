@@ -1,6 +1,5 @@
 /** Owned concern: centralize localized GraphNodeCard copy consumed by card read-model strategies. */
 type GraphNodeCardCopy = Readonly<{
-  nodeActionsLabel: string;
   columnsLabel: string;
   rowsLabel: string;
   sizeLabel: string;
@@ -41,7 +40,6 @@ type GraphNodeCardCopy = Readonly<{
 }>;
 
 const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
-  nodeActionsLabel: 'More node actions',
   columnsLabel: 'Columns',
   rowsLabel: 'Rows',
   sizeLabel: 'Size',
@@ -95,7 +93,6 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
 };
 
 const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
-  nodeActionsLabel: 'Más acciones del nodo',
   columnsLabel: 'Columnas',
   rowsLabel: 'Filas',
   sizeLabel: 'Tamaño',
@@ -147,8 +144,6 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   sourceIdentitySchemaLabel: 'Esquema',
   sourceIdentityUserLabel: 'Usuario',
 };
-
-export const graphNodeCardCopyTokens = ENGLISH_GRAPH_NODE_CARD_COPY;
 
 export function resolveGraphNodeCardCopy(locale?: string): GraphNodeCardCopy {
   return locale?.trim().toLowerCase().startsWith('es')

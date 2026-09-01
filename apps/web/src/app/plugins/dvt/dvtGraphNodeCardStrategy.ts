@@ -5,10 +5,7 @@ import type {
   GraphNodeCardReadModel,
   GraphNodeCardStrategy,
 } from '../graph/graphNodeCardStrategyContracts';
-import {
-  graphNodeCardCopyTokens,
-  resolveGraphNodeCardCopy,
-} from '../graph/graphNodeCardCopyTokens';
+import { resolveGraphNodeCardCopy } from '../graph/graphNodeCardCopyTokens';
 import { buildGraphNodeOperationalSummary } from '../graph/graphNodeOperationalSummary';
 import { buildGraphNodeVolumeMetricProjection } from '../graph/graphNodeSourceMetricProjection';
 import { buildGraphNodeTitlePresentation } from '../graph/graphNodeTitlePresentation';
@@ -148,6 +145,7 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
 
   return {
     title,
+    titleDetail: null,
     technicalName: titlePresentation.technicalName,
     subtitle: buildDvtSubtitle(metadata, data, node.path),
     path: buildDvtArtifactPath(metadata, data, node.path),
@@ -165,8 +163,6 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     operationalMetrics,
     operationalDetail: operationalSummary.detail,
     sourceIdentity: buildGraphNodeSourceIdentity(node, metadata, title, presentationCopy?.locale),
-    nodeActionsLabel:
-      presentationCopy?.nodeActionsLabel ?? graphNodeCardCopyTokens.nodeActionsLabel,
   };
 }
 
