@@ -865,6 +865,29 @@ describe('useCanvasGraphHandlers edge authoring', () => {
         : []
     ).toEqual(['output:order_id', 'output:amount']);
 
+    setDraftSession.mockClear();
+    act(() => {
+      harness.latest()?.handleReorderDvtSubstraitColumnOutput({
+        nodeId: transform.id,
+        columnId: 'output:amount',
+        targetColumnId: 'output:order_id',
+        placement: 'before',
+      });
+    });
+    const reorderedSession = setDraftSession.mock.calls[0]?.[0] as typeof draftSession;
+    const reorderedNode = reorderedSession.localNodeCatalog?.[transform.id];
+    if (reorderedNode == null) throw new Error('Expected reordered transform outputs.');
+    const reorderedAuthority = readDvtTransformAuthoringAuthority(reorderedNode);
+    if (reorderedAuthority.mode !== 'substrait') throw new Error('Expected Substrait authority.');
+    const reorderedInspection = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(reorderedAuthority.semanticDocument)
+    );
+    expect(
+      reorderedInspection.ok
+        ? reorderedInspection.projection.outputs.map((output) => output.fieldId)
+        : []
+    ).toEqual(['output:amount', 'output:order_id', 'output:customer']);
+
     harness.cleanup();
   });
 });

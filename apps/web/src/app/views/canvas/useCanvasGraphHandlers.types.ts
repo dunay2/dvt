@@ -44,6 +44,12 @@ export type UseCanvasGraphHandlersResult = {
     columnType: string;
     output: boolean;
   }) => void;
+  handleReorderDvtSubstraitColumnOutput: (identity: {
+    nodeId: string;
+    columnId: string;
+    targetColumnId: string;
+    placement: 'before' | 'after';
+  }) => void;
   handleColumnDisclosureChange: (nodeId: string, expanded: boolean) => void;
   handleAutomapCanvasColumns: (
     nodeId: string,

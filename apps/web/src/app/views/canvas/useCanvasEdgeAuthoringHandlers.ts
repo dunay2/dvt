@@ -27,6 +27,7 @@ import {
   applyCanvasColumnMapping,
   automapCanvasColumns,
   removeCanvasColumnMapping,
+  reorderCanvasColumnOutput,
   resolveCanvasColumnMappingTarget,
   setCanvasColumnOutputIncluded,
   type CanvasColumnMappingRejection,
@@ -61,6 +62,12 @@ type UseCanvasEdgeAuthoringHandlersResult = {
     columnId: string;
     columnType: string;
     output: boolean;
+  }) => void;
+  handleReorderDvtSubstraitColumnOutput: (identity: {
+    nodeId: string;
+    columnId: string;
+    targetColumnId: string;
+    placement: 'before' | 'after';
   }) => void;
   handleRemoveColumnMapping: (mapping: CanvasColumnLineageEdgeData) => void;
 };
@@ -273,6 +280,34 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
     [effects, policy.canEditEdges, state]
   );
 
+  const handleReorderDvtSubstraitColumnOutput = useCallback(
+    (identity: {
+      nodeId: string;
+      columnId: string;
+      targetColumnId: string;
+      placement: 'before' | 'after';
+    }) => {
+      if (!policy.canEditEdges) {
+        toast.error(canvasViewCopy.mutationUnavailableMessage);
+        return;
+      }
+      const result = reorderCanvasColumnOutput({
+        draftSession: state.draftSession,
+        canonicalNodesById: state.canonicalNodesById,
+        targetNodeId: identity.nodeId,
+        columnId: identity.columnId,
+        targetColumnId: identity.targetColumnId,
+        placement: identity.placement,
+      });
+      if (result.outcome === 'rejected') {
+        toast.error(formatColumnMappingRejection(result.reason));
+        return;
+      }
+      effects.setDraftSession(result.draftSession);
+    },
+    [effects, policy.canEditEdges, state]
+  );
+
   const handleRemoveColumnMapping = useCallback(
     (mapping: CanvasColumnLineageEdgeData) => {
       if (!policy.canEditEdges || !mapping.removable) {
@@ -310,6 +345,7 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
     handleColumnPortActivate,
     handleAutomapCanvasColumns,
     handleToggleDvtSubstraitColumnOutput,
+    handleReorderDvtSubstraitColumnOutput,
     handleRemoveColumnMapping,
   };
 }
@@ -490,6 +526,8 @@ export function useCanvasEdgeAuthoringHandlers({
     handleAutomapCanvasColumns: columnMappingHandlers.handleAutomapCanvasColumns,
     handleToggleDvtSubstraitColumnOutput:
       columnMappingHandlers.handleToggleDvtSubstraitColumnOutput,
+    handleReorderDvtSubstraitColumnOutput:
+      columnMappingHandlers.handleReorderDvtSubstraitColumnOutput,
     handleRemoveColumnMapping: columnMappingHandlers.handleRemoveColumnMapping,
   };
 }
