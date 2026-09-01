@@ -175,6 +175,7 @@ const SCRIPT_FILE_RULES = [
     'release-ops',
   ],
   [/^tools\/ops\/.+\.mjs$/u, 'release-ops'],
+  [/^tools\/ci\/eslint-precommit\.config\.cjs$/u, 'developer-workflow'],
   [/^tools\/ci\/.+\.test\.mjs$/u, 'test-tooling'],
   [/^tools\/ci\/.+\.(mjs|js)$/u, 'ci-tooling'],
   [/^\.github\/scripts\/.+\.(js|sh)$/u, 'ci-tooling'],
