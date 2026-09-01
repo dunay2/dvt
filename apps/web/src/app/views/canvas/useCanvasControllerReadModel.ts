@@ -5,7 +5,6 @@ import { buildCanvasNodeInteractionPresentation } from './canvasNodeInteractionP
 import { validateTransformationGraph } from './transformationGraphValidation';
 import type { RuntimeCapabilities } from '../../plugins/registry';
 import { getCanvasGraphNodeCardStrategies } from '../../plugins/graphStrategyRegistry';
-import { buildGraphNodeCardReadModel } from '../../plugins/graph/graphNodeCardReadModel';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { UseCanvasGraphHandlersResult } from './useCanvasGraphHandlers.types';
 import {
@@ -23,6 +22,7 @@ import type { CanvasNodePresentationTruth } from '../../components/canvas/canvas
 import type { GraphNodeColumn } from '../../plugins/graph/GraphNodeColumnSection';
 import { canAuthorCanvasColumnMappings } from './canvasColumnMappingAuthoring';
 import { readDvtTransformLineageProvenance } from './canvasTransformationSqlMirror';
+import { projectCanvasNodeAccessibleHealth } from './canvasNodeMapper';
 
 function projectInteractiveColumns(node: Node): GraphNodeColumn[] {
   const columns = Array.isArray(node.data.columns)
@@ -227,22 +227,14 @@ export function useCanvasControllerReadModel({
                 : resolveCanvasColumnPortDirections(canonicalNode.role)
               : [],
         };
-        const accessibleLabel =
-          canonicalNode == null
-            ? node.ariaLabel
-            : `${node.ariaLabel ?? canonicalNode.name}, ${
-                buildGraphNodeCardReadModel(
-                  canonicalNode,
-                  projectedNodeData,
-                  graphNodeCardStrategies
-                ).health.label
-              }`;
-
-        return {
-          ...node,
-          ariaLabel: accessibleLabel,
-          data: projectedNodeData,
-        };
+        return canonicalNode == null
+          ? { ...node, data: projectedNodeData }
+          : projectCanvasNodeAccessibleHealth({
+              node,
+              canonicalNode,
+              data: projectedNodeData,
+              graphNodeCardStrategies,
+            });
       }),
     [
       canMutateGraph,

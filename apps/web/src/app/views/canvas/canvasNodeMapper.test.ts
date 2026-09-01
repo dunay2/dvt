@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
+import { dbtGraphNodeCardStrategy } from '../../plugins/dbt/dbtGraphNodeCardStrategy';
 import {
   mapCanonicalEdgeToCanvasEdge,
   mapCanonicalNodeToCanvasNode,
   mapDroppedCanonicalNodeToCanvasNode,
+  projectCanvasNodeAccessibleHealth,
 } from './canvasNodeMapper';
 
 function buildCanonicalNode(): CanonicalNode {
@@ -66,6 +68,31 @@ describe('canvasNodeMapper', () => {
       { value: 'authoring', label: 'En edición' },
       { value: 'finance', label: 'finance' },
     ]);
+  });
+
+  it('projects strategy-owned health into a React Flow node accessible label', () => {
+    const canonicalNode = {
+      ...buildCanonicalNode(),
+      name: 'Failed model',
+      pluginId: 'dbt',
+      kind: 'dbt:model',
+      role: 'transform',
+      status: 'failed',
+    } satisfies CanonicalNode;
+    const mappedNode = mapCanonicalNodeToCanvasNode({
+      canonicalNode,
+      index: 0,
+      showColumns: false,
+    });
+
+    const projectedNode = projectCanvasNodeAccessibleHealth({
+      node: mappedNode,
+      canonicalNode,
+      data: mappedNode.data,
+      graphNodeCardStrategies: [dbtGraphNodeCardStrategy],
+    });
+
+    expect(projectedNode.ariaLabel).toBe('Failed model, Model, Failed');
   });
 
   it('projects one semantic dependency edge with an inset direction renderer', () => {

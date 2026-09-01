@@ -156,9 +156,10 @@ describe('React Flow visual token convergence architecture', () => {
       neutral: 'border-solid border-slate-700',
     });
     expect(GRAPH_CARD_VIEW_SOURCE).not.toContain('GraphNodeStatusChip');
-    expect(CANVAS_CONTROLLER_READ_MODEL_SOURCE).toContain('buildGraphNodeCardReadModel');
-    expect(CANVAS_CONTROLLER_READ_MODEL_SOURCE).toContain('ariaLabel:');
-    expect(CANVAS_CONTROLLER_READ_MODEL_SOURCE).toContain('accessibleLabel');
+    expect(CANVAS_NODE_MAPPER_SOURCE).toContain('buildGraphNodeCardReadModel');
+    expect(CANVAS_NODE_MAPPER_SOURCE).toContain('ariaLabel:');
+    expect(CANVAS_NODE_MAPPER_SOURCE).toContain('healthLabel');
+    expect(CANVAS_CONTROLLER_READ_MODEL_SOURCE).toContain('projectCanvasNodeAccessibleHealth');
     expect(GRAPH_RENDERER_SOURCE).toContain('GraphNodeCardView');
     expect(GRAPH_RENDERER_SOURCE).not.toContain('graphNodeHealthBorderClasses');
     expect(GRAPH_RENDERER_SOURCE).not.toMatch(/\b(?:slate|gray|neutral|zinc)-\d{2,3}\b/);

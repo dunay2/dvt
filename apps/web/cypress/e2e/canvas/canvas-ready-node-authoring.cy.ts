@@ -323,10 +323,10 @@ describe('Canvas ready node authoring', () => {
     cy.contains('.react-flow__node', 'Src Orders').as('sourceNode').should('be.visible');
     cy.get('@sourceNode')
       .find('[data-slot="graph-node-card"]')
-      .should('have.class', 'border-green-500')
-      .find('[data-slot="graph-node-health-description"]')
-      .should('have.text', 'Ready')
-      .and('have.class', 'sr-only');
+      .should('have.class', 'border-green-500');
+    cy.get('@sourceNode')
+      .should('have.attr', 'aria-label')
+      .and('match', /Ready$/);
     cy.get('@sourceNode').find('[data-slot="graph-node-status-chip"]').should('not.exist');
 
     cy.contains('.react-flow__node', 'Model Orders').as('ordersNode').should('be.visible').click();
@@ -335,9 +335,8 @@ describe('Canvas ready node authoring', () => {
       .should('have.class', 'border-slate-700')
       .and('have.class', 'ring-2');
     cy.get('@ordersNode')
-      .find('[data-slot="graph-node-health-description"]')
-      .should('have.text', 'Draft')
-      .and('have.class', 'sr-only');
+      .should('have.attr', 'aria-label')
+      .and('match', /Draft$/);
     cy.get('@ordersNode').find('[data-slot="graph-node-status-chip"]').should('not.exist');
   });
 
@@ -347,14 +346,15 @@ describe('Canvas ready node authoring', () => {
 
     visitReadyCanvas();
 
-    cy.contains('.react-flow__node', 'model_orders').as('ordersNode').should('be.visible').click();
+    cy.contains('.react-flow__node', 'Model Orders').as('ordersNode').should('be.visible').click();
     cy.get('@ordersNode')
-      .find('[data-slot="graph-node-card"]')
-      .should('contain.text', 'Draft')
-      .and('contain.text', 'models/analytics/model_orders.sql')
-      .find('button[aria-label="Select for execution"]')
-      .should('be.visible')
-      .and('have.css', 'cursor', 'pointer');
+      .should('have.attr', 'aria-label')
+      .and('match', /Draft$/);
+    cy.get('@ordersNode')
+      .find(
+        '[data-slot="graph-node-metric-hotspot"][aria-label*="models/analytics/model_orders.sql"]'
+      )
+      .should('be.visible');
     cy.get('[data-slot="canvas-node-floating-toolbar"]').should('not.exist');
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
 

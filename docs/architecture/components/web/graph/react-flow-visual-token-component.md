@@ -30,6 +30,8 @@ projection, generic plugin graph node rendering, and graph-node card chrome.
 - `graphFlowPalette`: React Flow edge and fallback minimap palette values.
 - `resolveGraphNodeKindTone(kind)`: returns a known node-kind tone or the
   fallback tone.
+- `projectCanvasNodeAccessibleHealth(...)`: applies strategy-owned health to a
+  focusable React Flow node label without duplicating health rules.
 
 ## Invariants
 
@@ -49,6 +51,8 @@ projection, generic plugin graph node rendering, and graph-node card chrome.
 - The focusable React Flow node label includes health from the same card read
   model that selects the border; health is not repeated as a visible status
   chip.
+- Draft-backed and dbt project-file Canvas controllers use the same accessible
+  health projector.
 - Plugin-specific behavior remains in plugin contracts; this component owns only
   presentation tokens.
 

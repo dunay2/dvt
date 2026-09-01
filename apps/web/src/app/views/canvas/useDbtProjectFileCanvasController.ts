@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import DbtNodeComponent, { type DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import type { DbtProjectFilesAuthorityBinding } from '../../ports/dbtProjectGraph';
 import { getRegisteredPluginIds } from '../../plugins/registry';
+import { getCanvasGraphNodeCardStrategies } from '../../plugins/graphStrategyRegistry';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { ImportSourcesResult, WorkspaceFileSaveReceipt } from '../../ports/workspace';
 import { createCanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
@@ -33,6 +34,7 @@ import { refreshCanvasExecutionSelectionAuthority } from './canvasExecutionSelec
 import { useCanvasExecutionSelectionRecovery } from './useCanvasExecutionSelectionRecovery';
 import { projectDbtCodeReconciliationOutcome } from './dbtProjectCodeReconciliation';
 import type { WorkspaceFileCodeEditorHandle } from '../code/WorkspaceFileCodeEditor';
+import { projectCanvasNodeAccessibleHealth } from './canvasNodeMapper';
 
 const EMPTY_NODE_POSITIONS: Record<string, { x: number; y: number }> = {};
 const EMPTY_FROZEN_NODE_IDS: readonly string[] = [];
@@ -323,16 +325,22 @@ export function useDbtProjectFileCanvasController(
   const closeCodeWorkbench = useCallback(() => {
     setProjectCodeWorkbenchOpen(false);
   }, []);
+  const graphNodeCardStrategies = useMemo(
+    () => getCanvasGraphNodeCardStrategies('dbt', runtimeCapabilities),
+    [runtimeCapabilities]
+  );
   const nodesWithCommands = useMemo<Node[]>(
     () =>
-      graphModel.nodes.map((node) => ({
-        ...node,
-        data: {
+      graphModel.nodes.map((node) => {
+        const data: DbtNodeData = {
           ...(node.data as DbtNodeData),
           canvasKind: 'dbt',
+          runtimeCapabilities,
           canMutateGraph: false,
           selectedForExecution: selectedNodeIds.includes(node.id),
-          onInspectNode: openNodeWorkbench,
+          onInspectNode: (nodeId, preferredTabId) => {
+            void openNodeWorkbench(nodeId, preferredTabId);
+          },
           canOpenNodeCode: node.data.path != null,
           onToggleNodeSelection:
             execution.canSelectExecution &&
@@ -350,14 +358,27 @@ export function useDbtProjectFileCanvasController(
                   );
                 }
               : undefined,
-        },
-      })),
+        };
+        const canonicalNode = canonicalNodesById.get(node.id);
+
+        return canonicalNode == null
+          ? { ...node, data }
+          : projectCanvasNodeAccessibleHealth({
+              node,
+              canonicalNode,
+              data,
+              graphNodeCardStrategies,
+            });
+      }),
     [
+      canonicalNodesById,
       execution.canSelectExecution,
       executionSelectableNodeIds,
       executionScope.requestedNodeIds,
+      graphNodeCardStrategies,
       graphModel.nodes,
       openNodeWorkbench,
+      runtimeCapabilities,
       selectedNodeIds,
       store.setExecutionSelectionIntent,
     ]

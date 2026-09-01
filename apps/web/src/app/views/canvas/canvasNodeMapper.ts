@@ -3,6 +3,8 @@ import { type Edge, type Node } from '@xyflow/react';
 
 import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
 import type { MergedNodeDecoration } from '../../plugins/contracts/NodeRendering';
+import { buildGraphNodeCardReadModel } from '../../plugins/graph/graphNodeCardReadModel';
+import type { GraphNodeCardStrategy } from '../../plugins/graph/graphNodeCardStrategyContracts';
 import { createGraphFlowEdgeStyle, graphFlowPalette } from '../../plugins/graph/graphVisualTokens';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type {
@@ -67,6 +69,27 @@ function toPortCompatibilityViewModel(
   return {
     source: toPortCompatibilityView(compatibility.source, copy),
     target: toPortCompatibilityView(compatibility.target, copy),
+  };
+}
+
+export function projectCanvasNodeAccessibleHealth<TData extends Record<string, unknown>>({
+  node,
+  canonicalNode,
+  data,
+  graphNodeCardStrategies,
+}: Readonly<{
+  node: Node<TData>;
+  canonicalNode: CanonicalNode;
+  data: TData;
+  graphNodeCardStrategies: readonly GraphNodeCardStrategy[];
+}>): Node<TData> {
+  const healthLabel = buildGraphNodeCardReadModel(canonicalNode, data, graphNodeCardStrategies)
+    .health.label;
+
+  return {
+    ...node,
+    ariaLabel: `${node.ariaLabel ?? canonicalNode.name}, ${healthLabel}`,
+    data,
   };
 }
 
