@@ -469,6 +469,30 @@ describe('GraphNodeCardView', () => {
     expect(card?.className).toContain('ring-2');
   });
 
+  it('keeps overlay decoration on a separate layer from the semantic health border', () => {
+    act(() => {
+      root.render(
+        <GraphNodeCardView
+          {...BASE_PROPS}
+          overlayStyle={{ borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.08)' }}
+          cardModel={{
+            ...BASE_PROPS.cardModel,
+            health: { label: 'Ready', tone: 'healthy' },
+          }}
+        />
+      );
+    });
+
+    const card = container.querySelector<HTMLElement>('[data-slot="graph-node-card"]');
+    const overlay = container.querySelector<HTMLElement>('[data-slot="graph-node-overlay-border"]');
+
+    expect(card?.className).toContain('border-green-500');
+    expect(card?.style.borderColor).toBe('');
+    expect(card?.style.backgroundColor).toBe('rgba(245, 158, 11, 0.08)');
+    expect(overlay?.style.borderColor).toBe('rgb(245, 158, 11)');
+    expect(overlay?.getAttribute('aria-hidden')).toBe('true');
+  });
+
   it('opens operational details from the rail without bubbling to the node card', () => {
     const onOpenOperationalDetails = vi.fn();
     const onCardClick = vi.fn();

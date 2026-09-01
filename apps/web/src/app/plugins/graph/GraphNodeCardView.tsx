@@ -167,6 +167,8 @@ export function GraphNodeCardView({
     (cardModel.subtitle !== cardModel.path || !pathIsRepresentedByCodeMetric)
       ? cardModel.subtitle
       : null;
+  const { borderColor: overlayBorderColor, ...cardOverlayStyle } = overlayStyle ?? {};
+  const hasCardOverlayStyle = Object.keys(cardOverlayStyle).length > 0;
 
   return (
     <div
@@ -179,7 +181,7 @@ export function GraphNodeCardView({
         hovered && !selected && graphNodeCardSurfaceClasses.hovered,
         dimmed && graphNodeCardSurfaceClasses.dimmed
       )}
-      {...(overlayStyle ? { style: overlayStyle } : {})}
+      {...(hasCardOverlayStyle ? { style: cardOverlayStyle } : {})}
     >
       <div className={graphNodeCardLayoutClasses.body}>
         <div className={graphNodeCardLayoutClasses.header}>
@@ -269,6 +271,14 @@ export function GraphNodeCardView({
               : (anchorElement) =>
                   onOpenOperationalDetails(interactiveOperationalDetail, anchorElement)
           }
+        />
+      )}
+      {overlayBorderColor != null && (
+        <span
+          aria-hidden="true"
+          data-slot="graph-node-overlay-border"
+          className={graphNodeCardSurfaceClasses.overlayBorder}
+          style={{ borderColor: overlayBorderColor }}
         />
       )}
     </div>

@@ -44,6 +44,8 @@ projection, generic plugin graph node rendering, and graph-node card chrome.
   non-terminal. The line style keeps failure distinguishable without color.
 - Selection and keyboard focus remain separate rings; they do not replace or
   reinterpret health.
+- Cost, runtime, and other overlay borders render on an inner decoration layer;
+  they never overwrite the outer health border.
 - Health copy remains available to assistive technology and is not repeated as
   a visible status chip.
 - Plugin-specific behavior remains in plugin contracts; this component owns only
