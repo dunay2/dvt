@@ -56,6 +56,12 @@ const NODE_CONTEXT_MENU_MODEL: CanvasNodeContextMenuModel = {
       label: 'Edit',
       actions: [
         {
+          id: 'open-properties',
+          label: 'Properties',
+          intent: 'query',
+          disabled: false,
+        },
+        {
           id: 'duplicate-node',
           label: 'Duplicate',
           intent: 'command',
@@ -110,7 +116,7 @@ describe('CanvasNodeContextMenuView', () => {
     }
   });
 
-  it('renders node operations without Properties or Code navigation', () => {
+  it('renders Properties through the backed inspector query', () => {
     const onAction = vi.fn();
 
     act(() => {
@@ -123,14 +129,16 @@ describe('CanvasNodeContextMenuView', () => {
     expect(screen.getByText('Orders model')).toBeTruthy();
 
     act(() => {
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Properties' }));
       fireEvent.click(screen.getByRole('menuitem', { name: 'Duplicate' }));
       fireEvent.click(screen.getByRole('menuitem', { name: 'Select for execution' }));
       fireEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
     });
 
-    expect(onAction).toHaveBeenNthCalledWith(1, 'duplicate-node');
-    expect(onAction).toHaveBeenNthCalledWith(2, 'select-node-for-execution');
-    expect(onAction).toHaveBeenNthCalledWith(3, 'remove-node');
+    expect(onAction).toHaveBeenNthCalledWith(1, 'open-properties');
+    expect(onAction).toHaveBeenNthCalledWith(2, 'duplicate-node');
+    expect(onAction).toHaveBeenNthCalledWith(3, 'select-node-for-execution');
+    expect(onAction).toHaveBeenNthCalledWith(4, 'remove-node');
     const deleteAction = screen.getByRole('menuitem', { name: 'Delete' });
     expect(deleteAction.getAttribute('data-variant')).toBe('destructive');
     expect(deleteAction.style.color).toBe('var(--status-danger)');
@@ -138,7 +146,6 @@ describe('CanvasNodeContextMenuView', () => {
     for (const retiredNavigationLabel of [
       'Open workbench',
       'Open code',
-      'Properties',
       'Inputs / Outputs',
       'Tests',
       'Edit SQL',

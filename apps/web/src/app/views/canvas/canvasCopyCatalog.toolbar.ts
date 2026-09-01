@@ -155,6 +155,10 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.nodeContext.editGroupLabel',
     fallback: 'Edit',
   },
+  canvasNodeContextPropertiesLabel: {
+    key: 'canvas.nodeContext.propertiesLabel',
+    fallback: 'Properties',
+  },
   canvasNodeContextDuplicateLabel: {
     key: 'canvas.nodeContext.duplicateLabel',
     fallback: 'Duplicate',
