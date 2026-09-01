@@ -450,11 +450,16 @@ export function inspectDvtSubstraitProjectionDraft(
               (entry) => entry.name === functionName
             );
       const argument = scalarFunction.arguments[0]?.argType;
+      const outputType = scalarFunction.outputType?.kind;
       if (
         capability == null ||
         urn !== 'extension:io.substrait:functions_string' ||
         scalarFunction.arguments.length !== 1 ||
-        argument?.case !== 'value'
+        argument?.case !== 'value' ||
+        scalarFunction.options.length !== 0 ||
+        outputType?.case !== 'string' ||
+        outputType.value.typeVariationReference !== 0 ||
+        outputType.value.nullability !== Type_Nullability.NULLABLE
       ) {
         return null;
       }
@@ -684,7 +689,11 @@ export function applyDvtSubstraitProjectionFunction(
       }),
     },
   });
+  const mappingReferenceCount = outputMapping.filter((candidate) => candidate === mapping).length;
   if (mapping < sourceFieldCount) {
+    project.expressions.push(nextExpression);
+    outputMapping[output.outputOrdinal] = sourceFieldCount + project.expressions.length - 1;
+  } else if (mappingReferenceCount > 1) {
     project.expressions.push(nextExpression);
     outputMapping[output.outputOrdinal] = sourceFieldCount + project.expressions.length - 1;
   } else {

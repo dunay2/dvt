@@ -10,12 +10,16 @@ import {
   resolveCanvasColumnMappingTarget,
 } from './canvasColumnMappingAuthoring';
 import {
+  applyDvtSubstraitSemanticDocument,
   applyDvtVisualTransformRecipe,
   readDvtTransformAuthoringAuthority,
 } from './canvasDvtTransformAuthoringAuthority';
 import {
+  applyDvtSubstraitProjectionFunction,
   decodeDvtSubstraitProjectionDocument,
+  encodeDvtSubstraitProjectionDocument,
   inspectDvtSubstraitProjectionDraft,
+  resolveDvtSubstraitColumnFunctions,
 } from './canvasDvtSubstraitProjection';
 
 function buildNode(
@@ -248,6 +252,75 @@ describe('Canvas column mapping authoring', () => {
     expect(inspection.ok).toBe(true);
     if (!inspection.ok) return;
     expect(inspection.projection.outputs[0]?.sourceFieldName).toBe('customer');
+  });
+
+  it('preserves a canonical field function while another output mapping is added', () => {
+    const source = buildNode('source', 'dvt:source', 'input', [
+      { name: 'customer', type: 'text' },
+      { name: 'amount', type: 'numeric' },
+    ]);
+    const model = buildNode('model', 'dvt:transform', 'transform');
+    const initial = buildSession([source, model], [{ sourceId: source.id, targetId: model.id }]);
+    const firstResult = applyCanvasColumnMapping({
+      draftSession: initial,
+      canonicalNodesById: new Map([
+        [source.id, source],
+        [model.id, model],
+      ]),
+      source: { nodeId: source.id, columnName: 'customer' },
+      target: { nodeId: model.id, columnName: 'customer', dataType: 'text' },
+    });
+    const mapped = readMappedTransform(firstResult);
+    const authority = readDvtTransformAuthoringAuthority(mapped);
+    if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return;
+    const trim = resolveDvtSubstraitColumnFunctions({
+      dataType: 'text',
+      provider: 'postgres',
+    }).find((candidate) => candidate.name === 'trim');
+    if (trim == null) throw new Error('Expected admitted trim capability.');
+    const withTrimDraft = applyDvtSubstraitProjectionFunction(
+      decodeDvtSubstraitProjectionDocument(authority.semanticDocument),
+      {
+        fieldId: 'output:customer',
+        capabilityId: trim.capabilityId,
+        dataType: 'text',
+        provider: 'postgres',
+      }
+    );
+    const withTrim = applyDvtSubstraitSemanticDocument(
+      mapped,
+      encodeDvtSubstraitProjectionDocument(withTrimDraft)
+    );
+    const withTrimSession = buildSession(
+      [source, withTrim],
+      [{ sourceId: source.id, targetId: withTrim.id }]
+    );
+
+    const secondResult = applyCanvasColumnMapping({
+      draftSession: withTrimSession,
+      canonicalNodesById: new Map([
+        [source.id, source],
+        [withTrim.id, withTrim],
+      ]),
+      source: { nodeId: source.id, columnName: 'amount' },
+      target: { nodeId: withTrim.id, columnName: 'amount', dataType: 'numeric' },
+    });
+    const updated = readMappedTransform(secondResult);
+    const updatedAuthority = readDvtTransformAuthoringAuthority(updated);
+    if (updatedAuthority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return;
+    const inspection = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(updatedAuthority.semanticDocument)
+    );
+
+    expect(inspection.ok).toBe(true);
+    if (!inspection.ok) return;
+    expect(inspection.projection.outputs[0]).toEqual(
+      expect.objectContaining({ fieldId: 'output:customer', operations: ['trim'] })
+    );
+    expect(inspection.projection.outputs[1]).toEqual(
+      expect.objectContaining({ fieldId: 'output:amount' })
+    );
+    expect(inspection.projection.outputs[1]).not.toHaveProperty('operations');
   });
 
   it('fails closed rather than discarding nonblank SQL authority', () => {

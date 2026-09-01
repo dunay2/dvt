@@ -3,6 +3,7 @@ import {
   DVT_TRANSFORM_AUTHORING_MODE,
   VISUAL_TRANSFORM_RECIPE_VERSION,
   type VisualTransformColumnInputRefV1,
+  type VisualTransformOperationV1,
   type VisualTransformOutputColumnV1,
   type VisualTransformRecipeV1,
 } from '@dvt/contracts';
@@ -15,10 +16,12 @@ import {
   readDvtTransformAuthoringAuthority,
 } from './canvasDvtTransformAuthoringAuthority';
 import {
+  applyDvtSubstraitProjectionFunction,
   createDvtSubstraitProjectionDraft,
   decodeDvtSubstraitProjectionDocument,
   encodeDvtSubstraitProjectionDocument,
   inspectDvtSubstraitProjectionDraft,
+  resolveDvtSubstraitColumnFunctions,
   resolveDvtSubstraitProjectionSource,
 } from './canvasDvtSubstraitProjection';
 
@@ -117,6 +120,13 @@ function createEmptyRecipe(): VisualTransformRecipeV1 {
   };
 }
 
+function toVisualFunctionOperation(name: string): VisualTransformOperationV1 {
+  if (name !== 'trim' && name !== 'upper') {
+    throw new Error(`Unsupported canonical projection operation: ${name}`);
+  }
+  return { kind: 'function', functionId: name, args: [] };
+}
+
 function readEditableRecipe(
   targetNode: CanonicalNode
 ):
@@ -152,7 +162,10 @@ function readEditableRecipe(
                   columnName: output.sourceFieldName,
                 },
               ],
-              operations: [{ kind: 'passthrough' }],
+              operations: [
+                { kind: 'passthrough' },
+                ...(output.operations ?? []).map(toVisualFunctionOperation),
+              ],
             },
           })),
           filters: [],
@@ -229,6 +242,29 @@ function isSimplePassthrough(output: VisualTransformOutputColumnV1): boolean {
   );
 }
 
+function readProjectionFunctionNames(
+  output: VisualTransformOutputColumnV1
+): readonly ('trim' | 'upper')[] | null {
+  if (
+    output.expression.inputs.length !== 1 ||
+    output.expression.operations[0]?.kind !== 'passthrough'
+  ) {
+    return null;
+  }
+  const names: ('trim' | 'upper')[] = [];
+  for (const operation of output.expression.operations.slice(1)) {
+    if (
+      operation.kind !== 'function' ||
+      operation.args.length !== 0 ||
+      (operation.functionId !== 'trim' && operation.functionId !== 'upper')
+    ) {
+      return null;
+    }
+    names.push(operation.functionId);
+  }
+  return names;
+}
+
 function persistProjectionRecipe(args: {
   targetNode: CanonicalNode;
   recipe: VisualTransformRecipeV1;
@@ -251,25 +287,48 @@ function persistProjectionRecipe(args: {
   const sourceNodeId = sourceNodeIds.size === 1 ? [...sourceNodeIds][0] : undefined;
   const sourceNode = sourceNodeId == null ? undefined : args.resolveNode(sourceNodeId);
   const source = sourceNode == null ? null : resolveDvtSubstraitProjectionSource(sourceNode);
-  if (
-    source == null ||
-    args.recipe.outputs.some(
-      (output) => !isSimplePassthrough(output) || output.expression.inputs.length !== 1
-    )
-  ) {
+  const functionNamesByOutput = args.recipe.outputs.map(readProjectionFunctionNames);
+  if (source == null || functionNamesByOutput.some((names) => names == null)) {
     return { outcome: 'rejected', reason: 'projection_requires_one_connected_source' };
   }
-  const document = encodeDvtSubstraitProjectionDocument(
-    createDvtSubstraitProjectionDraft({
-      source,
-      targetNodeId: args.targetNode.id,
-      outputs: args.recipe.outputs.map((output) => ({
+  let draft = createDvtSubstraitProjectionDraft({
+    source,
+    targetNodeId: args.targetNode.id,
+    outputs: args.recipe.outputs.map((output) => ({
+      fieldId: output.id,
+      name: output.name,
+      sourceFieldName: output.expression.inputs[0]!.columnName,
+    })),
+  });
+  for (const [outputIndex, functionNames] of functionNamesByOutput.entries()) {
+    const output = args.recipe.outputs[outputIndex]!;
+    const sourceField = source.fields.find(
+      (field) => field.name === output.expression.inputs[0]!.columnName
+    );
+    if (sourceField == null || functionNames == null) {
+      return { outcome: 'rejected', reason: 'projection_requires_one_connected_source' };
+    }
+    for (const functionName of functionNames) {
+      const capability = resolveDvtSubstraitColumnFunctions({
+        dataType: sourceField.dataType,
+        provider: source.sourceRef.connectionRef.provider,
+      }).find((candidate) => candidate.name === functionName);
+      if (capability == null) {
+        return { outcome: 'rejected', reason: 'projection_requires_one_connected_source' };
+      }
+      const nextDraft = applyDvtSubstraitProjectionFunction(draft, {
         fieldId: output.id,
-        name: output.name,
-        sourceFieldName: output.expression.inputs[0]!.columnName,
-      })),
-    })
-  );
+        capabilityId: capability.capabilityId,
+        dataType: sourceField.dataType,
+        provider: source.sourceRef.connectionRef.provider,
+      });
+      if (nextDraft === draft) {
+        return { outcome: 'rejected', reason: 'projection_requires_one_connected_source' };
+      }
+      draft = nextDraft;
+    }
+  }
+  const document = encodeDvtSubstraitProjectionDocument(draft);
   return {
     outcome: 'applied',
     node: applyDvtSubstraitSemanticDocument(args.targetNode, document),

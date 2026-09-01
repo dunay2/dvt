@@ -1,3 +1,8 @@
+import { create } from '@bufbuild/protobuf';
+import {
+  FunctionOptionSchema,
+  type Expression_ScalarFunction,
+} from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -19,6 +24,7 @@ import {
 import {
   applyDvtSubstraitProjectionFunction,
   createDvtSubstraitProjectionDraft,
+  inspectDvtSubstraitProjectionDraft,
   resolveDvtSubstraitColumnFunctions,
   type DvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
@@ -162,6 +168,75 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
         provider: 'postgres',
       })
     ).toBe(base);
+  });
+
+  it('rejects scalar functions whose return type or behavioral options exceed the profile', () => {
+    const trim = resolveDvtSubstraitColumnFunctions({
+      dataType: 'text',
+      provider: 'postgres',
+    }).find((item) => item.name === 'trim');
+    if (trim == null) throw new Error('Expected admitted trim capability.');
+    const applyTrim = (): DvtSubstraitProjectionDraft =>
+      applyDvtSubstraitProjectionFunction(connectedOrdersProjectionDraft(), {
+        fieldId: 'output:customer',
+        capabilityId: trim.capabilityId,
+        dataType: 'text',
+        provider: 'postgres',
+      });
+    const readScalarFunction = (draft: DvtSubstraitProjectionDraft): Expression_ScalarFunction => {
+      const root = draft.plan.relations[0]?.relType;
+      const project = root?.case === 'root' ? root.value.input?.relType : undefined;
+      const expression = project?.case === 'project' ? project.value.expressions[0] : undefined;
+      if (expression?.rexType.case !== 'scalarFunction') {
+        throw new Error('Expected one scalar function expression.');
+      }
+      return expression.rexType.value;
+    };
+
+    const invalidReturnType = applyTrim();
+    readScalarFunction(invalidReturnType).outputType = undefined;
+    expect(inspectDvtSubstraitProjectionDraft(invalidReturnType)).toEqual({ ok: false });
+
+    const unsupportedOptions = applyTrim();
+    readScalarFunction(unsupportedOptions).options.push(
+      create(FunctionOptionSchema, { name: 'unsupported', preference: ['enabled'] })
+    );
+    expect(inspectDvtSubstraitProjectionDraft(unsupportedOptions)).toEqual({ ok: false });
+  });
+
+  it('applies a function only to the selected output when expressions are shared', () => {
+    const functions = resolveDvtSubstraitColumnFunctions({
+      dataType: 'text',
+      provider: 'postgres',
+    });
+    const trim = functions.find((item) => item.name === 'trim');
+    const upper = functions.find((item) => item.name === 'upper');
+    if (trim == null || upper == null) throw new Error('Expected admitted text functions.');
+    const withTrim = applyDvtSubstraitProjectionFunction(connectedOrdersProjectionDraft(), {
+      fieldId: 'output:customer',
+      capabilityId: trim.capabilityId,
+      dataType: 'text',
+      provider: 'postgres',
+    });
+    const root = withTrim.plan.relations[0]?.relType;
+    const project = root?.case === 'root' ? root.value.input?.relType : undefined;
+    const emitKind = project?.case === 'project' ? project.value.common?.emitKind : undefined;
+    if (emitKind?.case !== 'emit') throw new Error('Expected projection output mapping.');
+    emitKind.value.outputMapping[2] = emitKind.value.outputMapping[1]!;
+    expect(inspectDvtSubstraitProjectionDraft(withTrim).ok).toBe(true);
+
+    const withUpper = applyDvtSubstraitProjectionFunction(withTrim, {
+      fieldId: 'output:customer',
+      capabilityId: upper.capabilityId,
+      dataType: 'text',
+      provider: 'postgres',
+    });
+    const inspection = inspectDvtSubstraitProjectionDraft(withUpper);
+
+    expect(inspection.ok).toBe(true);
+    if (!inspection.ok) return;
+    expect(inspection.projection.outputs[1]?.operations).toEqual(['trim', 'upper']);
+    expect(inspection.projection.outputs[2]?.operations).toEqual(['trim']);
   });
 
   it('fails closed while the pilot recipe is incomplete', async () => {
