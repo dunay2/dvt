@@ -240,7 +240,7 @@ describe('DbtNodeRenderer history panel', () => {
     expect(document.body.textContent).not.toContain('No run history for this node.');
   });
 
-  it('renders dbt card metrics through the shared graph node card read model', async () => {
+  it('renders compact dbt metrics without duplicating the column count', async () => {
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -283,7 +283,7 @@ describe('DbtNodeRenderer history panel', () => {
     expect(document.body.textContent).toContain('analytics');
     expect(document.body.textContent).toContain('Mat.');
     expect(document.body.textContent).toContain('Deps');
-    expect(document.body.textContent).toContain('Columns');
+    expect(document.body.textContent).not.toContain('Columns');
     expect(
       document.querySelector(
         '[data-slot="graph-node-metric-hotspot"][aria-label="Mat.: incremental"]'
@@ -295,8 +295,7 @@ describe('DbtNodeRenderer history panel', () => {
     ).toBe('2');
     expect(
       document.querySelector('[data-slot="graph-node-metric-hotspot"][aria-label="Columns: 1"]')
-        ?.textContent
-    ).toBe('1');
+    ).toBeNull();
   });
 
   it('forwards shared column lineage interactions to the DBT card', async () => {
@@ -350,7 +349,7 @@ describe('DbtNodeRenderer history panel', () => {
     ).not.toBeNull();
   });
 
-  it('opens the authoritative dbt file from the card File metric', async () => {
+  it('does not restore the removed File metric on dbt cards', async () => {
     const onInspectNode = vi.fn();
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -385,14 +384,10 @@ describe('DbtNodeRenderer history panel', () => {
       );
     });
 
-    const fileAction = container.querySelector<HTMLButtonElement>(
-      '[data-slot="graph-node-metric-hotspot"]'
-    );
-    act(() => {
-      fireEvent.click(fileAction!);
-    });
-
-    expect(onInspectNode).toHaveBeenCalledWith('model_orders', 'code');
+    expect(
+      container.querySelector('[data-slot="graph-node-metric-hotspot"][aria-label^="Code:"]')
+    ).toBeNull();
+    expect(onInspectNode).not.toHaveBeenCalled();
   });
 
   it('does not expose execution selection as a node-card header button', async () => {

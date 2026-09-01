@@ -280,7 +280,7 @@ describe('GraphNodeCardView', () => {
     expect(onCardClick).not.toHaveBeenCalled();
   });
 
-  it('forwards the canonical node id through the generic graph renderer file action', () => {
+  it('does not restore the removed File metric through the generic graph renderer', () => {
     const onInspectNode = vi.fn();
     const node: CanonicalNode = {
       id: 'source.auth_audit_events',
@@ -318,14 +318,8 @@ describe('GraphNodeCardView', () => {
       );
     });
 
-    const fileAction = container.querySelector<HTMLButtonElement>(
-      '[data-slot="graph-node-metric-hotspot"]'
-    );
-    act(() => {
-      fireEvent.click(fileAction!);
-    });
-
-    expect(onInspectNode).toHaveBeenCalledWith('source.auth_audit_events', 'code');
+    expect(container.querySelector('[data-slot="graph-node-metric-hotspot"]')).toBeNull();
+    expect(onInspectNode).not.toHaveBeenCalled();
   });
 
   it('reveals the structured source identity from the table title on keyboard focus', async () => {
