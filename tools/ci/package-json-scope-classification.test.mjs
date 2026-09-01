@@ -4,8 +4,48 @@ import test from 'node:test';
 import {
   WORKSPACE_ENTRIES,
   classifyPackageJsonChange,
+  computeTestPackageMatrix,
+  computeWorkflowModeScopeOutputs,
   computeWorkspaceMatrix,
 } from './scope-config.mjs';
+
+function classifyLintStagedMetadataChange() {
+  return classifyPackageJsonChange(
+    {
+      scripts: {},
+      'lint-staged': {
+        'apps/**/*.{ts,tsx}': ['eslint --fix'],
+      },
+    },
+    {
+      scripts: {},
+      'lint-staged': {
+        'apps/**/*.{ts,tsx}': ['eslint --fix --config tools/ci/eslint-precommit.config.cjs'],
+      },
+    }
+  );
+}
+
+test('lint-staged metadata stays in CI validation without runtime fan-out', () => {
+  const classification = classifyLintStagedMetadataChange();
+
+  assert.equal(classification.nonScriptChange, true);
+  assert.equal(classification.developerWorkflowMetadataOnly, true);
+  assert.equal(classification.dependencySensitive, false);
+  assert.equal(classification.rootBuildSensitive, false);
+  assert.equal(classification.ciToolingSensitive, true);
+
+  const context = { packageJsonChange: classification };
+  assert.deepEqual(computeWorkspaceMatrix(['package.json'], context).include, []);
+  assert.deepEqual(computeTestPackageMatrix(['package.json'], context).include, []);
+
+  const testScope = computeWorkflowModeScopeOutputs('test', ['package.json'], context);
+  assert.equal(testScope.root_build_sensitive, false);
+
+  const workflowScope = computeWorkflowModeScopeOutputs('workflow', ['package.json'], context);
+  assert.equal(workflowScope.changed_file_validation_relevant, true);
+  assert.equal(workflowScope.ci_tool_executable_contracts_relevant, true);
+});
 
 test('package json governance db alias stays out of runtime workspace scope', () => {
   const previousPackage = { scripts: {} };

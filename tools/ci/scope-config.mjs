@@ -520,6 +520,12 @@ function stripScripts(packageJson) {
   return rest;
 }
 
+function stripDeveloperWorkflowMetadata(packageJson) {
+  const rest = stripScripts(packageJson);
+  delete rest['lint-staged'];
+  return rest;
+}
+
 function stableJson(value) {
   if (Array.isArray(value)) {
     return `[${value.map(stableJson).join(',')}]`;
@@ -564,10 +570,20 @@ export function classifyPackageJsonChange(previousPackageJson, nextPackageJson) 
   );
   const nonScriptChange =
     stableJson(stripScripts(previousPackageJson)) !== stableJson(stripScripts(nextPackageJson));
-  const dependencySensitive = nonScriptChange;
+  const developerWorkflowMetadataChange =
+    stableJson(previousPackageJson?.['lint-staged']) !==
+    stableJson(nextPackageJson?.['lint-staged']);
+  const nonDeveloperWorkflowMetadataChange =
+    stableJson(stripDeveloperWorkflowMetadata(previousPackageJson)) !==
+    stableJson(stripDeveloperWorkflowMetadata(nextPackageJson));
+  const developerWorkflowMetadataOnly =
+    developerWorkflowMetadataChange &&
+    !nonDeveloperWorkflowMetadataChange &&
+    changedScriptNames.length === 0;
+  const dependencySensitive = nonDeveloperWorkflowMetadataChange;
   const lifecycleSensitive = changedScriptNames.some(isLifecycleScript);
   const rootBuildSensitive =
-    nonScriptChange ||
+    nonDeveloperWorkflowMetadataChange ||
     lifecycleSensitive ||
     commandClasses.some((commandClass) => isRuntimeFanoutCommand(commandClass));
   const governanceToolingOnly =
@@ -579,14 +595,18 @@ export function classifyPackageJsonChange(previousPackageJson, nextPackageJson) 
     changedScriptNames,
     commandClasses,
     nonScriptChange,
+    developerWorkflowMetadataChange,
+    developerWorkflowMetadataOnly,
     packageScriptsOnly: changedScriptNames.length > 0 && !nonScriptChange,
     dependencySensitive,
     lifecycleSensitive,
     rootBuildSensitive,
     governanceToolingOnly,
-    ciToolingSensitive: commandClasses.some((commandClass) =>
-      ['ci-tooling', 'developer-workflow', 'test-tooling'].includes(commandClass.domain)
-    ),
+    ciToolingSensitive:
+      developerWorkflowMetadataChange ||
+      commandClasses.some((commandClass) =>
+        ['ci-tooling', 'developer-workflow', 'test-tooling'].includes(commandClass.domain)
+      ),
     determinismSensitive: changedScriptNames.some(isDeterminismJobScript),
     temporalCapabilitySensitive: commandClasses.some(
       (commandClass) => commandClass.domain === 'runtime-capability'
@@ -821,6 +841,8 @@ function failClosedPackageJsonChange(error) {
     changedScriptNames: [],
     commandClasses: [],
     nonScriptChange: true,
+    developerWorkflowMetadataChange: false,
+    developerWorkflowMetadataOnly: false,
     packageScriptsOnly: false,
     dependencySensitive: true,
     lifecycleSensitive: true,
