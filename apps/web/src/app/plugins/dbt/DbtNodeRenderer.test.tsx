@@ -39,10 +39,10 @@ describe('DbtNodeRenderer history panel', () => {
     expect(dbtInspectorPanels.map((panel) => resolveString(panel.label, 'es'))).toEqual([
       'Vista general',
       'SQL',
-      'Configuración',
       'Columnas',
       'Historial',
     ]);
+    expect(dbtInspectorPanels.some((panel) => panel.id === 'dbt.config')).toBe(false);
   });
 
   const buildSnapshot = (runId: string): RunSnapshot => ({
@@ -174,14 +174,11 @@ describe('DbtNodeRenderer history panel', () => {
   it('localizes contributed Inspector content and empty history in Spanish', async () => {
     useApplicationLanguageStore.setState({ language: 'es' });
     const overviewPanel = dbtInspectorPanels.find((panel) => panel.id === 'dbt.overview');
-    const configPanel = dbtInspectorPanels.find((panel) => panel.id === 'dbt.config');
     expect(overviewPanel).toBeDefined();
-    expect(configPanel).toBeDefined();
-    if (!overviewPanel || !configPanel) {
+    if (!overviewPanel) {
       throw new Error('EXPECTED_DBT_LOCALIZED_PANELS');
     }
     const OverviewPanel = overviewPanel.component;
-    const ConfigPanel = configPanel.component;
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -207,11 +204,6 @@ describe('DbtNodeRenderer history panel', () => {
             activeRunId={null}
             onClose={vi.fn()}
           />
-          <ConfigPanel
-            node={buildNode({ metadata: { config: { materialized: 'view' } } })}
-            activeRunId={null}
-            onClose={vi.fn()}
-          />
         </>
       );
     });
@@ -225,7 +217,7 @@ describe('DbtNodeRenderer history panel', () => {
     expect(document.body.textContent).toContain('Descripción');
     expect(document.body.textContent).toContain('Etiquetas');
     expect(document.body.textContent).toContain('Dependencias');
-    expect(document.body.textContent).toContain('Configuración');
+    expect(document.body.textContent).not.toContain('Configuración');
     expect(document.body.textContent).not.toMatch(/Package|Path|Status|Idle|Tags/);
 
     act(() => {

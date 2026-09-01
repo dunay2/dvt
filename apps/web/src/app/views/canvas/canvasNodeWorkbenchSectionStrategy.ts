@@ -92,7 +92,7 @@ function isSupportedSection(
   }
 
   if (section.id === 'summary') {
-    return args.contributedSectionIds.has(section.id);
+    return args.contributedSectionIds.has(section.id) || hasRecordedSectionContent(section);
   }
 
   if (args.contributedSectionIds.has(section.id)) {

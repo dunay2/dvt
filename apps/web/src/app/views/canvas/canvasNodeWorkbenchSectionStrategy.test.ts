@@ -77,6 +77,7 @@ describe('resolveCanvasNodeWorkbenchSectionModel', () => {
       'general',
       'inputs-outputs',
       'keys',
+      'summary',
     ]);
     expect(result.primarySectionIds).toEqual(['code', 'general', 'inputs-outputs']);
   });
@@ -101,7 +102,7 @@ describe('resolveCanvasNodeWorkbenchSectionModel', () => {
     expect(result.primarySectionIds).toEqual(['code', 'general', 'columns']);
   });
 
-  it('keeps file-backed Code reachable while passive empty sections stay absent', () => {
+  it('keeps file-backed Code and recorded Summary reachable while passive empty sections stay absent', () => {
     const result = resolveCanvasNodeWorkbenchSectionModel({
       nodeKind: 'dbt:model',
       canEditNode: false,
@@ -118,7 +119,7 @@ describe('resolveCanvasNodeWorkbenchSectionModel', () => {
       ],
     });
 
-    expect(result.sections.map(({ id }) => id)).toEqual(['code', 'general']);
+    expect(result.sections.map(({ id }) => id)).toEqual(['code', 'general', 'summary']);
     expect(result.primarySectionIds).toEqual(['code', 'general']);
   });
 });

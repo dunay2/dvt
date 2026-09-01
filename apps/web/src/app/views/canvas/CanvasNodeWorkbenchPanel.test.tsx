@@ -603,8 +603,19 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(readonlyLabels).not.toContain('Schema');
     expect(readonlyLabels).not.toContain('Table');
     expect(readonlyLabels).not.toContain('Source');
-    expect(generalSection?.textContent).toContain('Node ID');
+    expect(generalSection?.textContent).not.toContain('Node ID');
+    expect(generalSection?.textContent).not.toContain('Plugin');
     expect(generalSection?.textContent).toContain('Rows');
+
+    renderPanel(root, 'summary');
+    const summarySection = container.querySelector(
+      '[data-slot="canvas-node-workbench-summary-section"]'
+    );
+    expect(summarySection?.textContent).toContain('Node ID');
+    expect(summarySection?.textContent).toContain('Kind');
+    expect(summarySection?.textContent).toContain('Role');
+    expect(summarySection?.textContent).toContain('Status');
+    expect(summarySection?.textContent).toContain('Plugin');
   });
 
   it('renders DVT transform upstream columns as read-only facts inside the Columns tab', () => {
