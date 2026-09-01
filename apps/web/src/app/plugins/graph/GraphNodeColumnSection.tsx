@@ -1,5 +1,5 @@
 /** Owned concern: render recorded graph-node columns as a compact disclosure. */
-import { useEffect, useId, useState, type ReactElement } from 'react';
+import { useEffect, useId, useRef, useState, type ReactElement } from 'react';
 import { Check, ChevronDown, ChevronUp, Table } from 'lucide-react';
 
 import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
@@ -52,6 +52,12 @@ export type GraphNodeColumnPortIdentity = Readonly<{
   nodeId: string;
   columnId: string;
 }>;
+export type GraphNodeColumnReorderIdentity = Readonly<{
+  nodeId: string;
+  columnId: string;
+  targetColumnId: string;
+  placement: 'before' | 'after';
+}>;
 
 export type GraphNodeColumnSectionProps = Readonly<{
   columns: readonly GraphNodeColumn[];
@@ -64,6 +70,13 @@ export type GraphNodeColumnSectionProps = Readonly<{
     columnId: string;
     capabilityId: string;
   }) => void;
+  onColumnOutputToggle?: (identity: {
+    nodeId: string;
+    columnId: string;
+    columnType: string;
+    output: boolean;
+  }) => void;
+  onColumnReorder?: (identity: GraphNodeColumnReorderIdentity) => void;
   onDisclosureChange?: (expanded: boolean) => void;
   onColumnLayoutChange?: () => void;
   onAutomap?: () => void;
@@ -94,6 +107,21 @@ export function resolveGraphNodeColumnInteractionProps(args: {
             capabilityId: string;
           }) => void)
         : undefined,
+    onColumnOutputToggle:
+      args.nodeRole === 'transform' && typeof data.onToggleDvtSubstraitColumnOutput === 'function'
+        ? (data.onToggleDvtSubstraitColumnOutput as (identity: {
+            nodeId: string;
+            columnId: string;
+            columnType: string;
+            output: boolean;
+          }) => void)
+        : undefined,
+    onColumnReorder:
+      args.nodeRole === 'transform' && typeof data.onReorderDvtSubstraitColumnOutput === 'function'
+        ? (data.onReorderDvtSubstraitColumnOutput as (
+            identity: GraphNodeColumnReorderIdentity
+          ) => void)
+        : undefined,
     onColumnDisclosureChange:
       typeof data.onColumnDisclosureChange === 'function'
         ? (data.onColumnDisclosureChange as (nodeId: string, expanded: boolean) => void)
@@ -118,6 +146,8 @@ export function GraphNodeColumnSection({
   activeColumnHandleId,
   onColumnPortActivate,
   onColumnFunctionApply,
+  onColumnOutputToggle,
+  onColumnReorder,
   onDisclosureChange,
   onColumnLayoutChange,
   onAutomap,
@@ -127,12 +157,20 @@ export function GraphNodeColumnSection({
   const [keyboardFunctionMenuColumnId, setKeyboardFunctionMenuColumnId] = useState<string | null>(
     null
   );
+  const draggedColumnIdRef = useRef<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<{
+    columnId: string;
+    placement: 'before' | 'after';
+  } | null>(null);
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = resolveGraphNodeCardCopy(applicationLanguage);
   const columnListId = useId();
   const portDirectionKey = portDirections.join(':');
   const visibleColumns = showAllColumns ? columns : columns.slice(0, MAX_PREVIEW_COLUMNS);
   const remainingColumnCount = Math.max(columns.length - MAX_PREVIEW_COLUMNS, 0);
+  const reorderableColumnIds = columns.flatMap((column) =>
+    column.output !== false && column.id != null ? [column.id] : []
+  );
   const remainderActionLabel = copy.remainingColumnsLabelTemplate.replace(
     '{count}',
     String(remainingColumnCount)
@@ -188,6 +226,8 @@ export function GraphNodeColumnSection({
             {visibleColumns.map((column) => {
               const columnId = column.id ?? column.name;
               const isOutput = column.output !== false;
+              const canReorder =
+                isOutput && column.id != null && nodeId != null && onColumnReorder != null;
               const metadataRows = [
                 { label: copy.columnTypeLabel, value: column.type },
                 ...(column.nullable == null
@@ -218,6 +258,18 @@ export function GraphNodeColumnSection({
                     ? copy.columnOutputAriaLabelTemplate
                     : copy.columnAvailableInputAriaLabelTemplate
                   ).replace('{column}', column.name)}
+                  draggable={canReorder}
+                  onDragStart={(event) => {
+                    if (!canReorder) return;
+                    event.stopPropagation();
+                    draggedColumnIdRef.current = column.id ?? null;
+                    event.dataTransfer.effectAllowed = 'move';
+                    event.dataTransfer.setData('text/plain', column.id ?? '');
+                  }}
+                  onDragEnd={() => {
+                    draggedColumnIdRef.current = null;
+                    setDropTarget(null);
+                  }}
                   className={graphNodeColumnClasses.piece}
                 >
                   <span className={graphNodeColumnClasses.name}>{column.name}</span>
@@ -229,10 +281,28 @@ export function GraphNodeColumnSection({
                     {column.nullable === false ? (
                       <span className={graphNodeColumnClasses.constraint}>NN</span>
                     ) : null}
-                    <span
+                    <button
+                      type="button"
                       data-slot="graph-node-column-output-state"
+                      {...canvasNodeEmbeddedControlProps}
+                      aria-label={(isOutput
+                        ? copy.columnOutputAriaLabelTemplate
+                        : copy.columnAvailableInputAriaLabelTemplate
+                      ).replace('{column}', column.name)}
+                      aria-pressed={isOutput}
+                      disabled={nodeId == null || onColumnOutputToggle == null}
                       className={graphNodeColumnClasses.outputState}
-                      aria-hidden="true"
+                      onPointerDown={(event) => event.stopPropagation()}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        if (nodeId == null) return;
+                        onColumnOutputToggle?.({
+                          nodeId,
+                          columnId,
+                          columnType: column.type,
+                          output: !isOutput,
+                        });
+                      }}
                     >
                       {isOutput ? (
                         <Check
@@ -240,7 +310,7 @@ export function GraphNodeColumnSection({
                           className={graphNodeColumnClasses.outputCheck}
                         />
                       ) : null}
-                    </span>
+                    </button>
                   </span>
                 </div>
               );
@@ -264,8 +334,74 @@ export function GraphNodeColumnSection({
                 <div
                   key={columnId}
                   data-slot="graph-node-column-row"
+                  data-drop-placement={
+                    dropTarget?.columnId === columnId ? dropTarget.placement : undefined
+                  }
                   className={graphNodeColumnClasses.row}
+                  onDragOver={(event) => {
+                    const draggedColumnId = draggedColumnIdRef.current;
+                    if (!canReorder || draggedColumnId == null || draggedColumnId === column.id) {
+                      return;
+                    }
+                    event.preventDefault();
+                    event.stopPropagation();
+                    event.dataTransfer.dropEffect = 'move';
+                    const bounds = event.currentTarget.getBoundingClientRect();
+                    const placement =
+                      event.clientY < bounds.top + bounds.height / 2 ? 'before' : 'after';
+                    setDropTarget({ columnId, placement });
+                  }}
+                  onDragLeave={(event) => {
+                    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                      setDropTarget(null);
+                    }
+                  }}
+                  onDrop={(event) => {
+                    const draggedColumnId = draggedColumnIdRef.current;
+                    if (
+                      !canReorder ||
+                      nodeId == null ||
+                      draggedColumnId == null ||
+                      draggedColumnId === column.id
+                    ) {
+                      return;
+                    }
+                    event.preventDefault();
+                    event.stopPropagation();
+                    const placement =
+                      dropTarget?.columnId === columnId ? dropTarget.placement : null;
+                    if (placement != null) {
+                      onColumnReorder?.({
+                        nodeId,
+                        columnId: draggedColumnId,
+                        targetColumnId: columnId,
+                        placement,
+                      });
+                    }
+                    draggedColumnIdRef.current = null;
+                    setDropTarget(null);
+                  }}
                   onKeyDownCapture={(event) => {
+                    if (
+                      canReorder &&
+                      event.altKey &&
+                      (event.key === 'ArrowUp' || event.key === 'ArrowDown')
+                    ) {
+                      const sourceIndex = reorderableColumnIds.indexOf(columnId);
+                      const targetIndex = sourceIndex + (event.key === 'ArrowUp' ? -1 : 1);
+                      const targetColumnId = reorderableColumnIds[targetIndex];
+                      if (targetColumnId != null) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        onColumnReorder?.({
+                          nodeId,
+                          columnId,
+                          targetColumnId,
+                          placement: event.key === 'ArrowUp' ? 'before' : 'after',
+                        });
+                      }
+                      return;
+                    }
                     if (
                       column.functionMenu != null &&
                       onColumnFunctionApply != null &&

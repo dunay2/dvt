@@ -8,10 +8,15 @@ import { GraphNodeColumnSection, type GraphNodeColumn } from './GraphNodeColumnS
 import type {
   GraphNodeColumnPortDirection,
   GraphNodeColumnPortIdentity,
+  GraphNodeColumnReorderIdentity,
 } from './GraphNodeColumnSection';
 import { GraphNodeMetricRow } from './GraphNodeMetricRow';
 import { GraphNodeOperationalRail } from './GraphNodeOperationalRail';
 import { GraphNodeTagList } from './GraphNodeTagList';
+import {
+  GraphNodeAlgebraicDropZone,
+  type GraphNodeAlgebraicDrop,
+} from './GraphNodeAlgebraicDropZone';
 import type {
   GraphNodeCardReadModel,
   GraphNodeOperationalDetail,
@@ -55,9 +60,17 @@ export type GraphNodeCardViewProps = Readonly<{
     columnId: string;
     capabilityId: string;
   }) => void;
+  onColumnOutputToggle?: (identity: {
+    nodeId: string;
+    columnId: string;
+    columnType: string;
+    output: boolean;
+  }) => void;
+  onColumnReorder?: (identity: GraphNodeColumnReorderIdentity) => void;
   onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;
   onColumnLayoutChange?: () => void;
   onAutomapColumns?: (nodeId: string, columns: readonly GraphNodeCardColumn[]) => void;
+  algebraicDrop?: GraphNodeAlgebraicDrop;
 }>;
 
 function GraphNodeCardTitle({ cardModel }: { cardModel: GraphNodeCardReadModel }): ReactElement {
@@ -130,9 +143,12 @@ export function GraphNodeCardView({
   activeColumnHandleId,
   onColumnPortActivate,
   onColumnFunctionApply,
+  onColumnOutputToggle,
+  onColumnReorder,
   onColumnDisclosureChange,
   onColumnLayoutChange,
   onAutomapColumns,
+  algebraicDrop,
 }: GraphNodeCardViewProps): ReactElement {
   const operationalDetail = cardModel.operationalDetail;
   const interactiveOperationalDetail =
@@ -216,6 +232,8 @@ export function GraphNodeCardView({
             activeColumnHandleId={activeColumnHandleId}
             onColumnPortActivate={onColumnPortActivate}
             onColumnFunctionApply={onColumnFunctionApply}
+            onColumnOutputToggle={onColumnOutputToggle}
+            onColumnReorder={onColumnReorder}
             onDisclosureChange={
               nodeId == null || onColumnDisclosureChange == null
                 ? undefined
@@ -258,6 +276,7 @@ export function GraphNodeCardView({
           style={{ borderColor: overlayBorderColor }}
         />
       )}
+      {algebraicDrop == null ? null : <GraphNodeAlgebraicDropZone drop={algebraicDrop} />}
     </div>
   );
 }

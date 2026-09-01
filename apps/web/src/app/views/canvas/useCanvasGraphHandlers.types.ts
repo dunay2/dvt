@@ -2,6 +2,10 @@ import type { Edge, Node, ReactFlowProps } from '@xyflow/react';
 import type { Dispatch, SetStateAction } from 'react';
 import type { GraphNodeColumnPortIdentity } from '../../plugins/graph/GraphNodeColumnSection';
 import type { CanvasColumnLineageEdgeData } from './canvasColumnLineageProjection';
+import type {
+  CanvasAlgebraicCompositionIdentity,
+  CanvasAlgebraicCompositionOperation,
+} from './canvasAlgebraicComposition';
 
 import type {
   CanvasGraphInteractionEffects,
@@ -38,10 +42,30 @@ export type UseCanvasGraphHandlersResult = {
     columnId: string;
     capabilityId: string;
   }) => void;
+  handleToggleDvtSubstraitColumnOutput: (identity: {
+    nodeId: string;
+    columnId: string;
+    columnType: string;
+    output: boolean;
+  }) => void;
+  handleReorderDvtSubstraitColumnOutput: (identity: {
+    nodeId: string;
+    columnId: string;
+    targetColumnId: string;
+    placement: 'before' | 'after';
+  }) => void;
   handleColumnDisclosureChange: (nodeId: string, expanded: boolean) => void;
   handleAutomapCanvasColumns: (
     nodeId: string,
     columns: readonly Readonly<{ name: string; type: string }>[]
   ) => void;
   handleRemoveColumnMapping: (mapping: CanvasColumnLineageEdgeData) => void;
+  resolveCanvasAlgebraicCompositionOperations: (
+    identity: CanvasAlgebraicCompositionIdentity
+  ) => CanvasAlgebraicCompositionOperation[];
+  handleComposeCanvasNodes: (
+    identity: CanvasAlgebraicCompositionIdentity & {
+      operation: CanvasAlgebraicCompositionOperation;
+    }
+  ) => void;
 };

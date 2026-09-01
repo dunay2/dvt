@@ -184,6 +184,107 @@ describe('GraphNodeColumnSection', () => {
     expect(tooltip?.textContent).toContain('field:model:event_id');
   });
 
+  it('toggles canonical output inclusion from the check control', async () => {
+    const onColumnOutputToggle = vi.fn();
+    await act(async () => {
+      root.render(
+        <GraphNodeColumnSection
+          nodeId="transform-orders"
+          columns={[
+            { id: 'output:order_id', name: 'order_id', type: 'integer', output: true },
+            { id: 'customer', name: 'customer', type: 'text', output: false },
+          ]}
+          onColumnOutputToggle={onColumnOutputToggle}
+        />
+      );
+    });
+    await act(async () => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="graph-node-column-toggle"]')!
+      );
+    });
+
+    const outputControls = container.querySelectorAll<HTMLButtonElement>(
+      '[data-slot="graph-node-column-output-state"]'
+    );
+    expect(outputControls).toHaveLength(2);
+    expect(outputControls[0]?.getAttribute('aria-pressed')).toBe('true');
+    expect(outputControls[1]?.getAttribute('aria-pressed')).toBe('false');
+
+    await act(async () => {
+      fireEvent.click(outputControls[0]!);
+      fireEvent.click(outputControls[1]!);
+    });
+
+    expect(onColumnOutputToggle.mock.calls).toEqual([
+      [
+        {
+          nodeId: 'transform-orders',
+          columnId: 'output:order_id',
+          columnType: 'integer',
+          output: false,
+        },
+      ],
+      [
+        {
+          nodeId: 'transform-orders',
+          columnId: 'customer',
+          columnType: 'text',
+          output: true,
+        },
+      ],
+    ]);
+  });
+
+  it('emits the same semantic reorder command for pointer and keyboard movement', async () => {
+    const onColumnReorder = vi.fn();
+    await act(async () => {
+      root.render(
+        <GraphNodeColumnSection
+          nodeId="transform-orders"
+          columns={[
+            { id: 'output:first', name: 'first', type: 'text', output: true },
+            { id: 'output:second', name: 'second', type: 'text', output: true },
+            { id: 'output:third', name: 'third', type: 'text', output: true },
+          ]}
+          onColumnReorder={onColumnReorder}
+        />
+      );
+    });
+    await act(async () => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="graph-node-column-toggle"]')!
+      );
+    });
+
+    const rows = container.querySelectorAll<HTMLElement>('[data-slot="graph-node-column-row"]');
+    const pieces = container.querySelectorAll<HTMLElement>('[data-slot="graph-node-column-piece"]');
+    const dataTransfer = { effectAllowed: 'none', dropEffect: 'none', setData: vi.fn() };
+    await act(async () => {
+      fireEvent.dragStart(pieces[2]!, { dataTransfer });
+      fireEvent.dragOver(rows[0]!, { clientY: 11, dataTransfer });
+    });
+    await act(async () => {
+      fireEvent.drop(rows[0]!, { clientY: 11, dataTransfer });
+      fireEvent.keyDown(pieces[1]!, { key: 'ArrowUp', altKey: true });
+    });
+
+    expect(onColumnReorder.mock.calls.map(([command]) => command)).toEqual([
+      {
+        nodeId: 'transform-orders',
+        columnId: 'output:third',
+        targetColumnId: 'output:first',
+        placement: 'after',
+      },
+      {
+        nodeId: 'transform-orders',
+        columnId: 'output:second',
+        targetColumnId: 'output:first',
+        placement: 'before',
+      },
+    ]);
+  });
+
   it('offers admitted column functions from the native pointer and keyboard context menu', async () => {
     const onColumnFunctionApply = vi.fn();
     await act(async () => {

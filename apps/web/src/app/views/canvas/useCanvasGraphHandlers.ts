@@ -24,6 +24,7 @@ import {
   applyDvtSubstraitProjectionFunction,
   resolveDvtSubstraitProjectionEntry,
 } from './canvasDvtSubstraitProjection';
+import { useCanvasAlgebraicCompositionHandler } from './useCanvasAlgebraicCompositionHandler';
 
 export function useCanvasGraphHandlers({
   graphStrategy,
@@ -88,6 +89,7 @@ export function useCanvasGraphHandlers({
   const edgeAuthoringHandlers = useCanvasEdgeAuthoringHandlers(
     canvasGraphHandlerContractBuilders.edgeAuthoring(interactionContracts)
   );
+  const algebraicComposition = useCanvasAlgebraicCompositionHandler(interactionContracts);
   const handleColumnDisclosureChange = (nodeId: string, expanded: boolean) => {
     setNodes((currentNodes) =>
       currentNodes.map((node) =>
@@ -171,5 +173,7 @@ export function useCanvasGraphHandlers({
     ...nodeAuthoringHandlers,
     handleColumnDisclosureChange,
     handleApplyDvtSubstraitColumnFunction,
+    resolveCanvasAlgebraicCompositionOperations: algebraicComposition.resolveOperations,
+    handleComposeCanvasNodes: algebraicComposition.composeNodes,
   };
 }

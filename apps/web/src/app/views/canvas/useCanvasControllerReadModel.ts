@@ -109,9 +109,13 @@ type UseCanvasControllerReadModelArgs = {
     | 'activeColumnHandleId'
     | 'handleColumnPortActivate'
     | 'handleApplyDvtSubstraitColumnFunction'
+    | 'handleToggleDvtSubstraitColumnOutput'
+    | 'handleReorderDvtSubstraitColumnOutput'
     | 'handleColumnDisclosureChange'
     | 'handleAutomapCanvasColumns'
     | 'handleRemoveColumnMapping'
+    | 'resolveCanvasAlgebraicCompositionOperations'
+    | 'handleComposeCanvasNodes'
   >;
   onToggleExecutionSelection: (nodeId: string, shouldSelect: boolean) => void;
   activeCanvasKind: string;
@@ -203,8 +207,18 @@ export function useCanvasControllerReadModel({
           onApplyDvtSubstraitColumnFunction: canMutateGraph
             ? graphHandlers.handleApplyDvtSubstraitColumnFunction
             : undefined,
+          onToggleDvtSubstraitColumnOutput: canMutateGraph
+            ? graphHandlers.handleToggleDvtSubstraitColumnOutput
+            : undefined,
+          onReorderDvtSubstraitColumnOutput: canMutateGraph
+            ? graphHandlers.handleReorderDvtSubstraitColumnOutput
+            : undefined,
           onColumnDisclosureChange: graphHandlers.handleColumnDisclosureChange,
           onAutomapColumns: canMutateGraph ? graphHandlers.handleAutomapCanvasColumns : undefined,
+          resolveAlgebraicCompositionOperations: canMutateGraph
+            ? graphHandlers.resolveCanvasAlgebraicCompositionOperations
+            : undefined,
+          onComposeCanvasNodes: canMutateGraph ? graphHandlers.handleComposeCanvasNodes : undefined,
         },
       }).map((node) => {
         const canonicalNode = graphModel.canonicalNodesById.get(node.id);
@@ -233,6 +247,7 @@ export function useCanvasControllerReadModel({
               }>
             >
           | undefined;
+        let hasEditableProjection = false;
         if (
           canMutateGraph &&
           canonicalNode?.pluginId === 'dvt' &&
@@ -255,6 +270,7 @@ export function useCanvasControllerReadModel({
                   })
                 : null;
             if (projection != null) {
+              hasEditableProjection = true;
               const projectedMenus = new Map<
                 string,
                 Readonly<{
@@ -320,6 +336,12 @@ export function useCanvasControllerReadModel({
             : undefined,
           onApplyDvtSubstraitColumnFunction:
             columnFunctionMenus == null ? undefined : node.data.onApplyDvtSubstraitColumnFunction,
+          onToggleDvtSubstraitColumnOutput: hasEditableProjection
+            ? node.data.onToggleDvtSubstraitColumnOutput
+            : undefined,
+          onReorderDvtSubstraitColumnOutput: hasEditableProjection
+            ? node.data.onReorderDvtSubstraitColumnOutput
+            : undefined,
           onAutomapColumns: canAuthorColumnMappings ? node.data.onAutomapColumns : undefined,
           columns: presentsColumnLineage
             ? projectInteractiveColumns(node, columnFunctionMenus)
@@ -355,6 +377,10 @@ export function useCanvasControllerReadModel({
       graphHandlers.handleColumnDisclosureChange,
       graphHandlers.handleColumnPortActivate,
       graphHandlers.handleApplyDvtSubstraitColumnFunction,
+      graphHandlers.handleReorderDvtSubstraitColumnOutput,
+      graphHandlers.handleToggleDvtSubstraitColumnOutput,
+      graphHandlers.resolveCanvasAlgebraicCompositionOperations,
+      graphHandlers.handleComposeCanvasNodes,
       onToggleExecutionSelection,
       graphModel.canonicalNodesById,
       graphModel.edges,

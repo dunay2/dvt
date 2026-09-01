@@ -2,7 +2,12 @@ import type { Node } from '@xyflow/react';
 import type {
   GraphNodeColumn,
   GraphNodeColumnPortIdentity,
+  GraphNodeColumnReorderIdentity,
 } from '../../plugins/graph/GraphNodeColumnSection';
+import type {
+  CanvasAlgebraicCompositionIdentity,
+  CanvasAlgebraicCompositionOperation,
+} from './canvasAlgebraicComposition';
 
 type NodeActionHandlers = {
   onInspectNode: (nodeId: string) => void;
@@ -16,8 +21,23 @@ type NodeActionHandlers = {
     columnId: string;
     capabilityId: string;
   }) => void;
+  onToggleDvtSubstraitColumnOutput?: (identity: {
+    nodeId: string;
+    columnId: string;
+    columnType: string;
+    output: boolean;
+  }) => void;
+  onReorderDvtSubstraitColumnOutput?: (identity: GraphNodeColumnReorderIdentity) => void;
   onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;
   onAutomapColumns?: (nodeId: string, columns: readonly GraphNodeColumn[]) => void;
+  resolveAlgebraicCompositionOperations?: (
+    identity: CanvasAlgebraicCompositionIdentity
+  ) => CanvasAlgebraicCompositionOperation[];
+  onComposeCanvasNodes?: (
+    identity: CanvasAlgebraicCompositionIdentity & {
+      operation: CanvasAlgebraicCompositionOperation;
+    }
+  ) => void;
 };
 
 type BuildCanvasNodeInteractionPresentationParams = {
@@ -55,8 +75,12 @@ export function buildCanvasNodeInteractionPresentation({
       onAttachSchemaToNode: handlers.onAttachSchemaToNode,
       onColumnPortActivate: handlers.onColumnPortActivate,
       onApplyDvtSubstraitColumnFunction: handlers.onApplyDvtSubstraitColumnFunction,
+      onToggleDvtSubstraitColumnOutput: handlers.onToggleDvtSubstraitColumnOutput,
+      onReorderDvtSubstraitColumnOutput: handlers.onReorderDvtSubstraitColumnOutput,
       onColumnDisclosureChange: handlers.onColumnDisclosureChange,
       onAutomapColumns: handlers.onAutomapColumns,
+      resolveAlgebraicCompositionOperations: handlers.resolveAlgebraicCompositionOperations,
+      onComposeCanvasNodes: handlers.onComposeCanvasNodes,
     },
   }));
 }

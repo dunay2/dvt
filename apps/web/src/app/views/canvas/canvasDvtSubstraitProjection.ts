@@ -247,12 +247,8 @@ export function createDvtSubstraitProjectionDraft(args: {
     sourceFieldName: string;
   }>[];
 }): DvtSubstraitProjectionDraft {
-  if (
-    args.targetNodeId.trim().length === 0 ||
-    args.targetNodeId !== args.targetNodeId.trim() ||
-    args.outputs.length === 0
-  ) {
-    throw new Error('Substrait projection requires a target identity and at least one output.');
+  if (args.targetNodeId.trim().length === 0 || args.targetNodeId !== args.targetNodeId.trim()) {
+    throw new Error('Substrait projection requires a target identity.');
   }
   const sourceFieldOrdinals = new Map(
     args.source.fields.map((field, ordinal) => [field.name, ordinal] as const)

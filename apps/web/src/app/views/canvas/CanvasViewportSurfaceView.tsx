@@ -25,6 +25,7 @@ import type { CanvasGraphSearchController } from './useCanvasGraphSearchControll
 import type { CanvasGraphFilterController } from './useCanvasGraphFilterController';
 import { CanvasColumnLineageEdge } from './CanvasColumnLineageEdge';
 import { CanvasDependencyEdge } from './CanvasDependencyEdge';
+import { useCanvasAlgebraicDrop } from './useCanvasAlgebraicDrop';
 
 const CANVAS_FIT_VIEW_OPTIONS = { padding: 0.32, maxZoom: 0.82 } as const;
 const CANVAS_EDGE_TYPES = {
@@ -163,6 +164,7 @@ function CanvasViewportReactFlowSurface({
   | 'nodeHealthPopoverModel'
   | 'graphFilterController'
 >): JSX.Element {
+  const algebraicDrop = useCanvasAlgebraicDrop(nodesWithImpact, canEditEdges);
   const handlePaneClick: NonNullable<ReactFlowProps<Node, Edge>['onPaneClick']> = (event) => {
     onCloseNodeHealthPopover();
     onImpactFocusNodeChange?.(null);
@@ -176,6 +178,7 @@ function CanvasViewportReactFlowSurface({
     contextMenuPresenter.closeContextMenu();
     onCloseNodeHealthPopover();
     onNodeDrag(event, node, nodes);
+    algebraicDrop.handleNodeDrag(node, nodes);
   };
   const handleNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']> = (
     event,
@@ -184,6 +187,7 @@ function CanvasViewportReactFlowSurface({
   ) => {
     contextMenuPresenter.closeContextMenu();
     onCloseNodeHealthPopover();
+    algebraicDrop.handleNodeDragStop(node, nodes);
     onNodeDragStop(event, node, nodes);
   };
   const handleEdgeContextMenu: NonNullable<ReactFlowProps<Node, Edge>['onEdgeContextMenu']> = (
@@ -224,7 +228,7 @@ function CanvasViewportReactFlowSurface({
       }}
     >
       <ReactFlow
-        nodes={nodesWithImpact}
+        nodes={algebraicDrop.nodes}
         edges={edges}
         onNodesChange={canMoveNodes ? onNodesChange : undefined}
         onEdgesChange={canEditEdges ? onEdgesChange : undefined}
