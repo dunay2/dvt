@@ -51,6 +51,9 @@ projection, generic plugin graph node rendering, and graph-node card chrome.
 - The focusable React Flow node label includes health from the same card read
   model that selects the border; health is not repeated as a visible status
   chip.
+- If a plugin card strategy throws while projecting accessible health, the
+  focusable label falls back to canonical default health for that node; plugin
+  failure cannot replace the Canvas route.
 - Draft-backed and dbt project-file Canvas controllers use the same accessible
   health projector.
 - Plugin-specific behavior remains in plugin contracts; this component owns only

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
 import { dbtGraphNodeCardStrategy } from '../../plugins/dbt/dbtGraphNodeCardStrategy';
+import type { GraphNodeCardStrategy } from '../../plugins/graph/graphNodeCardStrategyContracts';
 import {
   mapCanonicalEdgeToCanvasEdge,
   mapCanonicalNodeToCanvasNode,
@@ -94,6 +95,50 @@ describe('canvasNodeMapper', () => {
 
     expect(projectedNode.ariaLabel).toBe('Failed model, Model, Failed');
   });
+
+  it.each(['matches', 'build'] as const)(
+    'falls back to canonical health when a plugin card strategy throws from %s',
+    (failurePoint) => {
+      const canonicalNode = {
+        ...buildCanonicalNode(),
+        status: 'failed',
+      } satisfies CanonicalNode;
+      const mappedNode = mapCanonicalNodeToCanvasNode({
+        canonicalNode,
+        index: 0,
+        showColumns: false,
+      });
+      const throwingStrategy: GraphNodeCardStrategy = {
+        id: `throwing-${failurePoint}`,
+        matches: () => {
+          if (failurePoint === 'matches') {
+            throw new Error('Plugin matches failed');
+          }
+          return true;
+        },
+        build: () => {
+          throw new Error('Plugin build failed');
+        },
+      };
+
+      expect(() =>
+        projectCanvasNodeAccessibleHealth({
+          node: mappedNode,
+          canonicalNode,
+          data: mappedNode.data,
+          graphNodeCardStrategies: [throwingStrategy],
+        })
+      ).not.toThrow();
+      expect(
+        projectCanvasNodeAccessibleHealth({
+          node: mappedNode,
+          canonicalNode,
+          data: mappedNode.data,
+          graphNodeCardStrategies: [throwingStrategy],
+        }).ariaLabel
+      ).toBe('Raw orders, Source, Failed');
+    }
+  );
 
   it('projects one semantic dependency edge with an inset direction renderer', () => {
     const edge = mapCanonicalEdgeToCanvasEdge({
