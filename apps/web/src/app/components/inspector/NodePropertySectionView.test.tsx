@@ -68,7 +68,7 @@ describe('NodePropertySectionView', () => {
     container?.remove();
   });
 
-  it('renders column metadata from the section read model', () => {
+  it('collapses column metadata behind a name-first disclosure by default', () => {
     ({ container, root } = renderSection({
       id: 'columns',
       label: 'Columns',
@@ -84,14 +84,51 @@ describe('NodePropertySectionView', () => {
 
     expect(container.querySelector('[data-slot="node-section-columns-section"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="node-property-column-list"]')).not.toBeNull();
+    const disclosure = container.querySelector<HTMLDetailsElement>(
+      '[data-slot="node-property-column-disclosure"]'
+    );
+    const trigger = disclosure?.querySelector('summary');
+
+    expect(disclosure?.open).toBe(false);
+    expect(trigger?.textContent).toBe('order_id');
+    expect(trigger?.textContent).not.toContain('integer');
     expect(container.querySelector('dl')).not.toBeNull();
     expect(container.querySelector('table')).toBeNull();
-    expect(container.textContent).toContain('order_id');
-    expect(container.textContent).toContain('integer');
-    expect(container.textContent).toContain('not null');
+    expect(disclosure?.textContent).toContain('integer');
+    expect(disclosure?.textContent).toContain('not null');
     expect(
       container.querySelector('[data-slot="node-section-columns-description"]')?.textContent
     ).toBe('2 columns inherited from the connected source.');
+  });
+
+  it('uses independent native disclosures so pointer and keyboard activation share semantics', () => {
+    ({ container, root } = renderSection({
+      id: 'columns',
+      label: 'Columns',
+      rows: [],
+      tableRows: [
+        { id: 'event_id', cells: { name: 'event_id', type: 'text' } },
+        { id: 'event_type', cells: { name: 'event_type', type: 'text' } },
+      ],
+    }));
+
+    const disclosures = Array.from(
+      container.querySelectorAll<HTMLDetailsElement>(
+        '[data-slot="node-property-column-disclosure"]'
+      )
+    );
+    const firstTrigger = disclosures[0]?.querySelector<HTMLElement>('summary');
+
+    expect(disclosures).toHaveLength(2);
+    expect(disclosures.every((disclosure) => !disclosure.open)).toBe(true);
+    expect(firstTrigger?.tagName).toBe('SUMMARY');
+
+    act(() => {
+      firstTrigger?.click();
+    });
+
+    expect(disclosures[0]?.open).toBe(true);
+    expect(disclosures[1]?.open).toBe(false);
   });
 
   it('keeps long relationship values legible through horizontal table overflow', () => {
@@ -150,14 +187,17 @@ describe('NodePropertySectionView', () => {
 
     const record = container.querySelector('[data-slot="node-property-column-record"]');
     const values = Array.from(record?.querySelectorAll('dd') ?? []);
+    const disclosure = record?.querySelector<HTMLDetailsElement>('details');
+    const trigger = disclosure?.querySelector('summary');
 
     expect(container.querySelector('table')).toBeNull();
-    expect(record?.textContent).toContain('event_identifier_with_a_long_name');
+    expect(disclosure?.open).toBe(false);
+    expect(trigger?.textContent).toBe('event_identifier_with_a_long_name');
     expect(record?.textContent).toContain('auth_audit_events');
     expect(record?.textContent).toContain(
       'src_postgres_dvt_raw_auth_audit_events.event_identifier'
     );
-    expect(values).toHaveLength(5);
+    expect(values).toHaveLength(4);
     expect(values.every((value) => value.className.includes('break-words'))).toBe(true);
   });
 
