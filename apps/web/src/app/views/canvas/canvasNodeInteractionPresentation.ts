@@ -11,6 +11,11 @@ type NodeActionHandlers = {
   onToggleNodeSelection?: (nodeId: string, shouldSelect: boolean) => void;
   onAttachSchemaToNode?: (nodeId: string, schemaName: string) => void;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
+  onApplyDvtSubstraitColumnFunction?: (identity: {
+    nodeId: string;
+    columnId: string;
+    capabilityId: string;
+  }) => void;
   onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;
   onAutomapColumns?: (nodeId: string, columns: readonly GraphNodeColumn[]) => void;
 };
@@ -49,6 +54,7 @@ export function buildCanvasNodeInteractionPresentation({
       onToggleNodeSelection: handlers.onToggleNodeSelection,
       onAttachSchemaToNode: handlers.onAttachSchemaToNode,
       onColumnPortActivate: handlers.onColumnPortActivate,
+      onApplyDvtSubstraitColumnFunction: handlers.onApplyDvtSubstraitColumnFunction,
       onColumnDisclosureChange: handlers.onColumnDisclosureChange,
       onAutomapColumns: handlers.onAutomapColumns,
     },

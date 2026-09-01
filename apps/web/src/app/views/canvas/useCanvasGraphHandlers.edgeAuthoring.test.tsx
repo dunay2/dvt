@@ -696,4 +696,122 @@ describe('useCanvasGraphHandlers edge authoring', () => {
 
     harness.cleanup();
   });
+
+  it('applies a card column function through ConfigureCanvasDvtNode into the draft session', async () => {
+    const { applyDvtSubstraitSemanticDocument } = await vi.importActual<
+      typeof import('./canvasDvtTransformAuthoringAuthority')
+    >('./canvasDvtTransformAuthoringAuthority');
+    const {
+      createDvtSubstraitProjectionDraft,
+      decodeDvtSubstraitProjectionDocument,
+      encodeDvtSubstraitProjectionDocument,
+      inspectDvtSubstraitProjectionDraft,
+      resolveDvtSubstraitColumnFunctions,
+    } = await vi.importActual<typeof import('./canvasDvtSubstraitProjection')>(
+      './canvasDvtSubstraitProjection'
+    );
+    const source = {
+      ...buildCanonicalNode('source-orders', 'input'),
+      metadata: {
+        schema: 'raw',
+        tableName: 'orders',
+        connectedSourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'warehouse-main',
+            provider: 'postgres',
+          },
+          sourceObjectId: 'raw.orders',
+        } as const,
+        columns: [
+          { name: 'order_id', type: 'integer' },
+          { name: 'customer', type: 'text' },
+          { name: 'amount', type: 'numeric' },
+        ],
+      },
+    } satisfies CanonicalNode;
+    const projection = createDvtSubstraitProjectionDraft({
+      source: {
+        nodeId: source.id,
+        schema: 'raw',
+        table: 'orders',
+        sourceRef: source.metadata.connectedSourceRef,
+        fields: source.metadata.columns.map((column) => ({
+          name: column.name,
+          dataType: column.type,
+        })),
+      },
+      targetNodeId: 'transform-orders',
+      outputs: source.metadata.columns.map((column) => ({
+        fieldId: `output:${column.name}`,
+        name: column.name,
+        sourceFieldName: column.name,
+      })),
+    });
+    const transform = applyDvtSubstraitSemanticDocument(
+      buildCanonicalNode('transform-orders', 'transform'),
+      encodeDvtSubstraitProjectionDocument(projection)
+    );
+    const draftSession = {
+      ...buildDraftSession(),
+      workingSet: {
+        visibleNodeIds: [source.id, transform.id],
+        visibleEdges: [{ sourceId: source.id, targetId: transform.id }],
+        pendingExplicitNodeIds: [],
+      },
+      localNodeCatalog: { [source.id]: source, [transform.id]: transform },
+    };
+    const setDraftSession = vi.fn();
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      canonicalNodes: [source, transform],
+      edges: [
+        {
+          id: 'source-orders->transform-orders',
+          source: source.id,
+          target: transform.id,
+        },
+      ],
+      draftSession,
+      setDraftSession,
+    });
+    await harness.render();
+    const trim = resolveDvtSubstraitColumnFunctions({
+      dataType: 'text',
+      provider: 'postgres',
+    }).find((item) => item.name === 'trim');
+    if (trim == null) throw new Error('Expected admitted trim capability.');
+
+    act(() => {
+      harness.latest()?.handleApplyDvtSubstraitColumnFunction({
+        nodeId: transform.id,
+        columnId: 'output:customer',
+        capabilityId: trim.capabilityId,
+      });
+    });
+
+    expect(setDraftSession).toHaveBeenCalledOnce();
+    const updateDraftSession = setDraftSession.mock.calls[0]?.[0] as (
+      current: typeof draftSession
+    ) => typeof draftSession;
+    const nextSession = updateDraftSession(draftSession);
+    const nextNode = nextSession.localNodeCatalog?.[transform.id];
+    if (nextNode == null) throw new Error('Expected updated transform.');
+    const authority = readDvtTransformAuthoringAuthority(nextNode);
+    if (authority.mode !== 'substrait') throw new Error('Expected Substrait authority.');
+    const inspection = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+    );
+
+    expect(inspection.ok).toBe(true);
+    expect(
+      inspection.ok
+        ? inspection.projection.outputs.find((output) => output.fieldId === 'output:customer')
+            ?.operations
+        : []
+    ).toEqual(['trim']);
+
+    harness.cleanup();
+  });
 });
