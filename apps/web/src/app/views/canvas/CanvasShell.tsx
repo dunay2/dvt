@@ -303,7 +303,8 @@ export default function CanvasShell({
           (workspaceFilePath != null ||
             data.pluginKind === 'dbt:model' ||
             codeTruthKind === 'inline' ||
-            codeTruthKind === 'generated');
+            codeTruthKind === 'generated' ||
+            codeTruthKind === 'canonical');
         const canOpenNodeCode = data.canOpenNodeCode !== false && canInspectNodeCode;
         const sourceDataSampleTarget = resolveCanvasSourceDataSampleTarget(data);
         const sinkDataSampleTarget = resolveCanvasSinkDataSampleTarget(data, runSnapshot);

@@ -94,6 +94,51 @@ describe('CanvasShell graph base surface', () => {
     expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBeNull();
   });
 
+  it('routes canonical Transform code to the node inspector', async () => {
+    const onInspectNode = vi.fn();
+    await renderShell({
+      graph: {
+        nodesWithImpact: [
+          {
+            id: 'transform-1',
+            type: 'dbtNode',
+            position: { x: 0, y: 0 },
+            data: {
+              name: 'Transform 1',
+              pluginKind: 'dvt:transform',
+              status: 'idle',
+              presentationTruth: {
+                code: {
+                  kind: 'canonical',
+                  content: '{"schemaVersion":"dvt-substrait-semantic-document.v1"}',
+                  language: 'json',
+                  schemaVersion: 'dvt-substrait-semantic-document.v1',
+                  digest: 'a'.repeat(64),
+                },
+              },
+              onInspectNode,
+            },
+          },
+        ],
+      },
+    });
+
+    const forwardedNode = (
+      getCanvasShellState().canvasViewportProps?.nodesWithImpact as
+        | Array<{
+            data: {
+              canOpenNodeCode?: boolean;
+              onInspectNode?: (nodeId: string, preferredTabId?: string) => void;
+            };
+          }>
+        | undefined
+    )?.[0];
+    forwardedNode?.data.onInspectNode?.('transform-1', 'code');
+
+    expect(forwardedNode?.data.canOpenNodeCode).toBe(true);
+    expect(onInspectNode).toHaveBeenCalledWith('transform-1', 'code');
+  });
+
   it('keeps workspace-file Code inside the preserved node Properties context', async () => {
     const onHideInspector = vi.fn();
     const onShowInspector = vi.fn();
