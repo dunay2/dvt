@@ -73,6 +73,17 @@ test('pre-commit lint stays untyped while the canonical ESLint gate stays type-a
   const stagedEngineConfig = await stagedLint.calculateConfigForFile(
     path.join(repoRoot, 'packages', '@dvt', 'engine', 'src', 'WorkflowEngine.ts')
   );
+  const stagedTemporalWorkflowConfig = await stagedLint.calculateConfigForFile(
+    path.join(
+      repoRoot,
+      'packages',
+      '@dvt',
+      'adapter-temporal',
+      'src',
+      'workflows',
+      'RunPlanWorkflow.ts'
+    )
+  );
 
   assert.equal(stagedConfig.languageOptions.parserOptions.project, false);
   assert.equal(stagedConfig.rules['@typescript-eslint/no-floating-promises'][0], 0);
@@ -82,6 +93,10 @@ test('pre-commit lint stays untyped while the canonical ESLint gate stays type-a
   assert.equal(stagedConfig.rules['import/no-cycle'][0], 0);
   assert.deepEqual(Object.keys(stagedConfig.settings['import/resolver']), ['node']);
   assert.equal(stagedEngineConfig.rules['no-restricted-imports'][0], 2);
+  assert.equal(stagedEngineConfig.rules['no-restricted-syntax'][0], 2);
+  assert.equal(stagedEngineConfig.rules['no-restricted-properties'][0], 2);
+  assert.equal(stagedTemporalWorkflowConfig.rules['no-restricted-globals'][0], 2);
+  assert.equal(stagedTemporalWorkflowConfig.rules['no-restricted-imports'][0], 2);
 
   assert.deepEqual(canonicalConfig.languageOptions.parserOptions.project, [
     './apps/web/tsconfig.eslint.json',
@@ -117,4 +132,16 @@ test('web workspace lint is fast while strict lint remains available', () => {
   );
   assert.doesNotMatch(webPackageJson.scripts['lint:strict'], /eslint-precommit\.config\.cjs/u);
   assert.match(webPackageJson.scripts['lint:strict'], /eslint\.js/u);
+});
+
+test('determinism lint uses the fast syntax profile without package builds', () => {
+  const determinismLint = readPackageJson().scripts['lint:determinism'];
+
+  assert.match(determinismLint, /--config tools\/ci\/eslint-precommit\.config\.cjs/u);
+  assert.match(
+    determinismLint,
+    /--cache --cache-location node_modules\/\.cache\/eslint\/determinism/u
+  );
+  assert.doesNotMatch(determinismLint, /pnpm --filter/u);
+  assert.doesNotMatch(determinismLint, / build/u);
 });

@@ -12,7 +12,7 @@
     "lint:fix": "eslint \"packages/**/*.{ts,tsx}\" \"apps/**/*.{ts,tsx}\" --fix",
     "lint:md": "markdownlint-cli2 \"docs/**/*.md\" \"README.md\" --ignore-path .markdownlintignore --config .markdownlint-cli2.jsonc",
     "lint:md:changed": "node scripts/lint-markdown-changed.cjs",
-    "lint:determinism": "pnpm --filter @dvt/crypto build && pnpm --filter @dvt/plan-interpreter build && eslint \"packages/@dvt/engine/src/**/*.ts\" \"packages/@dvt/adapter-temporal/src/**/*.ts\" --max-warnings 0",
+    "lint:determinism": "eslint \"packages/@dvt/engine/src/**/*.ts\" \"packages/@dvt/adapter-temporal/src/**/*.ts\" --max-warnings 0 --config tools/ci/eslint-precommit.config.cjs --cache --cache-location node_modules/.cache/eslint/determinism",
     "format": "prettier --write '**/*.{ts,tsx,js,jsx,json,md,yml,yaml}'",
     "format:md:changed": "node scripts/format-markdown-changed.cjs",
     "fix:changed": "node scripts/fix-changed.cjs",
