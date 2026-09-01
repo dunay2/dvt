@@ -214,7 +214,7 @@ export const canvasViewAuthoringCopyByKey = {
   },
   nodePresentationGeneratedCodeDetailTemplate: {
     key: 'canvas.nodePresentation.generatedCodeDetailTemplate',
-    fallback: 'Generated DBT artifact at {path}. Edit Code to make it authored.',
+    fallback: 'Generated projection at {path}. The node semantic authority is unchanged.',
   },
   nodePresentationCodeUnavailableMessage: {
     key: 'canvas.nodePresentation.codeUnavailableMessage',

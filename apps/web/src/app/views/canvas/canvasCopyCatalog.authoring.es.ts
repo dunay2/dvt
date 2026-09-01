@@ -75,7 +75,7 @@ export const canvasViewAuthoringCopyEs = {
   nodePresentationWorkspaceCodeDetailTemplate:
     'El código está en el archivo {path} del workspace. Abre Código para inspeccionarlo o editarlo.',
   nodePresentationGeneratedCodeDetailTemplate:
-    'Artefacto DBT generado en {path}. Edita Código para convertirlo en código escrito.',
+    'Proyección generada en {path}. La autoridad semántica del nodo no cambia.',
   nodePresentationCodeUnavailableMessage:
     'No hay código inline ni archivo del workspace registrado para este nodo.',
   nodePresentationActionsLabel: 'Más acciones del nodo',

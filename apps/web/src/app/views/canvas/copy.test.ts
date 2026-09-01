@@ -76,6 +76,21 @@ describe('canvas copy catalog', () => {
     expect(spanishCopy.nodePresentationNoColumnsDetail).toBe('Heredadas: 0 · Declaradas: 0');
   });
 
+  it('describes generated code as a projection without assigning dbt authority', () => {
+    const englishCopy = resolveCanvasViewCopy('en-US');
+    const spanishCopy = resolveCanvasViewCopy('es-ES');
+
+    expect(englishCopy.nodePresentationGeneratedCodeDetailTemplate).toBe(
+      'Generated projection at {path}. The node semantic authority is unchanged.'
+    );
+    expect(spanishCopy.nodePresentationGeneratedCodeDetailTemplate).toBe(
+      'Proyección generada en {path}. La autoridad semántica del nodo no cambia.'
+    );
+    expect(
+      `${englishCopy.nodePresentationGeneratedCodeDetailTemplate} ${spanishCopy.nodePresentationGeneratedCodeDetailTemplate}`
+    ).not.toMatch(/dbt|artefacto|artifact/iu);
+  });
+
   it('exposes draft access posture copy in English and Spanish', () => {
     expect(canvasViewCopy.sessionRequiredDraftLabel).toBe('Session required');
     expect(canvasViewCopy.readOnlyDraftLabel).toBe('Read-only draft');
