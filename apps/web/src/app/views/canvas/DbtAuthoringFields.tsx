@@ -13,6 +13,11 @@ import { DbtSourceAuthoringSection } from './DbtSourceAuthoringSection';
 import { DbtTestAuthoringSection } from './DbtTestAuthoringSection';
 import { buildDbtAuthoringModelProjection } from './dbtAuthoringFieldsModel';
 import { buildDbtTestAuthoringFieldsModel } from './dbtTestAuthoringFieldsModel';
+import {
+  applyDbtNodeAuthoringMetadata,
+  createDbtNodeAuthoringMetadata,
+  reconcileDbtModelConnectedOrigin,
+} from './canvasDbtAuthoringModel';
 
 type DbtAuthoringFieldsProps = Readonly<{
   node: CanonicalNode;
@@ -93,7 +98,15 @@ export function DbtAuthoringFields({
   });
   const commitModelChange = (nextDbt: typeof draft.dbt): void => {
     if (nextDbt == null) return;
-    const nextDraft = { ...draft, dbt: nextDbt };
+    const reconciledNode = reconcileDbtModelConnectedOrigin({
+      node: applyDbtNodeAuthoringMetadata(node, nextDbt),
+      nodes,
+      edges,
+    });
+    const nextDraft = {
+      ...draft,
+      dbt: createDbtNodeAuthoringMetadata(reconciledNode),
+    };
     if (onCommitModelChange != null) {
       onCommitModelChange(nextDraft);
       return;

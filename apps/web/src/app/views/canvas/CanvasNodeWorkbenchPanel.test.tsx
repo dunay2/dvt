@@ -884,6 +884,46 @@ describe('CanvasNodeWorkbenchPanel', () => {
     );
   });
 
+  it('shows the connected origin schema consistently in the DBT model inspector', () => {
+    const source: CanonicalNode = {
+      ...SOURCE_NODE,
+      metadata: {
+        ...SOURCE_NODE.metadata,
+        schema: 'dvt',
+      },
+    };
+    const model: CanonicalNode = {
+      ...MODEL_NODE,
+      metadata: {
+        ...MODEL_NODE.metadata,
+        config: { schema: 'raw', table: 'model_1', materialized: 'view' },
+        dbt: { schemaName: 'raw', tableName: 'model_1', materialized: 'view' },
+      },
+    };
+
+    renderNodePanel(
+      root,
+      model,
+      'general',
+      { canEditNode: true, onApplyNodeDraft: vi.fn() },
+      1,
+      undefined,
+      { nodes: [source, model], edges: EDGES }
+    );
+
+    const generalSection = container.querySelector(
+      '[data-slot="canvas-node-workbench-general-section"]'
+    );
+    const originSelect = generalSection?.querySelector(
+      'select[name="dbt-origin"]'
+    ) as HTMLSelectElement;
+
+    expect(originSelect.value).toBe(source.id);
+    expect(generalSection?.textContent).toContain('Schema');
+    expect(generalSection?.textContent).toContain('dvt');
+    expect(generalSection?.textContent).not.toContain('Select a connected origin');
+  });
+
   it('preserves an empty DBT SQL draft across equivalent graph-node projections', () => {
     renderNodePanel(root, MODEL_NODE, 'code');
 

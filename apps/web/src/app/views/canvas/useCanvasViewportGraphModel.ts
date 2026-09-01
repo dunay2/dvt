@@ -10,6 +10,7 @@ import { resolveCanvasAuthoringVisibleEdgeId } from './canvasAuthoringGraphProje
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
+import { reconcileDbtModelConnectedOrigin } from './canvasDbtAuthoringModel';
 
 type UseCanvasViewportGraphModelArgs = {
   visibleNodeIds: string[];
@@ -60,18 +61,23 @@ function projectViewportNodes(args: {
   const visibleCanonicalNodes = resolveVisibleCanonicalNodes(visibleNodeIds, canonicalNodesById);
 
   return visibleCanonicalNodes.map((canonicalNode, index) => {
+    const presentedCanonicalNode = reconcileDbtModelConnectedOrigin({
+      node: canonicalNode,
+      nodes: visibleCanonicalNodes,
+      edges: visibleEdges,
+    });
     const fallbackNode = fallbackNodesById?.get(canonicalNode.id);
     const liveGesturePosition =
       fallbackNode?.dragging === undefined ? undefined : fallbackNode.position;
 
     const projectedNode = mapCanonicalNodeToCanvasNode({
-      canonicalNode,
+      canonicalNode: presentedCanonicalNode,
       index,
       showColumns: columnLevelLineageEnabled,
       portCompatibility: portCompatibilityByNodeId.get(canonicalNode.id),
       frozen: frozenNodeIds.has(canonicalNode.id),
       presentationTruth: projectCanvasNodePresentationTruth({
-        node: canonicalNode,
+        node: presentedCanonicalNode,
         nodes: visibleCanonicalNodes,
         edges: visibleEdges,
       }),

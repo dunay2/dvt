@@ -51,6 +51,7 @@ import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProj
 import { useCanvasNodeWorkbenchDraftController } from './useCanvasNodeWorkbenchDraftController';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { DvtTransformOutputView } from './DvtTransformOutputView';
+import { reconcileDbtModelConnectedOrigin } from './canvasDbtAuthoringModel';
 
 export type CanvasNodeWorkbenchPanelProps = Readonly<{
   node: CanonicalNode;
@@ -240,7 +241,7 @@ function buildContributionChildrenBySection(
 }
 
 export function CanvasNodeWorkbenchPanel({
-  node,
+  node: canonicalNode,
   nodes,
   edges,
   activeRunId,
@@ -255,6 +256,10 @@ export function CanvasNodeWorkbenchPanel({
 }: CanvasNodeWorkbenchPanelProps): JSX.Element {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasViewCopy(applicationLanguage);
+  const node = useMemo(
+    () => reconcileDbtModelConnectedOrigin({ node: canonicalNode, nodes, edges }),
+    [canonicalNode, edges, nodes]
+  );
   const [activeTab, setActiveTab] = useState<string | undefined>(() => preferredTabId ?? undefined);
   const [appliedPreferredTabKey, setAppliedPreferredTabKey] = useState<string | null>(null);
   const draftController = useCanvasNodeWorkbenchDraftController(node, authoring.workspaceScope);

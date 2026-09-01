@@ -10,8 +10,9 @@ import {
 } from './canvasConnectionAggregate';
 import { automapCanvasColumns } from './canvasColumnMappingAuthoring';
 import { canvasGraphLifecycle } from './canvasGraphLifecycle';
-import type { CanvasDraftSession } from './canvasDraftSession';
+import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
+import { reconcileDbtModelConnectedOrigin } from './canvasDbtAuthoringModel';
 
 type CanvasEdgeAdmissionTransactionState = {
   canonicalNodesById: Map<string, CanonicalNode>;
@@ -100,6 +101,31 @@ function applyConfirmedConnectionColumnMappings(args: {
     : args.transaction;
 }
 
+function applyConnectedDbtModelOrigin(args: {
+  transaction: AcceptedCanvasEdgeAdmissionTransaction;
+  canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
+  targetNodeId: string;
+}): AcceptedCanvasEdgeAdmissionTransaction {
+  const nodes = resolveDraftNodes(args.transaction.draftSession, args.canonicalNodesById);
+  const targetNode = nodes.find((node) => node.id === args.targetNodeId);
+  if (targetNode == null) return args.transaction;
+
+  const reconciledNode = reconcileDbtModelConnectedOrigin({
+    node: targetNode,
+    nodes,
+    edges: args.transaction.draftSession.workingSet.visibleEdges,
+  });
+  if (reconciledNode === targetNode) return args.transaction;
+
+  return {
+    ...args.transaction,
+    draftSession: canvasDraftSession.workingSet.upsertNode(
+      args.transaction.draftSession,
+      reconciledNode
+    ),
+  };
+}
+
 export function resolveCanvasEdgeConfirmationTransaction({
   canonicalNodesById,
   connection,
@@ -129,8 +155,13 @@ export function resolveCanvasEdgeConfirmationTransaction({
   if (transaction.outcome !== 'confirmed' || connection.target == null) {
     return transaction;
   }
-  return applyConfirmedConnectionColumnMappings({
+  const mappedTransaction = applyConfirmedConnectionColumnMappings({
     transaction,
+    canonicalNodesById,
+    targetNodeId: connection.target,
+  });
+  return applyConnectedDbtModelOrigin({
+    transaction: mappedTransaction,
     canonicalNodesById,
     targetNodeId: connection.target,
   });
@@ -159,9 +190,15 @@ export function resolveCanvasEdgeReconnectTransaction({
     };
   }
 
-  return buildAcceptedEdgeTransaction({
+  const transaction = buildAcceptedEdgeTransaction({
     outcome: 'reconnected',
     draftSession,
     nextEdges: result.nextEdges,
+  });
+  if (transaction.outcome !== 'reconnected' || connection.target == null) return transaction;
+  return applyConnectedDbtModelOrigin({
+    transaction,
+    canonicalNodesById,
+    targetNodeId: connection.target,
   });
 }

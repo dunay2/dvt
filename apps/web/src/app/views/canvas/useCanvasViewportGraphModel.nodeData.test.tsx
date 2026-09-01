@@ -11,6 +11,45 @@ import {
 } from './useCanvasViewportGraphModel.test.support';
 
 describe('useCanvasViewportGraphModel node data', () => {
+  it('projects the connected origin schema onto a default DBT model card', async () => {
+    const source = {
+      ...buildCanonicalNode('warehouse-source', 'dvt:source', 'input'),
+      pluginId: 'dvt.warehouse-source',
+      metadata: { schema: 'dvt', tableName: 'orders' },
+    };
+    const model = {
+      ...buildCanonicalNode('dbt-model', 'dbt:model', 'transform'),
+      pluginId: 'dbt',
+      metadata: {
+        config: { schema: 'raw', table: 'model_1', materialized: 'view' },
+        dbt: { schemaName: 'raw', tableName: 'model_1', materialized: 'view' },
+      },
+    };
+    const edge = { sourceId: source.id, targetId: model.id };
+    const mounted = await renderViewportGraphModel(
+      buildViewportGraphModelArgs({
+        visibleNodeIds: [source.id, model.id],
+        visibleEdges: [edge],
+        draftSemanticGraph: {
+          canonicalNodes: [source, model],
+          canonicalEdges: [{ id: 'source-model', ...edge, relation: 'lineage' }],
+        },
+      })
+    );
+
+    try {
+      const modelData = mounted.readState()?.nodes.find((node) => node.id === model.id)?.data as
+        DbtNodeData | undefined;
+
+      expect(modelData?.metadata).toMatchObject({
+        config: { schema: 'dvt', table: 'model_1' },
+        dbt: { schemaName: 'dvt', selectedSourceId: source.id },
+      });
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
   it('preserves transient column disclosure across semantic node reprojection', async () => {
     const args = buildViewportGraphModelArgs({
       visibleNodeIds: ['source-node'],
