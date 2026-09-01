@@ -8,6 +8,7 @@ import { proposeConnection } from './canvasConnectionAggregate';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import { resolveCanvasDraftNodes } from './canvasDraftNodeCatalog';
 import { applyDvtNodeAuthoringMetadata } from './canvasDvtAuthoringModel';
+import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import {
   createDvtSubstraitInnerJoinDraft,
   resolveDvtSubstraitInnerJoinEntry,
@@ -74,6 +75,16 @@ export function resolveCanvasAlgebraicCompositionOperations(
 ): CanvasAlgebraicCompositionOperation[] {
   const nodes = resolveCanvasDraftNodes(args.draftSession, args.canonicalNodesById);
   const canonicalNodesById = new Map(nodes.map((node) => [node.id, node]));
+  const targetNode = canonicalNodesById.get(args.targetNodeId);
+  if (targetNode == null) return [];
+  try {
+    const authority = readDvtTransformAuthoringAuthority(targetNode);
+    if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.sql || authority.sql.trim().length > 0) {
+      return [];
+    }
+  } catch {
+    return [];
+  }
   if (
     proposeConnection({
       connection: connection(args),
@@ -84,8 +95,6 @@ export function resolveCanvasAlgebraicCompositionOperations(
   ) {
     return [];
   }
-  const targetNode = canonicalNodesById.get(args.targetNodeId);
-  if (targetNode == null) return [];
   const draftSession = canvasDraftSession.workingSet.replaceEdges(args.draftSession, [
     ...args.draftSession.workingSet.visibleEdges,
     { sourceId: args.sourceNodeId, targetId: args.targetNodeId },

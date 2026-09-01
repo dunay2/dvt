@@ -114,4 +114,42 @@ describe('Canvas algebraic composition', () => {
       edges: [...visibleEdges, { sourceId: south.id, targetId: target.id }],
     });
   });
+
+  it('does not replace an authored Transform when another card is dropped on it', () => {
+    const north = source('customers-north');
+    const south = source('customers-south');
+    const target = {
+      ...transform(),
+      metadata: { sql: 'select customer_id from raw.customers_north' },
+    };
+    const visibleEdges = [{ sourceId: north.id, targetId: target.id }];
+    const draftSession: CanvasDraftSession = {
+      syncState: 'editing',
+      baseline: { record: null },
+      draftRevision: 'rev-1',
+      workingSet: {
+        visibleNodeIds: [north.id, south.id, target.id],
+        visibleEdges,
+        pendingExplicitNodeIds: [],
+      },
+    };
+    const state = {
+      canonicalNodesById: new Map([
+        [north.id, north],
+        [south.id, south],
+        [target.id, target],
+      ]),
+      draftSession,
+      edges: [{ id: 'north-target', source: north.id, target: target.id }],
+      pluginPortMap: getPluginPortMap(),
+      sourceNodeId: south.id,
+      targetNodeId: target.id,
+    };
+
+    expect(resolveCanvasAlgebraicCompositionOperations(state)).toEqual([]);
+    expect(
+      resolveCanvasAlgebraicCompositionTransaction({ ...state, operation: 'union_all' })
+    ).toEqual({ outcome: 'noop', rejection: { code: 'operation_not_available' } });
+    expect(draftSession.workingSet.visibleEdges).toEqual(visibleEdges);
+  });
 });
