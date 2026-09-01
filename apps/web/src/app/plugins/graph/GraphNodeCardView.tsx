@@ -13,7 +13,6 @@ import type {
 } from './GraphNodeColumnSection';
 import { GraphNodeMetricRow } from './GraphNodeMetricRow';
 import { GraphNodeOperationalRail } from './GraphNodeOperationalRail';
-import { GraphNodeStatusChip } from './GraphNodeStatusChip';
 import { GraphNodeTagList } from './GraphNodeTagList';
 import type {
   GraphNodeCardReadModel,
@@ -21,6 +20,7 @@ import type {
 } from './graphNodeCardStrategyContracts';
 import {
   graphNodeCardLayoutClasses,
+  graphNodeHealthBorderClasses,
   graphNodeCardSurfaceClasses,
   graphNodeSourceIdentityTooltipClasses,
 } from './graphVisualTokens';
@@ -35,7 +35,6 @@ export type GraphNodeCardViewProps = Readonly<{
   showColumns: boolean;
   icon?: LucideIcon;
   borderClass?: string;
-  statusRingClass?: string;
   selected: boolean;
   hovered: boolean;
   dimmed: boolean;
@@ -136,7 +135,6 @@ export function GraphNodeCardView({
   showColumns,
   icon: Icon,
   borderClass,
-  statusRingClass,
   selected,
   hovered,
   dimmed,
@@ -176,9 +174,9 @@ export function GraphNodeCardView({
       className={cn(
         graphNodeCardSurfaceClasses.root,
         borderClass,
+        graphNodeHealthBorderClasses[cardModel.health.tone],
         selected && graphNodeCardSurfaceClasses.selected,
         hovered && !selected && graphNodeCardSurfaceClasses.hovered,
-        statusRingClass,
         dimmed && graphNodeCardSurfaceClasses.dimmed
       )}
       {...(overlayStyle ? { style: overlayStyle } : {})}
@@ -200,7 +198,9 @@ export function GraphNodeCardView({
             <GraphNodeCardTitle cardModel={cardModel} />
           </div>
           <div className={graphNodeCardLayoutClasses.headerActions}>
-            <GraphNodeStatusChip status={cardModel.status} />
+            <span data-slot="graph-node-health-description" className="sr-only">
+              {cardModel.health.label}
+            </span>
             <button
               type="button"
               data-slot="graph-node-card-actions"

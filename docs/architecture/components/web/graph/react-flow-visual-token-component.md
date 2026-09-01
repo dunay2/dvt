@@ -2,7 +2,7 @@
 title: React Flow Visual Token Component
 status: Active
 owner: Web / Canvas
-last_reviewed: 2026-05-22
+last_reviewed: 2026-09-01
 planning_type: architecture
 ---
 
@@ -19,10 +19,10 @@ projection, generic plugin graph node rendering, and graph-node card chrome.
 - `graphNodeTagListClasses`: graph-node tag list classes.
 - `graphNodeOperationalRailClasses`: operational metric rail classes.
 - `graphNodeHealthPopoverClasses`: operational health popover classes.
+- `graphNodeHealthBorderClasses`: healthy, failed, and neutral card-border
+  classes projected from `ProjectGraphNodeCardReadModel`.
 - `fallbackGraphNodeClasses`: fallback node renderer classes.
 - `graphNodeColumnClasses`: optional graph-node column list classes.
-- `graphNodeStatusChipClasses`: textual status chip classes.
-- `graphStatusRingClasses`: selected runtime status ring classes.
 - `graphStatusBadgeClasses`: inspector badge tone classes for plugin node
   runtime state.
 - `graphNodeKindToneClasses`: semantic border and minimap tones for known node
@@ -39,6 +39,12 @@ projection, generic plugin graph node rendering, and graph-node card chrome.
   `slate-*`, `gray-*`, `neutral-*`, or hex visual decisions.
 - Graph-node card presentation components consume responsibility-specific token
   groups instead of a shared catch-all class bag.
+- A card's base border comes only from its projected health: green for healthy,
+  red for failed, and neutral when evidence is absent or non-terminal.
+- Selection and keyboard focus remain separate rings; they do not replace or
+  reinterpret health.
+- Health copy remains available to assistive technology and is not repeated as
+  a visible status chip.
 - Plugin-specific behavior remains in plugin contracts; this component owns only
   presentation tokens.
 
@@ -48,12 +54,13 @@ projection, generic plugin graph node rendering, and graph-node card chrome.
 flowchart LR
     Catalog["Plugin node-kind catalog"] --> Tone["resolveGraphNodeKindTone"]
     Tone --> Minimap["React Flow minimap color"]
-    Tone --> NodeBorder["Node border class"]
+    Tone --> NodeKindAccent["Node-kind accent"]
     CanvasMapper["Canvas node mapper"] --> EdgePalette["graphFlowPalette.edge"]
     Card["GraphNodeCardView"] --> CardSurface["graphNodeCardSurfaceClasses"]
     Card --> CardLayout["graphNodeCardLayoutClasses"]
     Card --> Columns["graphNodeColumnClasses"]
-    Status["GraphNodeStatusChip"] --> StatusChip["graphNodeStatusChipClasses"]
+    CardHealth["ProjectGraphNodeCardReadModel.health"] --> HealthBorder["graphNodeHealthBorderClasses"]
+    HealthBorder --> Card
     Metrics["GraphNodeMetricRow"] --> MetricTokens["graphNodeMetricRowClasses"]
     Tags["GraphNodeTagList"] --> TagTokens["graphNodeTagListClasses"]
     Rail["GraphNodeOperationalRail"] --> RailTokens["graphNodeOperationalRailClasses"]
@@ -69,7 +76,6 @@ flowchart LR
 - `canvasNodeMapper.ts`
 - `GraphNodeRenderer.tsx`
 - `GraphNodeCardView.tsx`
-- `GraphNodeStatusChip.tsx`
 - `GraphNodeMetricRow.tsx`
 - `GraphNodeTagList.tsx`
 - `GraphNodeOperationalRail.tsx`

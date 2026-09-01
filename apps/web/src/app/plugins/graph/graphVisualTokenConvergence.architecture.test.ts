@@ -6,8 +6,8 @@ import {
   graphNodeCardSurfaceClasses,
   graphNodeColumnClasses,
   graphNodeMetricRowClasses,
+  graphNodeHealthBorderClasses,
   graphNodeOperationalRailClasses,
-  graphNodeStatusChipClasses,
   graphNodeTagListClasses,
 } from './graphVisualTokens';
 
@@ -19,10 +19,6 @@ const GRAPH_RENDERER_SOURCE = readArchitectureSiblingSource(
 const GRAPH_CARD_VIEW_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'GraphNodeCardView.tsx'
-);
-const GRAPH_STATUS_CHIP_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'GraphNodeStatusChip.tsx'
 );
 const GRAPH_METRIC_ROW_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
@@ -92,7 +88,6 @@ const USER_STORIES = readArchitectureSiblingSource(
 );
 
 const GRAPH_CONSUMER_SOURCES = [
-  GRAPH_RENDERER_SOURCE,
   FALLBACK_RENDERER_SOURCE,
   CANVAS_NODE_MAPPER_SOURCE,
   DBT_NODE_CATALOG_SOURCE,
@@ -101,7 +96,6 @@ const GRAPH_CONSUMER_SOURCES = [
 ];
 const GRAPH_CARD_PRESENTATION_SOURCES = [
   GRAPH_CARD_VIEW_SOURCE,
-  GRAPH_STATUS_CHIP_SOURCE,
   GRAPH_METRIC_ROW_SOURCE,
   GRAPH_TAG_LIST_SOURCE,
   GRAPH_OPERATIONAL_RAIL_SOURCE,
@@ -120,7 +114,6 @@ describe('React Flow visual token convergence architecture', () => {
       fallbackGraphNodeClasses.card,
       fallbackGraphNodeClasses.kind,
       graphNodeColumnClasses.row,
-      graphNodeStatusChipClasses.base,
     ];
 
     expect(primaryCopyClasses.join(' ')).not.toMatch(/text-\[(?:9|10|11)px\]/);
@@ -134,8 +127,10 @@ describe('React Flow visual token convergence architecture', () => {
     expect(TOKEN_SOURCE).toContain('graphNodeTagListClasses');
     expect(TOKEN_SOURCE).toContain('graphNodeOperationalRailClasses');
     expect(TOKEN_SOURCE).toContain('graphNodeHealthPopoverClasses');
+    expect(TOKEN_SOURCE).toContain('graphNodeHealthBorderClasses');
     expect(TOKEN_SOURCE).toContain('fallbackGraphNodeClasses');
-    expect(TOKEN_SOURCE).toContain('graphStatusRingClasses');
+    expect(TOKEN_SOURCE).not.toContain('graphNodeStatusChipClasses');
+    expect(TOKEN_SOURCE).not.toContain('graphStatusRingClasses');
     expect(TOKEN_SOURCE).toContain('graphNodeKindToneClasses');
     expect(TOKEN_SOURCE).toContain('graphFlowPalette');
     expect(TOKEN_SOURCE).toContain('resolveGraphNodeKindTone');
@@ -148,6 +143,21 @@ describe('React Flow visual token convergence architecture', () => {
       expect(source).not.toMatch(/\b(?:slate|gray|neutral|zinc)-\d{2,3}\b/);
       expect(source).not.toMatch(/#[0-9a-fA-F]{3,8}/);
     }
+  });
+
+  it('keeps health borders semantic and status copy non-visual', () => {
+    expect(graphNodeHealthBorderClasses).toEqual({
+      healthy: 'border-green-500',
+      failed: 'border-red-500',
+      neutral: 'border-slate-700',
+    });
+    expect(GRAPH_CARD_VIEW_SOURCE).toContain('graph-node-health-description');
+    expect(GRAPH_CARD_VIEW_SOURCE).toContain('sr-only');
+    expect(GRAPH_CARD_VIEW_SOURCE).not.toContain('GraphNodeStatusChip');
+    expect(GRAPH_RENDERER_SOURCE).toContain('GraphNodeCardView');
+    expect(GRAPH_RENDERER_SOURCE).not.toContain('graphNodeHealthBorderClasses');
+    expect(GRAPH_RENDERER_SOURCE).not.toMatch(/\b(?:slate|gray|neutral|zinc)-\d{2,3}\b/);
+    expect(GRAPH_RENDERER_SOURCE).not.toMatch(/#[0-9a-fA-F]{3,8}/);
   });
 
   it('documents the graph visual token API, invariants, transitions, and consumers', () => {

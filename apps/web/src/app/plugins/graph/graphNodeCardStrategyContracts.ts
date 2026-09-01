@@ -25,9 +25,9 @@ export type GraphNodeOperationalDetail = Readonly<{
 export type GraphNodeCardStatusTone =
   'neutral' | 'info' | 'success' | 'warning' | 'danger' | 'running';
 
-export type GraphNodeCardStatus = Readonly<{
+export type GraphNodeCardHealth = Readonly<{
   label: string;
-  tone: GraphNodeCardStatusTone;
+  tone: 'healthy' | 'failed' | 'neutral';
 }>;
 
 export type GraphNodeSourceIdentity = Readonly<{
@@ -46,7 +46,7 @@ export type GraphNodeCardReadModel = Readonly<{
   path: string | null;
   kindLabel: string;
   accentTone: GraphNodeCardAccentTone;
-  status: GraphNodeCardStatus;
+  health: GraphNodeCardHealth;
   metrics: readonly GraphNodeCardMetric[];
   operationalMetrics: readonly GraphNodeCardMetric[];
   operationalDetail: GraphNodeOperationalDetail | null;

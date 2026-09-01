@@ -85,7 +85,7 @@ describe('buildGraphNodeCardReadModel', () => {
     expect(model.title).toBe('Warehouse · public');
     expect(model.accentTone).toBe('source');
     expect(model.technicalName).toBe('public.orders');
-    expect(model.status).toEqual({ label: 'Ready', tone: 'success' });
+    expect(model.health).toEqual({ label: 'Ready', tone: 'healthy' });
     expect(model.nodeActionsLabel).toBe('More node actions');
     expect(model.subtitle).toBe('warehouse.public.orders');
     expect(model.path).toBe('warehouse.public.orders');
@@ -421,7 +421,7 @@ describe('buildGraphNodeCardReadModel', () => {
       [dvtGraphNodeCardStrategy]
     );
 
-    expect(model.status).toEqual({ label: 'Completed', tone: 'success' });
+    expect(model.health).toEqual({ label: 'Completed', tone: 'healthy' });
     expect(model.accentTone).toBe('model');
     expect(model.metrics).toEqual([
       { id: 'columns', label: 'Columns', value: '0' },
@@ -547,7 +547,7 @@ describe('buildGraphNodeCardReadModel', () => {
       [dvtGraphNodeCardStrategy]
     );
 
-    expect(model.status).toEqual({ label: 'Warning', tone: 'warning' });
+    expect(model.health).toEqual({ label: 'Warning', tone: 'neutral' });
   });
 
   it('preserves running status as a first-class card tone', () => {
@@ -567,7 +567,7 @@ describe('buildGraphNodeCardReadModel', () => {
       [dvtGraphNodeCardStrategy]
     );
 
-    expect(model.status).toEqual({ label: 'Running', tone: 'running' });
+    expect(model.health).toEqual({ label: 'Running', tone: 'neutral' });
   });
 
   it('projects recorded running runtime status as a first-class card tone', () => {
@@ -587,7 +587,7 @@ describe('buildGraphNodeCardReadModel', () => {
       [dvtGraphNodeCardStrategy]
     );
 
-    expect(model.status).toEqual({ label: 'Running', tone: 'running' });
+    expect(model.health).toEqual({ label: 'Running', tone: 'neutral' });
   });
 
   it('projects the current run task status instead of a stale editorial fallback', () => {
@@ -611,7 +611,7 @@ describe('buildGraphNodeCardReadModel', () => {
       [dvtGraphNodeCardStrategy]
     );
 
-    expect(model.status).toEqual({ label: 'En ejecución', tone: 'running' });
+    expect(model.health).toEqual({ label: 'En ejecución', tone: 'neutral' });
   });
 
   it('projects a successful current run task with localized operational copy', () => {
@@ -632,12 +632,12 @@ describe('buildGraphNodeCardReadModel', () => {
       [dvtGraphNodeCardStrategy]
     );
 
-    expect(model.status).toEqual({ label: 'Correcto', tone: 'success' });
+    expect(model.health).toEqual({ label: 'Correcto', tone: 'healthy' });
   });
 
   it.each([
-    ['failed', 'Fallido', 'danger'],
-    ['skipped', 'Omitido', 'warning'],
+    ['failed', 'Fallido', 'failed'],
+    ['skipped', 'Omitido', 'neutral'],
   ] as const)(
     'projects the localized %s status of the current run task',
     (runStatus, label, tone) => {
@@ -658,7 +658,7 @@ describe('buildGraphNodeCardReadModel', () => {
         [dvtGraphNodeCardStrategy]
       );
 
-      expect(model.status).toEqual({ label, tone });
+      expect(model.health).toEqual({ label, tone });
     }
   );
 
@@ -680,7 +680,7 @@ describe('buildGraphNodeCardReadModel', () => {
       [dvtGraphNodeCardStrategy]
     );
 
-    expect(model.status).toEqual({ label: 'Borrador', tone: 'warning' });
+    expect(model.health).toEqual({ label: 'Borrador', tone: 'neutral' });
   });
 
   it('uses a DBT card strategy for model context instead of DVT table ownership', () => {
@@ -703,7 +703,7 @@ describe('buildGraphNodeCardReadModel', () => {
       [dbtGraphNodeCardStrategy]
     );
 
-    expect(model.status).toEqual({ label: 'Draft', tone: 'warning' });
+    expect(model.health).toEqual({ label: 'Draft', tone: 'neutral' });
     expect(model.accentTone).toBe('model');
     expect(model.subtitle).toBe('analytics');
     expect(model.path).toBe('models/marts/fct_orders.sql');
@@ -906,7 +906,7 @@ describe('buildGraphNodeCardReadModel', () => {
     expect(model.title).toBe('Raw · ERP');
     expect(model.accentTone).toBe('source');
     expect(model.technicalName).toBe('src_erp_orders');
-    expect(model.status).toEqual({ label: 'Ready', tone: 'success' });
+    expect(model.health).toEqual({ label: 'Ready', tone: 'healthy' });
     expect(model.subtitle).toBe('RAW.ERP.ORDERS');
     expect(model.path).toBe('RAW.ERP.ORDERS');
     expect(model.metrics).toEqual([{ id: 'columns', label: 'Columns', value: '2' }]);
