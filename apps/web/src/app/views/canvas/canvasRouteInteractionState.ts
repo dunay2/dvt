@@ -134,10 +134,13 @@ export function deriveCanvasRouteInteractionState(
     controller,
     shouldDisableCanvasInteractions,
   });
-  const readOnlyState =
-    shouldDisableCanvasInteractions || controller.draftAccessPosture.kind === 'saving'
-      ? null
-      : getCanvasReadOnlyState(effectiveUserPermissions);
+  const permissionPresentation =
+    controller.draftAccessPosture.kind === 'saving'
+      ? controller.authorizationPermissions
+      : effectiveUserPermissions;
+  const readOnlyState = shouldDisableCanvasInteractions
+    ? null
+    : getCanvasReadOnlyState(permissionPresentation);
 
   return {
     effectiveWorkbenchState,

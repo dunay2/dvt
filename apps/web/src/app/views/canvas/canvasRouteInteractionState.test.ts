@@ -155,6 +155,14 @@ describe('canvasRouteInteractionState', () => {
     });
     const interactionState = deriveCanvasRouteInteractionState(
       buildController({
+        authorizationPermissions: {
+          canPlan: true,
+          canRun: true,
+          canEditEdges: true,
+          canPersistGraphDraft: true,
+          canManagePlugins: false,
+          canManageRBAC: false,
+        },
         draftAccessMode: 'writable',
         draftAccessPosture,
         draftSaveStatus: 'saving',
@@ -177,6 +185,37 @@ describe('canvasRouteInteractionState', () => {
       canEditEdges: true,
     });
     expect(interactionState.readOnlyState).toBeNull();
+  });
+
+  it('keeps real limited permissions visible during autosave', () => {
+    const draftAccessPosture = deriveCanvasDraftAccessPosture({
+      draftAccessMode: 'writable',
+      draftCapabilityReason: null,
+      draftFormatError: null,
+      authTransportPosture: 'none',
+      recoveryReason: null,
+      draftSaveStatus: 'saving',
+    });
+    const limitedPermissions = {
+      canPlan: true,
+      canRun: false,
+      canEditEdges: true,
+      canPersistGraphDraft: true,
+      canManagePlugins: false,
+      canManageRBAC: false,
+    };
+    const interactionState = deriveCanvasRouteInteractionState(
+      buildController({
+        authorizationPermissions: limitedPermissions,
+        draftAccessPosture,
+        draftSaveStatus: 'saving',
+        nodesWithImpact: buildReadyNodes(),
+        userPermissions: limitedPermissions,
+      }),
+      null
+    );
+
+    expect(interactionState.readOnlyState).not.toBeNull();
   });
 
   it('blocks interactions before backend readiness is available', () => {
