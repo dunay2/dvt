@@ -231,6 +231,7 @@ describe('GraphNodeColumnSection', () => {
           columnId: 'customer',
           columnType: 'text',
           output: true,
+          placement: { targetColumnId: 'output:order_id', placement: 'after' },
         },
       ],
     ]);

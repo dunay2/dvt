@@ -32,6 +32,7 @@ import {
   setCanvasColumnOutputIncluded,
   type CanvasColumnMappingRejection,
 } from './canvasColumnMappingAuthoring';
+import type { GraphNodeColumnOutputToggleIdentity } from '../../plugins/graph/GraphNodeColumnSection';
 import {
   createCanvasColumnHandleId,
   parseCanvasColumnHandleId,
@@ -258,7 +259,7 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
   );
 
   const handleToggleDvtSubstraitColumnOutput = useCallback(
-    (identity: { nodeId: string; columnId: string; columnType: string; output: boolean }) => {
+    (identity: GraphNodeColumnOutputToggleIdentity) => {
       if (!policy.canEditEdges) {
         toast.error(canvasViewCopy.mutationUnavailableMessage);
         return;
@@ -270,6 +271,7 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
         columnId: identity.columnId,
         columnType: identity.columnType,
         output: identity.output,
+        placement: identity.placement,
       });
       if (result.outcome === 'rejected') {
         toast.error(formatColumnMappingRejection(result.reason));

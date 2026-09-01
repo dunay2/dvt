@@ -1,43 +1,67 @@
-import type { ConnectedSourceRef } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
+
+import type { ConnectedSourceRef } from '@dvt/contracts';
 
 import type { CanonicalNode } from '../../types/canonical';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
-import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import {
   createDvtSubstraitProjectionDraft,
   encodeDvtSubstraitProjectionDocument,
 } from './canvasDvtSubstraitProjection';
+import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 
-describe('Canvas canonical output selection presentation', () => {
-  it('keeps excluded upstream fields visible so they can be selected again', () => {
-    const connectedSourceRef: ConnectedSourceRef = {
-      schemaVersion: 'connected-source-ref.v1',
-      connectionRef: {
-        schemaVersion: 'connection-ref.v1',
-        connectionId: 'warehouse-main',
-        provider: 'postgres',
-      },
-      sourceObjectId: 'raw.orders',
-    };
-    const source: CanonicalNode = {
-      id: 'source-orders',
-      name: 'orders',
-      pluginId: 'dvt',
-      kind: 'dvt:source',
-      role: 'input',
-      status: 'idle',
-      tags: [],
-      metadata: {
-        schema: 'raw',
-        tableName: 'orders',
-        connectedSourceRef,
-        columns: [
-          { name: 'order_id', type: 'integer' },
-          { name: 'customer', type: 'text' },
+const connectedSourceRef: ConnectedSourceRef = {
+  schemaVersion: 'connected-source-ref.v1',
+  connectionRef: {
+    schemaVersion: 'connection-ref.v1',
+    connectionId: 'warehouse-main',
+    provider: 'postgres',
+  },
+  sourceObjectId: 'raw.orders',
+};
+
+const source: CanonicalNode = {
+  id: 'source-orders',
+  name: 'orders',
+  pluginId: 'dvt',
+  kind: 'dvt:source',
+  role: 'input',
+  status: 'idle',
+  tags: [],
+  metadata: {
+    schema: 'raw',
+    tableName: 'orders',
+    connectedSourceRef,
+    columns: [
+      { name: 'order_id', type: 'integer' },
+      { name: 'customer', type: 'text' },
+      { name: 'amount', type: 'numeric' },
+    ],
+  },
+};
+
+describe('Transform output-selection presentation', () => {
+  it('keeps an excluded middle field in its source-relative position', () => {
+    const semanticDocument = encodeDvtSubstraitProjectionDocument(
+      createDvtSubstraitProjectionDraft({
+        source: {
+          nodeId: source.id,
+          schema: 'raw',
+          table: 'orders',
+          sourceRef: connectedSourceRef,
+          fields: [
+            { name: 'order_id', dataType: 'integer' },
+            { name: 'customer', dataType: 'text' },
+            { name: 'amount', dataType: 'numeric' },
+          ],
+        },
+        targetNodeId: 'transform-orders',
+        outputs: [
+          { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
+          { fieldId: 'output:amount', name: 'amount', sourceFieldName: 'amount' },
         ],
-      },
-    };
+      })
+    );
     const transform = applyDvtSubstraitSemanticDocument(
       {
         id: 'transform-orders',
@@ -49,39 +73,19 @@ describe('Canvas canonical output selection presentation', () => {
         tags: [],
         metadata: {},
       },
-      encodeDvtSubstraitProjectionDocument(
-        createDvtSubstraitProjectionDraft({
-          source: {
-            nodeId: source.id,
-            schema: 'raw',
-            table: 'orders',
-            sourceRef: connectedSourceRef,
-            fields: [
-              { name: 'order_id', dataType: 'integer' },
-              { name: 'customer', dataType: 'text' },
-            ],
-          },
-          targetNodeId: 'transform-orders',
-          outputs: [],
-        })
-      )
+      semanticDocument
     );
 
-    const columns = projectCanvasNodePresentationTruth({
+    const truth = projectCanvasNodePresentationTruth({
       node: transform,
       nodes: [source, transform],
       edges: [{ sourceId: source.id, targetId: transform.id }],
-    }).columns;
-
-    expect(columns.visible.map(({ name, provenance }) => ({ name, provenance }))).toEqual([
-      { name: 'order_id', provenance: 'inherited' },
-      { name: 'customer', provenance: 'inherited' },
-    ]);
-    expect(columns).toMatchObject({
-      declaredCount: 0,
-      inheritedCount: 2,
-      visibleCount: 2,
-      visibleProvenance: 'inherited',
     });
+
+    expect(truth.columns.visible.map(({ name, provenance }) => ({ name, provenance }))).toEqual([
+      { name: 'order_id', provenance: 'declared' },
+      { name: 'customer', provenance: 'inherited' },
+      { name: 'amount', provenance: 'declared' },
+    ]);
   });
 });
