@@ -176,7 +176,7 @@ describe('canvasNodeMapper', () => {
         ...buildCanonicalNode(),
         metadata: {
           columns: [
-            { name: 'order_id', type: 'integer' },
+            { name: 'order_id', type: 'integer', nullable: false, primaryKey: true },
             { name: 'amount', type: 'numeric' },
           ],
         },
@@ -191,8 +191,60 @@ describe('canvasNodeMapper', () => {
       visibleProvenance: 'declared',
     });
     expect(mappedNode.data.columns).toEqual([
-      { name: 'order_id', type: 'integer' },
-      { name: 'amount', type: 'numeric' },
+      {
+        name: 'order_id',
+        type: 'integer',
+        nullable: false,
+        primaryKey: true,
+        output: true,
+      },
+      { name: 'amount', type: 'numeric', output: true },
+    ]);
+  });
+
+  it('marks inherited Transform fields as available inputs instead of outputs', () => {
+    const mappedNode = mapCanonicalNodeToCanvasNode({
+      canonicalNode: { ...buildCanonicalNode(), role: 'transform', kind: 'dvt:transform' },
+      index: 0,
+      showColumns: true,
+      presentationTruth: {
+        columns: {
+          declared: [],
+          inherited: [
+            {
+              name: 'customer',
+              type: 'text',
+              provenance: 'inherited',
+              sourceNodeName: 'orders',
+              reference: 'source:orders:customer',
+            },
+          ],
+          visible: [
+            {
+              name: 'customer',
+              type: 'text',
+              provenance: 'inherited',
+              sourceNodeName: 'orders',
+              reference: 'source:orders:customer',
+            },
+          ],
+          declaredCount: 0,
+          inheritedCount: 1,
+          visibleCount: 1,
+          visibleProvenance: 'inherited',
+        },
+        code: { kind: 'unavailable' },
+      },
+    });
+
+    expect(mappedNode.data.columns).toEqual([
+      {
+        name: 'customer',
+        type: 'text',
+        output: false,
+        sourceNodeName: 'orders',
+        reference: 'source:orders:customer',
+      },
     ]);
   });
 });

@@ -32,6 +32,16 @@ type GraphNodeCardCopy = Readonly<{
   automapColumnsLabel: string;
   sourceColumnPortLabelTemplate: string;
   targetColumnPortLabelTemplate: string;
+  columnTypeLabel: string;
+  columnNullabilityLabel: string;
+  columnNotNullValue: string;
+  columnNullableValue: string;
+  columnOriginLabel: string;
+  columnReferenceLabel: string;
+  columnOutputValue: string;
+  columnAvailableInputValue: string;
+  columnOutputAriaLabelTemplate: string;
+  columnAvailableInputAriaLabelTemplate: string;
   sourceIdentityAriaLabelTemplate: string;
   sourceIdentityDatabaseLabel: string;
   sourceIdentityConnectionLabel: string;
@@ -85,6 +95,16 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   automapColumnsLabel: 'Map compatible columns',
   sourceColumnPortLabelTemplate: 'Connect {column} output',
   targetColumnPortLabelTemplate: 'Map into {column}',
+  columnTypeLabel: 'Type',
+  columnNullabilityLabel: 'Nullability',
+  columnNotNullValue: 'Not null',
+  columnNullableValue: 'Nullable',
+  columnOriginLabel: 'Origin',
+  columnReferenceLabel: 'Reference',
+  columnOutputValue: 'Included in output',
+  columnAvailableInputValue: 'Available input',
+  columnOutputAriaLabelTemplate: '{column}, included in output',
+  columnAvailableInputAriaLabelTemplate: '{column}, available input',
   sourceIdentityAriaLabelTemplate: 'View source identity for {table}',
   sourceIdentityDatabaseLabel: 'Database',
   sourceIdentityConnectionLabel: 'Connection',
@@ -138,6 +158,16 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   automapColumnsLabel: 'Asignar columnas compatibles',
   sourceColumnPortLabelTemplate: 'Conectar salida de {column}',
   targetColumnPortLabelTemplate: 'Asignar a {column}',
+  columnTypeLabel: 'Tipo',
+  columnNullabilityLabel: 'Nulabilidad',
+  columnNotNullValue: 'No nulo',
+  columnNullableValue: 'Admite nulos',
+  columnOriginLabel: 'Origen',
+  columnReferenceLabel: 'Referencia',
+  columnOutputValue: 'Incluida en salida',
+  columnAvailableInputValue: 'Entrada disponible',
+  columnOutputAriaLabelTemplate: '{column}, incluida en salida',
+  columnAvailableInputAriaLabelTemplate: '{column}, entrada disponible',
   sourceIdentityAriaLabelTemplate: 'Ver identidad de origen de {table}',
   sourceIdentityDatabaseLabel: 'Base de datos',
   sourceIdentityConnectionLabel: 'Conexión',

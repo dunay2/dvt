@@ -23,6 +23,7 @@ describe('GraphNodeColumnSection', () => {
   let container: HTMLDivElement;
   let root: Root;
   let previousActEnvironment: boolean | undefined;
+  let previousResizeObserver: typeof ResizeObserver | undefined;
 
   beforeEach(() => {
     const globalObject = globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean };
@@ -32,6 +33,12 @@ describe('GraphNodeColumnSection', () => {
     document.body.append(container);
     root = createRoot(container);
     useApplicationLanguageStore.setState({ language: 'es' });
+    previousResizeObserver = globalThis.ResizeObserver;
+    globalThis.ResizeObserver = class implements ResizeObserver {
+      disconnect(): void {}
+      observe(): void {}
+      unobserve(): void {}
+    };
   });
 
   it('shows five columns before explicitly revealing and hiding the remainder', () => {
@@ -107,6 +114,74 @@ describe('GraphNodeColumnSection', () => {
     } else {
       globalObject.IS_REACT_ACT_ENVIRONMENT = previousActEnvironment;
     }
+    document
+      .querySelectorAll('[data-slot="tooltip-content"]')
+      .forEach((element) => element.remove());
+    if (previousResizeObserver === undefined) {
+      Reflect.deleteProperty(globalThis, 'ResizeObserver');
+    } else {
+      globalThis.ResizeObserver = previousResizeObserver;
+    }
+  });
+
+  it('presents stacked output pieces with truthful inline and focused metadata', async () => {
+    await act(async () => {
+      root.render(
+        <GraphNodeColumnSection
+          columns={[
+            {
+              id: 'field:model:event_id',
+              name: 'event_id',
+              type: 'text',
+              nullable: false,
+              primaryKey: true,
+              output: true,
+              sourceNodeName: 'auth_audit_events',
+              reference: 'field:model:event_id',
+            },
+            {
+              id: 'source:event_type',
+              name: 'event_type',
+              type: 'text',
+              nullable: true,
+              output: false,
+              sourceNodeName: 'auth_audit_events',
+              reference: 'source:event_type',
+            },
+          ]}
+        />
+      );
+    });
+
+    await act(async () => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="graph-node-column-toggle"]')!
+      );
+    });
+
+    const pieces = container.querySelectorAll<HTMLElement>('[data-slot="graph-node-column-piece"]');
+    expect(pieces).toHaveLength(2);
+    expect(pieces[0]?.getAttribute('data-output')).toBe('true');
+    expect(pieces[1]?.getAttribute('data-output')).toBe('false');
+    expect(pieces[0]?.textContent).toContain('PK');
+    expect(pieces[0]?.textContent).toContain('NN');
+    expect(pieces[0]?.querySelector('[data-slot="graph-node-column-output-check"]')).not.toBeNull();
+    expect(pieces[1]?.querySelector('[data-slot="graph-node-column-output-check"]')).toBeNull();
+    expect(pieces[0]?.getAttribute('tabindex')).toBe('0');
+    expect(pieces[0]?.getAttribute('aria-label')).toContain('event_id');
+    expect(pieces[0]?.getAttribute('aria-label')).toContain('salida');
+
+    await act(async () => {
+      pieces[0]?.focus();
+      await Promise.resolve();
+    });
+
+    const tooltip = document.body.querySelector('[role="tooltip"]');
+    expect(tooltip?.textContent).toContain('Tipo');
+    expect(tooltip?.textContent).toContain('text');
+    expect(tooltip?.textContent).toContain('No nulo');
+    expect(tooltip?.textContent).toContain('auth_audit_events');
+    expect(tooltip?.textContent).toContain('field:model:event_id');
   });
 
   it('renders a collapsed governed column disclosure with Spanish product copy', () => {

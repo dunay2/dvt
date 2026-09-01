@@ -15,7 +15,10 @@ import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import type { CanvasNodePortCompatibilityByDirection } from './canvasConnectionCompatibilityPresenter';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import type { CanvasViewCopy } from './canvasCopy.types';
-import type { CanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
+import type {
+  CanvasNodePresentationColumn,
+  CanvasNodePresentationTruth,
+} from '../../components/canvas/canvasNodePresentationTruth.contract';
 import { buildCanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth';
 import { buildCanvasNodePresentationCopy } from './canvasNodePresentationCopy';
 
@@ -31,6 +34,21 @@ type MapCanonicalNodeToCanvasNodeArgs = {
   locale?: string;
   presentationTruth?: CanvasNodePresentationTruth;
 };
+
+function toGraphNodeColumn(
+  column: CanvasNodePresentationColumn,
+  availableInputsRemainDistinct: boolean
+) {
+  return {
+    name: column.name,
+    type: column.type,
+    output: !availableInputsRemainDistinct || column.provenance === 'declared',
+    ...(column.nullable == null ? {} : { nullable: column.nullable }),
+    ...(column.primaryKey == null ? {} : { primaryKey: column.primaryKey }),
+    ...(column.sourceNodeName == null ? {} : { sourceNodeName: column.sourceNodeName }),
+    ...(column.reference == null ? {} : { reference: column.reference }),
+  };
+}
 
 function formatCompatibleNodeNames(compatibleNodeNames: readonly string[]): string {
   return compatibleNodeNames.join(', ');
@@ -122,10 +140,9 @@ export function mapCanonicalNodeToCanvasNode({
   const resolvedPresentationTruth =
     presentationTruth ??
     buildCanvasNodePresentationTruth({ node: canonicalNode, nodes: [canonicalNode], edges: [] });
-  const columns = resolvedPresentationTruth.columns.visible.map(({ name, type }) => ({
-    name,
-    type,
-  }));
+  const columns = resolvedPresentationTruth.columns.visible.map((column) =>
+    toGraphNodeColumn(column, canonicalNode.kind === 'dvt:transform')
+  );
   const presentationCopy = buildCanvasNodePresentationCopy(copy, locale);
 
   return {
@@ -240,7 +257,9 @@ export function mapDroppedCanonicalNodeToCanvasNode(
     nodes: [canonicalNode],
     edges: [],
   });
-  const columns = presentationTruth.columns.visible.map(({ name, type }) => ({ name, type }));
+  const columns = presentationTruth.columns.visible.map((column) =>
+    toGraphNodeColumn(column, canonicalNode.kind === 'dvt:transform')
+  );
   const presentationCopy = buildCanvasNodePresentationCopy(copy, locale);
   const typeLabelFromMetadata =
     typeof canonicalNode.metadata?.typeLabel === 'string'

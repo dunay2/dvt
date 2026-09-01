@@ -24,7 +24,7 @@ const SOURCE = buildNode({
   path: 'models/sources.yml',
   metadata: {
     columns: [
-      { name: 'order_id', type: 'integer', nullable: false },
+      { name: 'order_id', type: 'integer', nullable: false, primaryKey: true },
       { name: 'customer_id', type: 'integer' },
       { name: 'amount', type: 'numeric' },
     ],
@@ -59,6 +59,7 @@ describe('buildCanvasNodePresentationTruth', () => {
       'customer_id',
       'amount',
     ]);
+    expect(truth.columns.visible[0]).toMatchObject({ nullable: false, primaryKey: true });
   });
 
   it('preserves declared columns as authoritative without hiding inherited context', () => {
