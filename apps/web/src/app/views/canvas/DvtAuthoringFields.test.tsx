@@ -464,6 +464,11 @@ describe('DvtAuthoringFields', () => {
       table: 'tickets',
       columns: ['ticket_id', 'customer_id'],
     });
+    const profiles = buildJoinWarehouseSourceNode({
+      id: 'source-profiles',
+      table: 'profiles',
+      columns: ['customer_id', 'name'],
+    });
     const transform = buildDvtNode('dvt:sql_transform');
     const initialEdges: readonly CanonicalEdge[] = [
       {
@@ -484,7 +489,7 @@ describe('DvtAuthoringFields', () => {
       transform,
       undefined,
       undefined,
-      [customers, orders, shipments, tickets, transform],
+      [customers, orders, shipments, tickets, profiles, transform],
       initialEdges,
       'code'
     );
@@ -508,12 +513,18 @@ describe('DvtAuthoringFields', () => {
         targetId: transform.id,
         relation: 'lineage',
       },
+      {
+        id: 'profiles-transform',
+        sourceId: profiles.id,
+        targetId: transform.id,
+        relation: 'lineage',
+      },
     ];
     renderFields(
       transform,
       undefined,
       undefined,
-      [customers, orders, shipments, tickets, transform],
+      [customers, orders, shipments, tickets, profiles, transform],
       allEdges,
       'code'
     );
@@ -541,6 +552,10 @@ describe('DvtAuthoringFields', () => {
     expect(draftJson()).toContain('field:dvt-sql-transform:ticket_id');
     expect(container.textContent).toContain('customers + orders + shipments + tickets');
     expect(draftJson()).toContain('dvt-vtx2-n-input-inner-join-card');
+
+    chooseConnectedField(profiles.id);
+    expect(draftJson()).toContain('field:dvt-sql-transform:profiles_name');
+    expect(container.textContent).toContain('customers + orders + shipments + tickets + profiles');
 
     const shipmentCustomerSelection = container.querySelector<HTMLInputElement>(
       'input[name="dvt-substrait-n-input-field"][value="field:source-shipments:customer_id"]'

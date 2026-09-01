@@ -109,10 +109,7 @@ export function DvtSubstraitInnerJoinAuthoringSection({
         (input) => input.source.nodeId === candidateNodeId && input.fields.includes(rightFieldName)
       );
       if (candidate == null) return;
-      const existingOutputNames = new Set(projection.outputs.map((output) => output.name));
-      const selectedFields = candidate.fields.filter(
-        (field) => field !== rightFieldName && !existingOutputNames.has(field)
-      );
+      const selectedFields = candidate.fields.filter((field) => field !== rightFieldName);
       if (selectedFields.length === 0) return;
       mutateDraft((current) =>
         appendDvtSubstraitInnerJoinInput(current, {
