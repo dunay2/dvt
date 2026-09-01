@@ -110,7 +110,7 @@ describe('CanvasNodeShell', () => {
     expect(onContextMenuAction).not.toHaveBeenCalled();
   });
 
-  it('does not expose node operations from a native right-click on the node body', () => {
+  it('opens node operations from a native right-click on the node body', async () => {
     const onContextMenuAction = vi.fn();
 
     act(() => {
@@ -128,10 +128,14 @@ describe('CanvasNodeShell', () => {
 
     const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 });
     const target = container.querySelector('[data-testid="node-body"]')!;
-    const dispatchResult = target.dispatchEvent(event);
+    await act(async () => {
+      target.dispatchEvent(event);
+    });
 
-    expect(dispatchResult).toBe(false);
-    expect(document.querySelector('[data-slot="canvas-node-context-menu"]')).toBeNull();
+    expect(document.querySelector('[data-slot="canvas-node-context-menu"]')).not.toBeNull();
+    expect(document.querySelector('[data-slot="canvas-node-context-menu"]')?.textContent).toContain(
+      'Duplicate'
+    );
     expect(onContextMenuAction).not.toHaveBeenCalled();
   });
 
