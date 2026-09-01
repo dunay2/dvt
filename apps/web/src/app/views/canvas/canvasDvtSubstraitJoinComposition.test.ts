@@ -267,6 +267,50 @@ describe('VTX2 typed Substrait INNER JOIN composition', () => {
     }
   });
 
+  it('keeps carried predicate fields distinct from renamed N-input outputs', () => {
+    const threeInputs = appendDvtSubstraitInnerJoinInput(fixture(), {
+      source: source('source-shipments', 'public', 'shipments'),
+      fields: ['shipment_id', 'customer_id'],
+      predicate: {
+        leftSourceFieldId: 'field:source-customers:customer_id',
+        rightFieldName: 'customer_id',
+      },
+      selectedFields: ['shipment_id'],
+    });
+    const fourInputs = appendDvtSubstraitInnerJoinInput(threeInputs, {
+      source: source('source-tickets', 'public', 'tickets'),
+      fields: ['ticket_id', 'customer_id'],
+      predicate: {
+        leftSourceFieldId: 'field:source-customers:customer_id',
+        rightFieldName: 'customer_id',
+      },
+      selectedFields: ['ticket_id'],
+    });
+    const withoutCarriedOutput = applyDvtSubstraitInnerJoinFieldEdit(fourInputs, {
+      kind: 'set-selected',
+      sourceFieldId: 'field:source-customers:customer_id',
+      selected: false,
+    });
+
+    const renamed = applyDvtSubstraitInnerJoinFieldEdit(withoutCarriedOutput, {
+      kind: 'rename',
+      sourceFieldId: 'field:source-orders:order_id',
+      outputName: 'customer_id',
+    });
+    const inspection = inspectDvtSubstraitNInputJoinDraft(renamed);
+
+    expect(renamed).not.toBe(withoutCarriedOutput);
+    if (!inspection.ok) throw new Error('Expected source-qualified carried predicate fields.');
+    expect(
+      inspection.projection.outputs.find(
+        (output) => output.source.fieldId === 'field:source-orders:order_id'
+      )
+    ).toMatchObject({
+      name: 'customer_id',
+      fieldId: 'field:transform-customer-orders:order_id',
+    });
+  });
+
   it('does not reuse a preserved output FieldId after its display name changes', () => {
     const draft = appendDvtSubstraitInnerJoinInput(fixture(), {
       source: source('source-shipments', 'public', 'shipments'),

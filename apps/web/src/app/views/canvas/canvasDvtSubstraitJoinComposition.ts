@@ -1097,7 +1097,7 @@ function createDvtSubstraitNInputJoinDraft(
           return {
             fieldId: finalStage
               ? (output?.fieldId ?? `field:${args.targetNodeId}:${displayName}`)
-              : `field:${args.targetNodeId}:join-stage-${stageIndex + 1}:${displayName}`,
+              : `field:${args.targetNodeId}:join-stage-${stageIndex + 1}:${field.sourceFieldId}`,
             relationId: joinRelationIds[stageIndex]!,
             outputOrdinal,
             displayName,
@@ -2521,7 +2521,7 @@ export function inspectDvtSubstraitNInputJoinDraft(
     if (
       stageFields.some((field, outputOrdinal) => {
         const name = names[outputOrdinal];
-        const expectedFieldId = `field:${targetNodeId}:join-stage-${joinIndex + 1}:${name}`;
+        const expectedFieldId = `field:${targetNodeId}:join-stage-${joinIndex + 1}:${nextFields[outputOrdinal]?.sourceFieldId}`;
         const hasValidFieldId = finalStage
           ? field.fieldId.startsWith(`field:${targetNodeId}:`) &&
             field.fieldId.length > `field:${targetNodeId}:`.length
