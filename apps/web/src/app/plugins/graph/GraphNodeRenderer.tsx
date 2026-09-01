@@ -4,7 +4,6 @@ import type { CSSProperties, ReactElement } from 'react';
 import { resolveNodeKindRegistration } from '../nodeTypeRegistry';
 import { resolveGraphNodeColumnInteractionProps } from './GraphNodeColumnSection';
 import type { NodeRendererProps } from '../contracts/NodeRendering';
-import { graphStatusRingClasses } from './graphVisualTokens';
 import { buildGraphNodeCardReadModel } from './graphNodeCardReadModel';
 import type { GraphNodeOperationalDetail } from './graphNodeCardStrategyContracts';
 import { GraphNodeCardView } from './GraphNodeCardView';
@@ -50,7 +49,6 @@ export function GraphNodeRenderer({
 }: Readonly<NodeRendererProps>): ReactElement {
   const kindMeta = resolveNodeKindRegistration(node.kind);
 
-  const statusRing = graphStatusRingClasses[node.status] ?? '';
   const dimmed = overlayDecoration?.dimmed ?? false;
   const overlayProps = buildOverlayProps(
     overlayDecoration?.borderColor,
@@ -95,7 +93,6 @@ export function GraphNodeRenderer({
       showColumns={showColumns}
       icon={kindMeta.icon}
       borderClass={kindMeta.borderClass}
-      statusRingClass={statusRing}
       selected={selected}
       hovered={hovered}
       dimmed={dimmed}

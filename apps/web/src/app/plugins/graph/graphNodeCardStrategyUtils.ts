@@ -8,7 +8,7 @@ import type {
   GraphNodeCardAccentTone,
   GraphNodeCardMetric,
   GraphNodeCardMetricIcon,
-  GraphNodeCardStatus,
+  GraphNodeCardHealth,
   GraphNodeCardStatusTone,
   GraphNodeOperationalDetail,
   GraphNodeSourceIdentity,
@@ -229,11 +229,11 @@ export function resolveRuntimeDurationLabel(
   return durationMs == null ? null : formatDurationMs(durationMs);
 }
 
-export function resolveRunStatusLabel(
+export function resolveRunHealth(
   nodeId: string,
   metadata: Record<string, unknown>,
   data: Record<string, unknown>
-): GraphNodeCardStatus | null {
+): GraphNodeCardHealth | null {
   const runStatusByNodeId = data.runStatusByNodeId;
   const currentTaskStatus =
     runStatusByNodeId instanceof Map ? stringValue(runStatusByNodeId.get(nodeId)) : null;
@@ -251,26 +251,26 @@ export function resolveRunStatusLabel(
 
   switch (runStatus.toLowerCase()) {
     case 'pending':
-      return { label: localizedLabel('pending', 'Pending'), tone: 'info' };
+      return { label: localizedLabel('pending', 'Pending'), tone: 'neutral' };
     case 'completed':
     case 'success':
     case 'succeeded':
-      return { label: localizedLabel('success', 'Completed'), tone: 'success' };
+      return { label: localizedLabel('success', 'Completed'), tone: 'healthy' };
     case 'running':
-      return { label: localizedLabel('running', 'Running'), tone: 'running' };
+      return { label: localizedLabel('running', 'Running'), tone: 'neutral' };
     case 'failed':
     case 'error':
-      return { label: localizedLabel('failed', 'Failed'), tone: 'danger' };
+      return { label: localizedLabel('failed', 'Failed'), tone: 'failed' };
     case 'skipped':
-      return { label: localizedLabel('skipped', 'Skipped'), tone: 'warning' };
+      return { label: localizedLabel('skipped', 'Skipped'), tone: 'neutral' };
     case 'warn':
     case 'warning':
-      return { label: localizedLabel('warn', 'Warning'), tone: 'warning' };
+      return { label: localizedLabel('warn', 'Warning'), tone: 'neutral' };
     case 'cancelled':
     case 'canceled':
       return { label: localizedLabel('cancelled', 'Cancelled'), tone: 'neutral' };
     case 'blocked':
-      return { label: localizedLabel('blocked', 'Blocked'), tone: 'danger' };
+      return { label: localizedLabel('blocked', 'Blocked'), tone: 'failed' };
     case 'idle':
       return { label: localizedLabel('idle', 'Inactive'), tone: 'neutral' };
     default:
@@ -278,28 +278,28 @@ export function resolveRunStatusLabel(
   }
 }
 
-export function resolveNodeCardStatus(
+export function resolveNodeCardHealth(
   node: CanonicalNode,
   metadata: Record<string, unknown>,
   data: Record<string, unknown>,
-  fallback: GraphNodeCardStatus = { label: 'Draft', tone: 'warning' }
-): GraphNodeCardStatus {
-  const runtimeStatus = resolveRunStatusLabel(node.id, metadata, data);
-  if (runtimeStatus) {
-    return runtimeStatus;
+  fallback: GraphNodeCardHealth = { label: 'Draft', tone: 'neutral' }
+): GraphNodeCardHealth {
+  const runtimeHealth = resolveRunHealth(node.id, metadata, data);
+  if (runtimeHealth) {
+    return runtimeHealth;
   }
 
   switch (node.status) {
     case 'success':
-      return { label: 'Ready', tone: 'success' };
+      return { label: 'Ready', tone: 'healthy' };
     case 'running':
-      return { label: 'Running', tone: 'running' };
+      return { label: 'Running', tone: 'neutral' };
     case 'failed':
-      return { label: 'Failed', tone: 'danger' };
+      return { label: 'Failed', tone: 'failed' };
     case 'warn':
-      return { label: 'Warning', tone: 'warning' };
+      return { label: 'Warning', tone: 'neutral' };
     case 'skipped':
-      return { label: 'Skipped', tone: 'warning' };
+      return { label: 'Skipped', tone: 'neutral' };
     default:
       return fallback;
   }

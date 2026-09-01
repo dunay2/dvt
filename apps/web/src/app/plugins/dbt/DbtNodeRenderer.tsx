@@ -32,7 +32,7 @@ import type { RunEvent as EngineRunEvent } from '../../types/engine';
 import type { InspectorPanelContribution, InspectorPanelProps } from '../contracts/PluginManifest';
 import type { NodeRendererProps } from '../contracts/NodeRendering';
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
-import { graphStatusBadgeClasses, graphStatusRingClasses } from '../graph/graphVisualTokens';
+import { graphStatusBadgeClasses } from '../graph/graphVisualTokens';
 import { buildGraphNodeCardReadModel } from '../graph/graphNodeCardReadModel';
 import type { GraphNodeOperationalDetail } from '../graph/graphNodeCardStrategyContracts';
 import { GraphNodeCardView } from '../graph/GraphNodeCardView';
@@ -217,7 +217,6 @@ export function DbtNodeRenderer({
   const kindMeta = resolveKindMeta(node.kind);
   const Icon: LucideIcon | undefined = kindMeta?.icon;
 
-  const statusRing = graphStatusRingClasses[node.status] ?? '';
   const dimmed = overlayDecoration?.dimmed ?? false;
   const overlayProps = buildOverlayProps(
     overlayDecoration?.borderColor,
@@ -262,7 +261,6 @@ export function DbtNodeRenderer({
       showColumns={showColumns}
       icon={Icon}
       borderClass={kindMeta?.borderClass}
-      statusRingClass={statusRing}
       selected={selected}
       hovered={hovered}
       dimmed={dimmed}

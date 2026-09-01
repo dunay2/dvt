@@ -4,6 +4,7 @@ import type { Edge, EdgeChange, Node } from '@xyflow/react';
 import { buildCanvasNodeInteractionPresentation } from './canvasNodeInteractionPresentation';
 import { validateTransformationGraph } from './transformationGraphValidation';
 import type { RuntimeCapabilities } from '../../plugins/registry';
+import { getCanvasGraphNodeCardStrategies } from '../../plugins/graphStrategyRegistry';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { UseCanvasGraphHandlersResult } from './useCanvasGraphHandlers.types';
 import {
@@ -21,6 +22,7 @@ import type { CanvasNodePresentationTruth } from '../../components/canvas/canvas
 import type { GraphNodeColumn } from '../../plugins/graph/GraphNodeColumnSection';
 import { canAuthorCanvasColumnMappings } from './canvasColumnMappingAuthoring';
 import { readDvtTransformLineageProvenance } from './canvasTransformationSqlMirror';
+import { projectCanvasNodeAccessibleHealth } from './canvasNodeMapper';
 
 function projectInteractiveColumns(node: Node): GraphNodeColumn[] {
   const columns = Array.isArray(node.data.columns)
@@ -134,6 +136,10 @@ export function useCanvasControllerReadModel({
       visibleScope.canonicalNodes,
     ]
   );
+  const graphNodeCardStrategies = useMemo(
+    () => getCanvasGraphNodeCardStrategies(activeCanvasKind, runtimeCapabilities),
+    [activeCanvasKind, runtimeCapabilities]
+  );
   const projectedColumnLineage = useMemo(() => {
     if (!presentsColumnLineage) return [];
     const expandedNodeIds = new Set(
@@ -198,32 +204,37 @@ export function useCanvasControllerReadModel({
               selectedForExecution,
             }));
 
-        return {
-          ...node,
-          data: {
-            ...node.data,
-            onToggleNodeSelection: canSelectNode ? onToggleExecutionSelection : undefined,
-            activeRunId: overlayModel.activeRunId,
-            canvasKind: activeCanvasKind,
-            runStatusByNodeId: overlayModel.runStatusByNodeId,
-            overlayDecoration: overlayModel.overlayDecorations.get(node.id) ?? null,
-            runtimeCapabilities,
-            activeColumnHandleId: graphHandlers.activeColumnHandleId,
-            onColumnPortActivate: canAuthorColumnMappings
-              ? node.data.onColumnPortActivate
-              : undefined,
-            onAutomapColumns: canAuthorColumnMappings ? node.data.onAutomapColumns : undefined,
-            columns: presentsColumnLineage ? projectInteractiveColumns(node) : node.data.columns,
-            columnPortDirections:
-              presentsColumnLineage && canonicalNode != null
-                ? canonicalNode.role === 'transform' &&
-                  !canAuthorColumnMappings &&
-                  !hasReadOnlyColumnLineage
-                  ? []
-                  : resolveCanvasColumnPortDirections(canonicalNode.role)
-                : [],
-          },
+        const projectedNodeData = {
+          ...node.data,
+          onToggleNodeSelection: canSelectNode ? onToggleExecutionSelection : undefined,
+          activeRunId: overlayModel.activeRunId,
+          canvasKind: activeCanvasKind,
+          runStatusByNodeId: overlayModel.runStatusByNodeId,
+          overlayDecoration: overlayModel.overlayDecorations.get(node.id) ?? null,
+          runtimeCapabilities,
+          activeColumnHandleId: graphHandlers.activeColumnHandleId,
+          onColumnPortActivate: canAuthorColumnMappings
+            ? node.data.onColumnPortActivate
+            : undefined,
+          onAutomapColumns: canAuthorColumnMappings ? node.data.onAutomapColumns : undefined,
+          columns: presentsColumnLineage ? projectInteractiveColumns(node) : node.data.columns,
+          columnPortDirections:
+            presentsColumnLineage && canonicalNode != null
+              ? canonicalNode.role === 'transform' &&
+                !canAuthorColumnMappings &&
+                !hasReadOnlyColumnLineage
+                ? []
+                : resolveCanvasColumnPortDirections(canonicalNode.role)
+              : [],
         };
+        return canonicalNode == null
+          ? { ...node, data: projectedNodeData }
+          : projectCanvasNodeAccessibleHealth({
+              node,
+              canonicalNode,
+              data: projectedNodeData,
+              graphNodeCardStrategies,
+            });
       }),
     [
       canMutateGraph,
@@ -240,6 +251,7 @@ export function useCanvasControllerReadModel({
       onToggleExecutionSelection,
       graphModel.canonicalNodesById,
       graphModel.nodes,
+      graphNodeCardStrategies,
       activeCanvasKind,
       overlayModel.activeRunId,
       overlayModel.overlayDecorations,

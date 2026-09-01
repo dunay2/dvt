@@ -20,7 +20,7 @@ import {
   pushRuntimeMetrics,
   resolveCodeMetricPresentation,
   resolveNodeCardAccentTone,
-  resolveNodeCardStatus,
+  resolveNodeCardHealth,
   resolveColumnCount,
   resolveColumnMetricPresentation,
   resolveGraphNodeRelationPath,
@@ -163,13 +163,13 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     path: buildDvtArtifactPath(metadata, data, node.path),
     kindLabel: stringValue(data.typeLabel) ?? node.kind,
     accentTone: resolveNodeCardAccentTone(node),
-    status: resolveNodeCardStatus(
+    health: resolveNodeCardHealth(
       node,
       metadata,
       data,
       node.role === 'input'
-        ? { label: presentationCopy?.readyStatusLabel ?? 'Ready', tone: 'success' }
-        : { label: presentationCopy?.draftStatusLabel ?? 'Draft', tone: 'warning' }
+        ? { label: presentationCopy?.readyStatusLabel ?? 'Ready', tone: 'healthy' }
+        : { label: presentationCopy?.draftStatusLabel ?? 'Draft', tone: 'neutral' }
     ),
     metrics,
     operationalMetrics,

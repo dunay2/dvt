@@ -4,10 +4,12 @@ import type { CSSProperties } from 'react';
 import type { PluginNodeKind } from '../../types/canonical';
 
 export const graphNodeCardSurfaceClasses = {
-  root: 'group w-[24rem] min-w-[24rem] max-w-[24rem] overflow-hidden rounded-md border bg-slate-950/95 text-sm text-slate-100 shadow-xl shadow-slate-950/30 transition-opacity',
+  root: 'group relative w-[24rem] min-w-[24rem] max-w-[24rem] overflow-hidden rounded-md border bg-slate-950/95 text-sm text-slate-100 shadow-xl shadow-slate-950/30 transition-[border-color,opacity] focus-within:ring-2 focus-within:ring-white/40',
   selected: 'ring-2 ring-white/40',
   hovered: 'ring-1 ring-white/20',
   dimmed: 'opacity-30',
+  overlayBorder:
+    'pointer-events-none absolute inset-0 z-10 rounded-[inherit] border-2 border-solid',
 } as const;
 
 export const graphNodeCardLayoutClasses = {
@@ -135,22 +137,11 @@ export const graphNodeColumnClasses = {
     'nodrag nopan mt-2 w-full cursor-pointer rounded border border-purple-500/50 bg-purple-500/10 px-2 py-1.5 text-left text-xs font-semibold text-purple-100 transition hover:border-purple-400 hover:bg-purple-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400',
 } as const;
 
-export const graphNodeStatusChipClasses = {
-  base: 'rounded-full border px-2 py-0.5 text-xs font-medium',
-  neutral: 'border-slate-500/50 bg-slate-800/70 text-slate-200',
-  info: 'border-blue-400/40 bg-blue-500/15 text-blue-200',
-  success: 'border-green-300/60 bg-green-500/15 text-green-100',
-  warning: 'border-amber-400/40 bg-amber-500/15 text-amber-200',
-  danger: 'border-red-400/50 bg-red-500/15 text-red-200',
-  running: 'border-sky-400/45 bg-sky-500/15 text-sky-200',
+export const graphNodeHealthBorderClasses = {
+  healthy: 'border-solid border-green-500',
+  failed: 'border-dashed border-red-500',
+  neutral: 'border-solid border-slate-700',
 } as const;
-
-export const graphStatusRingClasses: Record<string, string> = {
-  running: 'ring-2 ring-blue-400',
-  success: 'ring-2 ring-green-500',
-  failed: 'ring-2 ring-red-500',
-  skipped: 'ring-1 ring-yellow-400 opacity-60',
-};
 
 export const graphStatusBadgeClasses: Record<string, string> = {
   idle: 'border-gray-500/80 bg-gray-900/60 text-slate-100',

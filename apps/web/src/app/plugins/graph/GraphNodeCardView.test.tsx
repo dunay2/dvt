@@ -18,7 +18,7 @@ const BASE_PROPS = {
     kindLabel: 'Model',
     subtitle: 'analytics',
     path: 'models/marts/orders.sql',
-    status: { label: 'Draft', tone: 'warning' as const },
+    health: { label: 'Draft', tone: 'neutral' as const },
     metrics: [],
     operationalMetrics: [],
     operationalDetail: null,
@@ -82,7 +82,7 @@ describe('GraphNodeCardView', () => {
 
     expect(container.querySelector('[data-slot="graph-node-card-play"]')).toBeNull();
     expect(container.querySelector('[data-slot="graph-node-card-actions"]')).not.toBeNull();
-    expect(container.querySelector('[data-slot="graph-node-status-chip"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="graph-node-status-chip"]')).toBeNull();
   });
 
   it('opens governed node actions from the card action button without selecting the card', () => {
@@ -127,7 +127,7 @@ describe('GraphNodeCardView', () => {
     expect(card?.className).not.toContain('min-w-[220px]');
   });
 
-  it('renders semantic status, subtitle, tags, and operational rail without repeating the backing path', () => {
+  it('renders subtitle, tags, and operational rail without repeating the backing path', () => {
     act(() => {
       root.render(
         <GraphNodeCardView
@@ -138,7 +138,7 @@ describe('GraphNodeCardView', () => {
             kindLabel: 'Source',
             subtitle: 'warehouse.public.orders',
             path: 'models/sources/src_public.yml',
-            status: { label: 'Ready', tone: 'success' },
+            health: { label: 'Ready', tone: 'healthy' },
             metrics: [{ id: 'columns', label: 'Columns', value: '3' }],
             operationalMetrics: [
               { id: 'freshness', label: 'Freshness', value: '12 min' },
@@ -171,7 +171,6 @@ describe('GraphNodeCardView', () => {
     expect(
       container.querySelector('[data-slot="graph-node-card-title"]')?.getAttribute('title')
     ).toBe('src_public_orders');
-    expect(container.textContent).toContain('Ready');
     expect(container.textContent).toContain('warehouse.public.orders');
     expect(container.textContent).not.toContain('models/sources/src_public.yml');
     expect(container.textContent).toContain('postgres');
@@ -416,24 +415,74 @@ describe('GraphNodeCardView', () => {
     expect(icon?.getAttribute('class')).toContain('text-purple');
   });
 
-  it('uses the textual status chip as the only card status indicator', () => {
+  it.each([
+    ['healthy', 'Ready', 'border-green-500', 'border-solid'],
+    ['failed', 'Failed', 'border-red-500', 'border-dashed'],
+    ['neutral', 'Draft', 'border-slate-700', 'border-solid'],
+  ] as const)(
+    'uses a %s health border without a visible status chip',
+    (tone, label, borderClass, borderStyleClass) => {
+      act(() => {
+        root.render(
+          <GraphNodeCardView
+            {...BASE_PROPS}
+            cardModel={{
+              ...BASE_PROPS.cardModel,
+              health: { label, tone },
+            }}
+          />
+        );
+      });
+
+      const card = container.querySelector('[data-slot="graph-node-card"]');
+      expect(card?.className).toContain(borderClass);
+      expect(card?.className).toContain(borderStyleClass);
+      expect(card?.className).toContain('focus-within:ring-2');
+      expect(container.querySelector('[data-slot="graph-node-status-chip"]')).toBeNull();
+    }
+  );
+
+  it('keeps selection visible alongside the semantic health border', () => {
     act(() => {
       root.render(
         <GraphNodeCardView
           {...BASE_PROPS}
+          selected
           cardModel={{
             ...BASE_PROPS.cardModel,
-            status: { label: 'Warning', tone: 'warning' },
+            health: { label: 'Ready', tone: 'healthy' },
           }}
         />
       );
     });
 
-    expect(container.querySelector('[data-slot="graph-node-status-chip"]')?.textContent).toBe(
-      'Warning'
-    );
-    expect(container.querySelectorAll('[data-slot="graph-node-status-chip"]')).toHaveLength(1);
-    expect(container.textContent?.match(/Warning/g)).toHaveLength(1);
+    const card = container.querySelector('[data-slot="graph-node-card"]');
+    expect(card?.className).toContain('border-green-500');
+    expect(card?.className).toContain('ring-2');
+  });
+
+  it('keeps overlay decoration on a separate layer from the semantic health border', () => {
+    act(() => {
+      root.render(
+        <GraphNodeCardView
+          {...BASE_PROPS}
+          overlayStyle={{ borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.08)' }}
+          cardModel={{
+            ...BASE_PROPS.cardModel,
+            health: { label: 'Ready', tone: 'healthy' },
+          }}
+        />
+      );
+    });
+
+    const card = container.querySelector<HTMLElement>('[data-slot="graph-node-card"]');
+    const overlay = container.querySelector<HTMLElement>('[data-slot="graph-node-overlay-border"]');
+
+    expect(card?.className).toContain('border-green-500');
+    expect(card?.style.borderColor).toBe('');
+    expect(card?.style.backgroundColor).toBe('rgba(245, 158, 11, 0.08)');
+    expect(overlay?.style.borderColor).toBe('rgb(245, 158, 11)');
+    expect(overlay?.getAttribute('aria-hidden')).toBe('true');
   });
 
   it('opens operational details from the rail without bubbling to the node card', () => {

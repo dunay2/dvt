@@ -27,6 +27,7 @@ describe('dbt project file Canvas architecture', () => {
     expect(composition).toContain('useDbtProjectFileCanvasController');
     expect(controller).toContain('useDbtProjectGraphQuery');
     expect(controller).toContain('projectDbtProjectGraphToCanonicalCanvas');
+    expect(controller).toContain('projectCanvasNodeAccessibleHealth');
     expect(view).toContain('CanvasShell');
     expect(view).toContain('buildDbtProjectFileCodeWorkbench');
     expect(codeWorkbench).toContain('SqlContextWorkbench');

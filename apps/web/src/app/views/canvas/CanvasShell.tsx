@@ -316,29 +316,31 @@ export default function CanvasShell({
           sinkDataSampleTarget == null
             ? data.runStatusByNodeId
             : new Map(data.runStatusByNodeId).set(node.id, sinkDataSampleTarget.status);
+        const projectedData: DbtNodeData = {
+          ...data,
+          canOpenNodeCode,
+          ...(sinkDataSampleTarget == null
+            ? {}
+            : {
+                rows: sinkDataSampleTarget.rowsWritten,
+                durationMs: sinkDataSampleTarget.durationMs,
+                lastRunAt: sinkDataSampleTarget.completedAt,
+                runStatusByNodeId,
+              }),
+          onOpenSourceDataSample: canOpenSourceDataSample
+            ? () => openSourceDataSample(sourceDataSampleTarget)
+            : canOpenSinkDataSample
+              ? () => openSinkDataSample(sinkDataSampleTarget)
+              : undefined,
+          sourceDataSampleInteractionLabel: canOpenDataSample
+            ? copy.sourceDataSampleInteractionLabel
+            : undefined,
+        };
 
         return {
           ...node,
-          data: {
-            ...data,
-            canOpenNodeCode,
-            ...(sinkDataSampleTarget == null
-              ? {}
-              : {
-                  rows: sinkDataSampleTarget.rowsWritten,
-                  durationMs: sinkDataSampleTarget.durationMs,
-                  lastRunAt: sinkDataSampleTarget.completedAt,
-                  runStatusByNodeId,
-                }),
-            onOpenSourceDataSample: canOpenSourceDataSample
-              ? () => openSourceDataSample(sourceDataSampleTarget)
-              : canOpenSinkDataSample
-                ? () => openSinkDataSample(sinkDataSampleTarget)
-                : undefined,
-            sourceDataSampleInteractionLabel: canOpenDataSample
-              ? copy.sourceDataSampleInteractionLabel
-              : undefined,
-          },
+          ariaLabel: projectedData.projectAccessibleHealthLabel?.(projectedData) ?? node.ariaLabel,
+          data: projectedData,
         };
       }),
     }),
