@@ -114,6 +114,8 @@ type UseCanvasControllerReadModelArgs = {
     | 'handleColumnDisclosureChange'
     | 'handleAutomapCanvasColumns'
     | 'handleRemoveColumnMapping'
+    | 'resolveCanvasAlgebraicCompositionOperations'
+    | 'handleComposeCanvasNodes'
   >;
   onToggleExecutionSelection: (nodeId: string, shouldSelect: boolean) => void;
   activeCanvasKind: string;
@@ -213,6 +215,10 @@ export function useCanvasControllerReadModel({
             : undefined,
           onColumnDisclosureChange: graphHandlers.handleColumnDisclosureChange,
           onAutomapColumns: canMutateGraph ? graphHandlers.handleAutomapCanvasColumns : undefined,
+          resolveAlgebraicCompositionOperations: canMutateGraph
+            ? graphHandlers.resolveCanvasAlgebraicCompositionOperations
+            : undefined,
+          onComposeCanvasNodes: canMutateGraph ? graphHandlers.handleComposeCanvasNodes : undefined,
         },
       }).map((node) => {
         const canonicalNode = graphModel.canonicalNodesById.get(node.id);
@@ -373,6 +379,8 @@ export function useCanvasControllerReadModel({
       graphHandlers.handleApplyDvtSubstraitColumnFunction,
       graphHandlers.handleReorderDvtSubstraitColumnOutput,
       graphHandlers.handleToggleDvtSubstraitColumnOutput,
+      graphHandlers.resolveCanvasAlgebraicCompositionOperations,
+      graphHandlers.handleComposeCanvasNodes,
       onToggleExecutionSelection,
       graphModel.canonicalNodesById,
       graphModel.edges,

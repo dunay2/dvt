@@ -4,6 +4,10 @@ import type {
   GraphNodeColumnPortIdentity,
   GraphNodeColumnReorderIdentity,
 } from '../../plugins/graph/GraphNodeColumnSection';
+import type {
+  CanvasAlgebraicCompositionIdentity,
+  CanvasAlgebraicCompositionOperation,
+} from './canvasAlgebraicComposition';
 
 type NodeActionHandlers = {
   onInspectNode: (nodeId: string) => void;
@@ -26,6 +30,14 @@ type NodeActionHandlers = {
   onReorderDvtSubstraitColumnOutput?: (identity: GraphNodeColumnReorderIdentity) => void;
   onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;
   onAutomapColumns?: (nodeId: string, columns: readonly GraphNodeColumn[]) => void;
+  resolveAlgebraicCompositionOperations?: (
+    identity: CanvasAlgebraicCompositionIdentity
+  ) => CanvasAlgebraicCompositionOperation[];
+  onComposeCanvasNodes?: (
+    identity: CanvasAlgebraicCompositionIdentity & {
+      operation: CanvasAlgebraicCompositionOperation;
+    }
+  ) => void;
 };
 
 type BuildCanvasNodeInteractionPresentationParams = {
@@ -67,6 +79,8 @@ export function buildCanvasNodeInteractionPresentation({
       onReorderDvtSubstraitColumnOutput: handlers.onReorderDvtSubstraitColumnOutput,
       onColumnDisclosureChange: handlers.onColumnDisclosureChange,
       onAutomapColumns: handlers.onAutomapColumns,
+      resolveAlgebraicCompositionOperations: handlers.resolveAlgebraicCompositionOperations,
+      onComposeCanvasNodes: handlers.onComposeCanvasNodes,
     },
   }));
 }

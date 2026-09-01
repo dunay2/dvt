@@ -102,6 +102,8 @@ function buildReadModelArgs(
       handleColumnDisclosureChange: vi.fn(),
       handleAutomapCanvasColumns: vi.fn(),
       handleRemoveColumnMapping: vi.fn(),
+      resolveCanvasAlgebraicCompositionOperations: vi.fn(() => []),
+      handleComposeCanvasNodes: vi.fn(),
     },
     onToggleExecutionSelection: vi.fn(),
     activeCanvasKind: 'transformation',
