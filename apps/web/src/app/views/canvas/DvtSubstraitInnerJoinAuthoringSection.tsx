@@ -67,22 +67,31 @@ export function DvtSubstraitInnerJoinAuthoringSection({
       {content}
     </div>
   );
-  const renderJoinSummary = (projection: {
-    left: { table: string };
-    right: { table: string };
-    leftKey: string;
-    rightKey: string;
-  }): JSX.Element => (
-    <div className="space-y-1 text-xs">
-      <p className="text-(--text-muted)">
-        {projection.left.table} + {projection.right.table}
+  const renderJoinSummary = (
+    projection:
+      | {
+          left: { table: string };
+          right: { table: string };
+          leftKey: string;
+          rightKey: string;
+        }
+      | Pick<DvtSubstraitNInputJoinProjection, 'inputs' | 'joins'>
+  ): JSX.Element =>
+    'inputs' in projection ? (
+      <p className="text-xs text-(--text-muted)">
+        {projection.inputs.map((input) => input.table).join(' + ')}
       </p>
-      <p>
-        {projection.left.table}.{projection.leftKey} = {projection.right.table}.
-        {projection.rightKey}
-      </p>
-    </div>
-  );
+    ) : (
+      <div className="space-y-1 text-xs">
+        <p className="text-(--text-muted)">
+          {projection.left.table} + {projection.right.table}
+        </p>
+        <p>
+          {projection.left.table}.{projection.leftKey} = {projection.right.table}.
+          {projection.rightKey}
+        </p>
+      </div>
+    );
   const nInputInspection = inspectDvtSubstraitNInputJoinDraft(semanticDraft);
   const renderAppendInput = (projection: DvtSubstraitNInputJoinProjection): ReactNode => {
     if (appendCandidates.length === 0) return null;
@@ -100,10 +109,7 @@ export function DvtSubstraitInnerJoinAuthoringSection({
         (input) => input.source.nodeId === candidateNodeId && input.fields.includes(rightFieldName)
       );
       if (candidate == null) return;
-      const existingOutputNames = new Set(projection.outputs.map((output) => output.name));
-      const selectedFields = candidate.fields.filter(
-        (field) => field !== rightFieldName && !existingOutputNames.has(field)
-      );
+      const selectedFields = candidate.fields.filter((field) => field !== rightFieldName);
       if (selectedFields.length === 0) return;
       mutateDraft((current) =>
         appendDvtSubstraitInnerJoinInput(current, {
@@ -165,6 +171,72 @@ export function DvtSubstraitInnerJoinAuthoringSection({
         </label>
         <Button type="submit" size="sm" disabled={disabled} data-slot="dvt-substrait-append-submit">
           {canvasViewCopy.inspectorDvtSubstraitAppendInputAction}
+        </Button>
+      </form>
+    );
+  };
+  const renderGroupingForm = (
+    outputs: readonly Readonly<{ name: string; fieldId: string }>[]
+  ): JSX.Element => {
+    const applyGrouping = (form: HTMLFormElement): void => {
+      const formData = new FormData(form);
+      const groupFieldId = formData.get('grainFieldId');
+      const countOutputName = formData.get('countOutputName');
+      if (
+        typeof groupFieldId !== 'string' ||
+        typeof countOutputName !== 'string' ||
+        countOutputName.trim().length === 0
+      ) {
+        return;
+      }
+      mutateDraft((current) =>
+        applyDvtSubstraitInnerJoinGrouping(current, { groupFieldId, countOutputName })
+      );
+    };
+    return (
+      <form
+        className="space-y-2 border-t border-[color:var(--border-default)] pt-3"
+        onSubmit={(event) => {
+          event.preventDefault();
+          applyGrouping(event.currentTarget);
+        }}
+      >
+        <p className="text-xs font-medium text-(--text-default)">
+          {canvasViewCopy.inspectorDvtSubstraitAggregationTitle}
+        </p>
+        <select
+          data-slot="dvt-substrait-inner-join-grain-field"
+          name="grainFieldId"
+          aria-label={canvasViewCopy.inspectorDvtSubstraitGrainFieldLabel}
+          disabled={disabled}
+          defaultValue={outputs[0]?.fieldId}
+          className="h-8 w-full rounded border border-[color:var(--border-default)] bg-transparent px-2 text-xs"
+        >
+          {outputs.map((output) => (
+            <option key={output.fieldId} value={output.fieldId}>
+              {output.name}
+            </option>
+          ))}
+        </select>
+        <Input
+          data-slot="dvt-substrait-inner-join-count-output-name"
+          name="countOutputName"
+          aria-label={canvasViewCopy.inspectorDvtSubstraitCountOutputLabel}
+          disabled={disabled}
+          defaultValue="row_count"
+        />
+        <Button
+          type="submit"
+          size="sm"
+          data-slot="dvt-substrait-inner-join-apply-grouping"
+          disabled={disabled}
+          onKeyDown={(event) => {
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            event.preventDefault();
+            if (event.currentTarget.form != null) applyGrouping(event.currentTarget.form);
+          }}
+        >
+          {canvasViewCopy.inspectorDvtSubstraitApplyAggregationLabel}
         </Button>
       </form>
     );
@@ -330,6 +402,9 @@ export function DvtSubstraitInnerJoinAuthoringSection({
 
   if (nInputInspection.ok && nInputInspection.projection.inputs.length > 2) {
     const projection = nInputInspection.projection;
+    const mutateField = (edit: DvtSubstraitInnerJoinFieldEdit): void => {
+      mutateDraft((current) => applyDvtSubstraitInnerJoinFieldEdit(current, edit));
+    };
     return renderShell(
       <div className="space-y-3" data-slot="dvt-substrait-n-input-join-authoring">
         <p className="text-xs text-(--text-muted)">
@@ -356,6 +431,109 @@ export function DvtSubstraitInnerJoinAuthoringSection({
             );
           })}
         </ul>
+        <dl className="space-y-2 text-xs">
+          <div className="space-y-2">
+            <dt className="text-(--text-muted)">
+              {canvasViewCopy.inspectorDvtSubstraitSelectedFieldsLabel}
+            </dt>
+            <dd className="space-y-2">
+              {projection.inputs.flatMap((input) =>
+                input.fields.map((field) => {
+                  const output = projection.outputs.find(
+                    (candidate) => candidate.source.fieldId === field.fieldId
+                  );
+                  const selected = output != null;
+                  const outputOrdinal = output?.outputOrdinal ?? -1;
+                  const fieldLabel = `${input.table}.${field.name}`;
+                  return (
+                    <div
+                      key={field.fieldId}
+                      className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded border border-[color:var(--border-default)] p-2"
+                      data-slot="dvt-substrait-n-input-field"
+                      data-source-field-id={field.fieldId}
+                    >
+                      <input
+                        type="checkbox"
+                        name="dvt-substrait-n-input-field"
+                        value={field.fieldId}
+                        aria-label={`${canvasViewCopy.inspectorDvtSubstraitSelectedFieldsLabel}: ${fieldLabel}`}
+                        checked={selected}
+                        disabled={disabled || (selected && projection.outputs.length === 1)}
+                        onChange={(event) =>
+                          mutateField({
+                            kind: 'set-selected',
+                            sourceFieldId: field.fieldId,
+                            selected: event.currentTarget.checked,
+                          })
+                        }
+                      />
+                      {output == null ? (
+                        <span className="text-(--text-muted)">{fieldLabel}</span>
+                      ) : (
+                        <Input
+                          key={`${output.fieldId}:${output.name}`}
+                          data-slot="dvt-substrait-n-input-output-name"
+                          data-source-field-id={field.fieldId}
+                          aria-label={`${canvasViewCopy.inspectorDvtVisualOutputNameLabel}: ${fieldLabel}`}
+                          disabled={disabled}
+                          defaultValue={output.name}
+                          onBlur={(event) =>
+                            mutateField({
+                              kind: 'rename',
+                              sourceFieldId: field.fieldId,
+                              outputName: event.currentTarget.value,
+                            })
+                          }
+                        />
+                      )}
+                      <div className="flex gap-1">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          data-action="move-substrait-n-input-field-up"
+                          data-source-field-id={field.fieldId}
+                          aria-label={`${canvasViewCopy.inspectorDvtSubstraitMoveFieldUpLabel}: ${fieldLabel}`}
+                          disabled={disabled || !selected || outputOrdinal === 0}
+                          onClick={() =>
+                            mutateField({
+                              kind: 'move',
+                              sourceFieldId: field.fieldId,
+                              direction: 'up',
+                            })
+                          }
+                        >
+                          ↑
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          data-action="move-substrait-n-input-field-down"
+                          data-source-field-id={field.fieldId}
+                          aria-label={`${canvasViewCopy.inspectorDvtSubstraitMoveFieldDownLabel}: ${fieldLabel}`}
+                          disabled={
+                            disabled || !selected || outputOrdinal === projection.outputs.length - 1
+                          }
+                          onClick={() =>
+                            mutateField({
+                              kind: 'move',
+                              sourceFieldId: field.fieldId,
+                              direction: 'down',
+                            })
+                          }
+                        >
+                          ↓
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </dd>
+          </div>
+        </dl>
+        {renderGroupingForm(projection.outputs)}
         {renderAppendInput(projection)}
       </div>
     );
@@ -366,21 +544,6 @@ export function DvtSubstraitInnerJoinAuthoringSection({
   const { projection } = inspection;
   const mutateField = (edit: DvtSubstraitInnerJoinFieldEdit): void => {
     mutateDraft((current) => applyDvtSubstraitInnerJoinFieldEdit(current, edit));
-  };
-  const applyGrouping = (form: HTMLFormElement): void => {
-    const formData = new FormData(form);
-    const groupFieldId = formData.get('grainFieldId');
-    const countOutputName = formData.get('countOutputName');
-    if (
-      typeof groupFieldId !== 'string' ||
-      typeof countOutputName !== 'string' ||
-      countOutputName.trim().length === 0
-    ) {
-      return;
-    }
-    mutateDraft((current) =>
-      applyDvtSubstraitInnerJoinGrouping(current, { groupFieldId, countOutputName })
-    );
   };
 
   return renderShell(
@@ -474,51 +637,7 @@ export function DvtSubstraitInnerJoinAuthoringSection({
           </dd>
         </div>
       </dl>
-      <form
-        className="space-y-2 border-t border-[color:var(--border-default)] pt-3"
-        onSubmit={(event) => {
-          event.preventDefault();
-          applyGrouping(event.currentTarget);
-        }}
-      >
-        <p className="text-xs font-medium text-(--text-default)">
-          {canvasViewCopy.inspectorDvtSubstraitAggregationTitle}
-        </p>
-        <select
-          data-slot="dvt-substrait-inner-join-grain-field"
-          name="grainFieldId"
-          aria-label={canvasViewCopy.inspectorDvtSubstraitGrainFieldLabel}
-          disabled={disabled}
-          defaultValue={projection.outputs[0]?.fieldId}
-          className="h-8 w-full rounded border border-[color:var(--border-default)] bg-transparent px-2 text-xs"
-        >
-          {projection.outputs.map((output) => (
-            <option key={output.fieldId} value={output.fieldId}>
-              {output.name}
-            </option>
-          ))}
-        </select>
-        <Input
-          data-slot="dvt-substrait-inner-join-count-output-name"
-          name="countOutputName"
-          aria-label={canvasViewCopy.inspectorDvtSubstraitCountOutputLabel}
-          disabled={disabled}
-          defaultValue="row_count"
-        />
-        <Button
-          type="submit"
-          size="sm"
-          data-slot="dvt-substrait-inner-join-apply-grouping"
-          disabled={disabled}
-          onKeyDown={(event) => {
-            if (event.key !== 'Enter' && event.key !== ' ') return;
-            event.preventDefault();
-            if (event.currentTarget.form != null) applyGrouping(event.currentTarget.form);
-          }}
-        >
-          {canvasViewCopy.inspectorDvtSubstraitApplyAggregationLabel}
-        </Button>
-      </form>
+      {renderGroupingForm(projection.outputs)}
       {nInputInspection.ok ? renderAppendInput(nInputInspection.projection) : null}
     </>
   );

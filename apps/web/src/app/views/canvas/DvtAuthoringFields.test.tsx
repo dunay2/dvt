@@ -464,6 +464,11 @@ describe('DvtAuthoringFields', () => {
       table: 'tickets',
       columns: ['ticket_id', 'customer_id'],
     });
+    const profiles = buildJoinWarehouseSourceNode({
+      id: 'source-profiles',
+      table: 'profiles',
+      columns: ['customer_id', 'name'],
+    });
     const transform = buildDvtNode('dvt:sql_transform');
     const initialEdges: readonly CanonicalEdge[] = [
       {
@@ -484,7 +489,7 @@ describe('DvtAuthoringFields', () => {
       transform,
       undefined,
       undefined,
-      [customers, orders, shipments, tickets, transform],
+      [customers, orders, shipments, tickets, profiles, transform],
       initialEdges,
       'code'
     );
@@ -508,12 +513,18 @@ describe('DvtAuthoringFields', () => {
         targetId: transform.id,
         relation: 'lineage',
       },
+      {
+        id: 'profiles-transform',
+        sourceId: profiles.id,
+        targetId: transform.id,
+        relation: 'lineage',
+      },
     ];
     renderFields(
       transform,
       undefined,
       undefined,
-      [customers, orders, shipments, tickets, transform],
+      [customers, orders, shipments, tickets, profiles, transform],
       allEdges,
       'code'
     );
@@ -541,6 +552,71 @@ describe('DvtAuthoringFields', () => {
     expect(draftJson()).toContain('field:dvt-sql-transform:ticket_id');
     expect(container.textContent).toContain('customers + orders + shipments + tickets');
     expect(draftJson()).toContain('dvt-vtx2-n-input-inner-join-card');
+
+    chooseConnectedField(profiles.id);
+    expect(draftJson()).toContain('field:dvt-sql-transform:profiles_name');
+    expect(container.textContent).toContain('customers + orders + shipments + tickets + profiles');
+
+    const shipmentCustomerSelection = container.querySelector<HTMLInputElement>(
+      'input[name="dvt-substrait-n-input-field"][value="field:source-shipments:customer_id"]'
+    );
+    expect(shipmentCustomerSelection?.checked).toBe(false);
+    act(() => {
+      fireEvent.click(shipmentCustomerSelection!);
+    });
+    const shipmentCustomerOutput = container.querySelector<HTMLInputElement>(
+      'input[data-slot="dvt-substrait-n-input-output-name"][data-source-field-id="field:source-shipments:customer_id"]'
+    );
+    expect(shipmentCustomerOutput?.value).toBe('shipments_customer_id');
+    act(() => {
+      fireEvent.input(shipmentCustomerOutput!, { target: { value: 'shipping_customer' } });
+      fireEvent.focusOut(shipmentCustomerOutput!);
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>(
+          'button[data-action="move-substrait-n-input-field-up"][data-source-field-id="field:source-shipments:customer_id"]'
+        )!
+      );
+    });
+    expect(draftJson()).toContain('"fieldId":"field:dvt-sql-transform:shipments_customer_id"');
+    expect(draftJson()).toContain('"displayName":"shipping_customer"');
+
+    const grainField = container.querySelector<HTMLSelectElement>(
+      '[data-slot="dvt-substrait-inner-join-grain-field"]'
+    );
+    const countOutput = container.querySelector<HTMLInputElement>(
+      '[data-slot="dvt-substrait-inner-join-count-output-name"]'
+    );
+    act(() => {
+      fireEvent.change(grainField!, {
+        target: { value: 'field:dvt-sql-transform:shipment_id' },
+      });
+      fireEvent.input(countOutput!, { target: { value: 'shipment_count' } });
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>(
+          '[data-slot="dvt-substrait-inner-join-apply-grouping"]'
+        )!
+      );
+    });
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-inner-join-grouping-authoring"]')
+    ).not.toBeNull();
+
+    const rankOutput = container.querySelector<HTMLInputElement>(
+      '[data-slot="dvt-substrait-inner-join-window-output-name"]'
+    );
+    act(() => {
+      fireEvent.input(rankOutput!, { target: { value: 'shipment_rank' } });
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>(
+          '[data-slot="dvt-substrait-inner-join-apply-window"]'
+        )!
+      );
+    });
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-inner-join-grouped-window-authoring"]')
+    ).not.toBeNull();
+    expect(draftJson()).toContain('"displayName":"shipment_count"');
+    expect(draftJson()).toContain('"displayName":"shipment_rank"');
   });
 
   it('does not offer INNER JOIN when the connected datasets use different connections', () => {

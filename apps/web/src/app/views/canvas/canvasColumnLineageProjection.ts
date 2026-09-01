@@ -181,6 +181,14 @@ function readSubstraitJoinLineage(node: CanonicalNode): DvtSubstraitInnerJoinLin
     }
     const groupedWindow = inspectDvtSubstraitInnerJoinGroupedWindowDraft(draft);
     if (groupedWindow.ok) {
+      if (groupedWindow.projection.kind === 'n-input') {
+        if (groupedWindow.projection.targetNodeId !== node.id) return null;
+        return {
+          kind: 'n-input',
+          inputs: groupedWindow.projection.inputs,
+          outputs: [groupedWindow.projection.groupField],
+        };
+      }
       return {
         kind: 'binary',
         left: groupedWindow.projection.left,
@@ -190,6 +198,14 @@ function readSubstraitJoinLineage(node: CanonicalNode): DvtSubstraitInnerJoinLin
     }
     const grouping = inspectDvtSubstraitInnerJoinGroupingDraft(draft);
     if (grouping.ok) {
+      if (grouping.projection.kind === 'n-input') {
+        if (grouping.projection.targetNodeId !== node.id) return null;
+        return {
+          kind: 'n-input',
+          inputs: grouping.projection.inputs,
+          outputs: [grouping.projection.groupField],
+        };
+      }
       return {
         kind: 'binary',
         left: grouping.projection.left,

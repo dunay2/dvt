@@ -1,10 +1,20 @@
 import { describe, expect, it } from 'vitest';
 
+import type { ConnectedSourceRef } from '@dvt/contracts';
+
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
+  applyDvtSubstraitSemanticDocument,
   applyDvtVisualTransformRecipe,
   convertDvtVisualTransformToSql,
 } from './canvasDvtTransformAuthoringAuthority';
+import {
+  appendDvtSubstraitInnerJoinInput,
+  applyDvtSubstraitInnerJoinGroupedRowNumber,
+  applyDvtSubstraitInnerJoinGrouping,
+  createDvtSubstraitInnerJoinDraft,
+  encodeDvtSubstraitInnerJoinDocument,
+} from './canvasDvtSubstraitJoinComposition';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 
 const source: CanonicalNode = {
@@ -40,6 +50,78 @@ const edge: CanonicalEdge = {
 };
 
 describe('projectCanvasNodePresentationTruth', () => {
+  it('rejects grouped N-input columns owned by another Canvas node', () => {
+    const connectionRef = {
+      schemaVersion: 'connection-ref.v1' as const,
+      connectionId: 'warehouse-main',
+      provider: 'postgres' as const,
+    };
+    const connectedSourceRef = (table: string): ConnectedSourceRef => ({
+      schemaVersion: 'connected-source-ref.v1',
+      connectionRef,
+      sourceObjectId: `public.${table}`,
+    });
+    let draft = createDvtSubstraitInnerJoinDraft({
+      left: {
+        nodeId: 'customers',
+        schema: 'public',
+        table: 'customers',
+        sourceRef: connectedSourceRef('customers'),
+      },
+      right: {
+        nodeId: 'orders',
+        schema: 'public',
+        table: 'orders',
+        sourceRef: connectedSourceRef('orders'),
+      },
+      targetNodeId: 'original-transform',
+    });
+    draft = appendDvtSubstraitInnerJoinInput(draft, {
+      source: {
+        nodeId: 'shipments',
+        schema: 'public',
+        table: 'shipments',
+        sourceRef: connectedSourceRef('shipments'),
+      },
+      fields: ['shipment_id', 'customer_id'],
+      predicate: {
+        leftSourceFieldId: 'field:customers:customer_id',
+        rightFieldName: 'customer_id',
+      },
+      selectedFields: ['shipment_id'],
+    });
+    const grouped = applyDvtSubstraitInnerJoinGrouping(draft, {
+      groupFieldId: 'field:original-transform:shipment_id',
+      countOutputName: 'shipment_count',
+    });
+    const ranked = applyDvtSubstraitInnerJoinGroupedRowNumber(grouped, {
+      outputName: 'shipment_rank',
+    });
+
+    for (const [nodeId, semanticDraft] of [
+      ['copied-grouped-transform', grouped],
+      ['copied-ranked-transform', ranked],
+    ] as const) {
+      const copied = applyDvtSubstraitSemanticDocument(
+        {
+          id: nodeId,
+          name: nodeId,
+          pluginId: 'dvt',
+          kind: 'dvt:sql_transform',
+          role: 'transform',
+          status: 'idle',
+          tags: [],
+          metadata: {},
+        },
+        encodeDvtSubstraitInnerJoinDocument(semanticDraft)
+      );
+
+      expect(
+        projectCanvasNodePresentationTruth({ node: copied, nodes: [copied], edges: [] }).columns
+      ).toMatchObject({ declared: [], visible: [], declaredCount: 0, visibleCount: 0 });
+    }
+  });
+
   it('combines inherited columns and generated DBT code in one presentation DTO', () => {
     const truth = projectCanvasNodePresentationTruth({
       node: model,

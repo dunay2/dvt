@@ -458,6 +458,30 @@ describe('Canvas column lineage projection', () => {
         'field:source-shipments:shipment_id',
         ...(inputCount === 4 ? ['field:source-tickets:ticket_id'] : []),
       ]);
+
+      const grouped = applyDvtSubstraitInnerJoinGrouping(draft, {
+        groupFieldId: 'field:model:shipment_id',
+        countOutputName: 'shipment_count',
+      });
+      const ranked = applyDvtSubstraitInnerJoinGroupedRowNumber(grouped, {
+        outputName: 'shipment_rank',
+      });
+      const rankedModel = applyDvtSubstraitSemanticDocument(
+        buildNode('model', 'dvt:sql_transform', 'transform'),
+        encodeDvtSubstraitInnerJoinDocument(ranked)
+      );
+      const groupedProjection = projectCanvasColumnLineage({
+        nodes: [...sources, rankedModel],
+        edges: sources.map((node) => ({ sourceId: node.id, targetId: rankedModel.id })),
+        expandedNodeIds: new Set([...sources.map((node) => node.id), rankedModel.id]),
+      });
+      expect(
+        groupedProjection.map((edge) => [
+          edge.source,
+          edge.data?.sourceFieldId,
+          edge.data?.targetColumnName,
+        ])
+      ).toEqual([['source-shipments', 'field:source-shipments:shipment_id', 'shipment_id']]);
     }
   );
 
@@ -526,6 +550,21 @@ describe('Canvas column lineage projection', () => {
       buildNode('copied-model', 'dvt:sql_transform', 'transform'),
       encodeDvtSubstraitInnerJoinDocument(draft)
     );
+    const groupedDraft = applyDvtSubstraitInnerJoinGrouping(draft, {
+      groupFieldId: 'field:model:shipment_id',
+      countOutputName: 'shipment_count',
+    });
+    const rankedDraft = applyDvtSubstraitInnerJoinGroupedRowNumber(groupedDraft, {
+      outputName: 'shipment_rank',
+    });
+    const copiedGroupedModel = applyDvtSubstraitSemanticDocument(
+      buildNode('copied-grouped-model', 'dvt:sql_transform', 'transform'),
+      encodeDvtSubstraitInnerJoinDocument(groupedDraft)
+    );
+    const copiedRankedModel = applyDvtSubstraitSemanticDocument(
+      buildNode('copied-ranked-model', 'dvt:sql_transform', 'transform'),
+      encodeDvtSubstraitInnerJoinDocument(rankedDraft)
+    );
     const staleShipments = {
       ...shipments,
       metadata: {
@@ -544,6 +583,19 @@ describe('Canvas column lineage projection', () => {
         expandedNodeIds: new Set([customers.id, orders.id, shipments.id, copiedModel.id]),
       })
     ).toEqual([]);
+
+    for (const copied of [copiedGroupedModel, copiedRankedModel]) {
+      expect(
+        projectCanvasColumnLineage({
+          nodes: [customers, orders, shipments, copied],
+          edges: [customers, orders, shipments].map((node) => ({
+            sourceId: node.id,
+            targetId: copied.id,
+          })),
+          expandedNodeIds: new Set([customers.id, orders.id, shipments.id, copied.id]),
+        })
+      ).toEqual([]);
+    }
 
     expect(
       projectCanvasColumnLineage({
