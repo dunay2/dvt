@@ -6,10 +6,12 @@ import {
   Clock,
   Database,
   DollarSign,
+  Eye,
   List,
   RefreshCw,
   Table2,
   Timer,
+  Workflow,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -35,6 +37,9 @@ const metricIconByName: Record<GraphNodeCardMetricIcon, LucideIcon> = {
   rows: List,
   cost: DollarSign,
   drift: AlertTriangle,
+  eye: Eye,
+  table: Table2,
+  workflow: Workflow,
 };
 
 type GraphNodeOperationalRailBaseProps = Readonly<{

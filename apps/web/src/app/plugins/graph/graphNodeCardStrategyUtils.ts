@@ -18,6 +18,7 @@ type PushMetricOptions = Readonly<{
   detail?: string;
   icon?: GraphNodeCardMetricIcon;
   tone?: GraphNodeCardStatusTone;
+  placement?: GraphNodeCardMetric['placement'];
 }>;
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
