@@ -81,7 +81,7 @@ describe('CanvasAddNodeCatalogView', () => {
 
     expect(onSelectItem).toHaveBeenCalledWith(
       expect.objectContaining({
-        id: 'create-node:dvt:sql_transform',
+        id: 'create-node:dvt:transform',
         category: 'transformation',
       })
     );
@@ -119,7 +119,7 @@ describe('CanvasAddNodeCatalogView', () => {
     const items = buildCanvasAddNodeCatalogItems({
       authoringNodeKinds: [
         buildTestNodeKind('dvt:source', 'Source'),
-        buildTestNodeKind('dvt:sql_transform', 'SQL transform'),
+        buildTestNodeKind('dvt:transform', 'Transform'),
       ],
     });
 

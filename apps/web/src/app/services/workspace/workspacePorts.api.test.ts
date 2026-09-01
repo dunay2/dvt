@@ -559,7 +559,7 @@ describe('workspace ports api warehouse source import', () => {
     );
   });
 
-  it('validates PostgreSQL transform SQL through the scoped protected query endpoint', async () => {
+  it('validates PostgreTransform SQL through the scoped protected query endpoint', async () => {
     const scope = buildWorkspaceScope();
     setWorkspaceScope(scope);
     const validation = {

@@ -85,7 +85,7 @@ function projectCanvasNodePresentationTruthInternal(
   let lineageRecipe: VisualTransformRecipeV1 | null = null;
   let substraitOutputs: readonly DvtSubstraitPresentedOutput[] | null = null;
   let substraitRejected = false;
-  if (args.node.pluginId === 'dvt' && args.node.kind === 'dvt:sql_transform') {
+  if (args.node.pluginId === 'dvt' && args.node.kind === 'dvt:transform') {
     try {
       const authority = readDvtTransformAuthoringAuthority(args.node);
       if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {

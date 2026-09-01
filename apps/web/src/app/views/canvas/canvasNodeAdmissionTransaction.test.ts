@@ -26,7 +26,7 @@ function buildCanonicalNode(id: string): CanonicalNode {
     id,
     name: id,
     pluginId: 'dvt',
-    kind: 'dvt:sql_transform',
+    kind: 'dvt:transform',
     role: 'transform',
     status: 'idle',
     tags: [],
@@ -52,10 +52,7 @@ describe('canvasNodeAdmissionTransaction', () => {
       return;
     }
 
-    expect(transaction.nodes.map((node) => node.id)).toEqual([
-      'source-node',
-      'transform-node',
-    ]);
+    expect(transaction.nodes.map((node) => node.id)).toEqual(['source-node', 'transform-node']);
     expect(transaction.nodes).not.toBe(existingNodes);
     expect(transaction.draftSession.workingSet.visibleNodeIds).toEqual([
       'source-node',

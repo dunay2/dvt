@@ -204,7 +204,7 @@ export function DvtVisualTransformRecipeAuthoringSection({
   const inputColumns = resolveInputColumns(node, nodes, edges);
   const mutateRecipe = (update: (recipe: VisualTransformRecipeV1) => VisualTransformRecipeV1) => {
     onChange((currentDraft) =>
-      currentDraft.dvt?.kind === 'sql_transform' && currentDraft.dvt.mode === 'visual'
+      currentDraft.dvt?.kind === 'transform' && currentDraft.dvt.mode === 'visual'
         ? {
             ...currentDraft,
             dvt: { ...currentDraft.dvt, recipe: update(currentDraft.dvt.recipe) },

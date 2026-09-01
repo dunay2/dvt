@@ -249,7 +249,7 @@ export function resolveDvtSubstraitUnionAllEntry(args: {
 }): DvtSubstraitUnionAllEntry | null {
   if (
     args.targetNode.pluginId !== 'dvt' ||
-    args.targetNode.kind !== 'dvt:sql_transform' ||
+    args.targetNode.kind !== 'dvt:transform' ||
     args.targetNode.role !== 'transform'
   ) {
     return null;

@@ -210,11 +210,11 @@ describe('Canvas preview-run live protected runtime', () => {
     visitWithLiveWorkspaceSession('/canvas');
 
     getVisibleCanvasNode('Source 1').should('be.visible');
-    getVisibleCanvasNode('SQL transform 1').should('be.visible');
+    getVisibleCanvasNode('Transform 1').should('be.visible');
     getVisibleCanvasNode('Sink 1').should('be.visible');
     getVisibleCanvasNode('Orphan transform').should('be.visible');
 
-    selectCanvasClosure(['Source 1', 'SQL transform 1', 'Sink 1']);
+    selectCanvasClosure(['Source 1', 'Transform 1', 'Sink 1']);
 
     clickPreviewExecutionPlanFromOperationalDrawer();
 
@@ -231,14 +231,14 @@ describe('Canvas preview-run live protected runtime', () => {
         cy.get('[data-decision-subject="selection"]')
           .should('contain.text', 'Partial')
           .and('contain.text', 'source-1')
-          .and('contain.text', 'dvt-sql-transform-1')
+          .and('contain.text', 'dvt-transform-1')
           .and('contain.text', 'sink-1')
           .and('contain.text', 'orphan-transform-1');
         cy.get('[data-decision-subject="source-1"]').should('contain.text', 'Run');
         cy.get('[data-decision-subject="orphan-transform-1"]').should('contain.text', 'Skip');
       });
 
-    readLiveWorkspaceFile('models/dvt-sql-transform-1.sql').then((sqlResponse) => {
+    readLiveWorkspaceFile('models/dvt-transform-1.sql').then((sqlResponse) => {
       expect(sqlResponse.status).to.equal(200);
       expect((sqlResponse.body as { content: string }).content).to.equal(
         'select *\nfrom public.source_1;\n'
@@ -249,14 +249,14 @@ describe('Canvas preview-run live protected runtime', () => {
       expect(graphResponse.status).to.equal(200);
       const content = (graphResponse.body as { content: string }).content;
       expect(content).to.contain('id: "source-1"');
-      expect(content).to.contain('id: "dvt-sql-transform-1"');
+      expect(content).to.contain('id: "dvt-transform-1"');
       expect(content).to.contain('id: "sink-1"');
-      expect(content).to.contain('entrypoint: "models/dvt-sql-transform-1.sql"');
+      expect(content).to.contain('entrypoint: "models/dvt-transform-1.sql"');
       expect(content).to.contain('schema: "public"');
       expect(content).to.contain('table: "sink_1"');
       expect(content).to.contain('fromNodeId: "source-1"');
-      expect(content).to.contain('toNodeId: "dvt-sql-transform-1"');
-      expect(content).to.contain('fromNodeId: "dvt-sql-transform-1"');
+      expect(content).to.contain('toNodeId: "dvt-transform-1"');
+      expect(content).to.contain('fromNodeId: "dvt-transform-1"');
       expect(content).to.contain('toNodeId: "sink-1"');
     });
 

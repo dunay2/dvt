@@ -35,7 +35,7 @@ export const canvasViewExecutionCopyByKey = {
   previewProvenanceTransformPathRequiredMessage: {
     key: 'canvas.preview.transformPathRequiredMessage',
     fallback:
-      'Execution Preview needs SQL content. Select a workspace SQL file for the SQL transform, or use a canvas-authored transform so DVT can create one.',
+      'Execution Preview needs an executable Transform projection. Select a workspace Transform or use a Canvas-authored Transform so DVT can generate one.',
   },
   previewProvenanceWorkspaceNotConfiguredMessage: {
     key: 'canvas.preview.workspaceNotConfiguredMessage',

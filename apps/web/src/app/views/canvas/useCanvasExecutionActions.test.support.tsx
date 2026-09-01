@@ -344,7 +344,7 @@ export function buildCanonicalNodes(): CanonicalNode[] {
       id: 'transform-node',
       name: 'Transform',
       pluginId: 'dvt',
-      kind: 'dvt:sql_transform',
+      kind: 'dvt:transform',
       path: 'models/transform.sql',
       role: 'transform',
       status: 'idle',

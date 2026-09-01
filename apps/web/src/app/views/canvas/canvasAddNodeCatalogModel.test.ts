@@ -16,9 +16,9 @@ describe('canvasAddNodeCatalogModel', () => {
       'model'
     );
     expect(inferCanvasAddNodeCatalogCategory(buildTestNodeKind('dbt:seed', 'Seed'))).toBe('seed');
-    expect(
-      inferCanvasAddNodeCatalogCategory(buildTestNodeKind('dvt:sql_transform', 'SQL transform'))
-    ).toBe('transformation');
+    expect(inferCanvasAddNodeCatalogCategory(buildTestNodeKind('dvt:transform', 'Transform'))).toBe(
+      'transformation'
+    );
     expect(inferCanvasAddNodeCatalogCategory(buildTestNodeKind('dbt:test', 'Test'))).toBe('test');
     expect(inferCanvasAddNodeCatalogCategory(buildTestNodeKind('dvt:sink', 'Sink'))).toBe('output');
     expect(inferCanvasAddNodeCatalogCategory(buildTestNodeKind('dbt:macro', 'Macro'))).toBe(
@@ -31,13 +31,13 @@ describe('canvasAddNodeCatalogModel', () => {
       authoringNodeKinds: [
         buildTestNodeKind('dvt:sink', 'Sink'),
         buildTestNodeKind('dvt:source', 'Source'),
-        buildTestNodeKind('dvt:sql_transform', 'SQL transform'),
+        buildTestNodeKind('dvt:transform', 'Transform'),
       ],
     });
 
     expect(items.map((item) => [item.id, item.category, item.actionLabel])).toEqual([
       ['create-node:dvt:source', 'source', 'Add source'],
-      ['create-node:dvt:sql_transform', 'transformation', 'Add transformation'],
+      ['create-node:dvt:transform', 'transformation', 'Add transformation'],
       ['create-node:dvt:sink', 'output', 'Add output'],
     ]);
     expect(items.every((item) => item.categoryLabel.length > 0)).toBe(true);
@@ -84,14 +84,14 @@ describe('canvasAddNodeCatalogModel', () => {
       authoringNodeKinds: [
         buildTestNodeKind('dvt:source', 'Source'),
         buildTestNodeKind('dbt:model', 'Model'),
-        buildTestNodeKind('dvt:sql_transform', 'SQL transform'),
+        buildTestNodeKind('dvt:transform', 'Transform'),
       ],
     });
 
     const filtered = filterCanvasAddNodeCatalogItems(items, 'transform');
     const filteredAgain = filterCanvasAddNodeCatalogItems(filtered, 'transform');
 
-    expect(filtered.map((item) => item.id)).toEqual(['create-node:dvt:sql_transform']);
+    expect(filtered.map((item) => item.id)).toEqual(['create-node:dvt:transform']);
     expect(filteredAgain).toEqual(filtered);
     expect(filtered.every((item) => items.includes(item))).toBe(true);
   });

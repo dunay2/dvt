@@ -155,7 +155,7 @@ describe('canvasDraftRepository read/write', () => {
           nodePositions: buildAuthoringDraft().nodePositions,
           nodes: expect.arrayContaining([
             expect.objectContaining({ id: 'source-node', kind: 'source' }),
-            expect.objectContaining({ id: 'transform-node', kind: 'sql_transform' }),
+            expect.objectContaining({ id: 'transform-node', kind: 'transform' }),
             expect.objectContaining({ id: 'sink-node', kind: 'sink' }),
           ]),
           edges: [

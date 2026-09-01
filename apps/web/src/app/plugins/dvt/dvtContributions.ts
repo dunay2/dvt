@@ -72,7 +72,7 @@ export const dvtContributions: PluginContributions = {
       emptyState: {
         title: 'Start transformation canvas',
         editableMessage:
-          'Start this transformation canvas by adding a governed source, SQL transform, or sink node.',
+          'Start this transformation canvas by adding a governed source, Transform, or sink node.',
       },
       localizedCopy: {
         es: {
@@ -82,7 +82,7 @@ export const dvtContributions: PluginContributions = {
           emptyState: {
             title: 'Inicia el canvas de transformación',
             editableMessage:
-              'Inicia este canvas añadiendo un origen gobernado, una transformación SQL o una salida.',
+              'Inicia este canvas añadiendo un origen gobernado, una transformación o una salida.',
           },
         },
       },
@@ -91,8 +91,8 @@ export const dvtContributions: PluginContributions = {
   ],
   nodeRenderers,
   connectionRules: [
-    { sourceKind: 'dvt:source', targetKind: 'dvt:sql_transform', allowed: true },
-    { sourceKind: 'dvt:sql_transform', targetKind: 'dvt:sink', allowed: true },
+    { sourceKind: 'dvt:source', targetKind: 'dvt:transform', allowed: true },
+    { sourceKind: 'dvt:transform', targetKind: 'dvt:sink', allowed: true },
     {
       sourceKind: 'dvt:sink',
       targetKind: '*',

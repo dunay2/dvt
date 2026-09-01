@@ -101,7 +101,7 @@ export const canvasViewToolbarCopyEs = {
   canvasAddNodeCatalogSeedDescription:
     'Agrega un dataset seed estático gestionado por el proyecto.',
   canvasAddNodeCatalogTransformationDescription:
-    'Agrega una transformación SQL entre orígenes aguas arriba y salidas aguas abajo.',
+    'Agrega una transformación entre orígenes aguas arriba y salidas aguas abajo.',
   canvasAddNodeCatalogTestDescription:
     'Agrega una validación que explica qué comprueba y contra qué objetivo aplica.',
   canvasAddNodeCatalogOutputDescription:

@@ -127,7 +127,7 @@ describe('VTX2 typed Substrait grouping and count', () => {
         id: 'transform-customers',
         name: 'Customers summary',
         pluginId: 'dvt',
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         role: 'transform',
         status: 'idle',
         tags: ['authoring'],

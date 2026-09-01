@@ -63,7 +63,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
     vi.spyOn(Date, 'now').mockReturnValue(123);
     const canonicalNodesById = new Map([
       ['source-node', buildCanonicalNode('source-node', 'input', 'dvt:source')],
-      ['transform-node', buildCanonicalNode('transform-node', 'transform', 'dvt:sql_transform')],
+      ['transform-node', buildCanonicalNode('transform-node', 'transform', 'dvt:transform')],
     ]);
     const connection: Connection = {
       source: 'source-node',
@@ -106,7 +106,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
         ],
       },
     };
-    const transform = buildCanonicalNode('transform-node', 'transform', 'dvt:sql_transform');
+    const transform = buildCanonicalNode('transform-node', 'transform', 'dvt:transform');
     const canonicalNodesById = new Map<string, CanonicalNode>([
       [source.id, source],
       [transform.id, transform],
@@ -180,7 +180,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
         ],
       },
     };
-    const transform = buildCanonicalNode('transform-node', 'transform', 'dvt:sql_transform');
+    const transform = buildCanonicalNode('transform-node', 'transform', 'dvt:transform');
     const canonicalNodesById = new Map([
       [firstSource.id, firstSource],
       [secondSource.id, secondSource],
@@ -250,7 +250,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
       },
     };
     const transform = applyDvtVisualTransformRecipe(
-      buildCanonicalNode('transform-node', 'transform', 'dvt:sql_transform'),
+      buildCanonicalNode('transform-node', 'transform', 'dvt:transform'),
       {
         version: 'v1',
         outputs: [
@@ -338,7 +338,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
       metadata: { columns: [{ name: 'order_id', type: 'integer' }] },
     };
     const transform = {
-      ...buildCanonicalNode('transform-node', 'transform', 'dvt:sql_transform'),
+      ...buildCanonicalNode('transform-node', 'transform', 'dvt:transform'),
       metadata: { sql: 'select order_id from existing_authority' },
     };
     const canonicalNodesById = new Map<string, CanonicalNode>([
@@ -422,7 +422,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
   it('rejects reverse transformation direction in constrained transformation graphs', () => {
     const canonicalNodesById = new Map([
       ['source-node', buildCanonicalNode('source-node', 'input', 'dvt:source')],
-      ['transform-node', buildCanonicalNode('transform-node', 'transform', 'dvt:sql_transform')],
+      ['transform-node', buildCanonicalNode('transform-node', 'transform', 'dvt:transform')],
       ['sink-node', buildCanonicalNode('sink-node', 'output', 'dvt:sink')],
     ]);
 
@@ -523,7 +523,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
   it('reconnects an edge with a stable edge identity and draft visible edges together', () => {
     const canonicalNodesById = new Map([
       ['source-node', buildCanonicalNode('source-node', 'input', 'dvt:source')],
-      ['transform-node', buildCanonicalNode('transform-node', 'transform', 'dvt:sql_transform')],
+      ['transform-node', buildCanonicalNode('transform-node', 'transform', 'dvt:transform')],
       ['sink-node', buildCanonicalNode('sink-node', 'output', 'dvt:sink')],
     ]);
     const edge: Edge = {
@@ -573,7 +573,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
       ...buildCanonicalNode('replacement-source', 'input', 'dvt:source'),
       metadata: { columns: [{ name: 'current_id', type: 'text' }] },
     };
-    const transform = buildCanonicalNode('transform-node', 'transform', 'dvt:sql_transform');
+    const transform = buildCanonicalNode('transform-node', 'transform', 'dvt:transform');
     const canonicalNodesById = new Map<string, CanonicalNode>([
       [firstSource.id, firstSource],
       [replacementSource.id, replacementSource],
@@ -641,7 +641,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
   it('keeps reconnecting to the same target idempotent instead of duplicating edges', () => {
     const canonicalNodesById = new Map([
       ['source-node', buildCanonicalNode('source-node', 'input', 'dvt:source')],
-      ['transform-node', buildCanonicalNode('transform-node', 'transform', 'dvt:sql_transform')],
+      ['transform-node', buildCanonicalNode('transform-node', 'transform', 'dvt:transform')],
     ]);
     const edge: Edge = {
       id: 'edge-1',

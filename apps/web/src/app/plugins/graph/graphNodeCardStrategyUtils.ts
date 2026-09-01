@@ -322,7 +322,7 @@ export function resolveNodeCardAccentTone(node: CanonicalNode): GraphNodeCardAcc
     node.kind.includes(':model') ||
     node.kind.includes(':snapshot') ||
     node.kind.includes(':seed') ||
-    node.kind.includes(':sql_transform')
+    node.kind.includes(':transform')
   ) {
     return 'model';
   }

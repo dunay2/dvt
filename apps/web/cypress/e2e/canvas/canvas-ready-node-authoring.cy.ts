@@ -217,7 +217,7 @@ describe('Canvas ready node authoring', () => {
     visitReadyCanvas();
 
     cy.get(
-      '.react-flow__node[data-id="dvt-sql-transform-1"] [data-slot="canvas-node-shell"]'
+      '.react-flow__node[data-id="dvt-transform-1"] [data-slot="canvas-node-shell"]'
     ).dblclick();
     cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
     cy.get('input[name="node-tags"]').should('have.value', '').type('finance');
@@ -226,7 +226,7 @@ describe('Canvas ready node authoring', () => {
     cy.wrap(null).should(() => {
       const savedNode = getE2eApiCalls('/workspace/graph/draft', 'PUT')
         .map((call) => call.body as CanvasDraftSaveRequestBody)
-        .map((body) => body.draft.nodes.find((candidate) => candidate.id === 'dvt-sql-transform-1'))
+        .map((body) => body.draft.nodes.find((candidate) => candidate.id === 'dvt-transform-1'))
         .find(
           (node) => node?.tags?.includes('authoring') === true && node.tags.includes('finance')
         );
@@ -236,7 +236,7 @@ describe('Canvas ready node authoring', () => {
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
     const englishTagAction =
-      '.react-flow__node[data-id="dvt-sql-transform-1"] button[aria-label="Filter graph by tag finance"]';
+      '.react-flow__node[data-id="dvt-transform-1"] button[aria-label="Filter graph by tag finance"]';
     cy.get(englishTagAction)
       .focus()
       .should('have.focus')
@@ -250,7 +250,7 @@ describe('Canvas ready node authoring', () => {
     visitReadyCanvas();
 
     cy.get(
-      '.react-flow__node[data-id="dvt-sql-transform-1"] [data-slot="canvas-node-shell"]'
+      '.react-flow__node[data-id="dvt-transform-1"] [data-slot="canvas-node-shell"]'
     ).dblclick();
     cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
     cy.get('input[name="node-tags"]').should('have.value', 'finance');
@@ -259,7 +259,7 @@ describe('Canvas ready node authoring', () => {
     cy.get('[data-slot="shell-menu-trigger"]').click();
     cy.get('[data-slot="shell-language-option-es"]').click();
     cy.get(
-      '.react-flow__node[data-id="dvt-sql-transform-1"] button[aria-label="Filtrar el grafo por la etiqueta finance"]'
+      '.react-flow__node[data-id="dvt-transform-1"] button[aria-label="Filtrar el grafo por la etiqueta finance"]'
     ).click();
     cy.get('[data-slot="canvas-graph-filter-control"]').should('contain.text', 'Etiqueta: finance');
     assertNoSeriousAccessibilityViolations('[data-slot="canvas-graph-filter-control"]');
@@ -276,20 +276,20 @@ describe('Canvas ready node authoring', () => {
     cy.contains('.react-flow__node', 'model_orders').should('be.visible');
     addSqlTransformNode();
 
-    cy.get('.react-flow__node[data-id="dvt-sql-transform-1"]').should('be.visible');
-    waitForDraftSaveContainingNode('dvt-sql-transform-1');
+    cy.get('.react-flow__node[data-id="dvt-transform-1"]').should('be.visible');
+    waitForDraftSaveContainingNode('dvt-transform-1');
     cy.then(() => {
-      const saveBody = findDraftSaveContainingNode('dvt-sql-transform-1');
-      const createdNode = saveBody?.draft.nodes.find((node) => node.id === 'dvt-sql-transform-1');
-      const createdPosition = saveBody?.draft.nodePositions['dvt-sql-transform-1'];
+      const saveBody = findDraftSaveContainingNode('dvt-transform-1');
+      const createdNode = saveBody?.draft.nodes.find((node) => node.id === 'dvt-transform-1');
+      const createdPosition = saveBody?.draft.nodePositions['dvt-transform-1'];
 
-      expect(saveBody?.draft.nodeIds).to.include('dvt-sql-transform-1');
+      expect(saveBody?.draft.nodeIds).to.include('dvt-transform-1');
       expect(createdPosition?.x).to.be.a('number');
       expect(createdPosition?.y).to.be.a('number');
       expect(createdNode).to.deep.include({
-        id: 'dvt-sql-transform-1',
-        name: 'SQL transform 1',
-        kind: 'sql_transform',
+        id: 'dvt-transform-1',
+        name: 'Transform 1',
+        kind: 'transform',
         pluginId: 'dvt',
       });
     });
@@ -377,20 +377,20 @@ describe('Canvas ready node authoring', () => {
     visitReadyCanvas();
 
     addSqlTransformNode();
-    cy.get('.react-flow__node[data-id="dvt-sql-transform-1"]').should('be.visible');
+    cy.get('.react-flow__node[data-id="dvt-transform-1"]').should('be.visible');
     waitForDraftSaveCount(1);
 
     visitReadyCanvas();
 
-    cy.get('.react-flow__node[data-id="dvt-sql-transform-1"]').should('be.visible');
-    removeCanvasNode('dvt-sql-transform-1');
-    cy.get('.react-flow__node[data-id="dvt-sql-transform-1"]').should('not.exist');
+    cy.get('.react-flow__node[data-id="dvt-transform-1"]').should('be.visible');
+    removeCanvasNode('dvt-transform-1');
+    cy.get('.react-flow__node[data-id="dvt-transform-1"]').should('not.exist');
     waitForDraftSaveCount(2);
 
     visitReadyCanvas();
 
     cy.contains('.react-flow__node', 'model_orders').should('be.visible');
-    cy.get('.react-flow__node[data-id="dvt-sql-transform-1"]').should('not.exist');
+    cy.get('.react-flow__node[data-id="dvt-transform-1"]').should('not.exist');
   });
 
   it('roundtrips dbt code and properties through the graph in English and Spanish', () => {
@@ -635,7 +635,7 @@ describe('Canvas ready node authoring', () => {
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
     cy.get(
-      '.react-flow__node[data-id="dvt-sql-transform-1"] [data-slot="canvas-node-shell"]'
+      '.react-flow__node[data-id="dvt-transform-1"] [data-slot="canvas-node-shell"]'
     ).dblclick();
     cy.contains('Inherited PostgreSQL connection').should('be.visible');
     cy.contains('code', 'warehouse-b').should('be.visible');
@@ -662,7 +662,7 @@ describe('Canvas ready node authoring', () => {
       const savedDraft = getE2eApiCalls('/workspace/graph/draft', 'PUT')
         .map((call) => call.body as CanvasDraftSaveRequestBody)
         .find((body) => {
-          const node = body.draft.nodes.find((candidate) => candidate.id === 'dvt-sql-transform-1');
+          const node = body.draft.nodes.find((candidate) => candidate.id === 'dvt-transform-1');
           const config = node?.metadata?.config as
             { sql?: string; selectedColumns?: string[] } | undefined;
 
@@ -683,14 +683,14 @@ describe('Canvas ready node authoring', () => {
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
     cy.get(
-      '.react-flow__node[data-id="dvt-sql-transform-1"] button[aria-label="Filter graph by tag finance"]'
+      '.react-flow__node[data-id="dvt-transform-1"] button[aria-label="Filter graph by tag finance"]'
     )
       .focus()
       .should('have.focus')
       .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
     cy.get('[data-slot="canvas-graph-filter-control"]').should('contain.text', 'Tag: finance');
     cy.get(
-      '.react-flow__node[data-id="dvt-sql-transform-1"] button[aria-label="Filter graph by tag finance"]'
+      '.react-flow__node[data-id="dvt-transform-1"] button[aria-label="Filter graph by tag finance"]'
     ).click();
     cy.get('[aria-label="Remove Tag filter finance"]').should('have.length', 1);
     cy.get('button[aria-label="Clear graph filters"]').click();
@@ -712,7 +712,7 @@ describe('Canvas ready node authoring', () => {
     cy.get('select[name="dvt-sink-write-mode"]').should('have.value', 'append');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
-    cy.get('.react-flow__node[data-id="dvt-sql-transform-1"]')
+    cy.get('.react-flow__node[data-id="dvt-transform-1"]')
       .should('contain.text', 'Orders Enriched')
       .find('[data-slot="canvas-node-shell"]')
       .dblclick();
@@ -766,15 +766,15 @@ describe('Canvas ready node authoring', () => {
     visitReadyCanvas();
 
     addSqlTransformNode();
-    cy.get('.react-flow__node[data-id="dvt-sql-transform-1"]').should('be.visible');
-    waitForDraftSaveContainingNode('dvt-sql-transform-1');
+    cy.get('.react-flow__node[data-id="dvt-transform-1"]').should('be.visible');
+    waitForDraftSaveContainingNode('dvt-transform-1');
     assertNoManualSaveCommand();
     assertDraftSaveStatus('draftSaveFailedLabel');
 
     visitReadyCanvas();
 
     cy.contains('.react-flow__node', 'model_orders').should('be.visible');
-    cy.get('.react-flow__node[data-id="dvt-sql-transform-1"]').should('not.exist');
+    cy.get('.react-flow__node[data-id="dvt-transform-1"]').should('not.exist');
   });
 
   it('does not expose ready-canvas node creation when draft capability is read-only', () => {

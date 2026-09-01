@@ -78,7 +78,7 @@ function applyConfirmedConnectionColumnMappings(args: {
 }): AcceptedCanvasEdgeAdmissionTransaction {
   const nodes = resolveDraftNodes(args.transaction.draftSession, args.canonicalNodesById);
   const targetNode = nodes.find((node) => node.id === args.targetNodeId);
-  if (targetNode?.pluginId !== 'dvt' || targetNode.kind !== 'dvt:sql_transform') {
+  if (targetNode?.pluginId !== 'dvt' || targetNode.kind !== 'dvt:transform') {
     return args.transaction;
   }
   const targetColumns = projectCanvasNodePresentationTruth({

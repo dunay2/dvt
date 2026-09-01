@@ -191,7 +191,7 @@ export function buildProtectedTransformNode(args: {
     id: nodeId,
     name: nodeId,
     pluginId: 'dvt',
-    kind: 'sql_transform',
+    kind: 'transform',
     role: 'transform',
     status: 'idle',
     tags: [],

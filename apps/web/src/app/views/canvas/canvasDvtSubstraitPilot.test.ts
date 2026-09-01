@@ -191,7 +191,7 @@ function buildTransformNode(metadata: CanonicalNode['metadata'] = {}): Canonical
     id: 'transform-customers',
     name: 'Customers',
     pluginId: 'dvt',
-    kind: 'dvt:sql_transform',
+    kind: 'dvt:transform',
     role: 'transform',
     status: 'idle',
     tags: ['authoring'],
@@ -278,8 +278,8 @@ describe('typed Substrait DVT card pilot', () => {
     const originalAuthority = readDvtTransformAuthoringAuthority(node);
     const inspectorDraft = createCanvasInspectorNodeDraft(node);
 
-    expect(inspectorDraft.dvt?.kind).toBe('sql_transform');
-    if (inspectorDraft.dvt?.kind !== 'sql_transform' || inspectorDraft.dvt.mode !== 'substrait') {
+    expect(inspectorDraft.dvt?.kind).toBe('transform');
+    if (inspectorDraft.dvt?.kind !== 'transform' || inspectorDraft.dvt.mode !== 'substrait') {
       throw new Error('Expected Substrait Inspector draft.');
     }
 

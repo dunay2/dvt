@@ -159,7 +159,7 @@ const DVT_TRANSFORM_NODE: CanonicalNode = {
   id: 'transform.orders',
   name: 'Clean Orders',
   pluginId: 'dvt',
-  kind: 'dvt:sql_transform',
+  kind: 'dvt:transform',
   role: 'transform',
   status: 'idle',
   tags: [],
@@ -870,7 +870,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(onApplyNodeDraft).toHaveBeenCalledWith(
       expect.objectContaining({
         dvt: expect.objectContaining({
-          kind: 'sql_transform',
+          kind: 'transform',
           sql: 'select customer from source.orders',
         }),
       })

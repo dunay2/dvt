@@ -329,7 +329,7 @@ describe('RunsView', () => {
             id: 'step-transform',
             type: 'SQL_TRANSFORM',
             name: 'Transform orders',
-            nodes: ['dvt-sql-transform-1'],
+            nodes: ['dvt-transform-1'],
             policies: {},
           },
         ],
@@ -382,7 +382,7 @@ describe('RunsView', () => {
     expect(useExecutionStore.getState().currentRun?.steps).toEqual([
       expect.objectContaining({
         id: 'step-transform',
-        nodes: ['dvt-sql-transform-1'],
+        nodes: ['dvt-transform-1'],
         status: 'success',
       }),
     ]);

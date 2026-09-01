@@ -690,7 +690,7 @@ function buildInputsOutputsRows(
   const nodeById = new Map(nodes.map((candidate) => [candidate.id, candidate]));
   const rows: NodePropertyTableRow[] = [];
   const inheritedConnectionRef =
-    node.pluginId === 'dvt' && node.kind === 'dvt:sql_transform'
+    node.pluginId === 'dvt' && node.kind === 'dvt:transform'
       ? resolveInheritedDvtConnectionRef({ node, nodes, edges })
       : undefined;
   const inheritedConnection =
@@ -792,7 +792,7 @@ export function buildNodePropertiesReadModel({
   const columns = readColumns(metadata.columns);
   const presentationTruth =
     suppliedPresentationTruth ?? buildCanvasNodePresentationTruth({ node, nodes, edges });
-  const projectsDvtTransformColumns = node.pluginId === 'dvt' && node.kind === 'dvt:sql_transform';
+  const projectsDvtTransformColumns = node.pluginId === 'dvt' && node.kind === 'dvt:transform';
   const columnRows = localizePropertyTableRows(
     projectsDvtTransformColumns
       ? buildDvtTransformColumnRows(presentationTruth.columns.visible, columns)

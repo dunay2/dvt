@@ -12,7 +12,7 @@ export const canvasViewExecutionCopyEs = {
   planGraphDbtCompilationFailedMessage:
     'La previsualización se detuvo porque la compilación nativa de DBT no validó los modelos generados. Revisa el SQL del modelo y la configuración del destino.',
   previewProvenanceTransformPathRequiredMessage:
-    'Execution Preview necesita contenido SQL. Selecciona un fichero SQL del workspace para el SQL transform o usa un transform creado en el canvas para que DVT lo cree.',
+    'Execution Preview necesita una proyección ejecutable del Transform. Selecciona un Transform del workspace o usa uno creado en el Canvas para que DVT la genere.',
   previewProvenanceWorkspaceNotConfiguredMessage:
     'La provenance del preview no esta configurada para este workspace. Define el repo Git y la ruta del artefacto de grafo antes de planificar.',
   previewProvenanceExplicitGitRevisionRequiredMessage:

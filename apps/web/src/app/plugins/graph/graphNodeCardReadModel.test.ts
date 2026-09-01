@@ -401,7 +401,7 @@ describe('buildGraphNodeCardReadModel', () => {
   it('adds DVT runtime metrics only from recorded metadata', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         pluginId: 'dvt',
         role: 'transform',
         name: 'customer_rollup',
@@ -454,7 +454,7 @@ describe('buildGraphNodeCardReadModel', () => {
   it('marks Rows and Size as not calculated when only partial execution evidence exists', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         pluginId: 'dvt',
         role: 'transform',
         name: 'customer_rollup',
@@ -489,11 +489,11 @@ describe('buildGraphNodeCardReadModel', () => {
       notCalculatedLabel: 'No calculado',
     },
   ])(
-    'reserves truthful uncalculated Rows and Size metrics for a DVT SQL transform in $locale',
+    'reserves truthful uncalculated Rows and Size metrics for a DVT Transform in $locale',
     ({ presentationCopy, rowsLabel, sizeLabel, notCalculatedLabel }) => {
       const model = buildGraphNodeCardReadModel(
         buildNode({
-          kind: 'dvt:sql_transform',
+          kind: 'dvt:transform',
           pluginId: 'dvt',
           role: 'transform',
           name: 'customer_rollup',
@@ -512,7 +512,7 @@ describe('buildGraphNodeCardReadModel', () => {
   it('keeps DVT canonical runtime metrics on strategy-owned cards', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         pluginId: 'dvt',
         role: 'transform',
         name: 'customer_rollup',
@@ -540,7 +540,7 @@ describe('buildGraphNodeCardReadModel', () => {
   it('preserves canonical warning status when runtime status is not recorded', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         pluginId: 'dvt',
         name: 'customer_rollup',
         status: 'warn',
@@ -560,7 +560,7 @@ describe('buildGraphNodeCardReadModel', () => {
   it('preserves running status as a first-class card tone', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         pluginId: 'dvt',
         name: 'customer_rollup',
         status: 'running',
@@ -580,7 +580,7 @@ describe('buildGraphNodeCardReadModel', () => {
   it('projects recorded running runtime status as a first-class card tone', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         pluginId: 'dvt',
         name: 'customer_rollup',
         metadata: {
@@ -600,7 +600,7 @@ describe('buildGraphNodeCardReadModel', () => {
   it('projects the current run task status instead of a stale editorial fallback', () => {
     const node = buildNode({
       id: 'transform-1',
-      kind: 'dvt:sql_transform',
+      kind: 'dvt:transform',
       pluginId: 'dvt',
       role: 'transform',
       name: 'customer_rollup',
@@ -650,7 +650,7 @@ describe('buildGraphNodeCardReadModel', () => {
     (runStatus, label, tone) => {
       const node = buildNode({
         id: 'transform-1',
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         pluginId: 'dvt',
         role: 'transform',
         name: 'customer_rollup',
@@ -672,7 +672,7 @@ describe('buildGraphNodeCardReadModel', () => {
   it('does not project a runtime task status that belongs to another node', () => {
     const node = buildNode({
       id: 'transform-1',
-      kind: 'dvt:sql_transform',
+      kind: 'dvt:transform',
       pluginId: 'dvt',
       role: 'transform',
       name: 'customer_rollup',

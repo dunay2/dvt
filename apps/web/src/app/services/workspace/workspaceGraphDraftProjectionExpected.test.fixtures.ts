@@ -24,7 +24,7 @@ export function buildExpectedCanvasAuthoringSemanticGraph(): CanvasAuthoringSema
         id: 'transform_node',
         name: 'transform',
         pluginId: 'dvt',
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         role: 'transform',
         status: 'idle',
         tags: [],

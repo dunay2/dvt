@@ -83,7 +83,7 @@ function formatCreateNodeActionLabel(
     return copy.canvasContextMenuAddModelLabel;
   }
 
-  if (registration.kind === 'dvt:sql_transform' || registration.role === 'transform') {
+  if (registration.kind === 'dvt:transform' || registration.role === 'transform') {
     return copy.canvasContextMenuAddTransformationLabel;
   }
 

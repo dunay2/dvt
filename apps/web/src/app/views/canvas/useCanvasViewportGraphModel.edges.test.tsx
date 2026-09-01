@@ -20,7 +20,7 @@ describe('useCanvasViewportGraphModel edges', () => {
         draftSemanticGraph: {
           canonicalNodes: [
             buildCanonicalNode('source-node', 'dvt:source', 'input'),
-            buildCanonicalNode('transform-node', 'dvt:sql_transform', 'transform'),
+            buildCanonicalNode('transform-node', 'dvt:transform', 'transform'),
             buildCanonicalNode('sink-node', 'dvt:sink', 'output'),
           ],
           canonicalEdges: [
@@ -79,7 +79,7 @@ describe('useCanvasViewportGraphModel edges', () => {
         draftSemanticGraph: {
           canonicalNodes: [
             buildCanonicalNode('source-node', 'dvt:source', 'input'),
-            buildCanonicalNode('transform-node', 'dvt:sql_transform', 'transform'),
+            buildCanonicalNode('transform-node', 'dvt:transform', 'transform'),
           ],
           canonicalEdges: [
             {

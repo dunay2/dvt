@@ -64,12 +64,12 @@ export const canvasViewAuthoringCopyByKey = {
   },
   transformationConnectionOrderMessage: {
     key: 'canvas.transformation.connectionOrderMessage',
-    fallback: 'Execution Preview edges must follow source -> sql_transform -> sink.',
+    fallback: 'Execution Preview edges must follow source -> transform -> sink.',
   },
   transformationConnectionEdgeCountMessage: {
     key: 'canvas.transformation.connectionEdgeCountMessage',
     fallback:
-      'Execution Preview requires exactly 2 edges: source -> sql_transform and sql_transform -> sink.',
+      'Execution Preview requires exactly 2 edges: source -> transform and transform -> sink.',
   },
   transformationConnectionDuplicateMessage: {
     key: 'canvas.transformation.connectionDuplicateMessage',
@@ -77,15 +77,15 @@ export const canvasViewAuthoringCopyByKey = {
   },
   transformationRequiresThreeNodesMessage: {
     key: 'canvas.transformation.requiresThreeNodesMessage',
-    fallback: 'Execution Preview requires source, sql_transform, and sink nodes.',
+    fallback: 'Execution Preview requires source, transform, and sink nodes.',
   },
   transformationAmbiguousExecutablePathMessage: {
     key: 'canvas.transformation.ambiguousExecutablePathMessage',
-    fallback: 'Execution Preview requires one selected source -> sql_transform -> sink path.',
+    fallback: 'Execution Preview requires one selected source -> transform -> sink path.',
   },
   transformationRequiresExecutablePathMessage: {
     key: 'canvas.transformation.requiresExecutablePathMessage',
-    fallback: 'Execution Preview requires a connected source -> sql_transform -> sink path.',
+    fallback: 'Execution Preview requires a connected source -> transform -> sink path.',
   },
   transformationRequiresPostgresConnectionMessage: {
     key: 'canvas.transformation.requiresPostgresConnectionMessage',
@@ -98,7 +98,7 @@ export const canvasViewAuthoringCopyByKey = {
   },
   transformationRequiresOneOfEachRoleMessage: {
     key: 'canvas.transformation.requiresOneOfEachRoleMessage',
-    fallback: 'Execution Preview requires one source, one sql_transform, and one sink.',
+    fallback: 'Execution Preview requires one source, one transform, and one sink.',
   },
   transformationDraftValidMessage: {
     key: 'canvas.transformation.validMessage',
@@ -519,7 +519,7 @@ export const canvasViewAuthoringCopyByKey = {
   },
   inspectorDvtSqlTransformTitle: {
     key: 'canvas.inspector.authoring.dvtSqlTransformTitle',
-    fallback: 'DVT SQL transform',
+    fallback: 'DVT Transform',
   },
   inspectorDvtSubstraitInnerJoinAction: {
     key: 'canvas.inspector.authoring.dvtSubstraitInnerJoinAction',

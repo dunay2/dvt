@@ -107,7 +107,7 @@ describe('projectCanvasNodePresentationTruth', () => {
           id: nodeId,
           name: nodeId,
           pluginId: 'dvt',
-          kind: 'dvt:sql_transform',
+          kind: 'dvt:transform',
           role: 'transform',
           status: 'idle',
           tags: [],
@@ -298,7 +298,7 @@ describe('projectCanvasNodePresentationTruth', () => {
       ...model,
       id: 'transform.orders',
       pluginId: 'dvt',
-      kind: 'dvt:sql_transform',
+      kind: 'dvt:transform',
       metadata: {},
     };
     const mappedModel = applyDvtVisualTransformRecipe(dvtModel, {
@@ -361,7 +361,7 @@ describe('projectCanvasNodePresentationTruth', () => {
         id: 'transform.orders',
         name: 'Transform 1',
         pluginId: 'dvt',
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         metadata: {},
       },
       {
@@ -446,7 +446,7 @@ describe('projectCanvasNodePresentationTruth', () => {
         ...model,
         id: 'transform.cast-order-id',
         pluginId: 'dvt',
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         metadata: {},
       },
       {
@@ -511,7 +511,7 @@ describe('projectCanvasNodePresentationTruth', () => {
         id: 'transform.orders',
         path: 'models/stale-visual-orders.sql',
         pluginId: 'dvt',
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         metadata: {},
       },
       {
@@ -556,7 +556,7 @@ describe('projectCanvasNodePresentationTruth', () => {
         ...model,
         id: 'transform.converted',
         pluginId: 'dvt',
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         metadata: {},
       },
       {
@@ -606,7 +606,7 @@ describe('projectCanvasNodePresentationTruth', () => {
         ...model,
         id: 'transform.empty',
         pluginId: 'dvt',
-        kind: 'dvt:sql_transform',
+        kind: 'dvt:transform',
         metadata: {},
       },
       { version: 'v1', outputs: [], filters: [] }

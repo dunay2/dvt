@@ -24,7 +24,7 @@ describe('buildCanvasAuthoringGraphProjection', () => {
     const protectedSemanticGraph = {
       canonicalNodes: [
         buildCanonicalNode('source-node', 'dvt:source', 'input'),
-        buildCanonicalNode('transform-node', 'dvt:sql_transform', 'transform'),
+        buildCanonicalNode('transform-node', 'dvt:transform', 'transform'),
         buildCanonicalNode('sink-node', 'dvt:sink', 'output'),
       ] satisfies CanonicalNode[],
       canonicalEdges: [
@@ -87,7 +87,7 @@ describe('buildCanvasAuthoringGraphProjection', () => {
     const protectedSemanticGraph = {
       canonicalNodes: [
         buildCanonicalNode('source-node', 'dvt:source', 'input'),
-        buildCanonicalNode('transform-node', 'dvt:sql_transform', 'transform'),
+        buildCanonicalNode('transform-node', 'dvt:transform', 'transform'),
       ] satisfies CanonicalNode[],
       canonicalEdges: [
         {

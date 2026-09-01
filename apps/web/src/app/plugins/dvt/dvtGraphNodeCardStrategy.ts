@@ -132,7 +132,7 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
   const currentRows = operationalSummary.metrics.find((metric) => metric.id === 'rows');
   const currentSize = operationalSummary.metrics.find((metric) => metric.id === 'size');
   const operationalMetrics =
-    node.kind === 'dvt:sql_transform'
+    node.kind === 'dvt:transform'
       ? [
           ...operationalSummary.metrics.filter(
             (metric) => metric.id !== 'rows' && metric.id !== 'size'

@@ -116,8 +116,8 @@ describe('codeViewFileSelection', () => {
         kind: 'directory',
         children: [
           {
-            path: 'models/dvt-sql-transform-1.sql',
-            name: 'dvt-sql-transform-1.sql',
+            path: 'models/dvt-transform-1.sql',
+            name: 'dvt-transform-1.sql',
             kind: 'file',
           },
         ],
@@ -206,7 +206,7 @@ describe('codeViewFileSelection', () => {
     expect([...filePaths]).toContain('models/schema.yml');
   });
 
-  it('filters stale dbt files when the active graph is a SQL transformation canvas', () => {
+  it('filters stale dbt files when the active graph is a Transformation canvas', () => {
     const tree: WorkspaceFileEntry[] = [
       {
         path: 'dbt_project.yml',
@@ -219,8 +219,8 @@ describe('codeViewFileSelection', () => {
         kind: 'directory',
         children: [
           {
-            path: 'models/dvt-sql-transform-1.sql',
-            name: 'dvt-sql-transform-1.sql',
+            path: 'models/dvt-transform-1.sql',
+            name: 'dvt-transform-1.sql',
             kind: 'file',
           },
           {
@@ -262,8 +262,8 @@ describe('codeViewFileSelection', () => {
         authoringAuthority: mockGraphDraftAuthoringAuthority,
         nodes: [
           {
-            id: 'dvt-sql-transform-1',
-            name: 'SQL transform 1',
+            id: 'dvt-transform-1',
+            name: 'Transform 1',
             type: 'MODEL',
             package: 'dvt',
             path: '',
@@ -286,7 +286,7 @@ describe('codeViewFileSelection', () => {
       },
     });
 
-    expect(hasCodeWorkspaceFilePath(scopedTree, 'models/dvt-sql-transform-1.sql')).toBe(true);
+    expect(hasCodeWorkspaceFilePath(scopedTree, 'models/dvt-transform-1.sql')).toBe(true);
     expect(hasCodeWorkspaceFilePath(scopedTree, 'models/sources/src_raw.yml')).toBe(true);
     expect(hasCodeWorkspaceFilePath(scopedTree, 'models/payments_model.sql')).toBe(false);
     expect(hasCodeWorkspaceFilePath(scopedTree, 'dbt_project.yml')).toBe(false);

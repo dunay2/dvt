@@ -60,7 +60,7 @@ describe('Canvas column mapping authoring', () => {
     const source = buildNode('source', 'dvt:source', 'input', [
       { name: 'event_id', type: 'integer' },
     ]);
-    const model = buildNode('model', 'dvt:sql_transform', 'transform');
+    const model = buildNode('model', 'dvt:transform', 'transform');
     const session = buildSession([source, model], [{ sourceId: 'source', targetId: 'model' }]);
 
     const result = applyCanvasColumnMapping({
@@ -98,7 +98,7 @@ describe('Canvas column mapping authoring', () => {
     const second = buildNode('source-2', 'dvt:source', 'input', [
       { name: 'renamed_id', type: 'integer' },
     ]);
-    const model = buildNode('model', 'dvt:sql_transform', 'transform');
+    const model = buildNode('model', 'dvt:transform', 'transform');
     const initial = buildSession(
       [first, second, model],
       [
@@ -144,7 +144,7 @@ describe('Canvas column mapping authoring', () => {
 
   it('keeps the source type when a prospective target has no declared type yet', () => {
     const source = buildNode('source', 'dvt:source', 'input', [{ name: 'customer', type: 'text' }]);
-    const model = buildNode('model', 'dvt:sql_transform', 'transform');
+    const model = buildNode('model', 'dvt:transform', 'transform');
     const session = buildSession([source, model], [{ sourceId: source.id, targetId: model.id }]);
 
     const mapped = readMappedTransform(
@@ -168,7 +168,7 @@ describe('Canvas column mapping authoring', () => {
     const source = buildNode('source', 'dvt:source', 'input', [
       { name: 'event_id', type: 'integer' },
     ]);
-    const model = buildNode('model', 'dvt:sql_transform', 'transform', [], {
+    const model = buildNode('model', 'dvt:transform', 'transform', [], {
       sql: 'select event_id from source',
     });
     const session = buildSession([source, model], [{ sourceId: 'source', targetId: 'model' }]);
@@ -195,7 +195,7 @@ describe('Canvas column mapping authoring', () => {
     const second = buildNode('source-2', 'dvt:source', 'input', [
       { name: 'ambiguous', type: 'text' },
     ]);
-    const model = buildNode('model', 'dvt:sql_transform', 'transform');
+    const model = buildNode('model', 'dvt:transform', 'transform');
     const session = buildSession(
       [first, second, model],
       [
@@ -235,7 +235,7 @@ describe('Canvas column mapping authoring', () => {
     const source = buildNode('source', 'dvt:source', 'input', [
       { name: 'event_id', type: 'integer' },
     ]);
-    const model = buildNode('model', 'dvt:sql_transform', 'transform');
+    const model = buildNode('model', 'dvt:transform', 'transform');
     const initial = buildSession([source, model], [{ sourceId: source.id, targetId: model.id }]);
     const mappedResult = applyCanvasColumnMapping({
       draftSession: initial,

@@ -59,7 +59,7 @@ const CANONICAL_NODES = [
     id: 'transform-node',
     name: 'Transform',
     pluginId: 'dvt',
-    kind: 'dvt:sql_transform',
+    kind: 'dvt:transform',
     role: 'transform',
     status: 'idle',
     tags: [],

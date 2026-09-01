@@ -21,13 +21,13 @@ function buildNode(kind: `${string}:${string}`, role: CanonicalNode['role']): Ca
 describe('dvtContributions connection rules', () => {
   const dvtMatrix = [
     ['dvt:source', 'input', 'dvt:source', 'input', false],
-    ['dvt:source', 'input', 'dvt:sql_transform', 'transform', true],
+    ['dvt:source', 'input', 'dvt:transform', 'transform', true],
     ['dvt:source', 'input', 'dvt:sink', 'output', false],
-    ['dvt:sql_transform', 'transform', 'dvt:source', 'input', false],
-    ['dvt:sql_transform', 'transform', 'dvt:sql_transform', 'transform', false],
-    ['dvt:sql_transform', 'transform', 'dvt:sink', 'output', true],
+    ['dvt:transform', 'transform', 'dvt:source', 'input', false],
+    ['dvt:transform', 'transform', 'dvt:transform', 'transform', false],
+    ['dvt:transform', 'transform', 'dvt:sink', 'output', true],
     ['dvt:sink', 'output', 'dvt:source', 'input', false],
-    ['dvt:sink', 'output', 'dvt:sql_transform', 'transform', false],
+    ['dvt:sink', 'output', 'dvt:transform', 'transform', false],
     ['dvt:sink', 'output', 'dvt:sink', 'output', false],
   ] as const satisfies readonly (readonly [
     `${string}:${string}`,

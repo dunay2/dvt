@@ -51,7 +51,7 @@ const AUTHORING_DRAFT = {
       id: 'transform-node',
       name: 'transform',
       pluginId: 'dvt',
-      kind: 'sql_transform',
+      kind: 'transform',
       role: 'transform',
       status: 'idle',
       tags: [],
@@ -269,7 +269,7 @@ describe('buildAppServices', () => {
         draft: {
           nodes: [
             expect.objectContaining({ id: 'source-node', kind: 'source' }),
-            expect.objectContaining({ id: 'transform-node', kind: 'sql_transform' }),
+            expect.objectContaining({ id: 'transform-node', kind: 'transform' }),
           ],
           edges: [
             {

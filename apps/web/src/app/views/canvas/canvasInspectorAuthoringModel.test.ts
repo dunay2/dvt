@@ -24,12 +24,12 @@ function buildNode(): CanonicalNode {
 }
 
 function buildDvtNode(
-  kind: 'dvt:source' | 'dvt:sql_transform' | 'dvt:sink',
+  kind: 'dvt:source' | 'dvt:transform' | 'dvt:sink',
   metadata?: Record<string, unknown>
 ): CanonicalNode {
   return {
     id: `node_${kind.replace('dvt:', '')}`,
-    name: kind === 'dvt:sql_transform' ? 'Clean orders' : 'Orders',
+    name: kind === 'dvt:transform' ? 'Clean orders' : 'Orders',
     pluginId: 'dvt',
     kind,
     role: kind === 'dvt:source' ? 'input' : kind === 'dvt:sink' ? 'output' : 'transform',
@@ -642,8 +642,8 @@ describe('canvasInspectorAuthoringModel', () => {
     });
   });
 
-  it('clears stale compiled SQL when applying DVT SQL transform edits', () => {
-    const node = buildDvtNode('dvt:sql_transform', {
+  it('clears stale compiled SQL when applying DVT Transform edits', () => {
+    const node = buildDvtNode('dvt:transform', {
       sql: 'select stale_column from old_orders',
       compiledSql: 'select stale_column from old_orders',
       config: {
@@ -656,7 +656,7 @@ describe('canvasInspectorAuthoringModel', () => {
       description: '',
       tags: ['authoring'],
       dvt: {
-        kind: 'sql_transform' as const,
+        kind: 'transform' as const,
         mode: 'sql' as const,
         sql: 'select order_id from raw.orders',
       },
@@ -676,7 +676,7 @@ describe('canvasInspectorAuthoringModel', () => {
   });
 
   it('preserves historical DVT selected columns when editing SQL', () => {
-    const node = buildDvtNode('dvt:sql_transform', {
+    const node = buildDvtNode('dvt:transform', {
       config: {
         dialect: 'postgres',
         sql: 'select * from raw.orders',
@@ -688,7 +688,7 @@ describe('canvasInspectorAuthoringModel', () => {
       description: '',
       tags: ['authoring'],
       dvt: {
-        kind: 'sql_transform' as const,
+        kind: 'transform' as const,
         mode: 'sql' as const,
         sql: 'select order_id, customer from raw.orders',
       },
@@ -727,18 +727,18 @@ describe('canvasInspectorAuthoringModel', () => {
       ],
       filters: [],
     };
-    const node = buildDvtNode('dvt:sql_transform', {
+    const node = buildDvtNode('dvt:transform', {
       transformAuthoring: { version: 'v1', mode: 'visual', recipe },
     });
 
     const draft = createCanvasInspectorNodeDraft(node);
 
-    expect(draft.dvt).toEqual({ kind: 'sql_transform', mode: 'visual', recipe });
+    expect(draft.dvt).toEqual({ kind: 'transform', mode: 'visual', recipe });
     expect(applyCanvasInspectorNodeDraft(node, draft)).toEqual(node);
   });
 
   it('rejects an invalid visual recipe before the inspector can apply it', () => {
-    const node = buildDvtNode('dvt:sql_transform', {
+    const node = buildDvtNode('dvt:transform', {
       transformAuthoring: {
         version: 'v1',
         mode: 'visual',
@@ -759,7 +759,7 @@ describe('canvasInspectorAuthoringModel', () => {
       },
     });
     const draft = createCanvasInspectorNodeDraft(node);
-    if (draft.dvt?.kind !== 'sql_transform' || draft.dvt.mode !== 'visual') {
+    if (draft.dvt?.kind !== 'transform' || draft.dvt.mode !== 'visual') {
       throw new Error('Expected a visual transform draft.');
     }
 

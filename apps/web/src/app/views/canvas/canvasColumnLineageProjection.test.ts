@@ -76,24 +76,21 @@ describe('Canvas column lineage projection', () => {
       { name: 'event_id', type: 'integer' },
       { name: 'principal_id', type: 'text' },
     ]);
-    const model = applyDvtVisualTransformRecipe(
-      buildNode('model', 'dvt:sql_transform', 'transform'),
-      {
-        version: 'v1',
-        outputs: [
-          {
-            id: 'output:user_id',
-            name: 'user_id',
-            dataType: 'text',
-            expression: {
-              inputs: [{ nodeId: 'source', columnName: 'principal_id' }],
-              operations: [{ kind: 'passthrough' }],
-            },
+    const model = applyDvtVisualTransformRecipe(buildNode('model', 'dvt:transform', 'transform'), {
+      version: 'v1',
+      outputs: [
+        {
+          id: 'output:user_id',
+          name: 'user_id',
+          dataType: 'text',
+          expression: {
+            inputs: [{ nodeId: 'source', columnName: 'principal_id' }],
+            operations: [{ kind: 'passthrough' }],
           },
-        ],
-        filters: [],
-      }
-    );
+        },
+      ],
+      filters: [],
+    });
 
     expect(
       projectCanvasColumnLineage({
@@ -136,24 +133,21 @@ describe('Canvas column lineage projection', () => {
     const workspaceDrafts = buildNode('workspace_graph_drafts', 'dvt:source', 'input', [
       { name: 'order_id', type: 'integer' },
     ]);
-    const model = applyDvtVisualTransformRecipe(
-      buildNode('model', 'dvt:sql_transform', 'transform'),
-      {
-        version: 'v1',
-        outputs: [
-          {
-            id: 'output:order_id',
-            name: 'order_id',
-            dataType: 'integer',
-            expression: {
-              inputs: [{ nodeId: workspaceDrafts.id, columnName: 'order_id' }],
-              operations: [{ kind: 'passthrough' }],
-            },
+    const model = applyDvtVisualTransformRecipe(buildNode('model', 'dvt:transform', 'transform'), {
+      version: 'v1',
+      outputs: [
+        {
+          id: 'output:order_id',
+          name: 'order_id',
+          dataType: 'integer',
+          expression: {
+            inputs: [{ nodeId: workspaceDrafts.id, columnName: 'order_id' }],
+            operations: [{ kind: 'passthrough' }],
           },
-        ],
-        filters: [],
-      }
-    );
+        },
+      ],
+      filters: [],
+    });
 
     expect(
       projectCanvasColumnLineage({
@@ -171,27 +165,24 @@ describe('Canvas column lineage projection', () => {
     const second = buildNode('source-b', 'dvt:source', 'input', [
       { name: 'last_name', type: 'text' },
     ]);
-    const model = applyDvtVisualTransformRecipe(
-      buildNode('model', 'dvt:sql_transform', 'transform'),
-      {
-        version: 'v1',
-        outputs: [
-          {
-            id: 'output:full_name',
-            name: 'full_name',
-            dataType: 'text',
-            expression: {
-              inputs: [
-                { nodeId: first.id, columnName: 'first_name' },
-                { nodeId: second.id, columnName: 'last_name' },
-              ],
-              operations: [{ kind: 'function', functionId: 'concat', args: [' '] }],
-            },
+    const model = applyDvtVisualTransformRecipe(buildNode('model', 'dvt:transform', 'transform'), {
+      version: 'v1',
+      outputs: [
+        {
+          id: 'output:full_name',
+          name: 'full_name',
+          dataType: 'text',
+          expression: {
+            inputs: [
+              { nodeId: first.id, columnName: 'first_name' },
+              { nodeId: second.id, columnName: 'last_name' },
+            ],
+            operations: [{ kind: 'function', functionId: 'concat', args: [' '] }],
           },
-        ],
-        filters: [],
-      }
-    );
+        },
+      ],
+      filters: [],
+    });
 
     const projected = projectCanvasColumnLineage({
       nodes: [first, second, model],
@@ -281,7 +272,7 @@ describe('Canvas column lineage projection', () => {
       selected: false,
     });
     const model = applyDvtSubstraitSemanticDocument(
-      buildNode('model', 'dvt:sql_transform', 'transform'),
+      buildNode('model', 'dvt:transform', 'transform'),
       encodeDvtSubstraitInnerJoinDocument(draft)
     );
 
@@ -333,7 +324,7 @@ describe('Canvas column lineage projection', () => {
     });
     draft = applyDvtSubstraitInnerJoinGroupedRowNumber(draft, { outputName: 'count_rank' });
     const groupedModel = applyDvtSubstraitSemanticDocument(
-      buildNode('model', 'dvt:sql_transform', 'transform'),
+      buildNode('model', 'dvt:transform', 'transform'),
       encodeDvtSubstraitInnerJoinDocument(draft)
     );
     const groupedProjection = projectCanvasColumnLineage({
@@ -427,7 +418,7 @@ describe('Canvas column lineage projection', () => {
         });
       }
       const model = applyDvtSubstraitSemanticDocument(
-        buildNode('model', 'dvt:sql_transform', 'transform'),
+        buildNode('model', 'dvt:transform', 'transform'),
         encodeDvtSubstraitInnerJoinDocument(draft)
       );
 
@@ -467,7 +458,7 @@ describe('Canvas column lineage projection', () => {
         outputName: 'shipment_rank',
       });
       const rankedModel = applyDvtSubstraitSemanticDocument(
-        buildNode('model', 'dvt:sql_transform', 'transform'),
+        buildNode('model', 'dvt:transform', 'transform'),
         encodeDvtSubstraitInnerJoinDocument(ranked)
       );
       const groupedProjection = projectCanvasColumnLineage({
@@ -543,11 +534,11 @@ describe('Canvas column lineage projection', () => {
       selectedFields: ['shipment_id'],
     });
     const model = applyDvtSubstraitSemanticDocument(
-      buildNode('model', 'dvt:sql_transform', 'transform'),
+      buildNode('model', 'dvt:transform', 'transform'),
       encodeDvtSubstraitInnerJoinDocument(draft)
     );
     const copiedModel = applyDvtSubstraitSemanticDocument(
-      buildNode('copied-model', 'dvt:sql_transform', 'transform'),
+      buildNode('copied-model', 'dvt:transform', 'transform'),
       encodeDvtSubstraitInnerJoinDocument(draft)
     );
     const groupedDraft = applyDvtSubstraitInnerJoinGrouping(draft, {
@@ -558,11 +549,11 @@ describe('Canvas column lineage projection', () => {
       outputName: 'shipment_rank',
     });
     const copiedGroupedModel = applyDvtSubstraitSemanticDocument(
-      buildNode('copied-grouped-model', 'dvt:sql_transform', 'transform'),
+      buildNode('copied-grouped-model', 'dvt:transform', 'transform'),
       encodeDvtSubstraitInnerJoinDocument(groupedDraft)
     );
     const copiedRankedModel = applyDvtSubstraitSemanticDocument(
-      buildNode('copied-ranked-model', 'dvt:sql_transform', 'transform'),
+      buildNode('copied-ranked-model', 'dvt:transform', 'transform'),
       encodeDvtSubstraitInnerJoinDocument(rankedDraft)
     );
     const staleShipments = {
@@ -663,7 +654,7 @@ describe('Canvas column lineage projection', () => {
       outputName: 'region',
     });
     const model = applyDvtSubstraitSemanticDocument(
-      buildNode('model', 'dvt:sql_transform', 'transform'),
+      buildNode('model', 'dvt:transform', 'transform'),
       encodeDvtSubstraitUnionAllDocument(draft)
     );
 
@@ -716,7 +707,7 @@ describe('Canvas column lineage projection', () => {
       outputName: 'count_rank',
     });
     const groupedModel = applyDvtSubstraitSemanticDocument(
-      buildNode('model', 'dvt:sql_transform', 'transform'),
+      buildNode('model', 'dvt:transform', 'transform'),
       encodeDvtSubstraitUnionAllDocument(draft)
     );
     const groupedProjection = projectCanvasColumnLineage({
@@ -753,7 +744,7 @@ describe('Canvas column lineage projection', () => {
       { name: 'order_id', type: 'integer' },
     ]);
     const visualModel = applyDvtVisualTransformRecipe(
-      buildNode('model', 'dvt:sql_transform', 'transform'),
+      buildNode('model', 'dvt:transform', 'transform'),
       {
         version: 'v1',
         outputs: [
@@ -799,7 +790,7 @@ describe('Canvas column lineage projection', () => {
       { name: 'order_id', type: 'integer' },
     ]);
     const arbitrarySql = {
-      ...buildNode('sql-model', 'dvt:sql_transform', 'transform'),
+      ...buildNode('sql-model', 'dvt:transform', 'transform'),
       metadata: {
         sql: 'select order_id from public.source_1',
         config: { sql: 'select order_id from public.source_1' },
@@ -1046,24 +1037,21 @@ describe('Canvas column lineage projection', () => {
   });
 
   it('derives terminal model-to-sink lineage only for a unique exact compatible column', () => {
-    const model = applyDvtVisualTransformRecipe(
-      buildNode('model', 'dvt:sql_transform', 'transform'),
-      {
-        version: 'v1',
-        outputs: [
-          {
-            id: 'output:event_id',
-            name: 'event_id',
-            dataType: 'integer',
-            expression: {
-              inputs: [{ nodeId: 'source', columnName: 'event_id' }],
-              operations: [{ kind: 'passthrough' }],
-            },
+    const model = applyDvtVisualTransformRecipe(buildNode('model', 'dvt:transform', 'transform'), {
+      version: 'v1',
+      outputs: [
+        {
+          id: 'output:event_id',
+          name: 'event_id',
+          dataType: 'integer',
+          expression: {
+            inputs: [{ nodeId: 'source', columnName: 'event_id' }],
+            operations: [{ kind: 'passthrough' }],
           },
-        ],
-        filters: [],
-      }
-    );
+        },
+      ],
+      filters: [],
+    });
     const sink = buildNode('sink', 'dvt:sink', 'output', [
       { name: 'event_id', type: 'integer' },
       { name: 'other', type: 'text' },

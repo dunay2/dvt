@@ -1,4 +1,4 @@
-/** Owned concern: render DVT SQL transform authoring fields. */
+/** Owned concern: render DVT Transform authoring fields. */
 import type { ConnectionRef } from '@dvt/contracts';
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 
@@ -162,7 +162,7 @@ export function DvtSqlTransformAuthoringSection({
               loadingLabel={canvasViewCopy.inspectorDvtSqlLabel}
               onChange={(sql) =>
                 onChange((currentDraft) =>
-                  currentDraft.dvt?.kind === 'sql_transform'
+                  currentDraft.dvt?.kind === 'transform'
                     ? {
                         ...currentDraft,
                         dvt: { ...currentDraft.dvt, sql },

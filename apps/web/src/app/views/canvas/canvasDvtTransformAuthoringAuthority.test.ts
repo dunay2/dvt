@@ -31,7 +31,7 @@ function buildTransformNode(metadata: CanonicalNode['metadata'] = {}): Canonical
     id: 'transform-orders',
     name: 'Orders model',
     pluginId: 'dvt',
-    kind: 'dvt:sql_transform',
+    kind: 'dvt:transform',
     role: 'transform',
     status: 'idle',
     tags: ['authoring'],
@@ -40,6 +40,15 @@ function buildTransformNode(metadata: CanonicalNode['metadata'] = {}): Canonical
 }
 
 describe('DVT transform authoring authority', () => {
+  it('rejects the removed dvt:sql_transform Graph Draft identity', () => {
+    expect(() =>
+      readDvtTransformAuthoringAuthority({
+        ...buildTransformNode(),
+        kind: 'dvt:sql_transform',
+      })
+    ).toThrow('DVT transform authoring authority requires a dvt:transform node.');
+  });
+
   it('keeps historical nodes without an authority envelope in SQL mode', () => {
     const node = buildTransformNode({
       sql: 'select order_id from raw.orders',

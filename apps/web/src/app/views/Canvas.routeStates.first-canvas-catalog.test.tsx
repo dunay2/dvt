@@ -51,7 +51,7 @@ describe('Canvas route first-canvas catalog', () => {
       title: 'Main canvas',
       kindLabel: 'Transformation',
     });
-    expectViewportAuthoringKinds(['dvt:sql_transform'], ['dbt:exposure', 'dbt:metric']);
+    expectViewportAuthoringKinds(['dvt:transform'], ['dbt:exposure', 'dbt:metric']);
   });
 
   it('publishes a typed dbt empty canvas catalog to the contextual viewport', async () => {
@@ -72,7 +72,7 @@ describe('Canvas route first-canvas catalog', () => {
     });
     expectViewportAuthoringKinds(
       ['dbt:source', 'dbt:model', 'dbt:test'],
-      ['dbt:seed', 'dbt:snapshot', 'dbt:exposure', 'dbt:metric', 'dbt:macro', 'dvt:sql_transform']
+      ['dbt:seed', 'dbt:snapshot', 'dbt:exposure', 'dbt:metric', 'dbt:macro', 'dvt:transform']
     );
   });
 });

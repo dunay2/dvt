@@ -56,7 +56,7 @@ describe('Canvas project snapshot round trip', () => {
     });
     openCanvasContextMenuAt(360, 260);
     clickCanvasContextMenuAction('open-add-node-catalog');
-    clickCanvasAddCatalogAction('create-node', 'dvt:sql_transform');
+    clickCanvasAddCatalogAction('create-node', 'dvt:transform');
   }
 
   function openWorkspaceMenuIfClosed(): void {
@@ -92,7 +92,7 @@ describe('Canvas project snapshot round trip', () => {
     visitReadyCanvas();
 
     addSqlTransformNode();
-    cy.get('.react-flow__node[data-id="dvt-sql-transform-1"]').should('be.visible');
+    cy.get('.react-flow__node[data-id="dvt-transform-1"]').should('be.visible');
     waitForDraftSaveCount(1);
     cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
     clickVisibleWorkspaceExportSnapshotCommand();
@@ -109,10 +109,10 @@ describe('Canvas project snapshot round trip', () => {
       expect(snapshot.schemaVersion).to.equal(1);
       expect(snapshot.canvas.title).to.equal('Sales canvas');
       expect(snapshot.project).to.deep.include(E2E_WORKSPACE_SESSION);
-      expect(snapshot.draft.nodeIds).to.include('dvt-sql-transform-1');
-      expect(snapshot.draft.nodePositions['dvt-sql-transform-1']).to.include.keys(['x', 'y']);
-      expect(snapshot.draft.nodePositions['dvt-sql-transform-1'].x).to.be.a('number');
-      expect(snapshot.draft.nodePositions['dvt-sql-transform-1'].y).to.be.a('number');
+      expect(snapshot.draft.nodeIds).to.include('dvt-transform-1');
+      expect(snapshot.draft.nodePositions['dvt-transform-1']).to.include.keys(['x', 'y']);
+      expect(snapshot.draft.nodePositions['dvt-transform-1'].x).to.be.a('number');
+      expect(snapshot.draft.nodePositions['dvt-transform-1'].y).to.be.a('number');
     });
 
     stubRuntimeCapabilities();
@@ -148,6 +148,6 @@ describe('Canvas project snapshot round trip', () => {
     visitReadyCanvas();
 
     cy.contains('Sales canvas').should('be.visible');
-    cy.get('.react-flow__node[data-id="dvt-sql-transform-1"]').should('be.visible');
+    cy.get('.react-flow__node[data-id="dvt-transform-1"]').should('be.visible');
   });
 });

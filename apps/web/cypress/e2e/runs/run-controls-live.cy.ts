@@ -43,7 +43,7 @@ function waitForPersistedTransformSql(attempt = 0): Cypress.Chainable<void> {
         record?: { draft?: { nodes?: Array<{ id: string; metadata?: Record<string, unknown> }> } };
       }
     ).record?.draft?.nodes;
-    const transform = nodes?.find((node) => node.id === 'dvt-sql-transform-1');
+    const transform = nodes?.find((node) => node.id === 'dvt-transform-1');
     const sql = (transform?.metadata?.config as { sql?: string } | undefined)?.sql;
 
     if (sql === LONG_RUNNING_SQL) {
@@ -89,7 +89,7 @@ function readEventTypes(runId: string): Cypress.Chainable<string[]> {
 }
 
 function authorLongRunningTransform(): void {
-  cy.get('.react-flow__node[data-id="dvt-sql-transform-1"]', { timeout: 20_000 })
+  cy.get('.react-flow__node[data-id="dvt-transform-1"]', { timeout: 20_000 })
     .should('be.visible')
     .find('[data-slot="canvas-node-shell"]')
     .dblclick();
@@ -118,7 +118,7 @@ describe('Run controls live protected runtime', () => {
     seedLiveSelectedClosureDraft({ authoringGenerated: true });
     visitWithLiveWorkspaceSession('/canvas');
     authorLongRunningTransform();
-    selectCanvasClosure(['Source 1', 'SQL transform 1', 'Sink 1']);
+    selectCanvasClosure(['Source 1', 'Transform 1', 'Sink 1']);
     clickPreviewExecutionPlanFromOperationalDrawer();
     cy.contains('Execution Preview', { timeout: 20_000 }).should('be.visible');
     clickButtonNatively('Start Run');

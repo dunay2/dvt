@@ -24,23 +24,23 @@ export const canvasViewAuthoringCopyEs = {
   nodeDropPayloadInvalidMessage:
     'No se ha podido leer el nodo arrastrado. El canvas no se ha modificado.',
   transformationConnectionOrderMessage:
-    'Las aristas del Execution Preview deben seguir source -> sql_transform -> sink.',
+    'Las aristas del Execution Preview deben seguir source -> transform -> sink.',
   transformationConnectionEdgeCountMessage:
-    'El Execution Preview requiere exactamente 2 aristas: source -> sql_transform y sql_transform -> sink.',
+    'El Execution Preview requiere exactamente 2 aristas: source -> transform y transform -> sink.',
   transformationConnectionDuplicateMessage:
     'La dependencia ya existe en este borrador de transformación.',
   transformationRequiresThreeNodesMessage:
-    'El Execution Preview requiere nodos source, sql_transform y sink.',
+    'El Execution Preview requiere nodos source, transform y sink.',
   transformationAmbiguousExecutablePathMessage:
-    'El Execution Preview requiere seleccionar una única ruta source -> sql_transform -> sink.',
+    'El Execution Preview requiere seleccionar una única ruta source -> transform -> sink.',
   transformationRequiresExecutablePathMessage:
-    'El Execution Preview requiere una ruta conectada source -> sql_transform -> sink.',
+    'El Execution Preview requiere una ruta conectada source -> transform -> sink.',
   transformationRequiresPostgresConnectionMessage:
     'Selecciona una conexión PostgreSQL gobernada en el origen antes de generar la vista previa.',
   transformationUnsupportedRolesMessage:
     'El Execution Preview solo admite nodos input, transform y output en esta vertical.',
   transformationRequiresOneOfEachRoleMessage:
-    'El Execution Preview requiere un source, un sql_transform y un sink.',
+    'El Execution Preview requiere un source, un transform y un sink.',
   transformationDraftValidMessage: 'El borrador de transformación es válido para la vista previa.',
   connectionSelfNotAllowedMessage: 'No se permiten las autoconexiones.',
   connectionAlreadyExistsMessage: 'La conexión ya existe.',

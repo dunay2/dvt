@@ -176,7 +176,7 @@ describe('canvas inspector authoring component architecture', () => {
     expect(MODEL_SOURCE).toContain('dbt_package_required');
   });
 
-  it('keeps DVT source, SQL transform, and sink authoring in separate presentation leaves', () => {
+  it('keeps DVT source, Transform, and sink authoring in separate presentation leaves', () => {
     expect(DVT_FIELDS_SOURCE).not.toContain("from '../../components/ui/input'");
     expect(DVT_FIELDS_SOURCE).not.toContain("from '../../components/ui/textarea'");
     expect(DVT_FIELDS_SOURCE).not.toContain('name="dvt-source-schema"');
@@ -189,7 +189,7 @@ describe('canvas inspector authoring component architecture', () => {
     expect(DVT_SOURCE_SECTION_SOURCE).toContain('formatCanvasInspectorNodeDraftError');
 
     expect(DVT_SQL_SECTION_SOURCE).toContain(
-      'Owned concern: render DVT SQL transform authoring fields.'
+      'Owned concern: render DVT Transform authoring fields.'
     );
     expect(DVT_SQL_SECTION_SOURCE).toContain('MonacoCodeEditor');
     expect(DVT_SQL_SECTION_SOURCE).toContain('inspectorDvtSqlLabel');

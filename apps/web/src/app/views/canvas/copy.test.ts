@@ -216,16 +216,16 @@ describe('canvas copy catalog', () => {
 
   it('formats transformation graph validation summaries from locale copy', () => {
     expect(formatTransformationGraphValidationSummary('requires_executable_path', 'en-US')).toBe(
-      'Execution Preview requires a connected source -> sql_transform -> sink path.'
+      'Execution Preview requires a connected source -> transform -> sink path.'
     );
     expect(formatTransformationGraphValidationSummary('ambiguous_executable_paths', 'en-US')).toBe(
-      'Execution Preview requires one selected source -> sql_transform -> sink path.'
+      'Execution Preview requires one selected source -> transform -> sink path.'
     );
     expect(formatTransformationGraphValidationSummary('requires_executable_path', 'es-ES')).toBe(
-      'El Execution Preview requiere una ruta conectada source -> sql_transform -> sink.'
+      'El Execution Preview requiere una ruta conectada source -> transform -> sink.'
     );
     expect(formatTransformationGraphValidationSummary('ambiguous_executable_paths', 'es-ES')).toBe(
-      'El Execution Preview requiere seleccionar una única ruta source -> sql_transform -> sink.'
+      'El Execution Preview requiere seleccionar una única ruta source -> transform -> sink.'
     );
   });
 
