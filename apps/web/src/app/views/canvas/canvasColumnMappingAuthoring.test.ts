@@ -6,6 +6,7 @@ import type { CanvasDraftSession } from './canvasDraftSession';
 import {
   applyCanvasColumnMapping,
   automapCanvasColumns,
+  reorderCanvasColumnOutput,
   resolveCanvasColumnMappingTarget,
   setCanvasColumnOutputIncluded,
 } from './canvasColumnMappingAuthoring';
@@ -508,6 +509,58 @@ describe('Canvas column mapping authoring', () => {
     ).toEqual(['output:event_id']);
     expect(removed.draftSession.workingSet.visibleEdges).toEqual([
       { sourceId: 'source', targetId: 'model' },
+    ]);
+  });
+
+  it('reorders outputs while preserving their canonical field identities', () => {
+    const source = buildNode('source', 'dvt:source', 'input', [
+      { name: 'first', type: 'text' },
+      { name: 'second', type: 'text' },
+      { name: 'third', type: 'text' },
+    ]);
+    const model = buildNode('model', 'dvt:transform', 'transform');
+    const canonicalNodesById = new Map([
+      [source.id, source],
+      [model.id, model],
+    ]);
+    const initial = buildSession([source, model], [{ sourceId: source.id, targetId: model.id }]);
+    const mapped = automapCanvasColumns({
+      draftSession: initial,
+      canonicalNodesById,
+      targetNodeId: model.id,
+      targetColumns: source.metadata.columns as readonly { name: string; type: string }[],
+    });
+    if (mapped.outcome !== 'applied') throw new Error('Expected mapped outputs.');
+
+    const reordered = reorderCanvasColumnOutput({
+      draftSession: mapped.draftSession,
+      canonicalNodesById,
+      targetNodeId: model.id,
+      columnId: 'output:third',
+      targetColumnId: 'output:first',
+      placement: 'before',
+    });
+    if (reordered.outcome !== 'applied') throw new Error('Expected reordered outputs.');
+    const updated = reordered.draftSession.localNodeCatalog?.model;
+    if (updated == null) throw new Error('Expected updated transform node.');
+    const authority = readDvtTransformAuthoringAuthority(updated);
+    if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+      throw new Error('Expected canonical Substrait authority.');
+    }
+    const inspection = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+    );
+    expect(
+      inspection.ok
+        ? inspection.projection.outputs.map(({ fieldId, sourceFieldName }) => ({
+            fieldId,
+            sourceFieldName,
+          }))
+        : []
+    ).toEqual([
+      { fieldId: 'output:third', sourceFieldName: 'third' },
+      { fieldId: 'output:first', sourceFieldName: 'first' },
+      { fieldId: 'output:second', sourceFieldName: 'second' },
     ]);
   });
 });

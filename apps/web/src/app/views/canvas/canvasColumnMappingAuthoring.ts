@@ -498,6 +498,49 @@ export function automapCanvasColumns(args: {
   };
 }
 
+export function reorderCanvasColumnOutput(args: {
+  draftSession: CanvasDraftSession;
+  canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
+  targetNodeId: string;
+  columnId: string;
+  targetColumnId: string;
+  placement: 'before' | 'after';
+}): CanvasColumnMappingResult {
+  const targetNode = resolveSessionNode(
+    args.draftSession,
+    args.canonicalNodesById,
+    args.targetNodeId
+  );
+  if (targetNode == null) return { outcome: 'rejected', reason: 'target_node_not_found' };
+  const recipeResult = readEditableRecipe(targetNode);
+  if (recipeResult.outcome === 'rejected') return recipeResult;
+  const outputs = [...recipeResult.recipe.outputs];
+  const sourceIndex = outputs.findIndex((output) => output.id === args.columnId);
+  if (sourceIndex < 0 || args.columnId === args.targetColumnId) {
+    return { outcome: 'rejected', reason: 'mapping_not_found' };
+  }
+  const [movedOutput] = outputs.splice(sourceIndex, 1);
+  const targetIndex = outputs.findIndex((output) => output.id === args.targetColumnId);
+  if (movedOutput == null || targetIndex < 0) {
+    return { outcome: 'rejected', reason: 'mapping_not_found' };
+  }
+  outputs.splice(args.placement === 'after' ? targetIndex + 1 : targetIndex, 0, movedOutput);
+  const projectionResult = persistProjectionRecipe({
+    targetNode,
+    resolveNode: (nodeId) => resolveSessionNode(args.draftSession, args.canonicalNodesById, nodeId),
+    recipe: { ...recipeResult.recipe, outputs },
+  });
+  return projectionResult.outcome === 'rejected'
+    ? projectionResult
+    : {
+        outcome: 'applied',
+        draftSession: canvasDraftSession.workingSet.upsertNode(
+          args.draftSession,
+          projectionResult.node
+        ),
+      };
+}
+
 export function setCanvasColumnOutputIncluded(args: {
   draftSession: CanvasDraftSession;
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
