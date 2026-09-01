@@ -5,6 +5,7 @@ import type { CanonicalNode } from '../../types/canonical';
 import { dbtGraphNodeCardStrategy } from '../dbt/dbtGraphNodeCardStrategy';
 import { dvtGraphNodeCardStrategy } from '../dvt/dvtGraphNodeCardStrategy';
 import { buildGraphNodeCardReadModel } from './graphNodeCardReadModel';
+import { defaultGraphNodeCardStrategy } from './defaultGraphNodeCardStrategy';
 
 const SOURCE_METRICS_OBSERVED_AT = '2026-07-10T21:00:00.000Z';
 const SPANISH_PRESENTATION_COPY = {
@@ -61,6 +62,47 @@ function buildNode(partial: Partial<CanonicalNode>): CanonicalNode {
 }
 
 describe('buildGraphNodeCardReadModel', () => {
+  it('keeps Code and Columns out of the compact upper metric row', () => {
+    const presentationTruth = {
+      columns: {
+        declared: [{ name: 'order_id', type: 'integer', provenance: 'declared' as const }],
+        inherited: [],
+        visible: [{ name: 'order_id', type: 'integer', provenance: 'declared' as const }],
+        declaredCount: 1,
+        inheritedCount: 0,
+        visibleCount: 1,
+        visibleProvenance: 'declared' as const,
+      },
+      code: {
+        kind: 'canonical' as const,
+        content: '{}',
+        language: 'json' as const,
+        schemaVersion: 'dvt-substrait-semantic-document.v1',
+        digest: 'a'.repeat(64),
+      },
+    };
+    const cases = [
+      {
+        node: buildNode({ kind: 'dvt:transform', pluginId: 'dvt', role: 'transform' }),
+        strategy: dvtGraphNodeCardStrategy,
+      },
+      {
+        node: buildNode({ kind: 'dbt:model', pluginId: 'dbt', role: 'transform' }),
+        strategy: dbtGraphNodeCardStrategy,
+      },
+      {
+        node: buildNode({ kind: 'custom:node', pluginId: 'custom', role: 'transform' }),
+        strategy: defaultGraphNodeCardStrategy,
+      },
+    ];
+
+    for (const { node, strategy } of cases) {
+      const model = buildGraphNodeCardReadModel(node, { presentationTruth }, [strategy]);
+      expect(model.metrics.map((metric) => metric.id)).not.toContain('code');
+      expect(model.metrics.map((metric) => metric.id)).not.toContain('columns');
+    }
+  });
+
   it('uses a DVT card strategy for operational table metrics', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({
@@ -89,7 +131,7 @@ describe('buildGraphNodeCardReadModel', () => {
     expect(model.nodeActionsLabel).toBe('More node actions');
     expect(model.subtitle).toBe('warehouse.public.orders');
     expect(model.path).toBe('warehouse.public.orders');
-    expect(model.metrics).toEqual([{ id: 'columns', label: 'Columns', value: '2' }]);
+    expect(model.metrics).toEqual([]);
     expect(model.operationalMetrics).toEqual([
       {
         id: 'rows',
@@ -135,7 +177,7 @@ describe('buildGraphNodeCardReadModel', () => {
       [dvtGraphNodeCardStrategy]
     );
 
-    expect(model.metrics).toEqual([{ id: 'columns', label: 'Columns', value: '3' }]);
+    expect(model.metrics).toEqual([]);
     expect(model.operationalMetrics).toEqual([]);
     expect(model.operationalDetail).toBeNull();
   });
@@ -163,7 +205,7 @@ describe('buildGraphNodeCardReadModel', () => {
       [dvtGraphNodeCardStrategy]
     );
 
-    expect(model.metrics).toEqual([{ id: 'columns', label: 'Columns', value: '3' }]);
+    expect(model.metrics).toEqual([]);
     expect(model.operationalMetrics).toEqual([
       {
         id: 'rows',
@@ -424,7 +466,6 @@ describe('buildGraphNodeCardReadModel', () => {
     expect(model.health).toEqual({ label: 'Completed', tone: 'healthy' });
     expect(model.accentTone).toBe('model');
     expect(model.metrics).toEqual([
-      { id: 'columns', label: 'Columns', value: '0' },
       { id: 'status', label: 'Status', value: 'completed' },
       { id: 'last-run', label: 'Last run', value: '2026-06-12T20:45:00Z' },
       { id: 'duration', label: 'Duration', value: '1m 15s' },
@@ -531,7 +572,6 @@ describe('buildGraphNodeCardReadModel', () => {
     );
 
     expect(model.metrics).toEqual([
-      { id: 'columns', label: 'Columns', value: '0' },
       { id: 'duration', label: 'Duration', value: '1m 15s' },
       { id: 'cost', label: 'Cost', value: '$0.42' },
     ]);
@@ -717,7 +757,6 @@ describe('buildGraphNodeCardReadModel', () => {
     expect(model.metrics).toEqual([
       { id: 'materialization', label: 'Mat.', value: 'incremental' },
       { id: 'dependencies', label: 'Deps', value: '2' },
-      { id: 'columns', label: 'Columns', value: '1' },
     ]);
   });
 
@@ -773,15 +812,10 @@ describe('buildGraphNodeCardReadModel', () => {
       [dbtGraphNodeCardStrategy]
     );
 
-    expect(model.metrics).toContainEqual({
-      id: 'columns',
-      label: 'Columns',
-      value: '2',
-      detail: '2 inherited columns.',
-    });
+    expect(model.metrics).toEqual([]);
   });
 
-  it('projects localized generated, authored, and file-backed code posture on the graph card', () => {
+  it('keeps localized code posture in the inspector instead of the graph card header', () => {
     const baseData = {
       presentationCopy: {
         columnsLabel: 'Columnas',
@@ -903,29 +937,10 @@ describe('buildGraphNodeCardReadModel', () => {
       [dvtGraphNodeCardStrategy]
     );
 
-    expect(generated.metrics).toContainEqual({
-      id: 'code',
-      label: 'Código',
-      value: 'Generado',
-      detail: 'Código generado en models/orders.sql.',
-    });
-    expect(authored.metrics).toContainEqual({
-      id: 'code',
-      label: 'Código',
-      value: 'Escrito',
-    });
-    expect(fileBacked.metrics).toContainEqual({
-      id: 'code',
-      label: 'Código',
-      value: 'Archivo',
-      detail: 'El código vive en models/orders.sql.',
-    });
-    expect(canonical.metrics).toContainEqual({
-      id: 'code',
-      label: 'Código',
-      value: 'Canónico',
-      detail: `Documento Substrait canónico dvt-substrait-semantic-document.v1 · SHA-256 ${'a'.repeat(64)}`,
-    });
+    expect(generated.metrics).toEqual([]);
+    expect(authored.metrics).toEqual([]);
+    expect(fileBacked.metrics).toEqual([]);
+    expect(canonical.metrics).toEqual([]);
   });
 
   it('adds DBT source operational metrics from recorded warehouse metadata', () => {
@@ -955,7 +970,7 @@ describe('buildGraphNodeCardReadModel', () => {
     expect(model.health).toEqual({ label: 'Ready', tone: 'healthy' });
     expect(model.subtitle).toBe('RAW.ERP.ORDERS');
     expect(model.path).toBe('RAW.ERP.ORDERS');
-    expect(model.metrics).toEqual([{ id: 'columns', label: 'Columns', value: '2' }]);
+    expect(model.metrics).toEqual([]);
     expect(model.operationalMetrics).toEqual([
       {
         id: 'rows',
@@ -1052,7 +1067,6 @@ describe('buildGraphNodeCardReadModel', () => {
     expect(model.metrics).toEqual([
       { id: 'test-target', label: 'Target', value: 'fct_orders.order_id' },
       { id: 'severity', label: 'Severity', value: 'error' },
-      { id: 'columns', label: 'Columns', value: '0' },
       { id: 'duration', label: 'Duration', value: '9s' },
       { id: 'warnings', label: 'Warnings', value: '1' },
     ]);

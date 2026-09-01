@@ -16,11 +16,9 @@ import {
   numericValue,
   pushMetric,
   pushRuntimeMetrics,
-  resolveCodeMetricPresentation,
   resolveNodeCardAccentTone,
   resolveNodeCardHealth,
   resolveColumnCount,
-  resolveColumnMetricPresentation,
   resolveGraphNodeRelationPath,
   stringValue,
 } from '../graph/graphNodeCardStrategyUtils';
@@ -46,9 +44,7 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
   const relationPath = resolveGraphNodeRelationPath(metadata, data);
   const metrics: GraphNodeCardMetric[] = [];
   const materialization = resolveDbtMaterialization(metadata);
-  const columnPresentation = resolveColumnMetricPresentation(metadata, data);
-  const codePresentation = resolveCodeMetricPresentation(data);
-  const columnCount = columnPresentation.count;
+  const columnCount = resolveColumnCount(metadata, data);
   const targetModel =
     stringValue(metadata.testTargetModel) ??
     stringValue(metadata.targetModel) ??
@@ -80,12 +76,6 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
   pushMetric(metrics, 'dependencies', 'Deps', arrayCount(metadata.dependencies));
   pushMetric(metrics, 'test-target', 'Target', testTarget);
   pushMetric(metrics, 'severity', 'Severity', severity);
-  pushMetric(metrics, 'code', codePresentation?.label ?? 'Code', codePresentation?.value ?? null, {
-    ...(codePresentation?.detail == null ? {} : { detail: codePresentation.detail }),
-  });
-  pushMetric(metrics, 'columns', columnPresentation.label, resolveColumnCount(metadata, data), {
-    ...(columnPresentation.detail == null ? {} : { detail: columnPresentation.detail }),
-  });
   pushRuntimeMetrics(metrics, metadata, data);
 
   const titlePresentation = buildGraphNodeTitlePresentation({
