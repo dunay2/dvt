@@ -123,6 +123,50 @@ describe('canvasEdgeAdmissionTransaction', () => {
     ]);
   });
 
+  it('binds a newly connected DBT model to the real origin schema in the same transaction', () => {
+    const source = {
+      ...buildConnectedSourceNode('source-node', []),
+      pluginId: 'dvt.warehouse-source',
+      metadata: {
+        ...buildConnectedSourceNode('source-node', []).metadata,
+        schema: 'dvt',
+      },
+    };
+    const model: CanonicalNode = {
+      ...buildCanonicalNode('transform-node', 'transform', 'dbt:model'),
+      pluginId: 'dbt',
+      metadata: {
+        config: { schema: 'raw', table: 'model_1', materialized: 'view' },
+        dbt: { schemaName: 'raw', tableName: 'model_1', materialized: 'view' },
+      },
+    };
+
+    const transaction = resolveCanvasEdgeConfirmationTransaction({
+      canonicalNodesById: new Map([
+        [source.id, source],
+        [model.id, model],
+      ]),
+      connection: {
+        source: source.id,
+        sourceHandle: null,
+        target: model.id,
+        targetHandle: null,
+      },
+      draftSession: buildDraftSession(),
+      edges: [],
+      pluginPortMap,
+    });
+
+    expect(transaction.outcome).toBe('confirmed');
+    if (transaction.outcome !== 'confirmed') {
+      throw new Error('Expected a confirmed edge transaction');
+    }
+    expect(transaction.draftSession.localNodeCatalog?.[model.id]?.metadata).toMatchObject({
+      config: { schema: 'dvt', table: 'model_1' },
+      dbt: { schemaName: 'dvt', selectedSourceId: source.id },
+    });
+  });
+
   it('creates deterministic column mappings in the same transaction as the stage edge', () => {
     const source = buildConnectedSourceNode('source-node', [
       { name: 'order_id', type: 'integer' },

@@ -218,11 +218,6 @@ function buildGeneralRows(
   const numberFormatter = new Intl.NumberFormat(locale);
 
   addRow(rows, NODE_PROPERTY_ROW_ID.name, 'Name', node.name);
-  addRow(rows, NODE_PROPERTY_ROW_ID.nodeId, 'Node ID', node.id);
-  addRow(rows, NODE_PROPERTY_ROW_ID.kind, 'Kind', node.kind);
-  addRow(rows, NODE_PROPERTY_ROW_ID.role, 'Role', formatWords(node.role));
-  addRow(rows, NODE_PROPERTY_ROW_ID.status, 'Status', formatWords(node.status));
-  addRow(rows, NODE_PROPERTY_ROW_ID.plugin, 'Plugin', node.pluginId);
   addRow(
     rows,
     NODE_PROPERTY_ROW_ID.package,
@@ -661,6 +656,11 @@ function buildSummaryRows(
     .filter((edge) => edge.sourceId === node.id)
     .map((edge) => nodeById.get(edge.targetId)?.name ?? edge.targetId);
 
+  addRow(rows, NODE_PROPERTY_ROW_ID.nodeId, 'Node ID', node.id);
+  addRow(rows, NODE_PROPERTY_ROW_ID.kind, 'Kind', node.kind);
+  addRow(rows, NODE_PROPERTY_ROW_ID.role, 'Role', formatWords(node.role));
+  addRow(rows, NODE_PROPERTY_ROW_ID.status, 'Status', formatWords(node.status));
+  addRow(rows, NODE_PROPERTY_ROW_ID.plugin, 'Plugin', node.pluginId);
   addRow(
     rows,
     NODE_PROPERTY_ROW_ID.upstreamNodes,

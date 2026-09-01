@@ -16,6 +16,14 @@ import {
   ContextMenuLabel,
   ContextMenuTrigger,
 } from '../../components/ui/context-menu';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '../../components/ui/dropdown-menu';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import {
   localizeCanvasContextMenuModel,
@@ -36,6 +44,7 @@ import {
 type CanvasContextMenuViewProps = Readonly<{
   children: ReactElement;
   model: CanvasContextMenuModel | null;
+  keyboardMenuOpen?: boolean;
   menuRef: RefObject<HTMLDivElement>;
   ariaLabel?: string;
   onClose: () => void;
@@ -48,6 +57,7 @@ type CanvasContextMenuViewProps = Readonly<{
 export function CanvasContextMenuView({
   children,
   model,
+  keyboardMenuOpen = false,
   menuRef,
   ariaLabel,
   onClose,
@@ -68,6 +78,36 @@ export function CanvasContextMenuView({
     localizedModel?.surface === 'add-node-catalog'
       ? buildCanvasAddNodeCatalogItems({ actions: localizedModel.catalogActions, copy })
       : [];
+  const CommandMenuGroup = keyboardMenuOpen ? DropdownMenuGroup : ContextMenuGroup;
+  const CommandMenuItem = keyboardMenuOpen ? DropdownMenuItem : ContextMenuItem;
+  const CommandMenuLabel = keyboardMenuOpen ? DropdownMenuLabel : ContextMenuLabel;
+  const commandMenuContents = (
+    <div ref={menuRef} data-slot="canvas-context-menu">
+      {commandSections.map((section) => (
+        <CommandMenuGroup key={section.id} data-slot={`canvas-context-menu-${section.id}-group`}>
+          {section.title == null ? null : <CommandMenuLabel>{section.title}</CommandMenuLabel>}
+          {section.items.map((item) => (
+            <CommandMenuItem
+              key={item.id}
+              data-slot="canvas-context-menu-item"
+              data-menu-item-kind={item.kind}
+              data-menu-action={item.action.action}
+              onSelect={() => {
+                selectCanvasContextMenuItem({
+                  item,
+                  onCanvasAction,
+                  onCreateNodeAction,
+                  onEdgeAction,
+                });
+              }}
+            >
+              {item.label}
+            </CommandMenuItem>
+          ))}
+        </CommandMenuGroup>
+      ))}
+    </div>
+  );
 
   return (
     <>
@@ -84,45 +124,50 @@ export function CanvasContextMenuView({
           </div>
         </ContextMenuTrigger>
 
-        {commandSurfaceOpen ? (
+        {commandSurfaceOpen && !keyboardMenuOpen ? (
           <ContextMenuContent
             aria-label={ariaLabel ?? copy.canvasContextMenuLabel}
             className="w-72 max-w-[calc(100vw-1.5rem)]"
             onCloseAutoFocus={(event) => event.preventDefault()}
           >
-            <div ref={menuRef} data-slot="canvas-context-menu">
-              {commandSections.map((section) => (
-                <ContextMenuGroup
-                  key={section.id}
-                  data-slot={`canvas-context-menu-${section.id}-group`}
-                >
-                  {section.title == null ? null : (
-                    <ContextMenuLabel>{section.title}</ContextMenuLabel>
-                  )}
-                  {section.items.map((item) => (
-                    <ContextMenuItem
-                      key={item.id}
-                      data-slot="canvas-context-menu-item"
-                      data-menu-item-kind={item.kind}
-                      data-menu-action={item.action.action}
-                      onSelect={() => {
-                        selectCanvasContextMenuItem({
-                          item,
-                          onCanvasAction,
-                          onCreateNodeAction,
-                          onEdgeAction,
-                        });
-                      }}
-                    >
-                      {item.label}
-                    </ContextMenuItem>
-                  ))}
-                </ContextMenuGroup>
-              ))}
-            </div>
+            {commandMenuContents}
           </ContextMenuContent>
         ) : null}
       </ContextMenu>
+
+      <DropdownMenu
+        open={keyboardMenuOpen && commandSurfaceOpen}
+        onOpenChange={(open) => {
+          if (!open && keyboardMenuOpen) {
+            onClose();
+          }
+        }}
+      >
+        <DropdownMenuTrigger asChild>
+          <span
+            aria-hidden="true"
+            style={{
+              position: 'fixed',
+              left: localizedModel?.screenPosition.x ?? 0,
+              top: localizedModel?.screenPosition.y ?? 0,
+              width: 1,
+              height: 1,
+              pointerEvents: 'none',
+            }}
+          />
+        </DropdownMenuTrigger>
+        {commandSurfaceOpen && keyboardMenuOpen ? (
+          <DropdownMenuContent
+            aria-label={ariaLabel ?? copy.canvasContextMenuLabel}
+            align="start"
+            sideOffset={0}
+            className="w-72 max-w-[calc(100vw-1.5rem)]"
+            onCloseAutoFocus={(event) => event.preventDefault()}
+          >
+            {commandMenuContents}
+          </DropdownMenuContent>
+        ) : null}
+      </DropdownMenu>
 
       <Dialog
         open={localizedModel?.surface === 'add-node-catalog'}

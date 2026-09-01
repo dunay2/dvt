@@ -8,10 +8,22 @@ export type GraphNodeCardMetric = Readonly<{
   detail?: string;
   icon?: GraphNodeCardMetricIcon;
   tone?: GraphNodeCardStatusTone;
+  placement?: 'header' | 'body';
 }>;
 
 export type GraphNodeCardMetricIcon =
-  'clock' | 'refresh' | 'throughput' | 'database' | 'columns' | 'timer' | 'rows' | 'cost' | 'drift';
+  | 'clock'
+  | 'refresh'
+  | 'throughput'
+  | 'database'
+  | 'columns'
+  | 'timer'
+  | 'rows'
+  | 'cost'
+  | 'drift'
+  | 'eye'
+  | 'table'
+  | 'workflow';
 
 export type GraphNodeCardAccentTone =
   'source' | 'model' | 'test' | 'output' | 'control' | 'unknown';
@@ -41,6 +53,7 @@ export type GraphNodeSourceIdentity = Readonly<{
 
 export type GraphNodeCardReadModel = Readonly<{
   title: string;
+  titleDetail: string | null;
   technicalName: string | null;
   subtitle: string | null;
   path: string | null;
@@ -51,7 +64,6 @@ export type GraphNodeCardReadModel = Readonly<{
   operationalMetrics: readonly GraphNodeCardMetric[];
   operationalDetail: GraphNodeOperationalDetail | null;
   sourceIdentity: GraphNodeSourceIdentity | null;
-  nodeActionsLabel: string;
 }>;
 
 export type GraphNodeCardStrategy = Readonly<{

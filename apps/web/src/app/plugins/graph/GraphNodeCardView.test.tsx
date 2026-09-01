@@ -24,7 +24,7 @@ const BASE_PROPS = {
     operationalDetail: null,
     sourceIdentity: null,
     accentTone: 'model' as const,
-    nodeActionsLabel: 'Open node menu',
+    titleDetail: null,
   },
   typeLabel: 'Model',
   tags: [],
@@ -75,13 +75,13 @@ describe('GraphNodeCardView', () => {
     }
   });
 
-  it('keeps execution selection out of the card header while preserving node actions', () => {
+  it('keeps execution selection and redundant node actions out of the card header', () => {
     act(() => {
       root.render(<GraphNodeCardView {...BASE_PROPS} />);
     });
 
     expect(container.querySelector('[data-slot="graph-node-card-play"]')).toBeNull();
-    expect(container.querySelector('[data-slot="graph-node-card-actions"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="graph-node-card-actions"]')).toBeNull();
     expect(container.querySelector('[data-slot="graph-node-status-chip"]')).toBeNull();
   });
 
@@ -99,34 +99,54 @@ describe('GraphNodeCardView', () => {
     expect(container.querySelector('[data-slot="graph-node-card-kind"]')).toBeNull();
   });
 
-  it('opens governed node actions from the card action button without selecting the card', () => {
-    const onCardClick = vi.fn();
-    const onContextMenu = vi.fn((event: React.MouseEvent<HTMLDivElement>) =>
-      event.preventDefault()
-    );
-
+  it('uses description and tags as the model title detail instead of its internal name', () => {
     act(() => {
       root.render(
-        <div onClick={onCardClick} onContextMenu={onContextMenu}>
-          <GraphNodeCardView {...BASE_PROPS} />
-        </div>
+        <GraphNodeCardView
+          {...BASE_PROPS}
+          cardModel={{
+            ...BASE_PROPS.cardModel,
+            technicalName: 'model_1',
+            titleDetail: 'Pedidos diarios · #finance #critical',
+          }}
+        />
       );
     });
 
-    const button = container.querySelector<HTMLButtonElement>(
-      '[data-slot="graph-node-card-actions"]'
-    );
+    expect(
+      container.querySelector('[data-slot="graph-node-card-title"]')?.getAttribute('title')
+    ).toBe('Pedidos diarios · #finance #critical');
+    expect(
+      container.querySelector('[data-slot="graph-node-card-title"]')?.getAttribute('title')
+    ).not.toBe('model_1');
+  });
 
-    expect(button).not.toBeNull();
-    expect(button?.getAttribute('aria-label')).toBe('Open node menu');
-    expect(button?.className).toContain('cursor-pointer');
-
+  it('places the complete materialization block at the top right without repeating it below', () => {
     act(() => {
-      fireEvent.click(button!);
+      root.render(
+        <GraphNodeCardView
+          {...BASE_PROPS}
+          cardModel={{
+            ...BASE_PROPS.cardModel,
+            metrics: [
+              {
+                id: 'materialization',
+                label: 'Mat.',
+                value: 'incremental',
+                icon: 'refresh',
+                placement: 'header',
+              },
+              { id: 'dependencies', label: 'Deps', value: '2' },
+            ],
+          }}
+        />
+      );
     });
 
-    expect(onContextMenu).toHaveBeenCalledOnce();
-    expect(onCardClick).not.toHaveBeenCalled();
+    const header = container.querySelector('[data-slot="graph-node-card-header"]');
+    expect(header?.querySelector('[data-placement="header"]')?.textContent).toBe('Mat.incremental');
+    expect(container.querySelector('[data-placement="body"]')?.textContent).toBe('Deps2');
+    expect(container.textContent?.match(/incremental/g)).toHaveLength(1);
   });
 
   it('uses a stable professional card width from graph visual tokens', () => {
@@ -170,7 +190,7 @@ describe('GraphNodeCardView', () => {
             },
             sourceIdentity: null,
             accentTone: 'source',
-            nodeActionsLabel: 'Open node menu',
+            titleDetail: null,
           }}
           tags={[
             { value: 'postgres', label: 'postgres' },
@@ -188,7 +208,7 @@ describe('GraphNodeCardView', () => {
     expect(container.textContent).not.toContain('src_public_orders');
     expect(
       container.querySelector('[data-slot="graph-node-card-title"]')?.getAttribute('title')
-    ).toBe('src_public_orders');
+    ).toBeNull();
     expect(container.textContent).toContain('warehouse.public.orders');
     expect(container.textContent).not.toContain('models/sources/src_public.yml');
     expect(container.textContent).toContain('postgres');

@@ -11,7 +11,6 @@ export type CanvasNodePresentationCopy = Readonly<{
   canonicalSubstraitCodeDetailTemplate?: string;
   invalidCanonicalSubstraitCodeMessage?: string;
   codeUnavailableMessage: string;
-  nodeActionsLabel?: string;
   readyStatusLabel?: string;
   draftStatusLabel?: string;
   authoringTagLabel?: string;
@@ -44,7 +43,6 @@ export function isCanvasNodePresentationCopy(value: unknown): value is CanvasNod
     (value.invalidCanonicalSubstraitCodeMessage == null ||
       typeof value.invalidCanonicalSubstraitCodeMessage === 'string') &&
     typeof value.codeUnavailableMessage === 'string' &&
-    (value.nodeActionsLabel == null || typeof value.nodeActionsLabel === 'string') &&
     (value.readyStatusLabel == null || typeof value.readyStatusLabel === 'string') &&
     (value.draftStatusLabel == null || typeof value.draftStatusLabel === 'string') &&
     (value.authoringTagLabel == null || typeof value.authoringTagLabel === 'string') &&

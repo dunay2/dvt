@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { CSSProperties, ReactElement } from 'react';
-import { Clock, Code, Info, Loader2, Settings, Table } from 'lucide-react';
+import { Clock, Code, Info, Loader2, Table } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 import { Badge } from '../../components/ui/badge';
@@ -54,7 +54,6 @@ const DBT_INSPECTOR_COPY = {
     dependencies: 'Dependencies',
     compiledSql: 'Compiled SQL',
     noCompiledSql: 'No compiled SQL available',
-    configuration: 'Config',
     noColumnMetadata: 'No column metadata available.',
     nullable: 'nullable',
     notNull: 'not null',
@@ -84,7 +83,6 @@ const DBT_INSPECTOR_COPY = {
     dependencies: 'Dependencias',
     compiledSql: 'SQL compilado',
     noCompiledSql: 'No hay SQL compilado disponible',
-    configuration: 'Configuración',
     noColumnMetadata: 'No hay metadatos de columnas disponibles.',
     nullable: 'admite nulos',
     notNull: 'no nulo',
@@ -383,20 +381,6 @@ function DbtSqlPanel({ node }: InspectorPanelProps) {
       <h3 className={inspectorVisualClasses.inspectorTitle}>{copy.compiledSql}</h3>
       <pre className={inspectorVisualClasses.inspectorCodeBlock}>
         {compiledSql ?? copy.noCompiledSql}
-      </pre>
-    </Card>
-  );
-}
-
-function DbtConfigPanel({ node }: InspectorPanelProps) {
-  const copy = useDbtInspectorCopy();
-  const config = meta<Record<string, unknown>>(node, 'config') ?? { materialized: 'table' };
-
-  return (
-    <Card className={inspectorVisualClasses.inspectorCard}>
-      <h3 className={inspectorVisualClasses.inspectorTitle}>{copy.configuration}</h3>
-      <pre className={inspectorVisualClasses.inspectorCodeText}>
-        {JSON.stringify(config, null, 2)}
       </pre>
     </Card>
   );
@@ -706,19 +690,6 @@ export const dbtInspectorPanels: InspectorPanelContribution[] = [
     order: 20,
     shouldShow: (node) => node.pluginId === DBT_PLUGIN_ID && node.metadata?.compiledSql != null,
     component: DbtSqlPanel,
-  },
-  {
-    id: 'dbt.config',
-    pluginId: DBT_PLUGIN_ID,
-    label: {
-      key: 'dbt.inspector.config',
-      fallback: 'Configuration',
-      translations: { es: 'Configuración' },
-    },
-    icon: Settings,
-    order: 30,
-    shouldShow: (node) => node.pluginId === DBT_PLUGIN_ID,
-    component: DbtConfigPanel,
   },
   {
     id: 'dbt.columns',

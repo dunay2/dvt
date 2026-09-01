@@ -13,6 +13,11 @@ import { DbtSourceAuthoringSection } from './DbtSourceAuthoringSection';
 import { DbtTestAuthoringSection } from './DbtTestAuthoringSection';
 import { buildDbtAuthoringModelProjection } from './dbtAuthoringFieldsModel';
 import { buildDbtTestAuthoringFieldsModel } from './dbtTestAuthoringFieldsModel';
+import {
+  applyDbtNodeAuthoringMetadata,
+  createDbtNodeAuthoringMetadata,
+  reconcileDbtModelConnectedOrigin,
+} from './canvasDbtAuthoringModel';
 
 type DbtAuthoringFieldsProps = Readonly<{
   node: CanonicalNode;
@@ -23,6 +28,7 @@ type DbtAuthoringFieldsProps = Readonly<{
   errors: ReturnType<typeof validateCanvasInspectorNodeDraft>;
   section?: 'general' | 'code';
   onChange: Dispatch<SetStateAction<ReturnType<typeof createCanvasInspectorNodeDraft>>>;
+  onCommitModelChange?: (draft: ReturnType<typeof createCanvasInspectorNodeDraft>) => void;
 }>;
 
 export function DbtAuthoringFields({
@@ -34,6 +40,7 @@ export function DbtAuthoringFields({
   errors,
   section = 'general',
   onChange,
+  onCommitModelChange,
 }: DbtAuthoringFieldsProps): JSX.Element | null {
   if (node.kind === 'dbt:test' && draft.dbtTest) {
     if (section === 'code') return null;
@@ -89,6 +96,23 @@ export function DbtAuthoringFields({
       'dbt:model': canvasViewCopy.inspectorDbtOriginKindModelLabel,
     },
   });
+  const commitModelChange = (nextDbt: typeof draft.dbt): void => {
+    if (nextDbt == null) return;
+    const reconciledNode = reconcileDbtModelConnectedOrigin({
+      node: applyDbtNodeAuthoringMetadata(node, nextDbt),
+      nodes,
+      edges,
+    });
+    const nextDraft = {
+      ...draft,
+      dbt: createDbtNodeAuthoringMetadata(reconciledNode),
+    };
+    if (onCommitModelChange != null) {
+      onCommitModelChange(nextDraft);
+      return;
+    }
+    onChange(nextDraft);
+  };
 
   return section === 'code' ? (
     <DbtModelCodeAuthoringSection
@@ -106,6 +130,7 @@ export function DbtAuthoringFields({
       errors={errors.dbt}
       projection={projection}
       onChange={onChange}
+      onCommitChange={commitModelChange}
     />
   );
 }

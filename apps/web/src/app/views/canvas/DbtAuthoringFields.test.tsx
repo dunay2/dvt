@@ -178,6 +178,22 @@ describe('DbtAuthoringFields', () => {
     expect(draftJson()).toContain('"materialized":"table"');
   });
 
+  it('shows the sole real connected origin without requiring duplicate selection metadata', () => {
+    const source = buildDbtSourceNode('source-a', 'Raw Orders', 'raw');
+    const model = buildDbtModelNode();
+
+    renderFields(
+      model,
+      [source, model],
+      [{ id: 'edge-a-model', sourceId: source.id, targetId: model.id, relation: 'lineage' }]
+    );
+
+    const originSelect = container.querySelector('select[name="dbt-origin"]') as HTMLSelectElement;
+
+    expect(originSelect.value).toBe(source.id);
+    expect(originSelect.selectedOptions[0]?.textContent).toBe('Raw Orders (source)');
+  });
+
   it('authors an executable DBT validation against connected model columns', () => {
     const model = buildDbtModelNode();
     const test = buildDbtTestNode();

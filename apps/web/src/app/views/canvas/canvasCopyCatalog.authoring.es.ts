@@ -82,7 +82,6 @@ export const canvasViewAuthoringCopyEs = {
     'El documento Substrait canónico no existe o no es válido.',
   nodePresentationCodeUnavailableMessage:
     'No hay código inline ni archivo del workspace registrado para este nodo.',
-  nodePresentationActionsLabel: 'Más acciones del nodo',
   nodePresentationReadyStatusLabel: 'Listo',
   nodePresentationDraftStatusLabel: 'Borrador',
   nodePresentationAuthoringTagLabel: 'En edición',

@@ -161,15 +161,18 @@ describe('nodePropertiesReadModel', () => {
       'Código',
       'Resumen',
     ]);
-    expect(sectionById(model, 'general').rows).toEqual(
+    expect(sectionById(model, 'general').rows.map((row) => row.id)).not.toEqual(
+      expect.arrayContaining(['node-id', 'kind', 'role', 'status', 'plugin'])
+    );
+    expect(sectionById(model, 'summary').rows).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: 'node-id', label: 'ID del nodo' }),
         expect.objectContaining({ id: 'kind', label: 'Tipo' }),
+        expect.objectContaining({ id: 'role', label: 'Rol' }),
         expect.objectContaining({ id: 'status', label: 'Estado', value: 'Inactivo' }),
+        expect.objectContaining({ id: 'plugin', label: 'Plugin' }),
+        expect.objectContaining({ id: 'tags', label: 'Etiquetas' }),
       ])
-    );
-    expect(sectionById(model, 'summary').rows).toEqual(
-      expect.arrayContaining([expect.objectContaining({ id: 'tags', label: 'Etiquetas' })])
     );
     expect(sectionById(model, 'keys').emptyState).toBe('No hay claves registradas para este nodo.');
     expect(sectionById(model, 'columns').columnLabels).toMatchObject({

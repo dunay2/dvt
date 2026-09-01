@@ -124,6 +124,61 @@ function buildDbtModelNode(id = 'model-orders', name = 'Orders Model'): Canonica
 }
 
 describe('dbtAuthoringFieldsModel', () => {
+  it('uses the sole connected origin when no redundant selection metadata exists', () => {
+    const source = buildWarehouseSourceNode('warehouse-orders', 'Imported Orders');
+    const model = buildDbtModelNode();
+
+    const projection = buildDbtAuthoringModelProjection({
+      node: model,
+      nodes: [source, model],
+      edges: [
+        {
+          id: 'edge-warehouse-model',
+          sourceId: source.id,
+          targetId: model.id,
+          relation: 'lineage',
+        },
+      ],
+      authoringMetadata: createDbtNodeAuthoringMetadata(model),
+      kindLabels: {
+        'dbt:source': 'Source',
+        'dbt:model': 'Model',
+      },
+    });
+
+    expect(projection.selectedOriginId).toBe(source.id);
+    expect(projection.modelArtifact?.origin.nodeId).toBe(source.id);
+  });
+
+  it('ignores stale selection metadata when one real connected origin remains', () => {
+    const source = buildWarehouseSourceNode('warehouse-orders', 'Imported Orders');
+    const model = buildDbtModelNode();
+
+    const projection = buildDbtAuthoringModelProjection({
+      node: model,
+      nodes: [source, model],
+      edges: [
+        {
+          id: 'edge-warehouse-model',
+          sourceId: source.id,
+          targetId: model.id,
+          relation: 'lineage',
+        },
+      ],
+      authoringMetadata: {
+        ...createDbtNodeAuthoringMetadata(model),
+        selectedSourceId: 'detached-source',
+      },
+      kindLabels: {
+        'dbt:source': 'Source',
+        'dbt:model': 'Model',
+      },
+    });
+
+    expect(projection.selectedOriginId).toBe(source.id);
+    expect(projection.modelArtifact?.origin.nodeId).toBe(source.id);
+  });
+
   it('projects connected dbt origins in graph order and requires an explicit selection', () => {
     const sourceA = buildDbtSourceNode('source-a', 'Raw Orders', 'raw');
     const sourceB = buildDbtSourceNode('source-b', 'Staging Orders', 'staging');

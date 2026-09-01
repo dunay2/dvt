@@ -22,7 +22,7 @@ those failures instead of presenting only the final happy path.
 - `AGENTS.md`
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `docs/guides/ai-work-protocol.md`
-- `docs/planning/reviews/20260328-lane-c-ai-efficiency-and-cost-review.md`
+- `docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md`
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/planning/state/github-mvp-issue-workflow.md`
 - `docs/architecture/components/web/screen-manuals-and-user-stories.md`

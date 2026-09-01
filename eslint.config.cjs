@@ -142,6 +142,19 @@ module.exports = [
     },
   },
 
+  // Keep strict web lint type-aware without constructing the whole monorepo
+  // TypeScript program. Pre-push and CI still execute the canonical rules;
+  // only the owning project used to supply type information is narrowed.
+  {
+    files: ['apps/web/**/*.{ts,tsx}', 'apps/web/*.{ts,tsx}'],
+    languageOptions: {
+      parserOptions: {
+        project: ['./apps/web/tsconfig.eslint.json'],
+        tsconfigRootDir: __dirname,
+      },
+    },
+  },
+
   // Contracts package: escalate no-explicit-any to error (enforcement replaces bash grep in CI).
   {
     files: ['packages/@dvt/contracts/src/**/*.ts'],

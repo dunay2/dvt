@@ -259,28 +259,42 @@ function renderNodePanel(
     onApplyNodeDraft: vi.fn(),
   },
   preferredTabRequestId = 1,
-  primarySectionIds?: readonly CanvasNodeWorkbenchSectionPolicyId[]
+  primarySectionIds?: readonly CanvasNodeWorkbenchSectionPolicyId[],
+  graph?: Readonly<{
+    nodes?: readonly CanonicalNode[];
+    edges?: readonly CanonicalEdge[];
+  }>
 ): void {
   act(() => {
     root.render(
       <CanvasNodeWorkbenchPanel
         node={node}
-        nodes={[SOURCE_NODE, MODEL_NODE, CONNECTED_TEST_NODE, DVT_TRANSFORM_NODE, DVT_SINK_NODE]}
-        edges={[
-          ...EDGES,
-          {
-            id: 'edge-model-test',
-            sourceId: MODEL_NODE.id,
-            targetId: CONNECTED_TEST_NODE.id,
-            relation: 'validation',
-          },
-          {
-            id: 'edge-source-transform',
-            sourceId: SOURCE_NODE.id,
-            targetId: DVT_TRANSFORM_NODE.id,
-            relation: 'lineage',
-          },
-        ]}
+        nodes={
+          graph?.nodes ?? [
+            SOURCE_NODE,
+            MODEL_NODE,
+            CONNECTED_TEST_NODE,
+            DVT_TRANSFORM_NODE,
+            DVT_SINK_NODE,
+          ]
+        }
+        edges={
+          graph?.edges ?? [
+            ...EDGES,
+            {
+              id: 'edge-model-test',
+              sourceId: MODEL_NODE.id,
+              targetId: CONNECTED_TEST_NODE.id,
+              relation: 'validation',
+            },
+            {
+              id: 'edge-source-transform',
+              sourceId: SOURCE_NODE.id,
+              targetId: DVT_TRANSFORM_NODE.id,
+              relation: 'lineage',
+            },
+          ]
+        }
         activeRunId={null}
         registeredPlugins={new Set()}
         preferredTabId={preferredTabId}
@@ -603,8 +617,19 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(readonlyLabels).not.toContain('Schema');
     expect(readonlyLabels).not.toContain('Table');
     expect(readonlyLabels).not.toContain('Source');
-    expect(generalSection?.textContent).toContain('Node ID');
+    expect(generalSection?.textContent).not.toContain('Node ID');
+    expect(generalSection?.textContent).not.toContain('Plugin');
     expect(generalSection?.textContent).toContain('Rows');
+
+    renderPanel(root, 'summary');
+    const summarySection = container.querySelector(
+      '[data-slot="canvas-node-workbench-summary-section"]'
+    );
+    expect(summarySection?.textContent).toContain('Node ID');
+    expect(summarySection?.textContent).toContain('Kind');
+    expect(summarySection?.textContent).toContain('Role');
+    expect(summarySection?.textContent).toContain('Status');
+    expect(summarySection?.textContent).toContain('Plugin');
   });
 
   it('renders DVT transform upstream columns as read-only facts inside the Columns tab', () => {
@@ -768,6 +793,135 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(codeSection?.querySelector('pre')).toBeNull();
     expect(codeSection?.querySelectorAll('[data-testid="monaco-code-editor"]')).toHaveLength(1);
     expect(codeSection?.textContent).not.toContain('No properties are recorded for this section.');
+  });
+
+  it('persists DBT model selections immediately without Apply or Cancel controls', () => {
+    const alternateSource: CanonicalNode = {
+      ...SOURCE_NODE,
+      id: 'source.customers',
+      name: 'Customers Source',
+      metadata: {
+        ...SOURCE_NODE.metadata,
+        tableName: 'customers',
+      },
+    };
+    const onApplyNodeDraft = vi.fn();
+
+    renderNodePanel(
+      root,
+      MODEL_NODE,
+      'general',
+      { canEditNode: true, onApplyNodeDraft },
+      1,
+      undefined,
+      {
+        nodes: [SOURCE_NODE, alternateSource, MODEL_NODE],
+        edges: [
+          ...EDGES,
+          {
+            id: 'edge-alternate-model',
+            sourceId: alternateSource.id,
+            targetId: MODEL_NODE.id,
+            relation: 'lineage',
+          },
+        ],
+      }
+    );
+
+    const materializedSelect = container.querySelector(
+      'select[name="dbt-materialized"]'
+    ) as HTMLSelectElement;
+    const originSelect = container.querySelector('select[name="dbt-origin"]') as HTMLSelectElement;
+
+    act(() => {
+      fireEvent.change(materializedSelect, { target: { value: 'incremental' } });
+    });
+
+    expect(onApplyNodeDraft).toHaveBeenCalledTimes(1);
+    expect(onApplyNodeDraft).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        dbt: expect.objectContaining({ materialized: 'incremental' }),
+      })
+    );
+
+    act(() => {
+      fireEvent.change(originSelect, { target: { value: alternateSource.id } });
+    });
+
+    expect(onApplyNodeDraft).toHaveBeenCalledTimes(2);
+    expect(onApplyNodeDraft).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        dbt: expect.objectContaining({
+          materialized: 'incremental',
+          selectedSourceId: alternateSource.id,
+        }),
+      })
+    );
+
+    const packageInput = container.querySelector('input[name="dbt-package"]') as HTMLInputElement;
+    act(() => {
+      fireEvent.focus(packageInput);
+      fireEvent.input(packageInput, { target: { value: 'finance' } });
+    });
+    expect(
+      Array.from(container.querySelectorAll('button')).some((button) =>
+        ['Apply', 'Cancel'].includes(button.textContent?.trim() ?? '')
+      )
+    ).toBe(false);
+
+    act(() => {
+      fireEvent.focusOut(packageInput);
+    });
+    expect(onApplyNodeDraft).toHaveBeenCalledTimes(3);
+    expect(onApplyNodeDraft).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        dbt: expect.objectContaining({
+          packageName: 'finance',
+          materialized: 'incremental',
+          selectedSourceId: alternateSource.id,
+        }),
+      })
+    );
+  });
+
+  it('shows the connected origin schema consistently in the DBT model inspector', () => {
+    const source: CanonicalNode = {
+      ...SOURCE_NODE,
+      metadata: {
+        ...SOURCE_NODE.metadata,
+        schema: 'dvt',
+      },
+    };
+    const model: CanonicalNode = {
+      ...MODEL_NODE,
+      metadata: {
+        ...MODEL_NODE.metadata,
+        config: { schema: 'raw', table: 'model_1', materialized: 'view' },
+        dbt: { schemaName: 'raw', tableName: 'model_1', materialized: 'view' },
+      },
+    };
+
+    renderNodePanel(
+      root,
+      model,
+      'general',
+      { canEditNode: true, onApplyNodeDraft: vi.fn() },
+      1,
+      undefined,
+      { nodes: [source, model], edges: EDGES }
+    );
+
+    const generalSection = container.querySelector(
+      '[data-slot="canvas-node-workbench-general-section"]'
+    );
+    const originSelect = generalSection?.querySelector(
+      'select[name="dbt-origin"]'
+    ) as HTMLSelectElement;
+
+    expect(originSelect.value).toBe(source.id);
+    expect(generalSection?.textContent).toContain('Schema');
+    expect(generalSection?.textContent).toContain('dvt');
+    expect(generalSection?.textContent).not.toContain('Select a connected origin');
   });
 
   it('preserves an empty DBT SQL draft across equivalent graph-node projections', () => {

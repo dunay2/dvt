@@ -1,6 +1,6 @@
 /** Owned concern: adapt Canvas context gestures to governed menu models and command callbacks. */
 import type { Edge, ReactFlowProps, Node as FlowNode } from '@xyflow/react';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import { flushSync } from 'react-dom';
 
@@ -37,6 +37,7 @@ export function useCanvasContextMenuPresenter({
   onOpenCanvasSettings,
 }: UseCanvasContextMenuPresenterArgs): UseCanvasContextMenuPresenterResult {
   const [model, setModel] = useState<CanvasContextMenuModel | null>(null);
+  const [keyboardMenuOpen, setKeyboardMenuOpen] = useState(false);
   const {
     menuRef,
     contextSurfaceRef,
@@ -46,12 +47,23 @@ export function useCanvasContextMenuPresenter({
     handlePaneClick,
   } = useCanvasContextMenuLifecycle({ model, setModel });
 
+  useEffect(() => {
+    if (model == null || model.surface === 'add-node-catalog') {
+      setKeyboardMenuOpen(false);
+    }
+  }, [model]);
+
   const openCanvasContextMenu = useCallback(
     (
       screenPosition: CanvasContextMenuPosition,
-      options: Readonly<{ opener?: HTMLElement; suppressPointerEcho?: boolean }> = {}
+      options: Readonly<{
+        opener?: HTMLElement;
+        suppressPointerEcho?: boolean;
+        keyboard?: boolean;
+      }> = {}
     ) => {
       const flowPosition = screenToFlowPosition(screenPosition);
+      setKeyboardMenuOpen(options.keyboard === true);
 
       markContextMenuOpened({
         targetKind: 'pane',
@@ -90,6 +102,7 @@ export function useCanvasContextMenuPresenter({
   const openAddNodeCatalog = useCallback(
     (screenPosition: CanvasContextMenuPosition, opener?: HTMLElement) => {
       const flowPosition = screenToFlowPosition(screenPosition);
+      setKeyboardMenuOpen(false);
       const sourceModel = buildCanvasContextMenuModel({
         target: {
           kind: 'pane',
@@ -148,32 +161,17 @@ export function useCanvasContextMenuPresenter({
         return;
       }
 
-      openCanvasContextMenu(position, { opener: event.currentTarget });
-      event.currentTarget.dispatchEvent(
-        new MouseEvent('contextmenu', {
-          bubbles: true,
-          cancelable: true,
-          button: 2,
-          buttons: 2,
-          clientX: position.x,
-          clientY: position.y,
-        })
-      );
+      openCanvasContextMenu(position, { keyboard: true, opener: event.currentTarget });
     },
     [openCanvasContextMenu]
   );
 
   const handleViewportContextMenuEvent = useCallback(
     (event: ContextMenuEvent) => {
-      const sourceEvent = event.nativeEvent ?? event;
       const targetsNodeShell =
         event.target instanceof Element &&
         event.target.closest('[data-slot="canvas-node-shell"]') != null;
-      if (
-        (sourceEvent as MouseEvent & Readonly<{ dvtNodeActionsRequest?: boolean }>)
-          .dvtNodeActionsRequest === true ||
-        targetsNodeShell
-      ) {
+      if (targetsNodeShell) {
         return;
       }
 
@@ -205,6 +203,7 @@ export function useCanvasContextMenuPresenter({
   const handleEdgeContextMenu: NonNullable<ReactFlowProps<FlowNode, Edge>['onEdgeContextMenu']> =
     useCallback(
       (event, edge) => {
+        setKeyboardMenuOpen(false);
         markContextMenuOpened({ targetKind: 'edge' });
         flushSync(() => {
           setModel(
@@ -233,6 +232,7 @@ export function useCanvasContextMenuPresenter({
           canCreateAuthoringNodes: canEditEdges,
         });
         if (catalogModel != null) {
+          setKeyboardMenuOpen(false);
           setModel(catalogModel);
           return;
         }
@@ -282,6 +282,7 @@ export function useCanvasContextMenuPresenter({
 
   return {
     model,
+    keyboardMenuOpen,
     menuRef,
     contextSurfaceRef,
     closeContextMenu,

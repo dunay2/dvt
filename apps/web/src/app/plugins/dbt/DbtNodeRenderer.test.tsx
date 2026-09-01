@@ -39,10 +39,10 @@ describe('DbtNodeRenderer history panel', () => {
     expect(dbtInspectorPanels.map((panel) => resolveString(panel.label, 'es'))).toEqual([
       'Vista general',
       'SQL',
-      'Configuración',
       'Columnas',
       'Historial',
     ]);
+    expect(dbtInspectorPanels.some((panel) => panel.id === 'dbt.config')).toBe(false);
   });
 
   const buildSnapshot = (runId: string): RunSnapshot => ({
@@ -174,14 +174,11 @@ describe('DbtNodeRenderer history panel', () => {
   it('localizes contributed Inspector content and empty history in Spanish', async () => {
     useApplicationLanguageStore.setState({ language: 'es' });
     const overviewPanel = dbtInspectorPanels.find((panel) => panel.id === 'dbt.overview');
-    const configPanel = dbtInspectorPanels.find((panel) => panel.id === 'dbt.config');
     expect(overviewPanel).toBeDefined();
-    expect(configPanel).toBeDefined();
-    if (!overviewPanel || !configPanel) {
+    if (!overviewPanel) {
       throw new Error('EXPECTED_DBT_LOCALIZED_PANELS');
     }
     const OverviewPanel = overviewPanel.component;
-    const ConfigPanel = configPanel.component;
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -207,11 +204,6 @@ describe('DbtNodeRenderer history panel', () => {
             activeRunId={null}
             onClose={vi.fn()}
           />
-          <ConfigPanel
-            node={buildNode({ metadata: { config: { materialized: 'view' } } })}
-            activeRunId={null}
-            onClose={vi.fn()}
-          />
         </>
       );
     });
@@ -225,7 +217,7 @@ describe('DbtNodeRenderer history panel', () => {
     expect(document.body.textContent).toContain('Descripción');
     expect(document.body.textContent).toContain('Etiquetas');
     expect(document.body.textContent).toContain('Dependencias');
-    expect(document.body.textContent).toContain('Configuración');
+    expect(document.body.textContent).not.toContain('Configuración');
     expect(document.body.textContent).not.toMatch(/Package|Path|Status|Idle|Tags/);
 
     act(() => {
@@ -279,7 +271,7 @@ describe('DbtNodeRenderer history panel', () => {
     );
     expect(
       document.querySelector('[data-slot="graph-node-card-title"]')?.getAttribute('title')
-    ).toBe('fct_orders');
+    ).toBeNull();
     expect(document.body.textContent).toContain('analytics');
     expect(document.body.textContent).toContain('Mat.');
     expect(document.body.textContent).toContain('Deps');
@@ -289,6 +281,17 @@ describe('DbtNodeRenderer history panel', () => {
         '[data-slot="graph-node-metric-hotspot"][aria-label="Mat.: incremental"]'
       )?.textContent
     ).toBe('incremental');
+    expect(
+      document.querySelector('[data-slot="graph-node-summary-icon"]')?.getAttribute('data-icon')
+    ).toBe('refresh');
+    expect(
+      document.querySelector('[data-slot="graph-node-metric-row"][data-placement="header"]')
+        ?.textContent
+    ).toBe('Mat.incremental');
+    expect(
+      document.querySelector('[data-slot="graph-node-metric-row"][data-placement="body"]')
+        ?.textContent
+    ).toBe('Deps2');
     expect(
       document.querySelector('[data-slot="graph-node-metric-hotspot"][aria-label="Deps: 2"]')
         ?.textContent
@@ -419,12 +422,40 @@ describe('DbtNodeRenderer history panel', () => {
     });
 
     expect(container.querySelector('[data-slot="graph-node-card-play"]')).toBeNull();
-    expect(container.querySelector('[data-slot="graph-node-card-actions"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="graph-node-card-actions"]')).toBeNull();
     expect(container.querySelector('[data-slot="graph-node-card-title"]')?.textContent).toBe(
       'Fct Orders'
     );
     expect(container.querySelector('[data-slot="graph-node-card-kind"]')).toBeNull();
     expect(toggleNodeSelection).not.toHaveBeenCalled();
+  });
+
+  it('keeps Rows and Size visible when a model has not been calculated', async () => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    (
+      globalThis as typeof globalThis & {
+        IS_REACT_ACT_ENVIRONMENT?: boolean;
+      }
+    ).IS_REACT_ACT_ENVIRONMENT = true;
+
+    await act(async () => {
+      root?.render(
+        <DbtNodeRenderer
+          node={buildNode({ id: 'model_orders', name: 'fct_orders' })}
+          selected={false}
+          hovered={false}
+          overlayDecoration={null}
+          badges={[]}
+          graphNodeCardStrategies={[dbtGraphNodeCardStrategy]}
+          data={{}}
+        />
+      );
+    });
+
+    expect(container.textContent).toContain('RowsNot calculated');
+    expect(container.textContent).toContain('SizeNot calculated');
   });
 
   it('renders node-scoped runtime events for the active run', async () => {

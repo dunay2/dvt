@@ -79,21 +79,24 @@ describe('Graph node card strategy architecture', () => {
     expect(DEFAULT_STRATEGY_SOURCE).toContain('matches: () => true');
   });
 
-  it('keeps shared graph card copy in component-owned tokens instead of strategy literals', () => {
+  it('keeps shared operational copy in component-owned tokens and retires action-button copy', () => {
     const copyTokensPath = path.resolve(import.meta.dirname, 'graphNodeCardCopyTokens.ts');
 
     expect(existsSync(copyTokensPath), 'graphNodeCardCopyTokens.ts must exist').toBe(true);
 
     const copyTokensSource = readFileSync(copyTokensPath, 'utf8');
 
-    expect(copyTokensSource).toContain('graphNodeCardCopyTokens');
-    expect(copyTokensSource).toContain('nodeActionsLabel');
+    expect(copyTokensSource).toContain('resolveGraphNodeCardCopy');
+    expect(copyTokensSource).not.toContain('nodeActionsLabel');
 
     for (const source of [DEFAULT_STRATEGY_SOURCE, DBT_STRATEGY_SOURCE, DVT_STRATEGY_SOURCE]) {
-      expect(source).toContain('graphNodeCardCopyTokens.nodeActionsLabel');
+      expect(source).not.toContain('nodeActionsLabel');
       expect(source).not.toContain("'Más acciones del nodo'");
       expect(source).not.toContain('"Más acciones del nodo"');
     }
+
+    expect(DBT_STRATEGY_SOURCE).toContain('resolveGraphNodeCardCopy');
+    expect(DVT_STRATEGY_SOURCE).toContain('resolveGraphNodeCardCopy');
   });
 
   it('keeps graph card markup in a shared presentational view', () => {

@@ -28,6 +28,12 @@ const DEFAULT_SCHEMA_NAME = 'raw';
 const DEFAULT_MATERIALIZATION = 'view';
 const VALID_MATERIALIZATIONS = new Set(['view', 'table', 'incremental', 'ephemeral']);
 
+type ReconcileDbtModelConnectedOriginArgs = Readonly<{
+  node: CanonicalNode;
+  nodes: readonly CanonicalNode[];
+  edges: readonly Pick<CanonicalEdge, 'sourceId' | 'targetId'>[];
+}>;
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
@@ -72,8 +78,9 @@ export function createDbtNodeAuthoringMetadata(node: CanonicalNode): DbtNodeAuth
     readString(configMetadata?.sourceName) ??
     normalizeIdentifier(node.name, 'source');
   const tableName =
-    readString(dbtMetadata?.tableName) ??
     readString(configMetadata?.table) ??
+    readString(configMetadata?.tableName) ??
+    readString(dbtMetadata?.tableName) ??
     readString(configMetadata?.alias) ??
     normalizeIdentifier(node.name, 'table');
 
@@ -84,8 +91,8 @@ export function createDbtNodeAuthoringMetadata(node: CanonicalNode): DbtNodeAuth
       DEFAULT_PACKAGE_NAME,
     sourceName: normalizeIdentifier(sourceName, 'source'),
     schemaName:
-      readString(dbtMetadata?.schemaName) ??
       readString(configMetadata?.schema) ??
+      readString(dbtMetadata?.schemaName) ??
       DEFAULT_SCHEMA_NAME,
     tableName: normalizeIdentifier(tableName, 'table'),
     materialized: normalizeMaterialized(
@@ -130,6 +137,69 @@ export function applyDbtNodeAuthoringMetadata(
       },
     },
   };
+}
+
+function isCompatibleDbtModelOrigin(node: CanonicalNode): boolean {
+  return (
+    (node.pluginId === 'dbt' && (node.kind === 'dbt:source' || node.kind === 'dbt:model')) ||
+    (node.pluginId === 'dvt.warehouse-source' && node.kind === 'dvt:source') ||
+    (node.pluginId === 'dvt.object-file-postgres' && node.kind === 'dvt:object_file_load')
+  );
+}
+
+function resolveDbtModelOriginSchemaName(node: CanonicalNode): string | undefined {
+  const configMetadata = readNodeMetadataRecord(node, 'config');
+  const dbtMetadata = readNodeMetadataRecord(node, 'dbt');
+  const objectFileMetadata = readNodeMetadataRecord(node, 'objectFilePostgres');
+  const objectFileTarget = isRecord(objectFileMetadata?.target)
+    ? objectFileMetadata.target
+    : undefined;
+
+  return (
+    readString(configMetadata?.schema) ??
+    readString(dbtMetadata?.schemaName) ??
+    readString(node.metadata?.schema) ??
+    readString(objectFileTarget?.schema)
+  );
+}
+
+export function reconcileDbtModelConnectedOrigin({
+  node,
+  nodes,
+  edges,
+}: ReconcileDbtModelConnectedOriginArgs): CanonicalNode {
+  if (node.pluginId !== 'dbt' || node.kind !== 'dbt:model') return node;
+
+  const nodeById = new Map(nodes.map((candidate) => [candidate.id, candidate]));
+  const connectedOrigins = edges
+    .filter((edge) => edge.targetId === node.id)
+    .map((edge) => nodeById.get(edge.sourceId))
+    .filter((candidate): candidate is CanonicalNode =>
+      candidate == null ? false : isCompatibleDbtModelOrigin(candidate)
+    );
+  const authoringMetadata = createDbtNodeAuthoringMetadata(node);
+  const selectedOrigin =
+    connectedOrigins.find((candidate) => candidate.id === authoringMetadata.selectedSourceId) ??
+    (connectedOrigins.length === 1 ? connectedOrigins[0] : undefined);
+  if (selectedOrigin == null) return node;
+
+  const originSchemaName = resolveDbtModelOriginSchemaName(selectedOrigin);
+  const schemaName =
+    authoringMetadata.schemaName === DEFAULT_SCHEMA_NAME && originSchemaName != null
+      ? originSchemaName
+      : authoringMetadata.schemaName;
+  if (
+    authoringMetadata.selectedSourceId === selectedOrigin.id &&
+    authoringMetadata.schemaName === schemaName
+  ) {
+    return node;
+  }
+
+  return applyDbtNodeAuthoringMetadata(node, {
+    ...authoringMetadata,
+    schemaName,
+    selectedSourceId: selectedOrigin.id,
+  });
 }
 
 function findConnectedSourceNode(args: {

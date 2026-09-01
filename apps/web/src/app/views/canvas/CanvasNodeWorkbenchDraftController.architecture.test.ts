@@ -40,7 +40,7 @@ describe('Canvas node workbench draft controller architecture', () => {
       'import type { CanvasNodeWorkbenchDraftController }'
     );
     expect(AUTHORING_SECTION_SOURCE).toContain('authoring.onApplyNodeDraft(draft)');
-    expect(AUTHORING_SECTION_SOURCE).toContain('draftController.onDraftSubmitted()');
+    expect(AUTHORING_SECTION_SOURCE).toContain('draftController.onDraftSubmitted(draft)');
     expect(AUTHORING_SECTION_SOURCE).not.toContain('useState(');
     expect(AUTHORING_SECTION_SOURCE).not.toContain('createCanvasInspectorNodeDraft');
   });

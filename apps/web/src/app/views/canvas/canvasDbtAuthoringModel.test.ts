@@ -4,6 +4,7 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
   applyDbtNodeAuthoringMetadata,
   createDbtNodeAuthoringMetadata,
+  reconcileDbtModelConnectedOrigin,
   resolveDbtSourceRelationshipSelection,
 } from './canvasDbtAuthoringModel';
 
@@ -68,6 +69,91 @@ describe('canvas dbt authoring model', () => {
       materialized: 'view',
       selectedSourceId: '',
       modelSql: null,
+    });
+  });
+
+  it('uses canonical config relation fields when duplicated dbt metadata is stale', () => {
+    const model = buildDbtModelNode();
+
+    expect(
+      createDbtNodeAuthoringMetadata({
+        ...model,
+        metadata: {
+          ...model.metadata,
+          config: {
+            schema: 'mart',
+            table: 'orders_current',
+          },
+          dbt: {
+            packageName: 'analytics',
+            schemaName: 'raw',
+            tableName: 'stale_orders',
+            materialized: 'view',
+          },
+        },
+      })
+    ).toMatchObject({
+      schemaName: 'mart',
+      tableName: 'orders_current',
+    });
+  });
+
+  it('inherits the real connected origin schema while the model still has the default schema', () => {
+    const model = applyDbtNodeAuthoringMetadata(buildDbtModelNode(), {
+      ...createDbtNodeAuthoringMetadata(buildDbtModelNode()),
+      schemaName: 'raw',
+      selectedSourceId: '',
+    });
+    const source: CanonicalNode = {
+      id: 'warehouse-orders',
+      name: 'Warehouse Orders',
+      pluginId: 'dvt.warehouse-source',
+      kind: 'dvt:source',
+      role: 'input',
+      status: 'idle',
+      tags: [],
+      metadata: { schema: 'dvt', tableName: 'orders' },
+    };
+
+    const reconciled = reconcileDbtModelConnectedOrigin({
+      node: model,
+      nodes: [source, model],
+      edges: [{ sourceId: source.id, targetId: model.id }],
+    });
+
+    expect(reconciled.metadata).toMatchObject({
+      config: { schema: 'dvt', table: 'orders_current' },
+      dbt: { schemaName: 'dvt', selectedSourceId: source.id },
+    });
+  });
+
+  it('preserves an explicit model schema instead of replacing it with the origin schema', () => {
+    const model = applyDbtNodeAuthoringMetadata(buildDbtModelNode(), {
+      ...createDbtNodeAuthoringMetadata(buildDbtModelNode()),
+      schemaName: 'mart',
+      selectedSourceId: '',
+    });
+    const source: CanonicalNode = {
+      ...buildDbtSourceNode(),
+      metadata: {
+        dbt: {
+          packageName: 'analytics',
+          sourceName: 'raw',
+          schemaName: 'dvt',
+          tableName: 'orders',
+        },
+      },
+    };
+
+    const reconciled = reconcileDbtModelConnectedOrigin({
+      node: model,
+      nodes: [source, model],
+      edges: [buildSourceEdge()],
+    });
+
+    expect(createDbtNodeAuthoringMetadata(reconciled)).toMatchObject({
+      schemaName: 'mart',
+      selectedSourceId: source.id,
     });
   });
 

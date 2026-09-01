@@ -95,7 +95,7 @@ Use these as procedural complements to this file. They do not override rules in
 `AGENTS.md`.
 
 - `docs/guides/ai-work-protocol.md` - phase-based execution procedure.
-- `docs/planning/reviews/20260328-lane-c-ai-efficiency-and-cost-review.md` -
+- `docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md` -
   efficiency and cost-reduction playbook (Lane C).
 - `scripts/hygiene.ps1` - standard diagnostics/cleanup/preflight helper.
 

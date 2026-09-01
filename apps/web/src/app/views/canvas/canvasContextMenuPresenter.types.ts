@@ -51,6 +51,7 @@ export type ContextMenuKeyboardEvent = Pick<
 
 export type UseCanvasContextMenuPresenterResult = Readonly<{
   model: CanvasContextMenuModel | null;
+  keyboardMenuOpen: boolean;
   menuRef: RefObject<HTMLDivElement>;
   contextSurfaceRef: RefObject<HTMLDivElement>;
   closeContextMenu: (options?: CloseCanvasContextMenuOptions) => void;

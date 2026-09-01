@@ -1,9 +1,7 @@
 /** Owned concern: render graph-node card markup from an already-projected card model. */
-import { type CSSProperties, type MouseEvent as ReactMouseEvent, type ReactElement } from 'react';
-import { MoreHorizontal } from 'lucide-react';
+import { type CSSProperties, type ReactElement } from 'react';
 import type { LucideIcon } from 'lucide-react';
 
-import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
 import { cn } from '../../components/ui/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
 import { GraphNodeColumnSection, type GraphNodeColumn } from './GraphNodeColumnSection';
@@ -57,29 +55,6 @@ export type GraphNodeCardViewProps = Readonly<{
   onAutomapColumns?: (nodeId: string, columns: readonly GraphNodeCardColumn[]) => void;
 }>;
 
-function openGovernedNodeActions(event: ReactMouseEvent<HTMLButtonElement>): void {
-  event.preventDefault();
-  event.stopPropagation();
-
-  const trigger = event.currentTarget;
-  const rect = trigger.getBoundingClientRect();
-  const MouseEventConstructor =
-    trigger.ownerDocument.defaultView?.MouseEvent ?? globalThis.MouseEvent;
-  const contextMenuEvent = new MouseEventConstructor('contextmenu', {
-    bubbles: true,
-    cancelable: true,
-    button: 2,
-    clientX: Math.max(8, rect.left),
-    clientY: Math.max(8, rect.bottom),
-  });
-  Object.defineProperty(contextMenuEvent, 'dvtNodeActionsRequest', {
-    configurable: false,
-    enumerable: false,
-    value: true,
-  });
-  trigger.dispatchEvent(contextMenuEvent);
-}
-
 function GraphNodeCardTitle({ cardModel }: { cardModel: GraphNodeCardReadModel }): ReactElement {
   const sourceIdentity = cardModel.sourceIdentity;
   if (sourceIdentity == null) {
@@ -87,7 +62,7 @@ function GraphNodeCardTitle({ cardModel }: { cardModel: GraphNodeCardReadModel }
       <span
         data-slot="graph-node-card-title"
         className={graphNodeCardLayoutClasses.title}
-        title={cardModel.technicalName ?? cardModel.title}
+        title={cardModel.titleDetail ?? undefined}
       >
         {cardModel.title}
       </span>
@@ -167,6 +142,8 @@ export function GraphNodeCardView({
     (cardModel.subtitle !== cardModel.path || !pathIsRepresentedByCodeMetric)
       ? cardModel.subtitle
       : null;
+  const headerMetrics = cardModel.metrics.filter((metric) => metric.placement === 'header');
+  const bodyMetrics = cardModel.metrics.filter((metric) => metric.placement !== 'header');
   const { borderColor: overlayBorderColor, ...cardOverlayStyle } = overlayStyle ?? {};
   const hasCardOverlayStyle = Object.keys(cardOverlayStyle).length > 0;
 
@@ -184,7 +161,7 @@ export function GraphNodeCardView({
       {...(hasCardOverlayStyle ? { style: cardOverlayStyle } : {})}
     >
       <div className={graphNodeCardLayoutClasses.body}>
-        <div className={graphNodeCardLayoutClasses.header}>
+        <div data-slot="graph-node-card-header" className={graphNodeCardLayoutClasses.header}>
           <div className={graphNodeCardLayoutClasses.titleRow}>
             {Icon && (
               <Icon
@@ -199,19 +176,11 @@ export function GraphNodeCardView({
             )}
             <GraphNodeCardTitle cardModel={cardModel} />
           </div>
-          <div className={graphNodeCardLayoutClasses.headerActions}>
-            <button
-              type="button"
-              data-slot="graph-node-card-actions"
-              {...canvasNodeEmbeddedControlProps}
-              aria-label={cardModel.nodeActionsLabel}
-              title={cardModel.nodeActionsLabel}
-              onClick={openGovernedNodeActions}
-              className={graphNodeCardLayoutClasses.actionsButton}
-            >
-              <MoreHorizontal className={graphNodeCardLayoutClasses.actionsIcon} />
-            </button>
-          </div>
+          {headerMetrics.length === 0 ? null : (
+            <div className={graphNodeCardLayoutClasses.headerActions}>
+              <GraphNodeMetricRow metrics={headerMetrics} placement="header" />
+            </div>
+          )}
         </div>
 
         {cardModel.kindLabel != null && (
@@ -220,7 +189,7 @@ export function GraphNodeCardView({
           </div>
         )}
 
-        <GraphNodeMetricRow metrics={cardModel.metrics} onOpenCode={onOpenCode} />
+        <GraphNodeMetricRow metrics={bodyMetrics} onOpenCode={onOpenCode} />
 
         {visibleSubtitle && (
           <div className={graphNodeCardLayoutClasses.path}>{visibleSubtitle}</div>

@@ -89,22 +89,18 @@ describe('CanvasViewport context menus', () => {
     expect(container.querySelector('[data-slot="canvas-add-component-command"]')).toBeNull();
   });
 
-  it('lets native card right-clicks and explicit upper actions reach the node-owned menu', async () => {
+  it('lets native card right-clicks reach the node-owned menu without synthetic events', async () => {
     await renderViewport();
 
     const contextSurface = container.querySelector('[data-slot="canvas-viewport-context-surface"]');
     const node = document.createElement('div');
     node.className = 'react-flow__node';
-    const upperAction = document.createElement('button');
     const nodeShell = document.createElement('div');
     nodeShell.dataset.slot = 'canvas-node-shell';
     const nodeBody = document.createElement('div');
-    const reachedUpperAction = vi.fn();
     const reachedNodeBody = vi.fn();
-    upperAction.addEventListener('contextmenu', reachedUpperAction);
     nodeBody.addEventListener('contextmenu', reachedNodeBody);
     nodeShell.appendChild(nodeBody);
-    node.appendChild(upperAction);
     node.appendChild(nodeShell);
     contextSurface?.appendChild(node);
 
@@ -117,30 +113,6 @@ describe('CanvasViewport context menus', () => {
       nodeBody.dispatchEvent(nativeRightClick);
     });
     expect(reachedNodeBody).toHaveBeenCalledOnce();
-    expect(getMenuText()).toBe('');
-
-    const unmarkedUpperAction = new MouseEvent('contextmenu', {
-      bubbles: true,
-      cancelable: true,
-      button: 2,
-    });
-    let unmarkedDispatchResult = true;
-    await act(async () => {
-      unmarkedDispatchResult = upperAction.dispatchEvent(unmarkedUpperAction);
-    });
-    expect(unmarkedDispatchResult).toBe(false);
-    expect(reachedUpperAction).not.toHaveBeenCalled();
-
-    const upperActionRequest = new MouseEvent('contextmenu', {
-      bubbles: true,
-      cancelable: true,
-      button: 2,
-    });
-    Object.defineProperty(upperActionRequest, 'dvtNodeActionsRequest', { value: true });
-    await act(async () => {
-      upperAction.dispatchEvent(upperActionRequest);
-    });
-    expect(reachedUpperAction).toHaveBeenCalledOnce();
     expect(getMenuText()).toBe('');
   });
 

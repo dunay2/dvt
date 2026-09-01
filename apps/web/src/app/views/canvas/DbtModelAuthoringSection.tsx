@@ -21,6 +21,7 @@ export function DbtModelAuthoringSection({
   errors,
   projection,
   onChange,
+  onCommitChange,
 }: Readonly<{
   node: CanonicalNode;
   disabled: boolean;
@@ -28,6 +29,7 @@ export function DbtModelAuthoringSection({
   errors: CanvasInspectorNodeDraftErrors['dbt'];
   projection: DbtAuthoringModelProjection;
   onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
+  onCommitChange: (draft: DbtNodeAuthoringMetadata) => void;
 }>): JSX.Element {
   const selectClassName = inspectorVisualClasses.inspectorSelectInput;
   const materializedOptions = [
@@ -61,6 +63,7 @@ export function DbtModelAuthoringSection({
                 : undefined,
             }))
           }
+          onBlur={() => onCommitChange(draft)}
         />
         {errors?.packageName ? (
           <p className={inspectorVisualClasses.inspectorErrorText}>
@@ -81,14 +84,7 @@ export function DbtModelAuthoringSection({
             disabled={disabled}
             className={selectClassName}
             aria-invalid={errors?.materialized ? 'true' : undefined}
-            onChange={(event) =>
-              onChange((currentDraft) => ({
-                ...currentDraft,
-                dbt: currentDraft.dbt
-                  ? { ...currentDraft.dbt, materialized: event.target.value }
-                  : undefined,
-              }))
-            }
+            onChange={(event) => onCommitChange({ ...draft, materialized: event.target.value })}
           >
             {materializedOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -110,20 +106,15 @@ export function DbtModelAuthoringSection({
             <select
               id={`inspector-dbt-origin-${node.id}`}
               name="dbt-origin"
-              value={draft.selectedSourceId}
+              value={projection.selectedOriginId}
               disabled={disabled}
               className={selectClassName}
               aria-invalid={errors?.selectedSourceId ? 'true' : undefined}
               onChange={(event) =>
-                onChange((currentDraft) => ({
-                  ...currentDraft,
-                  dbt: currentDraft.dbt
-                    ? { ...currentDraft.dbt, selectedSourceId: event.target.value }
-                    : undefined,
-                }))
+                onCommitChange({ ...draft, selectedSourceId: event.target.value })
               }
             >
-              {draft.selectedSourceId.length === 0 ? (
+              {projection.selectedOriginId.length === 0 ? (
                 <option value="" disabled>
                   {canvasViewCopy.inspectorDbtOriginPlaceholder}
                 </option>
