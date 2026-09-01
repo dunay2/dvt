@@ -9,6 +9,10 @@ import {
   convertDvtVisualTransformToSql,
 } from './canvasDvtTransformAuthoringAuthority';
 import {
+  createDvtSubstraitPilotDraft,
+  encodeDvtSubstraitPilotDocument,
+} from './canvasDvtSubstraitPilot';
+import {
   appendDvtSubstraitInnerJoinInput,
   applyDvtSubstraitInnerJoinGroupedRowNumber,
   applyDvtSubstraitInnerJoinGrouping,
@@ -547,6 +551,64 @@ describe('projectCanvasNodePresentationTruth', () => {
       ].join('\n'),
       path: 'models/transform-orders.sql',
       language: 'sql',
+    });
+  });
+
+  it('projects the canonical Substrait document instead of a generated SQL sibling', () => {
+    const semanticDocument = encodeDvtSubstraitPilotDocument(
+      createDvtSubstraitPilotDraft({
+        sourceNodeId: source.id,
+        targetNodeId: 'transform.substrait',
+      })
+    );
+    const transform = applyDvtSubstraitSemanticDocument(
+      {
+        ...model,
+        id: 'transform.substrait',
+        pluginId: 'dvt',
+        kind: 'dvt:transform',
+        path: 'models/generated-transform.sql',
+        metadata: {},
+      },
+      semanticDocument
+    );
+
+    const truth = projectCanvasNodePresentationTruth({
+      node: transform,
+      nodes: [source, transform],
+      edges: [{ ...edge, targetId: transform.id }],
+    });
+
+    expect(truth.code).toEqual({
+      kind: 'canonical',
+      content: JSON.stringify(semanticDocument, null, 2),
+      language: 'json',
+      schemaVersion: semanticDocument.schemaVersion,
+      digest: semanticDocument.semanticPlan.sha256,
+    });
+  });
+
+  it('fails closed when declared Substrait authority has no valid semantic document', () => {
+    const transform: CanonicalNode = {
+      ...model,
+      id: 'transform.invalid-substrait',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
+      metadata: {
+        sql: 'select * from raw.orders',
+        transformAuthoring: { version: 'v1', mode: 'substrait' },
+      },
+    };
+
+    const truth = projectCanvasNodePresentationTruth({
+      node: transform,
+      nodes: [source, transform],
+      edges: [{ ...edge, targetId: transform.id }],
+    });
+
+    expect(truth.code).toEqual({
+      kind: 'unavailable',
+      reason: 'invalid-canonical-substrait-document',
     });
   });
 

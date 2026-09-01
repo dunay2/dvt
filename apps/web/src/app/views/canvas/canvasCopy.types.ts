@@ -427,6 +427,8 @@ export type CanvasViewCopy = {
   readonly nodePresentationCodeLabel: string;
   readonly nodePresentationWorkspaceCodeDetailTemplate: string;
   readonly nodePresentationGeneratedCodeDetailTemplate: string;
+  readonly nodePresentationCanonicalSubstraitCodeDetailTemplate: string;
+  readonly nodePresentationInvalidCanonicalSubstraitCodeMessage: string;
   readonly nodePresentationCodeUnavailableMessage: string;
   readonly nodePresentationActionsLabel: string;
   readonly nodePresentationReadyStatusLabel: string;

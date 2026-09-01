@@ -25,6 +25,8 @@ export type CanvasNodeColumnTruth = Readonly<{
 
 export type CanvasNodeCodeLanguage = 'sql' | 'yaml' | 'json' | 'text';
 
+export type CanvasNodeCodeUnavailableReason = 'invalid-canonical-substrait-document';
+
 export type CanvasNodeCodeTruth =
   | Readonly<{
       kind: 'inline';
@@ -44,7 +46,15 @@ export type CanvasNodeCodeTruth =
       language: CanvasNodeCodeLanguage;
     }>
   | Readonly<{
+      kind: 'canonical';
+      content: string;
+      language: 'json';
+      schemaVersion: string;
+      digest: string;
+    }>
+  | Readonly<{
       kind: 'unavailable';
+      reason?: CanvasNodeCodeUnavailableReason;
     }>;
 
 export type CanvasNodePresentationTruth = Readonly<{
@@ -72,6 +82,7 @@ export function isCanvasNodePresentationTruth(
     (value.code.kind === 'inline' ||
       value.code.kind === 'workspace-file' ||
       value.code.kind === 'generated' ||
+      value.code.kind === 'canonical' ||
       value.code.kind === 'unavailable')
   );
 }

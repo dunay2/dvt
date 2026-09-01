@@ -216,6 +216,14 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.nodePresentation.generatedCodeDetailTemplate',
     fallback: 'Generated projection at {path}. The node semantic authority is unchanged.',
   },
+  nodePresentationCanonicalSubstraitCodeDetailTemplate: {
+    key: 'canvas.nodePresentation.canonicalSubstraitCodeDetailTemplate',
+    fallback: 'Canonical Substrait document {schemaVersion} · SHA-256 {digest}',
+  },
+  nodePresentationInvalidCanonicalSubstraitCodeMessage: {
+    key: 'canvas.nodePresentation.invalidCanonicalSubstraitCodeMessage',
+    fallback: 'The canonical Substrait document is missing or invalid.',
+  },
   nodePresentationCodeUnavailableMessage: {
     key: 'canvas.nodePresentation.codeUnavailableMessage',
     fallback: 'No inline code or workspace file is recorded for this node.',

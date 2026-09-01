@@ -76,6 +76,10 @@ export const canvasViewAuthoringCopyEs = {
     'El código está en el archivo {path} del workspace. Abre Código para inspeccionarlo o editarlo.',
   nodePresentationGeneratedCodeDetailTemplate:
     'Proyección generada en {path}. La autoridad semántica del nodo no cambia.',
+  nodePresentationCanonicalSubstraitCodeDetailTemplate:
+    'Documento Substrait canónico {schemaVersion} · SHA-256 {digest}',
+  nodePresentationInvalidCanonicalSubstraitCodeMessage:
+    'El documento Substrait canónico no existe o no es válido.',
   nodePresentationCodeUnavailableMessage:
     'No hay código inline ni archivo del workspace registrado para este nodo.',
   nodePresentationActionsLabel: 'Más acciones del nodo',

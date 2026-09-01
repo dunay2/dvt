@@ -817,7 +817,9 @@ export function buildNodePropertiesReadModel({
   );
   const sinkRows = localizePropertyRows(buildSinkRows(node, metadata), presentationCopy);
   const codeTruth =
-    presentationTruth.code.kind === 'inline' || presentationTruth.code.kind === 'generated'
+    presentationTruth.code.kind === 'inline' ||
+    presentationTruth.code.kind === 'generated' ||
+    presentationTruth.code.kind === 'canonical'
       ? presentationTruth.code
       : undefined;
   const columnsDescription =
@@ -850,7 +852,16 @@ export function buildNodePropertiesReadModel({
           ? interpolatePresentationTemplate(presentationCopy.generatedCodeDetailTemplate, {
               path: presentationTruth.code.path,
             })
-          : undefined;
+          : presentationTruth.code.kind === 'canonical'
+            ? interpolatePresentationTemplate(
+                presentationCopy.canonicalSubstraitCodeDetailTemplate ??
+                  'Canonical Substrait document {schemaVersion} · SHA-256 {digest}',
+                {
+                  schemaVersion: presentationTruth.code.schemaVersion,
+                  digest: presentationTruth.code.digest,
+                }
+              )
+            : undefined;
   const sectionLabels = presentationCopy?.sectionLabels;
   const sectionEmptyStates = presentationCopy?.sectionEmptyStates;
   const columnLabels = presentationCopy?.columnLabels;
@@ -970,12 +981,15 @@ export function buildNodePropertiesReadModel({
         label: sectionLabels?.code ?? presentationCopy?.codeLabel ?? 'Code',
         code: codeTruth?.content,
         codeLanguage: codeTruth?.language,
-        codePath: codeTruth?.path,
+        codePath: codeTruth != null && 'path' in codeTruth ? codeTruth.path : undefined,
         description: codeDescription,
         emptyState:
           presentationTruth.code.kind === 'unavailable'
-            ? (presentationCopy?.codeUnavailableMessage ??
-              'No SQL or generated code is recorded for this node.')
+            ? presentationTruth.code.reason === 'invalid-canonical-substrait-document'
+              ? (presentationCopy?.invalidCanonicalSubstraitCodeMessage ??
+                'The canonical Substrait document is missing or invalid.')
+              : (presentationCopy?.codeUnavailableMessage ??
+                'No inline code, generated projection, or canonical semantic document is recorded for this node.')
             : undefined,
       }),
       createSection({

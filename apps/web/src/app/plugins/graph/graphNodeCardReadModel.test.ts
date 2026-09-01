@@ -792,10 +792,13 @@ describe('buildGraphNodeCardReadModel', () => {
         codeLabel: 'Código',
         workspaceCodeDetailTemplate: 'El código vive en {path}.',
         generatedCodeDetailTemplate: 'Código generado en {path}.',
+        canonicalSubstraitCodeDetailTemplate:
+          'Documento Substrait canónico {schemaVersion} · SHA-256 {digest}',
         codeUnavailableMessage: 'Sin código.',
         valueLabels: {
           authored: 'Escrito',
           generated: 'Generado',
+          canonical: 'Canónico',
           file: 'Archivo',
         },
       },
@@ -869,6 +872,36 @@ describe('buildGraphNodeCardReadModel', () => {
       },
       [dbtGraphNodeCardStrategy]
     );
+    const canonical = buildGraphNodeCardReadModel(
+      buildNode({
+        kind: 'dvt:transform',
+        pluginId: 'dvt',
+        role: 'transform',
+        name: 'orders',
+      }),
+      {
+        ...baseData,
+        presentationTruth: {
+          columns: {
+            declared: [],
+            inherited: [],
+            visible: [],
+            declaredCount: 0,
+            inheritedCount: 0,
+            visibleCount: 0,
+            visibleProvenance: 'none',
+          },
+          code: {
+            kind: 'canonical',
+            content: '{"schemaVersion":"dvt-substrait-semantic-document.v1"}',
+            language: 'json',
+            schemaVersion: 'dvt-substrait-semantic-document.v1',
+            digest: 'a'.repeat(64),
+          },
+        },
+      },
+      [dvtGraphNodeCardStrategy]
+    );
 
     expect(generated.metrics).toContainEqual({
       id: 'code',
@@ -886,6 +919,12 @@ describe('buildGraphNodeCardReadModel', () => {
       label: 'Código',
       value: 'Archivo',
       detail: 'El código vive en models/orders.sql.',
+    });
+    expect(canonical.metrics).toContainEqual({
+      id: 'code',
+      label: 'Código',
+      value: 'Canónico',
+      detail: `Documento Substrait canónico dvt-substrait-semantic-document.v1 · SHA-256 ${'a'.repeat(64)}`,
     });
   });
 

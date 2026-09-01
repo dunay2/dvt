@@ -91,6 +91,19 @@ describe('canvas copy catalog', () => {
     ).not.toMatch(/dbt|artefacto|artifact/iu);
   });
 
+  it('localizes canonical Substrait provenance and invalid-evidence states', () => {
+    const englishCopy = resolveCanvasViewCopy('en-US');
+    const spanishCopy = resolveCanvasViewCopy('es-ES');
+
+    expect(englishCopy.nodePresentationCanonicalSubstraitCodeDetailTemplate).toContain('{digest}');
+    expect(spanishCopy.nodePresentationCanonicalSubstraitCodeDetailTemplate).toBe(
+      'Documento Substrait canónico {schemaVersion} · SHA-256 {digest}'
+    );
+    expect(spanishCopy.nodePresentationInvalidCanonicalSubstraitCodeMessage).toBe(
+      'El documento Substrait canónico no existe o no es válido.'
+    );
+  });
+
   it('exposes draft access posture copy in English and Spanish', () => {
     expect(canvasViewCopy.sessionRequiredDraftLabel).toBe('Session required');
     expect(canvasViewCopy.readOnlyDraftLabel).toBe('Read-only draft');

@@ -8,6 +8,8 @@ export type CanvasNodePresentationCopy = Readonly<{
   codeLabel: string;
   workspaceCodeDetailTemplate: string;
   generatedCodeDetailTemplate: string;
+  canonicalSubstraitCodeDetailTemplate?: string;
+  invalidCanonicalSubstraitCodeMessage?: string;
   codeUnavailableMessage: string;
   nodeActionsLabel?: string;
   readyStatusLabel?: string;
@@ -37,6 +39,10 @@ export function isCanvasNodePresentationCopy(value: unknown): value is CanvasNod
     typeof value.codeLabel === 'string' &&
     typeof value.workspaceCodeDetailTemplate === 'string' &&
     typeof value.generatedCodeDetailTemplate === 'string' &&
+    (value.canonicalSubstraitCodeDetailTemplate == null ||
+      typeof value.canonicalSubstraitCodeDetailTemplate === 'string') &&
+    (value.invalidCanonicalSubstraitCodeMessage == null ||
+      typeof value.invalidCanonicalSubstraitCodeMessage === 'string') &&
     typeof value.codeUnavailableMessage === 'string' &&
     (value.nodeActionsLabel == null || typeof value.nodeActionsLabel === 'string') &&
     (value.readyStatusLabel == null || typeof value.readyStatusLabel === 'string') &&
