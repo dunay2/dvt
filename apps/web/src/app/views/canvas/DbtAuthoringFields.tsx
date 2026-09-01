@@ -23,6 +23,7 @@ type DbtAuthoringFieldsProps = Readonly<{
   errors: ReturnType<typeof validateCanvasInspectorNodeDraft>;
   section?: 'general' | 'code';
   onChange: Dispatch<SetStateAction<ReturnType<typeof createCanvasInspectorNodeDraft>>>;
+  onCommitModelChange?: (draft: ReturnType<typeof createCanvasInspectorNodeDraft>) => void;
 }>;
 
 export function DbtAuthoringFields({
@@ -34,6 +35,7 @@ export function DbtAuthoringFields({
   errors,
   section = 'general',
   onChange,
+  onCommitModelChange,
 }: DbtAuthoringFieldsProps): JSX.Element | null {
   if (node.kind === 'dbt:test' && draft.dbtTest) {
     if (section === 'code') return null;
@@ -89,6 +91,15 @@ export function DbtAuthoringFields({
       'dbt:model': canvasViewCopy.inspectorDbtOriginKindModelLabel,
     },
   });
+  const commitModelChange = (nextDbt: typeof draft.dbt): void => {
+    if (nextDbt == null) return;
+    const nextDraft = { ...draft, dbt: nextDbt };
+    if (onCommitModelChange != null) {
+      onCommitModelChange(nextDraft);
+      return;
+    }
+    onChange(nextDraft);
+  };
 
   return section === 'code' ? (
     <DbtModelCodeAuthoringSection
@@ -106,6 +117,7 @@ export function DbtAuthoringFields({
       errors={errors.dbt}
       projection={projection}
       onChange={onChange}
+      onCommitChange={commitModelChange}
     />
   );
 }

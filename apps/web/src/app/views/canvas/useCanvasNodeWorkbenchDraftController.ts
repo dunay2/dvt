@@ -22,7 +22,7 @@ export type CanvasNodeWorkbenchDraftController = Readonly<{
   tagsText: string;
   onDraftChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
   onTagsTextChange: Dispatch<SetStateAction<string>>;
-  onDraftSubmitted: () => void;
+  onDraftSubmitted: (draft?: CanvasInspectorNodeDraft) => void;
   onResetDraft: () => void;
 }>;
 
@@ -52,6 +52,7 @@ type DraftControllerAction =
       type: 'draft-submitted';
       node: CanonicalNode;
       workspaceScope: WorkspaceScope | undefined;
+      draft?: CanvasInspectorNodeDraft;
     }>
   | Readonly<{ type: 'reset-requested' }>;
 
@@ -153,7 +154,7 @@ function reduceDraftControllerState(
         ...state,
         submittedDraft: canonicalizeCanvasInspectorNodeDraft(
           action.node,
-          state.draft,
+          action.draft ?? state.draft,
           action.workspaceScope
         ),
       };
@@ -189,7 +190,8 @@ export function useCanvasNodeWorkbenchDraftController(
     []
   );
   const onDraftSubmitted = useCallback(
-    () => dispatch({ type: 'draft-submitted', node, workspaceScope }),
+    (draft?: CanvasInspectorNodeDraft) =>
+      dispatch({ type: 'draft-submitted', node, workspaceScope, draft }),
     [node, workspaceScope]
   );
   const onResetDraft = useCallback(() => dispatch({ type: 'reset-requested' }), []);

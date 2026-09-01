@@ -79,6 +79,21 @@ export function CanvasInspectorAuthoringSection({
         : section === 'all'
           ? 'all'
           : 'general';
+  const commitDbtModelDraft = (nextDraft: typeof draft): void => {
+    setDraft(nextDraft);
+    const nextErrors = validateCanvasInspectorNodeDraft(nextDraft, {
+      node,
+      nodes,
+      edges,
+      workspaceScope: authoring.workspaceScope,
+    });
+    if (!authoring.canEditNode || Object.keys(nextErrors).length > 0) return;
+    authoring.onApplyNodeDraft(nextDraft);
+    draftController.onDraftSubmitted(nextDraft);
+  };
+  const commitCurrentDbtModelDraft = (): void => {
+    if (node.kind === 'dbt:model') commitDbtModelDraft(draft);
+  };
 
   if (
     !showGeneral &&
@@ -114,6 +129,7 @@ export function CanvasInspectorAuthoringSection({
                     name: event.target.value,
                   }))
                 }
+                onBlur={commitCurrentDbtModelDraft}
               />
               {errors.name ? (
                 <p className={inspectorVisualClasses.inspectorErrorText}>
@@ -133,6 +149,7 @@ export function CanvasInspectorAuthoringSection({
                 disabled={!authoring.canEditNode}
                 placeholder={canvasViewCopy.inspectorNodeTagsPlaceholder}
                 onChange={(event) => setTagsText(event.target.value)}
+                onBlur={commitCurrentDbtModelDraft}
               />
             </div>
           </>
@@ -148,6 +165,7 @@ export function CanvasInspectorAuthoringSection({
             errors={errors}
             section={section === 'code' ? 'code' : 'general'}
             onChange={setDraft}
+            onCommitModelChange={commitDbtModelDraft}
           />
         ) : null}
 
@@ -204,6 +222,7 @@ export function CanvasInspectorAuthoringSection({
                   description: event.target.value,
                 }))
               }
+              onBlur={commitCurrentDbtModelDraft}
             />
           </div>
         ) : null}
@@ -214,7 +233,7 @@ export function CanvasInspectorAuthoringSection({
           </p>
         ) : null}
 
-        {authoring.canEditNode && isDirty ? (
+        {authoring.canEditNode && isDirty && !(node.kind === 'dbt:model' && showGeneral) ? (
           <div className="flex items-center justify-end gap-2">
             <Button type="button" variant="ghost" size="sm" onClick={draftController.onResetDraft}>
               {canvasViewCopy.inspectorCancelLabel}
@@ -229,7 +248,7 @@ export function CanvasInspectorAuthoringSection({
                   return;
                 }
                 authoring.onApplyNodeDraft(draft);
-                draftController.onDraftSubmitted();
+                draftController.onDraftSubmitted(draft);
               }}
             >
               {canvasViewCopy.inspectorApplyLabel}

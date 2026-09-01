@@ -259,28 +259,42 @@ function renderNodePanel(
     onApplyNodeDraft: vi.fn(),
   },
   preferredTabRequestId = 1,
-  primarySectionIds?: readonly CanvasNodeWorkbenchSectionPolicyId[]
+  primarySectionIds?: readonly CanvasNodeWorkbenchSectionPolicyId[],
+  graph?: Readonly<{
+    nodes?: readonly CanonicalNode[];
+    edges?: readonly CanonicalEdge[];
+  }>
 ): void {
   act(() => {
     root.render(
       <CanvasNodeWorkbenchPanel
         node={node}
-        nodes={[SOURCE_NODE, MODEL_NODE, CONNECTED_TEST_NODE, DVT_TRANSFORM_NODE, DVT_SINK_NODE]}
-        edges={[
-          ...EDGES,
-          {
-            id: 'edge-model-test',
-            sourceId: MODEL_NODE.id,
-            targetId: CONNECTED_TEST_NODE.id,
-            relation: 'validation',
-          },
-          {
-            id: 'edge-source-transform',
-            sourceId: SOURCE_NODE.id,
-            targetId: DVT_TRANSFORM_NODE.id,
-            relation: 'lineage',
-          },
-        ]}
+        nodes={
+          graph?.nodes ?? [
+            SOURCE_NODE,
+            MODEL_NODE,
+            CONNECTED_TEST_NODE,
+            DVT_TRANSFORM_NODE,
+            DVT_SINK_NODE,
+          ]
+        }
+        edges={
+          graph?.edges ?? [
+            ...EDGES,
+            {
+              id: 'edge-model-test',
+              sourceId: MODEL_NODE.id,
+              targetId: CONNECTED_TEST_NODE.id,
+              relation: 'validation',
+            },
+            {
+              id: 'edge-source-transform',
+              sourceId: SOURCE_NODE.id,
+              targetId: DVT_TRANSFORM_NODE.id,
+              relation: 'lineage',
+            },
+          ]
+        }
         activeRunId={null}
         registeredPlugins={new Set()}
         preferredTabId={preferredTabId}
@@ -779,6 +793,95 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(codeSection?.querySelector('pre')).toBeNull();
     expect(codeSection?.querySelectorAll('[data-testid="monaco-code-editor"]')).toHaveLength(1);
     expect(codeSection?.textContent).not.toContain('No properties are recorded for this section.');
+  });
+
+  it('persists DBT model selections immediately without Apply or Cancel controls', () => {
+    const alternateSource: CanonicalNode = {
+      ...SOURCE_NODE,
+      id: 'source.customers',
+      name: 'Customers Source',
+      metadata: {
+        ...SOURCE_NODE.metadata,
+        tableName: 'customers',
+      },
+    };
+    const onApplyNodeDraft = vi.fn();
+
+    renderNodePanel(
+      root,
+      MODEL_NODE,
+      'general',
+      { canEditNode: true, onApplyNodeDraft },
+      1,
+      undefined,
+      {
+        nodes: [SOURCE_NODE, alternateSource, MODEL_NODE],
+        edges: [
+          ...EDGES,
+          {
+            id: 'edge-alternate-model',
+            sourceId: alternateSource.id,
+            targetId: MODEL_NODE.id,
+            relation: 'lineage',
+          },
+        ],
+      }
+    );
+
+    const materializedSelect = container.querySelector(
+      'select[name="dbt-materialized"]'
+    ) as HTMLSelectElement;
+    const originSelect = container.querySelector('select[name="dbt-origin"]') as HTMLSelectElement;
+
+    act(() => {
+      fireEvent.change(materializedSelect, { target: { value: 'incremental' } });
+    });
+
+    expect(onApplyNodeDraft).toHaveBeenCalledTimes(1);
+    expect(onApplyNodeDraft).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        dbt: expect.objectContaining({ materialized: 'incremental' }),
+      })
+    );
+
+    act(() => {
+      fireEvent.change(originSelect, { target: { value: alternateSource.id } });
+    });
+
+    expect(onApplyNodeDraft).toHaveBeenCalledTimes(2);
+    expect(onApplyNodeDraft).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        dbt: expect.objectContaining({
+          materialized: 'incremental',
+          selectedSourceId: alternateSource.id,
+        }),
+      })
+    );
+
+    const packageInput = container.querySelector('input[name="dbt-package"]') as HTMLInputElement;
+    act(() => {
+      fireEvent.focus(packageInput);
+      fireEvent.input(packageInput, { target: { value: 'finance' } });
+    });
+    expect(
+      Array.from(container.querySelectorAll('button')).some((button) =>
+        ['Apply', 'Cancel'].includes(button.textContent?.trim() ?? '')
+      )
+    ).toBe(false);
+
+    act(() => {
+      fireEvent.focusOut(packageInput);
+    });
+    expect(onApplyNodeDraft).toHaveBeenCalledTimes(3);
+    expect(onApplyNodeDraft).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        dbt: expect.objectContaining({
+          packageName: 'finance',
+          materialized: 'incremental',
+          selectedSourceId: alternateSource.id,
+        }),
+      })
+    );
   });
 
   it('preserves an empty DBT SQL draft across equivalent graph-node projections', () => {
