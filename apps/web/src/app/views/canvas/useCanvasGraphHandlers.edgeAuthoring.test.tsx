@@ -9,6 +9,10 @@ import { canvasViewCopy } from './copy';
 import { createCanvasColumnHandleId } from './canvasColumnLineageProjection';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import {
+  decodeDvtSubstraitProjectionDocument,
+  inspectDvtSubstraitProjectionDraft,
+} from './canvasDvtSubstraitProjection';
+import {
   buildDraftSession,
   buildCanonicalNode,
   evaluateGraphHandlerConnectionWith,
@@ -80,6 +84,30 @@ async function useRealConnectionAdmissionRail(): Promise<void> {
   );
 }
 
+function buildConnectedPostgresSource(
+  id: string,
+  columns: readonly Readonly<{ name: string; type: string }>[]
+): CanonicalNode {
+  return {
+    ...buildCanonicalNode(id, 'input'),
+    kind: 'dvt:source',
+    metadata: {
+      schema: 'raw',
+      tableName: 'orders',
+      columns,
+      connectedSourceRef: {
+        schemaVersion: 'connected-source-ref.v1',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: 'postgres',
+          provider: 'postgres',
+        },
+        sourceObjectId: 'relation/dvt/raw/orders',
+      },
+    },
+  };
+}
+
 describe('useCanvasGraphHandlers edge authoring', () => {
   beforeEach(() => {
     resetGraphHandlersTestDoubles();
@@ -109,11 +137,9 @@ describe('useCanvasGraphHandlers edge authoring', () => {
   });
 
   it('routes a pointer column connection into recipe authority without opening node-edge confirmation', async () => {
-    const source = {
-      ...buildCanonicalNode('source-node', 'input'),
-      kind: 'dvt:source' as const,
-      metadata: { columns: [{ name: 'order_id', type: 'integer' }] },
-    };
+    const source = buildConnectedPostgresSource('source-node', [
+      { name: 'order_id', type: 'integer' },
+    ]);
     const model = {
       ...buildCanonicalNode('model-node', 'transform'),
       kind: 'dvt:transform' as const,
@@ -158,17 +184,15 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     expect(typeof nextSession).toBe('object');
     const mapped = nextSession.localNodeCatalog?.[model.id];
     expect(mapped).toBeDefined();
-    expect(readDvtTransformAuthoringAuthority(mapped).mode).toBe('visual');
+    expect(readDvtTransformAuthoringAuthority(mapped).mode).toBe('substrait');
     expect(toastState.success).toHaveBeenCalledWith(canvasViewCopy.columnMappingAddedMessage);
     harness.cleanup();
   });
 
   it('uses the same mapping command for source and target handle keyboard activation', async () => {
-    const source = {
-      ...buildCanonicalNode('source-node', 'input'),
-      kind: 'dvt:source' as const,
-      metadata: { columns: [{ name: 'order_id', type: 'integer' }] },
-    };
+    const source = buildConnectedPostgresSource('source-node', [
+      { name: 'order_id', type: 'integer' },
+    ]);
     const model = {
       ...buildCanonicalNode('model-node', 'transform'),
       kind: 'dvt:transform' as const,
@@ -271,15 +295,10 @@ describe('useCanvasGraphHandlers edge authoring', () => {
   });
 
   it('commits the deterministic mappings produced by stage-edge confirmation', async () => {
-    const source = {
-      ...buildCanonicalNode('source-node', 'input'),
-      metadata: {
-        columns: [
-          { name: 'order_id', type: 'integer' },
-          { name: 'customer', type: 'text' },
-        ],
-      },
-    };
+    const source = buildConnectedPostgresSource('source-node', [
+      { name: 'order_id', type: 'integer' },
+      { name: 'customer', type: 'text' },
+    ]);
     const transform = {
       ...buildCanonicalNode('transform-node', 'transform'),
       kind: 'dvt:transform' as const,
@@ -320,11 +339,21 @@ describe('useCanvasGraphHandlers edge authoring', () => {
       throw new Error('Expected the edge command to commit the mapped transform');
     }
     const authority = readDvtTransformAuthoringAuthority(mappedTransform);
-    expect(authority.mode).toBe('visual');
-    if (authority.mode !== 'visual') return;
-    expect(authority.recipe.outputs.map((output) => output.expression.inputs)).toEqual([
-      [{ nodeId: source.id, columnName: 'order_id' }],
-      [{ nodeId: source.id, columnName: 'customer' }],
+    expect(authority.mode).toBe('substrait');
+    if (authority.mode !== 'substrait') return;
+    const inspection = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+    );
+    expect(inspection.ok).toBe(true);
+    if (!inspection.ok) return;
+    expect(
+      inspection.projection.outputs.map((output) => ({
+        name: output.name,
+        sourceFieldName: output.sourceFieldName,
+      }))
+    ).toEqual([
+      { name: 'order_id', sourceFieldName: 'order_id' },
+      { name: 'customer', sourceFieldName: 'customer' },
     ]);
 
     harness.cleanup();
