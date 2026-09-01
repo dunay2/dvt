@@ -2,6 +2,10 @@ import type { Edge, Node, ReactFlowProps } from '@xyflow/react';
 import type { Dispatch, SetStateAction } from 'react';
 import type { GraphNodeColumnPortIdentity } from '../../plugins/graph/GraphNodeColumnSection';
 import type { CanvasColumnLineageEdgeData } from './canvasColumnLineageProjection';
+import type {
+  CanvasAlgebraicCompositionIdentity,
+  CanvasAlgebraicCompositionOperation,
+} from './canvasAlgebraicComposition';
 
 import type {
   CanvasGraphInteractionEffects,
@@ -56,4 +60,12 @@ export type UseCanvasGraphHandlersResult = {
     columns: readonly Readonly<{ name: string; type: string }>[]
   ) => void;
   handleRemoveColumnMapping: (mapping: CanvasColumnLineageEdgeData) => void;
+  resolveCanvasAlgebraicCompositionOperations: (
+    identity: CanvasAlgebraicCompositionIdentity
+  ) => CanvasAlgebraicCompositionOperation[];
+  handleComposeCanvasNodes: (
+    identity: CanvasAlgebraicCompositionIdentity & {
+      operation: CanvasAlgebraicCompositionOperation;
+    }
+  ) => void;
 };

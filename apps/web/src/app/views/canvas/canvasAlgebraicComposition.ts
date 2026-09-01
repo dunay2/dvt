@@ -30,7 +30,7 @@ type CompositionState = {
   pluginPortMap: PluginPortMap;
 };
 
-type CompositionIdentity = {
+export type CanvasAlgebraicCompositionIdentity = {
   sourceNodeId: string;
   targetNodeId: string;
 };
@@ -39,7 +39,7 @@ export type CanvasAlgebraicCompositionTransaction =
   | CanvasEdgeAdmissionTransaction
   | { outcome: 'noop'; rejection: { code: 'operation_not_available' } };
 
-function connection(identity: CompositionIdentity): Connection {
+function connection(identity: CanvasAlgebraicCompositionIdentity): Connection {
   return {
     source: identity.sourceNodeId,
     sourceHandle: null,
@@ -70,7 +70,7 @@ function admittedOperations(args: {
 }
 
 export function resolveCanvasAlgebraicCompositionOperations(
-  args: CompositionState & CompositionIdentity
+  args: CompositionState & CanvasAlgebraicCompositionIdentity
 ): CanvasAlgebraicCompositionOperation[] {
   const nodes = resolveCanvasDraftNodes(args.draftSession, args.canonicalNodesById);
   const canonicalNodesById = new Map(nodes.map((node) => [node.id, node]));
@@ -109,7 +109,8 @@ function createSemanticDraft(args: {
 }
 
 export function resolveCanvasAlgebraicCompositionTransaction(
-  args: CompositionState & CompositionIdentity & { operation: CanvasAlgebraicCompositionOperation }
+  args: CompositionState &
+    CanvasAlgebraicCompositionIdentity & { operation: CanvasAlgebraicCompositionOperation }
 ): CanvasAlgebraicCompositionTransaction {
   if (!resolveCanvasAlgebraicCompositionOperations(args).includes(args.operation)) {
     return { outcome: 'noop', rejection: { code: 'operation_not_available' } };
