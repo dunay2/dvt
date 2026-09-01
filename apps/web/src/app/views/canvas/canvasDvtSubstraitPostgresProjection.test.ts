@@ -13,8 +13,10 @@ import {
   projectDvtSubstraitPilotWindowToPostgresSql,
   projectDvtSubstraitInnerJoinToPostgresSql,
   projectDvtSubstraitPilotToPostgresSql,
+  projectDvtSubstraitProjectionToPostgresSql,
   projectDvtSubstraitUnionAllToPostgresSql,
 } from './canvasDvtSubstraitPostgresProjection';
+import { createDvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import { applyDvtSubstraitPilotAggregation } from './canvasDvtSubstraitAggregation';
 import { applyDvtSubstraitPilotAggregateRowNumber } from './canvasDvtSubstraitAggregateWindow';
 import { applyDvtSubstraitPilotRowNumber } from './canvasDvtSubstraitWindow';
@@ -57,6 +59,42 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
 
     await expect(projectDvtSubstraitPilotToPostgresSql(draft)).resolves.toBe(
       await projectDvtSubstraitPilotToPostgresSql(draft)
+    );
+  });
+
+  it('renders connected-field Substrait as a derived PostgreSQL projection', async () => {
+    const draft = createDvtSubstraitProjectionDraft({
+      source: {
+        nodeId: 'source-orders',
+        schema: 'raw',
+        table: 'orders',
+        sourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'warehouse-main',
+            provider: 'postgres',
+          },
+          sourceObjectId: 'raw.orders',
+        },
+        fields: [
+          { name: 'order_id', dataType: 'integer' },
+          { name: 'customer', dataType: 'text' },
+          { name: 'amount', dataType: 'numeric' },
+        ],
+      },
+      targetNodeId: 'transform-orders',
+      outputs: [
+        { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
+        { fieldId: 'output:customer', name: 'buyer', sourceFieldName: 'customer' },
+        { fieldId: 'output:amount', name: 'amount', sourceFieldName: 'amount' },
+      ],
+    });
+
+    const sql = await projectDvtSubstraitProjectionToPostgresSql(draft);
+
+    expect(sql.replaceAll(/\s+/g, ' ').trim().toLowerCase()).toMatch(
+      /^select order_id, customer as buyer, amount from raw\.orders;?$/
     );
   });
 

@@ -24,6 +24,10 @@ import {
   encodeDvtSubstraitUnionAllDocument,
 } from './canvasDvtSubstraitSetComposition';
 import {
+  createDvtSubstraitProjectionDraft,
+  encodeDvtSubstraitProjectionDocument,
+} from './canvasDvtSubstraitProjection';
+import {
   createCanvasColumnHandleId,
   parseCanvasColumnHandleId,
   projectCanvasColumnLineage,
@@ -124,6 +128,61 @@ describe('Canvas column lineage projection', () => {
         expandedNodeIds: new Set([source.id]),
       })
     ).toEqual([]);
+  });
+
+  it('derives removable field lineage from a connected-source Substrait projection', () => {
+    const sourceRef: ConnectedSourceRef = {
+      schemaVersion: 'connected-source-ref.v1',
+      connectionRef: {
+        schemaVersion: 'connection-ref.v1',
+        connectionId: 'warehouse-main',
+        provider: 'postgres',
+      },
+      sourceObjectId: 'raw.orders',
+    };
+    const source: CanonicalNode = {
+      ...buildNode('source-orders', 'dvt:source', 'input', [{ name: 'order_id', type: 'integer' }]),
+      metadata: {
+        schema: 'raw',
+        tableName: 'orders',
+        connectedSourceRef: sourceRef,
+        columns: [{ name: 'order_id', type: 'integer' }],
+      },
+    };
+    const model = applyDvtSubstraitSemanticDocument(
+      buildNode('model-orders', 'dvt:transform', 'transform'),
+      encodeDvtSubstraitProjectionDocument(
+        createDvtSubstraitProjectionDraft({
+          source: {
+            nodeId: source.id,
+            schema: 'raw',
+            table: 'orders',
+            sourceRef,
+            fields: [{ name: 'order_id', dataType: 'integer' }],
+          },
+          targetNodeId: 'model-orders',
+          outputs: [{ fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' }],
+        })
+      )
+    );
+
+    expect(
+      projectCanvasColumnLineage({
+        nodes: [source, model],
+        edges: [{ sourceId: source.id, targetId: model.id }],
+        expandedNodeIds: new Set([source.id, model.id]),
+      })
+    ).toEqual([
+      expect.objectContaining({
+        source: source.id,
+        target: model.id,
+        data: expect.objectContaining({
+          sourceFieldId: 'field:source-orders:order_id',
+          outputId: 'output:order_id',
+          removable: true,
+        }),
+      }),
+    ]);
   });
 
   it('does not project lineage from an unrelated node with matching column names', () => {

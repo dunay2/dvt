@@ -166,9 +166,13 @@ export function useCanvasContextMenuPresenter({
   const handleViewportContextMenuEvent = useCallback(
     (event: ContextMenuEvent) => {
       const sourceEvent = event.nativeEvent ?? event;
+      const targetsNodeShell =
+        event.target instanceof Element &&
+        event.target.closest('[data-slot="canvas-node-shell"]') != null;
       if (
         (sourceEvent as MouseEvent & Readonly<{ dvtNodeActionsRequest?: boolean }>)
-          .dvtNodeActionsRequest === true
+          .dvtNodeActionsRequest === true ||
+        targetsNodeShell
       ) {
         return;
       }

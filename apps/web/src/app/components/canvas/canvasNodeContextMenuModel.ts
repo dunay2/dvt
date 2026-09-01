@@ -7,14 +7,18 @@ export type CanvasNodeContextMenuTarget = Readonly<{
 }>;
 
 export type CanvasNodeContextMenuActionId =
-  'duplicate-node' | 'select-node-for-execution' | 'deselect-node-from-execution' | 'remove-node';
+  | 'open-properties'
+  | 'duplicate-node'
+  | 'select-node-for-execution'
+  | 'deselect-node-from-execution'
+  | 'remove-node';
 
 export type CanvasNodeModelerActionId = CanvasNodeContextMenuActionId;
 
 export type CanvasNodeContextMenuAction = Readonly<{
   id: CanvasNodeContextMenuActionId;
   label: string;
-  intent: 'command';
+  intent: 'command' | 'query';
   disabled: boolean;
   destructive?: boolean;
   disabledReason?: string;
@@ -33,6 +37,7 @@ export type CanvasNodeContextMenuModel = Readonly<{
 
 export type CanvasNodeContextMenuCopy = Readonly<{
   editGroupLabel: string;
+  propertiesLabel: string;
   duplicateLabel: string;
   selectForExecutionLabel: string;
   deselectForExecutionLabel: string;
@@ -42,6 +47,7 @@ export type CanvasNodeContextMenuCopy = Readonly<{
 
 const DEFAULT_COPY: CanvasNodeContextMenuCopy = {
   editGroupLabel: 'Edit',
+  propertiesLabel: 'Properties',
   duplicateLabel: 'Duplicate',
   selectForExecutionLabel: 'Select for execution',
   deselectForExecutionLabel: 'Deselect for execution',
@@ -67,6 +73,7 @@ type BuildCanvasNodeModelerActionModelArgs = Readonly<{
   target: CanvasNodeContextMenuTarget;
   selectedForExecution: boolean;
   canMutateGraph: boolean;
+  canInspectNode: boolean;
   canDuplicateNode: boolean;
   canToggleNodeSelection: boolean;
   canRemoveNode: boolean;
@@ -77,6 +84,7 @@ export function buildCanvasNodeModelerActionModel({
   target,
   selectedForExecution,
   canMutateGraph,
+  canInspectNode,
   canDuplicateNode,
   canToggleNodeSelection,
   canRemoveNode,
@@ -84,6 +92,15 @@ export function buildCanvasNodeModelerActionModel({
 }: BuildCanvasNodeModelerActionModelArgs): CanvasNodeModelerActionModel {
   const groups: CanvasNodeModelerActionGroup[] = [];
   const editActions: CanvasNodeModelerAction[] = [];
+
+  if (canInspectNode) {
+    editActions.push({
+      id: 'open-properties',
+      label: copy.propertiesLabel,
+      intent: 'query',
+      disabled: false,
+    });
+  }
 
   if (canMutateGraph && canDuplicateNode) {
     editActions.push({

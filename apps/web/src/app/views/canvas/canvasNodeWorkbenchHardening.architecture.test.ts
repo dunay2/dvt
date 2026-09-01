@@ -22,6 +22,7 @@ import DvtSqlTransformAuthoringSectionSource from './DvtSqlTransformAuthoringSec
 import DvtAuthoringFieldsSource from './DvtAuthoringFields.tsx?raw';
 import DbtProjectFileCanvasControllerSource from './useDbtProjectFileCanvasController.ts?raw';
 import DbtWorkspaceFileCodeContributionSource from './dbtWorkspaceFileCodeContribution.tsx?raw';
+import CanvasContextMenuPresenterSource from './useCanvasContextMenuPresenter.ts?raw';
 import CanvasSelectionHandlersSource from './useCanvasSelectionHandlers.ts?raw';
 
 describe('Canvas Node Workbench W4 hardening contracts', () => {
@@ -29,7 +30,11 @@ describe('Canvas Node Workbench W4 hardening contracts', () => {
     expect(CanvasNodeShellSource).toContain('data-slot="canvas-node-shell"');
     expect(CanvasNodeShellSource).toContain('onOpenNode?.();');
     expect(CanvasNodeShellSource).toContain('isCanvasNodeEmbeddedControlTarget(event.target)');
-    expect(CanvasNodeShellSource).toContain('dvtNodeActionsRequest');
+    expect(CanvasNodeShellSource).not.toContain('dvtNodeActionsRequest');
+    expect(CanvasContextMenuPresenterSource).toContain(
+      'closest(\'[data-slot="canvas-node-shell"]\')'
+    );
+    expect(CanvasContextMenuPresenterSource).toContain('dvtNodeActionsRequest');
     expect(CanvasNodeShellSource).not.toContain('resolveCanvasNodeDoubleClickAction');
     expect(CanvasNodeShellSource).not.toContain('onOpenCode');
     expect(CanvasNodeShellSource).not.toContain('onOpenWorkbench');

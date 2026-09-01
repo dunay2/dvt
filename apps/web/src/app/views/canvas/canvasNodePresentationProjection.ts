@@ -13,6 +13,10 @@ import {
   decodeDvtSubstraitPilotDocument,
   inspectDvtSubstraitPilotDraft,
 } from './canvasDvtSubstraitPilot';
+import {
+  decodeDvtSubstraitProjectionDocument,
+  resolveDvtSubstraitProjectionEntry,
+} from './canvasDvtSubstraitProjection';
 import { inspectDvtSubstraitPilotAggregationDraft } from './canvasDvtSubstraitAggregation';
 import { inspectDvtSubstraitPilotAggregateWindowDraft } from './canvasDvtSubstraitAggregateWindow';
 import { inspectDvtSubstraitPilotWindowDraft } from './canvasDvtSubstraitWindow';
@@ -46,6 +50,8 @@ type DvtSubstraitPresentedOutput = Readonly<{
   name: string;
   fieldId: string;
   dataType?: string;
+  sourceNodeId?: string;
+  sourceFieldName?: string;
 }>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -112,51 +118,67 @@ function projectCanvasNodePresentationTruthInternal(
           digest: authority.semanticDocument.semanticPlan.sha256,
         };
         try {
-          const pilotInspection = inspectDvtSubstraitPilotDraft(
-            decodeDvtSubstraitPilotDocument(authority.semanticDocument)
-          );
-          if (pilotInspection.ok) {
-            substraitOutputs = pilotInspection.projection.outputs;
+          const projection = resolveDvtSubstraitProjectionEntry({
+            targetNode: args.node,
+            nodes: args.nodes,
+            edges: args.edges,
+            draft: decodeDvtSubstraitProjectionDocument(authority.semanticDocument),
+          });
+          if (projection != null) {
+            substraitOutputs = projection.outputs.map((output) => ({
+              name: output.name,
+              fieldId: output.fieldId,
+              dataType: output.dataType,
+              sourceNodeId: projection.source.nodeId,
+              sourceFieldName: output.sourceFieldName,
+            }));
           } else {
-            const aggregateWindowInspection = inspectDvtSubstraitPilotAggregateWindowDraft(
+            const pilotInspection = inspectDvtSubstraitPilotDraft(
               decodeDvtSubstraitPilotDocument(authority.semanticDocument)
             );
-            if (aggregateWindowInspection.ok) {
-              substraitOutputs = aggregateWindowInspection.projection.outputs;
+            if (pilotInspection.ok) {
+              substraitOutputs = pilotInspection.projection.outputs;
             } else {
-              const aggregateInspection = inspectDvtSubstraitPilotAggregationDraft(
+              const aggregateWindowInspection = inspectDvtSubstraitPilotAggregateWindowDraft(
                 decodeDvtSubstraitPilotDocument(authority.semanticDocument)
               );
-              if (aggregateInspection.ok) {
-                substraitOutputs = aggregateInspection.projection.outputs;
+              if (aggregateWindowInspection.ok) {
+                substraitOutputs = aggregateWindowInspection.projection.outputs;
               } else {
-                const windowInspection = inspectDvtSubstraitPilotWindowDraft(
+                const aggregateInspection = inspectDvtSubstraitPilotAggregationDraft(
                   decodeDvtSubstraitPilotDocument(authority.semanticDocument)
                 );
-                if (windowInspection.ok) {
-                  substraitOutputs = windowInspection.projection.outputs;
+                if (aggregateInspection.ok) {
+                  substraitOutputs = aggregateInspection.projection.outputs;
                 } else {
-                  const joinInspection = inspectDvtSubstraitInnerJoinAcceptedDraft(
-                    decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument)
+                  const windowInspection = inspectDvtSubstraitPilotWindowDraft(
+                    decodeDvtSubstraitPilotDocument(authority.semanticDocument)
                   );
-                  if (joinInspection.ok) {
-                    const targetNodeId =
-                      'targetNodeId' in joinInspection.projection
-                        ? joinInspection.projection.targetNodeId
-                        : args.node.id;
-                    if (targetNodeId === args.node.id) {
-                      substraitOutputs = joinInspection.projection.outputs;
-                    } else {
-                      substraitRejected = true;
-                    }
+                  if (windowInspection.ok) {
+                    substraitOutputs = windowInspection.projection.outputs;
                   } else {
-                    const unionAllInspection = inspectDvtSubstraitUnionAllAcceptedDraft(
-                      decodeDvtSubstraitUnionAllDocument(authority.semanticDocument)
+                    const joinInspection = inspectDvtSubstraitInnerJoinAcceptedDraft(
+                      decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument)
                     );
-                    if (unionAllInspection.ok) {
-                      substraitOutputs = unionAllInspection.projection.outputs;
+                    if (joinInspection.ok) {
+                      const targetNodeId =
+                        'targetNodeId' in joinInspection.projection
+                          ? joinInspection.projection.targetNodeId
+                          : args.node.id;
+                      if (targetNodeId === args.node.id) {
+                        substraitOutputs = joinInspection.projection.outputs;
+                      } else {
+                        substraitRejected = true;
+                      }
                     } else {
-                      substraitRejected = true;
+                      const unionAllInspection = inspectDvtSubstraitUnionAllAcceptedDraft(
+                        decodeDvtSubstraitUnionAllDocument(authority.semanticDocument)
+                      );
+                      if (unionAllInspection.ok) {
+                        substraitOutputs = unionAllInspection.projection.outputs;
+                      } else {
+                        substraitRejected = true;
+                      }
                     }
                   }
                 }
@@ -314,16 +336,45 @@ function projectCanvasNodePresentationTruthInternal(
       provenance: 'declared' as const,
       reference: output.fieldId,
     }));
+    const hasConnectedFieldProjection =
+      substraitOutputs.length > 0 &&
+      substraitOutputs.every(
+        (output) => output.sourceNodeId != null && output.sourceFieldName != null
+      );
+    const projectedSourceFields = new Set(
+      substraitOutputs.flatMap((output) =>
+        output.sourceNodeId == null || output.sourceFieldName == null
+          ? []
+          : [`${output.sourceNodeId}\u0000${output.sourceFieldName}`]
+      )
+    );
+    const declaredNames = new Set(declared.map((column) => column.name));
+    const unmatchedInherited = hasConnectedFieldProjection
+      ? presentationTruth.columns.inherited.filter(
+          (column) =>
+            !declaredNames.has(column.name) &&
+            (column.sourceNodeId == null ||
+              !projectedSourceFields.has(`${column.sourceNodeId}\u0000${column.name}`))
+        )
+      : [];
+    const visible = [...declared, ...unmatchedInherited];
     return {
       ...presentationTruth,
       columns: {
         declared,
         inherited: presentationTruth.columns.inherited,
-        visible: declared,
+        visible,
         declaredCount: declared.length,
         inheritedCount: presentationTruth.columns.inheritedCount,
-        visibleCount: declared.length,
-        visibleProvenance: declared.length > 0 ? 'declared' : 'none',
+        visibleCount: visible.length,
+        visibleProvenance:
+          declared.length > 0 && unmatchedInherited.length > 0
+            ? 'mixed'
+            : declared.length > 0
+              ? 'declared'
+              : unmatchedInherited.length > 0
+                ? 'inherited'
+                : 'none',
       },
     };
   }

@@ -18,11 +18,9 @@ import {
   numericValue,
   pushMetric,
   pushRuntimeMetrics,
-  resolveCodeMetricPresentation,
   resolveNodeCardAccentTone,
   resolveNodeCardHealth,
   resolveColumnCount,
-  resolveColumnMetricPresentation,
   resolveGraphNodeRelationPath,
   stringValue,
 } from '../graph/graphNodeCardStrategyUtils';
@@ -86,9 +84,7 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     data,
     locale: presentationCopy?.locale,
   });
-  const columnPresentation = resolveColumnMetricPresentation(metadata, data);
-  const codePresentation = resolveCodeMetricPresentation(data);
-  const columnCount = columnPresentation.count;
+  const columnCount = resolveColumnCount(metadata, data);
   const titlePresentation = buildGraphNodeTitlePresentation({
     nodeName: node.name,
     pluginId: node.pluginId,
@@ -105,12 +101,6 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     durationMs: numericValue(data.durationMs) ?? resolveCanonicalDurationMs(node, metadata, data),
   };
 
-  pushMetric(metrics, 'code', codePresentation?.label ?? 'Code', codePresentation?.value ?? null, {
-    ...(codePresentation?.detail == null ? {} : { detail: codePresentation.detail }),
-  });
-  pushMetric(metrics, 'columns', columnPresentation.label, resolveColumnCount(metadata, data), {
-    ...(columnPresentation.detail == null ? {} : { detail: columnPresentation.detail }),
-  });
   pushRuntimeMetrics(metrics, metadata, runtimeData);
   pushCanonicalCostMetric(metrics, node, metadata, data);
 

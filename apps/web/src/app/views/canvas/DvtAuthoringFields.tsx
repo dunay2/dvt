@@ -87,6 +87,9 @@ export function DvtAuthoringFields({
       if (section !== 'all' && section !== 'columns' && section !== 'code') {
         return null;
       }
+      if (draft.dvt.shape === 'projection') {
+        return null;
+      }
       if (draft.dvt.shape === 'inner_join') {
         const appendCandidates = resolveDvtSubstraitJoinAppendCandidates({
           targetNode: node,

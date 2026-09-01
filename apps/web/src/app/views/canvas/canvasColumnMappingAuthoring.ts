@@ -10,9 +10,17 @@ import {
 import type { CanonicalNode } from '../../types/canonical';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import {
+  applyDvtSubstraitSemanticDocument,
   applyDvtVisualTransformRecipe,
   readDvtTransformAuthoringAuthority,
 } from './canvasDvtTransformAuthoringAuthority';
+import {
+  createDvtSubstraitProjectionDraft,
+  decodeDvtSubstraitProjectionDocument,
+  encodeDvtSubstraitProjectionDocument,
+  inspectDvtSubstraitProjectionDraft,
+  resolveDvtSubstraitProjectionSource,
+} from './canvasDvtSubstraitProjection';
 
 export type CanvasColumnMappingSource = VisualTransformColumnInputRefV1;
 export type CanvasColumnMappingTarget = Readonly<{
@@ -31,6 +39,7 @@ export type CanvasColumnMappingRejection =
   | 'sql_authority_not_empty'
   | 'invalid_transform_authority'
   | 'complex_expression_not_editable'
+  | 'projection_requires_one_connected_source'
   | 'mapping_not_found'
   | 'no_compatible_mappings';
 
@@ -122,6 +131,34 @@ function readEditableRecipe(
     if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
       return { outcome: 'ready', recipe: authority.recipe };
     }
+    if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+      const inspection = inspectDvtSubstraitProjectionDraft(
+        decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+      );
+      if (!inspection.ok || inspection.projection.targetNodeId !== targetNode.id) {
+        return { outcome: 'rejected', reason: 'target_not_visual_transform' };
+      }
+      return {
+        outcome: 'ready',
+        recipe: {
+          version: VISUAL_TRANSFORM_RECIPE_VERSION,
+          outputs: inspection.projection.outputs.map((output) => ({
+            id: output.fieldId,
+            name: output.name,
+            expression: {
+              inputs: [
+                {
+                  nodeId: inspection.projection.source.nodeId,
+                  columnName: output.sourceFieldName,
+                },
+              ],
+              operations: [{ kind: 'passthrough' }],
+            },
+          })),
+          filters: [],
+        },
+      };
+    }
     if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.sql) {
       return { outcome: 'rejected', reason: 'target_not_visual_transform' };
     }
@@ -156,6 +193,22 @@ export function resolveCanvasColumnMappingTarget(
             ...(output.dataType == null ? {} : { dataType: output.dataType }),
           };
     }
+    if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+      const inspection = inspectDvtSubstraitProjectionDraft(
+        decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+      );
+      if (!inspection.ok || inspection.projection.targetNodeId !== targetNode.id) return null;
+      const output = inspection.projection.outputs.find(
+        (candidate) => candidate.fieldId === columnId || candidate.name === columnId
+      );
+      return output == null
+        ? { nodeId: targetNode.id, columnName: columnId }
+        : {
+            nodeId: targetNode.id,
+            outputId: output.fieldId,
+            columnName: output.name,
+          };
+    }
     if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.sql) return null;
     const targetColumn = readColumns(targetNode).find((column) => column.name === columnId);
     return {
@@ -174,6 +227,53 @@ function isSimplePassthrough(output: VisualTransformOutputColumnV1): boolean {
     output.expression.operations.length === 1 &&
     output.expression.operations[0]?.kind === 'passthrough'
   );
+}
+
+function persistProjectionRecipe(args: {
+  targetNode: CanonicalNode;
+  recipe: VisualTransformRecipeV1;
+  resolveNode: (nodeId: string) => CanonicalNode | undefined;
+}):
+  | Readonly<{ outcome: 'applied'; node: CanonicalNode }>
+  | Readonly<{
+      outcome: 'rejected';
+      reason: Extract<CanvasColumnMappingRejection, 'projection_requires_one_connected_source'>;
+    }> {
+  if (args.recipe.outputs.length === 0) {
+    return {
+      outcome: 'applied',
+      node: applyDvtVisualTransformRecipe(args.targetNode, args.recipe),
+    };
+  }
+  const sourceNodeIds = new Set(
+    args.recipe.outputs.flatMap((output) => output.expression.inputs.map((input) => input.nodeId))
+  );
+  const sourceNodeId = sourceNodeIds.size === 1 ? [...sourceNodeIds][0] : undefined;
+  const sourceNode = sourceNodeId == null ? undefined : args.resolveNode(sourceNodeId);
+  const source = sourceNode == null ? null : resolveDvtSubstraitProjectionSource(sourceNode);
+  if (
+    source == null ||
+    args.recipe.outputs.some(
+      (output) => !isSimplePassthrough(output) || output.expression.inputs.length !== 1
+    )
+  ) {
+    return { outcome: 'rejected', reason: 'projection_requires_one_connected_source' };
+  }
+  const document = encodeDvtSubstraitProjectionDocument(
+    createDvtSubstraitProjectionDraft({
+      source,
+      targetNodeId: args.targetNode.id,
+      outputs: args.recipe.outputs.map((output) => ({
+        fieldId: output.id,
+        name: output.name,
+        sourceFieldName: output.expression.inputs[0]!.columnName,
+      })),
+    })
+  );
+  return {
+    outcome: 'applied',
+    node: applyDvtSubstraitSemanticDocument(args.targetNode, document),
+  };
 }
 
 export function applyCanvasColumnMapping(args: {
@@ -230,10 +330,16 @@ export function applyCanvasColumnMapping(args: {
   const nextOutputs = [...recipeResult.recipe.outputs];
   if (outputIndex < 0) nextOutputs.push(nextOutput);
   else nextOutputs[outputIndex] = nextOutput;
-  const nextNode = applyDvtVisualTransformRecipe(targetNode, {
-    ...recipeResult.recipe,
-    outputs: nextOutputs,
+  const projectionResult = persistProjectionRecipe({
+    targetNode,
+    resolveNode: (nodeId) => resolveSessionNode(args.draftSession, args.canonicalNodesById, nodeId),
+    recipe: {
+      ...recipeResult.recipe,
+      outputs: nextOutputs,
+    },
   });
+  if (projectionResult.outcome === 'rejected') return projectionResult;
+  const nextNode = projectionResult.node;
 
   return {
     outcome: 'applied',
@@ -357,10 +463,13 @@ export function removeCanvasColumnMapping(args: {
             ? { ...candidate, expression: { ...candidate.expression, inputs: remainingInputs } }
             : candidate
         );
-  const nextNode = applyDvtVisualTransformRecipe(args.targetNode, {
-    ...recipeResult.recipe,
-    outputs: nextOutputs,
+  const projectionResult = persistProjectionRecipe({
+    targetNode: args.targetNode,
+    resolveNode: (nodeId) => args.draftSession.localNodeCatalog?.[nodeId],
+    recipe: { ...recipeResult.recipe, outputs: nextOutputs },
   });
+  if (projectionResult.outcome === 'rejected') return projectionResult;
+  const nextNode = projectionResult.node;
 
   return {
     outcome: 'applied',

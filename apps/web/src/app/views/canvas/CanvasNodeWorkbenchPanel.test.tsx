@@ -2,7 +2,7 @@
 
 /** Owned concern: prove CanvasNodeWorkbenchPanel presents governed node metadata directly. */
 import React, { act } from 'react';
-import { fireEvent } from '@testing-library/dom';
+import { fireEvent, waitFor } from '@testing-library/dom';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -10,6 +10,12 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { dvtCanvasSurfaceStrategy } from '../../plugins/dvt/dvtCanvasSurfaceStrategy';
 import type { CanvasNodeWorkbenchSectionPolicyId } from '../../plugins/canvasSurfaceStrategyContracts';
 import CanvasNodeWorkbenchPanelSource from './CanvasNodeWorkbenchPanel.tsx?raw';
+import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import {
+  createDvtSubstraitProjectionDraft,
+  encodeDvtSubstraitProjectionDocument,
+  resolveDvtSubstraitProjectionSource,
+} from './canvasDvtSubstraitProjection';
 import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import { mapCanonicalNodeToCanvasNode } from './canvasNodeMapper';
 import {
@@ -195,6 +201,21 @@ const DVT_VISUAL_TRANSFORM_NODE: CanonicalNode = {
     },
   },
 };
+
+const DVT_SUBSTRAIT_TRANSFORM_NODE: CanonicalNode = (() => {
+  const source = resolveDvtSubstraitProjectionSource(SOURCE_NODE);
+  if (source == null) throw new Error('Expected a connected PostgreSQL source fixture.');
+  return applyDvtSubstraitSemanticDocument(
+    DVT_TRANSFORM_NODE,
+    encodeDvtSubstraitProjectionDocument(
+      createDvtSubstraitProjectionDraft({
+        source,
+        targetNodeId: DVT_TRANSFORM_NODE.id,
+        outputs: [{ fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' }],
+      })
+    )
+  );
+})();
 
 const DVT_SINK_NODE: CanonicalNode = {
   id: 'sink.orders',
@@ -642,6 +663,39 @@ describe('CanvasNodeWorkbenchPanel', () => {
       ].join('\n')
     );
     expect(codeSection?.querySelector('pre')).toBeNull();
+  });
+
+  it('shows Substrait first and derives PostgreSQL SQL only after explicit output selection', async () => {
+    renderNodePanel(root, DVT_SUBSTRAIT_TRANSFORM_NODE, 'code');
+
+    const codeSection = container.querySelector('[data-slot="canvas-node-workbench-code-section"]');
+    const outputSelector = codeSection?.querySelector<HTMLSelectElement>(
+      '[data-slot="dvt-transform-output-view-selector"]'
+    );
+    const canonicalViewer = codeSection?.querySelector<HTMLElement>(
+      '[data-testid="monaco-code-viewer"]'
+    );
+
+    expect(outputSelector?.value).toBe('substrait');
+    expect(canonicalViewer?.dataset.language).toBe('json');
+    expect(canonicalViewer?.textContent).toContain('dvt-substrait-semantic-document.v1');
+    expect(codeSection?.textContent).not.toContain('Convert to SQL');
+
+    await act(async () => {
+      fireEvent.change(outputSelector!, { target: { value: 'postgres-sql' } });
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      const sqlViewer = codeSection?.querySelector<HTMLElement>(
+        '[data-testid="monaco-code-viewer"]'
+      );
+      expect(sqlViewer?.dataset.language).toBe('sql');
+      expect(sqlViewer?.textContent?.replaceAll(/\s+/g, ' ').toLowerCase()).toContain(
+        'select order_id from raw.orders'
+      );
+    });
+    expect(outputSelector?.value).toBe('postgres-sql');
   });
 
   it('requires explicit confirmation before transferring visual authority to generated SQL', () => {

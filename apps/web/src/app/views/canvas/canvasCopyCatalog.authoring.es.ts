@@ -123,6 +123,12 @@ export const canvasViewAuthoringCopyEs = {
   inspectorVisualTransformConvertToSqlTitle: '¿Convertir esta transformación visual a SQL?',
   inspectorVisualTransformConvertToSqlDescription:
     'Esto sustituye la receta visual como autoridad de edición. Volver de SQL a Visual no es automático.',
+  inspectorTransformOutputViewLabel: 'Vista de salida',
+  inspectorTransformOutputSubstraitLabel: 'Substrait (canónico)',
+  inspectorTransformOutputPostgresSqlLabel: 'SQL PostgreSQL (derivado)',
+  inspectorTransformOutputLoadingMessage: 'Generando SQL PostgreSQL...',
+  inspectorTransformOutputErrorMessage:
+    'No se pudo generar SQL PostgreSQL desde esta revisión canónica.',
   inspectorDbtCardTitle: 'Ficha dbt',
   inspectorDbtPackageLabel: 'Paquete',
   inspectorDbtSourceLabel: 'Origen',

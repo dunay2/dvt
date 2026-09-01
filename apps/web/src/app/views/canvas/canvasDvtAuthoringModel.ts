@@ -21,6 +21,11 @@ import {
   encodeDvtSubstraitPilotDocument,
   inspectDvtSubstraitPilotDraft,
 } from './canvasDvtSubstraitPilot';
+import {
+  decodeDvtSubstraitProjectionDocument,
+  encodeDvtSubstraitProjectionDocument,
+  inspectDvtSubstraitProjectionDraft,
+} from './canvasDvtSubstraitProjection';
 import { inspectDvtSubstraitPilotAggregationDraft } from './canvasDvtSubstraitAggregation';
 import { inspectDvtSubstraitPilotAggregateWindowDraft } from './canvasDvtSubstraitAggregateWindow';
 import { inspectDvtSubstraitPilotWindowDraft } from './canvasDvtSubstraitWindow';
@@ -59,7 +64,7 @@ export type DvtVisualTransformAuthoringMetadata = Readonly<{
 export type DvtSubstraitTransformAuthoringMetadata = Readonly<{
   kind: 'transform';
   mode: typeof DVT_TRANSFORM_AUTHORING_MODE.substrait;
-  shape: 'pilot' | 'inner_join' | 'union_all';
+  shape: 'projection' | 'pilot' | 'inner_join' | 'union_all';
   plan: Plan;
   sidecar: DvtSubstraitAuthoringSidecarV1;
 }>;
@@ -239,6 +244,16 @@ function createSqlTransformMetadata(
     return { kind: 'transform', mode: authority.mode, recipe: authority.recipe };
   }
   if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+    const projectionDraft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
+    if (inspectDvtSubstraitProjectionDraft(projectionDraft).ok) {
+      return {
+        kind: 'transform',
+        mode: authority.mode,
+        shape: 'projection',
+        plan: projectionDraft.plan,
+        sidecar: projectionDraft.sidecar,
+      };
+    }
     const pilotDraft = decodeDvtSubstraitPilotDocument(authority.semanticDocument);
     if (inspectDvtSubstraitPilotDraft(pilotDraft).ok) {
       return {
@@ -444,17 +459,22 @@ export function applyDvtNodeAuthoringMetadata(
     if (metadata.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
       return applyDvtSubstraitSemanticDocument(
         node,
-        metadata.shape === 'inner_join'
-          ? encodeDvtSubstraitInnerJoinDocument({
+        metadata.shape === 'projection'
+          ? encodeDvtSubstraitProjectionDocument({
               plan: metadata.plan,
               sidecar: metadata.sidecar,
             })
-          : metadata.shape === 'union_all'
-            ? encodeDvtSubstraitUnionAllDocument({
+          : metadata.shape === 'inner_join'
+            ? encodeDvtSubstraitInnerJoinDocument({
                 plan: metadata.plan,
                 sidecar: metadata.sidecar,
               })
-            : encodeDvtSubstraitPilotDocument({ plan: metadata.plan, sidecar: metadata.sidecar })
+            : metadata.shape === 'union_all'
+              ? encodeDvtSubstraitUnionAllDocument({
+                  plan: metadata.plan,
+                  sidecar: metadata.sidecar,
+                })
+              : encodeDvtSubstraitPilotDocument({ plan: metadata.plan, sidecar: metadata.sidecar })
       );
     }
     const transformMetadata = buildDvtSqlTransformMetadata(node, metadata.sql);

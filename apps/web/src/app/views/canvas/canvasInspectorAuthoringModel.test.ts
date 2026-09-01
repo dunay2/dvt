@@ -9,6 +9,12 @@ import {
   validateCanvasInspectorNodeDraft,
 } from './canvasInspectorAuthoringModel';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import {
+  createDvtSubstraitProjectionDraft,
+  encodeDvtSubstraitProjectionDocument,
+  resolveDvtSubstraitProjectionSource,
+} from './canvasDvtSubstraitProjection';
 
 function buildNode(): CanonicalNode {
   return {
@@ -734,6 +740,49 @@ describe('canvasInspectorAuthoringModel', () => {
     const draft = createCanvasInspectorNodeDraft(node);
 
     expect(draft.dvt).toEqual({ kind: 'transform', mode: 'visual', recipe });
+    expect(applyCanvasInspectorNodeDraft(node, draft)).toEqual(node);
+  });
+
+  it('roundtrips a connected-field Substrait projection through the inspector draft', () => {
+    const source: CanonicalNode = {
+      id: 'source_orders',
+      name: 'Orders',
+      pluginId: 'dvt',
+      kind: 'dvt:source',
+      role: 'input',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        schema: 'raw',
+        tableName: 'orders',
+        connectedSourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'warehouse-main',
+            provider: 'postgres',
+          },
+          sourceObjectId: 'raw.orders',
+        },
+        columns: [{ name: 'order_id', type: 'integer' }],
+      },
+    };
+    const projectionSource = resolveDvtSubstraitProjectionSource(source);
+    if (projectionSource == null) throw new Error('Expected a connected source fixture.');
+    const node = applyDvtSubstraitSemanticDocument(
+      buildDvtNode('dvt:transform'),
+      encodeDvtSubstraitProjectionDocument(
+        createDvtSubstraitProjectionDraft({
+          source: projectionSource,
+          targetNodeId: 'node_transform',
+          outputs: [{ fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' }],
+        })
+      )
+    );
+
+    const draft = createCanvasInspectorNodeDraft(node);
+
+    expect(draft.dvt).toMatchObject({ kind: 'transform', mode: 'substrait', shape: 'projection' });
     expect(applyCanvasInspectorNodeDraft(node, draft)).toEqual(node);
   });
 

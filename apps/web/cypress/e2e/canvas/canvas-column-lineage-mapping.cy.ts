@@ -84,6 +84,57 @@ function assertNoSeriousAccessibilityViolations(): void {
 }
 
 describe('Canvas column lineage mapping', () => {
+  it('keeps Transform inspection Substrait-first and restores Properties from the card', () => {
+    cy.viewport(1920, 1080);
+    stubColumnMappingCanvas();
+    visitColumnMappingCanvas('es');
+
+    toggleColumns('model-orders');
+    canvasNode('model-orders').contains('button', 'Asignar columnas compatibles').click();
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+
+    canvasNode('model-orders')
+      .should('contain.text', 'Transform')
+      .and('not.contain.text', 'SQL transform')
+      .find('[data-slot="graph-node-metric-row"]')
+      .should('not.exist');
+
+    canvasNode('model-orders').find('[data-slot="canvas-node-shell"]').rightclick();
+    cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Propiedades')
+      .should('be.visible')
+      .click();
+
+    cy.get('[data-slot="canvas-node-workbench-overlay"]').should('be.visible');
+    cy.get('[data-slot="canvas-node-workbench-tab-general"]').should(
+      'have.attr',
+      'aria-selected',
+      'true'
+    );
+    cy.get('[data-slot="canvas-node-workbench-tab-code"]').click();
+    cy.get('[data-slot="canvas-node-workbench-code-content"]')
+      .should('contain.text', 'Documento Substrait canónico')
+      .and('contain.text', 'SHA-256');
+    cy.get('[data-slot="dvt-transform-output-view-selector"]')
+      .should('have.value', 'substrait')
+      .select('postgres-sql');
+    cy.get('[data-testid="monaco-code-viewer"]')
+      .should('be.visible')
+      .find('.view-lines')
+      .should(($lines) => {
+        const sql = $lines.text().replaceAll('\u00a0', ' ').replaceAll(/\s+/g, ' ').toLowerCase();
+        expect(sql).to.contain('select order_id, customer, amount');
+        expect(sql).to.contain('from raw.orders');
+      });
+    cy.get('[data-slot="dvt-transform-output-view-selector"]').select('substrait');
+    cy.get('[data-testid="monaco-code-viewer"] .view-lines').should(($lines) => {
+      const code = $lines.text().replaceAll('\u00a0', ' ');
+      expect(code).to.contain('dvt-substrait-semantic-document.v1');
+      expect(code).to.contain('semanticPlan');
+      expect(code.toLowerCase()).not.to.contain('select ');
+    });
+    cy.contains('button', 'Convertir a SQL').should('not.exist');
+  });
+
   it('creates deterministic mappings when the stage dependency is confirmed', () => {
     cy.viewport(1920, 1080);
     stubColumnMappingCanvas(true);
