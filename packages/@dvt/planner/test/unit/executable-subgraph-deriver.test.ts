@@ -11,7 +11,7 @@ function buildNode(id: string, overrides: Partial<DraftNode> = {}): DraftNode {
     id,
     name: id,
     pluginId: 'dvt',
-    kind: 'dvt:transform',
+    kind: 'dvt:sql_transform',
     role: 'transform',
     status: 'idle',
     tags: [],
