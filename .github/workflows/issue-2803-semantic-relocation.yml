@@ -20,8 +20,8 @@ jobs:
       - name: Freeze tested main baseline
         run: |
           git fetch origin main
-          BASE_SHA=$(git rev-parse HEAD^)
-          test "$BASE_SHA" = "$(git rev-parse origin/main)" || { echo "main moved before validation"; exit 1; }
+          BASE_SHA=$(git rev-parse origin/main)
+          git merge-base --is-ancestor "$BASE_SHA" HEAD || { echo "branch no longer descends from main"; exit 1; }
           echo "BASE_SHA=$BASE_SHA" >> "$GITHUB_ENV"
           echo "TRIGGER_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
 
@@ -52,7 +52,7 @@ jobs:
             .map(e => path.join(root,e.name)).sort();
           if (!tests.length) throw new Error('No root Canvas tests found');
           if (fs.existsSync(dest) && fs.readdirSync(dest).length) throw new Error('__tests__ is not empty');
-          if (new Set(tests.map(path.basename)).size !== tests.length) throw new Error('Filename collision');
+          if (new Set(tests.map(p => path.basename(p))).size !== tests.length) throw new Error('Filename collision');
 
           const before = fs.readdirSync(root,{withFileTypes:true}).filter(e=>e.isFile()).length;
           const moves = new Map(tests.map(src => [norm(src), norm(path.join(dest,path.basename(src)))]));
