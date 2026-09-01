@@ -1,5 +1,6 @@
 /** Owned concern: render one node property section from the Inspector read model. */
 import type { ReactNode } from 'react';
+import { ChevronRight } from 'lucide-react';
 
 import { MetricEvidenceHotspot } from '../metrics/MetricEvidenceHotspot';
 import { MonacoCodeViewer } from '../monaco/MonacoCodeViewer';
@@ -52,6 +53,8 @@ function renderSectionBody(
       section.columnLabels?.[key] ?? key.replace(/([a-z])([A-Z])/g, '$1 $2');
 
     if (surface === 'workbench' && section.id === 'columns') {
+      const detailColumnKeys = columnKeys.filter((key) => key !== 'name');
+
       return (
         <div
           role="region"
@@ -61,21 +64,35 @@ function renderSectionBody(
         >
           <ul data-slot="node-property-column-list" className="divide-y divide-(--border-subtle)">
             {section.tableRows.map((row) => (
-              <li key={row.id} data-slot="node-property-column-record" className="px-3 py-3">
-                <dl className="grid grid-cols-[minmax(6rem,0.34fr)_minmax(0,1fr)] gap-x-3 gap-y-2 text-xs">
-                  {columnKeys.map((key) => (
-                    <div key={`${row.id}:${key}`} className="contents">
-                      <dt className={inspectorVisualClasses.inspectorLabel}>
-                        {resolveColumnLabel(key)}
-                      </dt>
-                      <dd className="min-w-0 break-words text-(--text-primary)">
-                        {row.cells[key] || (
-                          <span className={inspectorVisualClasses.inspectorSubtle}>-</span>
-                        )}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
+              <li key={row.id} data-slot="node-property-column-record">
+                <details data-slot="node-property-column-disclosure" className="group">
+                  <summary className="flex cursor-pointer list-none items-start gap-2 px-3 py-2.5 text-sm text-(--text-primary) outline-none hover:bg-(--surface-hover) focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-(--focus-ring) [&::-webkit-details-marker]:hidden">
+                    <ChevronRight
+                      data-slot="node-property-column-disclosure-arrow"
+                      className="mt-0.5 size-4 shrink-0 text-(--text-muted) transition-transform group-open:rotate-90"
+                      aria-hidden="true"
+                    />
+                    <span className="min-w-0 break-words font-medium">
+                      {row.cells.name || row.id}
+                    </span>
+                  </summary>
+                  {detailColumnKeys.length === 0 ? null : (
+                    <dl className="grid grid-cols-[minmax(6rem,0.34fr)_minmax(0,1fr)] gap-x-3 gap-y-2 px-3 pb-3 pl-9 text-xs">
+                      {detailColumnKeys.map((key) => (
+                        <div key={`${row.id}:${key}`} className="contents">
+                          <dt className={inspectorVisualClasses.inspectorLabel}>
+                            {resolveColumnLabel(key)}
+                          </dt>
+                          <dd className="min-w-0 break-words text-(--text-primary)">
+                            {row.cells[key] || (
+                              <span className={inspectorVisualClasses.inspectorSubtle}>-</span>
+                            )}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  )}
+                </details>
               </li>
             ))}
           </ul>
