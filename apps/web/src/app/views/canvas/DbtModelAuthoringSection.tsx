@@ -110,7 +110,7 @@ export function DbtModelAuthoringSection({
             <select
               id={`inspector-dbt-origin-${node.id}`}
               name="dbt-origin"
-              value={draft.selectedSourceId}
+              value={projection.selectedOriginId}
               disabled={disabled}
               className={selectClassName}
               aria-invalid={errors?.selectedSourceId ? 'true' : undefined}
@@ -123,7 +123,7 @@ export function DbtModelAuthoringSection({
                 }))
               }
             >
-              {draft.selectedSourceId.length === 0 ? (
+              {projection.selectedOriginId.length === 0 ? (
                 <option value="" disabled>
                   {canvasViewCopy.inspectorDbtOriginPlaceholder}
                 </option>

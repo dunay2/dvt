@@ -71,6 +71,32 @@ describe('canvas dbt authoring model', () => {
     });
   });
 
+  it('uses canonical config relation fields when duplicated dbt metadata is stale', () => {
+    const model = buildDbtModelNode();
+
+    expect(
+      createDbtNodeAuthoringMetadata({
+        ...model,
+        metadata: {
+          ...model.metadata,
+          config: {
+            schema: 'mart',
+            table: 'orders_current',
+          },
+          dbt: {
+            packageName: 'analytics',
+            schemaName: 'raw',
+            tableName: 'stale_orders',
+            materialized: 'view',
+          },
+        },
+      })
+    ).toMatchObject({
+      schemaName: 'mart',
+      tableName: 'orders_current',
+    });
+  });
+
   it('applies dbt model config without losing existing canonical node metadata', () => {
     const model = buildDbtModelNode();
 

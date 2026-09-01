@@ -74,12 +74,21 @@ export function buildDbtAuthoringModelProjection(args: {
   kindLabels: Readonly<Record<'dbt:source' | 'dbt:model', string>>;
 }): DbtAuthoringModelProjection {
   const originOptions = buildDbtOriginOptions(args);
-  const selectedOriginId = args.authoringMetadata.selectedSourceId;
+  const selectedOriginId = originOptions.some(
+    (option) => option.value === args.authoringMetadata.selectedSourceId
+  )
+    ? args.authoringMetadata.selectedSourceId
+    : originOptions.length === 1
+      ? (originOptions[0]?.value ?? '')
+      : '';
   const artifactProjection = projectDbtModelArtifact({
     modelNode: args.node,
     nodes: args.nodes,
     edges: args.edges,
-    authoringMetadata: args.authoringMetadata,
+    authoringMetadata: {
+      ...args.authoringMetadata,
+      selectedSourceId: selectedOriginId,
+    },
   });
 
   return {

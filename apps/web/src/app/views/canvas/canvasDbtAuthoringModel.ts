@@ -72,8 +72,9 @@ export function createDbtNodeAuthoringMetadata(node: CanonicalNode): DbtNodeAuth
     readString(configMetadata?.sourceName) ??
     normalizeIdentifier(node.name, 'source');
   const tableName =
-    readString(dbtMetadata?.tableName) ??
     readString(configMetadata?.table) ??
+    readString(configMetadata?.tableName) ??
+    readString(dbtMetadata?.tableName) ??
     readString(configMetadata?.alias) ??
     normalizeIdentifier(node.name, 'table');
 
@@ -84,8 +85,8 @@ export function createDbtNodeAuthoringMetadata(node: CanonicalNode): DbtNodeAuth
       DEFAULT_PACKAGE_NAME,
     sourceName: normalizeIdentifier(sourceName, 'source'),
     schemaName:
-      readString(dbtMetadata?.schemaName) ??
       readString(configMetadata?.schema) ??
+      readString(dbtMetadata?.schemaName) ??
       DEFAULT_SCHEMA_NAME,
     tableName: normalizeIdentifier(tableName, 'table'),
     materialized: normalizeMaterialized(
