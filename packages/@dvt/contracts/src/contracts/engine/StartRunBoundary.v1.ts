@@ -5,11 +5,7 @@
  * packs, runtime validation, fixtures, and API orchestration layers.
  */
 import type { PlanRef, RunExecutionContextRef } from '../../types/contracts.js';
-import type {
-  ExecutionPlan,
-  GenericGraphSourceV1,
-  PlannerEnvironmentContext,
-} from '../planner/ExecutionPlan.v1.js';
+import type { ExecutionPlan, GenericGraphSourceV1 } from '../planner/ExecutionPlan.v1.js';
 import type { ExecutionSelection } from '../planner/ExecutionSelection.v1.js';
 import type { ExecutabilityRejectionCode } from '../planner/PlanExecutabilityValidation.v1.js';
 import type { PlannerPolicyClassSet } from '../planner/PlannerPolicyVocabulary.v2.js';
@@ -34,14 +30,11 @@ export function isStartRunTargetAdapter(value: unknown): value is StartRunTarget
 
 export type StartRunPlanRef = PlanRef;
 
-export type StartRunPlannerEnvironmentInput = PlannerEnvironmentContext;
-
 export interface StartRunCommand {
   readonly planRef?: StartRunPlanRef;
   readonly runExecutionContextRef?: RunExecutionContextRef;
   readonly graphSource?: GenericGraphSourceV1;
   readonly policies?: PlannerPolicyClassSet;
-  readonly environment?: StartRunPlannerEnvironmentInput;
   readonly observability?: ExecutionPlan['observability'];
   readonly runId: string;
   readonly targetAdapter: StartRunTargetAdapter;

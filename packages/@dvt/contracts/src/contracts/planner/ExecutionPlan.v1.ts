@@ -25,15 +25,6 @@ import type { SupportedPlanVersion } from './PlanVersion.v1.js';
 export type StepKind = string;
 
 /**
- * Optional planning context used to bind environment-dependent knobs
- * without coupling planner logic to runtime adapters.
- */
-export interface PlannerEnvironmentContext {
-  environmentId?: string;
-  vars?: Record<string, unknown>;
-}
-
-/**
  * Canonical generic graph-source boundary for multi-workflow planning.
  *
  * Runtime execution support by step kind remains
@@ -177,6 +168,8 @@ export type ExecutionPlan = {
  * Normative public planner input for v1.
  *
  * `graphSource` is the canonical planner ingress.
+ * Environment-dependent values MUST be resolved upstream into explicit graph,
+ * policy or step configuration before planner admission.
  *
  * Compatibility translation from source-native inputs such as DBT manifest refs
  * happens outside this shared-kernel contract before planner admission.
@@ -198,7 +191,6 @@ export interface PlannerInputEnvelopeV1 {
     readonly requestedRootNodeIds?: readonly string[];
   };
   policies?: PlannerPolicyClassSet;
-  environment?: PlannerEnvironmentContext;
   ownership?: PlanOwnership;
   observability?: ExecutionPlan['observability'];
   requestedBy?: string;

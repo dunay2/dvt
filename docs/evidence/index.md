@@ -140,6 +140,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED-20260502 S08 Temporal Legacy Removal](ed-20260502-s08-temporal-legacy-removal.md)
 - [Engine Public API Surface Split](ed-20260514-ea-20260429-05-engine-public-api-surface.md)
 - [MW-D2 Temporal Worker Routing By Capability](ed-20260513-mw-d2-temporal-worker-routing.md)
+- [Planner environment input removal evidence](ED-20260902-planner-environment-contract-truth.md)
 - [Planner json-canonicalize 2.0.0 Upgrade](ED-20260603-planner-json-canonicalize-2-upgrade.md)
 - [Planning Authority Retirement In The Engine Architecture Guard](ed-20260731-planning-authority-engine-guard.md)
 - [Plugin Admission Architecture Hardening](ed-20260429-plugin-admission-architecture.md)

@@ -36,7 +36,6 @@ export {
   parsePlanCore,
   parsePlanExecutabilityRecord,
   parsePlannerBuildResultV1,
-  parsePlannerEnvironmentContext,
   parsePlannerInputEnvelopeV1,
   parsePlannerObservability,
   parsePlannerPolicyClassSet,

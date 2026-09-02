@@ -1,0 +1,31 @@
+---
+id: R-20260902-PLANNER-ENVIRONMENT-INGRESS-DRIFT
+title: Planner callers could retain the removed no-op environment input
+status: Open
+date: 2026-09-02
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/planner
+  - apps/api
+severity: Medium
+probability: Low
+---
+mitigation:
+  summary: >
+    The pre-stable hard cut removes the generic environment bag from every shared Planner and
+    planner-backed StartRun contract surface. Strict schemas and HTTP ingress reject the retired
+    field, while the normative boundary directs callers to resolve environment-dependent values
+    upstream into typed graph, policy, ownership, or step configuration. PlanOwnership.environmentId
+    remains intact because it carries real authorization and ownership scope. Focused contract,
+    Planner, and API tests guard against reintroducing accept-and-drop behavior.
+  evidence:
+    - docs/evidence/ED-20260902-planner-environment-contract-truth.md
+    - docs/architecture/components/engine/contracts/engine/start-run-boundary.v1.md
+    - packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts
+    - packages/@dvt/contracts/src/contracts/engine/StartRunBoundary.v1.ts
+    - packages/@dvt/contracts/test/start-run-boundary.contract.test.ts
+    - apps/api/src/entrypoints/http/planRoutePlannerEnvelopeParser.ts
+  follow_up:
+    - Issue #2691 owns removal of the no-op Planner input and its caller migration.
+    - Any future Planner-owned environment fact requires a typed deterministic consumer and a new
+      governed contract change.

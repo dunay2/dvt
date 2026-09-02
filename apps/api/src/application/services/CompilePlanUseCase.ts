@@ -14,7 +14,6 @@ export interface CompilePlanCommand {
   readonly graphSource: GenericGraphSourceV1;
   readonly selection: PlannerSelection;
   readonly policies: PlanCompileRequestV1SchemaT['policies'];
-  readonly environment: PlanCompileRequestV1SchemaT['environment'];
   readonly observability: PlanCompileRequestV1SchemaT['observability'];
 }
 
@@ -37,7 +36,6 @@ export class CompilePlanUseCase {
       graphSource: command.graphSource,
       selection: command.selection,
       ...(command.policies === undefined ? {} : { policies: command.policies }),
-      ...(command.environment === undefined ? {} : { environment: command.environment }),
       ...(command.observability === undefined ? {} : { observability: command.observability }),
     };
 

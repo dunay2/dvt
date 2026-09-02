@@ -44,6 +44,8 @@ consumers:
 - enforce exactly one command branch:
   - persisted `planRef` ingress
   - planner-backed `graphSource` ingress
+- resolve environment-dependent values upstream into explicit planner graph,
+  policy, ownership, or step configuration before planner-backed admission
 - remain distinct from the narrower `IWorkflowEngine.startRun()` contract
 
 ### MUST NOT
@@ -51,6 +53,8 @@ consumers:
 - redefine `PlanRef` or `RunExecutionContextRef` in app-local form
 - publish API-only shadow result enums outside the shared contract package
 - allow planner-backed fields to accompany persisted `planRef` ingress
+- accept a generic planner `environment` bag that has no deterministic planner
+  consumer
 - collapse API orchestration input and engine facade input into one misleading
   type
 
@@ -62,11 +66,10 @@ interface StartRunCommand {
   runExecutionContextRef?: RunExecutionContextRef;
   graphSource?: GenericGraphSourceV1;
   policies?: PlannerPolicyClassSet;
-  environment?: StartRunPlannerEnvironmentInput;
   observability?: ExecutionPlan['observability'];
   runId: string;
   targetAdapter: 'temporal';
-  selection: readonly string[];
+  selection: ExecutionSelection;
 }
 
 type StartRunResult =
@@ -113,10 +116,14 @@ type StartRunResult =
 Branch rule:
 
 - `planRef` branch:
-  `planRef` is present and `graphSource`, `policies`, `environment`, and
-  `observability` are absent
+  `planRef` is present and `graphSource`, `policies`, and `observability` are
+  absent
 - planner-backed branch:
   `graphSource` is present and `planRef` is absent
+
+Environment-dependent configuration is not a StartRun planner field. It must be
+resolved before this boundary into explicit graph, policy, ownership, or
+step-kind configuration with deterministic semantics.
 
 ## Ownership split
 
@@ -149,15 +156,16 @@ protection against API-local drift in the shape or result vocabulary.
 
 ## Current implementation note
 
-`apps/api` now imports the start-run command/result boundary directly from
+`apps/api` imports the start-run command/result boundary directly from
 `@dvt/contracts`. The API runtime still performs route-local HTTP parsing, but
-the route policy now enforces the same plan-source branch rule before handing
-off the canonical `StartRunCommand` shape. App-local command/result re-export
-shims are not part of the governed state for this boundary.
+the route policy enforces the same plan-source branch rule before handing off
+the canonical `StartRunCommand` shape. Planner `environment` ingress is
+rejected rather than accepted and discarded. App-local command/result
+re-export shims are not part of the governed state for this boundary.
 
 ## System backpressure codes
 
-The `system_backpressure` branch now covers two classes of system-owned denial:
+The `system_backpressure` branch covers two classes of system-owned denial:
 
 - delivery/backpressure infrastructure pressure:
   `SYSTEM_BACKPRESSURE`, `BACKPRESSURE_SNAPSHOT_UNAVAILABLE`

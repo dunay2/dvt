@@ -3,13 +3,11 @@ import type {
   GenericGraphNodeV1,
   GenericGraphSourceV1,
   GenericGraphSourceV1SchemaT,
-  PlannerEnvironmentContext,
   PlannerObservabilitySchemaT,
   PlannerPolicyClassSet,
 } from '@dvt/contracts';
 import {
   parseGenericGraphSourceV1,
-  parsePlannerEnvironmentContext,
   parsePlannerObservability,
   parsePlannerPolicyClassSet,
 } from '@dvt/contracts';
@@ -20,7 +18,6 @@ import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 export interface ParsedPlanRoutePlannerEnvelope {
   readonly graphSource?: GenericGraphSourceV1;
   readonly policies?: PlannerPolicyClassSet;
-  readonly environment?: PlannerEnvironmentContext;
   readonly observability?: ExecutionPlan['observability'];
 }
 
@@ -28,7 +25,7 @@ type PlannerCommandFields = {
   -readonly [K in keyof ParsedPlanRoutePlannerEnvelope]?: ParsedPlanRoutePlannerEnvelope[K];
 };
 
-const FORBIDDEN_PLANNER_INGRESS_KEYS = ['manifestRef', 'manifest', 'nodes'] as const;
+const FORBIDDEN_PLANNER_INGRESS_KEYS = ['manifestRef', 'manifest', 'nodes', 'environment'] as const;
 
 export function parsePlanRoutePlannerEnvelope(
   record: Record<string, unknown>
@@ -43,10 +40,6 @@ export function parsePlanRoutePlannerEnvelope(
 
     if (record.policies !== undefined) {
       result.policies = parsePlannerPolicyClassSet(record.policies);
-    }
-
-    if (record.environment !== undefined) {
-      result.environment = parsePlanRoutePlannerEnvironment(record.environment);
     }
 
     if (record.observability !== undefined) {
@@ -126,17 +119,6 @@ function normalizePlannerObservability(
   }
 
   return normalized;
-}
-
-function parsePlanRoutePlannerEnvironment(raw: unknown): PlannerEnvironmentContext {
-  const canonicalEnvironment = parsePlannerEnvironmentContext(raw);
-
-  return {
-    ...(canonicalEnvironment.environmentId === undefined
-      ? {}
-      : { environmentId: canonicalEnvironment.environmentId }),
-    ...(canonicalEnvironment.vars === undefined ? {} : { vars: canonicalEnvironment.vars }),
-  };
 }
 
 function assertNoForbiddenPlannerIngress(record: Record<string, unknown>): void {

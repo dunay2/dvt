@@ -150,14 +150,15 @@ describe('PlannerFacade - canonical graph source boundary', () => {
     );
   });
 
-  it('strips compatibility-only environment fields before delegating', async () => {
+  it('rejects the retired environment field at the Planner boundary', async () => {
     const facade = new PlannerFacade();
-    const result = await facade.buildPlan({
+    const input = {
       graphSource: BASE_GRAPH_SOURCE,
       selection: BASE_SELECTION,
       environment: { environmentId: 'prod', vars: { full_refresh: false } },
-    });
-    expect(result.plan).toBeDefined();
+    } as unknown as Parameters<PlannerFacade['buildPlan']>[0];
+
+    await expectInvalidInput(facade.buildPlan(input), 'Planner input failed contract validation');
   });
 
   it('supports non-DBT graphSource when stepFactory is injected', async () => {

@@ -122,6 +122,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Plan-store tenancy and live RLS profile coverage remain after forced RLS baseline](R-20260425-PRODUCTION-TENANT-ISOLATION-BASELINE.yaml)
 - [Planner boundary contract naming drift across V2 and V1 symbols](R-20260404-PLANNER-V1-CONTRACT-NORMALIZATION.yaml)
 - [Planner boundary exposed DBT-native ingress alongside canonical graph admission](R-20260410-PLANNER-KERNEL-DBT-INGRESS-LEAKAGE.yaml)
+- [Planner callers could retain the removed no-op environment input](R-20260902-PLANNER-ENVIRONMENT-INGRESS-DRIFT.yaml)
 - [Planner canonical JSON dependency upgrades can drift from deterministic hashing behavior](R-20260603-PLANNER-JSON-CANONICALIZE-2-UPGRADE.yaml)
 - [Planner determinism hash pin silently drifts when plan serialization changes](R-20260331-PLANNER-DETERMINISM-HASH-DRIFT.yaml)
 - [Planner manifestRef cache serves stale graph if sha256 contract is violated upstream](R-20260330-PLANNER-MANIFEST-CACHE-STALENESS.md)

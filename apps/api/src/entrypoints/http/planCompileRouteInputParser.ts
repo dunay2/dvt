@@ -46,7 +46,6 @@ export function parsePlanCompileRouteInput(
         graphSource: toPlanRouteGraphSource(compileRequest.graphSource),
         selection: toCompileSelection(compileRequest.selection),
         policies: compileRequest.policies,
-        environment: compileRequest.environment,
         observability: compileRequest.observability,
       },
     },

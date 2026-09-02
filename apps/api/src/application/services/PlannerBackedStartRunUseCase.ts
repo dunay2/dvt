@@ -227,7 +227,6 @@ function toPlannerInput(
   return resolveCanonicalPlannerInputEnvelope({
     graphSource: toPlannerGraphSource(command.graphSource),
     ...(command.policies === undefined ? {} : { policies: command.policies }),
-    ...(command.environment === undefined ? {} : { environment: command.environment }),
     ...(ownership === undefined ? {} : { ownership }),
     ...(command.observability === undefined ? {} : { observability: command.observability }),
     selection: { selectedNodeIds: [...selectedNodeIds] },

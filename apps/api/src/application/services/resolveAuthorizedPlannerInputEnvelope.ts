@@ -7,7 +7,6 @@ import { resolveCanonicalPlannerInputEnvelope } from './resolveCanonicalPlannerI
 type OptionalPropertyInput<T> = T | undefined;
 
 type PlannerInputPolicies = NonNullable<PlannerInputEnvelopeV1['policies']>;
-type PlannerInputEnvironment = NonNullable<PlannerInputEnvelopeV1['environment']>;
 type PlannerInputObservability = NonNullable<PlannerInputEnvelopeV1['observability']>;
 
 interface PlannerInputObservabilityInput {
@@ -16,17 +15,11 @@ interface PlannerInputObservabilityInput {
   readonly extra?: OptionalPropertyInput<Record<string, unknown>>;
 }
 
-interface PlannerInputEnvironmentInput {
-  readonly environmentId?: OptionalPropertyInput<string>;
-  readonly vars?: OptionalPropertyInput<Record<string, unknown>>;
-}
-
 export interface AuthorizedPlannerInputSeed {
   readonly graphSource: PlannerInputEnvelopeV1['graphSource'];
   readonly selection: PlannerInputEnvelopeV1['selection'];
   readonly decisionScope?: OptionalPropertyInput<PlannerInputEnvelopeV1['decisionScope']>;
   readonly policies?: OptionalPropertyInput<PlannerInputPolicies>;
-  readonly environment?: OptionalPropertyInput<PlannerInputEnvironmentInput>;
   readonly observability?: OptionalPropertyInput<PlannerInputObservabilityInput>;
 }
 
@@ -41,9 +34,6 @@ export function resolveAuthorizedPlannerInputEnvelope(
     selection: seed.selection,
     ...(seed.decisionScope === undefined ? {} : { decisionScope: seed.decisionScope }),
     ...(seed.policies === undefined ? {} : { policies: seed.policies }),
-    ...(seed.environment === undefined
-      ? {}
-      : { environment: normalizePlannerInputEnvironment(seed.environment) }),
     ...(ownership === undefined ? {} : { ownership }),
     ...(seed.observability === undefined
       ? {}
@@ -98,15 +88,4 @@ function normalizePlannerInputObservability(
   }
 
   return normalized;
-}
-
-function normalizePlannerInputEnvironment(
-  environment: PlannerInputEnvironmentInput
-): PlannerInputEnvironment {
-  return {
-    ...(environment.environmentId === undefined
-      ? {}
-      : { environmentId: environment.environmentId }),
-    ...(environment.vars === undefined ? {} : { vars: environment.vars }),
-  };
 }

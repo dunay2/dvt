@@ -53,12 +53,6 @@ export const VALID_START_RUN_PLANNER_BACKED_COMMAND_FIXTURE: StartRunCommand = {
   policies: {
     retry: { kind: 'at-most-once' },
   },
-  environment: {
-    environmentId: 'prod',
-    vars: {
-      target_name: 'prod',
-    },
-  },
   observability: {
     tags: {
       route: 'start-run',

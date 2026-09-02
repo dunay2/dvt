@@ -13,11 +13,7 @@ import { PlannerPolicyClassSetSchema } from '../contracts/planner/PlannerPolicyV
 
 import { NonBlankStringSchema } from './common.js';
 import { ExecutionPlanSchema } from './execution-plan.js';
-import {
-  PlannerEnvironmentContextSchema,
-  PlannerObservabilitySchema,
-  PlannerSelectionSchema,
-} from './planner-context.js';
+import { PlannerObservabilitySchema, PlannerSelectionSchema } from './planner-context.js';
 import { GenericGraphSourceV1Schema } from './planner-graph.js';
 
 export const PlanCompileScopeSchema = z
@@ -34,7 +30,6 @@ export const PlanCompileRequestV1Schema = z
     selection: PlannerSelectionSchema,
     graphSource: GenericGraphSourceV1Schema,
     policies: PlannerPolicyClassSetSchema.optional(),
-    environment: PlannerEnvironmentContextSchema.optional(),
     observability: PlannerObservabilitySchema.optional(),
   })
   .strict();

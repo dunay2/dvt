@@ -73,7 +73,6 @@ const COMPILE_COMMAND = {
     selectedNodeIds: ['spark-job-1'],
   },
   policies: undefined,
-  environment: undefined,
   observability: undefined,
 } as const;
 
@@ -128,7 +127,6 @@ const OBJECT_FILE_COMPILE_COMMAND = {
   },
   selection: { selectedNodeIds: ['load-orders'] },
   policies: undefined,
-  environment: undefined,
   observability: undefined,
 } as const;
 
