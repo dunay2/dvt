@@ -168,7 +168,11 @@ describe('ResolveAuthorizedExecutableSubgraphService', () => {
     expect(planner.deriveExecutableSubgraph).toHaveBeenCalledTimes(1);
   });
 
-  it('ignores reference-only authoring edges before deriving the executable closure', async () => {
+  it.each([
+    { executionDependency: false },
+    { executionGate: 'closed' },
+    { executionGate: 'future-state' },
+  ])('excludes non-executable edge metadata %o before deriving the closure', async (metadata) => {
     const selection = parseExecutionSelection({
       mode: 'explicit',
       nodeIds: ['transform-node'],
@@ -196,9 +200,7 @@ describe('ResolveAuthorizedExecutableSubgraphService', () => {
                 sourceId: 'source-node',
                 targetId: 'transform-node',
                 relation: 'lineage',
-                metadata: {
-                  executionDependency: false,
-                },
+                metadata,
               },
             ],
           },
