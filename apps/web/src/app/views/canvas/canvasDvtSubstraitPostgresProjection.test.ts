@@ -146,12 +146,14 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     const withTrim = applyDvtSubstraitProjectionFunction(base, {
       fieldId: 'output:customer',
       capabilityId: trim.capabilityId,
+      alias: 'buyer',
       dataType: 'text',
       provider: 'postgres',
     });
     const withUpper = applyDvtSubstraitProjectionFunction(withTrim, {
       fieldId: 'output:customer',
       capabilityId: upper.capabilityId,
+      alias: 'buyer',
       dataType: 'text',
       provider: 'postgres',
     });
@@ -164,6 +166,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       applyDvtSubstraitProjectionFunction(base, {
         fieldId: 'output:amount',
         capabilityId: trim.capabilityId,
+        alias: 'amount',
         dataType: 'numeric',
         provider: 'postgres',
       })
@@ -180,6 +183,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       applyDvtSubstraitProjectionFunction(connectedOrdersProjectionDraft(), {
         fieldId: 'output:customer',
         capabilityId: trim.capabilityId,
+        alias: 'buyer',
         dataType: 'text',
         provider: 'postgres',
       });
@@ -215,6 +219,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     const withTrim = applyDvtSubstraitProjectionFunction(connectedOrdersProjectionDraft(), {
       fieldId: 'output:customer',
       capabilityId: trim.capabilityId,
+      alias: 'buyer',
       dataType: 'text',
       provider: 'postgres',
     });
@@ -228,6 +233,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     const withUpper = applyDvtSubstraitProjectionFunction(withTrim, {
       fieldId: 'output:customer',
       capabilityId: upper.capabilityId,
+      alias: 'buyer',
       dataType: 'text',
       provider: 'postgres',
     });

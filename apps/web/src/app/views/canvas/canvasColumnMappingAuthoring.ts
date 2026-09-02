@@ -318,6 +318,7 @@ function persistProjectionRecipe(args: {
       const nextDraft = applyDvtSubstraitProjectionFunction(draft, {
         fieldId: output.id,
         capabilityId: capability.capabilityId,
+        alias: output.name,
         dataType: sourceField.dataType,
         provider: source.sourceRef.connectionRef.provider,
       });

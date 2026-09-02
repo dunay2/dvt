@@ -21,6 +21,8 @@ type NodeActionHandlers = {
     nodeId: string;
     columnId: string;
     capabilityId: string;
+    alias: string;
+    sourceColumnId?: string;
   }) => void;
   onToggleCanvasColumnOutput?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
   onReorderDvtSubstraitColumnOutput?: (identity: GraphNodeColumnReorderIdentity) => void;

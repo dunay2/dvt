@@ -818,6 +818,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
         columnId: 'output:order_id',
         sourceColumnId: 'output:customer',
         capabilityId: trim.capabilityId,
+        alias: 'order_id_clean',
       });
     });
 
@@ -841,6 +842,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
         : []
     ).toMatchObject({
       fieldId: 'output:order_id',
+      name: 'order_id_clean',
       sourceFieldName: 'customer',
       operations: ['trim'],
     });

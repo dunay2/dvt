@@ -558,11 +558,13 @@ export function applyDvtSubstraitProjectionFunction(
     fieldId: string;
     inputFieldId?: string;
     capabilityId: string;
+    alias: string;
     dataType: string;
     provider: string;
   }
 ): DvtSubstraitProjectionDraft {
   const inspection = inspectDvtSubstraitProjectionDraft(draft);
+  const alias = args.alias.trim();
   const capability = resolveDvtSubstraitColumnFunctions({
     dataType: args.dataType,
     provider: args.provider,
@@ -578,8 +580,12 @@ export function applyDvtSubstraitProjectionFunction(
   if (
     !inspection.ok ||
     capability == null ||
+    alias.length === 0 ||
     output == null ||
     inputOutput == null ||
+    inspection.projection.outputs.some(
+      (candidate) => candidate.fieldId !== args.fieldId && candidate.name === alias
+    ) ||
     (args.inputFieldId != null && args.inputFieldId === args.fieldId)
   ) {
     return draft;
@@ -587,8 +593,8 @@ export function applyDvtSubstraitProjectionFunction(
 
   const plan = fromBinary(PlanSchema, toBinary(PlanSchema, draft.plan));
   const rootRelation = plan.relations[0]?.relType;
-  const projectRelation =
-    rootRelation?.case === 'root' ? rootRelation.value.input?.relType : undefined;
+  if (rootRelation?.case !== 'root') return draft;
+  const projectRelation = rootRelation.value.input?.relType;
   if (projectRelation?.case !== 'project') {
     return draft;
   }
@@ -717,6 +723,7 @@ export function applyDvtSubstraitProjectionFunction(
   } else {
     project.expressions[targetExpressionOrdinal] = nextExpression;
   }
+  rootRelation.value.names[output.outputOrdinal] = alias;
   const usedFunctionAnchors = new Set<number>();
   const visitFunctionAnchors = (expression: Expression): void => {
     if (expression.rexType.case !== 'scalarFunction') return;
@@ -741,7 +748,15 @@ export function applyDvtSubstraitProjectionFunction(
   plan.extensionUrns = plan.extensionUrns.filter((entry) =>
     usedExtensionUrnAnchors.has(entry.extensionUrnAnchor)
   );
-  const nextDraft = { plan, sidecar: draft.sidecar };
+  const nextDraft = {
+    plan,
+    sidecar: {
+      ...draft.sidecar,
+      fields: draft.sidecar.fields.map((field) =>
+        field.fieldId === output.fieldId ? { ...field, displayName: alias } : field
+      ),
+    },
+  };
   return inspectDvtSubstraitProjectionDraft(nextDraft).ok ? nextDraft : draft;
 }
 

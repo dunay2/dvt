@@ -41,6 +41,7 @@ export type UseCanvasGraphHandlersResult = {
     nodeId: string;
     columnId: string;
     capabilityId: string;
+    alias: string;
     sourceColumnId?: string;
   }) => void;
   handleToggleCanvasColumnOutput: (identity: {

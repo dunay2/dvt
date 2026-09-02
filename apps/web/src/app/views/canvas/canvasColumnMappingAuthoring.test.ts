@@ -284,6 +284,7 @@ describe('Canvas column mapping authoring', () => {
       {
         fieldId: 'output:customer',
         capabilityId: trim.capabilityId,
+        alias: 'customer',
         dataType: 'text',
         provider: 'postgres',
       }
