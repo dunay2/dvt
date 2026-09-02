@@ -6,6 +6,7 @@ import test from 'node:test';
 const require = createRequire(import.meta.url);
 const {
   scanSectionEntries,
+  shouldIncludeDocumentationPath,
   shouldIncludePlanningDoc,
   splitFrontmatter,
 } = require('../../scripts/sync-docs.cjs');
@@ -27,6 +28,25 @@ test('planning doc index generation excludes superseded and archived docs', () =
   assert.equal(shouldIncludePlanningDoc('Archived'), false);
   assert.equal(shouldIncludePlanningDoc('superseded'), false);
   assert.equal(shouldIncludePlanningDoc(' archived '), false);
+});
+
+test('docs sync includes new Git documents without requiring a Planning DB rebuild', () => {
+  const lifecycleAuthority = {
+    rowsByPath: new Map(),
+    trackedPaths: new Set(['docs/evidence/ED-20260902-new-git-evidence.md']),
+  };
+
+  assert.equal(
+    shouldIncludeDocumentationPath(
+      'docs/evidence/ED-20260902-new-git-evidence.md',
+      lifecycleAuthority
+    ),
+    true
+  );
+  assert.equal(
+    shouldIncludeDocumentationPath('docs/evidence/untracked-local-note.md', lifecycleAuthority),
+    false
+  );
 });
 
 test('splitFrontmatter parses BOM-prefixed markdown frontmatter without duplicating metadata', () => {

@@ -367,23 +367,17 @@ function lifecycleStateIsPublishable(lifecycleRow = {}) {
 }
 
 function lifecycleAuthorityParts(authority) {
-  if (authority instanceof Map) return { rowsByPath: authority, strict: false };
-  return {
-    rowsByPath: authority?.rowsByPath,
-    strict: authority?.strict === true,
-  };
+  if (authority instanceof Map) return { rowsByPath: authority, trackedPaths: undefined };
+  return { rowsByPath: authority?.rowsByPath, trackedPaths: authority?.trackedPaths };
 }
 
 function shouldIncludeDocumentationPath(documentPath, authority) {
   const normalizedPath = String(documentPath || '').replace(/\\/gu, '/');
-  const { rowsByPath, strict } = lifecycleAuthorityParts(authority);
+  const { rowsByPath, trackedPaths } = lifecycleAuthorityParts(authority);
   if (!(rowsByPath instanceof Map)) return true;
   const lifecycleRow = rowsByPath.get(normalizedPath);
   if (!lifecycleRow) {
-    if (strict && /\.md$/iu.test(normalizedPath)) {
-      throw new Error(`Missing Planning DB lifecycle authority for ${normalizedPath}.`);
-    }
-    return true;
+    return !(trackedPaths instanceof Set) || trackedPaths.has(normalizedPath);
   }
   return lifecycleStateIsPublishable(lifecycleRow);
 }
@@ -401,6 +395,16 @@ async function readDocumentationLifecycleAuthority(options = {}) {
   const ownsClient = !options.client;
   if (ownsClient) await client.connect();
   try {
+    const trackedPaths = new Set(
+      require('node:child_process')
+        .execFileSync('git', ['ls-files', '--', 'docs'], {
+          cwd: repoRoot,
+          encoding: 'utf8',
+        })
+        .split(/\r?\n/u)
+        .filter(Boolean)
+        .map((trackedPath) => trackedPath.replace(/\\/gu, '/'))
+    );
     const rows = await readDocumentationLifecycleRows(client, { limit: 100000 });
     const rowsByPath = new Map();
     for (const row of rows) {
@@ -411,7 +415,7 @@ async function readDocumentationLifecycleAuthority(options = {}) {
       }
       rowsByPath.set(documentPath, row);
     }
-    return { rowsByPath, strict: true };
+    return { rowsByPath, trackedPaths };
   } finally {
     if (ownsClient) await client.end();
   }
