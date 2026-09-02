@@ -5,7 +5,20 @@ import type { LucideIcon } from 'lucide-react';
 import type { CanonicalNode, CoreNodeRole, PluginNodeKind } from '../../types/canonical';
 import type { CanonicalRunStatus } from '../../types/engine';
 import type { NodeCostData } from './NodeCostData';
-import type { GraphNodeCardStrategy } from '../graph/graphNodeCardStrategyContracts';
+import type { GraphNodeAlgebraicDrop } from '../graph/GraphNodeAlgebraicDropZone';
+import type {
+  GraphNodeCalculatedColumnIdentity,
+  GraphNodeColumn,
+  GraphNodeColumnFunctionApplyIdentity,
+  GraphNodeColumnOutputToggleIdentity,
+  GraphNodeColumnPortDirection,
+  GraphNodeColumnPortIdentity,
+  GraphNodeColumnReorderIdentity,
+} from '../graph/graphNodeColumnContracts';
+import type {
+  GraphNodeCardStrategy,
+  GraphNodeOperationalDetail,
+} from '../graph/graphNodeCardStrategyContracts';
 
 // ---------------------------------------------------------------------------
 // Node decoration — produced by overlays, merged by shell
@@ -66,6 +79,39 @@ export interface CanvasOverlayContribution {
 // Node renderer — base renderer (one per node, highest priority wins)
 // ---------------------------------------------------------------------------
 
+export type GraphNodeRendererData = Readonly<{
+  [extension: string]: unknown;
+  type?: string;
+  typeLabel?: string;
+  showColumns?: boolean;
+  columns?: readonly GraphNodeColumn[];
+  displayTags?: readonly Readonly<{ value: string; label: string }>[];
+  canOpenNodeCode?: boolean;
+  sourceDataSampleInteractionLabel?: string;
+  columnPortDirections?: readonly GraphNodeColumnPortDirection[];
+  activeColumnHandleId?: string | null;
+  algebraicDrop?: GraphNodeAlgebraicDrop;
+  onInspectNode?: (
+    nodeId: string,
+    preferredTabId?: 'general' | 'inputs-outputs' | 'tests' | 'code' | null
+  ) => void;
+  onOpenSourceDataSample?: (nodeId: string) => void;
+  onOpenOperationalDetails?: (
+    detail: GraphNodeOperationalDetail,
+    anchorElement: HTMLElement
+  ) => void;
+  onFilterByTag?: (tag: string) => void;
+  getTagFilterLabel?: (tag: string) => string;
+  onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
+  onApplyCanvasColumnFunction?: (identity: GraphNodeColumnFunctionApplyIdentity) => void;
+  onAddCanvasCalculatedColumn?: (identity: GraphNodeCalculatedColumnIdentity) => void;
+  onToggleCanvasColumnOutput?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
+  onReorderCanvasColumnOutput?: (identity: GraphNodeColumnReorderIdentity) => void;
+  onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;
+  onColumnLayoutChange?: () => void;
+  onAutomapColumns?: (nodeId: string, columns: readonly GraphNodeColumn[]) => void;
+}>;
+
 export type NodeRendererProps = {
   node: CanonicalNode;
   selected: boolean;
@@ -76,7 +122,7 @@ export type NodeRendererProps = {
   badges: NodeBadge[];
   /** Plugin-projected card strategies — sorted by registry contribution order */
   graphNodeCardStrategies: readonly GraphNodeCardStrategy[];
-  data: Record<string, unknown>;
+  data: GraphNodeRendererData;
 };
 
 export interface NodeRendererRegistration {

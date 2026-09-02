@@ -27,10 +27,7 @@ function rendererProps(): NodeRendererProps {
       typeLabel: 'Transform',
       showColumns: true,
       columns: [{ name: 'order_id', type: 'integer', nullable: false }],
-      displayTags: [
-        { value: 'critical', label: 'Critical' },
-        { value: 4, label: 'invalid' },
-      ],
+      displayTags: [{ value: 'critical', label: 'Critical' }],
     },
   };
 }
