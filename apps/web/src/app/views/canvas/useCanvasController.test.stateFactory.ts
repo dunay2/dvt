@@ -118,10 +118,7 @@ function buildDefaultCanvasHarnessStore(currentPlan: PlanViewModel): CanvasHarne
 
 function buildDefaultCanvasHarnessGraphHandlersResult(): CanvasHarnessState['graphHandlersResult'] {
   return {
-    confirmEdgeModal: { open: false, edge: null },
-    setConfirmEdgeModal: vi.fn(),
     onConnect: vi.fn(),
-    confirmEdgeCreation: vi.fn(),
     handleInspectNode: vi.fn(),
     handleAutoLayout: vi.fn(),
     handleDrop: vi.fn(),

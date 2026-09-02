@@ -276,7 +276,7 @@ describe('useCanvasController source import contract', () => {
           canvasGraphLifecycle.node.admitExplicit(currentSession, localDbtModelNode)
         );
       }),
-      confirmEdgeCreation: vi.fn(() => {
+      onConnect: vi.fn(() => {
         params.setEdges([
           {
             id: `edge-${importedWarehouseSourceNode.id}-${localDbtModelNode.id}`,
@@ -313,7 +313,12 @@ describe('useCanvasController source import contract', () => {
 
     await act(async () => {
       harness.getLatestResult()?.handleCreateAuthoringNode(dbtModelRegistration);
-      harness.getLatestResult()?.confirmEdgeCreation();
+      harness.getLatestResult()?.onConnect({
+        source: importedWarehouseSourceNode.id,
+        target: localDbtModelNode.id,
+        sourceHandle: null,
+        targetHandle: null,
+      });
     });
     await harness.renderProbe();
     await waitForAutosaveDebounce();

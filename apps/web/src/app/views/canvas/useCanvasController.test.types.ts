@@ -51,7 +51,7 @@ export type CanvasHarnessState = {
   };
   graphHandlersResult: {
     handleDrop: MockFn;
-    confirmEdgeCreation: MockFn;
+    onConnect: MockFn;
   } & Record<string, unknown>;
   executionActionsResult: {
     canStartRun: boolean;

@@ -90,7 +90,7 @@ describe('Canvas algebraic composition', () => {
       ...state,
       operation: 'union_all',
     });
-    if (transaction.outcome !== 'confirmed') throw new Error('Expected confirmed composition.');
+    if (transaction.outcome !== 'created') throw new Error('Expected created composition.');
     const composedNode = transaction.draftSession.localNodeCatalog?.[target.id];
     if (composedNode == null) throw new Error('Expected composed Transform.');
     const authority = readDvtTransformAuthoringAuthority(composedNode);

@@ -19,21 +19,14 @@ describe('useCanvasEdgeAuthoringHandlers architecture', () => {
     expect(EDGE_AUTHORING_HANDLERS_SOURCE).not.toContain('UseCanvasGraphHandlersResult');
   });
 
-  it('stays as a composition seam over proposal, confirmation, and reconnect handlers', () => {
-    expect(EDGE_AUTHORING_HANDLERS_SOURCE).toContain('useCanvasConnectionProposalHandler');
-    expect(EDGE_AUTHORING_HANDLERS_SOURCE).toContain('useCanvasConnectionConfirmationHandler');
-    expect(EDGE_AUTHORING_HANDLERS_SOURCE).toContain('useCanvasEdgeReconnectHandler');
-  });
-
-  it('routes edge confirmations and reconnects through a command runner instead of updater side effects', () => {
+  it('routes edge creation and reconnect through a command runner instead of updater side effects', () => {
     expect(EDGE_AUTHORING_HANDLERS_SOURCE).toContain('useCanvasEdgeCommandRunner');
     expect(EDGE_AUTHORING_HANDLERS_SOURCE).toContain('resolveVisibleDraftPluginPortMap');
     expect(EDGE_AUTHORING_HANDLERS_SOURCE).toContain('getPluginPortMap(args.runtimeCapabilities)');
     expect(EDGE_AUTHORING_HANDLERS_SOURCE).toContain('state.canonicalNodesById');
     expect(EDGE_AUTHORING_HANDLERS_SOURCE).not.toContain('setEdges((existingEdges)');
     expect(EDGE_AUTHORING_HANDLERS_SOURCE).not.toContain('setDraftSession((currentSession)');
-    expect(EDGE_AUTHORING_HANDLERS_SOURCE).not.toContain('confirmReconnect');
-    expect(EDGE_COMMAND_RUNNER_SOURCE).toContain('resolveCanvasEdgeConfirmationTransaction');
+    expect(EDGE_COMMAND_RUNNER_SOURCE).toContain('resolveCanvasEdgeCreationTransaction');
     expect(EDGE_COMMAND_RUNNER_SOURCE).toContain('resolveCanvasEdgeReconnectTransaction');
     expect(EDGE_COMMAND_RUNNER_SOURCE).toContain('setEdges(args.transaction.edges)');
     expect(EDGE_COMMAND_RUNNER_SOURCE).toContain('canvasGraphLifecycle.edge.replaceVisible');

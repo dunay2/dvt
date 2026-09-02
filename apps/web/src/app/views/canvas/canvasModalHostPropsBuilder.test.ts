@@ -20,9 +20,6 @@ describe('buildCanvasModalHostProps', () => {
       canStartRun: false,
       planStatusSummary: 'Preview blocked',
       handleStartRun: vi.fn(),
-      confirmEdgeModal: { open: false, edge: null },
-      setConfirmEdgeModal: vi.fn(),
-      confirmEdgeCreation: vi.fn(),
     } as unknown as Parameters<typeof buildCanvasModalHostProps>[0];
 
     const props = buildCanvasModalHostProps(source);
