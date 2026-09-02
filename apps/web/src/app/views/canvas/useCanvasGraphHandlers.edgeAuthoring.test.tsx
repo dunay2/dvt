@@ -815,7 +815,8 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     act(() => {
       harness.latest()?.handleApplyDvtSubstraitColumnFunction({
         nodeId: transform.id,
-        columnId: 'output:customer',
+        columnId: 'output:order_id',
+        sourceColumnId: 'output:customer',
         capabilityId: trim.capabilityId,
       });
     });
@@ -836,10 +837,13 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     expect(inspection.ok).toBe(true);
     expect(
       inspection.ok
-        ? inspection.projection.outputs.find((output) => output.fieldId === 'output:customer')
-            ?.operations
+        ? inspection.projection.outputs.find((output) => output.fieldId === 'output:order_id')
         : []
-    ).toEqual(['trim']);
+    ).toMatchObject({
+      fieldId: 'output:order_id',
+      sourceFieldName: 'customer',
+      operations: ['trim'],
+    });
 
     setDraftSession.mockClear();
     act(() => {

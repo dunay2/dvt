@@ -100,7 +100,7 @@ export function useCanvasGraphHandlers({
     );
   };
   const handleApplyDvtSubstraitColumnFunction: UseCanvasGraphHandlersResult['handleApplyDvtSubstraitColumnFunction'] =
-    ({ nodeId, columnId, capabilityId }) => {
+    ({ nodeId, columnId, sourceColumnId, capabilityId }) => {
       setDraftSession((currentSession) => {
         const targetNode =
           currentSession.localNodeCatalog?.[nodeId] ?? canonicalNodesById.get(nodeId);
@@ -133,12 +133,24 @@ export function useCanvasGraphHandlers({
             draft,
           });
           const output = projection?.outputs.find((candidate) => candidate.fieldId === columnId);
-          if (projection == null || output == null) return currentSession;
+          const sourceOutput =
+            sourceColumnId == null
+              ? output
+              : projection?.outputs.find((candidate) => candidate.fieldId === sourceColumnId);
+          if (
+            projection == null ||
+            output == null ||
+            sourceOutput == null ||
+            (sourceColumnId != null && sourceColumnId === columnId)
+          ) {
+            return currentSession;
+          }
 
           const nextDraft = applyDvtSubstraitProjectionFunction(draft, {
             fieldId: output.fieldId,
+            ...(sourceColumnId == null ? {} : { inputFieldId: sourceOutput.fieldId }),
             capabilityId,
-            dataType: output.dataType,
+            dataType: sourceOutput.dataType,
             provider: projection.source.sourceRef.connectionRef.provider,
           });
           if (nextDraft === draft) return currentSession;
