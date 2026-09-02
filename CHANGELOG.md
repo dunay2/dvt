@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.0 (2026-09-02)
+
+## What's Changed
+* fix(web): Author DBT model projection columns from Canvas by @dunay2 in https://github.com/dunay2/dvt/pull/2821
+* feat(web): Compose Transform fields through function drops by @dunay2 in https://github.com/dunay2/dvt/pull/2824
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.8.0...v0.9.0
+
 ## 0.8.0 (2026-09-02)
 
 ## What's Changed
