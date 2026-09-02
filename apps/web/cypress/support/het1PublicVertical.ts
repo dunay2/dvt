@@ -149,12 +149,6 @@ export function updateDbtModelSql(args: { nodeName: string; sql: string }): void
   closeNodeWorkbench();
 }
 
-export function confirmCanvasDependency(): void {
-  cy.get('[role="alertdialog"]', { timeout: 20_000 }).should('be.visible');
-  cy.get('[role="alertdialog"] button').filter(':enabled').last().click();
-  cy.get('[role="alertdialog"]').should('not.exist');
-}
-
 export function waitForPersistedDraft(args: {
   session: E2eWorkspaceSession;
   description: string;

@@ -18,7 +18,7 @@ import {
   resolveDvtSubstraitUnionAllEntry,
 } from './canvasDvtSubstraitSetComposition';
 import {
-  resolveCanvasEdgeConfirmationTransaction,
+  resolveCanvasEdgeCreationTransaction,
   type CanvasEdgeAdmissionTransaction,
 } from './canvasEdgeAdmissionTransaction';
 
@@ -126,12 +126,12 @@ export function resolveCanvasAlgebraicCompositionTransaction(
   }
   const nodes = resolveCanvasDraftNodes(args.draftSession, args.canonicalNodesById);
   const canonicalNodesById = new Map(nodes.map((node) => [node.id, node]));
-  const transaction = resolveCanvasEdgeConfirmationTransaction({
+  const transaction = resolveCanvasEdgeCreationTransaction({
     ...args,
     canonicalNodesById,
     connection: connection(args),
   });
-  if (transaction.outcome !== 'confirmed') return transaction;
+  if (transaction.outcome !== 'created') return transaction;
   const updatedNodes = resolveCanvasDraftNodes(transaction.draftSession, canonicalNodesById);
   const targetNode = updatedNodes.find((node) => node.id === args.targetNodeId);
   if (targetNode == null) {

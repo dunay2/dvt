@@ -131,12 +131,11 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     });
 
     expect(toastState.error).toHaveBeenCalledWith(canvasViewCopy.mutationUnavailableMessage);
-    expect(harness.latest()?.confirmEdgeModal).toEqual({ open: false, edge: null });
 
     harness.cleanup();
   });
 
-  it('routes a pointer column connection into recipe authority without opening node-edge confirmation', async () => {
+  it('routes a pointer column connection into recipe authority without creating a node edge', async () => {
     const source = buildConnectedPostgresSource('source-node', [
       { name: 'order_id', type: 'integer' },
     ]);
@@ -178,7 +177,6 @@ describe('useCanvasGraphHandlers edge authoring', () => {
       });
     });
 
-    expect(harness.latest()?.confirmEdgeModal).toEqual({ open: false, edge: null });
     expect(setDraftSession).toHaveBeenCalledTimes(1);
     const nextSession = setDraftSession.mock.calls[0]?.[0];
     expect(typeof nextSession).toBe('object');
@@ -242,7 +240,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     harness.cleanup();
   });
 
-  it('preserves concurrent draft-session state when confirming an edge', async () => {
+  it('creates a dependency immediately while preserving concurrent draft-session state', async () => {
     const setEdges = vi.fn();
     const setDraftSession = vi.fn();
     const draftSession = buildDraftSession();
@@ -261,7 +259,6 @@ describe('useCanvasGraphHandlers edge authoring', () => {
         target: 'sink-node',
         targetHandle: null,
       });
-      harness.latest()?.confirmEdgeCreation();
     });
 
     expect(setEdges).toHaveBeenCalledTimes(1);
@@ -294,7 +291,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     harness.cleanup();
   });
 
-  it('commits the deterministic mappings produced by stage-edge confirmation', async () => {
+  it('commits deterministic mappings with the created stage edge', async () => {
     const source = buildConnectedPostgresSource('source-node', [
       { name: 'order_id', type: 'integer' },
       { name: 'customer', type: 'text' },
@@ -327,7 +324,6 @@ describe('useCanvasGraphHandlers edge authoring', () => {
         target: transform.id,
         targetHandle: null,
       });
-      harness.latest()?.confirmEdgeCreation();
     });
 
     expect(setDraftSession).toHaveBeenCalledTimes(1);
@@ -383,7 +379,6 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     expect(toastState.error).toHaveBeenCalledWith(
       'No compatible data port bridge between dbt (input) and monitoring (output).'
     );
-    expect(harness.latest()?.confirmEdgeModal).toEqual({ open: false, edge: null });
 
     harness.cleanup();
   });
@@ -417,7 +412,6 @@ describe('useCanvasGraphHandlers edge authoring', () => {
       expect(toastState.error).toHaveBeenCalledWith(expectedMessage);
       expect(setEdges).not.toHaveBeenCalled();
       expect(setDraftSession).not.toHaveBeenCalled();
-      expect(harness.latest()?.confirmEdgeModal).toEqual({ open: false, edge: null });
 
       harness.cleanup();
     }
@@ -500,19 +494,12 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     });
 
     expect(toastState.error).not.toHaveBeenCalled();
-    expect(harness.latest()?.confirmEdgeModal).toEqual({
-      open: true,
-      edge: {
-        source: 'warehouse-source',
-        target: 'dbt-model',
-        type: 'lineage',
-      },
-    });
+    expect(toastState.success).toHaveBeenCalledWith(canvasViewCopy.dependencyAddedMessage);
 
     harness.cleanup();
   });
 
-  it('confirms warehouse-source to dbt model edges into draft visible-edge truth', async () => {
+  it('creates warehouse-source to dbt model edges in draft visible-edge truth', async () => {
     const setEdges = vi.fn();
     const setDraftSession = vi.fn();
     const harness = renderGraphHandlersHook({
@@ -584,7 +571,6 @@ describe('useCanvasGraphHandlers edge authoring', () => {
         target: 'dbt-model',
         targetHandle: null,
       });
-      harness.latest()?.confirmEdgeCreation();
     });
 
     expect(setEdges).toHaveBeenCalledTimes(1);
@@ -606,7 +592,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     harness.cleanup();
   });
 
-  it('confirms the registered HTTP JSON to object-file bridge through the real admission rail', async () => {
+  it('creates the registered HTTP JSON to object-file bridge through the real admission rail', async () => {
     await useRealConnectionAdmissionRail();
     const draftSession = {
       ...buildDraftSession(),
@@ -639,18 +625,6 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     });
 
     expect(toastState.error).not.toHaveBeenCalled();
-    expect(harness.latest()?.confirmEdgeModal).toEqual({
-      open: true,
-      edge: {
-        source: HTTP_JSON_ACQUISITION_NODE.name,
-        target: OBJECT_FILE_LOAD_NODE.name,
-        type: 'lineage',
-      },
-    });
-
-    act(() => {
-      harness.latest()?.confirmEdgeCreation();
-    });
 
     expect(setEdges).toHaveBeenCalledTimes(1);
     expect(setDraftSession).toHaveBeenCalledTimes(1);
@@ -687,7 +661,6 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     });
 
     expect(toastState.error).toHaveBeenCalledTimes(1);
-    expect(harness.latest()?.confirmEdgeModal).toEqual({ open: false, edge: null });
     expect(setEdges).not.toHaveBeenCalled();
     expect(setDraftSession).not.toHaveBeenCalled();
 
@@ -721,7 +694,6 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     expect(toastState.error).toHaveBeenCalledWith(
       'Connection not permitted by DVT authoring rules'
     );
-    expect(harness.latest()?.confirmEdgeModal).toEqual({ open: false, edge: null });
 
     harness.cleanup();
   });

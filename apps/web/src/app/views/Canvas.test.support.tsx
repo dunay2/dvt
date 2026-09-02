@@ -74,10 +74,6 @@ vi.mock('./canvas/CanvasViewport', () => ({
   },
 }));
 
-vi.mock('../components/Modals', () => ({
-  ConfirmEdgeModal: ({ open }: { open: boolean }) => (open ? <div>Confirm edge modal</div> : null),
-}));
-
 vi.mock('../components/PlanPreviewModal', () => ({
   PlanPreviewModal: ({ open }: { open: boolean }) =>
     open ? <div>Execution Preview modal</div> : null,

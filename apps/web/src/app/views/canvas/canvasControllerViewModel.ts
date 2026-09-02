@@ -199,9 +199,6 @@ function buildCanvasInteractionViewModel(args: CanvasControllerViewModelArgs) {
     canUseCostOverlay: overlayModel.canUseCostOverlay,
     impactOverlayEnabled: store.impactOverlayEnabled,
     columnLevelLineageEnabled: store.columnLevelLineageEnabled,
-    confirmEdgeModal: graphHandlers.confirmEdgeModal,
-    setConfirmEdgeModal: graphHandlers.setConfirmEdgeModal,
-    confirmEdgeCreation: graphHandlers.confirmEdgeCreation,
   };
 }
 

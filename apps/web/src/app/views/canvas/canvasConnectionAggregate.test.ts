@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { getPluginPortMap } from '../../plugins/registry';
 import type { CanonicalNode } from '../../types/canonical';
-import { confirmConnection, proposeConnection } from './canvasConnectionAggregate';
+import { createConnection, proposeConnection } from './canvasConnectionAggregate';
 
 function node(
   id: string,
@@ -207,7 +207,7 @@ describe('canvasConnectionAggregate', () => {
     });
 
     expect(
-      confirmConnection({
+      createConnection({
         connection: link(source.id, firstModel.id),
         canonicalNodesById,
         edges: duplicateEdges,

@@ -35,7 +35,6 @@ import {
   applyNodeWorkbench,
   assertLiveDraftScopeIsClean,
   closeNodeWorkbench,
-  confirmCanvasDependency,
   openNodeWorkbench,
   readDraftEdges,
   readDraftNodes,
@@ -239,13 +238,11 @@ describe('HET2 public REST artifact DBT vertical', () => {
       });
       closeNodeWorkbench();
       connectCanvasNodes(ACQUISITION_NODE_NAME, OBJECT_NODE_NAME);
-      confirmCanvasDependency();
 
       addCatalogNode(760, 240, 'dbt:model');
       cy.contains('.react-flow__node', MODEL_NODE_NAME, { timeout: 20_000 }).should('be.visible');
       dragCanvasNodeByViewportDelta(MODEL_NODE_NAME, { x: 120, y: -120 });
       connectCanvasNodes(OBJECT_NODE_NAME, MODEL_NODE_NAME);
-      confirmCanvasDependency();
       openNodeWorkbench(MODEL_NODE_NAME);
       openNodeWorkbenchSection('general');
       cy.get('select[name="dbt-materialized"]').select('table');
@@ -266,7 +263,6 @@ describe('HET2 public REST artifact DBT vertical', () => {
       cy.contains('.react-flow__node', TEST_NODE_NAME, { timeout: 20_000 }).should('be.visible');
       dragCanvasNodeByViewportDelta(TEST_NODE_NAME, { x: 360, y: 0 });
       connectCanvasNodes(MODEL_NODE_NAME, TEST_NODE_NAME);
-      confirmCanvasDependency();
       openNodeWorkbench(TEST_NODE_NAME);
       cy.get('select[name="dbt-test-type"]').select('not_null');
       cy.get('select[name="dbt-test-target"]').select(MODEL_NODE_ID);

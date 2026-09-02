@@ -18,7 +18,7 @@ import {
   inspectDvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
 import {
-  resolveCanvasEdgeConfirmationTransaction,
+  resolveCanvasEdgeCreationTransaction,
   resolveCanvasEdgeReconnectTransaction,
 } from './canvasEdgeAdmissionTransaction';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
@@ -86,7 +86,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
     vi.restoreAllMocks();
   });
 
-  it('confirms an edge with the next viewport edges and draft visible edges together', () => {
+  it('creates an edge with the next viewport edges and draft visible edges together', () => {
     vi.spyOn(Date, 'now').mockReturnValue(123);
     const canonicalNodesById = new Map([
       ['source-node', buildCanonicalNode('source-node', 'input', 'dvt:source')],
@@ -99,7 +99,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
       targetHandle: null,
     };
 
-    const transaction = resolveCanvasEdgeConfirmationTransaction({
+    const transaction = resolveCanvasEdgeCreationTransaction({
       canonicalNodesById,
       connection,
       draftSession: buildDraftSession(),
@@ -107,9 +107,9 @@ describe('canvasEdgeAdmissionTransaction', () => {
       pluginPortMap,
     });
 
-    expect(transaction.outcome).toBe('confirmed');
-    if (transaction.outcome !== 'confirmed') {
-      throw new Error('Expected a confirmed edge transaction');
+    expect(transaction.outcome).toBe('created');
+    if (transaction.outcome !== 'created') {
+      throw new Error('Expected a created edge transaction');
     }
     expect(transaction.edges).toMatchObject([
       {
@@ -141,7 +141,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
       },
     };
 
-    const transaction = resolveCanvasEdgeConfirmationTransaction({
+    const transaction = resolveCanvasEdgeCreationTransaction({
       canonicalNodesById: new Map([
         [source.id, source],
         [model.id, model],
@@ -157,9 +157,9 @@ describe('canvasEdgeAdmissionTransaction', () => {
       pluginPortMap,
     });
 
-    expect(transaction.outcome).toBe('confirmed');
-    if (transaction.outcome !== 'confirmed') {
-      throw new Error('Expected a confirmed edge transaction');
+    expect(transaction.outcome).toBe('created');
+    if (transaction.outcome !== 'created') {
+      throw new Error('Expected a created edge transaction');
     }
     expect(transaction.draftSession.localNodeCatalog?.[model.id]?.metadata).toMatchObject({
       config: { schema: 'dvt', table: 'model_1' },
@@ -178,7 +178,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
       [transform.id, transform],
     ]);
 
-    const transaction = resolveCanvasEdgeConfirmationTransaction({
+    const transaction = resolveCanvasEdgeCreationTransaction({
       canonicalNodesById,
       connection: {
         source: source.id,
@@ -191,16 +191,16 @@ describe('canvasEdgeAdmissionTransaction', () => {
       pluginPortMap,
     });
 
-    expect(transaction.outcome).toBe('confirmed');
-    if (transaction.outcome !== 'confirmed') {
-      throw new Error('Expected a confirmed edge transaction');
+    expect(transaction.outcome).toBe('created');
+    if (transaction.outcome !== 'created') {
+      throw new Error('Expected a created edge transaction');
     }
     expect(transaction.draftSession.workingSet.visibleEdges).toEqual([
       { sourceId: source.id, targetId: transform.id },
     ]);
     const mappedTransform = transaction.draftSession.localNodeCatalog?.[transform.id];
     if (mappedTransform == null) {
-      throw new Error('Expected the confirmed transaction to update the transform recipe');
+      throw new Error('Expected the created transaction to update the transform recipe');
     }
     const authority = readDvtTransformAuthoringAuthority(mappedTransform);
     expect(authority.mode).toBe(DVT_TRANSFORM_AUTHORING_MODE.substrait);
@@ -225,7 +225,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
     ]);
   });
 
-  it('confirms a second source without inventing a multi-source projection', () => {
+  it('creates a second source edge without inventing a multi-source projection', () => {
     const firstSource = buildConnectedSourceNode('source-node', [
       { name: 'shared_id', type: 'integer' },
       { name: 'first_only', type: 'text' },
@@ -254,7 +254,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
       },
     };
 
-    const transaction = resolveCanvasEdgeConfirmationTransaction({
+    const transaction = resolveCanvasEdgeCreationTransaction({
       canonicalNodesById,
       connection: {
         source: secondSource.id,
@@ -267,9 +267,9 @@ describe('canvasEdgeAdmissionTransaction', () => {
       pluginPortMap,
     });
 
-    expect(transaction.outcome).toBe('confirmed');
-    if (transaction.outcome !== 'confirmed') {
-      throw new Error('Expected a confirmed edge transaction');
+    expect(transaction.outcome).toBe('created');
+    if (transaction.outcome !== 'created') {
+      throw new Error('Expected a created edge transaction');
     }
     expect(transaction.draftSession.workingSet.visibleEdges).toEqual([
       { sourceId: firstSource.id, targetId: transform.id },
@@ -324,7 +324,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
       },
     };
 
-    const transaction = resolveCanvasEdgeConfirmationTransaction({
+    const transaction = resolveCanvasEdgeCreationTransaction({
       canonicalNodesById,
       connection: {
         source: secondSource.id,
@@ -337,9 +337,9 @@ describe('canvasEdgeAdmissionTransaction', () => {
       pluginPortMap,
     });
 
-    expect(transaction.outcome).toBe('confirmed');
-    if (transaction.outcome !== 'confirmed') {
-      throw new Error('Expected a confirmed edge transaction');
+    expect(transaction.outcome).toBe('created');
+    if (transaction.outcome !== 'created') {
+      throw new Error('Expected a created edge transaction');
     }
     const mappedTransform = transaction.draftSession.localNodeCatalog?.[transform.id];
     if (mappedTransform == null) throw new Error('Expected the transform recipe to remain local');
@@ -360,7 +360,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
     ]);
   });
 
-  it('keeps nonblank SQL authority intact while still confirming the stage edge', () => {
+  it('keeps nonblank SQL authority intact while creating the stage edge', () => {
     const source = {
       ...buildCanonicalNode('source-node', 'input', 'dvt:source'),
       metadata: { columns: [{ name: 'order_id', type: 'integer' }] },
@@ -374,7 +374,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
       [transform.id, transform],
     ]);
 
-    const transaction = resolveCanvasEdgeConfirmationTransaction({
+    const transaction = resolveCanvasEdgeCreationTransaction({
       canonicalNodesById,
       connection: {
         source: source.id,
@@ -387,9 +387,9 @@ describe('canvasEdgeAdmissionTransaction', () => {
       pluginPortMap,
     });
 
-    expect(transaction.outcome).toBe('confirmed');
-    if (transaction.outcome !== 'confirmed') {
-      throw new Error('Expected a confirmed edge transaction');
+    expect(transaction.outcome).toBe('created');
+    if (transaction.outcome !== 'created') {
+      throw new Error('Expected a created edge transaction');
     }
     expect(transaction.draftSession.localNodeCatalog?.[transform.id]).toBeUndefined();
     expect(readDvtTransformAuthoringAuthority(transform)).toEqual({
@@ -399,12 +399,12 @@ describe('canvasEdgeAdmissionTransaction', () => {
     });
   });
 
-  it('rejects confirmation when an endpoint is missing from the canonical graph', () => {
+  it('rejects creation when an endpoint is missing from the canonical graph', () => {
     const canonicalNodesById = new Map([
       ['source-node', buildCanonicalNode('source-node', 'input', 'dvt:source')],
     ]);
 
-    const transaction = resolveCanvasEdgeConfirmationTransaction({
+    const transaction = resolveCanvasEdgeCreationTransaction({
       canonicalNodesById,
       connection: {
         source: 'source-node',
@@ -423,12 +423,12 @@ describe('canvasEdgeAdmissionTransaction', () => {
     });
   });
 
-  it('rejects self-loop confirmation before graph effects are produced', () => {
+  it('rejects self-loop creation before graph effects are produced', () => {
     const canonicalNodesById = new Map([
       ['source-node', buildCanonicalNode('source-node', 'input', 'dvt:source')],
     ]);
 
-    const transaction = resolveCanvasEdgeConfirmationTransaction({
+    const transaction = resolveCanvasEdgeCreationTransaction({
       canonicalNodesById,
       connection: {
         source: 'source-node',
@@ -454,7 +454,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
       ['sink-node', buildCanonicalNode('sink-node', 'output', 'dvt:sink')],
     ]);
 
-    const transaction = resolveCanvasEdgeConfirmationTransaction({
+    const transaction = resolveCanvasEdgeCreationTransaction({
       canonicalNodesById,
       connection: {
         source: 'sink-node',
@@ -488,7 +488,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
     };
     const viewportEdges: Edge[] = [];
 
-    const transaction = resolveCanvasEdgeConfirmationTransaction({
+    const transaction = resolveCanvasEdgeCreationTransaction({
       canonicalNodesById,
       connection: {
         source: source.id,

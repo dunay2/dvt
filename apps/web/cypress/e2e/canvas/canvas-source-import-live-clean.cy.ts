@@ -475,10 +475,6 @@ describe('Canvas source import live clean proof', () => {
     cy.contains('.react-flow__node', 'Model 1', { timeout: 20_000 }).should('be.visible');
 
     connectCanvasNodes('Postgres', 'Model 1');
-    cy.contains('[role="alertdialog"]', 'Confirm Dependency', { timeout: 20_000 }).should(
-      'be.visible'
-    );
-    cy.contains('[role="alertdialog"] button', 'Confirm').should('be.enabled').click();
     cy.contains('Dependency added', { timeout: 20_000 }).should('be.visible');
     waitForLiveDraftEdgeSaved(session);
     cy.get('.react-flow__edge', { timeout: 20_000 }).should('have.length.greaterThan', 0);

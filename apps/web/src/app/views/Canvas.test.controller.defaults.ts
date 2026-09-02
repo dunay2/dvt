@@ -87,7 +87,6 @@ type CanvasExecutionDefaultsDto = {
   currentPlan: CanvasController['currentPlan'];
   executionSelectionRecovery: CanvasController['executionSelectionRecovery'];
   executionSelectionRecoveryCommands: CanvasController['executionSelectionRecoveryCommands'];
-  confirmEdgeModal: CanvasController['confirmEdgeModal'];
 };
 
 type CanvasControllerStateDefaults = CanvasWorkbenchDefaultsDto &
@@ -262,7 +261,6 @@ function buildDefaultCanvasExecutionState(): CanvasExecutionDefaultsDto {
     currentPlan: null,
     executionSelectionRecovery: null,
     executionSelectionRecoveryCommands: null,
-    confirmEdgeModal: { open: false, edge: null },
   } satisfies CanvasExecutionDefaultsDto;
 }
 
@@ -317,8 +315,6 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'handleStartRun'
   | 'reloadLatestDraft'
   | 'setPlanModalOpen'
-  | 'setConfirmEdgeModal'
-  | 'confirmEdgeCreation'
 > &
   Pick<CanvasController, 'importedNodeFocusIds'> {
   return {
@@ -364,7 +360,5 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     handleStartRun: vi.fn(),
     reloadLatestDraft: vi.fn(),
     setPlanModalOpen: vi.fn(),
-    setConfirmEdgeModal: vi.fn(),
-    confirmEdgeCreation: vi.fn(),
   };
 }

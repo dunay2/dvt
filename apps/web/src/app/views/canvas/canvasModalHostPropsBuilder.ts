@@ -16,9 +16,6 @@ type CanvasModalHostBuilderSource = Readonly<
     | 'canStartRun'
     | 'planStatusSummary'
     | 'handleStartRun'
-    | 'confirmEdgeModal'
-    | 'setConfirmEdgeModal'
-    | 'confirmEdgeCreation'
   >
 >;
 
@@ -36,12 +33,6 @@ export function buildCanvasModalHostProps(
       onStartRun: () => {
         void controller.handleStartRun();
       },
-    },
-    edgeConfirmation: {
-      open: controller.confirmEdgeModal.open,
-      edge: controller.confirmEdgeModal.edge,
-      onClose: () => controller.setConfirmEdgeModal({ open: false, edge: null }),
-      onConfirm: controller.confirmEdgeCreation,
     },
   };
 }

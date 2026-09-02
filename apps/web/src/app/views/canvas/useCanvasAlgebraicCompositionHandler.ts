@@ -43,7 +43,7 @@ export function useCanvasAlgebraicCompositionHandler({
         pluginPortMap: getPluginPortMap(),
         ...identity,
       });
-      if (transaction.outcome !== 'confirmed') return;
+      if (transaction.outcome !== 'created') return;
       effects.setEdges(transaction.edges);
       effects.setDraftSession(transaction.draftSession);
     },

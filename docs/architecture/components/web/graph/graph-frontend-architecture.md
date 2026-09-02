@@ -120,7 +120,7 @@ As of release `0.5.3` on 2026-08-02:
   precompute graph topology once and reuse that same policy object instead of
   rebuilding the command aggregate for every possible node pair
 - node create/drop handlers delegate node admission to
-  `useCanvasNodeAdmissionCommandRunner`, and edge confirmation/reconnect
+  `useCanvasNodeAdmissionCommandRunner`, and edge creation/reconnect
   delegates to `useCanvasEdgeCommandRunner`; both runners serialize local
   command effects over the latest viewport graph and draft session before a
   React rerender can refresh hook inputs
@@ -524,9 +524,11 @@ Invariant:
 
 ## Edge Command Admission
 
-Edge confirmation and reconnect use the same command-runner discipline as node
-admission. The handler owns gesture and modal orchestration; the transaction
-owns graph admission semantics; the runner owns effect serialization.
+Edge creation and reconnect use the same command-runner discipline as node
+admission. The completed compatible gesture is the `CreateCanvasEdge` command
+intent; the handler owns gesture routing and rejection presentation, the
+transaction owns graph admission semantics, and the runner owns effect
+serialization. No intermediate confirmation state or modal is created.
 
 ```mermaid
 sequenceDiagram
@@ -538,10 +540,10 @@ sequenceDiagram
   participant Lifecycle as canvasGraphLifecycle
   participant React as React setters
 
-  User->>Handler: confirm edge or reconnect
+  User->>Handler: complete connection or reconnect gesture
   Handler->>Runner: command with active connection
   Runner->>Tx: latest edges + latest draft session
-  Tx->>Aggregate: confirm connection / reconnect
+  Tx->>Aggregate: create connection / reconnect
   Aggregate-->>Tx: next viewport edges or rejection
   Tx->>Lifecycle: replace visible draft edges
   Tx-->>Runner: next edges + next draft session
@@ -552,7 +554,7 @@ sequenceDiagram
 
 Invariants:
 
-- edge confirmation and reconnect must compute next viewport edges and next
+- edge creation and reconnect must compute next viewport edges and next
   draft-session visible edges before React effects are applied;
 - `setEdges` must receive concrete edge arrays, not updater callbacks that
   also mutate draft state;
@@ -583,7 +585,7 @@ string checks. Current semantic coverage includes:
 - active graph and execution selectors returning `null` instead of
   transformation fallback for unsupported or disabled runtime states;
 - pure node-admission transaction results for add and duplicate-noop paths;
-- pure edge-admission transaction results for confirmation and reconnect paths;
+- pure edge-admission transaction results for creation and reconnect paths;
 - edge admission rejection for missing endpoints, self-loops, invalid
   transformation direction, and idempotent same-target reconnect;
 - node admission projection of column-level lineage posture into viewport node
@@ -595,7 +597,7 @@ string checks. Current semantic coverage includes:
 - active runtime catalog rejection before node create/drop side effects;
 - consecutive node create/drop commands preserving both viewport nodes and
   draft-session membership before rerender;
-- edge confirmation and reconnect applying direct `edges` and `draftSession`
+- edge creation and reconnect applying direct `edges` and `draftSession`
   values instead of updater callbacks with nested side effects;
 - plugin runtime projections filtering port maps, overlays, badges, and node
   renderers through `RuntimeCapabilities`;

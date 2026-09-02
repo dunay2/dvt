@@ -10,7 +10,7 @@ import type { CanvasConnectionRejection } from './canvasConnectionAggregate';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import { canvasGraphLifecycle } from './canvasGraphLifecycle';
 import {
-  resolveCanvasEdgeConfirmationTransaction,
+  resolveCanvasEdgeCreationTransaction,
   resolveCanvasEdgeReconnectTransaction,
   type CanvasEdgeAdmissionTransaction,
 } from './canvasEdgeAdmissionTransaction';
@@ -32,10 +32,10 @@ type UseCanvasEdgeCommandRunnerArgs = {
   pluginPortMap: PluginPortMap;
 };
 
-type RunCanvasEdgeConfirmationCommandArgs = {
+type RunCanvasEdgeCreationCommandArgs = {
   connection: Connection;
   onNoop?: (rejection: CanvasConnectionRejection) => void;
-  onConfirmed?: () => void;
+  onCreated?: () => void;
 };
 
 type RunCanvasEdgeReconnectCommandArgs = {
@@ -45,8 +45,8 @@ type RunCanvasEdgeReconnectCommandArgs = {
   onReconnected?: () => void;
 };
 
-export type RunCanvasEdgeConfirmationCommand = (
-  args: RunCanvasEdgeConfirmationCommandArgs
+export type RunCanvasEdgeCreationCommand = (
+  args: RunCanvasEdgeCreationCommandArgs
 ) => CanvasEdgeAdmissionTransaction;
 
 export type RunCanvasEdgeReconnectCommand = (
@@ -54,12 +54,12 @@ export type RunCanvasEdgeReconnectCommand = (
 ) => CanvasEdgeAdmissionTransaction;
 
 export type CanvasEdgeCommandRunner = {
-  confirmConnection: RunCanvasEdgeConfirmationCommand;
+  createConnection: RunCanvasEdgeCreationCommand;
   reconnectEdge: RunCanvasEdgeReconnectCommand;
 };
 
 function applyAcceptedEdgeTransaction(args: {
-  transaction: Extract<CanvasEdgeAdmissionTransaction, { outcome: 'confirmed' | 'reconnected' }>;
+  transaction: Extract<CanvasEdgeAdmissionTransaction, { outcome: 'created' | 'reconnected' }>;
   baselineDraftSession: CanvasDraftSession;
   latestEdgesRef: MutableRefObject<Edge[]>;
   latestDraftSessionRef: MutableRefObject<CanvasDraftSession>;
@@ -97,10 +97,10 @@ export function useCanvasEdgeCommandRunner({
   latestEdgesRef.current = edges;
   latestDraftSessionRef.current = draftSession;
 
-  const confirmConnectionCommand = useCallback<RunCanvasEdgeConfirmationCommand>(
-    ({ connection, onNoop, onConfirmed }) => {
+  const createConnectionCommand = useCallback<RunCanvasEdgeCreationCommand>(
+    ({ connection, onNoop, onCreated }) => {
       const baselineDraftSession = latestDraftSessionRef.current;
-      const transaction = resolveCanvasEdgeConfirmationTransaction({
+      const transaction = resolveCanvasEdgeCreationTransaction({
         canonicalNodesById,
         connection,
         draftSession: baselineDraftSession,
@@ -121,7 +121,7 @@ export function useCanvasEdgeCommandRunner({
         setDraftSession,
         setEdges,
       });
-      onConfirmed?.();
+      onCreated?.();
       return transaction;
     },
     [canonicalNodesById, pluginPortMap, setDraftSession, setEdges]
@@ -159,7 +159,7 @@ export function useCanvasEdgeCommandRunner({
   );
 
   return {
-    confirmConnection: confirmConnectionCommand,
+    createConnection: createConnectionCommand,
     reconnectEdge: reconnectEdgeCommand,
   };
 }

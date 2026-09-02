@@ -1,5 +1,4 @@
 import type { Edge, Node, ReactFlowProps } from '@xyflow/react';
-import type { Dispatch, SetStateAction } from 'react';
 import type {
   GraphNodeCalculatedColumnIdentity,
   GraphNodeColumnPortIdentity,
@@ -14,7 +13,6 @@ import type {
   CanvasGraphInteractionEffects,
   CanvasGraphInteractionPolicy,
   CanvasGraphInteractionState,
-  ConfirmEdgeModalState,
   CreateCanvasAuthoringNode,
 } from './canvasGraphHandlerContracts';
 
@@ -24,11 +22,8 @@ export type UseCanvasGraphHandlersParams = CanvasGraphInteractionState &
   Partial<Pick<CanvasGraphInteractionPolicy, 'gridSize' | 'canvasSnapToGrid'>>;
 
 export type UseCanvasGraphHandlersResult = {
-  confirmEdgeModal: ConfirmEdgeModalState;
-  setConfirmEdgeModal: Dispatch<SetStateAction<ConfirmEdgeModalState>>;
   onConnect: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
   onReconnect: NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>;
-  confirmEdgeCreation: () => void;
   handleInspectNode: (nodeId: string, preferredTabId?: string | null) => void;
   handleAutoLayout: () => void;
   handleDrop: React.DragEventHandler<HTMLDivElement>;

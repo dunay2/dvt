@@ -139,15 +139,14 @@ describe('Canvas column lineage mapping', () => {
     cy.contains('button', 'Convertir a SQL').should('not.exist');
   });
 
-  it('creates deterministic mappings when the stage dependency is confirmed', () => {
+  it('creates deterministic mappings when the stage dependency is connected', () => {
     cy.viewport(1920, 1080);
     stubColumnMappingCanvas(true);
     visitColumnMappingCanvas('en');
 
     cy.get('.react-flow__edge-columnLineage').should('not.exist');
     connectCanvasNodes('Orders Source', 'Orders Model');
-    cy.contains('[role="alertdialog"]', 'Confirm Dependency').should('be.visible');
-    cy.contains('[role="alertdialog"] button', 'Confirm').click();
+    cy.get('[role="alertdialog"]').should('not.exist');
     waitForE2eApiCall('/workspace/graph/draft', 'PUT');
 
     toggleColumns('source-orders');

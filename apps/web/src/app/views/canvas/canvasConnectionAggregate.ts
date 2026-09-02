@@ -133,11 +133,11 @@ export function proposeConnection({
   };
 }
 
-export type ConfirmConnectionResult =
+export type CreateConnectionResult =
   | { outcome: 'added'; nextEdges: Edge[] }
   | { outcome: 'rejected'; rejection: CanvasConnectionRejection };
 
-export function confirmConnection(args: ConnectionCheckArgs): ConfirmConnectionResult {
+export function createConnection(args: ConnectionCheckArgs): CreateConnectionResult {
   const proposed = proposeConnection(args);
   if (proposed.outcome === 'rejected') {
     return proposed;
@@ -157,13 +157,13 @@ export function confirmConnection(args: ConnectionCheckArgs): ConfirmConnectionR
   };
 }
 
-export type ConfirmReconnectResult =
+export type ReconnectConnectionResult =
   | { outcome: 'reconnected'; nextEdges: Edge[] }
   | { outcome: 'rejected'; rejection: CanvasConnectionRejection };
 
-export function confirmReconnect(
+export function reconnectConnection(
   args: ConnectionCheckArgs & { edge: Edge }
-): ConfirmReconnectResult {
+): ReconnectConnectionResult {
   const validationEdges = args.edges.filter((candidate) => candidate.id !== args.edge.id);
   const proposed = proposeConnection({
     ...args,
