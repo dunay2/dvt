@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { buildCanvasDependencyEdgeData } from './canvasDependencyEdgeModel';
 import { buildCanvasContextMenuModel } from './canvasInteractionCommandSurface';
 
-function buildEdgeMenu(execution: ReturnType<typeof buildCanvasDependencyEdgeData>['execution']) {
+function buildEdgeMenu(
+  execution: ReturnType<typeof buildCanvasDependencyEdgeData>['execution']
+): ReturnType<typeof buildCanvasContextMenuModel> {
   return buildCanvasContextMenuModel({
     target: {
       kind: 'edge',
