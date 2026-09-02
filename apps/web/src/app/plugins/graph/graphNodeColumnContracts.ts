@@ -84,8 +84,8 @@ export function resolveGraphNodeColumnInteractionProps(args: {
         ? (data.onColumnPortActivate as (identity: GraphNodeColumnPortIdentity) => void)
         : undefined,
     onColumnFunctionApply:
-      args.nodeRole === 'transform' && typeof data.onApplyDvtSubstraitColumnFunction === 'function'
-        ? (data.onApplyDvtSubstraitColumnFunction as (
+      args.nodeRole === 'transform' && typeof data.onApplyCanvasColumnFunction === 'function'
+        ? (data.onApplyCanvasColumnFunction as (
             identity: GraphNodeColumnFunctionApplyIdentity
           ) => void)
         : undefined,

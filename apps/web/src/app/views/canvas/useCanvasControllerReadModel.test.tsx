@@ -29,7 +29,7 @@ type ReadModelNodeData = {
   showColumns?: unknown;
   activeColumnHandleId?: unknown;
   onColumnPortActivate?: unknown;
-  onApplyDvtSubstraitColumnFunction?: unknown;
+  onApplyCanvasColumnFunction?: unknown;
   onToggleCanvasColumnOutput?: unknown;
   onReorderCanvasColumnOutput?: unknown;
   onColumnDisclosureChange?: unknown;
@@ -98,7 +98,7 @@ function buildReadModelArgs(
       handleAttachSchemaToNode: vi.fn(),
       activeColumnHandleId: null,
       handleColumnPortActivate: vi.fn(),
-      handleApplyDvtSubstraitColumnFunction: vi.fn(),
+      handleApplyCanvasColumnFunction: vi.fn(),
       handleToggleCanvasColumnOutput: vi.fn(),
       handleReorderCanvasColumnOutput: vi.fn(),
       handleColumnDisclosureChange: vi.fn(),
@@ -443,8 +443,8 @@ describe('useCanvasControllerReadModel', () => {
         }>;
       }>;
 
-      expect(transformData.onApplyDvtSubstraitColumnFunction).toBe(
-        args.graphHandlers.handleApplyDvtSubstraitColumnFunction
+      expect(transformData.onApplyCanvasColumnFunction).toBe(
+        args.graphHandlers.handleApplyCanvasColumnFunction
       );
       expect(columns.find((column) => column.id === 'output:customer')?.functionMenu).toEqual({
         category: 'text',
@@ -453,17 +453,14 @@ describe('useCanvasControllerReadModel', () => {
           expect.objectContaining({ name: 'upper' }),
         ]),
       });
-      expect(columns.find((column) => column.id === 'output:amount')?.functionMenu).toEqual({
-        category: 'numeric',
-        items: [],
-      });
+      expect(columns.find((column) => column.id === 'output:amount')?.functionMenu).toBeUndefined();
     } finally {
       await mounted.cleanup();
     }
   });
 
   it('keeps generated DBT outputs editable when the upstream projection changes', async () => {
-    const columns = [{ name: 'order_id', type: 'integer' }];
+    const columns = [{ name: 'order_id', type: 'text' }];
     const sourceNode = {
       ...testNode,
       pluginId: 'dvt.warehouse-source',
@@ -555,6 +552,13 @@ describe('useCanvasControllerReadModel', () => {
       expect(
         (state?.nodesWithImpact[1]?.data as ReadModelNodeData).onReorderCanvasColumnOutput
       ).toEqual(args.graphHandlers.handleReorderCanvasColumnOutput);
+      const modelData = state?.nodesWithImpact[1]?.data as ReadModelNodeData;
+      expect(modelData.onApplyCanvasColumnFunction).toEqual(
+        args.graphHandlers.handleApplyCanvasColumnFunction
+      );
+      expect(
+        (modelData.columns as ReadonlyArray<{ functionMenu?: unknown }>)[0]?.functionMenu
+      ).toEqual(expect.objectContaining({ category: 'text' }));
 
       const staleModelNode = {
         ...modelNode,

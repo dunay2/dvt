@@ -37,7 +37,7 @@ export type UseCanvasGraphHandlersResult = {
   handleAttachSchemaToNode: (nodeId: string, schemaName: string) => void;
   activeColumnHandleId: string | null;
   handleColumnPortActivate: (identity: GraphNodeColumnPortIdentity) => void;
-  handleApplyDvtSubstraitColumnFunction: (identity: {
+  handleApplyCanvasColumnFunction: (identity: {
     nodeId: string;
     columnId: string;
     capabilityId: string;

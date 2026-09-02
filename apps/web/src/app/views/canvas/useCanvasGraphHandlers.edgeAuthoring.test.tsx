@@ -813,7 +813,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     if (trim == null) throw new Error('Expected admitted trim capability.');
 
     act(() => {
-      harness.latest()?.handleApplyDvtSubstraitColumnFunction({
+      harness.latest()?.handleApplyCanvasColumnFunction({
         nodeId: transform.id,
         columnId: 'output:order_id',
         sourceColumnId: 'output:customer',
