@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 const APP_ROOT = path.resolve(import.meta.dirname, '../..');
 const REPO_ROOT = path.resolve(APP_ROOT, '../../../..');
+const CANVAS_MONACO_READ_ONLY_OWNERS = new Set(['views/canvas/DvtTransformOutputView.tsx']);
 
 function readAppSource(relativePathFromApp: string): string {
   return readFileSync(path.join(APP_ROOT, relativePathFromApp), 'utf8');
@@ -168,16 +169,21 @@ describe('Artifacts Monaco read-only viewer architecture', () => {
 
     for (const canvasModule of collectProductionSourceFiles(path.join(APP_ROOT, 'views/canvas'))) {
       const source = readFileSync(canvasModule, 'utf8');
-      expect(source, canvasModule).not.toContain('@monaco-editor/react');
-      expect(source, canvasModule).not.toContain('MonacoCodeViewer');
-      expect(source, canvasModule).not.toContain('MonacoDiffViewer');
+      const modulePath = path.relative(APP_ROOT, canvasModule).replaceAll('\\', '/');
+      expect(source, modulePath).not.toContain('@monaco-editor/react');
+      if (CANVAS_MONACO_READ_ONLY_OWNERS.has(modulePath)) {
+        expect(source, modulePath).toContain('MonacoCodeViewer');
+      } else {
+        expect(source, modulePath).not.toContain('MonacoCodeViewer');
+      }
+      expect(source, modulePath).not.toContain('MonacoDiffViewer');
       if (
         canvasModule.endsWith('DbtModelCodeAuthoringSection.tsx') ||
         canvasModule.endsWith('DvtSqlTransformAuthoringSection.tsx')
       ) {
-        expect(source, canvasModule).toContain('MonacoCodeEditor');
+        expect(source, modulePath).toContain('MonacoCodeEditor');
       } else {
-        expect(source, canvasModule).not.toContain('MonacoCodeEditor');
+        expect(source, modulePath).not.toContain('MonacoCodeEditor');
       }
     }
   });

@@ -5,10 +5,6 @@ const PREVIEW_PROVENANCE_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasPreviewProvenance.ts'
 );
-const SUBSTRAIT_POSTGRES_PROJECTION_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'canvasDvtSubstraitPostgresProjection.ts'
-);
 const SUBSTRAIT_AGGREGATION_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasDvtSubstraitAggregation.ts'
@@ -31,24 +27,10 @@ const SUBSTRAIT_AUTHORING_SOURCE = readArchitectureSiblingSource(
 );
 
 describe('VTX2 Substrait Preview cutover architecture', () => {
-  it('derives Preview SQL from Substrait while retaining the bounded VTX1 compatibility path', () => {
-    expect(PREVIEW_PROVENANCE_SOURCE).toContain('DVT_TRANSFORM_AUTHORING_MODE.substrait');
-    expect(PREVIEW_PROVENANCE_SOURCE).toContain('decodeDvtSubstraitPilotDocument(');
-    expect(PREVIEW_PROVENANCE_SOURCE).toContain('projectDvtSubstraitPilotToPostgresSql(');
-    expect(PREVIEW_PROVENANCE_SOURCE).toContain(
-      'projectDvtSubstraitPilotAggregationToPostgresSql('
-    );
-    expect(PREVIEW_PROVENANCE_SOURCE).toContain(
-      'projectDvtSubstraitPilotAggregateWindowToPostgresSql('
-    );
-    expect(PREVIEW_PROVENANCE_SOURCE).toContain('projectDvtSubstraitPilotWindowToPostgresSql(');
-    expect(PREVIEW_PROVENANCE_SOURCE).toContain('decodeDvtSubstraitInnerJoinDocument(');
-    expect(PREVIEW_PROVENANCE_SOURCE).toContain('projectDvtSubstraitInnerJoinToPostgresSql(');
-    expect(PREVIEW_PROVENANCE_SOURCE).toContain('decodeDvtSubstraitUnionAllDocument(');
-    expect(PREVIEW_PROVENANCE_SOURCE).toContain('projectDvtSubstraitUnionAllToPostgresSql(');
-    expect(PREVIEW_PROVENANCE_SOURCE).toContain('compileDvtVisualTransformNodeToPostgresSql(');
-    expect(SUBSTRAIT_POSTGRES_PROJECTION_SOURCE).toContain(
-      'project only the admitted pilot, aggregate/window, Join and Set shapes to PostgreSQL'
+  it('keeps Preview provenance free of a parallel Substrait decoder or planner', () => {
+    expect(PREVIEW_PROVENANCE_SOURCE).not.toContain("from './canvasDvtSubstraitPilot'");
+    expect(PREVIEW_PROVENANCE_SOURCE).not.toContain(
+      "from './canvasDvtSubstraitPostgresProjection'"
     );
     expect(PREVIEW_PROVENANCE_SOURCE).not.toContain('SubstraitPreviewService');
     expect(PREVIEW_PROVENANCE_SOURCE).not.toContain('localStorage');
