@@ -14,6 +14,7 @@ import { canvasGraphLifecycle } from './canvasGraphLifecycle';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import { reconcileDbtModelConnectedOrigin } from './canvasDbtAuthoringModel';
+import { rebaseStaleTransformProjection } from './canvasTransformSourceReplacement';
 
 type CanvasEdgeAdmissionTransactionState = {
   canonicalNodesById: Map<string, CanonicalNode>;
@@ -64,7 +65,15 @@ function applyCreatedConnectionColumnMappings(args: {
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
   targetNodeId: string;
 }): AcceptedCanvasEdgeAdmissionTransaction {
-  const nodes = resolveCanvasDraftNodes(args.transaction.draftSession, args.canonicalNodesById);
+  const rebasedDraftSession = rebaseStaleTransformProjection({
+    draftSession: args.transaction.draftSession,
+    canonicalNodesById: args.canonicalNodesById,
+    targetNodeId: args.targetNodeId,
+  });
+  if (rebasedDraftSession !== args.transaction.draftSession) {
+    return { ...args.transaction, draftSession: rebasedDraftSession };
+  }
+  const nodes = resolveCanvasDraftNodes(rebasedDraftSession, args.canonicalNodesById);
   const targetNode = nodes.find((node) => node.id === args.targetNodeId);
   if (targetNode?.pluginId !== 'dvt' || targetNode.kind !== 'dvt:transform') {
     return args.transaction;
