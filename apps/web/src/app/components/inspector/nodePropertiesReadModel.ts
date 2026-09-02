@@ -8,12 +8,6 @@ import type {
   CanvasNodePresentationColumn,
   CanvasNodePresentationTruth,
 } from '../canvas/canvasNodePresentationTruth.contract';
-import { readSourceObjectMetricEvidence } from '../../services/workspace/sourceObjectMetricEvidence';
-import {
-  describeSourceObjectMetricEvidence,
-  formatSourceObjectMetricByteDetail,
-  formatSourceObjectMetricByteSize,
-} from '../../services/workspace/sourceObjectMetricEvidencePresentation';
 import { buildDbtTestRows } from './dbtTestRowsReadModel';
 import { buildCanvasNodePresentationTruth } from '../canvas/canvasNodePresentationTruth';
 import { resolveInheritedDvtConnectionRef } from '../../views/canvas/canvasDvtAuthoringModel';
@@ -36,8 +30,6 @@ export type NodePropertyRow = Readonly<{
   id: NodePropertyRowId;
   label: string;
   value: string;
-  detail?: string;
-  tone?: 'measured' | 'estimated';
 }>;
 
 export const NODE_PROPERTY_ROW_ID = Object.freeze({
@@ -56,8 +48,6 @@ export const NODE_PROPERTY_ROW_ID = Object.freeze({
   source: 'source',
   path: 'path',
   owner: 'owner',
-  rows: 'rows',
-  size: 'size',
   duration: 'duration',
   cost: 'cost',
   destination: 'destination',
@@ -127,10 +117,6 @@ function readString(value: unknown): string | undefined {
 
 function readBoolean(value: unknown): boolean | undefined {
   return typeof value === 'boolean' ? value : undefined;
-}
-
-function readNumber(value: unknown): number | undefined {
-  return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
 }
 
 function readStringArray(value: unknown): readonly string[] {
@@ -209,13 +195,11 @@ function readColumns(value: unknown): readonly InspectorColumn[] {
 
 function buildGeneralRows(
   node: CanonicalNode,
-  metadata: Record<string, unknown>,
-  locale = 'en-US'
+  metadata: Record<string, unknown>
 ): NodePropertyRow[] {
   const config = asRecord(metadata.config);
   const dbt = asRecord(metadata.dbt);
   const rows: NodePropertyRow[] = [];
-  const numberFormatter = new Intl.NumberFormat(locale);
 
   addRow(rows, NODE_PROPERTY_ROW_ID.name, 'Name', node.name);
   addRow(
@@ -277,64 +261,6 @@ function buildGeneralRows(
   );
   addRow(rows, NODE_PROPERTY_ROW_ID.path, 'Path', node.path ?? readString(metadata.path));
   addRow(rows, NODE_PROPERTY_ROW_ID.owner, 'Owner', readString(metadata.owner));
-
-  const sourceMetricEvidence = readSourceObjectMetricEvidence(metadata.sourceMetricEvidence);
-  const rowCount =
-    sourceMetricEvidence?.rowCount.value ??
-    readNumber(metadata.rowCount) ??
-    readNumber(metadata.rows);
-  if (rowCount != null) {
-    const value = numberFormatter.format(rowCount);
-    rows.push(
-      sourceMetricEvidence === null
-        ? { id: NODE_PROPERTY_ROW_ID.rows, label: 'Rows', value }
-        : {
-            id: NODE_PROPERTY_ROW_ID.rows,
-            label: 'Rows',
-            value,
-            tone: sourceMetricEvidence.rowCount.provenance,
-            detail: describeSourceObjectMetricEvidence({
-              metric: sourceMetricEvidence.rowCount,
-              subject: `${value} ${rowCount === 1 ? 'record' : 'records'}`,
-              evidence: sourceMetricEvidence,
-            }),
-          }
-    );
-  }
-
-  if (sourceMetricEvidence !== null) {
-    const byteSize = sourceMetricEvidence.byteSize.value;
-    const compactSize = formatSourceObjectMetricByteSize(byteSize);
-    rows.push({
-      id: NODE_PROPERTY_ROW_ID.size,
-      label: 'Size',
-      value:
-        sourceMetricEvidence.byteSize.provenance === 'estimated'
-          ? `Estimated ${compactSize}`
-          : compactSize,
-      tone: sourceMetricEvidence.byteSize.provenance,
-      detail: describeSourceObjectMetricEvidence({
-        metric: sourceMetricEvidence.byteSize,
-        subject: formatSourceObjectMetricByteDetail(byteSize, numberFormatter),
-        evidence: sourceMetricEvidence,
-        basis: sourceMetricEvidence.byteSize.basis,
-      }),
-    });
-  } else {
-    const byteSize = readNumber(metadata.byteSize) ?? readNumber(metadata.bytes);
-    const estimatedByteSize = readNumber(metadata.estimatedByteSize);
-    addRow(
-      rows,
-      NODE_PROPERTY_ROW_ID.size,
-      'Size',
-      readFirstString(metadata.size, metadata.sizeLabel) ??
-        (byteSize == null
-          ? estimatedByteSize == null
-            ? undefined
-            : `Estimated ${formatSourceObjectMetricByteSize(estimatedByteSize)}`
-          : formatSourceObjectMetricByteSize(byteSize))
-    );
-  }
 
   if (node.lastDuration != null) {
     addRow(rows, NODE_PROPERTY_ROW_ID.duration, 'Duration', `${node.lastDuration}s`);
@@ -873,10 +799,7 @@ export function buildNodePropertiesReadModel({
       createSection({
         id: 'general',
         label: sectionLabels?.general ?? 'General',
-        rows: localizePropertyRows(
-          buildGeneralRows(node, metadata, presentationCopy?.locale),
-          presentationCopy
-        ),
+        rows: localizePropertyRows(buildGeneralRows(node, metadata), presentationCopy),
       }),
       createSection({
         id: 'columns',

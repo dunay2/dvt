@@ -202,10 +202,11 @@ describe('nodePropertiesReadModel', () => {
       Connection: 'Production warehouse · postgres · warehouse-prod',
       Schema: 'raw',
       Table: 'orders',
-      Rows: '1,500',
-      Size: '3.9 MB',
       Path: 'models/sources/src_orders.yml',
     });
+    expect(sectionById(model, 'general').rows.map(({ id }) => id)).not.toEqual(
+      expect.arrayContaining(['rows', 'size'])
+    );
     expectRows(sectionById(model, 'summary'), {
       'Upstream nodes': '0',
       'Downstream nodes': 'Clean Orders',
@@ -356,7 +357,7 @@ describe('nodePropertiesReadModel', () => {
     );
   });
 
-  it('shows calculated source object size distinctly from measured byte size', () => {
+  it('keeps source operational metrics out of general properties when evidence exists', () => {
     const model = buildSourceModel(
       buildSourceNode({
         metadata: {
@@ -386,23 +387,7 @@ describe('nodePropertiesReadModel', () => {
     );
 
     const general = sectionById(model, 'general');
-    expectRows(general, {
-      Rows: '1,500',
-      Size: 'Estimated 99.6 KB',
-    });
-    expect(general.rows.find((row) => row.label === 'Rows')).toMatchObject({
-      tone: 'estimated',
-      detail:
-        '1,500 records. Estimated using query plan. Confidence: low. Snapshot observed: 2026-07-10T21:00:00.000Z.',
-    });
-    expect(general.rows.find((row) => row.label === 'Size')).toMatchObject({
-      tone: 'estimated',
-      detail:
-        '102,000 B (99.6 KB). Estimated using schema width. Logical payload. Confidence: low. Snapshot observed: 2026-07-10T21:00:00.000Z.',
-    });
-    expect(general.rows.map((row) => row.label)).not.toEqual(
-      expect.arrayContaining(['Row evidence', 'Size evidence', 'Size basis', 'Metrics observed'])
-    );
+    expect(general.rows.map(({ id }) => id)).not.toEqual(expect.arrayContaining(['rows', 'size']));
   });
 
   it('keeps the expected table-modeler section vocabulary without requiring records', () => {

@@ -2,7 +2,6 @@
 import type { ReactNode } from 'react';
 import { ChevronRight } from 'lucide-react';
 
-import { MetricEvidenceHotspot } from '../metrics/MetricEvidenceHotspot';
 import { MonacoCodeViewer } from '../monaco/MonacoCodeViewer';
 import { inspectorVisualClasses } from './inspectorVisualTokens';
 import { Badge } from '../ui/badge';
@@ -214,16 +213,7 @@ function renderSectionBody(
                 surface === 'workbench' && 'text-(--text-primary)'
               )}
             >
-              {row.detail == null ? (
-                row.value
-              ) : (
-                <MetricEvidenceHotspot
-                  dataSlot="node-property-metric-evidence"
-                  detail={row.detail}
-                  tone={row.tone ?? 'neutral'}
-                  value={row.value}
-                />
-              )}
+              {row.value}
             </dd>
           </div>
         ))}
