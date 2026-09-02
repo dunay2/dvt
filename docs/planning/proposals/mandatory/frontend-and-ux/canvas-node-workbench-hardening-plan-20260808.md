@@ -83,7 +83,7 @@ semantics and a separately governed command surface.
 - `canvasNodeContextMenuModel.test.ts`
 - `CanvasNodeContextMenuView.test.tsx`
 - `GraphNodeCardView.test.tsx`
-- `DbtNodeComponent.architecture.test.ts`
+- `DbtNodeComponent.behavior.test.tsx`
 - `canvasNodeWorkbenchHardening.architecture.test.ts`
 - `canvasNodeContextSurfaceModel.test.ts`
 - `canvas-dbt-author-code-run-live.cy.ts`
@@ -251,6 +251,27 @@ Rejected alternatives:
 - Add a new route, event bus, store or editor: all required navigation already exists.
 - Make every metric clickable: health and column evidence do not share Code semantics.
 
+## Thin React Flow Adapter Increment
+
+- **Problem:** `DbtNodeComponent` combines React Flow adaptation with canonical-node
+  projection, plugin resolution, badge presentation, port policy and operation
+  dispatch. Its source-inspection test asserts implementation literals instead of
+  user-observable interactions.
+- **Root cause:** the adapter boundary grew around successive Canvas capabilities
+  without one projection seam behind the existing `ProjectGraphNodeCardReadModel`
+  query.
+- **Selected option:** extract one pure adapter projection and one badge view, keep
+  browser drag/drop translation in the React Flow component, and replace the literal
+  architecture test with callback-level interaction tests.
+- **Rejected options:** a second presentation rail or store would duplicate
+  authority; moving all `DbtNodeData` consumers would make this refactor cut too
+  broad; retaining source-string assertions would preserve test-only confidence.
+- **Fowler/DDD posture:** Extract Function and Extract Component address Long
+  Function and Divergent Change. `CanvasGraphPresentation` continues to own the
+  read projection; existing Canvas command callbacks continue to own mutations.
+- **Out of scope:** visible behavior, persistence, copy, column ordering/functions
+  and the transitional `DbtNodeData` rename.
+
 ## Feature Mechanization
 
 ```feature-mechanization
@@ -293,9 +314,12 @@ allowedImplementationSurfaces:
   - apps/web/src/app/components/canvas/CanvasNodeShell.doubleClick.test.ts
   - apps/web/src/app/components/canvas/CanvasNodeShell.test.tsx
   - apps/web/src/app/components/canvas/CanvasNodeShell.tsx
+  - apps/web/src/app/components/canvas/CanvasNodeBadgeOverlay.tsx
   - apps/web/src/app/components/canvas/DbtNodeComponent.architecture.test.ts
+  - apps/web/src/app/components/canvas/DbtNodeComponent.behavior.test.tsx
   - apps/web/src/app/components/canvas/DbtNodeComponent.failureContainment.test.tsx
   - apps/web/src/app/components/canvas/DbtNodeComponent.tsx
+  - apps/web/src/app/components/canvas/canvasNodeFlowAdapterProjection.ts
   - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts
   - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts
   - apps/web/src/app/components/metrics/MetricEvidenceHotspot.test.tsx
@@ -437,6 +461,96 @@ domainObjects:
     type: command state
     owner: Canvas execution-selection intent
 symbols:
+  - path: apps/web/src/app/components/canvas/CanvasNodeBadgeOverlay.tsx
+    name: POSITION_CLASSES
+    kind: constant
+    exported: false
+    dddOwner: CanvasGraphPresentation
+    cqRails: [ProjectGraphNodeCardReadModel]
+    fowlerSignals: [Extract component]
+    architectureGuard: pnpm --filter @dvt/web test -- DbtNodeComponent.failureContainment.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- DbtNodeComponent.failureContainment.test.tsx]
+  - path: apps/web/src/app/components/canvas/CanvasNodeBadgeOverlay.tsx
+    name: COLOR_CLASSES
+    kind: constant
+    exported: false
+    dddOwner: CanvasGraphPresentation
+    cqRails: [ProjectGraphNodeCardReadModel]
+    fowlerSignals: [Extract component]
+    architectureGuard: pnpm --filter @dvt/web test -- DbtNodeComponent.failureContainment.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- DbtNodeComponent.failureContainment.test.tsx]
+  - path: apps/web/src/app/components/canvas/canvasNodeFlowAdapterProjection.ts
+    name: projectCanvasNodeFlowAdapter
+    kind: function
+    exported: true
+    dddOwner: CanvasGraphPresentation
+    cqRails: [ProjectGraphNodeCardReadModel, InspectCanvasNode, SelectCanvasExecutionNode]
+    fowlerSignals: [Divergent change, Long function, Feature envy]
+    architectureGuard: pnpm --filter @dvt/web test -- DbtNodeComponent.behavior.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- DbtNodeComponent.behavior.test.tsx]
+  - path: apps/web/src/app/components/canvas/canvasNodeFlowAdapterProjection.ts
+    name: DBT_NODE_TYPES
+    kind: constant
+    exported: false
+    dddOwner: CanvasGraphPresentation
+    cqRails: [ProjectGraphNodeCardReadModel]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web typecheck
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- DbtNodeComponent.behavior.test.tsx]
+  - path: apps/web/src/app/components/canvas/canvasNodeFlowAdapterProjection.ts
+    name: NODE_ROLE_PORT_TONES
+    kind: constant
+    exported: false
+    dddOwner: CanvasGraphPresentation
+    cqRails: [ProjectGraphNodeCardReadModel]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web typecheck
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- DbtNodeComponent.behavior.test.tsx]
+  - path: apps/web/src/app/components/canvas/canvasNodeFlowAdapterProjection.ts
+    name: ProjectCanvasNodeFlowAdapterArgs
+    kind: type
+    exported: false
+    dddOwner: CanvasGraphPresentation
+    cqRails: [ProjectGraphNodeCardReadModel]
+    fowlerSignals: [Data clumps]
+    architectureGuard: pnpm --filter @dvt/web typecheck
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- DbtNodeComponent.behavior.test.tsx]
+  - path: apps/web/src/app/components/canvas/canvasNodeFlowAdapterProjection.ts
+    name: buildCanonicalNode
+    kind: function
+    exported: false
+    dddOwner: CanvasGraphPresentation
+    cqRails: [ProjectGraphNodeCardReadModel]
+    fowlerSignals: [Extract function]
+    architectureGuard: pnpm --filter @dvt/web typecheck
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- DbtNodeComponent.behavior.test.tsx]
+  - path: apps/web/src/app/components/canvas/canvasNodeFlowAdapterProjection.ts
+    name: isDbtNodeType
+    kind: function
+    exported: false
+    dddOwner: CanvasGraphPresentation
+    cqRails: [ProjectGraphNodeCardReadModel]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web typecheck
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- DbtNodeComponent.behavior.test.tsx]
+  - path: apps/web/src/app/components/canvas/CanvasNodeBadgeOverlay.tsx
+    name: CanvasNodeBadgeOverlay
+    kind: function
+    exported: true
+    dddOwner: CanvasGraphPresentation
+    cqRails: [ProjectGraphNodeCardReadModel]
+    fowlerSignals: [Divergent change, Extract component]
+    architectureGuard: pnpm --filter @dvt/web test -- DbtNodeComponent.failureContainment.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- DbtNodeComponent.failureContainment.test.tsx]
   - path: apps/web/src/app/plugins/contracts/NodeRendering.ts
     name: GraphNodeRendererData
     kind: type
@@ -749,6 +863,17 @@ completionGate:
   - pnpm governance:refresh
   - pnpm verify:prepush
 redGreenCycles:
+  - id: thin-react-flow-node-adapter
+    redTest: apps/web/src/app/components/canvas/DbtNodeComponent.behavior.test.tsx
+    expectedFailure: Schema drops and node operations are only guarded by source-code literal assertions while DbtNodeComponent owns projection, presentation and operation dispatch.
+    patchSurfaces:
+      - apps/web/src/app/components/canvas/CanvasNodeBadgeOverlay.tsx
+      - apps/web/src/app/components/canvas/DbtNodeComponent.architecture.test.ts
+      - apps/web/src/app/components/canvas/DbtNodeComponent.behavior.test.tsx
+      - apps/web/src/app/components/canvas/DbtNodeComponent.tsx
+      - apps/web/src/app/components/canvas/canvasNodeFlowAdapterProjection.ts
+      - apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
+    greenTest: apps/web/src/app/components/canvas/DbtNodeComponent.behavior.test.tsx
   - id: typed-node-renderer-data-boundary
     redTest: pnpm --filter @dvt/web typecheck
     expectedFailure: NodeRendererProps exposes unstructured renderer data, so the shared card projection cannot statically enforce its presentation and interaction callbacks.
@@ -811,7 +936,7 @@ redGreenCycles:
     expectedFailure: Previous node menu exposed Workbench navigation alongside node operations.
     patchSurfaces:
       - apps/web/src/app/components/canvas/CanvasNodeContextMenuView.test.tsx
-      - apps/web/src/app/components/canvas/DbtNodeComponent.architecture.test.ts
+      - apps/web/src/app/components/canvas/DbtNodeComponent.behavior.test.tsx
       - apps/web/src/app/components/canvas/DbtNodeComponent.tsx
       - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts
       - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts

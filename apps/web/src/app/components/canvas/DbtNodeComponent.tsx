@@ -2,28 +2,19 @@
 import { useUpdateNodeInternals, type Node, type NodeProps } from '@xyflow/react';
 import { memo, useCallback, type DragEvent } from 'react';
 
-import type {
-  BadgeContext,
-  MergedNodeDecoration,
-  NodeBadge,
-  NodeRendererProps,
-} from '../../plugins/contracts/NodeRendering';
-import { getCanvasGraphNodeCardStrategies } from '../../plugins/graphStrategyRegistry';
+import type { MergedNodeDecoration } from '../../plugins/contracts/NodeRendering';
 import { FallbackNodeRenderer } from '../../plugins/FallbackNodeRenderer';
 import { PluginContributionBoundary } from '../../plugins/PluginContributionBoundary';
-import { mapDbtTypeToKind } from '../../plugins/nodeTypeCatalog.dbt';
-import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
-import { getNodeBadges, getNodeRenderer, type RuntimeCapabilities } from '../../plugins/registry';
-import type { CanonicalNode, CoreNodeRole, PluginNodeKind } from '../../types/canonical';
-import { parsePluginNodeKind } from '../../types/canonicalGuards';
+import type { RuntimeCapabilities } from '../../plugins/registry';
+import type { CoreNodeRole, PluginNodeKind } from '../../types/canonical';
 import { DbtNodeType, NodeStatus } from '../../types/dbt';
 import {
   CANVAS_WORKSPACE_RESOURCE_DRAG_MIME_TYPE,
   parseCanvasWorkspaceResourceDragPayload,
 } from '../canvasWorkspaceExplorerModel';
-import { cn } from '../ui/utils';
+import { CanvasNodeBadgeOverlay } from './CanvasNodeBadgeOverlay';
 import { CanvasNodeShell } from './CanvasNodeShell';
-import type { CanvasNodePortCompatibilityView, CanvasNodePortTone } from './CanvasNodePortHandle';
+import type { CanvasNodePortCompatibilityView } from './CanvasNodePortHandle';
 import type { CanvasNodePresentationCopy } from './canvasNodePresentationCopy.contract';
 import type { CanvasNodePresentationTruth } from './canvasNodePresentationTruth.contract';
 import type {
@@ -31,11 +22,8 @@ import type {
   GraphNodeColumnPortDirection,
   GraphNodeColumnPortIdentity,
 } from '../../plugins/graph/graphNodeColumnContracts';
-import {
-  buildCanvasNodeModelerActionModel,
-  type CanvasNodeContextMenuCopy,
-  type CanvasNodeContextMenuActionId,
-} from './canvasNodeContextMenuModel';
+import type { CanvasNodeContextMenuCopy } from './canvasNodeContextMenuModel';
+import { projectCanvasNodeFlowAdapter } from './canvasNodeFlowAdapterProjection';
 
 // ---------------------------------------------------------------------------
 // Canvas node data
@@ -105,93 +93,6 @@ export interface DbtNodeData extends Record<string, unknown> {
 
 type DbtFlowNode = Node<DbtNodeData, 'dbtNode'>;
 
-const DBT_NODE_TYPES = new Set<string>([
-  'SOURCE',
-  'MODEL',
-  'SEED',
-  'SNAPSHOT',
-  'TEST',
-  'EXPOSURE',
-  'METRIC',
-  'MACRO',
-]);
-
-function isDbtNodeType(value: unknown): value is DbtNodeType {
-  return typeof value === 'string' && DBT_NODE_TYPES.has(value);
-}
-
-const POSITION_CLASSES: Record<NodeBadge['position'], string> = {
-  'top-right': '-top-1.5 -right-1.5',
-  'top-left': '-top-1.5 -left-1.5',
-  'bottom-right': '-bottom-1.5 -right-1.5',
-};
-
-const COLOR_CLASSES: Record<NodeBadge['color'], string> = {
-  green: 'bg-green-500 text-white',
-  red: 'bg-red-500 text-white',
-  yellow: 'bg-yellow-400 text-black',
-  blue: 'bg-blue-500 text-white',
-  gray: 'bg-neutral-500 text-white',
-};
-
-const NODE_ROLE_PORT_TONES: Record<CoreNodeRole, CanvasNodePortTone> = {
-  input: 'source',
-  transform: 'model',
-  check: 'test',
-  output: 'output',
-  control: 'control',
-};
-
-function NodeBadgeOverlay({ badge }: Readonly<{ badge: NodeBadge }>) {
-  const Icon = badge.icon;
-  return (
-    <div
-      className={cn(
-        'pointer-events-none absolute z-10 flex items-center gap-0.5 rounded-full px-1 py-0.5 text-[9px] font-semibold leading-none',
-        POSITION_CLASSES[badge.position],
-        COLOR_CLASSES[badge.color]
-      )}
-      title={badge.tooltip}
-    >
-      {Icon && <Icon size={8} />}
-      {badge.text && <span>{badge.text}</span>}
-    </div>
-  );
-}
-
-function buildCanonicalNode(
-  nodeId: string,
-  data: DbtNodeData,
-  pluginKind: PluginNodeKind,
-  role: CoreNodeRole
-): CanonicalNode {
-  const pluginId = data.pluginId ?? parsePluginNodeKind(pluginKind).pluginId;
-  const metadata =
-    typeof data.metadata === 'object' && data.metadata !== null ? { ...data.metadata } : {};
-
-  if (data.typeLabel != null) {
-    metadata.typeLabel ??= data.typeLabel;
-  }
-  if (data.columns != null) {
-    metadata.columns ??= data.columns;
-  }
-
-  return {
-    id: nodeId,
-    name: data.name,
-    pluginId,
-    kind: pluginKind,
-    role,
-    status: data.status,
-    tags: data.tags ?? [],
-    path: data.path,
-    description: data.description,
-    lastDuration: data.lastDuration,
-    lastCost: data.lastCost,
-    metadata,
-  };
-}
-
 function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
   const data = props.data as DbtNodeData;
   const { id, selected } = props;
@@ -200,57 +101,16 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
     () => updateNodeInternals(id),
     [id, updateNodeInternals]
   );
-  const selectedForExecution = data.selectedForExecution ?? selected;
-  const pluginKind =
-    data.pluginKind ??
-    (isDbtNodeType(data.type) ? mapDbtTypeToKind(data.type) : ('dvt:unknown' as PluginNodeKind));
-  const kindRegistration = resolveNodeKindRegistration(pluginKind);
-  const role = data.role ?? kindRegistration.role;
-  const canonicalNode = buildCanonicalNode(id, data, pluginKind, role);
-  const badgeCtx: BadgeContext = {
-    activeRunId: data.activeRunId ?? null,
-    runStatusByNodeId:
-      data.runStatusByNodeId instanceof Map ? data.runStatusByNodeId : new Map<string, string>(),
-  };
-  const Renderer = getNodeRenderer(
-    canonicalNode.kind,
-    FallbackNodeRenderer,
-    data.runtimeCapabilities
-  );
-  const badges = getNodeBadges(canonicalNode, badgeCtx, data.runtimeCapabilities);
-  const graphNodeCardStrategies = getCanvasGraphNodeCardStrategies(
-    data.canvasKind,
-    data.runtimeCapabilities
-  );
-  const rendererProps: NodeRendererProps = {
-    node: canonicalNode,
+  const projection = projectCanvasNodeFlowAdapter({
+    nodeId: id,
+    data,
     selected,
-    hovered: false,
-    overlayDecoration: data.overlayDecoration ?? null,
-    badges,
-    graphNodeCardStrategies,
-    data: { ...data, onColumnLayoutChange: handleColumnLayoutChange },
-  };
-
-  const shouldShowSourceHandle = kindRegistration.allowsOutgoing;
-  const shouldShowTargetHandle = kindRegistration.allowsIncoming;
-  const portTone = NODE_ROLE_PORT_TONES[role];
-  const canMutateNodeCommands = data.canMutateGraph === true;
-  const canAttachSchema = canMutateNodeCommands && typeof data.onAttachSchemaToNode === 'function';
-  const contextMenuModel = buildCanvasNodeModelerActionModel({
-    target: { kind: 'node', nodeId: id, nodeName: data.name },
-    selectedForExecution,
-    canMutateGraph: canMutateNodeCommands,
-    canInspectNode: typeof data.onInspectNode === 'function',
-    canDuplicateNode: typeof data.onDuplicateNode === 'function',
-    canToggleNodeSelection: typeof data.onToggleNodeSelection === 'function',
-    canRemoveNode: typeof data.onRemoveNode === 'function',
-    copy: data.contextMenuCopy,
+    onColumnLayoutChange: handleColumnLayoutChange,
   });
 
   const handleSchemaResourceDragOver = (event: DragEvent<HTMLDivElement>) => {
     if (
-      !canAttachSchema ||
+      !projection.canAttachSchema ||
       !Array.from(event.dataTransfer.types).includes(CANVAS_WORKSPACE_RESOURCE_DRAG_MIME_TYPE)
     ) {
       return;
@@ -262,7 +122,7 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
   };
 
   const handleSchemaResourceDrop = (event: DragEvent<HTMLDivElement>) => {
-    if (!canAttachSchema) {
+    if (!projection.canAttachSchema) {
       return;
     }
 
@@ -275,60 +135,40 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
 
     event.preventDefault();
     event.stopPropagation();
-    data.onAttachSchemaToNode?.(id, payload.schemaName);
+    projection.attachSchema(payload.schemaName);
   };
 
-  const handleOpenNode = () => {
-    data.onInspectNode?.(id, 'code');
-  };
-
-  const handleContextMenuAction = (actionId: CanvasNodeContextMenuActionId) => {
-    switch (actionId) {
-      case 'open-properties':
-        data.onInspectNode?.(id, 'general');
-        return;
-      case 'duplicate-node':
-        data.onDuplicateNode?.(id);
-        return;
-      case 'select-node-for-execution':
-      case 'deselect-node-from-execution':
-        data.onToggleNodeSelection?.(id, !selectedForExecution);
-        return;
-      case 'remove-node':
-        data.onRemoveNode?.(id);
-        return;
-    }
-  };
+  const Renderer = projection.Renderer;
 
   return (
     <CanvasNodeShell
-      contextMenuModel={contextMenuModel}
-      shouldShowSourceHandle={shouldShowSourceHandle}
-      shouldShowTargetHandle={shouldShowTargetHandle}
-      sourceHandleTone={portTone}
-      targetHandleTone={portTone}
+      contextMenuModel={projection.contextMenuModel}
+      shouldShowSourceHandle={projection.shouldShowSourceHandle}
+      shouldShowTargetHandle={projection.shouldShowTargetHandle}
+      sourceHandleTone={projection.portTone}
+      targetHandleTone={projection.portTone}
       sourcePortLabel={data.portLabels?.source}
       targetPortLabel={data.portLabels?.target}
       sourcePortCompatibility={data.portCompatibility?.source}
       targetPortCompatibility={data.portCompatibility?.target}
-      onContextMenuAction={handleContextMenuAction}
-      onOpenNode={typeof data.onInspectNode === 'function' ? handleOpenNode : undefined}
+      onContextMenuAction={projection.runAction}
+      onOpenNode={typeof data.onInspectNode === 'function' ? projection.openNode : undefined}
       onDragOver={handleSchemaResourceDragOver}
       onDrop={handleSchemaResourceDrop}
     >
       <PluginContributionBoundary
-        resetKey={`${id}:renderer:${canonicalNode.pluginId}:${canonicalNode.kind}`}
-        fallback={<FallbackNodeRenderer {...rendererProps} />}
+        resetKey={`${id}:renderer:${projection.canonicalNode.pluginId}:${projection.canonicalNode.kind}`}
+        fallback={<FallbackNodeRenderer {...projection.rendererProps} />}
       >
-        <Renderer {...rendererProps} />
+        <Renderer {...projection.rendererProps} />
       </PluginContributionBoundary>
-      {badges.map((badge, index) => (
+      {projection.badges.map((badge, index) => (
         <PluginContributionBoundary
           key={`${badge.position}-${badge.text ?? badge.tooltip ?? index}`}
           resetKey={`${id}:badge:${badge.position}:${badge.text ?? badge.tooltip ?? index}`}
           fallback={null}
         >
-          <NodeBadgeOverlay badge={badge} />
+          <CanvasNodeBadgeOverlay badge={badge} />
         </PluginContributionBoundary>
       ))}
     </CanvasNodeShell>
