@@ -91,6 +91,7 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-calculated-column-authoring-plan-20260902.md
   - docs/evidence/**
   - docs/risk-register/quality/**
+  - docs/.manifest.json
   - docs/**/index.md
   - docs/planning/status/**
 forbiddenImplementationSurfaces:
@@ -143,14 +144,17 @@ redGreenCycles:
       - apps/web/src/app/plugins/graph/GraphNodeColumnSection.tsx
     greenTest: pnpm --filter @dvt/web exec vitest run src/app/plugins/graph/GraphNodeCalculatedColumnForm.test.tsx
 symbols:
-  - name: applyCanvasCalculatedColumn
+  - &calculatedColumnSymbol
+    name: applyCanvasCalculatedColumn
     path: apps/web/src/app/views/canvas/canvasCalculatedColumnAuthoring.ts
-    dddOwner: DVT calculated-column command
+    dddOwner: Canvas calculated-column authoring
     cqRails: [ConfigureCanvasDvtNode]
     fowlerSignals: [Aggregate mutation, Hidden authority]
     architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-CALCULATED-COLUMN-AUTHORING-2833
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-calculated-column-authoring.cy.ts
-    unitTests: [apps/web/src/app/views/canvas/canvasCalculatedColumnAuthoring.test.ts]
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasCalculatedColumnAuthoring.test.ts
+      - apps/web/src/app/plugins/graph/GraphNodeCalculatedColumnForm.test.tsx
   - name: GraphNodeCalculatedColumnForm
     path: apps/web/src/app/plugins/graph/GraphNodeCalculatedColumnForm.tsx
     dddOwner: Calculated-column presentation form
@@ -167,6 +171,126 @@ symbols:
     architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-CALCULATED-COLUMN-AUTHORING-2833
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-calculated-column-authoring.cy.ts
     unitTests: [apps/web/src/app/views/canvas/canvasCalculatedColumnAuthoring.test.ts]
+  - <<: *calculatedColumnSymbol
+    name: DraftSave
+    path: apps/web/cypress/e2e/canvas/canvas-calculated-column-authoring.cy.ts
+  - <<: *calculatedColumnSymbol
+    name: sourceCard
+    path: apps/web/cypress/e2e/canvas/canvas-calculated-column-authoring.cy.ts
+  - <<: *calculatedColumnSymbol
+    name: stubCanvas
+    path: apps/web/cypress/e2e/canvas/canvas-calculated-column-authoring.cy.ts
+  - <<: *calculatedColumnSymbol
+    name: visitCanvas
+    path: apps/web/cypress/e2e/canvas/canvas-calculated-column-authoring.cy.ts
+  - <<: *calculatedColumnSymbol
+    name: CalculationKind
+    path: apps/web/src/app/plugins/graph/GraphNodeCalculatedColumnForm.tsx
+  - <<: *calculatedColumnSymbol
+    name: KINDS
+    path: apps/web/src/app/plugins/graph/GraphNodeCalculatedColumnForm.tsx
+  - <<: *calculatedColumnSymbol
+    name: GraphNodeCalculatedColumnIdentity
+    path: apps/web/src/app/plugins/graph/graphNodeColumnContracts.ts
+  - <<: *calculatedColumnSymbol
+    name: CanvasCalculatedColumnRequest
+    path: apps/web/src/app/views/canvas/canvasCalculatedColumnAuthoring.ts
+  - <<: *calculatedColumnSymbol
+    name: CanvasCalculatedColumnResult
+    path: apps/web/src/app/views/canvas/canvasCalculatedColumnAuthoring.ts
+  - <<: *calculatedColumnSymbol
+    name: append
+    path: apps/web/src/app/views/canvas/canvasCalculatedColumnAuthoring.ts
+  - <<: *calculatedColumnSymbol
+    name: applyToSource
+    path: apps/web/src/app/views/canvas/canvasCalculatedColumnAuthoring.ts
+  - <<: *calculatedColumnSymbol
+    name: applyToTransform
+    path: apps/web/src/app/views/canvas/canvasCalculatedColumnAuthoring.ts
+  - <<: *calculatedColumnSymbol
+    name: nodeCatalog
+    path: apps/web/src/app/views/canvas/canvasCalculatedColumnAuthoring.ts
+  - <<: *calculatedColumnSymbol
+    name: normalizedRequest
+    path: apps/web/src/app/views/canvas/canvasCalculatedColumnAuthoring.ts
+  - <<: *calculatedColumnSymbol
+    name: outputFieldId
+    path: apps/web/src/app/views/canvas/canvasCalculatedColumnAuthoring.ts
+  - <<: *calculatedColumnSymbol
+    name: projectDvtSourceMenus
+    path: apps/web/src/app/views/canvas/canvasColumnFunctionMenuProjection.ts
+  - <<: *calculatedColumnSymbol
+    name: DvtSubstraitCalculatedColumnRequest
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitCalculatedColumn.ts
+  - <<: *calculatedColumnSymbol
+    name: calculatedFieldId
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitCalculatedColumn.ts
+  - <<: *calculatedColumnSymbol
+    name: directCalculation
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitCalculatedColumn.ts
+  - <<: *calculatedColumnSymbol
+    name: DvtSubstraitCalculatedExpression
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitCalculatedExpression.ts
+  - <<: *calculatedColumnSymbol
+    name: buildDvtSubstraitCalculatedExpression
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitCalculatedExpression.ts
+  - <<: *calculatedColumnSymbol
+    name: capabilityId
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitCalculatedExpression.ts
+  - <<: *calculatedColumnSymbol
+    name: fieldReference
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitCalculatedExpression.ts
+  - <<: *calculatedColumnSymbol
+    name: inspectDvtSubstraitCalculatedExpression
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitCalculatedExpression.ts
+  - <<: *calculatedColumnSymbol
+    name: readFieldOrdinal
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitCalculatedExpression.ts
+  - <<: *calculatedColumnSymbol
+    name: requireCapabilities
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitCalculatedExpression.ts
+  - <<: *calculatedColumnSymbol
+    name: PostgresAstNode
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresAst.ts
+  - <<: *calculatedColumnSymbol
+    name: pgColumnRef
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresAst.ts
+  - <<: *calculatedColumnSymbol
+    name: pgCountRows
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresAst.ts
+  - <<: *calculatedColumnSymbol
+    name: pgFunction
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresAst.ts
+  - <<: *calculatedColumnSymbol
+    name: pgOrderedRowNumber
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresAst.ts
+  - <<: *calculatedColumnSymbol
+    name: pgQualifiedColumnRef
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresAst.ts
+  - <<: *calculatedColumnSymbol
+    name: pgRangeVar
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresAst.ts
+  - <<: *calculatedColumnSymbol
+    name: pgRowNumber
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresAst.ts
+  - <<: *calculatedColumnSymbol
+    name: pgRowNumberOverCount
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresAst.ts
+  - <<: *calculatedColumnSymbol
+    name: pgString
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresAst.ts
+  - <<: *calculatedColumnSymbol
+    name: pgStringLiteral
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresAst.ts
+  - <<: *calculatedColumnSymbol
+    name: pgTimestampTzLiteral
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresAst.ts
+  - <<: *calculatedColumnSymbol
+    name: CALCULATED_COLUMN
+    path: packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts
+  - <<: *calculatedColumnSymbol
+    name: CALCULATED_COLUMN_SUPPORTED_ENTRY_IDS
+    path: packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts
 ```
 
 ## Completion
