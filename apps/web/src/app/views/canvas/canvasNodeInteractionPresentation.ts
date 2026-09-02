@@ -1,6 +1,7 @@
 import type { Node } from '@xyflow/react';
 import type {
   GraphNodeColumn,
+  GraphNodeColumnFunctionApplyIdentity,
   GraphNodeColumnOutputToggleIdentity,
   GraphNodeColumnPortIdentity,
   GraphNodeColumnReorderIdentity,
@@ -17,13 +18,7 @@ type NodeActionHandlers = {
   onToggleNodeSelection?: (nodeId: string, shouldSelect: boolean) => void;
   onAttachSchemaToNode?: (nodeId: string, schemaName: string) => void;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
-  onApplyDvtSubstraitColumnFunction?: (identity: {
-    nodeId: string;
-    columnId: string;
-    capabilityId: string;
-    alias: string;
-    sourceColumnId?: string;
-  }) => void;
+  onApplyDvtSubstraitColumnFunction?: (identity: GraphNodeColumnFunctionApplyIdentity) => void;
   onToggleCanvasColumnOutput?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
   onReorderDvtSubstraitColumnOutput?: (identity: GraphNodeColumnReorderIdentity) => void;
   onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;

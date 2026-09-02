@@ -286,7 +286,7 @@ describe('GraphNodeColumnSection', () => {
     ]);
   });
 
-  it('offers admitted column functions from the native pointer and keyboard context menu', async () => {
+  it('requires an output alias before applying a function from pointer or keyboard menus', async () => {
     const onColumnFunctionApply = vi.fn();
     await act(async () => {
       root.render(
@@ -324,18 +324,31 @@ describe('GraphNodeColumnSection', () => {
       await Promise.resolve();
     });
 
-    expect(document.body.textContent).toContain('Funciones de texto');
     const upperItem = document.body.querySelector<HTMLElement>(
       '[data-slot="graph-node-column-function"][data-capability-id="capability:upper"]'
     );
-    expect(upperItem?.textContent).toBe('UPPER');
+    expect(upperItem).not.toBeNull();
     await act(async () => {
       fireEvent.click(upperItem!);
+    });
+    expect(onColumnFunctionApply).not.toHaveBeenCalled();
+    const aliasInput = document.body.querySelector<HTMLInputElement>(
+      '[data-slot="graph-node-column-function-alias-input"]'
+    );
+    const aliasSubmit = document.body.querySelector<HTMLButtonElement>(
+      '[data-slot="graph-node-column-function-alias-submit"]'
+    );
+    expect(aliasInput).not.toBeNull();
+    expect(aliasSubmit?.disabled).toBe(true);
+    await act(async () => {
+      fireEvent.change(aliasInput!, { target: { value: 'customer_clean' } });
+      fireEvent.click(aliasSubmit!);
     });
     expect(onColumnFunctionApply).toHaveBeenCalledWith({
       nodeId: 'transform-orders',
       columnId: 'output:customer',
       capabilityId: 'capability:upper',
+      alias: 'customer_clean',
     });
 
     await act(async () => {

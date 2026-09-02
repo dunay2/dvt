@@ -31,7 +31,7 @@ export function GraphNodeColumnFunctionMenu(props: {
   copy: GraphNodeColumnCopy;
   keyboardOpen: boolean;
   onKeyboardOpenChange: (open: boolean) => void;
-  onApply: (capabilityId: string) => void;
+  onRequest: (capabilityId: string) => void;
   piece: ReactElement;
   tooltip: ReactElement;
 }): ReactElement {
@@ -65,7 +65,7 @@ export function GraphNodeColumnFunctionMenu(props: {
                     key={item.capabilityId}
                     data-slot="graph-node-column-function"
                     data-capability-id={item.capabilityId}
-                    onSelect={() => props.onApply(item.capabilityId)}
+                    onSelect={() => props.onRequest(item.capabilityId)}
                   >
                     {item.name.toUpperCase()}
                   </ContextMenuItem>
@@ -97,7 +97,7 @@ export function GraphNodeColumnFunctionMenu(props: {
                   key={item.capabilityId}
                   data-slot="graph-node-column-function"
                   data-capability-id={item.capabilityId}
-                  onSelect={() => props.onApply(item.capabilityId)}
+                  onSelect={() => props.onRequest(item.capabilityId)}
                 >
                   {item.name.toUpperCase()}
                 </DropdownMenuItem>

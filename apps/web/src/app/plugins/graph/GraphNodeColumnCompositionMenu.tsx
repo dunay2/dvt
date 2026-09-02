@@ -19,7 +19,7 @@ export function GraphNodeColumnCompositionMenu(props: {
   targetColumn: GraphNodeColumn;
   copy: GraphNodeColumnCopy;
   onOpenChange: (open: boolean) => void;
-  onApply: (capabilityId: string) => void;
+  onRequest: (capabilityId: string) => void;
 }): ReactElement {
   const menu = props.sourceColumn.functionMenu;
   const pointerGraceProps = usePointerGraceDismiss({
@@ -57,7 +57,7 @@ export function GraphNodeColumnCompositionMenu(props: {
                 key={item.capabilityId}
                 data-slot="graph-node-column-composition-function"
                 data-capability-id={item.capabilityId}
-                onSelect={() => props.onApply(item.capabilityId)}
+                onSelect={() => props.onRequest(item.capabilityId)}
               >
                 {item.name.toUpperCase()}
               </DropdownMenuItem>

@@ -112,11 +112,20 @@ describe('GraphNodeColumnSection functional composition', () => {
     await act(async () => {
       fireEvent.click(functionChoice!);
     });
+    expect(onColumnFunctionApply).not.toHaveBeenCalled();
+    const aliasInput = document.body.querySelector<HTMLInputElement>(
+      '[data-slot="graph-node-column-function-alias-input"]'
+    );
+    await act(async () => {
+      fireEvent.change(aliasInput!, { target: { value: 'buyer_clean' } });
+      fireEvent.submit(aliasInput!.closest('form')!);
+    });
     expect(onColumnFunctionApply).toHaveBeenCalledWith({
       nodeId: 'transform-orders',
       columnId: 'output:buyer',
       sourceColumnId: 'output:customer',
       capabilityId: 'capability:upper',
+      alias: 'buyer_clean',
     });
   });
 

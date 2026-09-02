@@ -46,6 +46,9 @@ type GraphNodeCardCopy = Readonly<{
     Record<'text' | 'numeric' | 'date-time' | 'conversion' | 'aggregate' | 'window', string>
   >;
   noCompatibleColumnFunctionsLabel: string;
+  columnFunctionAliasLabelTemplate: string;
+  columnFunctionAliasSubmitLabel: string;
+  columnFunctionAliasCancelLabel: string;
   sourceIdentityAriaLabelTemplate: string;
   sourceIdentityDatabaseLabel: string;
   sourceIdentityConnectionLabel: string;
@@ -118,6 +121,9 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
     window: 'Window functions',
   },
   noCompatibleColumnFunctionsLabel: 'No functions are compatible with this type and target.',
+  columnFunctionAliasLabelTemplate: 'Output alias after {function}',
+  columnFunctionAliasSubmitLabel: 'Create output',
+  columnFunctionAliasCancelLabel: 'Cancel',
   sourceIdentityAriaLabelTemplate: 'View source identity for {table}',
   sourceIdentityDatabaseLabel: 'Database',
   sourceIdentityConnectionLabel: 'Connection',
@@ -190,6 +196,9 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
     window: 'Funciones de ventana',
   },
   noCompatibleColumnFunctionsLabel: 'No hay funciones compatibles con este tipo y destino.',
+  columnFunctionAliasLabelTemplate: 'Alias de salida tras {function}',
+  columnFunctionAliasSubmitLabel: 'Crear salida',
+  columnFunctionAliasCancelLabel: 'Cancelar',
   sourceIdentityAriaLabelTemplate: 'Ver identidad de origen de {table}',
   sourceIdentityDatabaseLabel: 'Base de datos',
   sourceIdentityConnectionLabel: 'Conexión',

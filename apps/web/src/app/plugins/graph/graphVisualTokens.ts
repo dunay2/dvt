@@ -139,6 +139,15 @@ export const graphNodeColumnClasses = {
     'pointer-events-none absolute left-1/2 top-1/2 size-px border-0 bg-transparent p-0 opacity-0',
   compositionMenuAnchor:
     'pointer-events-none absolute left-1/2 top-1/2 size-px border-0 bg-transparent p-0 opacity-0',
+  functionAliasAnchor:
+    'pointer-events-none absolute left-1/2 top-1/2 size-px border-0 bg-transparent p-0 opacity-0',
+  functionAliasForm: 'nodrag nopan w-64 border-slate-700 bg-slate-950 p-3',
+  functionAliasLabel: 'mb-2 block text-xs font-medium text-slate-200',
+  functionAliasActions: 'mt-3 flex justify-end gap-2',
+  functionAliasCancel:
+    'rounded px-2 py-1 text-xs text-slate-300 hover:bg-slate-800 hover:text-white',
+  functionAliasSubmit:
+    'rounded bg-blue-600 px-2 py-1 text-xs font-semibold text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40',
   piece:
     'nodrag nopan flex min-h-8 w-full items-center gap-2 rounded-md border border-slate-700/90 bg-slate-950/90 px-3 py-1.5 text-xs shadow-sm transition hover:border-blue-400/70 hover:bg-slate-900 focus-visible:border-blue-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70',
   name: 'truncate font-mono text-white',

@@ -46,6 +46,7 @@ export type GraphNodeColumnFunctionApplyIdentity = Readonly<{
   nodeId: string;
   columnId: string;
   capabilityId: string;
+  alias: string;
   sourceColumnId?: string;
 }>;
 

@@ -11,6 +11,7 @@ import type {
   GraphNodeColumnPortIdentity,
 } from './graphNodeColumnContracts';
 import { GraphNodeColumnCompositionMenu } from './GraphNodeColumnCompositionMenu';
+import { GraphNodeColumnFunctionAliasForm } from './GraphNodeColumnFunctionAliasForm';
 import { GraphNodeColumnFunctionMenu } from './GraphNodeColumnFunctionMenu';
 import {
   GraphNodeColumnPiece,
@@ -19,6 +20,12 @@ import {
 } from './GraphNodeColumnPiece';
 import { graphNodeColumnClasses } from './graphVisualTokens';
 import type { GraphNodeColumnReorderController } from './useGraphNodeColumnReorder';
+
+type PendingFunctionRequest = Readonly<{
+  capabilityId: string;
+  functionName: string;
+  sourceColumnId?: string;
+}>;
 
 export function GraphNodeColumnRow(props: {
   column: GraphNodeColumn;
@@ -37,6 +44,7 @@ export function GraphNodeColumnRow(props: {
   onColumnOutputToggle?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
 }): ReactElement {
   const [keyboardFunctionMenuOpen, setKeyboardFunctionMenuOpen] = useState(false);
+  const [pendingFunction, setPendingFunction] = useState<PendingFunctionRequest | null>(null);
   const { column, nodeId, copy, reorder } = props;
   const columnId = column.id ?? column.name;
   const isOutput = column.output !== false;
@@ -69,9 +77,14 @@ export function GraphNodeColumnRow(props: {
         copy={copy}
         keyboardOpen={keyboardFunctionMenuOpen}
         onKeyboardOpenChange={setKeyboardFunctionMenuOpen}
-        onApply={(capabilityId) =>
-          props.onColumnFunctionApply?.({ nodeId, columnId, capabilityId })
-        }
+        onRequest={(capabilityId) => {
+          const selectedFunction = column.functionMenu?.items.find(
+            (item) => item.capabilityId === capabilityId
+          );
+          if (selectedFunction != null) {
+            setPendingFunction({ capabilityId, functionName: selectedFunction.name });
+          }
+        }}
         piece={piece}
         tooltip={tooltip}
       />
@@ -125,16 +138,41 @@ export function GraphNodeColumnRow(props: {
           onOpenChange={(open) => {
             if (!open) props.onCompositionDismiss?.();
           }}
-          onApply={(capabilityId) => {
+          onRequest={(capabilityId) => {
+            const selectedFunction =
+              props.compositionRequest?.sourceColumn.functionMenu?.items.find(
+                (item) => item.capabilityId === capabilityId
+              );
+            const sourceColumnId =
+              props.compositionRequest?.sourceColumn.id ??
+              props.compositionRequest?.sourceColumn.name;
+            if (selectedFunction != null && sourceColumnId != null) {
+              setPendingFunction({
+                capabilityId,
+                functionName: selectedFunction.name,
+                sourceColumnId,
+              });
+            }
+            props.onCompositionDismiss?.();
+          }}
+        />
+      ) : null}
+      {nodeId != null && pendingFunction != null && props.onColumnFunctionApply != null ? (
+        <GraphNodeColumnFunctionAliasForm
+          functionName={pendingFunction.functionName}
+          copy={copy}
+          onCancel={() => setPendingFunction(null)}
+          onSubmit={(alias) => {
             props.onColumnFunctionApply?.({
               nodeId,
               columnId,
-              sourceColumnId:
-                props.compositionRequest?.sourceColumn.id ??
-                props.compositionRequest?.sourceColumn.name,
-              capabilityId,
+              capabilityId: pendingFunction.capabilityId,
+              alias,
+              ...(pendingFunction.sourceColumnId == null
+                ? {}
+                : { sourceColumnId: pendingFunction.sourceColumnId }),
             });
-            props.onCompositionDismiss?.();
+            setPendingFunction(null);
           }}
         />
       ) : null}
