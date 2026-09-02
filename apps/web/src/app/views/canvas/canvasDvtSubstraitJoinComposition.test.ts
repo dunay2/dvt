@@ -16,6 +16,7 @@ import {
   applyDvtSubstraitInnerJoinFieldEdit,
   appendDvtSubstraitInnerJoinInput,
   createDvtSubstraitInnerJoinDraft,
+  createDvtSubstraitStringInnerJoinDraft,
   decodeDvtSubstraitInnerJoinDocument,
   encodeDvtSubstraitInnerJoinDocument,
   inspectDvtSubstraitInnerJoinGroupedWindowDraft,
@@ -63,6 +64,39 @@ function fixture(): DvtSubstraitInnerJoinDraft {
 }
 
 describe('VTX2 typed Substrait INNER JOIN composition', () => {
+  it('joins explicitly selected relations and fields without fixture-specific schemas', () => {
+    const draft = createDvtSubstraitStringInnerJoinDraft({
+      left: {
+        source: source('source-orders', 'raw', 'orders'),
+        fields: ['order_id', 'customer'],
+      },
+      right: {
+        source: source('source-audits', 'raw', 'auth_audit_events'),
+        fields: ['event_id', 'principal_id'],
+      },
+      leftFieldName: 'customer',
+      rightFieldName: 'principal_id',
+      targetNodeId: 'transform-orders-audits',
+    });
+
+    const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+    expect(inspection.ok).toBe(true);
+    if (!inspection.ok) return;
+    expect(inspection.projection.joins).toEqual([
+      {
+        leftSourceFieldId: 'field:source-orders:customer',
+        rightSourceFieldId: 'field:source-audits:principal_id',
+      },
+    ]);
+    expect(inspection.projection.outputs.map((output) => output.name)).toEqual([
+      'order_id',
+      'customer',
+      'event_id',
+      'principal_id',
+    ]);
+    expect(() => encodeDvtSubstraitInnerJoinDocument(draft)).not.toThrow();
+  });
+
   it('repeats one append operation for three and four canonical join inputs', () => {
     const threeInputs = appendDvtSubstraitInnerJoinInput(fixture(), {
       source: source('source-shipments', 'public', 'shipments'),

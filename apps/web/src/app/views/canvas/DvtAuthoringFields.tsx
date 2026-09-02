@@ -27,6 +27,7 @@ import { DvtSqlTransformAuthoringSection } from './DvtSqlTransformAuthoringSecti
 import { DvtSubstraitPilotAuthoringSection } from './DvtSubstraitPilotAuthoringSection';
 import { DvtSubstraitInnerJoinAuthoringSection } from './DvtSubstraitInnerJoinAuthoringSection';
 import { DvtSubstraitUnionAllAuthoringSection } from './DvtSubstraitUnionAllAuthoringSection';
+import { DvtSubstraitCompositionStart } from './DvtSubstraitCompositionStart';
 import { DvtVisualTransformRecipeAuthoringSection } from './DvtVisualTransformRecipeAuthoringSection';
 
 type DvtAuthoringFieldsProps = Readonly<{
@@ -88,7 +89,15 @@ export function DvtAuthoringFields({
         return null;
       }
       if (draft.dvt.shape === 'projection') {
-        return null;
+        return (
+          <DvtSubstraitCompositionStart
+            disabled={disabled}
+            node={node}
+            nodes={nodes}
+            edges={edges}
+            onChange={onChange}
+          />
+        );
       }
       if (draft.dvt.shape === 'inner_join') {
         const appendCandidates = resolveDvtSubstraitJoinAppendCandidates({

@@ -313,6 +313,14 @@ export type DvtSubstraitJoinAppendInput = Readonly<{
   selectedFields: readonly string[];
 }>;
 
+export type DvtSubstraitStringJoinSelection = Readonly<{
+  left: DvtSubstraitJoinInput;
+  right: DvtSubstraitJoinInput;
+  leftFieldName: string;
+  rightFieldName: string;
+  targetNodeId: string;
+}>;
+
 function readMetadataText(node: CanonicalNode, key: string): string | null {
   const value = node.metadata?.[key];
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
@@ -1142,6 +1150,44 @@ function createCollisionSafeNInputOutput(
         sourceFieldId: args.sourceFieldId,
         fieldId: `field:${args.targetNodeId}:${name}`,
       };
+}
+
+export function createDvtSubstraitStringInnerJoinDraft(
+  selection: DvtSubstraitStringJoinSelection
+): DvtSubstraitInnerJoinDraft {
+  if (
+    !selection.left.fields.includes(selection.leftFieldName) ||
+    !selection.right.fields.includes(selection.rightFieldName)
+  ) {
+    throw new Error('VTX2 INNER JOIN predicate must reference selected input fields.');
+  }
+  const outputs: Array<Readonly<{ name: string; sourceFieldId: string; fieldId: string }>> = [];
+  for (const input of [selection.left, selection.right]) {
+    for (const field of input.fields) {
+      const output = createCollisionSafeNInputOutput({
+        targetNodeId: selection.targetNodeId,
+        input: input.source,
+        sourceName: field,
+        sourceFieldId: sourceFieldId(input.source.nodeId, field),
+        outputs,
+      });
+      if (output == null) {
+        throw new Error('VTX2 INNER JOIN could not create a stable collision-safe output.');
+      }
+      outputs.push(output);
+    }
+  }
+  return createDvtSubstraitNInputJoinDraft({
+    inputs: [selection.left, selection.right],
+    predicates: [
+      {
+        leftSourceFieldId: sourceFieldId(selection.left.source.nodeId, selection.leftFieldName),
+        rightSourceFieldId: sourceFieldId(selection.right.source.nodeId, selection.rightFieldName),
+      },
+    ],
+    outputs,
+    targetNodeId: selection.targetNodeId,
+  });
 }
 
 export function appendDvtSubstraitInnerJoinInput(
@@ -2588,7 +2634,8 @@ export function inspectDvtSubstraitInnerJoinAcceptedDraft(draft: DvtSubstraitInn
   if (grouping.ok) return grouping;
   const nInputJoin = inspectDvtSubstraitNInputJoinDraft(draft);
   if (nInputJoin.ok && nInputJoin.projection.inputs.length > 2) return nInputJoin;
-  return inspectDvtSubstraitInnerJoinDraft(draft);
+  const binaryJoin = inspectDvtSubstraitInnerJoinDraft(draft);
+  return binaryJoin.ok ? binaryJoin : nInputJoin;
 }
 
 export function decodeDvtSubstraitInnerJoinDocument(input: unknown): DvtSubstraitInnerJoinDraft {

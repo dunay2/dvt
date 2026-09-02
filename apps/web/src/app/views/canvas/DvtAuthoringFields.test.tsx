@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { fireEvent } from '@testing-library/dom';
+import type { ConnectedSourceRef } from '@dvt/contracts';
 import React, { act, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -18,6 +19,11 @@ import {
   createCanvasInspectorNodeDraft,
   validateCanvasInspectorNodeDraft,
 } from './canvasInspectorAuthoringModel';
+import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import {
+  createDvtSubstraitProjectionDraft,
+  encodeDvtSubstraitProjectionDocument,
+} from './canvasDvtSubstraitProjection';
 import { DvtAuthoringFields } from './DvtAuthoringFields';
 
 vi.mock('../../components/monaco/MonacoCodeEditor', () => ({
@@ -441,6 +447,91 @@ describe('DvtAuthoringFields', () => {
     ).not.toBeNull();
     expect(draftJson()).toContain('"names":["customer_name","order_count","count_rank"]');
     expect(draftJson()).toContain('"case":"windowFunction"');
+  });
+
+  it('replaces a stale one-input projection with an explicitly configured connected join', () => {
+    const orders = buildJoinWarehouseSourceNode({
+      id: 'source-orders',
+      table: 'orders',
+      columns: ['order_id', 'customer'],
+    });
+    const audits = buildJoinWarehouseSourceNode({
+      id: 'source-audits',
+      table: 'auth_audit_events',
+      columns: ['event_id', 'principal_id'],
+    });
+    const connectedSourceRef = orders.metadata?.connectedSourceRef;
+    if (connectedSourceRef == null || typeof connectedSourceRef !== 'object') {
+      throw new Error('Expected connected source reference.');
+    }
+    const transform = applyDvtSubstraitSemanticDocument(
+      buildDvtNode('dvt:transform'),
+      encodeDvtSubstraitProjectionDocument(
+        createDvtSubstraitProjectionDraft({
+          source: {
+            nodeId: orders.id,
+            schema: 'public',
+            table: 'orders',
+            sourceRef: connectedSourceRef as ConnectedSourceRef,
+            fields: [
+              { name: 'order_id', dataType: 'string' },
+              { name: 'customer', dataType: 'string' },
+            ],
+          },
+          targetNodeId: 'dvt-transform',
+          outputs: [
+            { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
+            { fieldId: 'output:customer', name: 'customer', sourceFieldName: 'customer' },
+          ],
+        })
+      )
+    );
+    const edges: readonly CanonicalEdge[] = [
+      {
+        id: 'orders-transform',
+        sourceId: orders.id,
+        targetId: transform.id,
+        relation: 'lineage',
+      },
+      {
+        id: 'audits-transform',
+        sourceId: audits.id,
+        targetId: transform.id,
+        relation: 'lineage',
+      },
+    ];
+
+    renderFields(transform, undefined, undefined, [orders, audits, transform], edges, 'columns');
+
+    const leftField = container.querySelector<HTMLSelectElement>(
+      '[data-slot="dvt-composition-left-field"]'
+    );
+    const rightField = container.querySelector<HTMLSelectElement>(
+      '[data-slot="dvt-composition-right-field"]'
+    );
+    const startJoin = container.querySelector<HTMLButtonElement>(
+      '[data-slot="dvt-start-configured-inner-join"]'
+    );
+    expect(leftField).not.toBeNull();
+    expect(rightField).not.toBeNull();
+    expect(startJoin).not.toBeNull();
+
+    act(() => {
+      fireEvent.change(leftField!, {
+        target: { value: `${orders.id}\u001fcustomer` },
+      });
+      fireEvent.change(rightField!, {
+        target: { value: `${audits.id}\u001fprincipal_id` },
+      });
+      fireEvent.click(startJoin!);
+    });
+
+    expect(draftJson()).toContain('"shape":"inner_join"');
+    expect(draftJson()).toContain('"field:source-orders:customer"');
+    expect(draftJson()).toContain('"field:source-audits:principal_id"');
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-n-input-join-authoring"]')
+    ).not.toBeNull();
   });
 
   it('appends connected inputs repeatedly through one explicit field-predicate control', () => {
