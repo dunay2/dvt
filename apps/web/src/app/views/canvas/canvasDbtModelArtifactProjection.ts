@@ -7,6 +7,10 @@ import {
   createDbtNodeAuthoringMetadata,
   type DbtNodeAuthoringMetadata,
 } from './canvasDbtAuthoringModel';
+import {
+  resolveDbtModelProjectionColumns,
+  validateDbtModelProjectionColumns,
+} from './canvasDbtModelColumnAuthoring';
 import { createDvtNodeAuthoringMetadata } from './canvasDvtAuthoringModel';
 import {
   isObjectFilePostgresNode,
@@ -48,7 +52,8 @@ export type DbtModelArtifactProjectionResult =
         | 'not_dbt_model'
         | 'origin_required'
         | 'origin_metadata_unavailable'
-        | 'origin_columns_unavailable';
+        | 'origin_columns_unavailable'
+        | 'projection_columns_invalid';
       message: string;
     }>;
 
@@ -282,7 +287,25 @@ export function projectDbtModelArtifact(
       message: `DBT model origin "${origin.nodeName}" does not expose canonical columns.`,
     };
   }
-  const body = hasAuthoredBody ? authoredBody : buildGeneratedBody(origin);
+  const projectionRejection = hasAuthoredBody
+    ? null
+    : validateDbtModelProjectionColumns(metadata.projectionColumns, origin.columnNames);
+  if (projectionRejection != null) {
+    return {
+      ok: false,
+      reason: 'projection_columns_invalid',
+      message: `DBT model "${args.modelNode.name}" has an invalid generated-column projection.`,
+    };
+  }
+  const generatedColumnNames = resolveDbtModelProjectionColumns(
+    metadata.projectionColumns,
+    origin.columnNames
+  )
+    .filter((column) => column.output)
+    .map((column) => column.name);
+  const body = hasAuthoredBody
+    ? authoredBody
+    : buildGeneratedBody({ ...origin, columnNames: generatedColumnNames });
   const name = normalizeDbtArtifactIdentifier(args.modelNode.name, args.modelNode.id);
 
   return {

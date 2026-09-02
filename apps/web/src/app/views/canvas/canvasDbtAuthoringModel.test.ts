@@ -69,6 +69,7 @@ describe('canvas dbt authoring model', () => {
       materialized: 'view',
       selectedSourceId: '',
       modelSql: null,
+      projectionColumns: null,
     });
   });
 

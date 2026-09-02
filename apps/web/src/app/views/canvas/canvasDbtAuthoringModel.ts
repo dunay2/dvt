@@ -9,6 +9,12 @@ export type DbtNodeAuthoringMetadata = Readonly<{
   materialized: string;
   selectedSourceId: string;
   modelSql: string | null;
+  projectionColumns: readonly DbtModelProjectionColumn[] | null;
+}>;
+
+export type DbtModelProjectionColumn = Readonly<{
+  name: string;
+  output: boolean;
 }>;
 
 export type DbtSourceRelationshipSelection =
@@ -44,6 +50,20 @@ function readString(value: unknown): string | undefined {
 
 function readAuthoredSql(value: unknown): string | null {
   return typeof value === 'string' && value.trim().length > 0 ? value : null;
+}
+
+function readProjectionColumns(value: unknown): readonly DbtModelProjectionColumn[] | null {
+  if (!Array.isArray(value)) return null;
+  const columns: DbtModelProjectionColumn[] = [];
+  const names = new Set<string>();
+  for (const candidate of value) {
+    if (!isRecord(candidate)) return null;
+    const name = readString(candidate.name);
+    if (name == null || typeof candidate.output !== 'boolean' || names.has(name)) return null;
+    names.add(name);
+    columns.push({ name, output: candidate.output });
+  }
+  return columns;
 }
 
 function readNodeMetadataRecord(
@@ -100,6 +120,7 @@ export function createDbtNodeAuthoringMetadata(node: CanonicalNode): DbtNodeAuth
     ),
     selectedSourceId: readString(dbtMetadata?.selectedSourceId) ?? '',
     modelSql: readAuthoredSql(configMetadata?.sql) ?? readAuthoredSql(node.metadata?.sql),
+    projectionColumns: readProjectionColumns(dbtMetadata?.projectionColumns),
   };
 }
 
@@ -134,6 +155,11 @@ export function applyDbtNodeAuthoringMetadata(
         tableName,
         materialized,
         selectedSourceId: metadata.selectedSourceId.trim(),
+        ...(metadata.projectionColumns == null
+          ? {}
+          : {
+              projectionColumns: metadata.projectionColumns.map((column) => ({ ...column })),
+            }),
       },
     },
   };
