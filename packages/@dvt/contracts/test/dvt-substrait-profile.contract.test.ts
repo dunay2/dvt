@@ -74,6 +74,7 @@ const SEMANTIC_DOCUMENT = {
         relationId: 'rel-result',
         outputOrdinal: 1,
         displayName: 'customer_name',
+        description: 'Normalized customer name',
       },
     ],
   },
@@ -199,6 +200,7 @@ describe('DVT Substrait semantic document and authoring sidecar', () => {
       fieldId: 'field-customer-name',
       outputOrdinal: 0,
       displayName: 'display_name',
+      description: 'Normalized customer name',
     });
     expect(reloaded.sidecar.semanticPlanSha256).toBe(PLAN_SHA256);
     expect(reloaded.semanticPlan.sha256).toBe(PLAN_SHA256);

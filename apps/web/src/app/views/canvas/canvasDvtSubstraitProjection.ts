@@ -75,6 +75,7 @@ export type DvtSubstraitProjectionOutput = Readonly<{
   dataType: string;
   outputOrdinal: number;
   operations?: readonly string[];
+  description?: string;
 }>;
 
 export type DvtSubstraitColumnFunction = Readonly<{
@@ -510,6 +511,7 @@ export function inspectDvtSubstraitProjectionDraft(
       sourceFieldName: sourceField.displayName,
       dataType: 'unknown',
       outputOrdinal,
+      ...(targetField.description == null ? {} : { description: targetField.description }),
       ...(resolvedExpression.operations.length > 0
         ? { operations: resolvedExpression.operations }
         : {}),

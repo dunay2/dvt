@@ -7,6 +7,7 @@ import {
   resolveDvtSubstraitColumnFunctions,
   type DvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
+import { setDvtSubstraitFieldDescription } from './canvasDvtSubstraitFieldDocumentation';
 
 const trimCapabilityId = resolveDvtSubstraitColumnFunctions({
   dataType: 'text',
@@ -113,5 +114,36 @@ describe('Substrait projection function aliases', () => {
         provider: 'postgres',
       })
     ).toBe(draft);
+  });
+
+  it('keeps field documentation attached while applying a function and alias', () => {
+    const draft = projectionDraft();
+    const documented = setDvtSubstraitFieldDescription({
+      metadata: {
+        kind: 'transform',
+        mode: 'substrait',
+        shape: 'projection',
+        plan: draft.plan,
+        sidecar: draft.sidecar,
+      },
+      fieldId: 'output:customer',
+      description: 'Customer name prepared for matching',
+    });
+    const nextDraft = applyDvtSubstraitProjectionFunction(
+      { plan: documented.plan, sidecar: documented.sidecar },
+      {
+        fieldId: 'output:customer',
+        capabilityId: trimCapabilityId,
+        alias: 'customer_clean',
+        dataType: 'text',
+        provider: 'postgres',
+      }
+    );
+    const inspection = inspectDvtSubstraitProjectionDraft(nextDraft);
+
+    expect(inspection.ok ? inspection.projection.outputs[0] : null).toMatchObject({
+      name: 'customer_clean',
+      description: 'Customer name prepared for matching',
+    });
   });
 });
