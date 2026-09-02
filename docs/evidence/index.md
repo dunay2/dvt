@@ -201,6 +201,7 @@ Evidence documents that justify or validate relevant changes.
 - [Temporal SDK 1.17.2 Upgrade](ED-20260603-temporal-sdk-1-17-2-upgrade.md)
 - [Temporal Step Plugin Semantics Hardening](ed-20260429-temporal-step-plugin-semantics.md)
 - [Temporal TypeScript SDK 1.20 Upgrade](ED-20260721-temporal-sdk-1-20-upgrade.md)
+- [Temporal TypeScript SDK 1.23 Upgrade](ED-20260902-temporal-sdk-1-23-upgrade.md)
 - [Temporal worker DBT Docker canary](ed-20260514-temporal-worker-dbt-canary.md)
 - [VTX2 Substrait grouping and count authoring evidence](ED-20260831-vtx2-substrait-grouping.md)
 - [VTX2 Substrait row-number window authoring evidence](ED-20260831-vtx2-substrait-row-number-window.md)

@@ -1,0 +1,22 @@
+---
+id: R-20260902-TEMPORAL-SDK-1-23-UPGRADE
+title: Temporal SDK 1.23 could change worker or replay behavior
+status: Open
+date: 2026-09-02
+owners:
+  - packages/@dvt/adapter-temporal
+  - apps/temporal-worker
+severity: High
+probability: Low
+context: >
+  PR #2629 upgrades all Temporal TypeScript SDK packages used by the adapter and worker from 1.20.3
+  to 1.23.0 without changing DVT workflow or activity contracts.
+risk: >
+  An upstream worker, bundler, protocol, or replay change could pass compilation while changing
+  execution, cancellation, time-skipping, transformation dispatch, or integration behavior.
+mitigations:
+  - Keep every Temporal package on the same exact SDK version across adapter and worker manifests.
+  - Require frozen-lockfile installation plus adapter and worker behavior suites.
+  - Require Temporal integration, dependency-review, and deterministic-workflow merge gates.
+review_after: 2026-10-02
+---
