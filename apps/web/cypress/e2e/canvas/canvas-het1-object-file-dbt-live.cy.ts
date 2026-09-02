@@ -34,7 +34,6 @@ import {
   assertLiveDraftScopeIsClean,
   closeNodeWorkbench,
   configureObjectFileLoad,
-  confirmCanvasDependency,
   type Het1ObjectFileManifest,
   openNodeWorkbench,
   readDraftEdges,
@@ -105,7 +104,6 @@ describe('HET1 public object-file DBT vertical', () => {
       cy.contains('.react-flow__node', MODEL_NODE_NAME, { timeout: 20_000 }).should('be.visible');
       dragCanvasNodeByViewportDelta(MODEL_NODE_NAME, { x: 0, y: -140 });
       connectCanvasNodes(OBJECT_NODE_CARD_TITLE, MODEL_NODE_NAME);
-      confirmCanvasDependency();
 
       openNodeWorkbench(MODEL_NODE_NAME);
       openNodeWorkbenchSection('general');
@@ -127,7 +125,6 @@ describe('HET1 public object-file DBT vertical', () => {
       cy.contains('.react-flow__node', TEST_NODE_NAME, { timeout: 20_000 }).should('be.visible');
       dragCanvasNodeByViewportDelta(TEST_NODE_NAME, { x: 300, y: 0 });
       connectCanvasNodes(MODEL_NODE_NAME, TEST_NODE_NAME);
-      confirmCanvasDependency();
 
       openNodeWorkbench(TEST_NODE_NAME);
       cy.get('select[name="dbt-test-type"]').select('not_null');
