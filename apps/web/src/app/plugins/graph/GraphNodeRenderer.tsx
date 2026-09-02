@@ -2,7 +2,7 @@
 import type { CSSProperties, ReactElement } from 'react';
 
 import { resolveNodeKindRegistration } from '../nodeTypeRegistry';
-import { resolveGraphNodeColumnInteractionProps } from './GraphNodeColumnSection';
+import { resolveGraphNodeColumnInteractionProps } from './graphNodeColumnContracts';
 import type { NodeRendererProps } from '../contracts/NodeRendering';
 import { buildGraphNodeCardReadModel } from './graphNodeCardReadModel';
 import type { GraphNodeOperationalDetail } from './graphNodeCardStrategyContracts';

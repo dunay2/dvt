@@ -36,7 +36,7 @@ import { graphStatusBadgeClasses } from '../graph/graphVisualTokens';
 import { buildGraphNodeCardReadModel } from '../graph/graphNodeCardReadModel';
 import type { GraphNodeOperationalDetail } from '../graph/graphNodeCardStrategyContracts';
 import { GraphNodeCardView } from '../graph/GraphNodeCardView';
-import { resolveGraphNodeColumnInteractionProps } from '../graph/GraphNodeColumnSection';
+import { resolveGraphNodeColumnInteractionProps } from '../graph/graphNodeColumnContracts';
 import { resolveGraphNodeTagActionProps } from '../graph/GraphNodeTagList';
 import { CANVAS_NODE_KINDS } from '../nodeTypeCatalog';
 

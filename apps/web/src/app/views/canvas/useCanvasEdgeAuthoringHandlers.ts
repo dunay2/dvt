@@ -32,7 +32,7 @@ import {
   setCanvasColumnOutputIncluded,
   type CanvasColumnMappingRejection,
 } from './canvasColumnMappingAuthoring';
-import type { GraphNodeColumnOutputToggleIdentity } from '../../plugins/graph/GraphNodeColumnSection';
+import type { GraphNodeColumnOutputToggleIdentity } from '../../plugins/graph/graphNodeColumnContracts';
 import {
   createCanvasColumnHandleId,
   parseCanvasColumnHandleId,
