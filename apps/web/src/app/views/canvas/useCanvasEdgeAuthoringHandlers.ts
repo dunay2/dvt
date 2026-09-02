@@ -26,6 +26,7 @@ import {
   configureDbtModelColumnOrder,
   configureDbtModelColumnOutput,
 } from './canvasDbtModelColumnCommand';
+import { isReorderableCanvasSource, reorderCanvasSourceColumns } from './canvasSourceColumnOrder';
 import type { GraphNodeColumnOutputToggleIdentity } from '../../plugins/graph/graphNodeColumnContracts';
 import {
   createCanvasColumnHandleId,
@@ -271,6 +272,22 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
       const targetNode = resolveCurrentNode(state, identity.nodeId);
       if (targetNode?.pluginId === 'dbt' && targetNode.kind === 'dbt:model') {
         const result = configureDbtModelColumnOrder({
+          draftSession: state.draftSession,
+          canonicalNodesById: state.canonicalNodesById,
+          nodeId: identity.nodeId,
+          columnName: identity.columnId,
+          targetColumnName: identity.targetColumnId,
+          placement: identity.placement,
+        });
+        if (result.outcome === 'rejected') {
+          toast.error(canvasViewCopy.columnMappingUnavailableMessage);
+          return;
+        }
+        effects.setDraftSession(result.draftSession);
+        return;
+      }
+      if (isReorderableCanvasSource(targetNode)) {
+        const result = reorderCanvasSourceColumns({
           draftSession: state.draftSession,
           canonicalNodesById: state.canonicalNodesById,
           nodeId: identity.nodeId,

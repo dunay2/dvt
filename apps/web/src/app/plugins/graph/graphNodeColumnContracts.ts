@@ -120,7 +120,8 @@ export function resolveGraphNodeColumnInteractionProps(args: {
           ) => void)
         : undefined,
     onColumnReorder:
-      args.nodeRole === 'transform' && typeof data.onReorderCanvasColumnOutput === 'function'
+      (args.nodeRole === 'input' || args.nodeRole === 'transform') &&
+      typeof data.onReorderCanvasColumnOutput === 'function'
         ? (data.onReorderCanvasColumnOutput as (identity: GraphNodeColumnReorderIdentity) => void)
         : undefined,
     onColumnDisclosureChange:

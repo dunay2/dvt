@@ -25,6 +25,7 @@ import { readDvtTransformLineageProvenance } from './canvasTransformationSqlMirr
 import { projectCanvasNodeAccessibleHealth } from './canvasNodeMapper';
 import { createDbtNodeAuthoringMetadata } from './canvasDbtAuthoringModel';
 import { projectCanvasColumnFunctionMenus } from './canvasColumnFunctionMenuProjection';
+import { isReorderableCanvasSource } from './canvasSourceColumnOrder';
 
 type InteractiveColumnInput = Readonly<{ name: string; type: string }>;
 
@@ -235,6 +236,7 @@ export function useCanvasControllerReadModel({
           canonicalNode?.pluginId === 'dbt' &&
           canonicalNode.kind === 'dbt:model' &&
           createDbtNodeAuthoringMetadata(canonicalNode).modelSql == null;
+        const canReorderSourceColumns = isReorderableCanvasSource(canonicalNode);
         const hasReadOnlyColumnLineage =
           canonicalNode?.role === 'transform' &&
           !canAuthorColumnMappings &&
@@ -291,7 +293,7 @@ export function useCanvasControllerReadModel({
               ? node.data.onToggleCanvasColumnOutput
               : undefined,
           onReorderCanvasColumnOutput:
-            hasEditableProjection || canAuthorDbtModelColumns
+            hasEditableProjection || canAuthorDbtModelColumns || canReorderSourceColumns
               ? node.data.onReorderCanvasColumnOutput
               : undefined,
           onAutomapColumns: canAuthorColumnMappings ? node.data.onAutomapColumns : undefined,
