@@ -279,17 +279,29 @@ function projectCanvasNodePresentationTruthInternal(
     : new Set<string>();
   const upstreamVisibleColumns = args.nodes
     .filter((node) => upstreamNodeIds.has(node.id) && !nextAncestorNodeIds.has(node.id))
-    .flatMap((node) =>
-      projectCanvasNodePresentationTruthInternal(
+    .flatMap((node) => {
+      const upstreamTruth = projectCanvasNodePresentationTruthInternal(
         { node, nodes: args.nodes, edges: args.edges },
         nextAncestorNodeIds
-      ).columns.visible.map((column) => ({
-        ...column,
-        provenance: 'inherited' as const,
-        sourceNodeId: column.sourceNodeId ?? node.id,
-        sourceNodeName: column.sourceNodeName ?? node.name,
-      }))
-    );
+      );
+      const upstreamArtifact = projectDbtModelArtifact({
+        modelNode: node,
+        nodes: args.nodes,
+        edges: args.edges,
+      });
+      const activeColumnNames =
+        upstreamArtifact.ok && upstreamArtifact.artifact.provenance === 'generated'
+          ? new Set(upstreamArtifact.artifact.outputColumns)
+          : null;
+      return upstreamTruth.columns.visible
+        .filter((column) => activeColumnNames == null || activeColumnNames.has(column.name))
+        .map((column) => ({
+          ...column,
+          provenance: 'inherited' as const,
+          sourceNodeId: column.sourceNodeId ?? node.id,
+          sourceNodeName: column.sourceNodeName ?? node.name,
+        }));
+    });
   if (args.node.role === 'output') {
     const inherited = upstreamVisibleColumns;
     const visible = baseTruth.columns.declared.length > 0 ? baseTruth.columns.declared : inherited;

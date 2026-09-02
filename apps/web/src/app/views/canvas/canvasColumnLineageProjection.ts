@@ -373,12 +373,29 @@ export function projectCanvasColumnLineage(args: {
       ) {
         continue;
       }
-      const targetColumns = buildCanvasNodePresentationTruth({
+      const targetColumns = projectCanvasNodePresentationTruth({
         node: model,
         nodes: args.nodes,
         edges: args.edges,
-      }).columns.visible.filter((column) => column.sourceNodeId === sourceNode.id);
-      for (const sourceColumn of readColumns(sourceNode)) {
+      }).columns.visible.filter((column) => artifact.artifact.outputColumns.includes(column.name));
+      const sourceTruth = projectCanvasNodePresentationTruth({
+        node: sourceNode,
+        nodes: args.nodes,
+        edges: args.edges,
+      });
+      const sourceArtifact = projectDbtModelArtifact({
+        modelNode: sourceNode,
+        nodes: args.nodes,
+        edges: args.edges,
+      });
+      const activeSourceNames =
+        sourceArtifact.ok && sourceArtifact.artifact.provenance === 'generated'
+          ? new Set(sourceArtifact.artifact.outputColumns)
+          : null;
+      const sourceColumns = sourceTruth.columns.visible.filter(
+        (column) => activeSourceNames == null || activeSourceNames.has(column.name)
+      );
+      for (const sourceColumn of sourceColumns) {
         const targetColumn = targetColumns.find((column) => column.name === sourceColumn.name);
         if (targetColumn == null) continue;
         projected.push(
@@ -391,7 +408,7 @@ export function projectCanvasColumnLineage(args: {
             targetColumnId: targetColumn.name,
             outputId: targetColumn.name,
             terminal: false,
-            removable: false,
+            removable: true,
           })
         );
       }

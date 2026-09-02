@@ -18,6 +18,7 @@ import type { CanvasViewCopy } from './canvasCopy.types';
 import type { CanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
 import { buildCanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth';
 import { buildCanvasNodePresentationCopy } from './canvasNodePresentationCopy';
+import { projectDbtModelColumnStates } from './canvasDbtModelColumnAuthoring';
 
 type CanvasNodePosition = { x: number; y: number };
 type MapCanonicalNodeToCanvasNodeArgs = {
@@ -122,10 +123,17 @@ export function mapCanonicalNodeToCanvasNode({
   const resolvedPresentationTruth =
     presentationTruth ??
     buildCanvasNodePresentationTruth({ node: canonicalNode, nodes: [canonicalNode], edges: [] });
-  const columns = resolvedPresentationTruth.columns.visible.map((column) => ({
+  const presentedColumns =
+    canonicalNode.pluginId === 'dbt' && canonicalNode.kind === 'dbt:model'
+      ? projectDbtModelColumnStates(canonicalNode, resolvedPresentationTruth.columns.visible)
+      : resolvedPresentationTruth.columns.visible.map((column) => ({
+          column,
+          output: canonicalNode.kind !== 'dvt:transform' || column.provenance === 'declared',
+        }));
+  const columns = presentedColumns.map(({ column, output }) => ({
     name: column.name,
     type: column.type,
-    output: canonicalNode.kind !== 'dvt:transform' || column.provenance === 'declared',
+    output,
     ...(column.nullable == null ? {} : { nullable: column.nullable }),
     ...(column.primaryKey == null ? {} : { primaryKey: column.primaryKey }),
     ...(column.sourceNodeName == null ? {} : { sourceNodeName: column.sourceNodeName }),

@@ -51,6 +51,21 @@ export function resolveDbtModelProjectionColumns(
   ];
 }
 
+export function projectDbtModelColumnStates<TColumn extends Readonly<{ name: string }>>(
+  node: CanonicalNode,
+  availableColumns: readonly TColumn[]
+): readonly Readonly<{ column: TColumn; output: boolean }>[] {
+  const columnByName = new Map(availableColumns.map((column) => [column.name, column]));
+  const states = resolveDbtModelProjectionColumns(
+    createDbtNodeAuthoringMetadata(node).projectionColumns,
+    availableColumns.map((column) => column.name)
+  );
+  return states.flatMap((state) => {
+    const column = columnByName.get(state.name);
+    return column == null ? [] : [{ column, output: state.output }];
+  });
+}
+
 export function setDbtModelProjectionColumnOutput(args: {
   node: CanonicalNode;
   availableColumns: readonly string[];
