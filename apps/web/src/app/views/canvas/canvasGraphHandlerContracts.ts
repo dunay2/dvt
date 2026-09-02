@@ -51,11 +51,6 @@ export type CanvasGraphInteractionContracts = {
   policy: CanvasGraphInteractionPolicy;
 };
 
-export type ConfirmEdgeModalState = {
-  open: boolean;
-  edge: { source: string; target: string; type: string } | null;
-};
-
 export type CanvasNodeAuthoringState = {
   canonicalNodesById: Map<string, CanonicalNode>;
   draftSession: CanvasDraftSession;

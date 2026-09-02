@@ -5,8 +5,8 @@ import type { PluginPortMap } from '../../plugins/contracts/ConnectionRules';
 import type { CanonicalNode } from '../../types/canonical';
 import { resolveCanvasDraftNodes } from './canvasDraftNodeCatalog';
 import {
-  confirmConnection,
-  confirmReconnect,
+  createConnection,
+  reconnectConnection,
   type CanvasConnectionRejection,
 } from './canvasConnectionAggregate';
 import { automapCanvasColumns } from './canvasColumnMappingAuthoring';
@@ -22,7 +22,7 @@ type CanvasEdgeAdmissionTransactionState = {
   pluginPortMap: PluginPortMap;
 };
 
-type ResolveCanvasEdgeConfirmationTransactionArgs = CanvasEdgeAdmissionTransactionState & {
+type ResolveCanvasEdgeCreationTransactionArgs = CanvasEdgeAdmissionTransactionState & {
   connection: Connection;
 };
 
@@ -37,7 +37,7 @@ export type CanvasEdgeAdmissionTransaction =
       rejection: CanvasConnectionRejection;
     }
   | {
-      outcome: 'confirmed' | 'reconnected';
+      outcome: 'created' | 'reconnected';
       edges: Edge[];
       draftSession: CanvasDraftSession;
     };
@@ -48,7 +48,7 @@ type AcceptedCanvasEdgeAdmissionTransaction = Exclude<
 >;
 
 function buildAcceptedEdgeTransaction(args: {
-  outcome: 'confirmed' | 'reconnected';
+  outcome: 'created' | 'reconnected';
   draftSession: CanvasDraftSession;
   nextEdges: Edge[];
 }): CanvasEdgeAdmissionTransaction {
@@ -59,7 +59,7 @@ function buildAcceptedEdgeTransaction(args: {
   };
 }
 
-function applyConfirmedConnectionColumnMappings(args: {
+function applyCreatedConnectionColumnMappings(args: {
   transaction: AcceptedCanvasEdgeAdmissionTransaction;
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
   targetNodeId: string;
@@ -113,14 +113,14 @@ function applyConnectedDbtModelOrigin(args: {
   };
 }
 
-export function resolveCanvasEdgeConfirmationTransaction({
+export function resolveCanvasEdgeCreationTransaction({
   canonicalNodesById,
   connection,
   draftSession,
   edges,
   pluginPortMap,
-}: ResolveCanvasEdgeConfirmationTransactionArgs): CanvasEdgeAdmissionTransaction {
-  const result = confirmConnection({
+}: ResolveCanvasEdgeCreationTransactionArgs): CanvasEdgeAdmissionTransaction {
+  const result = createConnection({
     connection,
     canonicalNodesById,
     edges,
@@ -135,14 +135,14 @@ export function resolveCanvasEdgeConfirmationTransaction({
   }
 
   const transaction = buildAcceptedEdgeTransaction({
-    outcome: 'confirmed',
+    outcome: 'created',
     draftSession,
     nextEdges: result.nextEdges,
   });
-  if (transaction.outcome !== 'confirmed' || connection.target == null) {
+  if (transaction.outcome !== 'created' || connection.target == null) {
     return transaction;
   }
-  const mappedTransaction = applyConfirmedConnectionColumnMappings({
+  const mappedTransaction = applyCreatedConnectionColumnMappings({
     transaction,
     canonicalNodesById,
     targetNodeId: connection.target,
@@ -162,7 +162,7 @@ export function resolveCanvasEdgeReconnectTransaction({
   edges,
   pluginPortMap,
 }: ResolveCanvasEdgeReconnectTransactionArgs): CanvasEdgeAdmissionTransaction {
-  const result = confirmReconnect({
+  const result = reconnectConnection({
     edge,
     connection,
     canonicalNodesById,

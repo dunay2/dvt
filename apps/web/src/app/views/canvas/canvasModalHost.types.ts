@@ -3,7 +3,6 @@
  */
 import type { PlanViewModel } from '../../types/plans';
 import type { PlanPreviewOutcome } from '../../ports/plans';
-import type { ConfirmEdgeModalState } from './canvasGraphHandlerContracts';
 
 export type CanvasPlanPreviewModalContract = Readonly<{
   open: boolean;
@@ -15,14 +14,6 @@ export type CanvasPlanPreviewModalContract = Readonly<{
   onStartRun: () => void;
 }>;
 
-export type CanvasEdgeConfirmationModalContract = Readonly<{
-  open: boolean;
-  edge: ConfirmEdgeModalState['edge'];
-  onClose: () => void;
-  onConfirm: () => void;
-}>;
-
 export type CanvasModalHostProps = Readonly<{
   planPreview: CanvasPlanPreviewModalContract;
-  edgeConfirmation?: CanvasEdgeConfirmationModalContract;
 }>;
