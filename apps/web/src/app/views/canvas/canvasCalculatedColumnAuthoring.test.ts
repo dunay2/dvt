@@ -9,6 +9,7 @@ import {
   encodeDvtSubstraitProjectionDocument,
   inspectDvtSubstraitProjectionDraft,
   resolveDvtSubstraitColumnFunctions,
+  type DvtSubstraitProjection,
 } from './canvasDvtSubstraitProjection';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
@@ -52,7 +53,7 @@ function session(...nodes: CanonicalNode[]): CanvasDraftSession {
   };
 }
 
-function inspect(node: CanonicalNode) {
+function inspect(node: CanonicalNode): DvtSubstraitProjection {
   const authority = readDvtTransformAuthoringAuthority(node);
   if (authority.mode !== 'substrait') throw new Error('Expected Substrait authority.');
   const inspection = inspectDvtSubstraitProjectionDraft(
