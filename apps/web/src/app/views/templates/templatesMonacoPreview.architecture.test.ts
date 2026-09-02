@@ -20,6 +20,7 @@ const CANVAS_MONACO_EDITOR_OWNERS = new Set([
   'views/canvas/DbtModelCodeAuthoringSection.tsx',
   'views/canvas/DvtSqlTransformAuthoringSection.tsx',
 ]);
+const CANVAS_MONACO_READ_ONLY_OWNERS = new Set(['views/canvas/DvtTransformOutputView.tsx']);
 
 const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
   {
@@ -33,6 +34,12 @@ const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
     surface: 'canvas-production' as const,
     modulePath,
     source: "import { MonacoCodeEditor } from '../../components/monaco/MonacoCodeEditor';",
+  })),
+  ...[...CANVAS_MONACO_READ_ONLY_OWNERS].map((modulePath) => ({
+    label: `${modulePath} owns a focused Canvas read-only output`,
+    surface: 'canvas-production' as const,
+    modulePath,
+    source: "import { MonacoCodeViewer } from '../../components/monaco/MonacoCodeViewer';",
   })),
 ];
 
@@ -59,6 +66,13 @@ const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
     modulePath: 'views/canvas/CanvasShell.tsx',
     source: "import { MonacoCodeEditor } from '../../components/monaco/MonacoCodeEditor';",
     expectedViolation: 'MonacoCodeEditor outside a governed Canvas authoring leaf',
+  },
+  {
+    label: 'Canvas shell cannot become a read-only Monaco owner',
+    surface: 'canvas-production',
+    modulePath: 'views/canvas/CanvasShell.tsx',
+    source: "import { MonacoCodeViewer } from '../../components/monaco/MonacoCodeViewer';",
+    expectedViolation: 'MonacoCodeViewer outside a governed Canvas output leaf',
   },
   {
     label: 'Canvas authoring cannot bypass the shared lazy Monaco gateway',
@@ -116,8 +130,12 @@ function collectMonacoAuthorityViolations({
   }
 
   if (surface === 'canvas-production') {
-    for (const gateway of ['MonacoCodeViewer', 'MonacoDiffViewer']) {
-      if (source.includes(gateway)) violations.push(gateway);
+    if (source.includes('MonacoDiffViewer')) {
+      violations.push('MonacoDiffViewer');
+    }
+
+    if (source.includes('MonacoCodeViewer') && !CANVAS_MONACO_READ_ONLY_OWNERS.has(modulePath)) {
+      violations.push('MonacoCodeViewer outside a governed Canvas output leaf');
     }
 
     if (source.includes('MonacoCodeEditor') && !CANVAS_MONACO_EDITOR_OWNERS.has(modulePath)) {
