@@ -304,6 +304,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/plugins/dbt/DbtNodeRenderer.test.tsx
   - apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx
   - apps/web/src/app/plugins/canvasSurfaceStrategyContracts.ts
+  - apps/web/src/app/plugins/contracts/NodeRendering.ts
   - apps/web/src/app/plugins/dbt/dbtCanvasSurfaceStrategy.ts
   - apps/web/src/app/plugins/dbt/dbtProjectFileCanvasSurfaceStrategy.ts
   - apps/web/src/app/plugins/dvt/dvtCanvasSurfaceStrategy.ts
@@ -436,6 +437,16 @@ domainObjects:
     type: command state
     owner: Canvas execution-selection intent
 symbols:
+  - path: apps/web/src/app/plugins/contracts/NodeRendering.ts
+    name: GraphNodeRendererData
+    kind: type
+    exported: true
+    dddOwner: CanvasGraphPresentation
+    cqRails: [ProjectGraphNodeCardReadModel, InspectCanvasNode, ConfigureCanvasDvtNode]
+    fowlerSignals: [Primitive obsession, Shotgun surgery]
+    architectureGuard: pnpm --filter @dvt/web typecheck
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- graphNodeCardPresentation.test.ts]
   - path: apps/web/src/app/plugins/graph/GraphNodeRenderer.tsx
     name: GraphNodeRenderer
     kind: function
@@ -738,6 +749,13 @@ completionGate:
   - pnpm governance:refresh
   - pnpm verify:prepush
 redGreenCycles:
+  - id: typed-node-renderer-data-boundary
+    redTest: pnpm --filter @dvt/web typecheck
+    expectedFailure: NodeRendererProps exposes unstructured renderer data, so the shared card projection cannot statically enforce its presentation and interaction callbacks.
+    patchSurfaces:
+      - apps/web/src/app/plugins/contracts/NodeRendering.ts
+      - apps/web/src/app/plugins/graph/graphNodeCardPresentation.test.ts
+    greenTest: pnpm --filter @dvt/web typecheck
   - id: shared-node-card-presentation-projection
     redTest: apps/web/src/app/plugins/graph/graphNodeCardPresentation.test.ts
     expectedFailure: The ProjectGraphNodeCardReadModel rail exposes no shared card-view projection, so generic and dbt renderers must independently prepare the same presentation and interaction props.
