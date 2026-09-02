@@ -6,12 +6,14 @@ import type {
 
 import type { CanvasAuthoringDraftRecord } from './canvasDraftReadModel';
 import { buildCanvasAuthoringDraft } from './canvasDraftAuthoring';
-import { canvasDraftSession } from './canvasDraftSession';
+import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 
 const SOURCE_ID = 'source';
 const TARGET_ID = 'target';
 
-function buildDraft(gate: WorkspaceGraphAuthoringEdgeExecutionGateCommand = 'open') {
+function buildDraft(
+  gate: WorkspaceGraphAuthoringEdgeExecutionGateCommand = 'open'
+): WorkspaceGraphAuthoringDraft {
   return {
     canvas: { kind: 'transformation', title: 'Canvas' },
     nodeIds: [SOURCE_ID, TARGET_ID],
@@ -51,7 +53,9 @@ function buildRecord(
   };
 }
 
-function bootstrap(gate: WorkspaceGraphAuthoringEdgeExecutionGateCommand = 'open') {
+function bootstrap(
+  gate: WorkspaceGraphAuthoringEdgeExecutionGateCommand = 'open'
+): CanvasDraftSession {
   return canvasDraftSession.machine.bootstrap({
     remoteDraft: buildRecord('rev-1', gate),
     canonicalNodeIds: [SOURCE_ID, TARGET_ID],

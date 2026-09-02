@@ -51,7 +51,7 @@ describe('useCanvasEdgeCommandRunner execution gate', () => {
       currentSession = typeof action === 'function' ? action(currentSession) : action;
     });
 
-    function Harness() {
+    function Harness(): null {
       runner = useCanvasEdgeCommandRunner({
         state: {
           canonicalNodesById: new Map(),
@@ -80,7 +80,7 @@ describe('useCanvasEdgeCommandRunner execution gate', () => {
     const currentSession = buildSession();
     const setDraftSession = vi.fn<Dispatch<SetStateAction<CanvasDraftSession>>>();
 
-    function Harness() {
+    function Harness(): null {
       runner = useCanvasEdgeCommandRunner({
         state: { canonicalNodesById: new Map(), draftSession: currentSession, edges: [] },
         effects: { setEdges: vi.fn(), setDraftSession },
