@@ -139,7 +139,7 @@ describe('Canvas column lineage mapping', () => {
     cy.contains('button', 'Convertir a SQL').should('not.exist');
   });
 
-  it('creates deterministic mappings when the stage dependency is confirmed', () => {
+  it('creates deterministic mappings when the stage dependency is connected', () => {
     cy.viewport(1920, 1080);
     stubColumnMappingCanvas(true);
     visitColumnMappingCanvas('en');
