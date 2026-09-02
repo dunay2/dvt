@@ -47,13 +47,6 @@ export const VALID_PLANNER_INPUT_FIXTURE = {
       maxParallel: 8,
     },
   },
-  environment: {
-    environmentId: 'prod',
-    vars: {
-      full_refresh: false,
-      threads: 4,
-    },
-  },
   ownership: {
     tenantId: 'tenant-a',
     projectId: 'analytics',
