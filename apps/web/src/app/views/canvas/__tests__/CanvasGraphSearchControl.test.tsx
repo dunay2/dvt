@@ -5,8 +5,8 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { resolveCanvasViewCopy } from './canvasCopyCatalog';
-import { CanvasGraphSearchControl } from './CanvasGraphSearchControl';
+import { resolveCanvasViewCopy } from '../canvasCopyCatalog';
+import { CanvasGraphSearchControl } from '../CanvasGraphSearchControl';
 
 describe('CanvasGraphSearchControl', () => {
   let container: HTMLDivElement;

@@ -6,8 +6,8 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
-import { CanvasColumnLineageEdge } from './CanvasColumnLineageEdge';
+import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
+import { CanvasColumnLineageEdge } from '../CanvasColumnLineageEdge';
 
 vi.mock('@xyflow/react', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@xyflow/react')>();

@@ -5,8 +5,8 @@ import React, { act, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { resolveCanvasViewCopy } from './canvasCopyCatalog';
-import { CanvasGraphFilterControl } from './CanvasGraphFilterControl';
+import { resolveCanvasViewCopy } from '../canvasCopyCatalog';
+import { CanvasGraphFilterControl } from '../CanvasGraphFilterControl';
 
 describe('CanvasGraphFilterControl', () => {
   let container: HTMLDivElement;
