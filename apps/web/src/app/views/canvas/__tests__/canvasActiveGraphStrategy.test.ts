@@ -4,14 +4,14 @@ import {
   type CanvasAuthoringDraftRecord,
   createUnknownCanvasAuthoringDraftReadModel,
   type CanvasAuthoringDraftReadModel,
-} from './canvasDraftReadModel';
+} from '../canvasDraftReadModel';
 import {
   resolveActiveCanvasAuthoringMode,
   resolveActiveCanvasGraphStrategy,
   selectActiveCanvasExecutionStrategy,
   selectActiveCanvasGraphStrategy,
   selectActiveCanvasSurfaceStrategy,
-} from './canvasActiveGraphStrategy';
+} from '../canvasActiveGraphStrategy';
 
 function buildDraftReadModelWithCanvasKind(kind: string): CanvasAuthoringDraftReadModel {
   const record: CanvasAuthoringDraftRecord = {

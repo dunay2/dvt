@@ -4,9 +4,9 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { buildTestNodeKind } from './canvasKindRegistration.testSupport';
-import { buildCanvasAddNodeCatalogItems } from './canvasAddNodeCatalogModel';
-import { CanvasAddNodeCatalogView } from './CanvasAddNodeCatalogView';
+import { buildTestNodeKind } from '../canvasKindRegistration.testSupport';
+import { buildCanvasAddNodeCatalogItems } from '../canvasAddNodeCatalogModel';
+import { CanvasAddNodeCatalogView } from '../CanvasAddNodeCatalogView';
 
 describe('CanvasAddNodeCatalogView', () => {
   let container: HTMLDivElement;

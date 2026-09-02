@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildTestNodeKind } from './canvasKindRegistration.testSupport';
+import { buildTestNodeKind } from '../canvasKindRegistration.testSupport';
 import {
   buildCanvasAddNodeCatalogItems,
   filterCanvasAddNodeCatalogItems,
   inferCanvasAddNodeCatalogCategory,
-} from './canvasAddNodeCatalogModel';
+} from '../canvasAddNodeCatalogModel';
 
 describe('canvasAddNodeCatalogModel', () => {
   it('classifies node registrations into professional add catalog categories', () => {
