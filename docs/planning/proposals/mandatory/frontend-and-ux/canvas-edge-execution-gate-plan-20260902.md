@@ -90,11 +90,11 @@ allowedImplementationSurfaces:
   - apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts
   - apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts
   - apps/web/src/app/views/canvas/canvasDraftSession.types.ts
+  - apps/web/src/app/views/canvas/canvasDraftEdgeExecutionGate.ts
   - apps/web/src/app/views/canvas/canvasDraftSessionWorkingSet.ts
   - apps/web/src/app/views/canvas/canvasDraftSessionMachine.ts
-  - apps/web/src/app/views/canvas/canvasDraftSession.test.ts
+  - apps/web/src/app/views/canvas/canvasDraftExecutionGate.test.ts
   - apps/web/src/app/views/canvas/canvasDraftAuthoring.ts
-  - apps/web/src/app/views/canvas/canvasDraftAuthoring.test.ts
   - apps/web/src/app/views/canvas/useCanvasAuthoringProjection.ts
   - apps/web/src/app/views/canvas/useCanvasEdgeCommandRunner.ts
   - apps/web/src/app/views/canvas/useCanvasEdgeCommandRunner.test.tsx
@@ -154,17 +154,17 @@ redGreenCycles:
       - apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts
     greenTest: packages/@dvt/contracts/test/workspace-graph-authoring-edge-execution.contract.test.ts
   - id: canvas-gate-persistence
-    redTest: apps/web/src/app/views/canvas/canvasDraftSession.test.ts
+    redTest: apps/web/src/app/views/canvas/canvasDraftExecutionGate.test.ts
     expectedFailure: CanvasDraftEdge drops gate state during rebuild, save and three-way reload reconciliation.
     patchSurfaces:
       - apps/web/src/app/views/canvas/canvasDraftSession.types.ts
+      - apps/web/src/app/views/canvas/canvasDraftEdgeExecutionGate.ts
       - apps/web/src/app/views/canvas/canvasDraftSessionWorkingSet.ts
       - apps/web/src/app/views/canvas/canvasDraftSessionMachine.ts
-      - apps/web/src/app/views/canvas/canvasDraftSession.test.ts
+      - apps/web/src/app/views/canvas/canvasDraftExecutionGate.test.ts
       - apps/web/src/app/views/canvas/canvasDraftAuthoring.ts
-      - apps/web/src/app/views/canvas/canvasDraftAuthoring.test.ts
       - apps/web/src/app/views/canvas/useCanvasAuthoringProjection.ts
-    greenTest: apps/web/src/app/views/canvas/canvasDraftSession.test.ts
+    greenTest: apps/web/src/app/views/canvas/canvasDraftExecutionGate.test.ts
   - id: existing-edge-command-runner-gate
     redTest: apps/web/src/app/views/canvas/useCanvasEdgeCommandRunner.test.tsx
     expectedFailure: The existing runner cannot apply or clear the bounded gate and reject a missing edge.

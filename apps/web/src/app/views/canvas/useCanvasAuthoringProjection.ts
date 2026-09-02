@@ -1,5 +1,6 @@
 /** Owned concern: compose semantic authoring projection and viewport projection into one route-facing graph model. */
 import { useMemo } from 'react';
+import { readWorkspaceGraphAuthoringEdgeExecutionGate } from '@dvt/contracts';
 
 import { buildCanvasCanonicalSnapshot } from './canvasCanonicalSnapshot';
 import { buildCanvasAuthoringGraphProjection } from './canvasAuthoringGraphProjection';
@@ -12,7 +13,7 @@ import type { CanvasAuthoringSemanticGraph } from '../../services/workspace/work
 type UseCanvasAuthoringProjectionArgs = {
   graphAuthorityQuery: GraphAuthorityQueryState;
   visibleNodeIds: string[];
-  visibleEdges: Array<{ sourceId: string; targetId: string }>;
+  visibleEdges: CanvasDraftEdge[];
   draftSemanticGraph: CanvasAuthoringSemanticGraph | null;
   localCanonicalNodes: readonly CanonicalNode[];
   columnLevelLineageEnabled: boolean;
@@ -35,6 +36,9 @@ function buildAuthoringReconcileSnapshot(args: {
     (edge) => ({
       sourceId: edge.sourceId,
       targetId: edge.targetId,
+      ...(readWorkspaceGraphAuthoringEdgeExecutionGate(edge) === 'open'
+        ? {}
+        : { executionGate: 'closed' }),
     })
   );
 

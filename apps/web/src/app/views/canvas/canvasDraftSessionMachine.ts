@@ -2,6 +2,7 @@ import type { CanonicalNode } from '../../types/canonical';
 import { canvasDraftSessionBaseline } from './canvasDraftSessionBaseline';
 import { canvasDraftSessionWorkingSet, EMPTY_WORKING_SET } from './canvasDraftSessionWorkingSet';
 import type { CanvasAuthoringDraftRecord } from './canvasDraftReadModel';
+import { canvasDraftEdgeExecutionGate } from './canvasDraftEdgeExecutionGate';
 import type {
   BootstrapSessionArgs,
   CanvasDraftSession,
@@ -248,13 +249,27 @@ function mergeRemoteWorkingSetWithLocalAuthoring(
   const visibleNodeIds = [...new Set([...localWorkingSet.visibleNodeIds, ...remoteAddedNodeIds])];
   const visibleNodeIdSet = new Set(visibleNodeIds);
   const baselineEdgeSignatures = new Set(baselineWorkingSet.visibleEdges.map(draftEdgeSignature));
+  const baselineEdgesBySignature = new Map(
+    baselineWorkingSet.visibleEdges.map((edge) => [draftEdgeSignature(edge), edge])
+  );
+  const remoteEdgesBySignature = new Map(
+    remoteWorkingSet.visibleEdges.map((edge) => [draftEdgeSignature(edge), edge])
+  );
   const remoteAddedEdges = remoteWorkingSet.visibleEdges.filter(
     (edge) => !baselineEdgeSignatures.has(draftEdgeSignature(edge))
   );
   const visibleEdges = dedupeDraftEdges(
-    [...localWorkingSet.visibleEdges, ...remoteAddedEdges].filter(
-      (edge) => visibleNodeIdSet.has(edge.sourceId) && visibleNodeIdSet.has(edge.targetId)
-    )
+    [
+      ...localWorkingSet.visibleEdges.map((localEdge) => {
+        const signature = draftEdgeSignature(localEdge);
+        return canvasDraftEdgeExecutionGate.mergeRemote(
+          localEdge,
+          baselineEdgesBySignature.get(signature),
+          remoteEdgesBySignature.get(signature)
+        );
+      }),
+      ...remoteAddedEdges,
+    ].filter((edge) => visibleNodeIdSet.has(edge.sourceId) && visibleNodeIdSet.has(edge.targetId))
   );
   const pendingExplicitNodeIds = [
     ...new Set(
