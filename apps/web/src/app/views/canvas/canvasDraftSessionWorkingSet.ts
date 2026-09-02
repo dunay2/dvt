@@ -6,6 +6,7 @@ import type {
   CanvasDraftWorkingSet,
   CanonicalSnapshotArgs,
 } from './canvasDraftSession.types';
+import { canvasDraftEdgeExecutionGate } from './canvasDraftEdgeExecutionGate';
 export const EMPTY_WORKING_SET: CanvasDraftWorkingSet = {
   visibleNodeIds: [],
   visibleEdges: [],
@@ -19,7 +20,9 @@ function draftEdgesEqual(left: CanvasDraftEdge[], right: CanvasDraftEdge[]): boo
     left.length === right.length &&
     left.every(
       (edge, index) =>
-        edge.sourceId === right[index]?.sourceId && edge.targetId === right[index]?.targetId
+        edge.sourceId === right[index]?.sourceId &&
+        edge.targetId === right[index]?.targetId &&
+        edge.executionGate === right[index]?.executionGate
     )
   );
 }
@@ -35,7 +38,11 @@ function dedupeEdges(edges: ReadonlyArray<CanvasDraftEdge>): CanvasDraftEdge[] {
       continue;
     }
     seen.add(signature);
-    deduped.push({ sourceId: edge.sourceId, targetId: edge.targetId });
+    deduped.push({
+      sourceId: edge.sourceId,
+      targetId: edge.targetId,
+      ...(edge.executionGate == null ? {} : { executionGate: edge.executionGate }),
+    });
   }
   return deduped;
 }
@@ -68,7 +75,10 @@ function buildCanonical({
   return buildWorkingSet(canonicalNodeIds, canonicalEdges);
 }
 function buildFromDraft(draft: WorkspaceGraphAuthoringDraft): CanvasDraftWorkingSet {
-  return buildWorkingSet(draft.nodeIds, draft.edges);
+  return buildWorkingSet(
+    draft.nodeIds,
+    draft.edges.map(canvasDraftEdgeExecutionGate.fromAuthoringEdge)
+  );
 }
 function workingSetsEqual(left: CanvasDraftWorkingSet, right: CanvasDraftWorkingSet): boolean {
   if (!arraysEqual(left.visibleNodeIds, right.visibleNodeIds)) {
@@ -252,8 +262,23 @@ function removeNode(session: CanvasDraftSession, nodeId: string): CanvasDraftSes
 function replaceEdges(session: CanvasDraftSession, edges: CanvasDraftEdge[]): CanvasDraftSession {
   return withWorkingSet(session, {
     ...session.workingSet,
-    visibleEdges: buildVisibleEdges(edges, session.workingSet.visibleNodeIds),
+    visibleEdges: buildVisibleEdges(
+      canvasDraftEdgeExecutionGate.preserveOnReplacement(session.workingSet.visibleEdges, edges),
+      session.workingSet.visibleNodeIds
+    ),
   });
+}
+function setEdgeExecutionGate(
+  session: CanvasDraftSession,
+  command: Parameters<typeof canvasDraftEdgeExecutionGate.applyCommand>[1]
+): CanvasDraftSession {
+  const visibleEdges = canvasDraftEdgeExecutionGate.applyCommand(
+    session.workingSet.visibleEdges,
+    command
+  );
+  return visibleEdges != null
+    ? withWorkingSet(session, { ...session.workingSet, visibleEdges })
+    : session;
 }
 // Working-set policy owns aggregate mutation over visible scope and pending nodes.
 export const canvasDraftSessionWorkingSet = {
@@ -266,4 +291,5 @@ export const canvasDraftSessionWorkingSet = {
   upsertNode,
   removeNode,
   replaceEdges,
+  setEdgeExecutionGate,
 } as const;

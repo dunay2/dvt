@@ -7,6 +7,7 @@
  */
 import {
   WorkspaceGraphAuthoringDraftSchema,
+  withWorkspaceGraphAuthoringEdgeExecutionGate,
   type WorkspaceGraphAuthoringDraft,
   type WorkspaceGraphAuthoringEdge,
   type WorkspaceGraphAuthoringNode,
@@ -16,12 +17,13 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { toCanvasAuthoringMetadata } from './canvasAuthoringMetadata';
 import type { CanvasAuthoringDraftRecord } from './canvasDraftReadModel';
 import { serializeWorkspaceGraphAuthoringDraftStructuralSignature } from './canvasDraftStructuralSignature';
+import type { CanvasDraftEdge } from './canvasDraftSession.types';
 
 export type CanvasAuthoringDraftBuildInput = {
   canvas: WorkspaceGraphAuthoringDraft['canvas'];
   nodeIds: readonly string[];
   nodePositions: WorkspaceGraphAuthoringDraft['nodePositions'];
-  visibleEdges: ReadonlyArray<Pick<WorkspaceGraphAuthoringEdge, 'sourceId' | 'targetId'>>;
+  visibleEdges: readonly CanvasDraftEdge[];
   canonicalNodes: readonly CanonicalNode[];
   canonicalEdges: readonly CanonicalEdge[];
 };
@@ -120,16 +122,19 @@ function resolveAuthoringEdgeMetadata(args: {
 }
 
 function projectDraftEdgeToAuthoringEdge(
-  edge: Pick<WorkspaceGraphAuthoringEdge, 'sourceId' | 'targetId'>,
+  edge: CanvasDraftEdge,
   canonicalEdgeLookup: ReadonlyMap<string, CanonicalEdge>,
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>
 ): WorkspaceGraphAuthoringEdge {
   const canonicalEdge = canonicalEdgeLookup.get(`${edge.sourceId}::${edge.targetId}`);
-  const metadata = resolveAuthoringEdgeMetadata({
-    canonicalEdge,
-    sourceNode: canonicalNodesById.get(edge.sourceId),
-    targetNode: canonicalNodesById.get(edge.targetId),
-  });
+  const metadata = withWorkspaceGraphAuthoringEdgeExecutionGate(
+    resolveAuthoringEdgeMetadata({
+      canonicalEdge,
+      sourceNode: canonicalNodesById.get(edge.sourceId),
+      targetNode: canonicalNodesById.get(edge.targetId),
+    }),
+    edge.executionGate ?? 'open'
+  );
 
   return {
     id: canonicalEdge?.id ?? createAuthoringEdgeId(edge.sourceId, edge.targetId),

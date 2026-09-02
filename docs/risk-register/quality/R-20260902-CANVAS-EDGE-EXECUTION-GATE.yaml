@@ -1,0 +1,29 @@
+---
+id: R-20260902-CANVAS-EDGE-EXECUTION-GATE
+title: Canvas edge execution gate could diverge across authoring and execution
+status: Open
+date: 2026-09-02
+owners:
+  - packages/@dvt/contracts
+  - api
+  - web
+severity: High
+probability: Low
+---
+mitigation:
+  summary: >
+    One shared contract policy defines gate parsing, mutation and effective execution. The API
+    applies it before planner derivation; Canvas persists only the exceptional closed value and uses
+    a three-way reload merge. Structural execution prohibition remains independent. Unknown gate
+    values fail closed, a missing edge rejects mutation, and reconnection cannot inherit a previous
+    edge gate.
+  evidence:
+    - docs/evidence/ED-20260902-canvas-edge-execution-gate.md
+    - docs/planning/proposals/mandatory/frontend-and-ux/canvas-edge-execution-gate-plan-20260902.md
+    - packages/@dvt/contracts/test/workspace-graph-authoring-edge-execution.contract.test.ts
+    - apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts
+    - apps/web/src/app/views/canvas/canvasDraftExecutionGate.test.ts
+    - apps/web/src/app/views/canvas/useCanvasEdgeCommandRunner.test.tsx
+  follow_up:
+    - Issue #2581 owns the low-noise visual valve and its accessible interaction.
+    - Any additional gate state requires a separate contract evolution.

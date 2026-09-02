@@ -3,6 +3,7 @@ import { useCallback, useRef } from 'react';
 import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
 
 import type { Connection, Edge } from '@xyflow/react';
+import type { WorkspaceGraphAuthoringEdgeExecutionGateCommand } from '@dvt/contracts';
 
 import type { PluginPortMap } from '../../plugins/contracts/ConnectionRules';
 import type { CanonicalNode } from '../../types/canonical';
@@ -56,6 +57,11 @@ export type RunCanvasEdgeReconnectCommand = (
 export type CanvasEdgeCommandRunner = {
   createConnection: RunCanvasEdgeCreationCommand;
   reconnectEdge: RunCanvasEdgeReconnectCommand;
+  setExecutionGate: (args: {
+    sourceId: string;
+    targetId: string;
+    gate: WorkspaceGraphAuthoringEdgeExecutionGateCommand;
+  }) => boolean;
 };
 
 function applyAcceptedEdgeTransaction(args: {
@@ -158,8 +164,34 @@ export function useCanvasEdgeCommandRunner({
     [canonicalNodesById, pluginPortMap, setDraftSession, setEdges]
   );
 
+  const setExecutionGateCommand = useCallback<CanvasEdgeCommandRunner['setExecutionGate']>(
+    (command) => {
+      const currentDraftSession = latestDraftSessionRef.current;
+      const nextDraftSession = canvasDraftSession.workingSet.setEdgeExecutionGate(
+        currentDraftSession,
+        command
+      );
+      if (nextDraftSession === currentDraftSession) {
+        return false;
+      }
+
+      latestDraftSessionRef.current = nextDraftSession;
+      setDraftSession((currentSession) => {
+        const updatedSession = canvasDraftSession.workingSet.setEdgeExecutionGate(
+          currentSession,
+          command
+        );
+        latestDraftSessionRef.current = updatedSession;
+        return updatedSession;
+      });
+      return true;
+    },
+    [setDraftSession]
+  );
+
   return {
     createConnection: createConnectionCommand,
     reconnectEdge: reconnectEdgeCommand,
+    setExecutionGate: setExecutionGateCommand,
   };
 }

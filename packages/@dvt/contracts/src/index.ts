@@ -197,6 +197,17 @@ export type {
   WorkspaceGraphAuthoringNodeStatus,
 } from './contracts/planner/WorkspaceGraphAuthoringDraft.v1.js';
 export {
+  WORKSPACE_GRAPH_AUTHORING_EDGE_EXECUTION_GATE,
+  isWorkspaceGraphAuthoringEdgeEffectivelyExecutable,
+  readWorkspaceGraphAuthoringEdgeExecutionGate,
+  withWorkspaceGraphAuthoringEdgeExecutionGate,
+} from './contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.js';
+export type {
+  WorkspaceGraphAuthoringEdgeExecutionGate,
+  WorkspaceGraphAuthoringEdgeExecutionGateCommand,
+  WorkspaceGraphAuthoringEdgeExecutionGateState,
+} from './contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.js';
+export {
   DVT_TRANSFORM_AUTHORING_MODE,
   DvtTransformAuthoringAuthorityV1Schema,
   VISUAL_TRANSFORM_FILTER_OPERATOR,

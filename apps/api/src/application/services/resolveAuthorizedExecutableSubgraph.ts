@@ -11,7 +11,10 @@ import type {
   PreviewSelectionFinding,
   WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
-import { WorkspaceGraphAuthoringDraftSchema } from '@dvt/contracts';
+import {
+  WorkspaceGraphAuthoringDraftSchema,
+  isWorkspaceGraphAuthoringEdgeEffectivelyExecutable,
+} from '@dvt/contracts';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 import type { IWorkspaceGraphDraftStore } from '../ports/workspaceGraphDraft.js';
@@ -135,22 +138,18 @@ export class ResolveAuthorizedExecutableSubgraphService {
   }
 }
 
-function isExecutionDependencyEdge(edge: WorkspaceGraphAuthoringDraft['edges'][number]): boolean {
-  return edge.metadata?.['executionDependency'] !== false;
-}
-
 function projectExecutionDependencyDraft(
   draft: WorkspaceGraphAuthoringDraft
 ): WorkspaceGraphAuthoringDraft {
   return {
     ...draft,
-    edges: draft.edges.filter(isExecutionDependencyEdge),
+    edges: draft.edges.filter(isWorkspaceGraphAuthoringEdgeEffectivelyExecutable),
     ...(draft.canvases == null
       ? {}
       : {
           canvases: draft.canvases.map((canvasWorkspace) => ({
             ...canvasWorkspace,
-            edges: canvasWorkspace.edges.filter(isExecutionDependencyEdge),
+            edges: canvasWorkspace.edges.filter(isWorkspaceGraphAuthoringEdgeEffectivelyExecutable),
           })),
         }),
   };
