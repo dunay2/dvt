@@ -44,6 +44,7 @@ type UseCanvasEdgeAuthoringHandlersArgs = CanvasEdgeAuthoringContracts;
 type UseCanvasEdgeAuthoringHandlersResult = {
   onConnect: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
   onReconnect: NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>;
+  setExecutionGate: CanvasEdgeCommandRunner['setExecutionGate'];
   activeColumnHandleId: string | null;
   handleColumnPortActivate: (identity: CanvasColumnHandleIdentity) => void;
   handleAutomapCanvasColumns: (
@@ -472,6 +473,7 @@ export function useCanvasEdgeAuthoringHandlers({
   return {
     onConnect,
     onReconnect,
+    setExecutionGate: edgeCommandRunner.setExecutionGate,
     activeColumnHandleId: columnMappingHandlers.activeColumnHandleId,
     handleColumnPortActivate: columnMappingHandlers.handleColumnPortActivate,
     handleAutomapCanvasColumns: columnMappingHandlers.handleAutomapCanvasColumns,

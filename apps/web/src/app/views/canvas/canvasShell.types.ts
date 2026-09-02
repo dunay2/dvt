@@ -36,6 +36,7 @@ import type {
 } from '../../types/canvasExecutionSelectionRecovery';
 import type { OperationalDrawerRunControls } from '../../components/shell/operationalDrawerContributionStore';
 import type { IRunsPort, RunSnapshot } from '../../ports/runs';
+import type { CanvasEdgeCommandRunner } from './useCanvasEdgeCommandRunner';
 
 export type UserPermissions = {
   canPlan: boolean;
@@ -133,6 +134,7 @@ export type CanvasShellGraphCommands = {
   onEdgesChange: NonNullable<ReactFlowProps<Node, Edge>['onEdgesChange']>;
   onConnect: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
   onReconnect: NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>;
+  onSetEdgeExecutionGate: CanvasEdgeCommandRunner['setExecutionGate'];
   onViewportChange: (viewport: CanvasViewport) => void;
   onDrop: React.DragEventHandler<HTMLDivElement>;
   onDragOver: React.DragEventHandler<HTMLDivElement>;

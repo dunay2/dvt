@@ -14,6 +14,7 @@ export function buildCanvasShellGraphCommands({
     onEdgesChange: graphCommands.onEdgesChange,
     onConnect: graphCommands.onConnect,
     onReconnect: graphCommands.onReconnect,
+    onSetEdgeExecutionGate: graphCommands.onSetEdgeExecutionGate,
     onViewportChange: graphCommands.handleViewportChange,
     onDrop: graphCommands.handleDrop,
     onDragOver: graphCommands.handleDragOver,

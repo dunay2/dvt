@@ -162,6 +162,7 @@ function buildCanvasInteractionViewModel(args: CanvasControllerViewModelArgs) {
     onEdgesChange: readModel.handleEdgesChange,
     onConnect: graphHandlers.onConnect,
     onReconnect: graphHandlers.onReconnect,
+    onSetEdgeExecutionGate: graphHandlers.setExecutionGate,
     handleViewportChange: persistence.handleViewportChange,
     handleNodeDrag: persistence.handleNodeDrag,
     handleNodeDragStop: persistence.handleNodeDragStop,

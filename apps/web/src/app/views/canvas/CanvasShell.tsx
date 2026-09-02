@@ -395,6 +395,7 @@ export default function CanvasShell({
     screenToFlowPosition: canvasContextScreenToFlowPosition ?? ((screenPosition) => screenPosition),
     onCreateAuthoringNode: graphCommands.onCreateAuthoringNode,
     onEdgesChange: graphCommands.onEdgesChange,
+    onSetEdgeExecutionGate: graphCommands.onSetEdgeExecutionGate,
     onOpenSourceImport:
       sourceImportDialog.openCommand == null
         ? undefined
