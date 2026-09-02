@@ -366,25 +366,16 @@ function lifecycleStateIsPublishable(lifecycleRow = {}) {
   ].includes(lifecycleState);
 }
 
-function lifecycleAuthorityParts(authority) {
-  if (authority instanceof Map) return { rowsByPath: authority, strict: false };
-  return {
-    rowsByPath: authority?.rowsByPath,
-    strict: authority?.strict === true,
-  };
+function lifecycleRowsByPath(authority) {
+  return authority instanceof Map ? authority : authority?.rowsByPath;
 }
 
 function shouldIncludeDocumentationPath(documentPath, authority) {
   const normalizedPath = String(documentPath || '').replace(/\\/gu, '/');
-  const { rowsByPath, strict } = lifecycleAuthorityParts(authority);
+  const rowsByPath = lifecycleRowsByPath(authority);
   if (!(rowsByPath instanceof Map)) return true;
   const lifecycleRow = rowsByPath.get(normalizedPath);
-  if (!lifecycleRow) {
-    if (strict && /\.md$/iu.test(normalizedPath)) {
-      throw new Error(`Missing Planning DB lifecycle authority for ${normalizedPath}.`);
-    }
-    return true;
-  }
+  if (!lifecycleRow) return true;
   return lifecycleStateIsPublishable(lifecycleRow);
 }
 
@@ -411,7 +402,7 @@ async function readDocumentationLifecycleAuthority(options = {}) {
       }
       rowsByPath.set(documentPath, row);
     }
-    return { rowsByPath, strict: true };
+    return { rowsByPath };
   } finally {
     if (ownsClient) await client.end();
   }
