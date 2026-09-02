@@ -5,6 +5,7 @@ import {
   createDvtSubstraitProjectionDraft,
   inspectDvtSubstraitProjectionDraft,
   resolveDvtSubstraitColumnFunctions,
+  type DvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
 
 const trimCapabilityId = resolveDvtSubstraitColumnFunctions({
@@ -12,7 +13,7 @@ const trimCapabilityId = resolveDvtSubstraitColumnFunctions({
   provider: 'postgres',
 }).find((entry) => entry.name === 'trim')!.capabilityId;
 
-function projectionDraft() {
+function projectionDraft(): DvtSubstraitProjectionDraft {
   return createDvtSubstraitProjectionDraft({
     source: {
       nodeId: 'source-orders',
@@ -66,7 +67,7 @@ describe('Substrait projection function aliases', () => {
 
   it('rejects blank and duplicate aliases without partially changing the draft', () => {
     const draft = projectionDraft();
-    const apply = (alias: string) =>
+    const apply = (alias: string): DvtSubstraitProjectionDraft =>
       applyDvtSubstraitProjectionFunction(draft, {
         fieldId: 'output:customer',
         capabilityId: trimCapabilityId,
