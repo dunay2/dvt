@@ -265,6 +265,7 @@ export function serializeDvtSubstraitCapabilityCatalogV1(input: unknown): string
 
 const STUDY = 'dvt:#2640';
 const PILOT = 'dvt:#2598';
+const LOWER = 'dvt:#2827';
 const INNER_JOIN = 'dvt:#2634';
 const AGGREGATE = ['dvt:#2641', 'dvt:#2642'] as const;
 const WINDOW = ['dvt:#2641', 'dvt:#2642'] as const;
@@ -432,6 +433,12 @@ const STANDARD_SEED: DvtSubstraitStandardCapabilityV1[] = [
   ),
 ];
 
+const LOWER_SUPPORTED_ENTRY_ID = buildDvtSubstraitStandardCapabilityId('scalar-function', {
+  sourceKind: 'simple-extension',
+  urn: 'extension:io.substrait:functions_string',
+  name: 'lower',
+});
+
 const PILOT_SUPPORTED_ENTRY_IDS = new Set([
   buildDvtSubstraitStandardCapabilityId('relation', {
     sourceKind: 'core',
@@ -472,6 +479,7 @@ const PILOT_SUPPORTED_ENTRY_IDS = new Set([
     urn: 'extension:io.substrait:functions_string',
     name: 'upper',
   }),
+  LOWER_SUPPORTED_ENTRY_ID,
 ]);
 
 const INNER_JOIN_SUPPORTED_ENTRY_IDS = new Set([
@@ -531,6 +539,7 @@ const UNION_ALL_SUPPORTED_ENTRY_IDS = new Set([
 ]);
 
 function admissionEvidenceRefs(entryId: string): readonly string[] {
+  if (entryId === LOWER_SUPPORTED_ENTRY_ID) return [PILOT, LOWER];
   if (PILOT_SUPPORTED_ENTRY_IDS.has(entryId)) return [PILOT];
   if (INNER_JOIN_SUPPORTED_ENTRY_IDS.has(entryId)) return [INNER_JOIN];
   if (AGGREGATE_SUPPORTED_ENTRY_IDS.has(entryId)) return AGGREGATE;

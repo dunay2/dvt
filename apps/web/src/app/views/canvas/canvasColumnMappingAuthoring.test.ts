@@ -255,7 +255,7 @@ describe('Canvas column mapping authoring', () => {
     expect(inspection.projection.outputs[0]?.sourceFieldName).toBe('customer');
   });
 
-  it('preserves a canonical field function while another output mapping is added', () => {
+  it('preserves LOWER while another output mapping is added', () => {
     const source = buildNode('source', 'dvt:source', 'input', [
       { name: 'customer', type: 'text' },
       { name: 'amount', type: 'numeric' },
@@ -274,38 +274,38 @@ describe('Canvas column mapping authoring', () => {
     const mapped = readMappedTransform(firstResult);
     const authority = readDvtTransformAuthoringAuthority(mapped);
     if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return;
-    const trim = resolveDvtSubstraitColumnFunctions({
+    const lower = resolveDvtSubstraitColumnFunctions({
       dataType: 'text',
       provider: 'postgres',
-    }).find((candidate) => candidate.name === 'trim');
-    if (trim == null) throw new Error('Expected admitted trim capability.');
-    const withTrimDraft = applyDvtSubstraitProjectionFunction(
+    }).find((candidate) => candidate.name === 'lower');
+    if (lower == null) throw new Error('Expected admitted lower capability.');
+    const withLowerDraft = applyDvtSubstraitProjectionFunction(
       decodeDvtSubstraitProjectionDocument(authority.semanticDocument),
       {
         fieldId: 'output:customer',
-        capabilityId: trim.capabilityId,
+        capabilityId: lower.capabilityId,
         alias: 'customer',
         dataType: 'text',
         provider: 'postgres',
       }
     );
-    const withTrim = applyDvtSubstraitSemanticDocument(
+    const withLower = applyDvtSubstraitSemanticDocument(
       mapped,
-      encodeDvtSubstraitProjectionDocument(withTrimDraft)
+      encodeDvtSubstraitProjectionDocument(withLowerDraft)
     );
-    const withTrimSession = buildSession(
-      [source, withTrim],
-      [{ sourceId: source.id, targetId: withTrim.id }]
+    const withLowerSession = buildSession(
+      [source, withLower],
+      [{ sourceId: source.id, targetId: withLower.id }]
     );
 
     const secondResult = applyCanvasColumnMapping({
-      draftSession: withTrimSession,
+      draftSession: withLowerSession,
       canonicalNodesById: new Map([
         [source.id, source],
-        [withTrim.id, withTrim],
+        [withLower.id, withLower],
       ]),
       source: { nodeId: source.id, columnName: 'amount' },
-      target: { nodeId: withTrim.id, columnName: 'amount', dataType: 'numeric' },
+      target: { nodeId: withLower.id, columnName: 'amount', dataType: 'numeric' },
     });
     const updated = readMappedTransform(secondResult);
     const updatedAuthority = readDvtTransformAuthoringAuthority(updated);
@@ -317,7 +317,7 @@ describe('Canvas column mapping authoring', () => {
     expect(inspection.ok).toBe(true);
     if (!inspection.ok) return;
     expect(inspection.projection.outputs[0]).toEqual(
-      expect.objectContaining({ fieldId: 'output:customer', operations: ['trim'] })
+      expect.objectContaining({ fieldId: 'output:customer', operations: ['lower'] })
     );
     expect(inspection.projection.outputs[1]).toEqual(
       expect.objectContaining({ fieldId: 'output:amount' })

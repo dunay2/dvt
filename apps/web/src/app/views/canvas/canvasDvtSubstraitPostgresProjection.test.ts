@@ -119,7 +119,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       provider: 'postgres',
     });
 
-    expect(textFunctions.map((item) => item.name)).toEqual(['trim', 'upper']);
+    expect(textFunctions.map((item) => item.name)).toEqual(['lower', 'trim', 'upper']);
     expect(textFunctions.every((item) => item.category === 'text')).toBe(true);
     expect(textFunctions.every((item) => item.capabilityId.includes('scalar-function'))).toBe(true);
     expect(

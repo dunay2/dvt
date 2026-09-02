@@ -86,6 +86,11 @@ describe('DVT Substrait capability catalog V1', () => {
         urn: 'extension:io.substrait:functions_string',
         name: 'upper',
       }),
+      buildDvtSubstraitStandardCapabilityId('scalar-function', {
+        sourceKind: 'simple-extension',
+        urn: 'extension:io.substrait:functions_string',
+        name: 'lower',
+      }),
     ];
     const innerJoinIds = [
       buildDvtSubstraitStandardCapabilityId('relation', {
@@ -212,7 +217,10 @@ describe('DVT Substrait capability catalog V1', () => {
           name: 'lower',
         })
       )
-    ).toMatchObject({ profileStatus: 'candidate-standard' });
+    ).toMatchObject({
+      profileStatus: 'supported-profile',
+      evidenceRefs: expect.arrayContaining(['dvt:#2827']),
+    });
     expect(
       findCapability(
         buildDvtSubstraitStandardCapabilityId('relation', {
