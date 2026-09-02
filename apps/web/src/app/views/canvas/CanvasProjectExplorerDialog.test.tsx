@@ -82,6 +82,6 @@ describe('CanvasProjectExplorerDialog', () => {
       ).toBeNull();
     });
     expect(onClose).toHaveBeenCalledTimes(1);
-    expect(onRestoreFocus).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(onRestoreFocus).toHaveBeenCalledTimes(1));
   });
 });
