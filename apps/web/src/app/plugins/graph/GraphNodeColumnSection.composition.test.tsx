@@ -94,6 +94,8 @@ describe('GraphNodeColumnSection functional composition', () => {
       fireEvent.dragStart(pieces[0]!, { dataTransfer });
       dispatchDragAt('dragover', 45);
     });
+    expect(dataTransfer.effectAllowed).toBe('linkMove');
+    expect(dataTransfer.dropEffect).toBe('link');
     expect(targetRow.getAttribute('data-drop-placement')).toBe('compose');
 
     await act(async () => {

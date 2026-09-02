@@ -41,7 +41,7 @@ export function useGraphNodeColumnReorder(args: {
       event.stopPropagation();
       args.onColumnComposeRequest?.(null);
       draggedColumnIdRef.current = column.name;
-      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.effectAllowed = 'linkMove';
       event.dataTransfer.setData('text/plain', column.name);
     },
     endDrag(): void {
