@@ -45,34 +45,56 @@ describe('usePointerGraceDismiss', () => {
   it('dismisses a pointer surface after one second when the pointer never enters', () => {
     act(() => root.render(<PointerGraceHarness enabled />));
 
-    act(() => vi.advanceTimersByTime(999));
+    act(() => {
+      vi.advanceTimersByTime(999);
+    });
     expect(surface().dataset.dismissed).toBe('false');
 
-    act(() => vi.advanceTimersByTime(1));
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
     expect(surface().dataset.dismissed).toBe('true');
   });
 
   it('starts grace on leave and cancels it when the pointer re-enters', () => {
     act(() => root.render(<PointerGraceHarness enabled />));
-    act(() => fireEvent.pointerOver(surface()));
-    act(() => vi.advanceTimersByTime(1_500));
+    act(() => {
+      fireEvent.pointerOver(surface());
+    });
+    act(() => {
+      vi.advanceTimersByTime(1_500);
+    });
     expect(surface().dataset.dismissed).toBe('false');
 
-    act(() => fireEvent.pointerOut(surface()));
-    act(() => vi.advanceTimersByTime(500));
-    act(() => fireEvent.pointerOver(surface()));
-    act(() => vi.advanceTimersByTime(1_000));
+    act(() => {
+      fireEvent.pointerOut(surface());
+    });
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+    act(() => {
+      fireEvent.pointerOver(surface());
+    });
+    act(() => {
+      vi.advanceTimersByTime(1_000);
+    });
     expect(surface().dataset.dismissed).toBe('false');
 
-    act(() => fireEvent.pointerOut(surface()));
-    act(() => vi.advanceTimersByTime(1_000));
+    act(() => {
+      fireEvent.pointerOut(surface());
+    });
+    act(() => {
+      vi.advanceTimersByTime(1_000);
+    });
     expect(surface().dataset.dismissed).toBe('true');
   });
 
   it('does not time out a surface opened for keyboard interaction', () => {
     act(() => root.render(<PointerGraceHarness enabled={false} />));
 
-    act(() => vi.advanceTimersByTime(2_000));
+    act(() => {
+      vi.advanceTimersByTime(2_000);
+    });
 
     expect(surface().dataset.dismissed).toBe('false');
   });

@@ -47,7 +47,9 @@ describe('CanvasContextMenuView pointer grace', () => {
     });
 
     expect(document.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
-    act(() => vi.advanceTimersByTime(1_000));
+    act(() => {
+      vi.advanceTimersByTime(1_000);
+    });
 
     expect(onClose).toHaveBeenCalledOnce();
   });
@@ -56,7 +58,9 @@ describe('CanvasContextMenuView pointer grace', () => {
     const onClose = vi.fn();
     renderMenu({ onClose, keyboardMenuOpen: true });
 
-    act(() => vi.advanceTimersByTime(2_000));
+    act(() => {
+      vi.advanceTimersByTime(2_000);
+    });
 
     expect(document.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
     expect(onClose).not.toHaveBeenCalled();

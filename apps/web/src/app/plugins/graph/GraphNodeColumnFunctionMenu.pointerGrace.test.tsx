@@ -39,11 +39,11 @@ describe('GraphNodeColumnFunctionMenu pointer grace', () => {
         />
       );
     });
-    act(() =>
+    act(() => {
       fireEvent.click(
         container.querySelector<HTMLButtonElement>('[data-slot="graph-node-column-toggle"]')!
-      )
-    );
+      );
+    });
   });
 
   afterEach(() => {
@@ -54,11 +54,11 @@ describe('GraphNodeColumnFunctionMenu pointer grace', () => {
 
   it('times out the pointer menu but leaves the keyboard menu stable', async () => {
     const piece = container.querySelector<HTMLElement>('[data-slot="graph-node-column-piece"]')!;
-    act(() =>
+    act(() => {
       piece.dispatchEvent(
         new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 })
-      )
-    );
+      );
+    });
     expect(menu()).not.toBeNull();
 
     await act(async () => vi.advanceTimersByTimeAsync(1_000));
