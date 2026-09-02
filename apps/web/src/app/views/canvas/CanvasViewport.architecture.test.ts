@@ -42,8 +42,6 @@ const DBT_NODE_COMPONENT_SOURCE = readArchitectureSiblingSource(
 );
 const CANVAS_VIEWPORT_BEHAVIOR_SPECS = [
   'CanvasViewport.test.tsx',
-  'CanvasViewport.contextMenu.test.tsx',
-  'CanvasViewport.edgeContextMenu.test.tsx',
   'CanvasViewport.nodeOperationalRail.test.tsx',
 ] as const;
 
