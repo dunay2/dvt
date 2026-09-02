@@ -42,6 +42,12 @@ export type GraphNodeColumnOutputToggleIdentity = Readonly<{
   output: boolean;
   placement?: ActiveColumnPlacement;
 }>;
+export type GraphNodeColumnFunctionApplyIdentity = Readonly<{
+  nodeId: string;
+  columnId: string;
+  capabilityId: string;
+  sourceColumnId?: string;
+}>;
 
 export type GraphNodeColumnSectionProps = Readonly<{
   columns: readonly GraphNodeColumn[];
@@ -49,11 +55,7 @@ export type GraphNodeColumnSectionProps = Readonly<{
   portDirections?: readonly GraphNodeColumnPortDirection[];
   activeColumnHandleId?: string | null;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
-  onColumnFunctionApply?: (identity: {
-    nodeId: string;
-    columnId: string;
-    capabilityId: string;
-  }) => void;
+  onColumnFunctionApply?: (identity: GraphNodeColumnFunctionApplyIdentity) => void;
   onColumnOutputToggle?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
   onColumnReorder?: (identity: GraphNodeColumnReorderIdentity) => void;
   onDisclosureChange?: (expanded: boolean) => void;
@@ -80,11 +82,9 @@ export function resolveGraphNodeColumnInteractionProps(args: {
         : undefined,
     onColumnFunctionApply:
       args.nodeRole === 'transform' && typeof data.onApplyDvtSubstraitColumnFunction === 'function'
-        ? (data.onApplyDvtSubstraitColumnFunction as (identity: {
-            nodeId: string;
-            columnId: string;
-            capabilityId: string;
-          }) => void)
+        ? (data.onApplyDvtSubstraitColumnFunction as (
+            identity: GraphNodeColumnFunctionApplyIdentity
+          ) => void)
         : undefined,
     onColumnOutputToggle:
       args.nodeRole === 'transform' && typeof data.onToggleCanvasColumnOutput === 'function'

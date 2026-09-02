@@ -134,8 +134,10 @@ export const graphNodeColumnClasses = {
   toggleIcon: 'size-3',
   disclosure: 'mt-2',
   list: 'space-y-1.5',
-  row: 'relative px-1 before:pointer-events-none before:absolute before:inset-x-2 before:z-10 before:h-0.5 before:rounded before:bg-blue-400 before:opacity-0 data-[drop-placement=before]:before:top-[-0.25rem] data-[drop-placement=after]:before:bottom-[-0.25rem] data-[drop-placement=before]:before:opacity-100 data-[drop-placement=after]:before:opacity-100',
+  row: 'relative px-1 before:pointer-events-none before:absolute before:inset-x-2 before:z-10 before:h-0.5 before:rounded before:bg-blue-400 before:opacity-0 after:pointer-events-none after:absolute after:inset-1 after:z-10 after:rounded-md after:border-2 after:border-purple-400 after:bg-purple-500/10 after:opacity-0 data-[drop-placement=before]:before:top-[-0.25rem] data-[drop-placement=after]:before:bottom-[-0.25rem] data-[drop-placement=before]:before:opacity-100 data-[drop-placement=after]:before:opacity-100 data-[drop-placement=compose]:cursor-copy data-[drop-placement=compose]:after:animate-pulse data-[drop-placement=compose]:after:opacity-100',
   keyboardMenuAnchor:
+    'pointer-events-none absolute left-1/2 top-1/2 size-px border-0 bg-transparent p-0 opacity-0',
+  compositionMenuAnchor:
     'pointer-events-none absolute left-1/2 top-1/2 size-px border-0 bg-transparent p-0 opacity-0',
   piece:
     'nodrag nopan flex min-h-8 w-full items-center gap-2 rounded-md border border-slate-700/90 bg-slate-950/90 px-3 py-1.5 text-xs shadow-sm transition hover:border-blue-400/70 hover:bg-slate-900 focus-visible:border-blue-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70',
