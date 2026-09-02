@@ -24,6 +24,8 @@ type GraphNodeCardCopy = Readonly<{
   durationLabel: string;
   costLabel: string;
   testsLabel: string;
+  readyStatusLabel: string;
+  draftStatusLabel: string;
   testStatusLabels: Readonly<Record<string, string>>;
   healthTitleTemplate: string;
   healthAriaLabelTemplate: string;
@@ -96,6 +98,8 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   durationLabel: 'Duration',
   costLabel: 'Cost',
   testsLabel: 'Tests',
+  readyStatusLabel: 'Ready',
+  draftStatusLabel: 'Draft',
   testStatusLabels: {
     pass: 'Passed',
     passed: 'Passed',
@@ -189,6 +193,8 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   durationLabel: 'Duración',
   costLabel: 'Coste',
   testsLabel: 'Pruebas',
+  readyStatusLabel: 'Listo',
+  draftStatusLabel: 'Borrador',
   testStatusLabels: {
     pass: 'Aprobadas',
     passed: 'Aprobadas',

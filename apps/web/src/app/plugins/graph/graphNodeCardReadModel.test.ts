@@ -708,6 +708,38 @@ describe('buildGraphNodeCardReadModel', () => {
     }
   );
 
+  it.each([
+    [
+      buildNode({ kind: 'dvt:source', pluginId: 'dvt', role: 'input' }),
+      dvtGraphNodeCardStrategy,
+      'Listo',
+      'healthy',
+    ],
+    [
+      buildNode({ kind: 'dbt:model', pluginId: 'dbt', role: 'transform' }),
+      dbtGraphNodeCardStrategy,
+      'Borrador',
+      'neutral',
+    ],
+  ] as const)(
+    'uses localized catalog health copy when %s has no route override',
+    (node, strategy, label, tone) => {
+      const model = buildGraphNodeCardReadModel(
+        node,
+        {
+          presentationCopy: {
+            ...SPANISH_PRESENTATION_COPY,
+            draftStatusLabel: undefined,
+            locale: 'es',
+          },
+        },
+        [strategy]
+      );
+
+      expect(model.health).toEqual({ label, tone });
+    }
+  );
+
   it('does not project a runtime task status that belongs to another node', () => {
     const node = buildNode({
       id: 'transform-1',

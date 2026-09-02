@@ -156,8 +156,14 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
       metadata,
       data,
       node.role === 'input'
-        ? { label: presentationCopy?.readyStatusLabel ?? 'Ready', tone: 'healthy' }
-        : { label: presentationCopy?.draftStatusLabel ?? 'Draft', tone: 'neutral' }
+        ? {
+            label: presentationCopy?.readyStatusLabel ?? operationalCopy.readyStatusLabel,
+            tone: 'healthy',
+          }
+        : {
+            label: presentationCopy?.draftStatusLabel ?? operationalCopy.draftStatusLabel,
+            tone: 'neutral',
+          }
     ),
     metrics,
     operationalMetrics,

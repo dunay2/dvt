@@ -272,6 +272,21 @@ Rejected alternatives:
 - **Out of scope:** visible behavior, persistence, copy, column ordering/functions
   and the transitional `DbtNodeData` rename.
 
+## Strategy Copy Catalog Increment
+
+- **Problem:** the dbt and DVT card strategies retain literal English fallbacks for
+  ready and draft health labels, so a localized presentation DTO without optional
+  label overrides leaks English into the card.
+- **Root cause:** locale resolution is centralized, but the final health-label
+  fallback remained duplicated inside semantic projection strategies.
+- **Selected option:** extend the existing graph-card copy catalog with ready and
+  draft labels and let both strategies consume that resolved presentation copy.
+- **Rejected options:** making optional route overrides mandatory would widen the
+  adapter contract without product value; a second localization service would
+  duplicate the existing catalog authority.
+- **Behavior proof:** locale `es` without status overrides projects `Listo` for a
+  source and `Borrador` for a transform/model.
+
 ## Feature Mechanization
 
 ```feature-mechanization
@@ -327,6 +342,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/components/metrics/metricEvidenceTokens.ts
   - apps/web/src/app/plugins/dbt/DbtNodeRenderer.test.tsx
   - apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx
+  - apps/web/src/app/plugins/dbt/dbtGraphNodeCardStrategy.ts
   - apps/web/src/app/plugins/canvasSurfaceStrategyContracts.ts
   - apps/web/src/app/plugins/contracts/NodeRendering.ts
   - apps/web/src/app/plugins/dbt/dbtCanvasSurfaceStrategy.ts
@@ -344,8 +360,10 @@ allowedImplementationSurfaces:
   - apps/web/src/app/plugins/graph/GraphNodeRenderer.tsx
   - apps/web/src/app/plugins/graph/graphNodeCardPresentation.test.ts
   - apps/web/src/app/plugins/graph/graphNodeCardReadModel.ts
+  - apps/web/src/app/plugins/graph/graphNodeCardReadModel.test.ts
   - apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts
   - apps/web/src/app/plugins/graph/graphVisualTokens.ts
+  - apps/web/src/app/plugins/dvt/dvtGraphNodeCardStrategy.ts
   - apps/web/src/app/views/canvas/CanvasNodeFloatingToolbarView.test.tsx
   - apps/web/src/app/views/canvas/CanvasNodeFloatingToolbarView.tsx
   - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx
@@ -863,6 +881,15 @@ completionGate:
   - pnpm governance:refresh
   - pnpm verify:prepush
 redGreenCycles:
+  - id: strategy-status-copy-catalog
+    redTest: apps/web/src/app/plugins/graph/graphNodeCardReadModel.test.ts
+    expectedFailure: Spanish locale without optional route overrides falls back to English Ready and Draft literals embedded in plugin strategies.
+    patchSurfaces:
+      - apps/web/src/app/plugins/dbt/dbtGraphNodeCardStrategy.ts
+      - apps/web/src/app/plugins/dvt/dvtGraphNodeCardStrategy.ts
+      - apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts
+      - apps/web/src/app/plugins/graph/graphNodeCardReadModel.test.ts
+    greenTest: apps/web/src/app/plugins/graph/graphNodeCardReadModel.test.ts
   - id: thin-react-flow-node-adapter
     redTest: apps/web/src/app/components/canvas/DbtNodeComponent.behavior.test.tsx
     expectedFailure: Schema drops and node operations are only guarded by source-code literal assertions while DbtNodeComponent owns projection, presentation and operation dispatch.
