@@ -1,0 +1,32 @@
+---
+id: R-20260902-CALCULATED-COLUMN-SEMANTIC-DRIFT
+title: Calculated Canvas fields could drift from their canonical Substrait expression
+status: Open
+date: 2026-09-02
+owners:
+  - web
+  - packages/@dvt/contracts
+severity: Medium
+probability: Low
+---
+mitigation:
+  summary: >
+    Calculated outputs are admitted only for one bounded ProjectRel shape over a connected
+    PostgreSQL ReadRel. Authoring, reload, card presentation and PostgreSQL Preview inspect the same
+    typed Plan and stable sidecar. The physical source schema remains unchanged. Duplicate or blank
+    aliases, invalid timestamps, missing input or order fields, unsupported functions, providers,
+    extensions and relation shapes fail atomically. The Source promotion preserves the original node
+    identity and physical binding instead of adding a hidden Transform.
+  evidence:
+    - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
+    - docs/evidence/ED-20260902-canvas-calculated-column-authoring.md
+    - docs/planning/proposals/mandatory/frontend-and-ux/canvas-calculated-column-authoring-plan-20260902.md
+    - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts
+    - apps/web/src/app/views/canvas/canvasCalculatedColumnAuthoring.test.ts
+    - apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresProjection.test.ts
+    - apps/web/cypress/e2e/canvas/canvas-calculated-column-authoring.cy.ts
+  follow_up:
+    - Issue #2833 owns this bounded authoring slice.
+    - Additional expression families require separate capability admission and target conformance.
+    - Provider-specific row identifiers remain out of scope; the portable option is ordered
+      row_number.
