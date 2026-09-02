@@ -134,7 +134,7 @@ export type CanvasShellGraphCommands = {
   onEdgesChange: NonNullable<ReactFlowProps<Node, Edge>['onEdgesChange']>;
   onConnect: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
   onReconnect: NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>;
-  onSetEdgeExecutionGate: CanvasEdgeCommandRunner['setExecutionGate'];
+  onSetEdgeExecutionGate?: CanvasEdgeCommandRunner['setExecutionGate'];
   onViewportChange: (viewport: CanvasViewport) => void;
   onDrop: React.DragEventHandler<HTMLDivElement>;
   onDragOver: React.DragEventHandler<HTMLDivElement>;

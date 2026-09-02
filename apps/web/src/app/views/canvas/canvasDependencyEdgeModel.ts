@@ -47,9 +47,11 @@ export function buildCanvasDependencyEdgeData({
         canonicalMetadata,
         executionGate === 'closed' ? 'closed' : 'open'
       );
-  const gateState = invalidGate
-    ? 'closed'
-    : readWorkspaceGraphAuthoringEdgeExecutionGate({ metadata: effectiveMetadata });
+  const effectiveGateState = readWorkspaceGraphAuthoringEdgeExecutionGate({
+    metadata: effectiveMetadata,
+  });
+  const gateState: CanvasDependencyEdgeData['execution']['gateState'] =
+    invalidGate || effectiveGateState === 'invalid' ? 'closed' : effectiveGateState;
   const unavailableReason: CanvasDependencyEdgeData['execution']['unavailableReason'] = invalidGate
     ? 'invalid-gate'
     : structurallyDisabled
@@ -76,17 +78,18 @@ export function readCanvasDependencyEdgeData(value: unknown): CanvasDependencyEd
     return undefined;
   }
 
-  const candidate: { [key: string]: unknown } = value;
+  const candidate = value as { [key: string]: unknown };
   const execution = candidate.execution;
   if (execution == null || typeof execution !== 'object') {
     return undefined;
   }
 
-  const executionCandidate: { [key: string]: unknown } = execution;
+  const executionCandidate = execution as { [key: string]: unknown };
+  const unavailableReason = executionCandidate.unavailableReason;
   const validUnavailableReason =
-    executionCandidate.unavailableReason == null ||
-    executionCandidate.unavailableReason === 'structural-execution-disabled' ||
-    executionCandidate.unavailableReason === 'invalid-gate';
+    unavailableReason == null ||
+    unavailableReason === 'structural-execution-disabled' ||
+    unavailableReason === 'invalid-gate';
   if (
     candidate.kind !== 'dependency' ||
     typeof candidate.sourceId !== 'string' ||
@@ -107,9 +110,10 @@ export function readCanvasDependencyEdgeData(value: unknown): CanvasDependencyEd
       gateState: executionCandidate.gateState,
       isGateable: executionCandidate.isGateable,
       isEffectivelyExecutable: executionCandidate.isEffectivelyExecutable,
-      ...(executionCandidate.unavailableReason == null
-        ? {}
-        : { unavailableReason: executionCandidate.unavailableReason }),
+      ...(unavailableReason === 'structural-execution-disabled' ||
+      unavailableReason === 'invalid-gate'
+        ? { unavailableReason }
+        : {}),
     },
   };
 }
