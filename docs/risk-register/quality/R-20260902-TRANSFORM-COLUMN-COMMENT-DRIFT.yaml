@@ -1,0 +1,26 @@
+---
+id: R-20260902-TRANSFORM-COLUMN-COMMENT-DRIFT
+title: Transform column comments can drift between Inspector and card projection
+status: Open
+date: 2026-09-02
+owners:
+  - web
+  - packages/@dvt/contracts
+severity: Medium
+probability: Low
+---
+mitigation:
+  summary: >
+    ConfigureCanvasDvtNode writes column documentation to the canonical DVT Substrait field sidecar.
+    Inspector rows and card tooltips project that same description, while function and alias
+    authoring retain it through the stable field identity. Unknown fields, invalid plans,
+    unsupported shapes, and read-only workspaces fail closed without a metadata mirror.
+  evidence:
+    - docs/evidence/ED-20260902-transform-column-comments.md
+    - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProfile.v1.ts
+    - packages/@dvt/contracts/test/dvt-substrait-profile.contract.test.ts
+    - apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.alias.test.ts
+    - apps/web/src/app/views/canvas/CanvasColumnCommentEditor.test.tsx
+    - apps/web/src/app/plugins/graph/GraphNodeColumnCommentTooltip.test.tsx
+  follow_up:
+    - Issue #2830 owns the bounded authoring and projection behavior.
