@@ -133,6 +133,7 @@ redGreenCycles:
     patchSurfaces:
       - apps/web/src/app/views/canvas/canvasCalculatedColumnAuthoring.ts
       - apps/web/src/app/views/canvas/canvasDvtSubstraitCalculatedColumn.ts
+      - apps/web/src/app/views/canvas/canvasDvtSubstraitCalculatedExpression.ts
     greenTest: pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasCalculatedColumnAuthoring.test.ts
   - id: calculated-column-card-gesture
     redTest: pnpm --filter @dvt/web exec vitest run src/app/plugins/graph/GraphNodeCalculatedColumnForm.test.tsx
@@ -158,6 +159,14 @@ symbols:
     architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-CALCULATED-COLUMN-AUTHORING-2833
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-calculated-column-authoring.cy.ts
     unitTests: [apps/web/src/app/plugins/graph/GraphNodeCalculatedColumnForm.test.tsx]
+  - name: appendDvtSubstraitCalculatedColumn
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitCalculatedColumn.ts
+    dddOwner: DVT calculated projection aggregate
+    cqRails: [ConfigureCanvasDvtNode]
+    fowlerSignals: [Aggregate mutation, Hidden authority]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-CALCULATED-COLUMN-AUTHORING-2833
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-calculated-column-authoring.cy.ts
+    unitTests: [apps/web/src/app/views/canvas/canvasCalculatedColumnAuthoring.test.ts]
 ```
 
 ## Completion

@@ -51,6 +51,10 @@ import {
 } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import {
+  inspectDvtSubstraitCalculatedExpression,
+  type DvtSubstraitCalculatedExpression,
+} from './canvasDvtSubstraitCalculatedExpression';
 
 const ZERO_SHA256 = '0'.repeat(64);
 
@@ -70,8 +74,9 @@ export type DvtSubstraitProjectionSource = Readonly<{
 export type DvtSubstraitProjectionOutput = Readonly<{
   fieldId: string;
   name: string;
-  sourceFieldId: string;
-  sourceFieldName: string;
+  sourceFieldId?: string;
+  sourceFieldName?: string;
+  calculation?: DvtSubstraitCalculatedExpression;
   dataType: string;
   outputOrdinal: number;
   operations?: readonly string[];
@@ -422,7 +427,15 @@ export function inspectDvtSubstraitProjectionDraft(
   const usedFunctionAnchors = new Set<number>();
   const inspectExpression = (
     expression: (typeof project.expressions)[number]
-  ): Readonly<{ sourceOrdinal: number; operations: readonly string[] }> | null => {
+  ):
+    | Readonly<{ sourceOrdinal: number; operations: readonly string[] }>
+    | Readonly<{ calculation: DvtSubstraitCalculatedExpression }>
+    | null => {
+    const calculated = inspectDvtSubstraitCalculatedExpression(draft.plan, expression);
+    if (calculated != null) {
+      calculated.functionAnchors.forEach((anchor) => usedFunctionAnchors.add(anchor));
+      return { calculation: calculated.calculation };
+    }
     const outerToInner: string[] = [];
     let current = expression;
     while (current.rexType.case === 'scalarFunction') {
@@ -494,31 +507,58 @@ export function inspectDvtSubstraitProjectionDraft(
       usedExpressionOrdinals.add(expressionOrdinal);
     }
     const sourceField =
-      resolvedExpression == null ? undefined : sourceFields[resolvedExpression.sourceOrdinal];
+      resolvedExpression != null && 'sourceOrdinal' in resolvedExpression
+        ? sourceFields[resolvedExpression.sourceOrdinal]
+        : undefined;
+    const calculation =
+      resolvedExpression != null && 'calculation' in resolvedExpression
+        ? resolvedExpression.calculation
+        : undefined;
     const targetField = targetFields[outputOrdinal];
     if (
       resolvedExpression == null ||
-      sourceField == null ||
+      ('sourceOrdinal' in resolvedExpression && sourceField == null) ||
       targetField == null ||
-      sourceField.displayName == null
+      (sourceField != null && sourceField.displayName == null) ||
+      (calculation?.kind === 'row-number' && calculation.orderSourceOrdinal >= sourceFields.length)
     ) {
       return null;
     }
+    const lineage =
+      calculation != null
+        ? { calculation }
+        : sourceField != null
+          ? { sourceFieldId: sourceField.fieldId, sourceFieldName: sourceField.displayName }
+          : null;
+    if (lineage == null) return null;
     return {
       fieldId: targetField.fieldId,
       name: targetField.displayName ?? rootRelation.value.names[outputOrdinal]!,
-      sourceFieldId: sourceField.fieldId,
-      sourceFieldName: sourceField.displayName,
-      dataType: 'unknown',
+      ...lineage,
+      dataType:
+        calculation == null
+          ? 'unknown'
+          : calculation.kind === 'string-literal'
+            ? 'string'
+            : calculation.kind === 'timestamp-literal'
+              ? 'timestamp with time zone'
+              : 'bigint',
       outputOrdinal,
       ...(targetField.description == null ? {} : { description: targetField.description }),
-      ...(resolvedExpression.operations.length > 0
+      ...('operations' in resolvedExpression && resolvedExpression.operations.length > 0
         ? { operations: resolvedExpression.operations }
         : {}),
     };
   });
   const declaredFunctionAnchors = draft.plan.extensions.flatMap((entry) =>
     entry.mappingType.case === 'extensionFunction' ? [entry.mappingType.value.functionAnchor] : []
+  );
+  const declaredUrnAnchors = new Set(
+    draft.plan.extensions.flatMap((entry) =>
+      entry.mappingType.case === 'extensionFunction'
+        ? [entry.mappingType.value.extensionUrnReference]
+        : []
+    )
   );
   if (
     outputs.some((output) => output == null) ||
@@ -527,10 +567,13 @@ export function inspectDvtSubstraitProjectionDraft(
     new Set(declaredFunctionAnchors).size !== declaredFunctionAnchors.length ||
     declaredFunctionAnchors.some((anchor) => !usedFunctionAnchors.has(anchor)) ||
     usedFunctionAnchors.size !== declaredFunctionAnchors.length ||
-    (usedFunctionAnchors.size === 0
-      ? draft.plan.extensionUrns.length !== 0
-      : draft.plan.extensionUrns.length !== 1 ||
-        draft.plan.extensionUrns[0]?.urn !== 'extension:io.substrait:functions_string')
+    draft.plan.extensionUrns.length !== declaredUrnAnchors.size ||
+    draft.plan.extensionUrns.some(
+      (entry) =>
+        !declaredUrnAnchors.has(entry.extensionUrnAnchor) ||
+        (entry.urn !== 'extension:io.substrait:functions_string' &&
+          entry.urn !== 'extension:io.substrait:functions_arithmetic')
+    )
   ) {
     return { ok: false };
   }
@@ -781,13 +824,17 @@ export function resolveDvtSubstraitProjectionEntry(args: {
       args.edges.filter((edge) => edge.targetId === args.targetNode.id).map((edge) => edge.sourceId)
     ),
   ];
+  const selfBacked =
+    inspection.projection.source.nodeId === args.targetNode.id && incomingSourceIds.length === 0;
   if (
-    incomingSourceIds.length !== 1 ||
-    incomingSourceIds[0] !== inspection.projection.source.nodeId
+    !selfBacked &&
+    (incomingSourceIds.length !== 1 || incomingSourceIds[0] !== inspection.projection.source.nodeId)
   ) {
     return null;
   }
-  const sourceNode = args.nodes.find((node) => node.id === inspection.projection.source.nodeId);
+  const sourceNode: CanonicalNode | undefined = selfBacked
+    ? { ...args.targetNode, kind: 'dvt:source' as const, role: 'input' as const }
+    : args.nodes.find((node) => node.id === inspection.projection.source.nodeId);
   const source = sourceNode == null ? null : resolveDvtSubstraitProjectionSource(sourceNode);
   return source != null &&
     source.schema === inspection.projection.source.schema &&
@@ -801,8 +848,10 @@ export function resolveDvtSubstraitProjectionEntry(args: {
         outputs: inspection.projection.outputs.map((output) => ({
           ...output,
           dataType:
-            source.fields.find((field) => field.name === output.sourceFieldName)?.dataType ??
-            'unknown',
+            output.calculation == null
+              ? (source.fields.find((field) => field.name === output.sourceFieldName)?.dataType ??
+                'unknown')
+              : output.dataType,
         })),
       }
     : null;

@@ -147,11 +147,18 @@ function readEditableRecipe(
       if (!inspection.ok || inspection.projection.targetNodeId !== targetNode.id) {
         return { outcome: 'rejected', reason: 'target_not_visual_transform' };
       }
+      const sourcedOutputs = inspection.projection.outputs.filter(
+        (output): output is typeof output & { sourceFieldName: string } =>
+          output.sourceFieldName != null
+      );
+      if (sourcedOutputs.length !== inspection.projection.outputs.length) {
+        return { outcome: 'rejected', reason: 'target_not_visual_transform' };
+      }
       return {
         outcome: 'ready',
         recipe: {
           version: VISUAL_TRANSFORM_RECIPE_VERSION,
-          outputs: inspection.projection.outputs.map((output) => ({
+          outputs: sourcedOutputs.map((output) => ({
             id: output.fieldId,
             name: output.name,
             expression: {

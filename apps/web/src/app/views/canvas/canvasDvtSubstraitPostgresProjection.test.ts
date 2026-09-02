@@ -28,6 +28,7 @@ import {
   resolveDvtSubstraitColumnFunctions,
   type DvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
+import { appendDvtSubstraitCalculatedColumn } from './canvasDvtSubstraitCalculatedColumn';
 import { applyDvtSubstraitPilotAggregation } from './canvasDvtSubstraitAggregation';
 import { applyDvtSubstraitPilotAggregateRowNumber } from './canvasDvtSubstraitAggregateWindow';
 import { applyDvtSubstraitPilotRowNumber } from './canvasDvtSubstraitWindow';
@@ -111,6 +112,34 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     expect(sql.replaceAll(/\s+/g, ' ').trim().toLowerCase()).toMatch(
       /^select order_id, customer as buyer, amount from raw\.orders;?$/
     );
+  });
+
+  it('derives literals and ordered row numbers from the canonical projection', async () => {
+    let draft = connectedOrdersProjectionDraft();
+    draft = appendDvtSubstraitCalculatedColumn(draft, {
+      kind: 'string-literal',
+      alias: 'channel',
+      value: 'web',
+    });
+    draft = appendDvtSubstraitCalculatedColumn(draft, {
+      kind: 'timestamp-literal',
+      alias: 'loaded_at',
+      value: '2026-09-02T12:30:00Z',
+    });
+    draft = appendDvtSubstraitCalculatedColumn(draft, {
+      kind: 'row-number',
+      alias: 'row_id',
+      orderFieldId: 'output:order_id',
+    });
+
+    const sql = (await projectDvtSubstraitProjectionToPostgresSql(draft))
+      .replaceAll(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+
+    expect(sql).toContain("'web' as channel");
+    expect(sql).toContain("'2026-09-02t12:30:00.000z'::timestamptz as loaded_at");
+    expect(sql).toMatch(/row_number\(\) over \(order by order_id asc nulls last\) as row_id/);
   });
 
   it('projects only admitted scalar functions compatible with the field type and target', () => {
