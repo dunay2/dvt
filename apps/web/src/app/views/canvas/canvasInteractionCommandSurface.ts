@@ -3,6 +3,8 @@ import type { Edge, EdgeChange } from '@xyflow/react';
 
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import { canvasViewCopy, type CanvasViewCopy } from './copy';
+import type { CanvasDependencyEdgeData } from './canvasDependencyEdgeModel';
+import type { WorkspaceGraphAuthoringEdgeExecutionGateCommand } from '@dvt/contracts';
 
 export type CanvasContextMenuPosition = Readonly<{
   x: number;
@@ -19,6 +21,9 @@ export type CanvasContextMenuTarget =
       kind: 'edge';
       edgeId: string;
       removable?: boolean;
+      sourceId?: string;
+      targetId?: string;
+      execution?: CanvasDependencyEdgeData['execution'];
       screenPosition: CanvasContextMenuPosition;
     }>;
 
@@ -42,10 +47,18 @@ export type CanvasContextMenuCanvasAction = Readonly<{
   label: string;
 }>;
 
-export type CanvasContextMenuEdgeAction = Readonly<{
-  action: 'remove-edge';
-  label: string;
-}>;
+export type CanvasContextMenuEdgeAction =
+  | Readonly<{
+      action: 'remove-edge';
+      label: string;
+    }>
+  | Readonly<{
+      action: 'set-execution-gate';
+      label: string;
+      sourceId: string;
+      targetId: string;
+      gate: WorkspaceGraphAuthoringEdgeExecutionGateCommand;
+    }>;
 
 export type CanvasContextMenuModel = Readonly<{
   surface: 'root' | 'add-node-catalog' | 'edge';
@@ -177,14 +190,32 @@ export function buildCanvasContextMenuModel({
     };
   }
 
-  if (!canMutateGraph || target.removable === false) {
+  if (!canMutateGraph) {
     return baseModel;
+  }
+
+  const edgeActions: CanvasContextMenuEdgeAction[] = [];
+  if (target.execution?.isGateable === true && target.sourceId != null && target.targetId != null) {
+    const gate = target.execution.gateState === 'open' ? 'closed' : 'open';
+    edgeActions.push({
+      action: 'set-execution-gate',
+      label:
+        gate === 'closed'
+          ? copy.canvasContextMenuCloseEdgeLabel
+          : copy.canvasContextMenuOpenEdgeLabel,
+      sourceId: target.sourceId,
+      targetId: target.targetId,
+      gate,
+    });
+  }
+  if (target.removable !== false) {
+    edgeActions.push({ action: 'remove-edge', label: copy.canvasContextMenuRemoveEdgeLabel });
   }
 
   return {
     ...baseModel,
     edgeId: target.edgeId,
-    edgeActions: [{ action: 'remove-edge', label: copy.canvasContextMenuRemoveEdgeLabel }],
+    edgeActions,
   };
 }
 
@@ -269,7 +300,12 @@ export function localizeCanvasContextMenuModel(
     createNodeActions: model.createNodeActions.map(localizeCreateNodeAction),
     edgeActions: model.edgeActions.map((action) => ({
       ...action,
-      label: copy.canvasContextMenuRemoveEdgeLabel,
+      label:
+        action.action === 'remove-edge'
+          ? copy.canvasContextMenuRemoveEdgeLabel
+          : action.gate === 'closed'
+            ? copy.canvasContextMenuCloseEdgeLabel
+            : copy.canvasContextMenuOpenEdgeLabel,
     })),
   };
 }
