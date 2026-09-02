@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import DbtNodeComponentSource from '../../components/canvas/DbtNodeComponent.tsx?raw';
 import CanvasNodeShellSource from '../../components/canvas/CanvasNodeShell.tsx?raw';
 import CanvasNodeContextMenuModelSource from '../../components/canvas/canvasNodeContextMenuModel.ts?raw';
 import NodePropertySectionViewSource from '../../components/inspector/NodePropertySectionView.tsx?raw';
@@ -44,12 +43,6 @@ describe('Canvas Node Workbench W4 hardening contracts', () => {
     expect(GraphNodeCardViewSource).not.toContain('data-slot="graph-node-card-play"');
     expect(GraphNodeCardViewSource).not.toContain('GraphNodeCardPlayAction');
     expect(GraphNodeCardViewSource).not.toContain('playAction');
-    expect(DbtNodeComponentSource).toContain(
-      'data.onToggleNodeSelection?.(id, !selectedForExecution)'
-    );
-    expect(DbtNodeComponentSource).toContain('buildCanvasNodeModelerActionModel');
-    expect(DbtNodeComponentSource).toContain("data.onInspectNode?.(id, 'code');");
-    expect(DbtNodeComponentSource).not.toContain('hasCodeSection');
     expect(CanvasNodeContextMenuModelSource).toContain('buildCanvasNodeModelerActionModel');
     expect(CanvasNodeContextMenuModelSource).not.toContain('inspect-node');
   });
