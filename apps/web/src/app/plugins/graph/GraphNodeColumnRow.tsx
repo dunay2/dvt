@@ -34,6 +34,7 @@ export function GraphNodeColumnRow(props: {
   activeColumnHandleId?: string | null;
   copy: GraphNodeColumnCopy;
   reorder: GraphNodeColumnReorderController;
+  unavailableAliases: readonly string[];
   compositionRequest?: Readonly<{
     sourceColumn: GraphNodeColumn;
     targetColumn: GraphNodeColumn;
@@ -160,6 +161,7 @@ export function GraphNodeColumnRow(props: {
       {nodeId != null && pendingFunction != null && props.onColumnFunctionApply != null ? (
         <GraphNodeColumnFunctionAliasForm
           functionName={pendingFunction.functionName}
+          unavailableAliases={props.unavailableAliases}
           copy={copy}
           onCancel={() => setPendingFunction(null)}
           onSubmit={(alias) => {

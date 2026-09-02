@@ -103,6 +103,11 @@ export function GraphNodeColumnSection({
                 activeColumnHandleId={activeColumnHandleId}
                 copy={copy}
                 reorder={columnReorder}
+                unavailableAliases={columnReorder.orderedColumns
+                  .filter(
+                    (candidate) => (candidate.id ?? candidate.name) !== (column.id ?? column.name)
+                  )
+                  .map((candidate) => candidate.name)}
                 compositionRequest={
                   compositionRequest != null &&
                   (compositionRequest.targetColumn.id ?? compositionRequest.targetColumn.name) ===

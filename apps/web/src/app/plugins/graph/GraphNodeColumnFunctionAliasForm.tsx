@@ -8,11 +8,13 @@ import { graphNodeColumnClasses } from './graphVisualTokens';
 
 export function GraphNodeColumnFunctionAliasForm(props: {
   functionName: string;
+  unavailableAliases: readonly string[];
   copy: GraphNodeColumnCopy;
   onSubmit: (alias: string) => void;
   onCancel: () => void;
 }): ReactElement {
   const [alias, setAlias] = useState('');
+  const [aliasConflict, setAliasConflict] = useState(false);
   const inputId = useId();
   const normalizedAlias = alias.trim();
 
@@ -35,7 +37,12 @@ export function GraphNodeColumnFunctionAliasForm(props: {
         <form
           onSubmit={(event) => {
             event.preventDefault();
-            if (normalizedAlias.length > 0) props.onSubmit(normalizedAlias);
+            if (normalizedAlias.length === 0) return;
+            if (props.unavailableAliases.includes(normalizedAlias)) {
+              setAliasConflict(true);
+              return;
+            }
+            props.onSubmit(normalizedAlias);
           }}
         >
           <label htmlFor={inputId} className={graphNodeColumnClasses.functionAliasLabel}>
@@ -50,8 +57,17 @@ export function GraphNodeColumnFunctionAliasForm(props: {
             value={alias}
             autoFocus
             required
-            onChange={(event) => setAlias(event.currentTarget.value)}
+            aria-invalid={aliasConflict}
+            onChange={(event) => {
+              setAlias(event.currentTarget.value);
+              setAliasConflict(false);
+            }}
           />
+          {aliasConflict ? (
+            <p role="alert" className={graphNodeColumnClasses.functionAliasError}>
+              {props.copy.columnFunctionAliasConflictLabel}
+            </p>
+          ) : null}
           <div className={graphNodeColumnClasses.functionAliasActions}>
             <button
               type="button"

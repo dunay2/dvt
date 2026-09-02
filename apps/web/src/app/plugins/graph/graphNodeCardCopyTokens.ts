@@ -50,6 +50,7 @@ type GraphNodeCardCopy = Readonly<{
   columnFunctionAliasLabelTemplate: string;
   columnFunctionAliasSubmitLabel: string;
   columnFunctionAliasCancelLabel: string;
+  columnFunctionAliasConflictLabel: string;
   sourceIdentityAriaLabelTemplate: string;
   sourceIdentityDatabaseLabel: string;
   sourceIdentityConnectionLabel: string;
@@ -126,6 +127,7 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   columnFunctionAliasLabelTemplate: 'Output alias after {function}',
   columnFunctionAliasSubmitLabel: 'Create output',
   columnFunctionAliasCancelLabel: 'Cancel',
+  columnFunctionAliasConflictLabel: 'Another column already uses this output name.',
   sourceIdentityAriaLabelTemplate: 'View source identity for {table}',
   sourceIdentityDatabaseLabel: 'Database',
   sourceIdentityConnectionLabel: 'Connection',
@@ -202,6 +204,7 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   columnFunctionAliasLabelTemplate: 'Alias de salida tras {function}',
   columnFunctionAliasSubmitLabel: 'Crear salida',
   columnFunctionAliasCancelLabel: 'Cancelar',
+  columnFunctionAliasConflictLabel: 'Otra columna ya utiliza este nombre de salida.',
   sourceIdentityAriaLabelTemplate: 'Ver identidad de origen de {table}',
   sourceIdentityDatabaseLabel: 'Base de datos',
   sourceIdentityConnectionLabel: 'Conexión',

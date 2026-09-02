@@ -313,6 +313,7 @@ describe('GraphNodeColumnSection', () => {
                 ],
               },
             },
+            { id: 'input:status', name: 'status', type: 'text', output: false },
           ]}
           onColumnFunctionApply={onColumnFunctionApply}
         />
@@ -348,6 +349,15 @@ describe('GraphNodeColumnSection', () => {
     );
     expect(aliasInput).not.toBeNull();
     expect(aliasSubmit?.disabled).toBe(true);
+    await act(async () => {
+      fireEvent.change(aliasInput!, { target: { value: 'status' } });
+      fireEvent.click(aliasSubmit!);
+    });
+    expect(onColumnFunctionApply).not.toHaveBeenCalled();
+    expect(document.body.querySelector('[role="alert"]')).not.toBeNull();
+    expect(
+      document.body.querySelector('[data-slot="graph-node-column-function-alias-form"]')
+    ).not.toBeNull();
     await act(async () => {
       fireEvent.change(aliasInput!, { target: { value: 'customer_clean' } });
       fireEvent.click(aliasSubmit!);

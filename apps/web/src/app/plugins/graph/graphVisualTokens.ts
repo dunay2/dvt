@@ -143,6 +143,7 @@ export const graphNodeColumnClasses = {
     'pointer-events-none absolute left-1/2 top-1/2 size-px border-0 bg-transparent p-0 opacity-0',
   functionAliasForm: 'nodrag nopan w-64 border-slate-700 bg-slate-950 p-3',
   functionAliasLabel: 'mb-2 block text-xs font-medium text-slate-200',
+  functionAliasError: 'mt-1 text-xs text-red-300',
   functionAliasActions: 'mt-3 flex justify-end gap-2',
   functionAliasCancel:
     'rounded px-2 py-1 text-xs text-slate-300 hover:bg-slate-800 hover:text-white',
