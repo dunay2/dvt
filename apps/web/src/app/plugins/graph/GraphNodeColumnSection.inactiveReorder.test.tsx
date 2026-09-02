@@ -126,7 +126,7 @@ describe('GraphNodeColumnSection inactive field reorder', () => {
     ).toEqual(['customertext', 'amountnumeric', 'order_idinteger']);
   });
 
-  it('does not present inactive-only ordering as durable', async () => {
+  it('moves an inactive field among inactive fields without changing output selection', async () => {
     const onColumnReorder = vi.fn();
     await act(async () => {
       root.render(
@@ -160,7 +160,7 @@ describe('GraphNodeColumnSection inactive field reorder', () => {
       [...container.querySelectorAll<HTMLElement>('[data-slot="graph-node-column-piece"]')].map(
         (piece) => piece.textContent
       )
-    ).toEqual(['firsttext', 'secondtext', 'thirdtext', 'fourthtext']);
+    ).toEqual(['firsttext', 'thirdtext', 'secondtext', 'fourthtext']);
     expect(onColumnReorder).not.toHaveBeenCalled();
   });
 });

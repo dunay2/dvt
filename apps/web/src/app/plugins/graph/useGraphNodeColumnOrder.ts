@@ -35,14 +35,6 @@ function reorderIds(
   return next;
 }
 
-function isDurableMove(
-  columnsById: ReadonlyMap<string, OrderableColumn>,
-  movedId: string,
-  targetId: string
-): boolean {
-  return columnsById.get(movedId)?.output !== false || columnsById.get(targetId)?.output !== false;
-}
-
 function resolveActivePlacement(
   orderedIds: readonly string[],
   movedId: string,
@@ -102,7 +94,6 @@ export function useGraphNodeColumnOrder<TColumn extends OrderableColumn>(
       targetId: string,
       placement: ActiveColumnPlacement['placement']
     ): ActiveColumnPlacement | undefined {
-      if (!isDurableMove(columnsById, movedId, targetId)) return undefined;
       const next = reorderIds(orderedIds, movedId, targetId, placement);
       setOrderedIds(next);
       if (columnsById.get(movedId)?.output === false) return undefined;
@@ -112,9 +103,6 @@ export function useGraphNodeColumnOrder<TColumn extends OrderableColumn>(
     },
     resolveActivationPlacement(id: string): ActiveColumnPlacement | undefined {
       return resolveActivePlacement(orderedIds, id, columnsById);
-    },
-    canMoveColumn(movedId: string, targetId: string): boolean {
-      return isDurableMove(columnsById, movedId, targetId);
     },
   };
 }
