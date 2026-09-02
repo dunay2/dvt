@@ -42,11 +42,8 @@ duplicate the execution policy.
 
 ### Options
 
-1. **Selected: contextual command plus closed-state valve.** Project one typed edge execution
-   presentation model, consume it in the existing renderer and context surface, and dispatch
-   through `AuthorCanvasGraphEdge`.
-2. Midpoint button plus context command: rejected because it adds a small pointer target and
-   permanent interaction chrome without improving keyboard access.
+1. **Selected: contextual command plus closed-state valve.** Project one typed edge execution presentation model, consume it in the renderer and context surface, and dispatch through `AuthorCanvasGraphEdge`.
+2. Midpoint button plus context command: rejected because it adds a small pointer target and permanent interaction chrome without improving keyboard access.
 3. New edge type, toolbar, store, or direct metadata setter: rejected as duplicate authority.
 4. Third-party graph control: rejected; React Flow already owns edge rendering and selection,
    so no library or custom overlay manager is required.
@@ -82,10 +79,8 @@ flowchart LR
 
 - **Mode:** Full.
 - **Primary interaction:** existing edge context surface only.
-- **Visual result:** open stays normal; closed uses dash, opacity and a centered non-interactive
-  gate glyph while retaining the direction cue and selection state.
-- **Risk mitigation:** the menu consumes the same typed projection as the renderer and invokes
-  the existing runner; behavior tests cover invalid/structural metadata and reload.
+- **Visual result:** open stays normal; closed uses dash, opacity and a centered non-interactive gate glyph while retaining direction and selection state.
+- **Risk mitigation:** menu and renderer share one typed projection; behavior tests cover invalid/structural metadata and reload.
 - **Microcommits:** presentation projection, contextual command wiring, user-flow proof, closeout.
 - **Validation:** focused Canvas tests, web typecheck/lint, Cypress spec, feature mechanization, governance refresh and `pnpm verify:prepush`.
 
@@ -132,7 +127,11 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasControllerViewModel.ts
   - apps/web/src/app/views/canvas/canvasShell*.ts*
   - apps/web/src/app/views/canvas/CanvasShell.tsx
-  - apps/web/src/app/views/canvas/CanvasViewport.tsx
+  - apps/web/src/app/views/canvas/CanvasViewport*
+  - apps/web/src/app/views/Canvas.test.controller*
+  - apps/web/src/app/views/canvas/useCanvasAuthoringProjection.ts
+  - apps/web/src/app/views/canvas/useCanvasController*.test.tsx
+  - apps/web/src/app/views/canvas/useCanvasGraphHandlers.types.ts
   - apps/web/src/app/views/canvas/canvasCopy*
   - apps/web/cypress/e2e/canvas/canvas-connection-valve.cy.ts
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-connection-valve-plan-20260903.md
@@ -196,4 +195,5 @@ symbols:
   - { name: CanvasDependencyEdgeData, path: apps/web/src/app/views/canvas/canvasDependencyEdgeModel.ts, dddOwner: Canvas connection presentation, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Presentation Model], architectureGuard: pnpm docs:feature-mechanization:implementation --feature FLOW1-CANVAS-CONNECTION-VALVE-2581, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-connection-valve.cy.ts, unitTests: [pnpm --filter @dvt/web test:canvas] }
   - { name: buildCanvasDependencyEdgeData, path: apps/web/src/app/views/canvas/canvasDependencyEdgeModel.ts, dddOwner: Canvas connection presentation, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Replace primitive with object], architectureGuard: pnpm docs:feature-mechanization:implementation --feature FLOW1-CANVAS-CONNECTION-VALVE-2581, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-connection-valve.cy.ts, unitTests: [pnpm --filter @dvt/web test:canvas] }
   - { name: readCanvasDependencyEdgeData, path: apps/web/src/app/views/canvas/canvasDependencyEdgeModel.ts, dddOwner: Canvas connection presentation, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Presentation Model], architectureGuard: pnpm docs:feature-mechanization:implementation --feature FLOW1-CANVAS-CONNECTION-VALVE-2581, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-connection-valve.cy.ts, unitTests: [pnpm --filter @dvt/web test:canvas] }
+  - { name: CanvasContextMenuEdgeAction, path: apps/web/src/app/views/canvas/canvasInteractionCommandSurface.ts, dddOwner: Canvas contextual action read model, cqRails: [AuthorCanvasGraphEdge], fowlerSignals: [Replace primitive with object], architectureGuard: pnpm docs:feature-mechanization:implementation --feature FLOW1-CANVAS-CONNECTION-VALVE-2581, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-connection-valve.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasEdgeExecutionContextMenu.test.ts] }
 ```
