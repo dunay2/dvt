@@ -255,8 +255,7 @@ export function useSourceImportWizard({
   const setSelectedConnection = (selectedConnection: string | null) =>
     setState((prev) => ({
       ...prev,
-      currentStep:
-        dbtSourceBinding != null && selectedConnection != null ? 'selection' : prev.currentStep,
+      currentStep: selectedConnection != null ? 'selection' : prev.currentStep,
       selectedConnection,
       createConnectionError: null,
       renameConnectionFormOpen: false,
