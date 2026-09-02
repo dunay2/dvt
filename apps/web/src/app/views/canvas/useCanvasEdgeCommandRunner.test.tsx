@@ -59,7 +59,7 @@ describe('useCanvasEdgeCommandRunner execution gate', () => {
           edges: [] as Edge[],
         },
         effects: { setEdges: vi.fn(), setDraftSession },
-        pluginPortMap: {},
+        pluginPortMap: new Map(),
       });
       return null;
     }
@@ -84,7 +84,7 @@ describe('useCanvasEdgeCommandRunner execution gate', () => {
       runner = useCanvasEdgeCommandRunner({
         state: { canonicalNodesById: new Map(), draftSession: currentSession, edges: [] },
         effects: { setEdges: vi.fn(), setDraftSession },
-        pluginPortMap: {},
+        pluginPortMap: new Map(),
       });
       return null;
     }
