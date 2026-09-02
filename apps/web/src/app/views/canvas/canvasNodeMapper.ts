@@ -19,6 +19,7 @@ import type { CanvasNodePresentationTruth } from '../../components/canvas/canvas
 import { buildCanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth';
 import { buildCanvasNodePresentationCopy } from './canvasNodePresentationCopy';
 import { projectDbtModelColumnStates } from './canvasDbtModelColumnAuthoring';
+import type { CanvasDependencyEdgeData } from './canvasDependencyEdgeModel';
 
 type CanvasNodePosition = { x: number; y: number };
 type MapCanonicalNodeToCanvasNodeArgs = {
@@ -217,7 +218,14 @@ export function createCanvasDirectionalEdge({
   source,
   target,
   ariaLabel,
-}: Readonly<{ id: string; source: string; target: string; ariaLabel?: string }>): Edge {
+  data,
+}: Readonly<{
+  id: string;
+  source: string;
+  target: string;
+  ariaLabel?: string;
+  data?: CanvasDependencyEdgeData;
+}>): Edge<CanvasDependencyEdgeData> {
   return {
     id,
     source,
@@ -225,6 +233,7 @@ export function createCanvasDirectionalEdge({
     sourceHandle: 'source' satisfies CanvasNodePortHandleKind,
     targetHandle: 'target' satisfies CanvasNodePortHandleKind,
     ariaLabel,
+    ...(data == null ? {} : { data }),
     type: 'dependency',
     animated: false,
     interactionWidth: graphFlowPalette.edgeInteractionWidth,

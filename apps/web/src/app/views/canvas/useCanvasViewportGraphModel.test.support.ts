@@ -3,6 +3,7 @@ import { createElement } from 'react';
 import { withTestQueryClient } from '../../../testing/reactQueryHarness';
 import type { CanonicalNode } from '../../types/canonical';
 import { buildCanvasAuthoringGraphProjection } from './canvasAuthoringGraphProjection';
+import type { CanvasDraftEdge } from './canvasDraftSession';
 import { useCanvasViewportGraphModel } from './useCanvasViewportGraphModel';
 
 export type ViewportGraphModelArgs = Parameters<typeof useCanvasViewportGraphModel>[0];
@@ -27,7 +28,7 @@ export function buildCanonicalNode(
 export function buildViewportGraphModelArgs(
   input: Readonly<{
     visibleNodeIds: readonly string[];
-    visibleEdges: readonly { sourceId: string; targetId: string }[];
+    visibleEdges: readonly CanvasDraftEdge[];
     draftSemanticGraph: Parameters<
       typeof buildCanvasAuthoringGraphProjection
     >[0]['draftSemanticGraph'];
@@ -47,6 +48,7 @@ export function buildViewportGraphModelArgs(
     visibleEdges: [...input.visibleEdges],
     canonicalNodesById: authoringProjection.canonicalNodesById,
     canonicalEdgeIdBySignature: authoringProjection.canonicalEdgeIdBySignature,
+    canonicalEdgeBySignature: authoringProjection.canonicalEdgeBySignature,
     columnLevelLineageEnabled: false,
     persistedNodePositions: input.persistedNodePositions ?? {},
   };

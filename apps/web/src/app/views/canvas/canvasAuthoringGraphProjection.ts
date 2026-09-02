@@ -20,6 +20,7 @@ export type CanvasAuthoringGraphProjection = {
   canonicalEdges: CanonicalEdge[];
   canonicalNodesById: Map<string, CanonicalNode>;
   canonicalEdgeIdBySignature: Map<string, string>;
+  canonicalEdgeBySignature: Map<string, CanonicalEdge>;
 };
 
 function buildVisibleEdgeId(edge: CanvasAuthoringEdgeRef): string {
@@ -197,6 +198,7 @@ export function buildCanvasAuthoringGraphProjection({
     canonicalEdgeIdBySignature: new Map(
       canonicalEdges.map((edge) => [edgeSignature(edge), edge.id])
     ),
+    canonicalEdgeBySignature: new Map(canonicalEdges.map((edge) => [edgeSignature(edge), edge])),
   };
 }
 

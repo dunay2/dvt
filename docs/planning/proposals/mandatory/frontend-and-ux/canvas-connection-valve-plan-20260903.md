@@ -119,8 +119,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasDependencyEdgeModel.test.ts
   - apps/web/src/app/views/canvas/CanvasDependencyEdge.tsx
   - apps/web/src/app/views/canvas/CanvasDependencyEdge.test.tsx
-  - apps/web/src/app/views/canvas/useCanvasViewportGraphModel.ts
-  - apps/web/src/app/views/canvas/useCanvasViewportGraphModel.edges.test.tsx
+  - apps/web/src/app/views/canvas/useCanvasViewportGraphModel*
   - apps/web/src/app/views/canvas/canvasAuthoringGraphProjection.ts
   - apps/web/src/app/views/canvas/canvasNodeMapper.ts
   - apps/web/src/app/plugins/graph/graphVisualTokens.ts

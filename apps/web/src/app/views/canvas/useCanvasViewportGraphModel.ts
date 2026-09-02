@@ -3,7 +3,7 @@ import { useEdgesState, useNodesState, type Edge, type Node } from '@xyflow/reac
 import { useEffect, useMemo } from 'react';
 
 import { getPluginPortMap } from '../../plugins/registry';
-import type { CanonicalNode } from '../../types/canonical';
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { buildCanvasConnectionCompatibilityByNodeId } from './canvasConnectionCompatibilityPresenter';
 import { createCanvasDirectionalEdge, mapCanonicalNodeToCanvasNode } from './canvasNodeMapper';
 import { resolveCanvasAuthoringVisibleEdgeId } from './canvasAuthoringGraphProjection';
@@ -11,12 +11,18 @@ import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProj
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { reconcileDbtModelConnectedOrigin } from './canvasDbtAuthoringModel';
+import type { CanvasDraftEdge } from './canvasDraftSession';
+import {
+  buildCanvasDependencyEdgeData,
+  readCanvasDependencyEdgeData,
+} from './canvasDependencyEdgeModel';
 
 type UseCanvasViewportGraphModelArgs = {
   visibleNodeIds: string[];
-  visibleEdges: Array<{ sourceId: string; targetId: string }>;
+  visibleEdges: CanvasDraftEdge[];
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
   canonicalEdgeIdBySignature: ReadonlyMap<string, string>;
+  canonicalEdgeBySignature?: ReadonlyMap<string, CanonicalEdge>;
   columnLevelLineageEnabled: boolean;
   persistedNodePositions: Record<string, { x: number; y: number }>;
   frozenNodeIds?: ReadonlySet<string>;
@@ -99,28 +105,45 @@ function projectViewportEdges(args: {
   visibleEdges: readonly VisibleViewportEdge[];
   allowedNodeIds: ReadonlySet<string>;
   canonicalEdgeIdBySignature: ReadonlyMap<string, string>;
+  canonicalEdgeBySignature: ReadonlyMap<string, CanonicalEdge>;
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
   locale: string;
 }): Edge[] {
-  const { visibleEdges, allowedNodeIds, canonicalEdgeIdBySignature, canonicalNodesById, locale } =
-    args;
+  const {
+    visibleEdges,
+    allowedNodeIds,
+    canonicalEdgeIdBySignature,
+    canonicalEdgeBySignature,
+    canonicalNodesById,
+    locale,
+  } = args;
   const copy = resolveCanvasViewCopy(locale);
 
   return visibleEdges
     .filter((edge) => allowedNodeIds.has(edge.sourceId) && allowedNodeIds.has(edge.targetId))
-    .map((edge) =>
-      createCanvasDirectionalEdge({
-        id: resolveCanvasAuthoringVisibleEdgeId({
-          edge,
-          canonicalEdgeIdBySignature,
-        }),
+    .map((edge) => {
+      const canonicalEdge = canonicalEdgeBySignature.get(`${edge.sourceId}::${edge.targetId}`);
+      const data = buildCanvasDependencyEdgeData({
+        sourceId: edge.sourceId,
+        targetId: edge.targetId,
+        executionGate: edge.executionGate,
+        canonicalMetadata: canonicalEdge?.metadata,
+      });
+      const baseAriaLabel = copy.canvasEdgeAccessibleLabelTemplate
+        .replace('{source}', canonicalNodesById.get(edge.sourceId)?.name ?? edge.sourceId)
+        .replace('{target}', canonicalNodesById.get(edge.targetId)?.name ?? edge.targetId);
+
+      return createCanvasDirectionalEdge({
+        id: resolveCanvasAuthoringVisibleEdgeId({ edge, canonicalEdgeIdBySignature }),
         source: edge.sourceId,
         target: edge.targetId,
-        ariaLabel: copy.canvasEdgeAccessibleLabelTemplate
-          .replace('{source}', canonicalNodesById.get(edge.sourceId)?.name ?? edge.sourceId)
-          .replace('{target}', canonicalNodesById.get(edge.targetId)?.name ?? edge.targetId),
-      })
-    );
+        ariaLabel:
+          data.execution.gateState === 'closed'
+            ? `${baseAriaLabel}, ${copy.canvasEdgeExcludedFromExecutionLabel}`
+            : baseAriaLabel,
+        data,
+      });
+    });
 }
 
 function viewportEdgesEqual(left: Edge[], right: Edge[]): boolean {
@@ -156,7 +179,9 @@ function viewportEdgeEqual(left: Edge, right: Edge): boolean {
     left.id === right.id &&
     left.source === right.source &&
     left.target === right.target &&
-    left.ariaLabel === right.ariaLabel
+    left.ariaLabel === right.ariaLabel &&
+    JSON.stringify(readCanvasDependencyEdgeData(left.data)) ===
+      JSON.stringify(readCanvasDependencyEdgeData(right.data))
   );
 }
 
@@ -243,6 +268,7 @@ export function useCanvasViewportGraphModel({
   visibleEdges,
   canonicalNodesById,
   canonicalEdgeIdBySignature,
+  canonicalEdgeBySignature = new Map(),
   columnLevelLineageEnabled,
   persistedNodePositions,
   frozenNodeIds = new Set(),
@@ -289,12 +315,14 @@ export function useCanvasViewportGraphModel({
         visibleEdges,
         allowedNodeIds: new Set(visibleNodeIds),
         canonicalEdgeIdBySignature,
+        canonicalEdgeBySignature,
         canonicalNodesById,
         locale: applicationLanguage,
       }),
     [
       applicationLanguage,
       canonicalEdgeIdBySignature,
+      canonicalEdgeBySignature,
       canonicalNodesById,
       visibleEdges,
       visibleNodeIds,
@@ -338,6 +366,7 @@ export function useCanvasViewportGraphModel({
         visibleEdges,
         allowedNodeIds: new Set(nodes.map((node) => node.id)),
         canonicalEdgeIdBySignature,
+        canonicalEdgeBySignature,
         canonicalNodesById,
         locale: applicationLanguage,
       });
@@ -347,6 +376,7 @@ export function useCanvasViewportGraphModel({
   }, [
     applicationLanguage,
     canonicalEdgeIdBySignature,
+    canonicalEdgeBySignature,
     canonicalNodesById,
     nodes,
     setEdges,
