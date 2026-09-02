@@ -3,6 +3,8 @@ import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
 import { MonacoCodeViewer } from '../../components/monaco/MonacoCodeViewer';
+import { monacoVisualClasses } from '../../components/monaco/monacoVisualTokens';
+import { cn } from '../../components/ui/utils';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasViewCopy } from './canvasCopy.types';
 import { projectDvtSubstraitTransformOutputToPostgresSql } from './canvasDvtSubstraitOutputProjection';
@@ -66,7 +68,7 @@ export function DvtTransformOutputView({
   };
 
   return (
-    <div data-slot="dvt-transform-output-view" className="space-y-3">
+    <div data-slot="dvt-transform-output-view" className="flex min-h-0 flex-1 flex-col gap-3">
       <label className="block space-y-1 text-xs text-(--text-muted)">
         <span>{copy.inspectorTransformOutputViewLabel}</span>
         <select
@@ -91,6 +93,7 @@ export function DvtTransformOutputView({
           ariaLabel={copy.inspectorTransformOutputSubstraitLabel}
           language="json"
           loadingLabel={copy.inspectorTransformOutputSubstraitLabel}
+          containerClassName={cn(monacoVisualClasses.surface, 'h-auto min-h-0 flex-1')}
           value={canonicalContent}
         />
       ) : derivedSql.status === 'ready' ? (
@@ -98,6 +101,7 @@ export function DvtTransformOutputView({
           ariaLabel={copy.inspectorTransformOutputPostgresSqlLabel}
           language="sql"
           loadingLabel={copy.inspectorTransformOutputPostgresSqlLabel}
+          containerClassName={cn(monacoVisualClasses.surface, 'h-auto min-h-0 flex-1')}
           value={derivedSql.sql}
         />
       ) : (

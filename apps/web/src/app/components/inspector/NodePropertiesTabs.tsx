@@ -35,6 +35,7 @@ export type NodePropertiesTabsProps = Readonly<{
   sectionAfterChildren?: Partial<Record<NodePropertySection['id'], ReactNode>>;
   moreLabel: string;
   tagsEditor?: ReactNode;
+  fillAvailableHeight?: boolean;
   slotPrefix?: string;
   surface?: 'inspector' | 'workbench';
   showSectionCountBadge?: boolean;
@@ -94,6 +95,7 @@ export function NodePropertiesTabs({
   sectionAfterChildren,
   moreLabel,
   tagsEditor,
+  fillAvailableHeight = false,
   slotPrefix,
   surface = 'inspector',
   showSectionCountBadge = false,
@@ -149,7 +151,7 @@ export function NodePropertiesTabs({
       data-slot={slots.root}
       value={activeTab}
       onValueChange={onActiveTabChange}
-      className="gap-4"
+      className={cn('gap-4', fillAvailableHeight && 'h-full min-h-0')}
     >
       <div data-slot={slots.list} className={inspectorVisualClasses.contextPanelFlatTabsList}>
         <TabsList
@@ -216,13 +218,17 @@ export function NodePropertiesTabs({
           value={section.id}
           forceMount={persistentSectionIds.includes(section.id) ? true : undefined}
           data-slot={`${slots.sectionPrefix}-${section.id}-content`}
-          className="m-0 data-[state=inactive]:hidden"
+          className={cn(
+            'm-0 data-[state=inactive]:hidden',
+            fillAvailableHeight && section.id === activeTab && 'min-h-0 overflow-hidden'
+          )}
         >
           <NodePropertySectionView
             section={section}
             slots={slots}
             surface={surface}
             showCountBadge={showSectionCountBadge}
+            fillAvailableHeight={fillAvailableHeight && section.id === activeTab}
             beforeBody={
               sectionBeforeChildren?.[section.id] ??
               (section.id === 'general' ? beforePanels : null)

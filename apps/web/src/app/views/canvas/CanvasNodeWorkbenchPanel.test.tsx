@@ -726,6 +726,29 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(outputSelector?.value).toBe('postgres-sql');
   });
 
+  it('keeps canonical code scrolling inside Monaco without a nested workbench scrollbar', () => {
+    renderNodePanel(root, DVT_SUBSTRAIT_TRANSFORM_NODE, 'code');
+
+    expect(
+      container.querySelector('[data-slot="canvas-node-workbench-contained-body"]')
+    ).not.toBeNull();
+    expect(container.querySelector('[data-slot="scroll-area"]')).toBeNull();
+    expect(container.querySelector('[data-testid="monaco-code-viewer"]')).not.toBeNull();
+
+    renderNodePanel(
+      root,
+      DVT_SUBSTRAIT_TRANSFORM_NODE,
+      'general',
+      { canEditNode: true, onApplyNodeDraft: vi.fn() },
+      2
+    );
+
+    expect(
+      container.querySelector('[data-slot="canvas-node-workbench-contained-body"]')
+    ).toBeNull();
+    expect(container.querySelector('[data-slot="scroll-area"]')).not.toBeNull();
+  });
+
   it('requires explicit confirmation before transferring visual authority to generated SQL', () => {
     const onConvertVisualTransformToSql = vi.fn();
     const authoring = {
