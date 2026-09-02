@@ -260,6 +260,10 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.a11y.edgeLabelTemplate',
     fallback: 'Edge from {source} to {target}',
   },
+  canvasEdgeExcludedFromExecutionLabel: {
+    key: 'canvas.a11y.edgeExcludedFromExecutionLabel',
+    fallback: 'Excluded from execution',
+  },
   reactFlowNodeDescription: {
     key: 'canvas.a11y.nodeDescription',
     fallback: 'Press Enter or Space to select a node. Use arrow keys to move it.',

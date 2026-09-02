@@ -90,6 +90,7 @@ export const canvasViewAuthoringCopyEs = {
   nodePresentationTestKindLabel: 'Prueba',
   canvasNodeAccessibleLabelTemplate: '{name}, {kind}',
   canvasEdgeAccessibleLabelTemplate: 'Conexión de {source} a {target}',
+  canvasEdgeExcludedFromExecutionLabel: 'Excluida de la ejecución',
   reactFlowNodeDescription:
     'Pulsa Intro o Espacio para seleccionar un nodo. Usa las flechas para moverlo.',
   reactFlowNodeKeyboardDisabledDescription: 'Este nodo no se puede mover con el teclado.',

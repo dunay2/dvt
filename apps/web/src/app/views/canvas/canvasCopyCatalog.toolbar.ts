@@ -227,6 +227,14 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.contextMenu.removeEdgeLabel',
     fallback: 'Remove connection',
   },
+  canvasContextMenuCloseEdgeLabel: {
+    key: 'canvas.contextMenu.closeEdgeLabel',
+    fallback: 'Exclude from execution',
+  },
+  canvasContextMenuOpenEdgeLabel: {
+    key: 'canvas.contextMenu.openEdgeLabel',
+    fallback: 'Include in execution',
+  },
   canvasSettingsDescription: {
     key: 'canvas.settings.description',
     fallback: 'Graph display preferences for the active canvas.',

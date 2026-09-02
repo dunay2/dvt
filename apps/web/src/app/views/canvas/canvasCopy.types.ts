@@ -130,6 +130,8 @@ export type CanvasViewCopy = {
   readonly canvasContextMenuCanvasGroupLabel: string;
   readonly canvasContextMenuCanvasSettingsLabel: string;
   readonly canvasContextMenuRemoveEdgeLabel: string;
+  readonly canvasContextMenuCloseEdgeLabel: string;
+  readonly canvasContextMenuOpenEdgeLabel: string;
   readonly canvasSettingsDescription: string;
   readonly canvasSettingsCloseLabel: string;
   readonly canvasSettingsSectionsLabel: string;
@@ -439,6 +441,7 @@ export type CanvasViewCopy = {
   readonly nodePresentationTestKindLabel: string;
   readonly canvasNodeAccessibleLabelTemplate: string;
   readonly canvasEdgeAccessibleLabelTemplate: string;
+  readonly canvasEdgeExcludedFromExecutionLabel: string;
   readonly reactFlowNodeDescription: string;
   readonly reactFlowNodeKeyboardDisabledDescription: string;
   readonly reactFlowNodeMovedTemplate: string;
