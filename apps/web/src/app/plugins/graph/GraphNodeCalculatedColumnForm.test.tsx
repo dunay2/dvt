@@ -54,7 +54,9 @@ describe('GraphNodeCalculatedColumnForm', () => {
       '[data-slot="graph-node-calculated-column-trigger"]'
     );
     expect(trigger?.getAttribute('aria-haspopup')).toBe('dialog');
-    act(() => fireEvent.click(trigger!));
+    act(() => {
+      fireEvent.click(trigger!);
+    });
 
     const surface = document.querySelector<HTMLElement>(
       '[data-slot="graph-node-calculated-column-form"]'
