@@ -3,6 +3,7 @@ import type { CanonicalNode } from '../../types/canonical';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import {
+  reorderDbtModelProjectionColumn,
   setDbtModelProjectionColumnOutput,
   type DbtModelColumnAuthoringRejection,
 } from './canvasDbtModelColumnAuthoring';
@@ -37,6 +38,41 @@ export function configureDbtModelColumnOutput(args: {
     availableColumns,
     columnName: args.columnName,
     output: args.output,
+  });
+  return result.outcome === 'rejected'
+    ? result
+    : {
+        outcome: 'applied',
+        draftSession: canvasDraftSession.workingSet.upsertNode(args.draftSession, result.node),
+      };
+}
+
+export function configureDbtModelColumnOrder(args: {
+  draftSession: CanvasDraftSession;
+  canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
+  nodeId: string;
+  columnName: string;
+  targetColumnName: string;
+  placement: 'before' | 'after';
+}): ConfigureDbtModelColumnResult {
+  const nodeCatalog = new Map(args.canonicalNodesById);
+  Object.values(args.draftSession.localNodeCatalog ?? {}).forEach((node) =>
+    nodeCatalog.set(node.id, node)
+  );
+  const node = nodeCatalog.get(args.nodeId);
+  if (node == null || node.pluginId !== 'dbt' || node.kind !== 'dbt:model') {
+    return { outcome: 'rejected', reason: 'not_generated_dbt_model' };
+  }
+  const result = reorderDbtModelProjectionColumn({
+    node,
+    availableColumns: projectCanvasNodePresentationTruth({
+      node,
+      nodes: [...nodeCatalog.values()],
+      edges: args.draftSession.workingSet.visibleEdges,
+    }).columns.visible.map((column) => column.name),
+    columnName: args.columnName,
+    targetColumnName: args.targetColumnName,
+    placement: args.placement,
   });
   return result.outcome === 'rejected'
     ? result

@@ -96,10 +96,8 @@ export function resolveGraphNodeColumnInteractionProps(args: {
           ) => void)
         : undefined,
     onColumnReorder:
-      args.nodeRole === 'transform' && typeof data.onReorderDvtSubstraitColumnOutput === 'function'
-        ? (data.onReorderDvtSubstraitColumnOutput as (
-            identity: GraphNodeColumnReorderIdentity
-          ) => void)
+      args.nodeRole === 'transform' && typeof data.onReorderCanvasColumnOutput === 'function'
+        ? (data.onReorderCanvasColumnOutput as (identity: GraphNodeColumnReorderIdentity) => void)
         : undefined,
     onColumnDisclosureChange:
       typeof data.onColumnDisclosureChange === 'function'

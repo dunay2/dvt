@@ -31,6 +31,7 @@ type ReadModelNodeData = {
   onColumnPortActivate?: unknown;
   onApplyDvtSubstraitColumnFunction?: unknown;
   onToggleCanvasColumnOutput?: unknown;
+  onReorderCanvasColumnOutput?: unknown;
   onColumnDisclosureChange?: unknown;
   onAutomapColumns?: unknown;
   columnPortDirections?: unknown;
@@ -99,7 +100,7 @@ function buildReadModelArgs(
       handleColumnPortActivate: vi.fn(),
       handleApplyDvtSubstraitColumnFunction: vi.fn(),
       handleToggleCanvasColumnOutput: vi.fn(),
-      handleReorderDvtSubstraitColumnOutput: vi.fn(),
+      handleReorderCanvasColumnOutput: vi.fn(),
       handleColumnDisclosureChange: vi.fn(),
       handleAutomapCanvasColumns: vi.fn(),
       handleRemoveColumnMapping: vi.fn(),
@@ -551,6 +552,9 @@ describe('useCanvasControllerReadModel', () => {
       expect(
         (state?.nodesWithImpact[1]?.data as ReadModelNodeData).onToggleCanvasColumnOutput
       ).toEqual(expect.any(Function));
+      expect(
+        (state?.nodesWithImpact[1]?.data as ReadModelNodeData).onReorderCanvasColumnOutput
+      ).toEqual(args.graphHandlers.handleReorderCanvasColumnOutput);
 
       const staleModelNode = {
         ...modelNode,

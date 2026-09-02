@@ -50,7 +50,7 @@ export type UseCanvasGraphHandlersResult = {
     columnType: string;
     output: boolean;
   }) => void;
-  handleReorderDvtSubstraitColumnOutput: (identity: {
+  handleReorderCanvasColumnOutput: (identity: {
     nodeId: string;
     columnId: string;
     targetColumnId: string;

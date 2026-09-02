@@ -32,7 +32,10 @@ import {
   setCanvasColumnOutputIncluded,
   type CanvasColumnMappingRejection,
 } from './canvasColumnMappingAuthoring';
-import { configureDbtModelColumnOutput } from './canvasDbtModelColumnCommand';
+import {
+  configureDbtModelColumnOrder,
+  configureDbtModelColumnOutput,
+} from './canvasDbtModelColumnCommand';
 import type { GraphNodeColumnOutputToggleIdentity } from '../../plugins/graph/graphNodeColumnContracts';
 import {
   createCanvasColumnHandleId,
@@ -65,7 +68,7 @@ type UseCanvasEdgeAuthoringHandlersResult = {
     columnType: string;
     output: boolean;
   }) => void;
-  handleReorderDvtSubstraitColumnOutput: (identity: {
+  handleReorderCanvasColumnOutput: (identity: {
     nodeId: string;
     columnId: string;
     targetColumnId: string;
@@ -300,7 +303,7 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
     [effects, policy.canEditEdges, state]
   );
 
-  const handleReorderDvtSubstraitColumnOutput = useCallback(
+  const handleReorderCanvasColumnOutput = useCallback(
     (identity: {
       nodeId: string;
       columnId: string;
@@ -309,6 +312,23 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
     }) => {
       if (!policy.canEditEdges) {
         toast.error(canvasViewCopy.mutationUnavailableMessage);
+        return;
+      }
+      const targetNode = resolveCurrentNode(state, identity.nodeId);
+      if (targetNode?.pluginId === 'dbt' && targetNode.kind === 'dbt:model') {
+        const result = configureDbtModelColumnOrder({
+          draftSession: state.draftSession,
+          canonicalNodesById: state.canonicalNodesById,
+          nodeId: identity.nodeId,
+          columnName: identity.columnId,
+          targetColumnName: identity.targetColumnId,
+          placement: identity.placement,
+        });
+        if (result.outcome === 'rejected') {
+          toast.error(canvasViewCopy.columnMappingUnavailableMessage);
+          return;
+        }
+        effects.setDraftSession(result.draftSession);
         return;
       }
       const result = reorderCanvasColumnOutput({
@@ -382,7 +402,7 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
     handleColumnPortActivate,
     handleAutomapCanvasColumns,
     handleToggleCanvasColumnOutput,
-    handleReorderDvtSubstraitColumnOutput,
+    handleReorderCanvasColumnOutput,
     handleRemoveColumnMapping,
   };
 }
@@ -562,8 +582,7 @@ export function useCanvasEdgeAuthoringHandlers({
     handleColumnPortActivate: columnMappingHandlers.handleColumnPortActivate,
     handleAutomapCanvasColumns: columnMappingHandlers.handleAutomapCanvasColumns,
     handleToggleCanvasColumnOutput: columnMappingHandlers.handleToggleCanvasColumnOutput,
-    handleReorderDvtSubstraitColumnOutput:
-      columnMappingHandlers.handleReorderDvtSubstraitColumnOutput,
+    handleReorderCanvasColumnOutput: columnMappingHandlers.handleReorderCanvasColumnOutput,
     handleRemoveColumnMapping: columnMappingHandlers.handleRemoveColumnMapping,
   };
 }

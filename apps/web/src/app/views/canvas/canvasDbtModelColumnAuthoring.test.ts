@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { CanonicalNode } from '../../types/canonical';
 import { createDbtNodeAuthoringMetadata } from './canvasDbtAuthoringModel';
 import {
+  reorderDbtModelProjectionColumn,
   setDbtModelProjectionColumnOutput,
   resolveDbtModelProjectionColumns,
 } from './canvasDbtModelColumnAuthoring';
@@ -71,6 +72,37 @@ describe('DBT model column authoring', () => {
       { name: 'order_id', output: true },
       { name: 'customer', output: true },
       { name: 'amount', output: true },
+    ]);
+  });
+
+  it('reorders active and inactive columns without changing their output state', () => {
+    const reordered = reorderDbtModelProjectionColumn({
+      node: {
+        ...model,
+        metadata: {
+          dbt: {
+            selectedSourceId: 'source-orders',
+            projectionColumns: [
+              { name: 'order_id', output: true },
+              { name: 'customer', output: false },
+              { name: 'amount', output: true },
+            ],
+          },
+        },
+      },
+      availableColumns,
+      columnName: 'amount',
+      targetColumnName: 'order_id',
+      placement: 'before',
+    });
+
+    expect(reordered.outcome).toBe('applied');
+    if (reordered.outcome !== 'applied') return;
+
+    expect(createDbtNodeAuthoringMetadata(reordered.node).projectionColumns).toEqual([
+      { name: 'amount', output: true },
+      { name: 'order_id', output: true },
+      { name: 'customer', output: false },
     ]);
   });
 

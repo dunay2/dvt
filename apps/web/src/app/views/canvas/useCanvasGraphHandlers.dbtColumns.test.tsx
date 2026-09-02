@@ -126,4 +126,43 @@ describe('Canvas DBT model column handlers', () => {
 
     harness.cleanup();
   });
+
+  it('routes column reorder through the DBT node authoring command', async () => {
+    const setDraftSession = vi.fn();
+    const draftSession = {
+      ...buildDraftSession(),
+      workingSet: {
+        visibleNodeIds: [source.id, model.id],
+        visibleEdges: [{ sourceId: source.id, targetId: model.id }],
+        pendingExplicitNodeIds: [],
+      },
+    };
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      canonicalNodes: [source, model],
+      draftSession,
+      setDraftSession,
+    });
+    await harness.render();
+
+    act(() => {
+      harness.latest()?.handleReorderCanvasColumnOutput({
+        nodeId: model.id,
+        columnId: 'customer',
+        targetColumnId: 'order_id',
+        placement: 'before',
+      });
+    });
+
+    const updatedModel = setDraftSession.mock.calls[0]?.[0]?.localNodeCatalog?.[model.id];
+    expect(updatedModel).toBeDefined();
+    if (updatedModel != null) {
+      expect(createDbtNodeAuthoringMetadata(updatedModel).projectionColumns).toEqual([
+        { name: 'customer', output: true },
+        { name: 'order_id', output: true },
+      ]);
+    }
+
+    harness.cleanup();
+  });
 });

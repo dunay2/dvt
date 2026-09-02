@@ -20,7 +20,7 @@ type NodeActionHandlers = {
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
   onApplyDvtSubstraitColumnFunction?: (identity: GraphNodeColumnFunctionApplyIdentity) => void;
   onToggleCanvasColumnOutput?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
-  onReorderDvtSubstraitColumnOutput?: (identity: GraphNodeColumnReorderIdentity) => void;
+  onReorderCanvasColumnOutput?: (identity: GraphNodeColumnReorderIdentity) => void;
   onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;
   onAutomapColumns?: (nodeId: string, columns: readonly GraphNodeColumn[]) => void;
   resolveAlgebraicCompositionOperations?: (
@@ -69,7 +69,7 @@ export function buildCanvasNodeInteractionPresentation({
       onColumnPortActivate: handlers.onColumnPortActivate,
       onApplyDvtSubstraitColumnFunction: handlers.onApplyDvtSubstraitColumnFunction,
       onToggleCanvasColumnOutput: handlers.onToggleCanvasColumnOutput,
-      onReorderDvtSubstraitColumnOutput: handlers.onReorderDvtSubstraitColumnOutput,
+      onReorderCanvasColumnOutput: handlers.onReorderCanvasColumnOutput,
       onColumnDisclosureChange: handlers.onColumnDisclosureChange,
       onAutomapColumns: handlers.onAutomapColumns,
       resolveAlgebraicCompositionOperations: handlers.resolveAlgebraicCompositionOperations,

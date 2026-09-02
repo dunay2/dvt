@@ -873,7 +873,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
 
     setDraftSession.mockClear();
     act(() => {
-      harness.latest()?.handleReorderDvtSubstraitColumnOutput({
+      harness.latest()?.handleReorderCanvasColumnOutput({
         nodeId: transform.id,
         columnId: 'output:amount',
         targetColumnId: 'output:order_id',

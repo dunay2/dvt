@@ -111,7 +111,7 @@ type UseCanvasControllerReadModelArgs = {
     | 'handleColumnPortActivate'
     | 'handleApplyDvtSubstraitColumnFunction'
     | 'handleToggleCanvasColumnOutput'
-    | 'handleReorderDvtSubstraitColumnOutput'
+    | 'handleReorderCanvasColumnOutput'
     | 'handleColumnDisclosureChange'
     | 'handleAutomapCanvasColumns'
     | 'handleRemoveColumnMapping'
@@ -211,8 +211,8 @@ export function useCanvasControllerReadModel({
           onToggleCanvasColumnOutput: canMutateGraph
             ? graphHandlers.handleToggleCanvasColumnOutput
             : undefined,
-          onReorderDvtSubstraitColumnOutput: canMutateGraph
-            ? graphHandlers.handleReorderDvtSubstraitColumnOutput
+          onReorderCanvasColumnOutput: canMutateGraph
+            ? graphHandlers.handleReorderCanvasColumnOutput
             : undefined,
           onColumnDisclosureChange: graphHandlers.handleColumnDisclosureChange,
           onAutomapColumns: canMutateGraph ? graphHandlers.handleAutomapCanvasColumns : undefined,
@@ -345,9 +345,10 @@ export function useCanvasControllerReadModel({
             hasEditableProjection || canAuthorDbtModelColumns
               ? node.data.onToggleCanvasColumnOutput
               : undefined,
-          onReorderDvtSubstraitColumnOutput: hasEditableProjection
-            ? node.data.onReorderDvtSubstraitColumnOutput
-            : undefined,
+          onReorderCanvasColumnOutput:
+            hasEditableProjection || canAuthorDbtModelColumns
+              ? node.data.onReorderCanvasColumnOutput
+              : undefined,
           onAutomapColumns: canAuthorColumnMappings ? node.data.onAutomapColumns : undefined,
           columns: presentsColumnLineage
             ? projectInteractiveColumns(node, columnFunctionMenus)
@@ -384,7 +385,7 @@ export function useCanvasControllerReadModel({
       graphHandlers.handleColumnDisclosureChange,
       graphHandlers.handleColumnPortActivate,
       graphHandlers.handleApplyDvtSubstraitColumnFunction,
-      graphHandlers.handleReorderDvtSubstraitColumnOutput,
+      graphHandlers.handleReorderCanvasColumnOutput,
       graphHandlers.handleToggleCanvasColumnOutput,
       graphHandlers.resolveCanvasAlgebraicCompositionOperations,
       graphHandlers.handleComposeCanvasNodes,
