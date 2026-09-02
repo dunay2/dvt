@@ -4,12 +4,13 @@ import type { LucideIcon } from 'lucide-react';
 
 import { cn } from '../../components/ui/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
-import { GraphNodeColumnSection, type GraphNodeColumn } from './GraphNodeColumnSection';
+import { GraphNodeColumnSection } from './GraphNodeColumnSection';
 import type {
+  GraphNodeColumn,
   GraphNodeColumnPortDirection,
   GraphNodeColumnPortIdentity,
   GraphNodeColumnReorderIdentity,
-} from './GraphNodeColumnSection';
+} from './graphNodeColumnContracts';
 import { GraphNodeMetricRow } from './GraphNodeMetricRow';
 import { GraphNodeOperationalRail } from './GraphNodeOperationalRail';
 import { GraphNodeTagList } from './GraphNodeTagList';

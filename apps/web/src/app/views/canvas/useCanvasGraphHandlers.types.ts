@@ -1,6 +1,6 @@
 import type { Edge, Node, ReactFlowProps } from '@xyflow/react';
 import type { Dispatch, SetStateAction } from 'react';
-import type { GraphNodeColumnPortIdentity } from '../../plugins/graph/GraphNodeColumnSection';
+import type { GraphNodeColumnPortIdentity } from '../../plugins/graph/graphNodeColumnContracts';
 import type { CanvasColumnLineageEdgeData } from './canvasColumnLineageProjection';
 import type {
   CanvasAlgebraicCompositionIdentity,

@@ -19,7 +19,7 @@ import {
 } from './canvasColumnLineageProjection';
 import type { InteractiveCanvasColumnLineageEdgeData } from './CanvasColumnLineageEdge';
 import type { CanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
-import type { GraphNodeColumn } from '../../plugins/graph/GraphNodeColumnSection';
+import type { GraphNodeColumn } from '../../plugins/graph/graphNodeColumnContracts';
 import { canAuthorCanvasColumnMappings } from './canvasColumnMappingAuthoring';
 import { readDvtTransformLineageProvenance } from './canvasTransformationSqlMirror';
 import { projectCanvasNodeAccessibleHealth } from './canvasNodeMapper';

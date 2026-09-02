@@ -30,7 +30,7 @@ import type {
   GraphNodeColumn,
   GraphNodeColumnPortDirection,
   GraphNodeColumnPortIdentity,
-} from '../../plugins/graph/GraphNodeColumnSection';
+} from '../../plugins/graph/graphNodeColumnContracts';
 import {
   buildCanvasNodeModelerActionModel,
   type CanvasNodeContextMenuCopy,
