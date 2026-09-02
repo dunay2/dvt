@@ -1,5 +1,5 @@
 /** Owned concern: render recorded graph-node columns as a compact disclosure. */
-import { useEffect, useId, useRef, useState, type ReactElement } from 'react';
+import { useEffect, useId, useState, type ReactElement } from 'react';
 import { Check, ChevronDown, ChevronUp, Table } from 'lucide-react';
 
 import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
@@ -25,7 +25,7 @@ import {
 import { resolveGraphNodeCardCopy } from './graphNodeCardCopyTokens';
 import { graphNodeColumnClasses } from './graphVisualTokens';
 import type { GraphNodeColumnSectionProps } from './graphNodeColumnContracts';
-import { useGraphNodeColumnOrder } from './useGraphNodeColumnOrder';
+import { useGraphNodeColumnReorder } from './useGraphNodeColumnReorder';
 
 const MAX_PREVIEW_COLUMNS = 5;
 
@@ -47,23 +47,15 @@ export function GraphNodeColumnSection({
   const [keyboardFunctionMenuColumnId, setKeyboardFunctionMenuColumnId] = useState<string | null>(
     null
   );
-  const draggedColumnIdRef = useRef<string | null>(null);
-  const [dropTarget, setDropTarget] = useState<{
-    columnId: string;
-    placement: 'before' | 'after';
-  } | null>(null);
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = resolveGraphNodeCardCopy(applicationLanguage);
   const columnListId = useId();
   const portDirectionKey = portDirections.join(':');
-  const columnOrder = useGraphNodeColumnOrder(columns);
+  const columnReorder = useGraphNodeColumnReorder({ columns, nodeId, onColumnReorder });
   const visibleColumns = showAllColumns
-    ? columnOrder.orderedColumns
-    : columnOrder.orderedColumns.slice(0, MAX_PREVIEW_COLUMNS);
+    ? columnReorder.orderedColumns
+    : columnReorder.orderedColumns.slice(0, MAX_PREVIEW_COLUMNS);
   const remainingColumnCount = Math.max(columns.length - MAX_PREVIEW_COLUMNS, 0);
-  const reorderableColumnIds = columnOrder.orderedColumns.flatMap((column) =>
-    column.id != null ? [column.name] : []
-  );
   const remainderActionLabel = copy.remainingColumnsLabelTemplate.replace(
     '{count}',
     String(remainingColumnCount)
@@ -120,7 +112,7 @@ export function GraphNodeColumnSection({
               const columnId = column.id ?? column.name;
               const columnOrderKey = column.name;
               const isOutput = column.output !== false;
-              const canReorder = column.id != null && nodeId != null && onColumnReorder != null;
+              const canReorder = columnReorder.canReorder(column);
               const metadataRows = [
                 { label: copy.columnTypeLabel, value: column.type },
                 ...(column.nullable == null
@@ -152,17 +144,8 @@ export function GraphNodeColumnSection({
                     : copy.columnAvailableInputAriaLabelTemplate
                   ).replace('{column}', column.name)}
                   draggable={canReorder}
-                  onDragStart={(event) => {
-                    if (!canReorder) return;
-                    event.stopPropagation();
-                    draggedColumnIdRef.current = columnOrderKey;
-                    event.dataTransfer.effectAllowed = 'move';
-                    event.dataTransfer.setData('text/plain', columnOrderKey);
-                  }}
-                  onDragEnd={() => {
-                    draggedColumnIdRef.current = null;
-                    setDropTarget(null);
-                  }}
+                  onDragStart={(event) => columnReorder.startDrag(column, event)}
+                  onDragEnd={columnReorder.endDrag}
                   className={graphNodeColumnClasses.piece}
                 >
                   <span className={graphNodeColumnClasses.name}>{column.name}</span>
@@ -196,7 +179,7 @@ export function GraphNodeColumnSection({
                           output: !isOutput,
                           ...(!isOutput
                             ? {
-                                placement: columnOrder.resolveActivationPlacement(columnOrderKey),
+                                placement: columnReorder.resolveActivationPlacement(columnOrderKey),
                               }
                             : {}),
                         });
@@ -232,89 +215,13 @@ export function GraphNodeColumnSection({
                 <div
                   key={columnId}
                   data-slot="graph-node-column-row"
-                  data-drop-placement={
-                    dropTarget?.columnId === columnId ? dropTarget.placement : undefined
-                  }
+                  data-drop-placement={columnReorder.dropPlacement(column)}
                   className={graphNodeColumnClasses.row}
-                  onDragOver={(event) => {
-                    const draggedColumnId = draggedColumnIdRef.current;
-                    if (
-                      !canReorder ||
-                      draggedColumnId == null ||
-                      draggedColumnId === columnOrderKey
-                    ) {
-                      return;
-                    }
-                    event.preventDefault();
-                    event.stopPropagation();
-                    event.dataTransfer.dropEffect = 'move';
-                    const bounds = event.currentTarget.getBoundingClientRect();
-                    const placement =
-                      event.clientY < bounds.top + bounds.height / 2 ? 'before' : 'after';
-                    setDropTarget({ columnId, placement });
-                  }}
-                  onDragLeave={(event) => {
-                    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
-                      setDropTarget(null);
-                    }
-                  }}
-                  onDrop={(event) => {
-                    const draggedColumnId = draggedColumnIdRef.current;
-                    if (
-                      !canReorder ||
-                      nodeId == null ||
-                      draggedColumnId == null ||
-                      draggedColumnId === columnOrderKey
-                    ) {
-                      return;
-                    }
-                    event.preventDefault();
-                    event.stopPropagation();
-                    const placement =
-                      dropTarget?.columnId === columnId ? dropTarget.placement : null;
-                    if (placement != null) {
-                      const activePlacement = columnOrder.moveColumn(
-                        draggedColumnId,
-                        columnOrderKey,
-                        placement
-                      );
-                      if (activePlacement != null) {
-                        const draggedColumn = columnOrder.orderedColumns.find(
-                          (candidate) => candidate.name === draggedColumnId
-                        );
-                        onColumnReorder?.({
-                          nodeId,
-                          columnId: draggedColumn?.id ?? draggedColumnId,
-                          ...activePlacement,
-                        });
-                      }
-                    }
-                    draggedColumnIdRef.current = null;
-                    setDropTarget(null);
-                  }}
+                  onDragOver={(event) => columnReorder.dragOver(column, event)}
+                  onDragLeave={columnReorder.dragLeave}
+                  onDrop={(event) => columnReorder.drop(column, event)}
                   onKeyDownCapture={(event) => {
-                    if (
-                      canReorder &&
-                      event.altKey &&
-                      (event.key === 'ArrowUp' || event.key === 'ArrowDown')
-                    ) {
-                      const sourceIndex = reorderableColumnIds.indexOf(columnOrderKey);
-                      const targetIndex = sourceIndex + (event.key === 'ArrowUp' ? -1 : 1);
-                      const targetColumnId = reorderableColumnIds[targetIndex];
-                      if (targetColumnId != null) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        const activePlacement = columnOrder.moveColumn(
-                          columnOrderKey,
-                          targetColumnId,
-                          event.key === 'ArrowUp' ? 'before' : 'after'
-                        );
-                        if (activePlacement != null) {
-                          onColumnReorder?.({ nodeId, columnId, ...activePlacement });
-                        }
-                      }
-                      return;
-                    }
+                    if (columnReorder.moveWithKeyboard(column, event)) return;
                     if (
                       column.functionMenu != null &&
                       onColumnFunctionApply != null &&
