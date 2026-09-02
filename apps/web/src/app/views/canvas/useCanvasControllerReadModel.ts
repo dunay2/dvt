@@ -28,6 +28,7 @@ import {
   resolveDvtSubstraitColumnFunctions,
   resolveDvtSubstraitProjectionEntry,
 } from './canvasDvtSubstraitProjection';
+import { projectDbtModelArtifact } from './canvasDbtModelArtifactProjection';
 
 function projectInteractiveColumns(
   node: Node,
@@ -109,7 +110,7 @@ type UseCanvasControllerReadModelArgs = {
     | 'activeColumnHandleId'
     | 'handleColumnPortActivate'
     | 'handleApplyDvtSubstraitColumnFunction'
-    | 'handleToggleDvtSubstraitColumnOutput'
+    | 'handleToggleCanvasColumnOutput'
     | 'handleReorderDvtSubstraitColumnOutput'
     | 'handleColumnDisclosureChange'
     | 'handleAutomapCanvasColumns'
@@ -207,8 +208,8 @@ export function useCanvasControllerReadModel({
           onApplyDvtSubstraitColumnFunction: canMutateGraph
             ? graphHandlers.handleApplyDvtSubstraitColumnFunction
             : undefined,
-          onToggleDvtSubstraitColumnOutput: canMutateGraph
-            ? graphHandlers.handleToggleDvtSubstraitColumnOutput
+          onToggleCanvasColumnOutput: canMutateGraph
+            ? graphHandlers.handleToggleCanvasColumnOutput
             : undefined,
           onReorderDvtSubstraitColumnOutput: canMutateGraph
             ? graphHandlers.handleReorderDvtSubstraitColumnOutput
@@ -224,6 +225,16 @@ export function useCanvasControllerReadModel({
         const canonicalNode = graphModel.canonicalNodesById.get(node.id);
         const canAuthorColumnMappings =
           canonicalNode?.role !== 'transform' || canAuthorCanvasColumnMappings(canonicalNode);
+        const dbtArtifact =
+          canonicalNode?.pluginId === 'dbt' && canonicalNode.kind === 'dbt:model'
+            ? projectDbtModelArtifact({
+                modelNode: canonicalNode,
+                nodes: visibleScope.canonicalNodes,
+                edges: visibleScope.canonicalEdges,
+              })
+            : null;
+        const canAuthorDbtModelColumns =
+          dbtArtifact?.ok === true && dbtArtifact.artifact.provenance === 'generated';
         const hasReadOnlyColumnLineage =
           canonicalNode?.role === 'transform' &&
           !canAuthorColumnMappings &&
@@ -336,9 +347,10 @@ export function useCanvasControllerReadModel({
             : undefined,
           onApplyDvtSubstraitColumnFunction:
             columnFunctionMenus == null ? undefined : node.data.onApplyDvtSubstraitColumnFunction,
-          onToggleDvtSubstraitColumnOutput: hasEditableProjection
-            ? node.data.onToggleDvtSubstraitColumnOutput
-            : undefined,
+          onToggleCanvasColumnOutput:
+            hasEditableProjection || canAuthorDbtModelColumns
+              ? node.data.onToggleCanvasColumnOutput
+              : undefined,
           onReorderDvtSubstraitColumnOutput: hasEditableProjection
             ? node.data.onReorderDvtSubstraitColumnOutput
             : undefined,
@@ -350,7 +362,8 @@ export function useCanvasControllerReadModel({
             presentsColumnLineage && canonicalNode != null
               ? canonicalNode.role === 'transform' &&
                 !canAuthorColumnMappings &&
-                !hasReadOnlyColumnLineage
+                !hasReadOnlyColumnLineage &&
+                !canAuthorDbtModelColumns
                 ? []
                 : resolveCanvasColumnPortDirections(canonicalNode.role)
               : [],
@@ -378,7 +391,7 @@ export function useCanvasControllerReadModel({
       graphHandlers.handleColumnPortActivate,
       graphHandlers.handleApplyDvtSubstraitColumnFunction,
       graphHandlers.handleReorderDvtSubstraitColumnOutput,
-      graphHandlers.handleToggleDvtSubstraitColumnOutput,
+      graphHandlers.handleToggleCanvasColumnOutput,
       graphHandlers.resolveCanvasAlgebraicCompositionOperations,
       graphHandlers.handleComposeCanvasNodes,
       onToggleExecutionSelection,
@@ -394,6 +407,8 @@ export function useCanvasControllerReadModel({
       uiScope.selectedNodeIds,
       readOnlyColumnLineageNodeIds,
       presentsColumnLineage,
+      visibleScope.canonicalEdges,
+      visibleScope.canonicalNodes,
     ]
   );
 

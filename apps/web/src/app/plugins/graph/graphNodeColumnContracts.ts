@@ -87,8 +87,8 @@ export function resolveGraphNodeColumnInteractionProps(args: {
           }) => void)
         : undefined,
     onColumnOutputToggle:
-      args.nodeRole === 'transform' && typeof data.onToggleDvtSubstraitColumnOutput === 'function'
-        ? (data.onToggleDvtSubstraitColumnOutput as (
+      args.nodeRole === 'transform' && typeof data.onToggleCanvasColumnOutput === 'function'
+        ? (data.onToggleCanvasColumnOutput as (
             identity: GraphNodeColumnOutputToggleIdentity
           ) => void)
         : undefined,

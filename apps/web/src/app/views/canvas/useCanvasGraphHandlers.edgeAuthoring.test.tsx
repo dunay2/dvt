@@ -843,7 +843,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
 
     setDraftSession.mockClear();
     act(() => {
-      harness.latest()?.handleToggleDvtSubstraitColumnOutput({
+      harness.latest()?.handleToggleCanvasColumnOutput({
         nodeId: transform.id,
         columnId: 'output:customer',
         columnType: 'text',
