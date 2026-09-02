@@ -7,6 +7,7 @@ import { useApplicationLanguageStore } from '../../stores/applicationLanguageSto
 import type { GraphNodeColumnSectionProps } from './graphNodeColumnContracts';
 import { resolveGraphNodeCardCopy } from './graphNodeCardCopyTokens';
 import { GraphNodeColumnRow } from './GraphNodeColumnRow';
+import { GraphNodeCalculatedColumnForm } from './GraphNodeCalculatedColumnForm';
 import { graphNodeColumnClasses } from './graphVisualTokens';
 import { useGraphNodeColumnReorder } from './useGraphNodeColumnReorder';
 
@@ -19,6 +20,7 @@ export function GraphNodeColumnSection({
   activeColumnHandleId,
   onColumnPortActivate,
   onColumnFunctionApply,
+  onCalculatedColumnAdd,
   onColumnOutputToggle,
   onColumnReorder,
   onDisclosureChange,
@@ -122,6 +124,13 @@ export function GraphNodeColumnSection({
               />
             ))}
           </div>
+          {nodeId != null && onCalculatedColumnAdd != null && columns.length > 0 ? (
+            <GraphNodeCalculatedColumnForm
+              nodeId={nodeId}
+              columns={columnReorder.orderedColumns}
+              onSubmit={onCalculatedColumnAdd}
+            />
+          ) : null}
           {remainingColumnCount > 0 ? (
             <button
               type="button"

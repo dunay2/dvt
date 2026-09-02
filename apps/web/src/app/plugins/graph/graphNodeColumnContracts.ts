@@ -52,6 +52,22 @@ export type GraphNodeColumnFunctionApplyIdentity = Readonly<{
   alias: string;
   sourceColumnId?: string;
 }>;
+export type GraphNodeCalculatedColumnIdentity =
+  | Readonly<{ nodeId: string; kind: 'string-literal'; alias: string; value: string }>
+  | Readonly<{ nodeId: string; kind: 'timestamp-literal'; alias: string; value: string }>
+  | Readonly<{
+      nodeId: string;
+      kind: 'scalar-function';
+      alias: string;
+      inputFieldId: string;
+      capabilityId: string;
+    }>
+  | Readonly<{
+      nodeId: string;
+      kind: 'row-number';
+      alias: string;
+      orderFieldId: string;
+    }>;
 
 export type GraphNodeColumnSectionProps = Readonly<{
   columns: readonly GraphNodeColumn[];
@@ -60,6 +76,7 @@ export type GraphNodeColumnSectionProps = Readonly<{
   activeColumnHandleId?: string | null;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
   onColumnFunctionApply?: (identity: GraphNodeColumnFunctionApplyIdentity) => void;
+  onCalculatedColumnAdd?: (identity: GraphNodeCalculatedColumnIdentity) => void;
   onColumnOutputToggle?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
   onColumnReorder?: (identity: GraphNodeColumnReorderIdentity) => void;
   onDisclosureChange?: (expanded: boolean) => void;
@@ -88,6 +105,12 @@ export function resolveGraphNodeColumnInteractionProps(args: {
       args.nodeRole === 'transform' && typeof data.onApplyCanvasColumnFunction === 'function'
         ? (data.onApplyCanvasColumnFunction as (
             identity: GraphNodeColumnFunctionApplyIdentity
+          ) => void)
+        : undefined,
+    onCalculatedColumnAdd:
+      typeof data.onAddCanvasCalculatedColumn === 'function'
+        ? (data.onAddCanvasCalculatedColumn as (
+            identity: GraphNodeCalculatedColumnIdentity
           ) => void)
         : undefined,
     onColumnOutputToggle:

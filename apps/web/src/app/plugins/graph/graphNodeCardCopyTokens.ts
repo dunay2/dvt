@@ -52,6 +52,18 @@ type GraphNodeCardCopy = Readonly<{
   columnFunctionAliasSubmitLabel: string;
   columnFunctionAliasCancelLabel: string;
   columnFunctionAliasConflictLabel: string;
+  addCalculatedColumnLabel: string;
+  calculatedColumnKindLabel: string;
+  calculatedColumnAliasLabel: string;
+  calculatedColumnValueLabel: string;
+  calculatedColumnInputLabel: string;
+  calculatedColumnFunctionLabel: string;
+  calculatedColumnOrderLabel: string;
+  calculatedColumnSubmitLabel: string;
+  calculatedColumnCancelLabel: string;
+  calculatedColumnKindLabels: Readonly<
+    Record<'string-literal' | 'timestamp-literal' | 'scalar-function' | 'row-number', string>
+  >;
   sourceIdentityAriaLabelTemplate: string;
   sourceIdentityDatabaseLabel: string;
   sourceIdentityConnectionLabel: string;
@@ -130,6 +142,21 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   columnFunctionAliasSubmitLabel: 'Create output',
   columnFunctionAliasCancelLabel: 'Cancel',
   columnFunctionAliasConflictLabel: 'Another column already uses this output name.',
+  addCalculatedColumnLabel: 'Add calculated column',
+  calculatedColumnKindLabel: 'Value source',
+  calculatedColumnAliasLabel: 'Output name',
+  calculatedColumnValueLabel: 'Value',
+  calculatedColumnInputLabel: 'Input column',
+  calculatedColumnFunctionLabel: 'Function',
+  calculatedColumnOrderLabel: 'Order by',
+  calculatedColumnSubmitLabel: 'Create column',
+  calculatedColumnCancelLabel: 'Cancel',
+  calculatedColumnKindLabels: {
+    'string-literal': 'Text value',
+    'timestamp-literal': 'Timestamp with timezone',
+    'scalar-function': 'Column function',
+    'row-number': 'Ordered row number',
+  },
   sourceIdentityAriaLabelTemplate: 'View source identity for {table}',
   sourceIdentityDatabaseLabel: 'Database',
   sourceIdentityConnectionLabel: 'Connection',
@@ -208,6 +235,21 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   columnFunctionAliasSubmitLabel: 'Crear salida',
   columnFunctionAliasCancelLabel: 'Cancelar',
   columnFunctionAliasConflictLabel: 'Otra columna ya utiliza este nombre de salida.',
+  addCalculatedColumnLabel: 'Añadir columna calculada',
+  calculatedColumnKindLabel: 'Origen del valor',
+  calculatedColumnAliasLabel: 'Nombre de salida',
+  calculatedColumnValueLabel: 'Valor',
+  calculatedColumnInputLabel: 'Columna de entrada',
+  calculatedColumnFunctionLabel: 'Función',
+  calculatedColumnOrderLabel: 'Ordenar por',
+  calculatedColumnSubmitLabel: 'Crear columna',
+  calculatedColumnCancelLabel: 'Cancelar',
+  calculatedColumnKindLabels: {
+    'string-literal': 'Valor de texto',
+    'timestamp-literal': 'Timestamp con zona',
+    'scalar-function': 'Función de columna',
+    'row-number': 'Número de fila ordenado',
+  },
   sourceIdentityAriaLabelTemplate: 'Ver identidad de origen de {table}',
   sourceIdentityDatabaseLabel: 'Base de datos',
   sourceIdentityConnectionLabel: 'Conexión',

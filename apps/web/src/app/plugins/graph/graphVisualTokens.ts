@@ -171,6 +171,18 @@ export const graphNodeColumnClasses = {
     'nodrag nopan mt-2 w-full cursor-pointer rounded border border-slate-700 bg-slate-900 px-2 py-1.5 text-left text-xs font-medium text-blue-200 transition hover:border-blue-400/60 hover:bg-slate-800 hover:text-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400',
   automap:
     'nodrag nopan mt-2 w-full cursor-pointer rounded border border-purple-500/50 bg-purple-500/10 px-2 py-1.5 text-left text-xs font-semibold text-purple-100 transition hover:border-purple-400 hover:bg-purple-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400',
+  addGap: 'group/add nodrag nopan relative flex h-7 items-center justify-center',
+  addTrigger:
+    'flex size-5 translate-y-0.5 cursor-pointer items-center justify-center rounded-full border border-blue-400/70 bg-slate-950 text-blue-200 opacity-0 shadow transition-[opacity,transform,background-color] hover:scale-110 hover:bg-blue-500/20 group-hover/add:opacity-100 focus:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300',
+  addIcon: 'size-3',
+  addForm: 'nodrag nopan w-72 border-slate-700 bg-slate-950 p-3 text-slate-100',
+  addFormFields: 'space-y-3',
+  addLabel: 'grid gap-1 text-xs font-medium text-slate-300',
+  addControl:
+    'h-8 w-full rounded border border-slate-700 bg-slate-900 px-2 text-xs text-slate-100 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400',
+  addActions: 'flex justify-end gap-2 pt-1',
+  addCancel: 'rounded px-2 py-1 text-xs text-slate-300 hover:bg-slate-800 hover:text-white',
+  addSubmit: 'rounded bg-blue-600 px-2 py-1 text-xs font-semibold text-white hover:bg-blue-500',
 } as const;
 
 export const graphNodeHealthBorderClasses = {
