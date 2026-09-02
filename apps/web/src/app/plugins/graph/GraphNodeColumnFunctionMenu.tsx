@@ -1,6 +1,7 @@
 /** Owned concern: expose admitted column functions through pointer and keyboard menus. */
-import type { ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 
+import { usePointerGraceDismiss } from '../../components/transientSurface/usePointerGraceDismiss';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -23,6 +24,7 @@ import type { GraphNodeColumnCopy } from './GraphNodeColumnPiece';
 import { graphNodeColumnClasses } from './graphVisualTokens';
 
 type FunctionMenu = NonNullable<GraphNodeColumn['functionMenu']>;
+type PointerMenuSession = Readonly<{ key: number; open: boolean }>;
 
 export function GraphNodeColumnFunctionMenu(props: {
   menu: FunctionMenu;
@@ -34,34 +36,44 @@ export function GraphNodeColumnFunctionMenu(props: {
   tooltip: ReactElement;
 }): ReactElement {
   const categoryLabel = props.copy.columnFunctionCategoryLabels[props.menu.category];
+  const [pointerSession, setPointerSession] = useState<PointerMenuSession>({ key: 0, open: false });
+  const pointerGraceProps = usePointerGraceDismiss({
+    enabled: pointerSession.open,
+    onDismiss: () => setPointerSession((session) => ({ key: session.key + 1, open: false })),
+  });
 
   return (
     <Tooltip>
-      <ContextMenu>
+      <ContextMenu
+        key={pointerSession.key}
+        onOpenChange={(open) => setPointerSession((session) => ({ ...session, open }))}
+      >
         <ContextMenuTrigger asChild>
           <TooltipTrigger asChild>{props.piece}</TooltipTrigger>
         </ContextMenuTrigger>
-        <ContextMenuContent data-slot="graph-node-column-function-menu">
-          <ContextMenuLabel>{categoryLabel}</ContextMenuLabel>
-          <ContextMenuGroup>
-            {props.menu.items.length === 0 ? (
-              <ContextMenuItem disabled>
-                {props.copy.noCompatibleColumnFunctionsLabel}
-              </ContextMenuItem>
-            ) : (
-              props.menu.items.map((item) => (
-                <ContextMenuItem
-                  key={item.capabilityId}
-                  data-slot="graph-node-column-function"
-                  data-capability-id={item.capabilityId}
-                  onSelect={() => props.onApply(item.capabilityId)}
-                >
-                  {item.name.toUpperCase()}
+        {pointerSession.open ? (
+          <ContextMenuContent data-slot="graph-node-column-function-menu" {...pointerGraceProps}>
+            <ContextMenuLabel>{categoryLabel}</ContextMenuLabel>
+            <ContextMenuGroup>
+              {props.menu.items.length === 0 ? (
+                <ContextMenuItem disabled>
+                  {props.copy.noCompatibleColumnFunctionsLabel}
                 </ContextMenuItem>
-              ))
-            )}
-          </ContextMenuGroup>
-        </ContextMenuContent>
+              ) : (
+                props.menu.items.map((item) => (
+                  <ContextMenuItem
+                    key={item.capabilityId}
+                    data-slot="graph-node-column-function"
+                    data-capability-id={item.capabilityId}
+                    onSelect={() => props.onApply(item.capabilityId)}
+                  >
+                    {item.name.toUpperCase()}
+                  </ContextMenuItem>
+                ))
+              )}
+            </ContextMenuGroup>
+          </ContextMenuContent>
+        ) : null}
       </ContextMenu>
       <DropdownMenu open={props.keyboardOpen} onOpenChange={props.onKeyboardOpenChange}>
         <DropdownMenuTrigger asChild>

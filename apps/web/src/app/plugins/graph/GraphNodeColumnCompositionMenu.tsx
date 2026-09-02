@@ -1,6 +1,7 @@
 /** Owned concern: choose an admitted function after a centre field drop. */
 import type { ReactElement } from 'react';
 
+import { usePointerGraceDismiss } from '../../components/transientSurface/usePointerGraceDismiss';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +22,10 @@ export function GraphNodeColumnCompositionMenu(props: {
   onApply: (capabilityId: string) => void;
 }): ReactElement {
   const menu = props.sourceColumn.functionMenu;
+  const pointerGraceProps = usePointerGraceDismiss({
+    enabled: true,
+    onDismiss: () => props.onOpenChange(false),
+  });
 
   return (
     <DropdownMenu open onOpenChange={props.onOpenChange}>
@@ -36,6 +41,7 @@ export function GraphNodeColumnCompositionMenu(props: {
         data-slot="graph-node-column-composition-menu"
         side="right"
         align="center"
+        {...pointerGraceProps}
       >
         <DropdownMenuLabel>
           {props.sourceColumn.name} → {props.targetColumn.name}

@@ -1,6 +1,7 @@
 /** Owned concern: render the Canvas contextual surfaces without owning interaction decisions. */
 import type { ReactElement, RefObject } from 'react';
 
+import { usePointerGraceDismiss } from '../../components/transientSurface/usePointerGraceDismiss';
 import {
   Dialog,
   DialogContent,
@@ -71,6 +72,10 @@ export function CanvasContextMenuView({
   const localizedModel = model == null ? null : localizeCanvasContextMenuModel(model, copy);
   const commandSurfaceOpen =
     localizedModel != null && localizedModel.surface !== 'add-node-catalog';
+  const pointerGraceProps = usePointerGraceDismiss({
+    enabled: commandSurfaceOpen && !keyboardMenuOpen,
+    onDismiss: onClose,
+  });
   const commandSections = commandSurfaceOpen
     ? buildCanvasContextMenuSections(localizedModel, copy)
     : [];
@@ -129,6 +134,7 @@ export function CanvasContextMenuView({
             aria-label={ariaLabel ?? copy.canvasContextMenuLabel}
             className="w-72 max-w-[calc(100vw-1.5rem)]"
             onCloseAutoFocus={(event) => event.preventDefault()}
+            {...pointerGraceProps}
           >
             {commandMenuContents}
           </ContextMenuContent>
