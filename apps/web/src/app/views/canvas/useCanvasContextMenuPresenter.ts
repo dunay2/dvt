@@ -211,6 +211,7 @@ export function useCanvasContextMenuPresenter({
               target: {
                 kind: 'edge',
                 edgeId: edge.id,
+                removable: edge.type !== 'columnLineage' || edge.data?.removable === true,
                 screenPosition: { x: event.clientX, y: event.clientY },
               },
               canMutateGraph: canEditEdges,
