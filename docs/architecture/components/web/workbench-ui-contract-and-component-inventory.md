@@ -309,7 +309,6 @@ Main screen composition:
 | Route center  | `CanvasViewport`                                 | primary graph interaction surface                            |
 | Route right   | `CanvasInspectorPanel`                           | optional, selection-driven, restorable                       |
 | Route modal   | `PlanPreviewModal`                               | explicit plan review before run                              |
-| Route modal   | `ConfirmEdgeModal`                               | explicit graph mutation confirmation                         |
 | Route modal   | `SourceImportWizard`                             | source import flow                                           |
 | Shell bottom  | `BottomOperationalDrawer`                        | execution and supporting context, not main navigation        |
 
@@ -338,7 +337,6 @@ Main screen composition:
 | `CanvasViewport`       | React Flow graph surface                        | Current                                        |
 | `CanvasInspectorPanel` | Selection detail                                | Current through `InspectorPanel`               |
 | `PlanPreviewModal`     | Plan review before run                          | Current                                        |
-| `ConfirmEdgeModal`     | Graph mutation confirmation                     | Current                                        |
 | `SourceImportWizard`   | Import source flow and immediate canvas handoff | Current                                        |
 | `CanvasLoadingState`   | Graph-specific loading treatment                | Current                                        |
 | `CanvasEmptyState`     | Empty graph treatment                           | Current                                        |

@@ -70,7 +70,6 @@ Current composition:
 - `CanvasViewport` in the center
 - optional `InspectorPanel` on the right
 - `PlanPreviewModal`
-- `ConfirmEdgeModal`
 - `SourceImportWizard`
 
 Current user jobs:

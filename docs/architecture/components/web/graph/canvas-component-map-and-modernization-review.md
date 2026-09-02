@@ -137,7 +137,6 @@ flowchart TB
   Controller --> Publisher["usePublishedRouteBootstrap"]
   ModalBuilder --> ModalHost
   ModalHost --> PlanModal["PlanPreviewModal"]
-  ModalHost --> EdgeModal["ConfirmEdgeModal"]
 
   DraftSession --> Baseline["canvasDraftSessionBaseline"]
   DraftSession --> Machine["canvasDraftSessionMachine"]

@@ -99,7 +99,6 @@ flowchart LR
   ShellBuilder --> Shell["CanvasShell"]
   ModalBuilder --> ModalHost["CanvasModalHost"]
   ModalHost --> PlanModal["PlanPreviewModal"]
-  ModalHost --> EdgeModal["ConfirmEdgeModal"]
 ```
 
 ## Transitions
