@@ -257,6 +257,9 @@ function projectCanvasNodePresentationTruthInternal(
   };
 
   if (substraitRejected) {
+    if (!invalidCanonicalSubstraitDocument) {
+      return baseTruth;
+    }
     return {
       ...baseTruth,
       columns: {
