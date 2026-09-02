@@ -24,6 +24,7 @@ Evidence documents that justify or validate relevant changes.
 - [AR-D4 zero-downtime schema rollback evidence](ed-20260513-ar-d4-zero-downtime-schema-rollback.md)
 - [Canonical Plan Admission Findings](ED-20260731-plan-admission-findings.md)
 - [Canvas calculated-column Substrait authoring evidence](ED-20260902-canvas-calculated-column-authoring.md)
+- [Canvas edge execution gate evidence](ED-20260902-canvas-edge-execution-gate.md)
 - [Canvas happy-path draggable proof after create/save](ed-20260503-canvas-happy-path-draggable-proof.md)
 - [Canvas Multi-Worksheet Draft Contract](ed-20260527-canvas-multi-worksheet-draft.md)
 - [Canvas Workflow E2E Usability Restoration](ed-20260601-canvas-workflow-e2e-usability.md)
