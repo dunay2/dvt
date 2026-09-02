@@ -876,7 +876,7 @@ describe('Canvas column lineage projection', () => {
     }
   });
 
-  it('derives read-only identity lineage for a generated DBT model from its selected origin', () => {
+  it('derives editable identity lineage for a generated DBT model from its selected origin', () => {
     const source = {
       ...buildNode('warehouse-source', 'dvt:source', 'input', [
         { name: 'event_id', type: 'text' },
@@ -931,14 +931,14 @@ describe('Canvas column lineage projection', () => {
           data: expect.objectContaining({
             sourceColumnName: 'event_id',
             targetColumnName: 'event_id',
-            removable: false,
+            removable: true,
           }),
         }),
         expect.objectContaining({
           data: expect.objectContaining({
             sourceColumnName: 'event_type',
             targetColumnName: 'event_type',
-            removable: false,
+            removable: true,
           }),
         }),
       ])
