@@ -1,5 +1,64 @@
 # Changelog
 
+## 0.8.0 (2026-09-02)
+
+## What's Changed
+* docs(architecture): Adopt Substrait semantic reference and capability dictionary by @dunay2 in https://github.com/dunay2/dvt/pull/2644
+* feat(vtx2): Pin Substrait profile and stable authoring sidecar by @dunay2 in https://github.com/dunay2/dvt/pull/2646
+* fix(vtx1): Accept visual timestamptz casts by @dunay2 in https://github.com/dunay2/dvt/pull/2647
+* feat(sub1): Add Substrait semantic capability catalog by @dunay2 in https://github.com/dunay2/dvt/pull/2649
+* feat(web): Author one typed Substrait recipe from the DVT card by @dunay2 in https://github.com/dunay2/dvt/pull/2658
+* fix(ci): Emit required CodeQL check for docs-only PRs by @dunay2 in https://github.com/dunay2/dvt/pull/2688
+* docs(architecture): Reconcile current architecture with source and VTX2 pilot by @dunay2 in https://github.com/dunay2/dvt/pull/2687
+* docs(architecture): Integrate source-first architecture problem register by @dunay2 in https://github.com/dunay2/dvt/pull/2692
+* docs(planner): Add source-first architecture study and PLN1 delivery plan by @dunay2 in https://github.com/dunay2/dvt/pull/2694
+* feat(web): Project typed Substrait pilot to PostgreSQL by @dunay2 in https://github.com/dunay2/dvt/pull/2659
+* docs(traceability): Reconcile source-first governance and remove obsolete R6 pack by @dunay2 in https://github.com/dunay2/dvt/pull/2693
+* docs(adr): Record ADR-0065 archive compression proposal by @dunay2 in https://github.com/dunay2/dvt/pull/2479
+* test(web): Prove dbt test Workbench reload roundtrip by @dunay2 in https://github.com/dunay2/dvt/pull/2733
+* test(api): Centralize architecture intent and trim redundant negative proof by @dunay2 in https://github.com/dunay2/dvt/pull/2734
+* fix(planner): Restore Planning DB operational integrity by @dunay2 in https://github.com/dunay2/dvt/pull/2750
+* fix(docs): Decouple Git inventory refresh from Planning DB imports by @dunay2 in https://github.com/dunay2/dvt/pull/2751
+* fix(ci): Build worker runtime dependencies before dev stack by @dunay2 in https://github.com/dunay2/dvt/pull/2747
+* feat(web): Derive Preview SQL from Substrait recipe by @dunay2 in https://github.com/dunay2/dvt/pull/2709
+* feat(web): Compose first typed Substrait inner join card by @dunay2 in https://github.com/dunay2/dvt/pull/2686
+* feat(web): Add Substrait INNER JOIN field selection by @dunay2 in https://github.com/dunay2/dvt/pull/2752
+* feat(web): Add Substrait grouping and row count by @dunay2 in https://github.com/dunay2/dvt/pull/2753
+* feat(web): Add Substrait row-number window by @dunay2 in https://github.com/dunay2/dvt/pull/2754
+* feat(web): Add Substrait union-all composition by @dunay2 in https://github.com/dunay2/dvt/pull/2755
+* feat(web): Compose Substrait grouping and window by @dunay2 in https://github.com/dunay2/dvt/pull/2756
+* feat(web): Edit Substrait union fields by @dunay2 in https://github.com/dunay2/dvt/pull/2757
+* feat(web): Group and rank Substrait unions by @dunay2 in https://github.com/dunay2/dvt/pull/2758
+* feat(web): Group and rank Substrait joins by @dunay2 in https://github.com/dunay2/dvt/pull/2760
+* fix(web): Preserve connected Transform field provenance by @dunay2 in https://github.com/dunay2/dvt/pull/2774
+* feat(web): Append sources to Substrait joins by @dunay2 in https://github.com/dunay2/dvt/pull/2775
+* feat(web): Project N-input Preview SQL by @dunay2 in https://github.com/dunay2/dvt/pull/2776
+* feat(web): Trace N-input Substrait join lineage by @dunay2 in https://github.com/dunay2/dvt/pull/2777
+* feat(web): Compose N-input Substrait field operations by @dunay2 in https://github.com/dunay2/dvt/pull/2778
+* fix(web): Project semantic node health borders by @dunay2 in https://github.com/dunay2/dvt/pull/2779
+* feat(web): Show native Transform truth from canonical Substrait by @dunay2 in https://github.com/dunay2/dvt/pull/2782
+* fix(web): Restore Transform semantic inspection and compact cards by @dunay2 in https://github.com/dunay2/dvt/pull/2785
+* perf(ci): Speed up staged ESLint without weakening validation by @dunay2 in https://github.com/dunay2/dvt/pull/2787
+* fix(web): Remove redundant Model labels from model cards by @dunay2 in https://github.com/dunay2/dvt/pull/2790
+* fix(web): Converge DBT model card and inspector behavior by @dunay2 in https://github.com/dunay2/dvt/pull/2795
+* fix(web): Keep inspector column metadata visible by @dunay2 in https://github.com/dunay2/dvt/pull/2797
+* feat(web): Collapse column metadata into disclosure rows by @dunay2 in https://github.com/dunay2/dvt/pull/2799
+* feat(web): Present Transform columns as stackable output pieces by @dunay2 in https://github.com/dunay2/dvt/pull/2801
+* feat(web): Offer compatible functions from Transform columns by @dunay2 in https://github.com/dunay2/dvt/pull/2802
+* feat(web): Add canonical Canvas field and algebraic composition by @dunay2 in https://github.com/dunay2/dvt/pull/2805
+* fix(web): Keep inactive Transform columns spatially stable by @dunay2 in https://github.com/dunay2/dvt/pull/2806
+* fix(web): Address Transform output stability review by @dunay2 in https://github.com/dunay2/dvt/pull/2807
+* fix(docs): Include new Git documents without DB import by @dunay2 in https://github.com/dunay2/dvt/pull/2809
+* fix(planner): Remove ignored environment input by @dunay2 in https://github.com/dunay2/dvt/pull/2696
+* chore(ci): Bump the codeql group across 1 directory with 2 updates by @dependabot[bot] in https://github.com/dunay2/dvt/pull/2627
+* test(ci): Validate action pins without version literals by @dunay2 in https://github.com/dunay2/dvt/pull/2816
+* test(web): Align Transform architecture invariants by @dunay2 in https://github.com/dunay2/dvt/pull/2817
+* test(web): Wait for project explorer focus restoration by @dunay2 in https://github.com/dunay2/dvt/pull/2818
+* chore(deps): Bump the temporal group across 1 directory with 5 updates by @dependabot[bot] in https://github.com/dunay2/dvt/pull/2629
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.7.1...v0.8.0
+
 ## 0.7.1 (2026-08-22)
 
 ## What's Changed
