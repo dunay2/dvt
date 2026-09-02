@@ -29,7 +29,9 @@ function isSourceColumn(value: unknown): value is SourceColumnDeclaration {
   );
 }
 
-export function isReorderableCanvasSource(node: CanonicalNode | undefined): boolean {
+export function isReorderableCanvasSource(
+  node: CanonicalNode | undefined
+): node is CanonicalNode & { kind: 'dvt:source'; role: 'input' } {
   return node?.kind === 'dvt:source' && node.role === 'input';
 }
 
