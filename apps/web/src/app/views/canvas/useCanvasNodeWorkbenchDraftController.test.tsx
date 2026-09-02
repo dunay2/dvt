@@ -133,6 +133,18 @@ describe('useCanvasNodeWorkbenchDraftController', () => {
     expect(harness.getController().draft.tags).toEqual(['mart', 'daily']);
   });
 
+  it('caps each edited business tag without preventing additional tags', async () => {
+    await harness.renderNode(MODEL_NODE);
+    const oversizedTag = 'a'.repeat(40);
+
+    await act(async () => {
+      harness.getController().onTagsTextChange(`${oversizedTag}, daily`);
+    });
+
+    expect(harness.getController().tagsText).toBe(`${'a'.repeat(32)}, daily`);
+    expect(harness.getController().draft.tags).toEqual(['a'.repeat(32), 'daily']);
+  });
+
   it('keeps semantic authoring tags outside the business-tag editor and preserves them', async () => {
     await harness.renderNode({
       ...DVT_TRANSFORM_NODE,
