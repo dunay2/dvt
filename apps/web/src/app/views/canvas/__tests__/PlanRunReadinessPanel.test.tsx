@@ -5,8 +5,8 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { PlanRunReadinessPanel } from './PlanRunReadinessPanel';
-import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
+import { PlanRunReadinessPanel } from '../PlanRunReadinessPanel';
+import type { PlanRunReadinessReadModel } from '../canvasPlanReadiness';
 
 function buildReadiness(overrides?: Partial<PlanRunReadinessReadModel>): PlanRunReadinessReadModel {
   return {

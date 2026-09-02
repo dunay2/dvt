@@ -2,8 +2,8 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { describe, expect, it, vi } from 'vitest';
 
-import { deriveCanvasDraftAccessPosture } from './canvasDraftAccessPostureModel';
-import { CanvasRecoveryBanner } from './CanvasRecoveryBanner';
+import { deriveCanvasDraftAccessPosture } from '../canvasDraftAccessPostureModel';
+import { CanvasRecoveryBanner } from '../CanvasRecoveryBanner';
 
 describe('CanvasRecoveryBanner', () => {
   it('renders the resolved session recovery action without hard-coding reload copy', () => {

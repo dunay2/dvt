@@ -5,8 +5,8 @@ import React, { act, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
-import { CanvasProjectExplorerDialog } from './CanvasProjectExplorerDialog';
+import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
+import { CanvasProjectExplorerDialog } from '../CanvasProjectExplorerDialog';
 
 describe('CanvasProjectExplorerDialog', () => {
   let container: HTMLDivElement;

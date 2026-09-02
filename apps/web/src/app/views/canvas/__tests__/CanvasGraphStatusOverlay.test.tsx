@@ -5,8 +5,8 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { CanvasGraphStatusOverlay } from './CanvasGraphStatusOverlay';
-import { canvasViewCopy } from './copy';
+import { CanvasGraphStatusOverlay } from '../CanvasGraphStatusOverlay';
+import { canvasViewCopy } from '../copy';
 
 const ACTIVE_CANVAS = {
   id: 'sales-canvas',

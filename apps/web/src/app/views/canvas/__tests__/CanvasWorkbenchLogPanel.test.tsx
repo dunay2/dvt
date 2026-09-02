@@ -3,7 +3,7 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { describe, expect, it } from 'vitest';
 
-import { CanvasWorkbenchLogPanel } from './CanvasWorkbenchLogPanel';
+import { CanvasWorkbenchLogPanel } from '../CanvasWorkbenchLogPanel';
 
 describe('CanvasWorkbenchLogPanel', () => {
   it('renders dense operational log rows without creating controls for empty history', () => {
