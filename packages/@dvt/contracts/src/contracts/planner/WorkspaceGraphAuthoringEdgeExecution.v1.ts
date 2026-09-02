@@ -5,6 +5,7 @@
  * Only the exceptional closed state is persisted; unknown values fail closed.
  *
  * @baseline ADR-0035: Planner Public Contract Evolution Protocol
+ * @decision Persist only the exceptional closed gate and derive effective execution from structural permission plus shared policy.
  * @version 1.0.0
  */
 import type { WorkspaceGraphAuthoringEdge } from './WorkspaceGraphAuthoringDraft.v1.js';
