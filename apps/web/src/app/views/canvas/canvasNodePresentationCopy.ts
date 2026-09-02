@@ -98,8 +98,6 @@ const NODE_PROPERTY_PRESENTATION_COPY = {
       source: 'Origen',
       path: 'Ruta',
       owner: 'Responsable',
-      rows: 'Filas',
-      size: 'Tamaño',
       duration: 'Duración',
       cost: 'Coste',
       destination: 'Destino',

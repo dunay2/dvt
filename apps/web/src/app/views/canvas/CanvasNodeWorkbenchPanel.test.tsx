@@ -619,8 +619,6 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(readonlyLabels).not.toContain('Source');
     expect(generalSection?.textContent).not.toContain('Node ID');
     expect(generalSection?.textContent).not.toContain('Plugin');
-    expect(generalSection?.textContent).toContain('Rows');
-
     renderPanel(root, 'summary');
     const summarySection = container.querySelector(
       '[data-slot="canvas-node-workbench-summary-section"]'
