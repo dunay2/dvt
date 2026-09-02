@@ -84,4 +84,52 @@ describe('CanvasDependencyEdge', () => {
     });
     expect(mockedEdge.props.markerEnd).toBeUndefined();
   });
+
+  it('makes a left-click selection visible on the dependency path', () => {
+    act(() => {
+      root.render(
+        <svg>
+          <g>
+            <CanvasDependencyEdge
+              id="dependency-1"
+              source="source"
+              target="transform"
+              sourceX={0}
+              sourceY={40}
+              targetX={100}
+              targetY={40}
+              sourcePosition={Position.Right}
+              targetPosition={Position.Left}
+              selected={false}
+            />
+          </g>
+        </svg>
+      );
+    });
+    const idleStyle = mockedEdge.props.style as React.CSSProperties;
+
+    act(() => {
+      root.render(
+        <svg>
+          <g>
+            <CanvasDependencyEdge
+              id="dependency-1"
+              source="source"
+              target="transform"
+              sourceX={0}
+              sourceY={40}
+              targetX={100}
+              targetY={40}
+              sourcePosition={Position.Right}
+              targetPosition={Position.Left}
+              selected
+            />
+          </g>
+        </svg>
+      );
+    });
+    const selectedStyle = mockedEdge.props.style as React.CSSProperties;
+
+    expect(selectedStyle.stroke).not.toBe(idleStyle.stroke);
+  });
 });

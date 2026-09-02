@@ -164,6 +164,16 @@ describe('CanvasViewport', () => {
     });
   });
 
+  it('allows the platform Delete key to remove the current editable selection', async () => {
+    await renderViewport({ canEditEdges: true });
+
+    expect(xyflowState.lastReactFlowProps).toMatchObject({
+      elementsSelectable: true,
+      edgesFocusable: true,
+      deleteKeyCode: ['Backspace', 'Delete'],
+    });
+  });
+
   it('preserves the governed Shift multi-selection gesture for canvas node selection', async () => {
     await renderViewport();
 

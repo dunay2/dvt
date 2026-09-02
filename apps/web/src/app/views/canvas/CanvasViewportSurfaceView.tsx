@@ -249,7 +249,7 @@ function CanvasViewportReactFlowSurface({
         elementsSelectable={canSelectNodes}
         selectNodesOnDrag
         multiSelectionKeyCode="Shift"
-        deleteKeyCode={canDeleteWithKeyboard ? undefined : null}
+        deleteKeyCode={canDeleteWithKeyboard ? ['Backspace', 'Delete'] : null}
         disableKeyboardA11y={!canSelectNodes}
         fitView={viewport == null}
         fitViewOptions={CANVAS_FIT_VIEW_OPTIONS}
