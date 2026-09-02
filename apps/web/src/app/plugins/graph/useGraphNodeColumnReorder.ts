@@ -117,3 +117,5 @@ export function useGraphNodeColumnReorder(args: {
     },
   };
 }
+
+export type GraphNodeColumnReorderController = ReturnType<typeof useGraphNodeColumnReorder>;
