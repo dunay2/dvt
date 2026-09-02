@@ -15,6 +15,7 @@ import {
 } from './canvasDvtSubstraitPilot';
 import {
   decodeDvtSubstraitProjectionDocument,
+  inspectDvtSubstraitProjectionDraft,
   resolveDvtSubstraitProjectionEntry,
 } from './canvasDvtSubstraitProjection';
 import { inspectDvtSubstraitPilotAggregationDraft } from './canvasDvtSubstraitAggregation';
@@ -101,6 +102,7 @@ function projectCanvasNodePresentationTruthInternal(
   let lineageRecipe: VisualTransformRecipeV1 | null = null;
   let substraitOutputs: readonly DvtSubstraitPresentedOutput[] | null = null;
   let substraitRejected = false;
+  let unresolvedMultiInputProjection = false;
   let canonicalSubstraitCode: Extract<CanvasNodeCodeTruth, { kind: 'canonical' }> | null = null;
   let invalidCanonicalSubstraitDocument = false;
   if (args.node.pluginId === 'dvt' && args.node.kind === 'dvt:transform') {
@@ -121,11 +123,12 @@ function projectCanvasNodePresentationTruthInternal(
           digest: authority.semanticDocument.semanticPlan.sha256,
         };
         try {
+          const projectionDraft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
           const projection = resolveDvtSubstraitProjectionEntry({
             targetNode: args.node,
             nodes: args.nodes,
             edges: args.edges,
-            draft: decodeDvtSubstraitProjectionDocument(authority.semanticDocument),
+            draft: projectionDraft,
           });
           if (projection != null) {
             substraitOutputs = projection.outputs.map((output) => ({
@@ -138,6 +141,17 @@ function projectCanvasNodePresentationTruthInternal(
               ...(output.description == null ? {} : { description: output.description }),
             }));
           } else {
+            const projectionInspection = inspectDvtSubstraitProjectionDraft(projectionDraft);
+            const incomingSourceIds = new Set(
+              args.edges
+                .filter((edge) => edge.targetId === args.node.id)
+                .map((edge) => edge.sourceId)
+            );
+            unresolvedMultiInputProjection =
+              projectionInspection.ok &&
+              projectionInspection.projection.targetNodeId === args.node.id &&
+              incomingSourceIds.size > 1 &&
+              incomingSourceIds.has(projectionInspection.projection.source.nodeId);
             const pilotInspection = inspectDvtSubstraitPilotDraft(
               decodeDvtSubstraitPilotDocument(authority.semanticDocument)
             );
@@ -257,7 +271,7 @@ function projectCanvasNodePresentationTruthInternal(
   };
 
   if (substraitRejected) {
-    if (!invalidCanonicalSubstraitDocument) {
+    if (unresolvedMultiInputProjection) {
       return baseTruth;
     }
     return {
