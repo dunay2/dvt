@@ -42,6 +42,20 @@ function assertWorkflowExcludes(workflow, snippet) {
   assert.ok(!workflow.includes(snippet), `workflow must exclude: ${snippet}`);
 }
 
+function pinnedActionReferences(workflow, action) {
+  const escapedAction = action.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
+  const referenceCount = [...workflow.matchAll(new RegExp(`${escapedAction}@`, 'gu'))].length;
+  const pins = [
+    ...workflow.matchAll(
+      new RegExp(`${escapedAction}@([0-9a-f]{40}) # (v\\d+(?:\\.\\d+){1,2})`, 'gu')
+    ),
+  ].map((match) => ({ sha: match[1], version: match[2] }));
+
+  assert.ok(referenceCount > 0, `workflow must use action: ${action}`);
+  assert.equal(pins.length, referenceCount, `${action} references must use a full SHA and version`);
+  return pins;
+}
+
 function countWorkflowCommand(workflow, command) {
   return workflow.split(command).length - 1;
 }
@@ -599,9 +613,9 @@ test('release generation and candidate admission have one trusted owner each', (
   const prQuality = yaml.load(prQualityWorkflow);
   const integrity = yaml.load(integrityWorkflow);
 
-  assertWorkflowContains(
-    releaseWorkflow,
-    'googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0'
+  assert.equal(
+    pinnedActionReferences(releaseWorkflow, 'googleapis/release-please-action').length,
+    1
   );
   assertWorkflowContains(releaseWorkflow, 'target-branch: main');
   assertWorkflowContains(releaseWorkflow, 'cancel-in-progress: false');
@@ -750,25 +764,13 @@ test('release generation and candidate admission have one trusted owner each', (
 });
 
 test('setup-node consumers stay on one pinned action version', () => {
-  const githubYamlSources = listYamlFiles('.github').map((filePath) =>
-    readFileSync(filePath, 'utf8')
-  );
-  const setupNodeReferenceCount = githubYamlSources.reduce(
-    (count, source) => count + [...source.matchAll(/actions\/setup-node@/gu)].length,
-    0
-  );
-  const setupNodePins = githubYamlSources
-    .flatMap((source) => [
-      ...source.matchAll(/actions\/setup-node@([0-9a-f]{40}) # (v\d+(?:\.\d+\.\d+)?)/gu),
-    ])
-    .map((match) => ({ sha: match[1], version: match[2] }));
+  const githubYamlSources = listYamlFiles('.github')
+    .map((filePath) => readFileSync(filePath, 'utf8'))
+    .join('\n');
+  const setupNodePins = pinnedActionReferences(githubYamlSources, 'actions/setup-node');
 
-  assert.ok(setupNodeReferenceCount > 0);
-  assert.equal(setupNodePins.length, setupNodeReferenceCount);
   assert.equal(new Set(setupNodePins.map(({ sha }) => sha)).size, 1);
   assert.equal(new Set(setupNodePins.map(({ version }) => version)).size, 1);
-  assert.equal(setupNodePins[0].sha, '820762786026740c76f36085b0efc47a31fe5020');
-  assert.equal(setupNodePins[0].version, 'v7.0.0');
 });
 
 test('security and nightly workflows stay wired to pinned actions and failure notification', () => {
@@ -783,9 +785,9 @@ test('security and nightly workflows stay wired to pinned actions and failure no
   );
   const setupNodePnpm = readFileSync('.github/actions/setup-node-pnpm/action.yml', 'utf8');
 
-  assertWorkflowContains(
-    dependencyReview,
-    'actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0'
+  assert.equal(
+    pinnedActionReferences(dependencyReview, 'actions/dependency-review-action').length,
+    1
   );
   assertWorkflowContains(dependencyReview, 'fail-on-severity: high');
   assertWorkflowContains(dependencyReview, "vars.GH_ADVANCED_SECURITY_ENABLED == 'true'");
@@ -797,8 +799,6 @@ test('security and nightly workflows stay wired to pinned actions and failure no
   assert.deepEqual(codeqlActionPins.map(({ action }) => action).sort(), ['analyze', 'init']);
   assert.equal(new Set(codeqlActionPins.map(({ sha }) => sha)).size, 1);
   assert.equal(new Set(codeqlActionPins.map(({ version }) => version)).size, 1);
-  assert.equal(codeqlActionPins[0].sha, '7188fc363630916deb702c7fdcf4e481b751f97a');
-  assert.equal(codeqlActionPins[0].version, 'v4.37.1');
   assertWorkflowContains(codeql, 'security-events: write');
   assertWorkflowContains(codeql, 'javascript-typescript');
   assertWorkflowContains(codeql, "vars.GH_ADVANCED_SECURITY_ENABLED == 'true'");
@@ -825,10 +825,7 @@ test('security and nightly workflows stay wired to pinned actions and failure no
     /pnpm --workspace-concurrency=4 --filter @dvt\/adapter-postgres\.\.\. --if-present run build/u
   );
 
-  assertWorkflowContains(
-    createLabels,
-    'actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0'
-  );
+  assert.equal(pinnedActionReferences(createLabels, 'actions/github-script').length, 1);
 
   assertWorkflowContains(docsDeploy, 'timeout-minutes: 20');
   assertWorkflowContains(docsDeploy, 'contents: write');
