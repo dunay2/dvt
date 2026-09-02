@@ -27,11 +27,20 @@ export function GraphNodeColumnSection({
 }: GraphNodeColumnSectionProps): ReactElement {
   const [columnsExpanded, setColumnsExpanded] = useState(false);
   const [showAllColumns, setShowAllColumns] = useState(false);
+  const [compositionRequest, setCompositionRequest] = useState<Readonly<{
+    sourceColumn: (typeof columns)[number];
+    targetColumn: (typeof columns)[number];
+  }> | null>(null);
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = resolveGraphNodeCardCopy(applicationLanguage);
   const columnListId = useId();
   const portDirectionKey = portDirections.join(':');
-  const columnReorder = useGraphNodeColumnReorder({ columns, nodeId, onColumnReorder });
+  const columnReorder = useGraphNodeColumnReorder({
+    columns,
+    nodeId,
+    onColumnReorder,
+    onColumnComposeRequest: onColumnFunctionApply == null ? undefined : setCompositionRequest,
+  });
   const visibleColumns = showAllColumns
     ? columnReorder.orderedColumns
     : columnReorder.orderedColumns.slice(0, MAX_PREVIEW_COLUMNS);
@@ -94,6 +103,14 @@ export function GraphNodeColumnSection({
                 activeColumnHandleId={activeColumnHandleId}
                 copy={copy}
                 reorder={columnReorder}
+                compositionRequest={
+                  compositionRequest != null &&
+                  (compositionRequest.targetColumn.id ?? compositionRequest.targetColumn.name) ===
+                    (column.id ?? column.name)
+                    ? compositionRequest
+                    : undefined
+                }
+                onCompositionDismiss={() => setCompositionRequest(null)}
                 onColumnPortActivate={onColumnPortActivate}
                 onColumnFunctionApply={onColumnFunctionApply}
                 onColumnOutputToggle={onColumnOutputToggle}

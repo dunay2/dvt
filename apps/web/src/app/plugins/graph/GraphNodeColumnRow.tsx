@@ -5,10 +5,12 @@ import { CanvasNodePortHandle } from '../../components/canvas/CanvasNodePortHand
 import { Tooltip, TooltipTrigger } from '../../components/ui/tooltip';
 import type {
   GraphNodeColumn,
+  GraphNodeColumnFunctionApplyIdentity,
   GraphNodeColumnOutputToggleIdentity,
   GraphNodeColumnPortDirection,
   GraphNodeColumnPortIdentity,
 } from './graphNodeColumnContracts';
+import { GraphNodeColumnCompositionMenu } from './GraphNodeColumnCompositionMenu';
 import { GraphNodeColumnFunctionMenu } from './GraphNodeColumnFunctionMenu';
 import {
   GraphNodeColumnPiece,
@@ -25,12 +27,13 @@ export function GraphNodeColumnRow(props: {
   activeColumnHandleId?: string | null;
   copy: GraphNodeColumnCopy;
   reorder: GraphNodeColumnReorderController;
+  compositionRequest?: Readonly<{
+    sourceColumn: GraphNodeColumn;
+    targetColumn: GraphNodeColumn;
+  }>;
+  onCompositionDismiss?: () => void;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
-  onColumnFunctionApply?: (identity: {
-    nodeId: string;
-    columnId: string;
-    capabilityId: string;
-  }) => void;
+  onColumnFunctionApply?: (identity: GraphNodeColumnFunctionApplyIdentity) => void;
   onColumnOutputToggle?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
 }): ReactElement {
   const [keyboardFunctionMenuOpen, setKeyboardFunctionMenuOpen] = useState(false);
@@ -114,6 +117,27 @@ export function GraphNodeColumnRow(props: {
         />
       ) : null}
       {content}
+      {nodeId != null && props.compositionRequest != null && props.onColumnFunctionApply != null ? (
+        <GraphNodeColumnCompositionMenu
+          sourceColumn={props.compositionRequest.sourceColumn}
+          targetColumn={column}
+          copy={copy}
+          onOpenChange={(open) => {
+            if (!open) props.onCompositionDismiss?.();
+          }}
+          onApply={(capabilityId) => {
+            props.onColumnFunctionApply?.({
+              nodeId,
+              columnId,
+              sourceColumnId:
+                props.compositionRequest?.sourceColumn.id ??
+                props.compositionRequest?.sourceColumn.name,
+              capabilityId,
+            });
+            props.onCompositionDismiss?.();
+          }}
+        />
+      ) : null}
       {nodeId != null &&
       column.sourceHandleId != null &&
       props.portDirections.includes('source') ? (

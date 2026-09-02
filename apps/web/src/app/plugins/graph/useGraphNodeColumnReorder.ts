@@ -6,13 +6,19 @@ import { useGraphNodeColumnOrder } from './useGraphNodeColumnOrder';
 
 type DropTarget = Readonly<{
   columnId: string;
-  placement: 'before' | 'after';
+  placement: 'before' | 'compose' | 'after';
 }>;
 
 export function useGraphNodeColumnReorder(args: {
   columns: readonly GraphNodeColumn[];
   nodeId?: string;
   onColumnReorder?: (identity: GraphNodeColumnReorderIdentity) => void;
+  onColumnComposeRequest?: (
+    request: Readonly<{
+      sourceColumn: GraphNodeColumn;
+      targetColumn: GraphNodeColumn;
+    }> | null
+  ) => void;
 }) {
   const columnOrder = useGraphNodeColumnOrder(args.columns);
   const draggedColumnIdRef = useRef<string | null>(null);
@@ -33,8 +39,9 @@ export function useGraphNodeColumnReorder(args: {
     startDrag(column: GraphNodeColumn, event: DragEvent<HTMLElement>): void {
       if (!canReorder(column)) return;
       event.stopPropagation();
+      args.onColumnComposeRequest?.(null);
       draggedColumnIdRef.current = column.name;
-      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.effectAllowed = 'linkMove';
       event.dataTransfer.setData('text/plain', column.name);
     },
     endDrag(): void {
@@ -46,11 +53,25 @@ export function useGraphNodeColumnReorder(args: {
       if (!canReorder(column) || draggedColumnId == null || draggedColumnId === column.name) return;
       event.preventDefault();
       event.stopPropagation();
-      event.dataTransfer.dropEffect = 'move';
       const bounds = event.currentTarget.getBoundingClientRect();
+      const draggedColumn = columnOrder.orderedColumns.find(
+        (candidate) => candidate.name === draggedColumnId
+      );
+      const offset = event.clientY - bounds.top;
+      const canCompose =
+        draggedColumn?.id != null &&
+        draggedColumn.functionMenu != null &&
+        args.onColumnComposeRequest != null;
+      const placement =
+        canCompose && offset >= bounds.height / 3 && offset <= (bounds.height * 2) / 3
+          ? 'compose'
+          : offset < bounds.height / 2
+            ? 'before'
+            : 'after';
+      event.dataTransfer.dropEffect = placement === 'compose' ? 'link' : 'move';
       setDropTarget({
         columnId: column.id ?? column.name,
-        placement: event.clientY < bounds.top + bounds.height / 2 ? 'before' : 'after',
+        placement,
       });
     },
     dragLeave(event: DragEvent<HTMLElement>): void {
@@ -70,7 +91,14 @@ export function useGraphNodeColumnReorder(args: {
       event.stopPropagation();
       const placement =
         dropTarget?.columnId === (column.id ?? column.name) ? dropTarget.placement : null;
-      if (placement != null) {
+      if (placement === 'compose') {
+        const sourceColumn = columnOrder.orderedColumns.find(
+          (candidate) => candidate.name === draggedColumnId
+        );
+        if (sourceColumn?.id != null && sourceColumn.functionMenu != null) {
+          args.onColumnComposeRequest?.({ sourceColumn, targetColumn: column });
+        }
+      } else if (placement != null) {
         const activePlacement = columnOrder.moveColumn(draggedColumnId, column.name, placement);
         if (activePlacement != null) {
           const draggedColumn = columnOrder.orderedColumns.find(

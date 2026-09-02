@@ -15,6 +15,7 @@ import {
   RelCommon_EmitSchema,
   RelRootSchema,
   RelSchema,
+  type Expression,
   type ProjectRel,
   type ReadRel,
   type RelCommon,
@@ -555,6 +556,7 @@ export function applyDvtSubstraitProjectionFunction(
   draft: DvtSubstraitProjectionDraft,
   args: {
     fieldId: string;
+    inputFieldId?: string;
     capabilityId: string;
     dataType: string;
     provider: string;
@@ -568,7 +570,20 @@ export function applyDvtSubstraitProjectionFunction(
   const output = inspection.ok
     ? inspection.projection.outputs.find((candidate) => candidate.fieldId === args.fieldId)
     : undefined;
-  if (!inspection.ok || capability == null || output == null) return draft;
+  const inputOutput = inspection.ok
+    ? args.inputFieldId == null
+      ? output
+      : inspection.projection.outputs.find((candidate) => candidate.fieldId === args.inputFieldId)
+    : undefined;
+  if (
+    !inspection.ok ||
+    capability == null ||
+    output == null ||
+    inputOutput == null ||
+    (args.inputFieldId != null && args.inputFieldId === args.fieldId)
+  ) {
+    return draft;
+  }
 
   const plan = fromBinary(PlanSchema, toBinary(PlanSchema, draft.plan));
   const rootRelation = plan.relations[0]?.relType;
@@ -581,9 +596,10 @@ export function applyDvtSubstraitProjectionFunction(
   const emitKind = project.common?.emitKind;
   if (emitKind?.case !== 'emit') return draft;
   const outputMapping = emitKind.value.outputMapping;
-  const mapping = outputMapping[output.outputOrdinal];
+  const targetMapping = outputMapping[output.outputOrdinal];
+  const inputMapping = outputMapping[inputOutput.outputOrdinal];
   const sourceFieldCount = inspection.projection.source.fields.length;
-  if (mapping == null) return draft;
+  if (targetMapping == null || inputMapping == null) return draft;
 
   const buildFieldReference = (ordinal: number) =>
     create(ExpressionSchema, {
@@ -665,12 +681,16 @@ export function applyDvtSubstraitProjectionFunction(
     plan.extensions.push(extensionFunction);
   }
   if (extensionFunction.mappingType.case !== 'extensionFunction') return draft;
-  const expressionOrdinal = mapping - sourceFieldCount;
+  const targetExpressionOrdinal = targetMapping - sourceFieldCount;
+  const inputExpressionOrdinal = inputMapping - sourceFieldCount;
   const inputExpression =
-    mapping < sourceFieldCount
-      ? buildFieldReference(mapping)
-      : expressionOrdinal >= 0 && expressionOrdinal < project.expressions.length
-        ? project.expressions[expressionOrdinal]
+    inputMapping < sourceFieldCount
+      ? buildFieldReference(inputMapping)
+      : inputExpressionOrdinal >= 0 && inputExpressionOrdinal < project.expressions.length
+        ? fromBinary(
+            ExpressionSchema,
+            toBinary(ExpressionSchema, project.expressions[inputExpressionOrdinal]!)
+          )
         : undefined;
   if (inputExpression == null) return draft;
   const nextExpression = create(ExpressionSchema, {
@@ -685,16 +705,42 @@ export function applyDvtSubstraitProjectionFunction(
       }),
     },
   });
-  const mappingReferenceCount = outputMapping.filter((candidate) => candidate === mapping).length;
-  if (mapping < sourceFieldCount) {
+  const mappingReferenceCount = outputMapping.filter(
+    (candidate) => candidate === targetMapping
+  ).length;
+  if (targetMapping < sourceFieldCount) {
     project.expressions.push(nextExpression);
     outputMapping[output.outputOrdinal] = sourceFieldCount + project.expressions.length - 1;
   } else if (mappingReferenceCount > 1) {
     project.expressions.push(nextExpression);
     outputMapping[output.outputOrdinal] = sourceFieldCount + project.expressions.length - 1;
   } else {
-    project.expressions[expressionOrdinal] = nextExpression;
+    project.expressions[targetExpressionOrdinal] = nextExpression;
   }
+  const usedFunctionAnchors = new Set<number>();
+  const visitFunctionAnchors = (expression: Expression): void => {
+    if (expression.rexType.case !== 'scalarFunction') return;
+    usedFunctionAnchors.add(expression.rexType.value.functionReference);
+    expression.rexType.value.arguments.forEach((argument) => {
+      if (argument.argType.case === 'value') visitFunctionAnchors(argument.argType.value);
+    });
+  };
+  project.expressions.forEach(visitFunctionAnchors);
+  plan.extensions = plan.extensions.filter(
+    (entry) =>
+      entry.mappingType.case !== 'extensionFunction' ||
+      usedFunctionAnchors.has(entry.mappingType.value.functionAnchor)
+  );
+  const usedExtensionUrnAnchors = new Set(
+    plan.extensions.flatMap((entry) =>
+      entry.mappingType.case === 'extensionFunction'
+        ? [entry.mappingType.value.extensionUrnReference]
+        : []
+    )
+  );
+  plan.extensionUrns = plan.extensionUrns.filter((entry) =>
+    usedExtensionUrnAnchors.has(entry.extensionUrnAnchor)
+  );
   const nextDraft = { plan, sidecar: draft.sidecar };
   return inspectDvtSubstraitProjectionDraft(nextDraft).ok ? nextDraft : draft;
 }
