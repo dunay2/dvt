@@ -39,6 +39,7 @@ type GraphNodeCardCopy = Readonly<{
   columnOriginLabel: string;
   columnReferenceLabel: string;
   columnLineageLabel: string;
+  columnCommentLabel: string;
   columnOutputValue: string;
   columnAvailableInputValue: string;
   columnOutputAriaLabelTemplate: string;
@@ -111,6 +112,7 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   columnOriginLabel: 'Origin',
   columnReferenceLabel: 'Reference',
   columnLineageLabel: 'Transformation lineage',
+  columnCommentLabel: 'Comment',
   columnOutputValue: 'Included in output',
   columnAvailableInputValue: 'Available input',
   columnOutputAriaLabelTemplate: '{column}, included in output',
@@ -188,6 +190,7 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   columnOriginLabel: 'Origen',
   columnReferenceLabel: 'Referencia',
   columnLineageLabel: 'Linaje de transformación',
+  columnCommentLabel: 'Comentario',
   columnOutputValue: 'Incluida en salida',
   columnAvailableInputValue: 'Entrada disponible',
   columnOutputAriaLabelTemplate: '{column}, incluida en salida',

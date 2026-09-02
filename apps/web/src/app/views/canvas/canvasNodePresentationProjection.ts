@@ -54,6 +54,7 @@ type DvtSubstraitPresentedOutput = Readonly<{
   sourceNodeId?: string;
   sourceFieldName?: string;
   operations?: readonly string[];
+  description?: string;
 }>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -134,6 +135,7 @@ function projectCanvasNodePresentationTruthInternal(
               sourceNodeId: projection.source.nodeId,
               sourceFieldName: output.sourceFieldName,
               ...(output.operations == null ? {} : { operations: output.operations }),
+              ...(output.description == null ? {} : { description: output.description }),
             }));
           } else {
             const pilotInspection = inspectDvtSubstraitPilotDraft(
@@ -358,6 +360,7 @@ function projectCanvasNodePresentationTruthInternal(
         ...(output.sourceNodeId == null ? {} : { sourceNodeId: output.sourceNodeId }),
         ...(output.sourceFieldName == null ? {} : { sourceFieldName: output.sourceFieldName }),
         ...(output.operations == null ? {} : { operations: output.operations }),
+        ...(output.description == null ? {} : { description: output.description }),
         ...(sourceColumn?.sourceNodeName == null
           ? {}
           : { sourceNodeName: sourceColumn.sourceNodeName }),

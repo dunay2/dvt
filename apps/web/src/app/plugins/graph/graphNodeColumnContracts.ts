@@ -17,6 +17,7 @@ export type GraphNodeColumn = Readonly<{
   sourceFieldName?: string;
   reference?: string;
   operations?: readonly string[];
+  description?: string;
   sourceHandleId?: string;
   targetHandleId?: string;
   functionMenu?: Readonly<{

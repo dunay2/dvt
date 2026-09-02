@@ -452,7 +452,7 @@ function buildDvtTransformColumnRows(
         nullable: nullable === false ? 'not null' : nullable === true ? 'nullable' : '',
         key: declared?.primaryKey ? 'PK' : '',
         default: declared?.defaultValue ?? '',
-        comment: declared?.comment ?? '',
+        comment: column.description ?? declared?.comment ?? '',
         ...(carriesSourceProvenance
           ? {
               source: column.sourceNodeName ?? column.sourceNodeId ?? '',

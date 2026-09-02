@@ -130,6 +130,9 @@ export function GraphNodeColumnTooltip(props: {
       ? []
       : [{ label: copy.columnReferenceLabel, value: column.reference }]),
     ...(lineage == null ? [] : [{ label: copy.columnLineageLabel, value: lineage }]),
+    ...(column.description == null
+      ? []
+      : [{ label: copy.columnCommentLabel, value: column.description }]),
     {
       label: copy.columnsLabel,
       value: props.isOutput ? copy.columnOutputValue : copy.columnAvailableInputValue,

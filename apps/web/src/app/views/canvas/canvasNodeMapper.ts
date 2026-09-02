@@ -140,6 +140,7 @@ export function mapCanonicalNodeToCanvasNode({
     ...(column.sourceFieldName == null ? {} : { sourceFieldName: column.sourceFieldName }),
     ...(column.reference == null ? {} : { reference: column.reference }),
     ...(column.operations == null ? {} : { operations: column.operations }),
+    ...(column.description == null ? {} : { description: column.description }),
   }));
   const presentationCopy = buildCanvasNodePresentationCopy(copy, locale);
 
@@ -265,6 +266,7 @@ export function mapDroppedCanonicalNodeToCanvasNode(
     ...(column.sourceFieldName == null ? {} : { sourceFieldName: column.sourceFieldName }),
     ...(column.reference == null ? {} : { reference: column.reference }),
     ...(column.operations == null ? {} : { operations: column.operations }),
+    ...(column.description == null ? {} : { description: column.description }),
   }));
   const presentationCopy = buildCanvasNodePresentationCopy(copy, locale);
   const typeLabelFromMetadata =

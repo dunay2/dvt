@@ -29,6 +29,7 @@ type ColumnCandidate = Readonly<{
   type: string;
   nullable?: boolean;
   primaryKey?: boolean;
+  description?: string;
 }>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -59,6 +60,7 @@ function readColumn(candidate: unknown, fallbackName?: string): readonly ColumnC
       type: readString(candidate.type) ?? readString(candidate.dataType) ?? 'unknown',
       nullable: readBoolean(candidate.nullable),
       primaryKey: readBoolean(candidate.primaryKey),
+      description: readString(candidate.description),
     },
   ];
 }

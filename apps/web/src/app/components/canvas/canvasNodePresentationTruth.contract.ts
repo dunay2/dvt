@@ -13,6 +13,7 @@ export type CanvasNodePresentationColumn = Readonly<{
   sourceReference?: string;
   reference?: string;
   operations?: readonly string[];
+  description?: string;
   selected?: boolean;
 }>;
 
