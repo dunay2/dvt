@@ -22,6 +22,7 @@ import type {
   UseCanvasContextMenuPresenterArgs,
   UseCanvasContextMenuPresenterResult,
 } from './canvasContextMenuPresenter.types';
+import { readCanvasDependencyEdgeData } from './canvasDependencyEdgeModel';
 
 export type { CanvasContextMenuPresenter } from './canvasContextMenuPresenter.types';
 
@@ -33,6 +34,7 @@ export function useCanvasContextMenuPresenter({
   screenToFlowPosition,
   onCreateAuthoringNode,
   onEdgesChange,
+  onSetEdgeExecutionGate,
   onOpenSourceImport,
   onOpenCanvasSettings,
 }: UseCanvasContextMenuPresenterArgs): UseCanvasContextMenuPresenterResult {
@@ -203,6 +205,7 @@ export function useCanvasContextMenuPresenter({
   const handleEdgeContextMenu: NonNullable<ReactFlowProps<FlowNode, Edge>['onEdgeContextMenu']> =
     useCallback(
       (event, edge) => {
+        const dependencyData = readCanvasDependencyEdgeData(edge.data);
         setKeyboardMenuOpen(false);
         markContextMenuOpened({ targetKind: 'edge' });
         flushSync(() => {
@@ -212,6 +215,9 @@ export function useCanvasContextMenuPresenter({
                 kind: 'edge',
                 edgeId: edge.id,
                 removable: edge.type !== 'columnLineage' || edge.data?.removable === true,
+                sourceId: edge.source,
+                targetId: edge.target,
+                execution: onSetEdgeExecutionGate == null ? undefined : dependencyData?.execution,
                 screenPosition: { x: event.clientX, y: event.clientY },
               },
               canMutateGraph: canEditEdges,
@@ -220,7 +226,7 @@ export function useCanvasContextMenuPresenter({
           );
         });
       },
-      [authoringNodeKinds, canEditEdges, markContextMenuOpened]
+      [authoringNodeKinds, canEditEdges, markContextMenuOpened, onSetEdgeExecutionGate]
     );
 
   const handleCanvasAction = useCallback(
@@ -274,11 +280,17 @@ export function useCanvasContextMenuPresenter({
     (action: CanvasContextMenuEdgeAction) => {
       if (action.action === 'remove-edge' && model?.edgeId != null) {
         onEdgesChange([buildCanvasEdgeContextRemovalChange({ id: model.edgeId })]);
+      } else if (action.action === 'set-execution-gate') {
+        onSetEdgeExecutionGate?.({
+          sourceId: action.sourceId,
+          targetId: action.targetId,
+          gate: action.gate,
+        });
       }
 
       closeContextMenu();
     },
-    [closeContextMenu, model?.edgeId, onEdgesChange]
+    [closeContextMenu, model?.edgeId, onEdgesChange, onSetEdgeExecutionGate]
   );
 
   return {

@@ -31,6 +31,7 @@ import { useCanvasGraphFilterController } from './useCanvasGraphFilterController
 import { useCanvasGraphSearchController } from './useCanvasGraphSearchController';
 import { useCanvasViewportLifecycle } from './useCanvasViewportLifecycle';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import type { CanvasEdgeCommandRunner } from './useCanvasEdgeCommandRunner';
 
 type CanvasViewportProps = {
   readonly canEditEdges: boolean;
@@ -47,6 +48,7 @@ type CanvasViewportProps = {
   readonly viewport: { x: number; y: number; zoom: number } | null;
   readonly onNodesChange: NonNullable<ReactFlowProps<Node, Edge>['onNodesChange']>;
   readonly onEdgesChange: NonNullable<ReactFlowProps<Node, Edge>['onEdgesChange']>;
+  readonly onSetEdgeExecutionGate?: CanvasEdgeCommandRunner['setExecutionGate'];
   readonly onConnect: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
   readonly onReconnect: NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>;
   readonly onViewportChange: (viewport: { x: number; y: number; zoom: number }) => void;
@@ -359,6 +361,7 @@ function CanvasViewportLocalPresenter(props: CanvasViewportProps): JSX.Element {
     screenToFlowPosition: (screenPosition) => reactFlow.screenToFlowPosition(screenPosition),
     onCreateAuthoringNode: props.onCreateAuthoringNode,
     onEdgesChange: props.onEdgesChange,
+    onSetEdgeExecutionGate: props.onSetEdgeExecutionGate,
     onOpenSourceImport: props.onOpenSourceImport,
     onOpenCanvasSettings: props.onOpenCanvasSettings,
   });
