@@ -85,7 +85,8 @@ describe('SourceImportWizard', () => {
     expect(renameAction?.disabled).toBe(true);
 
     await harness.clickConnectionOption('Local Postgres proof');
-    expect(renameAction?.disabled).toBe(false);
+    await harness.clickTab('Conexiones');
+    expect(harness.findButtonContaining('Cambiar nombre')?.disabled).toBe(false);
     await harness.clickButtonContaining('Cambiar nombre');
 
     const nameInput = document.querySelector<HTMLInputElement>(
@@ -136,6 +137,7 @@ describe('SourceImportWizard', () => {
     const onClose = vi.fn();
     await harness.renderWizard({ onClose });
     await harness.clickConnectionOption('Local Postgres proof');
+    await harness.clickTab('Connections');
     await harness.clickButtonContaining('Rename connection');
 
     const nameInput = document.querySelector<HTMLInputElement>(
@@ -166,6 +168,7 @@ describe('SourceImportWizard', () => {
     });
 
     await harness.clickConnectionOption('Local Postgres proof');
+    await harness.clickTab('Conexiones');
     await harness.clickButtonContaining('Cambiar nombre');
     await harness.fillInputByLabel('Nuevo nombre de la conexión', 'Postgres principal');
     await harness.clickButtonContaining('Guardar nombre');
@@ -205,6 +208,7 @@ describe('SourceImportWizard', () => {
     });
 
     await harness.clickConnectionOption('Local Postgres proof');
+    await harness.clickTab('Conexiones');
     await harness.clickButtonContaining('Cambiar nombre');
     await harness.fillInputByLabel('Nuevo nombre de la conexión', 'Postgres duplicado');
     await harness.clickButtonContaining('Guardar nombre');
@@ -239,6 +243,7 @@ describe('SourceImportWizard', () => {
     });
 
     await harness.clickConnectionOption('Local Postgres proof');
+    await harness.clickTab('Conexiones');
     await harness.clickButtonContaining('Cambiar nombre');
     await harness.fillInputByLabel('Nuevo nombre de la conexión', 'Postgres principal');
     await harness.clickButtonContaining('Guardar nombre');
@@ -321,6 +326,7 @@ describe('SourceImportWizard', () => {
       }),
     });
     await harness.clickConnectionOption('Local Postgres proof');
+    await harness.clickTab('Conexiones');
     await harness.clickButtonContaining('Probar conexión');
     await harness.flushPendingWork();
 
@@ -712,6 +718,7 @@ describe('SourceImportWizard', () => {
     });
 
     await harness.clickConnectionOption('Local Postgres proof');
+    await harness.clickTab('Connections');
     await harness.clickButtonContaining('Test connection');
     await harness.flushPendingWork();
 
@@ -761,6 +768,7 @@ describe('SourceImportWizard', () => {
     });
 
     await harness.clickConnectionOption('Local Postgres proof');
+    await harness.clickTab('Connections');
     await harness.clickButtonContaining('Test connection');
     await harness.flushPendingWork();
 
