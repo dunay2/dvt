@@ -168,6 +168,7 @@ describe('canvasInspectorAuthoringModel', () => {
           materialized: 'view',
           selectedSourceId: 'source-orders',
           modelSql: null,
+          projectionColumns: null,
         },
       })
     ).toEqual({});
@@ -431,6 +432,7 @@ describe('canvasInspectorAuthoringModel', () => {
         materialized: 'view',
         selectedSourceId: '  source.orders  ',
         modelSql: '',
+        projectionColumns: null,
       },
     };
     const modelNode: CanonicalNode = {
