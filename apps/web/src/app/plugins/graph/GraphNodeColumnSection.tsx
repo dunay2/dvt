@@ -104,7 +104,11 @@ export function GraphNodeColumnSection({
                 copy={copy}
                 reorder={columnReorder}
                 compositionRequest={
-                  compositionRequest?.targetColumn.id === column.id ? compositionRequest : undefined
+                  compositionRequest != null &&
+                  (compositionRequest.targetColumn.id ?? compositionRequest.targetColumn.name) ===
+                    (column.id ?? column.name)
+                    ? compositionRequest
+                    : undefined
                 }
                 onCompositionDismiss={() => setCompositionRequest(null)}
                 onColumnPortActivate={onColumnPortActivate}
