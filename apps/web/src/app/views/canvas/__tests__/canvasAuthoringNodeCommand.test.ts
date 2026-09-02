@@ -1,8 +1,8 @@
 import type { Node } from '@xyflow/react';
 import { describe, expect, it } from 'vitest';
 
-import { buildTestNodeKind } from './canvasKindRegistration.testSupport';
-import { buildAuthoringNodeCommand } from './canvasAuthoringNodeCommand';
+import { buildTestNodeKind } from '../canvasKindRegistration.testSupport';
+import { buildAuthoringNodeCommand } from '../canvasAuthoringNodeCommand';
 
 describe('buildAuthoringNodeCommand', () => {
   it('starts empty canvases from the first visible authoring slot', () => {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { buildCanvasAuthoringGraphProjection } from './canvasAuthoringGraphProjection';
+import type { CanonicalEdge, CanonicalNode } from '../../../types/canonical';
+import { buildCanvasAuthoringGraphProjection } from '../canvasAuthoringGraphProjection';
 
 function buildCanonicalNode(
   id: string,
