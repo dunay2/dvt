@@ -8,8 +8,6 @@ import {
   type CanvasDependencyEdgeData,
 } from './canvasDependencyEdgeModel';
 
-type CanvasDependencyFlowEdge = Edge<CanvasDependencyEdgeData>;
-
 function resolveIncomingDirection(targetPosition: Position): Readonly<{ x: number; y: number }> {
   switch (targetPosition) {
     case Position.Right:
@@ -56,7 +54,7 @@ export function CanvasDependencyEdge({
   interactionWidth,
   selected,
   data,
-}: EdgeProps<CanvasDependencyFlowEdge>): ReactElement {
+}: EdgeProps<Edge<CanvasDependencyEdgeData>>): ReactElement {
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,

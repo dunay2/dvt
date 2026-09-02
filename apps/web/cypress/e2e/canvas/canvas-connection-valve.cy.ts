@@ -7,90 +7,68 @@ import {
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
 
-const EDGE_SELECTOR = '.react-flow__edge[data-id="edge-source-transform"]';
-
-function stubCanvasApis(): void {
-  stubShellBootstrapApis();
-  stubE2eJsonApi('GET', '/workspace/context', {
-    defaultWorkspace: E2E_PROJECT_WORKSPACE,
-    availableWorkspaces: [E2E_PROJECT_WORKSPACE],
-  });
-  stubE2eJsonApi('GET', '/capabilities', {
-    apiVersion: '1.0.0',
-    minFrontendVersion: '0.0.1',
-    plugins: { dvt: { available: true } },
-  });
-  stubStatefulCanvasDraftAuthoring({ authoringGenerated: true });
-}
-
-function waitForDraftCallCount(method: 'GET' | 'PUT', expectedCount: number): void {
-  cy.wrap(null, { timeout: 20_000 }).should(() => {
-    expect(getE2eApiCalls('/workspace/graph/draft', method)).to.have.length(expectedCount);
-  });
-}
-
-function visitReadyCanvas(expectedReadCount: number): void {
-  visitWithE2eWorkspaceSession('/canvas');
-  waitForE2eApiCall('/capabilities', 'GET');
-  waitForDraftCallCount('GET', expectedReadCount);
-  cy.get(EDGE_SELECTOR).should('be.visible');
-}
-
-function waitForSaveCount(expectedCount: number): void {
-  waitForDraftCallCount('PUT', expectedCount);
-  waitForDraftCallCount('GET', expectedCount * 2);
-}
-
-function expectLastSavedGate(expectedGate: 'open' | 'closed'): void {
-  cy.then(() => {
-    const request = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as
-      | { draft?: { edges?: Array<{ id: string; metadata?: { executionGate?: string } }> } }
-      | undefined;
-    const edge = request?.draft?.edges?.find(({ id }) => id === 'edge-source-transform');
-    expect(edge, 'persisted source-to-transform edge').to.exist;
-    expect(edge?.metadata?.executionGate).to.equal(
-      expectedGate === 'closed' ? 'closed' : undefined
-    );
-  });
-}
-
-function toggleExecutionGate(): void {
-  cy.get(EDGE_SELECTOR).rightclick({ force: true });
-  cy.get('[data-slot="canvas-context-menu-item"][data-menu-action="set-execution-gate"]')
-    .should('be.visible')
-    .click();
-}
-
-function expectClosedGate(visible: boolean): void {
-  const glyph = `${EDGE_SELECTOR} [data-slot="canvas-dependency-closed-gate"]`;
-  cy.get(glyph).should(visible ? 'exist' : 'not.exist');
-  if (visible) {
-    cy.get(`${EDGE_SELECTOR} .react-flow__edge-path`).should(($path) => {
-      expect($path.attr('style')).to.include('stroke-dasharray');
-    });
-  }
-}
-
 describe('Canvas connection valve', () => {
   it('closes and reopens an edge through the canonical persisted command', () => {
-    stubCanvasApis();
-    visitReadyCanvas(1);
-    expectClosedGate(false);
+    const edge = '.react-flow__edge[data-id="edge-source-transform"]';
+    const closedGate = `${edge} [data-slot="canvas-dependency-closed-gate"]`;
+    const waitForCalls = (method: 'GET' | 'PUT', count: number): Cypress.Chainable =>
+      cy.wrap(null, { timeout: 20_000 }).should(() => {
+        expect(getE2eApiCalls('/workspace/graph/draft', method)).to.have.length(count);
+      });
+    const visitCanvas = (readCount: number): void => {
+      visitWithE2eWorkspaceSession('/canvas');
+      waitForE2eApiCall('/capabilities', 'GET');
+      waitForCalls('GET', readCount);
+      cy.get(edge).should('be.visible');
+    };
+    const toggleGate = (): void => {
+      cy.get(edge).rightclick({ force: true });
+      cy.get('[data-menu-action="set-execution-gate"]').should('be.visible').click();
+    };
+    const expectSavedGate = (gate: 'open' | 'closed'): void => {
+      cy.then(() => {
+        const body = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as {
+          draft: { edges: Array<{ id: string; metadata?: { executionGate?: string } }> };
+        };
+        const savedEdge = body.draft.edges.find(({ id }) => id === 'edge-source-transform');
+        expect(savedEdge?.metadata?.executionGate).to.equal(
+          gate === 'closed' ? 'closed' : undefined
+        );
+      });
+    };
 
-    toggleExecutionGate();
-    expectClosedGate(true);
-    waitForSaveCount(1);
-    expectLastSavedGate('closed');
+    stubShellBootstrapApis();
+    stubE2eJsonApi('GET', '/workspace/context', {
+      defaultWorkspace: E2E_PROJECT_WORKSPACE,
+      availableWorkspaces: [E2E_PROJECT_WORKSPACE],
+    });
+    stubE2eJsonApi('GET', '/capabilities', {
+      apiVersion: '1.0.0',
+      minFrontendVersion: '0.0.1',
+      plugins: { dvt: { available: true } },
+    });
+    stubStatefulCanvasDraftAuthoring({ authoringGenerated: true });
 
-    visitReadyCanvas(3);
-    expectClosedGate(true);
+    visitCanvas(1);
+    cy.get(closedGate).should('not.exist');
+    toggleGate();
+    cy.get(closedGate).should('exist');
+    cy.get(`${edge} .react-flow__edge-path`)
+      .should('have.attr', 'style')
+      .and('include', 'stroke-dasharray');
+    waitForCalls('PUT', 1);
+    waitForCalls('GET', 2);
+    expectSavedGate('closed');
 
-    toggleExecutionGate();
-    expectClosedGate(false);
-    waitForSaveCount(2);
-    expectLastSavedGate('open');
+    visitCanvas(3);
+    cy.get(closedGate).should('exist');
+    toggleGate();
+    cy.get(closedGate).should('not.exist');
+    waitForCalls('PUT', 2);
+    waitForCalls('GET', 4);
+    expectSavedGate('open');
 
-    visitReadyCanvas(5);
-    expectClosedGate(false);
+    visitCanvas(5);
+    cy.get(closedGate).should('not.exist');
   });
 });
