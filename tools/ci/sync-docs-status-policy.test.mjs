@@ -31,7 +31,10 @@ test('planning doc index generation excludes superseded and archived docs', () =
 });
 
 test('docs sync includes new Git documents without requiring a Planning DB rebuild', () => {
-  const lifecycleAuthority = { rowsByPath: new Map(), strict: true };
+  const lifecycleAuthority = {
+    rowsByPath: new Map(),
+    trackedPaths: new Set(['docs/evidence/ED-20260902-new-git-evidence.md']),
+  };
 
   assert.equal(
     shouldIncludeDocumentationPath(
@@ -39,6 +42,10 @@ test('docs sync includes new Git documents without requiring a Planning DB rebui
       lifecycleAuthority
     ),
     true
+  );
+  assert.equal(
+    shouldIncludeDocumentationPath('docs/evidence/untracked-local-note.md', lifecycleAuthority),
+    false
   );
 });
 

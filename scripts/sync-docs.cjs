@@ -367,16 +367,18 @@ function lifecycleStateIsPublishable(lifecycleRow = {}) {
 }
 
 function lifecycleAuthorityParts(authority) {
-  if (authority instanceof Map) return { rowsByPath: authority };
-  return { rowsByPath: authority?.rowsByPath };
+  if (authority instanceof Map) return { rowsByPath: authority, trackedPaths: undefined };
+  return { rowsByPath: authority?.rowsByPath, trackedPaths: authority?.trackedPaths };
 }
 
 function shouldIncludeDocumentationPath(documentPath, authority) {
   const normalizedPath = String(documentPath || '').replace(/\\/gu, '/');
-  const { rowsByPath } = lifecycleAuthorityParts(authority);
+  const { rowsByPath, trackedPaths } = lifecycleAuthorityParts(authority);
   if (!(rowsByPath instanceof Map)) return true;
   const lifecycleRow = rowsByPath.get(normalizedPath);
-  if (!lifecycleRow) return true;
+  if (!lifecycleRow) {
+    return !(trackedPaths instanceof Set) || trackedPaths.has(normalizedPath);
+  }
   return lifecycleStateIsPublishable(lifecycleRow);
 }
 
@@ -393,6 +395,16 @@ async function readDocumentationLifecycleAuthority(options = {}) {
   const ownsClient = !options.client;
   if (ownsClient) await client.connect();
   try {
+    const trackedPaths = new Set(
+      require('node:child_process')
+        .execFileSync('git', ['ls-files', '--', 'docs'], {
+          cwd: repoRoot,
+          encoding: 'utf8',
+        })
+        .split(/\r?\n/u)
+        .filter(Boolean)
+        .map((trackedPath) => trackedPath.replace(/\\/gu, '/'))
+    );
     const rows = await readDocumentationLifecycleRows(client, { limit: 100000 });
     const rowsByPath = new Map();
     for (const row of rows) {
@@ -403,7 +415,7 @@ async function readDocumentationLifecycleAuthority(options = {}) {
       }
       rowsByPath.set(documentPath, row);
     }
-    return { rowsByPath };
+    return { rowsByPath, trackedPaths };
   } finally {
     if (ownsClient) await client.end();
   }
