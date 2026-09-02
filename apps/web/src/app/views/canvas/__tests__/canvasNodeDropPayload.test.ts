@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseCanonicalNodeDragPayload } from './canvasNodeDropPayload';
+import { parseCanonicalNodeDragPayload } from '../canvasNodeDropPayload';
 
 function buildPayload(overrides: Record<string, unknown> = {}): string {
   return JSON.stringify({

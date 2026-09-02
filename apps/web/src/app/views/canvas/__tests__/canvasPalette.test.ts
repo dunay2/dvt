@@ -6,7 +6,7 @@ import {
   DEFAULT_CANVAS_PALETTE_ID,
   normalizeCanvasPaletteId,
   deriveCanvasPaletteTokens,
-} from './canvasPalette';
+} from '../canvasPalette';
 
 describe('canvasPalette', () => {
   it('accepts canonical hex values and rejects named palette aliases', () => {

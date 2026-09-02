@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { deriveCanvasBackendPosture } from './canvasBackendPosture';
+import { deriveCanvasBackendPosture } from '../canvasBackendPosture';
 
 describe('canvasBackendPosture', () => {
   it('keeps backend posture pending while the readiness check is unresolved', () => {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { canvasViewCopy } from './copy';
-import { deriveCanvasDraftStatusState, deriveDraftRecoveryReason } from './canvasDraftStatusState';
+import { canvasViewCopy } from '../copy';
+import { deriveCanvasDraftStatusState, deriveDraftRecoveryReason } from '../canvasDraftStatusState';
 
 describe('canvasDraftStatusState', () => {
   it('derives stale_conflict with highest precedence', () => {
