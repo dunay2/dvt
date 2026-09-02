@@ -348,6 +348,14 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.nodeDescriptionLabel',
     fallback: 'Description',
   },
+  inspectorColumnCommentLabel: {
+    key: 'canvas.inspector.authoring.columnCommentLabel',
+    fallback: 'Column comment',
+  },
+  inspectorColumnCommentPlaceholder: {
+    key: 'canvas.inspector.authoring.columnCommentPlaceholder',
+    fallback: 'Add a column comment',
+  },
   inspectorNodeReadOnlyMessage: {
     key: 'canvas.inspector.authoring.nodeReadOnlyMessage',
     fallback: 'Node details are read-only for this workspace state.',

@@ -15,7 +15,10 @@ import {
 } from '../ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { cn } from '../ui/utils';
-import { NodePropertySectionView } from './NodePropertySectionView';
+import {
+  NodePropertySectionView,
+  type NodePropertyTableCellRenderContext,
+} from './NodePropertySectionView';
 import type { NodePropertiesReadModel, NodePropertySection } from './nodePropertiesReadModel';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 
@@ -35,6 +38,7 @@ export type NodePropertiesTabsProps = Readonly<{
   slotPrefix?: string;
   surface?: 'inspector' | 'workbench';
   showSectionCountBadge?: boolean;
+  renderTableCell?: (context: NodePropertyTableCellRenderContext) => ReactNode;
   onActiveTabChange: (tab: string) => void;
   onHide: () => void;
 }>;
@@ -93,6 +97,7 @@ export function NodePropertiesTabs({
   slotPrefix,
   surface = 'inspector',
   showSectionCountBadge = false,
+  renderTableCell,
   onActiveTabChange,
   onHide,
 }: NodePropertiesTabsProps): JSX.Element {
@@ -223,6 +228,7 @@ export function NodePropertiesTabs({
               (section.id === 'general' ? beforePanels : null)
             }
             afterBody={sectionAfterChildren?.[section.id]}
+            renderTableCell={renderTableCell}
           />
         </TabsContent>
       ))}
