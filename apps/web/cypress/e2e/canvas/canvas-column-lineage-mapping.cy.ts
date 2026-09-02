@@ -146,6 +146,7 @@ describe('Canvas column lineage mapping', () => {
 
     cy.get('.react-flow__edge-columnLineage').should('not.exist');
     connectCanvasNodes('Orders Source', 'Orders Model');
+    cy.get('[role="alertdialog"]').should('not.exist');
     waitForE2eApiCall('/workspace/graph/draft', 'PUT');
 
     toggleColumns('source-orders');
