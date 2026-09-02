@@ -14,7 +14,9 @@ export type GraphNodeColumn = Readonly<{
   primaryKey?: boolean;
   output?: boolean;
   sourceNodeName?: string;
+  sourceFieldName?: string;
   reference?: string;
+  operations?: readonly string[];
   sourceHandleId?: string;
   targetHandleId?: string;
   functionMenu?: Readonly<{

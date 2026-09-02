@@ -13,8 +13,10 @@ import {
   encodeDvtSubstraitPilotDocument,
 } from './canvasDvtSubstraitPilot';
 import {
+  applyDvtSubstraitProjectionFunction,
   createDvtSubstraitProjectionDraft,
   encodeDvtSubstraitProjectionDocument,
+  resolveDvtSubstraitColumnFunctions,
 } from './canvasDvtSubstraitProjection';
 import {
   appendDvtSubstraitInnerJoinInput,
@@ -621,21 +623,33 @@ describe('projectCanvasNodePresentationTruth', () => {
         ],
       },
     };
+    const draft = createDvtSubstraitProjectionDraft({
+      source: {
+        nodeId: dvtSource.id,
+        schema: 'raw',
+        table: 'orders',
+        sourceRef: connectedSourceRef,
+        fields: [
+          { name: 'order_id', dataType: 'integer' },
+          { name: 'customer', dataType: 'text' },
+          { name: 'amount', dataType: 'numeric' },
+        ],
+      },
+      targetNodeId: 'transform-orders',
+      outputs: [{ fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'customer' }],
+    });
+    const trim = resolveDvtSubstraitColumnFunctions({
+      dataType: 'text',
+      provider: 'postgres',
+    }).find((entry) => entry.name === 'trim');
+    if (trim == null) throw new Error('Expected admitted trim capability.');
     const semanticDocument = encodeDvtSubstraitProjectionDocument(
-      createDvtSubstraitProjectionDraft({
-        source: {
-          nodeId: dvtSource.id,
-          schema: 'raw',
-          table: 'orders',
-          sourceRef: connectedSourceRef,
-          fields: [
-            { name: 'order_id', dataType: 'integer' },
-            { name: 'customer', dataType: 'text' },
-            { name: 'amount', dataType: 'numeric' },
-          ],
-        },
-        targetNodeId: 'transform-orders',
-        outputs: [{ fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'customer' }],
+      applyDvtSubstraitProjectionFunction(draft, {
+        fieldId: 'output:order_id',
+        capabilityId: trim.capabilityId,
+        alias: 'customer_clean',
+        dataType: 'text',
+        provider: 'postgres',
       })
     );
     const transform = applyDvtSubstraitSemanticDocument(
@@ -665,13 +679,20 @@ describe('projectCanvasNodePresentationTruth', () => {
 
     expect(truth.code).toMatchObject({ kind: 'canonical', language: 'json' });
     expect(truth.columns.visible).toEqual([
-      expect.objectContaining({ name: 'order_id', type: 'text', provenance: 'declared' }),
+      expect.objectContaining({ name: 'order_id', type: 'integer', provenance: 'inherited' }),
+      expect.objectContaining({
+        name: 'customer_clean',
+        type: 'text',
+        provenance: 'declared',
+        sourceFieldName: 'customer',
+        operations: ['trim'],
+      }),
       expect.objectContaining({ name: 'amount', type: 'numeric', provenance: 'inherited' }),
     ]);
     expect(truth.columns).toMatchObject({
       declaredCount: 1,
       inheritedCount: 3,
-      visibleCount: 2,
+      visibleCount: 3,
       visibleProvenance: 'mixed',
     });
   });

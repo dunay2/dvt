@@ -53,6 +53,7 @@ type DvtSubstraitPresentedOutput = Readonly<{
   dataType?: string;
   sourceNodeId?: string;
   sourceFieldName?: string;
+  operations?: readonly string[];
 }>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -132,6 +133,7 @@ function projectCanvasNodePresentationTruthInternal(
               dataType: output.dataType,
               sourceNodeId: projection.source.nodeId,
               sourceFieldName: output.sourceFieldName,
+              ...(output.operations == null ? {} : { operations: output.operations }),
             }));
           } else {
             const pilotInspection = inspectDvtSubstraitPilotDraft(
@@ -343,12 +345,25 @@ function projectCanvasNodePresentationTruthInternal(
       : baseTruth;
 
   if (substraitOutputs != null) {
-    const declared = substraitOutputs.map((output) => ({
-      name: output.name,
-      type: output.dataType ?? 'string',
-      provenance: 'declared' as const,
-      reference: output.fieldId,
-    }));
+    const declared = substraitOutputs.map((output) => {
+      const sourceColumn = presentationTruth.columns.inherited.find(
+        (column) =>
+          column.sourceNodeId === output.sourceNodeId && column.name === output.sourceFieldName
+      );
+      return {
+        name: output.name,
+        type: output.dataType ?? 'string',
+        provenance: 'declared' as const,
+        reference: output.fieldId,
+        ...(output.sourceNodeId == null ? {} : { sourceNodeId: output.sourceNodeId }),
+        ...(output.sourceFieldName == null ? {} : { sourceFieldName: output.sourceFieldName }),
+        ...(output.operations == null ? {} : { operations: output.operations }),
+        ...(sourceColumn?.sourceNodeName == null
+          ? {}
+          : { sourceNodeName: sourceColumn.sourceNodeName }),
+        ...(sourceColumn?.reference == null ? {} : { sourceReference: sourceColumn.reference }),
+      };
+    });
     const hasConnectedFieldProjection = substraitOutputs.every(
       (output) => output.sourceNodeId != null && output.sourceFieldName != null
     );
