@@ -111,6 +111,10 @@ describe('Canvas column lineage mapping', () => {
       'true'
     );
     cy.get('[data-slot="canvas-node-workbench-tab-code"]').click();
+    cy.get('[data-slot="canvas-node-workbench-panel"]').within(() => {
+      cy.get('[data-slot="canvas-node-workbench-contained-body"]').should('be.visible');
+      cy.get('[data-slot="scroll-area"]').should('not.exist');
+    });
     cy.get('[data-slot="canvas-node-workbench-code-content"]')
       .should('contain.text', 'Documento Substrait canónico')
       .and('contain.text', 'SHA-256');

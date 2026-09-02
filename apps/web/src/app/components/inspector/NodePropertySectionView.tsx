@@ -21,6 +21,7 @@ export type NodePropertySectionViewProps = Readonly<{
   slots: Readonly<{ sectionPrefix: string; code: string }>;
   surface?: 'inspector' | 'workbench';
   showCountBadge?: boolean;
+  fillAvailableHeight?: boolean;
   beforeBody?: ReactNode;
   afterBody?: ReactNode;
   renderTableCell?: (context: NodePropertyTableCellRenderContext) => ReactNode;
@@ -254,6 +255,7 @@ export function NodePropertySectionView({
   slots,
   surface = 'inspector',
   showCountBadge = false,
+  fillAvailableHeight = false,
   beforeBody,
   afterBody,
   renderTableCell,
@@ -263,14 +265,17 @@ export function NodePropertySectionView({
       <div
         data-slot={`${slots.sectionPrefix}-editable-properties`}
         data-placement={placement}
-        className="space-y-3 pt-1"
+        className={cn('space-y-3 pt-1', fillAvailableHeight && 'flex min-h-0 flex-1 flex-col')}
       >
         {content}
       </div>
     );
 
   return (
-    <section data-slot={sectionSlot(section, slots)} className="space-y-3">
+    <section
+      data-slot={sectionSlot(section, slots)}
+      className={cn('space-y-3', fillAvailableHeight && 'flex h-full min-h-0 flex-col')}
+    >
       {surface === 'workbench' && (section.id === 'code' || section.id === 'general') ? null : (
         <div className="flex items-center justify-between gap-3">
           <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>{section.label}</h3>

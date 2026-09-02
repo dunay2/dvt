@@ -315,6 +315,10 @@ export function CanvasNodeWorkbenchPanel({
   const resolvedPrimarySectionIds = sectionModel.primarySectionIds;
   const panelIds = panels.map((panel) => panel.id);
   const resolvedActiveTab = resolveActiveNodeWorkbenchTab({ activeTab, model, panelIds });
+  const containsCanonicalCodeOutput =
+    resolvedActiveTab === 'code' &&
+    canonicalSubstraitTransformAuthority &&
+    presentationTruth.code.kind === 'canonical';
   const dotClass = inspectorStatusDotClasses[node.status] ?? inspectorStatusDotClasses.idle;
   const preferredTabKey =
     preferredTabId == null ? null : `${node.id}:${preferredTabId}:${preferredTabRequestId}`;
@@ -447,6 +451,28 @@ export function CanvasNodeWorkbenchPanel({
     }
   }, [activeTab, resolvedActiveTab]);
 
+  const workbenchTabs = (
+    <NodePropertiesTabs
+      node={node}
+      model={model}
+      activeRunId={activeRunId}
+      panels={panels}
+      activeTab={resolvedActiveTab}
+      primarySectionIds={resolvedPrimarySectionIds}
+      persistentSectionIds={contributedSectionIds.has('code') ? ['code'] : undefined}
+      sectionBeforeChildren={sectionBeforeChildren}
+      sectionAfterChildren={sectionAfterChildren}
+      fillAvailableHeight={containsCanonicalCodeOutput}
+      moreLabel={copy.nodeWorkbenchMoreLabel}
+      slotPrefix="canvas-node-workbench"
+      surface="workbench"
+      showSectionCountBadge
+      renderTableCell={renderTableCell}
+      onActiveTabChange={handleActiveTabChange}
+      onHide={onClose}
+    />
+  );
+
   return (
     <div
       data-slot="canvas-node-workbench-panel"
@@ -506,28 +532,18 @@ export function CanvasNodeWorkbenchPanel({
         </div>
       </div>
 
-      <ScrollArea className="min-h-0 flex-1">
-        <div className="space-y-4 p-4">
-          <NodePropertiesTabs
-            node={node}
-            model={model}
-            activeRunId={activeRunId}
-            panels={panels}
-            activeTab={resolvedActiveTab}
-            primarySectionIds={resolvedPrimarySectionIds}
-            persistentSectionIds={contributedSectionIds.has('code') ? ['code'] : undefined}
-            sectionBeforeChildren={sectionBeforeChildren}
-            sectionAfterChildren={sectionAfterChildren}
-            moreLabel={copy.nodeWorkbenchMoreLabel}
-            slotPrefix="canvas-node-workbench"
-            surface="workbench"
-            showSectionCountBadge
-            renderTableCell={renderTableCell}
-            onActiveTabChange={handleActiveTabChange}
-            onHide={onClose}
-          />
+      {containsCanonicalCodeOutput ? (
+        <div
+          data-slot="canvas-node-workbench-contained-body"
+          className="min-h-0 flex-1 overflow-hidden p-4"
+        >
+          {workbenchTabs}
         </div>
-      </ScrollArea>
+      ) : (
+        <ScrollArea className="min-h-0 flex-1">
+          <div className="space-y-4 p-4">{workbenchTabs}</div>
+        </ScrollArea>
+      )}
     </div>
   );
 }
