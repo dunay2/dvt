@@ -118,6 +118,7 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
     activeCanvasId: resolveActiveProjectCanvasId(routeDraft),
     executionEnvironmentOptions: args.environment.workspaceBootstrapConfig.environmentOptions,
     canCreateCanvasDocument: canCreateCanvasDocument && routeDraftRecord == null,
+    authorizationPermissions: store.userPermissions,
     userPermissions: {
       ...store.userPermissions,
       canPlan: runtimePolicy.commands.canPlan,

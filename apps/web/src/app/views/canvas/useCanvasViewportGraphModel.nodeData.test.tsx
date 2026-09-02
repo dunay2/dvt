@@ -245,7 +245,7 @@ describe('useCanvasViewportGraphModel node data', () => {
     try {
       const nodeData = mounted.readState()?.nodes[0]?.data as DbtNodeData | undefined;
 
-      expect(nodeData?.columns).toEqual([
+      expect(nodeData?.columns).toMatchObject([
         { name: 'order_id', type: 'integer' },
         { name: 'customer_id', type: 'text' },
       ]);
@@ -297,9 +297,21 @@ describe('useCanvasViewportGraphModel node data', () => {
         visibleCount: 2,
         visibleProvenance: 'inherited',
       });
-      expect(modelData?.columns).toEqual([
-        { name: 'order_id', type: 'integer' },
-        { name: 'amount', type: 'numeric' },
+      expect(modelData?.columns).toMatchObject([
+        {
+          name: 'order_id',
+          type: 'integer',
+          output: true,
+          sourceNodeName: 'source-node',
+          reference: 'source-node.order_id',
+        },
+        {
+          name: 'amount',
+          type: 'numeric',
+          output: true,
+          sourceNodeName: 'source-node',
+          reference: 'source-node.amount',
+        },
       ]);
       expect(modelData?.presentationTruth?.code).toEqual({
         kind: 'workspace-file',

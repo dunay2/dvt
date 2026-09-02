@@ -4,7 +4,7 @@ import type {
   GraphNodeColumnOutputToggleIdentity,
   GraphNodeColumnPortIdentity,
   GraphNodeColumnReorderIdentity,
-} from '../../plugins/graph/GraphNodeColumnSection';
+} from '../../plugins/graph/graphNodeColumnContracts';
 import type {
   CanvasAlgebraicCompositionIdentity,
   CanvasAlgebraicCompositionOperation,
