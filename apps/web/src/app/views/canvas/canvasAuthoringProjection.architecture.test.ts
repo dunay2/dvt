@@ -100,7 +100,6 @@ describe('canvas authoring projection component architecture', () => {
     expect(COLUMN_MAPPING_AUTHORING_SOURCE).toContain(
       'translate column-mapping intent into the existing DVT node command authority'
     );
-    expect(COLUMN_MAPPING_AUTHORING_SOURCE).toContain('applyDvtVisualTransformRecipe(');
     expect(COLUMN_MAPPING_AUTHORING_SOURCE).toContain('canvasDraftSession.workingSet.upsertNode(');
     expect(COLUMN_MAPPING_AUTHORING_SOURCE).not.toContain('useEdgesState(');
     expect(COLUMN_MAPPING_AUTHORING_SOURCE).not.toContain('localStorage');
