@@ -317,6 +317,8 @@ allowedImplementationSurfaces:
   - apps/web/src/app/plugins/graph/GraphNodeMetricRow.test.tsx
   - apps/web/src/app/plugins/graph/GraphNodeMetricRow.tsx
   - apps/web/src/app/plugins/graph/GraphNodeRenderer.tsx
+  - apps/web/src/app/plugins/graph/graphNodeCardPresentation.test.ts
+  - apps/web/src/app/plugins/graph/graphNodeCardReadModel.ts
   - apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts
   - apps/web/src/app/plugins/graph/graphVisualTokens.ts
   - apps/web/src/app/views/canvas/CanvasNodeFloatingToolbarView.test.tsx
@@ -434,6 +436,36 @@ domainObjects:
     type: command state
     owner: Canvas execution-selection intent
 symbols:
+  - path: apps/web/src/app/plugins/graph/GraphNodeRenderer.tsx
+    name: GraphNodeRenderer
+    kind: function
+    exported: true
+    dddOwner: CanvasGraphPresentation
+    cqRails: [ProjectGraphNodeCardReadModel]
+    fowlerSignals: [Duplicate semantics, Feature envy]
+    architectureGuard: pnpm --filter @dvt/web test -- GraphNodeCardView.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- GraphNodeCardView.test.tsx]
+  - path: apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx
+    name: DbtNodeRenderer
+    kind: function
+    exported: true
+    dddOwner: CanvasGraphPresentation
+    cqRails: [ProjectGraphNodeCardReadModel]
+    fowlerSignals: [Duplicate semantics, Feature envy]
+    architectureGuard: pnpm --filter @dvt/web test -- DbtNodeRenderer.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- DbtNodeRenderer.test.tsx]
+  - path: apps/web/src/app/plugins/graph/graphNodeCardReadModel.ts
+    name: projectGraphNodeCardViewProps
+    kind: function
+    exported: true
+    dddOwner: CanvasGraphPresentation
+    cqRails: [ProjectGraphNodeCardReadModel, InspectCanvasNode]
+    fowlerSignals: [Duplicate semantics, Feature envy]
+    architectureGuard: pnpm --filter @dvt/web test -- graphNodeCardPresentation.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- graphNodeCardPresentation.test.ts]
   - path: apps/web/src/app/components/metrics/MetricEvidenceHotspot.tsx
     name: MetricEvidenceTriggerProps
     kind: type
@@ -706,6 +738,15 @@ completionGate:
   - pnpm governance:refresh
   - pnpm verify:prepush
 redGreenCycles:
+  - id: shared-node-card-presentation-projection
+    redTest: apps/web/src/app/plugins/graph/graphNodeCardPresentation.test.ts
+    expectedFailure: The ProjectGraphNodeCardReadModel rail exposes no shared card-view projection, so generic and dbt renderers must independently prepare the same presentation and interaction props.
+    patchSurfaces:
+      - apps/web/src/app/plugins/graph/graphNodeCardPresentation.test.ts
+      - apps/web/src/app/plugins/graph/graphNodeCardReadModel.ts
+      - apps/web/src/app/plugins/graph/GraphNodeRenderer.tsx
+      - apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx
+    greenTest: apps/web/src/app/plugins/graph/graphNodeCardPresentation.test.ts
   - id: file-backed-card-code-action
     redTest: apps/web/src/app/plugins/graph/GraphNodeCardView.test.tsx
     expectedFailure: The backing path is repeated under the metrics and the File metric cannot invoke the existing node-code callback.

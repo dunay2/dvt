@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
-import type { CSSProperties, ReactElement } from 'react';
+import type { ReactElement } from 'react';
 import { Clock, Code, Info, Loader2, Table } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
 
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
@@ -33,12 +32,8 @@ import type { InspectorPanelContribution, InspectorPanelProps } from '../contrac
 import type { NodeRendererProps } from '../contracts/NodeRendering';
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
 import { graphStatusBadgeClasses } from '../graph/graphVisualTokens';
-import { buildGraphNodeCardReadModel } from '../graph/graphNodeCardReadModel';
-import type { GraphNodeOperationalDetail } from '../graph/graphNodeCardStrategyContracts';
+import { projectGraphNodeCardViewProps } from '../graph/graphNodeCardReadModel';
 import { GraphNodeCardView } from '../graph/GraphNodeCardView';
-import { resolveGraphNodeColumnInteractionProps } from '../graph/graphNodeColumnContracts';
-import { resolveGraphNodeTagActionProps } from '../graph/GraphNodeTagList';
-import { CANVAS_NODE_KINDS } from '../nodeTypeCatalog';
 
 const DBT_PLUGIN_ID = 'dbt';
 
@@ -128,33 +123,6 @@ export type DbtNodeRunHistoryEntry = {
   readonly stepId: string | null;
 };
 
-function resolveKindMeta(kind: string) {
-  return CANVAS_NODE_KINDS.find((entry) => entry.kind === kind);
-}
-
-function buildOverlayProps(
-  borderColor?: string,
-  backgroundColor?: string
-): { style?: CSSProperties } {
-  const style: CSSProperties = {};
-  if (borderColor) style.borderColor = borderColor;
-  if (backgroundColor) style.backgroundColor = backgroundColor;
-  return Object.keys(style).length > 0 ? { style } : {};
-}
-
-function resolveColumns(
-  data: Record<string, unknown>,
-  metadata: Record<string, unknown> | undefined
-): ColumnMeta[] {
-  if (Array.isArray(data.columns)) {
-    return data.columns as ColumnMeta[];
-  }
-  if (Array.isArray(metadata?.columns)) {
-    return metadata.columns as ColumnMeta[];
-  }
-  return [];
-}
-
 function meta<T>(node: InspectorPanelProps['node'], key: string): T | undefined {
   return node.metadata?.[key] as T | undefined;
 }
@@ -204,91 +172,8 @@ export function buildDbtNodeRunHistoryEntries(
     });
 }
 
-export function DbtNodeRenderer({
-  node,
-  selected,
-  hovered,
-  overlayDecoration,
-  graphNodeCardStrategies,
-  data,
-}: Readonly<NodeRendererProps>): ReactElement {
-  const kindMeta = resolveKindMeta(node.kind);
-  const Icon: LucideIcon | undefined = kindMeta?.icon;
-
-  const dimmed = overlayDecoration?.dimmed ?? false;
-  const overlayProps = buildOverlayProps(
-    overlayDecoration?.borderColor,
-    overlayDecoration?.backgroundColor
-  );
-  const typeLabel =
-    typeof data.typeLabel === 'string'
-      ? data.typeLabel
-      : typeof data.type === 'string'
-        ? data.type
-        : (kindMeta?.label ?? node.kind);
-  const cardModel = buildGraphNodeCardReadModel(node, data, graphNodeCardStrategies);
-  const openOperationalDetails = data.onOpenOperationalDetails;
-  const inspectNode = data.onInspectNode;
-  const columns = resolveColumns(data, node.metadata);
-  const showColumns =
-    data.showColumns === true &&
-    columns.length > 0 &&
-    (kindMeta?.supportsColumns || node.role === 'input' || node.role === 'transform');
-  const displayTags = Array.isArray(data.displayTags)
-    ? data.displayTags.filter(
-        (tag): tag is Readonly<{ value: string; label: string }> =>
-          typeof tag === 'object' &&
-          tag != null &&
-          typeof (tag as { value?: unknown }).value === 'string' &&
-          typeof (tag as { label?: unknown }).label === 'string'
-      )
-    : node.tags.map((tag) => ({ value: tag, label: tag }));
-  const tagActionProps = resolveGraphNodeTagActionProps(data);
-  const columnInteractionProps = resolveGraphNodeColumnInteractionProps({
-    nodeId: node.id,
-    nodeRole: node.role,
-    data,
-  });
-
-  return (
-    <GraphNodeCardView
-      cardModel={cardModel}
-      typeLabel={typeLabel}
-      tags={displayTags}
-      columns={columns}
-      showColumns={showColumns}
-      icon={Icon}
-      borderClass={kindMeta?.borderClass}
-      selected={selected}
-      hovered={hovered}
-      dimmed={dimmed}
-      overlayStyle={overlayProps.style}
-      {...tagActionProps}
-      {...columnInteractionProps}
-      onOpenCode={
-        data.canOpenNodeCode !== false && typeof inspectNode === 'function'
-          ? () => inspectNode(node.id, 'code')
-          : undefined
-      }
-      onOpenDataSample={
-        typeof data.onOpenSourceDataSample === 'function'
-          ? () => (data.onOpenSourceDataSample as (nodeId: string) => void)(node.id)
-          : undefined
-      }
-      dataSampleInteractionLabel={
-        typeof data.sourceDataSampleInteractionLabel === 'string'
-          ? data.sourceDataSampleInteractionLabel
-          : undefined
-      }
-      onOpenOperationalDetails={
-        typeof openOperationalDetails === 'function'
-          ? (detail: GraphNodeOperationalDetail, anchorElement: HTMLElement) => {
-              openOperationalDetails(detail, anchorElement);
-            }
-          : undefined
-      }
-    />
-  );
+export function DbtNodeRenderer(props: Readonly<NodeRendererProps>): ReactElement {
+  return <GraphNodeCardView {...projectGraphNodeCardViewProps(props)} />;
 }
 
 function DbtOverviewPanel({ node, tagsEditor }: InspectorPanelProps) {
