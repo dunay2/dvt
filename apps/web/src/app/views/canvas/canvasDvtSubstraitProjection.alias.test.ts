@@ -79,4 +79,39 @@ describe('Substrait projection function aliases', () => {
     expect(apply('   ')).toBe(draft);
     expect(apply('status')).toBe(draft);
   });
+
+  it('does not let an alias hide an unprojected source field', () => {
+    const draft = createDvtSubstraitProjectionDraft({
+      source: {
+        nodeId: 'source-orders',
+        schema: 'raw',
+        table: 'orders',
+        sourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'warehouse-main',
+            provider: 'postgres',
+          },
+          sourceObjectId: 'raw.orders',
+        },
+        fields: [
+          { name: 'customer', dataType: 'text' },
+          { name: 'status', dataType: 'text' },
+        ],
+      },
+      targetNodeId: 'transform-orders',
+      outputs: [{ fieldId: 'output:customer', name: 'customer', sourceFieldName: 'customer' }],
+    });
+
+    expect(
+      applyDvtSubstraitProjectionFunction(draft, {
+        fieldId: 'output:customer',
+        capabilityId: trimCapabilityId,
+        alias: 'status',
+        dataType: 'text',
+        provider: 'postgres',
+      })
+    ).toBe(draft);
+  });
 });

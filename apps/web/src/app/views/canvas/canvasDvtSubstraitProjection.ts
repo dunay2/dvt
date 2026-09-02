@@ -577,6 +577,11 @@ export function applyDvtSubstraitProjectionFunction(
       ? output
       : inspection.projection.outputs.find((candidate) => candidate.fieldId === args.inputFieldId)
     : undefined;
+  const aliasShadowsAnotherSourceField = inspection.ok
+    ? inspection.projection.source.fields.some(
+        (field) => field.name === alias && field.name !== output?.sourceFieldName
+      )
+    : false;
   if (
     !inspection.ok ||
     capability == null ||
@@ -586,6 +591,7 @@ export function applyDvtSubstraitProjectionFunction(
     inspection.projection.outputs.some(
       (candidate) => candidate.fieldId !== args.fieldId && candidate.name === alias
     ) ||
+    aliasShadowsAnotherSourceField ||
     (args.inputFieldId != null && args.inputFieldId === args.fieldId)
   ) {
     return draft;
