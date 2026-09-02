@@ -110,6 +110,29 @@ describe('CanvasNodeWorkbenchOverlay', () => {
     });
   });
 
+  it('opens semi-docked beside the inspected graph card', () => {
+    vi.spyOn(container, 'getBoundingClientRect').mockReturnValue(new DOMRect(20, 40, 1_000, 700));
+    const graphNode = document.createElement('div');
+    graphNode.className = 'react-flow__node';
+    graphNode.dataset.id = NODE.id;
+    vi.spyOn(graphNode, 'getBoundingClientRect').mockReturnValue(new DOMRect(100, 80, 320, 240));
+    document.body.appendChild(graphNode);
+
+    renderOverlay(root);
+
+    const overlay = container.querySelector<HTMLElement>(
+      '[data-slot="canvas-node-workbench-overlay"]'
+    )!;
+    const localCardLeft = 80;
+    const localCardRight = 400;
+    const localCardTop = 40;
+
+    expect(Number.parseFloat(overlay.style.left)).toBeGreaterThan(localCardLeft);
+    expect(Number.parseFloat(overlay.style.left)).toBeLessThan(localCardRight);
+    expect(Number.parseFloat(overlay.style.top)).toBeGreaterThan(localCardTop);
+    graphNode.remove();
+  });
+
   it('moves from the header when the browser declines synthetic pointer capture', () => {
     renderOverlay(root);
 
