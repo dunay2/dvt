@@ -31,6 +31,7 @@ describe('GraphNodeColumnSection functional composition', () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     act(() => root.unmount());
     container.remove();
     document
@@ -46,6 +47,7 @@ describe('GraphNodeColumnSection functional composition', () => {
   });
 
   it('opens a compatible function choice only after dropping in the target centre', async () => {
+    vi.useFakeTimers();
     const onColumnFunctionApply = vi.fn();
     const onColumnReorder = vi.fn();
     await act(async () => {
