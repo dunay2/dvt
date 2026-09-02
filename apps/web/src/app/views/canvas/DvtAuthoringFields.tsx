@@ -235,7 +235,7 @@ export function DvtAuthoringFields({
         substraitUnionAllSummary={
           unionAllEntry == null
             ? undefined
-            : `${unionAllEntry.inputs[0].table} + ${unionAllEntry.inputs[1].table} · ${unionAllEntry.inputs[0].fields.length} fields`
+            : `${unionAllEntry.inputs.map((input) => input.table).join(' + ')} · ${unionAllEntry.inputs[0]?.fields.length ?? 0} fields`
         }
         onStartSubstraitUnionAll={
           unionAllEntry == null

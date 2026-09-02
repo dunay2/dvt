@@ -242,10 +242,7 @@ function readSubstraitJoinLineage(node: CanonicalNode): DvtSubstraitInnerJoinLin
 }
 
 type DvtSubstraitUnionAllLineage = Readonly<{
-  inputs: readonly [
-    Readonly<{ sourceRef: ConnectedSourceRef }>,
-    Readonly<{ sourceRef: ConnectedSourceRef }>,
-  ];
+  inputs: readonly Readonly<{ sourceRef: ConnectedSourceRef }>[];
   outputs: readonly Readonly<{ fieldKey: string; name: string; fieldId: string }>[];
 }>;
 

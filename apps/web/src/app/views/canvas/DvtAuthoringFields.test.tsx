@@ -744,7 +744,7 @@ describe('DvtAuthoringFields', () => {
     expect(container.querySelector('[data-slot="dvt-start-substrait-inner-join"]')).toBeNull();
   });
 
-  it('starts one typed Substrait UNION ALL from two compatible connected datasets', () => {
+  it('starts one typed Substrait UNION ALL from N compatible connected datasets', () => {
     const north = buildJoinWarehouseSourceNode({
       id: 'source-customers-north',
       table: 'customers_north',
@@ -753,6 +753,11 @@ describe('DvtAuthoringFields', () => {
     const south = buildJoinWarehouseSourceNode({
       id: 'source-customers-south',
       table: 'customers_south',
+      columns: ['customer_id', 'name', 'country'],
+    });
+    const west = buildJoinWarehouseSourceNode({
+      id: 'source-customers-west',
+      table: 'customers_west',
       columns: ['customer_id', 'name', 'country'],
     });
     const transform = buildDvtNode('dvt:transform');
@@ -769,9 +774,15 @@ describe('DvtAuthoringFields', () => {
         targetId: transform.id,
         relation: 'lineage',
       },
+      {
+        id: 'west-transform',
+        sourceId: west.id,
+        targetId: transform.id,
+        relation: 'lineage',
+      },
     ];
 
-    renderFields(transform, undefined, undefined, [north, south, transform], edges, 'code');
+    renderFields(transform, undefined, undefined, [north, south, west, transform], edges, 'code');
 
     const entry = container.querySelector<HTMLButtonElement>(
       '[data-slot="dvt-start-substrait-union-all"]'
@@ -788,6 +799,7 @@ describe('DvtAuthoringFields', () => {
     ).not.toBeNull();
     expect(container.textContent).toContain('customers_north');
     expect(container.textContent).toContain('customers_south');
+    expect(container.textContent).toContain('customers_west');
     expect(container.textContent).toContain('customer_id, name, country');
     expect(container.querySelector('[data-testid="dvt-transform-sql-editor"]')).toBeNull();
     expect(draftJson()).toContain('"shape":"union_all"');

@@ -1,4 +1,4 @@
-/** Owned concern: edit the admitted two-source Substrait UNION ALL in Node Properties. */
+/** Owned concern: edit the admitted N-source Substrait UNION ALL in Node Properties. */
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
 
 import { Button } from '../../components/ui/button';

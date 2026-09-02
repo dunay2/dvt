@@ -667,6 +667,17 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
             sourceObjectId: 'tenant-data.customers-south',
           },
         },
+        {
+          nodeId: 'source-customers-west',
+          schema: 'tenant-data',
+          table: 'customers-west',
+          fields,
+          sourceRef: {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef,
+            sourceObjectId: 'tenant-data.customers-west',
+          },
+        },
       ],
       targetNodeId: 'transform-all-customers',
     });
@@ -675,7 +686,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     const normalized = sql.replaceAll(/\s+/g, ' ').trim().toLowerCase();
 
     expect(normalized).toMatch(
-      /^select customer_id, name, country from "tenant-data"\."customers-north" union all select customer_id, name, country from "tenant-data"\."customers-south";?$/
+      /^\(select customer_id, name, country from "tenant-data"\."customers-north" union all select customer_id, name, country from "tenant-data"\."customers-south"\) union all select customer_id, name, country from "tenant-data"\."customers-west";?$/
     );
   });
 
