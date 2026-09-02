@@ -120,7 +120,7 @@ function createEmptyRecipe(): VisualTransformRecipeV1 {
 }
 
 function toVisualFunctionOperation(name: string): VisualTransformOperationV1 {
-  if (name !== 'trim' && name !== 'upper') {
+  if (name !== 'trim' && name !== 'upper' && name !== 'lower') {
     throw new Error(`Unsupported canonical projection operation: ${name}`);
   }
   return { kind: 'function', functionId: name, args: [] };
@@ -243,19 +243,21 @@ function isSimplePassthrough(output: VisualTransformOutputColumnV1): boolean {
 
 function readProjectionFunctionNames(
   output: VisualTransformOutputColumnV1
-): readonly ('trim' | 'upper')[] | null {
+): readonly ('trim' | 'upper' | 'lower')[] | null {
   if (
     output.expression.inputs.length !== 1 ||
     output.expression.operations[0]?.kind !== 'passthrough'
   ) {
     return null;
   }
-  const names: ('trim' | 'upper')[] = [];
+  const names: ('trim' | 'upper' | 'lower')[] = [];
   for (const operation of output.expression.operations.slice(1)) {
     if (
       operation.kind !== 'function' ||
       operation.args.length !== 0 ||
-      (operation.functionId !== 'trim' && operation.functionId !== 'upper')
+      (operation.functionId !== 'trim' &&
+        operation.functionId !== 'upper' &&
+        operation.functionId !== 'lower')
     ) {
       return null;
     }
@@ -318,6 +320,7 @@ function persistProjectionRecipe(args: {
       const nextDraft = applyDvtSubstraitProjectionFunction(draft, {
         fieldId: output.id,
         capabilityId: capability.capabilityId,
+        alias: output.name,
         dataType: sourceField.dataType,
         provider: source.sourceRef.connectionRef.provider,
       });

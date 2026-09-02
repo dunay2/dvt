@@ -45,6 +45,7 @@ describe('Substrait field function composition', () => {
       fieldId: 'output:order_id',
       inputFieldId: 'output:customer',
       capabilityId: upper.capabilityId,
+      alias: 'order_id',
       dataType: 'text',
       provider: 'postgres',
     });
@@ -93,6 +94,7 @@ describe('Substrait field function composition', () => {
         fieldId: 'output:customer',
         inputFieldId: 'output:missing',
         capabilityId: upper.capabilityId,
+        alias: 'customer',
         dataType: 'text',
         provider: 'postgres',
       })

@@ -131,12 +131,14 @@ describe('GraphNodeColumnSection', () => {
           columns={[
             {
               id: 'field:model:event_id',
-              name: 'event_id',
+              name: 'event_id_clean',
               type: 'text',
               nullable: false,
               primaryKey: true,
               output: true,
               sourceNodeName: 'auth_audit_events',
+              sourceFieldName: 'event_id',
+              operations: ['trim', 'upper'],
               reference: 'field:model:event_id',
             },
             {
@@ -168,8 +170,11 @@ describe('GraphNodeColumnSection', () => {
     expect(pieces[0]?.querySelector('[data-slot="graph-node-column-output-check"]')).not.toBeNull();
     expect(pieces[1]?.querySelector('[data-slot="graph-node-column-output-check"]')).toBeNull();
     expect(pieces[0]?.getAttribute('tabindex')).toBe('0');
-    expect(pieces[0]?.getAttribute('aria-label')).toContain('event_id');
+    expect(pieces[0]?.getAttribute('aria-label')).toContain('event_id_clean');
     expect(pieces[0]?.getAttribute('aria-label')).toContain('salida');
+    expect(
+      pieces[0]?.querySelector('[data-slot="graph-node-column-alias"]')?.textContent
+    ).toContain('event_id_clean');
 
     await act(async () => {
       pieces[0]?.focus();
@@ -182,6 +187,9 @@ describe('GraphNodeColumnSection', () => {
     expect(tooltip?.textContent).toContain('No nulo');
     expect(tooltip?.textContent).toContain('auth_audit_events');
     expect(tooltip?.textContent).toContain('field:model:event_id');
+    expect(tooltip?.textContent).toContain(
+      'event_id → TRIM(event_id) → UPPER(TRIM(event_id)) → event_id_clean'
+    );
   });
 
   it('toggles canonical output inclusion from the check control', async () => {
@@ -286,7 +294,7 @@ describe('GraphNodeColumnSection', () => {
     ]);
   });
 
-  it('offers admitted column functions from the native pointer and keyboard context menu', async () => {
+  it('requires an output alias before applying a function from pointer or keyboard menus', async () => {
     const onColumnFunctionApply = vi.fn();
     await act(async () => {
       root.render(
@@ -305,6 +313,7 @@ describe('GraphNodeColumnSection', () => {
                 ],
               },
             },
+            { id: 'input:status', name: 'status', type: 'text', output: false },
           ]}
           onColumnFunctionApply={onColumnFunctionApply}
         />
@@ -324,18 +333,40 @@ describe('GraphNodeColumnSection', () => {
       await Promise.resolve();
     });
 
-    expect(document.body.textContent).toContain('Funciones de texto');
     const upperItem = document.body.querySelector<HTMLElement>(
       '[data-slot="graph-node-column-function"][data-capability-id="capability:upper"]'
     );
-    expect(upperItem?.textContent).toBe('UPPER');
+    expect(upperItem).not.toBeNull();
     await act(async () => {
       fireEvent.click(upperItem!);
+    });
+    expect(onColumnFunctionApply).not.toHaveBeenCalled();
+    const aliasInput = document.body.querySelector<HTMLInputElement>(
+      '[data-slot="graph-node-column-function-alias-input"]'
+    );
+    const aliasSubmit = document.body.querySelector<HTMLButtonElement>(
+      '[data-slot="graph-node-column-function-alias-submit"]'
+    );
+    expect(aliasInput).not.toBeNull();
+    expect(aliasSubmit?.disabled).toBe(true);
+    await act(async () => {
+      fireEvent.change(aliasInput!, { target: { value: 'status' } });
+      fireEvent.click(aliasSubmit!);
+    });
+    expect(onColumnFunctionApply).not.toHaveBeenCalled();
+    expect(document.body.querySelector('[role="alert"]')).not.toBeNull();
+    expect(
+      document.body.querySelector('[data-slot="graph-node-column-function-alias-form"]')
+    ).not.toBeNull();
+    await act(async () => {
+      fireEvent.change(aliasInput!, { target: { value: 'customer_clean' } });
+      fireEvent.click(aliasSubmit!);
     });
     expect(onColumnFunctionApply).toHaveBeenCalledWith({
       nodeId: 'transform-orders',
       columnId: 'output:customer',
       capabilityId: 'capability:upper',
+      alias: 'customer_clean',
     });
 
     await act(async () => {

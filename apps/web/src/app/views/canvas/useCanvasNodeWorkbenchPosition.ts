@@ -5,24 +5,21 @@ import {
   useRef,
   useState,
   type HTMLAttributes,
-  type KeyboardEvent,
   type RefObject,
 } from 'react';
 
+import { readCanvasNodeWorkbenchGeometry } from './canvasNodeWorkbenchDomGeometry';
 import {
   CANVAS_NODE_WORKBENCH_DEFAULT_TOP,
   CANVAS_NODE_WORKBENCH_INSET,
   clampCanvasNodeWorkbenchPosition,
   moveCanvasNodeWorkbenchPosition,
+  preserveCanvasNodeWorkbenchPositionReference,
+  resolveAnchoredCanvasNodeWorkbenchPosition,
+  resolveCanvasNodeWorkbenchKeyboardDelta,
   resolveDefaultCanvasNodeWorkbenchPosition,
-  type CanvasNodeWorkbenchBounds,
   type CanvasNodeWorkbenchPosition,
 } from './canvasNodeWorkbenchPositionModel';
-
-const DEFAULT_SURFACE_WIDTH = 448;
-const DEFAULT_SURFACE_HEIGHT = 640;
-const KEYBOARD_MOVE_STEP = 8;
-const KEYBOARD_MOVE_LARGE_STEP = 32;
 
 type CanvasNodeWorkbenchDragState = Readonly<{
   pointerId: number;
@@ -41,81 +38,6 @@ type CanvasNodeWorkbenchPositionController = Readonly<{
   surfaceRef: RefObject<HTMLDivElement>;
 }>;
 
-function resolveDimension(primary: number, secondary: number, fallback: number): number {
-  if (primary > 0) {
-    return primary;
-  }
-  if (secondary > 0) {
-    return secondary;
-  }
-  return fallback;
-}
-
-function readWorkbenchBounds(surface: HTMLDivElement | null): CanvasNodeWorkbenchBounds {
-  const container =
-    surface?.offsetParent instanceof HTMLElement ? surface.offsetParent : surface?.parentElement;
-  const containerRect = container?.getBoundingClientRect();
-  const surfaceRect = surface?.getBoundingClientRect();
-  const viewportWidth = typeof window === 'undefined' ? DEFAULT_SURFACE_WIDTH : window.innerWidth;
-  const viewportHeight =
-    typeof window === 'undefined' ? DEFAULT_SURFACE_HEIGHT : window.innerHeight;
-  const containerWidth = resolveDimension(
-    containerRect?.width ?? 0,
-    container?.clientWidth ?? 0,
-    viewportWidth
-  );
-  const containerHeight = resolveDimension(
-    containerRect?.height ?? 0,
-    container?.clientHeight ?? 0,
-    viewportHeight
-  );
-  const availableWidth = Math.max(0, containerWidth - CANVAS_NODE_WORKBENCH_INSET * 2);
-  const availableHeight = Math.max(0, containerHeight - CANVAS_NODE_WORKBENCH_INSET * 2);
-
-  return {
-    containerWidth,
-    containerHeight,
-    surfaceWidth: Math.min(
-      resolveDimension(surfaceRect?.width ?? 0, surface?.offsetWidth ?? 0, DEFAULT_SURFACE_WIDTH),
-      availableWidth
-    ),
-    surfaceHeight: Math.min(
-      resolveDimension(
-        surfaceRect?.height ?? 0,
-        surface?.offsetHeight ?? 0,
-        DEFAULT_SURFACE_HEIGHT
-      ),
-      availableHeight
-    ),
-  };
-}
-
-function resolveKeyboardDelta(
-  event: KeyboardEvent<HTMLDivElement>
-): Readonly<{ x: number; y: number }> | null {
-  const step = event.shiftKey ? KEYBOARD_MOVE_LARGE_STEP : KEYBOARD_MOVE_STEP;
-
-  switch (event.key) {
-    case 'ArrowLeft':
-      return { x: -step, y: 0 };
-    case 'ArrowRight':
-      return { x: step, y: 0 };
-    case 'ArrowUp':
-      return { x: 0, y: -step };
-    case 'ArrowDown':
-      return { x: 0, y: step };
-    default:
-      return null;
-  }
-}
-
-function preservePositionReference(
-  current: CanvasNodeWorkbenchPosition,
-  next: CanvasNodeWorkbenchPosition
-): CanvasNodeWorkbenchPosition {
-  return current.left === next.left && current.top === next.top ? current : next;
-}
-
 function captureActivePointer(element: HTMLDivElement, pointerId: number): void {
   if (element.setPointerCapture == null) {
     return;
@@ -131,7 +53,8 @@ function captureActivePointer(element: HTMLDivElement, pointerId: number): void 
 }
 
 export function useCanvasNodeWorkbenchPosition(
-  enabled: boolean
+  enabled: boolean,
+  anchorNodeId: string | null = null
 ): CanvasNodeWorkbenchPositionController {
   const surfaceRef = useRef<HTMLDivElement>(null);
   const dragStateRef = useRef<CanvasNodeWorkbenchDragState | null>(null);
@@ -144,19 +67,24 @@ export function useCanvasNodeWorkbenchPosition(
   useLayoutEffect(() => {
     if (!enabled) {
       dragStateRef.current = null;
+      positionedRef.current = false;
       return;
     }
 
+    positionedRef.current = false;
+
     const reconcilePosition = (): void => {
-      const bounds = readWorkbenchBounds(surfaceRef.current);
+      const geometry = readCanvasNodeWorkbenchGeometry(surfaceRef.current, anchorNodeId);
       setPosition((current) => {
         if (!positionedRef.current) {
           positionedRef.current = true;
-          return resolveDefaultCanvasNodeWorkbenchPosition(bounds);
+          return geometry.anchor == null
+            ? resolveDefaultCanvasNodeWorkbenchPosition(geometry.bounds)
+            : resolveAnchoredCanvasNodeWorkbenchPosition(geometry.anchor, geometry.bounds);
         }
-        return preservePositionReference(
+        return preserveCanvasNodeWorkbenchPositionReference(
           current,
-          clampCanvasNodeWorkbenchPosition(current, bounds)
+          clampCanvasNodeWorkbenchPosition(current, geometry.bounds)
         );
       });
     };
@@ -179,7 +107,7 @@ export function useCanvasNodeWorkbenchPosition(
       window.removeEventListener('resize', reconcilePosition);
       resizeObserver?.disconnect();
     };
-  }, [enabled]);
+  }, [anchorNodeId, enabled]);
 
   const handlePointerDown = useCallback<
     NonNullable<HTMLAttributes<HTMLDivElement>['onPointerDown']>
@@ -203,23 +131,26 @@ export function useCanvasNodeWorkbenchPosition(
 
   const handlePointerMove = useCallback<
     NonNullable<HTMLAttributes<HTMLDivElement>['onPointerMove']>
-  >((event) => {
-    const dragState = dragStateRef.current;
-    if (dragState == null || dragState.pointerId !== event.pointerId) {
-      return;
-    }
+  >(
+    (event) => {
+      const dragState = dragStateRef.current;
+      if (dragState == null || dragState.pointerId !== event.pointerId) {
+        return;
+      }
 
-    setPosition(
-      moveCanvasNodeWorkbenchPosition(
-        dragState.origin,
-        {
-          x: event.clientX - dragState.startX,
-          y: event.clientY - dragState.startY,
-        },
-        readWorkbenchBounds(surfaceRef.current)
-      )
-    );
-  }, []);
+      setPosition(
+        moveCanvasNodeWorkbenchPosition(
+          dragState.origin,
+          {
+            x: event.clientX - dragState.startX,
+            y: event.clientY - dragState.startY,
+          },
+          readCanvasNodeWorkbenchGeometry(surfaceRef.current, anchorNodeId).bounds
+        )
+      );
+    },
+    [anchorNodeId]
+  );
 
   const handlePointerEnd = useCallback<NonNullable<HTMLAttributes<HTMLDivElement>['onPointerUp']>>(
     (event) => {
@@ -232,20 +163,24 @@ export function useCanvasNodeWorkbenchPosition(
 
   const handleKeyDown = useCallback<NonNullable<HTMLAttributes<HTMLDivElement>['onKeyDown']>>(
     (event) => {
-      const delta = resolveKeyboardDelta(event);
+      const delta = resolveCanvasNodeWorkbenchKeyboardDelta(event.key, event.shiftKey);
       if (delta == null) {
         return;
       }
 
       event.preventDefault();
       setPosition((current) =>
-        preservePositionReference(
+        preserveCanvasNodeWorkbenchPositionReference(
           current,
-          moveCanvasNodeWorkbenchPosition(current, delta, readWorkbenchBounds(surfaceRef.current))
+          moveCanvasNodeWorkbenchPosition(
+            current,
+            delta,
+            readCanvasNodeWorkbenchGeometry(surfaceRef.current, anchorNodeId).bounds
+          )
         )
       );
     },
-    []
+    [anchorNodeId]
   );
 
   return {

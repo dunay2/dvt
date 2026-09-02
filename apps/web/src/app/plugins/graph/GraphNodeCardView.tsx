@@ -7,6 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/too
 import { GraphNodeColumnSection } from './GraphNodeColumnSection';
 import type {
   GraphNodeColumn,
+  GraphNodeColumnFunctionApplyIdentity,
   GraphNodeColumnPortDirection,
   GraphNodeColumnPortIdentity,
   GraphNodeColumnReorderIdentity,
@@ -56,11 +57,7 @@ export type GraphNodeCardViewProps = Readonly<{
   columnPortDirections?: readonly GraphNodeColumnPortDirection[];
   activeColumnHandleId?: string | null;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
-  onColumnFunctionApply?: (identity: {
-    nodeId: string;
-    columnId: string;
-    capabilityId: string;
-  }) => void;
+  onColumnFunctionApply?: (identity: GraphNodeColumnFunctionApplyIdentity) => void;
   onColumnOutputToggle?: (identity: {
     nodeId: string;
     columnId: string;

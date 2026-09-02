@@ -9,6 +9,13 @@ import { Badge } from '../ui/badge';
 import { cn } from '../ui/utils';
 import type { NodePropertySection } from './nodePropertiesReadModel';
 
+export type NodePropertyTableCellRenderContext = Readonly<{
+  sectionId: NodePropertySection['id'];
+  rowId: string;
+  columnKey: string;
+  value: string;
+}>;
+
 export type NodePropertySectionViewProps = Readonly<{
   section: NodePropertySection;
   slots: Readonly<{ sectionPrefix: string; code: string }>;
@@ -16,6 +23,7 @@ export type NodePropertySectionViewProps = Readonly<{
   showCountBadge?: boolean;
   beforeBody?: ReactNode;
   afterBody?: ReactNode;
+  renderTableCell?: (context: NodePropertyTableCellRenderContext) => ReactNode;
 }>;
 
 function sectionSlot(
@@ -29,7 +37,8 @@ function renderSectionBody(
   section: NodePropertySection,
   slots: Readonly<{ code: string }>,
   surface: NodePropertySectionViewProps['surface'],
-  hasContextualContent: boolean
+  hasContextualContent: boolean,
+  renderTableCell?: NodePropertySectionViewProps['renderTableCell']
 ): JSX.Element | null {
   if (section.code != null) {
     return (
@@ -84,7 +93,13 @@ function renderSectionBody(
                             {resolveColumnLabel(key)}
                           </dt>
                           <dd className="min-w-0 break-words text-(--text-primary)">
-                            {row.cells[key] || (
+                            {(renderTableCell?.({
+                              sectionId: section.id,
+                              rowId: row.id,
+                              columnKey: key,
+                              value: row.cells[key] ?? '',
+                            }) ??
+                              row.cells[key]) || (
                               <span className={inspectorVisualClasses.inspectorSubtle}>-</span>
                             )}
                           </dd>
@@ -161,7 +176,13 @@ function renderSectionBody(
                         : 'text-slate-200'
                     )}
                   >
-                    {row.cells[key] || (
+                    {(renderTableCell?.({
+                      sectionId: section.id,
+                      rowId: row.id,
+                      columnKey: key,
+                      value: row.cells[key] ?? '',
+                    }) ??
+                      row.cells[key]) || (
                       <span className={inspectorVisualClasses.inspectorSubtle}>-</span>
                     )}
                   </td>
@@ -235,6 +256,7 @@ export function NodePropertySectionView({
   showCountBadge = false,
   beforeBody,
   afterBody,
+  renderTableCell,
 }: NodePropertySectionViewProps): JSX.Element {
   const renderContributionSlot = (placement: 'before-body' | 'after-body', content: ReactNode) =>
     content == null ? null : (
@@ -264,7 +286,13 @@ export function NodePropertySectionView({
         </p>
       )}
       {renderContributionSlot('before-body', beforeBody)}
-      {renderSectionBody(section, slots, surface, beforeBody != null || afterBody != null)}
+      {renderSectionBody(
+        section,
+        slots,
+        surface,
+        beforeBody != null || afterBody != null,
+        renderTableCell
+      )}
       {renderContributionSlot('after-body', afterBody)}
     </section>
   );

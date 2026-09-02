@@ -134,6 +134,7 @@ export const DvtSubstraitFieldBindingV1Schema = z
     relationId: NonBlankStringSchema,
     outputOrdinal: z.number().int().nonnegative(),
     displayName: NonBlankStringSchema.optional(),
+    description: NonBlankStringSchema.optional(),
   })
   .strict();
 

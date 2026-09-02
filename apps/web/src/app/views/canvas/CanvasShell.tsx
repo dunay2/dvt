@@ -35,6 +35,7 @@ import {
   type CanvasSinkDataSampleTarget,
   type CanvasSourceDataSampleTarget,
 } from './canvasSourceDataSample';
+import { findCanvasGraphNodeElement } from './canvasNodeWorkbenchDomGeometry';
 
 type WorkbenchOpener = Readonly<{
   element: HTMLElement | null;
@@ -118,12 +119,7 @@ export default function CanvasShell({
     const opener = workbenchOpenerRef.current;
     workbenchOpenerRef.current = null;
     window.requestAnimationFrame(() => {
-      const fallbackNode =
-        opener?.fallbackNodeId == null
-          ? null
-          : (Array.from(document.querySelectorAll<HTMLElement>('.react-flow__node')).find(
-              (node) => node.dataset.id === opener.fallbackNodeId
-            ) ?? null);
+      const fallbackNode = findCanvasGraphNodeElement(opener?.fallbackNodeId ?? null);
       const target =
         opener?.element?.isConnected === true
           ? opener.element

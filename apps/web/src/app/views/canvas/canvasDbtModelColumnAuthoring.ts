@@ -97,3 +97,50 @@ export function setDbtModelProjectionColumnOutput(args: {
     node: applyDbtNodeAuthoringMetadata(args.node, { ...metadata, projectionColumns }),
   };
 }
+
+export function reorderDbtModelProjectionColumn(args: {
+  node: CanonicalNode;
+  availableColumns: readonly string[];
+  columnName: string;
+  targetColumnName: string;
+  placement: 'before' | 'after';
+}): DbtModelColumnAuthoringResult {
+  if (args.node.pluginId !== 'dbt' || args.node.kind !== 'dbt:model') {
+    return { outcome: 'rejected', reason: 'not_generated_dbt_model' };
+  }
+  const availableColumns = uniqueColumnNames(args.availableColumns);
+  if (
+    args.columnName === args.targetColumnName ||
+    !availableColumns.includes(args.columnName) ||
+    !availableColumns.includes(args.targetColumnName)
+  ) {
+    return { outcome: 'rejected', reason: 'column_not_found' };
+  }
+  const metadata = createDbtNodeAuthoringMetadata(args.node);
+  if (metadata.modelSql != null) {
+    return { outcome: 'rejected', reason: 'not_generated_dbt_model' };
+  }
+  const projectionColumns = [
+    ...resolveDbtModelProjectionColumns(metadata.projectionColumns, availableColumns),
+  ];
+  const sourceIndex = projectionColumns.findIndex((column) => column.name === args.columnName);
+  const [movedColumn] = projectionColumns.splice(sourceIndex, 1);
+  const targetIndex = projectionColumns.findIndex(
+    (column) => column.name === args.targetColumnName
+  );
+  if (movedColumn == null || targetIndex < 0) {
+    return { outcome: 'rejected', reason: 'column_not_found' };
+  }
+  projectionColumns.splice(
+    args.placement === 'after' ? targetIndex + 1 : targetIndex,
+    0,
+    movedColumn
+  );
+  const rejection = validateDbtModelProjectionColumns(projectionColumns, availableColumns);
+  if (rejection != null) return { outcome: 'rejected', reason: rejection };
+
+  return {
+    outcome: 'applied',
+    node: applyDbtNodeAuthoringMetadata(args.node, { ...metadata, projectionColumns }),
+  };
+}

@@ -1,6 +1,7 @@
 import type { Node } from '@xyflow/react';
 import type {
   GraphNodeColumn,
+  GraphNodeColumnFunctionApplyIdentity,
   GraphNodeColumnOutputToggleIdentity,
   GraphNodeColumnPortIdentity,
   GraphNodeColumnReorderIdentity,
@@ -17,13 +18,9 @@ type NodeActionHandlers = {
   onToggleNodeSelection?: (nodeId: string, shouldSelect: boolean) => void;
   onAttachSchemaToNode?: (nodeId: string, schemaName: string) => void;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
-  onApplyDvtSubstraitColumnFunction?: (identity: {
-    nodeId: string;
-    columnId: string;
-    capabilityId: string;
-  }) => void;
+  onApplyCanvasColumnFunction?: (identity: GraphNodeColumnFunctionApplyIdentity) => void;
   onToggleCanvasColumnOutput?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
-  onReorderDvtSubstraitColumnOutput?: (identity: GraphNodeColumnReorderIdentity) => void;
+  onReorderCanvasColumnOutput?: (identity: GraphNodeColumnReorderIdentity) => void;
   onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;
   onAutomapColumns?: (nodeId: string, columns: readonly GraphNodeColumn[]) => void;
   resolveAlgebraicCompositionOperations?: (
@@ -70,9 +67,9 @@ export function buildCanvasNodeInteractionPresentation({
       onToggleNodeSelection: handlers.onToggleNodeSelection,
       onAttachSchemaToNode: handlers.onAttachSchemaToNode,
       onColumnPortActivate: handlers.onColumnPortActivate,
-      onApplyDvtSubstraitColumnFunction: handlers.onApplyDvtSubstraitColumnFunction,
+      onApplyCanvasColumnFunction: handlers.onApplyCanvasColumnFunction,
       onToggleCanvasColumnOutput: handlers.onToggleCanvasColumnOutput,
-      onReorderDvtSubstraitColumnOutput: handlers.onReorderDvtSubstraitColumnOutput,
+      onReorderCanvasColumnOutput: handlers.onReorderCanvasColumnOutput,
       onColumnDisclosureChange: handlers.onColumnDisclosureChange,
       onAutomapColumns: handlers.onAutomapColumns,
       resolveAlgebraicCompositionOperations: handlers.resolveAlgebraicCompositionOperations,

@@ -119,7 +119,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       provider: 'postgres',
     });
 
-    expect(textFunctions.map((item) => item.name)).toEqual(['trim', 'upper']);
+    expect(textFunctions.map((item) => item.name)).toEqual(['lower', 'trim', 'upper']);
     expect(textFunctions.every((item) => item.category === 'text')).toBe(true);
     expect(textFunctions.every((item) => item.capabilityId.includes('scalar-function'))).toBe(true);
     expect(
@@ -146,12 +146,14 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     const withTrim = applyDvtSubstraitProjectionFunction(base, {
       fieldId: 'output:customer',
       capabilityId: trim.capabilityId,
+      alias: 'buyer',
       dataType: 'text',
       provider: 'postgres',
     });
     const withUpper = applyDvtSubstraitProjectionFunction(withTrim, {
       fieldId: 'output:customer',
       capabilityId: upper.capabilityId,
+      alias: 'buyer',
       dataType: 'text',
       provider: 'postgres',
     });
@@ -164,6 +166,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       applyDvtSubstraitProjectionFunction(base, {
         fieldId: 'output:amount',
         capabilityId: trim.capabilityId,
+        alias: 'amount',
         dataType: 'numeric',
         provider: 'postgres',
       })
@@ -180,6 +183,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       applyDvtSubstraitProjectionFunction(connectedOrdersProjectionDraft(), {
         fieldId: 'output:customer',
         capabilityId: trim.capabilityId,
+        alias: 'buyer',
         dataType: 'text',
         provider: 'postgres',
       });
@@ -215,6 +219,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     const withTrim = applyDvtSubstraitProjectionFunction(connectedOrdersProjectionDraft(), {
       fieldId: 'output:customer',
       capabilityId: trim.capabilityId,
+      alias: 'buyer',
       dataType: 'text',
       provider: 'postgres',
     });
@@ -228,6 +233,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     const withUpper = applyDvtSubstraitProjectionFunction(withTrim, {
       fieldId: 'output:customer',
       capabilityId: upper.capabilityId,
+      alias: 'buyer',
       dataType: 'text',
       provider: 'postgres',
     });
@@ -661,6 +667,17 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
             sourceObjectId: 'tenant-data.customers-south',
           },
         },
+        {
+          nodeId: 'source-customers-west',
+          schema: 'tenant-data',
+          table: 'customers-west',
+          fields,
+          sourceRef: {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef,
+            sourceObjectId: 'tenant-data.customers-west',
+          },
+        },
       ],
       targetNodeId: 'transform-all-customers',
     });
@@ -669,7 +686,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     const normalized = sql.replaceAll(/\s+/g, ' ').trim().toLowerCase();
 
     expect(normalized).toMatch(
-      /^select customer_id, name, country from "tenant-data"\."customers-north" union all select customer_id, name, country from "tenant-data"\."customers-south";?$/
+      /^\(select customer_id, name, country from "tenant-data"\."customers-north" union all select customer_id, name, country from "tenant-data"\."customers-south"\) union all select customer_id, name, country from "tenant-data"\."customers-west";?$/
     );
   });
 

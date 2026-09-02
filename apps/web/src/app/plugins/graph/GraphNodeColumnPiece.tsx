@@ -1,5 +1,5 @@
 /** Owned concern: render one graph-node column piece and its factual metadata tooltip. */
-import { Check } from 'lucide-react';
+import { ArrowRight, Check } from 'lucide-react';
 import {
   forwardRef,
   type ComponentPropsWithoutRef,
@@ -58,7 +58,19 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
         onDragEnd={onDragEnd}
         className={graphNodeColumnClasses.piece}
       >
-        <span className={graphNodeColumnClasses.name}>{column.name}</span>
+        {column.sourceFieldName != null && column.sourceFieldName !== column.name ? (
+          <span data-slot="graph-node-column-alias" className="flex min-w-0 items-center gap-1.5">
+            <span className={graphNodeColumnClasses.sourceName}>{column.sourceFieldName}</span>
+            <ArrowRight
+              aria-hidden="true"
+              className={graphNodeColumnClasses.aliasArrow}
+              size={12}
+            />
+            <span className={graphNodeColumnClasses.name}>{column.name}</span>
+          </span>
+        ) : (
+          <span className={graphNodeColumnClasses.name}>{column.name}</span>
+        )}
         <span className={graphNodeColumnClasses.metadata}>
           <span className={graphNodeColumnClasses.type}>{column.type}</span>
           {column.primaryKey === true ? (
@@ -100,6 +112,7 @@ export function GraphNodeColumnTooltip(props: {
   copy: GraphNodeColumnCopy;
 }): ReactElement {
   const { column, copy } = props;
+  const lineage = resolveColumnLineage(column);
   const rows = [
     { label: copy.columnTypeLabel, value: column.type },
     ...(column.nullable == null
@@ -116,6 +129,10 @@ export function GraphNodeColumnTooltip(props: {
     ...(column.reference == null
       ? []
       : [{ label: copy.columnReferenceLabel, value: column.reference }]),
+    ...(lineage == null ? [] : [{ label: copy.columnLineageLabel, value: lineage }]),
+    ...(column.description == null
+      ? []
+      : [{ label: copy.columnCommentLabel, value: column.description }]),
     {
       label: copy.columnsLabel,
       value: props.isOutput ? copy.columnOutputValue : copy.columnAvailableInputValue,
@@ -134,4 +151,19 @@ export function GraphNodeColumnTooltip(props: {
       </dl>
     </TooltipContent>
   );
+}
+
+function resolveColumnLineage(column: GraphNodeColumn): string | null {
+  if (column.sourceFieldName == null) return null;
+  const operations = column.operations ?? [];
+  if (operations.length === 0 && column.sourceFieldName === column.name) return null;
+
+  let expression = column.sourceFieldName;
+  const lineage = [expression];
+  operations.forEach((operation) => {
+    expression = `${operation.toUpperCase()}(${expression})`;
+    lineage.push(expression);
+  });
+  lineage.push(column.name);
+  return lineage.join(' → ');
 }

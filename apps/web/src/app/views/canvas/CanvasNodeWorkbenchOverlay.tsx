@@ -8,6 +8,7 @@ import type {
 } from './canvasShell.types';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { findCanvasGraphNodeElement } from './canvasNodeWorkbenchDomGeometry';
 import type { CanvasNodeWorkbenchPosition } from './canvasNodeWorkbenchPositionModel';
 import { isCanvasNodeWorkbenchVisible } from './canvasNodeWorkbenchVisibility';
 import { canvasNodeWorkbenchVisualTokens } from './canvasNodeWorkbenchVisualTokens';
@@ -82,16 +83,13 @@ export function CanvasNodeWorkbenchOverlay({
   });
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasViewCopy(applicationLanguage);
-  const positionController = useCanvasNodeWorkbenchPosition(visible);
   const inspectorNodeId = panels.inspectorNode?.id ?? null;
+  const positionController = useCanvasNodeWorkbenchPosition(visible, inspectorNodeId);
 
   const hideAndRestoreNodeFocus = useCallback((): void => {
     onHide();
     window.requestAnimationFrame(() => {
-      const nodeElement = Array.from(
-        document.querySelectorAll<HTMLElement>('.react-flow__node')
-      ).find((candidate) => candidate.dataset.id === inspectorNodeId);
-      nodeElement?.focus({ preventScroll: true });
+      findCanvasGraphNodeElement(inspectorNodeId)?.focus({ preventScroll: true });
     });
   }, [inspectorNodeId, onHide]);
 

@@ -461,6 +461,8 @@ export type CanvasViewCopy = {
   readonly inspectorNodeTagsLabel: string;
   readonly inspectorNodeTagsPlaceholder: string;
   readonly inspectorNodeDescriptionLabel: string;
+  readonly inspectorColumnCommentLabel: string;
+  readonly inspectorColumnCommentPlaceholder: string;
   readonly inspectorNodeReadOnlyMessage: string;
   readonly inspectorCancelLabel: string;
   readonly inspectorApplyLabel: string;

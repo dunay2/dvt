@@ -38,6 +38,8 @@ type GraphNodeCardCopy = Readonly<{
   columnNullableValue: string;
   columnOriginLabel: string;
   columnReferenceLabel: string;
+  columnLineageLabel: string;
+  columnCommentLabel: string;
   columnOutputValue: string;
   columnAvailableInputValue: string;
   columnOutputAriaLabelTemplate: string;
@@ -46,6 +48,10 @@ type GraphNodeCardCopy = Readonly<{
     Record<'text' | 'numeric' | 'date-time' | 'conversion' | 'aggregate' | 'window', string>
   >;
   noCompatibleColumnFunctionsLabel: string;
+  columnFunctionAliasLabelTemplate: string;
+  columnFunctionAliasSubmitLabel: string;
+  columnFunctionAliasCancelLabel: string;
+  columnFunctionAliasConflictLabel: string;
   sourceIdentityAriaLabelTemplate: string;
   sourceIdentityDatabaseLabel: string;
   sourceIdentityConnectionLabel: string;
@@ -105,6 +111,8 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   columnNullableValue: 'Nullable',
   columnOriginLabel: 'Origin',
   columnReferenceLabel: 'Reference',
+  columnLineageLabel: 'Transformation lineage',
+  columnCommentLabel: 'Comment',
   columnOutputValue: 'Included in output',
   columnAvailableInputValue: 'Available input',
   columnOutputAriaLabelTemplate: '{column}, included in output',
@@ -118,6 +126,10 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
     window: 'Window functions',
   },
   noCompatibleColumnFunctionsLabel: 'No functions are compatible with this type and target.',
+  columnFunctionAliasLabelTemplate: 'Output alias after {function}',
+  columnFunctionAliasSubmitLabel: 'Create output',
+  columnFunctionAliasCancelLabel: 'Cancel',
+  columnFunctionAliasConflictLabel: 'Another column already uses this output name.',
   sourceIdentityAriaLabelTemplate: 'View source identity for {table}',
   sourceIdentityDatabaseLabel: 'Database',
   sourceIdentityConnectionLabel: 'Connection',
@@ -177,6 +189,8 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   columnNullableValue: 'Admite nulos',
   columnOriginLabel: 'Origen',
   columnReferenceLabel: 'Referencia',
+  columnLineageLabel: 'Linaje de transformación',
+  columnCommentLabel: 'Comentario',
   columnOutputValue: 'Incluida en salida',
   columnAvailableInputValue: 'Entrada disponible',
   columnOutputAriaLabelTemplate: '{column}, incluida en salida',
@@ -190,6 +204,10 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
     window: 'Funciones de ventana',
   },
   noCompatibleColumnFunctionsLabel: 'No hay funciones compatibles con este tipo y destino.',
+  columnFunctionAliasLabelTemplate: 'Alias de salida tras {function}',
+  columnFunctionAliasSubmitLabel: 'Crear salida',
+  columnFunctionAliasCancelLabel: 'Cancelar',
+  columnFunctionAliasConflictLabel: 'Otra columna ya utiliza este nombre de salida.',
   sourceIdentityAriaLabelTemplate: 'Ver identidad de origen de {table}',
   sourceIdentityDatabaseLabel: 'Base de datos',
   sourceIdentityConnectionLabel: 'Conexión',

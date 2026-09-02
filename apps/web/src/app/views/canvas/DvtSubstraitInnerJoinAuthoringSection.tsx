@@ -93,6 +93,7 @@ export function DvtSubstraitInnerJoinAuthoringSection({
       </div>
     );
   const nInputInspection = inspectDvtSubstraitNInputJoinDraft(semanticDraft);
+  const binaryInspection = inspectDvtSubstraitInnerJoinDraft(semanticDraft);
   const renderAppendInput = (projection: DvtSubstraitNInputJoinProjection): ReactNode => {
     if (appendCandidates.length === 0) return null;
     const candidateFieldSeparator = '\u001f';
@@ -400,7 +401,10 @@ export function DvtSubstraitInnerJoinAuthoringSection({
     );
   }
 
-  if (nInputInspection.ok && nInputInspection.projection.inputs.length > 2) {
+  if (
+    nInputInspection.ok &&
+    (nInputInspection.projection.inputs.length > 2 || !binaryInspection.ok)
+  ) {
     const projection = nInputInspection.projection;
     const mutateField = (edit: DvtSubstraitInnerJoinFieldEdit): void => {
       mutateDraft((current) => applyDvtSubstraitInnerJoinFieldEdit(current, edit));
@@ -539,7 +543,7 @@ export function DvtSubstraitInnerJoinAuthoringSection({
     );
   }
 
-  const inspection = inspectDvtSubstraitInnerJoinDraft(semanticDraft);
+  const inspection = binaryInspection;
   if (!inspection.ok) return null;
   const { projection } = inspection;
   const mutateField = (edit: DvtSubstraitInnerJoinFieldEdit): void => {

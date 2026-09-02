@@ -15,6 +15,7 @@ import {
 } from './canvasDvtSubstraitPilot';
 import {
   decodeDvtSubstraitProjectionDocument,
+  inspectDvtSubstraitProjectionDraft,
   resolveDvtSubstraitProjectionEntry,
 } from './canvasDvtSubstraitProjection';
 import { inspectDvtSubstraitPilotAggregationDraft } from './canvasDvtSubstraitAggregation';
@@ -53,6 +54,8 @@ type DvtSubstraitPresentedOutput = Readonly<{
   dataType?: string;
   sourceNodeId?: string;
   sourceFieldName?: string;
+  operations?: readonly string[];
+  description?: string;
 }>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -99,6 +102,7 @@ function projectCanvasNodePresentationTruthInternal(
   let lineageRecipe: VisualTransformRecipeV1 | null = null;
   let substraitOutputs: readonly DvtSubstraitPresentedOutput[] | null = null;
   let substraitRejected = false;
+  let unresolvedMultiInputProjection = false;
   let canonicalSubstraitCode: Extract<CanvasNodeCodeTruth, { kind: 'canonical' }> | null = null;
   let invalidCanonicalSubstraitDocument = false;
   if (args.node.pluginId === 'dvt' && args.node.kind === 'dvt:transform') {
@@ -119,11 +123,12 @@ function projectCanvasNodePresentationTruthInternal(
           digest: authority.semanticDocument.semanticPlan.sha256,
         };
         try {
+          const projectionDraft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
           const projection = resolveDvtSubstraitProjectionEntry({
             targetNode: args.node,
             nodes: args.nodes,
             edges: args.edges,
-            draft: decodeDvtSubstraitProjectionDocument(authority.semanticDocument),
+            draft: projectionDraft,
           });
           if (projection != null) {
             substraitOutputs = projection.outputs.map((output) => ({
@@ -132,8 +137,21 @@ function projectCanvasNodePresentationTruthInternal(
               dataType: output.dataType,
               sourceNodeId: projection.source.nodeId,
               sourceFieldName: output.sourceFieldName,
+              ...(output.operations == null ? {} : { operations: output.operations }),
+              ...(output.description == null ? {} : { description: output.description }),
             }));
           } else {
+            const projectionInspection = inspectDvtSubstraitProjectionDraft(projectionDraft);
+            const incomingSourceIds = new Set(
+              args.edges
+                .filter((edge) => edge.targetId === args.node.id)
+                .map((edge) => edge.sourceId)
+            );
+            unresolvedMultiInputProjection =
+              projectionInspection.ok &&
+              projectionInspection.projection.targetNodeId === args.node.id &&
+              incomingSourceIds.size > 1 &&
+              incomingSourceIds.has(projectionInspection.projection.source.nodeId);
             const pilotInspection = inspectDvtSubstraitPilotDraft(
               decodeDvtSubstraitPilotDocument(authority.semanticDocument)
             );
@@ -253,6 +271,9 @@ function projectCanvasNodePresentationTruthInternal(
   };
 
   if (substraitRejected) {
+    if (unresolvedMultiInputProjection) {
+      return baseTruth;
+    }
     return {
       ...baseTruth,
       columns: {
@@ -343,12 +364,26 @@ function projectCanvasNodePresentationTruthInternal(
       : baseTruth;
 
   if (substraitOutputs != null) {
-    const declared = substraitOutputs.map((output) => ({
-      name: output.name,
-      type: output.dataType ?? 'string',
-      provenance: 'declared' as const,
-      reference: output.fieldId,
-    }));
+    const declared = substraitOutputs.map((output) => {
+      const sourceColumn = presentationTruth.columns.inherited.find(
+        (column) =>
+          column.sourceNodeId === output.sourceNodeId && column.name === output.sourceFieldName
+      );
+      return {
+        name: output.name,
+        type: output.dataType ?? 'string',
+        provenance: 'declared' as const,
+        reference: output.fieldId,
+        ...(output.sourceNodeId == null ? {} : { sourceNodeId: output.sourceNodeId }),
+        ...(output.sourceFieldName == null ? {} : { sourceFieldName: output.sourceFieldName }),
+        ...(output.operations == null ? {} : { operations: output.operations }),
+        ...(output.description == null ? {} : { description: output.description }),
+        ...(sourceColumn?.sourceNodeName == null
+          ? {}
+          : { sourceNodeName: sourceColumn.sourceNodeName }),
+        ...(sourceColumn?.reference == null ? {} : { sourceReference: sourceColumn.reference }),
+      };
+    });
     const hasConnectedFieldProjection = substraitOutputs.every(
       (output) => output.sourceNodeId != null && output.sourceFieldName != null
     );

@@ -114,6 +114,8 @@ export const canvasViewAuthoringCopyEs = {
   inspectorNodeTagsLabel: 'Etiquetas',
   inspectorNodeTagsPlaceholder: 'finanzas, crítico',
   inspectorNodeDescriptionLabel: 'Descripción',
+  inspectorColumnCommentLabel: 'Comentario de columna',
+  inspectorColumnCommentPlaceholder: 'Añadir un comentario de columna',
   inspectorNodeReadOnlyMessage:
     'Los detalles del nodo son de solo lectura para este estado del workspace.',
   inspectorCancelLabel: 'Cancelar',

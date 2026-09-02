@@ -664,7 +664,7 @@ function requireUnionAllProjection(
   if (!inspection.ok) {
     throw new DvtSubstraitPostgresProjectionError(
       'unsupported_shape',
-      'PostgreSQL projection supports only the admitted VTX2 two-source UNION ALL.'
+      'PostgreSQL projection supports only the admitted VTX2 N-source UNION ALL.'
     );
   }
   return inspection.projection;
@@ -688,15 +688,24 @@ function buildUnionAllInputPostgresAst(
 }
 
 function buildUnionAllPostgresAst(projection: DvtSubstraitUnionAllProjection): PostgresAstNode {
-  return {
-    SelectStmt: {
+  const first = projection.inputs[0];
+  if (first == null || projection.inputs.length < 2) {
+    throw new DvtSubstraitPostgresProjectionError(
+      'unsupported_shape',
+      'UNION ALL requires at least two admitted inputs.'
+    );
+  }
+  let union = buildUnionAllInputPostgresAst(first, projection.outputs);
+  for (const input of projection.inputs.slice(1)) {
+    union = {
       op: 'SETOP_UNION',
       all: true,
-      larg: buildUnionAllInputPostgresAst(projection.inputs[0], projection.outputs),
-      rarg: buildUnionAllInputPostgresAst(projection.inputs[1], projection.outputs),
+      larg: union,
+      rarg: buildUnionAllInputPostgresAst(input, projection.outputs),
       limitOption: 'LIMIT_OPTION_DEFAULT',
-    },
-  };
+    };
+  }
+  return { SelectStmt: union };
 }
 
 function pgRangeSubselect(subquery: PostgresAstNode, alias: string): PostgresAstNode {

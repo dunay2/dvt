@@ -1,0 +1,29 @@
+---
+id: R-20260902-TRANSFORM-FUNCTION-ALIAS-DRIFT
+title: Transform aliases and displayed lineage can drift from canonical Substrait fields
+status: Open
+date: 2026-09-02
+owners:
+  - web
+  - packages/@dvt/contracts
+severity: Medium
+probability: Low
+---
+mitigation:
+  summary: >
+    ConfigureCanvasDvtNode applies each function and alias atomically to the same canonical
+    Substrait revision. The RelRoot name and DVT sidecar field display name must agree while the
+    stable FieldId remains unchanged. Card aliases and lineage are projected from inspection of that
+    revision rather than stored separately. Blank and duplicate aliases, unsupported capabilities,
+    invalid plans, and provider/type mismatches fail closed. LOWER is admitted only through the
+    pinned string-extension identity and proven PostgreSQL round-trip.
+  evidence:
+    - docs/evidence/ED-20260902-transform-function-alias-authoring.md
+    - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts
+    - packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts
+    - apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.alias.test.ts
+    - apps/web/src/app/views/canvas/canvasNodePresentationProjection.test.ts
+    - apps/web/src/app/plugins/graph/GraphNodeColumnSection.test.tsx
+  follow_up:
+    - Issue #2642 governs further function projection from the canonical catalog.
+    - Multi-argument functions require a governed operand-authoring contract before admission.

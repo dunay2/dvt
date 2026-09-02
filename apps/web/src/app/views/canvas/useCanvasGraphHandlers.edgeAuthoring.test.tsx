@@ -813,11 +813,12 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     if (trim == null) throw new Error('Expected admitted trim capability.');
 
     act(() => {
-      harness.latest()?.handleApplyDvtSubstraitColumnFunction({
+      harness.latest()?.handleApplyCanvasColumnFunction({
         nodeId: transform.id,
         columnId: 'output:order_id',
         sourceColumnId: 'output:customer',
         capabilityId: trim.capabilityId,
+        alias: 'order_id_clean',
       });
     });
 
@@ -841,6 +842,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
         : []
     ).toMatchObject({
       fieldId: 'output:order_id',
+      name: 'order_id_clean',
       sourceFieldName: 'customer',
       operations: ['trim'],
     });
@@ -871,7 +873,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
 
     setDraftSession.mockClear();
     act(() => {
-      harness.latest()?.handleReorderDvtSubstraitColumnOutput({
+      harness.latest()?.handleReorderCanvasColumnOutput({
         nodeId: transform.id,
         columnId: 'output:amount',
         targetColumnId: 'output:order_id',

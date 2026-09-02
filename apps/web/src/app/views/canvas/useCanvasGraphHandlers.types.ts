@@ -37,10 +37,11 @@ export type UseCanvasGraphHandlersResult = {
   handleAttachSchemaToNode: (nodeId: string, schemaName: string) => void;
   activeColumnHandleId: string | null;
   handleColumnPortActivate: (identity: GraphNodeColumnPortIdentity) => void;
-  handleApplyDvtSubstraitColumnFunction: (identity: {
+  handleApplyCanvasColumnFunction: (identity: {
     nodeId: string;
     columnId: string;
     capabilityId: string;
+    alias: string;
     sourceColumnId?: string;
   }) => void;
   handleToggleCanvasColumnOutput: (identity: {
@@ -49,7 +50,7 @@ export type UseCanvasGraphHandlersResult = {
     columnType: string;
     output: boolean;
   }) => void;
-  handleReorderDvtSubstraitColumnOutput: (identity: {
+  handleReorderCanvasColumnOutput: (identity: {
     nodeId: string;
     columnId: string;
     targetColumnId: string;

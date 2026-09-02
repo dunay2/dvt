@@ -13,8 +13,10 @@ import {
   encodeDvtSubstraitPilotDocument,
 } from './canvasDvtSubstraitPilot';
 import {
+  applyDvtSubstraitProjectionFunction,
   createDvtSubstraitProjectionDraft,
   encodeDvtSubstraitProjectionDocument,
+  resolveDvtSubstraitColumnFunctions,
 } from './canvasDvtSubstraitProjection';
 import {
   appendDvtSubstraitInnerJoinInput,
@@ -621,21 +623,33 @@ describe('projectCanvasNodePresentationTruth', () => {
         ],
       },
     };
+    const draft = createDvtSubstraitProjectionDraft({
+      source: {
+        nodeId: dvtSource.id,
+        schema: 'raw',
+        table: 'orders',
+        sourceRef: connectedSourceRef,
+        fields: [
+          { name: 'order_id', dataType: 'integer' },
+          { name: 'customer', dataType: 'text' },
+          { name: 'amount', dataType: 'numeric' },
+        ],
+      },
+      targetNodeId: 'transform-orders',
+      outputs: [{ fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'customer' }],
+    });
+    const trim = resolveDvtSubstraitColumnFunctions({
+      dataType: 'text',
+      provider: 'postgres',
+    }).find((entry) => entry.name === 'trim');
+    if (trim == null) throw new Error('Expected admitted trim capability.');
     const semanticDocument = encodeDvtSubstraitProjectionDocument(
-      createDvtSubstraitProjectionDraft({
-        source: {
-          nodeId: dvtSource.id,
-          schema: 'raw',
-          table: 'orders',
-          sourceRef: connectedSourceRef,
-          fields: [
-            { name: 'order_id', dataType: 'integer' },
-            { name: 'customer', dataType: 'text' },
-            { name: 'amount', dataType: 'numeric' },
-          ],
-        },
-        targetNodeId: 'transform-orders',
-        outputs: [{ fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'customer' }],
+      applyDvtSubstraitProjectionFunction(draft, {
+        fieldId: 'output:order_id',
+        capabilityId: trim.capabilityId,
+        alias: 'customer_clean',
+        dataType: 'text',
+        provider: 'postgres',
       })
     );
     const transform = applyDvtSubstraitSemanticDocument(
@@ -665,14 +679,119 @@ describe('projectCanvasNodePresentationTruth', () => {
 
     expect(truth.code).toMatchObject({ kind: 'canonical', language: 'json' });
     expect(truth.columns.visible).toEqual([
-      expect.objectContaining({ name: 'order_id', type: 'text', provenance: 'declared' }),
+      expect.objectContaining({ name: 'order_id', type: 'integer', provenance: 'inherited' }),
+      expect.objectContaining({
+        name: 'customer_clean',
+        type: 'text',
+        provenance: 'declared',
+        sourceFieldName: 'customer',
+        operations: ['trim'],
+      }),
       expect.objectContaining({ name: 'amount', type: 'numeric', provenance: 'inherited' }),
     ]);
     expect(truth.columns).toMatchObject({
       declaredCount: 1,
       inheritedCount: 3,
-      visibleCount: 2,
+      visibleCount: 3,
       visibleProvenance: 'mixed',
+    });
+  });
+
+  it('keeps every connected input field visible while a multi-input composition is unresolved', () => {
+    const connectedSourceRef: ConnectedSourceRef = {
+      schemaVersion: 'connected-source-ref.v1',
+      connectionRef: {
+        schemaVersion: 'connection-ref.v1',
+        connectionId: 'warehouse-main',
+        provider: 'postgres',
+      },
+      sourceObjectId: 'raw.orders',
+    };
+    const orders: CanonicalNode = {
+      id: 'source-orders',
+      name: 'orders',
+      pluginId: 'dvt',
+      kind: 'dvt:source',
+      role: 'input',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        schema: 'raw',
+        tableName: 'orders',
+        connectedSourceRef,
+        columns: [
+          { name: 'order_id', type: 'integer' },
+          { name: 'customer', type: 'text' },
+        ],
+      },
+    };
+    const audits: CanonicalNode = {
+      ...orders,
+      id: 'source-audits',
+      name: 'auth_audit_events',
+      metadata: {
+        ...orders.metadata,
+        tableName: 'auth_audit_events',
+        connectedSourceRef: {
+          ...connectedSourceRef,
+          sourceObjectId: 'raw.auth_audit_events',
+        },
+        columns: [
+          { name: 'event_id', type: 'text' },
+          { name: 'principal_id', type: 'text' },
+        ],
+      },
+    };
+    const projection = createDvtSubstraitProjectionDraft({
+      source: {
+        nodeId: orders.id,
+        schema: 'raw',
+        table: 'orders',
+        sourceRef: connectedSourceRef,
+        fields: [
+          { name: 'order_id', dataType: 'integer' },
+          { name: 'customer', dataType: 'text' },
+        ],
+      },
+      targetNodeId: 'transform-multiple-inputs',
+      outputs: [
+        { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
+        { fieldId: 'output:customer', name: 'customer', sourceFieldName: 'customer' },
+      ],
+    });
+    const transform = applyDvtSubstraitSemanticDocument(
+      {
+        id: 'transform-multiple-inputs',
+        name: 'Transform multiple inputs',
+        pluginId: 'dvt',
+        kind: 'dvt:transform',
+        role: 'transform',
+        status: 'idle',
+        tags: [],
+      },
+      encodeDvtSubstraitProjectionDocument(projection)
+    );
+
+    const truth = projectCanvasNodePresentationTruth({
+      node: transform,
+      nodes: [orders, audits, transform],
+      edges: [
+        { sourceId: orders.id, targetId: transform.id },
+        { sourceId: audits.id, targetId: transform.id },
+      ],
+    });
+
+    expect(truth.columns.visible).toMatchObject([
+      { name: 'order_id', sourceNodeId: orders.id },
+      { name: 'customer', sourceNodeId: orders.id },
+      { name: 'event_id', sourceNodeId: audits.id },
+      { name: 'principal_id', sourceNodeId: audits.id },
+    ]);
+    expect(truth.columns).toMatchObject({
+      declaredCount: 0,
+      inheritedCount: 4,
+      visibleCount: 4,
+      visibleProvenance: 'inherited',
     });
   });
 

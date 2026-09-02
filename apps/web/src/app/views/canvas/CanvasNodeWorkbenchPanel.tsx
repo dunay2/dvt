@@ -52,6 +52,7 @@ import { useCanvasNodeWorkbenchDraftController } from './useCanvasNodeWorkbenchD
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { DvtTransformOutputView } from './DvtTransformOutputView';
 import { reconcileDbtModelConnectedOrigin } from './canvasDbtAuthoringModel';
+import { useCanvasColumnCommentCellRenderer } from './useCanvasColumnCommentCellRenderer';
 
 export type CanvasNodeWorkbenchPanelProps = Readonly<{
   node: CanonicalNode;
@@ -263,6 +264,7 @@ export function CanvasNodeWorkbenchPanel({
   const [activeTab, setActiveTab] = useState<string | undefined>(() => preferredTabId ?? undefined);
   const [appliedPreferredTabKey, setAppliedPreferredTabKey] = useState<string | null>(null);
   const draftController = useCanvasNodeWorkbenchDraftController(node, authoring.workspaceScope);
+  const renderTableCell = useCanvasColumnCommentCellRenderer({ copy, authoring, draftController });
   const presentationTruth = useMemo(
     () => projectCanvasNodePresentationTruth({ node, nodes, edges }),
     [edges, node, nodes]
@@ -520,6 +522,7 @@ export function CanvasNodeWorkbenchPanel({
             slotPrefix="canvas-node-workbench"
             surface="workbench"
             showSectionCountBadge
+            renderTableCell={renderTableCell}
             onActiveTabChange={handleActiveTabChange}
             onHide={onClose}
           />

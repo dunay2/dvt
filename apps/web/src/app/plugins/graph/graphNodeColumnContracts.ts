@@ -14,7 +14,10 @@ export type GraphNodeColumn = Readonly<{
   primaryKey?: boolean;
   output?: boolean;
   sourceNodeName?: string;
+  sourceFieldName?: string;
   reference?: string;
+  operations?: readonly string[];
+  description?: string;
   sourceHandleId?: string;
   targetHandleId?: string;
   functionMenu?: Readonly<{
@@ -46,6 +49,7 @@ export type GraphNodeColumnFunctionApplyIdentity = Readonly<{
   nodeId: string;
   columnId: string;
   capabilityId: string;
+  alias: string;
   sourceColumnId?: string;
 }>;
 
@@ -81,8 +85,8 @@ export function resolveGraphNodeColumnInteractionProps(args: {
         ? (data.onColumnPortActivate as (identity: GraphNodeColumnPortIdentity) => void)
         : undefined,
     onColumnFunctionApply:
-      args.nodeRole === 'transform' && typeof data.onApplyDvtSubstraitColumnFunction === 'function'
-        ? (data.onApplyDvtSubstraitColumnFunction as (
+      args.nodeRole === 'transform' && typeof data.onApplyCanvasColumnFunction === 'function'
+        ? (data.onApplyCanvasColumnFunction as (
             identity: GraphNodeColumnFunctionApplyIdentity
           ) => void)
         : undefined,
@@ -93,10 +97,8 @@ export function resolveGraphNodeColumnInteractionProps(args: {
           ) => void)
         : undefined,
     onColumnReorder:
-      args.nodeRole === 'transform' && typeof data.onReorderDvtSubstraitColumnOutput === 'function'
-        ? (data.onReorderDvtSubstraitColumnOutput as (
-            identity: GraphNodeColumnReorderIdentity
-          ) => void)
+      args.nodeRole === 'transform' && typeof data.onReorderCanvasColumnOutput === 'function'
+        ? (data.onReorderCanvasColumnOutput as (identity: GraphNodeColumnReorderIdentity) => void)
         : undefined,
     onColumnDisclosureChange:
       typeof data.onColumnDisclosureChange === 'function'

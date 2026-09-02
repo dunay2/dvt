@@ -121,11 +121,13 @@ describe('VTX2 typed Substrait UNION ALL composition', () => {
       projection: {
         inputs: [
           {
+            nodeId: 'source-customers-north',
             schema: 'public',
             table: 'customers_north',
             sourceRef: sourceRef('warehouse-main', 'public.customers_north'),
           },
           {
+            nodeId: 'source-customers-south',
             schema: 'public',
             table: 'customers_south',
             sourceRef: sourceRef('warehouse-main', 'public.customers_south'),
@@ -184,6 +186,35 @@ describe('VTX2 typed Substrait UNION ALL composition', () => {
         ]),
       },
     });
+  });
+
+  it('reuses one SetRel for three compatible inputs and their grouping operations', () => {
+    const draft = createDvtSubstraitUnionAllDraft({
+      inputs: [
+        source('source-customers-north', 'customers_north'),
+        source('source-customers-south', 'customers_south'),
+        source('source-customers-west', 'customers_west'),
+      ],
+      targetNodeId: 'transform-all-customers',
+    });
+    const inspection = inspectDvtSubstraitUnionAllDraft(draft);
+    expect(inspection.ok).toBe(true);
+    if (!inspection.ok) return;
+    expect(inspection.projection.inputs.map((input) => input.nodeId)).toEqual([
+      'source-customers-north',
+      'source-customers-south',
+      'source-customers-west',
+    ]);
+    expect(draft.plan.relations[0]?.relType).toMatchObject({
+      case: 'root',
+      value: { input: { relType: { case: 'set', value: { inputs: expect.any(Array) } } } },
+    });
+    const grouped = applyDvtSubstraitUnionAllGrouping(draft, {
+      groupFieldId: 'field:transform-all-customers:country',
+      countOutputName: 'customer_count',
+    });
+    expect(inspectDvtSubstraitUnionAllGroupingDraft(grouped).ok).toBe(true);
+    expect(() => encodeDvtSubstraitUnionAllDocument(grouped)).not.toThrow();
   });
 
   it('selects, renames, and reorders union fields through SetRel emit mappings', () => {
@@ -357,7 +388,7 @@ describe('VTX2 typed Substrait UNION ALL composition', () => {
     ]);
   });
 
-  it('offers the product action only for two same-connection sources with identical schemas', () => {
+  it('offers the product action for N same-connection sources with identical schemas', () => {
     const target = targetNode();
     const north = sourceNode('source-customers-north', 'customers_north');
     const south = sourceNode('source-customers-south', 'customers_south');
@@ -372,6 +403,15 @@ describe('VTX2 typed Substrait UNION ALL composition', () => {
       ],
       targetNodeId: target.id,
     });
+
+    const west = sourceNode('source-customers-west', 'customers_west');
+    expect(
+      resolveDvtSubstraitUnionAllEntry({
+        targetNode: target,
+        nodes: [north, south, west, target],
+        edges: [...edges, inputEdge('west-union', west.id)],
+      })?.inputs.map((input) => input.nodeId)
+    ).toEqual([north.id, south.id, west.id]);
 
     const mismatched = sourceNode('source-customers-south', 'customers_south', [
       'customer_id',
