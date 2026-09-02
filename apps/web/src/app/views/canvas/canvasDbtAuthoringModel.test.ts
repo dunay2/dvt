@@ -69,6 +69,7 @@ describe('canvas dbt authoring model', () => {
       materialized: 'view',
       selectedSourceId: '',
       modelSql: null,
+      projectionColumns: null,
     });
   });
 
@@ -169,6 +170,7 @@ describe('canvas dbt authoring model', () => {
         materialized: 'table',
         selectedSourceId: 'source-orders',
         modelSql: 'select order_id from raw.orders',
+        projectionColumns: null,
       })
     ).toEqual({
       ...model,

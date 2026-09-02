@@ -106,6 +106,30 @@ describe('CanvasViewport edge context menu', () => {
     ]);
   });
 
+  it('does not offer removal for non-editable derived field lineage', async () => {
+    const props = await renderViewport({
+      edges: [
+        {
+          id: 'derived-field-lineage',
+          source: 'source',
+          target: 'model',
+          type: 'columnLineage',
+          data: { removable: false },
+        },
+      ],
+      onEdgesChange: vi.fn(),
+    });
+
+    await openEdgeContextMenu(props);
+
+    expect(
+      document.querySelector(
+        '[data-slot="canvas-context-menu-item"][data-menu-action="remove-edge"]'
+      )
+    ).toBeNull();
+    expect(props.onEdgesChange).not.toHaveBeenCalled();
+  });
+
   it('dismisses the edge context menu when the user clicks the graph background', async () => {
     const props = await renderViewport({
       edges: [

@@ -32,6 +32,7 @@ import {
   setCanvasColumnOutputIncluded,
   type CanvasColumnMappingRejection,
 } from './canvasColumnMappingAuthoring';
+import { configureDbtModelColumnOutput } from './canvasDbtModelColumnCommand';
 import type { GraphNodeColumnOutputToggleIdentity } from '../../plugins/graph/graphNodeColumnContracts';
 import {
   createCanvasColumnHandleId,
@@ -58,7 +59,7 @@ type UseCanvasEdgeAuthoringHandlersResult = {
     nodeId: string,
     columns: readonly Readonly<{ name: string; type: string }>[]
   ) => void;
-  handleToggleDvtSubstraitColumnOutput: (identity: {
+  handleToggleCanvasColumnOutput: (identity: {
     nodeId: string;
     columnId: string;
     columnType: string;
@@ -258,10 +259,27 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
     [effects, policy.canEditEdges, state]
   );
 
-  const handleToggleDvtSubstraitColumnOutput = useCallback(
+  const handleToggleCanvasColumnOutput = useCallback(
     (identity: GraphNodeColumnOutputToggleIdentity) => {
       if (!policy.canEditEdges) {
         toast.error(canvasViewCopy.mutationUnavailableMessage);
+        return;
+      }
+      const targetNode = resolveCurrentNode(state, identity.nodeId);
+      const dbtTarget = targetNode?.pluginId === 'dbt' && targetNode.kind === 'dbt:model';
+      if (dbtTarget) {
+        const result = configureDbtModelColumnOutput({
+          draftSession: state.draftSession,
+          canonicalNodesById: state.canonicalNodesById,
+          nodeId: identity.nodeId,
+          columnName: identity.columnId,
+          output: identity.output,
+        });
+        if (result.outcome === 'rejected') {
+          toast.error(canvasViewCopy.columnMappingUnavailableMessage);
+          return;
+        }
+        effects.setDraftSession(result.draftSession);
         return;
       }
       const result = setCanvasColumnOutputIncluded({
@@ -321,6 +339,23 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
         toast.error(canvasViewCopy.columnMappingUnavailableMessage);
         return;
       }
+      const dbtTarget = targetNode.pluginId === 'dbt' && targetNode.kind === 'dbt:model';
+      if (dbtTarget) {
+        const result = configureDbtModelColumnOutput({
+          draftSession: state.draftSession,
+          canonicalNodesById: state.canonicalNodesById,
+          nodeId: targetNode.id,
+          columnName: mapping.targetColumnName,
+          output: false,
+        });
+        if (result.outcome === 'rejected') {
+          toast.error(canvasViewCopy.columnMappingUnavailableMessage);
+          return;
+        }
+        effects.setDraftSession(result.draftSession);
+        toast.success(canvasViewCopy.columnMappingRemovedMessage);
+        return;
+      }
       const result = removeCanvasColumnMapping({
         draftSession: state.draftSession,
         canonicalNodesById: state.canonicalNodesById,
@@ -346,7 +381,7 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
     activeColumnHandleId: pendingSource == null ? null : createCanvasColumnHandleId(pendingSource),
     handleColumnPortActivate,
     handleAutomapCanvasColumns,
-    handleToggleDvtSubstraitColumnOutput,
+    handleToggleCanvasColumnOutput,
     handleReorderDvtSubstraitColumnOutput,
     handleRemoveColumnMapping,
   };
@@ -526,8 +561,7 @@ export function useCanvasEdgeAuthoringHandlers({
     activeColumnHandleId: columnMappingHandlers.activeColumnHandleId,
     handleColumnPortActivate: columnMappingHandlers.handleColumnPortActivate,
     handleAutomapCanvasColumns: columnMappingHandlers.handleAutomapCanvasColumns,
-    handleToggleDvtSubstraitColumnOutput:
-      columnMappingHandlers.handleToggleDvtSubstraitColumnOutput,
+    handleToggleCanvasColumnOutput: columnMappingHandlers.handleToggleCanvasColumnOutput,
     handleReorderDvtSubstraitColumnOutput:
       columnMappingHandlers.handleReorderDvtSubstraitColumnOutput,
     handleRemoveColumnMapping: columnMappingHandlers.handleRemoveColumnMapping,

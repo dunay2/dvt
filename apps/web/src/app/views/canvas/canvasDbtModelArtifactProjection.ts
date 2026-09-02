@@ -7,6 +7,10 @@ import {
   createDbtNodeAuthoringMetadata,
   type DbtNodeAuthoringMetadata,
 } from './canvasDbtAuthoringModel';
+import {
+  resolveDbtModelProjectionColumns,
+  validateDbtModelProjectionColumns,
+} from './canvasDbtModelColumnAuthoring';
 import { createDvtNodeAuthoringMetadata } from './canvasDvtAuthoringModel';
 import {
   isObjectFilePostgresNode,
@@ -28,6 +32,7 @@ export type DbtModelArtifactProjection = Readonly<{
   language: 'sql';
   materialized: string;
   provenance: 'authored' | 'generated';
+  outputColumns: readonly string[];
   body: string;
   content: string;
   origin: Readonly<{
@@ -48,7 +53,8 @@ export type DbtModelArtifactProjectionResult =
         | 'not_dbt_model'
         | 'origin_required'
         | 'origin_metadata_unavailable'
-        | 'origin_columns_unavailable';
+        | 'origin_columns_unavailable'
+        | 'projection_columns_invalid';
       message: string;
     }>;
 
@@ -194,7 +200,8 @@ function projectSourceOrigin(
 
 function resolveOriginProjection(
   args: ProjectDbtModelArtifactArgs,
-  metadata: DbtNodeAuthoringMetadata
+  metadata: DbtNodeAuthoringMetadata,
+  ancestorModelIds: ReadonlySet<string>
 ): DbtModelOriginProjection | DbtModelArtifactProjectionResult {
   const selectedSourceId = metadata.selectedSourceId.trim();
   const compatibleOrigins = resolveCompatibleDbtModelOrigins(args);
@@ -231,15 +238,49 @@ function resolveOriginProjection(
     };
   }
 
+  const originMetadata = createDbtNodeAuthoringMetadata(origin);
+  const authoredOriginColumns = buildCanvasNodePresentationTruth({
+    node: origin,
+    nodes: [origin],
+    edges: [],
+  }).columns.declared.map((column) => column.name);
+  const originColumns =
+    authoredOriginColumns.length === 0 && originMetadata.modelSql == null
+      ? projectDbtModelArtifactInternal(
+          { modelNode: origin, nodes: args.nodes, edges: args.edges },
+          ancestorModelIds
+        )
+      : null;
+  if (originColumns != null && !originColumns.ok) return originColumns;
+  const declaredProjectionRejection = validateDbtModelProjectionColumns(
+    originMetadata.projectionColumns,
+    authoredOriginColumns
+  );
+  if (authoredOriginColumns.length > 0 && declaredProjectionRejection != null) {
+    return {
+      ok: false,
+      reason: 'projection_columns_invalid',
+      message: `DBT model "${origin.name}" has an invalid generated-column projection.`,
+    };
+  }
+  const columnNames =
+    originColumns?.artifact.outputColumns ??
+    resolveDbtModelProjectionColumns(originMetadata.projectionColumns, authoredOriginColumns)
+      .filter((column) => column.output)
+      .map((column) => column.name);
+  if (columnNames.length === 0) {
+    return {
+      ok: false,
+      reason: 'origin_columns_unavailable',
+      message: `DBT model origin "${origin.name}" does not expose canonical output columns.`,
+    };
+  }
+
   return {
     nodeId: origin.id,
     nodeName: origin.name,
     sql: `{{ ref('${normalizeDbtArtifactIdentifier(origin.name, origin.id)}') }}`,
-    columnNames: buildCanvasNodePresentationTruth({
-      node: origin,
-      nodes: args.nodes,
-      edges: args.edges,
-    }).columns.visible.map((column) => column.name),
+    columnNames,
   };
 }
 
@@ -256,8 +297,9 @@ function buildArtifactContent(materialized: string, body: string): string {
   return [`{{ config(materialized='${materialized}') }}`, '', body, ''].join('\n');
 }
 
-export function projectDbtModelArtifact(
-  args: ProjectDbtModelArtifactArgs
+function projectDbtModelArtifactInternal(
+  args: ProjectDbtModelArtifactArgs,
+  ancestorModelIds: ReadonlySet<string>
 ): DbtModelArtifactProjectionResult {
   if (!isDbtModel(args.modelNode)) {
     return {
@@ -266,9 +308,18 @@ export function projectDbtModelArtifact(
       message: `Node "${args.modelNode.name}" is not a DBT model.`,
     };
   }
+  if (ancestorModelIds.has(args.modelNode.id)) {
+    return {
+      ok: false,
+      reason: 'origin_required',
+      message: `DBT model "${args.modelNode.name}" cannot use a cyclic model origin.`,
+    };
+  }
 
   const metadata = args.authoringMetadata ?? createDbtNodeAuthoringMetadata(args.modelNode);
-  const origin = resolveOriginProjection(args, metadata);
+  const nextAncestorModelIds = new Set(ancestorModelIds);
+  nextAncestorModelIds.add(args.modelNode.id);
+  const origin = resolveOriginProjection(args, metadata, nextAncestorModelIds);
   if ('ok' in origin) {
     return origin;
   }
@@ -282,8 +333,33 @@ export function projectDbtModelArtifact(
       message: `DBT model origin "${origin.nodeName}" does not expose canonical columns.`,
     };
   }
-  const body = hasAuthoredBody ? authoredBody : buildGeneratedBody(origin);
+  const projectionRejection = hasAuthoredBody
+    ? null
+    : validateDbtModelProjectionColumns(metadata.projectionColumns, origin.columnNames);
+  if (projectionRejection != null) {
+    return {
+      ok: false,
+      reason: 'projection_columns_invalid',
+      message: `DBT model "${args.modelNode.name}" has an invalid generated-column projection.`,
+    };
+  }
+  const generatedColumnNames = resolveDbtModelProjectionColumns(
+    metadata.projectionColumns,
+    origin.columnNames
+  )
+    .filter((column) => column.output)
+    .map((column) => column.name);
+  const body = hasAuthoredBody
+    ? authoredBody
+    : buildGeneratedBody({ ...origin, columnNames: generatedColumnNames });
   const name = normalizeDbtArtifactIdentifier(args.modelNode.name, args.modelNode.id);
+  const outputColumns = hasAuthoredBody
+    ? buildCanvasNodePresentationTruth({
+        node: args.modelNode,
+        nodes: [args.modelNode],
+        edges: [],
+      }).columns.declared.map((column) => column.name)
+    : generatedColumnNames;
 
   return {
     ok: true,
@@ -294,6 +370,7 @@ export function projectDbtModelArtifact(
       language: 'sql',
       materialized: metadata.materialized,
       provenance: hasAuthoredBody ? 'authored' : 'generated',
+      outputColumns,
       body,
       content: buildArtifactContent(metadata.materialized, body),
       origin: {
@@ -303,4 +380,10 @@ export function projectDbtModelArtifact(
       ...(origin.source == null ? {} : { source: origin.source }),
     },
   };
+}
+
+export function projectDbtModelArtifact(
+  args: ProjectDbtModelArtifactArgs
+): DbtModelArtifactProjectionResult {
+  return projectDbtModelArtifactInternal(args, new Set());
 }

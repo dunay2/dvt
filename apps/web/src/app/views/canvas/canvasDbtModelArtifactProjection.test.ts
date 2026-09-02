@@ -167,6 +167,7 @@ describe('canvas DBT model artifact projection', () => {
         language: 'sql',
         materialized: 'table',
         provenance: 'generated',
+        outputColumns: ['order_id', 'customer"label'],
         body: 'select\n  origin."order_id" as "order_id",\n  origin."customer""label" as "customer""label"\nfrom {{ source(\'warehouse_prod_analytics_erp\', \'orders\') }} as origin',
         content:
           '{{ config(materialized=\'table\') }}\n\nselect\n  origin."order_id" as "order_id",\n  origin."customer""label" as "customer""label"\nfrom {{ source(\'warehouse_prod_analytics_erp\', \'orders\') }} as origin\n',
@@ -179,6 +180,35 @@ describe('canvas DBT model artifact projection', () => {
           schemaName: 'erp',
           tableName: 'orders',
         },
+      },
+    });
+  });
+
+  it('generates only enabled model columns in their recorded order', () => {
+    const selectedModel: CanonicalNode = {
+      ...model,
+      metadata: {
+        ...model.metadata,
+        dbt: {
+          ...(model.metadata?.dbt as Record<string, unknown>),
+          projectionColumns: [
+            { name: 'customer"label', output: true },
+            { name: 'order_id', output: false },
+          ],
+        },
+      },
+    };
+
+    expect(
+      projectDbtModelArtifact({
+        modelNode: selectedModel,
+        nodes: [warehouseSource, selectedModel],
+        edges: [edge(warehouseSource.id)],
+      })
+    ).toMatchObject({
+      ok: true,
+      artifact: {
+        body: 'select\n  origin."customer""label" as "customer""label"\nfrom {{ source(\'warehouse_prod_analytics_erp\', \'orders\') }} as origin',
       },
     });
   });

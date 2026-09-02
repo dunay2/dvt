@@ -247,4 +247,46 @@ describe('canvasNodeMapper', () => {
       },
     ]);
   });
+
+  it('projects recorded DBT model outputs without moving inactive columns', () => {
+    const mappedNode = mapCanonicalNodeToCanvasNode({
+      canonicalNode: {
+        ...buildCanonicalNode(),
+        id: 'model-orders',
+        pluginId: 'dbt',
+        kind: 'dbt:model',
+        role: 'transform',
+        metadata: {
+          dbt: {
+            projectionColumns: [
+              { name: 'order_id', output: true },
+              { name: 'customer', output: false },
+            ],
+          },
+        },
+      },
+      index: 0,
+      showColumns: true,
+      presentationTruth: {
+        columns: {
+          declared: [],
+          inherited: [],
+          visible: [
+            { name: 'order_id', type: 'integer', provenance: 'inherited' },
+            { name: 'customer', type: 'text', provenance: 'inherited' },
+          ],
+          declaredCount: 0,
+          inheritedCount: 2,
+          visibleCount: 2,
+          visibleProvenance: 'inherited',
+        },
+        code: { kind: 'unavailable' },
+      },
+    });
+
+    expect(mappedNode.data.columns).toEqual([
+      { name: 'order_id', type: 'integer', output: true },
+      { name: 'customer', type: 'text', output: false },
+    ]);
+  });
 });

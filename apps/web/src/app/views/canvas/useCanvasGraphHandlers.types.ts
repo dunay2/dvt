@@ -42,7 +42,7 @@ export type UseCanvasGraphHandlersResult = {
     columnId: string;
     capabilityId: string;
   }) => void;
-  handleToggleDvtSubstraitColumnOutput: (identity: {
+  handleToggleCanvasColumnOutput: (identity: {
     nodeId: string;
     columnId: string;
     columnType: string;

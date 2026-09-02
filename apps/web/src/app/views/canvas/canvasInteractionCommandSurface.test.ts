@@ -281,6 +281,21 @@ describe('canvasInteractionCommandSurface', () => {
     ).toEqual([{ action: 'remove-edge', label: 'Eliminar conexión' }]);
   });
 
+  it('does not offer deletion for derived non-editable field lineage', () => {
+    const model = buildCanvasContextMenuModel({
+      target: {
+        kind: 'edge',
+        edgeId: 'derived-field-lineage',
+        removable: false,
+        screenPosition: { x: 600, y: 360 },
+      },
+      canMutateGraph: true,
+      authoringNodeKinds: [],
+    });
+
+    expect(model.edgeActions).toEqual([]);
+  });
+
   it('fails closed when graph mutation is not allowed', () => {
     const model = buildCanvasContextMenuModel({
       target: {

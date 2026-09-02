@@ -30,6 +30,7 @@ type ReadModelNodeData = {
   activeColumnHandleId?: unknown;
   onColumnPortActivate?: unknown;
   onApplyDvtSubstraitColumnFunction?: unknown;
+  onToggleCanvasColumnOutput?: unknown;
   onColumnDisclosureChange?: unknown;
   onAutomapColumns?: unknown;
   columnPortDirections?: unknown;
@@ -97,7 +98,7 @@ function buildReadModelArgs(
       activeColumnHandleId: null,
       handleColumnPortActivate: vi.fn(),
       handleApplyDvtSubstraitColumnFunction: vi.fn(),
-      handleToggleDvtSubstraitColumnOutput: vi.fn(),
+      handleToggleCanvasColumnOutput: vi.fn(),
       handleReorderDvtSubstraitColumnOutput: vi.fn(),
       handleColumnDisclosureChange: vi.fn(),
       handleAutomapCanvasColumns: vi.fn(),
@@ -460,7 +461,7 @@ describe('useCanvasControllerReadModel', () => {
     }
   });
 
-  it('renders generated DBT identity lineage with read-only model anchors', async () => {
+  it('keeps generated DBT outputs editable when the upstream projection changes', async () => {
     const columns = [{ name: 'order_id', type: 'integer' }];
     const sourceNode = {
       ...testNode,
@@ -540,13 +541,53 @@ describe('useCanvasControllerReadModel', () => {
           source: sourceNode.id,
           target: modelNode.id,
           ariaLabel: 'order_id → order_id',
-          data: expect.objectContaining({ removable: false }),
+          data: expect.objectContaining({ removable: true }),
         }),
       ]);
       expect((state?.nodesWithImpact[1]?.data as ReadModelNodeData).columnPortDirections).toEqual([
         'target',
         'source',
       ]);
+      expect(
+        (state?.nodesWithImpact[1]?.data as ReadModelNodeData).onToggleCanvasColumnOutput
+      ).toEqual(expect.any(Function));
+
+      const staleModelNode = {
+        ...modelNode,
+        metadata: {
+          ...modelNode.metadata,
+          dbt: {
+            projectionColumns: [{ name: 'retired_order_id', output: true }],
+          },
+        },
+      } satisfies CanonicalNode;
+      const staleGraphNodes = [sourceNode, staleModelNode].map((node, index) => ({
+        ...mapCanonicalNodeToCanvasNode({ canonicalNode: node, index, showColumns: true }),
+        data: {
+          ...graphNodes[index]!.data,
+          columns,
+          columnDisclosureExpanded: true,
+        },
+      }));
+
+      await mounted.rerender({
+        ...args,
+        graphModel: {
+          ...args.graphModel,
+          nodes: staleGraphNodes,
+          canonicalNodesById: new Map([sourceNode, staleModelNode].map((node) => [node.id, node])),
+        },
+        visibleScope: {
+          canonicalNodes: [sourceNode, staleModelNode],
+          canonicalEdges: [dependency],
+        },
+      });
+
+      expect(mounted.readState()?.edgesWithImpact).toEqual([]);
+      expect(
+        (mounted.readState()?.nodesWithImpact[1]?.data as ReadModelNodeData)
+          .onToggleCanvasColumnOutput
+      ).toEqual(expect.any(Function));
     } finally {
       await mounted.cleanup();
     }

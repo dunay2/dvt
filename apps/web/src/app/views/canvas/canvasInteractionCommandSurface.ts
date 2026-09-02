@@ -18,6 +18,7 @@ export type CanvasContextMenuTarget =
   | Readonly<{
       kind: 'edge';
       edgeId: string;
+      removable?: boolean;
       screenPosition: CanvasContextMenuPosition;
     }>;
 
@@ -176,7 +177,7 @@ export function buildCanvasContextMenuModel({
     };
   }
 
-  if (!canMutateGraph) {
+  if (!canMutateGraph || target.removable === false) {
     return baseModel;
   }
 
