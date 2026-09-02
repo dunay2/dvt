@@ -28,7 +28,7 @@ import {
   resolveDvtSubstraitColumnFunctions,
   resolveDvtSubstraitProjectionEntry,
 } from './canvasDvtSubstraitProjection';
-import { projectDbtModelArtifact } from './canvasDbtModelArtifactProjection';
+import { createDbtNodeAuthoringMetadata } from './canvasDbtAuthoringModel';
 
 function projectInteractiveColumns(
   node: Node,
@@ -225,16 +225,10 @@ export function useCanvasControllerReadModel({
         const canonicalNode = graphModel.canonicalNodesById.get(node.id);
         const canAuthorColumnMappings =
           canonicalNode?.role !== 'transform' || canAuthorCanvasColumnMappings(canonicalNode);
-        const dbtArtifact =
-          canonicalNode?.pluginId === 'dbt' && canonicalNode.kind === 'dbt:model'
-            ? projectDbtModelArtifact({
-                modelNode: canonicalNode,
-                nodes: visibleScope.canonicalNodes,
-                edges: visibleScope.canonicalEdges,
-              })
-            : null;
         const canAuthorDbtModelColumns =
-          dbtArtifact?.ok === true && dbtArtifact.artifact.provenance === 'generated';
+          canonicalNode?.pluginId === 'dbt' &&
+          canonicalNode.kind === 'dbt:model' &&
+          createDbtNodeAuthoringMetadata(canonicalNode).modelSql == null;
         const hasReadOnlyColumnLineage =
           canonicalNode?.role === 'transform' &&
           !canAuthorColumnMappings &&
