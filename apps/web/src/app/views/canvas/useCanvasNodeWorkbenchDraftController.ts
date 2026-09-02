@@ -11,6 +11,7 @@ import {
 import type { CanonicalNode } from '../../types/canonical';
 import type { WorkspaceScope } from '../../ports/sessionContext';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
+import { limitCanvasNodeTagsText } from './canvasNodeTagPolicy';
 import {
   areCanvasInspectorNodeDraftsEqual,
   canonicalizeCanvasInspectorNodeDraft,
@@ -135,7 +136,7 @@ function reduceDraftControllerState(
         submittedDraft: null,
       };
     case 'tags-text-changed': {
-      const tagsText = resolveStateUpdate(state.tagsText, action.update);
+      const tagsText = limitCanvasNodeTagsText(resolveStateUpdate(state.tagsText, action.update));
       return {
         ...state,
         draft: {

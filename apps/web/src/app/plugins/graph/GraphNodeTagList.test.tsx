@@ -83,6 +83,18 @@ describe('GraphNodeTagList', () => {
     expect(container.textContent).toBe('model+1');
   });
 
+  it('keeps the complete value accessible when a tag must fit the card', () => {
+    const longTag = 'customer-segmentation-with-a-historical-suffix';
+
+    act(() => {
+      root.render(<GraphNodeTagList tags={[{ value: longTag, label: longTag }]} />);
+    });
+
+    const tag = container.querySelector('[data-slot="graph-node-tag"]');
+    expect(tag?.textContent).toBe(longTag);
+    expect(tag?.getAttribute('title')).toBe(longTag);
+  });
+
   it('selects the canonical tag through a localized keyboard-operable action', () => {
     const onSelectTag = vi.fn();
 

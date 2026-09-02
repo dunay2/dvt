@@ -62,7 +62,13 @@ export function GraphNodeTagList({
             {tag.label}
           </button>
         ) : (
-          <span key={tag.value} data-slot="graph-node-tag" data-tone={tone} className={className}>
+          <span
+            key={tag.value}
+            data-slot="graph-node-tag"
+            data-tone={tone}
+            className={className}
+            title={tag.label}
+          >
             {tag.label}
           </span>
         );
