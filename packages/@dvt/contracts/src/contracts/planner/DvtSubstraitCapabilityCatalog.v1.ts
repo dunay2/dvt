@@ -269,6 +269,7 @@ const LOWER = 'dvt:#2827';
 const INNER_JOIN = 'dvt:#2634';
 const AGGREGATE = ['dvt:#2641', 'dvt:#2642'] as const;
 const WINDOW = ['dvt:#2641', 'dvt:#2642'] as const;
+const CALCULATED_COLUMN = 'dvt:#2833';
 const ALGEBRA = [STUDY, 'substrait:v0.101.0:proto/substrait/algebra.proto'];
 const TYPES = [STUDY, 'substrait:v0.101.0:proto/substrait/type.proto'];
 const FUNCTIONS_STRING = [STUDY, 'substrait:v0.101.0:extensions/functions_string.yaml'];
@@ -530,6 +531,19 @@ const WINDOW_SUPPORTED_ENTRY_IDS = new Set([
   }),
 ]);
 
+const CALCULATED_COLUMN_SUPPORTED_ENTRY_IDS = new Set([
+  buildDvtSubstraitStandardCapabilityId('expression-form', {
+    sourceKind: 'core',
+    message: 'substrait.Expression',
+    selector: 'rex_type.literal',
+  }),
+  buildDvtSubstraitStandardCapabilityId('type', {
+    sourceKind: 'core',
+    message: 'substrait.Type',
+    selector: 'kind.precision_timestamp_tz',
+  }),
+]);
+
 const UNION_ALL_SUPPORTED_ENTRY_IDS = new Set([
   buildDvtSubstraitStandardCapabilityId('relation', {
     sourceKind: 'core',
@@ -544,6 +558,7 @@ function admissionEvidenceRefs(entryId: string): readonly string[] {
   if (INNER_JOIN_SUPPORTED_ENTRY_IDS.has(entryId)) return [INNER_JOIN];
   if (AGGREGATE_SUPPORTED_ENTRY_IDS.has(entryId)) return AGGREGATE;
   if (WINDOW_SUPPORTED_ENTRY_IDS.has(entryId)) return WINDOW;
+  if (CALCULATED_COLUMN_SUPPORTED_ENTRY_IDS.has(entryId)) return [CALCULATED_COLUMN];
   if (UNION_ALL_SUPPORTED_ENTRY_IDS.has(entryId)) return [INNER_JOIN];
   return [];
 }

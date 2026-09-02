@@ -489,12 +489,14 @@ export function projectCanvasColumnLineage(args: {
         continue;
       }
       const sourceColumns = new Set(readColumns(sourceNode).map((column) => column.name));
-      if (
-        substraitProjection.outputs.some((output) => !sourceColumns.has(output.sourceFieldName))
-      ) {
+      const sourcedOutputs = substraitProjection.outputs.filter(
+        (output): output is typeof output & { sourceFieldName: string; sourceFieldId: string } =>
+          output.sourceFieldName != null && output.sourceFieldId != null
+      );
+      if (sourcedOutputs.some((output) => !sourceColumns.has(output.sourceFieldName))) {
         continue;
       }
-      for (const output of substraitProjection.outputs) {
+      for (const output of sourcedOutputs) {
         projected.push(
           buildLineageEdge({
             sourceNodeId: sourceNode.id,

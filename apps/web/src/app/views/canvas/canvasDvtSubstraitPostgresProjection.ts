@@ -50,6 +50,20 @@ import {
   type DvtSubstraitUnionAllGroupingProjection,
   type DvtSubstraitUnionAllProjection,
 } from './canvasDvtSubstraitSetComposition';
+import {
+  pgColumnRef,
+  pgCountRows,
+  pgFunction,
+  pgOrderedRowNumber,
+  pgQualifiedColumnRef,
+  pgRangeVar,
+  pgRowNumber,
+  pgRowNumberOverCount,
+  pgString,
+  pgStringLiteral,
+  pgTimestampTzLiteral,
+  type PostgresAstNode,
+} from './canvasDvtSubstraitPostgresAst';
 
 export type DvtSubstraitPostgresProjectionErrorCode =
   'unsupported_shape' | 'invalid_source_binding' | 'deparse_failed';
@@ -68,105 +82,6 @@ export class DvtSubstraitPostgresProjectionError extends Error {
     super(message, options);
     this.name = 'DvtSubstraitPostgresProjectionError';
   }
-}
-
-type PostgresAstNode = Readonly<Record<string, unknown>>;
-
-function pgString(value: string): PostgresAstNode {
-  return { String: { sval: value } };
-}
-
-function pgColumnRef(columnName: string): PostgresAstNode {
-  return {
-    ColumnRef: {
-      fields: [pgString(columnName)],
-    },
-  };
-}
-
-function pgQualifiedColumnRef(relationAlias: string, columnName: string): PostgresAstNode {
-  return {
-    ColumnRef: {
-      fields: [pgString(relationAlias), pgString(columnName)],
-    },
-  };
-}
-
-function pgRangeVar(args: { schema?: string; table: string; alias?: string }): PostgresAstNode {
-  return {
-    RangeVar: {
-      ...(args.schema == null ? {} : { schemaname: args.schema }),
-      relname: args.table,
-      inh: true,
-      relpersistence: 'p',
-      ...(args.alias == null ? {} : { alias: { aliasname: args.alias } }),
-    },
-  };
-}
-
-function pgFunction(name: string, argument: PostgresAstNode): PostgresAstNode {
-  return {
-    FuncCall: {
-      funcname: [pgString(name)],
-      args: [argument],
-      funcformat: 'COERCE_EXPLICIT_CALL',
-    },
-  };
-}
-
-function pgCountRows(): PostgresAstNode {
-  return {
-    FuncCall: {
-      funcname: [pgString('count')],
-      agg_star: true,
-    },
-  };
-}
-
-function pgRowNumber(partitionFieldName: string, orderFieldName: string): PostgresAstNode {
-  return {
-    FuncCall: {
-      funcname: [pgString('row_number')],
-      over: {
-        partitionClause: [pgColumnRef(partitionFieldName)],
-        orderClause: [
-          {
-            SortBy: {
-              node: pgColumnRef(orderFieldName),
-              sortby_dir: 'SORTBY_ASC',
-              sortby_nulls: 'SORTBY_NULLS_LAST',
-            },
-          },
-        ],
-      },
-    },
-  };
-}
-
-function pgRowNumberOverCount(groupExpression: PostgresAstNode): PostgresAstNode {
-  return {
-    FuncCall: {
-      funcname: [pgString('row_number')],
-      over: {
-        orderClause: [
-          {
-            SortBy: {
-              node: pgCountRows(),
-              sortby_dir: 'SORTBY_DESC',
-              sortby_nulls: 'SORTBY_NULLS_LAST',
-            },
-          },
-          {
-            SortBy: {
-              node: groupExpression,
-              sortby_dir: 'SORTBY_ASC',
-              sortby_nulls: 'SORTBY_NULLS_LAST',
-            },
-          },
-        ],
-      },
-    },
-  };
 }
 
 function buildPilotOutputExpression(projection: DvtSubstraitPilotProjection): PostgresAstNode {
@@ -190,15 +105,38 @@ function requireConnectedFieldProjection(
 }
 
 function buildConnectedFieldPostgresAst(projection: DvtSubstraitProjection): PostgresAstNode {
+  const calculatedExpression = (
+    output: DvtSubstraitProjection['outputs'][number]
+  ): PostgresAstNode | null => {
+    const calculation = output.calculation;
+    if (calculation?.kind === 'string-literal') return pgStringLiteral(calculation.value);
+    if (calculation?.kind === 'timestamp-literal') return pgTimestampTzLiteral(calculation.value);
+    if (calculation?.kind === 'row-number') {
+      const orderField = projection.source.fields[calculation.orderSourceOrdinal];
+      return orderField == null ? null : pgOrderedRowNumber(orderField.name);
+    }
+    return null;
+  };
+  const outputExpression = (output: DvtSubstraitProjection['outputs'][number]): PostgresAstNode => {
+    const calculated = calculatedExpression(output);
+    if (calculated != null) return calculated;
+    if (output.sourceFieldName == null) {
+      throw new DvtSubstraitPostgresProjectionError(
+        'unsupported_shape',
+        'Projection output has no admitted source or calculation.'
+      );
+    }
+    return (output.operations ?? []).reduce<PostgresAstNode>(
+      (expression, operation) => pgFunction(operation, expression),
+      pgColumnRef(output.sourceFieldName)
+    );
+  };
   return {
     SelectStmt: {
       targetList: projection.outputs.map((output) => ({
         ResTarget: {
           ...(output.name === output.sourceFieldName ? {} : { name: output.name }),
-          val: (output.operations ?? []).reduce<PostgresAstNode>(
-            (expression, operation) => pgFunction(operation, expression),
-            pgColumnRef(output.sourceFieldName)
-          ),
+          val: outputExpression(output),
         },
       })),
       fromClause: [

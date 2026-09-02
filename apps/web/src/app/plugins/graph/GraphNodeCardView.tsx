@@ -7,6 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/too
 import { GraphNodeColumnSection } from './GraphNodeColumnSection';
 import type {
   GraphNodeColumn,
+  GraphNodeCalculatedColumnIdentity,
   GraphNodeColumnFunctionApplyIdentity,
   GraphNodeColumnPortDirection,
   GraphNodeColumnPortIdentity,
@@ -58,6 +59,7 @@ export type GraphNodeCardViewProps = Readonly<{
   activeColumnHandleId?: string | null;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
   onColumnFunctionApply?: (identity: GraphNodeColumnFunctionApplyIdentity) => void;
+  onCalculatedColumnAdd?: (identity: GraphNodeCalculatedColumnIdentity) => void;
   onColumnOutputToggle?: (identity: {
     nodeId: string;
     columnId: string;
@@ -141,6 +143,7 @@ export function GraphNodeCardView({
   activeColumnHandleId,
   onColumnPortActivate,
   onColumnFunctionApply,
+  onCalculatedColumnAdd,
   onColumnOutputToggle,
   onColumnReorder,
   onColumnDisclosureChange,
@@ -230,6 +233,7 @@ export function GraphNodeCardView({
             activeColumnHandleId={activeColumnHandleId}
             onColumnPortActivate={onColumnPortActivate}
             onColumnFunctionApply={onColumnFunctionApply}
+            onCalculatedColumnAdd={onCalculatedColumnAdd}
             onColumnOutputToggle={onColumnOutputToggle}
             onColumnReorder={onColumnReorder}
             onDisclosureChange={

@@ -1,6 +1,9 @@
 import type { Edge, Node, ReactFlowProps } from '@xyflow/react';
 import type { Dispatch, SetStateAction } from 'react';
-import type { GraphNodeColumnPortIdentity } from '../../plugins/graph/graphNodeColumnContracts';
+import type {
+  GraphNodeCalculatedColumnIdentity,
+  GraphNodeColumnPortIdentity,
+} from '../../plugins/graph/graphNodeColumnContracts';
 import type { CanvasColumnLineageEdgeData } from './canvasColumnLineageProjection';
 import type {
   CanvasAlgebraicCompositionIdentity,
@@ -44,6 +47,7 @@ export type UseCanvasGraphHandlersResult = {
     alias: string;
     sourceColumnId?: string;
   }) => void;
+  handleAddCanvasCalculatedColumn: (identity: GraphNodeCalculatedColumnIdentity) => void;
   handleToggleCanvasColumnOutput: (identity: {
     nodeId: string;
     columnId: string;

@@ -144,12 +144,31 @@ describe('DVT Substrait capability catalog V1', () => {
         selector: 'SetOp.SET_OP_UNION_ALL',
       }),
     ];
+    const calculatedColumnIds = [
+      buildDvtSubstraitStandardCapabilityId('expression-form', {
+        sourceKind: 'core',
+        message: 'substrait.Expression',
+        selector: 'rex_type.literal',
+      }),
+      buildDvtSubstraitStandardCapabilityId('type', {
+        sourceKind: 'core',
+        message: 'substrait.Type',
+        selector: 'kind.precision_timestamp_tz',
+      }),
+    ];
     const supported = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.filter(
       (entry) => entry.kind === 'standard' && entry.profileStatus === 'supported-profile'
     );
 
     expect(supported.map((entry) => entry.entryId)).toEqual(
-      [...pilotIds, ...innerJoinIds, ...aggregateIds, ...windowIds, ...unionAllIds].sort()
+      [
+        ...pilotIds,
+        ...innerJoinIds,
+        ...aggregateIds,
+        ...windowIds,
+        ...unionAllIds,
+        ...calculatedColumnIds,
+      ].sort()
     );
     for (const entryId of pilotIds) {
       expect(findCapability(entryId)).toMatchObject({
@@ -179,6 +198,12 @@ describe('DVT Substrait capability catalog V1', () => {
       expect(findCapability(entryId)).toMatchObject({
         profileStatus: 'supported-profile',
         evidenceRefs: expect.arrayContaining(['dvt:#2634']),
+      });
+    }
+    for (const entryId of calculatedColumnIds) {
+      expect(findCapability(entryId)).toMatchObject({
+        profileStatus: 'supported-profile',
+        evidenceRefs: expect.arrayContaining(['dvt:#2833']),
       });
     }
 

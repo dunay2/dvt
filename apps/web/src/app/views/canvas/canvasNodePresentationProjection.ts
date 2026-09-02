@@ -131,15 +131,36 @@ function projectCanvasNodePresentationTruthInternal(
             draft: projectionDraft,
           });
           if (projection != null) {
-            substraitOutputs = projection.outputs.map((output) => ({
-              name: output.name,
-              fieldId: output.fieldId,
-              dataType: output.dataType,
-              sourceNodeId: projection.source.nodeId,
-              sourceFieldName: output.sourceFieldName,
-              ...(output.operations == null ? {} : { operations: output.operations }),
-              ...(output.description == null ? {} : { description: output.description }),
-            }));
+            substraitOutputs = projection.outputs.map((output) => {
+              const calculation = output.calculation;
+              const rowOrderField =
+                calculation?.kind === 'row-number'
+                  ? projection.source.fields[calculation.orderSourceOrdinal]
+                  : undefined;
+              const calculatedOperations =
+                calculation?.kind === 'string-literal'
+                  ? [`LITERAL(${JSON.stringify(calculation.value)})`]
+                  : calculation?.kind === 'timestamp-literal'
+                    ? [`TIMESTAMP_TZ(${calculation.value})`]
+                    : calculation?.kind === 'row-number'
+                      ? ['ROW_NUMBER']
+                      : undefined;
+              const sourceFieldName = output.sourceFieldName ?? rowOrderField?.name;
+              return {
+                name: output.name,
+                fieldId: output.fieldId,
+                dataType: output.dataType,
+                ...(sourceFieldName == null
+                  ? {}
+                  : { sourceNodeId: projection.source.nodeId, sourceFieldName }),
+                ...(calculatedOperations == null
+                  ? output.operations == null
+                    ? {}
+                    : { operations: output.operations }
+                  : { operations: calculatedOperations }),
+                ...(output.description == null ? {} : { description: output.description }),
+              };
+            });
           } else {
             const projectionInspection = inspectDvtSubstraitProjectionDraft(projectionDraft);
             const incomingSourceIds = new Set(

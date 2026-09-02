@@ -17,6 +17,7 @@ import { useCanvasNodeAuthoringHandlers } from './useCanvasNodeAuthoringHandlers
 import { useCanvasSelectionHandlers } from './useCanvasSelectionHandlers';
 import { useCanvasAlgebraicCompositionHandler } from './useCanvasAlgebraicCompositionHandler';
 import { applyCanvasColumnFunction } from './canvasColumnFunctionAuthoring';
+import { applyCanvasCalculatedColumn } from './canvasCalculatedColumnAuthoring';
 
 export function useCanvasGraphHandlers({
   graphStrategy,
@@ -102,6 +103,17 @@ export function useCanvasGraphHandlers({
         return result.outcome === 'applied' ? result.draftSession : currentSession;
       });
     };
+  const handleAddCanvasCalculatedColumn: UseCanvasGraphHandlersResult['handleAddCanvasCalculatedColumn'] =
+    (request) => {
+      setDraftSession((currentSession) => {
+        const result = applyCanvasCalculatedColumn({
+          draftSession: currentSession,
+          canonicalNodesById,
+          request,
+        });
+        return result.outcome === 'applied' ? result.draftSession : currentSession;
+      });
+    };
   const selectionHandlers = useCanvasSelectionHandlers(
     canvasGraphHandlerContractBuilders.selection(interactionContracts)
   );
@@ -119,6 +131,7 @@ export function useCanvasGraphHandlers({
     ...nodeAuthoringHandlers,
     handleColumnDisclosureChange,
     handleApplyCanvasColumnFunction,
+    handleAddCanvasCalculatedColumn,
     resolveCanvasAlgebraicCompositionOperations: algebraicComposition.resolveOperations,
     handleComposeCanvasNodes: algebraicComposition.composeNodes,
   };
