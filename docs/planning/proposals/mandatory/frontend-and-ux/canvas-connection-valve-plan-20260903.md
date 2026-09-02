@@ -1,6 +1,6 @@
 ---
 title: Canvas Connection Valve Implementation Plan
-status: Active
+status: Completed
 owner: Web
 last_reviewed: 2026-09-03
 planning_type: implementation-plan
