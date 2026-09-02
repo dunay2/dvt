@@ -50,6 +50,7 @@ export function CanvasDependencyEdge({
   targetPosition,
   style,
   interactionWidth,
+  selected,
 }: EdgeProps<CanvasDependencyFlowEdge>): ReactElement {
   const [edgePath] = getSmoothStepPath({
     sourceX,
@@ -59,7 +60,14 @@ export function CanvasDependencyEdge({
     targetY,
     targetPosition,
   });
-  const resolvedStyle = style ?? createGraphFlowEdgeStyle();
+  const resolvedStyle = {
+    ...(style ?? createGraphFlowEdgeStyle()),
+    ...(selected
+      ? {
+          stroke: 'var(--status-info)',
+        }
+      : {}),
+  };
 
   return (
     <>
