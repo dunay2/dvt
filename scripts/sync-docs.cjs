@@ -366,13 +366,14 @@ function lifecycleStateIsPublishable(lifecycleRow = {}) {
   ].includes(lifecycleState);
 }
 
-function lifecycleRowsByPath(authority) {
-  return authority instanceof Map ? authority : authority?.rowsByPath;
+function lifecycleAuthorityParts(authority) {
+  if (authority instanceof Map) return { rowsByPath: authority };
+  return { rowsByPath: authority?.rowsByPath };
 }
 
 function shouldIncludeDocumentationPath(documentPath, authority) {
   const normalizedPath = String(documentPath || '').replace(/\\/gu, '/');
-  const rowsByPath = lifecycleRowsByPath(authority);
+  const { rowsByPath } = lifecycleAuthorityParts(authority);
   if (!(rowsByPath instanceof Map)) return true;
   const lifecycleRow = rowsByPath.get(normalizedPath);
   if (!lifecycleRow) return true;
