@@ -102,6 +102,7 @@ allowedImplementationSurfaces:
   - docs/risk-register/quality/R-20260902-CANVAS-EDGE-EXECUTION-GATE.yaml
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-edge-execution-gate-plan-20260902.md
   - docs/.manifest.json
+  - docs/contracts/planner/index.md
   - docs/evidence/index.md
   - docs/risk-register/quality/index.md
   - docs/planning/proposals/index.md
@@ -173,28 +174,22 @@ redGreenCycles:
       - apps/web/src/app/views/canvas/useCanvasEdgeCommandRunner.test.tsx
     greenTest: apps/web/src/app/views/canvas/useCanvasEdgeCommandRunner.test.tsx
 symbols:
-  - name: readWorkspaceGraphAuthoringEdgeExecutionGate
-    path: packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.ts
-    dddOwner: Workspace graph edge execution policy
-    cqRails: [ProjectSelectedExecutableSubgraph]
-    fowlerSignals: [Replace private predicate]
-    architectureGuard: pnpm docs:feature-mechanization:implementation --feature FLOW1-EDGE-EXECUTION-GATE-2579
-    cypressCoverage: N/A - shared policy
-    unitTests: [pnpm --filter @dvt/contracts test]
-  - name: isWorkspaceGraphAuthoringEdgeEffectivelyExecutable
-    path: packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.ts
-    dddOwner: Workspace graph edge execution policy
-    cqRails: [ProjectSelectedExecutableSubgraph]
-    fowlerSignals: [Duplicate semantics]
-    architectureGuard: pnpm docs:feature-mechanization:implementation --feature FLOW1-EDGE-EXECUTION-GATE-2579
-    cypressCoverage: N/A - shared policy
-    unitTests: [pnpm --filter @dvt/contracts test]
-  - name: withWorkspaceGraphAuthoringEdgeExecutionGate
-    path: packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.ts
-    dddOwner: Workspace graph edge execution policy
-    cqRails: [AuthorCanvasGraphEdge]
-    fowlerSignals: [Bounded value]
-    architectureGuard: pnpm docs:feature-mechanization:implementation --feature FLOW1-EDGE-EXECUTION-GATE-2579
-    cypressCoverage: N/A - presentation belongs to issue 2581
-    unitTests: [pnpm --filter @dvt/contracts test]
+  - { name: EdgeExecutionMetadataOwner, path: packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.ts, dddOwner: Workspace graph edge execution policy, cqRails: [ProjectSelectedExecutableSubgraph], fowlerSignals: [Bounded value], architectureGuard: pnpm docs:feature-mechanization:implementation --feature FLOW1-EDGE-EXECUTION-GATE-2579, cypressCoverage: N/A - shared policy, unitTests: [pnpm --filter @dvt/contracts test] }
+  - { name: WORKSPACE_GRAPH_AUTHORING_EDGE_EXECUTION_GATE, path: packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.ts, dddOwner: Workspace graph edge execution policy, cqRails: [AuthorCanvasGraphEdge], fowlerSignals: [Bounded value], architectureGuard: pnpm docs:feature-mechanization:implementation --feature FLOW1-EDGE-EXECUTION-GATE-2579, cypressCoverage: N/A - shared policy, unitTests: [pnpm --filter @dvt/contracts test] }
+  - { name: WorkspaceGraphAuthoringEdgeExecutionGate, path: packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.ts, dddOwner: Workspace graph edge execution policy, cqRails: [AuthorCanvasGraphEdge], fowlerSignals: [Bounded value], architectureGuard: pnpm docs:feature-mechanization:implementation --feature FLOW1-EDGE-EXECUTION-GATE-2579, cypressCoverage: N/A - shared policy, unitTests: [pnpm --filter @dvt/contracts test] }
+  - { name: WorkspaceGraphAuthoringEdgeExecutionGateCommand, path: packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.ts, dddOwner: Workspace graph edge execution policy, cqRails: [AuthorCanvasGraphEdge], fowlerSignals: [Bounded value], architectureGuard: pnpm docs:feature-mechanization:implementation --feature FLOW1-EDGE-EXECUTION-GATE-2579, cypressCoverage: N/A - shared policy, unitTests: [pnpm --filter @dvt/contracts test] }
+  - { name: WorkspaceGraphAuthoringEdgeExecutionGateState, path: packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.ts, dddOwner: Workspace graph edge execution policy, cqRails: [ProjectSelectedExecutableSubgraph], fowlerSignals: [Bounded value], architectureGuard: pnpm docs:feature-mechanization:implementation --feature FLOW1-EDGE-EXECUTION-GATE-2579, cypressCoverage: N/A - shared policy, unitTests: [pnpm --filter @dvt/contracts test] }
+  - { name: readWorkspaceGraphAuthoringEdgeExecutionGate, path: packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.ts, dddOwner: Workspace graph edge execution policy, cqRails: [ProjectSelectedExecutableSubgraph], fowlerSignals: [Replace private predicate], architectureGuard: pnpm docs:feature-mechanization:implementation --feature FLOW1-EDGE-EXECUTION-GATE-2579, cypressCoverage: N/A - shared policy, unitTests: [pnpm --filter @dvt/contracts test] }
+  - { name: isWorkspaceGraphAuthoringEdgeEffectivelyExecutable, path: packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.ts, dddOwner: Workspace graph edge execution policy, cqRails: [ProjectSelectedExecutableSubgraph], fowlerSignals: [Duplicate semantics], architectureGuard: pnpm docs:feature-mechanization:implementation --feature FLOW1-EDGE-EXECUTION-GATE-2579, cypressCoverage: N/A - shared policy, unitTests: [pnpm --filter @dvt/contracts test] }
+  - { name: withWorkspaceGraphAuthoringEdgeExecutionGate, path: packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.ts, dddOwner: Workspace graph edge execution policy, cqRails: [AuthorCanvasGraphEdge], fowlerSignals: [Bounded value], architectureGuard: pnpm docs:feature-mechanization:implementation --feature FLOW1-EDGE-EXECUTION-GATE-2579, cypressCoverage: N/A - issue 2581, unitTests: [pnpm --filter @dvt/contracts test] }
+  - { name: EdgeExecutionGateCommand, path: apps/web/src/app/views/canvas/canvasDraftEdgeExecutionGate.ts, dddOwner: Canvas draft session, cqRails: [AuthorCanvasGraphEdge], fowlerSignals: [Bounded value], architectureGuard: pnpm docs:feature-mechanization:implementation --feature FLOW1-EDGE-EXECUTION-GATE-2579, cypressCoverage: N/A - issue 2581, unitTests: [pnpm --filter @dvt/web test:canvas] }
+  - { name: EdgeIdentity, path: apps/web/src/app/views/canvas/canvasDraftEdgeExecutionGate.ts, dddOwner: Canvas draft session, cqRails: [AuthorCanvasGraphEdge], fowlerSignals: [Bounded value], architectureGuard: pnpm docs:feature-mechanization:implementation --feature FLOW1-EDGE-EXECUTION-GATE-2579, cypressCoverage: N/A - issue 2581, unitTests: [pnpm --filter @dvt/web test:canvas] }
+  - { name: applyCommand, path: apps/web/src/app/views/canvas/canvasDraftEdgeExecutionGate.ts, dddOwner: Canvas draft session, cqRails: [AuthorCanvasGraphEdge], fowlerSignals: [Command method], architectureGuard: pnpm docs:feature-mechanization:implementation --feature FLOW1-EDGE-EXECUTION-GATE-2579, cypressCoverage: N/A - issue 2581, unitTests: [pnpm --filter @dvt/web test:canvas] }
+  - { name: canvasDraftEdgeExecutionGate, path: apps/web/src/app/views/canvas/canvasDraftEdgeExecutionGate.ts, dddOwner: Canvas draft session, cqRails: [AuthorCanvasGraphEdge], fowlerSignals: [Extract class], architectureGuard: pnpm docs:feature-mechanization:implementation --feature FLOW1-EDGE-EXECUTION-GATE-2579, cypressCoverage: N/A - issue 2581, unitTests: [pnpm --filter @dvt/web test:canvas] }
+  - { name: fromAuthoringEdge, path: apps/web/src/app/views/canvas/canvasDraftEdgeExecutionGate.ts, dddOwner: Canvas draft session, cqRails: [AuthorCanvasGraphEdge], fowlerSignals: [Bounded value], architectureGuard: pnpm docs:feature-mechanization:implementation --feature FLOW1-EDGE-EXECUTION-GATE-2579, cypressCoverage: N/A - issue 2581, unitTests: [pnpm --filter @dvt/web test:canvas] }
+  - { name: mergeRemote, path: apps/web/src/app/views/canvas/canvasDraftEdgeExecutionGate.ts, dddOwner: Canvas draft session, cqRails: [AuthorCanvasGraphEdge], fowlerSignals: [Three-way merge], architectureGuard: pnpm docs:feature-mechanization:implementation --feature FLOW1-EDGE-EXECUTION-GATE-2579, cypressCoverage: N/A - issue 2581, unitTests: [pnpm --filter @dvt/web test:canvas] }
+  - { name: preserveOnReplacement, path: apps/web/src/app/views/canvas/canvasDraftEdgeExecutionGate.ts, dddOwner: Canvas draft session, cqRails: [AuthorCanvasGraphEdge], fowlerSignals: [Preserve whole object], architectureGuard: pnpm docs:feature-mechanization:implementation --feature FLOW1-EDGE-EXECUTION-GATE-2579, cypressCoverage: N/A - issue 2581, unitTests: [pnpm --filter @dvt/web test:canvas] }
+  - { name: signature, path: apps/web/src/app/views/canvas/canvasDraftEdgeExecutionGate.ts, dddOwner: Canvas draft session, cqRails: [AuthorCanvasGraphEdge], fowlerSignals: [Identity map], architectureGuard: pnpm docs:feature-mechanization:implementation --feature FLOW1-EDGE-EXECUTION-GATE-2579, cypressCoverage: N/A - issue 2581, unitTests: [pnpm --filter @dvt/web test:canvas] }
+  - { name: CanvasDraftEdge, path: apps/web/src/app/views/canvas/canvasDraftSession.types.ts, dddOwner: Canvas draft session, cqRails: [AuthorCanvasGraphEdge], fowlerSignals: [Bounded value], architectureGuard: pnpm docs:feature-mechanization:implementation --feature FLOW1-EDGE-EXECUTION-GATE-2579, cypressCoverage: N/A - issue 2581, unitTests: [pnpm --filter @dvt/web test:canvas] }
+  - { name: setEdgeExecutionGate, path: apps/web/src/app/views/canvas/canvasDraftSessionWorkingSet.ts, dddOwner: Canvas draft session, cqRails: [AuthorCanvasGraphEdge], fowlerSignals: [Command method], architectureGuard: pnpm docs:feature-mechanization:implementation --feature FLOW1-EDGE-EXECUTION-GATE-2579, cypressCoverage: N/A - issue 2581, unitTests: [pnpm --filter @dvt/web test:canvas] }
 ```
