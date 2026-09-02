@@ -167,6 +167,7 @@ describe('canvas DBT model artifact projection', () => {
         language: 'sql',
         materialized: 'table',
         provenance: 'generated',
+        outputColumns: ['order_id', 'customer"label'],
         body: 'select\n  origin."order_id" as "order_id",\n  origin."customer""label" as "customer""label"\nfrom {{ source(\'warehouse_prod_analytics_erp\', \'orders\') }} as origin',
         content:
           '{{ config(materialized=\'table\') }}\n\nselect\n  origin."order_id" as "order_id",\n  origin."customer""label" as "customer""label"\nfrom {{ source(\'warehouse_prod_analytics_erp\', \'orders\') }} as origin\n',
