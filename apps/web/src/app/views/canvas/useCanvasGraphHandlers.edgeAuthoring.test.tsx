@@ -849,6 +849,33 @@ describe('useCanvasGraphHandlers edge authoring', () => {
 
     setDraftSession.mockClear();
     act(() => {
+      harness.latest()?.handleAddCanvasCalculatedColumn({
+        nodeId: transform.id,
+        kind: 'string-literal',
+        alias: 'channel',
+        value: 'web',
+      });
+    });
+    expect(setDraftSession).toHaveBeenCalledOnce();
+    const addCalculated = setDraftSession.mock.calls[0]?.[0] as (
+      current: typeof draftSession
+    ) => typeof draftSession;
+    const calculatedNode = addCalculated(draftSession).localNodeCatalog?.[transform.id];
+    if (calculatedNode == null) throw new Error('Expected calculated output.');
+    const calculatedAuthority = readDvtTransformAuthoringAuthority(calculatedNode);
+    if (calculatedAuthority.mode !== 'substrait') throw new Error('Expected Substrait authority.');
+    const calculatedInspection = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(calculatedAuthority.semanticDocument)
+    );
+    expect(
+      calculatedInspection.ok ? calculatedInspection.projection.outputs.at(-1) : null
+    ).toMatchObject({
+      name: 'channel',
+      calculation: { kind: 'string-literal', value: 'web' },
+    });
+
+    setDraftSession.mockClear();
+    act(() => {
       harness.latest()?.handleToggleCanvasColumnOutput({
         nodeId: transform.id,
         columnId: 'output:customer',

@@ -112,6 +112,7 @@ type UseCanvasControllerReadModelArgs = {
     | 'activeColumnHandleId'
     | 'handleColumnPortActivate'
     | 'handleApplyCanvasColumnFunction'
+    | 'handleAddCanvasCalculatedColumn'
     | 'handleToggleCanvasColumnOutput'
     | 'handleReorderCanvasColumnOutput'
     | 'handleColumnDisclosureChange'
@@ -210,6 +211,9 @@ export function useCanvasControllerReadModel({
           onApplyCanvasColumnFunction: canMutateGraph
             ? graphHandlers.handleApplyCanvasColumnFunction
             : undefined,
+          onAddCanvasCalculatedColumn: canMutateGraph
+            ? graphHandlers.handleAddCanvasCalculatedColumn
+            : undefined,
           onToggleCanvasColumnOutput: canMutateGraph
             ? graphHandlers.handleToggleCanvasColumnOutput
             : undefined,
@@ -261,7 +265,7 @@ export function useCanvasControllerReadModel({
                   CanvasNodePresentationTruth | undefined,
                 presentedColumns: readInteractiveColumns(node),
               })
-            : { hasEditableProjection: false };
+            : { hasEditableProjection: false, supportsCalculatedColumns: false };
         const columnFunctionMenus = functionProjection.menus;
         const hasEditableProjection = functionProjection.hasEditableProjection;
 
@@ -279,6 +283,9 @@ export function useCanvasControllerReadModel({
             : undefined,
           onApplyCanvasColumnFunction:
             columnFunctionMenus == null ? undefined : node.data.onApplyCanvasColumnFunction,
+          onAddCanvasCalculatedColumn: functionProjection.supportsCalculatedColumns
+            ? node.data.onAddCanvasCalculatedColumn
+            : undefined,
           onToggleCanvasColumnOutput:
             hasEditableProjection || canAuthorDbtModelColumns
               ? node.data.onToggleCanvasColumnOutput
@@ -323,6 +330,7 @@ export function useCanvasControllerReadModel({
       graphHandlers.handleColumnDisclosureChange,
       graphHandlers.handleColumnPortActivate,
       graphHandlers.handleApplyCanvasColumnFunction,
+      graphHandlers.handleAddCanvasCalculatedColumn,
       graphHandlers.handleReorderCanvasColumnOutput,
       graphHandlers.handleToggleCanvasColumnOutput,
       graphHandlers.resolveCanvasAlgebraicCompositionOperations,

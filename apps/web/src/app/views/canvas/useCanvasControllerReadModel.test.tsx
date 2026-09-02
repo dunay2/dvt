@@ -30,6 +30,7 @@ type ReadModelNodeData = {
   activeColumnHandleId?: unknown;
   onColumnPortActivate?: unknown;
   onApplyCanvasColumnFunction?: unknown;
+  onAddCanvasCalculatedColumn?: unknown;
   onToggleCanvasColumnOutput?: unknown;
   onReorderCanvasColumnOutput?: unknown;
   onColumnDisclosureChange?: unknown;
@@ -99,6 +100,7 @@ function buildReadModelArgs(
       activeColumnHandleId: null,
       handleColumnPortActivate: vi.fn(),
       handleApplyCanvasColumnFunction: vi.fn(),
+      handleAddCanvasCalculatedColumn: vi.fn(),
       handleToggleCanvasColumnOutput: vi.fn(),
       handleReorderCanvasColumnOutput: vi.fn(),
       handleColumnDisclosureChange: vi.fn(),
@@ -446,6 +448,9 @@ describe('useCanvasControllerReadModel', () => {
       expect(transformData.onApplyCanvasColumnFunction).toBe(
         args.graphHandlers.handleApplyCanvasColumnFunction
       );
+      expect(transformData.onAddCanvasCalculatedColumn).toBe(
+        args.graphHandlers.handleAddCanvasCalculatedColumn
+      );
       expect(columns.find((column) => column.id === 'output:customer')?.functionMenu).toEqual({
         category: 'text',
         items: expect.arrayContaining([
@@ -533,6 +538,13 @@ describe('useCanvasControllerReadModel', () => {
 
     try {
       const state = mounted.readState();
+      const sourceData = state?.nodesWithImpact[0]?.data as ReadModelNodeData;
+      expect(sourceData.onAddCanvasCalculatedColumn).toBe(
+        args.graphHandlers.handleAddCanvasCalculatedColumn
+      );
+      expect(
+        (sourceData.columns as ReadonlyArray<{ functionMenu?: unknown }>)[0]?.functionMenu
+      ).toEqual(expect.objectContaining({ category: 'text' }));
       expect(state?.edgesWithImpact).toEqual([
         expect.objectContaining({
           type: 'columnLineage',

@@ -1,6 +1,7 @@
 import type { Node } from '@xyflow/react';
 import type {
   GraphNodeColumn,
+  GraphNodeCalculatedColumnIdentity,
   GraphNodeColumnFunctionApplyIdentity,
   GraphNodeColumnOutputToggleIdentity,
   GraphNodeColumnPortIdentity,
@@ -19,6 +20,7 @@ type NodeActionHandlers = {
   onAttachSchemaToNode?: (nodeId: string, schemaName: string) => void;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
   onApplyCanvasColumnFunction?: (identity: GraphNodeColumnFunctionApplyIdentity) => void;
+  onAddCanvasCalculatedColumn?: (identity: GraphNodeCalculatedColumnIdentity) => void;
   onToggleCanvasColumnOutput?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
   onReorderCanvasColumnOutput?: (identity: GraphNodeColumnReorderIdentity) => void;
   onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;
@@ -68,6 +70,7 @@ export function buildCanvasNodeInteractionPresentation({
       onAttachSchemaToNode: handlers.onAttachSchemaToNode,
       onColumnPortActivate: handlers.onColumnPortActivate,
       onApplyCanvasColumnFunction: handlers.onApplyCanvasColumnFunction,
+      onAddCanvasCalculatedColumn: handlers.onAddCanvasCalculatedColumn,
       onToggleCanvasColumnOutput: handlers.onToggleCanvasColumnOutput,
       onReorderCanvasColumnOutput: handlers.onReorderCanvasColumnOutput,
       onColumnDisclosureChange: handlers.onColumnDisclosureChange,

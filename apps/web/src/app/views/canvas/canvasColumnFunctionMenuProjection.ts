@@ -20,6 +20,7 @@ export type CanvasColumnFunctionMenuMap = Map<
 
 export type CanvasColumnFunctionMenuProjection = Readonly<{
   hasEditableProjection: boolean;
+  supportsCalculatedColumns: boolean;
   menus?: CanvasColumnFunctionMenuMap;
 }>;
 
@@ -59,7 +60,8 @@ function projectDvtTransformMenus(args: {
             draft: { plan: metadata.plan, sidecar: metadata.sidecar },
           })
         : null;
-    if (projection == null) return { hasEditableProjection: false };
+    if (projection == null)
+      return { hasEditableProjection: false, supportsCalculatedColumns: false };
     const menus: CanvasColumnFunctionMenuMap = new Map();
     for (const output of projection.outputs) {
       addMenu({
@@ -70,10 +72,34 @@ function projectDvtTransformMenus(args: {
         provider: projection.source.sourceRef.connectionRef.provider,
       });
     }
-    return { hasEditableProjection: true, ...(menus.size === 0 ? {} : { menus }) };
+    return {
+      hasEditableProjection: true,
+      supportsCalculatedColumns: true,
+      ...(menus.size === 0 ? {} : { menus }),
+    };
   } catch {
-    return { hasEditableProjection: false };
+    return { hasEditableProjection: false, supportsCalculatedColumns: false };
   }
+}
+
+function projectDvtSourceMenus(node: CanonicalNode): CanvasColumnFunctionMenuProjection {
+  const source = resolveDvtSubstraitProjectionSource(node);
+  if (source == null) return { hasEditableProjection: false, supportsCalculatedColumns: false };
+  const menus: CanvasColumnFunctionMenuMap = new Map();
+  for (const field of source.fields) {
+    addMenu({
+      menus,
+      columnId: field.name,
+      name: field.name,
+      dataType: field.dataType,
+      provider: source.sourceRef.connectionRef.provider,
+    });
+  }
+  return {
+    hasEditableProjection: false,
+    supportsCalculatedColumns: true,
+    ...(menus.size === 0 ? {} : { menus }),
+  };
 }
 
 function projectGeneratedDbtModelMenus(args: {
@@ -84,7 +110,8 @@ function projectGeneratedDbtModelMenus(args: {
   presentedColumns?: readonly Readonly<{ name: string; type: string }>[];
 }): CanvasColumnFunctionMenuProjection {
   const metadata = createDbtNodeAuthoringMetadata(args.node);
-  if (metadata.modelSql != null) return { hasEditableProjection: false };
+  if (metadata.modelSql != null)
+    return { hasEditableProjection: false, supportsCalculatedColumns: false };
   const sourceIds = args.edges
     .filter((edge) => edge.targetId === args.node.id)
     .map((edge) => edge.sourceId);
@@ -93,7 +120,7 @@ function projectGeneratedDbtModelMenus(args: {
     (sourceIds.length === 1 ? sourceIds[0] : undefined);
   const sourceNode = args.nodes.find((candidate) => candidate.id === sourceId);
   const source = sourceNode == null ? null : resolveDvtSubstraitProjectionSource(sourceNode);
-  if (source == null) return { hasEditableProjection: false };
+  if (source == null) return { hasEditableProjection: false, supportsCalculatedColumns: false };
   const menus: CanvasColumnFunctionMenuMap = new Map();
   const truthColumns = args.presentationTruth?.columns.visible;
   const columns =
@@ -107,7 +134,11 @@ function projectGeneratedDbtModelMenus(args: {
       provider: source.sourceRef.connectionRef.provider,
     });
   }
-  return { hasEditableProjection: true, ...(menus.size === 0 ? {} : { menus }) };
+  return {
+    hasEditableProjection: true,
+    supportsCalculatedColumns: false,
+    ...(menus.size === 0 ? {} : { menus }),
+  };
 }
 
 export function projectCanvasColumnFunctionMenus(args: {
@@ -120,8 +151,9 @@ export function projectCanvasColumnFunctionMenus(args: {
   if (args.node.pluginId === 'dvt' && args.node.kind === 'dvt:transform') {
     return projectDvtTransformMenus(args);
   }
+  if (args.node.kind === 'dvt:source') return projectDvtSourceMenus(args.node);
   if (args.node.pluginId === 'dbt' && args.node.kind === 'dbt:model') {
     return projectGeneratedDbtModelMenus(args);
   }
-  return { hasEditableProjection: false };
+  return { hasEditableProjection: false, supportsCalculatedColumns: false };
 }
