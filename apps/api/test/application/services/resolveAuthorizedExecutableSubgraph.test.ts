@@ -357,7 +357,7 @@ describe('ResolveAuthorizedExecutableSubgraphService', () => {
           nodes: [
             {
               nodeId: 'source-node',
-              stepKind: 'PREPARE_POSTGRES_TRANSFORM',
+              stepKind: 'DBT_MODEL',
               dependsOn: [],
             },
           ],
@@ -401,12 +401,12 @@ describe('ResolveAuthorizedExecutableSubgraphService', () => {
           nodes: [
             {
               nodeId: 'source-node',
-              stepKind: 'PREPARE_POSTGRES_TRANSFORM',
+              stepKind: 'DBT_MODEL',
               dependsOn: [],
             },
             {
               nodeId: 'transform-node',
-              stepKind: 'POSTGRES_SQL_TRANSFORM',
+              stepKind: 'DBT_TEST',
               dependsOn: ['source-node'],
             },
           ],

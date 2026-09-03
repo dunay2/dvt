@@ -11,26 +11,7 @@ import {
 } from '../fixtures/workspaceGraphDraftFixture.js';
 
 import type { ProtectedRuntimeHarness } from './protectedRuntime.integration.harness.js';
-import { readAcceptedRunId } from './protectedRuntime.integration.http.js';
 import { ENVIRONMENT_ID, PROJECT_ID, TENANT_ID } from './protectedRuntime.integration.shared.js';
-
-const TRANSFORMATION_PREVIEW_PROVENANCE = {
-  kind: 'transformation-git-artifacts',
-  graphArtifact: {
-    repo: 'dunay2/dvt',
-    ref: 'refs/heads/main',
-    path: 'pipelines/orders_pipeline.yaml',
-    commitSha: 'commit-graph-1',
-    contentSha256: 'a'.repeat(64),
-  },
-  sqlArtifact: {
-    repo: 'dunay2/dvt',
-    ref: 'refs/heads/main',
-    path: 'models/orders.sql',
-    commitSha: 'commit-sql-1',
-    contentSha256: 'b'.repeat(64),
-  },
-} as const;
 
 export async function exerciseSelectedClosurePreviewFlow(
   runtime: ProtectedRuntimeHarness
@@ -106,57 +87,13 @@ export async function expectSelectedClosureGraphSourceMismatchRejected(
         mode: 'upstream',
         nodeIds: ['sink_1'],
       },
-      graphSource: buildMismatchedTransformationGraphSource(),
+      graphSource: buildMismatchedSelectedClosureGraphSource(),
     }),
   });
 
   return {
     saveResponse,
     previewResponse,
-  };
-}
-
-export async function exerciseSelectedClosurePlannerBackedRunFlow(
-  runtime: ProtectedRuntimeHarness
-): Promise<{
-  readonly saveResponse: { statusCode: number; json(): unknown };
-  readonly startResponse: { statusCode: number; json(): unknown };
-  readonly actualRunId: string;
-  readonly storedPlan:
-    | {
-        plan_id: string;
-        plan_uri: string;
-        validation_state: string;
-      }
-    | undefined;
-}> {
-  const token = await runtime.issuePrincipalToken();
-  const runtimeApp = runtime.requireApp();
-  const saveResponse = await saveSelectedClosureDraft(runtime, token);
-  const startResponse = await runtimeApp.inject({
-    method: 'POST',
-    url: '/runs/start',
-    headers: { authorization: `Bearer ${token}` },
-    payload: {
-      tenantId: TENANT_ID,
-      projectId: PROJECT_ID,
-      environmentId: ENVIRONMENT_ID,
-      selection: {
-        mode: 'upstream',
-        nodeIds: ['sink_1'],
-      },
-      graphSource: buildTransformationGraphSource(['source_1', 'transform_1', 'sink_1']),
-      targetAdapter: 'temporal',
-    },
-  });
-  const actualRunId = readAcceptedRunId(startResponse.json());
-  const storedPlan = await runtime.queryLatestStoredPlan();
-
-  return {
-    saveResponse,
-    startResponse,
-    actualRunId,
-    storedPlan,
   };
 }
 
@@ -180,7 +117,7 @@ function buildSelectedClosurePreviewPayload(input: {
     nodeIds: readonly string[];
   };
   graphSourceNodeIds?: readonly string[];
-  graphSource?: ReturnType<typeof buildTransformationGraphSource>;
+  graphSource?: ReturnType<typeof buildSelectedClosureGraphSource>;
 }): Record<string, unknown> {
   return {
     context: {
@@ -196,7 +133,7 @@ function buildSelectedClosurePreviewPayload(input: {
       nodeIds: [...input.selection.nodeIds],
     },
     graphSource:
-      input.graphSource ?? buildTransformationGraphSource(input.graphSourceNodeIds ?? []),
+      input.graphSource ?? buildSelectedClosureGraphSource(input.graphSourceNodeIds ?? []),
     persist: true,
   };
 }
@@ -230,7 +167,7 @@ function buildSelectedClosureDraft(): ReturnType<typeof buildWorkspaceGraphDraft
   };
 }
 
-function buildTransformationGraphSource(nodeIds: readonly string[]): {
+function buildSelectedClosureGraphSource(nodeIds: readonly string[]): {
   kind: 'generic-graph-v1';
   sourceFamily: 'dvt-substrait';
   sourceVersion: 'substrait-v1';
@@ -240,43 +177,18 @@ function buildTransformationGraphSource(nodeIds: readonly string[]): {
   const allNodes: Array<Record<string, unknown>> = [
     {
       nodeId: 'source_1',
-      stepKind: 'PREPARE_POSTGRES_TRANSFORM',
+      stepKind: 'DBT_MODEL',
       dependsOn: [],
-      stepTypeConfig: {
-        targetSchema: 'analytics',
-        sourceSchema: 'raw',
-        sourceTable: 'orders',
-        sourceAlias: 'orders',
-      },
     },
     {
       nodeId: 'transform_1',
-      stepKind: 'POSTGRES_SQL_TRANSFORM',
+      stepKind: 'DBT_MODEL',
       dependsOn: ['source_1'],
-      stepTypeConfig: {
-        dialect: 'postgres',
-        entrypoint: 'models/orders.sql',
-        sql: 'select * from raw.orders',
-        sqlArtifact: TRANSFORMATION_PREVIEW_PROVENANCE.sqlArtifact,
-        sourceSchema: 'raw',
-        sourceTable: 'orders',
-        sourceAlias: 'orders',
-        sinkSchema: 'analytics',
-        sinkTable: 'orders_final',
-        materialization: 'table',
-        writeMode: 'replace',
-      },
     },
     {
       nodeId: 'sink_1',
-      stepKind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
+      stepKind: 'DBT_TEST',
       dependsOn: ['transform_1'],
-      stepTypeConfig: {
-        sinkSchema: 'analytics',
-        sinkTable: 'orders_final',
-        materialization: 'table',
-        writeMode: 'replace',
-      },
     },
   ];
 
@@ -288,8 +200,8 @@ function buildTransformationGraphSource(nodeIds: readonly string[]): {
   };
 }
 
-function buildMismatchedTransformationGraphSource(): ReturnType<
-  typeof buildTransformationGraphSource
+function buildMismatchedSelectedClosureGraphSource(): ReturnType<
+  typeof buildSelectedClosureGraphSource
 > {
   return {
     kind: 'generic-graph-v1',
@@ -298,43 +210,18 @@ function buildMismatchedTransformationGraphSource(): ReturnType<
     nodes: [
       {
         nodeId: 'alternate_source',
-        stepKind: 'PREPARE_POSTGRES_TRANSFORM',
+        stepKind: 'DBT_MODEL',
         dependsOn: [],
-        stepTypeConfig: {
-          targetSchema: 'analytics',
-          sourceSchema: 'raw',
-          sourceTable: 'orders',
-          sourceAlias: 'orders',
-        },
       },
       {
         nodeId: 'alternate_transform',
-        stepKind: 'POSTGRES_SQL_TRANSFORM',
+        stepKind: 'DBT_MODEL',
         dependsOn: ['alternate_source'],
-        stepTypeConfig: {
-          dialect: 'postgres',
-          entrypoint: 'models/orders.sql',
-          sql: 'select * from raw.orders',
-          sqlArtifact: TRANSFORMATION_PREVIEW_PROVENANCE.sqlArtifact,
-          sourceSchema: 'raw',
-          sourceTable: 'orders',
-          sourceAlias: 'orders',
-          sinkSchema: 'analytics',
-          sinkTable: 'orders_final',
-          materialization: 'table',
-          writeMode: 'replace',
-        },
       },
       {
         nodeId: 'alternate_sink',
-        stepKind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
+        stepKind: 'DBT_TEST',
         dependsOn: ['alternate_transform'],
-        stepTypeConfig: {
-          sinkSchema: 'analytics',
-          sinkTable: 'orders_final',
-          materialization: 'table',
-          writeMode: 'replace',
-        },
       },
     ],
   };

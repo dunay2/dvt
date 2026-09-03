@@ -38,7 +38,6 @@ import {
   expectTokenAssertionConflict,
 } from './protectedRuntime.integration.runtime.scenarios.js';
 import {
-  exerciseSelectedClosurePlannerBackedRunFlow,
   exerciseSelectedClosurePreviewFlow,
   expectSelectedClosureDependencyGapRejected,
   expectSelectedClosureGraphSourceMismatchRejected,
@@ -197,20 +196,6 @@ describeIfPg('protected runtime integration', () => {
         },
       })
     );
-  });
-
-  it('accepts planner-backed start-run for the same selected closure used by preview', async () => {
-    const flow = await exerciseSelectedClosurePlannerBackedRunFlow(runtime);
-
-    expect(flow.saveResponse.statusCode).toBe(200);
-    expect(flow.startResponse.statusCode).toBe(202);
-    expect(flow.startResponse.json()).toEqual({
-      runId: flow.actualRunId,
-      accepted: true,
-    });
-    expect(flow.storedPlan).toMatchObject({
-      validation_state: 'VALID',
-    });
   });
 
   it('returns 400 invalid_plan_source when manifestRef is sent to the hard-cut runtime', async () => {

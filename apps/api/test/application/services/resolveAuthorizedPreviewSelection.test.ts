@@ -275,7 +275,7 @@ describe('ResolveAuthorizedPreviewSelectionService', () => {
         kind: 'generic-graph-v1' as const,
         sourceFamily: 'dvt-substrait',
         sourceVersion: 'substrait-v1',
-        nodes: [{ nodeId: 'transform', stepKind: 'POSTGRES_SQL_TRANSFORM', dependsOn: [] }],
+        nodes: [{ nodeId: 'transform', stepKind: 'DBT_MODEL', dependsOn: [] }],
       },
     };
 
