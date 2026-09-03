@@ -13,6 +13,10 @@
 import { z } from 'zod';
 
 import {
+  DvtSubstraitStandardAdmissionEvidenceV1Schema,
+  type DvtSubstraitStandardAdmissionEvidenceV1,
+} from './DvtSubstraitCapabilityAdmission.v1.js';
+import {
   DVT_SUBSTRAIT_PROFILE_REF_V1,
   DvtSubstraitProfileRefV1Schema,
 } from './DvtSubstraitProfile.v1.js';
@@ -138,6 +142,7 @@ export const DvtSubstraitStandardCapabilityV1Schema = z
     identity: DvtSubstraitStandardSemanticIdentityV1Schema,
     profileStatus: StandardProfileStatusSchema,
     evidenceRefs: EvidenceRefsSchema,
+    admission: DvtSubstraitStandardAdmissionEvidenceV1Schema.optional(),
   })
   .strict()
   .superRefine((entry, context) => {
@@ -169,6 +174,20 @@ export const DvtSubstraitStandardCapabilityV1Schema = z
         message:
           'Relations and expression forms in the standard-backed catalog require core identity.',
         path: ['identity'],
+      });
+    }
+    if (entry.profileStatus === 'supported-profile' && entry.admission === undefined) {
+      context.addIssue({
+        code: 'custom',
+        message: 'supported-profile requires complete standard-first admission evidence.',
+        path: ['admission'],
+      });
+    }
+    if (entry.profileStatus !== 'supported-profile' && entry.admission !== undefined) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Only supported-profile capabilities may carry admission evidence.',
+        path: ['admission'],
       });
     }
   });
@@ -254,6 +273,37 @@ export function canonicalizeDvtSubstraitCapabilityCatalogV1(
       .map((entry) => ({
         ...entry,
         evidenceRefs: [...entry.evidenceRefs].sort(compareCodeUnitStrings),
+        ...(entry.kind === 'standard' && entry.admission
+          ? {
+              admission: {
+                ...entry.admission,
+                targetConformance: entry.admission.targetConformance
+                  .map((target) => ({
+                    ...target,
+                    evidenceRefs: [...target.evidenceRefs].sort(compareCodeUnitStrings),
+                  }))
+                  .sort((left, right) => compareCodeUnitStrings(left.targetId, right.targetId)),
+                stableIdentity:
+                  entry.admission.stableIdentity.status === 'proved'
+                    ? {
+                        ...entry.admission.stableIdentity,
+                        evidenceRefs: [...entry.admission.stableIdentity.evidenceRefs].sort(
+                          compareCodeUnitStrings
+                        ),
+                      }
+                    : entry.admission.stableIdentity,
+                visualExposure:
+                  entry.admission.visualExposure.status === 'exposed'
+                    ? {
+                        ...entry.admission.visualExposure,
+                        evidenceRefs: [...entry.admission.visualExposure.evidenceRefs].sort(
+                          compareCodeUnitStrings
+                        ),
+                      }
+                    : entry.admission.visualExposure,
+              },
+            }
+          : {}),
       }))
       .sort((left, right) => compareCodeUnitStrings(left.entryId, right.entryId)),
   };
@@ -563,6 +613,52 @@ function admissionEvidenceRefs(entryId: string): readonly string[] {
   return [];
 }
 
+function conformanceEvidenceRef(entryId: string): string {
+  if (AGGREGATE_SUPPORTED_ENTRY_IDS.has(entryId)) {
+    return 'docs/evidence/ED-20260831-vtx2-substrait-grouping.md';
+  }
+  if (WINDOW_SUPPORTED_ENTRY_IDS.has(entryId)) {
+    return 'docs/evidence/ED-20260831-vtx2-substrait-row-number-window.md';
+  }
+  if (CALCULATED_COLUMN_SUPPORTED_ENTRY_IDS.has(entryId)) {
+    return 'docs/evidence/ED-20260902-canvas-calculated-column-authoring.md';
+  }
+  if (UNION_ALL_SUPPORTED_ENTRY_IDS.has(entryId)) {
+    return 'docs/evidence/ED-20260831-vtx2-substrait-union-all.md';
+  }
+  if (entryId === LOWER_SUPPORTED_ENTRY_ID) {
+    return 'docs/evidence/ED-20260902-transform-function-alias-authoring.md';
+  }
+  return 'docs/evidence/ED-20260826-vtx2-substrait-card-pilot.md';
+}
+
+function admissionFor(
+  entry: DvtSubstraitStandardCapabilityV1,
+  featureRefs: readonly string[]
+): DvtSubstraitStandardAdmissionEvidenceV1 {
+  const proofRef = conformanceEvidenceRef(entry.entryId);
+  const standardIdentityRef = entry.evidenceRefs.find((reference) =>
+    reference.startsWith('substrait:')
+  );
+  if (standardIdentityRef === undefined) {
+    throw new Error(`Missing pinned Substrait identity evidence for ${entry.entryId}.`);
+  }
+  return DvtSubstraitStandardAdmissionEvidenceV1Schema.parse({
+    kind: 'standard-admission',
+    productUseCaseRef: featureRefs[featureRefs.length - 1],
+    standardIdentityRef,
+    canonicalFixtureRef: proofRef,
+    semanticValidationRef: proofRef,
+    negativeValidationRef: proofRef,
+    stableIdentity: {
+      status: 'proved',
+      evidenceRefs: ['docs/evidence/ED-20260903-vtx2-durable-semantic-document.md'],
+    },
+    targetConformance: [{ targetId: 'postgres', status: 'mapped', evidenceRefs: [proofRef] }],
+    visualExposure: { status: 'exposed', evidenceRefs: [proofRef] },
+  });
+}
+
 const ADMITTED_STANDARD_SEED = STANDARD_SEED.map((entry) => {
   const evidenceRefs = admissionEvidenceRefs(entry.entryId);
   return evidenceRefs.length > 0
@@ -570,6 +666,7 @@ const ADMITTED_STANDARD_SEED = STANDARD_SEED.map((entry) => {
         ...entry,
         profileStatus: 'supported-profile',
         evidenceRefs: [...entry.evidenceRefs, ...evidenceRefs],
+        admission: admissionFor(entry, evidenceRefs),
       })
     : entry;
 });
