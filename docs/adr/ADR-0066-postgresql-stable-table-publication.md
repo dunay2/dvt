@@ -47,8 +47,9 @@ dvt:publication:v1;token=<sha256>;schema=<sha256>
 
 The publication token binds the admitted semantic document, selected output, target
 and run attempt. The schema digest binds ordered column names, PostgreSQL types,
-nullability and DVT-declared constraints. User-facing descriptions remain DVT
-metadata in V1; they do not share the reserved table comment.
+nullability, defaults, generated expressions, collations, DVT-declared constraints
+and indexes. User-facing descriptions remain DVT metadata in V1; they do not share
+the reserved table comment.
 
 An existing relation is replaceable only when it is a table owned by the governed
 role and has a valid DVT marker. Any absent marker, wrong relation kind, unexpected
@@ -75,16 +76,20 @@ logical target. Candidate failure leaves the target unchanged.
 
 The publication transaction:
 
-1. acquires a transaction-level advisory lock derived from the exact target;
+1. acquires a transaction-level advisory lock derived from the physical database,
+   schema and table, independent of the `ConnectionRef` alias;
 2. inspects relation kind, owner, DVT marker and schema digest;
-3. compares the current token with the admitted predecessor token;
-4. creates the first managed table, or deletes and inserts its rows from the
+3. returns idempotent success when the current token already equals the new token;
+4. otherwise compares the current token with the admitted predecessor token;
+5. creates the first managed table, or deletes and inserts its rows from the
    candidate using an explicit ordered column list;
-5. writes the new marker and commits rows plus token atomically.
+6. writes the new marker and commits rows plus token atomically.
 
-The two-integer advisory key is derived from SHA-256 of connection identity, schema
-and table. A hash collision may serialize unrelated targets but cannot weaken safety.
-The transaction does not wait for user input or perform transformation work.
+Within the selected PostgreSQL database, the two-integer advisory key is derived from
+SHA-256 of the schema and table. Connection aliases that reach the same physical
+target therefore coordinate on the same lock. A hash collision may serialize
+unrelated targets but cannot weaken safety. The transaction does not wait for user
+input or perform transformation work.
 
 `DELETE` plus `INSERT` preserves the table object. It deliberately avoids `TRUNCATE`,
 `DROP`, `ALTER` and rename-based swaps, whose stronger locks or object replacement
@@ -93,6 +98,7 @@ would violate the reader and dependency guarantees.
 ### 5. Failure is non-destructive
 
 - A stale predecessor yields `STALE_PUBLICATION` without mutation.
+- A retry whose new token is already current returns the original successful outcome.
 - An unmanaged collision yields `UNMANAGED_PUBLICATION_TARGET`.
 - Schema or managed-metadata drift yields `PUBLICATION_SCHEMA_MISMATCH`.
 - Insufficient privileges yield `PUBLICATION_PERMISSION_DENIED`.
@@ -108,9 +114,10 @@ publication commits and the new rows afterwards; they do not observe the interme
 delete. Concurrent writers are serialized by PostgreSQL and the DVT advisory lock.
 
 DVT-created indexes and constraints, grants and read dependencies survive because the
-table object survives. Unexpected triggers, rules, columns, constraints or indexes
-are drift and reject publication. External foreign-key behavior remains PostgreSQL
-behavior and may make publication fail atomically.
+table object survives. Unexpected triggers or rules are forbidden; any columns,
+defaults, generated expressions, collations, constraints or indexes outside the
+managed fingerprint are drift and reject publication. External foreign-key behavior
+remains PostgreSQL behavior and may make publication fail atomically.
 
 This contract does not promise historical versions, rollback, retention, garbage
 collection, zero write amplification, unbounded scale or non-blocking concurrent

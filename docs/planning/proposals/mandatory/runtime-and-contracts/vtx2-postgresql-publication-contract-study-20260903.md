@@ -94,10 +94,11 @@ flowchart LR
   Workload --> Temporal[Temporal activity]
   Temporal --> Candidate[(Temporary candidate)]
   Candidate --> Validate[Validate shape]
-  Validate --> Lock[Target advisory xact lock]
+  Validate --> Lock[Physical-target advisory xact lock]
   Lock --> CAS{Managed marker and<br/>predecessor match?}
-  CAS -- no --> Reject[Reject without mutation]
-  CAS -- yes --> Tx[DELETE + INSERT + marker<br/>one transaction]
+  CAS -- new token current --> Idempotent[Return prior success]
+  CAS -- stale or drift --> Reject[Reject without mutation]
+  CAS -- predecessor matches --> Tx[DELETE + INSERT + marker<br/>one transaction]
   Tx --> Stable[(Stable target OID)]
   Stable --> Evidence[Publication evidence]
 ```
@@ -107,7 +108,9 @@ flowchart LR
 - Connection identity comes only from the admitted governed `ConnectionRef`.
 - Target identity is exact connection, schema and table; identifiers are quoted.
 - Candidate evaluation completes before the target transaction starts.
-- One target-scoped transaction lock and predecessor-token comparison fence writers.
+- One physical-target transaction lock, independent of connection aliases, and
+  predecessor-token comparison fence writers.
+- A retry whose publication token is already current succeeds without rewriting rows.
 - Rows and current token become visible together or not at all.
 - Only a marked, owned, schema-compatible DVT target can be replaced.
 - The target object survives; no `DROP`, rename swap or `TRUNCATE` is used.
@@ -127,6 +130,8 @@ flowchart LR
 ## Required negative proofs
 
 - two candidates admitted from the same predecessor finish in reverse order;
+- retry after an uncertain successful commit observes the same token idempotently;
+- two connection aliases reaching one physical target use the same publication lock;
 - target exists without the DVT marker or with the wrong owner/relation kind;
 - ordered schema, type, nullability or managed metadata has drifted;
 - role lacks create/ownership/publication permissions;
