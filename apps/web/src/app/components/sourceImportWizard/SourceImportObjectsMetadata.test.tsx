@@ -117,5 +117,6 @@ describe('SourceImportObjectsMetadata', () => {
     ).not.toBeNull();
     expect(container.querySelector('[data-source-import-metadata-column]')).toBeNull();
     expect(container.querySelector('[data-source-import-importability]')).not.toBeNull();
+    expect(container.querySelector('[data-source-import-shared-catalog]')).toBeNull();
   });
 });

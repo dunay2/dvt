@@ -5,16 +5,14 @@ import type { SelectableSourceObject } from './types';
 export function resolveSourceImportSharedCatalog(
   sourceObjects: readonly SelectableSourceObject[]
 ): string | null {
-  const catalogs = new Set(
-    sourceObjects
-      .filter(isRelationalSourceObject)
-      .map((sourceObject) => sourceObject.locator.catalog)
-  );
-  return sourceObjects.length > 0 &&
-    sourceObjects.every(isRelationalSourceObject) &&
-    catalogs.size === 1
-    ? ([...catalogs][0] ?? null)
-    : null;
+  const catalogs = new Set<string>();
+  for (const sourceObject of sourceObjects) {
+    if (!isRelationalSourceObject(sourceObject)) {
+      return null;
+    }
+    catalogs.add(sourceObject.locator.catalog);
+  }
+  return sourceObjects.length > 0 && catalogs.size === 1 ? ([...catalogs][0] ?? null) : null;
 }
 
 export function resolveSourceImportContextualName(
