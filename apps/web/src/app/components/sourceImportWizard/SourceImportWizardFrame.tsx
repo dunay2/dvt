@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from '../ui/dialog';
 import { ScrollArea } from '../ui/scroll-area';
+import { useDraggableDialogPosition } from '../ui/use-draggable-dialog-position';
 import { useSourceImportLocalization } from './copy';
 
 type SourceImportWizardFooterProps = Readonly<{
@@ -100,6 +101,7 @@ export function SourceImportWizardFrame({
   onImport,
 }: SourceImportWizardFrameProps): JSX.Element {
   const { copy } = useSourceImportLocalization();
+  const dialogPosition = useDraggableDialogPosition(open);
 
   return (
     <Dialog
@@ -111,7 +113,9 @@ export function SourceImportWizardFrame({
       }}
     >
       <DialogContent
+        ref={dialogPosition.contentRef}
         closeLabel={copy.closeAction}
+        style={dialogPosition.contentStyle}
         className="flex h-[calc(100vh-2rem)] max-h-[760px] w-[calc(100vw-2rem)] min-w-0 flex-col overflow-hidden sm:max-w-[min(64rem,calc(100vw-2rem))]"
         onEscapeKeyDown={(event) => {
           if (preventCloseOnEscape) {
@@ -125,7 +129,10 @@ export function SourceImportWizardFrame({
           }
         }}
       >
-        <DialogHeader className="shrink-0">
+        <DialogHeader
+          className="shrink-0 cursor-move touch-none select-none pr-10"
+          {...dialogPosition.dragHandleProps}
+        >
           <DialogTitle>{copy.title}</DialogTitle>
           <DialogDescription>{copy.description}</DialogDescription>
         </DialogHeader>
