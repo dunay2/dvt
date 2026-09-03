@@ -1,7 +1,11 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "repository": "dunay2/dvt",
   "baselineRef": "origin/main",
+  "moduleGrouping": {
+    "maxFiles": 80,
+    "maxDepth": 3
+  },
   "contexts": [
     { "id": "contracts", "path": "packages/@dvt/contracts", "group": "Foundation & Contracts", "kind": "package" },
     { "id": "crypto", "path": "packages/@dvt/crypto", "group": "Foundation & Contracts", "kind": "package" },

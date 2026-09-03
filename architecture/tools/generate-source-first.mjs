@@ -13,6 +13,13 @@ const scriptDir = dirname(fileURLToPath(import.meta.url));
 const architectureDir = dirname(scriptDir);
 const config = JSON.parse(readFileSync(join(architectureDir, 'source-first.config.json'), 'utf8'));
 const generatedDir = join(architectureDir, 'generated');
+const grouping = {
+  maxFiles: Number(config.moduleGrouping?.maxFiles ?? 80),
+  maxDepth: Number(config.moduleGrouping?.maxDepth ?? 3),
+};
+if (!Number.isInteger(grouping.maxFiles) || grouping.maxFiles < 1) throw new Error('moduleGrouping.maxFiles must be a positive integer');
+if (!Number.isInteger(grouping.maxDepth) || grouping.maxDepth < 1) throw new Error('moduleGrouping.maxDepth must be a positive integer');
+
 const git = (args) => execFileSync('git', args, { encoding: 'utf8', maxBuffer: 128 * 1024 * 1024 }).trimEnd();
 const baselineSha = git(['rev-parse', config.baselineRef]);
 git(['cat-file', '-e', `${baselineSha}^{commit}`]);
@@ -29,10 +36,11 @@ writeFileSync(
   join(generatedDir, 'summary.json'),
   JSON.stringify(
     {
-      schemaVersion: 5,
+      schemaVersion: 6,
       repository: config.repository,
       baselineRef: config.baselineRef,
       baselineSha,
+      moduleGrouping: grouping,
       groups: groupContexts(contexts).map(([name, members]) => ({ name, contextIds: members.map((ctx) => ctx.id) })),
       contexts: contexts.map((ctx) => ({
         id: ctx.id,
@@ -45,8 +53,10 @@ writeFileSync(
         counts: ctx.counts,
         modules: ctx.modules.map((module) => ({
           id: module.id,
+          key: module.key,
           title: module.title,
           kind: module.kind,
+          depth: module.depth,
           implementationFileCount: module.files.length,
           ownedConcerns: module.ownedConcerns,
         })),
@@ -58,7 +68,7 @@ writeFileSync(
 );
 writeFileSync(join(generatedDir, 'source-first.c4'), render(contexts));
 
-console.log(`Generated source-first architecture v5 at ${baselineSha}`);
+console.log(`Generated source-first architecture v6 at ${baselineSha}`);
 for (const ctx of contexts) {
   console.log(
     `${ctx.packageName}: ${ctx.counts.trackedFiles} tracked, ${ctx.counts.implementationFiles} implementation, ${ctx.counts.testFiles} tests, ${ctx.counts.testSupportFiles} test-support, ${ctx.modules.length} modules`,
@@ -91,26 +101,23 @@ function loadContext(def) {
     });
   const implementationByPath = new Map(implementationFiles.map((file) => [file.relativePath, file]));
 
-  const groups = new Map();
-  for (const file of implementationFiles) {
-    const key = moduleKey(file.relativePath);
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(file);
-  }
-  const modules = [...groups.entries()]
-    .map(([key, moduleFiles]) => buildModule(key, moduleFiles, def.path))
-    .sort((a, b) => a.title.localeCompare(b.title));
+  const partition = buildAdaptiveModules(implementationFiles, def.path);
+  const modules = partition.modules;
   const moduleByKey = new Map(modules.map((module) => [module.key, module]));
 
   const internal = new Map();
   for (const source of implementationFiles) {
-    const from = moduleByKey.get(moduleKey(source.relativePath));
+    const fromKey = partition.moduleKeyByFile.get(source.relativePath);
+    const from = moduleByKey.get(fromKey);
+    if (!from) throw new Error(`No source module for ${def.id}:${source.relativePath}`);
     for (const specifier of source.imports) {
       if (!specifier.startsWith('.')) continue;
       const targetFile = resolveRelativeImport(source.relativePath, specifier, implementationByPath);
       if (!targetFile) continue;
-      const to = moduleByKey.get(moduleKey(targetFile.relativePath));
-      if (!to || from.id === to.id) continue;
+      const toKey = partition.moduleKeyByFile.get(targetFile.relativePath);
+      const to = moduleByKey.get(toKey);
+      if (!to) throw new Error(`No target module for ${def.id}:${targetFile.relativePath}`);
+      if (from.id === to.id) continue;
       const key = `${from.id}->${to.id}`;
       internal.set(key, { from: from.id, to: to.id, count: (internal.get(key)?.count ?? 0) + 1 });
     }
@@ -131,6 +138,8 @@ function loadContext(def) {
     visualizedEvidenceFiles: implementationFiles.length,
   };
 
+  assertModuleCoverage(def.id, implementationFiles, modules, partition.moduleKeyByFile);
+
   return {
     id: def.id,
     kind,
@@ -146,6 +155,100 @@ function loadContext(def) {
     workspaceEdges: [],
     counts,
   };
+}
+
+function buildAdaptiveModules(files, scope) {
+  const modules = [];
+  const moduleKeyByFile = new Map();
+  const rootFiles = files.filter((file) => srcSegments(file).length === 1);
+  if (rootFiles.length) addModule('srcRoot', [], rootFiles, scope, modules, moduleKeyByFile);
+
+  const top = new Map();
+  for (const file of files) {
+    const segments = srcSegments(file);
+    if (segments.length < 2) continue;
+    const key = segments[0];
+    if (!top.has(key)) top.set(key, []);
+    top.get(key).push(file);
+  }
+  for (const [segment, bucket] of [...top.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+    splitDirectory([segment], bucket, 1, scope, modules, moduleKeyByFile);
+  }
+
+  return { modules: modules.sort((a, b) => a.title.localeCompare(b.title)), moduleKeyByFile };
+}
+
+function splitDirectory(prefix, bucket, depth, scope, modules, moduleKeyByFile) {
+  const direct = [];
+  const childBuckets = new Map();
+  for (const file of bucket) {
+    const segments = srcSegments(file);
+    if (segments.length === prefix.length + 1) {
+      direct.push(file);
+      continue;
+    }
+    const child = segments[prefix.length];
+    if (!childBuckets.has(child)) childBuckets.set(child, []);
+    childBuckets.get(child).push(file);
+  }
+
+  const canSplit = bucket.length > grouping.maxFiles && depth < grouping.maxDepth && childBuckets.size > 0;
+  if (!canSplit) {
+    addModule(prefix.join('/'), prefix, bucket, scope, modules, moduleKeyByFile);
+    return;
+  }
+
+  if (direct.length) addModule(`${prefix.join('/')}/@root`, prefix, direct, scope, modules, moduleKeyByFile, true);
+  for (const [child, files] of [...childBuckets.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+    splitDirectory([...prefix, child], files, depth + 1, scope, modules, moduleKeyByFile);
+  }
+}
+
+function addModule(key, directorySegments, files, scope, modules, moduleKeyByFile, rootSlice = false) {
+  if (!files.length) return;
+  const sourcePath = directorySegments.length ? posix.join(scope, 'src', ...directorySegments) : posix.join(scope, 'src');
+  const depth = directorySegments.length;
+  const module = {
+    key,
+    id: `mod_${safeId(key)}`,
+    title: moduleTitle(key, directorySegments, rootSlice),
+    kind: kindFor(key),
+    depth,
+    sourcePath,
+    sourceUrl: `https://github.com/${config.repository}/tree/${baselineSha}/${encodePath(sourcePath)}`,
+    files: [...files].sort((a, b) => a.relativePath.localeCompare(b.relativePath)),
+    ownedConcerns: [...new Set(files.map((file) => file.metadata.ownedConcern).filter(Boolean))],
+    decisions: [...new Set(files.map((file) => file.metadata.decision).filter(Boolean))],
+  };
+  modules.push(module);
+  for (const file of files) {
+    if (moduleKeyByFile.has(file.relativePath)) throw new Error(`Implementation file assigned twice: ${file.relativePath}`);
+    moduleKeyByFile.set(file.relativePath, key);
+  }
+}
+
+function moduleTitle(key, directorySegments, rootSlice) {
+  if (key === 'srcRoot') return 'Public / source root';
+  const title = directorySegments.map(humanize).join(' / ');
+  return rootSlice ? `${title} / Root files` : title;
+}
+
+function srcSegments(file) {
+  return file.relativePath.replace(/^src\//, '').split('/');
+}
+
+function assertModuleCoverage(contextId, implementationFiles, modules, moduleKeyByFile) {
+  const assigned = modules.reduce((sum, module) => sum + module.files.length, 0);
+  if (assigned !== implementationFiles.length) {
+    throw new Error(`${contextId}: module coverage ${assigned} != implementation files ${implementationFiles.length}`);
+  }
+  if (moduleKeyByFile.size !== implementationFiles.length) {
+    throw new Error(`${contextId}: module key map ${moduleKeyByFile.size} != implementation files ${implementationFiles.length}`);
+  }
+  for (const file of implementationFiles) {
+    if (file.classification !== 'implementation-source') throw new Error(`${contextId}: non-implementation file entered topology: ${file.relativePath}`);
+    if (!moduleKeyByFile.has(file.relativePath)) throw new Error(`${contextId}: unassigned implementation file: ${file.relativePath}`);
+  }
 }
 
 function classifyTrackedFile(relativePath) {
@@ -294,28 +397,9 @@ function parseImports(content) {
   return [...values];
 }
 
-function moduleKey(relativePath) {
-  const rest = relativePath.replace(/^src\//, '');
-  return rest.includes('/') ? rest.split('/')[0] : 'srcRoot';
-}
-
-function buildModule(key, files, scope) {
-  const sourcePath = key === 'srcRoot' ? posix.join(scope, 'src') : posix.join(scope, 'src', key);
-  return {
-    key,
-    id: `mod_${safeId(key)}`,
-    title: key === 'srcRoot' ? 'Public / source root' : humanize(key),
-    kind: kindFor(key),
-    sourcePath,
-    sourceUrl: `https://github.com/${config.repository}/tree/${baselineSha}/${encodePath(sourcePath)}`,
-    files: [...files].sort((a, b) => a.relativePath.localeCompare(b.relativePath)),
-    ownedConcerns: [...new Set(files.map((file) => file.metadata.ownedConcern).filter(Boolean))],
-    decisions: [...new Set(files.map((file) => file.metadata.decision).filter(Boolean))],
-  };
-}
-
 function kindFor(key) {
-  const value = key.toLowerCase();
+  const segments = key.split('/').filter((segment) => segment && segment !== '@root' && segment !== 'srcRoot');
+  const value = (segments.at(-1) ?? key).toLowerCase();
   if (value === 'ports' || value.endsWith('ports')) return 'port';
   if (value.includes('adapter')) return 'adapter';
   if (value.includes('worker')) return 'worker';
@@ -349,11 +433,12 @@ function resolveRelativeImport(sourcePath, specifier, implementationByPath) {
 
 function inventoryPayload(ctx) {
   return {
-    schemaVersion: 5,
+    schemaVersion: 6,
     generatedFrom: 'git-tree',
     repository: config.repository,
     baselineRef: config.baselineRef,
     baselineSha,
+    moduleGrouping: grouping,
     kind: ctx.kind,
     group: ctx.group,
     packageName: ctx.packageName,
@@ -366,6 +451,7 @@ function inventoryPayload(ctx) {
       key: module.key,
       title: module.title,
       kind: module.kind,
+      depth: module.depth,
       provenance: 'STRUCTURE-DERIVED',
       sourcePath: module.sourcePath,
       implementationFileCount: module.files.length,
@@ -400,6 +486,8 @@ function render(all) {
     `      repository '${esc(config.repository)}'`,
     `      baselineSha '${baselineSha}'`,
     `      selectedContexts '${all.length}'`,
+    `      moduleMaxFiles '${grouping.maxFiles}'`,
+    `      moduleMaxDepth '${grouping.maxDepth}'`,
     '    }',
   ];
 
@@ -425,7 +513,7 @@ function render(all) {
     lines.push(`      testFiles '${ctx.counts.testFiles}'`);
     lines.push(`      testSupportFiles '${ctx.counts.testSupportFiles}'`);
     lines.push('    }');
-    lines.push(`    link https://github.com/${config.repository}/tree/${baselineSha}/${encodePath(ctx.path)} 'Pinned package tree'`);
+    lines.push(`    link https://github.com/${config.repository}/tree/${baselineSha}/${encodePath(ctx.path)} 'Pinned context tree'`);
 
     for (const file of ctx.implementationFiles) {
       const id = `file_${safeId(ctx.id)}_${safeId(file.relativePath)}_${file.blobSha.slice(0, 7)}`;
@@ -472,7 +560,7 @@ function render(all) {
     lines.push(`  view ${safeId(ctx.id)}Boundary of dvt.ctx_${safeId(ctx.id)} {`);
     lines.push(`    title '${esc(ctx.packageName)} — implementation modules and dependencies'`);
     lines.push(
-      `    description '${esc(`STRUCTURE-DERIVED modules from implementation source at ${ctx.path}/src, pinned to ${baselineSha.slice(0, 8)}. Test-only imports are excluded.`)}'`,
+      `    description '${esc(`Adaptive STRUCTURE-DERIVED modules from implementation source at ${ctx.path}/src, pinned to ${baselineSha.slice(0, 8)}. Groups larger than ${grouping.maxFiles} files split recursively to depth ${grouping.maxDepth}; test-only imports are excluded.`)}'`,
     );
     lines.push('    include *');
     lines.push('    autoLayout LeftRight');
@@ -518,6 +606,7 @@ function emitContext(ctx, lines) {
   lines.push(`        implementationFiles '${ctx.counts.implementationFiles}'`);
   lines.push(`        testFiles '${ctx.counts.testFiles}'`);
   lines.push(`        testSupportFiles '${ctx.counts.testSupportFiles}'`);
+  lines.push(`        sourceModules '${ctx.modules.length}'`);
   lines.push('      }');
   lines.push(`      link https://github.com/${config.repository}/tree/${baselineSha}/${encodePath(ctx.path)} 'Pinned context tree'`);
 
@@ -530,6 +619,7 @@ function emitContext(ctx, lines) {
     lines.push('        metadata {');
     lines.push("          provenance 'STRUCTURE-DERIVED'");
     lines.push(`          sourcePath '${esc(module.sourcePath)}'`);
+    lines.push(`          moduleDepth '${module.depth}'`);
     lines.push(`          implementationFileCount '${module.files.length}'`);
     lines.push(`          evidenceView '${safeId(ctx.id)}Files_${safeId(module.key)}'`);
     if (module.ownedConcerns.length) lines.push(`          ownedConcernCount '${module.ownedConcerns.length}'`);
