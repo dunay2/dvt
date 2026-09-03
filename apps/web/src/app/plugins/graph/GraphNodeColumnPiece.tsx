@@ -12,6 +12,7 @@ import { TooltipContent } from '../../components/ui/tooltip';
 import type { GraphNodeColumn } from './graphNodeColumnContracts';
 import { resolveGraphNodeCardCopy } from './graphNodeCardCopyTokens';
 import { graphNodeColumnClasses } from './graphVisualTokens';
+import { GraphNodeColumnChildren } from './GraphNodeColumnChildren';
 
 export type GraphNodeColumnCopy = ReturnType<typeof resolveGraphNodeCardCopy>;
 
@@ -101,6 +102,7 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
             ) : null}
           </button>
         </span>
+        {column.children == null ? null : <GraphNodeColumnChildren children={column.children} />}
       </div>
     );
   }

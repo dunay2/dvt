@@ -150,7 +150,7 @@ export const graphNodeColumnClasses = {
   functionAliasSubmit:
     'rounded bg-blue-600 px-2 py-1 text-xs font-semibold text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40',
   piece:
-    'nodrag nopan flex min-h-8 w-full items-center gap-2 rounded-md border border-slate-700/90 bg-slate-950/90 px-3 py-1.5 text-xs shadow-sm transition hover:border-blue-400/70 hover:bg-slate-900 focus-visible:border-blue-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70',
+    'nodrag nopan flex min-h-8 w-full flex-wrap items-center gap-2 rounded-md border border-slate-700/90 bg-slate-950/90 px-3 py-1.5 text-xs shadow-sm transition hover:border-blue-400/70 hover:bg-slate-900 focus-visible:border-blue-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70',
   name: 'truncate font-mono text-white',
   sourceName: 'truncate font-mono text-slate-400',
   aliasArrow: 'shrink-0 text-blue-300',

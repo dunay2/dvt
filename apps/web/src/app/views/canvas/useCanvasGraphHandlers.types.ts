@@ -2,6 +2,7 @@ import type { Edge, Node, ReactFlowProps } from '@xyflow/react';
 import type {
   GraphNodeCalculatedColumnIdentity,
   GraphNodeColumnPortIdentity,
+  GraphNodeStructuredFieldIdentity,
 } from '../../plugins/graph/graphNodeColumnContracts';
 import type { CanvasColumnLineageEdgeData } from './canvasColumnLineageProjection';
 import type { CanvasEdgeCommandRunner } from './useCanvasEdgeCommandRunner';
@@ -44,6 +45,7 @@ export type UseCanvasGraphHandlersResult = {
     alias: string;
     sourceColumnId?: string;
   }) => void;
+  handleApplyCanvasStructuredField: (identity: GraphNodeStructuredFieldIdentity) => void;
   handleAddCanvasCalculatedColumn: (identity: GraphNodeCalculatedColumnIdentity) => void;
   handleToggleCanvasColumnOutput: (identity: {
     nodeId: string;

@@ -6,6 +6,7 @@ import type {
   GraphNodeColumnOutputToggleIdentity,
   GraphNodeColumnPortIdentity,
   GraphNodeColumnReorderIdentity,
+  GraphNodeStructuredFieldIdentity,
 } from '../../plugins/graph/graphNodeColumnContracts';
 import type {
   CanvasAlgebraicCompositionIdentity,
@@ -20,6 +21,7 @@ type NodeActionHandlers = {
   onAttachSchemaToNode?: (nodeId: string, schemaName: string) => void;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
   onApplyCanvasColumnFunction?: (identity: GraphNodeColumnFunctionApplyIdentity) => void;
+  onApplyCanvasStructuredField?: (identity: GraphNodeStructuredFieldIdentity) => void;
   onAddCanvasCalculatedColumn?: (identity: GraphNodeCalculatedColumnIdentity) => void;
   onToggleCanvasColumnOutput?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
   onReorderCanvasColumnOutput?: (identity: GraphNodeColumnReorderIdentity) => void;
@@ -70,6 +72,7 @@ export function buildCanvasNodeInteractionPresentation({
       onAttachSchemaToNode: handlers.onAttachSchemaToNode,
       onColumnPortActivate: handlers.onColumnPortActivate,
       onApplyCanvasColumnFunction: handlers.onApplyCanvasColumnFunction,
+      onApplyCanvasStructuredField: handlers.onApplyCanvasStructuredField,
       onAddCanvasCalculatedColumn: handlers.onAddCanvasCalculatedColumn,
       onToggleCanvasColumnOutput: handlers.onToggleCanvasColumnOutput,
       onReorderCanvasColumnOutput: handlers.onReorderCanvasColumnOutput,

@@ -20,6 +20,7 @@ export function GraphNodeColumnSection({
   activeColumnHandleId,
   onColumnPortActivate,
   onColumnFunctionApply,
+  onStructuredFieldApply,
   onCalculatedColumnAdd,
   onColumnOutputToggle,
   onColumnReorder,
@@ -41,7 +42,10 @@ export function GraphNodeColumnSection({
     columns,
     nodeId,
     onColumnReorder,
-    onColumnComposeRequest: onColumnFunctionApply == null ? undefined : setCompositionRequest,
+    onColumnComposeRequest:
+      onColumnFunctionApply == null && onStructuredFieldApply == null
+        ? undefined
+        : setCompositionRequest,
   });
   const visibleColumns = showAllColumns
     ? columnReorder.orderedColumns
@@ -120,6 +124,7 @@ export function GraphNodeColumnSection({
                 onCompositionDismiss={() => setCompositionRequest(null)}
                 onColumnPortActivate={onColumnPortActivate}
                 onColumnFunctionApply={onColumnFunctionApply}
+                onStructuredFieldApply={onStructuredFieldApply}
                 onColumnOutputToggle={onColumnOutputToggle}
               />
             ))}

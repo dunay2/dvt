@@ -21,6 +21,7 @@ import type {
   GraphNodeColumn,
   GraphNodeColumnPortDirection,
   GraphNodeColumnPortIdentity,
+  GraphNodeStructuredFieldIdentity,
 } from '../../plugins/graph/graphNodeColumnContracts';
 import type { CanvasNodeContextMenuCopy } from './canvasNodeContextMenuModel';
 import { projectCanvasNodeFlowAdapter } from './canvasNodeFlowAdapterProjection';
@@ -89,6 +90,7 @@ export interface DbtNodeData extends Record<string, unknown> {
   onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;
   onColumnLayoutChange?: () => void;
   onAutomapColumns?: (nodeId: string, columns: readonly GraphNodeColumn[]) => void;
+  onApplyCanvasStructuredField?: (identity: GraphNodeStructuredFieldIdentity) => void;
 }
 
 type DbtFlowNode = Node<DbtNodeData, 'dbtNode'>;

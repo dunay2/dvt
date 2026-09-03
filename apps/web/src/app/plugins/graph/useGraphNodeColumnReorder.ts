@@ -58,10 +58,7 @@ export function useGraphNodeColumnReorder(args: {
         (candidate) => candidate.name === draggedColumnId
       );
       const offset = event.clientY - bounds.top;
-      const canCompose =
-        draggedColumn?.id != null &&
-        draggedColumn.functionMenu != null &&
-        args.onColumnComposeRequest != null;
+      const canCompose = draggedColumn?.id != null && args.onColumnComposeRequest != null;
       const placement =
         canCompose && offset >= bounds.height / 3 && offset <= (bounds.height * 2) / 3
           ? 'compose'
@@ -95,7 +92,7 @@ export function useGraphNodeColumnReorder(args: {
         const sourceColumn = columnOrder.orderedColumns.find(
           (candidate) => candidate.name === draggedColumnId
         );
-        if (sourceColumn?.id != null && sourceColumn.functionMenu != null) {
+        if (sourceColumn?.id != null) {
           args.onColumnComposeRequest?.({ sourceColumn, targetColumn: column });
         }
       } else if (placement != null) {
@@ -113,6 +110,25 @@ export function useGraphNodeColumnReorder(args: {
       }
       draggedColumnIdRef.current = null;
       setDropTarget(null);
+    },
+    composeWithKeyboard(column: GraphNodeColumn, event: KeyboardEvent<HTMLElement>): boolean {
+      if (
+        !canReorder(column) ||
+        args.onColumnComposeRequest == null ||
+        !event.altKey ||
+        (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight')
+      ) {
+        return false;
+      }
+      const sourceIndex = columnOrder.orderedColumns.findIndex(
+        (candidate) => candidate.name === column.name
+      );
+      const target = columnOrder.orderedColumns[sourceIndex + (event.key === 'ArrowLeft' ? -1 : 1)];
+      event.preventDefault();
+      event.stopPropagation();
+      if (target?.id != null)
+        args.onColumnComposeRequest({ sourceColumn: column, targetColumn: target });
+      return true;
     },
     moveWithKeyboard(column: GraphNodeColumn, event: KeyboardEvent<HTMLElement>): boolean {
       if (

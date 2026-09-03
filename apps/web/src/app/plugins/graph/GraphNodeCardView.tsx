@@ -12,6 +12,7 @@ import type {
   GraphNodeColumnPortDirection,
   GraphNodeColumnPortIdentity,
   GraphNodeColumnReorderIdentity,
+  GraphNodeStructuredFieldIdentity,
 } from './graphNodeColumnContracts';
 import { GraphNodeMetricRow } from './GraphNodeMetricRow';
 import { GraphNodeOperationalRail } from './GraphNodeOperationalRail';
@@ -59,6 +60,7 @@ export type GraphNodeCardViewProps = Readonly<{
   activeColumnHandleId?: string | null;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
   onColumnFunctionApply?: (identity: GraphNodeColumnFunctionApplyIdentity) => void;
+  onStructuredFieldApply?: (identity: GraphNodeStructuredFieldIdentity) => void;
   onCalculatedColumnAdd?: (identity: GraphNodeCalculatedColumnIdentity) => void;
   onColumnOutputToggle?: (identity: {
     nodeId: string;
@@ -143,6 +145,7 @@ export function GraphNodeCardView({
   activeColumnHandleId,
   onColumnPortActivate,
   onColumnFunctionApply,
+  onStructuredFieldApply,
   onCalculatedColumnAdd,
   onColumnOutputToggle,
   onColumnReorder,
@@ -233,6 +236,7 @@ export function GraphNodeCardView({
             activeColumnHandleId={activeColumnHandleId}
             onColumnPortActivate={onColumnPortActivate}
             onColumnFunctionApply={onColumnFunctionApply}
+            onStructuredFieldApply={onStructuredFieldApply}
             onCalculatedColumnAdd={onCalculatedColumnAdd}
             onColumnOutputToggle={onColumnOutputToggle}
             onColumnReorder={onColumnReorder}

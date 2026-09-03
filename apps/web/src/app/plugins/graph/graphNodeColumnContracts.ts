@@ -53,6 +53,12 @@ export type GraphNodeColumnFunctionApplyIdentity = Readonly<{
   alias: string;
   sourceColumnId?: string;
 }>;
+export type GraphNodeStructuredFieldIdentity = Readonly<{
+  nodeId: string;
+  draggedFieldId: string;
+  targetFieldId: string;
+  parentName: string;
+}>;
 export type GraphNodeCalculatedColumnIdentity =
   | Readonly<{ nodeId: string; kind: 'string-literal'; alias: string; value: string }>
   | Readonly<{ nodeId: string; kind: 'timestamp-literal'; alias: string; value: string }>
@@ -77,6 +83,7 @@ export type GraphNodeColumnSectionProps = Readonly<{
   activeColumnHandleId?: string | null;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
   onColumnFunctionApply?: (identity: GraphNodeColumnFunctionApplyIdentity) => void;
+  onStructuredFieldApply?: (identity: GraphNodeStructuredFieldIdentity) => void;
   onCalculatedColumnAdd?: (identity: GraphNodeCalculatedColumnIdentity) => void;
   onColumnOutputToggle?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
   onColumnReorder?: (identity: GraphNodeColumnReorderIdentity) => void;
@@ -106,6 +113,12 @@ export function resolveGraphNodeColumnInteractionProps(args: {
       args.nodeRole === 'transform' && typeof data.onApplyCanvasColumnFunction === 'function'
         ? (data.onApplyCanvasColumnFunction as (
             identity: GraphNodeColumnFunctionApplyIdentity
+          ) => void)
+        : undefined,
+    onStructuredFieldApply:
+      args.nodeRole === 'transform' && typeof data.onApplyCanvasStructuredField === 'function'
+        ? (data.onApplyCanvasStructuredField as (
+            identity: GraphNodeStructuredFieldIdentity
           ) => void)
         : undefined,
     onCalculatedColumnAdd:

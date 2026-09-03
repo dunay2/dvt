@@ -20,6 +20,8 @@ export function GraphNodeColumnCompositionMenu(props: {
   copy: GraphNodeColumnCopy;
   onOpenChange: (open: boolean) => void;
   onRequest: (capabilityId: string) => void;
+  structuredFieldLabel: string;
+  onStructuredRequest: () => void;
 }): ReactElement {
   const menu = props.sourceColumn.functionMenu;
   const pointerGraceProps = usePointerGraceDismiss({
@@ -47,6 +49,12 @@ export function GraphNodeColumnCompositionMenu(props: {
           {props.sourceColumn.name} → {props.targetColumn.name}
         </DropdownMenuLabel>
         <DropdownMenuGroup>
+          <DropdownMenuItem
+            data-slot="graph-node-column-composition-structured-field"
+            onSelect={props.onStructuredRequest}
+          >
+            {props.structuredFieldLabel}
+          </DropdownMenuItem>
           {menu == null || menu.items.length === 0 ? (
             <DropdownMenuItem disabled>
               {props.copy.noCompatibleColumnFunctionsLabel}

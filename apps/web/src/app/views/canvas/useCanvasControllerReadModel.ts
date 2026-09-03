@@ -26,18 +26,21 @@ import { createDbtNodeAuthoringMetadata } from './canvasDbtAuthoringModel';
 import { projectCanvasColumnFunctionMenus } from './canvasColumnFunctionMenuProjection';
 import { isReorderableCanvasSource } from './canvasSourceColumnOrder';
 
-type InteractiveColumnInput = Readonly<{ name: string; type: string }>;
+function isInteractiveColumn(value: unknown): value is GraphNodeColumn {
+  if (
+    typeof value !== 'object' ||
+    value == null ||
+    typeof (value as { name?: unknown }).name !== 'string' ||
+    typeof (value as { type?: unknown }).type !== 'string'
+  ) {
+    return false;
+  }
+  const children = (value as { children?: unknown }).children;
+  return children == null || (Array.isArray(children) && children.every(isInteractiveColumn));
+}
 
-function readInteractiveColumns(node: Node): InteractiveColumnInput[] {
-  return Array.isArray(node.data.columns)
-    ? node.data.columns.filter(
-        (column): column is InteractiveColumnInput =>
-          typeof column === 'object' &&
-          column != null &&
-          typeof (column as { name?: unknown }).name === 'string' &&
-          typeof (column as { type?: unknown }).type === 'string'
-      )
-    : [];
+function readInteractiveColumns(node: Node): GraphNodeColumn[] {
+  return Array.isArray(node.data.columns) ? node.data.columns.filter(isInteractiveColumn) : [];
 }
 
 function projectInteractiveColumns(
@@ -112,6 +115,7 @@ type UseCanvasControllerReadModelArgs = {
     | 'activeColumnHandleId'
     | 'handleColumnPortActivate'
     | 'handleApplyCanvasColumnFunction'
+    | 'handleApplyCanvasStructuredField'
     | 'handleAddCanvasCalculatedColumn'
     | 'handleToggleCanvasColumnOutput'
     | 'handleReorderCanvasColumnOutput'
@@ -211,6 +215,9 @@ export function useCanvasControllerReadModel({
           onApplyCanvasColumnFunction: canMutateGraph
             ? graphHandlers.handleApplyCanvasColumnFunction
             : undefined,
+          onApplyCanvasStructuredField: canMutateGraph
+            ? graphHandlers.handleApplyCanvasStructuredField
+            : undefined,
           onAddCanvasCalculatedColumn: canMutateGraph
             ? graphHandlers.handleAddCanvasCalculatedColumn
             : undefined,
@@ -283,6 +290,9 @@ export function useCanvasControllerReadModel({
             : undefined,
           onApplyCanvasColumnFunction:
             columnFunctionMenus == null ? undefined : node.data.onApplyCanvasColumnFunction,
+          onApplyCanvasStructuredField: hasEditableProjection
+            ? node.data.onApplyCanvasStructuredField
+            : undefined,
           onAddCanvasCalculatedColumn: functionProjection.supportsCalculatedColumns
             ? node.data.onAddCanvasCalculatedColumn
             : undefined,
