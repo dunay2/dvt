@@ -82,7 +82,10 @@ Stable-table prototype observations:
 - the fresh token published and the late token returned `STALE_PUBLICATION`;
 - final rows and marker belonged to the fresh publication;
 - incompatible assignment failed with `42804` and permissions with `42501`;
-- an unmarked existing relation was distinguishable as unmanaged.
+- an unmarked existing relation was distinguishable as unmanaged;
+- a `SHARE ROW EXCLUSIVE` fence let a reader see the prior committed row while an
+  ordinary writer waited until commit;
+- a consumer role with `SELECT` had no DML or `TRUNCATE` privilege.
 
 These are behavioral observations, not a checked-in prototype or fake adapter.
 
@@ -94,8 +97,8 @@ flowchart LR
   Workload --> Temporal[Temporal activity]
   Temporal --> Candidate[(Temporary candidate)]
   Candidate --> Validate[Validate shape]
-  Validate --> Lock[Physical-target advisory xact lock]
-  Lock --> CAS{Managed marker and<br/>predecessor match?}
+  Validate --> Lock[Physical-target advisory lock<br/>+ relation writer fence]
+  Lock --> CAS{Owner, ACL, marker and<br/>predecessor match?}
   CAS -- new token current --> Idempotent[Return prior success]
   CAS -- stale or drift --> Reject[Reject without mutation]
   CAS -- predecessor matches --> Tx[DELETE + INSERT + marker<br/>one transaction]
@@ -110,6 +113,9 @@ flowchart LR
 - Candidate evaluation completes before the target transaction starts.
 - One physical-target transaction lock, independent of connection aliases, and
   predecessor-token comparison fence writers.
+- One relation lock blocks ordinary writers during publication without blocking
+  ordinary readers; consumers have read-only grants.
+- The dedicated DVT publication owner credential is not an external write surface.
 - A retry whose publication token is already current succeeds without rewriting rows.
 - Rows and current token become visible together or not at all.
 - Only a marked, owned, schema-compatible DVT target can be replaced.
@@ -132,6 +138,7 @@ flowchart LR
 - two candidates admitted from the same predecessor finish in reverse order;
 - retry after an uncertain successful commit observes the same token idempotently;
 - two connection aliases reaching one physical target use the same publication lock;
+- an ordinary writer waits through publication and unexpected DML grants reject;
 - target exists without the DVT marker or with the wrong owner/relation kind;
 - ordered schema, type, nullability or managed metadata has drifted;
 - role lacks create/ownership/publication permissions;

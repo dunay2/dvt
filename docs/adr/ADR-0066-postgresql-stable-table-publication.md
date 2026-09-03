@@ -51,9 +51,12 @@ nullability, defaults, generated expressions, collations, DVT-declared constrain
 and indexes. User-facing descriptions remain DVT metadata in V1; they do not share
 the reserved table comment.
 
-An existing relation is replaceable only when it is a table owned by the governed
-role and has a valid DVT marker. Any absent marker, wrong relation kind, unexpected
-owner or metadata drift is an unmanaged collision and fails closed.
+An existing relation is replaceable only when it is a table owned by the dedicated
+DVT publication role and has a valid DVT marker. Consumers may receive read grants,
+but no other role may hold `INSERT`, `UPDATE`, `DELETE` or `TRUNCATE`. Any absent
+marker, wrong relation kind, unexpected owner, write grant or metadata drift is an
+unmanaged collision and fails closed. Sharing the owner credential for out-of-band
+writes is outside this contract and invalidates its guarantees.
 
 ### 2. Admission supplies compare-and-swap intent
 
@@ -78,18 +81,20 @@ The publication transaction:
 
 1. acquires a transaction-level advisory lock derived from the physical database,
    schema and table, independent of the `ConnectionRef` alias;
-2. inspects relation kind, owner, DVT marker and schema digest;
-3. returns idempotent success when the current token already equals the new token;
-4. otherwise compares the current token with the admitted predecessor token;
-5. creates the first managed table, or deletes and inserts its rows from the
+2. for an existing target, acquires `SHARE ROW EXCLUSIVE` on the table so ordinary
+   writers wait while ordinary readers continue;
+3. inspects relation kind, owner, ACL, DVT marker and schema digest;
+4. returns idempotent success when the current token already equals the new token;
+5. otherwise compares the current token with the admitted predecessor token;
+6. creates the first managed table, or deletes and inserts its rows from the
    candidate using an explicit ordered column list;
-6. writes the new marker and commits rows plus token atomically.
+7. writes the new marker and commits rows plus token atomically.
 
 Within the selected PostgreSQL database, the two-integer advisory key is derived from
 SHA-256 of the schema and table. Connection aliases that reach the same physical
 target therefore coordinate on the same lock. A hash collision may serialize
 unrelated targets but cannot weaken safety. The transaction does not wait for user
-input or perform transformation work.
+input or perform transformation work. The relation lock is held through commit.
 
 `DELETE` plus `INSERT` preserves the table object. It deliberately avoids `TRUNCATE`,
 `DROP`, `ALTER` and rename-based swaps, whose stronger locks or object replacement
@@ -111,7 +116,9 @@ wait for a separately governed migration capability.
 
 Readers using ordinary PostgreSQL MVCC see the previously committed rows until the
 publication commits and the new rows afterwards; they do not observe the intermediate
-delete. Concurrent writers are serialized by PostgreSQL and the DVT advisory lock.
+delete. The advisory lock serializes DVT publishers and the relation lock fences
+ordinary writers during the critical section. Direct writes outside the dedicated DVT
+owner are unsupported and prevented by the target ACL.
 
 DVT-created indexes and constraints, grants and read dependencies survive because the
 table object survives. Unexpected triggers or rules are forbidden; any columns,
@@ -156,9 +163,10 @@ governed strategy without weakening this contract silently.
 ## Verification obligations
 
 Behavior tests must cover stale completion, unmanaged collision, incompatible schema,
-wrong permissions, transaction rollback, concurrent reader visibility, stable OID,
-preserved grants/indexes/constraints/dependent views and target-scoped serialization.
-Tests assert outcomes and database state, not SQL literals.
+wrong permissions, unexpected write grants, transaction rollback, concurrent reader
+visibility, blocked ordinary writers, stable OID, preserved read grants, indexes,
+constraints, dependent views and target-scoped serialization. Tests assert outcomes
+and database state, not SQL literals.
 
 ## References
 
