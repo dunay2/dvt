@@ -135,11 +135,16 @@ fowlerSignals:
   - Divergent change
 allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/**
+  - apps/web/src/app/views/Canvas.test.controller.defaults.ts
+  - apps/web/src/app/views/artifacts/artifactsMonacoReadonlyViewer.architecture.test.ts
+  - apps/web/src/app/views/templates/templatesMonacoPreview.architecture.test.ts
   - packages/@dvt/contracts/src/contracts/planner/VisualTransformRecipe.v1.ts
   - packages/@dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts
   - packages/@dvt/contracts/src/index.ts
   - packages/@dvt/contracts/test/**
   - docs/architecture/components/web/graph/**
+  - docs/architecture/system/subsystems/semantic-transformation/index.md
+  - docs/contracts/planner/index.md
   - docs/evidence/**
   - docs/risk-register/quality/**
   - docs/planning/proposals/mandatory/frontend-and-ux/vtx2-web-vtx1-authoring-hardcut-plan-20260903.md
@@ -189,7 +194,8 @@ redGreenCycles:
       - apps/web/src/app/views/canvas/canvasDvtAuthoringModel.ts
     greenTest: apps/web/src/app/views/canvas/DvtAuthoringFields.test.tsx
 symbols:
-  - name: readDvtTransformAuthoringAuthority
+  - &vtx2Symbol
+    name: readDvtTransformAuthoringAuthority
     path: apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.ts
     dddOwner: DvtNodeAuthoringMetadata
     cqRails: [ConfigureCanvasDvtNode]
@@ -197,4 +203,72 @@ symbols:
     architectureGuard: pnpm docs:feature-mechanization:implementation --feature VTX2-WEB-VTX1-AUTHORING-HARDCUT-2600
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts
     unitTests: [apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.test.ts]
+  - { <<: *vtx2Symbol, name: DvtSubstraitTransformStart, path: apps/web/src/app/views/canvas/DvtSubstraitTransformStart.tsx }
+  - { <<: *vtx2Symbol, name: areCanvasColumnTypesCompatible, path: apps/web/src/app/views/canvas/canvasColumnAutomap.ts }
+  - { <<: *vtx2Symbol, name: automapCanvasColumns, path: apps/web/src/app/views/canvas/canvasColumnAutomap.ts }
+  - { <<: *vtx2Symbol, name: normalizeKnownType, path: apps/web/src/app/views/canvas/canvasColumnAutomap.ts }
+  - { <<: *vtx2Symbol, name: CanvasColumn, path: apps/web/src/app/views/canvas/canvasColumnMappingModel.ts }
+  - { <<: *vtx2Symbol, name: CanvasColumnAutomapResult, path: apps/web/src/app/views/canvas/canvasColumnMappingModel.ts }
+  - { <<: *vtx2Symbol, name: CanvasColumnMappingRejection, path: apps/web/src/app/views/canvas/canvasColumnMappingModel.ts }
+  - { <<: *vtx2Symbol, name: CanvasColumnMappingResult, path: apps/web/src/app/views/canvas/canvasColumnMappingModel.ts }
+  - { <<: *vtx2Symbol, name: CanvasColumnMappingSource, path: apps/web/src/app/views/canvas/canvasColumnMappingModel.ts }
+  - { <<: *vtx2Symbol, name: CanvasColumnMappingTarget, path: apps/web/src/app/views/canvas/canvasColumnMappingModel.ts }
+  - { <<: *vtx2Symbol, name: createCanvasColumnOutputId, path: apps/web/src/app/views/canvas/canvasColumnMappingModel.ts }
+  - { <<: *vtx2Symbol, name: hasCanvasStageDependency, path: apps/web/src/app/views/canvas/canvasColumnMappingModel.ts }
+  - { <<: *vtx2Symbol, name: isRecord, path: apps/web/src/app/views/canvas/canvasColumnMappingModel.ts }
+  - { <<: *vtx2Symbol, name: readCanvasNodeColumns, path: apps/web/src/app/views/canvas/canvasColumnMappingModel.ts }
+  - { <<: *vtx2Symbol, name: readNonblankString, path: apps/web/src/app/views/canvas/canvasColumnMappingModel.ts }
+  - { <<: *vtx2Symbol, name: resolveCanvasSessionNode, path: apps/web/src/app/views/canvas/canvasColumnMappingModel.ts }
+  - { <<: *vtx2Symbol, name: reorderCanvasColumnOutput, path: apps/web/src/app/views/canvas/canvasColumnOutputAuthoring.ts }
+  - { <<: *vtx2Symbol, name: setCanvasColumnOutputIncluded, path: apps/web/src/app/views/canvas/canvasColumnOutputAuthoring.ts }
+  - { <<: *vtx2Symbol, name: EditableCanvasProjection, path: apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts }
+  - { <<: *vtx2Symbol, name: canAuthorCanvasColumnMappings, path: apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts }
+  - { <<: *vtx2Symbol, name: copyOutputDescriptions, path: apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts }
+  - { <<: *vtx2Symbol, name: isSimpleCanvasPassthrough, path: apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts }
+  - { <<: *vtx2Symbol, name: persistCanvasProjectionOutputs, path: apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts }
+  - { <<: *vtx2Symbol, name: readEditableCanvasProjection, path: apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts }
+  - { <<: *vtx2Symbol, name: resolveCanvasColumnMappingTarget, path: apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts }
+  - { <<: *vtx2Symbol, name: DvtNodeAuthoringMetadata, path: apps/web/src/app/views/canvas/canvasDvtAuthoringTypes.ts }
+  - { <<: *vtx2Symbol, name: DvtNodeAuthoringMetadataErrors, path: apps/web/src/app/views/canvas/canvasDvtAuthoringTypes.ts }
+  - { <<: *vtx2Symbol, name: DvtSinkAuthoringMetadata, path: apps/web/src/app/views/canvas/canvasDvtAuthoringTypes.ts }
+  - { <<: *vtx2Symbol, name: DvtSourceAuthoringMetadata, path: apps/web/src/app/views/canvas/canvasDvtAuthoringTypes.ts }
+  - { <<: *vtx2Symbol, name: DvtSubstraitTransformAuthoringMetadata, path: apps/web/src/app/views/canvas/canvasDvtAuthoringTypes.ts }
+  - { <<: *vtx2Symbol, name: DvtUninitializedTransformAuthoringMetadata, path: apps/web/src/app/views/canvas/canvasDvtAuthoringTypes.ts }
+  - { <<: *vtx2Symbol, name: DEFAULT_MATERIALIZATION, path: apps/web/src/app/views/canvas/canvasDvtSinkAuthoring.ts }
+  - { <<: *vtx2Symbol, name: DEFAULT_SCHEMA_NAME, path: apps/web/src/app/views/canvas/canvasDvtSinkAuthoring.ts }
+  - { <<: *vtx2Symbol, name: DEFAULT_WRITE_MODE, path: apps/web/src/app/views/canvas/canvasDvtSinkAuthoring.ts }
+  - { <<: *vtx2Symbol, name: VALID_MATERIALIZATIONS, path: apps/web/src/app/views/canvas/canvasDvtSinkAuthoring.ts }
+  - { <<: *vtx2Symbol, name: VALID_WRITE_MODES, path: apps/web/src/app/views/canvas/canvasDvtSinkAuthoring.ts }
+  - { <<: *vtx2Symbol, name: applyDvtSinkAuthoringMetadata, path: apps/web/src/app/views/canvas/canvasDvtSinkAuthoring.ts }
+  - { <<: *vtx2Symbol, name: createDvtSinkAuthoringMetadata, path: apps/web/src/app/views/canvas/canvasDvtSinkAuthoring.ts }
+  - { <<: *vtx2Symbol, name: normalizeEnum, path: apps/web/src/app/views/canvas/canvasDvtSinkAuthoring.ts }
+  - { <<: *vtx2Symbol, name: validateDvtSinkAuthoringMetadata, path: apps/web/src/app/views/canvas/canvasDvtSinkAuthoring.ts }
+  - { <<: *vtx2Symbol, name: DEFAULT_SCHEMA_NAME, path: apps/web/src/app/views/canvas/canvasDvtSourceAuthoring.ts }
+  - { <<: *vtx2Symbol, name: DVT_AUTHORING_PLUGIN_ID, path: apps/web/src/app/views/canvas/canvasDvtSourceAuthoring.ts }
+  - { <<: *vtx2Symbol, name: DVT_WAREHOUSE_SOURCE_PLUGIN_ID, path: apps/web/src/app/views/canvas/canvasDvtSourceAuthoring.ts }
+  - { <<: *vtx2Symbol, name: applyDvtSourceAuthoringMetadata, path: apps/web/src/app/views/canvas/canvasDvtSourceAuthoring.ts }
+  - { <<: *vtx2Symbol, name: createDvtSourceAuthoringMetadata, path: apps/web/src/app/views/canvas/canvasDvtSourceAuthoring.ts }
+  - { <<: *vtx2Symbol, name: isRecord, path: apps/web/src/app/views/canvas/canvasDvtSourceAuthoring.ts }
+  - { <<: *vtx2Symbol, name: normalizeDvtIdentifier, path: apps/web/src/app/views/canvas/canvasDvtSourceAuthoring.ts }
+  - { <<: *vtx2Symbol, name: parseConnectionRef, path: apps/web/src/app/views/canvas/canvasDvtSourceAuthoring.ts }
+  - { <<: *vtx2Symbol, name: parseImportedConnectionRef, path: apps/web/src/app/views/canvas/canvasDvtSourceAuthoring.ts }
+  - { <<: *vtx2Symbol, name: readDvtNodeConfig, path: apps/web/src/app/views/canvas/canvasDvtSourceAuthoring.ts }
+  - { <<: *vtx2Symbol, name: readDvtString, path: apps/web/src/app/views/canvas/canvasDvtSourceAuthoring.ts }
+  - { <<: *vtx2Symbol, name: resolveEffectiveDvtConnectionRef, path: apps/web/src/app/views/canvas/canvasDvtSourceAuthoring.ts }
+  - { <<: *vtx2Symbol, name: resolveInheritedDvtConnectionRef, path: apps/web/src/app/views/canvas/canvasDvtSourceAuthoring.ts }
+  - { <<: *vtx2Symbol, name: validateDvtSourceAuthoringMetadata, path: apps/web/src/app/views/canvas/canvasDvtSourceAuthoring.ts }
+  - { <<: *vtx2Symbol, name: withDvtConfig, path: apps/web/src/app/views/canvas/canvasDvtSourceAuthoring.ts }
+  - { <<: *vtx2Symbol, name: TransformMetadata, path: apps/web/src/app/views/canvas/canvasDvtTransformAuthoring.ts }
+  - { <<: *vtx2Symbol, name: applyDvtTransformAuthoringMetadata, path: apps/web/src/app/views/canvas/canvasDvtTransformAuthoring.ts }
+  - { <<: *vtx2Symbol, name: createDvtTransformAuthoringMetadata, path: apps/web/src/app/views/canvas/canvasDvtTransformAuthoring.ts }
+  - { <<: *vtx2Symbol, name: fromDraft, path: apps/web/src/app/views/canvas/canvasDvtTransformAuthoring.ts }
+  - { <<: *vtx2Symbol, name: RETIRED_LINEAGE_PROVENANCE_METADATA_KEY, path: apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.ts }
+  - { <<: *vtx2Symbol, name: DvtTransformAuthoringAuthority, path: apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.ts }
+  - { <<: *vtx2Symbol, name: hasRetiredSqlMetadata, path: apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.ts }
+  - { <<: *vtx2Symbol, name: removeRetiredAuthorityMetadata, path: apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.ts }
+  - { <<: *vtx2Symbol, name: quoteSqlIdentifier, path: apps/web/src/app/views/canvas/canvasSqlIdentifier.ts }
+  - { <<: *vtx2Symbol, name: DVT_TRANSFORM_AUTHORING_AUTHORITY_VERSION, path: packages/@dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts }
+  - { <<: *vtx2Symbol, name: DVT_TRANSFORM_AUTHORING_MODE, path: packages/@dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts }
+  - { <<: *vtx2Symbol, name: DvtTransformAuthoringAuthorityV1, path: packages/@dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts }
+  - { <<: *vtx2Symbol, name: DvtTransformAuthoringAuthorityV1Schema, path: packages/@dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts }
 ```
