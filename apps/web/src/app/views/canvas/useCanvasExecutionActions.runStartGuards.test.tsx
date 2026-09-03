@@ -201,7 +201,9 @@ describe('useCanvasExecutionActions run start guards', () => {
     expect(harness.text('plan-run-readiness-status')).toBe('blocked');
     expect(harness.text('plan-run-readiness-blockers')).toContain('plan_integrity');
     const readinessSummary = harness.text('plan-status-summary');
-    expect(readinessSummary).not.toBe('');
+    if (!readinessSummary) {
+      throw new Error('Expected the blocked run to expose its readiness summary.');
+    }
 
     await expectRunStartBlocked({
       runsService,
