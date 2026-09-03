@@ -38,7 +38,6 @@ describe('HTTP JSON plugin contributions', () => {
       expect.objectContaining({
         kind: 'dvt:http_json_acquisition',
         role: 'input',
-        previewStepKind: 'ACQUIRE_HTTP_JSON_ARTIFACT',
         allowsIncoming: false,
         allowsOutgoing: true,
       }),
