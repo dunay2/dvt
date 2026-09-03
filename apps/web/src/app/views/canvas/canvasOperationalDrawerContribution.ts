@@ -107,7 +107,7 @@ export function buildCanvasOperationalDrawerContribution({
     problems: copy.operationalDrawerProblemsTab,
     runs: copy.operationalDrawerRunsTab,
     preview: copy.operationalDrawerPreviewTab,
-    data: copy.operationalDrawerDataTab,
+    data: dataSample.status === 'idle' ? copy.operationalDrawerDataTab : dataSample.nodeName,
   } satisfies Record<OperationalDrawerTabId, string>;
   const readinessBlockers: readonly PlanRunReadinessBlocker[] =
     planRunReadiness.status === 'ready'
@@ -185,9 +185,7 @@ export function buildCanvasOperationalDrawerContribution({
             ? 1
             : id === 'preview' && previewStatus === 'blocked'
               ? Math.max(1, previewBlockers.length)
-              : id === 'data' && dataSample.status === 'ready'
-                ? dataSample.sample.rows.length
-                : null,
+              : null,
     })),
     problems: {
       items: problems,
