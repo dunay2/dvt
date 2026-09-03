@@ -264,11 +264,23 @@ describe('canvas copy catalog', () => {
     }
 
     expect(formatTransformationGraphValidationSummary('requires_executable_path', 'en-US')).toMatch(
-      /evaluable|consolidated/iu
+      /currently evaluable/iu
     );
     expect(formatTransformationGraphValidationSummary('requires_executable_path', 'es-ES')).toMatch(
-      /evaluable|consolidado/iu
+      /evaluable actualmente/iu
     );
+    expect(
+      formatTransformationGraphValidationSummary('requires_executable_path', 'en-US')
+    ).not.toMatch(/consolidat/iu);
+    expect(
+      formatTransformationGraphValidationSummary('requires_executable_path', 'es-ES')
+    ).not.toMatch(/consolidad/iu);
+
+    for (const locale of ['en-US', 'es-ES'] as const) {
+      expect(formatTransformationGraphValidationSummary('requires_two_edges', locale)).toMatch(
+        /add|remove|añade|elimina/iu
+      );
+    }
   });
 
   it('formats a missing plugin connection policy from locale copy', () => {

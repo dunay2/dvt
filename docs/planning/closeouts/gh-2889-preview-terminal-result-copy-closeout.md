@@ -65,7 +65,9 @@ flowchart LR
 - **Expected outcome:** Problems never teaches a fixed three-card topology as the product model;
   incomplete and ambiguous selections remain explicit.
 - **Risks and mitigation:** neutral wording must not imply unsupported execution. It refers only to
-  an admitted terminal result and leaves validation fail-closed.
+  an admitted terminal result, recommends only a currently evaluable path, and leaves validation
+  fail-closed. Edge-count failures identify the missing-or-extra dependency condition without
+  prescribing node kinds.
 - **Out of scope:** implementing terminal Transform (`#2784`), Source consolidation/runtime,
   publication, workload lowering (`#2524`), or PostgreSQL materialization (`#2523`).
 - **Libraries:** none evaluated; this is an existing read-model projection correction.

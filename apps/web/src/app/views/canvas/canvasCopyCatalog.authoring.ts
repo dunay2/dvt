@@ -70,7 +70,7 @@ export const canvasViewAuthoringCopyByKey = {
   transformationConnectionEdgeCountMessage: {
     key: 'canvas.transformation.connectionEdgeCountMessage',
     fallback:
-      'The selected dependency structure does not form a terminal result supported by Execution Preview.',
+      'The selected dependencies include a missing or extra dependency for the terminal result supported by Execution Preview. Add or remove the affected dependency.',
   },
   transformationConnectionDuplicateMessage: {
     key: 'canvas.transformation.connectionDuplicateMessage',
@@ -87,7 +87,7 @@ export const canvasViewAuthoringCopyByKey = {
   transformationRequiresExecutablePathMessage: {
     key: 'canvas.transformation.requiresExecutablePathMessage',
     fallback:
-      'The current draft has no terminal result supported by Execution Preview. Configure or select an evaluable or consolidated result.',
+      'The current draft has no terminal result supported by Execution Preview. Complete or select a currently evaluable path.',
   },
   transformationRequiresPostgresConnectionMessage: {
     key: 'canvas.transformation.requiresPostgresConnectionMessage',

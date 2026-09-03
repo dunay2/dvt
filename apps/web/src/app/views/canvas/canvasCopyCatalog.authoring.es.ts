@@ -26,7 +26,7 @@ export const canvasViewAuthoringCopyEs = {
   transformationConnectionOrderMessage:
     'Las dependencias seleccionadas no forman un resultado terminal compatible con Execution Preview.',
   transformationConnectionEdgeCountMessage:
-    'La estructura de dependencias seleccionada no forma un resultado terminal compatible con Execution Preview.',
+    'Las dependencias seleccionadas incluyen una dependencia ausente o adicional para el resultado terminal compatible con Execution Preview. Añade o elimina la dependencia afectada.',
   transformationConnectionDuplicateMessage:
     'La dependencia ya existe en este borrador de transformación.',
   transformationRequiresThreeNodesMessage:
@@ -34,7 +34,7 @@ export const canvasViewAuthoringCopyEs = {
   transformationAmbiguousExecutablePathMessage:
     'Execution Preview ha encontrado varias rutas con resultado terminal. Selecciona una.',
   transformationRequiresExecutablePathMessage:
-    'El borrador actual no contiene un resultado terminal compatible con Execution Preview. Configura o selecciona un resultado evaluable o consolidado.',
+    'El borrador actual no contiene un resultado terminal compatible con Execution Preview. Completa o selecciona una ruta evaluable actualmente.',
   transformationRequiresPostgresConnectionMessage:
     'Selecciona una conexión PostgreSQL gobernada en el origen antes de generar la vista previa.',
   transformationUnsupportedRolesMessage:
