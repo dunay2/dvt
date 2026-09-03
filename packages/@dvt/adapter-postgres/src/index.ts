@@ -55,21 +55,11 @@ export type {
   RunEventWriteRepository,
   SqlCommandExecutor,
 } from './RunEventWriteRepository.js';
-export type {
-  PostgresRelationalExecutionCapabilityConfig,
-  RuntimeStepActivity,
-  RuntimeStepActivityRegistry,
-  RuntimeStepExecutionContext,
-  RuntimeStepResult,
-} from './PostgresRelationalExecutionCapability.js';
+export type { PostgresObjectFileLoadingCapabilityConfig } from './PostgresObjectFileLoadingCapability.js';
 export type {
   IPostgresCredentialBindingResolver,
   PostgresCredentialBindings,
 } from './PostgresCredentialBindingResolver.js';
-export type {
-  IPostgresPlanConnectionResolver,
-  PostgresPlanConnection,
-} from './PostgresPlanConnectionResolver.js';
 
 export { PostgresStateStoreAdapter } from './PostgresStateStoreAdapter.js';
 export { PostgresSchemaRollbackCompatibilityPolicy } from './PostgresSchemaManager.js';
@@ -103,13 +93,12 @@ export { PostgresLineageOutboxStore } from './PostgresLineageOutboxStore.js';
 export { PostgresRunArchiveStore } from './PostgresRunArchiveStore.js';
 export { PostgresArchiveLeaseStore } from './PostgresArchiveLeaseStore.js';
 export { PostgresDeliveryBufferPurgeStore } from './PostgresDeliveryBufferPurgeStore.js';
-export { PostgresRelationalExecutionCapability } from './PostgresRelationalExecutionCapability.js';
+export { PostgresObjectFileLoadingCapability } from './PostgresObjectFileLoadingCapability.js';
 export {
   InvalidPostgresCredentialBindingsError,
   PostgresCredentialBindingResolver,
   parsePostgresCredentialBindings,
 } from './PostgresCredentialBindingResolver.js';
-export { PostgresPlanConnectionRejectedError } from './PostgresPlanConnectionResolver.js';
 export {
   PostgresObjectFileLoader,
   resolvePostgresObjectFileScopeSchema,

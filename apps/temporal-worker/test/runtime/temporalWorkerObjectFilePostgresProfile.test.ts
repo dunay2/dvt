@@ -20,11 +20,9 @@ vi.mock('@temporalio/activity', () => ({
 describe('createTemporalWorkerObjectFilePostgresProfile', () => {
   it('omits the profile and its adapters when the capability is disabled', () => {
     const objectReaderFactory = vi.fn();
-    const profile = createTemporalWorkerObjectFilePostgresProfile(
-      createEnv(),
-      { objectFileReaderFactory: objectReaderFactory },
-      { load: vi.fn() }
-    );
+    const profile = createTemporalWorkerObjectFilePostgresProfile(createEnv(), {
+      objectFileReaderFactory: objectReaderFactory,
+    });
 
     expect(profile.pluginProfile).toBeUndefined();
     expect(objectReaderFactory).not.toHaveBeenCalled();
@@ -48,8 +46,13 @@ describe('createTemporalWorkerObjectFilePostgresProfile', () => {
         DVT_OBJECT_FILE_SOURCE_CREDENTIAL_REF: 'object-store:het1-source',
         DVT_OBJECT_FILE_POSTGRES_TARGET_CREDENTIAL_REF: 'postgres:het1-staging',
       }),
-      { objectFileReaderFactory: () => ({ read }) },
-      { load }
+      {
+        objectFileReaderFactory: () => ({ read }),
+        postgresObjectFileLoadingCapabilityFactory: () => ({
+          load,
+          close: vi.fn(async () => undefined),
+        }),
+      }
     );
 
     expect([...profile.pluginProfile!.stepActivitiesByKind.keys()]).toEqual([

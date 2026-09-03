@@ -1,6 +1,7 @@
 /**
  * @ownedConcern Compose the bounded object-file to PostgreSQL Temporal plugin profile.
  */
+import { PostgresObjectFileLoadingCapability } from '@dvt/adapter-postgres';
 import type { TemporalStepPluginProfile } from '@dvt/adapter-temporal';
 import {
   createObjectFilePostgresPluginProfile,
@@ -16,12 +17,12 @@ import { createTemporalWorkerObjectFileReader } from './temporalWorkerObjectFile
 
 export interface TemporalWorkerObjectFilePostgresProfile {
   readonly pluginProfile?: TemporalStepPluginProfile;
+  readonly close?: () => Promise<void>;
 }
 
 export function createTemporalWorkerObjectFilePostgresProfile(
   env: Env,
-  options: CreateTemporalWorkerRuntimeOptions,
-  relationalLoader: ObjectFilePostgresRelationalLoader
+  options: CreateTemporalWorkerRuntimeOptions
 ): TemporalWorkerObjectFilePostgresProfile {
   if (!env.DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED) {
     return {};
@@ -29,6 +30,13 @@ export function createTemporalWorkerObjectFilePostgresProfile(
 
   const objectReader =
     options.objectFileReaderFactory?.(env) ?? createTemporalWorkerObjectFileReader(env);
+  const relationalLoader: ObjectFilePostgresRelationalLoader & { close(): Promise<void> } =
+    options.postgresObjectFileLoadingCapabilityFactory?.(env) ??
+    new PostgresObjectFileLoadingCapability({
+      connectionString: env.DATABASE_URL,
+      statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
+      queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
+    });
   const runner = new ObjectFilePostgresPluginRunner({
     objectReader,
     relationalLoader,
@@ -43,7 +51,10 @@ export function createTemporalWorkerObjectFilePostgresProfile(
     getCancellationSignal: () => Context.current().cancellationSignal,
   });
 
-  return { pluginProfile: createObjectFilePostgresPluginProfile(runner) };
+  return {
+    pluginProfile: createObjectFilePostgresPluginProfile(runner),
+    close: () => relationalLoader.close(),
+  };
 }
 
 function requireBinding(value: string | undefined, field: string): string {

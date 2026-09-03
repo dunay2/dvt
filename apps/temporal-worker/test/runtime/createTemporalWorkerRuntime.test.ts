@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 
-import type { StepActivity, TemporalWorkerHostConfig } from '@dvt/adapter-temporal';
+import type { TemporalWorkerHostConfig } from '@dvt/adapter-temporal';
+import { LOAD_OBJECT_FILE_TO_POSTGRES_STEP_KIND } from '@dvt/contracts';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createTemporalWorkerRuntime } from '../../src/runtime/createTemporalWorkerRuntime.js';
@@ -142,14 +143,8 @@ describe('createTemporalWorkerRuntime', () => {
     expect(capturedConfig?.stepActivitiesByKind?.get('DBT_MODEL')).toBeUndefined();
   });
 
-  it('wires and closes the SQL-first Postgres execution capability without DBT', async () => {
+  it('creates and closes PostgreSQL resources only for enabled object-file ingestion', async () => {
     const fixture = createRuntimeFixture();
-    const postgresActivity: StepActivity = {
-      execute: vi.fn(async (step) => ({
-        stepId: step.stepId,
-        status: 'COMPLETED' as const,
-      })),
-    };
     const closePostgresCapability = vi.fn(async () => undefined);
     let capturedConfig: TemporalWorkerHostConfig | undefined;
     const runtimeOptions = {
@@ -159,12 +154,8 @@ describe('createTemporalWorkerRuntime', () => {
         capturedConfig = config;
         return fixture.host;
       },
-      postgresRelationalCapabilityFactory: () => ({
-        stepActivitiesByKind: new Map([
-          ['PREPARE_POSTGRES_TRANSFORM', postgresActivity],
-          ['POSTGRES_SQL_TRANSFORM', postgresActivity],
-          ['CAPTURE_MATERIALIZATION_EVIDENCE', postgresActivity],
-        ]),
+      objectFileReaderFactory: () => ({ read: vi.fn() }),
+      postgresObjectFileLoadingCapabilityFactory: () => ({
         load: vi.fn(async (input) => ({
           rowsWritten: input.rows.length,
           publicationOutcome: 'created' as const,
@@ -176,7 +167,11 @@ describe('createTemporalWorkerRuntime', () => {
     } satisfies Parameters<typeof createTemporalWorkerRuntime>[2];
 
     const runtime = await createTemporalWorkerRuntime(
-      createEnv(),
+      createEnv({
+        DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED: true,
+        DVT_OBJECT_FILE_SOURCE_CREDENTIAL_REF: 'object-source',
+        DVT_OBJECT_FILE_POSTGRES_TARGET_CREDENTIAL_REF: 'postgres-target',
+      }),
       { info() {}, error() {} },
       runtimeOptions
     );
@@ -184,15 +179,9 @@ describe('createTemporalWorkerRuntime', () => {
     await runtime.start();
     await runtime.stop();
 
-    expect(capturedConfig?.stepActivitiesByKind?.get('PREPARE_POSTGRES_TRANSFORM')).toBe(
-      postgresActivity
-    );
-    expect(capturedConfig?.stepActivitiesByKind?.get('POSTGRES_SQL_TRANSFORM')).toBe(
-      postgresActivity
-    );
-    expect(capturedConfig?.stepActivitiesByKind?.get('CAPTURE_MATERIALIZATION_EVIDENCE')).toBe(
-      postgresActivity
-    );
+    expect(
+      capturedConfig?.stepActivitiesByKind?.get(LOAD_OBJECT_FILE_TO_POSTGRES_STEP_KIND)
+    ).toBeDefined();
     expect(closePostgresCapability).toHaveBeenCalledTimes(1);
   });
 
