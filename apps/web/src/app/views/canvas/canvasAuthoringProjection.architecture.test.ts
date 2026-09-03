@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
@@ -24,18 +24,6 @@ const COLUMN_LINEAGE_PROJECTION_SOURCE = readArchitectureSiblingSource(
 const COLUMN_MAPPING_AUTHORING_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasColumnMappingAuthoring.ts'
-);
-const VISUAL_SQL_ADAPTER_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'canvasVisualTransformSql.ts'
-);
-const VISUAL_SQL_COMPILER_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'canvasVisualTransformSqlCompiler.ts'
-);
-const PREVIEW_PROVENANCE_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'canvasPreviewProvenance.ts'
 );
 const DRAFT_READ_MODEL_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
@@ -89,7 +77,7 @@ describe('canvas authoring projection component architecture', () => {
     );
   });
 
-  it('derives column lineage from recipe authority without introducing a parallel edge store', () => {
+  it('derives column lineage without introducing a parallel edge store', () => {
     expect(COLUMN_LINEAGE_PROJECTION_SOURCE).toContain(
       'derive stable Canvas column handles and lineage edges from semantic recipe truth'
     );
@@ -105,16 +93,23 @@ describe('canvas authoring projection component architecture', () => {
     expect(COLUMN_MAPPING_AUTHORING_SOURCE).not.toContain('localStorage');
   });
 
-  it('derives generated SQL and Preview from the same recipe authority without a parallel planner or store', () => {
-    expect(COLUMN_LINEAGE_PROJECTION_SOURCE).toContain('readDvtTransformAuthoringAuthority(');
-    expect(VISUAL_SQL_ADAPTER_SOURCE).toContain('readDvtTransformAuthoringAuthority(');
-    expect(VISUAL_SQL_ADAPTER_SOURCE).toContain('compileVisualTransformRecipeToPostgresSql(');
-    expect(PREVIEW_PROVENANCE_SOURCE).toContain('compileDvtVisualTransformNodeToPostgresSql(');
-    expect(VISUAL_SQL_COMPILER_SOURCE).toContain(
-      'compile the bounded visual transform recipe into deterministic PostgreSQL SQL'
+  it('contains no VTX1 recipe, SQL mirror, or visual SQL compiler production authority', () => {
+    const retiredFiles = [
+      'DvtVisualTransformRecipeAuthoringSection.tsx',
+      'canvasTransformationSqlMirror.ts',
+      'canvasVisualTransformSql.ts',
+      'canvasVisualTransformSqlCompiler.ts',
+    ];
+    for (const fileName of retiredFiles) {
+      expect(existsSync(path.resolve(import.meta.dirname, fileName))).toBe(false);
+    }
+
+    const productionSource = readdirSync(import.meta.dirname)
+      .filter((fileName) => /\.(ts|tsx)$/.test(fileName) && !fileName.includes('.test.'))
+      .map((fileName) => readFileSync(path.resolve(import.meta.dirname, fileName), 'utf8'))
+      .join('\n');
+    expect(productionSource).not.toMatch(
+      /VisualTransformRecipeV1|canvasTransformationSqlMirror|canvasVisualTransformSqlCompiler/
     );
-    expect(VISUAL_SQL_COMPILER_SOURCE).not.toContain('localStorage');
-    expect(VISUAL_SQL_COMPILER_SOURCE).not.toContain('useState(');
-    expect(VISUAL_SQL_COMPILER_SOURCE).not.toContain('PlanRef');
   });
 });
