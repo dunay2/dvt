@@ -1,13 +1,21 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "repository": "dunay2/dvt",
   "baselineRef": "origin/main",
   "contexts": [
-    { "id": "engine", "path": "packages/@dvt/engine" },
-    { "id": "planner", "path": "packages/@dvt/planner" },
-    { "id": "artifacts", "path": "packages/@dvt/artifacts" },
-    { "id": "stateStore", "path": "packages/@dvt/state-store" },
-    { "id": "runDomain", "path": "packages/@dvt/run-domain" },
-    { "id": "delivery", "path": "packages/@dvt/delivery" }
+    { "id": "contracts", "path": "packages/@dvt/contracts", "group": "Foundation & Contracts" },
+    { "id": "crypto", "path": "packages/@dvt/crypto", "group": "Foundation & Contracts" },
+
+    { "id": "planner", "path": "packages/@dvt/planner", "group": "Planning & Interpretation" },
+    { "id": "planVerifier", "path": "packages/@dvt/plan-verifier", "group": "Planning & Interpretation" },
+    { "id": "planInterpreter", "path": "packages/@dvt/plan-interpreter", "group": "Planning & Interpretation" },
+    { "id": "dsl", "path": "packages/@dvt/dsl", "group": "Planning & Interpretation" },
+
+    { "id": "engine", "path": "packages/@dvt/engine", "group": "Runtime Governance" },
+    { "id": "runDomain", "path": "packages/@dvt/run-domain", "group": "Runtime Governance" },
+
+    { "id": "artifacts", "path": "packages/@dvt/artifacts", "group": "State, Artifacts & Delivery" },
+    { "id": "stateStore", "path": "packages/@dvt/state-store", "group": "State, Artifacts & Delivery" },
+    { "id": "delivery", "path": "packages/@dvt/delivery", "group": "State, Artifacts & Delivery" }
   ]
 }

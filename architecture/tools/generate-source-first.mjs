@@ -20,15 +20,18 @@ for (const ctx of contexts) {
   writeFileSync(join(generatedDir, `${ctx.id}-inventory.json`), JSON.stringify(inventoryPayload(ctx), null, 2) + '\n');
 }
 writeFileSync(join(generatedDir, 'summary.json'), JSON.stringify({
-  schemaVersion: 3,
+  schemaVersion: 4,
   repository: config.repository,
   baselineRef: config.baselineRef,
   baselineSha,
+  groups: groupContexts(contexts).map(([name, members]) => ({ name, contextIds: members.map((ctx) => ctx.id) })),
   contexts: contexts.map((ctx) => ({
     id: ctx.id,
+    group: ctx.group,
     packageName: ctx.packageName,
     path: ctx.path,
     packageConcern: ctx.packageConcern,
+    packageConcernSource: ctx.packageConcernSource,
     counts: ctx.counts,
     modules: ctx.modules.map((m) => ({
       id: m.id,
@@ -41,7 +44,7 @@ writeFileSync(join(generatedDir, 'summary.json'), JSON.stringify({
 }, null, 2) + '\n');
 writeFileSync(join(generatedDir, 'source-first.c4'), render(contexts));
 
-console.log(`Generated source-first architecture v3 at ${baselineSha}`);
+console.log(`Generated source-first architecture v4 at ${baselineSha}`);
 for (const ctx of contexts) {
   console.log(`${ctx.packageName}: ${ctx.counts.trackedFiles} tracked, ${ctx.counts.sourceFiles} src, ${ctx.counts.testFiles} tests, ${ctx.modules.length} modules`);
 }
@@ -94,7 +97,7 @@ function loadContext(def) {
   }
 
   const index = sourceFiles.find((f) => f.relativePath === 'src/index.ts');
-  const packageConcern = index?.metadata.ownedConcern ?? index?.metadata.headerSummary ?? `Source-first bounded context observed at ${def.path}.`;
+  const concern = resolvePackageConcern(index, packageJson, def.path);
   const counts = {
     trackedFiles: files.length,
     sourceFiles: files.filter((f) => f.relativePath.startsWith('src/')).length,
@@ -107,9 +110,11 @@ function loadContext(def) {
 
   return {
     id: def.id,
+    group: def.group ?? 'Ungrouped',
     path: def.path,
     packageName,
-    packageConcern,
+    packageConcern: concern.text,
+    packageConcernSource: concern.source,
     files,
     sourceFiles,
     modules,
@@ -119,15 +124,23 @@ function loadContext(def) {
   };
 }
 
+function resolvePackageConcern(index, packageJson, path) {
+  if (index?.metadata.ownedConcern) return { text: index.metadata.ownedConcern, source: 'OWNED_CONCERN' };
+  if (packageJson.description) return { text: normalizeProse(packageJson.description), source: 'PACKAGE_JSON_DESCRIPTION' };
+  if (index?.metadata.headerSummary) return { text: index.metadata.headerSummary, source: 'SOURCE_HEADER' };
+  return {
+    text: `No package-level concern marker found in src/index.ts for ${path}; inspect source modules and evidence.`,
+    source: 'NO_PACKAGE_CONCERN_MARKER',
+  };
+}
+
 function deriveWorkspaceEdges(ctx, packageByName) {
   const counts = new Map();
   for (const file of ctx.sourceFiles) {
     for (const specifier of file.imports) {
       for (const [name, target] of packageByName) {
         if (target.id === ctx.id) continue;
-        if (specifier === name || specifier.startsWith(`${name}/`)) {
-          counts.set(target.id, (counts.get(target.id) ?? 0) + 1);
-        }
+        if (specifier === name || specifier.startsWith(`${name}/`)) counts.set(target.id, (counts.get(target.id) ?? 0) + 1);
       }
     }
   }
@@ -277,30 +290,23 @@ function humanize(value) {
 function resolveRelativeImport(sourcePath, specifier, sourceByPath) {
   const raw = posix.normalize(posix.join(posix.dirname(sourcePath), specifier.split('?')[0].split('#')[0]));
   const noJs = raw.replace(/\.(?:mjs|cjs|js|jsx)$/, '');
-  const candidates = [
-    raw,
-    `${noJs}.ts`,
-    `${noJs}.tsx`,
-    `${noJs}.js`,
-    `${noJs}.mjs`,
-    `${noJs}/index.ts`,
-    `${noJs}/index.tsx`,
-    `${raw}/index.ts`,
-  ];
+  const candidates = [raw, `${noJs}.ts`, `${noJs}.tsx`, `${noJs}.js`, `${noJs}.mjs`, `${noJs}/index.ts`, `${noJs}/index.tsx`, `${raw}/index.ts`];
   for (const candidate of candidates) if (sourceByPath.has(candidate)) return sourceByPath.get(candidate);
   return undefined;
 }
 
 function inventoryPayload(ctx) {
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     generatedFrom: 'git-tree',
     repository: config.repository,
     baselineRef: config.baselineRef,
     baselineSha,
+    group: ctx.group,
     packageName: ctx.packageName,
     scope: ctx.path,
     packageConcern: ctx.packageConcern,
+    packageConcernSource: ctx.packageConcernSource,
     counts: ctx.counts,
     modules: ctx.modules.map((m) => ({
       id: m.id,
@@ -318,6 +324,15 @@ function inventoryPayload(ctx) {
     selectedWorkspaceDependencies: ctx.workspaceEdges,
     files: ctx.files,
   };
+}
+
+function groupContexts(all) {
+  const grouped = new Map();
+  for (const ctx of all) {
+    if (!grouped.has(ctx.group)) grouped.set(ctx.group, []);
+    grouped.get(ctx.group).push(ctx);
+  }
+  return [...grouped.entries()];
 }
 
 function render(all) {
@@ -372,9 +387,7 @@ function render(all) {
   }
 
   for (const ctx of all) {
-    for (const edge of ctx.workspaceEdges) {
-      lines.push(`  dvt.pkg_${safeId(edge.from)} .uses dvt.pkg_${safeId(edge.to)} 'workspace imports (${edge.count})'`);
-    }
+    for (const edge of ctx.workspaceEdges) lines.push(`  dvt.pkg_${safeId(edge.from)} .uses dvt.pkg_${safeId(edge.to)} 'workspace imports (${edge.count})'`);
   }
 
   lines.push('}', '', 'views {');
@@ -384,6 +397,15 @@ function render(all) {
   lines.push('    include *');
   lines.push('    autoLayout LeftRight');
   lines.push('  }', '');
+
+  for (const [groupName, members] of groupContexts(all)) {
+    lines.push(`  view group_${safeId(groupName)} {`);
+    lines.push(`    title 'DVT+ — ${esc(groupName)}'`);
+    lines.push(`    description '${esc(`Focused source-first view of ${members.length} bounded context(s) at main@${baselineSha.slice(0, 8)}.`)}'`);
+    for (const ctx of members) lines.push(`    include dvt.pkg_${safeId(ctx.id)}`);
+    lines.push('    autoLayout LeftRight');
+    lines.push('  }', '');
+  }
 
   for (const ctx of all) {
     lines.push(`  view ${safeId(ctx.id)}Boundary of dvt.pkg_${safeId(ctx.id)} {`);
@@ -437,6 +459,8 @@ function emitContext(ctx, lines) {
   lines.push(`      description '${esc(ctx.packageConcern)}'`);
   lines.push('      metadata {');
   lines.push("        provenance 'SOURCE-FIRST'");
+  lines.push(`        architectureGroup '${esc(ctx.group)}'`);
+  lines.push(`        packageConcernSource '${ctx.packageConcernSource}'`);
   lines.push(`        sourceRoot '${esc(ctx.path)}'`);
   lines.push(`        baselineSha '${baselineSha}'`);
   lines.push(`        trackedFiles '${ctx.counts.trackedFiles}'`);
@@ -461,17 +485,12 @@ function emitContext(ctx, lines) {
     lines.push('      }');
   }
 
-  for (const edge of ctx.internalEdges) {
-    lines.push(`      ${edge.from} .uses ${edge.to} 'source imports (${edge.count})'`);
-  }
+  for (const edge of ctx.internalEdges) lines.push(`      ${edge.from} .uses ${edge.to} 'source imports (${edge.count})'`);
   lines.push('    }');
 }
 
 function safeId(value) {
-  let result = String(value)
-    .replace(/[^A-Za-z0-9_]+/g, '_')
-    .replace(/_+/g, '_')
-    .replace(/^_+|_+$/g, '');
+  let result = String(value).replace(/[^A-Za-z0-9_]+/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '');
   if (!result) result = 'root';
   if (!/^[A-Za-z_]/.test(result)) result = `_${result}`;
   return result;
@@ -482,8 +501,5 @@ function encodePath(value) {
 }
 
 function esc(value) {
-  return String(value)
-    .replace(/\\/g, '\\\\')
-    .replace(/'/g, "\\'")
-    .replace(/\r?\n/g, ' ');
+  return String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, ' ');
 }
