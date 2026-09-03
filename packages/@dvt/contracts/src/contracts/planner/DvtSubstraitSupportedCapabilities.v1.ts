@@ -42,6 +42,8 @@ interface SupportedCapabilityGroup {
   readonly entryIds: readonly string[];
   readonly useCaseRefs: readonly string[];
   readonly proofRef: string;
+  readonly targetStatus?: 'unavailable' | 'mapped' | 'provider-accepted';
+  readonly visualExposure?: 'not-exposed' | 'exposed';
 }
 
 const LOWER_ID = functionId('scalar-function', 'functions_string', 'lower');
@@ -104,6 +106,13 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
     useCaseRefs: ['dvt:#2634'],
     proofRef: 'docs/evidence/ED-20260831-vtx2-substrait-union-all.md',
   },
+  {
+    entryIds: [standardId('type', 'substrait.Type', 'kind.struct')],
+    useCaseRefs: ['dvt:#2771'],
+    proofRef: 'packages/@dvt/contracts/test/dvt-substrait-struct-capability.contract.test.ts',
+    targetStatus: 'unavailable',
+    visualExposure: 'not-exposed',
+  },
 ];
 
 function admissionFor(
@@ -123,8 +132,20 @@ function admissionFor(
       status: 'proved',
       evidenceRefs: ['docs/evidence/ED-20260903-vtx2-durable-semantic-document.md'],
     },
-    targetConformance: [{ targetId: 'postgres', status: 'mapped', evidenceRefs: [group.proofRef] }],
-    visualExposure: { status: 'exposed', evidenceRefs: [group.proofRef] },
+    targetConformance: [
+      {
+        targetId: 'postgres',
+        status: group.targetStatus ?? 'mapped',
+        evidenceRefs: [group.proofRef],
+      },
+    ],
+    visualExposure:
+      group.visualExposure === 'not-exposed'
+        ? {
+            status: 'not-exposed',
+            rationale: 'Structured projection is unavailable until the governed vertical slice.',
+          }
+        : { status: 'exposed', evidenceRefs: [group.proofRef] },
   });
 }
 

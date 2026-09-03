@@ -88,6 +88,7 @@ const CORE_TYPES = [
   'decimal',
   'precision_timestamp',
   'precision_timestamp_tz',
+  'struct',
   'uuid',
 ] as const;
 

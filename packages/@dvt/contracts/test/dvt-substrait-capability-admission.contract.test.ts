@@ -14,6 +14,11 @@ const LOWER_ID = buildDvtSubstraitStandardCapabilityId('scalar-function', {
   urn: 'extension:io.substrait:functions_string',
   name: 'lower',
 });
+const STRUCT_ID = buildDvtSubstraitStandardCapabilityId('type', {
+  sourceKind: 'core',
+  message: 'substrait.Type',
+  selector: 'kind.struct',
+});
 
 function lowerCapability(): DvtSubstraitStandardCapabilityV1 {
   const entry = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.find(
@@ -46,6 +51,22 @@ function extensionProposal(overrides: Record<string, unknown> = {}): Record<stri
 }
 
 describe('DVT Substrait standard-first capability admission', () => {
+  it('admits structured fields without claiming an unavailable target projection', () => {
+    expect(
+      DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.find(
+        (candidate) => candidate.entryId === STRUCT_ID
+      )
+    ).toMatchObject({
+      profileStatus: 'supported-profile',
+      admission: {
+        targetConformance: [
+          expect.objectContaining({ targetId: 'postgres', status: 'unavailable' }),
+        ],
+        visualExposure: { status: 'not-exposed' },
+      },
+    });
+  });
+
   it('retains complete conformance evidence without implying provider acceptance', () => {
     const lower = lowerCapability();
 
