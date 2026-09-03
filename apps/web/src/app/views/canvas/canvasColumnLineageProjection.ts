@@ -492,15 +492,20 @@ export function projectCanvasColumnLineage(args: {
     }
 
     if (args.expandedNodeIds.has(model.id)) {
-      const structuredLeaves = flattenCanvasStructuredLineage(
-        projectCanvasNodePresentationTruth({
-          node: model,
-          nodes: args.nodes,
-          edges: args.edges,
-        }).columns.declared
-      );
+      const presentedColumns = projectCanvasNodePresentationTruth({
+        node: model,
+        nodes: args.nodes,
+        edges: args.edges,
+      }).columns.declared;
+      const structuredLeaves = flattenCanvasStructuredLineage(presentedColumns);
       if (structuredLeaves.length > 0) {
-        for (const { root, leaf, path } of structuredLeaves) {
+        const sourcedLeaves = [
+          ...structuredLeaves,
+          ...presentedColumns
+            .filter((column) => column.children == null)
+            .map((column) => ({ root: column, leaf: column, path: column.name })),
+        ];
+        for (const { root, leaf, path } of sourcedLeaves) {
           const sourceNode = leaf.sourceNodeId == null ? null : nodeById.get(leaf.sourceNodeId);
           if (
             sourceNode == null ||

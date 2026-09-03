@@ -35,6 +35,7 @@ describe('structured Canvas column lineage', () => {
         columns: [
           { name: 'order_id', type: 'integer' },
           { name: 'customer', type: 'text' },
+          { name: 'amount', type: 'numeric' },
         ],
       },
     };
@@ -48,12 +49,14 @@ describe('structured Canvas column lineage', () => {
           fields: [
             { name: 'order_id', dataType: 'integer' },
             { name: 'customer', dataType: 'text' },
+            { name: 'amount', dataType: 'numeric' },
           ],
         },
         targetNodeId: 'transform-orders',
         outputs: [
           { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
           { fieldId: 'output:customer', name: 'customer', sourceFieldName: 'customer' },
+          { fieldId: 'output:amount', name: 'amount', sourceFieldName: 'amount' },
         ],
       }),
       {
@@ -92,7 +95,9 @@ describe('structured Canvas column lineage', () => {
     ).toEqual([
       expect.objectContaining({ source: 'order_id', target: 'identity.order_id' }),
       expect.objectContaining({ source: 'customer', target: 'identity.customer' }),
+      expect.objectContaining({ source: 'amount', target: 'amount' }),
     ]);
-    expect(new Set(edges.map((edge) => edge.targetHandle)).size).toBe(1);
+    expect(edges[0]?.targetHandle).toBe(edges[1]?.targetHandle);
+    expect(edges[2]?.targetHandle).not.toBe(edges[0]?.targetHandle);
   });
 });
