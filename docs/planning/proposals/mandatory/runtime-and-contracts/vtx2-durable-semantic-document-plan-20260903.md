@@ -61,9 +61,8 @@ contract boundary where `dvt:transform` metadata becomes typed semantic authorit
    would duplicate the same contract rule and non-HTTP consumers could bypass it.
 4. Refine the canonical aggregate schema with the pinned Substrait decoder. Selected:
    one contract rule automatically governs HTTP parse, application reload and tests.
-
-No external library is being invented. The already pinned Buf runtime and generated
-Substrait package used by Web are reused for exact protobuf decoding.
+   No external library is being invented. The already pinned Buf runtime and generated
+   Substrait package used by Web are reused for exact protobuf decoding.
 
 ## Fowler opportunity matrix
 
@@ -79,27 +78,19 @@ Substrait package used by Web are reused for exact protobuf decoding.
 
 ```mermaid
 flowchart LR
-  Web[Typed Transform in Web] --> Open[Open metadata record]
-  Open --> Structural[Structural draft parse]
-  Structural --> Save[SaveWorkspaceGraphDraft]
-  Save --> Jsonb[(workspace_graph_drafts.draft_json)]
-  Jsonb --> Read[GetWorkspaceGraphDraft]
-  Read --> Structural
+  Web[Typed Transform in Web] --> Open[Open metadata record] --> Structural[Structural draft parse]
+  Structural --> Save[SaveWorkspaceGraphDraft] --> Jsonb[(workspace_graph_drafts.draft_json)]
+  Jsonb --> Read[GetWorkspaceGraphDraft] --> Structural
 ```
 
 ## Target state
 
 ```mermaid
 flowchart LR
-  Web[Typed Transform in Web] --> Aggregate[WorkspaceGraphAuthoringDraft]
-  Aggregate --> Admission[Canonical semantic admission]
-  Admission --> Profile[Pinned profile and protobuf decode]
-  Profile --> Digest[Bytes SHA and sidecar binding]
-  Digest --> Save[SaveWorkspaceGraphDraft]
-  Save --> Jsonb[(existing JSONB plus CAS)]
-  Jsonb --> Read[GetWorkspaceGraphDraft]
-  Read --> Admission
-  Admission --> Web
+  Web[Typed Transform in Web] --> Aggregate[WorkspaceGraphAuthoringDraft] --> Admission[Canonical semantic admission]
+  Admission --> Profile[Pinned profile and protobuf decode] --> Digest[Bytes SHA and sidecar binding]
+  Digest --> Save[SaveWorkspaceGraphDraft] --> Jsonb[(existing JSONB plus CAS)] --> Read[GetWorkspaceGraphDraft]
+  Read --> Admission --> Web
   Legacy[SQL or VTX1 metadata] -. rejected .-> Admission
 ```
 
@@ -169,7 +160,22 @@ architectureGuards:
 symbolDefaults: &symbolDefaults {dddOwner: DvtSubstraitSemanticDocument, cqRails: [SaveWorkspaceGraphDraft, GetWorkspaceGraphDraft], fowlerSignals: [Primitive obsession, Duplicate validation risk], architectureGuard: pnpm verify:prepush, cypressCoverage: Existing Canvas Apply and reload flow, unitTests: [pnpm --filter @dvt/contracts test]}
 symbols:
   - {<<: *symbolDefaults, name: decodeDvtSubstraitPlanV1, path: packages/@dvt/contracts/src/contracts/planner/DvtSubstraitPlanBinary.v1.ts}
+  - {<<: *symbolDefaults, name: Base64Schema, path: packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts}
+  - {<<: *symbolDefaults, name: DvtSubstraitAuthoringSidecarV1, path: packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts}
+  - {<<: *symbolDefaults, name: DvtSubstraitAuthoringSidecarV1Schema, path: packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts}
+  - {<<: *symbolDefaults, name: DvtSubstraitFieldBindingV1, path: packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts}
+  - {<<: *symbolDefaults, name: DvtSubstraitFieldBindingV1Schema, path: packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts}
+  - {<<: *symbolDefaults, name: DvtSubstraitRelationBindingV1, path: packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts}
+  - {<<: *symbolDefaults, name: DvtSubstraitRelationBindingV1Schema, path: packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts}
+  - {<<: *symbolDefaults, name: DvtSubstraitSemanticDocumentV1, path: packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts}
   - {<<: *symbolDefaults, name: DvtSubstraitSemanticDocumentV1Schema, path: packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts}
+  - {<<: *symbolDefaults, name: DvtSubstraitSemanticPlanV1, path: packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts}
+  - {<<: *symbolDefaults, name: DvtSubstraitSemanticPlanV1Schema, path: packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts}
+  - {<<: *symbolDefaults, name: NonBlankStringSchema, path: packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts}
+  - {<<: *symbolDefaults, name: Sha256Schema, path: packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts}
+  - {<<: *symbolDefaults, name: canonicalizeDvtSubstraitSemanticDocumentV1, path: packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts}
+  - {<<: *symbolDefaults, name: serializeDvtSubstraitSemanticDocumentV1, path: packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts}
+  - {<<: *symbolDefaults, name: DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY, path: packages/@dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts}
   - {<<: *symbolDefaults, name: WorkspaceGraphAuthoringNodeSchema, path: packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts}
 cypressFlows:
   - apps/web/cypress/e2e/canvas/canvas-substrait-column-functions.cy.ts
@@ -180,10 +186,10 @@ redGreenCycles:
     patchSurfaces: [packages/@dvt/contracts/src/contracts/planner/**, packages/@dvt/contracts/test/**]
     greenTest: pnpm --filter @dvt/contracts test
   - id: persist-exact-semantic-document
-    redTest: pnpm --filter dvt-api test -- workspaceGraphDraftSemanticPersistence
+    redTest: pnpm --filter dvt-api exec vitest run --config vitest.integration.config.ts test/integration/workspaceGraphDraftSemanticPersistence.test.ts
     expectedFailure: no real PostgreSQL proof reloads exact bytes and stable DVT identities
     patchSurfaces: [apps/api/test/**]
-    greenTest: pnpm --filter dvt-api test -- workspaceGraphDraftSemanticPersistence
+    greenTest: pnpm --filter dvt-api exec vitest run --config vitest.integration.config.ts test/integration/workspaceGraphDraftSemanticPersistence.test.ts
 completionGate:
   - pnpm --filter @dvt/contracts test
   - pnpm --filter @dvt/contracts typecheck

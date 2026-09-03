@@ -1,0 +1,26 @@
+---
+id: R-20260903-VTX2-DURABLE-SEMANTIC-DOCUMENT
+title: Persisted Transform metadata may contain corrupt or unsupported Substrait semantics
+status: Open
+date: 2026-09-03
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+severity: Medium
+probability: Low
+---
+mitigation:
+  summary: >
+    The canonical workspace aggregate validates the pinned profile, exact protobuf decoding,
+    semantic digest, sidecar binding and unique stable identities on both save and reload.
+    PostgreSQL JSONB/CAS remains the single durable authority, and corrupt stored payloads fail
+    closed without SQL, VTX1 or project-file fallback.
+  evidence:
+    - docs/evidence/ED-20260903-vtx2-durable-semantic-document.md
+    - docs/planning/proposals/mandatory/runtime-and-contracts/vtx2-durable-semantic-document-plan-20260903.md
+    - packages/@dvt/contracts/test/dvt-substrait-semantic-document-decoding.contract.test.ts
+    - packages/@dvt/contracts/test/workspace-graph-semantic-document.contract.test.ts
+    - apps/api/test/integration/workspaceGraphDraftSemanticPersistence.test.ts
+  follow_up:
+    - Keep future Substrait profile upgrades explicit and versioned; never accept them through a
+      permissive compatibility fallback.
