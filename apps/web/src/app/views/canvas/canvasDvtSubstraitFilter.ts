@@ -17,6 +17,8 @@ import {
   type DvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
 import { dvtSubstraitTextEquality } from './canvasDvtSubstraitTextEquality';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import type { DvtSubstraitSemanticDocumentV1 } from '@dvt/contracts';
 
 const FILTER_ID = buildDvtSubstraitStandardCapabilityId('relation', {
   sourceKind: 'core',
@@ -123,6 +125,15 @@ export function removeDvtSubstraitFilter(
   return stripped != null && inspectDvtSubstraitProjectionDraft(stripped.draft).ok
     ? stripped.draft
     : draft;
+}
+
+export function encodeDvtSubstraitFilterDocument(
+  draft: DvtSubstraitProjectionDraft
+): DvtSubstraitSemanticDocumentV1 {
+  if (inspectDvtSubstraitFilter(draft) == null) {
+    throw new Error('Substrait connected-source filter is invalid.');
+  }
+  return encodeDvtSubstraitSemanticDocument(draft);
 }
 
 export function applyDvtSubstraitFilter(

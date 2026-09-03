@@ -3,12 +3,14 @@ import { describe, expect, it } from 'vitest';
 import type { CanonicalNode } from '../../types/canonical';
 import {
   applyDvtSubstraitFilter,
+  encodeDvtSubstraitFilterDocument,
   inspectDvtSubstraitFilter,
   removeDvtSubstraitFilter,
   resolveDvtSubstraitFilterCapabilities,
 } from './canvasDvtSubstraitFilter';
 import {
   createDvtSubstraitProjectionDraft,
+  decodeDvtSubstraitProjectionDocument,
   encodeDvtSubstraitProjectionDocument,
   resolveDvtSubstraitProjectionSource,
 } from './canvasDvtSubstraitProjection';
@@ -77,6 +79,11 @@ describe('DVT Substrait filter', () => {
       capabilityId: capability.capabilityId,
       value: 'Ada',
     });
+    expect(
+      inspectDvtSubstraitFilter(
+        decodeDvtSubstraitProjectionDocument(encodeDvtSubstraitFilterDocument(filtered))
+      )
+    ).toMatchObject({ fieldName: 'customer', value: 'Ada' });
     expect(encodeDvtSubstraitProjectionDocument(removeDvtSubstraitFilter(filtered))).toEqual(
       encodeDvtSubstraitProjectionDocument(draft)
     );

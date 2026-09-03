@@ -35,15 +35,11 @@ import {
   Type_Nullability,
   Type_StringSchema,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
-import { base64Bytes, sha256Hex } from '@dvt/crypto';
 import {
   ConnectedSourceRefSchema,
   DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION,
   DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1,
-  DVT_SUBSTRAIT_PLAN_ENCODING,
   DVT_SUBSTRAIT_PROFILE_REF_V1,
-  DVT_SUBSTRAIT_SEMANTIC_DOCUMENT_SCHEMA_VERSION,
-  canonicalizeDvtSubstraitSemanticDocumentV1,
   type ConnectedSourceRef,
   type DvtSubstraitAuthoringSidecarV1,
   type DvtSubstraitFieldBindingV1,
@@ -55,6 +51,10 @@ import {
   inspectDvtSubstraitCalculatedExpression,
   type DvtSubstraitCalculatedExpression,
 } from './canvasDvtSubstraitCalculatedExpression';
+import {
+  decodeDvtSubstraitSemanticDocument,
+  encodeDvtSubstraitSemanticDocument,
+} from './canvasDvtSubstraitSemanticDocument';
 
 const ZERO_SHA256 = '0'.repeat(64);
 
@@ -228,12 +228,6 @@ function projectHasOnlyFieldSelection(project: ProjectRel): boolean {
     project.common?.emitKind.case === 'emit' &&
     project.advancedExtension == null
   );
-}
-
-function bytesToBase64(bytes: Uint8Array): string {
-  let binary = '';
-  for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary);
 }
 
 function sortedRelationFields(
@@ -859,12 +853,11 @@ export function resolveDvtSubstraitProjectionEntry(args: {
 }
 
 export function decodeDvtSubstraitProjectionDocument(input: unknown): DvtSubstraitProjectionDraft {
-  const document = canonicalizeDvtSubstraitSemanticDocumentV1(input);
-  const plan = fromBinary(PlanSchema, base64Bytes(document.semanticPlan.bytesBase64));
+  const { plan, sidecar } = decodeDvtSubstraitSemanticDocument(input);
   if (!hasPinnedPlanVersion(plan)) {
     throw new Error('Substrait Plan does not match the pinned DVT profile.');
   }
-  return { plan, sidecar: document.sidecar };
+  return { plan, sidecar };
 }
 
 export function encodeDvtSubstraitProjectionDocument(
@@ -873,20 +866,5 @@ export function encodeDvtSubstraitProjectionDocument(
   if (!inspectDvtSubstraitProjectionDraft(draft).ok) {
     throw new Error('Substrait connected-source projection is invalid.');
   }
-  const bytes = toBinary(PlanSchema, draft.plan);
-  const sha256 = sha256Hex(bytes);
-  return canonicalizeDvtSubstraitSemanticDocumentV1({
-    schemaVersion: DVT_SUBSTRAIT_SEMANTIC_DOCUMENT_SCHEMA_VERSION,
-    profile: DVT_SUBSTRAIT_PROFILE_REF_V1,
-    semanticPlan: {
-      encoding: DVT_SUBSTRAIT_PLAN_ENCODING,
-      bytesBase64: bytesToBase64(bytes),
-      sha256,
-    },
-    sidecar: {
-      ...draft.sidecar,
-      schemaVersion: DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION,
-      semanticPlanSha256: sha256,
-    },
-  });
+  return encodeDvtSubstraitSemanticDocument(draft);
 }
