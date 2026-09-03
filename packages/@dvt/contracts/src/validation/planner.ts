@@ -8,8 +8,6 @@ import type { PlanRecord } from '../contracts/planner/PlanRecord.v1.js';
 import {
   ArtifactRefSchema,
   type ArtifactRefSchemaT,
-  DesignGraphDraftSchema,
-  type DesignGraphDraftSchemaT,
   ExecutableSubgraphSchema,
   type ExecutableSubgraphSchemaT,
   ExecutionPlanSchema,
@@ -51,8 +49,6 @@ import {
   PlanRecordSchema,
   PlanRefSchema,
   type PlanRefSchemaT,
-  TransformationSqlFirstCompilerGraphSourceSchema,
-  type TransformationSqlFirstCompilerGraphSourceSchemaT,
   WorkspaceGraphDraftReadResponseSchema,
   type WorkspaceGraphDraftReadResponseSchemaT,
   WorkspaceGraphDraftSaveRequestSchema,
@@ -65,10 +61,6 @@ import { parseWithSchema } from './core.js';
 
 export function parseArtifactRef(input: unknown): ArtifactRefSchemaT {
   return parseWithSchema(ArtifactRefSchema, input);
-}
-
-export function parseDesignGraphDraft(input: unknown): DesignGraphDraftSchemaT {
-  return parseWithSchema(DesignGraphDraftSchema, input);
 }
 
 export function parsePlanCompileRequest(input: unknown): PlanCompileRequestV1SchemaT {
@@ -85,12 +77,6 @@ export function parsePlanPreviewProvenance(input: unknown): PlanPreviewProvenanc
 
 export function parsePlanPreviewRequest(input: unknown): PlanPreviewRequestSchemaT {
   return parseWithSchema(PlanPreviewRequestSchema, input);
-}
-
-export function parseTransformationSqlFirstCompilerGraphSource(
-  input: unknown
-): TransformationSqlFirstCompilerGraphSourceSchemaT {
-  return parseWithSchema(TransformationSqlFirstCompilerGraphSourceSchema, input);
 }
 
 export function parsePlanPreviewPersistResponse(input: unknown): PlanPreviewPersistResponseSchemaT {
