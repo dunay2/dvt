@@ -65,6 +65,25 @@ Minimum rule for every planning-affecting task:
 Do not leave planning changes only in ad hoc notes or PR text when a canonical
 planning surface exists.
 
+## GitHub Issue Work Admission Rule
+
+No implementation, fix, refactor, product documentation change, or PR work may
+start without an open governing GitHub issue. If no issue exists, create or
+request the issue first; no issue means no work.
+
+Before changing the repository, the agent MUST take responsibility for the
+issue by assigning itself when repository permissions allow it and recording a
+concise claim comment with the intended slice and current branch. If assignment
+is unavailable, the claim comment is mandatory and the limitation must be
+reported. The agent MUST confirm that the issue remains open, is not already
+owned by another active worker, and matches the requested product intent before
+proceeding.
+
+One commit or PR may reference related issues, but it MUST name one governing
+issue whose acceptance criteria own the active slice. Switching the governing
+issue requires updating the previous issue journal first and taking the next
+issue before editing its scope.
+
 ## GitHub Issue Human Change Journal Rule
 
 A governing GitHub issue is both the canonical task record and the human-facing
