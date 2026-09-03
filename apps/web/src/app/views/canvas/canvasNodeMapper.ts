@@ -20,6 +20,7 @@ import { buildCanvasNodePresentationTruth } from '../../components/canvas/canvas
 import { buildCanvasNodePresentationCopy } from './canvasNodePresentationCopy';
 import { projectDbtModelColumnStates } from './canvasDbtModelColumnAuthoring';
 import type { CanvasDependencyEdgeData } from './canvasDependencyEdgeModel';
+import type { GraphNodeColumn } from '../../plugins/graph/graphNodeColumnContracts';
 
 type CanvasNodePosition = { x: number; y: number };
 type MapCanonicalNodeToCanvasNodeArgs = {
@@ -265,7 +266,9 @@ export function mapDroppedCanonicalNodeToCanvasNode(
     nodes: [canonicalNode],
     edges: [],
   });
-  const columns = presentationTruth.columns.visible.map((column) => ({
+  const mapColumn = (
+    column: (typeof presentationTruth.columns.visible)[number]
+  ): GraphNodeColumn => ({
     name: column.name,
     type: column.type,
     output: canonicalNode.kind !== 'dvt:transform' || column.provenance === 'declared',
@@ -276,7 +279,9 @@ export function mapDroppedCanonicalNodeToCanvasNode(
     ...(column.reference == null ? {} : { reference: column.reference }),
     ...(column.operations == null ? {} : { operations: column.operations }),
     ...(column.description == null ? {} : { description: column.description }),
-  }));
+    ...(column.children == null ? {} : { children: column.children.map(mapColumn) }),
+  });
+  const columns = presentationTruth.columns.visible.map(mapColumn);
   const presentationCopy = buildCanvasNodePresentationCopy(copy, locale);
   const typeLabelFromMetadata =
     typeof canonicalNode.metadata?.typeLabel === 'string'
