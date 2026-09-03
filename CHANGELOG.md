@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.11.1 (2026-09-03)
+
+## What's Changed
+* refactor(contracts): Remove SQL-first preview contracts by @dunay2 in https://github.com/dunay2/dvt/pull/2858
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.11.0...v0.11.1
+
 ## 0.11.0 (2026-09-03)
 
 ## What's Changed
