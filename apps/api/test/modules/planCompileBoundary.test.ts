@@ -96,137 +96,31 @@ function describePlanCompileBoundaryCases(): void {
       expect(result.executionPolicy.requiresCapabilities).toEqual(['spark.submit']);
     });
 
-    it('preserves DVT runtime step configs without injecting dbt-only policy keys', async () => {
+    it('rejects a step from the deleted SQL-first runtime family', async () => {
       const planner = buildPlanCompilePlanner();
 
-      const result = await planner.buildPlan({
-        requestedBy: 'principal-1',
-        requestId: 'req-compile-dvt-substrait',
-        requestedAtIso: '2026-04-24T00:00:00.000Z',
-        graphSource: {
-          kind: 'generic-graph-v1',
-          sourceFamily: 'dvt-substrait',
-          sourceVersion: 'substrait-v1',
-          nodes: [
-            {
-              nodeId: 'prepare_orders',
-              stepKind: 'PREPARE_POSTGRES_TRANSFORM',
-              dependsOn: [],
-              stepTypeConfig: {
-                connectionRef: {
-                  schemaVersion: 'connection-ref.v1',
-                  connectionId: 'warehouse-a',
-                  provider: 'postgres',
-                },
-                targetSchema: 'analytics',
-                sourceSchema: 'raw',
-                sourceTable: 'orders',
-                sourceAlias: 'orders',
+      await expect(
+        planner.buildPlan({
+          requestedBy: 'principal-1',
+          requestId: 'req-compile-retired-sql',
+          requestedAtIso: '2026-04-24T00:00:00.000Z',
+          graphSource: {
+            kind: 'generic-graph-v1',
+            sourceFamily: 'dvt-substrait',
+            sourceVersion: 'substrait-v1',
+            nodes: [
+              {
+                nodeId: 'transform_orders',
+                stepKind: 'POSTGRES_SQL_TRANSFORM',
+                dependsOn: [],
               },
-            },
-            {
-              nodeId: 'transform_orders',
-              stepKind: 'POSTGRES_SQL_TRANSFORM',
-              dependsOn: ['prepare_orders'],
-              stepTypeConfig: {
-                connectionRef: {
-                  schemaVersion: 'connection-ref.v1',
-                  connectionId: 'warehouse-a',
-                  provider: 'postgres',
-                },
-                dialect: 'postgres',
-                entrypoint: 'models/analytics/model_orders.sql',
-                sql: 'select * from raw.orders',
-                sqlArtifact: {
-                  repo: 'dunay2/dvt',
-                  path: 'models/analytics/model_orders.sql',
-                  ref: 'refs/heads/main',
-                  commitSha: 'local',
-                  contentSha256: 'a'.repeat(64),
-                },
-                sourceSchema: 'raw',
-                sourceTable: 'orders',
-                sourceAlias: 'orders',
-                sinkSchema: 'analytics',
-                sinkTable: 'orders_daily',
-                materialization: 'table',
-                writeMode: 'replace',
-              },
-            },
-            {
-              nodeId: 'capture_orders',
-              stepKind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
-              dependsOn: ['transform_orders'],
-              stepTypeConfig: {
-                connectionRef: {
-                  schemaVersion: 'connection-ref.v1',
-                  connectionId: 'warehouse-a',
-                  provider: 'postgres',
-                },
-                sinkSchema: 'analytics',
-                sinkTable: 'orders_daily',
-                materialization: 'table',
-                writeMode: 'replace',
-              },
-            },
-          ],
-        },
-        selection: {
-          selectedNodeIds: ['prepare_orders', 'transform_orders', 'capture_orders'],
-        },
-      });
-
-      expect(result.plan.steps).toMatchObject([
-        {
-          stepId: 'prepare_orders',
-          kind: 'PREPARE_POSTGRES_TRANSFORM',
-          stepTypeConfig: {
-            connectionRef: {
-              schemaVersion: 'connection-ref.v1',
-              connectionId: 'warehouse-a',
-              provider: 'postgres',
-            },
-            targetSchema: 'analytics',
-            sourceSchema: 'raw',
-            sourceTable: 'orders',
-            sourceAlias: 'orders',
+            ],
           },
-        },
-        {
-          stepId: 'transform_orders',
-          kind: 'POSTGRES_SQL_TRANSFORM',
-          stepTypeConfig: {
-            connectionRef: {
-              schemaVersion: 'connection-ref.v1',
-              connectionId: 'warehouse-a',
-              provider: 'postgres',
-            },
-            dialect: 'postgres',
-            entrypoint: 'models/analytics/model_orders.sql',
-            sinkSchema: 'analytics',
-            sinkTable: 'orders_daily',
+          selection: {
+            selectedNodeIds: ['transform_orders'],
           },
-        },
-        {
-          stepId: 'capture_orders',
-          kind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
-          stepTypeConfig: {
-            connectionRef: {
-              schemaVersion: 'connection-ref.v1',
-              connectionId: 'warehouse-a',
-              provider: 'postgres',
-            },
-            sinkSchema: 'analytics',
-            sinkTable: 'orders_daily',
-            materialization: 'table',
-            writeMode: 'replace',
-          },
-        },
-      ]);
-      expect(result.plan.steps[0]?.stepTypeConfig).not.toHaveProperty('stepTimeoutMs');
-      expect(result.plan.steps[0]?.stepTypeConfig).not.toHaveProperty('concurrency');
-      expect(result.plan.steps[1]?.stepTypeConfig).not.toHaveProperty('stepTimeoutMs');
-      expect(result.plan.steps[1]?.stepTypeConfig).not.toHaveProperty('concurrency');
+        })
+      ).rejects.toThrow(/POSTGRES_SQL_TRANSFORM/);
     });
 
     it('rejects profile kinds that fall outside the allowed families', () => {
@@ -236,10 +130,10 @@ function describePlanCompileBoundaryCases(): void {
           profile: {
             ...PLAN_COMPILE_BOUNDARY.profile,
             allowedFamilies: ['spark'],
-            allowedStepKinds: ['POSTGRES_SQL_TRANSFORM'],
+            allowedStepKinds: [LOAD_OBJECT_FILE_TO_POSTGRES_STEP_KIND],
           },
         })
-      ).toThrow(/POSTGRES_SQL_TRANSFORM/);
+      ).toThrow(new RegExp(LOAD_OBJECT_FILE_TO_POSTGRES_STEP_KIND));
     });
   });
 }

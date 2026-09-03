@@ -169,8 +169,8 @@ export function buildPreviewBody(overrides: Record<string, unknown> = {}): Recor
 export function buildCompileBody(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
     context: { ...VALID_COMPILE_CONTEXT },
-    selection: { selectedNodeIds: ['source-node', 'transform-node', 'sink-node'] },
-    graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
+    selection: { selectedNodeIds: ['spark-job-1'] },
+    graphSource: VALID_SPARK_GRAPH_SOURCE,
     ...overrides,
   };
 }

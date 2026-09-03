@@ -4,12 +4,9 @@
  * the canonical compile planner recipe for this boundary.
  */
 import {
-  CaptureMaterializationEvidenceStepTypeConfigSchema,
   LOAD_OBJECT_FILE_TO_POSTGRES_EXECUTION_PROFILE,
   LOAD_OBJECT_FILE_TO_POSTGRES_STEP_KIND,
   LoadObjectFileToPostgresStepTypeConfigSchema,
-  PostgresSqlTransformStepTypeConfigSchema,
-  PreparePostgresTransformStepTypeConfigSchema,
   SparkJobStepTypeConfigSchema,
   StepTypeRegistry,
   SUPPORTED_START_RUN_TARGET_ADAPTERS,
@@ -22,16 +19,7 @@ import type { PlannerFacadeOptions } from '@dvt/planner';
 const PLAN_COMPILE_SUPPORTED_ADAPTERS = SUPPORTED_START_RUN_TARGET_ADAPTERS;
 
 type PlanCompileStepSchema =
-  | typeof PreparePostgresTransformStepTypeConfigSchema
-  | typeof PostgresSqlTransformStepTypeConfigSchema
-  | typeof CaptureMaterializationEvidenceStepTypeConfigSchema
-  | typeof SparkJobStepTypeConfigSchema
-  | typeof LoadObjectFileToPostgresStepTypeConfigSchema;
-
-const DEFAULT_EXECUTION_PROFILE = {
-  supportedAdapters: PLAN_COMPILE_SUPPORTED_ADAPTERS,
-  requiredCapabilities: [],
-} satisfies StepKindExecutionProfile;
+  typeof SparkJobStepTypeConfigSchema | typeof LoadObjectFileToPostgresStepTypeConfigSchema;
 
 const planCompileStepFactory: NonNullable<PlannerFacadeOptions['stepFactory']> = (
   node,
@@ -51,12 +39,6 @@ const planCompileStepFactory: NonNullable<PlannerFacadeOptions['stepFactory']> =
 };
 
 const BUILT_IN_STEP_FAMILY_DEFINITIONS = [
-  {
-    family: 'sql_transform',
-    sourceFamilies: ['transformation-design-graph'],
-    owner: 'built-in',
-    pluginExtendable: false,
-  },
   {
     family: 'spark',
     sourceFamilies: ['spark-job-graph'],
@@ -86,27 +68,6 @@ export interface StepFamilyDefinition {
 }
 
 const BUILT_IN_STEP_KIND_DEFINITIONS = [
-  {
-    kind: 'PREPARE_POSTGRES_TRANSFORM',
-    family: 'sql_transform',
-    schema: PreparePostgresTransformStepTypeConfigSchema,
-    executionProfile: DEFAULT_EXECUTION_PROFILE,
-    source: 'built-in',
-  },
-  {
-    kind: 'POSTGRES_SQL_TRANSFORM',
-    family: 'sql_transform',
-    schema: PostgresSqlTransformStepTypeConfigSchema,
-    executionProfile: DEFAULT_EXECUTION_PROFILE,
-    source: 'built-in',
-  },
-  {
-    kind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
-    family: 'sql_transform',
-    schema: CaptureMaterializationEvidenceStepTypeConfigSchema,
-    executionProfile: DEFAULT_EXECUTION_PROFILE,
-    source: 'built-in',
-  },
   {
     kind: 'SPARK_JOB',
     family: 'spark',
