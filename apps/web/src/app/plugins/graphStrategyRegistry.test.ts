@@ -11,27 +11,18 @@ import type { RuntimeCapabilities } from './registry';
 
 describe('resolveCanvasGraphStrategy', () => {
   it('lists canvas runtime registrations with matching canvas kind and graph strategy ids', () => {
-    expect(
-      getCanvasRuntimeRegistrations().map((registration) => ({
-        kind: registration.kind,
-        executionKind: registration.executionStrategy.kind,
-        graphStrategyId: registration.graphStrategy.id,
-        surfaceStrategyId: registration.surfaceStrategy.id,
-      }))
-    ).toEqual([
-      {
-        kind: 'dbt',
-        executionKind: 'planner_generic_preview',
-        graphStrategyId: 'dbt',
-        surfaceStrategyId: 'dbt-contextual-canvas',
-      },
-      {
-        kind: 'transformation',
-        executionKind: 'transformation_preview',
-        graphStrategyId: 'transformation',
-        surfaceStrategyId: 'dvt-transformation-contextual-canvas',
-      },
-    ]);
+    const registrations = getCanvasRuntimeRegistrations();
+    const dbt = registrations.find((registration) => registration.kind === 'dbt');
+    const transformation = registrations.find(
+      (registration) => registration.kind === 'transformation'
+    );
+
+    expect(dbt?.executionStrategy.kind).toBe('planner_generic_preview');
+    expect(dbt?.graphStrategy.id).toBe('dbt');
+    expect(dbt?.surfaceStrategy.id).toBe('dbt-contextual-canvas');
+    expect(transformation?.executionStrategy.kind).toBe('not_executable');
+    expect(transformation?.graphStrategy.id).toBe('transformation');
+    expect(transformation?.surfaceStrategy.id).toBe('dvt-transformation-contextual-canvas');
   });
 
   it('filters canvas runtime registrations through runtime plugin capabilities', () => {

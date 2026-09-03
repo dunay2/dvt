@@ -113,6 +113,7 @@ fowlerSignals:
 allowedImplementationSurfaces:
   - apps/web/src/app/plugins/dvt/dvtContributions.ts
   - apps/web/src/app/plugins/dvt/dvtContributions.architecture.test.ts
+  - apps/web/src/app/plugins/graphStrategyRegistry.test.ts
   - apps/web/src/app/views/canvas/canvasRuntimePolicy.test.ts
   - apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts
   - docs/architecture/components/web/graph/graph-frontend-architecture.md

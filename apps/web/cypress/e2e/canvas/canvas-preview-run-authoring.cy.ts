@@ -1,6 +1,7 @@
 import {
   clickCanvasContextMenuItem,
   expectPreviewExecutionPlanUnavailableFromCanvasContextMenu,
+  getVisibleCanvasNode,
   openCanvasContextMenuAt,
 } from '../../support/canvasExecutionSelection';
 import { getE2eApiCalls, waitForE2eApiCall } from '../../support/e2eApiStub';
@@ -40,6 +41,28 @@ describe('Canvas preview-run authoring guardrails', () => {
     });
     cy.get('body').type('{esc}', { force: true });
     cy.get('[role="dialog"]').should('not.exist');
+    expectPreviewExecutionPlanUnavailableFromCanvasContextMenu();
+    cy.get('[data-slot="canvas-toolbar-run-command"]').should('not.exist');
+    cy.then(() => {
+      expect(getE2eApiCalls('/plans/preview', 'POST')).to.have.length(0);
+      expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
+    });
+  });
+
+  it('keeps canonical Transform authoring visible without the retired execution actions', () => {
+    stubCanvasRuntimeApis({ title: 'Canonical Transform' });
+
+    visitCanvasWithSettledBootstrap();
+
+    cy.contains('Canonical Transform').should('be.visible');
+    getVisibleCanvasNode('src_orders').find('[data-slot="canvas-node-shell"]').rightclick();
+    cy.get('[data-slot="canvas-node-context-menu"]').should('be.visible');
+    cy.get('[data-slot="canvas-node-context-menu-item"]')
+      .should('have.length.greaterThan', 0)
+      .should(($items) => {
+        expect($items.text()).not.to.match(/Select for execution|Seleccionar para ejecución/);
+      });
+    cy.get('body').type('{esc}', { force: true });
     expectPreviewExecutionPlanUnavailableFromCanvasContextMenu();
     cy.get('[data-slot="canvas-toolbar-run-command"]').should('not.exist');
     cy.then(() => {
