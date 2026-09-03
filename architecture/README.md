@@ -1,35 +1,41 @@
 # Source-first architecture visibility spike
 
-This directory is deliberately generated from Git rather than maintained as a second architecture truth.
+This directory is generated from Git. It is not a second architecture authority.
 
 ## Authority
 
 1. Current source, tests, configuration and composition remain authoritative.
-2. `source-first.config.json` only selects bounded contexts to visualize.
-3. `tools/generate-source-first.mjs` resolves `origin/main` to an exact commit SHA and derives:
-   - package inventory;
-   - source modules from the physical `src/` structure;
-   - `@ownedConcern` / `@decision` metadata when it exists;
-   - internal module dependencies from source imports;
-   - dependencies among the selected DVT workspaces;
-   - exact file/folder evidence with commit-pinned GitHub links.
-4. LikeC4 is a projection and navigation layer, not a replacement for the codebase.
+2. `source-first.config.json` selects current contexts and their human-facing architectural kind (`app`, `worker`, `adapter`, `plugin`, `package`).
+3. `tools/generate-source-first.mjs` resolves `origin/main` to an exact SHA and derives architecture from implementation source only.
+4. LikeC4 is a projection and navigation layer. Full tracked-file evidence remains machine-readable JSON.
 
-## Provenance labels
+## File classes
 
-- `SOURCE-FIRST`: bounded-context description is anchored to the current package source.
-- `STRUCTURE-DERIVED`: module/folder grouping is derived mechanically from the Git tree.
-- `SOURCE-DERIVED`: file identity and links come directly from Git blobs.
+The generator separates:
+
+- `implementation-source`: source that may contribute architecture/dependency edges;
+- `test`: explicit test directories plus `*.test.*` / `*.spec.*` files;
+- `test-support`: testing/fixtures/support sources;
+- `docs`, `package-root`, and `other`.
+
+Tests and test-support files never create runtime dependency arrows. They remain present in the exact Git inventory JSON with blob SHA and commit-pinned links.
+
+## Provenance
+
+- `SOURCE-FIRST`: context description is anchored to current source/package metadata.
+- `STRUCTURE-DERIVED`: implementation module grouping is mechanically derived from `src/`.
+- `SOURCE-DERIVED`: implementation evidence and file identity come from exact Git blobs.
 
 No TARGET component is generated automatically. Future architecture must be modeled separately and explicitly.
 
-## Current spike scope
+## Views
 
-- `@dvt/engine`
-- `@dvt/planner`
-- `@dvt/artifacts`
-- `@dvt/state-store`
-- `@dvt/run-domain`
-- `@dvt/delivery`
+The preview provides:
 
-The workflow validates the isolated generated model with LikeC4 before publishing any preview.
+- one current DVT landscape;
+- focused views by architectural group;
+- per-context implementation-module views;
+- per-module implementation evidence;
+- JSON inventories containing all tracked files, including tests/docs/configuration.
+
+The workflow runs `likec4 validate` before build and publishes only a validated static preview.

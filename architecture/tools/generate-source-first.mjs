@@ -3,6 +3,12 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+const SOURCE_EXT_RE = /\.(?:[cm]?[jt]sx?)$/i;
+const TEST_FILE_RE = /\.(?:test|spec)\.[cm]?[jt]sx?$/i;
+const TEST_DIR_RE = /(?:^|\/)(?:test|tests|__tests__|cypress)(?:\/|$)/i;
+const TEST_SUPPORT_RE = /(?:^|\/)(?:testing|test-support|fixtures|__fixtures__)(?:\/|$)|\.test\.support\.[cm]?[jt]sx?$/i;
+const ALLOWED_CONTEXT_KINDS = new Set(['package', 'app', 'worker', 'adapter', 'plugin']);
+
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const architectureDir = dirname(scriptDir);
 const config = JSON.parse(readFileSync(join(architectureDir, 'source-first.config.json'), 'utf8'));
@@ -19,60 +25,74 @@ mkdirSync(generatedDir, { recursive: true });
 for (const ctx of contexts) {
   writeFileSync(join(generatedDir, `${ctx.id}-inventory.json`), JSON.stringify(inventoryPayload(ctx), null, 2) + '\n');
 }
-writeFileSync(join(generatedDir, 'summary.json'), JSON.stringify({
-  schemaVersion: 4,
-  repository: config.repository,
-  baselineRef: config.baselineRef,
-  baselineSha,
-  groups: groupContexts(contexts).map(([name, members]) => ({ name, contextIds: members.map((ctx) => ctx.id) })),
-  contexts: contexts.map((ctx) => ({
-    id: ctx.id,
-    group: ctx.group,
-    packageName: ctx.packageName,
-    path: ctx.path,
-    packageConcern: ctx.packageConcern,
-    packageConcernSource: ctx.packageConcernSource,
-    counts: ctx.counts,
-    modules: ctx.modules.map((m) => ({
-      id: m.id,
-      title: m.title,
-      kind: m.kind,
-      fileCount: m.files.length,
-      ownedConcerns: m.ownedConcerns,
-    })),
-  })),
-}, null, 2) + '\n');
+writeFileSync(
+  join(generatedDir, 'summary.json'),
+  JSON.stringify(
+    {
+      schemaVersion: 5,
+      repository: config.repository,
+      baselineRef: config.baselineRef,
+      baselineSha,
+      groups: groupContexts(contexts).map(([name, members]) => ({ name, contextIds: members.map((ctx) => ctx.id) })),
+      contexts: contexts.map((ctx) => ({
+        id: ctx.id,
+        kind: ctx.kind,
+        group: ctx.group,
+        packageName: ctx.packageName,
+        path: ctx.path,
+        packageConcern: ctx.packageConcern,
+        packageConcernSource: ctx.packageConcernSource,
+        counts: ctx.counts,
+        modules: ctx.modules.map((module) => ({
+          id: module.id,
+          title: module.title,
+          kind: module.kind,
+          implementationFileCount: module.files.length,
+          ownedConcerns: module.ownedConcerns,
+        })),
+      })),
+    },
+    null,
+    2,
+  ) + '\n',
+);
 writeFileSync(join(generatedDir, 'source-first.c4'), render(contexts));
 
-console.log(`Generated source-first architecture v4 at ${baselineSha}`);
+console.log(`Generated source-first architecture v5 at ${baselineSha}`);
 for (const ctx of contexts) {
-  console.log(`${ctx.packageName}: ${ctx.counts.trackedFiles} tracked, ${ctx.counts.sourceFiles} src, ${ctx.counts.testFiles} tests, ${ctx.modules.length} modules`);
+  console.log(
+    `${ctx.packageName}: ${ctx.counts.trackedFiles} tracked, ${ctx.counts.implementationFiles} implementation, ${ctx.counts.testFiles} tests, ${ctx.counts.testSupportFiles} test-support, ${ctx.modules.length} modules`,
+  );
 }
 
 function loadContext(def) {
+  const kind = def.kind ?? 'package';
+  if (!ALLOWED_CONTEXT_KINDS.has(kind)) throw new Error(`Unsupported context kind ${kind} for ${def.id}`);
+
   const files = git(['ls-tree', '-r', '-l', baselineSha, '--', def.path])
     .split(/\r?\n/)
     .filter(Boolean)
     .map((line) => parseTreeLine(line, def.path))
     .filter(Boolean)
+    .map((file) => ({ ...file, classification: classifyTrackedFile(file.relativePath) }))
     .sort((a, b) => a.relativePath.localeCompare(b.relativePath));
   if (!files.length) throw new Error(`No tracked files under ${def.path}@${baselineSha}`);
 
-  const packageFile = files.find((f) => f.relativePath === 'package.json');
+  const packageFile = files.find((file) => file.relativePath === 'package.json');
   if (!packageFile) throw new Error(`Missing package.json in ${def.path}`);
   const packageJson = JSON.parse(git(['show', `${baselineSha}:${packageFile.path}`]));
   const packageName = packageJson.name ?? def.path;
 
-  const sourceFiles = files
-    .filter((f) => f.relativePath.startsWith('src/') && /\.(?:[cm]?js|jsx|ts|tsx)$/.test(f.relativePath))
+  const implementationFiles = files
+    .filter((file) => file.classification === 'implementation-source')
     .map((file) => {
       const content = git(['show', `${baselineSha}:${file.path}`]);
       return { ...file, content, metadata: parseMetadata(content), imports: parseImports(content) };
     });
-  const sourceByPath = new Map(sourceFiles.map((f) => [f.relativePath, f]));
+  const implementationByPath = new Map(implementationFiles.map((file) => [file.relativePath, file]));
 
   const groups = new Map();
-  for (const file of sourceFiles) {
+  for (const file of implementationFiles) {
     const key = moduleKey(file.relativePath);
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(file);
@@ -80,14 +100,14 @@ function loadContext(def) {
   const modules = [...groups.entries()]
     .map(([key, moduleFiles]) => buildModule(key, moduleFiles, def.path))
     .sort((a, b) => a.title.localeCompare(b.title));
-  const moduleByKey = new Map(modules.map((m) => [m.key, m]));
+  const moduleByKey = new Map(modules.map((module) => [module.key, module]));
 
   const internal = new Map();
-  for (const source of sourceFiles) {
+  for (const source of implementationFiles) {
     const from = moduleByKey.get(moduleKey(source.relativePath));
     for (const specifier of source.imports) {
       if (!specifier.startsWith('.')) continue;
-      const targetFile = resolveRelativeImport(source.relativePath, specifier, sourceByPath);
+      const targetFile = resolveRelativeImport(source.relativePath, specifier, implementationByPath);
       if (!targetFile) continue;
       const to = moduleByKey.get(moduleKey(targetFile.relativePath));
       if (!to || from.id === to.id) continue;
@@ -96,27 +116,31 @@ function loadContext(def) {
     }
   }
 
-  const index = sourceFiles.find((f) => f.relativePath === 'src/index.ts');
+  const index = implementationFiles.find((file) => file.relativePath === 'src/index.ts');
   const concern = resolvePackageConcern(index, packageJson, def.path);
   const counts = {
     trackedFiles: files.length,
-    sourceFiles: files.filter((f) => f.relativePath.startsWith('src/')).length,
-    testFiles: files.filter((f) => /^tests?\//.test(f.relativePath)).length,
-    docsFiles: files.filter((f) => f.relativePath.startsWith('docs/')).length,
-    packageRootFiles: files.filter((f) => !f.relativePath.includes('/')).length,
-    filesWithOwnedConcern: sourceFiles.filter((f) => Boolean(f.metadata.ownedConcern)).length,
-    filesWithDecision: sourceFiles.filter((f) => Boolean(f.metadata.decision)).length,
+    sourceTrackedFiles: files.filter((file) => file.relativePath.startsWith('src/') && SOURCE_EXT_RE.test(file.relativePath)).length,
+    implementationFiles: implementationFiles.length,
+    testFiles: files.filter((file) => file.classification === 'test').length,
+    testSupportFiles: files.filter((file) => file.classification === 'test-support').length,
+    docsFiles: files.filter((file) => file.classification === 'docs').length,
+    packageRootFiles: files.filter((file) => file.classification === 'package-root').length,
+    filesWithOwnedConcern: implementationFiles.filter((file) => Boolean(file.metadata.ownedConcern)).length,
+    filesWithDecision: implementationFiles.filter((file) => Boolean(file.metadata.decision)).length,
+    visualizedEvidenceFiles: implementationFiles.length,
   };
 
   return {
     id: def.id,
+    kind,
     group: def.group ?? 'Ungrouped',
     path: def.path,
     packageName,
     packageConcern: concern.text,
     packageConcernSource: concern.source,
     files,
-    sourceFiles,
+    implementationFiles,
     modules,
     internalEdges: [...internal.values()],
     workspaceEdges: [],
@@ -124,19 +148,36 @@ function loadContext(def) {
   };
 }
 
+function classifyTrackedFile(relativePath) {
+  if (isTestSupportFile(relativePath)) return 'test-support';
+  if (isTestFile(relativePath)) return 'test';
+  if (relativePath.startsWith('docs/') || /(?:^|\/)README\.md$/i.test(relativePath)) return 'docs';
+  if (relativePath.startsWith('src/') && SOURCE_EXT_RE.test(relativePath)) return 'implementation-source';
+  if (!relativePath.includes('/')) return 'package-root';
+  return 'other';
+}
+
+function isTestFile(relativePath) {
+  return TEST_FILE_RE.test(relativePath) || TEST_DIR_RE.test(relativePath);
+}
+
+function isTestSupportFile(relativePath) {
+  return TEST_SUPPORT_RE.test(relativePath);
+}
+
 function resolvePackageConcern(index, packageJson, path) {
   if (index?.metadata.ownedConcern) return { text: index.metadata.ownedConcern, source: 'OWNED_CONCERN' };
   if (packageJson.description) return { text: normalizeProse(packageJson.description), source: 'PACKAGE_JSON_DESCRIPTION' };
   if (index?.metadata.headerSummary) return { text: index.metadata.headerSummary, source: 'SOURCE_HEADER' };
   return {
-    text: `No package-level concern marker found in src/index.ts for ${path}; inspect source modules and evidence.`,
+    text: `No package-level concern marker found in src/index.ts for ${path}; inspect implementation modules and source evidence.`,
     source: 'NO_PACKAGE_CONCERN_MARKER',
   };
 }
 
 function deriveWorkspaceEdges(ctx, packageByName) {
   const counts = new Map();
-  for (const file of ctx.sourceFiles) {
+  for (const file of ctx.implementationFiles) {
     for (const specifier of file.imports) {
       for (const [name, target] of packageByName) {
         if (target.id === ctx.id) continue;
@@ -188,7 +229,7 @@ function extractCommentField(content, markers) {
 
     for (let cursor = index + 1; cursor < Math.min(lines.length, index + 12); cursor += 1) {
       const raw = lines[cursor];
-      if (/\*\//.test(raw)) break;
+      if (/^\s*\*\/\s*$/.test(raw)) break;
       const next = cleanCommentLine(raw);
       if (!next) break;
       if (next.startsWith('@') || /^Owned\s+concern:/i.test(next)) break;
@@ -207,10 +248,11 @@ function isCommentContinuation(line) {
 }
 
 function cleanCommentLine(line) {
+  if (/^\s*\/\*\*?\s*$/.test(line) || /^\s*\*\/\s*$/.test(line)) return '';
   return line
     .replace(/^\s*\/\*\*?\s?/, '')
-    .replace(/^\s*\*\s?/, '')
     .replace(/\*\/\s*$/, '')
+    .replace(/^\s*\*\s?/, '')
     .replace(/^\s*\/\/\s?/, '')
     .trim();
 }
@@ -228,6 +270,7 @@ function headerSummary(content) {
       if (result.length) break;
       continue;
     }
+    if (!/[A-Za-z0-9]/.test(text)) continue;
     if (isDecorativeHeader(text) || text.startsWith('@') || /^Governing:/i.test(text) || /^Owned\s+concern:/i.test(text)) continue;
     result.push(text);
     const prose = normalizeProse(result.join(' '));
@@ -266,8 +309,8 @@ function buildModule(key, files, scope) {
     sourcePath,
     sourceUrl: `https://github.com/${config.repository}/tree/${baselineSha}/${encodePath(sourcePath)}`,
     files: [...files].sort((a, b) => a.relativePath.localeCompare(b.relativePath)),
-    ownedConcerns: [...new Set(files.map((f) => f.metadata.ownedConcern).filter(Boolean))],
-    decisions: [...new Set(files.map((f) => f.metadata.decision).filter(Boolean))],
+    ownedConcerns: [...new Set(files.map((file) => file.metadata.ownedConcern).filter(Boolean))],
+    decisions: [...new Set(files.map((file) => file.metadata.decision).filter(Boolean))],
   };
 }
 
@@ -284,41 +327,51 @@ function humanize(value) {
   return value
     .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
     .replace(/[-_]+/g, ' ')
-    .replace(/\b\w/g, (m) => m.toUpperCase());
+    .replace(/\b\w/g, (match) => match.toUpperCase());
 }
 
-function resolveRelativeImport(sourcePath, specifier, sourceByPath) {
+function resolveRelativeImport(sourcePath, specifier, implementationByPath) {
   const raw = posix.normalize(posix.join(posix.dirname(sourcePath), specifier.split('?')[0].split('#')[0]));
   const noJs = raw.replace(/\.(?:mjs|cjs|js|jsx)$/, '');
-  const candidates = [raw, `${noJs}.ts`, `${noJs}.tsx`, `${noJs}.js`, `${noJs}.mjs`, `${noJs}/index.ts`, `${noJs}/index.tsx`, `${raw}/index.ts`];
-  for (const candidate of candidates) if (sourceByPath.has(candidate)) return sourceByPath.get(candidate);
+  const candidates = [
+    raw,
+    `${noJs}.ts`,
+    `${noJs}.tsx`,
+    `${noJs}.js`,
+    `${noJs}.mjs`,
+    `${noJs}/index.ts`,
+    `${noJs}/index.tsx`,
+    `${raw}/index.ts`,
+  ];
+  for (const candidate of candidates) if (implementationByPath.has(candidate)) return implementationByPath.get(candidate);
   return undefined;
 }
 
 function inventoryPayload(ctx) {
   return {
-    schemaVersion: 4,
+    schemaVersion: 5,
     generatedFrom: 'git-tree',
     repository: config.repository,
     baselineRef: config.baselineRef,
     baselineSha,
+    kind: ctx.kind,
     group: ctx.group,
     packageName: ctx.packageName,
     scope: ctx.path,
     packageConcern: ctx.packageConcern,
     packageConcernSource: ctx.packageConcernSource,
     counts: ctx.counts,
-    modules: ctx.modules.map((m) => ({
-      id: m.id,
-      key: m.key,
-      title: m.title,
-      kind: m.kind,
+    modules: ctx.modules.map((module) => ({
+      id: module.id,
+      key: module.key,
+      title: module.title,
+      kind: module.kind,
       provenance: 'STRUCTURE-DERIVED',
-      sourcePath: m.sourcePath,
-      fileCount: m.files.length,
-      ownedConcerns: m.ownedConcerns,
-      decisions: m.decisions,
-      files: m.files.map((f) => f.relativePath),
+      sourcePath: module.sourcePath,
+      implementationFileCount: module.files.length,
+      ownedConcerns: module.ownedConcerns,
+      decisions: module.decisions,
+      files: module.files.map((file) => file.relativePath),
     })),
     internalModuleDependencies: ctx.internalEdges,
     selectedWorkspaceDependencies: ctx.workspaceEdges,
@@ -342,7 +395,7 @@ function render(all) {
     'model {',
     "  dvt = system 'DVT+ — source-first architecture' {",
     '    #asIs',
-    "    description 'Generated from the current Git tree. Package/module structure and dependency arrows are source-derived; target architecture is never promoted automatically.'",
+    "    description 'Generated from the current Git tree. Runtime dependency arrows use implementation imports only; target architecture is never promoted automatically.'",
     '    metadata {',
     `      repository '${esc(config.repository)}'`,
     `      baselineSha '${baselineSha}'`,
@@ -358,42 +411,50 @@ function render(all) {
     const inventoryId = `inventory_${safeId(ctx.id)}`;
     const refs = new Map();
     evidenceRefs.set(ctx.id, refs);
-    lines.push(`  ${inventoryId} = inventory '${esc(ctx.packageName)} — exact Git evidence' {`);
+    lines.push(`  ${inventoryId} = inventory '${esc(ctx.packageName)} — implementation evidence' {`);
     lines.push('    #sourceDerived');
-    lines.push(`    description '${esc(`${ctx.counts.trackedFiles} tracked files from ${ctx.path}@${baselineSha.slice(0, 8)}.`)}'`);
+    lines.push(
+      `    description '${esc(`${ctx.counts.implementationFiles} implementation files from ${ctx.path}@${baselineSha.slice(0, 8)}. Full ${ctx.counts.trackedFiles}-file Git inventory remains in the generated JSON evidence.`)}'`,
+    );
     lines.push('    metadata {');
     lines.push("      provenance 'SOURCE-DERIVED'");
     lines.push(`      baselineSha '${baselineSha}'`);
     lines.push(`      sourceRoot '${esc(ctx.path)}'`);
     lines.push(`      trackedFiles '${ctx.counts.trackedFiles}'`);
+    lines.push(`      implementationFiles '${ctx.counts.implementationFiles}'`);
+    lines.push(`      testFiles '${ctx.counts.testFiles}'`);
+    lines.push(`      testSupportFiles '${ctx.counts.testSupportFiles}'`);
     lines.push('    }');
     lines.push(`    link https://github.com/${config.repository}/tree/${baselineSha}/${encodePath(ctx.path)} 'Pinned package tree'`);
-    for (const file of ctx.files) {
+
+    for (const file of ctx.implementationFiles) {
       const id = `file_${safeId(ctx.id)}_${safeId(file.relativePath)}_${file.blobSha.slice(0, 7)}`;
       refs.set(file.relativePath, `${inventoryId}.${id}`);
       lines.push(`    ${id} = file '${esc(file.relativePath)}' {`);
       lines.push('      #sourceDerived');
-      lines.push("      description 'Tracked file from the pinned Git tree.'");
+      lines.push("      description 'Implementation source from the pinned Git tree.'");
       lines.push('      metadata {');
       lines.push("        provenance 'SOURCE-DERIVED'");
       lines.push(`        sourcePath '${esc(file.path)}'`);
       lines.push(`        blobSha '${file.blobSha}'`);
       lines.push(`        baselineSha '${baselineSha}'`);
       lines.push('      }');
-      lines.push(`      link ${file.githubUrl} 'Open pinned source'`);
+      lines.push(`      link ${file.githubUrl} 'Open pinned implementation source'`);
       lines.push('    }');
     }
     lines.push('  }');
   }
 
   for (const ctx of all) {
-    for (const edge of ctx.workspaceEdges) lines.push(`  dvt.pkg_${safeId(edge.from)} .uses dvt.pkg_${safeId(edge.to)} 'workspace imports (${edge.count})'`);
+    for (const edge of ctx.workspaceEdges) {
+      lines.push(`  dvt.ctx_${safeId(edge.from)} .uses dvt.ctx_${safeId(edge.to)} 'implementation imports (${edge.count})'`);
+    }
   }
 
   lines.push('}', '', 'views {');
   lines.push('  view dvtSourceFirst of dvt {');
   lines.push("    title 'DVT+ — Source-first bounded contexts'");
-  lines.push(`    description 'Generated from main@${baselineSha.slice(0, 8)}. Package arrows come from source imports.'`);
+  lines.push(`    description 'Generated from main@${baselineSha.slice(0, 8)}. Dependency arrows exclude tests and test-support code.'`);
   lines.push('    include *');
   lines.push('    autoLayout LeftRight');
   lines.push('  }', '');
@@ -401,24 +462,28 @@ function render(all) {
   for (const [groupName, members] of groupContexts(all)) {
     lines.push(`  view group_${safeId(groupName)} {`);
     lines.push(`    title 'DVT+ — ${esc(groupName)}'`);
-    lines.push(`    description '${esc(`Focused source-first view of ${members.length} bounded context(s) at main@${baselineSha.slice(0, 8)}.`)}'`);
-    for (const ctx of members) lines.push(`    include dvt.pkg_${safeId(ctx.id)}`);
+    lines.push(`    description '${esc(`Focused source-first view of ${members.length} current context(s) at main@${baselineSha.slice(0, 8)}.`)}'`);
+    for (const ctx of members) lines.push(`    include dvt.ctx_${safeId(ctx.id)}`);
     lines.push('    autoLayout LeftRight');
     lines.push('  }', '');
   }
 
   for (const ctx of all) {
-    lines.push(`  view ${safeId(ctx.id)}Boundary of dvt.pkg_${safeId(ctx.id)} {`);
-    lines.push(`    title '${esc(ctx.packageName)} — source modules and dependencies'`);
-    lines.push(`    description '${esc(`STRUCTURE-DERIVED modules from ${ctx.path}/src at ${baselineSha.slice(0, 8)}.`)}'`);
+    lines.push(`  view ${safeId(ctx.id)}Boundary of dvt.ctx_${safeId(ctx.id)} {`);
+    lines.push(`    title '${esc(ctx.packageName)} — implementation modules and dependencies'`);
+    lines.push(
+      `    description '${esc(`STRUCTURE-DERIVED modules from implementation source at ${ctx.path}/src, pinned to ${baselineSha.slice(0, 8)}. Test-only imports are excluded.`)}'`,
+    );
     lines.push('    include *');
     lines.push('    autoLayout LeftRight');
     lines.push('  }', '');
 
     const inventoryId = `inventory_${safeId(ctx.id)}`;
-    lines.push(`  view ${safeId(ctx.id)}Inventory of ${inventoryId} {`);
-    lines.push(`    title '${esc(ctx.packageName)} — complete Git evidence'`);
-    lines.push(`    description '${esc(`${ctx.counts.trackedFiles} tracked files; use focused module views for readable evidence.`)}'`);
+    lines.push(`  view ${safeId(ctx.id)}ImplementationEvidence of ${inventoryId} {`);
+    lines.push(`    title '${esc(ctx.packageName)} — implementation evidence'`);
+    lines.push(
+      `    description '${esc(`${ctx.counts.implementationFiles} source file(s) visualized; ${ctx.counts.testFiles} test and ${ctx.counts.testSupportFiles} test-support file(s) remain machine-readable in JSON evidence.`)}'`,
+    );
     lines.push('    include *');
     lines.push('    autoLayout TopBottom');
     lines.push('  }', '');
@@ -426,24 +491,9 @@ function render(all) {
     const refs = evidenceRefs.get(ctx.id);
     for (const module of ctx.modules) {
       lines.push(`  view ${safeId(ctx.id)}Files_${safeId(module.key)} {`);
-      lines.push(`    title '${esc(ctx.packageName)} — files for ${module.title}'`);
-      lines.push(`    description '${esc(`SOURCE-DERIVED evidence for ${module.sourcePath}. ${module.files.length} source file(s).`)}'`);
+      lines.push(`    title '${esc(ctx.packageName)} — implementation files for ${module.title}'`);
+      lines.push(`    description '${esc(`SOURCE-DERIVED evidence for ${module.sourcePath}. ${module.files.length} implementation file(s).`)}'`);
       for (const file of module.files) lines.push(`    include ${refs.get(file.relativePath)}`);
-      lines.push('    autoLayout TopBottom');
-      lines.push('  }', '');
-    }
-
-    for (const [suffix, predicate, title] of [
-      ['Tests', (path) => /^tests?\//.test(path), 'tests'],
-      ['Docs', (path) => path.startsWith('docs/'), 'docs'],
-      ['Root', (path) => !path.includes('/'), 'package root files'],
-    ]) {
-      const selected = ctx.files.filter((file) => predicate(file.relativePath));
-      if (!selected.length) continue;
-      lines.push(`  view ${safeId(ctx.id)}${suffix} {`);
-      lines.push(`    title '${esc(ctx.packageName)} — ${title}'`);
-      lines.push(`    description '${selected.length} SOURCE-DERIVED file(s).'`);
-      for (const file of selected) lines.push(`    include ${refs.get(file.relativePath)}`);
       lines.push('    autoLayout TopBottom');
       lines.push('  }', '');
     }
@@ -454,38 +504,44 @@ function render(all) {
 }
 
 function emitContext(ctx, lines) {
-  lines.push(`    pkg_${safeId(ctx.id)} = package '${esc(ctx.packageName)}' {`);
+  lines.push(`    ctx_${safeId(ctx.id)} = ${ctx.kind} '${esc(ctx.packageName)}' {`);
   lines.push('      #asIs');
   lines.push(`      description '${esc(ctx.packageConcern)}'`);
   lines.push('      metadata {');
   lines.push("        provenance 'SOURCE-FIRST'");
   lines.push(`        architectureGroup '${esc(ctx.group)}'`);
+  lines.push(`        contextKind '${ctx.kind}'`);
   lines.push(`        packageConcernSource '${ctx.packageConcernSource}'`);
   lines.push(`        sourceRoot '${esc(ctx.path)}'`);
   lines.push(`        baselineSha '${baselineSha}'`);
   lines.push(`        trackedFiles '${ctx.counts.trackedFiles}'`);
-  lines.push(`        sourceFiles '${ctx.counts.sourceFiles}'`);
+  lines.push(`        implementationFiles '${ctx.counts.implementationFiles}'`);
   lines.push(`        testFiles '${ctx.counts.testFiles}'`);
+  lines.push(`        testSupportFiles '${ctx.counts.testSupportFiles}'`);
   lines.push('      }');
-  lines.push(`      link https://github.com/${config.repository}/tree/${baselineSha}/${encodePath(ctx.path)} 'Pinned package tree'`);
+  lines.push(`      link https://github.com/${config.repository}/tree/${baselineSha}/${encodePath(ctx.path)} 'Pinned context tree'`);
 
   for (const module of ctx.modules) {
     lines.push(`      ${module.id} = ${module.kind} '${esc(module.title)}' {`);
     lines.push('        #structureDerived');
-    lines.push(`        description '${esc(module.ownedConcerns.length ? module.ownedConcerns.join(' | ') : `Source grouping observed at ${module.sourcePath}.`)}'`);
+    lines.push(
+      `        description '${esc(module.ownedConcerns.length ? module.ownedConcerns.join(' | ') : `Implementation grouping observed at ${module.sourcePath}.`)}'`,
+    );
     lines.push('        metadata {');
     lines.push("          provenance 'STRUCTURE-DERIVED'");
     lines.push(`          sourcePath '${esc(module.sourcePath)}'`);
-    lines.push(`          fileCount '${module.files.length}'`);
+    lines.push(`          implementationFileCount '${module.files.length}'`);
     lines.push(`          evidenceView '${safeId(ctx.id)}Files_${safeId(module.key)}'`);
     if (module.ownedConcerns.length) lines.push(`          ownedConcernCount '${module.ownedConcerns.length}'`);
     if (module.decisions.length) lines.push(`          decisionCount '${module.decisions.length}'`);
     lines.push('        }');
-    lines.push(`        link ${module.sourceUrl} 'Pinned source module'`);
+    lines.push(`        link ${module.sourceUrl} 'Pinned implementation module'`);
     lines.push('      }');
   }
 
-  for (const edge of ctx.internalEdges) lines.push(`      ${edge.from} .uses ${edge.to} 'source imports (${edge.count})'`);
+  for (const edge of ctx.internalEdges) {
+    lines.push(`      ${edge.from} .uses ${edge.to} 'implementation imports (${edge.count})'`);
+  }
   lines.push('    }');
 }
 

@@ -1,6 +1,8 @@
 specification {
   element system
   element package
+  element app
+  element plugin
   element component
   element port {
     style { shape rectangle }
@@ -11,7 +13,6 @@ specification {
     style { shape cylinder }
   }
   element inventory
-  element folder
   element file {
     style { shape rectangle }
   }

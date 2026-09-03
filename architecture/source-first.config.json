@@ -1,39 +1,39 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "repository": "dunay2/dvt",
   "baselineRef": "origin/main",
   "contexts": [
-    { "id": "contracts", "path": "packages/@dvt/contracts", "group": "Foundation & Contracts" },
-    { "id": "crypto", "path": "packages/@dvt/crypto", "group": "Foundation & Contracts" },
+    { "id": "contracts", "path": "packages/@dvt/contracts", "group": "Foundation & Contracts", "kind": "package" },
+    { "id": "crypto", "path": "packages/@dvt/crypto", "group": "Foundation & Contracts", "kind": "package" },
 
-    { "id": "planner", "path": "packages/@dvt/planner", "group": "Planning & Interpretation" },
-    { "id": "planVerifier", "path": "packages/@dvt/plan-verifier", "group": "Planning & Interpretation" },
-    { "id": "planInterpreter", "path": "packages/@dvt/plan-interpreter", "group": "Planning & Interpretation" },
-    { "id": "dsl", "path": "packages/@dvt/dsl", "group": "Planning & Interpretation" },
+    { "id": "planner", "path": "packages/@dvt/planner", "group": "Planning & Interpretation", "kind": "package" },
+    { "id": "planVerifier", "path": "packages/@dvt/plan-verifier", "group": "Planning & Interpretation", "kind": "package" },
+    { "id": "planInterpreter", "path": "packages/@dvt/plan-interpreter", "group": "Planning & Interpretation", "kind": "package" },
+    { "id": "dsl", "path": "packages/@dvt/dsl", "group": "Planning & Interpretation", "kind": "package" },
 
-    { "id": "engine", "path": "packages/@dvt/engine", "group": "Runtime Governance" },
-    { "id": "runDomain", "path": "packages/@dvt/run-domain", "group": "Runtime Governance" },
+    { "id": "engine", "path": "packages/@dvt/engine", "group": "Runtime Governance", "kind": "package" },
+    { "id": "runDomain", "path": "packages/@dvt/run-domain", "group": "Runtime Governance", "kind": "package" },
 
-    { "id": "artifacts", "path": "packages/@dvt/artifacts", "group": "State, Artifacts & Delivery" },
-    { "id": "stateStore", "path": "packages/@dvt/state-store", "group": "State, Artifacts & Delivery" },
-    { "id": "delivery", "path": "packages/@dvt/delivery", "group": "State, Artifacts & Delivery" },
+    { "id": "artifacts", "path": "packages/@dvt/artifacts", "group": "State, Artifacts & Delivery", "kind": "package" },
+    { "id": "stateStore", "path": "packages/@dvt/state-store", "group": "State, Artifacts & Delivery", "kind": "package" },
+    { "id": "delivery", "path": "packages/@dvt/delivery", "group": "State, Artifacts & Delivery", "kind": "package" },
 
-    { "id": "adapterPostgres", "path": "packages/@dvt/adapter-postgres", "group": "Providers & Plugins" },
-    { "id": "adapterTemporal", "path": "packages/@dvt/adapter-temporal", "group": "Providers & Plugins" },
-    { "id": "temporalDbtPlugin", "path": "packages/@dvt/temporal-dbt-plugin", "group": "Providers & Plugins" },
-    { "id": "temporalHttpJsonPlugin", "path": "packages/@dvt/temporal-http-json-plugin", "group": "Providers & Plugins" },
-    { "id": "temporalObjectFilePostgresPlugin", "path": "packages/@dvt/temporal-object-file-postgres-plugin", "group": "Providers & Plugins" },
+    { "id": "adapterPostgres", "path": "packages/@dvt/adapter-postgres", "group": "Providers & Plugins", "kind": "adapter" },
+    { "id": "adapterTemporal", "path": "packages/@dvt/adapter-temporal", "group": "Providers & Plugins", "kind": "adapter" },
+    { "id": "temporalDbtPlugin", "path": "packages/@dvt/temporal-dbt-plugin", "group": "Providers & Plugins", "kind": "plugin" },
+    { "id": "temporalHttpJsonPlugin", "path": "packages/@dvt/temporal-http-json-plugin", "group": "Providers & Plugins", "kind": "plugin" },
+    { "id": "temporalObjectFilePostgresPlugin", "path": "packages/@dvt/temporal-object-file-postgres-plugin", "group": "Providers & Plugins", "kind": "plugin" },
 
-    { "id": "observability", "path": "packages/@dvt/observability", "group": "Evidence & Observability" },
-    { "id": "observabilityOtel", "path": "packages/@dvt/observability-otel", "group": "Evidence & Observability" },
-    { "id": "traceability", "path": "packages/@dvt/traceability-service", "group": "Evidence & Observability" },
+    { "id": "observability", "path": "packages/@dvt/observability", "group": "Evidence & Observability", "kind": "package" },
+    { "id": "observabilityOtel", "path": "packages/@dvt/observability-otel", "group": "Evidence & Observability", "kind": "package" },
+    { "id": "traceability", "path": "packages/@dvt/traceability-service", "group": "Evidence & Observability", "kind": "package" },
 
-    { "id": "api", "path": "apps/api", "group": "Applications & Entry Points" },
-    { "id": "web", "path": "apps/web", "group": "Applications & Entry Points" },
-    { "id": "temporalWorker", "path": "apps/temporal-worker", "group": "Applications & Entry Points" },
-    { "id": "outboxWorker", "path": "apps/outbox-worker", "group": "Applications & Entry Points" },
-    { "id": "projectorWorker", "path": "apps/projector-worker", "group": "Applications & Entry Points" },
-    { "id": "lineageWorker", "path": "apps/lineage-worker", "group": "Applications & Entry Points" },
-    { "id": "cli", "path": "packages/@dvt/cli", "group": "Applications & Entry Points" }
+    { "id": "api", "path": "apps/api", "group": "Applications & Entry Points", "kind": "app" },
+    { "id": "web", "path": "apps/web", "group": "Applications & Entry Points", "kind": "app" },
+    { "id": "temporalWorker", "path": "apps/temporal-worker", "group": "Applications & Entry Points", "kind": "worker" },
+    { "id": "outboxWorker", "path": "apps/outbox-worker", "group": "Applications & Entry Points", "kind": "worker" },
+    { "id": "projectorWorker", "path": "apps/projector-worker", "group": "Applications & Entry Points", "kind": "worker" },
+    { "id": "lineageWorker", "path": "apps/lineage-worker", "group": "Applications & Entry Points", "kind": "worker" },
+    { "id": "cli", "path": "packages/@dvt/cli", "group": "Applications & Entry Points", "kind": "package" }
   ]
 }

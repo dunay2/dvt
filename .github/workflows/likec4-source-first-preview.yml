@@ -53,10 +53,29 @@ jobs:
       - name: Build LikeC4 static site
         run: npx --yes likec4@1.59.2 build --base ./ --output dist .likec4-preview
 
-      - name: Publish machine-readable evidence
+      - name: Publish machine-readable evidence and preview metrics
         run: |
           mkdir -p dist/source
           cp .architecture-evidence/* dist/source/
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const stat = (file) => fs.existsSync(file) ? fs.statSync(file).size : null;
+          const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).reduce((sum, entry) => {
+            const target = path.join(dir, entry.name);
+            return sum + (entry.isDirectory() ? walk(target) : fs.statSync(target).size);
+          }, 0);
+          const metrics = {
+            schemaVersion: 1,
+            generatedAt: new Date().toISOString(),
+            totalDistBytes: walk('dist'),
+            likec4ViewsBytes: stat('dist/likec4-views.js'),
+            summaryBytes: stat('dist/source/summary.json'),
+            modelBytes: stat('dist/source/source-first.c4'),
+          };
+          fs.writeFileSync('dist/source/preview-metrics.json', JSON.stringify(metrics, null, 2) + '\n');
+          console.log(metrics);
+          NODE
 
       - name: Upload preview artifact
         uses: actions/upload-artifact@v4
