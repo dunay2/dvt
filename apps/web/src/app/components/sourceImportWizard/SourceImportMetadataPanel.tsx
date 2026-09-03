@@ -8,8 +8,9 @@ import { OptionsStep } from './OptionsStep';
 import { SourceImportObjectsMetadata } from './SourceImportObjectsMetadata';
 
 type SourceImportMetadataPanelProps = Readonly<{
-  selectedSourceObjects: readonly SelectableSourceObject[];
+  sourceObjects: readonly SelectableSourceObject[];
   activeSourceObjectKey: string | null;
+  scope: 'active' | 'selected';
   groupingStrategy: SourceImportGroupingStrategy;
   sourceImportOptions: readonly SourceImportOptionContribution[];
   sourceImportOptionValues: Readonly<Record<SourceImportOptionId, boolean>>;
@@ -28,8 +29,9 @@ export const sourceImportMetadataPanelClassNames = {
 } as const;
 
 export function SourceImportMetadataPanel({
-  selectedSourceObjects,
+  sourceObjects,
   activeSourceObjectKey,
+  scope,
   groupingStrategy,
   sourceImportOptions,
   sourceImportOptionValues,
@@ -38,7 +40,7 @@ export function SourceImportMetadataPanel({
 }: SourceImportMetadataPanelProps) {
   const { copy } = useSourceImportLocalization();
   const supportsRelationalImport =
-    selectedSourceObjects.length > 0 && selectedSourceObjects.every(isRelationalSourceObject);
+    sourceObjects.length > 0 && sourceObjects.every(isRelationalSourceObject);
 
   return (
     <div id="source-import-section-metadata" className={sourceImportMetadataPanelClassNames.root}>
@@ -47,9 +49,9 @@ export function SourceImportMetadataPanel({
         data-source-import-object-metadata-region
       >
         <SourceImportObjectsMetadata
-          sourceObjects={selectedSourceObjects}
+          sourceObjects={sourceObjects}
           activeSourceObjectKey={activeSourceObjectKey}
-          scope="selected"
+          scope={scope}
         />
       </div>
 

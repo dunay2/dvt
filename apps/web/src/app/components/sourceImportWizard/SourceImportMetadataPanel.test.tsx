@@ -34,8 +34,9 @@ describe('SourceImportMetadataPanel', () => {
     await act(async () => {
       root.render(
         <SourceImportMetadataPanel
-          selectedSourceObjects={selectedSourceObjects}
+          sourceObjects={selectedSourceObjects}
           activeSourceObjectKey={selectedSourceObjects[1]?.objectId ?? null}
+          scope="selected"
           groupingStrategy="schema"
           sourceImportOptions={[]}
           sourceImportOptionValues={{
@@ -54,8 +55,8 @@ describe('SourceImportMetadataPanel', () => {
 
     expect(objectRegion).not.toBeNull();
     expect(globalRegion).not.toBeNull();
-    expect(objectRegion?.querySelectorAll('[data-source-import-selected-object]')).toHaveLength(2);
-    expect(globalRegion?.querySelector('[data-source-import-selected-object]')).toBeNull();
+    expect(objectRegion?.querySelectorAll('[data-source-import-object-metadata]')).toHaveLength(2);
+    expect(globalRegion?.querySelector('[data-source-import-object-metadata]')).toBeNull();
     expect(objectRegion?.querySelector('[data-source-import-grouping-option]')).toBeNull();
     expect(globalRegion?.querySelector('[data-source-import-grouping-option]')).not.toBeNull();
   });

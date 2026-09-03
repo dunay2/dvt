@@ -85,7 +85,8 @@ export function SourceImportObjectsMetadata({
       {viewModels.length > 0 ? (
         <Accordion
           type="multiple"
-          defaultValue={activeKey ? [activeKey] : []}
+          value={scope === 'active' && activeKey ? [activeKey] : undefined}
+          defaultValue={scope === 'selected' && activeKey ? [activeKey] : []}
           className={sourceImportSelectedMetadataClassNames.list}
         >
           {viewModels.map(({ sourceObject, viewModel }) => (
@@ -93,12 +94,12 @@ export function SourceImportObjectsMetadata({
               key={viewModel.identityKey}
               value={viewModel.identityKey}
               className={sourceImportSelectedMetadataClassNames.item}
-              data-source-import-selected-object={viewModel.identityKey}
+              data-source-import-object-metadata={viewModel.identityKey}
             >
               <AccordionTrigger
                 className={sourceImportSelectedMetadataClassNames.trigger}
                 aria-label={viewModel.inspectionAccessibilityLabel}
-                data-source-import-selected-object-trigger={viewModel.identityKey}
+                data-source-import-object-metadata-trigger={viewModel.identityKey}
               >
                 <div className={sourceImportSelectedMetadataClassNames.triggerContent}>
                   <div className={sourceImportSelectedMetadataClassNames.identity}>

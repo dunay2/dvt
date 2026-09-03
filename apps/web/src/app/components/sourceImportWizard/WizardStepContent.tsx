@@ -23,6 +23,12 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
     copy,
     state.renameConnectionError
   );
+  const hasSelectedSourceObjects = controller.selectedSourceObjects.length > 0;
+  const metadataSourceObjects = hasSelectedSourceObjects
+    ? controller.selectedSourceObjects
+    : controller.activeSourceObject
+      ? [controller.activeSourceObject]
+      : [];
   switch (state.currentStep) {
     case 'connection':
       return (
@@ -85,8 +91,9 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
     case 'options':
       return (
         <SourceImportMetadataPanel
-          selectedSourceObjects={controller.selectedSourceObjects}
+          sourceObjects={metadataSourceObjects}
           activeSourceObjectKey={state.activeSourceObjectKey}
+          scope={hasSelectedSourceObjects ? 'selected' : 'active'}
           groupingStrategy={state.groupingStrategy}
           sourceImportOptions={controller.sourceImportOptions}
           sourceImportOptionValues={controller.sourceImportOptionValues}

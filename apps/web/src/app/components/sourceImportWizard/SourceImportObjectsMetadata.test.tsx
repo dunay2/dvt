@@ -51,32 +51,32 @@ describe('SourceImportObjectsMetadata', () => {
       );
     });
 
-    expect(container.querySelectorAll('[data-source-import-selected-object]')).toHaveLength(2);
+    expect(container.querySelectorAll('[data-source-import-object-metadata]')).toHaveLength(2);
     expect(container.querySelectorAll('[data-source-import-shared-catalog]')).toHaveLength(1);
     expect(
       container
-        .querySelector(`[data-source-import-selected-object="${customers.objectId}"]`)
+        .querySelector(`[data-source-import-object-metadata="${customers.objectId}"]`)
         ?.getAttribute('data-state')
     ).toBe('open');
     expect(
       container
-        .querySelector(`[data-source-import-selected-object="${orders.objectId}"]`)
+        .querySelector(`[data-source-import-object-metadata="${orders.objectId}"]`)
         ?.getAttribute('data-state')
     ).toBe('closed');
 
     const ordersTrigger = container.querySelector<HTMLButtonElement>(
-      `[data-source-import-selected-object-trigger="${orders.objectId}"]`
+      `[data-source-import-object-metadata-trigger="${orders.objectId}"]`
     );
     await act(async () => ordersTrigger?.click());
 
     expect(
       container
-        .querySelector(`[data-source-import-selected-object="${orders.objectId}"]`)
+        .querySelector(`[data-source-import-object-metadata="${orders.objectId}"]`)
         ?.getAttribute('data-state')
     ).toBe('open');
     expect(
       container
-        .querySelector(`[data-source-import-selected-object="${customers.objectId}"]`)
+        .querySelector(`[data-source-import-object-metadata="${customers.objectId}"]`)
         ?.getAttribute('data-state')
     ).toBe('open');
     expect(
@@ -96,7 +96,7 @@ describe('SourceImportObjectsMetadata', () => {
     });
 
     expect(container.querySelector('[data-source-import-metadata-empty]')).not.toBeNull();
-    expect(container.querySelector('[data-source-import-selected-object]')).toBeNull();
+    expect(container.querySelector('[data-source-import-object-metadata]')).toBeNull();
   });
 
   it('keeps selected unsupported objects inspectable without exposing relational columns', async () => {
@@ -113,7 +113,7 @@ describe('SourceImportObjectsMetadata', () => {
     });
 
     expect(
-      container.querySelector(`[data-source-import-selected-object="${file.objectId}"]`)
+      container.querySelector(`[data-source-import-object-metadata="${file.objectId}"]`)
     ).not.toBeNull();
     expect(container.querySelector('[data-source-import-metadata-column]')).toBeNull();
     expect(container.querySelector('[data-source-import-importability]')).not.toBeNull();
