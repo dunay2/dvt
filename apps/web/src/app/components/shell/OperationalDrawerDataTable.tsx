@@ -1,11 +1,6 @@
 /** Owned concern: present one source sample with local column positioning and row sorting. */
-import {
-  getCoreRowModel,
-  getSortedRowModel,
-  type ColumnDef,
-  type SortingState,
-  useReactTable,
-} from '@tanstack/react-table';
+import { getCoreRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table';
+import type { ColumnDef, SortingState } from '@tanstack/react-table';
 import { useMemo, useRef, useState } from 'react';
 
 const operationalDrawerDataTableClassNames = {
