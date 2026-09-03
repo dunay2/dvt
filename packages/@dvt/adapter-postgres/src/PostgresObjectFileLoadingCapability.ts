@@ -1,4 +1,10 @@
-/** Owned concern: own the PostgreSQL resources used by object-file ingestion. */
+/**
+ * @file packages/@dvt/adapter-postgres/src/PostgresObjectFileLoadingCapability.ts
+ * @baseline ADR-0003: Execution Model
+ * @ownedConcern Own the PostgreSQL resources used by object-file ingestion.
+ * @decision Expose one bounded capability that owns its pool unless the caller supplies one.
+ * @version 1.0.0
+ */
 import type { Pool } from 'pg';
 
 import { PostgresAdapterClientSession } from './PostgresAdapterClientSession.js';

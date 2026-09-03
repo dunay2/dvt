@@ -53,7 +53,6 @@
       "number": "ADR-0001",
       "decisions": [
         "ADR-0030 section 3.3 - lookupRunRef derives workflowId from runId and probes Temporal to detect orphans",
-        "Capability-specific Postgres integration owns its runtime prerequisites",
         "Drive Temporal layer execution from resolved DVT execution segments and canonical workflow state",
         "Finalize pause, resume, and cancellation transitions through canonical run events emitted from workflow lifecycle control",
         "Keep workflow side effects behind Temporal activities and await activity cleanup before terminal cancellation",
@@ -99,7 +98,6 @@
         "packages/@dvt/adapter-temporal/src/workflows/workflowInputParsingHelpers.ts",
         "packages/@dvt/adapter-temporal/test/activityDeps.typecheck.ts",
         "packages/@dvt/adapter-temporal/test/helpers/contractFixtures.ts",
-        "packages/@dvt/adapter-temporal/test/integration.postgres.time-skipping.test.ts",
         "packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts",
         "packages/@dvt/adapter-temporal/test/integration.transformation.time-skipping.test.ts",
         "packages/@dvt/adapter-temporal/test/runPlanWorkflow.layers.order.test.ts",
@@ -145,6 +143,7 @@
         "Emit StepStarted artifact references before executing DVT-owned step activities with explicit retry handling",
         "Engine entry-point plan integrity verification resolves the executable plan,",
         "Every production PostgreSQL pool observes idle-client failures without terminating its host process",
+        "Expose one bounded capability that owns its pool unless the caller supplies one.",
         "Extract plugin-agnostic artifact references and retry policy before event emission",
         "Groups authorizer, planRefPolicy, and outboxRateLimiter into a single",
         "Implement in-memory run-state writes through event-log authority and port-owned lifecycle state",
@@ -178,7 +177,6 @@
         "Parse workflow cursor and control values with deterministic validation before execution",
         "Plans carry only opaque endpoint/credential references and a predeclared content address.",
         "PostgreSQL credentials are resolved from explicit governed aliases without dynamic environment lookup.",
-        "PostgreSQL execution resolves the connection identity fixed by the admitted PlanRef and scoped run context.",
         "Provide contract-backed Temporal fixtures for tests that exercise DVT-owned run and plan boundaries",
         "Re-export canonical event types from @dvt/contracts without engine-local compatibility aliases.",
         "Re-export canonical types from @dvt/contracts — single source of truth",
@@ -207,7 +205,6 @@
         "Snapshot staleness queries and repair queue operations stay together as one maintenance slice",
         "The snapshot projection is derived exclusively from events for deterministic state reads",
         "The workflow engine behavior port lives in the engine-owned ports surface",
-        "Transformation execution remains capability-led: runtime dispatches StepKind and Postgres provides one relational SQL implementation",
         "Translate layer activity outcomes into canonical run events and gateway facts owned by DVT",
         "Translate runtime error evidence into DVT RunFailed reasons at the workflow boundary",
         "Type-check activity dependency fixtures against the scoped engine-dispatch plan query",
@@ -221,9 +218,8 @@
       "implemented_by": [
         "packages/@dvt/adapter-postgres/src/PostgresCredentialBindingResolver.ts",
         "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts",
-        "packages/@dvt/adapter-postgres/src/PostgresPlanConnectionResolver.ts",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoadingCapability.ts",
         "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts",
-        "packages/@dvt/adapter-postgres/src/PostgresRelationalExecutionCapability.ts",
         "packages/@dvt/adapter-postgres/src/PostgresRunStateStoreAdapter.ts",
         "packages/@dvt/adapter-postgres/src/PostgresSnapshotQueueAdapter.ts",
         "packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts",
@@ -523,7 +519,6 @@
     {
       "number": "ADR-0010",
       "decisions": [
-        "Capability-specific Postgres integration owns its runtime prerequisites",
         "Section 2 — Build precondition mandatory",
         "Section 3 — Single teardown owner",
         "Section 4 — Prefer environment-provided client",
@@ -531,7 +526,6 @@
         "Transformation-flow verification lives outside the Temporal baseline suite"
       ],
       "implemented_by": [
-        "packages/@dvt/adapter-temporal/test/integration.postgres.time-skipping.test.ts",
         "packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts",
         "packages/@dvt/adapter-temporal/test/integration.transformation.time-skipping.test.ts"
       ],
@@ -540,7 +534,6 @@
     {
       "number": "ADR-0011",
       "decisions": [
-        "Capability-specific Postgres integration owns its runtime prerequisites",
         "Section 2 — Build precondition mandatory",
         "Section 3 — Single teardown owner",
         "Section 4 — Prefer environment-provided client",
@@ -548,7 +541,6 @@
         "Transformation-flow verification lives outside the Temporal baseline suite"
       ],
       "implemented_by": [
-        "packages/@dvt/adapter-temporal/test/integration.postgres.time-skipping.test.ts",
         "packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts",
         "packages/@dvt/adapter-temporal/test/integration.transformation.time-skipping.test.ts"
       ],
@@ -590,11 +582,9 @@
         "Normalize facade start-run input before delegating to the start application service.",
         "Represent executor plugins as explicit step-activity profile inputs",
         "Signal-to-event derivation semantics are versioned as a contract shared by engine and adapters",
-        "Transformation execution remains capability-led: runtime dispatches StepKind and Postgres provides one relational SQL implementation",
         "WorkflowEngine is an application-facing facade that delegates"
       ],
       "implemented_by": [
-        "packages/@dvt/adapter-postgres/src/PostgresRelationalExecutionCapability.ts",
         "packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginProfile.ts",
         "packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginRunner.ts",
         "packages/@dvt/adapter-temporal/test/dbt-package-extraction.architecture.test.ts",
@@ -735,7 +725,6 @@
         "Map verified execution scope to a deterministic physical schema and replace one relation atomically",
         "Normalize lineage outbox claim, tenant, and query bounds at the PostgreSQL adapter boundary",
         "PostgreSQL credentials are resolved from explicit governed aliases without dynamic environment lookup.",
-        "PostgreSQL execution resolves the connection identity fixed by the admitted PlanRef and scoped run context.",
         "Run metadata persistence extracted from PostgresStateStoreAdapter",
         "Run-state contract delegation is isolated from snapshot-queue and delivery concerns",
         "Runtime bootstrap may require both core state-store and start-run intent schema migrations",
@@ -754,7 +743,6 @@
         "packages/@dvt/adapter-postgres/src/PostgresCredentialBindingResolver.ts",
         "packages/@dvt/adapter-postgres/src/PostgresMaintenanceAccess.ts",
         "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts",
-        "packages/@dvt/adapter-postgres/src/PostgresPlanConnectionResolver.ts",
         "packages/@dvt/adapter-postgres/src/PostgresRunMetadataRepository.ts",
         "packages/@dvt/adapter-postgres/src/PostgresRunStateCoordinator.ts",
         "packages/@dvt/adapter-postgres/src/PostgresRunStateStoreAdapter.ts",
