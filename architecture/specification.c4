@@ -1,0 +1,24 @@
+specification {
+  element system
+  element package
+  element component
+  element port {
+    style { shape rectangle }
+  }
+  element adapter
+  element worker
+  element store {
+    style { shape cylinder }
+  }
+  element inventory
+  element folder
+  element file {
+    style { shape rectangle }
+  }
+
+  tag asIs
+  tag sourceDerived
+  tag structureDerived
+
+  relationship uses
+}

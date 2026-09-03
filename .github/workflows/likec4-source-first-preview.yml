@@ -1,0 +1,73 @@
+name: LikeC4 source-first architecture preview
+
+on:
+  push:
+    branches:
+      - spike/likec4-source-first-20260903
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout spike
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Fetch current main
+        run: git fetch --no-tags origin main
+
+      - name: Setup compatible Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.2
+
+      - name: Generate source-first architecture
+        run: node architecture/tools/generate-source-first.mjs
+
+      - name: Stage isolated LikeC4 workspace
+        run: |
+          rm -rf .likec4-preview .architecture-evidence dist
+          mkdir -p .likec4-preview .architecture-evidence
+          cp architecture/specification.c4 .likec4-preview/specification.c4
+          cp architecture/generated/source-first.c4 .likec4-preview/source-first.c4
+          cat > .likec4-preview/likec4.config.json <<'JSON'
+          {
+            "$schema": "https://likec4.dev/schemas/config.json",
+            "name": "dvt-source-first-spike",
+            "title": "DVT+ — Source-first architecture"
+          }
+          JSON
+          cp architecture/generated/*.json .architecture-evidence/
+          cp architecture/generated/source-first.c4 .architecture-evidence/
+
+      - name: Validate LikeC4 model
+        run: |
+          cd .likec4-preview
+          npx --yes likec4@1.59.2 validate
+
+      - name: Build LikeC4 static site
+        run: npx --yes likec4@1.59.2 build --base ./ --output dist .likec4-preview
+
+      - name: Publish machine-readable evidence
+        run: |
+          mkdir -p dist/source
+          cp .architecture-evidence/* dist/source/
+
+      - name: Upload preview artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dvt-likec4-source-first-preview
+          path: dist
+
+      - name: Publish disposable gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages
+          force_orphan: true
