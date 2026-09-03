@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "repository": "dunay2/dvt",
   "baselineRef": "origin/main",
   "contexts": [
@@ -16,6 +16,16 @@
 
     { "id": "artifacts", "path": "packages/@dvt/artifacts", "group": "State, Artifacts & Delivery" },
     { "id": "stateStore", "path": "packages/@dvt/state-store", "group": "State, Artifacts & Delivery" },
-    { "id": "delivery", "path": "packages/@dvt/delivery", "group": "State, Artifacts & Delivery" }
+    { "id": "delivery", "path": "packages/@dvt/delivery", "group": "State, Artifacts & Delivery" },
+
+    { "id": "adapterPostgres", "path": "packages/@dvt/adapter-postgres", "group": "Providers & Plugins" },
+    { "id": "adapterTemporal", "path": "packages/@dvt/adapter-temporal", "group": "Providers & Plugins" },
+    { "id": "temporalDbtPlugin", "path": "packages/@dvt/temporal-dbt-plugin", "group": "Providers & Plugins" },
+    { "id": "temporalHttpJsonPlugin", "path": "packages/@dvt/temporal-http-json-plugin", "group": "Providers & Plugins" },
+    { "id": "temporalObjectFilePostgresPlugin", "path": "packages/@dvt/temporal-object-file-postgres-plugin", "group": "Providers & Plugins" },
+
+    { "id": "observability", "path": "packages/@dvt/observability", "group": "Evidence & Observability" },
+    { "id": "observabilityOtel", "path": "packages/@dvt/observability-otel", "group": "Evidence & Observability" },
+    { "id": "traceability", "path": "packages/@dvt/traceability-service", "group": "Evidence & Observability" }
   ]
 }
