@@ -279,49 +279,33 @@ export function buildCanonicalNodes(): CanonicalNode[] {
     {
       id: 'source-node',
       name: 'Source',
-      pluginId: 'dvt',
-      kind: 'dvt:source',
+      pluginId: 'dbt',
+      kind: 'dbt:source',
       role: 'input',
       status: 'idle',
       tags: [],
       metadata: {
-        connectionRef: buildTestPostgresConnectionRef(),
-        config: {
-          schema: 'raw',
-          table: 'orders',
-          alias: 'orders',
+        dbt: {
+          packageName: 'analytics',
+          sourceName: 'raw',
+          schemaName: 'raw',
+          tableName: 'orders',
         },
       },
     },
     {
-      id: 'transform-node',
-      name: 'Transform',
-      pluginId: 'dvt',
-      kind: 'dvt:transform',
-      path: 'models/transform.sql',
+      id: 'model-node',
+      name: 'Model',
+      pluginId: 'dbt',
+      kind: 'dbt:model',
       role: 'transform',
       status: 'idle',
       tags: [],
       metadata: {
-        config: {
-          dialect: 'postgres',
-        },
-      },
-    },
-    {
-      id: 'sink-node',
-      name: 'Sink',
-      pluginId: 'dvt',
-      kind: 'dvt:sink',
-      role: 'output',
-      status: 'idle',
-      tags: [],
-      metadata: {
-        config: {
-          schema: 'analytics',
-          table: 'orders_dashboard',
-          materialization: 'table',
-          writeMode: 'replace',
+        dbt: {
+          packageName: 'analytics',
+          materialized: 'table',
+          selectedSourceId: 'source-node',
         },
       },
     },
@@ -341,13 +325,7 @@ export function buildCanonicalEdges(): CanonicalEdge[] {
     {
       id: 'edge-1',
       sourceId: 'source-node',
-      targetId: 'transform-node',
-      relation: 'lineage',
-    },
-    {
-      id: 'edge-2',
-      sourceId: 'transform-node',
-      targetId: 'sink-node',
+      targetId: 'model-node',
       relation: 'lineage',
     },
   ];
