@@ -14,6 +14,7 @@ mitigations:
   - Persist operations through ConfigureCanvasDvtNode in the existing semantic envelope.
   - Preserve Source kind, connection authority and stable field provenance across reload.
   - Reject unsupported shapes, fields, types, providers and capabilities before draft mutation.
+  - Keep broader operation parity and semantic Preview execution explicit in issue #2894.
 
 evidence:
   - docs/evidence/ED-20260903-source-filter-capability-admission.md

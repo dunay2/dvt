@@ -10,10 +10,14 @@ breaking: false
 code_refs:
   - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSupportedCapabilities.v1.ts
   - apps/web/src/app/views/canvas/canvasDvtSubstraitFilter.ts
+  - apps/web/src/app/views/canvas/DvtRelationFilterAuthoringSection.tsx
+  - apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresProjection.ts
 evidence:
   tests:
     - pnpm --filter @dvt/contracts test -- dvt-substrait-capability-catalog
     - pnpm --filter @dvt/web test:canvas:run -- canvasDvtSubstraitFilter.test.ts
+    - pnpm --filter @dvt/web test:canvas:run -- src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx
+    - pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts
     - pnpm --filter @dvt/web typecheck
     - pnpm --filter @dvt/web lint
     - pnpm verify:prepush
@@ -28,3 +32,6 @@ The Canvas command persists the same Substrait plan and stable DVT sidecar on th
 it does not introduce a Source recipe, SQL model, hidden Transform, store or command. Strict
 inspection rejects unsupported functions, operands, providers, identities and relation shapes.
 Target and visible evidence are completed by the focused Web behavior and PostgreSQL tests.
+The local coordinated stack additionally proved that an imported Source can apply
+`event_type = "AUTH_GRANTED"`, persist the graph draft, survive a full reload, and retain the
+`dvt:source` card identity.

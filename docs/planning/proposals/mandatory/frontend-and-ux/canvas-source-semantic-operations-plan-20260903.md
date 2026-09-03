@@ -1,8 +1,8 @@
 ---
 title: Canvas Source semantic operations plan
-status: Working proposal
+status: Accepted
 owner: Web / Canvas / Contracts
-last_reviewed: 2026-09-03
+last_reviewed: 2026-09-04
 planning_type: implementation-plan
 task_id: 2894
 ---
@@ -60,6 +60,19 @@ One PostgreSQL Source can add, edit and remove `text_field = string_literal`. Th
 the operation from its canonical capability ID, binds a stable sidecar FieldId, and uses the
 existing Apply/Cancel lifecycle. Reload, card summary and PostgreSQL use the same revision.
 Other predicates and broader operation parity remain in #2894.
+
+## Implemented Increment
+
+The first bounded slice now admits one PostgreSQL text equality `FilterRel`, exposes the same
+filter editor on Source and Transform, persists the semantic document through the existing
+graph-draft command, restores it after reload, projects deterministic PostgreSQL, and shows a
+compact card summary. Source kind, imported connection authority and physical provenance remain
+unchanged. The visible local stack and the focused Cypress flow both proved apply, reload and
+remove.
+
+Issue #2894 remains open for ordered filters, field projection parity, broader relational
+operations, and terminal materialization. Raw Source sampling is not presented as execution of
+the semantic recipe; that integration remains part of the Preview/materialization sequence.
 
 ## Fowler Matrix
 
