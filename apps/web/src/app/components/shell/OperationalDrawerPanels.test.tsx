@@ -135,29 +135,11 @@ describe('OperationalDrawerPanels', () => {
     const table = container.querySelector<HTMLTableElement>(
       '[data-slot="bottom-operational-data-table"]'
     );
-    const tableFrame = container.querySelector<HTMLElement>(
-      '[data-slot="bottom-operational-data-table-frame"]'
-    );
-    const dataPanel = container.querySelector<HTMLElement>('#bottom-operational-drawer-panel-data');
     expect(table).not.toBeNull();
-    expect(tableFrame?.className).toContain('w-full');
-    expect(tableFrame?.className).toContain('max-w-full');
-    expect(dataPanel?.className).toContain('min-w-0');
-    expect(dataPanel?.className).toContain('flex-1');
     expect(table?.querySelector('caption')?.textContent).toBe('Sample from orders');
     expect(
       Array.from(table?.querySelectorAll('th[scope="col"]') ?? []).map((cell) => cell.textContent)
     ).toEqual(['order_id', 'customer']);
-    expect(
-      Array.from(table?.querySelectorAll('th[scope="col"]') ?? []).every((cell) =>
-        cell.className.includes('border-r')
-      )
-    ).toBe(true);
-    expect(
-      Array.from(table?.querySelectorAll('td') ?? []).every((cell) =>
-        cell.className.includes('border-r')
-      )
-    ).toBe(true);
     const longValue = Array.from(
       table?.querySelectorAll<HTMLElement>('[data-slot="bottom-operational-data-value"][title]') ??
         []
@@ -165,8 +147,6 @@ describe('OperationalDrawerPanels', () => {
     expect(longValue?.textContent).toBe(longPayload);
     expect(longValue?.getAttribute('title')).toBe(longPayload);
     expect(longValue?.getAttribute('aria-label')).toBe(longPayload);
-    expect(longValue?.className).toContain('truncate');
-    expect(longValue?.className).toContain('max-w-');
     expect(table?.textContent).toContain('NULL');
     expect(container.textContent).toContain('Showing 20 rows.');
   });

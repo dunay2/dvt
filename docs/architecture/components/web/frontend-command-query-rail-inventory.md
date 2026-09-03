@@ -296,6 +296,26 @@ commands or queries are still needed for a mature end-to-end workflow.
 - Frontend surface: `IWarehouseSourceImportPort.listSourceObjects`.
 - Backend surface: `GET /workspace/warehouse/connections/:connectionId/objects`.
 
+### `PreviewWarehouseSourceObjectRows`
+
+- Type: query.
+- Status: `implemented-api`.
+- Owner: bounded relational source sample read model.
+- Frontend surface:
+  `IWarehouseSourceDataSampleQueryPort.previewSourceObjectRows` and the Canvas
+  bottom operational drawer Data panel.
+- Backend surface:
+  `GET /workspace/warehouse/connections/:connectionId/source-data-sample`.
+- Scope and safety: tenant, project, environment, governed connection and source
+  object are server-authorized; the client supplies no SQL or credentials; the
+  response is bounded and string-or-null.
+- Presentation rule: column positioning and row sorting are local projections of
+  the returned sample. They never mutate the sample, canonical Canvas field order,
+  `FieldId`, lineage, or `ConfigureCanvasDvtNode` state.
+- Negative evidence: unknown or cross-scope connection/object, unsupported
+  provider, timeout, failed query, malformed response, stale response after a new
+  sample request, and the server-enforced row limit.
+
 ### `ImportWarehouseSources`
 
 - Type: command.

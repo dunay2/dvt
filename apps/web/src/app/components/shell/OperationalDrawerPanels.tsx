@@ -2,10 +2,10 @@
 import type { ReactNode } from 'react';
 
 import { RunControlActions } from '../runs/RunControlActions';
+import { OperationalDrawerDataTable } from './OperationalDrawerDataTable';
 import {
   OperationalDrawerEmptyState,
   OperationalDrawerDataNotice,
-  OperationalDrawerDataTable,
   OperationalDrawerPanelSurface,
   OperationalDrawerPreviewLayout,
   OperationalDrawerPreviewSummary,
@@ -84,6 +84,7 @@ export function BottomOperationalDataSamplePanel({
           </OperationalDrawerDataNotice>
         ) : null}
         <OperationalDrawerDataTable
+          key={state.sample.objectId}
           caption={formatDataSampleTemplate(contribution.copy.dataCaptionTemplate, {
             nodeName: state.nodeName,
             limit: String(state.sample.limit),
