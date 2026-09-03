@@ -1,14 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import type { GitArtifactRef } from '@dvt/contracts';
-
 import type { CanonicalNode } from '../../types/canonical';
 import {
   applyDvtNodeAuthoringMetadata,
   createDvtNodeAuthoringMetadata,
   resolveEffectiveDvtConnectionRef,
 } from './canvasDvtAuthoringModel';
-import { buildPreviewGraphSource } from './previewCompilerGraphSource';
 
 const connectionA = {
   schemaVersion: 'connection-ref.v1',
@@ -95,91 +92,5 @@ describe('Canvas DVT PostgreSQL connection authority', () => {
       metadata: { config: { sql: 'select * from raw.orders' } },
     });
     expect(transform.metadata).not.toHaveProperty('connectionRef');
-  });
-
-  it('projects the same connection and supplied edges into Preview steps', () => {
-    const source = node({ metadata: { ...node().metadata, connectionRef: connectionA } });
-    const transform = node({
-      id: 'transform-1',
-      name: 'Orders transform',
-      kind: 'dvt:transform',
-      role: 'transform',
-      path: 'models/orders.sql',
-    });
-    const sink = node({
-      id: 'sink-1',
-      name: 'Orders daily',
-      kind: 'dvt:sink',
-      role: 'output',
-      metadata: {
-        config: {
-          schema: 'analytics',
-          table: 'orders_daily',
-          materialization: 'table',
-          writeMode: 'replace',
-        },
-      },
-    });
-
-    const graphArgs = {
-      nodes: [source, transform, sink],
-      scopedNodeIds: [source.id, transform.id, sink.id],
-      sqlText: 'select * from raw.orders',
-      sqlArtifact: {
-        repo: 'org/repo',
-        path: 'models/orders.sql',
-        ref: 'refs/heads/main',
-        commitSha: 'commit-sql-1',
-        contentSha256: 'a'.repeat(64),
-      } as unknown as GitArtifactRef,
-    };
-    const sourceToTransform = {
-      id: 'source-transform',
-      sourceId: source.id,
-      targetId: transform.id,
-      relation: 'lineage' as const,
-    };
-    const transformToSink = {
-      id: 'transform-sink',
-      sourceId: transform.id,
-      targetId: sink.id,
-      relation: 'lineage' as const,
-    };
-    const graph = buildPreviewGraphSource({
-      ...graphArgs,
-      edges: [transformToSink, sourceToTransform],
-    });
-
-    expect(graph.sourceVersion).toBe('transformation-sql-first-v2');
-    expect(
-      graph.nodes.map(
-        (entry) => (entry.stepTypeConfig as { connectionRef: typeof connectionA }).connectionRef
-      )
-    ).toEqual([connectionA, connectionA, connectionA]);
-    expect(graph.nodes.map(({ nodeId, dependsOn }) => ({ nodeId, dependsOn }))).toEqual([
-      { nodeId: source.id, dependsOn: [] },
-      { nodeId: transform.id, dependsOn: [source.id] },
-      { nodeId: sink.id, dependsOn: [transform.id] },
-    ]);
-
-    const topologyProbe = buildPreviewGraphSource({
-      ...graphArgs,
-      edges: [
-        transformToSink,
-        {
-          id: 'source-sink',
-          sourceId: source.id,
-          targetId: sink.id,
-          relation: 'lineage' as const,
-        },
-        sourceToTransform,
-      ],
-    });
-
-    expect(topologyProbe.nodes.map(({ nodeId, dependsOn }) => ({ nodeId, dependsOn }))).toEqual([
-      { nodeId: source.id, dependsOn: [] },
-      { nodeId: transform.id, dependsOn: [source.id] },
-      { nodeId: sink.id, dependsOn: [source.id, transform.id] },
-    ]);
   });
 });

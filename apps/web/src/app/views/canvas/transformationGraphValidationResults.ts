@@ -1,4 +1,6 @@
-import { buildPreviewGraphSignature } from './previewGraphSource';
+import { jcsCanonicalize } from '@dvt/crypto';
+
+import { resolveEffectiveDvtConnectionRef } from './canvasDvtAuthoringModel';
 import type {
   TransformationGraphValidationResult,
   TransformationGraphValidationSummaryCode,
@@ -11,7 +13,26 @@ function buildDraftSignature(
   allEdges: TransformationValidationContext['allEdges'],
   scopedNodeIds: readonly string[]
 ): string {
-  return buildPreviewGraphSignature(allNodes, allEdges, scopedNodeIds);
+  const scopedIds = new Set(scopedNodeIds);
+  return jcsCanonicalize({
+    nodes: allNodes
+      .filter((node) => scopedIds.has(node.id))
+      .map((node) => ({
+        id: node.id,
+        kind: node.kind,
+        role: node.role,
+        name: node.name,
+        ...(node.path ? { path: node.path } : {}),
+        ...(node.kind === 'dvt:source'
+          ? { connectionRef: resolveEffectiveDvtConnectionRef(node) }
+          : {}),
+      }))
+      .sort((left, right) => left.id.localeCompare(right.id)),
+    edges: allEdges
+      .filter((edge) => scopedIds.has(edge.sourceId) && scopedIds.has(edge.targetId))
+      .map((edge) => ({ id: edge.id, sourceId: edge.sourceId, targetId: edge.targetId }))
+      .sort((left, right) => left.id.localeCompare(right.id)),
+  });
 }
 
 export function buildInvalidResult(

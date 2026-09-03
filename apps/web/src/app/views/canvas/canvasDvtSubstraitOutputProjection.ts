@@ -25,6 +25,7 @@ import {
   decodeDvtSubstraitProjectionDocument,
   inspectDvtSubstraitProjectionDraft,
   resolveDvtSubstraitProjectionEntry,
+  resolveDvtSubstraitProjectionSource,
 } from './canvasDvtSubstraitProjection';
 import {
   decodeDvtSubstraitUnionAllDocument,
@@ -33,7 +34,6 @@ import {
 } from './canvasDvtSubstraitSetComposition';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { inspectDvtSubstraitPilotWindowDraft } from './canvasDvtSubstraitWindow';
-import { requireSourcePayload } from './previewGraphNodePayloads';
 
 export type DvtSubstraitTransformOutputProjectionArgs = Readonly<{
   transformNode: CanonicalNode;
@@ -81,8 +81,11 @@ export async function projectDvtSubstraitTransformOutputToPostgresSql(
 
   const pilotDraft = decodeDvtSubstraitPilotDocument(authority.semanticDocument);
   const sourceBinding = (): Readonly<{ schema: string; table: string }> => {
-    const source = requireSourcePayload(requireSingleIncomingSource(args));
-    return { schema: source.payload.schema, table: source.payload.table };
+    const source = resolveDvtSubstraitProjectionSource(requireSingleIncomingSource(args));
+    if (source == null) {
+      throw new Error('Substrait output projection requires a governed source relation.');
+    }
+    return { schema: source.schema, table: source.table };
   };
   if (inspectDvtSubstraitPilotDraft(pilotDraft).ok) {
     return projectDvtSubstraitPilotToPostgresSql(pilotDraft, sourceBinding());
