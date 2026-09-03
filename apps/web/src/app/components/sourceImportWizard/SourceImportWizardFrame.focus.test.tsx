@@ -109,7 +109,58 @@ describe('SourceImportWizardFrame focus', () => {
     );
     expect(scrollRegion).not.toBeNull();
     expect(scrollRegion?.getAttribute('data-overflow-affordance')).toBe('always');
-    expect(document.body.textContent).toContain('Cancel');
-    expect(document.body.textContent).toContain('Attach sources to canvas');
+    expect(document.body.querySelectorAll('[data-slot="dialog-footer"] button')).toHaveLength(2);
+  });
+
+  it('moves from the header and keeps the dialog inside the viewport', async () => {
+    const renderFrame = (open: boolean): void => {
+      root.render(
+        <SourceImportWizardFrame
+          open={open}
+          activeContentId="connections"
+          isResultStep={false}
+          isProcessing={false}
+          canImport={false}
+          sections={<button type="button">Connections</button>}
+          onClose={vi.fn()}
+          onDone={vi.fn()}
+          onImport={vi.fn()}
+        >
+          <button type="button">Catalog content</button>
+        </SourceImportWizardFrame>
+      );
+    };
+    await act(async () => renderFrame(true));
+
+    const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]')!;
+    const dragHandle = dialog.querySelector<HTMLElement>('[data-slot="dialog-header"]')!;
+    vi.spyOn(dialog, 'getBoundingClientRect').mockReturnValue(new DOMRect(262, 184, 500, 400));
+    dragHandle.setPointerCapture = vi.fn();
+
+    act(() => {
+      fireEvent.pointerDown(dragHandle, {
+        pointerId: 7,
+        button: 0,
+        clientX: 300,
+        clientY: 220,
+      });
+      fireEvent.pointerMove(dragHandle, {
+        pointerId: 7,
+        clientX: 5_000,
+        clientY: 5_000,
+      });
+      fireEvent.pointerUp(dragHandle, { pointerId: 7 });
+    });
+
+    expect(dragHandle.setPointerCapture).toHaveBeenCalledWith(7);
+    expect(dialog.style.left).toBe('calc(50% + 246px)');
+    expect(dialog.style.top).toBe('calc(50% + 168px)');
+
+    await act(async () => renderFrame(false));
+    await act(async () => renderFrame(true));
+
+    const reopenedDialog = document.body.querySelector<HTMLElement>('[role="dialog"]')!;
+    expect(reopenedDialog.style.left).toBe('calc(50% + 0px)');
+    expect(reopenedDialog.style.top).toBe('calc(50% + 0px)');
   });
 });
