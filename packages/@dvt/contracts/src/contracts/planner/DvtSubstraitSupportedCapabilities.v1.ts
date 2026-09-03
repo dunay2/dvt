@@ -33,81 +33,93 @@ const functionId = (
     name,
   });
 
+interface SupportedCapabilityGroup {
+  readonly entryIds: readonly string[];
+  readonly useCaseRefs: readonly string[];
+  readonly proofRef: string;
+}
+
 const LOWER_ID = functionId('scalar-function', 'functions_string', 'lower');
-const PILOT_IDS = new Set([
-  standardId('relation', 'substrait.ReadRel', 'read_type.named_table'),
-  standardId('relation', 'substrait.RelCommon', 'emit_kind.emit'),
-  standardId('relation', 'substrait.ProjectRel'),
-  standardId('expression-form', 'substrait.Expression', 'rex_type.selection'),
-  standardId('expression-form', 'substrait.Expression', 'rex_type.scalar_function'),
-  standardId('type', 'substrait.Type', 'kind.string'),
-  functionId('scalar-function', 'functions_string', 'trim'),
-  functionId('scalar-function', 'functions_string', 'upper'),
-  LOWER_ID,
-]);
-const JOIN_IDS = new Set([
-  standardId('relation', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_INNER'),
-  functionId('scalar-function', 'functions_comparison', 'equal'),
-  standardId('type', 'substrait.Type', 'kind.bool'),
-]);
-const AGGREGATE_IDS = new Set([
-  standardId('relation', 'substrait.AggregateRel'),
-  functionId('aggregate-function', 'functions_aggregate_generic', 'count'),
-  standardId('type', 'substrait.Type', 'kind.i64'),
-]);
-const WINDOW_IDS = new Set([
-  standardId('expression-form', 'substrait.Expression', 'rex_type.window_function'),
-  functionId('window-function', 'functions_arithmetic', 'row_number'),
-]);
-const CALCULATED_IDS = new Set([
-  standardId('expression-form', 'substrait.Expression', 'rex_type.literal'),
-  standardId('type', 'substrait.Type', 'kind.precision_timestamp_tz'),
-]);
-const UNION_ALL_IDS = new Set([
-  standardId('relation', 'substrait.SetRel', 'SetOp.SET_OP_UNION_ALL'),
-]);
-
-function featureRefs(entryId: string): readonly string[] {
-  if (entryId === LOWER_ID) return ['dvt:#2598', 'dvt:#2827'];
-  if (PILOT_IDS.has(entryId)) return ['dvt:#2598'];
-  if (JOIN_IDS.has(entryId) || UNION_ALL_IDS.has(entryId)) return ['dvt:#2634'];
-  if (AGGREGATE_IDS.has(entryId) || WINDOW_IDS.has(entryId)) return ['dvt:#2641', 'dvt:#2642'];
-  if (CALCULATED_IDS.has(entryId)) return ['dvt:#2833'];
-  return [];
-}
-
-function proofRef(entryId: string): string {
-  if (AGGREGATE_IDS.has(entryId)) return 'docs/evidence/ED-20260831-vtx2-substrait-grouping.md';
-  if (WINDOW_IDS.has(entryId))
-    return 'docs/evidence/ED-20260831-vtx2-substrait-row-number-window.md';
-  if (CALCULATED_IDS.has(entryId))
-    return 'docs/evidence/ED-20260902-canvas-calculated-column-authoring.md';
-  if (UNION_ALL_IDS.has(entryId)) return 'docs/evidence/ED-20260831-vtx2-substrait-union-all.md';
-  if (entryId === LOWER_ID)
-    return 'docs/evidence/ED-20260902-transform-function-alias-authoring.md';
-  return 'docs/evidence/ED-20260826-vtx2-substrait-card-pilot.md';
-}
+const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
+  {
+    entryIds: [
+      standardId('relation', 'substrait.ReadRel', 'read_type.named_table'),
+      standardId('relation', 'substrait.RelCommon', 'emit_kind.emit'),
+      standardId('relation', 'substrait.ProjectRel'),
+      standardId('expression-form', 'substrait.Expression', 'rex_type.selection'),
+      standardId('expression-form', 'substrait.Expression', 'rex_type.scalar_function'),
+      standardId('type', 'substrait.Type', 'kind.string'),
+      functionId('scalar-function', 'functions_string', 'trim'),
+      functionId('scalar-function', 'functions_string', 'upper'),
+    ],
+    useCaseRefs: ['dvt:#2598'],
+    proofRef: 'docs/evidence/ED-20260826-vtx2-substrait-card-pilot.md',
+  },
+  {
+    entryIds: [LOWER_ID],
+    useCaseRefs: ['dvt:#2598', 'dvt:#2827'],
+    proofRef: 'docs/evidence/ED-20260902-transform-function-alias-authoring.md',
+  },
+  {
+    entryIds: [
+      standardId('relation', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_INNER'),
+      functionId('scalar-function', 'functions_comparison', 'equal'),
+      standardId('type', 'substrait.Type', 'kind.bool'),
+    ],
+    useCaseRefs: ['dvt:#2634'],
+    proofRef: 'docs/evidence/ED-20260826-vtx2-substrait-card-pilot.md',
+  },
+  {
+    entryIds: [
+      standardId('relation', 'substrait.AggregateRel'),
+      functionId('aggregate-function', 'functions_aggregate_generic', 'count'),
+      standardId('type', 'substrait.Type', 'kind.i64'),
+    ],
+    useCaseRefs: ['dvt:#2641', 'dvt:#2642'],
+    proofRef: 'docs/evidence/ED-20260831-vtx2-substrait-grouping.md',
+  },
+  {
+    entryIds: [
+      standardId('expression-form', 'substrait.Expression', 'rex_type.window_function'),
+      functionId('window-function', 'functions_arithmetic', 'row_number'),
+    ],
+    useCaseRefs: ['dvt:#2641', 'dvt:#2642'],
+    proofRef: 'docs/evidence/ED-20260831-vtx2-substrait-row-number-window.md',
+  },
+  {
+    entryIds: [
+      standardId('expression-form', 'substrait.Expression', 'rex_type.literal'),
+      standardId('type', 'substrait.Type', 'kind.precision_timestamp_tz'),
+    ],
+    useCaseRefs: ['dvt:#2833'],
+    proofRef: 'docs/evidence/ED-20260902-canvas-calculated-column-authoring.md',
+  },
+  {
+    entryIds: [standardId('relation', 'substrait.SetRel', 'SetOp.SET_OP_UNION_ALL')],
+    useCaseRefs: ['dvt:#2634'],
+    proofRef: 'docs/evidence/ED-20260831-vtx2-substrait-union-all.md',
+  },
+];
 
 function admissionFor(
   entry: DvtSubstraitStandardCapabilityV1,
-  useCaseRefs: readonly string[]
+  group: SupportedCapabilityGroup
 ): DvtSubstraitStandardAdmissionEvidenceV1 {
-  const proof = proofRef(entry.entryId);
   const identityRef = entry.evidenceRefs.find((reference) => reference.startsWith('substrait:'));
   if (identityRef === undefined) throw new Error(`Missing standard evidence for ${entry.entryId}.`);
   return DvtSubstraitStandardAdmissionEvidenceV1Schema.parse({
     kind: 'standard-admission',
-    productUseCaseRef: useCaseRefs[useCaseRefs.length - 1],
+    productUseCaseRef: group.useCaseRefs[group.useCaseRefs.length - 1],
     standardIdentityRef: identityRef,
-    canonicalFixtureRef: proof,
-    semanticValidationRef: proof,
-    negativeValidationRef: proof,
+    canonicalFixtureRef: group.proofRef,
+    semanticValidationRef: group.proofRef,
+    negativeValidationRef: group.proofRef,
     stableIdentity: {
       status: 'proved',
       evidenceRefs: ['docs/evidence/ED-20260903-vtx2-durable-semantic-document.md'],
     },
-    targetConformance: [{ targetId: 'postgres', status: 'mapped', evidenceRefs: [proof] }],
-    visualExposure: { status: 'exposed', evidenceRefs: [proof] },
+    targetConformance: [{ targetId: 'postgres', status: 'mapped', evidenceRefs: [group.proofRef] }],
+    visualExposure: { status: 'exposed', evidenceRefs: [group.proofRef] },
   });
 }
 
@@ -115,14 +127,16 @@ export function admitDvtSubstraitStandardCandidatesV1(
   candidates: readonly DvtSubstraitStandardCapabilityV1[]
 ): DvtSubstraitStandardCapabilityV1[] {
   return candidates.map((entry) => {
-    const useCaseRefs = featureRefs(entry.entryId);
-    return useCaseRefs.length === 0
+    const group = SUPPORTED_CAPABILITY_GROUPS.find(({ entryIds }) =>
+      entryIds.includes(entry.entryId)
+    );
+    return group === undefined
       ? entry
       : DvtSubstraitStandardCapabilityV1Schema.parse({
           ...entry,
           profileStatus: 'supported-profile',
-          evidenceRefs: [...entry.evidenceRefs, ...useCaseRefs],
-          admission: admissionFor(entry, useCaseRefs),
+          evidenceRefs: [...entry.evidenceRefs, ...group.useCaseRefs],
+          admission: admissionFor(entry, group),
         });
   });
 }
