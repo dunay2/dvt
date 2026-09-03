@@ -85,7 +85,8 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
     case 'options':
       return (
         <SourceImportMetadataPanel
-          activeSourceObject={controller.activeSourceObject}
+          selectedSourceObjects={controller.selectedSourceObjects}
+          activeSourceObjectKey={state.activeSourceObjectKey}
           groupingStrategy={state.groupingStrategy}
           sourceImportOptions={controller.sourceImportOptions}
           sourceImportOptionValues={controller.sourceImportOptionValues}

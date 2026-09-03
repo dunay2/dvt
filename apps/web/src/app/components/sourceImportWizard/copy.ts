@@ -88,13 +88,14 @@ const EN_COPY = {
     searchPlaceholder: 'Search name, locator, column, or type',
   },
   metadata: {
-    title: 'Source metadata',
-    description: 'Inspect the active source object before registering it into the canvas graph.',
+    title: 'Selected source metadata',
+    description: 'Inspect every selected source object before registering the selection.',
+    sharedDatabaseLabel: 'Shared database',
     noObjectSelected: 'No source object selected',
     rowsUnknown: 'Rows unknown',
     sizeUnknown: 'Size unknown',
     noColumns: '0 columns',
-    columnsUnavailable: 'Column metadata is not recorded for the active source object.',
+    columnsUnavailable: 'Column metadata is not recorded for this selected source object.',
     optionsUnavailable:
       'Import options are unavailable because this source object cannot yet be attached by the relational importer.',
   },
@@ -296,14 +297,14 @@ const ES_COPY = {
     searchPlaceholder: 'Buscar por nombre, localizador, columna o tipo',
   },
   metadata: {
-    title: 'Metadatos del origen',
-    description:
-      'Inspecciona el objeto de origen activo antes de registrarlo en el grafo del canvas.',
+    title: 'Metadatos de los orígenes seleccionados',
+    description: 'Inspecciona cada objeto seleccionado antes de registrar la selección.',
+    sharedDatabaseLabel: 'Base de datos compartida',
     noObjectSelected: 'Ningún objeto de origen seleccionado',
     rowsUnknown: 'Filas desconocidas',
     sizeUnknown: 'Tamaño desconocido',
     noColumns: '0 columnas',
-    columnsUnavailable: 'No hay metadatos de columnas registrados para el objeto de origen activo.',
+    columnsUnavailable: 'No hay metadatos de columnas registrados para este objeto seleccionado.',
     optionsUnavailable:
       'Las opciones de importación no están disponibles porque el importador relacional aún no puede adjuntar este objeto de origen.',
   },
