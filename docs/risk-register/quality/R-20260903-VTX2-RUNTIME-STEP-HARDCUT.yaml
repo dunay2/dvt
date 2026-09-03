@@ -1,0 +1,25 @@
+---
+id: R-20260903-VTX2-RUNTIME-STEP-HARDCUT
+title: Persisted plans may contain retired SQL-first step kinds
+status: Open
+date: 2026-09-03
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/adapter-temporal
+severity: Medium
+probability: Low
+---
+mitigation:
+  summary: >
+    Canonical plan validation rejects all three retired kinds before dispatch. The compile catalog,
+    API context binding, worker registry, adapter exports, and proof commands contain no fallback or
+    alias. Current DBT, Spark, RLS, and object-file behavior remains covered independently.
+  evidence:
+    - docs/evidence/ED-20260903-vtx2-runtime-step-hardcut.md
+    - docs/planning/proposals/mandatory/runtime-and-contracts/vtx2-runtime-step-hardcut-plan-20260903.md
+    - packages/@dvt/contracts/test/step-registry.test.ts
+    - apps/api/test/modules/planCompileBoundary.test.ts
+    - apps/api/test/entrypoints/http/retiredRuntimeRoutes.test.ts
+  follow_up:
+    - Operators must recompile supported plans instead of migrating retired SQL-first plan
+      artifacts.
