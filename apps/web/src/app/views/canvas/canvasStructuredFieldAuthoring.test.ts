@@ -14,7 +14,10 @@ import {
   applyDvtSubstraitSemanticDocument,
   readDvtTransformAuthoringAuthority,
 } from './canvasDvtTransformAuthoringAuthority';
-import { applyCanvasStructuredField } from './canvasStructuredFieldAuthoring';
+import {
+  applyCanvasStructuredField,
+  reorderCanvasStructuredFieldChildren,
+} from './canvasStructuredFieldAuthoring';
 
 const source: CanonicalNode = {
   id: 'source-orders',
@@ -133,5 +136,58 @@ describe('ConfigureCanvasDvtNode structured-field command', () => {
       })
     ).toEqual({ outcome: 'rejected' });
     expect(draftSession.localNodeCatalog?.[target.id]).toBe(target);
+  });
+
+  it('reorders nested children through the same draft command boundary', () => {
+    const target = transform();
+    const composed = applyCanvasStructuredField({
+      draftSession: session(target),
+      canonicalNodesById: new Map([[source.id, source]]),
+      request: {
+        nodeId: target.id,
+        draggedFieldId: 'output:customer',
+        targetFieldId: 'output:order_id',
+        parentName: 'identity',
+      },
+    });
+    if (composed.outcome !== 'applied') throw new Error('Expected structured field creation.');
+    const persistedTarget = composed.draftSession.localNodeCatalog?.[target.id];
+    if (persistedTarget == null) throw new Error('Expected composed Transform.');
+    const persistedSession: CanvasDraftSession = {
+      ...composed.draftSession,
+      baseline: {
+        record: {
+          revision: 'revision-8',
+          savedAt: '2026-09-03T00:00:00.000Z',
+          draft: { nodes: [source, persistedTarget] } as never,
+        },
+      },
+      draftRevision: 'revision-8',
+      localNodeCatalog: undefined,
+    };
+
+    const result = reorderCanvasStructuredFieldChildren({
+      draftSession: persistedSession,
+      canonicalNodesById: new Map([[source.id, source]]),
+      request: {
+        nodeId: target.id,
+        parentFieldId: 'output:identity',
+        fieldId: 'output:customer',
+        targetFieldId: 'output:order_id',
+        placement: 'before',
+      },
+    });
+
+    expect(result.outcome).toBe('applied');
+    if (result.outcome !== 'applied') return;
+    const updated = result.draftSession.localNodeCatalog?.[target.id];
+    const authority = readDvtTransformAuthoringAuthority(updated!)!;
+    const inspection = inspectDvtSubstraitStructuredFieldDraft(
+      decodeDvtSubstraitStructuredFieldDocument(authority.semanticDocument)
+    );
+    expect(inspection.ok ? inspection.fields[0]?.children : null).toMatchObject([
+      { fieldId: 'output:customer' },
+      { fieldId: 'output:order_id' },
+    ]);
   });
 });

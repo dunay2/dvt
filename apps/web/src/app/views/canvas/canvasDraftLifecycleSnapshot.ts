@@ -77,11 +77,14 @@ export function buildCurrentDraftPayload(
   canonicalNodes: readonly CanonicalNode[],
   canonicalEdges: readonly CanonicalEdge[]
 ): WorkspaceGraphAuthoringDraft {
-  const canonicalNodeIds = new Set(canonicalNodes.map((node) => node.id));
-  const localCanonicalNodes = Object.values(draftSession.localNodeCatalog ?? {}).filter(
-    (node) => !canonicalNodeIds.has(node.id)
-  );
-  const draftCanonicalNodes = [...canonicalNodes, ...localCanonicalNodes];
+  const draftCanonicalNodes = [
+    ...new Map(
+      [...canonicalNodes, ...Object.values(draftSession.localNodeCatalog ?? {})].map((node) => [
+        node.id,
+        node,
+      ])
+    ).values(),
+  ];
   const currentNodePositions = Object.fromEntries(
     graphNodes.map((node) => [node.id, { x: node.position.x, y: node.position.y }])
   );
