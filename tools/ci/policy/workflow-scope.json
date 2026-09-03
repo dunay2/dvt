@@ -159,7 +159,7 @@
     "scripts/run-turbo-workspace-task.cjs",
     "scripts/db-migrate.cjs",
     "scripts/provision-postgres-app-role.cjs",
-    "scripts/run-temporal-postgres-proof.cjs",
+    "scripts/run-local-postgres.cjs",
     "packages/@dvt/traceability-service/**",
     "traceability.config.json",
     "docs/adr/**"

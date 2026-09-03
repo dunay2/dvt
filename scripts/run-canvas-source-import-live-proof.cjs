@@ -12,7 +12,7 @@ const { Client } = require('pg');
 const readline = require('node:readline');
 const { pathToFileURL } = require('node:url');
 
-const { defaultPgUrl } = require('./run-temporal-postgres-proof.cjs');
+const { defaultPgUrl } = require('./run-local-postgres.cjs');
 const { buildLocalDbtArtifactEnv, seedLocalPostgresProofData } = require('./run-dev-stack.cjs');
 const {
   LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS,
@@ -28,7 +28,7 @@ class CanvasSourceImportLiveProofRunner {
     this.webPort = 4174;
     this.readyTimeoutMs = 240_000;
     this.pollIntervalMs = 500;
-    this.postgresBootstrapScript = path.resolve(__dirname, 'run-temporal-postgres-proof.cjs');
+    this.postgresBootstrapScript = path.resolve(__dirname, 'run-local-postgres.cjs');
     this.temporalPackageRoot = path.resolve(__dirname, '../packages/@dvt/adapter-temporal');
     this.webPackageRoot = path.resolve(__dirname, '../apps/web');
     this.localSpecPath = path.resolve(
