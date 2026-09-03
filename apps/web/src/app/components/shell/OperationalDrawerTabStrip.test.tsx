@@ -50,11 +50,16 @@ describe('OperationalDrawerTabStrip', () => {
       );
     });
 
-    const close = container.querySelector<HTMLButtonElement>('[data-tab-close="log"]');
-    expect(close?.closest('[role="tab"]')).toBeNull();
+    const close = container.querySelector<HTMLElement>('[data-tab-close="log"]');
+    expect(close?.closest('[role="tab"]')).not.toBeNull();
     await act(async () => fireEvent.click(close!));
     expect(onCloseTab).toHaveBeenCalledWith('log');
     expect(onSelectTab).not.toHaveBeenCalled();
+
+    await act(async () =>
+      fireEvent.keyDown(container.querySelector('[data-tab="runs"]')!, { key: 'Delete' })
+    );
+    expect(onCloseTab).toHaveBeenCalledWith('runs');
   });
 
   it('restores a hidden tab from the strip context menu', async () => {

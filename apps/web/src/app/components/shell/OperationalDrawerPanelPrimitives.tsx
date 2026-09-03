@@ -63,6 +63,7 @@ export function OperationalDrawerPanelSurface({
           : operationalDrawerPanelClassNames.panelSurface
       }
       aria-label={ariaLabel}
+      tabIndex={0}
     >
       {children}
     </section>

@@ -16,10 +16,9 @@ import type {
 
 const classes = {
   list: 'flex min-h-10 shrink-0 flex-wrap items-center gap-1 border-b border-[color:var(--border-default)] px-3',
-  item: 'group flex h-9 items-center border-b-2 border-transparent data-[active=true]:border-[color:var(--focus-ring)]',
-  tab: 'h-full px-2 text-xs font-semibold text-[var(--text-muted)] group-data-[active=true]:text-[var(--text-strong)]',
+  tab: 'group flex h-9 items-center border-b-2 border-transparent px-2 text-xs font-semibold text-[var(--text-muted)] data-[active=true]:border-[color:var(--focus-ring)] data-[active=true]:text-[var(--text-strong)]',
   close:
-    'mr-1 grid size-5 place-items-center rounded text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-strong)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]',
+    'ml-1 grid size-5 place-items-center rounded text-[var(--text-muted)] group-hover:bg-[var(--surface-hover)] group-hover:text-[var(--text-strong)]',
   closeIcon: 'size-3',
 } as const;
 
@@ -75,34 +74,49 @@ export function OperationalDrawerTabStrip({
           aria-label={ariaLabel}
         >
           {visibleTabs.map((tab) => (
-            <div key={tab.id} className={classes.item} data-active={activeTab === tab.id}>
-              <button
-                type="button"
-                role="tab"
-                id={`bottom-operational-drawer-tab-${tab.id}`}
-                aria-controls={`bottom-operational-drawer-panel-${tab.id}`}
-                aria-selected={activeTab === tab.id}
-                tabIndex={activeTab === tab.id ? 0 : -1}
-                data-slot="bottom-operational-drawer-tab"
-                data-tab={tab.id}
-                className={classes.tab}
-                onClick={() => onSelectTab(tab.id)}
-                onKeyDown={(event) => moveFocus(event, tab.id)}
-              >
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              id={`bottom-operational-drawer-tab-${tab.id}`}
+              aria-controls={`bottom-operational-drawer-panel-${tab.id}`}
+              aria-selected={activeTab === tab.id}
+              aria-keyshortcuts="Delete"
+              tabIndex={activeTab === tab.id ? 0 : -1}
+              data-slot="bottom-operational-drawer-tab"
+              data-tab={tab.id}
+              className={classes.tab}
+              data-active={activeTab === tab.id}
+              onClick={(event) => {
+                if ((event.target as HTMLElement).closest('[data-tab-close]') != null) {
+                  onCloseTab(tab.id);
+                  return;
+                }
+                onSelectTab(tab.id);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Delete') {
+                  event.preventDefault();
+                  onCloseTab(tab.id);
+                  return;
+                }
+                moveFocus(event, tab.id);
+              }}
+            >
+              <span>
                 {tab.label}
                 {tab.count == null ? null : <span> {tab.count}</span>}
-              </button>
-              <button
-                type="button"
-                aria-label={closeTabLabel.replace('{tab}', tab.label)}
+              </span>
+              <span
+                aria-hidden="true"
+                title={closeTabLabel.replace('{tab}', tab.label)}
                 data-slot="bottom-operational-drawer-tab-close"
                 data-tab-close={tab.id}
                 className={classes.close}
-                onClick={() => onCloseTab(tab.id)}
               >
                 <X aria-hidden="true" className={classes.closeIcon} />
-              </button>
-            </div>
+              </span>
+            </button>
           ))}
         </div>
       </ContextMenuTrigger>
