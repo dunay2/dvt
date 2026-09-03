@@ -83,6 +83,13 @@ and Engine/runtime handles execution lifecycle.
   before idempotent replay; revoked authority may refuse a prior replay.
 - Unsupported stored schema versions fail closed. No migration-state or
   compatibility path exists in this rail.
+- A `dvt:transform` node may remain unconfigured, but once its
+  `transformAuthoring` metadata exists it must decode as the exact pinned
+  Substrait Plan and validate its semantic digest, profile coordinates and DVT
+  sidecar binding.
+- The same aggregate parser governs protected save and reload. A malformed or
+  unsupported semantic document cannot be stored as current truth and cannot
+  be returned as a valid draft.
 
 ## User stories
 
@@ -114,6 +121,23 @@ stateDiagram-v2
 
 Save success means the editable draft is persisted. It does not mean the whole
 draft is compile-ready.
+
+## Durable semantic document boundary
+
+```mermaid
+flowchart LR
+  Transform["dvt:transform metadata"] --> Aggregate[WorkspaceGraphAuthoringDraft]
+  Aggregate --> Decode["Pinned Substrait decode + SHA/profile/sidecar validation"]
+  Decode --> Save[SaveWorkspaceGraphDraft]
+  Save --> Jsonb[(Existing draft_json JSONB/CAS)]
+  Jsonb --> Get[GetWorkspaceGraphDraft]
+  Get --> Decode
+  Legacy[SQL/VTX1 authority] -. fail closed .-> Decode
+```
+
+The decoder is a contract invariant, not a new persistence owner. PostgreSQL
+stores the aggregate exactly; projections remain read-only consumers and never
+write back as semantic authority.
 
 ## Component map
 

@@ -2,6 +2,7 @@
 import {
   DVT_TRANSFORM_AUTHORING_MODE,
   DVT_TRANSFORM_AUTHORING_AUTHORITY_VERSION,
+  DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY,
   DvtTransformAuthoringAuthorityV1Schema,
   canonicalizeDvtSubstraitSemanticDocumentV1,
   type DvtSubstraitSemanticDocumentV1,
@@ -9,7 +10,6 @@ import {
 
 import type { CanonicalNode } from '../../types/canonical';
 
-export const DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY = 'transformAuthoring' as const;
 const RETIRED_LINEAGE_PROVENANCE_METADATA_KEY = 'transformLineageProvenance';
 
 export type DvtTransformAuthoringAuthority = Readonly<{

@@ -17,25 +17,7 @@
  * @consequence Rename/reorder/reload can preserve identity without a private DVT relational IR.
  * @version 1.0.0
  */
-import { base64Bytes, sha256Hex } from '@dvt/crypto';
 import { z } from 'zod';
-
-import { ConnectedSourceRefSchema } from '../source-import/ConnectedSourceRef.v1.js';
-
-const NonBlankStringSchema = z
-  .string()
-  .refine(
-    (value) => value.length > 0 && value === value.trim(),
-    'Expected a non-blank string without exterior whitespace.'
-  );
-const Sha256Schema = z.string().regex(/^[0-9a-f]{64}$/, 'Expected a lowercase SHA-256 hex digest.');
-const Base64Schema = z
-  .string()
-  .min(4)
-  .regex(
-    /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/,
-    'Expected canonical base64 without whitespace.'
-  );
 
 export const DVT_SUBSTRAIT_PROFILE_SCHEMA_VERSION = 'dvt-substrait-profile.v1' as const;
 export const DVT_SUBSTRAIT_SEMANTIC_DOCUMENT_SCHEMA_VERSION =
@@ -101,132 +83,7 @@ export const DvtSubstraitProfileRefV1Schema = z
   })
   .strict();
 
-export const DvtSubstraitSemanticPlanV1Schema = z
-  .object({
-    encoding: z.literal(DVT_SUBSTRAIT_PLAN_ENCODING),
-    bytesBase64: Base64Schema,
-    sha256: Sha256Schema,
-  })
-  .strict()
-  .superRefine((plan, context) => {
-    const actualSha256 = sha256Hex(base64Bytes(plan.bytesBase64));
-    if (actualSha256 !== plan.sha256) {
-      context.addIssue({
-        code: 'custom',
-        message: 'Semantic Plan SHA-256 does not match the serialized Substrait bytes.',
-        path: ['sha256'],
-      });
-    }
-  });
-
-export const DvtSubstraitRelationBindingV1Schema = z
-  .object({
-    relationId: NonBlankStringSchema,
-    relAnchor: z.number().int().positive().max(0xffffffff),
-    sourceRef: ConnectedSourceRefSchema.optional(),
-    displayName: NonBlankStringSchema.optional(),
-  })
-  .strict();
-
-export const DvtSubstraitFieldBindingV1Schema = z
-  .object({
-    fieldId: NonBlankStringSchema,
-    relationId: NonBlankStringSchema,
-    outputOrdinal: z.number().int().nonnegative(),
-    displayName: NonBlankStringSchema.optional(),
-    description: NonBlankStringSchema.optional(),
-  })
-  .strict();
-
-export const DvtSubstraitAuthoringSidecarV1Schema = z
-  .object({
-    schemaVersion: z.literal(DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION),
-    semanticPlanSha256: Sha256Schema,
-    relations: z.array(DvtSubstraitRelationBindingV1Schema).min(1),
-    fields: z.array(DvtSubstraitFieldBindingV1Schema),
-  })
-  .strict()
-  .superRefine((sidecar, context) => {
-    const relationIds = new Set<string>();
-    const relAnchors = new Set<number>();
-
-    sidecar.relations.forEach((relation, index) => {
-      if (relationIds.has(relation.relationId)) {
-        context.addIssue({
-          code: 'custom',
-          message: `Duplicate relationId ${relation.relationId}.`,
-          path: ['relations', index, 'relationId'],
-        });
-      }
-      relationIds.add(relation.relationId);
-
-      if (relAnchors.has(relation.relAnchor)) {
-        context.addIssue({
-          code: 'custom',
-          message: `Duplicate Substrait rel_anchor ${relation.relAnchor}.`,
-          path: ['relations', index, 'relAnchor'],
-        });
-      }
-      relAnchors.add(relation.relAnchor);
-    });
-
-    const fieldIds = new Set<string>();
-    const outputPositions = new Set<string>();
-
-    sidecar.fields.forEach((field, index) => {
-      if (fieldIds.has(field.fieldId)) {
-        context.addIssue({
-          code: 'custom',
-          message: `Duplicate fieldId ${field.fieldId}.`,
-          path: ['fields', index, 'fieldId'],
-        });
-      }
-      fieldIds.add(field.fieldId);
-
-      if (!relationIds.has(field.relationId)) {
-        context.addIssue({
-          code: 'custom',
-          message: `Unknown relationId ${field.relationId}.`,
-          path: ['fields', index, 'relationId'],
-        });
-      }
-
-      const outputPosition = `${field.relationId}:${field.outputOrdinal}`;
-      if (outputPositions.has(outputPosition)) {
-        context.addIssue({
-          code: 'custom',
-          message: `Duplicate output ordinal ${field.outputOrdinal} for ${field.relationId}.`,
-          path: ['fields', index, 'outputOrdinal'],
-        });
-      }
-      outputPositions.add(outputPosition);
-    });
-  });
-
-export const DvtSubstraitSemanticDocumentV1Schema = z
-  .object({
-    schemaVersion: z.literal(DVT_SUBSTRAIT_SEMANTIC_DOCUMENT_SCHEMA_VERSION),
-    profile: DvtSubstraitProfileRefV1Schema,
-    semanticPlan: DvtSubstraitSemanticPlanV1Schema,
-    sidecar: DvtSubstraitAuthoringSidecarV1Schema,
-  })
-  .strict()
-  .superRefine((document, context) => {
-    if (document.sidecar.semanticPlanSha256 !== document.semanticPlan.sha256) {
-      context.addIssue({
-        code: 'custom',
-        message: 'Authoring sidecar is bound to a different semantic Plan digest.',
-        path: ['sidecar', 'semanticPlanSha256'],
-      });
-    }
-  });
-
 export type DvtSubstraitProfileRefV1 = z.infer<typeof DvtSubstraitProfileRefV1Schema>;
-export type DvtSubstraitSemanticPlanV1 = z.infer<typeof DvtSubstraitSemanticPlanV1Schema>;
-export type DvtSubstraitRelationBindingV1 = z.infer<typeof DvtSubstraitRelationBindingV1Schema>;
-export type DvtSubstraitFieldBindingV1 = z.infer<typeof DvtSubstraitFieldBindingV1Schema>;
-export type DvtSubstraitAuthoringSidecarV1 = z.infer<typeof DvtSubstraitAuthoringSidecarV1Schema>;
-export type DvtSubstraitSemanticDocumentV1 = z.infer<typeof DvtSubstraitSemanticDocumentV1Schema>;
 
 export type DvtSubstraitProfileCompatibility =
   | { status: 'compatible' }
@@ -264,14 +121,4 @@ export function evaluateDvtSubstraitProfileCompatibility(
     return { status: 'incompatible', reason: 'spec-commit-mismatch' };
   }
   return { status: 'compatible' };
-}
-
-export function canonicalizeDvtSubstraitSemanticDocumentV1(
-  input: unknown
-): DvtSubstraitSemanticDocumentV1 {
-  return DvtSubstraitSemanticDocumentV1Schema.parse(input);
-}
-
-export function serializeDvtSubstraitSemanticDocumentV1(input: unknown): string {
-  return JSON.stringify(canonicalizeDvtSubstraitSemanticDocumentV1(input));
 }

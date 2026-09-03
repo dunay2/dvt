@@ -188,6 +188,7 @@ export type {
   WorkspaceGraphAuthoringEdgeExecutionGateState,
 } from './contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.js';
 export {
+  DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY,
   DVT_TRANSFORM_AUTHORING_AUTHORITY_VERSION,
   DVT_TRANSFORM_AUTHORING_MODE,
   DvtTransformAuthoringAuthorityV1Schema,

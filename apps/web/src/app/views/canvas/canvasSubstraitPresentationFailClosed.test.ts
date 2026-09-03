@@ -46,7 +46,9 @@ describe('Substrait card presentation fail-closed behavior', () => {
       sourceNodeId: 'source-customers',
       targetNodeId: 'transform-customers',
     });
-    draft.plan.relations = [];
+    const existingRelation = draft.plan.relations[0];
+    if (existingRelation == null) throw new Error('Expected the canonical pilot relation.');
+    draft.plan.relations.push(existingRelation);
     const node = applyDvtSubstraitSemanticDocument(
       transformNode(),
       encodeDvtSubstraitPilotDocument(draft)
