@@ -244,19 +244,46 @@ describe('canvas copy catalog', () => {
     expect(coveredErrorCodes.size).toBe(INSPECTOR_DRAFT_ERROR_COPY_KEYS.length);
   });
 
-  it('formats transformation graph validation summaries from locale copy', () => {
-    expect(formatTransformationGraphValidationSummary('requires_executable_path', 'en-US')).toBe(
-      'Execution Preview requires a connected source -> transform -> sink path.'
+  it('keeps terminal-result diagnostics independent from a fixed graph topology', () => {
+    const topologyDiagnostics = [
+      'requires_executable_path',
+      'ambiguous_executable_paths',
+      'requires_three_nodes',
+      'requires_one_of_each_role',
+      'requires_two_edges',
+      'invalid_edge_order',
+    ] as const;
+
+    for (const locale of ['en-US', 'es-ES']) {
+      const diagnostics = topologyDiagnostics.map((code) =>
+        formatTransformationGraphValidationSummary(code, locale)
+      );
+
+      expect(diagnostics.join(' ')).not.toMatch(/source\s*->\s*transform|transform\s*->\s*sink/iu);
+      expect(diagnostics.every((diagnostic) => /terminal/iu.test(diagnostic))).toBe(true);
+    }
+
+    expect(formatTransformationGraphValidationSummary('requires_executable_path', 'en-US')).toMatch(
+      /currently evaluable/iu
     );
-    expect(formatTransformationGraphValidationSummary('ambiguous_executable_paths', 'en-US')).toBe(
-      'Execution Preview requires one selected source -> transform -> sink path.'
+    expect(formatTransformationGraphValidationSummary('requires_executable_path', 'es-ES')).toMatch(
+      /evaluable actualmente/iu
     );
-    expect(formatTransformationGraphValidationSummary('requires_executable_path', 'es-ES')).toBe(
-      'El Execution Preview requiere una ruta conectada source -> transform -> sink.'
-    );
-    expect(formatTransformationGraphValidationSummary('ambiguous_executable_paths', 'es-ES')).toBe(
-      'El Execution Preview requiere seleccionar una única ruta source -> transform -> sink.'
-    );
+    expect(
+      formatTransformationGraphValidationSummary('requires_executable_path', 'en-US')
+    ).not.toMatch(/consolidat/iu);
+    expect(
+      formatTransformationGraphValidationSummary('requires_executable_path', 'es-ES')
+    ).not.toMatch(/consolidad/iu);
+
+    for (const locale of ['en-US', 'es-ES'] as const) {
+      expect(formatTransformationGraphValidationSummary('requires_two_edges', locale)).toMatch(
+        /add|remove|añade|elimina/iu
+      );
+      expect(formatTransformationGraphValidationSummary('invalid_edge_order', locale)).toMatch(
+        /reconnect|recon[eé]cta/iu
+      );
+    }
   });
 
   it('formats a missing plugin connection policy from locale copy', () => {
