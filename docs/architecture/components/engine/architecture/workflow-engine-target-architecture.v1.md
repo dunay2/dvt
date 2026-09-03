@@ -128,10 +128,10 @@ Mainline now partially realizes this seam:
 
 - `@dvt/adapter-temporal` dispatches runtime task steps through
   `StepActivityDispatcher`
-- provider-owned capability registries can register non-dbt step activity
+- provider-owned plugins can register bounded non-DBT step activity
   implementations
-- `@dvt/adapter-postgres` supplies the first relational implementation through
-  `PostgresRelationalExecutionCapability`
+- the object-file plugin uses `PostgresObjectFileLoadingCapability` without
+  exposing a general SQL transformation runtime
 
 What remains target-state rather than normative public contract is the broader
 promotion of this seam into a repository-wide adapter policy or ADR-backed
