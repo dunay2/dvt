@@ -8,9 +8,10 @@
  */
 import { z } from 'zod';
 
-import { DvtSubstraitSemanticDocumentV1Schema } from './DvtSubstraitProfile.v1.js';
+import { DvtSubstraitSemanticDocumentV1Schema } from './DvtSubstraitSemanticDocument.v1.js';
 
 export const DVT_TRANSFORM_AUTHORING_AUTHORITY_VERSION = 'v1' as const;
+export const DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY = 'transformAuthoring' as const;
 export const DVT_TRANSFORM_AUTHORING_MODE = {
   substrait: 'substrait',
 } as const;

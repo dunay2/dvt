@@ -15,6 +15,11 @@ import { z } from 'zod';
 
 import { isNonBlankString, NON_BLANK_STRING_MESSAGE } from '../../utils/contractPrimitives.js';
 
+import {
+  DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY,
+  DvtTransformAuthoringAuthorityV1Schema,
+} from './DvtTransformAuthoringAuthority.v1.js';
+
 const NonBlankStringSchema = z
   .string()
   .min(1)
@@ -238,6 +243,33 @@ function addGraphShapeIssues(
       message: 'WorkspaceGraphAuthoringDraft nodes must have unique ids.',
     });
   }
+
+  graph.nodes.forEach((node, index) => {
+    if (
+      node.kind !== 'dvt:transform' ||
+      node.metadata === undefined ||
+      !Object.hasOwn(node.metadata, DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY)
+    ) {
+      return;
+    }
+    if (
+      !DvtTransformAuthoringAuthorityV1Schema.safeParse(
+        node.metadata[DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY]
+      ).success
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'DVT Transform authoring metadata must contain canonical Substrait authority.',
+        path: [
+          ...pathPrefix,
+          'nodes',
+          index,
+          'metadata',
+          DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY,
+        ],
+      });
+    }
+  });
 
   for (const nodeId of graph.nodeIds) {
     if (!semanticNodeIds.has(nodeId)) {
