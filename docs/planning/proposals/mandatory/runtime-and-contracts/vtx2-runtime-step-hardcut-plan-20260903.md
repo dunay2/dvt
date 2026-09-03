@@ -120,11 +120,12 @@ domainObjects:
 allowedImplementationSurfaces:
   - packages/@dvt/contracts/**
   - packages/@dvt/adapter-postgres/**
-  - packages/@dvt/adapter-temporal/test/**
+  - packages/@dvt/adapter-temporal/**
   - apps/api/**
   - apps/temporal-worker/**
   - packages/@dvt/engine/test/**
   - scripts/supported-runtime-proof/**
+  - CI scope and workflow declarations governing PostgreSQL runtime proofs
   - docs/**
 forbiddenImplementationSurfaces:
   - packages/@dvt/planner/**
