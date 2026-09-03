@@ -271,6 +271,39 @@ describe('DvtAuthoringFields', () => {
     expect(draftJson()).toContain('"table":"orders_daily"');
   });
 
+  it('authors and removes the same admitted filter on a Source columns section', () => {
+    const source = buildJoinWarehouseSourceNode({
+      id: 'source-orders',
+      table: 'orders',
+      columns: ['order_id', 'customer'],
+    });
+    renderFields(source, undefined, undefined, [source], [], 'columns');
+    expect(draftJson()).toContain('"semantic"');
+
+    const field = container.querySelector(
+      'select[name="dvt-filter-field"]'
+    ) as HTMLSelectElement | null;
+    const value = container.querySelector(
+      'input[name="dvt-filter-value"]'
+    ) as HTMLInputElement | null;
+    expect(field).not.toBeNull();
+    expect(value).not.toBeNull();
+
+    act(() => {
+      fireEvent.change(field!, { target: { value: 'output:customer' } });
+      fireEvent.input(value!, { target: { value: 'Ada' } });
+      fireEvent.click(container.querySelector('[data-slot="dvt-filter-apply"]')!);
+    });
+
+    expect(container.querySelector('[data-slot="dvt-filter-active"]')?.textContent).toContain(
+      'customer'
+    );
+    act(() => {
+      fireEvent.click(container.querySelector('[data-slot="dvt-filter-remove"]')!);
+    });
+    expect(container.querySelector('[data-slot="dvt-filter-active"]')).toBeNull();
+  });
+
   it('starts one typed Substrait INNER JOIN from two compatible connected datasets', () => {
     const customers = buildJoinWarehouseSourceNode({
       id: 'source-customers',

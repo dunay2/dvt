@@ -11,6 +11,7 @@ import { resolveInheritedDvtConnectionRef } from './canvasDvtAuthoringModel';
 import { resolveDvtSubstraitJoinAppendCandidates } from './canvasDvtSubstraitJoinComposition';
 import { DvtSinkAuthoringSection } from './DvtSinkAuthoringSection';
 import { DvtSourceAuthoringSection } from './DvtSourceAuthoringSection';
+import { DvtRelationFilterAuthoringSection } from './DvtRelationFilterAuthoringSection';
 import { DvtSubstraitCompositionStart } from './DvtSubstraitCompositionStart';
 import { DvtSubstraitInnerJoinAuthoringSection } from './DvtSubstraitInnerJoinAuthoringSection';
 import { DvtSubstraitPilotAuthoringSection } from './DvtSubstraitPilotAuthoringSection';
@@ -48,16 +49,47 @@ export function DvtAuthoringFields({
   if (!draft.dvt) return null;
 
   if (draft.dvt.kind === 'source') {
-    if (section !== 'all' && section !== 'general') return null;
+    if (section === 'code' || draft.dvt.semantic == null) {
+      return section === 'all' || section === 'general' ? (
+        <DvtSourceAuthoringSection
+          node={node}
+          disabled={disabled}
+          draft={draft.dvt}
+          errors={errors.dvt}
+          sourceTarget={formatQualifiedTarget([draft.dvt.schema, draft.dvt.table]) || '-'}
+          onChange={onChange}
+        />
+      ) : null;
+    }
     return (
-      <DvtSourceAuthoringSection
-        node={node}
-        disabled={disabled}
-        draft={draft.dvt}
-        errors={errors.dvt}
-        sourceTarget={formatQualifiedTarget([draft.dvt.schema, draft.dvt.table]) || '-'}
-        onChange={onChange}
-      />
+      <>
+        {section === 'all' || section === 'general' ? (
+          <DvtSourceAuthoringSection
+            node={node}
+            disabled={disabled}
+            draft={draft.dvt}
+            errors={errors.dvt}
+            sourceTarget={formatQualifiedTarget([draft.dvt.schema, draft.dvt.table]) || '-'}
+            onChange={onChange}
+          />
+        ) : null}
+        {section === 'all' || section === 'columns' ? (
+          <DvtRelationFilterAuthoringSection
+            disabled={disabled}
+            draft={draft.dvt.semantic}
+            node={node}
+            nodes={nodes}
+            edges={edges}
+            onChange={(semantic) =>
+              onChange((current) =>
+                current.dvt?.kind === 'source'
+                  ? { ...current, dvt: { ...current.dvt, semantic } }
+                  : current
+              )
+            }
+          />
+        ) : null}
+      </>
     );
   }
 
@@ -77,13 +109,29 @@ export function DvtAuthoringFields({
     if (draft.dvt.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return null;
     if (draft.dvt.shape === 'projection') {
       return (
-        <DvtSubstraitCompositionStart
-          disabled={disabled}
-          node={node}
-          nodes={nodes}
-          edges={edges}
-          onChange={onChange}
-        />
+        <div className="space-y-4">
+          <DvtRelationFilterAuthoringSection
+            disabled={disabled}
+            draft={draft.dvt}
+            node={node}
+            nodes={nodes}
+            edges={edges}
+            onChange={(semantic) =>
+              onChange((current) =>
+                current.dvt?.kind === 'transform' && current.dvt.mode === 'substrait'
+                  ? { ...current, dvt: { ...current.dvt, ...semantic } }
+                  : current
+              )
+            }
+          />
+          <DvtSubstraitCompositionStart
+            disabled={disabled}
+            node={node}
+            nodes={nodes}
+            edges={edges}
+            onChange={onChange}
+          />
+        </div>
       );
     }
     if (draft.dvt.shape === 'inner_join') {
