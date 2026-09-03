@@ -70,7 +70,9 @@ describe('OperationalDrawerDataTable', () => {
     });
 
     const customer = container.querySelector<HTMLButtonElement>('[data-column-id="customer"]')!;
-    act(() => fireEvent.click(customer));
+    act(() => {
+      fireEvent.click(customer);
+    });
     expect(
       container
         .querySelector('[data-column-id="customer"]')
@@ -79,7 +81,9 @@ describe('OperationalDrawerDataTable', () => {
     ).toBe('ascending');
     expect(visibleRows().map((row) => row[0])).toEqual(['2', '3', '1', '4']);
 
-    act(() => fireEvent.click(customer));
+    act(() => {
+      fireEvent.click(customer);
+    });
     expect(
       container
         .querySelector('[data-column-id="customer"]')
@@ -88,7 +92,9 @@ describe('OperationalDrawerDataTable', () => {
     ).toBe('descending');
     expect(visibleRows().map((row) => row[0])).toEqual(['1', '2', '3', '4']);
 
-    act(() => fireEvent.click(customer));
+    act(() => {
+      fireEvent.click(customer);
+    });
     expect(
       container
         .querySelector('[data-column-id="customer"]')
@@ -122,7 +128,9 @@ describe('OperationalDrawerDataTable', () => {
     ).toEqual(['customer', 'id']);
     expect(visibleRows()[0]).toEqual(['beta', '1']);
 
-    act(() => fireEvent.keyDown(customer, { altKey: true, key: 'ArrowRight' }));
+    act(() => {
+      fireEvent.keyDown(customer, { altKey: true, key: 'ArrowRight' });
+    });
     expect(
       Array.from(container.querySelectorAll('th')).map((header) => header.textContent)
     ).toEqual(['id', 'customer']);
