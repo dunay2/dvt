@@ -134,8 +134,7 @@ disables this isolation and can exhaust the 4 GB worker limit.
 | Temporal adapter unit tests        | `pnpm test:adapter-temporal`                                               | `@dvt/adapter-temporal`                              | [`package.json`](../../package.json)                                                                   |
 | Temporal adapter runtime closure   | `pnpm test:adapter-temporal` then `pnpm test:adapter-temporal:integration` | `@dvt/adapter-temporal`                              | [`package.json`](../../package.json)                                                                   |
 | Temporal transformation tests      | `pnpm test:adapter-temporal:integration:transformation`                    | Transformation runtime path                          | [`package.json`](../../package.json)                                                                   |
-| Temporal Postgres integration      | `pnpm test:adapter-temporal:integration:postgres`                          | Capability-specific PG path                          | [`package.json`](../../package.json)                                                                   |
-| Temporal Postgres Docker proof     | `pnpm test:adapter-temporal:integration:postgres:docker`                   | Canonical local Docker PG proof                      | [`package.json`](../../package.json)                                                                   |
+| Local PostgreSQL lifecycle         | `pnpm postgres:local:up` / `reset` / `down`                                | Development database environment                     | [`scripts/run-local-postgres.cjs`](../../scripts/run-local-postgres.cjs)                               |
 | CLI package tests                  | `pnpm test:cli`                                                            | `@dvt/cli`                                           | [`package.json`](../../package.json)                                                                   |
 | Delivery package tests             | `pnpm --filter @dvt/delivery test`                                         | `@dvt/delivery`                                      | [`packages/@dvt/delivery/package.json`](../../packages/@dvt/delivery/package.json)                     |
 | Outbox worker arch test            | `pnpm --filter dvt-outbox-worker test:arch`                                | `apps/outbox-worker`                                 | [`apps/outbox-worker/package.json`](../../apps/outbox-worker/package.json)                             |
@@ -669,9 +668,6 @@ Frontend Tests` lane and the main/manual `Full CI` baseline both set the same we
   `prepare:integration` and `test:integration` steps.
 - `pnpm test:adapter-temporal:integration:transformation` is capability-specific
   verification for transformation-flow semantics above the Temporal baseline.
-- `pnpm test:adapter-temporal:integration:postgres` is capability-specific
-  verification for the relational Postgres path. It is not the baseline
-  closeout command for every Temporal slice.
 - Local Node selection is pinned through `.node-version` and `.nvmrc` with the
   same Node 22 baseline that the shared CI setup already uses.
 - `pnpm run hooks:precommit` runs Prettier plus
@@ -689,10 +685,9 @@ Frontend Tests` lane and the main/manual `Full CI` baseline both set the same we
   declarations from built workspace outputs. That keeps direct local
   `pnpm --filter <pkg> typecheck` behavior aligned with the package’s existing
   cold-build assumptions instead of creating a fake no-emit contract.
-- `pnpm test:adapter-temporal:integration:postgres:docker` is the canonical
-  local proof wrapper for the relational Postgres capability path; it resets
-  the Docker PostgreSQL environment, waits for readiness, and then runs the
-  capability-specific lane with the canonical local DSN.
+- `pnpm postgres:local:reset` recreates and validates only the local PostgreSQL
+  development database. RLS and object-file runtime proofs remain separate CI
+  behaviors.
 - `pnpm --filter dvt-api test:integration` skips cleanly when `DATABASE_URL` or
   `DVT_PG_URL` is absent; when configured it exercises the real API protected
   runtime with JWKS-backed OIDC verification plus PostgreSQL authorization data.
