@@ -27,20 +27,7 @@ const operationalDrawerPanelClassNames = {
   previewBlockers: 'mt-2 flex flex-wrap gap-1.5',
   sectionKicker: 'text-[11px] font-semibold uppercase text-[var(--text-muted)]',
   tabPanel: 'min-w-0 flex-1',
-  dataTableFrame:
-    'w-full max-w-full min-w-0 overflow-auto rounded border border-[color:var(--border-default)]',
-  dataTable: 'w-max min-w-full border-collapse text-left font-mono text-xs',
-  dataTableHeader:
-    'sticky top-0 z-10 border-b border-[color:var(--border-default)] bg-[var(--surface-raised)] text-[var(--text-strong)]',
-  dataTableHeaderCell:
-    'min-w-32 max-w-80 overflow-hidden border-r border-[color:var(--border-default)] px-3 py-2 font-semibold text-ellipsis whitespace-nowrap last:border-r-0',
-  dataTableRow: 'last:[&>td]:border-b-0',
-  dataTableCell:
-    'min-w-32 max-w-80 overflow-hidden border-r border-b border-[color:var(--border-muted)] px-3 py-2 text-[var(--text-default)] last:border-r-0',
-  dataTableValue: 'block max-w-80 truncate',
-  dataTableNull: 'italic text-[var(--text-muted)]',
   dataNotice: 'mb-2 text-xs text-[var(--text-muted)]',
-  screenReaderOnly: 'sr-only',
 } as const;
 
 export function OperationalDrawerPanelSurface({
@@ -80,69 +67,6 @@ export function OperationalDrawerDataNotice({
   children,
 }: Readonly<{ children: ReactNode }>): JSX.Element {
   return <p className={operationalDrawerPanelClassNames.dataNotice}>{children}</p>;
-}
-
-export function OperationalDrawerDataTable({
-  caption,
-  columns,
-  nullValueLabel,
-  rows,
-}: Readonly<{
-  caption: string;
-  columns: readonly Readonly<{ name: string }>[];
-  nullValueLabel: string;
-  rows: readonly Readonly<{ values: readonly (string | null)[] }>[];
-}>): JSX.Element {
-  return (
-    <div
-      data-slot="bottom-operational-data-table-frame"
-      className={operationalDrawerPanelClassNames.dataTableFrame}
-    >
-      <table
-        data-slot="bottom-operational-data-table"
-        className={operationalDrawerPanelClassNames.dataTable}
-      >
-        <caption className={operationalDrawerPanelClassNames.screenReaderOnly}>{caption}</caption>
-        <thead className={operationalDrawerPanelClassNames.dataTableHeader}>
-          <tr>
-            {columns.map((column) => (
-              <th
-                key={column.name}
-                scope="col"
-                className={operationalDrawerPanelClassNames.dataTableHeaderCell}
-              >
-                {column.name}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, rowIndex) => (
-            <tr key={rowIndex} className={operationalDrawerPanelClassNames.dataTableRow}>
-              {row.values.map((value, columnIndex) => (
-                <td key={columnIndex} className={operationalDrawerPanelClassNames.dataTableCell}>
-                  {value == null ? (
-                    <span className={operationalDrawerPanelClassNames.dataTableNull}>
-                      {nullValueLabel}
-                    </span>
-                  ) : (
-                    <span
-                      data-slot="bottom-operational-data-value"
-                      className={operationalDrawerPanelClassNames.dataTableValue}
-                      title={value}
-                      aria-label={value}
-                    >
-                      {value}
-                    </span>
-                  )}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
 }
 
 export function OperationalDrawerWarningBadge({
