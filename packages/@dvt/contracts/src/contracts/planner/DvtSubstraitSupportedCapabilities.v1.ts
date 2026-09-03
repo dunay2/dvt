@@ -1,4 +1,9 @@
-/** Admission evidence attached to supported entries during catalog composition. */
+/**
+ * @baseline ADR-0064: Substrait semantic reference and bounded logical profile
+ * @decision Attach typed evidence from one admission-group collection.
+ * @consequence No ID-set switch or parallel supported-capability registry remains.
+ * @version 1.0.0
+ */
 import {
   DvtSubstraitStandardAdmissionEvidenceV1Schema,
   type DvtSubstraitStandardAdmissionEvidenceV1,

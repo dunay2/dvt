@@ -1,4 +1,9 @@
-/** Product gaps retained beside, but structurally separate from, standard identities. */
+/**
+ * @baseline ADR-0064: Substrait semantic reference and bounded logical profile
+ * @decision Retain product gaps separately from standard semantic identities.
+ * @consequence A product need cannot masquerade as admitted Substrait semantics.
+ * @version 1.0.0
+ */
 import {
   DvtSubstraitProductNeedCapabilityV1Schema,
   type DvtSubstraitProductNeedCapabilityV1,

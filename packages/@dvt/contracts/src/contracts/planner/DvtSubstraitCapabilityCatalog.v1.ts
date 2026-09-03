@@ -1,4 +1,9 @@
-/** Single composed read model for the pinned DVT Substrait capability profile. */
+/**
+ * @baseline ADR-0064: Substrait semantic reference and bounded logical profile
+ * @decision Compose one catalog from standard candidates, admissions, and product gaps.
+ * @consequence Consumers retain one canonical capability read model.
+ * @version 1.0.0
+ */
 import {
   DVT_SUBSTRAIT_CAPABILITY_CATALOG_SCHEMA_VERSION,
   canonicalizeDvtSubstraitCapabilityCatalogV1,

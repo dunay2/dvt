@@ -1,4 +1,9 @@
-/** Schemas and deterministic serialization for the DVT Substrait capability read model. */
+/**
+ * @baseline ADR-0064: Substrait semantic reference and bounded logical profile
+ * @decision Validate and serialize the capability read model deterministically.
+ * @consequence Supported status rejects without complete admission evidence.
+ * @version 1.0.0
+ */
 import { z } from 'zod';
 
 import {
@@ -14,7 +19,6 @@ import {
   buildDvtSubstraitStandardCapabilityId,
 } from './DvtSubstraitCapabilityIdentity.v1.js';
 import { DvtSubstraitProfileRefV1Schema } from './DvtSubstraitProfile.v1.js';
-
 const NonBlankStringSchema = z
   .string()
   .refine(
@@ -24,7 +28,6 @@ const NonBlankStringSchema = z
 const EvidenceRefsSchema = z.array(NonBlankStringSchema).min(1);
 const compareStrings = (left: string, right: string): number =>
   left === right ? 0 : left < right ? -1 : 1;
-
 export const DVT_SUBSTRAIT_CAPABILITY_CATALOG_SCHEMA_VERSION =
   'dvt-substrait-capability-catalog.v1' as const;
 
@@ -83,7 +86,6 @@ export const DvtSubstraitStandardCapabilityV1Schema = z
       });
     }
   });
-
 export const DvtSubstraitProductNeedCapabilityV1Schema = z
   .object({
     kind: z.literal('product-need'),
@@ -116,7 +118,6 @@ export const DvtSubstraitProductNeedCapabilityV1Schema = z
       });
     }
   });
-
 export const DvtSubstraitCapabilityEntryV1Schema = z.discriminatedUnion('kind', [
   DvtSubstraitStandardCapabilityV1Schema,
   DvtSubstraitProductNeedCapabilityV1Schema,

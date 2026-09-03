@@ -1,6 +1,8 @@
 /**
- * Typed evidence required to admit semantics into the pinned DVT Substrait profile.
- * Provider execution and visual exposure are explicit, independent postures.
+ * @baseline ADR-0064: Substrait semantic reference and bounded logical profile
+ * @decision Require typed standard-first evidence before semantic admission.
+ * @consequence Provider execution and visual exposure remain independent postures.
+ * @version 1.0.0
  */
 import { z } from 'zod';
 

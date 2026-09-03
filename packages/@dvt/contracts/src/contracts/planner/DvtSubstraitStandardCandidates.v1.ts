@@ -1,4 +1,9 @@
-/** Standard Substrait candidates considered by the pinned DVT profile. */
+/**
+ * @baseline ADR-0064: Substrait semantic reference and bounded logical profile
+ * @decision Seed candidates only from pinned core and official extension identities.
+ * @consequence Candidate presence does not imply DVT support.
+ * @version 1.0.0
+ */
 import {
   DvtSubstraitStandardCapabilityV1Schema,
   type DvtSubstraitStandardCapabilityV1,

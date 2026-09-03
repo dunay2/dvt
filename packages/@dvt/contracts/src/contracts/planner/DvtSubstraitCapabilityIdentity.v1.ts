@@ -1,4 +1,9 @@
-/** Exact Substrait identities used by the one DVT capability catalog. */
+/**
+ * @baseline ADR-0064: Substrait semantic reference and bounded logical profile
+ * @decision Bind catalog entries to exact core or official extension identities.
+ * @consequence Private or keyword-derived semantic identities reject.
+ * @version 1.0.0
+ */
 import { z } from 'zod';
 
 const NonBlankStringSchema = z
