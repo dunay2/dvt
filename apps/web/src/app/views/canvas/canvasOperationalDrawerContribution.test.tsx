@@ -1,6 +1,7 @@
 /** Owned concern: prove Canvas operational drawer read-model projection. */
 import { describe, expect, it, vi } from 'vitest';
 
+import type { OperationalDrawerDataSample } from '../../components/shell/operationalDrawerContributionStore';
 import { buildCanvasShellProps, buildPlanRunReadiness } from './CanvasShell.testHarness';
 import { buildCanvasOperationalDrawerContribution } from './canvasOperationalDrawerContribution';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
@@ -139,6 +140,51 @@ describe('buildCanvasOperationalDrawerContribution', () => {
     });
 
     expect(contribution.runs.controls).toBe(runControls);
+  });
+
+  it('names the data tab after the active card without exposing the sample size', () => {
+    const props = buildCanvasShellProps();
+    const dataSamples: readonly Exclude<
+      OperationalDrawerDataSample,
+      Readonly<{ status: 'idle' }>
+    >[] = [
+      { status: 'loading', nodeName: 'warehouse_orders' },
+      {
+        status: 'ready',
+        nodeName: 'curated_customers',
+        sample: {
+          contractVersion: 1,
+          connectionId: 'postgresql-local',
+          objectId: 'relation/dvt/public/curated_customers',
+          columns: [{ name: 'record_id', type: 'integer', nullable: false }],
+          rows: [{ values: ['1'] }, { values: ['2'] }],
+          limit: 20,
+          truncated: false,
+          sampledAt: '2026-09-03T10:00:00.000Z',
+        },
+      },
+      { status: 'error', nodeName: 'finance_daily', reason: 'unavailable' },
+    ];
+
+    for (const dataSample of dataSamples) {
+      const contribution = buildCanvasOperationalDrawerContribution({
+        policy: props.layout.surfaceStrategy!.operationalDrawer!,
+        canPlan: props.panels.userPermissions.canPlan,
+        activeRunId: null,
+        canPlanGraph: props.chromeState.canPlanGraph,
+        canStartRun: props.chromeState.canStartRun,
+        planRunReadiness: props.chromeState.planRunReadiness,
+        planStatusSummary: props.chromeState.planStatusSummary,
+        dataSample,
+        onPreviewExecutionPlan: vi.fn(),
+        onStartRun: vi.fn(),
+      });
+
+      expect(contribution.tabs.find((tab) => tab.id === 'data')).toMatchObject({
+        label: dataSample.nodeName,
+        count: null,
+      });
+    }
   });
 
   it('projects blocked selection recovery without admitting Preview', () => {
