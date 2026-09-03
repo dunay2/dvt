@@ -77,6 +77,7 @@ const EXPRESSION_SELECTORS = [
   'rex_type.cast',
   'rex_type.if_then',
   'rex_type.window_function',
+  'rex_type.nested',
 ] as const;
 const CORE_TYPES = [
   'bool',

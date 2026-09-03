@@ -107,7 +107,10 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
     proofRef: 'docs/evidence/ED-20260831-vtx2-substrait-union-all.md',
   },
   {
-    entryIds: [standardId('type', 'substrait.Type', 'kind.struct')],
+    entryIds: [
+      standardId('type', 'substrait.Type', 'kind.struct'),
+      standardId('expression-form', 'substrait.Expression', 'rex_type.nested'),
+    ],
     useCaseRefs: ['dvt:#2771'],
     proofRef: 'packages/@dvt/contracts/test/dvt-substrait-struct-capability.contract.test.ts',
     targetStatus: 'unavailable',

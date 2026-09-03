@@ -19,6 +19,11 @@ const STRUCT_ID = buildDvtSubstraitStandardCapabilityId('type', {
   message: 'substrait.Type',
   selector: 'kind.struct',
 });
+const NESTED_EXPRESSION_ID = buildDvtSubstraitStandardCapabilityId('expression-form', {
+  sourceKind: 'core',
+  message: 'substrait.Expression',
+  selector: 'rex_type.nested',
+});
 
 function lowerCapability(): DvtSubstraitStandardCapabilityV1 {
   const entry = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.find(
@@ -51,20 +56,30 @@ function extensionProposal(overrides: Record<string, unknown> = {}): Record<stri
 }
 
 describe('DVT Substrait standard-first capability admission', () => {
-  it('admits structured fields without claiming an unavailable target projection', () => {
-    expect(
-      DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.find(
-        (candidate) => candidate.entryId === STRUCT_ID
-      )
-    ).toMatchObject({
-      profileStatus: 'supported-profile',
-      admission: {
-        targetConformance: [
-          expect.objectContaining({ targetId: 'postgres', status: 'unavailable' }),
-        ],
-        visualExposure: { status: 'not-exposed' },
-      },
-    });
+  it('admits structured construction as one unavailable target slice', () => {
+    const structuredCapabilities = [STRUCT_ID, NESTED_EXPRESSION_ID].map((entryId) =>
+      DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.find((candidate) => candidate.entryId === entryId)
+    );
+
+    expect(structuredCapabilities).toEqual([
+      expect.objectContaining({
+        profileStatus: 'supported-profile',
+        admission: expect.objectContaining({
+          targetConformance: [
+            expect.objectContaining({ targetId: 'postgres', status: 'unavailable' }),
+          ],
+          visualExposure: { status: 'not-exposed', rationale: expect.any(String) },
+        }),
+      }),
+      expect.objectContaining({
+        profileStatus: 'supported-profile',
+        admission: expect.objectContaining({
+          targetConformance: [
+            expect.objectContaining({ targetId: 'postgres', status: 'unavailable' }),
+          ],
+        }),
+      }),
+    ]);
   });
 
   it('retains complete conformance evidence without implying provider acceptance', () => {
