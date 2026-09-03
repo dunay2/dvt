@@ -135,7 +135,7 @@ export function registerValidationPlanCompileSuite(): void {
       });
 
       expect(request.context.tenantId).toBe('tenant-a');
-      expect(request.graphSource.sourceFamily).toBe('transformation-design-graph');
+      expect(request.graphSource).toEqual(TRANSFORMATION_GRAPH_SOURCE);
     });
 
     it('rejects compile requests with preview-only fields', () => {
