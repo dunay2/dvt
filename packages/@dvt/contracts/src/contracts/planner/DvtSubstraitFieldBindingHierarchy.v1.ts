@@ -10,11 +10,12 @@ export type DvtSubstraitHierarchyFieldV1 = Readonly<{
   relationId: string;
   outputOrdinal: number;
   parentFieldId?: string | undefined;
+  sourceFieldId?: string | undefined;
 }>;
 
 export type DvtSubstraitFieldHierarchyIssueV1 = Readonly<{
   index: number;
-  property: 'fieldId' | 'relationId' | 'outputOrdinal' | 'parentFieldId';
+  property: 'fieldId' | 'relationId' | 'outputOrdinal' | 'parentFieldId' | 'sourceFieldId';
   message: string;
 }>;
 
@@ -43,6 +44,9 @@ export function validateDvtSubstraitFieldHierarchyV1(
   });
 
   fields.forEach((field, index) => {
+    if (field.sourceFieldId != null && !fieldsById.has(field.sourceFieldId)) {
+      issues.push({ index, property: 'sourceFieldId', message: 'Unknown source field.' });
+    }
     if (field.parentFieldId == null) return;
     const parent = fieldsById.get(field.parentFieldId);
     if (parent == null) {

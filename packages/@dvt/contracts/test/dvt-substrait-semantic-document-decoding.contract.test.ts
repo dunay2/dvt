@@ -117,4 +117,28 @@ describe('DVT Substrait semantic document decoding', () => {
       ).toBe(false);
     });
   });
+
+  it('retains explicit field provenance and rejects an unknown source identity', () => {
+    const document = buildDvtSubstraitSemanticDocumentFixture();
+    const target = document.sidecar.fields[0];
+    const sourceRelationId = document.sidecar.relations[0]?.relationId;
+    if (target == null || sourceRelationId == null) throw new Error('Expected semantic fixture.');
+    const source = {
+      fieldId: 'field:source-node:name',
+      relationId: sourceRelationId,
+      outputOrdinal: 0,
+      displayName: 'name',
+    };
+    const fields = [source, { ...target, sourceFieldId: source.fieldId }];
+
+    expect(
+      DvtSubstraitAuthoringSidecarV1Schema.safeParse({ ...document.sidecar, fields }).success
+    ).toBe(true);
+    expect(
+      DvtSubstraitAuthoringSidecarV1Schema.safeParse({
+        ...document.sidecar,
+        fields: [source, { ...target, sourceFieldId: 'field:missing' }],
+      }).success
+    ).toBe(false);
+  });
 });

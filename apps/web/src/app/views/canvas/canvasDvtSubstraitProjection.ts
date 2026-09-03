@@ -344,6 +344,7 @@ export function createDvtSubstraitProjectionDraft(args: {
       ...args.outputs.map((output, outputOrdinal) => ({
         fieldId: output.fieldId,
         relationId: targetId,
+        sourceFieldId: sourceFieldId(args.source.nodeId, output.sourceFieldName),
         outputOrdinal,
         displayName: output.name,
       })),

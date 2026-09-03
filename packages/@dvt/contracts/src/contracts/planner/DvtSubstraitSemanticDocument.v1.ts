@@ -66,6 +66,7 @@ export const DvtSubstraitFieldBindingV1Schema = z
     fieldId: NonBlankStringSchema,
     relationId: NonBlankStringSchema,
     parentFieldId: NonBlankStringSchema.optional(),
+    sourceFieldId: NonBlankStringSchema.optional(),
     outputOrdinal: z.number().int().nonnegative(),
     displayName: NonBlankStringSchema.optional(),
     description: NonBlankStringSchema.optional(),
