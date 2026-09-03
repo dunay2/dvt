@@ -27,7 +27,7 @@ jobs:
           node-version: 22.23.2
 
       - name: Generate source-first architecture
-        run: node architecture/tools/generate-source-first-v2.mjs
+        run: node architecture/tools/generate-source-first.mjs
 
       - name: Stage isolated LikeC4 workspace
         run: |

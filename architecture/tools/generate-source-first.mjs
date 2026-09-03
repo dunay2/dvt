@@ -7,169 +7,131 @@ const scriptDir = dirname(fileURLToPath(import.meta.url));
 const architectureDir = dirname(scriptDir);
 const config = JSON.parse(readFileSync(join(architectureDir, 'source-first.config.json'), 'utf8'));
 const generatedDir = join(architectureDir, 'generated');
-
-const git = (args, input) =>
-  execFileSync('git', args, {
-    encoding: 'utf8',
-    input,
-    maxBuffer: 128 * 1024 * 1024,
-  }).trimEnd();
-
+const git = (args) => execFileSync('git', args, { encoding: 'utf8', maxBuffer: 128 * 1024 * 1024 }).trimEnd();
 const baselineSha = git(['rev-parse', config.baselineRef]);
 git(['cat-file', '-e', `${baselineSha}^{commit}`]);
 
 const contexts = config.contexts.map(loadContext);
-const packageNameToContext = new Map(contexts.map((ctx) => [ctx.packageName, ctx]));
-for (const ctx of contexts) deriveWorkspaceDependencies(ctx, packageNameToContext);
+const packageByName = new Map(contexts.map((ctx) => [ctx.packageName, ctx]));
+for (const ctx of contexts) deriveWorkspaceEdges(ctx, packageByName);
 
 mkdirSync(generatedDir, { recursive: true });
 for (const ctx of contexts) {
-  writeFileSync(
-    join(generatedDir, `${ctx.id}-inventory.json`),
-    JSON.stringify(toInventoryPayload(ctx), null, 2) + '\n',
-  );
+  writeFileSync(join(generatedDir, `${ctx.id}-inventory.json`), JSON.stringify(inventoryPayload(ctx), null, 2) + '\n');
 }
-writeFileSync(
-  join(generatedDir, 'summary.json'),
-  JSON.stringify(
-    {
-      schemaVersion: 1,
-      repository: config.repository,
-      baselineRef: config.baselineRef,
-      baselineSha,
-      contexts: contexts.map((ctx) => ({
-        id: ctx.id,
-        packageName: ctx.packageName,
-        path: ctx.path,
-        packageConcern: ctx.packageConcern,
-        counts: ctx.counts,
-        modules: ctx.modules.map((m) => ({
-          id: m.id,
-          title: m.title,
-          kind: m.kind,
-          fileCount: m.files.length,
-          ownedConcerns: m.ownedConcerns,
-        })),
-      })),
-    },
-    null,
-    2,
-  ) + '\n',
-);
-writeFileSync(join(generatedDir, 'source-first.c4'), renderLikeC4(contexts));
+writeFileSync(join(generatedDir, 'summary.json'), JSON.stringify({
+  schemaVersion: 3,
+  repository: config.repository,
+  baselineRef: config.baselineRef,
+  baselineSha,
+  contexts: contexts.map((ctx) => ({
+    id: ctx.id,
+    packageName: ctx.packageName,
+    path: ctx.path,
+    packageConcern: ctx.packageConcern,
+    counts: ctx.counts,
+    modules: ctx.modules.map((m) => ({
+      id: m.id,
+      title: m.title,
+      kind: m.kind,
+      fileCount: m.files.length,
+      ownedConcerns: m.ownedConcerns,
+    })),
+  })),
+}, null, 2) + '\n');
+writeFileSync(join(generatedDir, 'source-first.c4'), render(contexts));
 
-console.log(`Generated source-first architecture at ${baselineSha}`);
+console.log(`Generated source-first architecture v3 at ${baselineSha}`);
 for (const ctx of contexts) {
-  console.log(
-    `${ctx.packageName}: ${ctx.counts.trackedFiles} tracked, ${ctx.counts.sourceFiles} src, ${ctx.counts.testFiles} tests, ${ctx.modules.length} source modules`,
-  );
+  console.log(`${ctx.packageName}: ${ctx.counts.trackedFiles} tracked, ${ctx.counts.sourceFiles} src, ${ctx.counts.testFiles} tests, ${ctx.modules.length} modules`);
 }
 
-function loadContext(definition) {
-  const files = git(['ls-tree', '-r', '-l', baselineSha, '--', definition.path])
+function loadContext(def) {
+  const files = git(['ls-tree', '-r', '-l', baselineSha, '--', def.path])
     .split(/\r?\n/)
     .filter(Boolean)
-    .map((line) => parseTreeLine(line, definition.path))
+    .map((line) => parseTreeLine(line, def.path))
     .filter(Boolean)
     .sort((a, b) => a.relativePath.localeCompare(b.relativePath));
+  if (!files.length) throw new Error(`No tracked files under ${def.path}@${baselineSha}`);
 
-  if (!files.length) throw new Error(`No tracked files under ${definition.path}@${baselineSha}`);
-
-  const packageJsonFile = files.find((file) => file.relativePath === 'package.json');
-  if (!packageJsonFile) throw new Error(`Missing package.json in ${definition.path}`);
-  const packageJson = JSON.parse(git(['show', `${baselineSha}:${packageJsonFile.path}`]));
-  const packageName = packageJson.name ?? definition.path;
+  const packageFile = files.find((f) => f.relativePath === 'package.json');
+  if (!packageFile) throw new Error(`Missing package.json in ${def.path}`);
+  const packageJson = JSON.parse(git(['show', `${baselineSha}:${packageFile.path}`]));
+  const packageName = packageJson.name ?? def.path;
 
   const sourceFiles = files
-    .filter((file) => file.relativePath.startsWith('src/') && isTextSource(file.relativePath))
+    .filter((f) => f.relativePath.startsWith('src/') && /\.(?:[cm]?js|jsx|ts|tsx)$/.test(f.relativePath))
     .map((file) => {
       const content = git(['show', `${baselineSha}:${file.path}`]);
-      return {
-        ...file,
-        content,
-        metadata: parseSourceMetadata(content),
-        importSpecifiers: parseImportSpecifiers(content),
-      };
+      return { ...file, content, metadata: parseMetadata(content), imports: parseImports(content) };
     });
+  const sourceByPath = new Map(sourceFiles.map((f) => [f.relativePath, f]));
 
-  const fileByRelativePath = new Map(sourceFiles.map((file) => [file.relativePath, file]));
-  const moduleMap = new Map();
+  const groups = new Map();
   for (const file of sourceFiles) {
     const key = moduleKey(file.relativePath);
-    if (!moduleMap.has(key)) moduleMap.set(key, []);
-    moduleMap.get(key).push(file);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(file);
   }
-
-  const modules = [...moduleMap.entries()]
-    .map(([key, moduleFiles]) => buildModule(key, moduleFiles, definition.path))
+  const modules = [...groups.entries()]
+    .map(([key, moduleFiles]) => buildModule(key, moduleFiles, def.path))
     .sort((a, b) => a.title.localeCompare(b.title));
-  const moduleByKey = new Map(modules.map((module) => [module.key, module]));
+  const moduleByKey = new Map(modules.map((m) => [m.key, m]));
 
-  const internalEdges = new Map();
+  const internal = new Map();
   for (const source of sourceFiles) {
-    const sourceModule = moduleByKey.get(moduleKey(source.relativePath));
-    for (const specifier of source.importSpecifiers) {
+    const from = moduleByKey.get(moduleKey(source.relativePath));
+    for (const specifier of source.imports) {
       if (!specifier.startsWith('.')) continue;
-      const target = resolveRelativeImport(source.relativePath, specifier, fileByRelativePath);
-      if (!target) continue;
-      const targetModule = moduleByKey.get(moduleKey(target.relativePath));
-      if (!targetModule || sourceModule.id === targetModule.id) continue;
-      const key = `${sourceModule.id}->${targetModule.id}`;
-      internalEdges.set(key, {
-        from: sourceModule.id,
-        to: targetModule.id,
-        count: (internalEdges.get(key)?.count ?? 0) + 1,
-      });
+      const targetFile = resolveRelativeImport(source.relativePath, specifier, sourceByPath);
+      if (!targetFile) continue;
+      const to = moduleByKey.get(moduleKey(targetFile.relativePath));
+      if (!to || from.id === to.id) continue;
+      const key = `${from.id}->${to.id}`;
+      internal.set(key, { from: from.id, to: to.id, count: (internal.get(key)?.count ?? 0) + 1 });
     }
   }
 
-  const rootIndex = sourceFiles.find((file) => file.relativePath === 'src/index.ts');
-  const packageConcern =
-    rootIndex?.metadata.ownedConcern ??
-    rootIndex?.metadata.headerSummary ??
-    `Source-first bounded context observed at ${definition.path}.`;
-
-  const root = makeFolder('', '');
-  for (const file of files) addInventoryFile(root, file);
-  countFolderFiles(root);
+  const index = sourceFiles.find((f) => f.relativePath === 'src/index.ts');
+  const packageConcern = index?.metadata.ownedConcern ?? index?.metadata.headerSummary ?? `Source-first bounded context observed at ${def.path}.`;
+  const counts = {
+    trackedFiles: files.length,
+    sourceFiles: files.filter((f) => f.relativePath.startsWith('src/')).length,
+    testFiles: files.filter((f) => /^tests?\//.test(f.relativePath)).length,
+    docsFiles: files.filter((f) => f.relativePath.startsWith('docs/')).length,
+    packageRootFiles: files.filter((f) => !f.relativePath.includes('/')).length,
+    filesWithOwnedConcern: sourceFiles.filter((f) => Boolean(f.metadata.ownedConcern)).length,
+    filesWithDecision: sourceFiles.filter((f) => Boolean(f.metadata.decision)).length,
+  };
 
   return {
-    id: definition.id,
-    path: definition.path,
+    id: def.id,
+    path: def.path,
     packageName,
     packageConcern,
     files,
     sourceFiles,
     modules,
-    moduleByKey,
-    internalEdges: [...internalEdges.values()],
+    internalEdges: [...internal.values()],
     workspaceEdges: [],
-    root,
-    counts: {
-      trackedFiles: files.length,
-      sourceFiles: files.filter((f) => f.relativePath.startsWith('src/')).length,
-      testFiles: files.filter((f) => /^tests?\//.test(f.relativePath)).length,
-      docsFiles: files.filter((f) => f.relativePath.startsWith('docs/')).length,
-      packageRootFiles: files.filter((f) => !f.relativePath.includes('/')).length,
-      filesWithOwnedConcern: sourceFiles.filter((f) => Boolean(f.metadata.ownedConcern)).length,
-      filesWithDecision: sourceFiles.filter((f) => Boolean(f.metadata.decision)).length,
-    },
+    counts,
   };
 }
 
-function deriveWorkspaceDependencies(ctx, packageNameToContext) {
+function deriveWorkspaceEdges(ctx, packageByName) {
   const counts = new Map();
   for (const file of ctx.sourceFiles) {
-    for (const specifier of file.importSpecifiers) {
-      for (const [packageName, target] of packageNameToContext) {
+    for (const specifier of file.imports) {
+      for (const [name, target] of packageByName) {
         if (target.id === ctx.id) continue;
-        if (specifier === packageName || specifier.startsWith(`${packageName}/`)) {
+        if (specifier === name || specifier.startsWith(`${name}/`)) {
           counts.set(target.id, (counts.get(target.id) ?? 0) + 1);
         }
       }
     }
   }
-  ctx.workspaceEdges = [...counts.entries()]
+  ctx.workspaceEdges = [...counts]
     .map(([to, count]) => ({ from: ctx.id, to, count }))
     .sort((a, b) => a.to.localeCompare(b.to));
 }
@@ -187,93 +149,121 @@ function parseTreeLine(line, scope) {
     sizeBytes: rawSize === '-' ? null : Number(rawSize),
     path,
     relativePath,
-    githubUrl: `https://github.com/${config.repository}/blob/${baselineSha}/${encodeGitHubPath(path)}`,
+    githubUrl: `https://github.com/${config.repository}/blob/${baselineSha}/${encodePath(path)}`,
   };
 }
 
-function isTextSource(path) {
-  return /\.(?:[cm]?js|jsx|ts|tsx)$/.test(path);
-}
-
-function parseSourceMetadata(content) {
+function parseMetadata(content) {
   return {
-    ownedConcern: firstMatch(content, [
-      /@ownedConcern\s+([^\r\n*]+)/i,
-      /Owned concern:\s*([^\r\n*]+)/i,
-    ]),
-    decision: firstMatch(content, [/@decision\s+([^\r\n*]+)/i]),
-    consequence: firstMatch(content, [/@consequence\s+([^\r\n*]+)/i]),
-    headerSummary: extractHeaderSummary(content),
+    ownedConcern: extractCommentField(content, ['@ownedConcern', 'Owned concern:']),
+    decision: extractCommentField(content, ['@decision']),
+    consequence: extractCommentField(content, ['@consequence']),
+    headerSummary: headerSummary(content),
   };
 }
 
-function firstMatch(content, regexes) {
-  for (const regex of regexes) {
-    const value = content.match(regex)?.[1]?.trim();
-    if (value) return value;
+function extractCommentField(content, markers) {
+  const lines = content.split(/\r?\n/);
+  for (let index = 0; index < Math.min(lines.length, 120); index += 1) {
+    const clean = cleanCommentLine(lines[index]);
+    const marker = markers.find((candidate) => clean.toLowerCase().startsWith(candidate.toLowerCase()));
+    if (!marker) continue;
+
+    const values = [];
+    const firstValue = clean.slice(marker.length).trim();
+    if (firstValue) values.push(firstValue);
+
+    for (let cursor = index + 1; cursor < Math.min(lines.length, index + 12); cursor += 1) {
+      const raw = lines[cursor];
+      if (/\*\//.test(raw)) break;
+      const next = cleanCommentLine(raw);
+      if (!next) break;
+      if (next.startsWith('@') || /^Owned\s+concern:/i.test(next)) break;
+      if (!isCommentContinuation(raw)) break;
+      values.push(next);
+    }
+
+    const normalized = normalizeProse(values.join(' '));
+    if (normalized) return normalized;
   }
   return undefined;
 }
 
-function extractHeaderSummary(content) {
-  const lines = content.split(/\r?\n/).slice(0, 35);
-  const cleaned = [];
-  for (const line of lines) {
-    if (/^\s*(?:export|import|const|let|class|interface|type|function)\b/.test(line)) break;
-    const text = line
-      .replace(/^\s*\/\*\*?\s?/, '')
-      .replace(/^\s*\*\s?/, '')
-      .replace(/\*\/\s*$/, '')
-      .replace(/^\s*\/\/\s?/, '')
-      .trim();
-    if (!text || /^[-─=]+$/.test(text) || text.startsWith('@') || /^Governing:/i.test(text)) continue;
-    cleaned.push(text);
-  }
-  return cleaned.slice(0, 2).join(' ').trim() || undefined;
+function isCommentContinuation(line) {
+  return /^\s*(?:\/\/|\*)/.test(line);
 }
 
-function parseImportSpecifiers(content) {
+function cleanCommentLine(line) {
+  return line
+    .replace(/^\s*\/\*\*?\s?/, '')
+    .replace(/^\s*\*\s?/, '')
+    .replace(/\*\/\s*$/, '')
+    .replace(/^\s*\/\/\s?/, '')
+    .trim();
+}
+
+function normalizeProse(value) {
+  return String(value).replace(/\s+/g, ' ').trim();
+}
+
+function headerSummary(content) {
+  const result = [];
+  for (const line of content.split(/\r?\n/).slice(0, 50)) {
+    if (/^\s*(?:export|import|const|let|class|interface|type|function)\b/.test(line)) break;
+    const text = cleanCommentLine(line);
+    if (!text) {
+      if (result.length) break;
+      continue;
+    }
+    if (isDecorativeHeader(text) || text.startsWith('@') || /^Governing:/i.test(text) || /^Owned\s+concern:/i.test(text)) continue;
+    result.push(text);
+    const prose = normalizeProse(result.join(' '));
+    if (/[.!?]$/.test(prose)) return prose;
+    if (result.length >= 3) return prose;
+  }
+  return result.length ? normalizeProse(result.join(' ')) : undefined;
+}
+
+function isDecorativeHeader(text) {
+  if (/^[\-─—=_*\s]+$/.test(text)) return true;
+  if (/^[─—=_-]{2,}.*[─—=_-]{2,}$/.test(text)) return true;
+  const framing = (text.match(/[─—=_-]/g) ?? []).length;
+  return framing >= 8 && framing / Math.max(text.length, 1) > 0.25;
+}
+
+function parseImports(content) {
   const values = new Set();
-  for (const match of content.matchAll(/(?:from\s+|import\s*\(\s*|require\s*\(\s*)['"]([^'"]+)['"]/g)) {
-    values.add(match[1]);
-  }
-  for (const match of content.matchAll(/(?:^|\n)\s*import\s+['"]([^'"]+)['"]/g)) {
-    values.add(match[1]);
-  }
+  for (const match of content.matchAll(/(?:from\s+|import\s*\(\s*|require\s*\(\s*)['"]([^'"]+)['"]/g)) values.add(match[1]);
+  for (const match of content.matchAll(/(?:^|\n)\s*import\s+['"]([^'"]+)['"]/g)) values.add(match[1]);
   return [...values];
 }
 
 function moduleKey(relativePath) {
   const rest = relativePath.replace(/^src\//, '');
-  if (!rest.includes('/')) return 'srcRoot';
-  return rest.split('/')[0];
+  return rest.includes('/') ? rest.split('/')[0] : 'srcRoot';
 }
 
 function buildModule(key, files, scope) {
-  const ownedConcerns = [...new Set(files.map((f) => f.metadata.ownedConcern).filter(Boolean))];
-  const decisions = [...new Set(files.map((f) => f.metadata.decision).filter(Boolean))];
-  const title = key === 'srcRoot' ? 'Public / source root' : humanize(key);
-  const kind = inferElementKind(key);
   const sourcePath = key === 'srcRoot' ? posix.join(scope, 'src') : posix.join(scope, 'src', key);
   return {
     key,
     id: `mod_${safeId(key)}`,
-    title,
-    kind,
-    files: [...files].sort((a, b) => a.relativePath.localeCompare(b.relativePath)),
-    ownedConcerns,
-    decisions,
+    title: key === 'srcRoot' ? 'Public / source root' : humanize(key),
+    kind: kindFor(key),
     sourcePath,
-    sourceUrl: `https://github.com/${config.repository}/tree/${baselineSha}/${encodeGitHubPath(sourcePath)}`,
+    sourceUrl: `https://github.com/${config.repository}/tree/${baselineSha}/${encodePath(sourcePath)}`,
+    files: [...files].sort((a, b) => a.relativePath.localeCompare(b.relativePath)),
+    ownedConcerns: [...new Set(files.map((f) => f.metadata.ownedConcern).filter(Boolean))],
+    decisions: [...new Set(files.map((f) => f.metadata.decision).filter(Boolean))],
   };
 }
 
-function inferElementKind(key) {
-  const normalized = key.toLowerCase();
-  if (normalized === 'ports' || normalized.endsWith('ports')) return 'port';
-  if (normalized.includes('adapter')) return 'adapter';
-  if (normalized.includes('worker')) return 'worker';
-  if (normalized.endsWith('store') || normalized === 'stores') return 'store';
+function kindFor(key) {
+  const value = key.toLowerCase();
+  if (value === 'ports' || value.endsWith('ports')) return 'port';
+  if (value.includes('adapter')) return 'adapter';
+  if (value.includes('worker')) return 'worker';
+  if (value.endsWith('store') || value === 'stores') return 'store';
   return 'component';
 }
 
@@ -284,54 +274,26 @@ function humanize(value) {
     .replace(/\b\w/g, (m) => m.toUpperCase());
 }
 
-function resolveRelativeImport(sourceRelativePath, specifier, fileByRelativePath) {
-  const sourceDir = posix.dirname(sourceRelativePath);
-  const raw = posix.normalize(posix.join(sourceDir, specifier.split('?')[0].split('#')[0]));
-  const noRuntimeExt = raw.replace(/\.(?:mjs|cjs|js|jsx)$/, '');
+function resolveRelativeImport(sourcePath, specifier, sourceByPath) {
+  const raw = posix.normalize(posix.join(posix.dirname(sourcePath), specifier.split('?')[0].split('#')[0]));
+  const noJs = raw.replace(/\.(?:mjs|cjs|js|jsx)$/, '');
   const candidates = [
     raw,
-    `${noRuntimeExt}.ts`,
-    `${noRuntimeExt}.tsx`,
-    `${noRuntimeExt}.js`,
-    `${noRuntimeExt}.mjs`,
-    `${noRuntimeExt}/index.ts`,
-    `${noRuntimeExt}/index.tsx`,
+    `${noJs}.ts`,
+    `${noJs}.tsx`,
+    `${noJs}.js`,
+    `${noJs}.mjs`,
+    `${noJs}/index.ts`,
+    `${noJs}/index.tsx`,
     `${raw}/index.ts`,
   ];
-  for (const candidate of candidates) {
-    const file = fileByRelativePath.get(candidate);
-    if (file) return file;
-  }
+  for (const candidate of candidates) if (sourceByPath.has(candidate)) return sourceByPath.get(candidate);
   return undefined;
 }
 
-function makeFolder(name, relativePath) {
-  return { name, relativePath, folders: new Map(), files: [], recursiveFileCount: 0 };
-}
-
-function addInventoryFile(root, file) {
-  const parts = file.relativePath.split('/');
-  const filename = parts.pop();
-  let current = root;
-  let currentPath = '';
-  for (const part of parts) {
-    currentPath = currentPath ? `${currentPath}/${part}` : part;
-    if (!current.folders.has(part)) current.folders.set(part, makeFolder(part, currentPath));
-    current = current.folders.get(part);
-  }
-  current.files.push({ ...file, filename });
-}
-
-function countFolderFiles(folder) {
-  let total = folder.files.length;
-  for (const child of folder.folders.values()) total += countFolderFiles(child);
-  folder.recursiveFileCount = total;
-  return total;
-}
-
-function toInventoryPayload(ctx) {
+function inventoryPayload(ctx) {
   return {
-    schemaVersion: 1,
+    schemaVersion: 3,
     generatedFrom: 'git-tree',
     repository: config.repository,
     baselineRef: config.baselineRef,
@@ -340,17 +302,17 @@ function toInventoryPayload(ctx) {
     scope: ctx.path,
     packageConcern: ctx.packageConcern,
     counts: ctx.counts,
-    modules: ctx.modules.map((module) => ({
-      id: module.id,
-      key: module.key,
-      title: module.title,
-      kind: module.kind,
+    modules: ctx.modules.map((m) => ({
+      id: m.id,
+      key: m.key,
+      title: m.title,
+      kind: m.kind,
       provenance: 'STRUCTURE-DERIVED',
-      sourcePath: module.sourcePath,
-      fileCount: module.files.length,
-      ownedConcerns: module.ownedConcerns,
-      decisions: module.decisions,
-      files: module.files.map((file) => file.relativePath),
+      sourcePath: m.sourcePath,
+      fileCount: m.files.length,
+      ownedConcerns: m.ownedConcerns,
+      decisions: m.decisions,
+      files: m.files.map((f) => f.relativePath),
     })),
     internalModuleDependencies: ctx.internalEdges,
     selectedWorkspaceDependencies: ctx.workspaceEdges,
@@ -358,90 +320,108 @@ function toInventoryPayload(ctx) {
   };
 }
 
-function renderLikeC4(allContexts) {
+function render(all) {
   const lines = [
     '// GENERATED FILE. DO NOT EDIT.',
     `// Source baseline: ${config.repository}@${baselineSha}`,
     'model {',
     "  dvt = system 'DVT+ — source-first architecture' {",
     '    #asIs',
-    "    description 'Generated from the current Git tree. Package/module structure and dependency arrows are source-derived; no target architecture is promoted to AS-IS.'",
+    "    description 'Generated from the current Git tree. Package/module structure and dependency arrows are source-derived; target architecture is never promoted automatically.'",
     '    metadata {',
     `      repository '${esc(config.repository)}'`,
     `      baselineSha '${baselineSha}'`,
-    `      baselineRef '${esc(config.baselineRef)}'`,
-    `      selectedContexts '${allContexts.length}'`,
+    `      selectedContexts '${all.length}'`,
     '    }',
   ];
 
-  for (const ctx of allContexts) emitLogicalContext(ctx, lines);
+  for (const ctx of all) emitContext(ctx, lines);
   lines.push('  }');
 
-  const inventoryFqns = new Map();
-  for (const ctx of allContexts) {
+  const evidenceRefs = new Map();
+  for (const ctx of all) {
     const inventoryId = `inventory_${safeId(ctx.id)}`;
-    const pathToFqn = new Map();
-    inventoryFqns.set(ctx.id, pathToFqn);
-    lines.push(`  ${inventoryId} = inventory '${esc(ctx.packageName)} — exact Git inventory' {`);
+    const refs = new Map();
+    evidenceRefs.set(ctx.id, refs);
+    lines.push(`  ${inventoryId} = inventory '${esc(ctx.packageName)} — exact Git evidence' {`);
     lines.push('    #sourceDerived');
     lines.push(`    description '${esc(`${ctx.counts.trackedFiles} tracked files from ${ctx.path}@${baselineSha.slice(0, 8)}.`)}'`);
     lines.push('    metadata {');
     lines.push("      provenance 'SOURCE-DERIVED'");
-    lines.push(`      packageName '${esc(ctx.packageName)}'`);
-    lines.push(`      sourceRoot '${esc(ctx.path)}'`);
     lines.push(`      baselineSha '${baselineSha}'`);
+    lines.push(`      sourceRoot '${esc(ctx.path)}'`);
     lines.push(`      trackedFiles '${ctx.counts.trackedFiles}'`);
-    lines.push(`      sourceFiles '${ctx.counts.sourceFiles}'`);
-    lines.push(`      testFiles '${ctx.counts.testFiles}'`);
     lines.push('    }');
-    lines.push(`    link https://github.com/${config.repository}/tree/${baselineSha}/${encodeGitHubPath(ctx.path)} 'Pinned package tree'`);
-    emitInventoryChildren(ctx, ctx.root, inventoryId, '    ', lines, pathToFqn);
+    lines.push(`    link https://github.com/${config.repository}/tree/${baselineSha}/${encodePath(ctx.path)} 'Pinned package tree'`);
+    for (const file of ctx.files) {
+      const id = `file_${safeId(ctx.id)}_${safeId(file.relativePath)}_${file.blobSha.slice(0, 7)}`;
+      refs.set(file.relativePath, `${inventoryId}.${id}`);
+      lines.push(`    ${id} = file '${esc(file.relativePath)}' {`);
+      lines.push('      #sourceDerived');
+      lines.push("      description 'Tracked file from the pinned Git tree.'");
+      lines.push('      metadata {');
+      lines.push("        provenance 'SOURCE-DERIVED'");
+      lines.push(`        sourcePath '${esc(file.path)}'`);
+      lines.push(`        blobSha '${file.blobSha}'`);
+      lines.push(`        baselineSha '${baselineSha}'`);
+      lines.push('      }');
+      lines.push(`      link ${file.githubUrl} 'Open pinned source'`);
+      lines.push('    }');
+    }
     lines.push('  }');
   }
 
-  for (const ctx of allContexts) {
+  for (const ctx of all) {
     for (const edge of ctx.workspaceEdges) {
-      lines.push(
-        `  dvt.pkg_${safeId(edge.from)} .uses dvt.pkg_${safeId(edge.to)} 'workspace imports (${edge.count})'`,
-      );
+      lines.push(`  dvt.pkg_${safeId(edge.from)} .uses dvt.pkg_${safeId(edge.to)} 'workspace imports (${edge.count})'`);
     }
   }
 
   lines.push('}', '', 'views {');
   lines.push('  view dvtSourceFirst of dvt {');
   lines.push("    title 'DVT+ — Source-first bounded contexts'");
-  lines.push(`    description 'Current selected bounded contexts generated from main@${baselineSha.slice(0, 8)}. Dependency arrows come from source imports.'`);
+  lines.push(`    description 'Generated from main@${baselineSha.slice(0, 8)}. Package arrows come from source imports.'`);
   lines.push('    include *');
   lines.push('    autoLayout LeftRight');
   lines.push('  }', '');
 
-  for (const ctx of allContexts) {
+  for (const ctx of all) {
     lines.push(`  view ${safeId(ctx.id)}Boundary of dvt.pkg_${safeId(ctx.id)} {`);
     lines.push(`    title '${esc(ctx.packageName)} — source modules and dependencies'`);
-    lines.push(`    description '${esc(`STRUCTURE-DERIVED modules from ${ctx.path}/src at ${baselineSha.slice(0, 8)}. Open a module link for its pinned source tree; evidence views list exact files.`)}'`);
+    lines.push(`    description '${esc(`STRUCTURE-DERIVED modules from ${ctx.path}/src at ${baselineSha.slice(0, 8)}.`)}'`);
     lines.push('    include *');
     lines.push('    autoLayout LeftRight');
     lines.push('  }', '');
 
     const inventoryId = `inventory_${safeId(ctx.id)}`;
     lines.push(`  view ${safeId(ctx.id)}Inventory of ${inventoryId} {`);
-    lines.push(`    title '${esc(ctx.packageName)} — complete Git inventory'`);
-    lines.push(`    description '${esc(`${ctx.counts.trackedFiles} tracked files. Folder/file identity is derived from the pinned Git tree.`)}'`);
+    lines.push(`    title '${esc(ctx.packageName)} — complete Git evidence'`);
+    lines.push(`    description '${esc(`${ctx.counts.trackedFiles} tracked files; use focused module views for readable evidence.`)}'`);
     lines.push('    include *');
     lines.push('    autoLayout TopBottom');
     lines.push('  }', '');
 
-    const pathToFqn = inventoryFqns.get(ctx.id);
-    emitFolderViews(ctx, ctx.root, pathToFqn, lines);
+    const refs = evidenceRefs.get(ctx.id);
     for (const module of ctx.modules) {
       lines.push(`  view ${safeId(ctx.id)}Files_${safeId(module.key)} {`);
       lines.push(`    title '${esc(ctx.packageName)} — files for ${module.title}'`);
-      lines.push(`    description '${esc(`SOURCE-DERIVED evidence for STRUCTURE-DERIVED module ${module.sourcePath}. ${module.files.length} file(s).`)}'`);
-      for (const file of module.files) {
-        const fqn = pathToFqn.get(file.relativePath);
-        if (!fqn) throw new Error(`Missing inventory FQN for ${ctx.id}:${file.relativePath}`);
-        lines.push(`    include ${fqn}`);
-      }
+      lines.push(`    description '${esc(`SOURCE-DERIVED evidence for ${module.sourcePath}. ${module.files.length} source file(s).`)}'`);
+      for (const file of module.files) lines.push(`    include ${refs.get(file.relativePath)}`);
+      lines.push('    autoLayout TopBottom');
+      lines.push('  }', '');
+    }
+
+    for (const [suffix, predicate, title] of [
+      ['Tests', (path) => /^tests?\//.test(path), 'tests'],
+      ['Docs', (path) => path.startsWith('docs/'), 'docs'],
+      ['Root', (path) => !path.includes('/'), 'package root files'],
+    ]) {
+      const selected = ctx.files.filter((file) => predicate(file.relativePath));
+      if (!selected.length) continue;
+      lines.push(`  view ${safeId(ctx.id)}${suffix} {`);
+      lines.push(`    title '${esc(ctx.packageName)} — ${title}'`);
+      lines.push(`    description '${selected.length} SOURCE-DERIVED file(s).'`);
+      for (const file of selected) lines.push(`    include ${refs.get(file.relativePath)}`);
       lines.push('    autoLayout TopBottom');
       lines.push('  }', '');
     }
@@ -451,9 +431,8 @@ function renderLikeC4(allContexts) {
   return lines.join('\n');
 }
 
-function emitLogicalContext(ctx, lines) {
-  const packageId = `pkg_${safeId(ctx.id)}`;
-  lines.push(`    ${packageId} = package '${esc(ctx.packageName)}' {`);
+function emitContext(ctx, lines) {
+  lines.push(`    pkg_${safeId(ctx.id)} = package '${esc(ctx.packageName)}' {`);
   lines.push('      #asIs');
   lines.push(`      description '${esc(ctx.packageConcern)}'`);
   lines.push('      metadata {');
@@ -464,15 +443,12 @@ function emitLogicalContext(ctx, lines) {
   lines.push(`        sourceFiles '${ctx.counts.sourceFiles}'`);
   lines.push(`        testFiles '${ctx.counts.testFiles}'`);
   lines.push('      }');
-  lines.push(`      link https://github.com/${config.repository}/tree/${baselineSha}/${encodeGitHubPath(ctx.path)} 'Pinned package tree'`);
+  lines.push(`      link https://github.com/${config.repository}/tree/${baselineSha}/${encodePath(ctx.path)} 'Pinned package tree'`);
 
   for (const module of ctx.modules) {
     lines.push(`      ${module.id} = ${module.kind} '${esc(module.title)}' {`);
     lines.push('        #structureDerived');
-    const description = module.ownedConcerns.length
-      ? module.ownedConcerns.join(' | ')
-      : `Source grouping observed at ${module.sourcePath}.`;
-    lines.push(`        description '${esc(description)}'`);
+    lines.push(`        description '${esc(module.ownedConcerns.length ? module.ownedConcerns.join(' | ') : `Source grouping observed at ${module.sourcePath}.`)}'`);
     lines.push('        metadata {');
     lines.push("          provenance 'STRUCTURE-DERIVED'");
     lines.push(`          sourcePath '${esc(module.sourcePath)}'`);
@@ -491,68 +467,6 @@ function emitLogicalContext(ctx, lines) {
   lines.push('    }');
 }
 
-function emitInventoryChildren(ctx, folder, parentFqn, indent, lines, pathToFqn) {
-  for (const child of sortedFolders(folder)) {
-    const id = folderElementId(child.relativePath);
-    const fqn = `${parentFqn}.${id}`;
-    pathToFqn.set(`${child.relativePath}/`, fqn);
-    lines.push(`${indent}${id} = folder '${esc(child.name)}/ — ${child.recursiveFileCount} files' {`);
-    lines.push(`${indent}  #structureDerived`);
-    lines.push(`${indent}  description 'Directory observed in the pinned Git tree.'`);
-    lines.push(`${indent}  metadata {`);
-    lines.push(`${indent}    provenance 'STRUCTURE-DERIVED'`);
-    lines.push(`${indent}    sourcePath '${esc(posix.join(ctx.path, child.relativePath))}'`);
-    lines.push(`${indent}    recursiveFileCount '${child.recursiveFileCount}'`);
-    lines.push(`${indent}    directFileCount '${child.files.length}'`);
-    lines.push(`${indent}    baselineSha '${baselineSha}'`);
-    lines.push(`${indent}  }`);
-    lines.push(`${indent}  link https://github.com/${config.repository}/tree/${baselineSha}/${encodeGitHubPath(posix.join(ctx.path, child.relativePath))} 'Pinned directory'`);
-    emitInventoryChildren(ctx, child, fqn, `${indent}  `, lines, pathToFqn);
-    emitInventoryFiles(child.files, fqn, `${indent}  `, lines, pathToFqn);
-    lines.push(`${indent}}`);
-  }
-  emitInventoryFiles(folder.files, parentFqn, indent, lines, pathToFqn);
-}
-
-function emitInventoryFiles(files, parentFqn, indent, lines, pathToFqn) {
-  for (const file of [...files].sort((a, b) => a.filename.localeCompare(b.filename))) {
-    const id = fileElementId(file);
-    const fqn = `${parentFqn}.${id}`;
-    if (pathToFqn.has(file.relativePath)) throw new Error(`Duplicate inventory file ${file.relativePath}`);
-    pathToFqn.set(file.relativePath, fqn);
-    lines.push(`${indent}${id} = file '${esc(file.filename)}' {`);
-    lines.push(`${indent}  #sourceDerived`);
-    lines.push(`${indent}  description 'Tracked file from the pinned Git tree.'`);
-    lines.push(`${indent}  metadata {`);
-    lines.push(`${indent}    provenance 'SOURCE-DERIVED'`);
-    lines.push(`${indent}    sourcePath '${esc(file.path)}'`);
-    lines.push(`${indent}    blobSha '${file.blobSha}'`);
-    if (file.sizeBytes !== null) lines.push(`${indent}    sizeBytes '${file.sizeBytes}'`);
-    lines.push(`${indent}    baselineSha '${baselineSha}'`);
-    lines.push(`${indent}  }`);
-    lines.push(`${indent}  link ${file.githubUrl} 'Open pinned source'`);
-    lines.push(`${indent}}`);
-  }
-}
-
-function emitFolderViews(ctx, folder, pathToFqn, lines) {
-  for (const child of sortedFolders(folder)) {
-    const fqn = pathToFqn.get(`${child.relativePath}/`);
-    if (!fqn) throw new Error(`Missing folder FQN ${ctx.id}:${child.relativePath}`);
-    lines.push(`  view ${safeId(ctx.id)}Dir_${safeId(child.relativePath)} of ${fqn} {`);
-    lines.push(`    title '${esc(ctx.packageName)} — ${esc(child.relativePath)}/ (${child.recursiveFileCount} files)'`);
-    lines.push("    description 'STRUCTURE-DERIVED directory view; child file identity comes from Git.'");
-    lines.push('    include *');
-    lines.push('    autoLayout TopBottom');
-    lines.push('  }', '');
-    emitFolderViews(ctx, child, pathToFqn, lines);
-  }
-}
-
-function sortedFolders(folder) {
-  return [...folder.folders.values()].sort((a, b) => a.name.localeCompare(b.name));
-}
-
 function safeId(value) {
   let result = String(value)
     .replace(/[^A-Za-z0-9_]+/g, '_')
@@ -563,16 +477,8 @@ function safeId(value) {
   return result;
 }
 
-function folderElementId(relativePath) {
-  return `dir_${safeId(relativePath)}`;
-}
-
-function fileElementId(file) {
-  return `file_${safeId(file.relativePath)}_${file.blobSha.slice(0, 7)}`;
-}
-
-function encodeGitHubPath(path) {
-  return path.split('/').map(encodeURIComponent).join('/');
+function encodePath(value) {
+  return value.split('/').map(encodeURIComponent).join('/');
 }
 
 function esc(value) {
