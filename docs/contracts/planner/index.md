@@ -17,6 +17,7 @@ ExecutionPlan and planner-related schemas and admission contracts.
 - `packages/@dvt/contracts/src/contracts/planner/DbtStepSelector.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProfile.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/ExecutableSubgraph.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/ExecutionBindingVerification.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts`
@@ -51,7 +52,6 @@ ExecutionPlan and planner-related schemas and admission contracts.
 - `packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/TransformationFlowStepKinds.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/TransformationFlowStepTypeConfigs.v1.ts`
-- `packages/@dvt/contracts/src/contracts/planner/VisualTransformRecipe.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringCommand.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.ts`

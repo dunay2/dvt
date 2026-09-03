@@ -1,0 +1,28 @@
+---
+id: R-20260903-VTX1-AUTHORING-HARDCUT
+title: Removed VTX1 metadata could be mistaken for supported Transform authority
+status: Open
+date: 2026-09-03
+owners:
+  - packages/@dvt/contracts
+  - web
+severity: Medium
+probability: Low
+---
+mitigation:
+  summary: >
+    The shared contract admits only a strict canonical Substrait semantic document. Web reads
+    removed SQL and VTX1 metadata fail closed, an uninitialized Transform must enter through one
+    admitted Substrait start action, and all column mutations persist through the same projection
+    authority. Existing workspace SQL remains a read-only artifact path rather than an authoring
+    fallback.
+  evidence:
+    - docs/evidence/ED-20260903-vtx1-authoring-hardcut.md
+    - docs/planning/proposals/mandatory/frontend-and-ux/vtx2-web-vtx1-authoring-hardcut-plan-20260903.md
+    - packages/@dvt/contracts/test/dvt-transform-authoring-authority.contract.test.ts
+    - apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.test.ts
+    - apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts
+    - apps/web/src/app/views/canvas/canvasAuthoringProjection.architecture.test.ts
+  follow_up:
+    - Issue #2600 owns the remaining VTX2 convergence increments.
+    - Any migration of persisted VTX1 metadata requires a separately governed command.
