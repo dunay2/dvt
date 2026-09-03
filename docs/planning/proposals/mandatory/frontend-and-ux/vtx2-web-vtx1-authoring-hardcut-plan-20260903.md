@@ -102,8 +102,7 @@ flowchart LR
   presentation can create a canonical projection/join/set draft and reload it.
 - **Negative paths:** legacy SQL/VTX1 metadata rejects; malformed/absent canonical metadata
   never mutates; unsupported mapping remains fail-closed.
-- **Libraries:** none; existing Substrait authoring modules provide the required model.
-- **Rail impact:** reuse `ConfigureCanvasDvtNode`; no new command/query.
+- **Libraries/rail:** no new library; reuse `ConfigureCanvasDvtNode` and existing Substrait modules.
 - **Microcommits:** plan; red behavior; contract hard cut; Web hard cut; docs/evidence.
 - **Validation:** focused Contracts/Web tests, Web lint/typecheck, ARC check, governance
   refresh, and `pnpm verify:prepush`.
