@@ -64,12 +64,13 @@ export const canvasViewAuthoringCopyByKey = {
   },
   transformationConnectionOrderMessage: {
     key: 'canvas.transformation.connectionOrderMessage',
-    fallback: 'Execution Preview edges must follow source -> transform -> sink.',
+    fallback:
+      'The selected dependencies do not form a terminal result supported by Execution Preview.',
   },
   transformationConnectionEdgeCountMessage: {
     key: 'canvas.transformation.connectionEdgeCountMessage',
     fallback:
-      'Execution Preview requires exactly 2 edges: source -> transform and transform -> sink.',
+      'The selected dependency structure does not form a terminal result supported by Execution Preview.',
   },
   transformationConnectionDuplicateMessage: {
     key: 'canvas.transformation.connectionDuplicateMessage',
@@ -77,15 +78,16 @@ export const canvasViewAuthoringCopyByKey = {
   },
   transformationRequiresThreeNodesMessage: {
     key: 'canvas.transformation.requiresThreeNodesMessage',
-    fallback: 'Execution Preview requires source, transform, and sink nodes.',
+    fallback: 'The selection does not contain a terminal result supported by Execution Preview.',
   },
   transformationAmbiguousExecutablePathMessage: {
     key: 'canvas.transformation.ambiguousExecutablePathMessage',
-    fallback: 'Execution Preview requires one selected source -> transform -> sink path.',
+    fallback: 'Execution Preview found multiple terminal result paths. Select one.',
   },
   transformationRequiresExecutablePathMessage: {
     key: 'canvas.transformation.requiresExecutablePathMessage',
-    fallback: 'Execution Preview requires a connected source -> transform -> sink path.',
+    fallback:
+      'The current draft has no terminal result supported by Execution Preview. Configure or select an evaluable or consolidated result.',
   },
   transformationRequiresPostgresConnectionMessage: {
     key: 'canvas.transformation.requiresPostgresConnectionMessage',
@@ -98,7 +100,8 @@ export const canvasViewAuthoringCopyByKey = {
   },
   transformationRequiresOneOfEachRoleMessage: {
     key: 'canvas.transformation.requiresOneOfEachRoleMessage',
-    fallback: 'Execution Preview requires one source, one transform, and one sink.',
+    fallback:
+      'The selected node combination does not form a terminal result supported by Execution Preview.',
   },
   transformationDraftValidMessage: {
     key: 'canvas.transformation.validMessage',

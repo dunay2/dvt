@@ -24,23 +24,23 @@ export const canvasViewAuthoringCopyEs = {
   nodeDropPayloadInvalidMessage:
     'No se ha podido leer el nodo arrastrado. El canvas no se ha modificado.',
   transformationConnectionOrderMessage:
-    'Las aristas del Execution Preview deben seguir source -> transform -> sink.',
+    'Las dependencias seleccionadas no forman un resultado terminal compatible con Execution Preview.',
   transformationConnectionEdgeCountMessage:
-    'El Execution Preview requiere exactamente 2 aristas: source -> transform y transform -> sink.',
+    'La estructura de dependencias seleccionada no forma un resultado terminal compatible con Execution Preview.',
   transformationConnectionDuplicateMessage:
     'La dependencia ya existe en este borrador de transformación.',
   transformationRequiresThreeNodesMessage:
-    'El Execution Preview requiere nodos source, transform y sink.',
+    'La selección no contiene un resultado terminal compatible con Execution Preview.',
   transformationAmbiguousExecutablePathMessage:
-    'El Execution Preview requiere seleccionar una única ruta source -> transform -> sink.',
+    'Execution Preview ha encontrado varias rutas con resultado terminal. Selecciona una.',
   transformationRequiresExecutablePathMessage:
-    'El Execution Preview requiere una ruta conectada source -> transform -> sink.',
+    'El borrador actual no contiene un resultado terminal compatible con Execution Preview. Configura o selecciona un resultado evaluable o consolidado.',
   transformationRequiresPostgresConnectionMessage:
     'Selecciona una conexión PostgreSQL gobernada en el origen antes de generar la vista previa.',
   transformationUnsupportedRolesMessage:
     'El Execution Preview solo admite nodos input, transform y output en esta vertical.',
   transformationRequiresOneOfEachRoleMessage:
-    'El Execution Preview requiere un source, un transform y un sink.',
+    'La combinación de nodos seleccionada no forma un resultado terminal compatible con Execution Preview.',
   transformationDraftValidMessage: 'El borrador de transformación es válido para la vista previa.',
   connectionSelfNotAllowedMessage: 'No se permiten las autoconexiones.',
   connectionAlreadyExistsMessage: 'La conexión ya existe.',
