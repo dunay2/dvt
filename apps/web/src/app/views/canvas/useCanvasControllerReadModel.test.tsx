@@ -27,6 +27,7 @@ type ReadModelNodeData = {
   activeColumnHandleId?: unknown;
   onColumnPortActivate?: unknown;
   onApplyCanvasColumnFunction?: unknown;
+  onApplyCanvasStructuredField?: unknown;
   onAddCanvasCalculatedColumn?: unknown;
   onToggleCanvasColumnOutput?: unknown;
   onReorderCanvasColumnOutput?: unknown;
@@ -97,6 +98,7 @@ function buildReadModelArgs(
       activeColumnHandleId: null,
       handleColumnPortActivate: vi.fn(),
       handleApplyCanvasColumnFunction: vi.fn(),
+      handleApplyCanvasStructuredField: vi.fn(),
       handleAddCanvasCalculatedColumn: vi.fn(),
       handleToggleCanvasColumnOutput: vi.fn(),
       handleReorderCanvasColumnOutput: vi.fn(),
@@ -456,6 +458,9 @@ describe('useCanvasControllerReadModel', () => {
 
       expect(transformData.onApplyCanvasColumnFunction).toBe(
         args.graphHandlers.handleApplyCanvasColumnFunction
+      );
+      expect(transformData.onApplyCanvasStructuredField).toBe(
+        args.graphHandlers.handleApplyCanvasStructuredField
       );
       expect(transformData.onAddCanvasCalculatedColumn).toBe(
         args.graphHandlers.handleAddCanvasCalculatedColumn

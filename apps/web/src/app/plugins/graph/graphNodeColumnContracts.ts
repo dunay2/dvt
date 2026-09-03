@@ -20,6 +20,7 @@ export type GraphNodeColumn = Readonly<{
   description?: string;
   sourceHandleId?: string;
   targetHandleId?: string;
+  children?: readonly GraphNodeColumn[];
   functionMenu?: Readonly<{
     category: 'text' | 'numeric' | 'date-time' | 'conversion' | 'aggregate' | 'window';
     items: readonly GraphNodeColumnFunction[];
@@ -37,6 +38,7 @@ export type GraphNodeColumnReorderIdentity = Readonly<{
   columnId: string;
   targetColumnId: string;
   placement: 'before' | 'after';
+  parentColumnId?: string;
 }>;
 export type GraphNodeColumnOutputToggleIdentity = Readonly<{
   nodeId: string;
@@ -51,6 +53,12 @@ export type GraphNodeColumnFunctionApplyIdentity = Readonly<{
   capabilityId: string;
   alias: string;
   sourceColumnId?: string;
+}>;
+export type GraphNodeStructuredFieldIdentity = Readonly<{
+  nodeId: string;
+  draggedFieldId: string;
+  targetFieldId: string;
+  parentName: string;
 }>;
 export type GraphNodeCalculatedColumnIdentity =
   | Readonly<{ nodeId: string; kind: 'string-literal'; alias: string; value: string }>
@@ -71,14 +79,17 @@ export type GraphNodeCalculatedColumnIdentity =
 
 export type GraphNodeColumnSectionProps = Readonly<{
   columns: readonly GraphNodeColumn[];
+  expanded?: boolean;
   nodeId?: string;
   portDirections?: readonly GraphNodeColumnPortDirection[];
   activeColumnHandleId?: string | null;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
   onColumnFunctionApply?: (identity: GraphNodeColumnFunctionApplyIdentity) => void;
+  onStructuredFieldApply?: (identity: GraphNodeStructuredFieldIdentity) => void;
   onCalculatedColumnAdd?: (identity: GraphNodeCalculatedColumnIdentity) => void;
   onColumnOutputToggle?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
   onColumnReorder?: (identity: GraphNodeColumnReorderIdentity) => void;
+  canReorderTopLevelColumns?: boolean;
   onDisclosureChange?: (expanded: boolean) => void;
   onColumnLayoutChange?: () => void;
   onAutomap?: () => void;
@@ -97,6 +108,10 @@ export function resolveGraphNodeColumnInteractionProps(args: {
       : [],
     activeColumnHandleId:
       typeof data.activeColumnHandleId === 'string' ? data.activeColumnHandleId : null,
+    columnDisclosureExpanded:
+      typeof data.columnDisclosureExpanded === 'boolean'
+        ? data.columnDisclosureExpanded
+        : undefined,
     onColumnPortActivate:
       typeof data.onColumnPortActivate === 'function'
         ? (data.onColumnPortActivate as (identity: GraphNodeColumnPortIdentity) => void)
@@ -105,6 +120,12 @@ export function resolveGraphNodeColumnInteractionProps(args: {
       args.nodeRole === 'transform' && typeof data.onApplyCanvasColumnFunction === 'function'
         ? (data.onApplyCanvasColumnFunction as (
             identity: GraphNodeColumnFunctionApplyIdentity
+          ) => void)
+        : undefined,
+    onStructuredFieldApply:
+      args.nodeRole === 'transform' && typeof data.onApplyCanvasStructuredField === 'function'
+        ? (data.onApplyCanvasStructuredField as (
+            identity: GraphNodeStructuredFieldIdentity
           ) => void)
         : undefined,
     onCalculatedColumnAdd:
@@ -124,6 +145,7 @@ export function resolveGraphNodeColumnInteractionProps(args: {
       typeof data.onReorderCanvasColumnOutput === 'function'
         ? (data.onReorderCanvasColumnOutput as (identity: GraphNodeColumnReorderIdentity) => void)
         : undefined,
+    canReorderTopLevelColumns: data.canReorderTopLevelColumns !== false,
     onColumnDisclosureChange:
       typeof data.onColumnDisclosureChange === 'function'
         ? (data.onColumnDisclosureChange as (nodeId: string, expanded: boolean) => void)

@@ -699,8 +699,9 @@ describe('SourceImportWizard', () => {
     expect(connectionOption?.tagName).toBe('BUTTON');
 
     await harness.clickConnectionOption('Local Postgres proof');
-    await harness.clickTab('Browse');
+    await harness.flushPendingWork();
 
+    expect(harness.findTab('Browse')?.getAttribute('aria-selected')).toBe('true');
     expect(document.body.textContent).toContain('Browse source objects');
     expect(document.body.textContent).toContain('ORDERS');
   });

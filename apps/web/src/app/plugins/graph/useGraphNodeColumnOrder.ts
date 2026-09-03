@@ -75,10 +75,17 @@ export function useGraphNodeColumnOrder<TColumn extends OrderableColumn>(
   const [orderedIds, setOrderedIds] = useState(currentIds);
 
   useEffect(() => {
-    setOrderedIds((existing) => [
-      ...existing.filter((id) => columnsById.has(id)),
-      ...currentIds.filter((id) => !existing.includes(id)),
-    ]);
+    setOrderedIds((existing) => {
+      const schemaChanged =
+        existing.some((id) => !columnsById.has(id)) &&
+        currentIds.some((id) => !existing.includes(id));
+      return schemaChanged
+        ? currentIds
+        : [
+            ...existing.filter((id) => columnsById.has(id)),
+            ...currentIds.filter((id) => !existing.includes(id)),
+          ];
+    });
   }, [columnsById, currentIdsKey]);
 
   const orderedColumns = orderedIds.flatMap((id) => {

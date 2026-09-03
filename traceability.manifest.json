@@ -1205,13 +1205,15 @@
         "Require typed standard-first evidence before semantic admission.",
         "Retain product gaps separately from standard semantic identities.",
         "Seed candidates only from pinned core and official extension identities.",
-        "Validate and serialize the capability read model deterministically."
+        "Validate and serialize the capability read model deterministically.",
+        "Validate stable field hierarchy independently from document transport."
       ],
       "implemented_by": [
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityAdmission.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalogSchema.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityIdentity.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitFieldBindingHierarchy.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitPlanBinary.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProductNeeds.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProfile.v1.ts",

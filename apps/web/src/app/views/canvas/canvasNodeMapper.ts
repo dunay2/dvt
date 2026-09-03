@@ -20,6 +20,7 @@ import { buildCanvasNodePresentationTruth } from '../../components/canvas/canvas
 import { buildCanvasNodePresentationCopy } from './canvasNodePresentationCopy';
 import { projectDbtModelColumnStates } from './canvasDbtModelColumnAuthoring';
 import type { CanvasDependencyEdgeData } from './canvasDependencyEdgeModel';
+import { projectGraphNodeColumn } from './canvasGraphNodeColumnProjection';
 
 type CanvasNodePosition = { x: number; y: number };
 type MapCanonicalNodeToCanvasNodeArgs = {
@@ -131,18 +132,9 @@ export function mapCanonicalNodeToCanvasNode({
           column,
           output: canonicalNode.kind !== 'dvt:transform' || column.provenance === 'declared',
         }));
-  const columns = presentedColumns.map(({ column, output }) => ({
-    name: column.name,
-    type: column.type,
-    output,
-    ...(column.nullable == null ? {} : { nullable: column.nullable }),
-    ...(column.primaryKey == null ? {} : { primaryKey: column.primaryKey }),
-    ...(column.sourceNodeName == null ? {} : { sourceNodeName: column.sourceNodeName }),
-    ...(column.sourceFieldName == null ? {} : { sourceFieldName: column.sourceFieldName }),
-    ...(column.reference == null ? {} : { reference: column.reference }),
-    ...(column.operations == null ? {} : { operations: column.operations }),
-    ...(column.description == null ? {} : { description: column.description }),
-  }));
+  const columns = presentedColumns.map(({ column, output }) =>
+    projectGraphNodeColumn(column, output)
+  );
   const presentationCopy = buildCanvasNodePresentationCopy(copy, locale);
 
   return {
@@ -265,18 +257,12 @@ export function mapDroppedCanonicalNodeToCanvasNode(
     nodes: [canonicalNode],
     edges: [],
   });
-  const columns = presentationTruth.columns.visible.map((column) => ({
-    name: column.name,
-    type: column.type,
-    output: canonicalNode.kind !== 'dvt:transform' || column.provenance === 'declared',
-    ...(column.nullable == null ? {} : { nullable: column.nullable }),
-    ...(column.primaryKey == null ? {} : { primaryKey: column.primaryKey }),
-    ...(column.sourceNodeName == null ? {} : { sourceNodeName: column.sourceNodeName }),
-    ...(column.sourceFieldName == null ? {} : { sourceFieldName: column.sourceFieldName }),
-    ...(column.reference == null ? {} : { reference: column.reference }),
-    ...(column.operations == null ? {} : { operations: column.operations }),
-    ...(column.description == null ? {} : { description: column.description }),
-  }));
+  const columns = presentationTruth.columns.visible.map((column) =>
+    projectGraphNodeColumn(
+      column,
+      canonicalNode.kind !== 'dvt:transform' || column.provenance === 'declared'
+    )
+  );
   const presentationCopy = buildCanvasNodePresentationCopy(copy, locale);
   const typeLabelFromMetadata =
     typeof canonicalNode.metadata?.typeLabel === 'string'

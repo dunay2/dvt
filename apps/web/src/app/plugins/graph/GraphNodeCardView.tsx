@@ -12,6 +12,7 @@ import type {
   GraphNodeColumnPortDirection,
   GraphNodeColumnPortIdentity,
   GraphNodeColumnReorderIdentity,
+  GraphNodeStructuredFieldIdentity,
 } from './graphNodeColumnContracts';
 import { GraphNodeMetricRow } from './GraphNodeMetricRow';
 import { GraphNodeOperationalRail } from './GraphNodeOperationalRail';
@@ -57,8 +58,10 @@ export type GraphNodeCardViewProps = Readonly<{
   nodeId?: string;
   columnPortDirections?: readonly GraphNodeColumnPortDirection[];
   activeColumnHandleId?: string | null;
+  columnDisclosureExpanded?: boolean;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
   onColumnFunctionApply?: (identity: GraphNodeColumnFunctionApplyIdentity) => void;
+  onStructuredFieldApply?: (identity: GraphNodeStructuredFieldIdentity) => void;
   onCalculatedColumnAdd?: (identity: GraphNodeCalculatedColumnIdentity) => void;
   onColumnOutputToggle?: (identity: {
     nodeId: string;
@@ -67,6 +70,7 @@ export type GraphNodeCardViewProps = Readonly<{
     output: boolean;
   }) => void;
   onColumnReorder?: (identity: GraphNodeColumnReorderIdentity) => void;
+  canReorderTopLevelColumns?: boolean;
   onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;
   onColumnLayoutChange?: () => void;
   onAutomapColumns?: (nodeId: string, columns: readonly GraphNodeCardColumn[]) => void;
@@ -141,11 +145,14 @@ export function GraphNodeCardView({
   nodeId,
   columnPortDirections,
   activeColumnHandleId,
+  columnDisclosureExpanded,
   onColumnPortActivate,
   onColumnFunctionApply,
+  onStructuredFieldApply,
   onCalculatedColumnAdd,
   onColumnOutputToggle,
   onColumnReorder,
+  canReorderTopLevelColumns,
   onColumnDisclosureChange,
   onColumnLayoutChange,
   onAutomapColumns,
@@ -228,14 +235,17 @@ export function GraphNodeCardView({
         {showColumns && (
           <GraphNodeColumnSection
             columns={columns}
+            expanded={columnDisclosureExpanded}
             nodeId={nodeId}
             portDirections={columnPortDirections}
             activeColumnHandleId={activeColumnHandleId}
             onColumnPortActivate={onColumnPortActivate}
             onColumnFunctionApply={onColumnFunctionApply}
+            onStructuredFieldApply={onStructuredFieldApply}
             onCalculatedColumnAdd={onCalculatedColumnAdd}
             onColumnOutputToggle={onColumnOutputToggle}
             onColumnReorder={onColumnReorder}
+            canReorderTopLevelColumns={canReorderTopLevelColumns}
             onDisclosureChange={
               nodeId == null || onColumnDisclosureChange == null
                 ? undefined

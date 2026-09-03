@@ -11,6 +11,7 @@ describe('graph node column interaction contracts', () => {
       data: {
         onReorderCanvasColumnOutput: onReorder,
         onApplyCanvasColumnFunction: vi.fn(),
+        onApplyCanvasStructuredField: vi.fn(),
         onToggleCanvasColumnOutput: vi.fn(),
       },
     });
@@ -24,6 +25,7 @@ describe('graph node column interaction contracts', () => {
 
     expect(onReorder).toHaveBeenCalledOnce();
     expect(interactions.onColumnFunctionApply).toBeUndefined();
+    expect(interactions.onStructuredFieldApply).toBeUndefined();
     expect(interactions.onColumnOutputToggle).toBeUndefined();
   });
 });

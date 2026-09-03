@@ -26,18 +26,21 @@ import { createDbtNodeAuthoringMetadata } from './canvasDbtAuthoringModel';
 import { projectCanvasColumnFunctionMenus } from './canvasColumnFunctionMenuProjection';
 import { isReorderableCanvasSource } from './canvasSourceColumnOrder';
 
-type InteractiveColumnInput = Readonly<{ name: string; type: string }>;
+function isInteractiveColumn(value: unknown): value is GraphNodeColumn {
+  if (
+    typeof value !== 'object' ||
+    value == null ||
+    typeof (value as { name?: unknown }).name !== 'string' ||
+    typeof (value as { type?: unknown }).type !== 'string'
+  ) {
+    return false;
+  }
+  const children = (value as { children?: unknown }).children;
+  return children == null || (Array.isArray(children) && children.every(isInteractiveColumn));
+}
 
-function readInteractiveColumns(node: Node): InteractiveColumnInput[] {
-  return Array.isArray(node.data.columns)
-    ? node.data.columns.filter(
-        (column): column is InteractiveColumnInput =>
-          typeof column === 'object' &&
-          column != null &&
-          typeof (column as { name?: unknown }).name === 'string' &&
-          typeof (column as { type?: unknown }).type === 'string'
-      )
-    : [];
+function readInteractiveColumns(node: Node): GraphNodeColumn[] {
+  return Array.isArray(node.data.columns) ? node.data.columns.filter(isInteractiveColumn) : [];
 }
 
 function projectInteractiveColumns(
@@ -112,6 +115,7 @@ type UseCanvasControllerReadModelArgs = {
     | 'activeColumnHandleId'
     | 'handleColumnPortActivate'
     | 'handleApplyCanvasColumnFunction'
+    | 'handleApplyCanvasStructuredField'
     | 'handleAddCanvasCalculatedColumn'
     | 'handleToggleCanvasColumnOutput'
     | 'handleReorderCanvasColumnOutput'
@@ -211,6 +215,9 @@ export function useCanvasControllerReadModel({
           onApplyCanvasColumnFunction: canMutateGraph
             ? graphHandlers.handleApplyCanvasColumnFunction
             : undefined,
+          onApplyCanvasStructuredField: canMutateGraph
+            ? graphHandlers.handleApplyCanvasStructuredField
+            : undefined,
           onAddCanvasCalculatedColumn: canMutateGraph
             ? graphHandlers.handleAddCanvasCalculatedColumn
             : undefined,
@@ -267,7 +274,12 @@ export function useCanvasControllerReadModel({
               })
             : { hasEditableProjection: false, supportsCalculatedColumns: false };
         const columnFunctionMenus = functionProjection.menus;
+        const hasStructuredProjection =
+          canonicalNode?.pluginId === 'dvt' &&
+          canonicalNode.kind === 'dvt:transform' &&
+          readInteractiveColumns(node).some((column) => column.children?.length);
         const hasEditableProjection = functionProjection.hasEditableProjection;
+        const canApplyStructuredField = hasEditableProjection || hasStructuredProjection;
 
         const projectedNodeData = {
           ...node.data,
@@ -283,6 +295,9 @@ export function useCanvasControllerReadModel({
             : undefined,
           onApplyCanvasColumnFunction:
             columnFunctionMenus == null ? undefined : node.data.onApplyCanvasColumnFunction,
+          onApplyCanvasStructuredField: canApplyStructuredField
+            ? node.data.onApplyCanvasStructuredField
+            : undefined,
           onAddCanvasCalculatedColumn: functionProjection.supportsCalculatedColumns
             ? node.data.onAddCanvasCalculatedColumn
             : undefined,
@@ -291,9 +306,13 @@ export function useCanvasControllerReadModel({
               ? node.data.onToggleCanvasColumnOutput
               : undefined,
           onReorderCanvasColumnOutput:
-            hasEditableProjection || canAuthorDbtModelColumns || canReorderSourceColumns
+            hasEditableProjection ||
+            hasStructuredProjection ||
+            canAuthorDbtModelColumns ||
+            canReorderSourceColumns
               ? node.data.onReorderCanvasColumnOutput
               : undefined,
+          canReorderTopLevelColumns: !hasStructuredProjection,
           onAutomapColumns: canAuthorColumnMappings ? node.data.onAutomapColumns : undefined,
           columns: presentsColumnLineage
             ? projectInteractiveColumns(node, columnFunctionMenus)

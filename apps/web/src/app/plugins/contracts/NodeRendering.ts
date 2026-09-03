@@ -14,6 +14,7 @@ import type {
   GraphNodeColumnPortDirection,
   GraphNodeColumnPortIdentity,
   GraphNodeColumnReorderIdentity,
+  GraphNodeStructuredFieldIdentity,
 } from '../graph/graphNodeColumnContracts';
 import type {
   GraphNodeCardStrategy,
@@ -104,9 +105,11 @@ export type GraphNodeRendererData = Readonly<{
   getTagFilterLabel?: (tag: string) => string;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
   onApplyCanvasColumnFunction?: (identity: GraphNodeColumnFunctionApplyIdentity) => void;
+  onApplyCanvasStructuredField?: (identity: GraphNodeStructuredFieldIdentity) => void;
   onAddCanvasCalculatedColumn?: (identity: GraphNodeCalculatedColumnIdentity) => void;
   onToggleCanvasColumnOutput?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
   onReorderCanvasColumnOutput?: (identity: GraphNodeColumnReorderIdentity) => void;
+  canReorderTopLevelColumns?: boolean;
   onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;
   onColumnLayoutChange?: () => void;
   onAutomapColumns?: (nodeId: string, columns: readonly GraphNodeColumn[]) => void;

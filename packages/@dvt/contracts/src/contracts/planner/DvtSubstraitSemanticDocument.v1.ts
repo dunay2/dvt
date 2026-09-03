@@ -11,6 +11,7 @@ import { z } from 'zod';
 
 import { ConnectedSourceRefSchema } from '../source-import/ConnectedSourceRef.v1.js';
 
+import { validateDvtSubstraitFieldHierarchyV1 } from './DvtSubstraitFieldBindingHierarchy.v1.js';
 import { decodeDvtSubstraitPlanV1 } from './DvtSubstraitPlanBinary.v1.js';
 import {
   DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION,
@@ -64,6 +65,8 @@ export const DvtSubstraitFieldBindingV1Schema = z
   .object({
     fieldId: NonBlankStringSchema,
     relationId: NonBlankStringSchema,
+    parentFieldId: NonBlankStringSchema.optional(),
+    sourceFieldId: NonBlankStringSchema.optional(),
     outputOrdinal: z.number().int().nonnegative(),
     displayName: NonBlankStringSchema.optional(),
     description: NonBlankStringSchema.optional(),
@@ -100,33 +103,12 @@ export const DvtSubstraitAuthoringSidecarV1Schema = z
       relAnchors.add(relation.relAnchor);
     });
 
-    const fieldIds = new Set<string>();
-    const outputPositions = new Set<string>();
-    sidecar.fields.forEach((field, index) => {
-      if (fieldIds.has(field.fieldId)) {
-        context.addIssue({
-          code: 'custom',
-          message: 'Duplicate fieldId.',
-          path: ['fields', index, 'fieldId'],
-        });
-      }
-      if (!relationIds.has(field.relationId)) {
-        context.addIssue({
-          code: 'custom',
-          message: 'Unknown relationId.',
-          path: ['fields', index, 'relationId'],
-        });
-      }
-      const position = `${field.relationId}:${field.outputOrdinal}`;
-      if (outputPositions.has(position)) {
-        context.addIssue({
-          code: 'custom',
-          message: 'Duplicate output ordinal.',
-          path: ['fields', index, 'outputOrdinal'],
-        });
-      }
-      fieldIds.add(field.fieldId);
-      outputPositions.add(position);
+    validateDvtSubstraitFieldHierarchyV1(sidecar.fields, relationIds).forEach((issue) => {
+      context.addIssue({
+        code: 'custom',
+        message: issue.message,
+        path: ['fields', issue.index, issue.property],
+      });
     });
   });
 

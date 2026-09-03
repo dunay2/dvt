@@ -70,4 +70,36 @@ describe('canvas draft lifecycle snapshot', () => {
     ]);
     expect(isCurrentDraftProjectable(payload, draftSession)).toBe(true);
   });
+
+  it('persists a local replacement instead of the stale canonical node with the same identity', () => {
+    const canonical = buildNode({ id: 'transform-1', name: 'Before' });
+    const replacement = buildNode({
+      id: canonical.id,
+      name: 'After',
+      metadata: { transformAuthoring: { mode: 'substrait' } },
+    });
+    const draftSession: CanvasDraftSession = {
+      syncState: 'editing',
+      baseline: { record: null },
+      draftRevision: 'rev-1',
+      workingSet: {
+        visibleNodeIds: [canonical.id],
+        visibleEdges: [],
+        pendingExplicitNodeIds: [],
+      },
+      localNodeCatalog: { [canonical.id]: replacement },
+    };
+
+    const payload = buildCurrentDraftPayload(
+      [{ id: canonical.id, position: { x: 120, y: 80 } }],
+      draftSession,
+      { kind: 'transformation', title: 'Transform canvas' },
+      null,
+      [canonical],
+      []
+    );
+
+    expect(payload.nodes).toEqual([expect.objectContaining({ name: 'After' })]);
+    expect(payload.nodes[0]?.metadata).toEqual(replacement.metadata);
+  });
 });

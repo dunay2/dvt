@@ -15,6 +15,7 @@ export type CanvasNodePresentationColumn = Readonly<{
   operations?: readonly string[];
   description?: string;
   selected?: boolean;
+  children?: readonly CanvasNodePresentationColumn[];
 }>;
 
 export type CanvasNodeColumnTruth = Readonly<{

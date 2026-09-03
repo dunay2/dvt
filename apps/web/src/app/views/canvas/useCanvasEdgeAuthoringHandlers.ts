@@ -23,6 +23,7 @@ import {
   reorderCanvasColumnOutput,
   setCanvasColumnOutputIncluded,
 } from './canvasColumnOutputAuthoring';
+import { reorderCanvasStructuredFieldChildren } from './canvasStructuredFieldAuthoring';
 import { resolveCanvasColumnMappingTarget } from './canvasColumnProjectionAuthority';
 import {
   configureDbtModelColumnOrder,
@@ -64,6 +65,7 @@ type UseCanvasEdgeAuthoringHandlersResult = {
     columnId: string;
     targetColumnId: string;
     placement: 'before' | 'after';
+    parentColumnId?: string;
   }) => void;
   handleRemoveColumnMapping: (mapping: CanvasColumnLineageEdgeData) => void;
 };
@@ -264,12 +266,32 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
       columnId: string;
       targetColumnId: string;
       placement: 'before' | 'after';
+      parentColumnId?: string;
     }) => {
       if (!policy.canEditEdges) {
         toast.error(canvasViewCopy.mutationUnavailableMessage);
         return;
       }
       const targetNode = resolveCurrentNode(state, identity.nodeId);
+      if (identity.parentColumnId != null) {
+        const result = reorderCanvasStructuredFieldChildren({
+          draftSession: state.draftSession,
+          canonicalNodesById: state.canonicalNodesById,
+          request: {
+            nodeId: identity.nodeId,
+            parentFieldId: identity.parentColumnId,
+            fieldId: identity.columnId,
+            targetFieldId: identity.targetColumnId,
+            placement: identity.placement,
+          },
+        });
+        if (result.outcome === 'rejected') {
+          toast.error(canvasViewCopy.columnMappingUnavailableMessage);
+          return;
+        }
+        effects.setDraftSession(result.draftSession);
+        return;
+      }
       if (targetNode?.pluginId === 'dbt' && targetNode.kind === 'dbt:model') {
         const result = configureDbtModelColumnOrder({
           draftSession: state.draftSession,

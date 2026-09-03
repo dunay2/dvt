@@ -15,19 +15,22 @@ const MAX_PREVIEW_COLUMNS = 5;
 
 export function GraphNodeColumnSection({
   columns,
+  expanded,
   nodeId,
   portDirections = [],
   activeColumnHandleId,
   onColumnPortActivate,
   onColumnFunctionApply,
+  onStructuredFieldApply,
   onCalculatedColumnAdd,
   onColumnOutputToggle,
   onColumnReorder,
+  canReorderTopLevelColumns,
   onDisclosureChange,
   onColumnLayoutChange,
   onAutomap,
 }: GraphNodeColumnSectionProps): ReactElement {
-  const [columnsExpanded, setColumnsExpanded] = useState(false);
+  const [columnsExpanded, setColumnsExpanded] = useState(expanded ?? false);
   const [showAllColumns, setShowAllColumns] = useState(false);
   const [compositionRequest, setCompositionRequest] = useState<Readonly<{
     sourceColumn: (typeof columns)[number];
@@ -40,8 +43,11 @@ export function GraphNodeColumnSection({
   const columnReorder = useGraphNodeColumnReorder({
     columns,
     nodeId,
-    onColumnReorder,
-    onColumnComposeRequest: onColumnFunctionApply == null ? undefined : setCompositionRequest,
+    onColumnReorder: canReorderTopLevelColumns === false ? undefined : onColumnReorder,
+    onColumnComposeRequest:
+      onColumnFunctionApply == null && onStructuredFieldApply == null
+        ? undefined
+        : setCompositionRequest,
   });
   const visibleColumns = showAllColumns
     ? columnReorder.orderedColumns
@@ -66,6 +72,10 @@ export function GraphNodeColumnSection({
     showAllColumns,
     visibleColumns.length,
   ]);
+
+  useEffect(() => {
+    if (expanded != null) setColumnsExpanded(expanded);
+  }, [expanded]);
 
   return (
     <div data-slot="graph-node-column-section" className={graphNodeColumnClasses.shell}>
@@ -120,7 +130,9 @@ export function GraphNodeColumnSection({
                 onCompositionDismiss={() => setCompositionRequest(null)}
                 onColumnPortActivate={onColumnPortActivate}
                 onColumnFunctionApply={onColumnFunctionApply}
+                onStructuredFieldApply={onStructuredFieldApply}
                 onColumnOutputToggle={onColumnOutputToggle}
+                onColumnReorder={onColumnReorder}
               />
             ))}
           </div>

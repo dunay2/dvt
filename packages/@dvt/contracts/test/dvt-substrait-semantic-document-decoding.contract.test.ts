@@ -72,4 +72,73 @@ describe('DVT Substrait semantic document decoding', () => {
       ).toBe(false);
     }
   });
+
+  it('scopes child order to a valid acyclic parent field', () => {
+    const document = buildDvtSubstraitSemanticDocumentFixture();
+    const [parent, sibling] = document.sidecar.fields;
+    if (parent == null || sibling == null) throw new Error('Expected semantic fixture fields.');
+    const children = ['given_name', 'family_name'].map((displayName, outputOrdinal) => ({
+      fieldId: `field:transform-node:${displayName}`,
+      relationId: parent.relationId,
+      parentFieldId: parent.fieldId,
+      outputOrdinal,
+      displayName,
+    }));
+    const structuredFields = [parent, sibling, ...children];
+
+    expect(
+      DvtSubstraitAuthoringSidecarV1Schema.safeParse({
+        ...document.sidecar,
+        fields: structuredFields,
+      }).success
+    ).toBe(true);
+
+    const invalidHierarchies = [
+      structuredFields.map((field) =>
+        field.fieldId === children[0]?.fieldId
+          ? { ...field, parentFieldId: 'field:missing' }
+          : field
+      ),
+      structuredFields.map((field) =>
+        field.fieldId === parent.fieldId ? { ...field, parentFieldId: children[0]?.fieldId } : field
+      ),
+      [
+        ...structuredFields,
+        {
+          ...children[1],
+          fieldId: 'field:source-node:cross-relation',
+          relationId: document.sidecar.relations[0]?.relationId,
+        },
+      ],
+    ];
+    invalidHierarchies.forEach((fields) => {
+      expect(
+        DvtSubstraitAuthoringSidecarV1Schema.safeParse({ ...document.sidecar, fields }).success
+      ).toBe(false);
+    });
+  });
+
+  it('retains explicit field provenance and rejects an unknown source identity', () => {
+    const document = buildDvtSubstraitSemanticDocumentFixture();
+    const target = document.sidecar.fields[0];
+    const sourceRelationId = document.sidecar.relations[0]?.relationId;
+    if (target == null || sourceRelationId == null) throw new Error('Expected semantic fixture.');
+    const source = {
+      fieldId: 'field:source-node:name',
+      relationId: sourceRelationId,
+      outputOrdinal: 0,
+      displayName: 'name',
+    };
+    const fields = [source, { ...target, sourceFieldId: source.fieldId }];
+
+    expect(
+      DvtSubstraitAuthoringSidecarV1Schema.safeParse({ ...document.sidecar, fields }).success
+    ).toBe(true);
+    expect(
+      DvtSubstraitAuthoringSidecarV1Schema.safeParse({
+        ...document.sidecar,
+        fields: [source, { ...target, sourceFieldId: 'field:missing' }],
+      }).success
+    ).toBe(false);
+  });
 });
