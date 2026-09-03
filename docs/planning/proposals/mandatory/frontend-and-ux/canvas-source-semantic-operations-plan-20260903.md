@@ -33,8 +33,7 @@ missing filter DSL. `FilterRel`, `equal`, string literal and string type are alr
 1. Source filter model: rejected; duplicates Substrait and the existing command.
 2. Promote Source to Transform: rejected; erases the product identity being edited.
 3. Hidden Transform: rejected; creates invisible graph authority.
-4. Selected: Source retains physical identity and carries the same optional semantic envelope;
-   one shared operation editor serves Source and Transform.
+4. Selected: Source retains identity and carries the same envelope; one editor serves both roles.
 
 No library is added; pinned protobufs, capability catalog and PostgreSQL AST/deparser cover the shape.
 
@@ -54,8 +53,7 @@ flowchart LR
 
 ## First Slice
 
-One PostgreSQL Source can add, edit and remove `text_field = string_literal`. The UI derives the
-operation from its canonical capability ID, binds a stable sidecar FieldId, and uses Apply/Cancel.
+One PostgreSQL Source can add, edit and remove `text_field = string_literal`; the UI derives its capability, binds a stable FieldId, and uses Apply/Cancel.
 Reload, card summary and PostgreSQL use the same revision.
 Other predicates and broader operation parity remain in #2894.
 
@@ -67,9 +65,8 @@ compact card summary. Source kind, imported connection authority and physical pr
 unchanged. The visible local stack and the focused Cypress flow both proved apply, reload and
 remove.
 
-Issue #2894 remains open for ordered filters, field projection parity, broader relational
-operations, and terminal materialization. Raw Source sampling is not presented as execution of
-the semantic recipe; that integration remains part of the Preview/materialization sequence.
+Issue #2894 remains open for ordered filters, field projection parity, broader relational operations,
+and materialization. Raw Source sampling remains outside the semantic Preview/materialization path.
 
 ## Fowler Matrix
 
@@ -122,7 +119,7 @@ userStories: [https://github.com/dunay2/dvt/issues/2894]
 governingSources: [AGENTS.md, docs/adr/ADR-0035-planner-public-contract-evolution-protocol.md, docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md, docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md, docs/architecture/command-query-rail-governance.md, docs/architecture/fowler-opportunity-planning-governance.md]
 domainObjects: [DvtNodeAuthoringMetadata, DvtSubstraitCapabilityCatalogV1, DvtSubstraitSemanticDocumentV1]
 fowlerSignals: [Boundary drift, Hidden authority, Duplicate semantics, Primitive obsession]
-allowedImplementationSurfaces: [packages/@dvt/contracts/src/contracts/planner/**, packages/@dvt/contracts/test/**, apps/web/src/app/views/canvas/**, apps/web/src/app/plugins/graph/**, apps/web/cypress/e2e/canvas/**, docs/**]
+allowedImplementationSurfaces: [packages/@dvt/contracts/src/contracts/planner/**, packages/@dvt/contracts/test/**, apps/web/src/app/views/canvas/**, apps/web/src/app/plugins/graph/**, apps/web/src/app/plugins/dvt/**, apps/web/cypress/e2e/canvas/**, apps/web/cypress/support/**, docs/**]
 forbiddenImplementationSurfaces: [apps/api/**, packages/@dvt/engine/**, packages/@dvt/adapter-*/**, new commands, stores, registries, recipes, SQL editors, node kinds or runtime steps]
 commandQueryRails:
   - name: ConfigureCanvasDvtNode
@@ -197,4 +194,7 @@ symbols:
   - { <<: *symbolDefaults, name: ensureFunction, path: apps/web/src/app/views/canvas/canvasDvtSubstraitTextEquality.ts }
   - { <<: *symbolDefaults, name: fieldReference, path: apps/web/src/app/views/canvas/canvasDvtSubstraitTextEquality.ts }
   - { <<: *symbolDefaults, name: assertDvtSemanticNode, path: apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.ts }
+  - { <<: *symbolDefaults, name: useGraphNodeColumnSectionState, path: apps/web/src/app/plugins/graph/useGraphNodeColumnSectionState.ts }
+  - { <<: *symbolDefaults, name: GraphNodeColumnSection, path: apps/web/src/app/plugins/graph/GraphNodeColumnSection.tsx }
+  - { <<: *symbolDefaults, name: buildConnectedFieldPostgresAst, path: apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresProjection.ts }
 ```
