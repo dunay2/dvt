@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
+import { buildCanvasAuthoringDraft } from './canvasDraftAuthoring';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import {
   createDvtSubstraitProjectionDraft,
@@ -159,7 +160,17 @@ describe('ConfigureCanvasDvtNode structured-field command', () => {
         record: {
           revision: 'revision-8',
           savedAt: '2026-09-03T00:00:00.000Z',
-          draft: { nodes: [source, persistedTarget] } as never,
+          draft: buildCanvasAuthoringDraft({
+            canvas: { kind: 'transformation', title: 'Structured reorder' },
+            nodeIds: [source.id, persistedTarget.id],
+            nodePositions: {
+              [source.id]: { x: 0, y: 0 },
+              [persistedTarget.id]: { x: 320, y: 0 },
+            },
+            visibleEdges: [{ sourceId: source.id, targetId: persistedTarget.id }],
+            canonicalNodes: [source, persistedTarget],
+            canonicalEdges: [],
+          }),
         },
       },
       draftRevision: 'revision-8',

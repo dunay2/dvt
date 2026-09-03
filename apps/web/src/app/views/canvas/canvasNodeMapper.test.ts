@@ -239,6 +239,7 @@ describe('canvasNodeMapper', () => {
 
     expect(mappedNode.data.columns).toEqual([
       {
+        id: 'source:orders:customer',
         name: 'customer',
         type: 'text',
         output: false,
