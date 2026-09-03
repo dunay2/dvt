@@ -28,10 +28,7 @@ describe('resolveCanvasRuntimePolicy', () => {
     const policy = resolveCanvasRuntimePolicy({
       activeRuntime: {
         kind: 'missing_document',
-        executionStrategy: {
-          kind: 'transformation_preview',
-          previewProfile: 'transformation-sql-first-v2',
-        },
+        executionStrategy: { kind: 'not_executable' },
         nodeKinds: DVT_AUTHORING_NODE_KINDS,
       },
       canMutateGraph: true,
@@ -262,10 +259,7 @@ describe('resolveCanvasRuntimePolicy', () => {
       activeRuntime: {
         kind: 'ready',
         canvasKind: 'transformation',
-        executionStrategy: {
-          kind: 'transformation_preview',
-          previewProfile: 'transformation-sql-first-v2',
-        },
+        executionStrategy: { kind: 'not_executable' },
         nodeKinds: DVT_AUTHORING_NODE_KINDS,
       },
       canOpenSourceImport: true,

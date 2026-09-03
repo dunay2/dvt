@@ -504,7 +504,7 @@ describe('internal alpha route gate architecture', () => {
         'apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts',
         'apps/web/src/app/views/canvas/useCanvasExecutionActions.runStartGuards.test.tsx',
         'apps/web/src/app/views/canvas/useCanvasExecutionActions.runStartSuccess.test.tsx',
-        'apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts',
+        'apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts',
       ])
     );
     for (const blocker of [

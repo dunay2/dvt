@@ -88,7 +88,7 @@ describe('useCanvasController permission and posture contract', () => {
     );
   });
 
-  it('keeps execution selection while stopping node mutation handlers when graph edits are gated', async () => {
+  it('stops mutation and execution-selection handlers when graph edits and execution are gated', async () => {
     const userPermissions = harness.state.store.userPermissions as {
       canEditEdges: boolean;
     };
@@ -112,14 +112,8 @@ describe('useCanvasController permission and posture contract', () => {
 
     expect(latestBuildNodesCall?.handlers?.onDuplicateNode).toBeUndefined();
     expect(latestBuildNodesCall?.handlers?.onRemoveNode).toBeUndefined();
-    const toggleExecutionSelection = latestBuildNodesCall?.handlers?.onToggleNodeSelection as
-      ((nodeId: string, shouldSelect: boolean) => void) | undefined;
-    expect(toggleExecutionSelection).toEqual(expect.any(Function));
-    toggleExecutionSelection?.('node_1', true);
-    expect(harness.state.graphHandlersResult.handleToggleNodeSelection).toHaveBeenCalledWith(
-      'node_1',
-      true
-    );
+    expect(latestBuildNodesCall?.handlers?.onToggleNodeSelection).toBeUndefined();
+    expect(harness.state.graphHandlersResult.handleToggleNodeSelection).not.toHaveBeenCalled();
     expect(harness.mocks.useCanvasGraphHandlers).toHaveBeenCalledWith(
       expect.objectContaining({
         canEditEdges: false,

@@ -49,15 +49,15 @@ contracts.
 
 ## Scenario Coverage Matrix
 
-| Scenario                     | Readiness blocker      | Evidence                                              |
-| ---------------------------- | ---------------------- | ----------------------------------------------------- |
-| Persisted preview can start  | none                   | `canvas-preview-run-persisted.cy.ts`                  |
-| Missing or stale plan proof  | `plan_integrity`       | `canvasPlanReadiness.test.ts`                         |
-| Preview identity mismatch    | `plan_integrity`       | `useCanvasExecutionActions.runStartGuards.test.tsx`   |
-| Route permission denied      | `authorization_denied` | `useCanvasExecutionActions.runStartGuards.test.tsx`   |
-| Unsupported canvas execution | `capability_mismatch`  | `useCanvasExecutionActions.planPreview.core.test.tsx` |
-| Backpressure vocabulary      | `backpressure`         | `canvasPlanReadiness.test.ts`                         |
-| Adapter degraded vocabulary  | `adapter_degraded`     | `canvasPlanReadiness.test.ts`                         |
+| Scenario                     | Readiness blocker      | Evidence                                            |
+| ---------------------------- | ---------------------- | --------------------------------------------------- |
+| Persisted preview can start  | none                   | `canvas-dbt-author-code-run-live.cy.ts`             |
+| Missing or stale plan proof  | `plan_integrity`       | `canvasPlanReadiness.test.ts`                       |
+| Preview identity mismatch    | `plan_integrity`       | `useCanvasExecutionActions.runStartGuards.test.tsx` |
+| Route permission denied      | `authorization_denied` | `useCanvasExecutionActions.runStartGuards.test.tsx` |
+| Unsupported canvas execution | `capability_mismatch`  | `useCanvasExecutionActions.dbtPreviewRun.test.tsx`  |
+| Backpressure vocabulary      | `backpressure`         | `canvasPlanReadiness.test.ts`                       |
+| Adapter degraded vocabulary  | `adapter_degraded`     | `canvasPlanReadiness.test.ts`                       |
 
 ## Traceability
 
@@ -65,5 +65,5 @@ contracts.
 - Read model: `PlanRunReadinessReadModel`.
 - Component guide:
   `docs/architecture/components/web/graph/canvas-plan-run-readiness-component.md`.
-- Architecture guard:
-  `apps/web/src/app/views/canvas/canvasPlanRunReadiness.architecture.test.ts`.
+- Route-level architecture guard:
+  `apps/web/src/app/routes/internalAlphaRouteGate.architecture.test.ts`.

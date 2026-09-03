@@ -10,7 +10,6 @@ export const HTTP_JSON_NODE_KINDS: NodeKindRegistration[] = [
     pluginId: 'dvt.http-json',
     label: 'HTTP JSON acquisition',
     role: 'input',
-    previewStepKind: 'ACQUIRE_HTTP_JSON_ARTIFACT',
     icon: CloudDownload,
     ...resolveGraphNodeKindTone('dvt:http_json_acquisition'),
     allowsIncoming: false,

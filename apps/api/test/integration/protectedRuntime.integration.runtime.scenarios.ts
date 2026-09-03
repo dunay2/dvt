@@ -382,8 +382,8 @@ async function startTemporalRun(
       },
       graphSource: {
         kind: 'generic-graph-v1',
-        sourceFamily: 'transformation-design-graph',
-        sourceVersion: 'transformation-sql-first-v2',
+        sourceFamily: 'dvt-substrait',
+        sourceVersion: 'substrait-v1',
         nodes: [
           {
             nodeId: input.graphNodeId,

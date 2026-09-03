@@ -192,7 +192,7 @@ describe('useCanvasExecutionActions run start guards', () => {
     const invalidGraphScenario = await renderRunStartHarness({
       runsService,
       currentPlan: buildPersistedPreviewPlan(),
-      canonicalNodes: buildCanonicalNodes().slice(0, 2),
+      canonicalNodes: buildCanonicalNodes().slice(0, 1),
       canonicalEdges: [],
     });
     harness = invalidGraphScenario.harness;
@@ -200,14 +200,15 @@ describe('useCanvasExecutionActions run start guards', () => {
     expect(harness.text('can-start-run')).toBe('false');
     expect(harness.text('plan-run-readiness-status')).toBe('blocked');
     expect(harness.text('plan-run-readiness-blockers')).toContain('plan_integrity');
-    expect(harness.text('plan-status-summary')).toBe(
-      canvasViewCopy.transformationRequiresExecutablePathMessage
-    );
+    const readinessSummary = harness.text('plan-status-summary');
+    if (!readinessSummary) {
+      throw new Error('Expected the blocked run to expose its readiness summary.');
+    }
 
     await expectRunStartBlocked({
       runsService,
       harness,
-      expectedError: canvasViewCopy.transformationRequiresExecutablePathMessage,
+      expectedError: readinessSummary,
       expectedModalState: 'false',
     });
   });

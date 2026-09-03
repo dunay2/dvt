@@ -4,16 +4,12 @@ import type { IPlansPort } from '../../ports/plans';
 import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
 import type { IGraphDbtModelCompilationQueryPort } from '../../ports/graphDbtModelCompilation';
 import type { SessionContextPort } from '../../ports/sessionContext';
-import type {
-  IWorkspaceFileContentCommandPort,
-  IWorkspaceFilesQueryPort,
-} from '../../ports/workspace';
+import type { IWorkspaceFilesQueryPort } from '../../ports/workspace';
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import { makePlanRef, makeRunContext } from '../../testing/contractTestUtils';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
 import { executeCanvasPlanAction } from './canvasPlanAction';
-import { validateTransformationGraph } from './transformationGraphValidation';
 
 const sourceNode: CanonicalNode = {
   id: 'source-orders',
@@ -51,15 +47,6 @@ const edge: CanonicalEdge = {
 
 describe('Canvas graph-draft DBT SQL authority', () => {
   it('refuses divergent pre-marker model SQL without an adoption path', async () => {
-    const saveFileContent = vi.fn<IWorkspaceFileContentCommandPort['saveFileContent']>(
-      async (input) => ({
-        kind: 'saved',
-        disposition: 'updated',
-        path: input.path,
-        contentSha256: 'c'.repeat(64),
-        lastModified: '2026-07-22T00:00:01.000Z',
-      })
-    );
     const publish = vi.fn<IGraphDbtWorkspaceArtifactPublicationCommandPort['publish']>(
       async (request) => ({
         schemaVersion: 'graph-dbt-workspace-artifact-publication.v1',
@@ -122,18 +109,10 @@ describe('Canvas graph-draft DBT SQL authority', () => {
       canonicalNodes: [sourceNode, modelNode],
       executionStrategy: strategy,
       plansService: { previewPlan, importPlan: vi.fn() },
-      previewProvenanceConfig: { gitBranch: 'detached', gitSha: 'unknown' },
       selectionIntent: { mode: 'explicit', nodeIds: [modelNode.id] },
       sessionContext,
-      transformationValidation: validateTransformationGraph({
-        nodes: [sourceNode, modelNode],
-        edges: [edge],
-        selectedNodeIds: [modelNode.id],
-        workspaceNodeIds: [sourceNode.id, modelNode.id],
-      }),
       workspaceNodeIds: [sourceNode.id, modelNode.id],
       workspaceFilesQuery,
-      workspaceFileContentCommand: { saveFileContent },
       graphDbtWorkspaceArtifactPublicationCommand: { publish },
       graphDbtModelCompilationQuery: {
         compile: vi.fn<IGraphDbtModelCompilationQueryPort['compile']>(),
@@ -144,7 +123,6 @@ describe('Canvas graph-draft DBT SQL authority', () => {
       ok: false,
       message: expect.stringContaining('models/orders.sql'),
     });
-    expect(saveFileContent).not.toHaveBeenCalled();
     expect(publish).not.toHaveBeenCalled();
     expect(previewPlan).not.toHaveBeenCalled();
   });

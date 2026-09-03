@@ -21,7 +21,6 @@ export const VALID_PLAN_REF = {
 } as const;
 
 export const PREVIEW_PROFILE_GENERIC = 'planner-generic-v1' as const;
-export const PREVIEW_PROFILE_TRANSFORMATION = 'transformation-sql-first-v2' as const;
 
 export const VALID_PREVIEW_CONTEXT = {
   runId: 'run_1',
@@ -86,8 +85,8 @@ export const VALID_POSTGRES_CONNECTION_REF = {
 
 export const VALID_TRANSFORMATION_GRAPH_SOURCE = {
   kind: 'generic-graph-v1',
-  sourceFamily: 'transformation-design-graph',
-  sourceVersion: 'transformation-sql-first-v2',
+  sourceFamily: 'dvt-substrait',
+  sourceVersion: 'substrait-v1',
   nodes: [
     {
       nodeId: 'source-node',

@@ -352,8 +352,8 @@ describe('ResolveAuthorizedExecutableSubgraphService', () => {
         }),
         graphSource: {
           kind: 'generic-graph-v1',
-          sourceFamily: 'transformation-design-graph',
-          sourceVersion: 'transformation-sql-first-v2',
+          sourceFamily: 'dvt-substrait',
+          sourceVersion: 'substrait-v1',
           nodes: [
             {
               nodeId: 'source-node',
@@ -396,8 +396,8 @@ describe('ResolveAuthorizedExecutableSubgraphService', () => {
         selection: executableSubgraph.selection,
         graphSource: {
           kind: 'generic-graph-v1',
-          sourceFamily: 'transformation-design-graph',
-          sourceVersion: 'transformation-sql-first-v2',
+          sourceFamily: 'dvt-substrait',
+          sourceVersion: 'substrait-v1',
           nodes: [
             {
               nodeId: 'source-node',

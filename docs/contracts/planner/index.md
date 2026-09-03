@@ -46,9 +46,6 @@ ExecutionPlan and planner-related schemas and admission contracts.
 - `packages/@dvt/contracts/src/contracts/planner/PolicyMappingTable.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/StepKindRegistry.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/StoredPlanArtifactValidation.v1.ts`
-- `packages/@dvt/contracts/src/contracts/planner/TransformationFlowCompiler.v1.ts`
-- `packages/@dvt/contracts/src/contracts/planner/TransformationFlowCompilerSummary.v1.ts`
-- `packages/@dvt/contracts/src/contracts/planner/TransformationFlowDesignGraph.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/TransformationFlowStepKinds.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/TransformationFlowStepTypeConfigs.v1.ts`
@@ -61,8 +58,6 @@ ExecutionPlan and planner-related schemas and admission contracts.
 
 - [Execution selection and executable subgraph v1](execution-selection-and-executable-subgraph-v1.md)
 - [Plan store records v1](plan-store-records-v1.md)
-- [Transformation flow compiler mapping v1](transformation-flow-compiler-v1.md)
-- [Transformation flow preview and design graph v1](transformation-flow-preview-v1.md)
 - [Workspace graph draft persistence v1](workspace-graph-draft-persistence-v1.md)
 
 ## Related

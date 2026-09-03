@@ -1,4 +1,4 @@
-import type { CoreNodeRole, PluginNodeKind } from '../types/canonical';
+import type { PluginNodeKind } from '../types/canonical';
 
 import { CANVAS_NODE_KINDS, EDGE_TYPE_STRATEGIES, FALLBACK_NODE_KIND } from './nodeTypeCatalog';
 import type {
@@ -15,26 +15,6 @@ const registry = new Map<PluginNodeKind, NodeKindRegistration>(
 
 export function resolveNodeKindRegistration(kind: string): NodeKindRegistration {
   return registry.get(kind as PluginNodeKind) ?? FALLBACK_NODE_KIND;
-}
-
-export function resolvePreviewStepKind(kind: string, role: CoreNodeRole): string {
-  const registration = resolveNodeKindRegistration(kind);
-  if (registration.previewStepKind) {
-    return registration.previewStepKind;
-  }
-
-  switch (role) {
-    case 'input':
-      return 'CANVAS_SOURCE';
-    case 'transform':
-      return 'CANVAS_TRANSFORM';
-    case 'output':
-      return 'CANVAS_SINK';
-    case 'check':
-      return 'CANVAS_CHECK';
-    case 'control':
-      return 'CANVAS_CONTROL';
-  }
 }
 
 export function resolveCanvasEdgeType(context: EdgeTypeStrategyContext): CanvasEdgeType {

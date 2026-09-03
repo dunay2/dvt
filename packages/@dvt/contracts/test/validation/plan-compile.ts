@@ -15,8 +15,8 @@ const POSTGRES_CONNECTION_REF = {
 
 const TRANSFORMATION_GRAPH_SOURCE = {
   kind: 'generic-graph-v1',
-  sourceFamily: 'transformation-design-graph',
-  sourceVersion: 'transformation-sql-first-v2',
+  sourceFamily: 'dvt-substrait',
+  sourceVersion: 'substrait-v1',
   nodes: [
     {
       nodeId: 'source-1',
@@ -135,7 +135,7 @@ export function registerValidationPlanCompileSuite(): void {
       });
 
       expect(request.context.tenantId).toBe('tenant-a');
-      expect(request.graphSource.sourceFamily).toBe('transformation-design-graph');
+      expect(request.graphSource).toEqual(TRANSFORMATION_GRAPH_SOURCE);
     });
 
     it('rejects compile requests with preview-only fields', () => {

@@ -176,11 +176,6 @@ export interface NodeKindManifestEntry {
   kind: PluginNodeKind;
   label: import('./PluginManifest').LocalizableString;
   role: CoreNodeRole;
-  /**
-   * Optional planner-facing step kind for generic preview projection.
-   * When omitted, the shell falls back to its core role-based mapping.
-   */
-  previewStepKind?: string;
   icon: LucideIcon;
   /** Tailwind border class for the node card */
   borderClass: string;

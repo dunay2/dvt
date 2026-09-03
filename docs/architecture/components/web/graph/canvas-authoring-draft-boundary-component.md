@@ -15,7 +15,7 @@ This component defines the target web-side boundary for `TF-E2-A`.
 
 Canvas must use `WorkspaceGraphAuthoringDraft` as editable authoring truth. It
 must not treat route-local `WorkspaceGraphDraft` projections or
-compile-ready `DesignGraphDraft` artifacts as the active save model.
+compile-ready execution artifacts as the active save model.
 
 The protected contract and API already persist `WorkspaceGraphAuthoringDraft`.
 The remaining web drift is the active Canvas save path still passing through a
@@ -99,8 +99,8 @@ only protected contract/port names may keep `WorkspaceGraphDraft`.
 - Route-local types must not be named `WorkspaceGraphDraft`.
 - Canvas save, cache, session, and working-set modules must not import
   projected draft records from the generic workspace port.
-- `DesignGraphDraft` is compile-only and must not appear in Canvas draft
-  persistence modules.
+- compile-ready Substrait plans must not appear in Canvas draft persistence
+  modules.
 - Read success preserves capability, audit, format metadata, revision, and the
   authoring aggregate.
 - Read denial, format error, unsupported schema version, idempotency mismatch,
@@ -168,7 +168,7 @@ flowchart LR
   Save["SaveWorkspaceGraphDraft"]
   Viewport["React Flow projection"]
   Selection["ExecutionSelection"]
-  Compile["ExecutableSubgraph -> DesignGraphDraft"]
+  Compile["ExecutableSubgraph -> canonical Substrait plan"]
 
   Read --> Model
   Model --> Record
@@ -248,7 +248,6 @@ stateDiagram-v2
 - `apps/web/src/app/views/canvas/useCanvasDraftRecoveryActions.ts`
 - `apps/web/src/app/views/canvas/useCanvasDraftReloadHydration.ts`
 - `apps/web/src/app/views/canvas/useCanvasExecutionActions.ts`
-- `apps/web/src/app/views/canvas/previewDesignGraphArtifact.ts`
 - `apps/web/src/app/views/canvas/canvasDraftRecoveryBoundary.architecture.test.ts`
 
 ## Architecture Guard Requirements
@@ -265,8 +264,8 @@ The implementation must add or update a semantic architecture test that proves:
   `WorkspaceGraphDraftRecord` from
   `apps/web/src/app/ports/workspace.ts`;
 - `canvasDraftRepository.ts` saves `WorkspaceGraphAuthoringDraft` directly;
-- `canvasDraftAuthoring.ts` does not compile or validate `DesignGraphDraft`;
-- `DesignGraphDraft` imports remain confined to preview/run projection modules;
+- `canvasDraftAuthoring.ts` does not compile or validate execution plans;
+- DVT compile projection consumes the canonical Substrait authority;
 - the component guide, Planning DB architecture record, and GitHub issue all
   name the same command/query rails without duplicating task lifecycle.
 
@@ -277,8 +276,8 @@ The implementation must add or update a semantic architecture test that proves:
   before adding route-local fields.
 - Keep transport-only outcomes in the authoring port.
 - Keep UI projections in Canvas presentation modules under Canvas-owned names.
-- Keep compile projection in preview/run modules.
+- Keep compile projection at the canonical Substrait boundary.
 - Delete route-local draft types instead of adding compatibility aliases.
-- Do not add compatibility paths accepting `DesignGraphDraft`,
+- Do not add compatibility paths accepting compile artifacts,
   `WorkspaceGraphDraft`, projected records, React Flow nodes, or canonical graph
   side channels as protected draft save payload.

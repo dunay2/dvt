@@ -186,9 +186,6 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       ...(evidenceModel.materialization === undefined
         ? {}
         : { materialization: evidenceModel.materialization }),
-      ...(evidenceModel.planSummary === undefined
-        ? {}
-        : { planSummary: evidenceModel.planSummary }),
       ...(evidenceModel.diagnostics === undefined
         ? {}
         : { diagnostics: evidenceModel.diagnostics }),

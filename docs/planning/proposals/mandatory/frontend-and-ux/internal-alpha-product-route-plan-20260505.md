@@ -196,7 +196,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/PlanRunReadinessPanel.test.tsx
   - apps/web/src/app/views/canvas/canvasPlanReadiness.ts
   - apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts
-  - apps/web/src/app/views/canvas/canvasPlanRunReadiness.architecture.test.ts
+  - apps/web/src/app/routes/internalAlphaRouteGate.architecture.test.ts
   - docs/planning/state/agent-lane-c.yaml
   - docs/planning/state/agent-lane-e.yaml
   - docs/planning/status/**
@@ -662,8 +662,8 @@ symbols:
     fowlerSignals:
       - Primitive obsession
       - Duplicate semantics
-    architectureGuard: pnpm --filter @dvt/web test -- canvasPlanRunReadiness.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+    architectureGuard: pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/routes/internalAlphaRouteGate.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
     unitTests:
       - pnpm --filter @dvt/web test -- canvasPlanReadiness.test.ts
   - name: PlanRunReadinessReadModel
@@ -674,8 +674,8 @@ symbols:
     fowlerSignals:
       - Boundary drift
       - Primitive obsession
-    architectureGuard: pnpm --filter @dvt/web test -- canvasPlanRunReadiness.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+    architectureGuard: pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/routes/internalAlphaRouteGate.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
     unitTests:
       - pnpm --filter @dvt/web test -- canvasPlanReadiness.test.ts
   - name: observePlanRunReadiness
@@ -686,8 +686,8 @@ symbols:
     fowlerSignals:
       - Boundary drift
       - Duplicate semantics
-    architectureGuard: pnpm --filter @dvt/web test -- canvasPlanRunReadiness.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+    architectureGuard: pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/routes/internalAlphaRouteGate.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
     unitTests:
       - pnpm --filter @dvt/web test -- canvasPlanReadiness.test.ts
   - name: buildPlanRunReadinessSummary
@@ -697,8 +697,8 @@ symbols:
       - ObservePlanRunReadiness
     fowlerSignals:
       - Duplicate semantics
-    architectureGuard: pnpm --filter @dvt/web test -- canvasPlanRunReadiness.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+    architectureGuard: pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/routes/internalAlphaRouteGate.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
     unitTests:
       - pnpm --filter @dvt/web test -- canvasPlanReadiness.test.ts
   - name: PlanRunReadinessPanel
@@ -709,8 +709,8 @@ symbols:
     fowlerSignals:
       - Passive View
       - Duplicate semantics
-    architectureGuard: pnpm --filter @dvt/web test -- canvasPlanRunReadiness.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+    architectureGuard: pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/routes/internalAlphaRouteGate.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
     unitTests:
       - pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/views/canvas/PlanRunReadinessPanel.test.tsx
   - name: PlanRunReadinessPanelProps
@@ -720,8 +720,8 @@ symbols:
       - ObservePlanRunReadiness
     fowlerSignals:
       - Boundary drift
-    architectureGuard: pnpm --filter @dvt/web test -- canvasPlanRunReadiness.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+    architectureGuard: pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/routes/internalAlphaRouteGate.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
     unitTests:
       - pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/views/canvas/PlanRunReadinessPanel.test.tsx
   - name: blockerLabels
@@ -732,8 +732,8 @@ symbols:
     fowlerSignals:
       - Primitive obsession
       - Duplicate semantics
-    architectureGuard: pnpm --filter @dvt/web test -- canvasPlanRunReadiness.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+    architectureGuard: pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/routes/internalAlphaRouteGate.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
     unitTests:
       - pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/views/canvas/PlanRunReadinessPanel.test.tsx
   - name: forcePlanIntegrityBlocker
@@ -744,8 +744,8 @@ symbols:
     fowlerSignals:
       - Boundary drift
       - Duplicate semantics
-    architectureGuard: pnpm --filter @dvt/web test -- canvasPlanRunReadiness.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+    architectureGuard: pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/routes/internalAlphaRouteGate.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
     unitTests:
       - pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/canvasPlanReadiness.test.ts
   - name: buildReadiness
@@ -755,7 +755,7 @@ symbols:
       - ObservePlanRunReadiness
     fowlerSignals:
       - Test-only confidence
-    architectureGuard: pnpm --filter @dvt/web test -- canvasPlanRunReadiness.architecture.test.ts
+    architectureGuard: pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/routes/internalAlphaRouteGate.architecture.test.ts
     cypressCoverage: N/A - component test fixture only.
     unitTests:
       - pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/views/canvas/PlanRunReadinessPanel.test.tsx
@@ -766,7 +766,7 @@ symbols:
       - ObservePlanRunReadiness
     fowlerSignals:
       - Test-only confidence
-    architectureGuard: pnpm --filter @dvt/web test -- canvasPlanRunReadiness.architecture.test.ts
+    architectureGuard: pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/routes/internalAlphaRouteGate.architecture.test.ts
     cypressCoverage: N/A - component test fixture only.
     unitTests:
       - pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/views/canvas/CanvasToolbar.test.tsx
@@ -777,34 +777,34 @@ symbols:
       - ObservePlanRunReadiness
     fowlerSignals:
       - Test-only confidence
-    architectureGuard: pnpm --filter @dvt/web test -- canvasPlanRunReadiness.architecture.test.ts
+    architectureGuard: pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/routes/internalAlphaRouteGate.architecture.test.ts
     cypressCoverage: N/A - shell test fixture only.
     unitTests:
       - pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/views/canvas/CanvasShell.test.tsx
   - name: REPO_ROOT
-    path: apps/web/src/app/views/canvas/canvasPlanRunReadiness.architecture.test.ts
+    path: apps/web/src/app/routes/internalAlphaRouteGate.architecture.test.ts
     dddOwner: Canvas plan/run readiness architecture guard
     cqRails:
       - ObservePlanRunReadiness
     fowlerSignals:
       - Test-only confidence
       - Documentation drift
-    architectureGuard: pnpm --filter @dvt/web test -- canvasPlanRunReadiness.architecture.test.ts
+    architectureGuard: pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/routes/internalAlphaRouteGate.architecture.test.ts
     cypressCoverage: N/A - architecture guard only.
     unitTests:
-      - pnpm --filter @dvt/web test -- canvasPlanRunReadiness.architecture.test.ts
+      - pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/routes/internalAlphaRouteGate.architecture.test.ts
   - name: readRepoFile
-    path: apps/web/src/app/views/canvas/canvasPlanRunReadiness.architecture.test.ts
+    path: apps/web/src/app/routes/internalAlphaRouteGate.architecture.test.ts
     dddOwner: Canvas plan/run readiness architecture guard
     cqRails:
       - ObservePlanRunReadiness
     fowlerSignals:
       - Test-only confidence
       - Documentation drift
-    architectureGuard: pnpm --filter @dvt/web test -- canvasPlanRunReadiness.architecture.test.ts
+    architectureGuard: pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/routes/internalAlphaRouteGate.architecture.test.ts
     cypressCoverage: N/A - architecture guard only.
     unitTests:
-      - pnpm --filter @dvt/web test -- canvasPlanRunReadiness.architecture.test.ts
+      - pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/routes/internalAlphaRouteGate.architecture.test.ts
   - name: stubMissingSessionRouteFetch
     path: apps/web/src/app/routes.test.tsx
     dddOwner: InternalAlphaRouteGate protected-session negative fixture

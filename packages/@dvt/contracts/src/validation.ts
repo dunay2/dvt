@@ -22,7 +22,6 @@ export {
 } from './validation/events.js';
 export {
   parseArtifactRef,
-  parseDesignGraphDraft,
   parseExecutableSubgraph,
   parseExecutionPlan,
   parseExecutionSelection,
@@ -46,7 +45,6 @@ export {
   parsePlanPreviewRequest,
   parsePlanRecord,
   parsePlanRef,
-  parseTransformationSqlFirstCompilerGraphSource,
   parseWorkspaceGraphDraftReadResponse,
   parseWorkspaceGraphDraftSaveRequest,
   parseWorkspaceGraphDraftSaveResponse,

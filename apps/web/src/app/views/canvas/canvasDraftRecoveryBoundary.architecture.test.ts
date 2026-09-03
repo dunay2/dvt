@@ -128,21 +128,6 @@ describe('canvas draft recovery boundary architecture', () => {
       const source = readAppSource(relativePath);
       expect(source, relativePath).not.toMatch(bannedWorkspaceDraftImport);
     }
-
-    const allowedDesignGraphDraftFiles = new Set([
-      'previewDesignGraphArtifact.ts',
-      'previewGraphNodePayloads.ts',
-    ]);
-    const designGraphDraftContractImport =
-      /import\s+type\s+\{[^}]*\bDesignGraphDraft\b[^}]*\}\s+from\s+['"]@dvt\/contracts['"]/;
-    for (const relativePath of listCanvasSourceFiles()) {
-      const source = readAppSource(relativePath);
-      if (!designGraphDraftContractImport.test(source)) {
-        continue;
-      }
-
-      expect(allowedDesignGraphDraftFiles.has(relativePath), relativePath).toBe(true);
-    }
   });
 
   it('keeps canvas node viewport projection options behind a named argument object', () => {

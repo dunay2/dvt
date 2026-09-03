@@ -43,7 +43,6 @@ describe('object-file PostgreSQL plugin contributions', () => {
         kind: 'dvt:object_file_load',
         pluginId: OBJECT_FILE_POSTGRES_PLUGIN_ID,
         role: 'transform',
-        previewStepKind: 'LOAD_OBJECT_FILE_TO_POSTGRES',
         allowsIncoming: true,
         allowsOutgoing: true,
       }),

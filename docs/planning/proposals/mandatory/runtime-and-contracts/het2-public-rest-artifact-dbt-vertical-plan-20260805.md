@@ -304,7 +304,7 @@ fowlerSignals:
   - Test-only confidence
 architectureGuards:
   - packages/@dvt/temporal-http-json-plugin/test/httpJsonPluginBoundary.architecture.test.ts
-  - apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts
+  - apps/web/src/app/views/canvas/canvasPlanAction.dbtProjectFiles.test.ts
 cypressFlows:
   - apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts
 completionGate:
@@ -425,7 +425,7 @@ symbols:
     dddOwner: PlannerPreviewReadModel
     cqRails: [PreviewExecutionPlan]
     fowlerSignals: [Hidden authority]
-    architectureGuard: apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts
+    architectureGuard: apps/web/src/app/views/canvas/dbtProjectFileProjection.architecture.test.ts
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts
     unitTests: [apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts]
   - name: main

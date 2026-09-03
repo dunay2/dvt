@@ -140,27 +140,7 @@ export type {
   PlanPreviewSummary,
   PlanPreviewValidation,
   PreviewProfile,
-  TransformationSqlFirstPlanPreviewPersistResponse,
-  TransformationSqlFirstPlanPreviewRequest,
 } from './contracts/planner/TransformationFlowPreview.v1.js';
-export {
-  TRANSFORMATION_DESIGN_GRAPH_SOURCE_FAMILY,
-  TRANSFORMATION_EXECUTION_TARGET,
-  TRANSFORMATION_SQL_FIRST_SOURCE_VERSION,
-  DesignGraphDraftSchema,
-} from './contracts/planner/TransformationFlowDesignGraph.v1.js';
-export type {
-  DesignGraphContext,
-  DesignGraphDraft,
-  DesignGraphEdge,
-  DesignGraphNode,
-  DesignGraphSinkNode,
-  DesignGraphSourceNode,
-  DesignGraphSqlTransformNode,
-  DesignNodeType,
-  TransformationExecutionTarget,
-  TransformationSqlFirstGraphSourceV2,
-} from './contracts/planner/TransformationFlowDesignGraph.v1.js';
 export {
   DbtExecutionTargetIdentitySchema,
   GitArtifactRefSchema,
@@ -309,20 +289,14 @@ export {
   CaptureMaterializationEvidenceStepTypeConfigSchema,
   PostgresSqlTransformStepTypeConfigSchema,
   PreparePostgresTransformStepTypeConfigSchema,
-  TRANSFORMATION_STEP_KIND,
-  TransformationCompilerGraphNodeV1Schema,
-  TransformationSqlFirstCompilerGraphSourceSchema,
-  summarizeTransformationSqlFirstPlan,
-} from './contracts/planner/TransformationFlowCompiler.v1.js';
+} from './contracts/planner/TransformationFlowStepTypeConfigs.v1.js';
 export type {
   CaptureMaterializationEvidenceStepTypeConfig,
   PostgresSqlTransformStepTypeConfig,
   PreparePostgresTransformStepTypeConfig,
-  TransformationCompilerGraphNodeV1,
-  TransformationSqlFirstCompilerGraphSourceV2,
-  TransformationSqlFirstPlanSummary,
-  TransformationStepKind,
-} from './contracts/planner/TransformationFlowCompiler.v1.js';
+} from './contracts/planner/TransformationFlowStepTypeConfigs.v1.js';
+export { TRANSFORMATION_STEP_KIND } from './contracts/planner/TransformationFlowStepKinds.v1.js';
+export type { TransformationStepKind } from './contracts/planner/TransformationFlowStepKinds.v1.js';
 export {
   SparkJobDeployModeSchema,
   SparkJobRuntimeSchema,

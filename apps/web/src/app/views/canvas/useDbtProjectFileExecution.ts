@@ -9,10 +9,8 @@ import {
   useRunsService,
   useSessionContext,
   useShellFeedback,
-  useWorkspaceFileContentCommandPort,
   useWorkspaceFilesQueryPort,
 } from '../../services/AppServicesContext';
-import { resolveWorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { buildDbtProjectFileExecutionStrategy } from './dbtProjectFileExecutionStrategy';
 import { useCanvasExecutionActions } from './useCanvasExecutionActions';
@@ -44,12 +42,10 @@ export function useDbtProjectFileExecution(args: {
   const sessionContext = useSessionContext();
   const shellFeedback = useShellFeedback();
   const workspaceFilesQuery = useWorkspaceFilesQueryPort();
-  const workspaceFileContentCommand = useWorkspaceFileContentCommandPort();
   const graphDbtWorkspaceArtifactPublicationCommand =
     useGraphDbtWorkspaceArtifactPublicationCommandPort();
   const graphDbtModelCompilationQuery = useGraphDbtModelCompilationQueryPort();
   const navigation = useCanvasNavigationActions();
-  const previewProvenanceConfig = useMemo(() => resolveWorkspaceBootstrapConfig(), []);
   const executionStrategy = useMemo(
     () => (args.projection == null ? null : buildDbtProjectFileExecutionStrategy(args.projection)),
     [args.projection]
@@ -62,7 +58,6 @@ export function useDbtProjectFileExecution(args: {
     plansService,
     runsService,
     workspaceFilesQuery,
-    workspaceFileContentCommand,
     graphDbtWorkspaceArtifactPublicationCommand,
     graphDbtModelCompilationQuery,
     executionStrategy,
@@ -75,7 +70,6 @@ export function useDbtProjectFileExecution(args: {
     sessionContext,
     executionEnvironmentId: args.store.selectedEnvironment,
     shellFeedback,
-    previewProvenanceConfig,
     bottomDrawerVisible: args.store.bottomDrawerVisible,
     currentPlan: args.store.currentPlan,
     setCurrentPlan: args.store.setCurrentPlan,

@@ -1064,7 +1064,7 @@ symbols:
     cqRails: [PreviewExecutablePlan, StartRun]
     fowlerSignals: [Reference-only Canvas edges require a consistent execution projection.]
     architectureGuard: pnpm --filter dvt-api test -- test/application/services/resolveAuthorizedExecutableSubgraph.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
     unitTests:
       - apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts
   - name: PostgresPlanStoreSchemaManager
@@ -1073,7 +1073,7 @@ symbols:
     cqRails: [PreviewExecutablePlan, StartRun, ValidateExecutionPlanAdmission]
     fowlerSignals: [Legacy v1.2 persisted rows must be pruned after the hard-cut.]
     architectureGuard: pnpm --filter @dvt/adapter-postgres test -- PostgresPlanStore.records-core.integration.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
     unitTests:
       - packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts
   - name: createTemporalWorkerPostgresProfile

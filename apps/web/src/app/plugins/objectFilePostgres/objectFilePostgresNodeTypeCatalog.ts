@@ -10,7 +10,6 @@ export const OBJECT_FILE_POSTGRES_NODE_KINDS: NodeKindRegistration[] = [
     pluginId: 'dvt.object-file-postgres',
     label: 'Object-file load',
     role: 'transform',
-    previewStepKind: 'LOAD_OBJECT_FILE_TO_POSTGRES',
     icon: FileInput,
     ...resolveGraphNodeKindTone('dvt:object_file_load'),
     allowsIncoming: true,

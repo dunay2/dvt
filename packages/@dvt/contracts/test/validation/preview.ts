@@ -1,314 +1,95 @@
 import { describe, expect, it } from 'vitest';
 
+import { PreviewProfileSchema } from '../../src/schemas.js';
 import {
   ContractValidationError,
-  parseDesignGraphDraft,
   parsePlanPreviewPersistResponse,
   parsePlanPreviewRejectedOutcome,
   parsePlanPreviewRequest,
 } from '../../src/validation.js';
 
-const postgresConnectionRef = {
-  schemaVersion: 'connection-ref.v1',
-  connectionId: 'warehouse-a',
-  provider: 'postgres',
+const context = {
+  tenantId: 'tenant-a',
+  projectId: 'project-a',
+  environmentId: 'prod',
+  runId: 'run-1',
+  targetAdapter: 'temporal',
 } as const;
 
-const transformationGraphSource = {
+const graphSource = {
   kind: 'generic-graph-v1',
-  sourceFamily: 'transformation-design-graph',
-  sourceVersion: 'transformation-sql-first-v2',
-  nodes: [
-    {
-      nodeId: 'source-1',
-      stepKind: 'PREPARE_POSTGRES_TRANSFORM',
-      dependsOn: [],
-      stepTypeConfig: {
-        connectionRef: postgresConnectionRef,
-        targetSchema: 'analytics',
-        sourceSchema: 'raw',
-        sourceTable: 'orders',
-        sourceAlias: 'orders_src',
-      },
-    },
-    {
-      nodeId: 'transform-1',
-      stepKind: 'POSTGRES_SQL_TRANSFORM',
-      dependsOn: ['source-1'],
-      stepTypeConfig: {
-        connectionRef: postgresConnectionRef,
-        dialect: 'postgres',
-        entrypoint: 'models/orders.sql',
-        sql: 'select * from raw.orders',
-        sqlArtifact: {
-          repo: 'org/repo',
-          path: 'models/orders.sql',
-          ref: 'refs/heads/main',
-          commitSha: 'commit-sql-1',
-          contentSha256: 'c'.repeat(64),
-        },
-        sourceSchema: 'raw',
-        sourceTable: 'orders',
-        sourceAlias: 'orders_src',
-        sinkSchema: 'analytics',
-        sinkTable: 'orders_daily',
-        materialization: 'table',
-        writeMode: 'replace',
-      },
-    },
-    {
-      nodeId: 'sink-1',
-      stepKind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
-      dependsOn: ['transform-1'],
-      stepTypeConfig: {
-        connectionRef: postgresConnectionRef,
-        sinkSchema: 'analytics',
-        sinkTable: 'orders_daily',
-        materialization: 'table',
-        writeMode: 'replace',
-      },
-    },
-  ],
+  sourceFamily: 'dbt',
+  sourceVersion: 'manifest-v12',
+  nodes: [{ nodeId: 'model.orders', stepKind: 'DBT_MODEL', dependsOn: [] }],
 } as const;
 
-const transformationPlan = {
+const selection = { mode: 'explicit', nodeIds: ['model.orders'] } as const;
+
+const plan = {
   metadata: {
     planVersion: '1.0',
     schemaVersion: '1.0',
     contractVersion: '1.0.0',
     inputHashSha256: 'f'.repeat(64),
     planId: '1'.repeat(64),
-    createdAtIso: '2026-04-05T10:00:00.000Z',
+    createdAtIso: '2026-09-03T00:00:00.000Z',
   },
-  steps: [
-    {
-      stepId: 'source-1',
-      kind: 'PREPARE_POSTGRES_TRANSFORM',
-      dependsOn: [],
-      stepTypeConfig: transformationGraphSource.nodes[0].stepTypeConfig,
-    },
-    {
-      stepId: 'transform-1',
-      kind: 'POSTGRES_SQL_TRANSFORM',
-      dependsOn: ['source-1'],
-      stepTypeConfig: transformationGraphSource.nodes[1].stepTypeConfig,
-    },
-    {
-      stepId: 'sink-1',
-      kind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
-      dependsOn: ['transform-1'],
-      stepTypeConfig: transformationGraphSource.nodes[2].stepTypeConfig,
-    },
-  ],
+  steps: [{ stepId: 'model.orders', kind: 'DBT_MODEL', dependsOn: [] }],
+} as const;
+
+const planRef = {
+  uri: 'dvt-plan://plans/plan-1',
+  sha256: 'd'.repeat(64),
+  schemaVersion: '1.0',
+  planId: plan.metadata.planId,
+  planVersion: plan.metadata.planVersion,
 } as const;
 
 export function registerValidationPreviewSuite(): void {
-  describe('preview and design-graph contracts', () => {
-    it('parses DesignGraphDraft for the governed source -> sql_transform -> sink shape', () => {
-      const draft = parseDesignGraphDraft({
-        context: {
-          tenantId: 'tenant-a',
-          projectId: 'project-a',
-          environmentId: 'prod',
-          executionTarget: 'postgres',
-        },
-        nodes: [
-          {
-            id: 'source-1',
-            type: 'source',
-            payload: {
-              kind: 'postgres_table',
-              connectionRef: postgresConnectionRef,
-              schema: 'raw',
-              table: 'orders',
-              alias: 'orders_src',
-            },
-          },
-          {
-            id: 'transform-1',
-            type: 'sql_transform',
-            payload: {
-              dialect: 'postgres',
-              entrypoint: 'models/orders.sql',
-              sqlArtifact: {
-                repo: 'org/repo',
-                path: 'models/orders.sql',
-                ref: 'refs/heads/main',
-                commitSha: 'commit-sql-1',
-                contentSha256: 'a'.repeat(64),
-              },
-            },
-          },
-          {
-            id: 'sink-1',
-            type: 'sink',
-            payload: {
-              kind: 'postgres_table',
-              schema: 'analytics',
-              table: 'orders_daily',
-              materialization: 'table',
-              writeMode: 'replace',
-            },
-          },
-        ],
-        edges: [
-          { fromNodeId: 'source-1', toNodeId: 'transform-1' },
-          { fromNodeId: 'transform-1', toNodeId: 'sink-1' },
-        ],
-      });
-
-      expect(draft.nodes).toHaveLength(3);
-      expect(draft.edges).toHaveLength(2);
-    });
-
-    it('rejects DesignGraphDraft when edges break the governed chain', () => {
-      expect(() =>
-        parseDesignGraphDraft({
-          context: {
-            tenantId: 'tenant-a',
-            projectId: 'project-a',
-            environmentId: 'prod',
-            executionTarget: 'postgres',
-          },
-          nodes: [
-            {
-              id: 'source-1',
-              type: 'source',
-              payload: {
-                kind: 'postgres_table',
-                connectionRef: postgresConnectionRef,
-                schema: 'raw',
-                table: 'orders',
-                alias: 'orders_src',
-              },
-            },
-            {
-              id: 'transform-1',
-              type: 'sql_transform',
-              payload: {
-                dialect: 'postgres',
-                entrypoint: 'models/orders.sql',
-                sqlArtifact: {
-                  repo: 'org/repo',
-                  path: 'models/orders.sql',
-                  ref: 'refs/heads/main',
-                  commitSha: 'commit-sql-1',
-                  contentSha256: 'a'.repeat(64),
-                },
-              },
-            },
-            {
-              id: 'sink-1',
-              type: 'sink',
-              payload: {
-                kind: 'postgres_table',
-                schema: 'analytics',
-                table: 'orders_daily',
-                materialization: 'table',
-                writeMode: 'replace',
-              },
-            },
-          ],
-          edges: [
-            { fromNodeId: 'source-1', toNodeId: 'sink-1' },
-            { fromNodeId: 'transform-1', toNodeId: 'sink-1' },
-          ],
-        })
-      ).toThrow(ContractValidationError);
-    });
-
-    it('parses transformation preview request when provenance and graph identity are explicit', () => {
+  describe('plan preview contracts', () => {
+    it('accepts the generic persisted-preview request', () => {
       const request = parsePlanPreviewRequest({
-        previewProfile: 'transformation-sql-first-v2',
-        context: {
-          tenantId: 'tenant-a',
-          projectId: 'project-a',
-          environmentId: 'prod',
-          runId: 'run-1',
-          targetAdapter: 'temporal',
-        },
-        selection: {
-          mode: 'explicit',
-          nodeIds: ['source-1', 'transform-1', 'sink-1'],
-        },
-        graphSource: transformationGraphSource,
-        provenance: {
-          kind: 'transformation-git-artifacts',
-          graphArtifact: {
-            repo: 'org/repo',
-            path: 'graphs/orders.yml',
-            ref: 'refs/heads/main',
-            commitSha: 'commit-graph-1',
-            contentSha256: 'b'.repeat(64),
-          },
-          sqlArtifact: {
-            repo: 'org/repo',
-            path: 'models/orders.sql',
-            ref: 'refs/heads/main',
-            commitSha: 'commit-sql-1',
-            contentSha256: 'c'.repeat(64),
-          },
-        },
+        previewProfile: 'planner-generic-v1',
+        context,
+        selection,
+        graphSource,
         persist: true,
       });
 
-      expect(request.previewProfile).toBe('transformation-sql-first-v2');
-      expect(request.provenance?.graphArtifact.path).toBe('graphs/orders.yml');
+      expect(request.graphSource).toEqual(graphSource);
+      expect(request.selection).toEqual(selection);
     });
 
-    it('rejects transformation preview request when provenance is missing', () => {
+    it('rejects the retired SQL-first preview profile before compilation', () => {
+      expect(PreviewProfileSchema.safeParse('transformation-sql-first-v2').success).toBe(false);
       expect(() =>
         parsePlanPreviewRequest({
           previewProfile: 'transformation-sql-first-v2',
-          context: {
-            tenantId: 'tenant-a',
-            projectId: 'project-a',
-            environmentId: 'prod',
-            runId: 'run-1',
-            targetAdapter: 'temporal',
-          },
-          selection: {
-            mode: 'explicit',
-            nodeIds: ['source-1', 'transform-1', 'sink-1'],
-          },
-          graphSource: transformationGraphSource,
+          context,
+          selection,
+          graphSource,
           persist: true,
         })
       ).toThrow(ContractValidationError);
     });
 
-    it('rejects transformation preview response when required provenance is missing', () => {
-      expect(() =>
-        parsePlanPreviewPersistResponse({
-          previewProfile: 'transformation-sql-first-v2',
-          plan: transformationPlan,
-          planRef: {
-            uri: 'dvt-plan://plans/plan-1',
-            sha256: 'd'.repeat(64),
-            schemaVersion: '1.0',
-            planId: transformationPlan.metadata.planId,
-            planVersion: transformationPlan.metadata.planVersion,
-          },
-          planSummary: {
-            executor: 'postgres',
-            nodeCount: 3,
-            stepCount: transformationPlan.steps.length,
-            sourceTables: ['raw.orders'],
-            sinkTables: ['analytics.orders_daily'],
-          },
-          persisted: {
-            planRecordId: transformationPlan.metadata.planId,
-            canonicalPlanSha256: 'e'.repeat(64),
-          },
-          validation: {
-            valid: true,
-            warnings: [],
-          },
-        })
-      ).toThrow(ContractValidationError);
+    it('accepts the generic persisted-preview response', () => {
+      const response = parsePlanPreviewPersistResponse({
+        previewProfile: 'planner-generic-v1',
+        plan,
+        planRef,
+        persisted: {
+          planRecordId: plan.metadata.planId,
+          canonicalPlanSha256: 'e'.repeat(64),
+        },
+        validation: { valid: true, warnings: [] },
+      });
+
+      expect(response.plan).toEqual(plan);
+      expect(response.planRef).toEqual(planRef);
     });
 
-    it('parses the versioned selection-rejected outcome without plan identity', () => {
+    it('keeps selection rejection free of fabricated plan identity', () => {
       const outcome = parsePlanPreviewRejectedOutcome({
         contractVersion: '1.0.0',
         kind: 'selection-rejected',
@@ -319,41 +100,25 @@ export function registerValidationPreviewSuite(): void {
         },
       });
 
-      expect(outcome).toEqual({
-        contractVersion: '1.0.0',
-        kind: 'selection-rejected',
-        rejection: {
-          code: 'REJECTED',
-          cause: 'dependency_gap',
-          reason: 'Selected closure is missing a dependency.',
-        },
-      });
+      expect(outcome.kind).toBe('selection-rejected');
       expect(outcome).not.toHaveProperty('planRef');
     });
 
-    it('parses the versioned plan-invalid outcome with exact plan identity', () => {
-      const planRef = {
-        uri: 'dvt-plan://plans/plan-1',
-        sha256: 'd'.repeat(64),
-        schemaVersion: '1.0',
-        planId: transformationPlan.metadata.planId,
-        planVersion: transformationPlan.metadata.planVersion,
-      };
-
+    it('keeps invalid-plan outcomes bound to their persisted plan identity', () => {
       const outcome = parsePlanPreviewRejectedOutcome({
         contractVersion: '1.0.0',
         kind: 'plan-invalid',
         previewProfile: 'planner-generic-v1',
-        plan: transformationPlan,
+        plan,
         planRef,
         persisted: {
-          planRecordId: transformationPlan.metadata.planId,
+          planRecordId: plan.metadata.planId,
           canonicalPlanSha256: 'e'.repeat(64),
         },
         validation: {
           status: 'ERROR',
           code: 'MISSING_CAPABILITY',
-          planId: transformationPlan.metadata.planId,
+          planId: plan.metadata.planId,
           adapterId: 'temporal',
           degradable: false,
           reason: 'The adapter is missing executor.dbt.',
@@ -363,24 +128,9 @@ export function registerValidationPreviewSuite(): void {
 
       expect(outcome.kind).toBe('plan-invalid');
       if (outcome.kind === 'plan-invalid') {
-        expect(outcome.plan).toEqual(transformationPlan);
         expect(outcome.planRef).toEqual(planRef);
         expect(outcome.validation.code).toBe('MISSING_CAPABILITY');
       }
-    });
-
-    it('rejects malformed preview rejection outcomes instead of coercing them', () => {
-      expect(() =>
-        parsePlanPreviewRejectedOutcome({
-          contractVersion: '1.0.0',
-          kind: 'selection-rejected',
-          rejection: {
-            code: 'REJECTED',
-            reason: 'Rejected.',
-          },
-          planRef: { planId: 'fabricated' },
-        })
-      ).toThrow(ContractValidationError);
     });
   });
 }

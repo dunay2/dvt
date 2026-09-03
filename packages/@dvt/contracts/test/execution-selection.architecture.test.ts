@@ -82,7 +82,6 @@ describe('ExecutionSelection contract component architecture', () => {
     const subgraphSource = readFileSync(SUBGRAPH_PATH, 'utf8');
 
     expect(subgraphSource).not.toContain('WorkspaceGraphDraft');
-    expect(subgraphSource).not.toContain('DesignGraphDraft');
     expect(subgraphSource).not.toContain('updatedAt');
     expect(subgraphSource).not.toContain('revision');
 

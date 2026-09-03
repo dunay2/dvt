@@ -19,13 +19,8 @@ import type {
   PlanPreviewProvenance,
   PlanPreviewSelectionRejection,
 } from '@dvt/contracts';
-import { ConnectionRefSchema, TRANSFORMATION_STEP_KIND } from '@dvt/contracts';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
-import {
-  POSTGRES_TRANSFORM_SQL_DIAGNOSTIC_CODE,
-  type PostgresTransformSqlValidationResult,
-} from '../ports/postgresTransformSqlValidation.js';
 
 import { resolveAuthorizedPlannerInputEnvelope } from './resolveAuthorizedPlannerInputEnvelope.js';
 import { ResolveAuthorizedPreviewSelectionService } from './resolveAuthorizedPreviewSelection.js';
@@ -34,7 +29,6 @@ import {
   type StoredPlanAdmissionResult,
 } from './StoredPlanAdmissionCoordinator.js';
 import type { StoredPlanExecutabilityValidator } from './StoredPlanExecutabilityValidator.js';
-import type { ValidatePostgresTransformSqlUseCase } from './validatePostgresTransformSqlUseCase.js';
 
 export interface PreviewPlanCommand {
   readonly targetAdapter: string;
@@ -48,7 +42,6 @@ export const PREVIEW_PLAN_RESULT_KIND = {
   accepted: 'accepted',
   selectionRejected: 'selection-rejected',
   planInvalid: 'plan-invalid',
-  sqlNotReady: 'sql-not-ready',
 } as const;
 
 export type PreviewPlanUseCaseResult =
@@ -71,13 +64,6 @@ export type PreviewPlanUseCaseResult =
         StoredPlanAdmissionResult['validation'],
         { readonly status: 'ERROR' }
       >;
-    }
-  | {
-      readonly kind: typeof PREVIEW_PLAN_RESULT_KIND.sqlNotReady;
-      readonly validation: Exclude<
-        PostgresTransformSqlValidationResult,
-        { readonly status: 'valid' }
-      >;
     };
 
 export class PreviewPlanUseCase {
@@ -91,7 +77,6 @@ export class PreviewPlanUseCase {
         Pick<IPlanStoreReader, 'getPlanRecordByRef'>;
       readonly planValidator: Pick<StoredPlanExecutabilityValidator, 'materializeAndValidatePlan'>;
       readonly previewSelectionResolver: ResolveAuthorizedPreviewSelectionService;
-      readonly validatePostgresTransformSql: Pick<ValidatePostgresTransformSqlUseCase, 'execute'>;
     }
   ) {
     this.planAdmission = new StoredPlanAdmissionCoordinator({
@@ -116,19 +101,6 @@ export class PreviewPlanUseCase {
       return {
         kind: PREVIEW_PLAN_RESULT_KIND.selectionRejected,
         rejection: previewSelection.rejection,
-      };
-    }
-
-    const sqlValidation = await validateAuthorizedPostgresSql(
-      previewSelection.value.graphSource,
-      previewSelection.value.nodeIds,
-      context,
-      this.deps.validatePostgresTransformSql
-    );
-    if (sqlValidation !== undefined) {
-      return {
-        kind: PREVIEW_PLAN_RESULT_KIND.sqlNotReady,
-        validation: sqlValidation,
       };
     }
 
@@ -166,66 +138,4 @@ export class PreviewPlanUseCase {
       planRecord: admission.planRecord,
     };
   }
-}
-
-async function validateAuthorizedPostgresSql(
-  graphSource: GenericGraphSourceV1,
-  nodeIds: readonly string[],
-  context: AuthorizedCommandExecutionContext,
-  validator: Pick<ValidatePostgresTransformSqlUseCase, 'execute'>
-): Promise<
-  Exclude<PostgresTransformSqlValidationResult, { readonly status: 'valid' }> | undefined
-> {
-  const scope = context.scope;
-  if (scope.projectId === undefined || scope.environmentId === undefined) {
-    return unavailableSqlValidation('Preview SQL validation requires environment scope.');
-  }
-
-  const authorizedNodeIds = new Set(nodeIds);
-  for (const node of graphSource.nodes) {
-    if (
-      node.stepKind !== TRANSFORMATION_STEP_KIND.postgresSqlTransform ||
-      !authorizedNodeIds.has(node.nodeId)
-    ) {
-      continue;
-    }
-
-    const connectionRef = ConnectionRefSchema.safeParse(node.stepTypeConfig?.connectionRef);
-    const sql = node.stepTypeConfig?.sql;
-    if (!connectionRef.success || typeof sql !== 'string') {
-      return unavailableSqlValidation(
-        'The PostgreSQL transform does not have a valid governed connection and SQL buffer.'
-      );
-    }
-
-    const validation = await validator.execute({
-      scope: {
-        tenantId: scope.tenantId.value,
-        projectId: scope.projectId.value,
-        environmentId: scope.environmentId.value,
-      },
-      connectionRef: connectionRef.data,
-      sql,
-    });
-    if (validation.status !== 'valid') {
-      return validation;
-    }
-  }
-
-  return undefined;
-}
-
-function unavailableSqlValidation(
-  message: string
-): Extract<PostgresTransformSqlValidationResult, { readonly status: 'unavailable' }> {
-  return {
-    status: 'unavailable',
-    diagnostics: [
-      {
-        code: POSTGRES_TRANSFORM_SQL_DIAGNOSTIC_CODE.connectionUnavailable,
-        source: 'connection',
-        message,
-      },
-    ],
-  };
 }

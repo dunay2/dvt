@@ -239,7 +239,7 @@ describe('useCanvasController draft lifecycle scope and projection', () => {
     await harness.renderProbe();
     await harness.renderProbe();
 
-    expectProtectedSemanticProjectionState(harness, true, true);
+    expectProtectedSemanticProjectionState(harness, true, false);
 
     await waitForAutosaveDebounce();
     expect(
@@ -253,6 +253,6 @@ describe('useCanvasController draft lifecycle scope and projection', () => {
 
     await harness.renderProbe();
 
-    expectProtectedSemanticProjectionState(harness, true, true);
+    expectProtectedSemanticProjectionState(harness, true, false);
   });
 });

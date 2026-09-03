@@ -2,7 +2,6 @@
  * Owned concern: build protected runtime route dependencies from the runtime
  * module without registering HTTP routes.
  */
-import { TRANSFORMATION_DESIGN_GRAPH_SOURCE_FAMILY } from '@dvt/contracts';
 import { IdempotencyKeyBuilder } from '@dvt/engine/runtime';
 import type { IObservability } from '@dvt/observability';
 
@@ -98,14 +97,7 @@ export function buildProtectedRuntimeRouteDependencies(
     }),
   });
   const previewPlanUseCase = new PreviewPlanUseCase({
-    planner: {
-      buildPlan: (plannerInput) =>
-        plannerInput.graphSource.sourceFamily === TRANSFORMATION_DESIGN_GRAPH_SOURCE_FAMILY
-          ? protectedModule.planCompilePlanner.buildPlan(plannerInput)
-          : protectedModule.planner.buildPlan(plannerInput),
-      deriveExecutableSubgraph: (selectionInput) =>
-        protectedModule.planner.deriveExecutableSubgraph(selectionInput),
-    },
+    planner: protectedModule.planner,
     planStore: protectedModule.planStore,
     planValidator: protectedModule.planValidator,
     previewSelectionResolver: new ResolveAuthorizedPreviewSelectionService({
@@ -115,7 +107,6 @@ export function buildProtectedRuntimeRouteDependencies(
       }),
       projectGraph: protectedModule.dbtProjectImport.projectGraphUseCase,
     }),
-    validatePostgresTransformSql: validatePostgresTransformSqlUseCase,
   });
 
   return {

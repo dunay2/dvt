@@ -183,9 +183,7 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
         'apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts',
         'apps/web/src/app/views/canvas/useCanvasExecutionActions.runStartGuards.test.tsx',
         'apps/web/src/app/views/canvas/useCanvasExecutionActions.runStartSuccess.test.tsx',
-        'apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx',
-        'apps/web/src/app/views/canvas/canvasPlanRunReadiness.architecture.test.ts',
-        'apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts',
+        'apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts',
       ],
       failClosedProof:
         'plan integrity, backpressure, capability mismatch, degraded adapter, and authorization denial stay distinct',

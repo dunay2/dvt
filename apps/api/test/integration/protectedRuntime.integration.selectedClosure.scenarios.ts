@@ -190,14 +190,13 @@ function buildSelectedClosurePreviewPayload(input: {
       environmentId: ENVIRONMENT_ID,
       targetAdapter: 'temporal',
     },
-    previewProfile: 'transformation-sql-first-v2',
+    previewProfile: 'planner-generic-v1',
     selection: {
       mode: input.selection.mode,
       nodeIds: [...input.selection.nodeIds],
     },
     graphSource:
       input.graphSource ?? buildTransformationGraphSource(input.graphSourceNodeIds ?? []),
-    provenance: TRANSFORMATION_PREVIEW_PROVENANCE,
     persist: true,
   };
 }
@@ -233,8 +232,8 @@ function buildSelectedClosureDraft(): ReturnType<typeof buildWorkspaceGraphDraft
 
 function buildTransformationGraphSource(nodeIds: readonly string[]): {
   kind: 'generic-graph-v1';
-  sourceFamily: 'transformation-design-graph';
-  sourceVersion: 'transformation-sql-first-v2';
+  sourceFamily: 'dvt-substrait';
+  sourceVersion: 'substrait-v1';
   nodes: Array<Record<string, unknown>>;
 } {
   const nodeSet = new Set(nodeIds);
@@ -283,8 +282,8 @@ function buildTransformationGraphSource(nodeIds: readonly string[]): {
 
   return {
     kind: 'generic-graph-v1',
-    sourceFamily: 'transformation-design-graph',
-    sourceVersion: 'transformation-sql-first-v2',
+    sourceFamily: 'dvt-substrait',
+    sourceVersion: 'substrait-v1',
     nodes: allNodes.filter((node) => nodeSet.has(node.nodeId as string)),
   };
 }
@@ -294,8 +293,8 @@ function buildMismatchedTransformationGraphSource(): ReturnType<
 > {
   return {
     kind: 'generic-graph-v1',
-    sourceFamily: 'transformation-design-graph',
-    sourceVersion: 'transformation-sql-first-v2',
+    sourceFamily: 'dvt-substrait',
+    sourceVersion: 'substrait-v1',
     nodes: [
       {
         nodeId: 'alternate_source',

@@ -67,7 +67,7 @@ describe('WorkspaceGraphAuthoringDraft component architecture', () => {
       expect(docText).toContain(section);
     }
     expect(docText).toContain('```mermaid');
-    expect(docText).toContain('DesignGraphDraft');
+    expect(docText).toContain('canonical Substrait');
     expect(docText).toContain('API compiles, stores, validates, and admits');
     expect(docText).toContain('shadow engine');
   });
@@ -83,9 +83,6 @@ describe('WorkspaceGraphAuthoringDraft component architecture', () => {
 
     expect(envelopeSource).toContain('WorkspaceGraphAuthoringDraftSchema');
     expect(envelopeSource).toContain('draft: WorkspaceGraphAuthoringDraft');
-    expect(envelopeSource).not.toContain('DesignGraphDraftSchema');
-    expect(envelopeSource).not.toContain('draft: DesignGraphDraft');
-    expect(envelopeSource).not.toMatch(/import[\s\S]*DesignGraphDraftSchema/);
   });
 
   it('accepts disconnected authoring drafts because execution selection is downstream', () => {

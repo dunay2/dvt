@@ -154,57 +154,6 @@ describe('canvasPlanReadiness', () => {
     }
   );
 
-  it('blocks readiness when a persisted plan exists but the current graph is not executable', () => {
-    const plan = {
-      ...mockExecutionPlan,
-      planId: 'plan_live_1',
-      planRef: makePlanRef({
-        ...mockExecutionPlan.planRef!,
-        planId: 'plan_live_1',
-        sha256: 'a'.repeat(64),
-      }),
-      preview: {
-        ...mockExecutionPlan.preview!,
-        persisted: {
-          planRecordId: 'plan_live_1',
-          canonicalPlanSha256: 'b'.repeat(64),
-        },
-      },
-    };
-
-    const executionState = deriveCanvasExecutionState({
-      canRun: true,
-      executionStrategy: {
-        kind: 'transformation_preview',
-        previewProfile: 'transformation-sql-first-v2',
-      },
-      currentPlan: plan,
-      lastPlannedDraftSignature: null,
-      canonicalNodes: [
-        {
-          id: 'transform_1',
-          name: 'Transform',
-          pluginId: 'dvt',
-          kind: 'dvt:transform',
-          role: 'transform',
-          status: 'idle',
-          tags: [],
-        },
-      ],
-      canonicalEdges: [],
-      selectionIntent: { mode: 'workspace', nodeIds: [] },
-      workspaceNodeIds: ['transform_1'],
-      latestPreviewOutcome: null,
-    });
-
-    expect(executionState.canStartRun).toBe(false);
-    expect(executionState.planRunReadiness.status).toBe('blocked');
-    expect(executionState.planRunReadiness.blockers).toContain('plan_integrity');
-    expect(executionState.planRunReadiness.summary).toBe(
-      executionState.executableGraphFailureMessage
-    );
-  });
-
   it('blocks a persisted dbt project preview when its authoritative revision is stale', () => {
     const plan: PlanViewModel = {
       ...mockExecutionPlan,

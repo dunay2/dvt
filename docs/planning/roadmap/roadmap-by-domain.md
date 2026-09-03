@@ -91,17 +91,10 @@ flowchart LR
   [AR-A12-B status model split plan 2026-04-11](../proposals/mandatory/runtime-and-contracts/ar-a12-b-status-model-split-plan-20260411.md),
   [TF-A1-C SRP and extensibility hardening plan 2026-04-14](../proposals/mandatory/runtime-and-contracts/tf-a1-c-srp-and-extensibility-hardening-plan-20260414.md),
   [Runtime hardening, shared-kernel, and operations roadmap 2026-04-10](../proposals/mandatory/runtime-and-contracts/runtime-hardening-shared-kernel-and-operations-roadmap-20260410.md)
-  Near-term target: keep the now-frozen first SQL-first transformation contract
-  pack (`DesignGraphDraft`, `GitArtifactRef`, preview-persist boundary, and
-  deterministic compiler mapping) stable now that `TF-A1-C` has closed the
-  step-kind authority and direct API/UI seam hardening, execute the queued
-  `TF-A1-C12..C14` follow-through to standardize the shared plan-route
-  remote-facade recipe, replace observability-tag import ownership, and
-  converge compile-boundary vocabulary plus living docs, and then continue the
-  remaining shared-kernel and plan-record hardening under `RC-G1` and `S08`,
-  while `S05-TRUTH-SYNC` keeps payload-version closure truth aligned across
-  planning and status surfaces and `RC-G1-C-TRUTH-SYNC` now closes the post-merge
-  wording and generated-status drift left after the `RC-G1-C` ownership cutover.
+  Near-term target: complete #2600 by removing the remaining SQL-first runtime
+  handlers after the preview/contract hard cut. VTX2 Substrait remains the sole
+  DVT authoring authority, while the shared generic preview and stored-plan
+  rails retain planner and execution sovereignty.
 - `Event Lifecycle and Retention`
   Current sources: [Event Lifecycle and Retention domain view](../domains/event-lifecycle-and-retention.md),
   [20260330 MVP-D1 residual risk baseline review](../reviews/event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md),

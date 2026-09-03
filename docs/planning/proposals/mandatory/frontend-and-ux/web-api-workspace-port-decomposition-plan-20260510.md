@@ -364,18 +364,18 @@ symbols:
     path: apps/web/cypress/support/workspaceSession.ts
     dddOwner: Shell bootstrap E2E support
     cqRails: [ListWorkspaceFiles, GetWorkspaceFileContent, SaveWorkspaceFileContent]
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
     unitTests:
-      - apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+      - apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
       - apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
   - <<: *workspace_port_symbol
     name: stubShellBootstrapApis
     path: apps/web/cypress/support/workspaceSession.ts
     dddOwner: Shell bootstrap E2E support
     cqRails: [ListWorkspaceFiles, GetWorkspaceFileContent, SaveWorkspaceFileContent]
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
     unitTests:
-      - apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+      - apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
       - apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
   - <<: *workspace_port_symbol
     name: mockConnections

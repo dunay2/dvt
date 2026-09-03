@@ -156,13 +156,6 @@ describeIfPg('protected runtime integration', () => {
       'sink_1',
     ]);
     expect(preview.plan.steps.map((step) => step.stepId)).not.toContain('loose_1');
-    expect(preview.planSummary).toEqual({
-      executor: 'postgres',
-      nodeCount: 3,
-      stepCount: 3,
-      sourceTables: ['raw.orders'],
-      sinkTables: ['analytics.orders_final'],
-    });
   });
 
   it('rejects preview when the selected closure has a dependency gap even if the draft contains a larger valid graph', async () => {

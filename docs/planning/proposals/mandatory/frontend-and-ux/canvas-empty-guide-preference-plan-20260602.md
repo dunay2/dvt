@@ -48,10 +48,10 @@ Rejected alternatives:
 
 ## Fowler Matrix
 
-| Scenario                                           | Opportunity         | Fowler pattern                                  | DDD owner                   | Command/query rail                   | Implementation surfaces                                             | Unit or package test                                                                                    | Architecture test                              | User-flow test                       | Out of scope        |
-| -------------------------------------------------- | ------------------- | ----------------------------------------------- | --------------------------- | ------------------------------------ | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | ------------------------------------ | ------------------- |
-| User hides empty Canvas guide from the guide card. | Hidden authority    | Value Object plus Intention-Revealing Interface | `CanvasViewportPreferences` | `ConfigureCanvasViewportPreferences` | `uiLayoutStore`, Canvas center surface, Canvas empty state          | `uiLayoutStore.test.ts`, `CanvasStateViews.test.tsx`, `Canvas.routeStates.first-canvas-policy.test.tsx` | `canvasLayoutPersistence.architecture.test.ts` | `canvas-preview-run-persisted.cy.ts` | Backend settings    |
-| User re-enables the guide from configuration.      | Duplicate semantics | Menu contribution / Presenter                   | `CanvasViewMenuControls`    | `ConfigureCanvasViewportPreferences` | `CanvasViewMenuControls`, `CanvasToolbar`, shell contribution store | `CanvasToolbar.test.tsx`                                                                                | `CanvasToolbar.architecture.test.tsx`          | `canvas-preview-run-persisted.cy.ts` | New top-level route |
+| Scenario                                           | Opportunity         | Fowler pattern                                  | DDD owner                   | Command/query rail                   | Implementation surfaces                                             | Unit or package test                                                                                    | Architecture test                              | User-flow test                      | Out of scope        |
+| -------------------------------------------------- | ------------------- | ----------------------------------------------- | --------------------------- | ------------------------------------ | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | ----------------------------------- | ------------------- |
+| User hides empty Canvas guide from the guide card. | Hidden authority    | Value Object plus Intention-Revealing Interface | `CanvasViewportPreferences` | `ConfigureCanvasViewportPreferences` | `uiLayoutStore`, Canvas center surface, Canvas empty state          | `uiLayoutStore.test.ts`, `CanvasStateViews.test.tsx`, `Canvas.routeStates.first-canvas-policy.test.tsx` | `canvasLayoutPersistence.architecture.test.ts` | `canvas-first-authoring-live.cy.ts` | Backend settings    |
+| User re-enables the guide from configuration.      | Duplicate semantics | Menu contribution / Presenter                   | `CanvasViewMenuControls`    | `ConfigureCanvasViewportPreferences` | `CanvasViewMenuControls`, `CanvasToolbar`, shell contribution store | `CanvasToolbar.test.tsx`                                                                                | `CanvasToolbar.architecture.test.tsx`          | `canvas-first-authoring-live.cy.ts` | New top-level route |
 
 ```feature-mechanization
 version: 1
@@ -73,7 +73,7 @@ governingSources:
   - docs/architecture/components/web/frontend-command-query-rail-inventory.md
   - docs/architecture/components/web/graph/canvas-layout-persistence-component.md
 allowedImplementationSurfaces:
-  - apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+  - apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
   - apps/web/src/app/components/shell/ShellMenu.tsx
   - apps/web/src/app/stores/uiLayoutStore.ts
   - apps/web/src/app/stores/uiLayoutStore.test.ts
@@ -136,11 +136,11 @@ architectureGuards:
   - pnpm --filter @dvt/web test:architecture -- src/app/views/canvas/canvasLayoutPersistence.architecture.test.ts
   - pnpm --filter @dvt/web test:architecture -- src/app/views/canvas/CanvasToolbar.architecture.test.tsx
 cypressFlows:
-  - pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+  - pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
 completionGate:
   - pnpm docs:feature-mechanization -- --feature CANVAS-EMPTY-GUIDE-PREFERENCE-20260602
   - pnpm --filter @dvt/web test -- src/app/stores/uiLayoutStore.test.ts src/app/views/canvas/CanvasStateViews.test.tsx src/app/views/canvas/CanvasToolbar.test.tsx src/app/views/Canvas.routeStates.first-canvas-policy.test.tsx
-  - pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+  - pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
   - pnpm --filter @dvt/web typecheck
   - pnpm --filter @dvt/web lint
   - pnpm docs:feature-mechanization:implementation -- --feature CANVAS-EMPTY-GUIDE-PREFERENCE-20260602
@@ -168,7 +168,7 @@ symbols:
     cqRails: [ConfigureCanvasViewportPreferences]
     fowlerSignals: [Hidden authority]
     architectureGuard: pnpm --filter @dvt/web test:architecture -- src/app/views/canvas/canvasLayoutPersistence.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/stores/uiLayoutStore.test.ts]
   - name: setCanvasEmptyStateGuideVisible
     path: apps/web/src/app/stores/uiLayoutStore.ts
@@ -176,6 +176,6 @@ symbols:
     cqRails: [ConfigureCanvasViewportPreferences]
     fowlerSignals: [Intention-Revealing Interface]
     architectureGuard: pnpm --filter @dvt/web test:architecture -- src/app/views/canvas/canvasLayoutPersistence.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/stores/uiLayoutStore.test.ts]
 ```
