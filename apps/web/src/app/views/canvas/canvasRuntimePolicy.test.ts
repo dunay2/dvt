@@ -155,14 +155,13 @@ describe('resolveCanvasRuntimePolicy', () => {
     ).toBe(true);
   });
 
-  it('admits only canonical nodes owned by the active runtime catalog', () => {
+  it('keeps DVT authoring admitted while its retired execution path is unavailable', () => {
     const policy = resolveCanvasRuntimePolicy({
       activeRuntime: {
         kind: 'ready',
         canvasKind: 'transformation',
         executionStrategy: {
-          kind: 'transformation_preview',
-          previewProfile: 'transformation-sql-first-v2',
+          kind: 'not_executable',
         },
         nodeKinds: DVT_AUTHORING_NODE_KINDS,
       },
@@ -173,9 +172,10 @@ describe('resolveCanvasRuntimePolicy', () => {
       canReloadLatestDraft: false,
     });
 
-    expect(policy.execution.kind).toBe('executable');
-    expect(policy.commands.canPlan).toBe(true);
-    expect(policy.commands.canRun).toBe(true);
+    expect(policy.execution.kind).toBe('not_executable');
+    expect(policy.commands.canMutateGraph).toBe(true);
+    expect(policy.commands.canPlan).toBe(false);
+    expect(policy.commands.canRun).toBe(false);
     expect(
       policy.admission.allowsCanonicalNode(
         buildCanonicalNode({
