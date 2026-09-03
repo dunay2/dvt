@@ -21,13 +21,7 @@ import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/typ
 import { buildProtectedRuntimeRouteDependencies } from '../../../src/entrypoints/http/protectedRuntimeRouteDependencies.js';
 import type { ProtectedRuntimeModule } from '../../../src/modules/types.js';
 
-import {
-  VALID_DBT_GRAPH_SOURCE,
-  VALID_PLAN_REF,
-  VALID_TRANSFORMATION_GRAPH_SOURCE,
-  buildStoredPlan,
-  buildTransformationStoredPlan,
-} from './planRouteFixtures.js';
+import { VALID_DBT_GRAPH_SOURCE, VALID_PLAN_REF, buildStoredPlan } from './planRouteFixtures.js';
 
 type PlanAdmissionDoubles = {
   readonly planStore: {
@@ -227,89 +221,6 @@ describe('buildProtectedRuntimeRouteDependencies', () => {
     };
     return { planStore, planValidator };
   }
-
-  it('builds transformation previews with the compile planner while deriving selection from the runtime planner', async () => {
-    const selectedNodeIds = ['source-node', 'transform-node', 'sink-node'].map(asNonBlankString);
-    const buildResult = {
-      plan: buildTransformationStoredPlan(),
-      executionPolicy: {},
-      canonicalPlanCoreJson: '{}',
-    } satisfies PlannerBuildResultV1;
-    const runtimePlanner = {
-      buildPlan: vi.fn(async () => {
-        throw new Error('runtime planner must not compile transformation previews');
-      }),
-      deriveExecutableSubgraph: vi.fn(() => ({
-        selection: {
-          mode: 'explicit' as const,
-          nodeIds: selectedNodeIds,
-        },
-        nodeIds: selectedNodeIds,
-        edgeIds: ['edge-source-transform', 'edge-transform-sink'],
-        executable: true,
-        diagnostics: [],
-      })),
-    };
-    const compilePlanner = {
-      buildPlan: vi.fn(async () => buildResult),
-      deriveExecutableSubgraph: vi.fn(),
-    };
-    const { planStore, planValidator } = buildPlanAdmissionDoubles(buildResult);
-    const workspaceGraphDraftStore = {
-      read: vi.fn(async () => ({
-        schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
-        draftPayload: buildPreviewDraft(),
-      })),
-    };
-
-    const dependencies = buildProtectedRuntimeRouteDependencies({
-      observability: OBSERVABILITY,
-      protectedModule: buildProtectedModule({
-        planner: runtimePlanner as never,
-        planCompilePlanner: compilePlanner as never,
-        planStore: planStore as never,
-        planValidator: planValidator as never,
-        workspaceGraphDraftStore: workspaceGraphDraftStore as never,
-      }),
-    });
-
-    const result = await dependencies.previewPlanUseCase.execute(
-      {
-        targetAdapter: 'temporal',
-        graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
-        selection: {
-          mode: 'explicit',
-          nodeIds: selectedNodeIds,
-        },
-      },
-      {
-        principal: {
-          principalId: 'principal-1',
-          subjectId: 'principal-1',
-          issuer: 'issuer',
-          audience: 'audience',
-          principalType: 'user',
-          expiresAt: new Date('2030-01-01T00:00:00.000Z'),
-          rawScopes: [],
-          assertedTenantIds: ['tenant-1'],
-          assertedProjectIds: ['project-1'],
-        },
-        scope: buildEnvironmentAccessScope(
-          TenantId.unsafe('tenant-1'),
-          ProjectId.unsafe('project-1'),
-          EnvironmentId.unsafe('env-1')
-        ),
-        action: AUTHORIZATION_ACTION.runStart,
-        requestId: 'req-preview-route-deps',
-        authorizedAt: new Date('2026-05-28T00:00:00.000Z'),
-      }
-    );
-
-    expect(result.kind).toBe('accepted');
-    expect(runtimePlanner.deriveExecutableSubgraph).toHaveBeenCalledTimes(1);
-    expect(runtimePlanner.buildPlan).not.toHaveBeenCalled();
-    expect(compilePlanner.buildPlan).toHaveBeenCalledTimes(1);
-  });
 
   it('keeps generic dbt previews on the runtime planner while deriving selection from the runtime planner', async () => {
     const selectedNodeIds = ['node_1'].map(asNonBlankString);

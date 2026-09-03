@@ -9,7 +9,6 @@ import type {
   MaterializationEvidence,
   ProviderRunStatusView,
   TransformationExecutor,
-  TransformationSqlFirstPlanSummary,
   CancelRunCommand,
   CancelRunReceipt,
   RecoverRunReceipt,
@@ -140,7 +139,6 @@ export type GetRunStatusResult = RunOperationalTruthDto & {
   readonly executor?: TransformationExecutor;
   readonly materialization?: MaterializationEvidence;
   readonly provenance?: RunProvenanceChain;
-  readonly planSummary?: TransformationSqlFirstPlanSummary;
   readonly diagnostics?: RunDiagnostics;
 };
 

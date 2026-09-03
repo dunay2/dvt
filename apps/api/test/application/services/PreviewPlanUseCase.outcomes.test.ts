@@ -1,4 +1,4 @@
-import { parsePlanRef, TRANSFORMATION_STEP_KIND, type ExecutionPlan } from '@dvt/contracts';
+import { parsePlanRef, type ExecutionPlan } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import { PreviewPlanUseCase } from '../../../src/application/services/PreviewPlanUseCase.js';
@@ -82,7 +82,6 @@ function createUseCase(
   overrides: {
     previewSelectionResolver?: { execute: ReturnType<typeof vi.fn> };
     materializeAndValidatePlan?: ReturnType<typeof vi.fn>;
-    validatePostgresTransformSql?: ReturnType<typeof vi.fn>;
   } = {}
 ): {
   readonly useCase: PreviewPlanUseCase;
@@ -155,10 +154,6 @@ function createUseCase(
       planStore: planStore as never,
       planValidator: planValidator as never,
       previewSelectionResolver: previewSelectionResolver as never,
-      validatePostgresTransformSql: {
-        execute:
-          overrides.validatePostgresTransformSql ?? vi.fn().mockResolvedValue({ status: 'valid' }),
-      },
     }),
     planner,
     planStore,
@@ -166,65 +161,6 @@ function createUseCase(
 }
 
 describe('PreviewPlanUseCase outcomes', () => {
-  it('fails closed before planning when current PostgreSQL SQL is not ready', async () => {
-    const graphSource = {
-      kind: 'generic-graph-v1' as const,
-      sourceFamily: 'transformation-design-graph',
-      sourceVersion: 'transformation-sql-first-v2',
-      nodes: [
-        {
-          nodeId: 'transform-1',
-          stepKind: TRANSFORMATION_STEP_KIND.postgresSqlTransform,
-          dependsOn: [],
-          stepTypeConfig: {
-            connectionRef: {
-              schemaVersion: 'connection-ref.v1',
-              provider: 'postgres',
-              connectionId: 'warehouse-a',
-            },
-            sql: 'select missing from public.source_1',
-          },
-        },
-      ],
-    };
-    const validation = {
-      status: 'invalid' as const,
-      diagnostics: [
-        {
-          code: 'undefined_column' as const,
-          source: 'postgres' as const,
-          message: 'column missing does not exist',
-        },
-      ],
-    };
-    const validatePostgresTransformSql = vi.fn().mockResolvedValue(validation);
-    const { useCase, planner } = createUseCase({
-      validatePostgresTransformSql,
-      previewSelectionResolver: {
-        execute: vi.fn().mockResolvedValue({
-          ok: true,
-          value: {
-            graphSource,
-            nodeIds: ['transform-1'],
-            decisionScopeNodeIds: ['transform-1'],
-            requestedRootNodeIds: ['transform-1'],
-          },
-        }),
-      },
-    });
-
-    await expect(useCase.execute({ ...COMMAND, graphSource }, CONTEXT)).resolves.toEqual({
-      kind: 'sql-not-ready',
-      validation,
-    });
-    expect(validatePostgresTransformSql).toHaveBeenCalledWith({
-      scope: { tenantId: 'tenant-1', projectId: 'project-1', environmentId: 'env-1' },
-      connectionRef: graphSource.nodes[0]?.stepTypeConfig.connectionRef,
-      sql: 'select missing from public.source_1',
-    });
-    expect(planner.buildPlan).not.toHaveBeenCalled();
-  });
-
   it('passes the authorized workspace decision scope to Planner without widening graphSource', async () => {
     const { useCase, planner } = createUseCase();
 

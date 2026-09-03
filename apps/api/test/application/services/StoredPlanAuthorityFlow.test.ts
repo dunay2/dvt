@@ -123,7 +123,6 @@ describe('stored plan authority flow', () => {
           },
         })),
       } as never,
-      validatePostgresTransformSql: { execute: vi.fn().mockResolvedValue({ status: 'valid' }) },
     });
     const executeAdmitted = vi.fn(async () => ({
       ok: true as const,

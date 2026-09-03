@@ -2,11 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { previewPlanRoute } from '../../../src/entrypoints/http/previewPlanRoute.js';
 
-import {
-  PREVIEW_PROFILE_TRANSFORMATION,
-  VALID_DBT_GRAPH_SOURCE,
-  VALID_PREVIEW_CONTEXT,
-} from './planRouteFixtures.js';
+import { VALID_DBT_GRAPH_SOURCE, VALID_PREVIEW_CONTEXT } from './planRouteFixtures.js';
 import { createPreviewRequest, createReply } from './planRouteHttpTestSupport.js';
 import { createPreviewDeps } from './previewPlanRouteTestSupport.js';
 
@@ -48,7 +44,7 @@ describe('previewPlanRoute auth', () => {
         authorization: null,
         body: {
           context: VALID_PREVIEW_CONTEXT,
-          previewProfile: PREVIEW_PROFILE_TRANSFORMATION,
+          previewProfile: 'retired-preview-profile',
           selection: { mode: 'explicit', nodeIds: ['node_1'] },
           graphSource: VALID_DBT_GRAPH_SOURCE,
           persist: true,

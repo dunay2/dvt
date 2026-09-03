@@ -1,5 +1,4 @@
 import {
-  PREVIEW_PROFILE,
   parsePlanPreviewRequest,
   toValidationErrorResponse,
   type ExecutionPlan,
@@ -14,7 +13,7 @@ import { parsePlanRouteBodyRecord } from './planRouteBodyParser.js';
 import { toPlanRouteGraphSource } from './planRoutePlannerEnvelopeParser.js';
 import { evaluatePlanRoutePlanSource } from './planRoutePlanSourcePolicy.js';
 import { toParsedPlanRouteContext, type ParsedPlanRouteContext } from './planRouteScope.js';
-import { badRequestResult, type RouteParseResult, unprocessableResult } from './routeParseIssue.js';
+import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 
 type CanonicalPreviewRequest = ReturnType<typeof parsePlanPreviewRequest>;
 
@@ -46,7 +45,7 @@ export function parsePreviewPlanBody(body: unknown): RouteParseResult<ParsedPrev
   try {
     contractRequest = parsePlanPreviewRequest(bodyRecord.value);
   } catch (error) {
-    return mapPreviewContractError(bodyRecord.value, error);
+    return mapPreviewContractError(error);
   }
 
   const routeContext = toParsedPlanRouteContext(contractRequest.context);
@@ -55,11 +54,7 @@ export function parsePreviewPlanBody(body: unknown): RouteParseResult<ParsedPrev
   }
 
   const graphSource = toPlanRouteGraphSource(contractRequest.graphSource);
-  const observability = buildPreviewObservability(
-    routeContext.value,
-    contractRequest.previewProfile,
-    contractRequest.provenance
-  );
+  const observability = buildPreviewObservability(routeContext.value, contractRequest.provenance);
 
   return {
     ok: true,
@@ -80,10 +75,7 @@ export function parsePreviewPlanBody(body: unknown): RouteParseResult<ParsedPrev
   };
 }
 
-function mapPreviewContractError(
-  record: Record<string, unknown>,
-  error: unknown
-): RouteParseResult<ParsedPreviewPlanRequest> {
+function mapPreviewContractError(error: unknown): RouteParseResult<ParsedPreviewPlanRequest> {
   const validation = toValidationErrorResponse(error);
   const issues = deduplicateIssues(validation.details);
   const roots = new Set(issues.map((issue) => issue.path.split('.')[0]));
@@ -99,33 +91,8 @@ function mapPreviewContractError(
   if (roots.has('selection')) {
     return badRequestResult(HTTP_ERROR_REASON.invalidSelection, { target: 'selection' });
   }
-  if (
-    record.previewProfile === PREVIEW_PROFILE.transformationSqlFirstV2 &&
-    record.provenance === undefined &&
-    roots.has('provenance')
-  ) {
-    return unprocessableResult(HTTP_ERROR_REASON.planRejected, {
-      details: {
-        cause: 'missing_preview_provenance',
-        previewProfile: PREVIEW_PROFILE.transformationSqlFirstV2,
-        requiredArtifacts: ['graphArtifact', 'sqlArtifact'],
-      },
-    });
-  }
   if (roots.has('provenance')) {
     return badRequestResult(HTTP_ERROR_REASON.invalidPlanSource);
-  }
-  if (
-    roots.has('graphSource') &&
-    record.previewProfile === PREVIEW_PROFILE.transformationSqlFirstV2
-  ) {
-    return badRequestResult(HTTP_ERROR_REASON.invalidPlanSource, {
-      details: {
-        cause: 'preview_contract_validation_failed',
-        previewProfile: PREVIEW_PROFILE.transformationSqlFirstV2,
-        issues,
-      },
-    });
   }
   if (roots.has('graphSource')) {
     return badRequestResult(HTTP_ERROR_REASON.invalidPlanSource);
@@ -152,18 +119,9 @@ function deduplicateIssues(
 
 function buildPreviewObservability(
   context: ParsedPlanRouteContext,
-  previewProfile: PreviewProfile,
   provenance: PlanPreviewProvenance | undefined
 ): NonNullable<ExecutionPlan['observability']> {
   const extra = {
-    ...(previewProfile === PREVIEW_PROFILE.transformationSqlFirstV2
-      ? {
-          transformationFlowRuntime: {
-            previewProfile,
-            executor: 'postgres',
-          },
-        }
-      : {}),
     ...(provenance === undefined ? {} : { planPreviewProvenance: provenance }),
   };
 

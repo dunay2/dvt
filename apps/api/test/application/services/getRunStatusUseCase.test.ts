@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from 'vitest';
 import type { AuthorizedExecutionContext } from '../../../src/application/ports/auth.js';
 import { GetRunStatusUseCase } from '../../../src/application/services/getRunStatusUseCase.js';
 import { TenantId } from '../../../src/domain/auth/types.js';
-import { buildTransformationStoredPlan } from '../../entrypoints/http/planRouteFixtures.js';
 
 const queryContext: AuthorizedExecutionContext<{ kind: 'query'; name: 'run:view' }> = {
   principal: {
@@ -673,75 +672,6 @@ describe('GetRunStatusUseCase', () => {
         executor: 'postgres',
         sinkTable: 'analytics.orders_daily',
         rowsWritten: 42,
-      },
-    });
-  });
-
-  it('projects persisted transformation plan source and sink summary into run status', async () => {
-    const persistedPlan = buildTransformationStoredPlan();
-    const engine = {
-      async getRunStatus() {
-        return {
-          runId: 'provider-run-1',
-          status: 'COMPLETED' as const,
-          startedAt: '2026-04-08T10:00:00.000Z',
-          completedAt: '2026-04-08T10:00:04.000Z',
-          execution: {
-            materialization: {
-              executor: 'postgres' as const,
-              environmentId: 'env-1',
-              sinkTable: 'analytics.orders_daily',
-              rowsWritten: 42,
-              startedAt: '2026-04-08T10:00:00.000Z',
-              completedAt: '2026-04-08T10:00:04.000Z',
-              durationMs: 4000,
-            },
-          },
-        };
-      },
-      async getRunEnrichment() {
-        throw new Error('should not be called');
-      },
-    };
-
-    const useCase = new GetRunStatusUseCase(
-      engine as never,
-      engine as never,
-      createStateStore() as never,
-      {
-        isSnapshotStale: vi.fn().mockResolvedValue(false),
-      } as never,
-      undefined,
-      {
-        async getPlanRecord() {
-          return {
-            tenantId: 'tenant-a',
-            projectId: 'proj-1',
-            environmentId: 'env-1',
-            planId: persistedPlan.metadata.planId,
-            planVersion: persistedPlan.metadata.planVersion,
-            schemaVersion: persistedPlan.metadata.schemaVersion,
-            contractVersion: persistedPlan.metadata.contractVersion,
-            canonicalHash: 'a'.repeat(64),
-            canonicalPlanJson: JSON.stringify(persistedPlan),
-            sourceRef: 'dvt-plan://postgres/orders-daily',
-            state: 'ACTIVE' as const,
-            createdAtIso: '2026-04-08T10:00:00.000Z',
-            updatedAtIso: '2026-04-08T10:00:00.000Z',
-          };
-        },
-      } as never
-    );
-
-    await expect(
-      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
-    ).resolves.toMatchObject({
-      planSummary: {
-        executor: 'postgres',
-        nodeCount: 3,
-        stepCount: 3,
-        sourceTables: ['raw.orders'],
-        sinkTables: ['analytics.orders_daily'],
       },
     });
   });
