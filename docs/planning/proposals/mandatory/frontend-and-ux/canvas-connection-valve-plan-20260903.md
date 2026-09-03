@@ -135,7 +135,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasCopy*
   - apps/web/cypress/e2e/canvas/canvas-connection-valve.cy.ts
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-connection-valve-plan-20260903.md
-  - docs/planning/closeouts/FLOW1-CANVAS-CONNECTION-VALVE-2581-closeout.md
+  - docs/planning/closeouts/flow1-canvas-connection-valve-2581-closeout.md
   - docs/.manifest.json
   - docs/**/index.md
 forbiddenImplementationSurfaces:
