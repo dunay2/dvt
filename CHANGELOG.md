@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.13.0 (2026-09-03)
+
+## What's Changed
+* feat(contracts): Enforce standard-first capability admission by @dunay2 in https://github.com/dunay2/dvt/pull/2864
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.12.0...v0.13.0
+
 ## 0.12.0 (2026-09-03)
 
 ## What's Changed
