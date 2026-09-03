@@ -55,11 +55,9 @@ export function SourceImportObjectsMetadata({
   }));
   const sharedCatalog =
     scope === 'selected' ? resolveSourceImportSharedCatalog(sourceObjects) : null;
-  const activeKey = viewModels.some(
-    ({ viewModel }) => viewModel.identityKey === activeSourceObjectKey
-  )
-    ? activeSourceObjectKey
-    : viewModels[0]?.viewModel.identityKey;
+  const activeKey =
+    viewModels.find(({ viewModel }) => viewModel.identityKey === activeSourceObjectKey)?.viewModel
+      .identityKey ?? viewModels[0]?.viewModel.identityKey;
 
   return (
     <section className={sourceImportSelectedMetadataClassNames.root}>
