@@ -2,10 +2,7 @@
 import type { ReactNode } from 'react';
 
 import { Button } from '../ui/button';
-import type {
-  OperationalDrawerTab,
-  OperationalDrawerTabId,
-} from './operationalDrawerContributionStore';
+import type { OperationalDrawerTabId } from './operationalDrawerContributionStore';
 
 const operationalDrawerPanelClassNames = {
   panelSurface: 'h-full min-h-0 overflow-auto px-4 py-3',
@@ -29,10 +26,6 @@ const operationalDrawerPanelClassNames = {
   previewSummary: 'mt-1 text-[var(--text-default)]',
   previewBlockers: 'mt-2 flex flex-wrap gap-1.5',
   sectionKicker: 'text-[11px] font-semibold uppercase text-[var(--text-muted)]',
-  tabList:
-    'flex shrink-0 flex-wrap items-center gap-1 border-b border-[color:var(--border-default)] px-3',
-  tabButton:
-    'h-9 border-b-2 border-transparent px-2 text-xs font-semibold text-[var(--text-muted)] data-[active=true]:border-[color:var(--focus-ring)] data-[active=true]:text-[var(--text-strong)]',
   tabPanel: 'min-w-0 flex-1',
   dataTableFrame:
     'w-full max-w-full min-w-0 overflow-auto rounded border border-[color:var(--border-default)]',
@@ -349,77 +342,6 @@ export function OperationalDrawerSecondaryAction({
     <Button type="button" variant="outline" size="sm" disabled={disabled} onClick={onClick}>
       {children}
     </Button>
-  );
-}
-
-export function OperationalDrawerTabs({
-  activeTab,
-  ariaLabel,
-  onSelectTab,
-  tabs,
-}: Readonly<{
-  activeTab: OperationalDrawerTabId;
-  ariaLabel: string;
-  onSelectTab: (tab: OperationalDrawerTabId) => void;
-  tabs: readonly OperationalDrawerTab[];
-}>): JSX.Element {
-  return (
-    <div
-      data-slot="bottom-operational-drawer-tabs"
-      className={operationalDrawerPanelClassNames.tabList}
-      role="tablist"
-      aria-orientation="horizontal"
-      aria-label={ariaLabel}
-    >
-      {tabs.map((tab) => (
-        <button
-          key={tab.id}
-          type="button"
-          role="tab"
-          id={`bottom-operational-drawer-tab-${tab.id}`}
-          aria-controls={`bottom-operational-drawer-panel-${tab.id}`}
-          aria-selected={activeTab === tab.id}
-          tabIndex={activeTab === tab.id ? 0 : -1}
-          data-slot="bottom-operational-drawer-tab"
-          data-tab={tab.id}
-          className={operationalDrawerPanelClassNames.tabButton}
-          data-active={activeTab === tab.id}
-          onClick={() => onSelectTab(tab.id)}
-          onKeyDown={(event) => {
-            const currentIndex = tabs.findIndex((candidate) => candidate.id === tab.id);
-            let nextIndex: number | null = null;
-
-            if (event.key === 'ArrowRight') {
-              nextIndex = (currentIndex + 1) % tabs.length;
-            } else if (event.key === 'ArrowLeft') {
-              nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
-            } else if (event.key === 'Home') {
-              nextIndex = 0;
-            } else if (event.key === 'End') {
-              nextIndex = tabs.length - 1;
-            }
-
-            if (nextIndex == null) {
-              return;
-            }
-
-            const nextTab = tabs[nextIndex];
-            if (nextTab == null) {
-              return;
-            }
-
-            event.preventDefault();
-            onSelectTab(nextTab.id);
-            event.currentTarget.parentElement
-              ?.querySelector<HTMLButtonElement>(`[data-tab="${nextTab.id}"]`)
-              ?.focus();
-          }}
-        >
-          {tab.label}
-          {tab.count == null ? null : <span> {tab.count}</span>}
-        </button>
-      ))}
-    </div>
   );
 }
 

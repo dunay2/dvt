@@ -16,7 +16,6 @@ import {
   OperationalDrawerRunLayout,
   OperationalDrawerRunStatusSummary,
   OperationalDrawerTabPanel,
-  OperationalDrawerTabs,
 } from './OperationalDrawerPanelPrimitives';
 import type {
   OperationalDrawerContribution,
@@ -230,31 +229,12 @@ export function BottomOperationalPreviewPanel({
   );
 }
 
-export function BottomOperationalDrawerTabs({
-  activeTab,
-  contribution,
-  onSelectTab,
-}: Readonly<{
-  activeTab: OperationalDrawerTabId;
-  contribution: OperationalDrawerContribution;
-  onSelectTab: (tab: OperationalDrawerTabId) => void;
-}>): JSX.Element {
-  return (
-    <OperationalDrawerTabs
-      activeTab={activeTab}
-      ariaLabel={contribution.copy.tabsAriaLabel}
-      onSelectTab={onSelectTab}
-      tabs={contribution.tabs}
-    />
-  );
-}
-
 export function BottomOperationalDrawerBody({
   activeTab,
   contribution,
   logBody,
 }: Readonly<{
-  activeTab: OperationalDrawerTabId;
+  activeTab: OperationalDrawerTabId | null;
   contribution: OperationalDrawerContribution | null;
   logBody: ReactNode;
 }>): JSX.Element {
