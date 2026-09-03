@@ -6,376 +6,166 @@
       "kind": "system",
       "title": "Temporal service",
       "description": "External Temporal workflow service reached through the Temporal client/connection boundary.",
-      "evidence": [
-        {
-          "path": "packages/@dvt/adapter-temporal/src/TemporalClient.ts",
-          "contains": ["Connection.connect({", "new Client({"]
-        }
-      ]
+      "evidence": [{"path":"packages/@dvt/adapter-temporal/src/TemporalClient.ts","contains":["Connection.connect({","new Client({"]}]
     },
     {
       "id": "postgresDatabase",
       "kind": "store",
       "title": "PostgreSQL",
       "description": "External PostgreSQL operational persistence used by the PostgreSQL adapter and worker composition roots.",
-      "evidence": [
-        {
-          "path": "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts",
-          "contains": ["new Pool(config)"]
-        }
-      ]
+      "evidence": [{"path":"packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts","contains":["new Pool(config)"]}]
     }
   ],
   "relations": [
     {
-      "id": "web-api-http",
-      "from": "web",
-      "to": "api",
-      "relation": "calls",
-      "label": "HTTP commands / queries",
-      "rationale": "The web API client dispatches fetch requests to the configured API base URL; the API is a Fastify HTTP application that registers protected runtime routes.",
-      "evidence": [
-        {
-          "path": "apps/web/src/app/services/api/createApiClient.ts",
-          "contains": ["return await fetch(", "buildRequestUrl(endpoint, normalizedBaseUrl)"]
-        },
-        {
-          "path": "apps/api/src/app.ts",
-          "contains": ["Fastify({", "registerProtectedRuntimeRoutes"]
-        }
+      "id":"web-api-http","from":"web","to":"api","relation":"calls","label":"HTTP commands / queries",
+      "rationale":"The web API client dispatches fetch requests to the configured API base URL; the API is a Fastify HTTP application that registers protected runtime routes.",
+      "evidence":[
+        {"path":"apps/web/src/app/services/api/createApiClient.ts","contains":["return await fetch(","buildRequestUrl(endpoint, normalizedBaseUrl)"]},
+        {"path":"apps/api/src/app.ts","contains":["Fastify({","registerProtectedRuntimeRoutes"]}
       ]
     },
     {
-      "id": "api-planner-compose",
-      "from": "api",
-      "to": "planner",
-      "relation": "composes",
-      "label": "PlannerFacade / plan compile",
-      "rationale": "The start-run application composition creates PlannerFacade and the planner-backed plan compile rail.",
-      "evidence": [
-        {
-          "path": "apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts",
-          "contains": ["import { PlannerFacade } from '@dvt/planner';", "const planner = new PlannerFacade();", "buildPlanCompilePlanner"]
-        }
+      "id":"api-planner-compose","from":"api","to":"planner","relation":"composes","label":"PlannerFacade / plan compile",
+      "rationale":"The start-run application composition creates PlannerFacade and the planner-backed plan compile rail.",
+      "evidence":[{"path":"apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts","contains":["import { PlannerFacade } from '@dvt/planner';","const planner = new PlannerFacade();","buildPlanCompilePlanner"]}]
+    },
+    {
+      "id":"api-engine-compose","from":"api","to":"engine","relation":"composes","label":"workflow engine + start-run rail",
+      "rationale":"The protected execution composition builds the workflow engine; the API composition root then passes that concrete engine into the start-run application boundary.",
+      "evidence":[
+        {"path":"apps/api/src/modules/protectedRuntime/buildProtectedExecutionRuntime.ts","contains":["buildWorkflowEngine","runtime: { adapters }"]},
+        {"path":"apps/api/src/modules/buildProtectedRuntimeModule.ts","contains":["buildProtectedStartRunRuntime","engine: executionRuntime.engine"]},
+        {"path":"apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts","contains":["new EngineStartRunUseCase(deps.engine)"]}
       ]
     },
     {
-      "id": "api-engine-compose",
-      "from": "api",
-      "to": "engine",
-      "relation": "composes",
-      "label": "workflow engine + start-run rail",
-      "rationale": "The protected execution composition builds the workflow engine; the API composition root then passes that concrete engine into the start-run application boundary.",
-      "evidence": [
-        {
-          "path": "apps/api/src/modules/protectedRuntime/buildProtectedExecutionRuntime.ts",
-          "contains": ["buildWorkflowEngine", "runtime: { adapters }"]
-        },
-        {
-          "path": "apps/api/src/modules/buildProtectedRuntimeModule.ts",
-          "contains": ["buildProtectedStartRunRuntime", "engine: executionRuntime.engine"]
-        },
-        {
-          "path": "apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts",
-          "contains": ["new EngineStartRunUseCase(deps.engine)"]
-        }
+      "id":"api-delivery-admission","from":"api","to":"delivery","relation":"calls","label":"start-run backpressure admission",
+      "rationale":"The API admission runtime constructs the delivery-owned StartRunAdmissionGuard; the protected runtime composition injects that guard into the start-run boundary.",
+      "evidence":[
+        {"path":"apps/api/src/modules/protectedRuntime/buildProtectedAdmissionRuntime.ts","contains":["import { StartRunAdmissionGuard } from '@dvt/delivery';","const admissionGuard = new StartRunAdmissionGuard({"]},
+        {"path":"apps/api/src/modules/buildProtectedRuntimeModule.ts","contains":["const admissionRuntime = buildProtectedAdmissionRuntime({","admissionGuard: admissionRuntime.admissionGuard"]}
       ]
     },
     {
-      "id": "api-delivery-admission",
-      "from": "api",
-      "to": "delivery",
-      "relation": "calls",
-      "label": "start-run backpressure admission",
-      "rationale": "The start-run API composition constructs the delivery-owned StartRunAdmissionGuard around the backpressure snapshot reader.",
-      "evidence": [
-        {
-          "path": "apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts",
-          "contains": ["StartRunAdmissionGuard", "new StartRunAdmissionGuard"]
-        }
+      "id":"api-postgres-compose","from":"api","to":"adapterPostgres","relation":"composes","label":"state / intent / plan stores",
+      "rationale":"The API composition dynamically loads PostgreSQL adapter types and constructs state, intent and plan stores.",
+      "evidence":[
+        {"path":"apps/api/src/modules/buildProtectedRuntimeModule.ts","contains":["import('@dvt/adapter-postgres')","PostgresStateStoreAdapter"]},
+        {"path":"apps/api/src/modules/protectedRuntime/buildProtectedRuntimeStorage.ts","contains":["new deps.PostgresStateStoreAdapter","new deps.PostgresStartRunIntentStore","new deps.PostgresPlanStore"]}
       ]
     },
     {
-      "id": "api-postgres-compose",
-      "from": "api",
-      "to": "adapterPostgres",
-      "relation": "composes",
-      "label": "state / intent / plan stores",
-      "rationale": "The API composition dynamically loads PostgreSQL adapter types and constructs state, intent and plan stores.",
-      "evidence": [
-        {
-          "path": "apps/api/src/modules/buildProtectedRuntimeModule.ts",
-          "contains": ["import('@dvt/adapter-postgres')", "PostgresStateStoreAdapter"]
-        },
-        {
-          "path": "apps/api/src/modules/protectedRuntime/buildProtectedRuntimeStorage.ts",
-          "contains": ["new deps.PostgresStateStoreAdapter", "new deps.PostgresStartRunIntentStore", "new deps.PostgresPlanStore"]
-        }
+      "id":"api-temporal-compose","from":"api","to":"adapterTemporal","relation":"composes","label":"Temporal IProviderAdapter binding",
+      "rationale":"The API provider-adapter factory loads @dvt/adapter-temporal and returns a concrete TemporalAdapter behind the engine provider boundary.",
+      "evidence":[{"path":"apps/api/src/modules/providerAdapters/createTemporalProviderAdapterFactory.ts","contains":["import('@dvt/adapter-temporal')","new temporalModule.TemporalAdapter"]}]
+    },
+    {
+      "id":"engine-temporal-delegate","from":"engine","to":"adapterTemporal","relation":"delegates","label":"IProviderAdapter.startRun → Temporal binding",
+      "rationale":"Engine start-run resolves an injected provider adapter and delegates startRun; API composition binds the temporal provider to TemporalAdapter.",
+      "evidence":[
+        {"path":"packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts","contains":["const adapter = this.deps.adapters.get(provider);","await adapter.startRun"]},
+        {"path":"apps/api/src/modules/providerAdapters/createTemporalProviderAdapterFactory.ts","contains":["new temporalModule.TemporalAdapter"]}
       ]
     },
     {
-      "id": "api-temporal-compose",
-      "from": "api",
-      "to": "adapterTemporal",
-      "relation": "composes",
-      "label": "Temporal IProviderAdapter binding",
-      "rationale": "The API provider-adapter factory loads @dvt/adapter-temporal and returns a concrete TemporalAdapter behind the engine provider boundary.",
-      "evidence": [
-        {
-          "path": "apps/api/src/modules/providerAdapters/createTemporalProviderAdapterFactory.ts",
-          "contains": ["import('@dvt/adapter-temporal')", "new temporalModule.TemporalAdapter"]
-        }
+      "id":"engine-postgres-state","from":"engine","to":"adapterPostgres","relation":"persists","label":"run state via injected store roles",
+      "rationale":"Engine writes through injected run-state roles; API composition binds those roles to PostgresStateStoreAdapter.",
+      "evidence":[
+        {"path":"packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts","contains":["stateStoreWrite.bootstrapRunTx","stateStoreWrite.saveProviderRef"]},
+        {"path":"apps/api/src/modules/protectedRuntime/buildProtectedRuntimeStorage.ts","contains":["new deps.PostgresStateStoreAdapter","bindStateStoreRoles(stateStore)"]}
       ]
     },
     {
-      "id": "engine-temporal-delegate",
-      "from": "engine",
-      "to": "adapterTemporal",
-      "relation": "delegates",
-      "label": "IProviderAdapter.startRun → Temporal binding",
-      "rationale": "Engine start-run resolves an injected provider adapter and delegates startRun; API composition binds the temporal provider to TemporalAdapter.",
-      "evidence": [
-        {
-          "path": "packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts",
-          "contains": ["const adapter = this.deps.adapters.get(provider);", "await adapter.startRun"]
-        },
-        {
-          "path": "apps/api/src/modules/providerAdapters/createTemporalProviderAdapterFactory.ts",
-          "contains": ["new temporalModule.TemporalAdapter"]
-        }
+      "id":"temporal-adapter-service","from":"adapterTemporal","to":"temporalService","relation":"connects","label":"Temporal client / workflow service",
+      "rationale":"TemporalClientManager opens a Temporal Connection and Client using configured address and namespace.",
+      "evidence":[{"path":"packages/@dvt/adapter-temporal/src/TemporalClient.ts","contains":["Connection.connect({","new Client({"]}]
+    },
+    {
+      "id":"postgres-adapter-database","from":"adapterPostgres","to":"postgresDatabase","relation":"connects","label":"SQL / operational persistence",
+      "rationale":"The PostgreSQL adapter creates observed pg Pool instances used by adapter runtime components.",
+      "evidence":[{"path":"packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts","contains":["new Pool(config)"]}]
+    },
+    {
+      "id":"temporal-worker-host","from":"temporalWorker","to":"adapterTemporal","relation":"loads","label":"TemporalWorkerHost + plugin registry",
+      "rationale":"The Temporal worker composition instantiates TemporalWorkerHost and composes adapter-owned step-plugin registries.",
+      "evidence":[
+        {"path":"apps/temporal-worker/src/runtime/temporalWorkerHost.ts","contains":["TemporalWorkerHost","new TemporalWorkerHost(hostConfig)"]},
+        {"path":"apps/temporal-worker/src/runtime/temporalWorkerRuntimeResources.ts","contains":["composeTemporalStepPluginRegistries","loadTemporalAdapterConfig"]}
       ]
     },
     {
-      "id": "engine-postgres-state",
-      "from": "engine",
-      "to": "adapterPostgres",
-      "relation": "persists",
-      "label": "run state via injected store roles",
-      "rationale": "Engine writes through injected run-state roles; API composition binds those roles to PostgresStateStoreAdapter.",
-      "evidence": [
-        {
-          "path": "packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts",
-          "contains": ["stateStoreWrite.bootstrapRunTx", "stateStoreWrite.saveProviderRef"]
-        },
-        {
-          "path": "apps/api/src/modules/protectedRuntime/buildProtectedRuntimeStorage.ts",
-          "contains": ["new deps.PostgresStateStoreAdapter", "bindStateStoreRoles(stateStore)"]
-        }
+      "id":"temporal-worker-dbt-plugin","from":"temporalWorker","to":"temporalDbtPlugin","relation":"loads","label":"DBT step activity profile",
+      "rationale":"The Temporal worker explicitly constructs the DBT plugin runner and step activity registry.",
+      "evidence":[{"path":"apps/temporal-worker/src/runtime/temporalWorkerDbtProfile.ts","contains":["@dvt/temporal-dbt-plugin","new DbtCliPluginRunner","createDbtStepActivityRegistry"]}]
+    },
+    {
+      "id":"temporal-worker-http-plugin","from":"temporalWorker","to":"temporalHttpJsonPlugin","relation":"loads","label":"HTTP JSON acquisition profile",
+      "rationale":"The Temporal worker explicitly constructs the HTTP JSON plugin runner and profile.",
+      "evidence":[{"path":"apps/temporal-worker/src/runtime/temporalWorkerHttpJsonProfile.ts","contains":["@dvt/temporal-http-json-plugin","new HttpJsonArtifactPluginRunner","createHttpJsonArtifactPluginProfile"]}]
+    },
+    {
+      "id":"temporal-worker-object-plugin","from":"temporalWorker","to":"temporalObjectFilePostgresPlugin","relation":"loads","label":"object-file → PostgreSQL profile",
+      "rationale":"The Temporal worker explicitly constructs the object-file PostgreSQL plugin runner and profile.",
+      "evidence":[{"path":"apps/temporal-worker/src/runtime/temporalWorkerObjectFilePostgresProfile.ts","contains":["@dvt/temporal-object-file-postgres-plugin","new ObjectFilePostgresPluginRunner","createObjectFilePostgresPluginProfile"]}]
+    },
+    {
+      "id":"temporal-worker-postgres-loader","from":"temporalWorker","to":"adapterPostgres","relation":"composes","label":"PostgresObjectFileLoadingCapability",
+      "rationale":"The object-file worker profile binds the plugin's relational loader to the PostgreSQL adapter capability.",
+      "evidence":[{"path":"apps/temporal-worker/src/runtime/temporalWorkerObjectFilePostgresProfile.ts","contains":["PostgresObjectFileLoadingCapability","new PostgresObjectFileLoadingCapability"]}]
+    },
+    {
+      "id":"outbox-worker-delivery","from":"outboxWorker","to":"delivery","relation":"loads","label":"OutboxWorkerRuntime",
+      "rationale":"The outbox worker composition runs the delivery-owned OutboxWorkerRuntime.",
+      "evidence":[
+        {"path":"apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts","contains":["OutboxWorkerRuntime","new OutboxWorkerRuntime"]},
+        {"path":"apps/outbox-worker/src/runtime/OutboxWorkerRuntime.ts","contains":["from '@dvt/delivery'"]}
       ]
     },
     {
-      "id": "temporal-adapter-service",
-      "from": "adapterTemporal",
-      "to": "temporalService",
-      "relation": "connects",
-      "label": "Temporal client / workflow service",
-      "rationale": "TemporalClientManager opens a Temporal Connection and Client using configured address and namespace.",
-      "evidence": [
-        {
-          "path": "packages/@dvt/adapter-temporal/src/TemporalClient.ts",
-          "contains": ["Connection.connect({", "new Client({"]
-        }
+      "id":"outbox-worker-postgres","from":"outboxWorker","to":"adapterPostgres","relation":"persists","label":"outbox state / claims / retries",
+      "rationale":"The outbox worker constructs PostgresStateStoreAdapter and passes it to OutboxWorkerRuntime.",
+      "evidence":[{"path":"apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts","contains":["new PostgresStateStoreAdapter","new OutboxWorkerRuntime(stateStore"]}]
+    },
+    {
+      "id":"projector-worker-delivery","from":"projectorWorker","to":"delivery","relation":"loads","label":"ProjectorWorkerRuntime",
+      "rationale":"The projector worker composition runs the delivery-owned projector runtime.",
+      "evidence":[{"path":"apps/projector-worker/src/server.ts","contains":["ProjectorWorkerRuntime","new ProjectorWorkerRuntime"]}]
+    },
+    {
+      "id":"projector-worker-postgres","from":"projectorWorker","to":"adapterPostgres","relation":"persists","label":"snapshot projection state",
+      "rationale":"The projector worker constructs PostgresStateStoreAdapter and gives it to ProjectorWorkerRuntime.",
+      "evidence":[{"path":"apps/projector-worker/src/server.ts","contains":["new PostgresStateStoreAdapter","new ProjectorWorkerRuntime(stateStore"]}]
+    },
+    {
+      "id":"lineage-worker-traceability","from":"lineageWorker","to":"traceability","relation":"loads","label":"LineageWorkerRuntime + OpenLineage sink",
+      "rationale":"The lineage worker runs LineageWorkerRuntime and composes the traceability-owned HTTP OpenLineage sink.",
+      "evidence":[
+        {"path":"apps/lineage-worker/src/server.ts","contains":["LineageWorkerRuntime","new LineageWorkerRuntime"]},
+        {"path":"apps/lineage-worker/src/bootstrap.ts","contains":["HttpOpenLineageSink","new HttpOpenLineageSink"]}
       ]
     },
     {
-      "id": "postgres-adapter-database",
-      "from": "adapterPostgres",
-      "to": "postgresDatabase",
-      "relation": "connects",
-      "label": "SQL / operational persistence",
-      "rationale": "The PostgreSQL adapter creates observed pg Pool instances used by adapter runtime components.",
-      "evidence": [
-        {
-          "path": "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts",
-          "contains": ["new Pool(config)"]
-        }
-      ]
-    },
-    {
-      "id": "temporal-worker-host",
-      "from": "temporalWorker",
-      "to": "adapterTemporal",
-      "relation": "loads",
-      "label": "TemporalWorkerHost + plugin registry",
-      "rationale": "The Temporal worker composition instantiates TemporalWorkerHost and composes adapter-owned step-plugin registries.",
-      "evidence": [
-        {
-          "path": "apps/temporal-worker/src/runtime/temporalWorkerHost.ts",
-          "contains": ["TemporalWorkerHost", "new TemporalWorkerHost(hostConfig)"]
-        },
-        {
-          "path": "apps/temporal-worker/src/runtime/temporalWorkerRuntimeResources.ts",
-          "contains": ["composeTemporalStepPluginRegistries", "loadTemporalAdapterConfig"]
-        }
-      ]
-    },
-    {
-      "id": "temporal-worker-dbt-plugin",
-      "from": "temporalWorker",
-      "to": "temporalDbtPlugin",
-      "relation": "loads",
-      "label": "DBT step activity profile",
-      "rationale": "The Temporal worker explicitly constructs the DBT plugin runner and step activity registry.",
-      "evidence": [
-        {
-          "path": "apps/temporal-worker/src/runtime/temporalWorkerDbtProfile.ts",
-          "contains": ["@dvt/temporal-dbt-plugin", "new DbtCliPluginRunner", "createDbtStepActivityRegistry"]
-        }
-      ]
-    },
-    {
-      "id": "temporal-worker-http-plugin",
-      "from": "temporalWorker",
-      "to": "temporalHttpJsonPlugin",
-      "relation": "loads",
-      "label": "HTTP JSON acquisition profile",
-      "rationale": "The Temporal worker explicitly constructs the HTTP JSON plugin runner and profile.",
-      "evidence": [
-        {
-          "path": "apps/temporal-worker/src/runtime/temporalWorkerHttpJsonProfile.ts",
-          "contains": ["@dvt/temporal-http-json-plugin", "new HttpJsonArtifactPluginRunner", "createHttpJsonArtifactPluginProfile"]
-        }
-      ]
-    },
-    {
-      "id": "temporal-worker-object-plugin",
-      "from": "temporalWorker",
-      "to": "temporalObjectFilePostgresPlugin",
-      "relation": "loads",
-      "label": "object-file → PostgreSQL profile",
-      "rationale": "The Temporal worker explicitly constructs the object-file PostgreSQL plugin runner and profile.",
-      "evidence": [
-        {
-          "path": "apps/temporal-worker/src/runtime/temporalWorkerObjectFilePostgresProfile.ts",
-          "contains": ["@dvt/temporal-object-file-postgres-plugin", "new ObjectFilePostgresPluginRunner", "createObjectFilePostgresPluginProfile"]
-        }
-      ]
-    },
-    {
-      "id": "temporal-worker-postgres-loader",
-      "from": "temporalWorker",
-      "to": "adapterPostgres",
-      "relation": "composes",
-      "label": "PostgresObjectFileLoadingCapability",
-      "rationale": "The object-file worker profile binds the plugin's relational loader to the PostgreSQL adapter capability.",
-      "evidence": [
-        {
-          "path": "apps/temporal-worker/src/runtime/temporalWorkerObjectFilePostgresProfile.ts",
-          "contains": ["PostgresObjectFileLoadingCapability", "new PostgresObjectFileLoadingCapability"]
-        }
-      ]
-    },
-    {
-      "id": "outbox-worker-delivery",
-      "from": "outboxWorker",
-      "to": "delivery",
-      "relation": "loads",
-      "label": "OutboxWorkerRuntime",
-      "rationale": "The outbox worker composition runs the delivery-owned OutboxWorkerRuntime.",
-      "evidence": [
-        {
-          "path": "apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts",
-          "contains": ["OutboxWorkerRuntime", "new OutboxWorkerRuntime"]
-        },
-        {
-          "path": "apps/outbox-worker/src/runtime/OutboxWorkerRuntime.ts",
-          "contains": ["from '@dvt/delivery'"]
-        }
-      ]
-    },
-    {
-      "id": "outbox-worker-postgres",
-      "from": "outboxWorker",
-      "to": "adapterPostgres",
-      "relation": "persists",
-      "label": "outbox state / claims / retries",
-      "rationale": "The outbox worker constructs PostgresStateStoreAdapter and passes it to OutboxWorkerRuntime.",
-      "evidence": [
-        {
-          "path": "apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts",
-          "contains": ["new PostgresStateStoreAdapter", "new OutboxWorkerRuntime(stateStore"]
-        }
-      ]
-    },
-    {
-      "id": "projector-worker-delivery",
-      "from": "projectorWorker",
-      "to": "delivery",
-      "relation": "loads",
-      "label": "ProjectorWorkerRuntime",
-      "rationale": "The projector worker composition runs the delivery-owned projector runtime.",
-      "evidence": [
-        {
-          "path": "apps/projector-worker/src/server.ts",
-          "contains": ["ProjectorWorkerRuntime", "new ProjectorWorkerRuntime"]
-        }
-      ]
-    },
-    {
-      "id": "projector-worker-postgres",
-      "from": "projectorWorker",
-      "to": "adapterPostgres",
-      "relation": "persists",
-      "label": "snapshot projection state",
-      "rationale": "The projector worker constructs PostgresStateStoreAdapter and gives it to ProjectorWorkerRuntime.",
-      "evidence": [
-        {
-          "path": "apps/projector-worker/src/server.ts",
-          "contains": ["new PostgresStateStoreAdapter", "new ProjectorWorkerRuntime(stateStore"]
-        }
-      ]
-    },
-    {
-      "id": "lineage-worker-traceability",
-      "from": "lineageWorker",
-      "to": "traceability",
-      "relation": "loads",
-      "label": "LineageWorkerRuntime + OpenLineage sink",
-      "rationale": "The lineage worker runs LineageWorkerRuntime and composes the traceability-owned HTTP OpenLineage sink.",
-      "evidence": [
-        {
-          "path": "apps/lineage-worker/src/server.ts",
-          "contains": ["LineageWorkerRuntime", "new LineageWorkerRuntime"]
-        },
-        {
-          "path": "apps/lineage-worker/src/bootstrap.ts",
-          "contains": ["HttpOpenLineageSink", "new HttpOpenLineageSink"]
-        }
-      ]
-    },
-    {
-      "id": "lineage-worker-postgres",
-      "from": "lineageWorker",
-      "to": "adapterPostgres",
-      "relation": "persists",
-      "label": "lineage outbox / state",
-      "rationale": "The lineage worker bootstrap constructs PostgresStateStoreAdapter and exposes its lineage outbox store.",
-      "evidence": [
-        {
-          "path": "apps/lineage-worker/src/bootstrap.ts",
-          "contains": ["new PostgresStateStoreAdapter", "stateStore.getLineageOutboxStore()"]
-        }
-      ]
+      "id":"lineage-worker-postgres","from":"lineageWorker","to":"adapterPostgres","relation":"persists","label":"lineage outbox / state",
+      "rationale":"The lineage worker bootstrap constructs PostgresStateStoreAdapter and exposes its lineage outbox store.",
+      "evidence":[{"path":"apps/lineage-worker/src/bootstrap.ts","contains":["new PostgresStateStoreAdapter","stateStore.getLineageOutboxStore()"]}]
     }
   ],
-  "views": [
+  "views":[
     {
-      "id": "dvtRuntimeCommunication",
-      "title": "DVT+ — Runtime communication (source-evidenced)",
-      "description": "Operational calls, composition, delegation, persistence and plugin loading proven by current source; distinct from compile-time import topology.",
-      "include": ["web", "api", "planner", "delivery", "engine", "adapterTemporal", "adapterPostgres", "temporalWorker", "temporalDbtPlugin", "temporalHttpJsonPlugin", "temporalObjectFilePostgresPlugin", "outboxWorker", "projectorWorker", "lineageWorker", "traceability", "temporalService", "postgresDatabase"]
+      "id":"dvtRuntimeCommunication","title":"DVT+ — Runtime communication (source-evidenced)",
+      "description":"Operational calls, composition, delegation, persistence and plugin loading proven by current source; distinct from compile-time import topology.",
+      "include":["web","api","planner","delivery","engine","adapterTemporal","adapterPostgres","temporalWorker","temporalDbtPlugin","temporalHttpJsonPlugin","temporalObjectFilePostgresPlugin","outboxWorker","projectorWorker","lineageWorker","traceability","temporalService","postgresDatabase"]
     },
     {
-      "id": "startRunRuntime",
-      "title": "DVT+ — Start-run runtime handoff",
-      "description": "User/API planning and admission, Engine delegation, provider binding and operational state persistence.",
-      "include": ["web", "api", "planner", "delivery", "engine", "adapterTemporal", "adapterPostgres", "temporalService", "postgresDatabase"]
+      "id":"startRunRuntime","title":"DVT+ — Start-run runtime handoff",
+      "description":"User/API planning and admission, Engine delegation, provider binding and operational state persistence.",
+      "include":["web","api","planner","delivery","engine","adapterTemporal","adapterPostgres","temporalService","postgresDatabase"]
     },
     {
-      "id": "workerRuntime",
-      "title": "DVT+ — Worker composition and execution",
-      "description": "Current worker hosts, Temporal plugin composition and persistence/evidence boundaries.",
-      "include": ["temporalWorker", "adapterTemporal", "temporalDbtPlugin", "temporalHttpJsonPlugin", "temporalObjectFilePostgresPlugin", "adapterPostgres", "outboxWorker", "delivery", "projectorWorker", "lineageWorker", "traceability", "temporalService", "postgresDatabase"]
+      "id":"workerRuntime","title":"DVT+ — Worker composition and execution",
+      "description":"Current worker hosts, Temporal plugin composition and persistence/evidence boundaries.",
+      "include":["temporalWorker","adapterTemporal","temporalDbtPlugin","temporalHttpJsonPlugin","temporalObjectFilePostgresPlugin","adapterPostgres","outboxWorker","delivery","projectorWorker","lineageWorker","traceability","temporalService","postgresDatabase"]
     }
   ]
 }
