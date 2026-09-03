@@ -1,6 +1,6 @@
 ---
 title: Operational Drawer Tab Visibility Plan
-status: Active
+status: Accepted
 owner: Web / Canvas workbench presentation
 last_reviewed: 2026-09-03
 planning_type: proposal
@@ -137,13 +137,16 @@ redGreenCycles:
     greenTest: pnpm --filter @dvt/web exec vitest run OperationalDrawerTabStrip.test.tsx
 symbols:
   - { name: setOperationalDrawerTabVisibility, path: apps/web/src/app/components/shell/operationalDrawerContributionStore.ts, dddOwner: OperationalDrawerTabVisibility, cqRails: [SetOperationalDrawerTabVisibility], fowlerSignals: [Hidden authority], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature GH-2887-OPERATIONAL-DRAWER-TAB-VISIBILITY, cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts, unitTests: [apps/web/src/app/components/shell/operationalDrawerContributionStore.test.ts] }
+  - { name: OperationalDrawerTabVisibilityCommand, path: apps/web/src/app/components/shell/operationalDrawerContributionStore.ts, dddOwner: OperationalDrawerTabVisibility, cqRails: [SetOperationalDrawerTabVisibility], fowlerSignals: [Replace primitive with object], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature GH-2887-OPERATIONAL-DRAWER-TAB-VISIBILITY, cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts, unitTests: [apps/web/src/app/components/shell/operationalDrawerContributionStore.test.ts] }
+  - { name: OperationalDrawerTabVisibilityState, path: apps/web/src/app/components/shell/operationalDrawerContributionStore.ts, dddOwner: OperationalDrawerTabVisibility, cqRails: [SetOperationalDrawerTabVisibility], fowlerSignals: [Hidden authority], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature GH-2887-OPERATIONAL-DRAWER-TAB-VISIBILITY, cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts, unitTests: [apps/web/src/app/components/shell/operationalDrawerContributionStore.test.ts] }
   - { name: OperationalDrawerTabStrip, path: apps/web/src/app/components/shell/OperationalDrawerTabStrip.tsx, dddOwner: OperationalDrawerTabVisibility presentation, cqRails: [SetOperationalDrawerTabVisibility], fowlerSignals: [Responsibility overload], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature GH-2887-OPERATIONAL-DRAWER-TAB-VISIBILITY, cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts, unitTests: [apps/web/src/app/components/shell/OperationalDrawerTabStrip.test.tsx] }
+  - { name: classes, path: apps/web/src/app/components/shell/OperationalDrawerTabStrip.tsx, dddOwner: OperationalDrawerTabVisibility presentation, cqRails: [SetOperationalDrawerTabVisibility], fowlerSignals: [Presentation Model], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature GH-2887-OPERATIONAL-DRAWER-TAB-VISIBILITY, cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts, unitTests: [apps/web/src/app/components/shell/OperationalDrawerTabStrip.test.tsx] }
 ```
 
 ## Definition Of Done
 
 - [x] Issue #2887 owns the change and records the decision.
 - [x] The command rail and negative behavior are declared before code.
-- [ ] Behavioral RED/GREEN tests cover canonical state and interaction.
-- [ ] Headed browser proves close, empty strip, and contextual restoration.
+- [x] Behavioral RED/GREEN tests cover canonical state and interaction.
+- [x] Headed browser proves close, empty strip, and contextual restoration.
 - [ ] Governance, Web, pre-push, PR review, and CI pass cleanly.
