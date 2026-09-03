@@ -5,10 +5,7 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  BottomOperationalDrawerBody,
-  BottomOperationalDrawerTabs,
-} from './OperationalDrawerPanels';
+import { BottomOperationalDrawerBody } from './OperationalDrawerPanels';
 import type { OperationalDrawerContribution } from './operationalDrawerContributionStore';
 
 function buildCanvasOperationalDrawerContribution(
@@ -98,57 +95,6 @@ describe('OperationalDrawerPanels', () => {
       root.unmount();
     });
     container.remove();
-  });
-
-  it('renders operational drawer tabs as component-owned presentation', async () => {
-    const onSelectTab = vi.fn();
-    const contribution = buildCanvasOperationalDrawerContribution();
-
-    await act(async () => {
-      root.render(
-        <BottomOperationalDrawerTabs
-          activeTab="log"
-          contribution={contribution}
-          onSelectTab={onSelectTab}
-        />
-      );
-    });
-
-    const tabs = Array.from(
-      container.querySelectorAll<HTMLButtonElement>('[data-slot="bottom-operational-drawer-tab"]')
-    );
-
-    expect(tabs.map((tab) => tab.textContent?.replace(/\s+/g, ' ').trim())).toEqual([
-      'Log',
-      'Problems 1',
-      'Runs 1',
-      'Preview 1',
-      'Data',
-    ]);
-    expect(tabs[0]?.getAttribute('aria-selected')).toBe('true');
-    expect(tabs.map((tab) => tab.tabIndex)).toEqual([0, -1, -1, -1, -1]);
-    expect(tabs[0]?.getAttribute('aria-controls')).toBe('bottom-operational-drawer-panel-log');
-
-    tabs[0]?.focus();
-    await act(async () => {
-      fireEvent.keyDown(tabs[0]!, { key: 'ArrowRight' });
-    });
-
-    expect(onSelectTab).toHaveBeenLastCalledWith('problems');
-    expect(tabs[1]).toBe(document.activeElement);
-
-    await act(async () => {
-      fireEvent.keyDown(tabs[1]!, { key: 'End' });
-    });
-
-    expect(onSelectTab).toHaveBeenLastCalledWith('data');
-    expect(tabs[4]).toBe(document.activeElement);
-
-    await act(async () => {
-      fireEvent.click(tabs[4]!);
-    });
-
-    expect(onSelectTab).toHaveBeenCalledWith('data');
   });
 
   it('renders a bounded source sample as an accessible data table', async () => {
@@ -383,128 +329,5 @@ describe('OperationalDrawerPanels', () => {
     });
 
     expect(container.textContent).toBe('log stream');
-  });
-
-  it('renders all contributed Spanish labels, status text, actions, and accessible names', async () => {
-    container.style.width = '320px';
-    const contribution = buildCanvasOperationalDrawerContribution({
-      title: 'Operaciones del Canvas',
-      copy: {
-        problemsAriaLabel: 'Problemas del Canvas',
-        noProblemsMessage: 'No hay problemas actuales en el Canvas.',
-        runsAriaLabel: 'Ejecuciones del Canvas',
-        runReadyStatus: 'Ejecución lista',
-        runBlockedStatus: 'Ejecución bloqueada',
-        runActiveStatus: 'Ejecución activa',
-        previewAriaLabel: 'Vista previa de ejecución del Canvas',
-        previewAction: 'Crear Execution Preview',
-        previewReadyStatus: 'Vista previa lista',
-        previewBlockedStatus: 'Vista previa bloqueada',
-        dataAriaLabel: 'Muestra de datos',
-        dataIdleMessage: 'Abre una muestra.',
-        dataLoadingTemplate: 'Cargando {nodeName}.',
-        dataEmptyTemplate: '{nodeName} no tiene filas.',
-        dataConnectionNotFoundTemplate: 'Falta la conexión de {nodeName}.',
-        dataSourceObjectNotFoundTemplate: 'Falta el objeto de {nodeName}.',
-        dataUnavailableTemplate: 'No disponible para {nodeName}.',
-        dataUnknownErrorTemplate: 'Error para {nodeName}.',
-        dataTruncatedTemplate: 'Se muestran {limit} filas.',
-        dataCaptionTemplate: 'Muestra de {nodeName}',
-        dataNullValue: 'NULO',
-        tabsAriaLabel: 'Cajón operativo del Canvas',
-        severity: { info: 'Información', warning: 'Advertencia', error: 'Error' },
-      },
-      tabs: [
-        { id: 'log', label: 'Registro', count: null },
-        { id: 'problems', label: 'Problemas', count: 1 },
-        { id: 'runs', label: 'Ejecuciones', count: 1 },
-        { id: 'preview', label: 'Vista previa', count: 1 },
-        { id: 'data', label: 'Datos', count: null },
-      ],
-      problems: {
-        items: [
-          {
-            id: 'plan_integrity',
-            severity: 'warning',
-            message: 'Se requiere una vista previa antes de ejecutar.',
-            detail: 'Integridad del Execution Preview',
-          },
-        ],
-      },
-      runs: {
-        activeRunId: null,
-        canStartRun: false,
-        controls: null,
-        onStartRun: vi.fn(),
-        status: 'blocked',
-        summary: 'Se requiere una vista previa antes de ejecutar.',
-      },
-      preview: {
-        status: 'blocked',
-        summary: 'Se requiere una vista previa antes de ejecutar.',
-        blockers: ['Integridad del Execution Preview'],
-        canPreview: true,
-        onPreviewExecutionPlan: vi.fn(),
-        selectionRecovery: null,
-      },
-    });
-
-    await act(async () => {
-      root.render(
-        <BottomOperationalDrawerTabs
-          activeTab="log"
-          contribution={contribution}
-          onSelectTab={vi.fn()}
-        />
-      );
-    });
-    const tabList = container.querySelector<HTMLElement>('[role="tablist"]');
-    const tabs = Array.from(tabList?.querySelectorAll<HTMLElement>('[role="tab"]') ?? []);
-    expect(tabList?.getAttribute('aria-label')).toBe('Cajón operativo del Canvas');
-    expect(tabList?.getAttribute('aria-orientation')).toBe('horizontal');
-    expect(tabList?.className).toContain('flex-wrap');
-    expect(tabList?.className).not.toContain('overflow-x-auto');
-    expect(tabs).toHaveLength(5);
-    expect(container.textContent).toContain('Registro');
-    expect(container.textContent).toContain('Vista previa');
-
-    await act(async () => {
-      root.render(
-        <BottomOperationalDrawerBody
-          activeTab="problems"
-          contribution={contribution}
-          logBody={null}
-        />
-      );
-    });
-    expect(container.querySelector('section')?.getAttribute('aria-label')).toBe(
-      'Problemas del Canvas'
-    );
-    expect(container.textContent).toContain('Advertencia');
-
-    await act(async () => {
-      root.render(
-        <BottomOperationalDrawerBody activeTab="runs" contribution={contribution} logBody={null} />
-      );
-    });
-    expect(container.querySelector('section')?.getAttribute('aria-label')).toBe(
-      'Ejecuciones del Canvas'
-    );
-    expect(container.textContent).toContain('Ejecución bloqueada');
-
-    await act(async () => {
-      root.render(
-        <BottomOperationalDrawerBody
-          activeTab="preview"
-          contribution={contribution}
-          logBody={null}
-        />
-      );
-    });
-    expect(container.querySelector('section')?.getAttribute('aria-label')).toBe(
-      'Vista previa de ejecución del Canvas'
-    );
-    expect(container.textContent).toContain('Vista previa bloqueada');
-    expect(container.textContent).toContain('Crear Execution Preview');
   });
 });

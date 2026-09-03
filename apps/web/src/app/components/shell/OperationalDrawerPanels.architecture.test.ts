@@ -51,7 +51,6 @@ describe('Operational drawer architecture', () => {
     expect(primitivesSource).toContain('export function OperationalDrawerPanelSurface');
     expect(primitivesSource).toContain('export function OperationalDrawerProblemItem');
     expect(primitivesSource).toContain('export function OperationalDrawerPreviewLayout');
-    expect(primitivesSource).toContain('export function OperationalDrawerTabs');
     expect(primitivesSource).toContain('const operationalDrawerPanelClassNames');
     expect(primitivesSource).not.toContain('className="');
   });

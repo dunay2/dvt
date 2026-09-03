@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect } from 'react';
+import { Suspense, lazy } from 'react';
 import { Activity, X } from 'lucide-react';
 
 import { resolveRunEventFeedHealthCopy } from '../../services/runs/runEventFeedHealthCopy';
@@ -9,10 +9,8 @@ import { buildBottomOperationalDrawerLogModel } from './bottomOperationalDrawerL
 import { bottomOperationalDrawerClasses } from './chrome';
 import { resolveShellTopBarCopy } from './copy';
 import { useOperationalDrawerContributionStore } from './operationalDrawerContributionStore';
-import {
-  BottomOperationalDrawerBody,
-  BottomOperationalDrawerTabs,
-} from './OperationalDrawerPanels';
+import { BottomOperationalDrawerBody } from './OperationalDrawerPanels';
+import { OperationalDrawerTabStrip } from './OperationalDrawerTabStrip';
 
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
@@ -93,8 +91,12 @@ export function BottomOperationalDrawer() {
   const hideBottomDrawer = useUiLayoutStore((state) => state.hideBottomDrawer);
   const contribution = useOperationalDrawerContributionStore((state) => state.contribution);
   const activeOperationalTab = useOperationalDrawerContributionStore((state) => state.activeTab);
+  const hiddenOperationalTabs = useOperationalDrawerContributionStore((state) => state.hiddenTabs);
   const setActiveOperationalTab = useOperationalDrawerContributionStore(
     (state) => state.selectOperationalDrawerTab
+  );
+  const setOperationalDrawerTabVisibility = useOperationalDrawerContributionStore(
+    (state) => state.setOperationalDrawerTabVisibility
   );
   const feedCopy = resolveRunEventFeedHealthCopy(locale);
   const { lines, runId, health, retry } = useConsoleLogStream();
@@ -106,12 +108,10 @@ export function BottomOperationalDrawer() {
     lines,
   });
   const drawerTitle = contribution?.title ?? model.title;
-
-  useEffect(() => {
-    if (contribution != null && !contribution.tabs.some((tab) => tab.id === activeOperationalTab)) {
-      setActiveOperationalTab(contribution.tabs[0]?.id ?? 'log');
-    }
-  }, [activeOperationalTab, contribution]);
+  const visibleTabs =
+    contribution?.tabs.filter((tab) => !hiddenOperationalTabs.includes(tab.id)) ?? [];
+  const hiddenTabs =
+    contribution?.tabs.filter((tab) => hiddenOperationalTabs.includes(tab.id)) ?? [];
 
   return (
     <div data-slot="bottom-operational-drawer" className={bottomOperationalDrawerClasses.drawer}>
@@ -148,10 +148,16 @@ export function BottomOperationalDrawer() {
       </div>
 
       {contribution == null ? null : (
-        <BottomOperationalDrawerTabs
+        <OperationalDrawerTabStrip
           activeTab={activeOperationalTab}
-          contribution={contribution}
+          ariaLabel={contribution.copy.tabsAriaLabel}
+          closeTabLabel={copy.closeOperationalDrawerTab}
+          hiddenTabs={hiddenTabs}
+          onCloseTab={(tab) => setOperationalDrawerTabVisibility({ tab, visible: false })}
+          onRestoreTab={(tab) => setOperationalDrawerTabVisibility({ tab, visible: true })}
           onSelectTab={setActiveOperationalTab}
+          restoreTabsLabel={copy.restoreOperationalDrawerTabs}
+          visibleTabs={visibleTabs}
         />
       )}
 

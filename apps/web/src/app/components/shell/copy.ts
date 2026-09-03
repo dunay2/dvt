@@ -26,6 +26,8 @@ export type ShellTopBarCopy = {
   readonly languageSpanish: string;
   readonly operationalDrawer: string;
   readonly closeOperationalDrawer: string;
+  readonly closeOperationalDrawerTab: string;
+  readonly restoreOperationalDrawerTabs: string;
   readonly focusMode: string;
   readonly canvasPalette: string;
   readonly canvasColorHexValue: string;
@@ -102,6 +104,14 @@ const COPY_BY_KEY: Record<keyof ShellTopBarCopy, LocalizableString> = {
   closeOperationalDrawer: {
     key: 'shell.closeOperationalDrawer',
     fallback: 'Close operational drawer',
+  },
+  closeOperationalDrawerTab: {
+    key: 'shell.closeOperationalDrawerTab',
+    fallback: 'Close {tab}',
+  },
+  restoreOperationalDrawerTabs: {
+    key: 'shell.restoreOperationalDrawerTabs',
+    fallback: 'Show windows',
   },
   focusMode: { key: 'shell.focusMode', fallback: 'Focus Mode' },
   canvasPalette: { key: 'shell.canvasPalette', fallback: 'Canvas background' },
@@ -183,6 +193,8 @@ const COPY_ES: ShellTopBarCopy = {
   languageSpanish: 'Español',
   operationalDrawer: 'Operaciones',
   closeOperationalDrawer: 'Cerrar panel de operaciones',
+  closeOperationalDrawerTab: 'Cerrar {tab}',
+  restoreOperationalDrawerTabs: 'Mostrar ventanas',
   focusMode: 'Modo foco',
   canvasPalette: 'Fondo del canvas',
   canvasColorHexValue: 'Valor hexadecimal',
@@ -268,6 +280,8 @@ export function resolveShellTopBarCopy(locale?: string): ShellTopBarCopy {
     languageSpanish: resolveString(COPY_BY_KEY.languageSpanish, locale),
     operationalDrawer: resolveString(COPY_BY_KEY.operationalDrawer, locale),
     closeOperationalDrawer: resolveString(COPY_BY_KEY.closeOperationalDrawer, locale),
+    closeOperationalDrawerTab: resolveString(COPY_BY_KEY.closeOperationalDrawerTab, locale),
+    restoreOperationalDrawerTabs: resolveString(COPY_BY_KEY.restoreOperationalDrawerTabs, locale),
     focusMode: resolveString(COPY_BY_KEY.focusMode, locale),
     canvasPalette: resolveString(COPY_BY_KEY.canvasPalette, locale),
     canvasColorHexValue: resolveString(COPY_BY_KEY.canvasColorHexValue, locale),

@@ -811,6 +811,13 @@ describe('Canvas workbench screen composition', () => {
       .and('have.attr', 'aria-labelledby', 'bottom-operational-drawer-tab-runs');
     assertViewportHasNoGlobalHorizontalOverflow(390);
     assertNoSeriousAccessibilityViolations('[data-slot="bottom-operational-drawer"]');
+    cy.get('[data-tab-close="preview"]').click();
+    cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="preview"]').should('not.exist');
+    cy.get('[data-slot="bottom-operational-drawer-tabs"]').rightclick();
+    cy.get('[data-restore-tab="preview"]').should('be.visible').click();
+    cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="preview"]')
+      .should('be.visible')
+      .and('have.attr', 'aria-selected', 'true');
 
     openCanvasContextMenuAt(260, 260);
     cy.get('[data-menu-action="open-canvas-settings"]').click();
