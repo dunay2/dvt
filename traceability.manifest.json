@@ -1194,14 +1194,30 @@
       "number": "ADR-0064",
       "decisions": [
         "Admit Substrait as the sole DVT transform authoring authority.",
+        "Attach typed evidence from one admission-group collection.",
+        "Bind catalog entries to exact core or official extension identities.",
+        "Bind exact pinned Plan bytes to one identity-only DVT sidecar.",
+        "Compose one catalog from standard candidates, admissions, and product gaps.",
         "Export the pinned Substrait profile, stable authoring bindings, and single semantic capability catalog through one bounded public contract surface.",
-        "Keep one small versioned governance overlay over exact Substrait identities instead of duplicating its algebra or provider capability model.",
+        "Fail closed when persisted bytes are not one decodable Plan at the pinned version.",
         "Logical transformation semantics stay outside ExecutionPlan; plan steps represent runtime responsibilities only.",
-        "Pin one exact Substrait release and map stable DVT ids to rel_anchor/output ordinals."
+        "Pin one exact Substrait release and map stable DVT ids to rel_anchor/output ordinals.",
+        "Require typed standard-first evidence before semantic admission.",
+        "Retain product gaps separately from standard semantic identities.",
+        "Seed candidates only from pinned core and official extension identities.",
+        "Validate and serialize the capability read model deterministically."
       ],
       "implemented_by": [
+        "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityAdmission.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalogSchema.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityIdentity.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitPlanBinary.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProductNeeds.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProfile.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitStandardCandidates.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSupportedCapabilities.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts",
         "packages/@dvt/contracts/src/substrait.ts"

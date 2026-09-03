@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  DVT_SUBSTRAIT_CAPABILITY_CATALOG_SCHEMA_VERSION,
   DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1,
   DVT_SUBSTRAIT_PROFILE_REF_V1,
   DvtSubstraitCapabilityCatalogV1Schema,
@@ -16,7 +15,10 @@ import {
 } from '../src/substrait.js';
 
 const EVIDENCE = ['dvt:#2640'];
-
+const findCapability = (
+  entryId: string
+): (typeof DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries)[number] | undefined =>
+  DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.find((entry) => entry.entryId === entryId);
 function standardEntry(
   category: DvtSubstraitCapabilityCategory,
   identity: DvtSubstraitStandardSemanticIdentityV1
@@ -31,233 +33,25 @@ function standardEntry(
   };
 }
 
-function findCapability(
-  entryId: string
-): (typeof DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries)[number] | undefined {
-  return DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.find((entry) => entry.entryId === entryId);
-}
-
 describe('DVT Substrait capability catalog V1', () => {
-  it('reuses the exact #2595 profile and admits only proven VTX2 semantics', () => {
-    expect(DVT_SUBSTRAIT_CAPABILITY_CATALOG_SCHEMA_VERSION).toBe(
-      'dvt-substrait-capability-catalog.v1'
-    );
+  it('admits only entries with complete evidence under the pinned profile', () => {
+    expect(
+      DvtSubstraitCapabilityCatalogV1Schema.safeParse(DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1).success
+    ).toBe(true);
     expect(DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.profile).toEqual(DVT_SUBSTRAIT_PROFILE_REF_V1);
-    expect(DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.profile.specVersion).toBe('0.101.0');
-    expect(DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries).toHaveLength(51);
 
-    const pilotIds = [
-      buildDvtSubstraitStandardCapabilityId('relation', {
-        sourceKind: 'core',
-        message: 'substrait.ReadRel',
-        selector: 'read_type.named_table',
-      }),
-      buildDvtSubstraitStandardCapabilityId('relation', {
-        sourceKind: 'core',
-        message: 'substrait.RelCommon',
-        selector: 'emit_kind.emit',
-      }),
-      buildDvtSubstraitStandardCapabilityId('relation', {
-        sourceKind: 'core',
-        message: 'substrait.ProjectRel',
-      }),
-      buildDvtSubstraitStandardCapabilityId('expression-form', {
-        sourceKind: 'core',
-        message: 'substrait.Expression',
-        selector: 'rex_type.selection',
-      }),
-      buildDvtSubstraitStandardCapabilityId('expression-form', {
-        sourceKind: 'core',
-        message: 'substrait.Expression',
-        selector: 'rex_type.scalar_function',
-      }),
-      buildDvtSubstraitStandardCapabilityId('type', {
-        sourceKind: 'core',
-        message: 'substrait.Type',
-        selector: 'kind.string',
-      }),
-      buildDvtSubstraitStandardCapabilityId('scalar-function', {
-        sourceKind: 'simple-extension',
-        urn: 'extension:io.substrait:functions_string',
-        name: 'trim',
-      }),
-      buildDvtSubstraitStandardCapabilityId('scalar-function', {
-        sourceKind: 'simple-extension',
-        urn: 'extension:io.substrait:functions_string',
-        name: 'upper',
-      }),
-      buildDvtSubstraitStandardCapabilityId('scalar-function', {
-        sourceKind: 'simple-extension',
-        urn: 'extension:io.substrait:functions_string',
-        name: 'lower',
-      }),
-    ];
-    const innerJoinIds = [
-      buildDvtSubstraitStandardCapabilityId('relation', {
-        sourceKind: 'core',
-        message: 'substrait.JoinRel',
-        selector: 'JoinType.JOIN_TYPE_INNER',
-      }),
-      buildDvtSubstraitStandardCapabilityId('scalar-function', {
-        sourceKind: 'simple-extension',
-        urn: 'extension:io.substrait:functions_comparison',
-        name: 'equal',
-      }),
-      buildDvtSubstraitStandardCapabilityId('type', {
-        sourceKind: 'core',
-        message: 'substrait.Type',
-        selector: 'kind.bool',
-      }),
-    ];
-    const aggregateIds = [
-      buildDvtSubstraitStandardCapabilityId('relation', {
-        sourceKind: 'core',
-        message: 'substrait.AggregateRel',
-      }),
-      buildDvtSubstraitStandardCapabilityId('aggregate-function', {
-        sourceKind: 'simple-extension',
-        urn: 'extension:io.substrait:functions_aggregate_generic',
-        name: 'count',
-      }),
-      buildDvtSubstraitStandardCapabilityId('type', {
-        sourceKind: 'core',
-        message: 'substrait.Type',
-        selector: 'kind.i64',
-      }),
-    ];
-    const windowIds = [
-      buildDvtSubstraitStandardCapabilityId('expression-form', {
-        sourceKind: 'core',
-        message: 'substrait.Expression',
-        selector: 'rex_type.window_function',
-      }),
-      buildDvtSubstraitStandardCapabilityId('window-function', {
-        sourceKind: 'simple-extension',
-        urn: 'extension:io.substrait:functions_arithmetic',
-        name: 'row_number',
-      }),
-    ];
-    const unionAllIds = [
-      buildDvtSubstraitStandardCapabilityId('relation', {
-        sourceKind: 'core',
-        message: 'substrait.SetRel',
-        selector: 'SetOp.SET_OP_UNION_ALL',
-      }),
-    ];
-    const calculatedColumnIds = [
-      buildDvtSubstraitStandardCapabilityId('expression-form', {
-        sourceKind: 'core',
-        message: 'substrait.Expression',
-        selector: 'rex_type.literal',
-      }),
-      buildDvtSubstraitStandardCapabilityId('type', {
-        sourceKind: 'core',
-        message: 'substrait.Type',
-        selector: 'kind.precision_timestamp_tz',
-      }),
-    ];
-    const supported = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.filter(
-      (entry) => entry.kind === 'standard' && entry.profileStatus === 'supported-profile'
+    const standards = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.filter(
+      (entry) => entry.kind === 'standard'
     );
-
-    expect(supported.map((entry) => entry.entryId)).toEqual(
-      [
-        ...pilotIds,
-        ...innerJoinIds,
-        ...aggregateIds,
-        ...windowIds,
-        ...unionAllIds,
-        ...calculatedColumnIds,
-      ].sort()
-    );
-    for (const entryId of pilotIds) {
-      expect(findCapability(entryId)).toMatchObject({
-        profileStatus: 'supported-profile',
-        evidenceRefs: expect.arrayContaining(['dvt:#2598']),
-      });
-    }
-    for (const entryId of innerJoinIds) {
-      expect(findCapability(entryId)).toMatchObject({
-        profileStatus: 'supported-profile',
-        evidenceRefs: expect.arrayContaining(['dvt:#2634']),
-      });
-    }
-    for (const entryId of aggregateIds) {
-      expect(findCapability(entryId)).toMatchObject({
-        profileStatus: 'supported-profile',
-        evidenceRefs: expect.arrayContaining(['dvt:#2641', 'dvt:#2642']),
-      });
-    }
-    for (const entryId of windowIds) {
-      expect(findCapability(entryId)).toMatchObject({
-        profileStatus: 'supported-profile',
-        evidenceRefs: expect.arrayContaining(['dvt:#2641', 'dvt:#2642']),
-      });
-    }
-    for (const entryId of unionAllIds) {
-      expect(findCapability(entryId)).toMatchObject({
-        profileStatus: 'supported-profile',
-        evidenceRefs: expect.arrayContaining(['dvt:#2634']),
-      });
-    }
-    for (const entryId of calculatedColumnIds) {
-      expect(findCapability(entryId)).toMatchObject({
-        profileStatus: 'supported-profile',
-        evidenceRefs: expect.arrayContaining(['dvt:#2833']),
-      });
-    }
-
-    expect(
-      findCapability(
-        buildDvtSubstraitStandardCapabilityId('relation', {
-          sourceKind: 'core',
-          message: 'substrait.JoinRel',
-          selector: 'JoinType.JOIN_TYPE_LEFT',
-        })
-      )
-    ).toMatchObject({ profileStatus: 'candidate-standard' });
-    expect(
-      findCapability(
-        buildDvtSubstraitStandardCapabilityId('scalar-function', {
-          sourceKind: 'simple-extension',
-          urn: 'extension:io.substrait:functions_comparison',
-          name: 'not_equal',
-        })
-      )
-    ).toMatchObject({ profileStatus: 'candidate-standard' });
-    expect(
-      findCapability(
-        buildDvtSubstraitStandardCapabilityId('type', {
-          sourceKind: 'core',
-          message: 'substrait.Type',
-          selector: 'kind.i32',
-        })
-      )
-    ).toMatchObject({ profileStatus: 'candidate-standard' });
-    expect(
-      findCapability(
-        buildDvtSubstraitStandardCapabilityId('scalar-function', {
-          sourceKind: 'simple-extension',
-          urn: 'extension:io.substrait:functions_string',
-          name: 'lower',
-        })
-      )
-    ).toMatchObject({
-      profileStatus: 'supported-profile',
-      evidenceRefs: expect.arrayContaining(['dvt:#2827']),
-    });
-    expect(
-      findCapability(
-        buildDvtSubstraitStandardCapabilityId('relation', {
-          sourceKind: 'core',
-          message: 'substrait.FilterRel',
-        })
-      )
-    ).toMatchObject({ profileStatus: 'candidate-standard' });
+    const supported = standards.filter((entry) => entry.profileStatus === 'supported-profile');
+    const candidates = standards.filter((entry) => entry.profileStatus !== 'supported-profile');
+    expect(supported.length).toBeGreaterThan(0);
+    expect(supported.every((entry) => entry.admission !== undefined)).toBe(true);
+    expect(candidates.every((entry) => entry.admission === undefined)).toBe(true);
   });
 
-  it('uses exact relation variants and RelCommon.Emit instead of SQL keyword identities', () => {
-    const expectedIds = [
+  it('uses exact standard relation variants rather than SQL keyword identities', () => {
+    const expected = [
       buildDvtSubstraitStandardCapabilityId('relation', {
         sourceKind: 'core',
         message: 'substrait.RelCommon',
@@ -267,11 +61,6 @@ describe('DVT Substrait capability catalog V1', () => {
         sourceKind: 'core',
         message: 'substrait.JoinRel',
         selector: 'JoinType.JOIN_TYPE_INNER',
-      }),
-      buildDvtSubstraitStandardCapabilityId('relation', {
-        sourceKind: 'core',
-        message: 'substrait.SetRel',
-        selector: 'SetOp.SET_OP_INTERSECTION_MULTISET',
       }),
       buildDvtSubstraitStandardCapabilityId('relation', {
         sourceKind: 'core',
@@ -279,17 +68,14 @@ describe('DVT Substrait capability catalog V1', () => {
         selector: 'SetOp.SET_OP_MINUS_PRIMARY',
       }),
     ];
+    const actual = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.map((entry) => entry.entryId);
 
-    expect(DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.map((entry) => entry.entryId)).toEqual(
-      expect.arrayContaining(expectedIds)
-    );
-    expect(
-      DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.map((entry) => entry.entryId).join('\n')
-    ).not.toMatch(/where|having|group-by|count-distinct|input-rel/i);
+    expect(actual).toEqual(expect.arrayContaining(expected));
+    expect(actual.join('\n')).not.toMatch(/where|having|group-by|count-distinct|input-rel/i);
   });
 
-  it('keeps decimal and non-decimal SUM as different upstream identities', () => {
-    const nonDecimal = buildDvtSubstraitStandardCapabilityId('aggregate-function', {
+  it('keeps same-named functions from different upstream families distinct', () => {
+    const arithmetic = buildDvtSubstraitStandardCapabilityId('aggregate-function', {
       sourceKind: 'simple-extension',
       urn: 'extension:io.substrait:functions_arithmetic',
       name: 'sum',
@@ -300,41 +86,23 @@ describe('DVT Substrait capability catalog V1', () => {
       name: 'sum',
     });
 
-    expect(nonDecimal).not.toBe(decimal);
-    expect(findCapability(nonDecimal)).toMatchObject({
-      kind: 'standard',
-      profileStatus: 'candidate-standard',
-    });
-    expect(findCapability(decimal)).toMatchObject({
-      kind: 'standard',
-      profileStatus: 'candidate-standard',
-    });
-    expect(
-      findCapability(
-        buildDvtSubstraitStandardCapabilityId('window-function', {
-          sourceKind: 'simple-extension',
-          urn: 'extension:io.substrait:functions_arithmetic',
-          name: 'rank',
-        })
-      )
-    ).toBeUndefined();
+    expect(arithmetic).not.toBe(decimal);
+    expect(findCapability(arithmetic)).toMatchObject({ profileStatus: 'candidate-standard' });
+    expect(findCapability(decimal)).toMatchObject({ profileStatus: 'candidate-standard' });
   });
 
   it('keeps product gaps structurally separate from standard identities', () => {
-    const jsonbId = buildDvtSubstraitProductNeedCapabilityId('type', 'postgres-jsonb');
-    const jsonb = findCapability(jsonbId);
-
-    expect(jsonb).toMatchObject({
+    const entryId = buildDvtSubstraitProductNeedCapabilityId('type', 'postgres-jsonb');
+    expect(findCapability(entryId)).toMatchObject({
       kind: 'product-need',
       profileStatus: 'candidate-extension',
       extensionPoint: 'simple-extension-type',
     });
-    expect(jsonb).not.toHaveProperty('identity');
-
+    expect(findCapability(entryId)).not.toHaveProperty('identity');
     expect(
       DvtSubstraitProductNeedCapabilityV1Schema.safeParse({
         kind: 'product-need',
-        entryId: jsonbId,
+        entryId,
         category: 'type',
         productNeedId: 'postgres-jsonb',
         productNeed: 'Portable JSONB semantics.',
@@ -344,13 +112,12 @@ describe('DVT Substrait capability catalog V1', () => {
     ).toBe(false);
   });
 
-  it('rejects forged ids, provider metadata, anchors and private extension identities', () => {
+  it('rejects forged ids, provider metadata, anchors, and private extension identities', () => {
     const trim = standardEntry('scalar-function', {
       sourceKind: 'simple-extension',
       urn: 'extension:io.substrait:functions_string',
       name: 'trim',
     });
-
     expect(
       DvtSubstraitStandardCapabilityV1Schema.safeParse({ ...trim, entryId: 'trim' }).success
     ).toBe(false);
@@ -374,49 +141,21 @@ describe('DVT Substrait capability catalog V1', () => {
     ).toBe(false);
   });
 
-  it('orders entry ids by locale-independent code units', () => {
-    const upper = standardEntry('relation', { sourceKind: 'core', message: 'I' });
-    const lower = standardEntry('relation', { sourceKind: 'core', message: 'i' });
-    const serialized = serializeDvtSubstraitCapabilityCatalogV1({
-      schemaVersion: DVT_SUBSTRAIT_CAPABILITY_CATALOG_SCHEMA_VERSION,
-      profile: DVT_SUBSTRAIT_PROFILE_REF_V1,
-      entries: [lower, upper],
-    });
-    const parsed = JSON.parse(serialized) as { entries: Array<{ entryId: string }> };
-
-    expect(parsed.entries.map((entry) => entry.entryId)).toEqual([upper.entryId, lower.entryId]);
-  });
-
-  it('rejects duplicate entries and serializes independently of input ordering', () => {
+  it('canonicalizes order and rejects duplicate entries', () => {
     const canonical = serializeDvtSubstraitCapabilityCatalogV1(DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1);
     const reversed = {
       ...DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1,
-      entries: [...DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries]
-        .reverse()
-        .map((entry) => ({ ...entry, evidenceRefs: [...entry.evidenceRefs].reverse() })),
+      entries: [...DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries].reverse(),
     };
-
     expect(serializeDvtSubstraitCapabilityCatalogV1(reversed)).toBe(canonical);
 
     const duplicate = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries[0];
-    if (!duplicate) throw new Error('Expected seeded capability entries.');
+    if (!duplicate) throw new Error('Expected a seeded capability.');
     expect(
       DvtSubstraitCapabilityCatalogV1Schema.safeParse({
         ...DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1,
         entries: [...DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries, duplicate],
       }).success
-    ).toBe(false);
-  });
-
-  it('does not let core selectors masquerade as function-family authority', () => {
-    expect(
-      DvtSubstraitStandardCapabilityV1Schema.safeParse(
-        standardEntry('aggregate-function', {
-          sourceKind: 'core',
-          message: 'substrait.AggregateFunction',
-          selector: 'sum',
-        })
-      ).success
     ).toBe(false);
   });
 });

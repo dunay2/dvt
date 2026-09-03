@@ -1,0 +1,22 @@
+---
+id: R-20260903-SUBSTRAIT-CAPABILITY-ADMISSION
+title: Capability evidence can drift into unsupported semantic or provider claims
+status: Open
+date: 2026-09-03
+owners:
+  - packages/@dvt/contracts
+severity: Medium
+probability: Low
+---
+mitigation:
+  summary: >
+    Supported-profile entries require typed standard-first evidence. Semantic, target, and visual
+    postures remain independent; provider-native support cannot be inferred from mapping. Bounded
+    DVT proposals fail when a reviewed standard identity exists or upstream-gap evidence is absent.
+  evidence:
+    - docs/evidence/ED-20260903-vtx2-standard-first-capability-admission.md
+    - docs/planning/proposals/mandatory/runtime-and-contracts/vtx2-standard-first-capability-admission-plan-20260903.md
+    - packages/@dvt/contracts/test/dvt-substrait-capability-admission.contract.test.ts
+    - packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts
+  follow_up:
+    - Require this admission contract before structured-type work can unblock issue #2771.
