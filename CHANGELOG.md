@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.11.0 (2026-09-03)
+
+## What's Changed
+* feat(web): Retire DVT SQL-first Canvas execution by @dunay2 in https://github.com/dunay2/dvt/pull/2855
+* refactor(web): Make Substrait the sole DVT authoring authority by @dunay2 in https://github.com/dunay2/dvt/pull/2857
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.10.0...v0.11.0
+
 ## 0.10.0 (2026-09-03)
 
 ## What's Changed
