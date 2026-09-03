@@ -3,6 +3,7 @@ import {
   WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE,
   WORKSPACE_GRAPH_DRAFT_CAPABILITY_REASON,
   type DvtSubstraitSemanticDocumentV1,
+  type DvtTransformAuthoringAuthorityV1,
   type WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
 
@@ -95,7 +96,9 @@ export function writableSemanticDecision(): WorkspaceGraphDraftDecisionContext {
   };
 }
 
-export function readTransformAuthority(draft: WorkspaceGraphAuthoringDraft) {
+export function readTransformAuthority(
+  draft: WorkspaceGraphAuthoringDraft
+): DvtTransformAuthoringAuthorityV1 {
   const transform = draft.nodes.find(({ kind }) => kind === 'dvt:transform');
   return DvtTransformAuthoringAuthorityV1Schema.parse(transform?.metadata?.transformAuthoring);
 }
