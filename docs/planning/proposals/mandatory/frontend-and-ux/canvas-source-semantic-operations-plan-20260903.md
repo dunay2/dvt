@@ -13,11 +13,10 @@ task_id: 2894
 
 ### Problem and root cause
 
-A connection-backed Source cannot own the canonical relational operations available to a
-Transform. The calculated-column path hides that limit by changing Source to `dvt:transform`,
-losing the visible Source role. The cause is a node-kind restriction around the existing
-Substrait authority, not a missing filter DSL. `FilterRel` is already a standard candidate;
-`equal`, string literal and string type are admitted.
+A connection-backed Source cannot own the canonical relational operations available to a Transform.
+The calculated-column path hides that limit by changing Source to `dvt:transform`, losing the visible
+Source role. The cause is a node-kind restriction around the existing Substrait authority, not a
+missing filter DSL. `FilterRel`, `equal`, string literal and string type are already candidates.
 
 ### Invariants
 
@@ -37,8 +36,7 @@ Substrait authority, not a missing filter DSL. `FilterRel` is already a standard
 4. Selected: Source retains physical identity and carries the same optional semantic envelope;
    one shared operation editor serves Source and Transform.
 
-No library is added; the pinned protobufs, capability catalog and PostgreSQL AST/deparser cover
-the bounded shape.
+No library is added; pinned protobufs, capability catalog and PostgreSQL AST/deparser cover the shape.
 
 ## Current And Target
 
@@ -56,16 +54,15 @@ flowchart LR
 
 ## First Slice
 
-One PostgreSQL Source can add, edit and remove `text_field = string_literal`. The UI derives
-the operation from its canonical capability ID, binds a stable sidecar FieldId, and uses the
-existing Apply/Cancel lifecycle. Reload, card summary and PostgreSQL use the same revision.
+One PostgreSQL Source can add, edit and remove `text_field = string_literal`. The UI derives the
+operation from its canonical capability ID, binds a stable sidecar FieldId, and uses Apply/Cancel.
+Reload, card summary and PostgreSQL use the same revision.
 Other predicates and broader operation parity remain in #2894.
 
 ## Implemented Increment
 
-The first bounded slice now admits one PostgreSQL text equality `FilterRel`, exposes the same
-filter editor on Source and Transform, persists the semantic document through the existing
-graph-draft command, restores it after reload, projects deterministic PostgreSQL, and shows a
+The first slice admits one PostgreSQL text equality `FilterRel`, exposes the filter editor on Source
+and Transform, persists through the existing graph-draft command, restores after reload, and shows a
 compact card summary. Source kind, imported connection authority and physical provenance remain
 unchanged. The visible local stack and the focused Cypress flow both proved apply, reload and
 remove.
@@ -163,34 +160,41 @@ redGreenCycles:
     expectedFailure: strict FilterRel mutation/inspection/removal is absent.
     patchSurfaces: [apps/web/src/app/views/canvas/**, apps/web/src/app/plugins/graph/**]
     greenTest: pnpm --filter @dvt/web test:canvas:run -- canvasDvtSubstraitFilter.test.ts
+symbolDefaults: &symbolDefaults { dddOwner: DvtSubstraitSemanticDocumentV1, cqRails: [ConfigureCanvasDvtNode, GetWorkspaceGraphDraft], fowlerSignals: [Duplicate semantics, Hidden authority], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-SOURCE-SEMANTIC-OPERATIONS-2894, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasDvtSubstraitFilter.test.ts] }
 symbols:
-  - name: dvtSubstraitTextEquality
-    path: apps/web/src/app/views/canvas/canvasDvtSubstraitTextEquality.ts
-    dddOwner: Substrait equality expression
-    cqRails: [ConfigureCanvasDvtNode]
-    fowlerSignals: [Duplicate semantics]
-    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-SOURCE-SEMANTIC-OPERATIONS-2894
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts
-    unitTests: [apps/web/src/app/views/canvas/canvasDvtSubstraitFilter.test.ts]
-  - &filter
-    name: DvtSubstraitFilter
-    path: apps/web/src/app/views/canvas/canvasDvtSubstraitFilter.ts
-    dddOwner: DvtSubstraitSemanticDocumentV1
-    cqRails: [ConfigureCanvasDvtNode, GetWorkspaceGraphDraft]
-    fowlerSignals: [Primitive obsession, Hidden authority]
-    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-SOURCE-SEMANTIC-OPERATIONS-2894
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts
-    unitTests: [apps/web/src/app/views/canvas/canvasDvtSubstraitFilter.test.ts]
-  - { <<: *filter, name: resolveDvtSubstraitFilterCapabilities }
-  - { <<: *filter, name: applyDvtSubstraitFilter }
-  - { <<: *filter, name: inspectDvtSubstraitFilter }
-  - { <<: *filter, name: removeDvtSubstraitFilter }
-  - name: DvtRelationFilterAuthoringSection
-    path: apps/web/src/app/views/canvas/DvtRelationFilterAuthoringSection.tsx
-    dddOwner: Canvas relation-operation presentation
-    cqRails: [ConfigureCanvasDvtNode]
-    fowlerSignals: [Duplicate semantics]
-    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-SOURCE-SEMANTIC-OPERATIONS-2894
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts
-    unitTests: [apps/web/src/app/views/canvas/DvtAuthoringFields.test.tsx]
+  - { <<: *symbolDefaults, name: dvtSubstraitTextEquality, path: apps/web/src/app/views/canvas/canvasDvtSubstraitTextEquality.ts }
+  - { <<: *symbolDefaults, name: DvtSubstraitFilter, path: apps/web/src/app/views/canvas/canvasDvtSubstraitFilter.ts }
+  - { <<: *symbolDefaults, name: resolveDvtSubstraitFilterCapabilities, path: apps/web/src/app/views/canvas/canvasDvtSubstraitFilter.ts }
+  - { <<: *symbolDefaults, name: applyDvtSubstraitFilter, path: apps/web/src/app/views/canvas/canvasDvtSubstraitFilter.ts }
+  - { <<: *symbolDefaults, name: inspectDvtSubstraitFilter, path: apps/web/src/app/views/canvas/canvasDvtSubstraitFilter.ts }
+  - { <<: *symbolDefaults, name: removeDvtSubstraitFilter, path: apps/web/src/app/views/canvas/canvasDvtSubstraitFilter.ts }
+  - { <<: *symbolDefaults, name: DvtRelationFilterAuthoringSection, path: apps/web/src/app/views/canvas/DvtRelationFilterAuthoringSection.tsx }
+  - { <<: *symbolDefaults, name: DraftSave, path: apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts }
+  - { <<: *symbolDefaults, name: latestFilter, path: apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts }
+  - { <<: *symbolDefaults, name: openSourceColumns, path: apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts }
+  - { <<: *symbolDefaults, name: sourceCard, path: apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts }
+  - { <<: *symbolDefaults, name: stubCanvas, path: apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts }
+  - { <<: *symbolDefaults, name: visitCanvas, path: apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts }
+  - { <<: *symbolDefaults, name: buildDvtGraphNodeSemanticMetric, path: apps/web/src/app/plugins/dvt/dvtGraphNodeSemanticMetric.ts }
+  - { <<: *symbolDefaults, name: applyDvtSourceSemanticDraft, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts }
+  - { <<: *symbolDefaults, name: createDvtSourceSemanticDraft, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts }
+  - { <<: *symbolDefaults, name: outputFieldId, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts }
+  - { <<: *symbolDefaults, name: FILTER_ID, path: apps/web/src/app/views/canvas/canvasDvtSubstraitFilter.ts }
+  - { <<: *symbolDefaults, name: STRING_TYPES, path: apps/web/src/app/views/canvas/canvasDvtSubstraitFilter.ts }
+  - { <<: *symbolDefaults, name: clonePlan, path: apps/web/src/app/views/canvas/canvasDvtSubstraitFilter.ts }
+  - { <<: *symbolDefaults, name: encodeDvtSubstraitFilterDocument, path: apps/web/src/app/views/canvas/canvasDvtSubstraitFilter.ts }
+  - { <<: *symbolDefaults, name: rootProject, path: apps/web/src/app/views/canvas/canvasDvtSubstraitFilter.ts }
+  - { <<: *symbolDefaults, name: stripFilter, path: apps/web/src/app/views/canvas/canvasDvtSubstraitFilter.ts }
+  - { <<: *symbolDefaults, name: resolveDvtSubstraitFilterPostgresProjection, path: apps/web/src/app/views/canvas/canvasDvtSubstraitFilterPostgresProjection.ts }
+  - { <<: *symbolDefaults, name: pgEquals, path: apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresAst.ts }
+  - { <<: *symbolDefaults, name: DvtSubstraitSemanticDraft, path: apps/web/src/app/views/canvas/canvasDvtSubstraitSemanticDocument.ts }
+  - { <<: *symbolDefaults, name: bytesToBase64, path: apps/web/src/app/views/canvas/canvasDvtSubstraitSemanticDocument.ts }
+  - { <<: *symbolDefaults, name: decodeDvtSubstraitSemanticDocument, path: apps/web/src/app/views/canvas/canvasDvtSubstraitSemanticDocument.ts }
+  - { <<: *symbolDefaults, name: encodeDvtSubstraitSemanticDocument, path: apps/web/src/app/views/canvas/canvasDvtSubstraitSemanticDocument.ts }
+  - { <<: *symbolDefaults, name: EQUAL_ID, path: apps/web/src/app/views/canvas/canvasDvtSubstraitTextEquality.ts }
+  - { <<: *symbolDefaults, name: EqualityInspection, path: apps/web/src/app/views/canvas/canvasDvtSubstraitTextEquality.ts }
+  - { <<: *symbolDefaults, name: URN, path: apps/web/src/app/views/canvas/canvasDvtSubstraitTextEquality.ts }
+  - { <<: *symbolDefaults, name: ensureFunction, path: apps/web/src/app/views/canvas/canvasDvtSubstraitTextEquality.ts }
+  - { <<: *symbolDefaults, name: fieldReference, path: apps/web/src/app/views/canvas/canvasDvtSubstraitTextEquality.ts }
+  - { <<: *symbolDefaults, name: assertDvtSemanticNode, path: apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.ts }
 ```
