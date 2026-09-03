@@ -11,12 +11,15 @@ probability: Low
 mitigation:
   summary: >
     Parent references are validated against one relation, sibling order is scoped to the parent,
-    ancestry cycles and duplicate identities fail closed, and visual and PostgreSQL postures remain
-    unavailable until the vertical authoring slice proves agreement with the canonical Plan.
+    ancestry cycles and duplicate identities fail closed, and the visual authoring flow now proves
+    autosave and reload agreement with the canonical Plan. PostgreSQL projection remains
+    unavailable.
   evidence:
     - docs/evidence/ED-20260903-substrait-structured-field-gate.md
     - docs/planning/proposals/mandatory/frontend-and-ux/canvas-structured-transform-fields-plan-20260903.md
     - packages/@dvt/contracts/test/dvt-substrait-semantic-document-decoding.contract.test.ts
     - packages/@dvt/contracts/test/dvt-substrait-struct-capability.contract.test.ts
+    - apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts
   follow_up:
-    - Close only after card, inspector, lineage, reload and supported target projections agree.
+    - Keep open until a supported target projection proves agreement with card, inspector, lineage
+      and reload.
