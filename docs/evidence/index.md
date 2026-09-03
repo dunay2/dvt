@@ -207,6 +207,7 @@ Evidence documents that justify or validate relevant changes.
 - [Temporal worker DBT Docker canary](ed-20260514-temporal-worker-dbt-canary.md)
 - [Transform column comment authoring evidence](ED-20260902-transform-column-comments.md)
 - [Transform function alias authoring evidence](ED-20260902-transform-function-alias-authoring.md)
+- [VTX1 authoring authority hard cut](ED-20260903-vtx1-authoring-hardcut.md)
 - [VTX2 Substrait grouping and count authoring evidence](ED-20260831-vtx2-substrait-grouping.md)
 - [VTX2 Substrait row-number window authoring evidence](ED-20260831-vtx2-substrait-row-number-window.md)
 - [VTX2 Substrait UNION ALL authoring evidence](ED-20260831-vtx2-substrait-union-all.md)
