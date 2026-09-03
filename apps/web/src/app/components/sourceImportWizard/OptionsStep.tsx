@@ -26,7 +26,11 @@ export function OptionsStep({
       </div>
 
       {sourceImportOptions.map((option) => (
-        <Card key={option.id} className="border-slate-600 p-4">
+        <Card
+          key={option.id}
+          className="border-slate-600 p-4"
+          data-source-import-option={option.id}
+        >
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
               <h4 className="mb-1 text-sm font-medium">{resolveString(option.label, language)}</h4>

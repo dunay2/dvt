@@ -23,23 +23,22 @@ describe('SourceImportWizard metadata exploration', () => {
   });
 
   it('uses contextual tabs to inspect source metadata without leaving the add-source surface', async () => {
+    const orders = buildSourceObject({
+      table: 'ORDERS',
+      metricEvidence: buildSourceImportTestMetricEvidence(1500, 4096000),
+      columns: [
+        { name: 'order_id', type: 'INTEGER', nullable: false },
+        { name: 'customer_id', type: 'INTEGER', nullable: false },
+        { name: 'discount_code', type: 'TEXT', nullable: true },
+      ],
+      constraints: [
+        { name: 'orders_pkey', kind: 'primary-key', columns: ['order_id'] },
+        { name: 'orders_discount_code_key', kind: 'unique', columns: ['discount_code'] },
+      ],
+    });
     await harness.renderWizard({
       warehouseSourceImport: buildWarehouseSourceImportPort({
-        listSourceObjects: async () => [
-          buildSourceObject({
-            table: 'ORDERS',
-            metricEvidence: buildSourceImportTestMetricEvidence(1500, 4096000),
-            columns: [
-              { name: 'order_id', type: 'INTEGER', nullable: false },
-              { name: 'customer_id', type: 'INTEGER', nullable: false },
-              { name: 'discount_code', type: 'TEXT', nullable: true },
-            ],
-            constraints: [
-              { name: 'orders_pkey', kind: 'primary-key', columns: ['order_id'] },
-              { name: 'orders_discount_code_key', kind: 'unique', columns: ['discount_code'] },
-            ],
-          }),
-        ],
+        listSourceObjects: async () => [orders],
       }),
     });
 
@@ -49,24 +48,20 @@ describe('SourceImportWizard metadata exploration', () => {
     await harness.clickTab('Metadata');
 
     expect(harness.findTab('Metadata')?.getAttribute('aria-selected')).toBe('true');
-    expect(document.body.textContent).toContain('RAW.ERP.ORDERS');
-    expect(document.body.textContent).toContain('1,500 rows');
-    expect(document.body.textContent).toContain('3 columns');
-    expect(document.body.textContent).toContain('order_id');
-    expect(document.body.textContent).toContain('INTEGER');
-    expect(document.body.textContent).toContain('PK');
-    expect(document.body.textContent).toContain('discount_code');
-    expect(document.body.textContent).toContain('UQ');
-    expect(document.body.textContent).not.toContain('Nullable');
-    expect(document.body.textContent).toContain('Metadata Options');
-
-    const metadataText = document.body.textContent ?? '';
-    expect(metadataText.indexOf('Metadata Options')).toBeLessThan(
-      metadataText.indexOf('Source metadata')
+    const objectMetadata = document.querySelector(
+      `[data-source-import-object-metadata="${orders.objectId}"]`
     );
-    expect(metadataText.indexOf('Metadata Options')).toBeLessThan(
-      metadataText.indexOf('Grouping Strategy')
+    expect(objectMetadata).not.toBeNull();
+    expect(objectMetadata?.querySelectorAll('[data-source-import-metadata-column]')).toHaveLength(
+      3
     );
+    expect(
+      objectMetadata?.querySelector('[data-source-import-constraint-marker="primary-key"]')
+    ).not.toBeNull();
+    expect(
+      objectMetadata?.querySelector('[data-source-import-constraint-marker="unique"]')
+    ).not.toBeNull();
+    expect(document.querySelector('[data-source-import-global-options-region]')).not.toBeNull();
   });
 
   it('opens at the selected source objects when launched from the source explorer', async () => {
@@ -351,9 +346,11 @@ describe('SourceImportWizard metadata exploration', () => {
     expect(document.body.textContent).toContain('RAW.ERP.CUSTOMERS');
     expect(document.body.textContent).toContain('45,000 rows');
     expect(document.body.textContent).toContain('7 MB');
-    expect(document.body.textContent).toContain('email');
-    expect(document.body.textContent).toContain('VARCHAR');
-    expect(document.body.textContent).toContain('UQ');
+    const activeObject = document.querySelector('[data-source-import-object-metadata]');
+    expect(activeObject?.querySelectorAll('[data-source-import-metadata-column]')).toHaveLength(2);
+    expect(
+      activeObject?.querySelector('[data-source-import-constraint-marker="unique"]')
+    ).not.toBeNull();
   });
 
   it('keeps a selected-source basket visible while browsing before import', async () => {

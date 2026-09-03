@@ -5,7 +5,7 @@ import { Card } from '../ui/card';
 import { Input } from '../ui/input';
 import { ScrollArea } from '../ui/scroll-area';
 import { useSourceImportLocalization } from './copy';
-import { SourceImportActiveObjectMetadata } from './SourceImportActiveObjectMetadata';
+import { SourceImportObjectsMetadata } from './SourceImportObjectsMetadata';
 import { SourceImportCatalogView } from './SourceImportCatalogView';
 import { SourceImportSelectionBasket } from './SourceImportSelectionBasket';
 import {
@@ -135,7 +135,11 @@ export function SelectionStep({
             </ScrollArea>
           </div>
           <div className={sourceImportSelectionStepClassNames.detail}>
-            <SourceImportActiveObjectMetadata activeSourceObject={activeBrowseSourceObject} />
+            <SourceImportObjectsMetadata
+              sourceObjects={activeBrowseSourceObject ? [activeBrowseSourceObject] : []}
+              activeSourceObjectKey={catalogViewModel.activeSourceObject?.identityKey ?? null}
+              scope="active"
+            />
             <SourceImportSelectionBasket
               selectedSourceObjects={catalogViewModel.selectedSourceObjects}
               onRemoveSourceObject={onToggleSourceObject}

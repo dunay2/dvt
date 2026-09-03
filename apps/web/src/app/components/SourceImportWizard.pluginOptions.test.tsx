@@ -59,9 +59,13 @@ describe('SourceImportWizard plugin options', () => {
     await harness.clickSourceObjectInspectionButton('ORDERS');
     await harness.clickTab('Metadata');
 
-    expect(document.body.textContent).toContain('Include Column Metadata');
-    expect(document.body.textContent).not.toContain('Add Generic Tests');
-    expect(document.body.textContent).not.toContain('Add Freshness Checks');
+    const globalOptions = document.querySelector('[data-source-import-global-options-region]');
+    expect(globalOptions?.querySelectorAll('[data-source-import-option]')).toHaveLength(1);
+    expect(
+      globalOptions?.querySelector('[data-source-import-option="includeColumns"]')
+    ).not.toBeNull();
+    expect(globalOptions?.querySelector('[data-source-import-option="addTests"]')).toBeNull();
+    expect(globalOptions?.querySelector('[data-source-import-option="addFreshness"]')).toBeNull();
   });
 
   it('applies plugin option defaults when runtime declarations arrive after mount', async () => {
