@@ -23,7 +23,7 @@ invention ahead of `TF-C4` and `TF-E2`.
 - `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringCommand.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/ExecutionSelection.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/ExecutableSubgraph.v1.ts`
-- `packages/@dvt/contracts/src/contracts/planner/TransformationFlowDesignGraph.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts`
 - `packages/@dvt/contracts/src/schemas.ts`
 - `packages/@dvt/contracts/src/validation.ts`
 - `docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-graph-draft-persistence-boundary-plan-20260416.md`
@@ -99,16 +99,17 @@ authoring truth. The payload can represent zero nodes, one node, disconnected
 graphs, and partially connected graphs. Those states are valid authoring states
 even when they are not compile-ready.
 
-`DesignGraphDraft` remains a derived preview/run artifact. It must not be
-accepted as the protected draft save payload.
+The persisted authoring draft is projected into the canonical VTX2 Substrait
+plan only after execution selection. Compile-shaped payloads must not be
+accepted as the protected draft save model.
 
 ```mermaid
 flowchart LR
   Draft["WorkspaceGraphAuthoringDraft"] --> Save["WorkspaceGraphDraftSaveRequest"]
   Draft --> Selection["ExecutionSelection"]
   Selection --> Subgraph["Executable selected subgraph"]
-  Subgraph --> Compile["DesignGraphDraft"]
-  Save -. must not accept .-> Legacy["DesignGraphDraft as editable payload"]
+  Subgraph --> Compile["Canonical Substrait plan"]
+  Save -. must not accept .-> Legacy["Compile artifact as editable payload"]
 ```
 
 ## Selection-to-execution seam
@@ -162,5 +163,5 @@ envelope.
 
 - [Planner contracts index](./index.md)
 - [Execution selection and executable subgraph v1](./execution-selection-and-executable-subgraph-v1.md)
-- [Transformation flow preview and design graph v1](./transformation-flow-preview-v1.md)
+- [ADR-0064: Substrait semantic reference](../../adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md)
 - [Workspace authoring draft aggregate](../../architecture/components/planner/workspace-authoring-draft-aggregate.md)

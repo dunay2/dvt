@@ -67,8 +67,6 @@ blending them into one hook or one controller-local helper file.
 
 The public APIs of the component are:
 
-- `projectDesignGraphDraft(...)`
-- `projectDesignGraphDraftSemanticGraph(...)`
 - `projectProtectedWorkspaceGraphDraftRecord(...)`
 - `projectCanvasDraftReadModel(...)`
 - `buildCanvasAuthoringGraphProjection(...)`
@@ -76,6 +74,7 @@ The public APIs of the component are:
 - `useCanvasAuthoringProjection(...)`
 - `useCanvasViewportGraphModel(...)`
 - `buildCanvasCanonicalSnapshot(...)`
+- `resolveDvtSubstraitProjectionSource(...)`
 
 This is a multi-surface component, not one namespaced object, because it spans:
 

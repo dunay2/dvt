@@ -1,0 +1,27 @@
+---
+id: R-20260903-VTX2-PREVIEW-CONTRACT-HARDCUT
+title: Preview consumers could attempt the removed SQL-first contract
+status: Open
+date: 2026-09-03
+owners:
+  - packages/@dvt/contracts
+  - api
+  - web
+severity: Medium
+probability: Low
+---
+mitigation:
+  summary: >
+    The shared schema admits only planner-generic-v1, the API has one generic planner path, and
+    Canvas no longer exposes or constructs the retired SQL-first profile. Contract, API, web, and
+    runtime-proof tests exercise the remaining rail and reject malformed or retired inputs without
+    compatibility aliases. The next ordered #2600 slice removes runtime-only SQL step handlers.
+  evidence:
+    - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
+    - docs/evidence/ED-20260903-vtx2-preview-contract-hardcut.md
+    - docs/planning/proposals/mandatory/runtime-and-contracts/vtx2-preview-contract-hardcut-plan-20260903.md
+    - packages/@dvt/contracts/test/validation/preview.ts
+    - apps/api/test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts
+    - apps/web/src/app/services/plans/plansService.preview.test.ts
+  follow_up:
+    - Issue #2600 owns removal of the remaining runtime-only SQL step handlers.

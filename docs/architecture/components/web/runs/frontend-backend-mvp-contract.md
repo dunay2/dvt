@@ -52,14 +52,11 @@ This contract is route-truth only. It does not introduce new backend behavior.
 
 Preview-route rule:
 
-- `transformation-sql-first-v2` requires request-side `provenance.graphArtifact`
-  and `provenance.sqlArtifact`, plus one shared PostgreSQL `ConnectionRef`
-  across all governed SQL-first step configs
-- frontend callers must materialize the current `DesignGraphDraft` authoring
-  artifact at the configured `graphArtifactPath` before calling preview and
-  hash that saved content for `provenance.graphArtifact.contentSha256`
-- frontend callers must fail closed when Git repo, graph artifact path, branch,
-  or commit are not explicitly configured for that profile
+- `/plans/preview` accepts only the shared `planner-generic-v1` profile
+- DVT authoring is projected through the canonical Substrait boundary and does
+  not publish a SQL-shaped preview profile
+- frontend callers must fail closed when the active runtime has no registered
+  executable strategy
 
 ### Public operational routes (shell health contract)
 

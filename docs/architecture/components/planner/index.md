@@ -14,7 +14,7 @@ last_reviewed: 2026-04-10
 3. [Planner private behavior ports component](./planner-private-behavior-ports-component.md)
 4. [Workspace authoring draft aggregate](./workspace-authoring-draft-aggregate.md)
 5. [Executable subgraph derivation component](./executable-subgraph-derivation-component.md)
-6. [Transformation flow compiler mapping v1](../../../contracts/planner/transformation-flow-compiler-v1.md)
+6. [ADR-0064: Substrait semantic reference](../../../adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md)
 7. [GenericGraphSource user manual](../../../guides/generic-graph-source-user-manual-20260404.md)
 8. [Planner cycle detection technical manual](../../../guides/planner-cycle-detection-technical-manual-20260404.md)
 9. [Planner cycle detection user manual](../../../guides/planner-cycle-detection-user-manual-20260404.md)
@@ -33,9 +33,8 @@ last_reviewed: 2026-04-10
 - canonical input source: `graphSource`
 - planner-owned selected-closure derivation now lives behind
   `PlannerFacade#deriveExecutableSubgraph`
-- the first SQL-first preview profile now freezes one compiler-governed
-  `graphSource` mapping into `PREPARE_POSTGRES_TRANSFORM ->
-POSTGRES_SQL_TRANSFORM -> CAPTURE_MATERIALIZATION_EVIDENCE`
+- VTX2 Substrait is the sole DVT transformation authoring authority; the
+  generic preview rail does not admit a DVT-specific preview profile
 - source-native adaptation happens before planner admission
 - canonical plan artifact: `ExecutionPlan.v1.ts`
 - canonical per-step retry ownership: `ExecutionStep.retryPolicy`
@@ -47,8 +46,8 @@ POSTGRES_SQL_TRANSFORM -> CAPTURE_MATERIALIZATION_EVIDENCE`
 ## Target truth
 
 - `graphSource` remains the canonical typed planner input boundary
-- the SQL-first transformation profile is expressed as a typed compiler mapping
-  inside `graphSource`, not as a second planner ingress
+- DVT transformation compilation consumes the canonical Substrait projection;
+  no SQL-shaped preview profile or second planner ingress exists
 - source-native refs such as DBT manifest artifacts stay outside the planner
   package and do not appear in the canonical planner ingress
 - planner component pages stay summary-only and point back to canonical planner docs

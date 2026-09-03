@@ -75,8 +75,8 @@ and Engine/runtime handles execution lifecycle.
 - zero nodes, one node, disconnected graphs, and partially connected graphs are
   valid authoring states.
 - compile invariants do not belong to the persisted aggregate.
-- `DesignGraphDraft` is derived for preview/run only; it is not the editable
-  persistence payload.
+- the canonical Substrait execution plan is derived only after selection; it is
+  not the editable persistence payload.
 - All declared Canvas identities (main, active, and secondary) are graph-owned
   for authority conflict checks.
 - Authentication, authorization, and current Canvas authority are evaluated
@@ -125,8 +125,8 @@ flowchart LR
   App --> Boundary["WorkspaceGraphDraft.v1 envelope"]
   Boundary --> Root["WorkspaceGraphAuthoringDraft root"]
   Root --> Projection["selected-subgraph projection"]
-  Projection --> Design["DesignGraphDraft"]
-  Design --> PreviewRun["Preview / Run"]
+  Projection --> Plan["Canonical Substrait plan"]
+  Plan --> PreviewRun["Preview / Run"]
 ```
 
 ## Execution selection rule
@@ -237,4 +237,4 @@ The intended path is:
 - Keep compile-only fields in compile projection contracts.
 - Keep preview/run selection contracts in the execution-selection component.
 - Add semantic contract tests for every new aggregate invariant.
-- Do not add compatibility paths accepting `DesignGraphDraft` as a save payload.
+- Do not add compatibility paths accepting compile artifacts as a save payload.
