@@ -74,12 +74,32 @@ flowchart LR
 
 ## Work performed
 
-Pending implementation.
+- Replaced the six topology-prescriptive validation messages in English and Spanish with
+  capability-based terminal-result diagnostics.
+- The missing-result diagnostic now tells the author to configure or select an evaluable or
+  consolidated result; it does not require a Sink or a three-card chain.
+- Ambiguous, unsupported-cardinality, edge-count, and edge-order cases remain explicit and
+  fail-closed without being described as universal product structure.
+- Replaced four full-sentence equality assertions with one behavioral invariant across both
+  locales and every affected diagnostic.
+- Coordinated the boundary in issues `#2889` and `#2784`; terminal Transform execution remains
+  owned by `#2784` rather than being duplicated here.
 
 ## Validation evidence
 
-Pending implementation.
+| Evidence                                                                   | Result                                                    |
+| -------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Focused behavioral test before implementation                              | FAIL — all six messages exposed the fixed legacy topology |
+| Focused behavioral test after implementation                               | PASS — 9/9                                                |
+| `pnpm --filter @dvt/web test:canvas-unit:run`                              | PASS                                                      |
+| `pnpm --filter @dvt/web typecheck`                                         | PASS                                                      |
+| `pnpm --filter @dvt/web lint`                                              | PASS                                                      |
+| Visible Chrome application after HMR                                       | PASS — Canvas and Problems panel remain operational       |
+| `pnpm governance:refresh` and `pnpm verify:prepush` after the final commit | Required final closeout gates                             |
 
 ## Debt and stubs
 
-Pending implementation. No debt or incomplete runtime behavior is authorized by this plan.
+No debt, stub, placeholder, fake consolidation, compatibility topology, second readiness model,
+disabled rule, relaxed check, or bypassed hook was introduced. The functional expansion for a
+terminal Transform remains explicitly owned by `#2784`; Source consolidation requires its real
+materialization contract and is not presented as implemented by this copy correction.
