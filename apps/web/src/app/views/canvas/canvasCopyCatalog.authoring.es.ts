@@ -24,7 +24,7 @@ export const canvasViewAuthoringCopyEs = {
   nodeDropPayloadInvalidMessage:
     'No se ha podido leer el nodo arrastrado. El canvas no se ha modificado.',
   transformationConnectionOrderMessage:
-    'Las dependencias seleccionadas no forman un resultado terminal compatible con Execution Preview.',
+    'Las dependencias seleccionadas están conectadas en un orden incompatible con Execution Preview. Reconéctalas al resultado terminal evaluable actualmente.',
   transformationConnectionEdgeCountMessage:
     'Las dependencias seleccionadas incluyen una dependencia ausente o adicional para el resultado terminal compatible con Execution Preview. Añade o elimina la dependencia afectada.',
   transformationConnectionDuplicateMessage:

@@ -280,6 +280,9 @@ describe('canvas copy catalog', () => {
       expect(formatTransformationGraphValidationSummary('requires_two_edges', locale)).toMatch(
         /add|remove|añade|elimina/iu
       );
+      expect(formatTransformationGraphValidationSummary('invalid_edge_order', locale)).toMatch(
+        /reconnect|recon[eé]cta/iu
+      );
     }
   });
 

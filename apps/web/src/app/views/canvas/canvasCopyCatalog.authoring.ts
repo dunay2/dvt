@@ -65,7 +65,7 @@ export const canvasViewAuthoringCopyByKey = {
   transformationConnectionOrderMessage: {
     key: 'canvas.transformation.connectionOrderMessage',
     fallback:
-      'The selected dependencies do not form a terminal result supported by Execution Preview.',
+      'The selected dependencies are connected in an order unsupported by Execution Preview. Reconnect them to the currently evaluable terminal result.',
   },
   transformationConnectionEdgeCountMessage: {
     key: 'canvas.transformation.connectionEdgeCountMessage',

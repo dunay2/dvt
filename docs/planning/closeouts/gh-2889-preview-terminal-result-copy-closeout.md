@@ -71,15 +71,15 @@ flowchart LR
 - **Out of scope:** implementing terminal Transform (`#2784`), Source consolidation/runtime,
   publication, workload lowering (`#2524`), or PostgreSQL materialization (`#2523`).
 - **Libraries:** none evaluated; this is an existing read-model projection correction.
-- **Validation:** focused red/green behavioral test, Web tests/typecheck/lint, visible-browser proof,
-  governance refresh, final commit, and `pnpm verify:prepush`.
+- **Validation:** focused red/green behavioral test, Web tests/typecheck/lint, visible-browser
+  smoke check, governance refresh, final commit, and `pnpm verify:prepush`.
 
 ## Work performed
 
 - Replaced the six topology-prescriptive validation messages in English and Spanish with
   capability-based terminal-result diagnostics.
-- The missing-result diagnostic now tells the author to configure or select an evaluable or
-  consolidated result; it does not require a Sink or a three-card chain.
+- The missing-result diagnostic now tells the author to complete or select a currently evaluable
+  path; it does not require a Sink or present Source consolidation as already executable.
 - Ambiguous, unsupported-cardinality, edge-count, and edge-order cases remain explicit and
   fail-closed without being described as universal product structure.
 - Replaced four full-sentence equality assertions with one behavioral invariant across both
