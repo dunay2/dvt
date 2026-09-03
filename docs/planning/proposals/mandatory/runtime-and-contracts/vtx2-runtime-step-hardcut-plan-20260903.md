@@ -21,13 +21,11 @@ task_id: VTX2-RUNTIME-STEP-HARDCUT-2600
 
 ## Decision and root cause
 
-The preview hard cut made the SQL-first transformation compiler unreachable, but its
-three technical step kinds remain canonical and executable. A persisted plan can still
-describe the deleted execution architecture.
+The preview hard cut made the SQL-first compiler unreachable, but its three technical
+step kinds remain canonical and executable, so persisted plans still describe it.
 
-This slice deletes all three kinds from producers, registries, admission bindings,
-runtime dispatch, proofs, and current architecture. It does not alias or migrate old
-plans. The independent object-file-to-PostgreSQL product path remains supported.
+This slice deletes all three kinds from producers, registries, admission, runtime and
+proofs without aliasing old plans. Object-file-to-PostgreSQL remains supported.
 
 ## Governing rails
 
@@ -36,6 +34,7 @@ plans. The independent object-file-to-PostgreSQL product path remains supported.
 | `CompilePlan`                     | command | Plan compile application service | API planner compile boundary              | Deleted family and kinds cannot compile     |
 | `PlanAdmissionCompatibilityQuery` | query   | Execution plan admission matrix  | Contracts validation and engine admission | Old PlanRefs fail closed before dispatch    |
 | `StartRun`                        | command | Run command application service  | Engine/Temporal dispatch                  | No legacy PostgreSQL activity is registered |
+| `PreviewRunMaterializationRows`   | query   | Legacy run sample read model     | `GET /runs/:runId/materialization/rows`   | Route retires with its only target resolver |
 
 No new command, query, profile, compatibility parser, or runtime plugin is introduced.
 
@@ -43,12 +42,9 @@ No new command, query, profile, compatibility parser, or runtime plugin is intro
 
 ```mermaid
 flowchart LR
-  Compile[CompilePlan] --> Legacy[SQL transform family]
-  Legacy --> Plan[Persisted ExecutionPlan]
-  Plan --> Admission[StartRun admission]
-  Admission --> Plugin[postgres-relational plugin]
+  Compile[CompilePlan] --> Legacy[SQL transform family] --> Plan[Persisted plan]
+  Plan --> Admission[StartRun] --> Plugin[postgres-relational plugin]
   Plugin --> Steps[prepare / SQL / evidence]
-  Plugin --> Loader[object-file relational loader]
 ```
 
 ## Target state
@@ -56,11 +52,9 @@ flowchart LR
 ```mermaid
 flowchart LR
   Compile[CompilePlan] --> Current[Current generic step families]
-  Old[Old SQL-first plan] -. unknown kind / rejected .-> Admission[StartRun admission]
-  Admission --> Temporal[Temporal dispatch]
-  Temporal --> Dbt[DBT plugin]
-  Temporal --> Object[Object-file PostgreSQL plugin]
-  Object --> Loader[PostgreSQL object-file loader]
+  Old[Old SQL-first plan] -. rejected .-> Admission[StartRun admission]
+  Admission --> Temporal[Temporal] --> Dbt[DBT plugin]
+  Temporal --> Object[Object-file plugin] --> Loader[PostgreSQL loader]
 ```
 
 ## Invariants
@@ -94,10 +88,8 @@ flowchart LR
 
 ## Validation
 
-- focused API compile-boundary behavior tests
-- focused adapter-postgres object-file loader tests
-- focused Temporal composition and routing tests
-- package tests, lint and typecheck for affected workspaces
+- focused API, contract, adapter and Temporal behavior tests
+- package tests, lint and typecheck for every affected workspace
 - `GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs`
 - `pnpm governance:refresh`
 - `pnpm verify:prepush`
@@ -136,7 +128,6 @@ allowedImplementationSurfaces:
   - docs/**
 forbiddenImplementationSurfaces:
   - packages/@dvt/planner/**
-  - database migrations
   - new compatibility contracts, runtime plugins, or fallback handlers
 commandQueryRails:
   - name: CompilePlan
@@ -166,6 +157,15 @@ commandQueryRails:
     authorizationScope: Existing scoped start-run authorization
     negativeTests:
       - no activity is registered for a deleted PostgreSQL transform kind
+  - name: PreviewRunMaterializationRows
+    type: query
+    status: retired
+    dddOwner: Legacy run materialization sample read model
+    applicationPort: Deleted with its only SQL-first target resolver
+    adapterSurface: GET /runs/:runId/materialization/rows
+    authorizationScope: Route is no longer registered
+    negativeTests:
+      - retired route is absent from the protected runtime registry
 fowlerSignals:
   - Dead code
   - Duplicate runtime authority
