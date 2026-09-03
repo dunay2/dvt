@@ -151,6 +151,14 @@ redGreenCycles:
     patchSurfaces: [apps/web/src/app/views/canvas/**, apps/web/src/app/plugins/graph/**]
     greenTest: pnpm --filter @dvt/web test:canvas:run -- canvasDvtSubstraitFilter.test.ts
 symbols:
+  - name: dvtSubstraitTextEquality
+    path: apps/web/src/app/views/canvas/canvasDvtSubstraitTextEquality.ts
+    dddOwner: Substrait equality expression
+    cqRails: [ConfigureCanvasDvtNode]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-SOURCE-SEMANTIC-OPERATIONS-2894
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts
+    unitTests: [apps/web/src/app/views/canvas/canvasDvtSubstraitFilter.test.ts]
   - &filter
     name: DvtSubstraitFilter
     path: apps/web/src/app/views/canvas/canvasDvtSubstraitFilter.ts
