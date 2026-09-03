@@ -13,6 +13,7 @@ import {
   decodeDvtSubstraitProjectionDocument,
   encodeDvtSubstraitProjectionDocument,
   resolveDvtSubstraitProjectionSource,
+  type DvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
 
 const source: CanonicalNode = {
@@ -42,7 +43,7 @@ const source: CanonicalNode = {
   },
 };
 
-function projection() {
+function projection(): DvtSubstraitProjectionDraft {
   const resolved = resolveDvtSubstraitProjectionSource(source);
   if (resolved == null) throw new Error('Expected a valid Source fixture.');
   return createDvtSubstraitProjectionDraft({
