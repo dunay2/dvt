@@ -208,6 +208,7 @@ Evidence documents that justify or validate relevant changes.
 - [Transform column comment authoring evidence](ED-20260902-transform-column-comments.md)
 - [Transform function alias authoring evidence](ED-20260902-transform-function-alias-authoring.md)
 - [VTX1 authoring authority hard cut](ED-20260903-vtx1-authoring-hardcut.md)
+- [VTX2 durable semantic document evidence](ED-20260903-vtx2-durable-semantic-document.md)
 - [VTX2 preview contract hard cut evidence](ED-20260903-vtx2-preview-contract-hardcut.md)
 - [VTX2 runtime step hard cut evidence](ED-20260903-vtx2-runtime-step-hardcut.md)
 - [VTX2 Substrait grouping and count authoring evidence](ED-20260831-vtx2-substrait-grouping.md)
