@@ -26,15 +26,18 @@ jobs:
         with:
           node-version: 22.23.2
 
-      - name: Generate source-first architecture
+      - name: Generate source-first topology
         run: node architecture/tools/generate-source-first.mjs
+
+      - name: Generate source-evidenced runtime relations
+        run: node architecture/tools/generate-runtime-relations.mjs
 
       - name: Stage isolated LikeC4 workspace
         run: |
           rm -rf .likec4-preview .architecture-evidence dist
           mkdir -p .likec4-preview .architecture-evidence
           cp architecture/specification.c4 .likec4-preview/specification.c4
-          cp architecture/generated/source-first.c4 .likec4-preview/source-first.c4
+          cp architecture/generated/*.c4 .likec4-preview/
           cat > .likec4-preview/likec4.config.json <<'JSON'
           {
             "$schema": "https://likec4.dev/schemas/config.json",
@@ -43,7 +46,7 @@ jobs:
           }
           JSON
           cp architecture/generated/*.json .architecture-evidence/
-          cp architecture/generated/source-first.c4 .architecture-evidence/
+          cp architecture/generated/*.c4 .architecture-evidence/
 
       - name: Validate LikeC4 model
         run: |
@@ -66,12 +69,14 @@ jobs:
             return sum + (entry.isDirectory() ? walk(target) : fs.statSync(target).size);
           }, 0);
           const metrics = {
-            schemaVersion: 1,
+            schemaVersion: 2,
             generatedAt: new Date().toISOString(),
             totalDistBytes: walk('dist'),
             likec4ViewsBytes: stat('dist/likec4-views.js'),
             summaryBytes: stat('dist/source/summary.json'),
-            modelBytes: stat('dist/source/source-first.c4'),
+            sourceTopologyBytes: stat('dist/source/source-first.c4'),
+            runtimeRelationsBytes: stat('dist/source/runtime-relations.c4'),
+            runtimeEvidenceBytes: stat('dist/source/runtime-relations.json'),
           };
           fs.writeFileSync('dist/source/preview-metrics.json', JSON.stringify(metrics, null, 2) + '\n');
           console.log(metrics);

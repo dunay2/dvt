@@ -20,6 +20,13 @@ specification {
   tag asIs
   tag sourceDerived
   tag structureDerived
+  tag external
 
   relationship uses
+  relationship calls
+  relationship composes
+  relationship delegates
+  relationship persists
+  relationship loads
+  relationship connects
 }
