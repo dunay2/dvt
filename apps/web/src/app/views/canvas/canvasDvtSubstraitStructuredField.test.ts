@@ -194,4 +194,51 @@ describe('canonical Substrait structured Transform fields', () => {
       ],
     });
   });
+
+  it('creates another structured root from remaining scalar outputs', () => {
+    const fields = [...SOURCE.fields, { name: 'tax', dataType: 'numeric' }];
+    const draft = createDvtSubstraitProjectionDraft({
+      source: { ...SOURCE, fields },
+      targetNodeId: 'transform-orders',
+      outputs: fields.map((field) => ({
+        fieldId: `output:${field.name}`,
+        name: field.name,
+        sourceFieldName: field.name,
+      })),
+    });
+    const identity = composeDvtSubstraitProjectionFields(draft, {
+      draggedFieldId: 'output:customer',
+      targetFieldId: 'output:order_id',
+      parentFieldId: 'output:identity',
+      parentName: 'identity',
+    });
+    const totals = composeDvtSubstraitProjectionFields(identity, {
+      draggedFieldId: 'output:tax',
+      targetFieldId: 'output:amount',
+      parentFieldId: 'output:totals',
+      parentName: 'totals',
+    });
+
+    expect(inspectDvtSubstraitStructuredFieldDraft(totals)).toEqual({
+      ok: true,
+      fields: [
+        {
+          fieldId: 'output:identity',
+          name: 'identity',
+          children: [
+            { fieldId: 'output:order_id', name: 'order_id' },
+            { fieldId: 'output:customer', name: 'customer' },
+          ],
+        },
+        {
+          fieldId: 'output:totals',
+          name: 'totals',
+          children: [
+            { fieldId: 'output:amount', name: 'amount' },
+            { fieldId: 'output:tax', name: 'tax' },
+          ],
+        },
+      ],
+    });
+  });
 });

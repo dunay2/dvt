@@ -7,10 +7,7 @@ import {
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 
-import {
-  inspectDvtSubstraitProjectionDraft,
-  type DvtSubstraitProjectionDraft,
-} from './canvasDvtSubstraitProjection';
+import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import {
   buildDvtSubstraitFieldTree,
   flattenDvtSubstraitFieldNames,
@@ -33,17 +30,37 @@ export function composeDvtSubstraitProjectionFields(
     parentName: string;
   }>
 ): DvtSubstraitProjectionDraft {
-  const flat = inspectDvtSubstraitProjectionDraft(draft);
   const parentName = args.parentName.trim();
   if (parentName.length === 0 || args.draggedFieldId === args.targetFieldId) return draft;
-  if (!flat.ok) return appendDvtSubstraitProjectionFieldToStruct(draft, args);
-  const outputs = flat.projection.outputs;
-  const draggedIndex = outputs.findIndex((field) => field.fieldId === args.draggedFieldId);
-  const targetIndex = outputs.findIndex((field) => field.fieldId === args.targetFieldId);
+  const inspection = inspectDvtSubstraitStructuredFieldDraft(draft);
+  const sourceParts = resolveDvtSubstraitStructuredProjectionParts(draft);
+  if (!inspection.ok || sourceParts == null) return draft;
+  const roots = orderedDvtSubstraitFields(
+    draft.sidecar.fields,
+    sourceParts.targetRelation.relationId
+  );
+  const draggedIndex = roots.findIndex((field) => field.fieldId === args.draggedFieldId);
+  const targetIndex = roots.findIndex((field) => field.fieldId === args.targetFieldId);
+  const targetChildren = orderedDvtSubstraitFields(
+    draft.sidecar.fields,
+    sourceParts.targetRelation.relationId,
+    args.targetFieldId
+  );
+  if (targetChildren.length > 0) return appendDvtSubstraitProjectionFieldToStruct(draft, args);
+  const draggedChildren = orderedDvtSubstraitFields(
+    draft.sidecar.fields,
+    sourceParts.targetRelation.relationId,
+    args.draggedFieldId
+  );
   if (
     draggedIndex < 0 ||
     targetIndex < 0 ||
-    outputs.some((field) => field.fieldId === args.parentFieldId || field.name === parentName)
+    draggedChildren.length > 0 ||
+    draft.sidecar.fields.some(
+      (field) =>
+        field.relationId === sourceParts.targetRelation.relationId &&
+        (field.fieldId === args.parentFieldId || field.displayName === parentName)
+    )
   )
     return draft;
 
@@ -53,7 +70,10 @@ export function composeDvtSubstraitProjectionFields(
   };
   const parts = resolveDvtSubstraitStructuredProjectionParts(next);
   if (parts == null) return draft;
-  const sourceCount = flat.projection.source.fields.length;
+  const sourceCount = orderedDvtSubstraitFields(
+    draft.sidecar.fields,
+    sourceParts.sourceRelation.relationId
+  ).length;
   const expressions = parts.emit.outputMapping.map((mapping) =>
     mapping < sourceCount
       ? createDvtSubstraitFieldReference(mapping)
@@ -74,21 +94,20 @@ export function composeDvtSubstraitProjectionFields(
     },
   });
   const insertionIndex = Math.min(draggedIndex, targetIndex);
-  const retained = outputs
+  const retained = roots
     .map((field, index) => ({ field, expression: expressions[index]! }))
     .filter((_, index) => !childIndexes.includes(index));
   retained.splice(insertionIndex, 0, {
-    field: { ...outputs[targetIndex]!, fieldId: args.parentFieldId, name: parentName },
+    field: {
+      ...roots[targetIndex]!,
+      fieldId: args.parentFieldId,
+      displayName: parentName,
+    },
     expression: parentExpression,
   });
   parts.project.expressions = retained.map(({ expression }) => expression);
   parts.emit.outputMapping = retained.map((_, index) => sourceCount + index);
 
-  const targetBindings = orderedDvtSubstraitFields(
-    draft.sidecar.fields,
-    parts.targetRelation.relationId
-  );
-  const bindingById = new Map(targetBindings.map((field) => [field.fieldId, field]));
   const parentBinding = {
     fieldId: args.parentFieldId,
     relationId: parts.targetRelation.relationId,
@@ -96,15 +115,16 @@ export function composeDvtSubstraitProjectionFields(
     displayName: parentName,
   };
   const retainedBindings = retained.map(({ field }, outputOrdinal) =>
-    field.fieldId === args.parentFieldId
-      ? parentBinding
-      : { ...bindingById.get(field.fieldId)!, outputOrdinal }
+    field.fieldId === args.parentFieldId ? parentBinding : { ...field, outputOrdinal }
   );
   const children = childIndexes.map((index, outputOrdinal) => ({
-    ...bindingById.get(outputs[index]!.fieldId)!,
+    ...roots[index]!,
     parentFieldId: args.parentFieldId,
     outputOrdinal,
   }));
+  const existingChildren = draft.sidecar.fields.filter(
+    (field) => field.relationId === parts.targetRelation.relationId && field.parentFieldId != null
+  );
   next.sidecar = {
     ...draft.sidecar,
     fields: [
@@ -112,6 +132,7 @@ export function composeDvtSubstraitProjectionFields(
         (field) => field.relationId !== parts.targetRelation.relationId
       ),
       ...retainedBindings,
+      ...existingChildren,
       ...children,
     ],
   };
