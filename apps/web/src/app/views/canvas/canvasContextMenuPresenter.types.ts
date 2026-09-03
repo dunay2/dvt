@@ -8,6 +8,7 @@ import type {
 
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
+import type { CanvasEdgeCommandRunner } from './useCanvasEdgeCommandRunner';
 import type {
   CanvasContextMenuCanvasAction,
   CanvasContextMenuCreateNodeAction,
@@ -24,6 +25,7 @@ export type UseCanvasContextMenuPresenterArgs = Readonly<{
   screenToFlowPosition: (screenPosition: CanvasContextMenuPosition) => CanvasContextMenuPosition;
   onCreateAuthoringNode: CreateCanvasAuthoringNode;
   onEdgesChange: NonNullable<ReactFlowProps<FlowNode, Edge>['onEdgesChange']>;
+  onSetEdgeExecutionGate?: CanvasEdgeCommandRunner['setExecutionGate'];
   onOpenSourceImport?: (flowPosition?: CanvasContextMenuPosition) => void;
   onOpenCanvasSettings?: () => void;
 }>;

@@ -41,6 +41,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Caller-visible freshness may be misinterpreted as read-your-writes guarantee](R-20260330-snapshot-staleness-caller-view.yaml)
 - [Cancel lifecycle ownership can regress to mixed engine/runtime emission](R-20260401-CANCEL-LIFECYCLE-OWNERSHIP-DRIFT.yaml)
 - [Canvas and dbt files can expose conflicting authoring authority](R-20260731-CANVAS-DBT-AUTHORING-AUTHORITY.yaml)
+- [Canvas edge execution gate could diverge across authoring and execution](R-20260902-CANVAS-EDGE-EXECUTION-GATE.yaml)
 - [Canvas empty-state copy is ambiguous and can be interpreted as connectivity failure](R-20260503-CANVAS-EMPTY-STATE-MESSAGE-AMBIGUITY.yaml)
 - [Canvas host can overclaim multi-canvas truth before the draft boundary supports it](R-20260423-CANVAS-HOST-DRAFT-BOUNDARY.yaml)
 - [Canvas workflow E2E usability regressions across protected runtime rails](R-20260601-CANVAS-WORKFLOW-E2E-USABILITY.yaml)

@@ -73,6 +73,7 @@ export function useCanvasAuthoringProjection({
     visibleEdges,
     canonicalNodesById: authoringGraphProjection.canonicalNodesById,
     canonicalEdgeIdBySignature: authoringGraphProjection.canonicalEdgeIdBySignature,
+    canonicalEdgeBySignature: authoringGraphProjection.canonicalEdgeBySignature,
     columnLevelLineageEnabled,
     persistedNodePositions,
     frozenNodeIds,

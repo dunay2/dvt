@@ -7,6 +7,7 @@ import {
   buildViewportGraphModelArgs,
   renderViewportGraphModel,
 } from './useCanvasViewportGraphModel.test.support';
+import { readCanvasDependencyEdgeData } from './canvasDependencyEdgeModel';
 
 describe('useCanvasViewportGraphModel edges', () => {
   it('projects visible canonical nodes and canonical edge ids into React Flow state', async () => {
@@ -111,6 +112,46 @@ describe('useCanvasViewportGraphModel edges', () => {
           interactionWidth: 18,
         },
       ]);
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('projects the persisted gate into one typed React Flow edge read model', async () => {
+    const mounted = await renderViewportGraphModel(
+      buildViewportGraphModelArgs({
+        visibleNodeIds: ['source-node', 'transform-node'],
+        visibleEdges: [
+          { sourceId: 'source-node', targetId: 'transform-node', executionGate: 'closed' },
+        ],
+        draftSemanticGraph: {
+          canonicalNodes: [
+            buildCanonicalNode('source-node', 'dvt:source', 'input'),
+            buildCanonicalNode('transform-node', 'dvt:transform', 'transform'),
+          ],
+          canonicalEdges: [
+            {
+              id: 'source-transform',
+              sourceId: 'source-node',
+              targetId: 'transform-node',
+              relation: 'lineage',
+              metadata: { executionGate: 'closed' },
+            },
+          ],
+        },
+      })
+    );
+
+    try {
+      const edge = mounted.readState()?.edges[0];
+      const data = readCanvasDependencyEdgeData(edge?.data);
+
+      expect(data?.execution).toMatchObject({
+        gateState: 'closed',
+        isGateable: true,
+        isEffectivelyExecutable: false,
+      });
+      expect(edge?.ariaLabel).toContain('Excluded from execution');
     } finally {
       await mounted.cleanup();
     }

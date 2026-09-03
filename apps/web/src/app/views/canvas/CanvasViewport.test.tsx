@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 
-import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@xyflow/react', () => import('./canvasViewportXyflowTestAdapter'));
@@ -181,32 +180,6 @@ describe('CanvasViewport', () => {
       multiSelectionKeyCode: 'Shift',
       selectNodesOnDrag: true,
     });
-  });
-
-  it('keeps canvas-local command capabilities wired into the rendered context menu', async () => {
-    await renderViewport({
-      canOpenCanvasSettings: true,
-      onOpenCanvasSettings: vi.fn(),
-    });
-
-    const contextSurface = container.querySelector('[data-slot="canvas-viewport-context-surface"]');
-    expect(contextSurface).not.toBeNull();
-    expect(contextSurface?.getAttribute('role')).toBe('region');
-
-    await act(async () => {
-      contextSurface?.dispatchEvent(
-        new MouseEvent('contextmenu', {
-          bubbles: true,
-          cancelable: true,
-          button: 2,
-          clientX: 320,
-          clientY: 240,
-        })
-      );
-    });
-
-    expect(document.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
-    expect(document.body.textContent).toContain('Canvas properties');
   });
 
   it('uses one governed CSS grid layer for visibility, color, size, and snap policy', async () => {

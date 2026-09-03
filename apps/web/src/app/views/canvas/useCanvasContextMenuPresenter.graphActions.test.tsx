@@ -9,14 +9,17 @@ import {
   useCanvasContextMenuPresenter,
   type CanvasContextMenuPresenter,
 } from './useCanvasContextMenuPresenter';
+import { buildCanvasDependencyEdgeData } from './canvasDependencyEdgeModel';
 
 function PresenterHarness({
   onCreateAuthoringNode,
   onEdgesChange,
+  onSetEdgeExecutionGate,
   onPresenter,
 }: Readonly<{
   onCreateAuthoringNode: ReturnType<typeof vi.fn>;
   onEdgesChange: ReturnType<typeof vi.fn>;
+  onSetEdgeExecutionGate: ReturnType<typeof vi.fn>;
   onPresenter: (presenter: CanvasContextMenuPresenter) => void;
 }>): null {
   const presenter = useCanvasContextMenuPresenter({
@@ -27,6 +30,7 @@ function PresenterHarness({
     screenToFlowPosition: ({ x, y }) => ({ x: x + 100, y: y - 40 }),
     onCreateAuthoringNode,
     onEdgesChange,
+    onSetEdgeExecutionGate,
   });
 
   onPresenter(presenter);
@@ -37,6 +41,7 @@ describe('useCanvasContextMenuPresenter graph actions', () => {
   let container: HTMLDivElement;
   let onCreateAuthoringNode: ReturnType<typeof vi.fn>;
   let onEdgesChange: ReturnType<typeof vi.fn>;
+  let onSetEdgeExecutionGate: ReturnType<typeof vi.fn>;
   let presenter: CanvasContextMenuPresenter | null;
   let root: Root;
 
@@ -45,6 +50,7 @@ describe('useCanvasContextMenuPresenter graph actions', () => {
     document.body.appendChild(container);
     onCreateAuthoringNode = vi.fn();
     onEdgesChange = vi.fn();
+    onSetEdgeExecutionGate = vi.fn(() => true);
     presenter = null;
     root = createRoot(container);
     (
@@ -64,6 +70,7 @@ describe('useCanvasContextMenuPresenter graph actions', () => {
         <PresenterHarness
           onCreateAuthoringNode={onCreateAuthoringNode}
           onEdgesChange={onEdgesChange}
+          onSetEdgeExecutionGate={onSetEdgeExecutionGate}
           onPresenter={(next) => (presenter = next)}
         />
       );
@@ -126,5 +133,42 @@ describe('useCanvasContextMenuPresenter graph actions', () => {
 
     expect(onEdgesChange).toHaveBeenCalledWith([{ id: 'edge-orders', type: 'remove' }]);
     expect(presenter?.model ?? null).toBeNull();
+  });
+
+  it('routes the opposite execution gate through the existing semantic edge command', async () => {
+    await renderPresenter();
+    await act(async () => {
+      presenter?.handleEdgeContextMenu(
+        {
+          preventDefault: vi.fn(),
+          clientX: 440,
+          clientY: 300,
+        } as unknown as React.MouseEvent<Element>,
+        {
+          id: 'edge-orders',
+          source: 'orders',
+          target: 'transform',
+          type: 'dependency',
+          data: buildCanvasDependencyEdgeData({ sourceId: 'orders', targetId: 'transform' }),
+        } as Parameters<CanvasContextMenuPresenter['handleEdgeContextMenu']>[1]
+      );
+    });
+
+    const action = presenter?.model?.edgeActions.find(
+      (candidate) => candidate.action === 'set-execution-gate'
+    );
+    expect(action).toBeDefined();
+    await act(async () => {
+      if (action != null) {
+        presenter?.handleEdgeAction(action);
+      }
+    });
+
+    expect(onSetEdgeExecutionGate).toHaveBeenCalledWith({
+      sourceId: 'orders',
+      targetId: 'transform',
+      gate: 'closed',
+    });
+    expect(onEdgesChange).not.toHaveBeenCalled();
   });
 });

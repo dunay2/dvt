@@ -70,12 +70,12 @@ describe('useCanvasController protected draft reload', () => {
       'node_4',
     ]);
     expect(harness.getLatestResult()?.edges).toEqual([
-      {
+      expect.objectContaining({
         id: 'draft_edge_node_2_node_4',
         source: 'node_2',
         target: 'node_4',
         ariaLabel: 'Edge from node_2 to remote_sink',
-      },
+      }),
     ]);
   });
 
@@ -118,12 +118,12 @@ describe('useCanvasController protected draft reload', () => {
       'node_3',
     ]);
     expect(harness.getLatestResult()?.edges).toEqual([
-      {
+      expect.objectContaining({
         id: 'draft_edge_node_1_node_3',
         source: 'node_1',
         target: 'node_3',
         ariaLabel: 'Edge from orders to node_3',
-      },
+      }),
     ]);
   });
 });

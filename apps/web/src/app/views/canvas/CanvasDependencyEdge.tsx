@@ -3,8 +3,10 @@ import { BaseEdge, getSmoothStepPath, Position, type Edge, type EdgeProps } from
 import { type ReactElement } from 'react';
 
 import { createGraphFlowEdgeStyle, graphFlowPalette } from '../../plugins/graph/graphVisualTokens';
-
-type CanvasDependencyFlowEdge = Edge;
+import {
+  readCanvasDependencyEdgeData,
+  type CanvasDependencyEdgeData,
+} from './canvasDependencyEdgeModel';
 
 function resolveIncomingDirection(targetPosition: Position): Readonly<{ x: number; y: number }> {
   switch (targetPosition) {
@@ -51,8 +53,9 @@ export function CanvasDependencyEdge({
   style,
   interactionWidth,
   selected,
-}: EdgeProps<CanvasDependencyFlowEdge>): ReactElement {
-  const [edgePath] = getSmoothStepPath({
+  data,
+}: EdgeProps<Edge<CanvasDependencyEdgeData>>): ReactElement {
+  const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
     sourcePosition,
@@ -60,8 +63,16 @@ export function CanvasDependencyEdge({
     targetY,
     targetPosition,
   });
+  const execution = readCanvasDependencyEdgeData(data)?.execution;
+  const closed = execution?.gateState === 'closed';
   const resolvedStyle = {
     ...(style ?? createGraphFlowEdgeStyle()),
+    ...(closed
+      ? {
+          strokeDasharray: graphFlowPalette.closedEdgeDashArray,
+          opacity: graphFlowPalette.closedEdgeOpacity,
+        }
+      : {}),
     ...(selected
       ? {
           stroke: 'var(--status-info)',
@@ -76,6 +87,25 @@ export function CanvasDependencyEdge({
         style={resolvedStyle}
         interactionWidth={interactionWidth ?? graphFlowPalette.edgeInteractionWidth}
       />
+      {closed ? (
+        <g
+          data-slot="canvas-dependency-closed-gate"
+          data-state="closed"
+          aria-hidden="true"
+          pointerEvents="none"
+          transform={`translate(${labelX} ${labelY})`}
+          stroke={
+            typeof resolvedStyle.stroke === 'string'
+              ? resolvedStyle.stroke
+              : graphFlowPalette.edgeStroke
+          }
+          strokeWidth={graphFlowPalette.gateGlyphStrokeWidth}
+        >
+          <circle r={graphFlowPalette.gateGlyphRadius} fill="var(--canvas-surface)" />
+          <line x1="-4" y1="-4" x2="4" y2="4" />
+          <line x1="4" y1="-4" x2="-4" y2="4" />
+        </g>
+      ) : null}
       <polygon
         data-slot="canvas-dependency-direction-cue"
         aria-hidden="true"

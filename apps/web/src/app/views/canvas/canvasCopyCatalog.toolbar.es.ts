@@ -62,6 +62,8 @@ export const canvasViewToolbarCopyEs = {
   canvasContextMenuCanvasGroupLabel: 'Canvas',
   canvasContextMenuCanvasSettingsLabel: 'Propiedades del canvas',
   canvasContextMenuRemoveEdgeLabel: 'Eliminar conexión',
+  canvasContextMenuCloseEdgeLabel: 'Excluir de la ejecución',
+  canvasContextMenuOpenEdgeLabel: 'Incluir en la ejecución',
   canvasSettingsDescription: 'Preferencias de visualización del grafo para el canvas activo.',
   canvasSettingsCloseLabel: 'Cerrar configuración de canvas',
   canvasSettingsSectionsLabel: 'Secciones de propiedades del canvas',

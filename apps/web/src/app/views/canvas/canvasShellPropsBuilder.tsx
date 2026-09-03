@@ -155,6 +155,7 @@ function buildCanvasShellGraphCommandsArgs({
       onEdgesChange: controller.onEdgesChange,
       onConnect: controller.onConnect,
       onReconnect: controller.onReconnect,
+      onSetEdgeExecutionGate: controller.onSetEdgeExecutionGate,
       handleViewportChange: controller.handleViewportChange,
       handleDrop: controller.handleDrop,
       handleDragOver: controller.handleDragOver,

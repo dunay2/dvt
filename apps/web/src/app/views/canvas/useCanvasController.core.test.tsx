@@ -78,12 +78,12 @@ describe('useCanvasController core', () => {
       }),
     ]);
     expect(result?.edges).toEqual([
-      {
+      expect.objectContaining({
         id: 'draft_edge_node_1_node_2',
         source: 'node_1',
         target: 'node_2',
         ariaLabel: 'Edge from node_1 to node_2',
-      },
+      }),
     ]);
     expect(result?.impactOverlayEnabled).toBe(true);
 

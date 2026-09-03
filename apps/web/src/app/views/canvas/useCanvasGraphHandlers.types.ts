@@ -4,6 +4,7 @@ import type {
   GraphNodeColumnPortIdentity,
 } from '../../plugins/graph/graphNodeColumnContracts';
 import type { CanvasColumnLineageEdgeData } from './canvasColumnLineageProjection';
+import type { CanvasEdgeCommandRunner } from './useCanvasEdgeCommandRunner';
 import type {
   CanvasAlgebraicCompositionIdentity,
   CanvasAlgebraicCompositionOperation,
@@ -24,6 +25,7 @@ export type UseCanvasGraphHandlersParams = CanvasGraphInteractionState &
 export type UseCanvasGraphHandlersResult = {
   onConnect: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
   onReconnect: NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>;
+  setExecutionGate: CanvasEdgeCommandRunner['setExecutionGate'];
   handleInspectNode: (nodeId: string, preferredTabId?: string | null) => void;
   handleAutoLayout: () => void;
   handleDrop: React.DragEventHandler<HTMLDivElement>;
