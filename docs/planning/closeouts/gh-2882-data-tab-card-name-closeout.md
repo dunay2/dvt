@@ -50,3 +50,35 @@ a command, query, service, or parallel tab model.
 - **Libraries:** none evaluated; no custom infrastructure is needed.
 - **Validation plan:** focused Vitest, web typecheck, web lint, visible browser proof, and
   `pnpm verify:prepush` after the final commit.
+
+## Work performed
+
+- The existing operational-drawer projection now uses `OperationalDrawerDataSample.nodeName` as
+  the data tab label whenever a card has requested data.
+- The sample row count no longer appears as a tab counter; row and limit information remain owned
+  by the data panel content.
+- The generic localized Data/Datos label remains only for the idle state, where no card has been
+  selected.
+- The behavioral test varies card identity and covers loading, ready, and error states instead of
+  asserting screenshot-specific copy.
+
+## Validation evidence
+
+| Evidence                                                       | Result                                                       |
+| -------------------------------------------------------------- | ------------------------------------------------------------ |
+| Red focused Canvas presentation test                           | Failed with `label: Data`, `count: 1`, proving the defect    |
+| Focused Canvas presentation test after implementation          | PASS — 6/6                                                   |
+| `pnpm --filter @dvt/web typecheck`                             | PASS                                                         |
+| `pnpm --filter @dvt/web lint`                                  | PASS                                                         |
+| `pnpm --filter @dvt/web test:canvas-presentation:run`          | PASS — 111 files, 465 tests                                  |
+| Visible Chrome flow: open `auth_audit_events`, then `source_1` | PASS — tab changed to each card name                         |
+| Local listeners                                                | PASS — one Web listener on 5173 and one API listener on 3000 |
+
+The full Canvas presentation suite emitted existing React `act(...)` warnings in unchanged tests;
+all tests passed and this slice did not add a warning.
+
+## Debt and stubs
+
+No debt, stub, placeholder, parallel rail, disabled rule, relaxed check, compatibility alias, or
+bypassed hook was introduced. The change removes the obsolete `Data/Datos + sample size` tab
+semantics and adds no production files or dependencies.
