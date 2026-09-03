@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "repository": "dunay2/dvt",
   "baselineRef": "origin/main",
   "contexts": [
@@ -26,6 +26,14 @@
 
     { "id": "observability", "path": "packages/@dvt/observability", "group": "Evidence & Observability" },
     { "id": "observabilityOtel", "path": "packages/@dvt/observability-otel", "group": "Evidence & Observability" },
-    { "id": "traceability", "path": "packages/@dvt/traceability-service", "group": "Evidence & Observability" }
+    { "id": "traceability", "path": "packages/@dvt/traceability-service", "group": "Evidence & Observability" },
+
+    { "id": "api", "path": "apps/api", "group": "Applications & Entry Points" },
+    { "id": "web", "path": "apps/web", "group": "Applications & Entry Points" },
+    { "id": "temporalWorker", "path": "apps/temporal-worker", "group": "Applications & Entry Points" },
+    { "id": "outboxWorker", "path": "apps/outbox-worker", "group": "Applications & Entry Points" },
+    { "id": "projectorWorker", "path": "apps/projector-worker", "group": "Applications & Entry Points" },
+    { "id": "lineageWorker", "path": "apps/lineage-worker", "group": "Applications & Entry Points" },
+    { "id": "cli", "path": "packages/@dvt/cli", "group": "Applications & Entry Points" }
   ]
 }
