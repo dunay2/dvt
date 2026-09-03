@@ -7,10 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CanonicalNode } from '../../types/canonical';
 import { mapCanonicalNodeToCanvasNode } from './canvasNodeMapper';
 import { useCanvasControllerReadModel } from './useCanvasControllerReadModel';
-import {
-  applyDvtSubstraitSemanticDocument,
-  applyDvtVisualTransformRecipe,
-} from './canvasDvtTransformAuthoringAuthority';
+import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import {
   createDvtSubstraitProjectionDraft,
   encodeDvtSubstraitProjectionDocument,
@@ -231,11 +228,25 @@ describe('useCanvasControllerReadModel', () => {
   });
 
   it('derives visible column lineage and attaches interactions without changing graph edges', async () => {
+    const sourceRef = {
+      schemaVersion: 'connected-source-ref.v1' as const,
+      connectionRef: {
+        schemaVersion: 'connection-ref.v1' as const,
+        connectionId: 'warehouse-main',
+        provider: 'postgres' as const,
+      },
+      sourceObjectId: 'raw.orders',
+    };
     const sourceNode = {
       ...testNode,
-      metadata: { columns: [{ name: 'order_id', type: 'integer' }] },
+      metadata: {
+        schema: 'raw',
+        tableName: 'orders',
+        connectedSourceRef: sourceRef,
+        columns: [{ name: 'order_id', type: 'integer' }],
+      },
     } satisfies CanonicalNode;
-    const modelNode = applyDvtVisualTransformRecipe(
+    const modelNode = applyDvtSubstraitSemanticDocument(
       {
         ...testNode,
         id: 'model-orders',
@@ -243,21 +254,19 @@ describe('useCanvasControllerReadModel', () => {
         kind: 'dvt:transform',
         role: 'transform',
       },
-      {
-        version: 'v1',
-        outputs: [
-          {
-            id: 'output:order_id',
-            name: 'order_id',
-            dataType: 'integer',
-            expression: {
-              inputs: [{ nodeId: sourceNode.id, columnName: 'order_id' }],
-              operations: [{ kind: 'passthrough' }],
-            },
+      encodeDvtSubstraitProjectionDocument(
+        createDvtSubstraitProjectionDraft({
+          source: {
+            nodeId: sourceNode.id,
+            schema: 'raw',
+            table: 'orders',
+            sourceRef,
+            fields: [{ name: 'order_id', dataType: 'integer' }],
           },
-        ],
-        filters: [],
-      }
+          targetNodeId: 'model-orders',
+          outputs: [{ fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' }],
+        })
+      )
     );
     const dependency = {
       id: 'source-to-model',
@@ -658,71 +667,6 @@ describe('useCanvasControllerReadModel', () => {
         expect.objectContaining({ name: 'order_id', type: 'integer' }),
       ]);
       expect(nodeData?.columnPortDirections).toEqual([]);
-      expect(nodeData?.onAutomapColumns).toBeUndefined();
-    } finally {
-      await mounted.cleanup();
-    }
-  });
-
-  it('renders read-only column anchors for SQL converted from an exact visual recipe', async () => {
-    const sqlTransform = {
-      ...testNode,
-      id: 'converted-sql-transform-orders',
-      name: 'Converted orders SQL',
-      kind: 'dvt:transform',
-      role: 'transform',
-      metadata: {
-        sql: 'select order_id from public.orders',
-        columns: [{ name: 'order_id', type: 'integer' }],
-        transformAuthoring: { version: 'v1', mode: 'sql' },
-        transformLineageProvenance: {
-          version: 'v1',
-          outputs: [
-            {
-              id: 'output:order_id',
-              name: 'order_id',
-              dataType: 'integer',
-              expression: {
-                inputs: [{ nodeId: testNode.id, columnName: 'order_id' }],
-                operations: [{ kind: 'passthrough' }],
-              },
-            },
-          ],
-          filters: [],
-        },
-      },
-    } satisfies CanonicalNode;
-    const graphNode = mapCanonicalNodeToCanvasNode({
-      canonicalNode: sqlTransform,
-      index: 0,
-      showColumns: true,
-    });
-    const base = buildReadModelArgs({ canMutateGraph: true });
-    const args: ReadModelArgs = {
-      ...base,
-      graphModel: {
-        nodes: [graphNode],
-        edges: [],
-        canonicalNodesById: new Map([[sqlTransform.id, sqlTransform]]),
-        onEdgesChange: vi.fn(),
-      },
-      visibleScope: {
-        canonicalNodes: [sqlTransform],
-        canonicalEdges: [],
-      },
-      executionScope: {
-        selectedNodeIds: [],
-        workspaceNodeIds: [sqlTransform.id],
-      },
-      columnLevelLineageEnabled: true,
-    };
-    const mounted = await renderReadModel(args);
-
-    try {
-      const nodeData = readProjectedNodeData(mounted.readState());
-
-      expect(nodeData?.columnPortDirections).toEqual(['target', 'source']);
-      expect(nodeData?.onColumnPortActivate).toBeUndefined();
       expect(nodeData?.onAutomapColumns).toBeUndefined();
     } finally {
       await mounted.cleanup();

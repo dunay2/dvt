@@ -55,7 +55,6 @@ import {
   type DvtSubstraitPilotDraft,
 } from './canvasDvtSubstraitPilot';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
-import { resolveExecutableSqlText } from './canvasTransformationSqlMirror';
 
 const ZERO_SHA256 = '0'.repeat(64);
 const OUTPUT_FIELD_ID = 'field:customer-name';
@@ -350,18 +349,12 @@ describe('typed Substrait DVT card pilot', () => {
     });
   });
 
-  it('fails closed outside the pilot shape and while SQL projection is not implemented', () => {
+  it('fails closed outside the pilot shape', () => {
     const initialDocument = encodeDvtSubstraitPilotDocument(buildPilotDraft());
-    const node = applyDvtSubstraitSemanticDocument(buildTransformNode(), initialDocument);
     const unsupported = decodeDvtSubstraitPilotDocument(initialDocument);
     unsupported.plan.relations = [];
 
     expect(inspectDvtSubstraitPilotDraft(unsupported)).toEqual({ ok: false });
     expect(applyDvtSubstraitPilotFunction(unsupported, 'trim')).toBe(unsupported);
-    expect(resolveExecutableSqlText(node)).toEqual({
-      ok: false,
-      message:
-        'SQL projection is not available yet for Substrait-authored transform node transform-customers.',
-    });
   });
 });

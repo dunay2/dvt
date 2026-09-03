@@ -12,7 +12,6 @@ import {
 } from './canvasColumnMappingAuthoring';
 import {
   applyDvtSubstraitSemanticDocument,
-  applyDvtVisualTransformRecipe,
   readDvtTransformAuthoringAuthority,
 } from './canvasDvtTransformAuthoringAuthority';
 import {
@@ -344,7 +343,7 @@ describe('Canvas column mapping authoring', () => {
       target: { nodeId: 'model', columnName: 'event_id', dataType: 'integer' },
     });
 
-    expect(result).toEqual({ outcome: 'rejected', reason: 'sql_authority_not_empty' });
+    expect(result).toEqual({ outcome: 'rejected', reason: 'invalid_transform_authority' });
   });
 
   it('automaps only unique exact-name columns with known compatible types', () => {
@@ -395,50 +394,6 @@ describe('Canvas column mapping authoring', () => {
     expect(inspection.projection.outputs.map((output) => output.name)).toEqual(['event_id']);
     expect(result.appliedCount).toBe(1);
     expect(result.skippedCount).toBe(3);
-  });
-
-  it('replaces an already mapped visual recipe with canonical Substrait authority', () => {
-    const source = buildNode('source', 'dvt:source', 'input', [{ name: 'customer', type: 'text' }]);
-    const visualModel = applyDvtVisualTransformRecipe(
-      buildNode('model', 'dvt:transform', 'transform'),
-      {
-        version: 'v1',
-        filters: [],
-        outputs: [
-          {
-            id: 'output:customer',
-            name: 'customer',
-            dataType: 'text',
-            expression: {
-              inputs: [{ nodeId: source.id, columnName: 'customer' }],
-              operations: [{ kind: 'passthrough' }],
-            },
-          },
-        ],
-      }
-    );
-    const session = buildSession(
-      [source, visualModel],
-      [{ sourceId: source.id, targetId: visualModel.id }]
-    );
-
-    const result = automapCanvasColumns({
-      draftSession: session,
-      canonicalNodesById: new Map([
-        [source.id, source],
-        [visualModel.id, visualModel],
-      ]),
-      targetNodeId: visualModel.id,
-      targetColumns: [{ name: 'customer', type: 'text' }],
-    });
-
-    expect(result.outcome).toBe('applied');
-    if (result.outcome !== 'applied') return;
-    const mapped = result.draftSession.localNodeCatalog?.model;
-    if (mapped == null) throw new Error('Expected mapped Transform node.');
-    const authority = readDvtTransformAuthoringAuthority(mapped);
-    expect(authority.mode).toBe(DVT_TRANSFORM_AUTHORING_MODE.substrait);
-    expect(result.appliedCount).toBe(1);
   });
 
   it('toggles the last output without leaving canonical Substrait authority', () => {
