@@ -26,6 +26,7 @@ import {
   inspectDvtSubstraitProjectionDraft,
   type DvtSubstraitProjection,
 } from './canvasDvtSubstraitProjection';
+import { flattenCanvasStructuredLineage } from './canvasStructuredFieldLineage';
 
 export type CanvasColumnPortDirection = 'source' | 'target';
 export type CanvasColumnHandleIdentity = Readonly<{
@@ -488,6 +489,45 @@ export function projectCanvasColumnLineage(args: {
         );
       }
       continue;
+    }
+
+    if (args.expandedNodeIds.has(model.id)) {
+      const structuredLeaves = flattenCanvasStructuredLineage(
+        projectCanvasNodePresentationTruth({
+          node: model,
+          nodes: args.nodes,
+          edges: args.edges,
+        }).columns.declared
+      );
+      if (structuredLeaves.length > 0) {
+        for (const { root, leaf, path } of structuredLeaves) {
+          const sourceNode = leaf.sourceNodeId == null ? null : nodeById.get(leaf.sourceNodeId);
+          if (
+            sourceNode == null ||
+            !args.expandedNodeIds.has(sourceNode.id) ||
+            !hasDependency(args.edges, sourceNode.id, model.id) ||
+            leaf.sourceFieldName == null ||
+            !readColumns(sourceNode).some((column) => column.name === leaf.sourceFieldName)
+          ) {
+            continue;
+          }
+          projected.push(
+            buildLineageEdge({
+              sourceNodeId: sourceNode.id,
+              sourceColumnName: leaf.sourceFieldName,
+              sourceColumnId: leaf.sourceFieldName,
+              sourceFieldId: leaf.sourceReference,
+              targetNodeId: model.id,
+              targetColumnName: path,
+              targetColumnId: root.reference ?? root.name,
+              outputId: leaf.reference ?? path,
+              terminal: false,
+              removable: false,
+            })
+          );
+        }
+        continue;
+      }
     }
 
     const substraitUnionAll = readSubstraitUnionAllLineage(model);

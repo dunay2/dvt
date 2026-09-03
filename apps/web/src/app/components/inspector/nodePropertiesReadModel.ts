@@ -11,6 +11,7 @@ import type {
 import { buildDbtTestRows } from './dbtTestRowsReadModel';
 import { buildCanvasNodePresentationTruth } from '../canvas/canvasNodePresentationTruth';
 import { resolveInheritedDvtConnectionRef } from '../../views/canvas/canvasDvtAuthoringModel';
+import { flattenStructuredColumns } from './structuredColumnPresentation';
 
 export type NodePropertySectionId =
   | 'general'
@@ -358,7 +359,7 @@ function buildDvtTransformColumnRows(
   }
 
   const declaredByName = new Map(declaredColumns.map((column) => [column.name, column]));
-  return columns.map((column) => {
+  return flattenStructuredColumns(columns).map(({ column, path }) => {
     const declared = declaredByName.get(column.name);
     const nullable = column.nullable ?? declared?.nullable;
     const carriesSourceProvenance =
@@ -373,7 +374,7 @@ function buildDvtTransformColumnRows(
           ? `${column.sourceNodeId ?? 'input'}.${column.name}`
           : column.name),
       cells: {
-        name: column.name,
+        name: path,
         type: column.type === 'unknown' && declared != null ? declared.type : column.type,
         nullable: nullable === false ? 'not null' : nullable === true ? 'nullable' : '',
         key: declared?.primaryKey ? 'PK' : '',

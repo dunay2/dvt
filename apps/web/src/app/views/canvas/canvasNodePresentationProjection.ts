@@ -52,6 +52,7 @@ type DvtSubstraitPresentedOutput = Readonly<{
   fieldId: string;
   dataType?: string;
   sourceNodeId?: string;
+  sourceFieldId?: string;
   sourceFieldName?: string;
   operations?: readonly string[];
   description?: string;
@@ -78,7 +79,9 @@ function presentSubstraitOutput(
     ...(sourceColumn?.sourceNodeName == null
       ? {}
       : { sourceNodeName: sourceColumn.sourceNodeName }),
-    ...(sourceColumn?.reference == null ? {} : { sourceReference: sourceColumn.reference }),
+    ...(output.sourceFieldId == null && sourceColumn?.reference == null
+      ? {}
+      : { sourceReference: output.sourceFieldId ?? sourceColumn?.reference }),
     ...(output.children == null
       ? {}
       : { children: output.children.map((child) => presentSubstraitOutput(child, inherited)) }),
@@ -174,7 +177,11 @@ function projectCanvasNodePresentationTruthInternal(
                 dataType: output.dataType,
                 ...(sourceFieldName == null
                   ? {}
-                  : { sourceNodeId: projection.source.nodeId, sourceFieldName }),
+                  : {
+                      sourceNodeId: projection.source.nodeId,
+                      sourceFieldId: output.sourceFieldId,
+                      sourceFieldName,
+                    }),
                 ...(calculatedOperations == null
                   ? output.operations == null
                     ? {}

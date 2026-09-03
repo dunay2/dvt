@@ -17,6 +17,7 @@ export type CanvasStructuredPresentedOutput = Readonly<{
   fieldId: string;
   dataType: string;
   sourceNodeId?: string;
+  sourceFieldId?: string;
   sourceFieldName?: string;
   children?: readonly CanvasStructuredPresentedOutput[];
 }>;
@@ -68,6 +69,7 @@ function presentField(args: {
     fieldId: args.binding.fieldId,
     dataType: sourceField.dataType,
     sourceNodeId: args.sourceNode.id,
+    sourceFieldId: args.binding.sourceFieldId,
     sourceFieldName,
   };
 }
