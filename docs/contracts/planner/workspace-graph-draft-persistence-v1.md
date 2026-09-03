@@ -72,6 +72,12 @@ migration state: unsupported stored versions are rejected and must be handled
 by an explicit product operation outside this read/write route if one is ever
 approved.
 
+For `dvt:transform` nodes, an existing `transformAuthoring` metadata value is
+part of that format boundary. The aggregate parser must verify the exact pinned
+Substrait protobuf version, semantic byte digest, profile coordinates and DVT
+sidecar binding on both save and read. Invalid semantic truth is a corrupt
+payload; it never falls back to SQL, VTX1 metadata or another document source.
+
 ## Compare-and-swap and idempotency
 
 Write requests must include:
