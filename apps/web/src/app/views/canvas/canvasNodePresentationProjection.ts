@@ -36,6 +36,7 @@ import {
 } from './objectFilePostgresAuthoringModel';
 import { projectTransformColumnsInStableOrder } from './canvasTransformColumnOrderProjection';
 import { projectCanvasStructuredFieldOutputs } from './canvasStructuredFieldPresentation';
+import { inspectDvtSubstraitFilter, removeDvtSubstraitFilter } from './canvasDvtSubstraitFilter';
 
 export function projectCanvasNodePresentationTruth(
   args: Readonly<{
@@ -133,7 +134,11 @@ function projectCanvasNodePresentationTruthInternal(
   let unresolvedMultiInputProjection = false;
   let canonicalSubstraitCode: Extract<CanvasNodeCodeTruth, { kind: 'canonical' }> | null = null;
   let invalidCanonicalSubstraitDocument = false;
-  if (args.node.pluginId === 'dvt' && args.node.kind === 'dvt:transform') {
+  const supportsDvtSemantics =
+    (args.node.pluginId === 'dvt' && args.node.kind === 'dvt:transform') ||
+    (args.node.kind === 'dvt:source' &&
+      (args.node.pluginId === 'dvt' || args.node.pluginId === 'dvt.warehouse-source'));
+  if (supportsDvtSemantics) {
     const rawAuthority = args.node.metadata?.transformAuthoring;
     const declaresSubstraitAuthority =
       isRecord(rawAuthority) && rawAuthority.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait;
@@ -149,11 +154,14 @@ function projectCanvasNodePresentationTruthInternal(
         };
         try {
           const projectionDraft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
+          const projectionFilter = inspectDvtSubstraitFilter(projectionDraft);
+          const resolvedProjectionDraft =
+            projectionFilter == null ? projectionDraft : removeDvtSubstraitFilter(projectionDraft);
           const projection = resolveDvtSubstraitProjectionEntry({
             targetNode: args.node,
             nodes: args.nodes,
             edges: args.edges,
-            draft: projectionDraft,
+            draft: resolvedProjectionDraft,
           });
           if (projection != null) {
             substraitOutputs = projection.outputs.map((output) => {
