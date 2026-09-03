@@ -118,25 +118,37 @@ flowchart LR
 ```feature-mechanization
 version: 1
 featureId: VTX2-PREVIEW-CONTRACT-HARDCUT-2600
-mechanizationStatus: planned
+mechanizationStatus: implemented
 noHumanDecisionsRemaining: true
 implementationPlan: docs/planning/proposals/mandatory/runtime-and-contracts/vtx2-preview-contract-hardcut-plan-20260903.md
+componentGuides:
+  - docs/architecture/components/planner/index.md
+  - docs/architecture/components/web/runs/frontend-backend-mvp-contract.md
+  - docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md
+userStories:
+  - As a DVT author I have one Substrait transformation authority instead of two competing models.
+  - As an API caller I receive a typed rejection for retired preview profiles.
+  - As a maintainer I can change generic Preview without preserving SQL-first compatibility code.
 governingSources:
   - AGENTS.md
   - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
   - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
 domainObjects:
   - Plan preview contract
 allowedImplementationSurfaces:
   - packages/@dvt/contracts/**
-  - apps/api/src/**
-  - apps/api/test/**
-  - apps/web/src/app/plugins/canvasExecutionStrategyContracts.ts
-  - apps/web/src/app/views/canvas/**
-  - docs/contracts/planner/**
-  - docs/evidence/**
-  - docs/risk-register/quality/**
-  - docs/**/index.md
+  - packages/@dvt/adapter-temporal/test/**
+  - apps/api/**
+  - apps/temporal-worker/test/**
+  - apps/web/**
+  - scripts/supported-runtime-proof/**
+  - docs/**
+forbiddenImplementationSurfaces:
+  - packages/@dvt/engine/**
+  - packages/@dvt/planner/**
+  - database migrations
+  - new preview routes, commands, queries, planners, stores, or compatibility aliases
 commandQueryRails:
   - name: PreviewExecutionPlan
     type: query
@@ -156,9 +168,43 @@ commandQueryRails:
     authorizationScope: Existing plan compile scope
     negativeTests:
       - retired transformation design graph is not recognized as an admitted source
+fowlerSignals:
+  - Duplicate semantic authority
+  - Dead code
+  - Parallel parser semantics
+  - Shotgun surgery
+architectureGuards:
+  - pnpm docs:feature-mechanization:implementation -- --feature VTX2-PREVIEW-CONTRACT-HARDCUT-2600
+  - GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs
+cypressFlows:
+  - none: contract hard cut deletes the retired Canvas E2E path; generic Preview remains covered by behavior suites
+redGreenCycles:
+  - id: reject-retired-preview-profile
+    redTest: pnpm --filter @dvt/contracts exec vitest run test/validation.test.ts
+    expectedFailure: PreviewProfileSchema still accepts transformation-sql-first-v2.
+    patchSurfaces:
+      - packages/@dvt/contracts/src/schema-packs/plan-preview-profile.ts
+      - packages/@dvt/contracts/src/schema-packs/plan-preview-request.ts
+      - packages/@dvt/contracts/src/schema-packs/plan-preview-response.ts
+    greenTest: pnpm --filter @dvt/contracts exec vitest run test/validation.test.ts
 completionGate:
   - pnpm --filter @dvt/contracts test
-  - pnpm --filter @dvt/api test
-  - pnpm --filter @dvt/web test:canvas
+  - pnpm --filter dvt-api test:unit
+  - pnpm --filter @dvt/web test:changed
   - pnpm verify:prepush
+symbols:
+  - { name: PreviewProfileSchema, path: packages/@dvt/contracts/src/schema-packs/plan-preview-profile.ts, dddOwner: PlanPreviewContract, cqRails: [PreviewExecutionPlan], fowlerSignals: [Duplicate semantic authority], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: none, unitTests: [pnpm --filter @dvt/contracts test] }
+  - { name: TRANSFORMATION_STEP_KIND, path: packages/@dvt/contracts/src/index.ts, dddOwner: RuntimeStepRegistry, cqRails: [CompilePlan], fowlerSignals: [Dead code], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: none, unitTests: [pnpm --filter @dvt/contracts test] }
+  - { name: mapPreviewContractError, path: apps/api/src/entrypoints/http/previewPlanRouteParser.ts, dddOwner: PreviewExecutionPlan, cqRails: [PreviewExecutionPlan], fowlerSignals: [Parallel parser semantics], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: none, unitTests: [pnpm --filter dvt-api test:unit] }
+  - { name: CanvasPlanActionResult, path: apps/web/src/app/views/canvas/canvasPlanAction.ts, dddOwner: CanvasPlanAction, cqRails: [PreviewExecutionPlan], fowlerSignals: [Duplicate semantic authority], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: none, unitTests: [pnpm --filter @dvt/web test:changed] }
+  - { name: attachDbtSelectionIntentToOutcome, path: apps/web/src/app/views/canvas/canvasPlanAction.ts, dddOwner: CanvasPlanAction, cqRails: [PreviewExecutionPlan], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: none, unitTests: [pnpm --filter @dvt/web test:changed] }
+  - { name: GENERIC_GRAPH_SOURCE, path: apps/web/src/app/services/plans/plansService.test.support.ts, dddOwner: PlansAdapterBehaviorProof, cqRails: [PreviewExecutionPlan], fowlerSignals: [Extract Class], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: none, unitTests: [pnpm --filter @dvt/web test:changed] }
+  - { name: buildPlan, path: apps/web/src/app/services/plans/plansService.test.support.ts, dddOwner: PlansAdapterBehaviorProof, cqRails: [PreviewExecutionPlan], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: none, unitTests: [pnpm --filter @dvt/web test:changed] }
+  - { name: buildValidPlanRef, path: apps/web/src/app/services/plans/plansService.test.support.ts, dddOwner: PlansAdapterBehaviorProof, cqRails: [PreviewExecutionPlan], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: none, unitTests: [pnpm --filter @dvt/web test:changed] }
+  - { name: buildPreviewPayload, path: apps/web/src/app/services/plans/plansService.test.support.ts, dddOwner: PlansAdapterBehaviorProof, cqRails: [PreviewExecutionPlan], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: none, unitTests: [pnpm --filter @dvt/web test:changed] }
+  - { name: buildApiClientStub, path: apps/web/src/app/services/plans/plansService.test.support.ts, dddOwner: PlansAdapterBehaviorProof, cqRails: [PreviewExecutionPlan], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: none, unitTests: [pnpm --filter @dvt/web test:changed] }
+  - { name: buildPreviewInput, path: apps/web/src/app/services/plans/plansService.test.support.ts, dddOwner: PlansAdapterBehaviorProof, cqRails: [PreviewExecutionPlan], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: none, unitTests: [pnpm --filter @dvt/web test:changed] }
+  - { name: previewAccepted, path: apps/web/src/app/services/plans/plansService.test.support.ts, dddOwner: PlansAdapterBehaviorProof, cqRails: [PreviewExecutionPlan], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: none, unitTests: [pnpm --filter @dvt/web test:changed] }
+  - { name: createPlanRejectedApiError, path: apps/web/src/app/services/plans/plansService.test.support.ts, dddOwner: PlansAdapterBehaviorProof, cqRails: [PreviewExecutionPlan], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: none, unitTests: [pnpm --filter @dvt/web test:changed] }
+  - { name: createWorkspaceFilesQueryMock, path: apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx, dddOwner: CanvasExecutionBehaviorProof, cqRails: [PreviewExecutionPlan], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: none, unitTests: [pnpm --filter @dvt/web test:changed] }
 ```

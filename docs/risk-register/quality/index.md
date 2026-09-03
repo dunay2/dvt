@@ -137,6 +137,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Postgres tenant isolation semantic docs can drift from runtime RLS catalog](R-20260523-POSTGRES-TENANT-ISOLATION-CANON.yaml)
 - [Postgres three-part model migration and compatibility drift](R-20260403-S08-4-POSTGRES-THREE-PART-MODEL.yaml)
 - [PostgreSQL interruption could strand workers or diverge run snapshots](R-20260803-POSTGRES-RECOVERY.yaml)
+- [Preview consumers could attempt the removed SQL-first contract](R-20260903-VTX2-PREVIEW-CONTRACT-HARDCUT.yaml)
 - [Preview rejection phases can be misclassified across API and Web boundaries](R-20260731-TYPED-PLAN-PREVIEW-OUTCOMES.yaml)
 - [Project grants, workspace selection and graph authority could diverge](R-20260813-PROJECT-WORKSPACE-GRAPH-AUTHORITY.yaml)
 - [Protected runtime rail catalog documentation source of truth is closed](R-20260503-PROTECTED-RUNTIME-RAIL-SSOT-DEBT.yaml)
