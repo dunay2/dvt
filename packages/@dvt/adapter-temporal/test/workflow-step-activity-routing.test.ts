@@ -59,7 +59,7 @@ describe('workflow step activity routing', () => {
 
   it('keeps unrouted step kinds on the workflow task queue default', () => {
     createStepActivities(
-      { stepId: 's-sql', kind: 'POSTGRES_SQL_TRANSFORM' },
+      { stepId: 's-dbt-test', kind: 'DBT_TEST' },
       {
         routesByStepKind: {
           PYTHON_SCRIPT: {

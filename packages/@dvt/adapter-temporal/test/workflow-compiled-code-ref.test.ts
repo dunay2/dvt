@@ -92,14 +92,10 @@ describe('buildStepStartedPayload', () => {
   it('returns undefined for step kinds without compiledCodeRef', () => {
     expect(
       buildStepStartedPayload({
-        stepId: 'step-relational',
-        kind: 'POSTGRES_SQL_TRANSFORM',
+        stepId: 'step-object-file-load',
+        kind: 'LOAD_OBJECT_FILE_TO_POSTGRES',
         stepTypeConfig: {
-          sql: 'SELECT 1',
-          sinkSchema: 'analytics',
-          sinkTable: 'orders_daily',
-          materialization: 'table',
-          writeMode: 'replace',
+          source: 's3://bucket/orders.parquet',
         },
       })
     ).toBeUndefined();

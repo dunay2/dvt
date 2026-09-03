@@ -28,7 +28,7 @@ describe('RunExecutionContextAdmissionPolicy acceptance', () => {
 
     await expect(
       assertDefaultAdmission(policy, {
-        plan: makePlan(['POSTGRES_SQL_TRANSFORM']),
+        plan: makePlan(['SPARK_JOB']),
         executionPolicy: makeExecutionPolicy(),
         context: { ...makeContext(), runExecutionContextRef: undefined },
       })
