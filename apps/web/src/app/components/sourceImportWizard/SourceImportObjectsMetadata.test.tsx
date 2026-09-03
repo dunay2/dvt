@@ -4,13 +4,13 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { SourceImportSelectedObjectsMetadata } from './SourceImportSelectedObjectsMetadata';
+import { SourceImportObjectsMetadata } from './SourceImportObjectsMetadata';
 import {
   buildSourceImportTestFileObject,
   buildSourceImportTestObject,
 } from './sourceImportWizard.testFixtures';
 
-describe('SourceImportSelectedObjectsMetadata', () => {
+describe('SourceImportObjectsMetadata', () => {
   let container: HTMLDivElement;
   let root: Root;
 
@@ -43,9 +43,10 @@ describe('SourceImportSelectedObjectsMetadata', () => {
 
     await act(async () => {
       root.render(
-        <SourceImportSelectedObjectsMetadata
-          selectedSourceObjects={[orders, customers]}
+        <SourceImportObjectsMetadata
+          sourceObjects={[orders, customers]}
           activeSourceObjectKey={customers.objectId}
+          scope="selected"
         />
       );
     });
@@ -86,9 +87,10 @@ describe('SourceImportSelectedObjectsMetadata', () => {
   it('renders a truthful empty state without inventing an active object', async () => {
     await act(async () => {
       root.render(
-        <SourceImportSelectedObjectsMetadata
-          selectedSourceObjects={[]}
+        <SourceImportObjectsMetadata
+          sourceObjects={[]}
           activeSourceObjectKey={null}
+          scope="selected"
         />
       );
     });
@@ -102,9 +104,10 @@ describe('SourceImportSelectedObjectsMetadata', () => {
 
     await act(async () => {
       root.render(
-        <SourceImportSelectedObjectsMetadata
-          selectedSourceObjects={[file]}
+        <SourceImportObjectsMetadata
+          sourceObjects={[file]}
           activeSourceObjectKey={file.objectId}
+          scope="selected"
         />
       );
     });

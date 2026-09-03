@@ -1,6 +1,4 @@
 /** Owned concern: render selected source metadata without owning wizard flow state. */
-import { isRelationalSourceObject } from '@dvt/contracts';
-
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { Badge } from '../ui/badge';
 import { ScrollArea } from '../ui/scroll-area';
@@ -8,11 +6,16 @@ import { MetricEvidenceHotspot } from '../metrics/MetricEvidenceHotspot';
 import { useSourceImportLocalization } from './copy';
 import { SourceImportConstraintMarkers } from './SourceImportConstraintMarkers';
 import { buildSourceImportObjectViewModel } from './sourceImportCatalogModel';
+import {
+  resolveSourceImportContextualName,
+  resolveSourceImportSharedCatalog,
+} from './sourceImportMetadataModel';
 import type { SelectableSourceObject } from './types';
 
-type SourceImportSelectedObjectsMetadataProps = Readonly<{
-  selectedSourceObjects: readonly SelectableSourceObject[];
+type SourceImportObjectsMetadataProps = Readonly<{
+  sourceObjects: readonly SelectableSourceObject[];
   activeSourceObjectKey: string | null;
+  scope: 'active' | 'selected';
 }>;
 
 export const sourceImportSelectedMetadataClassNames = {
@@ -40,16 +43,18 @@ export const sourceImportSelectedMetadataClassNames = {
   importability: 'rounded border border-amber-500/40 bg-amber-950/20 p-3 text-sm text-amber-200',
 } as const;
 
-export function SourceImportSelectedObjectsMetadata({
-  selectedSourceObjects,
+export function SourceImportObjectsMetadata({
+  sourceObjects,
   activeSourceObjectKey,
-}: SourceImportSelectedObjectsMetadataProps): JSX.Element {
+  scope,
+}: SourceImportObjectsMetadataProps): JSX.Element {
   const { copy, numberFormatter } = useSourceImportLocalization();
-  const viewModels = selectedSourceObjects.map((sourceObject, index) => ({
+  const viewModels = sourceObjects.map((sourceObject, index) => ({
     sourceObject,
     viewModel: buildSourceImportObjectViewModel(sourceObject, index, copy.catalog, numberFormatter),
   }));
-  const sharedCatalog = resolveSharedCatalog(selectedSourceObjects);
+  const sharedCatalog =
+    scope === 'selected' ? resolveSourceImportSharedCatalog(sourceObjects) : null;
   const activeKey = viewModels.some(
     ({ viewModel }) => viewModel.identityKey === activeSourceObjectKey
   )
@@ -59,9 +64,11 @@ export function SourceImportSelectedObjectsMetadata({
   return (
     <section className={sourceImportSelectedMetadataClassNames.root}>
       <header className={sourceImportSelectedMetadataClassNames.heading}>
-        <h3 className={sourceImportSelectedMetadataClassNames.title}>{copy.metadata.title}</h3>
+        <h3 className={sourceImportSelectedMetadataClassNames.title}>
+          {scope === 'selected' ? copy.metadata.title : copy.metadata.activeTitle}
+        </h3>
         <p className={sourceImportSelectedMetadataClassNames.description}>
-          {copy.metadata.description}
+          {scope === 'selected' ? copy.metadata.description : copy.metadata.activeDescription}
         </p>
       </header>
 
@@ -96,7 +103,7 @@ export function SourceImportSelectedObjectsMetadata({
                 <div className={sourceImportSelectedMetadataClassNames.triggerContent}>
                   <div className={sourceImportSelectedMetadataClassNames.identity}>
                     <span className={sourceImportSelectedMetadataClassNames.objectName}>
-                      {resolveContextualName(sourceObject, sharedCatalog)}
+                      {resolveSourceImportContextualName(sourceObject, sharedCatalog)}
                     </span>
                     <Badge variant="outline">{viewModel.kindLabel}</Badge>
                   </div>
@@ -180,29 +187,4 @@ function SourceObjectMetadataBody({
       </div>
     </ScrollArea>
   );
-}
-
-function resolveSharedCatalog(sourceObjects: readonly SelectableSourceObject[]): string | null {
-  const catalogs = new Set(
-    sourceObjects
-      .filter(isRelationalSourceObject)
-      .map((sourceObject) => sourceObject.locator.catalog)
-  );
-  return sourceObjects.length > 0 &&
-    sourceObjects.every(isRelationalSourceObject) &&
-    catalogs.size === 1
-    ? ([...catalogs][0] ?? null)
-    : null;
-}
-
-function resolveContextualName(
-  sourceObject: SelectableSourceObject,
-  sharedCatalog: string | null
-): string {
-  if (isRelationalSourceObject(sourceObject)) {
-    const prefix =
-      sharedCatalog === sourceObject.locator.catalog ? [] : [sourceObject.locator.catalog];
-    return [...prefix, sourceObject.locator.schema, sourceObject.locator.name].join('.');
-  }
-  return sourceObject.displayName;
 }
