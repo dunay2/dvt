@@ -109,7 +109,7 @@ domainObjects:
   - ExecutionPlan step-kind registry
   - Plan compile catalog
   - Temporal step-activity registry
-allowedImplementationSurfaces: [packages/@dvt/contracts/**, packages/@dvt/adapter-postgres/**, packages/@dvt/adapter-temporal/**, packages/@dvt/engine/test/**, apps/api/**, apps/temporal-worker/**, scripts/**, tools/ci/**, .github/workflows/pr-quality-gate.yml, package.json, pnpm-lock.yaml, docs/**]
+allowedImplementationSurfaces: [packages/@dvt/contracts/**, packages/@dvt/adapter-postgres/**, packages/@dvt/adapter-temporal/**, packages/@dvt/engine/test/**, apps/api/**, apps/temporal-worker/**, scripts/**, tools/ci/**, .github/workflows/pr-quality-gate.yml, package.json, pnpm-lock.yaml, tsconfig.json, docs/**]
 forbiddenImplementationSurfaces:
   - packages/@dvt/planner/**
   - new compatibility contracts, runtime plugins, or fallback handlers
