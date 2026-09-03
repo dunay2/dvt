@@ -185,12 +185,10 @@ describe('LOAD_OBJECT_FILE_TO_POSTGRES registry profile', () => {
     ).toBe(false);
   });
 
-  it('does not change existing DBT and PostgreSQL transformation profiles', () => {
+  it('keeps DBT execution independent from the retired SQL-first profile', () => {
     expect(registry.getExecutionProfile?.('DBT_MODEL')?.requiredCapabilities).toEqual([
       'executor.dbt',
     ]);
-    expect(registry.getExecutionProfile?.('POSTGRES_SQL_TRANSFORM')?.requiredCapabilities).toEqual(
-      []
-    );
+    expect(registry.getExecutionProfile?.('POSTGRES_SQL_TRANSFORM')).toBeUndefined();
   });
 });
