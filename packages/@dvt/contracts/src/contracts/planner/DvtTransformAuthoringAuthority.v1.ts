@@ -3,6 +3,7 @@
  *
  * @baseline ADR-0035: Planner Public Contract Evolution Protocol
  * @baseline ADR-0064: Substrait semantic reference and bounded logical profile
+ * @decision Admit Substrait as the sole DVT transform authoring authority.
  * @version 1.0.0
  */
 import { z } from 'zod';

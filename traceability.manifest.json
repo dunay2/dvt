@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-08-14",
+  "generated": "2026-09-03",
   "repo": {
     "sha": "local"
   },
@@ -324,9 +324,7 @@
         "packages/@dvt/engine/src/state/InMemoryTxStore.ts",
         "packages/@dvt/engine/src/types/index.ts",
         "packages/@dvt/engine/src/types/types.ts",
-        "packages/@dvt/engine/src/utils/clock.ts",
-        "packages/@dvt/engine/src/utils/jcs.ts",
-        "packages/@dvt/engine/src/utils/sha256.ts"
+        "packages/@dvt/engine/src/utils/clock.ts"
       ],
       "title": "ADR-0003: Execution Model Sovereignty"
     },
@@ -434,8 +432,6 @@
         "packages/@dvt/contracts/src/schemas.ts",
         "packages/@dvt/contracts/src/types/artifacts.ts",
         "packages/@dvt/contracts/src/types/contracts.ts",
-        "packages/@dvt/contracts/src/utils/jcsCanonicalize.ts",
-        "packages/@dvt/contracts/src/utils/sha256HexUtf8.ts",
         "packages/@dvt/contracts/src/validation.ts",
         "packages/@dvt/contracts/src/workflows.ts"
       ],
@@ -464,8 +460,6 @@
         "packages/@dvt/contracts/src/schemas.ts",
         "packages/@dvt/contracts/src/types/artifacts.ts",
         "packages/@dvt/contracts/src/types/contracts.ts",
-        "packages/@dvt/contracts/src/utils/jcsCanonicalize.ts",
-        "packages/@dvt/contracts/src/utils/sha256HexUtf8.ts",
         "packages/@dvt/contracts/src/validation.ts",
         "packages/@dvt/contracts/src/workflows.ts"
       ],
@@ -865,6 +859,7 @@
     {
       "number": "ADR-0035",
       "decisions": [
+        "Admit Substrait as the sole DVT transform authoring authority.",
         "Admit one UTF-8 CSV or JSON Lines object and one scoped staging relation.",
         "Carry one bounded dbt selector in the admitted step configuration.",
         "Define plan-compile step-type configuration schemas as explicit planner contract surface",
@@ -873,6 +868,7 @@
         "Keep execution decisions in the persisted plan artifact so Web renders planner truth without reconstructing selection semantics.",
         "Mark the object-file staging dependency explicitly in admitted DBT step configuration.",
         "Model workspace graph edits as aggregate commands instead of transport-specific patches.",
+        "Persist only the exceptional closed gate and derive effective execution from structural permission plus shared policy.",
         "Persist workspace authoring as a graph-first aggregate, not as UI widget state.",
         "Plans carry only opaque endpoint/credential references and a predeclared content address.",
         "Publish execution-selection schemas as a focused schema pack for external validators.",
@@ -884,6 +880,7 @@
       ],
       "implemented_by": [
         "packages/@dvt/contracts/src/contracts/planner/DbtStepSelector.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/ExecutableSubgraph.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/ExecutionSelection.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/HttpJsonArtifactStepTypeConfig.v1.ts",
@@ -894,6 +891,7 @@
         "packages/@dvt/contracts/src/contracts/planner/PlanExecutionDecision.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringCommand.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/index.ts",
         "packages/@dvt/contracts/src/schema-packs/execution-selection.ts",
         "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
@@ -1122,6 +1120,7 @@
       "decisions": [
         "Define warehouse connection discovery queries and source import command DTOs.",
         "Keep protected source discovery and import request/response DTOs in one canonical contract component.",
+        "Keep row samples separate from source-object catalog discovery and reject client SQL.",
         "Keep source import scope bound to protected runtime workspace authorization.",
         "Persist one strict, versioned ConnectedSourceRef instead of parallel loose connection and object identifiers.",
         "Re-export only source-object catalog and source-import operation contracts from this barrel.",
@@ -1130,6 +1129,7 @@
       "implemented_by": [
         "apps/api/src/application/ports/warehouseSourceImport.ts",
         "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts",
+        "packages/@dvt/contracts/src/contracts/source-import/SourceDataSample.v1.ts",
         "packages/@dvt/contracts/src/contracts/source-import/SourceImportOperations.v1.ts",
         "packages/@dvt/contracts/src/contracts/source-import/SourceObjectCatalog.v1.ts",
         "packages/@dvt/contracts/src/contracts/source-import/index.ts"
@@ -1139,6 +1139,7 @@
     {
       "number": "ADR-0060",
       "decisions": [
+        "Compile only already-published Graph Draft artifacts through native DBT.",
         "Enforce scoped compare-and-swap before atomically replacing authoritative workspace files.",
         "Expose stable content revisions and compare-and-swap writes at the workspace-file port.",
         "Keep dbt file analysis in a versioned projection separate from execution and draft persistence.",
@@ -1161,6 +1162,7 @@
         "packages/@dvt/contracts/src/contracts/dbt-project/DbtProjectImport.v1.ts",
         "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
         "packages/@dvt/contracts/src/contracts/dbt-project/DbtYamlDescriptionEdit.v1.ts",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtModelCompilation.v1.ts",
         "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
         "packages/@dvt/contracts/src/contracts/dbt-project/index.ts",
         "packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts",
@@ -1199,6 +1201,24 @@
       ],
       "implemented_by": ["scripts/planning-db-query.cjs"],
       "title": "ADR-0063 - Planning DB Current-Schema Rebuild"
+    },
+    {
+      "number": "ADR-0064",
+      "decisions": [
+        "Admit Substrait as the sole DVT transform authoring authority.",
+        "Export the pinned Substrait profile, stable authoring bindings, and single semantic capability catalog through one bounded public contract surface.",
+        "Keep one small versioned governance overlay over exact Substrait identities instead of duplicating its algebra or provider capability model.",
+        "Logical transformation semantics stay outside ExecutionPlan; plan steps represent runtime responsibilities only.",
+        "Pin one exact Substrait release and map stable DVT ids to rel_anchor/output ordinals."
+      ],
+      "implemented_by": [
+        "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProfile.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts",
+        "packages/@dvt/contracts/src/substrait.ts"
+      ],
+      "title": "ADR-0064 - Substrait as the Semantic Reference and Bounded Logical Profile for DVT Transformations"
     }
   ]
 }
