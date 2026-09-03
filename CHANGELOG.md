@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.12.0 (2026-09-03)
+
+## What's Changed
+* feat(contracts): Persist canonical Substrait semantic documents by @dunay2 in https://github.com/dunay2/dvt/pull/2862
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.11.2...v0.12.0
+
 ## 0.11.2 (2026-09-03)
 
 ## What's Changed
