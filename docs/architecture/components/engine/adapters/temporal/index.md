@@ -13,7 +13,7 @@ last_reviewed: 2026-04-09
 - [Temporal PlanRef workflow boundary component](./temporal-planref-workflow-boundary.md)
 - [Temporal step plugin profile component](./temporal-step-plugin-profile.md)
 - [Temporal DBT worker plugin profile](./temporal-dbt-worker-plugin-profile.md)
-- [Engine policies](./EnginePolicies.md)
+- [Engine policies](./engine-policies.md)
 
 ## Related pages
 

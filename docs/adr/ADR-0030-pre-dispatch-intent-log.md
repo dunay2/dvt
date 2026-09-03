@@ -283,7 +283,7 @@ Two new error classes extending `DvtError`:
 - [ADR-0013 — bootstrapRunTx Atomicity](./ADR-0013-run-state-store-bootstrapRunTx.md) — Provider refs in atomic bootstrap
 - [ADR-0014 — Adapter-First Execution Order](./ADR-0014-run-driven-adapter-model.md) — Why adapter is called before state persistence
 - [ADR-0029 — Run Maintenance Service Extraction](./ADR-0029-run-maintenance-service.md) — Reconciliation added to this service
-- [Temporal Engine Policies](../architecture/components/engine/adapters/temporal/EnginePolicies.md) — workflowId derivation from `runId`
+- [Temporal Engine Policies](../architecture/components/engine/adapters/temporal/engine-policies.md) — workflowId derivation from `runId`
 
 ---
 

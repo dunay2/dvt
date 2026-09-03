@@ -1,4 +1,4 @@
-# Temporal Engine Policies
+# Temporal engine policies
 
 **Status**: Implementation Snapshot (aligned to current code)  
 **Version**: 1.2  
