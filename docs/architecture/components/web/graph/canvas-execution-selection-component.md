@@ -308,8 +308,8 @@ sequenceDiagram
 
 Browser proof for this posture now lives in:
 
-- `apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts`
-- `apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts`
+- `apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts`
+- `apps/web/cypress/e2e/canvas/canvas-dbt-selection-recovery-live.cy.ts`
 - `apps/web/src/app/services/plans/plansService.test.ts`
 - `apps/web/src/app/services/runs/runsService.test.ts`
 
@@ -318,21 +318,21 @@ Browser proof for this posture now lives in:
 These stories are the regression checklist for the product promise. They must
 stay tied to executable browser proof instead of remaining a loose QA note.
 
-| Story       | User intent                                                                                                    | Proof surface                                                                                         |
-| ----------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `UX-E2E-01` | Create the first graph/canvas node through the UI and restore it.                                              | `apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts`                                       |
-| `UX-E2E-02` | Build a graph, plan the selected closure, execute it, and see result.                                          | `apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts`                                      |
-| `UX-E2E-03` | Return from run result to Canvas, plan again, and execute again.                                               | `apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts`                                      |
-| `UX-E2E-04` | Prove the same selected-closure flow against the protected runtime.                                            | `apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts`                                           |
-| `UX-E2E-05` | Configure dbt cards, select origin, view generated code, and run.                                              | `apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts`                                   |
-| `UX-E2E-06` | Verify Graph, Code, Lineage, and Artifacts describe the same project.                                          | `apps/web/cypress/e2e/canvas/canvas-graph-code-artifacts-parity.cy.ts`                                |
-| `UX-E2E-07` | See explicit re-plan guidance instead of raw transport failures.                                               | `apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts` and plan action unit coverage below. |
-| `UX-E2E-08` | Select only executable DBT roots and verify Preview distinguishes requested resources from dependency closure. | `apps/web/cypress/e2e/dbt/dbt-project-preview-run-live.cy.ts`                                         |
+| Story       | User intent                                                                                                    | Proof surface                                                                     |
+| ----------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `UX-E2E-01` | Create the first graph/canvas node through the UI and restore it.                                              | `apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts`                   |
+| `UX-E2E-02` | Build a dbt graph, plan the selected closure, execute it, and see result.                                      | `apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts`               |
+| `UX-E2E-03` | Return from a dbt run result, plan again, and execute again.                                                   | `apps/web/cypress/e2e/dbt/dbt-project-preview-run-live.cy.ts`                     |
+| `UX-E2E-04` | Recover a selected dbt closure against the protected runtime.                                                  | `apps/web/cypress/e2e/canvas/canvas-dbt-selection-recovery-live.cy.ts`            |
+| `UX-E2E-05` | Configure dbt cards, select origin, view generated code, and run.                                              | `apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts`               |
+| `UX-E2E-06` | Preserve authored graph and code through a project snapshot round trip.                                        | `apps/web/cypress/e2e/canvas/canvas-project-snapshot-roundtrip.cy.ts`             |
+| `UX-E2E-07` | See explicit re-plan guidance instead of raw transport failures.                                               | `apps/web/src/app/views/canvas/useCanvasExecutionActions.runStartGuards.test.tsx` |
+| `UX-E2E-08` | Select only executable DBT roots and verify Preview distinguishes requested resources from dependency closure. | `apps/web/cypress/e2e/dbt/dbt-project-preview-run-live.cy.ts`                     |
 
 Minimum local product gate for this component:
 
 ```bash
-pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
 ```
 
 Live protected-runtime lanes remain separate because they require the local
@@ -390,7 +390,8 @@ sequenceDiagram
 
 The governed proof surface for that lane is:
 
-- `apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts`
+- `apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts`
+- `apps/web/cypress/e2e/canvas/canvas-dbt-selection-recovery-live.cy.ts`
 - `apps/web/cypress/support/liveProtectedRuntime.ts`
 - `apps/web/cypress/support/canvasExecutionSelection.ts`
 - `apps/web/cypress/support/canvasPreviewArtifacts.ts`
@@ -415,10 +416,10 @@ The governed proof surface for that lane is:
 - `apps/web/src/app/services/runs/runsService.api.ts`
 - `apps/web/src/app/services/plans/plansService.api.ts`
 - `apps/web/src/app/services/api/protectedRuntimeRejection.ts`
-- `apps/web/src/app/views/canvas/canvasExecutionSelection.architecture.test.ts`
+- `apps/web/src/app/views/canvas/canvasRunSelection.test.ts`
 - `apps/web/src/app/views/canvas/canvasRunStartIdentity.architecture.test.ts`
-- `apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts`
-- `apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts`
+- `apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts`
+- `apps/web/cypress/e2e/canvas/canvas-dbt-selection-recovery-live.cy.ts`
 - `apps/web/cypress/support/liveProtectedRuntime.ts`
 - `scripts/run-selected-closure-live-proof.cjs`
 
