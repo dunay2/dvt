@@ -24,8 +24,8 @@ test('draft and preview describe the same source, sink, and selected closure', (
   assert.equal(draft.draft.nodes[0].metadata.schema, 'raw');
   assert.deepEqual(draft.draft.nodes[0].metadata.connectionRef, connectionRef);
   assert.equal(draft.draft.nodes[2].metadata.schema, 'runtime_proof');
-  assert.equal(preview.previewProfile, 'transformation-sql-first-v2');
-  assert.equal(preview.graphSource.sourceVersion, 'transformation-sql-first-v2');
+  assert.equal(preview.previewProfile, 'planner-generic-v1');
+  assert.equal(preview.graphSource.sourceVersion, 'substrait-v1');
   assert.deepEqual(preview.selection, { mode: 'upstream', nodeIds: ['sink_1'] });
   assert.equal(preview.graphSource.nodes[1].stepTypeConfig.sql, 'select * from raw.orders');
   assert.equal(

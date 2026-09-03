@@ -64,12 +64,12 @@ function buildRuntimeProofPreviewRequest(profile) {
       ...scope,
       targetAdapter: 'temporal',
     },
-    previewProfile: 'transformation-sql-first-v2',
+    previewProfile: 'planner-generic-v1',
     selection: { mode: 'upstream', nodeIds: ['sink_1'] },
     graphSource: {
       kind: 'generic-graph-v1',
-      sourceFamily: 'transformation-design-graph',
-      sourceVersion: 'transformation-sql-first-v2',
+      sourceFamily: 'dvt-substrait',
+      sourceVersion: 'substrait-v1',
       nodes: [
         {
           nodeId: 'source_1',
