@@ -274,7 +274,12 @@ export function useCanvasControllerReadModel({
               })
             : { hasEditableProjection: false, supportsCalculatedColumns: false };
         const columnFunctionMenus = functionProjection.menus;
-        const hasEditableProjection = functionProjection.hasEditableProjection;
+        const hasStructuredProjection =
+          canonicalNode?.pluginId === 'dvt' &&
+          canonicalNode.kind === 'dvt:transform' &&
+          readInteractiveColumns(node).some((column) => column.children?.length);
+        const hasEditableProjection =
+          functionProjection.hasEditableProjection || hasStructuredProjection;
 
         const projectedNodeData = {
           ...node.data,

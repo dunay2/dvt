@@ -58,6 +58,7 @@ export type UseCanvasGraphHandlersResult = {
     columnId: string;
     targetColumnId: string;
     placement: 'before' | 'after';
+    parentColumnId?: string;
   }) => void;
   handleColumnDisclosureChange: (nodeId: string, expanded: boolean) => void;
   handleAutomapCanvasColumns: (

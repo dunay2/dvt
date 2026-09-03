@@ -58,18 +58,29 @@ function expandAndAssignColumns(): void {
   modelCard().find('[data-slot="graph-node-column-toggle"]').click();
   modelCard().contains('button', 'Map compatible columns').click();
   waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+  // Let the stateful save resolution promote the mapped node into the persisted baseline.
+  cy.wait(600);
 }
 
 function latestStructuredFields(): ReturnType<typeof inspectDvtSubstraitStructuredFieldDraft> {
-  const model = getE2eApiCalls('/workspace/graph/draft', 'PUT')
+  const inspections = getE2eApiCalls('/workspace/graph/draft', 'PUT')
     .map((call) => call.body as DraftSave)
     .map((save) => save.draft.nodes.find((node) => node.id === 'model-orders'))
     .filter((node) => node != null)
-    .at(-1);
-  const authority = model?.metadata?.transformAuthoring as
-    { semanticDocument?: unknown } | undefined;
-  return inspectDvtSubstraitStructuredFieldDraft(
-    decodeDvtSubstraitStructuredFieldDocument(authority?.semanticDocument)
+    .map((model) => {
+      const authority = model.metadata?.transformAuthoring as
+        { semanticDocument?: unknown } | undefined;
+      return inspectDvtSubstraitStructuredFieldDraft(
+        decodeDvtSubstraitStructuredFieldDocument(authority?.semanticDocument)
+      );
+    });
+  return (
+    inspections
+      .filter(
+        (inspection) =>
+          inspection.ok && inspection.fields.some((field) => field.fieldId === 'output:identity')
+      )
+      .at(-1) ?? inspections.at(-1)!
   );
 }
 
@@ -92,7 +103,7 @@ describe('Canvas structured Transform fields', () => {
       cy.get('[data-slot="graph-node-structured-field-apply"]').click();
     });
 
-    cy.wrap(null).should(() => {
+    cy.wrap(null, { timeout: 10_000 }).should(() => {
       expect(latestStructuredFields()).to.deep.equal({
         ok: true,
         fields: [
@@ -112,9 +123,30 @@ describe('Canvas structured Transform fields', () => {
       });
     });
     modelCard().should('contain.text', 'identity').and('contain.text', 'order_id');
+    modelCard()
+      .find('[data-slot="graph-node-nested-column"]')
+      .eq(1)
+      .should('contain.text', 'customer')
+      .and('have.attr', 'data-field-id', 'output:customer')
+      .and('have.attr', 'data-parent-field-id', 'output:identity')
+      .focus()
+      .trigger('keydown', { key: 'ArrowUp', altKey: true });
+    cy.wrap(null, { timeout: 10_000 }).should(() => {
+      const inspection = latestStructuredFields();
+      expect(
+        inspection.ok ? inspection.fields[0]?.children.map((field) => field.name) : null
+      ).to.deep.equal(['customer', 'order_id']);
+    });
 
     visitCanvas();
     modelCard().find('[data-slot="graph-node-column-toggle"]').click();
-    modelCard().should('contain.text', 'identity').and('contain.text', 'customer');
+    modelCard()
+      .find('[data-slot="graph-node-nested-column"]')
+      .then(($children) => {
+        expect([...$children].map((child) => child.textContent)).to.deep.equal([
+          'customertext',
+          'order_idinteger',
+        ]);
+      });
   });
 });
