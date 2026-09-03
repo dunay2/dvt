@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.11.2 (2026-09-03)
+
+## What's Changed
+* refactor(contracts): Remove the SQL-first runtime step family by @dunay2 in https://github.com/dunay2/dvt/pull/2860
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.11.1...v0.11.2
+
 ## 0.11.1 (2026-09-03)
 
 ## What's Changed
