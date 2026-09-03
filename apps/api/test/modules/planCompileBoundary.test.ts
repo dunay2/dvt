@@ -96,17 +96,17 @@ function describePlanCompileBoundaryCases(): void {
       expect(result.executionPolicy.requiresCapabilities).toEqual(['spark.submit']);
     });
 
-    it('preserves transformation sql-first step configs without injecting dbt-only policy keys', async () => {
+    it('preserves DVT runtime step configs without injecting dbt-only policy keys', async () => {
       const planner = buildPlanCompilePlanner();
 
       const result = await planner.buildPlan({
         requestedBy: 'principal-1',
-        requestId: 'req-compile-transformation-sql-first',
+        requestId: 'req-compile-dvt-substrait',
         requestedAtIso: '2026-04-24T00:00:00.000Z',
         graphSource: {
           kind: 'generic-graph-v1',
-          sourceFamily: 'transformation-design-graph',
-          sourceVersion: 'transformation-sql-first-v2',
+          sourceFamily: 'dvt-substrait',
+          sourceVersion: 'substrait-v1',
           nodes: [
             {
               nodeId: 'prepare_orders',

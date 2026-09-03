@@ -273,8 +273,8 @@ describe('ResolveAuthorizedPreviewSelectionService', () => {
       selection: parseExecutionSelection({ mode: 'explicit', nodeIds: ['transform'] }),
       graphSource: {
         kind: 'generic-graph-v1' as const,
-        sourceFamily: 'transformation-design-graph',
-        sourceVersion: 'transformation-sql-first-v2',
+        sourceFamily: 'dvt-substrait',
+        sourceVersion: 'substrait-v1',
         nodes: [{ nodeId: 'transform', stepKind: 'POSTGRES_SQL_TRANSFORM', dependsOn: [] }],
       },
     };
