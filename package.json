@@ -81,7 +81,6 @@
     "proof:temporal:postgres:reset": "node scripts/run-temporal-postgres-proof.cjs reset",
     "proof:temporal:postgres:cleanup": "node scripts/run-temporal-postgres-proof.cjs cleanup",
     "proof:temporal:postgres:down": "node scripts/run-temporal-postgres-proof.cjs down",
-    "proof:supported-runtime": "pnpm --filter dvt-api --filter dvt-temporal-worker --filter dvt-outbox-worker --filter dvt-projector-worker build && node scripts/run-supported-runtime-proof.cjs",
     "test:api": "pnpm --filter dvt-api test",
     "test:cli": "pnpm --filter @dvt/cli test",
     "test:planner": "pnpm --filter @dvt/planner test",
