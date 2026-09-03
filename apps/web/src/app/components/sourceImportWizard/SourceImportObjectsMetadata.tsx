@@ -111,11 +111,13 @@ export function SourceImportObjectsMetadata({
                   <div className={sourceImportSelectedMetadataClassNames.metrics}>
                     <MetricEvidenceHotspot
                       detail={viewModel.rowCountDetail}
+                      focusable={false}
                       tone={viewModel.rowCountTone}
                       value={viewModel.rowCountLabel}
                     />
                     <MetricEvidenceHotspot
                       detail={viewModel.byteSizeDetail}
+                      focusable={false}
                       tone={viewModel.byteSizeTone}
                       value={viewModel.byteSizeLabel}
                     />
@@ -148,44 +150,52 @@ function SourceObjectMetadataBody({
 }>): JSX.Element {
   const { copy } = useSourceImportLocalization();
 
-  if (viewModel.importabilityLabel) {
-    return (
-      <p
-        className={sourceImportSelectedMetadataClassNames.importability}
-        data-source-import-importability
-      >
-        {viewModel.importabilityLabel}
-      </p>
-    );
-  }
+  const importability = viewModel.importabilityLabel ? (
+    <p
+      className={sourceImportSelectedMetadataClassNames.importability}
+      data-source-import-importability
+    >
+      {viewModel.importabilityLabel}
+    </p>
+  ) : null;
 
   if (viewModel.columns.length === 0) {
     return (
-      <div className={sourceImportSelectedMetadataClassNames.notice}>
-        {copy.metadata.columnsUnavailable}
+      <div className="space-y-3">
+        {importability}
+        <div className={sourceImportSelectedMetadataClassNames.notice}>
+          {copy.metadata.columnsUnavailable}
+        </div>
       </div>
     );
   }
 
   return (
-    <ScrollArea className="max-h-64">
-      <div className={sourceImportSelectedMetadataClassNames.columnList}>
-        {viewModel.columns.map((column) => (
-          <div
-            key={`${viewModel.identityKey}.${column.name}`}
-            className={sourceImportSelectedMetadataClassNames.columnRow}
-            data-source-import-metadata-column={`${viewModel.identityKey}.${column.name}`}
-          >
-            <div className={sourceImportSelectedMetadataClassNames.columnIdentity}>
-              <div className={sourceImportSelectedMetadataClassNames.columnName}>{column.name}</div>
-              <div className={sourceImportSelectedMetadataClassNames.constraintList}>
-                <SourceImportConstraintMarkers markers={column.constraintMarkers} />
+    <div className="space-y-3">
+      {importability}
+      <ScrollArea className="h-64">
+        <div className={sourceImportSelectedMetadataClassNames.columnList}>
+          {viewModel.columns.map((column) => (
+            <div
+              key={`${viewModel.identityKey}.${column.name}`}
+              className={sourceImportSelectedMetadataClassNames.columnRow}
+              data-source-import-metadata-column={`${viewModel.identityKey}.${column.name}`}
+            >
+              <div className={sourceImportSelectedMetadataClassNames.columnIdentity}>
+                <div className={sourceImportSelectedMetadataClassNames.columnName}>
+                  {column.name}
+                </div>
+                <div className={sourceImportSelectedMetadataClassNames.constraintList}>
+                  <SourceImportConstraintMarkers markers={column.constraintMarkers} />
+                </div>
               </div>
+              <span className={sourceImportSelectedMetadataClassNames.columnType}>
+                {column.type}
+              </span>
             </div>
-            <span className={sourceImportSelectedMetadataClassNames.columnType}>{column.type}</span>
-          </div>
-        ))}
-      </div>
-    </ScrollArea>
+          ))}
+        </div>
+      </ScrollArea>
+    </div>
   );
 }

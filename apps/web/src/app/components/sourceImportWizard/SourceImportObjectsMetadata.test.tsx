@@ -82,6 +82,9 @@ describe('SourceImportObjectsMetadata', () => {
     expect(
       container.querySelector('[data-source-import-constraint-marker="primary-key"]')
     ).not.toBeNull();
+    expect(
+      ordersTrigger?.querySelector('[tabindex="0"], button, a, input, select, textarea')
+    ).toBeNull();
   });
 
   it('renders a truthful empty state without inventing an active object', async () => {
@@ -99,8 +102,11 @@ describe('SourceImportObjectsMetadata', () => {
     expect(container.querySelector('[data-source-import-object-metadata]')).toBeNull();
   });
 
-  it('keeps selected unsupported objects inspectable without exposing relational columns', async () => {
-    const file = buildSourceImportTestFileObject({ selected: true });
+  it('keeps discovered columns inspectable when the source kind cannot be imported', async () => {
+    const file = buildSourceImportTestFileObject({
+      selected: true,
+      columns: [{ name: 'event_id', type: 'INTEGER', nullable: false }],
+    });
 
     await act(async () => {
       root.render(
@@ -115,7 +121,7 @@ describe('SourceImportObjectsMetadata', () => {
     expect(
       container.querySelector(`[data-source-import-object-metadata="${file.objectId}"]`)
     ).not.toBeNull();
-    expect(container.querySelector('[data-source-import-metadata-column]')).toBeNull();
+    expect(container.querySelector('[data-source-import-metadata-column]')).not.toBeNull();
     expect(container.querySelector('[data-source-import-importability]')).not.toBeNull();
     expect(container.querySelector('[data-source-import-shared-catalog]')).toBeNull();
   });
