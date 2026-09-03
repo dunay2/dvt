@@ -203,6 +203,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Step retry policy could drift back into adapter-local ownership](R-20260412-AR-A11-STEP-RETRY-POLICY-DRIFT.yaml)
 - [Stored-plan artifact ports can drift back into API, planner, or engine packages](R-20260509-STORED-PLAN-ARTIFACT-PORT-OWNERSHIP.yaml)
 - [Structural architecture assertions could preserve a superseded stored-plan dependency](R-20260813-STORED-PLAN-BOUNDARY-ASSERTION-DRIFT.yaml)
+- [Structured sidecar identity can diverge from canonical Substrait nesting](R-20260903-STRUCTURED-FIELD-HIERARCHY.yaml)
 - [Substrait profile and tool version drift can change semantic portability](r-20260824-substrait-profile-drift.yaml)
 - [Temporal activity dependency wiring can drift from the segment-resolution runtime contract](R-20260421-TEMPORAL-ACTIVITY-DEPS-WIRING-DRIFT.yaml)
 - [Temporal cancellation integration could regress to activity timing dependence](R-20260809-TEMPORAL-CANCELLATION-TEST-RACE.yaml)

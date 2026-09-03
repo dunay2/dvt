@@ -2,7 +2,7 @@
 title: AI Work Protocol
 status: Active
 owner: docs
-last_reviewed: 2026-04-02
+last_reviewed: 2026-09-03
 ---
 
 # AI Work Protocol
@@ -64,6 +64,35 @@ Minimum rule for every planning-affecting task:
 
 Do not leave planning changes only in ad hoc notes or PR text when a canonical
 planning surface exists.
+
+## GitHub Issue Human Change Journal Rule
+
+A governing GitHub issue is both the canonical task record and the human-facing
+change journal. It MUST explain how the product and the proposed solution evolve;
+labels, status changes, commits, and PR automation alone are not sufficient.
+
+After every meaningful product increment, and before switching to another issue
+or PR, the agent MUST add a concise issue comment that records:
+
+1. the user-visible or architectural advance, linked to commits, PRs, and
+   verification evidence when available;
+2. the current proposed solution and the reason it remains preferable;
+3. behavior, code paths, terminology, or alternatives that are now obsolete or
+   explicitly rejected;
+4. the remaining work, known limitations, risks, or failed checks without
+   presenting partial work as complete;
+5. new questions or follow-up topics opened by the increment, including the
+   agent's recommended default when a product decision is still needed.
+
+Update the issue body when acceptance criteria, scope, priority, or blockers have
+durably changed. Use comments for the chronological reasoning trail. Do not paste
+raw command logs or duplicate durable architecture documentation into the issue;
+summarize the evidence and link to its canonical source instead.
+
+The final issue comment before closure MUST reconcile the original acceptance
+criteria with the delivered behavior, identify any deliberately deferred work,
+and link the validation and integration evidence. If this journal is stale, the
+task is not ready for closeout even when the code is green.
 
 ## Feature Mechanization Placement Rule
 
