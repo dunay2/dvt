@@ -985,7 +985,7 @@ describe('GetRunStatusUseCase', () => {
               observability: {
                 extra: {
                   transformationFlowRuntime: {
-                    previewProfile: 'transformation-sql-first-v2',
+                    previewProfile: 'planner-generic-v1',
                     executor: 'postgres',
                   },
                   planPreviewProvenance: {

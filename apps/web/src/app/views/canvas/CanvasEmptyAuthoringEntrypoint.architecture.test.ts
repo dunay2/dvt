@@ -215,7 +215,6 @@ describe('Canvas empty authoring entrypoint architecture', () => {
     expect(NODE_CREATION_HANDLER_SOURCE).toContain('useCanvasNodeAdmissionCommandRunner');
     expect(NODE_CREATION_HANDLER_SOURCE).not.toContain('resolveCanvasNodeAdmissionTransaction');
     expect(NODE_CREATION_HANDLER_SOURCE).not.toContain('WorkspaceGraphDraft');
-    expect(NODE_CREATION_HANDLER_SOURCE).not.toContain('DesignGraphDraft');
     expect(NODE_ADMISSION_COMMAND_RUNNER_SOURCE).toContain('resolveCanvasNodeAdmissionTransaction');
     expect(NODE_ADMISSION_COMMAND_RUNNER_SOURCE).toContain('latestDraftSessionRef');
     expect(NODE_AUTHORING_HANDLER_SOURCE).toContain('useCanvasNodeDropHandlers');

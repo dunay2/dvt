@@ -15,8 +15,8 @@ const POSTGRES_CONNECTION_REF = {
 
 const TRANSFORMATION_GRAPH_SOURCE = {
   kind: 'generic-graph-v1',
-  sourceFamily: 'transformation-design-graph',
-  sourceVersion: 'transformation-sql-first-v2',
+  sourceFamily: 'dvt-substrait',
+  sourceVersion: 'substrait-v1',
   nodes: [
     {
       nodeId: 'source-1',

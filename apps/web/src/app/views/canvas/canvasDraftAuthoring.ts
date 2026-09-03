@@ -3,7 +3,7 @@
  * workspace authoring draft aggregate.
  *
  * This module builds editable persistence payloads. It does not compile
- * `DesignGraphDraft`, persist directly, or own runtime execution eligibility.
+ * execution plans, persist directly, or own runtime execution eligibility.
  */
 import {
   WorkspaceGraphAuthoringDraftSchema,
