@@ -6,6 +6,7 @@ import {
   DvtSubstraitStandardCapabilityV1Schema,
   assertDvtSubstraitExtensionProposalV1,
   buildDvtSubstraitStandardCapabilityId,
+  type DvtSubstraitStandardCapabilityV1,
 } from '../src/substrait.js';
 
 const LOWER_ID = buildDvtSubstraitStandardCapabilityId('scalar-function', {
@@ -14,7 +15,7 @@ const LOWER_ID = buildDvtSubstraitStandardCapabilityId('scalar-function', {
   name: 'lower',
 });
 
-function lowerCapability() {
+function lowerCapability(): DvtSubstraitStandardCapabilityV1 {
   const entry = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.find(
     (candidate) => candidate.entryId === LOWER_ID
   );
@@ -22,7 +23,7 @@ function lowerCapability() {
   return entry;
 }
 
-function extensionProposal(overrides: Record<string, unknown> = {}) {
+function extensionProposal(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
     kind: 'dvt-extension-proposal',
     extensionId: 'masked-lower',

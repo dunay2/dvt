@@ -15,7 +15,9 @@ import {
 } from '../src/substrait.js';
 
 const EVIDENCE = ['dvt:#2640'];
-const findCapability = (entryId: string) =>
+const findCapability = (
+  entryId: string
+): (typeof DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries)[number] | undefined =>
   DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.find((entry) => entry.entryId === entryId);
 function standardEntry(
   category: DvtSubstraitCapabilityCategory,
