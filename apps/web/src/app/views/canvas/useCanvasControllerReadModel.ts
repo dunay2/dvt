@@ -278,8 +278,8 @@ export function useCanvasControllerReadModel({
           canonicalNode?.pluginId === 'dvt' &&
           canonicalNode.kind === 'dvt:transform' &&
           readInteractiveColumns(node).some((column) => column.children?.length);
-        const hasEditableProjection =
-          functionProjection.hasEditableProjection || hasStructuredProjection;
+        const hasEditableProjection = functionProjection.hasEditableProjection;
+        const canApplyStructuredField = hasEditableProjection || hasStructuredProjection;
 
         const projectedNodeData = {
           ...node.data,
@@ -295,7 +295,7 @@ export function useCanvasControllerReadModel({
             : undefined,
           onApplyCanvasColumnFunction:
             columnFunctionMenus == null ? undefined : node.data.onApplyCanvasColumnFunction,
-          onApplyCanvasStructuredField: hasEditableProjection
+          onApplyCanvasStructuredField: canApplyStructuredField
             ? node.data.onApplyCanvasStructuredField
             : undefined,
           onAddCanvasCalculatedColumn: functionProjection.supportsCalculatedColumns
@@ -306,9 +306,13 @@ export function useCanvasControllerReadModel({
               ? node.data.onToggleCanvasColumnOutput
               : undefined,
           onReorderCanvasColumnOutput:
-            hasEditableProjection || canAuthorDbtModelColumns || canReorderSourceColumns
+            hasEditableProjection ||
+            hasStructuredProjection ||
+            canAuthorDbtModelColumns ||
+            canReorderSourceColumns
               ? node.data.onReorderCanvasColumnOutput
               : undefined,
+          canReorderTopLevelColumns: !hasStructuredProjection,
           onAutomapColumns: canAuthorColumnMappings ? node.data.onAutomapColumns : undefined,
           columns: presentsColumnLineage
             ? projectInteractiveColumns(node, columnFunctionMenus)

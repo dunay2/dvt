@@ -25,6 +25,7 @@ export function GraphNodeColumnSection({
   onCalculatedColumnAdd,
   onColumnOutputToggle,
   onColumnReorder,
+  canReorderTopLevelColumns,
   onDisclosureChange,
   onColumnLayoutChange,
   onAutomap,
@@ -42,7 +43,7 @@ export function GraphNodeColumnSection({
   const columnReorder = useGraphNodeColumnReorder({
     columns,
     nodeId,
-    onColumnReorder,
+    onColumnReorder: canReorderTopLevelColumns === false ? undefined : onColumnReorder,
     onColumnComposeRequest:
       onColumnFunctionApply == null && onStructuredFieldApply == null
         ? undefined

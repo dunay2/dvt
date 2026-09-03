@@ -71,4 +71,49 @@ describe('GraphNodeColumnChildren reorder', () => {
       placement: 'before',
     });
   });
+
+  it('keeps nested reorder available when structured roots cannot be reordered', async () => {
+    const onColumnReorder = vi.fn();
+    await act(async () => {
+      root.render(
+        <GraphNodeColumnSection
+          nodeId="transform-orders"
+          expanded
+          columns={[
+            {
+              id: 'output:identity',
+              name: 'identity',
+              type: 'struct',
+              children: [
+                { id: 'output:order_id', name: 'order_id', type: 'integer' },
+                { id: 'output:customer', name: 'customer', type: 'text' },
+              ],
+            },
+            { id: 'output:amount', name: 'amount', type: 'numeric' },
+          ]}
+          onColumnReorder={onColumnReorder}
+          canReorderTopLevelColumns={false}
+        />
+      );
+    });
+
+    const roots = container.querySelectorAll<HTMLElement>('[data-slot="graph-node-column-piece"]');
+    const nested = container.querySelectorAll<HTMLElement>(
+      '[data-slot="graph-node-nested-column"]'
+    );
+    expect([...roots].every((rootColumn) => !rootColumn.draggable)).toBe(true);
+
+    await act(async () => {
+      nested[1]!.focus();
+      fireEvent.keyDown(nested[1]!, { key: 'ArrowUp', altKey: true });
+    });
+
+    expect(onColumnReorder).toHaveBeenCalledWith({
+      nodeId: 'transform-orders',
+      parentColumnId: 'output:identity',
+      columnId: 'output:customer',
+      targetColumnId: 'output:order_id',
+      placement: 'before',
+    });
+  });
 });

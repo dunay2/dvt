@@ -89,6 +89,7 @@ export type GraphNodeColumnSectionProps = Readonly<{
   onCalculatedColumnAdd?: (identity: GraphNodeCalculatedColumnIdentity) => void;
   onColumnOutputToggle?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
   onColumnReorder?: (identity: GraphNodeColumnReorderIdentity) => void;
+  canReorderTopLevelColumns?: boolean;
   onDisclosureChange?: (expanded: boolean) => void;
   onColumnLayoutChange?: () => void;
   onAutomap?: () => void;
@@ -144,6 +145,7 @@ export function resolveGraphNodeColumnInteractionProps(args: {
       typeof data.onReorderCanvasColumnOutput === 'function'
         ? (data.onReorderCanvasColumnOutput as (identity: GraphNodeColumnReorderIdentity) => void)
         : undefined,
+    canReorderTopLevelColumns: data.canReorderTopLevelColumns !== false,
     onColumnDisclosureChange:
       typeof data.onColumnDisclosureChange === 'function'
         ? (data.onColumnDisclosureChange as (nodeId: string, expanded: boolean) => void)

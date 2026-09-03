@@ -70,6 +70,7 @@ export type GraphNodeCardViewProps = Readonly<{
     output: boolean;
   }) => void;
   onColumnReorder?: (identity: GraphNodeColumnReorderIdentity) => void;
+  canReorderTopLevelColumns?: boolean;
   onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;
   onColumnLayoutChange?: () => void;
   onAutomapColumns?: (nodeId: string, columns: readonly GraphNodeCardColumn[]) => void;
@@ -151,6 +152,7 @@ export function GraphNodeCardView({
   onCalculatedColumnAdd,
   onColumnOutputToggle,
   onColumnReorder,
+  canReorderTopLevelColumns,
   onColumnDisclosureChange,
   onColumnLayoutChange,
   onAutomapColumns,
@@ -243,6 +245,7 @@ export function GraphNodeCardView({
             onCalculatedColumnAdd={onCalculatedColumnAdd}
             onColumnOutputToggle={onColumnOutputToggle}
             onColumnReorder={onColumnReorder}
+            canReorderTopLevelColumns={canReorderTopLevelColumns}
             onDisclosureChange={
               nodeId == null || onColumnDisclosureChange == null
                 ? undefined
