@@ -2,7 +2,7 @@
 title: Canvas Plan/Run Readiness Component
 status: Review
 owner: Frontend / Runtime Safety / Architecture
-last_reviewed: 2026-05-18
+last_reviewed: 2026-09-03
 planning_type: component
 task_ids:
   - F-27
@@ -41,15 +41,9 @@ runs, own runtime identity, or replace planner/runtime contracts.
 - `plan_integrity` covers missing plan, stale plan, missing planRef,
   preview-identity mismatch, missing persisted preview proof, and a visible
   graph that can no longer execute.
-- DVT transformation readiness validates the execution scope, not the total
-  Canvas node count. A three-node explicit selection is authoritative; without
-  that selection, the read model may infer one connected
-  `source -> sql_transform -> sink` path from the visible graph.
-- Zero inferred paths or multiple inferred paths remain `plan_integrity`
-  blockers. The SQL-first preview payload still contains exactly one source,
-  one SQL transform, one sink, and the two ordered edges required by the
-  `transformation-sql-first-v2` contract, including one shared PostgreSQL
-  `ConnectionRef` across the selected closure.
+- DVT transformation Canvas is authorable but `not_executable`. Its readiness
+  is `capability_mismatch`; selection-for-execution, Preview, and Run remain
+  unavailable until a governed replacement rail is implemented.
 - `authorization_denied` covers route permission denial before any
   `IRunsPort.startRun` call.
 - `capability_mismatch` covers canvas kinds or execution strategies that cannot

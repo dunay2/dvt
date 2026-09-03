@@ -2,7 +2,7 @@
 title: Graph Frontend Architecture
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-08-02
+last_reviewed: 2026-09-03
 ---
 
 # Graph Frontend Architecture
@@ -165,8 +165,9 @@ As of release `0.5.3` on 2026-08-02:
   registered canvas kinds whose plugin is disabled fail closed as
   `disabled_plugin` with separate operator copy; only a missing document may
   use the default transformation creation posture
-- `transformation` uses `transformation-sql-first-v2` with one source-selected
-  PostgreSQL `ConnectionRef` shared by its governed steps; `dbt` uses the
+- `transformation` retains its canonical authoring catalog but registers a
+  `not_executable` posture: selection-for-execution, Preview, and Run are not
+  exposed while the retired SQL-first path has no replacement. `dbt` keeps the
   TF-C3-backed `planner-generic-v1` posture. DBT preview/run is available only
   through generated workspace artifacts, a dbt `GenericGraphSourceV1`, and a
   persisted `PlanRef`; API-mode warehouse source import is available only when

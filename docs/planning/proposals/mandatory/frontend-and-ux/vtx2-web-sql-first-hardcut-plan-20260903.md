@@ -117,6 +117,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasRuntimePolicy.test.ts
   - apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts
   - docs/architecture/components/web/graph/graph-frontend-architecture.md
+  - docs/architecture/components/web/graph/canvas-plan-run-readiness-component.md
   - docs/planning/proposals/mandatory/frontend-and-ux/vtx2-web-sql-first-hardcut-plan-20260903.md
   - docs/planning/closeouts/vtx2-web-sql-first-hardcut-2600-closeout.md
   - docs/.manifest.json
