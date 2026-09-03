@@ -45,6 +45,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Canvas empty-state copy is ambiguous and can be interpreted as connectivity failure](R-20260503-CANVAS-EMPTY-STATE-MESSAGE-AMBIGUITY.yaml)
 - [Canvas host can overclaim multi-canvas truth before the draft boundary supports it](R-20260423-CANVAS-HOST-DRAFT-BOUNDARY.yaml)
 - [Canvas workflow E2E usability regressions across protected runtime rails](R-20260601-CANVAS-WORKFLOW-E2E-USABILITY.yaml)
+- [Capability evidence can drift into unsupported semantic or provider claims](R-20260903-SUBSTRAIT-CAPABILITY-ADMISSION.yaml)
 - [Capability matrix tests and docs governance can drift after doc relocations](R-20260409-CAPABILITY-MATRIX-DOCS-GOVERNANCE-DRIFT.yaml)
 - [Capability-routed Temporal workers require operational queue alignment](R-20260513-MW-D2-TEMPORAL-WORKER-ROUTING.yaml)
 - [CI rebuild dedupe or job consolidation could hide missing explicit build prerequisites](R-20260409-CI-REBUILD-DEDUPE-AND-ADAPTER-POSTGRES-CONSOLIDATION.yaml)

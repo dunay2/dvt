@@ -211,6 +211,7 @@ Evidence documents that justify or validate relevant changes.
 - [VTX2 durable semantic document evidence](ED-20260903-vtx2-durable-semantic-document.md)
 - [VTX2 preview contract hard cut evidence](ED-20260903-vtx2-preview-contract-hardcut.md)
 - [VTX2 runtime step hard cut evidence](ED-20260903-vtx2-runtime-step-hardcut.md)
+- [VTX2 standard-first capability admission evidence](ED-20260903-vtx2-standard-first-capability-admission.md)
 - [VTX2 Substrait grouping and count authoring evidence](ED-20260831-vtx2-substrait-grouping.md)
 - [VTX2 Substrait row-number window authoring evidence](ED-20260831-vtx2-substrait-row-number-window.md)
 - [VTX2 Substrait UNION ALL authoring evidence](ED-20260831-vtx2-substrait-union-all.md)

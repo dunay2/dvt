@@ -15,10 +15,16 @@ ExecutionPlan and planner-related schemas and admission contracts.
 - `packages/@dvt/contracts/src/contracts/planner/CustomPolicyNamespaceRegistry.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DbtProjectGraphProjection.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DbtStepSelector.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityAdmission.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalogSchema.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityIdentity.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitPlanBinary.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProductNeeds.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProfile.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitStandardCandidates.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSupportedCapabilities.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/ExecutableSubgraph.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/ExecutionBindingVerification.v1.ts`
