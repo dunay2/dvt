@@ -15,6 +15,7 @@ const MAX_PREVIEW_COLUMNS = 5;
 
 export function GraphNodeColumnSection({
   columns,
+  expanded,
   nodeId,
   portDirections = [],
   activeColumnHandleId,
@@ -28,7 +29,7 @@ export function GraphNodeColumnSection({
   onColumnLayoutChange,
   onAutomap,
 }: GraphNodeColumnSectionProps): ReactElement {
-  const [columnsExpanded, setColumnsExpanded] = useState(false);
+  const [columnsExpanded, setColumnsExpanded] = useState(expanded ?? false);
   const [showAllColumns, setShowAllColumns] = useState(false);
   const [compositionRequest, setCompositionRequest] = useState<Readonly<{
     sourceColumn: (typeof columns)[number];
@@ -70,6 +71,10 @@ export function GraphNodeColumnSection({
     showAllColumns,
     visibleColumns.length,
   ]);
+
+  useEffect(() => {
+    if (expanded != null) setColumnsExpanded(expanded);
+  }, [expanded]);
 
   return (
     <div data-slot="graph-node-column-section" className={graphNodeColumnClasses.shell}>

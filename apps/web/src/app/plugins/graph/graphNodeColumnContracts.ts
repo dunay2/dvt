@@ -78,6 +78,7 @@ export type GraphNodeCalculatedColumnIdentity =
 
 export type GraphNodeColumnSectionProps = Readonly<{
   columns: readonly GraphNodeColumn[];
+  expanded?: boolean;
   nodeId?: string;
   portDirections?: readonly GraphNodeColumnPortDirection[];
   activeColumnHandleId?: string | null;
@@ -105,6 +106,10 @@ export function resolveGraphNodeColumnInteractionProps(args: {
       : [],
     activeColumnHandleId:
       typeof data.activeColumnHandleId === 'string' ? data.activeColumnHandleId : null,
+    columnDisclosureExpanded:
+      typeof data.columnDisclosureExpanded === 'boolean'
+        ? data.columnDisclosureExpanded
+        : undefined,
     onColumnPortActivate:
       typeof data.onColumnPortActivate === 'function'
         ? (data.onColumnPortActivate as (identity: GraphNodeColumnPortIdentity) => void)

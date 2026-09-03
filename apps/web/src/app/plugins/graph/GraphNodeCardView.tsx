@@ -58,6 +58,7 @@ export type GraphNodeCardViewProps = Readonly<{
   nodeId?: string;
   columnPortDirections?: readonly GraphNodeColumnPortDirection[];
   activeColumnHandleId?: string | null;
+  columnDisclosureExpanded?: boolean;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
   onColumnFunctionApply?: (identity: GraphNodeColumnFunctionApplyIdentity) => void;
   onStructuredFieldApply?: (identity: GraphNodeStructuredFieldIdentity) => void;
@@ -143,6 +144,7 @@ export function GraphNodeCardView({
   nodeId,
   columnPortDirections,
   activeColumnHandleId,
+  columnDisclosureExpanded,
   onColumnPortActivate,
   onColumnFunctionApply,
   onStructuredFieldApply,
@@ -231,6 +233,7 @@ export function GraphNodeCardView({
         {showColumns && (
           <GraphNodeColumnSection
             columns={columns}
+            expanded={columnDisclosureExpanded}
             nodeId={nodeId}
             portDirections={columnPortDirections}
             activeColumnHandleId={activeColumnHandleId}
