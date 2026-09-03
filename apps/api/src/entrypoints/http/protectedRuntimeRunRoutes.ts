@@ -11,7 +11,6 @@ import { costAttributionSummaryRoute } from './costAttributionSummaryRoute.js';
 import { getRunEventsRoute } from './getRunEventsRoute.js';
 import { getRunRoute } from './getRunRoute.js';
 import { listRunsRoute } from './listRunsRoute.js';
-import { previewRunMaterializationRowsRoute } from './previewRunMaterializationRowsRoute.js';
 import type { ProtectedRuntimeRouteDependencies } from './protectedRuntimeRouteDependencies.js';
 import { recoverRunRoute } from './recoverRunRoute.js';
 import { RUNTIME_ROUTE_PATH } from './runtimeRoutes.constants.js';
@@ -60,15 +59,6 @@ export function registerProtectedRunRoutes(
       ...runtimeAuth,
       useCase: dependencies.getRunEventsUseCase,
     })
-  );
-  app.get(
-    RUNTIME_ROUTE_PATH.materializationRows,
-    { config: { rateLimit } },
-    async (request, reply) =>
-      previewRunMaterializationRowsRoute(request as never, reply, {
-        ...runtimeAuth,
-        useCase: dependencies.previewRunMaterializationRowsUseCase,
-      })
   );
   app.get(
     RUNTIME_ROUTE_PATH.costAttributionSummary,

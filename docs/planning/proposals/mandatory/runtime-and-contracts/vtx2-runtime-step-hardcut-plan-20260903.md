@@ -34,7 +34,7 @@ proofs without aliasing old plans. Object-file-to-PostgreSQL remains supported.
 | `CompilePlan`                     | command | Plan compile application service | API planner compile boundary              | Deleted family and kinds cannot compile     |
 | `PlanAdmissionCompatibilityQuery` | query   | Execution plan admission matrix  | Contracts validation and engine admission | Old PlanRefs fail closed before dispatch    |
 | `StartRun`                        | command | Run command application service  | Engine/Temporal dispatch                  | No legacy PostgreSQL activity is registered |
-| `PreviewRunMaterializationRows`   | query   | Legacy run sample read model     | `GET /runs/:runId/materialization/rows`   | Route retires with its only target resolver |
+| `PreviewRunMaterializationRows`   | query   | Legacy run sample read model     | `GET /runs/:runId/materialization-rows`   | Route retires with its only target resolver |
 
 No new command, query, profile, compatibility parser, or runtime plugin is introduced.
 
@@ -162,7 +162,7 @@ commandQueryRails:
     status: retired
     dddOwner: Legacy run materialization sample read model
     applicationPort: Deleted with its only SQL-first target resolver
-    adapterSurface: GET /runs/:runId/materialization/rows
+    adapterSurface: GET /runs/:runId/materialization-rows
     authorizationScope: Route is no longer registered
     negativeTests:
       - retired route is absent from the protected runtime registry
