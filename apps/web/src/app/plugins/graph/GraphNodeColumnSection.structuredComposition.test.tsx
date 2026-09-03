@@ -122,4 +122,57 @@ describe('GraphNodeColumnSection structured composition', () => {
       parentName: 'identity',
     });
   });
+
+  it('proposes appending a scalar to an existing structured parent', async () => {
+    const onApply = vi.fn();
+    await act(async () => {
+      root.render(
+        <GraphNodeColumnSection
+          nodeId="transform-orders"
+          columns={[
+            {
+              id: 'output:identity',
+              name: 'identity',
+              type: 'struct',
+              children: columns,
+            },
+            { id: 'output:amount', name: 'amount', type: 'numeric' },
+          ]}
+          onColumnReorder={vi.fn()}
+          onStructuredFieldApply={onApply}
+        />
+      );
+      await Promise.resolve();
+    });
+    await act(async () => {
+      fireEvent.click(container.querySelector('[data-slot="graph-node-column-toggle"]')!);
+    });
+    const rows = [
+      ...container.querySelectorAll<HTMLElement>('[data-slot="graph-node-column-row"]'),
+    ];
+    await act(async () => {
+      fireEvent.keyDown(rows[1]!, { key: 'ArrowLeft', altKey: true });
+      await Promise.resolve();
+    });
+    await act(async () => {
+      fireEvent.click(
+        document.body.querySelector('[data-slot="graph-node-column-composition-structured-field"]')!
+      );
+      await Promise.resolve();
+    });
+    const input = document.body.querySelector<HTMLInputElement>(
+      '[data-slot="graph-node-structured-field-name"]'
+    )!;
+    expect(input.value).toBe('identity');
+    await act(async () => {
+      fireEvent.submit(input.closest('form')!);
+    });
+
+    expect(onApply).toHaveBeenCalledWith({
+      nodeId: 'transform-orders',
+      draggedFieldId: 'output:amount',
+      targetFieldId: 'output:identity',
+      parentName: 'identity',
+    });
+  });
 });

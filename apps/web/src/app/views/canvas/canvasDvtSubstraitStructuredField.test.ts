@@ -164,4 +164,34 @@ describe('canonical Substrait structured Transform fields', () => {
       expect(composeDvtSubstraitProjectionFields(draft, request)).toBe(draft);
     });
   });
+
+  it('appends a scalar field to an existing parent without replacing field identities', () => {
+    const first = composeDvtSubstraitProjectionFields(projectionDraft(), {
+      draggedFieldId: 'output:customer',
+      targetFieldId: 'output:order_id',
+      parentFieldId: 'output:identity',
+      parentName: 'identity',
+    });
+    const appended = composeDvtSubstraitProjectionFields(first, {
+      draggedFieldId: 'output:amount',
+      targetFieldId: 'output:identity',
+      parentFieldId: 'output:identity',
+      parentName: 'identity',
+    });
+
+    expect(inspectDvtSubstraitStructuredFieldDraft(appended)).toEqual({
+      ok: true,
+      fields: [
+        {
+          fieldId: 'output:identity',
+          name: 'identity',
+          children: [
+            { fieldId: 'output:order_id', name: 'order_id' },
+            { fieldId: 'output:customer', name: 'customer' },
+            { fieldId: 'output:amount', name: 'amount' },
+          ],
+        },
+      ],
+    });
+  });
 });

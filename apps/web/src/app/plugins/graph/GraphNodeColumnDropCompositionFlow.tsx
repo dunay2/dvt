@@ -81,8 +81,19 @@ export function GraphNodeColumnDropCompositionFlow(props: {
       {structuredChildren == null || props.onStructuredFieldApply == null ? null : (
         <GraphNodeStructuredFieldForm
           language={language}
-          childNames={[structuredChildren[0].name, structuredChildren[1].name]}
+          childNames={[
+            ...(structuredChildren[0].children?.map((child) => child.name) ?? [
+              structuredChildren[0].name,
+            ]),
+            structuredChildren[1].name,
+          ]}
           unavailableNames={props.unavailableNames}
+          initialName={
+            structuredChildren[0].children == null ? undefined : structuredChildren[0].name
+          }
+          allowedExistingName={
+            structuredChildren[0].children == null ? undefined : structuredChildren[0].name
+          }
           onCancel={() => setStructuredChildren(null)}
           onApply={(parentName) => {
             props.onStructuredFieldApply?.({

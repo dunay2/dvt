@@ -2,13 +2,8 @@
 import { create, fromBinary, toBinary } from '@bufbuild/protobuf';
 import {
   ExpressionSchema,
-  Expression_FieldReferenceSchema,
-  Expression_FieldReference_RootReferenceSchema,
   Expression_NestedSchema,
   Expression_Nested_StructSchema,
-  Expression_ReferenceSegmentSchema,
-  Expression_ReferenceSegment_StructFieldSchema,
-  type Expression,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 
@@ -23,33 +18,11 @@ import {
   orderedDvtSubstraitFields,
   resolveDvtSubstraitStructuredProjectionParts,
 } from './canvasDvtSubstraitStructuredField';
-
-function cloneExpression(expression: Expression): Expression {
-  return fromBinary(ExpressionSchema, toBinary(ExpressionSchema, expression));
-}
-
-function fieldReference(ordinal: number): Expression {
-  return create(ExpressionSchema, {
-    rexType: {
-      case: 'selection',
-      value: create(Expression_FieldReferenceSchema, {
-        referenceType: {
-          case: 'directReference',
-          value: create(Expression_ReferenceSegmentSchema, {
-            referenceType: {
-              case: 'structField',
-              value: create(Expression_ReferenceSegment_StructFieldSchema, { field: ordinal }),
-            },
-          }),
-        },
-        rootType: {
-          case: 'rootReference',
-          value: create(Expression_FieldReference_RootReferenceSchema, {}),
-        },
-      }),
-    },
-  });
-}
+import {
+  appendDvtSubstraitProjectionFieldToStruct,
+  cloneDvtSubstraitExpression,
+  createDvtSubstraitFieldReference,
+} from './canvasDvtSubstraitStructuredFieldAppend';
 
 export function composeDvtSubstraitProjectionFields(
   draft: DvtSubstraitProjectionDraft,
@@ -62,8 +35,8 @@ export function composeDvtSubstraitProjectionFields(
 ): DvtSubstraitProjectionDraft {
   const flat = inspectDvtSubstraitProjectionDraft(draft);
   const parentName = args.parentName.trim();
-  if (!flat.ok || parentName.length === 0 || args.draggedFieldId === args.targetFieldId)
-    return draft;
+  if (parentName.length === 0 || args.draggedFieldId === args.targetFieldId) return draft;
+  if (!flat.ok) return appendDvtSubstraitProjectionFieldToStruct(draft, args);
   const outputs = flat.projection.outputs;
   const draggedIndex = outputs.findIndex((field) => field.fieldId === args.draggedFieldId);
   const targetIndex = outputs.findIndex((field) => field.fieldId === args.targetFieldId);
@@ -83,8 +56,8 @@ export function composeDvtSubstraitProjectionFields(
   const sourceCount = flat.projection.source.fields.length;
   const expressions = parts.emit.outputMapping.map((mapping) =>
     mapping < sourceCount
-      ? fieldReference(mapping)
-      : cloneExpression(parts.project.expressions[mapping - sourceCount]!)
+      ? createDvtSubstraitFieldReference(mapping)
+      : cloneDvtSubstraitExpression(parts.project.expressions[mapping - sourceCount]!)
   );
   const childIndexes = [targetIndex, draggedIndex];
   const parentExpression = create(ExpressionSchema, {

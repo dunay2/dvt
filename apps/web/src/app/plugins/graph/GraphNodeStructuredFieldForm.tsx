@@ -19,16 +19,19 @@ const classes = {
 
 export function GraphNodeStructuredFieldForm(props: {
   language: string;
-  childNames: readonly [string, string];
+  childNames: readonly string[];
   unavailableNames: readonly string[];
+  initialName?: string;
+  allowedExistingName?: string;
   onApply: (name: string) => void;
   onCancel: () => void;
 }): ReactElement {
   const copy = resolveGraphNodeStructuredFieldCopy(props.language);
-  const [name, setName] = useState('');
+  const [name, setName] = useState(props.initialName ?? '');
   const inputId = useId();
   const normalizedName = name.trim();
-  const conflict = props.unavailableNames.includes(normalizedName);
+  const conflict =
+    normalizedName !== props.allowedExistingName && props.unavailableNames.includes(normalizedName);
   return (
     <Popover open onOpenChange={(open) => !open && props.onCancel()}>
       <PopoverAnchor asChild>
