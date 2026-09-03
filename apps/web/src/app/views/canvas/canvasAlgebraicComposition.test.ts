@@ -93,7 +93,7 @@ describe('Canvas algebraic composition', () => {
     if (transaction.outcome !== 'created') throw new Error('Expected created composition.');
     const composedNode = transaction.draftSession.localNodeCatalog?.[target.id];
     if (composedNode == null) throw new Error('Expected composed Transform.');
-    const authority = readDvtTransformAuthoringAuthority(composedNode);
+    const authority = readDvtTransformAuthoringAuthority(composedNode)!;
     if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) {
       throw new Error('Expected Substrait authority.');
     }

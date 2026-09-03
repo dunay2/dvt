@@ -54,7 +54,7 @@ function session(...nodes: CanonicalNode[]): CanvasDraftSession {
 }
 
 function inspect(node: CanonicalNode): DvtSubstraitProjection {
-  const authority = readDvtTransformAuthoringAuthority(node);
+  const authority = readDvtTransformAuthoringAuthority(node)!;
   if (authority.mode !== 'substrait') throw new Error('Expected Substrait authority.');
   const inspection = inspectDvtSubstraitProjectionDraft(
     decodeDvtSubstraitProjectionDocument(authority.semanticDocument)

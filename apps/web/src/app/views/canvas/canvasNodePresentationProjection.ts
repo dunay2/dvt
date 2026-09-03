@@ -1,5 +1,5 @@
 /** Owned concern: adapt plugin artifact queries into the shared Canvas node presentation DTO. */
-import { DVT_TRANSFORM_AUTHORING_MODE, type VisualTransformRecipeV1 } from '@dvt/contracts';
+import { DVT_TRANSFORM_AUTHORING_MODE } from '@dvt/contracts';
 
 import { buildCanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth';
 import type {
@@ -33,9 +33,6 @@ import {
   isObjectFilePostgresNode,
   resolveObjectFilePostgresAuthoringMetadata,
 } from './objectFilePostgresAuthoringModel';
-import { resolveAuthoringSqlArtifactPath } from './previewGraphNodePayloads';
-import { compileDvtVisualTransformNodeToPostgresSql } from './canvasVisualTransformSql';
-import { readDvtTransformLineageProvenance } from './canvasTransformationSqlMirror';
 import { projectTransformColumnsInStableOrder } from './canvasTransformColumnOrderProjection';
 
 export function projectCanvasNodePresentationTruth(
@@ -98,8 +95,6 @@ function projectCanvasNodePresentationTruthInternal(
             })),
           },
         };
-  let visualRecipe: VisualTransformRecipeV1 | null = null;
-  let lineageRecipe: VisualTransformRecipeV1 | null = null;
   let substraitOutputs: readonly DvtSubstraitPresentedOutput[] | null = null;
   let substraitRejected = false;
   let unresolvedMultiInputProjection = false;
@@ -111,10 +106,7 @@ function projectCanvasNodePresentationTruthInternal(
       isRecord(rawAuthority) && rawAuthority.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait;
     try {
       const authority = readDvtTransformAuthoringAuthority(args.node);
-      if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
-        visualRecipe = authority.recipe;
-        lineageRecipe = authority.recipe;
-      } else if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+      if (authority != null) {
         canonicalSubstraitCode = {
           kind: 'canonical',
           content: JSON.stringify(authority.semanticDocument, null, 2),
@@ -228,60 +220,25 @@ function projectCanvasNodePresentationTruthInternal(
         } catch {
           substraitRejected = true;
         }
-      } else {
-        lineageRecipe = readDvtTransformLineageProvenance(args.node);
       }
     } catch {
-      visualRecipe = null;
-      lineageRecipe = null;
       substraitOutputs = null;
       invalidCanonicalSubstraitDocument = declaresSubstraitAuthority;
       substraitRejected = declaresSubstraitAuthority;
     }
   }
-  let visualGeneratedCode: Readonly<{
-    content: string;
-    path: string;
-    language: 'sql';
-  }> | null = null;
-  if (visualRecipe != null) {
-    try {
-      const sourceNodeIds = new Set(
-        args.edges.filter((edge) => edge.targetId === args.node.id).map((edge) => edge.sourceId)
-      );
-      const sourceNodes = args.nodes.filter(
-        (node) => sourceNodeIds.has(node.id) && node.role === 'input'
-      );
-      if (sourceNodes.length === 1) {
-        const sourceNode = sourceNodes[0]!;
-        visualGeneratedCode = {
-          content: compileDvtVisualTransformNodeToPostgresSql({
-            transformNode: args.node,
-            sourceNode,
-          }),
-          path: resolveAuthoringSqlArtifactPath(args.node),
-          language: 'sql',
-        };
-      }
-    } catch {
-      visualGeneratedCode = null;
-    }
-  }
-
   const projectedTruth = buildCanvasNodePresentationTruth({
     ...args,
     node: presentationNode,
-    generatedCodeIsAuthoritative: visualGeneratedCode != null,
-    ...(generatedArtifact == null && visualGeneratedCode == null
+    generatedCodeIsAuthoritative: false,
+    ...(generatedArtifact == null
       ? {}
       : {
-          generatedCode:
-            visualGeneratedCode ??
-            ({
-              content: generatedArtifact!.content,
-              path: generatedArtifact!.path,
-              language: generatedArtifact!.language,
-            } as const),
+          generatedCode: {
+            content: generatedArtifact.content,
+            path: generatedArtifact.path,
+            language: generatedArtifact.language,
+          } as const,
         }),
   });
   const baseTruth: CanvasNodePresentationTruth = {
@@ -437,62 +394,5 @@ function projectCanvasNodePresentationTruthInternal(
     };
   }
 
-  if (lineageRecipe == null) return presentationTruth;
-  const declared = lineageRecipe.outputs.map((output) => {
-    const input = output.expression.inputs.length === 1 ? output.expression.inputs[0] : undefined;
-    const sourceColumn =
-      input == null
-        ? undefined
-        : presentationTruth.columns.inherited.find(
-            (column) => column.sourceNodeId === input.nodeId && column.name === input.columnName
-          );
-    const preservesNullability =
-      output.expression.operations.length === 1 &&
-      output.expression.operations[0]?.kind === 'passthrough';
-
-    return {
-      name: output.name,
-      type: output.dataType ?? (preservesNullability ? sourceColumn?.type : undefined) ?? 'unknown',
-      provenance: 'declared' as const,
-      reference: output.id,
-      ...(sourceColumn == null
-        ? {}
-        : {
-            ...(sourceColumn.sourceNodeId == null
-              ? {}
-              : { sourceNodeId: sourceColumn.sourceNodeId }),
-            ...(sourceColumn.sourceNodeName == null
-              ? {}
-              : { sourceNodeName: sourceColumn.sourceNodeName }),
-            ...(sourceColumn.reference == null ? {} : { sourceReference: sourceColumn.reference }),
-            ...(preservesNullability && sourceColumn.nullable != null
-              ? { nullable: sourceColumn.nullable }
-              : {}),
-          }),
-    };
-  });
-  const declaredNames = new Set(declared.map((column) => column.name));
-  const prospective = presentationTruth.columns.inherited.filter(
-    (column) => !declaredNames.has(column.name)
-  );
-  const visible = [...declared, ...prospective];
-  return {
-    ...presentationTruth,
-    columns: {
-      declared,
-      inherited: presentationTruth.columns.inherited,
-      visible,
-      declaredCount: declared.length,
-      inheritedCount: presentationTruth.columns.inheritedCount,
-      visibleCount: visible.length,
-      visibleProvenance:
-        declared.length > 0 && prospective.length > 0
-          ? 'mixed'
-          : declared.length > 0
-            ? 'declared'
-            : prospective.length > 0
-              ? 'inherited'
-              : 'none',
-    },
-  };
+  return presentationTruth;
 }

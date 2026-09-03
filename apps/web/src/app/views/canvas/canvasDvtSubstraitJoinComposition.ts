@@ -461,7 +461,7 @@ export function resolveDvtSubstraitInnerJoinEntry(args: {
   if (args.requirePersistedAuthority) {
     try {
       const authority = readDvtTransformAuthoringAuthority(args.targetNode);
-      if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return null;
+      if (authority == null) return null;
       const inspection = inspectDvtSubstraitInnerJoinAcceptedDraft(
         decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument)
       );
@@ -506,7 +506,7 @@ export function resolveDvtSubstraitNInputJoinEntry(args: {
   if (draft == null) {
     try {
       const authority = readDvtTransformAuthoringAuthority(args.targetNode);
-      if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return null;
+      if (authority == null) return null;
       draft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
     } catch {
       return null;

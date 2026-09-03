@@ -10,17 +10,6 @@ import {
   inspectorVisualClasses,
 } from '../../components/inspector/inspectorVisualTokens';
 import { Button } from '../../components/ui/button';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '../../components/ui/alert-dialog';
 import { ScrollArea } from '../../components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
 import { cn } from '../../components/ui/utils';
@@ -139,7 +128,7 @@ function readDvtTransformAuthoringMode(
 ): (typeof DVT_TRANSFORM_AUTHORING_MODE)[keyof typeof DVT_TRANSFORM_AUTHORING_MODE] | null {
   if (node.pluginId !== 'dvt' || node.kind !== 'dvt:transform') return null;
   try {
-    return readDvtTransformAuthoringAuthority(node).mode;
+    return readDvtTransformAuthoringAuthority(node)?.mode ?? null;
   } catch {
     return null;
   }
@@ -181,11 +170,7 @@ function buildNodeWorkbenchReadModel({
             (canEditNode && node.pluginId === 'dbt' && node.kind === 'dbt:model') ||
             (node.pluginId === 'dvt' &&
               node.kind === 'dvt:transform' &&
-              readDvtTransformAuthoringMode(node) === DVT_TRANSFORM_AUTHORING_MODE.substrait) ||
-            (canEditNode &&
-              node.pluginId === 'dvt' &&
-              node.kind === 'dvt:transform' &&
-              readDvtTransformAuthoringMode(node) === DVT_TRANSFORM_AUTHORING_MODE.sql))
+              readDvtTransformAuthoringMode(node) === DVT_TRANSFORM_AUTHORING_MODE.substrait))
             ? (() => {
                 const {
                   code: _passiveCode,
@@ -270,12 +255,8 @@ export function CanvasNodeWorkbenchPanel({
     [edges, node, nodes]
   );
   const dvtTransformAuthoringMode = readDvtTransformAuthoringMode(node);
-  const visualDvtTransformAuthority =
-    dvtTransformAuthoringMode === DVT_TRANSFORM_AUTHORING_MODE.visual;
   const canonicalSubstraitTransformAuthority =
     dvtTransformAuthoringMode === DVT_TRANSFORM_AUTHORING_MODE.substrait;
-  const structuredDvtTransformAuthority =
-    visualDvtTransformAuthority || canonicalSubstraitTransformAuthority;
   const baseModel = buildNodePropertiesReadModel({
     node,
     nodes,
@@ -375,7 +356,7 @@ export function CanvasNodeWorkbenchPanel({
       </>
     );
     for (const sectionId of ['code', 'sink'] as const) {
-      if (sectionId === 'code' && structuredDvtTransformAuthority) continue;
+      if (sectionId === 'code' && canonicalSubstraitTransformAuthority) continue;
       sectionAfterChildren[sectionId] = (
         <>
           {sectionAfterChildren[sectionId]}
@@ -383,54 +364,11 @@ export function CanvasNodeWorkbenchPanel({
         </>
       );
     }
-    if (structuredDvtTransformAuthority) {
+    if (canonicalSubstraitTransformAuthority) {
       sectionAfterChildren.columns = (
         <>
           {sectionAfterChildren.columns}
           {renderAuthoringSection('columns')}
-        </>
-      );
-    }
-    if (
-      visualDvtTransformAuthority &&
-      presentationTruth.code.kind === 'generated' &&
-      authoring.onConvertVisualTransformToSql != null
-    ) {
-      const generatedSql = presentationTruth.code.content;
-      sectionAfterChildren.code = (
-        <>
-          {sectionAfterChildren.code}
-          <div className="flex justify-end pt-1">
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  data-slot="canvas-node-workbench-convert-visual-to-sql"
-                >
-                  {copy.inspectorVisualTransformConvertToSqlLabel}
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    {copy.inspectorVisualTransformConvertToSqlTitle}
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>
-                    {copy.inspectorVisualTransformConvertToSqlDescription}
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>{copy.inspectorCancelLabel}</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={() => authoring.onConvertVisualTransformToSql?.(generatedSql)}
-                  >
-                    {copy.inspectorVisualTransformConvertToSqlLabel}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
         </>
       );
     }

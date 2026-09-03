@@ -16,7 +16,7 @@ import {
   isObjectFilePostgresNode,
   resolveObjectFilePostgresAuthoringMetadata,
 } from './objectFilePostgresAuthoringModel';
-import { quoteSqlIdentifier } from './canvasVisualTransformSqlCompiler';
+import { quoteSqlIdentifier } from './canvasSqlIdentifier';
 
 export type DbtModelArtifactSource = Readonly<{
   sourceName: string;

@@ -182,7 +182,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     expect(typeof nextSession).toBe('object');
     const mapped = nextSession.localNodeCatalog?.[model.id];
     expect(mapped).toBeDefined();
-    expect(readDvtTransformAuthoringAuthority(mapped).mode).toBe('substrait');
+    expect(readDvtTransformAuthoringAuthority(mapped)?.mode).toBe('substrait');
     expect(toastState.success).toHaveBeenCalledWith(canvasViewCopy.columnMappingAddedMessage);
     harness.cleanup();
   });
@@ -334,7 +334,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     if (mappedTransform == null) {
       throw new Error('Expected the edge command to commit the mapped transform');
     }
-    const authority = readDvtTransformAuthoringAuthority(mappedTransform);
+    const authority = readDvtTransformAuthoringAuthority(mappedTransform)!;
     expect(authority.mode).toBe('substrait');
     if (authority.mode !== 'substrait') return;
     const inspection = inspectDvtSubstraitProjectionDraft(
@@ -801,7 +801,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     const nextSession = updateDraftSession(draftSession);
     const nextNode = nextSession.localNodeCatalog?.[transform.id];
     if (nextNode == null) throw new Error('Expected updated transform.');
-    const authority = readDvtTransformAuthoringAuthority(nextNode);
+    const authority = readDvtTransformAuthoringAuthority(nextNode)!;
     if (authority.mode !== 'substrait') throw new Error('Expected Substrait authority.');
     const inspection = inspectDvtSubstraitProjectionDraft(
       decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
@@ -834,7 +834,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     ) => typeof draftSession;
     const calculatedNode = addCalculated(draftSession).localNodeCatalog?.[transform.id];
     if (calculatedNode == null) throw new Error('Expected calculated output.');
-    const calculatedAuthority = readDvtTransformAuthoringAuthority(calculatedNode);
+    const calculatedAuthority = readDvtTransformAuthoringAuthority(calculatedNode)!;
     if (calculatedAuthority.mode !== 'substrait') throw new Error('Expected Substrait authority.');
     const calculatedInspection = inspectDvtSubstraitProjectionDraft(
       decodeDvtSubstraitProjectionDocument(calculatedAuthority.semanticDocument)
@@ -859,7 +859,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     const toggledSession = setDraftSession.mock.calls[0]?.[0] as typeof draftSession;
     const toggledNode = toggledSession.localNodeCatalog?.[transform.id];
     if (toggledNode == null) throw new Error('Expected updated transform output selection.');
-    const toggledAuthority = readDvtTransformAuthoringAuthority(toggledNode);
+    const toggledAuthority = readDvtTransformAuthoringAuthority(toggledNode)!;
     if (toggledAuthority.mode !== 'substrait') throw new Error('Expected Substrait authority.');
     const toggledInspection = inspectDvtSubstraitProjectionDraft(
       decodeDvtSubstraitProjectionDocument(toggledAuthority.semanticDocument)
@@ -882,7 +882,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     const reorderedSession = setDraftSession.mock.calls[0]?.[0] as typeof draftSession;
     const reorderedNode = reorderedSession.localNodeCatalog?.[transform.id];
     if (reorderedNode == null) throw new Error('Expected reordered transform outputs.');
-    const reorderedAuthority = readDvtTransformAuthoringAuthority(reorderedNode);
+    const reorderedAuthority = readDvtTransformAuthoringAuthority(reorderedNode)!;
     if (reorderedAuthority.mode !== 'substrait') throw new Error('Expected Substrait authority.');
     const reorderedInspection = inspectDvtSubstraitProjectionDraft(
       decodeDvtSubstraitProjectionDocument(reorderedAuthority.semanticDocument)

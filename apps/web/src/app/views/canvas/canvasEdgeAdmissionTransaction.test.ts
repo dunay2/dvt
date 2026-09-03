@@ -199,7 +199,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
     if (mappedTransform == null) {
       throw new Error('Expected the created transaction to update the transform recipe');
     }
-    const authority = readDvtTransformAuthoringAuthority(mappedTransform);
+    const authority = readDvtTransformAuthoringAuthority(mappedTransform)!;
     expect(authority.mode).toBe(DVT_TRANSFORM_AUTHORING_MODE.substrait);
     if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return;
     const inspection = inspectDvtSubstraitProjectionDraft(

@@ -20,8 +20,7 @@ import {
 import type { InteractiveCanvasColumnLineageEdgeData } from './CanvasColumnLineageEdge';
 import type { CanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
 import type { GraphNodeColumn } from '../../plugins/graph/graphNodeColumnContracts';
-import { canAuthorCanvasColumnMappings } from './canvasColumnMappingAuthoring';
-import { readDvtTransformLineageProvenance } from './canvasTransformationSqlMirror';
+import { canAuthorCanvasColumnMappings } from './canvasColumnProjectionAuthority';
 import { projectCanvasNodeAccessibleHealth } from './canvasNodeMapper';
 import { createDbtNodeAuthoringMetadata } from './canvasDbtAuthoringModel';
 import { projectCanvasColumnFunctionMenus } from './canvasColumnFunctionMenuProjection';
@@ -240,8 +239,7 @@ export function useCanvasControllerReadModel({
         const hasReadOnlyColumnLineage =
           canonicalNode?.role === 'transform' &&
           !canAuthorColumnMappings &&
-          (readDvtTransformLineageProvenance(canonicalNode) != null ||
-            readOnlyColumnLineageNodeIds.has(canonicalNode.id));
+          readOnlyColumnLineageNodeIds.has(canonicalNode.id);
         const selectedForExecution = uiScope.selectedNodeIds.includes(node.id);
         const canSelectNode =
           canSelectExecution &&

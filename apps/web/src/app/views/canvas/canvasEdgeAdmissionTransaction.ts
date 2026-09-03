@@ -9,7 +9,7 @@ import {
   reconnectConnection,
   type CanvasConnectionRejection,
 } from './canvasConnectionAggregate';
-import { automapCanvasColumns } from './canvasColumnMappingAuthoring';
+import { automapCanvasColumns } from './canvasColumnAutomap';
 import { canvasGraphLifecycle } from './canvasGraphLifecycle';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';

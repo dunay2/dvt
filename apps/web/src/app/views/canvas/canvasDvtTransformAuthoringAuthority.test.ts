@@ -26,7 +26,7 @@ function buildTransformNode(metadata: CanonicalNode['metadata'] = {}): Canonical
   };
 }
 
-function buildSemanticDocument(): string {
+function buildSemanticDocument(): ReturnType<typeof encodeDvtSubstraitPilotDocument> {
   return encodeDvtSubstraitPilotDocument(
     createDvtSubstraitPilotDraft({
       sourceNodeId: 'source-orders',

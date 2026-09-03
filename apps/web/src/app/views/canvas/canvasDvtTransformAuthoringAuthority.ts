@@ -1,41 +1,22 @@
-/** Owned concern: project and transition the single DVT transform authoring authority. */
+/** Owned concern: persist the single canonical DVT Transform semantic authority. */
 import {
   DVT_TRANSFORM_AUTHORING_MODE,
+  DVT_TRANSFORM_AUTHORING_AUTHORITY_VERSION,
   DvtTransformAuthoringAuthorityV1Schema,
-  VISUAL_TRANSFORM_RECIPE_VERSION,
-  canonicalizeVisualTransformRecipeV1,
-  type VisualTransformRecipeV1,
-} from '@dvt/contracts';
-import {
   canonicalizeDvtSubstraitSemanticDocumentV1,
   type DvtSubstraitSemanticDocumentV1,
 } from '@dvt/contracts';
 
 import type { CanonicalNode } from '../../types/canonical';
-import {
-  DVT_TRANSFORM_LINEAGE_PROVENANCE_METADATA_KEY,
-  buildDvtSqlTransformMetadata,
-  readDraftSqlText,
-} from './canvasTransformationSqlMirror';
 
 export const DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY = 'transformAuthoring' as const;
+const RETIRED_LINEAGE_PROVENANCE_METADATA_KEY = 'transformLineageProvenance';
 
-export type DvtTransformAuthoringAuthority =
-  | Readonly<{
-      version: typeof VISUAL_TRANSFORM_RECIPE_VERSION;
-      mode: typeof DVT_TRANSFORM_AUTHORING_MODE.sql;
-      sql: string;
-    }>
-  | Readonly<{
-      version: typeof VISUAL_TRANSFORM_RECIPE_VERSION;
-      mode: typeof DVT_TRANSFORM_AUTHORING_MODE.visual;
-      recipe: VisualTransformRecipeV1;
-    }>
-  | Readonly<{
-      version: typeof VISUAL_TRANSFORM_RECIPE_VERSION;
-      mode: typeof DVT_TRANSFORM_AUTHORING_MODE.substrait;
-      semanticDocument: DvtSubstraitSemanticDocumentV1;
-    }>;
+export type DvtTransformAuthoringAuthority = Readonly<{
+  version: typeof DVT_TRANSFORM_AUTHORING_AUTHORITY_VERSION;
+  mode: typeof DVT_TRANSFORM_AUTHORING_MODE.substrait;
+  semanticDocument: DvtSubstraitSemanticDocumentV1;
+}>;
 
 function assertDvtTransformNode(node: CanonicalNode): void {
   if (node.pluginId !== 'dvt' || node.kind !== 'dvt:transform') {
@@ -47,89 +28,52 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
-function hasEditableSqlMetadata(node: CanonicalNode): boolean {
-  if (node.metadata != null && Object.hasOwn(node.metadata, 'sql')) {
-    return true;
-  }
+function hasRetiredSqlMetadata(node: CanonicalNode): boolean {
+  if (node.metadata != null && Object.hasOwn(node.metadata, 'sql')) return true;
   const config = node.metadata?.config;
   return isRecord(config) && Object.hasOwn(config, 'sql');
 }
 
-function removeEditableSqlMetadata(node: CanonicalNode): Record<string, unknown> {
+function removeRetiredAuthorityMetadata(node: CanonicalNode): Record<string, unknown> {
   const {
     sql: _sql,
     compiledSql: _compiledSql,
     config: rawConfig,
     [DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY]: _authority,
-    [DVT_TRANSFORM_LINEAGE_PROVENANCE_METADATA_KEY]: _lineageProvenance,
-    ...metadataWithoutTransformAuthority
+    [RETIRED_LINEAGE_PROVENANCE_METADATA_KEY]: _lineage,
+    ...retainedMetadata
   } = node.metadata ?? {};
-  const { sql: _configSql, ...configWithoutSql } = isRecord(rawConfig) ? rawConfig : {};
-
+  const { sql: _configSql, ...retainedConfig } = isRecord(rawConfig) ? rawConfig : {};
   return {
-    ...metadataWithoutTransformAuthority,
-    ...(Object.keys(configWithoutSql).length > 0 ? { config: configWithoutSql } : {}),
+    ...retainedMetadata,
+    ...(Object.keys(retainedConfig).length > 0 ? { config: retainedConfig } : {}),
   };
 }
 
 export function readDvtTransformAuthoringAuthority(
   node: CanonicalNode
-): DvtTransformAuthoringAuthority {
+): DvtTransformAuthoringAuthority | null {
   assertDvtTransformNode(node);
   const rawAuthority = node.metadata?.[DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY];
-  const sql = readDraftSqlText(node) ?? '';
 
   if (rawAuthority === undefined) {
-    return {
-      version: VISUAL_TRANSFORM_RECIPE_VERSION,
-      mode: DVT_TRANSFORM_AUTHORING_MODE.sql,
-      sql,
-    };
+    if (hasRetiredSqlMetadata(node)) {
+      throw new Error('DVT transform authoring authority metadata is unsupported.');
+    }
+    return null;
+  }
+  if (isRecord(rawAuthority) && (rawAuthority.mode === 'sql' || rawAuthority.mode === 'visual')) {
+    throw new Error('DVT transform authoring authority metadata is unsupported.');
   }
 
   const result = DvtTransformAuthoringAuthorityV1Schema.safeParse(rawAuthority);
-  if (!result.success) {
+  if (!result.success || result.data.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) {
     throw new Error('DVT transform authoring authority metadata is invalid.');
   }
-
-  if (result.data.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
-    if (hasEditableSqlMetadata(node)) {
-      throw new Error('Visual DVT transform authority cannot coexist with editable SQL.');
-    }
-    return result.data;
+  if (hasRetiredSqlMetadata(node)) {
+    throw new Error('DVT transform authoring authority metadata is unsupported.');
   }
-
-  if (result.data.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
-    if (hasEditableSqlMetadata(node)) {
-      throw new Error('Substrait DVT transform authority cannot coexist with editable SQL.');
-    }
-    return result.data;
-  }
-
-  return {
-    ...result.data,
-    sql,
-  };
-}
-
-export function applyDvtVisualTransformRecipe(
-  node: CanonicalNode,
-  recipeInput: unknown
-): CanonicalNode {
-  assertDvtTransformNode(node);
-  const recipe = canonicalizeVisualTransformRecipeV1(recipeInput);
-
-  return {
-    ...node,
-    metadata: {
-      ...removeEditableSqlMetadata(node),
-      [DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY]: {
-        version: VISUAL_TRANSFORM_RECIPE_VERSION,
-        mode: DVT_TRANSFORM_AUTHORING_MODE.visual,
-        recipe,
-      },
-    },
-  };
+  return result.data;
 }
 
 export function applyDvtSubstraitSemanticDocument(
@@ -138,41 +82,14 @@ export function applyDvtSubstraitSemanticDocument(
 ): CanonicalNode {
   assertDvtTransformNode(node);
   const semanticDocument = canonicalizeDvtSubstraitSemanticDocumentV1(documentInput);
-
   return {
     ...node,
     metadata: {
-      ...removeEditableSqlMetadata(node),
+      ...removeRetiredAuthorityMetadata(node),
       [DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY]: {
-        version: VISUAL_TRANSFORM_RECIPE_VERSION,
+        version: DVT_TRANSFORM_AUTHORING_AUTHORITY_VERSION,
         mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
         semanticDocument,
-      },
-    },
-  };
-}
-
-export function convertDvtVisualTransformToSql(
-  node: CanonicalNode,
-  generatedSql: string
-): CanonicalNode {
-  const currentAuthority = readDvtTransformAuthoringAuthority(node);
-  if (currentAuthority.mode !== DVT_TRANSFORM_AUTHORING_MODE.visual) {
-    throw new Error('Visual to SQL conversion requires current visual authority.');
-  }
-
-  if (generatedSql.trim().length === 0) {
-    throw new Error('Visual to SQL conversion requires nonblank generated SQL.');
-  }
-
-  return {
-    ...node,
-    metadata: {
-      ...buildDvtSqlTransformMetadata(node, generatedSql),
-      [DVT_TRANSFORM_LINEAGE_PROVENANCE_METADATA_KEY]: currentAuthority.recipe,
-      [DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY]: {
-        version: VISUAL_TRANSFORM_RECIPE_VERSION,
-        mode: DVT_TRANSFORM_AUTHORING_MODE.sql,
       },
     },
   };

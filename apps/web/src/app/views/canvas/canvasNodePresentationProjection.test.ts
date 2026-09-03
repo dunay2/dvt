@@ -123,8 +123,18 @@ describe('projectCanvasNodePresentationTruth', () => {
       metadata: {},
     };
     const edges: CanonicalEdge[] = [
-      { sourceId: SOURCE.id, targetId: transform.id },
-      { sourceId: transform.id, targetId: sink.id },
+      {
+        id: 'source-transform',
+        sourceId: SOURCE.id,
+        targetId: transform.id,
+        relation: 'lineage',
+      },
+      {
+        id: 'transform-sink',
+        sourceId: transform.id,
+        targetId: sink.id,
+        relation: 'lineage',
+      },
     ];
 
     expect(

@@ -80,7 +80,6 @@ function buildCanvasShellPanelsArgs({
       canEditInspectorNode:
         controller.canEditInspectorNode && routeViewState.effectiveUserPermissions.canEditEdges,
       applyInspectorNodeDraft: controller.applyInspectorNodeDraft,
-      convertInspectorVisualTransformToSql: controller.convertInspectorVisualTransformToSql,
       activeRunId: controller.activeRunId,
       registeredPlugins: controller.registeredPlugins,
       runtimeCapabilities: controller.runtimeCapabilities,

@@ -3,13 +3,13 @@ import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftSession } from './canvasDraftSession';
+import { applyCanvasColumnMapping } from './canvasColumnMappingAuthoring';
+import { automapCanvasColumns } from './canvasColumnAutomap';
 import {
-  applyCanvasColumnMapping,
-  automapCanvasColumns,
   reorderCanvasColumnOutput,
-  resolveCanvasColumnMappingTarget,
   setCanvasColumnOutputIncluded,
-} from './canvasColumnMappingAuthoring';
+} from './canvasColumnOutputAuthoring';
+import { resolveCanvasColumnMappingTarget } from './canvasColumnProjectionAuthority';
 import {
   applyDvtSubstraitSemanticDocument,
   readDvtTransformAuthoringAuthority,
@@ -128,7 +128,7 @@ describe('Canvas column mapping authoring', () => {
     if (result.outcome !== 'applied') return;
     const mapped = result.draftSession.localNodeCatalog?.['model-orders'];
     if (mapped == null) throw new Error('Expected mapped Transform node.');
-    const authority = readDvtTransformAuthoringAuthority(mapped);
+    const authority = readDvtTransformAuthoringAuthority(mapped)!;
 
     expect(authority.mode).toBe(DVT_TRANSFORM_AUTHORING_MODE.substrait);
     expect(mapped.metadata).not.toHaveProperty('sql');
@@ -151,7 +151,7 @@ describe('Canvas column mapping authoring', () => {
       target: { nodeId: 'model', columnName: 'event_id', dataType: 'integer' },
     });
     const mapped = readMappedTransform(result);
-    const authority = readDvtTransformAuthoringAuthority(mapped);
+    const authority = readDvtTransformAuthoringAuthority(mapped)!;
 
     expect(authority.mode).toBe(DVT_TRANSFORM_AUTHORING_MODE.substrait);
     if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return;
@@ -212,7 +212,7 @@ describe('Canvas column mapping authoring', () => {
       },
     });
     const changed = readMappedTransform(secondResult);
-    const authority = readDvtTransformAuthoringAuthority(changed);
+    const authority = readDvtTransformAuthoringAuthority(changed)!;
 
     if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return;
     const inspection = inspectDvtSubstraitProjectionDraft(
@@ -243,7 +243,7 @@ describe('Canvas column mapping authoring', () => {
         target: { nodeId: model.id, columnName: 'customer' },
       })
     );
-    const authority = readDvtTransformAuthoringAuthority(mapped);
+    const authority = readDvtTransformAuthoringAuthority(mapped)!;
 
     if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return;
     const inspection = inspectDvtSubstraitProjectionDraft(
@@ -271,7 +271,7 @@ describe('Canvas column mapping authoring', () => {
       target: { nodeId: model.id, columnName: 'customer', dataType: 'text' },
     });
     const mapped = readMappedTransform(firstResult);
-    const authority = readDvtTransformAuthoringAuthority(mapped);
+    const authority = readDvtTransformAuthoringAuthority(mapped)!;
     if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return;
     const lower = resolveDvtSubstraitColumnFunctions({
       dataType: 'text',
@@ -307,7 +307,7 @@ describe('Canvas column mapping authoring', () => {
       target: { nodeId: withLower.id, columnName: 'amount', dataType: 'numeric' },
     });
     const updated = readMappedTransform(secondResult);
-    const updatedAuthority = readDvtTransformAuthoringAuthority(updated);
+    const updatedAuthority = readDvtTransformAuthoringAuthority(updated)!;
     if (updatedAuthority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return;
     const inspection = inspectDvtSubstraitProjectionDraft(
       decodeDvtSubstraitProjectionDocument(updatedAuthority.semanticDocument)
@@ -384,7 +384,7 @@ describe('Canvas column mapping authoring', () => {
     if (result.outcome !== 'applied') return;
     const mapped = result.draftSession.localNodeCatalog?.model;
     if (mapped == null) throw new Error('Expected mapped transform node.');
-    const authority = readDvtTransformAuthoringAuthority(mapped);
+    const authority = readDvtTransformAuthoringAuthority(mapped)!;
     if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return;
     const inspection = inspectDvtSubstraitProjectionDraft(
       decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
@@ -430,7 +430,7 @@ describe('Canvas column mapping authoring', () => {
     if (removed.outcome !== 'applied') return;
     const updated = removed.draftSession.localNodeCatalog?.model;
     if (updated == null) throw new Error('Expected updated transform node.');
-    const authority = readDvtTransformAuthoringAuthority(updated);
+    const authority = readDvtTransformAuthoringAuthority(updated)!;
     if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) {
       throw new Error('Expected canonical Substrait authority after exclusion.');
     }
@@ -451,7 +451,7 @@ describe('Canvas column mapping authoring', () => {
     if (restored.outcome !== 'applied') return;
     const restoredNode = restored.draftSession.localNodeCatalog?.model;
     if (restoredNode == null) throw new Error('Expected restored transform node.');
-    const restoredAuthority = readDvtTransformAuthoringAuthority(restoredNode);
+    const restoredAuthority = readDvtTransformAuthoringAuthority(restoredNode)!;
     if (restoredAuthority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) {
       throw new Error('Expected canonical Substrait authority after inclusion.');
     }
@@ -500,7 +500,7 @@ describe('Canvas column mapping authoring', () => {
     if (reordered.outcome !== 'applied') throw new Error('Expected reordered outputs.');
     const updated = reordered.draftSession.localNodeCatalog?.model;
     if (updated == null) throw new Error('Expected updated transform node.');
-    const authority = readDvtTransformAuthoringAuthority(updated);
+    const authority = readDvtTransformAuthoringAuthority(updated)!;
     if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) {
       throw new Error('Expected canonical Substrait authority.');
     }
