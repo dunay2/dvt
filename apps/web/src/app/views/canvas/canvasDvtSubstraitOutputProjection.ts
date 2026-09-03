@@ -34,6 +34,7 @@ import {
 } from './canvasDvtSubstraitSetComposition';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { inspectDvtSubstraitPilotWindowDraft } from './canvasDvtSubstraitWindow';
+import { inspectDvtSubstraitFilter, removeDvtSubstraitFilter } from './canvasDvtSubstraitFilter';
 
 export type DvtSubstraitTransformOutputProjectionArgs = Readonly<{
   transformNode: CanonicalNode;
@@ -66,12 +67,15 @@ export async function projectDvtSubstraitTransformOutputToPostgresSql(
 
   const projectionDraft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
   const projectionInspection = inspectDvtSubstraitProjectionDraft(projectionDraft);
-  if (projectionInspection.ok) {
+  const filterInspection = inspectDvtSubstraitFilter(projectionDraft);
+  if (projectionInspection.ok || filterInspection != null) {
+    const resolvedDraft =
+      filterInspection == null ? projectionDraft : removeDvtSubstraitFilter(projectionDraft);
     const entry = resolveDvtSubstraitProjectionEntry({
       targetNode: args.transformNode,
       nodes: args.nodes,
       edges: args.edges,
-      draft: projectionDraft,
+      draft: resolvedDraft,
     });
     if (entry == null) {
       throw new Error('Substrait projection source identities do not match the connected graph.');
