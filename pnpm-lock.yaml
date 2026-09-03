@@ -741,9 +741,6 @@ importers:
         specifier: 1.23.0
         version: 1.23.0
     devDependencies:
-      '@dvt/adapter-postgres':
-        specifier: workspace:*
-        version: link:../adapter-postgres
       '@temporalio/testing':
         specifier: 1.23.0
         version: 1.23.0(lightningcss@1.32.0)

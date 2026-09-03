@@ -202,11 +202,6 @@ export async function createStartRunOpenTelemetryProof(
           throw new Error('Unexpected PostgreSQL catalog access for an empty plan');
         },
       },
-      postgresCredentialResolver: {
-        async resolveCredential() {
-          throw new Error('Unexpected PostgreSQL credential access for an empty plan');
-        },
-      },
     }),
     executableSubgraphResolver: new ResolveAuthorizedExecutableSubgraphService({
       planner,

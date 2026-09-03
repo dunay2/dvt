@@ -12,7 +12,6 @@ import {
   STRICT_ISO_UTC_STRING_MESSAGE,
 } from '../../utils/contractPrimitives.js';
 import { ConnectionRefSchema } from '../source-import/ConnectedSourceRef.v1.js';
-import { PostgresCredentialRefSchema } from '../source-import/SourceImportOperations.v1.js';
 
 const NonBlankStringSchema = z
   .string()
@@ -57,13 +56,6 @@ export const DbtProjectBundleRefSchema = z
   })
   .strict();
 
-const PostgresConnectionRefSchema = ConnectionRefSchema.refine(
-  (connectionRef) => connectionRef.provider === 'postgres',
-  {
-    message: 'PostgreSQL runtime context requires provider postgres.',
-    path: ['provider'],
-  }
-);
 export const PluginContextValueSchema = z.union([
   NonBlankStringSchema,
   DbtProjectBundleRefSchema,
@@ -80,14 +72,6 @@ export const DbtPluginContextSchema = z
   })
   .strict();
 export type DbtPluginContextSchemaT = z.infer<typeof DbtPluginContextSchema>;
-export const PostgresPluginContextSchema = z
-  .object({
-    connectionRef: PostgresConnectionRefSchema,
-    credentialRef: PostgresCredentialRefSchema,
-  })
-  .strict();
-export type PostgresPluginContextSchemaT = z.infer<typeof PostgresPluginContextSchema>;
-
 export const RunExecutionContextRefSchema = z
   .object({
     uri: NonBlankStringSchema,
@@ -118,15 +102,6 @@ export const RunExecutionContextSchema = z
     const dbtContext = input.pluginContexts['dbt'];
     if (dbtContext !== undefined) {
       addPluginContextIssues('dbt', DbtPluginContextSchema.safeParse(dbtContext), ctx);
-    }
-
-    const postgresContext = input.pluginContexts['postgres'];
-    if (postgresContext !== undefined) {
-      addPluginContextIssues(
-        'postgres',
-        PostgresPluginContextSchema.safeParse(postgresContext),
-        ctx
-      );
     }
   })
   .strict();

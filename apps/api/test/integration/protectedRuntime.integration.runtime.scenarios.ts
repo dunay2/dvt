@@ -387,13 +387,12 @@ async function startTemporalRun(
         nodes: [
           {
             nodeId: input.graphNodeId,
-            stepKind: 'PREPARE_POSTGRES_TRANSFORM',
+            stepKind: 'SPARK_JOB',
             dependsOn: [],
             stepTypeConfig: {
-              targetSchema: 'analytics',
-              sourceSchema: 'raw',
-              sourceTable: 'orders',
-              sourceAlias: 'orders',
+              application: 'orders-daily',
+              entrypoint: 'jobs/orders.py',
+              runtime: 'python',
             },
           },
         ],

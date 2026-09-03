@@ -11,12 +11,6 @@ import {
   validateLoadObjectFileToPostgresPlanOwnership,
 } from '../contracts/planner/ObjectFileToPostgresStepTypeConfig.v1.js';
 import { KNOWN_STEP_KINDS } from '../contracts/planner/StepKindRegistry.v1.js';
-import { TRANSFORMATION_STEP_KIND } from '../contracts/planner/TransformationFlowStepKinds.v1.js';
-import {
-  CaptureMaterializationEvidenceStepTypeConfigSchema,
-  PostgresSqlTransformStepTypeConfigSchema,
-  PreparePostgresTransformStepTypeConfigSchema,
-} from '../contracts/planner/TransformationFlowStepTypeConfigs.v1.js';
 
 import { DbtStepTypeConfigSchema } from './DbtStepTypeConfig.js';
 import type { StepKindContextValidator, StepKindExecutionProfile } from './StepTypeRegistry.js';
@@ -66,21 +60,6 @@ export function createBuiltInStepTypeEntries(
         profile: LOAD_OBJECT_FILE_TO_POSTGRES_EXECUTION_PROFILE,
         validateContext: (config, context) =>
           validateLoadObjectFileToPostgresPlanOwnership(config, context?.planOwnership),
-      },
-    ],
-    [
-      TRANSFORMATION_STEP_KIND.preparePostgresTransform,
-      { schema: PreparePostgresTransformStepTypeConfigSchema, profile: defaultProfile },
-    ],
-    [
-      TRANSFORMATION_STEP_KIND.postgresSqlTransform,
-      { schema: PostgresSqlTransformStepTypeConfigSchema, profile: defaultProfile },
-    ],
-    [
-      TRANSFORMATION_STEP_KIND.captureMaterializationEvidence,
-      {
-        schema: CaptureMaterializationEvidenceStepTypeConfigSchema,
-        profile: defaultProfile,
       },
     ],
   ] as const);

@@ -1,4 +1,4 @@
-# Temporal Engine Policies
+# Temporal engine policies
 
 **Status**: Implementation Snapshot (aligned to current code)  
 **Version**: 1.2  
@@ -257,11 +257,10 @@ For broader policy context, see [determinism-tooling.md](../../dev/determinism-t
 - Capability-specific verification command:
   `pnpm test:adapter-temporal:integration:transformation` when transformation
   runtime semantics are in scope
-- Capability-specific verification command:
-  `pnpm test:adapter-temporal:integration:postgres` when the relational
-  Postgres execution path is in scope
-- Canonical local Docker proof wrapper:
-  `pnpm test:adapter-temporal:integration:postgres:docker`
+- PostgreSQL object-file behavior is verified by the worker object-file profile
+  tests and the PR quality `PostgreSQL adapters and object-file integration` job.
+- Local PostgreSQL lifecycle: `pnpm postgres:local:reset` and
+  `pnpm postgres:local:down`.
 - Canonical runbook:
   [Temporal Postgres Proof Environment](../../../../../runbooks/temporal-postgres-proof-environment.md)
 - Evidence:

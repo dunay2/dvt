@@ -20,7 +20,6 @@ import type {
 import { createTemporalWorkerDbtProfile } from './temporalWorkerDbtProfile.js';
 import { createTemporalWorkerHttpJsonProfile } from './temporalWorkerHttpJsonProfile.js';
 import { createTemporalWorkerObjectFilePostgresProfile } from './temporalWorkerObjectFilePostgresProfile.js';
-import { createTemporalWorkerPostgresProfile } from './temporalWorkerPostgresProfile.js';
 import {
   createTemporalWorkerActivityDeps,
   createTemporalWorkerStores,
@@ -58,20 +57,10 @@ export function createTemporalWorkerRuntimeResources(
     new ArtifactBackedRunExecutionContextReader(
       resolveTemporalWorkerRunExecutionContextReaderOptions(env)
     );
-  const postgresProfile = createTemporalWorkerPostgresProfile(
-    env,
-    options,
-    runExecutionContextReader
-  );
   const dbtProfile = createTemporalWorkerDbtProfile(env, options, runExecutionContextReader);
-  const objectFilePostgresProfile = createTemporalWorkerObjectFilePostgresProfile(
-    env,
-    options,
-    postgresProfile.relationalLoader
-  );
+  const objectFilePostgresProfile = createTemporalWorkerObjectFilePostgresProfile(env, options);
   const httpJsonProfile = createTemporalWorkerHttpJsonProfile(env, options);
   const pluginProfiles = [
-    postgresProfile.pluginProfile,
     ...(dbtProfile.pluginProfile === undefined ? [] : [dbtProfile.pluginProfile]),
     ...(objectFilePostgresProfile.pluginProfile === undefined
       ? []
@@ -92,7 +81,9 @@ export function createTemporalWorkerRuntimeResources(
       ? {}
       : { dbtAvailabilityProbe: dbtProfile.dbtAvailabilityProbe }),
     ...(stepActivitiesByKind === undefined ? {} : { stepActivitiesByKind }),
-    closeStepActivityResources: postgresProfile.close,
+    ...(objectFilePostgresProfile.close === undefined
+      ? {}
+      : { closeStepActivityResources: objectFilePostgresProfile.close }),
   };
 }
 

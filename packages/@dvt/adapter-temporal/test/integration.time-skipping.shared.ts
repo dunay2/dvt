@@ -49,7 +49,6 @@ export {
   withDbtRunExecutionContext,
 } from './helpers/integration/dbtRuntimeFixtures.js';
 export {
-  INTEGRATION_POSTGRES_CONNECTION_REF,
   INTEGRATION_PLAN_OWNERSHIP,
   createPlanOwnershipFromContext,
   createPlanRef,
@@ -58,7 +57,6 @@ export {
   mkPlan,
   mkLinearThreeStepPlan,
   mkPermanentFailurePlan,
-  mkPostgresTransformationPlan,
   withTransformationRuntimeBinding,
 } from './helpers/integration/testPlans.js';
 export type { WaitForConditionFn } from './helpers/integration/waitForCondition.js';

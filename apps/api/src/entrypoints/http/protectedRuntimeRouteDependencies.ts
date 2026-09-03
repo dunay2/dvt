@@ -13,7 +13,6 @@ import { GetRunStatusUseCase } from '../../application/services/getRunStatusUseC
 import { ImportPlanUseCase } from '../../application/services/ImportPlanUseCase.js';
 import { ListRunsUseCase } from '../../application/services/listRunsUseCase.js';
 import { PreviewPlanUseCase } from '../../application/services/PreviewPlanUseCase.js';
-import { PreviewRunMaterializationRowsUseCase } from '../../application/services/previewRunMaterializationRowsUseCase.js';
 import { PreviewWarehouseSourceObjectRowsUseCase } from '../../application/services/previewWarehouseSourceObjectRowsUseCase.js';
 import { RecoverRunUseCase } from '../../application/services/recoverRunUseCase.js';
 import { ResolveAuthorizedExecutableSubgraphService } from '../../application/services/resolveAuthorizedExecutableSubgraph.js';
@@ -126,12 +125,6 @@ export function buildProtectedRuntimeRouteDependencies(
       planResolver: protectedModule.executablePlanResolver,
     }),
     listRunsUseCase: new ListRunsUseCase(protectedModule.stateStore.read, protectedModule.engine),
-    previewRunMaterializationRowsUseCase: new PreviewRunMaterializationRowsUseCase({
-      getRunStatus: getRunStatusUseCase,
-      planStore: protectedModule.planStore,
-      catalog: protectedModule.warehouseConnectionCatalog,
-      previewRows: previewWarehouseSourceObjectRowsUseCase,
-    }),
     previewWarehouseSourceObjectRowsUseCase,
     previewPlanUseCase,
     validatePostgresTransformSqlUseCase,

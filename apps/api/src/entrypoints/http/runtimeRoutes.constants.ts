@@ -34,7 +34,6 @@ export const RUNTIME_ROUTE_PATH = {
   list: '/runs',
   get: '/runs/:runId',
   events: '/runs/:runId/events',
-  materializationRows: '/runs/:runId/materialization-rows',
   signal: '/runs/:runId/signal',
   cancel: '/runs/:runId/cancel',
   recover: '/runs/:runId/recover',

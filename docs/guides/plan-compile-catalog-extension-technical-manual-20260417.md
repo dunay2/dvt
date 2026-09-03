@@ -88,13 +88,13 @@ already exists in production code.
 
 Multi-workflow design stays coherent only if these decisions remain separate.
 
-| Axis            | Meaning                                  | Decided by                            | Example                                            | Must not be confused with |
-| --------------- | ---------------------------------------- | ------------------------------------- | -------------------------------------------------- | ------------------------- |
-| `stepKind`      | semantic meaning of one node             | graph contract plus canonical catalog | `DBT_MODEL`, `POSTGRES_SQL_TRANSFORM`, `SPARK_JOB` | runtime provider          |
-| `family`        | taxonomy grouping for step kinds         | canonical catalog                     | `dbt`, `sql_transform`, `spark`                    | handler implementation    |
-| `targetAdapter` | runtime provider selected for start-run  | run admission contract                | `temporal`                                         | node semantics            |
-| `workerRoute`   | deployment or task-queue destination     | runtime routing model                 | `dbt-worker`, `spark-worker`                       | compile policy            |
-| `pluginPack`    | source of contributed families and kinds | approved plugin contribution pack     | `acme-spark-plugin`                                | contract authority        |
+| Axis            | Meaning                                  | Decided by                            | Example                                                  | Must not be confused with |
+| --------------- | ---------------------------------------- | ------------------------------------- | -------------------------------------------------------- | ------------------------- |
+| `stepKind`      | semantic meaning of one node             | graph contract plus canonical catalog | `DBT_MODEL`, `LOAD_OBJECT_FILE_TO_POSTGRES`, `SPARK_JOB` | runtime provider          |
+| `family`        | taxonomy grouping for step kinds         | canonical catalog                     | `dbt`, `object_file_load`, `spark`                       | handler implementation    |
+| `targetAdapter` | runtime provider selected for start-run  | run admission contract                | `temporal`                                               | node semantics            |
+| `workerRoute`   | deployment or task-queue destination     | runtime routing model                 | `dbt-worker`, `spark-worker`                             | compile policy            |
+| `pluginPack`    | source of contributed families and kinds | approved plugin contribution pack     | `acme-spark-plugin`                                      | contract authority        |
 
 Working rule:
 
@@ -361,8 +361,8 @@ Illustrative shape:
 ```ts
 const planCompileProfile: PlanCompileProfileSpec = {
   profileId: 'plan-compile-v1',
-  allowedFamilies: ['sql_transform', 'spark'],
-  allowedStepKinds: ['PREPARE_POSTGRES_TRANSFORM', 'POSTGRES_SQL_TRANSFORM', 'SPARK_JOB'],
+  allowedFamilies: ['object_file_load', 'spark'],
+  allowedStepKinds: ['LOAD_OBJECT_FILE_TO_POSTGRES', 'SPARK_JOB'],
   allowBridgeKinds: false,
 };
 ```
@@ -372,11 +372,11 @@ This is acceptable because it selects from the resolved catalog.
 This would not be acceptable if it attempted to embed schema objects, handler
 functions, or arbitrary unreviewed family ids directly from free-form config.
 
-## Worked example: distinguish `DBT_MODEL` from `POSTGRES_SQL_TRANSFORM`
+## Worked example: distinguish object-file loading from `SPARK_JOB`
 
-- `DBT_MODEL` and `POSTGRES_SQL_TRANSFORM` are different `stepKind` values.
-- They may belong to different families, for example `dbt` and
-  `sql_transform`.
+- `LOAD_OBJECT_FILE_TO_POSTGRES` and `SPARK_JOB` are different `stepKind`
+  values.
+- They belong to the `object_file_load` and `spark` families.
 - Either kind may still run through the same `targetAdapter`, such as
   `temporal`.
 - The worker image or queue may still differ later, which is a routing concern

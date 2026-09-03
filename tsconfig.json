@@ -65,6 +65,18 @@
       "@dvt/temporal-dbt-plugin/*": [
         "./packages/@dvt/temporal-dbt-plugin/src/*"
       ],
+      "@dvt/temporal-http-json-plugin": [
+        "./packages/@dvt/temporal-http-json-plugin/src/index.ts"
+      ],
+      "@dvt/temporal-http-json-plugin/*": [
+        "./packages/@dvt/temporal-http-json-plugin/src/*"
+      ],
+      "@dvt/temporal-object-file-postgres-plugin": [
+        "./packages/@dvt/temporal-object-file-postgres-plugin/src/index.ts"
+      ],
+      "@dvt/temporal-object-file-postgres-plugin/*": [
+        "./packages/@dvt/temporal-object-file-postgres-plugin/src/*"
+      ],
       "@dvt/artifacts": ["./packages/@dvt/artifacts/src/index.ts"],
       "@dvt/artifacts/*": ["./packages/@dvt/artifacts/src/*"],
       "@dvt/observability": ["./packages/@dvt/observability/src/index.ts"],

@@ -434,7 +434,6 @@ export const PR_QUALITY_SCOPE_PATTERNS = {
     'packages/@dvt/adapter-temporal/src/workflows/**',
     'packages/@dvt/adapter-temporal/src/index.ts',
     'packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts',
-    'packages/@dvt/adapter-temporal/test/integration.postgres.time-skipping.test.ts',
     'packages/@dvt/adapter-temporal/test/integration.time-skipping.shared.ts',
     'packages/@dvt/adapter-temporal/test/helpers/**',
     'packages/@dvt/adapter-temporal/package.json',

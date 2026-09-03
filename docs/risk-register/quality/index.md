@@ -119,6 +119,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Packaged compatibility schema can drift from canonical root compatibility matrix](R-20260612-CONTRACTS-COMPAT-SCHEMA-PARITY.yaml)
 - [Persisted plan decisions could diverge from the authorized executable graph](R-20260801-PLAN-EXECUTION-DECISIONS.yaml)
 - [Persisted plan record contracts can drift back into dual truth and invalid state acceptance](R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml)
+- [Persisted plans may contain retired SQL-first step kinds](R-20260903-VTX2-RUNTIME-STEP-HARDCUT.yaml)
 - [Plan admission matrix can drift during future schema or plan-version changes](R-20260429-PLAN-ADMISSION-DRIFT.yaml)
 - [Plan-store canonical JSON shape may drift from contract schema](R-20260405-PLAN-STORE-CANONICAL-SHAPE-DRIFT.yaml)
 - [Plan-store tenancy and live RLS profile coverage remain after forced RLS baseline](R-20260425-PRODUCTION-TENANT-ISOLATION-BASELINE.yaml)

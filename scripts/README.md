@@ -166,20 +166,16 @@ Intended usage:
 - CI workflows call this helper explicitly before integration tests instead of
   relying on implicit `pretest:*` hooks
 
-### `run-temporal-postgres-proof.cjs`
+### `run-local-postgres.cjs`
 
-Canonical local operator wrapper for the Temporal Postgres capability proof
-environment.
+Local PostgreSQL lifecycle used by the development stack and browser proofs.
 
 Usage:
 
 ```bash
-node scripts/run-temporal-postgres-proof.cjs up
-node scripts/run-temporal-postgres-proof.cjs test
-node scripts/run-temporal-postgres-proof.cjs reset
-node scripts/run-temporal-postgres-proof.cjs cleanup
-node scripts/run-temporal-postgres-proof.cjs test --reset
-node scripts/run-temporal-postgres-proof.cjs down
+pnpm postgres:local:up
+pnpm postgres:local:reset
+pnpm postgres:local:down
 ```
 
 Behavior:
@@ -189,44 +185,9 @@ Behavior:
   standalone Compose binary is available
 - waits for the `dvt-postgres` container healthcheck
 - verifies the seeded proof baseline after destructive reset
-- can drop transient proof schemas (`it_runtime_*`, `dvt_transform_it_*`)
-  without deleting the Docker volume
-- exports `DVT_PG_INTEGRATION=1`
-- always exports the canonical local Docker DSN as `DVT_PG_URL` and
-  `DATABASE_URL`
-- runs the `@dvt/adapter-temporal` Postgres capability integration lane
-
-### `run-supported-runtime-proof.cjs`
-
-Canonical bounded capacity and recovery proof for the supported production
-runtime path.
-
-Usage:
-
-```bash
-pnpm test:supported-runtime-proof
-pnpm proof:supported-runtime
-pnpm proof:supported-runtime -- --output .dvt/proofs/supported-runtime.json
-```
-
-The test command builds the canonical contracts and run-domain dependencies
-before loading their distribution entry points, so it is reproducible from a
-clean checkout.
-
-Behavior:
-
-- builds the API, Temporal worker, outbox worker, and projector worker
-- drives the protected `StartRun` route with persisted plan references
-- executes steady-state, worker-interruption, and PostgreSQL-interruption
-  scenarios using one versioned workload profile
-- measures accepted runs, event throughput, projection freshness, API latency,
-  completion duration, backlog drain, and bounded recovery
-- rebuilds authoritative run snapshots from the canonical event history and
-  rejects loss, duplicate state effects, ordering violations, or divergence
-- runs the measured baseline three times by default and writes one concise JSON
-  artifact that identifies the first failed invariant
-- owns numeric budgets only in
-  `scripts/supported-runtime-proof/runtime-proof-profile.cjs`
+- exposes the canonical local DSN to callers as `defaultPgUrl`
+- does not own a runtime execution proof; current DBT, RLS and object-file
+  guarantees remain in their dedicated test lanes
 
 ### `run-dev-stack.cjs`
 

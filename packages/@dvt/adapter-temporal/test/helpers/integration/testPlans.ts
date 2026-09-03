@@ -19,12 +19,6 @@ export const INTEGRATION_PLAN_OWNERSHIP = {
   environmentId: 'test',
 } as const;
 
-export const INTEGRATION_POSTGRES_CONNECTION_REF = {
-  schemaVersion: 'connection-ref.v1',
-  connectionId: 'integration-warehouse',
-  provider: 'postgres',
-} as const;
-
 export function createPlanOwnershipFromContext(
   ctx: Pick<ResolvedRunContext, 'tenantId' | 'projectId' | 'environmentId'>
 ): NonNullable<ExecutionPlan['metadata']['ownership']> {
@@ -123,73 +117,6 @@ export function mkPermanentFailurePlan(): ExecutionPlan {
     ownership: INTEGRATION_PLAN_OWNERSHIP,
     steps: [createDbtModelStep('s-fail')],
   });
-}
-
-export function mkPostgresTransformationPlan(
-  schema: string,
-  sinkTable: string,
-  options: {
-    ownership?: NonNullable<ExecutionPlan['metadata']['ownership']>;
-  } = {}
-): ExecutionPlan {
-  return withTransformationRuntimeBinding(
-    createExecutionPlan({
-      inputHashSha256: sha256Hex(Buffer.from('fixture:it-plan-postgres-transform', 'utf-8')),
-      ownership: options.ownership ?? INTEGRATION_PLAN_OWNERSHIP,
-      steps: [
-        {
-          stepId: 's-1',
-          kind: 'PREPARE_POSTGRES_TRANSFORM',
-          dependsOn: [],
-          stepTypeConfig: {
-            connectionRef: INTEGRATION_POSTGRES_CONNECTION_REF,
-            targetSchema: schema,
-            sourceSchema: 'raw',
-            sourceTable: 'orders',
-            sourceAlias: 'orders',
-          },
-        },
-        {
-          stepId: 's-2',
-          kind: 'POSTGRES_SQL_TRANSFORM',
-          dependsOn: ['s-1'],
-          stepTypeConfig: {
-            connectionRef: INTEGRATION_POSTGRES_CONNECTION_REF,
-            dialect: 'postgres',
-            entrypoint: 'models/orders.sql',
-            sql: 'SELECT 1 AS order_id UNION ALL SELECT 2 AS order_id',
-            sqlArtifact: {
-              repo: 'dunay2/dvt',
-              path: 'models/orders.sql',
-              ref: 'refs/heads/main',
-              commitSha: 'a'.repeat(40),
-              contentSha256: 'b'.repeat(64),
-            },
-            sourceSchema: 'raw',
-            sourceTable: 'orders',
-            sourceAlias: 'orders',
-            sinkSchema: schema,
-            sinkTable,
-            materialization: 'table',
-            writeMode: 'replace',
-          },
-        },
-        {
-          stepId: 's-3',
-          kind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
-          dependsOn: ['s-2'],
-          stepTypeConfig: {
-            connectionRef: INTEGRATION_POSTGRES_CONNECTION_REF,
-            sinkSchema: schema,
-            sinkTable,
-            materialization: 'table',
-            writeMode: 'replace',
-          },
-        },
-      ],
-    }),
-    'postgres'
-  );
 }
 
 export function withTransformationRuntimeBinding<T extends Record<string, unknown>>(

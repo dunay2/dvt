@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { compilePlanRoute } from '../../../src/entrypoints/http/compilePlanRoute.js';
 
-import { buildCompileBody, buildTransformationStoredPlan } from './planRouteFixtures.js';
+import { buildCompileBody, buildStoredPlan } from './planRouteFixtures.js';
 import { createCompileRequest, createReply, okAuthDeps } from './planRouteHttpTestSupport.js';
 
 describe('compilePlanRoute', () => {
@@ -33,7 +33,7 @@ describe('compilePlanRoute', () => {
 
   it('returns a compiled plan without persistence side effects', async () => {
     const reply = createReply();
-    const plan = buildTransformationStoredPlan();
+    const plan = buildStoredPlan();
     const useCase = { execute: vi.fn(async () => ({ plan })) };
 
     await compilePlanRoute(
@@ -54,7 +54,7 @@ describe('compilePlanRoute', () => {
       expect.objectContaining({
         graphSource: expect.any(Object),
         selection: {
-          selectedNodeIds: ['source-node', 'transform-node', 'sink-node'],
+          selectedNodeIds: ['spark-job-1'],
         },
       }),
       expect.any(Object)

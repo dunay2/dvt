@@ -77,63 +77,6 @@ export const VALID_PREVIEW_PROVENANCE = {
   },
 } as const;
 
-export const VALID_POSTGRES_CONNECTION_REF = {
-  schemaVersion: 'connection-ref.v1',
-  connectionId: 'warehouse-a',
-  provider: 'postgres',
-} as const;
-
-export const VALID_TRANSFORMATION_GRAPH_SOURCE = {
-  kind: 'generic-graph-v1',
-  sourceFamily: 'dvt-substrait',
-  sourceVersion: 'substrait-v1',
-  nodes: [
-    {
-      nodeId: 'source-node',
-      stepKind: 'PREPARE_POSTGRES_TRANSFORM',
-      dependsOn: [],
-      stepTypeConfig: {
-        connectionRef: VALID_POSTGRES_CONNECTION_REF,
-        targetSchema: 'analytics',
-        sourceSchema: 'raw',
-        sourceTable: 'orders',
-        sourceAlias: 'orders_src',
-      },
-    },
-    {
-      nodeId: 'transform-node',
-      stepKind: 'POSTGRES_SQL_TRANSFORM',
-      dependsOn: ['source-node'],
-      stepTypeConfig: {
-        connectionRef: VALID_POSTGRES_CONNECTION_REF,
-        dialect: 'postgres',
-        entrypoint: 'models/model.sql',
-        sql: 'select * from raw.orders',
-        sqlArtifact: VALID_PREVIEW_PROVENANCE.sqlArtifact,
-        sourceSchema: 'raw',
-        sourceTable: 'orders',
-        sourceAlias: 'orders_src',
-        sinkSchema: 'analytics',
-        sinkTable: 'orders_daily',
-        materialization: 'table',
-        writeMode: 'replace',
-      },
-    },
-    {
-      nodeId: 'sink-node',
-      stepKind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
-      dependsOn: ['transform-node'],
-      stepTypeConfig: {
-        connectionRef: VALID_POSTGRES_CONNECTION_REF,
-        sinkSchema: 'analytics',
-        sinkTable: 'orders_daily',
-        materialization: 'table',
-        writeMode: 'replace',
-      },
-    },
-  ],
-} as const;
-
 export const VALID_SPARK_GRAPH_SOURCE = {
   kind: 'generic-graph-v1',
   sourceFamily: 'spark-job-graph',
@@ -169,8 +112,8 @@ export function buildPreviewBody(overrides: Record<string, unknown> = {}): Recor
 export function buildCompileBody(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
     context: { ...VALID_COMPILE_CONTEXT },
-    selection: { selectedNodeIds: ['source-node', 'transform-node', 'sink-node'] },
-    graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
+    selection: { selectedNodeIds: ['spark-job-1'] },
+    graphSource: VALID_SPARK_GRAPH_SOURCE,
     ...overrides,
   };
 }
@@ -187,32 +130,6 @@ export function buildStoredPlan(): ExecutionPlan {
   return {
     metadata: buildPlanMetadata(),
     steps: [],
-  } as const;
-}
-
-export function buildTransformationStoredPlan(): ExecutionPlan {
-  return {
-    metadata: buildPlanMetadata(),
-    steps: [
-      {
-        stepId: 'source-node',
-        kind: 'PREPARE_POSTGRES_TRANSFORM',
-        dependsOn: [],
-        stepTypeConfig: VALID_TRANSFORMATION_GRAPH_SOURCE.nodes[0].stepTypeConfig,
-      },
-      {
-        stepId: 'transform-node',
-        kind: 'POSTGRES_SQL_TRANSFORM',
-        dependsOn: ['source-node'],
-        stepTypeConfig: VALID_TRANSFORMATION_GRAPH_SOURCE.nodes[1].stepTypeConfig,
-      },
-      {
-        stepId: 'sink-node',
-        kind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
-        dependsOn: ['transform-node'],
-        stepTypeConfig: VALID_TRANSFORMATION_GRAPH_SOURCE.nodes[2].stepTypeConfig,
-      },
-    ],
   } as const;
 }
 

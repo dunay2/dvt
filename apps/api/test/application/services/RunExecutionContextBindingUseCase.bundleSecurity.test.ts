@@ -52,7 +52,6 @@ describe('DBT runtime binding security boundary', () => {
         createConnection: vi.fn(),
         renameConnection: vi.fn(),
       },
-      postgresCredentialResolver: { resolveCredential: vi.fn() },
     });
 
     const result = await useCase.executeAdmitted(

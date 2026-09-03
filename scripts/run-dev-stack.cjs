@@ -7,7 +7,7 @@ const http = require('node:http');
 const https = require('node:https');
 const path = require('node:path');
 const readline = require('node:readline');
-const { defaultPgUrl } = require('./run-temporal-postgres-proof.cjs');
+const { defaultPgUrl } = require('./run-local-postgres.cjs');
 const {
   LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS,
   seedLocalProtectedRuntimeGrant,
@@ -28,7 +28,7 @@ const DEFAULT_HOST = '127.0.0.1';
 const DEFAULT_READY_TIMEOUT_MS = 240_000;
 const DEFAULT_POLL_INTERVAL_MS = 500;
 const PNPM_COMMAND = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
-const POSTGRES_BOOTSTRAP_SCRIPT = path.resolve(__dirname, 'run-temporal-postgres-proof.cjs');
+const POSTGRES_BOOTSTRAP_SCRIPT = path.resolve(__dirname, 'run-local-postgres.cjs');
 const WORKSPACE_RUNTIME_DEPENDENCIES_BUILD_SCRIPT = path.resolve(
   __dirname,
   'build-workspace-runtime-deps.cjs'

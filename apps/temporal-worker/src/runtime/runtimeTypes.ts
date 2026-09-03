@@ -4,7 +4,6 @@
 import type {
   ActivityDeps,
   RunStateCommandCircuitSnapshot,
-  StepActivityRegistry,
   TemporalAdapterConfig,
   TemporalPlanArtifactReader,
   TemporalWorkerHostConfig,
@@ -57,7 +56,9 @@ export interface CreateTemporalWorkerRuntimeOptions {
     bundleReader: IDbtProjectBundleReader;
   }) => DbtPluginRunner;
   planArtifactReaderFactory?: (env: Env) => TemporalPlanArtifactReader;
-  postgresRelationalCapabilityFactory?: (env: Env) => TemporalWorkerPostgresCapability;
+  postgresObjectFileLoadingCapabilityFactory?: (
+    env: Env
+  ) => TemporalWorkerPostgresLoadingCapability;
   objectFileReaderFactory?: (env: Env) => ContentAddressedObjectReader;
   httpJsonClientFactory?: (env: Env) => HttpJsonAcquisitionClient;
   contentAddressedArtifactStoreFactory?: (env: Env) => IContentAddressedArtifactStore;
@@ -66,13 +67,9 @@ export interface CreateTemporalWorkerRuntimeOptions {
   dbtAvailabilityProbe?: (dbtBin: string) => Promise<void>;
 }
 
-export interface TemporalWorkerStepCapability {
-  stepActivitiesByKind: StepActivityRegistry;
+export interface TemporalWorkerPostgresLoadingCapability extends ObjectFilePostgresRelationalLoader {
   close(): Promise<void>;
 }
-
-export interface TemporalWorkerPostgresCapability
-  extends TemporalWorkerStepCapability, ObjectFilePostgresRelationalLoader {}
 
 export interface TemporalWorkerRuntimeResources {
   runMigrations: boolean;

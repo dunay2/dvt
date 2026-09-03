@@ -286,18 +286,6 @@ export type {
   WorkspaceGraphDraftScope,
 } from './contracts/planner/WorkspaceGraphDraft.v1.js';
 export {
-  CaptureMaterializationEvidenceStepTypeConfigSchema,
-  PostgresSqlTransformStepTypeConfigSchema,
-  PreparePostgresTransformStepTypeConfigSchema,
-} from './contracts/planner/TransformationFlowStepTypeConfigs.v1.js';
-export type {
-  CaptureMaterializationEvidenceStepTypeConfig,
-  PostgresSqlTransformStepTypeConfig,
-  PreparePostgresTransformStepTypeConfig,
-} from './contracts/planner/TransformationFlowStepTypeConfigs.v1.js';
-export { TRANSFORMATION_STEP_KIND } from './contracts/planner/TransformationFlowStepKinds.v1.js';
-export type { TransformationStepKind } from './contracts/planner/TransformationFlowStepKinds.v1.js';
-export {
   SparkJobDeployModeSchema,
   SparkJobRuntimeSchema,
   SparkJobStepTypeConfigSchema,

@@ -29,31 +29,25 @@
   },
   "scripts": {
     "build:runtime-deps": "node ../../../scripts/build-workspace-runtime-deps.cjs @dvt/adapter-temporal",
-    "build:runtime-deps:postgres": "node ../../../scripts/build-workspace-runtime-deps.cjs @dvt/adapter-temporal --include-package @dvt/adapter-postgres",
     "build": "tsc -p tsconfig.json",
     "prebuild": "node ../../../scripts/skip-prebuild-if-orchestrated.cjs || pnpm run build:runtime-deps",
     "postbuild": "echo '✅ Build complete'",
     "pretest": "node ../../../scripts/skip-pretest-if-ci.cjs || pnpm run build:runtime-deps",
-    "test": "vitest run ./test/ --exclude ./test/integration.time-skipping.test.ts --exclude ./test/integration.transformation.time-skipping.test.ts --exclude ./test/integration.postgres.time-skipping.test.ts",
+    "test": "vitest run ./test/ --exclude ./test/integration.time-skipping.test.ts --exclude ./test/integration.transformation.time-skipping.test.ts",
     "pretypecheck": "node ../../../scripts/skip-pretest-if-ci.cjs || pnpm run build:runtime-deps",
     "typecheck": "tsc -p tsconfig.json --noEmit && pnpm run typecheck:test",
     "typecheck:test": "tsc -p tsconfig.test.json --noEmit",
     "prepare:integration": "node ../../../scripts/build-workspace-runtime-deps.cjs @dvt/adapter-temporal --build-self",
     "prepare:integration:transformation": "node ../../../scripts/build-workspace-runtime-deps.cjs @dvt/adapter-temporal --build-self",
-    "prepare:integration:postgres": "node ../../../scripts/build-workspace-runtime-deps.cjs @dvt/adapter-temporal --include-package @dvt/adapter-postgres --build-self",
     "test:integration": "vitest run ./test/integration.time-skipping.test.ts",
     "test:integration:transformation": "vitest run ./test/integration.transformation.time-skipping.test.ts",
-    "test:integration:postgres": "node ./scripts/run-postgres-integration.cjs",
     "test:integration:local": "pnpm run prepare:integration && pnpm run test:integration",
     "test:integration:transformation:local": "pnpm run prepare:integration:transformation && pnpm run test:integration:transformation",
-    "test:integration:postgres:local": "pnpm run prepare:integration:postgres && pnpm run test:integration:postgres",
     "test:integration:watch": "vitest watch ./test/integration.time-skipping.test.ts",
     "ci:test:integration": "pnpm run prepare:integration && pnpm run test:integration",
-    "ci:test:integration:transformation": "pnpm run prepare:integration:transformation && pnpm run test:integration:transformation",
-    "ci:test:integration:postgres": "pnpm run prepare:integration:postgres && pnpm run test:integration:postgres"
+    "ci:test:integration:transformation": "pnpm run prepare:integration:transformation && pnpm run test:integration:transformation"
   },
   "devDependencies": {
-    "@dvt/adapter-postgres": "workspace:*",
     "@temporalio/testing": "1.23.0",
     "typescript": "5.9.3",
     "vitest": "3.2.4"

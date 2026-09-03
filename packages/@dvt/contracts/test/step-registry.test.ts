@@ -127,10 +127,12 @@ describe('createDefaultStepTypeRegistry', () => {
 describe('isKnownStepKind', () => {
   it('accepts canonical step kind values only', () => {
     expect(isKnownStepKind(DBT_MODEL)).toBe(true);
-    expect(isKnownStepKind('PREPARE_POSTGRES_TRANSFORM')).toBe(true);
   });
 
-  it('rejects inherited property names and arbitrary strings', () => {
+  it('rejects retired, inherited, and arbitrary kinds', () => {
+    expect(isKnownStepKind('PREPARE_POSTGRES_TRANSFORM')).toBe(false);
+    expect(isKnownStepKind('POSTGRES_SQL_TRANSFORM')).toBe(false);
+    expect(isKnownStepKind('CAPTURE_MATERIALIZATION_EVIDENCE')).toBe(false);
     expect(isKnownStepKind('toString')).toBe(false);
     expect(isKnownStepKind('constructor')).toBe(false);
     expect(isKnownStepKind('UNKNOWN_KIND')).toBe(false);

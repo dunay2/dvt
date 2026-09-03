@@ -18,7 +18,7 @@ const {
   resolveLiveProofSpecPath,
   seedSelectedClosureLocalWarehouseProof,
 } = require('./run-selected-closure-live-proof.cjs');
-const { defaultPgUrl } = require('./run-temporal-postgres-proof.cjs');
+const { defaultPgUrl } = require('./run-local-postgres.cjs');
 
 test('resolveLiveProofSpecPath keeps the selected-closure proof as the default', () => {
   assert.equal(

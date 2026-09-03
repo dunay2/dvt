@@ -244,7 +244,6 @@ describe('stored plan authority flow', () => {
         createConnection: vi.fn(),
         renameConnection: vi.fn(),
       },
-      postgresCredentialResolver: { resolveCredential: vi.fn() },
     });
     const start = new PlannerBackedStartRunUseCase({
       planner: { buildPlan: vi.fn() } as never,

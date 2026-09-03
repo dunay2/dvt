@@ -120,12 +120,6 @@ test('adapter-postgres policy stays wired into the PR quality gate and test work
   );
   assert.ok(
     matchesAnyPattern(
-      'packages/@dvt/adapter-temporal/test/integration.postgres.time-skipping.test.ts',
-      PR_QUALITY_SCOPE_PATTERNS.temporal_postgres_changed
-    )
-  );
-  assert.ok(
-    matchesAnyPattern(
       'scripts/build-workspace-runtime-deps.cjs',
       PR_QUALITY_SCOPE_PATTERNS.temporal_changed
     )

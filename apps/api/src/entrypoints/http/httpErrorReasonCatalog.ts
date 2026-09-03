@@ -47,7 +47,6 @@ export const HTTP_ERROR_REASON = Object.freeze({
   postgresTransformSqlNotReady: 'postgres_transform_sql_not_ready',
   runAlreadyExists: 'run_already_exists',
   runControlUnavailable: 'run_control_unavailable',
-  runMaterializationSampleUnavailable: 'run_materialization_sample_unavailable',
   runRecoveryUnavailable: 'run_recovery_unavailable',
   runNotFound: 'run_not_found',
   sourceRunNotTerminal: 'source_run_not_terminal',

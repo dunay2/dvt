@@ -76,13 +76,6 @@ test('computeBooleanScope marks temporal_postgres_changed for adapter-postgres c
   assert.equal(fromRuntimeDepsHelper.temporal_transformation_changed, true);
   assert.equal(fromRuntimeDepsHelper.temporal_postgres_changed, true);
 
-  const fromPostgresIntegrationFile = computeBooleanScope(
-    ['packages/@dvt/adapter-temporal/test/integration.postgres.time-skipping.test.ts'],
-    PR_QUALITY_SCOPE_PATTERNS
-  );
-  assert.equal(fromPostgresIntegrationFile.temporal_postgres_changed, true);
-  assert.equal(fromPostgresIntegrationFile.temporal_changed, false);
-
   const fromObjectFileWorker = computeBooleanScope(
     ['apps/temporal-worker/src/runtime/temporalWorkerObjectFilePostgresProfile.ts'],
     PR_QUALITY_SCOPE_PATTERNS

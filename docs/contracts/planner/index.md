@@ -47,8 +47,6 @@ ExecutionPlan and planner-related schemas and admission contracts.
 - `packages/@dvt/contracts/src/contracts/planner/StepKindRegistry.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/StoredPlanArtifactValidation.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts`
-- `packages/@dvt/contracts/src/contracts/planner/TransformationFlowStepKinds.v1.ts`
-- `packages/@dvt/contracts/src/contracts/planner/TransformationFlowStepTypeConfigs.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringCommand.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.ts`

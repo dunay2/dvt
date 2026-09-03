@@ -6,12 +6,7 @@ import {
   assertDbtProjectBundleBinding,
   type DbtProjectBundleArtifactStore,
 } from '@dvt/artifacts';
-import {
-  TRANSFORMATION_STEP_KIND,
-  parseDbtPluginContext,
-  parsePostgresPluginContext,
-  type DbtProjectBundleRef,
-} from '@dvt/contracts';
+import { parseDbtPluginContext, type DbtProjectBundleRef } from '@dvt/contracts';
 import {
   RunExecutionContextRejectedError,
   type IRunExecutionContextBindingPolicy,
@@ -41,18 +36,6 @@ export class RunExecutionContextBindingPolicy implements IRunExecutionContextBin
           }
 
           this.assertDbtProjectBundleBindingAllowed(parsed.projectBundleRef, context.tenantId);
-        },
-      },
-      {
-        pluginId: 'postgres-relational',
-        contextKey: 'postgres',
-        stepKinds: [
-          TRANSFORMATION_STEP_KIND.preparePostgresTransform,
-          TRANSFORMATION_STEP_KIND.postgresSqlTransform,
-          TRANSFORMATION_STEP_KIND.captureMaterializationEvidence,
-        ],
-        assertPluginContextAllowed: ({ pluginContext }) => {
-          parsePostgresPluginContext(pluginContext);
         },
       },
     ];

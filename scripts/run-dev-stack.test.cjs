@@ -23,7 +23,7 @@ const {
   resolveTemporalCliExecutable,
   startLocalTemporalService,
 } = require('./run-dev-stack.temporal.cjs');
-const { defaultPgUrl } = require('./run-temporal-postgres-proof.cjs');
+const { defaultPgUrl } = require('./run-local-postgres.cjs');
 
 test('parseArgs enables skip-postgres explicitly', () => {
   const options = parseArgs(['--host', '0.0.0.0', '--skip-postgres', '--test-only']);

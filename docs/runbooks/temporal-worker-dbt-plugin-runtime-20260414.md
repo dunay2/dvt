@@ -210,12 +210,12 @@ bundle, and one DBT-enabled workflow.
 PowerShell:
 
 ```powershell
-pnpm proof:temporal:postgres:reset
+pnpm postgres:local:reset
 $env:DVT_PG_INTEGRATION = '1'
 $env:DVT_PG_URL = 'postgresql://dvt:dvt@localhost:5432/dvt'
 $env:DATABASE_URL = 'postgresql://dvt:dvt@localhost:5432/dvt'
 pnpm --filter dvt-temporal-worker test -- test/host/runTemporalWorkerHost.test.ts
-pnpm proof:temporal:postgres:down
+pnpm postgres:local:down
 ```
 
 The canary asserts:
