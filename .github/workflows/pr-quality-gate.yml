@@ -343,7 +343,7 @@ jobs:
         run: pnpm --filter @dvt/adapter-temporal run test:integration
 
   temporal-postgres-integration:
-    name: Temporal adapter integration (postgres capability)
+    name: PostgreSQL adapters and object-file integration
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: [pr-checks]
@@ -400,12 +400,6 @@ jobs:
         run:
           pnpm --filter @dvt/adapter-postgres test -- PostgresAppRoleRuntime.integration.test.ts
           PostgresTenantRlsEnforcement.integration.test.ts
-
-      - name: Prepare Temporal adapter Postgres integration runtime
-        run: pnpm --filter @dvt/adapter-temporal run prepare:integration:postgres
-
-      - name: Run Temporal adapter integration (postgres capability)
-        run: pnpm --filter @dvt/adapter-temporal run test:integration:postgres
 
       - name: Start HET1 object-store and Temporal services
         run: |
