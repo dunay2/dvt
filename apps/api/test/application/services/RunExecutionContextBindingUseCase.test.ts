@@ -354,10 +354,7 @@ function dbtBindingDependencies(
     credentialRef: TARGET.credentialRef,
     sourceObjects: [],
   })
-): Pick<
-  BindingDependencies,
-  'executionConnectionBindingVerifier' | 'warehouseConnectionCatalog' | 'postgresCredentialResolver'
-> {
+): Pick<BindingDependencies, 'executionConnectionBindingVerifier' | 'warehouseConnectionCatalog'> {
   const unexpected = async (): Promise<never> => {
     throw new Error('Unexpected PostgreSQL binding for a DBT-only plan');
   };
@@ -370,7 +367,6 @@ function dbtBindingDependencies(
       createConnection: unexpected,
       renameConnection: unexpected,
     },
-    postgresCredentialResolver: { resolveCredential: unexpected },
   };
 }
 

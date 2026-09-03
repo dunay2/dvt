@@ -107,7 +107,6 @@ export function buildProtectedStartRunRuntime(
     executionConnectionBindingVerifier: deps.dbtExecutionConnectionBindingVerifier,
     stepTypeRegistry: deps.stepTypeRegistry,
     warehouseConnectionCatalog: deps.warehouseConnectionCatalog,
-    postgresCredentialResolver: deps.postgresCredentialResolver,
   });
   const plannerBackedUseCase = new PlannerBackedStartRunUseCase({
     planner: planCompilePlanner,

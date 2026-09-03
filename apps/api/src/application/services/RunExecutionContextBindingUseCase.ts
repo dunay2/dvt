@@ -2,15 +2,10 @@
  * Owned concern: orchestrate one server-owned run-context binding for an
  * already persisted executable plan.
  */
-import type { IPostgresCredentialBindingResolver } from '@dvt/adapter-postgres';
 import {
   DBT_STEP_REQUIRED_CAPABILITY,
   START_RUN_PLAN_REJECTION_CODE,
   START_RUN_RESULT_KIND,
-  TRANSFORMATION_STEP_KIND,
-  CaptureMaterializationEvidenceStepTypeConfigSchema,
-  PostgresSqlTransformStepTypeConfigSchema,
-  PreparePostgresTransformStepTypeConfigSchema,
   collectRequiredCapabilitiesForSteps,
   type ConnectionRef,
   type ExecutionPlan,
@@ -54,7 +49,6 @@ export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
       readonly executionConnectionBindingVerifier: IDbtExecutionConnectionBindingVerifier;
       readonly stepTypeRegistry: IStepTypeRegistry;
       readonly warehouseConnectionCatalog: IWarehouseConnectionCatalog;
-      readonly postgresCredentialResolver: IPostgresCredentialBindingResolver;
     }
   ) {}
 
@@ -74,12 +68,8 @@ export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
     const { materialized, scopedPlanRef } = admission;
     const { plan } = materialized;
     const bindsDbt = isDbtPlan(plan, this.deps.stepTypeRegistry);
-    const postgresBinding = resolvePostgresPlanConnection(plan);
-    if (!bindsDbt && postgresBinding.kind === 'not_applicable') {
+    if (!bindsDbt) {
       return this.deps.delegate.execute(command, context);
-    }
-    if (postgresBinding.kind === 'rejected') {
-      return rejectRunExecutionContext(postgresBinding.reason);
     }
     if (command.runExecutionContextRef !== undefined) {
       return rejectRunExecutionContext(CALLER_CONTEXT_REJECTION);
@@ -123,17 +113,6 @@ export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
         targetProfile: sourceBinding.targetProfile,
         credentialRef: sourceBinding.credentialRef,
       };
-    }
-
-    if (postgresBinding.kind === 'resolved') {
-      const postgresContext = await this.resolvePostgresPluginContext(
-        scope,
-        postgresBinding.connectionRef
-      );
-      if (!postgresContext.ok) {
-        return rejectRunExecutionContext(postgresContext.reason);
-      }
-      pluginContexts['postgres'] = postgresContext.value;
     }
 
     const runExecutionContext = buildRunExecutionContext({
@@ -209,127 +188,11 @@ export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
     }
     return { ok: true };
   }
-
-  private async resolvePostgresPluginContext(
-    scope: WorkspaceStorageScope,
-    connectionRef: ConnectionRef
-  ): Promise<
-    | { readonly ok: true; readonly value: Record<string, unknown> }
-    | { readonly ok: false; readonly reason: string }
-  > {
-    let connection: Awaited<ReturnType<IWarehouseConnectionCatalog['getConnection']>>;
-    try {
-      connection = await this.deps.warehouseConnectionCatalog.getConnection(
-        scope,
-        connectionRef.connectionId
-      );
-    } catch (error) {
-      if (error instanceof WarehouseConnectionNotFoundError) {
-        return { ok: false, reason: 'The PlanRef PostgreSQL connection is not in this workspace.' };
-      }
-      throw error;
-    }
-
-    if (connection.id !== connectionRef.connectionId || connection.type !== 'postgres') {
-      return { ok: false, reason: 'The PlanRef PostgreSQL connection binding is invalid.' };
-    }
-    if (connection.credentialRef === undefined) {
-      return { ok: false, reason: 'The PlanRef PostgreSQL credential alias is missing.' };
-    }
-
-    const resolved = await this.deps.postgresCredentialResolver.resolveCredential(
-      connection.credentialRef
-    );
-    if (resolved === null || resolved.trim().length === 0) {
-      return { ok: false, reason: 'The PlanRef PostgreSQL credential alias is not configured.' };
-    }
-
-    return {
-      ok: true,
-      value: {
-        connectionRef,
-        credentialRef: connection.credentialRef,
-      },
-    };
-  }
 }
 
 function isDbtPlan(plan: ExecutionPlan, stepTypeRegistry: IStepTypeRegistry): boolean {
   return collectRequiredCapabilitiesForSteps(stepTypeRegistry, plan.steps).includes(
     DBT_STEP_REQUIRED_CAPABILITY
-  );
-}
-
-type PostgresPlanConnectionResolution =
-  | Readonly<{ kind: 'not_applicable' }>
-  | Readonly<{ kind: 'resolved'; connectionRef: ConnectionRef }>
-  | Readonly<{ kind: 'rejected'; reason: string }>;
-
-function resolvePostgresPlanConnection(plan: ExecutionPlan): PostgresPlanConnectionResolution {
-  const expectedSteps = [
-    {
-      kind: TRANSFORMATION_STEP_KIND.preparePostgresTransform,
-      schema: PreparePostgresTransformStepTypeConfigSchema,
-    },
-    {
-      kind: TRANSFORMATION_STEP_KIND.postgresSqlTransform,
-      schema: PostgresSqlTransformStepTypeConfigSchema,
-    },
-    {
-      kind: TRANSFORMATION_STEP_KIND.captureMaterializationEvidence,
-      schema: CaptureMaterializationEvidenceStepTypeConfigSchema,
-    },
-  ] as const;
-  const sqlFirstSteps = plan.steps.filter((step) =>
-    expectedSteps.some((expected) => expected.kind === step.kind)
-  );
-  if (sqlFirstSteps.length === 0) {
-    return { kind: 'not_applicable' };
-  }
-  if (sqlFirstSteps.length !== expectedSteps.length) {
-    return {
-      kind: 'rejected',
-      reason: 'The SQL-first PlanRef must contain one complete PostgreSQL step chain.',
-    };
-  }
-
-  const connectionRefs: ConnectionRef[] = [];
-  for (const expected of expectedSteps) {
-    const matches = sqlFirstSteps.filter((step) => step.kind === expected.kind);
-    if (matches.length !== 1) {
-      return {
-        kind: 'rejected',
-        reason: 'The SQL-first PlanRef must contain each PostgreSQL step exactly once.',
-      };
-    }
-    const parsed = expected.schema.safeParse(matches[0]?.stepTypeConfig);
-    if (!parsed.success) {
-      return {
-        kind: 'rejected',
-        reason: 'The SQL-first PlanRef contains an invalid PostgreSQL connection binding.',
-      };
-    }
-    connectionRefs.push(parsed.data.connectionRef);
-  }
-
-  const connectionRef = connectionRefs[0];
-  if (
-    connectionRef === undefined ||
-    connectionRefs.slice(1).some((candidate) => !sameConnectionRef(connectionRef, candidate))
-  ) {
-    return {
-      kind: 'rejected',
-      reason: 'All SQL-first PlanRef steps must use the same PostgreSQL connection.',
-    };
-  }
-  return { kind: 'resolved', connectionRef };
-}
-
-function sameConnectionRef(left: ConnectionRef, right: ConnectionRef): boolean {
-  return (
-    left.schemaVersion === right.schemaVersion &&
-    left.connectionId === right.connectionId &&
-    left.provider === right.provider
   );
 }
 
