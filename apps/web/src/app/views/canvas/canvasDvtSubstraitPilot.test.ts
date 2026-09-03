@@ -55,7 +55,6 @@ import {
   type DvtSubstraitPilotDraft,
 } from './canvasDvtSubstraitPilot';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
-import { resolveExecutableSqlText } from './canvasTransformationSqlMirror';
 
 const ZERO_SHA256 = '0'.repeat(64);
 const OUTPUT_FIELD_ID = 'field:customer-name';
@@ -296,7 +295,7 @@ describe('typed Substrait DVT card pilot', () => {
     expect(readDvtTransformAuthoringAuthority(node)).toEqual(originalAuthority);
 
     const appliedNode = applyCanvasInspectorNodeDraft(node, editedInspectorDraft);
-    const appliedAuthority = readDvtTransformAuthoringAuthority(appliedNode);
+    const appliedAuthority = readDvtTransformAuthoringAuthority(appliedNode)!;
     expect(appliedAuthority.mode).toBe('substrait');
 
     const sourceNode = buildSourceNode();
@@ -326,7 +325,7 @@ describe('typed Substrait DVT card pilot', () => {
     const reopenedNode =
       projectWorkspaceGraphAuthoringDraftSemanticGraph(graphDraft).canonicalNodes[0];
     if (reopenedNode == null) throw new Error('Expected reopened Substrait node.');
-    const reopenedAuthority = readDvtTransformAuthoringAuthority(reopenedNode);
+    const reopenedAuthority = readDvtTransformAuthoringAuthority(reopenedNode)!;
     if (reopenedAuthority.mode !== 'substrait') throw new Error('Expected Substrait authority.');
 
     expect(
@@ -350,18 +349,12 @@ describe('typed Substrait DVT card pilot', () => {
     });
   });
 
-  it('fails closed outside the pilot shape and while SQL projection is not implemented', () => {
+  it('fails closed outside the pilot shape', () => {
     const initialDocument = encodeDvtSubstraitPilotDocument(buildPilotDraft());
-    const node = applyDvtSubstraitSemanticDocument(buildTransformNode(), initialDocument);
     const unsupported = decodeDvtSubstraitPilotDocument(initialDocument);
     unsupported.plan.relations = [];
 
     expect(inspectDvtSubstraitPilotDraft(unsupported)).toEqual({ ok: false });
     expect(applyDvtSubstraitPilotFunction(unsupported, 'trim')).toBe(unsupported);
-    expect(resolveExecutableSqlText(node)).toEqual({
-      ok: false,
-      message:
-        'SQL projection is not available yet for Substrait-authored transform node transform-customers.',
-    });
   });
 });

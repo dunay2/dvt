@@ -16,10 +16,7 @@ interface MonacoAuthorityFixture {
   source: string;
 }
 
-const CANVAS_MONACO_EDITOR_OWNERS = new Set([
-  'views/canvas/DbtModelCodeAuthoringSection.tsx',
-  'views/canvas/DvtSqlTransformAuthoringSection.tsx',
-]);
+const CANVAS_MONACO_EDITOR_OWNERS = new Set(['views/canvas/DbtModelCodeAuthoringSection.tsx']);
 const CANVAS_MONACO_READ_ONLY_OWNERS = new Set(['views/canvas/DvtTransformOutputView.tsx']);
 
 const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
@@ -73,13 +70,6 @@ const REJECTED_MONACO_AUTHORITY_FIXTURES: readonly (MonacoAuthorityFixture & {
     modulePath: 'views/canvas/CanvasShell.tsx',
     source: "import { MonacoCodeViewer } from '../../components/monaco/MonacoCodeViewer';",
     expectedViolation: 'MonacoCodeViewer outside a governed Canvas output leaf',
-  },
-  {
-    label: 'Canvas authoring cannot bypass the shared lazy Monaco gateway',
-    surface: 'canvas-production',
-    modulePath: 'views/canvas/DvtSqlTransformAuthoringSection.tsx',
-    source: "import Editor from '@monaco-editor/react';",
-    expectedViolation: '@monaco-editor/react',
   },
 ];
 

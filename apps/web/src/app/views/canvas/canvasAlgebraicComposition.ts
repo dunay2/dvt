@@ -79,9 +79,7 @@ export function resolveCanvasAlgebraicCompositionOperations(
   if (targetNode == null) return [];
   try {
     const authority = readDvtTransformAuthoringAuthority(targetNode);
-    if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.sql || authority.sql.trim().length > 0) {
-      return [];
-    }
+    if (authority != null) return [];
   } catch {
     return [];
   }

@@ -289,7 +289,7 @@ export function resolveDvtSubstraitUnionAllEntry(args: {
   if (args.requirePersistedAuthority) {
     try {
       const authority = readDvtTransformAuthoringAuthority(args.targetNode);
-      if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return null;
+      if (authority == null) return null;
       const inspection = inspectDvtSubstraitUnionAllAcceptedDraft(
         decodeDvtSubstraitUnionAllDocument(authority.semanticDocument)
       );

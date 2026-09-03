@@ -3,7 +3,7 @@
 import { fireEvent } from '@testing-library/dom';
 import React, { act, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
@@ -11,12 +11,6 @@ import {
   validateCanvasInspectorNodeDraft,
 } from './canvasInspectorAuthoringModel';
 import { DvtAuthoringFields } from './DvtAuthoringFields';
-
-vi.mock('../../components/monaco/MonacoCodeEditor', () => ({
-  MonacoCodeEditor: ({ value }: { value: string }) => (
-    <textarea data-testid="dvt-transform-sql-editor" readOnly value={value} />
-  ),
-}));
 
 function sourceNode(type = 'string'): CanonicalNode {
   return {
@@ -37,7 +31,7 @@ function sourceNode(type = 'string'): CanonicalNode {
   };
 }
 
-function transformNode(sql = ''): CanonicalNode {
+function transformNode(): CanonicalNode {
   return {
     id: 'transform-customers',
     name: 'Customers',
@@ -46,7 +40,7 @@ function transformNode(sql = ''): CanonicalNode {
     role: 'transform',
     status: 'idle',
     tags: ['authoring'],
-    metadata: sql.length === 0 ? {} : { sql, config: { sql } },
+    metadata: {},
   };
 }
 
@@ -197,17 +191,10 @@ describe('Substrait pilot entry through ConfigureCanvasDvtNode', () => {
     expect(restored).not.toContain('"fieldId":"field:transform-customers:count"');
   });
 
-  it('does not offer the pilot for a non-string fixture or when SQL already has authority', () => {
+  it('does not offer the pilot for a non-string fixture', () => {
     act(() =>
       root.render(
         <Harness key="non-string" source={sourceNode('number')} transform={transformNode()} />
-      )
-    );
-    expect(container.querySelector('[data-slot="dvt-start-substrait-pilot"]')).toBeNull();
-
-    act(() =>
-      root.render(
-        <Harness key="sql-authority" source={sourceNode()} transform={transformNode('select 1')} />
       )
     );
     expect(container.querySelector('[data-slot="dvt-start-substrait-pilot"]')).toBeNull();

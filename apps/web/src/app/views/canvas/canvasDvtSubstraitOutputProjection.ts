@@ -1,6 +1,4 @@
 /** Owned concern: derive an explicitly requested PostgreSQL view from one canonical Transform. */
-import { DVT_TRANSFORM_AUTHORING_MODE } from '@dvt/contracts';
-
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { inspectDvtSubstraitPilotAggregateWindowDraft } from './canvasDvtSubstraitAggregateWindow';
 import { inspectDvtSubstraitPilotAggregationDraft } from './canvasDvtSubstraitAggregation';
@@ -62,7 +60,7 @@ export async function projectDvtSubstraitTransformOutputToPostgresSql(
   args: DvtSubstraitTransformOutputProjectionArgs
 ): Promise<string> {
   const authority = readDvtTransformAuthoringAuthority(args.transformNode);
-  if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+  if (authority == null) {
     throw new Error('PostgreSQL output projection requires canonical Substrait authority.');
   }
 

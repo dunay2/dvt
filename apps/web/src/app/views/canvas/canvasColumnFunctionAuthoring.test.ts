@@ -107,7 +107,7 @@ describe('Canvas column function authoring', () => {
     expect(replacement?.metadata).not.toHaveProperty('dbt');
     expect(replacement?.metadata).not.toHaveProperty('config');
     if (replacement == null) throw new Error('Expected replacement Transform.');
-    const authority = readDvtTransformAuthoringAuthority(replacement);
+    const authority = readDvtTransformAuthoringAuthority(replacement)!;
     if (authority.mode !== 'substrait') throw new Error('Expected Substrait authority.');
     const inspection = inspectDvtSubstraitProjectionDraft(
       decodeDvtSubstraitProjectionDocument(authority.semanticDocument)

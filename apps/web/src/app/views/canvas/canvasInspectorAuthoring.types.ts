@@ -43,5 +43,4 @@ export type CanvasInspectorAuthoringContract = Readonly<{
   canEditNode: boolean;
   workspaceScope?: WorkspaceScope;
   onApplyNodeDraft: (draft: CanvasInspectorNodeDraft) => void;
-  onConvertVisualTransformToSql?: (generatedSql: string) => void;
 }>;

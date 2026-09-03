@@ -162,6 +162,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [RC-C1 boundary hardening could regress if typed not-found errors drift back to string parsing](R-20260331-RC-C1-BOUNDARY-LEGACY-HARDENING.yaml)
 - [RC-G1 contract ownership migration can drift between tracker, proposal, and package moves](R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml)
 - [Recovery could execute a plan reference reconstructed from the wrong hash](R-20260802-RECOVER-RUN-PLAN-REF-INTEGRITY.yaml)
+- [Removed VTX1 metadata could be mistaken for supported Transform authority](R-20260903-VTX1-AUTHORING-HARDCUT.yaml)
 - [Residual S08 scoped dispatch depends on upstream plan-record migration](r-20260502-s08-temporal-dispatch-scope.yaml)
 - [Riesgo de inconsistencia en guards de transición y shape-checking entre run-domain y](R-20260404-guards-alignment-adapter-postgres.yaml)
 - [Run events partitioning could drift from idempotency and tenant isolation constraints](R-20260513-RUN-EVENTS-HASH-PARTITIONING.yaml)

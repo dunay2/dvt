@@ -23,13 +23,8 @@ import {
   resolveAuthoringSqlArtifactPath,
   resolveScopedTransformationNodes,
 } from './previewGraphNodePayloads';
-import {
-  readTransformationSqlMirrorState,
-  resolveExecutableSqlText,
-} from './canvasTransformationSqlMirror';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { projectDvtSubstraitTransformOutputToPostgresSql } from './canvasDvtSubstraitOutputProjection';
-import { compileDvtVisualTransformNodeToPostgresSql } from './canvasVisualTransformSql';
 
 export type PreviewProvenanceResolution =
   | {
@@ -121,10 +116,7 @@ function resolveTransformArtifactSource(
   const workspacePath = normalizeNonBlankString(transformNode.path);
   if (transformNode.pluginId === 'dvt' && transformNode.kind === 'dvt:transform') {
     const authority = readDvtTransformAuthoringAuthority(transformNode);
-    if (
-      authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual ||
-      authority.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait
-    ) {
+    if (authority?.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
       return {
         kind: 'authoring-generated',
         node: transformNode,
@@ -210,43 +202,13 @@ async function resolvePreviewSqlArtifact(args: {
   const { transformArtifactSource } = args;
 
   if (transformArtifactSource.kind === 'workspace-file') {
-    const draftSqlText = readTransformationSqlMirrorState(transformArtifactSource.node).draftSql;
-    if (draftSqlText) {
-      const sqlText = draftSqlText.endsWith('\n') ? draftSqlText : `${draftSqlText}\n`;
-      const savedSqlArtifactReceipt = await args.workspaceFileContentCommand.saveFileContent({
-        path: transformArtifactSource.path,
-        content: sqlText,
-        expectedRevision: await readExpectedWorkspaceFileRevision(
-          args.workspaceFilesQuery,
-          transformArtifactSource.path
-        ),
-      });
-
-      return {
-        sqlText,
-        sqlArtifact: {
-          repo: args.gitRepo,
-          path: transformArtifactSource.path,
-          ref: args.gitRef,
-          commitSha: args.gitSha,
-          contentSha256: asSha256HexString(savedSqlArtifactReceipt.contentSha256),
-        },
-      };
-    }
-
-    try {
-      return await readPreviewSqlArtifact({
-        workspaceFilesQuery: args.workspaceFilesQuery,
-        path: transformArtifactSource.path,
-        gitRepo: args.gitRepo,
-        gitRef: args.gitRef,
-        gitSha: args.gitSha,
-      });
-    } catch (error) {
-      if (!isCanvasAuthoringNode(transformArtifactSource.node)) {
-        throw error;
-      }
-    }
+    return readPreviewSqlArtifact({
+      workspaceFilesQuery: args.workspaceFilesQuery,
+      path: transformArtifactSource.path,
+      gitRepo: args.gitRepo,
+      gitRef: args.gitRef,
+      gitSha: args.gitSha,
+    });
   }
 
   const sqlText = await buildAuthoringPreviewSql({
@@ -289,14 +251,7 @@ async function buildAuthoringPreviewSql({
 }): Promise<string> {
   if (transformNode.pluginId === 'dvt' && transformNode.kind === 'dvt:transform') {
     const authority = readDvtTransformAuthoringAuthority(transformNode);
-    if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
-      const scopedNodes = resolveScopedTransformationNodes(canonicalNodes, scopedNodeIds);
-      return compileDvtVisualTransformNodeToPostgresSql({
-        transformNode,
-        sourceNode: scopedNodes.source,
-      });
-    }
-    if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+    if (authority?.mode === DVT_TRANSFORM_AUTHORING_MODE.substrait) {
       const scopedNodeIdSet = new Set(scopedNodeIds);
       const scopedNodes = canonicalNodes.filter((node) => scopedNodeIdSet.has(node.id));
       const scopedEdges = canonicalEdges.filter(
@@ -309,15 +264,8 @@ async function buildAuthoringPreviewSql({
       });
       return sql.endsWith('\n') ? sql : `${sql}\n`;
     }
-  }
 
-  const explicitSql = resolveExecutableSqlText(transformNode);
-  if (!explicitSql.ok) {
-    throw new Error(explicitSql.message);
-  }
-
-  if (explicitSql.sql) {
-    return explicitSql.sql.endsWith('\n') ? explicitSql.sql : `${explicitSql.sql}\n`;
+    throw new Error(canvasViewCopy.previewProvenanceTransformPathRequiredMessage);
   }
 
   const scopedNodes = resolveScopedTransformationNodes(canonicalNodes, scopedNodeIds);

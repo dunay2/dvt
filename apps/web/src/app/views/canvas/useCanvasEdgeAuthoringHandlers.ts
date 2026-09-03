@@ -15,13 +15,15 @@ import type {
 import { canvasViewCopy, formatCanvasConnectionRejection } from './copy';
 import {
   applyCanvasColumnMapping,
-  automapCanvasColumns,
   removeCanvasColumnMapping,
-  reorderCanvasColumnOutput,
-  resolveCanvasColumnMappingTarget,
-  setCanvasColumnOutputIncluded,
-  type CanvasColumnMappingRejection,
 } from './canvasColumnMappingAuthoring';
+import { automapCanvasColumns } from './canvasColumnAutomap';
+import type { CanvasColumnMappingRejection } from './canvasColumnMappingModel';
+import {
+  reorderCanvasColumnOutput,
+  setCanvasColumnOutputIncluded,
+} from './canvasColumnOutputAuthoring';
+import { resolveCanvasColumnMappingTarget } from './canvasColumnProjectionAuthority';
 import {
   configureDbtModelColumnOrder,
   configureDbtModelColumnOutput,
@@ -99,9 +101,6 @@ function notifyRejectedConnection(
 function formatColumnMappingRejection(reason: CanvasColumnMappingRejection): string {
   if (reason === 'source_not_connected') {
     return canvasViewCopy.columnMappingRequiresDependencyMessage;
-  }
-  if (reason === 'sql_authority_not_empty') {
-    return canvasViewCopy.columnMappingSqlAuthorityMessage;
   }
   if (reason === 'complex_expression_not_editable') {
     return canvasViewCopy.columnMappingComplexExpressionMessage;

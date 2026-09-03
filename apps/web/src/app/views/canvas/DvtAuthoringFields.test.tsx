@@ -26,34 +26,6 @@ import {
 } from './canvasDvtSubstraitProjection';
 import { DvtAuthoringFields } from './DvtAuthoringFields';
 
-vi.mock('../../components/monaco/MonacoCodeEditor', () => ({
-  MonacoCodeEditor: ({
-    ariaLabel,
-    language,
-    onChange,
-    path,
-    value,
-    diagnostics = [],
-  }: {
-    ariaLabel: string;
-    language: string;
-    onChange: (value: string) => void;
-    path?: string;
-    value: string;
-    diagnostics?: readonly { message: string }[];
-  }) => (
-    <textarea
-      aria-label={ariaLabel}
-      data-language={language}
-      data-path={path}
-      data-testid="dvt-transform-sql-editor"
-      data-diagnostics={JSON.stringify(diagnostics)}
-      onChange={(event) => onChange(event.currentTarget.value)}
-      value={value}
-    />
-  ),
-}));
-
 function buildDvtNode(
   kind: 'dvt:source' | 'dvt:transform' | 'dvt:sink',
   metadata?: Record<string, unknown>
@@ -299,34 +271,6 @@ describe('DvtAuthoringFields', () => {
     expect(draftJson()).toContain('"table":"orders_daily"');
   });
 
-  it('renders one Transform editor without a duplicate summary and updates the draft', () => {
-    renderFields(
-      buildDvtNode('dvt:transform', {
-        config: {
-          sql: 'select * from public.orders',
-        },
-      })
-    );
-
-    const sqlEditor = container.querySelector(
-      '[data-testid="dvt-transform-sql-editor"]'
-    ) as HTMLTextAreaElement | null;
-
-    expect(container.textContent).toContain('DVT Transform');
-    expect(container.textContent).not.toContain('1 line');
-    expect(container.textContent).not.toContain('SQL body');
-    expect(sqlEditor).not.toBeNull();
-    expect(sqlEditor?.value).toBe('select * from public.orders');
-    expect(sqlEditor?.dataset.language).toBe('sql');
-    expect(sqlEditor?.dataset.path).toBe('canvas/dvt-transform.sql');
-
-    act(() => {
-      fireEvent.input(sqlEditor!, { target: { value: 'select id from public.orders' } });
-    });
-
-    expect(draftJson()).toContain('"sql":"select id from public.orders"');
-  });
-
   it('starts one typed Substrait INNER JOIN from two compatible connected datasets', () => {
     const customers = buildJoinWarehouseSourceNode({
       id: 'source-customers',
@@ -357,7 +301,7 @@ describe('DvtAuthoringFields', () => {
     renderFields(transform, undefined, undefined, [customers, orders, transform], edges, 'code');
 
     const entry = container.querySelector<HTMLButtonElement>(
-      '[data-slot="dvt-start-substrait-inner-join"]'
+      '[data-slot="dvt-start-configured-inner-join"]'
     );
     expect(entry).not.toBeNull();
 
@@ -371,84 +315,8 @@ describe('DvtAuthoringFields', () => {
     expect(container.textContent).toContain('customers');
     expect(container.textContent).toContain('orders');
     expect(container.textContent).toContain('customer_id');
-    expect(container.querySelector('[data-testid="dvt-transform-sql-editor"]')).toBeNull();
     expect(draftJson()).toContain('"shape":"inner_join"');
-
-    const customerIdSelection = container.querySelector<HTMLInputElement>(
-      'input[name="dvt-substrait-inner-join-field"][value="left.customer_id"]'
-    );
-    const nameOutput = container.querySelector<HTMLInputElement>(
-      'input[data-slot="dvt-substrait-inner-join-output-name"][data-field-key="left.name"]'
-    );
-    const moveOrderUp = container.querySelector<HTMLButtonElement>(
-      'button[data-action="move-substrait-inner-join-field-up"][data-field-key="right.order_id"]'
-    );
-    expect(customerIdSelection?.checked).toBe(true);
-    expect(nameOutput?.value).toBe('name');
-    expect(moveOrderUp).not.toBeNull();
-
-    act(() => {
-      fireEvent.click(customerIdSelection!);
-    });
-    const currentNameOutput = container.querySelector<HTMLInputElement>(
-      'input[data-slot="dvt-substrait-inner-join-output-name"][data-field-key="left.name"]'
-    );
-    act(() => {
-      fireEvent.focus(currentNameOutput!);
-      fireEvent.input(currentNameOutput!, { target: { value: 'customer_name' } });
-      fireEvent.focusOut(currentNameOutput!);
-    });
-    const currentMoveOrderUp = container.querySelector<HTMLButtonElement>(
-      'button[data-action="move-substrait-inner-join-field-up"][data-field-key="right.order_id"]'
-    );
-    act(() => {
-      fireEvent.click(currentMoveOrderUp!);
-    });
-
-    expect(customerIdSelection?.checked).toBe(false);
-    expect(draftJson()).toContain('"names":["order_id","customer_name"]');
-    expect(draftJson()).toContain('"fieldId":"field:dvt-transform:name"');
-    expect(draftJson()).toContain('"displayName":"customer_name"');
-    expect(draftJson()).not.toContain('selectedColumns');
-
-    const grainField = container.querySelector<HTMLSelectElement>(
-      '[data-slot="dvt-substrait-inner-join-grain-field"]'
-    );
-    const countOutput = container.querySelector<HTMLInputElement>(
-      '[data-slot="dvt-substrait-inner-join-count-output-name"]'
-    );
-    const applyGrouping = container.querySelector<HTMLButtonElement>(
-      '[data-slot="dvt-substrait-inner-join-apply-grouping"]'
-    );
-    expect(grainField).not.toBeNull();
-    expect(countOutput).not.toBeNull();
-    act(() => {
-      fireEvent.change(grainField!, { target: { value: 'field:dvt-transform:name' } });
-      fireEvent.input(countOutput!, { target: { value: 'order_count' } });
-      fireEvent.click(applyGrouping!);
-    });
-    expect(
-      container.querySelector('[data-slot="dvt-substrait-inner-join-grouping-authoring"]')
-    ).not.toBeNull();
-    expect(draftJson()).toContain('"case":"aggregate"');
-
-    const rankOutput = container.querySelector<HTMLInputElement>(
-      '[data-slot="dvt-substrait-inner-join-window-output-name"]'
-    );
-    const applyWindow = container.querySelector<HTMLButtonElement>(
-      '[data-slot="dvt-substrait-inner-join-apply-window"]'
-    );
-    act(() => {
-      fireEvent.input(rankOutput!, { target: { value: 'count_rank' } });
-      fireEvent.keyDown(applyWindow!, { key: 'Enter' });
-    });
-    expect(
-      container.querySelector('[data-slot="dvt-substrait-inner-join-grouped-window-authoring"]')
-    ).not.toBeNull();
-    expect(draftJson()).toContain('"names":["customer_name","order_count","count_rank"]');
-    expect(draftJson()).toContain('"case":"windowFunction"');
   });
-
   it('replaces a stale one-input projection with an explicitly configured connected join', () => {
     const orders = buildJoinWarehouseSourceNode({
       id: 'source-orders',
@@ -586,7 +454,7 @@ describe('DvtAuthoringFields', () => {
     );
     act(() => {
       fireEvent.click(
-        container.querySelector<HTMLButtonElement>('[data-slot="dvt-start-substrait-inner-join"]')!
+        container.querySelector<HTMLButtonElement>('[data-slot="dvt-start-configured-inner-join"]')!
       );
     });
 
@@ -741,7 +609,7 @@ describe('DvtAuthoringFields', () => {
 
     renderFields(transform, undefined, undefined, [customers, orders, transform], edges, 'code');
 
-    expect(container.querySelector('[data-slot="dvt-start-substrait-inner-join"]')).toBeNull();
+    expect(container.querySelector('[data-slot="dvt-start-configured-inner-join"]')).toBeNull();
   });
 
   it('starts one typed Substrait UNION ALL from N compatible connected datasets', () => {
@@ -785,13 +653,13 @@ describe('DvtAuthoringFields', () => {
     renderFields(transform, undefined, undefined, [north, south, west, transform], edges, 'code');
 
     const entry = container.querySelector<HTMLButtonElement>(
-      '[data-slot="dvt-start-substrait-union-all"]'
+      '[data-slot="dvt-start-connected-union-all"]'
     );
     expect(entry).not.toBeNull();
-    expect(container.querySelector('[data-slot="dvt-start-substrait-inner-join"]')).toBeNull();
+    expect(container.querySelector('[data-slot="dvt-start-configured-inner-join"]')).not.toBeNull();
 
     act(() => {
-      fireEvent.keyDown(entry!, { key: 'Enter' });
+      fireEvent.click(entry!);
     });
 
     expect(
@@ -801,7 +669,6 @@ describe('DvtAuthoringFields', () => {
     expect(container.textContent).toContain('customers_south');
     expect(container.textContent).toContain('customers_west');
     expect(container.textContent).toContain('customer_id, name, country');
-    expect(container.querySelector('[data-testid="dvt-transform-sql-editor"]')).toBeNull();
     expect(draftJson()).toContain('"shape":"union_all"');
     expect(draftJson()).toContain('"case":"set"');
 
@@ -868,268 +735,6 @@ describe('DvtAuthoringFields', () => {
     ).not.toBeNull();
     expect(draftJson()).toContain('"names":["region","customer_count","count_rank"]');
     expect(draftJson()).toContain('"case":"windowFunction"');
-  });
-
-  it('keeps only the latest governed SQL validation and localizes its diagnostic', async () => {
-    vi.useFakeTimers();
-    useApplicationLanguageStore.setState({ language: 'es' });
-    let resolveFirst: ((value: { status: 'valid' }) => void) | undefined;
-    const validatePostgresTransformSql = vi
-      .fn()
-      .mockImplementationOnce(
-        () =>
-          new Promise<{ status: 'valid' }>((resolve) => {
-            resolveFirst = resolve;
-          })
-      )
-      .mockResolvedValueOnce({
-        status: 'invalid',
-        diagnostics: [
-          {
-            code: 'undefined_column',
-            source: 'postgres',
-            message: 'column missing_column does not exist',
-            startOffset: 7,
-            endOffset: 21,
-          },
-        ],
-      });
-    const warehouseSourceImport = {
-      ...createMockWarehouseSourceImportPort(),
-      validatePostgresTransformSql,
-    };
-    const baseSource = buildImportedWarehouseSourceNode();
-    const source: CanonicalNode = {
-      ...baseSource,
-      metadata: {
-        ...baseSource.metadata,
-        connectedSourceRef: {
-          schemaVersion: 'connected-source-ref.v1',
-          connectionRef: {
-            schemaVersion: 'connection-ref.v1',
-            provider: 'postgres',
-            connectionId: 'warehouse-prod',
-          },
-          sourceObjectId: 'relation/analytics/erp/orders',
-        },
-      },
-    };
-    const transform = buildDvtNode('dvt:transform', {
-      config: { sql: 'select order_id from analytics.erp.orders' },
-    });
-    const edges: readonly CanonicalEdge[] = [
-      { id: 'source-transform', sourceId: source.id, targetId: transform.id, relation: 'lineage' },
-    ];
-
-    renderFields(transform, warehouseSourceImport, undefined, [source, transform], edges, 'code');
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(400);
-    });
-
-    const editor = container.querySelector(
-      '[data-testid="dvt-transform-sql-editor"]'
-    ) as HTMLTextAreaElement;
-    act(() => {
-      fireEvent.input(editor, {
-        target: { value: 'select missing_column from analytics.erp.orders' },
-      });
-    });
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(400);
-    });
-
-    expect(container.textContent).toContain('PostgreSQL no encuentra esta columna.');
-    expect(editor.dataset.diagnostics).toContain('PostgreSQL no encuentra esta columna.');
-
-    await act(async () => {
-      resolveFirst?.({ status: 'valid' });
-      await Promise.resolve();
-    });
-    expect(container.textContent).toContain('PostgreSQL no encuentra esta columna.');
-    expect(validatePostgresTransformSql).toHaveBeenLastCalledWith({
-      connectionRef: expect.objectContaining({ connectionId: 'warehouse-prod' }),
-      sql: 'select missing_column from analytics.erp.orders',
-    });
-    vi.useRealTimers();
-  });
-
-  it('does not present connected source columns as editable DVT transform inputs', () => {
-    const source = buildImportedWarehouseSourceNode();
-    const transform = buildDvtNode('dvt:transform', {
-      config: {
-        sql: 'select id from analytics.erp.orders',
-        selectedColumns: [`${source.id}.id`],
-      },
-    });
-
-    renderFields(transform);
-
-    expect(container.querySelector('input[name="dvt-transform-column"]')).toBeNull();
-    expect(draftJson()).not.toContain('selectedColumns');
-  });
-
-  it('edits the visual recipe from source inputs without creating another SQL editor', () => {
-    const source = buildImportedWarehouseSourceNode();
-    const transform = buildDvtNode('dvt:transform', {
-      transformAuthoring: {
-        version: 'v1',
-        mode: 'visual',
-        recipe: {
-          version: 'v1',
-          outputs: [
-            {
-              id: 'output:id',
-              name: 'id',
-              dataType: 'number',
-              expression: {
-                inputs: [{ nodeId: source.id, columnName: 'id' }],
-                operations: [{ kind: 'passthrough' }],
-              },
-            },
-          ],
-          filters: [],
-        },
-      },
-    });
-    const edges: readonly CanonicalEdge[] = [
-      {
-        id: 'source-transform',
-        sourceId: source.id,
-        targetId: transform.id,
-        relation: 'lineage',
-      },
-    ];
-    renderFields(transform, undefined, undefined, [source, transform], edges, 'columns');
-
-    const outputName = container.querySelector<HTMLInputElement>(
-      '[data-slot="dvt-visual-output-name"]'
-    );
-    expect(container.querySelector('[data-slot="dvt-visual-recipe-authoring"]')).not.toBeNull();
-    expect(container.textContent).toContain('Visual recipe');
-    expect(outputName?.value).toBe('id');
-    expect(container.querySelector('[data-testid="dvt-transform-sql-editor"]')).toBeNull();
-
-    act(() => {
-      fireEvent.input(outputName!, { target: { value: 'order_id' } });
-      fireEvent.click(container.querySelector('[data-action="add-visual-operation"]')!);
-    });
-
-    const operations = container.querySelectorAll<HTMLSelectElement>(
-      '[data-slot="dvt-visual-operation-kind"]'
-    );
-    expect(operations).toHaveLength(2);
-    expect(operations[1]?.value).toBe('trim');
-
-    act(() => {
-      fireEvent.change(operations[1]!, { target: { value: 'upper' } });
-      fireEvent.click(container.querySelector('[data-action="add-visual-filter"]')!);
-    });
-
-    const resolvedDraft = JSON.parse(draftJson()) as {
-      recipe: {
-        outputs: Array<{ name: string; expression: { operations: Array<unknown> } }>;
-        filters: Array<{ operator: string }>;
-      };
-    };
-    expect(resolvedDraft.recipe.outputs[0]?.name).toBe('order_id');
-    expect(resolvedDraft.recipe.outputs[0]?.expression.operations).toEqual([
-      { kind: 'passthrough' },
-      { kind: 'function', functionId: 'upper', args: [] },
-    ]);
-    expect(resolvedDraft.recipe.filters).toEqual([
-      expect.objectContaining({ operator: 'is_not_null' }),
-    ]);
-  });
-
-  it('localizes and reorders a multi-input recipe without persisting a second mapping', () => {
-    useApplicationLanguageStore.setState({ language: 'es' });
-    const baseSource = buildImportedWarehouseSourceNode();
-    const source: CanonicalNode = {
-      ...baseSource,
-      metadata: {
-        ...baseSource.metadata,
-        columns: [
-          { name: 'id', type: 'number' },
-          { name: 'customer', type: 'text' },
-        ],
-      },
-    };
-    const transform = buildDvtNode('dvt:transform', {
-      transformAuthoring: {
-        version: 'v1',
-        mode: 'visual',
-        recipe: {
-          version: 'v1',
-          outputs: [
-            {
-              id: 'output:id',
-              name: 'id',
-              dataType: 'number',
-              expression: {
-                inputs: [{ nodeId: source.id, columnName: 'id' }],
-                operations: [
-                  { kind: 'passthrough' },
-                  { kind: 'function', functionId: 'trim', args: [] },
-                  { kind: 'function', functionId: 'upper', args: [] },
-                ],
-              },
-            },
-          ],
-          filters: [],
-        },
-      },
-    });
-    const edges: readonly CanonicalEdge[] = [
-      {
-        id: 'source-transform',
-        sourceId: source.id,
-        targetId: transform.id,
-        relation: 'lineage',
-      },
-    ];
-    renderFields(transform, undefined, undefined, [source, transform], edges, 'columns');
-
-    expect(container.textContent).toContain('Receta visual');
-    expect(container.textContent).not.toContain('Visual recipe');
-    const inputCheckboxes = container.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
-    expect(inputCheckboxes).toHaveLength(2);
-
-    act(() => {
-      fireEvent.click(inputCheckboxes[1]!);
-    });
-
-    const moveUpButtons = container.querySelectorAll<HTMLButtonElement>(
-      'button[aria-label="Subir operación"]'
-    );
-    act(() => {
-      fireEvent.click(moveUpButtons[2]!);
-    });
-
-    let resolvedDraft = JSON.parse(draftJson()) as {
-      recipe: {
-        outputs: Array<{
-          expression: { inputs: Array<{ columnName: string }>; operations: Array<unknown> };
-        }>;
-      };
-    };
-    expect(resolvedDraft.recipe.outputs[0]?.expression.inputs).toEqual([
-      expect.objectContaining({ columnName: 'id' }),
-      expect.objectContaining({ columnName: 'customer' }),
-    ]);
-    expect(resolvedDraft.recipe.outputs[0]?.expression.operations).toEqual([
-      { kind: 'function', functionId: 'concat', args: [' '] },
-      { kind: 'function', functionId: 'upper', args: [] },
-      { kind: 'function', functionId: 'trim', args: [] },
-    ]);
-
-    const excludeButton = Array.from(container.querySelectorAll('button')).find(
-      (button) => button.textContent === 'Excluir salida'
-    );
-    act(() => {
-      fireEvent.click(excludeButton!);
-    });
-    resolvedDraft = JSON.parse(draftJson()) as typeof resolvedDraft;
-    expect(resolvedDraft.recipe.outputs).toEqual([]);
   });
 
   it('renders sink destination posture and updates materialization controls', () => {

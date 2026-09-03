@@ -1,15 +1,10 @@
-/** Owned concern: derive stable Canvas column handles and lineage edges from semantic recipe truth. */
-import {
-  DVT_TRANSFORM_AUTHORING_MODE,
-  ConnectedSourceRefSchema,
-  type ConnectedSourceRef,
-  type VisualTransformRecipeV1,
-} from '@dvt/contracts';
+/** Owned concern: derive stable Canvas column handles and lineage edges from canonical semantic truth. */
+import { ConnectedSourceRefSchema, type ConnectedSourceRef } from '@dvt/contracts';
 import type { Edge } from '@xyflow/react';
 
 import { buildCanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth';
 import type { CoreNodeRole, CanonicalNode } from '../../types/canonical';
-import { areCanvasColumnTypesCompatible } from './canvasColumnMappingAuthoring';
+import { areCanvasColumnTypesCompatible } from './canvasColumnAutomap';
 import { projectDbtModelArtifact } from './canvasDbtModelArtifactProjection';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
@@ -31,7 +26,6 @@ import {
   inspectDvtSubstraitProjectionDraft,
   type DvtSubstraitProjection,
 } from './canvasDvtSubstraitProjection';
-import { readDvtTransformLineageProvenance } from './canvasTransformationSqlMirror';
 
 export type CanvasColumnPortDirection = 'source' | 'target';
 export type CanvasColumnHandleIdentity = Readonly<{
@@ -124,30 +118,11 @@ function readColumns(node: CanonicalNode): readonly Column[] {
   });
 }
 
-type LineageRecipe = Readonly<{
-  recipe: VisualTransformRecipeV1;
-  removable: boolean;
-}>;
-
-function readLineageRecipe(node: CanonicalNode): LineageRecipe | null {
-  if (node.pluginId !== 'dvt' || node.kind !== 'dvt:transform') return null;
-  try {
-    const authority = readDvtTransformAuthoringAuthority(node);
-    if (authority.mode === DVT_TRANSFORM_AUTHORING_MODE.visual) {
-      return { recipe: authority.recipe, removable: true };
-    }
-    const provenance = readDvtTransformLineageProvenance(node);
-    return provenance == null ? null : { recipe: provenance, removable: false };
-  } catch {
-    return null;
-  }
-}
-
 function readSubstraitProjectionLineage(node: CanonicalNode): DvtSubstraitProjection | null {
   if (node.pluginId !== 'dvt' || node.kind !== 'dvt:transform') return null;
   try {
     const authority = readDvtTransformAuthoringAuthority(node);
-    if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return null;
+    if (authority == null) return null;
     const inspection = inspectDvtSubstraitProjectionDraft(
       decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
     );
@@ -189,7 +164,7 @@ function readSubstraitJoinLineage(node: CanonicalNode): DvtSubstraitInnerJoinLin
   if (node.pluginId !== 'dvt' || node.kind !== 'dvt:transform') return null;
   try {
     const authority = readDvtTransformAuthoringAuthority(node);
-    if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return null;
+    if (authority == null) return null;
     const draft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
     const nInput = inspectDvtSubstraitNInputJoinDraft(draft);
     if (nInput.ok && nInput.projection.inputs.length > 2) {
@@ -250,7 +225,7 @@ function readSubstraitUnionAllLineage(node: CanonicalNode): DvtSubstraitUnionAll
   if (node.pluginId !== 'dvt' || node.kind !== 'dvt:transform') return null;
   try {
     const authority = readDvtTransformAuthoringAuthority(node);
-    if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return null;
+    if (authority == null) return null;
     const draft = decodeDvtSubstraitUnionAllDocument(authority.semanticDocument);
     const groupedWindow = inspectDvtSubstraitUnionAllGroupedWindowDraft(draft);
     if (groupedWindow.ok) {
@@ -648,63 +623,6 @@ export function projectCanvasColumnLineage(args: {
         );
       }
       continue;
-    }
-
-    const lineageRecipe = readLineageRecipe(model);
-    if (lineageRecipe == null || !args.expandedNodeIds.has(model.id)) continue;
-
-    for (const output of lineageRecipe.recipe.outputs) {
-      for (const input of output.expression.inputs) {
-        const sourceNode = nodeById.get(input.nodeId);
-        if (
-          sourceNode == null ||
-          !args.expandedNodeIds.has(sourceNode.id) ||
-          !hasDependency(args.edges, sourceNode.id, model.id) ||
-          !readColumns(sourceNode).some((column) => column.name === input.columnName)
-        ) {
-          continue;
-        }
-        projected.push(
-          buildLineageEdge({
-            sourceNodeId: sourceNode.id,
-            sourceColumnName: input.columnName,
-            sourceColumnId: input.columnName,
-            targetNodeId: model.id,
-            targetColumnName: output.name,
-            targetColumnId: output.id,
-            outputId: output.id,
-            terminal: false,
-            removable: lineageRecipe.removable,
-          })
-        );
-      }
-
-      for (const dependency of args.edges.filter((edge) => edge.sourceId === model.id)) {
-        const sink = nodeById.get(dependency.targetId);
-        if (sink?.role !== 'output' || !args.expandedNodeIds.has(sink.id)) continue;
-        const compatibleSinkColumns = readColumns(sink).filter(
-          (column) =>
-            column.name === output.name &&
-            output.dataType != null &&
-            areCanvasColumnTypesCompatible(output.dataType, column.type)
-        );
-        if (compatibleSinkColumns.length !== 1) continue;
-        const sinkColumn = compatibleSinkColumns[0];
-        if (sinkColumn == null) continue;
-        projected.push(
-          buildLineageEdge({
-            sourceNodeId: model.id,
-            sourceColumnName: output.name,
-            sourceColumnId: output.id,
-            targetNodeId: sink.id,
-            targetColumnName: sinkColumn.name,
-            targetColumnId: sinkColumn.name,
-            outputId: output.id,
-            terminal: true,
-            removable: false,
-          })
-        );
-      }
     }
   }
 

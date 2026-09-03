@@ -1,6 +1,4 @@
 /** Owned concern: rebase a stale simple Transform projection onto its sole connected source. */
-import { DVT_TRANSFORM_AUTHORING_MODE } from '@dvt/contracts';
-
 import type { CanonicalNode } from '../../types/canonical';
 import { resolveCanvasDraftNodes } from './canvasDraftNodeCatalog';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
@@ -38,7 +36,7 @@ export function rebaseStaleTransformProjection(args: {
 
   try {
     const authority = readDvtTransformAuthoringAuthority(targetNode);
-    if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return args.draftSession;
+    if (authority == null) return args.draftSession;
     const inspection = inspectDvtSubstraitProjectionDraft(
       decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
     );

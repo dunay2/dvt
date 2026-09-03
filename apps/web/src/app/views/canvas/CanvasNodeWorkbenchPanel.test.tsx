@@ -171,33 +171,7 @@ const DVT_TRANSFORM_NODE: CanonicalNode = {
   tags: [],
   metadata: {
     config: {
-      sql: 'select order_id from source.orders',
       selectedColumns: [`${SOURCE_NODE.id}.order_id`],
-    },
-  },
-};
-
-const DVT_VISUAL_TRANSFORM_NODE: CanonicalNode = {
-  ...DVT_TRANSFORM_NODE,
-  metadata: {
-    transformAuthoring: {
-      version: 'v1',
-      mode: 'visual',
-      recipe: {
-        version: 'v1',
-        outputs: [
-          {
-            id: 'output:order_id',
-            name: 'order_id',
-            dataType: 'integer',
-            expression: {
-              inputs: [{ nodeId: SOURCE_NODE.id, columnName: 'order_id' }],
-              operations: [{ kind: 'passthrough' }],
-            },
-          },
-        ],
-        filters: [],
-      },
     },
   },
 };
@@ -652,45 +626,6 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(container.querySelector('[data-testid="monaco-code-editor"]')).toBeNull();
   });
 
-  it('renders DVT transform SQL editing inside the Code tab', () => {
-    renderNodePanel(root, DVT_TRANSFORM_NODE, 'code');
-
-    const codeSection = container.querySelector('[data-slot="canvas-node-workbench-code-section"]');
-    const sqlEditor = codeSection?.querySelector<HTMLTextAreaElement>(
-      '[data-testid="monaco-code-editor"]'
-    );
-
-    expect(codeSection).not.toBeNull();
-    expect(sqlEditor).not.toBeNull();
-    expect(sqlEditor?.value).toBe('select order_id from source.orders');
-    expect(sqlEditor?.dataset.language).toBe('sql');
-    expect(sqlEditor?.dataset.path).toBe('canvas/transform.orders.sql');
-    expect(codeSection?.querySelector('[data-testid="monaco-code-viewer"]')).toBeNull();
-    expect(codeSection?.querySelector('input[name="dvt-transform-column"]')).toBeNull();
-  });
-
-  it('shows visual transform generated SQL in the shared read-only Monaco surface', () => {
-    renderNodePanel(root, DVT_VISUAL_TRANSFORM_NODE, 'code');
-
-    const codeSection = container.querySelector('[data-slot="canvas-node-workbench-code-section"]');
-    expect(codeSection?.querySelector('[data-testid="monaco-code-editor"]')).toBeNull();
-    const codeViewer = codeSection?.querySelector<HTMLElement>(
-      '[data-testid="monaco-code-viewer"]'
-    );
-    expect(codeViewer).not.toBeNull();
-    expect(codeViewer?.dataset.language).toBe('sql');
-    expect(codeViewer?.dataset.path).toBe('models/transform-orders.sql');
-    expect(codeViewer?.textContent).toBe(
-      [
-        'select',
-        '  "orders"."order_id" as "order_id"',
-        'from "raw"."orders" as "orders";',
-        '',
-      ].join('\n')
-    );
-    expect(codeSection?.querySelector('pre')).toBeNull();
-  });
-
   it('shows Substrait first and derives PostgreSQL SQL only after explicit output selection', async () => {
     renderNodePanel(root, DVT_SUBSTRAIT_TRANSFORM_NODE, 'code');
 
@@ -745,58 +680,6 @@ describe('CanvasNodeWorkbenchPanel', () => {
       container.querySelector('[data-slot="canvas-node-workbench-contained-body"]')
     ).toBeNull();
     expect(container.querySelector('[data-slot="scroll-area"]')).not.toBeNull();
-  });
-
-  it('requires explicit confirmation before transferring visual authority to generated SQL', () => {
-    const onConvertVisualTransformToSql = vi.fn();
-    const authoring = {
-      canEditNode: true,
-      onApplyNodeDraft: vi.fn(),
-      onConvertVisualTransformToSql,
-    };
-    const generatedSql = [
-      'select',
-      '  "orders"."order_id" as "order_id"',
-      'from "raw"."orders" as "orders";',
-      '',
-    ].join('\n');
-
-    renderNodePanel(root, DVT_VISUAL_TRANSFORM_NODE, 'code', authoring);
-
-    const convertButton = Array.from(container.querySelectorAll('button')).find(
-      (button) => button.textContent?.trim() === 'Convert to SQL'
-    );
-    expect(convertButton).toBeDefined();
-
-    act(() => {
-      fireEvent.click(convertButton!);
-    });
-
-    expect(document.body.textContent).toContain('Convert this visual transform to SQL?');
-    expect(document.body.textContent).toContain('Returning from SQL to Visual is not automatic.');
-    expect(onConvertVisualTransformToSql).not.toHaveBeenCalled();
-
-    const cancelButton = Array.from(document.body.querySelectorAll('button')).find(
-      (button) => button.textContent?.trim() === 'Cancel'
-    );
-    act(() => {
-      fireEvent.click(cancelButton!);
-    });
-    expect(onConvertVisualTransformToSql).not.toHaveBeenCalled();
-
-    act(() => {
-      fireEvent.click(convertButton!);
-    });
-    const dialog = document.body.querySelector('[data-slot="alert-dialog-content"]');
-    const confirmButton = Array.from(dialog?.querySelectorAll('button') ?? []).find(
-      (button) => button.textContent?.trim() === 'Convert to SQL'
-    );
-    act(() => {
-      fireEvent.click(confirmButton!);
-    });
-
-    expect(onConvertVisualTransformToSql).toHaveBeenCalledOnce();
-    expect(onConvertVisualTransformToSql).toHaveBeenCalledWith(generatedSql);
   });
 
   it('renders one DBT model editor in Code without duplicating passive generated SQL', () => {
@@ -1040,72 +923,5 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(sinkSection?.textContent).toContain('replace');
     expect(sinkSection?.querySelector('input[name="dvt-sink-table"]')).not.toBeNull();
     expect(sinkSection?.querySelector('select[name="dvt-sink-write-mode"]')).not.toBeNull();
-  });
-
-  it('preserves one DVT transform authoring draft across workbench section switches', () => {
-    const onApplyNodeDraft = vi.fn();
-
-    renderNodePanel(root, DVT_TRANSFORM_NODE, 'code', {
-      canEditNode: true,
-      onApplyNodeDraft,
-    });
-
-    const sqlEditor = container.querySelector<HTMLTextAreaElement>(
-      '[data-testid="monaco-code-editor"]'
-    );
-    expect(sqlEditor).not.toBeNull();
-
-    act(() => {
-      fireEvent.input(sqlEditor!, {
-        target: { value: 'select customer from source.orders' },
-      });
-    });
-
-    renderNodePanel(
-      root,
-      DVT_TRANSFORM_NODE,
-      'columns',
-      {
-        canEditNode: true,
-        onApplyNodeDraft,
-      },
-      2
-    );
-
-    expect(container.querySelector('input[name="dvt-transform-column"]')).toBeNull();
-
-    renderNodePanel(
-      root,
-      DVT_TRANSFORM_NODE,
-      'code',
-      {
-        canEditNode: true,
-        onApplyNodeDraft,
-      },
-      3
-    );
-
-    const restoredSqlEditor = container.querySelector<HTMLTextAreaElement>(
-      '[data-testid="monaco-code-editor"]'
-    );
-    expect(restoredSqlEditor?.value).toBe('select customer from source.orders');
-
-    const applyButton = Array.from(container.querySelectorAll('button')).find(
-      (button) => button.textContent === 'Apply'
-    );
-    expect(applyButton).toBeDefined();
-
-    act(() => {
-      fireEvent.click(applyButton!);
-    });
-
-    expect(onApplyNodeDraft).toHaveBeenCalledWith(
-      expect.objectContaining({
-        dvt: expect.objectContaining({
-          kind: 'transform',
-          sql: 'select customer from source.orders',
-        }),
-      })
-    );
   });
 });

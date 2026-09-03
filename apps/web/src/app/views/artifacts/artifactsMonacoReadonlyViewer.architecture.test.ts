@@ -177,10 +177,7 @@ describe('Artifacts Monaco read-only viewer architecture', () => {
         expect(source, modulePath).not.toContain('MonacoCodeViewer');
       }
       expect(source, modulePath).not.toContain('MonacoDiffViewer');
-      if (
-        canvasModule.endsWith('DbtModelCodeAuthoringSection.tsx') ||
-        canvasModule.endsWith('DvtSqlTransformAuthoringSection.tsx')
-      ) {
+      if (canvasModule.endsWith('DbtModelCodeAuthoringSection.tsx')) {
         expect(source, modulePath).toContain('MonacoCodeEditor');
       } else {
         expect(source, modulePath).not.toContain('MonacoCodeEditor');

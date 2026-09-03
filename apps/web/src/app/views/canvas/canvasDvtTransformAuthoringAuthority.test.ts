@@ -1,30 +1,17 @@
-import { WorkspaceGraphAuthoringDraftSchema, type VisualTransformRecipeV1 } from '@dvt/contracts';
+import { WorkspaceGraphAuthoringDraftSchema } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
 import type { CanonicalNode } from '../../types/canonical';
 import { projectCanonicalNodeToAuthoringNode } from './canvasDraftAuthoring';
 import {
-  applyDvtVisualTransformRecipe,
-  convertDvtVisualTransformToSql,
+  applyDvtSubstraitSemanticDocument,
   readDvtTransformAuthoringAuthority,
 } from './canvasDvtTransformAuthoringAuthority';
-
-const RECIPE: VisualTransformRecipeV1 = {
-  version: 'v1',
-  outputs: [
-    {
-      id: 'output-order-id',
-      name: 'order_id',
-      dataType: 'integer',
-      expression: {
-        inputs: [{ nodeId: 'source-orders', columnName: 'order_id' }],
-        operations: [{ kind: 'passthrough' }],
-      },
-    },
-  ],
-  filters: [],
-};
+import {
+  createDvtSubstraitPilotDraft,
+  encodeDvtSubstraitPilotDocument,
+} from './canvasDvtSubstraitPilot';
 
 function buildTransformNode(metadata: CanonicalNode['metadata'] = {}): CanonicalNode {
   return {
@@ -39,185 +26,82 @@ function buildTransformNode(metadata: CanonicalNode['metadata'] = {}): Canonical
   };
 }
 
+function buildSemanticDocument(): ReturnType<typeof encodeDvtSubstraitPilotDocument> {
+  return encodeDvtSubstraitPilotDocument(
+    createDvtSubstraitPilotDraft({
+      sourceNodeId: 'source-orders',
+      targetNodeId: 'transform-orders',
+    })
+  );
+}
+
 describe('DVT transform authoring authority', () => {
-  it('rejects the removed dvt:sql_transform Graph Draft identity', () => {
-    expect(() =>
-      readDvtTransformAuthoringAuthority({
-        ...buildTransformNode(),
-        kind: 'dvt:sql_transform',
-      })
-    ).toThrow('DVT transform authoring authority requires a dvt:transform node.');
+  it('represents a new Transform as uninitialized instead of inventing SQL authority', () => {
+    expect(readDvtTransformAuthoringAuthority(buildTransformNode())).toBeNull();
   });
 
-  it('keeps historical nodes without an authority envelope in SQL mode', () => {
-    const node = buildTransformNode({
-      sql: 'select order_id from raw.orders',
-      config: {
-        sql: 'select order_id from raw.orders',
-        selectedColumns: ['source-orders.order_id'],
-      },
-    });
-
-    expect(readDvtTransformAuthoringAuthority(node)).toEqual({
-      version: 'v1',
-      mode: 'sql',
-      sql: 'select order_id from raw.orders',
-    });
-  });
-
-  it('persists visual authority while removing every editable or stale SQL mirror', () => {
-    const node = buildTransformNode({
-      sql: 'select stale from raw.orders',
-      compiledSql: 'select stale from raw.orders',
-      config: {
-        dialect: 'postgres',
-        sql: 'select stale from raw.orders',
-        selectedColumns: ['source-orders.order_id'],
-      },
-      transformLineageProvenance: RECIPE,
-    });
-
-    const updated = applyDvtVisualTransformRecipe(node, RECIPE);
-
-    expect(updated.metadata).toEqual({
-      config: {
-        dialect: 'postgres',
-        selectedColumns: ['source-orders.order_id'],
-      },
+  it.each([
+    { sql: 'select order_id from raw.orders' },
+    { config: { sql: 'select order_id from raw.orders' } },
+    { transformAuthoring: { version: 'v1', mode: 'sql' } },
+    {
       transformAuthoring: {
         version: 'v1',
         mode: 'visual',
-        recipe: RECIPE,
+        recipe: { version: 'v1', outputs: [], filters: [] },
+      },
+    },
+  ])('fails closed for removed SQL/VTX1 metadata %#', (metadata) => {
+    expect(() => readDvtTransformAuthoringAuthority(buildTransformNode(metadata))).toThrow(
+      'DVT transform authoring authority metadata is unsupported.'
+    );
+  });
+
+  it('persists only canonical Substrait metadata and survives the Graph Draft roundtrip', () => {
+    const semanticDocument = buildSemanticDocument();
+    const canonicalNode = applyDvtSubstraitSemanticDocument(
+      buildTransformNode({
+        sql: 'select stale from raw.orders',
+        compiledSql: 'select stale from raw.orders',
+        config: { sql: 'select stale from raw.orders', selectedColumns: ['order_id'] },
+        transformLineageProvenance: { stale: true },
+      }),
+      semanticDocument
+    );
+
+    expect(canonicalNode.metadata).toEqual({
+      config: { selectedColumns: ['order_id'] },
+      transformAuthoring: {
+        version: 'v1',
+        mode: 'substrait',
+        semanticDocument,
       },
     });
-    expect(readDvtTransformAuthoringAuthority(updated)).toEqual({
-      version: 'v1',
-      mode: 'visual',
-      recipe: RECIPE,
-    });
-  });
 
-  it('survives the existing CanonicalNode to Graph Draft to CanonicalNode roundtrip', () => {
-    const visualNode = applyDvtVisualTransformRecipe(buildTransformNode(), RECIPE);
     const draft = WorkspaceGraphAuthoringDraftSchema.parse({
       canvas: { id: 'canvas-1', kind: 'transformation', title: 'Transformation' },
-      nodeIds: [visualNode.id],
-      nodePositions: { [visualNode.id]: { x: 40, y: 80 } },
-      nodes: [projectCanonicalNodeToAuthoringNode(visualNode)],
+      nodeIds: [canonicalNode.id],
+      nodePositions: { [canonicalNode.id]: { x: 40, y: 80 } },
+      nodes: [projectCanonicalNodeToAuthoringNode(canonicalNode)],
       edges: [],
     });
     const reopenedNode = projectWorkspaceGraphAuthoringDraftSemanticGraph(draft).canonicalNodes[0];
 
-    expect(reopenedNode).toBeDefined();
     expect(readDvtTransformAuthoringAuthority(reopenedNode!)).toEqual({
       version: 'v1',
-      mode: 'visual',
-      recipe: RECIPE,
+      mode: 'substrait',
+      semanticDocument,
     });
   });
 
-  it('fails closed when visual authority coexists with editable SQL', () => {
-    const node = buildTransformNode({
-      sql: 'select * from raw.orders',
-      transformAuthoring: { version: 'v1', mode: 'visual', recipe: RECIPE },
-    });
-
-    expect(() => readDvtTransformAuthoringAuthority(node)).toThrow(
-      'Visual DVT transform authority cannot coexist with editable SQL.'
-    );
-  });
-
-  it('treats even an empty SQL field as a second editable authority', () => {
-    const topLevelSql = buildTransformNode({
-      sql: '',
-      transformAuthoring: { version: 'v1', mode: 'visual', recipe: RECIPE },
-    });
-    const configSql = buildTransformNode({
-      config: { sql: '' },
-      transformAuthoring: { version: 'v1', mode: 'visual', recipe: RECIPE },
-    });
-
-    expect(() => readDvtTransformAuthoringAuthority(topLevelSql)).toThrow(
-      'Visual DVT transform authority cannot coexist with editable SQL.'
-    );
-    expect(() => readDvtTransformAuthoringAuthority(configSql)).toThrow(
-      'Visual DVT transform authority cannot coexist with editable SQL.'
-    );
-  });
-
-  it('fails closed for malformed or unknown authority metadata', () => {
-    const node = buildTransformNode({
-      transformAuthoring: { version: 'v2', mode: 'visual', recipe: RECIPE },
-    });
-
-    expect(() => readDvtTransformAuthoringAuthority(node)).toThrow(
-      'DVT transform authoring authority metadata is invalid.'
-    );
-  });
-
-  it('converts Visual to SQL atomically and rejects a blank generated projection', () => {
-    const visualNode = applyDvtVisualTransformRecipe(buildTransformNode(), RECIPE);
-
-    expect(() => convertDvtVisualTransformToSql(visualNode, '  ')).toThrow(
-      'Visual to SQL conversion requires nonblank generated SQL.'
-    );
-
-    const sqlNode = convertDvtVisualTransformToSql(visualNode, 'select order_id from raw.orders');
-    expect(sqlNode.metadata).toEqual({
-      sql: 'select order_id from raw.orders',
-      config: { sql: 'select order_id from raw.orders' },
-      transformLineageProvenance: RECIPE,
-      transformAuthoring: { version: 'v1', mode: 'sql' },
-    });
-    expect(readDvtTransformAuthoringAuthority(sqlNode)).toEqual({
-      version: 'v1',
-      mode: 'sql',
-      sql: 'select order_id from raw.orders',
-    });
-  });
-
-  it('preserves the exact generated SQL when transferring authority', () => {
-    const visualNode = applyDvtVisualTransformRecipe(buildTransformNode(), RECIPE);
-    const generatedSql = 'select\n  "orders"."order_id" as "order_id"\nfrom "raw"."orders";\n';
-
-    const sqlNode = convertDvtVisualTransformToSql(visualNode, generatedSql);
-
-    expect(sqlNode.metadata?.sql).toBe(generatedSql);
-    expect(sqlNode.metadata?.config).toMatchObject({ sql: generatedSql });
-    expect(sqlNode.metadata?.transformLineageProvenance).toEqual(RECIPE);
-    expect(readDvtTransformAuthoringAuthority(sqlNode)).toEqual({
-      version: 'v1',
-      mode: 'sql',
-      sql: generatedSql,
-    });
-  });
-
-  it('persists converted SQL lineage provenance through the graph draft roundtrip', () => {
-    const visualNode = applyDvtVisualTransformRecipe(buildTransformNode(), RECIPE);
-    const sqlNode = convertDvtVisualTransformToSql(visualNode, 'select order_id from raw.orders');
-    const draft = WorkspaceGraphAuthoringDraftSchema.parse({
-      canvas: { id: 'canvas-1', kind: 'transformation', title: 'Transformation' },
-      nodeIds: [sqlNode.id],
-      nodePositions: { [sqlNode.id]: { x: 40, y: 80 } },
-      nodes: [projectCanonicalNodeToAuthoringNode(sqlNode)],
-      edges: [],
-    });
-    const reopenedNode = projectWorkspaceGraphAuthoringDraftSemanticGraph(draft).canonicalNodes[0];
-
-    expect(reopenedNode?.metadata?.transformLineageProvenance).toEqual(RECIPE);
-    expect(readDvtTransformAuthoringAuthority(reopenedNode!)).toEqual({
-      version: 'v1',
-      mode: 'sql',
-      sql: 'select order_id from raw.orders',
-    });
-  });
-
-  it('rejects visual-to-SQL conversion when visual authority is not current', () => {
+  it('rejects non-Transform nodes and malformed canonical metadata', () => {
     expect(() =>
-      convertDvtVisualTransformToSql(
-        buildTransformNode({ sql: 'select * from raw.orders' }),
-        'select order_id from raw.orders'
+      readDvtTransformAuthoringAuthority({ ...buildTransformNode(), kind: 'dvt:source' })
+    ).toThrow('DVT transform authoring authority requires a dvt:transform node.');
+    expect(() =>
+      readDvtTransformAuthoringAuthority(
+        buildTransformNode({ transformAuthoring: { version: 'v1', mode: 'substrait' } })
       )
-    ).toThrow('Visual to SQL conversion requires current visual authority.');
+    ).toThrow('DVT transform authoring authority metadata is invalid.');
   });
 });

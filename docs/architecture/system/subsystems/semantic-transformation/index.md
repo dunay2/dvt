@@ -141,8 +141,8 @@ The implementation:
 - re-encodes protobuf bytes, recomputes SHA-256, and binds the sidecar to that SHA on Apply;
 - reuses the existing Workspace Graph Draft Apply/Cancel/reload path;
 - fails closed for hidden or unsupported semantic shapes;
-- does not fall back silently to the VTX1 column-mapping or editable-SQL authority while the
-  Substrait mode is active.
+- rejects removed VTX1 and editable-SQL authoring metadata instead of admitting a second
+  semantic authority.
 
 This proves a semantic-authoring pattern. It does **not** prove a general semantic editor,
 SQL rendering, provider execution, joins, aggregates, windows, or a universal visual grammar.
@@ -276,13 +276,12 @@ and be introduced only when executable evidence requires it.
 
 ## Current-To-Target Convergence
 
-VTX2 should remove duplicate semantic authorities rather than add another framework:
+VTX2 removes duplicate semantic authorities rather than adding another framework:
 
-- `VisualTransformRecipeV1` remains compatibility/current product behavior where still wired,
-  but it must not become the VTX2 semantic center;
-- existing SQL-first compiler paths remain until a replacement slice proves equivalent
-  accepted behavior; they are retired deliberately, not speculatively;
-- one Substrait capability governance surface replaces parallel semantic operation catalogs;
+- canonical Substrait authoring is the only writable DVT Transform authority;
+- VTX1 recipes, editable DVT SQL, their mirror, and the visual-to-SQL compiler are retired;
+- existing workspace SQL files remain readable artifacts, not an authoring fallback;
+- one Substrait capability governance surface replaces parallel operation catalogs;
 - provider validation, generic planning, run lifecycle, state and artifact ownership remain in
   their existing bounded contexts;
 - no new store, service, builder framework, renderer framework, graph abstraction, or private
