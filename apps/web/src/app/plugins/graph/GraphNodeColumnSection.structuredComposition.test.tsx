@@ -80,7 +80,7 @@ describe('GraphNodeColumnSection structured composition', () => {
     rows[0]!.getBoundingClientRect = () =>
       ({ top: 0, bottom: 90, height: 90, left: 0, right: 300, width: 300, x: 0, y: 0 }) as DOMRect;
     const dataTransfer = { effectAllowed: 'none', dropEffect: 'none', setData: vi.fn() };
-    const dragEvent = (type: string) => {
+    const dragEvent = (type: string): void => {
       const event = new Event(type, { bubbles: true, cancelable: true });
       Object.defineProperties(event, {
         clientY: { value: 45 },

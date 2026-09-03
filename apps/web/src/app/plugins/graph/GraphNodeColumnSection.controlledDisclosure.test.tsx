@@ -25,7 +25,7 @@ describe('GraphNodeColumnSection controlled disclosure', () => {
   });
 
   it('retains the expanded state when the graph remounts the node', async () => {
-    function RemountingGraph() {
+    function RemountingGraph(): React.JSX.Element {
       const [expanded, setExpanded] = useState(false);
       const [revision, setRevision] = useState(0);
       return (
