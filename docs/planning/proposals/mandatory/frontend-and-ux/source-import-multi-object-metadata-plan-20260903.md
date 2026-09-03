@@ -75,10 +75,11 @@ flowchart LR
 
 ## Command And Query Rails
 
-| Intent                                                   | Rail                                   | Type  | Owner                                  |
-| -------------------------------------------------------- | -------------------------------------- | ----- | -------------------------------------- |
-| Discover source objects and metadata                     | `ListWarehouseConnectionSourceObjects` | query | provider-neutral source-object catalog |
-| No new rail is introduced; import behavior is unchanged. |
+| Intent                               | Rail                                   | Type  | Owner                                  |
+| ------------------------------------ | -------------------------------------- | ----- | -------------------------------------- |
+| Discover source objects and metadata | `ListWarehouseConnectionSourceObjects` | query | provider-neutral source-object catalog |
+
+No new rail is introduced; import behavior is unchanged.
 
 ## Fowler Opportunities
 
