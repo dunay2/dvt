@@ -131,6 +131,7 @@ export function GraphNodeColumnSection({
                 onColumnFunctionApply={onColumnFunctionApply}
                 onStructuredFieldApply={onStructuredFieldApply}
                 onColumnOutputToggle={onColumnOutputToggle}
+                onColumnReorder={onColumnReorder}
               />
             ))}
           </div>

@@ -28,6 +28,7 @@ describe('projectGraphNodeColumn', () => {
       output: true,
       children: [
         {
+          id: 'source:orders:order_id',
           name: 'order_id',
           type: 'integer',
           output: true,

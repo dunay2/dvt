@@ -9,6 +9,7 @@ import type {
   GraphNodeColumnOutputToggleIdentity,
   GraphNodeColumnPortDirection,
   GraphNodeColumnPortIdentity,
+  GraphNodeColumnReorderIdentity,
   GraphNodeStructuredFieldIdentity,
 } from './graphNodeColumnContracts';
 import { GraphNodeColumnDropCompositionFlow } from './GraphNodeColumnDropCompositionFlow';
@@ -41,6 +42,7 @@ export function GraphNodeColumnRow(props: {
   onColumnFunctionApply?: (identity: GraphNodeColumnFunctionApplyIdentity) => void;
   onStructuredFieldApply?: (identity: GraphNodeStructuredFieldIdentity) => void;
   onColumnOutputToggle?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
+  onColumnReorder?: (identity: GraphNodeColumnReorderIdentity) => void;
 }): ReactElement {
   const [keyboardFunctionMenuOpen, setKeyboardFunctionMenuOpen] = useState(false);
   const [pendingFunction, setPendingFunction] = useState<PendingFunctionRequest | null>(null);
@@ -54,6 +56,8 @@ export function GraphNodeColumnRow(props: {
       canReorder={reorder.canReorder(column)}
       outputToggleDisabled={nodeId == null || props.onColumnOutputToggle == null}
       copy={copy}
+      nodeId={nodeId}
+      onNestedColumnReorder={props.onColumnReorder}
       onDragStart={(event) => reorder.startDrag(column, event)}
       onDragEnd={reorder.endDrag}
       onOutputToggle={() => {
@@ -102,7 +106,7 @@ export function GraphNodeColumnRow(props: {
       onDragOver={(event) => reorder.dragOver(column, event)}
       onDragLeave={reorder.dragLeave}
       onDrop={(event) => reorder.drop(column, event)}
-      onKeyDownCapture={(event) => {
+      onKeyDown={(event) => {
         if (reorder.composeWithKeyboard(column, event)) return;
         if (reorder.moveWithKeyboard(column, event)) return;
         if (

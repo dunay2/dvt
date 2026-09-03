@@ -7,6 +7,7 @@ export function projectGraphNodeColumn(
   output: boolean
 ): GraphNodeColumn {
   return {
+    ...(column.reference == null ? {} : { id: column.reference }),
     name: column.name,
     type: column.type,
     output,

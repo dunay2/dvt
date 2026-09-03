@@ -10,6 +10,7 @@ import {
 import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
 import { TooltipContent } from '../../components/ui/tooltip';
 import type { GraphNodeColumn } from './graphNodeColumnContracts';
+import type { GraphNodeColumnReorderIdentity } from './graphNodeColumnContracts';
 import { resolveGraphNodeCardCopy } from './graphNodeCardCopyTokens';
 import { graphNodeColumnClasses } from './graphVisualTokens';
 import { GraphNodeColumnChildren } from './GraphNodeColumnChildren';
@@ -26,6 +27,8 @@ type GraphNodeColumnPieceProps = Readonly<
     onDragStart: DragEventHandler<HTMLDivElement>;
     onDragEnd: () => void;
     onOutputToggle: () => void;
+    nodeId?: string;
+    onNestedColumnReorder?: (identity: GraphNodeColumnReorderIdentity) => void;
   }
 >;
 
@@ -40,6 +43,8 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
       onDragStart,
       onDragEnd,
       onOutputToggle,
+      nodeId,
+      onNestedColumnReorder,
       ...elementProps
     } = props;
     const accessibleLabel = (
@@ -102,7 +107,14 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
             ) : null}
           </button>
         </span>
-        {column.children == null ? null : <GraphNodeColumnChildren children={column.children} />}
+        {column.children == null ? null : (
+          <GraphNodeColumnChildren
+            nodeId={nodeId}
+            parentColumnId={column.id}
+            children={column.children}
+            onColumnReorder={onNestedColumnReorder}
+          />
+        )}
       </div>
     );
   }

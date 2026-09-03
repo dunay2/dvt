@@ -38,6 +38,7 @@ export type GraphNodeColumnReorderIdentity = Readonly<{
   columnId: string;
   targetColumnId: string;
   placement: 'before' | 'after';
+  parentColumnId?: string;
 }>;
 export type GraphNodeColumnOutputToggleIdentity = Readonly<{
   nodeId: string;
