@@ -4,7 +4,7 @@
  */
 import { z } from 'zod';
 
-import type { DvtSubstraitCapabilityCatalogV1 } from './DvtSubstraitCapabilityCatalog.v1.js';
+import type { DvtSubstraitCapabilityCatalogV1 } from './DvtSubstraitCapabilityCatalogSchema.v1.js';
 
 const NonBlankStringSchema = z
   .string()
