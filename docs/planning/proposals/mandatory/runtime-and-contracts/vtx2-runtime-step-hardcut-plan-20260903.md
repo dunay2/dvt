@@ -124,8 +124,7 @@ allowedImplementationSurfaces:
   - apps/api/**
   - apps/temporal-worker/**
   - packages/@dvt/engine/test/**
-  - scripts/supported-runtime-proof/**
-  - CI scope and workflow declarations governing PostgreSQL runtime proofs
+  - scripts/**, package.json, and CI declarations governing runtime proofs
   - docs/**
 forbiddenImplementationSurfaces:
   - packages/@dvt/planner/**
