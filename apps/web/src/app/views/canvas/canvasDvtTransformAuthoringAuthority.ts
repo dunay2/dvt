@@ -1,4 +1,4 @@
-/** Owned concern: persist the single canonical DVT Transform semantic authority. */
+/** Owned concern: persist the single canonical DVT relation semantic authority. */
 import {
   DVT_TRANSFORM_AUTHORING_MODE,
   DVT_TRANSFORM_AUTHORING_AUTHORITY_VERSION,
@@ -18,9 +18,13 @@ export type DvtTransformAuthoringAuthority = Readonly<{
   semanticDocument: DvtSubstraitSemanticDocumentV1;
 }>;
 
-function assertDvtTransformNode(node: CanonicalNode): void {
-  if (node.pluginId !== 'dvt' || node.kind !== 'dvt:transform') {
-    throw new Error('DVT transform authoring authority requires a dvt:transform node.');
+function assertDvtSemanticNode(node: CanonicalNode): void {
+  const isTransform = node.pluginId === 'dvt' && node.kind === 'dvt:transform';
+  const isSource =
+    node.kind === 'dvt:source' &&
+    (node.pluginId === 'dvt' || node.pluginId === 'dvt.warehouse-source');
+  if (!isTransform && !isSource) {
+    throw new Error('DVT semantic authoring authority requires a DVT Source or Transform node.');
   }
 }
 
@@ -53,7 +57,7 @@ function removeRetiredAuthorityMetadata(node: CanonicalNode): Record<string, unk
 export function readDvtTransformAuthoringAuthority(
   node: CanonicalNode
 ): DvtTransformAuthoringAuthority | null {
-  assertDvtTransformNode(node);
+  assertDvtSemanticNode(node);
   const rawAuthority = node.metadata?.[DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY];
 
   if (rawAuthority === undefined) {
@@ -80,7 +84,7 @@ export function applyDvtSubstraitSemanticDocument(
   node: CanonicalNode,
   documentInput: unknown
 ): CanonicalNode {
-  assertDvtTransformNode(node);
+  assertDvtSemanticNode(node);
   const semanticDocument = canonicalizeDvtSubstraitSemanticDocumentV1(documentInput);
   return {
     ...node,
