@@ -244,10 +244,8 @@ flowchart LR
   WF["RunPlanWorkflow"]:::impl --> DISP["StepActivityDispatcher"]:::impl
   DISP --> GATE["GatewayStepActivity"]:::impl
   DISP --> DBT["DbtStepActivity"]:::impl
-  DISP --> PG["PostgresRelationalExecutionCapability"]:::impl
-  PG --> P1["PREPARE_POSTGRES_TRANSFORM"]:::impl
-  PG --> P2["POSTGRES_SQL_TRANSFORM"]:::impl
-  PG --> P3["CAPTURE_MATERIALIZATION_EVIDENCE"]:::impl
+  DISP --> OBJ["ObjectFilePostgresStepActivity"]:::impl
+  OBJ --> LOAD["PostgresObjectFileLoadingCapability"]:::impl
 ```
 
 ---
