@@ -87,15 +87,15 @@ flowchart LR
 
 ## Validation evidence
 
-| Evidence                                                                   | Result                                                    |
-| -------------------------------------------------------------------------- | --------------------------------------------------------- |
-| Focused behavioral test before implementation                              | FAIL — all six messages exposed the fixed legacy topology |
-| Focused behavioral test after implementation                               | PASS — 9/9                                                |
-| `pnpm --filter @dvt/web test:canvas-unit:run`                              | PASS                                                      |
-| `pnpm --filter @dvt/web typecheck`                                         | PASS                                                      |
-| `pnpm --filter @dvt/web lint`                                              | PASS                                                      |
-| Visible Chrome application after HMR                                       | PASS — Canvas and Problems panel remain operational       |
-| `pnpm governance:refresh` and `pnpm verify:prepush` after the final commit | Required final closeout gates                             |
+| Evidence                                            | Result                                                    |
+| --------------------------------------------------- | --------------------------------------------------------- |
+| Focused behavioral test before implementation       | FAIL — all six messages exposed the fixed legacy topology |
+| Focused behavioral test after implementation        | PASS — 9/9                                                |
+| `pnpm --filter @dvt/web test:canvas-unit:run`       | PASS                                                      |
+| `pnpm --filter @dvt/web typecheck`                  | PASS                                                      |
+| `pnpm --filter @dvt/web lint`                       | PASS                                                      |
+| Visible Chrome application after HMR                | PASS — Canvas and Problems panel remain operational       |
+| `pnpm governance:refresh` and `pnpm verify:prepush` | PASS                                                      |
 
 ## Debt and stubs
 
