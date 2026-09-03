@@ -4,17 +4,13 @@ import type { IPlansPort } from '../../ports/plans';
 import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
 import type { IGraphDbtModelCompilationQueryPort } from '../../ports/graphDbtModelCompilation';
 import type { SessionContextPort } from '../../ports/sessionContext';
-import type {
-  IWorkspaceFileContentCommandPort,
-  IWorkspaceFilesQueryPort,
-} from '../../ports/workspace';
+import type { IWorkspaceFilesQueryPort } from '../../ports/workspace';
 import type { CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
 import { makePlanRef, makeRunContext } from '../../testing/contractTestUtils';
 import { canvasViewCopy } from './copy';
 import { executeCanvasPlanAction } from './canvasPlanAction';
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
-import { validateTransformationGraph } from './transformationGraphValidation';
 
 const modelNode: CanonicalNode = {
   id: 'model.analytics.orders',
@@ -52,7 +48,6 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
       kind: 'accepted',
       plan: { ...persistedPlan, planRef: makePlanRef({ planId: persistedPlan.planId }) },
     });
-    const saveFileContent = vi.fn();
     const strategy: Extract<CanvasExecutionStrategy, { kind: 'dbt_project_file_preview' }> = {
       kind: 'dbt_project_file_preview',
       previewProfile: 'planner-generic-v1',
@@ -125,26 +120,16 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
       canonicalNodes: [modelNode],
       executionStrategy: strategy,
       plansService: { previewPlan, importPlan: vi.fn() },
-      previewProvenanceConfig: { gitBranch: 'detached', gitSha: 'unknown' },
       selectionIntent: {
         mode: 'explicit',
         nodeIds: ['test.analytics.orders_not_null'],
       },
       sessionContext,
-      transformationValidation: validateTransformationGraph({
-        nodes: [modelNode],
-        edges: [],
-        selectedNodeIds: ['test.analytics.orders_not_null'],
-        workspaceNodeIds: ['model.analytics.orders', 'test.analytics.orders_not_null'],
-      }),
       workspaceNodeIds: ['model.analytics.orders', 'test.analytics.orders_not_null'],
       workspaceFilesQuery: {} as IWorkspaceFilesQueryPort,
       graphDbtWorkspaceArtifactPublicationCommand:
         {} as IGraphDbtWorkspaceArtifactPublicationCommandPort,
       graphDbtModelCompilationQuery: {} as IGraphDbtModelCompilationQueryPort,
-      workspaceFileContentCommand: {
-        saveFileContent,
-      } as unknown as IWorkspaceFileContentCommandPort,
     });
 
     expect(result).toMatchObject({
@@ -165,7 +150,6 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
       },
       writtenArtifactPaths: [],
     });
-    expect(saveFileContent).not.toHaveBeenCalled();
     expect(previewPlan).toHaveBeenCalledWith({
       previewProfile: 'planner-generic-v1',
       graphSource: expect.objectContaining({ kind: 'generic-graph-v1', sourceFamily: 'dbt' }),
@@ -239,21 +223,13 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
       canonicalNodes: [sourceNode, modelNode],
       executionStrategy: strategy,
       plansService: { previewPlan, importPlan: vi.fn() },
-      previewProvenanceConfig: { gitBranch: 'detached', gitSha: 'unknown' },
       selectionIntent: { mode: 'explicit', nodeIds: [sourceNode.id] },
       sessionContext,
-      transformationValidation: validateTransformationGraph({
-        nodes: [sourceNode, modelNode],
-        edges: [],
-        selectedNodeIds: [sourceNode.id],
-        workspaceNodeIds: [sourceNode.id, modelNode.id],
-      }),
       workspaceNodeIds: [sourceNode.id, modelNode.id],
       workspaceFilesQuery: {} as IWorkspaceFilesQueryPort,
       graphDbtWorkspaceArtifactPublicationCommand:
         {} as IGraphDbtWorkspaceArtifactPublicationCommandPort,
       graphDbtModelCompilationQuery: {} as IGraphDbtModelCompilationQueryPort,
-      workspaceFileContentCommand: {} as IWorkspaceFileContentCommandPort,
     });
 
     expect(result).toEqual({
@@ -308,24 +284,16 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
       canonicalNodes: [sourceNode, modelNode],
       executionStrategy: strategy,
       plansService: { previewPlan, importPlan: vi.fn() },
-      previewProvenanceConfig: { gitBranch: 'detached', gitSha: 'unknown' },
       selectionIntent: {
         mode: 'explicit',
         nodeIds: [sourceNode.id, modelNode.id],
       },
       sessionContext,
-      transformationValidation: validateTransformationGraph({
-        nodes: [sourceNode, modelNode],
-        edges: [],
-        selectedNodeIds: [sourceNode.id, modelNode.id],
-        workspaceNodeIds: [sourceNode.id, modelNode.id],
-      }),
       workspaceNodeIds: [sourceNode.id, modelNode.id],
       workspaceFilesQuery: {} as IWorkspaceFilesQueryPort,
       graphDbtWorkspaceArtifactPublicationCommand:
         {} as IGraphDbtWorkspaceArtifactPublicationCommandPort,
       graphDbtModelCompilationQuery: {} as IGraphDbtModelCompilationQueryPort,
-      workspaceFileContentCommand: {} as IWorkspaceFileContentCommandPort,
     });
 
     expect(result).toEqual({

@@ -12,8 +12,6 @@ import type {
 import { executeCanvasPlanAction } from './canvasPlanAction';
 import { projectCanvasPreviewOutcome } from './canvasPreviewOutcomeProjection';
 import type { PlanPreviewOutcome } from '../../ports/plans';
-import type { CanvasExecutionState } from './canvasExecutionState';
-import { validateTransformationGraph } from './transformationGraphValidation';
 
 type UseCanvasPlanActionHandlerArgs = Pick<
   UseCanvasExecutionActionsParams,
@@ -23,19 +21,16 @@ type UseCanvasPlanActionHandlerArgs = Pick<
   | 'canonicalNodes'
   | 'executionStrategy'
   | 'plansService'
-  | 'previewProvenanceConfig'
   | 'selectionIntent'
   | 'sessionContext'
   | 'shellFeedback'
   | 'flushDraftForExecution'
   | 'workspaceNodeIds'
   | 'workspaceFilesQuery'
-  | 'workspaceFileContentCommand'
   | 'graphDbtWorkspaceArtifactPublicationCommand'
   | 'graphDbtModelCompilationQuery'
   | 'setCurrentPlan'
 > & {
-  transformationValidation: CanvasExecutionState['transformationValidation'];
   setLastPlannedDraftSignature: SetLastPlannedDraftSignature;
   setPlanModalOpen: SetPlanModalOpen;
   setLatestPreviewOutcome: (outcome: PlanPreviewOutcome | null) => void;
@@ -48,15 +43,12 @@ export function useCanvasPlanActionHandler({
   canonicalNodes,
   executionStrategy,
   plansService,
-  previewProvenanceConfig,
   selectionIntent,
   sessionContext,
   shellFeedback,
   flushDraftForExecution,
-  transformationValidation,
   workspaceNodeIds,
   workspaceFilesQuery,
-  workspaceFileContentCommand,
   graphDbtWorkspaceArtifactPublicationCommand,
   graphDbtModelCompilationQuery,
   setCurrentPlan,
@@ -88,16 +80,6 @@ export function useCanvasPlanActionHandler({
     const planCanonicalEdges = flushedDraftGraph?.canonicalEdges ?? canonicalEdges;
     const planCanonicalNodes = flushedDraftGraph?.canonicalNodes ?? canonicalNodes;
     const planWorkspaceNodeIds = flushedDraftGraph?.workspaceNodeIds ?? workspaceNodeIds;
-    const planTransformationValidation =
-      flushedDraftGraph?.ok === true
-        ? validateTransformationGraph({
-            nodes: planCanonicalNodes,
-            edges: planCanonicalEdges,
-            selectedNodeIds: selectionIntent.nodeIds,
-            workspaceNodeIds: planWorkspaceNodeIds,
-          })
-        : transformationValidation;
-
     const result = await executeCanvasPlanAction({
       graphDraftCanvasId,
       canPlan,
@@ -105,13 +87,10 @@ export function useCanvasPlanActionHandler({
       canonicalNodes: planCanonicalNodes,
       executionStrategy,
       plansService,
-      previewProvenanceConfig,
       selectionIntent,
       sessionContext,
-      transformationValidation: planTransformationValidation,
       workspaceNodeIds: planWorkspaceNodeIds,
       workspaceFilesQuery,
-      workspaceFileContentCommand,
       graphDbtWorkspaceArtifactPublicationCommand,
       graphDbtModelCompilationQuery,
     });
@@ -129,14 +108,6 @@ export function useCanvasPlanActionHandler({
     void queryClient.invalidateQueries({
       queryKey: queryKeys.workspace.artifacts(workspaceLayoutKey),
     });
-    if (previewProvenanceConfig.graphArtifactPath) {
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.workspace.fileContent(
-          workspaceLayoutKey,
-          previewProvenanceConfig.graphArtifactPath
-        ),
-      });
-    }
     for (const artifactPath of result.writtenArtifactPaths) {
       void queryClient.invalidateQueries({
         queryKey: queryKeys.workspace.fileContent(workspaceLayoutKey, artifactPath),
@@ -162,13 +133,10 @@ export function useCanvasPlanActionHandler({
     canonicalNodes,
     executionStrategy,
     plansService,
-    previewProvenanceConfig,
     selectionIntent,
     sessionContext,
-    transformationValidation,
     workspaceNodeIds,
     workspaceFilesQuery,
-    workspaceFileContentCommand,
     graphDbtWorkspaceArtifactPublicationCommand,
     graphDbtModelCompilationQuery,
     queryClient,

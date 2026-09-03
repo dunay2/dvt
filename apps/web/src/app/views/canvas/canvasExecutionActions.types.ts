@@ -7,12 +7,8 @@ import type { IGraphDbtModelCompilationQueryPort } from '../../ports/graphDbtMod
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort, WorkspaceScope } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
-import type {
-  IWorkspaceFileContentCommandPort,
-  IWorkspaceFilesQueryPort,
-} from '../../ports/workspace';
+import type { IWorkspaceFilesQueryPort } from '../../ports/workspace';
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
-import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
 import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
@@ -35,7 +31,6 @@ export type UseCanvasExecutionActionsParams = {
   plansService: IPlansPort;
   runsService: IRunsPort;
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
-  workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
   graphDbtWorkspaceArtifactPublicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
   graphDbtModelCompilationQuery: IGraphDbtModelCompilationQueryPort;
   executionStrategy: CanvasExecutionStrategy | null;
@@ -49,10 +44,6 @@ export type UseCanvasExecutionActionsParams = {
   sessionContext: SessionContextPort;
   executionEnvironmentId?: WorkspaceScope['environmentId'];
   shellFeedback: ShellFeedbackPort;
-  previewProvenanceConfig: Pick<
-    WorkspaceBootstrapConfig,
-    'gitBranch' | 'gitSha' | 'gitRepo' | 'graphArtifactPath'
-  >;
   bottomDrawerVisible: boolean;
   currentPlan: PlanViewModel | null;
   setCurrentPlan: (plan: PlanViewModel | null) => void;

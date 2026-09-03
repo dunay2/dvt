@@ -14,15 +14,8 @@ import type { IGraphDbtModelCompilationQueryPort } from '../../ports/graphDbtMod
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
-import type {
-  IWorkspaceFileContentCommandPort,
-  IWorkspaceFilesQueryPort,
-} from '../../ports/workspace';
-import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
-import {
-  WorkspaceFileLoadError,
-  WorkspaceFileRevisionConflictError,
-} from '../../services/workspace/workspaceErrors';
+import type { IWorkspaceFilesQueryPort } from '../../ports/workspace';
+import { WorkspaceFileLoadError } from '../../services/workspace/workspaceErrors';
 import { makeRunContext, nb } from '../../testing/contractTestUtils';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
@@ -33,11 +26,6 @@ import type { PlanViewModel } from '../../types/plans';
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import type { CanvasExecutionDraftGraph } from './canvasExecutionActions.types';
 import { useCanvasExecutionActions } from './useCanvasExecutionActions';
-
-export type PreviewProvenanceConfig = Pick<
-  WorkspaceBootstrapConfig,
-  'gitBranch' | 'gitSha' | 'gitRepo' | 'graphArtifactPath'
->;
 
 type ExecutionActionsHookViewProps = Readonly<{
   currentPlan: PlanViewModel | null;
@@ -52,10 +40,8 @@ type ExecutionActionsHookCommonProps = Readonly<{
   sessionContext: SessionContextPort;
   shellFeedback: ShellFeedbackPort;
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
-  workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
   graphDbtWorkspaceArtifactPublicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
   graphDbtModelCompilationQuery: IGraphDbtModelCompilationQueryPort;
-  previewProvenanceConfig: PreviewProvenanceConfig;
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
   executionStrategy: CanvasExecutionStrategy;
@@ -92,10 +78,8 @@ export type RenderExecutionActionsHarnessArgs = {
   sessionContext?: SessionContextPort;
   shellFeedback?: ShellFeedbackPort;
   workspaceFilesQuery?: IWorkspaceFilesQueryPort;
-  workspaceFileContentCommand?: IWorkspaceFileContentCommandPort;
   graphDbtWorkspaceArtifactPublicationCommand?: IGraphDbtWorkspaceArtifactPublicationCommandPort;
   graphDbtModelCompilationQuery?: IGraphDbtModelCompilationQueryPort;
-  previewProvenanceConfig?: Partial<PreviewProvenanceConfig>;
   canonicalNodes?: CanonicalNode[];
   canonicalEdges?: CanonicalEdge[];
   executionStrategy?: CanvasExecutionStrategy;
@@ -124,10 +108,8 @@ type ResolvedExecutionActionsHarnessArgs = Omit<
   | 'sessionContext'
   | 'shellFeedback'
   | 'workspaceFilesQuery'
-  | 'workspaceFileContentCommand'
   | 'graphDbtWorkspaceArtifactPublicationCommand'
   | 'graphDbtModelCompilationQuery'
-  | 'previewProvenanceConfig'
   | 'flushDraftForExecution'
   | 'canPlan'
   | 'canRun'
@@ -143,10 +125,8 @@ type ResolvedExecutionActionsHarnessArgs = Omit<
   sessionContext: SessionContextPort;
   shellFeedback: ShellFeedbackPort;
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
-  workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
   graphDbtWorkspaceArtifactPublicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
   graphDbtModelCompilationQuery: IGraphDbtModelCompilationQueryPort;
-  previewProvenanceConfig: Partial<PreviewProvenanceConfig>;
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
   executionStrategy: CanvasExecutionStrategy;
@@ -159,18 +139,6 @@ type ResolvedExecutionActionsHarnessArgs = Omit<
   bottomDrawerVisible: boolean;
   setBottomDrawerHeight: (height: number) => void;
   toggleBottomDrawer: () => void;
-};
-
-export const DEFAULT_PREVIEW_PROVENANCE_CONFIG: PreviewProvenanceConfig = {
-  gitBranch: 'main',
-  gitSha: 'local',
-  gitRepo: 'dunay2/dvt',
-  graphArtifactPath: 'pipelines/sales_pipeline.yaml',
-} as const;
-
-const DEFAULT_WORKSPACE_FILE_CONTENTS: Readonly<Record<string, string>> = {
-  'pipelines/sales_pipeline.yaml': 'name: sales_pipeline\nsteps: []',
-  'models/transform.sql': 'select * from analytics.orders',
 };
 
 function ExecutionActionsHookView({
@@ -247,10 +215,8 @@ function resolveCommonHookProps(
     sessionContext: args.sessionContext,
     shellFeedback: args.shellFeedback,
     workspaceFilesQuery: args.workspaceFilesQuery,
-    workspaceFileContentCommand: args.workspaceFileContentCommand,
     graphDbtWorkspaceArtifactPublicationCommand: args.graphDbtWorkspaceArtifactPublicationCommand,
     graphDbtModelCompilationQuery: args.graphDbtModelCompilationQuery,
-    previewProvenanceConfig: args.previewProvenanceConfig as PreviewProvenanceConfig,
     canonicalNodes: args.canonicalNodes,
     canonicalEdges: args.canonicalEdges,
     executionStrategy: args.executionStrategy,
@@ -270,19 +236,6 @@ function resolveCommonHookProps(
   };
 }
 
-function resolveWorkspaceFilePortMocks(args: RenderExecutionActionsHarnessArgs): {
-  workspaceFilesQuery: IWorkspaceFilesQueryPort;
-  workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
-} {
-  const defaults = createWorkspaceFilePortMocks();
-
-  return {
-    workspaceFilesQuery: args.workspaceFilesQuery ?? defaults.workspaceFilesQuery,
-    workspaceFileContentCommand:
-      args.workspaceFileContentCommand ?? defaults.workspaceFileContentCommand,
-  };
-}
-
 function resolveHarnessArgs(
   args: RenderExecutionActionsHarnessArgs
 ): ResolvedExecutionActionsHarnessArgs {
@@ -296,18 +249,18 @@ function resolveHarnessArgs(
     onRunStarted: args.onRunStarted ?? vi.fn<(runId: string) => void>(),
     sessionContext: args.sessionContext ?? createSessionContext(),
     shellFeedback: args.shellFeedback ?? createShellFeedbackMock(),
-    ...resolveWorkspaceFilePortMocks(args),
+    workspaceFilesQuery: args.workspaceFilesQuery ?? createWorkspaceFilesQueryMock(),
     graphDbtWorkspaceArtifactPublicationCommand:
       args.graphDbtWorkspaceArtifactPublicationCommand ??
       createGraphDbtWorkspaceArtifactPublicationCommandMock(),
     graphDbtModelCompilationQuery:
       args.graphDbtModelCompilationQuery ?? createGraphDbtModelCompilationQueryMock(),
-    previewProvenanceConfig: args.previewProvenanceConfig ?? DEFAULT_PREVIEW_PROVENANCE_CONFIG,
     canonicalNodes: args.canonicalNodes ?? buildCanonicalNodes(),
     canonicalEdges: args.canonicalEdges ?? buildCanonicalEdges(),
     executionStrategy: args.executionStrategy ?? {
-      kind: 'transformation_preview',
-      previewProfile: 'transformation-sql-first-v2',
+      kind: 'planner_generic_preview',
+      previewProfile: 'planner-generic-v1',
+      sourceFamily: 'dbt',
     },
     ...(args.executionEnvironmentId == null
       ? {}
@@ -400,72 +353,24 @@ export function buildCanonicalEdges(): CanonicalEdge[] {
   ];
 }
 
-export function createWorkspaceFilePortMocks(
-  fileContents: Readonly<Record<string, string>> = DEFAULT_WORKSPACE_FILE_CONTENTS
-): {
-  workspaceFilesQuery: IWorkspaceFilesQueryPort;
-  workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
-} {
+export function createWorkspaceFilesQueryMock(
+  fileContents: Readonly<Record<string, string>> = {}
+): IWorkspaceFilesQueryPort {
   const files = new Map(Object.entries(fileContents));
   return {
-    workspaceFilesQuery: {
-      listFiles: vi.fn(async () => []),
-      getFileContent: vi.fn(async (path: string) => {
-        const content = files.get(path);
-        if (content === undefined) {
-          throw new WorkspaceFileLoadError('not_found', path);
-        }
-
-        return {
-          path,
-          name: path.split('/').at(-1) ?? path,
-          language: path.endsWith('.sql') ? 'sql' : 'yaml',
-          content,
-          contentSha256: sha256HexUtf8(content),
-          lastModified: '2026-04-08T00:00:00Z',
-        };
-      }),
-    },
-    workspaceFileContentCommand: {
-      saveFileContent: vi.fn(async (input) => {
-        const currentContent = files.get(input.path);
-        const contentSha256 = sha256HexUtf8(input.content);
-        const file = {
-          path: input.path,
-          name: input.path.split('/').at(-1) ?? input.path,
-          language: input.path.endsWith('.sql') ? 'sql' : 'yaml',
-          content: input.content,
-          contentSha256,
-          lastModified: '2026-04-08T00:00:00Z',
-        };
-        if (currentContent !== undefined && sha256HexUtf8(currentContent) === contentSha256) {
-          return {
-            kind: 'unchanged' as const,
-            disposition: null,
-            path: file.path,
-            contentSha256: file.contentSha256,
-            lastModified: file.lastModified,
-          };
-        }
-        const revisionMatches =
-          input.expectedRevision.kind === 'absent'
-            ? currentContent === undefined
-            : currentContent !== undefined &&
-              sha256HexUtf8(currentContent) === input.expectedRevision.value;
-        if (!revisionMatches) {
-          throw new WorkspaceFileRevisionConflictError(input.path);
-        }
-
-        files.set(input.path, input.content);
-        return {
-          kind: 'saved' as const,
-          disposition: currentContent === undefined ? ('created' as const) : ('updated' as const),
-          path: file.path,
-          contentSha256: file.contentSha256,
-          lastModified: file.lastModified,
-        };
-      }),
-    },
+    listFiles: vi.fn(async () => []),
+    getFileContent: vi.fn(async (path: string) => {
+      const content = files.get(path);
+      if (content === undefined) throw new WorkspaceFileLoadError('not_found', path);
+      return {
+        path,
+        name: path.split('/').at(-1) ?? path,
+        language: path.endsWith('.sql') ? 'sql' : 'yaml',
+        content,
+        contentSha256: sha256HexUtf8(content),
+        lastModified: '2026-04-08T00:00:00Z',
+      };
+    }),
   };
 }
 
@@ -625,7 +530,6 @@ export function renderExecutionActionsHarness(initialArgs: RenderExecutionAction
   sessionContext: SessionContextPort;
   shellFeedback: ResolvedExecutionActionsHarnessArgs['shellFeedback'];
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
-  workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
   graphDbtWorkspaceArtifactPublicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
   graphDbtModelCompilationQuery: IGraphDbtModelCompilationQueryPort;
   setBottomDrawerHeight: ResolvedExecutionActionsHarnessArgs['setBottomDrawerHeight'];
@@ -692,7 +596,6 @@ export function renderExecutionActionsHarness(initialArgs: RenderExecutionAction
     sessionContext: currentArgs.sessionContext,
     shellFeedback: currentArgs.shellFeedback,
     workspaceFilesQuery: currentArgs.workspaceFilesQuery,
-    workspaceFileContentCommand: currentArgs.workspaceFileContentCommand,
     graphDbtWorkspaceArtifactPublicationCommand:
       currentArgs.graphDbtWorkspaceArtifactPublicationCommand,
     graphDbtModelCompilationQuery: currentArgs.graphDbtModelCompilationQuery,

@@ -95,10 +95,7 @@ export function configureCanvasHarnessHookAndProjectionMocks(
         kind: 'transformation',
         graphStrategy: transformationGraphStrategy,
         nodeKinds: DVT_AUTHORING_NODE_KINDS,
-        executionStrategy: {
-          kind: 'transformation_preview',
-          previewProfile: 'transformation-sql-first-v2',
-        },
+        executionStrategy: { kind: 'not_executable' },
       };
     }
     return null;

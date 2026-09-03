@@ -7,7 +7,7 @@ import {
   createGraphDbtWorkspaceArtifactPublicationCommandMock,
   createPlansServiceMock,
   createRunsServiceMock,
-  createWorkspaceFilePortMocks,
+  createWorkspaceFilesQueryMock,
   renderExecutionActionsHarness,
   resetExecutionActionsTestDoubles,
   restoreExecutionActionsTestDoubles,
@@ -74,7 +74,7 @@ describe('useCanvasExecutionActions graph SQL divergence', () => {
   it('refuses to replace unmarked SQL and never starts preview', async () => {
     const plansService = createPlansServiceMock();
     const graphPublicationCommand = createGraphDbtWorkspaceArtifactPublicationCommandMock();
-    const workspacePorts = createWorkspaceFilePortMocks({
+    const workspaceFilesQuery = createWorkspaceFilesQueryMock({
       'models/orders_model.sql': 'select * from historical_graph_projection\n',
     });
 
@@ -93,7 +93,7 @@ describe('useCanvasExecutionActions graph SQL divergence', () => {
       selectionIntent: { mode: 'explicit', nodeIds: ['model-orders'] },
       workspaceNodeIds: ['source-orders', 'model-orders'],
       graphDbtWorkspaceArtifactPublicationCommand: graphPublicationCommand,
-      ...workspacePorts,
+      workspaceFilesQuery,
     });
     await harness.render();
 
@@ -107,8 +107,8 @@ describe('useCanvasExecutionActions graph SQL divergence', () => {
     );
     expect(plansService.previewPlan).not.toHaveBeenCalled();
     expect(graphPublicationCommand.publish).not.toHaveBeenCalled();
-    expect(
-      await workspacePorts.workspaceFilesQuery.getFileContent('models/orders_model.sql')
-    ).toMatchObject({ content: 'select * from historical_graph_projection\n' });
+    expect(await workspaceFilesQuery.getFileContent('models/orders_model.sql')).toMatchObject({
+      content: 'select * from historical_graph_projection\n',
+    });
   });
 });
