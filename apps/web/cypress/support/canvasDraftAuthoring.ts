@@ -566,7 +566,7 @@ export function buildCanvasAuthoringDraft({
         {
           id: 'source-orders',
           name: 'Orders source',
-          pluginId: 'dvt',
+          pluginId: 'dvt.warehouse-source',
           kind: 'dvt:source',
           role: 'input',
           status: 'idle',
