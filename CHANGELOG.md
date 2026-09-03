@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.10.0 (2026-09-03)
+
+## What's Changed
+* feat(web): Author Canvas columns, functions, and multi-origin composition by @dunay2 in https://github.com/dunay2/dvt/pull/2828
+* feat(web): Add calculated Canvas columns by @dunay2 in https://github.com/dunay2/dvt/pull/2834
+* fix(web): Remove nested Canvas code scrollbar by @dunay2 in https://github.com/dunay2/dvt/pull/2836
+* fix(web): Create Canvas dependencies without confirmation by @dunay2 in https://github.com/dunay2/dvt/pull/2840
+* fix(web): Limit Canvas tag length by @dunay2 in https://github.com/dunay2/dvt/pull/2842
+* refactor(web): Remove duplicate inspector metrics by @dunay2 in https://github.com/dunay2/dvt/pull/2844
+* fix(web): Enable keyboard deletion for selected Canvas edges by @dunay2 in https://github.com/dunay2/dvt/pull/2846
+* fix(web): Advance source import after connection selection by @dunay2 in https://github.com/dunay2/dvt/pull/2848
+* refactor(web): Share graph node card presentation projection by @dunay2 in https://github.com/dunay2/dvt/pull/2849
+* refactor(web): Type graph node renderer data boundary by @dunay2 in https://github.com/dunay2/dvt/pull/2850
+* refactor(web): Thin React Flow node adapter by @dunay2 in https://github.com/dunay2/dvt/pull/2851
+* refactor(web): Centralize graph card status copy by @dunay2 in https://github.com/dunay2/dvt/pull/2852
+* feat(web): Persist canvas edge execution gates by @dunay2 in https://github.com/dunay2/dvt/pull/2853
+* feat(web): Add low-noise Canvas connection valve by @dunay2 in https://github.com/dunay2/dvt/pull/2854
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.9.0...v0.10.0
+
 ## 0.9.0 (2026-09-02)
 
 ## What's Changed
