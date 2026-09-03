@@ -65,11 +65,15 @@
       "to": "engine",
       "relation": "composes",
       "label": "workflow engine + start-run rail",
-      "rationale": "The protected runtime composition builds the workflow engine and passes it into the start-run application boundary.",
+      "rationale": "The protected execution composition builds the workflow engine; the API composition root then passes that concrete engine into the start-run application boundary.",
       "evidence": [
         {
           "path": "apps/api/src/modules/protectedRuntime/buildProtectedExecutionRuntime.ts",
-          "contains": ["buildWorkflowEngine", "buildProtectedStartRunRuntime"]
+          "contains": ["buildWorkflowEngine", "runtime: { adapters }"]
+        },
+        {
+          "path": "apps/api/src/modules/buildProtectedRuntimeModule.ts",
+          "contains": ["buildProtectedStartRunRuntime", "engine: executionRuntime.engine"]
         },
         {
           "path": "apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts",
