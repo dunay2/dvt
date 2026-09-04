@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vitest';
 import {
   applyDvtSubstraitPilotFunction,
   createDvtSubstraitPilotDraft,
+  inspectDvtSubstraitPilotDraft,
   renameDvtSubstraitPilotOutput,
   type DvtSubstraitPilotDraft,
 } from './canvasDvtSubstraitPilot';
@@ -49,6 +50,14 @@ import {
   applyDvtSubstraitUnionAllFieldEdit,
   createDvtSubstraitUnionAllDraft,
 } from './canvasDvtSubstraitSetComposition';
+
+function requirePilotOutputId(draft: DvtSubstraitPilotDraft, name: string): string {
+  const inspection = inspectDvtSubstraitPilotDraft(draft);
+  if (!inspection.ok) throw new Error('Expected admitted pilot projection.');
+  const output = inspection.projection.outputs.find((candidate) => candidate.name === name);
+  if (output == null) throw new Error(`Expected pilot output ${name}.`);
+  return output.fieldId;
+}
 
 function completedPilotDraft(): DvtSubstraitPilotDraft {
   let draft = createDvtSubstraitPilotDraft({
@@ -334,13 +343,14 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
   });
 
   it('projects one admitted Substrait grain field and row count', async () => {
-    const draft = applyDvtSubstraitPilotAggregation(
-      createDvtSubstraitPilotDraft({
-        sourceNodeId: 'source-customers',
-        targetNodeId: 'transform-customers',
-      }),
-      { groupFieldId: 'field:transform-customers:country', countOutputName: 'customer_count' }
-    );
+    const base = createDvtSubstraitPilotDraft({
+      sourceNodeId: 'source-customers',
+      targetNodeId: 'transform-customers',
+    });
+    const draft = applyDvtSubstraitPilotAggregation(base, {
+      groupFieldId: requirePilotOutputId(base, 'country'),
+      countOutputName: 'customer_count',
+    });
 
     const sql = await projectDvtSubstraitPilotAggregationToPostgresSql(draft, {
       schema: 'public',
@@ -354,9 +364,10 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
   });
 
   it('projects one admitted Substrait row_number partition and ordering', async () => {
-    const draft = applyDvtSubstraitPilotRowNumber(completedPilotDraft(), {
-      partitionFieldId: 'field:transform-customers:country',
-      orderFieldId: 'field:transform-customers:name',
+    const base = completedPilotDraft();
+    const draft = applyDvtSubstraitPilotRowNumber(base, {
+      partitionFieldId: requirePilotOutputId(base, 'country'),
+      orderFieldId: requirePilotOutputId(base, 'customer_name'),
       outputName: 'country_row_number',
     });
 
@@ -372,13 +383,14 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
   });
 
   it('projects grouped rows ranked globally by their count from one Substrait revision', async () => {
-    const grouped = applyDvtSubstraitPilotAggregation(
-      createDvtSubstraitPilotDraft({
-        sourceNodeId: 'source-customers',
-        targetNodeId: 'transform-customers',
-      }),
-      { groupFieldId: 'field:transform-customers:country', countOutputName: 'customer_count' }
-    );
+    const base = createDvtSubstraitPilotDraft({
+      sourceNodeId: 'source-customers',
+      targetNodeId: 'transform-customers',
+    });
+    const grouped = applyDvtSubstraitPilotAggregation(base, {
+      groupFieldId: requirePilotOutputId(base, 'country'),
+      countOutputName: 'customer_count',
+    });
     const ranked = applyDvtSubstraitPilotAggregateRowNumber(grouped, {
       outputName: 'count_rank',
     });
