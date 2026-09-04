@@ -1,0 +1,104 @@
+model {
+  apiModel = app 'apps/api' {
+    #asIs
+    description 'Authenticated HTTP boundary and composition host for DVT commands, queries, operational routes and protected runtime modules.'
+
+    metadata {
+      repository 'dunay2/dvt'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      sourceRoot 'apps/api'
+      provenance 'SOURCE-FIRST'
+    }
+
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/api 'Pinned app tree'
+
+    sourceEvidence = component 'Source evidence' {
+      #sourceDerived
+      description 'Machine-generated inventory of every tracked API file at the resolved main SHA.'
+    }
+
+    host = component 'API process host' {
+      #asIs
+      description 'Starts Fastify and owns process-level reconciler/watchdog lifecycle.'
+    }
+
+    appComposition = component 'Fastify application composition' {
+      #asIs
+      description 'Builds Fastify, observability, readiness, operational/protected routes and protected runtime composition.'
+    }
+
+    application = component 'Application services + ports' {
+      #asIs
+      description 'Use cases and explicit application boundaries for admission, authorization, workspace and run control.'
+    }
+
+    domain = component 'API-owned domain behavior' {
+      #asIs
+      description 'Domain behavior owned locally by the API application.'
+    }
+
+    entrypoints = component 'HTTP entrypoints' {
+      #asIs
+      description 'Inbound HTTP registration and request boundary.'
+    }
+
+    infrastructure = component 'Infrastructure adapters' {
+      #asIs
+      description 'Concrete infrastructure implementations used behind API application boundaries.'
+    }
+
+    modules = component 'Runtime module composition' {
+      #asIs
+      description 'Composes protected runtime dependencies and operational hooks.'
+    }
+
+    plugins = component 'API host plugins' {
+      #asIs
+      description 'Environment, logging and observability host plugins.'
+    }
+
+    routes = component 'Operational routes' {
+      #asIs
+      description 'Health/readiness and other operational route behavior.'
+    }
+
+    runtime = component 'API runtime services' {
+      #asIs
+      description 'Long-lived reconciliation and runtime-health coordination.'
+    }
+
+    db = component 'API database support' {
+      #asIs
+      description 'API-local database support code, distinct from the shared PostgreSQL adapter package.'
+    }
+
+    host .uses appComposition 'buildApp + process lifecycle'
+    host .uses runtime 'reconciler/watchdog runtime'
+    appComposition .uses modules 'build protected runtime module'
+    appComposition .uses routes 'register operational routes'
+    appComposition .uses entrypoints 'register protected HTTP entrypoints'
+    appComposition .uses plugins 'env/logging/observability plugins'
+  }
+}
+
+views {
+  view apiBoundary of apiModel {
+    title 'DVT+ API — Composition, boundaries and source evidence'
+    description 'Source-first API view. Logical responsibilities drill into exact Git-derived files at the resolved main SHA.'
+
+    include sourceEvidence with { navigateTo apiSourceInventory }
+    include host with { navigateTo apiFiles_host }
+    include appComposition with { navigateTo apiFiles_appComposition }
+    include application with { navigateTo apiFiles_application }
+    include domain with { navigateTo apiFiles_domain }
+    include entrypoints with { navigateTo apiFiles_entrypoints }
+    include infrastructure with { navigateTo apiFiles_infrastructure }
+    include modules with { navigateTo apiFiles_modules }
+    include plugins with { navigateTo apiFiles_plugins }
+    include routes with { navigateTo apiFiles_routes }
+    include runtime with { navigateTo apiFiles_runtime }
+    include db with { navigateTo apiFiles_db }
+
+    autoLayout LeftRight
+  }
+}
