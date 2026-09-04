@@ -32,6 +32,10 @@ import {
   readDvtTransformAuthoringAuthority,
 } from './canvasDvtTransformAuthoringAuthority';
 import { inspectDvtSubstraitPilotWindowDraft } from './canvasDvtSubstraitWindow';
+import {
+  encodeDvtSubstraitFilterDocument,
+  inspectDvtSubstraitFilter,
+} from './canvasDvtSubstraitFilter';
 
 type TransformMetadata =
   DvtUninitializedTransformAuthoringMetadata | DvtSubstraitTransformAuthoringMetadata;
@@ -40,7 +44,10 @@ export function createDvtTransformAuthoringMetadata(node: CanonicalNode): Transf
   const authority = readDvtTransformAuthoringAuthority(node);
   if (authority == null) return { kind: 'transform', mode: 'uninitialized' };
   const projection = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
-  if (inspectDvtSubstraitProjectionDraft(projection).ok) {
+  if (
+    inspectDvtSubstraitProjectionDraft(projection).ok ||
+    inspectDvtSubstraitFilter(projection) != null
+  ) {
     return fromDraft(authority.mode, 'projection', projection);
   }
   const pilot = decodeDvtSubstraitPilotDocument(authority.semanticDocument);
@@ -76,7 +83,9 @@ export function applyDvtTransformAuthoringMetadata(
   const draft = { plan: metadata.plan, sidecar: metadata.sidecar };
   const document =
     metadata.shape === 'projection'
-      ? encodeDvtSubstraitProjectionDocument(draft)
+      ? inspectDvtSubstraitFilter(draft) == null
+        ? encodeDvtSubstraitProjectionDocument(draft)
+        : encodeDvtSubstraitFilterDocument(draft)
       : metadata.shape === 'inner_join'
         ? encodeDvtSubstraitInnerJoinDocument(draft)
         : metadata.shape === 'union_all'

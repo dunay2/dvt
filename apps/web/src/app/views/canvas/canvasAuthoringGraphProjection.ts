@@ -1,6 +1,7 @@
 /** Owned concern: compose semantic authoring truth from protected draft semantics and explicit route-local additions. */
 import type { CanvasAuthoringSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { reconcileDvtSourceSemanticColumnOrder } from './canvasDvtSourceSemanticAuthoring';
 
 type CanvasAuthoringVisibleEdge = {
   sourceId: string;
@@ -92,7 +93,8 @@ function selectScopedMergedNodes(args: {
 
   return scopedNodeIds
     .map((nodeId) => mergedNodes.get(nodeId))
-    .filter((node): node is CanonicalNode => node != null);
+    .filter((node): node is CanonicalNode => node != null)
+    .map(reconcileDvtSourceSemanticColumnOrder);
 }
 
 function hasKnownCanvasAuthoringEdgeNodes(args: {

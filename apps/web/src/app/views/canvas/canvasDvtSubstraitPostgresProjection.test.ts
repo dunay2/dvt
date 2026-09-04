@@ -33,6 +33,10 @@ import { applyDvtSubstraitPilotAggregation } from './canvasDvtSubstraitAggregati
 import { applyDvtSubstraitPilotAggregateRowNumber } from './canvasDvtSubstraitAggregateWindow';
 import { applyDvtSubstraitPilotRowNumber } from './canvasDvtSubstraitWindow';
 import {
+  applyDvtSubstraitFilter,
+  resolveDvtSubstraitFilterCapabilities,
+} from './canvasDvtSubstraitFilter';
+import {
   applyDvtSubstraitInnerJoinFieldEdit,
   applyDvtSubstraitInnerJoinGroupedRowNumber,
   applyDvtSubstraitInnerJoinGrouping,
@@ -111,6 +115,26 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
 
     expect(sql.replaceAll(/\s+/g, ' ').trim().toLowerCase()).toMatch(
       /^select order_id, customer as buyer, amount from raw\.orders;?$/
+    );
+  });
+
+  it('renders an admitted Source filter from the canonical FilterRel', async () => {
+    const capability = resolveDvtSubstraitFilterCapabilities({
+      dataType: 'text',
+      provider: 'postgres',
+    })[0];
+    if (capability == null) throw new Error('Expected an admitted filter capability.');
+    const draft = applyDvtSubstraitFilter(connectedOrdersProjectionDraft(), {
+      fieldId: 'output:customer',
+      dataType: 'text',
+      capabilityId: capability.capabilityId,
+      value: "O'Reilly",
+    });
+
+    const sql = await projectDvtSubstraitProjectionToPostgresSql(draft);
+
+    expect(sql.replaceAll(/\s+/g, ' ').trim().toLowerCase()).toMatch(
+      /^select order_id, customer as buyer, amount from raw\.orders where customer = 'o''reilly';?$/
     );
   });
 

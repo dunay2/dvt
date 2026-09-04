@@ -365,6 +365,12 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(tabsList?.textContent).not.toContain('Columns');
   });
 
+  it('offers semantic filter authoring from a Source columns tab', () => {
+    renderPanel(root, 'columns');
+
+    expect(container.querySelector('[data-slot="dvt-filter-authoring"]')).not.toBeNull();
+  });
+
   it('does not repeat an external code action when the node already supports inline authoring', () => {
     act(() => {
       root.render(

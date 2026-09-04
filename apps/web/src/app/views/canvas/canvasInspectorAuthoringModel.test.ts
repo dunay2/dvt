@@ -9,10 +9,20 @@ import {
   validateCanvasInspectorNodeDraft,
 } from './canvasInspectorAuthoringModel';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import {
+  applyDvtSubstraitSemanticDocument,
+  readDvtTransformAuthoringAuthority,
+} from './canvasDvtTransformAuthoringAuthority';
+import {
+  applyDvtSubstraitFilter,
+  inspectDvtSubstraitFilter,
+  resolveDvtSubstraitFilterCapabilities,
+} from './canvasDvtSubstraitFilter';
 import {
   createDvtSubstraitProjectionDraft,
+  decodeDvtSubstraitProjectionDocument,
   encodeDvtSubstraitProjectionDocument,
+  inspectDvtSubstraitProjectionDraft,
   resolveDvtSubstraitProjectionSource,
 } from './canvasDvtSubstraitProjection';
 
@@ -691,6 +701,54 @@ describe('canvasInspectorAuthoringModel', () => {
 
     expect(draft.dvt).toMatchObject({ kind: 'transform', mode: 'substrait', shape: 'projection' });
     expect(applyCanvasInspectorNodeDraft(node, draft)).toEqual(node);
+  });
+
+  it('persists an admitted filter on a Source without changing its identity', () => {
+    const source = buildImportedWarehouseSourceNode({
+      connectedSourceRef: {
+        schemaVersion: 'connected-source-ref.v1',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: 'warehouse-main',
+          provider: 'postgres',
+        },
+        sourceObjectId: 'erp.orders',
+      },
+      columns: [{ name: 'customer', type: 'text', nullable: false }],
+    });
+    const draft = createCanvasInspectorNodeDraft(source);
+    if (draft.dvt?.kind !== 'source' || draft.dvt.semantic == null) {
+      throw new Error('Expected editable Source semantics.');
+    }
+    const capability = resolveDvtSubstraitFilterCapabilities({
+      dataType: 'text',
+      provider: 'postgres',
+    })[0];
+    if (capability == null) throw new Error('Expected an admitted filter capability.');
+    const projection = inspectDvtSubstraitProjectionDraft(draft.dvt.semantic);
+    if (!projection.ok) throw new Error('Expected an editable Source projection.');
+    const filtered = applyDvtSubstraitFilter(draft.dvt.semantic, {
+      fieldId: projection.projection.outputs[0]!.fieldId,
+      dataType: 'text',
+      capabilityId: capability.capabilityId,
+      value: 'Ada',
+    });
+
+    const updated = applyCanvasInspectorNodeDraft(source, {
+      ...draft,
+      dvt: { ...draft.dvt, semantic: filtered },
+    });
+    const authority = readDvtTransformAuthoringAuthority(updated);
+
+    expect(updated).toMatchObject({
+      id: source.id,
+      pluginId: source.pluginId,
+      kind: 'dvt:source',
+      role: 'input',
+    });
+    expect(
+      inspectDvtSubstraitFilter(decodeDvtSubstraitProjectionDocument(authority?.semanticDocument))
+    ).toMatchObject({ fieldName: 'customer', value: 'Ada' });
   });
 
   it('routes object-file load drafts through their plugin-owned authoring model', () => {

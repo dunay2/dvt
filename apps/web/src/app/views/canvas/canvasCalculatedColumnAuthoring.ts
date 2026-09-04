@@ -9,13 +9,17 @@ import { canvasDraftSession } from './canvasDraftSession';
 import { createDvtNodeAuthoringMetadata } from './canvasDvtAuthoringModel';
 import {
   createDvtSubstraitProjectionDraft,
+  decodeDvtSubstraitProjectionDocument,
   encodeDvtSubstraitProjectionDocument,
   resolveDvtSubstraitProjectionEntry,
   resolveDvtSubstraitProjectionSource,
   type DvtSubstraitProjection,
   type DvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
-import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import {
+  applyDvtSubstraitSemanticDocument,
+  readDvtTransformAuthoringAuthority,
+} from './canvasDvtTransformAuthoringAuthority';
 
 export type CanvasCalculatedColumnRequest = Readonly<{ nodeId: string }> &
   DvtSubstraitCalculatedColumnRequest;
@@ -89,16 +93,31 @@ function applyToSource(
 ): CanonicalNode | null {
   const source = resolveDvtSubstraitProjectionSource(target);
   if (source == null) return null;
-  const draft = createDvtSubstraitProjectionDraft({
-    source,
-    targetNodeId: target.id,
-    outputs: source.fields.map((field) => ({
-      fieldId: outputFieldId(field.name),
-      name: field.name,
-      sourceFieldName: field.name,
-    })),
-  });
-  const projection: DvtSubstraitProjection = {
+  const authority = readDvtTransformAuthoringAuthority(target);
+  const existingDraft =
+    authority == null ? null : decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
+  const existingProjection =
+    existingDraft == null
+      ? null
+      : resolveDvtSubstraitProjectionEntry({
+          targetNode: target,
+          nodes: [target],
+          edges: [],
+          draft: existingDraft,
+        });
+  if (existingDraft != null && existingProjection == null) return null;
+  const draft =
+    existingDraft ??
+    createDvtSubstraitProjectionDraft({
+      source,
+      targetNodeId: target.id,
+      outputs: source.fields.map((field) => ({
+        fieldId: outputFieldId(field.name),
+        name: field.name,
+        sourceFieldName: field.name,
+      })),
+    });
+  const projection: DvtSubstraitProjection = existingProjection ?? {
     targetNodeId: target.id,
     source,
     outputs: source.fields.map((field, outputOrdinal) => ({
@@ -112,10 +131,7 @@ function applyToSource(
   };
   const nextDraft = append({ request, projection, draft });
   if (nextDraft === draft) return null;
-  return applyDvtSubstraitSemanticDocument(
-    { ...target, pluginId: 'dvt', kind: 'dvt:transform', role: 'transform', status: 'idle' },
-    encodeDvtSubstraitProjectionDocument(nextDraft)
-  );
+  return applyDvtSubstraitSemanticDocument(target, encodeDvtSubstraitProjectionDocument(nextDraft));
 }
 
 function applyToTransform(args: {

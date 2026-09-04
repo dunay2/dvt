@@ -35,15 +35,11 @@ import {
   Type_Nullability,
   Type_StringSchema,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
-import { base64Bytes, sha256Hex } from '@dvt/crypto';
 import {
   ConnectedSourceRefSchema,
   DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION,
   DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1,
-  DVT_SUBSTRAIT_PLAN_ENCODING,
   DVT_SUBSTRAIT_PROFILE_REF_V1,
-  DVT_SUBSTRAIT_SEMANTIC_DOCUMENT_SCHEMA_VERSION,
-  canonicalizeDvtSubstraitSemanticDocumentV1,
   type ConnectedSourceRef,
   type DvtSubstraitAuthoringSidecarV1,
   type DvtSubstraitFieldBindingV1,
@@ -55,6 +51,10 @@ import {
   inspectDvtSubstraitCalculatedExpression,
   type DvtSubstraitCalculatedExpression,
 } from './canvasDvtSubstraitCalculatedExpression';
+import {
+  decodeDvtSubstraitSemanticDocument,
+  encodeDvtSubstraitSemanticDocument,
+} from './canvasDvtSubstraitSemanticDocument';
 
 const ZERO_SHA256 = '0'.repeat(64);
 
@@ -230,12 +230,6 @@ function projectHasOnlyFieldSelection(project: ProjectRel): boolean {
   );
 }
 
-function bytesToBase64(bytes: Uint8Array): string {
-  let binary = '';
-  for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary);
-}
-
 function sortedRelationFields(
   sidecar: DvtSubstraitAuthoringSidecarV1,
   relationId: string
@@ -351,6 +345,78 @@ export function createDvtSubstraitProjectionDraft(args: {
     ],
   };
   return { plan, sidecar };
+}
+
+export function reorderDvtSubstraitProjectionOutputs(
+  draft: DvtSubstraitProjectionDraft,
+  args: Readonly<{
+    fieldId: string;
+    targetFieldId: string;
+    placement: 'before' | 'after';
+  }>
+): DvtSubstraitProjectionDraft {
+  if (args.fieldId === args.targetFieldId || draft.plan.relations.length !== 1) return draft;
+
+  const plan = fromBinary(PlanSchema, toBinary(PlanSchema, draft.plan));
+  const root = plan.relations[0]?.relType;
+  const projectRelation = root?.case === 'root' ? root.value.input?.relType : undefined;
+  if (root?.case !== 'root' || projectRelation?.case !== 'project') return draft;
+
+  const project = projectRelation.value;
+  const emit = project.common?.emitKind;
+  const relationAnchor = project.common?.relAnchor;
+  if (emit?.case !== 'emit' || relationAnchor == null) return draft;
+
+  const targetRelationId = draft.sidecar.relations.find(
+    (relation) => relation.relAnchor === relationAnchor
+  )?.relationId;
+  if (targetRelationId == null) return draft;
+
+  const outputFields = sortedRelationFields(draft.sidecar, targetRelationId);
+  if (
+    outputFields.length !== emit.value.outputMapping.length ||
+    outputFields.length !== root.value.names.length
+  ) {
+    return draft;
+  }
+
+  const sourceIndex = outputFields.findIndex((field) => field.fieldId === args.fieldId);
+  const targetIndexBeforeMove = outputFields.findIndex(
+    (field) => field.fieldId === args.targetFieldId
+  );
+  if (sourceIndex < 0 || targetIndexBeforeMove < 0) return draft;
+
+  const reorderedFields = [...outputFields];
+  const reorderedMappings = [...emit.value.outputMapping];
+  const reorderedNames = [...root.value.names];
+  const [movedField] = reorderedFields.splice(sourceIndex, 1);
+  const [movedMapping] = reorderedMappings.splice(sourceIndex, 1);
+  const [movedName] = reorderedNames.splice(sourceIndex, 1);
+  const targetIndex = reorderedFields.findIndex((field) => field.fieldId === args.targetFieldId);
+  if (movedField == null || movedMapping == null || movedName == null || targetIndex < 0) {
+    return draft;
+  }
+  const insertionIndex = args.placement === 'after' ? targetIndex + 1 : targetIndex;
+  reorderedFields.splice(insertionIndex, 0, movedField);
+  reorderedMappings.splice(insertionIndex, 0, movedMapping);
+  reorderedNames.splice(insertionIndex, 0, movedName);
+  emit.value.outputMapping = reorderedMappings;
+  root.value.names = reorderedNames;
+
+  const outputOrdinalByFieldId = new Map(
+    reorderedFields.map((field, outputOrdinal) => [field.fieldId, outputOrdinal] as const)
+  );
+  return {
+    plan,
+    sidecar: {
+      ...draft.sidecar,
+      fields: draft.sidecar.fields.map((field) => {
+        if (field.relationId !== targetRelationId) return field;
+        const outputOrdinal = outputOrdinalByFieldId.get(field.fieldId);
+        return outputOrdinal == null ? field : { ...field, outputOrdinal };
+      }),
+    },
+  };
 }
 
 export function inspectDvtSubstraitProjectionDraft(
@@ -859,12 +925,11 @@ export function resolveDvtSubstraitProjectionEntry(args: {
 }
 
 export function decodeDvtSubstraitProjectionDocument(input: unknown): DvtSubstraitProjectionDraft {
-  const document = canonicalizeDvtSubstraitSemanticDocumentV1(input);
-  const plan = fromBinary(PlanSchema, base64Bytes(document.semanticPlan.bytesBase64));
+  const { plan, sidecar } = decodeDvtSubstraitSemanticDocument(input);
   if (!hasPinnedPlanVersion(plan)) {
     throw new Error('Substrait Plan does not match the pinned DVT profile.');
   }
-  return { plan, sidecar: document.sidecar };
+  return { plan, sidecar };
 }
 
 export function encodeDvtSubstraitProjectionDocument(
@@ -873,20 +938,5 @@ export function encodeDvtSubstraitProjectionDocument(
   if (!inspectDvtSubstraitProjectionDraft(draft).ok) {
     throw new Error('Substrait connected-source projection is invalid.');
   }
-  const bytes = toBinary(PlanSchema, draft.plan);
-  const sha256 = sha256Hex(bytes);
-  return canonicalizeDvtSubstraitSemanticDocumentV1({
-    schemaVersion: DVT_SUBSTRAIT_SEMANTIC_DOCUMENT_SCHEMA_VERSION,
-    profile: DVT_SUBSTRAIT_PROFILE_REF_V1,
-    semanticPlan: {
-      encoding: DVT_SUBSTRAIT_PLAN_ENCODING,
-      bytesBase64: bytesToBase64(bytes),
-      sha256,
-    },
-    sidecar: {
-      ...draft.sidecar,
-      schemaVersion: DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION,
-      semanticPlanSha256: sha256,
-    },
-  });
+  return encodeDvtSubstraitSemanticDocument(draft);
 }

@@ -68,6 +68,11 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
     proofRef: 'docs/evidence/ED-20260902-transform-function-alias-authoring.md',
   },
   {
+    entryIds: [standardId('relation', 'substrait.FilterRel')],
+    useCaseRefs: ['dvt:#2642', 'dvt:#2894'],
+    proofRef: 'docs/evidence/ED-20260903-source-filter-capability-admission.md',
+  },
+  {
     entryIds: [
       standardId('relation', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_INNER'),
       functionId('scalar-function', 'functions_comparison', 'equal'),

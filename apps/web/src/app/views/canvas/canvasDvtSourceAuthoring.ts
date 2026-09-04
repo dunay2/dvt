@@ -6,6 +6,10 @@ import type {
   DvtNodeAuthoringMetadataErrors,
   DvtSourceAuthoringMetadata,
 } from './canvasDvtAuthoringTypes';
+import {
+  applyDvtSourceSemanticDraft,
+  createDvtSourceSemanticDraft,
+} from './canvasDvtSourceSemanticAuthoring';
 
 const DEFAULT_SCHEMA_NAME = 'public';
 export const DVT_AUTHORING_PLUGIN_ID = 'dvt';
@@ -104,6 +108,7 @@ export function createDvtSourceAuthoringMetadata(node: CanonicalNode): DvtSource
       table
     ),
     connectionRef: resolveEffectiveDvtConnectionRef(node),
+    semantic: createDvtSourceSemanticDraft(node),
   };
 }
 
@@ -132,12 +137,15 @@ export function applyDvtSourceAuthoringMetadata(
       readDvtString(node.metadata?.tableName) ?? node.name,
       'source_table'
     );
-    return withDvtConfig(node, {
+    const configured = withDvtConfig(node, {
       ...config,
       alias: normalizeDvtIdentifier(metadata.alias, importedTable),
     });
+    return metadata.semantic == null
+      ? configured
+      : applyDvtSourceSemanticDraft(configured, metadata.semantic);
   }
-  return withDvtConfig(
+  const configured = withDvtConfig(
     node,
     {
       ...existingConfig,
@@ -147,6 +155,9 @@ export function applyDvtSourceAuthoringMetadata(
     },
     { connectionRef: metadata.connectionRef }
   );
+  return metadata.semantic == null
+    ? configured
+    : applyDvtSourceSemanticDraft(configured, metadata.semantic);
 }
 
 export function withDvtConfig(

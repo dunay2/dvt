@@ -3,6 +3,7 @@ import { DVT_TRANSFORM_AUTHORING_MODE, type ConnectionRef } from '@dvt/contracts
 import type { DvtSubstraitAuthoringSidecarV1 } from '@dvt/contracts';
 
 import type { CanvasInspectorNodeDraftErrorCode } from './canvasInspectorAuthoringErrorCodes';
+import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 
 export type DvtSourceAuthoringMetadata = Readonly<{
   kind: 'source';
@@ -10,6 +11,7 @@ export type DvtSourceAuthoringMetadata = Readonly<{
   table: string;
   alias: string;
   connectionRef?: ConnectionRef;
+  semantic?: DvtSubstraitProjectionDraft;
 }>;
 
 export type DvtUninitializedTransformAuthoringMetadata = Readonly<{

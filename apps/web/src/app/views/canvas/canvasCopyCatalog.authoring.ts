@@ -560,6 +560,34 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtSqlTransformTitle',
     fallback: 'DVT Transform',
   },
+  inspectorDvtFilterTitle: {
+    key: 'canvas.inspector.authoring.dvtFilterTitle',
+    fallback: 'Filter rows',
+  },
+  inspectorDvtFilterFieldLabel: {
+    key: 'canvas.inspector.authoring.dvtFilterFieldLabel',
+    fallback: 'Field',
+  },
+  inspectorDvtFilterOperatorLabel: {
+    key: 'canvas.inspector.authoring.dvtFilterOperatorLabel',
+    fallback: 'Operator',
+  },
+  inspectorDvtFilterEqualLabel: {
+    key: 'canvas.inspector.authoring.dvtFilterEqualLabel',
+    fallback: 'Equals',
+  },
+  inspectorDvtFilterValueLabel: {
+    key: 'canvas.inspector.authoring.dvtFilterValueLabel',
+    fallback: 'Value',
+  },
+  inspectorDvtFilterApplyLabel: {
+    key: 'canvas.inspector.authoring.dvtFilterApplyLabel',
+    fallback: 'Apply filter',
+  },
+  inspectorDvtFilterRemoveLabel: {
+    key: 'canvas.inspector.authoring.dvtFilterRemoveLabel',
+    fallback: 'Remove filter',
+  },
   inspectorDvtSubstraitInnerJoinAction: {
     key: 'canvas.inspector.authoring.dvtSubstraitInnerJoinAction',
     fallback: 'INNER JOIN',

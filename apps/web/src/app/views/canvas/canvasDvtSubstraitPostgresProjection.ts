@@ -64,6 +64,7 @@ import {
   pgTimestampTzLiteral,
   type PostgresAstNode,
 } from './canvasDvtSubstraitPostgresAst';
+import { resolveDvtSubstraitFilterPostgresProjection } from './canvasDvtSubstraitFilterPostgresProjection';
 
 export type DvtSubstraitPostgresProjectionErrorCode =
   'unsupported_shape' | 'invalid_source_binding' | 'deparse_failed';
@@ -104,7 +105,10 @@ function requireConnectedFieldProjection(
   return inspection.projection;
 }
 
-function buildConnectedFieldPostgresAst(projection: DvtSubstraitProjection): PostgresAstNode {
+function buildConnectedFieldPostgresAst(
+  projection: DvtSubstraitProjection,
+  whereClause?: PostgresAstNode
+): PostgresAstNode {
   const calculatedExpression = (
     output: DvtSubstraitProjection['outputs'][number]
   ): PostgresAstNode | null => {
@@ -142,6 +146,7 @@ function buildConnectedFieldPostgresAst(projection: DvtSubstraitProjection): Pos
       fromClause: [
         pgRangeVar({ schema: projection.source.schema, table: projection.source.table }),
       ],
+      ...(whereClause == null ? {} : { whereClause }),
       limitOption: 'LIMIT_OPTION_DEFAULT',
       op: 'SETOP_NONE',
     },
@@ -709,8 +714,12 @@ async function deparseBoundedPostgresAst(postgresAst: PostgresAstNode): Promise<
 export async function projectDvtSubstraitProjectionToPostgresSql(
   draft: DvtSubstraitProjectionDraft
 ): Promise<string> {
+  const filter = resolveDvtSubstraitFilterPostgresProjection(draft);
   return deparseBoundedPostgresAst(
-    buildConnectedFieldPostgresAst(requireConnectedFieldProjection(draft))
+    buildConnectedFieldPostgresAst(
+      requireConnectedFieldProjection(filter.baseDraft),
+      filter.whereClause
+    )
   );
 }
 

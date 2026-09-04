@@ -2,7 +2,7 @@
 title: Canvas Inspector Authoring Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-09-03
+last_reviewed: 2026-09-04
 planning_type: architecture
 ---
 
@@ -27,15 +27,15 @@ state as semantic truth, or create a second transform authority.
 
 ## Command Rail
 
-| Attribute        | Canonical value                                                  |
-| ---------------- | ---------------------------------------------------------------- |
-| Command          | `ConfigureCanvasDvtNode`                                         |
-| Bounded context  | Web Graph Canvas Workbench                                       |
-| DDD owner        | `DvtNodeAuthoringMetadata`                                       |
-| Application seam | `useCanvasInspectorCommands`                                     |
-| Adapter surface  | route-owned Inspector and graph-column controls                  |
-| Authority        | `DvtTransformAuthoringAuthorityV1` with canonical Substrait only |
-| Mutation target  | `CanvasDraftSession.workingSet.upsertNode`                       |
+| Attribute        | Canonical value                                                 |
+| ---------------- | --------------------------------------------------------------- |
+| Command          | `ConfigureCanvasDvtNode`                                        |
+| Bounded context  | Web Graph Canvas Workbench                                      |
+| DDD owner        | `DvtNodeAuthoringMetadata`                                      |
+| Application seam | `useCanvasInspectorCommands`                                    |
+| Adapter surface  | route-owned Inspector and graph-column controls                 |
+| Authority        | `DvtTransformAuthoringAuthorityV1` canonical Substrait envelope |
+| Mutation target  | `CanvasDraftSession.workingSet.upsertNode`                      |
 
 There is no separate SQL command, visual-recipe command, column-mapping store, or React Flow
 edge authority for this intent.
@@ -54,6 +54,8 @@ edge authority for this intent.
 
 An empty Transform is explicitly `uninitialized`. Its first admitted authoring action creates
 one canonical Substrait projection or composition. Removed SQL/VTX1 metadata fails closed.
+An imported Source may carry the same envelope for admitted operations while retaining its
+Source kind, connection authority and physical provenance.
 
 ## Invariants
 
@@ -61,6 +63,8 @@ one canonical Substrait projection or composition. Removed SQL/VTX1 metadata fai
 - Apply and column gestures mutate the same `CanvasDraftSession` authority.
 - A DVT Transform has zero authority while uninitialized and exactly one canonical Substrait
   semantic document after its first accepted mutation.
+- A connection-backed Source may own that same semantic document; it never becomes a hidden or
+  renamed Transform.
 - Editable SQL, VTX1 recipes, SQL mirrors, and visual-to-SQL conversion are not supported
   authoring states.
 - Column order, output inclusion, functions, aliases, descriptions, and multi-input
@@ -83,6 +87,7 @@ one canonical Substrait projection or composition. Removed SQL/VTX1 metadata fai
 | `canvasInspectorAuthoringModel.ts`        | Inspector draft projection and validation     |
 | `canvasDvtAuthoringModel.ts`              | dispatch authoring by DVT node kind           |
 | `canvasDvtSourceAuthoring.ts`             | source identity and connection authority      |
+| `canvasDvtSourceSemanticAuthoring.ts`     | source semantic draft lifecycle               |
 | `canvasDvtTransformAuthoring.ts`          | canonical Transform shape decode/encode       |
 | `canvasDvtSinkAuthoring.ts`               | sink materialization and write policy         |
 | `canvasDvtTransformAuthoringAuthority.ts` | strict authority envelope                     |
@@ -92,6 +97,7 @@ one canonical Substrait projection or composition. Removed SQL/VTX1 metadata fai
 | `canvasColumnAutomap.ts`                  | deterministic compatible automapping          |
 | `canvasColumnOutputAuthoring.ts`          | output inclusion and order                    |
 | `canvasColumnLineageProjection.ts`        | field-handle and lineage read model           |
+| `canvasDvtSubstraitFilter.ts`             | strict shared FilterRel mutation              |
 | `DvtAuthoringFields.tsx`                  | route DVT authoring to focused views          |
 
 ## Flow
@@ -113,7 +119,7 @@ flowchart LR
 The command rejects or fails closed for:
 
 - removed SQL/VTX1 metadata;
-- a non-DVT Transform target;
+- an unsupported DVT target or semantic shape;
 - a source without a stage dependency;
 - absent or ambiguous source fields;
 - unknown or incompatible types during automap;
@@ -130,7 +136,9 @@ The command rejects or fails closed for:
 - `canvasColumnFunctionAuthoring.test.ts`
 - `canvasAlgebraicComposition.test.ts`
 - `canvasDvtSubstraitPilot.test.ts`
+- `canvasDvtSubstraitFilter.test.ts`
 - `DvtAuthoringFields.test.tsx`
+- `canvas-source-filter-authoring.cy.ts`
 - `dvt-transform-authoring-authority.contract.test.ts`
 
 The architecture absence guard proves retired modules and public names are not reintroduced;

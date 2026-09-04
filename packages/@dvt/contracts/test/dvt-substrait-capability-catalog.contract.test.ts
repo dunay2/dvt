@@ -74,6 +74,24 @@ describe('DVT Substrait capability catalog V1', () => {
     expect(actual.join('\n')).not.toMatch(/where|having|group-by|count-distinct|input-rel/i);
   });
 
+  it('admits FilterRel for the governed Source predicate slice', () => {
+    const filter = findCapability(
+      buildDvtSubstraitStandardCapabilityId('relation', {
+        sourceKind: 'core',
+        message: 'substrait.FilterRel',
+      })
+    );
+
+    expect(filter).toMatchObject({
+      profileStatus: 'supported-profile',
+      admission: {
+        productUseCaseRef: 'dvt:#2894',
+        targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+        visualExposure: { status: 'exposed' },
+      },
+    });
+  });
+
   it('keeps same-named functions from different upstream families distinct', () => {
     const arithmetic = buildDvtSubstraitStandardCapabilityId('aggregate-function', {
       sourceKind: 'simple-extension',
