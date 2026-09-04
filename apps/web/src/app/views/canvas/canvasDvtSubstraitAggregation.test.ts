@@ -14,9 +14,14 @@ import {
   inspectDvtSubstraitPilotAggregationDraft,
   removeDvtSubstraitPilotAggregation,
   renameDvtSubstraitPilotCountOutput,
+  type DvtSubstraitPilotAggregationProjection,
 } from './canvasDvtSubstraitAggregation';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
+
+const UUID_V7 = '[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}';
+const DVT_FIELD_ID = new RegExp(`^dvt_fld_${UUID_V7}$`, 'i');
+const DVT_RELATION_ID = new RegExp(`^dvt_rel_${UUID_V7}$`, 'i');
 
 function pilot(): DvtSubstraitPilotDraft {
   return createDvtSubstraitPilotDraft({
@@ -25,8 +30,25 @@ function pilot(): DvtSubstraitPilotDraft {
   });
 }
 
+function requireAggregation(draft: DvtSubstraitPilotDraft): DvtSubstraitPilotAggregationProjection {
+  const inspection = inspectDvtSubstraitPilotAggregationDraft(draft);
+  if (!inspection.ok) throw new Error('Expected an admitted aggregation.');
+  return inspection.projection;
+}
+
+function aggregateRelationId(draft: DvtSubstraitPilotDraft): string {
+  const root = draft.plan.relations[0]?.relType;
+  if (root?.case !== 'root' || root.value.input?.relType.case !== 'aggregate') {
+    throw new Error('Expected AggregateRel.');
+  }
+  const anchor = root.value.input.relType.value.common?.relAnchor;
+  const binding = draft.sidecar.relations.find((relation) => relation.relAnchor === anchor);
+  if (binding == null) throw new Error('Expected aggregate relation binding.');
+  return binding.relationId;
+}
+
 describe('VTX2 typed Substrait grouping and count', () => {
-  it('persists one grain field and count measure with stable field identity', () => {
+  it('allocates opaque aggregate/count identities and persists them unchanged', () => {
     const initial = pilot();
     const base = inspectDvtSubstraitPilotDraft(initial);
     if (!base.ok) throw new Error('Expected the admitted pilot.');
@@ -37,41 +59,21 @@ describe('VTX2 typed Substrait grouping and count', () => {
       groupFieldId: country.fieldId,
       countOutputName: 'customer_count',
     });
+    const projection = requireAggregation(grouped);
+    expect(aggregateRelationId(grouped)).toMatch(DVT_RELATION_ID);
+    expect(projection.measure.fieldId).toMatch(DVT_FIELD_ID);
+    expect(projection.measure.fieldId).not.toBe(country.fieldId);
+
     const persisted = encodeDvtSubstraitPilotDocument(grouped);
     const reopened = decodeDvtSubstraitPilotDocument(persisted);
-
-    expect(inspectDvtSubstraitPilotAggregationDraft(reopened)).toEqual({
-      ok: true,
-      projection: {
-        sourceName: 'customers',
-        groupField: {
-          name: 'country',
-          fieldId: country.fieldId,
-          inputOrdinal: 2,
-        },
-        measure: {
-          name: 'customer_count',
-          fieldId: 'field:transform-customers:count',
-          capabilityId:
-            'substrait/simple-extension/aggregate-function/extension%3Aio.substrait%3Afunctions_aggregate_generic/count',
-        },
-        outputs: [
-          { name: 'country', fieldId: country.fieldId, outputOrdinal: 0 },
-          {
-            name: 'customer_count',
-            fieldId: 'field:transform-customers:count',
-            outputOrdinal: 1,
-          },
-        ],
-      },
-    });
+    expect(requireAggregation(reopened)).toEqual(projection);
     expect(persisted.sidecar.semanticPlanSha256).toBe(persisted.semanticPlan.sha256);
     expect(reopened.plan.relations[0]?.relType.case).toBe('root');
     const root = reopened.plan.relations[0]?.relType;
     expect(root?.case === 'root' ? root.value.input?.relType.case : null).toBe('aggregate');
   });
 
-  it('renames the count output and removes grouping without losing the grain FieldId', () => {
+  it('renames the count output without changing its FieldId or aggregate RelationId', () => {
     const base = inspectDvtSubstraitPilotDraft(pilot());
     if (!base.ok) throw new Error('Expected the admitted pilot.');
     const email = base.projection.outputs.find((output) => output.name === 'email');
@@ -81,11 +83,12 @@ describe('VTX2 typed Substrait grouping and count', () => {
       groupFieldId: email.fieldId,
       countOutputName: 'row_count',
     });
+    const before = requireAggregation(grouped);
+    const relationId = aggregateRelationId(grouped);
     const renamed = renameDvtSubstraitPilotCountOutput(grouped, 'email_count');
-    expect(inspectDvtSubstraitPilotAggregationDraft(renamed)).toMatchObject({
-      ok: true,
-      projection: { measure: { name: 'email_count' } },
-    });
+    const after = requireAggregation(renamed);
+    expect(after.measure).toMatchObject({ name: 'email_count', fieldId: before.measure.fieldId });
+    expect(aggregateRelationId(renamed)).toBe(relationId);
 
     const restored = removeDvtSubstraitPilotAggregation(renamed);
     expect(inspectDvtSubstraitPilotDraft(restored)).toMatchObject({
@@ -96,6 +99,46 @@ describe('VTX2 typed Substrait grouping and count', () => {
         ]),
       },
     });
+  });
+
+  it('treats persisted legacy aggregate/count IDs as opaque values', () => {
+    const base = inspectDvtSubstraitPilotDraft(pilot());
+    if (!base.ok) throw new Error('Expected the admitted pilot.');
+    const country = base.projection.outputs.find((output) => output.name === 'country');
+    if (country == null) throw new Error('Expected the country field.');
+    const grouped = applyDvtSubstraitPilotAggregation(pilot(), {
+      groupFieldId: country.fieldId,
+      countOutputName: 'customer_count',
+    });
+    const current = requireAggregation(grouped);
+    const currentRelationId = aggregateRelationId(grouped);
+    const legacyRelationId = 'relation:transform-customers:aggregate';
+    const legacyMeasureId = 'field:transform-customers:count';
+    const legacy: DvtSubstraitPilotDraft = {
+      plan: grouped.plan,
+      sidecar: {
+        ...grouped.sidecar,
+        relations: grouped.sidecar.relations.map((relation) =>
+          relation.relationId === currentRelationId
+            ? { ...relation, relationId: legacyRelationId }
+            : relation
+        ),
+        fields: grouped.sidecar.fields.map((field) => ({
+          ...field,
+          relationId: field.relationId === currentRelationId ? legacyRelationId : field.relationId,
+          fieldId: field.fieldId === current.measure.fieldId ? legacyMeasureId : field.fieldId,
+        })),
+      },
+    };
+
+    expect(requireAggregation(legacy).measure.fieldId).toBe(legacyMeasureId);
+    const renamed = renameDvtSubstraitPilotCountOutput(legacy, 'renamed_count');
+    expect(requireAggregation(renamed).measure).toMatchObject({
+      name: 'renamed_count',
+      fieldId: legacyMeasureId,
+    });
+    expect(aggregateRelationId(renamed)).toBe(legacyRelationId);
+    expect(inspectDvtSubstraitPilotDraft(removeDvtSubstraitPilotAggregation(renamed)).ok).toBe(true);
   });
 
   it('fails closed for an unadmitted grouping-set shape', () => {
@@ -122,6 +165,7 @@ describe('VTX2 typed Substrait grouping and count', () => {
       groupFieldId: 'field:transform-customers:country',
       countOutputName: 'customer_count',
     });
+    const projection = requireAggregation(grouped);
     const transform = applyDvtSubstraitSemanticDocument(
       {
         id: 'transform-customers',
@@ -154,8 +198,8 @@ describe('VTX2 typed Substrait grouping and count', () => {
       edges: [{ sourceId: source.id, targetId: transform.id }],
     });
     expect(truth.columns.visible.map((column) => [column.name, column.reference])).toEqual([
-      ['country', 'field:transform-customers:country'],
-      ['customer_count', 'field:transform-customers:count'],
+      ['country', projection.groupField.fieldId],
+      ['customer_count', projection.measure.fieldId],
     ]);
   });
 });
