@@ -9,7 +9,9 @@ import {
 import { PlanSchema, type Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import {
   DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1,
+  allocateDvtRelationId,
   buildDvtSubstraitStandardCapabilityId,
+  type DvtSubstraitSemanticDocumentV1,
 } from '@dvt/contracts';
 
 import {
@@ -18,7 +20,6 @@ import {
 } from './canvasDvtSubstraitProjection';
 import { dvtSubstraitTextEquality } from './canvasDvtSubstraitTextEquality';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
-import type { DvtSubstraitSemanticDocumentV1 } from '@dvt/contracts';
 
 const FILTER_ID = buildDvtSubstraitStandardCapabilityId('relation', {
   sourceKind: 'core',
@@ -61,6 +62,15 @@ function rootProject(plan: Plan): ProjectRel | null {
   return root?.case === 'root' && root.value.input?.relType.case === 'project'
     ? root.value.input.relType.value
     : null;
+}
+
+function filterRelationId(draft: DvtSubstraitProjectionDraft): string | null {
+  const project = rootProject(draft.plan);
+  const filter = project?.input?.relType;
+  const anchor = filter?.case === 'filter' ? filter.value.common?.relAnchor : undefined;
+  return anchor == null
+    ? null
+    : (draft.sidecar.relations.find((relation) => relation.relAnchor === anchor)?.relationId ?? null);
 }
 
 function stripFilter(draft: DvtSubstraitProjectionDraft): Readonly<{
@@ -140,6 +150,7 @@ export function applyDvtSubstraitFilter(
   draft: DvtSubstraitProjectionDraft,
   request: Readonly<{ fieldId: string; dataType: string; capabilityId: string; value: string }>
 ): DvtSubstraitProjectionDraft {
+  const existingFilterRelationId = filterRelationId(draft);
   const base = removeDvtSubstraitFilter(draft);
   const inspection = inspectDvtSubstraitProjectionDraft(base);
   if (!inspection.ok) return draft;
@@ -179,7 +190,7 @@ export function applyDvtSubstraitFilter(
       relations: [
         ...base.sidecar.relations,
         {
-          relationId: `relation:${inspection.projection.targetNodeId}:filter`,
+          relationId: existingFilterRelationId ?? allocateDvtRelationId(),
           relAnchor: anchor,
           displayName: 'filter',
         },
