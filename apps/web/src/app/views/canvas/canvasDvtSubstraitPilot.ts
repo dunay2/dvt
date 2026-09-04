@@ -47,7 +47,7 @@ import {
   type DvtSubstraitAuthoringSidecarV1,
   type DvtSubstraitSemanticDocumentV1,
 } from '@dvt/contracts';
-import { allocateDvtRelationId } from '@dvt/contracts/substrait';
+import { allocateDvtFieldId, allocateDvtRelationId } from '@dvt/contracts/substrait';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 
@@ -220,7 +220,7 @@ function fieldReference(ordinal: number) {
  * Create only the exact production-entry fixture owned by #2598. The caller is
  * responsible for admitting the matching connected source before invoking it.
  */
-export function createDvtSubstraitPilotDraft(args: {
+export function createDvtSubstraitPilotDraft(_args: {
   sourceNodeId: string;
   targetNodeId: string;
 }): DvtSubstraitPilotDraft {
@@ -289,7 +289,7 @@ export function createDvtSubstraitPilotDraft(args: {
       { relationId: projectRelationId, relAnchor: 2, displayName: PILOT_SOURCE_NAME },
     ],
     fields: PILOT_FIELD_NAMES.map((name, outputOrdinal) => ({
-      fieldId: `field:${args.targetNodeId}:${name}`,
+      fieldId: allocateDvtFieldId(),
       relationId: projectRelationId,
       outputOrdinal,
       displayName: name,
