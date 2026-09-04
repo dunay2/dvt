@@ -6,6 +6,7 @@ import {
   createDvtSubstraitPilotDraft,
   decodeDvtSubstraitPilotDocument,
   encodeDvtSubstraitPilotDocument,
+  inspectDvtSubstraitPilotDraft,
   type DvtSubstraitPilotDraft,
 } from './canvasDvtSubstraitPilot';
 import {
@@ -27,16 +28,18 @@ const DVT_FIELD_ID = new RegExp(`^dvt_fld_${UUID_V7}$`, 'i');
 const DVT_RELATION_ID = new RegExp(`^dvt_rel_${UUID_V7}$`, 'i');
 
 function groupedDraft(): DvtSubstraitPilotDraft {
-  return applyDvtSubstraitPilotAggregation(
-    createDvtSubstraitPilotDraft({
-      sourceNodeId: 'source-customers',
-      targetNodeId: 'transform-customers',
-    }),
-    {
-      groupFieldId: 'field:transform-customers:country',
-      countOutputName: 'customer_count',
-    }
-  );
+  const draft = createDvtSubstraitPilotDraft({
+    sourceNodeId: 'source-customers',
+    targetNodeId: 'transform-customers',
+  });
+  const inspection = inspectDvtSubstraitPilotDraft(draft);
+  if (!inspection.ok) throw new Error('Expected the admitted pilot.');
+  const country = inspection.projection.outputs.find((output) => output.name === 'country');
+  if (country == null) throw new Error('Expected country output.');
+  return applyDvtSubstraitPilotAggregation(draft, {
+    groupFieldId: country.fieldId,
+    countOutputName: 'customer_count',
+  });
 }
 
 function requireAggregateWindow(
