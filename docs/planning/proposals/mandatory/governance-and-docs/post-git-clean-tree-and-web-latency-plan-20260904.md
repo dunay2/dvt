@@ -87,14 +87,16 @@ flowchart LR
    environment/fork cost while preserving periodic memory release and coverage.
 
 No external library is needed; the change removes a custom post-Git writer and
-uses the existing Node test and CI tool-suite rails.
+keeps the existing command catalog and positive validation rails.
 
 ### Selected option and rationale
 
-Delete the two post-Git hooks, retire `postgit:format`, and add a repository CI
-test that makes absence of `post-merge` and `post-checkout` hooks an explicit
-architecture rule. The guard is discovered automatically by the existing
-`test:ci-tools:static` suite, so a future reintroduction fails CI.
+Delete the two post-Git hooks and retire `postgit:format`. Do not retain their
+names in an executable rejection test: that would turn removed implementation
+details into permanent negative API. Prevention remains attached to the
+positive workflow boundaries that contributors actually use: the command
+catalog contains only live commands, pre-commit owns formatting, and
+pre-push verifies the resulting changes.
 
 Keep the current Web Vitest topology unchanged until a dedicated benchmark
 proves a lower-latency configuration within the same memory and coverage
@@ -105,27 +107,27 @@ subsequent implementation.
 
 ### Fowler opportunity matrix
 
-| Scenario                                                       | Opportunity                                            | Fowler pattern                                              | DDD owner / rail                                                | Allowed surfaces                                                                      | Test evidence                                             | Out of scope                                                             |
-| -------------------------------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------ |
-| Post-Git hooks rewrite committed files                         | Hidden side effect and duplicated formatting semantics | Remove Dead Code / Replace Command with Explicit Validation | Repository developer workflow; retired `postgit:format` command | `.husky/**`, `scripts/format-git-operation-changes*`, `package.json`, command catalog | `tools/ci/post-git-hook-purity.test.mjs`; static CI tools | Changing pre-commit formatting                                           |
-| Obsolete agent-lane warning remains in hooks                   | Obsolete planning authority                            | Remove Dead Code                                            | GitHub issue workflow                                           | `.husky/post-merge`, `.husky/post-checkout`                                           | same architecture guard                                   | Reintroducing local workboards                                           |
-| Web full route spends most time creating isolated environments | Repeated setup constrained by memory safety            | Introduce Bounded Batch / Separate Query from Modifier      | Web CI governance; `SelectWebVitestChangedSuites`               | Documentation and follow-up issue only                                                | Measured GitHub job timings                               | Relaxing coverage, memory limits, or worker isolation without benchmarks |
+| Scenario                                                       | Opportunity                                            | Fowler pattern                                              | DDD owner / rail                                                | Allowed surfaces                                                                      | Test evidence                                         | Out of scope                                                             |
+| -------------------------------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------ |
+| Post-Git hooks rewrite committed files                         | Hidden side effect and duplicated formatting semantics | Remove Dead Code / Replace Command with Explicit Validation | Repository developer workflow; retired `postgit:format` command | `.husky/**`, `scripts/format-git-operation-changes*`, `package.json`, command catalog | Reproduction evidence plus live command-catalog tests | Changing pre-commit formatting                                           |
+| Obsolete agent-lane warning remains in hooks                   | Obsolete planning authority                            | Remove Dead Code                                            | GitHub issue workflow                                           | `.husky/post-merge`, `.husky/post-checkout`                                           | Repository diff and issue journal                     | Reintroducing local workboards                                           |
+| Web full route spends most time creating isolated environments | Repeated setup constrained by memory safety            | Introduce Bounded Batch / Separate Query from Modifier      | Web CI governance; `SelectWebVitestChangedSuites`               | Documentation and follow-up issue only                                                | Measured GitHub job timings                           | Relaxing coverage, memory limits, or worker isolation without benchmarks |
 
 ## Pre-Implementation Brief
 
 - **Mode:** Full, because the slice changes a governed developer workflow and
   removes published command surfaces.
-- **Scope:** hard-cut mutating post-Git automation, add a durable purity guard,
-  align the command catalog and testing guide, and publish the measured Web
-  Frontend Tests diagnosis.
+- **Scope:** hard-cut mutating post-Git automation, align the command catalog
+  and testing guide, avoid executable tombstones for deleted symbols, and
+  publish the measured Web Frontend Tests diagnosis.
 - **Expected outcome:** merge and branch checkout end at the exact committed
   tree without a repository hook writing afterward; the web delay has a
   traceable cause and a separately governed optimization path.
 - **Risks:** a future contributor may expect automatic formatting after branch
   switches. Mitigation: retain and document the existing explicit formatting
   rails and make the obsolete behavior clear.
-- **Negative coverage:** the red test must fail while either prohibited post-Git
-  hook exists, and pass only after both are absent.
+- **Test posture:** validate the live command catalog and formatting rails; do
+  not keep a test whose only responsibility is naming deleted hooks or scripts.
 - **Out of scope:** changing Web Vitest worker count, suite coverage, test
   classification, or production application behavior.
 - **Command/query impact:** retire the `postgit:format` developer-workflow
@@ -154,7 +156,7 @@ flowchart LR
 ```feature-mechanization
 version: 1
 featureId: POST-GIT-CLEAN-WEB-LATENCY-2899
-mechanizationStatus: implemented
+mechanizationStatus: closed
 noHumanDecisionsRemaining: true
 implementationPlan: docs/planning/proposals/mandatory/governance-and-docs/post-git-clean-tree-and-web-latency-plan-20260904.md
 componentGuides:
@@ -174,7 +176,6 @@ allowedImplementationSurfaces:
   - .husky/post-checkout
   - scripts/format-git-operation-changes.cjs
   - scripts/format-git-operation-changes.test.cjs
-  - tools/ci/post-git-hook-purity.test.mjs
   - tools/ci/repository-command-catalog.mjs
   - package.json
   - docs/guides/testing-and-ci-capabilities.md
@@ -191,54 +192,36 @@ commandQueryRails:
   - name: postgit:format
     type: command
     dddOwner: Repository developer workflow
-    disposition: retired
-  - name: SelectWebVitestChangedSuites
-    type: query
-    dddOwner: WebVitestChangedSuitePlan
-    disposition: reused-unchanged
+    status: retired
 domainObjects:
-  - name: PostGitHookPurityPolicy
-    type: policy
+  - name: RepositoryCommandCatalog
+    type: catalog
     owner: Repository CI governance
-  - name: WebVitestChangedSuitePlan
-    type: read model
-    owner: Web CI governance
 fowlerSignals:
   - Remove Dead Code
   - Replace Command with Explicit Validation
   - Separate Query from Modifier
 architectureGuards:
-  - node --test tools/ci/post-git-hook-purity.test.mjs
-  - pnpm test:ci-tools:static
+  - node --test tools/ci/repository-command-catalog.test.mjs
 cypressFlows:
   - N/A - repository workflow and CI test topology only
 completionGate:
-  - node --test tools/ci/post-git-hook-purity.test.mjs
   - pnpm test:ci-tools:static
   - pnpm lint:md
   - pnpm governance:refresh
   - pnpm docs:feature-mechanization:implementation
   - pnpm verify:prepush
 redGreenCycles:
-  - id: post-git-hook-purity
-    redTest: node --test tools/ci/post-git-hook-purity.test.mjs
-    expectedFailure: Repository post-merge and post-checkout hooks still exist and can mutate the completed Git operation.
+  - id: post-git-command-removal
+    redTest: Reproduce a branch checkout from a clean worktree and inspect git status --short.
+    expectedFailure: The completed checkout rewrites tracked files and leaves the worktree dirty.
     patchSurfaces:
-      - tools/ci/post-git-hook-purity.test.mjs
       - .husky/post-merge
       - .husky/post-checkout
       - scripts/format-git-operation-changes.cjs
       - scripts/format-git-operation-changes.test.cjs
       - package.json
       - tools/ci/repository-command-catalog.mjs
-    greenTest: node --test tools/ci/post-git-hook-purity.test.mjs
-symbols:
-  - name: PostGitHookPurityPolicy
-    path: tools/ci/post-git-hook-purity.test.mjs
-    dddOwner: Repository CI governance
-    cqRails: [postgit:format]
-    fowlerSignals: [Remove Dead Code, Separate Query from Modifier]
-    architectureGuard: node --test tools/ci/post-git-hook-purity.test.mjs
-    cypressCoverage: N/A - repository workflow
-    unitTests: [node --test tools/ci/post-git-hook-purity.test.mjs]
+    greenTest: Inspect the committed tree after removing post-Git writers; no repository hook runs after checkout.
+symbols: []
 ```

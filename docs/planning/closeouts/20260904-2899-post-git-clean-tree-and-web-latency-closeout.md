@@ -15,10 +15,9 @@ featureId: POST-GIT-CLEAN-WEB-LATENCY-2899
 The repository was intentionally running `prettier --write` after merge and
 branch checkout. The operation could therefore finish successfully and then
 have its committed result rewritten by a Husky hook. The selected solution
-removes that late writer and enforces the absence of both post-Git hooks through
-the existing static CI-tool test rail. Automatic formatting remains available
-before a commit and through explicit developer commands; no replacement writer
-was introduced.
+removes that late writer. Automatic formatting remains available before a
+commit and through explicit developer commands; no replacement writer or
+executable tombstone for deleted symbols was introduced.
 
 The web delay is independent of the hook defect. A measured full hosted route
 took about 845 seconds, of which only about 35 seconds were setup and dependency
@@ -54,9 +53,6 @@ owners.
 - Removed `postgit:format` and `test:postgit:format` from `package.json`.
 - Removed the retired command and file rule from
   `tools/ci/repository-command-catalog.mjs`.
-- Added `tools/ci/post-git-hook-purity.test.mjs`. The static CI-tool discovery
-  automatically executes this guard and rejects reintroduction of any retired
-  surface.
 - Updated `docs/guides/testing-and-ci-capabilities.md` with the clean-tree
   invariant, surviving format rails, measured web timing, and memory constraint.
 - Opened GitHub issue #2900 for the separately governed Web Vitest benchmark.
@@ -66,17 +62,15 @@ changed.
 
 ## Acceptance and evidence
 
-| Acceptance                                                  | Evidence                                                                                               | Result |
-| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------ |
-| Post-Git operations cannot be rewritten by repository hooks | Both post-Git hooks and their writer are absent; `PostGitHookPurityPolicy` asserts the hard cut        | Passed |
-| Regression test fails on the old behavior                   | Initial `node --test tools/ci/post-git-hook-purity.test.mjs` failed 2/2 while hooks and writer existed | Passed |
-| Regression test passes on the new behavior                  | The same command passed 2/2 after removal                                                              | Passed |
-| Canonical CI test rail owns the guard                       | `pnpm test:ci-tools:static` passed 230/230                                                             | Passed |
-| Command catalog remains coherent                            | Direct CI-tool and command-catalog suite passed 15/15                                                  | Passed |
-| Web delay has a measured dominant cause                     | 845 s full route: about 35 s setup; 320 s unit; 379 s presentation; 101 s architecture                 | Passed |
-| Material web bottleneck has a sequenced next issue          | #2900 records alternatives, memory/coverage constraints, and acceptance                                | Passed |
-| Markdown changes are valid                                  | `pnpm lint:md:changed` passed                                                                          | Passed |
-| Feature mechanization is coherent                           | Feature-specific check and implementation check passed                                                 | Passed |
+| Acceptance                                         | Evidence                                                                               | Result |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------- | ------ |
+| Post-Git operations retain the committed tree      | Post-Git hooks and their writer are absent from the repository                         | Passed |
+| Removed names do not survive as test API           | The dedicated rejection test was removed after review feedback                         | Passed |
+| Command catalog remains coherent                   | Current command-catalog and CI-tool tests validate only live surfaces                  | Passed |
+| Web delay has a measured dominant cause            | 845 s full route: about 35 s setup; 320 s unit; 379 s presentation; 101 s architecture | Passed |
+| Material web bottleneck has a sequenced next issue | #2900 records alternatives, memory/coverage constraints, and acceptance                | Passed |
+| Markdown changes are valid                         | `pnpm lint:md:changed` passed                                                          | Passed |
+| Feature mechanization is coherent                  | Feature-specific check and implementation check passed                                 | Passed |
 
 ## Obsolete and rejected behavior
 
@@ -84,6 +78,8 @@ changed.
 - The post-Git `agent-lane` workboard warning is removed because GitHub Issues
   replaced local task-lane authority.
 - Auto-committing, restoring, or hiding formatter output after Git is rejected.
+- Executable tombstone tests whose only purpose is to preserve and reject
+  deleted implementation names are rejected.
 - Increasing Web Vitest concurrency or enabling one unlimited shared fork is
   rejected until #2900 proves memory safety with peak-RSS evidence.
 

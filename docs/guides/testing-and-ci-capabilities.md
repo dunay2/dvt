@@ -37,7 +37,6 @@ See also:
 | Full CI baseline                 | `pnpm ci:full`                         | [`package.json`](../../package.json)                                                                                                 |
 | Planning DB current-schema tests | `pnpm test:planning:db:current-schema` | [`package.json`](../../package.json), [`scripts/planning-db-schema.test.cjs`](../../scripts/planning-db-schema.test.cjs)             |
 | Changed-files auto-fix           | `pnpm fix:changed`                     | [`package.json`](../../package.json)                                                                                                 |
-| Post-Git hook purity guard       | `pnpm test:ci-tools:static`            | [`tools/ci/post-git-hook-purity.test.mjs`](../../tools/ci/post-git-hook-purity.test.mjs)                                             |
 | AI local preflight               | `pnpm ai:preflight`                    | [`scripts/ai-preflight.cjs`](../../scripts/ai-preflight.cjs)                                                                         |
 | Changed-files lint/format gate   | `node scripts/check-changed.cjs`       | [`scripts/check-changed.cjs`](../../scripts/check-changed.cjs)                                                                       |
 | PR closeout rail                 | `pnpm pr:closeout`                     | [`scripts/pr-closeout.cjs`](../../scripts/pr-closeout.cjs)                                                                           |
@@ -410,13 +409,12 @@ Command semantics:
   runs. The `test:ai-preflight` contract checks those settings so save-time
   formatting and lint-fix behavior remain part of the repository automation
   posture.
-- Git `post-merge` and branch-level `post-checkout` hooks are prohibited. A
-  completed Git operation must leave the exact committed tree in place and
-  must not start a formatter or another worktree writer afterward. The static
-  CI-tool suite enforces the absence of both hooks and of the retired
-  `postgit:format` command. Formatting remains owned by `lint-staged` in
-  pre-commit, the explicit `pnpm fix:changed` / `pnpm ai:preflight` rails, and
-  the Prettier check in `pnpm verify:prepush`.
+- The repository installs no post-Git automation. A completed Git operation
+  leaves the exact committed tree in place; formatting belongs to the positive
+  workflow rails contributors actually execute: `lint-staged` in pre-commit,
+  the explicit `pnpm fix:changed` / `pnpm ai:preflight` commands, and the
+  Prettier check in `pnpm verify:prepush`. Deleted implementation names are not
+  retained as executable rejection tests.
 - `pnpm verify:prepush -- --full` keeps three outcomes for code diffs:
   - skip when no TypeScript-affecting files changed
   - run `pnpm ci:affected:typecheck` when the diff is workspace-scoped
