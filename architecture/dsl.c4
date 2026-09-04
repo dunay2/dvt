@@ -1,0 +1,38 @@
+model {
+  dslModel = package '@dvt/dsl' {
+    #asIs
+    description 'Bounded v1 expression DSL with AST, parser and evaluator. It is not a universal semantic authority for DVT.'
+    metadata {
+      repository 'dunay2/dvt'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      sourceRoot 'packages/@dvt/dsl'
+      provenance 'SOURCE-FIRST'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/dsl 'Pinned package tree'
+
+    sourceEvidence = component 'Source evidence' { #sourceDerived description 'Complete tracked-file inventory at the resolved main SHA.' }
+    publicBoundary = component 'DSL public boundary' { #asIs description 'Exports the bounded v1 DSL surface.' }
+    ast = contract 'DSL v1 AST' { #asIs description 'Bounded expression AST.' }
+    parser = component 'DSL v1 parser' { #asIs description 'Parses supported expressions into the v1 AST.' }
+    evaluator = component 'DSL v1 evaluator' { #asIs description 'Evaluates the bounded AST against its supported context.' }
+
+    publicBoundary .uses ast 'exports AST'
+    publicBoundary .uses parser 'exports parser'
+    publicBoundary .uses evaluator 'exports evaluator'
+    parser .uses ast 'produces AST'
+    evaluator .uses ast 'evaluates AST'
+  }
+}
+
+views {
+  view dslBoundary of dslModel {
+    title 'DVT+ DSL — Bounded expression language and source evidence'
+    description 'Source-first view of the small v1 AST/parser/evaluator package; no claim of universal semantic authority.'
+    include sourceEvidence with { navigateTo dslSourceInventory }
+    include publicBoundary with { navigateTo dslFiles_publicBoundary }
+    include ast with { navigateTo dslFiles_ast }
+    include parser with { navigateTo dslFiles_parser }
+    include evaluator with { navigateTo dslFiles_evaluator }
+    autoLayout LeftRight
+  }
+}
