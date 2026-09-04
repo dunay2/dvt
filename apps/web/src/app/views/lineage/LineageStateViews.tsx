@@ -14,28 +14,14 @@ type LineageWorkbenchStateViewProps = {
   header: ReactNode;
 };
 
-type LineageStateCardTone = 'default' | 'danger' | 'warning';
+type LineageStateCardTone = 'default' | 'danger';
 
 function resolveToneClassName(tone: LineageStateCardTone): string {
-  switch (tone) {
-    case 'danger':
-      return 'border-[color:var(--status-danger)]';
-    case 'warning':
-      return 'border-[color:var(--status-warning)]';
-    default:
-      return '';
-  }
+  return tone === 'danger' ? 'border-[color:var(--status-danger)]' : '';
 }
 
 function resolveTitleToneClassName(tone: LineageStateCardTone): string {
-  switch (tone) {
-    case 'danger':
-      return 'text-[var(--status-danger)]';
-    case 'warning':
-      return 'text-[var(--status-warning)]';
-    default:
-      return '';
-  }
+  return tone === 'danger' ? 'text-[var(--status-danger)]' : '';
 }
 
 function LineageStateCard({
