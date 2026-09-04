@@ -16,15 +16,27 @@ import {
   encodeDvtSubstraitProjectionDocument,
   inspectDvtSubstraitProjectionDraft,
   resolveDvtSubstraitColumnFunctions,
+  resolveDvtSubstraitProjectionEntry,
   resolveDvtSubstraitProjectionSource,
   type DvtSubstraitProjection,
   type DvtSubstraitProjectionDraft,
   type DvtSubstraitProjectionOutput,
+  type DvtSubstraitProjectionSemantics,
 } from './canvasDvtSubstraitProjection';
 
 export type EditableCanvasProjection =
+  | Readonly<{ outcome: 'ready'; projection: DvtSubstraitProjectionSemantics | null }>
+  | Readonly<{ outcome: 'rejected'; reason: CanvasColumnMappingRejection }>;
+
+export type EditableCanvasProjectionEntry =
   | Readonly<{ outcome: 'ready'; projection: DvtSubstraitProjection | null }>
   | Readonly<{ outcome: 'rejected'; reason: CanvasColumnMappingRejection }>;
+
+function hasEditableOutputs(projection: DvtSubstraitProjectionSemantics): boolean {
+  return projection.outputs.every(
+    (output) => output.sourceFieldName != null && output.calculation == null
+  );
+}
 
 export function readEditableCanvasProjection(targetNode: CanonicalNode): EditableCanvasProjection {
   if (targetNode.pluginId !== 'dvt' || targetNode.kind !== 'dvt:transform') {
@@ -36,16 +48,48 @@ export function readEditableCanvasProjection(targetNode: CanonicalNode): Editabl
     const inspection = inspectDvtSubstraitProjectionDraft(
       decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
     );
-    if (
-      !inspection.ok ||
-      inspection.projection.targetNodeId !== targetNode.id ||
-      inspection.projection.outputs.some(
-        (output) => output.sourceFieldName == null || output.calculation != null
-      )
-    ) {
+    if (!inspection.ok || !hasEditableOutputs(inspection.projection)) {
       return { outcome: 'rejected', reason: 'target_not_canonical_transform' };
     }
     return { outcome: 'ready', projection: inspection.projection };
+  } catch {
+    return { outcome: 'rejected', reason: 'invalid_transform_authority' };
+  }
+}
+
+export function readEditableCanvasProjectionEntry(args: {
+  targetNode: CanonicalNode;
+  edges: readonly Readonly<{ sourceId: string; targetId: string }>[];
+  resolveNode: (nodeId: string) => CanonicalNode | undefined;
+}): EditableCanvasProjectionEntry {
+  if (args.targetNode.pluginId !== 'dvt' || args.targetNode.kind !== 'dvt:transform') {
+    return { outcome: 'rejected', reason: 'target_not_canonical_transform' };
+  }
+  try {
+    const authority = readDvtTransformAuthoringAuthority(args.targetNode);
+    if (authority == null) return { outcome: 'ready', projection: null };
+    const draft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
+    const inspection = inspectDvtSubstraitProjectionDraft(draft);
+    if (!inspection.ok || !hasEditableOutputs(inspection.projection)) {
+      return { outcome: 'rejected', reason: 'target_not_canonical_transform' };
+    }
+    const nodeIds = new Set<string>([args.targetNode.id]);
+    args.edges.forEach((edge) => {
+      nodeIds.add(edge.sourceId);
+      nodeIds.add(edge.targetId);
+    });
+    const nodes = [...nodeIds]
+      .map((nodeId) => args.resolveNode(nodeId))
+      .filter((node): node is CanonicalNode => node != null);
+    const projection = resolveDvtSubstraitProjectionEntry({
+      targetNode: args.targetNode,
+      nodes,
+      edges: args.edges,
+      draft,
+    });
+    return projection == null
+      ? { outcome: 'rejected', reason: 'target_not_canonical_transform' }
+      : { outcome: 'ready', projection };
   } catch {
     return { outcome: 'rejected', reason: 'invalid_transform_authority' };
   }
@@ -66,7 +110,7 @@ export function resolveCanvasColumnMappingTarget(
       const inspection = inspectDvtSubstraitProjectionDraft(
         decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
       );
-      if (!inspection.ok || inspection.projection.targetNodeId !== targetNode.id) return null;
+      if (!inspection.ok) return null;
       const output = inspection.projection.outputs.find(
         (candidate) => candidate.fieldId === columnId || candidate.name === columnId
       );
