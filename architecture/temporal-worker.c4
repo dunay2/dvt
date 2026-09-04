@@ -1,0 +1,66 @@
+model {
+  temporalWorkerModel = worker 'apps/temporal-worker' {
+    #asIs
+    description 'Concrete Temporal worker host. Composes runtime stores, artifacts and step plugins and executes activities outside the generic provider adapter.'
+
+    metadata {
+      repository 'dunay2/dvt'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      sourceRoot 'apps/temporal-worker'
+      provenance 'SOURCE-FIRST'
+    }
+
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker 'Pinned app tree'
+
+    sourceEvidence = component 'Source evidence' {
+      #sourceDerived
+      description 'Machine-generated inventory of every tracked Temporal Worker file at the resolved main SHA.'
+    }
+
+    host = component 'Worker process host' {
+      #asIs
+      description 'Process entrypoint and lifecycle for the Temporal worker.'
+    }
+
+    hostComposition = component 'Temporal worker host composition' {
+      #asIs
+      description 'Host-level worker creation and startup composition.'
+    }
+
+    runtime = component 'Worker runtime composition' {
+      #asIs
+      description 'Composes runtime stores, artifact readers, adapter services and worker execution dependencies.'
+    }
+
+    plugins = component 'Step plugin composition' {
+      #asIs
+      description 'Loads concrete step plugins while keeping provider-generic Temporal adapter code free of plugin-specific semantics.'
+    }
+
+    ops = component 'Worker operations' {
+      #asIs
+      description 'Operational worker behavior and host support.'
+    }
+
+    host .uses hostComposition 'starts worker host'
+    hostComposition .uses runtime 'build runtime dependencies'
+    hostComposition .uses plugins 'register step plugins'
+    hostComposition .uses ops 'operational concerns'
+  }
+}
+
+views {
+  view temporalWorkerBoundary of temporalWorkerModel {
+    title 'DVT+ Temporal Worker — Runtime composition and source evidence'
+    description 'Source-first worker view. Drill down from host/runtime/plugin responsibilities to the exact files at the resolved main SHA.'
+
+    include sourceEvidence with { navigateTo temporalWorkerSourceInventory }
+    include host with { navigateTo temporal-workerFiles_host }
+    include hostComposition with { navigateTo temporal-workerFiles_hostComposition }
+    include runtime with { navigateTo temporal-workerFiles_runtime }
+    include plugins with { navigateTo temporal-workerFiles_plugins }
+    include ops with { navigateTo temporal-workerFiles_ops }
+
+    autoLayout LeftRight
+  }
+}
