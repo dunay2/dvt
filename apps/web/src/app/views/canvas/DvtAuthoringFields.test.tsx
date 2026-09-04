@@ -225,6 +225,9 @@ describe('DvtAuthoringFields', () => {
     const aliasInput = container.querySelector(
       'input[name="dvt-source-alias"]'
     ) as HTMLInputElement | null;
+    const aliasPresentations = [...container.querySelectorAll('span, label')].filter(
+      (element) => element.textContent?.trim() === 'Alias'
+    );
 
     expect(container.textContent).toContain('DVT source');
     expect(container.textContent).toContain('erp.orders');
@@ -236,6 +239,7 @@ describe('DvtAuthoringFields', () => {
     expect(schemaFact?.getAttribute('aria-label')).toBe('Schema: erp');
     expect(tableFact?.textContent).toBe('orders');
     expect(tableFact?.getAttribute('aria-label')).toBe('Table: orders');
+    expect(aliasPresentations).toHaveLength(1);
     expect(aliasInput?.value).toBe('warehouse_prod_analytics_erp');
 
     act(() => {

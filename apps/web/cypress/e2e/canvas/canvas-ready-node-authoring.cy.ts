@@ -515,14 +515,21 @@ describe('Canvas ready node authoring', () => {
     cy.get('.react-flow__node[data-id="source-1"] [data-slot="canvas-node-shell"]').dblclick();
     cy.contains('h3', 'DVT source').should('be.visible');
     waitForE2eApiCall('/workspace/warehouse/connections', 'GET');
-    cy.contains('label', 'PostgreSQL connection').scrollIntoView().should('be.visible');
+    cy.contains('label', 'Connection').scrollIntoView().should('be.visible');
     cy.get('select[name="dvt-source-connection"]').select('warehouse-b');
     cy.contains('button', 'Test connection').click();
     waitForE2eApiCall('/workspace/warehouse/connections/warehouse-b/test', 'POST');
     cy.contains('Connection available.').should('be.visible');
     cy.contains('label', 'Schema').scrollIntoView().should('be.visible');
     cy.contains('label', 'Table').scrollIntoView().should('be.visible');
-    cy.contains('label', 'Alias').scrollIntoView().should('be.visible');
+    cy.get(
+      '[data-slot="canvas-node-workbench-overlay"] span, [data-slot="canvas-node-workbench-overlay"] label'
+    )
+      .filter((_, element) => element.textContent?.trim() === 'Alias')
+      .should('have.length', 1)
+      .first()
+      .scrollIntoView()
+      .should('be.visible');
     cy.get('input[name="dvt-source-schema"]').should('have.value', 'raw');
     cy.get('input[name="dvt-source-table"]').should('have.value', 'orders');
     cy.get('input[name="dvt-source-alias"]').should('have.value', 'orders_source');
