@@ -1,0 +1,63 @@
+model {
+  postgresAdapterModel = package '@dvt/adapter-postgres' {
+    #asIs
+    description 'PostgreSQL infrastructure adapter. Implements persistence, archive, outbox and capability boundaries; translates/delegates without becoming the domain authority for run lifecycle.'
+    metadata {
+      repository 'dunay2/dvt'
+      baselineSha '42504563629f0b998d8a3382ea839eead99a36d1'
+      sourceRoot 'packages/@dvt/adapter-postgres'
+      provenance 'SOURCE-FIRST'
+    }
+    link https://github.com/dunay2/dvt/tree/42504563629f0b998d8a3382ea839eead99a36d1/packages/%40dvt/adapter-postgres 'Pinned package tree'
+
+    sourceEvidence = component 'Source evidence' { #sourceDerived }
+    publicBoundary = component 'Postgres adapter public boundary' { #asIs }
+    stateStore = store 'Run state persistence' {
+      #asIs
+      description 'Event, snapshot and metadata persistence used by DVT run-state boundaries.'
+    }
+    runStateCommandBridge = adapter 'RunStateCommandPort bridge' {
+      #asIs
+      description 'Explicit bridge from the DVT run-state command port into PostgreSQL writes.'
+    }
+    planStore = store 'Postgres plan store' { #asIs }
+    outboxDelivery = store 'Outbox + lineage persistence' { #asIs }
+    archiveLifecycle = store 'Run archive persistence' { #asIs }
+    backpressure = component 'Backpressure snapshot reader' { #asIs }
+    objectFile = adapter 'Object-file to Postgres capability' { #asIs }
+    schemaAndRuntime = component 'Schema + runtime composition' { #asIs }
+    credentialsAndPool = component 'Credentials + pool policy' { #asIs }
+
+    publicBoundary .uses stateStore 'exports state persistence'
+    publicBoundary .uses runStateCommandBridge 'exports command bridge'
+    publicBoundary .uses planStore 'exports plan storage'
+    publicBoundary .uses outboxDelivery 'exports delivery stores'
+    publicBoundary .uses archiveLifecycle 'exports archive stores'
+    runStateCommandBridge .delegates stateStore 'translates command writes'
+    stateStore .uses schemaAndRuntime 'schema + runtime config'
+    planStore .uses schemaAndRuntime 'schema + transactions'
+    outboxDelivery .uses schemaAndRuntime 'Postgres persistence'
+    archiveLifecycle .uses schemaAndRuntime 'Postgres persistence'
+    objectFile .uses credentialsAndPool 'connection/credential boundary'
+    stateStore .uses credentialsAndPool 'observed pool boundary'
+  }
+}
+
+views {
+  view postgresAdapterBoundary of postgresAdapterModel {
+    title 'DVT+ Postgres Adapter — Persistence and infrastructure translation'
+    description 'Source-first Postgres adapter view pinned to main@42504563.'
+    include sourceEvidence with { navigateTo postgresAdapterSourceInventory }
+    include publicBoundary with { navigateTo adapter-postgresFiles_publicBoundary }
+    include stateStore with { navigateTo adapter-postgresFiles_stateStore }
+    include runStateCommandBridge with { navigateTo adapter-postgresFiles_runStateCommandBridge }
+    include planStore with { navigateTo adapter-postgresFiles_planStore }
+    include outboxDelivery with { navigateTo adapter-postgresFiles_outboxDelivery }
+    include archiveLifecycle with { navigateTo adapter-postgresFiles_archiveLifecycle }
+    include backpressure with { navigateTo adapter-postgresFiles_backpressure }
+    include objectFile with { navigateTo adapter-postgresFiles_objectFile }
+    include schemaAndRuntime with { navigateTo adapter-postgresFiles_schemaAndRuntime }
+    include credentialsAndPool with { navigateTo adapter-postgresFiles_credentialsAndPool }
+    autoLayout LeftRight
+  }
+}
