@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "components": [
+    {"id":"publicBoundary","title":"OTel public boundary","paths":["src/index.ts"],"rationale":"Exports the concrete OpenTelemetry observability implementation."},
+    {"id":"observability","title":"OTel observability implementation","paths":["src/OtelObservability.ts"],"rationale":"Concrete @dvt/observability implementation backed by OpenTelemetry."},
+    {"id":"traces","title":"OpenTelemetry traces","paths":["src/OpenTelemetryTraces.ts"],"rationale":"Trace provider/exporter integration."},
+    {"id":"tracePolicy","title":"OTel trace policy","paths":["src/otelTracePolicy.ts"],"rationale":"OpenTelemetry-specific trace configuration/policy."}
+  ]
+}
