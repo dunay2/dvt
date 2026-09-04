@@ -26,6 +26,8 @@ const contexts = contextIds.map((contextId) => {
   const config = JSON.parse(
     readFileSync(join(contextsDir, `${contextId}-source-baseline.json`), 'utf8'),
   );
+  const logicalSource = readFileSync(join(architectureDir, `${contextId}.c4`), 'utf8');
+  const logicalModelId = parseLogicalModelId(logicalSource, contextId);
   const packageJsonPath = posix.join(config.scope, 'package.json');
   let packageJson;
   try {
@@ -35,11 +37,11 @@ const contexts = contextIds.map((contextId) => {
   }
 
   if (!packageJson.name) throw new Error(`${packageJsonPath} has no package name`);
-  if (!config.modelId) throw new Error(`${contextId} source baseline has no modelId`);
 
   return {
     contextId,
-    modelId: config.modelId,
+    logicalModelId,
+    configuredSourceModelId: config.modelId ?? null,
     displayName: config.displayName ?? packageJson.name,
     scope: config.scope,
     packageName: packageJson.name,
@@ -72,10 +74,10 @@ for (const source of contexts) {
     relationships.push({
       sourceContext: source.contextId,
       sourcePackage: source.packageName,
-      sourceModelId: source.modelId,
+      sourceModelId: source.logicalModelId,
       targetContext: target.contextId,
       targetPackage: target.packageName,
-      targetModelId: target.modelId,
+      targetModelId: target.logicalModelId,
       dependencyType: 'dependencies',
       versionRange,
       sourceManifest: source.packageJsonPath,
@@ -92,7 +94,7 @@ unmodeledWorkspaceDependencies.sort((a, b) =>
 );
 
 const evidenceBase = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   generatedFrom: 'workspace-package-json',
   baselineSha,
   contexts: contexts.map(({ packageJson, ...context }) => context),
@@ -120,6 +122,14 @@ console.log(
     `${unmodeledWorkspaceDependencies.length} @dvt dependencies are not yet modeled.`,
 );
 
+function parseLogicalModelId(source, contextId) {
+  const match = source.match(
+    /model\s*\{\s*([A-Za-z_][A-Za-z0-9_-]*)\s*=\s*(?:system|app|package|component|port|adapter|worker|store|external|contract|inventory)\b/,
+  );
+  if (!match?.[1]) throw new Error(`Cannot resolve logical model id from architecture/${contextId}.c4`);
+  return match[1];
+}
+
 function renderLikeC4(contextsToRender, relations, sha) {
   const lines = [
     '// GENERATED FILE. DO NOT EDIT.',
@@ -139,7 +149,7 @@ function renderLikeC4(contextsToRender, relations, sha) {
     `    description 'SOURCE-DERIVED from package.json dependencies at main@${sha.slice(0, 8)}. Arrows mean compile/runtime workspace dependency, not runtime call direction.'`,
   );
 
-  for (const context of contextsToRender) lines.push(`    include ${context.modelId}`);
+  for (const context of contextsToRender) lines.push(`    include ${context.logicalModelId}`);
   lines.push('    autoLayout LeftRight', '  }', '}', '');
   return lines.join('\n');
 }
