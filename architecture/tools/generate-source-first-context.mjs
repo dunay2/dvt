@@ -18,19 +18,39 @@ const baselineConfig = JSON.parse(
 const manifest = JSON.parse(
   readFileSync(join(contextsDir, `${contextId}-components.json`), 'utf8'),
 );
+const logicalSource = readFileSync(join(architectureDir, `${contextId}.c4`), 'utf8');
+const logicalModelId = parseLogicalModelId(logicalSource, contextId);
 
 const {
   repository,
   scope,
-  modelId,
+  modelId: configuredModelId,
   displayName,
   architectureOwner,
   baselineSha: configuredBaselineSha,
 } = baselineConfig;
 const baselineSha = process.env.DVT_ARCH_BASELINE_SHA || configuredBaselineSha;
+const modelId =
+  configuredModelId === logicalModelId
+    ? deriveSourceModelId(configuredModelId)
+    : configuredModelId;
 
-if (![repository, baselineSha, scope, modelId, displayName, architectureOwner].every(Boolean)) {
+if (
+  ![
+    repository,
+    baselineSha,
+    scope,
+    configuredModelId,
+    modelId,
+    logicalModelId,
+    displayName,
+    architectureOwner,
+  ].every(Boolean)
+) {
   throw new Error(`Incomplete source configuration for ${contextId}`);
+}
+if (modelId === logicalModelId) {
+  throw new Error(`${contextId} source inventory model id collides with logical model id: ${modelId}`);
 }
 
 const git = (args) =>
@@ -77,7 +97,7 @@ const components = manifest.components.map((component) => {
 const counts = {
   trackedFiles: files.length,
   sourceFiles: files.filter((f) => f.relativePath.startsWith('src/')).length,
-  testFiles: files.filter((f) => /^(test|tests)\//.test(f.relativePath)).length,
+  testFiles: files.filter((f) => isTestFile(f.relativePath)).length,
   docsFiles: files.filter((f) => f.relativePath.startsWith('docs/')).length,
   packageRootFiles: files.filter((f) => !f.relativePath.includes('/')).length,
   filesWithOwnedConcern: files.filter((f) => Boolean(f.ownedConcern)).length,
@@ -85,12 +105,15 @@ const counts = {
 };
 
 const payload = {
-  schemaVersion: 2,
+  schemaVersion: 3,
   generatedFrom: 'git-tree',
   repository,
   baselineSha,
   configuredBaselineSha: configuredBaselineSha ?? null,
   scope,
+  logicalModelId,
+  sourceModelId: modelId,
+  configuredModelId,
   counts,
   files,
   componentMappings: components.map((component) => ({
@@ -118,8 +141,30 @@ writeFileSync(join(generatedDir, `${contextId}-source.c4`), renderSourceModel(in
 
 console.log(
   `Generated ${displayName}: ${counts.trackedFiles} tracked, ${counts.sourceFiles} src, ` +
-    `${counts.testFiles} tests @ ${baselineSha.slice(0, 8)}, digest ${inventory.inventorySha256}`,
+    `${counts.testFiles} tests @ ${baselineSha.slice(0, 8)}, source=${modelId}, digest ${inventory.inventorySha256}`,
 );
+
+function parseLogicalModelId(source, id) {
+  const match = source.match(
+    /model\s*\{\s*([A-Za-z_][A-Za-z0-9_-]*)\s*=\s*(?:system|app|package|component|port|adapter|worker|store|external|contract|inventory)\b/,
+  );
+  if (!match?.[1]) throw new Error(`Cannot resolve logical model id from architecture/${id}.c4`);
+  return match[1];
+}
+
+function deriveSourceModelId(logicalId) {
+  return logicalId.endsWith('Model')
+    ? `${logicalId.slice(0, -'Model'.length)}Source`
+    : `${logicalId}Source`;
+}
+
+function isTestFile(relativePath) {
+  return (
+    /^(?:test|tests|__tests__)\//.test(relativePath) ||
+    /\.(?:test|spec|cy)\.[cm]?[jt]sx?$/.test(relativePath) ||
+    /\/(?:test|tests|__tests__)\//.test(relativePath)
+  );
+}
 
 function parseTreeLine(line) {
   const match = line.match(/^(\d+)\s+(\w+)\s+([0-9a-f]+)\s+(-|\d+)\t(.+)$/);
@@ -190,6 +235,7 @@ function renderSourceModel(data) {
     '    metadata {',
     "      provenance 'SOURCE-DERIVED'",
     `      architectureOwner '${esc(architectureOwner)}'`,
+    `      logicalModelId '${esc(logicalModelId)}'`,
     `      sourceRoot '${esc(scope)}'`,
     `      baselineSha '${baselineSha}'`,
     `      trackedFiles '${data.counts.trackedFiles}'`,
