@@ -207,7 +207,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
     );
     expect(inspection.ok).toBe(true);
     if (!inspection.ok) return;
-    expect(inspection.projection.source.nodeId).toBe(source.id);
+    expect(inspection.projection.source.sourceRef.sourceObjectId).toBe(`raw.${source.id}`);
     expect(inspection.projection.outputs).toMatchObject([
       {
         fieldId: 'output:order_id',
