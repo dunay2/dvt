@@ -14,7 +14,7 @@ model {
 
     sourceEvidence = component 'Source evidence' {
       #sourceDerived
-      description 'Machine-generated inventory of every tracked file under @dvt/engine at the pinned main SHA.'
+      description 'Machine-generated inventory of every tracked file under @dvt/engine at the resolved main SHA.'
     }
 
     workflowPort = port 'IWorkflowEngine' {
@@ -68,6 +68,30 @@ model {
       description 'Plan-integrity admission boundary used before dispatch.'
     }
 
+    supporting = component 'Supporting Engine responsibilities' {
+      #asIs
+      description 'Source-proven Engine responsibilities that support lifecycle governance without widening the primary workflow behavior view.'
+
+      publicSurfaces = component 'Stable + runtime public surfaces' { #asIs }
+      providerResilience = component 'Provider resilience + in-memory provider' { #asIs }
+      applicationSupport = component 'Recovery + provider selection application services' { #asIs }
+      compatibilityContracts = contract 'Engine-local compatibility contracts' { #asIs }
+      coreRuntime = component 'Core lifecycle runtime + projection' { #asIs }
+      domainServices = component 'Engine domain service contracts + intent policy' { #asIs }
+      metrics = component 'Metrics collection boundary' { #asIs }
+      outboxPolicy = component 'Outbox rate limiting' { #asIs }
+      supportingPorts = port 'Supporting Engine ports' { #asIs }
+      security = component 'Authorization + plan-reference security' { #asIs }
+      runServices = component 'Run health, enrichment, maintenance + status services' { #asIs }
+      runControl = component 'Run command + signal control' { #asIs }
+      runMaintenance = component 'Run reconciliation + maintenance policies' { #asIs }
+      signalPolicy = component 'Signal transition policy' { #asIs }
+      inMemoryState = component 'In-memory state implementations' { #asIs }
+      engineTypes = component 'Engine type surface' { #asIs }
+      utilities = component 'Clock + error utilities' { #asIs }
+      reconciliationWorker = worker 'Intent reconciler worker' { #asIs }
+    }
+
     workflowPort .delegates workflowFacade 'implemented by facade'
     workflowFacade .delegates useCases 'commands + queries'
     useCases.startRun .delegates startPipeline 'start lifecycle'
@@ -77,13 +101,17 @@ model {
     useCases.status .uses statePort 'canonical status source'
     useCases.cancelRun .uses providerPort 'provider cancellation side effect'
     useCases.signal .uses providerPort 'provider signal side effect'
+    workflowFacade .uses supporting.coreRuntime 'core lifecycle support'
+    supporting.providerResilience .implements providerPort 'provider adapter implementations/wrappers'
+    supporting.runServices .uses supporting.supportingPorts 'operational boundaries'
+    supporting.runMaintenance .uses supporting.supportingPorts 'maintenance boundaries'
   }
 }
 
 views {
   view engineBoundary of engineModel {
     title 'DVT+ Engine — Lifecycle governance and provider delegation'
-    description 'Source-first Engine view pinned to main@42504563. Logical boxes drill into exact Git-derived evidence files.'
+    description 'Primary source-first Engine view. Supporting responsibilities are available as a separate drill-down instead of overcrowding the lifecycle boundary.'
 
     include sourceEvidence with { navigateTo engineSourceInventory }
     include workflowPort with { navigateTo engineFiles_workflowPort }
@@ -93,6 +121,7 @@ views {
     include providerPort with { navigateTo engineFiles_providerPort }
     include statePort with { navigateTo engineFiles_statePort }
     include planIntegrityPort with { navigateTo engineFiles_planIntegrityPort }
+    include supporting with { navigateTo engineSupportingResponsibilities }
 
     autoLayout LeftRight
   }
@@ -117,6 +146,32 @@ views {
     include cancelRun with { navigateTo engineFiles_cancelRun }
     include status with { navigateTo engineFiles_status }
     include signal with { navigateTo engineFiles_signal }
+    autoLayout LeftRight
+  }
+
+  view engineSupportingResponsibilities of engineModel.supporting {
+    title 'DVT+ Engine — Supporting responsibilities'
+    description 'Additional source-proven responsibilities behind the primary lifecycle API. Every box drills into the exact files claiming that responsibility.'
+
+    include publicSurfaces with { navigateTo engineFiles_publicSurfaces }
+    include providerResilience with { navigateTo engineFiles_providerResilience }
+    include applicationSupport with { navigateTo engineFiles_applicationSupport }
+    include compatibilityContracts with { navigateTo engineFiles_compatibilityContracts }
+    include coreRuntime with { navigateTo engineFiles_coreRuntime }
+    include domainServices with { navigateTo engineFiles_domainServices }
+    include metrics with { navigateTo engineFiles_metrics }
+    include outboxPolicy with { navigateTo engineFiles_outboxPolicy }
+    include supportingPorts with { navigateTo engineFiles_supportingPorts }
+    include security with { navigateTo engineFiles_security }
+    include runServices with { navigateTo engineFiles_runServices }
+    include runControl with { navigateTo engineFiles_runControl }
+    include runMaintenance with { navigateTo engineFiles_runMaintenance }
+    include signalPolicy with { navigateTo engineFiles_signalPolicy }
+    include inMemoryState with { navigateTo engineFiles_inMemoryState }
+    include engineTypes with { navigateTo engineFiles_engineTypes }
+    include utilities with { navigateTo engineFiles_utilities }
+    include reconciliationWorker with { navigateTo engineFiles_reconciliationWorker }
+
     autoLayout LeftRight
   }
 }
