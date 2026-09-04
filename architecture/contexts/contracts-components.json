@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "components": [
     {"id":"publicBoundary","title":"Contracts public boundary","paths":["src/index.ts","src/schemas.ts"],"rationale":"Root contract/schema export surface consumed across DVT."},
     {"id":"contractFamilies","title":"Versioned contract families","prefixes":["src/contracts"],"rationale":"Versioned domain/source/workspace/planner/dbt contract families."},
@@ -9,6 +9,8 @@
     {"id":"stepRegistry","title":"Step registry contracts","prefixes":["src/step-registry"],"rationale":"Canonical step-kind registry and executable step contract support."},
     {"id":"types","title":"Shared contract types","prefixes":["src/types"],"rationale":"Shared contract-owned type definitions."},
     {"id":"utils","title":"Contract utilities","prefixes":["src/utils"],"rationale":"Utilities owned by contract representation/validation rather than product runtime."},
-    {"id":"errors","title":"Error contracts","paths":["src/errorContract.ts","src/errors.ts"],"rationale":"Versioned error and failure contract surfaces."}
+    {"id":"errors","title":"Error contracts","paths":["src/errorContract.ts","src/errors.ts"],"rationale":"Versioned error and failure contract surfaces."},
+    {"id":"validation","title":"Contract validation boundary","paths":["src/validation.ts"],"prefixes":["src/validation"],"rationale":"Contract-owned validation entrypoint and focused planner/runtime/event/core validation helpers."},
+    {"id":"workflowContracts","title":"Workflow contract compatibility exports","paths":["src/workflows.ts"],"rationale":"Workflow-facing contract export surface kept within @dvt/contracts; it describes contracts rather than executing workflows."}
   ]
 }
