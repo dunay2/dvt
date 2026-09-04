@@ -9,6 +9,8 @@ import {
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
 
+const DVT_FIELD_ID = /^dvt_fld_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 type CanvasDraftSaveRequestBody = {
   draft: {
     nodes: Array<{
@@ -64,11 +66,13 @@ describe('Canvas Substrait row-number window', () => {
     ).dblclick();
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
     cy.get('select[data-slot="dvt-substrait-window-partition-field"]')
-      .select('field:transform-customers:country')
-      .should('have.value', 'field:transform-customers:country');
+      .select('country')
+      .find('option:selected')
+      .should('have.text', 'country');
     cy.get('select[data-slot="dvt-substrait-window-order-field"]')
-      .select('field:transform-customers:name')
-      .should('have.value', 'field:transform-customers:name');
+      .select('name')
+      .find('option:selected')
+      .should('have.text', 'name');
     cy.get('input[data-slot="dvt-substrait-window-output-name"]')
       .clear()
       .type('country_row_number');
@@ -94,12 +98,14 @@ describe('Canvas Substrait row-number window', () => {
         decodeDvtSubstraitPilotDocument(transformAuthoring?.semanticDocument)
       );
 
-      expect(inspection.ok && inspection.projection.result).to.deep.equal({
-        name: 'country_row_number',
-        fieldId: 'field:transform-customers:row-number',
-        capabilityId:
-          'substrait/simple-extension/window-function/extension%3Aio.substrait%3Afunctions_arithmetic/row_number',
-      });
+      expect(inspection.ok).to.equal(true);
+      if (!inspection.ok) return;
+      expect(inspection.projection.result.name).to.equal('country_row_number');
+      expect(inspection.projection.result.fieldId).to.match(DVT_FIELD_ID);
+      expect(inspection.projection.result.capabilityId).to.equal(
+        'substrait/simple-extension/window-function/extension%3Aio.substrait%3Afunctions_arithmetic/row_number'
+      );
+      inspection.projection.outputs.forEach((output) => expect(output.fieldId).to.match(DVT_FIELD_ID));
     });
 
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
