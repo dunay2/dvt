@@ -28,7 +28,7 @@ jobs:
       - name: Prepare source-first preview
         run: node architecture/tools/prepare-source-first-preview.mjs
 
-      - name: Derive observed import evidence from current main
+      - name: Derive observed import and composition evidence from current main
         run: |
           BASELINE_SHA="$(node -e "const fs=require('fs');process.stdout.write(JSON.parse(fs.readFileSync('.architecture-evidence/resolved-baseline.json','utf8')).baselineSha)")"
           git worktree add --detach .architecture-main "$BASELINE_SHA"
@@ -42,8 +42,12 @@ jobs:
           )
           node architecture/tools/generate-observed-import-landscape.mjs \
             .architecture-evidence/dependency-cruise.json "$BASELINE_SHA"
+          node architecture/tools/generate-composition-reachability.mjs \
+            .architecture-evidence/dependency-cruise.json "$BASELINE_SHA"
           cp architecture/generated/context-imports.c4 .source-first-likec4-preview/context-imports.c4
           cp architecture/generated/context-imports.json .architecture-evidence/context-imports.json
+          cp architecture/generated/composition-reachability.c4 .source-first-likec4-preview/composition-reachability.c4
+          cp architecture/generated/composition-reachability.json .architecture-evidence/composition-reachability.json
           git worktree remove --force .architecture-main
 
       - name: Validate source-first LikeC4 model
