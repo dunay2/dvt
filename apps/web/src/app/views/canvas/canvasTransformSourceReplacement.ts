@@ -11,6 +11,7 @@ import {
   decodeDvtSubstraitProjectionDocument,
   encodeDvtSubstraitProjectionDocument,
   inspectDvtSubstraitProjectionDraft,
+  resolveDvtSubstraitProjectionEntry,
   resolveDvtSubstraitProjectionSource,
 } from './canvasDvtSubstraitProjection';
 
@@ -37,10 +38,17 @@ export function rebaseStaleTransformProjection(args: {
   try {
     const authority = readDvtTransformAuthoringAuthority(targetNode);
     if (authority == null) return args.draftSession;
-    const inspection = inspectDvtSubstraitProjectionDraft(
-      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
-    );
-    if (!inspection.ok || inspection.projection.source.nodeId === source.nodeId) {
+    const currentDraft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
+    const inspection = inspectDvtSubstraitProjectionDraft(currentDraft);
+    if (!inspection.ok) return args.draftSession;
+    if (
+      resolveDvtSubstraitProjectionEntry({
+        targetNode,
+        nodes,
+        edges: args.draftSession.workingSet.visibleEdges,
+        draft: currentDraft,
+      }) != null
+    ) {
       return args.draftSession;
     }
 
