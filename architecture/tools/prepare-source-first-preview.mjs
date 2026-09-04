@@ -31,6 +31,7 @@ const baselineRef = registry.baselineRef || registry.baselineSha;
 if (!baselineRef) throw new Error('Context registry must define baselineRef or baselineSha');
 const baselineSha = git(['rev-parse', baselineRef]);
 git(['cat-file', '-e', `${baselineSha}^{commit}`]);
+const generationEnv = { ...process.env, DVT_ARCH_BASELINE_SHA: baselineSha };
 
 const previewDir = join(repoRoot, '.source-first-likec4-preview');
 const evidenceDir = join(repoRoot, '.architecture-evidence');
@@ -47,11 +48,7 @@ for (const context of contexts) {
   execFileSync(
     process.execPath,
     [join(architectureDir, 'tools', 'generate-source-first-context.mjs'), context],
-    {
-      cwd: repoRoot,
-      stdio: 'inherit',
-      env: { ...process.env, DVT_ARCH_BASELINE_SHA: baselineSha },
-    },
+    { cwd: repoRoot, stdio: 'inherit', env: generationEnv },
   );
 
   const logicalSource = readFileSync(join(architectureDir, `${context}.c4`), 'utf8');
@@ -80,12 +77,18 @@ for (const context of contexts) {
 
 execFileSync(
   process.execPath,
+  [join(architectureDir, 'tools', 'verify-context-coverage.mjs')],
+  { cwd: repoRoot, stdio: 'inherit', env: generationEnv },
+);
+copyFileSync(
+  join(generatedDir, 'context-coverage.json'),
+  join(evidenceDir, 'context-coverage.json'),
+);
+
+execFileSync(
+  process.execPath,
   [join(architectureDir, 'tools', 'generate-context-dependency-landscape.mjs')],
-  {
-    cwd: repoRoot,
-    stdio: 'inherit',
-    env: { ...process.env, DVT_ARCH_BASELINE_SHA: baselineSha },
-  },
+  { cwd: repoRoot, stdio: 'inherit', env: generationEnv },
 );
 copyFileSync(
   join(generatedDir, 'context-dependencies.c4'),
