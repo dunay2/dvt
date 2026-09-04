@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "components": [
+    {"id":"publicBoundary","title":"Plan Interpreter public boundary","paths":["src/index.ts"],"rationale":"Exports adapter-agnostic DAG analysis and execution-layer functions."},
+    {"id":"dagAnalysis","title":"DAG validation + execution layering","paths":["src/dagAnalyzer.ts"],"rationale":"Validates ExecutionPlan DAG structure, computes execution layers and downstream closure."},
+    {"id":"types","title":"Interpreter result types","paths":["src/types.ts"],"rationale":"Defines typed DAG validation and layer-analysis results."},
+    {"id":"errors","title":"DAG interpretation errors","paths":["src/errors.ts"],"rationale":"Typed errors for invalid DAG structure and interpretation failures."}
+  ]
+}
