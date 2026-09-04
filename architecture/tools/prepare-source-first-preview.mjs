@@ -94,10 +94,12 @@ copyFileSync(
   join(generatedDir, 'component-classification-coverage.c4'),
   join(previewDir, 'component-classification-coverage.c4'),
 );
-copyFileSync(
-  join(generatedDir, 'component-classification-coverage.json'),
-  join(evidenceDir, 'component-classification-coverage.json'),
-);
+for (const filename of [
+  'component-classification-coverage.json',
+  'component-classification-summary.json',
+]) {
+  copyFileSync(join(generatedDir, filename), join(evidenceDir, filename));
+}
 
 execFileSync(
   process.execPath,
