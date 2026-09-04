@@ -7,6 +7,7 @@ import {
   encodeDvtSubstraitProjectionDocument,
   inspectDvtSubstraitProjectionDraft,
   reorderDvtSubstraitProjectionOutputs,
+  resolveDvtSubstraitProjectionEntry,
   resolveDvtSubstraitProjectionSource,
   type DvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
@@ -140,8 +141,17 @@ export function reconcileDvtSourceSemanticColumnOrder(node: CanonicalNode): Cano
   }
   if (semanticDraft == null) return normalizedNode;
 
-  const inspection = inspectDvtSubstraitProjectionDraft(removeDvtSubstraitFilter(semanticDraft));
-  if (!inspection.ok || inspection.projection.targetNodeId !== normalizedNode.id) {
+  const baseDraft = removeDvtSubstraitFilter(semanticDraft);
+  const inspection = inspectDvtSubstraitProjectionDraft(baseDraft);
+  if (
+    !inspection.ok ||
+    resolveDvtSubstraitProjectionEntry({
+      targetNode: normalizedNode,
+      nodes: [normalizedNode],
+      edges: [],
+      draft: baseDraft,
+    }) == null
+  ) {
     return normalizedNode;
   }
 
