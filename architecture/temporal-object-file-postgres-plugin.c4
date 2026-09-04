@@ -1,0 +1,40 @@
+model {
+  temporalObjectFilePostgresPluginModel = package '@dvt/temporal-object-file-postgres-plugin' {
+    #asIs
+    description 'Concrete Temporal step plugin for decoding object-file rows and materializing them through a PostgreSQL loading capability.'
+    metadata {
+      repository 'dunay2/dvt'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      sourceRoot 'packages/@dvt/temporal-object-file-postgres-plugin'
+      provenance 'SOURCE-FIRST'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin 'Pinned package tree'
+
+    sourceEvidence = component 'Source evidence' { #sourceDerived description 'Complete tracked-file inventory at the resolved main SHA.' }
+    publicBoundary = component 'Object-file Postgres plugin public boundary' { #asIs description 'Publishes the concrete object-file to PostgreSQL plugin API.' }
+    activity = component 'Object-file Postgres activity' { #asIs description 'Temporal activity boundary for object-file materialization.' }
+    runner = component 'Object-file Postgres runner' { #asIs description 'Coordinates row decoding and provider-specific loading capability.' }
+    rows = component 'Object-file row decoding' { #asIs description 'Parses and normalizes object-file rows.' }
+    typesAndErrors = contract 'Object-file plugin contracts' { #asIs description 'Plugin-owned types and bounded failure model.' }
+
+    publicBoundary .uses activity 'exports activity'
+    publicBoundary .uses runner 'exports runner'
+    publicBoundary .uses typesAndErrors 'exports plugin contracts'
+    activity .delegates runner 'materializes object file'
+    runner .uses rows 'decode rows'
+  }
+}
+
+views {
+  view temporalObjectFilePostgresPluginBoundary of temporalObjectFilePostgresPluginModel {
+    title 'DVT+ Temporal Object File → Postgres Plugin'
+    description 'Source-first concrete execution capability, separate from provider-generic Temporal orchestration.'
+    include sourceEvidence with { navigateTo temporalObjectFilePostgresPluginSourceInventory }
+    include publicBoundary with { navigateTo temporal-object-file-postgres-pluginFiles_publicBoundary }
+    include activity with { navigateTo temporal-object-file-postgres-pluginFiles_activity }
+    include runner with { navigateTo temporal-object-file-postgres-pluginFiles_runner }
+    include rows with { navigateTo temporal-object-file-postgres-pluginFiles_rows }
+    include typesAndErrors with { navigateTo temporal-object-file-postgres-pluginFiles_typesAndErrors }
+    autoLayout LeftRight
+  }
+}
