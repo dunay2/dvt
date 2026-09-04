@@ -347,6 +347,78 @@ export function createDvtSubstraitProjectionDraft(args: {
   return { plan, sidecar };
 }
 
+export function reorderDvtSubstraitProjectionOutputs(
+  draft: DvtSubstraitProjectionDraft,
+  args: Readonly<{
+    fieldId: string;
+    targetFieldId: string;
+    placement: 'before' | 'after';
+  }>
+): DvtSubstraitProjectionDraft {
+  if (args.fieldId === args.targetFieldId || draft.plan.relations.length !== 1) return draft;
+
+  const plan = fromBinary(PlanSchema, toBinary(PlanSchema, draft.plan));
+  const root = plan.relations[0]?.relType;
+  const projectRelation = root?.case === 'root' ? root.value.input?.relType : undefined;
+  if (root?.case !== 'root' || projectRelation?.case !== 'project') return draft;
+
+  const project = projectRelation.value;
+  const emit = project.common?.emitKind;
+  const relationAnchor = project.common?.relAnchor;
+  if (emit?.case !== 'emit' || relationAnchor == null) return draft;
+
+  const targetRelationId = draft.sidecar.relations.find(
+    (relation) => relation.relAnchor === relationAnchor
+  )?.relationId;
+  if (targetRelationId == null) return draft;
+
+  const outputFields = sortedRelationFields(draft.sidecar, targetRelationId);
+  if (
+    outputFields.length !== emit.value.outputMapping.length ||
+    outputFields.length !== root.value.names.length
+  ) {
+    return draft;
+  }
+
+  const sourceIndex = outputFields.findIndex((field) => field.fieldId === args.fieldId);
+  const targetIndexBeforeMove = outputFields.findIndex(
+    (field) => field.fieldId === args.targetFieldId
+  );
+  if (sourceIndex < 0 || targetIndexBeforeMove < 0) return draft;
+
+  const reorderedFields = [...outputFields];
+  const reorderedMappings = [...emit.value.outputMapping];
+  const reorderedNames = [...root.value.names];
+  const [movedField] = reorderedFields.splice(sourceIndex, 1);
+  const [movedMapping] = reorderedMappings.splice(sourceIndex, 1);
+  const [movedName] = reorderedNames.splice(sourceIndex, 1);
+  const targetIndex = reorderedFields.findIndex((field) => field.fieldId === args.targetFieldId);
+  if (movedField == null || movedMapping == null || movedName == null || targetIndex < 0) {
+    return draft;
+  }
+  const insertionIndex = args.placement === 'after' ? targetIndex + 1 : targetIndex;
+  reorderedFields.splice(insertionIndex, 0, movedField);
+  reorderedMappings.splice(insertionIndex, 0, movedMapping);
+  reorderedNames.splice(insertionIndex, 0, movedName);
+  emit.value.outputMapping = reorderedMappings;
+  root.value.names = reorderedNames;
+
+  const outputOrdinalByFieldId = new Map(
+    reorderedFields.map((field, outputOrdinal) => [field.fieldId, outputOrdinal] as const)
+  );
+  return {
+    plan,
+    sidecar: {
+      ...draft.sidecar,
+      fields: draft.sidecar.fields.map((field) => {
+        if (field.relationId !== targetRelationId) return field;
+        const outputOrdinal = outputOrdinalByFieldId.get(field.fieldId);
+        return outputOrdinal == null ? field : { ...field, outputOrdinal };
+      }),
+    },
+  };
+}
+
 export function inspectDvtSubstraitProjectionDraft(
   draft: DvtSubstraitProjectionDraft
 ): DvtSubstraitProjectionInspection {

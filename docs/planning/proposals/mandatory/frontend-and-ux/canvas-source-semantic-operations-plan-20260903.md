@@ -65,7 +65,14 @@ compact card summary. Source kind, imported connection authority and physical pr
 unchanged. The visible local stack and the focused Cypress flow both proved apply, reload and
 remove.
 
-Issue #2894 remains open for ordered filters, field projection parity, broader relational operations,
+The Source column-order increment keeps the physical connected-source declaration stable and
+reorders canonical Substrait projection outputs by FieldId. The shared authoring projection also
+repairs previously persisted order-only divergence before card, Inspector, Preview or autosave
+consume the node; recovery is admitted only when the physical and semantic field sets match
+exactly. A visible-browser proof covered reorder with Inspector Columns open and persistence after
+reload.
+
+Issue #2894 remains open for ordered filters, broader field projection parity, relational operations,
 and materialization. Raw Source sampling remains outside the semantic Preview/materialization path.
 
 ## Fowler Matrix
@@ -157,6 +164,11 @@ redGreenCycles:
     expectedFailure: strict FilterRel mutation/inspection/removal is absent.
     patchSurfaces: [apps/web/src/app/views/canvas/**, apps/web/src/app/plugins/graph/**]
     greenTest: pnpm --filter @dvt/web test:canvas:run -- canvasDvtSubstraitFilter.test.ts
+  - id: source-column-order
+    redTest: apps/web/src/app/views/canvas/canvasSourceColumnOrder.test.ts
+    expectedFailure: Reordering a filtered Source makes its columns fail closed after metadata and semantic order diverge.
+    patchSurfaces: [apps/web/src/app/views/canvas/**]
+    greenTest: pnpm --filter @dvt/web test:canvas:run -- canvasSourceColumnOrder.test.ts
 symbolDefaults: &symbolDefaults { dddOwner: DvtSubstraitSemanticDocumentV1, cqRails: [ConfigureCanvasDvtNode, GetWorkspaceGraphDraft], fowlerSignals: [Duplicate semantics, Hidden authority], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-SOURCE-SEMANTIC-OPERATIONS-2894, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts, unitTests: [apps/web/src/app/views/canvas/canvasDvtSubstraitFilter.test.ts] }
 symbols:
   - { <<: *symbolDefaults, name: dvtSubstraitTextEquality, path: apps/web/src/app/views/canvas/canvasDvtSubstraitTextEquality.ts }
@@ -176,6 +188,9 @@ symbols:
   - { <<: *symbolDefaults, name: applyDvtSourceSemanticDraft, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts }
   - { <<: *symbolDefaults, name: createDvtSourceSemanticDraft, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts }
   - { <<: *symbolDefaults, name: outputFieldId, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts }
+  - { <<: *symbolDefaults, name: reconcileDvtSourceSemanticColumnOrder, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts, unitTests: [apps/web/src/app/views/canvas/canvasSourceColumnOrder.test.ts] }
+  - { <<: *symbolDefaults, name: reorderDvtSubstraitProjectionOutputs, path: apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.ts, unitTests: [apps/web/src/app/views/canvas/canvasSourceColumnOrder.test.ts] }
+  - { <<: *symbolDefaults, name: reorderCanvasSourceColumns, path: apps/web/src/app/views/canvas/canvasSourceColumnOrder.ts, unitTests: [apps/web/src/app/views/canvas/canvasSourceColumnOrder.test.ts] }
   - { <<: *symbolDefaults, name: FILTER_ID, path: apps/web/src/app/views/canvas/canvasDvtSubstraitFilter.ts }
   - { <<: *symbolDefaults, name: STRING_TYPES, path: apps/web/src/app/views/canvas/canvasDvtSubstraitFilter.ts }
   - { <<: *symbolDefaults, name: clonePlan, path: apps/web/src/app/views/canvas/canvasDvtSubstraitFilter.ts }
