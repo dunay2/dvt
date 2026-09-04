@@ -1,0 +1,47 @@
+model {
+  contractsModel = package '@dvt/contracts' {
+    #asIs
+    description 'Versioned product contracts, schema boundaries, step registry and the explicit Substrait contract export.'
+    metadata {
+      repository 'dunay2/dvt'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      sourceRoot 'packages/@dvt/contracts'
+      provenance 'SOURCE-FIRST'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts 'Pinned package tree'
+
+    sourceEvidence = component 'Source evidence' { #sourceDerived description 'Complete tracked-file inventory at the resolved main SHA.' }
+    publicBoundary = contract 'Contracts public boundary' { #asIs description 'Root exports and shared schemas consumed across DVT.' }
+    contractFamilies = contract 'Versioned contract families' { #asIs description 'Planner, engine, workspace, source-import, dbt-project and other versioned contract families.' }
+    substrait = contract 'Substrait public boundary' { #asIs description 'Explicit @dvt/contracts/substrait boundary for pinned Substrait semantics and DVT identity/provenance contracts.' }
+    engineCompat = contract 'Engine compatibility surface' { #asIs description 'Engine-facing contract compatibility surface within this package.' }
+    schemaPacks = contract 'Schema packs' { #asIs description 'Governed reusable schema definitions.' }
+    stepRegistry = contract 'Step registry contracts' { #asIs description 'Canonical step-kind registry and execution-step contract support.' }
+    types = contract 'Shared contract types' { #asIs description 'Contract-owned shared types.' }
+    utils = component 'Contract utilities' { #asIs description 'Utilities supporting contract representation and validation.' }
+    errors = contract 'Error contracts' { #asIs description 'Versioned error/failure contract surfaces.' }
+
+    publicBoundary .uses contractFamilies 'exports contract families'
+    publicBoundary .uses schemaPacks 'exports schemas'
+    publicBoundary .uses stepRegistry 'exports step registry'
+    publicBoundary .uses types 'exports shared types'
+  }
+}
+
+views {
+  view contractsBoundary of contractsModel {
+    title 'DVT+ Contracts — Versioned boundaries and source evidence'
+    description 'Source-first contract map. Substrait is shown as an explicit exported boundary rather than as the whole planner-contract namespace.'
+    include sourceEvidence with { navigateTo contractsSourceInventory }
+    include publicBoundary with { navigateTo contractsFiles_publicBoundary }
+    include contractFamilies with { navigateTo contractsFiles_contractFamilies }
+    include substrait with { navigateTo contractsFiles_substrait }
+    include engineCompat with { navigateTo contractsFiles_engineCompat }
+    include schemaPacks with { navigateTo contractsFiles_schemaPacks }
+    include stepRegistry with { navigateTo contractsFiles_stepRegistry }
+    include types with { navigateTo contractsFiles_types }
+    include utils with { navigateTo contractsFiles_utils }
+    include errors with { navigateTo contractsFiles_errors }
+    autoLayout LeftRight
+  }
+}
