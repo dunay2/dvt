@@ -52,7 +52,7 @@ const out = [
   `      baselineSha '${baselineSha}'`,
   `      contextCount '${contexts.length}'`,
   `      productionCoverage '${summary.totals.coveragePercent}'`,
-  `      representedTrackedFiles '${summary.totals.productionSourceFiles}'`,
+  `      representedProductionSourceFiles '${summary.totals.productionSourceFiles}'`,
   '    }',
   "    global = component 'Global evidence views' {",
   '      #sourceDerived',
@@ -71,7 +71,7 @@ const out = [
   '      }',
   `      coverage = component 'Logical source coverage — ${summary.totals.coveragePercent}%' {`,
   '        #sourceDerived',
-  `        description '${summary.totals.mappedProductionFiles}/${summary.totals.productionSourceFiles} production source files mapped; ${summary.totals.unmappedProductionFiles} unmapped; ${summary.totals.multiMappedProductionFiles} multi-mapped.'`,
+  `        description '${summary.totals.mappedProductionFiles}/${summary.totals.productionSourceFiles} production source files mapped; ${summary.totals.unmappedProductionFiles} unmapped; ${summary.totals.ownershipConflictFiles ?? summary.totals.multiMappedProductionFiles ?? 0} ownership conflict(s); ${summary.totals.aggregateOverlapFiles ?? 0} aggregate overlap(s).'`,
   '      }',
   '    }',
   "    applications = component 'Applications / process hosts' {",
@@ -112,7 +112,7 @@ writeFileSync(
   join(generatedDir, 'architecture-home.json'),
   JSON.stringify(
     {
-      schemaVersion: 2,
+      schemaVersion: 3,
       generatedFrom: 'context-registry+component-classification-summary',
       baselineSha,
       contexts,
