@@ -4,6 +4,7 @@
 export const lineageChromeClasses = {
   panel: 'border-[color:var(--border-default)] bg-[var(--surface-panel)]',
   mutedText: 'text-[var(--text-muted)]',
+  subtleText: 'text-[var(--text-subtle)]',
   focusBadge: 'bg-[var(--status-success)] text-[var(--surface-app)]',
 } as const;
 
