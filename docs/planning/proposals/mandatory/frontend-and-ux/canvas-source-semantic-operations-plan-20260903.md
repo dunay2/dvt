@@ -187,10 +187,16 @@ symbols:
   - { <<: *symbolDefaults, name: buildDvtGraphNodeSemanticMetric, path: apps/web/src/app/plugins/dvt/dvtGraphNodeSemanticMetric.ts }
   - { <<: *symbolDefaults, name: applyDvtSourceSemanticDraft, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts }
   - { <<: *symbolDefaults, name: createDvtSourceSemanticDraft, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts }
+  - { <<: *symbolDefaults, name: isNamedSourceColumn, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts, unitTests: [apps/web/src/app/views/canvas/canvasSourceColumnOrder.test.ts] }
   - { <<: *symbolDefaults, name: outputFieldId, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts }
   - { <<: *symbolDefaults, name: reconcileDvtSourceSemanticColumnOrder, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts, unitTests: [apps/web/src/app/views/canvas/canvasSourceColumnOrder.test.ts] }
+  - { <<: *symbolDefaults, name: reorderProjectionToFieldIds, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts, unitTests: [apps/web/src/app/views/canvas/canvasSourceColumnOrder.test.ts] }
+  - { <<: *symbolDefaults, name: sameOrderedValues, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts, unitTests: [apps/web/src/app/views/canvas/canvasSourceColumnOrder.test.ts] }
+  - { <<: *symbolDefaults, name: sameUniqueValues, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts, unitTests: [apps/web/src/app/views/canvas/canvasSourceColumnOrder.test.ts] }
   - { <<: *symbolDefaults, name: reorderDvtSubstraitProjectionOutputs, path: apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.ts, unitTests: [apps/web/src/app/views/canvas/canvasSourceColumnOrder.test.ts] }
   - { <<: *symbolDefaults, name: reorderCanvasSourceColumns, path: apps/web/src/app/views/canvas/canvasSourceColumnOrder.ts, unitTests: [apps/web/src/app/views/canvas/canvasSourceColumnOrder.test.ts] }
+  - { <<: *symbolDefaults, name: reorderSourceSemanticProjection, path: apps/web/src/app/views/canvas/canvasSourceColumnOrder.ts, unitTests: [apps/web/src/app/views/canvas/canvasSourceColumnOrder.test.ts] }
+  - { <<: *symbolDefaults, name: resolveProjectionFieldId, path: apps/web/src/app/views/canvas/canvasSourceColumnOrder.ts, unitTests: [apps/web/src/app/views/canvas/canvasSourceColumnOrder.test.ts] }
   - { <<: *symbolDefaults, name: FILTER_ID, path: apps/web/src/app/views/canvas/canvasDvtSubstraitFilter.ts }
   - { <<: *symbolDefaults, name: STRING_TYPES, path: apps/web/src/app/views/canvas/canvasDvtSubstraitFilter.ts }
   - { <<: *symbolDefaults, name: clonePlan, path: apps/web/src/app/views/canvas/canvasDvtSubstraitFilter.ts }
