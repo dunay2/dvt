@@ -1,4 +1,4 @@
-name: LikeC4 Planner source-first spike preview
+name: LikeC4 source-first architecture preview
 
 on:
   push:
@@ -21,51 +21,52 @@ jobs:
       - name: Fetch source baseline
         run: git fetch --no-tags origin main
 
-      - name: Generate source-first Planner inventory
-        run: node architecture/tools/generate-planner-preview-v2.mjs
+      - name: Generate Planner source evidence
+        run: node architecture/tools/generate-source-first-context.mjs planner
 
-      - name: Reject invalid navigation in generated source model
-        run: |
-          if grep -n -E '^\s*navigateTo\s+' architecture/generated/planner-source.c4; then
-            echo 'Generated Planner source model contains invalid model-level navigateTo' >&2
-            exit 1
-          fi
+      - name: Generate Artifacts source evidence
+        run: node architecture/tools/generate-source-first-context.mjs artifacts
 
-      - name: Stage Planner-only LikeC4 workspace
+      - name: Stage combined LikeC4 workspace
         run: |
-          rm -rf .planner-likec4-preview
-          mkdir -p .planner-likec4-preview .architecture-evidence
-          cp architecture/specification.c4 .planner-likec4-preview/specification.c4
-          cp architecture/planner.c4 .planner-likec4-preview/planner.c4
-          cp architecture/generated/planner-source.c4 .planner-likec4-preview/planner-source.c4
-          cat > .planner-likec4-preview/likec4.config.json <<'JSON'
+          rm -rf .source-first-likec4-preview
+          mkdir -p .source-first-likec4-preview .architecture-evidence
+          cp architecture/specification.c4 .source-first-likec4-preview/specification.c4
+          cp architecture/planner.c4 .source-first-likec4-preview/planner.c4
+          cp architecture/artifacts.c4 .source-first-likec4-preview/artifacts.c4
+          cp architecture/generated/planner-source.c4 .source-first-likec4-preview/planner-source.c4
+          cp architecture/generated/artifacts-source.c4 .source-first-likec4-preview/artifacts-source.c4
+          cat > .source-first-likec4-preview/likec4.config.json <<'JSON'
           {
             "$schema": "https://likec4.dev/schemas/config.json",
-            "name": "dvt-planner-source-first-spike",
-            "title": "DVT+ Planner — Source-first architecture",
+            "name": "dvt-source-first-architecture-spike",
+            "title": "DVT+ — Source-first architecture",
             "metadata": {
               "status": "manual-spike",
               "repository": "dunay2/dvt",
-              "baselineSha": "4e63f9a65e25f409ad975fa1da5620e569bb3a36",
-              "scope": "packages/@dvt/planner"
+              "baselineSha": "42504563629f0b998d8a3382ea839eead99a36d1"
             }
           }
           JSON
           cp architecture/generated/planner-inventory.json .architecture-evidence/planner-inventory.json
           cp architecture/generated/planner-source.c4 .architecture-evidence/planner-source.c4
-          cp architecture/planner-components.json .architecture-evidence/planner-components.json
-          cp architecture/planner-source-baseline.json .architecture-evidence/planner-source-baseline.json
+          cp architecture/contexts/planner-components.json .architecture-evidence/planner-components.json
+          cp architecture/contexts/planner-source-baseline.json .architecture-evidence/planner-source-baseline.json
+          cp architecture/generated/artifacts-inventory.json .architecture-evidence/artifacts-inventory.json
+          cp architecture/generated/artifacts-source.c4 .architecture-evidence/artifacts-source.c4
+          cp architecture/contexts/artifacts-components.json .architecture-evidence/artifacts-components.json
+          cp architecture/contexts/artifacts-source-baseline.json .architecture-evidence/artifacts-source-baseline.json
 
-      - name: Validate Planner LikeC4 model
+      - name: Validate source-first LikeC4 model
         run: |
-          cd .planner-likec4-preview
+          cd .source-first-likec4-preview
           npx --yes likec4@1.59.2 validate
 
-      - name: Build Planner LikeC4 static site
+      - name: Build source-first LikeC4 static site
         uses: likec4/actions@v1
         with:
           action: build
-          path: .planner-likec4-preview
+          path: .source-first-likec4-preview
           output: dist
           base: ./
           likec4-version: 1.59.2
@@ -79,7 +80,7 @@ jobs:
       - name: Upload preview artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dvt-likec4-planner-source-first-preview
+          name: dvt-likec4-source-first-preview
           path: dist
 
       - name: Publish disposable gh-pages branch
