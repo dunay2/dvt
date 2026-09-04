@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "components": [
+    {"id":"publicBoundary","title":"Observability public boundary","paths":["src/index.ts"],"rationale":"Exports the provider-neutral observability contracts and policies."},
+    {"id":"contracts","title":"Observability contracts","prefixes":["src/contracts"],"rationale":"Provider-neutral metrics/logging/tracing interfaces and context types."},
+    {"id":"policy","title":"Cardinality and telemetry policy","prefixes":["src/policy"],"rationale":"Protects telemetry shape/cardinality independently from concrete backends."},
+    {"id":"noop","title":"No-op observability implementation","paths":["src/noopObservability.ts"],"rationale":"Provider-neutral no-op implementation for bounded fallback/testing scenarios."}
+  ]
+}
