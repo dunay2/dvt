@@ -5,10 +5,15 @@ This spike treats the repository source tree as evidence and LikeC4 as a navigab
 ## Current contexts
 
 - `@dvt/planner`
+- `@dvt/plan-verifier`
+- `@dvt/plan-interpreter`
 - `@dvt/engine`
+- `@dvt/run-domain`
 - `@dvt/artifacts`
 - `@dvt/state-store`
 - `@dvt/delivery`
+- `@dvt/adapter-temporal`
+- `@dvt/adapter-postgres`
 
 All current context baselines are pinned to `main@42504563629f0b998d8a3382ea839eead99a36d1`.
 
