@@ -1,0 +1,36 @@
+model {
+  lineageWorkerModel = worker 'apps/lineage-worker' {
+    #asIs
+    description 'Lineage/evidence worker host that composes PostgreSQL outbox evidence with the traceability service and compiled-code resolution.'
+    metadata {
+      repository 'dunay2/dvt'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      sourceRoot 'apps/lineage-worker'
+      provenance 'SOURCE-FIRST'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker 'Pinned app tree'
+
+    sourceEvidence = component 'Source evidence' { #sourceDerived description 'Complete tracked-file inventory at the resolved main SHA.' }
+    host = component 'Lineage worker process host' { #asIs description 'Startup/bootstrap and process lifecycle.' }
+    compiledCodeResolver = component 'Compiled-code resolver' { #asIs description 'Resolves compiled-code evidence required by lineage mapping.' }
+    types = contract 'Lineage worker types' { #asIs description 'Worker-owned types for composition/evidence resolution.' }
+    env = component 'Lineage worker environment' { #asIs description 'Validated runtime configuration.' }
+
+    host .uses env 'load validated configuration'
+    host .uses compiledCodeResolver 'resolve compiled-code evidence'
+    host .uses types 'worker-owned types'
+  }
+}
+
+views {
+  view lineageWorkerBoundary of lineageWorkerModel {
+    title 'DVT+ Lineage Worker — Evidence processing host'
+    description 'Source-first lineage worker view; lineage semantics remain owned by @dvt/traceability-service.'
+    include sourceEvidence with { navigateTo lineageWorkerSourceInventory }
+    include host with { navigateTo lineage-workerFiles_host }
+    include compiledCodeResolver with { navigateTo lineage-workerFiles_compiledCodeResolver }
+    include types with { navigateTo lineage-workerFiles_types }
+    include env with { navigateTo lineage-workerFiles_env }
+    autoLayout LeftRight
+  }
+}
