@@ -14,6 +14,7 @@ import {
   isSimpleCanvasPassthrough,
   persistCanvasProjectionOutputs,
   readEditableCanvasProjectionEntry,
+  type EditableCanvasProjectionEntry,
 } from './canvasColumnProjectionAuthority';
 import type { DvtSubstraitProjectionOutput } from './canvasDvtSubstraitProjection';
 
@@ -21,7 +22,7 @@ function readProjectionEntry(args: {
   draftSession: CanvasDraftSession;
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
   targetNode: CanonicalNode;
-}) {
+}): EditableCanvasProjectionEntry {
   return readEditableCanvasProjectionEntry({
     targetNode: args.targetNode,
     edges: args.draftSession.workingSet.visibleEdges,
