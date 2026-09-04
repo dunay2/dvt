@@ -114,6 +114,14 @@ copyFileSync(
   join(generatedDir, 'context-dependencies.json'),
   join(evidenceDir, 'context-dependencies.json'),
 );
+
+execFileSync(
+  process.execPath,
+  [join(architectureDir, 'tools', 'generate-architecture-home.mjs')],
+  { cwd: repoRoot, stdio: 'inherit', env: generationEnv },
+);
+copyFileSync(join(generatedDir, 'architecture-home.c4'), join(previewDir, 'architecture-home.c4'));
+copyFileSync(join(generatedDir, 'architecture-home.json'), join(evidenceDir, 'architecture-home.json'));
 copyFileSync(join(contextsDir, 'registry.json'), join(evidenceDir, 'registry.json'));
 
 writeFileSync(
