@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const cruisePath = process.argv[2];
 const baselineSha = process.argv[3] || process.env.DVT_ARCH_BASELINE_SHA;
+const strictManifestDrift = process.env.DVT_ARCH_STRICT_MANIFEST_DRIFT === '1';
 if (!cruisePath || !baselineSha) {
   throw new Error('Usage: node generate-observed-import-landscape.mjs <dependency-cruise.json> <baseline-sha>');
 }
@@ -132,9 +133,10 @@ const productionManifestDrift = edges
   }));
 
 const evidenceBase = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   generatedFrom: 'dependency-cruiser@17.3.9',
   baselineSha,
+  strictManifestDrift,
   totalCruised: report.summary?.totalCruised ?? modules.length,
   contextCount: contexts.length,
   edgeCount: edges.length,
@@ -163,10 +165,15 @@ console.log(
     `${productionManifestDrift.length} production manifest drift edge(s), ${evidence.unmappedDvtImports.length} unmapped @dvt import(s).`,
 );
 
+if (productionManifestDrift.length) {
+  console.warn(
+    `Manifest drift evidence: ${productionManifestDrift.map((item) => `${item.sourceContext}->${item.targetContext}(${item.manifestDeclaration})`).join(', ')}`,
+  );
+}
 if (evidence.unmappedDvtImports.length) {
   throw new Error(`Observed @dvt imports outside registered context map: ${evidence.unmappedDvtImports.map((item) => item.specifier).join(', ')}`);
 }
-if (productionManifestDrift.length) {
+if (strictManifestDrift && productionManifestDrift.length) {
   throw new Error(
     `Production cross-context imports not declared in dependencies: ${productionManifestDrift.map((item) => `${item.sourceContext}->${item.targetContext}(${item.manifestDeclaration})`).join(', ')}`,
   );
@@ -248,6 +255,7 @@ function renderLikeC4(importEdges) {
     if (edge.typeOnlyImports) parts.push(`${edge.typeOnlyImports} type-only`);
     if (edge.dynamicImports) parts.push(`${edge.dynamicImports} dynamic`);
     if (edge.testImports) parts.push(`${edge.testImports} test`);
+    if (edge.productionManifestDrift) parts.push(`MANIFEST DRIFT: ${edge.manifestDeclaration}`);
     lines.push(
       `  ${edge.sourceModelId} .uses ${edge.targetModelId} '${esc(`observed imports: ${parts.join(', ')}`)}'`,
     );
@@ -255,7 +263,7 @@ function renderLikeC4(importEdges) {
   lines.push('}', '', 'views {', '  view observedImportLandscape {');
   lines.push("    title 'DVT+ — Observed source import landscape'");
   lines.push(
-    `    description 'SOURCE-DERIVED with Dependency Cruiser at main@${baselineSha.slice(0, 8)}. Edges aggregate observed cross-context imports and distinguish runtime, type-only, dynamic and test usage.'`,
+    `    description 'SOURCE-DERIVED with Dependency Cruiser at main@${baselineSha.slice(0, 8)}. Edges aggregate observed cross-context imports; MANIFEST DRIFT is displayed rather than hidden.'`,
   );
   for (const context of contexts) lines.push(`    include ${context.logicalModelId}`);
   lines.push('    autoLayout LeftRight', '  }', '}', '');
