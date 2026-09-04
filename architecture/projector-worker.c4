@@ -1,0 +1,30 @@
+model {
+  projectorWorkerModel = worker 'apps/projector-worker' {
+    #asIs
+    description 'Small projection worker host that composes the projector runtime from @dvt/delivery with PostgreSQL infrastructure.'
+    metadata {
+      repository 'dunay2/dvt'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      sourceRoot 'apps/projector-worker'
+      provenance 'SOURCE-FIRST'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/projector-worker 'Pinned app tree'
+
+    sourceEvidence = component 'Source evidence' { #sourceDerived description 'Complete tracked-file inventory at the resolved main SHA.' }
+    host = component 'Projector worker process host' { #asIs description 'Owns process lifecycle and composes the delivery projector runtime.' }
+    env = component 'Projector environment' { #asIs description 'Validates deployment/runtime configuration.' }
+
+    host .uses env 'load validated configuration'
+  }
+}
+
+views {
+  view projectorWorkerBoundary of projectorWorkerModel {
+    title 'DVT+ Projector Worker — Projection host and source evidence'
+    description 'The worker is intentionally small; projection behavior itself remains owned by @dvt/delivery.'
+    include sourceEvidence with { navigateTo projectorWorkerSourceInventory }
+    include host with { navigateTo projector-workerFiles_host }
+    include env with { navigateTo projector-workerFiles_env }
+    autoLayout LeftRight
+  }
+}
