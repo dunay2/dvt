@@ -1,0 +1,122 @@
+model {
+  engineModel = package '@dvt/engine' {
+    #asIs
+    description 'Workflow lifecycle and command/read governance. The Engine admits immutable plans, coordinates run lifecycle, delegates provider execution and derives canonical status from persisted state rather than provider introspection.'
+
+    metadata {
+      repository 'dunay2/dvt'
+      baselineSha '42504563629f0b998d8a3382ea839eead99a36d1'
+      sourceRoot 'packages/@dvt/engine'
+      provenance 'SOURCE-FIRST'
+    }
+
+    link https://github.com/dunay2/dvt/tree/42504563629f0b998d8a3382ea839eead99a36d1/packages/%40dvt/engine 'Pinned package tree'
+
+    sourceEvidence = component 'Source evidence' {
+      #sourceDerived
+      description 'Machine-generated inventory of every tracked file under @dvt/engine at the pinned main SHA.'
+    }
+
+    workflowPort = port 'IWorkflowEngine' {
+      #asIs
+      description 'Engine-owned public behavior port: start, recover, cancel, canonical status and signal.'
+      link https://github.com/dunay2/dvt/blob/42504563629f0b998d8a3382ea839eead99a36d1/packages/%40dvt/engine/src/ports/IWorkflowEngine.ts 'Source'
+    }
+
+    workflowFacade = component 'WorkflowEngine facade' {
+      #asIs
+      description 'Narrow facade implementing IWorkflowEngine and delegating lifecycle commands/queries to explicit use cases.'
+    }
+
+    useCases = component 'Workflow engine use cases' {
+      #asIs
+      description 'Application use cases for start, recover, cancel, status and signal.'
+
+      startRun = component 'Start run' { #asIs }
+      recoverRun = component 'Recover run' { #asIs }
+      cancelRun = component 'Cancel run' { #asIs }
+      status = component 'Canonical status' {
+        #asIs
+        description 'Reads canonical run status from event log + materialized snapshot and must not query the provider adapter.'
+      }
+      signal = component 'Signal run' { #asIs }
+    }
+
+    startPipeline = component 'StartRun application pipeline' {
+      #asIs
+      description 'Coordinates admission, intent persistence, provider dispatch, telemetry and failure policy.'
+
+      coordinator = component 'StartRun coordinator' { #asIs }
+      admission = component 'Admission + integrity' { #asIs }
+      intent = component 'Pre-dispatch intent' { #asIs }
+      execution = component 'Execution dispatch' { #asIs }
+      failure = component 'Failure policy' { #asIs }
+    }
+
+    providerPort = port 'IProviderAdapter' {
+      #asIs
+      description 'Provider-facing adapter boundary used to delegate execution without giving the provider authority over DVT lifecycle truth.'
+    }
+
+    statePort = port 'IRunStateStore' {
+      #asIs
+      description 'Persisted event/snapshot boundary used as canonical run-state source.'
+    }
+
+    planIntegrityPort = port 'IPlanIntegrityValidator' {
+      #asIs
+      description 'Plan-integrity admission boundary used before dispatch.'
+    }
+
+    workflowPort .delegates workflowFacade 'implemented by facade'
+    workflowFacade .delegates useCases 'commands + queries'
+    useCases.startRun .delegates startPipeline 'start lifecycle'
+    startPipeline.admission .uses planIntegrityPort 'validates plan integrity'
+    startPipeline.execution .uses providerPort 'dispatches provider execution'
+    startPipeline.intent .uses statePort 'persists pre-dispatch intent/state'
+    useCases.status .uses statePort 'canonical status source'
+    useCases.cancelRun .uses providerPort 'provider cancellation side effect'
+    useCases.signal .uses providerPort 'provider signal side effect'
+  }
+}
+
+views {
+  view engineBoundary of engineModel {
+    title 'DVT+ Engine — Lifecycle governance and provider delegation'
+    description 'Source-first Engine view pinned to main@42504563. Logical boxes drill into exact Git-derived evidence files.'
+
+    include sourceEvidence with { navigateTo engineSourceInventory }
+    include workflowPort with { navigateTo engineFiles_workflowPort }
+    include workflowFacade with { navigateTo engineFiles_workflowFacade }
+    include useCases with { navigateTo engineFiles_useCases }
+    include startPipeline with { navigateTo engineFiles_startPipeline }
+    include providerPort with { navigateTo engineFiles_providerPort }
+    include statePort with { navigateTo engineFiles_statePort }
+    include planIntegrityPort with { navigateTo engineFiles_planIntegrityPort }
+
+    autoLayout LeftRight
+  }
+
+  view engineStartRun of engineModel.startPipeline {
+    title 'DVT+ Engine — StartRun application pipeline'
+    description 'Admission, intent, execution and failure boundaries inside the current start-run path.'
+
+    include coordinator with { navigateTo engineFiles_coordinator }
+    include admission with { navigateTo engineFiles_admission }
+    include intent with { navigateTo engineFiles_intent }
+    include execution with { navigateTo engineFiles_execution }
+    include failure with { navigateTo engineFiles_failure }
+
+    autoLayout LeftRight
+  }
+
+  view engineUseCases of engineModel.useCases {
+    title 'DVT+ Engine — Workflow behavior use cases'
+    include startRun with { navigateTo engineFiles_startRun }
+    include recoverRun with { navigateTo engineFiles_recoverRun }
+    include cancelRun with { navigateTo engineFiles_cancelRun }
+    include status with { navigateTo engineFiles_status }
+    include signal with { navigateTo engineFiles_signal }
+    autoLayout LeftRight
+  }
+}
