@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "components": [
+    {"id":"publicBoundary","title":"State Store public boundary","rationale":"src/index.ts exposes runtime state-store lifecycle, archive, retention, restore and delivery-buffer APIs.","paths":["src/index.ts"]},
+    {"id":"runStateCommands","title":"Run state command boundary","rationale":"Defines the bootstrap/command port and the in-memory implementation used to append authoritative run state transitions.","paths":["src/types.ts","src/inMemoryRunStateCommandPort.ts"]},
+    {"id":"archiveIdentity","title":"Archive unit identity + retention math","rationale":"Owns deterministic archive unit keys, tenant buckets, delete-after calculation and archive lifecycle state.","paths":["src/archiveLifecycle.ts"]},
+    {"id":"archiveArtifacts","title":"Archive manifests + terminal snapshots","rationale":"Builds immutable archive manifests, event checksums and pinned/archived terminal snapshots.","paths":["src/lifecycle/archiveArtifacts.ts"]},
+    {"id":"archiveRuntime","title":"Archive runtime ports + policies","rationale":"Defines archive stores, leases, restore/delete boundaries, retention policies and lifecycle telemetry.","paths":["src/lifecycle/archiveRuntime.ts"]},
+    {"id":"archivePipeline","title":"Archive lifecycle pipeline","rationale":"Coordinates export, verification, deletion and restore of run archive units through explicit lifecycle services.","paths":["src/lifecycle/ObjectStorageRunArchiveExporter.ts","src/lifecycle/RunArchiveCoordinator.ts","src/lifecycle/RunArchiveVerifier.ts","src/lifecycle/RunArchiveDeleter.ts","src/lifecycle/RunArchiveRestorer.ts"]},
+    {"id":"archiveObjectStores","title":"Archive object-store adapters","rationale":"Concrete filesystem and S3 implementations of the archive object-store boundary.","prefixes":["src/lifecycle/adapters"]},
+    {"id":"deliveryBufferLifecycle","title":"Delivery-buffer retention + purge","rationale":"Owns delivery-buffer retention policy, purge boundary, telemetry and purge execution.","paths":["src/lifecycle/deliveryBufferRuntime.ts","src/lifecycle/DeliveryBufferPurger.ts"]}
+  ]
+}

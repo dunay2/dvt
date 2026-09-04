@@ -1,0 +1,243 @@
+// GENERATED FILE. DO NOT EDIT.
+// Source: git tree dunay2/dvt@3695f07c9ba3c66ab51f88a2dabe18e18556a244:packages/@dvt/observability
+model {
+  observabilitySource = inventory 'Observability source inventory — generated from Git' {
+    #sourceDerived
+    description 'Machine-generated from the exact Git tree. Folder structure is STRUCTURE-DERIVED; file identity is SOURCE-DERIVED.'
+    metadata {
+      provenance 'SOURCE-DERIVED'
+      architectureOwner 'dvt.observability'
+      logicalModelId 'observabilityModel'
+      sourceRoot 'packages/@dvt/observability'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      trackedFiles '9'
+      sourceFiles '5'
+      testFiles '1'
+      inventorySha256 '6945cd6f57e4c398ff08aee0ea2c03dd2198ab57c457bff068809feaca6790a6'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability 'Pinned package tree'
+    dir_src_f27fede2 = folder 'src/ — 5 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/observability/src'
+        recursiveFileCount '5'
+        directFileCount '2'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability/src 'Pinned directory'
+      dir_src_contracts_63d3060b = folder 'contracts/ — 2 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/observability/src/contracts'
+          recursiveFileCount '2'
+          directFileCount '2'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability/src/contracts 'Pinned directory'
+        file_src_contracts_IObservability_ts_3025c009 = file 'IObservability.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/observability/src/contracts/IObservability.ts'
+            blobSha 'd872295317a8e85167a1c8f97bd79a44a122f47d'
+            sizeBytes '1835'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability/src/contracts/IObservability.ts 'Open pinned source'
+        }
+        file_src_contracts_ObservabilityContext_ts_55975809 = file 'ObservabilityContext.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/observability/src/contracts/ObservabilityContext.ts'
+            blobSha '10d0a6f2aeeb4c0f1e961155b81d4603357ddbe0'
+            sizeBytes '811'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability/src/contracts/ObservabilityContext.ts 'Open pinned source'
+        }
+      }
+      dir_src_policy_d3c8fc47 = folder 'policy/ — 1 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/observability/src/policy'
+          recursiveFileCount '1'
+          directFileCount '1'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability/src/policy 'Pinned directory'
+        file_src_policy_cardinalityPolicy_ts_db3796c6 = file 'cardinalityPolicy.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/observability/src/policy/cardinalityPolicy.ts'
+            blobSha '6882e31dc481f4c49b0b4a06bf15fc6bd46bd079'
+            sizeBytes '1080'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability/src/policy/cardinalityPolicy.ts 'Open pinned source'
+        }
+      }
+      file_src_index_ts_c5fb8502 = file 'index.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/observability/src/index.ts'
+          blobSha 'a6e5f33d23c77ab5a27655190be258fe90763a8f'
+          sizeBytes '187'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability/src/index.ts 'Open pinned source'
+      }
+      file_src_noopObservability_ts_b1c14ac1 = file 'noopObservability.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/observability/src/noopObservability.ts'
+          blobSha 'df17db972c15b4b7dde84a503099345ff6862616'
+          sizeBytes '2567'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability/src/noopObservability.ts 'Open pinned source'
+      }
+    }
+    dir_test_a94a8fe5 = folder 'test/ — 1 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/observability/test'
+        recursiveFileCount '1'
+        directFileCount '1'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability/test 'Pinned directory'
+      file_test_cardinalityPolicy_test_ts_784145ea = file 'cardinalityPolicy.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/observability/test/cardinalityPolicy.test.ts'
+          blobSha '37c4f75a2fac2c2bd6bafa0f4207acf70aae7663'
+          sizeBytes '768'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability/test/cardinalityPolicy.test.ts 'Open pinned source'
+      }
+    }
+    file_package_json_7030d0b2 = file 'package.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/observability/package.json'
+        blobSha 'bc309e43c6055b10195db8a7858730c7915bea00'
+        sizeBytes '619'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability/package.json 'Open pinned source'
+    }
+    file_README_md_8ec9a00b = file 'README.md' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/observability/README.md'
+        blobSha 'f74882a6e83ac504d790cc79b8fc0ee72387f481'
+        sizeBytes '354'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability/README.md 'Open pinned source'
+    }
+    file_tsconfig_json_61ebb9fd = file 'tsconfig.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/observability/tsconfig.json'
+        blobSha 'ef56b5a4462e589c158939db4dd2a98b24804c9e'
+        sizeBytes '302'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability/tsconfig.json 'Open pinned source'
+    }
+  }
+}
+
+views {
+  view observabilitySourceInventory of observabilitySource {
+    title 'Observability — Complete source inventory'
+    description 'Generated from Git at 3695f07c. 9 tracked files.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view observabilitySource_dir_src_f27fede2 of observabilitySource.dir_src_f27fede2 {
+    title 'Source — src/ (5 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view observabilitySource_dir_src_contracts_63d3060b of observabilitySource.dir_src_f27fede2.dir_src_contracts_63d3060b {
+    title 'Source — src/contracts/ (2 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view observabilitySource_dir_src_policy_d3c8fc47 of observabilitySource.dir_src_f27fede2.dir_src_policy_d3c8fc47 {
+    title 'Source — src/policy/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view observabilitySource_dir_test_a94a8fe5 of observabilitySource.dir_test_a94a8fe5 {
+    title 'Source — test/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view observabilityFiles_publicBoundary {
+    title 'Files — Observability public boundary'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include observabilitySource.dir_src_f27fede2.file_src_index_ts_c5fb8502
+    autoLayout TopBottom
+  }
+
+  view observabilityFiles_contracts {
+    title 'Files — Observability contracts'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 2 evidence file(s).'
+    include observabilitySource.dir_src_f27fede2.dir_src_contracts_63d3060b.file_src_contracts_IObservability_ts_3025c009
+    include observabilitySource.dir_src_f27fede2.dir_src_contracts_63d3060b.file_src_contracts_ObservabilityContext_ts_55975809
+    autoLayout TopBottom
+  }
+
+  view observabilityFiles_policy {
+    title 'Files — Cardinality and telemetry policy'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include observabilitySource.dir_src_f27fede2.dir_src_policy_d3c8fc47.file_src_policy_cardinalityPolicy_ts_db3796c6
+    autoLayout TopBottom
+  }
+
+  view observabilityFiles_noop {
+    title 'Files — No-op observability implementation'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include observabilitySource.dir_src_f27fede2.file_src_noopObservability_ts_b1c14ac1
+    autoLayout TopBottom
+  }
+
+}

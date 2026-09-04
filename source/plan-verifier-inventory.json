@@ -1,0 +1,212 @@
+{
+  "schemaVersion": 3,
+  "generatedFrom": "git-tree",
+  "repository": "dunay2/dvt",
+  "baselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "configuredBaselineSha": "42504563629f0b998d8a3382ea839eead99a36d1",
+  "scope": "packages/@dvt/plan-verifier",
+  "logicalModelId": "planVerifierModel",
+  "sourceModelId": "planVerifierSource",
+  "configuredModelId": "planVerifierSource",
+  "counts": {
+    "trackedFiles": 15,
+    "sourceFiles": 5,
+    "testFiles": 5,
+    "docsFiles": 0,
+    "packageRootFiles": 5,
+    "filesWithOwnedConcern": 2,
+    "filesWithDecision": 0
+  },
+  "files": [
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4ff21df464e3883f2d7276fc772c6d9b5b0b9ca4",
+      "sizeBytes": 615,
+      "path": "packages/@dvt/plan-verifier/package.json",
+      "relativePath": "package.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/package.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "29e0481c52366f7ab67ebf4d577750d67d5fdec1",
+      "sizeBytes": 1672,
+      "path": "packages/@dvt/plan-verifier/README.md",
+      "relativePath": "README.md",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/README.md"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6a682e9a21eba1d78f38508fce6ff355c21cda3c",
+      "sizeBytes": 460,
+      "path": "packages/@dvt/plan-verifier/src/errors.ts",
+      "relativePath": "src/errors.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/src/errors.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a111e26e9349ed6129d445a3546c3814a23f801c",
+      "sizeBytes": 285,
+      "path": "packages/@dvt/plan-verifier/src/index.ts",
+      "relativePath": "src/index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/src/index.ts",
+      "ownedConcern": "Runtime plan-verification API for admission compatibility,"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c8894cb8ae1a312eedb6aa9796311d9ff01a2905",
+      "sizeBytes": 2105,
+      "path": "packages/@dvt/plan-verifier/src/planVersion.ts",
+      "relativePath": "src/planVersion.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/src/planVersion.ts",
+      "ownedConcern": "Adapter-side plan admission facade for the canonical"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "26e25dfaea1d56616e425dc11b40cc7a349a3c7b",
+      "sizeBytes": 2565,
+      "path": "packages/@dvt/plan-verifier/src/stepTypeConfig.ts",
+      "relativePath": "src/stepTypeConfig.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/src/stepTypeConfig.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "24573b90bcbf129cabdaf8bbc6921ddc5d5c0bb2",
+      "sizeBytes": 1745,
+      "path": "packages/@dvt/plan-verifier/src/verify.ts",
+      "relativePath": "src/verify.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/src/verify.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ac772ee490fd9b9563a1421362c556dc5a2e29ad",
+      "sizeBytes": 3382,
+      "path": "packages/@dvt/plan-verifier/test/http-json-artifact-step.admission.test.ts",
+      "relativePath": "test/http-json-artifact-step.admission.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/test/http-json-artifact-step.admission.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3b2e49c6c8c0647fb79d9fda76b3a0bad8402734",
+      "sizeBytes": 2557,
+      "path": "packages/@dvt/plan-verifier/test/object-file-to-postgres-step.admission.test.ts",
+      "relativePath": "test/object-file-to-postgres-step.admission.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/test/object-file-to-postgres-step.admission.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "cc0f562d8f971c3aa29ea7332812cf2d61d36db5",
+      "sizeBytes": 2152,
+      "path": "packages/@dvt/plan-verifier/test/planVersionAdmission.architecture.test.ts",
+      "relativePath": "test/planVersionAdmission.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/test/planVersionAdmission.architecture.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "64d243dcdf05689992020713b790ed1ee6e18737",
+      "sizeBytes": 1631,
+      "path": "packages/@dvt/plan-verifier/test/planVersionAdmission.test.ts",
+      "relativePath": "test/planVersionAdmission.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/test/planVersionAdmission.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ac5e467e18e055be31e45e6e788c9b1c141b62dc",
+      "sizeBytes": 6736,
+      "path": "packages/@dvt/plan-verifier/test/verify.test.ts",
+      "relativePath": "test/verify.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/test/verify.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a7e7abe39c6ddc581c78e190593ddd8c4ee72705",
+      "sizeBytes": 195,
+      "path": "packages/@dvt/plan-verifier/tsconfig.json",
+      "relativePath": "tsconfig.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/tsconfig.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "45bbe8fa570075eb453a7a08242b4e4ab9c9f3f5",
+      "sizeBytes": 132,
+      "path": "packages/@dvt/plan-verifier/tsconfig.test.json",
+      "relativePath": "tsconfig.test.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/tsconfig.test.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "968c45e24f122972f6ea33fb60bd5debc1d1002e",
+      "sizeBytes": 177,
+      "path": "packages/@dvt/plan-verifier/vitest.config.ts",
+      "relativePath": "vitest.config.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/vitest.config.ts"
+    }
+  ],
+  "componentMappings": [
+    {
+      "id": "publicBoundary",
+      "title": "Plan Verifier public boundary",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Exports the verifier entry points and errors.",
+      "fileCount": 1,
+      "files": [
+        "src/index.ts"
+      ]
+    },
+    {
+      "id": "verification",
+      "title": "Plan verification",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Coordinates admitted plan verification without replanning.",
+      "fileCount": 1,
+      "files": [
+        "src/verify.ts"
+      ]
+    },
+    {
+      "id": "planVersion",
+      "title": "Plan-version compatibility",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Checks supported ExecutionPlan version compatibility.",
+      "fileCount": 1,
+      "files": [
+        "src/planVersion.ts"
+      ]
+    },
+    {
+      "id": "stepTypeConfig",
+      "title": "Step-type configuration verification",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Validates step-type configuration against admitted execution contracts.",
+      "fileCount": 1,
+      "files": [
+        "src/stepTypeConfig.ts"
+      ]
+    },
+    {
+      "id": "errors",
+      "title": "Verification errors",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Typed failures for plan-verification rejection.",
+      "fileCount": 1,
+      "files": [
+        "src/errors.ts"
+      ]
+    }
+  ],
+  "inventorySha256": "d224d620183f5b4a24920600c673d450815b527c661025f36ab7949605c34c74"
+}

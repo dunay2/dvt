@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "components": [
+    {
+      "id": "host",
+      "title": "Worker process host",
+      "paths": ["src/server.ts"],
+      "rationale": "Owns the Temporal worker process entrypoint and lifecycle."
+    },
+    {
+      "id": "hostComposition",
+      "title": "Temporal worker host composition",
+      "prefixes": ["src/host"],
+      "rationale": "Host-level composition and worker startup boundaries."
+    },
+    {
+      "id": "runtime",
+      "title": "Worker runtime composition",
+      "prefixes": ["src/runtime"],
+      "rationale": "Composes stores, artifacts, adapters and runtime services used by the worker."
+    },
+    {
+      "id": "plugins",
+      "title": "Step plugin composition",
+      "prefixes": ["src/plugins"],
+      "rationale": "Loads and wires concrete Temporal step plugins without moving their semantics into the generic adapter."
+    },
+    {
+      "id": "ops",
+      "title": "Worker operations",
+      "prefixes": ["src/ops"],
+      "rationale": "Operational worker behavior and supporting host concerns."
+    }
+  ]
+}

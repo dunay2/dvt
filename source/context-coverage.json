@@ -1,0 +1,386 @@
+{
+  "schemaVersion": 1,
+  "generatedFrom": "git-workspace-tree+context-registry",
+  "baselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "expectedWorkspaceCount": 26,
+  "registeredContextCount": 26,
+  "expectedScopes": [
+    "apps/api",
+    "apps/lineage-worker",
+    "apps/outbox-worker",
+    "apps/projector-worker",
+    "apps/temporal-worker",
+    "apps/web",
+    "packages/@dvt/adapter-postgres",
+    "packages/@dvt/adapter-temporal",
+    "packages/@dvt/artifacts",
+    "packages/@dvt/cli",
+    "packages/@dvt/contracts",
+    "packages/@dvt/crypto",
+    "packages/@dvt/delivery",
+    "packages/@dvt/dsl",
+    "packages/@dvt/engine",
+    "packages/@dvt/observability",
+    "packages/@dvt/observability-otel",
+    "packages/@dvt/plan-interpreter",
+    "packages/@dvt/plan-verifier",
+    "packages/@dvt/planner",
+    "packages/@dvt/run-domain",
+    "packages/@dvt/state-store",
+    "packages/@dvt/temporal-dbt-plugin",
+    "packages/@dvt/temporal-http-json-plugin",
+    "packages/@dvt/temporal-object-file-postgres-plugin",
+    "packages/@dvt/traceability-service"
+  ],
+  "registered": [
+    {
+      "contextId": "contracts",
+      "scope": "packages/@dvt/contracts",
+      "modelId": "contractsModel"
+    },
+    {
+      "contextId": "crypto",
+      "scope": "packages/@dvt/crypto",
+      "modelId": "cryptoModel"
+    },
+    {
+      "contextId": "dsl",
+      "scope": "packages/@dvt/dsl",
+      "modelId": "dslModel"
+    },
+    {
+      "contextId": "cli",
+      "scope": "packages/@dvt/cli",
+      "modelId": "cliModel"
+    },
+    {
+      "contextId": "planner",
+      "scope": "packages/@dvt/planner",
+      "modelId": "plannerSource"
+    },
+    {
+      "contextId": "plan-verifier",
+      "scope": "packages/@dvt/plan-verifier",
+      "modelId": "planVerifierSource"
+    },
+    {
+      "contextId": "plan-interpreter",
+      "scope": "packages/@dvt/plan-interpreter",
+      "modelId": "planInterpreterSource"
+    },
+    {
+      "contextId": "engine",
+      "scope": "packages/@dvt/engine",
+      "modelId": "engineSource"
+    },
+    {
+      "contextId": "run-domain",
+      "scope": "packages/@dvt/run-domain",
+      "modelId": "runDomainSource"
+    },
+    {
+      "contextId": "artifacts",
+      "scope": "packages/@dvt/artifacts",
+      "modelId": "artifactsSource"
+    },
+    {
+      "contextId": "state-store",
+      "scope": "packages/@dvt/state-store",
+      "modelId": "stateStoreSource"
+    },
+    {
+      "contextId": "delivery",
+      "scope": "packages/@dvt/delivery",
+      "modelId": "deliverySource"
+    },
+    {
+      "contextId": "observability",
+      "scope": "packages/@dvt/observability",
+      "modelId": "observabilityModel"
+    },
+    {
+      "contextId": "observability-otel",
+      "scope": "packages/@dvt/observability-otel",
+      "modelId": "observabilityOtelModel"
+    },
+    {
+      "contextId": "traceability-service",
+      "scope": "packages/@dvt/traceability-service",
+      "modelId": "traceabilityModel"
+    },
+    {
+      "contextId": "adapter-temporal",
+      "scope": "packages/@dvt/adapter-temporal",
+      "modelId": "temporalAdapterSource"
+    },
+    {
+      "contextId": "adapter-postgres",
+      "scope": "packages/@dvt/adapter-postgres",
+      "modelId": "postgresAdapterSource"
+    },
+    {
+      "contextId": "temporal-dbt-plugin",
+      "scope": "packages/@dvt/temporal-dbt-plugin",
+      "modelId": "temporalDbtPluginModel"
+    },
+    {
+      "contextId": "temporal-http-json-plugin",
+      "scope": "packages/@dvt/temporal-http-json-plugin",
+      "modelId": "temporalHttpJsonPluginModel"
+    },
+    {
+      "contextId": "temporal-object-file-postgres-plugin",
+      "scope": "packages/@dvt/temporal-object-file-postgres-plugin",
+      "modelId": "temporalObjectFilePostgresPluginModel"
+    },
+    {
+      "contextId": "api",
+      "scope": "apps/api",
+      "modelId": "apiModel"
+    },
+    {
+      "contextId": "temporal-worker",
+      "scope": "apps/temporal-worker",
+      "modelId": "temporalWorkerModel"
+    },
+    {
+      "contextId": "outbox-worker",
+      "scope": "apps/outbox-worker",
+      "modelId": "outboxWorkerModel"
+    },
+    {
+      "contextId": "projector-worker",
+      "scope": "apps/projector-worker",
+      "modelId": "projectorWorkerModel"
+    },
+    {
+      "contextId": "lineage-worker",
+      "scope": "apps/lineage-worker",
+      "modelId": "lineageWorkerModel"
+    },
+    {
+      "contextId": "web",
+      "scope": "apps/web",
+      "modelId": "webModel"
+    }
+  ],
+  "unregisteredScopes": [],
+  "staleRegisteredScopes": [],
+  "duplicateScopes": [],
+  "totals": {
+    "trackedFiles": 3273,
+    "sourceFiles": 2430,
+    "testFiles": 1250
+  },
+  "inventories": [
+    {
+      "contextId": "contracts",
+      "scope": "packages/@dvt/contracts",
+      "trackedFiles": 185,
+      "sourceFiles": 110,
+      "testFiles": 68,
+      "inventorySha256": "8740cceb032c40af70bd3cad07afb70378b4b767bdb94daddd58c174f730cb9a"
+    },
+    {
+      "contextId": "crypto",
+      "scope": "packages/@dvt/crypto",
+      "trackedFiles": 12,
+      "sourceFiles": 7,
+      "testFiles": 3,
+      "inventorySha256": "be88edd7775a894acd0b8d6a480353d18604445ebf21afbc92c8c36c87fe5581"
+    },
+    {
+      "contextId": "dsl",
+      "scope": "packages/@dvt/dsl",
+      "trackedFiles": 9,
+      "sourceFiles": 4,
+      "testFiles": 1,
+      "inventorySha256": "ddb4f11fefcf242b19be7c0b12e522e57f9d6b3431833ed711df33055b7e63d3"
+    },
+    {
+      "contextId": "cli",
+      "scope": "packages/@dvt/cli",
+      "trackedFiles": 10,
+      "sourceFiles": 1,
+      "testFiles": 1,
+      "inventorySha256": "bd006a3dc5fdd06058b311e5d98aa12119222cc037aa53a5fed60ef2240550d9"
+    },
+    {
+      "contextId": "planner",
+      "scope": "packages/@dvt/planner",
+      "trackedFiles": 62,
+      "sourceFiles": 28,
+      "testFiles": 25,
+      "inventorySha256": "97484eea00fae6ce3da3a96a699caaf062a4cc70ec449bdf5c40c1779881d3e6"
+    },
+    {
+      "contextId": "plan-verifier",
+      "scope": "packages/@dvt/plan-verifier",
+      "trackedFiles": 15,
+      "sourceFiles": 5,
+      "testFiles": 5,
+      "inventorySha256": "d224d620183f5b4a24920600c673d450815b527c661025f36ab7949605c34c74"
+    },
+    {
+      "contextId": "plan-interpreter",
+      "scope": "packages/@dvt/plan-interpreter",
+      "trackedFiles": 9,
+      "sourceFiles": 4,
+      "testFiles": 1,
+      "inventorySha256": "48565b445035b4b41db714d51fc81e7f2ecd6388546de1e533d172e88ee1e717"
+    },
+    {
+      "contextId": "engine",
+      "scope": "packages/@dvt/engine",
+      "trackedFiles": 202,
+      "sourceFiles": 123,
+      "testFiles": 73,
+      "inventorySha256": "0037425b4228720b5a1b61fdca9b340b38eaa9526c9a21a26d1cf0916969f2f6"
+    },
+    {
+      "contextId": "run-domain",
+      "scope": "packages/@dvt/run-domain",
+      "trackedFiles": 9,
+      "sourceFiles": 5,
+      "testFiles": 1,
+      "inventorySha256": "7abfdf854ae443a02314ec5b3f820143246a53c007c70feed376fdf344e6b12f"
+    },
+    {
+      "contextId": "artifacts",
+      "scope": "packages/@dvt/artifacts",
+      "trackedFiles": 33,
+      "sourceFiles": 25,
+      "testFiles": 5,
+      "inventorySha256": "71c11ff5cc43bee64809619753791300bc63d2e32b3f146670b7c9031a7ac6a1"
+    },
+    {
+      "contextId": "state-store",
+      "scope": "packages/@dvt/state-store",
+      "trackedFiles": 31,
+      "sourceFiles": 15,
+      "testFiles": 13,
+      "inventorySha256": "234794ea926f92e47eb90b66c82a3995cfbaff4d68ad28c154d5620d9a0b550f"
+    },
+    {
+      "contextId": "delivery",
+      "scope": "packages/@dvt/delivery",
+      "trackedFiles": 29,
+      "sourceFiles": 15,
+      "testFiles": 11,
+      "inventorySha256": "f4197f578e12fb31d10d3d772a63b683dece4caed306de49afc4cd1fd2403be9"
+    },
+    {
+      "contextId": "observability",
+      "scope": "packages/@dvt/observability",
+      "trackedFiles": 9,
+      "sourceFiles": 5,
+      "testFiles": 1,
+      "inventorySha256": "6945cd6f57e4c398ff08aee0ea2c03dd2198ab57c457bff068809feaca6790a6"
+    },
+    {
+      "contextId": "observability-otel",
+      "scope": "packages/@dvt/observability-otel",
+      "trackedFiles": 8,
+      "sourceFiles": 4,
+      "testFiles": 1,
+      "inventorySha256": "6519f811f51b2ca01464e2c6961c3a09e2c24685d3d5646b46ea668ca6b48eaa"
+    },
+    {
+      "contextId": "traceability-service",
+      "scope": "packages/@dvt/traceability-service",
+      "trackedFiles": 68,
+      "sourceFiles": 39,
+      "testFiles": 18,
+      "inventorySha256": "a2aaa32bfc9e408128fdca3ddadafc5f6d7aed289562d18aa5185d9fcb6bf267"
+    },
+    {
+      "contextId": "adapter-temporal",
+      "scope": "packages/@dvt/adapter-temporal",
+      "trackedFiles": 94,
+      "sourceFiles": 44,
+      "testFiles": 45,
+      "inventorySha256": "14668dc0303a2c4032f29b950f15bc1c48c62ee727f8b51900ce1f7b23338152"
+    },
+    {
+      "contextId": "adapter-postgres",
+      "scope": "packages/@dvt/adapter-postgres",
+      "trackedFiles": 125,
+      "sourceFiles": 60,
+      "testFiles": 49,
+      "inventorySha256": "c57d39915a9b584faa16388fc2b6dac58b61ea3aed60030c2063e3503fdca9f4"
+    },
+    {
+      "contextId": "temporal-dbt-plugin",
+      "scope": "packages/@dvt/temporal-dbt-plugin",
+      "trackedFiles": 17,
+      "sourceFiles": 11,
+      "testFiles": 2,
+      "inventorySha256": "6e99c32491ec10e9c3102c5792305c2b1fe262bd16c0aa12a76e7c25920453f6"
+    },
+    {
+      "contextId": "temporal-http-json-plugin",
+      "scope": "packages/@dvt/temporal-http-json-plugin",
+      "trackedFiles": 11,
+      "sourceFiles": 5,
+      "testFiles": 2,
+      "inventorySha256": "6231db297af56d69cda3c0ac119083ccf630c0052b079658909ed8570091daae"
+    },
+    {
+      "contextId": "temporal-object-file-postgres-plugin",
+      "scope": "packages/@dvt/temporal-object-file-postgres-plugin",
+      "trackedFiles": 14,
+      "sourceFiles": 6,
+      "testFiles": 4,
+      "inventorySha256": "c02e9d7c96cd7ecac465cbf395b0f8e85c2971d5f35511966f6b100273463461"
+    },
+    {
+      "contextId": "api",
+      "scope": "apps/api",
+      "trackedFiles": 597,
+      "sourceFiles": 352,
+      "testFiles": 235,
+      "inventorySha256": "b3efe672ee5af0167d69e6335f6e8f791a1f11c8eb6eb53881b95fed86a68f09"
+    },
+    {
+      "contextId": "temporal-worker",
+      "scope": "apps/temporal-worker",
+      "trackedFiles": 39,
+      "sourceFiles": 20,
+      "testFiles": 16,
+      "inventorySha256": "96c2a4651cb45469163a1e57de9714c43cf288818f631865241e56e2ac6ae448"
+    },
+    {
+      "contextId": "outbox-worker",
+      "scope": "apps/outbox-worker",
+      "trackedFiles": 62,
+      "sourceFiles": 25,
+      "testFiles": 30,
+      "inventorySha256": "fbbaee6f97785c0ed28b1532dbfaffd9feb0aeaba47ce3bfd048a420055405e2"
+    },
+    {
+      "contextId": "projector-worker",
+      "scope": "apps/projector-worker",
+      "trackedFiles": 7,
+      "sourceFiles": 2,
+      "testFiles": 2,
+      "inventorySha256": "3058f4c276e1cdc9a3cf47f712eccf58712b068d8d101969ce88b30f53d1ac4b"
+    },
+    {
+      "contextId": "lineage-worker",
+      "scope": "apps/lineage-worker",
+      "trackedFiles": 17,
+      "sourceFiles": 9,
+      "testFiles": 5,
+      "inventorySha256": "1b1dda01455f81a91ec44340c488e2cc498c5a158c398a1aa57529da5ea5fa87"
+    },
+    {
+      "contextId": "web",
+      "scope": "apps/web",
+      "trackedFiles": 1599,
+      "sourceFiles": 1506,
+      "testFiles": 633,
+      "inventorySha256": "654d69e7380ed1ea5f2fa25ac82085130543bc9f598d25df9164371ac2f01c3a"
+    }
+  ],
+  "evidenceSha256": "f8a7dbcaaa6235de9da4c5755ce11cd6f9f7154ef69207be10c52481d4e3eda0"
+}

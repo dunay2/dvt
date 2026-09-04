@@ -1,0 +1,1215 @@
+// GENERATED FILE. DO NOT EDIT.
+// Source: git tree dunay2/dvt@3695f07c9ba3c66ab51f88a2dabe18e18556a244:packages/@dvt/planner
+model {
+  plannerSource = inventory 'Planner source inventory — generated from Git' {
+    #sourceDerived
+    description 'Machine-generated from the exact Git tree. Folder structure is STRUCTURE-DERIVED; file identity is SOURCE-DERIVED.'
+    metadata {
+      provenance 'SOURCE-DERIVED'
+      architectureOwner 'dvt.planner'
+      logicalModelId 'plannerModel'
+      sourceRoot 'packages/@dvt/planner'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      trackedFiles '62'
+      sourceFiles '28'
+      testFiles '25'
+      inventorySha256 '97484eea00fae6ce3da3a96a699caaf062a4cc70ec449bdf5c40c1779881d3e6'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner 'Pinned package tree'
+    dir_docs_71ab8b6a = folder 'docs/ — 4 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/planner/docs'
+        recursiveFileCount '4'
+        directFileCount '2'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/docs 'Pinned directory'
+      dir_docs_audit_17d2e8ed = folder 'audit/ — 1 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/planner/docs/audit'
+          recursiveFileCount '1'
+          directFileCount '1'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/docs/audit 'Pinned directory'
+        file_docs_audit_planner_v2_3_2_audit_commented_ts_8a6e981b = file 'planner_v2_3_2_audit.commented.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/docs/audit/planner_v2_3_2_audit.commented.ts'
+            blobSha '9d2034a7e113f51ed434b09be79bcfabd07acc69'
+            sizeBytes '4493'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/docs/audit/planner_v2_3_2_audit.commented.ts 'Open pinned source'
+        }
+      }
+      dir_docs_planning_8089dc66 = folder 'planning/ — 1 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/planner/docs/planning'
+          recursiveFileCount '1'
+          directFileCount '1'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/docs/planning 'Pinned directory'
+        file_s_planning_Stage-1_1-Planner-Canonicalization_md_9d789891 = file 'Stage-1.1-Planner-Canonicalization.md' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.md'
+            blobSha '750a90a3c2a0c70361a355cdf2c36ac79a9b6b07'
+            sizeBytes '74455'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.md 'Open pinned source'
+        }
+      }
+      file_docs_grimorio_md_37254475 = file 'grimorio.md' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/planner/docs/grimorio.md'
+          blobSha '4ca1819a6cb274e45830ffedd608686feae85d34'
+          sizeBytes '1869'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/docs/grimorio.md 'Open pinned source'
+      }
+      file_docs_README_md_9f7cbce1 = file 'README.md' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/planner/docs/README.md'
+          blobSha 'de3955d38d562a40648dd5383d31f087c8037ec1'
+          sizeBytes '1817'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/docs/README.md 'Open pinned source'
+      }
+    }
+    dir_examples_99345ce6 = folder 'examples/ — 2 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/planner/examples'
+        recursiveFileCount '2'
+        directFileCount '2'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/examples 'Pinned directory'
+      file_examples_dbt-workflow_ts_e71810d3 = file 'dbt-workflow.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/planner/examples/dbt-workflow.ts'
+          blobSha '14f65874b56e1630a0cc62eb8b8d9cb7c15e653c'
+          sizeBytes '1228'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/examples/dbt-workflow.ts 'Open pinned source'
+      }
+      file_examples_generic-pipeline_ts_299037b9 = file 'generic-pipeline.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/planner/examples/generic-pipeline.ts'
+          blobSha 'efa07a02f1311c609f1f15a2c1c18bb742bcaecd'
+          sizeBytes '1582'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/examples/generic-pipeline.ts 'Open pinned source'
+      }
+    }
+    dir_src_f27fede2 = folder 'src/ — 28 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/planner/src'
+        recursiveFileCount '28'
+        directFileCount '1'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src 'Pinned directory'
+      dir_src_application_f8a49c7c = folder 'application/ — 4 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/planner/src/application'
+          recursiveFileCount '4'
+          directFileCount '4'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/application 'Pinned directory'
+        file_lication_derivePlannerGraphSourceFromManifest_ts_e73dc650 = file 'derivePlannerGraphSourceFromManifest.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/src/application/derivePlannerGraphSourceFromManifest.ts'
+            blobSha 'b4d749f15561e1c644f235538013ed14ee2c6cf0'
+            sizeBytes '613'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/application/derivePlannerGraphSourceFromManifest.ts 'Open pinned source'
+        }
+        file_src_application_ExecutableSubgraphDeriver_ts_c941a99f = file 'ExecutableSubgraphDeriver.ts' {
+          #sourceDerived
+          description 'derive the selected executable closure from editable'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/src/application/ExecutableSubgraphDeriver.ts'
+            blobSha '71898dc9a0cafe290174375b45d77f0168978a78'
+            sizeBytes '10217'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'derive the selected executable closure from editable'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/application/ExecutableSubgraphDeriver.ts 'Open pinned source'
+        }
+        file_src_application_PlannerEnvelopeMapper_ts_85c009a9 = file 'PlannerEnvelopeMapper.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/src/application/PlannerEnvelopeMapper.ts'
+            blobSha 'da1330520c05aeb6e41742c839cd8a711a4f5c6f'
+            sizeBytes '4205'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/application/PlannerEnvelopeMapper.ts 'Open pinned source'
+        }
+        file_src_application_PlannerFacade_ts_ffe4cd95 = file 'PlannerFacade.ts' {
+          #sourceDerived
+          description 'expose the planner bounded-context public boundary for plan build and selected-closure derivation.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/src/application/PlannerFacade.ts'
+            blobSha '51d45e02ee2299c519ee60184acc2ca504eb308e'
+            sizeBytes '4606'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'expose the planner bounded-context public boundary for plan build and selected-closure derivation.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/application/PlannerFacade.ts 'Open pinned source'
+        }
+      }
+      dir_src_contracts_63d3060b = folder 'contracts/ — 3 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/planner/src/contracts'
+          recursiveFileCount '3'
+          directFileCount '3'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/contracts 'Pinned directory'
+        file_src_contracts_CustomPolicyNamespaceRegistry_ts_14364c58 = file 'CustomPolicyNamespaceRegistry.ts' {
+          #sourceDerived
+          description 'resolve custom policy namespace registration for planner policy checks.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/src/contracts/CustomPolicyNamespaceRegistry.ts'
+            blobSha '1338af7b10c944acda243855179487fafdd894af'
+            sizeBytes '623'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'resolve custom policy namespace registration for planner policy checks.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/contracts/CustomPolicyNamespaceRegistry.ts 'Open pinned source'
+        }
+        file_src_contracts_ExecutionBindingVerification_ts_9038fe82 = file 'ExecutionBindingVerification.ts' {
+          #sourceDerived
+          description 'verify compiled artifact bindings for planner-authored steps.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/src/contracts/ExecutionBindingVerification.ts'
+            blobSha '66809b84b028a303e0ec61d148ff8ea764029efa'
+            sizeBytes '450'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'verify compiled artifact bindings for planner-authored steps.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/contracts/ExecutionBindingVerification.ts 'Open pinned source'
+        }
+        file_src_contracts_PlanExecutabilityValidation_ts_0ae35af6 = file 'PlanExecutabilityValidation.ts' {
+          #sourceDerived
+          description 'validate persisted plan executability before execution admission.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/src/contracts/PlanExecutabilityValidation.ts'
+            blobSha 'd94e5ab1a46375a3f5a5d733de73a7e2128c1d70'
+            sizeBytes '504'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'validate persisted plan executability before execution admission.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/contracts/PlanExecutabilityValidation.ts 'Open pinned source'
+        }
+      }
+      dir_src_domain_7ea5567e = folder 'domain/ — 18 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/planner/src/domain'
+          recursiveFileCount '18'
+          directFileCount '13'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain 'Pinned directory'
+        dir_src_domain_graph_cf5690b8 = folder 'graph/ — 3 files' {
+          #structureDerived
+          description 'Directory observed in the pinned Git tree.'
+          metadata {
+            provenance 'STRUCTURE-DERIVED'
+            sourcePath 'packages/@dvt/planner/src/domain/graph'
+            recursiveFileCount '3'
+            directFileCount '3'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/graph 'Pinned directory'
+          file_src_domain_graph_Depth_ts_d7e3a5ad = file 'Depth.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/planner/src/domain/graph/Depth.ts'
+              blobSha '501cbe86310736d4c652d9d1bb3b50ee676b752b'
+              sizeBytes '907'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/graph/Depth.ts 'Open pinned source'
+          }
+          file_src_domain_graph_GraphBuilder_ts_09d1fc17 = file 'GraphBuilder.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/planner/src/domain/graph/GraphBuilder.ts'
+              blobSha '5f49e3f537ba0d0e58e3b756966a4802b2acd5bb'
+              sizeBytes '7788'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/graph/GraphBuilder.ts 'Open pinned source'
+          }
+          file_src_domain_graph_TopoSort_ts_5319bdef = file 'TopoSort.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/planner/src/domain/graph/TopoSort.ts'
+              blobSha '0583b0e3c4f4d8b79c55d753d673789b7072ee5a'
+              sizeBytes '2735'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/graph/TopoSort.ts 'Open pinned source'
+          }
+        }
+        dir_src_domain_stepFactory_f09a8fc8 = folder 'stepFactory/ — 2 files' {
+          #structureDerived
+          description 'Directory observed in the pinned Git tree.'
+          metadata {
+            provenance 'STRUCTURE-DERIVED'
+            sourcePath 'packages/@dvt/planner/src/domain/stepFactory'
+            recursiveFileCount '2'
+            directFileCount '2'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/stepFactory 'Pinned directory'
+          file_src_domain_stepFactory_dbtStepFactory_ts_74967292 = file 'dbtStepFactory.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/planner/src/domain/stepFactory/dbtStepFactory.ts'
+              blobSha 'fc26fceb3441cb8b9ac456d23d296ca9d3a5351d'
+              sizeBytes '1569'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/stepFactory/dbtStepFactory.ts 'Open pinned source'
+          }
+          file_src_domain_stepFactory_StepFactory_ts_117e8c5b = file 'StepFactory.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/planner/src/domain/stepFactory/StepFactory.ts'
+              blobSha 'b50f35bb9867ab6d0c56e2b2cc68a08233b4bda9'
+              sizeBytes '350'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/stepFactory/StepFactory.ts 'Open pinned source'
+          }
+        }
+        file_src_domain_errors_ts_24f92960 = file 'errors.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/src/domain/errors.ts'
+            blobSha '2e761d06e0565e96c275cecdbc804b6535937eed'
+            sizeBytes '1010'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/errors.ts 'Open pinned source'
+        }
+        file_src_domain_hashing_ts_4ff20961 = file 'hashing.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/src/domain/hashing.ts'
+            blobSha '11b9c9c975e6e779f77332d9db0adfe08227da6e'
+            sizeBytes '603'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/hashing.ts 'Open pinned source'
+        }
+        file_src_domain_InputEnvelopeValidator_ts_d5837816 = file 'InputEnvelopeValidator.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/src/domain/InputEnvelopeValidator.ts'
+            blobSha '640b425668f70d7fa5e2de6279ca78426fd3faae'
+            sizeBytes '3851'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/InputEnvelopeValidator.ts 'Open pinned source'
+        }
+        file_src_domain_limits_ts_f1894b29 = file 'limits.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/src/domain/limits.ts'
+            blobSha 'a49dd3707390a579a6bfaaa4eb6dbcd594eaa84d'
+            sizeBytes '994'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/limits.ts 'Open pinned source'
+        }
+        file_src_domain_manifest_ts_b684950d = file 'manifest.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/src/domain/manifest.ts'
+            blobSha 'b95d88963cde89cd8711b8b11e34b1a5f6d15743'
+            sizeBytes '4508'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/manifest.ts 'Open pinned source'
+        }
+        file_src_domain_metrics_ts_52bfda3a = file 'metrics.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/src/domain/metrics.ts'
+            blobSha '5b1ce7e24ea8018818eab6cadb521bb92291c1be'
+            sizeBytes '552'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/metrics.ts 'Open pinned source'
+        }
+        file_src_domain_NodeSelector_ts_ad7075f6 = file 'NodeSelector.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/src/domain/NodeSelector.ts'
+            blobSha '21beaad00bcf368bd9eeec06339fcb5ebc4de0bb'
+            sizeBytes '2510'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/NodeSelector.ts 'Open pinned source'
+        }
+        file_src_domain_PlanAssembler_ts_968cdda3 = file 'PlanAssembler.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/src/domain/PlanAssembler.ts'
+            blobSha '2f6fea229d310abc24bcd0b3424c643b5e764927'
+            sizeBytes '7099'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/PlanAssembler.ts 'Open pinned source'
+        }
+        file_src_domain_PlanExecutionDecisionProjector_ts_66b97391 = file 'PlanExecutionDecisionProjector.ts' {
+          #sourceDerived
+          description 'project deterministic planner selection decisions.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/src/domain/PlanExecutionDecisionProjector.ts'
+            blobSha '1d32babdd53135fb90f1904eab9805f9309ea570'
+            sizeBytes '1891'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'project deterministic planner selection decisions.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/PlanExecutionDecisionProjector.ts 'Open pinned source'
+        }
+        file_src_domain_Planner_ts_60a526f5 = file 'Planner.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/src/domain/Planner.ts'
+            blobSha 'f92f44efb46225ae3e7c4f0ac085ac5455465eca'
+            sizeBytes '10679'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/Planner.ts 'Open pinned source'
+        }
+        file_src_domain_policies_ts_16e68f7c = file 'policies.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/src/domain/policies.ts'
+            blobSha 'b7a5d539dadaa57a2c58e7b72f140ae250958b08'
+            sizeBytes '2394'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/policies.ts 'Open pinned source'
+        }
+        file_src_domain_sorting_ts_45462632 = file 'sorting.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/src/domain/sorting.ts'
+            blobSha '4c09dfa468bda7732f1cdb270db15387f7c40199'
+            sizeBytes '281'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/sorting.ts 'Open pinned source'
+        }
+        file_src_domain_types_ts_4eb94e03 = file 'types.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/src/domain/types.ts'
+            blobSha '3aef5f599b0a63315c379d46c38f32d790e60faa'
+            sizeBytes '2443'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/types.ts 'Open pinned source'
+        }
+      }
+      dir_src_ports_3a2d3ebf = folder 'ports/ — 1 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/planner/src/ports'
+          recursiveFileCount '1'
+          directFileCount '1'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/ports 'Pinned directory'
+        file_src_ports_ICompiledCodeStorage_ts_c3084ffd = file 'ICompiledCodeStorage.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/src/ports/ICompiledCodeStorage.ts'
+            blobSha 'd1bf3be29db186968f8480105bcad1fc87a39d0e'
+            sizeBytes '486'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/ports/ICompiledCodeStorage.ts 'Open pinned source'
+        }
+      }
+      dir_src_runtime_6c8c9a16 = folder 'runtime/ — 1 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/planner/src/runtime'
+          recursiveFileCount '1'
+          directFileCount '1'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/runtime 'Pinned directory'
+        file_src_runtime_time_ts_ffbb7fc6 = file 'time.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/src/runtime/time.ts'
+            blobSha 'a2077c5eb3d035386b8f43895053dfe0b08a8d56'
+            sizeBytes '307'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/runtime/time.ts 'Open pinned source'
+        }
+      }
+      file_src_index_ts_c5fb8502 = file 'index.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/planner/src/index.ts'
+          blobSha 'f7be610a48895e00de122c210beecfb84a1aa433'
+          sizeBytes '3003'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/index.ts 'Open pinned source'
+      }
+    }
+    dir_test_a94a8fe5 = folder 'test/ — 25 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/planner/test'
+        recursiveFileCount '25'
+        directFileCount '2'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test 'Pinned directory'
+      dir_test_compiledCode_c6b8c06a = folder 'compiledCode/ — 4 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/planner/test/compiledCode'
+          recursiveFileCount '4'
+          directFileCount '4'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/compiledCode 'Pinned directory'
+        file_test_compiledCode_attachCompiledCodeRefs_test_ts_23733616 = file 'attachCompiledCodeRefs.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/test/compiledCode/attachCompiledCodeRefs.test.ts'
+            blobSha 'e2d59a5b7446ec16486cf488c2a895528f99e7f4'
+            sizeBytes '4002'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/compiledCode/attachCompiledCodeRefs.test.ts 'Open pinned source'
+        }
+        file_mpiledCode_FileSystemCompiledCodeStorage_test_ts_5cc394b3 = file 'FileSystemCompiledCodeStorage.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/test/compiledCode/FileSystemCompiledCodeStorage.test.ts'
+            blobSha 'ceacfa3602d849aecde7b5ef2b5c42dc50d679d4'
+            sizeBytes '537'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/compiledCode/FileSystemCompiledCodeStorage.test.ts 'Open pinned source'
+        }
+        file_compiledCode_InMemoryCompiledCodeStorage_test_ts_edba831a = file 'InMemoryCompiledCodeStorage.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/test/compiledCode/InMemoryCompiledCodeStorage.test.ts'
+            blobSha '4fc9ca551e16ab3fb44f8b53ad01300a4143e9cb'
+            sizeBytes '605'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/compiledCode/InMemoryCompiledCodeStorage.test.ts 'Open pinned source'
+        }
+        file_test_compiledCode_sha256_test_ts_f64a4f58 = file 'sha256.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/test/compiledCode/sha256.test.ts'
+            blobSha '41e4f3300987ff28884f579fb83cb32219d58ec7'
+            sizeBytes '559'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/compiledCode/sha256.test.ts 'Open pinned source'
+        }
+      }
+      dir_test_fixtures_9c0e9ecf = folder 'fixtures/ — 1 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/planner/test/fixtures'
+          recursiveFileCount '1'
+          directFileCount '1'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/fixtures 'Pinned directory'
+        file_test_fixtures_dbt-manifest_fixtures_ts_3308ab9a = file 'dbt-manifest.fixtures.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/test/fixtures/dbt-manifest.fixtures.ts'
+            blobSha 'aabd4c27d30d4a823a66ffbfea304955d05a4d26'
+            sizeBytes '2327'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/fixtures/dbt-manifest.fixtures.ts 'Open pinned source'
+        }
+      }
+      dir_test_slow_2158a782 = folder 'slow/ — 1 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/planner/test/slow'
+          recursiveFileCount '1'
+          directFileCount '1'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/slow 'Pinned directory'
+        file_test_slow_load_test_ts_ae56c614 = file 'load.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/test/slow/load.test.ts'
+            blobSha '296be60c6f1d12eb226a6ec0d988433e003a9933'
+            sizeBytes '1313'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/slow/load.test.ts 'Open pinned source'
+        }
+      }
+      dir_test_unit_c3b5db1b = folder 'unit/ — 15 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/planner/test/unit'
+          recursiveFileCount '15'
+          directFileCount '15'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit 'Pinned directory'
+        file_test_unit_dbt-step-factory_test_ts_103b541e = file 'dbt-step-factory.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/test/unit/dbt-step-factory.test.ts'
+            blobSha 'd76a03ac283d83d5379b3575eb129275067bcb15'
+            sizeBytes '3182'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/dbt-step-factory.test.ts 'Open pinned source'
+        }
+        file_test_unit_determinism_test_ts_e8b8f25c = file 'determinism.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/test/unit/determinism.test.ts'
+            blobSha 'c5844038bbd79fc27100ea9f84c292d49bf6cfd4'
+            sizeBytes '9195'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/determinism.test.ts 'Open pinned source'
+        }
+        file_executable-subgraph-deriver_architecture_test_ts_053fb35f = file 'executable-subgraph-deriver.architecture.test.ts' {
+          #sourceDerived
+          description 'guard semantic architecture rules for the planner-owned'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/test/unit/executable-subgraph-deriver.architecture.test.ts'
+            blobSha '357f026189a591fc74d2f7dec267e10140e4e1c5'
+            sizeBytes '2498'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'guard semantic architecture rules for the planner-owned'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/executable-subgraph-deriver.architecture.test.ts 'Open pinned source'
+        }
+        file_test_unit_executable-subgraph-deriver_test_ts_8e62de04 = file 'executable-subgraph-deriver.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/test/unit/executable-subgraph-deriver.test.ts'
+            blobSha 'c8aefad6d6e60ca673a1b3aeae057cdfa50d2ce1'
+            sizeBytes '6345'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/executable-subgraph-deriver.test.ts 'Open pinned source'
+        }
+        file_test_unit_graph_test_ts_882a8041 = file 'graph.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/test/unit/graph.test.ts'
+            blobSha 'd904c1b5f10a6cd86a0580d68cd7a9be167ec2e8'
+            sizeBytes '4579'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/graph.test.ts 'Open pinned source'
+        }
+        file_nit_http-json-artifact-chain_integration_test_ts_c36dc9ab = file 'http-json-artifact-chain.integration.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/test/unit/http-json-artifact-chain.integration.test.ts'
+            blobSha 'b00070fd0ec5adae440825506131dfa4cc3beaa9'
+            sizeBytes '4244'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/http-json-artifact-chain.integration.test.ts 'Open pinned source'
+        }
+        file_test_unit_input-envelope-validator_test_ts_dd463d5c = file 'input-envelope-validator.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/test/unit/input-envelope-validator.test.ts'
+            blobSha '21366a6e6d0b541b24e3e5ef76b93b52ff0e5c6c'
+            sizeBytes '3927'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/input-envelope-validator.test.ts 'Open pinned source'
+        }
+        file_test_unit_limits_test_ts_74e9eeb0 = file 'limits.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/test/unit/limits.test.ts'
+            blobSha '9756939b4076038300e3c35789cee87ba19b1045'
+            sizeBytes '1947'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/limits.test.ts 'Open pinned source'
+        }
+        file_test_unit_manifest-graph-source_test_ts_5b3fa596 = file 'manifest-graph-source.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/test/unit/manifest-graph-source.test.ts'
+            blobSha '732f6dbd6c926df73e436907229f5702e00d7931'
+            sizeBytes '2539'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/manifest-graph-source.test.ts 'Open pinned source'
+        }
+        file_test_unit_manifest-mvp_test_ts_630c1741 = file 'manifest-mvp.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/test/unit/manifest-mvp.test.ts'
+            blobSha 'b1cec42b718464899425a2e00e56c6833cbf3d66'
+            sizeBytes '2776'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/manifest-mvp.test.ts 'Open pinned source'
+        }
+        file_object-file-to-postgres-step_integration_test_ts_6d2d9d4a = file 'object-file-to-postgres-step.integration.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/test/unit/object-file-to-postgres-step.integration.test.ts'
+            blobSha '8e4296eb23d91115fe545c2952d6e3eda431d02e'
+            sizeBytes '2903'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/object-file-to-postgres-step.integration.test.ts 'Open pinned source'
+        }
+        file_test_unit_planner-facade_test_ts_e5e92a5c = file 'planner-facade.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/test/unit/planner-facade.test.ts'
+            blobSha 'b93f9508919ad21a0b6c103812aa41a42b613737'
+            sizeBytes '8733'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/planner-facade.test.ts 'Open pinned source'
+        }
+        file_t_planner-private-ownership_architecture_test_ts_5076d569 = file 'planner-private-ownership.architecture.test.ts' {
+          #sourceDerived
+          description '/);'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/test/unit/planner-private-ownership.architecture.test.ts'
+            blobSha '6ab0ef82572ea925e1cada9b283192e17eb77c5b'
+            sizeBytes '4811'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern '/);'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/planner-private-ownership.architecture.test.ts 'Open pinned source'
+        }
+        file_test_unit_policies_test_ts_0548c301 = file 'policies.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/test/unit/policies.test.ts'
+            blobSha '3f21b2b2bb4b1b69c72a85b03a4ae173d6ff06df'
+            sizeBytes '1956'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/policies.test.ts 'Open pinned source'
+        }
+        file_test_unit_step-registry-integration_test_ts_df75ee4e = file 'step-registry-integration.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/test/unit/step-registry-integration.test.ts'
+            blobSha '68d5af05f73047d77ae18b0ed2c647840315792c'
+            sizeBytes '7002'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/step-registry-integration.test.ts 'Open pinned source'
+        }
+      }
+      dir_test_vectors_798a0d09 = folder 'vectors/ — 2 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/planner/test/vectors'
+          recursiveFileCount '2'
+          directFileCount '2'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/vectors 'Pinned directory'
+        file_test_vectors_fixed-vector_inline_ts_3e05c001 = file 'fixed-vector.inline.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/test/vectors/fixed-vector.inline.ts'
+            blobSha '7f61922d428f4c246a4d1ee8c865a3ccd721b433'
+            sizeBytes '645'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/vectors/fixed-vector.inline.ts 'Open pinned source'
+        }
+        file_test_vectors_fixed-vector_json_f432834f = file 'fixed-vector.json' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/planner/test/vectors/fixed-vector.json'
+            blobSha '0338e3b7a303d083c2e6acb62e6ee3dab9fe714d'
+            sizeBytes '544'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/vectors/fixed-vector.json 'Open pinned source'
+        }
+      }
+      file_test_cross-runtime-print-planid_ts_4d68fe2b = file 'cross-runtime-print-planid.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/planner/test/cross-runtime-print-planid.ts'
+          blobSha '30a21b80c519e4d03a0cde4390981a18504d0baf'
+          sizeBytes '406'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/cross-runtime-print-planid.ts 'Open pinned source'
+      }
+      file_test_cross-runtime_sh_b17cea63 = file 'cross-runtime.sh' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/planner/test/cross-runtime.sh'
+          blobSha '36c3ad8a81e00547e892fe39a72baaee9ca1068c'
+          sizeBytes '766'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/cross-runtime.sh 'Open pinned source'
+      }
+    }
+    file_package_json_7030d0b2 = file 'package.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/planner/package.json'
+        blobSha '131f991b48a79b87471caf47ddbc119a205ab279'
+        sizeBytes '1300'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/package.json 'Open pinned source'
+    }
+    file_tsconfig_json_61ebb9fd = file 'tsconfig.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/planner/tsconfig.json'
+        blobSha '78596817a731d4016fd4bd171179b384ad1bbf3b'
+        sizeBytes '504'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/tsconfig.json 'Open pinned source'
+    }
+    file_vitest_config_ts_e7b129ed = file 'vitest.config.ts' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/planner/vitest.config.ts'
+        blobSha 'cfd9ed63cd98e8ca3170e4057e0cd55e5964f49e'
+        sizeBytes '230'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/vitest.config.ts 'Open pinned source'
+    }
+  }
+}
+
+views {
+  view plannerSourceInventory of plannerSource {
+    title 'Planner — Complete source inventory'
+    description 'Generated from Git at 3695f07c. 62 tracked files.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view plannerSource_dir_docs_71ab8b6a of plannerSource.dir_docs_71ab8b6a {
+    title 'Source — docs/ (4 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view plannerSource_dir_docs_audit_17d2e8ed of plannerSource.dir_docs_71ab8b6a.dir_docs_audit_17d2e8ed {
+    title 'Source — docs/audit/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view plannerSource_dir_docs_planning_8089dc66 of plannerSource.dir_docs_71ab8b6a.dir_docs_planning_8089dc66 {
+    title 'Source — docs/planning/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view plannerSource_dir_examples_99345ce6 of plannerSource.dir_examples_99345ce6 {
+    title 'Source — examples/ (2 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view plannerSource_dir_src_f27fede2 of plannerSource.dir_src_f27fede2 {
+    title 'Source — src/ (28 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view plannerSource_dir_src_application_f8a49c7c of plannerSource.dir_src_f27fede2.dir_src_application_f8a49c7c {
+    title 'Source — src/application/ (4 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view plannerSource_dir_src_contracts_63d3060b of plannerSource.dir_src_f27fede2.dir_src_contracts_63d3060b {
+    title 'Source — src/contracts/ (3 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view plannerSource_dir_src_domain_7ea5567e of plannerSource.dir_src_f27fede2.dir_src_domain_7ea5567e {
+    title 'Source — src/domain/ (18 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view plannerSource_dir_src_domain_graph_cf5690b8 of plannerSource.dir_src_f27fede2.dir_src_domain_7ea5567e.dir_src_domain_graph_cf5690b8 {
+    title 'Source — src/domain/graph/ (3 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view plannerSource_dir_src_domain_stepFactory_f09a8fc8 of plannerSource.dir_src_f27fede2.dir_src_domain_7ea5567e.dir_src_domain_stepFactory_f09a8fc8 {
+    title 'Source — src/domain/stepFactory/ (2 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view plannerSource_dir_src_ports_3a2d3ebf of plannerSource.dir_src_f27fede2.dir_src_ports_3a2d3ebf {
+    title 'Source — src/ports/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view plannerSource_dir_src_runtime_6c8c9a16 of plannerSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16 {
+    title 'Source — src/runtime/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view plannerSource_dir_test_a94a8fe5 of plannerSource.dir_test_a94a8fe5 {
+    title 'Source — test/ (25 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view plannerSource_dir_test_compiledCode_c6b8c06a of plannerSource.dir_test_a94a8fe5.dir_test_compiledCode_c6b8c06a {
+    title 'Source — test/compiledCode/ (4 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view plannerSource_dir_test_fixtures_9c0e9ecf of plannerSource.dir_test_a94a8fe5.dir_test_fixtures_9c0e9ecf {
+    title 'Source — test/fixtures/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view plannerSource_dir_test_slow_2158a782 of plannerSource.dir_test_a94a8fe5.dir_test_slow_2158a782 {
+    title 'Source — test/slow/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view plannerSource_dir_test_unit_c3b5db1b of plannerSource.dir_test_a94a8fe5.dir_test_unit_c3b5db1b {
+    title 'Source — test/unit/ (15 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view plannerSource_dir_test_vectors_798a0d09 of plannerSource.dir_test_a94a8fe5.dir_test_vectors_798a0d09 {
+    title 'Source — test/vectors/ (2 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view plannerFiles_publicBoundary {
+    title 'Files — PlannerFacade + stable boundary'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 2 evidence file(s).'
+    include plannerSource.dir_src_f27fede2.dir_src_application_f8a49c7c.file_src_application_PlannerFacade_ts_ffe4cd95
+    include plannerSource.dir_src_f27fede2.file_src_index_ts_c5fb8502
+    autoLayout TopBottom
+  }
+
+  view plannerFiles_executableSubgraph {
+    title 'Files — Executable subgraph derivation'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include plannerSource.dir_src_f27fede2.dir_src_application_f8a49c7c.file_src_application_ExecutableSubgraphDeriver_ts_c941a99f
+    autoLayout TopBottom
+  }
+
+  view plannerFiles_envelopeMapping {
+    title 'Files — Input normalization and graph-source mapping'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 2 evidence file(s).'
+    include plannerSource.dir_src_f27fede2.dir_src_application_f8a49c7c.file_lication_derivePlannerGraphSourceFromManifest_ts_e73dc650
+    include plannerSource.dir_src_f27fede2.dir_src_application_f8a49c7c.file_src_application_PlannerEnvelopeMapper_ts_85c009a9
+    autoLayout TopBottom
+  }
+
+  view plannerFiles_planningPipeline {
+    title 'Files — Deterministic planning pipeline'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 6 evidence file(s).'
+    include plannerSource.dir_src_f27fede2.dir_src_domain_7ea5567e.file_src_domain_InputEnvelopeValidator_ts_d5837816
+    include plannerSource.dir_src_f27fede2.dir_src_domain_7ea5567e.file_src_domain_limits_ts_f1894b29
+    include plannerSource.dir_src_f27fede2.dir_src_domain_7ea5567e.file_src_domain_metrics_ts_52bfda3a
+    include plannerSource.dir_src_f27fede2.dir_src_domain_7ea5567e.file_src_domain_Planner_ts_60a526f5
+    include plannerSource.dir_src_f27fede2.dir_src_domain_7ea5567e.file_src_domain_policies_ts_16e68f7c
+    include plannerSource.dir_src_f27fede2.dir_src_domain_7ea5567e.file_src_domain_sorting_ts_45462632
+    autoLayout TopBottom
+  }
+
+  view plannerFiles_graph {
+    title 'Files — Graph construction and topology'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 3 evidence file(s).'
+    include plannerSource.dir_src_f27fede2.dir_src_domain_7ea5567e.dir_src_domain_graph_cf5690b8.file_src_domain_graph_Depth_ts_d7e3a5ad
+    include plannerSource.dir_src_f27fede2.dir_src_domain_7ea5567e.dir_src_domain_graph_cf5690b8.file_src_domain_graph_GraphBuilder_ts_09d1fc17
+    include plannerSource.dir_src_f27fede2.dir_src_domain_7ea5567e.dir_src_domain_graph_cf5690b8.file_src_domain_graph_TopoSort_ts_5319bdef
+    autoLayout TopBottom
+  }
+
+  view plannerFiles_selection {
+    title 'Files — Node selection'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include plannerSource.dir_src_f27fede2.dir_src_domain_7ea5567e.file_src_domain_NodeSelector_ts_ad7075f6
+    autoLayout TopBottom
+  }
+
+  view plannerFiles_planAssembly {
+    title 'Files — Immutable plan assembly'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 3 evidence file(s).'
+    include plannerSource.dir_src_f27fede2.dir_src_domain_7ea5567e.file_src_domain_hashing_ts_4ff20961
+    include plannerSource.dir_src_f27fede2.dir_src_domain_7ea5567e.file_src_domain_PlanAssembler_ts_968cdda3
+    include plannerSource.dir_src_f27fede2.dir_src_domain_7ea5567e.file_src_domain_PlanExecutionDecisionProjector_ts_66b97391
+    autoLayout TopBottom
+  }
+
+  view plannerFiles_stepFactory {
+    title 'Files — Execution-step factory'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 2 evidence file(s).'
+    include plannerSource.dir_src_f27fede2.dir_src_domain_7ea5567e.dir_src_domain_stepFactory_f09a8fc8.file_src_domain_stepFactory_dbtStepFactory_ts_74967292
+    include plannerSource.dir_src_f27fede2.dir_src_domain_7ea5567e.dir_src_domain_stepFactory_f09a8fc8.file_src_domain_stepFactory_StepFactory_ts_117e8c5b
+    autoLayout TopBottom
+  }
+
+  view plannerFiles_behaviorContracts {
+    title 'Files — Planner-owned behavior contracts'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 3 evidence file(s).'
+    include plannerSource.dir_src_f27fede2.dir_src_contracts_63d3060b.file_src_contracts_CustomPolicyNamespaceRegistry_ts_14364c58
+    include plannerSource.dir_src_f27fede2.dir_src_contracts_63d3060b.file_src_contracts_ExecutionBindingVerification_ts_9038fe82
+    include plannerSource.dir_src_f27fede2.dir_src_contracts_63d3060b.file_src_contracts_PlanExecutabilityValidation_ts_0ae35af6
+    autoLayout TopBottom
+  }
+
+  view plannerFiles_runtimeClock {
+    title 'Files — Runtime clock boundary'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include plannerSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_src_runtime_time_ts_ffbb7fc6
+    autoLayout TopBottom
+  }
+
+  view plannerFiles_artifactCompatibilityBridge {
+    title 'Files — Artifact compatibility bridge'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include plannerSource.dir_src_f27fede2.dir_src_ports_3a2d3ebf.file_src_ports_ICompiledCodeStorage_ts_c3084ffd
+    autoLayout TopBottom
+  }
+
+}

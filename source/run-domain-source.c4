@@ -1,0 +1,216 @@
+// GENERATED FILE. DO NOT EDIT.
+// Source: git tree dunay2/dvt@3695f07c9ba3c66ab51f88a2dabe18e18556a244:packages/@dvt/run-domain
+model {
+  runDomainSource = inventory 'Run Domain source inventory — generated from Git' {
+    #sourceDerived
+    description 'Machine-generated from the exact Git tree. Folder structure is STRUCTURE-DERIVED; file identity is SOURCE-DERIVED.'
+    metadata {
+      provenance 'SOURCE-DERIVED'
+      architectureOwner 'dvt.run-domain'
+      logicalModelId 'runDomainModel'
+      sourceRoot 'packages/@dvt/run-domain'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      trackedFiles '9'
+      sourceFiles '5'
+      testFiles '1'
+      inventorySha256 '7abfdf854ae443a02314ec5b3f820143246a53c007c70feed376fdf344e6b12f'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/run-domain 'Pinned package tree'
+    dir_src_f27fede2 = folder 'src/ — 5 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/run-domain/src'
+        recursiveFileCount '5'
+        directFileCount '5'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/run-domain/src 'Pinned directory'
+      file_src_applyRunEvent_ts_6658c103 = file 'applyRunEvent.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/run-domain/src/applyRunEvent.ts'
+          blobSha '4474bb9cea7085bc4a9f36edf13bd406525a41c0'
+          sizeBytes '8542'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Canonical run projection delegates envelope normalization to a mapper and mutates snapshots through focused handlers.'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/run-domain/src/applyRunEvent.ts 'Open pinned source'
+      }
+      file_src_errors_ts_69d4c465 = file 'errors.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/run-domain/src/errors.ts'
+          blobSha 'f141524914044d4435c96077ffb6e4585e56dc23'
+          sizeBytes '1701'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Domain-level error for invalid state transitions in run projection.'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/run-domain/src/errors.ts 'Open pinned source'
+      }
+      file_src_index_ts_c5fb8502 = file 'index.ts' {
+        #sourceDerived
+        description 'Runtime run-domain invariant API for event folding, transition'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/run-domain/src/index.ts'
+          blobSha '3f21002f8fcaa837bd65365e3d409d2133869c66'
+          sizeBytes '689'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Runtime run-domain invariant API for event folding, transition'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/run-domain/src/index.ts 'Open pinned source'
+      }
+      file_src_mapEventEnvelopeToProjectableEvent_ts_981727f4 = file 'mapEventEnvelopeToProjectableEvent.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/run-domain/src/mapEventEnvelopeToProjectableEvent.ts'
+          blobSha 'd79697fad4efed6646671a227ef7f0fa91ed2ad0'
+          sizeBytes '5473'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Raw event envelopes are normalized into projector-specific domain events before snapshot mutation.'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/run-domain/src/mapEventEnvelopeToProjectableEvent.ts 'Open pinned source'
+      }
+      file_src_transitionPolicy_ts_f07fdc0c = file 'transitionPolicy.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/run-domain/src/transitionPolicy.ts'
+          blobSha 'd4103a5ce8c2ac45a5a1fa939cb08e28da543758'
+          sizeBytes '952'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/run-domain/src/transitionPolicy.ts 'Open pinned source'
+      }
+    }
+    dir_test_a94a8fe5 = folder 'test/ — 1 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/run-domain/test'
+        recursiveFileCount '1'
+        directFileCount '1'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/run-domain/test 'Pinned directory'
+      file_test_applyRunEvent_test_ts_77bd2cb8 = file 'applyRunEvent.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/run-domain/test/applyRunEvent.test.ts'
+          blobSha 'fa16ca25dece8fa55e2fd15d5ded821f8a88084c'
+          sizeBytes '14210'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Verify shared run projection guards and fail-open compatibility.'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/run-domain/test/applyRunEvent.test.ts 'Open pinned source'
+      }
+    }
+    file_package_json_7030d0b2 = file 'package.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/run-domain/package.json'
+        blobSha '9ca00b0dba9a99f5cfe27f7685b4e7e8171728b8'
+        sizeBytes '936'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/run-domain/package.json 'Open pinned source'
+    }
+    file_tsconfig_json_61ebb9fd = file 'tsconfig.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/run-domain/tsconfig.json'
+        blobSha '47f6b6868c7575616dbc51d257f6cdb80fe89cca'
+        sizeBytes '370'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/run-domain/tsconfig.json 'Open pinned source'
+    }
+    file_vitest_config_ts_e7b129ed = file 'vitest.config.ts' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/run-domain/vitest.config.ts'
+        blobSha 'a71174ddf688af5e944496a955ad1c92f790dfbd'
+        sizeBytes '157'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/run-domain/vitest.config.ts 'Open pinned source'
+    }
+  }
+}
+
+views {
+  view runDomainSourceInventory of runDomainSource {
+    title 'Run Domain — Complete source inventory'
+    description 'Generated from Git at 3695f07c. 9 tracked files.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view runDomainSource_dir_src_f27fede2 of runDomainSource.dir_src_f27fede2 {
+    title 'Source — src/ (5 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view runDomainSource_dir_test_a94a8fe5 of runDomainSource.dir_test_a94a8fe5 {
+    title 'Source — test/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view run-domainFiles_publicBoundary {
+    title 'Files — Run Domain public boundary'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include runDomainSource.dir_src_f27fede2.file_src_index_ts_c5fb8502
+    autoLayout TopBottom
+  }
+
+  view run-domainFiles_eventFolding {
+    title 'Files — Run event folding'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include runDomainSource.dir_src_f27fede2.file_src_applyRunEvent_ts_6658c103
+    autoLayout TopBottom
+  }
+
+  view run-domainFiles_transitionPolicy {
+    title 'Files — Run transition policy'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include runDomainSource.dir_src_f27fede2.file_src_transitionPolicy_ts_f07fdc0c
+    autoLayout TopBottom
+  }
+
+  view run-domainFiles_projectionMapping {
+    title 'Files — Projectable event mapping'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include runDomainSource.dir_src_f27fede2.file_src_mapEventEnvelopeToProjectableEvent_ts_981727f4
+    autoLayout TopBottom
+  }
+
+  view run-domainFiles_errors {
+    title 'Files — Run-domain invariant errors'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include runDomainSource.dir_src_f27fede2.file_src_errors_ts_69d4c465
+    autoLayout TopBottom
+  }
+
+}

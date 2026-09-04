@@ -1,0 +1,285 @@
+// GENERATED FILE. DO NOT EDIT.
+// Source: git tree dunay2/dvt@3695f07c9ba3c66ab51f88a2dabe18e18556a244:packages/@dvt/plan-verifier
+model {
+  planVerifierSource = inventory 'Plan Verifier source inventory — generated from Git' {
+    #sourceDerived
+    description 'Machine-generated from the exact Git tree. Folder structure is STRUCTURE-DERIVED; file identity is SOURCE-DERIVED.'
+    metadata {
+      provenance 'SOURCE-DERIVED'
+      architectureOwner 'dvt.plan-verifier'
+      logicalModelId 'planVerifierModel'
+      sourceRoot 'packages/@dvt/plan-verifier'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      trackedFiles '15'
+      sourceFiles '5'
+      testFiles '5'
+      inventorySha256 'd224d620183f5b4a24920600c673d450815b527c661025f36ab7949605c34c74'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier 'Pinned package tree'
+    dir_src_f27fede2 = folder 'src/ — 5 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/plan-verifier/src'
+        recursiveFileCount '5'
+        directFileCount '5'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/src 'Pinned directory'
+      file_src_errors_ts_69d4c465 = file 'errors.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/plan-verifier/src/errors.ts'
+          blobSha '6a682e9a21eba1d78f38508fce6ff355c21cda3c'
+          sizeBytes '460'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/src/errors.ts 'Open pinned source'
+      }
+      file_src_index_ts_c5fb8502 = file 'index.ts' {
+        #sourceDerived
+        description 'Runtime plan-verification API for admission compatibility,'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/plan-verifier/src/index.ts'
+          blobSha 'a111e26e9349ed6129d445a3546c3814a23f801c'
+          sizeBytes '285'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Runtime plan-verification API for admission compatibility,'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/src/index.ts 'Open pinned source'
+      }
+      file_src_planVersion_ts_0c0b8e65 = file 'planVersion.ts' {
+        #sourceDerived
+        description 'Adapter-side plan admission facade for the canonical'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/plan-verifier/src/planVersion.ts'
+          blobSha 'c8894cb8ae1a312eedb6aa9796311d9ff01a2905'
+          sizeBytes '2105'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Adapter-side plan admission facade for the canonical'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/src/planVersion.ts 'Open pinned source'
+      }
+      file_src_stepTypeConfig_ts_e3c09325 = file 'stepTypeConfig.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/plan-verifier/src/stepTypeConfig.ts'
+          blobSha '26e25dfaea1d56616e425dc11b40cc7a349a3c7b'
+          sizeBytes '2565'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/src/stepTypeConfig.ts 'Open pinned source'
+      }
+      file_src_verify_ts_8fb52c8f = file 'verify.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/plan-verifier/src/verify.ts'
+          blobSha '24573b90bcbf129cabdaf8bbc6921ddc5d5c0bb2'
+          sizeBytes '1745'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/src/verify.ts 'Open pinned source'
+      }
+    }
+    dir_test_a94a8fe5 = folder 'test/ — 5 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/plan-verifier/test'
+        recursiveFileCount '5'
+        directFileCount '5'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/test 'Pinned directory'
+      file_test_http-json-artifact-step_admission_test_ts_e30dc2bc = file 'http-json-artifact-step.admission.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/plan-verifier/test/http-json-artifact-step.admission.test.ts'
+          blobSha 'ac772ee490fd9b9563a1421362c556dc5a2e29ad'
+          sizeBytes '3382'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/test/http-json-artifact-step.admission.test.ts 'Open pinned source'
+      }
+      file_t_object-file-to-postgres-step_admission_test_ts_7624da9f = file 'object-file-to-postgres-step.admission.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/plan-verifier/test/object-file-to-postgres-step.admission.test.ts'
+          blobSha '3b2e49c6c8c0647fb79d9fda76b3a0bad8402734'
+          sizeBytes '2557'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/test/object-file-to-postgres-step.admission.test.ts 'Open pinned source'
+      }
+      file_test_planVersionAdmission_architecture_test_ts_3ff3b253 = file 'planVersionAdmission.architecture.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/plan-verifier/test/planVersionAdmission.architecture.test.ts'
+          blobSha 'cc0f562d8f971c3aa29ea7332812cf2d61d36db5'
+          sizeBytes '2152'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/test/planVersionAdmission.architecture.test.ts 'Open pinned source'
+      }
+      file_test_planVersionAdmission_test_ts_ef577972 = file 'planVersionAdmission.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/plan-verifier/test/planVersionAdmission.test.ts'
+          blobSha '64d243dcdf05689992020713b790ed1ee6e18737'
+          sizeBytes '1631'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/test/planVersionAdmission.test.ts 'Open pinned source'
+      }
+      file_test_verify_test_ts_48e361b9 = file 'verify.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/plan-verifier/test/verify.test.ts'
+          blobSha 'ac5e467e18e055be31e45e6e788c9b1c141b62dc'
+          sizeBytes '6736'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/test/verify.test.ts 'Open pinned source'
+      }
+    }
+    file_package_json_7030d0b2 = file 'package.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/plan-verifier/package.json'
+        blobSha '4ff21df464e3883f2d7276fc772c6d9b5b0b9ca4'
+        sizeBytes '615'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/package.json 'Open pinned source'
+    }
+    file_README_md_8ec9a00b = file 'README.md' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/plan-verifier/README.md'
+        blobSha '29e0481c52366f7ab67ebf4d577750d67d5fdec1'
+        sizeBytes '1672'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/README.md 'Open pinned source'
+    }
+    file_tsconfig_json_61ebb9fd = file 'tsconfig.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/plan-verifier/tsconfig.json'
+        blobSha 'a7e7abe39c6ddc581c78e190593ddd8c4ee72705'
+        sizeBytes '195'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/tsconfig.json 'Open pinned source'
+    }
+    file_tsconfig_test_json_d1f96fd1 = file 'tsconfig.test.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/plan-verifier/tsconfig.test.json'
+        blobSha '45bbe8fa570075eb453a7a08242b4e4ab9c9f3f5'
+        sizeBytes '132'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/tsconfig.test.json 'Open pinned source'
+    }
+    file_vitest_config_ts_e7b129ed = file 'vitest.config.ts' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/plan-verifier/vitest.config.ts'
+        blobSha '968c45e24f122972f6ea33fb60bd5debc1d1002e'
+        sizeBytes '177'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-verifier/vitest.config.ts 'Open pinned source'
+    }
+  }
+}
+
+views {
+  view planVerifierSourceInventory of planVerifierSource {
+    title 'Plan Verifier — Complete source inventory'
+    description 'Generated from Git at 3695f07c. 15 tracked files.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view planVerifierSource_dir_src_f27fede2 of planVerifierSource.dir_src_f27fede2 {
+    title 'Source — src/ (5 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view planVerifierSource_dir_test_a94a8fe5 of planVerifierSource.dir_test_a94a8fe5 {
+    title 'Source — test/ (5 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view plan-verifierFiles_publicBoundary {
+    title 'Files — Plan Verifier public boundary'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include planVerifierSource.dir_src_f27fede2.file_src_index_ts_c5fb8502
+    autoLayout TopBottom
+  }
+
+  view plan-verifierFiles_verification {
+    title 'Files — Plan verification'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include planVerifierSource.dir_src_f27fede2.file_src_verify_ts_8fb52c8f
+    autoLayout TopBottom
+  }
+
+  view plan-verifierFiles_planVersion {
+    title 'Files — Plan-version compatibility'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include planVerifierSource.dir_src_f27fede2.file_src_planVersion_ts_0c0b8e65
+    autoLayout TopBottom
+  }
+
+  view plan-verifierFiles_stepTypeConfig {
+    title 'Files — Step-type configuration verification'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include planVerifierSource.dir_src_f27fede2.file_src_stepTypeConfig_ts_e3c09325
+    autoLayout TopBottom
+  }
+
+  view plan-verifierFiles_errors {
+    title 'Files — Verification errors'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include planVerifierSource.dir_src_f27fede2.file_src_errors_ts_69d4c465
+    autoLayout TopBottom
+  }
+
+}

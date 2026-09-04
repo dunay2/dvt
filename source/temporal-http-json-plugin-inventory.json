@@ -1,0 +1,166 @@
+{
+  "schemaVersion": 3,
+  "generatedFrom": "git-tree",
+  "repository": "dunay2/dvt",
+  "baselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "configuredBaselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "scope": "packages/@dvt/temporal-http-json-plugin",
+  "logicalModelId": "temporalHttpJsonPluginModel",
+  "sourceModelId": "temporalHttpJsonPluginSource",
+  "configuredModelId": "temporalHttpJsonPluginModel",
+  "counts": {
+    "trackedFiles": 11,
+    "sourceFiles": 5,
+    "testFiles": 2,
+    "docsFiles": 0,
+    "packageRootFiles": 4,
+    "filesWithOwnedConcern": 1,
+    "filesWithDecision": 0
+  },
+  "files": [
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ad7b66553607306826cd31b044a4801eb04e23bd",
+      "sizeBytes": 1166,
+      "path": "packages/@dvt/temporal-http-json-plugin/package.json",
+      "relativePath": "package.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-http-json-plugin/package.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "231632d61fadf771a4d2aadb5a1b7784f6b4cf33",
+      "sizeBytes": 397,
+      "path": "packages/@dvt/temporal-http-json-plugin/src/httpJsonArtifactPluginErrors.ts",
+      "relativePath": "src/httpJsonArtifactPluginErrors.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-http-json-plugin/src/httpJsonArtifactPluginErrors.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "293b05684274b3ff493d0775e93479e92e73a297",
+      "sizeBytes": 7554,
+      "path": "packages/@dvt/temporal-http-json-plugin/src/HttpJsonArtifactPluginRunner.ts",
+      "relativePath": "src/HttpJsonArtifactPluginRunner.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-http-json-plugin/src/HttpJsonArtifactPluginRunner.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9b842e4cdddfe74e58b532b3b45448b82a8a7582",
+      "sizeBytes": 1549,
+      "path": "packages/@dvt/temporal-http-json-plugin/src/httpJsonArtifactPluginTypes.ts",
+      "relativePath": "src/httpJsonArtifactPluginTypes.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-http-json-plugin/src/httpJsonArtifactPluginTypes.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2c35ddd94047097b06169be23dece35c093c6d7c",
+      "sizeBytes": 1824,
+      "path": "packages/@dvt/temporal-http-json-plugin/src/HttpJsonArtifactStepActivity.ts",
+      "relativePath": "src/HttpJsonArtifactStepActivity.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-http-json-plugin/src/HttpJsonArtifactStepActivity.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "7a08470ff852994550339825d138e77c0d63fa88",
+      "sizeBytes": 661,
+      "path": "packages/@dvt/temporal-http-json-plugin/src/index.ts",
+      "relativePath": "src/index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-http-json-plugin/src/index.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b998626d673cf263196cea790a77f26d0332b40a",
+      "sizeBytes": 5706,
+      "path": "packages/@dvt/temporal-http-json-plugin/test/HttpJsonArtifactPlugin.test.ts",
+      "relativePath": "test/HttpJsonArtifactPlugin.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-http-json-plugin/test/HttpJsonArtifactPlugin.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "15de8b517a8efe33c7d3ef69601cd3142749871f",
+      "sizeBytes": 2125,
+      "path": "packages/@dvt/temporal-http-json-plugin/test/httpJsonPluginBoundary.architecture.test.ts",
+      "relativePath": "test/httpJsonPluginBoundary.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-http-json-plugin/test/httpJsonPluginBoundary.architecture.test.ts",
+      "ownedConcern": "keep HTTP acquisition policy outside generic orchestration and network adapters."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d0bda7b9987ecd09b89e860aea21ddd33beff85f",
+      "sizeBytes": 677,
+      "path": "packages/@dvt/temporal-http-json-plugin/tsconfig.json",
+      "relativePath": "tsconfig.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-http-json-plugin/tsconfig.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "928209032dbd2026a96166634a3ff8982e3f6ff4",
+      "sizeBytes": 169,
+      "path": "packages/@dvt/temporal-http-json-plugin/tsconfig.test.json",
+      "relativePath": "tsconfig.test.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-http-json-plugin/tsconfig.test.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "43e56f45f3eece05a802ab75eedcff828b76b9d4",
+      "sizeBytes": 132,
+      "path": "packages/@dvt/temporal-http-json-plugin/vitest.config.ts",
+      "relativePath": "vitest.config.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-http-json-plugin/vitest.config.ts"
+    }
+  ],
+  "componentMappings": [
+    {
+      "id": "publicBoundary",
+      "title": "HTTP JSON plugin public boundary",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Publishes the concrete HTTP JSON artifact Temporal step plugin API.",
+      "fileCount": 1,
+      "files": [
+        "src/index.ts"
+      ]
+    },
+    {
+      "id": "activity",
+      "title": "HTTP JSON artifact activity",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Temporal activity boundary for HTTP JSON artifact acquisition.",
+      "fileCount": 1,
+      "files": [
+        "src/HttpJsonArtifactStepActivity.ts"
+      ]
+    },
+    {
+      "id": "runner",
+      "title": "HTTP JSON artifact runner",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Concrete HTTP JSON acquisition/plugin execution runner.",
+      "fileCount": 1,
+      "files": [
+        "src/HttpJsonArtifactPluginRunner.ts"
+      ]
+    },
+    {
+      "id": "typesAndErrors",
+      "title": "HTTP JSON plugin contracts",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Plugin-owned input/output types and bounded failure model.",
+      "fileCount": 2,
+      "files": [
+        "src/httpJsonArtifactPluginErrors.ts",
+        "src/httpJsonArtifactPluginTypes.ts"
+      ]
+    }
+  ],
+  "inventorySha256": "6231db297af56d69cda3c0ac119083ccf630c0052b079658909ed8570091daae"
+}

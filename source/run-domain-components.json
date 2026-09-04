@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "components": [
+    {"id":"publicBoundary","title":"Run Domain public boundary","rationale":"src/index.ts exports event folding, transition policy, projectable-event mapping and run-domain errors.","paths":["src/index.ts"]},
+    {"id":"eventFolding","title":"Run event folding","rationale":"Applies canonical run events to derived workflow snapshots while enforcing lifecycle invariants.","paths":["src/applyRunEvent.ts"]},
+    {"id":"transitionPolicy","title":"Run transition policy","rationale":"Defines legal terminal and lifecycle transition rules independent from provider behavior.","paths":["src/transitionPolicy.ts"]},
+    {"id":"projectionMapping","title":"Projectable event mapping","rationale":"Normalizes persisted event envelopes into projectable run-domain events for downstream read models.","paths":["src/mapEventEnvelopeToProjectableEvent.ts"]},
+    {"id":"errors","title":"Run-domain invariant errors","rationale":"Typed errors for invalid lifecycle/event transitions.","paths":["src/errors.ts"]}
+  ]
+}

@@ -1,0 +1,1765 @@
+// GENERATED FILE. DO NOT EDIT.
+// Source: git tree dunay2/dvt@3695f07c9ba3c66ab51f88a2dabe18e18556a244:packages/@dvt/adapter-postgres
+model {
+  postgresAdapterSource = inventory 'Postgres Adapter source inventory — generated from Git' {
+    #sourceDerived
+    description 'Machine-generated from the exact Git tree. Folder structure is STRUCTURE-DERIVED; file identity is SOURCE-DERIVED.'
+    metadata {
+      provenance 'SOURCE-DERIVED'
+      architectureOwner 'dvt.adapter-postgres'
+      logicalModelId 'postgresAdapterModel'
+      sourceRoot 'packages/@dvt/adapter-postgres'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      trackedFiles '125'
+      sourceFiles '60'
+      testFiles '49'
+      inventorySha256 'c57d39915a9b584faa16388fc2b6dac58b61ea3aed60030c2063e3503fdca9f4'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres 'Pinned package tree'
+    dir_migrations_56a9264f = folder 'migrations/ — 11 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/adapter-postgres/migrations'
+        recursiveFileCount '11'
+        directFileCount '11'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/migrations 'Pinned directory'
+      file_migrations_001_init_sql_f5a0537e = file '001_init.sql' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/migrations/001_init.sql'
+          blobSha '8c8e27995e848ce372e64ee9a5cb64827cd2bd15'
+          sizeBytes '1481'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/migrations/001_init.sql 'Open pinned source'
+      }
+      file_migrations_002_add_claimed_at_sql_60b5240d = file '002_add_claimed_at.sql' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/migrations/002_add_claimed_at.sql'
+          blobSha '3d4dedb17f78af42deebd159e4e8f1721bfbe277'
+          sizeBytes '1217'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/migrations/002_add_claimed_at.sql 'Open pinned source'
+      }
+      file_grations_003_outbox_shard_retry_and_ordering_sql_15b85428 = file '003_outbox_shard_retry_and_ordering.sql' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/migrations/003_outbox_shard_retry_and_ordering.sql'
+          blobSha '4f3314d757770b7157d9ca13738b3a130be56a19'
+          sizeBytes '1063'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/migrations/003_outbox_shard_retry_and_ordering.sql 'Open pinned source'
+      }
+      file_igrations_004_run_snapshots_and_status_index_sql_7f1d2814 = file '004_run_snapshots_and_status_index.sql' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/migrations/004_run_snapshots_and_status_index.sql'
+          blobSha 'e1903796d0d069d74887182ebdbe46d466cf85f2'
+          sizeBytes '1136'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/migrations/004_run_snapshots_and_status_index.sql 'Open pinned source'
+      }
+      file_migrations_005_lineage_outbox_sql_df9d0bc9 = file '005_lineage_outbox.sql' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/migrations/005_lineage_outbox.sql'
+          blobSha '4166fc116e876e0ebd7667b9bae0c96263890595'
+          sizeBytes '1084'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/migrations/005_lineage_outbox.sql 'Open pinned source'
+      }
+      file_migrations_006_run_event_archive_catalog_sql_a76ad12c = file '006_run_event_archive_catalog.sql' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/migrations/006_run_event_archive_catalog.sql'
+          blobSha 'b2f52be27019ed42b2b2d3c2209baa4259a00357'
+          sizeBytes '1392'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/migrations/006_run_event_archive_catalog.sql 'Open pinned source'
+      }
+      file_migrations_007_run_snapshots_archive_pinning_sql_2675fe86 = file '007_run_snapshots_archive_pinning.sql' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/migrations/007_run_snapshots_archive_pinning.sql'
+          blobSha '02c4645021f595ca16b70dec770ab1361decf5bf'
+          sizeBytes '410'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/migrations/007_run_snapshots_archive_pinning.sql 'Open pinned source'
+      }
+      file_tions_008_run_event_archive_delete_lifecycle_sql_a7c9f806 = file '008_run_event_archive_delete_lifecycle.sql' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/migrations/008_run_event_archive_delete_lifecycle.sql'
+          blobSha '3f90a8935fe44566bd65bd051bc891e8c2c2a3cb'
+          sizeBytes '1229'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/migrations/008_run_event_archive_delete_lifecycle.sql 'Open pinned source'
+      }
+      file_migrations_009_delivery_buffer_purge_indexes_sql_55a0dda4 = file '009_delivery_buffer_purge_indexes.sql' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/migrations/009_delivery_buffer_purge_indexes.sql'
+          blobSha '699d75d621bdb8af0002f215c61a1b54e0b8887d'
+          sizeBytes '860'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/migrations/009_delivery_buffer_purge_indexes.sql 'Open pinned source'
+      }
+      file_ions_010_lineage_outbox_retry_claim_schedule_sql_b1845a7c = file '010_lineage_outbox_retry_claim_schedule.sql' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/migrations/010_lineage_outbox_retry_claim_schedule.sql'
+          blobSha 'd0b9027e90dd4c09ef5770d3ffe01fe80078b148'
+          sizeBytes '417'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/migrations/010_lineage_outbox_retry_claim_schedule.sql 'Open pinned source'
+      }
+      file_igrations_011_lineage_tenant_scope_hardening_sql_a6deea34 = file '011_lineage_tenant_scope_hardening.sql' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/migrations/011_lineage_tenant_scope_hardening.sql'
+          blobSha '46d510cad20283bd32902c01e3d721f3639695d9'
+          sizeBytes '1509'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/migrations/011_lineage_tenant_scope_hardening.sql 'Open pinned source'
+      }
+    }
+    dir_src_f27fede2 = folder 'src/ — 60 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/adapter-postgres/src'
+        recursiveFileCount '60'
+        directFileCount '60'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src 'Pinned directory'
+      file_src_index_ts_c5fb8502 = file 'index.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/index.ts'
+          blobSha '5192033bcd7c69e927b503fdcc53ff29ff024773'
+          sizeBytes '4342'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Section 3 — Adapter public surface exports transactional state-store capabilities'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/index.ts 'Open pinned source'
+      }
+      file_src_lineageOutboxStorePolicy_ts_41c28a57 = file 'lineageOutboxStorePolicy.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/lineageOutboxStorePolicy.ts'
+          blobSha '4c1d255d28cb717ef9ce8a6b1be612cf1c955c52'
+          sizeBytes '1361'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Normalize lineage outbox claim, tenant, and query bounds at the PostgreSQL adapter boundary'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/lineageOutboxStorePolicy.ts 'Open pinned source'
+      }
+      file_src_migratePostgresRuntimeStores_ts_291884fb = file 'migratePostgresRuntimeStores.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/migratePostgresRuntimeStores.ts'
+          blobSha '9026f7183cdf6985b9dde7d5a0c4c3cb57d049f3'
+          sizeBytes '938'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Runtime bootstrap may require both core state-store and start-run intent schema migrations'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/migratePostgresRuntimeStores.ts 'Open pinned source'
+      }
+      file_src_PostgresAdapterClientSession_ts_102fe4ea = file 'PostgresAdapterClientSession.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresAdapterClientSession.ts'
+          blobSha '3ee8e51b4c06ee916897b9233342d3a50c81d534'
+          sizeBytes '6304'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Encapsulate pool-client lifecycle, tx boundaries and abort semantics outside the facade adapter'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresAdapterClientSession.ts 'Open pinned source'
+      }
+      file_src_PostgresAdapterClientSessionConstants_ts_1ba3ea3e = file 'PostgresAdapterClientSessionConstants.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresAdapterClientSessionConstants.ts'
+          blobSha '5ecb9d94e0ecdf030df0f215a357a18997d9729b'
+          sizeBytes '1041'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Centralize client-session protocol constants'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresAdapterClientSessionConstants.ts 'Open pinned source'
+      }
+      file_src_PostgresAdapterClientSessionSql_ts_27d40a34 = file 'PostgresAdapterClientSessionSql.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresAdapterClientSessionSql.ts'
+          blobSha '5f26d4e26cf356d0d3e53e797e37bf19fec876e1'
+          sizeBytes '673'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Centralize SQL fragments used by PostgresAdapterClientSession'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresAdapterClientSessionSql.ts 'Open pinned source'
+      }
+      file_src_PostgresAdapterConnectionString_ts_1aa936b5 = file 'PostgresAdapterConnectionString.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresAdapterConnectionString.ts'
+          blobSha 'a1b733a1f351e9a8eb974ff08fa54a71d78ad7d9'
+          sizeBytes '514'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresAdapterConnectionString.ts 'Open pinned source'
+      }
+      file_src_PostgresAdapterConstants_ts_5838cc4d = file 'PostgresAdapterConstants.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresAdapterConstants.ts'
+          blobSha '803abf88e2aaf76a19c07575d4ddad025a2aa921'
+          sizeBytes '989'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Centralize adapter-level defaults and protocol literals'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresAdapterConstants.ts 'Open pinned source'
+      }
+      file_src_PostgresArchiveLeaseStore_ts_84942c21 = file 'PostgresArchiveLeaseStore.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresArchiveLeaseStore.ts'
+          blobSha '4c803a21a184d66d2279aab42ef59e7fc9a9fbbf'
+          sizeBytes '4415'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresArchiveLeaseStore.ts 'Open pinned source'
+      }
+      file_src_PostgresBackpressureSnapshotReader_ts_3ed6f23d = file 'PostgresBackpressureSnapshotReader.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresBackpressureSnapshotReader.ts'
+          blobSha 'd3aefdf637dadfc181aab6b38e16ae66099da966'
+          sizeBytes '5034'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresBackpressureSnapshotReader.ts 'Open pinned source'
+      }
+      file_src_PostgresBackpressureSnapshotReaderSql_ts_cc41b881 = file 'PostgresBackpressureSnapshotReaderSql.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresBackpressureSnapshotReaderSql.ts'
+          blobSha '6c406653da8550146c267190df1008f5cd4060d2'
+          sizeBytes '2027'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Centralize SQL text used by PostgresBackpressureSnapshotReader'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresBackpressureSnapshotReaderSql.ts 'Open pinned source'
+      }
+      file_src_PostgresCredentialBindingResolver_ts_05be0484 = file 'PostgresCredentialBindingResolver.ts' {
+        #sourceDerived
+        description 'Resolve governed PostgreSQL credential aliases without dynamic environment lookup.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresCredentialBindingResolver.ts'
+          blobSha 'a3e46727c430250d58d5796777fc5180dcbee636'
+          sizeBytes '3375'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Resolve governed PostgreSQL credential aliases without dynamic environment lookup.'
+          decision 'PostgreSQL credentials are resolved from explicit governed aliases without dynamic environment lookup.'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresCredentialBindingResolver.ts 'Open pinned source'
+      }
+      file_src_PostgresDeliveryBufferPurgeStore_ts_9d3d6ade = file 'PostgresDeliveryBufferPurgeStore.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresDeliveryBufferPurgeStore.ts'
+          blobSha '73b91c2361cfde1887382cb0b479347c38e9670f'
+          sizeBytes '5065'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresDeliveryBufferPurgeStore.ts 'Open pinned source'
+      }
+      file_src_PostgresLineageOutboxStore_ts_26603fd9 = file 'PostgresLineageOutboxStore.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresLineageOutboxStore.ts'
+          blobSha '2f35003a4ad49ba8d562ea8d934080ad3387daaf'
+          sizeBytes '9705'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresLineageOutboxStore.ts 'Open pinned source'
+      }
+      file_src_PostgresLineageOutboxStoreSql_ts_7dd11ee9 = file 'PostgresLineageOutboxStoreSql.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresLineageOutboxStoreSql.ts'
+          blobSha 'bd35fcd3eb3b4e79520dfe29287b77e98195e1f6'
+          sizeBytes '6337'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Centralize SQL text used by PostgresLineageOutboxStore'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresLineageOutboxStoreSql.ts 'Open pinned source'
+      }
+      file_src_PostgresMaintenanceAccess_ts_7d2db232 = file 'PostgresMaintenanceAccess.ts' {
+        #sourceDerived
+        description 'enter transaction-local Postgres maintenance access for'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresMaintenanceAccess.ts'
+          blobSha 'f5ccf0a6ade6c8cd88bac1303ecaa05f68445eae'
+          sizeBytes '998'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'enter transaction-local Postgres maintenance access for'
+          decision 'Service-mode transaction context is entered only through an approved maintenance capability.'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresMaintenanceAccess.ts 'Open pinned source'
+      }
+      file_src_PostgresObjectFileLoader_ts_4e439445 = file 'PostgresObjectFileLoader.ts' {
+        #sourceDerived
+        description 'Publish bounded object-file rows into a PostgreSQL staging relation atomically.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts'
+          blobSha '9b3e5ef40307ea8bc474109f8cca72f6a305f141'
+          sizeBytes '7112'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Publish bounded object-file rows into a PostgreSQL staging relation atomically.'
+          decision 'Map verified execution scope to a deterministic physical schema and replace one relation atomically'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresObjectFileLoader.ts 'Open pinned source'
+      }
+      file_src_PostgresObjectFileLoadingCapability_ts_2cb09f82 = file 'PostgresObjectFileLoadingCapability.ts' {
+        #sourceDerived
+        description 'Own the PostgreSQL resources used by object-file ingestion.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresObjectFileLoadingCapability.ts'
+          blobSha '4528233b86d3ff4ad20e23b5b247d70873583464'
+          sizeBytes '2243'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Own the PostgreSQL resources used by object-file ingestion.'
+          decision 'Expose one bounded capability that owns its pool unless the caller supplies one.'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresObjectFileLoadingCapability.ts 'Open pinned source'
+      }
+      file_src_PostgresOutboxStore_ts_586cff1c = file 'PostgresOutboxStore.ts' {
+        #sourceDerived
+        description 'persist, claim, retry, and replay tenant-scoped outbox records'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresOutboxStore.ts'
+          blobSha 'ca1cb9ddf7cf363c049db96a15e5b53146e3b11c'
+          sizeBytes '17253'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'persist, claim, retry, and replay tenant-scoped outbox records'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresOutboxStore.ts 'Open pinned source'
+      }
+      file_src_PostgresPlanStore_admission-repository_ts_8b1af55c = file 'PostgresPlanStore.admission-repository.ts' {
+        #sourceDerived
+        description 'persist scoped plan admission links.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresPlanStore.admission-repository.ts'
+          blobSha '88b2cc4ccbf4466a5789e7b5625cf204de0faa06'
+          sizeBytes '2189'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'persist scoped plan admission links.'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresPlanStore.admission-repository.ts 'Open pinned source'
+      }
+      file_rc_PostgresPlanStore_executability-repository_ts_4d2d641c = file 'PostgresPlanStore.executability-repository.ts' {
+        #sourceDerived
+        description 'persist scoped adapter executability records.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresPlanStore.executability-repository.ts'
+          blobSha 'd52bd6e8af0ca853c65a087593230b8331ce350f'
+          sizeBytes '2611'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'persist scoped adapter executability records.'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresPlanStore.executability-repository.ts 'Open pinned source'
+      }
+      file__PostgresPlanStore_executable-blob-repository_ts_4aed45e6 = file 'PostgresPlanStore.executable-blob-repository.ts' {
+        #sourceDerived
+        description 'persist tenant-neutral stored-plan artifact blobs.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresPlanStore.executable-blob-repository.ts'
+          blobSha 'bc75e44b8e1065e0ff18100a57e5a5d8eaee71b4'
+          sizeBytes '6821'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'persist tenant-neutral stored-plan artifact blobs.'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresPlanStore.executable-blob-repository.ts 'Open pinned source'
+      }
+      file_src_PostgresPlanStore_mappers_ts_94650230 = file 'PostgresPlanStore.mappers.ts' {
+        #sourceDerived
+        description 'map scoped plan-store rows.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresPlanStore.mappers.ts'
+          blobSha 'af262eb5385ff9b5816031a3a805d381b6b7ebba'
+          sizeBytes '10171'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'map scoped plan-store rows.'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresPlanStore.mappers.ts 'Open pinned source'
+      }
+      file_src_PostgresPlanStore_plan-record-repository_ts_d8f3b47e = file 'PostgresPlanStore.plan-record-repository.ts' {
+        #sourceDerived
+        description 'persist tenant-owned plan-record aggregate state.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresPlanStore.plan-record-repository.ts'
+          blobSha '10587bb5b25d53789c5302db972b3e508bd7b9c9'
+          sizeBytes '11198'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'persist tenant-owned plan-record aggregate state.'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresPlanStore.plan-record-repository.ts 'Open pinned source'
+      }
+      file_src_PostgresPlanStore_schema-manager_ts_f938ffe8 = file 'PostgresPlanStore.schema-manager.ts' {
+        #sourceDerived
+        description 'migrate scoped plan-store tables and fail-fast legacy shapes.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresPlanStore.schema-manager.ts'
+          blobSha 'd35e104fb6988c017246cce34b7925954de4986d'
+          sizeBytes '3396'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'migrate scoped plan-store tables and fail-fast legacy shapes.'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresPlanStore.schema-manager.ts 'Open pinned source'
+      }
+      file_src_PostgresPlanStore_sql_ts_bf4dc479 = file 'PostgresPlanStore.sql.ts' {
+        #sourceDerived
+        description 'define scoped plan-store Postgres DDL.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresPlanStore.sql.ts'
+          blobSha 'cb269917ecc09d677c3822b79e3b7818009893f1'
+          sizeBytes '9951'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'define scoped plan-store Postgres DDL.'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresPlanStore.sql.ts 'Open pinned source'
+      }
+      file_src_PostgresPlanStore_ts_a53147a9 = file 'PostgresPlanStore.ts' {
+        #sourceDerived
+        description 'adapt scoped plan-store commands and queries to Postgres.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts'
+          blobSha '7c85b6eeddd368ec0fb7897424ca4284dcc039f0'
+          sizeBytes '13611'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'adapt scoped plan-store commands and queries to Postgres.'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresPlanStore.ts 'Open pinned source'
+      }
+      file_src_PostgresPlanStore_tx_ts_e4575f48 = file 'PostgresPlanStore.tx.ts' {
+        #sourceDerived
+        description 'provide transaction boundaries for scoped plan-store repositories.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresPlanStore.tx.ts'
+          blobSha '9bb77482bfbaca55541acb0f6cf9ec87208e863c'
+          sizeBytes '1264'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'provide transaction boundaries for scoped plan-store repositories.'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresPlanStore.tx.ts 'Open pinned source'
+      }
+      file_src_PostgresPlanStoreComposer_ts_b9a06b2e = file 'PostgresPlanStoreComposer.ts' {
+        #sourceDerived
+        description 'compose the scoped Postgres plan-store adapter internals.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresPlanStoreComposer.ts'
+          blobSha '435e930af68a00335d144ec91454505886c5a0d6'
+          sizeBytes '2979'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'compose the scoped Postgres plan-store adapter internals.'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresPlanStoreComposer.ts 'Open pinned source'
+      }
+      file_src_PostgresPoolErrorPolicy_ts_69e3b097 = file 'PostgresPoolErrorPolicy.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts'
+          blobSha '1a83d5839592fbfe297c7171273ed2bcf7e9b565'
+          sizeBytes '1419'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Every production PostgreSQL pool observes idle-client failures without terminating its host process'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts 'Open pinned source'
+      }
+      file_src_PostgresRunArchiveStore_ts_8d527d34 = file 'PostgresRunArchiveStore.ts' {
+        #sourceDerived
+        description 'Owns PostgreSQL run-event archive-unit eligibility, export/verification state transitions, restore writes, and hot-store deletion for the state-store adapter.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresRunArchiveStore.ts'
+          blobSha '25054f07ddf529c34a53ef88d0d3c0201696f49e'
+          sizeBytes '33927'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Owns PostgreSQL run-event archive-unit eligibility, export/verification state transitions, restore writes, and hot-store deletion for the state-store adapter.'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresRunArchiveStore.ts 'Open pinned source'
+      }
+      file_src_PostgresRunEventStorage_ts_eb05c541 = file 'PostgresRunEventStorage.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresRunEventStorage.ts'
+          blobSha '19e98553d5a1cce8a456ca534a806a1deb9e9411'
+          sizeBytes '6756'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresRunEventStorage.ts 'Open pinned source'
+      }
+      file_src_PostgresRunEventStore_ts_8d91cfe9 = file 'PostgresRunEventStore.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresRunEventStore.ts'
+          blobSha '914943a62758cb67a1237a228b470e52a65274f5'
+          sizeBytes '5265'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Run-event append orchestration is separated from low-level SQL storage concerns'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresRunEventStore.ts 'Open pinned source'
+      }
+      file_src_PostgresRunEventStoreSql_ts_3040cfda = file 'PostgresRunEventStoreSql.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresRunEventStoreSql.ts'
+          blobSha 'a7e36e347e9d74b7ff6bae35187406dcafeefae0'
+          sizeBytes '3198'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Centralize SQL text for PostgresRunEventStore in a dedicated module'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresRunEventStoreSql.ts 'Open pinned source'
+      }
+      file_src_PostgresRunMetadataRepository_ts_c676ce0c = file 'PostgresRunMetadataRepository.ts' {
+        #sourceDerived
+        description 'persist and hydrate canonical run metadata with contract-'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresRunMetadataRepository.ts'
+          blobSha 'cefa23c34ecb8a6cf5083afbd3837bb1bf2db973'
+          sizeBytes '15056'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'persist and hydrate canonical run metadata with contract-'
+          decision 'Run metadata persistence extracted from PostgresStateStoreAdapter'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresRunMetadataRepository.ts 'Open pinned source'
+      }
+      file_src_PostgresRunSnapshotStore_ts_91e4a82a = file 'PostgresRunSnapshotStore.ts' {
+        #sourceDerived
+        description 'Implement the state-store snapshot read model and the portable'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresRunSnapshotStore.ts'
+          blobSha '441a8c974b920b756d14aa2f4ef69b30d254c1ae'
+          sizeBytes '21426'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Implement the state-store snapshot read model and the portable'
+          decision 'Run snapshot persistence extracted from PostgresStateStoreAdapter'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresRunSnapshotStore.ts 'Open pinned source'
+      }
+      file_src_PostgresRunStateCoordinator_ts_6ecc5937 = file 'PostgresRunStateCoordinator.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresRunStateCoordinator.ts'
+          blobSha '87378143474335cc9c95d2c75be72c4fce134f86'
+          sizeBytes '8503'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Extract state/outbox transactional orchestration from facade adapter'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresRunStateCoordinator.ts 'Open pinned source'
+      }
+      file_src_PostgresRunStateCoordinatorConstants_ts_7c7584ad = file 'PostgresRunStateCoordinatorConstants.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresRunStateCoordinatorConstants.ts'
+          blobSha 'e472fde4c39b06ef7002ec15e0d15851901b5052'
+          sizeBytes '745'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Isolate coordinator literals and protocol constants from orchestration logic'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresRunStateCoordinatorConstants.ts 'Open pinned source'
+      }
+      file_src_PostgresRunStateStoreAdapter_ts_e59624b9 = file 'PostgresRunStateStoreAdapter.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresRunStateStoreAdapter.ts'
+          blobSha 'db55ea76b8ca0cf8009468ae993b90ffa7270032'
+          sizeBytes '3349'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Run-state contract delegation is isolated from snapshot-queue and delivery concerns'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresRunStateStoreAdapter.ts 'Open pinned source'
+      }
+      file_src_PostgresSchemaManager_ts_fdbed115 = file 'PostgresSchemaManager.ts' {
+        #sourceDerived
+        description 'Owns PostgreSQL schema migration catalog, rollback planning/execution, and rollback compatibility classification for the state-store adapter.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts'
+          blobSha 'ac863d1e4ac666206620b56bc5fefd1175435cc1'
+          sizeBytes '60790'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Owns PostgreSQL schema migration catalog, rollback planning/execution, and rollback compatibility classification for the state-store adapter.'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresSchemaManager.ts 'Open pinned source'
+      }
+      file_src_PostgresSchemaManagerSql_ts_494faa83 = file 'PostgresSchemaManagerSql.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresSchemaManagerSql.ts'
+          blobSha '47c282aaf52394ca90a9af625f79b5ae81a31b22'
+          sizeBytes '2863'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Centralize SQL used by PostgresSchemaManager orchestration methods'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresSchemaManagerSql.ts 'Open pinned source'
+      }
+      file_src_PostgresServiceAccessCapability_ts_a41c3465 = file 'PostgresServiceAccessCapability.ts' {
+        #sourceDerived
+        description 'represent the internal capability required before a Postgres'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresServiceAccessCapability.ts'
+          blobSha '147890cd2ef696a16bfd31b5f6e07830eefe5dd6'
+          sizeBytes '2514'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'represent the internal capability required before a Postgres'
+          decision 'Service access owners are constrained to a closed adapter-internal capability catalog.'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresServiceAccessCapability.ts 'Open pinned source'
+      }
+      file_src_PostgresSnapshotQueueAdapter_ts_e344ca57 = file 'PostgresSnapshotQueueAdapter.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresSnapshotQueueAdapter.ts'
+          blobSha '193d1576d6255937f127e4982c67a3aade65c448'
+          sizeBytes '1790'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Snapshot staleness queries and repair queue operations stay together as one maintenance slice'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresSnapshotQueueAdapter.ts 'Open pinned source'
+      }
+      file_src_PostgresSnapshotStalenessQuery_ts_0b46ad42 = file 'PostgresSnapshotStalenessQuery.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresSnapshotStalenessQuery.ts'
+          blobSha 'f2043eeced64c264671e08dc35c1dd652a9ec93d'
+          sizeBytes '2716'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Isolate stale snapshot SQL query from the facade adapter'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresSnapshotStalenessQuery.ts 'Open pinned source'
+      }
+      file_src_PostgresSnapshotStalenessQuerySql_ts_1124f977 = file 'PostgresSnapshotStalenessQuerySql.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresSnapshotStalenessQuerySql.ts'
+          blobSha '95c40e12709f640839501d04e8b14985d7d52209'
+          sizeBytes '3445'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Centralize SQL text used by PostgresSnapshotStalenessQuery'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresSnapshotStalenessQuerySql.ts 'Open pinned source'
+      }
+      file_src_PostgresSnapshotWorkQueue_ts_b03dc097 = file 'PostgresSnapshotWorkQueue.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresSnapshotWorkQueue.ts'
+          blobSha '4f175c3c76cc52eed9eac0d1704aa990fa1777fe'
+          sizeBytes '7194'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresSnapshotWorkQueue.ts 'Open pinned source'
+      }
+      file_src_PostgresStartRunIntentStore_ts_a1356a74 = file 'PostgresStartRunIntentStore.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts'
+          blobSha 'b2aa9b4c20321b8fdeac696af754d57971c78e7e'
+          sizeBytes '16197'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'SQL-backed intent store with explicit status-transition guards'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts 'Open pinned source'
+      }
+      file_src_PostgresStateStoreAdapter_ts_bd8d5cd9 = file 'PostgresStateStoreAdapter.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts'
+          blobSha '5a30bcc498a212484cc82c3b93673644edf5b01e'
+          sizeBytes '2299'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Delivery-facing port delegation remains the stable aggregate entrypoint for PostgreSQL state storage'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts 'Open pinned source'
+      }
+      file_src_PostgresStateStoreAdminAdapter_ts_d2cf00e6 = file 'PostgresStateStoreAdminAdapter.ts' {
+        #sourceDerived
+        description 'Owns Postgres administrative schema lifecycle commands, including online-compatible rollback orchestration.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresStateStoreAdminAdapter.ts'
+          blobSha 'f203e18c392a5104ea2eb59896872c153c112341'
+          sizeBytes '1498'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Owns Postgres administrative schema lifecycle commands, including online-compatible rollback orchestration.'
+          decision 'Administrative schema lifecycle stays separate from run-state and delivery port delegation'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresStateStoreAdminAdapter.ts 'Open pinned source'
+      }
+      file_src_PostgresStateStoreRuntime_ts_d51ed051 = file 'PostgresStateStoreRuntime.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresStateStoreRuntime.ts'
+          blobSha '9198281f835523ed86f8b4329be3eef030ac1851'
+          sizeBytes '9268'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Section 2.1 - Append-only event persistence with monotonic sequence semantics'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresStateStoreRuntime.ts 'Open pinned source'
+      }
+      file_src_PostgresStateStoreRuntimeComposer_ts_68e7f00a = file 'PostgresStateStoreRuntimeComposer.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresStateStoreRuntimeComposer.ts'
+          blobSha '253a1520b472dd2dbb2494aa064c9f621e8602f6'
+          sizeBytes '5392'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresStateStoreRuntimeComposer.ts 'Open pinned source'
+      }
+      file_src_PostgresStateStoreRuntimeConfig_ts_69491487 = file 'PostgresStateStoreRuntimeConfig.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresStateStoreRuntimeConfig.ts'
+          blobSha '311dff318794e13a1c8db165ddc1a377eb6b1634'
+          sizeBytes '617'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresStateStoreRuntimeConfig.ts 'Open pinned source'
+      }
+      file_src_PostgresTenantIsolationPolicy_ts_5adb1022 = file 'PostgresTenantIsolationPolicy.ts' {
+        #sourceDerived
+        description 'define the production tenant-isolation table catalog, RLS'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/PostgresTenantIsolationPolicy.ts'
+          blobSha 'a8ef003b93a6b535b764a25230346382d3be9644'
+          sizeBytes '6428'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'define the production tenant-isolation table catalog, RLS'
+          decision 'Tenant-owned Postgres tables use forced RLS with tenant context or approved service owners.'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresTenantIsolationPolicy.ts 'Open pinned source'
+      }
+      file_src_runEventEnvelopePolicy_ts_1beadc8a = file 'runEventEnvelopePolicy.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/runEventEnvelopePolicy.ts'
+          blobSha '647c3e73ff23903ba40ec913f79a30e6a5de5db7'
+          sizeBytes '2155'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/runEventEnvelopePolicy.ts 'Open pinned source'
+      }
+      file_src_runEventStoreErrors_ts_063c3a35 = file 'runEventStoreErrors.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/runEventStoreErrors.ts'
+          blobSha 'd97c65ede3a099049612b955f46ccff129e1ec79'
+          sizeBytes '5704'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Use typed, stable errors for run-event write-boundary violations'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/runEventStoreErrors.ts 'Open pinned source'
+      }
+      file_src_RunEventWriteRepository_ts_a3e160df = file 'RunEventWriteRepository.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/RunEventWriteRepository.ts'
+          blobSha 'cdbcb7b22bdb65dbfbb13e94afb5e34aa8394876'
+          sizeBytes '1471'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Define local write/read repository ports for run events'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/RunEventWriteRepository.ts 'Open pinned source'
+      }
+      file_src_runStateCommandPortBridge_ts_57c52f86 = file 'runStateCommandPortBridge.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/runStateCommandPortBridge.ts'
+          blobSha 'f9c6a883d1ad065c3e4222ecbf01f5073a8857e9'
+          sizeBytes '1459'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Run-state writes are exposed via command port bridge, avoiding direct adapter/runtime coupling to concrete persistence callers.'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/runStateCommandPortBridge.ts 'Open pinned source'
+      }
+      file_src_sqlUtils_ts_4ece9507 = file 'sqlUtils.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/sqlUtils.ts'
+          blobSha '5eb2af999d23d68d44171a76fd3794daf2c9d597'
+          sizeBytes '850'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Section 2.3 — PostgreSQL is the canonical transactional store and requires safe schema/identifier handling'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/sqlUtils.ts 'Open pinned source'
+      }
+      file_src_StartRunIntentSchemaManager_ts_d008daf8 = file 'StartRunIntentSchemaManager.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/StartRunIntentSchemaManager.ts'
+          blobSha 'e7dc1f40bd85ced771bf803fd2da7e82a4729567'
+          sizeBytes '8778'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Versioned schema migrations for start_run_intents are managed outside repository CRUD logic'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/StartRunIntentSchemaManager.ts 'Open pinned source'
+      }
+      file_src_types_ts_cdcae080 = file 'types.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/src/types.ts'
+          blobSha '84a8e3d840c1e8d1fef6f696a69dfbdd8b3a4288'
+          sizeBytes '988'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/types.ts 'Open pinned source'
+      }
+    }
+    dir_test_a94a8fe5 = folder 'test/ — 49 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/adapter-postgres/test'
+        recursiveFileCount '49'
+        directFileCount '44'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test 'Pinned directory'
+      dir_test_helpers_a3c41c9e = folder 'helpers/ — 5 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/helpers'
+          recursiveFileCount '5'
+          directFileCount '5'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/helpers 'Pinned directory'
+        file_test_helpers_lineageOutboxIntegrationHarness_ts_082a5bbf = file 'lineageOutboxIntegrationHarness.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-postgres/test/helpers/lineageOutboxIntegrationHarness.ts'
+            blobSha '9e9ff5119fc1b979a043c0ffc0bf3bccbc4df07d'
+            sizeBytes '2265'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/helpers/lineageOutboxIntegrationHarness.ts 'Open pinned source'
+        }
+        file_test_helpers_lineageOutboxUnitSupport_ts_789db30f = file 'lineageOutboxUnitSupport.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-postgres/test/helpers/lineageOutboxUnitSupport.ts'
+            blobSha '79ad7f1662e27c5badc00cf0f70141fb816b7c62'
+            sizeBytes '1868'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/helpers/lineageOutboxUnitSupport.ts 'Open pinned source'
+        }
+        file_test_helpers_postgresIntegrationHarness_ts_4d64b2d6 = file 'postgresIntegrationHarness.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-postgres/test/helpers/postgresIntegrationHarness.ts'
+            blobSha '67f7c47f60fafc62a6e6557f1c6370a26c38a6c4'
+            sizeBytes '1462'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/helpers/postgresIntegrationHarness.ts 'Open pinned source'
+        }
+        file_test_helpers_postgresRlsProofHarness_ts_080c2bff = file 'postgresRlsProofHarness.ts' {
+          #sourceDerived
+          description 'centralize real PostgreSQL RLS proof setup so tests can'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-postgres/test/helpers/postgresRlsProofHarness.ts'
+            blobSha '6e336fbf5f11f60df0cca6f245d40680bf9ea818'
+            sizeBytes '8723'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'centralize real PostgreSQL RLS proof setup so tests can'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/helpers/postgresRlsProofHarness.ts 'Open pinned source'
+        }
+        file_test_helpers_runEventFixtures_ts_4c51a4db = file 'runEventFixtures.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-postgres/test/helpers/runEventFixtures.ts'
+            blobSha '7903f2cb2d96e7139afb3dcf43ee098d4df9775d'
+            sizeBytes '4249'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/helpers/runEventFixtures.ts 'Open pinned source'
+        }
+      }
+      file_test_migratePostgresRuntimeStores_test_ts_2401ac18 = file 'migratePostgresRuntimeStores.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/migratePostgresRuntimeStores.test.ts'
+          blobSha '924b17830f2e3fbd039283db97ce667d4a71dd01'
+          sizeBytes '1284'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/migratePostgresRuntimeStores.test.ts 'Open pinned source'
+      }
+      file_test_PostgresAdapterClientSession_test_ts_0e63088f = file 'PostgresAdapterClientSession.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresAdapterClientSession.test.ts'
+          blobSha '508cc2c4acda1f9dfbb1d3a858de2d96d0a7a81a'
+          sizeBytes '7019'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresAdapterClientSession.test.ts 'Open pinned source'
+      }
+      file_test_PostgresAppRoleRuntime_integration_test_ts_28c9410e = file 'PostgresAppRoleRuntime.integration.test.ts' {
+        #sourceDerived
+        description 'prove online adapter operations run under the non-owner'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresAppRoleRuntime.integration.test.ts'
+          blobSha 'c361c7fe3b8e61893cd5716929f160d03e850b5d'
+          sizeBytes '5475'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'prove online adapter operations run under the non-owner'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresAppRoleRuntime.integration.test.ts 'Open pinned source'
+      }
+      file_test_PostgresBackpressureSnapshotReader_test_ts_8d7a1bfc = file 'PostgresBackpressureSnapshotReader.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresBackpressureSnapshotReader.test.ts'
+          blobSha '7fe0b70ec7e077f39d53bc306f2257346457f206'
+          sizeBytes '11482'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresBackpressureSnapshotReader.test.ts 'Open pinned source'
+      }
+      file_test_PostgresCredentialBindingResolver_test_ts_b75ed818 = file 'PostgresCredentialBindingResolver.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresCredentialBindingResolver.test.ts'
+          blobSha '0714b733c6aecf93af0b5c5adc03627271c74d55'
+          sizeBytes '1631'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresCredentialBindingResolver.test.ts 'Open pinned source'
+      }
+      file_t_PostgresLineageOutboxStore_dead-letter_test_ts_16899933 = file 'PostgresLineageOutboxStore.dead-letter.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresLineageOutboxStore.dead-letter.test.ts'
+          blobSha '546c9e2c3c608a79d60f605c9a60b07817df5353'
+          sizeBytes '5369'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresLineageOutboxStore.dead-letter.test.ts 'Open pinned source'
+      }
+      file_test_PostgresLineageOutboxStore_failures_test_ts_25dfa1e5 = file 'PostgresLineageOutboxStore.failures.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresLineageOutboxStore.failures.test.ts'
+          blobSha '36d5246e2c89bb3b2ec51906ae730bb91b02eca5'
+          sizeBytes '2626'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresLineageOutboxStore.failures.test.ts 'Open pinned source'
+      }
+      file_t_PostgresLineageOutboxStore_integration_test_ts_aec8cb02 = file 'PostgresLineageOutboxStore.integration.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresLineageOutboxStore.integration.test.ts'
+          blobSha 'c4916ede824709644fd7169ab9a2d06f55a1491f'
+          sizeBytes '2308'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresLineageOutboxStore.integration.test.ts 'Open pinned source'
+      }
+      file_test_PostgresLineageOutboxStore_pending_test_ts_58493ff8 = file 'PostgresLineageOutboxStore.pending.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresLineageOutboxStore.pending.test.ts'
+          blobSha '5925136e0db82b63ed3ca9ce22d7334767219c69'
+          sizeBytes '5437'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresLineageOutboxStore.pending.test.ts 'Open pinned source'
+      }
+      file_test_PostgresObjectFileLoad_test_ts_65b6235d = file 'PostgresObjectFileLoad.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts'
+          blobSha '262d7804b6a07418ebf88c397f206050e49a01ad'
+          sizeBytes '8733'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts 'Open pinned source'
+      }
+      file_test_PostgresOutboxStore_test_ts_9298f7af = file 'PostgresOutboxStore.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresOutboxStore.test.ts'
+          blobSha '51c27c731e8c52e55b3b14714a18050380f88f68'
+          sizeBytes '1321'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresOutboxStore.test.ts 'Open pinned source'
+      }
+      file_test_PostgresPlanStore_integration_helpers_ts_db0699ba = file 'PostgresPlanStore.integration.helpers.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresPlanStore.integration.helpers.ts'
+          blobSha 'ccb9e79be0e1c024fbcdd66e6c30d2efc618511c'
+          sizeBytes '3253'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresPlanStore.integration.helpers.ts 'Open pinned source'
+      }
+      file_test_PostgresPlanStore_invariants_unit_test_ts_86b67435 = file 'PostgresPlanStore.invariants.unit.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresPlanStore.invariants.unit.test.ts'
+          blobSha '6f3174ae4e46cd2ab1bc7819dbcb7e6eb16cb6cd'
+          sizeBytes '5466'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresPlanStore.invariants.unit.test.ts 'Open pinned source'
+      }
+      file__PostgresPlanStore_lifecycle_integration_test_ts_fc972175 = file 'PostgresPlanStore.lifecycle.integration.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresPlanStore.lifecycle.integration.test.ts'
+          blobSha 'a65fc548fc721bde3d48a29a0c4263bfd0b1aee1'
+          sizeBytes '7542'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresPlanStore.lifecycle.integration.test.ts 'Open pinned source'
+      }
+      file_stgresPlanStore_records-core_integration_test_ts_678d958a = file 'PostgresPlanStore.records-core.integration.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts'
+          blobSha '48ca76bb3f64cbe351f7dbb577a0ee21496e193b'
+          sizeBytes '10692'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts 'Open pinned source'
+      }
+      file_gresPlanStore_records-guards_integration_test_ts_4b80c3e6 = file 'PostgresPlanStore.records-guards.integration.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-guards.integration.test.ts'
+          blobSha '0a4bf17f337a31fe10a6f1e34ce9a2027a7ceefd'
+          sizeBytes '7496'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresPlanStore.records-guards.integration.test.ts 'Open pinned source'
+      }
+      file_test_PostgresPlanStore_sql_test_ts_c5ebc25b = file 'PostgresPlanStore.sql.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresPlanStore.sql.test.ts'
+          blobSha '3b04fe006df62d76957df9ef4e09e1d3cf6ee802'
+          sizeBytes '671'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresPlanStore.sql.test.ts 'Open pinned source'
+      }
+      file_test_PostgresPoolErrorPolicy_test_ts_a4ea16e5 = file 'PostgresPoolErrorPolicy.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresPoolErrorPolicy.test.ts'
+          blobSha 'a9bd4405d88e595241e7ae54b546afd9638fed4b'
+          sizeBytes '753'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresPoolErrorPolicy.test.ts 'Open pinned source'
+      }
+      file_rchiveStore_tenant-retention_integration_test_ts_1b577861 = file 'PostgresRunArchiveStore.tenant-retention.integration.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresRunArchiveStore.tenant-retention.integration.test.ts'
+          blobSha '0e603c762937058049206881ff90685eda132566'
+          sizeBytes '5690'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresRunArchiveStore.tenant-retention.integration.test.ts 'Open pinned source'
+      }
+      file_PostgresRunArchiveStore_tenant-retention_test_ts_5c0d710d = file 'PostgresRunArchiveStore.tenant-retention.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresRunArchiveStore.tenant-retention.test.ts'
+          blobSha 'ef089aca1889bcc22ac4daa354d001bce5ee4159'
+          sizeBytes '3922'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresRunArchiveStore.tenant-retention.test.ts 'Open pinned source'
+      }
+      file_gresRunEventRetentionPolicy_architecture_test_ts_ea258c7e = file 'PostgresRunEventRetentionPolicy.architecture.test.ts' {
+        #sourceDerived
+        description 'Owns run-event archive lifecycle policy contracts, tenant retention resolution, and archive runtime ports\\.[\\s\\S]'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresRunEventRetentionPolicy.architecture.test.ts'
+          blobSha '7c717101298c5b74cc5b1e8fa1c43ebd7edfaa2e'
+          sizeBytes '5377'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Owns run-event archive lifecycle policy contracts, tenant retention resolution, and archive runtime ports\\.[\\s\\S]'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresRunEventRetentionPolicy.architecture.test.ts 'Open pinned source'
+      }
+      file_test_PostgresRunEventStore_test_ts_2c0626ac = file 'PostgresRunEventStore.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresRunEventStore.test.ts'
+          blobSha '529f619d422873c6475c47c67cb8ea62b101ac31'
+          sizeBytes '17792'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresRunEventStore.test.ts 'Open pinned source'
+      }
+      file_test_PostgresRunMetadataRepository_test_ts_b6e720ef = file 'PostgresRunMetadataRepository.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresRunMetadataRepository.test.ts'
+          blobSha '4b0ec54ffd7627cc9082399351c0f18caf990060'
+          sizeBytes '6988'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresRunMetadataRepository.test.ts 'Open pinned source'
+      }
+      file_test_PostgresRunSnapshotStore_cas-guard_test_ts_46eb9c45 = file 'PostgresRunSnapshotStore.cas-guard.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresRunSnapshotStore.cas-guard.test.ts'
+          blobSha 'ab5414568bf01f2b400b9502188e03cc8f365ee4'
+          sizeBytes '6364'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresRunSnapshotStore.cas-guard.test.ts 'Open pinned source'
+      }
+      file_test_PostgresRunSnapshotStore_test_ts_9b5d150e = file 'PostgresRunSnapshotStore.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresRunSnapshotStore.test.ts'
+          blobSha '7f39ee30f575252f51e18718dbd9d7590e8a6f86'
+          sizeBytes '28973'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresRunSnapshotStore.test.ts 'Open pinned source'
+      }
+      file_test_PostgresRunStateCoordinator_test_ts_58267d55 = file 'PostgresRunStateCoordinator.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresRunStateCoordinator.test.ts'
+          blobSha 'd72566c69669c77d97384c3c053e9c4b339405bf'
+          sizeBytes '13156'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresRunStateCoordinator.test.ts 'Open pinned source'
+      }
+      file_test_PostgresSchemaManager_rollback_test_ts_805034db = file 'PostgresSchemaManager.rollback.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresSchemaManager.rollback.test.ts'
+          blobSha '6736bcbb6cfeeac7f4e3d289c055c4fc79af3a2d'
+          sizeBytes '12306'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresSchemaManager.rollback.test.ts 'Open pinned source'
+      }
+      file_sSchemaRollbackZeroDowntime_architecture_test_ts_4482eea7 = file 'PostgresSchemaRollbackZeroDowntime.architecture.test.ts' {
+        #sourceDerived
+        description 'Owns PostgreSQL schema migration catalog, rollback planning\\/execution, and rollback compatibility classification for the state-store adapter\\.[\\s\\S]'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresSchemaRollbackZeroDowntime.architecture.test.ts'
+          blobSha 'e1e9ac00e31b8aea999c5d383cec2d0133d6bfc3'
+          sizeBytes '5287'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Owns PostgreSQL schema migration catalog, rollback planning\\/execution, and rollback compatibility classification for the state-store adapter\\.[\\s\\S]'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresSchemaRollbackZeroDowntime.architecture.test.ts 'Open pinned source'
+      }
+      file_gresServiceAccessCapability_architecture_test_ts_c61d56d0 = file 'PostgresServiceAccessCapability.architecture.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresServiceAccessCapability.architecture.test.ts'
+          blobSha 'fdcc6a65ab97c75fd1584e25b5177356418fe54a'
+          sizeBytes '4210'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresServiceAccessCapability.architecture.test.ts 'Open pinned source'
+      }
+      file_test_PostgresSnapshotStalenessQuery_test_ts_0ca8934e = file 'PostgresSnapshotStalenessQuery.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresSnapshotStalenessQuery.test.ts'
+          blobSha '3061ef495f312b3cbc3f68ccb4e309efdb3aa33a'
+          sizeBytes '4723'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresSnapshotStalenessQuery.test.ts 'Open pinned source'
+      }
+      file_test_PostgresStartRunIntentStore_context_test_ts_b6e56ee8 = file 'PostgresStartRunIntentStore.context.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresStartRunIntentStore.context.test.ts'
+          blobSha '25a3583d8976ea069db81651569b4abea590eda7'
+          sizeBytes '3282'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresStartRunIntentStore.context.test.ts 'Open pinned source'
+      }
+      file_test_PostgresStartRunIntentStore_test_ts_3bb01816 = file 'PostgresStartRunIntentStore.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresStartRunIntentStore.test.ts'
+          blobSha '519008556ed9a52a907a7b8b18faec62f9907294'
+          sizeBytes '5883'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresStartRunIntentStore.test.ts 'Open pinned source'
+      }
+      file_test_PostgresStateStoreAdapter_abort_test_ts_8ce7c1ab = file 'PostgresStateStoreAdapter.abort.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.abort.test.ts'
+          blobSha 'ccecf38ea8d93bd7c5d6365d2a560c9d02f096f6'
+          sizeBytes '3130'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresStateStoreAdapter.abort.test.ts 'Open pinned source'
+      }
+      file_test_PostgresStateStoreAdapter_migrate_test_ts_9a9a2e1f = file 'PostgresStateStoreAdapter.migrate.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts'
+          blobSha 'd99c93313ef4c9cdd8dee07c5e2b9e3ddbc53833'
+          sizeBytes '27462'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts 'Open pinned source'
+      }
+      file_test_PostgresStateStoreAdapter_sharding_test_ts_912483d1 = file 'PostgresStateStoreAdapter.sharding.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.sharding.test.ts'
+          blobSha '56e1f560ad5956d17982dc9f574443a77c1c8270'
+          sizeBytes '16908'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresStateStoreAdapter.sharding.test.ts 'Open pinned source'
+      }
+      file_est_PostgresStateTransitions_integration_test_ts_00c32a45 = file 'PostgresStateTransitions.integration.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresStateTransitions.integration.test.ts'
+          blobSha '3f19ccc1e8c611cc7e90f75b61e669ba701b0860'
+          sizeBytes '1071'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresStateTransitions.integration.test.ts 'Open pinned source'
+      }
+      file_test_PostgresTenantIsolationPolicy_test_ts_4750b847 = file 'PostgresTenantIsolationPolicy.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresTenantIsolationPolicy.test.ts'
+          blobSha 'e7c153116840520956e8f480e395a0b875812475'
+          sizeBytes '3555'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresTenantIsolationPolicy.test.ts 'Open pinned source'
+      }
+      file_gresTenantIsolationSemantic_architecture_test_ts_dc32fe9b = file 'PostgresTenantIsolationSemantic.architecture.test.ts' {
+        #sourceDerived
+        description 'keep Postgres tenant-isolation semantics aligned across the'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresTenantIsolationSemantic.architecture.test.ts'
+          blobSha '2555f4b3bc9347da4bf07146c881587f7fb75c97'
+          sizeBytes '2696'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'keep Postgres tenant-isolation semantics aligned across the'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresTenantIsolationSemantic.architecture.test.ts 'Open pinned source'
+      }
+      file_PostgresTenantRlsEnforcement_integration_test_ts_293ac3a3 = file 'PostgresTenantRlsEnforcement.integration.test.ts' {
+        #sourceDerived
+        description 'prove real PostgreSQL forced-RLS behavior independently from'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/PostgresTenantRlsEnforcement.integration.test.ts'
+          blobSha '3302e088481019305c2ccfbd9e1c7ffe77e97cef'
+          sizeBytes '20005'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'prove real PostgreSQL forced-RLS behavior independently from'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresTenantRlsEnforcement.integration.test.ts 'Open pinned source'
+      }
+      file_test_RunDomainStateTransitions_contract_test_ts_316f0292 = file 'RunDomainStateTransitions.contract.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/RunDomainStateTransitions.contract.test.ts'
+          blobSha 'f0c0079557f04c2799717db4f7db6221b9216980'
+          sizeBytes '1240'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/RunDomainStateTransitions.contract.test.ts 'Open pinned source'
+      }
+      file_test_runStateCommandPortBridge_test_ts_7bfe90c2 = file 'runStateCommandPortBridge.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/runStateCommandPortBridge.test.ts'
+          blobSha 'd0a0086474e84bf4f64cef82d5923ba97b21dc6d'
+          sizeBytes '1965'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/runStateCommandPortBridge.test.ts 'Open pinned source'
+      }
+      file_19F1SnapshotWorkQueueClosure_integration_test_ts_e072628f = file 'S19F1SnapshotWorkQueueClosure.integration.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/S19F1SnapshotWorkQueueClosure.integration.test.ts'
+          blobSha '459da47809b209c42d1cf35af61c578b50d6e92a'
+          sizeBytes '6499'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/S19F1SnapshotWorkQueueClosure.integration.test.ts 'Open pinned source'
+      }
+      file_test_smoke_test_ts_dc6a63e5 = file 'smoke.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/smoke.test.ts'
+          blobSha 'bc9c49552d7b5950783512dcbb5d311228657598'
+          sizeBytes '56028'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Verify Postgres adapter lifecycle, idempotency, outbox, queue-backed snapshot rebuilds, and tenant isolation'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/smoke.test.ts 'Open pinned source'
+      }
+      file_test_StartRunIntentSchemaManager_test_ts_7af139c0 = file 'StartRunIntentSchemaManager.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-postgres/test/StartRunIntentSchemaManager.test.ts'
+          blobSha 'b9197974021574c329ba5746f8f46f65f2e65a77'
+          sizeBytes '5832'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/StartRunIntentSchemaManager.test.ts 'Open pinned source'
+      }
+    }
+    file_DESIGN_md_8db51892 = file 'DESIGN.md' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/adapter-postgres/DESIGN.md'
+        blobSha '14182cb076da94a169eb2d51b9ed0cb4894e2fc7'
+        sizeBytes '4587'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/DESIGN.md 'Open pinned source'
+    }
+    file_package_json_7030d0b2 = file 'package.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/adapter-postgres/package.json'
+        blobSha 'e03c45ae5efca6f5d1bfcf2dd9f32d5be969b269'
+        sizeBytes '1430'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/package.json 'Open pinned source'
+    }
+    file_tsconfig_eslint_json_df42856a = file 'tsconfig.eslint.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/adapter-postgres/tsconfig.eslint.json'
+        blobSha 'b87c89eff295ebadcc658e630d2a95ee53372dbf'
+        sizeBytes '144'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/tsconfig.eslint.json 'Open pinned source'
+    }
+    file_tsconfig_json_61ebb9fd = file 'tsconfig.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/adapter-postgres/tsconfig.json'
+        blobSha '8141dd6ff5545ce4d9846bd12eb840e885fba63d'
+        sizeBytes '1595'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/tsconfig.json 'Open pinned source'
+    }
+    file_vitest_config_ts_e7b129ed = file 'vitest.config.ts' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/adapter-postgres/vitest.config.ts'
+        blobSha '325d4773097cad2085c2fd53202fc068d586c5ad'
+        sizeBytes '322'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/vitest.config.ts 'Open pinned source'
+    }
+  }
+}
+
+views {
+  view postgresAdapterSourceInventory of postgresAdapterSource {
+    title 'Postgres Adapter — Complete source inventory'
+    description 'Generated from Git at 3695f07c. 125 tracked files.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view postgresAdapterSource_dir_migrations_56a9264f of postgresAdapterSource.dir_migrations_56a9264f {
+    title 'Source — migrations/ (11 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view postgresAdapterSource_dir_src_f27fede2 of postgresAdapterSource.dir_src_f27fede2 {
+    title 'Source — src/ (60 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view postgresAdapterSource_dir_test_a94a8fe5 of postgresAdapterSource.dir_test_a94a8fe5 {
+    title 'Source — test/ (49 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view postgresAdapterSource_dir_test_helpers_a3c41c9e of postgresAdapterSource.dir_test_a94a8fe5.dir_test_helpers_a3c41c9e {
+    title 'Source — test/helpers/ (5 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view adapter-postgresFiles_publicBoundary {
+    title 'Files — Postgres adapter public boundary'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 2 evidence file(s).'
+    include postgresAdapterSource.dir_src_f27fede2.file_src_index_ts_c5fb8502
+    include postgresAdapterSource.dir_src_f27fede2.file_src_types_ts_cdcae080
+    autoLayout TopBottom
+  }
+
+  view adapter-postgresFiles_stateStore {
+    title 'Files — Run state persistence'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 6 evidence file(s).'
+    include postgresAdapterSource.dir_src_f27fede2.file_src_PostgresRunEventStorage_ts_eb05c541
+    include postgresAdapterSource.dir_src_f27fede2.file_src_PostgresRunEventStore_ts_8d91cfe9
+    include postgresAdapterSource.dir_src_f27fede2.file_src_PostgresRunMetadataRepository_ts_c676ce0c
+    include postgresAdapterSource.dir_src_f27fede2.file_src_PostgresRunSnapshotStore_ts_91e4a82a
+    include postgresAdapterSource.dir_src_f27fede2.file_src_PostgresRunStateCoordinator_ts_6ecc5937
+    include postgresAdapterSource.dir_src_f27fede2.file_src_PostgresStateStoreAdapter_ts_bd8d5cd9
+    autoLayout TopBottom
+  }
+
+  view adapter-postgresFiles_runStateCommandBridge {
+    title 'Files — RunStateCommandPort bridge'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include postgresAdapterSource.dir_src_f27fede2.file_src_runStateCommandPortBridge_ts_57c52f86
+    autoLayout TopBottom
+  }
+
+  view adapter-postgresFiles_planStore {
+    title 'Files — Postgres plan store'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 10 evidence file(s).'
+    include postgresAdapterSource.dir_src_f27fede2.file_src_PostgresPlanStore_admission-repository_ts_8b1af55c
+    include postgresAdapterSource.dir_src_f27fede2.file_rc_PostgresPlanStore_executability-repository_ts_4d2d641c
+    include postgresAdapterSource.dir_src_f27fede2.file__PostgresPlanStore_executable-blob-repository_ts_4aed45e6
+    include postgresAdapterSource.dir_src_f27fede2.file_src_PostgresPlanStore_mappers_ts_94650230
+    include postgresAdapterSource.dir_src_f27fede2.file_src_PostgresPlanStore_plan-record-repository_ts_d8f3b47e
+    include postgresAdapterSource.dir_src_f27fede2.file_src_PostgresPlanStore_schema-manager_ts_f938ffe8
+    include postgresAdapterSource.dir_src_f27fede2.file_src_PostgresPlanStore_sql_ts_bf4dc479
+    include postgresAdapterSource.dir_src_f27fede2.file_src_PostgresPlanStore_ts_a53147a9
+    include postgresAdapterSource.dir_src_f27fede2.file_src_PostgresPlanStore_tx_ts_e4575f48
+    include postgresAdapterSource.dir_src_f27fede2.file_src_PostgresPlanStoreComposer_ts_b9a06b2e
+    autoLayout TopBottom
+  }
+
+  view adapter-postgresFiles_outboxDelivery {
+    title 'Files — Outbox + lineage persistence'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 2 evidence file(s).'
+    include postgresAdapterSource.dir_src_f27fede2.file_src_PostgresLineageOutboxStore_ts_26603fd9
+    include postgresAdapterSource.dir_src_f27fede2.file_src_PostgresOutboxStore_ts_586cff1c
+    autoLayout TopBottom
+  }
+
+  view adapter-postgresFiles_archiveLifecycle {
+    title 'Files — Run archive persistence'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 3 evidence file(s).'
+    include postgresAdapterSource.dir_src_f27fede2.file_src_PostgresArchiveLeaseStore_ts_84942c21
+    include postgresAdapterSource.dir_src_f27fede2.file_src_PostgresDeliveryBufferPurgeStore_ts_9d3d6ade
+    include postgresAdapterSource.dir_src_f27fede2.file_src_PostgresRunArchiveStore_ts_8d527d34
+    autoLayout TopBottom
+  }
+
+  view adapter-postgresFiles_backpressure {
+    title 'Files — Backpressure snapshot reader'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 2 evidence file(s).'
+    include postgresAdapterSource.dir_src_f27fede2.file_src_PostgresBackpressureSnapshotReader_ts_3ed6f23d
+    include postgresAdapterSource.dir_src_f27fede2.file_src_PostgresBackpressureSnapshotReaderSql_ts_cc41b881
+    autoLayout TopBottom
+  }
+
+  view adapter-postgresFiles_objectFile {
+    title 'Files — Object-file to Postgres capability'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 2 evidence file(s).'
+    include postgresAdapterSource.dir_src_f27fede2.file_src_PostgresObjectFileLoader_ts_4e439445
+    include postgresAdapterSource.dir_src_f27fede2.file_src_PostgresObjectFileLoadingCapability_ts_2cb09f82
+    autoLayout TopBottom
+  }
+
+  view adapter-postgresFiles_schemaAndRuntime {
+    title 'Files — Schema + runtime composition'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 3 evidence file(s).'
+    include postgresAdapterSource.dir_src_f27fede2.file_src_migratePostgresRuntimeStores_ts_291884fb
+    include postgresAdapterSource.dir_src_f27fede2.file_src_PostgresSchemaManager_ts_fdbed115
+    include postgresAdapterSource.dir_src_f27fede2.file_src_PostgresStateStoreRuntimeConfig_ts_69491487
+    autoLayout TopBottom
+  }
+
+  view adapter-postgresFiles_credentialsAndPool {
+    title 'Files — Credentials + pool policy'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 3 evidence file(s).'
+    include postgresAdapterSource.dir_src_f27fede2.file_src_PostgresAdapterConnectionString_ts_1aa936b5
+    include postgresAdapterSource.dir_src_f27fede2.file_src_PostgresCredentialBindingResolver_ts_05be0484
+    include postgresAdapterSource.dir_src_f27fede2.file_src_PostgresPoolErrorPolicy_ts_69e3b097
+    autoLayout TopBottom
+  }
+
+}

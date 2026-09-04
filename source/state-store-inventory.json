@@ -1,0 +1,400 @@
+{
+  "schemaVersion": 3,
+  "generatedFrom": "git-tree",
+  "repository": "dunay2/dvt",
+  "baselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "configuredBaselineSha": "42504563629f0b998d8a3382ea839eead99a36d1",
+  "scope": "packages/@dvt/state-store",
+  "logicalModelId": "stateStoreModel",
+  "sourceModelId": "stateStoreSource",
+  "configuredModelId": "stateStoreSource",
+  "counts": {
+    "trackedFiles": 31,
+    "sourceFiles": 15,
+    "testFiles": 13,
+    "docsFiles": 0,
+    "packageRootFiles": 3,
+    "filesWithOwnedConcern": 3,
+    "filesWithDecision": 1
+  },
+  "files": [
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f70d7b63e29d067404919401ad9e1a84c73c8c46",
+      "sizeBytes": 913,
+      "path": "packages/@dvt/state-store/package.json",
+      "relativePath": "package.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/package.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "575da6b316ab0e38bb01b64fc1c5f5f5ac5084f5",
+      "sizeBytes": 4155,
+      "path": "packages/@dvt/state-store/src/archiveLifecycle.ts",
+      "relativePath": "src/archiveLifecycle.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/archiveLifecycle.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b20abca1675b3c9f39dc847f1b49f2bb16685c6b",
+      "sizeBytes": 3637,
+      "path": "packages/@dvt/state-store/src/index.ts",
+      "relativePath": "src/index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/index.ts",
+      "ownedConcern": "Runtime state-store lifecycle API for run events, archive units,"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4bfe9ecbfc0f507c8817546825bfe3a9744ec77d",
+      "sizeBytes": 2502,
+      "path": "packages/@dvt/state-store/src/inMemoryRunStateCommandPort.ts",
+      "relativePath": "src/inMemoryRunStateCommandPort.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/inMemoryRunStateCommandPort.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "1f206436743233392a44299c6ec0fa0cfe44a06b",
+      "sizeBytes": 1781,
+      "path": "packages/@dvt/state-store/src/lifecycle/adapters/FileSystemArchiveObjectStore.ts",
+      "relativePath": "src/lifecycle/adapters/FileSystemArchiveObjectStore.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/lifecycle/adapters/FileSystemArchiveObjectStore.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "fce540ca0c0f127fe384634e9b65397c9a2045ec",
+      "sizeBytes": 2474,
+      "path": "packages/@dvt/state-store/src/lifecycle/adapters/S3ArchiveObjectStore.ts",
+      "relativePath": "src/lifecycle/adapters/S3ArchiveObjectStore.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/lifecycle/adapters/S3ArchiveObjectStore.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a9044903b64b059827a0ff4e3b951f6954119a4f",
+      "sizeBytes": 7570,
+      "path": "packages/@dvt/state-store/src/lifecycle/archiveArtifacts.ts",
+      "relativePath": "src/lifecycle/archiveArtifacts.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/lifecycle/archiveArtifacts.ts",
+      "decision": "PR1 archive artifacts use one deterministic JCS + SHA-256 checksum rule",
+      "consequence": "Exporters, verifiers, and snapshot pinning share one canonical artifact surface",
+      "baseline": [
+        "ADR-0004: Event Sourcing Strategy (ordered authoritative history)",
+        "ADR-0037: Run Event Lifecycle Archival, Verification, and Restore Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6058fa836f3bfa40c50598933d612d7d2e3e6731",
+      "sizeBytes": 14749,
+      "path": "packages/@dvt/state-store/src/lifecycle/archiveRuntime.ts",
+      "relativePath": "src/lifecycle/archiveRuntime.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/lifecycle/archiveRuntime.ts",
+      "ownedConcern": "Owns run-event archive lifecycle policy contracts, tenant retention resolution, and archive runtime ports."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "cf1987c980db2500253e4d10261540439bed14d0",
+      "sizeBytes": 6702,
+      "path": "packages/@dvt/state-store/src/lifecycle/DeliveryBufferPurger.ts",
+      "relativePath": "src/lifecycle/DeliveryBufferPurger.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/lifecycle/DeliveryBufferPurger.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e7887cadfc6bcfa20f690cfb16bdd5c5709f9784",
+      "sizeBytes": 4270,
+      "path": "packages/@dvt/state-store/src/lifecycle/deliveryBufferRuntime.ts",
+      "relativePath": "src/lifecycle/deliveryBufferRuntime.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/lifecycle/deliveryBufferRuntime.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2f82e711c779f288674007fb2a13ca6ecd254e9c",
+      "sizeBytes": 12873,
+      "path": "packages/@dvt/state-store/src/lifecycle/ObjectStorageRunArchiveExporter.ts",
+      "relativePath": "src/lifecycle/ObjectStorageRunArchiveExporter.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/lifecycle/ObjectStorageRunArchiveExporter.ts",
+      "ownedConcern": "Owns object-store archive artifact export, verification, and cold-payload redaction."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5a6cdcb53cd82c282bfc436d38373bfb587196d0",
+      "sizeBytes": 5582,
+      "path": "packages/@dvt/state-store/src/lifecycle/RunArchiveCoordinator.ts",
+      "relativePath": "src/lifecycle/RunArchiveCoordinator.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/lifecycle/RunArchiveCoordinator.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b2cdb1c06d712b4e148d374204f0faa4503b2a55",
+      "sizeBytes": 5601,
+      "path": "packages/@dvt/state-store/src/lifecycle/RunArchiveDeleter.ts",
+      "relativePath": "src/lifecycle/RunArchiveDeleter.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/lifecycle/RunArchiveDeleter.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "160ab8fb7b09726c9a9dfa2f1b87ccbdb5b5c9f3",
+      "sizeBytes": 6181,
+      "path": "packages/@dvt/state-store/src/lifecycle/RunArchiveRestorer.ts",
+      "relativePath": "src/lifecycle/RunArchiveRestorer.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/lifecycle/RunArchiveRestorer.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "29fd4a86bc371f4d1c1a47c27b6f795765eb4a20",
+      "sizeBytes": 2868,
+      "path": "packages/@dvt/state-store/src/lifecycle/RunArchiveVerifier.ts",
+      "relativePath": "src/lifecycle/RunArchiveVerifier.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/lifecycle/RunArchiveVerifier.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "afb1aebf31b6bf733f6e6ab275f13817b732588c",
+      "sizeBytes": 343,
+      "path": "packages/@dvt/state-store/src/types.ts",
+      "relativePath": "src/types.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/types.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "56ac1aaaed587d7257412b34d78ae038854fa75c",
+      "sizeBytes": 9848,
+      "path": "packages/@dvt/state-store/test/archiveArtifacts.test.ts",
+      "relativePath": "test/archiveArtifacts.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/test/archiveArtifacts.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "8e63a01f460581812d5fab82642d68fd6f28a582",
+      "sizeBytes": 3699,
+      "path": "packages/@dvt/state-store/test/archiveLifecycle.test.ts",
+      "relativePath": "test/archiveLifecycle.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/test/archiveLifecycle.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "baa2615465b50ee5336b8afa81b7430ab4dd050f",
+      "sizeBytes": 6759,
+      "path": "packages/@dvt/state-store/test/archiveRuntime.test.ts",
+      "relativePath": "test/archiveRuntime.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/test/archiveRuntime.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6b24256750efb1f9ad41a3d2fa6ef00e7f703733",
+      "sizeBytes": 2058,
+      "path": "packages/@dvt/state-store/test/command-port.test.ts",
+      "relativePath": "test/command-port.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/test/command-port.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "46f01d4dc793d7a616468c0756430fd3064d00a0",
+      "sizeBytes": 13618,
+      "path": "packages/@dvt/state-store/test/DeliveryBufferPurger.test.ts",
+      "relativePath": "test/DeliveryBufferPurger.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/test/DeliveryBufferPurger.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e91e1817112315c1063b0aa09804c41ac461e058",
+      "sizeBytes": 1247,
+      "path": "packages/@dvt/state-store/test/FileSystemArchiveObjectStore.test.ts",
+      "relativePath": "test/FileSystemArchiveObjectStore.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/test/FileSystemArchiveObjectStore.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2529df1a81a3763e9434bef934a9ccf49d2f92d8",
+      "sizeBytes": 20477,
+      "path": "packages/@dvt/state-store/test/ObjectStorageRunArchiveExporter.test.ts",
+      "relativePath": "test/ObjectStorageRunArchiveExporter.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/test/ObjectStorageRunArchiveExporter.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "408db3022e93d276d7a1988b517b24dd0e002a59",
+      "sizeBytes": 20511,
+      "path": "packages/@dvt/state-store/test/RunArchiveCoordinator.test.ts",
+      "relativePath": "test/RunArchiveCoordinator.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/test/RunArchiveCoordinator.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9cbcf072b14ab6122197f1a5f856e2d0b064e946",
+      "sizeBytes": 11029,
+      "path": "packages/@dvt/state-store/test/RunArchiveDeleter.test.ts",
+      "relativePath": "test/RunArchiveDeleter.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/test/RunArchiveDeleter.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4555111a2cdedfe2284847bef9b72e6398cf5828",
+      "sizeBytes": 14078,
+      "path": "packages/@dvt/state-store/test/RunArchiveLifecycleIntegration.test.ts",
+      "relativePath": "test/RunArchiveLifecycleIntegration.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/test/RunArchiveLifecycleIntegration.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5d2bd6978333cf0b737e3da9c74c7064b4c0cd3a",
+      "sizeBytes": 12527,
+      "path": "packages/@dvt/state-store/test/RunArchiveRestorer.test.ts",
+      "relativePath": "test/RunArchiveRestorer.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/test/RunArchiveRestorer.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d81ffff1a23961b9e0d583ee39bf778b89c8311d",
+      "sizeBytes": 1436,
+      "path": "packages/@dvt/state-store/test/RunEventRetentionPolicy.test.ts",
+      "relativePath": "test/RunEventRetentionPolicy.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/test/RunEventRetentionPolicy.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4ff292aee1068531992645f94a9177074617c2e0",
+      "sizeBytes": 1739,
+      "path": "packages/@dvt/state-store/test/S3ArchiveObjectStore.test.ts",
+      "relativePath": "test/S3ArchiveObjectStore.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/test/S3ArchiveObjectStore.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e14cc5892cda8d5a465dfeaf13efb86877aa7ba6",
+      "sizeBytes": 609,
+      "path": "packages/@dvt/state-store/tsconfig.json",
+      "relativePath": "tsconfig.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/tsconfig.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "43e56f45f3eece05a802ab75eedcff828b76b9d4",
+      "sizeBytes": 132,
+      "path": "packages/@dvt/state-store/vitest.config.ts",
+      "relativePath": "vitest.config.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/vitest.config.ts"
+    }
+  ],
+  "componentMappings": [
+    {
+      "id": "publicBoundary",
+      "title": "State Store public boundary",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "src/index.ts exposes runtime state-store lifecycle, archive, retention, restore and delivery-buffer APIs.",
+      "fileCount": 1,
+      "files": [
+        "src/index.ts"
+      ]
+    },
+    {
+      "id": "runStateCommands",
+      "title": "Run state command boundary",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Defines the bootstrap/command port and the in-memory implementation used to append authoritative run state transitions.",
+      "fileCount": 2,
+      "files": [
+        "src/inMemoryRunStateCommandPort.ts",
+        "src/types.ts"
+      ]
+    },
+    {
+      "id": "archiveIdentity",
+      "title": "Archive unit identity + retention math",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Owns deterministic archive unit keys, tenant buckets, delete-after calculation and archive lifecycle state.",
+      "fileCount": 1,
+      "files": [
+        "src/archiveLifecycle.ts"
+      ]
+    },
+    {
+      "id": "archiveArtifacts",
+      "title": "Archive manifests + terminal snapshots",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Builds immutable archive manifests, event checksums and pinned/archived terminal snapshots.",
+      "fileCount": 1,
+      "files": [
+        "src/lifecycle/archiveArtifacts.ts"
+      ]
+    },
+    {
+      "id": "archiveRuntime",
+      "title": "Archive runtime ports + policies",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Defines archive stores, leases, restore/delete boundaries, retention policies and lifecycle telemetry.",
+      "fileCount": 1,
+      "files": [
+        "src/lifecycle/archiveRuntime.ts"
+      ]
+    },
+    {
+      "id": "archivePipeline",
+      "title": "Archive lifecycle pipeline",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Coordinates export, verification, deletion and restore of run archive units through explicit lifecycle services.",
+      "fileCount": 5,
+      "files": [
+        "src/lifecycle/ObjectStorageRunArchiveExporter.ts",
+        "src/lifecycle/RunArchiveCoordinator.ts",
+        "src/lifecycle/RunArchiveDeleter.ts",
+        "src/lifecycle/RunArchiveRestorer.ts",
+        "src/lifecycle/RunArchiveVerifier.ts"
+      ]
+    },
+    {
+      "id": "archiveObjectStores",
+      "title": "Archive object-store adapters",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Concrete filesystem and S3 implementations of the archive object-store boundary.",
+      "fileCount": 2,
+      "files": [
+        "src/lifecycle/adapters/FileSystemArchiveObjectStore.ts",
+        "src/lifecycle/adapters/S3ArchiveObjectStore.ts"
+      ]
+    },
+    {
+      "id": "deliveryBufferLifecycle",
+      "title": "Delivery-buffer retention + purge",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Owns delivery-buffer retention policy, purge boundary, telemetry and purge execution.",
+      "fileCount": 2,
+      "files": [
+        "src/lifecycle/DeliveryBufferPurger.ts",
+        "src/lifecycle/deliveryBufferRuntime.ts"
+      ]
+    }
+  ],
+  "inventorySha256": "234794ea926f92e47eb90b66c82a3995cfbaff4d68ad28c154d5620d9a0b550f"
+}

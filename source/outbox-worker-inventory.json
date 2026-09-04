@@ -1,0 +1,694 @@
+{
+  "schemaVersion": 3,
+  "generatedFrom": "git-tree",
+  "repository": "dunay2/dvt",
+  "baselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "configuredBaselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "scope": "apps/outbox-worker",
+  "logicalModelId": "outboxWorkerModel",
+  "sourceModelId": "outboxWorkerSource",
+  "configuredModelId": "outboxWorkerModel",
+  "counts": {
+    "trackedFiles": 62,
+    "sourceFiles": 25,
+    "testFiles": 30,
+    "docsFiles": 0,
+    "packageRootFiles": 7,
+    "filesWithOwnedConcern": 5,
+    "filesWithDecision": 0
+  },
+  "files": [
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c3a40b88528732fef21456592cce195be7b16a16",
+      "sizeBytes": 632,
+      "path": "apps/outbox-worker/.dependency-cruiser.cjs",
+      "relativePath": ".dependency-cruiser.cjs",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/.dependency-cruiser.cjs"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e1fc04605aa7e92bad7b62d2708d2ea56ad8397a",
+      "sizeBytes": 1287,
+      "path": "apps/outbox-worker/.env.example",
+      "relativePath": ".env.example",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/.env.example"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "de4d1f007dd195ea685034cbda7209013105044b",
+      "sizeBytes": 18,
+      "path": "apps/outbox-worker/.gitignore",
+      "relativePath": ".gitignore",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/.gitignore"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "91641e3b5613f53f62c2c263269d5d291f628bc6",
+      "sizeBytes": 1216,
+      "path": "apps/outbox-worker/package.json",
+      "relativePath": "package.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/package.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ba15ea1d68b3b0c184320e26d32896533f9f81c5",
+      "sizeBytes": 5695,
+      "path": "apps/outbox-worker/README.md",
+      "relativePath": "README.md",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/README.md"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3be45925505767f322f5b4d3885c033e602d63ae",
+      "sizeBytes": 2632,
+      "path": "apps/outbox-worker/src/bus/HttpEventBus.ts",
+      "relativePath": "src/bus/HttpEventBus.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/bus/HttpEventBus.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5e9bed5109f0d26eb5876d929c080845d32e2e92",
+      "sizeBytes": 816,
+      "path": "apps/outbox-worker/src/bus/LoggingEventBus.ts",
+      "relativePath": "src/bus/LoggingEventBus.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/bus/LoggingEventBus.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "896a01f84df807cfddac6301365ffba5a26945fb",
+      "sizeBytes": 2410,
+      "path": "apps/outbox-worker/src/db/pool.ts",
+      "relativePath": "src/db/pool.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/db/pool.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "bf9077826dc16b8960cf2e3b587d6b331f1051c2",
+      "sizeBytes": 13616,
+      "path": "apps/outbox-worker/src/host/runOutboxWorkerHost.ts",
+      "relativePath": "src/host/runOutboxWorkerHost.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/host/runOutboxWorkerHost.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2b456ca3d3906064cddb6dd86520cef40dedfe5f",
+      "sizeBytes": 2613,
+      "path": "apps/outbox-worker/src/lifecycle/stopRuntimeAndOperationalServer.ts",
+      "relativePath": "src/lifecycle/stopRuntimeAndOperationalServer.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/lifecycle/stopRuntimeAndOperationalServer.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f55b5a5f8d70840d7263e001bd7ae09e60f3d0b7",
+      "sizeBytes": 1946,
+      "path": "apps/outbox-worker/src/ops/monitor/model.ts",
+      "relativePath": "src/ops/monitor/model.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/ops/monitor/model.ts",
+      "ownedConcern": "AR-C2 outbox monitor snapshots and Prometheus bucket policy."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f5853bc9e9822c754cca93967b7a6d3915d91094",
+      "sizeBytes": 5333,
+      "path": "apps/outbox-worker/src/ops/monitor/OutboxDeliveryTelemetry.ts",
+      "relativePath": "src/ops/monitor/OutboxDeliveryTelemetry.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/ops/monitor/OutboxDeliveryTelemetry.ts",
+      "ownedConcern": "measure outbox delivery SLA counters, lag, and latency seconds."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "459d79f98fe18e57ad039f6d90b1faad9695a3c0",
+      "sizeBytes": 4745,
+      "path": "apps/outbox-worker/src/ops/monitor/OutboxRuntimeHealthTracker.ts",
+      "relativePath": "src/ops/monitor/OutboxRuntimeHealthTracker.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/ops/monitor/OutboxRuntimeHealthTracker.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a7c667a0d27293a399c5f5b593c60bae3cd7fda3",
+      "sizeBytes": 7595,
+      "path": "apps/outbox-worker/src/ops/monitor/renderOutboxWorkerMetrics.ts",
+      "relativePath": "src/ops/monitor/renderOutboxWorkerMetrics.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/ops/monitor/renderOutboxWorkerMetrics.ts",
+      "ownedConcern": "render current-version outbox Prometheus text exposition."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "49bafa1155e137bd89cdcac68dc64447e83ff1fb",
+      "sizeBytes": 2395,
+      "path": "apps/outbox-worker/src/ops/monitor/RunEventRetentionTelemetry.ts",
+      "relativePath": "src/ops/monitor/RunEventRetentionTelemetry.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/ops/monitor/RunEventRetentionTelemetry.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "76dc44a3ce0a76ca357bc169e27bd8e4daa9b468",
+      "sizeBytes": 3036,
+      "path": "apps/outbox-worker/src/ops/monitor/support.ts",
+      "relativePath": "src/ops/monitor/support.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/ops/monitor/support.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ce8d21386113f5fa36974d2301475d19e3689638",
+      "sizeBytes": 3544,
+      "path": "apps/outbox-worker/src/ops/OperationalServer.ts",
+      "relativePath": "src/ops/OperationalServer.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/ops/OperationalServer.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "96a18b6eac2215db7cd0875e0bea920847065493",
+      "sizeBytes": 4372,
+      "path": "apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts",
+      "relativePath": "src/ops/OutboxWorkerMonitor.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts",
+      "ownedConcern": "compose outbox runtime, delivery, and retention telemetry for scraping."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b44af528bf190eb3a4a6d8c3470c5ae2fe3d8714",
+      "sizeBytes": 727,
+      "path": "apps/outbox-worker/src/ops/resolveReadyStaleAfterMs.ts",
+      "relativePath": "src/ops/resolveReadyStaleAfterMs.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/ops/resolveReadyStaleAfterMs.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "af556c13300b028b89819154b16b39f02fe7f904",
+      "sizeBytes": 12818,
+      "path": "apps/outbox-worker/src/ownership/PgShardOwnershipGate.ts",
+      "relativePath": "src/ownership/PgShardOwnershipGate.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/ownership/PgShardOwnershipGate.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e776b910cac8d18bdd74b1ef9b4c94bb1b01f3f8",
+      "sizeBytes": 10003,
+      "path": "apps/outbox-worker/src/plugins/env.ts",
+      "relativePath": "src/plugins/env.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/plugins/env.ts",
+      "ownedConcern": "Owns outbox worker environment parsing and runtime configuration policy for active/passive worker modes."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "681f515cec9185a64e59f1118667b69f68272e14",
+      "sizeBytes": 1127,
+      "path": "apps/outbox-worker/src/runtime/buildDeliveryBufferPurgeRuntime.ts",
+      "relativePath": "src/runtime/buildDeliveryBufferPurgeRuntime.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/runtime/buildDeliveryBufferPurgeRuntime.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "17882be2ff5d31fa0ac67c937ec9bad47c7f9ab3",
+      "sizeBytes": 5274,
+      "path": "apps/outbox-worker/src/runtime/buildRunEventRetentionRuntime.ts",
+      "relativePath": "src/runtime/buildRunEventRetentionRuntime.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/runtime/buildRunEventRetentionRuntime.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "40fa5b66e6f67bfabecd4d56390e536e63e7eb41",
+      "sizeBytes": 940,
+      "path": "apps/outbox-worker/src/runtime/createOutboxEventBus.ts",
+      "relativePath": "src/runtime/createOutboxEventBus.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/runtime/createOutboxEventBus.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "025687163b3bfe1277a7990ac3652f15c6e62bff",
+      "sizeBytes": 3901,
+      "path": "apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts",
+      "relativePath": "src/runtime/createOutboxWorkerRuntime.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a075566975626b40777c25f751eac46c69ca3353",
+      "sizeBytes": 3081,
+      "path": "apps/outbox-worker/src/runtime/DeliveryBufferPurgeRuntime.ts",
+      "relativePath": "src/runtime/DeliveryBufferPurgeRuntime.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/runtime/DeliveryBufferPurgeRuntime.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e77c5fb1d155af671cae9f15030370d316acd367",
+      "sizeBytes": 2974,
+      "path": "apps/outbox-worker/src/runtime/outboxRuntimeResourceLifecycle.ts",
+      "relativePath": "src/runtime/outboxRuntimeResourceLifecycle.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/runtime/outboxRuntimeResourceLifecycle.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "8343b7d2af879e460d9381b505c3bff613051d20",
+      "sizeBytes": 158,
+      "path": "apps/outbox-worker/src/runtime/OutboxWorkerRuntime.ts",
+      "relativePath": "src/runtime/OutboxWorkerRuntime.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/runtime/OutboxWorkerRuntime.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "10ef260b1ce7b8fba36fba012e09e84e81ed0cfb",
+      "sizeBytes": 5326,
+      "path": "apps/outbox-worker/src/runtime/RunEventRetentionRuntime.ts",
+      "relativePath": "src/runtime/RunEventRetentionRuntime.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/runtime/RunEventRetentionRuntime.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "341ae5889265eb51e571a9d63e5a68993f5386df",
+      "sizeBytes": 2173,
+      "path": "apps/outbox-worker/src/server.ts",
+      "relativePath": "src/server.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/server.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "fbad64b52b497918730c9613a3172b6edfeea2f8",
+      "sizeBytes": 8903,
+      "path": "apps/outbox-worker/test/bus/HttpEventBus.test.ts",
+      "relativePath": "test/bus/HttpEventBus.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/bus/HttpEventBus.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b6ed4632bc91e5460f1fab60d9f80db3e5940980",
+      "sizeBytes": 5886,
+      "path": "apps/outbox-worker/test/canary/standaloneCanaryAcceptance.health.test.ts",
+      "relativePath": "test/canary/standaloneCanaryAcceptance.health.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/canary/standaloneCanaryAcceptance.health.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "46622a04741af3d6fdc695c57b6bd2312a0f8d36",
+      "sizeBytes": 2579,
+      "path": "apps/outbox-worker/test/canary/standaloneCanaryAcceptance.idempotency.test.ts",
+      "relativePath": "test/canary/standaloneCanaryAcceptance.idempotency.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/canary/standaloneCanaryAcceptance.idempotency.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "37dcf1bb269e8bf3b39a6e52a67986ae75fc8ad1",
+      "sizeBytes": 3910,
+      "path": "apps/outbox-worker/test/canary/standaloneCanaryAcceptance.ordering.test.ts",
+      "relativePath": "test/canary/standaloneCanaryAcceptance.ordering.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/canary/standaloneCanaryAcceptance.ordering.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "dba55db6e8532dff6132f21cba0d3b6c06a4a183",
+      "sizeBytes": 734,
+      "path": "apps/outbox-worker/test/canary/support/standaloneCanaryEventSupport.ts",
+      "relativePath": "test/canary/support/standaloneCanaryEventSupport.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/canary/support/standaloneCanaryEventSupport.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "96e7e821f9f7d6ce763d604ddc61508c5bd2b3cf",
+      "sizeBytes": 5250,
+      "path": "apps/outbox-worker/test/canary/support/standaloneCanaryHostSupport.ts",
+      "relativePath": "test/canary/support/standaloneCanaryHostSupport.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/canary/support/standaloneCanaryHostSupport.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "47d66fc858fa446103f1724dd08177726bb0b4f8",
+      "sizeBytes": 6414,
+      "path": "apps/outbox-worker/test/canary/support/standaloneCanaryHttpSink.ts",
+      "relativePath": "test/canary/support/standaloneCanaryHttpSink.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/canary/support/standaloneCanaryHttpSink.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4822ed6929edf516d7eb10a8461a140ef97ad022",
+      "sizeBytes": 6335,
+      "path": "apps/outbox-worker/test/canary/support/standaloneCanaryOutboxFixture.ts",
+      "relativePath": "test/canary/support/standaloneCanaryOutboxFixture.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/canary/support/standaloneCanaryOutboxFixture.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e3efb91d558faf9c7746f3ecd3c6d00ca3ffd1d1",
+      "sizeBytes": 3525,
+      "path": "apps/outbox-worker/test/db/pool.test.ts",
+      "relativePath": "test/db/pool.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/db/pool.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3e35ca9eb8ffdeb23b19ac75cff6652b773e5bf4",
+      "sizeBytes": 24489,
+      "path": "apps/outbox-worker/test/host/runOutboxWorkerHost.test.ts",
+      "relativePath": "test/host/runOutboxWorkerHost.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/host/runOutboxWorkerHost.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "577e33205b8a2fa3bf841db026a95a79c522bb6a",
+      "sizeBytes": 5725,
+      "path": "apps/outbox-worker/test/integration/workerEndToEnd.integration.test.ts",
+      "relativePath": "test/integration/workerEndToEnd.integration.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/integration/workerEndToEnd.integration.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6b75801f83ee9f602d288c19db0a4fe6e2112a73",
+      "sizeBytes": 4103,
+      "path": "apps/outbox-worker/test/lifecycle/stopRuntimeAndOperationalServer.test.ts",
+      "relativePath": "test/lifecycle/stopRuntimeAndOperationalServer.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/lifecycle/stopRuntimeAndOperationalServer.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2ce3a39b6b9b2491079d1b29ce1db1d211193f16",
+      "sizeBytes": 10961,
+      "path": "apps/outbox-worker/test/ops/OperationalServer.test.ts",
+      "relativePath": "test/ops/OperationalServer.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/ops/OperationalServer.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "8faacb702d6548375cee908d47e3014da612cd3e",
+      "sizeBytes": 11673,
+      "path": "apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts",
+      "relativePath": "test/ops/OutboxWorkerMonitor.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "dab1975afd3b629fbc1ade7dfe04ef5a47ad9848",
+      "sizeBytes": 3358,
+      "path": "apps/outbox-worker/test/ops/outboxWorkerMonitorTestSupport.ts",
+      "relativePath": "test/ops/outboxWorkerMonitorTestSupport.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/ops/outboxWorkerMonitorTestSupport.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4b0750c592a6e587caed7966aed52da0abdb3ca0",
+      "sizeBytes": 1418,
+      "path": "apps/outbox-worker/test/ops/resolveReadyStaleAfterMs.test.ts",
+      "relativePath": "test/ops/resolveReadyStaleAfterMs.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/ops/resolveReadyStaleAfterMs.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "90e64f39cac875da3f083d0ce3041efece920283",
+      "sizeBytes": 4310,
+      "path": "apps/outbox-worker/test/ownership/PgShardOwnershipGate.integration.test.ts",
+      "relativePath": "test/ownership/PgShardOwnershipGate.integration.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/ownership/PgShardOwnershipGate.integration.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b25685718fdc585e01ba91483bea5f6d328f4e17",
+      "sizeBytes": 8103,
+      "path": "apps/outbox-worker/test/ownership/PgShardOwnershipGate.test.ts",
+      "relativePath": "test/ownership/PgShardOwnershipGate.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/ownership/PgShardOwnershipGate.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b4aa5c692744e6f50d28a1f555a44f7069b074e2",
+      "sizeBytes": 19039,
+      "path": "apps/outbox-worker/test/plugins/env.test.ts",
+      "relativePath": "test/plugins/env.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/plugins/env.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e38ce4d10842c342f286c1d45b4a4f8dae4b3eed",
+      "sizeBytes": 4320,
+      "path": "apps/outbox-worker/test/runtime/buildRunEventRetentionRuntime.test.ts",
+      "relativePath": "test/runtime/buildRunEventRetentionRuntime.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/runtime/buildRunEventRetentionRuntime.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "156cb7ef92b88acaed3da3eedb04e97243f9e86a",
+      "sizeBytes": 19318,
+      "path": "apps/outbox-worker/test/runtime/createOutboxWorkerRuntime.test.ts",
+      "relativePath": "test/runtime/createOutboxWorkerRuntime.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/runtime/createOutboxWorkerRuntime.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "16bb6dcc1ed53a3f8bd6110b2a06c105fde25688",
+      "sizeBytes": 4960,
+      "path": "apps/outbox-worker/test/runtime/DeliveryBufferPurgeRuntime.test.ts",
+      "relativePath": "test/runtime/DeliveryBufferPurgeRuntime.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/runtime/DeliveryBufferPurgeRuntime.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "89ba26bfe048b7c90cd59d5776e2bbc1ab191a7b",
+      "sizeBytes": 4341,
+      "path": "apps/outbox-worker/test/runtime/OutboxWorkerRuntime.failure.test.ts",
+      "relativePath": "test/runtime/OutboxWorkerRuntime.failure.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/runtime/OutboxWorkerRuntime.failure.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4a032014e3e9c058d74531668f767f60d3bc45d0",
+      "sizeBytes": 7637,
+      "path": "apps/outbox-worker/test/runtime/OutboxWorkerRuntime.lifecycle.test.ts",
+      "relativePath": "test/runtime/OutboxWorkerRuntime.lifecycle.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/runtime/OutboxWorkerRuntime.lifecycle.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "eed47b1bba808de2b66884c051dba0204c84a7c7",
+      "sizeBytes": 5983,
+      "path": "apps/outbox-worker/test/runtime/OutboxWorkerRuntime.ordering.test.ts",
+      "relativePath": "test/runtime/OutboxWorkerRuntime.ordering.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/runtime/OutboxWorkerRuntime.ordering.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "81ae72c05ccac5d2641cca1db1c25ea632f47f2a",
+      "sizeBytes": 5055,
+      "path": "apps/outbox-worker/test/runtime/RunEventRetentionRuntime.test.ts",
+      "relativePath": "test/runtime/RunEventRetentionRuntime.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/runtime/RunEventRetentionRuntime.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "87809163981f6cafbec275bd7e8ef5bb58444b9d",
+      "sizeBytes": 9842,
+      "path": "apps/outbox-worker/test/runtime/runtimeTestSupport.ts",
+      "relativePath": "test/runtime/runtimeTestSupport.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/runtime/runtimeTestSupport.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "22f5fcc395c8e87987395ccc1d9d28448e0f141a",
+      "sizeBytes": 3457,
+      "path": "apps/outbox-worker/test/runtime/runtimeTestUtils.ts",
+      "relativePath": "test/runtime/runtimeTestUtils.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/runtime/runtimeTestUtils.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "152afbe09c3311eb4a6d6c9c31bcd0d1587345ad",
+      "sizeBytes": 11589,
+      "path": "apps/outbox-worker/test/sharding/concurrentWorkerOrdering.test.ts",
+      "relativePath": "test/sharding/concurrentWorkerOrdering.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/sharding/concurrentWorkerOrdering.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4ee0bf81f17666c47d3fac13bb3b8157d9b2b9fd",
+      "sizeBytes": 150,
+      "path": "apps/outbox-worker/test/tsconfig.json",
+      "relativePath": "test/tsconfig.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/tsconfig.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "1130ad64210927638796b1458508070f4e03b827",
+      "sizeBytes": 231,
+      "path": "apps/outbox-worker/tsconfig.json",
+      "relativePath": "tsconfig.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/tsconfig.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4d50ba5b64e0b830a507f39e7dfe58172981f48d",
+      "sizeBytes": 156,
+      "path": "apps/outbox-worker/vitest.config.ts",
+      "relativePath": "vitest.config.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/vitest.config.ts"
+    }
+  ],
+  "componentMappings": [
+    {
+      "id": "host",
+      "title": "Outbox worker process host",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Owns the process entrypoint and worker lifecycle.",
+      "fileCount": 1,
+      "files": [
+        "src/server.ts"
+      ]
+    },
+    {
+      "id": "hostComposition",
+      "title": "Outbox host composition",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Composes the outbox worker runtime and host dependencies.",
+      "fileCount": 1,
+      "files": [
+        "src/host/runOutboxWorkerHost.ts"
+      ]
+    },
+    {
+      "id": "runtime",
+      "title": "Outbox runtime",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Long-lived runtime behavior built around @dvt/delivery outbox movement.",
+      "fileCount": 8,
+      "files": [
+        "src/runtime/buildDeliveryBufferPurgeRuntime.ts",
+        "src/runtime/buildRunEventRetentionRuntime.ts",
+        "src/runtime/createOutboxEventBus.ts",
+        "src/runtime/createOutboxWorkerRuntime.ts",
+        "src/runtime/DeliveryBufferPurgeRuntime.ts",
+        "src/runtime/outboxRuntimeResourceLifecycle.ts",
+        "src/runtime/OutboxWorkerRuntime.ts",
+        "src/runtime/RunEventRetentionRuntime.ts"
+      ]
+    },
+    {
+      "id": "ownership",
+      "title": "Shard ownership",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Worker-side shard ownership/assignment behavior.",
+      "fileCount": 1,
+      "files": [
+        "src/ownership/PgShardOwnershipGate.ts"
+      ]
+    },
+    {
+      "id": "bus",
+      "title": "Event bus integration",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Concrete event transport integration used by the worker.",
+      "fileCount": 2,
+      "files": [
+        "src/bus/HttpEventBus.ts",
+        "src/bus/LoggingEventBus.ts"
+      ]
+    },
+    {
+      "id": "db",
+      "title": "Outbox database composition",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Database composition and adapter wiring for outbox persistence.",
+      "fileCount": 1,
+      "files": [
+        "src/db/pool.ts"
+      ]
+    },
+    {
+      "id": "lifecycle",
+      "title": "Outbox lifecycle support",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Worker lifecycle and retention/support behavior.",
+      "fileCount": 1,
+      "files": [
+        "src/lifecycle/stopRuntimeAndOperationalServer.ts"
+      ]
+    },
+    {
+      "id": "ops",
+      "title": "Outbox operations",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Operational concerns and diagnostics.",
+      "fileCount": 9,
+      "files": [
+        "src/ops/monitor/model.ts",
+        "src/ops/monitor/OutboxDeliveryTelemetry.ts",
+        "src/ops/monitor/OutboxRuntimeHealthTracker.ts",
+        "src/ops/monitor/renderOutboxWorkerMetrics.ts",
+        "src/ops/monitor/RunEventRetentionTelemetry.ts",
+        "src/ops/monitor/support.ts",
+        "src/ops/OperationalServer.ts",
+        "src/ops/OutboxWorkerMonitor.ts",
+        "src/ops/resolveReadyStaleAfterMs.ts"
+      ]
+    },
+    {
+      "id": "plugins",
+      "title": "Outbox host plugins",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Host-level plugin/configuration concerns.",
+      "fileCount": 1,
+      "files": [
+        "src/plugins/env.ts"
+      ]
+    }
+  ],
+  "inventorySha256": "fbbaee6f97785c0ed28b1532dbfaffd9feb0aeaba47ce3bfd048a420055405e2"
+}

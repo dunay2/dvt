@@ -1,0 +1,272 @@
+// GENERATED FILE. DO NOT EDIT.
+// Source: git tree dunay2/dvt@3695f07c9ba3c66ab51f88a2dabe18e18556a244:packages/@dvt/temporal-object-file-postgres-plugin
+model {
+  temporalObjectFilePostgresPluginSource = inventory 'Temporal Object File Postgres Plugin source inventory — generated from Git' {
+    #sourceDerived
+    description 'Machine-generated from the exact Git tree. Folder structure is STRUCTURE-DERIVED; file identity is SOURCE-DERIVED.'
+    metadata {
+      provenance 'SOURCE-DERIVED'
+      architectureOwner 'dvt.temporal-object-file-postgres-plugin'
+      logicalModelId 'temporalObjectFilePostgresPluginModel'
+      sourceRoot 'packages/@dvt/temporal-object-file-postgres-plugin'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      trackedFiles '14'
+      sourceFiles '6'
+      testFiles '4'
+      inventorySha256 'c02e9d7c96cd7ecac465cbf395b0f8e85c2971d5f35511966f6b100273463461'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin 'Pinned package tree'
+    dir_src_f27fede2 = folder 'src/ — 6 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/temporal-object-file-postgres-plugin/src'
+        recursiveFileCount '6'
+        directFileCount '6'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/src 'Pinned directory'
+      file_src_index_ts_c5fb8502 = file 'index.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-object-file-postgres-plugin/src/index.ts'
+          blobSha 'f761b9b33ea3143491511d11c9006fb078309303'
+          sizeBytes '783'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/src/index.ts 'Open pinned source'
+      }
+      file_src_objectFilePostgresPluginErrors_ts_9051edb9 = file 'objectFilePostgresPluginErrors.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginErrors.ts'
+          blobSha 'a1c3b4b2ca504564101800cd79dbc156670b70b2'
+          sizeBytes '430'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginErrors.ts 'Open pinned source'
+      }
+      file_src_ObjectFilePostgresPluginRunner_ts_ccf1b641 = file 'ObjectFilePostgresPluginRunner.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts'
+          blobSha 'f95f30f74419d24c72aeb08bf18606a5f6443cdd'
+          sizeBytes '7020'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts 'Open pinned source'
+      }
+      file_src_objectFilePostgresPluginTypes_ts_c1f97f3c = file 'objectFilePostgresPluginTypes.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts'
+          blobSha '9a721785dd1e5e794c4e0aad01993e2e4c7432c2'
+          sizeBytes '1874'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts 'Open pinned source'
+      }
+      file_src_ObjectFilePostgresStepActivity_ts_9ec6f900 = file 'ObjectFilePostgresStepActivity.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresStepActivity.ts'
+          blobSha '53b68c8a909e446b735e138e214246599b044073'
+          sizeBytes '1856'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresStepActivity.ts 'Open pinned source'
+      }
+      file_src_objectFileRows_ts_6d56a11b = file 'objectFileRows.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts'
+          blobSha '41b874ee4c7f46d4e9966ba1ddbc88bb56447f7f'
+          sizeBytes '8362'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts 'Open pinned source'
+      }
+    }
+    dir_test_a94a8fe5 = folder 'test/ — 4 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/temporal-object-file-postgres-plugin/test'
+        recursiveFileCount '4'
+        directFileCount '4'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/test 'Pinned directory'
+      file_test_ObjectFilePostgresPluginRunner_test_ts_de7b18c5 = file 'ObjectFilePostgresPluginRunner.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts'
+          blobSha '1bcb43541a9c178a7bd6ec76b620b558680d44f4'
+          sizeBytes '9166'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts 'Open pinned source'
+      }
+      file_test_ObjectFilePostgresStepActivity_test_ts_7be3eda4 = file 'ObjectFilePostgresStepActivity.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresStepActivity.test.ts'
+          blobSha 'afebac4f6f58bde5f092be32bc1cdcc3e5e34aa4'
+          sizeBytes '2761'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresStepActivity.test.ts 'Open pinned source'
+      }
+      file_test_objectFilePostgresTestFixtures_ts_ab768378 = file 'objectFilePostgresTestFixtures.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-object-file-postgres-plugin/test/objectFilePostgresTestFixtures.ts'
+          blobSha '87d1c8d89617a90c3de8b0d6402cda84d59de48d'
+          sizeBytes '1456'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/test/objectFilePostgresTestFixtures.ts 'Open pinned source'
+      }
+      file_test_objectFileRows_test_ts_b23e1eab = file 'objectFileRows.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts'
+          blobSha 'cefcccab605e42323d64c4b34eb0446623deda6f'
+          sizeBytes '3632'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts 'Open pinned source'
+      }
+    }
+    file_package_json_7030d0b2 = file 'package.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/temporal-object-file-postgres-plugin/package.json'
+        blobSha '99f0d082b2b9374c9c3fe7bb5019f1a5f1acb3e3'
+        sizeBytes '1178'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/package.json 'Open pinned source'
+    }
+    file_tsconfig_json_61ebb9fd = file 'tsconfig.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/temporal-object-file-postgres-plugin/tsconfig.json'
+        blobSha '19704ea088a2066c17e25d250cff2e0bc68c254a'
+        sizeBytes '771'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/tsconfig.json 'Open pinned source'
+    }
+    file_tsconfig_test_json_d1f96fd1 = file 'tsconfig.test.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/temporal-object-file-postgres-plugin/tsconfig.test.json'
+        blobSha '928209032dbd2026a96166634a3ff8982e3f6ff4'
+        sizeBytes '169'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/tsconfig.test.json 'Open pinned source'
+    }
+    file_vitest_config_ts_e7b129ed = file 'vitest.config.ts' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/temporal-object-file-postgres-plugin/vitest.config.ts'
+        blobSha '43e56f45f3eece05a802ab75eedcff828b76b9d4'
+        sizeBytes '132'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/vitest.config.ts 'Open pinned source'
+    }
+  }
+}
+
+views {
+  view temporalObjectFilePostgresPluginSourceInventory of temporalObjectFilePostgresPluginSource {
+    title 'Temporal Object File Postgres Plugin — Complete source inventory'
+    description 'Generated from Git at 3695f07c. 14 tracked files.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view temporalObjectFilePostgresPluginSource_dir_src_f27fede2 of temporalObjectFilePostgresPluginSource.dir_src_f27fede2 {
+    title 'Source — src/ (6 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view temporalObjectFilePostgresPluginSource_dir_test_a94a8fe5 of temporalObjectFilePostgresPluginSource.dir_test_a94a8fe5 {
+    title 'Source — test/ (4 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view temporal-object-file-postgres-pluginFiles_publicBoundary {
+    title 'Files — Object-file Postgres plugin public boundary'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include temporalObjectFilePostgresPluginSource.dir_src_f27fede2.file_src_index_ts_c5fb8502
+    autoLayout TopBottom
+  }
+
+  view temporal-object-file-postgres-pluginFiles_activity {
+    title 'Files — Object-file Postgres activity'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include temporalObjectFilePostgresPluginSource.dir_src_f27fede2.file_src_ObjectFilePostgresStepActivity_ts_9ec6f900
+    autoLayout TopBottom
+  }
+
+  view temporal-object-file-postgres-pluginFiles_runner {
+    title 'Files — Object-file Postgres runner'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include temporalObjectFilePostgresPluginSource.dir_src_f27fede2.file_src_ObjectFilePostgresPluginRunner_ts_ccf1b641
+    autoLayout TopBottom
+  }
+
+  view temporal-object-file-postgres-pluginFiles_rows {
+    title 'Files — Object-file row decoding'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include temporalObjectFilePostgresPluginSource.dir_src_f27fede2.file_src_objectFileRows_ts_6d56a11b
+    autoLayout TopBottom
+  }
+
+  view temporal-object-file-postgres-pluginFiles_typesAndErrors {
+    title 'Files — Object-file plugin contracts'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 2 evidence file(s).'
+    include temporalObjectFilePostgresPluginSource.dir_src_f27fede2.file_src_objectFilePostgresPluginErrors_ts_9051edb9
+    include temporalObjectFilePostgresPluginSource.dir_src_f27fede2.file_src_objectFilePostgresPluginTypes_ts_c1f97f3c
+    autoLayout TopBottom
+  }
+
+}

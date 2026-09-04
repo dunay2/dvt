@@ -1,0 +1,172 @@
+{
+  "schemaVersion": 3,
+  "generatedFrom": "git-tree",
+  "repository": "dunay2/dvt",
+  "baselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "configuredBaselineSha": "42504563629f0b998d8a3382ea839eead99a36d1",
+  "scope": "packages/@dvt/plan-interpreter",
+  "logicalModelId": "planInterpreterModel",
+  "sourceModelId": "planInterpreterSource",
+  "configuredModelId": "planInterpreterSource",
+  "counts": {
+    "trackedFiles": 9,
+    "sourceFiles": 4,
+    "testFiles": 1,
+    "docsFiles": 0,
+    "packageRootFiles": 4,
+    "filesWithOwnedConcern": 1,
+    "filesWithDecision": 5
+  },
+  "files": [
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "bce5d740863566efd8f77edf915b5c5d37a2e6f4",
+      "sizeBytes": 702,
+      "path": "packages/@dvt/plan-interpreter/package.json",
+      "relativePath": "package.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-interpreter/package.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "044e8f3c3af615ae8f602d4cce8b550bb36e7206",
+      "sizeBytes": 299,
+      "path": "packages/@dvt/plan-interpreter/README.md",
+      "relativePath": "README.md",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-interpreter/README.md"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "404ac839990f214949476c0ebbe26be0cc5666c0",
+      "sizeBytes": 7561,
+      "path": "packages/@dvt/plan-interpreter/src/dagAnalyzer.ts",
+      "relativePath": "src/dagAnalyzer.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-interpreter/src/dagAnalyzer.ts",
+      "decision": "Decision — DAG analysis and execution layer computation are shared across all adapters",
+      "consequence": "Active runtime adapters produce identical execution order for the same plan",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "8b0bd9f53042563f408e8c8cceea47aedeb0c556",
+      "sizeBytes": 928,
+      "path": "packages/@dvt/plan-interpreter/src/errors.ts",
+      "relativePath": "src/errors.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-interpreter/src/errors.ts",
+      "decision": "Decision — Plan validation errors are structured with machine-readable codes for adapter-agnostic error handling",
+      "consequence": "All adapters receive identical error semantics when plans are structurally invalid",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "30825d8d9e1886f2f2f3440ff193aec239646cdf",
+      "sizeBytes": 687,
+      "path": "packages/@dvt/plan-interpreter/src/index.ts",
+      "relativePath": "src/index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-interpreter/src/index.ts",
+      "ownedConcern": "Runtime plan-interpretation API for adapter-agnostic DAG validation and execution layering.",
+      "decision": "Decision — Shared plan interpretation package ensures adapter-agnostic DAG analysis",
+      "consequence": "Active runtime adapters produce identical execution order for the same plan",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4eaa5fa95e5dbbf1d17544f861c85d817228189f",
+      "sizeBytes": 1444,
+      "path": "packages/@dvt/plan-interpreter/src/types.ts",
+      "relativePath": "src/types.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-interpreter/src/types.ts",
+      "decision": "Decision — Plan step types are defined in a shared package so all adapters interpret plans identically",
+      "consequence": "DAG analysis, layer computation, and validation are adapter-agnostic and testable in isolation",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "926268fb6191d674daf1ad14456ad5e12b7305c1",
+      "sizeBytes": 10578,
+      "path": "packages/@dvt/plan-interpreter/test/dagAnalyzer.test.ts",
+      "relativePath": "test/dagAnalyzer.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-interpreter/test/dagAnalyzer.test.ts",
+      "decision": "Decision — Golden-path tests verify identical execution order across all adapters",
+      "consequence": "Any adapter consuming @dvt/plan-interpreter is guaranteed to produce the same layer structure",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b53c7ed6e7664b495edb0994516cbb10c95d4a61",
+      "sizeBytes": 319,
+      "path": "packages/@dvt/plan-interpreter/tsconfig.json",
+      "relativePath": "tsconfig.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-interpreter/tsconfig.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "fa69665ca779308af444b9c788f8f2925766a9f0",
+      "sizeBytes": 157,
+      "path": "packages/@dvt/plan-interpreter/vitest.config.ts",
+      "relativePath": "vitest.config.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-interpreter/vitest.config.ts"
+    }
+  ],
+  "componentMappings": [
+    {
+      "id": "publicBoundary",
+      "title": "Plan Interpreter public boundary",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Exports adapter-agnostic DAG analysis and execution-layer functions.",
+      "fileCount": 1,
+      "files": [
+        "src/index.ts"
+      ]
+    },
+    {
+      "id": "dagAnalysis",
+      "title": "DAG validation + execution layering",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Validates ExecutionPlan DAG structure, computes execution layers and downstream closure.",
+      "fileCount": 1,
+      "files": [
+        "src/dagAnalyzer.ts"
+      ]
+    },
+    {
+      "id": "types",
+      "title": "Interpreter result types",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Defines typed DAG validation and layer-analysis results.",
+      "fileCount": 1,
+      "files": [
+        "src/types.ts"
+      ]
+    },
+    {
+      "id": "errors",
+      "title": "DAG interpretation errors",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Typed errors for invalid DAG structure and interpretation failures.",
+      "fileCount": 1,
+      "files": [
+        "src/errors.ts"
+      ]
+    }
+  ],
+  "inventorySha256": "48565b445035b4b41db714d51fc81e7f2ecd6388546de1e533d172e88ee1e717"
+}

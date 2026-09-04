@@ -1,0 +1,413 @@
+{
+  "schemaVersion": 3,
+  "generatedFrom": "git-tree",
+  "repository": "dunay2/dvt",
+  "baselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "configuredBaselineSha": "42504563629f0b998d8a3382ea839eead99a36d1",
+  "scope": "packages/@dvt/artifacts",
+  "logicalModelId": "artifactsModel",
+  "sourceModelId": "artifactsSource",
+  "configuredModelId": "artifactsSource",
+  "counts": {
+    "trackedFiles": 33,
+    "sourceFiles": 25,
+    "testFiles": 5,
+    "docsFiles": 0,
+    "packageRootFiles": 3,
+    "filesWithOwnedConcern": 3,
+    "filesWithDecision": 0
+  },
+  "files": [
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "14ade87ee83faee97e8385c739950e252cb7dcd0",
+      "sizeBytes": 824,
+      "path": "packages/@dvt/artifacts/package.json",
+      "relativePath": "package.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/package.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d60f8a95468de899cc063cfbed672c06390cc807",
+      "sizeBytes": 1847,
+      "path": "packages/@dvt/artifacts/src/compiledCode/adapters/FileSystemCompiledCodeStorage.ts",
+      "relativePath": "src/compiledCode/adapters/FileSystemCompiledCodeStorage.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/compiledCode/adapters/FileSystemCompiledCodeStorage.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e952af483099c47ce738de1e0b481b3a39a6e17d",
+      "sizeBytes": 1614,
+      "path": "packages/@dvt/artifacts/src/compiledCode/adapters/InMemoryCompiledCodeStorage.ts",
+      "relativePath": "src/compiledCode/adapters/InMemoryCompiledCodeStorage.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/compiledCode/adapters/InMemoryCompiledCodeStorage.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a45c3ebe95c506d8b3ef528c7bdbea678ad8a835",
+      "sizeBytes": 2452,
+      "path": "packages/@dvt/artifacts/src/compiledCode/adapters/MinioCompiledCodeStorage.ts",
+      "relativePath": "src/compiledCode/adapters/MinioCompiledCodeStorage.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/compiledCode/adapters/MinioCompiledCodeStorage.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "afd90387389cb6ab6af9c82d338cd201e959bec2",
+      "sizeBytes": 465,
+      "path": "packages/@dvt/artifacts/src/compiledCode/adapters/NoopCompiledCodeStorage.ts",
+      "relativePath": "src/compiledCode/adapters/NoopCompiledCodeStorage.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/compiledCode/adapters/NoopCompiledCodeStorage.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "afe2b30268df6f5fb35f5e993166abc383b108d9",
+      "sizeBytes": 2135,
+      "path": "packages/@dvt/artifacts/src/compiledCode/adapters/S3CompiledCodeStorage.ts",
+      "relativePath": "src/compiledCode/adapters/S3CompiledCodeStorage.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/compiledCode/adapters/S3CompiledCodeStorage.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "361e42f3b4d1abe8d188d5dcecaedad9082e0ad0",
+      "sizeBytes": 3362,
+      "path": "packages/@dvt/artifacts/src/compiledCode/attachCompiledCodeRefs.ts",
+      "relativePath": "src/compiledCode/attachCompiledCodeRefs.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/compiledCode/attachCompiledCodeRefs.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "682e5119e7b7a674b8cc72b92f0645ad704a8f02",
+      "sizeBytes": 211,
+      "path": "packages/@dvt/artifacts/src/compiledCode/sha256.ts",
+      "relativePath": "src/compiledCode/sha256.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/compiledCode/sha256.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4fbb7c2fe1ed74edb99f91deedf2d2ceddea716e",
+      "sizeBytes": 668,
+      "path": "packages/@dvt/artifacts/src/contentAddressed/IContentAddressedArtifactStore.ts",
+      "relativePath": "src/contentAddressed/IContentAddressedArtifactStore.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/contentAddressed/IContentAddressedArtifactStore.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ec03cf8ac5d7f4bfdd1ac3cb5abbe41a9ae1e840",
+      "sizeBytes": 5842,
+      "path": "packages/@dvt/artifacts/src/contentAddressed/S3ContentAddressedArtifactStore.ts",
+      "relativePath": "src/contentAddressed/S3ContentAddressedArtifactStore.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/contentAddressed/S3ContentAddressedArtifactStore.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9b35fdcb512b05741badf603326073e673241acb",
+      "sizeBytes": 3717,
+      "path": "packages/@dvt/artifacts/src/index.ts",
+      "relativePath": "src/index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/index.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "eed58c1fa5c1d23dc18acd5e751c7fcbe58a4e18",
+      "sizeBytes": 1193,
+      "path": "packages/@dvt/artifacts/src/ports/ICompiledCodeStorage.ts",
+      "relativePath": "src/ports/ICompiledCodeStorage.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/ports/ICompiledCodeStorage.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "da9cb03bbce24f51c7e0559d06672b095314db7b",
+      "sizeBytes": 518,
+      "path": "packages/@dvt/artifacts/src/ports/IDbtProjectBundleReader.ts",
+      "relativePath": "src/ports/IDbtProjectBundleReader.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/ports/IDbtProjectBundleReader.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "270149f2d3fc4afde0ab15cd237ce15563f553d1",
+      "sizeBytes": 960,
+      "path": "packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts",
+      "relativePath": "src/ports/IPlanStoreReader.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/ports/IPlanStoreReader.ts",
+      "ownedConcern": "expose scoped plan-store query ports."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b5225e311cb8db1d72afc7926f6914c328a292dc",
+      "sizeBytes": 940,
+      "path": "packages/@dvt/artifacts/src/ports/IPlanStoreWriter.ts",
+      "relativePath": "src/ports/IPlanStoreWriter.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/ports/IPlanStoreWriter.ts",
+      "ownedConcern": "expose scoped plan-store command ports."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "badd991f0f2ce7f2f112eaea9daab0e2929990cc",
+      "sizeBytes": 392,
+      "path": "packages/@dvt/artifacts/src/ports/IRunExecutionContextReader.ts",
+      "relativePath": "src/ports/IRunExecutionContextReader.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/ports/IRunExecutionContextReader.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "44aed8cd207bb1c40051d314083a77ad89f62e9d",
+      "sizeBytes": 541,
+      "path": "packages/@dvt/artifacts/src/ports/IRunExecutionContextReferenceStore.ts",
+      "relativePath": "src/ports/IRunExecutionContextReferenceStore.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/ports/IRunExecutionContextReferenceStore.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3a82f060b992f73f79c795ce540879f89abdc66e",
+      "sizeBytes": 1632,
+      "path": "packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts",
+      "relativePath": "src/ports/IStoredPlanArtifactStore.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts",
+      "ownedConcern": "expose stored-plan artifact lifecycle and materialization ports."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f89f33fc35aed68fa90b6beac0f81be459cb073e",
+      "sizeBytes": 1750,
+      "path": "packages/@dvt/artifacts/src/runtime/ArtifactBackedDbtProjectBundleReader.ts",
+      "relativePath": "src/runtime/ArtifactBackedDbtProjectBundleReader.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/runtime/ArtifactBackedDbtProjectBundleReader.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a267c934bf430ed2f35c84ad4ff26bdd1b988c7d",
+      "sizeBytes": 3782,
+      "path": "packages/@dvt/artifacts/src/runtime/ArtifactBackedRunExecutionContextReader.ts",
+      "relativePath": "src/runtime/ArtifactBackedRunExecutionContextReader.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/runtime/ArtifactBackedRunExecutionContextReader.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "47e0448885af9268365b13fe0254d51693ab19e9",
+      "sizeBytes": 746,
+      "path": "packages/@dvt/artifacts/src/runtime/ArtifactReadError.ts",
+      "relativePath": "src/runtime/ArtifactReadError.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/runtime/ArtifactReadError.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c86df4bb818d00d346def85f228edfe454e8346f",
+      "sizeBytes": 3417,
+      "path": "packages/@dvt/artifacts/src/runtime/assertDbtProjectBundleBinding.ts",
+      "relativePath": "src/runtime/assertDbtProjectBundleBinding.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/runtime/assertDbtProjectBundleBinding.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "10b31e66595e59d47bf8c2d3a2ae3b4b6864abd7",
+      "sizeBytes": 9778,
+      "path": "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts",
+      "relativePath": "src/runtime/readArtifactBytes.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/runtime/readArtifactBytes.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "173169e91ee6ff8197a6830bfc1cf154eef2f3f6",
+      "sizeBytes": 1622,
+      "path": "packages/@dvt/artifacts/src/runtime/resolveRunExecutionContextArtifactStore.ts",
+      "relativePath": "src/runtime/resolveRunExecutionContextArtifactStore.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/runtime/resolveRunExecutionContextArtifactStore.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "7f270d2d362e3c3f146a652b587494bcfbf8363a",
+      "sizeBytes": 5192,
+      "path": "packages/@dvt/artifacts/src/runtime/S3RunExecutionContextReferenceStore.ts",
+      "relativePath": "src/runtime/S3RunExecutionContextReferenceStore.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/runtime/S3RunExecutionContextReferenceStore.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b22fc5c90e967af091d8a6fb52f4b0e704dc5693",
+      "sizeBytes": 775,
+      "path": "packages/@dvt/artifacts/src/runtime/validateArtifactIntegrity.ts",
+      "relativePath": "src/runtime/validateArtifactIntegrity.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/runtime/validateArtifactIntegrity.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e722fbb8a37090abd09c06433eb9e128dd256c60",
+      "sizeBytes": 3188,
+      "path": "packages/@dvt/artifacts/test/artifactSurface.test.ts",
+      "relativePath": "test/artifactSurface.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/test/artifactSurface.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "7d86dbf3945dfcd34dcc0221f0404491905a6427",
+      "sizeBytes": 9686,
+      "path": "packages/@dvt/artifacts/test/contentAddressedArtifactStore.test.ts",
+      "relativePath": "test/contentAddressedArtifactStore.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/test/contentAddressedArtifactStore.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "229720209030665ef17159bb9a471a51c05a23a2",
+      "sizeBytes": 3385,
+      "path": "packages/@dvt/artifacts/test/readArtifact.test.ts",
+      "relativePath": "test/readArtifact.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/test/readArtifact.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2ed9d4c61b1290f44dc6ddc7c605b0315ad058ff",
+      "sizeBytes": 13229,
+      "path": "packages/@dvt/artifacts/test/runExecutionContextReaders.test.ts",
+      "relativePath": "test/runExecutionContextReaders.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/test/runExecutionContextReaders.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "7aa342298ad739dad499f0046fb6b3754ea108c3",
+      "sizeBytes": 1593,
+      "path": "packages/@dvt/artifacts/test/validateArtifactIntegrity.test.ts",
+      "relativePath": "test/validateArtifactIntegrity.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/test/validateArtifactIntegrity.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e940367672b75eb3849112fd1374fd6c29a7c55a",
+      "sizeBytes": 211,
+      "path": "packages/@dvt/artifacts/tsconfig.json",
+      "relativePath": "tsconfig.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/tsconfig.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a71174ddf688af5e944496a955ad1c92f790dfbd",
+      "sizeBytes": 157,
+      "path": "packages/@dvt/artifacts/vitest.config.ts",
+      "relativePath": "vitest.config.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/vitest.config.ts"
+    }
+  ],
+  "componentMappings": [
+    {
+      "id": "publicBoundary",
+      "title": "Artifacts public boundary",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "src/index.ts is the package export surface for artifact ports, runtime readers and storage implementations.",
+      "fileCount": 1,
+      "files": [
+        "src/index.ts"
+      ]
+    },
+    {
+      "id": "contentAddressed",
+      "title": "Content-addressed artifact storage",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Owns immutable content-addressed publication and retrieval, including the S3 implementation.",
+      "fileCount": 2,
+      "files": [
+        "src/contentAddressed/IContentAddressedArtifactStore.ts",
+        "src/contentAddressed/S3ContentAddressedArtifactStore.ts"
+      ]
+    },
+    {
+      "id": "planStorage",
+      "title": "Plan artifact storage ports",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Defines read/write boundaries for plans and stored plan artifacts without owning planning decisions.",
+      "fileCount": 3,
+      "files": [
+        "src/ports/IPlanStoreReader.ts",
+        "src/ports/IPlanStoreWriter.ts",
+        "src/ports/IStoredPlanArtifactStore.ts"
+      ]
+    },
+    {
+      "id": "executionContext",
+      "title": "Run execution context artifacts",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Resolves immutable run execution context references and reads their backing artifacts at runtime.",
+      "fileCount": 5,
+      "files": [
+        "src/ports/IRunExecutionContextReader.ts",
+        "src/ports/IRunExecutionContextReferenceStore.ts",
+        "src/runtime/ArtifactBackedRunExecutionContextReader.ts",
+        "src/runtime/resolveRunExecutionContextArtifactStore.ts",
+        "src/runtime/S3RunExecutionContextReferenceStore.ts"
+      ]
+    },
+    {
+      "id": "dbtBundle",
+      "title": "dbt project bundle artifacts",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Reads dbt project bundles from artifact storage and validates their binding to expected execution context.",
+      "fileCount": 3,
+      "files": [
+        "src/ports/IDbtProjectBundleReader.ts",
+        "src/runtime/ArtifactBackedDbtProjectBundleReader.ts",
+        "src/runtime/assertDbtProjectBundleBinding.ts"
+      ]
+    },
+    {
+      "id": "artifactReadIntegrity",
+      "title": "Artifact reading and integrity",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Centralizes artifact byte reads, integrity checks and typed read failures used by runtime readers.",
+      "fileCount": 3,
+      "files": [
+        "src/runtime/ArtifactReadError.ts",
+        "src/runtime/readArtifactBytes.ts",
+        "src/runtime/validateArtifactIntegrity.ts"
+      ]
+    },
+    {
+      "id": "compiledCode",
+      "title": "Compiled-code storage and enrichment",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Current AS-IS compiled-code storage port, adapters, hashing helper and ExecutionPlan enrichment surface exported by the package.",
+      "fileCount": 8,
+      "files": [
+        "src/compiledCode/adapters/FileSystemCompiledCodeStorage.ts",
+        "src/compiledCode/adapters/InMemoryCompiledCodeStorage.ts",
+        "src/compiledCode/adapters/MinioCompiledCodeStorage.ts",
+        "src/compiledCode/adapters/NoopCompiledCodeStorage.ts",
+        "src/compiledCode/adapters/S3CompiledCodeStorage.ts",
+        "src/compiledCode/attachCompiledCodeRefs.ts",
+        "src/compiledCode/sha256.ts",
+        "src/ports/ICompiledCodeStorage.ts"
+      ]
+    }
+  ],
+  "inventorySha256": "71c11ff5cc43bee64809619753791300bc63d2e32b3f146670b7c9031a7ac6a1"
+}

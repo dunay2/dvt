@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "components": [
+    {"id":"host","title":"Projector worker process host","paths":["src/server.ts"],"rationale":"Owns the projector process lifecycle and composes the @dvt/delivery projector runtime."},
+    {"id":"env","title":"Projector environment","paths":["src/env.ts"],"rationale":"Parses/validates deployment configuration for the projector host."}
+  ]
+}

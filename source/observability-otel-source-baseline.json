@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "repository": "dunay2/dvt",
+  "baselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "scope": "packages/@dvt/observability-otel",
+  "modelId": "observabilityOtelModel",
+  "displayName": "Observability OTel",
+  "architectureOwner": "dvt.observability-otel"
+}

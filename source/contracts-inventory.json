@@ -1,0 +1,2255 @@
+{
+  "schemaVersion": 3,
+  "generatedFrom": "git-tree",
+  "repository": "dunay2/dvt",
+  "baselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "configuredBaselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "scope": "packages/@dvt/contracts",
+  "logicalModelId": "contractsModel",
+  "sourceModelId": "contractsSource",
+  "configuredModelId": "contractsModel",
+  "counts": {
+    "trackedFiles": 185,
+    "sourceFiles": 110,
+    "testFiles": 68,
+    "docsFiles": 0,
+    "packageRootFiles": 6,
+    "filesWithOwnedConcern": 56,
+    "filesWithDecision": 60
+  },
+  "files": [
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "fb8b52eb6c4d91d07d11262adb6d42f7df7cdfe1",
+      "sizeBytes": 1145,
+      "path": "packages/@dvt/contracts/compat/plan-compat.schema.json",
+      "relativePath": "compat/plan-compat.schema.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/compat/plan-compat.schema.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "cba18435457dde95efe54c25b2e332bf369c16b7",
+      "sizeBytes": 29,
+      "path": "packages/@dvt/contracts/index.d.ts",
+      "relativePath": "index.d.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/index.d.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4df73b330ffdfcbdf04f4263be4627d2a04dcb58",
+      "sizeBytes": 32,
+      "path": "packages/@dvt/contracts/index.js",
+      "relativePath": "index.js",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/index.js"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "cba18435457dde95efe54c25b2e332bf369c16b7",
+      "sizeBytes": 29,
+      "path": "packages/@dvt/contracts/index.ts",
+      "relativePath": "index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/index.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3a4e2c5146f3fbe99c45206751dd63caf15053bc",
+      "sizeBytes": 1306,
+      "path": "packages/@dvt/contracts/package.json",
+      "relativePath": "package.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/package.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "51343e8badb2c4c46345c200407db45bfb62099a",
+      "sizeBytes": 6994,
+      "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
+      "relativePath": "src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
+      "ownedConcern": "publish the semantic command and typed outcomes for one",
+      "decision": "The client names semantic identities; the server owns source patches.",
+      "consequence": "Arbitrary replacement source is absent from this boundary.",
+      "baseline": [
+        "ADR-0060: DBT Project Authoring Authority"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "68bbd55ccfe63c4f6adee8cf571a14e40ab758b5",
+      "sizeBytes": 11094,
+      "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtProjectImport.v1.ts",
+      "relativePath": "src/contracts/dbt-project/DbtProjectImport.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/dbt-project/DbtProjectImport.v1.ts",
+      "ownedConcern": "version validation and explicit import of one existing dbt",
+      "decision": "Validation is read-only; import requires its content-addressed receipt and an unbound Canvas.",
+      "consequence": "A client cannot silently overwrite graph authority or report an uninspected project as imported.",
+      "baseline": [
+        "ADR-0060: dbt Project Authoring Authority"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ae10e7f55a4f9cb361e887efd1082320d8c467d3",
+      "sizeBytes": 9408,
+      "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
+      "relativePath": "src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
+      "ownedConcern": "publish a deterministic, server-authoritative analysis for one",
+      "decision": "Native dbt analysis owns semantics; this contract exposes only",
+      "consequence": "Unsupported syntax remains byte-addressable and code-only.",
+      "baseline": [
+        "ADR-0060: dbt Project Authoring Authority"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "57c8dce3dadff101fa94b8ad45eabf68e16e57ac",
+      "sizeBytes": 6300,
+      "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtYamlDescriptionEdit.v1.ts",
+      "relativePath": "src/contracts/dbt-project/DbtYamlDescriptionEdit.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/dbt-project/DbtYamlDescriptionEdit.v1.ts",
+      "ownedConcern": "version the exact proposal, apply receipt, and conditional",
+      "decision": "Visual description edits carry a content-addressed proposal and never expose a generic node update.",
+      "consequence": "API and browser share one strict transaction vocabulary while files remain semantic authority.",
+      "baseline": [
+        "ADR-0060: dbt Project Authoring Authority"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "1fda43c8e95641b6c4bb9a795ced2bb910f231fd",
+      "sizeBytes": 3824,
+      "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtModelCompilation.v1.ts",
+      "relativePath": "src/contracts/dbt-project/GraphDbtModelCompilation.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/dbt-project/GraphDbtModelCompilation.v1.ts",
+      "ownedConcern": "version the bounded request and native result for compiling",
+      "decision": "Compile only already-published Graph Draft artifacts through native DBT.",
+      "consequence": "Compiled SQL is an ephemeral readiness read model, never graph state.",
+      "baseline": [
+        "ADR-0060: dbt Project Authoring Authority"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "bcb36dd817e36cb116fe9e42510c347bd27b7a67",
+      "sizeBytes": 6773,
+      "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+      "relativePath": "src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+      "ownedConcern": "version the complete, revision-guarded publication request",
+      "decision": "Publish the complete graph-derived dbt artifact set through one specific atomic command.",
+      "consequence": "A browser cannot partially publish graph-derived dbt project files.",
+      "baseline": [
+        "ADR-0060: dbt Project Authoring Authority"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "145c182c6853a33c79347c24d1d2a6c823c8278b",
+      "sizeBytes": 642,
+      "path": "packages/@dvt/contracts/src/contracts/dbt-project/index.ts",
+      "relativePath": "src/contracts/dbt-project/index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/dbt-project/index.ts",
+      "ownedConcern": "expose versioned dbt project boundary contracts.",
+      "decision": "Re-export only versioned dbt project published language",
+      "consequence": "Consumers cannot bypass the governed validation receipt and",
+      "baseline": [
+        "ADR-0060: dbt Project Authoring Authority"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "586af7b370949c02f1807e37a735b30f980ff08f",
+      "sizeBytes": 88,
+      "path": "packages/@dvt/contracts/src/contracts/engine/ExecutionSemantics.v1.ts",
+      "relativePath": "src/contracts/engine/ExecutionSemantics.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/engine/ExecutionSemantics.v1.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "54b19ed13958879f025547cf999f1a43fc38c3d8",
+      "sizeBytes": 486,
+      "path": "packages/@dvt/contracts/src/contracts/engine/IOutboxStorage.v1.ts",
+      "relativePath": "src/contracts/engine/IOutboxStorage.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/engine/IOutboxStorage.v1.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e751d761bad34039ac0bd289a8dd75b78062aebd",
+      "sizeBytes": 141,
+      "path": "packages/@dvt/contracts/src/contracts/engine/IWorkflowEngine.v1.ts",
+      "relativePath": "src/contracts/engine/IWorkflowEngine.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/engine/IWorkflowEngine.v1.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6ac90d7e1da32da71e586f4c3e8d40238adb0861",
+      "sizeBytes": 6431,
+      "path": "packages/@dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
+      "relativePath": "src/contracts/engine/RunControlBoundary.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/engine/RunControlBoundary.v1.ts",
+      "decision": "Publish one run-control boundary without exposing adapter-owned lifecycle authority",
+      "consequence": "API and web consumers share vocabulary while the engine owns behavior",
+      "baseline": [
+        "ADR-0005: Contract Formalization Tooling",
+        "ADR-0006: Contract Tooling Governance",
+        "ADR-0007: Run Cancellation Semantics and Event Ownership",
+        "ADR-0040: Retry Ownership and Attempt Authority",
+        "ADR-0049: RETRY_RUN is a separate recovery use case"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "44e819a2ffbd478644d4af6f1e521c2af3ed9cf4",
+      "sizeBytes": 88,
+      "path": "packages/@dvt/contracts/src/contracts/engine/RunEvents.v1.ts",
+      "relativePath": "src/contracts/engine/RunEvents.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/engine/RunEvents.v1.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "689ec0c68e4eca36474f1887b1673b6413985f81",
+      "sizeBytes": 5457,
+      "path": "packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts",
+      "relativePath": "src/contracts/engine/RunExecutionContext.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "fe122d9ff90b21982990fee990bbf51948af7482",
+      "sizeBytes": 799,
+      "path": "packages/@dvt/contracts/src/contracts/engine/RunExecutionPolicy.v1.ts",
+      "relativePath": "src/contracts/engine/RunExecutionPolicy.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/engine/RunExecutionPolicy.v1.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a96b9ed9d22bd5341abb0a52bc6af96c69e30dcc",
+      "sizeBytes": 4077,
+      "path": "packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts",
+      "relativePath": "src/contracts/engine/RunStateVocabulary.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts",
+      "ownedConcern": "Publish shared run-state vocabulary for persisted events,",
+      "decision": "Publish only serializable run-state DTO vocabulary from the shared",
+      "consequence": "Engine and adapters can share persisted event shapes without",
+      "baseline": [
+        "ADR-0018: Shared Kernel Ownership Governance",
+        "ADR-0034: Bounded Context Boundaries and Communication Rules"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6310442d29ed14a227984ee5f5ab8bd15f207666",
+      "sizeBytes": 2071,
+      "path": "packages/@dvt/contracts/src/contracts/engine/SignalSemantics.v1.ts",
+      "relativePath": "src/contracts/engine/SignalSemantics.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/engine/SignalSemantics.v1.ts",
+      "decision": "Signal-to-event derivation semantics are versioned as a contract shared by engine and adapters",
+      "consequence": "Signal evolution can be negotiated by version without hardcoding mapping logic inside engine internals",
+      "baseline": [
+        "ADR-0005: Contract Formalization Tooling",
+        "ADR-0006: Contract Tooling Governance",
+        "ADR-0014: Run-Driven Adapter Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9224bed9bf0b42953afd66fff860bcd46165c236",
+      "sizeBytes": 5211,
+      "path": "packages/@dvt/contracts/src/contracts/engine/StartRunBoundary.v1.ts",
+      "relativePath": "src/contracts/engine/StartRunBoundary.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/engine/StartRunBoundary.v1.ts",
+      "ownedConcern": "define the canonical API-to-engine start-run boundary."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5bb7092dd162c8c8c68dc3f22d692448670c05d0",
+      "sizeBytes": 2348,
+      "path": "packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts",
+      "relativePath": "src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts",
+      "ownedConcern": "define the mutually exclusive semantic authority for one",
+      "decision": "Version graph-draft and dbt-project-files authority outside WorkspaceGraphAuthoringDraft.v1.",
+      "consequence": "A Canvas cannot silently merge file-backed resources with graph-draft semantics.",
+      "baseline": [
+        "ADR-0060: dbt Project Authoring Authority"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "98e6791197a19dda78b3f11b6134e653e36c0e2f",
+      "sizeBytes": 7558,
+      "path": "packages/@dvt/contracts/src/contracts/planner/CustomPolicyNamespaceRegistry.v1.ts",
+      "relativePath": "src/contracts/planner/CustomPolicyNamespaceRegistry.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/CustomPolicyNamespaceRegistry.v1.ts",
+      "ownedConcern": "retain source-compatible custom policy namespace DTO"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "8728b124db6613ae985db83fc2fafde7094cf4e4",
+      "sizeBytes": 10336,
+      "path": "packages/@dvt/contracts/src/contracts/planner/DbtProjectGraphProjection.v1.ts",
+      "relativePath": "src/contracts/planner/DbtProjectGraphProjection.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/DbtProjectGraphProjection.v1.ts",
+      "ownedConcern": "expose the deterministic server-analyzed dbt project graph",
+      "decision": "Keep dbt file analysis in a versioned projection separate from execution and draft persistence.",
+      "consequence": "Invalid analysis remains explicit and cannot fall back to graph-draft authority.",
+      "baseline": [
+        "ADR-0060: dbt Project Authoring Authority"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "fd868478ffecb0f22444e105368247e5cafc36ef",
+      "sizeBytes": 1905,
+      "path": "packages/@dvt/contracts/src/contracts/planner/DbtStepSelector.v1.ts",
+      "relativePath": "src/contracts/planner/DbtStepSelector.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/DbtStepSelector.v1.ts",
+      "ownedConcern": "bind a DBT execution step to its project resource selector.",
+      "decision": "Carry one bounded dbt selector in the admitted step configuration.",
+      "consequence": "Runtime dispatch resolves the selected dbt resource without inferring it from step identity.",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0035: Planner Public Contract Evolution Protocol"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "55c65b8b3827337dbf7b806bf37a406e630bc3ff",
+      "sizeBytes": 4131,
+      "path": "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityAdmission.v1.ts",
+      "relativePath": "src/contracts/planner/DvtSubstraitCapabilityAdmission.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityAdmission.v1.ts",
+      "decision": "Require typed standard-first evidence before semantic admission.",
+      "consequence": "Provider execution and visual exposure remain independent postures.",
+      "baseline": [
+        "ADR-0064: Substrait semantic reference and bounded logical profile"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e7adf39a2076514d80cea98bdcc271c0dd78c8b5",
+      "sizeBytes": 1247,
+      "path": "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts",
+      "relativePath": "src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts",
+      "decision": "Compose one catalog from standard candidates, admissions, and product gaps.",
+      "consequence": "Consumers retain one canonical capability read model.",
+      "baseline": [
+        "ADR-0064: Substrait semantic reference and bounded logical profile"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3a23363172be308ddf9a3d5cf7bb93b0f1fa6acd",
+      "sizeBytes": 7304,
+      "path": "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalogSchema.v1.ts",
+      "relativePath": "src/contracts/planner/DvtSubstraitCapabilityCatalogSchema.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalogSchema.v1.ts",
+      "decision": "Validate and serialize the capability read model deterministically.",
+      "consequence": "Supported status rejects without complete admission evidence.",
+      "baseline": [
+        "ADR-0064: Substrait semantic reference and bounded logical profile"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "0f5b45ead5548d12d1c545ee526294594b8df83b",
+      "sizeBytes": 3083,
+      "path": "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityIdentity.v1.ts",
+      "relativePath": "src/contracts/planner/DvtSubstraitCapabilityIdentity.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityIdentity.v1.ts",
+      "decision": "Bind catalog entries to exact core or official extension identities.",
+      "consequence": "Private or keyword-derived semantic identities reject.",
+      "baseline": [
+        "ADR-0064: Substrait semantic reference and bounded logical profile"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "1c1a9549c70b0a80e142f633a63b1f874ba7b637",
+      "sizeBytes": 2851,
+      "path": "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitFieldBindingHierarchy.v1.ts",
+      "relativePath": "src/contracts/planner/DvtSubstraitFieldBindingHierarchy.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/DvtSubstraitFieldBindingHierarchy.v1.ts",
+      "decision": "Validate stable field hierarchy independently from document transport.",
+      "consequence": "Root and nested sibling order share one fail-closed invariant.",
+      "baseline": [
+        "ADR-0064: Substrait semantic reference and bounded logical profile"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "422101d136aa72eeafcd6bcbff27f02a578bfdd5",
+      "sizeBytes": 1302,
+      "path": "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitPlanBinary.v1.ts",
+      "relativePath": "src/contracts/planner/DvtSubstraitPlanBinary.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/DvtSubstraitPlanBinary.v1.ts",
+      "ownedConcern": "decode the exact protobuf Plan admitted by the pinned DVT",
+      "decision": "Fail closed when persisted bytes are not one decodable Plan at the pinned version.",
+      "baseline": [
+        "ADR-0064: Substrait semantic reference and bounded logical profile"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "aa435fcb35466fccb387444c94c7007342d5ac1b",
+      "sizeBytes": 1975,
+      "path": "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProductNeeds.v1.ts",
+      "relativePath": "src/contracts/planner/DvtSubstraitProductNeeds.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/DvtSubstraitProductNeeds.v1.ts",
+      "decision": "Retain product gaps separately from standard semantic identities.",
+      "consequence": "A product need cannot masquerade as admitted Substrait semantics.",
+      "baseline": [
+        "ADR-0064: Substrait semantic reference and bounded logical profile"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6912b951c4ab0c3b20d535a9263e2cf4e8969602",
+      "sizeBytes": 4931,
+      "path": "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProfile.v1.ts",
+      "relativePath": "src/contracts/planner/DvtSubstraitProfile.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/DvtSubstraitProfile.v1.ts",
+      "ownedConcern": "pin the first DVT Substrait semantic profile and define the",
+      "decision": "Pin one exact Substrait release and map stable DVT ids to rel_anchor/output ordinals.",
+      "consequence": "Rename/reorder/reload can preserve identity without a private DVT relational IR.",
+      "baseline": [
+        "ADR-0064: Substrait semantic reference and bounded logical profile"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "1f61258ec1625bb6f337d6b39220ba948ce872d2",
+      "sizeBytes": 5486,
+      "path": "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts",
+      "relativePath": "src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts",
+      "ownedConcern": "validate the canonical DVT Substrait semantic document and",
+      "decision": "Bind exact pinned Plan bytes to one identity-only DVT sidecar.",
+      "baseline": [
+        "ADR-0064: Substrait semantic reference and bounded logical profile"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e2e8c07ba5b4a91022b78d7410809ed87547bf94",
+      "sizeBytes": 4119,
+      "path": "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitStandardCandidates.v1.ts",
+      "relativePath": "src/contracts/planner/DvtSubstraitStandardCandidates.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/DvtSubstraitStandardCandidates.v1.ts",
+      "decision": "Seed candidates only from pinned core and official extension identities.",
+      "consequence": "Candidate presence does not imply DVT support.",
+      "baseline": [
+        "ADR-0064: Substrait semantic reference and bounded logical profile"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "09528b6c674b89373fc39f08d8b7bd5e2545ca23",
+      "sizeBytes": 6494,
+      "path": "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSupportedCapabilities.v1.ts",
+      "relativePath": "src/contracts/planner/DvtSubstraitSupportedCapabilities.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/DvtSubstraitSupportedCapabilities.v1.ts",
+      "decision": "Attach typed evidence from one admission-group collection.",
+      "consequence": "No ID-set switch or parallel supported-capability registry remains.",
+      "baseline": [
+        "ADR-0064: Substrait semantic reference and bounded logical profile"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ec7b518d5f89cc29ae63be81233ad59a5623caba",
+      "sizeBytes": 1088,
+      "path": "packages/@dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts",
+      "relativePath": "src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts",
+      "ownedConcern": "admit the single canonical authoring authority for DVT transforms.",
+      "decision": "Admit Substrait as the sole DVT transform authoring authority.",
+      "baseline": [
+        "ADR-0035: Planner Public Contract Evolution Protocol",
+        "ADR-0064: Substrait semantic reference and bounded logical profile"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c43d27f7b06dc5df39870e4e12f7bb4b3616913d",
+      "sizeBytes": 4194,
+      "path": "packages/@dvt/contracts/src/contracts/planner/ExecutableSubgraph.v1.ts",
+      "relativePath": "src/contracts/planner/ExecutableSubgraph.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/ExecutableSubgraph.v1.ts",
+      "ownedConcern": "define the canonical derived selected-closure read model used",
+      "decision": "Publish selected executable closure as a derived read model separate from editable authoring truth.",
+      "consequence": "Preview and run callers can validate selection intent without persisting a second draft family.",
+      "baseline": [
+        "ADR-0035: Planner Public Contract Evolution Protocol"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "18690ce6660bb82a3536a5b3cec4bc6975fb7f32",
+      "sizeBytes": 3977,
+      "path": "packages/@dvt/contracts/src/contracts/planner/ExecutionBindingVerification.v1.ts",
+      "relativePath": "src/contracts/planner/ExecutionBindingVerification.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/ExecutionBindingVerification.v1.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "1e38c71a50af7a2ac462c4f9495bc430288658f2",
+      "sizeBytes": 6953,
+      "path": "packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts",
+      "relativePath": "src/contracts/planner/ExecutionPlan.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts",
+      "decision": "Logical transformation semantics stay outside ExecutionPlan; plan steps represent runtime responsibilities only.",
+      "consequence": "Substrait relation/operator count cannot implicitly become ExecutionPlan step count.",
+      "baseline": [
+        "ADR-0064: Substrait semantic reference and bounded logical profile"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d8cd711d3b5440f4616ff1c124a8294c1ea653d4",
+      "sizeBytes": 2624,
+      "path": "packages/@dvt/contracts/src/contracts/planner/ExecutionSelection.v1.ts",
+      "relativePath": "src/contracts/planner/ExecutionSelection.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/ExecutionSelection.v1.ts",
+      "ownedConcern": "define the canonical execution-selection command input for",
+      "decision": "Keep executable-selection intent as a canonical planner contract instead of UI-local state.",
+      "consequence": "API, web, and planner callers share one selection vocabulary for preview and run paths.",
+      "baseline": [
+        "ADR-0035: Planner Public Contract Evolution Protocol"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2b9bb4bde32973ef48d59920d6d4c19c053b1c27",
+      "sizeBytes": 8249,
+      "path": "packages/@dvt/contracts/src/contracts/planner/HttpJsonArtifactStepTypeConfig.v1.ts",
+      "relativePath": "src/contracts/planner/HttpJsonArtifactStepTypeConfig.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/HttpJsonArtifactStepTypeConfig.v1.ts",
+      "ownedConcern": "define one bounded HTTPS GET to immutable JSON artifact step.",
+      "decision": "Plans carry only opaque endpoint/credential references and a predeclared content address.",
+      "consequence": "Admission rejects arbitrary URLs, methods, bodies, secret headers, unbounded responses, and scope drift.",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0035: Planner Public Contract Evolution Protocol",
+        "ADR-0043: Plan record, plan store, and artifacts ownership"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "24081c2561318d154cd4782d8dce38796fe44082",
+      "sizeBytes": 746,
+      "path": "packages/@dvt/contracts/src/contracts/planner/IExecutionPlanner.v1.ts",
+      "relativePath": "src/contracts/planner/IExecutionPlanner.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/IExecutionPlanner.v1.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5f37eda7f69173203793ee68524a976aad93d06b",
+      "sizeBytes": 1018,
+      "path": "packages/@dvt/contracts/src/contracts/planner/index.ts",
+      "relativePath": "src/contracts/planner/index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/index.ts",
+      "ownedConcern": "expose the execution-selection planner contract component as",
+      "decision": "Re-export only the execution-selection component contracts through this local barrel.",
+      "consequence": "Downstream imports do not turn the planner contract package into an accidental grab bag.",
+      "baseline": [
+        "ADR-0035: Planner Public Contract Evolution Protocol"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a4e58aecd6f41a06d07b1679a5175bbde13ad469",
+      "sizeBytes": 1854,
+      "path": "packages/@dvt/contracts/src/contracts/planner/ObjectFilePostgresDbtBridge.v1.ts",
+      "relativePath": "src/contracts/planner/ObjectFilePostgresDbtBridge.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/ObjectFilePostgresDbtBridge.v1.ts",
+      "ownedConcern": "mark DBT steps whose project reads the scoped PostgreSQL",
+      "decision": "Mark the object-file staging dependency explicitly in admitted DBT step configuration.",
+      "consequence": "Artifact projection binds source() to the scoped staging relation without making DBT own ingestion.",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0035: Planner Public Contract Evolution Protocol"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2de7ed2de4a87a477fce55fc454ed6d3082f86f0",
+      "sizeBytes": 6642,
+      "path": "packages/@dvt/contracts/src/contracts/planner/ObjectFileToPostgresStepTypeConfig.v1.ts",
+      "relativePath": "src/contracts/planner/ObjectFileToPostgresStepTypeConfig.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/ObjectFileToPostgresStepTypeConfig.v1.ts",
+      "ownedConcern": "define the bounded, content-addressed object-file to",
+      "decision": "Admit one UTF-8 CSV or JSON Lines object and one scoped staging relation.",
+      "consequence": "Planner and stored-plan admission reject unbounded locators, secrets, and scope drift.",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0035: Planner Public Contract Evolution Protocol"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ad4768305607b8ccfae40c85c2b882d36a0504e3",
+      "sizeBytes": 2721,
+      "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmission.v1.ts",
+      "relativePath": "src/contracts/planner/PlanAdmission.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/PlanAdmission.v1.ts",
+      "ownedConcern": "publish the executable admission truth that binds",
+      "decision": "Publish admitted planVersion/schemaVersion pairs as executable shared-kernel contract data.",
+      "consequence": "Runtime ingress rejects unsupported plan pairs from one canonical matrix.",
+      "baseline": [
+        "ADR-0036: ExecutionPlan PlanVersion Registry And Runtime Compatibility Matrix",
+        "ADR-0046: Execution Plan Definition And Run Execution Policy Separation"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9ad1b173bc944d8d3b105d5e2741ac91766f50b4",
+      "sizeBytes": 6210,
+      "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+      "relativePath": "src/contracts/planner/PlanAdmissionFinding.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+      "ownedConcern": "publish immutable, structured findings emitted by the two",
+      "decision": "Publish one versioned finding vocabulary for the existing preview-selection and stored-plan executability decisions.",
+      "consequence": "Admission authorities can expose structured rejection evidence without creating a parallel result hierarchy.",
+      "baseline": [
+        "ADR-0035: Planner Public Contract Evolution Protocol"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "35cbf5bf9afcc19a58ad789d7a7422cbbc644ed2",
+      "sizeBytes": 769,
+      "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionLink.v1.schema.json",
+      "relativePath": "src/contracts/planner/PlanAdmissionLink.v1.schema.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/PlanAdmissionLink.v1.schema.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c409f0103a3f2d44cee36209da2d4898c23c3224",
+      "sizeBytes": 561,
+      "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionLink.v1.ts",
+      "relativePath": "src/contracts/planner/PlanAdmissionLink.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/PlanAdmissionLink.v1.ts",
+      "ownedConcern": "publish tenant-owned plan admission link shapes."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ad8d535622b4c3ee7eac9a760ec79bc47fd8455b",
+      "sizeBytes": 1358,
+      "path": "packages/@dvt/contracts/src/contracts/planner/PlanCompileStepTypeConfigs.v1.ts",
+      "relativePath": "src/contracts/planner/PlanCompileStepTypeConfigs.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/PlanCompileStepTypeConfigs.v1.ts",
+      "decision": "Define plan-compile step-type configuration schemas as explicit planner contract surface",
+      "consequence": "Planner extensions validate through versioned contract schemas instead of ad hoc runtime payloads",
+      "baseline": [
+        "ADR-0005: Contract Formalization Tooling",
+        "ADR-0035: Planner Public Contract Evolution Protocol",
+        "ADR-0046: Execution Plan Definition And Run Execution Policy Separation"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5f2f0c843b5cd79f4aa9d329c087d32663a9b9c0",
+      "sizeBytes": 2914,
+      "path": "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityRecord.v1.schema.json",
+      "relativePath": "src/contracts/planner/PlanExecutabilityRecord.v1.schema.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/PlanExecutabilityRecord.v1.schema.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "344b4287db4dd530606855c0f3e86ae27d7162d9",
+      "sizeBytes": 1166,
+      "path": "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityRecord.v1.ts",
+      "relativePath": "src/contracts/planner/PlanExecutabilityRecord.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/PlanExecutabilityRecord.v1.ts",
+      "ownedConcern": "publish tenant-owned adapter executability record shapes."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "397fb73caefbeebe74a1b2b732cd510a11069ce8",
+      "sizeBytes": 4253,
+      "path": "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts",
+      "relativePath": "src/contracts/planner/PlanExecutabilityValidation.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f2aa96d475c6e87ae2db12e3aa71ef663cc32e34",
+      "sizeBytes": 1721,
+      "path": "packages/@dvt/contracts/src/contracts/planner/PlanExecutionDecision.v1.ts",
+      "relativePath": "src/contracts/planner/PlanExecutionDecision.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/PlanExecutionDecision.v1.ts",
+      "decision": "Keep execution decisions in the persisted plan artifact so Web renders planner truth without reconstructing selection semantics.",
+      "consequence": "Planner, API, and Web share one immutable execution-decision vocabulary.",
+      "baseline": [
+        "ADR-0035: Planner Public Contract Evolution Protocol"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "407b226abf400eb80adcd792a2945332197e3df5",
+      "sizeBytes": 4637,
+      "path": "packages/@dvt/contracts/src/contracts/planner/PlannerInputEnvelopeV1.schema.json",
+      "relativePath": "src/contracts/planner/PlannerInputEnvelopeV1.schema.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/PlannerInputEnvelopeV1.schema.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "202f5c0849bc58d123a0f5865d496df156bcd6f4",
+      "sizeBytes": 2032,
+      "path": "packages/@dvt/contracts/src/contracts/planner/PlannerPolicyClassSet.v2.schema.json",
+      "relativePath": "src/contracts/planner/PlannerPolicyClassSet.v2.schema.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/PlannerPolicyClassSet.v2.schema.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f757c10bf5d58694a04ed4da4ce6a0a0cbfa84d6",
+      "sizeBytes": 8394,
+      "path": "packages/@dvt/contracts/src/contracts/planner/PlannerPolicyVocabulary.v2.ts",
+      "relativePath": "src/contracts/planner/PlannerPolicyVocabulary.v2.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/PlannerPolicyVocabulary.v2.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "604517e7293ccaf7aefee5b34375c83ac71baeff",
+      "sizeBytes": 4071,
+      "path": "packages/@dvt/contracts/src/contracts/planner/PlanPreviewProvenance.v1.ts",
+      "relativePath": "src/contracts/planner/PlanPreviewProvenance.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/PlanPreviewProvenance.v1.ts",
+      "ownedConcern": "bind persisted plan previews to their authoritative inputs.",
+      "decision": "Use one discriminated provenance contract for transformation Git artifacts and file-authoritative dbt projects.",
+      "consequence": "Consumers cannot confuse generated-artifact authority with an analyzed dbt project revision.",
+      "baseline": [
+        "ADR-0060: dbt Project Authoring Authority"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e6db85bc12cda21c9429e94bb797836554865c08",
+      "sizeBytes": 4496,
+      "path": "packages/@dvt/contracts/src/contracts/planner/PlanRecord.v1.schema.json",
+      "relativePath": "src/contracts/planner/PlanRecord.v1.schema.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/PlanRecord.v1.schema.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "01301ba0cdf73ab6aa5525951f6edaf792622d8d",
+      "sizeBytes": 1673,
+      "path": "packages/@dvt/contracts/src/contracts/planner/PlanRecord.v1.ts",
+      "relativePath": "src/contracts/planner/PlanRecord.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/PlanRecord.v1.ts",
+      "ownedConcern": "publish tenant-owned plan-record contract shapes."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "86de752a7cf5efb8b4036111036394021f666a38",
+      "sizeBytes": 1002,
+      "path": "packages/@dvt/contracts/src/contracts/planner/PlanVersion.v1.ts",
+      "relativePath": "src/contracts/planner/PlanVersion.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/PlanVersion.v1.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b97a0ab41b5e104ad29e7846aa36b58f7a2e13ba",
+      "sizeBytes": 7192,
+      "path": "packages/@dvt/contracts/src/contracts/planner/PolicyMappingTable.v1.ts",
+      "relativePath": "src/contracts/planner/PolicyMappingTable.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/PolicyMappingTable.v1.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6421e109feceef3b6bdb035170475924665a4db9",
+      "sizeBytes": 7115,
+      "path": "packages/@dvt/contracts/src/contracts/planner/StepKindRegistry.v1.ts",
+      "relativePath": "src/contracts/planner/StepKindRegistry.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/StepKindRegistry.v1.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "59f404ffbb51ebf1e24a9df0e9da3875484f7e0f",
+      "sizeBytes": 1639,
+      "path": "packages/@dvt/contracts/src/contracts/planner/StoredPlanArtifactValidation.v1.ts",
+      "relativePath": "src/contracts/planner/StoredPlanArtifactValidation.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/StoredPlanArtifactValidation.v1.ts",
+      "ownedConcern": "publish stored-plan artifact validation-state vocabulary.",
+      "decision": "Publish stored-plan artifact validation as artifact state, not as a plan lifecycle facade.",
+      "consequence": "Consumers depend on artifact validity vocabulary while behavior stays in artifact ports.",
+      "baseline": [
+        "ADR-0043: PlanRecord, Plan Store, And Artifacts Ownership",
+        "ADR-0054: Plan Store Scoped Record Identity"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9afb3b58a2ac0dec677198457a87806d2ac9f5a2",
+      "sizeBytes": 2828,
+      "path": "packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts",
+      "relativePath": "src/contracts/planner/TransformationFlowPreview.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "812982ed8fdc834db3c5bea2f39611a9c7318873",
+      "sizeBytes": 3009,
+      "path": "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringCommand.v1.ts",
+      "relativePath": "src/contracts/planner/WorkspaceGraphAuthoringCommand.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringCommand.v1.ts",
+      "ownedConcern": "define serializable aggregate commands for editable workspace",
+      "decision": "Model workspace graph edits as aggregate commands instead of transport-specific patches.",
+      "consequence": "Canvas authoring can evolve without duplicating planner command semantics.",
+      "baseline": [
+        "ADR-0035: Planner Public Contract Evolution Protocol"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "dbc2459d5114cae8d21053337dde7277cc40db34",
+      "sizeBytes": 13014,
+      "path": "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts",
+      "relativePath": "src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts",
+      "ownedConcern": "define the graph-first editable aggregate persisted as a",
+      "decision": "Persist workspace authoring as a graph-first aggregate, not as UI widget state.",
+      "consequence": "Planner and canvas boundaries share one editable authoring truth.",
+      "baseline": [
+        "ADR-0035: Planner Public Contract Evolution Protocol"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "0945aa0a261aa10b3bcee0cc7276b1596f64daac",
+      "sizeBytes": 2140,
+      "path": "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.ts",
+      "relativePath": "src/contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.ts",
+      "ownedConcern": "define the bounded user execution gate on workspace graph edges.",
+      "decision": "Persist only the exceptional closed gate and derive effective execution from structural permission plus shared policy.",
+      "baseline": [
+        "ADR-0035: Planner Public Contract Evolution Protocol"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ea62daad13a93503eec42a26485958137fe6a183",
+      "sizeBytes": 19844,
+      "path": "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts",
+      "relativePath": "src/contracts/planner/WorkspaceGraphDraft.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts",
+      "ownedConcern": "define the protected persistence envelope for workspace graph"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e96f2f3ea69f08c31433971c5273ba69c2ebd4cb",
+      "sizeBytes": 1664,
+      "path": "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts",
+      "relativePath": "src/contracts/source-import/ConnectedSourceRef.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts",
+      "ownedConcern": "qualify an external source object through the non-secret",
+      "decision": "Persist one strict, versioned ConnectedSourceRef instead of parallel loose connection and object identifiers.",
+      "consequence": "Import replay, Canvas presentation, and later execution bindings can share one unambiguous non-secret identity.",
+      "baseline": [
+        "ADR-0058: Warehouse Source Import Rails"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "8372bffe48ab69bc5b7d16716a01f3cdafaedf44",
+      "sizeBytes": 624,
+      "path": "packages/@dvt/contracts/src/contracts/source-import/index.ts",
+      "relativePath": "src/contracts/source-import/index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/source-import/index.ts",
+      "ownedConcern": "expose the source-import contract component through one",
+      "decision": "Re-export only source-object catalog and source-import operation contracts from this barrel.",
+      "consequence": "Consumers receive one governed source-import vocabulary without unrelated contract leakage.",
+      "baseline": [
+        "ADR-0058: Warehouse Source Import Rails"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "62101ef357623e622ec3a6b806ea28c17539e99f",
+      "sizeBytes": 2864,
+      "path": "packages/@dvt/contracts/src/contracts/source-import/SourceDataSample.v1.ts",
+      "relativePath": "src/contracts/source-import/SourceDataSample.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/source-import/SourceDataSample.v1.ts",
+      "ownedConcern": "define the bounded, display-safe warehouse source data sample contract.",
+      "decision": "Keep row samples separate from source-object catalog discovery and reject client SQL.",
+      "consequence": "API and web exchange only governed object identity, bounded rows, and display values.",
+      "baseline": [
+        "ADR-0058: Warehouse Source Import Rails"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "bd4550eaa83a01ab7eab42d25e55043be70d5ce6",
+      "sizeBytes": 4585,
+      "path": "packages/@dvt/contracts/src/contracts/source-import/SourceImportOperations.v1.ts",
+      "relativePath": "src/contracts/source-import/SourceImportOperations.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/source-import/SourceImportOperations.v1.ts",
+      "ownedConcern": "define versioned warehouse-connection discovery and",
+      "decision": "Keep protected source discovery and import request/response DTOs in one canonical contract component.",
+      "consequence": "API and web rails exchange validated operation payloads without local transport vocabularies.",
+      "baseline": [
+        "ADR-0058: Warehouse Source Import Rails"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b2155df5fb4a861c00a414b21180dbaa289c27df",
+      "sizeBytes": 6630,
+      "path": "packages/@dvt/contracts/src/contracts/source-import/SourceImportOperations.v2.ts",
+      "relativePath": "src/contracts/source-import/SourceImportOperations.v2.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/source-import/SourceImportOperations.v2.ts",
+      "ownedConcern": "version Source Import results for mutually exclusive Canvas",
+      "decision": "Resolve authority on the server and return a discriminated outcome for the one mutated authority.",
+      "consequence": "File-backed imports cannot masquerade as graph-draft mutations or create semantic draft nodes.",
+      "baseline": [
+        "ADR-0060: dbt Project Authoring Authority"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f19f49d2f6ecc1232f25bc0135f23dd758427e02",
+      "sizeBytes": 12288,
+      "path": "packages/@dvt/contracts/src/contracts/source-import/SourceObjectCatalog.v1.ts",
+      "relativePath": "src/contracts/source-import/SourceObjectCatalog.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/source-import/SourceObjectCatalog.v1.ts",
+      "ownedConcern": "define the provider-neutral source-object catalog contract,",
+      "decision": "Represent discoverable inputs as source objects instead of relational-table-only DTOs.",
+      "consequence": "API and web consumers share one versioned vocabulary across relations, files, endpoints, and streams.",
+      "baseline": [
+        "ADR-0058: Warehouse Source Import Rails"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c68aad7253f31243cb9dbf796b87e35cabd4a875",
+      "sizeBytes": 3147,
+      "path": "packages/@dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts",
+      "relativePath": "src/contracts/workspace/ProjectWorkspace.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/contracts/workspace/ProjectWorkspace.v1.ts",
+      "ownedConcern": "version the public project admission, catalog, and effective",
+      "decision": "The server owns granted workspace truth through one strict shared contract.",
+      "consequence": "Browser persistence remains a projection and cannot invent project authority.",
+      "baseline": [
+        "ADR-0062: Server-owned granted workspace context and default"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6923e616f3ab46472963bcc9097d40cb7ea403f2",
+      "sizeBytes": 932,
+      "path": "packages/@dvt/contracts/src/engine/IRunSnapshotStalenessQuery.v1.ts",
+      "relativePath": "src/engine/IRunSnapshotStalenessQuery.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/engine/IRunSnapshotStalenessQuery.v1.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e6e1937033e89e5d2b18884cbdb2b60141f19356",
+      "sizeBytes": 8259,
+      "path": "packages/@dvt/contracts/src/errorContract.ts",
+      "relativePath": "src/errorContract.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/errorContract.ts",
+      "decision": "Shared-kernel contract errors expose stable code/messageKey/messageParams metadata",
+      "consequence": "Consumers branch on structured fields instead of parsing Error.message text",
+      "baseline": [
+        "ADR-0005: Contract Formalization Tooling",
+        "ADR-0006: Contract Tooling Governance",
+        "ADR-0018: Shared Kernel Ownership Governance"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "01c41a15ea77865260a522cbcf9e9916a6523356",
+      "sizeBytes": 6031,
+      "path": "packages/@dvt/contracts/src/errors.ts",
+      "relativePath": "src/errors.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/errors.ts",
+      "decision": "Contract-level error types are centralized for deterministic cross-module semantics",
+      "consequence": "Consumers branch on typed metadata instead of stringly Error.message values",
+      "baseline": [
+        "ADR-0005: Contract Formalization Tooling",
+        "ADR-0006: Contract Tooling Governance",
+        "ADR-0018: Shared Kernel Ownership Governance"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "834d9e56cc6782be731f39764752746fb15e87d9",
+      "sizeBytes": 14063,
+      "path": "packages/@dvt/contracts/src/index.ts",
+      "relativePath": "src/index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/index.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6313cb41fb9a3c467713fc7d4c14c54fb7e241e0",
+      "sizeBytes": 8787,
+      "path": "packages/@dvt/contracts/src/schema-packs/common.ts",
+      "relativePath": "src/schema-packs/common.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/schema-packs/common.ts",
+      "ownedConcern": "publish runtime validation schemas for shared serialized"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "1d5af490f8f252ee5d4ada6d60cb45285b3894be",
+      "sizeBytes": 6898,
+      "path": "packages/@dvt/contracts/src/schema-packs/execution-plan.ts",
+      "relativePath": "src/schema-packs/execution-plan.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/schema-packs/execution-plan.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2ac44f30cbf71e71aec9fe37f096b1e756c16b2a",
+      "sizeBytes": 952,
+      "path": "packages/@dvt/contracts/src/schema-packs/execution-selection.ts",
+      "relativePath": "src/schema-packs/execution-selection.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/schema-packs/execution-selection.ts",
+      "decision": "Publish execution-selection schemas as a focused schema pack for external validators.",
+      "consequence": "Contract consumers validate executable selection without importing unrelated planner schemas.",
+      "baseline": [
+        "ADR-0035: Planner Public Contract Evolution Protocol"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "cd20efcaf70f785f940b26b8805fe7ac54a0401c",
+      "sizeBytes": 4507,
+      "path": "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+      "relativePath": "src/schema-packs/plan-admission-finding.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+      "decision": "Validate canonical plan-admission findings through one focused strict schema pack.",
+      "consequence": "Contract consumers reject malformed findings without importing admission orchestration behavior.",
+      "baseline": [
+        "ADR-0035: Planner Public Contract Evolution Protocol"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "12eb78542e72a5a80ad53b1f868e7a1a3b2745a1",
+      "sizeBytes": 1912,
+      "path": "packages/@dvt/contracts/src/schema-packs/plan-compile.ts",
+      "relativePath": "src/schema-packs/plan-compile.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/schema-packs/plan-compile.ts",
+      "decision": "Publish plan-compile request and response schemas as a bounded planner contract pack",
+      "consequence": "Planner callers receive validated execution plans without coupling compile output to runtime policy persistence",
+      "baseline": [
+        "ADR-0005: Contract Formalization Tooling",
+        "ADR-0035: Planner Public Contract Evolution Protocol",
+        "ADR-0046: Execution Plan Definition And Run Execution Policy Separation"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5dfaf1167028fdc025c0217655bd12a5634be144",
+      "sizeBytes": 771,
+      "path": "packages/@dvt/contracts/src/schema-packs/plan-preview-profile.ts",
+      "relativePath": "src/schema-packs/plan-preview-profile.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/schema-packs/plan-preview-profile.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "497c055256c21629eb7394e37f007e4beb78ac0e",
+      "sizeBytes": 862,
+      "path": "packages/@dvt/contracts/src/schema-packs/plan-preview-request.ts",
+      "relativePath": "src/schema-packs/plan-preview-request.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/schema-packs/plan-preview-request.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "251780393bd2847f4b7c87028d86bf94989a4312",
+      "sizeBytes": 3856,
+      "path": "packages/@dvt/contracts/src/schema-packs/plan-preview-response.ts",
+      "relativePath": "src/schema-packs/plan-preview-response.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/schema-packs/plan-preview-response.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "8d9c79de58b83d1790b01edfa8b91d5649ee4efe",
+      "sizeBytes": 851,
+      "path": "packages/@dvt/contracts/src/schema-packs/plan-preview.ts",
+      "relativePath": "src/schema-packs/plan-preview.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/schema-packs/plan-preview.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "97cec8dc71312a05138f04bccb5648cd05278dea",
+      "sizeBytes": 8287,
+      "path": "packages/@dvt/contracts/src/schema-packs/plan-records.ts",
+      "relativePath": "src/schema-packs/plan-records.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/schema-packs/plan-records.ts",
+      "ownedConcern": "validate scoped plan-store record contracts."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "576af333f8211c047592032790237ec3530d836e",
+      "sizeBytes": 5225,
+      "path": "packages/@dvt/contracts/src/schema-packs/planner-build.ts",
+      "relativePath": "src/schema-packs/planner-build.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/schema-packs/planner-build.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "0c22bd2dc0862aee1b4d2759ce4f6914e55b1cd7",
+      "sizeBytes": 616,
+      "path": "packages/@dvt/contracts/src/schema-packs/planner-context.ts",
+      "relativePath": "src/schema-packs/planner-context.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/schema-packs/planner-context.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f5e68c02be0b1c24c6860d5aa8b41707a8c46722",
+      "sizeBytes": 1789,
+      "path": "packages/@dvt/contracts/src/schema-packs/planner-graph.ts",
+      "relativePath": "src/schema-packs/planner-graph.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/schema-packs/planner-graph.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "cf41eca8be28dc60587350d144fda16666fd0a7e",
+      "sizeBytes": 485,
+      "path": "packages/@dvt/contracts/src/schema-packs/planner.ts",
+      "relativePath": "src/schema-packs/planner.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/schema-packs/planner.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "aaf43d7a80756df518a6c6717f60a743408e12d2",
+      "sizeBytes": 8726,
+      "path": "packages/@dvt/contracts/src/schema-packs/run-events.ts",
+      "relativePath": "src/schema-packs/run-events.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/schema-packs/run-events.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e2f7d88b6cf8bcabe476737545eaee45ea6d1107",
+      "sizeBytes": 93,
+      "path": "packages/@dvt/contracts/src/schema-packs/shared.ts",
+      "relativePath": "src/schema-packs/shared.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/schema-packs/shared.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a8b7bb0bc15d61bdabedbf511ce3dbec07b330f2",
+      "sizeBytes": 5103,
+      "path": "packages/@dvt/contracts/src/schema-packs/start-run.ts",
+      "relativePath": "src/schema-packs/start-run.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/schema-packs/start-run.ts",
+      "ownedConcern": "define runtime validation schemas for the canonical"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "0375812a1ac92996b6d8d4b1a3b18f524485a0c4",
+      "sizeBytes": 2281,
+      "path": "packages/@dvt/contracts/src/schema-packs/workspace-graph-draft.ts",
+      "relativePath": "src/schema-packs/workspace-graph-draft.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/schema-packs/workspace-graph-draft.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "79149f1bdd3cda7e28f4803552a10820d774d0d6",
+      "sizeBytes": 848,
+      "path": "packages/@dvt/contracts/src/schemas.ts",
+      "relativePath": "src/schemas.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/schemas.ts",
+      "decision": "Section 2 - Runtime schemas are formalized as canonical validation contracts",
+      "consequence": "API and adapter boundaries validate payloads consistently against governed contract versions",
+      "baseline": [
+        "ADR-0005: Contract Formalization Tooling",
+        "ADR-0006: Contract Tooling Governance"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e19aacbd74a91ff62d9141d4b2dace4ee2cec0e6",
+      "sizeBytes": 3114,
+      "path": "packages/@dvt/contracts/src/step-registry/BuiltInStepTypeEntries.ts",
+      "relativePath": "src/step-registry/BuiltInStepTypeEntries.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/step-registry/BuiltInStepTypeEntries.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a214a4a2b14c56dbce2af4334d27146fcf49ce40",
+      "sizeBytes": 1100,
+      "path": "packages/@dvt/contracts/src/step-registry/CommonStepTypeConfig.ts",
+      "relativePath": "src/step-registry/CommonStepTypeConfig.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/step-registry/CommonStepTypeConfig.ts",
+      "ownedConcern": "define transport-neutral configuration shared by registered step types.",
+      "decision": "Keep common timeout, concurrency, and compiled-code fields independent of DBT.",
+      "consequence": "Step contracts can reuse one strict schema without depending on another step family.",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0035: Planner Public Contract Evolution Protocol"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "7778a716a0a0f786557687384b61e5f001c8930a",
+      "sizeBytes": 887,
+      "path": "packages/@dvt/contracts/src/step-registry/DbtStepTypeConfig.ts",
+      "relativePath": "src/step-registry/DbtStepTypeConfig.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/step-registry/DbtStepTypeConfig.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3630b804490dfbcb1abb441262687b222aaf24d1",
+      "sizeBytes": 6730,
+      "path": "packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts",
+      "relativePath": "src/step-registry/StepTypeRegistry.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/step-registry/StepTypeRegistry.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3fd8f654eb085e906de3a603ed2e1ec65e5fede9",
+      "sizeBytes": 940,
+      "path": "packages/@dvt/contracts/src/substrait.ts",
+      "relativePath": "src/substrait.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/substrait.ts",
+      "decision": "Export the pinned Substrait profile, stable authoring bindings, and single semantic capability catalog through one bounded public contract surface.",
+      "baseline": [
+        "ADR-0064: Substrait semantic reference and bounded logical profile"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "bf98d0991f5f57ea8b8244a5c9797c4d475e735a",
+      "sizeBytes": 2309,
+      "path": "packages/@dvt/contracts/src/types/artifacts.ts",
+      "relativePath": "src/types/artifacts.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/types/artifacts.ts",
+      "decision": "Section 2 — Artifact and step output contracts are centralized for execution result interoperability",
+      "consequence": "Producers and consumers exchange deterministic artifact payload shapes across workflow boundaries",
+      "baseline": [
+        "ADR-0005: Contract Formalization Tooling",
+        "ADR-0006: Contract Tooling Governance"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f19bbad8a3603e7520b36cbd3d06375217e2098c",
+      "sizeBytes": 8018,
+      "path": "packages/@dvt/contracts/src/types/contracts.ts",
+      "relativePath": "src/types/contracts.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/types/contracts.ts",
+      "ownedConcern": "declare shared serialized contract primitives and the active",
+      "decision": "Section 2 — Canonical core contract primitives (tenant/run/provider/status) are versioned in a single type module",
+      "consequence": "All adapters and engine components share deterministic compile-time contract vocabulary",
+      "baseline": [
+        "ADR-0005: Contract Formalization Tooling",
+        "ADR-0006: Contract Tooling Governance"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2965fb5766db000ff59b81a27924f5c78179b6a1",
+      "sizeBytes": 5768,
+      "path": "packages/@dvt/contracts/src/utils/contractPrimitives.ts",
+      "relativePath": "src/utils/contractPrimitives.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/utils/contractPrimitives.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "cef6bdc6da47c68827a6b89b65424542540208a1",
+      "sizeBytes": 2067,
+      "path": "packages/@dvt/contracts/src/validation.ts",
+      "relativePath": "src/validation.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/validation.ts",
+      "decision": "Section 2 — Contract validation functions are centralized at runtime boundaries",
+      "consequence": "Invalid contract payloads fail fast with canonical diagnostics across modules",
+      "baseline": [
+        "ADR-0005: Contract Formalization Tooling",
+        "ADR-0006: Contract Tooling Governance"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "0065c9014cd4c0667a0563f9449947cf8fb3b603",
+      "sizeBytes": 2957,
+      "path": "packages/@dvt/contracts/src/validation/core.ts",
+      "relativePath": "src/validation/core.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/validation/core.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3d5661f710b55d5fa39ef7a92d4f0d75820d5293",
+      "sizeBytes": 1053,
+      "path": "packages/@dvt/contracts/src/validation/events.ts",
+      "relativePath": "src/validation/events.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/validation/events.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e695c052959d25a06dffe5b0b7769b0b61279d5b",
+      "sizeBytes": 6198,
+      "path": "packages/@dvt/contracts/src/validation/planner.ts",
+      "relativePath": "src/validation/planner.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/validation/planner.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d6e4aa5713e4cde5a06887efa9d533ddec0180ec",
+      "sizeBytes": 3556,
+      "path": "packages/@dvt/contracts/src/validation/runtime.ts",
+      "relativePath": "src/validation/runtime.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/validation/runtime.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2ad9d86cf85ae8e1e3e6a384c1c5ab02beda1cd0",
+      "sizeBytes": 734,
+      "path": "packages/@dvt/contracts/src/workflows.ts",
+      "relativePath": "src/workflows.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/src/workflows.ts",
+      "decision": "Section 2 — Canonical workflow names and signal identifiers are centralized as contract constants",
+      "consequence": "Engine and adapters share deterministic workflow/signal literals without drift",
+      "baseline": [
+        "ADR-0005: Contract Formalization Tooling",
+        "ADR-0006: Contract Tooling Governance"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d2bd37d67af7bd8eca8e053cec446df953775e71",
+      "sizeBytes": 12856,
+      "path": "packages/@dvt/contracts/test/compiled-code-ref.contract.test.ts",
+      "relativePath": "test/compiled-code-ref.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/compiled-code-ref.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ec81023e67f470540a9fd5b429708d4c23669ebd",
+      "sizeBytes": 5136,
+      "path": "packages/@dvt/contracts/test/dbt-dependency-edit.contract.test.ts",
+      "relativePath": "test/dbt-dependency-edit.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/dbt-dependency-edit.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e85d933d86d5a495b49a03e4251787d75828979b",
+      "sizeBytes": 7977,
+      "path": "packages/@dvt/contracts/test/dbt-project-file-projection.contract.test.ts",
+      "relativePath": "test/dbt-project-file-projection.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/dbt-project-file-projection.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3665831fe20d222aa2cacc6deeb96793a2721ab6",
+      "sizeBytes": 7610,
+      "path": "packages/@dvt/contracts/test/dbt-project-import.contract.test.ts",
+      "relativePath": "test/dbt-project-import.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/dbt-project-import.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "05645758599546b00b3d780f186bb1d6ecb47c77",
+      "sizeBytes": 6008,
+      "path": "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+      "relativePath": "test/dbt-selected-model-analysis.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "34e8bf000fff487e8574afad4e3221bf8bda7c1c",
+      "sizeBytes": 987,
+      "path": "packages/@dvt/contracts/test/dbt-step-selector.contract.test.ts",
+      "relativePath": "test/dbt-step-selector.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/dbt-step-selector.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "879efc18b09e6903e691305bef008616bc8d4fbe",
+      "sizeBytes": 3536,
+      "path": "packages/@dvt/contracts/test/dbt-yaml-description-edit.contract.test.ts",
+      "relativePath": "test/dbt-yaml-description-edit.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/dbt-yaml-description-edit.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "93b602927f1abaef6e4ee439447276315b645b85",
+      "sizeBytes": 4983,
+      "path": "packages/@dvt/contracts/test/dvt-substrait-capability-admission.contract.test.ts",
+      "relativePath": "test/dvt-substrait-capability-admission.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/dvt-substrait-capability-admission.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5c7d0090c3d64aec5c23965c078a9c6bfbfbe1c4",
+      "sizeBytes": 6767,
+      "path": "packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts",
+      "relativePath": "test/dvt-substrait-capability-catalog.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "8e9a916243e6218d26fd7ee448577b9a9a8d3a1c",
+      "sizeBytes": 1251,
+      "path": "packages/@dvt/contracts/test/dvt-substrait-profile.contract.test.ts",
+      "relativePath": "test/dvt-substrait-profile.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/dvt-substrait-profile.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e8ab657c4699ae755e5a10aba49214127af66e5f",
+      "sizeBytes": 5247,
+      "path": "packages/@dvt/contracts/test/dvt-substrait-semantic-document-decoding.contract.test.ts",
+      "relativePath": "test/dvt-substrait-semantic-document-decoding.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/dvt-substrait-semantic-document-decoding.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "7430efa58bb6717f96f8895deaa45bae3c35992e",
+      "sizeBytes": 1597,
+      "path": "packages/@dvt/contracts/test/dvt-substrait-struct-capability.contract.test.ts",
+      "relativePath": "test/dvt-substrait-struct-capability.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/dvt-substrait-struct-capability.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "fce15de844f46241c9b8f7f17bc2d461456476ba",
+      "sizeBytes": 1035,
+      "path": "packages/@dvt/contracts/test/dvt-transform-authoring-authority.contract.test.ts",
+      "relativePath": "test/dvt-transform-authoring-authority.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/dvt-transform-authoring-authority.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "705fb8ee7302368c5d31758068b25c2254f356d3",
+      "sizeBytes": 4778,
+      "path": "packages/@dvt/contracts/test/errors.test.ts",
+      "relativePath": "test/errors.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/errors.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "01f73f5dce7b10a52dad712e4d4089459de694d0",
+      "sizeBytes": 3796,
+      "path": "packages/@dvt/contracts/test/execution-selection.architecture.test.ts",
+      "relativePath": "test/execution-selection.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/execution-selection.architecture.test.ts",
+      "ownedConcern": "guard semantic architecture rules for the execution"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "309536fc1df315ca0b5db52203d04a4088cbff19",
+      "sizeBytes": 3259,
+      "path": "packages/@dvt/contracts/test/execution-selection.contract.test.ts",
+      "relativePath": "test/execution-selection.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/execution-selection.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2fe1e26cfc51a02744ca2dbe1279477dfccb9a4c",
+      "sizeBytes": 1548,
+      "path": "packages/@dvt/contracts/test/fixtures/dvtSubstraitSemanticDocument.ts",
+      "relativePath": "test/fixtures/dvtSubstraitSemanticDocument.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/fixtures/dvtSubstraitSemanticDocument.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ea09b8eeaa4559744f765b30bd8f86d250fa27d3",
+      "sizeBytes": 4023,
+      "path": "packages/@dvt/contracts/test/fixtures/planner-contract.fixtures.ts",
+      "relativePath": "test/fixtures/planner-contract.fixtures.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/fixtures/planner-contract.fixtures.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "afff9a4b339eba298f1d4b502c67e33cd15b9011",
+      "sizeBytes": 2153,
+      "path": "packages/@dvt/contracts/test/fixtures/run-event-compiled-code-ref.fixtures.ts",
+      "relativePath": "test/fixtures/run-event-compiled-code-ref.fixtures.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/fixtures/run-event-compiled-code-ref.fixtures.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "067634a3db4f07589d64fc88559c0aca0fe555ef",
+      "sizeBytes": 2747,
+      "path": "packages/@dvt/contracts/test/fixtures/start-run-boundary.fixtures.ts",
+      "relativePath": "test/fixtures/start-run-boundary.fixtures.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/fixtures/start-run-boundary.fixtures.ts",
+      "ownedConcern": "provide canonical command/result fixtures for the"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "11f7810d4ae6237cb059c5f35f2e093218653922",
+      "sizeBytes": 2307,
+      "path": "packages/@dvt/contracts/test/graph-dbt-model-compilation.contract.test.ts",
+      "relativePath": "test/graph-dbt-model-compilation.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/graph-dbt-model-compilation.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b970879ab3dec5a9bd45f11760e83befd787956f",
+      "sizeBytes": 4644,
+      "path": "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts",
+      "relativePath": "test/graph-dbt-workspace-artifact-publication.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "1e27bc30e42cbfa6188e450454ba0d67c84d37b4",
+      "sizeBytes": 8322,
+      "path": "packages/@dvt/contracts/test/http-json-artifact-step.contract.test.ts",
+      "relativePath": "test/http-json-artifact-step.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/http-json-artifact-step.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9316c8bd64c6d264ad984ff42487c97d67ec749e",
+      "sizeBytes": 1635,
+      "path": "packages/@dvt/contracts/test/materialization-evidence.contract.test.ts",
+      "relativePath": "test/materialization-evidence.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/materialization-evidence.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a6c6a83e2f7b0b4af6cb1748b4833955323ac6a2",
+      "sizeBytes": 1102,
+      "path": "packages/@dvt/contracts/test/object-file-postgres-dbt-bridge.contract.test.ts",
+      "relativePath": "test/object-file-postgres-dbt-bridge.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/object-file-postgres-dbt-bridge.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "0d938019a16e4ede6b1d286eec8c9d40f04f693c",
+      "sizeBytes": 6345,
+      "path": "packages/@dvt/contracts/test/object-file-to-postgres-step.contract.test.ts",
+      "relativePath": "test/object-file-to-postgres-step.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/object-file-to-postgres-step.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "dded7a8c444e3e14697cd2200fb70bb2ffcf615c",
+      "sizeBytes": 1822,
+      "path": "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts",
+      "relativePath": "test/plan-admission-finding.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "7928bab3a6fd4de6bb6851d5ba015cc5030eb28f",
+      "sizeBytes": 5644,
+      "path": "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+      "relativePath": "test/plan-admission-finding.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/plan-admission-finding.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "af5f95d821f69e85c97c19edfb6e62f2e0a91e3b",
+      "sizeBytes": 6859,
+      "path": "packages/@dvt/contracts/test/plan-admission-matrix.architecture.test.ts",
+      "relativePath": "test/plan-admission-matrix.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/plan-admission-matrix.architecture.test.ts",
+      "ownedConcern": "guard semantic architecture rules for the plan admission"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2062652f7d3dfbcb3777ac1632e3dd928d6fe8fd",
+      "sizeBytes": 2456,
+      "path": "packages/@dvt/contracts/test/plan-admission-matrix.contract.test.ts",
+      "relativePath": "test/plan-admission-matrix.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/plan-admission-matrix.contract.test.ts",
+      "ownedConcern": "verify executable plan admission pairs and negative cases."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "12809b2b806b695f2d624011b315f27f7902289c",
+      "sizeBytes": 4125,
+      "path": "packages/@dvt/contracts/test/plan-preview-provenance.contract.test.ts",
+      "relativePath": "test/plan-preview-provenance.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/plan-preview-provenance.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3e26698cf8ffd115418dcc1c0cca8ab2a7d42cd5",
+      "sizeBytes": 7212,
+      "path": "packages/@dvt/contracts/test/plan-store-records-shape-sync.test.ts",
+      "relativePath": "test/plan-store-records-shape-sync.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/plan-store-records-shape-sync.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9a058e786790e7f84439c2b8c64ec6e47e7a7ccf",
+      "sizeBytes": 14011,
+      "path": "packages/@dvt/contracts/test/plan-store-records.architecture.test.ts",
+      "relativePath": "test/plan-store-records.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/plan-store-records.architecture.test.ts",
+      "ownedConcern": "guard semantic architecture rules for scoped plan-store"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "585c7a359e8f843b97367924bfb03aa3fe3fb5b1",
+      "sizeBytes": 1451,
+      "path": "packages/@dvt/contracts/test/plan-version.contract.test.ts",
+      "relativePath": "test/plan-version.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/plan-version.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a6c1d4ebb435aafb30dbd66e9c2fe7859f387b88",
+      "sizeBytes": 3051,
+      "path": "packages/@dvt/contracts/test/planner-policy-vocabulary.test.ts",
+      "relativePath": "test/planner-policy-vocabulary.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/planner-policy-vocabulary.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f2a615ba393ba4a1b512be5bfb1fcb957862986c",
+      "sizeBytes": 2070,
+      "path": "packages/@dvt/contracts/test/planner-private-ownership.architecture.test.ts",
+      "relativePath": "test/planner-private-ownership.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/planner-private-ownership.architecture.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "53b6634d911e2cf17add5c0bb55886ffcaee2667",
+      "sizeBytes": 10911,
+      "path": "packages/@dvt/contracts/test/planner.contract.test.ts",
+      "relativePath": "test/planner.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/planner.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a820bf886aa1a0a5f14d7bde1d4adbfd97b8b773",
+      "sizeBytes": 2101,
+      "path": "packages/@dvt/contracts/test/project-workspace-contract.test.ts",
+      "relativePath": "test/project-workspace-contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/project-workspace-contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "82695f8314d5db0f5d90c700b917a7328d0d3fab",
+      "sizeBytes": 2062,
+      "path": "packages/@dvt/contracts/test/provider-adapter.architecture.test.ts",
+      "relativePath": "test/provider-adapter.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/provider-adapter.architecture.test.ts",
+      "ownedConcern": "enforce the provider adapter semantic boundary. Adapters"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2c1cf32acce20173472f6f9b76f137f4eacc4928",
+      "sizeBytes": 9794,
+      "path": "packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts",
+      "relativePath": "test/provider-vocabulary.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/provider-vocabulary.architecture.test.ts",
+      "ownedConcern": "enforce the hard-cut provider vocabulary for active runtime"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e76aab3bb6bdfd4583d057102ba2968182237e99",
+      "sizeBytes": 2547,
+      "path": "packages/@dvt/contracts/test/run-control-boundary.contract.test.ts",
+      "relativePath": "test/run-control-boundary.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/run-control-boundary.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3e16ac403299bcb36851b1b239a16420c0e5eadf",
+      "sizeBytes": 5211,
+      "path": "packages/@dvt/contracts/test/run-state-store-maintenance-concurrency.architecture.test.ts",
+      "relativePath": "test/run-state-store-maintenance-concurrency.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/run-state-store-maintenance-concurrency.architecture.test.ts",
+      "ownedConcern": "keep snapshot rebuild concurrency as a portable state-store"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b9fc99a753e0107b1258fe082000d310b9b0f123",
+      "sizeBytes": 8214,
+      "path": "packages/@dvt/contracts/test/schema-sync.test.ts",
+      "relativePath": "test/schema-sync.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/schema-sync.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e27e2be84afc7ff7117c5d9e3dc1af27c0aa0581",
+      "sizeBytes": 1031,
+      "path": "packages/@dvt/contracts/test/signalSemantics.test.ts",
+      "relativePath": "test/signalSemantics.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/signalSemantics.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9dfb8180139ede74fc22b58f6febadaea7a44d7f",
+      "sizeBytes": 2502,
+      "path": "packages/@dvt/contracts/test/source-import/ConnectedSourceRef.v1.test.ts",
+      "relativePath": "test/source-import/ConnectedSourceRef.v1.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/source-import/ConnectedSourceRef.v1.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "194245ae44c1924eb37155b78ed8709b8ee33b7b",
+      "sizeBytes": 2960,
+      "path": "packages/@dvt/contracts/test/source-import/SourceDataSample.v1.test.ts",
+      "relativePath": "test/source-import/SourceDataSample.v1.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/source-import/SourceDataSample.v1.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b3742a129c984d12462b5ce171d200111202427a",
+      "sizeBytes": 3253,
+      "path": "packages/@dvt/contracts/test/source-import/SourceImportOperations.v1.test.ts",
+      "relativePath": "test/source-import/SourceImportOperations.v1.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/source-import/SourceImportOperations.v1.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "54d5095e178c909e752182aa319811bbf9148d91",
+      "sizeBytes": 5604,
+      "path": "packages/@dvt/contracts/test/source-import/SourceImportOperations.v2.test.ts",
+      "relativePath": "test/source-import/SourceImportOperations.v2.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/source-import/SourceImportOperations.v2.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e74c08db0d19afb16563baf29b24d4ccd7c8506e",
+      "sizeBytes": 8041,
+      "path": "packages/@dvt/contracts/test/source-import/SourceObjectCatalog.v1.test.ts",
+      "relativePath": "test/source-import/SourceObjectCatalog.v1.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/source-import/SourceObjectCatalog.v1.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "93b67473be6ee967131413bfc66c543087ea9b68",
+      "sizeBytes": 5231,
+      "path": "packages/@dvt/contracts/test/start-run-boundary.architecture.test.ts",
+      "relativePath": "test/start-run-boundary.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/start-run-boundary.architecture.test.ts",
+      "ownedConcern": "enforce semantic packaging rules for the StartRunBoundary"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "54ad0b3245f3a14dc5769516aaee718f93f4639f",
+      "sizeBytes": 4113,
+      "path": "packages/@dvt/contracts/test/start-run-boundary.contract.test.ts",
+      "relativePath": "test/start-run-boundary.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/start-run-boundary.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2ef1a3b6f7ed5248007af7f559c44bbd6ce8f996",
+      "sizeBytes": 1769,
+      "path": "packages/@dvt/contracts/test/start-run-intent-ownership.architecture.test.ts",
+      "relativePath": "test/start-run-intent-ownership.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/start-run-intent-ownership.architecture.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "8b9548edd9ad7a04a5c97cdd98c6dbaf14f7e773",
+      "sizeBytes": 6984,
+      "path": "packages/@dvt/contracts/test/step-registry.test.ts",
+      "relativePath": "test/step-registry.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/step-registry.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "11a28fbbca9611a85f6ed7ba8d20bb7da6864d0d",
+      "sizeBytes": 1391,
+      "path": "packages/@dvt/contracts/test/validation.test.ts",
+      "relativePath": "test/validation.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/validation.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3501d1b6ab4b18fc0eaa4f58c1e7891c726802fc",
+      "sizeBytes": 9799,
+      "path": "packages/@dvt/contracts/test/validation/execution-context.ts",
+      "relativePath": "test/validation/execution-context.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/validation/execution-context.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3aa42858fbe1d7c1f4f41de4167fd0e24d496f75",
+      "sizeBytes": 5082,
+      "path": "packages/@dvt/contracts/test/validation/execution-plan.ts",
+      "relativePath": "test/validation/execution-plan.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/validation/execution-plan.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c5c2484ae23aca8e7a70841f96d70f9c577c0d9d",
+      "sizeBytes": 1663,
+      "path": "packages/@dvt/contracts/test/validation/execution-selection.ts",
+      "relativePath": "test/validation/execution-selection.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/validation/execution-selection.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "258f5876bc1f9b06f3a00969987714265fdcb668",
+      "sizeBytes": 2675,
+      "path": "packages/@dvt/contracts/test/validation/plan-compile.ts",
+      "relativePath": "test/validation/plan-compile.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/validation/plan-compile.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4b610cdad6c9e254be19be325da337fe9e5de70c",
+      "sizeBytes": 9194,
+      "path": "packages/@dvt/contracts/test/validation/plan-records.ts",
+      "relativePath": "test/validation/plan-records.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/validation/plan-records.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "8ecf13e58977515f0e6e684ac3e2e7acda4d7a03",
+      "sizeBytes": 3046,
+      "path": "packages/@dvt/contracts/test/validation/planner-graph.ts",
+      "relativePath": "test/validation/planner-graph.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/validation/planner-graph.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "077b8f5c244c2aba5073f843049c90a079b32d7a",
+      "sizeBytes": 4032,
+      "path": "packages/@dvt/contracts/test/validation/preview.ts",
+      "relativePath": "test/validation/preview.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/validation/preview.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e6c15fe0c7e801e081d32804c3c3b7e6fb28cd64",
+      "sizeBytes": 4878,
+      "path": "packages/@dvt/contracts/test/validation/run-lifecycle.ts",
+      "relativePath": "test/validation/run-lifecycle.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/validation/run-lifecycle.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9aef5555dba588a6564fbd3f2ae4a2b71165d2a0",
+      "sizeBytes": 3904,
+      "path": "packages/@dvt/contracts/test/validation/signal-and-error.ts",
+      "relativePath": "test/validation/signal-and-error.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/validation/signal-and-error.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "eab07773da946149272a11240d2f29650e1f2590",
+      "sizeBytes": 9800,
+      "path": "packages/@dvt/contracts/test/validation/workspace-graph-draft.ts",
+      "relativePath": "test/validation/workspace-graph-draft.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/validation/workspace-graph-draft.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a47198e6b07d7d6e41ac73c45c9f1f114cb501ab",
+      "sizeBytes": 4816,
+      "path": "packages/@dvt/contracts/test/workspace-graph-authoring-draft.architecture.test.ts",
+      "relativePath": "test/workspace-graph-authoring-draft.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/workspace-graph-authoring-draft.architecture.test.ts",
+      "ownedConcern": "guard semantic architecture rules for the workspace graph"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c143162ab8c502586be3be42f26220035a506524",
+      "sizeBytes": 5915,
+      "path": "packages/@dvt/contracts/test/workspace-graph-authoring-draft.contract.test.ts",
+      "relativePath": "test/workspace-graph-authoring-draft.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/workspace-graph-authoring-draft.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "fda1e6fd320d6c1a381f27372e15cea1a5b374d9",
+      "sizeBytes": 1627,
+      "path": "packages/@dvt/contracts/test/workspace-graph-authoring-edge-execution.contract.test.ts",
+      "relativePath": "test/workspace-graph-authoring-edge-execution.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/workspace-graph-authoring-edge-execution.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a5a2fe0b8d7fa4098be7c62e3ca7bd5ef34937ec",
+      "sizeBytes": 2379,
+      "path": "packages/@dvt/contracts/test/workspace-graph-semantic-document.contract.test.ts",
+      "relativePath": "test/workspace-graph-semantic-document.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/test/workspace-graph-semantic-document.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e40040a0d1d1cd32cd85a46d4dc9979ec82545c4",
+      "sizeBytes": 208,
+      "path": "packages/@dvt/contracts/tsconfig.json",
+      "relativePath": "tsconfig.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/tsconfig.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "968c45e24f122972f6ea33fb60bd5debc1d1002e",
+      "sizeBytes": 177,
+      "path": "packages/@dvt/contracts/vitest.config.ts",
+      "relativePath": "vitest.config.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/contracts/vitest.config.ts"
+    }
+  ],
+  "componentMappings": [
+    {
+      "id": "publicBoundary",
+      "title": "Contracts public boundary",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Root contract/schema export surface consumed across DVT.",
+      "fileCount": 2,
+      "files": [
+        "src/index.ts",
+        "src/schemas.ts"
+      ]
+    },
+    {
+      "id": "contractFamilies",
+      "title": "Versioned contract families",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Versioned domain/source/workspace/planner/dbt contract families.",
+      "fileCount": 73,
+      "files": [
+        "src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
+        "src/contracts/dbt-project/DbtProjectImport.v1.ts",
+        "src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
+        "src/contracts/dbt-project/DbtYamlDescriptionEdit.v1.ts",
+        "src/contracts/dbt-project/GraphDbtModelCompilation.v1.ts",
+        "src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+        "src/contracts/dbt-project/index.ts",
+        "src/contracts/engine/ExecutionSemantics.v1.ts",
+        "src/contracts/engine/IOutboxStorage.v1.ts",
+        "src/contracts/engine/IWorkflowEngine.v1.ts",
+        "src/contracts/engine/RunControlBoundary.v1.ts",
+        "src/contracts/engine/RunEvents.v1.ts",
+        "src/contracts/engine/RunExecutionContext.v1.ts",
+        "src/contracts/engine/RunExecutionPolicy.v1.ts",
+        "src/contracts/engine/RunStateVocabulary.v1.ts",
+        "src/contracts/engine/SignalSemantics.v1.ts",
+        "src/contracts/engine/StartRunBoundary.v1.ts",
+        "src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts",
+        "src/contracts/planner/CustomPolicyNamespaceRegistry.v1.ts",
+        "src/contracts/planner/DbtProjectGraphProjection.v1.ts",
+        "src/contracts/planner/DbtStepSelector.v1.ts",
+        "src/contracts/planner/DvtSubstraitCapabilityAdmission.v1.ts",
+        "src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts",
+        "src/contracts/planner/DvtSubstraitCapabilityCatalogSchema.v1.ts",
+        "src/contracts/planner/DvtSubstraitCapabilityIdentity.v1.ts",
+        "src/contracts/planner/DvtSubstraitFieldBindingHierarchy.v1.ts",
+        "src/contracts/planner/DvtSubstraitPlanBinary.v1.ts",
+        "src/contracts/planner/DvtSubstraitProductNeeds.v1.ts",
+        "src/contracts/planner/DvtSubstraitProfile.v1.ts",
+        "src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts",
+        "src/contracts/planner/DvtSubstraitStandardCandidates.v1.ts",
+        "src/contracts/planner/DvtSubstraitSupportedCapabilities.v1.ts",
+        "src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts",
+        "src/contracts/planner/ExecutableSubgraph.v1.ts",
+        "src/contracts/planner/ExecutionBindingVerification.v1.ts",
+        "src/contracts/planner/ExecutionPlan.v1.ts",
+        "src/contracts/planner/ExecutionSelection.v1.ts",
+        "src/contracts/planner/HttpJsonArtifactStepTypeConfig.v1.ts",
+        "src/contracts/planner/IExecutionPlanner.v1.ts",
+        "src/contracts/planner/index.ts",
+        "src/contracts/planner/ObjectFilePostgresDbtBridge.v1.ts",
+        "src/contracts/planner/ObjectFileToPostgresStepTypeConfig.v1.ts",
+        "src/contracts/planner/PlanAdmission.v1.ts",
+        "src/contracts/planner/PlanAdmissionFinding.v1.ts",
+        "src/contracts/planner/PlanAdmissionLink.v1.schema.json",
+        "src/contracts/planner/PlanAdmissionLink.v1.ts",
+        "src/contracts/planner/PlanCompileStepTypeConfigs.v1.ts",
+        "src/contracts/planner/PlanExecutabilityRecord.v1.schema.json",
+        "src/contracts/planner/PlanExecutabilityRecord.v1.ts",
+        "src/contracts/planner/PlanExecutabilityValidation.v1.ts",
+        "src/contracts/planner/PlanExecutionDecision.v1.ts",
+        "src/contracts/planner/PlannerInputEnvelopeV1.schema.json",
+        "src/contracts/planner/PlannerPolicyClassSet.v2.schema.json",
+        "src/contracts/planner/PlannerPolicyVocabulary.v2.ts",
+        "src/contracts/planner/PlanPreviewProvenance.v1.ts",
+        "src/contracts/planner/PlanRecord.v1.schema.json",
+        "src/contracts/planner/PlanRecord.v1.ts",
+        "src/contracts/planner/PlanVersion.v1.ts",
+        "src/contracts/planner/PolicyMappingTable.v1.ts",
+        "src/contracts/planner/StepKindRegistry.v1.ts",
+        "src/contracts/planner/StoredPlanArtifactValidation.v1.ts",
+        "src/contracts/planner/TransformationFlowPreview.v1.ts",
+        "src/contracts/planner/WorkspaceGraphAuthoringCommand.v1.ts",
+        "src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts",
+        "src/contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.ts",
+        "src/contracts/planner/WorkspaceGraphDraft.v1.ts",
+        "src/contracts/source-import/ConnectedSourceRef.v1.ts",
+        "src/contracts/source-import/index.ts",
+        "src/contracts/source-import/SourceDataSample.v1.ts",
+        "src/contracts/source-import/SourceImportOperations.v1.ts",
+        "src/contracts/source-import/SourceImportOperations.v2.ts",
+        "src/contracts/source-import/SourceObjectCatalog.v1.ts",
+        "src/contracts/workspace/ProjectWorkspace.v1.ts"
+      ]
+    },
+    {
+      "id": "substrait",
+      "title": "Substrait public boundary",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Explicit @dvt/contracts/substrait export boundary for pinned Substrait semantics and DVT sidecar contracts.",
+      "fileCount": 1,
+      "files": [
+        "src/substrait.ts"
+      ]
+    },
+    {
+      "id": "engineCompat",
+      "title": "Engine contract compatibility surface",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Engine-facing contract surface retained inside the contracts package.",
+      "fileCount": 1,
+      "files": [
+        "src/engine/IRunSnapshotStalenessQuery.v1.ts"
+      ]
+    },
+    {
+      "id": "schemaPacks",
+      "title": "Schema packs",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Governed schema-pack definitions and helpers.",
+      "fileCount": 18,
+      "files": [
+        "src/schema-packs/common.ts",
+        "src/schema-packs/execution-plan.ts",
+        "src/schema-packs/execution-selection.ts",
+        "src/schema-packs/plan-admission-finding.ts",
+        "src/schema-packs/plan-compile.ts",
+        "src/schema-packs/plan-preview-profile.ts",
+        "src/schema-packs/plan-preview-request.ts",
+        "src/schema-packs/plan-preview-response.ts",
+        "src/schema-packs/plan-preview.ts",
+        "src/schema-packs/plan-records.ts",
+        "src/schema-packs/planner-build.ts",
+        "src/schema-packs/planner-context.ts",
+        "src/schema-packs/planner-graph.ts",
+        "src/schema-packs/planner.ts",
+        "src/schema-packs/run-events.ts",
+        "src/schema-packs/shared.ts",
+        "src/schema-packs/start-run.ts",
+        "src/schema-packs/workspace-graph-draft.ts"
+      ]
+    },
+    {
+      "id": "stepRegistry",
+      "title": "Step registry contracts",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Canonical step-kind registry and executable step contract support.",
+      "fileCount": 4,
+      "files": [
+        "src/step-registry/BuiltInStepTypeEntries.ts",
+        "src/step-registry/CommonStepTypeConfig.ts",
+        "src/step-registry/DbtStepTypeConfig.ts",
+        "src/step-registry/StepTypeRegistry.ts"
+      ]
+    },
+    {
+      "id": "types",
+      "title": "Shared contract types",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Shared contract-owned type definitions.",
+      "fileCount": 2,
+      "files": [
+        "src/types/artifacts.ts",
+        "src/types/contracts.ts"
+      ]
+    },
+    {
+      "id": "utils",
+      "title": "Contract utilities",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Utilities owned by contract representation/validation rather than product runtime.",
+      "fileCount": 1,
+      "files": [
+        "src/utils/contractPrimitives.ts"
+      ]
+    },
+    {
+      "id": "errors",
+      "title": "Error contracts",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Versioned error and failure contract surfaces.",
+      "fileCount": 2,
+      "files": [
+        "src/errorContract.ts",
+        "src/errors.ts"
+      ]
+    }
+  ],
+  "inventorySha256": "8740cceb032c40af70bd3cad07afb70378b4b767bdb94daddd58c174f730cb9a"
+}

@@ -1,0 +1,1477 @@
+// GENERATED FILE. DO NOT EDIT.
+// Source: git tree dunay2/dvt@3695f07c9ba3c66ab51f88a2dabe18e18556a244:packages/@dvt/adapter-temporal
+model {
+  temporalAdapterSource = inventory 'Temporal Adapter source inventory — generated from Git' {
+    #sourceDerived
+    description 'Machine-generated from the exact Git tree. Folder structure is STRUCTURE-DERIVED; file identity is SOURCE-DERIVED.'
+    metadata {
+      provenance 'SOURCE-DERIVED'
+      architectureOwner 'dvt.adapter-temporal'
+      logicalModelId 'temporalAdapterModel'
+      sourceRoot 'packages/@dvt/adapter-temporal'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      trackedFiles '94'
+      sourceFiles '44'
+      testFiles '45'
+      inventorySha256 '14668dc0303a2c4032f29b950f15bc1c48c62ee727f8b51900ce1f7b23338152'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal 'Pinned package tree'
+    dir_src_f27fede2 = folder 'src/ — 44 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/adapter-temporal/src'
+        recursiveFileCount '44'
+        directFileCount '14'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src 'Pinned directory'
+      dir_src_activities_7b271b5c = folder 'activities/ — 8 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/src/activities'
+          recursiveFileCount '8'
+          directFileCount '8'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/activities 'Pinned directory'
+        file_src_activities_activityFactory_ts_5c37456f = file 'activityFactory.ts' {
+          #sourceDerived
+          description 'Compose Temporal core activities with optional worker-provided step registries.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/activities/activityFactory.ts'
+            blobSha 'c07fe47c1d506513bc22458c8e259cfda986e5a6'
+            sizeBytes '5338'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Compose Temporal core activities with optional worker-provided step registries.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/activities/activityFactory.ts 'Open pinned source'
+        }
+        file_src_activities_activityFailures_ts_0b47fa48 = file 'activityFailures.ts' {
+          #sourceDerived
+          description 'Define stable Temporal activity failure codes and non-retryable failure construction.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/activities/activityFailures.ts'
+            blobSha '8fa184fa4a21ad3e5c3b2c7f727c4a5d6287c241'
+            sizeBytes '790'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Define stable Temporal activity failure codes and non-retryable failure construction.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/activities/activityFailures.ts 'Open pinned source'
+        }
+        file_src_activities_activityTypes_ts_e6f23064 = file 'activityTypes.ts' {
+          #sourceDerived
+          description 'Define plugin-free Temporal activity contracts and dispatch types.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/activities/activityTypes.ts'
+            blobSha 'c7500d2641b3020e37b3ee8f0db4904ba175d565'
+            sizeBytes '2341'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Define plugin-free Temporal activity contracts and dispatch types.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/activities/activityTypes.ts 'Open pinned source'
+        }
+        file_src_activities_gatewayStepActivity_ts_fe8fa2d5 = file 'gatewayStepActivity.ts' {
+          #sourceDerived
+          description 'Execute gateway DSL steps inside the activity boundary.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/activities/gatewayStepActivity.ts'
+            blobSha 'f9ed48cd0a88ed43e93cde2f485f0de5e06ad536'
+            sizeBytes '1858'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Execute gateway DSL steps inside the activity boundary.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/activities/gatewayStepActivity.ts 'Open pinned source'
+        }
+        file_src_activities_stepActivities_ts_0421a0df = file 'stepActivities.ts' {
+          #sourceDerived
+          description 'Publish the Temporal activity public surface without owning plugin step kinds.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/activities/stepActivities.ts'
+            blobSha 'e0bbf2fc950b0fe5349907c974ccfa85dd7fed14'
+            sizeBytes '1117'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Publish the Temporal activity public surface without owning plugin step kinds.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/activities/stepActivities.ts 'Open pinned source'
+        }
+        file_src_activities_stepActivityDispatcher_ts_41ae72d5 = file 'stepActivityDispatcher.ts' {
+          #sourceDerived
+          description 'Dispatch workflow step work to core gateway or composed plugin activities.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/activities/stepActivityDispatcher.ts'
+            blobSha '43d2320fdee5ba88076f5f15a17852a37cd5f761'
+            sizeBytes '2208'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Dispatch workflow step work to core gateway or composed plugin activities.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/activities/stepActivityDispatcher.ts 'Open pinned source'
+        }
+        file_src_activities_stepActivityValidation_ts_f1ced87f = file 'stepActivityValidation.ts' {
+          #sourceDerived
+          description 'Validate runtime step shape and derive activity execution identity.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/activities/stepActivityValidation.ts'
+            blobSha '96f18cf4ba5c77537434aa39ec3b25dbeb6ac831'
+            sizeBytes '1770'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Validate runtime step shape and derive activity execution identity.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/activities/stepActivityValidation.ts 'Open pinned source'
+        }
+        file_src_activities_temporalPlanArtifactReader_ts_d8fbec02 = file 'temporalPlanArtifactReader.ts' {
+          #sourceDerived
+          description 'Resolve scoped Temporal plan artifacts for engine dispatch.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/activities/temporalPlanArtifactReader.ts'
+            blobSha '6fee363ff8e1e18bbe088451df8144689e60c513'
+            sizeBytes '2439'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Resolve scoped Temporal plan artifacts for engine dispatch.'
+            decision 'Fetch engine dispatch artifacts through the artifacts-owned reader before segment projection.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/activities/temporalPlanArtifactReader.ts 'Open pinned source'
+        }
+      }
+      dir_src_plugins_e2271fcc = folder 'plugins/ — 2 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/src/plugins'
+          recursiveFileCount '2'
+          directFileCount '2'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/plugins 'Pinned directory'
+        file_src_plugins_TemporalStepPluginProfile_ts_3f1b8cc2 = file 'TemporalStepPluginProfile.ts' {
+          #sourceDerived
+          description 'Compose Temporal step plugin profiles without encoding plugin-specific kinds in core dispatch'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginProfile.ts'
+            blobSha 'd40367a43c956ed472c19ff1788aeedfc9bbef8f'
+            sizeBytes '1440'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Compose Temporal step plugin profiles without encoding plugin-specific kinds in core dispatch'
+            decision 'Represent executor plugins as explicit step-activity profile inputs'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/plugins/TemporalStepPluginProfile.ts 'Open pinned source'
+        }
+        file_src_plugins_TemporalStepPluginRunner_ts_f768febc = file 'TemporalStepPluginRunner.ts' {
+          #sourceDerived
+          description 'Define the generic execution port for Temporal step plugin runners'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginRunner.ts'
+            blobSha 'eb33f220c9ba65af9c32ddacd47aec8af49a43b0'
+            sizeBytes '625'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Define the generic execution port for Temporal step plugin runners'
+            decision 'Model executable plugin runtimes behind a generic runner port'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/plugins/TemporalStepPluginRunner.ts 'Open pinned source'
+        }
+      }
+      dir_src_workflows_4449a236 = folder 'workflows/ — 20 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/src/workflows'
+          recursiveFileCount '20'
+          directFileCount '20'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows 'Pinned directory'
+        file_src_workflows_executionSegmentResolver_ts_2360f16e = file 'executionSegmentResolver.ts' {
+          #sourceDerived
+          description 'PlanRef execution-segment projection from canonical plans'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/workflows/executionSegmentResolver.ts'
+            blobSha '39367c408ebd75a2c86f55a157c4c6fb0bb2c717'
+            sizeBytes '4254'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'PlanRef execution-segment projection from canonical plans'
+            decision 'Resolve executable workflow segments from the canonical DVT execution plan, not from Temporal provider state'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/executionSegmentResolver.ts 'Open pinned source'
+        }
+        file_src_workflows_runPlanWorkflow_activities_ts_7c558f2f = file 'runPlanWorkflow.activities.ts' {
+          #sourceDerived
+          description 'Temporal activity proxy binding for workflow ports'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.activities.ts'
+            blobSha 'e8ca9343f255771ca89056fda551f990695a0931'
+            sizeBytes '2827'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Temporal activity proxy binding for workflow ports'
+            decision 'Keep workflow side effects behind Temporal activities and await activity cleanup before terminal cancellation'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/runPlanWorkflow.activities.ts 'Open pinned source'
+        }
+        file_src_workflows_runPlanWorkflow_cancellation_ts_99aebd96 = file 'runPlanWorkflow.cancellation.ts' {
+          #sourceDerived
+          description 'Runtime-owned cancellation lifecycle settlement'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.cancellation.ts'
+            blobSha 'ff6aa7f8aa30f311b0136a5343883f71a4179eff'
+            sizeBytes '3502'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Runtime-owned cancellation lifecycle settlement'
+            decision 'Finalize pause, resume, and cancellation transitions through canonical run events emitted from workflow lifecycle control'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/runPlanWorkflow.cancellation.ts 'Open pinned source'
+        }
+        file_src_workflows_runPlanWorkflow_layerHelpers_ts_5644644d = file 'runPlanWorkflow.layerHelpers.ts' {
+          #sourceDerived
+          description 'Layer selection and continue-as-new decision helpers'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.layerHelpers.ts'
+            blobSha '6b6e66a8fd7d7cb35bdad884a9f47417bacf4174'
+            sizeBytes '3582'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Layer selection and continue-as-new decision helpers'
+            decision 'Keep layer cursor, skipped-step emission, and continue-as-new handoff derived from DVT workflow state'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/runPlanWorkflow.layerHelpers.ts 'Open pinned source'
+        }
+        file_src_workflows_runPlanWorkflow_layerResults_ts_ef7509a8 = file 'runPlanWorkflow.layerResults.ts' {
+          #sourceDerived
+          description 'Layer result application and gateway fact retention'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.layerResults.ts'
+            blobSha '24bf83317562dcf8fdef79c0095f048600bb35ec'
+            sizeBytes '6052'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Layer result application and gateway fact retention'
+            decision 'Translate layer activity outcomes into canonical run events and gateway facts owned by DVT'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/runPlanWorkflow.layerResults.ts 'Open pinned source'
+        }
+        file_src_workflows_runPlanWorkflow_layers_ts_b0dc1edc = file 'runPlanWorkflow.layers.ts' {
+          #sourceDerived
+          description 'Deterministic workflow layer-loop orchestration'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.layers.ts'
+            blobSha '2beee4ad6a8eb2e8608f10c0be3f928a22fdbbcb'
+            sizeBytes '5568'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Deterministic workflow layer-loop orchestration'
+            decision 'Drive Temporal layer execution from resolved DVT execution segments and canonical workflow state'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/runPlanWorkflow.layers.ts 'Open pinned source'
+        }
+        file_src_workflows_runPlanWorkflow_lifecycle_ts_85fd0658 = file 'runPlanWorkflow.lifecycle.ts' {
+          #sourceDerived
+          description 'Workflow bootstrap, terminal, failure, and rollover outcomes'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.lifecycle.ts'
+            blobSha '4be114de80949f9f5e699499775a716df9ba16ce'
+            sizeBytes '4093'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Workflow bootstrap, terminal, failure, and rollover outcomes'
+            decision 'Resolve terminal, cancellation, and continue-as-new workflow outcomes through DVT lifecycle events'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/runPlanWorkflow.lifecycle.ts 'Open pinned source'
+        }
+        file_src_workflows_runPlanWorkflow_signals_ts_1c1789d8 = file 'runPlanWorkflow.signals.ts' {
+          #sourceDerived
+          description 'Runtime control-signal registration and dedupe state'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.signals.ts'
+            blobSha '81f9f7b8bdb58acf90f69e7278b0922ab0240480'
+            sizeBytes '5380'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Runtime control-signal registration and dedupe state'
+            decision 'Apply pause, resume, and cancel signals idempotently against runtime-owned workflow state'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/runPlanWorkflow.signals.ts 'Open pinned source'
+        }
+        file_src_workflows_runPlanWorkflow_state_ts_42e1bfb3 = file 'runPlanWorkflow.state.ts' {
+          #sourceDerived
+          description 'Workflow control input parsing and cursor hydration'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.state.ts'
+            blobSha '058095784835d1f1f7ef7ba0f04af4b9c8ed984e'
+            sizeBytes '3046'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Workflow control input parsing and cursor hydration'
+            decision 'Parse workflow control input into DVT-owned cursor and materialization state before Temporal execution'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/runPlanWorkflow.state.ts 'Open pinned source'
+        }
+        file_src_workflows_runPlanWorkflow_stepExecution_ts_6dff9077 = file 'runPlanWorkflow.stepExecution.ts' {
+          #sourceDerived
+          description 'Per-layer step activity execution orchestration'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.stepExecution.ts'
+            blobSha '08dcfbad72ba7edfc8fb393b70c1c4888d7a55ce'
+            sizeBytes '6232'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Per-layer step activity execution orchestration'
+            decision 'Emit StepStarted artifact references before executing DVT-owned step activities with explicit retry handling'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/runPlanWorkflow.stepExecution.ts 'Open pinned source'
+        }
+        file_src_workflows_RunPlanWorkflow_ts_42bee0ed = file 'RunPlanWorkflow.ts' {
+          #sourceDerived
+          description 'Temporal PlanRef workflow orchestration entrypoint'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts'
+            blobSha '4c8e0562c155818b859e68782d8875f957cb7892'
+            sizeBytes '4400'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Temporal PlanRef workflow orchestration entrypoint'
+            decision 'Section 5 - Workflow remains deterministic and delegates side effects to activities'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts 'Open pinned source'
+        }
+        file_src_workflows_runPlanWorkflow_types_ts_9f49e52f = file 'runPlanWorkflow.types.ts' {
+          #sourceDerived
+          description 'Workflow public API contracts and runtime state model'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.types.ts'
+            blobSha 'b9977faa1c8848b9b8512392e4c2dce6bfb5d2f4'
+            sizeBytes '4166'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Workflow public API contracts and runtime state model'
+            decision 'Define workflow ports and cursor contracts at the DVT boundary before Temporal-specific execution'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/runPlanWorkflow.types.ts 'Open pinned source'
+        }
+        file_src_workflows_workflowArtifactHelpers_ts_e024961b = file 'workflowArtifactHelpers.ts' {
+          #sourceDerived
+          description 'Execution artifact payload interpretation'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts'
+            blobSha 'f03335f60152f48ea079f538128e6e583d9f38eb'
+            sizeBytes '3448'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Execution artifact payload interpretation'
+            decision 'Extract plugin-agnostic artifact references and retry policy before event emission'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts 'Open pinned source'
+        }
+        file_orkflows_workflowControlSignalRetentionPolicy_ts_c8f33c3b = file 'workflowControlSignalRetentionPolicy.ts' {
+          #sourceDerived
+          description 'Bounded retention policy for control-signal dedupe ids across workflow continuation'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/workflows/workflowControlSignalRetentionPolicy.ts'
+            blobSha 'bca96b86028e9d3e4fb5a075d052119fe4a7b1e7'
+            sizeBytes '965'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Bounded retention policy for control-signal dedupe ids across workflow continuation'
+            decision 'Keep recent control-signal ids in continue-as-new cursor state without making cursor size unbounded'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/workflowControlSignalRetentionPolicy.ts 'Open pinned source'
+        }
+        file_src_workflows_workflowCursorHelpers_ts_77b65951 = file 'workflowCursorHelpers.ts' {
+          #sourceDerived
+          description 'Compact continue-as-new cursor construction and payload guard'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/workflows/workflowCursorHelpers.ts'
+            blobSha 'c1ef50c06a726216ec499a6a3d463515d05d8929'
+            sizeBytes '3723'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Compact continue-as-new cursor construction and payload guard'
+            decision 'Serialize continue-as-new cursor state explicitly from DVT workflow progress'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/workflowCursorHelpers.ts 'Open pinned source'
+        }
+        file_src_workflows_workflowErrorHelpers_ts_2a9687e1 = file 'workflowErrorHelpers.ts' {
+          #sourceDerived
+          description 'Workflow-safe error-message normalization'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/workflows/workflowErrorHelpers.ts'
+            blobSha '4146433c938ed2a3b8a918a1c71c496858df54b6'
+            sizeBytes '786'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Workflow-safe error-message normalization'
+            decision 'Normalize workflow-side unknown errors before they become canonical failure event payloads'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/workflowErrorHelpers.ts 'Open pinned source'
+        }
+        file_src_workflows_workflowFailureReasonPolicy_ts_64af0c14 = file 'workflowFailureReasonPolicy.ts' {
+          #sourceDerived
+          description 'Governed workflow failure reason classification from runtime error evidence'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/workflows/workflowFailureReasonPolicy.ts'
+            blobSha 'cf99aaa95ef00753f8966624880b972bdbbd9cff'
+            sizeBytes '1699'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Governed workflow failure reason classification from runtime error evidence'
+            decision 'Translate runtime error evidence into DVT RunFailed reasons at the workflow boundary'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/workflowFailureReasonPolicy.ts 'Open pinned source'
+        }
+        file_src_workflows_workflowGatewayHelpers_ts_b42f874f = file 'workflowGatewayHelpers.ts' {
+          #sourceDerived
+          description 'Gateway dependency validation and fact lookup'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/workflows/workflowGatewayHelpers.ts'
+            blobSha '8100239f7ad3508bd100e467aafca3ad6b299dd8'
+            sizeBytes '2789'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Gateway dependency validation and fact lookup'
+            decision 'Validate and evaluate gateway dependencies from canonical execution-plan facts'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/workflowGatewayHelpers.ts 'Open pinned source'
+        }
+        file_src_workflows_workflowInputParsingHelpers_ts_9d6c4309 = file 'workflowInputParsingHelpers.ts' {
+          #sourceDerived
+          description 'Deterministic workflow input primitive parsing'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/workflows/workflowInputParsingHelpers.ts'
+            blobSha '880e82263343b17fd95e6c54df79628f5b72719b'
+            sizeBytes '2842'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Deterministic workflow input primitive parsing'
+            decision 'Parse workflow cursor and control values with deterministic validation before execution'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/workflowInputParsingHelpers.ts 'Open pinned source'
+        }
+        file_src_workflows_workflowRuntimePayloadHelpers_ts_202d2ce0 = file 'workflowRuntimePayloadHelpers.ts' {
+          #sourceDerived
+          description 'Runtime event payload shaping'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/src/workflows/workflowRuntimePayloadHelpers.ts'
+            blobSha 'e35c89fc5de27e31a73d886f0acd1c1f7060a2f5'
+            sizeBytes '2335'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Runtime event payload shaping'
+            decision 'Build run terminal event payloads from DVT runtime evidence instead of Temporal provider metadata'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/workflowRuntimePayloadHelpers.ts 'Open pinned source'
+        }
+      }
+      file_src_config_ts_0808bc71 = file 'config.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/src/config.ts'
+          blobSha '53fb2adbb1d2b65929bbb9ac2a0c1c59315e6510'
+          sizeBytes '13497'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Section 1 â€” Enforce explicit Temporal runtime configuration preconditions'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/config.ts 'Open pinned source'
+      }
+      file_src_engine-types_ts_e3103f80 = file 'engine-types.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/src/engine-types.ts'
+          blobSha '2fba2d2ce1f797b2cd54f54cc2f9635498c1e2bb'
+          sizeBytes '677'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/engine-types.ts 'Open pinned source'
+      }
+      file_src_index_ts_c5fb8502 = file 'index.ts' {
+        #sourceDerived
+        description 'Publish the generic Temporal adapter and step-plugin public module surface'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/src/index.ts'
+          blobSha '0d7a2b72bf1235e5c4c337016c4eba011f0a3d9e'
+          sizeBytes '3646'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Publish the generic Temporal adapter and step-plugin public module surface'
+          decision 'Section 3 — Expose a stable adapter boundary for client/worker/workflow mapping components'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/index.ts 'Open pinned source'
+      }
+      file_src_ObservedTemporalAdapter_ts_cbf66427 = file 'ObservedTemporalAdapter.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/src/ObservedTemporalAdapter.ts'
+          blobSha '1c147b7acfdf6ce7f7f9a59648392f935d329ad3'
+          sizeBytes '6179'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/ObservedTemporalAdapter.ts 'Open pinned source'
+      }
+      file_src_RunStateCommandPortCircuitBreaker_ts_a76803df = file 'RunStateCommandPortCircuitBreaker.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/src/RunStateCommandPortCircuitBreaker.ts'
+          blobSha 'b3882c44342f3cf78eb41ed9f3c448c7c299be6f'
+          sizeBytes '6217'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/RunStateCommandPortCircuitBreaker.ts 'Open pinned source'
+      }
+      file_src_TemporalAdapter_ts_cd3d08b1 = file 'TemporalAdapter.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/src/TemporalAdapter.ts'
+          blobSha '4f1688f9727c7ed02c52985ecf9ce8e2f2611520'
+          sizeBytes '11114'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Section 3 - Provider adapter delegates run lifecycle to Temporal workflow primitives'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/TemporalAdapter.ts 'Open pinned source'
+      }
+      file_src_TemporalClient_ts_50ffa75d = file 'TemporalClient.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/src/TemporalClient.ts'
+          blobSha '0f818dc2ed8dab5d75d8d1e8e3a12a5486cc442c'
+          sizeBytes '5646'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Section 3 — Centralize Temporal client connection lifecycle in a single manager'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/TemporalClient.ts 'Open pinned source'
+      }
+      file_src_temporalErrorPolicy_ts_9b40e84d = file 'temporalErrorPolicy.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/src/temporalErrorPolicy.ts'
+          blobSha 'adcfa9aaae855165ec2fd14f20c0b1c5864ae4ae'
+          sizeBytes '2001'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/temporalErrorPolicy.ts 'Open pinned source'
+      }
+      file_src_temporalObservability_ts_df62a1eb = file 'temporalObservability.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/src/temporalObservability.ts'
+          blobSha 'f0268dee9d6e07a7c8eac03c038cdabe86256cff'
+          sizeBytes '6249'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/temporalObservability.ts 'Open pinned source'
+      }
+      file_src_temporalPlanRefCapacitySlaPolicy_ts_df244d08 = file 'temporalPlanRefCapacitySlaPolicy.ts' {
+        #sourceDerived
+        description 'Evaluate Temporal PlanRef workflow budgets against governed production capacity SLAs'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/src/temporalPlanRefCapacitySlaPolicy.ts'
+          blobSha 'c945a0976550548a0417a16a6f05e11e84e8c00f'
+          sizeBytes '5909'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Evaluate Temporal PlanRef workflow budgets against governed production capacity SLAs'
+          decision 'Evaluate continue-as-new, history, segment, payload, and retention budgets as explicit readiness evidence.'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/temporalPlanRefCapacitySlaPolicy.ts 'Open pinned source'
+      }
+      file_src_TemporalPolicyMapper_ts_07cc6405 = file 'TemporalPolicyMapper.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/src/TemporalPolicyMapper.ts'
+          blobSha 'b3e3b1c26a0ad9764129edbf6e8d63046e807da3'
+          sizeBytes '3618'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/TemporalPolicyMapper.ts 'Open pinned source'
+      }
+      file_src_TemporalWorkerHost_ts_baba20bf = file 'TemporalWorkerHost.ts' {
+        #sourceDerived
+        description 'Temporal worker lifecycle and activity binding host'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts'
+          blobSha 'ff5d09e3aa0cca80ef413dbf0ed3f743450224fd'
+          sizeBytes '9003'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Temporal worker lifecycle and activity binding host'
+          decision 'Section 2 — Worker lifecycle ownership is centralized in a single host'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/TemporalWorkerHost.ts 'Open pinned source'
+      }
+      file_src_versioning_ts_11419bfa = file 'versioning.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/src/versioning.ts'
+          blobSha '525cbe2689c56ef06b3f394c4d867619f77edc62'
+          sizeBytes '715'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Adapters MUST declare their supported schemaVersion as a typed constant'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/versioning.ts 'Open pinned source'
+      }
+      file_src_WorkflowMapper_ts_d2031a69 = file 'WorkflowMapper.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/src/WorkflowMapper.ts'
+          blobSha 'be160bdcf0c69acc42570bc2375ea0a3d6fd10b9'
+          sizeBytes '3427'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Section 3 — Temporal runtime identifiers/status are mapped into canonical engine run references'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/WorkflowMapper.ts 'Open pinned source'
+      }
+    }
+    dir_test_a94a8fe5 = folder 'test/ — 45 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/adapter-temporal/test'
+        recursiveFileCount '45'
+        directFileCount '34'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test 'Pinned directory'
+      dir_test_helpers_a3c41c9e = folder 'helpers/ — 11 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/helpers'
+          recursiveFileCount '11'
+          directFileCount '5'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/helpers 'Pinned directory'
+        dir_test_helpers_integration_5893c921 = folder 'integration/ — 6 files' {
+          #structureDerived
+          description 'Directory observed in the pinned Git tree.'
+          metadata {
+            provenance 'STRUCTURE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/test/helpers/integration'
+            recursiveFileCount '6'
+            directFileCount '6'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/helpers/integration 'Pinned directory'
+          file_test_helpers_integration_dbtRuntimeFixtures_ts_4596c489 = file 'dbtRuntimeFixtures.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/adapter-temporal/test/helpers/integration/dbtRuntimeFixtures.ts'
+              blobSha '5d4d6cfe87574daf78a60247a7d7393231c8d750'
+              sizeBytes '8667'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/helpers/integration/dbtRuntimeFixtures.ts 'Open pinned source'
+          }
+          file_test_helpers_integration_runtimeState_ts_07553e9b = file 'runtimeState.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/adapter-temporal/test/helpers/integration/runtimeState.ts'
+              blobSha '43b60df9154c02b2be8b4bba16578052db2dce61'
+              sizeBytes '10201'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/helpers/integration/runtimeState.ts 'Open pinned source'
+          }
+          file_test_helpers_integration_testActivities_ts_5e4ff930 = file 'testActivities.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/adapter-temporal/test/helpers/integration/testActivities.ts'
+              blobSha 'e27b54314dcd9d7d788b5eb12f5d98257567c158'
+              sizeBytes '3531'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/helpers/integration/testActivities.ts 'Open pinned source'
+          }
+          file_test_helpers_integration_testPlans_ts_fca482ec = file 'testPlans.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/adapter-temporal/test/helpers/integration/testPlans.ts'
+              blobSha '18b99e9cdea9cf399f17ae240cfb83a3ab625d47'
+              sizeBytes '4488'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/helpers/integration/testPlans.ts 'Open pinned source'
+          }
+          file_test_helpers_integration_waitForCondition_ts_7c83c70c = file 'waitForCondition.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/adapter-temporal/test/helpers/integration/waitForCondition.ts'
+              blobSha '0141fa0c79258beea3f7f6eaf59a5ec107fb9384'
+              sizeBytes '771'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/helpers/integration/waitForCondition.ts 'Open pinned source'
+          }
+          file_test_helpers_integration_workflowArtifacts_ts_58b23f11 = file 'workflowArtifacts.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/adapter-temporal/test/helpers/integration/workflowArtifacts.ts'
+              blobSha 'd9c855421e966fb6837e57f431a4903510a6ae04'
+              sizeBytes '912'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/helpers/integration/workflowArtifacts.ts 'Open pinned source'
+          }
+        }
+        file_test_helpers_contractFixtures_ts_7205439e = file 'contractFixtures.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/test/helpers/contractFixtures.ts'
+            blobSha 'c384d6a9a24048b2d28cd854041797df92807127'
+            sizeBytes '5778'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            decision 'Provide contract-backed Temporal fixtures for tests that exercise DVT-owned run and plan boundaries'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/helpers/contractFixtures.ts 'Open pinned source'
+        }
+        file_test_helpers_lookupRunRefHarness_ts_5fde5b31 = file 'lookupRunRefHarness.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/test/helpers/lookupRunRefHarness.ts'
+            blobSha '49f4ea62d5cdb7403363f128c70f54cb0304d93c'
+            sizeBytes '2573'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            decision 'Mock Temporal workflow handles through the adapter read/control boundary'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/helpers/lookupRunRefHarness.ts 'Open pinned source'
+        }
+        file_test_helpers_mockObservability_ts_92ea5d88 = file 'mockObservability.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/test/helpers/mockObservability.ts'
+            blobSha 'b985b8a738b786ae8f1f1a4aed5149c959d540c4'
+            sizeBytes '1462'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/helpers/mockObservability.ts 'Open pinned source'
+        }
+        file_test_helpers_testExecutors_ts_7b772381 = file 'testExecutors.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/test/helpers/testExecutors.ts'
+            blobSha '6b54c13535053c3d14484e15ed0a37cb44cd2661'
+            sizeBytes '2220'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/helpers/testExecutors.ts 'Open pinned source'
+        }
+        file_test_helpers_workflowComponentGuideSupport_ts_b712683d = file 'workflowComponentGuideSupport.ts' {
+          #sourceDerived
+          description 'Parse Temporal PlanRef component-guide markdown structures for semantic architecture tests'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/adapter-temporal/test/helpers/workflowComponentGuideSupport.ts'
+            blobSha '40aa60a7420b189e0569303b56b980439a6d0b29'
+            sizeBytes '2221'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Parse Temporal PlanRef component-guide markdown structures for semantic architecture tests'
+            decision 'Keep architecture tests coupled to semantic guide structure instead of duplicated string fixtures'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/helpers/workflowComponentGuideSupport.ts 'Open pinned source'
+        }
+      }
+      file_test_activities_test_ts_900ed66d = file 'activities.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/activities.test.ts'
+          blobSha 'a254468967e2ef5495298fd88f5f51a6a78e6c17'
+          sizeBytes '36216'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/activities.test.ts 'Open pinned source'
+      }
+      file_test_activityDeps_typecheck_ts_aec68732 = file 'activityDeps.typecheck.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/activityDeps.typecheck.ts'
+          blobSha '7f6834c78910ec8a4cbb7823c72fb5003ce08c6b'
+          sizeBytes '2261'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Type-check activity dependency fixtures against the scoped engine-dispatch plan query'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/activityDeps.typecheck.ts 'Open pinned source'
+      }
+      file_test_dbt-core-decoupling_architecture_test_ts_a22c65f5 = file 'dbt-core-decoupling.architecture.test.ts' {
+        #sourceDerived
+        description 'Compose Temporal core activities with optional worker-provided step registries.\','
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/dbt-core-decoupling.architecture.test.ts'
+          blobSha 'd8a2d3ec91400f690fa49f6c09ba14c60cc4a4f5'
+          sizeBytes '15342'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Compose Temporal core activities with optional worker-provided step registries.\','
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/dbt-core-decoupling.architecture.test.ts 'Open pinned source'
+      }
+      file_test_dbt-package-extraction_architecture_test_ts_936e2624 = file 'dbt-package-extraction.architecture.test.ts' {
+        #sourceDerived
+        description 'verify concrete DBT plugin ownership lives in its package,'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/dbt-package-extraction.architecture.test.ts'
+          blobSha '4579cc233ca407fa409c914c8dcdc7c2b6a6028c'
+          sizeBytes '4344'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'verify concrete DBT plugin ownership lives in its package,'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/dbt-package-extraction.architecture.test.ts 'Open pinned source'
+      }
+      file_test_dbtRuntimeFixtures_test_ts_8dc0b64b = file 'dbtRuntimeFixtures.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/dbtRuntimeFixtures.test.ts'
+          blobSha '04172aa0fc7d15295e05c2394f990696946c457b'
+          sizeBytes '10065'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/dbtRuntimeFixtures.test.ts 'Open pinned source'
+      }
+      file_test_integration_time-skipping_shared_ts_dedb432f = file 'integration.time-skipping.shared.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/integration.time-skipping.shared.ts'
+          blobSha '6cfb134e54dd952b019bd71209d604984b53b59f'
+          sizeBytes '5697'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/integration.time-skipping.shared.ts 'Open pinned source'
+      }
+      file_test_integration_time-skipping_test_ts_11ec7be4 = file 'integration.time-skipping.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts'
+          blobSha 'f66a101a83cb2c0ecdcd7c0b8a03dccb89b85e06'
+          sizeBytes '25988'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Section 2 — Build precondition mandatory'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/integration.time-skipping.test.ts 'Open pinned source'
+      }
+      file_integration_transformation_time-skipping_test_ts_c633766b = file 'integration.transformation.time-skipping.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/integration.transformation.time-skipping.test.ts'
+          blobSha 'dadcb37a36bd6d717bc59f74fb194be2515eaa8c'
+          sizeBytes '9050'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Transformation-flow verification lives outside the Temporal baseline suite'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/integration.transformation.time-skipping.test.ts 'Open pinned source'
+      }
+      file_test_ObservedTemporalAdapter_test_ts_ea0bd2af = file 'ObservedTemporalAdapter.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts'
+          blobSha 'ab5a9c9b91e87ed4ca8d3533014774ccdba9da6d'
+          sizeBytes '7595'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts 'Open pinned source'
+      }
+      file_test_runPlanWorkflow_cancellation_test_ts_dbad01e0 = file 'runPlanWorkflow.cancellation.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/runPlanWorkflow.cancellation.test.ts'
+          blobSha '808f3dd130651bf48bab26dde41b302fb0cfdfa2'
+          sizeBytes '5069'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Verify workflow cancellation emits canonical lifecycle events under Temporal cancellation scopes'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/runPlanWorkflow.cancellation.test.ts 'Open pinned source'
+      }
+      file_test_runPlanWorkflow_layers_order_test_ts_56bd7390 = file 'runPlanWorkflow.layers.order.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/runPlanWorkflow.layers.order.test.ts'
+          blobSha '0f9b5117dc2f1e19b907262bdeae5e503ba54e46'
+          sizeBytes '7105'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Verify workflow layer order follows resolved DVT execution segments and lifecycle guards'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/runPlanWorkflow.layers.order.test.ts 'Open pinned source'
+      }
+      file_test_runPlanWorkflow_signals_test_ts_95a84e91 = file 'runPlanWorkflow.signals.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/runPlanWorkflow.signals.test.ts'
+          blobSha 'e306b33efe0a3c183d1184151d4f3b473ddf8a33'
+          sizeBytes '2162'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Verify signal handlers deduplicate control signals and preserve first-writer lifecycle state'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/runPlanWorkflow.signals.test.ts 'Open pinned source'
+      }
+      file_test_RunStateCommandPortCircuitBreaker_test_ts_20fd7c09 = file 'RunStateCommandPortCircuitBreaker.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/RunStateCommandPortCircuitBreaker.test.ts'
+          blobSha '30f2e6d0092cd52c145330cfad507d1ea184c4a4'
+          sizeBytes '4468'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/RunStateCommandPortCircuitBreaker.test.ts 'Open pinned source'
+      }
+      file_test_smoke_test_ts_dc6a63e5 = file 'smoke.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/smoke.test.ts'
+          blobSha '403d79d858bb08086e76e4755e92460374f744d9'
+          sizeBytes '19205'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/smoke.test.ts 'Open pinned source'
+      }
+      file_test_TemporalAdapter_control_test_ts_317859f9 = file 'TemporalAdapter.control.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/TemporalAdapter.control.test.ts'
+          blobSha '9d11f7633f877c3502d9d2066e892099061b1c45'
+          sizeBytes '3700'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Validate adapter control operations against canonical signal and cancellation semantics'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/TemporalAdapter.control.test.ts 'Open pinned source'
+      }
+      file_st_TemporalAdapter_getProviderStatusView_test_ts_f695c7af = file 'TemporalAdapter.getProviderStatusView.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/TemporalAdapter.getProviderStatusView.test.ts'
+          blobSha '93032e05b6f81e8d03d29804b811aaecefc388db'
+          sizeBytes '2270'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/TemporalAdapter.getProviderStatusView.test.ts 'Open pinned source'
+      }
+      file_test_TemporalAdapter_lookupRunRef_test_ts_3291006b = file 'TemporalAdapter.lookupRunRef.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts'
+          blobSha 'aa5fc4f99ab6040925142825894c552da05650a9'
+          sizeBytes '6151'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts 'Open pinned source'
+      }
+      file_test_TemporalAdapter_startRun_test_ts_2196b901 = file 'TemporalAdapter.startRun.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/TemporalAdapter.startRun.test.ts'
+          blobSha '887612ff5a08776634ffdbade068db7ffcbf7052'
+          sizeBytes '6000'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/TemporalAdapter.startRun.test.ts 'Open pinned source'
+      }
+      file_test_temporalErrorPolicy_test_ts_c4f19796 = file 'temporalErrorPolicy.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/temporalErrorPolicy.test.ts'
+          blobSha '39ed240f27375758fd097c3fce79f89e6fb740f5'
+          sizeBytes '4971'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/temporalErrorPolicy.test.ts 'Open pinned source'
+      }
+      file_test_temporalPlanArtifactReader_test_ts_cdf8e5d0 = file 'temporalPlanArtifactReader.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts'
+          blobSha '4ebef5288dae7307e72e102e2201050921de1af3'
+          sizeBytes '3751'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts 'Open pinned source'
+      }
+      file_test_temporalPlanRefCapacitySlaPolicy_test_ts_7a6a130a = file 'temporalPlanRefCapacitySlaPolicy.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/temporalPlanRefCapacitySlaPolicy.test.ts'
+          blobSha '1da7c3c9b7399234b70585f28290f078517bc9ed'
+          sizeBytes '4340'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/temporalPlanRefCapacitySlaPolicy.test.ts 'Open pinned source'
+      }
+      file_test_TemporalPolicyMapper_test_ts_45cf7cb1 = file 'TemporalPolicyMapper.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/TemporalPolicyMapper.test.ts'
+          blobSha 'b210f0f0a164ce41a342e9f528cb41d98f0722fc'
+          sizeBytes '1491'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/TemporalPolicyMapper.test.ts 'Open pinned source'
+      }
+      file_test_TemporalWorkerHost_lifecycle_test_ts_0152b062 = file 'TemporalWorkerHost.lifecycle.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts'
+          blobSha '5f66058a2ddb75073be88cc6629a73b5a8df8a0a'
+          sizeBytes '10059'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts 'Open pinned source'
+      }
+      file_est_worker-scaling-strategy_architecture_test_ts_350fd1e9 = file 'worker-scaling-strategy.architecture.test.ts' {
+        #sourceDerived
+        description 'Guard the Temporal worker scaling strategy against unsupported topology claims.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/worker-scaling-strategy.architecture.test.ts'
+          blobSha '13e4ea9619ef93d1f535f0ac11ba98f773171a1d'
+          sizeBytes '3239'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Guard the Temporal worker scaling strategy against unsupported topology claims.'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/worker-scaling-strategy.architecture.test.ts 'Open pinned source'
+      }
+      file_test_workflow-compiled-code-ref_test_ts_6fac621d = file 'workflow-compiled-code-ref.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts'
+          blobSha '42efd55763e6467d0dd8c94383d636f749d60f86'
+          sizeBytes '3117'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts 'Open pinned source'
+      }
+      file_orkflow-component-semantics_architecture_test_ts_9bd67166 = file 'workflow-component-semantics.architecture.test.ts' {
+        #sourceDerived
+        description '${escapeRegExp(concern)}[\\s\\S]'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts'
+          blobSha 'f4437e12bc91e5eb327bf82ef630e095bf0a1aab'
+          sizeBytes '10795'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern '${escapeRegExp(concern)}[\\s\\S]'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts 'Open pinned source'
+      }
+      file_test_workflow-continue-as-new_test_ts_e10bbde5 = file 'workflow-continue-as-new.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/workflow-continue-as-new.test.ts'
+          blobSha '1cf79e31db7fab41a55446c7d2ee5decdebd4ff1'
+          sizeBytes '10135'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/workflow-continue-as-new.test.ts 'Open pinned source'
+      }
+      file_test_workflow-dag-scheduler_test_ts_6466ed82 = file 'workflow-dag-scheduler.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/workflow-dag-scheduler.test.ts'
+          blobSha '13b3281884269ee4b5c50fdfedfc2611fd1edd62'
+          sizeBytes '2399'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/workflow-dag-scheduler.test.ts 'Open pinned source'
+      }
+      file_test_workflow-execution-segment_test_ts_e8c48ac3 = file 'workflow-execution-segment.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/workflow-execution-segment.test.ts'
+          blobSha '92c9faeb2937db5fdbe2c913b4e284e5d7d646f6'
+          sizeBytes '4199'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Verify execution segment resolution exposes only bounded layer metadata needed by the workflow'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/workflow-execution-segment.test.ts 'Open pinned source'
+      }
+      file_test_workflow-literals_test_ts_858c32cb = file 'workflow-literals.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/workflow-literals.test.ts'
+          blobSha 'db94b71bef5f0d7eb00e42a91ea26b84c6d70bdf'
+          sizeBytes '2498'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/workflow-literals.test.ts 'Open pinned source'
+      }
+      file_test_workflow-retry-policy_test_ts_17b052bc = file 'workflow-retry-policy.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/workflow-retry-policy.test.ts'
+          blobSha 'b7ccba5a78f341c987ed066f81bb6a9b501842e8'
+          sizeBytes '1555'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/workflow-retry-policy.test.ts 'Open pinned source'
+      }
+      file_test_workflow-step-activity-routing_test_ts_8669491d = file 'workflow-step-activity-routing.test.ts' {
+        #sourceDerived
+        description 'Temporal workflow step activity task-queue routing coverage'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts'
+          blobSha 'ea843817cc1cb96840240f3fb8478f4badfee02b'
+          sizeBytes '2753'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Temporal workflow step activity task-queue routing coverage'
+          decision 'Verify that only executeStep activity proxies receive capability task queues'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts 'Open pinned source'
+      }
+      file_test_workflowMapper_typecheck_ts_384ae912 = file 'workflowMapper.typecheck.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/workflowMapper.typecheck.ts'
+          blobSha '60700e66fad1bae8c60cc86643c838600867c6ed'
+          sizeBytes '976'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Type-check workflow mapping fixtures against canonical execution plan and task queue contracts'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/workflowMapper.typecheck.ts 'Open pinned source'
+      }
+      file_test_workflowRuntimePayloadHelpers_test_ts_80a7b0cd = file 'workflowRuntimePayloadHelpers.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/adapter-temporal/test/workflowRuntimePayloadHelpers.test.ts'
+          blobSha '34355cf63da66b945b721cb09b0264f9451ca0f5'
+          sizeBytes '1890'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/workflowRuntimePayloadHelpers.test.ts 'Open pinned source'
+      }
+    }
+    file_package_json_7030d0b2 = file 'package.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/adapter-temporal/package.json'
+        blobSha '95b97db4f0abfd528b66ac3006693d22f7c324fd'
+        sizeBytes '2672'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/package.json 'Open pinned source'
+    }
+    file_tsconfig_eslint_json_df42856a = file 'tsconfig.eslint.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/adapter-temporal/tsconfig.eslint.json'
+        blobSha 'b87c89eff295ebadcc658e630d2a95ee53372dbf'
+        sizeBytes '144'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/tsconfig.eslint.json 'Open pinned source'
+    }
+    file_tsconfig_json_61ebb9fd = file 'tsconfig.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/adapter-temporal/tsconfig.json'
+        blobSha '0369f92bf4563e47d2cf60eae4da4f295a1ea2a9'
+        sizeBytes '1645'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/tsconfig.json 'Open pinned source'
+    }
+    file_tsconfig_test_json_d1f96fd1 = file 'tsconfig.test.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/adapter-temporal/tsconfig.test.json'
+        blobSha '69cd822eafeb6720de06a7ef236e15d221b381bc'
+        sizeBytes '210'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/tsconfig.test.json 'Open pinned source'
+    }
+    file_vitest_config_ts_e7b129ed = file 'vitest.config.ts' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/adapter-temporal/vitest.config.ts'
+        blobSha '6e66baba56a2bcc47446fa6b36db18cefffe3d76'
+        sizeBytes '1076'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/vitest.config.ts 'Open pinned source'
+    }
+  }
+}
+
+views {
+  view temporalAdapterSourceInventory of temporalAdapterSource {
+    title 'Temporal Adapter — Complete source inventory'
+    description 'Generated from Git at 3695f07c. 94 tracked files.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view temporalAdapterSource_dir_src_f27fede2 of temporalAdapterSource.dir_src_f27fede2 {
+    title 'Source — src/ (44 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view temporalAdapterSource_dir_src_activities_7b271b5c of temporalAdapterSource.dir_src_f27fede2.dir_src_activities_7b271b5c {
+    title 'Source — src/activities/ (8 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view temporalAdapterSource_dir_src_plugins_e2271fcc of temporalAdapterSource.dir_src_f27fede2.dir_src_plugins_e2271fcc {
+    title 'Source — src/plugins/ (2 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view temporalAdapterSource_dir_src_workflows_4449a236 of temporalAdapterSource.dir_src_f27fede2.dir_src_workflows_4449a236 {
+    title 'Source — src/workflows/ (20 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view temporalAdapterSource_dir_test_a94a8fe5 of temporalAdapterSource.dir_test_a94a8fe5 {
+    title 'Source — test/ (45 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view temporalAdapterSource_dir_test_helpers_a3c41c9e of temporalAdapterSource.dir_test_a94a8fe5.dir_test_helpers_a3c41c9e {
+    title 'Source — test/helpers/ (11 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view temporalAdapterSource_dir_test_helpers_integration_5893c921 of temporalAdapterSource.dir_test_a94a8fe5.dir_test_helpers_a3c41c9e.dir_test_helpers_integration_5893c921 {
+    title 'Source — test/helpers/integration/ (6 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view adapter-temporalFiles_publicBoundary {
+    title 'Files — Temporal adapter public boundary'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include temporalAdapterSource.dir_src_f27fede2.file_src_index_ts_c5fb8502
+    autoLayout TopBottom
+  }
+
+  view adapter-temporalFiles_providerAdapter {
+    title 'Files — Temporal provider adapter'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 2 evidence file(s).'
+    include temporalAdapterSource.dir_src_f27fede2.file_src_ObservedTemporalAdapter_ts_cbf66427
+    include temporalAdapterSource.dir_src_f27fede2.file_src_TemporalAdapter_ts_cd3d08b1
+    autoLayout TopBottom
+  }
+
+  view adapter-temporalFiles_temporalClient {
+    title 'Files — Temporal client boundary'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include temporalAdapterSource.dir_src_f27fede2.file_src_TemporalClient_ts_50ffa75d
+    autoLayout TopBottom
+  }
+
+  view adapter-temporalFiles_workerHost {
+    title 'Files — Temporal worker host'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 3 evidence file(s).'
+    include temporalAdapterSource.dir_src_f27fede2.file_src_config_ts_0808bc71
+    include temporalAdapterSource.dir_src_f27fede2.file_src_TemporalWorkerHost_ts_baba20bf
+    include temporalAdapterSource.dir_src_f27fede2.file_src_versioning_ts_11419bfa
+    autoLayout TopBottom
+  }
+
+  view adapter-temporalFiles_workflowRuntime {
+    title 'Files — RunPlan workflow runtime'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 20 evidence file(s).'
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_workflows_4449a236.file_src_workflows_executionSegmentResolver_ts_2360f16e
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_workflows_4449a236.file_src_workflows_runPlanWorkflow_activities_ts_7c558f2f
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_workflows_4449a236.file_src_workflows_runPlanWorkflow_cancellation_ts_99aebd96
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_workflows_4449a236.file_src_workflows_runPlanWorkflow_layerHelpers_ts_5644644d
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_workflows_4449a236.file_src_workflows_runPlanWorkflow_layerResults_ts_ef7509a8
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_workflows_4449a236.file_src_workflows_runPlanWorkflow_layers_ts_b0dc1edc
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_workflows_4449a236.file_src_workflows_runPlanWorkflow_lifecycle_ts_85fd0658
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_workflows_4449a236.file_src_workflows_runPlanWorkflow_signals_ts_1c1789d8
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_workflows_4449a236.file_src_workflows_runPlanWorkflow_state_ts_42e1bfb3
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_workflows_4449a236.file_src_workflows_runPlanWorkflow_stepExecution_ts_6dff9077
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_workflows_4449a236.file_src_workflows_RunPlanWorkflow_ts_42bee0ed
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_workflows_4449a236.file_src_workflows_runPlanWorkflow_types_ts_9f49e52f
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_workflows_4449a236.file_src_workflows_workflowArtifactHelpers_ts_e024961b
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_workflows_4449a236.file_orkflows_workflowControlSignalRetentionPolicy_ts_c8f33c3b
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_workflows_4449a236.file_src_workflows_workflowCursorHelpers_ts_77b65951
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_workflows_4449a236.file_src_workflows_workflowErrorHelpers_ts_2a9687e1
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_workflows_4449a236.file_src_workflows_workflowFailureReasonPolicy_ts_64af0c14
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_workflows_4449a236.file_src_workflows_workflowGatewayHelpers_ts_b42f874f
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_workflows_4449a236.file_src_workflows_workflowInputParsingHelpers_ts_9d6c4309
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_workflows_4449a236.file_src_workflows_workflowRuntimePayloadHelpers_ts_202d2ce0
+    autoLayout TopBottom
+  }
+
+  view adapter-temporalFiles_activities {
+    title 'Files — Temporal activities + dispatch'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 8 evidence file(s).'
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_activities_7b271b5c.file_src_activities_activityFactory_ts_5c37456f
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_activities_7b271b5c.file_src_activities_activityFailures_ts_0b47fa48
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_activities_7b271b5c.file_src_activities_activityTypes_ts_e6f23064
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_activities_7b271b5c.file_src_activities_gatewayStepActivity_ts_fe8fa2d5
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_activities_7b271b5c.file_src_activities_stepActivities_ts_0421a0df
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_activities_7b271b5c.file_src_activities_stepActivityDispatcher_ts_41ae72d5
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_activities_7b271b5c.file_src_activities_stepActivityValidation_ts_f1ced87f
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_activities_7b271b5c.file_src_activities_temporalPlanArtifactReader_ts_d8fbec02
+    autoLayout TopBottom
+  }
+
+  view adapter-temporalFiles_stepPlugins {
+    title 'Files — Temporal step plugin boundary'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 2 evidence file(s).'
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_plugins_e2271fcc.file_src_plugins_TemporalStepPluginProfile_ts_3f1b8cc2
+    include temporalAdapterSource.dir_src_f27fede2.dir_src_plugins_e2271fcc.file_src_plugins_TemporalStepPluginRunner_ts_f768febc
+    autoLayout TopBottom
+  }
+
+  view adapter-temporalFiles_policyMapping {
+    title 'Files — Temporal policy mapping'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 2 evidence file(s).'
+    include temporalAdapterSource.dir_src_f27fede2.file_src_TemporalPolicyMapper_ts_07cc6405
+    include temporalAdapterSource.dir_src_f27fede2.file_src_WorkflowMapper_ts_d2031a69
+    autoLayout TopBottom
+  }
+
+  view adapter-temporalFiles_stateWriteProtection {
+    title 'Files — Run-state command circuit breaker'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include temporalAdapterSource.dir_src_f27fede2.file_src_RunStateCommandPortCircuitBreaker_ts_a76803df
+    autoLayout TopBottom
+  }
+
+  view adapter-temporalFiles_observability {
+    title 'Files — Temporal observability + error policy'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 3 evidence file(s).'
+    include temporalAdapterSource.dir_src_f27fede2.file_src_temporalErrorPolicy_ts_9b40e84d
+    include temporalAdapterSource.dir_src_f27fede2.file_src_temporalObservability_ts_df62a1eb
+    include temporalAdapterSource.dir_src_f27fede2.file_src_temporalPlanRefCapacitySlaPolicy_ts_df244d08
+    autoLayout TopBottom
+  }
+
+}

@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "components": [
+    {"id":"host","title":"Lineage worker process host","paths":["src/server.ts","src/bootstrap.ts"],"rationale":"Owns lineage worker startup and composition."},
+    {"id":"compiledCodeResolver","title":"Compiled-code resolver","paths":["src/compiledCodeResolver.ts"],"prefixes":["src/compiled-code-resolver"],"rationale":"Resolves compiled-code evidence needed for lineage projection while keeping artifact lookup separate from lineage semantics."},
+    {"id":"types","title":"Lineage worker types","prefixes":["src/types"],"rationale":"Worker-owned types supporting composition and evidence resolution."},
+    {"id":"env","title":"Lineage worker environment","paths":["src/env.ts"],"rationale":"Validates runtime configuration for the lineage worker host."}
+  ]
+}

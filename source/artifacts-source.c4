@@ -1,0 +1,629 @@
+// GENERATED FILE. DO NOT EDIT.
+// Source: git tree dunay2/dvt@3695f07c9ba3c66ab51f88a2dabe18e18556a244:packages/@dvt/artifacts
+model {
+  artifactsSource = inventory '@dvt/artifacts source inventory — generated from Git' {
+    #sourceDerived
+    description 'Machine-generated from the exact Git tree. Folder structure is STRUCTURE-DERIVED; file identity is SOURCE-DERIVED.'
+    metadata {
+      provenance 'SOURCE-DERIVED'
+      architectureOwner 'Artifacts bounded context'
+      logicalModelId 'artifactsModel'
+      sourceRoot 'packages/@dvt/artifacts'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      trackedFiles '33'
+      sourceFiles '25'
+      testFiles '5'
+      inventorySha256 '71c11ff5cc43bee64809619753791300bc63d2e32b3f146670b7c9031a7ac6a1'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts 'Pinned package tree'
+    dir_src_f27fede2 = folder 'src/ — 25 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/artifacts/src'
+        recursiveFileCount '25'
+        directFileCount '1'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src 'Pinned directory'
+      dir_src_compiledCode_a188b957 = folder 'compiledCode/ — 7 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/artifacts/src/compiledCode'
+          recursiveFileCount '7'
+          directFileCount '2'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/compiledCode 'Pinned directory'
+        dir_src_compiledCode_adapters_1eddf0a2 = folder 'adapters/ — 5 files' {
+          #structureDerived
+          description 'Directory observed in the pinned Git tree.'
+          metadata {
+            provenance 'STRUCTURE-DERIVED'
+            sourcePath 'packages/@dvt/artifacts/src/compiledCode/adapters'
+            recursiveFileCount '5'
+            directFileCount '5'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/compiledCode/adapters 'Pinned directory'
+          file_edCode_adapters_FileSystemCompiledCodeStorage_ts_7cf12581 = file 'FileSystemCompiledCodeStorage.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/artifacts/src/compiledCode/adapters/FileSystemCompiledCodeStorage.ts'
+              blobSha 'd60f8a95468de899cc063cfbed672c06390cc807'
+              sizeBytes '1847'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/compiledCode/adapters/FileSystemCompiledCodeStorage.ts 'Open pinned source'
+          }
+          file_iledCode_adapters_InMemoryCompiledCodeStorage_ts_cb73138e = file 'InMemoryCompiledCodeStorage.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/artifacts/src/compiledCode/adapters/InMemoryCompiledCodeStorage.ts'
+              blobSha 'e952af483099c47ce738de1e0b481b3a39a6e17d'
+              sizeBytes '1614'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/compiledCode/adapters/InMemoryCompiledCodeStorage.ts 'Open pinned source'
+          }
+          file_ompiledCode_adapters_MinioCompiledCodeStorage_ts_e7bfeaa9 = file 'MinioCompiledCodeStorage.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/artifacts/src/compiledCode/adapters/MinioCompiledCodeStorage.ts'
+              blobSha 'a45c3ebe95c506d8b3ef528c7bdbea678ad8a835'
+              sizeBytes '2452'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/compiledCode/adapters/MinioCompiledCodeStorage.ts 'Open pinned source'
+          }
+          file_compiledCode_adapters_NoopCompiledCodeStorage_ts_4e9e8e48 = file 'NoopCompiledCodeStorage.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/artifacts/src/compiledCode/adapters/NoopCompiledCodeStorage.ts'
+              blobSha 'afd90387389cb6ab6af9c82d338cd201e959bec2'
+              sizeBytes '465'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/compiledCode/adapters/NoopCompiledCodeStorage.ts 'Open pinned source'
+          }
+          file_c_compiledCode_adapters_S3CompiledCodeStorage_ts_0dcc5392 = file 'S3CompiledCodeStorage.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/artifacts/src/compiledCode/adapters/S3CompiledCodeStorage.ts'
+              blobSha 'afe2b30268df6f5fb35f5e993166abc383b108d9'
+              sizeBytes '2135'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/compiledCode/adapters/S3CompiledCodeStorage.ts 'Open pinned source'
+          }
+        }
+        file_src_compiledCode_attachCompiledCodeRefs_ts_ad89a9f1 = file 'attachCompiledCodeRefs.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/artifacts/src/compiledCode/attachCompiledCodeRefs.ts'
+            blobSha '361e42f3b4d1abe8d188d5dcecaedad9082e0ad0'
+            sizeBytes '3362'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/compiledCode/attachCompiledCodeRefs.ts 'Open pinned source'
+        }
+        file_src_compiledCode_sha256_ts_e87caec7 = file 'sha256.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/artifacts/src/compiledCode/sha256.ts'
+            blobSha '682e5119e7b7a674b8cc72b92f0645ad704a8f02'
+            sizeBytes '211'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/compiledCode/sha256.ts 'Open pinned source'
+        }
+      }
+      dir_src_contentAddressed_d00e5123 = folder 'contentAddressed/ — 2 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/artifacts/src/contentAddressed'
+          recursiveFileCount '2'
+          directFileCount '2'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/contentAddressed 'Pinned directory'
+        file_ntentAddressed_IContentAddressedArtifactStore_ts_303a6651 = file 'IContentAddressedArtifactStore.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/artifacts/src/contentAddressed/IContentAddressedArtifactStore.ts'
+            blobSha '4fbb7c2fe1ed74edb99f91deedf2d2ceddea716e'
+            sizeBytes '668'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/contentAddressed/IContentAddressedArtifactStore.ts 'Open pinned source'
+        }
+        file_tentAddressed_S3ContentAddressedArtifactStore_ts_2d9f8e9c = file 'S3ContentAddressedArtifactStore.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/artifacts/src/contentAddressed/S3ContentAddressedArtifactStore.ts'
+            blobSha 'ec03cf8ac5d7f4bfdd1ac3cb5abbe41a9ae1e840'
+            sizeBytes '5842'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/contentAddressed/S3ContentAddressedArtifactStore.ts 'Open pinned source'
+        }
+      }
+      dir_src_ports_3a2d3ebf = folder 'ports/ — 7 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/artifacts/src/ports'
+          recursiveFileCount '7'
+          directFileCount '7'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/ports 'Pinned directory'
+        file_src_ports_ICompiledCodeStorage_ts_c3084ffd = file 'ICompiledCodeStorage.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/artifacts/src/ports/ICompiledCodeStorage.ts'
+            blobSha 'eed58c1fa5c1d23dc18acd5e751c7fcbe58a4e18'
+            sizeBytes '1193'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/ports/ICompiledCodeStorage.ts 'Open pinned source'
+        }
+        file_src_ports_IDbtProjectBundleReader_ts_fbaa4a7e = file 'IDbtProjectBundleReader.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/artifacts/src/ports/IDbtProjectBundleReader.ts'
+            blobSha 'da9cb03bbce24f51c7e0559d06672b095314db7b'
+            sizeBytes '518'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/ports/IDbtProjectBundleReader.ts 'Open pinned source'
+        }
+        file_src_ports_IPlanStoreReader_ts_6cb66e37 = file 'IPlanStoreReader.ts' {
+          #sourceDerived
+          description 'expose scoped plan-store query ports.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts'
+            blobSha '270149f2d3fc4afde0ab15cd237ce15563f553d1'
+            sizeBytes '960'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'expose scoped plan-store query ports.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/ports/IPlanStoreReader.ts 'Open pinned source'
+        }
+        file_src_ports_IPlanStoreWriter_ts_d74f251c = file 'IPlanStoreWriter.ts' {
+          #sourceDerived
+          description 'expose scoped plan-store command ports.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/artifacts/src/ports/IPlanStoreWriter.ts'
+            blobSha 'b5225e311cb8db1d72afc7926f6914c328a292dc'
+            sizeBytes '940'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'expose scoped plan-store command ports.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/ports/IPlanStoreWriter.ts 'Open pinned source'
+        }
+        file_src_ports_IRunExecutionContextReader_ts_5e773e10 = file 'IRunExecutionContextReader.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/artifacts/src/ports/IRunExecutionContextReader.ts'
+            blobSha 'badd991f0f2ce7f2f112eaea9daab0e2929990cc'
+            sizeBytes '392'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/ports/IRunExecutionContextReader.ts 'Open pinned source'
+        }
+        file_src_ports_IRunExecutionContextReferenceStore_ts_8330e260 = file 'IRunExecutionContextReferenceStore.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/artifacts/src/ports/IRunExecutionContextReferenceStore.ts'
+            blobSha '44aed8cd207bb1c40051d314083a77ad89f62e9d'
+            sizeBytes '541'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/ports/IRunExecutionContextReferenceStore.ts 'Open pinned source'
+        }
+        file_src_ports_IStoredPlanArtifactStore_ts_2706acea = file 'IStoredPlanArtifactStore.ts' {
+          #sourceDerived
+          description 'expose stored-plan artifact lifecycle and materialization ports.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts'
+            blobSha '3a82f060b992f73f79c795ce540879f89abdc66e'
+            sizeBytes '1632'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'expose stored-plan artifact lifecycle and materialization ports.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts 'Open pinned source'
+        }
+      }
+      dir_src_runtime_6c8c9a16 = folder 'runtime/ — 8 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/artifacts/src/runtime'
+          recursiveFileCount '8'
+          directFileCount '8'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/runtime 'Pinned directory'
+        file__runtime_ArtifactBackedDbtProjectBundleReader_ts_4ac7a7b2 = file 'ArtifactBackedDbtProjectBundleReader.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/artifacts/src/runtime/ArtifactBackedDbtProjectBundleReader.ts'
+            blobSha 'f89f33fc35aed68fa90b6beac0f81be459cb073e'
+            sizeBytes '1750'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/runtime/ArtifactBackedDbtProjectBundleReader.ts 'Open pinned source'
+        }
+        file_ntime_ArtifactBackedRunExecutionContextReader_ts_fa403d8a = file 'ArtifactBackedRunExecutionContextReader.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/artifacts/src/runtime/ArtifactBackedRunExecutionContextReader.ts'
+            blobSha 'a267c934bf430ed2f35c84ad4ff26bdd1b988c7d'
+            sizeBytes '3782'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/runtime/ArtifactBackedRunExecutionContextReader.ts 'Open pinned source'
+        }
+        file_src_runtime_ArtifactReadError_ts_9ad1a6de = file 'ArtifactReadError.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/artifacts/src/runtime/ArtifactReadError.ts'
+            blobSha '47e0448885af9268365b13fe0254d51693ab19e9'
+            sizeBytes '746'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/runtime/ArtifactReadError.ts 'Open pinned source'
+        }
+        file_src_runtime_assertDbtProjectBundleBinding_ts_c4c61a3d = file 'assertDbtProjectBundleBinding.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/artifacts/src/runtime/assertDbtProjectBundleBinding.ts'
+            blobSha 'c86df4bb818d00d346def85f228edfe454e8346f'
+            sizeBytes '3417'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/runtime/assertDbtProjectBundleBinding.ts 'Open pinned source'
+        }
+        file_src_runtime_readArtifactBytes_ts_502618ef = file 'readArtifactBytes.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts'
+            blobSha '10b31e66595e59d47bf8c2d3a2ae3b4b6864abd7'
+            sizeBytes '9778'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/runtime/readArtifactBytes.ts 'Open pinned source'
+        }
+        file_ntime_resolveRunExecutionContextArtifactStore_ts_e717eb22 = file 'resolveRunExecutionContextArtifactStore.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/artifacts/src/runtime/resolveRunExecutionContextArtifactStore.ts'
+            blobSha '173169e91ee6ff8197a6830bfc1cf154eef2f3f6'
+            sizeBytes '1622'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/runtime/resolveRunExecutionContextArtifactStore.ts 'Open pinned source'
+        }
+        file_c_runtime_S3RunExecutionContextReferenceStore_ts_83fcefea = file 'S3RunExecutionContextReferenceStore.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/artifacts/src/runtime/S3RunExecutionContextReferenceStore.ts'
+            blobSha '7f270d2d362e3c3f146a652b587494bcfbf8363a'
+            sizeBytes '5192'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/runtime/S3RunExecutionContextReferenceStore.ts 'Open pinned source'
+        }
+        file_src_runtime_validateArtifactIntegrity_ts_ec4c4fd1 = file 'validateArtifactIntegrity.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/artifacts/src/runtime/validateArtifactIntegrity.ts'
+            blobSha 'b22fc5c90e967af091d8a6fb52f4b0e704dc5693'
+            sizeBytes '775'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/runtime/validateArtifactIntegrity.ts 'Open pinned source'
+        }
+      }
+      file_src_index_ts_c5fb8502 = file 'index.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/artifacts/src/index.ts'
+          blobSha '9b35fdcb512b05741badf603326073e673241acb'
+          sizeBytes '3717'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/src/index.ts 'Open pinned source'
+      }
+    }
+    dir_test_a94a8fe5 = folder 'test/ — 5 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/artifacts/test'
+        recursiveFileCount '5'
+        directFileCount '5'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/test 'Pinned directory'
+      file_test_artifactSurface_test_ts_96c8813d = file 'artifactSurface.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/artifacts/test/artifactSurface.test.ts'
+          blobSha 'e722fbb8a37090abd09c06433eb9e128dd256c60'
+          sizeBytes '3188'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/test/artifactSurface.test.ts 'Open pinned source'
+      }
+      file_test_contentAddressedArtifactStore_test_ts_a0f7c055 = file 'contentAddressedArtifactStore.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/artifacts/test/contentAddressedArtifactStore.test.ts'
+          blobSha '7d86dbf3945dfcd34dcc0221f0404491905a6427'
+          sizeBytes '9686'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/test/contentAddressedArtifactStore.test.ts 'Open pinned source'
+      }
+      file_test_readArtifact_test_ts_2d557adf = file 'readArtifact.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/artifacts/test/readArtifact.test.ts'
+          blobSha '229720209030665ef17159bb9a471a51c05a23a2'
+          sizeBytes '3385'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/test/readArtifact.test.ts 'Open pinned source'
+      }
+      file_test_runExecutionContextReaders_test_ts_309ae6b5 = file 'runExecutionContextReaders.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/artifacts/test/runExecutionContextReaders.test.ts'
+          blobSha '2ed9d4c61b1290f44dc6ddc7c605b0315ad058ff'
+          sizeBytes '13229'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/test/runExecutionContextReaders.test.ts 'Open pinned source'
+      }
+      file_test_validateArtifactIntegrity_test_ts_85f7a3c8 = file 'validateArtifactIntegrity.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/artifacts/test/validateArtifactIntegrity.test.ts'
+          blobSha '7aa342298ad739dad499f0046fb6b3754ea108c3'
+          sizeBytes '1593'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/test/validateArtifactIntegrity.test.ts 'Open pinned source'
+      }
+    }
+    file_package_json_7030d0b2 = file 'package.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/artifacts/package.json'
+        blobSha '14ade87ee83faee97e8385c739950e252cb7dcd0'
+        sizeBytes '824'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/package.json 'Open pinned source'
+    }
+    file_tsconfig_json_61ebb9fd = file 'tsconfig.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/artifacts/tsconfig.json'
+        blobSha 'e940367672b75eb3849112fd1374fd6c29a7c55a'
+        sizeBytes '211'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/tsconfig.json 'Open pinned source'
+    }
+    file_vitest_config_ts_e7b129ed = file 'vitest.config.ts' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/artifacts/vitest.config.ts'
+        blobSha 'a71174ddf688af5e944496a955ad1c92f790dfbd'
+        sizeBytes '157'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/artifacts/vitest.config.ts 'Open pinned source'
+    }
+  }
+}
+
+views {
+  view artifactsSourceInventory of artifactsSource {
+    title '@dvt/artifacts — Complete source inventory'
+    description 'Generated from Git at 3695f07c. 33 tracked files.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view artifactsSource_dir_src_f27fede2 of artifactsSource.dir_src_f27fede2 {
+    title 'Source — src/ (25 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view artifactsSource_dir_src_compiledCode_a188b957 of artifactsSource.dir_src_f27fede2.dir_src_compiledCode_a188b957 {
+    title 'Source — src/compiledCode/ (7 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view artifactsSource_dir_src_compiledCode_adapters_1eddf0a2 of artifactsSource.dir_src_f27fede2.dir_src_compiledCode_a188b957.dir_src_compiledCode_adapters_1eddf0a2 {
+    title 'Source — src/compiledCode/adapters/ (5 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view artifactsSource_dir_src_contentAddressed_d00e5123 of artifactsSource.dir_src_f27fede2.dir_src_contentAddressed_d00e5123 {
+    title 'Source — src/contentAddressed/ (2 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view artifactsSource_dir_src_ports_3a2d3ebf of artifactsSource.dir_src_f27fede2.dir_src_ports_3a2d3ebf {
+    title 'Source — src/ports/ (7 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view artifactsSource_dir_src_runtime_6c8c9a16 of artifactsSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16 {
+    title 'Source — src/runtime/ (8 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view artifactsSource_dir_test_a94a8fe5 of artifactsSource.dir_test_a94a8fe5 {
+    title 'Source — test/ (5 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view artifactsFiles_publicBoundary {
+    title 'Files — Artifacts public boundary'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include artifactsSource.dir_src_f27fede2.file_src_index_ts_c5fb8502
+    autoLayout TopBottom
+  }
+
+  view artifactsFiles_contentAddressed {
+    title 'Files — Content-addressed artifact storage'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 2 evidence file(s).'
+    include artifactsSource.dir_src_f27fede2.dir_src_contentAddressed_d00e5123.file_ntentAddressed_IContentAddressedArtifactStore_ts_303a6651
+    include artifactsSource.dir_src_f27fede2.dir_src_contentAddressed_d00e5123.file_tentAddressed_S3ContentAddressedArtifactStore_ts_2d9f8e9c
+    autoLayout TopBottom
+  }
+
+  view artifactsFiles_planStorage {
+    title 'Files — Plan artifact storage ports'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 3 evidence file(s).'
+    include artifactsSource.dir_src_f27fede2.dir_src_ports_3a2d3ebf.file_src_ports_IPlanStoreReader_ts_6cb66e37
+    include artifactsSource.dir_src_f27fede2.dir_src_ports_3a2d3ebf.file_src_ports_IPlanStoreWriter_ts_d74f251c
+    include artifactsSource.dir_src_f27fede2.dir_src_ports_3a2d3ebf.file_src_ports_IStoredPlanArtifactStore_ts_2706acea
+    autoLayout TopBottom
+  }
+
+  view artifactsFiles_executionContext {
+    title 'Files — Run execution context artifacts'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 5 evidence file(s).'
+    include artifactsSource.dir_src_f27fede2.dir_src_ports_3a2d3ebf.file_src_ports_IRunExecutionContextReader_ts_5e773e10
+    include artifactsSource.dir_src_f27fede2.dir_src_ports_3a2d3ebf.file_src_ports_IRunExecutionContextReferenceStore_ts_8330e260
+    include artifactsSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_ntime_ArtifactBackedRunExecutionContextReader_ts_fa403d8a
+    include artifactsSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_ntime_resolveRunExecutionContextArtifactStore_ts_e717eb22
+    include artifactsSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_c_runtime_S3RunExecutionContextReferenceStore_ts_83fcefea
+    autoLayout TopBottom
+  }
+
+  view artifactsFiles_dbtBundle {
+    title 'Files — dbt project bundle artifacts'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 3 evidence file(s).'
+    include artifactsSource.dir_src_f27fede2.dir_src_ports_3a2d3ebf.file_src_ports_IDbtProjectBundleReader_ts_fbaa4a7e
+    include artifactsSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file__runtime_ArtifactBackedDbtProjectBundleReader_ts_4ac7a7b2
+    include artifactsSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_src_runtime_assertDbtProjectBundleBinding_ts_c4c61a3d
+    autoLayout TopBottom
+  }
+
+  view artifactsFiles_artifactReadIntegrity {
+    title 'Files — Artifact reading and integrity'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 3 evidence file(s).'
+    include artifactsSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_src_runtime_ArtifactReadError_ts_9ad1a6de
+    include artifactsSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_src_runtime_readArtifactBytes_ts_502618ef
+    include artifactsSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_src_runtime_validateArtifactIntegrity_ts_ec4c4fd1
+    autoLayout TopBottom
+  }
+
+  view artifactsFiles_compiledCode {
+    title 'Files — Compiled-code storage and enrichment'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 8 evidence file(s).'
+    include artifactsSource.dir_src_f27fede2.dir_src_compiledCode_a188b957.dir_src_compiledCode_adapters_1eddf0a2.file_edCode_adapters_FileSystemCompiledCodeStorage_ts_7cf12581
+    include artifactsSource.dir_src_f27fede2.dir_src_compiledCode_a188b957.dir_src_compiledCode_adapters_1eddf0a2.file_iledCode_adapters_InMemoryCompiledCodeStorage_ts_cb73138e
+    include artifactsSource.dir_src_f27fede2.dir_src_compiledCode_a188b957.dir_src_compiledCode_adapters_1eddf0a2.file_ompiledCode_adapters_MinioCompiledCodeStorage_ts_e7bfeaa9
+    include artifactsSource.dir_src_f27fede2.dir_src_compiledCode_a188b957.dir_src_compiledCode_adapters_1eddf0a2.file_compiledCode_adapters_NoopCompiledCodeStorage_ts_4e9e8e48
+    include artifactsSource.dir_src_f27fede2.dir_src_compiledCode_a188b957.dir_src_compiledCode_adapters_1eddf0a2.file_c_compiledCode_adapters_S3CompiledCodeStorage_ts_0dcc5392
+    include artifactsSource.dir_src_f27fede2.dir_src_compiledCode_a188b957.file_src_compiledCode_attachCompiledCodeRefs_ts_ad89a9f1
+    include artifactsSource.dir_src_f27fede2.dir_src_compiledCode_a188b957.file_src_compiledCode_sha256_ts_e87caec7
+    include artifactsSource.dir_src_f27fede2.dir_src_ports_3a2d3ebf.file_src_ports_ICompiledCodeStorage_ts_c3084ffd
+    autoLayout TopBottom
+  }
+
+}

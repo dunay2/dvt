@@ -1,0 +1,545 @@
+// GENERATED FILE. DO NOT EDIT.
+// Source: git tree dunay2/dvt@3695f07c9ba3c66ab51f88a2dabe18e18556a244:packages/@dvt/state-store
+model {
+  stateStoreSource = inventory 'State Store source inventory — generated from Git' {
+    #sourceDerived
+    description 'Machine-generated from the exact Git tree. Folder structure is STRUCTURE-DERIVED; file identity is SOURCE-DERIVED.'
+    metadata {
+      provenance 'SOURCE-DERIVED'
+      architectureOwner 'dvt.state-store'
+      logicalModelId 'stateStoreModel'
+      sourceRoot 'packages/@dvt/state-store'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      trackedFiles '31'
+      sourceFiles '15'
+      testFiles '13'
+      inventorySha256 '234794ea926f92e47eb90b66c82a3995cfbaff4d68ad28c154d5620d9a0b550f'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store 'Pinned package tree'
+    dir_src_f27fede2 = folder 'src/ — 15 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/state-store/src'
+        recursiveFileCount '15'
+        directFileCount '4'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src 'Pinned directory'
+      dir_src_lifecycle_be90645c = folder 'lifecycle/ — 11 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/state-store/src/lifecycle'
+          recursiveFileCount '11'
+          directFileCount '9'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/lifecycle 'Pinned directory'
+        dir_src_lifecycle_adapters_2eb741df = folder 'adapters/ — 2 files' {
+          #structureDerived
+          description 'Directory observed in the pinned Git tree.'
+          metadata {
+            provenance 'STRUCTURE-DERIVED'
+            sourcePath 'packages/@dvt/state-store/src/lifecycle/adapters'
+            recursiveFileCount '2'
+            directFileCount '2'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/lifecycle/adapters 'Pinned directory'
+          file_fecycle_adapters_FileSystemArchiveObjectStore_ts_215ec773 = file 'FileSystemArchiveObjectStore.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/state-store/src/lifecycle/adapters/FileSystemArchiveObjectStore.ts'
+              blobSha '1f206436743233392a44299c6ec0fa0cfe44a06b'
+              sizeBytes '1781'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/lifecycle/adapters/FileSystemArchiveObjectStore.ts 'Open pinned source'
+          }
+          file_src_lifecycle_adapters_S3ArchiveObjectStore_ts_5ac1121e = file 'S3ArchiveObjectStore.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/state-store/src/lifecycle/adapters/S3ArchiveObjectStore.ts'
+              blobSha 'fce540ca0c0f127fe384634e9b65397c9a2045ec'
+              sizeBytes '2474'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/lifecycle/adapters/S3ArchiveObjectStore.ts 'Open pinned source'
+          }
+        }
+        file_src_lifecycle_archiveArtifacts_ts_988a7280 = file 'archiveArtifacts.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/state-store/src/lifecycle/archiveArtifacts.ts'
+            blobSha 'a9044903b64b059827a0ff4e3b951f6954119a4f'
+            sizeBytes '7570'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            decision 'PR1 archive artifacts use one deterministic JCS + SHA-256 checksum rule'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/lifecycle/archiveArtifacts.ts 'Open pinned source'
+        }
+        file_src_lifecycle_archiveRuntime_ts_f9a4b64d = file 'archiveRuntime.ts' {
+          #sourceDerived
+          description 'Owns run-event archive lifecycle policy contracts, tenant retention resolution, and archive runtime ports.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/state-store/src/lifecycle/archiveRuntime.ts'
+            blobSha '6058fa836f3bfa40c50598933d612d7d2e3e6731'
+            sizeBytes '14749'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Owns run-event archive lifecycle policy contracts, tenant retention resolution, and archive runtime ports.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/lifecycle/archiveRuntime.ts 'Open pinned source'
+        }
+        file_src_lifecycle_DeliveryBufferPurger_ts_1ef1023b = file 'DeliveryBufferPurger.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/state-store/src/lifecycle/DeliveryBufferPurger.ts'
+            blobSha 'cf1987c980db2500253e4d10261540439bed14d0'
+            sizeBytes '6702'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/lifecycle/DeliveryBufferPurger.ts 'Open pinned source'
+        }
+        file_src_lifecycle_deliveryBufferRuntime_ts_890e1d63 = file 'deliveryBufferRuntime.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/state-store/src/lifecycle/deliveryBufferRuntime.ts'
+            blobSha 'e7887cadfc6bcfa20f690cfb16bdd5c5709f9784'
+            sizeBytes '4270'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/lifecycle/deliveryBufferRuntime.ts 'Open pinned source'
+        }
+        file_src_lifecycle_ObjectStorageRunArchiveExporter_ts_8d22c575 = file 'ObjectStorageRunArchiveExporter.ts' {
+          #sourceDerived
+          description 'Owns object-store archive artifact export, verification, and cold-payload redaction.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/state-store/src/lifecycle/ObjectStorageRunArchiveExporter.ts'
+            blobSha '2f82e711c779f288674007fb2a13ca6ecd254e9c'
+            sizeBytes '12873'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Owns object-store archive artifact export, verification, and cold-payload redaction.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/lifecycle/ObjectStorageRunArchiveExporter.ts 'Open pinned source'
+        }
+        file_src_lifecycle_RunArchiveCoordinator_ts_4a10b869 = file 'RunArchiveCoordinator.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/state-store/src/lifecycle/RunArchiveCoordinator.ts'
+            blobSha '5a6cdcb53cd82c282bfc436d38373bfb587196d0'
+            sizeBytes '5582'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/lifecycle/RunArchiveCoordinator.ts 'Open pinned source'
+        }
+        file_src_lifecycle_RunArchiveDeleter_ts_57c91379 = file 'RunArchiveDeleter.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/state-store/src/lifecycle/RunArchiveDeleter.ts'
+            blobSha 'b2cdb1c06d712b4e148d374204f0faa4503b2a55'
+            sizeBytes '5601'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/lifecycle/RunArchiveDeleter.ts 'Open pinned source'
+        }
+        file_src_lifecycle_RunArchiveRestorer_ts_b0beec82 = file 'RunArchiveRestorer.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/state-store/src/lifecycle/RunArchiveRestorer.ts'
+            blobSha '160ab8fb7b09726c9a9dfa2f1b87ccbdb5b5c9f3'
+            sizeBytes '6181'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/lifecycle/RunArchiveRestorer.ts 'Open pinned source'
+        }
+        file_src_lifecycle_RunArchiveVerifier_ts_02fcf1d8 = file 'RunArchiveVerifier.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/state-store/src/lifecycle/RunArchiveVerifier.ts'
+            blobSha '29fd4a86bc371f4d1c1a47c27b6f795765eb4a20'
+            sizeBytes '2868'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/lifecycle/RunArchiveVerifier.ts 'Open pinned source'
+        }
+      }
+      file_src_archiveLifecycle_ts_4b182e15 = file 'archiveLifecycle.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/state-store/src/archiveLifecycle.ts'
+          blobSha '575da6b316ab0e38bb01b64fc1c5f5f5ac5084f5'
+          sizeBytes '4155'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/archiveLifecycle.ts 'Open pinned source'
+      }
+      file_src_index_ts_c5fb8502 = file 'index.ts' {
+        #sourceDerived
+        description 'Runtime state-store lifecycle API for run events, archive units,'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/state-store/src/index.ts'
+          blobSha 'b20abca1675b3c9f39dc847f1b49f2bb16685c6b'
+          sizeBytes '3637'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Runtime state-store lifecycle API for run events, archive units,'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/index.ts 'Open pinned source'
+      }
+      file_src_inMemoryRunStateCommandPort_ts_ce93809e = file 'inMemoryRunStateCommandPort.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/state-store/src/inMemoryRunStateCommandPort.ts'
+          blobSha '4bfe9ecbfc0f507c8817546825bfe3a9744ec77d'
+          sizeBytes '2502'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/inMemoryRunStateCommandPort.ts 'Open pinned source'
+      }
+      file_src_types_ts_cdcae080 = file 'types.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/state-store/src/types.ts'
+          blobSha 'afb1aebf31b6bf733f6e6ab275f13817b732588c'
+          sizeBytes '343'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/src/types.ts 'Open pinned source'
+      }
+    }
+    dir_test_a94a8fe5 = folder 'test/ — 13 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/state-store/test'
+        recursiveFileCount '13'
+        directFileCount '13'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/test 'Pinned directory'
+      file_test_archiveArtifacts_test_ts_4e0cd7b4 = file 'archiveArtifacts.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/state-store/test/archiveArtifacts.test.ts'
+          blobSha '56ac1aaaed587d7257412b34d78ae038854fa75c'
+          sizeBytes '9848'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/test/archiveArtifacts.test.ts 'Open pinned source'
+      }
+      file_test_archiveLifecycle_test_ts_81e2f497 = file 'archiveLifecycle.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/state-store/test/archiveLifecycle.test.ts'
+          blobSha '8e63a01f460581812d5fab82642d68fd6f28a582'
+          sizeBytes '3699'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/test/archiveLifecycle.test.ts 'Open pinned source'
+      }
+      file_test_archiveRuntime_test_ts_99944a25 = file 'archiveRuntime.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/state-store/test/archiveRuntime.test.ts'
+          blobSha 'baa2615465b50ee5336b8afa81b7430ab4dd050f'
+          sizeBytes '6759'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/test/archiveRuntime.test.ts 'Open pinned source'
+      }
+      file_test_command-port_test_ts_500f135d = file 'command-port.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/state-store/test/command-port.test.ts'
+          blobSha '6b24256750efb1f9ad41a3d2fa6ef00e7f703733'
+          sizeBytes '2058'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/test/command-port.test.ts 'Open pinned source'
+      }
+      file_test_DeliveryBufferPurger_test_ts_f93491d3 = file 'DeliveryBufferPurger.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/state-store/test/DeliveryBufferPurger.test.ts'
+          blobSha '46f01d4dc793d7a616468c0756430fd3064d00a0'
+          sizeBytes '13618'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/test/DeliveryBufferPurger.test.ts 'Open pinned source'
+      }
+      file_test_FileSystemArchiveObjectStore_test_ts_b0a94230 = file 'FileSystemArchiveObjectStore.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/state-store/test/FileSystemArchiveObjectStore.test.ts'
+          blobSha 'e91e1817112315c1063b0aa09804c41ac461e058'
+          sizeBytes '1247'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/test/FileSystemArchiveObjectStore.test.ts 'Open pinned source'
+      }
+      file_test_ObjectStorageRunArchiveExporter_test_ts_c4530c83 = file 'ObjectStorageRunArchiveExporter.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/state-store/test/ObjectStorageRunArchiveExporter.test.ts'
+          blobSha '2529df1a81a3763e9434bef934a9ccf49d2f92d8'
+          sizeBytes '20477'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/test/ObjectStorageRunArchiveExporter.test.ts 'Open pinned source'
+      }
+      file_test_RunArchiveCoordinator_test_ts_b7abf9f8 = file 'RunArchiveCoordinator.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/state-store/test/RunArchiveCoordinator.test.ts'
+          blobSha '408db3022e93d276d7a1988b517b24dd0e002a59'
+          sizeBytes '20511'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/test/RunArchiveCoordinator.test.ts 'Open pinned source'
+      }
+      file_test_RunArchiveDeleter_test_ts_f8dda6ea = file 'RunArchiveDeleter.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/state-store/test/RunArchiveDeleter.test.ts'
+          blobSha '9cbcf072b14ab6122197f1a5f856e2d0b064e946'
+          sizeBytes '11029'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/test/RunArchiveDeleter.test.ts 'Open pinned source'
+      }
+      file_test_RunArchiveLifecycleIntegration_test_ts_2782652e = file 'RunArchiveLifecycleIntegration.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/state-store/test/RunArchiveLifecycleIntegration.test.ts'
+          blobSha '4555111a2cdedfe2284847bef9b72e6398cf5828'
+          sizeBytes '14078'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/test/RunArchiveLifecycleIntegration.test.ts 'Open pinned source'
+      }
+      file_test_RunArchiveRestorer_test_ts_5e7183bb = file 'RunArchiveRestorer.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/state-store/test/RunArchiveRestorer.test.ts'
+          blobSha '5d2bd6978333cf0b737e3da9c74c7064b4c0cd3a'
+          sizeBytes '12527'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/test/RunArchiveRestorer.test.ts 'Open pinned source'
+      }
+      file_test_RunEventRetentionPolicy_test_ts_5e370435 = file 'RunEventRetentionPolicy.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/state-store/test/RunEventRetentionPolicy.test.ts'
+          blobSha 'd81ffff1a23961b9e0d583ee39bf778b89c8311d'
+          sizeBytes '1436'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/test/RunEventRetentionPolicy.test.ts 'Open pinned source'
+      }
+      file_test_S3ArchiveObjectStore_test_ts_527f1337 = file 'S3ArchiveObjectStore.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/state-store/test/S3ArchiveObjectStore.test.ts'
+          blobSha '4ff292aee1068531992645f94a9177074617c2e0'
+          sizeBytes '1739'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/test/S3ArchiveObjectStore.test.ts 'Open pinned source'
+      }
+    }
+    file_package_json_7030d0b2 = file 'package.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/state-store/package.json'
+        blobSha 'f70d7b63e29d067404919401ad9e1a84c73c8c46'
+        sizeBytes '913'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/package.json 'Open pinned source'
+    }
+    file_tsconfig_json_61ebb9fd = file 'tsconfig.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/state-store/tsconfig.json'
+        blobSha 'e14cc5892cda8d5a465dfeaf13efb86877aa7ba6'
+        sizeBytes '609'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/tsconfig.json 'Open pinned source'
+    }
+    file_vitest_config_ts_e7b129ed = file 'vitest.config.ts' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/state-store/vitest.config.ts'
+        blobSha '43e56f45f3eece05a802ab75eedcff828b76b9d4'
+        sizeBytes '132'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/state-store/vitest.config.ts 'Open pinned source'
+    }
+  }
+}
+
+views {
+  view stateStoreSourceInventory of stateStoreSource {
+    title 'State Store — Complete source inventory'
+    description 'Generated from Git at 3695f07c. 31 tracked files.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view stateStoreSource_dir_src_f27fede2 of stateStoreSource.dir_src_f27fede2 {
+    title 'Source — src/ (15 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view stateStoreSource_dir_src_lifecycle_be90645c of stateStoreSource.dir_src_f27fede2.dir_src_lifecycle_be90645c {
+    title 'Source — src/lifecycle/ (11 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view stateStoreSource_dir_src_lifecycle_adapters_2eb741df of stateStoreSource.dir_src_f27fede2.dir_src_lifecycle_be90645c.dir_src_lifecycle_adapters_2eb741df {
+    title 'Source — src/lifecycle/adapters/ (2 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view stateStoreSource_dir_test_a94a8fe5 of stateStoreSource.dir_test_a94a8fe5 {
+    title 'Source — test/ (13 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view state-storeFiles_publicBoundary {
+    title 'Files — State Store public boundary'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include stateStoreSource.dir_src_f27fede2.file_src_index_ts_c5fb8502
+    autoLayout TopBottom
+  }
+
+  view state-storeFiles_runStateCommands {
+    title 'Files — Run state command boundary'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 2 evidence file(s).'
+    include stateStoreSource.dir_src_f27fede2.file_src_inMemoryRunStateCommandPort_ts_ce93809e
+    include stateStoreSource.dir_src_f27fede2.file_src_types_ts_cdcae080
+    autoLayout TopBottom
+  }
+
+  view state-storeFiles_archiveIdentity {
+    title 'Files — Archive unit identity + retention math'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include stateStoreSource.dir_src_f27fede2.file_src_archiveLifecycle_ts_4b182e15
+    autoLayout TopBottom
+  }
+
+  view state-storeFiles_archiveArtifacts {
+    title 'Files — Archive manifests + terminal snapshots'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include stateStoreSource.dir_src_f27fede2.dir_src_lifecycle_be90645c.file_src_lifecycle_archiveArtifacts_ts_988a7280
+    autoLayout TopBottom
+  }
+
+  view state-storeFiles_archiveRuntime {
+    title 'Files — Archive runtime ports + policies'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include stateStoreSource.dir_src_f27fede2.dir_src_lifecycle_be90645c.file_src_lifecycle_archiveRuntime_ts_f9a4b64d
+    autoLayout TopBottom
+  }
+
+  view state-storeFiles_archivePipeline {
+    title 'Files — Archive lifecycle pipeline'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 5 evidence file(s).'
+    include stateStoreSource.dir_src_f27fede2.dir_src_lifecycle_be90645c.file_src_lifecycle_ObjectStorageRunArchiveExporter_ts_8d22c575
+    include stateStoreSource.dir_src_f27fede2.dir_src_lifecycle_be90645c.file_src_lifecycle_RunArchiveCoordinator_ts_4a10b869
+    include stateStoreSource.dir_src_f27fede2.dir_src_lifecycle_be90645c.file_src_lifecycle_RunArchiveDeleter_ts_57c91379
+    include stateStoreSource.dir_src_f27fede2.dir_src_lifecycle_be90645c.file_src_lifecycle_RunArchiveRestorer_ts_b0beec82
+    include stateStoreSource.dir_src_f27fede2.dir_src_lifecycle_be90645c.file_src_lifecycle_RunArchiveVerifier_ts_02fcf1d8
+    autoLayout TopBottom
+  }
+
+  view state-storeFiles_archiveObjectStores {
+    title 'Files — Archive object-store adapters'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 2 evidence file(s).'
+    include stateStoreSource.dir_src_f27fede2.dir_src_lifecycle_be90645c.dir_src_lifecycle_adapters_2eb741df.file_fecycle_adapters_FileSystemArchiveObjectStore_ts_215ec773
+    include stateStoreSource.dir_src_f27fede2.dir_src_lifecycle_be90645c.dir_src_lifecycle_adapters_2eb741df.file_src_lifecycle_adapters_S3ArchiveObjectStore_ts_5ac1121e
+    autoLayout TopBottom
+  }
+
+  view state-storeFiles_deliveryBufferLifecycle {
+    title 'Files — Delivery-buffer retention + purge'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 2 evidence file(s).'
+    include stateStoreSource.dir_src_f27fede2.dir_src_lifecycle_be90645c.file_src_lifecycle_DeliveryBufferPurger_ts_1ef1023b
+    include stateStoreSource.dir_src_f27fede2.dir_src_lifecycle_be90645c.file_src_lifecycle_deliveryBufferRuntime_ts_890e1d63
+    autoLayout TopBottom
+  }
+
+}

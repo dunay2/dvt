@@ -1,0 +1,1289 @@
+// GENERATED FILE. DO NOT EDIT.
+// Source: git tree dunay2/dvt@3695f07c9ba3c66ab51f88a2dabe18e18556a244:packages/@dvt/traceability-service
+model {
+  traceabilitySource = inventory 'Traceability Service source inventory — generated from Git' {
+    #sourceDerived
+    description 'Machine-generated from the exact Git tree. Folder structure is STRUCTURE-DERIVED; file identity is SOURCE-DERIVED.'
+    metadata {
+      provenance 'SOURCE-DERIVED'
+      architectureOwner 'dvt.traceability-service'
+      logicalModelId 'traceabilityModel'
+      sourceRoot 'packages/@dvt/traceability-service'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      trackedFiles '68'
+      sourceFiles '39'
+      testFiles '18'
+      inventorySha256 'a2aaa32bfc9e408128fdca3ddadafc5f6d7aed289562d18aa5185d9fcb6bf267'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service 'Pinned package tree'
+    dir_docs_71ab8b6a = folder 'docs/ — 5 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/traceability-service/docs'
+        recursiveFileCount '5'
+        directFileCount '3'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/docs 'Pinned directory'
+      dir_docs_adr_aa1f87c3 = folder 'adr/ — 1 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/traceability-service/docs/adr'
+          recursiveFileCount '1'
+          directFileCount '1'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/docs/adr 'Pinned directory'
+        file_docs_adr_ADR-0000_md_2e8ae038 = file 'ADR-0000.md' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/docs/adr/ADR-0000.md'
+            blobSha '7c6d1b9b2d17f78b8640948728412518cda17f87'
+            sizeBytes '3277'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/docs/adr/ADR-0000.md 'Open pinned source'
+        }
+      }
+      dir_docs_ci_536ccda5 = folder 'ci/ — 1 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/traceability-service/docs/ci'
+          recursiveFileCount '1'
+          directFileCount '1'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/docs/ci 'Pinned directory'
+        file_docs_ci_github-actions_yml_9a4648e2 = file 'github-actions.yml' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/docs/ci/github-actions.yml'
+            blobSha 'c8f4a42608e30b76a37e97bb978cd61e83deed98'
+            sizeBytes '694'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/docs/ci/github-actions.yml 'Open pinned source'
+        }
+      }
+      file_docs_Examples_md_4bce4c4c = file 'Examples.md' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/traceability-service/docs/Examples.md'
+          blobSha '571189c3bd669fd53c71a801c99384455bfd5e1b'
+          sizeBytes '889'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/docs/Examples.md 'Open pinned source'
+      }
+      file_docs_README_md_9f7cbce1 = file 'README.md' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/traceability-service/docs/README.md'
+          blobSha '3fecc7fe87efa3dafddf4831f44b0b7616ff285e'
+          sizeBytes '40'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/docs/README.md 'Open pinned source'
+      }
+      file_docs_Traceability-Service-Design_md_174d5b8e = file 'Traceability-Service-Design.md' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/traceability-service/docs/Traceability-Service-Design.md'
+          blobSha '7449c59d9b995e72daab07872e961c2af059fbc5'
+          sizeBytes '605'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/docs/Traceability-Service-Design.md 'Open pinned source'
+      }
+    }
+    dir_src_f27fede2 = folder 'src/ — 39 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/traceability-service/src'
+        recursiveFileCount '39'
+        directFileCount '5'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src 'Pinned directory'
+      dir_src_adapters_68aa84b0 = folder 'adapters/ — 2 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/traceability-service/src/adapters'
+          recursiveFileCount '2'
+          directFileCount '2'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/adapters 'Pinned directory'
+        file_src_adapters_adr-catalog-filesystem_ts_3ed1c49a = file 'adr-catalog-filesystem.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/src/adapters/adr-catalog-filesystem.ts'
+            blobSha '51dbe40db1571fc1f84dd40c282ffc4631e3b974'
+            sizeBytes '4209'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            decision 'Section 4.4 — Resolve and validate Accepted ADR catalog from docs filesystem'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/adapters/adr-catalog-filesystem.ts 'Open pinned source'
+        }
+        file_src_adapters_header-scanner-glob_ts_f20e16cc = file 'header-scanner-glob.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/src/adapters/header-scanner-glob.ts'
+            blobSha '023dd13320ccc4ee6e2f5f3bf455dc80b013530b'
+            sizeBytes '1810'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            decision 'Section 4.1 — Scan governed files and parse traceability headers'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/adapters/header-scanner-glob.ts 'Open pinned source'
+        }
+      }
+      dir_src_core_b256a6ae = folder 'core/ — 5 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/traceability-service/src/core'
+          recursiveFileCount '5'
+          directFileCount '5'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/core 'Pinned directory'
+        file_src_core_header-parser_ts_e90f5c55 = file 'header-parser.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/src/core/header-parser.ts'
+            blobSha 'eca1ae0f184157c026e9b8b3af59c5f9b9666476'
+            sizeBytes '3159'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            decision 'Section 4.1 — Parse machine-readable in-code traceability headers'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/core/header-parser.ts 'Open pinned source'
+        }
+        file_src_core_issue-baseline_ts_dd4d3e42 = file 'issue-baseline.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/src/core/issue-baseline.ts'
+            blobSha 'bb141d4fc0a8b72bb1c6dcf549e3890ba32af758'
+            sizeBytes '1959'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            decision 'Section 4.4 - Compare traceability failures against an explicit regression baseline'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/core/issue-baseline.ts 'Open pinned source'
+        }
+        file_src_core_manifest-json_ts_c84d974c = file 'manifest-json.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/src/core/manifest-json.ts'
+            blobSha '5840cdc6aa0c79c04e7e1a9f8f281f13d85e5af7'
+            sizeBytes '1682'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            decision 'Section 4.3 - Manifest generation remains machine-readable and deterministic'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/core/manifest-json.ts 'Open pinned source'
+        }
+        file_src_core_manifest_ts_630abf9a = file 'manifest.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/src/core/manifest.ts'
+            blobSha '8fa7fb3e619e14f6f6783247c6fcb95b309b3d54'
+            sizeBytes '2210'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            decision 'Section 4.3 — Generate machine-readable traceability manifests from parsed headers'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/core/manifest.ts 'Open pinned source'
+        }
+        file_src_core_validator_ts_e4510880 = file 'validator.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/src/core/validator.ts'
+            blobSha '3d820deb5724a396cfedbf18cbea784d7cc4d3b7'
+            sizeBytes '4371'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            decision 'Section 4.1 — Enforce baseline presence and header completeness in governed artifacts'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/core/validator.ts 'Open pinned source'
+        }
+      }
+      dir_src_lineage_a5e6b0c8 = folder 'lineage/ — 27 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/traceability-service/src/lineage'
+          recursiveFileCount '27'
+          directFileCount '14'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage 'Pinned directory'
+        dir_src_lineage_cache_3d5361c8 = folder 'cache/ — 1 files' {
+          #structureDerived
+          description 'Directory observed in the pinned Git tree.'
+          metadata {
+            provenance 'STRUCTURE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/src/lineage/cache'
+            recursiveFileCount '1'
+            directFileCount '1'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/cache 'Pinned directory'
+          file_src_lineage_cache_InMemoryCompiledCodeCache_ts_1f882d30 = file 'InMemoryCompiledCodeCache.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/traceability-service/src/lineage/cache/InMemoryCompiledCodeCache.ts'
+              blobSha 'df47b613b909b653d16972b492f87ee37e8585fd'
+              sizeBytes '1173'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/cache/InMemoryCompiledCodeCache.ts 'Open pinned source'
+          }
+        }
+        dir_src_lineage_facets_bb600362 = folder 'facets/ — 1 files' {
+          #structureDerived
+          description 'Directory observed in the pinned Git tree.'
+          metadata {
+            provenance 'STRUCTURE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/src/lineage/facets'
+            recursiveFileCount '1'
+            directFileCount '1'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/facets 'Pinned directory'
+          file_src_lineage_facets_SqlJobFacetBuilder_ts_18d17c58 = file 'SqlJobFacetBuilder.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/traceability-service/src/lineage/facets/SqlJobFacetBuilder.ts'
+              blobSha 'ecfa52b379df6123cf7da9c125fb7fc32768a662'
+              sizeBytes '450'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/facets/SqlJobFacetBuilder.ts 'Open pinned source'
+          }
+        }
+        dir_src_lineage_mapper_12020689 = folder 'mapper/ — 2 files' {
+          #structureDerived
+          description 'Directory observed in the pinned Git tree.'
+          metadata {
+            provenance 'STRUCTURE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/src/lineage/mapper'
+            recursiveFileCount '2'
+            directFileCount '2'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/mapper 'Pinned directory'
+          file_neage_mapper_mapCompiledCodeResolutionWarning_ts_b494db86 = file 'mapCompiledCodeResolutionWarning.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/traceability-service/src/lineage/mapper/mapCompiledCodeResolutionWarning.ts'
+              blobSha '39dd579e600150baba84cc257e0576168aa08a84'
+              sizeBytes '1664'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+              decision 'Map compiled-code resolution failures into stable lineage warnings'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/mapper/mapCompiledCodeResolutionWarning.ts 'Open pinned source'
+          }
+          file_src_lineage_mapper_StepStartedLineageMapper_ts_f8838fcb = file 'StepStartedLineageMapper.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts'
+              blobSha '3d2ad7df3c3a79be5402bae226b2764c75ea095b'
+              sizeBytes '1864'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts 'Open pinned source'
+          }
+        }
+        dir_src_lineage_readers_46be5146 = folder 'readers/ — 3 files' {
+          #structureDerived
+          description 'Directory observed in the pinned Git tree.'
+          metadata {
+            provenance 'STRUCTURE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/src/lineage/readers'
+            recursiveFileCount '3'
+            directFileCount '3'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/readers 'Pinned directory'
+          file_c_lineage_readers_CompositeCompiledCodeReader_ts_03763358 = file 'CompositeCompiledCodeReader.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/traceability-service/src/lineage/readers/CompositeCompiledCodeReader.ts'
+              blobSha 'bb05304bdd8c52b13d28adeb56bb821169ed4188'
+              sizeBytes '947'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/readers/CompositeCompiledCodeReader.ts 'Open pinned source'
+          }
+          file_src_lineage_readers_FileUriCompiledCodeReader_ts_bb467a9c = file 'FileUriCompiledCodeReader.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/traceability-service/src/lineage/readers/FileUriCompiledCodeReader.ts'
+              blobSha '57c590f9f413f2c587051575ceb12abfb29d9ce3'
+              sizeBytes '2119'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/readers/FileUriCompiledCodeReader.ts 'Open pinned source'
+          }
+          file_rc_lineage_readers_InMemoryCompiledCodeReader_ts_06584e4c = file 'InMemoryCompiledCodeReader.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/traceability-service/src/lineage/readers/InMemoryCompiledCodeReader.ts'
+              blobSha '6d74cd4a2c75381e96c0f3e620d2f7e35df7db5f'
+              sizeBytes '885'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/readers/InMemoryCompiledCodeReader.ts 'Open pinned source'
+          }
+        }
+        dir_src_lineage_resolver_d076791f = folder 'resolver/ — 1 files' {
+          #structureDerived
+          description 'Directory observed in the pinned Git tree.'
+          metadata {
+            provenance 'STRUCTURE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/src/lineage/resolver'
+            recursiveFileCount '1'
+            directFileCount '1'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/resolver 'Pinned directory'
+          file_eage_resolver_CachedRetryCompiledCodeResolver_ts_dc534e6e = file 'CachedRetryCompiledCodeResolver.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/traceability-service/src/lineage/resolver/CachedRetryCompiledCodeResolver.ts'
+              blobSha '193204c26a386a225d5f9ec5f7b1cab449513d6f'
+              sizeBytes '5177'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/resolver/CachedRetryCompiledCodeResolver.ts 'Open pinned source'
+          }
+        }
+        dir_src_lineage_runtime_038dab8b = folder 'runtime/ — 5 files' {
+          #structureDerived
+          description 'Directory observed in the pinned Git tree.'
+          metadata {
+            provenance 'STRUCTURE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/src/lineage/runtime'
+            recursiveFileCount '5'
+            directFileCount '5'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/runtime 'Pinned directory'
+          file_ineage_runtime_lineageWorkerDeadLetterSupport_ts_52952be2 = file 'lineageWorkerDeadLetterSupport.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerDeadLetterSupport.ts'
+              blobSha 'd82ada166399a2ae26ceaf8e3b699a8e64ac748a'
+              sizeBytes '4795'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+              decision 'Manage lineage dead-letter counting, alerting, and replay as worker-owned recovery behavior'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/runtime/lineageWorkerDeadLetterSupport.ts 'Open pinned source'
+          }
+          file_c_lineage_runtime_LineageWorkerLoopController_ts_30224aaf = file 'LineageWorkerLoopController.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/traceability-service/src/lineage/runtime/LineageWorkerLoopController.ts'
+              blobSha '7bd80380f75024360dca62e601c3a95952e63d85'
+              sizeBytes '4006'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+              decision 'Own lineage worker lifecycle loop, abort cleanup, and backoff without owning tick semantics'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/runtime/LineageWorkerLoopController.ts 'Open pinned source'
+          }
+          file__lineage_runtime_lineageWorkerRecordProcessor_ts_fbe1d1fa = file 'lineageWorkerRecordProcessor.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerRecordProcessor.ts'
+              blobSha '72f6054eaf41c5828728e6a23bece658a2620ea2'
+              sizeBytes '2794'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+              decision 'Process lineage outbox records through mapper, sink, delivered, failed, and dead-letter states'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/runtime/lineageWorkerRecordProcessor.ts 'Open pinned source'
+          }
+          file_rc_lineage_runtime_lineageWorkerRuntimeConfig_ts_6dc3c780 = file 'lineageWorkerRuntimeConfig.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerRuntimeConfig.ts'
+              blobSha '509387f0437b328d5b25667e197e267c86bd291c'
+              sizeBytes '3415'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+              decision 'Normalize lineage worker runtime options before polling, replay, or dead-letter processing starts'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/runtime/lineageWorkerRuntimeConfig.ts 'Open pinned source'
+          }
+          file_src_lineage_runtime_lineageWorkerTick_ts_6a253745 = file 'lineageWorkerTick.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerTick.ts'
+              blobSha '618bc346a42327994c2013b882bc85e2bdbaa0f8'
+              sizeBytes '3014'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+              decision 'Coordinate one lineage worker tick without owning lifecycle mechanics'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/runtime/lineageWorkerTick.ts 'Open pinned source'
+          }
+        }
+        file_src_lineage_compiledCodeRef_ts_60930993 = file 'compiledCodeRef.ts' {
+          #sourceDerived
+          description 'Extract canonical compiled-code references from run-event payloads for lineage ingestion.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/src/lineage/compiledCodeRef.ts'
+            blobSha '14a690055eb3d270fd20af8a70fd91ac858a228e'
+            sizeBytes '2328'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Extract canonical compiled-code references from run-event payloads for lineage ingestion.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/compiledCodeRef.ts 'Open pinned source'
+        }
+        file_src_lineage_contracts_ts_981dfd42 = file 'contracts.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/src/lineage/contracts.ts'
+            blobSha 'd82dcc1d8340f2cab48077cffe5ad67dd994627f'
+            sizeBytes '2343'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/contracts.ts 'Open pinned source'
+        }
+        file_src_lineage_errorContract_ts_744d1bc4 = file 'errorContract.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/src/lineage/errorContract.ts'
+            blobSha 'bdbc82073c8a7a254f03b60b0f10f8e70a9e81e8'
+            sizeBytes '7030'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            decision 'Define stable lineage error codes, reason codes, and message keys for compiled-code resolution'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/errorContract.ts 'Open pinned source'
+        }
+        file_src_lineage_errorPersistenceSupport_ts_7222dd9f = file 'errorPersistenceSupport.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/src/lineage/errorPersistenceSupport.ts'
+            blobSha 'ff72e396ba720156d86fcbf5c459d19e98c1b870'
+            sizeBytes '5682'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            decision 'Sanitize, redact, and bound lineage error metadata before persistence'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/errorPersistenceSupport.ts 'Open pinned source'
+        }
+        file_src_lineage_errors_ts_f625dc09 = file 'errors.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/src/lineage/errors.ts'
+            blobSha 'c5edd94c4248e4647c2773bf04bfc2575b9859e0'
+            sizeBytes '4304'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/errors.ts 'Open pinned source'
+        }
+        file_src_lineage_errorSupport_ts_d5a48fa1 = file 'errorSupport.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/src/lineage/errorSupport.ts'
+            blobSha 'cc422c554ede7230438b10352d9598c9fc7383a9'
+            sizeBytes '2787'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            decision 'Normalize arbitrary lineage runtime errors into structured fail-open diagnostics'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/errorSupport.ts 'Open pinned source'
+        }
+        file_src_lineage_HttpOpenLineageSink_ts_3a495acd = file 'HttpOpenLineageSink.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/src/lineage/HttpOpenLineageSink.ts'
+            blobSha 'b34dec7d9211891dfe9db42253c9a7acc93846c0'
+            sizeBytes '3324'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/HttpOpenLineageSink.ts 'Open pinned source'
+        }
+        file_src_lineage_index_ts_63a1c6b7 = file 'index.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/src/lineage/index.ts'
+            blobSha '3d76e5dbcd3617272f0697c1c84449141ea274cb'
+            sizeBytes '795'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/index.ts 'Open pinned source'
+        }
+        file_src_lineage_LineageOutboxObserver_ts_781ac147 = file 'LineageOutboxObserver.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/src/lineage/LineageOutboxObserver.ts'
+            blobSha '2deb199e8d3c7bc081457b53405980bc43df5dd2'
+            sizeBytes '1809'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            decision 'Observe delivered StepStarted outbox records and enqueue lineage work fail-open'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/LineageOutboxObserver.ts 'Open pinned source'
+        }
+        file_src_lineage_LineageWorkerRuntime_ts_30bebebb = file 'LineageWorkerRuntime.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/src/lineage/LineageWorkerRuntime.ts'
+            blobSha '01552e9c5d3357655dc4502b3783e1cd95354ef4'
+            sizeBytes '4004'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            decision 'Run lineage outbox polling, delivery, dead-letter, and replay loops outside domain outbox authority'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/LineageWorkerRuntime.ts 'Open pinned source'
+        }
+        file_src_lineage_logMessages_ts_84f1f8ad = file 'logMessages.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/src/lineage/logMessages.ts'
+            blobSha '5bc83996d2444ad68d3e228f0c14c1f430895367'
+            sizeBytes '741'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            decision 'Keep lineage runtime log message keys explicit and separate from published lineage warning contracts'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/logMessages.ts 'Open pinned source'
+        }
+        file_src_lineage_openlineageSchema_ts_d8e9399b = file 'openlineageSchema.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/src/lineage/openlineageSchema.ts'
+            blobSha 'b911422f1db803e71ffe832b3c20e251f92d2c70'
+            sizeBytes '788'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/openlineageSchema.ts 'Open pinned source'
+        }
+        file_src_lineage_types_ts_06c3c3bc = file 'types.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/src/lineage/types.ts'
+            blobSha 'f43d1ecdcdd62ef2efae5c04c0a0d46caa5c8ad3'
+            sizeBytes '907'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/types.ts 'Open pinned source'
+        }
+        file_src_lineage_warningContract_ts_d5156880 = file 'warningContract.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/src/lineage/warningContract.ts'
+            blobSha '2101a216cc4e20daaa3f8ac9e2b7d13108aa057e'
+            sizeBytes '2045'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            decision 'Define stable lineage warning codes, message keys, and parameters for fail-open compiled-code resolution'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/warningContract.ts 'Open pinned source'
+        }
+      }
+      file_src_cli_ts_c443bc51 = file 'cli.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/traceability-service/src/cli.ts'
+          blobSha '0e881e6f59e8ad76f6efb880bd56542c68262261'
+          sizeBytes '7409'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Section 4.3 - Manifest generation remains the canonical CLI output'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/cli.ts 'Open pinned source'
+      }
+      file_src_contracts_ts_9032c8ad = file 'contracts.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/traceability-service/src/contracts.ts'
+          blobSha 'e6dec2b2464dc9826a3d054e8b301fe5189aeee4'
+          sizeBytes '1964'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Section 4.3 - Define explicit contracts for scanner, validator and manifest generation'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/contracts.ts 'Open pinned source'
+      }
+      file_src_index_ts_c5fb8502 = file 'index.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/traceability-service/src/index.ts'
+          blobSha '40d66f13822c7d029dc08ae741e98e1237ec0e02'
+          sizeBytes '688'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Section 4.3 - Export a canonical public API for traceability service components'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/index.ts 'Open pinned source'
+      }
+      file_src_service_ts_aaf7ca00 = file 'service.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/traceability-service/src/service.ts'
+          blobSha '943d0865719e19bf1b416b11fb2f6f68ad19012e'
+          sizeBytes '2940'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Section 4.3 - Build a manifest from scanned trace headers'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/service.ts 'Open pinned source'
+      }
+      file_src_types_ts_cdcae080 = file 'types.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/traceability-service/src/types.ts'
+          blobSha 'c98c4be4743d4a957cfb8450248ff9e714effc50'
+          sizeBytes '2086'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Section 4.3 — Canonical machine-readable types for traceability metadata and validation'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/types.ts 'Open pinned source'
+      }
+    }
+    dir_test_a94a8fe5 = folder 'test/ — 18 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/traceability-service/test'
+        recursiveFileCount '18'
+        directFileCount '2'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test 'Pinned directory'
+      dir_test_fixtures_9c0e9ecf = folder 'fixtures/ — 3 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/traceability-service/test/fixtures'
+          recursiveFileCount '3'
+          directFileCount '0'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/fixtures 'Pinned directory'
+        dir_test_fixtures_lineage_5eaa077a = folder 'lineage/ — 3 files' {
+          #structureDerived
+          description 'Directory observed in the pinned Git tree.'
+          metadata {
+            provenance 'STRUCTURE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/test/fixtures/lineage'
+            recursiveFileCount '3'
+            directFileCount '3'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/fixtures/lineage 'Pinned directory'
+          file_test_fixtures_lineage_mapper-fail-open_json_c7c24ac2 = file 'mapper-fail-open.json' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/traceability-service/test/fixtures/lineage/mapper-fail-open.json'
+              blobSha '0175758a6b533d95a4833e8a2808e53dc8c87517'
+              sizeBytes '946'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/fixtures/lineage/mapper-fail-open.json 'Open pinned source'
+          }
+          file_test_fixtures_lineage_mapper-no-ref_json_43239410 = file 'mapper-no-ref.json' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/traceability-service/test/fixtures/lineage/mapper-no-ref.json'
+              blobSha '097a505ddea88f7ba5e239189a045314684f1627'
+              sizeBytes '40'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/fixtures/lineage/mapper-no-ref.json 'Open pinned source'
+          }
+          file_test_fixtures_lineage_mapper-success_json_f02f8f87 = file 'mapper-success.json' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/traceability-service/test/fixtures/lineage/mapper-success.json'
+              blobSha 'a448a1da24864b64023f88956bb50e295da3899b'
+              sizeBytes '775'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/fixtures/lineage/mapper-success.json 'Open pinned source'
+          }
+        }
+      }
+      dir_test_lineage_2ea417d9 = folder 'lineage/ — 13 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/traceability-service/test/lineage'
+          recursiveFileCount '13'
+          directFileCount '12'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/lineage 'Pinned directory'
+        dir_test_lineage_support_129de678 = folder 'support/ — 1 files' {
+          #structureDerived
+          description 'Directory observed in the pinned Git tree.'
+          metadata {
+            provenance 'STRUCTURE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/test/lineage/support'
+            recursiveFileCount '1'
+            directFileCount '1'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/lineage/support 'Pinned directory'
+          file_est_lineage_support_lineageRuntimeTestSupport_ts_790a92e1 = file 'lineageRuntimeTestSupport.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'packages/@dvt/traceability-service/test/lineage/support/lineageRuntimeTestSupport.ts'
+              blobSha 'f32916be1123442431acbd2ec20f31dca4c1b10e'
+              sizeBytes '2297'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/lineage/support/lineageRuntimeTestSupport.ts 'Open pinned source'
+          }
+        }
+        file__lineage_CachedRetryCompiledCodeResolver_test_ts_dcc9e1d9 = file 'CachedRetryCompiledCodeResolver.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/test/lineage/CachedRetryCompiledCodeResolver.test.ts'
+            blobSha '709809cbf0278eaac53487a9d0f955a518555030'
+            sizeBytes '4488'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/lineage/CachedRetryCompiledCodeResolver.test.ts 'Open pinned source'
+        }
+        file_test_lineage_compiledCodeRef_test_ts_c8ba4237 = file 'compiledCodeRef.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/test/lineage/compiledCodeRef.test.ts'
+            blobSha '2b71d4f0c9b886796ce425c801eb422d908f3bdc'
+            sizeBytes '2075'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/lineage/compiledCodeRef.test.ts 'Open pinned source'
+        }
+        file_test_lineage_errorSupport_test_ts_35dc00e5 = file 'errorSupport.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/test/lineage/errorSupport.test.ts'
+            blobSha 'bd9fa176b35c4da809b0a0276fb943d823f929be'
+            sizeBytes '2366'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/lineage/errorSupport.test.ts 'Open pinned source'
+        }
+        file_test_lineage_facetSchema_validation_test_ts_cdfd697e = file 'facetSchema.validation.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/test/lineage/facetSchema.validation.test.ts'
+            blobSha '2bcee26e93c4ea853f6b9378a550909b6b7090e2'
+            sizeBytes '6167'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/lineage/facetSchema.validation.test.ts 'Open pinned source'
+        }
+        file_test_lineage_LineageOutboxObserver_test_ts_ee79bb6f = file 'LineageOutboxObserver.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/test/lineage/LineageOutboxObserver.test.ts'
+            blobSha '95246609d8603fa9944c9da37356d7d9acb85236'
+            sizeBytes '2831'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/lineage/LineageOutboxObserver.test.ts 'Open pinned source'
+        }
+        file_ineage_LineageWorkerRuntime_architecture_test_ts_9bbb0099 = file 'LineageWorkerRuntime.architecture.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.architecture.test.ts'
+            blobSha 'ca232453ec47f1f0e53d38c87b684ac3fd4a895c'
+            sizeBytes '937'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/lineage/LineageWorkerRuntime.architecture.test.ts 'Open pinned source'
+        }
+        file_neage_LineageWorkerRuntime_configuration_test_ts_db3bb0ea = file 'LineageWorkerRuntime.configuration.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.configuration.test.ts'
+            blobSha '804446f607475ff5950f515b1182c0e38c872b4c'
+            sizeBytes '2400'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/lineage/LineageWorkerRuntime.configuration.test.ts 'Open pinned source'
+        }
+        file_t_lineage_LineageWorkerRuntime_lifecycle_test_ts_d216c9c0 = file 'LineageWorkerRuntime.lifecycle.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.lifecycle.test.ts'
+            blobSha '89fe3883d39ec534692214728c576e2c0e3e74ba'
+            sizeBytes '1635'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/lineage/LineageWorkerRuntime.lifecycle.test.ts 'Open pinned source'
+        }
+        file_est_lineage_LineageWorkerRuntime_runOnce_test_ts_a917f77b = file 'LineageWorkerRuntime.runOnce.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.runOnce.test.ts'
+            blobSha '3095df6be982be9fb601822e6d98e05691bf3323'
+            sizeBytes '10317'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/lineage/LineageWorkerRuntime.runOnce.test.ts 'Open pinned source'
+        }
+        file_test_lineage_lineageWorkerTick_test_ts_f8a04bbb = file 'lineageWorkerTick.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/test/lineage/lineageWorkerTick.test.ts'
+            blobSha '0e3533bd357048b660673c815c645d0c1bb086c2'
+            sizeBytes '2488'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/lineage/lineageWorkerTick.test.ts 'Open pinned source'
+        }
+        file__lineage_StepStartedLineageMapper_golden_test_ts_49decc9a = file 'StepStartedLineageMapper.golden.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.golden.test.ts'
+            blobSha '88a215fb2e99ef72af794fb3107bd80c570764c1'
+            sizeBytes '4489'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/lineage/StepStartedLineageMapper.golden.test.ts 'Open pinned source'
+        }
+        file_test_lineage_StepStartedLineageMapper_test_ts_6475569b = file 'StepStartedLineageMapper.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.test.ts'
+            blobSha 'aee2b56f04f75892d808ccb7a11f4b9b260fca68'
+            sizeBytes '4300'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/lineage/StepStartedLineageMapper.test.ts 'Open pinned source'
+        }
+      }
+      file_test_manifestJson_test_ts_08368bde = file 'manifestJson.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/traceability-service/test/manifestJson.test.ts'
+          blobSha '5370063b4dde6cb5a865a169e4f7db8b418594a0'
+          sizeBytes '1315'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/manifestJson.test.ts 'Open pinned source'
+      }
+      file_test_TraceabilityService_test_ts_5023944d = file 'TraceabilityService.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/traceability-service/test/TraceabilityService.test.ts'
+          blobSha 'f8d0906e4118f51022c53192768fa83a688fecf1'
+          sizeBytes '4107'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/TraceabilityService.test.ts 'Open pinned source'
+      }
+    }
+    file_package_json_7030d0b2 = file 'package.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/traceability-service/package.json'
+        blobSha 'b0531e9889086db5e3e643486c3f93ec9bf63399'
+        sizeBytes '1271'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/package.json 'Open pinned source'
+    }
+    file_pnpm-workspace_yaml_5c19168a = file 'pnpm-workspace.yaml' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/traceability-service/pnpm-workspace.yaml'
+        blobSha '600b4bb4863e9c64e21b6185f21096e1777c5a6d'
+        sizeBytes '28'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/pnpm-workspace.yaml 'Open pinned source'
+    }
+    file_README_md_8ec9a00b = file 'README.md' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/traceability-service/README.md'
+        blobSha 'bb0e14499f773f83c571e423b57eb08ba28c7335'
+        sizeBytes '1284'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/README.md 'Open pinned source'
+    }
+    file_traceability_config_example_json_4f6423c1 = file 'traceability.config.example.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/traceability-service/traceability.config.example.json'
+        blobSha '43c2234fbf6016003d728601299b7f793cc39403'
+        sizeBytes '536'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/traceability.config.example.json 'Open pinned source'
+    }
+    file_tsconfig_json_61ebb9fd = file 'tsconfig.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/traceability-service/tsconfig.json'
+        blobSha '926a6c34caba96e353caf393ae4d459698108fca'
+        sizeBytes '628'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/tsconfig.json 'Open pinned source'
+    }
+    file_vitest_config_ts_e7b129ed = file 'vitest.config.ts' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/traceability-service/vitest.config.ts'
+        blobSha 'fa69665ca779308af444b9c788f8f2925766a9f0'
+        sizeBytes '157'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/vitest.config.ts 'Open pinned source'
+    }
+  }
+}
+
+views {
+  view traceabilitySourceInventory of traceabilitySource {
+    title 'Traceability Service — Complete source inventory'
+    description 'Generated from Git at 3695f07c. 68 tracked files.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view traceabilitySource_dir_docs_71ab8b6a of traceabilitySource.dir_docs_71ab8b6a {
+    title 'Source — docs/ (5 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view traceabilitySource_dir_docs_adr_aa1f87c3 of traceabilitySource.dir_docs_71ab8b6a.dir_docs_adr_aa1f87c3 {
+    title 'Source — docs/adr/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view traceabilitySource_dir_docs_ci_536ccda5 of traceabilitySource.dir_docs_71ab8b6a.dir_docs_ci_536ccda5 {
+    title 'Source — docs/ci/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view traceabilitySource_dir_src_f27fede2 of traceabilitySource.dir_src_f27fede2 {
+    title 'Source — src/ (39 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view traceabilitySource_dir_src_adapters_68aa84b0 of traceabilitySource.dir_src_f27fede2.dir_src_adapters_68aa84b0 {
+    title 'Source — src/adapters/ (2 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view traceabilitySource_dir_src_core_b256a6ae of traceabilitySource.dir_src_f27fede2.dir_src_core_b256a6ae {
+    title 'Source — src/core/ (5 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view traceabilitySource_dir_src_lineage_a5e6b0c8 of traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8 {
+    title 'Source — src/lineage/ (27 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view traceabilitySource_dir_src_lineage_cache_3d5361c8 of traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.dir_src_lineage_cache_3d5361c8 {
+    title 'Source — src/lineage/cache/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view traceabilitySource_dir_src_lineage_facets_bb600362 of traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.dir_src_lineage_facets_bb600362 {
+    title 'Source — src/lineage/facets/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view traceabilitySource_dir_src_lineage_mapper_12020689 of traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.dir_src_lineage_mapper_12020689 {
+    title 'Source — src/lineage/mapper/ (2 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view traceabilitySource_dir_src_lineage_readers_46be5146 of traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.dir_src_lineage_readers_46be5146 {
+    title 'Source — src/lineage/readers/ (3 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view traceabilitySource_dir_src_lineage_resolver_d076791f of traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.dir_src_lineage_resolver_d076791f {
+    title 'Source — src/lineage/resolver/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view traceabilitySource_dir_src_lineage_runtime_038dab8b of traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.dir_src_lineage_runtime_038dab8b {
+    title 'Source — src/lineage/runtime/ (5 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view traceabilitySource_dir_test_a94a8fe5 of traceabilitySource.dir_test_a94a8fe5 {
+    title 'Source — test/ (18 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view traceabilitySource_dir_test_fixtures_9c0e9ecf of traceabilitySource.dir_test_a94a8fe5.dir_test_fixtures_9c0e9ecf {
+    title 'Source — test/fixtures/ (3 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view traceabilitySource_dir_test_fixtures_lineage_5eaa077a of traceabilitySource.dir_test_a94a8fe5.dir_test_fixtures_9c0e9ecf.dir_test_fixtures_lineage_5eaa077a {
+    title 'Source — test/fixtures/lineage/ (3 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view traceabilitySource_dir_test_lineage_2ea417d9 of traceabilitySource.dir_test_a94a8fe5.dir_test_lineage_2ea417d9 {
+    title 'Source — test/lineage/ (13 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view traceabilitySource_dir_test_lineage_support_129de678 of traceabilitySource.dir_test_a94a8fe5.dir_test_lineage_2ea417d9.dir_test_lineage_support_129de678 {
+    title 'Source — test/lineage/support/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view traceability-serviceFiles_publicBoundary {
+    title 'Files — Traceability public boundary'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 3 evidence file(s).'
+    include traceabilitySource.dir_src_f27fede2.file_src_contracts_ts_9032c8ad
+    include traceabilitySource.dir_src_f27fede2.file_src_index_ts_c5fb8502
+    include traceabilitySource.dir_src_f27fede2.file_src_types_ts_cdcae080
+    autoLayout TopBottom
+  }
+
+  view traceability-serviceFiles_service {
+    title 'Files — Traceability service'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include traceabilitySource.dir_src_f27fede2.file_src_service_ts_aaf7ca00
+    autoLayout TopBottom
+  }
+
+  view traceability-serviceFiles_core {
+    title 'Files — Traceability core'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 5 evidence file(s).'
+    include traceabilitySource.dir_src_f27fede2.dir_src_core_b256a6ae.file_src_core_header-parser_ts_e90f5c55
+    include traceabilitySource.dir_src_f27fede2.dir_src_core_b256a6ae.file_src_core_issue-baseline_ts_dd4d3e42
+    include traceabilitySource.dir_src_f27fede2.dir_src_core_b256a6ae.file_src_core_manifest-json_ts_c84d974c
+    include traceabilitySource.dir_src_f27fede2.dir_src_core_b256a6ae.file_src_core_manifest_ts_630abf9a
+    include traceabilitySource.dir_src_f27fede2.dir_src_core_b256a6ae.file_src_core_validator_ts_e4510880
+    autoLayout TopBottom
+  }
+
+  view traceability-serviceFiles_adapters {
+    title 'Files — Traceability adapters'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 2 evidence file(s).'
+    include traceabilitySource.dir_src_f27fede2.dir_src_adapters_68aa84b0.file_src_adapters_adr-catalog-filesystem_ts_3ed1c49a
+    include traceabilitySource.dir_src_f27fede2.dir_src_adapters_68aa84b0.file_src_adapters_header-scanner-glob_ts_f20e16cc
+    autoLayout TopBottom
+  }
+
+  view traceability-serviceFiles_lineage {
+    title 'Files — Lineage mapping'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 27 evidence file(s).'
+    include traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.dir_src_lineage_cache_3d5361c8.file_src_lineage_cache_InMemoryCompiledCodeCache_ts_1f882d30
+    include traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.file_src_lineage_compiledCodeRef_ts_60930993
+    include traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.file_src_lineage_contracts_ts_981dfd42
+    include traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.file_src_lineage_errorContract_ts_744d1bc4
+    include traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.file_src_lineage_errorPersistenceSupport_ts_7222dd9f
+    include traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.file_src_lineage_errors_ts_f625dc09
+    include traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.file_src_lineage_errorSupport_ts_d5a48fa1
+    include traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.dir_src_lineage_facets_bb600362.file_src_lineage_facets_SqlJobFacetBuilder_ts_18d17c58
+    include traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.file_src_lineage_HttpOpenLineageSink_ts_3a495acd
+    include traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.file_src_lineage_index_ts_63a1c6b7
+    include traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.file_src_lineage_LineageOutboxObserver_ts_781ac147
+    include traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.file_src_lineage_LineageWorkerRuntime_ts_30bebebb
+    include traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.file_src_lineage_logMessages_ts_84f1f8ad
+    include traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.dir_src_lineage_mapper_12020689.file_neage_mapper_mapCompiledCodeResolutionWarning_ts_b494db86
+    include traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.dir_src_lineage_mapper_12020689.file_src_lineage_mapper_StepStartedLineageMapper_ts_f8838fcb
+    include traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.file_src_lineage_openlineageSchema_ts_d8e9399b
+    include traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.dir_src_lineage_readers_46be5146.file_c_lineage_readers_CompositeCompiledCodeReader_ts_03763358
+    include traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.dir_src_lineage_readers_46be5146.file_src_lineage_readers_FileUriCompiledCodeReader_ts_bb467a9c
+    include traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.dir_src_lineage_readers_46be5146.file_rc_lineage_readers_InMemoryCompiledCodeReader_ts_06584e4c
+    include traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.dir_src_lineage_resolver_d076791f.file_eage_resolver_CachedRetryCompiledCodeResolver_ts_dc534e6e
+    include traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.dir_src_lineage_runtime_038dab8b.file_ineage_runtime_lineageWorkerDeadLetterSupport_ts_52952be2
+    include traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.dir_src_lineage_runtime_038dab8b.file_c_lineage_runtime_LineageWorkerLoopController_ts_30224aaf
+    include traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.dir_src_lineage_runtime_038dab8b.file__lineage_runtime_lineageWorkerRecordProcessor_ts_fbe1d1fa
+    include traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.dir_src_lineage_runtime_038dab8b.file_rc_lineage_runtime_lineageWorkerRuntimeConfig_ts_6dc3c780
+    include traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.dir_src_lineage_runtime_038dab8b.file_src_lineage_runtime_lineageWorkerTick_ts_6a253745
+    include traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.file_src_lineage_types_ts_06c3c3bc
+    include traceabilitySource.dir_src_f27fede2.dir_src_lineage_a5e6b0c8.file_src_lineage_warningContract_ts_d5156880
+    autoLayout TopBottom
+  }
+
+  view traceability-serviceFiles_cli {
+    title 'Files — Traceability CLI'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include traceabilitySource.dir_src_f27fede2.file_src_cli_ts_c443bc51
+    autoLayout TopBottom
+  }
+
+}

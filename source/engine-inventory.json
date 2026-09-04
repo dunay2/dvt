@@ -1,0 +1,2486 @@
+{
+  "schemaVersion": 3,
+  "generatedFrom": "git-tree",
+  "repository": "dunay2/dvt",
+  "baselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "configuredBaselineSha": "42504563629f0b998d8a3382ea839eead99a36d1",
+  "scope": "packages/@dvt/engine",
+  "logicalModelId": "engineModel",
+  "sourceModelId": "engineSource",
+  "configuredModelId": "engineSource",
+  "counts": {
+    "trackedFiles": 202,
+    "sourceFiles": 123,
+    "testFiles": 73,
+    "docsFiles": 0,
+    "packageRootFiles": 6,
+    "filesWithOwnedConcern": 63,
+    "filesWithDecision": 65
+  },
+  "files": [
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "fbf6d0ef9c2947b783a405472bf565e7af4db597",
+      "sizeBytes": 1413,
+      "path": "packages/@dvt/engine/package.json",
+      "relativePath": "package.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/package.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "aa1a94f495df44336ecc1e93ae83a4eceb3903da",
+      "sizeBytes": 9500,
+      "path": "packages/@dvt/engine/src/adapters/CircuitBreakingProviderAdapter.ts",
+      "relativePath": "src/adapters/CircuitBreakingProviderAdapter.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/adapters/CircuitBreakingProviderAdapter.ts",
+      "ownedConcern": "Protect provider adapter calls with engine-owned circuit-breaker posture.",
+      "decision": "Decorate IProviderAdapter calls at the engine outbound boundary so provider outages fail fast.",
+      "consequence": "Runtime safety is centralized without changing provider adapter semantics.",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0014: Run-Driven Adapter Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "61a8ea54ce2e765429875187c1a7fefc592e57ec",
+      "sizeBytes": 7065,
+      "path": "packages/@dvt/engine/src/adapters/inMemory/InMemoryProviderAdapter.ts",
+      "relativePath": "src/adapters/inMemory/InMemoryProviderAdapter.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/adapters/inMemory/InMemoryProviderAdapter.ts",
+      "ownedConcern": "provide an in-memory IProviderAdapter test double without",
+      "decision": "Keep provider-test behavior behind the real provider adapter contract.",
+      "consequence": "Engine tests exercise runtime semantics without publishing an extra runtime provider.",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0014: Run-Driven Adapter Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9593685f2360d381c192e371c7aee81e7488cd2b",
+      "sizeBytes": 3178,
+      "path": "packages/@dvt/engine/src/adapters/IProviderAdapter.ts",
+      "relativePath": "src/adapters/IProviderAdapter.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/adapters/IProviderAdapter.ts",
+      "decision": "Define an adapter contract oriented to run-driven execution and explicit signaling",
+      "consequence": "The engine retains semantic control and allows swapping runtimes without breaking the domain.",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0012: Plan Integrity Ownership",
+        "ADR-0014: Run-Driven Adapter Model",
+        "ADR-0030: Pre-Dispatch Intent Log (lookupRunRef? for PENDING intent reconciliation)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b4c8fd1100e1836ef0ff11b528acc4764a47200a",
+      "sizeBytes": 657,
+      "path": "packages/@dvt/engine/src/application/IStartRunApplicationService.ts",
+      "relativePath": "src/application/IStartRunApplicationService.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/application/IStartRunApplicationService.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "62a7cd8dc3533ffcce7c1a74d3cd4c93a01a137f",
+      "sizeBytes": 3274,
+      "path": "packages/@dvt/engine/src/application/providerSelection.ts",
+      "relativePath": "src/application/providerSelection.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/application/providerSelection.ts",
+      "ownedConcern": "Resolve engine provider ids against the active adapter registry.",
+      "decision": "Decision — Provider selection is resolved in the application layer to keep runtime independence",
+      "consequence": "Engine startup preserves deterministic rules for fallback/override without leaking semantics to the adapter",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "24d5243c2dd7957cbfedfeb0c5a6eb32fd0ef25b",
+      "sizeBytes": 12197,
+      "path": "packages/@dvt/engine/src/application/RecoverRunApplicationService.ts",
+      "relativePath": "src/application/RecoverRunApplicationService.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/application/RecoverRunApplicationService.ts",
+      "ownedConcern": "Orchestrate governed run recovery from terminal source runs."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "60eebc9627bc2080620c0f60c59bd80e15c6f279",
+      "sizeBytes": 3337,
+      "path": "packages/@dvt/engine/src/application/StartRunAdmissionGuard.ts",
+      "relativePath": "src/application/StartRunAdmissionGuard.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/application/StartRunAdmissionGuard.ts",
+      "ownedConcern": "Coordinate start-run admission orchestration across access,"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e44ebcaac79fb18854d36b61e41d0c1fdea29319",
+      "sizeBytes": 7597,
+      "path": "packages/@dvt/engine/src/application/StartRunApplicationService.ts",
+      "relativePath": "src/application/StartRunApplicationService.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/application/StartRunApplicationService.ts",
+      "ownedConcern": "Orchestrate start-run phase services without owning phase rules."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a0a8a05e654178b9200a122214993f4375e8f566",
+      "sizeBytes": 3027,
+      "path": "packages/@dvt/engine/src/application/workflow-engine-use-cases/buildWorkflowEngineUseCases.ts",
+      "relativePath": "src/application/workflow-engine-use-cases/buildWorkflowEngineUseCases.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/application/workflow-engine-use-cases/buildWorkflowEngineUseCases.ts",
+      "ownedConcern": "Compose WorkflowEngine facade use-case implementations from internal engine services.",
+      "decision": "Compose facade use cases through explicit dependencies instead of a multi-reason facade module.",
+      "consequence": "WorkflowEngine delegates behavior without owning every command and query path directly.",
+      "baseline": [
+        "ADR-0003: Execution Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e56a67af9473ff2bcbe1fd755f415bf433b65b70",
+      "sizeBytes": 1233,
+      "path": "packages/@dvt/engine/src/application/workflow-engine-use-cases/index.ts",
+      "relativePath": "src/application/workflow-engine-use-cases/index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/application/workflow-engine-use-cases/index.ts",
+      "ownedConcern": "Publish the WorkflowEngine facade use-case component API from one local barrel.",
+      "decision": "Keep the facade use-case export surface local to the component boundary.",
+      "consequence": "Engine consumers import named use cases without widening the component API.",
+      "baseline": [
+        "ADR-0003: Execution Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "948597e93a08f7f18e52205b40b3f5d252a1eca8",
+      "sizeBytes": 1364,
+      "path": "packages/@dvt/engine/src/application/workflow-engine-use-cases/types.ts",
+      "relativePath": "src/application/workflow-engine-use-cases/types.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/application/workflow-engine-use-cases/types.ts",
+      "ownedConcern": "Declare facade-facing WorkflowEngine use-case ports and their composition shape.",
+      "decision": "Model facade operations as explicit command and query use-case ports.",
+      "consequence": "The WorkflowEngine facade can delegate without hiding application-service boundaries.",
+      "baseline": [
+        "ADR-0003: Execution Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "494e2269f559b3b197c68614d31124a3f17af8f7",
+      "sizeBytes": 1010,
+      "path": "packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowCancelRunUseCase.ts",
+      "relativePath": "src/application/workflow-engine-use-cases/WorkflowCancelRunUseCase.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/application/workflow-engine-use-cases/WorkflowCancelRunUseCase.ts",
+      "ownedConcern": "Adapt cancellation facade commands to the run-control service boundary.",
+      "decision": "Route facade cancellation requests through the canonical run-control service.",
+      "consequence": "Cancellation stays event-owned instead of becoming facade-local behavior.",
+      "baseline": [
+        "ADR-0007: Run Cancellation Semantics And Event Ownership",
+        "ADR-0047: Runtime-Owned Realized Lifecycle For Signal-Driven Transitions"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "1c8f5b40f537d893655cec0082d363a372b4cf3e",
+      "sizeBytes": 1057,
+      "path": "packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowRecoverRunUseCase.ts",
+      "relativePath": "src/application/workflow-engine-use-cases/WorkflowRecoverRunUseCase.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/application/workflow-engine-use-cases/WorkflowRecoverRunUseCase.ts",
+      "ownedConcern": "Adapt normalized recover-run facade input to the recovery application service.",
+      "decision": "Delegate recover-run facade input to the recovery application service.",
+      "consequence": "Recovery remains a separate use case instead of a synthetic canonical signal.",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0049: Retry-Run As Separate Recovery Use Case"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6e5ea1b4cf55df94baaa2c1299f56359239cf23e",
+      "sizeBytes": 952,
+      "path": "packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowRunStatusUseCase.ts",
+      "relativePath": "src/application/workflow-engine-use-cases/WorkflowRunStatusUseCase.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/application/workflow-engine-use-cases/WorkflowRunStatusUseCase.ts",
+      "ownedConcern": "Adapt canonical status facade reads to the engine read-model query service.",
+      "decision": "Delegate facade status reads to the run-status query service.",
+      "consequence": "Status reads stay separated from command-side lifecycle mutation.",
+      "baseline": [
+        "ADR-0015: getRunStatus Read Model Separation"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "61d95ad548ae9aa3de51c0b0534f345b6abf2165",
+      "sizeBytes": 1029,
+      "path": "packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowSignalRunUseCase.ts",
+      "relativePath": "src/application/workflow-engine-use-cases/WorkflowSignalRunUseCase.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/application/workflow-engine-use-cases/WorkflowSignalRunUseCase.ts",
+      "ownedConcern": "Adapt canonical signal facade commands to the run-control service boundary.",
+      "decision": "Route signal facade commands through the canonical run-control service.",
+      "consequence": "Signal handling keeps runtime lifecycle authority below the facade.",
+      "baseline": [
+        "ADR-0008: Signal Idempotency Key Derivation",
+        "ADR-0047: Runtime-Owned Realized Lifecycle For Signal-Driven Transitions"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "468f6422b45c3dfb7a4565793c1ff3a9f53e96bd",
+      "sizeBytes": 2319,
+      "path": "packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowStartRunUseCase.ts",
+      "relativePath": "src/application/workflow-engine-use-cases/WorkflowStartRunUseCase.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/application/workflow-engine-use-cases/WorkflowStartRunUseCase.ts",
+      "ownedConcern": "Adapt normalized start-run facade input to resolved context, tracing, and start application service execution.",
+      "decision": "Normalize facade start-run input before delegating to the start application service.",
+      "consequence": "Start-run orchestration stays behind the engine application boundary.",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0014: Run-Driven Adapter Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4e97d10e37a482418dcd81cd066fd02502ba983b",
+      "sizeBytes": 58,
+      "path": "packages/@dvt/engine/src/contracts/engine/ExecutionPlan.v1.ts",
+      "relativePath": "src/contracts/engine/ExecutionPlan.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/contracts/engine/ExecutionPlan.v1.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "63cf685c001d92cc459a355e29c445862ee0af13",
+      "sizeBytes": 235,
+      "path": "packages/@dvt/engine/src/contracts/engine/ExecutionSemantics.v1.ts",
+      "relativePath": "src/contracts/engine/ExecutionSemantics.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/contracts/engine/ExecutionSemantics.v1.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a5bce39ad9c175f189bcbd2584f6c875a75399b5",
+      "sizeBytes": 950,
+      "path": "packages/@dvt/engine/src/contracts/engine/index.ts",
+      "relativePath": "src/contracts/engine/index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/contracts/engine/index.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "361944a33886b35d5eebaca514b6cceb7ead7ffe",
+      "sizeBytes": 89,
+      "path": "packages/@dvt/engine/src/contracts/engine/IProvider.v1.ts",
+      "relativePath": "src/contracts/engine/IProvider.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/contracts/engine/IProvider.v1.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "0690d0e978deb26cfe14a8727ea9cbd4049e6266",
+      "sizeBytes": 77,
+      "path": "packages/@dvt/engine/src/contracts/engine/IRunEnrichmentService.v1.ts",
+      "relativePath": "src/contracts/engine/IRunEnrichmentService.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/contracts/engine/IRunEnrichmentService.v1.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2fbc9c783d36296b2751b528aa4b35b5cc0d915d",
+      "sizeBytes": 170,
+      "path": "packages/@dvt/engine/src/contracts/engine/RunEvents.v1.ts",
+      "relativePath": "src/contracts/engine/RunEvents.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/contracts/engine/RunEvents.v1.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "dba28369d78d8c9686b0c99af7cf8bba9849c729",
+      "sizeBytes": 1567,
+      "path": "packages/@dvt/engine/src/contracts/errors.ts",
+      "relativePath": "src/contracts/errors.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/contracts/errors.ts",
+      "decision": "Decision - The engine's error hierarchy encodes domain failures with stable codes",
+      "consequence": "Integrations and observability can handle errors deterministically without fragile message parsing",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c952d9a94b753a5b71ea0b22795a45e77db77e4d",
+      "sizeBytes": 2941,
+      "path": "packages/@dvt/engine/src/contracts/errors/adapterErrors.ts",
+      "relativePath": "src/contracts/errors/adapterErrors.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/contracts/errors/adapterErrors.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "1a0b4bb1032c2d615bd166d52c5d151a0d806fec",
+      "sizeBytes": 1557,
+      "path": "packages/@dvt/engine/src/contracts/errors/baseError.ts",
+      "relativePath": "src/contracts/errors/baseError.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/contracts/errors/baseError.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "7b5c12808fa6c72916177d1eb21d4676dcc6563b",
+      "sizeBytes": 1156,
+      "path": "packages/@dvt/engine/src/contracts/errors/errorCodes.ts",
+      "relativePath": "src/contracts/errors/errorCodes.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/contracts/errors/errorCodes.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "dcdd4b1206053c2a5f853f36407082635a7d001d",
+      "sizeBytes": 8645,
+      "path": "packages/@dvt/engine/src/contracts/errors/errorMessages.ts",
+      "relativePath": "src/contracts/errors/errorMessages.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/contracts/errors/errorMessages.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ecf252c0ced36cbf3f5cc021985fc2463d0b465f",
+      "sizeBytes": 1516,
+      "path": "packages/@dvt/engine/src/contracts/errors/planErrors.ts",
+      "relativePath": "src/contracts/errors/planErrors.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/contracts/errors/planErrors.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3f1835edd9daee9aeccca2f9c8c78d5d251a8df6",
+      "sizeBytes": 4410,
+      "path": "packages/@dvt/engine/src/contracts/errors/runErrors.ts",
+      "relativePath": "src/contracts/errors/runErrors.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/contracts/errors/runErrors.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "782f9d689e36aa70ea17b590e6557965739ac7db",
+      "sizeBytes": 68,
+      "path": "packages/@dvt/engine/src/contracts/executionPlan.ts",
+      "relativePath": "src/contracts/executionPlan.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/contracts/executionPlan.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f133001d6b689b41e3edcdf7d0cc4b34831eb715",
+      "sizeBytes": 398,
+      "path": "packages/@dvt/engine/src/contracts/index.ts",
+      "relativePath": "src/contracts/index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/contracts/index.ts",
+      "decision": "Decision — Consolidate the engine contracts entry point as a public domain boundary",
+      "consequence": "Los consumidores importan tipos/contratos desde un barrel estable y versionable",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "bcc11f438c7195bd9451daa03d2ffea2be5b1beb",
+      "sizeBytes": 562,
+      "path": "packages/@dvt/engine/src/contracts/intentErrors.ts",
+      "relativePath": "src/contracts/intentErrors.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/contracts/intentErrors.ts",
+      "decision": "Intent errors are defined in the canonical contracts package",
+      "consequence": "Engine and adapters share the same error classes and stable codes",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0030: Pre-Dispatch Intent Log for startRun Crash Consistency"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4fcbe6b79b14d4f0687f660679387da063ea9282",
+      "sizeBytes": 550,
+      "path": "packages/@dvt/engine/src/contracts/IRunEnrichmentService.v1.ts",
+      "relativePath": "src/contracts/IRunEnrichmentService.v1.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/contracts/IRunEnrichmentService.v1.ts",
+      "decision": "The enrichment boundary is explicit and separate from the engine facade",
+      "consequence": "Callers can opt into provider-backed diagnostics without widening IWorkflowEngine",
+      "baseline": [
+        "ADR-0015: getRunStatus Read Model Separation"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "aabc3e6b7f0c0a5c0526d28a10e421b3bbf7f230",
+      "sizeBytes": 2225,
+      "path": "packages/@dvt/engine/src/contracts/PlanAdmissionPolicy.ts",
+      "relativePath": "src/contracts/PlanAdmissionPolicy.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/contracts/PlanAdmissionPolicy.ts",
+      "ownedConcern": "fail closed at engine ingress when a PlanRef names a",
+      "decision": "Enforce the shared plan admission matrix before provider dispatch.",
+      "consequence": "Unsupported plan/schema pairs fail closed at engine ingress.",
+      "baseline": [
+        "ADR-0036: ExecutionPlan PlanVersion Registry And Runtime Compatibility Matrix",
+        "ADR-0046: Execution Plan Definition And Run Execution Policy Separation"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "119354710bf674fe620d714512ef07a42d03d4f4",
+      "sizeBytes": 758,
+      "path": "packages/@dvt/engine/src/contracts/PlanSchemaVersionPolicy.ts",
+      "relativePath": "src/contracts/PlanSchemaVersionPolicy.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/contracts/PlanSchemaVersionPolicy.ts",
+      "ownedConcern": "Enforce start-run schema-version admission semantics before",
+      "decision": "Expose schema-version admission as an engine semantic policy while",
+      "baseline": [
+        "ADR-0017: ExecutionPlan Schema Versioning",
+        "ADR-0036: ExecutionPlan PlanVersion Registry And Runtime Compatibility Matrix"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "1c8022b709cb2c8a5e029f1da3e4a1f9ef401442",
+      "sizeBytes": 653,
+      "path": "packages/@dvt/engine/src/contracts/planUriPolicyViolation.ts",
+      "relativePath": "src/contracts/planUriPolicyViolation.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/contracts/planUriPolicyViolation.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3f40788cca52c46613961b24b5931923b8cbf69b",
+      "sizeBytes": 512,
+      "path": "packages/@dvt/engine/src/contracts/runEvents.ts",
+      "relativePath": "src/contracts/runEvents.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/contracts/runEvents.ts",
+      "decision": "Re-export canonical event types from @dvt/contracts without engine-local compatibility aliases.",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0004: Event Sourcing Strategy (Extended)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9dc35242580d206a2f6fd9946571873ff8513359",
+      "sizeBytes": 517,
+      "path": "packages/@dvt/engine/src/contracts/types.ts",
+      "relativePath": "src/contracts/types.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/contracts/types.ts",
+      "decision": "Re-export canonical types from @dvt/contracts — single source of truth",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "8fd57d1b99fb685300ba30dde213bdda55032b36",
+      "sizeBytes": 357,
+      "path": "packages/@dvt/engine/src/core/buildWorkflowEngineFacade.ts",
+      "relativePath": "src/core/buildWorkflowEngineFacade.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/core/buildWorkflowEngineFacade.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "befed2d44726e5d55e1dfb5a58b046958bb35f06",
+      "sizeBytes": 4071,
+      "path": "packages/@dvt/engine/src/core/idempotency.ts",
+      "relativePath": "src/core/idempotency.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/core/idempotency.ts",
+      "decision": "Decision — Idempotency keys are derived from the logical identity of the event and the logical attempt",
+      "consequence": "Prevents duplication of effects and preserves deterministic replay between storage and runtime",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0004: Event Sourcing Strategy (Extended)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b6e803d7d4f4483ed66547352db06b4865b1f363",
+      "sizeBytes": 401,
+      "path": "packages/@dvt/engine/src/core/index.ts",
+      "relativePath": "src/core/index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/core/index.ts",
+      "decision": "Decision — Centralize exports of the execution core to preserve internal/external domain boundary",
+      "consequence": "The core module maintains a cohesive, traceable surface for engine consumption",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "1c70d863c5a80802bcfa4ac877ea361aa0c1f8f7",
+      "sizeBytes": 1262,
+      "path": "packages/@dvt/engine/src/core/lifecycle/coreDomainConstants.ts",
+      "relativePath": "src/core/lifecycle/coreDomainConstants.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/core/lifecycle/coreDomainConstants.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4627eb6c493af1e0b7f841853cf85824f62cb824",
+      "sizeBytes": 7444,
+      "path": "packages/@dvt/engine/src/core/lifecycle/coreRuntime.ts",
+      "relativePath": "src/core/lifecycle/coreRuntime.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/core/lifecycle/coreRuntime.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a90876a4da20933bec8e21384ea8ed9090ed305c",
+      "sizeBytes": 295,
+      "path": "packages/@dvt/engine/src/core/lifecycle/StartRunTraceContext.ts",
+      "relativePath": "src/core/lifecycle/StartRunTraceContext.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/core/lifecycle/StartRunTraceContext.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "baaa97d7cda866b22c5ca00aeec0f7d9ff78c827",
+      "sizeBytes": 3175,
+      "path": "packages/@dvt/engine/src/core/SnapshotProjector.ts",
+      "relativePath": "src/core/SnapshotProjector.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/core/SnapshotProjector.ts",
+      "decision": "The snapshot projection is derived exclusively from events for deterministic state reads",
+      "consequence": "getRunStatus and incremental stores reuse the same replay semantics without duplicating rules",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0004: Event Sourcing Strategy (Extended)",
+        "ADR-0007: Run Cancellation Semantics (RunCancelRequested + cancelling substatus)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e127e68539f8daa8b0a17c691602947386800eb5",
+      "sizeBytes": 401,
+      "path": "packages/@dvt/engine/src/core/types.ts",
+      "relativePath": "src/core/types.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/core/types.ts",
+      "decision": "Decision — Reserve a typed core module to evolve internal semantics without exposing implementation",
+      "consequence": "The core maintains traceable internal contracts for future execution changes",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f555d39f3d6f2a34237443703cf26053ab9f9492",
+      "sizeBytes": 5339,
+      "path": "packages/@dvt/engine/src/core/WorkflowEngine.ts",
+      "relativePath": "src/core/WorkflowEngine.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/core/WorkflowEngine.ts",
+      "ownedConcern": "Normalize the public IWorkflowEngine contract and delegate behavior to facade use cases.",
+      "decision": "WorkflowEngine is an application-facing facade that delegates",
+      "consequence": "Runtime orchestration responsibilities are hosted outside the facade.",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0014: Run-Driven Adapter Model",
+        "ADR-0030: Pre-Dispatch Intent Log for startRun Crash Consistency"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a6ea23146b6a27b38c754a9f1b1bfbf1d0d89bd2",
+      "sizeBytes": 1365,
+      "path": "packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts",
+      "relativePath": "src/core/WorkflowEngineCoreService.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/core/WorkflowEngineCoreService.ts",
+      "ownedConcern": "Provide the combined run-control delegator that delegates to command and signal services.",
+      "decision": "Keep combined run-control delegation without owning cancel or signal semantics.",
+      "consequence": "Runtime command and signal behavior stay in role-specific services.",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0039: Hexagonal Port Hardening and SOLID Remediation"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e7513c0fab9b6ddd78b32ad99bb86742500fb249",
+      "sizeBytes": 458,
+      "path": "packages/@dvt/engine/src/domain/IRunCommandService.ts",
+      "relativePath": "src/domain/IRunCommandService.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/domain/IRunCommandService.ts",
+      "ownedConcern": "Expose the runtime cancel command role interface for run-control commands.",
+      "decision": "Keep cancel command behavior behind a command-specific runtime port.",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0039: Hexagonal Port Hardening and SOLID Remediation"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ba944ce31b080e5f3d5e8683e8807da0ea9ca0ce",
+      "sizeBytes": 218,
+      "path": "packages/@dvt/engine/src/domain/IRunControlService.ts",
+      "relativePath": "src/domain/IRunControlService.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/domain/IRunControlService.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "01dee4036903cb876557fb9debb0996e1d752ffd",
+      "sizeBytes": 591,
+      "path": "packages/@dvt/engine/src/domain/IRunHealthService.ts",
+      "relativePath": "src/domain/IRunHealthService.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/domain/IRunHealthService.ts",
+      "ownedConcern": "Define the engine operational health read model exposed to runtime callers."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6940bc5f99ed1a758502586f2d2ed06311e45277",
+      "sizeBytes": 308,
+      "path": "packages/@dvt/engine/src/domain/IRunRecoveryService.ts",
+      "relativePath": "src/domain/IRunRecoveryService.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/domain/IRunRecoveryService.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "29b98da060ed61a7a3235c0682bcbe7762350d4d",
+      "sizeBytes": 491,
+      "path": "packages/@dvt/engine/src/domain/IRunSignalService.ts",
+      "relativePath": "src/domain/IRunSignalService.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/domain/IRunSignalService.ts",
+      "ownedConcern": "Expose the runtime signal command role interface for run-control commands.",
+      "decision": "Keep signal command behavior behind a signal-specific runtime port.",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0039: Hexagonal Port Hardening and SOLID Remediation"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "1c9f1679648c1d18ff433b7426be5452e0bd2a87",
+      "sizeBytes": 178,
+      "path": "packages/@dvt/engine/src/domain/IRunStatusQueryService.ts",
+      "relativePath": "src/domain/IRunStatusQueryService.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/domain/IRunStatusQueryService.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "8ba72bfbc7ba2f63ee86090a27abad0f16300688",
+      "sizeBytes": 1074,
+      "path": "packages/@dvt/engine/src/domain/startRunIntentPolicy.ts",
+      "relativePath": "src/domain/startRunIntentPolicy.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/domain/startRunIntentPolicy.ts",
+      "decision": "Canonical transition policy for start-run intent lifecycle",
+      "consequence": "Transition guards remain consistent across in-memory and persistent stores",
+      "baseline": [
+        "ADR-0030: Pre-Dispatch Intent Log for startRun Crash Consistency"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "1a189ef2ae56ff0464c3e5e33050ca6045e0220d",
+      "sizeBytes": 2669,
+      "path": "packages/@dvt/engine/src/index.ts",
+      "relativePath": "src/index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/index.ts",
+      "ownedConcern": "Runtime engine stable public API for contracts, errors, ports, and role interfaces.",
+      "decision": "Decision â€” Expose a stable public surface of the engine for orchestration decoupled from the runtime",
+      "consequence": "Consumers integrate engine contracts/ports without depending on internal implementations",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "21cd461b4ee5e384f0c70384bcf11554210f0a98",
+      "sizeBytes": 1787,
+      "path": "packages/@dvt/engine/src/metrics/IMetricsCollector.ts",
+      "relativePath": "src/metrics/IMetricsCollector.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/metrics/IMetricsCollector.ts",
+      "decision": "Decision — The engine exposes an abstract metrics port for observability without coupling to a specific provider",
+      "consequence": "Separation between the execution domain and telemetry backend is preserved",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5e0247ac0426bc852e92e7e85a04ce2fffc6fd1a",
+      "sizeBytes": 1010,
+      "path": "packages/@dvt/engine/src/outbox/IOutboxRateLimiter.ts",
+      "relativePath": "src/outbox/IOutboxRateLimiter.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/outbox/IOutboxRateLimiter.ts",
+      "decision": "Decision — El control de caudal del outbox se define por contrato para proteger la estabilidad multi-tenant",
+      "consequence": "The engine can enforce per-tenant limits without coupling to a specific rate-limiting strategy",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a37889682419f8bed7b74044e893dee465885c2d",
+      "sizeBytes": 2361,
+      "path": "packages/@dvt/engine/src/outbox/TokenBucketRateLimiter.ts",
+      "relativePath": "src/outbox/TokenBucketRateLimiter.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/outbox/TokenBucketRateLimiter.ts",
+      "decision": "Decision — The token-bucket rate limiter controls outbox write pressure per tenant in memory",
+      "consequence": "Bursts are limited per tenant, preventing global engine degradation from sudden overloads",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "864878c76693939d6d739828f8dc0448cfdffc1c",
+      "sizeBytes": 553,
+      "path": "packages/@dvt/engine/src/ports/IAuthorizer.ts",
+      "relativePath": "src/ports/IAuthorizer.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/ports/IAuthorizer.ts",
+      "ownedConcern": "Public authorization role interface for engine consumers.",
+      "decision": "Keep the authorization role interface in the engine public ports surface.",
+      "consequence": "Consumers can depend on the role contract without importing the security implementation module.",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0031: Storage Adapter Tenant Isolation Strategy"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c8bb1270b5983a01ed4f9696b13edb4c4cb9007f",
+      "sizeBytes": 905,
+      "path": "packages/@dvt/engine/src/ports/IPlanIntegrityValidator.ts",
+      "relativePath": "src/ports/IPlanIntegrityValidator.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/ports/IPlanIntegrityValidator.ts",
+      "ownedConcern": "Define the engine port for validating scoped plan artifacts before dispatch.",
+      "decision": "Keep scoped plan artifact integrity validation as an engine-owned dispatch port.",
+      "consequence": "Engine applications validate scoped artifacts before provider dispatch without",
+      "baseline": [
+        "ADR-0043: Plan record, plan store, and artifacts ownership",
+        "ADR-0054: Plan Store Scoped Record Identity"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "7b88a48b71e543875fee16ae49534d9ed2ca2379",
+      "sizeBytes": 178,
+      "path": "packages/@dvt/engine/src/ports/IProjector.ts",
+      "relativePath": "src/ports/IProjector.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/ports/IProjector.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "0a87ae2f3fead9778fee375690aaaa15922a9d57",
+      "sizeBytes": 584,
+      "path": "packages/@dvt/engine/src/ports/IRunAccessPolicy.ts",
+      "relativePath": "src/ports/IRunAccessPolicy.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/ports/IRunAccessPolicy.ts",
+      "ownedConcern": "Public run access policy role interface for engine consumers.",
+      "decision": "Keep run access policy as a public role interface instead of exporting security implementation details.",
+      "consequence": "Consumers can type authorization boundaries through the public ports surface.",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0031: Storage Adapter Tenant Isolation Strategy"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a35a7ba60b575da4d97dc4b44f570c11b674f2ab",
+      "sizeBytes": 1126,
+      "path": "packages/@dvt/engine/src/ports/IRunExecutionContextBindingPolicy.ts",
+      "relativePath": "src/ports/IRunExecutionContextBindingPolicy.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/ports/IRunExecutionContextBindingPolicy.ts",
+      "ownedConcern": "Define plugin-owned run-execution-context admission requirements for the engine boundary."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e834bf0024f7a108369c4599db33f359cce227ad",
+      "sizeBytes": 316,
+      "path": "packages/@dvt/engine/src/ports/IRunExecutionContextResolver.ts",
+      "relativePath": "src/ports/IRunExecutionContextResolver.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/ports/IRunExecutionContextResolver.ts",
+      "ownedConcern": "Define the engine port for resolving run-execution-context payloads at admission time."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d2883072be92855e3fbf30e32c72830d17dea152",
+      "sizeBytes": 2666,
+      "path": "packages/@dvt/engine/src/ports/IRunMaintenanceService.ts",
+      "relativePath": "src/ports/IRunMaintenanceService.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/ports/IRunMaintenanceService.ts",
+      "decision": "Batch/operational maintenance operations are separated from lifecycle methods on IWorkflowEngine",
+      "consequence": "Orphaned provider workflows from process crashes are automatically detected and cancelled",
+      "baseline": [
+        "ADR-0029: Run Maintenance Service Extraction",
+        "ADR-0030: Pre-Dispatch Intent Log for startRun Crash Consistency"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6923e616f3ab46472963bcc9097d40cb7ea403f2",
+      "sizeBytes": 932,
+      "path": "packages/@dvt/engine/src/ports/IRunSnapshotStalenessQuery.ts",
+      "relativePath": "src/ports/IRunSnapshotStalenessQuery.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/ports/IRunSnapshotStalenessQuery.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "477376f9675df44fecb33af52c909d08c323e650",
+      "sizeBytes": 8863,
+      "path": "packages/@dvt/engine/src/ports/IRunStateStore.ts",
+      "relativePath": "src/ports/IRunStateStore.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/ports/IRunStateStore.ts",
+      "ownedConcern": "Define engine run-state persistence ports and plugin-neutral lifecycle event payloads."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d29067daed03154c4905056f5d41bd7ebfa23308",
+      "sizeBytes": 2884,
+      "path": "packages/@dvt/engine/src/ports/IStartRunIntentStore.ts",
+      "relativePath": "src/ports/IStartRunIntentStore.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/ports/IStartRunIntentStore.ts",
+      "decision": "Canonical command/query contract for start-run intent durability",
+      "consequence": "Engine and adapters share one contract and status vocabulary",
+      "baseline": [
+        "ADR-0030: Pre-Dispatch Intent Log for startRun Crash Consistency"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4234996dfde9f91b8b292dffcb280be79a1501a2",
+      "sizeBytes": 1138,
+      "path": "packages/@dvt/engine/src/ports/IWorkflowEngine.ts",
+      "relativePath": "src/ports/IWorkflowEngine.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/ports/IWorkflowEngine.ts",
+      "decision": "The workflow engine behavior port lives in the engine-owned ports surface",
+      "consequence": "Consumers use a domain-owned behavior contract instead of a transitional contracts path",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0018: Shared Kernel Ownership Governance"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "86b82a47e9fee62f84a468d4e4484b3a4aabda43",
+      "sizeBytes": 2650,
+      "path": "packages/@dvt/engine/src/runtime.ts",
+      "relativePath": "src/runtime.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/runtime.ts",
+      "ownedConcern": "Runtime engine composition API for builders, policies, services, and workers.",
+      "decision": "Keep implementation composition behind a governed entrypoint instead of the root barrel.",
+      "consequence": "Composition roots can assemble runtime behavior without widening the stable public API.",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "486599bfc8251bbf3a512fa3c37ec33d6806abf4",
+      "sizeBytes": 631,
+      "path": "packages/@dvt/engine/src/security/AuthorizationError.ts",
+      "relativePath": "src/security/AuthorizationError.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/security/AuthorizationError.ts",
+      "decision": "Decision — Tenant access rejections are represented with a typed error and stable code",
+      "consequence": "The engine security layer communicates authorization failures consistently",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d6bf1b0334edc575e161af37bab49dd8e6b47607",
+      "sizeBytes": 1296,
+      "path": "packages/@dvt/engine/src/security/authorizer.ts",
+      "relativePath": "src/security/authorizer.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/security/authorizer.ts",
+      "decision": "Decision — Authorization is abstracted behind a port so the engine does not depend on a specific IAM provider",
+      "consequence": "Tenant access control can evolve without breaking core execution contracts",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0031: Storage Adapter Tenant Isolation Strategy"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3e6c1fa8e8cb68d48aa8d793038dbdaa48e7a960",
+      "sizeBytes": 3046,
+      "path": "packages/@dvt/engine/src/security/hostRiskClassifier.ts",
+      "relativePath": "src/security/hostRiskClassifier.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/security/hostRiskClassifier.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b6514f7bcc02a9aa4596e90c25fe1676a1b4c8ef",
+      "sizeBytes": 3588,
+      "path": "packages/@dvt/engine/src/security/planIntegrity.ts",
+      "relativePath": "src/security/planIntegrity.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/security/planIntegrity.ts",
+      "ownedConcern": "Verify executable plan bytes and metadata before provider dispatch.",
+      "decision": "Engine entry-point plan integrity verification resolves the executable plan,",
+      "consequence": "Adapters receive an immutable PlanRef and must revalidate fetched plan bytes",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0012: Plan Integrity Ownership"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "05035f85f7e62dffddb0d9d17d6827131ea3e175",
+      "sizeBytes": 3702,
+      "path": "packages/@dvt/engine/src/security/planRefPolicy.ts",
+      "relativePath": "src/security/planRefPolicy.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/security/planRefPolicy.ts",
+      "decision": "Decision — Plan URIs are restricted by an allowlist of schemes/hosts/prefixes as a security policy",
+      "consequence": "The engine avoids untrusted sources and reduces attack surface in plan resolution",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "729a19b2f32a18b8836ccceeda8277fa2d13e966",
+      "sizeBytes": 273,
+      "path": "packages/@dvt/engine/src/security/planRefPolicyRules.ts",
+      "relativePath": "src/security/planRefPolicyRules.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/security/planRefPolicyRules.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "767f8b73b923ac3bb5818847de41fb99a5ead3b9",
+      "sizeBytes": 702,
+      "path": "packages/@dvt/engine/src/security/planUri.ts",
+      "relativePath": "src/security/planUri.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/security/planUri.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "8e94facdfa889eff019b9126398b6a38baa78a34",
+      "sizeBytes": 2179,
+      "path": "packages/@dvt/engine/src/security/RunAccessPolicy.ts",
+      "relativePath": "src/security/RunAccessPolicy.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/security/RunAccessPolicy.ts",
+      "decision": "Groups authorizer, planRefPolicy, and outboxRateLimiter into a single",
+      "consequence": "The engine surface shrinks; policy can evolve independently of the engine.",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0031: Storage Adapter Tenant Isolation Strategy"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4fcc94660af43deb2da7ca6b923dbabf459335b0",
+      "sizeBytes": 4752,
+      "path": "packages/@dvt/engine/src/services/runControl/RunCommandService.ts",
+      "relativePath": "src/services/runControl/RunCommandService.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/services/runControl/RunCommandService.ts",
+      "ownedConcern": "Execute runtime cancel commands through the runtime cancel command service behind the command role interface.",
+      "decision": "Isolate cancel adapter dispatch from the combined run-control delegator.",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0039: Hexagonal Port Hardening and SOLID Remediation"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "99cbb71c576eea27da935839f6d86d8b2cfb6f7e",
+      "sizeBytes": 5599,
+      "path": "packages/@dvt/engine/src/services/runControl/RunSignalService.ts",
+      "relativePath": "src/services/runControl/RunSignalService.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/services/runControl/RunSignalService.ts",
+      "ownedConcern": "Execute runtime signal commands through the runtime signal command service behind the signal role interface.",
+      "decision": "Isolate signal transition checks and dispatch from the combined run-control delegator.",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0039: Hexagonal Port Hardening and SOLID Remediation"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "dec4518b79d5711d726c5322ac1af1be77eb1210",
+      "sizeBytes": 3381,
+      "path": "packages/@dvt/engine/src/services/RunEnrichmentService.ts",
+      "relativePath": "src/services/RunEnrichmentService.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/services/RunEnrichmentService.ts",
+      "ownedConcern": "Read canonical and provider-specific run enrichment views."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f0d0c52040368403d8bb649bf794768af2d94bc1",
+      "sizeBytes": 2342,
+      "path": "packages/@dvt/engine/src/services/RunHealthService.ts",
+      "relativePath": "src/services/RunHealthService.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/services/RunHealthService.ts",
+      "ownedConcern": "Assemble engine dependency health and adapter breaker posture."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b73efaa0cd93f8e2bff83ee1bdcdfc7269b8234a",
+      "sizeBytes": 3759,
+      "path": "packages/@dvt/engine/src/services/runMaintenance/DispatchedIntentReconciliationPolicy.ts",
+      "relativePath": "src/services/runMaintenance/DispatchedIntentReconciliationPolicy.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/services/runMaintenance/DispatchedIntentReconciliationPolicy.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "27141ac132b8357b2371fa3133ea9a50ab4920a1",
+      "sizeBytes": 12895,
+      "path": "packages/@dvt/engine/src/services/runMaintenance/PendingIntentReconciliationPolicy.ts",
+      "relativePath": "src/services/runMaintenance/PendingIntentReconciliationPolicy.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/services/runMaintenance/PendingIntentReconciliationPolicy.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b418fabb72a6153736c1a18a221d6f0a909143da",
+      "sizeBytes": 1894,
+      "path": "packages/@dvt/engine/src/services/runMaintenance/RunMaintenanceContracts.ts",
+      "relativePath": "src/services/runMaintenance/RunMaintenanceContracts.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/services/runMaintenance/RunMaintenanceContracts.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f7c14e037fc91e2b9857433d5d148f78d1143fb9",
+      "sizeBytes": 4401,
+      "path": "packages/@dvt/engine/src/services/runMaintenance/RunMaintenanceDomainConstants.ts",
+      "relativePath": "src/services/runMaintenance/RunMaintenanceDomainConstants.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/services/runMaintenance/RunMaintenanceDomainConstants.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "01126328a755673963e832a1bcb4f71ccd7d69d2",
+      "sizeBytes": 1649,
+      "path": "packages/@dvt/engine/src/services/runMaintenance/RunMaintenanceEventFactory.ts",
+      "relativePath": "src/services/runMaintenance/RunMaintenanceEventFactory.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/services/runMaintenance/RunMaintenanceEventFactory.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a2e729147d468ed2db620c44b0a6f14b61e52b8b",
+      "sizeBytes": 1129,
+      "path": "packages/@dvt/engine/src/services/runMaintenance/RunMaintenanceObservabilityFacade.ts",
+      "relativePath": "src/services/runMaintenance/RunMaintenanceObservabilityFacade.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/services/runMaintenance/RunMaintenanceObservabilityFacade.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "800a5d35a5863eb8c289f6dbeb98d3dcc45c5490",
+      "sizeBytes": 5684,
+      "path": "packages/@dvt/engine/src/services/runMaintenance/RunMaintenanceOrphanedIntentService.ts",
+      "relativePath": "src/services/runMaintenance/RunMaintenanceOrphanedIntentService.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/services/runMaintenance/RunMaintenanceOrphanedIntentService.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d235159789afbb884c5b13b7c9ac5b791b9e0f43",
+      "sizeBytes": 5771,
+      "path": "packages/@dvt/engine/src/services/runMaintenance/RunMaintenanceStuckRunService.ts",
+      "relativePath": "src/services/runMaintenance/RunMaintenanceStuckRunService.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/services/runMaintenance/RunMaintenanceStuckRunService.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f0acce5a35fcfb5c1140d256a31ba2fcb9ed8ef7",
+      "sizeBytes": 2470,
+      "path": "packages/@dvt/engine/src/services/RunMaintenanceService.ts",
+      "relativePath": "src/services/RunMaintenanceService.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/services/RunMaintenanceService.ts",
+      "decision": "Batch maintenance operations (detectStuckRuns) separated from IWorkflowEngine lifecycle",
+      "baseline": [
+        "ADR-0009: Outbox Publication Ordering Guarantees",
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0004: Event Sourcing Strategy (Extended)",
+        "ADR-0030: Pre-Dispatch Intent Log for startRun Crash Consistency"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f52abb5f7f0c410c8f5fccb41171f29103927efb",
+      "sizeBytes": 2860,
+      "path": "packages/@dvt/engine/src/services/RunStatusQueryService.ts",
+      "relativePath": "src/services/RunStatusQueryService.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/services/RunStatusQueryService.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "89b912953805f45d7206c949fa9f10ca5b1ce058",
+      "sizeBytes": 6361,
+      "path": "packages/@dvt/engine/src/services/signal/SignalTransitionGuard.ts",
+      "relativePath": "src/services/signal/SignalTransitionGuard.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/services/signal/SignalTransitionGuard.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "279c287b006be2f1deae06abb0bb4011d229eaca",
+      "sizeBytes": 6714,
+      "path": "packages/@dvt/engine/src/services/startRun/RunExecutionContextAdmissionPolicy.ts",
+      "relativePath": "src/services/startRun/RunExecutionContextAdmissionPolicy.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/services/startRun/RunExecutionContextAdmissionPolicy.ts",
+      "ownedConcern": "Enforce generic run-execution-context admission without owning executor plugin semantics."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e94725649d49b2f6ad1dbc390fa366026c029fa6",
+      "sizeBytes": 1204,
+      "path": "packages/@dvt/engine/src/services/startRun/runExecutionContextRequirements.ts",
+      "relativePath": "src/services/startRun/runExecutionContextRequirements.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/services/startRun/runExecutionContextRequirements.ts",
+      "ownedConcern": "Select execution-context requirements activated by one plan.",
+      "decision": "Derive active requirements from the injected binding policy before dispatch.",
+      "consequence": "Engine admission can reuse one plugin-agnostic requirement selection rule.",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a269e8337afa338b512750b24993949751213ba7",
+      "sizeBytes": 2199,
+      "path": "packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts",
+      "relativePath": "src/services/startRun/StartRunAdmissionService.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/services/startRun/StartRunAdmissionService.ts",
+      "ownedConcern": "Coordinate pre-dispatch start-run admission, provider resolution,",
+      "decision": "Keep start-run admission in a named phase service before provider dispatch.",
+      "consequence": "StartRunApplicationService coordinates phases without owning",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0012: Plan Integrity Ownership",
+        "ADR-0014: Run-Driven Adapter Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6191163efd3284efd2d738d135825dcf36898630",
+      "sizeBytes": 1067,
+      "path": "packages/@dvt/engine/src/services/startRun/StartRunDomainConstants.ts",
+      "relativePath": "src/services/startRun/StartRunDomainConstants.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/services/startRun/StartRunDomainConstants.ts",
+      "ownedConcern": "Centralize start-run log messages and failure-reason constants."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c46ed3a30f85c6e939ea51f678c06811fb945bce",
+      "sizeBytes": 2351,
+      "path": "packages/@dvt/engine/src/services/startRun/StartRunEventFactory.ts",
+      "relativePath": "src/services/startRun/StartRunEventFactory.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/services/startRun/StartRunEventFactory.ts",
+      "ownedConcern": "Build deterministic start-run metadata and lifecycle events for"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "79f5c74366df01a76ee877c45fd1a2fe91a6d662",
+      "sizeBytes": 10356,
+      "path": "packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts",
+      "relativePath": "src/services/startRun/StartRunExecutionService.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/services/startRun/StartRunExecutionService.ts",
+      "ownedConcern": "Dispatch admitted start-run requests to provider adapters and"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "02272c6d9bdae3eb947eb25e84df35b4d1d83a73",
+      "sizeBytes": 8771,
+      "path": "packages/@dvt/engine/src/services/startRun/StartRunFailurePolicy.ts",
+      "relativePath": "src/services/startRun/StartRunFailurePolicy.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/services/startRun/StartRunFailurePolicy.ts",
+      "ownedConcern": "Apply start-run failure reporting, intent cleanup, and guarded"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "8f58cc006832ad4af298f345e8a6723b516cc561",
+      "sizeBytes": 1491,
+      "path": "packages/@dvt/engine/src/services/startRun/StartRunIntentService.ts",
+      "relativePath": "src/services/startRun/StartRunIntentService.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/services/startRun/StartRunIntentService.ts",
+      "ownedConcern": "Create deterministic pre-dispatch start-run intents before",
+      "decision": "Keep deterministic start-run intent creation in a named phase service.",
+      "consequence": "Intent identity and creation order remain independently testable",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0030: Pre-Dispatch Intent Log"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2240cc62a6c57eab3efaf6d5bfaca71fd19480bc",
+      "sizeBytes": 2355,
+      "path": "packages/@dvt/engine/src/services/startRun/StartRunTelemetryPolicy.ts",
+      "relativePath": "src/services/startRun/StartRunTelemetryPolicy.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/services/startRun/StartRunTelemetryPolicy.ts",
+      "ownedConcern": "Emit non-blocking start-run telemetry for start and success.",
+      "decision": "Keep start-run start and success telemetry in a policy seam instead of the application coordinator.",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0014: Run-Driven Adapter Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "336a565238c33d7f605256b6ef1e021baca1dc4e",
+      "sizeBytes": 2347,
+      "path": "packages/@dvt/engine/src/services/startRun/StartRunTypes.ts",
+      "relativePath": "src/services/startRun/StartRunTypes.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/services/startRun/StartRunTypes.ts",
+      "ownedConcern": "Declare shared start-run application phase contracts and context types."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5170e2f3c6f891e0433c101c68ec4f325a79eb6f",
+      "sizeBytes": 3136,
+      "path": "packages/@dvt/engine/src/services/startRun/StartRunValidationPolicy.ts",
+      "relativePath": "src/services/startRun/StartRunValidationPolicy.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/services/startRun/StartRunValidationPolicy.ts",
+      "ownedConcern": "Validate start-run preconditions and provider capability"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "048af871322aad77146111bd523afc4747f220b8",
+      "sizeBytes": 416,
+      "path": "packages/@dvt/engine/src/state/InMemoryOutboxState.ts",
+      "relativePath": "src/state/InMemoryOutboxState.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/state/InMemoryOutboxState.ts",
+      "ownedConcern": "engine in-memory outbox state adapter."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a24fc669ec16c6e5335611317d3a2c98d7d49154",
+      "sizeBytes": 2347,
+      "path": "packages/@dvt/engine/src/state/InMemoryRunStateAdminSupport.ts",
+      "relativePath": "src/state/InMemoryRunStateAdminSupport.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/state/InMemoryRunStateAdminSupport.ts",
+      "decision": "Keep provider-ref and retry-attempt administration behind DVT-owned in-memory run-state support",
+      "consequence": "Tests and local runtime preserve retry lineage without delegating attempt authority to providers",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0040: Retry Ownership And Attempt Authority"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "fa619d07cc906fc3d26a157e1bcff151af2ff125",
+      "sizeBytes": 12103,
+      "path": "packages/@dvt/engine/src/state/InMemoryRunStateCore.ts",
+      "relativePath": "src/state/InMemoryRunStateCore.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/state/InMemoryRunStateCore.ts",
+      "decision": "Implement in-memory run-state writes through event-log authority and port-owned lifecycle state",
+      "consequence": "Local and test state stores replay canonical events instead of accepting provider state as truth",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0004: Event Sourcing Strategy",
+        "ADR-0039: Hexagonal Port Hardening And SOLID Remediation"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "8cbd0e7ba288d56e9efb587b09bce1c7905ec290",
+      "sizeBytes": 2427,
+      "path": "packages/@dvt/engine/src/state/InMemoryRunStateReadSupport.ts",
+      "relativePath": "src/state/InMemoryRunStateReadSupport.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/state/InMemoryRunStateReadSupport.ts",
+      "decision": "Serve in-memory run reads from DVT-owned metadata, events, and projections under tenant scope",
+      "consequence": "Read-model helpers stay separated from write authority and provider runtime state",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0015: getRunStatus Read-Model Separation",
+        "ADR-0039: Hexagonal Port Hardening And SOLID Remediation"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "414947af5b6465db4daf9a52d4da8182df82e80b",
+      "sizeBytes": 3573,
+      "path": "packages/@dvt/engine/src/state/InMemoryRunStateSnapshotSupport.ts",
+      "relativePath": "src/state/InMemoryRunStateSnapshotSupport.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/state/InMemoryRunStateSnapshotSupport.ts",
+      "decision": "Rebuild in-memory snapshots as secondary projections from ordered run events",
+      "consequence": "Snapshot reads remain reconstructable and do not replace the append-only event log as authority",
+      "baseline": [
+        "ADR-0004: Event Sourcing Strategy",
+        "ADR-0039: Hexagonal Port Hardening And SOLID Remediation"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "62264c5bf1a4a3ed9de65f4f91587f6ba257e094",
+      "sizeBytes": 2655,
+      "path": "packages/@dvt/engine/src/state/InMemoryRunStateStore.ts",
+      "relativePath": "src/state/InMemoryRunStateStore.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/state/InMemoryRunStateStore.ts",
+      "baseline": [
+        "ADR-0003"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f7b7086ff888ec1d84a15e5b2eb5fd4fc5ccbee3",
+      "sizeBytes": 4364,
+      "path": "packages/@dvt/engine/src/state/InMemoryStartRunIntentStore.ts",
+      "relativePath": "src/state/InMemoryStartRunIntentStore.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/state/InMemoryStartRunIntentStore.ts",
+      "decision": "In-memory intent store for unit tests; mirrors InMemoryTxStore patterns",
+      "consequence": "Tests can validate intent state machine without external dependencies",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0030: Pre-Dispatch Intent Log for startRun Crash Consistency"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "648f993cb9bc53ce67a606aa445e84c41962b2ab",
+      "sizeBytes": 4565,
+      "path": "packages/@dvt/engine/src/state/InMemoryTxStore.ts",
+      "relativePath": "src/state/InMemoryTxStore.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/state/InMemoryTxStore.ts",
+      "baseline": [
+        "ADR-0003"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "03c9e9536e9a39af1f927dfe2b704905b613e7fd",
+      "sizeBytes": 1030,
+      "path": "packages/@dvt/engine/src/state/outboxSharding.ts",
+      "relativePath": "src/state/outboxSharding.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/state/outboxSharding.ts",
+      "ownedConcern": "expose engine-local outbox sharding facade while Delivery owns policy semantics.",
+      "decision": "Delegate stable outbox shard assignment to the Delivery-owned tenant-aware policy",
+      "consequence": "Engine in-memory state keeps test parity without duplicating outbox sharding",
+      "baseline": [
+        "ADR-0004: Event Sourcing Strategy",
+        "ADR-0033: Outbox Worker Sharding And Fencing Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "28883476c5b11c0bf2b54c8f46dafe2931c7ddfa",
+      "sizeBytes": 2156,
+      "path": "packages/@dvt/engine/src/state/retryLineagePolicy.ts",
+      "relativePath": "src/state/retryLineagePolicy.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/state/retryLineagePolicy.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "05eb99e7a080377bde4fe3bb7305cee537e2d11c",
+      "sizeBytes": 3473,
+      "path": "packages/@dvt/engine/src/state/runEventWritePolicy.ts",
+      "relativePath": "src/state/runEventWritePolicy.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/state/runEventWritePolicy.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9bf001512dfdf28e47953912a14469f24e8d3ab3",
+      "sizeBytes": 1428,
+      "path": "packages/@dvt/engine/src/state/snapshotStaleness.ts",
+      "relativePath": "src/state/snapshotStaleness.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/state/snapshotStaleness.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f3c83247bc0a3bfe99c9088c8f98648af407014d",
+      "sizeBytes": 256,
+      "path": "packages/@dvt/engine/src/testing.ts",
+      "relativePath": "src/testing.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/testing.ts",
+      "ownedConcern": "Engine testing API for in-memory stores and provider test doubles."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d978578d8d19fbf1520cac8305283cbc4d5e98ec",
+      "sizeBytes": 79,
+      "path": "packages/@dvt/engine/src/types/index.ts",
+      "relativePath": "src/types/index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/types/index.ts",
+      "baseline": [
+        "ADR-0003"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e80bbed3671227c72c174ace7d01b4368e787b1a",
+      "sizeBytes": 79,
+      "path": "packages/@dvt/engine/src/types/types.ts",
+      "relativePath": "src/types/types.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/types/types.ts",
+      "baseline": [
+        "ADR-0003"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "412ac97bdc321d7633aae0a807effffd2940f39c",
+      "sizeBytes": 781,
+      "path": "packages/@dvt/engine/src/utils/clock.ts",
+      "relativePath": "src/utils/clock.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/utils/clock.ts",
+      "baseline": [
+        "ADR-0003"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4135e325c8c203cd0ce5a258ebdd07461489f04e",
+      "sizeBytes": 781,
+      "path": "packages/@dvt/engine/src/utils/errorUtils.ts",
+      "relativePath": "src/utils/errorUtils.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/utils/errorUtils.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9014f7c97169ecbae2069428ebf793c1dde2ec5b",
+      "sizeBytes": 7467,
+      "path": "packages/@dvt/engine/src/workers/IntentReconcilerWorker.ts",
+      "relativePath": "src/workers/IntentReconcilerWorker.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/src/workers/IntentReconcilerWorker.ts",
+      "decision": "Periodic reconciler with single-flight execution and infra-only backoff",
+      "consequence": "Reconciliation keeps running across transient failures without overlapping sweeps",
+      "baseline": [
+        "ADR-0030: Pre-Dispatch Intent Log for startRun Crash Consistency"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2d38eda9ec0aa0fc710ffcda2e08ff00d8725d15",
+      "sizeBytes": 9945,
+      "path": "packages/@dvt/engine/test/adapters/CircuitBreakingProviderAdapter.test.ts",
+      "relativePath": "test/adapters/CircuitBreakingProviderAdapter.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/adapters/CircuitBreakingProviderAdapter.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a2ab7d389a538cd64b917ff0f209aebe1d49be2d",
+      "sizeBytes": 6588,
+      "path": "packages/@dvt/engine/test/adapters/InMemoryProviderAdapter.cancel.test.ts",
+      "relativePath": "test/adapters/InMemoryProviderAdapter.cancel.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/adapters/InMemoryProviderAdapter.cancel.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "affc336aa4721091198e804aa476d9134ac4aed6",
+      "sizeBytes": 3368,
+      "path": "packages/@dvt/engine/test/application/providerSelection.test.ts",
+      "relativePath": "test/application/providerSelection.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/application/providerSelection.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5d2a5bbbea9681b10aca59d21351f3f8d14127f0",
+      "sizeBytes": 1018,
+      "path": "packages/@dvt/engine/test/application/workflowEngineUseCases.factory.test.ts",
+      "relativePath": "test/application/workflowEngineUseCases.factory.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/application/workflowEngineUseCases.factory.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "8b53fad8d98e5ca4144206949885c2b1cddd7783",
+      "sizeBytes": 3617,
+      "path": "packages/@dvt/engine/test/architecture/adapterCircuitBreaker.architecture.test.ts",
+      "relativePath": "test/architecture/adapterCircuitBreaker.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/architecture/adapterCircuitBreaker.architecture.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9d7129ced2ec6e911d07edd366cfed06fbbaf5cd",
+      "sizeBytes": 576,
+      "path": "packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.test.ts",
+      "relativePath": "test/architecture/engineArchitectureTestSupport.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/architecture/engineArchitectureTestSupport.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "752801a5d545cc1ffe4e2ecf997859ea7692863c",
+      "sizeBytes": 5308,
+      "path": "packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts",
+      "relativePath": "test/architecture/engineArchitectureTestSupport.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/architecture/engineArchitectureTestSupport.ts",
+      "ownedConcern": "Engine architecture test support for source and documentation discovery."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "21df44f770c75e808f03d034e759941b1f5015b7",
+      "sizeBytes": 8101,
+      "path": "packages/@dvt/engine/test/architecture/enginePublicApiSurface.architecture.test.ts",
+      "relativePath": "test/architecture/enginePublicApiSurface.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/architecture/enginePublicApiSurface.architecture.test.ts",
+      "ownedConcern": "Validate the semantic package-surface split between public,"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "673c85a19b9d923f692109e32402dab9258eb3c2",
+      "sizeBytes": 4019,
+      "path": "packages/@dvt/engine/test/architecture/planSchemaVersionAdmission.architecture.test.ts",
+      "relativePath": "test/architecture/planSchemaVersionAdmission.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/architecture/planSchemaVersionAdmission.architecture.test.ts",
+      "ownedConcern": "Guard semantic encapsulation for start-run schema-version admission."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "aebf4c4511276eb3e2738908761141cc97a990cd",
+      "sizeBytes": 6172,
+      "path": "packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts",
+      "relativePath": "test/architecture/startRunApplicationDecomposition.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f15bfe927a0a26639f6deb2be7ada52e84497841",
+      "sizeBytes": 2740,
+      "path": "packages/@dvt/engine/test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts",
+      "relativePath": "test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "63a406f733961dd2fde44b4f1d246945ee099c65",
+      "sizeBytes": 5600,
+      "path": "packages/@dvt/engine/test/architecture/workflowEngineBoundaryFitness.architecture.test.ts",
+      "relativePath": "test/architecture/workflowEngineBoundaryFitness.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/architecture/workflowEngineBoundaryFitness.architecture.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5dd5be4d55eff88c7ec0a36402796808929b1b1e",
+      "sizeBytes": 5835,
+      "path": "packages/@dvt/engine/test/architecture/workflowEngineBoundaryOwnership.architecture.test.ts",
+      "relativePath": "test/architecture/workflowEngineBoundaryOwnership.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/architecture/workflowEngineBoundaryOwnership.architecture.test.ts",
+      "ownedConcern": "Define the engine port for validating scoped plan artifacts before dispatch.'"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "8296f7193ce796bdb62edf61e2027e12205ff802",
+      "sizeBytes": 4406,
+      "path": "packages/@dvt/engine/test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts",
+      "relativePath": "test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "0b81e32576ecae87e1d76234e0f505418dc9d893",
+      "sizeBytes": 5691,
+      "path": "packages/@dvt/engine/test/architecture/workflowEngineFacadeUseCases.architecture.test.ts",
+      "relativePath": "test/architecture/workflowEngineFacadeUseCases.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/architecture/workflowEngineFacadeUseCases.architecture.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "8aafb16b70d389e3040101c23b14196f141fd8ac",
+      "sizeBytes": 4051,
+      "path": "packages/@dvt/engine/test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts",
+      "relativePath": "test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts",
+      "ownedConcern": "Emit non-blocking start-run telemetry');"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f35bfc2ca361b6a2e242fd67d70fca83eed31905",
+      "sizeBytes": 5457,
+      "path": "packages/@dvt/engine/test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts",
+      "relativePath": "test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c86fec4cb6d113cc60201f015470ae06e2b01837",
+      "sizeBytes": 7210,
+      "path": "packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts",
+      "relativePath": "test/architecture/workflowEngineSemanticClosure.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b746a70fc03a5e348a1c19340b11450bbb37d406",
+      "sizeBytes": 9193,
+      "path": "packages/@dvt/engine/test/contracts/capabilities.contract.test.ts",
+      "relativePath": "test/contracts/capabilities.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/contracts/capabilities.contract.test.ts",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "PR-3: Capability gating and compatibility matrix"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "690235f0b3249cc0ed92e032c22caade2a86099c",
+      "sizeBytes": 13307,
+      "path": "packages/@dvt/engine/test/contracts/engine.test.ts",
+      "relativePath": "test/contracts/engine.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/contracts/engine.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f1484708f725504710c10f5cc024388fa7894da6",
+      "sizeBytes": 5053,
+      "path": "packages/@dvt/engine/test/contracts/errorI18n.contract.test.ts",
+      "relativePath": "test/contracts/errorI18n.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/contracts/errorI18n.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "085675e7648c9cf72b79acdcd1fb1eae8abe5279",
+      "sizeBytes": 7883,
+      "path": "packages/@dvt/engine/test/contracts/executionPlan.contract.test.ts",
+      "relativePath": "test/contracts/executionPlan.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/contracts/executionPlan.contract.test.ts",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "PR-2: Contract hardening for Planner → Engine"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9f79484246da72b5babe6308ed75f82cf5172bad",
+      "sizeBytes": 895,
+      "path": "packages/@dvt/engine/test/contracts/helpers.ts",
+      "relativePath": "test/contracts/helpers.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/contracts/helpers.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ff264251167a72b8f7c7a2cb46efe4aa9a0f69ca",
+      "sizeBytes": 2589,
+      "path": "packages/@dvt/engine/test/contracts/IWorkflowEngine.types.test.ts",
+      "relativePath": "test/contracts/IWorkflowEngine.types.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/contracts/IWorkflowEngine.types.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "283992ce5c2abee5693f836bf5e6bc80c7763e75",
+      "sizeBytes": 1509,
+      "path": "packages/@dvt/engine/test/contracts/package-surface.test.ts",
+      "relativePath": "test/contracts/package-surface.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/contracts/package-surface.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9d0ff2f3309238c7d2b619ab51bb63e7a89812f5",
+      "sizeBytes": 758,
+      "path": "packages/@dvt/engine/test/contracts/plans/plan-cancel-and-resume.json",
+      "relativePath": "test/contracts/plans/plan-cancel-and-resume.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/contracts/plans/plan-cancel-and-resume.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b26853f1816884f2005cf1cf0f255bcbe9d2ff9e",
+      "sizeBytes": 426,
+      "path": "packages/@dvt/engine/test/contracts/plans/plan-minimal.json",
+      "relativePath": "test/contracts/plans/plan-minimal.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/contracts/plans/plan-minimal.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f226d8ba9db8467e82ab2e5d5c82a872ca4c007f",
+      "sizeBytes": 681,
+      "path": "packages/@dvt/engine/test/contracts/plans/plan-parallel.json",
+      "relativePath": "test/contracts/plans/plan-parallel.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/contracts/plans/plan-parallel.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6d0177fb888c35b9afa38e02a5ff8d1985924277",
+      "sizeBytes": 1572,
+      "path": "packages/@dvt/engine/test/contracts/PlanSchemaVersionPolicy.test.ts",
+      "relativePath": "test/contracts/PlanSchemaVersionPolicy.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/contracts/PlanSchemaVersionPolicy.test.ts",
+      "ownedConcern": "Verify schema-version admission semantics at the engine policy boundary."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e4b31795eebe7c8bea3edc7053e9fb80c8e0d175",
+      "sizeBytes": 4511,
+      "path": "packages/@dvt/engine/test/contracts/run-golden-paths.hash.test.ts",
+      "relativePath": "test/contracts/run-golden-paths.hash.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/contracts/run-golden-paths.hash.test.ts",
+      "decision": "Validates deterministic SHA256 hashes of plan fixtures against .golden/hashes.json",
+      "consequence": "Any change to a plan fixture that shifts its normalized hash fails CI immediately",
+      "baseline": [
+        "ADR-0004: Event Sourcing Strategy (ExecutionPlan determinism)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3af2538feeed830f254d0cc73dfa01b9d896be4b",
+      "sizeBytes": 7536,
+      "path": "packages/@dvt/engine/test/core/SnapshotProjector.transitions.test.ts",
+      "relativePath": "test/core/SnapshotProjector.transitions.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/core/SnapshotProjector.transitions.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "43b70d277f7f8c454523d5dac97c8d231eb97e57",
+      "sizeBytes": 10206,
+      "path": "packages/@dvt/engine/test/core/WorkflowEngine.helpers.ts",
+      "relativePath": "test/core/WorkflowEngine.helpers.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/core/WorkflowEngine.helpers.ts",
+      "ownedConcern": "WorkflowEngine facade behavior test helpers and test-only vocabulary."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6422de104a19e9629df980a5caba367f3486d9bd",
+      "sizeBytes": 2551,
+      "path": "packages/@dvt/engine/test/core/WorkflowEngine.intent-id-deterministic.test.ts",
+      "relativePath": "test/core/WorkflowEngine.intent-id-deterministic.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/core/WorkflowEngine.intent-id-deterministic.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "1597a8d68b43955feb4bcc09975a7ead01ea2bbd",
+      "sizeBytes": 13493,
+      "path": "packages/@dvt/engine/test/core/WorkflowEngine.intentLog.test.ts",
+      "relativePath": "test/core/WorkflowEngine.intentLog.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/core/WorkflowEngine.intentLog.test.ts",
+      "decision": "Verify PENDING->DISPATCHED->RESOLVED lifecycle and crash-compensation intent resolution",
+      "consequence": "Ensures WorkflowEngine.startRun() intent store integration matches ADR-0030 invariants",
+      "baseline": [
+        "ADR-0030: Pre-Dispatch Intent Log for startRun Crash Consistency"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "54bed14c9de0ab9d39fdf33330c4dddff0e37e2e",
+      "sizeBytes": 14960,
+      "path": "packages/@dvt/engine/test/core/WorkflowEngine.observability.test.ts",
+      "relativePath": "test/core/WorkflowEngine.observability.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/core/WorkflowEngine.observability.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "fd0fd26929645ef170166ae6fed2513c7233445b",
+      "sizeBytes": 2356,
+      "path": "packages/@dvt/engine/test/core/WorkflowEngine.planRef.test.ts",
+      "relativePath": "test/core/WorkflowEngine.planRef.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/core/WorkflowEngine.planRef.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a1b37985ab73d5a0ca61465e16d54cf9ca456ffc",
+      "sizeBytes": 39817,
+      "path": "packages/@dvt/engine/test/core/WorkflowEngine.test.ts",
+      "relativePath": "test/core/WorkflowEngine.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/core/WorkflowEngine.test.ts",
+      "decision": "Verify engine lifecycle failure modes, observability, idempotency, and boundary validation",
+      "consequence": "Regression coverage for core engine invariants",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0014: Run-Driven Adapter Model",
+        "ADR-0015: getRunStatus read-model separation"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "de7a49e11c64938e3ed8c9b7b489ae0b624ecc61",
+      "sizeBytes": 10479,
+      "path": "packages/@dvt/engine/test/core/WorkflowEngineCoreService.test.ts",
+      "relativePath": "test/core/WorkflowEngineCoreService.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/core/WorkflowEngineCoreService.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "af3b68c22e7c8def187533572ad707d773edf688",
+      "sizeBytes": 1028,
+      "path": "packages/@dvt/engine/test/domain/startRunIntentPolicy.test.ts",
+      "relativePath": "test/domain/startRunIntentPolicy.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/domain/startRunIntentPolicy.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5c543e5c484cc760a7bc6d7e6476288e16fb3b1d",
+      "sizeBytes": 2163,
+      "path": "packages/@dvt/engine/test/gaps/PlanAdmissionPolicy.test.ts",
+      "relativePath": "test/gaps/PlanAdmissionPolicy.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/gaps/PlanAdmissionPolicy.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "73dc618480e23727536d23e94ea20843fbef0b8d",
+      "sizeBytes": 2276,
+      "path": "packages/@dvt/engine/test/helpers/runLifecycle.fixture.ts",
+      "relativePath": "test/helpers/runLifecycle.fixture.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/helpers/runLifecycle.fixture.ts",
+      "ownedConcern": "run lifecycle test fixture for in-memory run store setup."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "7f39fa8c92c6bea2c029cb0bf76beddd6e41c956",
+      "sizeBytes": 12794,
+      "path": "packages/@dvt/engine/test/helpers/workflowEngine.fixture.ts",
+      "relativePath": "test/helpers/workflowEngine.fixture.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/helpers/workflowEngine.fixture.ts",
+      "ownedConcern": "WorkflowEngine test composition fixture using fake provider adapters and engine-owned ports."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "0d8b259042dd5ccfe6b7f2cb97cd6ccf2bca8072",
+      "sizeBytes": 5752,
+      "path": "packages/@dvt/engine/test/idempotency.vectors.test.ts",
+      "relativePath": "test/idempotency.vectors.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/idempotency.vectors.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6b56f68108c7fdbb44d31747ac9384612b6f8d94",
+      "sizeBytes": 949,
+      "path": "packages/@dvt/engine/test/security/authorizer.allowAll.test.ts",
+      "relativePath": "test/security/authorizer.allowAll.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/security/authorizer.allowAll.test.ts",
+      "decision": "Verify AllowAllAuthorizer rejects instantiation in production",
+      "consequence": "Prevents insecure authorizer from reaching production deployments",
+      "baseline": [
+        "ADR-0031: Storage Adapter Tenant Isolation Strategy"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "96a1fe7177ce6a81599ed2a27bf059719072806d",
+      "sizeBytes": 9384,
+      "path": "packages/@dvt/engine/test/security/authorizer.deny.test.ts",
+      "relativePath": "test/security/authorizer.deny.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/security/authorizer.deny.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c9341ad718df81eb43fbf4a96689e9c8dd949ee4",
+      "sizeBytes": 2236,
+      "path": "packages/@dvt/engine/test/security/planRefPolicy.test.ts",
+      "relativePath": "test/security/planRefPolicy.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/security/planRefPolicy.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "338c43bb1769c2070fb663c0f1f2d5009df452ce",
+      "sizeBytes": 2695,
+      "path": "packages/@dvt/engine/test/services/RunEnrichmentService.test.ts",
+      "relativePath": "test/services/RunEnrichmentService.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/services/RunEnrichmentService.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9b949ae5ca6c74b0481e0002168d44f1619adbc5",
+      "sizeBytes": 1410,
+      "path": "packages/@dvt/engine/test/services/RunExecutionContextAdmissionPolicy.acceptance.test.ts",
+      "relativePath": "test/services/RunExecutionContextAdmissionPolicy.acceptance.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/services/RunExecutionContextAdmissionPolicy.acceptance.test.ts",
+      "ownedConcern": "verify admission-policy happy paths and non-plugin fallback behavior."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "dd7a2bed397ca41fe44189fef19a918ab646668c",
+      "sizeBytes": 1928,
+      "path": "packages/@dvt/engine/test/services/RunExecutionContextAdmissionPolicy.compatibility.test.ts",
+      "relativePath": "test/services/RunExecutionContextAdmissionPolicy.compatibility.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/services/RunExecutionContextAdmissionPolicy.compatibility.test.ts",
+      "ownedConcern": "verify plugin compatibility fingerprint admission semantics."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "889b3d5b9662810ececdf2ee7402eb9e0ecde66f",
+      "sizeBytes": 5982,
+      "path": "packages/@dvt/engine/test/services/runExecutionContextAdmissionPolicy.fixtures.ts",
+      "relativePath": "test/services/runExecutionContextAdmissionPolicy.fixtures.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/services/runExecutionContextAdmissionPolicy.fixtures.ts",
+      "ownedConcern": "provide canonical admission-policy fixtures and semantic plugin-binding test helpers."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2490ed96d3b0b2088311fe11d6d627b3d99e2e4a",
+      "sizeBytes": 3215,
+      "path": "packages/@dvt/engine/test/services/RunExecutionContextAdmissionPolicy.plugin-requirements.test.ts",
+      "relativePath": "test/services/RunExecutionContextAdmissionPolicy.plugin-requirements.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/services/RunExecutionContextAdmissionPolicy.plugin-requirements.test.ts",
+      "ownedConcern": "verify generic plugin requirement admission without DBT-specific semantics."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2c7e83fb26844eebbfaa310bd2afb116b4692607",
+      "sizeBytes": 1413,
+      "path": "packages/@dvt/engine/test/services/RunExecutionContextAdmissionPolicy.provenance.test.ts",
+      "relativePath": "test/services/RunExecutionContextAdmissionPolicy.provenance.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/services/RunExecutionContextAdmissionPolicy.provenance.test.ts",
+      "ownedConcern": "verify resolved run-execution-context provenance alignment."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "73cee46f7a931b1952718929a16e7cf4266f4201",
+      "sizeBytes": 6419,
+      "path": "packages/@dvt/engine/test/services/RunExecutionContextAdmissionPolicy.srp.architecture.test.ts",
+      "relativePath": "test/services/RunExecutionContextAdmissionPolicy.srp.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/services/RunExecutionContextAdmissionPolicy.srp.architecture.test.ts",
+      "ownedConcern": "Enforce generic run-execution-context admission without owning executor plugin semantics.',"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "320e0e63d3f867b8644e4ebd967ed5dc3438bfe7",
+      "sizeBytes": 42229,
+      "path": "packages/@dvt/engine/test/services/RunMaintenanceService.test.ts",
+      "relativePath": "test/services/RunMaintenanceService.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/services/RunMaintenanceService.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "8c16f6e3a1f619acf9e5036cde8f56db7309ebc4",
+      "sizeBytes": 1066,
+      "path": "packages/@dvt/engine/test/services/RunStatusQueryService.test.ts",
+      "relativePath": "test/services/RunStatusQueryService.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/services/RunStatusQueryService.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "1e4423b20dfc84e2fa976307ad4ad40b73a6d9aa",
+      "sizeBytes": 11211,
+      "path": "packages/@dvt/engine/test/services/SignalTransitionGuard.test.ts",
+      "relativePath": "test/services/SignalTransitionGuard.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/services/SignalTransitionGuard.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "cbbb6232feb5fafceff743a5848d632017ef66de",
+      "sizeBytes": 4900,
+      "path": "packages/@dvt/engine/test/services/StartRunApplicationDecomposition.test.ts",
+      "relativePath": "test/services/StartRunApplicationDecomposition.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/services/StartRunApplicationDecomposition.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "238c8a069fe16a9c674b5254964d36c11d8cae76",
+      "sizeBytes": 12566,
+      "path": "packages/@dvt/engine/test/services/StartRunApplicationService.test.ts",
+      "relativePath": "test/services/StartRunApplicationService.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/services/StartRunApplicationService.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "eeaa4b0fb98ddd9d0dd3a748f2bac937680628c0",
+      "sizeBytes": 2393,
+      "path": "packages/@dvt/engine/test/services/StartRunEventFactory.test.ts",
+      "relativePath": "test/services/StartRunEventFactory.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/services/StartRunEventFactory.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f9374f7109f826b4751f621295e5ef0648ce2013",
+      "sizeBytes": 8992,
+      "path": "packages/@dvt/engine/test/state/bootstrapRunTx.atomicity.test.ts",
+      "relativePath": "test/state/bootstrapRunTx.atomicity.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/state/bootstrapRunTx.atomicity.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a4489ad17c2784b3d0dcc179b271de2c3132150c",
+      "sizeBytes": 11692,
+      "path": "packages/@dvt/engine/test/state/InMemoryRunStateStore.appendInvariants.test.ts",
+      "relativePath": "test/state/InMemoryRunStateStore.appendInvariants.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/state/InMemoryRunStateStore.appendInvariants.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "44ae813fecfbbdf2407bcb15ddb88feb1f823e51",
+      "sizeBytes": 3171,
+      "path": "packages/@dvt/engine/test/state/InMemoryRunStateStore.rebuildSnapshot.test.ts",
+      "relativePath": "test/state/InMemoryRunStateStore.rebuildSnapshot.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/state/InMemoryRunStateStore.rebuildSnapshot.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5b06311c85ae76654a5d4d8922b5fd921f3599ee",
+      "sizeBytes": 2786,
+      "path": "packages/@dvt/engine/test/state/InMemoryRunStateStore.staleSnapshotRuns.test.ts",
+      "relativePath": "test/state/InMemoryRunStateStore.staleSnapshotRuns.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/state/InMemoryRunStateStore.staleSnapshotRuns.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c775f0b2a0044764d1227d43b261e85649191c56",
+      "sizeBytes": 12962,
+      "path": "packages/@dvt/engine/test/state/InMemoryStartRunIntentStore.test.ts",
+      "relativePath": "test/state/InMemoryStartRunIntentStore.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/state/InMemoryStartRunIntentStore.test.ts",
+      "decision": "Validate intent state machine transitions, idempotency, and orphan listing",
+      "consequence": "Ensures InMemoryStartRunIntentStore matches IStartRunIntentStore contract",
+      "baseline": [
+        "ADR-0030: Pre-Dispatch Intent Log for startRun Crash Consistency"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9825d24185144c839432c2ce291e8311689eb54f",
+      "sizeBytes": 12050,
+      "path": "packages/@dvt/engine/test/state/InMemoryTxStore.outbox.test.ts",
+      "relativePath": "test/state/InMemoryTxStore.outbox.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/state/InMemoryTxStore.outbox.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "0e1f8ea86b48b873661ba42affd3c339fbf8c131",
+      "sizeBytes": 3123,
+      "path": "packages/@dvt/engine/test/state/InMemoryTxStore.rebuildSnapshot.test.ts",
+      "relativePath": "test/state/InMemoryTxStore.rebuildSnapshot.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/state/InMemoryTxStore.rebuildSnapshot.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d54d102476b3a9c8a67dafb6226acb05f2bcaa63",
+      "sizeBytes": 6258,
+      "path": "packages/@dvt/engine/test/state/InMemoryTxStore.retryLineage.test.ts",
+      "relativePath": "test/state/InMemoryTxStore.retryLineage.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/state/InMemoryTxStore.retryLineage.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9b63af1d02137cbc509edc517d0a878203369c55",
+      "sizeBytes": 2783,
+      "path": "packages/@dvt/engine/test/state/InMemoryTxStore.staleSnapshotRuns.test.ts",
+      "relativePath": "test/state/InMemoryTxStore.staleSnapshotRuns.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/state/InMemoryTxStore.staleSnapshotRuns.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "0dae8557ed8f6c32e3d15a57482d601faf7c1aab",
+      "sizeBytes": 3228,
+      "path": "packages/@dvt/engine/test/state/providerRefPersistence.test.ts",
+      "relativePath": "test/state/providerRefPersistence.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/state/providerRefPersistence.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b3073c2393679e6f9385c3671fb4963c750e18a3",
+      "sizeBytes": 1135,
+      "path": "packages/@dvt/engine/test/state/runBootstrapTestSupport.ts",
+      "relativePath": "test/state/runBootstrapTestSupport.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/state/runBootstrapTestSupport.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "202f73d0605a7de458320a544e9ab59782f225a6",
+      "sizeBytes": 2606,
+      "path": "packages/@dvt/engine/test/types/engine-types.test.ts",
+      "relativePath": "test/types/engine-types.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/types/engine-types.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "727e5b5e19cd8c294776d1c8738a83082a1b4430",
+      "sizeBytes": 2127,
+      "path": "packages/@dvt/engine/test/utils/clock.test.ts",
+      "relativePath": "test/utils/clock.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/utils/clock.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "61c7c773e36d5ff1541d6a910380255b6206f632",
+      "sizeBytes": 9017,
+      "path": "packages/@dvt/engine/test/workers/IntentReconcilerWorker.test.ts",
+      "relativePath": "test/workers/IntentReconcilerWorker.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/test/workers/IntentReconcilerWorker.test.ts",
+      "decision": "Verifies scheduler semantics: no overlap, timeout guard, and infra/backoff behavior",
+      "consequence": "Reconciler runtime behavior remains deterministic under failure conditions"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "0b33c302118fc70f87fc09a3932b5f451c551576",
+      "sizeBytes": 160,
+      "path": "packages/@dvt/engine/tsconfig.eslint.json",
+      "relativePath": "tsconfig.eslint.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/tsconfig.eslint.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "93bf1561f95398eb21111f6776064e53965a891c",
+      "sizeBytes": 817,
+      "path": "packages/@dvt/engine/tsconfig.json",
+      "relativePath": "tsconfig.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/tsconfig.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9677fbbced07bc4e43533ece98b580de0a189e7f",
+      "sizeBytes": 110,
+      "path": "packages/@dvt/engine/tsconfig.test.eslint.json",
+      "relativePath": "tsconfig.test.eslint.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/tsconfig.test.eslint.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a24ac8279f321243e3845b64960324329b6db350",
+      "sizeBytes": 148,
+      "path": "packages/@dvt/engine/tsconfig.test.json",
+      "relativePath": "tsconfig.test.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/tsconfig.test.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a71174ddf688af5e944496a955ad1c92f790dfbd",
+      "sizeBytes": 157,
+      "path": "packages/@dvt/engine/vitest.config.ts",
+      "relativePath": "vitest.config.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/engine/vitest.config.ts"
+    }
+  ],
+  "componentMappings": [
+    {
+      "id": "workflowPort",
+      "title": "IWorkflowEngine",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Public workflow behavior port owned by the Engine.",
+      "fileCount": 1,
+      "files": [
+        "src/ports/IWorkflowEngine.ts"
+      ]
+    },
+    {
+      "id": "workflowFacade",
+      "title": "WorkflowEngine facade",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "WorkflowEngine implements IWorkflowEngine and delegates to explicit application use cases.",
+      "fileCount": 1,
+      "files": [
+        "src/core/WorkflowEngine.ts"
+      ]
+    },
+    {
+      "id": "useCases",
+      "title": "Workflow engine use cases",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Application boundary for start/recover/cancel/status/signal behavior.",
+      "fileCount": 8,
+      "files": [
+        "src/application/workflow-engine-use-cases/buildWorkflowEngineUseCases.ts",
+        "src/application/workflow-engine-use-cases/index.ts",
+        "src/application/workflow-engine-use-cases/types.ts",
+        "src/application/workflow-engine-use-cases/WorkflowCancelRunUseCase.ts",
+        "src/application/workflow-engine-use-cases/WorkflowRecoverRunUseCase.ts",
+        "src/application/workflow-engine-use-cases/WorkflowRunStatusUseCase.ts",
+        "src/application/workflow-engine-use-cases/WorkflowSignalRunUseCase.ts",
+        "src/application/workflow-engine-use-cases/WorkflowStartRunUseCase.ts"
+      ]
+    },
+    {
+      "id": "startRun",
+      "title": "Start run",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": null,
+      "fileCount": 1,
+      "files": [
+        "src/application/workflow-engine-use-cases/WorkflowStartRunUseCase.ts"
+      ]
+    },
+    {
+      "id": "recoverRun",
+      "title": "Recover run",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": null,
+      "fileCount": 1,
+      "files": [
+        "src/application/workflow-engine-use-cases/WorkflowRecoverRunUseCase.ts"
+      ]
+    },
+    {
+      "id": "cancelRun",
+      "title": "Cancel run",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": null,
+      "fileCount": 1,
+      "files": [
+        "src/application/workflow-engine-use-cases/WorkflowCancelRunUseCase.ts"
+      ]
+    },
+    {
+      "id": "status",
+      "title": "Canonical status",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": null,
+      "fileCount": 1,
+      "files": [
+        "src/application/workflow-engine-use-cases/WorkflowRunStatusUseCase.ts"
+      ]
+    },
+    {
+      "id": "signal",
+      "title": "Signal run",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": null,
+      "fileCount": 1,
+      "files": [
+        "src/application/workflow-engine-use-cases/WorkflowSignalRunUseCase.ts"
+      ]
+    },
+    {
+      "id": "startPipeline",
+      "title": "StartRun application pipeline",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Sequences admission, intent creation, dispatch, telemetry and failure policy.",
+      "fileCount": 14,
+      "files": [
+        "src/application/IStartRunApplicationService.ts",
+        "src/application/StartRunAdmissionGuard.ts",
+        "src/application/StartRunApplicationService.ts",
+        "src/services/startRun/RunExecutionContextAdmissionPolicy.ts",
+        "src/services/startRun/runExecutionContextRequirements.ts",
+        "src/services/startRun/StartRunAdmissionService.ts",
+        "src/services/startRun/StartRunDomainConstants.ts",
+        "src/services/startRun/StartRunEventFactory.ts",
+        "src/services/startRun/StartRunExecutionService.ts",
+        "src/services/startRun/StartRunFailurePolicy.ts",
+        "src/services/startRun/StartRunIntentService.ts",
+        "src/services/startRun/StartRunTelemetryPolicy.ts",
+        "src/services/startRun/StartRunTypes.ts",
+        "src/services/startRun/StartRunValidationPolicy.ts"
+      ]
+    },
+    {
+      "id": "coordinator",
+      "title": "StartRun coordinator",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": null,
+      "fileCount": 1,
+      "files": [
+        "src/application/StartRunApplicationService.ts"
+      ]
+    },
+    {
+      "id": "admission",
+      "title": "Admission + integrity",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": null,
+      "fileCount": 5,
+      "files": [
+        "src/application/StartRunAdmissionGuard.ts",
+        "src/ports/IPlanIntegrityValidator.ts",
+        "src/services/startRun/RunExecutionContextAdmissionPolicy.ts",
+        "src/services/startRun/StartRunAdmissionService.ts",
+        "src/services/startRun/StartRunValidationPolicy.ts"
+      ]
+    },
+    {
+      "id": "intent",
+      "title": "Pre-dispatch intent",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": null,
+      "fileCount": 2,
+      "files": [
+        "src/ports/IStartRunIntentStore.ts",
+        "src/services/startRun/StartRunIntentService.ts"
+      ]
+    },
+    {
+      "id": "execution",
+      "title": "Execution dispatch",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": null,
+      "fileCount": 2,
+      "files": [
+        "src/services/startRun/StartRunEventFactory.ts",
+        "src/services/startRun/StartRunExecutionService.ts"
+      ]
+    },
+    {
+      "id": "failure",
+      "title": "Failure policy",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": null,
+      "fileCount": 1,
+      "files": [
+        "src/services/startRun/StartRunFailurePolicy.ts"
+      ]
+    },
+    {
+      "id": "providerPort",
+      "title": "IProviderAdapter",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": null,
+      "fileCount": 1,
+      "files": [
+        "src/adapters/IProviderAdapter.ts"
+      ]
+    },
+    {
+      "id": "statePort",
+      "title": "IRunStateStore",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": null,
+      "fileCount": 1,
+      "files": [
+        "src/ports/IRunStateStore.ts"
+      ]
+    },
+    {
+      "id": "planIntegrityPort",
+      "title": "IPlanIntegrityValidator",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": null,
+      "fileCount": 1,
+      "files": [
+        "src/ports/IPlanIntegrityValidator.ts"
+      ]
+    }
+  ],
+  "inventorySha256": "0037425b4228720b5a1b61fdca9b340b38eaa9526c9a21a26d1cf0916969f2f6"
+}

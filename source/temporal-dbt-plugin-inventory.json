@@ -1,0 +1,316 @@
+{
+  "schemaVersion": 3,
+  "generatedFrom": "git-tree",
+  "repository": "dunay2/dvt",
+  "baselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "configuredBaselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "scope": "packages/@dvt/temporal-dbt-plugin",
+  "logicalModelId": "temporalDbtPluginModel",
+  "sourceModelId": "temporalDbtPluginSource",
+  "configuredModelId": "temporalDbtPluginModel",
+  "counts": {
+    "trackedFiles": 17,
+    "sourceFiles": 11,
+    "testFiles": 2,
+    "docsFiles": 0,
+    "packageRootFiles": 4,
+    "filesWithOwnedConcern": 11,
+    "filesWithDecision": 10
+  },
+  "files": [
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "1a4903d492baf33c2800cf1273e853b02484ec4b",
+      "sizeBytes": 1209,
+      "path": "packages/@dvt/temporal-dbt-plugin/package.json",
+      "relativePath": "package.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/package.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5c0f99fa10d038403132fa53bf35f89664a5810d",
+      "sizeBytes": 906,
+      "path": "packages/@dvt/temporal-dbt-plugin/src/dbtCliArguments.ts",
+      "relativePath": "src/dbtCliArguments.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/src/dbtCliArguments.ts",
+      "ownedConcern": "Translate DBT plugin step metadata into DBT CLI arguments",
+      "decision": "Resolve DBT command arguments from the DBT plugin manifest",
+      "consequence": "Step-kind command ownership stays in the DBT plugin boundary",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0014: Run-Driven Adapter Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e11372d55e24545d7d397d5509b40f8d783c630b",
+      "sizeBytes": 2764,
+      "path": "packages/@dvt/temporal-dbt-plugin/src/dbtCliFailures.ts",
+      "relativePath": "src/dbtCliFailures.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/src/dbtCliFailures.ts",
+      "ownedConcern": "Classify DBT CLI and bundle failures into stable step results",
+      "decision": "Keep DBT process failure mapping separate from runner orchestration",
+      "consequence": "The DBT runner can remain a thin coordinator while preserving stable failure codes",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0014: Run-Driven Adapter Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "271ae7d015b4fbf1867c15a4009809b8aaa85a83",
+      "sizeBytes": 8468,
+      "path": "packages/@dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts",
+      "relativePath": "src/DbtCliPluginRunner.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts",
+      "ownedConcern": "Orchestrate DBT CLI plugin execution through focused DBT helpers",
+      "decision": "Keep DBT CLI invocation behind a plugin runner instead of core activity dispatch",
+      "consequence": "Worker composition can enable DBT without making DBT a Temporal core default",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0040: Retry Ownership And Attempt Authority"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "aef5685fa17d8f61f2b0573d2579b6d62cfedd50",
+      "sizeBytes": 1335,
+      "path": "packages/@dvt/temporal-dbt-plugin/src/dbtCliProcess.ts",
+      "relativePath": "src/dbtCliProcess.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/src/dbtCliProcess.ts",
+      "ownedConcern": "Execute DBT CLI subprocess commands and availability probes",
+      "decision": "Keep process execution behind a DBT CLI command runner seam",
+      "consequence": "Tests and future runner implementations can replace process execution cleanly",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0014: Run-Driven Adapter Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "af7067b4ca7891e72bf64e19fe0e76730cb77fdc",
+      "sizeBytes": 4541,
+      "path": "packages/@dvt/temporal-dbt-plugin/src/dbtCliProjectMaterializer.ts",
+      "relativePath": "src/dbtCliProjectMaterializer.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/src/dbtCliProjectMaterializer.ts",
+      "ownedConcern": "Materialize DBT project bundles into worker-local temporary directories",
+      "decision": "Isolate bundle reading, archive extraction, project discovery, and cleanup",
+      "consequence": "DBT CLI orchestration stays independent from filesystem materialization details",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0014: Run-Driven Adapter Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "dd912d6f9b9aec3fb40286214e0fd2031f51fadf",
+      "sizeBytes": 1503,
+      "path": "packages/@dvt/temporal-dbt-plugin/src/dbtCliTypes.ts",
+      "relativePath": "src/dbtCliTypes.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/src/dbtCliTypes.ts",
+      "ownedConcern": "Share DBT CLI runner helper contracts inside the DBT plugin boundary",
+      "decision": "Keep DBT CLI helper contracts plugin-local instead of leaking them into core dispatch",
+      "consequence": "The DBT runner can be decomposed without creating new Temporal core dependencies",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0014: Run-Driven Adapter Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6a9dc30757c1e779c3f4015126769b7b6a6cd1bc",
+      "sizeBytes": 1274,
+      "path": "packages/@dvt/temporal-dbt-plugin/src/dbtPluginManifest.ts",
+      "relativePath": "src/dbtPluginManifest.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/src/dbtPluginManifest.ts",
+      "ownedConcern": "Declare the Temporal DBT plugin manifest and its step-kind to CLI-command map",
+      "decision": "Keep DBT plan-step support in one plugin-owned manifest instead of scattered allowlists",
+      "consequence": "DBT can evolve like SQL or future plugins without changing Temporal core dispatch",
+      "baseline": [
+        "ADR-0003: Execution Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9fdae63f1fffd1fd347cd9a95fbb6092f535b840",
+      "sizeBytes": 1216,
+      "path": "packages/@dvt/temporal-dbt-plugin/src/dbtPluginTypes.ts",
+      "relativePath": "src/dbtPluginTypes.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/src/dbtPluginTypes.ts",
+      "ownedConcern": "DBT plugin activity contracts owned by the worker plugin profile",
+      "decision": "Keep DBT execution contracts outside the Temporal core activity dispatcher",
+      "consequence": "Core Temporal activity wiring remains plugin-agnostic while DBT can be composed explicitly",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0046: Execution Plan Definition And Run Execution Policy Separation"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2f3ddb9f350d4154e14de2343226991ff24f9103",
+      "sizeBytes": 2373,
+      "path": "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts",
+      "relativePath": "src/dbtRuntimeProfile.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts",
+      "ownedConcern": "Resolve and materialize worker-local DBT runtime profiles."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "853f588641e802e305e69bc8dfbda444b4d4121c",
+      "sizeBytes": 4511,
+      "path": "packages/@dvt/temporal-dbt-plugin/src/DbtStepActivity.ts",
+      "relativePath": "src/DbtStepActivity.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/src/DbtStepActivity.ts",
+      "ownedConcern": "DBT step activity profile composed explicitly by Temporal worker runtime",
+      "decision": "Keep DBT step-kind ownership in the worker plugin profile instead of core Temporal dispatch",
+      "consequence": "DBT execution can be enabled, replaced, or omitted without changing workflow orchestration",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0046: Execution Plan Definition And Run Execution Policy Separation"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "da5a3a143de374491b0efbc691af30436994a692",
+      "sizeBytes": 1112,
+      "path": "packages/@dvt/temporal-dbt-plugin/src/index.ts",
+      "relativePath": "src/index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/src/index.ts",
+      "ownedConcern": "Publish the concrete DBT Temporal step plugin package API",
+      "decision": "Keep DBT runner and manifest ownership outside the generic Temporal adapter package",
+      "consequence": "Worker and API composition consume DBT semantics from the DBT plugin package",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0014: Run-Driven Adapter Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "311fa10be0545d43fc4a535e87d710bae4ff3592",
+      "sizeBytes": 16860,
+      "path": "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts",
+      "relativePath": "test/DbtCliPluginRunner.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c6ade7346f2b6e30c40458ace305af4928f752a0",
+      "sizeBytes": 5080,
+      "path": "packages/@dvt/temporal-dbt-plugin/test/dbtCliProjectMaterializer.test.ts",
+      "relativePath": "test/dbtCliProjectMaterializer.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/test/dbtCliProjectMaterializer.test.ts",
+      "baseline": [
+        "ADR-0003: Execution Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5098268bd7896d9f5b39d658bfe5ee93748f2c6d",
+      "sizeBytes": 1057,
+      "path": "packages/@dvt/temporal-dbt-plugin/tsconfig.json",
+      "relativePath": "tsconfig.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/tsconfig.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "69cd822eafeb6720de06a7ef236e15d221b381bc",
+      "sizeBytes": 210,
+      "path": "packages/@dvt/temporal-dbt-plugin/tsconfig.test.json",
+      "relativePath": "tsconfig.test.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/tsconfig.test.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "43e56f45f3eece05a802ab75eedcff828b76b9d4",
+      "sizeBytes": 132,
+      "path": "packages/@dvt/temporal-dbt-plugin/vitest.config.ts",
+      "relativePath": "vitest.config.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/vitest.config.ts"
+    }
+  ],
+  "componentMappings": [
+    {
+      "id": "publicBoundary",
+      "title": "dbt plugin public boundary",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Publishes the concrete dbt Temporal step plugin API and explicitly keeps dbt runner/manifest ownership outside the generic Temporal adapter.",
+      "fileCount": 1,
+      "files": [
+        "src/index.ts"
+      ]
+    },
+    {
+      "id": "manifest",
+      "title": "dbt step plugin manifest",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Declares plugin identity, executable step kinds and plugin-owned types.",
+      "fileCount": 2,
+      "files": [
+        "src/dbtPluginManifest.ts",
+        "src/dbtPluginTypes.ts"
+      ]
+    },
+    {
+      "id": "activity",
+      "title": "dbt step activity",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Temporal activity boundary for dbt execution steps.",
+      "fileCount": 1,
+      "files": [
+        "src/DbtStepActivity.ts"
+      ]
+    },
+    {
+      "id": "runner",
+      "title": "dbt CLI plugin runner",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Concrete dbt CLI execution runner.",
+      "fileCount": 1,
+      "files": [
+        "src/DbtCliPluginRunner.ts"
+      ]
+    },
+    {
+      "id": "cliRuntime",
+      "title": "dbt CLI runtime support",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Process invocation, argument construction, project materialization, failures and CLI-owned types.",
+      "fileCount": 5,
+      "files": [
+        "src/dbtCliArguments.ts",
+        "src/dbtCliFailures.ts",
+        "src/dbtCliProcess.ts",
+        "src/dbtCliProjectMaterializer.ts",
+        "src/dbtCliTypes.ts"
+      ]
+    },
+    {
+      "id": "runtimeProfile",
+      "title": "dbt runtime profile materialization",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Resolves/materializes runtime profile input for dbt execution.",
+      "fileCount": 1,
+      "files": [
+        "src/dbtRuntimeProfile.ts"
+      ]
+    }
+  ],
+  "inventorySha256": "6e99c32491ec10e9c3102c5792305c2b1fe262bd16c0aa12a76e7c25920453f6"
+}

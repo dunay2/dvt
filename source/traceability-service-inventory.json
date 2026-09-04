@@ -1,0 +1,872 @@
+{
+  "schemaVersion": 3,
+  "generatedFrom": "git-tree",
+  "repository": "dunay2/dvt",
+  "baselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "configuredBaselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "scope": "packages/@dvt/traceability-service",
+  "logicalModelId": "traceabilityModel",
+  "sourceModelId": "traceabilitySource",
+  "configuredModelId": "traceabilityModel",
+  "counts": {
+    "trackedFiles": 68,
+    "sourceFiles": 39,
+    "testFiles": 18,
+    "docsFiles": 5,
+    "packageRootFiles": 6,
+    "filesWithOwnedConcern": 1,
+    "filesWithDecision": 25
+  },
+  "files": [
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "7c6d1b9b2d17f78b8640948728412518cda17f87",
+      "sizeBytes": 3277,
+      "path": "packages/@dvt/traceability-service/docs/adr/ADR-0000.md",
+      "relativePath": "docs/adr/ADR-0000.md",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/docs/adr/ADR-0000.md"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c8f4a42608e30b76a37e97bb978cd61e83deed98",
+      "sizeBytes": 694,
+      "path": "packages/@dvt/traceability-service/docs/ci/github-actions.yml",
+      "relativePath": "docs/ci/github-actions.yml",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/docs/ci/github-actions.yml"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "571189c3bd669fd53c71a801c99384455bfd5e1b",
+      "sizeBytes": 889,
+      "path": "packages/@dvt/traceability-service/docs/Examples.md",
+      "relativePath": "docs/Examples.md",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/docs/Examples.md"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3fecc7fe87efa3dafddf4831f44b0b7616ff285e",
+      "sizeBytes": 40,
+      "path": "packages/@dvt/traceability-service/docs/README.md",
+      "relativePath": "docs/README.md",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/docs/README.md"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "7449c59d9b995e72daab07872e961c2af059fbc5",
+      "sizeBytes": 605,
+      "path": "packages/@dvt/traceability-service/docs/Traceability-Service-Design.md",
+      "relativePath": "docs/Traceability-Service-Design.md",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/docs/Traceability-Service-Design.md"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b0531e9889086db5e3e643486c3f93ec9bf63399",
+      "sizeBytes": 1271,
+      "path": "packages/@dvt/traceability-service/package.json",
+      "relativePath": "package.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/package.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "600b4bb4863e9c64e21b6185f21096e1777c5a6d",
+      "sizeBytes": 28,
+      "path": "packages/@dvt/traceability-service/pnpm-workspace.yaml",
+      "relativePath": "pnpm-workspace.yaml",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/pnpm-workspace.yaml"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "bb0e14499f773f83c571e423b57eb08ba28c7335",
+      "sizeBytes": 1284,
+      "path": "packages/@dvt/traceability-service/README.md",
+      "relativePath": "README.md",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/README.md"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "51dbe40db1571fc1f84dd40c282ffc4631e3b974",
+      "sizeBytes": 4209,
+      "path": "packages/@dvt/traceability-service/src/adapters/adr-catalog-filesystem.ts",
+      "relativePath": "src/adapters/adr-catalog-filesystem.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/adapters/adr-catalog-filesystem.ts",
+      "decision": "Section 4.4 — Resolve and validate Accepted ADR catalog from docs filesystem",
+      "consequence": "Traceability validation uses canonical ADR metadata independent of filename suffix variations",
+      "baseline": [
+        "ADR-0000: Code Generation with Enforced Normative Traceability (Automated)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "023dd13320ccc4ee6e2f5f3bf455dc80b013530b",
+      "sizeBytes": 1810,
+      "path": "packages/@dvt/traceability-service/src/adapters/header-scanner-glob.ts",
+      "relativePath": "src/adapters/header-scanner-glob.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/adapters/header-scanner-glob.ts",
+      "decision": "Section 4.1 — Scan governed files and parse traceability headers",
+      "consequence": "Governance checks include both malformed headers and absent headers in governed scope",
+      "baseline": [
+        "ADR-0000: Code Generation with Enforced Normative Traceability (Automated)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "0e881e6f59e8ad76f6efb880bd56542c68262261",
+      "sizeBytes": 7409,
+      "path": "packages/@dvt/traceability-service/src/cli.ts",
+      "relativePath": "src/cli.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/cli.ts",
+      "decision": "Section 4.3 - Manifest generation remains the canonical CLI output",
+      "consequence": "ADR governance can run in CI with only repository-local inputs",
+      "baseline": [
+        "ADR-0000: Code Generation with Enforced Normative Traceability (Automated)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e6dec2b2464dc9826a3d054e8b301fe5189aeee4",
+      "sizeBytes": 1964,
+      "path": "packages/@dvt/traceability-service/src/contracts.ts",
+      "relativePath": "src/contracts.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/contracts.ts",
+      "decision": "Section 4.3 - Define explicit contracts for scanner, validator and manifest generation",
+      "consequence": "Traceability pipeline remains composable and testable through stable interfaces",
+      "baseline": [
+        "ADR-0000: Code Generation with Enforced Normative Traceability (Automated)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "eca1ae0f184157c026e9b8b3af59c5f9b9666476",
+      "sizeBytes": 3159,
+      "path": "packages/@dvt/traceability-service/src/core/header-parser.ts",
+      "relativePath": "src/core/header-parser.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/core/header-parser.ts",
+      "decision": "Section 4.1 — Parse machine-readable in-code traceability headers",
+      "consequence": "Header parsing remains deterministic and portable across governed modules",
+      "baseline": [
+        "ADR-0000: Code Generation with Enforced Normative Traceability (Automated)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "bb141d4fc0a8b72bb1c6dcf549e3890ba32af758",
+      "sizeBytes": 1959,
+      "path": "packages/@dvt/traceability-service/src/core/issue-baseline.ts",
+      "relativePath": "src/core/issue-baseline.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/core/issue-baseline.ts",
+      "decision": "Section 4.4 - Compare traceability failures against an explicit regression baseline",
+      "consequence": "Push-to-main governance blocks new traceability drift without re-failing the historical debt backlog",
+      "baseline": [
+        "ADR-0000: Code Generation with Enforced Normative Traceability (Automated)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5840cdc6aa0c79c04e7e1a9f8f281f13d85e5af7",
+      "sizeBytes": 1682,
+      "path": "packages/@dvt/traceability-service/src/core/manifest-json.ts",
+      "relativePath": "src/core/manifest-json.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/core/manifest-json.ts",
+      "decision": "Section 4.3 - Manifest generation remains machine-readable and deterministic",
+      "consequence": "ADR-0000 validation rewrites traceability.manifest.json without creating format drift",
+      "baseline": [
+        "ADR-0000: Code Generation with Enforced Normative Traceability (Automated)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "8fa7fb3e619e14f6f6783247c6fcb95b309b3d54",
+      "sizeBytes": 2210,
+      "path": "packages/@dvt/traceability-service/src/core/manifest.ts",
+      "relativePath": "src/core/manifest.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/core/manifest.ts",
+      "decision": "Section 4.3 — Generate machine-readable traceability manifests from parsed headers",
+      "consequence": "ADR-to-file mappings are emitted deterministically for CI and downstream tooling",
+      "baseline": [
+        "ADR-0000: Code Generation with Enforced Normative Traceability (Automated)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3d820deb5724a396cfedbf18cbea784d7cc4d3b7",
+      "sizeBytes": 4371,
+      "path": "packages/@dvt/traceability-service/src/core/validator.ts",
+      "relativePath": "src/core/validator.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/core/validator.ts",
+      "decision": "Section 4.1 — Enforce baseline presence and header completeness in governed artifacts",
+      "consequence": "CI can fail deterministically on traceability drift or orphaned accepted decisions",
+      "baseline": [
+        "ADR-0000: Code Generation with Enforced Normative Traceability (Automated)",
+        "ADR-xxxx header.',"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "40d66f13822c7d029dc08ae741e98e1237ec0e02",
+      "sizeBytes": 688,
+      "path": "packages/@dvt/traceability-service/src/index.ts",
+      "relativePath": "src/index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/index.ts",
+      "decision": "Section 4.3 - Export a canonical public API for traceability service components",
+      "consequence": "Downstream tooling consumes stable exports for validation and manifest generation",
+      "baseline": [
+        "ADR-0000: Code Generation with Enforced Normative Traceability (Automated)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "df47b613b909b653d16972b492f87ee37e8585fd",
+      "sizeBytes": 1173,
+      "path": "packages/@dvt/traceability-service/src/lineage/cache/InMemoryCompiledCodeCache.ts",
+      "relativePath": "src/lineage/cache/InMemoryCompiledCodeCache.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/cache/InMemoryCompiledCodeCache.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "14a690055eb3d270fd20af8a70fd91ac858a228e",
+      "sizeBytes": 2328,
+      "path": "packages/@dvt/traceability-service/src/lineage/compiledCodeRef.ts",
+      "relativePath": "src/lineage/compiledCodeRef.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/compiledCodeRef.ts",
+      "ownedConcern": "Extract canonical compiled-code references from run-event payloads for lineage ingestion."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d82dcc1d8340f2cab48077cffe5ad67dd994627f",
+      "sizeBytes": 2343,
+      "path": "packages/@dvt/traceability-service/src/lineage/contracts.ts",
+      "relativePath": "src/lineage/contracts.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/contracts.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "bdbc82073c8a7a254f03b60b0f10f8e70a9e81e8",
+      "sizeBytes": 7030,
+      "path": "packages/@dvt/traceability-service/src/lineage/errorContract.ts",
+      "relativePath": "src/lineage/errorContract.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/errorContract.ts",
+      "decision": "Define stable lineage error codes, reason codes, and message keys for compiled-code resolution",
+      "consequence": "Traceability failures are structured and persistable without changing run-event contracts",
+      "baseline": [
+        "ADR-0032: compiledCodeRef Ownership"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ff72e396ba720156d86fcbf5c459d19e98c1b870",
+      "sizeBytes": 5682,
+      "path": "packages/@dvt/traceability-service/src/lineage/errorPersistenceSupport.ts",
+      "relativePath": "src/lineage/errorPersistenceSupport.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/errorPersistenceSupport.ts",
+      "decision": "Sanitize, redact, and bound lineage error metadata before persistence",
+      "consequence": "Dead-letter and retry diagnostics stay safe to store while preserving compiled-code resolution evidence",
+      "baseline": [
+        "ADR-0032: compiledCodeRef Ownership",
+        "ADR-0033: Outbox Worker Sharding And Fencing Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c5edd94c4248e4647c2773bf04bfc2575b9859e0",
+      "sizeBytes": 4304,
+      "path": "packages/@dvt/traceability-service/src/lineage/errors.ts",
+      "relativePath": "src/lineage/errors.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/errors.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "cc422c554ede7230438b10352d9598c9fc7383a9",
+      "sizeBytes": 2787,
+      "path": "packages/@dvt/traceability-service/src/lineage/errorSupport.ts",
+      "relativePath": "src/lineage/errorSupport.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/errorSupport.ts",
+      "decision": "Normalize arbitrary lineage runtime errors into structured fail-open diagnostics",
+      "consequence": "Worker logs and dead-letter records remain deterministic without leaking unsafe error content",
+      "baseline": [
+        "ADR-0032: compiledCodeRef Ownership",
+        "ADR-0033: Outbox Worker Sharding And Fencing Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ecfa52b379df6123cf7da9c125fb7fc32768a662",
+      "sizeBytes": 450,
+      "path": "packages/@dvt/traceability-service/src/lineage/facets/SqlJobFacetBuilder.ts",
+      "relativePath": "src/lineage/facets/SqlJobFacetBuilder.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/facets/SqlJobFacetBuilder.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b34dec7d9211891dfe9db42253c9a7acc93846c0",
+      "sizeBytes": 3324,
+      "path": "packages/@dvt/traceability-service/src/lineage/HttpOpenLineageSink.ts",
+      "relativePath": "src/lineage/HttpOpenLineageSink.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/HttpOpenLineageSink.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3d76e5dbcd3617272f0697c1c84449141ea274cb",
+      "sizeBytes": 795,
+      "path": "packages/@dvt/traceability-service/src/lineage/index.ts",
+      "relativePath": "src/lineage/index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/index.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2deb199e8d3c7bc081457b53405980bc43df5dd2",
+      "sizeBytes": 1809,
+      "path": "packages/@dvt/traceability-service/src/lineage/LineageOutboxObserver.ts",
+      "relativePath": "src/lineage/LineageOutboxObserver.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/LineageOutboxObserver.ts",
+      "decision": "Observe delivered StepStarted outbox records and enqueue lineage work fail-open",
+      "consequence": "Domain delivery remains authoritative while traceability processing can lag or fail independently",
+      "baseline": [
+        "ADR-0004: Event Sourcing Strategy",
+        "ADR-0032: compiledCodeRef Ownership",
+        "ADR-0033: Outbox Worker Sharding And Fencing Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "01552e9c5d3357655dc4502b3783e1cd95354ef4",
+      "sizeBytes": 4004,
+      "path": "packages/@dvt/traceability-service/src/lineage/LineageWorkerRuntime.ts",
+      "relativePath": "src/lineage/LineageWorkerRuntime.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/LineageWorkerRuntime.ts",
+      "decision": "Run lineage outbox polling, delivery, dead-letter, and replay loops outside domain outbox authority",
+      "consequence": "OpenLineage publication can be retried and monitored without blocking DVT run lifecycle events",
+      "baseline": [
+        "ADR-0032: compiledCodeRef Ownership",
+        "ADR-0033: Outbox Worker Sharding And Fencing Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5bc83996d2444ad68d3e228f0c14c1f430895367",
+      "sizeBytes": 741,
+      "path": "packages/@dvt/traceability-service/src/lineage/logMessages.ts",
+      "relativePath": "src/lineage/logMessages.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/logMessages.ts",
+      "decision": "Keep lineage runtime log message keys explicit and separate from published lineage warning contracts",
+      "consequence": "Operational logs can describe fail-open behavior without mutating OpenLineage warning payloads",
+      "baseline": [
+        "ADR-0032: compiledCodeRef Ownership",
+        "ADR-0033: Outbox Worker Sharding And Fencing Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "39dd579e600150baba84cc257e0576168aa08a84",
+      "sizeBytes": 1664,
+      "path": "packages/@dvt/traceability-service/src/lineage/mapper/mapCompiledCodeResolutionWarning.ts",
+      "relativePath": "src/lineage/mapper/mapCompiledCodeResolutionWarning.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/mapper/mapCompiledCodeResolutionWarning.ts",
+      "decision": "Map compiled-code resolution failures into stable lineage warnings",
+      "consequence": "OpenLineage output can degrade gracefully while preserving storage URI and cause diagnostics",
+      "baseline": [
+        "ADR-0032: compiledCodeRef Ownership"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3d2ad7df3c3a79be5402bae226b2764c75ea095b",
+      "sizeBytes": 1864,
+      "path": "packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts",
+      "relativePath": "src/lineage/mapper/StepStartedLineageMapper.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b911422f1db803e71ffe832b3c20e251f92d2c70",
+      "sizeBytes": 788,
+      "path": "packages/@dvt/traceability-service/src/lineage/openlineageSchema.ts",
+      "relativePath": "src/lineage/openlineageSchema.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/openlineageSchema.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "bb05304bdd8c52b13d28adeb56bb821169ed4188",
+      "sizeBytes": 947,
+      "path": "packages/@dvt/traceability-service/src/lineage/readers/CompositeCompiledCodeReader.ts",
+      "relativePath": "src/lineage/readers/CompositeCompiledCodeReader.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/readers/CompositeCompiledCodeReader.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "57c590f9f413f2c587051575ceb12abfb29d9ce3",
+      "sizeBytes": 2119,
+      "path": "packages/@dvt/traceability-service/src/lineage/readers/FileUriCompiledCodeReader.ts",
+      "relativePath": "src/lineage/readers/FileUriCompiledCodeReader.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/readers/FileUriCompiledCodeReader.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6d74cd4a2c75381e96c0f3e620d2f7e35df7db5f",
+      "sizeBytes": 885,
+      "path": "packages/@dvt/traceability-service/src/lineage/readers/InMemoryCompiledCodeReader.ts",
+      "relativePath": "src/lineage/readers/InMemoryCompiledCodeReader.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/readers/InMemoryCompiledCodeReader.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "193204c26a386a225d5f9ec5f7b1cab449513d6f",
+      "sizeBytes": 5177,
+      "path": "packages/@dvt/traceability-service/src/lineage/resolver/CachedRetryCompiledCodeResolver.ts",
+      "relativePath": "src/lineage/resolver/CachedRetryCompiledCodeResolver.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/resolver/CachedRetryCompiledCodeResolver.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d82ada166399a2ae26ceaf8e3b699a8e64ac748a",
+      "sizeBytes": 4795,
+      "path": "packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerDeadLetterSupport.ts",
+      "relativePath": "src/lineage/runtime/lineageWorkerDeadLetterSupport.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/runtime/lineageWorkerDeadLetterSupport.ts",
+      "decision": "Manage lineage dead-letter counting, alerting, and replay as worker-owned recovery behavior",
+      "consequence": "Failed traceability delivery can be recovered without rewriting immutable run events",
+      "baseline": [
+        "ADR-0032: compiledCodeRef Ownership",
+        "ADR-0033: Outbox Worker Sharding And Fencing Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "7bd80380f75024360dca62e601c3a95952e63d85",
+      "sizeBytes": 4006,
+      "path": "packages/@dvt/traceability-service/src/lineage/runtime/LineageWorkerLoopController.ts",
+      "relativePath": "src/lineage/runtime/LineageWorkerLoopController.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/runtime/LineageWorkerLoopController.ts",
+      "decision": "Own lineage worker lifecycle loop, abort cleanup, and backoff without owning tick semantics",
+      "consequence": "The public lineage runtime remains a compatibility facade while loop mechanics are independently testable",
+      "baseline": [
+        "ADR-0032: compiledCodeRef Ownership",
+        "ADR-0033: Outbox Worker Sharding And Fencing Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "72f6054eaf41c5828728e6a23bece658a2620ea2",
+      "sizeBytes": 2794,
+      "path": "packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerRecordProcessor.ts",
+      "relativePath": "src/lineage/runtime/lineageWorkerRecordProcessor.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/runtime/lineageWorkerRecordProcessor.ts",
+      "decision": "Process lineage outbox records through mapper, sink, delivered, failed, and dead-letter states",
+      "consequence": "OpenLineage publication failures remain isolated from DVT event delivery and remain retryable",
+      "baseline": [
+        "ADR-0032: compiledCodeRef Ownership",
+        "ADR-0033: Outbox Worker Sharding And Fencing Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "509387f0437b328d5b25667e197e267c86bd291c",
+      "sizeBytes": 3415,
+      "path": "packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerRuntimeConfig.ts",
+      "relativePath": "src/lineage/runtime/lineageWorkerRuntimeConfig.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/runtime/lineageWorkerRuntimeConfig.ts",
+      "decision": "Normalize lineage worker runtime options before polling, replay, or dead-letter processing starts",
+      "consequence": "Worker behavior is bounded and explicit across local and CI runtime configurations",
+      "baseline": [
+        "ADR-0032: compiledCodeRef Ownership",
+        "ADR-0033: Outbox Worker Sharding And Fencing Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "618bc346a42327994c2013b882bc85e2bdbaa0f8",
+      "sizeBytes": 3014,
+      "path": "packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerTick.ts",
+      "relativePath": "src/lineage/runtime/lineageWorkerTick.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/runtime/lineageWorkerTick.ts",
+      "decision": "Coordinate one lineage worker tick without owning lifecycle mechanics",
+      "consequence": "Tick processing, dead-letter recovery, lag reporting, and summary logging can evolve without bloating the public runtime facade",
+      "baseline": [
+        "ADR-0032: compiledCodeRef Ownership",
+        "ADR-0033: Outbox Worker Sharding And Fencing Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f43d1ecdcdd62ef2efae5c04c0a0d46caa5c8ad3",
+      "sizeBytes": 907,
+      "path": "packages/@dvt/traceability-service/src/lineage/types.ts",
+      "relativePath": "src/lineage/types.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/types.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2101a216cc4e20daaa3f8ac9e2b7d13108aa057e",
+      "sizeBytes": 2045,
+      "path": "packages/@dvt/traceability-service/src/lineage/warningContract.ts",
+      "relativePath": "src/lineage/warningContract.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/lineage/warningContract.ts",
+      "decision": "Define stable lineage warning codes, message keys, and parameters for fail-open compiled-code resolution",
+      "consequence": "Consumers can distinguish traceability degradation from run execution failures",
+      "baseline": [
+        "ADR-0032: compiledCodeRef Ownership"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "943d0865719e19bf1b416b11fb2f6f68ad19012e",
+      "sizeBytes": 2940,
+      "path": "packages/@dvt/traceability-service/src/service.ts",
+      "relativePath": "src/service.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/service.ts",
+      "decision": "Section 4.3 - Build a manifest from scanned trace headers",
+      "consequence": "A single orchestration entrypoint enforces governance deterministically in CI",
+      "baseline": [
+        "ADR-0000: Code Generation with Enforced Normative Traceability (Automated)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c98c4be4743d4a957cfb8450248ff9e714effc50",
+      "sizeBytes": 2086,
+      "path": "packages/@dvt/traceability-service/src/types.ts",
+      "relativePath": "src/types.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/src/types.ts",
+      "decision": "Section 4.3 — Canonical machine-readable types for traceability metadata and validation",
+      "consequence": "Typed governance payloads remain deterministic across scanner, validator, manifest and publisher",
+      "baseline": [
+        "ADR-0000: Code Generation with Enforced Normative Traceability (Automated)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "0175758a6b533d95a4833e8a2808e53dc8c87517",
+      "sizeBytes": 946,
+      "path": "packages/@dvt/traceability-service/test/fixtures/lineage/mapper-fail-open.json",
+      "relativePath": "test/fixtures/lineage/mapper-fail-open.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/fixtures/lineage/mapper-fail-open.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "097a505ddea88f7ba5e239189a045314684f1627",
+      "sizeBytes": 40,
+      "path": "packages/@dvt/traceability-service/test/fixtures/lineage/mapper-no-ref.json",
+      "relativePath": "test/fixtures/lineage/mapper-no-ref.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/fixtures/lineage/mapper-no-ref.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a448a1da24864b64023f88956bb50e295da3899b",
+      "sizeBytes": 775,
+      "path": "packages/@dvt/traceability-service/test/fixtures/lineage/mapper-success.json",
+      "relativePath": "test/fixtures/lineage/mapper-success.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/fixtures/lineage/mapper-success.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "709809cbf0278eaac53487a9d0f955a518555030",
+      "sizeBytes": 4488,
+      "path": "packages/@dvt/traceability-service/test/lineage/CachedRetryCompiledCodeResolver.test.ts",
+      "relativePath": "test/lineage/CachedRetryCompiledCodeResolver.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/lineage/CachedRetryCompiledCodeResolver.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2b71d4f0c9b886796ce425c801eb422d908f3bdc",
+      "sizeBytes": 2075,
+      "path": "packages/@dvt/traceability-service/test/lineage/compiledCodeRef.test.ts",
+      "relativePath": "test/lineage/compiledCodeRef.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/lineage/compiledCodeRef.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "bd9fa176b35c4da809b0a0276fb943d823f929be",
+      "sizeBytes": 2366,
+      "path": "packages/@dvt/traceability-service/test/lineage/errorSupport.test.ts",
+      "relativePath": "test/lineage/errorSupport.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/lineage/errorSupport.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2bcee26e93c4ea853f6b9378a550909b6b7090e2",
+      "sizeBytes": 6167,
+      "path": "packages/@dvt/traceability-service/test/lineage/facetSchema.validation.test.ts",
+      "relativePath": "test/lineage/facetSchema.validation.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/lineage/facetSchema.validation.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "95246609d8603fa9944c9da37356d7d9acb85236",
+      "sizeBytes": 2831,
+      "path": "packages/@dvt/traceability-service/test/lineage/LineageOutboxObserver.test.ts",
+      "relativePath": "test/lineage/LineageOutboxObserver.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/lineage/LineageOutboxObserver.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ca232453ec47f1f0e53d38c87b684ac3fd4a895c",
+      "sizeBytes": 937,
+      "path": "packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.architecture.test.ts",
+      "relativePath": "test/lineage/LineageWorkerRuntime.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/lineage/LineageWorkerRuntime.architecture.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "804446f607475ff5950f515b1182c0e38c872b4c",
+      "sizeBytes": 2400,
+      "path": "packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.configuration.test.ts",
+      "relativePath": "test/lineage/LineageWorkerRuntime.configuration.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/lineage/LineageWorkerRuntime.configuration.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "89fe3883d39ec534692214728c576e2c0e3e74ba",
+      "sizeBytes": 1635,
+      "path": "packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.lifecycle.test.ts",
+      "relativePath": "test/lineage/LineageWorkerRuntime.lifecycle.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/lineage/LineageWorkerRuntime.lifecycle.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3095df6be982be9fb601822e6d98e05691bf3323",
+      "sizeBytes": 10317,
+      "path": "packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.runOnce.test.ts",
+      "relativePath": "test/lineage/LineageWorkerRuntime.runOnce.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/lineage/LineageWorkerRuntime.runOnce.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "0e3533bd357048b660673c815c645d0c1bb086c2",
+      "sizeBytes": 2488,
+      "path": "packages/@dvt/traceability-service/test/lineage/lineageWorkerTick.test.ts",
+      "relativePath": "test/lineage/lineageWorkerTick.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/lineage/lineageWorkerTick.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "88a215fb2e99ef72af794fb3107bd80c570764c1",
+      "sizeBytes": 4489,
+      "path": "packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.golden.test.ts",
+      "relativePath": "test/lineage/StepStartedLineageMapper.golden.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/lineage/StepStartedLineageMapper.golden.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "aee2b56f04f75892d808ccb7a11f4b9b260fca68",
+      "sizeBytes": 4300,
+      "path": "packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.test.ts",
+      "relativePath": "test/lineage/StepStartedLineageMapper.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/lineage/StepStartedLineageMapper.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f32916be1123442431acbd2ec20f31dca4c1b10e",
+      "sizeBytes": 2297,
+      "path": "packages/@dvt/traceability-service/test/lineage/support/lineageRuntimeTestSupport.ts",
+      "relativePath": "test/lineage/support/lineageRuntimeTestSupport.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/lineage/support/lineageRuntimeTestSupport.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5370063b4dde6cb5a865a169e4f7db8b418594a0",
+      "sizeBytes": 1315,
+      "path": "packages/@dvt/traceability-service/test/manifestJson.test.ts",
+      "relativePath": "test/manifestJson.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/manifestJson.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f8d0906e4118f51022c53192768fa83a688fecf1",
+      "sizeBytes": 4107,
+      "path": "packages/@dvt/traceability-service/test/TraceabilityService.test.ts",
+      "relativePath": "test/TraceabilityService.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/test/TraceabilityService.test.ts",
+      "baseline": [
+        "ADR-xxxx header.',",
+        "ADR-xxxx header.',"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "43c2234fbf6016003d728601299b7f793cc39403",
+      "sizeBytes": 536,
+      "path": "packages/@dvt/traceability-service/traceability.config.example.json",
+      "relativePath": "traceability.config.example.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/traceability.config.example.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "926a6c34caba96e353caf393ae4d459698108fca",
+      "sizeBytes": 628,
+      "path": "packages/@dvt/traceability-service/tsconfig.json",
+      "relativePath": "tsconfig.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/tsconfig.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "fa69665ca779308af444b9c788f8f2925766a9f0",
+      "sizeBytes": 157,
+      "path": "packages/@dvt/traceability-service/vitest.config.ts",
+      "relativePath": "vitest.config.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service/vitest.config.ts"
+    }
+  ],
+  "componentMappings": [
+    {
+      "id": "publicBoundary",
+      "title": "Traceability public boundary",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Exports traceability contracts/types and the service boundary.",
+      "fileCount": 3,
+      "files": [
+        "src/contracts.ts",
+        "src/index.ts",
+        "src/types.ts"
+      ]
+    },
+    {
+      "id": "service",
+      "title": "Traceability service",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Coordinates traceability queries/validation over adapters and lineage evidence.",
+      "fileCount": 1,
+      "files": [
+        "src/service.ts"
+      ]
+    },
+    {
+      "id": "core",
+      "title": "Traceability core",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Core traceability/manifest/header-scanning behavior.",
+      "fileCount": 5,
+      "files": [
+        "src/core/header-parser.ts",
+        "src/core/issue-baseline.ts",
+        "src/core/manifest-json.ts",
+        "src/core/manifest.ts",
+        "src/core/validator.ts"
+      ]
+    },
+    {
+      "id": "adapters",
+      "title": "Traceability adapters",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Filesystem and other concrete adapters behind traceability boundaries.",
+      "fileCount": 2,
+      "files": [
+        "src/adapters/adr-catalog-filesystem.ts",
+        "src/adapters/header-scanner-glob.ts"
+      ]
+    },
+    {
+      "id": "lineage",
+      "title": "Lineage mapping",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Lineage/evidence projection and OpenLineage-oriented mapping behavior.",
+      "fileCount": 27,
+      "files": [
+        "src/lineage/cache/InMemoryCompiledCodeCache.ts",
+        "src/lineage/compiledCodeRef.ts",
+        "src/lineage/contracts.ts",
+        "src/lineage/errorContract.ts",
+        "src/lineage/errorPersistenceSupport.ts",
+        "src/lineage/errors.ts",
+        "src/lineage/errorSupport.ts",
+        "src/lineage/facets/SqlJobFacetBuilder.ts",
+        "src/lineage/HttpOpenLineageSink.ts",
+        "src/lineage/index.ts",
+        "src/lineage/LineageOutboxObserver.ts",
+        "src/lineage/LineageWorkerRuntime.ts",
+        "src/lineage/logMessages.ts",
+        "src/lineage/mapper/mapCompiledCodeResolutionWarning.ts",
+        "src/lineage/mapper/StepStartedLineageMapper.ts",
+        "src/lineage/openlineageSchema.ts",
+        "src/lineage/readers/CompositeCompiledCodeReader.ts",
+        "src/lineage/readers/FileUriCompiledCodeReader.ts",
+        "src/lineage/readers/InMemoryCompiledCodeReader.ts",
+        "src/lineage/resolver/CachedRetryCompiledCodeResolver.ts",
+        "src/lineage/runtime/lineageWorkerDeadLetterSupport.ts",
+        "src/lineage/runtime/LineageWorkerLoopController.ts",
+        "src/lineage/runtime/lineageWorkerRecordProcessor.ts",
+        "src/lineage/runtime/lineageWorkerRuntimeConfig.ts",
+        "src/lineage/runtime/lineageWorkerTick.ts",
+        "src/lineage/types.ts",
+        "src/lineage/warningContract.ts"
+      ]
+    },
+    {
+      "id": "cli",
+      "title": "Traceability CLI",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Command-line entrypoint over the traceability service.",
+      "fileCount": 1,
+      "files": [
+        "src/cli.ts"
+      ]
+    }
+  ],
+  "inventorySha256": "a2aaa32bfc9e408128fdca3ddadafc5f6d7aed289562d18aa5185d9fcb6bf267"
+}

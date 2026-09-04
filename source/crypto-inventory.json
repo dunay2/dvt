@@ -1,0 +1,203 @@
+{
+  "schemaVersion": 3,
+  "generatedFrom": "git-tree",
+  "repository": "dunay2/dvt",
+  "baselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "configuredBaselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "scope": "packages/@dvt/crypto",
+  "logicalModelId": "cryptoModel",
+  "sourceModelId": "cryptoSource",
+  "configuredModelId": "cryptoModel",
+  "counts": {
+    "trackedFiles": 12,
+    "sourceFiles": 7,
+    "testFiles": 3,
+    "docsFiles": 0,
+    "packageRootFiles": 2,
+    "filesWithOwnedConcern": 0,
+    "filesWithDecision": 0
+  },
+  "files": [
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "73b76de7a49a2653984ec28fa30d038eca4638fa",
+      "sizeBytes": 772,
+      "path": "packages/@dvt/crypto/package.json",
+      "relativePath": "package.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/crypto/package.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "7fa6fd83abc82f430dea08d573daef7d80789f78",
+      "sizeBytes": 2054,
+      "path": "packages/@dvt/crypto/src/encoding.ts",
+      "relativePath": "src/encoding.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/crypto/src/encoding.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d91fdfd5ed0825f8962ba8b67f3c591bea50c9de",
+      "sizeBytes": 373,
+      "path": "packages/@dvt/crypto/src/index.ts",
+      "relativePath": "src/index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/crypto/src/index.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2edf2c3f466a29ab3a39e1f1820fbf8ac2067cf2",
+      "sizeBytes": 1043,
+      "path": "packages/@dvt/crypto/src/jcs.ts",
+      "relativePath": "src/jcs.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/crypto/src/jcs.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3ed7c73335489367b416d1f79c11a9a067f3ed61",
+      "sizeBytes": 506,
+      "path": "packages/@dvt/crypto/src/md5.ts",
+      "relativePath": "src/md5.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/crypto/src/md5.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2e0c544a9de7adaa4f459cddfc6f8510e28d1aa7",
+      "sizeBytes": 501,
+      "path": "packages/@dvt/crypto/src/random.ts",
+      "relativePath": "src/random.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/crypto/src/random.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "8e37324ce3aa200e0800485a534e0009f21a9f45",
+      "sizeBytes": 964,
+      "path": "packages/@dvt/crypto/src/sha256.ts",
+      "relativePath": "src/sha256.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/crypto/src/sha256.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "7af6761f0a436a584ba3f646facaf271c84c2f4b",
+      "sizeBytes": 801,
+      "path": "packages/@dvt/crypto/src/uuid.ts",
+      "relativePath": "src/uuid.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/crypto/src/uuid.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "33598cf2533683cd271b410251a7811c1d7074fd",
+      "sizeBytes": 4315,
+      "path": "packages/@dvt/crypto/test/primitives.test.ts",
+      "relativePath": "test/primitives.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/crypto/test/primitives.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "1628d0094593689723ed9d8a5f4676376e3d87d0",
+      "sizeBytes": 1157,
+      "path": "packages/@dvt/crypto/test/runtime-parity.test.ts",
+      "relativePath": "test/runtime-parity.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/crypto/test/runtime-parity.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9786434339484b5b09d900679ec8c157374c4efe",
+      "sizeBytes": 1217,
+      "path": "packages/@dvt/crypto/test/vectors.ts",
+      "relativePath": "test/vectors.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/crypto/test/vectors.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ef56b5a4462e589c158939db4dd2a98b24804c9e",
+      "sizeBytes": 302,
+      "path": "packages/@dvt/crypto/tsconfig.json",
+      "relativePath": "tsconfig.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/crypto/tsconfig.json"
+    }
+  ],
+  "componentMappings": [
+    {
+      "id": "publicBoundary",
+      "title": "Crypto public boundary",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Single public authority for canonicalization, hashes, randomness, UUID and encoding primitives.",
+      "fileCount": 1,
+      "files": [
+        "src/index.ts"
+      ]
+    },
+    {
+      "id": "jcs",
+      "title": "JCS canonicalization",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Canonical JSON representation primitive.",
+      "fileCount": 1,
+      "files": [
+        "src/jcs.ts"
+      ]
+    },
+    {
+      "id": "sha256",
+      "title": "SHA-256",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Canonical SHA-256 primitive.",
+      "fileCount": 1,
+      "files": [
+        "src/sha256.ts"
+      ]
+    },
+    {
+      "id": "md5",
+      "title": "MD5 compatibility",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Compatibility-only MD5 primitive owned centrally rather than duplicated elsewhere.",
+      "fileCount": 1,
+      "files": [
+        "src/md5.ts"
+      ]
+    },
+    {
+      "id": "uuid",
+      "title": "UUID generation",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Central UUID generation primitive.",
+      "fileCount": 1,
+      "files": [
+        "src/uuid.ts"
+      ]
+    },
+    {
+      "id": "random",
+      "title": "Secure randomness",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Central secure-random primitive.",
+      "fileCount": 1,
+      "files": [
+        "src/random.ts"
+      ]
+    },
+    {
+      "id": "encoding",
+      "title": "Encoding primitives",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Shared UTF-8/base64 and binary encoding helpers.",
+      "fileCount": 1,
+      "files": [
+        "src/encoding.ts"
+      ]
+    }
+  ],
+  "inventorySha256": "be88edd7775a894acd0b8d6a480353d18604445ebf21afbc92c8c36c87fe5581"
+}

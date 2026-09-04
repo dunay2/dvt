@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 3,
+  "generatedFrom": "git-tree",
+  "repository": "dunay2/dvt",
+  "baselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "configuredBaselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "scope": "packages/@dvt/observability",
+  "logicalModelId": "observabilityModel",
+  "sourceModelId": "observabilitySource",
+  "configuredModelId": "observabilityModel",
+  "counts": {
+    "trackedFiles": 9,
+    "sourceFiles": 5,
+    "testFiles": 1,
+    "docsFiles": 0,
+    "packageRootFiles": 3,
+    "filesWithOwnedConcern": 0,
+    "filesWithDecision": 0
+  },
+  "files": [
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "bc309e43c6055b10195db8a7858730c7915bea00",
+      "sizeBytes": 619,
+      "path": "packages/@dvt/observability/package.json",
+      "relativePath": "package.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability/package.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f74882a6e83ac504d790cc79b8fc0ee72387f481",
+      "sizeBytes": 354,
+      "path": "packages/@dvt/observability/README.md",
+      "relativePath": "README.md",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability/README.md"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d872295317a8e85167a1c8f97bd79a44a122f47d",
+      "sizeBytes": 1835,
+      "path": "packages/@dvt/observability/src/contracts/IObservability.ts",
+      "relativePath": "src/contracts/IObservability.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability/src/contracts/IObservability.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "10d0a6f2aeeb4c0f1e961155b81d4603357ddbe0",
+      "sizeBytes": 811,
+      "path": "packages/@dvt/observability/src/contracts/ObservabilityContext.ts",
+      "relativePath": "src/contracts/ObservabilityContext.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability/src/contracts/ObservabilityContext.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a6e5f33d23c77ab5a27655190be258fe90763a8f",
+      "sizeBytes": 187,
+      "path": "packages/@dvt/observability/src/index.ts",
+      "relativePath": "src/index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability/src/index.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "df17db972c15b4b7dde84a503099345ff6862616",
+      "sizeBytes": 2567,
+      "path": "packages/@dvt/observability/src/noopObservability.ts",
+      "relativePath": "src/noopObservability.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability/src/noopObservability.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6882e31dc481f4c49b0b4a06bf15fc6bd46bd079",
+      "sizeBytes": 1080,
+      "path": "packages/@dvt/observability/src/policy/cardinalityPolicy.ts",
+      "relativePath": "src/policy/cardinalityPolicy.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability/src/policy/cardinalityPolicy.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "37c4f75a2fac2c2bd6bafa0f4207acf70aae7663",
+      "sizeBytes": 768,
+      "path": "packages/@dvt/observability/test/cardinalityPolicy.test.ts",
+      "relativePath": "test/cardinalityPolicy.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability/test/cardinalityPolicy.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ef56b5a4462e589c158939db4dd2a98b24804c9e",
+      "sizeBytes": 302,
+      "path": "packages/@dvt/observability/tsconfig.json",
+      "relativePath": "tsconfig.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability/tsconfig.json"
+    }
+  ],
+  "componentMappings": [
+    {
+      "id": "publicBoundary",
+      "title": "Observability public boundary",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Exports the provider-neutral observability contracts and policies.",
+      "fileCount": 1,
+      "files": [
+        "src/index.ts"
+      ]
+    },
+    {
+      "id": "contracts",
+      "title": "Observability contracts",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Provider-neutral metrics/logging/tracing interfaces and context types.",
+      "fileCount": 2,
+      "files": [
+        "src/contracts/IObservability.ts",
+        "src/contracts/ObservabilityContext.ts"
+      ]
+    },
+    {
+      "id": "policy",
+      "title": "Cardinality and telemetry policy",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Protects telemetry shape/cardinality independently from concrete backends.",
+      "fileCount": 1,
+      "files": [
+        "src/policy/cardinalityPolicy.ts"
+      ]
+    },
+    {
+      "id": "noop",
+      "title": "No-op observability implementation",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Provider-neutral no-op implementation for bounded fallback/testing scenarios.",
+      "fileCount": 1,
+      "files": [
+        "src/noopObservability.ts"
+      ]
+    }
+  ],
+  "inventorySha256": "6945cd6f57e4c398ff08aee0ea2c03dd2198ab57c457bff068809feaca6790a6"
+}

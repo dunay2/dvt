@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "components": [
+    {"id":"bootstrap","title":"Web application bootstrap","paths":["src/main.tsx","src/app/App.tsx","src/app/AppProviders.tsx"],"rationale":"Bootstraps React and top-level providers without owning execution authority."},
+    {"id":"shell","title":"Application shell","paths":["src/app/Root.tsx"],"prefixes":["src/app/components","src/app/shell"],"rationale":"Composes Raven shell chrome, health/capability posture, navigation and contextual workspace presentation."},
+    {"id":"routing","title":"Route and bootstrap boundary","paths":["src/app/routes.ts"],"prefixes":["src/app/bootstrap"],"rationale":"Builds static/plugin routes and governs route bootstrap/readiness behavior."},
+    {"id":"plugins","title":"Web plugin registry and contributions","prefixes":["src/app/plugins"],"rationale":"Plugin manifests, route/view contributions, canvas execution/surface strategies and contribution boundaries."},
+    {"id":"queries","title":"Web query boundary","prefixes":["src/app/queries"],"rationale":"Frontend query hooks/read boundaries used to reflect backend state and capabilities."},
+    {"id":"services","title":"Frontend application services","prefixes":["src/app/services"],"rationale":"Application-facing frontend services and service context boundaries."},
+    {"id":"stores","title":"Frontend interaction stores","prefixes":["src/app/stores"],"rationale":"Zustand/UI interaction state; presentation state only, not canonical execution truth."},
+    {"id":"views","title":"Route views","prefixes":["src/app/views"],"rationale":"Route-level product views composed by the router/plugin registry."},
+    {"id":"platformHealth","title":"Platform health capability","prefixes":["src/capabilities/platform-health"],"rationale":"Frontend capability for platform health/readiness presentation."},
+    {"id":"runtimeCapabilities","title":"Runtime capabilities capability","prefixes":["src/capabilities/runtime-capabilities"],"rationale":"Frontend capability for runtime/provider capability discovery."}
+  ]
+}

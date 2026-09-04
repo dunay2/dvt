@@ -1,0 +1,340 @@
+// GENERATED FILE. DO NOT EDIT.
+// Source: git tree dunay2/dvt@3695f07c9ba3c66ab51f88a2dabe18e18556a244:packages/@dvt/temporal-dbt-plugin
+model {
+  temporalDbtPluginSource = inventory 'Temporal dbt Plugin source inventory — generated from Git' {
+    #sourceDerived
+    description 'Machine-generated from the exact Git tree. Folder structure is STRUCTURE-DERIVED; file identity is SOURCE-DERIVED.'
+    metadata {
+      provenance 'SOURCE-DERIVED'
+      architectureOwner 'dvt.temporal-dbt-plugin'
+      logicalModelId 'temporalDbtPluginModel'
+      sourceRoot 'packages/@dvt/temporal-dbt-plugin'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      trackedFiles '17'
+      sourceFiles '11'
+      testFiles '2'
+      inventorySha256 '6e99c32491ec10e9c3102c5792305c2b1fe262bd16c0aa12a76e7c25920453f6'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin 'Pinned package tree'
+    dir_src_f27fede2 = folder 'src/ — 11 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/temporal-dbt-plugin/src'
+        recursiveFileCount '11'
+        directFileCount '11'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/src 'Pinned directory'
+      file_src_dbtCliArguments_ts_75421ce4 = file 'dbtCliArguments.ts' {
+        #sourceDerived
+        description 'Translate DBT plugin step metadata into DBT CLI arguments'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-dbt-plugin/src/dbtCliArguments.ts'
+          blobSha '5c0f99fa10d038403132fa53bf35f89664a5810d'
+          sizeBytes '906'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Translate DBT plugin step metadata into DBT CLI arguments'
+          decision 'Resolve DBT command arguments from the DBT plugin manifest'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/src/dbtCliArguments.ts 'Open pinned source'
+      }
+      file_src_dbtCliFailures_ts_77b175c6 = file 'dbtCliFailures.ts' {
+        #sourceDerived
+        description 'Classify DBT CLI and bundle failures into stable step results'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-dbt-plugin/src/dbtCliFailures.ts'
+          blobSha 'e11372d55e24545d7d397d5509b40f8d783c630b'
+          sizeBytes '2764'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Classify DBT CLI and bundle failures into stable step results'
+          decision 'Keep DBT process failure mapping separate from runner orchestration'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/src/dbtCliFailures.ts 'Open pinned source'
+      }
+      file_src_DbtCliPluginRunner_ts_ebfb4c70 = file 'DbtCliPluginRunner.ts' {
+        #sourceDerived
+        description 'Orchestrate DBT CLI plugin execution through focused DBT helpers'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts'
+          blobSha '271ae7d015b4fbf1867c15a4009809b8aaa85a83'
+          sizeBytes '8468'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Orchestrate DBT CLI plugin execution through focused DBT helpers'
+          decision 'Keep DBT CLI invocation behind a plugin runner instead of core activity dispatch'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts 'Open pinned source'
+      }
+      file_src_dbtCliProcess_ts_d55b4d17 = file 'dbtCliProcess.ts' {
+        #sourceDerived
+        description 'Execute DBT CLI subprocess commands and availability probes'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-dbt-plugin/src/dbtCliProcess.ts'
+          blobSha 'aef5685fa17d8f61f2b0573d2579b6d62cfedd50'
+          sizeBytes '1335'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Execute DBT CLI subprocess commands and availability probes'
+          decision 'Keep process execution behind a DBT CLI command runner seam'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/src/dbtCliProcess.ts 'Open pinned source'
+      }
+      file_src_dbtCliProjectMaterializer_ts_fbe37cfe = file 'dbtCliProjectMaterializer.ts' {
+        #sourceDerived
+        description 'Materialize DBT project bundles into worker-local temporary directories'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-dbt-plugin/src/dbtCliProjectMaterializer.ts'
+          blobSha 'af7067b4ca7891e72bf64e19fe0e76730cb77fdc'
+          sizeBytes '4541'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Materialize DBT project bundles into worker-local temporary directories'
+          decision 'Isolate bundle reading, archive extraction, project discovery, and cleanup'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/src/dbtCliProjectMaterializer.ts 'Open pinned source'
+      }
+      file_src_dbtCliTypes_ts_16391643 = file 'dbtCliTypes.ts' {
+        #sourceDerived
+        description 'Share DBT CLI runner helper contracts inside the DBT plugin boundary'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-dbt-plugin/src/dbtCliTypes.ts'
+          blobSha 'dd912d6f9b9aec3fb40286214e0fd2031f51fadf'
+          sizeBytes '1503'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Share DBT CLI runner helper contracts inside the DBT plugin boundary'
+          decision 'Keep DBT CLI helper contracts plugin-local instead of leaking them into core dispatch'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/src/dbtCliTypes.ts 'Open pinned source'
+      }
+      file_src_dbtPluginManifest_ts_81c436ae = file 'dbtPluginManifest.ts' {
+        #sourceDerived
+        description 'Declare the Temporal DBT plugin manifest and its step-kind to CLI-command map'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-dbt-plugin/src/dbtPluginManifest.ts'
+          blobSha '6a9dc30757c1e779c3f4015126769b7b6a6cd1bc'
+          sizeBytes '1274'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Declare the Temporal DBT plugin manifest and its step-kind to CLI-command map'
+          decision 'Keep DBT plan-step support in one plugin-owned manifest instead of scattered allowlists'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/src/dbtPluginManifest.ts 'Open pinned source'
+      }
+      file_src_dbtPluginTypes_ts_06ea7543 = file 'dbtPluginTypes.ts' {
+        #sourceDerived
+        description 'DBT plugin activity contracts owned by the worker plugin profile'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-dbt-plugin/src/dbtPluginTypes.ts'
+          blobSha '9fdae63f1fffd1fd347cd9a95fbb6092f535b840'
+          sizeBytes '1216'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'DBT plugin activity contracts owned by the worker plugin profile'
+          decision 'Keep DBT execution contracts outside the Temporal core activity dispatcher'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/src/dbtPluginTypes.ts 'Open pinned source'
+      }
+      file_src_dbtRuntimeProfile_ts_7c8a0823 = file 'dbtRuntimeProfile.ts' {
+        #sourceDerived
+        description 'Resolve and materialize worker-local DBT runtime profiles.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts'
+          blobSha '2f3ddb9f350d4154e14de2343226991ff24f9103'
+          sizeBytes '2373'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Resolve and materialize worker-local DBT runtime profiles.'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts 'Open pinned source'
+      }
+      file_src_DbtStepActivity_ts_c3657921 = file 'DbtStepActivity.ts' {
+        #sourceDerived
+        description 'DBT step activity profile composed explicitly by Temporal worker runtime'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-dbt-plugin/src/DbtStepActivity.ts'
+          blobSha '853f588641e802e305e69bc8dfbda444b4d4121c'
+          sizeBytes '4511'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'DBT step activity profile composed explicitly by Temporal worker runtime'
+          decision 'Keep DBT step-kind ownership in the worker plugin profile instead of core Temporal dispatch'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/src/DbtStepActivity.ts 'Open pinned source'
+      }
+      file_src_index_ts_c5fb8502 = file 'index.ts' {
+        #sourceDerived
+        description 'Publish the concrete DBT Temporal step plugin package API'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-dbt-plugin/src/index.ts'
+          blobSha 'da5a3a143de374491b0efbc691af30436994a692'
+          sizeBytes '1112'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Publish the concrete DBT Temporal step plugin package API'
+          decision 'Keep DBT runner and manifest ownership outside the generic Temporal adapter package'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/src/index.ts 'Open pinned source'
+      }
+    }
+    dir_test_a94a8fe5 = folder 'test/ — 2 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/temporal-dbt-plugin/test'
+        recursiveFileCount '2'
+        directFileCount '2'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/test 'Pinned directory'
+      file_test_DbtCliPluginRunner_test_ts_6a802b4d = file 'DbtCliPluginRunner.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts'
+          blobSha '311fa10be0545d43fc4a535e87d710bae4ff3592'
+          sizeBytes '16860'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts 'Open pinned source'
+      }
+      file_test_dbtCliProjectMaterializer_test_ts_46e5f581 = file 'dbtCliProjectMaterializer.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-dbt-plugin/test/dbtCliProjectMaterializer.test.ts'
+          blobSha 'c6ade7346f2b6e30c40458ace305af4928f752a0'
+          sizeBytes '5080'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/test/dbtCliProjectMaterializer.test.ts 'Open pinned source'
+      }
+    }
+    file_package_json_7030d0b2 = file 'package.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/temporal-dbt-plugin/package.json'
+        blobSha '1a4903d492baf33c2800cf1273e853b02484ec4b'
+        sizeBytes '1209'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/package.json 'Open pinned source'
+    }
+    file_tsconfig_json_61ebb9fd = file 'tsconfig.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/temporal-dbt-plugin/tsconfig.json'
+        blobSha '5098268bd7896d9f5b39d658bfe5ee93748f2c6d'
+        sizeBytes '1057'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/tsconfig.json 'Open pinned source'
+    }
+    file_tsconfig_test_json_d1f96fd1 = file 'tsconfig.test.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/temporal-dbt-plugin/tsconfig.test.json'
+        blobSha '69cd822eafeb6720de06a7ef236e15d221b381bc'
+        sizeBytes '210'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/tsconfig.test.json 'Open pinned source'
+    }
+    file_vitest_config_ts_e7b129ed = file 'vitest.config.ts' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/temporal-dbt-plugin/vitest.config.ts'
+        blobSha '43e56f45f3eece05a802ab75eedcff828b76b9d4'
+        sizeBytes '132'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin/vitest.config.ts 'Open pinned source'
+    }
+  }
+}
+
+views {
+  view temporalDbtPluginSourceInventory of temporalDbtPluginSource {
+    title 'Temporal dbt Plugin — Complete source inventory'
+    description 'Generated from Git at 3695f07c. 17 tracked files.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view temporalDbtPluginSource_dir_src_f27fede2 of temporalDbtPluginSource.dir_src_f27fede2 {
+    title 'Source — src/ (11 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view temporalDbtPluginSource_dir_test_a94a8fe5 of temporalDbtPluginSource.dir_test_a94a8fe5 {
+    title 'Source — test/ (2 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view temporal-dbt-pluginFiles_publicBoundary {
+    title 'Files — dbt plugin public boundary'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include temporalDbtPluginSource.dir_src_f27fede2.file_src_index_ts_c5fb8502
+    autoLayout TopBottom
+  }
+
+  view temporal-dbt-pluginFiles_manifest {
+    title 'Files — dbt step plugin manifest'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 2 evidence file(s).'
+    include temporalDbtPluginSource.dir_src_f27fede2.file_src_dbtPluginManifest_ts_81c436ae
+    include temporalDbtPluginSource.dir_src_f27fede2.file_src_dbtPluginTypes_ts_06ea7543
+    autoLayout TopBottom
+  }
+
+  view temporal-dbt-pluginFiles_activity {
+    title 'Files — dbt step activity'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include temporalDbtPluginSource.dir_src_f27fede2.file_src_DbtStepActivity_ts_c3657921
+    autoLayout TopBottom
+  }
+
+  view temporal-dbt-pluginFiles_runner {
+    title 'Files — dbt CLI plugin runner'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include temporalDbtPluginSource.dir_src_f27fede2.file_src_DbtCliPluginRunner_ts_ebfb4c70
+    autoLayout TopBottom
+  }
+
+  view temporal-dbt-pluginFiles_cliRuntime {
+    title 'Files — dbt CLI runtime support'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 5 evidence file(s).'
+    include temporalDbtPluginSource.dir_src_f27fede2.file_src_dbtCliArguments_ts_75421ce4
+    include temporalDbtPluginSource.dir_src_f27fede2.file_src_dbtCliFailures_ts_77b175c6
+    include temporalDbtPluginSource.dir_src_f27fede2.file_src_dbtCliProcess_ts_d55b4d17
+    include temporalDbtPluginSource.dir_src_f27fede2.file_src_dbtCliProjectMaterializer_ts_fbe37cfe
+    include temporalDbtPluginSource.dir_src_f27fede2.file_src_dbtCliTypes_ts_16391643
+    autoLayout TopBottom
+  }
+
+  view temporal-dbt-pluginFiles_runtimeProfile {
+    title 'Files — dbt runtime profile materialization'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include temporalDbtPluginSource.dir_src_f27fede2.file_src_dbtRuntimeProfile_ts_7c8a0823
+    autoLayout TopBottom
+  }
+
+}

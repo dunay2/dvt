@@ -1,0 +1,180 @@
+{
+  "schemaVersion": 3,
+  "generatedFrom": "git-tree",
+  "repository": "dunay2/dvt",
+  "baselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "configuredBaselineSha": "42504563629f0b998d8a3382ea839eead99a36d1",
+  "scope": "packages/@dvt/run-domain",
+  "logicalModelId": "runDomainModel",
+  "sourceModelId": "runDomainSource",
+  "configuredModelId": "runDomainSource",
+  "counts": {
+    "trackedFiles": 9,
+    "sourceFiles": 5,
+    "testFiles": 1,
+    "docsFiles": 0,
+    "packageRootFiles": 3,
+    "filesWithOwnedConcern": 1,
+    "filesWithDecision": 4
+  },
+  "files": [
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9ca00b0dba9a99f5cfe27f7685b4e7e8171728b8",
+      "sizeBytes": 936,
+      "path": "packages/@dvt/run-domain/package.json",
+      "relativePath": "package.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/run-domain/package.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4474bb9cea7085bc4a9f36edf13bd406525a41c0",
+      "sizeBytes": 8542,
+      "path": "packages/@dvt/run-domain/src/applyRunEvent.ts",
+      "relativePath": "src/applyRunEvent.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/run-domain/src/applyRunEvent.ts",
+      "decision": "Canonical run projection delegates envelope normalization to a mapper and mutates snapshots through focused handlers.",
+      "consequence": "Transition rules, payload normalization, and snapshot mutation no longer share one procedural blob.",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0004: Event Sourcing Strategy (Extended)",
+        "ADR-0007: Run Cancellation Semantics"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f141524914044d4435c96077ffb6e4585e56dc23",
+      "sizeBytes": 1701,
+      "path": "packages/@dvt/run-domain/src/errors.ts",
+      "relativePath": "src/errors.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/run-domain/src/errors.ts",
+      "decision": "Domain-level error for invalid state transitions in run projection.",
+      "consequence": "Projection consumers share one stable error code and details shape.",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0004: Event Sourcing Strategy (Extended)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3f21002f8fcaa837bd65365e3d409d2133869c66",
+      "sizeBytes": 689,
+      "path": "packages/@dvt/run-domain/src/index.ts",
+      "relativePath": "src/index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/run-domain/src/index.ts",
+      "ownedConcern": "Runtime run-domain invariant API for event folding, transition"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d79697fad4efed6646671a227ef7f0fa91ed2ad0",
+      "sizeBytes": 5473,
+      "path": "packages/@dvt/run-domain/src/mapEventEnvelopeToProjectableEvent.ts",
+      "relativePath": "src/mapEventEnvelopeToProjectableEvent.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/run-domain/src/mapEventEnvelopeToProjectableEvent.ts",
+      "decision": "Raw event envelopes are normalized into projector-specific domain events before snapshot mutation.",
+      "consequence": "Payload parsing stays outside the projector and contracts remain the source of validation truth.",
+      "baseline": [
+        "ADR-0004: Event Sourcing Strategy (Extended)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d4103a5ce8c2ac45a5a1fa939cb08e28da543758",
+      "sizeBytes": 952,
+      "path": "packages/@dvt/run-domain/src/transitionPolicy.ts",
+      "relativePath": "src/transitionPolicy.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/run-domain/src/transitionPolicy.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "fa16ca25dece8fa55e2fd15d5ded821f8a88084c",
+      "sizeBytes": 14210,
+      "path": "packages/@dvt/run-domain/test/applyRunEvent.test.ts",
+      "relativePath": "test/applyRunEvent.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/run-domain/test/applyRunEvent.test.ts",
+      "decision": "Verify shared run projection guards and fail-open compatibility.",
+      "baseline": [
+        "ADR-0003: Execution Model Sovereignty",
+        "ADR-0004: Event Sourcing Strategy (Extended)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "47f6b6868c7575616dbc51d257f6cdb80fe89cca",
+      "sizeBytes": 370,
+      "path": "packages/@dvt/run-domain/tsconfig.json",
+      "relativePath": "tsconfig.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/run-domain/tsconfig.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a71174ddf688af5e944496a955ad1c92f790dfbd",
+      "sizeBytes": 157,
+      "path": "packages/@dvt/run-domain/vitest.config.ts",
+      "relativePath": "vitest.config.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/run-domain/vitest.config.ts"
+    }
+  ],
+  "componentMappings": [
+    {
+      "id": "publicBoundary",
+      "title": "Run Domain public boundary",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "src/index.ts exports event folding, transition policy, projectable-event mapping and run-domain errors.",
+      "fileCount": 1,
+      "files": [
+        "src/index.ts"
+      ]
+    },
+    {
+      "id": "eventFolding",
+      "title": "Run event folding",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Applies canonical run events to derived workflow snapshots while enforcing lifecycle invariants.",
+      "fileCount": 1,
+      "files": [
+        "src/applyRunEvent.ts"
+      ]
+    },
+    {
+      "id": "transitionPolicy",
+      "title": "Run transition policy",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Defines legal terminal and lifecycle transition rules independent from provider behavior.",
+      "fileCount": 1,
+      "files": [
+        "src/transitionPolicy.ts"
+      ]
+    },
+    {
+      "id": "projectionMapping",
+      "title": "Projectable event mapping",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Normalizes persisted event envelopes into projectable run-domain events for downstream read models.",
+      "fileCount": 1,
+      "files": [
+        "src/mapEventEnvelopeToProjectableEvent.ts"
+      ]
+    },
+    {
+      "id": "errors",
+      "title": "Run-domain invariant errors",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Typed errors for invalid lifecycle/event transitions.",
+      "fileCount": 1,
+      "files": [
+        "src/errors.ts"
+      ]
+    }
+  ],
+  "inventorySha256": "7abfdf854ae443a02314ec5b3f820143246a53c007c70feed376fdf344e6b12f"
+}

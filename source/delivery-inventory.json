@@ -1,0 +1,370 @@
+{
+  "schemaVersion": 3,
+  "generatedFrom": "git-tree",
+  "repository": "dunay2/dvt",
+  "baselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "configuredBaselineSha": "42504563629f0b998d8a3382ea839eead99a36d1",
+  "scope": "packages/@dvt/delivery",
+  "logicalModelId": "deliveryModel",
+  "sourceModelId": "deliverySource",
+  "configuredModelId": "deliverySource",
+  "counts": {
+    "trackedFiles": 29,
+    "sourceFiles": 15,
+    "testFiles": 11,
+    "docsFiles": 0,
+    "packageRootFiles": 3,
+    "filesWithOwnedConcern": 6,
+    "filesWithDecision": 0
+  },
+  "files": [
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "7af2c214af9da2597f9fbbbe1ac239723a8c0099",
+      "sizeBytes": 1695,
+      "path": "packages/@dvt/delivery/package.json",
+      "relativePath": "package.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/delivery/package.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "73f763f38dc40d1c3a5ac730229cbb1af1348f29",
+      "sizeBytes": 7286,
+      "path": "packages/@dvt/delivery/src/application/OutboxWorker.ts",
+      "relativePath": "src/application/OutboxWorker.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/delivery/src/application/OutboxWorker.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "41832cea2761ac40ac2b311d95ace0bff0f3a727",
+      "sizeBytes": 5126,
+      "path": "packages/@dvt/delivery/src/application/OutboxWorkerRuntime.ts",
+      "relativePath": "src/application/OutboxWorkerRuntime.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/delivery/src/application/OutboxWorkerRuntime.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "35ad3a7d71bf55065e8902f8d9d69edb3d0d251f",
+      "sizeBytes": 3231,
+      "path": "packages/@dvt/delivery/src/application/outboxWorkerRuntimeErrorSupport.ts",
+      "relativePath": "src/application/outboxWorkerRuntimeErrorSupport.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/delivery/src/application/outboxWorkerRuntimeErrorSupport.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b986345e3f1c02192f3b1e5c2d62690d63bba885",
+      "sizeBytes": 2143,
+      "path": "packages/@dvt/delivery/src/application/OutboxWorkerRuntimeHookRunner.ts",
+      "relativePath": "src/application/OutboxWorkerRuntimeHookRunner.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/delivery/src/application/OutboxWorkerRuntimeHookRunner.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f13d5ed4e8a2f260059d2ea8bcf82619e45f3188",
+      "sizeBytes": 3186,
+      "path": "packages/@dvt/delivery/src/application/OutboxWorkerRuntimeLoopController.ts",
+      "relativePath": "src/application/OutboxWorkerRuntimeLoopController.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/delivery/src/application/OutboxWorkerRuntimeLoopController.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a42bb4a940157e5233dabc9a83f55502140669e0",
+      "sizeBytes": 12707,
+      "path": "packages/@dvt/delivery/src/application/ProjectorWorkerRuntime.ts",
+      "relativePath": "src/application/ProjectorWorkerRuntime.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/delivery/src/application/ProjectorWorkerRuntime.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3e8de9b487c6f20f609c1873313b7a153f20a43d",
+      "sizeBytes": 2165,
+      "path": "packages/@dvt/delivery/src/backpressure/StartRunAdmissionGuard.ts",
+      "relativePath": "src/backpressure/StartRunAdmissionGuard.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/delivery/src/backpressure/StartRunAdmissionGuard.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e91040a8c4e756c87341e8ac1db5826f4da4b4ad",
+      "sizeBytes": 1612,
+      "path": "packages/@dvt/delivery/src/contracts.ts",
+      "relativePath": "src/contracts.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/delivery/src/contracts.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c8d5942cd992052f21458471c057f4ca0743a19f",
+      "sizeBytes": 430,
+      "path": "packages/@dvt/delivery/src/index.ts",
+      "relativePath": "src/index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/delivery/src/index.ts",
+      "ownedConcern": "Runtime delivery API for outbox movement, projection refresh,"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4efc8ab16063459f3da034471d20c3f2212a8cd4",
+      "sizeBytes": 2079,
+      "path": "packages/@dvt/delivery/src/outboxShardAssignment.ts",
+      "relativePath": "src/outboxShardAssignment.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/delivery/src/outboxShardAssignment.ts",
+      "ownedConcern": "assign persisted outbox shards from tenant-scoped delivery identity."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ebb0b9de13a3c9c7723e23ff6538467f9dc6fab5",
+      "sizeBytes": 200,
+      "path": "packages/@dvt/delivery/src/testing.ts",
+      "relativePath": "src/testing.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/delivery/src/testing.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d7694e8f0b14e7db428fa3937266ae6f03ed2080",
+      "sizeBytes": 310,
+      "path": "packages/@dvt/delivery/src/testing/InMemoryEventBus.ts",
+      "relativePath": "src/testing/InMemoryEventBus.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/delivery/src/testing/InMemoryEventBus.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "58508245734d4f0048cfcce88a118e4889b49078",
+      "sizeBytes": 422,
+      "path": "packages/@dvt/delivery/src/testing/InMemoryOutboxStorage.ts",
+      "relativePath": "src/testing/InMemoryOutboxStorage.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/delivery/src/testing/InMemoryOutboxStorage.ts",
+      "ownedConcern": "delivery testing facade for in-memory outbox storage."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d5d02b4041a62349c03cbe40fa49f08c3ea7573e",
+      "sizeBytes": 9810,
+      "path": "packages/@dvt/delivery/src/testing/InMemoryOutboxStorageCore.ts",
+      "relativePath": "src/testing/InMemoryOutboxStorageCore.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/delivery/src/testing/InMemoryOutboxStorageCore.ts",
+      "ownedConcern": "Delivery-owned in-memory outbox state machine."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "32bfff708ecfcb72eea8423735d4367c775f2bc2",
+      "sizeBytes": 143,
+      "path": "packages/@dvt/delivery/src/testing/outboxSharding.ts",
+      "relativePath": "src/testing/outboxSharding.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/delivery/src/testing/outboxSharding.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "33ec5d5c42d0e440b794824918c2731dd6faf471",
+      "sizeBytes": 2402,
+      "path": "packages/@dvt/delivery/test/gaps/StartRunAdmissionGuard.test.ts",
+      "relativePath": "test/gaps/StartRunAdmissionGuard.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/delivery/test/gaps/StartRunAdmissionGuard.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "42bec33cea4d63024c5e52096f974b7ea5c35ade",
+      "sizeBytes": 2088,
+      "path": "packages/@dvt/delivery/test/OutboxInMemoryStorageOwnership.architecture.test.ts",
+      "relativePath": "test/OutboxInMemoryStorageOwnership.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/delivery/test/OutboxInMemoryStorageOwnership.architecture.test.ts",
+      "ownedConcern": "delivery testing facade');"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "73be531997af8f77b653ddaf2d76e8aa4a2d77f9",
+      "sizeBytes": 2770,
+      "path": "packages/@dvt/delivery/test/OutboxShardAssignment.architecture.test.ts",
+      "relativePath": "test/OutboxShardAssignment.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/delivery/test/OutboxShardAssignment.architecture.test.ts",
+      "ownedConcern": "assign persisted outbox shards');"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "18c9fa3a9a7440021bed65ec3ab3bba6a26c4c8b",
+      "sizeBytes": 2253,
+      "path": "packages/@dvt/delivery/test/OutboxShardAssignment.test.ts",
+      "relativePath": "test/OutboxShardAssignment.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/delivery/test/OutboxShardAssignment.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b38fb20bba00c93d3ea2df02b0cf1c2a1cc9ed76",
+      "sizeBytes": 4047,
+      "path": "packages/@dvt/delivery/test/OutboxWorker.deadLetter.test.ts",
+      "relativePath": "test/OutboxWorker.deadLetter.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/delivery/test/OutboxWorker.deadLetter.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "868b8c72fdffcfba76be18d393a6160a0593ef37",
+      "sizeBytes": 3505,
+      "path": "packages/@dvt/delivery/test/OutboxWorker.delivery.test.ts",
+      "relativePath": "test/OutboxWorker.delivery.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/delivery/test/OutboxWorker.delivery.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9dcf29882bb788e91225bbccebd8a82d20303e0c",
+      "sizeBytes": 4907,
+      "path": "packages/@dvt/delivery/test/OutboxWorker.observer.test.ts",
+      "relativePath": "test/OutboxWorker.observer.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/delivery/test/OutboxWorker.observer.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5332fb82983d42c4e404629f13c3c142ac25dede",
+      "sizeBytes": 5413,
+      "path": "packages/@dvt/delivery/test/OutboxWorker.retry.test.ts",
+      "relativePath": "test/OutboxWorker.retry.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/delivery/test/OutboxWorker.retry.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c45467fd9cc68bbf5967ee06cd90d308eb46da6e",
+      "sizeBytes": 5508,
+      "path": "packages/@dvt/delivery/test/OutboxWorker.sharding.test.ts",
+      "relativePath": "test/OutboxWorker.sharding.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/delivery/test/OutboxWorker.sharding.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "0eb02d910db33d1e11d3a011a520c417ba8d6559",
+      "sizeBytes": 17785,
+      "path": "packages/@dvt/delivery/test/ProjectorWorkerRuntime.test.ts",
+      "relativePath": "test/ProjectorWorkerRuntime.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/delivery/test/ProjectorWorkerRuntime.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "14a186ffb348a48f980b9b0e4a2897d8bc56212b",
+      "sizeBytes": 3167,
+      "path": "packages/@dvt/delivery/test/support/outboxWorkerTestSupport.ts",
+      "relativePath": "test/support/outboxWorkerTestSupport.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/delivery/test/support/outboxWorkerTestSupport.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e7da32e577aa4a8e0400805255e9a57c0670f66a",
+      "sizeBytes": 378,
+      "path": "packages/@dvt/delivery/tsconfig.json",
+      "relativePath": "tsconfig.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/delivery/tsconfig.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a71174ddf688af5e944496a955ad1c92f790dfbd",
+      "sizeBytes": 157,
+      "path": "packages/@dvt/delivery/vitest.config.ts",
+      "relativePath": "vitest.config.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/delivery/vitest.config.ts"
+    }
+  ],
+  "componentMappings": [
+    {
+      "id": "publicBoundary",
+      "title": "Delivery public boundary",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "src/index.ts exposes runtime delivery APIs for outbox movement, projection refresh, sharding and start-run backpressure admission.",
+      "fileCount": 2,
+      "files": [
+        "src/contracts.ts",
+        "src/index.ts"
+      ]
+    },
+    {
+      "id": "outboxWorker",
+      "title": "Outbox delivery worker",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Moves outbox facts through the delivery boundary and owns worker execution behavior.",
+      "fileCount": 1,
+      "files": [
+        "src/application/OutboxWorker.ts"
+      ]
+    },
+    {
+      "id": "outboxRuntime",
+      "title": "Outbox worker runtime",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Owns runtime looping, hook execution and bounded error handling around outbox delivery.",
+      "fileCount": 4,
+      "files": [
+        "src/application/OutboxWorkerRuntime.ts",
+        "src/application/outboxWorkerRuntimeErrorSupport.ts",
+        "src/application/OutboxWorkerRuntimeHookRunner.ts",
+        "src/application/OutboxWorkerRuntimeLoopController.ts"
+      ]
+    },
+    {
+      "id": "projectorRuntime",
+      "title": "Projector worker runtime",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Refreshes read-model projections from delivered facts using the delivery runtime boundary.",
+      "fileCount": 1,
+      "files": [
+        "src/application/ProjectorWorkerRuntime.ts"
+      ]
+    },
+    {
+      "id": "sharding",
+      "title": "Outbox shard assignment",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Deterministically assigns outbox work to shards for scale-out ownership.",
+      "fileCount": 1,
+      "files": [
+        "src/outboxShardAssignment.ts"
+      ]
+    },
+    {
+      "id": "backpressure",
+      "title": "Start-run backpressure admission",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Applies delivery-pressure admission rules before allowing new run starts.",
+      "fileCount": 1,
+      "files": [
+        "src/backpressure/StartRunAdmissionGuard.ts"
+      ]
+    },
+    {
+      "id": "testingAdapters",
+      "title": "In-memory delivery test adapters",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Testing-only event bus and outbox storage implementations used to prove delivery semantics.",
+      "fileCount": 5,
+      "files": [
+        "src/testing.ts",
+        "src/testing/InMemoryEventBus.ts",
+        "src/testing/InMemoryOutboxStorage.ts",
+        "src/testing/InMemoryOutboxStorageCore.ts",
+        "src/testing/outboxSharding.ts"
+      ]
+    }
+  ],
+  "inventorySha256": "f4197f578e12fb31d10d3d772a63b683dece4caed306de49afc4cd1fd2403be9"
+}

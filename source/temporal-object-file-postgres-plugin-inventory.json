@@ -1,0 +1,202 @@
+{
+  "schemaVersion": 3,
+  "generatedFrom": "git-tree",
+  "repository": "dunay2/dvt",
+  "baselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "configuredBaselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "scope": "packages/@dvt/temporal-object-file-postgres-plugin",
+  "logicalModelId": "temporalObjectFilePostgresPluginModel",
+  "sourceModelId": "temporalObjectFilePostgresPluginSource",
+  "configuredModelId": "temporalObjectFilePostgresPluginModel",
+  "counts": {
+    "trackedFiles": 14,
+    "sourceFiles": 6,
+    "testFiles": 4,
+    "docsFiles": 0,
+    "packageRootFiles": 4,
+    "filesWithOwnedConcern": 0,
+    "filesWithDecision": 0
+  },
+  "files": [
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "99f0d082b2b9374c9c3fe7bb5019f1a5f1acb3e3",
+      "sizeBytes": 1178,
+      "path": "packages/@dvt/temporal-object-file-postgres-plugin/package.json",
+      "relativePath": "package.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/package.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f761b9b33ea3143491511d11c9006fb078309303",
+      "sizeBytes": 783,
+      "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/index.ts",
+      "relativePath": "src/index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/src/index.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a1c3b4b2ca504564101800cd79dbc156670b70b2",
+      "sizeBytes": 430,
+      "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginErrors.ts",
+      "relativePath": "src/objectFilePostgresPluginErrors.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginErrors.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f95f30f74419d24c72aeb08bf18606a5f6443cdd",
+      "sizeBytes": 7020,
+      "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts",
+      "relativePath": "src/ObjectFilePostgresPluginRunner.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9a721785dd1e5e794c4e0aad01993e2e4c7432c2",
+      "sizeBytes": 1874,
+      "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts",
+      "relativePath": "src/objectFilePostgresPluginTypes.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "53b68c8a909e446b735e138e214246599b044073",
+      "sizeBytes": 1856,
+      "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresStepActivity.ts",
+      "relativePath": "src/ObjectFilePostgresStepActivity.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresStepActivity.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "41b874ee4c7f46d4e9966ba1ddbc88bb56447f7f",
+      "sizeBytes": 8362,
+      "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts",
+      "relativePath": "src/objectFileRows.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "1bcb43541a9c178a7bd6ec76b620b558680d44f4",
+      "sizeBytes": 9166,
+      "path": "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+      "relativePath": "test/ObjectFilePostgresPluginRunner.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "afebac4f6f58bde5f092be32bc1cdcc3e5e34aa4",
+      "sizeBytes": 2761,
+      "path": "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresStepActivity.test.ts",
+      "relativePath": "test/ObjectFilePostgresStepActivity.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresStepActivity.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "87d1c8d89617a90c3de8b0d6402cda84d59de48d",
+      "sizeBytes": 1456,
+      "path": "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFilePostgresTestFixtures.ts",
+      "relativePath": "test/objectFilePostgresTestFixtures.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/test/objectFilePostgresTestFixtures.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "cefcccab605e42323d64c4b34eb0446623deda6f",
+      "sizeBytes": 3632,
+      "path": "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+      "relativePath": "test/objectFileRows.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "19704ea088a2066c17e25d250cff2e0bc68c254a",
+      "sizeBytes": 771,
+      "path": "packages/@dvt/temporal-object-file-postgres-plugin/tsconfig.json",
+      "relativePath": "tsconfig.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/tsconfig.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "928209032dbd2026a96166634a3ff8982e3f6ff4",
+      "sizeBytes": 169,
+      "path": "packages/@dvt/temporal-object-file-postgres-plugin/tsconfig.test.json",
+      "relativePath": "tsconfig.test.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/tsconfig.test.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "43e56f45f3eece05a802ab75eedcff828b76b9d4",
+      "sizeBytes": 132,
+      "path": "packages/@dvt/temporal-object-file-postgres-plugin/vitest.config.ts",
+      "relativePath": "vitest.config.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-object-file-postgres-plugin/vitest.config.ts"
+    }
+  ],
+  "componentMappings": [
+    {
+      "id": "publicBoundary",
+      "title": "Object-file Postgres plugin public boundary",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Publishes the concrete object-file to PostgreSQL Temporal step plugin API.",
+      "fileCount": 1,
+      "files": [
+        "src/index.ts"
+      ]
+    },
+    {
+      "id": "activity",
+      "title": "Object-file Postgres activity",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Temporal activity boundary for object-file materialization into PostgreSQL.",
+      "fileCount": 1,
+      "files": [
+        "src/ObjectFilePostgresStepActivity.ts"
+      ]
+    },
+    {
+      "id": "runner",
+      "title": "Object-file Postgres runner",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Concrete plugin runner coordinating file-row decoding and provider-specific loading capability.",
+      "fileCount": 1,
+      "files": [
+        "src/ObjectFilePostgresPluginRunner.ts"
+      ]
+    },
+    {
+      "id": "rows",
+      "title": "Object-file row decoding",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Parses and normalizes object-file rows before provider materialization.",
+      "fileCount": 1,
+      "files": [
+        "src/objectFileRows.ts"
+      ]
+    },
+    {
+      "id": "typesAndErrors",
+      "title": "Object-file plugin contracts",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Plugin-owned input/output types and bounded failure model.",
+      "fileCount": 2,
+      "files": [
+        "src/objectFilePostgresPluginErrors.ts",
+        "src/objectFilePostgresPluginTypes.ts"
+      ]
+    }
+  ],
+  "inventorySha256": "c02e9d7c96cd7ecac465cbf395b0f8e85c2971d5f35511966f6b100273463461"
+}

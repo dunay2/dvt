@@ -1,0 +1,1352 @@
+{
+  "schemaVersion": 3,
+  "generatedFrom": "git-tree",
+  "repository": "dunay2/dvt",
+  "baselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "configuredBaselineSha": "42504563629f0b998d8a3382ea839eead99a36d1",
+  "scope": "packages/@dvt/adapter-temporal",
+  "logicalModelId": "temporalAdapterModel",
+  "sourceModelId": "temporalAdapterSource",
+  "configuredModelId": "temporalAdapterSource",
+  "counts": {
+    "trackedFiles": 94,
+    "sourceFiles": 44,
+    "testFiles": 45,
+    "docsFiles": 0,
+    "packageRootFiles": 5,
+    "filesWithOwnedConcern": 39,
+    "filesWithDecision": 44
+  },
+  "files": [
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "95b97db4f0abfd528b66ac3006693d22f7c324fd",
+      "sizeBytes": 2672,
+      "path": "packages/@dvt/adapter-temporal/package.json",
+      "relativePath": "package.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/package.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c07fe47c1d506513bc22458c8e259cfda986e5a6",
+      "sizeBytes": 5338,
+      "path": "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts",
+      "relativePath": "src/activities/activityFactory.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/activities/activityFactory.ts",
+      "ownedConcern": "Compose Temporal core activities with optional worker-provided step registries."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "8fa184fa4a21ad3e5c3b2c7f727c4a5d6287c241",
+      "sizeBytes": 790,
+      "path": "packages/@dvt/adapter-temporal/src/activities/activityFailures.ts",
+      "relativePath": "src/activities/activityFailures.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/activities/activityFailures.ts",
+      "ownedConcern": "Define stable Temporal activity failure codes and non-retryable failure construction."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c7500d2641b3020e37b3ee8f0db4904ba175d565",
+      "sizeBytes": 2341,
+      "path": "packages/@dvt/adapter-temporal/src/activities/activityTypes.ts",
+      "relativePath": "src/activities/activityTypes.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/activities/activityTypes.ts",
+      "ownedConcern": "Define plugin-free Temporal activity contracts and dispatch types."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f9ed48cd0a88ed43e93cde2f485f0de5e06ad536",
+      "sizeBytes": 1858,
+      "path": "packages/@dvt/adapter-temporal/src/activities/gatewayStepActivity.ts",
+      "relativePath": "src/activities/gatewayStepActivity.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/activities/gatewayStepActivity.ts",
+      "ownedConcern": "Execute gateway DSL steps inside the activity boundary."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e0bbf2fc950b0fe5349907c974ccfa85dd7fed14",
+      "sizeBytes": 1117,
+      "path": "packages/@dvt/adapter-temporal/src/activities/stepActivities.ts",
+      "relativePath": "src/activities/stepActivities.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/activities/stepActivities.ts",
+      "ownedConcern": "Publish the Temporal activity public surface without owning plugin step kinds."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "43d2320fdee5ba88076f5f15a17852a37cd5f761",
+      "sizeBytes": 2208,
+      "path": "packages/@dvt/adapter-temporal/src/activities/stepActivityDispatcher.ts",
+      "relativePath": "src/activities/stepActivityDispatcher.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/activities/stepActivityDispatcher.ts",
+      "ownedConcern": "Dispatch workflow step work to core gateway or composed plugin activities."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "96f18cf4ba5c77537434aa39ec3b25dbeb6ac831",
+      "sizeBytes": 1770,
+      "path": "packages/@dvt/adapter-temporal/src/activities/stepActivityValidation.ts",
+      "relativePath": "src/activities/stepActivityValidation.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/activities/stepActivityValidation.ts",
+      "ownedConcern": "Validate runtime step shape and derive activity execution identity."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6fee363ff8e1e18bbe088451df8144689e60c513",
+      "sizeBytes": 2439,
+      "path": "packages/@dvt/adapter-temporal/src/activities/temporalPlanArtifactReader.ts",
+      "relativePath": "src/activities/temporalPlanArtifactReader.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/activities/temporalPlanArtifactReader.ts",
+      "ownedConcern": "Resolve scoped Temporal plan artifacts for engine dispatch.",
+      "decision": "Fetch engine dispatch artifacts through the artifacts-owned reader before segment projection.",
+      "consequence": "Temporal activity composition cannot bypass plan ownership or execution-policy validation.",
+      "baseline": [
+        "ADR-0043: Plan Record, Plan Store, And Artifacts Ownership",
+        "ADR-0046: Execution Plan Definition And Run Execution Policy Separation"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "53fb2adbb1d2b65929bbb9ac2a0c1c59315e6510",
+      "sizeBytes": 13497,
+      "path": "packages/@dvt/adapter-temporal/src/config.ts",
+      "relativePath": "src/config.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/config.ts",
+      "decision": "Section 1 â€” Enforce explicit Temporal runtime configuration preconditions",
+      "consequence": "Invalid Temporal runtime settings fail fast before adapter/client lifecycle starts",
+      "baseline": [
+        "ADR-0001: Temporal Integration Test Policy (Build Preconditions + Lifecycle Discipline)",
+        "ADR-0003: Execution Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2fba2d2ce1f797b2cd54f54cc2f9635498c1e2bb",
+      "sizeBytes": 677,
+      "path": "packages/@dvt/adapter-temporal/src/engine-types.ts",
+      "relativePath": "src/engine-types.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/engine-types.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "0d7a2b72bf1235e5c4c337016c4eba011f0a3d9e",
+      "sizeBytes": 3646,
+      "path": "packages/@dvt/adapter-temporal/src/index.ts",
+      "relativePath": "src/index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/index.ts",
+      "ownedConcern": "Publish the generic Temporal adapter and step-plugin public module surface",
+      "decision": "Section 3 — Expose a stable adapter boundary for client/worker/workflow mapping components",
+      "consequence": "Temporal adapter capabilities are consumed through a deterministic public module surface",
+      "baseline": [
+        "ADR-0001: Temporal Integration Test Policy (Build Preconditions + Lifecycle Discipline)",
+        "ADR-0003: Execution Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "1c147b7acfdf6ce7f7f9a59648392f935d329ad3",
+      "sizeBytes": 6179,
+      "path": "packages/@dvt/adapter-temporal/src/ObservedTemporalAdapter.ts",
+      "relativePath": "src/ObservedTemporalAdapter.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/ObservedTemporalAdapter.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d40367a43c956ed472c19ff1788aeedfc9bbef8f",
+      "sizeBytes": 1440,
+      "path": "packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginProfile.ts",
+      "relativePath": "src/plugins/TemporalStepPluginProfile.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/plugins/TemporalStepPluginProfile.ts",
+      "ownedConcern": "Compose Temporal step plugin profiles without encoding plugin-specific kinds in core dispatch",
+      "decision": "Represent executor plugins as explicit step-activity profile inputs",
+      "consequence": "The Temporal core dispatcher stays generic while worker composition proves plugin extensibility",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0014: Run-Driven Adapter Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "eb33f220c9ba65af9c32ddacd47aec8af49a43b0",
+      "sizeBytes": 625,
+      "path": "packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginRunner.ts",
+      "relativePath": "src/plugins/TemporalStepPluginRunner.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/plugins/TemporalStepPluginRunner.ts",
+      "ownedConcern": "Define the generic execution port for Temporal step plugin runners",
+      "decision": "Model executable plugin runtimes behind a generic runner port",
+      "consequence": "DBT, SQL, and future plugins can implement the same execution boundary",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0014: Run-Driven Adapter Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b3882c44342f3cf78eb41ed9f3c448c7c299be6f",
+      "sizeBytes": 6217,
+      "path": "packages/@dvt/adapter-temporal/src/RunStateCommandPortCircuitBreaker.ts",
+      "relativePath": "src/RunStateCommandPortCircuitBreaker.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/RunStateCommandPortCircuitBreaker.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4f1688f9727c7ed02c52985ecf9ce8e2f2611520",
+      "sizeBytes": 11114,
+      "path": "packages/@dvt/adapter-temporal/src/TemporalAdapter.ts",
+      "relativePath": "src/TemporalAdapter.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/TemporalAdapter.ts",
+      "decision": "Section 3 - Provider adapter delegates run lifecycle to Temporal workflow primitives",
+      "consequence": "Temporal provider operations remain deterministic and aligned with engine lifecycle semantics",
+      "baseline": [
+        "ADR-0001: Temporal Integration Test Policy (Build Preconditions + Lifecycle Discipline)",
+        "ADR-0003: Execution Model",
+        "ADR-0030: Pre-Dispatch Intent Log - lookupRunRef for PENDING intent reconciliation"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "0f818dc2ed8dab5d75d8d1e8e3a12a5486cc442c",
+      "sizeBytes": 5646,
+      "path": "packages/@dvt/adapter-temporal/src/TemporalClient.ts",
+      "relativePath": "src/TemporalClient.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/TemporalClient.ts",
+      "decision": "Section 3 — Centralize Temporal client connection lifecycle in a single manager",
+      "consequence": "Adapter interactions reuse a deterministic client handle and controlled connect/close semantics",
+      "baseline": [
+        "ADR-0001: Temporal Integration Test Policy (Build Preconditions + Lifecycle Discipline)",
+        "ADR-0003: Execution Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "adcfa9aaae855165ec2fd14f20c0b1c5864ae4ae",
+      "sizeBytes": 2001,
+      "path": "packages/@dvt/adapter-temporal/src/temporalErrorPolicy.ts",
+      "relativePath": "src/temporalErrorPolicy.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/temporalErrorPolicy.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f0268dee9d6e07a7c8eac03c038cdabe86256cff",
+      "sizeBytes": 6249,
+      "path": "packages/@dvt/adapter-temporal/src/temporalObservability.ts",
+      "relativePath": "src/temporalObservability.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/temporalObservability.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c945a0976550548a0417a16a6f05e11e84e8c00f",
+      "sizeBytes": 5909,
+      "path": "packages/@dvt/adapter-temporal/src/temporalPlanRefCapacitySlaPolicy.ts",
+      "relativePath": "src/temporalPlanRefCapacitySlaPolicy.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/temporalPlanRefCapacitySlaPolicy.ts",
+      "ownedConcern": "Evaluate Temporal PlanRef workflow budgets against governed production capacity SLAs",
+      "decision": "Evaluate continue-as-new, history, segment, payload, and retention budgets as explicit readiness evidence.",
+      "consequence": "Production Temporal deployments expose capacity drift before PlanRef continuation safety is at risk.",
+      "baseline": [
+        "ADR-0052: PlanRef Continuation Safety"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b3e3b1c26a0ad9764129edbf6e8d63046e807da3",
+      "sizeBytes": 3618,
+      "path": "packages/@dvt/adapter-temporal/src/TemporalPolicyMapper.ts",
+      "relativePath": "src/TemporalPolicyMapper.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/TemporalPolicyMapper.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ff5d09e3aa0cca80ef413dbf0ed3f743450224fd",
+      "sizeBytes": 9003,
+      "path": "packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts",
+      "relativePath": "src/TemporalWorkerHost.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/TemporalWorkerHost.ts",
+      "ownedConcern": "Temporal worker lifecycle and activity binding host",
+      "decision": "Section 2 — Worker lifecycle ownership is centralized in a single host",
+      "consequence": "Temporal worker start/shutdown behavior remains predictable across integration and runtime paths",
+      "baseline": [
+        "ADR-0001: Temporal Integration Test Policy (Build Preconditions + Lifecycle Discipline)",
+        "ADR-0003: Execution Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "525cbe2689c56ef06b3f394c4d867619f77edc62",
+      "sizeBytes": 715,
+      "path": "packages/@dvt/adapter-temporal/src/versioning.ts",
+      "relativePath": "src/versioning.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/versioning.ts",
+      "decision": "Adapters MUST declare their supported schemaVersion as a typed constant",
+      "consequence": "matrix-alignment.test.ts imports this constant to validate plan-compat.json alignment in CI",
+      "baseline": [
+        "ADR-0017: ExecutionPlan Schema Versioning"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "be160bdcf0c69acc42570bc2375ea0a3d6fd10b9",
+      "sizeBytes": 3427,
+      "path": "packages/@dvt/adapter-temporal/src/WorkflowMapper.ts",
+      "relativePath": "src/WorkflowMapper.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/WorkflowMapper.ts",
+      "decision": "Section 3 — Temporal runtime identifiers/status are mapped into canonical engine run references",
+      "consequence": "Provider-specific runtime state stays aligned with normalized run status contracts",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0001: Temporal Integration Test Policy (Build Preconditions + Lifecycle Discipline)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "39367c408ebd75a2c86f55a157c4c6fb0bb2c717",
+      "sizeBytes": 4254,
+      "path": "packages/@dvt/adapter-temporal/src/workflows/executionSegmentResolver.ts",
+      "relativePath": "src/workflows/executionSegmentResolver.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/executionSegmentResolver.ts",
+      "ownedConcern": "PlanRef execution-segment projection from canonical plans",
+      "decision": "Resolve executable workflow segments from the canonical DVT execution plan, not from Temporal provider state",
+      "consequence": "Temporal receives bounded layer metadata while DVT retains execution-plan authority",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0046: Execution Plan Definition And Run Execution Policy Separation"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e8ca9343f255771ca89056fda551f990695a0931",
+      "sizeBytes": 2827,
+      "path": "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.activities.ts",
+      "relativePath": "src/workflows/runPlanWorkflow.activities.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/runPlanWorkflow.activities.ts",
+      "ownedConcern": "Temporal activity proxy binding for workflow ports",
+      "decision": "Keep workflow side effects behind Temporal activities and await activity cleanup before terminal cancellation",
+      "consequence": "Workflow replay stays deterministic and RunCancelled cannot precede worker resource cleanup",
+      "baseline": [
+        "ADR-0001: Temporal Integration Test Policy",
+        "ADR-0003: Execution Model",
+        "ADR-0040: Retry Ownership And Attempt Authority"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ff6aa7f8aa30f311b0136a5343883f71a4179eff",
+      "sizeBytes": 3502,
+      "path": "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.cancellation.ts",
+      "relativePath": "src/workflows/runPlanWorkflow.cancellation.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/runPlanWorkflow.cancellation.ts",
+      "ownedConcern": "Runtime-owned cancellation lifecycle settlement",
+      "decision": "Finalize pause, resume, and cancellation transitions through canonical run events emitted from workflow lifecycle control",
+      "consequence": "Operator cancellation remains observable without making Temporal the semantic lifecycle authority",
+      "baseline": [
+        "ADR-0001: Temporal Integration Test Policy",
+        "ADR-0007: Run Cancellation",
+        "ADR-0047: Runtime-Owned Realized Lifecycle For Signal-Driven Transitions"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6b6e66a8fd7d7cb35bdad884a9f47417bacf4174",
+      "sizeBytes": 3582,
+      "path": "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.layerHelpers.ts",
+      "relativePath": "src/workflows/runPlanWorkflow.layerHelpers.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/runPlanWorkflow.layerHelpers.ts",
+      "ownedConcern": "Layer selection and continue-as-new decision helpers",
+      "decision": "Keep layer cursor, skipped-step emission, and continue-as-new handoff derived from DVT workflow state",
+      "consequence": "Provider continuation mechanics preserve canonical DVT layer progress and lifecycle evidence",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0046: Execution Plan Definition And Run Execution Policy Separation",
+        "ADR-0047: Runtime-Owned Realized Lifecycle For Signal-Driven Transitions"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "24bf83317562dcf8fdef79c0095f048600bb35ec",
+      "sizeBytes": 6052,
+      "path": "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.layerResults.ts",
+      "relativePath": "src/workflows/runPlanWorkflow.layerResults.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/runPlanWorkflow.layerResults.ts",
+      "ownedConcern": "Layer result application and gateway fact retention",
+      "decision": "Translate layer activity outcomes into canonical run events and gateway facts owned by DVT",
+      "consequence": "Temporal layer completion updates event-sourced lifecycle state without becoming the source of truth",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0004: Event Sourcing Strategy",
+        "ADR-0047: Runtime-Owned Realized Lifecycle For Signal-Driven Transitions"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2beee4ad6a8eb2e8608f10c0be3f928a22fdbbcb",
+      "sizeBytes": 5568,
+      "path": "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.layers.ts",
+      "relativePath": "src/workflows/runPlanWorkflow.layers.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/runPlanWorkflow.layers.ts",
+      "ownedConcern": "Deterministic workflow layer-loop orchestration",
+      "decision": "Drive Temporal layer execution from resolved DVT execution segments and canonical workflow state",
+      "consequence": "Layer iteration remains replay-safe and bounded by the DVT execution model",
+      "baseline": [
+        "ADR-0001: Temporal Integration Test Policy",
+        "ADR-0003: Execution Model",
+        "ADR-0046: Execution Plan Definition And Run Execution Policy Separation"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4be114de80949f9f5e699499775a716df9ba16ce",
+      "sizeBytes": 4093,
+      "path": "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.lifecycle.ts",
+      "relativePath": "src/workflows/runPlanWorkflow.lifecycle.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/runPlanWorkflow.lifecycle.ts",
+      "ownedConcern": "Workflow bootstrap, terminal, failure, and rollover outcomes",
+      "decision": "Resolve terminal, cancellation, and continue-as-new workflow outcomes through DVT lifecycle events",
+      "consequence": "Temporal continuation remains an implementation detail while DVT lifecycle state stays authoritative",
+      "baseline": [
+        "ADR-0001: Temporal Integration Test Policy",
+        "ADR-0003: Execution Model",
+        "ADR-0047: Runtime-Owned Realized Lifecycle For Signal-Driven Transitions"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "81f9f7b8bdb58acf90f69e7278b0922ab0240480",
+      "sizeBytes": 5380,
+      "path": "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.signals.ts",
+      "relativePath": "src/workflows/runPlanWorkflow.signals.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/runPlanWorkflow.signals.ts",
+      "ownedConcern": "Runtime control-signal registration and dedupe state",
+      "decision": "Apply pause, resume, and cancel signals idempotently against runtime-owned workflow state",
+      "consequence": "Duplicate control signals cannot create divergent lifecycle transitions",
+      "baseline": [
+        "ADR-0007: Run Cancellation",
+        "ADR-0008: Signal Idempotency",
+        "ADR-0047: Runtime-Owned Realized Lifecycle For Signal-Driven Transitions"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "058095784835d1f1f7ef7ba0f04af4b9c8ed984e",
+      "sizeBytes": 3046,
+      "path": "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.state.ts",
+      "relativePath": "src/workflows/runPlanWorkflow.state.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/runPlanWorkflow.state.ts",
+      "ownedConcern": "Workflow control input parsing and cursor hydration",
+      "decision": "Parse workflow control input into DVT-owned cursor and materialization state before Temporal execution",
+      "consequence": "Continue-as-new state is explicit, validated, and portable across workflow executions",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0046: Execution Plan Definition And Run Execution Policy Separation",
+        "ADR-0047: Runtime-Owned Realized Lifecycle For Signal-Driven Transitions"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "08dcfbad72ba7edfc8fb393b70c1c4888d7a55ce",
+      "sizeBytes": 6232,
+      "path": "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.stepExecution.ts",
+      "relativePath": "src/workflows/runPlanWorkflow.stepExecution.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/runPlanWorkflow.stepExecution.ts",
+      "ownedConcern": "Per-layer step activity execution orchestration",
+      "decision": "Emit StepStarted artifact references before executing DVT-owned step activities with explicit retry handling",
+      "consequence": "Traceability receives immutable compiled-code references while activity retries remain under DVT policy",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0032: compiledCodeRef Ownership",
+        "ADR-0040: Retry Ownership And Attempt Authority"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4c8e0562c155818b859e68782d8875f957cb7892",
+      "sizeBytes": 4400,
+      "path": "packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts",
+      "relativePath": "src/workflows/RunPlanWorkflow.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts",
+      "ownedConcern": "Temporal PlanRef workflow orchestration entrypoint",
+      "decision": "Section 5 - Workflow remains deterministic and delegates side effects to activities",
+      "consequence": "Temporal workflow execution is replay-safe and aligned with engine lifecycle contracts",
+      "baseline": [
+        "ADR-0001: Temporal Integration Test Policy (Build Preconditions + Lifecycle Discipline)",
+        "ADR-0003: Execution Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b9977faa1c8848b9b8512392e4c2dce6bfb5d2f4",
+      "sizeBytes": 4166,
+      "path": "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.types.ts",
+      "relativePath": "src/workflows/runPlanWorkflow.types.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/runPlanWorkflow.types.ts",
+      "ownedConcern": "Workflow public API contracts and runtime state model",
+      "decision": "Define workflow ports and cursor contracts at the DVT boundary before Temporal-specific execution",
+      "consequence": "Workflow helpers share typed state without leaking provider authority into engine contracts",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0046: Execution Plan Definition And Run Execution Policy Separation"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f03335f60152f48ea079f538128e6e583d9f38eb",
+      "sizeBytes": 3448,
+      "path": "packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts",
+      "relativePath": "src/workflows/workflowArtifactHelpers.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts",
+      "ownedConcern": "Execution artifact payload interpretation",
+      "decision": "Extract plugin-agnostic artifact references and retry policy before event emission",
+      "consequence": "StepStarted payloads carry traceability references without making workflow core know plugin step kinds",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0032: compiledCodeRef Ownership",
+        "ADR-0040: Retry Ownership And Attempt Authority"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "bca96b86028e9d3e4fb5a075d052119fe4a7b1e7",
+      "sizeBytes": 965,
+      "path": "packages/@dvt/adapter-temporal/src/workflows/workflowControlSignalRetentionPolicy.ts",
+      "relativePath": "src/workflows/workflowControlSignalRetentionPolicy.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/workflowControlSignalRetentionPolicy.ts",
+      "ownedConcern": "Bounded retention policy for control-signal dedupe ids across workflow continuation",
+      "decision": "Keep recent control-signal ids in continue-as-new cursor state without making cursor size unbounded",
+      "consequence": "Long-running workflows retain practical dedupe protection while payload growth remains bounded",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0008: Signal Idempotency",
+        "ADR-0047: Runtime-Owned Realized Lifecycle For Signal-Driven Transitions"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c1ef50c06a726216ec499a6a3d463515d05d8929",
+      "sizeBytes": 3723,
+      "path": "packages/@dvt/adapter-temporal/src/workflows/workflowCursorHelpers.ts",
+      "relativePath": "src/workflows/workflowCursorHelpers.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/workflowCursorHelpers.ts",
+      "ownedConcern": "Compact continue-as-new cursor construction and payload guard",
+      "decision": "Serialize continue-as-new cursor state explicitly from DVT workflow progress",
+      "consequence": "Temporal history rollover preserves deterministic layer, gateway, and control-signal state",
+      "baseline": [
+        "ADR-0001: Temporal Integration Test Policy",
+        "ADR-0003: Execution Model",
+        "ADR-0047: Runtime-Owned Realized Lifecycle For Signal-Driven Transitions"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4146433c938ed2a3b8a918a1c71c496858df54b6",
+      "sizeBytes": 786,
+      "path": "packages/@dvt/adapter-temporal/src/workflows/workflowErrorHelpers.ts",
+      "relativePath": "src/workflows/workflowErrorHelpers.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/workflowErrorHelpers.ts",
+      "ownedConcern": "Workflow-safe error-message normalization",
+      "decision": "Normalize workflow-side unknown errors before they become canonical failure event payloads",
+      "consequence": "Replay-safe error serialization stays deterministic across provider executions",
+      "baseline": [
+        "ADR-0001: Temporal Integration Test Policy",
+        "ADR-0003: Execution Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "cf99aaa95ef00753f8966624880b972bdbbd9cff",
+      "sizeBytes": 1699,
+      "path": "packages/@dvt/adapter-temporal/src/workflows/workflowFailureReasonPolicy.ts",
+      "relativePath": "src/workflows/workflowFailureReasonPolicy.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/workflowFailureReasonPolicy.ts",
+      "ownedConcern": "Governed workflow failure reason classification from runtime error evidence",
+      "decision": "Translate runtime error evidence into DVT RunFailed reasons at the workflow boundary",
+      "consequence": "Terminal workflow failures stay queryable by governed reason instead of provider text",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0004: Event Sourcing Strategy",
+        "ADR-0052: PlanRef Continuation Safety"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "8100239f7ad3508bd100e467aafca3ad6b299dd8",
+      "sizeBytes": 2789,
+      "path": "packages/@dvt/adapter-temporal/src/workflows/workflowGatewayHelpers.ts",
+      "relativePath": "src/workflows/workflowGatewayHelpers.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/workflowGatewayHelpers.ts",
+      "ownedConcern": "Gateway dependency validation and fact lookup",
+      "decision": "Validate and evaluate gateway dependencies from canonical execution-plan facts",
+      "consequence": "Temporal workflows cannot invent gateway semantics outside DVT plan interpretation",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0046: Execution Plan Definition And Run Execution Policy Separation"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "880e82263343b17fd95e6c54df79628f5b72719b",
+      "sizeBytes": 2842,
+      "path": "packages/@dvt/adapter-temporal/src/workflows/workflowInputParsingHelpers.ts",
+      "relativePath": "src/workflows/workflowInputParsingHelpers.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/workflowInputParsingHelpers.ts",
+      "ownedConcern": "Deterministic workflow input primitive parsing",
+      "decision": "Parse workflow cursor and control values with deterministic validation before execution",
+      "consequence": "Invalid provider payloads fail before mutating canonical DVT lifecycle state",
+      "baseline": [
+        "ADR-0001: Temporal Integration Test Policy",
+        "ADR-0003: Execution Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e35c89fc5de27e31a73d886f0acd1c1f7060a2f5",
+      "sizeBytes": 2335,
+      "path": "packages/@dvt/adapter-temporal/src/workflows/workflowRuntimePayloadHelpers.ts",
+      "relativePath": "src/workflows/workflowRuntimePayloadHelpers.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/src/workflows/workflowRuntimePayloadHelpers.ts",
+      "ownedConcern": "Runtime event payload shaping",
+      "decision": "Build run terminal event payloads from DVT runtime evidence instead of Temporal provider metadata",
+      "consequence": "Event-sourced terminal state remains portable and replayable across orchestration adapters",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0004: Event Sourcing Strategy",
+        "ADR-0047: Runtime-Owned Realized Lifecycle For Signal-Driven Transitions"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a254468967e2ef5495298fd88f5f51a6a78e6c17",
+      "sizeBytes": 36216,
+      "path": "packages/@dvt/adapter-temporal/test/activities.test.ts",
+      "relativePath": "test/activities.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/activities.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "7f6834c78910ec8a4cbb7823c72fb5003ce08c6b",
+      "sizeBytes": 2261,
+      "path": "packages/@dvt/adapter-temporal/test/activityDeps.typecheck.ts",
+      "relativePath": "test/activityDeps.typecheck.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/activityDeps.typecheck.ts",
+      "decision": "Type-check activity dependency fixtures against the scoped engine-dispatch plan query",
+      "consequence": "Adapter activity wiring cannot silently depend on provider-owned lifecycle state",
+      "baseline": [
+        "ADR-0001: Temporal Integration Test Policy",
+        "ADR-0003: Execution Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d8a2d3ec91400f690fa49f6c09ba14c60cc4a4f5",
+      "sizeBytes": 15342,
+      "path": "packages/@dvt/adapter-temporal/test/dbt-core-decoupling.architecture.test.ts",
+      "relativePath": "test/dbt-core-decoupling.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/dbt-core-decoupling.architecture.test.ts",
+      "ownedConcern": "Compose Temporal core activities with optional worker-provided step registries.',",
+      "baseline": [
+        "ADR-0003: Execution Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4579cc233ca407fa409c914c8dcdc7c2b6a6028c",
+      "sizeBytes": 4344,
+      "path": "packages/@dvt/adapter-temporal/test/dbt-package-extraction.architecture.test.ts",
+      "relativePath": "test/dbt-package-extraction.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/dbt-package-extraction.architecture.test.ts",
+      "ownedConcern": "verify concrete DBT plugin ownership lives in its package,",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0014: Run-Driven Adapter Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "04172aa0fc7d15295e05c2394f990696946c457b",
+      "sizeBytes": 10065,
+      "path": "packages/@dvt/adapter-temporal/test/dbtRuntimeFixtures.test.ts",
+      "relativePath": "test/dbtRuntimeFixtures.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/dbtRuntimeFixtures.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c384d6a9a24048b2d28cd854041797df92807127",
+      "sizeBytes": 5778,
+      "path": "packages/@dvt/adapter-temporal/test/helpers/contractFixtures.ts",
+      "relativePath": "test/helpers/contractFixtures.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/helpers/contractFixtures.ts",
+      "decision": "Provide contract-backed Temporal fixtures for tests that exercise DVT-owned run and plan boundaries",
+      "consequence": "Adapter tests use canonical contract shapes instead of ad hoc provider-only payloads",
+      "baseline": [
+        "ADR-0001: Temporal Integration Test Policy",
+        "ADR-0003: Execution Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5d4d6cfe87574daf78a60247a7d7393231c8d750",
+      "sizeBytes": 8667,
+      "path": "packages/@dvt/adapter-temporal/test/helpers/integration/dbtRuntimeFixtures.ts",
+      "relativePath": "test/helpers/integration/dbtRuntimeFixtures.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/helpers/integration/dbtRuntimeFixtures.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "43b60df9154c02b2be8b4bba16578052db2dce61",
+      "sizeBytes": 10201,
+      "path": "packages/@dvt/adapter-temporal/test/helpers/integration/runtimeState.ts",
+      "relativePath": "test/helpers/integration/runtimeState.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/helpers/integration/runtimeState.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e27b54314dcd9d7d788b5eb12f5d98257567c158",
+      "sizeBytes": 3531,
+      "path": "packages/@dvt/adapter-temporal/test/helpers/integration/testActivities.ts",
+      "relativePath": "test/helpers/integration/testActivities.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/helpers/integration/testActivities.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "18b99e9cdea9cf399f17ae240cfb83a3ab625d47",
+      "sizeBytes": 4488,
+      "path": "packages/@dvt/adapter-temporal/test/helpers/integration/testPlans.ts",
+      "relativePath": "test/helpers/integration/testPlans.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/helpers/integration/testPlans.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "0141fa0c79258beea3f7f6eaf59a5ec107fb9384",
+      "sizeBytes": 771,
+      "path": "packages/@dvt/adapter-temporal/test/helpers/integration/waitForCondition.ts",
+      "relativePath": "test/helpers/integration/waitForCondition.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/helpers/integration/waitForCondition.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d9c855421e966fb6837e57f431a4903510a6ae04",
+      "sizeBytes": 912,
+      "path": "packages/@dvt/adapter-temporal/test/helpers/integration/workflowArtifacts.ts",
+      "relativePath": "test/helpers/integration/workflowArtifacts.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/helpers/integration/workflowArtifacts.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "49f4ea62d5cdb7403363f128c70f54cb0304d93c",
+      "sizeBytes": 2573,
+      "path": "packages/@dvt/adapter-temporal/test/helpers/lookupRunRefHarness.ts",
+      "relativePath": "test/helpers/lookupRunRefHarness.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/helpers/lookupRunRefHarness.ts",
+      "decision": "Mock Temporal workflow handles through the adapter read/control boundary",
+      "consequence": "Tests verify lookup and control behavior without treating provider state as canonical run state",
+      "baseline": [
+        "ADR-0007: Run Cancellation",
+        "ADR-0015: getRunStatus Read-Model Separation"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b985b8a738b786ae8f1f1a4aed5149c959d540c4",
+      "sizeBytes": 1462,
+      "path": "packages/@dvt/adapter-temporal/test/helpers/mockObservability.ts",
+      "relativePath": "test/helpers/mockObservability.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/helpers/mockObservability.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6b54c13535053c3d14484e15ed0a37cb44cd2661",
+      "sizeBytes": 2220,
+      "path": "packages/@dvt/adapter-temporal/test/helpers/testExecutors.ts",
+      "relativePath": "test/helpers/testExecutors.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/helpers/testExecutors.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "40aa60a7420b189e0569303b56b980439a6d0b29",
+      "sizeBytes": 2221,
+      "path": "packages/@dvt/adapter-temporal/test/helpers/workflowComponentGuideSupport.ts",
+      "relativePath": "test/helpers/workflowComponentGuideSupport.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/helpers/workflowComponentGuideSupport.ts",
+      "ownedConcern": "Parse Temporal PlanRef component-guide markdown structures for semantic architecture tests",
+      "decision": "Keep architecture tests coupled to semantic guide structure instead of duplicated string fixtures",
+      "consequence": "Guide drift is detected from real documented API/component tables, reducing brittle test repetition",
+      "baseline": [
+        "ADR-0052: PlanRef Continuation Safety"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6cfb134e54dd952b019bd71209d604984b53b59f",
+      "sizeBytes": 5697,
+      "path": "packages/@dvt/adapter-temporal/test/integration.time-skipping.shared.ts",
+      "relativePath": "test/integration.time-skipping.shared.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/integration.time-skipping.shared.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f66a101a83cb2c0ecdcd7c0b8a03dccb89b85e06",
+      "sizeBytes": 25988,
+      "path": "packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts",
+      "relativePath": "test/integration.time-skipping.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/integration.time-skipping.test.ts",
+      "decision": "Section 2 — Build precondition mandatory",
+      "consequence": "Tests are deterministic, isolated, and follow Temporal best practices",
+      "baseline": [
+        "ADR-0001: Temporal Integration Test Policy",
+        "ADR-0010: Run Event Envelope Split",
+        "ADR-0011: RunStarted Ownership"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "dadcb37a36bd6d717bc59f74fb194be2515eaa8c",
+      "sizeBytes": 9050,
+      "path": "packages/@dvt/adapter-temporal/test/integration.transformation.time-skipping.test.ts",
+      "relativePath": "test/integration.transformation.time-skipping.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/integration.transformation.time-skipping.test.ts",
+      "decision": "Transformation-flow verification lives outside the Temporal baseline suite",
+      "consequence": "Temporal baseline stays provider-agnostic while transformation semantics keep dedicated coverage",
+      "baseline": [
+        "ADR-0001: Temporal Integration Test Policy",
+        "ADR-0010: Run Event Envelope Split",
+        "ADR-0011: RunStarted Ownership"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ab5a9c9b91e87ed4ca8d3533014774ccdba9da6d",
+      "sizeBytes": 7595,
+      "path": "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+      "relativePath": "test/ObservedTemporalAdapter.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "808f3dd130651bf48bab26dde41b302fb0cfdfa2",
+      "sizeBytes": 5069,
+      "path": "packages/@dvt/adapter-temporal/test/runPlanWorkflow.cancellation.test.ts",
+      "relativePath": "test/runPlanWorkflow.cancellation.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/runPlanWorkflow.cancellation.test.ts",
+      "decision": "Verify workflow cancellation emits canonical lifecycle events under Temporal cancellation scopes",
+      "consequence": "Native provider cancellation cannot bypass DVT terminal event ownership",
+      "baseline": [
+        "ADR-0007: Run Cancellation",
+        "ADR-0047: Runtime-Owned Realized Lifecycle For Signal-Driven Transitions"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "0f9b5117dc2f1e19b907262bdeae5e503ba54e46",
+      "sizeBytes": 7105,
+      "path": "packages/@dvt/adapter-temporal/test/runPlanWorkflow.layers.order.test.ts",
+      "relativePath": "test/runPlanWorkflow.layers.order.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/runPlanWorkflow.layers.order.test.ts",
+      "decision": "Verify workflow layer order follows resolved DVT execution segments and lifecycle guards",
+      "consequence": "Temporal execution ordering remains constrained by the canonical plan layer graph",
+      "baseline": [
+        "ADR-0001: Temporal Integration Test Policy",
+        "ADR-0003: Execution Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e306b33efe0a3c183d1184151d4f3b473ddf8a33",
+      "sizeBytes": 2162,
+      "path": "packages/@dvt/adapter-temporal/test/runPlanWorkflow.signals.test.ts",
+      "relativePath": "test/runPlanWorkflow.signals.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/runPlanWorkflow.signals.test.ts",
+      "decision": "Verify signal handlers deduplicate control signals and preserve first-writer lifecycle state",
+      "consequence": "Duplicate Temporal signals cannot create duplicate DVT lifecycle transitions",
+      "baseline": [
+        "ADR-0007: Run Cancellation",
+        "ADR-0008: Signal Idempotency",
+        "ADR-0047: Runtime-Owned Realized Lifecycle For Signal-Driven Transitions"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "30f2e6d0092cd52c145330cfad507d1ea184c4a4",
+      "sizeBytes": 4468,
+      "path": "packages/@dvt/adapter-temporal/test/RunStateCommandPortCircuitBreaker.test.ts",
+      "relativePath": "test/RunStateCommandPortCircuitBreaker.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/RunStateCommandPortCircuitBreaker.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "403d79d858bb08086e76e4755e92460374f744d9",
+      "sizeBytes": 19205,
+      "path": "packages/@dvt/adapter-temporal/test/smoke.test.ts",
+      "relativePath": "test/smoke.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/smoke.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9d11f7633f877c3502d9d2066e892099061b1c45",
+      "sizeBytes": 3700,
+      "path": "packages/@dvt/adapter-temporal/test/TemporalAdapter.control.test.ts",
+      "relativePath": "test/TemporalAdapter.control.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/TemporalAdapter.control.test.ts",
+      "decision": "Validate adapter control operations against canonical signal and cancellation semantics",
+      "consequence": "Control-plane regressions are caught before provider calls can drift from DVT lifecycle rules",
+      "baseline": [
+        "ADR-0007: Run Cancellation",
+        "ADR-0008: Signal Idempotency"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "93032e05b6f81e8d03d29804b811aaecefc388db",
+      "sizeBytes": 2270,
+      "path": "packages/@dvt/adapter-temporal/test/TemporalAdapter.getProviderStatusView.test.ts",
+      "relativePath": "test/TemporalAdapter.getProviderStatusView.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/TemporalAdapter.getProviderStatusView.test.ts",
+      "baseline": [
+        "ADR-0003: Execution Model - provider diagnostics stay provider-native"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "aa5fc4f99ab6040925142825894c552da05650a9",
+      "sizeBytes": 6151,
+      "path": "packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts",
+      "relativePath": "test/TemporalAdapter.lookupRunRef.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts",
+      "baseline": [
+        "ADR-0030: Pre-Dispatch Intent Log - Section 3.3 lookupRunRef for PENDING intent reconciliation"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "887612ff5a08776634ffdbade068db7ffcbf7052",
+      "sizeBytes": 6000,
+      "path": "packages/@dvt/adapter-temporal/test/TemporalAdapter.startRun.test.ts",
+      "relativePath": "test/TemporalAdapter.startRun.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/TemporalAdapter.startRun.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "39ed240f27375758fd097c3fce79f89e6fb740f5",
+      "sizeBytes": 4971,
+      "path": "packages/@dvt/adapter-temporal/test/temporalErrorPolicy.test.ts",
+      "relativePath": "test/temporalErrorPolicy.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/temporalErrorPolicy.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4ebef5288dae7307e72e102e2201050921de1af3",
+      "sizeBytes": 3751,
+      "path": "packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts",
+      "relativePath": "test/temporalPlanArtifactReader.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts",
+      "baseline": [
+        "ADR-0043: Plan Record, Plan Store, And Artifacts Ownership"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "1da7c3c9b7399234b70585f28290f078517bc9ed",
+      "sizeBytes": 4340,
+      "path": "packages/@dvt/adapter-temporal/test/temporalPlanRefCapacitySlaPolicy.test.ts",
+      "relativePath": "test/temporalPlanRefCapacitySlaPolicy.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/temporalPlanRefCapacitySlaPolicy.test.ts",
+      "baseline": [
+        "ADR-0052: PlanRef Continuation Safety"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b210f0f0a164ce41a342e9f528cb41d98f0722fc",
+      "sizeBytes": 1491,
+      "path": "packages/@dvt/adapter-temporal/test/TemporalPolicyMapper.test.ts",
+      "relativePath": "test/TemporalPolicyMapper.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/TemporalPolicyMapper.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5f66058a2ddb75073be88cc6629a73b5a8df8a0a",
+      "sizeBytes": 10059,
+      "path": "packages/@dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts",
+      "relativePath": "test/TemporalWorkerHost.lifecycle.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "13e4ea9619ef93d1f535f0ac11ba98f773171a1d",
+      "sizeBytes": 3239,
+      "path": "packages/@dvt/adapter-temporal/test/worker-scaling-strategy.architecture.test.ts",
+      "relativePath": "test/worker-scaling-strategy.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/worker-scaling-strategy.architecture.test.ts",
+      "ownedConcern": "Guard the Temporal worker scaling strategy against unsupported topology claims.",
+      "baseline": [
+        "ADR-0001: Temporal Integration Test Policy",
+        "ADR-0003: Execution Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "42efd55763e6467d0dd8c94383d636f749d60f86",
+      "sizeBytes": 3117,
+      "path": "packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts",
+      "relativePath": "test/workflow-compiled-code-ref.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f4437e12bc91e5eb327bf82ef630e095bf0a1aab",
+      "sizeBytes": 10795,
+      "path": "packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts",
+      "relativePath": "test/workflow-component-semantics.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts",
+      "ownedConcern": "${escapeRegExp(concern)}[\\s\\S]",
+      "baseline": [
+        "ADR-0052: PlanRef Continuation Safety"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "1cf79e31db7fab41a55446c7d2ee5decdebd4ff1",
+      "sizeBytes": 10135,
+      "path": "packages/@dvt/adapter-temporal/test/workflow-continue-as-new.test.ts",
+      "relativePath": "test/workflow-continue-as-new.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/workflow-continue-as-new.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "13b3281884269ee4b5c50fdfedfc2611fd1edd62",
+      "sizeBytes": 2399,
+      "path": "packages/@dvt/adapter-temporal/test/workflow-dag-scheduler.test.ts",
+      "relativePath": "test/workflow-dag-scheduler.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/workflow-dag-scheduler.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "92c9faeb2937db5fdbe2c913b4e284e5d7d646f6",
+      "sizeBytes": 4199,
+      "path": "packages/@dvt/adapter-temporal/test/workflow-execution-segment.test.ts",
+      "relativePath": "test/workflow-execution-segment.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/workflow-execution-segment.test.ts",
+      "decision": "Verify execution segment resolution exposes only bounded layer metadata needed by the workflow",
+      "consequence": "Adapter workflows cannot execute outside the canonical DVT plan segment contract",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0046: Execution Plan Definition And Run Execution Policy Separation"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "db94b71bef5f0d7eb00e42a91ea26b84c6d70bdf",
+      "sizeBytes": 2498,
+      "path": "packages/@dvt/adapter-temporal/test/workflow-literals.test.ts",
+      "relativePath": "test/workflow-literals.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/workflow-literals.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b7ccba5a78f341c987ed066f81bb6a9b501842e8",
+      "sizeBytes": 1555,
+      "path": "packages/@dvt/adapter-temporal/test/workflow-retry-policy.test.ts",
+      "relativePath": "test/workflow-retry-policy.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/workflow-retry-policy.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ea843817cc1cb96840240f3fb8478f4badfee02b",
+      "sizeBytes": 2753,
+      "path": "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts",
+      "relativePath": "test/workflow-step-activity-routing.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts",
+      "ownedConcern": "Temporal workflow step activity task-queue routing coverage",
+      "decision": "Verify that only executeStep activity proxies receive capability task queues",
+      "consequence": "Workflow/core activities stay on the workflow queue while step execution can route by capability",
+      "baseline": [
+        "ADR-0001: Temporal Integration Test Policy",
+        "ADR-0057: Temporal Step Activity Routing By Capability"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "60700e66fad1bae8c60cc86643c838600867c6ed",
+      "sizeBytes": 976,
+      "path": "packages/@dvt/adapter-temporal/test/workflowMapper.typecheck.ts",
+      "relativePath": "test/workflowMapper.typecheck.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/workflowMapper.typecheck.ts",
+      "decision": "Type-check workflow mapping fixtures against canonical execution plan and task queue contracts",
+      "consequence": "Adapter mapper changes cannot silently weaken DVT plan or queue typing",
+      "baseline": [
+        "ADR-0001: Temporal Integration Test Policy",
+        "ADR-0003: Execution Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "34355cf63da66b945b721cb09b0264f9451ca0f5",
+      "sizeBytes": 1890,
+      "path": "packages/@dvt/adapter-temporal/test/workflowRuntimePayloadHelpers.test.ts",
+      "relativePath": "test/workflowRuntimePayloadHelpers.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/test/workflowRuntimePayloadHelpers.test.ts",
+      "baseline": [
+        "ADR-0004: Event Sourcing Strategy",
+        "ADR-0047: Runtime-Owned Realized Lifecycle For Signal-Driven Transitions"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b87c89eff295ebadcc658e630d2a95ee53372dbf",
+      "sizeBytes": 144,
+      "path": "packages/@dvt/adapter-temporal/tsconfig.eslint.json",
+      "relativePath": "tsconfig.eslint.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/tsconfig.eslint.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "0369f92bf4563e47d2cf60eae4da4f295a1ea2a9",
+      "sizeBytes": 1645,
+      "path": "packages/@dvt/adapter-temporal/tsconfig.json",
+      "relativePath": "tsconfig.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/tsconfig.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "69cd822eafeb6720de06a7ef236e15d221b381bc",
+      "sizeBytes": 210,
+      "path": "packages/@dvt/adapter-temporal/tsconfig.test.json",
+      "relativePath": "tsconfig.test.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/tsconfig.test.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6e66baba56a2bcc47446fa6b36db18cefffe3d76",
+      "sizeBytes": 1076,
+      "path": "packages/@dvt/adapter-temporal/vitest.config.ts",
+      "relativePath": "vitest.config.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-temporal/vitest.config.ts"
+    }
+  ],
+  "componentMappings": [
+    {
+      "id": "publicBoundary",
+      "title": "Temporal adapter public boundary",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "src/index.ts is the package export surface for adapter, worker, workflow and activity runtime pieces.",
+      "fileCount": 1,
+      "files": [
+        "src/index.ts"
+      ]
+    },
+    {
+      "id": "providerAdapter",
+      "title": "Temporal provider adapter",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "TemporalAdapter implements provider-facing start/cancel/signal/status behavior; ObservedTemporalAdapter decorates it with telemetry.",
+      "fileCount": 2,
+      "files": [
+        "src/ObservedTemporalAdapter.ts",
+        "src/TemporalAdapter.ts"
+      ]
+    },
+    {
+      "id": "temporalClient",
+      "title": "Temporal client boundary",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Owns concrete Temporal client interactions used by the adapter.",
+      "fileCount": 1,
+      "files": [
+        "src/TemporalClient.ts"
+      ]
+    },
+    {
+      "id": "workerHost",
+      "title": "Temporal worker host",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Creates and hosts Temporal workers and binds runtime activities/plugins.",
+      "fileCount": 3,
+      "files": [
+        "src/config.ts",
+        "src/TemporalWorkerHost.ts",
+        "src/versioning.ts"
+      ]
+    },
+    {
+      "id": "workflowRuntime",
+      "title": "RunPlan workflow runtime",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Temporal workflow implementation for plan execution, layers, signals, lifecycle, cancellation and deterministic state.",
+      "fileCount": 20,
+      "files": [
+        "src/workflows/executionSegmentResolver.ts",
+        "src/workflows/runPlanWorkflow.activities.ts",
+        "src/workflows/runPlanWorkflow.cancellation.ts",
+        "src/workflows/runPlanWorkflow.layerHelpers.ts",
+        "src/workflows/runPlanWorkflow.layerResults.ts",
+        "src/workflows/runPlanWorkflow.layers.ts",
+        "src/workflows/runPlanWorkflow.lifecycle.ts",
+        "src/workflows/runPlanWorkflow.signals.ts",
+        "src/workflows/runPlanWorkflow.state.ts",
+        "src/workflows/runPlanWorkflow.stepExecution.ts",
+        "src/workflows/RunPlanWorkflow.ts",
+        "src/workflows/runPlanWorkflow.types.ts",
+        "src/workflows/workflowArtifactHelpers.ts",
+        "src/workflows/workflowControlSignalRetentionPolicy.ts",
+        "src/workflows/workflowCursorHelpers.ts",
+        "src/workflows/workflowErrorHelpers.ts",
+        "src/workflows/workflowFailureReasonPolicy.ts",
+        "src/workflows/workflowGatewayHelpers.ts",
+        "src/workflows/workflowInputParsingHelpers.ts",
+        "src/workflows/workflowRuntimePayloadHelpers.ts"
+      ]
+    },
+    {
+      "id": "activities",
+      "title": "Temporal activities + dispatch",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Activity factory, step dispatch, validation, gateway activity and plan-artifact reads used by Temporal workers.",
+      "fileCount": 8,
+      "files": [
+        "src/activities/activityFactory.ts",
+        "src/activities/activityFailures.ts",
+        "src/activities/activityTypes.ts",
+        "src/activities/gatewayStepActivity.ts",
+        "src/activities/stepActivities.ts",
+        "src/activities/stepActivityDispatcher.ts",
+        "src/activities/stepActivityValidation.ts",
+        "src/activities/temporalPlanArtifactReader.ts"
+      ]
+    },
+    {
+      "id": "stepPlugins",
+      "title": "Temporal step plugin boundary",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Defines plugin profile and runner boundaries used to keep step-specific execution outside the generic adapter core.",
+      "fileCount": 2,
+      "files": [
+        "src/plugins/TemporalStepPluginProfile.ts",
+        "src/plugins/TemporalStepPluginRunner.ts"
+      ]
+    },
+    {
+      "id": "policyMapping",
+      "title": "Temporal policy mapping",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Maps admitted plan policy into Temporal-specific options; modeled AS-IS without claiming runtime authority beyond source evidence.",
+      "fileCount": 2,
+      "files": [
+        "src/TemporalPolicyMapper.ts",
+        "src/WorkflowMapper.ts"
+      ]
+    },
+    {
+      "id": "stateWriteProtection",
+      "title": "Run-state command circuit breaker",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Protects run-state command writes from cascading provider/runtime failures.",
+      "fileCount": 1,
+      "files": [
+        "src/RunStateCommandPortCircuitBreaker.ts"
+      ]
+    },
+    {
+      "id": "observability",
+      "title": "Temporal observability + error policy",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Provider-specific telemetry, error translation and plan-ref capacity SLA policy.",
+      "fileCount": 3,
+      "files": [
+        "src/temporalErrorPolicy.ts",
+        "src/temporalObservability.ts",
+        "src/temporalPlanRefCapacitySlaPolicy.ts"
+      ]
+    }
+  ],
+  "inventorySha256": "14668dc0303a2c4032f29b950f15bc1c48c62ee727f8b51900ce1f7b23338152"
+}

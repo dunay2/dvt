@@ -1,0 +1,261 @@
+// GENERATED FILE. DO NOT EDIT.
+// Source: git tree dunay2/dvt@3695f07c9ba3c66ab51f88a2dabe18e18556a244:packages/@dvt/crypto
+model {
+  cryptoSource = inventory 'Crypto source inventory — generated from Git' {
+    #sourceDerived
+    description 'Machine-generated from the exact Git tree. Folder structure is STRUCTURE-DERIVED; file identity is SOURCE-DERIVED.'
+    metadata {
+      provenance 'SOURCE-DERIVED'
+      architectureOwner 'dvt.crypto'
+      logicalModelId 'cryptoModel'
+      sourceRoot 'packages/@dvt/crypto'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      trackedFiles '12'
+      sourceFiles '7'
+      testFiles '3'
+      inventorySha256 'be88edd7775a894acd0b8d6a480353d18604445ebf21afbc92c8c36c87fe5581'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/crypto 'Pinned package tree'
+    dir_src_f27fede2 = folder 'src/ — 7 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/crypto/src'
+        recursiveFileCount '7'
+        directFileCount '7'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/crypto/src 'Pinned directory'
+      file_src_encoding_ts_0126a9c2 = file 'encoding.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/crypto/src/encoding.ts'
+          blobSha '7fa6fd83abc82f430dea08d573daef7d80789f78'
+          sizeBytes '2054'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/crypto/src/encoding.ts 'Open pinned source'
+      }
+      file_src_index_ts_c5fb8502 = file 'index.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/crypto/src/index.ts'
+          blobSha 'd91fdfd5ed0825f8962ba8b67f3c591bea50c9de'
+          sizeBytes '373'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/crypto/src/index.ts 'Open pinned source'
+      }
+      file_src_jcs_ts_51e82c0e = file 'jcs.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/crypto/src/jcs.ts'
+          blobSha '2edf2c3f466a29ab3a39e1f1820fbf8ac2067cf2'
+          sizeBytes '1043'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/crypto/src/jcs.ts 'Open pinned source'
+      }
+      file_src_md5_ts_e765deaf = file 'md5.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/crypto/src/md5.ts'
+          blobSha '3ed7c73335489367b416d1f79c11a9a067f3ed61'
+          sizeBytes '506'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/crypto/src/md5.ts 'Open pinned source'
+      }
+      file_src_random_ts_802921c7 = file 'random.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/crypto/src/random.ts'
+          blobSha '2e0c544a9de7adaa4f459cddfc6f8510e28d1aa7'
+          sizeBytes '501'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/crypto/src/random.ts 'Open pinned source'
+      }
+      file_src_sha256_ts_570d2ed8 = file 'sha256.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/crypto/src/sha256.ts'
+          blobSha '8e37324ce3aa200e0800485a534e0009f21a9f45'
+          sizeBytes '964'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/crypto/src/sha256.ts 'Open pinned source'
+      }
+      file_src_uuid_ts_a4b9fa9f = file 'uuid.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/crypto/src/uuid.ts'
+          blobSha '7af6761f0a436a584ba3f646facaf271c84c2f4b'
+          sizeBytes '801'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/crypto/src/uuid.ts 'Open pinned source'
+      }
+    }
+    dir_test_a94a8fe5 = folder 'test/ — 3 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/crypto/test'
+        recursiveFileCount '3'
+        directFileCount '3'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/crypto/test 'Pinned directory'
+      file_test_primitives_test_ts_80b0829e = file 'primitives.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/crypto/test/primitives.test.ts'
+          blobSha '33598cf2533683cd271b410251a7811c1d7074fd'
+          sizeBytes '4315'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/crypto/test/primitives.test.ts 'Open pinned source'
+      }
+      file_test_runtime-parity_test_ts_15c5b42f = file 'runtime-parity.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/crypto/test/runtime-parity.test.ts'
+          blobSha '1628d0094593689723ed9d8a5f4676376e3d87d0'
+          sizeBytes '1157'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/crypto/test/runtime-parity.test.ts 'Open pinned source'
+      }
+      file_test_vectors_ts_b55fd9a8 = file 'vectors.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/crypto/test/vectors.ts'
+          blobSha '9786434339484b5b09d900679ec8c157374c4efe'
+          sizeBytes '1217'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/crypto/test/vectors.ts 'Open pinned source'
+      }
+    }
+    file_package_json_7030d0b2 = file 'package.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/crypto/package.json'
+        blobSha '73b76de7a49a2653984ec28fa30d038eca4638fa'
+        sizeBytes '772'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/crypto/package.json 'Open pinned source'
+    }
+    file_tsconfig_json_61ebb9fd = file 'tsconfig.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/crypto/tsconfig.json'
+        blobSha 'ef56b5a4462e589c158939db4dd2a98b24804c9e'
+        sizeBytes '302'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/crypto/tsconfig.json 'Open pinned source'
+    }
+  }
+}
+
+views {
+  view cryptoSourceInventory of cryptoSource {
+    title 'Crypto — Complete source inventory'
+    description 'Generated from Git at 3695f07c. 12 tracked files.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view cryptoSource_dir_src_f27fede2 of cryptoSource.dir_src_f27fede2 {
+    title 'Source — src/ (7 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view cryptoSource_dir_test_a94a8fe5 of cryptoSource.dir_test_a94a8fe5 {
+    title 'Source — test/ (3 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view cryptoFiles_publicBoundary {
+    title 'Files — Crypto public boundary'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include cryptoSource.dir_src_f27fede2.file_src_index_ts_c5fb8502
+    autoLayout TopBottom
+  }
+
+  view cryptoFiles_jcs {
+    title 'Files — JCS canonicalization'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include cryptoSource.dir_src_f27fede2.file_src_jcs_ts_51e82c0e
+    autoLayout TopBottom
+  }
+
+  view cryptoFiles_sha256 {
+    title 'Files — SHA-256'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include cryptoSource.dir_src_f27fede2.file_src_sha256_ts_570d2ed8
+    autoLayout TopBottom
+  }
+
+  view cryptoFiles_md5 {
+    title 'Files — MD5 compatibility'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include cryptoSource.dir_src_f27fede2.file_src_md5_ts_e765deaf
+    autoLayout TopBottom
+  }
+
+  view cryptoFiles_uuid {
+    title 'Files — UUID generation'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include cryptoSource.dir_src_f27fede2.file_src_uuid_ts_a4b9fa9f
+    autoLayout TopBottom
+  }
+
+  view cryptoFiles_random {
+    title 'Files — Secure randomness'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include cryptoSource.dir_src_f27fede2.file_src_random_ts_802921c7
+    autoLayout TopBottom
+  }
+
+  view cryptoFiles_encoding {
+    title 'Files — Encoding primitives'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include cryptoSource.dir_src_f27fede2.file_src_encoding_ts_0126a9c2
+    autoLayout TopBottom
+  }
+
+}

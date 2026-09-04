@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "repository": "dunay2/dvt",
+  "baselineSha": "42504563629f0b998d8a3382ea839eead99a36d1",
+  "scope": "packages/@dvt/plan-interpreter",
+  "modelId": "planInterpreterSource",
+  "displayName": "Plan Interpreter",
+  "architectureOwner": "dvt.plan-interpreter"
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "components": [
+    {"id":"publicBoundary","title":"Object-file Postgres plugin public boundary","paths":["src/index.ts"],"rationale":"Publishes the concrete object-file to PostgreSQL Temporal step plugin API."},
+    {"id":"activity","title":"Object-file Postgres activity","paths":["src/ObjectFilePostgresStepActivity.ts"],"rationale":"Temporal activity boundary for object-file materialization into PostgreSQL."},
+    {"id":"runner","title":"Object-file Postgres runner","paths":["src/ObjectFilePostgresPluginRunner.ts"],"rationale":"Concrete plugin runner coordinating file-row decoding and provider-specific loading capability."},
+    {"id":"rows","title":"Object-file row decoding","paths":["src/objectFileRows.ts"],"rationale":"Parses and normalizes object-file rows before provider materialization."},
+    {"id":"typesAndErrors","title":"Object-file plugin contracts","paths":["src/objectFilePostgresPluginTypes.ts","src/objectFilePostgresPluginErrors.ts"],"rationale":"Plugin-owned input/output types and bounded failure model."}
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "components": [
+    {
+      "id": "publicBoundary",
+      "title": "Artifacts public boundary",
+      "rationale": "src/index.ts is the package export surface for artifact ports, runtime readers and storage implementations.",
+      "paths": ["src/index.ts"]
+    },
+    {
+      "id": "contentAddressed",
+      "title": "Content-addressed artifact storage",
+      "rationale": "Owns immutable content-addressed publication and retrieval, including the S3 implementation.",
+      "prefixes": ["src/contentAddressed"]
+    },
+    {
+      "id": "planStorage",
+      "title": "Plan artifact storage ports",
+      "rationale": "Defines read/write boundaries for plans and stored plan artifacts without owning planning decisions.",
+      "paths": [
+        "src/ports/IPlanStoreReader.ts",
+        "src/ports/IPlanStoreWriter.ts",
+        "src/ports/IStoredPlanArtifactStore.ts"
+      ]
+    },
+    {
+      "id": "executionContext",
+      "title": "Run execution context artifacts",
+      "rationale": "Resolves immutable run execution context references and reads their backing artifacts at runtime.",
+      "paths": [
+        "src/ports/IRunExecutionContextReader.ts",
+        "src/ports/IRunExecutionContextReferenceStore.ts",
+        "src/runtime/ArtifactBackedRunExecutionContextReader.ts",
+        "src/runtime/S3RunExecutionContextReferenceStore.ts",
+        "src/runtime/resolveRunExecutionContextArtifactStore.ts"
+      ]
+    },
+    {
+      "id": "dbtBundle",
+      "title": "dbt project bundle artifacts",
+      "rationale": "Reads dbt project bundles from artifact storage and validates their binding to expected execution context.",
+      "paths": [
+        "src/ports/IDbtProjectBundleReader.ts",
+        "src/runtime/ArtifactBackedDbtProjectBundleReader.ts",
+        "src/runtime/assertDbtProjectBundleBinding.ts"
+      ]
+    },
+    {
+      "id": "artifactReadIntegrity",
+      "title": "Artifact reading and integrity",
+      "rationale": "Centralizes artifact byte reads, integrity checks and typed read failures used by runtime readers.",
+      "paths": [
+        "src/runtime/ArtifactReadError.ts",
+        "src/runtime/readArtifactBytes.ts",
+        "src/runtime/validateArtifactIntegrity.ts"
+      ]
+    },
+    {
+      "id": "compiledCode",
+      "title": "Compiled-code storage and enrichment",
+      "rationale": "Current AS-IS compiled-code storage port, adapters, hashing helper and ExecutionPlan enrichment surface exported by the package.",
+      "prefixes": ["src/compiledCode"],
+      "paths": ["src/ports/ICompiledCodeStorage.ts"]
+    }
+  ]
+}

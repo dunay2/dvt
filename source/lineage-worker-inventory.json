@@ -1,0 +1,223 @@
+{
+  "schemaVersion": 3,
+  "generatedFrom": "git-tree",
+  "repository": "dunay2/dvt",
+  "baselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "configuredBaselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "scope": "apps/lineage-worker",
+  "logicalModelId": "lineageWorkerModel",
+  "sourceModelId": "lineageWorkerSource",
+  "configuredModelId": "lineageWorkerModel",
+  "counts": {
+    "trackedFiles": 17,
+    "sourceFiles": 9,
+    "testFiles": 5,
+    "docsFiles": 0,
+    "packageRootFiles": 3,
+    "filesWithOwnedConcern": 0,
+    "filesWithDecision": 0
+  },
+  "files": [
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d2d34bf4c3e97170ca0186833545c2c6c9a8c4bd",
+      "sizeBytes": 1003,
+      "path": "apps/lineage-worker/package.json",
+      "relativePath": "package.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/package.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ff07d9d636352f15c9c6188dafe5051991b0c7ba",
+      "sizeBytes": 1430,
+      "path": "apps/lineage-worker/src/bootstrap.ts",
+      "relativePath": "src/bootstrap.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/src/bootstrap.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d2970ccc98b213a4a0a79b076be27c12ee7b640f",
+      "sizeBytes": 1670,
+      "path": "apps/lineage-worker/src/compiled-code-resolver/errorMapping.ts",
+      "relativePath": "src/compiled-code-resolver/errorMapping.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/src/compiled-code-resolver/errorMapping.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "fafb8a516ae42483c9c0e22c8ea5fc1e47413404",
+      "sizeBytes": 2972,
+      "path": "apps/lineage-worker/src/compiled-code-resolver/policy.ts",
+      "relativePath": "src/compiled-code-resolver/policy.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/src/compiled-code-resolver/policy.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ec4a576abe58f5198521fe78b519f5206c03cb15",
+      "sizeBytes": 3456,
+      "path": "apps/lineage-worker/src/compiled-code-resolver/S3UriCompiledCodeReader.ts",
+      "relativePath": "src/compiled-code-resolver/S3UriCompiledCodeReader.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/src/compiled-code-resolver/S3UriCompiledCodeReader.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3ee2f6ddd8e7c88d55e0a66bba04a5ee8b054734",
+      "sizeBytes": 901,
+      "path": "apps/lineage-worker/src/compiled-code-resolver/types.ts",
+      "relativePath": "src/compiled-code-resolver/types.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/src/compiled-code-resolver/types.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "db1d1ba5abe7564a85e0377ec69eea5ec6ddd223",
+      "sizeBytes": 2401,
+      "path": "apps/lineage-worker/src/compiledCodeResolver.ts",
+      "relativePath": "src/compiledCodeResolver.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/src/compiledCodeResolver.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a480b9594c77e2d1ad03997784d7e097977f3e1b",
+      "sizeBytes": 2944,
+      "path": "apps/lineage-worker/src/env.ts",
+      "relativePath": "src/env.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/src/env.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ee35aea60c6d9c367f10d0c487d2ff63e88f74ba",
+      "sizeBytes": 2949,
+      "path": "apps/lineage-worker/src/server.ts",
+      "relativePath": "src/server.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/src/server.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4bd229a2f72e45f3bcdb30576e493d8c04fe29e1",
+      "sizeBytes": 276,
+      "path": "apps/lineage-worker/src/types/pg.d.ts",
+      "relativePath": "src/types/pg.d.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/src/types/pg.d.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b9c00e8868bafba011efff89db7d4966a18f9685",
+      "sizeBytes": 3317,
+      "path": "apps/lineage-worker/test/bootstrap.test.ts",
+      "relativePath": "test/bootstrap.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/test/bootstrap.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "071cf4993cac8f7ad164716433bec6f14dfa23b1",
+      "sizeBytes": 11462,
+      "path": "apps/lineage-worker/test/compiledCodeResolver.test.ts",
+      "relativePath": "test/compiledCodeResolver.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/test/compiledCodeResolver.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c8c9f44788d8d8b80549c918a663be3a31f86e0c",
+      "sizeBytes": 2294,
+      "path": "apps/lineage-worker/test/env.test.ts",
+      "relativePath": "test/env.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/test/env.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "25841f28cabc0327771cf886c3956e26fdc8e38d",
+      "sizeBytes": 3936,
+      "path": "apps/lineage-worker/test/server.bootstrap.test.ts",
+      "relativePath": "test/server.bootstrap.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/test/server.bootstrap.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "97c61d03b169c1e3f00a57e36061d624966e8cf7",
+      "sizeBytes": 4404,
+      "path": "apps/lineage-worker/test/server.lineage-mapper-wiring.test.ts",
+      "relativePath": "test/server.lineage-mapper-wiring.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/test/server.lineage-mapper-wiring.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "64277f18747c137a1a6d683603b4ed60ca742476",
+      "sizeBytes": 248,
+      "path": "apps/lineage-worker/tsconfig.json",
+      "relativePath": "tsconfig.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/tsconfig.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "0891ca03e1e3f4256610e5d77e1a5405c93cb49e",
+      "sizeBytes": 184,
+      "path": "apps/lineage-worker/vitest.config.ts",
+      "relativePath": "vitest.config.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/vitest.config.ts"
+    }
+  ],
+  "componentMappings": [
+    {
+      "id": "host",
+      "title": "Lineage worker process host",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Owns lineage worker startup and composition.",
+      "fileCount": 2,
+      "files": [
+        "src/bootstrap.ts",
+        "src/server.ts"
+      ]
+    },
+    {
+      "id": "compiledCodeResolver",
+      "title": "Compiled-code resolver",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Resolves compiled-code evidence needed for lineage projection while keeping artifact lookup separate from lineage semantics.",
+      "fileCount": 5,
+      "files": [
+        "src/compiled-code-resolver/errorMapping.ts",
+        "src/compiled-code-resolver/policy.ts",
+        "src/compiled-code-resolver/S3UriCompiledCodeReader.ts",
+        "src/compiled-code-resolver/types.ts",
+        "src/compiledCodeResolver.ts"
+      ]
+    },
+    {
+      "id": "types",
+      "title": "Lineage worker types",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Worker-owned types supporting composition and evidence resolution.",
+      "fileCount": 1,
+      "files": [
+        "src/types/pg.d.ts"
+      ]
+    },
+    {
+      "id": "env",
+      "title": "Lineage worker environment",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Validates runtime configuration for the lineage worker host.",
+      "fileCount": 1,
+      "files": [
+        "src/env.ts"
+      ]
+    }
+  ],
+  "inventorySha256": "1b1dda01455f81a91ec44340c488e2cc498c5a158c398a1aa57529da5ea5fa87"
+}

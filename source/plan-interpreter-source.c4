@@ -1,0 +1,210 @@
+// GENERATED FILE. DO NOT EDIT.
+// Source: git tree dunay2/dvt@3695f07c9ba3c66ab51f88a2dabe18e18556a244:packages/@dvt/plan-interpreter
+model {
+  planInterpreterSource = inventory 'Plan Interpreter source inventory — generated from Git' {
+    #sourceDerived
+    description 'Machine-generated from the exact Git tree. Folder structure is STRUCTURE-DERIVED; file identity is SOURCE-DERIVED.'
+    metadata {
+      provenance 'SOURCE-DERIVED'
+      architectureOwner 'dvt.plan-interpreter'
+      logicalModelId 'planInterpreterModel'
+      sourceRoot 'packages/@dvt/plan-interpreter'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      trackedFiles '9'
+      sourceFiles '4'
+      testFiles '1'
+      inventorySha256 '48565b445035b4b41db714d51fc81e7f2ecd6388546de1e533d172e88ee1e717'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-interpreter 'Pinned package tree'
+    dir_src_f27fede2 = folder 'src/ — 4 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/plan-interpreter/src'
+        recursiveFileCount '4'
+        directFileCount '4'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-interpreter/src 'Pinned directory'
+      file_src_dagAnalyzer_ts_e14aab4b = file 'dagAnalyzer.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/plan-interpreter/src/dagAnalyzer.ts'
+          blobSha '404ac839990f214949476c0ebbe26be0cc5666c0'
+          sizeBytes '7561'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Decision — DAG analysis and execution layer computation are shared across all adapters'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-interpreter/src/dagAnalyzer.ts 'Open pinned source'
+      }
+      file_src_errors_ts_69d4c465 = file 'errors.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/plan-interpreter/src/errors.ts'
+          blobSha '8b0bd9f53042563f408e8c8cceea47aedeb0c556'
+          sizeBytes '928'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Decision — Plan validation errors are structured with machine-readable codes for adapter-agnostic error handling'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-interpreter/src/errors.ts 'Open pinned source'
+      }
+      file_src_index_ts_c5fb8502 = file 'index.ts' {
+        #sourceDerived
+        description 'Runtime plan-interpretation API for adapter-agnostic DAG validation and execution layering.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/plan-interpreter/src/index.ts'
+          blobSha '30825d8d9e1886f2f2f3440ff193aec239646cdf'
+          sizeBytes '687'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Runtime plan-interpretation API for adapter-agnostic DAG validation and execution layering.'
+          decision 'Decision — Shared plan interpretation package ensures adapter-agnostic DAG analysis'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-interpreter/src/index.ts 'Open pinned source'
+      }
+      file_src_types_ts_cdcae080 = file 'types.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/plan-interpreter/src/types.ts'
+          blobSha '4eaa5fa95e5dbbf1d17544f861c85d817228189f'
+          sizeBytes '1444'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Decision — Plan step types are defined in a shared package so all adapters interpret plans identically'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-interpreter/src/types.ts 'Open pinned source'
+      }
+    }
+    dir_test_a94a8fe5 = folder 'test/ — 1 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/plan-interpreter/test'
+        recursiveFileCount '1'
+        directFileCount '1'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-interpreter/test 'Pinned directory'
+      file_test_dagAnalyzer_test_ts_8d31be3d = file 'dagAnalyzer.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/plan-interpreter/test/dagAnalyzer.test.ts'
+          blobSha '926268fb6191d674daf1ad14456ad5e12b7305c1'
+          sizeBytes '10578'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          decision 'Decision — Golden-path tests verify identical execution order across all adapters'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-interpreter/test/dagAnalyzer.test.ts 'Open pinned source'
+      }
+    }
+    file_package_json_7030d0b2 = file 'package.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/plan-interpreter/package.json'
+        blobSha 'bce5d740863566efd8f77edf915b5c5d37a2e6f4'
+        sizeBytes '702'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-interpreter/package.json 'Open pinned source'
+    }
+    file_README_md_8ec9a00b = file 'README.md' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/plan-interpreter/README.md'
+        blobSha '044e8f3c3af615ae8f602d4cce8b550bb36e7206'
+        sizeBytes '299'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-interpreter/README.md 'Open pinned source'
+    }
+    file_tsconfig_json_61ebb9fd = file 'tsconfig.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/plan-interpreter/tsconfig.json'
+        blobSha 'b53c7ed6e7664b495edb0994516cbb10c95d4a61'
+        sizeBytes '319'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-interpreter/tsconfig.json 'Open pinned source'
+    }
+    file_vitest_config_ts_e7b129ed = file 'vitest.config.ts' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/plan-interpreter/vitest.config.ts'
+        blobSha 'fa69665ca779308af444b9c788f8f2925766a9f0'
+        sizeBytes '157'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/plan-interpreter/vitest.config.ts 'Open pinned source'
+    }
+  }
+}
+
+views {
+  view planInterpreterSourceInventory of planInterpreterSource {
+    title 'Plan Interpreter — Complete source inventory'
+    description 'Generated from Git at 3695f07c. 9 tracked files.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view planInterpreterSource_dir_src_f27fede2 of planInterpreterSource.dir_src_f27fede2 {
+    title 'Source — src/ (4 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view planInterpreterSource_dir_test_a94a8fe5 of planInterpreterSource.dir_test_a94a8fe5 {
+    title 'Source — test/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view plan-interpreterFiles_publicBoundary {
+    title 'Files — Plan Interpreter public boundary'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include planInterpreterSource.dir_src_f27fede2.file_src_index_ts_c5fb8502
+    autoLayout TopBottom
+  }
+
+  view plan-interpreterFiles_dagAnalysis {
+    title 'Files — DAG validation + execution layering'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include planInterpreterSource.dir_src_f27fede2.file_src_dagAnalyzer_ts_e14aab4b
+    autoLayout TopBottom
+  }
+
+  view plan-interpreterFiles_types {
+    title 'Files — Interpreter result types'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include planInterpreterSource.dir_src_f27fede2.file_src_types_ts_cdcae080
+    autoLayout TopBottom
+  }
+
+  view plan-interpreterFiles_errors {
+    title 'Files — DAG interpretation errors'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include planInterpreterSource.dir_src_f27fede2.file_src_errors_ts_69d4c465
+    autoLayout TopBottom
+  }
+
+}

@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 3,
+  "generatedFrom": "git-tree",
+  "repository": "dunay2/dvt",
+  "baselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "configuredBaselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "scope": "packages/@dvt/observability-otel",
+  "logicalModelId": "observabilityOtelModel",
+  "sourceModelId": "observabilityOtelSource",
+  "configuredModelId": "observabilityOtelModel",
+  "counts": {
+    "trackedFiles": 8,
+    "sourceFiles": 4,
+    "testFiles": 1,
+    "docsFiles": 0,
+    "packageRootFiles": 3,
+    "filesWithOwnedConcern": 0,
+    "filesWithDecision": 0
+  },
+  "files": [
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "77396cc47adf7414a7f9988eecdd57ed4eff6a3d",
+      "sizeBytes": 1097,
+      "path": "packages/@dvt/observability-otel/package.json",
+      "relativePath": "package.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability-otel/package.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a5968dd22e11acb0f3cc2864ea3afb0a87896919",
+      "sizeBytes": 1735,
+      "path": "packages/@dvt/observability-otel/README.md",
+      "relativePath": "README.md",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability-otel/README.md"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a8fbfd42b91b96e7a71814ac35452e892eaa4218",
+      "sizeBytes": 40,
+      "path": "packages/@dvt/observability-otel/src/index.ts",
+      "relativePath": "src/index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability-otel/src/index.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "42b760196a742545d263428983d0d5a102ac7215",
+      "sizeBytes": 3806,
+      "path": "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts",
+      "relativePath": "src/OpenTelemetryTraces.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability-otel/src/OpenTelemetryTraces.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b92518bbc1aa46310d3e5d2bf67824b80e140b86",
+      "sizeBytes": 5113,
+      "path": "packages/@dvt/observability-otel/src/OtelObservability.ts",
+      "relativePath": "src/OtelObservability.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability-otel/src/OtelObservability.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "43acf13c1a7d742c4385ba31c25cf7ca2e57a210",
+      "sizeBytes": 2964,
+      "path": "packages/@dvt/observability-otel/src/otelTracePolicy.ts",
+      "relativePath": "src/otelTracePolicy.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability-otel/src/otelTracePolicy.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "df0b0c7cbca588724f0e0b982dd99693e48b0531",
+      "sizeBytes": 8820,
+      "path": "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+      "relativePath": "test/OtelObservability.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability-otel/test/OtelObservability.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "55b3ada44d7127a508fc999bf9430538dc0f90ab",
+      "sizeBytes": 504,
+      "path": "packages/@dvt/observability-otel/tsconfig.json",
+      "relativePath": "tsconfig.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability-otel/tsconfig.json"
+    }
+  ],
+  "componentMappings": [
+    {
+      "id": "publicBoundary",
+      "title": "OTel public boundary",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Exports the concrete OpenTelemetry observability implementation.",
+      "fileCount": 1,
+      "files": [
+        "src/index.ts"
+      ]
+    },
+    {
+      "id": "observability",
+      "title": "OTel observability implementation",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Concrete @dvt/observability implementation backed by OpenTelemetry.",
+      "fileCount": 1,
+      "files": [
+        "src/OtelObservability.ts"
+      ]
+    },
+    {
+      "id": "traces",
+      "title": "OpenTelemetry traces",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Trace provider/exporter integration.",
+      "fileCount": 1,
+      "files": [
+        "src/OpenTelemetryTraces.ts"
+      ]
+    },
+    {
+      "id": "tracePolicy",
+      "title": "OTel trace policy",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "OpenTelemetry-specific trace configuration/policy.",
+      "fileCount": 1,
+      "files": [
+        "src/otelTracePolicy.ts"
+      ]
+    }
+  ],
+  "inventorySha256": "6519f811f51b2ca01464e2c6961c3a09e2c24685d3d5646b46ea668ca6b48eaa"
+}

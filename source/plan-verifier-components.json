@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "components": [
+    {"id":"publicBoundary","title":"Plan Verifier public boundary","paths":["src/index.ts"],"rationale":"Exports the verifier entry points and errors."},
+    {"id":"verification","title":"Plan verification","paths":["src/verify.ts"],"rationale":"Coordinates admitted plan verification without replanning."},
+    {"id":"planVersion","title":"Plan-version compatibility","paths":["src/planVersion.ts"],"rationale":"Checks supported ExecutionPlan version compatibility."},
+    {"id":"stepTypeConfig","title":"Step-type configuration verification","paths":["src/stepTypeConfig.ts"],"rationale":"Validates step-type configuration against admitted execution contracts."},
+    {"id":"errors","title":"Verification errors","paths":["src/errors.ts"],"rationale":"Typed failures for plan-verification rejection."}
+  ]
+}

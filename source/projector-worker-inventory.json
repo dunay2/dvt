@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 3,
+  "generatedFrom": "git-tree",
+  "repository": "dunay2/dvt",
+  "baselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "configuredBaselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "scope": "apps/projector-worker",
+  "logicalModelId": "projectorWorkerModel",
+  "sourceModelId": "projectorWorkerSource",
+  "configuredModelId": "projectorWorkerModel",
+  "counts": {
+    "trackedFiles": 7,
+    "sourceFiles": 2,
+    "testFiles": 2,
+    "docsFiles": 0,
+    "packageRootFiles": 3,
+    "filesWithOwnedConcern": 0,
+    "filesWithDecision": 0
+  },
+  "files": [
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "abb30c1ad5e9f417f634aedff7b34f6e3e5c9a0b",
+      "sizeBytes": 998,
+      "path": "apps/projector-worker/package.json",
+      "relativePath": "package.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/projector-worker/package.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "971865b3aa29052732e00be95b52530d2ad06a3d",
+      "sizeBytes": 1296,
+      "path": "apps/projector-worker/src/env.ts",
+      "relativePath": "src/env.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/projector-worker/src/env.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e03cdd71a01715ade8b8e7c31ff954429c8fc175",
+      "sizeBytes": 2230,
+      "path": "apps/projector-worker/src/server.ts",
+      "relativePath": "src/server.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/projector-worker/src/server.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "789b790d9d091d3482d2ae4a0a4bb406f0dd3ad6",
+      "sizeBytes": 659,
+      "path": "apps/projector-worker/test/env.test.ts",
+      "relativePath": "test/env.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/projector-worker/test/env.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4ee0bf81f17666c47d3fac13bb3b8157d9b2b9fd",
+      "sizeBytes": 150,
+      "path": "apps/projector-worker/test/tsconfig.json",
+      "relativePath": "test/tsconfig.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/projector-worker/test/tsconfig.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "1130ad64210927638796b1458508070f4e03b827",
+      "sizeBytes": 231,
+      "path": "apps/projector-worker/tsconfig.json",
+      "relativePath": "tsconfig.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/projector-worker/tsconfig.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4d50ba5b64e0b830a507f39e7dfe58172981f48d",
+      "sizeBytes": 156,
+      "path": "apps/projector-worker/vitest.config.ts",
+      "relativePath": "vitest.config.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/projector-worker/vitest.config.ts"
+    }
+  ],
+  "componentMappings": [
+    {
+      "id": "host",
+      "title": "Projector worker process host",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Owns the projector process lifecycle and composes the @dvt/delivery projector runtime.",
+      "fileCount": 1,
+      "files": [
+        "src/server.ts"
+      ]
+    },
+    {
+      "id": "env",
+      "title": "Projector environment",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Parses/validates deployment configuration for the projector host.",
+      "fileCount": 1,
+      "files": [
+        "src/env.ts"
+      ]
+    }
+  ],
+  "inventorySha256": "3058f4c276e1cdc9a3cf47f712eccf58712b068d8d101969ce88b30f53d1ac4b"
+}

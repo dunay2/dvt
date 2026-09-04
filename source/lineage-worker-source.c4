@@ -1,0 +1,343 @@
+// GENERATED FILE. DO NOT EDIT.
+// Source: git tree dunay2/dvt@3695f07c9ba3c66ab51f88a2dabe18e18556a244:apps/lineage-worker
+model {
+  lineageWorkerSource = inventory 'Lineage Worker source inventory — generated from Git' {
+    #sourceDerived
+    description 'Machine-generated from the exact Git tree. Folder structure is STRUCTURE-DERIVED; file identity is SOURCE-DERIVED.'
+    metadata {
+      provenance 'SOURCE-DERIVED'
+      architectureOwner 'dvt.apps.lineage-worker'
+      logicalModelId 'lineageWorkerModel'
+      sourceRoot 'apps/lineage-worker'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      trackedFiles '17'
+      sourceFiles '9'
+      testFiles '5'
+      inventorySha256 '1b1dda01455f81a91ec44340c488e2cc498c5a158c398a1aa57529da5ea5fa87'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker 'Pinned package tree'
+    dir_src_f27fede2 = folder 'src/ — 9 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'apps/lineage-worker/src'
+        recursiveFileCount '9'
+        directFileCount '4'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/src 'Pinned directory'
+      dir_src_compiled-code-resolver_e09af233 = folder 'compiled-code-resolver/ — 4 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/lineage-worker/src/compiled-code-resolver'
+          recursiveFileCount '4'
+          directFileCount '4'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/src/compiled-code-resolver 'Pinned directory'
+        file_src_compiled-code-resolver_errorMapping_ts_ff861088 = file 'errorMapping.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/lineage-worker/src/compiled-code-resolver/errorMapping.ts'
+            blobSha 'd2970ccc98b213a4a0a79b076be27c12ee7b640f'
+            sizeBytes '1670'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/src/compiled-code-resolver/errorMapping.ts 'Open pinned source'
+        }
+        file_src_compiled-code-resolver_policy_ts_8a3b8a21 = file 'policy.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/lineage-worker/src/compiled-code-resolver/policy.ts'
+            blobSha 'fafb8a516ae42483c9c0e22c8ea5fc1e47413404'
+            sizeBytes '2972'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/src/compiled-code-resolver/policy.ts 'Open pinned source'
+        }
+        file_ompiled-code-resolver_S3UriCompiledCodeReader_ts_609358c3 = file 'S3UriCompiledCodeReader.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/lineage-worker/src/compiled-code-resolver/S3UriCompiledCodeReader.ts'
+            blobSha 'ec4a576abe58f5198521fe78b519f5206c03cb15'
+            sizeBytes '3456'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/src/compiled-code-resolver/S3UriCompiledCodeReader.ts 'Open pinned source'
+        }
+        file_src_compiled-code-resolver_types_ts_2342179d = file 'types.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/lineage-worker/src/compiled-code-resolver/types.ts'
+            blobSha '3ee2f6ddd8e7c88d55e0a66bba04a5ee8b054734'
+            sizeBytes '901'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/src/compiled-code-resolver/types.ts 'Open pinned source'
+        }
+      }
+      dir_src_types_7f0be21a = folder 'types/ — 1 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/lineage-worker/src/types'
+          recursiveFileCount '1'
+          directFileCount '1'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/src/types 'Pinned directory'
+        file_src_types_pg_d_ts_cfcf86d1 = file 'pg.d.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/lineage-worker/src/types/pg.d.ts'
+            blobSha '4bd229a2f72e45f3bcdb30576e493d8c04fe29e1'
+            sizeBytes '276'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/src/types/pg.d.ts 'Open pinned source'
+        }
+      }
+      file_src_bootstrap_ts_cf7b7793 = file 'bootstrap.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'apps/lineage-worker/src/bootstrap.ts'
+          blobSha 'ff07d9d636352f15c9c6188dafe5051991b0c7ba'
+          sizeBytes '1430'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/src/bootstrap.ts 'Open pinned source'
+      }
+      file_src_compiledCodeResolver_ts_82c1a308 = file 'compiledCodeResolver.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'apps/lineage-worker/src/compiledCodeResolver.ts'
+          blobSha 'db1d1ba5abe7564a85e0377ec69eea5ec6ddd223'
+          sizeBytes '2401'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/src/compiledCodeResolver.ts 'Open pinned source'
+      }
+      file_src_env_ts_3686f5d5 = file 'env.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'apps/lineage-worker/src/env.ts'
+          blobSha 'a480b9594c77e2d1ad03997784d7e097977f3e1b'
+          sizeBytes '2944'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/src/env.ts 'Open pinned source'
+      }
+      file_src_server_ts_bcc09dcb = file 'server.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'apps/lineage-worker/src/server.ts'
+          blobSha 'ee35aea60c6d9c367f10d0c487d2ff63e88f74ba'
+          sizeBytes '2949'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/src/server.ts 'Open pinned source'
+      }
+    }
+    dir_test_a94a8fe5 = folder 'test/ — 5 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'apps/lineage-worker/test'
+        recursiveFileCount '5'
+        directFileCount '5'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/test 'Pinned directory'
+      file_test_bootstrap_test_ts_580bf460 = file 'bootstrap.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'apps/lineage-worker/test/bootstrap.test.ts'
+          blobSha 'b9c00e8868bafba011efff89db7d4966a18f9685'
+          sizeBytes '3317'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/test/bootstrap.test.ts 'Open pinned source'
+      }
+      file_test_compiledCodeResolver_test_ts_033bc2c9 = file 'compiledCodeResolver.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'apps/lineage-worker/test/compiledCodeResolver.test.ts'
+          blobSha '071cf4993cac8f7ad164716433bec6f14dfa23b1'
+          sizeBytes '11462'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/test/compiledCodeResolver.test.ts 'Open pinned source'
+      }
+      file_test_env_test_ts_04b55cc5 = file 'env.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'apps/lineage-worker/test/env.test.ts'
+          blobSha 'c8c9f44788d8d8b80549c918a663be3a31f86e0c'
+          sizeBytes '2294'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/test/env.test.ts 'Open pinned source'
+      }
+      file_test_server_bootstrap_test_ts_93c6282d = file 'server.bootstrap.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'apps/lineage-worker/test/server.bootstrap.test.ts'
+          blobSha '25841f28cabc0327771cf886c3956e26fdc8e38d'
+          sizeBytes '3936'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/test/server.bootstrap.test.ts 'Open pinned source'
+      }
+      file_test_server_lineage-mapper-wiring_test_ts_72d5c726 = file 'server.lineage-mapper-wiring.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'apps/lineage-worker/test/server.lineage-mapper-wiring.test.ts'
+          blobSha '97c61d03b169c1e3f00a57e36061d624966e8cf7'
+          sizeBytes '4404'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/test/server.lineage-mapper-wiring.test.ts 'Open pinned source'
+      }
+    }
+    file_package_json_7030d0b2 = file 'package.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'apps/lineage-worker/package.json'
+        blobSha 'd2d34bf4c3e97170ca0186833545c2c6c9a8c4bd'
+        sizeBytes '1003'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/package.json 'Open pinned source'
+    }
+    file_tsconfig_json_61ebb9fd = file 'tsconfig.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'apps/lineage-worker/tsconfig.json'
+        blobSha '64277f18747c137a1a6d683603b4ed60ca742476'
+        sizeBytes '248'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/tsconfig.json 'Open pinned source'
+    }
+    file_vitest_config_ts_e7b129ed = file 'vitest.config.ts' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'apps/lineage-worker/vitest.config.ts'
+        blobSha '0891ca03e1e3f4256610e5d77e1a5405c93cb49e'
+        sizeBytes '184'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/lineage-worker/vitest.config.ts 'Open pinned source'
+    }
+  }
+}
+
+views {
+  view lineageWorkerSourceInventory of lineageWorkerSource {
+    title 'Lineage Worker — Complete source inventory'
+    description 'Generated from Git at 3695f07c. 17 tracked files.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view lineageWorkerSource_dir_src_f27fede2 of lineageWorkerSource.dir_src_f27fede2 {
+    title 'Source — src/ (9 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view lineageWorkerSource_dir_src_compiled-code-resolver_e09af233 of lineageWorkerSource.dir_src_f27fede2.dir_src_compiled-code-resolver_e09af233 {
+    title 'Source — src/compiled-code-resolver/ (4 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view lineageWorkerSource_dir_src_types_7f0be21a of lineageWorkerSource.dir_src_f27fede2.dir_src_types_7f0be21a {
+    title 'Source — src/types/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view lineageWorkerSource_dir_test_a94a8fe5 of lineageWorkerSource.dir_test_a94a8fe5 {
+    title 'Source — test/ (5 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view lineage-workerFiles_host {
+    title 'Files — Lineage worker process host'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 2 evidence file(s).'
+    include lineageWorkerSource.dir_src_f27fede2.file_src_bootstrap_ts_cf7b7793
+    include lineageWorkerSource.dir_src_f27fede2.file_src_server_ts_bcc09dcb
+    autoLayout TopBottom
+  }
+
+  view lineage-workerFiles_compiledCodeResolver {
+    title 'Files — Compiled-code resolver'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 5 evidence file(s).'
+    include lineageWorkerSource.dir_src_f27fede2.dir_src_compiled-code-resolver_e09af233.file_src_compiled-code-resolver_errorMapping_ts_ff861088
+    include lineageWorkerSource.dir_src_f27fede2.dir_src_compiled-code-resolver_e09af233.file_src_compiled-code-resolver_policy_ts_8a3b8a21
+    include lineageWorkerSource.dir_src_f27fede2.dir_src_compiled-code-resolver_e09af233.file_ompiled-code-resolver_S3UriCompiledCodeReader_ts_609358c3
+    include lineageWorkerSource.dir_src_f27fede2.dir_src_compiled-code-resolver_e09af233.file_src_compiled-code-resolver_types_ts_2342179d
+    include lineageWorkerSource.dir_src_f27fede2.file_src_compiledCodeResolver_ts_82c1a308
+    autoLayout TopBottom
+  }
+
+  view lineage-workerFiles_types {
+    title 'Files — Lineage worker types'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include lineageWorkerSource.dir_src_f27fede2.dir_src_types_7f0be21a.file_src_types_pg_d_ts_cfcf86d1
+    autoLayout TopBottom
+  }
+
+  view lineage-workerFiles_env {
+    title 'Files — Lineage worker environment'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include lineageWorkerSource.dir_src_f27fede2.file_src_env_ts_3686f5d5
+    autoLayout TopBottom
+  }
+
+}

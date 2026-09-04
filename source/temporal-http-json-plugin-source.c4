@@ -1,0 +1,230 @@
+// GENERATED FILE. DO NOT EDIT.
+// Source: git tree dunay2/dvt@3695f07c9ba3c66ab51f88a2dabe18e18556a244:packages/@dvt/temporal-http-json-plugin
+model {
+  temporalHttpJsonPluginSource = inventory 'Temporal HTTP JSON Plugin source inventory — generated from Git' {
+    #sourceDerived
+    description 'Machine-generated from the exact Git tree. Folder structure is STRUCTURE-DERIVED; file identity is SOURCE-DERIVED.'
+    metadata {
+      provenance 'SOURCE-DERIVED'
+      architectureOwner 'dvt.temporal-http-json-plugin'
+      logicalModelId 'temporalHttpJsonPluginModel'
+      sourceRoot 'packages/@dvt/temporal-http-json-plugin'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      trackedFiles '11'
+      sourceFiles '5'
+      testFiles '2'
+      inventorySha256 '6231db297af56d69cda3c0ac119083ccf630c0052b079658909ed8570091daae'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-http-json-plugin 'Pinned package tree'
+    dir_src_f27fede2 = folder 'src/ — 5 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/temporal-http-json-plugin/src'
+        recursiveFileCount '5'
+        directFileCount '5'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-http-json-plugin/src 'Pinned directory'
+      file_src_httpJsonArtifactPluginErrors_ts_aada1514 = file 'httpJsonArtifactPluginErrors.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-http-json-plugin/src/httpJsonArtifactPluginErrors.ts'
+          blobSha '231632d61fadf771a4d2aadb5a1b7784f6b4cf33'
+          sizeBytes '397'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-http-json-plugin/src/httpJsonArtifactPluginErrors.ts 'Open pinned source'
+      }
+      file_src_HttpJsonArtifactPluginRunner_ts_91e1783a = file 'HttpJsonArtifactPluginRunner.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-http-json-plugin/src/HttpJsonArtifactPluginRunner.ts'
+          blobSha '293b05684274b3ff493d0775e93479e92e73a297'
+          sizeBytes '7554'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-http-json-plugin/src/HttpJsonArtifactPluginRunner.ts 'Open pinned source'
+      }
+      file_src_httpJsonArtifactPluginTypes_ts_c566e7be = file 'httpJsonArtifactPluginTypes.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-http-json-plugin/src/httpJsonArtifactPluginTypes.ts'
+          blobSha '9b842e4cdddfe74e58b532b3b45448b82a8a7582'
+          sizeBytes '1549'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-http-json-plugin/src/httpJsonArtifactPluginTypes.ts 'Open pinned source'
+      }
+      file_src_HttpJsonArtifactStepActivity_ts_b5aa4ffd = file 'HttpJsonArtifactStepActivity.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-http-json-plugin/src/HttpJsonArtifactStepActivity.ts'
+          blobSha '2c35ddd94047097b06169be23dece35c093c6d7c'
+          sizeBytes '1824'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-http-json-plugin/src/HttpJsonArtifactStepActivity.ts 'Open pinned source'
+      }
+      file_src_index_ts_c5fb8502 = file 'index.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-http-json-plugin/src/index.ts'
+          blobSha '7a08470ff852994550339825d138e77c0d63fa88'
+          sizeBytes '661'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-http-json-plugin/src/index.ts 'Open pinned source'
+      }
+    }
+    dir_test_a94a8fe5 = folder 'test/ — 2 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/temporal-http-json-plugin/test'
+        recursiveFileCount '2'
+        directFileCount '2'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-http-json-plugin/test 'Pinned directory'
+      file_test_HttpJsonArtifactPlugin_test_ts_51bc41ae = file 'HttpJsonArtifactPlugin.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-http-json-plugin/test/HttpJsonArtifactPlugin.test.ts'
+          blobSha 'b998626d673cf263196cea790a77f26d0332b40a'
+          sizeBytes '5706'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-http-json-plugin/test/HttpJsonArtifactPlugin.test.ts 'Open pinned source'
+      }
+      file_test_httpJsonPluginBoundary_architecture_test_ts_26696631 = file 'httpJsonPluginBoundary.architecture.test.ts' {
+        #sourceDerived
+        description 'keep HTTP acquisition policy outside generic orchestration and network adapters.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/temporal-http-json-plugin/test/httpJsonPluginBoundary.architecture.test.ts'
+          blobSha '15de8b517a8efe33c7d3ef69601cd3142749871f'
+          sizeBytes '2125'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'keep HTTP acquisition policy outside generic orchestration and network adapters.'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-http-json-plugin/test/httpJsonPluginBoundary.architecture.test.ts 'Open pinned source'
+      }
+    }
+    file_package_json_7030d0b2 = file 'package.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/temporal-http-json-plugin/package.json'
+        blobSha 'ad7b66553607306826cd31b044a4801eb04e23bd'
+        sizeBytes '1166'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-http-json-plugin/package.json 'Open pinned source'
+    }
+    file_tsconfig_json_61ebb9fd = file 'tsconfig.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/temporal-http-json-plugin/tsconfig.json'
+        blobSha 'd0bda7b9987ecd09b89e860aea21ddd33beff85f'
+        sizeBytes '677'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-http-json-plugin/tsconfig.json 'Open pinned source'
+    }
+    file_tsconfig_test_json_d1f96fd1 = file 'tsconfig.test.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/temporal-http-json-plugin/tsconfig.test.json'
+        blobSha '928209032dbd2026a96166634a3ff8982e3f6ff4'
+        sizeBytes '169'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-http-json-plugin/tsconfig.test.json 'Open pinned source'
+    }
+    file_vitest_config_ts_e7b129ed = file 'vitest.config.ts' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/temporal-http-json-plugin/vitest.config.ts'
+        blobSha '43e56f45f3eece05a802ab75eedcff828b76b9d4'
+        sizeBytes '132'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-http-json-plugin/vitest.config.ts 'Open pinned source'
+    }
+  }
+}
+
+views {
+  view temporalHttpJsonPluginSourceInventory of temporalHttpJsonPluginSource {
+    title 'Temporal HTTP JSON Plugin — Complete source inventory'
+    description 'Generated from Git at 3695f07c. 11 tracked files.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view temporalHttpJsonPluginSource_dir_src_f27fede2 of temporalHttpJsonPluginSource.dir_src_f27fede2 {
+    title 'Source — src/ (5 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view temporalHttpJsonPluginSource_dir_test_a94a8fe5 of temporalHttpJsonPluginSource.dir_test_a94a8fe5 {
+    title 'Source — test/ (2 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view temporal-http-json-pluginFiles_publicBoundary {
+    title 'Files — HTTP JSON plugin public boundary'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include temporalHttpJsonPluginSource.dir_src_f27fede2.file_src_index_ts_c5fb8502
+    autoLayout TopBottom
+  }
+
+  view temporal-http-json-pluginFiles_activity {
+    title 'Files — HTTP JSON artifact activity'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include temporalHttpJsonPluginSource.dir_src_f27fede2.file_src_HttpJsonArtifactStepActivity_ts_b5aa4ffd
+    autoLayout TopBottom
+  }
+
+  view temporal-http-json-pluginFiles_runner {
+    title 'Files — HTTP JSON artifact runner'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include temporalHttpJsonPluginSource.dir_src_f27fede2.file_src_HttpJsonArtifactPluginRunner_ts_91e1783a
+    autoLayout TopBottom
+  }
+
+  view temporal-http-json-pluginFiles_typesAndErrors {
+    title 'Files — HTTP JSON plugin contracts'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 2 evidence file(s).'
+    include temporalHttpJsonPluginSource.dir_src_f27fede2.file_src_httpJsonArtifactPluginErrors_ts_aada1514
+    include temporalHttpJsonPluginSource.dir_src_f27fede2.file_src_httpJsonArtifactPluginTypes_ts_c566e7be
+    autoLayout TopBottom
+  }
+
+}

@@ -1,0 +1,715 @@
+{
+  "schemaVersion": 3,
+  "generatedFrom": "git-tree",
+  "repository": "dunay2/dvt",
+  "baselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "configuredBaselineSha": "42504563629f0b998d8a3382ea839eead99a36d1",
+  "scope": "packages/@dvt/planner",
+  "logicalModelId": "plannerModel",
+  "sourceModelId": "plannerSource",
+  "configuredModelId": "plannerSource",
+  "counts": {
+    "trackedFiles": 62,
+    "sourceFiles": 28,
+    "testFiles": 25,
+    "docsFiles": 4,
+    "packageRootFiles": 3,
+    "filesWithOwnedConcern": 8,
+    "filesWithDecision": 0
+  },
+  "files": [
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9d2034a7e113f51ed434b09be79bcfabd07acc69",
+      "sizeBytes": 4493,
+      "path": "packages/@dvt/planner/docs/audit/planner_v2_3_2_audit.commented.ts",
+      "relativePath": "docs/audit/planner_v2_3_2_audit.commented.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/docs/audit/planner_v2_3_2_audit.commented.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4ca1819a6cb274e45830ffedd608686feae85d34",
+      "sizeBytes": 1869,
+      "path": "packages/@dvt/planner/docs/grimorio.md",
+      "relativePath": "docs/grimorio.md",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/docs/grimorio.md"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "750a90a3c2a0c70361a355cdf2c36ac79a9b6b07",
+      "sizeBytes": 74455,
+      "path": "packages/@dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.md",
+      "relativePath": "docs/planning/Stage-1.1-Planner-Canonicalization.md",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.md"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "de3955d38d562a40648dd5383d31f087c8037ec1",
+      "sizeBytes": 1817,
+      "path": "packages/@dvt/planner/docs/README.md",
+      "relativePath": "docs/README.md",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/docs/README.md"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "14f65874b56e1630a0cc62eb8b8d9cb7c15e653c",
+      "sizeBytes": 1228,
+      "path": "packages/@dvt/planner/examples/dbt-workflow.ts",
+      "relativePath": "examples/dbt-workflow.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/examples/dbt-workflow.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "efa07a02f1311c609f1f15a2c1c18bb742bcaecd",
+      "sizeBytes": 1582,
+      "path": "packages/@dvt/planner/examples/generic-pipeline.ts",
+      "relativePath": "examples/generic-pipeline.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/examples/generic-pipeline.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "131f991b48a79b87471caf47ddbc119a205ab279",
+      "sizeBytes": 1300,
+      "path": "packages/@dvt/planner/package.json",
+      "relativePath": "package.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/package.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b4d749f15561e1c644f235538013ed14ee2c6cf0",
+      "sizeBytes": 613,
+      "path": "packages/@dvt/planner/src/application/derivePlannerGraphSourceFromManifest.ts",
+      "relativePath": "src/application/derivePlannerGraphSourceFromManifest.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/application/derivePlannerGraphSourceFromManifest.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "71898dc9a0cafe290174375b45d77f0168978a78",
+      "sizeBytes": 10217,
+      "path": "packages/@dvt/planner/src/application/ExecutableSubgraphDeriver.ts",
+      "relativePath": "src/application/ExecutableSubgraphDeriver.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/application/ExecutableSubgraphDeriver.ts",
+      "ownedConcern": "derive the selected executable closure from editable"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "da1330520c05aeb6e41742c839cd8a711a4f5c6f",
+      "sizeBytes": 4205,
+      "path": "packages/@dvt/planner/src/application/PlannerEnvelopeMapper.ts",
+      "relativePath": "src/application/PlannerEnvelopeMapper.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/application/PlannerEnvelopeMapper.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "51d45e02ee2299c519ee60184acc2ca504eb308e",
+      "sizeBytes": 4606,
+      "path": "packages/@dvt/planner/src/application/PlannerFacade.ts",
+      "relativePath": "src/application/PlannerFacade.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/application/PlannerFacade.ts",
+      "ownedConcern": "expose the planner bounded-context public boundary for plan build and selected-closure derivation."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "1338af7b10c944acda243855179487fafdd894af",
+      "sizeBytes": 623,
+      "path": "packages/@dvt/planner/src/contracts/CustomPolicyNamespaceRegistry.ts",
+      "relativePath": "src/contracts/CustomPolicyNamespaceRegistry.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/contracts/CustomPolicyNamespaceRegistry.ts",
+      "ownedConcern": "resolve custom policy namespace registration for planner policy checks."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "66809b84b028a303e0ec61d148ff8ea764029efa",
+      "sizeBytes": 450,
+      "path": "packages/@dvt/planner/src/contracts/ExecutionBindingVerification.ts",
+      "relativePath": "src/contracts/ExecutionBindingVerification.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/contracts/ExecutionBindingVerification.ts",
+      "ownedConcern": "verify compiled artifact bindings for planner-authored steps."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d94e5ab1a46375a3f5a5d733de73a7e2128c1d70",
+      "sizeBytes": 504,
+      "path": "packages/@dvt/planner/src/contracts/PlanExecutabilityValidation.ts",
+      "relativePath": "src/contracts/PlanExecutabilityValidation.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/contracts/PlanExecutabilityValidation.ts",
+      "ownedConcern": "validate persisted plan executability before execution admission."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2e761d06e0565e96c275cecdbc804b6535937eed",
+      "sizeBytes": 1010,
+      "path": "packages/@dvt/planner/src/domain/errors.ts",
+      "relativePath": "src/domain/errors.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/errors.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "501cbe86310736d4c652d9d1bb3b50ee676b752b",
+      "sizeBytes": 907,
+      "path": "packages/@dvt/planner/src/domain/graph/Depth.ts",
+      "relativePath": "src/domain/graph/Depth.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/graph/Depth.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5f49e3f537ba0d0e58e3b756966a4802b2acd5bb",
+      "sizeBytes": 7788,
+      "path": "packages/@dvt/planner/src/domain/graph/GraphBuilder.ts",
+      "relativePath": "src/domain/graph/GraphBuilder.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/graph/GraphBuilder.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "0583b0e3c4f4d8b79c55d753d673789b7072ee5a",
+      "sizeBytes": 2735,
+      "path": "packages/@dvt/planner/src/domain/graph/TopoSort.ts",
+      "relativePath": "src/domain/graph/TopoSort.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/graph/TopoSort.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "11b9c9c975e6e779f77332d9db0adfe08227da6e",
+      "sizeBytes": 603,
+      "path": "packages/@dvt/planner/src/domain/hashing.ts",
+      "relativePath": "src/domain/hashing.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/hashing.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "640b425668f70d7fa5e2de6279ca78426fd3faae",
+      "sizeBytes": 3851,
+      "path": "packages/@dvt/planner/src/domain/InputEnvelopeValidator.ts",
+      "relativePath": "src/domain/InputEnvelopeValidator.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/InputEnvelopeValidator.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a49dd3707390a579a6bfaaa4eb6dbcd594eaa84d",
+      "sizeBytes": 994,
+      "path": "packages/@dvt/planner/src/domain/limits.ts",
+      "relativePath": "src/domain/limits.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/limits.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b95d88963cde89cd8711b8b11e34b1a5f6d15743",
+      "sizeBytes": 4508,
+      "path": "packages/@dvt/planner/src/domain/manifest.ts",
+      "relativePath": "src/domain/manifest.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/manifest.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5b1ce7e24ea8018818eab6cadb521bb92291c1be",
+      "sizeBytes": 552,
+      "path": "packages/@dvt/planner/src/domain/metrics.ts",
+      "relativePath": "src/domain/metrics.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/metrics.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "21beaad00bcf368bd9eeec06339fcb5ebc4de0bb",
+      "sizeBytes": 2510,
+      "path": "packages/@dvt/planner/src/domain/NodeSelector.ts",
+      "relativePath": "src/domain/NodeSelector.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/NodeSelector.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2f6fea229d310abc24bcd0b3424c643b5e764927",
+      "sizeBytes": 7099,
+      "path": "packages/@dvt/planner/src/domain/PlanAssembler.ts",
+      "relativePath": "src/domain/PlanAssembler.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/PlanAssembler.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "1d32babdd53135fb90f1904eab9805f9309ea570",
+      "sizeBytes": 1891,
+      "path": "packages/@dvt/planner/src/domain/PlanExecutionDecisionProjector.ts",
+      "relativePath": "src/domain/PlanExecutionDecisionProjector.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/PlanExecutionDecisionProjector.ts",
+      "ownedConcern": "project deterministic planner selection decisions."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f92f44efb46225ae3e7c4f0ac085ac5455465eca",
+      "sizeBytes": 10679,
+      "path": "packages/@dvt/planner/src/domain/Planner.ts",
+      "relativePath": "src/domain/Planner.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/Planner.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b7a5d539dadaa57a2c58e7b72f140ae250958b08",
+      "sizeBytes": 2394,
+      "path": "packages/@dvt/planner/src/domain/policies.ts",
+      "relativePath": "src/domain/policies.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/policies.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4c09dfa468bda7732f1cdb270db15387f7c40199",
+      "sizeBytes": 281,
+      "path": "packages/@dvt/planner/src/domain/sorting.ts",
+      "relativePath": "src/domain/sorting.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/sorting.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "fc26fceb3441cb8b9ac456d23d296ca9d3a5351d",
+      "sizeBytes": 1569,
+      "path": "packages/@dvt/planner/src/domain/stepFactory/dbtStepFactory.ts",
+      "relativePath": "src/domain/stepFactory/dbtStepFactory.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/stepFactory/dbtStepFactory.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b50f35bb9867ab6d0c56e2b2cc68a08233b4bda9",
+      "sizeBytes": 350,
+      "path": "packages/@dvt/planner/src/domain/stepFactory/StepFactory.ts",
+      "relativePath": "src/domain/stepFactory/StepFactory.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/stepFactory/StepFactory.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3aef5f599b0a63315c379d46c38f32d790e60faa",
+      "sizeBytes": 2443,
+      "path": "packages/@dvt/planner/src/domain/types.ts",
+      "relativePath": "src/domain/types.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/domain/types.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f7be610a48895e00de122c210beecfb84a1aa433",
+      "sizeBytes": 3003,
+      "path": "packages/@dvt/planner/src/index.ts",
+      "relativePath": "src/index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/index.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d1bf3be29db186968f8480105bcad1fc87a39d0e",
+      "sizeBytes": 486,
+      "path": "packages/@dvt/planner/src/ports/ICompiledCodeStorage.ts",
+      "relativePath": "src/ports/ICompiledCodeStorage.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/ports/ICompiledCodeStorage.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a2077c5eb3d035386b8f43895053dfe0b08a8d56",
+      "sizeBytes": 307,
+      "path": "packages/@dvt/planner/src/runtime/time.ts",
+      "relativePath": "src/runtime/time.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/src/runtime/time.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e2d59a5b7446ec16486cf488c2a895528f99e7f4",
+      "sizeBytes": 4002,
+      "path": "packages/@dvt/planner/test/compiledCode/attachCompiledCodeRefs.test.ts",
+      "relativePath": "test/compiledCode/attachCompiledCodeRefs.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/compiledCode/attachCompiledCodeRefs.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ceacfa3602d849aecde7b5ef2b5c42dc50d679d4",
+      "sizeBytes": 537,
+      "path": "packages/@dvt/planner/test/compiledCode/FileSystemCompiledCodeStorage.test.ts",
+      "relativePath": "test/compiledCode/FileSystemCompiledCodeStorage.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/compiledCode/FileSystemCompiledCodeStorage.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4fc9ca551e16ab3fb44f8b53ad01300a4143e9cb",
+      "sizeBytes": 605,
+      "path": "packages/@dvt/planner/test/compiledCode/InMemoryCompiledCodeStorage.test.ts",
+      "relativePath": "test/compiledCode/InMemoryCompiledCodeStorage.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/compiledCode/InMemoryCompiledCodeStorage.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "41e4f3300987ff28884f579fb83cb32219d58ec7",
+      "sizeBytes": 559,
+      "path": "packages/@dvt/planner/test/compiledCode/sha256.test.ts",
+      "relativePath": "test/compiledCode/sha256.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/compiledCode/sha256.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "30a21b80c519e4d03a0cde4390981a18504d0baf",
+      "sizeBytes": 406,
+      "path": "packages/@dvt/planner/test/cross-runtime-print-planid.ts",
+      "relativePath": "test/cross-runtime-print-planid.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/cross-runtime-print-planid.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "36c3ad8a81e00547e892fe39a72baaee9ca1068c",
+      "sizeBytes": 766,
+      "path": "packages/@dvt/planner/test/cross-runtime.sh",
+      "relativePath": "test/cross-runtime.sh",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/cross-runtime.sh"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "aabd4c27d30d4a823a66ffbfea304955d05a4d26",
+      "sizeBytes": 2327,
+      "path": "packages/@dvt/planner/test/fixtures/dbt-manifest.fixtures.ts",
+      "relativePath": "test/fixtures/dbt-manifest.fixtures.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/fixtures/dbt-manifest.fixtures.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "296be60c6f1d12eb226a6ec0d988433e003a9933",
+      "sizeBytes": 1313,
+      "path": "packages/@dvt/planner/test/slow/load.test.ts",
+      "relativePath": "test/slow/load.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/slow/load.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d76a03ac283d83d5379b3575eb129275067bcb15",
+      "sizeBytes": 3182,
+      "path": "packages/@dvt/planner/test/unit/dbt-step-factory.test.ts",
+      "relativePath": "test/unit/dbt-step-factory.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/dbt-step-factory.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c5844038bbd79fc27100ea9f84c292d49bf6cfd4",
+      "sizeBytes": 9195,
+      "path": "packages/@dvt/planner/test/unit/determinism.test.ts",
+      "relativePath": "test/unit/determinism.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/determinism.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "357f026189a591fc74d2f7dec267e10140e4e1c5",
+      "sizeBytes": 2498,
+      "path": "packages/@dvt/planner/test/unit/executable-subgraph-deriver.architecture.test.ts",
+      "relativePath": "test/unit/executable-subgraph-deriver.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/executable-subgraph-deriver.architecture.test.ts",
+      "ownedConcern": "guard semantic architecture rules for the planner-owned"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c8aefad6d6e60ca673a1b3aeae057cdfa50d2ce1",
+      "sizeBytes": 6345,
+      "path": "packages/@dvt/planner/test/unit/executable-subgraph-deriver.test.ts",
+      "relativePath": "test/unit/executable-subgraph-deriver.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/executable-subgraph-deriver.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d904c1b5f10a6cd86a0580d68cd7a9be167ec2e8",
+      "sizeBytes": 4579,
+      "path": "packages/@dvt/planner/test/unit/graph.test.ts",
+      "relativePath": "test/unit/graph.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/graph.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b00070fd0ec5adae440825506131dfa4cc3beaa9",
+      "sizeBytes": 4244,
+      "path": "packages/@dvt/planner/test/unit/http-json-artifact-chain.integration.test.ts",
+      "relativePath": "test/unit/http-json-artifact-chain.integration.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/http-json-artifact-chain.integration.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "21366a6e6d0b541b24e3e5ef76b93b52ff0e5c6c",
+      "sizeBytes": 3927,
+      "path": "packages/@dvt/planner/test/unit/input-envelope-validator.test.ts",
+      "relativePath": "test/unit/input-envelope-validator.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/input-envelope-validator.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9756939b4076038300e3c35789cee87ba19b1045",
+      "sizeBytes": 1947,
+      "path": "packages/@dvt/planner/test/unit/limits.test.ts",
+      "relativePath": "test/unit/limits.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/limits.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "732f6dbd6c926df73e436907229f5702e00d7931",
+      "sizeBytes": 2539,
+      "path": "packages/@dvt/planner/test/unit/manifest-graph-source.test.ts",
+      "relativePath": "test/unit/manifest-graph-source.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/manifest-graph-source.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b1cec42b718464899425a2e00e56c6833cbf3d66",
+      "sizeBytes": 2776,
+      "path": "packages/@dvt/planner/test/unit/manifest-mvp.test.ts",
+      "relativePath": "test/unit/manifest-mvp.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/manifest-mvp.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "8e4296eb23d91115fe545c2952d6e3eda431d02e",
+      "sizeBytes": 2903,
+      "path": "packages/@dvt/planner/test/unit/object-file-to-postgres-step.integration.test.ts",
+      "relativePath": "test/unit/object-file-to-postgres-step.integration.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/object-file-to-postgres-step.integration.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b93f9508919ad21a0b6c103812aa41a42b613737",
+      "sizeBytes": 8733,
+      "path": "packages/@dvt/planner/test/unit/planner-facade.test.ts",
+      "relativePath": "test/unit/planner-facade.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/planner-facade.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6ab0ef82572ea925e1cada9b283192e17eb77c5b",
+      "sizeBytes": 4811,
+      "path": "packages/@dvt/planner/test/unit/planner-private-ownership.architecture.test.ts",
+      "relativePath": "test/unit/planner-private-ownership.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/planner-private-ownership.architecture.test.ts",
+      "ownedConcern": "/);"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3f21b2b2bb4b1b69c72a85b03a4ae173d6ff06df",
+      "sizeBytes": 1956,
+      "path": "packages/@dvt/planner/test/unit/policies.test.ts",
+      "relativePath": "test/unit/policies.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/policies.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "68d5af05f73047d77ae18b0ed2c647840315792c",
+      "sizeBytes": 7002,
+      "path": "packages/@dvt/planner/test/unit/step-registry-integration.test.ts",
+      "relativePath": "test/unit/step-registry-integration.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/unit/step-registry-integration.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "7f61922d428f4c246a4d1ee8c865a3ccd721b433",
+      "sizeBytes": 645,
+      "path": "packages/@dvt/planner/test/vectors/fixed-vector.inline.ts",
+      "relativePath": "test/vectors/fixed-vector.inline.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/vectors/fixed-vector.inline.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "0338e3b7a303d083c2e6acb62e6ee3dab9fe714d",
+      "sizeBytes": 544,
+      "path": "packages/@dvt/planner/test/vectors/fixed-vector.json",
+      "relativePath": "test/vectors/fixed-vector.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/test/vectors/fixed-vector.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "78596817a731d4016fd4bd171179b384ad1bbf3b",
+      "sizeBytes": 504,
+      "path": "packages/@dvt/planner/tsconfig.json",
+      "relativePath": "tsconfig.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/tsconfig.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "cfd9ed63cd98e8ca3170e4057e0cd55e5964f49e",
+      "sizeBytes": 230,
+      "path": "packages/@dvt/planner/vitest.config.ts",
+      "relativePath": "vitest.config.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/planner/vitest.config.ts"
+    }
+  ],
+  "componentMappings": [
+    {
+      "id": "publicBoundary",
+      "title": "PlannerFacade + stable boundary",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "src/index.ts declares PlannerFacade as the sole public entry point; PlannerFacade validates canonical inputs and delegates into planner-owned services.",
+      "fileCount": 2,
+      "files": [
+        "src/application/PlannerFacade.ts",
+        "src/index.ts"
+      ]
+    },
+    {
+      "id": "executableSubgraph",
+      "title": "Executable subgraph derivation",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Derives the selected executable closure from workspace authoring truth and execution-selection intent.",
+      "fileCount": 1,
+      "files": [
+        "src/application/ExecutableSubgraphDeriver.ts"
+      ]
+    },
+    {
+      "id": "envelopeMapping",
+      "title": "Input normalization and graph-source mapping",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Maps validated contract envelopes and manifest-derived graph sources into the planner domain input.",
+      "fileCount": 2,
+      "files": [
+        "src/application/derivePlannerGraphSourceFromManifest.ts",
+        "src/application/PlannerEnvelopeMapper.ts"
+      ]
+    },
+    {
+      "id": "planningPipeline",
+      "title": "Deterministic planning pipeline",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Planner is the domain service orchestrating validation, graph construction, policies, selection, topology, step construction and immutable plan assembly.",
+      "fileCount": 6,
+      "files": [
+        "src/domain/InputEnvelopeValidator.ts",
+        "src/domain/limits.ts",
+        "src/domain/metrics.ts",
+        "src/domain/Planner.ts",
+        "src/domain/policies.ts",
+        "src/domain/sorting.ts"
+      ]
+    },
+    {
+      "id": "graph",
+      "title": "Graph construction and topology",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Owns graph building, topological ordering and depth calculation used by deterministic planning and executable-closure derivation.",
+      "fileCount": 3,
+      "files": [
+        "src/domain/graph/Depth.ts",
+        "src/domain/graph/GraphBuilder.ts",
+        "src/domain/graph/TopoSort.ts"
+      ]
+    },
+    {
+      "id": "selection",
+      "title": "Node selection",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Resolves the nodes participating in execution from the normalized graph and planner selection.",
+      "fileCount": 1,
+      "files": [
+        "src/domain/NodeSelector.ts"
+      ]
+    },
+    {
+      "id": "planAssembly",
+      "title": "Immutable plan assembly",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Builds the canonical plan material, hashes deterministic inputs and projects execution decisions into the final plan.",
+      "fileCount": 3,
+      "files": [
+        "src/domain/hashing.ts",
+        "src/domain/PlanAssembler.ts",
+        "src/domain/PlanExecutionDecisionProjector.ts"
+      ]
+    },
+    {
+      "id": "stepFactory",
+      "title": "Execution-step factory",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Maps graph nodes and resolved policies into deterministic execution steps.",
+      "fileCount": 2,
+      "files": [
+        "src/domain/stepFactory/dbtStepFactory.ts",
+        "src/domain/stepFactory/StepFactory.ts"
+      ]
+    },
+    {
+      "id": "behaviorContracts",
+      "title": "Planner-owned behavior contracts",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Planner-owned extension and validation boundaries kept behind explicit contracts.",
+      "fileCount": 3,
+      "files": [
+        "src/contracts/CustomPolicyNamespaceRegistry.ts",
+        "src/contracts/ExecutionBindingVerification.ts",
+        "src/contracts/PlanExecutabilityValidation.ts"
+      ]
+    },
+    {
+      "id": "runtimeClock",
+      "title": "Runtime clock boundary",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Small runtime timing boundary used for planner timeout and metrics measurement without changing deterministic plan material.",
+      "fileCount": 1,
+      "files": [
+        "src/runtime/time.ts"
+      ]
+    },
+    {
+      "id": "artifactCompatibilityBridge",
+      "title": "Artifact compatibility bridge",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Explicit transitional bridge: ICompiledCodeStorage has moved to @dvt/artifacts and this planner path is marked for removal.",
+      "fileCount": 1,
+      "files": [
+        "src/ports/ICompiledCodeStorage.ts"
+      ]
+    }
+  ],
+  "inventorySha256": "97484eea00fae6ce3da3a96a699caaf062a4cc70ec449bdf5c40c1779881d3e6"
+}

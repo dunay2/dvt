@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 3,
+  "generatedFrom": "git-tree",
+  "repository": "dunay2/dvt",
+  "baselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "configuredBaselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "scope": "packages/@dvt/dsl",
+  "logicalModelId": "dslModel",
+  "sourceModelId": "dslSource",
+  "configuredModelId": "dslModel",
+  "counts": {
+    "trackedFiles": 9,
+    "sourceFiles": 4,
+    "testFiles": 1,
+    "docsFiles": 0,
+    "packageRootFiles": 4,
+    "filesWithOwnedConcern": 1,
+    "filesWithDecision": 0
+  },
+  "files": [
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c8147f972a3dad27e818cbc1c0bd449411d88c36",
+      "sizeBytes": 606,
+      "path": "packages/@dvt/dsl/package.json",
+      "relativePath": "package.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/dsl/package.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "da2279aab391da4cbe07f8a877cd1168bdf0103b",
+      "sizeBytes": 380,
+      "path": "packages/@dvt/dsl/README.md",
+      "relativePath": "README.md",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/dsl/README.md"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d1d899f44b3c9264d924ac4c1a094b0cc5e8dff4",
+      "sizeBytes": 274,
+      "path": "packages/@dvt/dsl/src/index.ts",
+      "relativePath": "src/index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/dsl/src/index.ts",
+      "ownedConcern": "Runtime DSL API for parsing and evaluating governed v1"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9650022e9880419deb4f3013c895a77149c888be",
+      "sizeBytes": 207,
+      "path": "packages/@dvt/dsl/src/v1/ast.ts",
+      "relativePath": "src/v1/ast.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/dsl/src/v1/ast.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "8b15d82912b720a758355e2e805aca1cf08c6a75",
+      "sizeBytes": 637,
+      "path": "packages/@dvt/dsl/src/v1/evaluator.ts",
+      "relativePath": "src/v1/evaluator.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/dsl/src/v1/evaluator.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ce20517f5d79b9045ad35bbfc3f3ba9d30f1952e",
+      "sizeBytes": 1781,
+      "path": "packages/@dvt/dsl/src/v1/parser.ts",
+      "relativePath": "src/v1/parser.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/dsl/src/v1/parser.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6892d0c63781cd5ba3274672ec08f1c530303615",
+      "sizeBytes": 1051,
+      "path": "packages/@dvt/dsl/test/dsl-v1.test.ts",
+      "relativePath": "test/dsl-v1.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/dsl/test/dsl-v1.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ef56b5a4462e589c158939db4dd2a98b24804c9e",
+      "sizeBytes": 302,
+      "path": "packages/@dvt/dsl/tsconfig.json",
+      "relativePath": "tsconfig.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/dsl/tsconfig.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "43e56f45f3eece05a802ab75eedcff828b76b9d4",
+      "sizeBytes": 132,
+      "path": "packages/@dvt/dsl/vitest.config.ts",
+      "relativePath": "vitest.config.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/dsl/vitest.config.ts"
+    }
+  ],
+  "componentMappings": [
+    {
+      "id": "publicBoundary",
+      "title": "DSL public boundary",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Exports the bounded v1 DSL surface.",
+      "fileCount": 1,
+      "files": [
+        "src/index.ts"
+      ]
+    },
+    {
+      "id": "ast",
+      "title": "DSL v1 AST",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Defines the bounded expression AST owned by the DSL.",
+      "fileCount": 1,
+      "files": [
+        "src/v1/ast.ts"
+      ]
+    },
+    {
+      "id": "parser",
+      "title": "DSL v1 parser",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Parses supported DSL expressions into the v1 AST.",
+      "fileCount": 1,
+      "files": [
+        "src/v1/parser.ts"
+      ]
+    },
+    {
+      "id": "evaluator",
+      "title": "DSL v1 evaluator",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Evaluates the bounded DSL AST against its supported context.",
+      "fileCount": 1,
+      "files": [
+        "src/v1/evaluator.ts"
+      ]
+    }
+  ],
+  "inventorySha256": "ddb4f11fefcf242b19be7c0b12e522e57f9d6b3431833ed711df33055b7e63d3"
+}

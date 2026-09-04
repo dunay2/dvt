@@ -1,0 +1,146 @@
+{
+  "schemaVersion": 3,
+  "generatedFrom": "git-tree",
+  "repository": "dunay2/dvt",
+  "baselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "configuredBaselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "scope": "packages/@dvt/cli",
+  "logicalModelId": "cliModel",
+  "sourceModelId": "cliSource",
+  "configuredModelId": "cliModel",
+  "counts": {
+    "trackedFiles": 10,
+    "sourceFiles": 1,
+    "testFiles": 1,
+    "docsFiles": 0,
+    "packageRootFiles": 8,
+    "filesWithOwnedConcern": 1,
+    "filesWithDecision": 0
+  },
+  "files": [
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "24c18077f2e21991c75f89cd1fbe9e1b03f8ba23",
+      "sizeBytes": 36,
+      "path": "packages/@dvt/cli/compare-hashes.cjs",
+      "relativePath": "compare-hashes.cjs",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/cli/compare-hashes.cjs"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "24c18077f2e21991c75f89cd1fbe9e1b03f8ba23",
+      "sizeBytes": 36,
+      "path": "packages/@dvt/cli/db-migrate.cjs",
+      "relativePath": "db-migrate.cjs",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/cli/db-migrate.cjs"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "24c18077f2e21991c75f89cd1fbe9e1b03f8ba23",
+      "sizeBytes": 36,
+      "path": "packages/@dvt/cli/enable-workflow.sh",
+      "relativePath": "enable-workflow.sh",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/cli/enable-workflow.sh"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a02a01529db576a427d7b2cd2a0d8933f3b65914",
+      "sizeBytes": 814,
+      "path": "packages/@dvt/cli/package.json",
+      "relativePath": "package.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/cli/package.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "53c77732da01b181d7ebb603935590c3ded84a1a",
+      "sizeBytes": 427,
+      "path": "packages/@dvt/cli/README.md",
+      "relativePath": "README.md",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/cli/README.md"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "dbc135956e8267847b073b93b6c27d537b2058d1",
+      "sizeBytes": 4775,
+      "path": "packages/@dvt/cli/run-golden-paths.cjs",
+      "relativePath": "run-golden-paths.cjs",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/cli/run-golden-paths.cjs"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "438ce34c3975eccf78ea3ebbacc304cc5f0fb1a7",
+      "sizeBytes": 321,
+      "path": "packages/@dvt/cli/src/index.ts",
+      "relativePath": "src/index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/cli/src/index.ts",
+      "ownedConcern": "Runtime CLI validation metadata for script-backed contract and"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "dfe632996a1da6a8c27e4e156eb951d13e295720",
+      "sizeBytes": 373,
+      "path": "packages/@dvt/cli/test/smoke.test.ts",
+      "relativePath": "test/smoke.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/cli/test/smoke.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ef56b5a4462e589c158939db4dd2a98b24804c9e",
+      "sizeBytes": 302,
+      "path": "packages/@dvt/cli/tsconfig.json",
+      "relativePath": "tsconfig.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/cli/tsconfig.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "bf3533aa787c6795436174ea45232961970527e1",
+      "sizeBytes": 7240,
+      "path": "packages/@dvt/cli/validate-contracts.cjs",
+      "relativePath": "validate-contracts.cjs",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/cli/validate-contracts.cjs"
+    }
+  ],
+  "componentMappings": [
+    {
+      "id": "metadata",
+      "title": "CLI validation metadata",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Declares the package as a script-backed validation/golden-path surface and explicitly states userFacingCli=false.",
+      "fileCount": 1,
+      "files": [
+        "src/index.ts"
+      ]
+    },
+    {
+      "id": "contractValidation",
+      "title": "Contract validation script",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Script-backed contract validation command declared by package.json.",
+      "fileCount": 1,
+      "files": [
+        "validate-contracts.cjs"
+      ]
+    },
+    {
+      "id": "goldenPaths",
+      "title": "Golden-path runner",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Script-backed golden-path command declared by package.json.",
+      "fileCount": 1,
+      "files": [
+        "run-golden-paths.cjs"
+      ]
+    }
+  ],
+  "inventorySha256": "bd006a3dc5fdd06058b311e5d98aa12119222cc037aa53a5fed60ef2240550d9"
+}

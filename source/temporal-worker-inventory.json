@@ -1,0 +1,454 @@
+{
+  "schemaVersion": 3,
+  "generatedFrom": "git-tree",
+  "repository": "dunay2/dvt",
+  "baselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "configuredBaselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "scope": "apps/temporal-worker",
+  "logicalModelId": "temporalWorkerModel",
+  "sourceModelId": "temporalWorkerSource",
+  "configuredModelId": "temporalWorkerModel",
+  "counts": {
+    "trackedFiles": 39,
+    "sourceFiles": 20,
+    "testFiles": 16,
+    "docsFiles": 0,
+    "packageRootFiles": 3,
+    "filesWithOwnedConcern": 13,
+    "filesWithDecision": 0
+  },
+  "files": [
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4c044fa5da68f96ec9fe013fe387905a9dbc7a61",
+      "sizeBytes": 1528,
+      "path": "apps/temporal-worker/package.json",
+      "relativePath": "package.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/package.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f63bd4e62000a6f4e09ca2b533fa1b75e9428ef5",
+      "sizeBytes": 3565,
+      "path": "apps/temporal-worker/src/host/runTemporalWorkerHost.ts",
+      "relativePath": "src/host/runTemporalWorkerHost.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/host/runTemporalWorkerHost.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d5cea2e02e5bac560da78b3335ad59831a380622",
+      "sizeBytes": 3818,
+      "path": "apps/temporal-worker/src/ops/OperationalServer.ts",
+      "relativePath": "src/ops/OperationalServer.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/ops/OperationalServer.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "404e4d07695d2508ebb3024c0a4bd3d3e069c1ba",
+      "sizeBytes": 8922,
+      "path": "apps/temporal-worker/src/ops/TemporalWorkerMonitor.ts",
+      "relativePath": "src/ops/TemporalWorkerMonitor.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/ops/TemporalWorkerMonitor.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f8dca413420db7b02a4b1f2e9e6f4dca7dacd4ed",
+      "sizeBytes": 9527,
+      "path": "apps/temporal-worker/src/plugins/env.ts",
+      "relativePath": "src/plugins/env.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/plugins/env.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "62fafe39305d900bde5cb02c8625a61644324d48",
+      "sizeBytes": 1136,
+      "path": "apps/temporal-worker/src/runtime/createTemporalWorkerRuntime.ts",
+      "relativePath": "src/runtime/createTemporalWorkerRuntime.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/createTemporalWorkerRuntime.ts",
+      "ownedConcern": "Assemble focused Temporal worker runtime modules into the public runtime handle."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "edfed2373b608dd91320860bc3f5e5334677df56",
+      "sizeBytes": 1711,
+      "path": "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts",
+      "relativePath": "src/runtime/EnvironmentDbtRuntimeProfileResolver.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts",
+      "ownedConcern": "Resolve env-backed DBT profile references inside the Temporal worker boundary."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2276df06473f4648e82d4aaec125a25d607c7d06",
+      "sizeBytes": 14001,
+      "path": "apps/temporal-worker/src/runtime/nodeHttpsJsonClient.ts",
+      "relativePath": "src/runtime/nodeHttpsJsonClient.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/nodeHttpsJsonClient.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d08631d2353058254cae60de387759f86294cde1",
+      "sizeBytes": 1036,
+      "path": "apps/temporal-worker/src/runtime/objectFilePostgresDbtCommandEnvironment.ts",
+      "relativePath": "src/runtime/objectFilePostgresDbtCommandEnvironment.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/objectFilePostgresDbtCommandEnvironment.ts",
+      "ownedConcern": "adapt a DBT bridge marker and authorized run scope to worker-local process input."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ade5d1e6d801e30e790c54a7046ae83049826bee",
+      "sizeBytes": 3198,
+      "path": "apps/temporal-worker/src/runtime/runtimeTypes.ts",
+      "relativePath": "src/runtime/runtimeTypes.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/runtimeTypes.ts",
+      "ownedConcern": "Define shared Temporal worker runtime composition contracts."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6ac6ff437b9e4dca2441cb08351c8551baf1f0b5",
+      "sizeBytes": 3330,
+      "path": "apps/temporal-worker/src/runtime/temporalWorkerDbtProfile.ts",
+      "relativePath": "src/runtime/temporalWorkerDbtProfile.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/temporalWorkerDbtProfile.ts",
+      "ownedConcern": "Build the optional DBT worker profile and step activity registry."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "419f482e3528f23b2951e3b5cf38262d61b8a967",
+      "sizeBytes": 987,
+      "path": "apps/temporal-worker/src/runtime/temporalWorkerHost.ts",
+      "relativePath": "src/runtime/temporalWorkerHost.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/temporalWorkerHost.ts",
+      "ownedConcern": "Build Temporal worker host configuration and host instance."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c659baf7b02b684df3445fc3c54db82b69515395",
+      "sizeBytes": 704,
+      "path": "apps/temporal-worker/src/runtime/temporalWorkerHttpJsonArtifactStore.ts",
+      "relativePath": "src/runtime/temporalWorkerHttpJsonArtifactStore.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/temporalWorkerHttpJsonArtifactStore.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f9101bc513db55da9f592d13328d2322ad3f2d3c",
+      "sizeBytes": 2437,
+      "path": "apps/temporal-worker/src/runtime/temporalWorkerHttpJsonProfile.ts",
+      "relativePath": "src/runtime/temporalWorkerHttpJsonProfile.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/temporalWorkerHttpJsonProfile.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f38d36db63a4a54aa6b486307d3b90989c899dd1",
+      "sizeBytes": 3739,
+      "path": "apps/temporal-worker/src/runtime/temporalWorkerLifecycle.ts",
+      "relativePath": "src/runtime/temporalWorkerLifecycle.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/temporalWorkerLifecycle.ts",
+      "ownedConcern": "Execute Temporal worker startup, shutdown, connection, and abort lifecycle."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "1dbf560b9eb269a5699145ee42f9bebc261ee33c",
+      "sizeBytes": 2489,
+      "path": "apps/temporal-worker/src/runtime/temporalWorkerObjectFilePostgresProfile.ts",
+      "relativePath": "src/runtime/temporalWorkerObjectFilePostgresProfile.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/temporalWorkerObjectFilePostgresProfile.ts",
+      "ownedConcern": "Compose the bounded object-file to PostgreSQL Temporal plugin profile."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d44aed37f5f97e532de31ede64542c73851cd839",
+      "sizeBytes": 1547,
+      "path": "apps/temporal-worker/src/runtime/temporalWorkerObjectFileReader.ts",
+      "relativePath": "src/runtime/temporalWorkerObjectFileReader.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/temporalWorkerObjectFileReader.ts",
+      "ownedConcern": "Adapt governed artifact URIs to the object-file plugin reader port."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9d392378583ee2f507aad47bf4b41895aefcad25",
+      "sizeBytes": 2696,
+      "path": "apps/temporal-worker/src/runtime/temporalWorkerRuntimeHandle.ts",
+      "relativePath": "src/runtime/temporalWorkerRuntimeHandle.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/temporalWorkerRuntimeHandle.ts",
+      "ownedConcern": "Own runtime handle idempotency and delegate lifecycle operations."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6a2ef0dce42c48c23a58d2367ff1e2d4514e0e82",
+      "sizeBytes": 4753,
+      "path": "apps/temporal-worker/src/runtime/temporalWorkerRuntimeResources.ts",
+      "relativePath": "src/runtime/temporalWorkerRuntimeResources.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/temporalWorkerRuntimeResources.ts",
+      "ownedConcern": "Compose validated worker runtime resources from environment and options."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3e50e9e165d82d5d4673be6667167aca2d56e0b4",
+      "sizeBytes": 3048,
+      "path": "apps/temporal-worker/src/runtime/temporalWorkerStores.ts",
+      "relativePath": "src/runtime/temporalWorkerStores.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/temporalWorkerStores.ts",
+      "ownedConcern": "Build state, plan, and activity dependencies for the Temporal worker runtime."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2ba13562966c502a7f6ca2db3227c5994748c524",
+      "sizeBytes": 1654,
+      "path": "apps/temporal-worker/src/server.ts",
+      "relativePath": "src/server.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/server.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "0635bcba708bf67830b5e94e4f6b084c0c9deae5",
+      "sizeBytes": 1245,
+      "path": "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts",
+      "relativePath": "test/host/objectFilePostgres.service.integration.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e91eff53fb3151f2b28161747f045f5740170cb3",
+      "sizeBytes": 19037,
+      "path": "apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts",
+      "relativePath": "test/host/runTemporalWorkerHost.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6ac9b97d765cb445609a63315984b30f0b40f1aa",
+      "sizeBytes": 3008,
+      "path": "apps/temporal-worker/test/ops/OperationalServer.test.ts",
+      "relativePath": "test/ops/OperationalServer.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/ops/OperationalServer.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b79cda399f2ce34fba73245296c798c2cdc882f2",
+      "sizeBytes": 7267,
+      "path": "apps/temporal-worker/test/plugins/env.test.ts",
+      "relativePath": "test/plugins/env.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/plugins/env.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "69b6a153731a6fa5202c0ed480cf393a3505d2d0",
+      "sizeBytes": 4305,
+      "path": "apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.srp.architecture.test.ts",
+      "relativePath": "test/runtime/createTemporalWorkerRuntime.srp.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.srp.architecture.test.ts",
+      "ownedConcern": "Compose validated worker runtime resources from environment and options.',"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "74b3ac3dbd4e6769073eb5c671c18eb53967aac2",
+      "sizeBytes": 15126,
+      "path": "apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.test.ts",
+      "relativePath": "test/runtime/createTemporalWorkerRuntime.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e8481c2d0ed8e8d3ce350d4fd966105dc36f88af",
+      "sizeBytes": 2006,
+      "path": "apps/temporal-worker/test/runtime/EnvironmentDbtRuntimeProfileResolver.test.ts",
+      "relativePath": "test/runtime/EnvironmentDbtRuntimeProfileResolver.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/runtime/EnvironmentDbtRuntimeProfileResolver.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2d861f2e449ffe7bcea1c751722287c6f93a3056",
+      "sizeBytes": 11220,
+      "path": "apps/temporal-worker/test/runtime/nodeHttpsJsonClient.test.ts",
+      "relativePath": "test/runtime/nodeHttpsJsonClient.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/runtime/nodeHttpsJsonClient.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "fb4bca279fb368721cc76d76f558fcd0d4d0d313",
+      "sizeBytes": 1891,
+      "path": "apps/temporal-worker/test/runtime/objectFilePostgresDbtCommandEnvironment.test.ts",
+      "relativePath": "test/runtime/objectFilePostgresDbtCommandEnvironment.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/runtime/objectFilePostgresDbtCommandEnvironment.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "651e208cacf9c0329ea10ab855bc4c86672a9c08",
+      "sizeBytes": 2065,
+      "path": "apps/temporal-worker/test/runtime/temporalWorkerHttpJsonProfile.test.ts",
+      "relativePath": "test/runtime/temporalWorkerHttpJsonProfile.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/runtime/temporalWorkerHttpJsonProfile.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "84718963c02c937ec0c127068709ec80bd70aa8b",
+      "sizeBytes": 5463,
+      "path": "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+      "relativePath": "test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "fe702737ecef393398efa58f8f7e11da90b4da40",
+      "sizeBytes": 2278,
+      "path": "apps/temporal-worker/test/runtime/temporalWorkerObjectFileReader.test.ts",
+      "relativePath": "test/runtime/temporalWorkerObjectFileReader.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/runtime/temporalWorkerObjectFileReader.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e11feb297ebdfc50eb895300c05f3dd96b2cc712",
+      "sizeBytes": 3030,
+      "path": "apps/temporal-worker/test/support/objectFilePostgresPlanFixture.ts",
+      "relativePath": "test/support/objectFilePostgresPlanFixture.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/support/objectFilePostgresPlanFixture.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "cf6d486409c7568d4e506009436362c0d1367878",
+      "sizeBytes": 10067,
+      "path": "apps/temporal-worker/test/support/objectFilePostgresServiceFixture.ts",
+      "relativePath": "test/support/objectFilePostgresServiceFixture.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/support/objectFilePostgresServiceFixture.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9097e858fde81143a6a89034e4b1cdfdf7f29a5f",
+      "sizeBytes": 3520,
+      "path": "apps/temporal-worker/test/support/temporalWorkerServiceTestSupport.ts",
+      "relativePath": "test/support/temporalWorkerServiceTestSupport.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/support/temporalWorkerServiceTestSupport.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4ee0bf81f17666c47d3fac13bb3b8157d9b2b9fd",
+      "sizeBytes": 150,
+      "path": "apps/temporal-worker/test/tsconfig.json",
+      "relativePath": "test/tsconfig.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/tsconfig.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "1130ad64210927638796b1458508070f4e03b827",
+      "sizeBytes": 231,
+      "path": "apps/temporal-worker/tsconfig.json",
+      "relativePath": "tsconfig.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/tsconfig.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a71174ddf688af5e944496a955ad1c92f790dfbd",
+      "sizeBytes": 157,
+      "path": "apps/temporal-worker/vitest.config.ts",
+      "relativePath": "vitest.config.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/vitest.config.ts"
+    }
+  ],
+  "componentMappings": [
+    {
+      "id": "host",
+      "title": "Worker process host",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Owns the Temporal worker process entrypoint and lifecycle.",
+      "fileCount": 1,
+      "files": [
+        "src/server.ts"
+      ]
+    },
+    {
+      "id": "hostComposition",
+      "title": "Temporal worker host composition",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Host-level composition and worker startup boundaries.",
+      "fileCount": 1,
+      "files": [
+        "src/host/runTemporalWorkerHost.ts"
+      ]
+    },
+    {
+      "id": "runtime",
+      "title": "Worker runtime composition",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Composes stores, artifacts, adapters and runtime services used by the worker.",
+      "fileCount": 15,
+      "files": [
+        "src/runtime/createTemporalWorkerRuntime.ts",
+        "src/runtime/EnvironmentDbtRuntimeProfileResolver.ts",
+        "src/runtime/nodeHttpsJsonClient.ts",
+        "src/runtime/objectFilePostgresDbtCommandEnvironment.ts",
+        "src/runtime/runtimeTypes.ts",
+        "src/runtime/temporalWorkerDbtProfile.ts",
+        "src/runtime/temporalWorkerHost.ts",
+        "src/runtime/temporalWorkerHttpJsonArtifactStore.ts",
+        "src/runtime/temporalWorkerHttpJsonProfile.ts",
+        "src/runtime/temporalWorkerLifecycle.ts",
+        "src/runtime/temporalWorkerObjectFilePostgresProfile.ts",
+        "src/runtime/temporalWorkerObjectFileReader.ts",
+        "src/runtime/temporalWorkerRuntimeHandle.ts",
+        "src/runtime/temporalWorkerRuntimeResources.ts",
+        "src/runtime/temporalWorkerStores.ts"
+      ]
+    },
+    {
+      "id": "plugins",
+      "title": "Step plugin composition",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Loads and wires concrete Temporal step plugins without moving their semantics into the generic adapter.",
+      "fileCount": 1,
+      "files": [
+        "src/plugins/env.ts"
+      ]
+    },
+    {
+      "id": "ops",
+      "title": "Worker operations",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Operational worker behavior and supporting host concerns.",
+      "fileCount": 2,
+      "files": [
+        "src/ops/OperationalServer.ts",
+        "src/ops/TemporalWorkerMonitor.ts"
+      ]
+    }
+  ],
+  "inventorySha256": "96c2a4651cb45469163a1e57de9714c43cf288818f631865241e56e2ac6ae448"
+}

@@ -1,0 +1,770 @@
+// GENERATED FILE. DO NOT EDIT.
+// Source: git tree dunay2/dvt@3695f07c9ba3c66ab51f88a2dabe18e18556a244:apps/temporal-worker
+model {
+  temporalWorkerSource = inventory 'Temporal Worker source inventory — generated from Git' {
+    #sourceDerived
+    description 'Machine-generated from the exact Git tree. Folder structure is STRUCTURE-DERIVED; file identity is SOURCE-DERIVED.'
+    metadata {
+      provenance 'SOURCE-DERIVED'
+      architectureOwner 'dvt.apps.temporal-worker'
+      logicalModelId 'temporalWorkerModel'
+      sourceRoot 'apps/temporal-worker'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      trackedFiles '39'
+      sourceFiles '20'
+      testFiles '16'
+      inventorySha256 '96c2a4651cb45469163a1e57de9714c43cf288818f631865241e56e2ac6ae448'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker 'Pinned package tree'
+    dir_src_f27fede2 = folder 'src/ — 20 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'apps/temporal-worker/src'
+        recursiveFileCount '20'
+        directFileCount '1'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src 'Pinned directory'
+      dir_src_host_16cb5924 = folder 'host/ — 1 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/temporal-worker/src/host'
+          recursiveFileCount '1'
+          directFileCount '1'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/host 'Pinned directory'
+        file_src_host_runTemporalWorkerHost_ts_50cefac9 = file 'runTemporalWorkerHost.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/src/host/runTemporalWorkerHost.ts'
+            blobSha 'f63bd4e62000a6f4e09ca2b533fa1b75e9428ef5'
+            sizeBytes '3565'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/host/runTemporalWorkerHost.ts 'Open pinned source'
+        }
+      }
+      dir_src_ops_43dcc755 = folder 'ops/ — 2 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/temporal-worker/src/ops'
+          recursiveFileCount '2'
+          directFileCount '2'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/ops 'Pinned directory'
+        file_src_ops_OperationalServer_ts_b7f6874b = file 'OperationalServer.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/src/ops/OperationalServer.ts'
+            blobSha 'd5cea2e02e5bac560da78b3335ad59831a380622'
+            sizeBytes '3818'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/ops/OperationalServer.ts 'Open pinned source'
+        }
+        file_src_ops_TemporalWorkerMonitor_ts_92206208 = file 'TemporalWorkerMonitor.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/src/ops/TemporalWorkerMonitor.ts'
+            blobSha '404e4d07695d2508ebb3024c0a4bd3d3e069c1ba'
+            sizeBytes '8922'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/ops/TemporalWorkerMonitor.ts 'Open pinned source'
+        }
+      }
+      dir_src_plugins_e2271fcc = folder 'plugins/ — 1 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/temporal-worker/src/plugins'
+          recursiveFileCount '1'
+          directFileCount '1'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/plugins 'Pinned directory'
+        file_src_plugins_env_ts_a41c27b5 = file 'env.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/src/plugins/env.ts'
+            blobSha 'f8dca413420db7b02a4b1f2e9e6f4dca7dacd4ed'
+            sizeBytes '9527'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/plugins/env.ts 'Open pinned source'
+        }
+      }
+      dir_src_runtime_6c8c9a16 = folder 'runtime/ — 15 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/temporal-worker/src/runtime'
+          recursiveFileCount '15'
+          directFileCount '15'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime 'Pinned directory'
+        file_src_runtime_createTemporalWorkerRuntime_ts_05c67170 = file 'createTemporalWorkerRuntime.ts' {
+          #sourceDerived
+          description 'Assemble focused Temporal worker runtime modules into the public runtime handle.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/src/runtime/createTemporalWorkerRuntime.ts'
+            blobSha '62fafe39305d900bde5cb02c8625a61644324d48'
+            sizeBytes '1136'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Assemble focused Temporal worker runtime modules into the public runtime handle.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/createTemporalWorkerRuntime.ts 'Open pinned source'
+        }
+        file__runtime_EnvironmentDbtRuntimeProfileResolver_ts_f0e1feb7 = file 'EnvironmentDbtRuntimeProfileResolver.ts' {
+          #sourceDerived
+          description 'Resolve env-backed DBT profile references inside the Temporal worker boundary.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts'
+            blobSha 'edfed2373b608dd91320860bc3f5e5334677df56'
+            sizeBytes '1711'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Resolve env-backed DBT profile references inside the Temporal worker boundary.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts 'Open pinned source'
+        }
+        file_src_runtime_nodeHttpsJsonClient_ts_7554d7cc = file 'nodeHttpsJsonClient.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/src/runtime/nodeHttpsJsonClient.ts'
+            blobSha '2276df06473f4648e82d4aaec125a25d607c7d06'
+            sizeBytes '14001'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/nodeHttpsJsonClient.ts 'Open pinned source'
+        }
+        file_ntime_objectFilePostgresDbtCommandEnvironment_ts_b3229875 = file 'objectFilePostgresDbtCommandEnvironment.ts' {
+          #sourceDerived
+          description 'adapt a DBT bridge marker and authorized run scope to worker-local process input.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/src/runtime/objectFilePostgresDbtCommandEnvironment.ts'
+            blobSha 'd08631d2353058254cae60de387759f86294cde1'
+            sizeBytes '1036'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'adapt a DBT bridge marker and authorized run scope to worker-local process input.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/objectFilePostgresDbtCommandEnvironment.ts 'Open pinned source'
+        }
+        file_src_runtime_runtimeTypes_ts_3859dc08 = file 'runtimeTypes.ts' {
+          #sourceDerived
+          description 'Define shared Temporal worker runtime composition contracts.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/src/runtime/runtimeTypes.ts'
+            blobSha 'ade5d1e6d801e30e790c54a7046ae83049826bee'
+            sizeBytes '3198'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Define shared Temporal worker runtime composition contracts.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/runtimeTypes.ts 'Open pinned source'
+        }
+        file_src_runtime_temporalWorkerDbtProfile_ts_3bbab614 = file 'temporalWorkerDbtProfile.ts' {
+          #sourceDerived
+          description 'Build the optional DBT worker profile and step activity registry.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/src/runtime/temporalWorkerDbtProfile.ts'
+            blobSha '6ac6ff437b9e4dca2441cb08351c8551baf1f0b5'
+            sizeBytes '3330'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Build the optional DBT worker profile and step activity registry.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/temporalWorkerDbtProfile.ts 'Open pinned source'
+        }
+        file_src_runtime_temporalWorkerHost_ts_40f4bb7e = file 'temporalWorkerHost.ts' {
+          #sourceDerived
+          description 'Build Temporal worker host configuration and host instance.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/src/runtime/temporalWorkerHost.ts'
+            blobSha '419f482e3528f23b2951e3b5cf38262d61b8a967'
+            sizeBytes '987'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Build Temporal worker host configuration and host instance.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/temporalWorkerHost.ts 'Open pinned source'
+        }
+        file_c_runtime_temporalWorkerHttpJsonArtifactStore_ts_e45b4f85 = file 'temporalWorkerHttpJsonArtifactStore.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/src/runtime/temporalWorkerHttpJsonArtifactStore.ts'
+            blobSha 'c659baf7b02b684df3445fc3c54db82b69515395'
+            sizeBytes '704'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/temporalWorkerHttpJsonArtifactStore.ts 'Open pinned source'
+        }
+        file_src_runtime_temporalWorkerHttpJsonProfile_ts_b6d7e198 = file 'temporalWorkerHttpJsonProfile.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/src/runtime/temporalWorkerHttpJsonProfile.ts'
+            blobSha 'f9101bc513db55da9f592d13328d2322ad3f2d3c'
+            sizeBytes '2437'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/temporalWorkerHttpJsonProfile.ts 'Open pinned source'
+        }
+        file_src_runtime_temporalWorkerLifecycle_ts_b18d1e18 = file 'temporalWorkerLifecycle.ts' {
+          #sourceDerived
+          description 'Execute Temporal worker startup, shutdown, connection, and abort lifecycle.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/src/runtime/temporalWorkerLifecycle.ts'
+            blobSha 'f38d36db63a4a54aa6b486307d3b90989c899dd1'
+            sizeBytes '3739'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Execute Temporal worker startup, shutdown, connection, and abort lifecycle.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/temporalWorkerLifecycle.ts 'Open pinned source'
+        }
+        file_ntime_temporalWorkerObjectFilePostgresProfile_ts_47ea271b = file 'temporalWorkerObjectFilePostgresProfile.ts' {
+          #sourceDerived
+          description 'Compose the bounded object-file to PostgreSQL Temporal plugin profile.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/src/runtime/temporalWorkerObjectFilePostgresProfile.ts'
+            blobSha '1dbf560b9eb269a5699145ee42f9bebc261ee33c'
+            sizeBytes '2489'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Compose the bounded object-file to PostgreSQL Temporal plugin profile.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/temporalWorkerObjectFilePostgresProfile.ts 'Open pinned source'
+        }
+        file_src_runtime_temporalWorkerObjectFileReader_ts_224e37d5 = file 'temporalWorkerObjectFileReader.ts' {
+          #sourceDerived
+          description 'Adapt governed artifact URIs to the object-file plugin reader port.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/src/runtime/temporalWorkerObjectFileReader.ts'
+            blobSha 'd44aed37f5f97e532de31ede64542c73851cd839'
+            sizeBytes '1547'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Adapt governed artifact URIs to the object-file plugin reader port.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/temporalWorkerObjectFileReader.ts 'Open pinned source'
+        }
+        file_src_runtime_temporalWorkerRuntimeHandle_ts_82cb6aca = file 'temporalWorkerRuntimeHandle.ts' {
+          #sourceDerived
+          description 'Own runtime handle idempotency and delegate lifecycle operations.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/src/runtime/temporalWorkerRuntimeHandle.ts'
+            blobSha '9d392378583ee2f507aad47bf4b41895aefcad25'
+            sizeBytes '2696'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Own runtime handle idempotency and delegate lifecycle operations.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/temporalWorkerRuntimeHandle.ts 'Open pinned source'
+        }
+        file_src_runtime_temporalWorkerRuntimeResources_ts_6add2f7f = file 'temporalWorkerRuntimeResources.ts' {
+          #sourceDerived
+          description 'Compose validated worker runtime resources from environment and options.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/src/runtime/temporalWorkerRuntimeResources.ts'
+            blobSha '6a2ef0dce42c48c23a58d2367ff1e2d4514e0e82'
+            sizeBytes '4753'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Compose validated worker runtime resources from environment and options.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/temporalWorkerRuntimeResources.ts 'Open pinned source'
+        }
+        file_src_runtime_temporalWorkerStores_ts_30507c83 = file 'temporalWorkerStores.ts' {
+          #sourceDerived
+          description 'Build state, plan, and activity dependencies for the Temporal worker runtime.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/src/runtime/temporalWorkerStores.ts'
+            blobSha '3e50e9e165d82d5d4673be6667167aca2d56e0b4'
+            sizeBytes '3048'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Build state, plan, and activity dependencies for the Temporal worker runtime.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/runtime/temporalWorkerStores.ts 'Open pinned source'
+        }
+      }
+      file_src_server_ts_bcc09dcb = file 'server.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'apps/temporal-worker/src/server.ts'
+          blobSha '2ba13562966c502a7f6ca2db3227c5994748c524'
+          sizeBytes '1654'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/src/server.ts 'Open pinned source'
+      }
+    }
+    dir_test_a94a8fe5 = folder 'test/ — 16 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'apps/temporal-worker/test'
+        recursiveFileCount '16'
+        directFileCount '1'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test 'Pinned directory'
+      dir_test_host_c4480bb3 = folder 'host/ — 2 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/temporal-worker/test/host'
+          recursiveFileCount '2'
+          directFileCount '2'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/host 'Pinned directory'
+        file_t_objectFilePostgres_service_integration_test_ts_286f9c8f = file 'objectFilePostgres.service.integration.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts'
+            blobSha '0635bcba708bf67830b5e94e4f6b084c0c9deae5'
+            sizeBytes '1245'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts 'Open pinned source'
+        }
+        file_test_host_runTemporalWorkerHost_test_ts_5118b9aa = file 'runTemporalWorkerHost.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts'
+            blobSha 'e91eff53fb3151f2b28161747f045f5740170cb3'
+            sizeBytes '19037'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts 'Open pinned source'
+        }
+      }
+      dir_test_ops_ccbee1ea = folder 'ops/ — 1 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/temporal-worker/test/ops'
+          recursiveFileCount '1'
+          directFileCount '1'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/ops 'Pinned directory'
+        file_test_ops_OperationalServer_test_ts_46d9420b = file 'OperationalServer.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/test/ops/OperationalServer.test.ts'
+            blobSha '6ac9b97d765cb445609a63315984b30f0b40f1aa'
+            sizeBytes '3008'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/ops/OperationalServer.test.ts 'Open pinned source'
+        }
+      }
+      dir_test_plugins_a1eaa08f = folder 'plugins/ — 1 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/temporal-worker/test/plugins'
+          recursiveFileCount '1'
+          directFileCount '1'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/plugins 'Pinned directory'
+        file_test_plugins_env_test_ts_f51e0578 = file 'env.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/test/plugins/env.test.ts'
+            blobSha 'b79cda399f2ce34fba73245296c798c2cdc882f2'
+            sizeBytes '7267'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/plugins/env.test.ts 'Open pinned source'
+        }
+      }
+      dir_test_runtime_f0806ded = folder 'runtime/ — 8 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/temporal-worker/test/runtime'
+          recursiveFileCount '8'
+          directFileCount '8'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/runtime 'Pinned directory'
+        file_teTemporalWorkerRuntime_srp_architecture_test_ts_ac7c63ed = file 'createTemporalWorkerRuntime.srp.architecture.test.ts' {
+          #sourceDerived
+          description 'Compose validated worker runtime resources from environment and options.\','
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.srp.architecture.test.ts'
+            blobSha '69b6a153731a6fa5202c0ed480cf393a3505d2d0'
+            sizeBytes '4305'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Compose validated worker runtime resources from environment and options.\','
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.srp.architecture.test.ts 'Open pinned source'
+        }
+        file_test_runtime_createTemporalWorkerRuntime_test_ts_59469a0e = file 'createTemporalWorkerRuntime.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.test.ts'
+            blobSha '74b3ac3dbd4e6769073eb5c671c18eb53967aac2'
+            sizeBytes '15126'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.test.ts 'Open pinned source'
+        }
+        file_ime_EnvironmentDbtRuntimeProfileResolver_test_ts_a7b70ee9 = file 'EnvironmentDbtRuntimeProfileResolver.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/test/runtime/EnvironmentDbtRuntimeProfileResolver.test.ts'
+            blobSha 'e8481c2d0ed8e8d3ce350d4fd966105dc36f88af'
+            sizeBytes '2006'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/runtime/EnvironmentDbtRuntimeProfileResolver.test.ts 'Open pinned source'
+        }
+        file_test_runtime_nodeHttpsJsonClient_test_ts_96e4ddb0 = file 'nodeHttpsJsonClient.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/test/runtime/nodeHttpsJsonClient.test.ts'
+            blobSha '2d861f2e449ffe7bcea1c751722287c6f93a3056'
+            sizeBytes '11220'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/runtime/nodeHttpsJsonClient.test.ts 'Open pinned source'
+        }
+        file__objectFilePostgresDbtCommandEnvironment_test_ts_b1a50d56 = file 'objectFilePostgresDbtCommandEnvironment.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/test/runtime/objectFilePostgresDbtCommandEnvironment.test.ts'
+            blobSha 'fb4bca279fb368721cc76d76f558fcd0d4d0d313'
+            sizeBytes '1891'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/runtime/objectFilePostgresDbtCommandEnvironment.test.ts 'Open pinned source'
+        }
+        file_st_runtime_temporalWorkerHttpJsonProfile_test_ts_693c29b4 = file 'temporalWorkerHttpJsonProfile.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/test/runtime/temporalWorkerHttpJsonProfile.test.ts'
+            blobSha '651e208cacf9c0329ea10ab855bc4c86672a9c08'
+            sizeBytes '2065'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/runtime/temporalWorkerHttpJsonProfile.test.ts 'Open pinned source'
+        }
+        file__temporalWorkerObjectFilePostgresProfile_test_ts_e3040f0e = file 'temporalWorkerObjectFilePostgresProfile.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts'
+            blobSha '84718963c02c937ec0c127068709ec80bd70aa8b'
+            sizeBytes '5463'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts 'Open pinned source'
+        }
+        file_t_runtime_temporalWorkerObjectFileReader_test_ts_d5134753 = file 'temporalWorkerObjectFileReader.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/test/runtime/temporalWorkerObjectFileReader.test.ts'
+            blobSha 'fe702737ecef393398efa58f8f7e11da90b4da40'
+            sizeBytes '2278'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/runtime/temporalWorkerObjectFileReader.test.ts 'Open pinned source'
+        }
+      }
+      dir_test_support_a2b6bf64 = folder 'support/ — 3 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/temporal-worker/test/support'
+          recursiveFileCount '3'
+          directFileCount '3'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/support 'Pinned directory'
+        file_test_support_objectFilePostgresPlanFixture_ts_f59fedf1 = file 'objectFilePostgresPlanFixture.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/test/support/objectFilePostgresPlanFixture.ts'
+            blobSha 'e11feb297ebdfc50eb895300c05f3dd96b2cc712'
+            sizeBytes '3030'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/support/objectFilePostgresPlanFixture.ts 'Open pinned source'
+        }
+        file_test_support_objectFilePostgresServiceFixture_ts_45976ba2 = file 'objectFilePostgresServiceFixture.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/test/support/objectFilePostgresServiceFixture.ts'
+            blobSha 'cf6d486409c7568d4e506009436362c0d1367878'
+            sizeBytes '10067'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/support/objectFilePostgresServiceFixture.ts 'Open pinned source'
+        }
+        file_test_support_temporalWorkerServiceTestSupport_ts_8600d82a = file 'temporalWorkerServiceTestSupport.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/temporal-worker/test/support/temporalWorkerServiceTestSupport.ts'
+            blobSha '9097e858fde81143a6a89034e4b1cdfdf7f29a5f'
+            sizeBytes '3520'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/support/temporalWorkerServiceTestSupport.ts 'Open pinned source'
+        }
+      }
+      file_test_tsconfig_json_ecaa19a9 = file 'tsconfig.json' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'apps/temporal-worker/test/tsconfig.json'
+          blobSha '4ee0bf81f17666c47d3fac13bb3b8157d9b2b9fd'
+          sizeBytes '150'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/test/tsconfig.json 'Open pinned source'
+      }
+    }
+    file_package_json_7030d0b2 = file 'package.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'apps/temporal-worker/package.json'
+        blobSha '4c044fa5da68f96ec9fe013fe387905a9dbc7a61'
+        sizeBytes '1528'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/package.json 'Open pinned source'
+    }
+    file_tsconfig_json_61ebb9fd = file 'tsconfig.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'apps/temporal-worker/tsconfig.json'
+        blobSha '1130ad64210927638796b1458508070f4e03b827'
+        sizeBytes '231'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/tsconfig.json 'Open pinned source'
+    }
+    file_vitest_config_ts_e7b129ed = file 'vitest.config.ts' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'apps/temporal-worker/vitest.config.ts'
+        blobSha 'a71174ddf688af5e944496a955ad1c92f790dfbd'
+        sizeBytes '157'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/temporal-worker/vitest.config.ts 'Open pinned source'
+    }
+  }
+}
+
+views {
+  view temporalWorkerSourceInventory of temporalWorkerSource {
+    title 'Temporal Worker — Complete source inventory'
+    description 'Generated from Git at 3695f07c. 39 tracked files.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view temporalWorkerSource_dir_src_f27fede2 of temporalWorkerSource.dir_src_f27fede2 {
+    title 'Source — src/ (20 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view temporalWorkerSource_dir_src_host_16cb5924 of temporalWorkerSource.dir_src_f27fede2.dir_src_host_16cb5924 {
+    title 'Source — src/host/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view temporalWorkerSource_dir_src_ops_43dcc755 of temporalWorkerSource.dir_src_f27fede2.dir_src_ops_43dcc755 {
+    title 'Source — src/ops/ (2 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view temporalWorkerSource_dir_src_plugins_e2271fcc of temporalWorkerSource.dir_src_f27fede2.dir_src_plugins_e2271fcc {
+    title 'Source — src/plugins/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view temporalWorkerSource_dir_src_runtime_6c8c9a16 of temporalWorkerSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16 {
+    title 'Source — src/runtime/ (15 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view temporalWorkerSource_dir_test_a94a8fe5 of temporalWorkerSource.dir_test_a94a8fe5 {
+    title 'Source — test/ (16 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view temporalWorkerSource_dir_test_host_c4480bb3 of temporalWorkerSource.dir_test_a94a8fe5.dir_test_host_c4480bb3 {
+    title 'Source — test/host/ (2 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view temporalWorkerSource_dir_test_ops_ccbee1ea of temporalWorkerSource.dir_test_a94a8fe5.dir_test_ops_ccbee1ea {
+    title 'Source — test/ops/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view temporalWorkerSource_dir_test_plugins_a1eaa08f of temporalWorkerSource.dir_test_a94a8fe5.dir_test_plugins_a1eaa08f {
+    title 'Source — test/plugins/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view temporalWorkerSource_dir_test_runtime_f0806ded of temporalWorkerSource.dir_test_a94a8fe5.dir_test_runtime_f0806ded {
+    title 'Source — test/runtime/ (8 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view temporalWorkerSource_dir_test_support_a2b6bf64 of temporalWorkerSource.dir_test_a94a8fe5.dir_test_support_a2b6bf64 {
+    title 'Source — test/support/ (3 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view temporal-workerFiles_host {
+    title 'Files — Worker process host'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include temporalWorkerSource.dir_src_f27fede2.file_src_server_ts_bcc09dcb
+    autoLayout TopBottom
+  }
+
+  view temporal-workerFiles_hostComposition {
+    title 'Files — Temporal worker host composition'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include temporalWorkerSource.dir_src_f27fede2.dir_src_host_16cb5924.file_src_host_runTemporalWorkerHost_ts_50cefac9
+    autoLayout TopBottom
+  }
+
+  view temporal-workerFiles_runtime {
+    title 'Files — Worker runtime composition'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 15 evidence file(s).'
+    include temporalWorkerSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_src_runtime_createTemporalWorkerRuntime_ts_05c67170
+    include temporalWorkerSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file__runtime_EnvironmentDbtRuntimeProfileResolver_ts_f0e1feb7
+    include temporalWorkerSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_src_runtime_nodeHttpsJsonClient_ts_7554d7cc
+    include temporalWorkerSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_ntime_objectFilePostgresDbtCommandEnvironment_ts_b3229875
+    include temporalWorkerSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_src_runtime_runtimeTypes_ts_3859dc08
+    include temporalWorkerSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_src_runtime_temporalWorkerDbtProfile_ts_3bbab614
+    include temporalWorkerSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_src_runtime_temporalWorkerHost_ts_40f4bb7e
+    include temporalWorkerSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_c_runtime_temporalWorkerHttpJsonArtifactStore_ts_e45b4f85
+    include temporalWorkerSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_src_runtime_temporalWorkerHttpJsonProfile_ts_b6d7e198
+    include temporalWorkerSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_src_runtime_temporalWorkerLifecycle_ts_b18d1e18
+    include temporalWorkerSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_ntime_temporalWorkerObjectFilePostgresProfile_ts_47ea271b
+    include temporalWorkerSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_src_runtime_temporalWorkerObjectFileReader_ts_224e37d5
+    include temporalWorkerSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_src_runtime_temporalWorkerRuntimeHandle_ts_82cb6aca
+    include temporalWorkerSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_src_runtime_temporalWorkerRuntimeResources_ts_6add2f7f
+    include temporalWorkerSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_src_runtime_temporalWorkerStores_ts_30507c83
+    autoLayout TopBottom
+  }
+
+  view temporal-workerFiles_plugins {
+    title 'Files — Step plugin composition'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include temporalWorkerSource.dir_src_f27fede2.dir_src_plugins_e2271fcc.file_src_plugins_env_ts_a41c27b5
+    autoLayout TopBottom
+  }
+
+  view temporal-workerFiles_ops {
+    title 'Files — Worker operations'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 2 evidence file(s).'
+    include temporalWorkerSource.dir_src_f27fede2.dir_src_ops_43dcc755.file_src_ops_OperationalServer_ts_b7f6874b
+    include temporalWorkerSource.dir_src_f27fede2.dir_src_ops_43dcc755.file_src_ops_TemporalWorkerMonitor_ts_92206208
+    autoLayout TopBottom
+  }
+
+}

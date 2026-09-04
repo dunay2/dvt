@@ -1,0 +1,1514 @@
+{
+  "schemaVersion": 3,
+  "generatedFrom": "git-tree",
+  "repository": "dunay2/dvt",
+  "baselineSha": "3695f07c9ba3c66ab51f88a2dabe18e18556a244",
+  "configuredBaselineSha": "42504563629f0b998d8a3382ea839eead99a36d1",
+  "scope": "packages/@dvt/adapter-postgres",
+  "logicalModelId": "postgresAdapterModel",
+  "sourceModelId": "postgresAdapterSource",
+  "configuredModelId": "postgresAdapterSource",
+  "counts": {
+    "trackedFiles": 125,
+    "sourceFiles": 60,
+    "testFiles": 49,
+    "docsFiles": 0,
+    "packageRootFiles": 5,
+    "filesWithOwnedConcern": 28,
+    "filesWithDecision": 37
+  },
+  "files": [
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "14182cb076da94a169eb2d51b9ed0cb4894e2fc7",
+      "sizeBytes": 4587,
+      "path": "packages/@dvt/adapter-postgres/DESIGN.md",
+      "relativePath": "DESIGN.md",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/DESIGN.md"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "8c8e27995e848ce372e64ee9a5cb64827cd2bd15",
+      "sizeBytes": 1481,
+      "path": "packages/@dvt/adapter-postgres/migrations/001_init.sql",
+      "relativePath": "migrations/001_init.sql",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/migrations/001_init.sql"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3d4dedb17f78af42deebd159e4e8f1721bfbe277",
+      "sizeBytes": 1217,
+      "path": "packages/@dvt/adapter-postgres/migrations/002_add_claimed_at.sql",
+      "relativePath": "migrations/002_add_claimed_at.sql",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/migrations/002_add_claimed_at.sql"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4f3314d757770b7157d9ca13738b3a130be56a19",
+      "sizeBytes": 1063,
+      "path": "packages/@dvt/adapter-postgres/migrations/003_outbox_shard_retry_and_ordering.sql",
+      "relativePath": "migrations/003_outbox_shard_retry_and_ordering.sql",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/migrations/003_outbox_shard_retry_and_ordering.sql"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e1903796d0d069d74887182ebdbe46d466cf85f2",
+      "sizeBytes": 1136,
+      "path": "packages/@dvt/adapter-postgres/migrations/004_run_snapshots_and_status_index.sql",
+      "relativePath": "migrations/004_run_snapshots_and_status_index.sql",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/migrations/004_run_snapshots_and_status_index.sql"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4166fc116e876e0ebd7667b9bae0c96263890595",
+      "sizeBytes": 1084,
+      "path": "packages/@dvt/adapter-postgres/migrations/005_lineage_outbox.sql",
+      "relativePath": "migrations/005_lineage_outbox.sql",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/migrations/005_lineage_outbox.sql"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b2f52be27019ed42b2b2d3c2209baa4259a00357",
+      "sizeBytes": 1392,
+      "path": "packages/@dvt/adapter-postgres/migrations/006_run_event_archive_catalog.sql",
+      "relativePath": "migrations/006_run_event_archive_catalog.sql",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/migrations/006_run_event_archive_catalog.sql"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "02c4645021f595ca16b70dec770ab1361decf5bf",
+      "sizeBytes": 410,
+      "path": "packages/@dvt/adapter-postgres/migrations/007_run_snapshots_archive_pinning.sql",
+      "relativePath": "migrations/007_run_snapshots_archive_pinning.sql",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/migrations/007_run_snapshots_archive_pinning.sql"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3f90a8935fe44566bd65bd051bc891e8c2c2a3cb",
+      "sizeBytes": 1229,
+      "path": "packages/@dvt/adapter-postgres/migrations/008_run_event_archive_delete_lifecycle.sql",
+      "relativePath": "migrations/008_run_event_archive_delete_lifecycle.sql",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/migrations/008_run_event_archive_delete_lifecycle.sql"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "699d75d621bdb8af0002f215c61a1b54e0b8887d",
+      "sizeBytes": 860,
+      "path": "packages/@dvt/adapter-postgres/migrations/009_delivery_buffer_purge_indexes.sql",
+      "relativePath": "migrations/009_delivery_buffer_purge_indexes.sql",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/migrations/009_delivery_buffer_purge_indexes.sql"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d0b9027e90dd4c09ef5770d3ffe01fe80078b148",
+      "sizeBytes": 417,
+      "path": "packages/@dvt/adapter-postgres/migrations/010_lineage_outbox_retry_claim_schedule.sql",
+      "relativePath": "migrations/010_lineage_outbox_retry_claim_schedule.sql",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/migrations/010_lineage_outbox_retry_claim_schedule.sql"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "46d510cad20283bd32902c01e3d721f3639695d9",
+      "sizeBytes": 1509,
+      "path": "packages/@dvt/adapter-postgres/migrations/011_lineage_tenant_scope_hardening.sql",
+      "relativePath": "migrations/011_lineage_tenant_scope_hardening.sql",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/migrations/011_lineage_tenant_scope_hardening.sql"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e03c45ae5efca6f5d1bfcf2dd9f32d5be969b269",
+      "sizeBytes": 1430,
+      "path": "packages/@dvt/adapter-postgres/package.json",
+      "relativePath": "package.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/package.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5192033bcd7c69e927b503fdcc53ff29ff024773",
+      "sizeBytes": 4342,
+      "path": "packages/@dvt/adapter-postgres/src/index.ts",
+      "relativePath": "src/index.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/index.ts",
+      "decision": "Section 3 — Adapter public surface exports transactional state-store capabilities",
+      "consequence": "Consumers import a stable PostgreSQL adapter boundary aligned with execution/state decisions",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0004: Event Sourcing Strategy (Extended)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4c1d255d28cb717ef9ce8a6b1be612cf1c955c52",
+      "sizeBytes": 1361,
+      "path": "packages/@dvt/adapter-postgres/src/lineageOutboxStorePolicy.ts",
+      "relativePath": "src/lineageOutboxStorePolicy.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/lineageOutboxStorePolicy.ts",
+      "decision": "Normalize lineage outbox claim, tenant, and query bounds at the PostgreSQL adapter boundary",
+      "consequence": "Lineage outbox reads remain bounded, tenant-scoped, and compatible with worker claim semantics",
+      "baseline": [
+        "ADR-0004: Event Sourcing Strategy",
+        "ADR-0031: Storage Adapter Tenant Isolation Strategy",
+        "ADR-0033: Outbox Worker Sharding And Fencing Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9026f7183cdf6985b9dde7d5a0c4c3cb57d049f3",
+      "sizeBytes": 938,
+      "path": "packages/@dvt/adapter-postgres/src/migratePostgresRuntimeStores.ts",
+      "relativePath": "src/migratePostgresRuntimeStores.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/migratePostgresRuntimeStores.ts",
+      "decision": "Runtime bootstrap may require both core state-store and start-run intent schema migrations",
+      "consequence": "Callers get one explicit helper instead of remembering dual migrate sequencing ad hoc",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0030: Pre-Dispatch Intent Log for startRun Crash Consistency",
+        "ADR-0031: Storage Adapter Tenant Isolation Strategy"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3ee8e51b4c06ee916897b9233342d3a50c81d534",
+      "sizeBytes": 6304,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresAdapterClientSession.ts",
+      "relativePath": "src/PostgresAdapterClientSession.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresAdapterClientSession.ts",
+      "decision": "Encapsulate pool-client lifecycle, tx boundaries and abort semantics outside the facade adapter",
+      "consequence": "PostgresStateStoreAdapter remains focused on contract composition instead of connection orchestration",
+      "baseline": [
+        "ADR-0031: Storage Adapter Tenant Isolation Strategy"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5ecb9d94e0ecdf030df0f215a357a18997d9729b",
+      "sizeBytes": 1041,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresAdapterClientSessionConstants.ts",
+      "relativePath": "src/PostgresAdapterClientSessionConstants.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresAdapterClientSessionConstants.ts",
+      "decision": "Centralize client-session protocol constants",
+      "consequence": "Session lifecycle and error contracts avoid inline literals",
+      "baseline": [
+        "ADR-0031: Storage Adapter Tenant Isolation Strategy"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5f26d4e26cf356d0d3e53e797e37bf19fec876e1",
+      "sizeBytes": 673,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresAdapterClientSessionSql.ts",
+      "relativePath": "src/PostgresAdapterClientSessionSql.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresAdapterClientSessionSql.ts",
+      "decision": "Centralize SQL fragments used by PostgresAdapterClientSession",
+      "consequence": "Client-session orchestration remains free of inline SQL strings",
+      "baseline": [
+        "ADR-0004: Event Sourcing Strategy (Extended)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a1b733a1f351e9a8eb974ff08fa54a71d78ad7d9",
+      "sizeBytes": 514,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresAdapterConnectionString.ts",
+      "relativePath": "src/PostgresAdapterConnectionString.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresAdapterConnectionString.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "803abf88e2aaf76a19c07575d4ddad025a2aa921",
+      "sizeBytes": 989,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresAdapterConstants.ts",
+      "relativePath": "src/PostgresAdapterConstants.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresAdapterConstants.ts",
+      "decision": "Centralize adapter-level defaults and protocol literals",
+      "consequence": "Runtime and reader implementations avoid magic numbers/strings",
+      "baseline": [
+        "ADR-0031: Storage Adapter Tenant Isolation Strategy"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4c803a21a184d66d2279aab42ef59e7fc9a9fbbf",
+      "sizeBytes": 4415,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresArchiveLeaseStore.ts",
+      "relativePath": "src/PostgresArchiveLeaseStore.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresArchiveLeaseStore.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d3aefdf637dadfc181aab6b38e16ae66099da966",
+      "sizeBytes": 5034,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresBackpressureSnapshotReader.ts",
+      "relativePath": "src/PostgresBackpressureSnapshotReader.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresBackpressureSnapshotReader.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6c406653da8550146c267190df1008f5cd4060d2",
+      "sizeBytes": 2027,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresBackpressureSnapshotReaderSql.ts",
+      "relativePath": "src/PostgresBackpressureSnapshotReaderSql.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresBackpressureSnapshotReaderSql.ts",
+      "decision": "Centralize SQL text used by PostgresBackpressureSnapshotReader",
+      "consequence": "Backpressure reader keeps orchestration logic separate from SQL details",
+      "baseline": [
+        "ADR-0004: Event Sourcing Strategy (Extended)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a3e46727c430250d58d5796777fc5180dcbee636",
+      "sizeBytes": 3375,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresCredentialBindingResolver.ts",
+      "relativePath": "src/PostgresCredentialBindingResolver.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresCredentialBindingResolver.ts",
+      "ownedConcern": "Resolve governed PostgreSQL credential aliases without dynamic environment lookup.",
+      "decision": "PostgreSQL credentials are resolved from explicit governed aliases without dynamic environment lookup.",
+      "consequence": "SQL-first execution fails closed when a scoped credential alias is absent or malformed.",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0031: Storage Adapter Tenant Isolation Strategy"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "73b91c2361cfde1887382cb0b479347c38e9670f",
+      "sizeBytes": 5065,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresDeliveryBufferPurgeStore.ts",
+      "relativePath": "src/PostgresDeliveryBufferPurgeStore.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresDeliveryBufferPurgeStore.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2f35003a4ad49ba8d562ea8d934080ad3387daaf",
+      "sizeBytes": 9705,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresLineageOutboxStore.ts",
+      "relativePath": "src/PostgresLineageOutboxStore.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresLineageOutboxStore.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "bd35fcd3eb3b4e79520dfe29287b77e98195e1f6",
+      "sizeBytes": 6337,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresLineageOutboxStoreSql.ts",
+      "relativePath": "src/PostgresLineageOutboxStoreSql.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresLineageOutboxStoreSql.ts",
+      "decision": "Centralize SQL text used by PostgresLineageOutboxStore",
+      "consequence": "Store class focuses on lineage retry orchestration and policy decisions",
+      "baseline": [
+        "ADR-0004: Event Sourcing Strategy (Extended)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f5ccf0a6ade6c8cd88bac1303ecaa05f68445eae",
+      "sizeBytes": 998,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresMaintenanceAccess.ts",
+      "relativePath": "src/PostgresMaintenanceAccess.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresMaintenanceAccess.ts",
+      "ownedConcern": "enter transaction-local Postgres maintenance access for",
+      "decision": "Service-mode transaction context is entered only through an approved maintenance capability.",
+      "consequence": "Schema management no longer exposes service access as ambient adapter authority.",
+      "baseline": [
+        "ADR-0031: Storage Adapter Tenant Isolation Strategy"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9b3e5ef40307ea8bc474109f8cca72f6a305f141",
+      "sizeBytes": 7112,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts",
+      "relativePath": "src/PostgresObjectFileLoader.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresObjectFileLoader.ts",
+      "ownedConcern": "Publish bounded object-file rows into a PostgreSQL staging relation atomically.",
+      "decision": "Map verified execution scope to a deterministic physical schema and replace one relation atomically",
+      "consequence": "Shared database credentials cannot overwrite another admitted tenant, project, or environment target",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0031: Storage Adapter Tenant Isolation Strategy"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4528233b86d3ff4ad20e23b5b247d70873583464",
+      "sizeBytes": 2243,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoadingCapability.ts",
+      "relativePath": "src/PostgresObjectFileLoadingCapability.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresObjectFileLoadingCapability.ts",
+      "ownedConcern": "Own the PostgreSQL resources used by object-file ingestion.",
+      "decision": "Expose one bounded capability that owns its pool unless the caller supplies one.",
+      "baseline": [
+        "ADR-0003: Execution Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ca1cb9ddf7cf363c049db96a15e5b53146e3b11c",
+      "sizeBytes": 17253,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresOutboxStore.ts",
+      "relativePath": "src/PostgresOutboxStore.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresOutboxStore.ts",
+      "ownedConcern": "persist, claim, retry, and replay tenant-scoped outbox records"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "88b2cc4ccbf4466a5789e7b5625cf204de0faa06",
+      "sizeBytes": 2189,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresPlanStore.admission-repository.ts",
+      "relativePath": "src/PostgresPlanStore.admission-repository.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresPlanStore.admission-repository.ts",
+      "ownedConcern": "persist scoped plan admission links."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d52bd6e8af0ca853c65a087593230b8331ce350f",
+      "sizeBytes": 2611,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresPlanStore.executability-repository.ts",
+      "relativePath": "src/PostgresPlanStore.executability-repository.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresPlanStore.executability-repository.ts",
+      "ownedConcern": "persist scoped adapter executability records."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "bc75e44b8e1065e0ff18100a57e5a5d8eaee71b4",
+      "sizeBytes": 6821,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresPlanStore.executable-blob-repository.ts",
+      "relativePath": "src/PostgresPlanStore.executable-blob-repository.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresPlanStore.executable-blob-repository.ts",
+      "ownedConcern": "persist tenant-neutral stored-plan artifact blobs."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "af262eb5385ff9b5816031a3a805d381b6b7ebba",
+      "sizeBytes": 10171,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresPlanStore.mappers.ts",
+      "relativePath": "src/PostgresPlanStore.mappers.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresPlanStore.mappers.ts",
+      "ownedConcern": "map scoped plan-store rows."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "10587bb5b25d53789c5302db972b3e508bd7b9c9",
+      "sizeBytes": 11198,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresPlanStore.plan-record-repository.ts",
+      "relativePath": "src/PostgresPlanStore.plan-record-repository.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresPlanStore.plan-record-repository.ts",
+      "ownedConcern": "persist tenant-owned plan-record aggregate state."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d35e104fb6988c017246cce34b7925954de4986d",
+      "sizeBytes": 3396,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresPlanStore.schema-manager.ts",
+      "relativePath": "src/PostgresPlanStore.schema-manager.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresPlanStore.schema-manager.ts",
+      "ownedConcern": "migrate scoped plan-store tables and fail-fast legacy shapes."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "cb269917ecc09d677c3822b79e3b7818009893f1",
+      "sizeBytes": 9951,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresPlanStore.sql.ts",
+      "relativePath": "src/PostgresPlanStore.sql.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresPlanStore.sql.ts",
+      "ownedConcern": "define scoped plan-store Postgres DDL."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "7c85b6eeddd368ec0fb7897424ca4284dcc039f0",
+      "sizeBytes": 13611,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts",
+      "relativePath": "src/PostgresPlanStore.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresPlanStore.ts",
+      "ownedConcern": "adapt scoped plan-store commands and queries to Postgres."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9bb77482bfbaca55541acb0f6cf9ec87208e863c",
+      "sizeBytes": 1264,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresPlanStore.tx.ts",
+      "relativePath": "src/PostgresPlanStore.tx.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresPlanStore.tx.ts",
+      "ownedConcern": "provide transaction boundaries for scoped plan-store repositories."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "435e930af68a00335d144ec91454505886c5a0d6",
+      "sizeBytes": 2979,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresPlanStoreComposer.ts",
+      "relativePath": "src/PostgresPlanStoreComposer.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresPlanStoreComposer.ts",
+      "ownedConcern": "compose the scoped Postgres plan-store adapter internals."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "1a83d5839592fbfe297c7171273ed2bcf7e9b565",
+      "sizeBytes": 1419,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts",
+      "relativePath": "src/PostgresPoolErrorPolicy.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts",
+      "decision": "Every production PostgreSQL pool observes idle-client failures without terminating its host process",
+      "consequence": "Runtime supervisors can recover database connectivity while failures remain visible to operators",
+      "baseline": [
+        "ADR-0003: Execution Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "25054f07ddf529c34a53ef88d0d3c0201696f49e",
+      "sizeBytes": 33927,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresRunArchiveStore.ts",
+      "relativePath": "src/PostgresRunArchiveStore.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresRunArchiveStore.ts",
+      "ownedConcern": "Owns PostgreSQL run-event archive-unit eligibility, export/verification state transitions, restore writes, and hot-store deletion for the state-store adapter."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "19e98553d5a1cce8a456ca534a806a1deb9e9411",
+      "sizeBytes": 6756,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresRunEventStorage.ts",
+      "relativePath": "src/PostgresRunEventStorage.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresRunEventStorage.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "914943a62758cb67a1237a228b470e52a65274f5",
+      "sizeBytes": 5265,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresRunEventStore.ts",
+      "relativePath": "src/PostgresRunEventStore.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresRunEventStore.ts",
+      "decision": "Run-event append orchestration is separated from low-level SQL storage concerns",
+      "consequence": "Store policy remains focused on sequencing/deduplication while SQL operations live in dedicated storage module",
+      "baseline": [
+        "ADR-0004: Event Sourcing Strategy (Extended)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a7e36e347e9d74b7ff6bae35187406dcafeefae0",
+      "sizeBytes": 3198,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresRunEventStoreSql.ts",
+      "relativePath": "src/PostgresRunEventStoreSql.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresRunEventStoreSql.ts",
+      "decision": "Centralize SQL text for PostgresRunEventStore in a dedicated module",
+      "consequence": "Store class focuses on policy/orchestration instead of inline query literals",
+      "baseline": [
+        "ADR-0004: Event Sourcing Strategy (Extended)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "cefa23c34ecb8a6cf5083afbd3837bb1bf2db973",
+      "sizeBytes": 15056,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresRunMetadataRepository.ts",
+      "relativePath": "src/PostgresRunMetadataRepository.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresRunMetadataRepository.ts",
+      "ownedConcern": "persist and hydrate canonical run metadata with contract-",
+      "decision": "Run metadata persistence extracted from PostgresStateStoreAdapter",
+      "consequence": "Single-responsibility class for run_metadata table operations",
+      "baseline": [
+        "ADR-0031: Storage Adapter Tenant Isolation Strategy"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "441a8c974b920b756d14aa2f4ef69b30d254c1ae",
+      "sizeBytes": 21426,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresRunSnapshotStore.ts",
+      "relativePath": "src/PostgresRunSnapshotStore.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresRunSnapshotStore.ts",
+      "ownedConcern": "Implement the state-store snapshot read model and the portable",
+      "decision": "Run snapshot persistence extracted from PostgresStateStoreAdapter",
+      "consequence": "Single-responsibility class for run_snapshots table operations",
+      "baseline": [
+        "ADR-0004: Event Sourcing Strategy (Extended)",
+        "ADR-0037: Run Event Lifecycle Archival, Verification, and Restore Model"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "87378143474335cc9c95d2c75be72c4fce134f86",
+      "sizeBytes": 8503,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresRunStateCoordinator.ts",
+      "relativePath": "src/PostgresRunStateCoordinator.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresRunStateCoordinator.ts",
+      "decision": "Extract state/outbox transactional orchestration from facade adapter",
+      "consequence": "PostgresStateStoreAdapter composes contract ports while this class owns write transaction flow",
+      "baseline": [
+        "ADR-0004: Event Sourcing Strategy (Extended)",
+        "ADR-0013: run state bootstrapRunTx ownership",
+        "ADR-0031: Storage Adapter Tenant Isolation Strategy"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e472fde4c39b06ef7002ec15e0d15851901b5052",
+      "sizeBytes": 745,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresRunStateCoordinatorConstants.ts",
+      "relativePath": "src/PostgresRunStateCoordinatorConstants.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresRunStateCoordinatorConstants.ts",
+      "decision": "Isolate coordinator literals and protocol constants from orchestration logic",
+      "consequence": "PostgresRunStateCoordinator stays focused on transactional flow and invariant checks",
+      "baseline": [
+        "ADR-0004: Event Sourcing Strategy (Extended)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "db55ea76b8ca0cf8009468ae993b90ffa7270032",
+      "sizeBytes": 3349,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresRunStateStoreAdapter.ts",
+      "relativePath": "src/PostgresRunStateStoreAdapter.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresRunStateStoreAdapter.ts",
+      "decision": "Run-state contract delegation is isolated from snapshot-queue and delivery concerns",
+      "consequence": "Postgres state-store facade stays aligned with DDD-style responsibility slices",
+      "baseline": [
+        "ADR-0004: Event Sourcing Strategy (Extended)",
+        "ADR-0003: Execution Model",
+        "ADR-0031: Storage Adapter Tenant Isolation Strategy"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ac863d1e4ac666206620b56bc5fefd1175435cc1",
+      "sizeBytes": 60790,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts",
+      "relativePath": "src/PostgresSchemaManager.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresSchemaManager.ts",
+      "ownedConcern": "Owns PostgreSQL schema migration catalog, rollback planning/execution, and rollback compatibility classification for the state-store adapter."
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "47c282aaf52394ca90a9af625f79b5ae81a31b22",
+      "sizeBytes": 2863,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresSchemaManagerSql.ts",
+      "relativePath": "src/PostgresSchemaManagerSql.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresSchemaManagerSql.ts",
+      "decision": "Centralize SQL used by PostgresSchemaManager orchestration methods",
+      "consequence": "Schema manager class remains focused on migration flow control",
+      "baseline": [
+        "ADR-0004: Event Sourcing Strategy (Extended)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "147890cd2ef696a16bfd31b5f6e07830eefe5dd6",
+      "sizeBytes": 2514,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresServiceAccessCapability.ts",
+      "relativePath": "src/PostgresServiceAccessCapability.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresServiceAccessCapability.ts",
+      "ownedConcern": "represent the internal capability required before a Postgres",
+      "decision": "Service access owners are constrained to a closed adapter-internal capability catalog.",
+      "consequence": "Adapter maintenance code cannot mint arbitrary service owners through an exported factory.",
+      "baseline": [
+        "ADR-0031: Storage Adapter Tenant Isolation Strategy"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "193d1576d6255937f127e4982c67a3aade65c448",
+      "sizeBytes": 1790,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresSnapshotQueueAdapter.ts",
+      "relativePath": "src/PostgresSnapshotQueueAdapter.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresSnapshotQueueAdapter.ts",
+      "decision": "Snapshot staleness queries and repair queue operations stay together as one maintenance slice",
+      "consequence": "Snapshot recovery responsibilities no longer inflate the delivery facade file",
+      "baseline": [
+        "ADR-0004: Event Sourcing Strategy (Extended)",
+        "ADR-0003: Execution Model",
+        "ADR-0031: Storage Adapter Tenant Isolation Strategy"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f2043eeced64c264671e08dc35c1dd652a9ec93d",
+      "sizeBytes": 2716,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresSnapshotStalenessQuery.ts",
+      "relativePath": "src/PostgresSnapshotStalenessQuery.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresSnapshotStalenessQuery.ts",
+      "decision": "Isolate stale snapshot SQL query from the facade adapter",
+      "consequence": "Snapshot catch-up selection stays replaceable and independently testable",
+      "baseline": [
+        "ADR-0004: Event Sourcing Strategy (Extended)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "95c40e12709f640839501d04e8b14985d7d52209",
+      "sizeBytes": 3445,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresSnapshotStalenessQuerySql.ts",
+      "relativePath": "src/PostgresSnapshotStalenessQuerySql.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresSnapshotStalenessQuerySql.ts",
+      "decision": "Centralize SQL text used by PostgresSnapshotStalenessQuery",
+      "consequence": "Snapshot staleness query stays isolated from query execution logic",
+      "baseline": [
+        "ADR-0004: Event Sourcing Strategy (Extended)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4f175c3c76cc52eed9eac0d1704aa990fa1777fe",
+      "sizeBytes": 7194,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresSnapshotWorkQueue.ts",
+      "relativePath": "src/PostgresSnapshotWorkQueue.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresSnapshotWorkQueue.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b2aa9b4c20321b8fdeac696af754d57971c78e7e",
+      "sizeBytes": 16197,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts",
+      "relativePath": "src/PostgresStartRunIntentStore.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts",
+      "decision": "SQL-backed intent store with explicit status-transition guards",
+      "consequence": "Intent reconciliation remains durable across process restarts",
+      "baseline": [
+        "ADR-0030: Pre-Dispatch Intent Log for startRun Crash Consistency",
+        "ADR-0031: Storage Adapter Tenant Isolation Strategy"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5a30bcc498a212484cc82c3b93673644edf5b01e",
+      "sizeBytes": 2299,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts",
+      "relativePath": "src/PostgresStateStoreAdapter.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts",
+      "decision": "Delivery-facing port delegation remains the stable aggregate entrypoint for PostgreSQL state storage",
+      "consequence": "Consumers keep one adapter type while the facade is split into smaller responsibility files",
+      "baseline": [
+        "ADR-0004: Event Sourcing Strategy (Extended)",
+        "ADR-0003: Execution Model",
+        "ADR-0031: Storage Adapter Tenant Isolation Strategy"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f203e18c392a5104ea2eb59896872c153c112341",
+      "sizeBytes": 1498,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresStateStoreAdminAdapter.ts",
+      "relativePath": "src/PostgresStateStoreAdminAdapter.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresStateStoreAdminAdapter.ts",
+      "ownedConcern": "Owns Postgres administrative schema lifecycle commands, including online-compatible rollback orchestration.",
+      "decision": "Administrative schema lifecycle stays separate from run-state and delivery port delegation",
+      "consequence": "State-store facade responsibilities are split into smaller owner-focused files",
+      "baseline": [
+        "ADR-0004: Event Sourcing Strategy (Extended)",
+        "ADR-0003: Execution Model",
+        "ADR-0031: Storage Adapter Tenant Isolation Strategy"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9198281f835523ed86f8b4329be3eef030ac1851",
+      "sizeBytes": 9268,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresStateStoreRuntime.ts",
+      "relativePath": "src/PostgresStateStoreRuntime.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresStateStoreRuntime.ts",
+      "decision": "Section 2.1 - Append-only event persistence with monotonic sequence semantics",
+      "consequence": "PostgreSQL adapter preserves deterministic replay and transactional state consistency",
+      "baseline": [
+        "ADR-0004: Event Sourcing Strategy (Extended)",
+        "ADR-0003: Execution Model",
+        "ADR-0031: Storage Adapter Tenant Isolation Strategy"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "253a1520b472dd2dbb2494aa064c9f621e8602f6",
+      "sizeBytes": 5392,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresStateStoreRuntimeComposer.ts",
+      "relativePath": "src/PostgresStateStoreRuntimeComposer.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresStateStoreRuntimeComposer.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "311dff318794e13a1c8db165ddc1a377eb6b1634",
+      "sizeBytes": 617,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresStateStoreRuntimeConfig.ts",
+      "relativePath": "src/PostgresStateStoreRuntimeConfig.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresStateStoreRuntimeConfig.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a8ef003b93a6b535b764a25230346382d3be9644",
+      "sizeBytes": 6428,
+      "path": "packages/@dvt/adapter-postgres/src/PostgresTenantIsolationPolicy.ts",
+      "relativePath": "src/PostgresTenantIsolationPolicy.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/PostgresTenantIsolationPolicy.ts",
+      "ownedConcern": "define the production tenant-isolation table catalog, RLS",
+      "decision": "Tenant-owned Postgres tables use forced RLS with tenant context or approved service owners.",
+      "consequence": "Storage isolation no longer relies only on application predicates or table ownership.",
+      "baseline": [
+        "ADR-0031: Storage Adapter Tenant Isolation Strategy"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "647c3e73ff23903ba40ec913f79a30e6a5de5db7",
+      "sizeBytes": 2155,
+      "path": "packages/@dvt/adapter-postgres/src/runEventEnvelopePolicy.ts",
+      "relativePath": "src/runEventEnvelopePolicy.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/runEventEnvelopePolicy.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d97c65ede3a099049612b955f46ccff129e1ec79",
+      "sizeBytes": 5704,
+      "path": "packages/@dvt/adapter-postgres/src/runEventStoreErrors.ts",
+      "relativePath": "src/runEventStoreErrors.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/runEventStoreErrors.ts",
+      "decision": "Use typed, stable errors for run-event write-boundary violations",
+      "consequence": "Callers assert on error class/code instead of brittle string literals",
+      "baseline": [
+        "ADR-0004: Event Sourcing Strategy (Extended)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "cdbcb7b22bdb65dbfbb13e94afb5e34aa8394876",
+      "sizeBytes": 1471,
+      "path": "packages/@dvt/adapter-postgres/src/RunEventWriteRepository.ts",
+      "relativePath": "src/RunEventWriteRepository.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/RunEventWriteRepository.ts",
+      "decision": "Define local write/read repository ports for run events",
+      "consequence": "Adapter orchestration depends on ports, not concrete Postgres classes",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0034: Bounded Context Boundaries and Communication Rules"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f9c6a883d1ad065c3e4222ecbf01f5073a8857e9",
+      "sizeBytes": 1459,
+      "path": "packages/@dvt/adapter-postgres/src/runStateCommandPortBridge.ts",
+      "relativePath": "src/runStateCommandPortBridge.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/runStateCommandPortBridge.ts",
+      "decision": "Run-state writes are exposed via command port bridge, avoiding direct adapter/runtime coupling to concrete persistence callers.",
+      "consequence": "Temporal and future adapters can target a stable write boundary while Postgres remains an infrastructure implementation.",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0004: Event Sourcing Strategy (Extended)",
+        "ADR-0017: State Write Boundary for Engine Adapters",
+        "ADR-0019: Dungeon Master Orchestration Component"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5eb2af999d23d68d44171a76fd3794daf2c9d597",
+      "sizeBytes": 850,
+      "path": "packages/@dvt/adapter-postgres/src/sqlUtils.ts",
+      "relativePath": "src/sqlUtils.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/sqlUtils.ts",
+      "decision": "Section 2.3 — PostgreSQL is the canonical transactional store and requires safe schema/identifier handling",
+      "consequence": "SQL identifier and schema normalization reduces invalid writes and preserves deterministic adapter behavior",
+      "baseline": [
+        "ADR-0003: Execution Model",
+        "ADR-0004: Event Sourcing Strategy (Extended)"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e7dc1f40bd85ced771bf803fd2da7e82a4729567",
+      "sizeBytes": 8778,
+      "path": "packages/@dvt/adapter-postgres/src/StartRunIntentSchemaManager.ts",
+      "relativePath": "src/StartRunIntentSchemaManager.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/StartRunIntentSchemaManager.ts",
+      "decision": "Versioned schema migrations for start_run_intents are managed outside repository CRUD logic",
+      "consequence": "PostgresStartRunIntentStore focuses on persistence behavior, while schema evolution is explicit",
+      "baseline": [
+        "ADR-0030: Pre-Dispatch Intent Log for startRun Crash Consistency"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "84a8e3d840c1e8d1fef6f696a69dfbdd8b3a4288",
+      "sizeBytes": 988,
+      "path": "packages/@dvt/adapter-postgres/src/types.ts",
+      "relativePath": "src/types.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/src/types.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "9e9ff5119fc1b979a043c0ffc0bf3bccbc4df07d",
+      "sizeBytes": 2265,
+      "path": "packages/@dvt/adapter-postgres/test/helpers/lineageOutboxIntegrationHarness.ts",
+      "relativePath": "test/helpers/lineageOutboxIntegrationHarness.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/helpers/lineageOutboxIntegrationHarness.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "79ad7f1662e27c5badc00cf0f70141fb816b7c62",
+      "sizeBytes": 1868,
+      "path": "packages/@dvt/adapter-postgres/test/helpers/lineageOutboxUnitSupport.ts",
+      "relativePath": "test/helpers/lineageOutboxUnitSupport.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/helpers/lineageOutboxUnitSupport.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "67f7c47f60fafc62a6e6557f1c6370a26c38a6c4",
+      "sizeBytes": 1462,
+      "path": "packages/@dvt/adapter-postgres/test/helpers/postgresIntegrationHarness.ts",
+      "relativePath": "test/helpers/postgresIntegrationHarness.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/helpers/postgresIntegrationHarness.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6e336fbf5f11f60df0cca6f245d40680bf9ea818",
+      "sizeBytes": 8723,
+      "path": "packages/@dvt/adapter-postgres/test/helpers/postgresRlsProofHarness.ts",
+      "relativePath": "test/helpers/postgresRlsProofHarness.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/helpers/postgresRlsProofHarness.ts",
+      "ownedConcern": "centralize real PostgreSQL RLS proof setup so tests can"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "7903f2cb2d96e7139afb3dcf43ee098d4df9775d",
+      "sizeBytes": 4249,
+      "path": "packages/@dvt/adapter-postgres/test/helpers/runEventFixtures.ts",
+      "relativePath": "test/helpers/runEventFixtures.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/helpers/runEventFixtures.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "924b17830f2e3fbd039283db97ce667d4a71dd01",
+      "sizeBytes": 1284,
+      "path": "packages/@dvt/adapter-postgres/test/migratePostgresRuntimeStores.test.ts",
+      "relativePath": "test/migratePostgresRuntimeStores.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/migratePostgresRuntimeStores.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "508cc2c4acda1f9dfbb1d3a858de2d96d0a7a81a",
+      "sizeBytes": 7019,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresAdapterClientSession.test.ts",
+      "relativePath": "test/PostgresAdapterClientSession.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresAdapterClientSession.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c361c7fe3b8e61893cd5716929f160d03e850b5d",
+      "sizeBytes": 5475,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresAppRoleRuntime.integration.test.ts",
+      "relativePath": "test/PostgresAppRoleRuntime.integration.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresAppRoleRuntime.integration.test.ts",
+      "ownedConcern": "prove online adapter operations run under the non-owner"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "7fe0b70ec7e077f39d53bc306f2257346457f206",
+      "sizeBytes": 11482,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresBackpressureSnapshotReader.test.ts",
+      "relativePath": "test/PostgresBackpressureSnapshotReader.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresBackpressureSnapshotReader.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "0714b733c6aecf93af0b5c5adc03627271c74d55",
+      "sizeBytes": 1631,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresCredentialBindingResolver.test.ts",
+      "relativePath": "test/PostgresCredentialBindingResolver.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresCredentialBindingResolver.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "546c9e2c3c608a79d60f605c9a60b07817df5353",
+      "sizeBytes": 5369,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresLineageOutboxStore.dead-letter.test.ts",
+      "relativePath": "test/PostgresLineageOutboxStore.dead-letter.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresLineageOutboxStore.dead-letter.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "36d5246e2c89bb3b2ec51906ae730bb91b02eca5",
+      "sizeBytes": 2626,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresLineageOutboxStore.failures.test.ts",
+      "relativePath": "test/PostgresLineageOutboxStore.failures.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresLineageOutboxStore.failures.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "c4916ede824709644fd7169ab9a2d06f55a1491f",
+      "sizeBytes": 2308,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresLineageOutboxStore.integration.test.ts",
+      "relativePath": "test/PostgresLineageOutboxStore.integration.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresLineageOutboxStore.integration.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "5925136e0db82b63ed3ca9ce22d7334767219c69",
+      "sizeBytes": 5437,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresLineageOutboxStore.pending.test.ts",
+      "relativePath": "test/PostgresLineageOutboxStore.pending.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresLineageOutboxStore.pending.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "262d7804b6a07418ebf88c397f206050e49a01ad",
+      "sizeBytes": 8733,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+      "relativePath": "test/PostgresObjectFileLoad.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "51c27c731e8c52e55b3b14714a18050380f88f68",
+      "sizeBytes": 1321,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresOutboxStore.test.ts",
+      "relativePath": "test/PostgresOutboxStore.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresOutboxStore.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ccb9e79be0e1c024fbcdd66e6c30d2efc618511c",
+      "sizeBytes": 3253,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.integration.helpers.ts",
+      "relativePath": "test/PostgresPlanStore.integration.helpers.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresPlanStore.integration.helpers.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6f3174ae4e46cd2ab1bc7819dbcb7e6eb16cb6cd",
+      "sizeBytes": 5466,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.invariants.unit.test.ts",
+      "relativePath": "test/PostgresPlanStore.invariants.unit.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresPlanStore.invariants.unit.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a65fc548fc721bde3d48a29a0c4263bfd0b1aee1",
+      "sizeBytes": 7542,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.lifecycle.integration.test.ts",
+      "relativePath": "test/PostgresPlanStore.lifecycle.integration.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresPlanStore.lifecycle.integration.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "48ca76bb3f64cbe351f7dbb577a0ee21496e193b",
+      "sizeBytes": 10692,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts",
+      "relativePath": "test/PostgresPlanStore.records-core.integration.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "0a4bf17f337a31fe10a6f1e34ce9a2027a7ceefd",
+      "sizeBytes": 7496,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-guards.integration.test.ts",
+      "relativePath": "test/PostgresPlanStore.records-guards.integration.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresPlanStore.records-guards.integration.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3b04fe006df62d76957df9ef4e09e1d3cf6ee802",
+      "sizeBytes": 671,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.sql.test.ts",
+      "relativePath": "test/PostgresPlanStore.sql.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresPlanStore.sql.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "a9bd4405d88e595241e7ae54b546afd9638fed4b",
+      "sizeBytes": 753,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresPoolErrorPolicy.test.ts",
+      "relativePath": "test/PostgresPoolErrorPolicy.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresPoolErrorPolicy.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "0e603c762937058049206881ff90685eda132566",
+      "sizeBytes": 5690,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresRunArchiveStore.tenant-retention.integration.test.ts",
+      "relativePath": "test/PostgresRunArchiveStore.tenant-retention.integration.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresRunArchiveStore.tenant-retention.integration.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ef089aca1889bcc22ac4daa354d001bce5ee4159",
+      "sizeBytes": 3922,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresRunArchiveStore.tenant-retention.test.ts",
+      "relativePath": "test/PostgresRunArchiveStore.tenant-retention.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresRunArchiveStore.tenant-retention.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "7c717101298c5b74cc5b1e8fa1c43ebd7edfaa2e",
+      "sizeBytes": 5377,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresRunEventRetentionPolicy.architecture.test.ts",
+      "relativePath": "test/PostgresRunEventRetentionPolicy.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresRunEventRetentionPolicy.architecture.test.ts",
+      "ownedConcern": "Owns run-event archive lifecycle policy contracts, tenant retention resolution, and archive runtime ports\\.[\\s\\S]"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "529f619d422873c6475c47c67cb8ea62b101ac31",
+      "sizeBytes": 17792,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresRunEventStore.test.ts",
+      "relativePath": "test/PostgresRunEventStore.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresRunEventStore.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "4b0ec54ffd7627cc9082399351c0f18caf990060",
+      "sizeBytes": 6988,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresRunMetadataRepository.test.ts",
+      "relativePath": "test/PostgresRunMetadataRepository.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresRunMetadataRepository.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ab5414568bf01f2b400b9502188e03cc8f365ee4",
+      "sizeBytes": 6364,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresRunSnapshotStore.cas-guard.test.ts",
+      "relativePath": "test/PostgresRunSnapshotStore.cas-guard.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresRunSnapshotStore.cas-guard.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "7f39ee30f575252f51e18718dbd9d7590e8a6f86",
+      "sizeBytes": 28973,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresRunSnapshotStore.test.ts",
+      "relativePath": "test/PostgresRunSnapshotStore.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresRunSnapshotStore.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d72566c69669c77d97384c3c053e9c4b339405bf",
+      "sizeBytes": 13156,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresRunStateCoordinator.test.ts",
+      "relativePath": "test/PostgresRunStateCoordinator.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresRunStateCoordinator.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "6736bcbb6cfeeac7f4e3d289c055c4fc79af3a2d",
+      "sizeBytes": 12306,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresSchemaManager.rollback.test.ts",
+      "relativePath": "test/PostgresSchemaManager.rollback.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresSchemaManager.rollback.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e1e9ac00e31b8aea999c5d383cec2d0133d6bfc3",
+      "sizeBytes": 5287,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresSchemaRollbackZeroDowntime.architecture.test.ts",
+      "relativePath": "test/PostgresSchemaRollbackZeroDowntime.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresSchemaRollbackZeroDowntime.architecture.test.ts",
+      "ownedConcern": "Owns PostgreSQL schema migration catalog, rollback planning\\/execution, and rollback compatibility classification for the state-store adapter\\.[\\s\\S]"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "fdcc6a65ab97c75fd1584e25b5177356418fe54a",
+      "sizeBytes": 4210,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresServiceAccessCapability.architecture.test.ts",
+      "relativePath": "test/PostgresServiceAccessCapability.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresServiceAccessCapability.architecture.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3061ef495f312b3cbc3f68ccb4e309efdb3aa33a",
+      "sizeBytes": 4723,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresSnapshotStalenessQuery.test.ts",
+      "relativePath": "test/PostgresSnapshotStalenessQuery.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresSnapshotStalenessQuery.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "25a3583d8976ea069db81651569b4abea590eda7",
+      "sizeBytes": 3282,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresStartRunIntentStore.context.test.ts",
+      "relativePath": "test/PostgresStartRunIntentStore.context.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresStartRunIntentStore.context.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "519008556ed9a52a907a7b8b18faec62f9907294",
+      "sizeBytes": 5883,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresStartRunIntentStore.test.ts",
+      "relativePath": "test/PostgresStartRunIntentStore.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresStartRunIntentStore.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "ccecf38ea8d93bd7c5d6365d2a560c9d02f096f6",
+      "sizeBytes": 3130,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.abort.test.ts",
+      "relativePath": "test/PostgresStateStoreAdapter.abort.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresStateStoreAdapter.abort.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d99c93313ef4c9cdd8dee07c5e2b9e3ddbc53833",
+      "sizeBytes": 27462,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts",
+      "relativePath": "test/PostgresStateStoreAdapter.migrate.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "56e1f560ad5956d17982dc9f574443a77c1c8270",
+      "sizeBytes": 16908,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.sharding.test.ts",
+      "relativePath": "test/PostgresStateStoreAdapter.sharding.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresStateStoreAdapter.sharding.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3f19ccc1e8c611cc7e90f75b61e669ba701b0860",
+      "sizeBytes": 1071,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresStateTransitions.integration.test.ts",
+      "relativePath": "test/PostgresStateTransitions.integration.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresStateTransitions.integration.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "e7c153116840520956e8f480e395a0b875812475",
+      "sizeBytes": 3555,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresTenantIsolationPolicy.test.ts",
+      "relativePath": "test/PostgresTenantIsolationPolicy.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresTenantIsolationPolicy.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "2555f4b3bc9347da4bf07146c881587f7fb75c97",
+      "sizeBytes": 2696,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresTenantIsolationSemantic.architecture.test.ts",
+      "relativePath": "test/PostgresTenantIsolationSemantic.architecture.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresTenantIsolationSemantic.architecture.test.ts",
+      "ownedConcern": "keep Postgres tenant-isolation semantics aligned across the"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "3302e088481019305c2ccfbd9e1c7ffe77e97cef",
+      "sizeBytes": 20005,
+      "path": "packages/@dvt/adapter-postgres/test/PostgresTenantRlsEnforcement.integration.test.ts",
+      "relativePath": "test/PostgresTenantRlsEnforcement.integration.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/PostgresTenantRlsEnforcement.integration.test.ts",
+      "ownedConcern": "prove real PostgreSQL forced-RLS behavior independently from"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "f0c0079557f04c2799717db4f7db6221b9216980",
+      "sizeBytes": 1240,
+      "path": "packages/@dvt/adapter-postgres/test/RunDomainStateTransitions.contract.test.ts",
+      "relativePath": "test/RunDomainStateTransitions.contract.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/RunDomainStateTransitions.contract.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "d0a0086474e84bf4f64cef82d5923ba97b21dc6d",
+      "sizeBytes": 1965,
+      "path": "packages/@dvt/adapter-postgres/test/runStateCommandPortBridge.test.ts",
+      "relativePath": "test/runStateCommandPortBridge.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/runStateCommandPortBridge.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "459da47809b209c42d1cf35af61c578b50d6e92a",
+      "sizeBytes": 6499,
+      "path": "packages/@dvt/adapter-postgres/test/S19F1SnapshotWorkQueueClosure.integration.test.ts",
+      "relativePath": "test/S19F1SnapshotWorkQueueClosure.integration.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/S19F1SnapshotWorkQueueClosure.integration.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "bc9c49552d7b5950783512dcbb5d311228657598",
+      "sizeBytes": 56028,
+      "path": "packages/@dvt/adapter-postgres/test/smoke.test.ts",
+      "relativePath": "test/smoke.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/smoke.test.ts",
+      "decision": "Verify Postgres adapter lifecycle, idempotency, outbox, queue-backed snapshot rebuilds, and tenant isolation",
+      "consequence": "Regression coverage for adapter-level invariants against a live PostgreSQL instance",
+      "baseline": [
+        "ADR-0004: Event Sourcing Strategy",
+        "ADR-0013: bootstrapRunTx atomicity",
+        "ADR-0031: Storage Adapter Tenant Isolation Strategy"
+      ]
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b9197974021574c329ba5746f8f46f65f2e65a77",
+      "sizeBytes": 5832,
+      "path": "packages/@dvt/adapter-postgres/test/StartRunIntentSchemaManager.test.ts",
+      "relativePath": "test/StartRunIntentSchemaManager.test.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/test/StartRunIntentSchemaManager.test.ts"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "b87c89eff295ebadcc658e630d2a95ee53372dbf",
+      "sizeBytes": 144,
+      "path": "packages/@dvt/adapter-postgres/tsconfig.eslint.json",
+      "relativePath": "tsconfig.eslint.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/tsconfig.eslint.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "8141dd6ff5545ce4d9846bd12eb840e885fba63d",
+      "sizeBytes": 1595,
+      "path": "packages/@dvt/adapter-postgres/tsconfig.json",
+      "relativePath": "tsconfig.json",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/tsconfig.json"
+    },
+    {
+      "mode": "100644",
+      "type": "blob",
+      "blobSha": "325d4773097cad2085c2fd53202fc068d586c5ad",
+      "sizeBytes": 322,
+      "path": "packages/@dvt/adapter-postgres/vitest.config.ts",
+      "relativePath": "vitest.config.ts",
+      "githubUrl": "https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/adapter-postgres/vitest.config.ts"
+    }
+  ],
+  "componentMappings": [
+    {
+      "id": "publicBoundary",
+      "title": "Postgres adapter public boundary",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Exports transactional state, plan, archive, delivery and capability adapters behind stable PostgreSQL boundaries.",
+      "fileCount": 2,
+      "files": [
+        "src/index.ts",
+        "src/types.ts"
+      ]
+    },
+    {
+      "id": "stateStore",
+      "title": "Run state persistence",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Persists run events, snapshots and metadata without owning lifecycle rules.",
+      "fileCount": 6,
+      "files": [
+        "src/PostgresRunEventStorage.ts",
+        "src/PostgresRunEventStore.ts",
+        "src/PostgresRunMetadataRepository.ts",
+        "src/PostgresRunSnapshotStore.ts",
+        "src/PostgresRunStateCoordinator.ts",
+        "src/PostgresStateStoreAdapter.ts"
+      ]
+    },
+    {
+      "id": "runStateCommandBridge",
+      "title": "RunStateCommandPort bridge",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Explicit bridge from the DVT run-state command boundary into PostgreSQL write storage.",
+      "fileCount": 1,
+      "files": [
+        "src/runStateCommandPortBridge.ts"
+      ]
+    },
+    {
+      "id": "planStore",
+      "title": "Postgres plan store",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Stores and queries immutable/admitted plan records and executable plan artifacts.",
+      "fileCount": 10,
+      "files": [
+        "src/PostgresPlanStore.admission-repository.ts",
+        "src/PostgresPlanStore.executability-repository.ts",
+        "src/PostgresPlanStore.executable-blob-repository.ts",
+        "src/PostgresPlanStore.mappers.ts",
+        "src/PostgresPlanStore.plan-record-repository.ts",
+        "src/PostgresPlanStore.schema-manager.ts",
+        "src/PostgresPlanStore.sql.ts",
+        "src/PostgresPlanStore.ts",
+        "src/PostgresPlanStore.tx.ts",
+        "src/PostgresPlanStoreComposer.ts"
+      ]
+    },
+    {
+      "id": "outboxDelivery",
+      "title": "Outbox + lineage persistence",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "PostgreSQL implementations for delivery/outbox facts and lineage outbox storage.",
+      "fileCount": 2,
+      "files": [
+        "src/PostgresLineageOutboxStore.ts",
+        "src/PostgresOutboxStore.ts"
+      ]
+    },
+    {
+      "id": "archiveLifecycle",
+      "title": "Run archive persistence",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Persistence adapters used by state-store archive/retention lifecycle.",
+      "fileCount": 3,
+      "files": [
+        "src/PostgresArchiveLeaseStore.ts",
+        "src/PostgresDeliveryBufferPurgeStore.ts",
+        "src/PostgresRunArchiveStore.ts"
+      ]
+    },
+    {
+      "id": "backpressure",
+      "title": "Backpressure snapshot reader",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Reads bounded delivery-pressure snapshots used by admission policies.",
+      "fileCount": 2,
+      "files": [
+        "src/PostgresBackpressureSnapshotReader.ts",
+        "src/PostgresBackpressureSnapshotReaderSql.ts"
+      ]
+    },
+    {
+      "id": "objectFile",
+      "title": "Object-file to Postgres capability",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Provider-specific object-file materialization capability exposed to runtime plugins.",
+      "fileCount": 2,
+      "files": [
+        "src/PostgresObjectFileLoader.ts",
+        "src/PostgresObjectFileLoadingCapability.ts"
+      ]
+    },
+    {
+      "id": "schemaAndRuntime",
+      "title": "Schema + runtime composition",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Owns PostgreSQL schema migration/runtime configuration mechanics, not domain semantics.",
+      "fileCount": 3,
+      "files": [
+        "src/migratePostgresRuntimeStores.ts",
+        "src/PostgresSchemaManager.ts",
+        "src/PostgresStateStoreRuntimeConfig.ts"
+      ]
+    },
+    {
+      "id": "credentialsAndPool",
+      "title": "Credentials + pool policy",
+      "provenance": "ARCHITECTURE-DECLARED",
+      "rationale": "Infrastructure-level credential binding and observed pool failure policy.",
+      "fileCount": 3,
+      "files": [
+        "src/PostgresAdapterConnectionString.ts",
+        "src/PostgresCredentialBindingResolver.ts",
+        "src/PostgresPoolErrorPolicy.ts"
+      ]
+    }
+  ],
+  "inventorySha256": "c57d39915a9b584faa16388fc2b6dac58b61ea3aed60030c2063e3503fdca9f4"
+}

@@ -1,0 +1,210 @@
+// GENERATED FILE. DO NOT EDIT.
+// Source: git tree dunay2/dvt@3695f07c9ba3c66ab51f88a2dabe18e18556a244:packages/@dvt/cli
+model {
+  cliSource = inventory 'CLI source inventory — generated from Git' {
+    #sourceDerived
+    description 'Machine-generated from the exact Git tree. Folder structure is STRUCTURE-DERIVED; file identity is SOURCE-DERIVED.'
+    metadata {
+      provenance 'SOURCE-DERIVED'
+      architectureOwner 'dvt.cli'
+      logicalModelId 'cliModel'
+      sourceRoot 'packages/@dvt/cli'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      trackedFiles '10'
+      sourceFiles '1'
+      testFiles '1'
+      inventorySha256 'bd006a3dc5fdd06058b311e5d98aa12119222cc037aa53a5fed60ef2240550d9'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/cli 'Pinned package tree'
+    dir_src_f27fede2 = folder 'src/ — 1 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/cli/src'
+        recursiveFileCount '1'
+        directFileCount '1'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/cli/src 'Pinned directory'
+      file_src_index_ts_c5fb8502 = file 'index.ts' {
+        #sourceDerived
+        description 'Runtime CLI validation metadata for script-backed contract and'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/cli/src/index.ts'
+          blobSha '438ce34c3975eccf78ea3ebbacc304cc5f0fb1a7'
+          sizeBytes '321'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Runtime CLI validation metadata for script-backed contract and'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/cli/src/index.ts 'Open pinned source'
+      }
+    }
+    dir_test_a94a8fe5 = folder 'test/ — 1 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/cli/test'
+        recursiveFileCount '1'
+        directFileCount '1'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/cli/test 'Pinned directory'
+      file_test_smoke_test_ts_dc6a63e5 = file 'smoke.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/cli/test/smoke.test.ts'
+          blobSha 'dfe632996a1da6a8c27e4e156eb951d13e295720'
+          sizeBytes '373'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/cli/test/smoke.test.ts 'Open pinned source'
+      }
+    }
+    file_compare-hashes_cjs_1b5f2875 = file 'compare-hashes.cjs' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/cli/compare-hashes.cjs'
+        blobSha '24c18077f2e21991c75f89cd1fbe9e1b03f8ba23'
+        sizeBytes '36'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/cli/compare-hashes.cjs 'Open pinned source'
+    }
+    file_db-migrate_cjs_1ee1966c = file 'db-migrate.cjs' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/cli/db-migrate.cjs'
+        blobSha '24c18077f2e21991c75f89cd1fbe9e1b03f8ba23'
+        sizeBytes '36'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/cli/db-migrate.cjs 'Open pinned source'
+    }
+    file_enable-workflow_sh_8e2d703e = file 'enable-workflow.sh' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/cli/enable-workflow.sh'
+        blobSha '24c18077f2e21991c75f89cd1fbe9e1b03f8ba23'
+        sizeBytes '36'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/cli/enable-workflow.sh 'Open pinned source'
+    }
+    file_package_json_7030d0b2 = file 'package.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/cli/package.json'
+        blobSha 'a02a01529db576a427d7b2cd2a0d8933f3b65914'
+        sizeBytes '814'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/cli/package.json 'Open pinned source'
+    }
+    file_README_md_8ec9a00b = file 'README.md' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/cli/README.md'
+        blobSha '53c77732da01b181d7ebb603935590c3ded84a1a'
+        sizeBytes '427'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/cli/README.md 'Open pinned source'
+    }
+    file_run-golden-paths_cjs_ed42d141 = file 'run-golden-paths.cjs' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/cli/run-golden-paths.cjs'
+        blobSha 'dbc135956e8267847b073b93b6c27d537b2058d1'
+        sizeBytes '4775'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/cli/run-golden-paths.cjs 'Open pinned source'
+    }
+    file_tsconfig_json_61ebb9fd = file 'tsconfig.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/cli/tsconfig.json'
+        blobSha 'ef56b5a4462e589c158939db4dd2a98b24804c9e'
+        sizeBytes '302'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/cli/tsconfig.json 'Open pinned source'
+    }
+    file_validate-contracts_cjs_3da4b466 = file 'validate-contracts.cjs' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/cli/validate-contracts.cjs'
+        blobSha 'bf3533aa787c6795436174ea45232961970527e1'
+        sizeBytes '7240'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/cli/validate-contracts.cjs 'Open pinned source'
+    }
+  }
+}
+
+views {
+  view cliSourceInventory of cliSource {
+    title 'CLI — Complete source inventory'
+    description 'Generated from Git at 3695f07c. 10 tracked files.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view cliSource_dir_src_f27fede2 of cliSource.dir_src_f27fede2 {
+    title 'Source — src/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view cliSource_dir_test_a94a8fe5 of cliSource.dir_test_a94a8fe5 {
+    title 'Source — test/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view cliFiles_metadata {
+    title 'Files — CLI validation metadata'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include cliSource.dir_src_f27fede2.file_src_index_ts_c5fb8502
+    autoLayout TopBottom
+  }
+
+  view cliFiles_contractValidation {
+    title 'Files — Contract validation script'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include cliSource.file_validate-contracts_cjs_3da4b466
+    autoLayout TopBottom
+  }
+
+  view cliFiles_goldenPaths {
+    title 'Files — Golden-path runner'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include cliSource.file_run-golden-paths_cjs_ed42d141
+    autoLayout TopBottom
+  }
+
+}

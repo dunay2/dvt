@@ -1,0 +1,192 @@
+// GENERATED FILE. DO NOT EDIT.
+// Source: git tree dunay2/dvt@3695f07c9ba3c66ab51f88a2dabe18e18556a244:packages/@dvt/observability-otel
+model {
+  observabilityOtelSource = inventory 'Observability OTel source inventory — generated from Git' {
+    #sourceDerived
+    description 'Machine-generated from the exact Git tree. Folder structure is STRUCTURE-DERIVED; file identity is SOURCE-DERIVED.'
+    metadata {
+      provenance 'SOURCE-DERIVED'
+      architectureOwner 'dvt.observability-otel'
+      logicalModelId 'observabilityOtelModel'
+      sourceRoot 'packages/@dvt/observability-otel'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      trackedFiles '8'
+      sourceFiles '4'
+      testFiles '1'
+      inventorySha256 '6519f811f51b2ca01464e2c6961c3a09e2c24685d3d5646b46ea668ca6b48eaa'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability-otel 'Pinned package tree'
+    dir_src_f27fede2 = folder 'src/ — 4 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/observability-otel/src'
+        recursiveFileCount '4'
+        directFileCount '4'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability-otel/src 'Pinned directory'
+      file_src_index_ts_c5fb8502 = file 'index.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/observability-otel/src/index.ts'
+          blobSha 'a8fbfd42b91b96e7a71814ac35452e892eaa4218'
+          sizeBytes '40'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability-otel/src/index.ts 'Open pinned source'
+      }
+      file_src_OpenTelemetryTraces_ts_da517d6b = file 'OpenTelemetryTraces.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts'
+          blobSha '42b760196a742545d263428983d0d5a102ac7215'
+          sizeBytes '3806'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability-otel/src/OpenTelemetryTraces.ts 'Open pinned source'
+      }
+      file_src_OtelObservability_ts_9699bfcd = file 'OtelObservability.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/observability-otel/src/OtelObservability.ts'
+          blobSha 'b92518bbc1aa46310d3e5d2bf67824b80e140b86'
+          sizeBytes '5113'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability-otel/src/OtelObservability.ts 'Open pinned source'
+      }
+      file_src_otelTracePolicy_ts_a5d77099 = file 'otelTracePolicy.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/observability-otel/src/otelTracePolicy.ts'
+          blobSha '43acf13c1a7d742c4385ba31c25cf7ca2e57a210'
+          sizeBytes '2964'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability-otel/src/otelTracePolicy.ts 'Open pinned source'
+      }
+    }
+    dir_test_a94a8fe5 = folder 'test/ — 1 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/observability-otel/test'
+        recursiveFileCount '1'
+        directFileCount '1'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability-otel/test 'Pinned directory'
+      file_test_OtelObservability_test_ts_7d388a53 = file 'OtelObservability.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/observability-otel/test/OtelObservability.test.ts'
+          blobSha 'df0b0c7cbca588724f0e0b982dd99693e48b0531'
+          sizeBytes '8820'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability-otel/test/OtelObservability.test.ts 'Open pinned source'
+      }
+    }
+    file_package_json_7030d0b2 = file 'package.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/observability-otel/package.json'
+        blobSha '77396cc47adf7414a7f9988eecdd57ed4eff6a3d'
+        sizeBytes '1097'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability-otel/package.json 'Open pinned source'
+    }
+    file_README_md_8ec9a00b = file 'README.md' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/observability-otel/README.md'
+        blobSha 'a5968dd22e11acb0f3cc2864ea3afb0a87896919'
+        sizeBytes '1735'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability-otel/README.md 'Open pinned source'
+    }
+    file_tsconfig_json_61ebb9fd = file 'tsconfig.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/observability-otel/tsconfig.json'
+        blobSha '55b3ada44d7127a508fc999bf9430538dc0f90ab'
+        sizeBytes '504'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability-otel/tsconfig.json 'Open pinned source'
+    }
+  }
+}
+
+views {
+  view observabilityOtelSourceInventory of observabilityOtelSource {
+    title 'Observability OTel — Complete source inventory'
+    description 'Generated from Git at 3695f07c. 8 tracked files.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view observabilityOtelSource_dir_src_f27fede2 of observabilityOtelSource.dir_src_f27fede2 {
+    title 'Source — src/ (4 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view observabilityOtelSource_dir_test_a94a8fe5 of observabilityOtelSource.dir_test_a94a8fe5 {
+    title 'Source — test/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view observability-otelFiles_publicBoundary {
+    title 'Files — OTel public boundary'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include observabilityOtelSource.dir_src_f27fede2.file_src_index_ts_c5fb8502
+    autoLayout TopBottom
+  }
+
+  view observability-otelFiles_observability {
+    title 'Files — OTel observability implementation'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include observabilityOtelSource.dir_src_f27fede2.file_src_OtelObservability_ts_9699bfcd
+    autoLayout TopBottom
+  }
+
+  view observability-otelFiles_traces {
+    title 'Files — OpenTelemetry traces'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include observabilityOtelSource.dir_src_f27fede2.file_src_OpenTelemetryTraces_ts_da517d6b
+    autoLayout TopBottom
+  }
+
+  view observability-otelFiles_tracePolicy {
+    title 'Files — OTel trace policy'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include observabilityOtelSource.dir_src_f27fede2.file_src_otelTracePolicy_ts_a5d77099
+    autoLayout TopBottom
+  }
+
+}

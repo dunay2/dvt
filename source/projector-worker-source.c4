@@ -1,0 +1,166 @@
+// GENERATED FILE. DO NOT EDIT.
+// Source: git tree dunay2/dvt@3695f07c9ba3c66ab51f88a2dabe18e18556a244:apps/projector-worker
+model {
+  projectorWorkerSource = inventory 'Projector Worker source inventory — generated from Git' {
+    #sourceDerived
+    description 'Machine-generated from the exact Git tree. Folder structure is STRUCTURE-DERIVED; file identity is SOURCE-DERIVED.'
+    metadata {
+      provenance 'SOURCE-DERIVED'
+      architectureOwner 'dvt.apps.projector-worker'
+      logicalModelId 'projectorWorkerModel'
+      sourceRoot 'apps/projector-worker'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      trackedFiles '7'
+      sourceFiles '2'
+      testFiles '2'
+      inventorySha256 '3058f4c276e1cdc9a3cf47f712eccf58712b068d8d101969ce88b30f53d1ac4b'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/projector-worker 'Pinned package tree'
+    dir_src_f27fede2 = folder 'src/ — 2 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'apps/projector-worker/src'
+        recursiveFileCount '2'
+        directFileCount '2'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/projector-worker/src 'Pinned directory'
+      file_src_env_ts_3686f5d5 = file 'env.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'apps/projector-worker/src/env.ts'
+          blobSha '971865b3aa29052732e00be95b52530d2ad06a3d'
+          sizeBytes '1296'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/projector-worker/src/env.ts 'Open pinned source'
+      }
+      file_src_server_ts_bcc09dcb = file 'server.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'apps/projector-worker/src/server.ts'
+          blobSha 'e03cdd71a01715ade8b8e7c31ff954429c8fc175'
+          sizeBytes '2230'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/projector-worker/src/server.ts 'Open pinned source'
+      }
+    }
+    dir_test_a94a8fe5 = folder 'test/ — 2 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'apps/projector-worker/test'
+        recursiveFileCount '2'
+        directFileCount '2'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/projector-worker/test 'Pinned directory'
+      file_test_env_test_ts_04b55cc5 = file 'env.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'apps/projector-worker/test/env.test.ts'
+          blobSha '789b790d9d091d3482d2ae4a0a4bb406f0dd3ad6'
+          sizeBytes '659'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/projector-worker/test/env.test.ts 'Open pinned source'
+      }
+      file_test_tsconfig_json_ecaa19a9 = file 'tsconfig.json' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'apps/projector-worker/test/tsconfig.json'
+          blobSha '4ee0bf81f17666c47d3fac13bb3b8157d9b2b9fd'
+          sizeBytes '150'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/projector-worker/test/tsconfig.json 'Open pinned source'
+      }
+    }
+    file_package_json_7030d0b2 = file 'package.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'apps/projector-worker/package.json'
+        blobSha 'abb30c1ad5e9f417f634aedff7b34f6e3e5c9a0b'
+        sizeBytes '998'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/projector-worker/package.json 'Open pinned source'
+    }
+    file_tsconfig_json_61ebb9fd = file 'tsconfig.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'apps/projector-worker/tsconfig.json'
+        blobSha '1130ad64210927638796b1458508070f4e03b827'
+        sizeBytes '231'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/projector-worker/tsconfig.json 'Open pinned source'
+    }
+    file_vitest_config_ts_e7b129ed = file 'vitest.config.ts' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'apps/projector-worker/vitest.config.ts'
+        blobSha '4d50ba5b64e0b830a507f39e7dfe58172981f48d'
+        sizeBytes '156'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/projector-worker/vitest.config.ts 'Open pinned source'
+    }
+  }
+}
+
+views {
+  view projectorWorkerSourceInventory of projectorWorkerSource {
+    title 'Projector Worker — Complete source inventory'
+    description 'Generated from Git at 3695f07c. 7 tracked files.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view projectorWorkerSource_dir_src_f27fede2 of projectorWorkerSource.dir_src_f27fede2 {
+    title 'Source — src/ (2 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view projectorWorkerSource_dir_test_a94a8fe5 of projectorWorkerSource.dir_test_a94a8fe5 {
+    title 'Source — test/ (2 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view projector-workerFiles_host {
+    title 'Files — Projector worker process host'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include projectorWorkerSource.dir_src_f27fede2.file_src_server_ts_bcc09dcb
+    autoLayout TopBottom
+  }
+
+  view projector-workerFiles_env {
+    title 'Files — Projector environment'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include projectorWorkerSource.dir_src_f27fede2.file_src_env_ts_3686f5d5
+    autoLayout TopBottom
+  }
+
+}

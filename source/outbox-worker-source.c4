@@ -1,0 +1,1295 @@
+// GENERATED FILE. DO NOT EDIT.
+// Source: git tree dunay2/dvt@3695f07c9ba3c66ab51f88a2dabe18e18556a244:apps/outbox-worker
+model {
+  outboxWorkerSource = inventory 'Outbox Worker source inventory — generated from Git' {
+    #sourceDerived
+    description 'Machine-generated from the exact Git tree. Folder structure is STRUCTURE-DERIVED; file identity is SOURCE-DERIVED.'
+    metadata {
+      provenance 'SOURCE-DERIVED'
+      architectureOwner 'dvt.apps.outbox-worker'
+      logicalModelId 'outboxWorkerModel'
+      sourceRoot 'apps/outbox-worker'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      trackedFiles '62'
+      sourceFiles '25'
+      testFiles '30'
+      inventorySha256 'fbbaee6f97785c0ed28b1532dbfaffd9feb0aeaba47ce3bfd048a420055405e2'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker 'Pinned package tree'
+    dir_src_f27fede2 = folder 'src/ — 25 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'apps/outbox-worker/src'
+        recursiveFileCount '25'
+        directFileCount '1'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src 'Pinned directory'
+      dir_src_bus_740211a8 = folder 'bus/ — 2 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/outbox-worker/src/bus'
+          recursiveFileCount '2'
+          directFileCount '2'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/bus 'Pinned directory'
+        file_src_bus_HttpEventBus_ts_30469926 = file 'HttpEventBus.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/src/bus/HttpEventBus.ts'
+            blobSha '3be45925505767f322f5b4d3885c033e602d63ae'
+            sizeBytes '2632'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/bus/HttpEventBus.ts 'Open pinned source'
+        }
+        file_src_bus_LoggingEventBus_ts_af7cf0ff = file 'LoggingEventBus.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/src/bus/LoggingEventBus.ts'
+            blobSha '5e9bed5109f0d26eb5876d929c080845d32e2e92'
+            sizeBytes '816'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/bus/LoggingEventBus.ts 'Open pinned source'
+        }
+      }
+      dir_src_db_a9f703b6 = folder 'db/ — 1 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/outbox-worker/src/db'
+          recursiveFileCount '1'
+          directFileCount '1'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/db 'Pinned directory'
+        file_src_db_pool_ts_1b4a99d5 = file 'pool.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/src/db/pool.ts'
+            blobSha '896a01f84df807cfddac6301365ffba5a26945fb'
+            sizeBytes '2410'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/db/pool.ts 'Open pinned source'
+        }
+      }
+      dir_src_host_16cb5924 = folder 'host/ — 1 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/outbox-worker/src/host'
+          recursiveFileCount '1'
+          directFileCount '1'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/host 'Pinned directory'
+        file_src_host_runOutboxWorkerHost_ts_d8877e3e = file 'runOutboxWorkerHost.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/src/host/runOutboxWorkerHost.ts'
+            blobSha 'bf9077826dc16b8960cf2e3b587d6b331f1051c2'
+            sizeBytes '13616'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/host/runOutboxWorkerHost.ts 'Open pinned source'
+        }
+      }
+      dir_src_lifecycle_be90645c = folder 'lifecycle/ — 1 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/outbox-worker/src/lifecycle'
+          recursiveFileCount '1'
+          directFileCount '1'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/lifecycle 'Pinned directory'
+        file_src_lifecycle_stopRuntimeAndOperationalServer_ts_18448806 = file 'stopRuntimeAndOperationalServer.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/src/lifecycle/stopRuntimeAndOperationalServer.ts'
+            blobSha '2b456ca3d3906064cddb6dd86520cef40dedfe5f'
+            sizeBytes '2613'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/lifecycle/stopRuntimeAndOperationalServer.ts 'Open pinned source'
+        }
+      }
+      dir_src_ops_43dcc755 = folder 'ops/ — 9 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/outbox-worker/src/ops'
+          recursiveFileCount '9'
+          directFileCount '3'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/ops 'Pinned directory'
+        dir_src_ops_monitor_19265fa8 = folder 'monitor/ — 6 files' {
+          #structureDerived
+          description 'Directory observed in the pinned Git tree.'
+          metadata {
+            provenance 'STRUCTURE-DERIVED'
+            sourcePath 'apps/outbox-worker/src/ops/monitor'
+            recursiveFileCount '6'
+            directFileCount '6'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/ops/monitor 'Pinned directory'
+          file_src_ops_monitor_model_ts_9dbdd92c = file 'model.ts' {
+            #sourceDerived
+            description 'AR-C2 outbox monitor snapshots and Prometheus bucket policy.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'apps/outbox-worker/src/ops/monitor/model.ts'
+              blobSha 'f55b5a5f8d70840d7263e001bd7ae09e60f3d0b7'
+              sizeBytes '1946'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+              ownedConcern 'AR-C2 outbox monitor snapshots and Prometheus bucket policy.'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/ops/monitor/model.ts 'Open pinned source'
+          }
+          file_src_ops_monitor_OutboxDeliveryTelemetry_ts_15b0eded = file 'OutboxDeliveryTelemetry.ts' {
+            #sourceDerived
+            description 'measure outbox delivery SLA counters, lag, and latency seconds.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'apps/outbox-worker/src/ops/monitor/OutboxDeliveryTelemetry.ts'
+              blobSha 'f5853bc9e9822c754cca93967b7a6d3915d91094'
+              sizeBytes '5333'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+              ownedConcern 'measure outbox delivery SLA counters, lag, and latency seconds.'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/ops/monitor/OutboxDeliveryTelemetry.ts 'Open pinned source'
+          }
+          file_src_ops_monitor_OutboxRuntimeHealthTracker_ts_4df4fdb0 = file 'OutboxRuntimeHealthTracker.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'apps/outbox-worker/src/ops/monitor/OutboxRuntimeHealthTracker.ts'
+              blobSha '459d79f98fe18e57ad039f6d90b1faad9695a3c0'
+              sizeBytes '4745'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/ops/monitor/OutboxRuntimeHealthTracker.ts 'Open pinned source'
+          }
+          file_src_ops_monitor_renderOutboxWorkerMetrics_ts_9fadac99 = file 'renderOutboxWorkerMetrics.ts' {
+            #sourceDerived
+            description 'render current-version outbox Prometheus text exposition.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'apps/outbox-worker/src/ops/monitor/renderOutboxWorkerMetrics.ts'
+              blobSha 'a7c667a0d27293a399c5f5b593c60bae3cd7fda3'
+              sizeBytes '7595'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+              ownedConcern 'render current-version outbox Prometheus text exposition.'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/ops/monitor/renderOutboxWorkerMetrics.ts 'Open pinned source'
+          }
+          file_src_ops_monitor_RunEventRetentionTelemetry_ts_cd18114d = file 'RunEventRetentionTelemetry.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'apps/outbox-worker/src/ops/monitor/RunEventRetentionTelemetry.ts'
+              blobSha '49bafa1155e137bd89cdcac68dc64447e83ff1fb'
+              sizeBytes '2395'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/ops/monitor/RunEventRetentionTelemetry.ts 'Open pinned source'
+          }
+          file_src_ops_monitor_support_ts_05e70b3a = file 'support.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'apps/outbox-worker/src/ops/monitor/support.ts'
+              blobSha '76dc44a3ce0a76ca357bc169e27bd8e4daa9b468'
+              sizeBytes '3036'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/ops/monitor/support.ts 'Open pinned source'
+          }
+        }
+        file_src_ops_OperationalServer_ts_b7f6874b = file 'OperationalServer.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/src/ops/OperationalServer.ts'
+            blobSha 'ce8d21386113f5fa36974d2301475d19e3689638'
+            sizeBytes '3544'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/ops/OperationalServer.ts 'Open pinned source'
+        }
+        file_src_ops_OutboxWorkerMonitor_ts_55820373 = file 'OutboxWorkerMonitor.ts' {
+          #sourceDerived
+          description 'compose outbox runtime, delivery, and retention telemetry for scraping.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts'
+            blobSha '96a18b6eac2215db7cd0875e0bea920847065493'
+            sizeBytes '4372'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'compose outbox runtime, delivery, and retention telemetry for scraping.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts 'Open pinned source'
+        }
+        file_src_ops_resolveReadyStaleAfterMs_ts_f7f2c0bb = file 'resolveReadyStaleAfterMs.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/src/ops/resolveReadyStaleAfterMs.ts'
+            blobSha 'b44af528bf190eb3a4a6d8c3470c5ae2fe3d8714'
+            sizeBytes '727'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/ops/resolveReadyStaleAfterMs.ts 'Open pinned source'
+        }
+      }
+      dir_src_ownership_3dbdd8b8 = folder 'ownership/ — 1 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/outbox-worker/src/ownership'
+          recursiveFileCount '1'
+          directFileCount '1'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/ownership 'Pinned directory'
+        file_src_ownership_PgShardOwnershipGate_ts_6012f89c = file 'PgShardOwnershipGate.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/src/ownership/PgShardOwnershipGate.ts'
+            blobSha 'af556c13300b028b89819154b16b39f02fe7f904'
+            sizeBytes '12818'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/ownership/PgShardOwnershipGate.ts 'Open pinned source'
+        }
+      }
+      dir_src_plugins_e2271fcc = folder 'plugins/ — 1 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/outbox-worker/src/plugins'
+          recursiveFileCount '1'
+          directFileCount '1'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/plugins 'Pinned directory'
+        file_src_plugins_env_ts_a41c27b5 = file 'env.ts' {
+          #sourceDerived
+          description 'Owns outbox worker environment parsing and runtime configuration policy for active/passive worker modes.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/src/plugins/env.ts'
+            blobSha 'e776b910cac8d18bdd74b1ef9b4c94bb1b01f3f8'
+            sizeBytes '10003'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            ownedConcern 'Owns outbox worker environment parsing and runtime configuration policy for active/passive worker modes.'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/plugins/env.ts 'Open pinned source'
+        }
+      }
+      dir_src_runtime_6c8c9a16 = folder 'runtime/ — 8 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/outbox-worker/src/runtime'
+          recursiveFileCount '8'
+          directFileCount '8'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/runtime 'Pinned directory'
+        file_src_runtime_buildDeliveryBufferPurgeRuntime_ts_7221e0a1 = file 'buildDeliveryBufferPurgeRuntime.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/src/runtime/buildDeliveryBufferPurgeRuntime.ts'
+            blobSha '681f515cec9185a64e59f1118667b69f68272e14'
+            sizeBytes '1127'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/runtime/buildDeliveryBufferPurgeRuntime.ts 'Open pinned source'
+        }
+        file_src_runtime_buildRunEventRetentionRuntime_ts_32abfa14 = file 'buildRunEventRetentionRuntime.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/src/runtime/buildRunEventRetentionRuntime.ts'
+            blobSha '17882be2ff5d31fa0ac67c937ec9bad47c7f9ab3'
+            sizeBytes '5274'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/runtime/buildRunEventRetentionRuntime.ts 'Open pinned source'
+        }
+        file_src_runtime_createOutboxEventBus_ts_0a19e908 = file 'createOutboxEventBus.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/src/runtime/createOutboxEventBus.ts'
+            blobSha '40fa5b66e6f67bfabecd4d56390e536e63e7eb41'
+            sizeBytes '940'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/runtime/createOutboxEventBus.ts 'Open pinned source'
+        }
+        file_src_runtime_createOutboxWorkerRuntime_ts_5585da97 = file 'createOutboxWorkerRuntime.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts'
+            blobSha '025687163b3bfe1277a7990ac3652f15c6e62bff'
+            sizeBytes '3901'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts 'Open pinned source'
+        }
+        file_src_runtime_DeliveryBufferPurgeRuntime_ts_de2b3a16 = file 'DeliveryBufferPurgeRuntime.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/src/runtime/DeliveryBufferPurgeRuntime.ts'
+            blobSha 'a075566975626b40777c25f751eac46c69ca3353'
+            sizeBytes '3081'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/runtime/DeliveryBufferPurgeRuntime.ts 'Open pinned source'
+        }
+        file_src_runtime_outboxRuntimeResourceLifecycle_ts_deabfb71 = file 'outboxRuntimeResourceLifecycle.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/src/runtime/outboxRuntimeResourceLifecycle.ts'
+            blobSha 'e77c5fb1d155af671cae9f15030370d316acd367'
+            sizeBytes '2974'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/runtime/outboxRuntimeResourceLifecycle.ts 'Open pinned source'
+        }
+        file_src_runtime_OutboxWorkerRuntime_ts_f1ec00b8 = file 'OutboxWorkerRuntime.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/src/runtime/OutboxWorkerRuntime.ts'
+            blobSha '8343b7d2af879e460d9381b505c3bff613051d20'
+            sizeBytes '158'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/runtime/OutboxWorkerRuntime.ts 'Open pinned source'
+        }
+        file_src_runtime_RunEventRetentionRuntime_ts_8df9cc8b = file 'RunEventRetentionRuntime.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/src/runtime/RunEventRetentionRuntime.ts'
+            blobSha '10ef260b1ce7b8fba36fba012e09e84e81ed0cfb'
+            sizeBytes '5326'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/runtime/RunEventRetentionRuntime.ts 'Open pinned source'
+        }
+      }
+      file_src_server_ts_bcc09dcb = file 'server.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'apps/outbox-worker/src/server.ts'
+          blobSha '341ae5889265eb51e571a9d63e5a68993f5386df'
+          sizeBytes '2173'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/src/server.ts 'Open pinned source'
+      }
+    }
+    dir_test_a94a8fe5 = folder 'test/ — 30 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'apps/outbox-worker/test'
+        recursiveFileCount '30'
+        directFileCount '1'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test 'Pinned directory'
+      dir_test_bus_17c9bd04 = folder 'bus/ — 1 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/outbox-worker/test/bus'
+          recursiveFileCount '1'
+          directFileCount '1'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/bus 'Pinned directory'
+        file_test_bus_HttpEventBus_test_ts_756866f7 = file 'HttpEventBus.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/test/bus/HttpEventBus.test.ts'
+            blobSha 'fbad64b52b497918730c9613a3172b6edfeea2f8'
+            sizeBytes '8903'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/bus/HttpEventBus.test.ts 'Open pinned source'
+        }
+      }
+      dir_test_canary_74a0cd7f = folder 'canary/ — 7 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/outbox-worker/test/canary'
+          recursiveFileCount '7'
+          directFileCount '3'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/canary 'Pinned directory'
+        dir_test_canary_support_37b55e06 = folder 'support/ — 4 files' {
+          #structureDerived
+          description 'Directory observed in the pinned Git tree.'
+          metadata {
+            provenance 'STRUCTURE-DERIVED'
+            sourcePath 'apps/outbox-worker/test/canary/support'
+            recursiveFileCount '4'
+            directFileCount '4'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/canary/support 'Pinned directory'
+          file_t_canary_support_standaloneCanaryEventSupport_ts_dbe31bf5 = file 'standaloneCanaryEventSupport.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'apps/outbox-worker/test/canary/support/standaloneCanaryEventSupport.ts'
+              blobSha 'dba55db6e8532dff6132f21cba0d3b6c06a4a183'
+              sizeBytes '734'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/canary/support/standaloneCanaryEventSupport.ts 'Open pinned source'
+          }
+          file_st_canary_support_standaloneCanaryHostSupport_ts_fe84e40b = file 'standaloneCanaryHostSupport.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'apps/outbox-worker/test/canary/support/standaloneCanaryHostSupport.ts'
+              blobSha '96e7e821f9f7d6ce763d604ddc61508c5bd2b3cf'
+              sizeBytes '5250'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/canary/support/standaloneCanaryHostSupport.ts 'Open pinned source'
+          }
+          file_test_canary_support_standaloneCanaryHttpSink_ts_bf0d7f7e = file 'standaloneCanaryHttpSink.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'apps/outbox-worker/test/canary/support/standaloneCanaryHttpSink.ts'
+              blobSha '47d66fc858fa446103f1724dd08177726bb0b4f8'
+              sizeBytes '6414'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/canary/support/standaloneCanaryHttpSink.ts 'Open pinned source'
+          }
+          file__canary_support_standaloneCanaryOutboxFixture_ts_937cc850 = file 'standaloneCanaryOutboxFixture.ts' {
+            #sourceDerived
+            description 'Tracked file from the pinned Git tree.'
+            metadata {
+              provenance 'SOURCE-DERIVED'
+              sourcePath 'apps/outbox-worker/test/canary/support/standaloneCanaryOutboxFixture.ts'
+              blobSha '4822ed6929edf516d7eb10a8461a140ef97ad022'
+              sizeBytes '6335'
+              baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+            }
+            link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/canary/support/standaloneCanaryOutboxFixture.ts 'Open pinned source'
+          }
+        }
+        file_canary_standaloneCanaryAcceptance_health_test_ts_295a2496 = file 'standaloneCanaryAcceptance.health.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/test/canary/standaloneCanaryAcceptance.health.test.ts'
+            blobSha 'b6ed4632bc91e5460f1fab60d9f80db3e5940980'
+            sizeBytes '5886'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/canary/standaloneCanaryAcceptance.health.test.ts 'Open pinned source'
+        }
+        file_y_standaloneCanaryAcceptance_idempotency_test_ts_d6451929 = file 'standaloneCanaryAcceptance.idempotency.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/test/canary/standaloneCanaryAcceptance.idempotency.test.ts'
+            blobSha '46622a04741af3d6fdc695c57b6bd2312a0f8d36'
+            sizeBytes '2579'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/canary/standaloneCanaryAcceptance.idempotency.test.ts 'Open pinned source'
+        }
+        file_nary_standaloneCanaryAcceptance_ordering_test_ts_16086c06 = file 'standaloneCanaryAcceptance.ordering.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/test/canary/standaloneCanaryAcceptance.ordering.test.ts'
+            blobSha '37dcf1bb269e8bf3b39a6e52a67986ae75fc8ad1'
+            sizeBytes '3910'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/canary/standaloneCanaryAcceptance.ordering.test.ts 'Open pinned source'
+        }
+      }
+      dir_test_db_cdf1fabf = folder 'db/ — 1 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/outbox-worker/test/db'
+          recursiveFileCount '1'
+          directFileCount '1'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/db 'Pinned directory'
+        file_test_db_pool_test_ts_20d13277 = file 'pool.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/test/db/pool.test.ts'
+            blobSha 'e3efb91d558faf9c7746f3ecd3c6d00ca3ffd1d1'
+            sizeBytes '3525'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/db/pool.test.ts 'Open pinned source'
+        }
+      }
+      dir_test_host_c4480bb3 = folder 'host/ — 1 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/outbox-worker/test/host'
+          recursiveFileCount '1'
+          directFileCount '1'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/host 'Pinned directory'
+        file_test_host_runOutboxWorkerHost_test_ts_9664ec50 = file 'runOutboxWorkerHost.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/test/host/runOutboxWorkerHost.test.ts'
+            blobSha '3e35ca9eb8ffdeb23b19ac75cff6652b773e5bf4'
+            sizeBytes '24489'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/host/runOutboxWorkerHost.test.ts 'Open pinned source'
+        }
+      }
+      dir_test_integration_6de70f9e = folder 'integration/ — 1 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/outbox-worker/test/integration'
+          recursiveFileCount '1'
+          directFileCount '1'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/integration 'Pinned directory'
+        file_t_integration_workerEndToEnd_integration_test_ts_5c4bdef6 = file 'workerEndToEnd.integration.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/test/integration/workerEndToEnd.integration.test.ts'
+            blobSha '577e33205b8a2fa3bf841db026a95a79c522bb6a'
+            sizeBytes '5725'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/integration/workerEndToEnd.integration.test.ts 'Open pinned source'
+        }
+      }
+      dir_test_lifecycle_8592082a = folder 'lifecycle/ — 1 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/outbox-worker/test/lifecycle'
+          recursiveFileCount '1'
+          directFileCount '1'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/lifecycle 'Pinned directory'
+        file_ifecycle_stopRuntimeAndOperationalServer_test_ts_2e8370cb = file 'stopRuntimeAndOperationalServer.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/test/lifecycle/stopRuntimeAndOperationalServer.test.ts'
+            blobSha '6b75801f83ee9f602d288c19db0a4fe6e2112a73'
+            sizeBytes '4103'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/lifecycle/stopRuntimeAndOperationalServer.test.ts 'Open pinned source'
+        }
+      }
+      dir_test_ops_ccbee1ea = folder 'ops/ — 4 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/outbox-worker/test/ops'
+          recursiveFileCount '4'
+          directFileCount '4'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/ops 'Pinned directory'
+        file_test_ops_OperationalServer_test_ts_46d9420b = file 'OperationalServer.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/test/ops/OperationalServer.test.ts'
+            blobSha '2ce3a39b6b9b2491079d1b29ce1db1d211193f16'
+            sizeBytes '10961'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/ops/OperationalServer.test.ts 'Open pinned source'
+        }
+        file_test_ops_OutboxWorkerMonitor_test_ts_60737f35 = file 'OutboxWorkerMonitor.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts'
+            blobSha '8faacb702d6548375cee908d47e3014da612cd3e'
+            sizeBytes '11673'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts 'Open pinned source'
+        }
+        file_test_ops_outboxWorkerMonitorTestSupport_ts_263fc14f = file 'outboxWorkerMonitorTestSupport.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/test/ops/outboxWorkerMonitorTestSupport.ts'
+            blobSha 'dab1975afd3b629fbc1ade7dfe04ef5a47ad9848'
+            sizeBytes '3358'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/ops/outboxWorkerMonitorTestSupport.ts 'Open pinned source'
+        }
+        file_test_ops_resolveReadyStaleAfterMs_test_ts_b024291e = file 'resolveReadyStaleAfterMs.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/test/ops/resolveReadyStaleAfterMs.test.ts'
+            blobSha '4b0750c592a6e587caed7966aed52da0abdb3ca0'
+            sizeBytes '1418'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/ops/resolveReadyStaleAfterMs.test.ts 'Open pinned source'
+        }
+      }
+      dir_test_ownership_521c7256 = folder 'ownership/ — 2 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/outbox-worker/test/ownership'
+          recursiveFileCount '2'
+          directFileCount '2'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/ownership 'Pinned directory'
+        file_nership_PgShardOwnershipGate_integration_test_ts_a47f29ba = file 'PgShardOwnershipGate.integration.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/test/ownership/PgShardOwnershipGate.integration.test.ts'
+            blobSha '90e64f39cac875da3f083d0ce3041efece920283'
+            sizeBytes '4310'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/ownership/PgShardOwnershipGate.integration.test.ts 'Open pinned source'
+        }
+        file_test_ownership_PgShardOwnershipGate_test_ts_5437aab7 = file 'PgShardOwnershipGate.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/test/ownership/PgShardOwnershipGate.test.ts'
+            blobSha 'b25685718fdc585e01ba91483bea5f6d328f4e17'
+            sizeBytes '8103'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/ownership/PgShardOwnershipGate.test.ts 'Open pinned source'
+        }
+      }
+      dir_test_plugins_a1eaa08f = folder 'plugins/ — 1 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/outbox-worker/test/plugins'
+          recursiveFileCount '1'
+          directFileCount '1'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/plugins 'Pinned directory'
+        file_test_plugins_env_test_ts_f51e0578 = file 'env.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/test/plugins/env.test.ts'
+            blobSha 'b4aa5c692744e6f50d28a1f555a44f7069b074e2'
+            sizeBytes '19039'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/plugins/env.test.ts 'Open pinned source'
+        }
+      }
+      dir_test_runtime_f0806ded = folder 'runtime/ — 9 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/outbox-worker/test/runtime'
+          recursiveFileCount '9'
+          directFileCount '9'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/runtime 'Pinned directory'
+        file_st_runtime_buildRunEventRetentionRuntime_test_ts_b7f4fc06 = file 'buildRunEventRetentionRuntime.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/test/runtime/buildRunEventRetentionRuntime.test.ts'
+            blobSha 'e38ce4d10842c342f286c1d45b4a4f8dae4b3eed'
+            sizeBytes '4320'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/runtime/buildRunEventRetentionRuntime.test.ts 'Open pinned source'
+        }
+        file_test_runtime_createOutboxWorkerRuntime_test_ts_016e7839 = file 'createOutboxWorkerRuntime.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/test/runtime/createOutboxWorkerRuntime.test.ts'
+            blobSha '156cb7ef92b88acaed3da3eedb04e97243f9e86a'
+            sizeBytes '19318'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/runtime/createOutboxWorkerRuntime.test.ts 'Open pinned source'
+        }
+        file_test_runtime_DeliveryBufferPurgeRuntime_test_ts_aef9b76d = file 'DeliveryBufferPurgeRuntime.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/test/runtime/DeliveryBufferPurgeRuntime.test.ts'
+            blobSha '16bb6dcc1ed53a3f8bd6110b2a06c105fde25688'
+            sizeBytes '4960'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/runtime/DeliveryBufferPurgeRuntime.test.ts 'Open pinned source'
+        }
+        file_test_runtime_OutboxWorkerRuntime_failure_test_ts_ee00fbc6 = file 'OutboxWorkerRuntime.failure.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/test/runtime/OutboxWorkerRuntime.failure.test.ts'
+            blobSha '89ba26bfe048b7c90cd59d5776e2bbc1ab191a7b'
+            sizeBytes '4341'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/runtime/OutboxWorkerRuntime.failure.test.ts 'Open pinned source'
+        }
+        file_st_runtime_OutboxWorkerRuntime_lifecycle_test_ts_e26a06bf = file 'OutboxWorkerRuntime.lifecycle.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/test/runtime/OutboxWorkerRuntime.lifecycle.test.ts'
+            blobSha '4a032014e3e9c058d74531668f767f60d3bc45d0'
+            sizeBytes '7637'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/runtime/OutboxWorkerRuntime.lifecycle.test.ts 'Open pinned source'
+        }
+        file_est_runtime_OutboxWorkerRuntime_ordering_test_ts_125bb78b = file 'OutboxWorkerRuntime.ordering.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/test/runtime/OutboxWorkerRuntime.ordering.test.ts'
+            blobSha 'eed47b1bba808de2b66884c051dba0204c84a7c7'
+            sizeBytes '5983'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/runtime/OutboxWorkerRuntime.ordering.test.ts 'Open pinned source'
+        }
+        file_test_runtime_RunEventRetentionRuntime_test_ts_25cb16e5 = file 'RunEventRetentionRuntime.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/test/runtime/RunEventRetentionRuntime.test.ts'
+            blobSha '81ae72c05ccac5d2641cca1db1c25ea632f47f2a'
+            sizeBytes '5055'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/runtime/RunEventRetentionRuntime.test.ts 'Open pinned source'
+        }
+        file_test_runtime_runtimeTestSupport_ts_b68326c5 = file 'runtimeTestSupport.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/test/runtime/runtimeTestSupport.ts'
+            blobSha '87809163981f6cafbec275bd7e8ef5bb58444b9d'
+            sizeBytes '9842'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/runtime/runtimeTestSupport.ts 'Open pinned source'
+        }
+        file_test_runtime_runtimeTestUtils_ts_e9ef0681 = file 'runtimeTestUtils.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/test/runtime/runtimeTestUtils.ts'
+            blobSha '22f5fcc395c8e87987395ccc1d9d28448e0f141a'
+            sizeBytes '3457'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/runtime/runtimeTestUtils.ts 'Open pinned source'
+        }
+      }
+      dir_test_sharding_4c144e39 = folder 'sharding/ — 1 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'apps/outbox-worker/test/sharding'
+          recursiveFileCount '1'
+          directFileCount '1'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/sharding 'Pinned directory'
+        file_test_sharding_concurrentWorkerOrdering_test_ts_e0a38780 = file 'concurrentWorkerOrdering.test.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'apps/outbox-worker/test/sharding/concurrentWorkerOrdering.test.ts'
+            blobSha '152afbe09c3311eb4a6d6c9c31bcd0d1587345ad'
+            sizeBytes '11589'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/sharding/concurrentWorkerOrdering.test.ts 'Open pinned source'
+        }
+      }
+      file_test_tsconfig_json_ecaa19a9 = file 'tsconfig.json' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'apps/outbox-worker/test/tsconfig.json'
+          blobSha '4ee0bf81f17666c47d3fac13bb3b8157d9b2b9fd'
+          sizeBytes '150'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/test/tsconfig.json 'Open pinned source'
+      }
+    }
+    file__dependency-cruiser_cjs_18f59799 = file '.dependency-cruiser.cjs' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'apps/outbox-worker/.dependency-cruiser.cjs'
+        blobSha 'c3a40b88528732fef21456592cce195be7b16a16'
+        sizeBytes '632'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/.dependency-cruiser.cjs 'Open pinned source'
+    }
+    file__env_example_d4dae00d = file '.env.example' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'apps/outbox-worker/.env.example'
+        blobSha 'e1fc04605aa7e92bad7b62d2708d2ea56ad8397a'
+        sizeBytes '1287'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/.env.example 'Open pinned source'
+    }
+    file__gitignore_a5cc2925 = file '.gitignore' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'apps/outbox-worker/.gitignore'
+        blobSha 'de4d1f007dd195ea685034cbda7209013105044b'
+        sizeBytes '18'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/.gitignore 'Open pinned source'
+    }
+    file_package_json_7030d0b2 = file 'package.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'apps/outbox-worker/package.json'
+        blobSha '91641e3b5613f53f62c2c263269d5d291f628bc6'
+        sizeBytes '1216'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/package.json 'Open pinned source'
+    }
+    file_README_md_8ec9a00b = file 'README.md' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'apps/outbox-worker/README.md'
+        blobSha 'ba15ea1d68b3b0c184320e26d32896533f9f81c5'
+        sizeBytes '5695'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/README.md 'Open pinned source'
+    }
+    file_tsconfig_json_61ebb9fd = file 'tsconfig.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'apps/outbox-worker/tsconfig.json'
+        blobSha '1130ad64210927638796b1458508070f4e03b827'
+        sizeBytes '231'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/tsconfig.json 'Open pinned source'
+    }
+    file_vitest_config_ts_e7b129ed = file 'vitest.config.ts' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'apps/outbox-worker/vitest.config.ts'
+        blobSha '4d50ba5b64e0b830a507f39e7dfe58172981f48d'
+        sizeBytes '156'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker/vitest.config.ts 'Open pinned source'
+    }
+  }
+}
+
+views {
+  view outboxWorkerSourceInventory of outboxWorkerSource {
+    title 'Outbox Worker — Complete source inventory'
+    description 'Generated from Git at 3695f07c. 62 tracked files.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view outboxWorkerSource_dir_src_f27fede2 of outboxWorkerSource.dir_src_f27fede2 {
+    title 'Source — src/ (25 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view outboxWorkerSource_dir_src_bus_740211a8 of outboxWorkerSource.dir_src_f27fede2.dir_src_bus_740211a8 {
+    title 'Source — src/bus/ (2 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view outboxWorkerSource_dir_src_db_a9f703b6 of outboxWorkerSource.dir_src_f27fede2.dir_src_db_a9f703b6 {
+    title 'Source — src/db/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view outboxWorkerSource_dir_src_host_16cb5924 of outboxWorkerSource.dir_src_f27fede2.dir_src_host_16cb5924 {
+    title 'Source — src/host/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view outboxWorkerSource_dir_src_lifecycle_be90645c of outboxWorkerSource.dir_src_f27fede2.dir_src_lifecycle_be90645c {
+    title 'Source — src/lifecycle/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view outboxWorkerSource_dir_src_ops_43dcc755 of outboxWorkerSource.dir_src_f27fede2.dir_src_ops_43dcc755 {
+    title 'Source — src/ops/ (9 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view outboxWorkerSource_dir_src_ops_monitor_19265fa8 of outboxWorkerSource.dir_src_f27fede2.dir_src_ops_43dcc755.dir_src_ops_monitor_19265fa8 {
+    title 'Source — src/ops/monitor/ (6 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view outboxWorkerSource_dir_src_ownership_3dbdd8b8 of outboxWorkerSource.dir_src_f27fede2.dir_src_ownership_3dbdd8b8 {
+    title 'Source — src/ownership/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view outboxWorkerSource_dir_src_plugins_e2271fcc of outboxWorkerSource.dir_src_f27fede2.dir_src_plugins_e2271fcc {
+    title 'Source — src/plugins/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view outboxWorkerSource_dir_src_runtime_6c8c9a16 of outboxWorkerSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16 {
+    title 'Source — src/runtime/ (8 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view outboxWorkerSource_dir_test_a94a8fe5 of outboxWorkerSource.dir_test_a94a8fe5 {
+    title 'Source — test/ (30 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view outboxWorkerSource_dir_test_bus_17c9bd04 of outboxWorkerSource.dir_test_a94a8fe5.dir_test_bus_17c9bd04 {
+    title 'Source — test/bus/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view outboxWorkerSource_dir_test_canary_74a0cd7f of outboxWorkerSource.dir_test_a94a8fe5.dir_test_canary_74a0cd7f {
+    title 'Source — test/canary/ (7 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view outboxWorkerSource_dir_test_canary_support_37b55e06 of outboxWorkerSource.dir_test_a94a8fe5.dir_test_canary_74a0cd7f.dir_test_canary_support_37b55e06 {
+    title 'Source — test/canary/support/ (4 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view outboxWorkerSource_dir_test_db_cdf1fabf of outboxWorkerSource.dir_test_a94a8fe5.dir_test_db_cdf1fabf {
+    title 'Source — test/db/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view outboxWorkerSource_dir_test_host_c4480bb3 of outboxWorkerSource.dir_test_a94a8fe5.dir_test_host_c4480bb3 {
+    title 'Source — test/host/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view outboxWorkerSource_dir_test_integration_6de70f9e of outboxWorkerSource.dir_test_a94a8fe5.dir_test_integration_6de70f9e {
+    title 'Source — test/integration/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view outboxWorkerSource_dir_test_lifecycle_8592082a of outboxWorkerSource.dir_test_a94a8fe5.dir_test_lifecycle_8592082a {
+    title 'Source — test/lifecycle/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view outboxWorkerSource_dir_test_ops_ccbee1ea of outboxWorkerSource.dir_test_a94a8fe5.dir_test_ops_ccbee1ea {
+    title 'Source — test/ops/ (4 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view outboxWorkerSource_dir_test_ownership_521c7256 of outboxWorkerSource.dir_test_a94a8fe5.dir_test_ownership_521c7256 {
+    title 'Source — test/ownership/ (2 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view outboxWorkerSource_dir_test_plugins_a1eaa08f of outboxWorkerSource.dir_test_a94a8fe5.dir_test_plugins_a1eaa08f {
+    title 'Source — test/plugins/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view outboxWorkerSource_dir_test_runtime_f0806ded of outboxWorkerSource.dir_test_a94a8fe5.dir_test_runtime_f0806ded {
+    title 'Source — test/runtime/ (9 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view outboxWorkerSource_dir_test_sharding_4c144e39 of outboxWorkerSource.dir_test_a94a8fe5.dir_test_sharding_4c144e39 {
+    title 'Source — test/sharding/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view outbox-workerFiles_host {
+    title 'Files — Outbox worker process host'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include outboxWorkerSource.dir_src_f27fede2.file_src_server_ts_bcc09dcb
+    autoLayout TopBottom
+  }
+
+  view outbox-workerFiles_hostComposition {
+    title 'Files — Outbox host composition'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include outboxWorkerSource.dir_src_f27fede2.dir_src_host_16cb5924.file_src_host_runOutboxWorkerHost_ts_d8877e3e
+    autoLayout TopBottom
+  }
+
+  view outbox-workerFiles_runtime {
+    title 'Files — Outbox runtime'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 8 evidence file(s).'
+    include outboxWorkerSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_src_runtime_buildDeliveryBufferPurgeRuntime_ts_7221e0a1
+    include outboxWorkerSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_src_runtime_buildRunEventRetentionRuntime_ts_32abfa14
+    include outboxWorkerSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_src_runtime_createOutboxEventBus_ts_0a19e908
+    include outboxWorkerSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_src_runtime_createOutboxWorkerRuntime_ts_5585da97
+    include outboxWorkerSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_src_runtime_DeliveryBufferPurgeRuntime_ts_de2b3a16
+    include outboxWorkerSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_src_runtime_outboxRuntimeResourceLifecycle_ts_deabfb71
+    include outboxWorkerSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_src_runtime_OutboxWorkerRuntime_ts_f1ec00b8
+    include outboxWorkerSource.dir_src_f27fede2.dir_src_runtime_6c8c9a16.file_src_runtime_RunEventRetentionRuntime_ts_8df9cc8b
+    autoLayout TopBottom
+  }
+
+  view outbox-workerFiles_ownership {
+    title 'Files — Shard ownership'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include outboxWorkerSource.dir_src_f27fede2.dir_src_ownership_3dbdd8b8.file_src_ownership_PgShardOwnershipGate_ts_6012f89c
+    autoLayout TopBottom
+  }
+
+  view outbox-workerFiles_bus {
+    title 'Files — Event bus integration'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 2 evidence file(s).'
+    include outboxWorkerSource.dir_src_f27fede2.dir_src_bus_740211a8.file_src_bus_HttpEventBus_ts_30469926
+    include outboxWorkerSource.dir_src_f27fede2.dir_src_bus_740211a8.file_src_bus_LoggingEventBus_ts_af7cf0ff
+    autoLayout TopBottom
+  }
+
+  view outbox-workerFiles_db {
+    title 'Files — Outbox database composition'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include outboxWorkerSource.dir_src_f27fede2.dir_src_db_a9f703b6.file_src_db_pool_ts_1b4a99d5
+    autoLayout TopBottom
+  }
+
+  view outbox-workerFiles_lifecycle {
+    title 'Files — Outbox lifecycle support'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include outboxWorkerSource.dir_src_f27fede2.dir_src_lifecycle_be90645c.file_src_lifecycle_stopRuntimeAndOperationalServer_ts_18448806
+    autoLayout TopBottom
+  }
+
+  view outbox-workerFiles_ops {
+    title 'Files — Outbox operations'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 9 evidence file(s).'
+    include outboxWorkerSource.dir_src_f27fede2.dir_src_ops_43dcc755.dir_src_ops_monitor_19265fa8.file_src_ops_monitor_model_ts_9dbdd92c
+    include outboxWorkerSource.dir_src_f27fede2.dir_src_ops_43dcc755.dir_src_ops_monitor_19265fa8.file_src_ops_monitor_OutboxDeliveryTelemetry_ts_15b0eded
+    include outboxWorkerSource.dir_src_f27fede2.dir_src_ops_43dcc755.dir_src_ops_monitor_19265fa8.file_src_ops_monitor_OutboxRuntimeHealthTracker_ts_4df4fdb0
+    include outboxWorkerSource.dir_src_f27fede2.dir_src_ops_43dcc755.dir_src_ops_monitor_19265fa8.file_src_ops_monitor_renderOutboxWorkerMetrics_ts_9fadac99
+    include outboxWorkerSource.dir_src_f27fede2.dir_src_ops_43dcc755.dir_src_ops_monitor_19265fa8.file_src_ops_monitor_RunEventRetentionTelemetry_ts_cd18114d
+    include outboxWorkerSource.dir_src_f27fede2.dir_src_ops_43dcc755.dir_src_ops_monitor_19265fa8.file_src_ops_monitor_support_ts_05e70b3a
+    include outboxWorkerSource.dir_src_f27fede2.dir_src_ops_43dcc755.file_src_ops_OperationalServer_ts_b7f6874b
+    include outboxWorkerSource.dir_src_f27fede2.dir_src_ops_43dcc755.file_src_ops_OutboxWorkerMonitor_ts_55820373
+    include outboxWorkerSource.dir_src_f27fede2.dir_src_ops_43dcc755.file_src_ops_resolveReadyStaleAfterMs_ts_f7f2c0bb
+    autoLayout TopBottom
+  }
+
+  view outbox-workerFiles_plugins {
+    title 'Files — Outbox host plugins'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include outboxWorkerSource.dir_src_f27fede2.dir_src_plugins_e2271fcc.file_src_plugins_env_ts_a41c27b5
+    autoLayout TopBottom
+  }
+
+}

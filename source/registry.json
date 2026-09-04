@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 2,
+  "baselineRef": "origin/main",
+  "lastValidatedSha": "42504563629f0b998d8a3382ea839eead99a36d1",
+  "contexts": [
+    "contracts",
+    "crypto",
+    "dsl",
+    "cli",
+    "planner",
+    "plan-verifier",
+    "plan-interpreter",
+    "engine",
+    "run-domain",
+    "artifacts",
+    "state-store",
+    "delivery",
+    "observability",
+    "observability-otel",
+    "traceability-service",
+    "adapter-temporal",
+    "adapter-postgres",
+    "temporal-dbt-plugin",
+    "temporal-http-json-plugin",
+    "temporal-object-file-postgres-plugin",
+    "api",
+    "temporal-worker",
+    "outbox-worker",
+    "projector-worker",
+    "lineage-worker",
+    "web"
+  ]
+}

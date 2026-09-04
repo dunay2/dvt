@@ -1,0 +1,224 @@
+// GENERATED FILE. DO NOT EDIT.
+// Source: git tree dunay2/dvt@3695f07c9ba3c66ab51f88a2dabe18e18556a244:packages/@dvt/dsl
+model {
+  dslSource = inventory 'DSL source inventory — generated from Git' {
+    #sourceDerived
+    description 'Machine-generated from the exact Git tree. Folder structure is STRUCTURE-DERIVED; file identity is SOURCE-DERIVED.'
+    metadata {
+      provenance 'SOURCE-DERIVED'
+      architectureOwner 'dvt.dsl'
+      logicalModelId 'dslModel'
+      sourceRoot 'packages/@dvt/dsl'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      trackedFiles '9'
+      sourceFiles '4'
+      testFiles '1'
+      inventorySha256 'ddb4f11fefcf242b19be7c0b12e522e57f9d6b3431833ed711df33055b7e63d3'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/dsl 'Pinned package tree'
+    dir_src_f27fede2 = folder 'src/ — 4 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/dsl/src'
+        recursiveFileCount '4'
+        directFileCount '1'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/dsl/src 'Pinned directory'
+      dir_src_v1_d0c3db8f = folder 'v1/ — 3 files' {
+        #structureDerived
+        description 'Directory observed in the pinned Git tree.'
+        metadata {
+          provenance 'STRUCTURE-DERIVED'
+          sourcePath 'packages/@dvt/dsl/src/v1'
+          recursiveFileCount '3'
+          directFileCount '3'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/dsl/src/v1 'Pinned directory'
+        file_src_v1_ast_ts_008d2652 = file 'ast.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/dsl/src/v1/ast.ts'
+            blobSha '9650022e9880419deb4f3013c895a77149c888be'
+            sizeBytes '207'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/dsl/src/v1/ast.ts 'Open pinned source'
+        }
+        file_src_v1_evaluator_ts_ca5cff7f = file 'evaluator.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/dsl/src/v1/evaluator.ts'
+            blobSha '8b15d82912b720a758355e2e805aca1cf08c6a75'
+            sizeBytes '637'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/dsl/src/v1/evaluator.ts 'Open pinned source'
+        }
+        file_src_v1_parser_ts_9d102362 = file 'parser.ts' {
+          #sourceDerived
+          description 'Tracked file from the pinned Git tree.'
+          metadata {
+            provenance 'SOURCE-DERIVED'
+            sourcePath 'packages/@dvt/dsl/src/v1/parser.ts'
+            blobSha 'ce20517f5d79b9045ad35bbfc3f3ba9d30f1952e'
+            sizeBytes '1781'
+            baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          }
+          link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/dsl/src/v1/parser.ts 'Open pinned source'
+        }
+      }
+      file_src_index_ts_c5fb8502 = file 'index.ts' {
+        #sourceDerived
+        description 'Runtime DSL API for parsing and evaluating governed v1'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/dsl/src/index.ts'
+          blobSha 'd1d899f44b3c9264d924ac4c1a094b0cc5e8dff4'
+          sizeBytes '274'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+          ownedConcern 'Runtime DSL API for parsing and evaluating governed v1'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/dsl/src/index.ts 'Open pinned source'
+      }
+    }
+    dir_test_a94a8fe5 = folder 'test/ — 1 files' {
+      #structureDerived
+      description 'Directory observed in the pinned Git tree.'
+      metadata {
+        provenance 'STRUCTURE-DERIVED'
+        sourcePath 'packages/@dvt/dsl/test'
+        recursiveFileCount '1'
+        directFileCount '1'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/dsl/test 'Pinned directory'
+      file_test_dsl-v1_test_ts_ad300292 = file 'dsl-v1.test.ts' {
+        #sourceDerived
+        description 'Tracked file from the pinned Git tree.'
+        metadata {
+          provenance 'SOURCE-DERIVED'
+          sourcePath 'packages/@dvt/dsl/test/dsl-v1.test.ts'
+          blobSha '6892d0c63781cd5ba3274672ec08f1c530303615'
+          sizeBytes '1051'
+          baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+        }
+        link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/dsl/test/dsl-v1.test.ts 'Open pinned source'
+      }
+    }
+    file_package_json_7030d0b2 = file 'package.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/dsl/package.json'
+        blobSha 'c8147f972a3dad27e818cbc1c0bd449411d88c36'
+        sizeBytes '606'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/dsl/package.json 'Open pinned source'
+    }
+    file_README_md_8ec9a00b = file 'README.md' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/dsl/README.md'
+        blobSha 'da2279aab391da4cbe07f8a877cd1168bdf0103b'
+        sizeBytes '380'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/dsl/README.md 'Open pinned source'
+    }
+    file_tsconfig_json_61ebb9fd = file 'tsconfig.json' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/dsl/tsconfig.json'
+        blobSha 'ef56b5a4462e589c158939db4dd2a98b24804c9e'
+        sizeBytes '302'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/dsl/tsconfig.json 'Open pinned source'
+    }
+    file_vitest_config_ts_e7b129ed = file 'vitest.config.ts' {
+      #sourceDerived
+      description 'Tracked file from the pinned Git tree.'
+      metadata {
+        provenance 'SOURCE-DERIVED'
+        sourcePath 'packages/@dvt/dsl/vitest.config.ts'
+        blobSha '43e56f45f3eece05a802ab75eedcff828b76b9d4'
+        sizeBytes '132'
+        baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      }
+      link https://github.com/dunay2/dvt/blob/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/dsl/vitest.config.ts 'Open pinned source'
+    }
+  }
+}
+
+views {
+  view dslSourceInventory of dslSource {
+    title 'DSL — Complete source inventory'
+    description 'Generated from Git at 3695f07c. 9 tracked files.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view dslSource_dir_src_f27fede2 of dslSource.dir_src_f27fede2 {
+    title 'Source — src/ (4 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view dslSource_dir_src_v1_d0c3db8f of dslSource.dir_src_f27fede2.dir_src_v1_d0c3db8f {
+    title 'Source — src/v1/ (3 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view dslSource_dir_test_a94a8fe5 of dslSource.dir_test_a94a8fe5 {
+    title 'Source — test/ (1 files)'
+    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'
+    include *
+    autoLayout TopBottom
+  }
+
+  view dslFiles_publicBoundary {
+    title 'Files — DSL public boundary'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include dslSource.dir_src_f27fede2.file_src_index_ts_c5fb8502
+    autoLayout TopBottom
+  }
+
+  view dslFiles_ast {
+    title 'Files — DSL v1 AST'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include dslSource.dir_src_f27fede2.dir_src_v1_d0c3db8f.file_src_v1_ast_ts_008d2652
+    autoLayout TopBottom
+  }
+
+  view dslFiles_parser {
+    title 'Files — DSL v1 parser'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include dslSource.dir_src_f27fede2.dir_src_v1_d0c3db8f.file_src_v1_parser_ts_9d102362
+    autoLayout TopBottom
+  }
+
+  view dslFiles_evaluator {
+    title 'Files — DSL v1 evaluator'
+    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. 1 evidence file(s).'
+    include dslSource.dir_src_f27fede2.dir_src_v1_d0c3db8f.file_src_v1_evaluator_ts_ca5cff7f
+    autoLayout TopBottom
+  }
+
+}
