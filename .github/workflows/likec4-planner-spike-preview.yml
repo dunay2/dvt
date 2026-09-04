@@ -1,9 +1,6 @@
 name: LikeC4 source-first architecture preview
 
 on:
-  push:
-    branches:
-      - spike/likec4-planner-source-first
   workflow_dispatch:
 
 permissions:
