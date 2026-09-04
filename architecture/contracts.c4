@@ -1,7 +1,7 @@
 model {
   contractsModel = package '@dvt/contracts' {
     #asIs
-    description 'Versioned product contracts, schema boundaries, step registry and the explicit Substrait contract export.'
+    description 'Versioned product contracts, schema boundaries, validation, step registry and the explicit Substrait contract export.'
     metadata {
       repository 'dunay2/dvt'
       baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
@@ -20,18 +20,28 @@ model {
     types = contract 'Shared contract types' { #asIs description 'Contract-owned shared types.' }
     utils = component 'Contract utilities' { #asIs description 'Utilities supporting contract representation and validation.' }
     errors = contract 'Error contracts' { #asIs description 'Versioned error/failure contract surfaces.' }
+    validation = component 'Contract validation boundary' {
+      #asIs
+      description 'Contract-owned validation entrypoint plus focused core, event, planner and runtime validators.'
+    }
+    workflowContracts = contract 'Workflow compatibility exports' {
+      #asIs
+      description 'Workflow-facing contract export surface; contract representation only, never workflow execution.'
+    }
 
     publicBoundary .uses contractFamilies 'exports contract families'
     publicBoundary .uses schemaPacks 'exports schemas'
     publicBoundary .uses stepRegistry 'exports step registry'
     publicBoundary .uses types 'exports shared types'
+    publicBoundary .uses validation 'exposes validation behavior'
+    publicBoundary .uses workflowContracts 'exports workflow-facing contracts'
   }
 }
 
 views {
   view contractsBoundary of contractsModel {
     title 'DVT+ Contracts — Versioned boundaries and source evidence'
-    description 'Source-first contract map. Substrait is shown as an explicit exported boundary rather than as the whole planner-contract namespace.'
+    description 'Source-first contract map. Substrait remains an explicit exported boundary; validation and workflow compatibility surfaces are visible separately.'
     include sourceEvidence with { navigateTo contractsSourceInventory }
     include publicBoundary with { navigateTo contractsFiles_publicBoundary }
     include contractFamilies with { navigateTo contractsFiles_contractFamilies }
@@ -42,6 +52,8 @@ views {
     include types with { navigateTo contractsFiles_types }
     include utils with { navigateTo contractsFiles_utils }
     include errors with { navigateTo contractsFiles_errors }
+    include validation with { navigateTo contractsFiles_validation }
+    include workflowContracts with { navigateTo contractsFiles_workflowContracts }
     autoLayout LeftRight
   }
 }
