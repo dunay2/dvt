@@ -1,0 +1,51 @@
+model {
+  outboxWorkerModel = worker 'apps/outbox-worker' {
+    #asIs
+    description 'Asynchronous worker host for durable outbox movement, sharding/ownership and event transport composition.'
+    metadata {
+      repository 'dunay2/dvt'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      sourceRoot 'apps/outbox-worker'
+      provenance 'SOURCE-FIRST'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/outbox-worker 'Pinned app tree'
+
+    sourceEvidence = component 'Source evidence' { #sourceDerived description 'Complete tracked-file inventory at the resolved main SHA.' }
+    host = component 'Outbox worker process host' { #asIs description 'Process entrypoint and lifecycle.' }
+    hostComposition = component 'Outbox host composition' { #asIs description 'Composes the worker runtime and host dependencies.' }
+    runtime = component 'Outbox runtime' { #asIs description 'Long-lived outbox worker execution behavior.' }
+    ownership = component 'Shard ownership' { #asIs description 'Worker-side shard ownership and assignment.' }
+    bus = adapter 'Event bus integration' { #asIs description 'Concrete event transport integration.' }
+    db = adapter 'Outbox database composition' { #asIs description 'Database adapter wiring for outbox persistence.' }
+    lifecycle = component 'Outbox lifecycle support' { #asIs description 'Worker lifecycle and retention support.' }
+    ops = component 'Outbox operations' { #asIs description 'Operational concerns and diagnostics.' }
+    plugins = component 'Outbox host plugins' { #asIs description 'Host-level plugin/configuration concerns.' }
+
+    host .uses hostComposition 'build worker host'
+    hostComposition .uses runtime 'start outbox runtime'
+    hostComposition .uses ownership 'assign owned shards'
+    hostComposition .uses bus 'compose event transport'
+    hostComposition .uses db 'compose persistence adapters'
+    hostComposition .uses lifecycle 'lifecycle support'
+    hostComposition .uses ops 'operations'
+    hostComposition .uses plugins 'host plugins'
+  }
+}
+
+views {
+  view outboxWorkerBoundary of outboxWorkerModel {
+    title 'DVT+ Outbox Worker — Durable delivery host and source evidence'
+    description 'Source-first worker view separating delivery runtime, shard ownership, transport and persistence wiring.'
+    include sourceEvidence with { navigateTo outboxWorkerSourceInventory }
+    include host with { navigateTo outbox-workerFiles_host }
+    include hostComposition with { navigateTo outbox-workerFiles_hostComposition }
+    include runtime with { navigateTo outbox-workerFiles_runtime }
+    include ownership with { navigateTo outbox-workerFiles_ownership }
+    include bus with { navigateTo outbox-workerFiles_bus }
+    include db with { navigateTo outbox-workerFiles_db }
+    include lifecycle with { navigateTo outbox-workerFiles_lifecycle }
+    include ops with { navigateTo outbox-workerFiles_ops }
+    include plugins with { navigateTo outbox-workerFiles_plugins }
+    autoLayout LeftRight
+  }
+}
