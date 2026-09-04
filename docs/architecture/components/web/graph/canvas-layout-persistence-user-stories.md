@@ -91,18 +91,6 @@ Acceptance:
 - snapped coordinates affect renderer layout projection only;
 - node identity, node kind, edges, and protected draft authority are unchanged.
 
-### US-CANVAS-LAYOUT-007 - Empty Guide Visibility
-
-As a Canvas user, I want to decide whether the typed-empty Canvas guide is shown
-for newly created empty canvases, and I want to re-enable it from configuration.
-
-Acceptance:
-
-- empty-guide visibility executes `ConfigureCanvasViewportPreferences`;
-- hiding the guide does not disable toolbar Insert/Add or node creation;
-- the configuration menu exposes the same preference so the guide can be shown
-  again without changing draft data.
-
 ### US-CANVAS-LAYOUT-008 - Auto-Layout Keeps Dragging
 
 As a Canvas user, I want auto-layout to reposition nodes without making them

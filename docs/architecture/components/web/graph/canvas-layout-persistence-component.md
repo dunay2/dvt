@@ -12,8 +12,8 @@ planning_type: architecture
 
 This guide defines the local component that persists route-local Canvas layout
 observations and viewport presentation preferences: viewport position, node
-coordinates, grid visibility, grid color, snap-to-grid behavior, and empty guide
-visibility. It does not own authoritative graph draft state.
+coordinates, grid visibility, grid color, and snap-to-grid behavior. It does not
+own authoritative graph draft state.
 
 This distinction matters because Canvas has two truths:
 
@@ -63,8 +63,7 @@ Canonical local C&Q catalog:
 | `setCanvasGridVisible(...)`                  | `uiLayoutStore.ts`                    | Persist whether the viewport grid is rendered.                                               |
 | `setCanvasGridColor(...)`                    | `uiLayoutStore.ts`                    | Persist the grid line color as a normalized hex color.                                       |
 | `setCanvasSnapToGrid(...)`                   | `uiLayoutStore.ts`                    | Persist whether React Flow drag and auto-layout coordinates snap to the grid.                |
-| `setCanvasEmptyStateGuideVisible(...)`       | `uiLayoutStore.ts`                    | Persist whether typed-empty Canvas startup guidance is rendered.                             |
-| `ConfigureCanvasViewportPreferences`         | Canvas shell chrome command rail      | Apply grid, snap, and empty-guide preferences without changing graph authority.              |
+| `ConfigureCanvasViewportPreferences`         | Canvas shell chrome command rail      | Apply grid and snap preferences without changing graph authority.                            |
 
 ## Invariants
 
@@ -97,8 +96,6 @@ Canonical local C&Q catalog:
 - Snap-to-grid may adjust renderer coordinates produced by drag or auto-layout,
   but it must not modify canonical node identity, node kind, graph edges, or
   protected draft authority.
-- Empty-guide visibility may hide the typed-empty guide overlay, but it must not
-  disable toolbar Insert/Add, node creation, graph gestures, or draft loading.
 - Auto-layout must preserve React Flow node type, data, and gesture capability;
   layout is a coordinate projection, not a node replacement authority.
 
@@ -111,7 +108,7 @@ Canonical local catalog:
 | ------------------------------------ | ------- | ---------------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------- |
 | `PersistCanvasLayout`                | command | `CanvasLayoutProjection` value object    | `useCanvasLayoutPersistence(...)`                | pending query and pre-hydration persistence are blocked or queued       |
 | `GetCanvasLayout`                    | query   | `CanvasLayoutProjection` value object    | `canvasInteractionStore` hydration               | local layout is not overwritten when protected draft coordinates reload |
-| `ConfigureCanvasViewportPreferences` | command | `CanvasViewportPreferences` value object | `uiLayoutStore` and Canvas presentation surfaces | hidden guide keeps node creation and drag enabled                       |
+| `ConfigureCanvasViewportPreferences` | command | `CanvasViewportPreferences` value object | `uiLayoutStore` and Canvas presentation surfaces | hidden grid keeps node creation and drag enabled                        |
 
 `ConfigureCanvasViewportPreferences` is intentionally local to the Web Graph
 bounded frontend context. It changes operator presentation preferences only.
@@ -144,10 +141,8 @@ sequenceDiagram
 ```mermaid
 flowchart LR
   Toolbar["CanvasToolbar / Canvas settings controls"] --> Command["ConfigureCanvasViewportPreferences"]
-  Guide["CanvasEmptyStateView checkbox"] --> Command
   Command --> Store["uiLayoutStore persisted visual preferences"]
   Store --> Viewport["CanvasViewport"]
-  Store --> EmptyGuide["typed-empty guide overlay"]
   Viewport --> Background["React Flow Background visibility and color"]
   Viewport --> Snap["React Flow snapToGrid and snapGrid"]
   Snap --> Layout["auto-layout snapped coordinates when enabled"]
@@ -221,10 +216,9 @@ Primary tests:
 The tests cover automatic store hydration, pre-hydration node-position queueing,
 pending-query viewport denial, stale drag-stop payload replacement, active live
 drag persistence, settled live drag persistence, remote-draft hydration not
-overwriting local layout after refresh/reload, grid preference persistence,
-grid background visibility/color, empty-guide visibility persistence,
-snap-to-grid propagation, snapped auto-layout coordinates, and semantic
-boundary rules.
+overwriting local layout after refresh/reload, grid preference persistence, grid
+background visibility/color, snap-to-grid propagation, snapped auto-layout
+coordinates, and semantic boundary rules.
 
 ## Drift To Watch
 
@@ -235,14 +229,14 @@ boundary rules.
 - Do not let protected draft bootstrap or reload overwrite a workspace layout
   that already contains local card positions.
 - Do not re-enable drag gestures outside `CanvasViewport` permission policy.
-- Do not store grid visibility, grid color, empty-guide visibility, or snap
-  preferences in protected graph drafts.
+- Do not store grid visibility, grid color, or snap preferences in protected
+  graph drafts.
   They are explicitly not in protected graph drafts.
 - Do not let auto-layout replace node data/type fields or reintroduce
   handle-only dragging.
-- Do not treat Canvas grid visibility, grid color, empty-guide visibility, or
-  snap-to-grid as draft semantics; they are route-local presentation preferences
-  until a governed slice says otherwise.
+- Do not treat Canvas grid visibility, grid color, or snap-to-grid as draft
+  semantics; they are route-local presentation preferences until a governed
+  slice says otherwise.
 - Do not let auto-layout become an edit-permission toggle. Layout may project
   positions, but graph editability remains owned by Canvas interaction policy.
 
