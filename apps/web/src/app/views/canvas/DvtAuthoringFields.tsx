@@ -49,48 +49,16 @@ export function DvtAuthoringFields({
   if (!draft.dvt) return null;
 
   if (draft.dvt.kind === 'source') {
-    if (section === 'code' || draft.dvt.semantic == null) {
-      return section === 'all' || section === 'general' ? (
-        <DvtSourceAuthoringSection
-          node={node}
-          disabled={disabled}
-          draft={draft.dvt}
-          errors={errors.dvt}
-          sourceTarget={formatQualifiedTarget([draft.dvt.schema, draft.dvt.table]) || '-'}
-          onChange={onChange}
-        />
-      ) : null;
-    }
-    return (
-      <>
-        {section === 'all' || section === 'general' ? (
-          <DvtSourceAuthoringSection
-            node={node}
-            disabled={disabled}
-            draft={draft.dvt}
-            errors={errors.dvt}
-            sourceTarget={formatQualifiedTarget([draft.dvt.schema, draft.dvt.table]) || '-'}
-            onChange={onChange}
-          />
-        ) : null}
-        {section === 'all' || section === 'columns' ? (
-          <DvtRelationFilterAuthoringSection
-            disabled={disabled}
-            draft={draft.dvt.semantic}
-            node={node}
-            nodes={nodes}
-            edges={edges}
-            onChange={(semantic) =>
-              onChange((current) =>
-                current.dvt?.kind === 'source'
-                  ? { ...current, dvt: { ...current.dvt, semantic } }
-                  : current
-              )
-            }
-          />
-        ) : null}
-      </>
-    );
+    return section === 'all' || section === 'general' ? (
+      <DvtSourceAuthoringSection
+        node={node}
+        disabled={disabled}
+        draft={draft.dvt}
+        errors={errors.dvt}
+        sourceTarget={formatQualifiedTarget([draft.dvt.schema, draft.dvt.table]) || '-'}
+        onChange={onChange}
+      />
+    ) : null;
   }
 
   if (draft.dvt.kind === 'transform') {

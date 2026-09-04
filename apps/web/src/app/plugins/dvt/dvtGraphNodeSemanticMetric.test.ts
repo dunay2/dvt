@@ -60,8 +60,18 @@ function filteredSource(): CanonicalNode {
 }
 
 describe('DVT graph node semantic metric', () => {
-  it('projects an admitted Source FilterRel as a localized card summary', () => {
-    expect(buildDvtGraphNodeSemanticMetric(filteredSource(), 'es')).toEqual({
+  it('does not project a legacy Source FilterRel as card state', () => {
+    expect(buildDvtGraphNodeSemanticMetric(filteredSource(), 'es')).toBeNull();
+  });
+
+  it('projects an admitted Transform FilterRel as a localized card summary', () => {
+    const source = filteredSource();
+    expect(
+      buildDvtGraphNodeSemanticMetric(
+        { ...source, pluginId: 'dvt', kind: 'dvt:transform', role: 'transform' },
+        'es'
+      )
+    ).toEqual({
       id: 'filter',
       label: 'Filtro',
       value: 'customer = "Ada"',

@@ -1,10 +1,6 @@
 /** Owns creation and persistence of the Source relation's canonical semantic draft. */
 import type { CanonicalNode } from '../../types/canonical';
-import {
-  encodeDvtSubstraitFilterDocument,
-  inspectDvtSubstraitFilter,
-  removeDvtSubstraitFilter,
-} from './canvasDvtSubstraitFilter';
+import { inspectDvtSubstraitFilter, removeDvtSubstraitFilter } from './canvasDvtSubstraitFilter';
 import {
   createDvtSubstraitProjectionDraft,
   decodeDvtSubstraitProjectionDocument,
@@ -77,8 +73,10 @@ export function createDvtSourceSemanticDraft(
 ): DvtSubstraitProjectionDraft | undefined {
   const authority = readDvtTransformAuthoringAuthority(node);
   if (authority != null) {
-    const draft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
-    if (!inspectDvtSubstraitProjectionDraft(draft).ok && inspectDvtSubstraitFilter(draft) == null) {
+    const draft = removeDvtSubstraitFilter(
+      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+    );
+    if (!inspectDvtSubstraitProjectionDraft(draft).ok) {
       throw new Error('DVT Source semantic authority is not an admitted projection shape.');
     }
     return draft;
@@ -101,11 +99,19 @@ export function applyDvtSourceSemanticDraft(
   node: CanonicalNode,
   draft: DvtSubstraitProjectionDraft
 ): CanonicalNode {
-  const document =
-    inspectDvtSubstraitFilter(draft) == null
-      ? encodeDvtSubstraitProjectionDocument(draft)
-      : encodeDvtSubstraitFilterDocument(draft);
-  return applyDvtSubstraitSemanticDocument(node, document);
+  return applyDvtSubstraitSemanticDocument(
+    node,
+    encodeDvtSubstraitProjectionDocument(removeDvtSubstraitFilter(draft))
+  );
+}
+
+function normalizeDvtSourceFilterAuthority(node: CanonicalNode): CanonicalNode {
+  const authority = readDvtTransformAuthoringAuthority(node);
+  if (authority == null) return node;
+  const draft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
+  return inspectDvtSubstraitFilter(draft) == null
+    ? node
+    : applyDvtSourceSemanticDraft(node, removeDvtSubstraitFilter(draft));
 }
 
 /**
@@ -116,19 +122,28 @@ export function applyDvtSourceSemanticDraft(
 export function reconcileDvtSourceSemanticColumnOrder(node: CanonicalNode): CanonicalNode {
   if (node.kind !== 'dvt:source' || node.role !== 'input') return node;
 
-  const columns = node.metadata?.columns;
-  if (!Array.isArray(columns) || !columns.every(isNamedSourceColumn)) return node;
-
-  let semanticDraft: DvtSubstraitProjectionDraft | undefined;
+  let normalizedNode: CanonicalNode;
   try {
-    semanticDraft = createDvtSourceSemanticDraft(node);
+    normalizedNode = normalizeDvtSourceFilterAuthority(node);
   } catch {
     return node;
   }
-  if (semanticDraft == null) return node;
+
+  const columns = normalizedNode.metadata?.columns;
+  if (!Array.isArray(columns) || !columns.every(isNamedSourceColumn)) return normalizedNode;
+
+  let semanticDraft: DvtSubstraitProjectionDraft | undefined;
+  try {
+    semanticDraft = createDvtSourceSemanticDraft(normalizedNode);
+  } catch {
+    return normalizedNode;
+  }
+  if (semanticDraft == null) return normalizedNode;
 
   const inspection = inspectDvtSubstraitProjectionDraft(removeDvtSubstraitFilter(semanticDraft));
-  if (!inspection.ok || inspection.projection.targetNodeId !== node.id) return node;
+  if (!inspection.ok || inspection.projection.targetNodeId !== normalizedNode.id) {
+    return normalizedNode;
+  }
 
   const metadataNames = columns.map((column) => column.name);
   const physicalNames = inspection.projection.source.fields.map((field) => field.name);
@@ -141,7 +156,7 @@ export function reconcileDvtSourceSemanticColumnOrder(node: CanonicalNode): Cano
     !sameUniqueValues(metadataNames, physicalNames) ||
     !sameUniqueValues(outputSourceNames, physicalNames)
   ) {
-    return node;
+    return normalizedNode;
   }
 
   const fieldIdBySourceName = new Map(
@@ -151,7 +166,7 @@ export function reconcileDvtSourceSemanticColumnOrder(node: CanonicalNode): Cano
     const fieldId = fieldIdBySourceName.get(name);
     return fieldId == null ? [] : [fieldId];
   });
-  if (desiredFieldIds.length !== metadataNames.length) return node;
+  if (desiredFieldIds.length !== metadataNames.length) return normalizedNode;
 
   const reorderedDraft = reorderProjectionToFieldIds(
     semanticDraft,
@@ -168,17 +183,17 @@ export function reconcileDvtSourceSemanticColumnOrder(node: CanonicalNode): Cano
       desiredFieldIds
     )
   ) {
-    return node;
+    return normalizedNode;
   }
 
   const columnByName = new Map(columns.map((column) => [column.name, column] as const));
   const physicalColumns = physicalNames.map((name) => columnByName.get(name));
-  if (physicalColumns.some((column) => column == null)) return node;
+  if (physicalColumns.some((column) => column == null)) return normalizedNode;
 
   return applyDvtSourceSemanticDraft(
     {
-      ...node,
-      metadata: { ...node.metadata, columns: physicalColumns },
+      ...normalizedNode,
+      metadata: { ...normalizedNode.metadata, columns: physicalColumns },
     },
     reorderedDraft
   );
