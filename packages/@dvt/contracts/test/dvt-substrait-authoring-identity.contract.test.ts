@@ -15,6 +15,6 @@ describe('DVT Substrait authoring identity', () => {
     expect(relationB).toMatch(new RegExp(`^dvt_rel_${UUID_V7}$`, 'i'));
     expect(fieldA).toMatch(new RegExp(`^dvt_fld_${UUID_V7}$`, 'i'));
     expect(fieldB).toMatch(new RegExp(`^dvt_fld_${UUID_V7}$`, 'i'));
-    expect(new Set([relationA, relationB, fieldA, fieldB])).toHaveSize(4);
+    expect(new Set([relationA, relationB, fieldA, fieldB]).size).toBe(4);
   });
 });
