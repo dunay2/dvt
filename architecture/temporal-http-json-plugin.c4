@@ -1,0 +1,37 @@
+model {
+  temporalHttpJsonPluginModel = package '@dvt/temporal-http-json-plugin' {
+    #asIs
+    description 'Concrete Temporal step plugin for acquiring JSON artifacts over HTTP.'
+    metadata {
+      repository 'dunay2/dvt'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      sourceRoot 'packages/@dvt/temporal-http-json-plugin'
+      provenance 'SOURCE-FIRST'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-http-json-plugin 'Pinned package tree'
+
+    sourceEvidence = component 'Source evidence' { #sourceDerived description 'Complete tracked-file inventory at the resolved main SHA.' }
+    publicBoundary = component 'HTTP JSON plugin public boundary' { #asIs description 'Publishes the concrete HTTP JSON artifact plugin API.' }
+    activity = component 'HTTP JSON artifact activity' { #asIs description 'Temporal activity boundary for HTTP JSON artifact acquisition.' }
+    runner = component 'HTTP JSON artifact runner' { #asIs description 'Concrete HTTP JSON acquisition/plugin runner.' }
+    typesAndErrors = contract 'HTTP JSON plugin contracts' { #asIs description 'Plugin-owned input/output types and bounded failure model.' }
+
+    publicBoundary .uses activity 'exports activity'
+    publicBoundary .uses runner 'exports runner'
+    publicBoundary .uses typesAndErrors 'exports plugin contracts'
+    activity .delegates runner 'acquires artifact'
+  }
+}
+
+views {
+  view temporalHttpJsonPluginBoundary of temporalHttpJsonPluginModel {
+    title 'DVT+ Temporal HTTP JSON Plugin — Concrete execution capability'
+    description 'Source-first HTTP JSON acquisition plugin, separate from the generic Temporal adapter.'
+    include sourceEvidence with { navigateTo temporalHttpJsonPluginSourceInventory }
+    include publicBoundary with { navigateTo temporal-http-json-pluginFiles_publicBoundary }
+    include activity with { navigateTo temporal-http-json-pluginFiles_activity }
+    include runner with { navigateTo temporal-http-json-pluginFiles_runner }
+    include typesAndErrors with { navigateTo temporal-http-json-pluginFiles_typesAndErrors }
+    autoLayout LeftRight
+  }
+}
