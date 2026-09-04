@@ -1,0 +1,93 @@
+model {
+  stateStoreModel = package '@dvt/state-store' {
+    #asIs
+    description 'Runtime state-store lifecycle bounded context. Exposes run state command boundaries plus archive, retention, restore and delivery-buffer lifecycle behavior.'
+
+    metadata {
+      repository 'dunay2/dvt'
+      baselineSha '42504563629f0b998d8a3382ea839eead99a36d1'
+      sourceRoot 'packages/@dvt/state-store'
+      provenance 'SOURCE-FIRST'
+    }
+
+    link https://github.com/dunay2/dvt/tree/42504563629f0b998d8a3382ea839eead99a36d1/packages/%40dvt/state-store 'Pinned package tree'
+
+    sourceEvidence = component 'Source evidence' {
+      #sourceDerived
+      description 'Machine-generated inventory of every tracked file under @dvt/state-store at the pinned main SHA.'
+    }
+
+    publicBoundary = component 'State Store public boundary' {
+      #asIs
+      description 'Package export surface for run-state commands, archive lifecycle, retention, restore and delivery-buffer purge.'
+      link https://github.com/dunay2/dvt/blob/42504563629f0b998d8a3382ea839eead99a36d1/packages/%40dvt/state-store/src/index.ts 'Source'
+    }
+
+    runStateCommands = port 'Run state command boundary' {
+      #asIs
+      description 'Command/bootstrap port for authoritative run state transitions, with an in-memory implementation inside this package.'
+    }
+
+    archiveIdentity = component 'Archive unit identity + retention math' {
+      #asIs
+      description 'Deterministic archive unit keys, tenant buckets, delete-after calculation and lifecycle state.'
+    }
+
+    archiveArtifacts = component 'Archive manifests + terminal snapshots' {
+      #asIs
+      description 'Builds checksummed archive manifests plus pinned and archived terminal snapshots.'
+    }
+
+    archiveRuntime = port 'Archive runtime ports + policies' {
+      #asIs
+      description 'Archive store/lease/restore/delete boundaries, retention policy and lifecycle telemetry contracts.'
+    }
+
+    archivePipeline = component 'Archive lifecycle pipeline' {
+      #asIs
+      description 'Coordinates object-storage export, verification, deletion and restore of run archive units.'
+    }
+
+    archiveObjectStores = adapter 'Archive object-store adapters' {
+      #asIs
+      description 'Filesystem and S3 archive object-store implementations.'
+    }
+
+    deliveryBufferLifecycle = component 'Delivery-buffer retention + purge' {
+      #asIs
+      description 'Retention policy, purge store boundary, telemetry and purge execution for delivery buffers.'
+    }
+
+    publicBoundary .uses runStateCommands 'exports command boundary'
+    publicBoundary .uses archiveIdentity 'exports archive identity helpers'
+    publicBoundary .uses archiveArtifacts 'exports archive artifact builders'
+    publicBoundary .uses archiveRuntime 'exports lifecycle ports + policies'
+    publicBoundary .uses archivePipeline 'exports lifecycle services'
+    publicBoundary .uses archiveObjectStores 'exports object-store adapters'
+    publicBoundary .uses deliveryBufferLifecycle 'exports purge lifecycle'
+    archivePipeline .uses archiveIdentity 'keys + retention eligibility'
+    archivePipeline .uses archiveArtifacts 'manifest + snapshot material'
+    archivePipeline .uses archiveRuntime 'stores + leases + policies'
+    archivePipeline .uses archiveObjectStores 'persists archive objects'
+    deliveryBufferLifecycle .uses archiveRuntime 'shares lifecycle telemetry conventions'
+  }
+}
+
+views {
+  view stateStoreBoundary of stateStoreModel {
+    title 'DVT+ State Store — Run state, archive lifecycle and retention'
+    description 'Source-first State Store view pinned to main@42504563. Logical boxes drill into exact Git-derived evidence files.'
+
+    include sourceEvidence with { navigateTo stateStoreSourceInventory }
+    include publicBoundary with { navigateTo state-storeFiles_publicBoundary }
+    include runStateCommands with { navigateTo state-storeFiles_runStateCommands }
+    include archiveIdentity with { navigateTo state-storeFiles_archiveIdentity }
+    include archiveArtifacts with { navigateTo state-storeFiles_archiveArtifacts }
+    include archiveRuntime with { navigateTo state-storeFiles_archiveRuntime }
+    include archivePipeline with { navigateTo state-storeFiles_archivePipeline }
+    include archiveObjectStores with { navigateTo state-storeFiles_archiveObjectStores }
+    include deliveryBufferLifecycle with { navigateTo state-storeFiles_deliveryBufferLifecycle }
+
+    autoLayout LeftRight
+  }
+}
