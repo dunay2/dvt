@@ -36,6 +36,14 @@ function requireAggregation(draft: DvtSubstraitPilotDraft): DvtSubstraitPilotAgg
   return inspection.projection;
 }
 
+function requirePilotField(draft: DvtSubstraitPilotDraft, name: string) {
+  const inspection = inspectDvtSubstraitPilotDraft(draft);
+  if (!inspection.ok) throw new Error('Expected the admitted pilot.');
+  const field = inspection.projection.outputs.find((output) => output.name === name);
+  if (field == null) throw new Error(`Expected pilot field ${name}.`);
+  return field;
+}
+
 function aggregateRelationId(draft: DvtSubstraitPilotDraft): string {
   const root = draft.plan.relations[0]?.relType;
   if (root?.case !== 'root' || root.value.input?.relType.case !== 'aggregate') {
@@ -50,10 +58,7 @@ function aggregateRelationId(draft: DvtSubstraitPilotDraft): string {
 describe('VTX2 typed Substrait grouping and count', () => {
   it('allocates opaque aggregate/count identities and persists them unchanged', () => {
     const initial = pilot();
-    const base = inspectDvtSubstraitPilotDraft(initial);
-    if (!base.ok) throw new Error('Expected the admitted pilot.');
-    const country = base.projection.outputs.find((output) => output.name === 'country');
-    if (country == null) throw new Error('Expected the country field.');
+    const country = requirePilotField(initial, 'country');
 
     const grouped = applyDvtSubstraitPilotAggregation(initial, {
       groupFieldId: country.fieldId,
@@ -74,12 +79,10 @@ describe('VTX2 typed Substrait grouping and count', () => {
   });
 
   it('renames the count output without changing its FieldId or aggregate RelationId', () => {
-    const base = inspectDvtSubstraitPilotDraft(pilot());
-    if (!base.ok) throw new Error('Expected the admitted pilot.');
-    const email = base.projection.outputs.find((output) => output.name === 'email');
-    if (email == null) throw new Error('Expected the email field.');
+    const initial = pilot();
+    const email = requirePilotField(initial, 'email');
 
-    const grouped = applyDvtSubstraitPilotAggregation(pilot(), {
+    const grouped = applyDvtSubstraitPilotAggregation(initial, {
       groupFieldId: email.fieldId,
       countOutputName: 'row_count',
     });
@@ -102,11 +105,9 @@ describe('VTX2 typed Substrait grouping and count', () => {
   });
 
   it('treats persisted legacy aggregate/count IDs as opaque values', () => {
-    const base = inspectDvtSubstraitPilotDraft(pilot());
-    if (!base.ok) throw new Error('Expected the admitted pilot.');
-    const country = base.projection.outputs.find((output) => output.name === 'country');
-    if (country == null) throw new Error('Expected the country field.');
-    const grouped = applyDvtSubstraitPilotAggregation(pilot(), {
+    const initial = pilot();
+    const country = requirePilotField(initial, 'country');
+    const grouped = applyDvtSubstraitPilotAggregation(initial, {
       groupFieldId: country.fieldId,
       countOutputName: 'customer_count',
     });
@@ -142,11 +143,9 @@ describe('VTX2 typed Substrait grouping and count', () => {
   });
 
   it('fails closed for an unadmitted grouping-set shape', () => {
-    const base = inspectDvtSubstraitPilotDraft(pilot());
-    if (!base.ok) throw new Error('Expected the admitted pilot.');
-    const country = base.projection.outputs.find((output) => output.name === 'country');
-    if (country == null) throw new Error('Expected the country field.');
-    const grouped = applyDvtSubstraitPilotAggregation(pilot(), {
+    const initial = pilot();
+    const country = requirePilotField(initial, 'country');
+    const grouped = applyDvtSubstraitPilotAggregation(initial, {
       groupFieldId: country.fieldId,
       countOutputName: 'customer_count',
     });
@@ -161,8 +160,10 @@ describe('VTX2 typed Substrait grouping and count', () => {
   });
 
   it('projects aggregate outputs on the Transform card from the persisted Plan', () => {
-    const grouped = applyDvtSubstraitPilotAggregation(pilot(), {
-      groupFieldId: 'field:transform-customers:country',
+    const initial = pilot();
+    const country = requirePilotField(initial, 'country');
+    const grouped = applyDvtSubstraitPilotAggregation(initial, {
+      groupFieldId: country.fieldId,
       countOutputName: 'customer_count',
     });
     const projection = requireAggregation(grouped);
