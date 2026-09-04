@@ -1,0 +1,75 @@
+model {
+  temporalAdapterModel = package '@dvt/adapter-temporal' {
+    #asIs
+    description 'Temporal provider adapter and runtime integration. Translates DVT execution responsibilities into Temporal workflow/activity mechanics while keeping step-specific behavior behind plugins.'
+
+    metadata {
+      repository 'dunay2/dvt'
+      baselineSha '42504563629f0b998d8a3382ea839eead99a36d1'
+      sourceRoot 'packages/@dvt/adapter-temporal'
+      provenance 'SOURCE-FIRST'
+    }
+
+    link https://github.com/dunay2/dvt/tree/42504563629f0b998d8a3382ea839eead99a36d1/packages/%40dvt/adapter-temporal 'Pinned package tree'
+
+    sourceEvidence = component 'Source evidence' { #sourceDerived }
+    publicBoundary = component 'Temporal adapter public boundary' { #asIs }
+    providerAdapter = adapter 'Temporal provider adapter' {
+      #asIs
+      description 'Provider-facing adapter for start/cancel/signal/status plus an observed wrapper.'
+    }
+    temporalClient = component 'Temporal client boundary' { #asIs }
+    workerHost = worker 'Temporal worker host' {
+      #asIs
+      description 'Creates Temporal workers and composes runtime activities/plugins.'
+    }
+    workflowRuntime = component 'RunPlan workflow runtime' {
+      #asIs
+      description 'Deterministic workflow path for layers, signals, lifecycle, cancellation and step execution.'
+    }
+    activities = component 'Temporal activities + dispatch' { #asIs }
+    stepPlugins = port 'Temporal step plugin boundary' {
+      #asIs
+      description 'Keeps concrete step capabilities outside the generic Temporal adapter.'
+    }
+    policyMapping = component 'Temporal policy mapping' {
+      #asIs
+      description 'Current source mapping layer for Temporal-specific workflow/activity policy options.'
+    }
+    stateWriteProtection = component 'Run-state command circuit breaker' { #asIs }
+    observability = component 'Temporal observability + error policy' { #asIs }
+
+    publicBoundary .uses providerAdapter 'exports adapter'
+    publicBoundary .uses workerHost 'exports worker host'
+    providerAdapter .uses temporalClient 'provider API calls'
+    providerAdapter .uses policyMapping 'Temporal-specific translation'
+    workerHost .uses workflowRuntime 'hosts workflow code'
+    workerHost .uses activities 'registers activities'
+    activities .uses stepPlugins 'dispatches step capability'
+    workflowRuntime .uses activities 'schedules activities'
+    workflowRuntime .uses stateWriteProtection 'guards state writes'
+    providerAdapter .uses observability 'telemetry + error policy'
+    workerHost .uses observability 'worker/runtime telemetry'
+  }
+}
+
+views {
+  view temporalAdapterBoundary of temporalAdapterModel {
+    title 'DVT+ Temporal Adapter — Provider translation and runtime composition'
+    description 'Source-first Temporal adapter view pinned to main@42504563.'
+
+    include sourceEvidence with { navigateTo temporalAdapterSourceInventory }
+    include publicBoundary with { navigateTo adapter-temporalFiles_publicBoundary }
+    include providerAdapter with { navigateTo adapter-temporalFiles_providerAdapter }
+    include temporalClient with { navigateTo adapter-temporalFiles_temporalClient }
+    include workerHost with { navigateTo adapter-temporalFiles_workerHost }
+    include workflowRuntime with { navigateTo adapter-temporalFiles_workflowRuntime }
+    include activities with { navigateTo adapter-temporalFiles_activities }
+    include stepPlugins with { navigateTo adapter-temporalFiles_stepPlugins }
+    include policyMapping with { navigateTo adapter-temporalFiles_policyMapping }
+    include stateWriteProtection with { navigateTo adapter-temporalFiles_stateWriteProtection }
+    include observability with { navigateTo adapter-temporalFiles_observability }
+
+    autoLayout LeftRight
+  }
+}
