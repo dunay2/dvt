@@ -60,25 +60,6 @@ export const canvasViewRouteCopyByKey = {
     fallback:
       'Canvas template creation is disabled because graph edits are unavailable for this workspace scope.',
   },
-  routeEmptyTitle: {
-    key: 'canvas.route.emptyTitle',
-    fallback: 'No graph content loaded',
-  },
-  routeEmptyEditableMessage: {
-    key: 'canvas.route.emptyEditableMessage',
-    fallback:
-      'This workspace does not expose graph nodes yet. Use Add source to import sources or load graph content before planning.',
-  },
-  routeEmptyImportUnavailableMessage: {
-    key: 'canvas.route.emptyImportUnavailableMessage',
-    fallback:
-      'This workspace does not expose graph nodes yet. Source import is unavailable in this runtime, so graph content must come from protected backend authority.',
-  },
-  routeEmptyReadOnlyMessage: {
-    key: 'canvas.route.emptyReadOnlyMessage',
-    fallback:
-      'This workspace does not expose graph nodes yet. Graph edits are disabled in this context.',
-  },
   routeErrorTitle: {
     key: 'canvas.route.errorTitle',
     fallback: 'Canvas unavailable',

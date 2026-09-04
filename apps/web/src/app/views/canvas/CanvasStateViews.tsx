@@ -1,6 +1,4 @@
 /** Owned concern: render governed Canvas state views and read-only banners from route presentation models. */
-import type { ReactNode } from 'react';
-
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
 import { cn } from '../../components/ui/utils';
@@ -15,32 +13,21 @@ function CanvasSurfaceStateCard({
   dataSlot,
   title,
   message,
-  children,
   tone = 'default',
-  allowCanvasPointerPassthrough = false,
 }: Readonly<{
   dataSlot: string;
   title: string;
   message: string;
-  children?: ReactNode;
   tone?: 'default' | 'danger';
-  allowCanvasPointerPassthrough?: boolean;
 }>) {
   return (
-    <div
-      data-slot={`${dataSlot}-frame`}
-      className={cn(
-        'flex flex-1 items-center justify-center p-6',
-        allowCanvasPointerPassthrough && 'pointer-events-none'
-      )}
-    >
+    <div data-slot={`${dataSlot}-frame`} className="flex flex-1 items-center justify-center p-6">
       <Card
         data-slot={dataSlot}
         className={cn(
           routeWorkbenchPanelClassName,
           'w-full max-w-xl p-6',
-          tone === 'danger' && 'border-(--status-danger) bg-(--surface-elevated)',
-          allowCanvasPointerPassthrough && 'pointer-events-auto'
+          tone === 'danger' && 'border-(--status-danger) bg-(--surface-elevated)'
         )}
       >
         <h2
@@ -59,7 +46,6 @@ function CanvasSurfaceStateCard({
         >
           {message}
         </p>
-        {children}
       </Card>
     </div>
   );
@@ -73,58 +59,6 @@ export function CanvasLoadingStateView({
   message?: string;
 }>) {
   return <CanvasSurfaceStateCard dataSlot="canvas-loading-state" title={title} message={message} />;
-}
-
-export function CanvasEmptyStateView({
-  canvasTitle = null,
-  title = canvasViewCopy.routeEmptyTitle,
-  message = canvasViewCopy.routeEmptyEditableMessage,
-  emptyStateGuideVisible = true,
-  onEmptyStateGuideVisibilityChange,
-}: Readonly<{
-  canvasTitle?: string | null;
-  title?: string;
-  message?: string;
-  emptyStateGuideVisible?: boolean;
-  onEmptyStateGuideVisibilityChange?: (visible: boolean) => void;
-}>) {
-  return (
-    <CanvasSurfaceStateCard
-      dataSlot="canvas-empty-state"
-      title={title}
-      message={message}
-      allowCanvasPointerPassthrough
-    >
-      {canvasTitle != null ? (
-        <p
-          data-slot="canvas-empty-active-canvas"
-          className={cn('mt-1 text-xs font-medium', routeWorkbenchMutedTextClassName)}
-        >
-          {canvasTitle}
-        </p>
-      ) : null}
-      {onEmptyStateGuideVisibilityChange != null ? (
-        <label
-          data-slot="canvas-empty-guide-preference-row"
-          className={cn(
-            'mt-5 flex items-center gap-2 border-t border-(--border-default) pt-4 text-xs',
-            routeWorkbenchMutedTextClassName
-          )}
-        >
-          <input
-            data-slot="canvas-empty-guide-preference"
-            type="checkbox"
-            checked={emptyStateGuideVisible}
-            onChange={(event) => {
-              onEmptyStateGuideVisibilityChange(event.currentTarget.checked);
-            }}
-            className="size-4 accent-(--text-accent)"
-          />
-          <span>{canvasViewCopy.toolbarEmptyCanvasGuideLabel}</span>
-        </label>
-      ) : null}
-    </CanvasSurfaceStateCard>
-  );
 }
 
 export function CanvasErrorStateView({

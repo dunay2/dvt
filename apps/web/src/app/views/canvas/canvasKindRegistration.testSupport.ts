@@ -31,10 +31,6 @@ export function buildTestCanvasKind(
     label: kind,
     description: kind,
     createTitle: `Create ${kind}`,
-    emptyState: {
-      title: kind,
-      editableMessage: kind,
-    },
     nodeKinds,
   };
 }

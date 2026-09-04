@@ -48,7 +48,6 @@ describe('CanvasSettingsDialog', () => {
           canvasGridVisible
           canvasGridColor="#101826"
           canvasSnapToGrid={false}
-          canvasEmptyStateGuideVisible
           canAutoLayout={false}
           copy={copy}
           onToggleImpact={vi.fn()}
@@ -57,7 +56,6 @@ describe('CanvasSettingsDialog', () => {
           onToggleGridVisible={vi.fn()}
           onGridColorChange={vi.fn()}
           onToggleSnapToGrid={vi.fn()}
-          onSetCanvasEmptyStateGuideVisible={vi.fn()}
           onGridSizeChange={vi.fn()}
           onCanvasPaletteChange={vi.fn()}
           onAutoLayout={vi.fn()}
@@ -100,7 +98,6 @@ describe('CanvasSettingsDialog', () => {
     const onToggleGridVisible = vi.fn();
     const onGridColorChange = vi.fn();
     const onToggleSnapToGrid = vi.fn();
-    const onSetCanvasEmptyStateGuideVisible = vi.fn();
     const onGridSizeChange = vi.fn();
     const onCanvasPaletteChange = vi.fn();
     const onAutoLayout = vi.fn();
@@ -119,7 +116,6 @@ describe('CanvasSettingsDialog', () => {
           canvasGridVisible
           canvasGridColor="#94a3b8"
           canvasSnapToGrid={false}
-          canvasEmptyStateGuideVisible
           canAutoLayout
           onToggleImpact={onToggleImpact}
           onToggleColumns={onToggleColumns}
@@ -129,7 +125,6 @@ describe('CanvasSettingsDialog', () => {
           onToggleGridVisible={onToggleGridVisible}
           onGridColorChange={onGridColorChange}
           onToggleSnapToGrid={onToggleSnapToGrid}
-          onSetCanvasEmptyStateGuideVisible={onSetCanvasEmptyStateGuideVisible}
           onAutoLayout={onAutoLayout}
           onClose={onClose}
         />
@@ -215,7 +210,6 @@ describe('CanvasSettingsDialog', () => {
     expect(onToggleGridVisible).not.toHaveBeenCalled();
     expect(onGridColorChange).not.toHaveBeenCalled();
     expect(onToggleSnapToGrid).not.toHaveBeenCalled();
-    expect(onSetCanvasEmptyStateGuideVisible).not.toHaveBeenCalled();
     expect(onGridSizeChange).not.toHaveBeenCalled();
     expect(onClose).toHaveBeenCalledTimes(1);
   });
@@ -238,7 +232,6 @@ describe('CanvasSettingsDialog', () => {
           canvasGridVisible
           canvasGridColor="#94a3b8"
           canvasSnapToGrid={false}
-          canvasEmptyStateGuideVisible
           canAutoLayout={false}
           onToggleImpact={onToggleImpact}
           onToggleColumns={vi.fn()}
@@ -248,7 +241,6 @@ describe('CanvasSettingsDialog', () => {
           onToggleGridVisible={vi.fn()}
           onGridColorChange={vi.fn()}
           onToggleSnapToGrid={vi.fn()}
-          onSetCanvasEmptyStateGuideVisible={vi.fn()}
           onAutoLayout={vi.fn()}
           onClose={onClose}
         />
@@ -289,7 +281,6 @@ describe('CanvasSettingsDialog', () => {
           canvasGridVisible
           canvasGridColor="#94a3b8"
           canvasSnapToGrid={false}
-          canvasEmptyStateGuideVisible
           canAutoLayout={false}
           onToggleImpact={vi.fn()}
           onToggleColumns={vi.fn()}
@@ -299,7 +290,6 @@ describe('CanvasSettingsDialog', () => {
           onToggleGridVisible={vi.fn()}
           onGridColorChange={onGridColorChange}
           onToggleSnapToGrid={vi.fn()}
-          onSetCanvasEmptyStateGuideVisible={vi.fn()}
           onAutoLayout={vi.fn()}
           onClose={onClose}
         />

@@ -58,7 +58,6 @@ export type CanvasShellLayout = {
   canSelectNodes?: boolean;
   surfaceStrategy: CanvasSurfaceStrategy | null;
   contextualWorkbench?: CanvasShellContextualWorkbench;
-  centerSurfaceMode: 'replace' | 'overlay';
   centerSurface?: React.ReactNode;
   readOnlyBanner?: React.ReactNode;
 };
@@ -104,7 +103,6 @@ export type CanvasShellGraph = {
   canvasGridVisible: boolean;
   canvasGridColor: CanvasPaletteId;
   canvasSnapToGrid: boolean;
-  canvasEmptyStateGuideVisible: boolean;
   viewport: CanvasViewport | null;
   frozenNodeIds: ReadonlySet<string>;
 };
@@ -160,7 +158,6 @@ export type CanvasShellChromeCommands = {
   onToggleGridVisible: () => void;
   onGridColorChange: (color: CanvasPaletteId) => void;
   onToggleSnapToGrid: () => void;
-  onSetCanvasEmptyStateGuideVisible: (visible: boolean) => void;
   onExportProjectSnapshot: () => void;
   onImportProjectSnapshotFile: (file: File) => void;
   onReloadLatestDraft: () => void;

@@ -504,7 +504,6 @@ describe('CanvasShell graph base surface', () => {
   it('keeps governed center surfaces ahead of workbench unavailable panels', async () => {
     await renderShell({
       layout: {
-        centerSurfaceMode: 'replace',
         centerSurface: <div data-testid="first-canvas-center-surface" />,
         contextualWorkbench: {
           id: 'project-code',

@@ -395,10 +395,6 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.addNodeCatalog.nodeDescription',
     fallback: 'Add a registered Canvas component.',
   },
-  toolbarEmptyCanvasGuideLabel: {
-    key: 'canvas.toolbar.emptyCanvasGuideLabel',
-    fallback: 'Empty canvas guide',
-  },
   workspaceProjectActionsMenuLabel: {
     key: 'canvas.workspace.projectActionsMenuLabel',
     fallback: 'Project actions',

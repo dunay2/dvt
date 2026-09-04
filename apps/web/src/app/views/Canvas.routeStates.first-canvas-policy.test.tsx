@@ -1,12 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildCanvasHostCycleControllerState } from './Canvas.test.hostCycleScenario';
-import { canvasViewRouteCopyByKey } from './canvas/canvasCopyCatalog.route';
-import { canvasViewRouteCopyEs } from './canvas/canvasCopyCatalog.route.es';
 import {
   createCanvasRouteHarness,
   expectActiveCanvasShellIdentity,
-  expectCanvasRegistryClosed,
   currentCanvasRouteState,
   getPrimaryCanvasButtons,
   renderCanvasRouteWithController,
@@ -16,7 +13,6 @@ import {
 
 describe('Canvas route first-canvas policy', () => {
   let harness: CanvasRouteHarness;
-  const retiredAddDataLabel = ['Add', 'data'].join(' ');
 
   beforeEach(() => {
     harness = createCanvasRouteHarness();
@@ -24,15 +20,6 @@ describe('Canvas route first-canvas policy', () => {
 
   afterEach(() => {
     harness.cleanup();
-  });
-
-  it('uses Add source vocabulary for empty editable route guidance', () => {
-    expect(canvasViewRouteCopyByKey.routeEmptyEditableMessage.fallback).toContain('Add source');
-    expect(canvasViewRouteCopyByKey.routeEmptyEditableMessage.fallback).not.toContain(
-      retiredAddDataLabel
-    );
-    expect(canvasViewRouteCopyEs.routeEmptyEditableMessage).toContain('Add source');
-    expect(canvasViewRouteCopyEs.routeEmptyEditableMessage).not.toContain(retiredAddDataLabel);
   });
 
   it('creates the first transformation canvas through the controller command', async () => {
@@ -47,10 +34,7 @@ describe('Canvas route first-canvas policy', () => {
       button.textContent?.includes('Transformation')
     );
 
-    expect(harness.container.textContent).toContain('Create canvas');
-    expect(harness.container.textContent).not.toContain('Add first node');
     expect(createButton).toBeDefined();
-
     createButton?.click();
 
     expect(handleCreateCanvasDocument).toHaveBeenCalledWith({
@@ -59,7 +43,36 @@ describe('Canvas route first-canvas policy', () => {
     });
   });
 
-  it('renders read-only empty guidance without suggesting retired source actions when edits are gated', async () => {
+  it('opens an existing empty Canvas as an unobstructed authoring viewport', async () => {
+    const handleCreateAuthoringNode = vi.fn();
+    await renderCanvasRouteWithController(harness, {
+      canvasDocument: {
+        kind: 'transformation',
+        title: 'Main canvas',
+      },
+      handleCreateAuthoringNode,
+    });
+
+    expect(harness.container.querySelector('[data-slot="canvas-empty-state"]')).toBeNull();
+    expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
+    expectActiveCanvasShellIdentity({
+      container: harness.container,
+      title: 'Main canvas',
+      kindLabel: 'Transformation',
+    });
+
+    const viewportProps = currentCanvasRouteState().viewportProps;
+    const createFromViewport = viewportProps?.onCreateAuthoringNode as
+      ((registration: ReturnType<typeof requireAuthoringNodeKind>) => void) | undefined;
+    const sourceKind = requireAuthoringNodeKind('dvt:source');
+
+    expect(viewportProps?.authoringNodeKinds).toContain(sourceKind);
+    expect(createFromViewport).toBeTypeOf('function');
+    createFromViewport?.(sourceKind);
+    expect(handleCreateAuthoringNode).toHaveBeenCalledWith(sourceKind);
+  });
+
+  it('keeps a read-only empty Canvas unobstructed without exposing mutating commands', async () => {
     await renderCanvasRouteWithController(harness, {
       canvasDocument: {
         kind: 'transformation',
@@ -75,93 +88,12 @@ describe('Canvas route first-canvas policy', () => {
       },
     });
 
-    expect(harness.container.textContent).toContain('Start transformation canvas');
-    expect(harness.container.textContent).toContain(
-      'This workspace does not expose graph nodes yet. Graph edits are disabled in this context.'
-    );
-    expect(harness.container.textContent).not.toContain(`Use ${retiredAddDataLabel}`);
-    expectCanvasRegistryClosed();
-  });
-
-  it('routes empty authoring first-node creation through the controller command', async () => {
-    const handleCreateAuthoringNode = vi.fn();
-    await renderCanvasRouteWithController(harness, {
-      canvasDocument: {
-        kind: 'transformation',
-        title: 'Main canvas',
-      },
-      handleCreateAuthoringNode,
-    });
-
-    expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
-    expectActiveCanvasShellIdentity({
-      container: harness.container,
-      title: 'Main canvas',
-      kindLabel: 'Transformation',
-    });
-    expect(harness.container.textContent).toContain('Start transformation canvas');
-    expect(harness.container.textContent).not.toContain('Add first transformation node');
-    expect(
-      harness.container.querySelector('[data-slot="canvas-add-node-palette-trigger"]')
-    ).toBeNull();
-    expect(document.body.querySelector('[data-slot="canvas-add-node-palette"]')).toBeNull();
-
-    const viewportProps = currentCanvasRouteState().viewportProps;
-    const createFromViewport = viewportProps?.onCreateAuthoringNode as
-      | ((registration: ReturnType<typeof requireAuthoringNodeKind>) => void)
-      | undefined;
-    const viewportNodeKinds = viewportProps?.authoringNodeKinds as
-      | readonly ReturnType<typeof requireAuthoringNodeKind>[]
-      | undefined;
-
-    expect(viewportNodeKinds).toContain(requireAuthoringNodeKind('dvt:source'));
-    expect(createFromViewport).toBeTypeOf('function');
-    createFromViewport?.(requireAuthoringNodeKind('dvt:source'));
-
-    expect(handleCreateAuthoringNode).toHaveBeenCalledWith(requireAuthoringNodeKind('dvt:source'));
-  });
-
-  it('renders empty guidance without suggesting retired source actions when source import is unavailable', async () => {
-    await renderCanvasRouteWithController(harness, {
-      canvasDocument: {
-        kind: 'transformation',
-        title: 'Main canvas',
-      },
-      canOpenSourceImport: false,
-    });
-
-    expect(harness.container.textContent).toContain('Start transformation canvas');
-    expect(harness.container.textContent).toContain('Source import is unavailable in this runtime');
-    expect(harness.container.textContent).not.toContain(`Use ${retiredAddDataLabel}`);
-    expectCanvasRegistryClosed();
-  });
-
-  it('hides typed empty guidance by preference without reintroducing fixed Insert chrome', async () => {
-    await renderCanvasRouteWithController(harness, {
-      canvasDocument: {
-        kind: 'dbt',
-        title: 'dbt canvas',
-      },
-      canvasAuthoringMode: 'dbt',
-      canvasEmptyStateGuideVisible: false,
-    });
-
     expect(harness.container.querySelector('[data-slot="canvas-empty-state"]')).toBeNull();
     expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
-    expectActiveCanvasShellIdentity({
-      container: harness.container,
-      title: 'dbt canvas',
-      kindLabel: 'dbt',
-    });
-    expect(harness.container.textContent).not.toContain('Start dbt canvas');
-    expect(harness.container.textContent).not.toContain('Add first dbt node');
-
-    expect(
-      harness.container.querySelector('[data-slot="canvas-toolbar-insert-command"]')
-    ).toBeNull();
+    expect(currentCanvasRouteState().viewportProps?.canEditEdges).toBe(false);
   });
 
-  it('keeps dbt first-node authoring available while execution actions stay unavailable', async () => {
+  it('keeps dbt authoring available without restoring an empty-state overlay', async () => {
     await renderCanvasRouteWithController(harness, {
       ...buildCanvasHostCycleControllerState({
         kind: 'typed_empty',
@@ -176,12 +108,7 @@ describe('Canvas route first-canvas policy', () => {
       title: 'Warehouse dbt',
       kindLabel: 'dbt',
     });
-    expect(harness.container.textContent).toContain('Start dbt canvas');
-    expect(harness.container.textContent).not.toContain('Add first dbt node');
-    expect(
-      harness.container.querySelector('[data-slot="canvas-add-node-palette-trigger"]')
-    ).toBeNull();
-    expect(document.body.querySelector('[data-slot="canvas-add-node-palette"]')).toBeNull();
+    expect(harness.container.querySelector('[data-slot="canvas-empty-state"]')).toBeNull();
     expect(currentCanvasRouteState().viewportProps?.authoringNodeKinds).toContain(
       requireAuthoringNodeKind('dbt:source')
     );

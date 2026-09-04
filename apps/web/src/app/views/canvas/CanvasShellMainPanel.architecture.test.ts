@@ -42,14 +42,12 @@ describe('CanvasShellMainPanel architecture', () => {
 
     expect(MAIN_PANEL_SOURCE).toContain("'./CanvasShellMainPanelFrame'");
     expect(MAIN_PANEL_SOURCE).toContain('<CanvasShellMainPanelFrame');
-    expect(MAIN_PANEL_SOURCE).toContain('<CanvasShellOverlayCenterSurfaceFrame');
     expect(MAIN_PANEL_SOURCE).toContain('<CanvasShellContextualWorkbenchSplit');
     expect(MAIN_PANEL_SOURCE).not.toContain('className=');
     expect(MAIN_PANEL_SOURCE).not.toContain('pointer-events-none absolute inset-0');
     expect(MAIN_PANEL_SOURCE).not.toContain('min-w-0 flex-1');
 
     expect(mainPanelFrameSource).toContain('export function CanvasShellMainPanelFrame');
-    expect(mainPanelFrameSource).toContain('export function CanvasShellOverlayCenterSurfaceFrame');
     expect(mainPanelFrameSource).toContain('export function CanvasShellContextualWorkbenchSplit');
     expect(mainPanelFrameSource).toContain('const canvasShellMainPanelFrameClassNames');
     expect(mainPanelFrameSource).not.toContain('className="');

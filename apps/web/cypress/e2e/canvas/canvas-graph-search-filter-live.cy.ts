@@ -88,7 +88,8 @@ describe('Canvas graph search and filtering live protected runtime', () => {
       .contains('button', 'dbt canvas')
       .should('be.enabled')
       .click();
-    cy.get('[data-slot="canvas-empty-state"]').should('be.visible');
+    cy.get('[data-slot="canvas-viewport"]').should('be.visible');
+    cy.get('[data-slot="canvas-empty-state"]').should('not.exist');
 
     addDbtNode('dbt:model', 320, 250);
     cy.contains('[data-slot="graph-node-card-title"]', 'Model 1')

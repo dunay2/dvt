@@ -21,14 +21,12 @@ describe('Canvas first-authoring live protected runtime', () => {
     {
       id: 'transformation',
       createButton: 'Transformation',
-      emptyTitle: 'Start transformation canvas',
       addCatalogItem: 'Add transformation',
       firstNodeName: /transform 1/i,
     },
     {
       id: 'dbt',
       createButton: 'dbt',
-      emptyTitle: 'Start dbt canvas',
       addCatalogItem: 'Add model',
       firstNodeName: 'Model 1',
     },
@@ -170,8 +168,8 @@ describe('Canvas first-authoring live protected runtime', () => {
       });
       waitForLiveFirstAuthoringDraftRecord(variant.id);
 
-      cy.contains(variant.emptyTitle, { timeout: 20_000 }).should('be.visible');
-      cy.get('[data-slot="canvas-empty-state"]').should('be.visible');
+      cy.get('[data-slot="canvas-viewport"]', { timeout: 20_000 }).should('be.visible');
+      cy.get('[data-slot="canvas-empty-state"]').should('not.exist');
       cy.contains('button', /^Add first /).should('not.exist');
       openCanvasContextMenuAt(360, 260);
       clickCanvasContextMenuItem('Add...');

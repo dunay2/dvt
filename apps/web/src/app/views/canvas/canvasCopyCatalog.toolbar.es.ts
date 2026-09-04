@@ -111,7 +111,6 @@ export const canvasViewToolbarCopyEs = {
     'Declara la tabla destino exacta, modo de escritura y objetivo de publicación.',
   canvasAddNodeCatalogMacroDescription: 'Agrega un componente macro reutilizable del proyecto.',
   canvasAddNodeCatalogNodeDescription: 'Agrega un componente registrado de Canvas.',
-  toolbarEmptyCanvasGuideLabel: 'Guía de canvas vacío',
   workspaceProjectActionsMenuLabel: 'Acciones del proyecto',
   toolbarProjectSnapshotMenuLabel: 'Instantáneas del proyecto',
   workspaceImportDbtProjectLabel: 'Importar proyecto dbt',

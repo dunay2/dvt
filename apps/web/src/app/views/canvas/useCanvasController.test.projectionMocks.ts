@@ -134,10 +134,6 @@ export function configureCanvasHarnessHookAndProjectionMocks(
       label: 'dbt',
       description: 'Model-first canvas for dbt resources and dependencies.',
       createTitle: 'dbt canvas',
-      emptyState: {
-        title: 'Start dbt canvas',
-        editableMessage: 'Start this dbt canvas by adding a governed source, model, or test.',
-      },
       nodeKinds:
         dbtContributions.canvasKinds?.find((registration) => registration.kind === 'dbt')
           ?.nodeKinds ?? [],
@@ -148,11 +144,6 @@ export function configureCanvasHarnessHookAndProjectionMocks(
       label: 'Transformation',
       description: 'Flow-based transformation canvas for the protected authoring draft.',
       createTitle: 'Transformation canvas',
-      emptyState: {
-        title: 'Start transformation canvas',
-        editableMessage:
-          'Start this transformation canvas by adding a governed source, Transform, or sink node.',
-      },
       nodeKinds: DVT_AUTHORING_NODE_KINDS,
     },
   ]);

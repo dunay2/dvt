@@ -40,7 +40,6 @@ type CanvasSettingsDialogProps = Readonly<{
   canvasGridVisible: boolean;
   canvasGridColor: CanvasPaletteId;
   canvasSnapToGrid: boolean;
-  canvasEmptyStateGuideVisible: boolean;
   canAutoLayout: boolean;
   copy?: CanvasViewCopy;
   onToggleImpact: () => void;
@@ -51,7 +50,6 @@ type CanvasSettingsDialogProps = Readonly<{
   onToggleGridVisible: () => void;
   onGridColorChange: (color: CanvasPaletteId) => void;
   onToggleSnapToGrid: () => void;
-  onSetCanvasEmptyStateGuideVisible: (visible: boolean) => void;
   onAutoLayout: () => void;
   onRestoreFocus?: () => void;
   onClose: () => void;
@@ -66,7 +64,6 @@ type CanvasPropertiesEditBuffer = Readonly<{
   canvasGridVisible: boolean;
   canvasGridColorInput: string;
   canvasSnapToGrid: boolean;
-  canvasEmptyStateGuideVisible: boolean;
   autoLayoutRequested: boolean;
 }>;
 
@@ -168,7 +165,6 @@ function buildEditBuffer(
     | 'canvasGridVisible'
     | 'canvasGridColor'
     | 'canvasSnapToGrid'
-    | 'canvasEmptyStateGuideVisible'
   >
 ): CanvasPropertiesEditBuffer {
   return {
@@ -180,7 +176,6 @@ function buildEditBuffer(
     canvasGridVisible: props.canvasGridVisible,
     canvasGridColorInput: normalizeCanvasHexColor(props.canvasGridColor, DEFAULT_CANVAS_GRID_COLOR),
     canvasSnapToGrid: props.canvasSnapToGrid,
-    canvasEmptyStateGuideVisible: props.canvasEmptyStateGuideVisible,
     autoLayoutRequested: false,
   };
 }
@@ -197,7 +192,6 @@ export function CanvasSettingsDialog(props: CanvasSettingsDialogProps): JSX.Elem
     canvasGridVisible,
     canvasGridColor,
     canvasSnapToGrid,
-    canvasEmptyStateGuideVisible,
     canAutoLayout,
     copy = canvasViewCopy,
     onToggleImpact,
@@ -208,7 +202,6 @@ export function CanvasSettingsDialog(props: CanvasSettingsDialogProps): JSX.Elem
     onToggleGridVisible,
     onGridColorChange,
     onToggleSnapToGrid,
-    onSetCanvasEmptyStateGuideVisible,
     onAutoLayout,
     onRestoreFocus,
     onClose,
@@ -229,7 +222,6 @@ export function CanvasSettingsDialog(props: CanvasSettingsDialogProps): JSX.Elem
     canvasGridVisible,
     canvasGridColor,
     canvasSnapToGrid,
-    canvasEmptyStateGuideVisible,
   ]);
 
   const backgroundColorValid = /^#[0-9a-f]{6}$/i.test(draft.canvasPaletteInput);
@@ -253,7 +245,6 @@ export function CanvasSettingsDialog(props: CanvasSettingsDialogProps): JSX.Elem
     normalizedCanvasGridColorInput !==
       normalizeCanvasHexColor(canvasGridColor, DEFAULT_CANVAS_GRID_COLOR) ||
     draft.canvasSnapToGrid !== canvasSnapToGrid ||
-    draft.canvasEmptyStateGuideVisible !== canvasEmptyStateGuideVisible ||
     (canAutoLayout && draft.autoLayoutRequested);
 
   const appearanceSection: WorkbenchPropertiesSection = {
@@ -298,14 +289,6 @@ export function CanvasSettingsDialog(props: CanvasSettingsDialogProps): JSX.Elem
               }
             />
           ) : null}
-          <CanvasSettingToggleRow
-            dataSlot="canvas-properties-empty-guide"
-            label={copy.toolbarEmptyCanvasGuideLabel}
-            checked={draft.canvasEmptyStateGuideVisible}
-            onCheckedChange={(checked) =>
-              setDraft((current) => ({ ...current, canvasEmptyStateGuideVisible: checked }))
-            }
-          />
         </div>
       </div>
     ),
@@ -426,9 +409,6 @@ export function CanvasSettingsDialog(props: CanvasSettingsDialogProps): JSX.Elem
       onGridColorChange(normalizedCanvasGridColorInput);
     }
     if (draft.canvasSnapToGrid !== canvasSnapToGrid) onToggleSnapToGrid();
-    if (draft.canvasEmptyStateGuideVisible !== canvasEmptyStateGuideVisible) {
-      onSetCanvasEmptyStateGuideVisible(draft.canvasEmptyStateGuideVisible);
-    }
     if (canAutoLayout && draft.autoLayoutRequested) onAutoLayout();
     onClose();
   }

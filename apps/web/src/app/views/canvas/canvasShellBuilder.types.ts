@@ -16,25 +16,13 @@ export type CanvasShellRouteComposerArgs = Readonly<{
 export type CanvasShellLayoutBuilderArgs = Readonly<{
   layoutState: Pick<
     CanvasRouteController,
-    | 'focusMode'
-    | 'inspectorPanelVisible'
-    | 'canOpenSourceImport'
-    | 'canvasEmptyStateGuideVisible'
-    | 'canvasSurfaceStrategy'
+    'focusMode' | 'inspectorPanelVisible' | 'canOpenSourceImport' | 'canvasSurfaceStrategy'
   >;
   recoveryCommands: Pick<CanvasRouteController, 'reloadLatestDraft'> &
     Readonly<{
       refetchDraftAfterAuthRefresh: () => void;
     }>;
-  authoringCommands: Pick<
-    CanvasRouteController,
-    | 'handleCreateAuthoringNode'
-    | 'handleCreateCanvasDocument'
-    | 'handleSelectCanvasDocument'
-    | 'handleApplyCanvasDocumentPatch'
-    | 'handleDeleteCanvasDocument'
-  >;
-  preferenceCommands: Pick<CanvasRouteController, 'setCanvasEmptyStateGuideVisible'>;
+  authoringCommands: Pick<CanvasRouteController, 'handleCreateCanvasDocument'>;
   routePresentation: Pick<
     CanvasRouteViewState,
     | 'presentationState'
@@ -44,12 +32,9 @@ export type CanvasShellLayoutBuilderArgs = Readonly<{
     | 'draftTransportError'
     | 'workbenchErrorMessage'
     | 'canvasDocument'
-    | 'canvasDocuments'
-    | 'activeCanvasId'
     | 'canCreateCanvasDocument'
     | 'draftSaveStatus'
     | 'availableCanvasKinds'
-    | 'effectiveUserPermissions'
     | 'readOnlyState'
   >;
 }>;
@@ -92,7 +77,6 @@ export type CanvasShellGraphBuilderArgs = Readonly<{
     | 'canvasGridVisible'
     | 'canvasGridColor'
     | 'canvasSnapToGrid'
-    | 'canvasEmptyStateGuideVisible'
     | 'viewport'
     | 'frozenNodeIds'
   >;
@@ -155,7 +139,6 @@ export type CanvasShellChromeCommandsBuilderArgs = Readonly<{
     | 'setCanvasGridVisible'
     | 'setCanvasGridColor'
     | 'setCanvasSnapToGrid'
-    | 'setCanvasEmptyStateGuideVisible'
     | 'handleExportProjectSnapshot'
     | 'handleImportProjectSnapshotFile'
     | 'reloadLatestDraft'

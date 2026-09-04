@@ -8,9 +8,6 @@ import { useCanvasNodeWorkbenchPosition } from './useCanvasNodeWorkbenchPosition
 const canvasShellMainPanelFrameClassNames = {
   root: 'relative h-full flex flex-col bg-(--surface-panel)',
   readOnlyBanner: 'shrink-0',
-  overlayBase: 'relative flex min-h-0 flex-1',
-  overlayLayer: 'pointer-events-none absolute inset-0',
-  overlayContent: 'pointer-events-none h-full',
   workbenchSplit: 'relative flex min-h-0 flex-1',
   workbenchBaseSurface: 'flex min-h-0 min-w-0 flex-1',
   workbenchOverlay:
@@ -35,23 +32,6 @@ export function CanvasShellReadOnlyBannerSlot({
   children,
 }: Readonly<{ children: ReactNode }>): JSX.Element {
   return <div className={canvasShellMainPanelFrameClassNames.readOnlyBanner}>{children}</div>;
-}
-
-export function CanvasShellOverlayCenterSurfaceFrame({
-  centerSurface,
-  viewport,
-}: Readonly<{
-  centerSurface: ReactNode;
-  viewport: ReactNode;
-}>): JSX.Element {
-  return (
-    <div className={canvasShellMainPanelFrameClassNames.overlayBase}>
-      {viewport}
-      <div className={canvasShellMainPanelFrameClassNames.overlayLayer}>
-        <div className={canvasShellMainPanelFrameClassNames.overlayContent}>{centerSurface}</div>
-      </div>
-    </div>
-  );
 }
 
 export function CanvasShellContextualWorkbenchSplit({

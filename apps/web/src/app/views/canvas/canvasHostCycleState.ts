@@ -1,15 +1,10 @@
 /** Owned concern: derive story-shaped host cycle DTOs from canonical Canvas workbench posture. */
 import { canvasViewCopy } from './copy';
 import type { CanvasWorkbenchSurfaceArgs } from './canvasCenterSurface.types';
-import type { CanvasKindRegistration, NodeKindRegistration } from '../../plugins/nodeTypeContracts';
+import type { CanvasKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CanvasAuthoringCanvasDocument } from './canvasDraftReadModel';
 
 type CreateCanvasDocumentCommand = CanvasWorkbenchSurfaceArgs['onCreateCanvasDocument'];
-type CreateAuthoringNodeCommand = CanvasWorkbenchSurfaceArgs['onCreateAuthoringNode'];
-
-function normalizeCanvasKind(kind: string): string {
-  return kind.trim().toLowerCase();
-}
 
 export type CanvasHostCycleState =
   | {
@@ -20,58 +15,12 @@ export type CanvasHostCycleState =
     }
   | {
       kind: 'typed_empty';
-      canvasTitle: string | null;
-      title: string;
-      message: string;
-      nodeKinds: readonly NodeKindRegistration[];
-      onCreateAuthoringNode: CreateAuthoringNodeCommand | undefined;
+      canvasDocument: CanvasAuthoringCanvasDocument;
     }
   | {
       kind: 'graph_ready';
       canvasDocument: CanvasAuthoringCanvasDocument;
     };
-
-function resolveCanvasKindRegistration(
-  args: Pick<CanvasWorkbenchSurfaceArgs, 'canvasDocument' | 'availableCanvasKinds'>
-): CanvasKindRegistration | null {
-  const { canvasDocument, availableCanvasKinds } = args;
-  if (canvasDocument == null) {
-    return null;
-  }
-
-  const activeCanvasKind = normalizeCanvasKind(canvasDocument.kind);
-  return (
-    availableCanvasKinds.find(
-      (registration) => normalizeCanvasKind(registration.kind) === activeCanvasKind
-    ) ?? null
-  );
-}
-
-function resolveTypedEmptyMessage(
-  args: Pick<
-    CanvasWorkbenchSurfaceArgs,
-    'canEditEdges' | 'canOpenSourceImport' | 'canvasDocument' | 'availableCanvasKinds'
-  >
-): string {
-  const { canEditEdges, canOpenSourceImport } = args;
-  const activeCanvasKind = resolveCanvasKindRegistration(args);
-
-  if (!canEditEdges) {
-    return canvasViewCopy.routeEmptyReadOnlyMessage;
-  }
-
-  if (!canOpenSourceImport) {
-    return canvasViewCopy.routeEmptyImportUnavailableMessage;
-  }
-
-  return activeCanvasKind?.emptyState.editableMessage ?? canvasViewCopy.routeEmptyEditableMessage;
-}
-
-function canCreateFirstNode(
-  args: Pick<CanvasWorkbenchSurfaceArgs, 'canEditEdges' | 'draftSaveStatus'>
-): boolean {
-  return args.canEditEdges && args.draftSaveStatus !== 'saving';
-}
 
 function canCreateFirstCanvasDocument(
   args: Pick<CanvasWorkbenchSurfaceArgs, 'canCreateCanvasDocument' | 'draftSaveStatus'>
@@ -87,10 +36,7 @@ export function deriveCanvasHostCycleState(
     | 'draftSaveStatus'
     | 'availableCanvasKinds'
     | 'canCreateCanvasDocument'
-    | 'canEditEdges'
-    | 'canOpenSourceImport'
     | 'onCreateCanvasDocument'
-    | 'onCreateAuthoringNode'
   >
 ): CanvasHostCycleState | null {
   const {
@@ -98,10 +44,7 @@ export function deriveCanvasHostCycleState(
     canvasDocument,
     availableCanvasKinds,
     canCreateCanvasDocument,
-    canEditEdges,
-    canOpenSourceImport,
     onCreateCanvasDocument,
-    onCreateAuthoringNode,
   } = args;
 
   if (routeState === 'needs_canvas') {
@@ -122,28 +65,10 @@ export function deriveCanvasHostCycleState(
     };
   }
 
-  if (routeState === 'empty') {
-    const activeCanvasKind = resolveCanvasKindRegistration({
-      canvasDocument,
-      availableCanvasKinds,
-    });
-    const canCreateNode = canCreateFirstNode({
-      canEditEdges,
-      draftSaveStatus: args.draftSaveStatus,
-    });
-
+  if (routeState === 'empty' && canvasDocument != null) {
     return {
       kind: 'typed_empty',
-      canvasTitle: canvasDocument?.title ?? null,
-      title: activeCanvasKind?.emptyState.title ?? canvasViewCopy.routeEmptyTitle,
-      message: resolveTypedEmptyMessage({
-        canEditEdges,
-        canOpenSourceImport,
-        canvasDocument,
-        availableCanvasKinds,
-      }),
-      nodeKinds: canCreateNode ? (activeCanvasKind?.nodeKinds ?? []) : [],
-      onCreateAuthoringNode: canCreateNode ? onCreateAuthoringNode : undefined,
+      canvasDocument,
     };
   }
 

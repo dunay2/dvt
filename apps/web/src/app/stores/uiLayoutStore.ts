@@ -21,7 +21,6 @@ interface UiLayoutState {
   canvasGridVisible: boolean;
   canvasGridColor: CanvasPaletteId;
   canvasSnapToGrid: boolean;
-  canvasEmptyStateGuideVisible: boolean;
 
   toggleLeftNav: () => void;
   setInspectorPanelWidth: (width: number) => void;
@@ -38,7 +37,6 @@ interface UiLayoutState {
   setCanvasGridVisible: (visible: boolean) => void;
   setCanvasGridColor: (color: CanvasPaletteId) => void;
   setCanvasSnapToGrid: (enabled: boolean) => void;
-  setCanvasEmptyStateGuideVisible: (visible: boolean) => void;
 }
 
 type PersistedUiLayoutState = Partial<
@@ -54,7 +52,6 @@ type PersistedUiLayoutState = Partial<
     | 'canvasGridVisible'
     | 'canvasGridColor'
     | 'canvasSnapToGrid'
-    | 'canvasEmptyStateGuideVisible'
   >
 >;
 
@@ -72,7 +69,6 @@ export const useUiLayoutStore = create<UiLayoutState>()(
       canvasGridVisible: true,
       canvasGridColor: DEFAULT_CANVAS_GRID_COLOR,
       canvasSnapToGrid: false,
-      canvasEmptyStateGuideVisible: true,
 
       toggleLeftNav: () => set((state) => ({ leftNavCollapsed: !state.leftNavCollapsed })),
       setInspectorPanelWidth: (width) => set({ inspectorPanelWidth: width }),
@@ -96,7 +92,6 @@ export const useUiLayoutStore = create<UiLayoutState>()(
       setCanvasGridColor: (color) =>
         set({ canvasGridColor: normalizeCanvasHexColor(color, DEFAULT_CANVAS_GRID_COLOR) }),
       setCanvasSnapToGrid: (enabled) => set({ canvasSnapToGrid: enabled }),
-      setCanvasEmptyStateGuideVisible: (visible) => set({ canvasEmptyStateGuideVisible: visible }),
     }),
     {
       name: 'dvt-web-ui-layout',
@@ -134,10 +129,6 @@ export const useUiLayoutStore = create<UiLayoutState>()(
             typeof persistedLayoutState.canvasSnapToGrid === 'boolean'
               ? persistedLayoutState.canvasSnapToGrid
               : currentState.canvasSnapToGrid,
-          canvasEmptyStateGuideVisible:
-            typeof persistedLayoutState.canvasEmptyStateGuideVisible === 'boolean'
-              ? persistedLayoutState.canvasEmptyStateGuideVisible
-              : currentState.canvasEmptyStateGuideVisible,
         };
       },
       partialize: (state) => ({
@@ -151,7 +142,6 @@ export const useUiLayoutStore = create<UiLayoutState>()(
         canvasGridVisible: state.canvasGridVisible,
         canvasGridColor: state.canvasGridColor,
         canvasSnapToGrid: state.canvasSnapToGrid,
-        canvasEmptyStateGuideVisible: state.canvasEmptyStateGuideVisible,
       }),
     }
   )

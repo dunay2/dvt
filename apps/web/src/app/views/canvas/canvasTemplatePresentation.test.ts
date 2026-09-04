@@ -10,10 +10,6 @@ function buildCanvasKind(overrides?: Partial<CanvasKindRegistration>): CanvasKin
     label: 'Transformation',
     description: 'Flow-based transformation canvas for the protected authoring draft.',
     createTitle: 'Transformation canvas',
-    emptyState: {
-      title: 'Start transformation canvas',
-      editableMessage: 'Start transformation authoring',
-    },
     nodeKinds: [],
     ...overrides,
   };

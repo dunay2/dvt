@@ -27,7 +27,6 @@ function buildCanvasShellLayoutArgs({
       focusMode: controller.focusMode,
       inspectorPanelVisible: controller.inspectorPanelVisible,
       canOpenSourceImport: controller.canOpenSourceImport,
-      canvasEmptyStateGuideVisible: controller.canvasEmptyStateGuideVisible,
       canvasSurfaceStrategy: controller.canvasSurfaceStrategy,
     },
     recoveryCommands: {
@@ -38,14 +37,7 @@ function buildCanvasShellLayoutArgs({
       },
     },
     authoringCommands: {
-      handleCreateAuthoringNode: controller.handleCreateAuthoringNode,
       handleCreateCanvasDocument: controller.handleCreateCanvasDocument,
-      handleSelectCanvasDocument: controller.handleSelectCanvasDocument,
-      handleApplyCanvasDocumentPatch: controller.handleApplyCanvasDocumentPatch,
-      handleDeleteCanvasDocument: controller.handleDeleteCanvasDocument,
-    },
-    preferenceCommands: {
-      setCanvasEmptyStateGuideVisible: controller.setCanvasEmptyStateGuideVisible,
     },
     routePresentation: {
       presentationState: routeViewState.presentationState,
@@ -55,12 +47,9 @@ function buildCanvasShellLayoutArgs({
       draftTransportError: routeViewState.draftTransportError,
       workbenchErrorMessage: routeViewState.workbenchErrorMessage,
       canvasDocument: routeViewState.canvasDocument,
-      canvasDocuments: routeViewState.canvasDocuments,
-      activeCanvasId: routeViewState.activeCanvasId,
       canCreateCanvasDocument: routeViewState.canCreateCanvasDocument,
       draftSaveStatus: routeViewState.draftSaveStatus,
       availableCanvasKinds: routeViewState.availableCanvasKinds,
-      effectiveUserPermissions: routeViewState.effectiveUserPermissions,
       readOnlyState: routeViewState.readOnlyState,
     },
   };
@@ -110,7 +99,6 @@ function buildCanvasShellGraphArgs({
       canvasGridVisible: controller.canvasGridVisible,
       canvasGridColor: controller.canvasGridColor,
       canvasSnapToGrid: controller.canvasSnapToGrid,
-      canvasEmptyStateGuideVisible: controller.canvasEmptyStateGuideVisible,
       viewport: controller.viewport,
       frozenNodeIds: controller.frozenNodeIds,
     },
@@ -185,7 +173,6 @@ function buildCanvasShellChromeCommandsArgs({
       setCanvasGridVisible: controller.setCanvasGridVisible,
       setCanvasGridColor: controller.setCanvasGridColor,
       setCanvasSnapToGrid: controller.setCanvasSnapToGrid,
-      setCanvasEmptyStateGuideVisible: controller.setCanvasEmptyStateGuideVisible,
       handleExportProjectSnapshot: controller.handleExportProjectSnapshot,
       handleImportProjectSnapshotFile: controller.handleImportProjectSnapshotFile,
       reloadLatestDraft: controller.reloadLatestDraft,

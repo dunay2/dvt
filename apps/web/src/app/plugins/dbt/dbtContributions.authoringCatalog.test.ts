@@ -26,17 +26,4 @@ describe('dbt Graph Draft authoring catalog', () => {
       expect.arrayContaining([...HTTP_JSON_NODE_KINDS, ...OBJECT_FILE_POSTGRES_NODE_KINDS])
     );
   });
-
-  it('describes only the supported authoring choices in English and Spanish', () => {
-    const canvasRegistration = dbtContributions.canvasKinds?.find(
-      (registration) => registration.kind === 'dbt'
-    );
-
-    expect(canvasRegistration?.emptyState.editableMessage).toBe(
-      'Start this dbt canvas by adding a governed source, model, or test.'
-    );
-    expect(canvasRegistration?.localizedCopy?.es?.emptyState.editableMessage).toBe(
-      'Inicia este canvas añadiendo un origen, modelo o prueba gobernados.'
-    );
-  });
 });
