@@ -38,6 +38,119 @@ function hasEditableOutputs(projection: DvtSubstraitProjectionSemantics): boolea
   );
 }
 
+function sameProjectionSource(
+  left: DvtSubstraitProjectionSemantics['source'],
+  right: DvtSubstraitProjectionSemantics['source']
+): boolean {
+  return (
+    left.schema === right.schema &&
+    left.table === right.table &&
+    left.sourceRef.schemaVersion === right.sourceRef.schemaVersion &&
+    left.sourceRef.sourceObjectId === right.sourceRef.sourceObjectId &&
+    left.sourceRef.connectionRef.schemaVersion === right.sourceRef.connectionRef.schemaVersion &&
+    left.sourceRef.connectionRef.connectionId === right.sourceRef.connectionRef.connectionId &&
+    left.sourceRef.connectionRef.provider === right.sourceRef.connectionRef.provider &&
+    left.fields.map((field) => field.name).join('\u0000') ===
+      right.fields.map((field) => field.name).join('\u0000')
+  );
+}
+
+function carryForwardProjectionIdentity(
+  previous: DvtSubstraitProjectionDraft | null,
+  next: DvtSubstraitProjectionDraft
+): DvtSubstraitProjectionDraft {
+  if (previous == null) return next;
+  const previousInspection = inspectDvtSubstraitProjectionDraft(previous);
+  const nextInspection = inspectDvtSubstraitProjectionDraft(next);
+  if (!previousInspection.ok || !nextInspection.ok) return next;
+
+  const previousSources = previous.sidecar.relations.filter((relation) => relation.sourceRef != null);
+  const previousTargets = previous.sidecar.relations.filter((relation) => relation.sourceRef == null);
+  const nextSources = next.sidecar.relations.filter((relation) => relation.sourceRef != null);
+  const nextTargets = next.sidecar.relations.filter((relation) => relation.sourceRef == null);
+  if (
+    previousSources.length !== 1 ||
+    previousTargets.length !== 1 ||
+    nextSources.length !== 1 ||
+    nextTargets.length !== 1
+  ) {
+    return next;
+  }
+  const previousSource = previousSources[0]!;
+  const previousTarget = previousTargets[0]!;
+  const nextSource = nextSources[0]!;
+  const nextTarget = nextTargets[0]!;
+  const sameSource = sameProjectionSource(
+    previousInspection.projection.source,
+    nextInspection.projection.source
+  );
+
+  const nextSourceFieldIdToPrevious = new Map<string, string>();
+  if (sameSource) {
+    const previousSourceFieldIdByName = new Map(
+      previous.sidecar.fields
+        .filter((field) => field.relationId === previousSource.relationId && field.displayName != null)
+        .map((field) => [field.displayName!, field.fieldId] as const)
+    );
+    next.sidecar.fields
+      .filter((field) => field.relationId === nextSource.relationId && field.displayName != null)
+      .forEach((field) => {
+        const previousFieldId = previousSourceFieldIdByName.get(field.displayName!);
+        if (previousFieldId != null) nextSourceFieldIdToPrevious.set(field.fieldId, previousFieldId);
+      });
+    if (nextSourceFieldIdToPrevious.size !== nextInspection.projection.source.fields.length) {
+      return next;
+    }
+  }
+
+  return {
+    plan: next.plan,
+    sidecar: {
+      ...next.sidecar,
+      relations: next.sidecar.relations.map((relation) => {
+        if (relation.relationId === nextTarget.relationId) {
+          return { ...relation, relationId: previousTarget.relationId };
+        }
+        return sameSource && relation.relationId === nextSource.relationId
+          ? { ...relation, relationId: previousSource.relationId }
+          : relation;
+      }),
+      fields: next.sidecar.fields.map((field) => {
+        const relationId =
+          field.relationId === nextTarget.relationId
+            ? previousTarget.relationId
+            : sameSource && field.relationId === nextSource.relationId
+              ? previousSource.relationId
+              : field.relationId;
+        const fieldId = sameSource
+          ? (nextSourceFieldIdToPrevious.get(field.fieldId) ?? field.fieldId)
+          : field.fieldId;
+        const sourceFieldId =
+          sameSource && field.sourceFieldId != null
+            ? (nextSourceFieldIdToPrevious.get(field.sourceFieldId) ?? field.sourceFieldId)
+            : field.sourceFieldId;
+        return {
+          ...field,
+          relationId,
+          fieldId,
+          ...(sourceFieldId == null ? {} : { sourceFieldId }),
+        };
+      }),
+    },
+  };
+}
+
+function readCurrentProjectionDraft(targetNode: CanonicalNode): DvtSubstraitProjectionDraft | null {
+  try {
+    const authority = readDvtTransformAuthoringAuthority(targetNode);
+    return authority == null
+      ? null
+      : decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
+  } catch {
+    return null;
+  }
+}
+
 export function readEditableCanvasProjection(targetNode: CanonicalNode): EditableCanvasProjection {
   if (targetNode.pluginId !== 'dvt' || targetNode.kind !== 'dvt:transform') {
     return { outcome: 'rejected', reason: 'target_not_canonical_transform' };
@@ -153,15 +266,19 @@ export function persistCanvasProjectionOutputs(args: {
   if (source == null || args.outputs.some((output) => output.sourceFieldName == null)) {
     return { outcome: 'rejected', reason: 'projection_requires_one_connected_source' };
   }
-  let draft = createDvtSubstraitProjectionDraft({
-    source,
-    targetNodeId: args.targetNode.id,
-    outputs: args.outputs.map((output) => ({
-      fieldId: output.fieldId,
-      name: output.name,
-      sourceFieldName: output.sourceFieldName!,
-    })),
-  });
+  const previousDraft = readCurrentProjectionDraft(args.targetNode);
+  let draft = carryForwardProjectionIdentity(
+    previousDraft,
+    createDvtSubstraitProjectionDraft({
+      source,
+      targetNodeId: args.targetNode.id,
+      outputs: args.outputs.map((output) => ({
+        fieldId: output.fieldId,
+        name: output.name,
+        sourceFieldName: output.sourceFieldName!,
+      })),
+    })
+  );
   for (const output of args.outputs) {
     const sourceField = source.fields.find((field) => field.name === output.sourceFieldName);
     if (sourceField == null) {
