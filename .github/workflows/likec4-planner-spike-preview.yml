@@ -21,38 +21,8 @@ jobs:
       - name: Fetch source baseline
         run: git fetch --no-tags origin main
 
-      - name: Generate source-first evidence
-        run: |
-          for context in planner plan-verifier plan-interpreter engine run-domain artifacts state-store delivery adapter-temporal adapter-postgres; do
-            node architecture/tools/generate-source-first-context.mjs "$context"
-          done
-
-      - name: Stage combined LikeC4 workspace
-        run: |
-          rm -rf .source-first-likec4-preview
-          mkdir -p .source-first-likec4-preview .architecture-evidence
-          cp architecture/specification.c4 .source-first-likec4-preview/specification.c4
-          for context in planner plan-verifier plan-interpreter engine run-domain artifacts state-store delivery adapter-temporal adapter-postgres; do
-            cp "architecture/${context}.c4" ".source-first-likec4-preview/${context}.c4"
-            cp "architecture/generated/${context}-source.c4" ".source-first-likec4-preview/${context}-source.c4"
-            cp "architecture/generated/${context}-inventory.json" ".architecture-evidence/${context}-inventory.json"
-            cp "architecture/generated/${context}-source.c4" ".architecture-evidence/${context}-source.c4"
-            cp "architecture/contexts/${context}-components.json" ".architecture-evidence/${context}-components.json"
-            cp "architecture/contexts/${context}-source-baseline.json" ".architecture-evidence/${context}-source-baseline.json"
-          done
-          cat > .source-first-likec4-preview/likec4.config.json <<'JSON'
-          {
-            "$schema": "https://likec4.dev/schemas/config.json",
-            "name": "dvt-source-first-architecture-spike",
-            "title": "DVT+ — Source-first architecture",
-            "metadata": {
-              "status": "manual-spike",
-              "repository": "dunay2/dvt",
-              "baselineSha": "42504563629f0b998d8a3382ea839eead99a36d1",
-              "contexts": "planner,plan-verifier,plan-interpreter,engine,run-domain,artifacts,state-store,delivery,adapter-temporal,adapter-postgres"
-            }
-          }
-          JSON
+      - name: Prepare source-first preview
+        run: node architecture/tools/prepare-source-first-preview.mjs
 
       - name: Validate source-first LikeC4 model
         run: |
