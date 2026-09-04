@@ -70,11 +70,7 @@ describe('plugin runtime projection', () => {
     expect(transformation).toMatchObject({
       label: 'Transformación',
       createTitle: 'Canvas de transformación',
-      emptyState: {
-        title: 'Inicia el canvas de transformación',
-      },
     });
-    expect(transformation?.emptyState.editableMessage).not.toContain('Start this');
   });
 
   it('excludes backend-backed plugins until the backend publishes an available capability row', () => {

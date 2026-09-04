@@ -124,11 +124,8 @@ describe('Project onboarding first-use flow', () => {
     waitForE2eApiCall('/workspace/graph/draft', 'GET');
 
     cy.location('pathname').should('eq', '/canvas');
-    cy.get('[data-slot="canvas-empty-state"]', { timeout: 20_000 }).within(() => {
-      cy.contains(/Start transformation canvas|Inicia el canvas de transformación/).should(
-        'be.visible'
-      );
-    });
+    cy.get('[data-slot="canvas-viewport"]', { timeout: 20_000 }).should('be.visible');
+    cy.get('[data-slot="canvas-empty-state"]').should('not.exist');
     cy.contains('src_orders').should('not.exist');
     cy.contains('model_orders').should('not.exist');
     cy.contains('orders_dashboard').should('not.exist');

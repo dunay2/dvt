@@ -1,7 +1,6 @@
 /** Owned concern: render Canvas workbench states from canonical route posture. */
 import {
   CanvasBlockedStateView,
-  CanvasEmptyStateView,
   CanvasErrorStateView,
   CanvasLoadingStateView,
 } from './CanvasStateViews';
@@ -69,12 +68,7 @@ function renderCanvasHostCycleWorkbenchSurface(
     | 'draftSaveStatus'
     | 'availableCanvasKinds'
     | 'canCreateCanvasDocument'
-    | 'canEditEdges'
-    | 'canOpenSourceImport'
-    | 'emptyStateGuideVisible'
     | 'onCreateCanvasDocument'
-    | 'onCreateAuthoringNode'
-    | 'onEmptyStateGuideVisibilityChange'
   >
 ) {
   const cycleState = deriveCanvasHostCycleState(args);
@@ -93,23 +87,7 @@ function renderCanvasHostCycleWorkbenchSurface(
     );
   }
 
-  if (cycleState.kind !== 'typed_empty') {
-    return null;
-  }
-
-  if (!args.emptyStateGuideVisible) {
-    return null;
-  }
-
-  return (
-    <CanvasEmptyStateView
-      canvasTitle={cycleState.canvasTitle}
-      title={cycleState.title}
-      message={cycleState.message}
-      emptyStateGuideVisible={args.emptyStateGuideVisible}
-      onEmptyStateGuideVisibilityChange={args.onEmptyStateGuideVisibilityChange}
-    />
-  );
+  return null;
 }
 
 export function renderCanvasWorkbenchSurface(args: CanvasWorkbenchSurfaceArgs) {

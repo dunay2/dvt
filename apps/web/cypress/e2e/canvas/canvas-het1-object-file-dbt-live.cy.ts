@@ -85,7 +85,8 @@ describe('HET1 public object-file DBT vertical', () => {
       cy.get('[data-slot="canvas-playground-empty-state"]', { timeout: 20_000 }).within(() => {
         cy.contains('button', 'dbt').should('be.enabled').click();
       });
-      cy.contains('Start dbt canvas', { timeout: 20_000 }).should('be.visible');
+      cy.get('[data-slot="canvas-viewport"]', { timeout: 20_000 }).should('be.visible');
+      cy.get('[data-slot="canvas-empty-state"]').should('not.exist');
 
       addCatalogNode(300, 260, 'dvt:object_file_load');
       cy.contains('.react-flow__node', OBJECT_NODE_CARD_TITLE, { timeout: 20_000 }).should(

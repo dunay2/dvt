@@ -54,22 +54,14 @@ function renderCanvasShellReadOnlyBanner(
 export function buildCanvasShellLayout({
   authoringCommands,
   layoutState,
-  preferenceCommands,
   recoveryCommands,
   routePresentation,
 }: CanvasShellLayoutBuilderArgs): CanvasShellLayout {
-  const centerSurfaceMode =
-    routePresentation.presentationState.routeState === 'empty' &&
-    routePresentation.effectiveUserPermissions.canEditEdges
-      ? 'overlay'
-      : 'replace';
-
   return {
     focusMode: layoutState.focusMode,
     inspectorPanelVisible: layoutState.inspectorPanelVisible,
     canOpenSourceImport: layoutState.canOpenSourceImport,
     surfaceStrategy: layoutState.canvasSurfaceStrategy,
-    centerSurfaceMode,
     centerSurface: renderCanvasCenterSurface({
       presentationState: routePresentation.presentationState,
       workspaceScope: routePresentation.workspaceScope,
@@ -80,14 +72,9 @@ export function buildCanvasShellLayout({
       draftSaveStatus: routePresentation.draftSaveStatus,
       availableCanvasKinds: routePresentation.availableCanvasKinds,
       canCreateCanvasDocument: routePresentation.canCreateCanvasDocument,
-      canEditEdges: routePresentation.effectiveUserPermissions.canEditEdges,
-      canOpenSourceImport: layoutState.canOpenSourceImport,
-      emptyStateGuideVisible: layoutState.canvasEmptyStateGuideVisible,
       onCreateCanvasDocument: (command) => {
         void authoringCommands.handleCreateCanvasDocument(command);
       },
-      onCreateAuthoringNode: authoringCommands.handleCreateAuthoringNode,
-      onEmptyStateGuideVisibilityChange: preferenceCommands.setCanvasEmptyStateGuideVisible,
     }),
     readOnlyBanner: renderCanvasShellReadOnlyBanner(recoveryCommands, routePresentation),
   };

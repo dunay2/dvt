@@ -68,21 +68,11 @@ export const dvtContributions: PluginContributions = {
       label: 'Transformation',
       description: 'Flow-based transformation canvas for the protected authoring draft.',
       createTitle: 'Transformation canvas',
-      emptyState: {
-        title: 'Start transformation canvas',
-        editableMessage:
-          'Start this transformation canvas by adding a governed source, Transform, or sink node.',
-      },
       localizedCopy: {
         es: {
           label: 'Transformación',
           description: 'Canvas de flujo para el borrador protegido de autoría.',
           createTitle: 'Canvas de transformación',
-          emptyState: {
-            title: 'Inicia el canvas de transformación',
-            editableMessage:
-              'Inicia este canvas añadiendo un origen gobernado, una transformación o una salida.',
-          },
         },
       },
       nodeKinds: DVT_AUTHORING_NODE_KINDS,

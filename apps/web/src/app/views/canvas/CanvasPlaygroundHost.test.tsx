@@ -22,10 +22,6 @@ const canvasKinds: readonly CanvasKindRegistration[] = [
     label: 'dbt',
     description: 'Model-first canvas for dbt resources and dependencies.',
     createTitle: 'dbt canvas',
-    emptyState: {
-      title: 'Start dbt canvas',
-      editableMessage: 'Start dbt modeling',
-    },
     nodeKinds: [],
   },
   {
@@ -34,10 +30,6 @@ const canvasKinds: readonly CanvasKindRegistration[] = [
     label: 'Transformation',
     description: 'Flow-based transformation canvas for the protected authoring draft.',
     createTitle: 'Transformation canvas',
-    emptyState: {
-      title: 'Start transformation canvas',
-      editableMessage: 'Start transformation authoring',
-    },
     nodeKinds: [],
   },
 ];

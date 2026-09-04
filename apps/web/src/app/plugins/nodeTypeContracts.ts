@@ -24,10 +24,6 @@ export type CanvasKindRegistration = {
   label: string;
   description: string;
   createTitle: string;
-  emptyState: {
-    title: string;
-    editableMessage: string;
-  };
   localizedCopy?: Readonly<
     Record<
       string,
@@ -35,10 +31,6 @@ export type CanvasKindRegistration = {
         label: string;
         description: string;
         createTitle: string;
-        emptyState: Readonly<{
-          title: string;
-          editableMessage: string;
-        }>;
       }>
     >
   >;

@@ -216,7 +216,8 @@ describe('HET2 public REST artifact DBT vertical', () => {
       cy.get('[data-slot="canvas-playground-empty-state"]', { timeout: 20_000 }).within(() => {
         cy.contains('button', 'dbt').should('be.enabled').click();
       });
-      cy.contains('Start dbt canvas', { timeout: 20_000 }).should('be.visible');
+      cy.get('[data-slot="canvas-viewport"]', { timeout: 20_000 }).should('be.visible');
+      cy.get('[data-slot="canvas-empty-state"]').should('not.exist');
 
       addCatalogNode(180, 240, 'dvt:http_json_acquisition');
       cy.contains('.react-flow__node', ACQUISITION_NODE_NAME, { timeout: 20_000 }).should(

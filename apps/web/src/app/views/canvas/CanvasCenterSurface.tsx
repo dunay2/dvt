@@ -18,11 +18,6 @@ export function renderCanvasCenterSurface(args: RenderCanvasCenterSurfaceArgs) {
     draftSaveStatus: args.draftSaveStatus,
     availableCanvasKinds: args.availableCanvasKinds,
     canCreateCanvasDocument: args.canCreateCanvasDocument,
-    canEditEdges: args.canEditEdges,
-    canOpenSourceImport: args.canOpenSourceImport,
-    emptyStateGuideVisible: args.emptyStateGuideVisible,
     onCreateCanvasDocument: args.onCreateCanvasDocument,
-    onCreateAuthoringNode: args.onCreateAuthoringNode,
-    onEmptyStateGuideVisibilityChange: args.onEmptyStateGuideVisibilityChange,
   });
 }

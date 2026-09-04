@@ -61,8 +61,8 @@ second presentation or preference.
 - Empty Canvas is read-only when mutations are denied.
 - Empty authoring is only reachable after the host persists a canvas document.
 - The empty catalog must resolve from the active `canvasDocument.kind`.
-- The empty catalog, empty copy, graph strategy, and execution posture must
-  resolve from the same `CanvasRuntimeRegistration`.
+- The node catalog, graph strategy, and execution posture must resolve from the
+  same `CanvasRuntimeRegistration`.
 - First-node admission must call `CanvasRuntimePolicy.admission` before
   `CanvasGraphLifecycle` mutates the draft session.
 - A node whose `kind`, `pluginId`, or role is not owned by the active runtime
@@ -71,8 +71,8 @@ second presentation or preference.
 - First-node authoring remains available when source import is unavailable;
   source import is an optional capability, not the only route out of empty
   Canvas.
-- Read-only empty posture keeps typed copy visible but removes mutating node
-  choices and commands.
+- Read-only empty posture uses the standard read-only banner and removes
+  mutating node choices and commands without adding another center surface.
 - Node creation must pass through the existing draft graph lifecycle.
 - Context-menu node creation may supply a caller-owned flow position, but it
   must not fork node admission or identity generation.
@@ -194,6 +194,6 @@ canvas document identity rather than a route-global transformation default.
 - Do not skip the `needs_canvas` host posture by inventing a default document
   client-side.
 - Do not make import capability the only path out of empty Canvas.
-- Do not split empty copy, first-node catalog, graph strategy, and execution
-  posture into separate route-level truth sources.
+- Do not split the first-node catalog, graph strategy, and execution posture
+  into separate route-level truth sources.
 - Do not fork the first-node command from the ready-canvas create command.

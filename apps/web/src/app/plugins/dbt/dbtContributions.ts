@@ -91,19 +91,11 @@ export const dbtContributions: PluginContributions = {
       label: 'dbt',
       description: 'Model-first canvas for dbt resources and dependencies.',
       createTitle: 'dbt canvas',
-      emptyState: {
-        title: 'Start dbt canvas',
-        editableMessage: 'Start this dbt canvas by adding a governed source, model, or test.',
-      },
       localizedCopy: {
         es: {
           label: 'dbt',
           description: 'Canvas basado en modelos para recursos y dependencias dbt.',
           createTitle: 'Canvas dbt',
-          emptyState: {
-            title: 'Inicia el canvas dbt',
-            editableMessage: 'Inicia este canvas añadiendo un origen, modelo o prueba gobernados.',
-          },
         },
       },
       nodeKinds: [
