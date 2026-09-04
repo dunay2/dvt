@@ -9,8 +9,13 @@ import { describe, expect, it } from 'vitest';
 import {
   applyDvtSubstraitPilotFunction,
   createDvtSubstraitPilotDraft,
+  decodeDvtSubstraitPilotDocument,
+  encodeDvtSubstraitPilotDocument,
   inspectDvtSubstraitPilotDraft,
+  renameDvtSubstraitPilotOutput,
 } from './canvasDvtSubstraitPilot';
+
+const UUID_V7 = '[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}';
 
 function projectExpression(draft: ReturnType<typeof createDvtSubstraitPilotDraft>): Expression {
   const root = draft.plan.relations[0]?.relType;
@@ -52,6 +57,36 @@ describe('typed Substrait pilot review guards', () => {
           { name: 'country', fieldId: 'field:transform-customers:country', outputOrdinal: 2 },
         ],
       },
+    });
+  });
+
+  it('allocates opaque base relation ids once and preserves them through rename and reload', () => {
+    const draft = createDvtSubstraitPilotDraft({
+      sourceNodeId: 'source-customers',
+      targetNodeId: 'transform-customers',
+    });
+    const relationIds = draft.sidecar.relations.map((relation) => relation.relationId);
+
+    expect(relationIds).toHaveLength(2);
+    expect(new Set(relationIds).size).toBe(2);
+    relationIds.forEach((relationId) =>
+      expect(relationId).toMatch(new RegExp(`^dvt_rel_${UUID_V7}$`, 'i'))
+    );
+    expect(
+      relationIds.some(
+        (relationId) =>
+          relationId.includes('source-customers') || relationId.includes('transform-customers')
+      )
+    ).toBe(false);
+
+    const renamed = renameDvtSubstraitPilotOutput(draft, 'customer_name');
+    expect(renamed.sidecar.relations.map((relation) => relation.relationId)).toEqual(relationIds);
+
+    const reopened = decodeDvtSubstraitPilotDocument(encodeDvtSubstraitPilotDocument(renamed));
+    expect(reopened.sidecar.relations.map((relation) => relation.relationId)).toEqual(relationIds);
+    expect(inspectDvtSubstraitPilotDraft(reopened)).toMatchObject({
+      ok: true,
+      projection: { outputName: 'customer_name' },
     });
   });
 
