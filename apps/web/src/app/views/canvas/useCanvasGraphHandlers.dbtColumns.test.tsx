@@ -107,6 +107,7 @@ describe('Canvas DBT model column handlers', () => {
       harness.latest()?.handleRemoveColumnMapping({
         kind: 'column-lineage',
         sourceNodeId: source.id,
+        sourceFieldId: 'external-dbt-field:customer',
         sourceColumnName: 'customer',
         targetNodeId: model.id,
         targetColumnName: 'customer',
