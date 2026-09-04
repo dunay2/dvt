@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "baselineSha": "42504563629f0b998d8a3382ea839eead99a36d1",
+  "contexts": [
+    "planner",
+    "plan-verifier",
+    "plan-interpreter",
+    "engine",
+    "run-domain",
+    "artifacts",
+    "state-store",
+    "delivery",
+    "adapter-temporal",
+    "adapter-postgres"
+  ]
+}
