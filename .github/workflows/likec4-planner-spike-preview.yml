@@ -47,24 +47,15 @@ jobs:
           git worktree remove --force .architecture-main
 
       - name: Validate source-first LikeC4 model
-        run: |
-          cd .source-first-likec4-preview
-          npx --yes likec4@1.59.2 validate
+        run: npx --yes likec4@1.59.2 validate .source-first-likec4-preview
 
       - name: Build source-first LikeC4 static site
-        uses: likec4/actions@v1
-        with:
-          action: build
-          path: .source-first-likec4-preview
-          output: dist
-          base: ./
-          likec4-version: 1.59.2
+        run: npx --yes likec4@1.59.2 build --base ./ --output dist .source-first-likec4-preview
 
       - name: Publish machine-readable source evidence
         run: |
-          sudo mkdir -p dist/source
-          sudo cp .architecture-evidence/* dist/source/
-          sudo chown -R "$USER":"$USER" dist
+          mkdir -p dist/source
+          cp .architecture-evidence/* dist/source/
 
       - name: Upload preview artifact
         uses: actions/upload-artifact@v4
