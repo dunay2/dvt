@@ -44,7 +44,6 @@ export function replaceGeneratedDbtModelWithTransform(args: {
   identity: CanvasColumnFunctionIdentity;
 }): CanonicalNode | null {
   const dbtMetadata = createDbtNodeAuthoringMetadata(args.targetNode);
-  if (dbtMetadata.modelSql != null) return null;
   const connectedSourceIds = args.draftSession.workingSet.visibleEdges
     .filter((edge) => edge.targetId === args.targetNode.id)
     .map((edge) => edge.sourceId);

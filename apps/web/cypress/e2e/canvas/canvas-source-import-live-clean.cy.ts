@@ -107,43 +107,6 @@ function waitForLiveDraftEdgeSaved(
   });
 }
 
-function waitForLiveDraftModelSqlSaved(
-  session: ReturnType<typeof resolveLiveFirstAuthoringWorkspaceSession>,
-  expectedSql: string,
-  remainingAttempts = 30
-): Cypress.Chainable<void> {
-  return readLiveGraphDraft(session).then((draftResponse) => {
-    expect(draftResponse.status).to.equal(200);
-    const nodes = (
-      draftResponse.body as {
-        record: {
-          draft: {
-            nodes: Array<{
-              name: string;
-              metadata?: { config?: { sql?: string } };
-            }>;
-          };
-        };
-      }
-    ).record.draft.nodes;
-    const modelSql = nodes.find((node) => node.name === 'Model 1')?.metadata?.config?.sql;
-
-    if (modelSql === expectedSql) {
-      return;
-    }
-
-    if (remainingAttempts <= 0) {
-      throw new Error(
-        `Timed out waiting for authored DBT SQL to persist. Last value: ${JSON.stringify(modelSql)}`
-      );
-    }
-
-    return cy
-      .wait(500)
-      .then(() => waitForLiveDraftModelSqlSaved(session, expectedSql, remainingAttempts - 1));
-  });
-}
-
 describe('Canvas source import live clean proof', () => {
   beforeEach(function () {
     if (skipWhenFirstAuthoringLiveEnvIsMissing(this)) {
@@ -259,7 +222,7 @@ describe('Canvas source import live clean proof', () => {
       cy.contains('button', 'dbt').should('be.enabled').click();
     });
 
-    cy.get('[data-slot="canvas-viewport"]', { timeout: 20_000 }).should('be.visible');
+    cy.get('[data-testid="canvas-viewport"]', { timeout: 20_000 }).should('be.visible');
     cy.get('[data-slot="canvas-empty-state"]').should('not.exist');
     waitForLiveDraftSaved(session);
     openCanvasContextMenuAt(420, 280);
@@ -525,30 +488,44 @@ describe('Canvas source import live clean proof', () => {
       .should('be.visible')
       .and('have.attr', 'aria-selected', 'true');
     cy.get('[data-slot="canvas-node-workbench-code-section"]').should('be.visible');
-    const authoredModelSql = `select order_id, customer, amount\nfrom {{ source('${expectedSourceName}', 'source_1') }}`;
     cy.get('[data-slot="canvas-node-workbench-code-section"]').should(
       'not.contain.text',
       'No SQL or generated code is recorded for this node.'
     );
     cy.get('[data-slot="dbt-model-code-provenance"]')
       .should('contain.text', 'models/model_1.sql')
-      .and('contain.text', 'Generated');
-    cy.get('textarea[name="dbt-model-sql"]')
+      .and('contain.text', 'read-only projection');
+    cy.get('[data-slot="canvas-node-workbench-code-section"]')
+      .find('[data-testid="monaco-code-viewer"]')
       .should('be.visible')
-      .and('contain.value', `{{ source('${expectedSourceName}', 'source_1') }}`)
-      .focus()
-      .type('{selectall}{backspace}');
-    cy.contains('.react-flow__node', 'Model 1').should('exist');
-    cy.get('textarea[name="dbt-model-sql"]').type(authoredModelSql, {
-      parseSpecialCharSequences: false,
+      .find('.view-lines')
+      .should(($lines) => {
+        const sql = $lines.text();
+        expect(sql).to.contain(`source('${expectedSourceName}', 'source_1')`);
+        expect(sql).to.contain('origin."order_id" as "order_id"');
+        expect(sql).to.contain('origin."customer" as "customer"');
+        expect(sql).to.contain('origin."amount" as "amount"');
+      });
+    cy.get('[data-slot="canvas-node-workbench-code-section"]')
+      .find('[data-testid="monaco-code-editor"]')
+      .should('not.exist');
+    readLiveGraphDraft(session).then((draftResponse) => {
+      expect(draftResponse.status).to.equal(200);
+      const nodes = (
+        draftResponse.body as {
+          record: {
+            draft: {
+              nodes: Array<{
+                name: string;
+                metadata?: { config?: { sql?: string } };
+              }>;
+            };
+          };
+        }
+      ).record.draft.nodes;
+      const model = nodes.find((node) => node.name === 'Model 1');
+      expect(model?.metadata?.config).not.to.have.property('sql');
     });
-    cy.get('textarea[name="dbt-model-sql"]').should('have.value', authoredModelSql);
-    cy.contains('[data-slot="dbt-model-code-provenance"]', 'Authored').should('be.visible');
-    cy.get('[data-slot="canvas-node-workbench-panel"]')
-      .contains('button', 'Apply')
-      .should('be.enabled');
-    cy.get('[data-slot="canvas-node-workbench-panel"]').contains('button', 'Apply').click();
-    waitForLiveDraftModelSqlSaved(session, authoredModelSql);
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
 
@@ -562,7 +539,12 @@ describe('Canvas source import live clean proof', () => {
       const content = (modelSqlResponse.body as { content: string }).content;
 
       expect(content).to.contain("{{ config(materialized='view') }}");
-      expect(content).to.contain(authoredModelSql);
+      expect(content).to.contain(
+        `from {{ source('${expectedSourceName}', 'source_1') }} as origin`
+      );
+      expect(content).to.contain('origin."order_id" as "order_id"');
+      expect(content).to.contain('origin."customer" as "customer"');
+      expect(content).to.contain('origin."amount" as "amount"');
     });
 
     cy.get('[data-testid="plan-preview-modal"]')

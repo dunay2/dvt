@@ -115,13 +115,7 @@ export function DbtAuthoringFields({
   };
 
   return section === 'code' ? (
-    <DbtModelCodeAuthoringSection
-      node={node}
-      disabled={disabled}
-      draft={draft.dbt}
-      projection={projection}
-      onChange={onChange}
-    />
+    <DbtModelCodeAuthoringSection node={node} projection={projection} />
   ) : (
     <DbtModelAuthoringSection
       node={node}

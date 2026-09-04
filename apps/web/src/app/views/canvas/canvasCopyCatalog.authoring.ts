@@ -442,15 +442,11 @@ export const canvasViewAuthoringCopyByKey = {
   },
   inspectorDbtModelSqlLabel: {
     key: 'canvas.inspector.authoring.dbtModelSqlLabel',
-    fallback: 'Model SQL',
+    fallback: 'Generated SQL projection',
   },
   inspectorDbtModelSqlGeneratedDetailTemplate: {
     key: 'canvas.inspector.authoring.dbtModelSqlGeneratedDetailTemplate',
-    fallback: 'Generated DBT artifact: {path}. Edit to take ownership.',
-  },
-  inspectorDbtModelSqlAuthoredDetailTemplate: {
-    key: 'canvas.inspector.authoring.dbtModelSqlAuthoredDetailTemplate',
-    fallback: 'Authored DBT SQL: {path}.',
+    fallback: 'Generated DBT artifact: {path}. This is a read-only projection.',
   },
   inspectorDbtNoConnectedOriginsMessage: {
     key: 'canvas.inspector.authoring.dbtNoConnectedOriginsMessage',

@@ -22,7 +22,6 @@ import type { CanvasNodePresentationTruth } from '../../components/canvas/canvas
 import type { GraphNodeColumn } from '../../plugins/graph/graphNodeColumnContracts';
 import { canAuthorCanvasColumnMappings } from './canvasColumnProjectionAuthority';
 import { projectCanvasNodeAccessibleHealth } from './canvasNodeMapper';
-import { createDbtNodeAuthoringMetadata } from './canvasDbtAuthoringModel';
 import { projectCanvasColumnFunctionMenus } from './canvasColumnFunctionMenuProjection';
 import { isReorderableCanvasSource } from './canvasSourceColumnOrder';
 
@@ -239,9 +238,7 @@ export function useCanvasControllerReadModel({
         const canAuthorColumnMappings =
           canonicalNode?.role !== 'transform' || canAuthorCanvasColumnMappings(canonicalNode);
         const canAuthorDbtModelColumns =
-          canonicalNode?.pluginId === 'dbt' &&
-          canonicalNode.kind === 'dbt:model' &&
-          createDbtNodeAuthoringMetadata(canonicalNode).modelSql == null;
+          canonicalNode?.pluginId === 'dbt' && canonicalNode.kind === 'dbt:model';
         const canReorderSourceColumns = isReorderableCanvasSource(canonicalNode);
         const hasReadOnlyColumnLineage =
           canonicalNode?.role === 'transform' &&

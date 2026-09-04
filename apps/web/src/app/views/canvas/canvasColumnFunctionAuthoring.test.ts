@@ -118,7 +118,13 @@ describe('Canvas column function authoring', () => {
     ]);
   });
 
-  it('rejects authored DBT SQL instead of deriving semantics from it', () => {
+  it('replaces legacy SQL metadata with canonical Substrait semantics', () => {
+    const trim = resolveDvtSubstraitColumnFunctions({
+      dataType: 'text',
+      provider: 'postgres',
+    }).find((candidate) => candidate.name === 'trim');
+    if (trim == null) throw new Error('Expected admitted TRIM capability.');
+
     const result = applyCanvasColumnFunction({
       draftSession: {
         ...draftSession(),
@@ -130,10 +136,23 @@ describe('Canvas column function authoring', () => {
           },
         },
       },
-      canonicalNodesById: new Map(),
-      identity: { nodeId: model.id, columnId: 'event_type', capabilityId: 'ignored', alias: 'x' },
+      canonicalNodesById: new Map([
+        [source.id, source],
+        [model.id, model],
+      ]),
+      identity: {
+        nodeId: model.id,
+        columnId: 'event_type',
+        capabilityId: trim.capabilityId,
+        alias: 'event_type_clean',
+      },
     });
 
-    expect(result.outcome).toBe('rejected');
+    expect(result.outcome).toBe('applied');
+    if (result.outcome !== 'applied') return;
+    const replacement = result.draftSession.localNodeCatalog?.[model.id];
+    expect(replacement).toMatchObject({ pluginId: 'dvt', kind: 'dvt:transform' });
+    expect(replacement?.metadata).not.toHaveProperty('sql');
+    expect(replacement?.metadata).not.toHaveProperty('config');
   });
 });

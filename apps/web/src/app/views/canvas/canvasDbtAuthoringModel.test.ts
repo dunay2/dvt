@@ -84,7 +84,6 @@ describe('canvas dbt authoring model', () => {
       tableName: 'orders',
       materialized: 'view',
       selectedSourceId: '',
-      modelSql: null,
       projectionColumns: null,
     });
   });
@@ -185,7 +184,6 @@ describe('canvas dbt authoring model', () => {
         tableName: 'orders',
         materialized: 'table',
         selectedSourceId: 'source-orders',
-        modelSql: 'select order_id from raw.orders',
         projectionColumns: null,
       })
     ).toEqual({
@@ -197,7 +195,6 @@ describe('canvas dbt authoring model', () => {
           schema: 'raw',
           table: 'orders',
           materialized: 'table',
-          sql: 'select order_id from raw.orders',
         },
         dbt: {
           packageName: 'analytics',
@@ -211,45 +208,24 @@ describe('canvas dbt authoring model', () => {
     });
   });
 
-  it('roundtrips authored model SQL through the canonical config metadata field', () => {
+  it('strips legacy SQL instead of adopting it as graph-draft model authority', () => {
     const baseModel = buildDbtModelNode();
     const model = {
       ...baseModel,
       metadata: {
         ...baseModel.metadata,
+        config: {
+          ...(baseModel.metadata?.config as Record<string, unknown>),
+          sql: 'select order_id, amount from raw.orders',
+        },
         sql: 'select stale_order_id from legacy.orders',
       },
     };
-    const updated = applyDbtNodeAuthoringMetadata(model, {
-      ...createDbtNodeAuthoringMetadata(model),
-      modelSql: 'select order_id, amount\nfrom raw.orders',
-    });
+    const updated = applyDbtNodeAuthoringMetadata(model, createDbtNodeAuthoringMetadata(model));
 
-    expect(updated.metadata?.config).toMatchObject({
-      sql: 'select order_id, amount\nfrom raw.orders',
-    });
-    expect(createDbtNodeAuthoringMetadata(updated).modelSql).toBe(
-      'select order_id, amount\nfrom raw.orders'
-    );
     expect(updated.metadata).not.toHaveProperty('sql');
-  });
-
-  it('preserves authored SQL whitespace while distinguishing absent SQL from an empty edit', () => {
-    const authoredSql = '  select order_id\nfrom raw.orders\n';
-    const updated = applyDbtNodeAuthoringMetadata(buildDbtModelNode(), {
-      ...createDbtNodeAuthoringMetadata(buildDbtModelNode()),
-      modelSql: authoredSql,
-    });
-
-    expect(updated.metadata?.config).toMatchObject({ sql: authoredSql });
-    expect(createDbtNodeAuthoringMetadata(updated).modelSql).toBe(authoredSql);
-
-    const reset = applyDbtNodeAuthoringMetadata(updated, {
-      ...createDbtNodeAuthoringMetadata(updated),
-      modelSql: '',
-    });
-    expect(reset.metadata?.config).not.toHaveProperty('sql');
-    expect(createDbtNodeAuthoringMetadata(reset).modelSql).toBeNull();
+    expect(updated.metadata?.config).not.toHaveProperty('sql');
+    expect(createDbtNodeAuthoringMetadata(updated)).not.toHaveProperty('modelSql');
   });
 
   it('resolves the selected model origin from the visible dbt graph relation', () => {

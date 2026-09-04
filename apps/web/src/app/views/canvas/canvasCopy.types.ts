@@ -482,7 +482,6 @@ export type CanvasViewCopy = {
   readonly inspectorDbtOriginPlaceholder: string;
   readonly inspectorDbtModelSqlLabel: string;
   readonly inspectorDbtModelSqlGeneratedDetailTemplate: string;
-  readonly inspectorDbtModelSqlAuthoredDetailTemplate: string;
   readonly inspectorDbtNoConnectedOriginsMessage: string;
   readonly inspectorDbtOriginKindSourceLabel: string;
   readonly inspectorDbtOriginKindModelLabel: string;
