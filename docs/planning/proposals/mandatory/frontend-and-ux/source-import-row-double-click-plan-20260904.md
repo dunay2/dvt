@@ -95,14 +95,14 @@ flowchart LR
 - [x] Double click on its checkbox has one net toggle.
 - [x] Unsupported rows do not toggle.
 - [x] Single-click inspection and keyboard checkbox behavior remain intact.
-- [ ] Targeted presentation, architecture, lint, type-check, mechanization,
+- [x] Targeted presentation, architecture, lint, type-check, mechanization,
       governance, pre-push, and visible browser evidence pass.
-- [ ] Issue #2906 contains the human change journal and PR evidence.
+- [x] Issue #2906 contains the human change journal and PR evidence.
 
 ```feature-mechanization
 version: 1
 featureId: GH-2906-SOURCE-ROW-DOUBLE-CLICK
-mechanizationStatus: implemented
+mechanizationStatus: closed
 noHumanDecisionsRemaining: true
 implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/source-import-row-double-click-plan-20260904.md
 componentGuides:
