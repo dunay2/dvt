@@ -1,0 +1,36 @@
+model {
+  observabilityOtelModel = adapter '@dvt/observability-otel' {
+    #asIs
+    description 'Concrete OpenTelemetry implementation of the provider-neutral @dvt/observability boundary.'
+    metadata {
+      repository 'dunay2/dvt'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      sourceRoot 'packages/@dvt/observability-otel'
+      provenance 'SOURCE-FIRST'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability-otel 'Pinned package tree'
+
+    sourceEvidence = component 'Source evidence' { #sourceDerived description 'Complete tracked-file inventory at the resolved main SHA.' }
+    publicBoundary = component 'OTel public boundary' { #asIs description 'Exports the concrete OpenTelemetry implementation.' }
+    observability = component 'OTel observability implementation' { #asIs description 'Concrete IObservability implementation backed by OpenTelemetry.' }
+    traces = component 'OpenTelemetry traces' { #asIs description 'Trace provider/exporter integration.' }
+    tracePolicy = component 'OTel trace policy' { #asIs description 'OpenTelemetry-specific trace configuration and policy.' }
+
+    publicBoundary .uses observability 'exports concrete implementation'
+    observability .uses traces 'trace implementation'
+    observability .uses tracePolicy 'trace policy'
+  }
+}
+
+views {
+  view observabilityOtelBoundary of observabilityOtelModel {
+    title 'DVT+ Observability OTel — Concrete implementation and source evidence'
+    description 'Concrete OpenTelemetry adapter kept separate from the provider-neutral observability contract.'
+    include sourceEvidence with { navigateTo observabilityOtelSourceInventory }
+    include publicBoundary with { navigateTo observability-otelFiles_publicBoundary }
+    include observability with { navigateTo observability-otelFiles_observability }
+    include traces with { navigateTo observability-otelFiles_traces }
+    include tracePolicy with { navigateTo observability-otelFiles_tracePolicy }
+    autoLayout LeftRight
+  }
+}
