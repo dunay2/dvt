@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "components": [
+    {"id":"publicBoundary","title":"Traceability public boundary","paths":["src/index.ts","src/contracts.ts","src/types.ts"],"rationale":"Exports traceability contracts/types and the service boundary."},
+    {"id":"service","title":"Traceability service","paths":["src/service.ts"],"rationale":"Coordinates traceability queries/validation over adapters and lineage evidence."},
+    {"id":"core","title":"Traceability core","prefixes":["src/core"],"rationale":"Core traceability/manifest/header-scanning behavior."},
+    {"id":"adapters","title":"Traceability adapters","prefixes":["src/adapters"],"rationale":"Filesystem and other concrete adapters behind traceability boundaries."},
+    {"id":"lineage","title":"Lineage mapping","prefixes":["src/lineage"],"rationale":"Lineage/evidence projection and OpenLineage-oriented mapping behavior."},
+    {"id":"cli","title":"Traceability CLI","paths":["src/cli.ts"],"rationale":"Command-line entrypoint over the traceability service."}
+  ]
+}
