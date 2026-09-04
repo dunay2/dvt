@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "components": [
+    {"id":"metadata","title":"CLI validation metadata","paths":["src/index.ts"],"rationale":"Declares the package as a script-backed validation/golden-path surface and explicitly states userFacingCli=false."},
+    {"id":"contractValidation","title":"Contract validation script","paths":["validate-contracts.cjs"],"rationale":"Script-backed contract validation command declared by package.json."},
+    {"id":"goldenPaths","title":"Golden-path runner","paths":["run-golden-paths.cjs"],"rationale":"Script-backed golden-path command declared by package.json."}
+  ]
+}
