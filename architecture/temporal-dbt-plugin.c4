@@ -1,0 +1,44 @@
+model {
+  temporalDbtPluginModel = package '@dvt/temporal-dbt-plugin' {
+    #asIs
+    description 'Concrete dbt execution capability for Temporal. Owns dbt runner, activity, manifest and runtime-profile semantics outside the generic Temporal adapter.'
+    metadata {
+      repository 'dunay2/dvt'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      sourceRoot 'packages/@dvt/temporal-dbt-plugin'
+      provenance 'SOURCE-FIRST'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/temporal-dbt-plugin 'Pinned package tree'
+
+    sourceEvidence = component 'Source evidence' { #sourceDerived description 'Complete tracked-file inventory at the resolved main SHA.' }
+    publicBoundary = component 'dbt plugin public boundary' { #asIs description 'Publishes the concrete dbt Temporal step plugin API.' }
+    manifest = contract 'dbt step plugin manifest' { #asIs description 'Plugin identity, executable step kinds and plugin-owned types.' }
+    activity = component 'dbt step activity' { #asIs description 'Temporal activity boundary for dbt execution.' }
+    runner = component 'dbt CLI plugin runner' { #asIs description 'Concrete dbt CLI execution runner.' }
+    cliRuntime = component 'dbt CLI runtime support' { #asIs description 'Arguments, process execution, project materialization and failure handling.' }
+    runtimeProfile = component 'dbt runtime profile materialization' { #asIs description 'Resolves runtime profile material needed by dbt execution.' }
+
+    publicBoundary .uses manifest 'exports plugin capabilities'
+    publicBoundary .uses activity 'exports step activity'
+    publicBoundary .uses runner 'exports runner'
+    publicBoundary .uses runtimeProfile 'exports profile materializer'
+    activity .delegates runner 'executes dbt step'
+    runner .uses cliRuntime 'invokes dbt CLI'
+    runner .uses runtimeProfile 'uses resolved runtime profile'
+  }
+}
+
+views {
+  view temporalDbtPluginBoundary of temporalDbtPluginModel {
+    title 'DVT+ Temporal dbt Plugin — Concrete execution capability'
+    description 'Source-first proof that dbt execution semantics live in a concrete plugin, not in the generic Temporal adapter.'
+    include sourceEvidence with { navigateTo temporalDbtPluginSourceInventory }
+    include publicBoundary with { navigateTo temporal-dbt-pluginFiles_publicBoundary }
+    include manifest with { navigateTo temporal-dbt-pluginFiles_manifest }
+    include activity with { navigateTo temporal-dbt-pluginFiles_activity }
+    include runner with { navigateTo temporal-dbt-pluginFiles_runner }
+    include cliRuntime with { navigateTo temporal-dbt-pluginFiles_cliRuntime }
+    include runtimeProfile with { navigateTo temporal-dbt-pluginFiles_runtimeProfile }
+    autoLayout LeftRight
+  }
+}
