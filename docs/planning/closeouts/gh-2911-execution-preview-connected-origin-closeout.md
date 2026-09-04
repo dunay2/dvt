@@ -61,6 +61,9 @@ no parallel execution or graph-projection command.
 | `pnpm --filter @dvt/web lint`          | PASS                                                                                                 |
 | Local Web listener                     | PASS — exactly one listener on `127.0.0.1:5173`, PID 38216                                           |
 | Visible Chrome verification            | NOT RUN — browser control was stopped from the extension; application remains open for human testing |
+| `pnpm governance:refresh`              | PASS — stable after two passes; 6,380/6,380 files governed                                           |
+| Feature mechanization implementation   | PASS — 267 DB manifests                                                                              |
+| `pnpm verify:prepush`                  | PASS — changed Web suites, architecture guard, formatting, lint, and forbidden-file checks           |
 
 ## Debt and stubs
 
