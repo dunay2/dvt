@@ -106,10 +106,44 @@ const evidence = {
   evidenceSha256: createHash('sha256').update(canonical).digest('hex'),
 };
 
+const ranking = [...contexts]
+  .map((context) => ({
+    contextId: context.contextId,
+    displayName: context.displayName,
+    scope: context.scope,
+    productionSourceFiles: context.productionSourceFileCount,
+    mappedProductionFiles: context.mappedProductionFileCount,
+    unmappedProductionFiles: context.unmappedProductionFileCount,
+    multiMappedProductionFiles: context.multiMappedProductionFileCount,
+    coveragePercent: context.coveragePercent,
+  }))
+  .sort(
+    (a, b) =>
+      b.unmappedProductionFiles - a.unmappedProductionFiles ||
+      a.coveragePercent - b.coveragePercent ||
+      a.contextId.localeCompare(b.contextId),
+  );
+const summaryBase = {
+  schemaVersion: 1,
+  generatedFrom: 'component-classification-coverage',
+  baselineSha,
+  totals,
+  ranking,
+};
+const summaryCanonical = JSON.stringify(summaryBase, null, 2) + '\n';
+const summary = {
+  ...summaryBase,
+  evidenceSha256: createHash('sha256').update(summaryCanonical).digest('hex'),
+};
+
 mkdirSync(generatedDir, { recursive: true });
 writeFileSync(
   join(generatedDir, 'component-classification-coverage.json'),
   JSON.stringify(evidence, null, 2) + '\n',
+);
+writeFileSync(
+  join(generatedDir, 'component-classification-summary.json'),
+  JSON.stringify(summary, null, 2) + '\n',
 );
 writeFileSync(
   join(generatedDir, 'component-classification-coverage.c4'),
@@ -118,6 +152,13 @@ writeFileSync(
 
 console.log(
   `Logical classification coverage: ${totals.mappedProductionFiles}/${totals.productionSourceFiles} production source files (${totals.coveragePercent}%) across ${contexts.length} contexts; ${totals.multiMappedProductionFiles} multi-mapped.`,
+);
+console.log(
+  `Top classification gaps: ${ranking
+    .filter((item) => item.unmappedProductionFiles > 0)
+    .slice(0, 8)
+    .map((item) => `${item.contextId}:${item.unmappedProductionFiles} (${item.coveragePercent}%)`)
+    .join(', ') || 'none'}`,
 );
 
 function isProductionSourcePath(path) {
