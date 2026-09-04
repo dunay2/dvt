@@ -10,17 +10,50 @@ model {
     }
     link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/web 'Pinned app tree'
 
-    sourceEvidence = component 'Source evidence' { #sourceDerived description 'Complete tracked-file inventory at the resolved main SHA.' }
-    bootstrap = component 'Web application bootstrap' { #asIs description 'React entrypoint and top-level providers.' }
-    shell = component 'Application shell' { #asIs description 'Raven shell chrome, navigation, capability/health posture and contextual presentation.' }
-    routing = component 'Route + bootstrap boundary' { #asIs description 'Static/plugin route construction and route readiness/bootstrap behavior.' }
-    plugins = component 'Web plugin registry + contributions' { #asIs description 'Plugin manifests, route/view contributions and canvas strategy boundaries.' }
-    queries = component 'Web query boundary' { #asIs description 'Frontend query hooks used to reflect backend state/capabilities.' }
-    services = component 'Frontend application services' { #asIs description 'Application-facing frontend services and service context.' }
-    stores = component 'Frontend interaction stores' { #asIs description 'Presentation/interaction state only; not canonical execution truth.' }
-    views = component 'Route views' { #asIs description 'Route-level product views.' }
-    platformHealth = component 'Platform health capability' { #asIs description 'Platform health/readiness presentation capability.' }
-    runtimeCapabilities = component 'Runtime capabilities capability' { #asIs description 'Runtime/provider capability discovery surface.' }
+    sourceEvidence = component 'Source evidence' {
+      #sourceDerived
+      description 'Complete tracked-file inventory at the resolved main SHA.'
+    }
+    bootstrap = component 'Web application bootstrap' {
+      #asIs
+      description 'React entrypoint and top-level providers.'
+    }
+    shell = component 'Application shell' {
+      #asIs
+      description 'Raven shell chrome, navigation, capability/health posture and contextual presentation.'
+    }
+    routing = component 'Route + bootstrap boundary' {
+      #asIs
+      description 'Static/plugin route construction and route readiness/bootstrap behavior.'
+    }
+    plugins = component 'Web plugin registry + contributions' {
+      #asIs
+      description 'Plugin manifests, route/view contributions and canvas strategy boundaries.'
+    }
+    queries = component 'Web query boundary' {
+      #asIs
+      description 'Frontend query hooks used to reflect backend state/capabilities.'
+    }
+    services = component 'Frontend application services' {
+      #asIs
+      description 'Application-facing frontend services and service context.'
+    }
+    stores = component 'Frontend interaction stores' {
+      #asIs
+      description 'Presentation/interaction state only; not canonical execution truth.'
+    }
+    routeViews = component 'Route views' {
+      #asIs
+      description 'Route-level product views.'
+    }
+    platformHealth = component 'Platform health capability' {
+      #asIs
+      description 'Platform health/readiness presentation capability.'
+    }
+    runtimeCapabilities = component 'Runtime capabilities capability' {
+      #asIs
+      description 'Runtime/provider capability discovery surface.'
+    }
 
     bootstrap .uses shell 'mount app shell'
     shell .uses routing 'render routed workspace'
@@ -30,7 +63,7 @@ model {
     shell .uses platformHealth 'health posture'
     shell .uses runtimeCapabilities 'capability posture'
     routing .uses plugins 'plugin route contributions'
-    routing .uses views 'route views'
+    routing .uses routeViews 'route views'
   }
 }
 
@@ -46,7 +79,7 @@ views {
     include queries with { navigateTo webFiles_queries }
     include services with { navigateTo webFiles_services }
     include stores with { navigateTo webFiles_stores }
-    include views with { navigateTo webFiles_views }
+    include routeViews with { navigateTo webFiles_views }
     include platformHealth with { navigateTo webFiles_platformHealth }
     include runtimeCapabilities with { navigateTo webFiles_runtimeCapabilities }
     autoLayout LeftRight
