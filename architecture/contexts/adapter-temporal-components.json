@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "components": [
     {"id":"publicBoundary","title":"Temporal adapter public boundary","rationale":"src/index.ts is the package export surface for adapter, worker, workflow and activity runtime pieces.","paths":["src/index.ts"]},
     {"id":"providerAdapter","title":"Temporal provider adapter","rationale":"TemporalAdapter implements provider-facing start/cancel/signal/status behavior; ObservedTemporalAdapter decorates it with telemetry.","paths":["src/TemporalAdapter.ts","src/ObservedTemporalAdapter.ts"]},
@@ -10,6 +10,7 @@
     {"id":"stepPlugins","title":"Temporal step plugin boundary","rationale":"Defines plugin profile and runner boundaries used to keep step-specific execution outside the generic adapter core.","prefixes":["src/plugins"]},
     {"id":"policyMapping","title":"Temporal policy mapping","rationale":"Maps admitted plan policy into Temporal-specific options; modeled AS-IS without claiming runtime authority beyond source evidence.","paths":["src/TemporalPolicyMapper.ts","src/WorkflowMapper.ts"]},
     {"id":"stateWriteProtection","title":"Run-state command circuit breaker","rationale":"Protects run-state command writes from cascading provider/runtime failures.","paths":["src/RunStateCommandPortCircuitBreaker.ts"]},
-    {"id":"observability","title":"Temporal observability + error policy","rationale":"Provider-specific telemetry, error translation and plan-ref capacity SLA policy.","paths":["src/temporalObservability.ts","src/temporalErrorPolicy.ts","src/temporalPlanRefCapacitySlaPolicy.ts"]}
+    {"id":"observability","title":"Temporal observability + error policy","rationale":"Provider-specific telemetry, error translation and plan-ref capacity SLA policy.","paths":["src/temporalObservability.ts","src/temporalErrorPolicy.ts","src/temporalPlanRefCapacitySlaPolicy.ts"]},
+    {"id":"engineTypes","title":"Engine type bridge","rationale":"Small adapter-local type bridge for Engine-facing Temporal integration; it carries type compatibility and does not own Engine semantics.","paths":["src/engine-types.ts"]}
   ]
 }
