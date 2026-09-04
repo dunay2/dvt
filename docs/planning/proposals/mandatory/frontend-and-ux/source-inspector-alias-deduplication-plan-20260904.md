@@ -93,16 +93,16 @@ flowchart LR
 - [x] Alias appears exactly once for an imported Source.
 - [x] The remaining Alias field retains editing and validation behavior.
 - [x] Qualified target, Connection, Schema, and Table remain visible once.
-- [ ] Presentation, architecture, lint, type-check, mechanization, governance,
+- [x] Presentation, architecture, lint, type-check, mechanization, governance,
       pre-push, and visible-browser evidence pass.
 - [x] The Cypress flow reaches and passes the Source Alias assertion and Source
       roundtrip; its later independent Sink clipping failure is tracked in #2909.
-- [ ] Issue #2908 contains the human change journal and PR evidence.
+- [x] Issue #2908 contains the human change journal and PR evidence.
 
 ```feature-mechanization
 version: 1
 featureId: GH-2908-SOURCE-INSPECTOR-ALIAS-DEDUPLICATION
-mechanizationStatus: implemented
+mechanizationStatus: closed
 noHumanDecisionsRemaining: true
 implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/source-inspector-alias-deduplication-plan-20260904.md
 componentGuides:
