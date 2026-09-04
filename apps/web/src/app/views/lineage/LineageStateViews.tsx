@@ -127,18 +127,3 @@ export function LineageErrorStateView({
     </LineageWorkbenchStateLayout>
   );
 }
-
-export function LineageMetadataMissingStateView({ focusNodeName }: { focusNodeName: string }) {
-  return (
-    <Card
-      data-slot="lineage-metadata-missing-state"
-      className={cn('border-[color:var(--status-warning)] p-6', routeWorkbenchPanelClassName)}
-    >
-      <h2 className="mb-4 font-semibold">{`Column lineage: ${focusNodeName}`}</h2>
-      <div className="mb-2 text-base font-semibold text-[var(--status-warning)]">
-        {copy.metadataMissingTitle}
-      </div>
-      <p className="text-sm text-[var(--text-default)]">{copy.metadataMissingMessage}</p>
-    </Card>
-  );
-}
