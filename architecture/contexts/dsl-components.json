@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "components": [
+    {"id":"publicBoundary","title":"DSL public boundary","paths":["src/index.ts"],"rationale":"Exports the bounded v1 DSL surface."},
+    {"id":"ast","title":"DSL v1 AST","paths":["src/v1/ast.ts"],"rationale":"Defines the bounded expression AST owned by the DSL."},
+    {"id":"parser","title":"DSL v1 parser","paths":["src/v1/parser.ts"],"rationale":"Parses supported DSL expressions into the v1 AST."},
+    {"id":"evaluator","title":"DSL v1 evaluator","paths":["src/v1/evaluator.ts"],"rationale":"Evaluates the bounded DSL AST against its supported context."}
+  ]
+}
