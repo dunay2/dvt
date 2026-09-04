@@ -38,33 +38,3 @@ export function buildLineageWorkbenchState({
 
   return { kind: 'ready' };
 }
-
-export type LineageColumnState = { kind: 'metadata-missing' } | { kind: 'ready' };
-
-type BuildLineageColumnStateInput = {
-  focusNodeHasColumnMetadata: boolean;
-  hasReachableUpstreamNodes: boolean;
-  reachableUpstreamHasColumnMetadata: boolean;
-  columnLineageCount: number;
-};
-
-export function buildLineageColumnState({
-  focusNodeHasColumnMetadata,
-  hasReachableUpstreamNodes,
-  reachableUpstreamHasColumnMetadata,
-  columnLineageCount,
-}: BuildLineageColumnStateInput): LineageColumnState {
-  if (!focusNodeHasColumnMetadata) {
-    return { kind: 'metadata-missing' };
-  }
-
-  if (
-    columnLineageCount === 0 &&
-    hasReachableUpstreamNodes &&
-    !reachableUpstreamHasColumnMetadata
-  ) {
-    return { kind: 'metadata-missing' };
-  }
-
-  return { kind: 'ready' };
-}
