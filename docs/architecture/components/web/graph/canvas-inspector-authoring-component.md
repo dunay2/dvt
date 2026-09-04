@@ -52,7 +52,7 @@ Transform semantics is tracked separately by issue #2903.
 | Contract                           | Responsibility                                         |
 | ---------------------------------- | ------------------------------------------------------ |
 | `CanvasInspectorNodeDraft`         | local semantic editing DTO                             |
-| `DvtNodeAuthoringMetadata`         | source, canonical Transform, and sink authoring union  |
+| `DvtNodeAuthoringMetadata`         | stable Source, canonical Transform, and sink union     |
 | `DvtTransformAuthoringAuthorityV1` | strict Substrait semantic-document envelope            |
 | `CanvasColumnMappingSource`        | typed source field identity                            |
 | `CanvasColumnMappingTarget`        | typed Transform output identity                        |
@@ -63,8 +63,9 @@ Transform semantics is tracked separately by issue #2903.
 
 An empty Transform is explicitly `uninitialized`. Its first admitted authoring action creates
 one canonical Substrait projection or composition. Removed SQL/VTX1 metadata fails closed.
-An imported Source may carry the same envelope for admitted operations while retaining its
-Source kind, connection authority and physical provenance.
+An imported Source is a stable physical-origin boundary. It retains connection authority,
+object identity, schema and provenance, but it cannot carry `FilterRel` or another operation that
+changes the relation. Those operations require an explicit connected Transform.
 
 ## Invariants
 
@@ -72,8 +73,8 @@ Source kind, connection authority and physical provenance.
 - Apply and column gestures mutate the same `CanvasDraftSession` authority.
 - A DVT Transform has zero authority while uninitialized and exactly one canonical Substrait
   semantic document after its first accepted mutation.
-- A connection-backed Source may own that same semantic document; it never becomes a hidden or
-  renamed Transform.
+- A connection-backed Source cannot own Transform operations. Legacy Source envelopes are
+  normalized to their filter-free base relation without changing physical identity or provenance.
 - Editable SQL, VTX1 recipes, SQL mirrors, and visual-to-SQL conversion are not supported
   authoring states.
 - A graph-draft `dbt:model` never adopts `metadata.sql` or `metadata.config.sql`; legacy values
@@ -98,7 +99,7 @@ Source kind, connection authority and physical provenance.
 | `canvasInspectorAuthoringModel.ts`        | Inspector draft projection and validation     |
 | `canvasDvtAuthoringModel.ts`              | dispatch authoring by DVT node kind           |
 | `canvasDvtSourceAuthoring.ts`             | source identity and connection authority      |
-| `canvasDvtSourceSemanticAuthoring.ts`     | source semantic draft lifecycle               |
+| `canvasDvtSourceSemanticAuthoring.ts`     | stable Source relation normalization          |
 | `canvasDvtTransformAuthoring.ts`          | canonical Transform shape decode/encode       |
 | `canvasDvtSinkAuthoring.ts`               | sink materialization and write policy         |
 | `canvasDvtTransformAuthoringAuthority.ts` | strict authority envelope                     |
@@ -108,21 +109,23 @@ Source kind, connection authority and physical provenance.
 | `canvasColumnAutomap.ts`                  | deterministic compatible automapping          |
 | `canvasColumnOutputAuthoring.ts`          | output inclusion and order                    |
 | `canvasColumnLineageProjection.ts`        | field-handle and lineage read model           |
-| `canvasDvtSubstraitFilter.ts`             | strict shared FilterRel mutation              |
+| `canvasDvtSubstraitFilter.ts`             | strict Transform FilterRel mutation           |
 | `DvtAuthoringFields.tsx`                  | route DVT authoring to focused views          |
 
 ## Flow
 
 ```mermaid
 flowchart LR
-  Gesture[Inspector or field gesture] --> Command[ConfigureCanvasDvtNode]
+  Source[Stable Source / ReadRel] --> Edge[Explicit edge]
+  Edge --> Gesture[Transform Inspector or field gesture]
+  Gesture --> Command[ConfigureCanvasDvtNode]
   Command --> Draft[CanvasInspectorNodeDraft]
   Draft --> Validate[Typed validation]
   Validate --> Session[CanvasDraftSession]
   Session --> Authority[DvtTransformAuthoringAuthorityV1]
-  Authority --> Semantic[Canonical Substrait document]
-  Semantic --> Card[Card and field projection]
-  Semantic --> Preview[Preview provenance]
+  Authority --> Semantic[Canonical Transform document]
+  Semantic --> Card[Transform card and field projection]
+  Semantic --> Preview[Derived Preview / SQL]
 ```
 
 ## Negative Behavior
@@ -131,6 +134,7 @@ The command rejects or fails closed for:
 
 - removed SQL/VTX1 metadata;
 - an unsupported DVT target or semantic shape;
+- a Source attempting to retain or execute `FilterRel`;
 - a source without a stage dependency;
 - absent or ambiguous source fields;
 - unknown or incompatible types during automap;
@@ -149,7 +153,7 @@ The command rejects or fails closed for:
 - `canvasDvtSubstraitPilot.test.ts`
 - `canvasDvtSubstraitFilter.test.ts`
 - `DvtAuthoringFields.test.tsx`
-- `canvas-source-filter-authoring.cy.ts`
+- `canvas-source-filter-authoring.cy.ts` (Source/Transform ownership boundary)
 - `dvt-transform-authoring-authority.contract.test.ts`
 
 The architecture absence guard proves retired modules and public names are not reintroduced;
@@ -158,6 +162,7 @@ behavior tests prove accepted/rejected mutations and their persisted semantic re
 ## Drift To Watch
 
 - restoring editable SQL or a visual recipe as Transform authority;
+- exposing Transform operations on a Source or projecting them as Source card state;
 - keeping a generated SQL mirror beside the semantic document;
 - persisting presentation edges as mapping truth;
 - guessing unknown or ambiguous automaps;
