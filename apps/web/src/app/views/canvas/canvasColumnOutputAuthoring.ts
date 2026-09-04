@@ -9,7 +9,7 @@ import {
 } from './canvasColumnMappingModel';
 import {
   persistCanvasProjectionOutputs,
-  readEditableCanvasProjection,
+  readEditableCanvasProjectionEntry,
 } from './canvasColumnProjectionAuthority';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 
@@ -27,7 +27,12 @@ export function reorderCanvasColumnOutput(args: {
     args.targetNodeId
   );
   if (targetNode == null) return { outcome: 'rejected', reason: 'target_node_not_found' };
-  const projectionResult = readEditableCanvasProjection(targetNode);
+  const projectionResult = readEditableCanvasProjectionEntry({
+    targetNode,
+    edges: args.draftSession.workingSet.visibleEdges,
+    resolveNode: (nodeId) =>
+      resolveCanvasSessionNode(args.draftSession, args.canonicalNodesById, nodeId),
+  });
   if (projectionResult.outcome === 'rejected') return projectionResult;
   if (projectionResult.projection == null) {
     return { outcome: 'rejected', reason: 'mapping_not_found' };
@@ -73,7 +78,12 @@ export function setCanvasColumnOutputIncluded(args: {
     args.targetNodeId
   );
   if (targetNode == null) return { outcome: 'rejected', reason: 'target_node_not_found' };
-  const projectionResult = readEditableCanvasProjection(targetNode);
+  const projectionResult = readEditableCanvasProjectionEntry({
+    targetNode,
+    edges: args.draftSession.workingSet.visibleEdges,
+    resolveNode: (nodeId) =>
+      resolveCanvasSessionNode(args.draftSession, args.canonicalNodesById, nodeId),
+  });
   if (projectionResult.outcome === 'rejected') return projectionResult;
   const existingOutput = projectionResult.projection?.outputs.find(
     (candidate) => candidate.fieldId === args.columnId || candidate.name === args.columnId
