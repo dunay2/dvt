@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "components": [
     {"id":"workflowPort","title":"IWorkflowEngine","paths":["src/ports/IWorkflowEngine.ts"],"rationale":"Public workflow behavior port owned by the Engine."},
     {"id":"workflowFacade","title":"WorkflowEngine facade","paths":["src/core/WorkflowEngine.ts"],"rationale":"WorkflowEngine implements IWorkflowEngine and delegates to explicit application use cases."},
@@ -17,6 +17,25 @@
     {"id":"failure","title":"Failure policy","paths":["src/services/startRun/StartRunFailurePolicy.ts"]},
     {"id":"providerPort","title":"IProviderAdapter","paths":["src/adapters/IProviderAdapter.ts"]},
     {"id":"statePort","title":"IRunStateStore","paths":["src/ports/IRunStateStore.ts"]},
-    {"id":"planIntegrityPort","title":"IPlanIntegrityValidator","paths":["src/ports/IPlanIntegrityValidator.ts"]}
+    {"id":"planIntegrityPort","title":"IPlanIntegrityValidator","paths":["src/ports/IPlanIntegrityValidator.ts"]},
+
+    {"id":"publicSurfaces","title":"Stable + runtime public surfaces","paths":["src/index.ts","src/runtime.ts","src/testing.ts"],"rationale":"Separates stable package exports, composition/runtime exports and testing-only surface."},
+    {"id":"providerResilience","title":"Provider resilience + in-memory provider","paths":["src/adapters/CircuitBreakingProviderAdapter.ts"],"prefixes":["src/adapters/inMemory"],"rationale":"Provider-side resilience wrapper and in-memory provider implementation; neither owns canonical lifecycle truth."},
+    {"id":"applicationSupport","title":"Recovery + provider selection application services","paths":["src/application/RecoverRunApplicationService.ts","src/application/providerSelection.ts"],"rationale":"Application-layer recovery orchestration and provider selection outside the narrow workflow facade use-case folder."},
+    {"id":"compatibilityContracts","title":"Engine-local compatibility contracts","prefixes":["src/contracts"],"rationale":"Engine-local contract/compatibility surface retained around canonical engine behavior and error vocabulary."},
+    {"id":"coreRuntime","title":"Core lifecycle runtime + projection","paths":["src/core/SnapshotProjector.ts","src/core/WorkflowEngineCoreService.ts","src/core/buildWorkflowEngineFacade.ts","src/core/idempotency.ts","src/core/index.ts","src/core/types.ts"],"prefixes":["src/core/lifecycle"],"rationale":"Core lifecycle helpers, facade construction, idempotency and snapshot projection supporting the public WorkflowEngine facade."},
+    {"id":"domainServices","title":"Engine domain service contracts + intent policy","prefixes":["src/domain"],"rationale":"Engine-owned domain service boundaries and start-run intent transition policy."},
+    {"id":"metrics","title":"Metrics collection boundary","prefixes":["src/metrics"],"rationale":"Engine metrics collection abstraction."},
+    {"id":"outboxPolicy","title":"Outbox rate limiting","prefixes":["src/outbox"],"rationale":"Engine-side outbox rate-limit policy and token-bucket implementation."},
+    {"id":"supportingPorts","title":"Supporting Engine ports","paths":["src/ports/IAuthorizer.ts","src/ports/IProjector.ts","src/ports/IRunAccessPolicy.ts","src/ports/IRunExecutionContextBindingPolicy.ts","src/ports/IRunExecutionContextResolver.ts","src/ports/IRunMaintenanceService.ts","src/ports/IRunSnapshotStalenessQuery.ts"],"rationale":"Authorization, projection, execution-context, maintenance and snapshot-staleness boundaries used by runtime composition."},
+    {"id":"security","title":"Authorization + plan-reference security","prefixes":["src/security"],"rationale":"Run access policy, authorization, plan-integrity/reference/URI validation and host-risk classification."},
+    {"id":"runServices","title":"Run health, enrichment, maintenance + status services","paths":["src/services/RunEnrichmentService.ts","src/services/RunHealthService.ts","src/services/RunMaintenanceService.ts","src/services/RunStatusQueryService.ts"],"rationale":"Top-level operational Engine services outside start-run orchestration."},
+    {"id":"runControl","title":"Run command + signal control","prefixes":["src/services/runControl"],"rationale":"Canonical command and signal application services."},
+    {"id":"runMaintenance","title":"Run reconciliation + maintenance policies","prefixes":["src/services/runMaintenance"],"rationale":"Pending/dispatched intent reconciliation, stuck/orphaned-run maintenance and maintenance observability."},
+    {"id":"signalPolicy","title":"Signal transition policy","prefixes":["src/services/signal"],"rationale":"Signal transition guard independent from provider mechanics."},
+    {"id":"inMemoryState","title":"In-memory state implementations","prefixes":["src/state"],"rationale":"In-memory state/outbox/intent implementations and state write/staleness policies used by testing and local composition."},
+    {"id":"engineTypes","title":"Engine type surface","prefixes":["src/types"],"rationale":"Engine-owned internal/public type aggregation."},
+    {"id":"utilities","title":"Clock + error utilities","prefixes":["src/utils"],"rationale":"Small utility boundaries used by Engine services."},
+    {"id":"reconciliationWorker","title":"Intent reconciler worker","prefixes":["src/workers"],"rationale":"Engine-owned worker primitive for intent reconciliation; process hosting remains outside the package."}
   ]
 }
