@@ -32,7 +32,7 @@ export type CanvasColumnLineageEdgeData = Readonly<{
   sourceFieldId: string;
   sourceColumnName: string;
   targetNodeId: string;
-  outputId: string;
+  targetFieldId: string;
   targetColumnName: string;
   removable: boolean;
 }> &
@@ -201,7 +201,7 @@ function buildLineageEdge(args: {
   sourceColumnName: string;
   sourceHandleColumnId: string;
   targetNodeId: string;
-  outputId: string;
+  targetFieldId: string;
   targetColumnName: string;
   targetHandleColumnId: string;
   terminal: boolean;
@@ -212,7 +212,7 @@ function buildLineageEdge(args: {
       args.sourceNodeId,
       args.sourceFieldId,
       args.targetNodeId,
-      args.outputId,
+      args.targetFieldId,
     ]),
     source: args.sourceNodeId,
     target: args.targetNodeId,
@@ -238,7 +238,7 @@ function buildLineageEdge(args: {
       sourceFieldId: args.sourceFieldId,
       sourceColumnName: args.sourceColumnName,
       targetNodeId: args.targetNodeId,
-      outputId: args.outputId,
+      targetFieldId: args.targetFieldId,
       targetColumnName: args.targetColumnName,
       removable: args.removable && !args.terminal,
     },
@@ -293,7 +293,7 @@ export function projectCanvasColumnLineage(args: {
             sourceColumnName: output.sourceFieldName,
             sourceHandleColumnId: output.sourceFieldName,
             targetNodeId: model.id,
-            outputId: output.fieldId,
+            targetFieldId: output.fieldId,
             targetColumnName: output.name,
             targetHandleColumnId: output.fieldId,
             terminal: false,
@@ -339,7 +339,7 @@ export function projectCanvasColumnLineage(args: {
               sourceColumnName: leaf.sourceFieldName,
               sourceHandleColumnId: leaf.sourceFieldName,
               targetNodeId: model.id,
-              outputId: leaf.reference,
+              targetFieldId: leaf.reference,
               targetColumnName: path,
               targetHandleColumnId: root.reference,
               terminal: false,
@@ -401,7 +401,7 @@ export function projectCanvasColumnLineage(args: {
             sourceColumnName: resolved.sourceField.name,
             sourceHandleColumnId: resolved.sourceField.name,
             targetNodeId: model.id,
-            outputId: resolved.output.fieldId,
+            targetFieldId: resolved.output.fieldId,
             targetColumnName: resolved.output.name,
             targetHandleColumnId: resolved.output.fieldId,
             terminal: false,
