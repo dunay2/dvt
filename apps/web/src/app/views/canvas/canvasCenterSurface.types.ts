@@ -1,6 +1,6 @@
 /** Owned concern: define Canvas center-surface rendering contracts. */
 import type { WorkspaceScope } from '../../ports/sessionContext';
-import type { CanvasKindRegistration, NodeKindRegistration } from '../../plugins/nodeTypeContracts';
+import type { CanvasKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CanvasDraftPresentationState } from './canvasDraftPresentationModel';
 import type {
   CanvasCreateCanvasDocumentCommand,
@@ -9,7 +9,6 @@ import type {
 import type { CanvasDraftTransportErrorState } from './canvasDraftTransportErrorState';
 import type { CanvasRouteStartupBlockState } from './canvasRouteInteractionState';
 import type { CanvasAuthoringCanvasDocument } from './canvasDraftReadModel';
-import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
 
 export type RenderCanvasCenterSurfaceArgs = {
   presentationState: CanvasDraftPresentationState;
@@ -21,12 +20,7 @@ export type RenderCanvasCenterSurfaceArgs = {
   draftSaveStatus: DraftSaveStatus;
   availableCanvasKinds: readonly CanvasKindRegistration[];
   canCreateCanvasDocument: boolean;
-  canEditEdges: boolean;
-  canOpenSourceImport: boolean;
-  emptyStateGuideVisible: boolean;
   onCreateCanvasDocument: (command: CanvasCreateCanvasDocumentCommand) => void;
-  onCreateAuthoringNode: CreateCanvasAuthoringNode;
-  onEmptyStateGuideVisibilityChange: (visible: boolean) => void;
 };
 
 export type CanvasWorkbenchSurfaceArgs = Pick<
@@ -39,10 +33,5 @@ export type CanvasWorkbenchSurfaceArgs = Pick<
   | 'draftSaveStatus'
   | 'availableCanvasKinds'
   | 'canCreateCanvasDocument'
-  | 'canEditEdges'
-  | 'canOpenSourceImport'
-  | 'emptyStateGuideVisible'
   | 'onCreateCanvasDocument'
-  | 'onCreateAuthoringNode'
-  | 'onEmptyStateGuideVisibilityChange'
 >;

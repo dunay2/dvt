@@ -1,8 +1,8 @@
 ---
 title: Canvas empty guide preference plan
-status: Proposed
+status: Superseded
 date: 2026-06-02
-last_reviewed: 2026-06-02
+last_reviewed: 2026-09-04
 owners:
   - apps/web
 planning_type: proposal
@@ -10,6 +10,19 @@ lane: E
 ---
 
 # Canvas Empty Guide Preference Plan
+
+## Supersession Decision — GH-2896
+
+The empty-guide card and the preference introduced by this plan are retired by
+[#2896](https://github.com/dunay2/dvt/issues/2896). Direct Canvas authoring is
+now available from the governed toolbar and contextual graph commands, so the
+card duplicates the work surface and the preference exists only to control
+obsolete presentation.
+
+The retirement removes the card, its persisted preference, settings control,
+runtime copy, pass-through wiring, and topology tests. It does not change
+`CreateCanvasAuthoringNode`, graph admission, draft persistence, or the
+first-Canvas document creation flow.
 
 ## Think-First Analysis
 
@@ -56,7 +69,7 @@ Rejected alternatives:
 ```feature-mechanization
 version: 1
 featureId: CANVAS-EMPTY-GUIDE-PREFERENCE-20260602
-mechanizationStatus: implemented
+mechanizationStatus: closed
 noHumanDecisionsRemaining: true
 implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/canvas-empty-guide-preference-plan-20260602.md
 componentGuides:
@@ -120,6 +133,7 @@ forbiddenImplementationSurfaces:
 commandQueryRails:
   - name: ConfigureCanvasViewportPreferences
     type: command
+    status: deprecated
     dddOwner: CanvasViewportPreferences value object
 domainObjects:
   - name: CanvasViewportPreferences
@@ -161,21 +175,5 @@ redGreenCycles:
       - apps/web/src/app/views/canvas/**
       - apps/web/src/app/views/Canvas.routeStates.first-canvas-policy.test.tsx
     greenTest: pnpm --filter @dvt/web test -- src/app/stores/uiLayoutStore.test.ts src/app/views/canvas/CanvasToolbar.test.tsx src/app/views/Canvas.routeStates.first-canvas-policy.test.tsx
-symbols:
-  - name: canvasEmptyStateGuideVisible
-    path: apps/web/src/app/stores/uiLayoutStore.ts
-    dddOwner: CanvasViewportPreferences
-    cqRails: [ConfigureCanvasViewportPreferences]
-    fowlerSignals: [Hidden authority]
-    architectureGuard: pnpm --filter @dvt/web test:architecture -- src/app/views/canvas/canvasLayoutPersistence.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
-    unitTests: [pnpm --filter @dvt/web test -- src/app/stores/uiLayoutStore.test.ts]
-  - name: setCanvasEmptyStateGuideVisible
-    path: apps/web/src/app/stores/uiLayoutStore.ts
-    dddOwner: CanvasViewportPreferences
-    cqRails: [ConfigureCanvasViewportPreferences]
-    fowlerSignals: [Intention-Revealing Interface]
-    architectureGuard: pnpm --filter @dvt/web test:architecture -- src/app/views/canvas/canvasLayoutPersistence.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
-    unitTests: [pnpm --filter @dvt/web test -- src/app/stores/uiLayoutStore.test.ts]
+symbols: []
 ```

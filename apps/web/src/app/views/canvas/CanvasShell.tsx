@@ -476,7 +476,6 @@ export default function CanvasShell({
         canvasGridVisible={graph.canvasGridVisible}
         canvasGridColor={graph.canvasGridColor}
         canvasSnapToGrid={graph.canvasSnapToGrid}
-        canvasEmptyStateGuideVisible={graph.canvasEmptyStateGuideVisible}
         canAutoLayout={panels.userPermissions.canEditEdges}
         onToggleImpact={chromeCommands.onToggleImpact}
         onToggleColumns={chromeCommands.onToggleColumns}
@@ -486,7 +485,6 @@ export default function CanvasShell({
         onToggleGridVisible={chromeCommands.onToggleGridVisible}
         onGridColorChange={chromeCommands.onGridColorChange}
         onToggleSnapToGrid={chromeCommands.onToggleSnapToGrid}
-        onSetCanvasEmptyStateGuideVisible={chromeCommands.onSetCanvasEmptyStateGuideVisible}
         onAutoLayout={chromeCommands.onAutoLayout}
         onRestoreFocus={contextMenuPresenter.restoreContextMenuOpenerFocus}
         onClose={() => setCanvasSettingsOpen(false)}

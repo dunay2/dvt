@@ -44,8 +44,7 @@ describe('Canvas route first-canvas catalog', () => {
       },
     });
 
-    expect(harness.container.textContent).toContain('Start transformation canvas');
-    expect(harness.container.textContent).not.toContain('Add first transformation node');
+    expect(harness.container.querySelector('[data-slot="canvas-empty-state"]')).toBeNull();
     expectActiveCanvasShellIdentity({
       container: harness.container,
       title: 'Main canvas',
@@ -63,8 +62,7 @@ describe('Canvas route first-canvas catalog', () => {
       canvasAuthoringMode: 'dbt',
     });
 
-    expect(harness.container.textContent).toContain('Start dbt canvas');
-    expect(harness.container.textContent).not.toContain('Add first dbt node');
+    expect(harness.container.querySelector('[data-slot="canvas-empty-state"]')).toBeNull();
     expectActiveCanvasShellIdentity({
       container: harness.container,
       title: 'dbt canvas',

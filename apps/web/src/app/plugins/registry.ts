@@ -314,7 +314,6 @@ export function getAllCanvasKinds(
       label: localizedCopy?.label ?? registration.label,
       description: localizedCopy?.description ?? registration.description,
       createTitle: localizedCopy?.createTitle ?? registration.createTitle,
-      emptyState: localizedCopy?.emptyState ?? registration.emptyState,
       localizedCopy: registration.localizedCopy,
       nodeKinds: registration.nodeKinds,
     };

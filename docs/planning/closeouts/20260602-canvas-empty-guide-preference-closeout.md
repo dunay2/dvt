@@ -1,12 +1,20 @@
 ---
 title: Canvas Empty Guide Preference Closeout
-status: Draft
+status: Superseded
 owner: web
-last_reviewed: 2026-06-02
+last_reviewed: 2026-09-04
 planning_type: closeout
 ---
 
 # Canvas Empty Guide Preference Closeout
+
+## Superseded By GH-2896
+
+The implementation evidenced below was subsequently retired by
+[#2896](https://github.com/dunay2/dvt/issues/2896). Once direct toolbar and
+contextual authoring became the canonical empty-Canvas interaction, the guide
+and its preference were duplicate presentation rather than product capability.
+This closeout remains as historical evidence only.
 
 ## Governing Sources
 

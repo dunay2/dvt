@@ -109,8 +109,8 @@ before that boundary exists.
 - On reopen, the active canvas identity and typed posture must derive from the
   authoritative draft-backed `canvasDocument`; ambient controller mode must not
   override restore posture.
-- Restored typed-empty posture remains an overlay on the authoritative canvas
-  shell, so the viewport stays mounted while the empty guidance is shown.
+- Restored typed-empty posture renders the authoritative canvas shell directly;
+  it must not cover the viewport with a passive onboarding overlay.
 - First-canvas host HTML belongs in `CanvasPlaygroundHost.templates.tsx`.
   `CanvasPlaygroundHost.tsx` owns copy selection and create-canvas command
   construction.

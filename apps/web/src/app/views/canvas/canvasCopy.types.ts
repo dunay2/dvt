@@ -15,10 +15,6 @@ export type CanvasViewCopy = {
   readonly routeNeedsCanvasAdapterLabel: string;
   readonly routeNeedsCanvasTemplateLabel: string;
   readonly routeNeedsCanvasReadOnlyMessage: string;
-  readonly routeEmptyTitle: string;
-  readonly routeEmptyEditableMessage: string;
-  readonly routeEmptyImportUnavailableMessage: string;
-  readonly routeEmptyReadOnlyMessage: string;
   readonly routeErrorTitle: string;
   readonly routeErrorFallbackMessage: string;
   readonly routeErrorMessage: string;
@@ -172,7 +168,6 @@ export type CanvasViewCopy = {
   readonly canvasAddNodeCatalogOutputDescription: string;
   readonly canvasAddNodeCatalogMacroDescription: string;
   readonly canvasAddNodeCatalogNodeDescription: string;
-  readonly toolbarEmptyCanvasGuideLabel: string;
   readonly workspaceProjectActionsMenuLabel: string;
   readonly toolbarProjectSnapshotMenuLabel: string;
   readonly workspaceImportDbtProjectLabel: string;

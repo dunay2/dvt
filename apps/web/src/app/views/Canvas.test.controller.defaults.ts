@@ -49,7 +49,6 @@ type CanvasWorkbenchDefaultsDto = {
   canvasGridVisible: CanvasController['canvasGridVisible'];
   canvasGridColor: CanvasController['canvasGridColor'];
   canvasSnapToGrid: CanvasController['canvasSnapToGrid'];
-  canvasEmptyStateGuideVisible: CanvasController['canvasEmptyStateGuideVisible'];
   viewport: CanvasController['viewport'];
   frozenNodeIds: CanvasController['frozenNodeIds'];
 };
@@ -156,10 +155,6 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
         label: 'dbt',
         description: 'Model-first canvas for dbt resources and dependencies.',
         createTitle: 'dbt canvas',
-        emptyState: {
-          title: 'Start dbt canvas',
-          editableMessage: 'Start this dbt canvas by adding a governed source, model, or test.',
-        },
         nodeKinds:
           dbtContributions.canvasKinds?.find((registration) => registration.kind === 'dbt')
             ?.nodeKinds ?? [],
@@ -170,11 +165,6 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
         label: 'Transformation',
         description: 'Flow-based transformation canvas for the protected authoring draft.',
         createTitle: 'Transformation canvas',
-        emptyState: {
-          title: 'Start transformation canvas',
-          editableMessage:
-            'Start this transformation canvas by adding a governed source, Transform, or sink node.',
-        },
         nodeKinds: DVT_AUTHORING_NODE_KINDS,
       },
     ],
@@ -205,7 +195,6 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
     canvasGridVisible: true,
     canvasGridColor: DEFAULT_CANVAS_GRID_COLOR,
     canvasSnapToGrid: false,
-    canvasEmptyStateGuideVisible: true,
     viewport: null,
     frozenNodeIds: new Set(),
   } satisfies CanvasWorkbenchDefaultsDto;
@@ -310,7 +299,6 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'setCanvasGridVisible'
   | 'setCanvasGridColor'
   | 'setCanvasSnapToGrid'
-  | 'setCanvasEmptyStateGuideVisible'
   | 'handlePreviewExecutionPlan'
   | 'handleStartRun'
   | 'reloadLatestDraft'
@@ -355,7 +343,6 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     setCanvasGridVisible: vi.fn(),
     setCanvasGridColor: vi.fn(),
     setCanvasSnapToGrid: vi.fn(),
-    setCanvasEmptyStateGuideVisible: vi.fn(),
     handlePreviewExecutionPlan: vi.fn(),
     handleStartRun: vi.fn(),
     reloadLatestDraft: vi.fn(),

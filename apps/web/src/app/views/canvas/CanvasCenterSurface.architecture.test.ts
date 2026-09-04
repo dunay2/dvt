@@ -47,16 +47,10 @@ describe('CanvasCenterSurface architecture', () => {
     expect(WORKBENCH_SURFACE_SOURCE).toContain('deriveCanvasHostCycleState');
   });
 
-  it('renders typed empty authoring from the registered canvas kind only when edits are allowed', () => {
+  it('does not render a second presentation over an existing empty Canvas', () => {
     expect(WORKBENCH_SURFACE_SOURCE).toContain('deriveCanvasHostCycleState');
-    expect(WORKBENCH_SURFACE_SOURCE).toContain("cycleState.kind !== 'typed_empty'");
-    expect(WORKBENCH_SURFACE_SOURCE).toContain('cycleState.title');
-    expect(WORKBENCH_SURFACE_SOURCE).not.toContain('cycleState.firstNodeLabel');
-    expect(WORKBENCH_SURFACE_SOURCE).not.toContain('cycleState.firstNodeHelper');
-    expect(WORKBENCH_SURFACE_SOURCE).not.toContain('nodeKinds={cycleState.nodeKinds}');
-    expect(WORKBENCH_SURFACE_SOURCE).not.toContain(
-      'onCreateAuthoringNode={cycleState.onCreateAuthoringNode}'
-    );
+    expect(WORKBENCH_SURFACE_SOURCE).not.toContain('CanvasEmptyStateView');
+    expect(WORKBENCH_SURFACE_SOURCE).not.toContain('emptyStateGuideVisible');
     expect(WORKBENCH_SURFACE_SOURCE).not.toContain('DVT_AUTHORING_NODE_KINDS');
   });
 

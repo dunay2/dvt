@@ -3,7 +3,6 @@ import { CanvasGraphStatusOverlay } from './CanvasGraphStatusOverlay';
 import {
   CanvasShellContextualWorkbenchSplit,
   CanvasShellMainPanelFrame,
-  CanvasShellOverlayCenterSurfaceFrame,
   CanvasShellReadOnlyBannerSlot,
 } from './CanvasShellMainPanelFrame';
 import { CanvasNodeWorkbenchOverlay } from './CanvasNodeWorkbenchOverlay';
@@ -176,17 +175,7 @@ function CanvasShellMainSurface({
     />
   );
 
-  const baseSurface =
-    layout.centerSurface == null ? (
-      viewport
-    ) : layout.centerSurfaceMode === 'replace' ? (
-      <>{layout.centerSurface}</>
-    ) : (
-      <CanvasShellOverlayCenterSurfaceFrame
-        viewport={viewport}
-        centerSurface={layout.centerSurface}
-      />
-    );
+  const baseSurface = layout.centerSurface == null ? viewport : <>{layout.centerSurface}</>;
 
   if (layout.contextualWorkbench == null) {
     return baseSurface;
@@ -234,8 +223,7 @@ export function CanvasShellMainPanel({
   onOpenCanvasSettings,
   contextMenuPresenter,
 }: CanvasShellMainPanelProps): JSX.Element {
-  const shouldShowGraphStatusOverlay =
-    layout.centerSurface == null || layout.centerSurfaceMode === 'overlay';
+  const shouldShowGraphStatusOverlay = layout.centerSurface == null;
 
   return (
     <CanvasShellMainPanelFrame defaultSize={resolveCanvasShellMainPanelDefaultSize()}>

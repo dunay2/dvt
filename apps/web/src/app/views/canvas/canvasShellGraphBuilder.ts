@@ -16,7 +16,6 @@ export function buildCanvasShellGraph({
     canvasGridVisible: graphState.canvasGridVisible,
     canvasGridColor: graphState.canvasGridColor,
     canvasSnapToGrid: graphState.canvasSnapToGrid,
-    canvasEmptyStateGuideVisible: graphState.canvasEmptyStateGuideVisible,
     viewport: graphState.viewport,
     frozenNodeIds: graphState.frozenNodeIds,
   };

@@ -9,8 +9,9 @@ last_reviewed: 2026-04-26
 
 ## Purpose
 
-This component owns the graph-first entrypoint that lets an operator create the
-first Canvas node from an empty protected authoring draft.
+This component owns the graph-first behavior that lets an operator create the
+first Canvas node from an empty protected authoring draft without covering the
+work surface with a passive onboarding card.
 
 It is intentionally not a project-creation flow and not a source-import
 fallback. Project/resource inventory may enrich later authoring, but the empty
@@ -49,10 +50,10 @@ list. Runtime admission is enforced by `CanvasRuntimePolicy`, not by the
 visible list alone. For the `transformation` canvas kind, that catalog
 currently resolves to `DVT_AUTHORING_NODE_KINDS`.
 
-The visible editable empty-state copy is also governed by the active
-`CanvasRuntimeRegistration.emptyState`. The host may still own blocked or
-read-only messages, but it must not flatten typed editable empty-state copy
-back into one route-global fallback once the canvas kind is known.
+An existing empty Canvas renders the same viewport and governed authoring
+commands as a populated Canvas. Loading, transport error, and read-only status
+remain explicit route surfaces, but typed-empty state does not introduce a
+second presentation or preference.
 
 ## Invariants
 
@@ -60,19 +61,18 @@ back into one route-global fallback once the canvas kind is known.
 - Empty Canvas is read-only when mutations are denied.
 - Empty authoring is only reachable after the host persists a canvas document.
 - The empty catalog must resolve from the active `canvasDocument.kind`.
-- The empty catalog, empty copy, graph strategy, and execution posture must
-  resolve from the same `CanvasRuntimeRegistration`.
+- The node catalog, graph strategy, and execution posture must resolve from the
+  same `CanvasRuntimeRegistration`.
 - First-node admission must call `CanvasRuntimePolicy.admission` before
   `CanvasGraphLifecycle` mutates the draft session.
 - A node whose `kind`, `pluginId`, or role is not owned by the active runtime
   catalog must be rejected before any viewport or draft effect runs.
-- The typed editable empty-state title and first-node copy must resolve from
-  `CanvasRuntimeRegistration.emptyState`.
+- Typed-empty state must leave the Canvas viewport unobstructed.
 - First-node authoring remains available when source import is unavailable;
   source import is an optional capability, not the only route out of empty
   Canvas.
-- Read-only empty posture keeps typed copy visible but removes mutating node
-  choices and commands.
+- Read-only empty posture uses the standard read-only banner and removes
+  mutating node choices and commands without adding another center surface.
 - Node creation must pass through the existing draft graph lifecycle.
 - Context-menu node creation may supply a caller-owned flow position, but it
   must not fork node admission or identity generation.
@@ -90,14 +90,12 @@ back into one route-global fallback once the canvas kind is known.
 ```mermaid
 stateDiagram-v2
   [*] --> NeedsCanvas: no persisted canvas document
-  NeedsCanvas --> EmptyReadonly: save canvas + mutation denied
-  NeedsCanvas --> EmptyAuthorable: save canvas + mutation allowed
-  EmptyReadonly --> EmptyReadonly: show read-only copy
-  EmptyAuthorable --> CreatingNode: choose governed node kind
+  NeedsCanvas --> EmptyCanvas: save canvas document
+  EmptyCanvas --> CreatingNode: toolbar or contextual authoring command
   CreatingNode --> DraftLifecycle: build canonical authoring node
   DraftLifecycle --> ViewportProjection: admit explicit node
   ViewportProjection --> DraftAutosave: existing draft persistence flow
-  DraftAutosave --> EmptyAuthorable: save rejected or gated
+  DraftAutosave --> EmptyCanvas: save rejected or gated
   DraftAutosave --> GraphReady: authoritative draft refresh/projection
 ```
 
@@ -109,11 +107,9 @@ flowchart LR
   Draft --> Center["CanvasCenterSurface"]
   Center --> Workbench["canvasCenterSurfaceWorkbench"]
   Workbench --> Runtime["CanvasRuntimeRegistration"]
-  Runtime --> Copy["emptyState"]
   Runtime --> Catalog["nodeKinds"]
   Runtime --> Execution["executionStrategy"]
   Runtime --> Policy["CanvasRuntimePolicy"]
-  Copy --> Catalog
   Catalog --> Command["handleCreateAuthoringNode"]
   Command --> Builder["canvasAuthoringNodeCommand"]
   Builder --> Runner["useCanvasNodeAdmissionCommandRunner"]
@@ -133,7 +129,7 @@ sequenceDiagram
   participant Route as Canvas route
   participant Runtime as CanvasRuntimeRegistration
   participant Policy as CanvasRuntimePolicy
-  participant Empty as Empty entrypoint
+  participant Viewport as Canvas viewport
   participant Handler as Node creation handler
   participant Runner as Node admission command runner
   participant Tx as Node admission transaction
@@ -142,8 +138,8 @@ sequenceDiagram
 
   Route->>Runtime: active canvasDocument.kind
   Runtime->>Policy: nodeKinds and execution posture
-  Runtime-->>Empty: emptyState and nodeKinds
-  Empty->>Handler: create NodeKindRegistration
+  Runtime-->>Viewport: nodeKinds
+  Viewport->>Handler: create NodeKindRegistration
   Handler->>Runner: canonical node + viewport position
   Runner->>Policy: allowsCanonicalNode
   Runner->>Tx: latest nodes + latest draft session
@@ -155,9 +151,9 @@ sequenceDiagram
 
 ## Consumers
 
-- `CanvasCenterSurface.tsx` renders the empty authoring surface from canonical
-  route posture.
-- `CanvasStateViews.tsx` renders the governed node-kind choices.
+- `CanvasCenterSurface.tsx` leaves typed-empty posture on the normal Canvas
+  viewport while still rendering loading and error states.
+- `CanvasViewport.tsx` exposes the governed contextual authoring commands.
 - `CanvasShell.tsx` and `CanvasShellMainPanel.tsx` carry shell composition.
 - `useCanvasNodeAuthoringHandlers.ts` composes drop, creation, and removal
   authoring commands.
@@ -184,8 +180,8 @@ canvas document identity rather than a route-global transformation default.
 - Do not route first-node creation through project setup.
 - Do not create another catalog beside the plugin-owned `CanvasKindRegistration`
   node kinds.
-- Do not flatten typed editable empty-state copy back into one route-global
-  fallback once `canvasDocument.kind` is known.
+- Do not restore a passive typed-empty overlay or a preference whose only job is
+  to hide that overlay.
 - Do not bypass `admitCanonicalNodeToCanvas` or `canvasGraphLifecycle`.
 - Do not bypass `useCanvasNodeAdmissionCommandRunner` when a handler needs to
   mutate both viewport nodes and the draft session.
@@ -198,6 +194,6 @@ canvas document identity rather than a route-global transformation default.
 - Do not skip the `needs_canvas` host posture by inventing a default document
   client-side.
 - Do not make import capability the only path out of empty Canvas.
-- Do not split empty copy, first-node catalog, graph strategy, and execution
-  posture into separate route-level truth sources.
+- Do not split the first-node catalog, graph strategy, and execution posture
+  into separate route-level truth sources.
 - Do not fork the first-node command from the ready-canvas create command.

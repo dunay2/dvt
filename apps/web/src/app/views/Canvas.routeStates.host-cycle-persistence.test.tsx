@@ -21,8 +21,6 @@ type FirstCanvasCycleFixture = Readonly<{
   canvasKind: 'transformation' | 'dbt';
   createLabel: string;
   title: string;
-  emptyText: string;
-  retiredFirstNodeText: string;
   firstNodeKind: string;
 }>;
 
@@ -34,16 +32,12 @@ const FIRST_CANVAS_CYCLE_FIXTURES: Record<
     canvasKind: 'transformation',
     createLabel: 'Transformation',
     title: 'Transformation canvas',
-    emptyText: 'Start transformation canvas',
-    retiredFirstNodeText: 'Add first transformation node',
     firstNodeKind: 'dvt:source',
   },
   dbt: {
     canvasKind: 'dbt',
     createLabel: 'dbt',
     title: 'dbt canvas',
-    emptyText: 'Start dbt canvas',
-    retiredFirstNodeText: 'Add first dbt node',
     firstNodeKind: 'dbt:source',
   },
 };
@@ -132,8 +126,8 @@ describe('Canvas route host-cycle persistence', () => {
         kind: fixture.canvasKind,
         title: fixture.title,
       });
-      expect(harness.container.textContent).toContain(fixture.emptyText);
-      expect(harness.container.textContent).not.toContain(fixture.retiredFirstNodeText);
+      expect(harness.container.querySelector('[data-slot="canvas-empty-state"]')).toBeNull();
+      expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
       expectCanvasBootstrapState({
         routeState: 'empty',
         readinessStatus: 'complete',
@@ -286,11 +280,8 @@ describe('Canvas route host-cycle persistence', () => {
       title: 'Warehouse dbt',
       kindLabel: 'dbt',
     });
-    expect(harness.container.textContent).toContain('Start dbt canvas');
-    expect(harness.container.textContent).not.toContain('Add first dbt node');
     expect(harness.container.textContent).not.toContain('Create canvas');
-    expect(harness.container.textContent).not.toContain('Start transformation canvas');
-    expect(harness.container.querySelector('[data-slot="canvas-empty-state"]')).not.toBeNull();
+    expect(harness.container.querySelector('[data-slot="canvas-empty-state"]')).toBeNull();
     expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
     expectCanvasBootstrapState({
       routeState: 'empty',

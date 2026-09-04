@@ -259,7 +259,8 @@ describe('Canvas source import live clean proof', () => {
       cy.contains('button', 'dbt').should('be.enabled').click();
     });
 
-    cy.contains('Start dbt canvas', { timeout: 20_000 }).should('be.visible');
+    cy.get('[data-slot="canvas-viewport"]', { timeout: 20_000 }).should('be.visible');
+    cy.get('[data-slot="canvas-empty-state"]').should('not.exist');
     waitForLiveDraftSaved(session);
     openCanvasContextMenuAt(420, 280);
     clickCanvasContextMenuAction('open-add-node-catalog');
@@ -599,7 +600,8 @@ describe('Canvas source import live clean proof', () => {
     cy.get('[data-slot="canvas-playground-empty-state"]').within(() => {
       cy.contains('button', 'dbt').should('be.enabled').click();
     });
-    cy.contains('Start dbt canvas', { timeout: 20_000 }).should('be.visible');
+    cy.get('[data-slot="canvas-viewport"]', { timeout: 20_000 }).should('be.visible');
+    cy.get('[data-slot="canvas-empty-state"]').should('not.exist');
     waitForLiveDraftSaved(secondarySession);
 
     openCanvasContextMenuAt(420, 280);
