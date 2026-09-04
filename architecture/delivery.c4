@@ -1,0 +1,81 @@
+model {
+  deliveryModel = package '@dvt/delivery' {
+    #asIs
+    description 'Runtime delivery bounded context for outbox movement, projection refresh, sharding and start-run backpressure admission.'
+
+    metadata {
+      repository 'dunay2/dvt'
+      baselineSha '42504563629f0b998d8a3382ea839eead99a36d1'
+      sourceRoot 'packages/@dvt/delivery'
+      provenance 'SOURCE-FIRST'
+    }
+
+    link https://github.com/dunay2/dvt/tree/42504563629f0b998d8a3382ea839eead99a36d1/packages/%40dvt/delivery 'Pinned package tree'
+
+    sourceEvidence = component 'Source evidence' {
+      #sourceDerived
+      description 'Machine-generated inventory of every tracked file under @dvt/delivery at the pinned main SHA.'
+    }
+
+    publicBoundary = component 'Delivery public boundary' {
+      #asIs
+      description 'Exports outbox movement, projection refresh, shard assignment and start-run backpressure behavior.'
+      link https://github.com/dunay2/dvt/blob/42504563629f0b998d8a3382ea839eead99a36d1/packages/%40dvt/delivery/src/index.ts 'Source'
+    }
+
+    outboxWorker = worker 'Outbox delivery worker' {
+      #asIs
+      description 'Moves outbox facts through the delivery boundary.'
+    }
+
+    outboxRuntime = component 'Outbox worker runtime' {
+      #asIs
+      description 'Owns worker loop control, runtime hooks and bounded error handling around outbox delivery.'
+    }
+
+    projectorRuntime = worker 'Projector worker runtime' {
+      #asIs
+      description 'Refreshes read-model projections from delivered facts.'
+    }
+
+    sharding = component 'Outbox shard assignment' {
+      #asIs
+      description 'Deterministic shard assignment used for scale-out work ownership.'
+    }
+
+    backpressure = component 'Start-run backpressure admission' {
+      #asIs
+      description 'Admission guard that can reject new run starts when delivery pressure exceeds policy.'
+    }
+
+    testingAdapters = adapter 'In-memory delivery test adapters' {
+      #asIs
+      description 'Testing-only event bus and outbox storage implementations used to prove delivery semantics.'
+    }
+
+    publicBoundary .uses outboxWorker 'exports outbox worker'
+    publicBoundary .uses projectorRuntime 'exports projector runtime'
+    publicBoundary .uses sharding 'exports shard assignment'
+    publicBoundary .uses backpressure 'exports admission guard'
+    outboxWorker .uses outboxRuntime 'runtime loop + hooks'
+    outboxRuntime .uses sharding 'owns shard-scoped work'
+  }
+}
+
+views {
+  view deliveryBoundary of deliveryModel {
+    title 'DVT+ Delivery — Outbox, projections, sharding and backpressure'
+    description 'Source-first Delivery view pinned to main@42504563. Logical boxes drill into exact Git-derived evidence files.'
+
+    include sourceEvidence with { navigateTo deliverySourceInventory }
+    include publicBoundary with { navigateTo deliveryFiles_publicBoundary }
+    include outboxWorker with { navigateTo deliveryFiles_outboxWorker }
+    include outboxRuntime with { navigateTo deliveryFiles_outboxRuntime }
+    include projectorRuntime with { navigateTo deliveryFiles_projectorRuntime }
+    include sharding with { navigateTo deliveryFiles_sharding }
+    include backpressure with { navigateTo deliveryFiles_backpressure }
+    include testingAdapters with { navigateTo deliveryFiles_testingAdapters }
+
+    autoLayout LeftRight
+  }
+}
