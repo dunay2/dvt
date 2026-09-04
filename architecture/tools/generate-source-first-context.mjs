@@ -5,56 +5,33 @@ import { dirname, join, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const contextId = process.argv[2];
-if (!contextId || !/^[a-z0-9-]+$/.test(contextId)) {
-  throw new Error('Usage: node generate-source-first-context.mjs <context-id>');
-}
+if (!contextId) throw new Error('Usage: node generate-source-first-context.mjs <context>');
 
 const architectureDir = dirname(dirname(fileURLToPath(import.meta.url)));
+const repoRoot = dirname(architectureDir);
 const contextsDir = join(architectureDir, 'contexts');
 const generatedDir = join(architectureDir, 'generated');
-const baselineConfig = JSON.parse(
-  readFileSync(join(contextsDir, `${contextId}-source-baseline.json`), 'utf8'),
-);
-const manifest = JSON.parse(
-  readFileSync(join(contextsDir, `${contextId}-components.json`), 'utf8'),
-);
-const logicalSource = readFileSync(join(architectureDir, `${contextId}.c4`), 'utf8');
-const logicalModelId = parseLogicalModelId(logicalSource, contextId);
+const baselinePath = join(contextsDir, `${contextId}-source-baseline.json`);
+const componentsPath = join(contextsDir, `${contextId}-components.json`);
+const logicalPath = join(architectureDir, `${contextId}.c4`);
 
-const {
-  repository,
-  scope,
-  modelId: configuredModelId,
-  displayName,
-  architectureOwner,
-  baselineSha: configuredBaselineSha,
-} = baselineConfig;
+const baseline = JSON.parse(readFileSync(baselinePath, 'utf8'));
+const manifest = JSON.parse(readFileSync(componentsPath, 'utf8'));
+const logicalSource = readFileSync(logicalPath, 'utf8');
+const configuredBaselineSha = baseline.baselineSha;
 const baselineSha = process.env.DVT_ARCH_BASELINE_SHA || configuredBaselineSha;
-const modelId =
-  configuredModelId === logicalModelId
-    ? deriveSourceModelId(configuredModelId)
-    : configuredModelId;
+const { repository, scope, displayName, architectureOwner } = baseline;
+const logicalModelId = parseLogicalModelId(logicalSource, contextId);
+const configuredModelId = baseline.modelId ?? null;
+const modelId = deriveSourceModelId(logicalModelId);
 
-if (
-  ![
-    repository,
-    baselineSha,
-    scope,
-    configuredModelId,
-    modelId,
-    logicalModelId,
-    displayName,
-    architectureOwner,
-  ].every(Boolean)
-) {
-  throw new Error(`Incomplete source configuration for ${contextId}`);
-}
-if (modelId === logicalModelId) {
-  throw new Error(`${contextId} source inventory model id collides with logical model id: ${modelId}`);
+if (![repository, baselineSha, scope, displayName, architectureOwner].every(Boolean)) {
+  throw new Error(`${baselinePath} is incomplete`);
 }
 
 const git = (args) =>
   execFileSync('git', args, {
+    cwd: repoRoot,
     encoding: 'utf8',
     maxBuffer: 64 * 1024 * 1024,
   }).trimEnd();
@@ -70,23 +47,20 @@ const files = git(['ls-tree', '-r', '-l', baselineSha, '--', scope])
 
 if (!files.length) throw new Error(`No tracked files under ${scope}@${baselineSha}`);
 
-const fileByPath = new Map(files.map((file) => [file.relativePath, file]));
-const components = manifest.components.map((component) => {
+const byPath = new Map(files.map((file) => [file.relativePath, file]));
+const components = (manifest.components ?? []).map((component) => {
   const selected = new Map();
-
-  for (const path of component.paths ?? []) {
-    const file = fileByPath.get(path);
-    if (!file) throw new Error(`${component.id} references missing file ${path}`);
-    selected.set(path, file);
+  for (const exactPath of component.paths ?? []) {
+    const file = byPath.get(exactPath);
+    if (!file) throw new Error(`${component.id} references missing file: ${exactPath}`);
+    selected.set(file.relativePath, file);
   }
-
   for (const prefix of component.prefixes ?? []) {
     const normalized = prefix.endsWith('/') ? prefix : `${prefix}/`;
     const matches = files.filter((file) => file.relativePath.startsWith(normalized));
     if (!matches.length) throw new Error(`${component.id} prefix matched no files: ${prefix}`);
     for (const file of matches) selected.set(file.relativePath, file);
   }
-
   const evidenceFiles = [...selected.values()].sort((a, b) =>
     a.relativePath.localeCompare(b.relativePath),
   );
@@ -105,7 +79,7 @@ const counts = {
 };
 
 const payload = {
-  schemaVersion: 3,
+  schemaVersion: 4,
   generatedFrom: 'git-tree',
   repository,
   baselineSha,
@@ -120,6 +94,7 @@ const payload = {
     id: component.id,
     title: component.title,
     provenance: 'ARCHITECTURE-DECLARED',
+    classificationRole: component.classificationRole ?? 'owner',
     rationale: component.rationale ?? null,
     fileCount: component.evidenceFiles.length,
     files: component.evidenceFiles.map((file) => file.relativePath),
@@ -213,19 +188,19 @@ function sourceMetadata(path, relativePath) {
 
 function first(content, regexes) {
   for (const regex of regexes) {
-    const value = content.match(regex)?.[1]?.trim();
-    if (value) return value;
+    const match = content.match(regex);
+    if (match?.[1]?.trim()) return match[1].trim();
   }
   return undefined;
 }
 
-function renderSourceModel(data) {
-  const root = makeFolder('', '');
-  for (const file of data.files) addFile(root, file);
+function renderSourceModel(inventory) {
+  const root = folder('', '');
+  for (const file of inventory.files) addFile(root, file);
   countFiles(root);
 
-  const fqnByPath = new Map();
-  const out = [
+  const pathToFqn = new Map();
+  const lines = [
     '// GENERATED FILE. DO NOT EDIT.',
     `// Source: git tree ${repository}@${baselineSha}:${scope}`,
     'model {',
@@ -235,164 +210,134 @@ function renderSourceModel(data) {
     '    metadata {',
     "      provenance 'SOURCE-DERIVED'",
     `      architectureOwner '${esc(architectureOwner)}'`,
-    `      logicalModelId '${esc(logicalModelId)}'`,
     `      sourceRoot '${esc(scope)}'`,
     `      baselineSha '${baselineSha}'`,
-    `      trackedFiles '${data.counts.trackedFiles}'`,
-    `      sourceFiles '${data.counts.sourceFiles}'`,
-    `      testFiles '${data.counts.testFiles}'`,
-    `      inventorySha256 '${data.inventorySha256}'`,
+    `      trackedFiles '${inventory.counts.trackedFiles}'`,
+    `      sourceFiles '${inventory.counts.sourceFiles}'`,
+    `      testFiles '${inventory.counts.testFiles}'`,
+    `      inventorySha256 '${inventory.inventorySha256}'`,
     '    }',
     `    link https://github.com/${repository}/tree/${baselineSha}/${urlPath(scope)} 'Pinned package tree'`,
   ];
-
-  emitNode(root, modelId, '    ', out, fqnByPath);
-  out.push('  }', '}', '', 'views {');
-  out.push(`  view ${modelId}Inventory of ${modelId} {`);
-  out.push(`    title '${esc(displayName)} — Complete source inventory'`);
-  out.push(
-    `    description 'Generated from Git at ${baselineSha.slice(0, 8)}. ${data.counts.trackedFiles} tracked files.'`,
+  emitChildren(root, modelId, '    ', lines, pathToFqn);
+  lines.push('  }', '}', '', 'views {');
+  lines.push(`  view ${modelId}Inventory of ${modelId} {`);
+  lines.push(`    title '${esc(displayName)} — Complete source inventory'`);
+  lines.push(
+    `    description 'Generated from Git at ${baselineSha.slice(0, 8)}. ${inventory.counts.trackedFiles} tracked files; drill into folders to reach every file.'`,
   );
-  out.push('    include *', '    autoLayout TopBottom', '  }', '');
-
-  emitFolderViews(root, out, fqnByPath);
-
-  for (const component of data.componentMappings) {
-    out.push(`  view ${contextId}Files_${safeId(component.id)} {`);
-    out.push(`    title 'Files — ${esc(component.title)}'`);
-    out.push(
-      `    description 'ARCHITECTURE-DECLARED mapping over SOURCE-DERIVED Git files. ${component.fileCount} evidence file(s).'`,
+  lines.push('    include *', '    autoLayout TopBottom', '  }', '');
+  emitFolderViews(root, lines, pathToFqn);
+  for (const component of inventory.componentMappings) {
+    lines.push(`  view ${componentViewId(component.id)} {`);
+    lines.push(`    title 'Files — ${esc(component.title)}'`);
+    lines.push(
+      `    description 'ARCHITECTURE-DECLARED ${esc(component.classificationRole)} mapping over SOURCE-DERIVED Git files. ${component.fileCount} evidence file(s).'`,
     );
-    for (const path of component.files) {
-      const fqn = fqnByPath.get(path);
-      if (!fqn) throw new Error(`Missing source element: ${path}`);
-      out.push(`    include ${fqn}`);
+    for (const relativePath of component.files) {
+      const fqn = pathToFqn.get(relativePath);
+      if (!fqn) throw new Error(`No generated LikeC4 element for ${relativePath}`);
+      lines.push(`    include ${fqn}`);
     }
-    out.push('    autoLayout TopBottom', '  }', '');
+    lines.push('    autoLayout TopBottom', '  }', '');
   }
-
-  out.push('}', '');
-  const expected = data.files.length + folderCount(root);
-  if (fqnByPath.size !== expected) {
-    throw new Error(`Element cardinality mismatch: ${fqnByPath.size} != ${expected}`);
-  }
-  return out.join('\n');
+  lines.push('}', '');
+  return lines.join('\n');
 }
 
-function makeFolder(name, path) {
-  return { name, path, folders: new Map(), files: [], count: 0 };
+function folder(name, relativePath) {
+  return { name, relativePath, folders: new Map(), files: [], recursiveFileCount: 0 };
 }
 
-function addFile(root, file) {
+function addFile(rootFolder, file) {
   const parts = file.relativePath.split('/');
   const filename = parts.pop();
-  let node = root;
-  let path = '';
-
+  let current = rootFolder;
+  let currentPath = '';
   for (const part of parts) {
-    path = path ? `${path}/${part}` : part;
-    if (!node.folders.has(part)) node.folders.set(part, makeFolder(part, path));
-    node = node.folders.get(part);
+    currentPath = currentPath ? `${currentPath}/${part}` : part;
+    if (!current.folders.has(part)) current.folders.set(part, folder(part, currentPath));
+    current = current.folders.get(part);
   }
-
-  node.files.push({ ...file, filename });
+  current.files.push({ ...file, filename });
 }
 
-function countFiles(node) {
-  let count = node.files.length;
-  for (const child of node.folders.values()) count += countFiles(child);
-  node.count = count;
-  return count;
+function countFiles(current) {
+  let total = current.files.length;
+  for (const child of current.folders.values()) total += countFiles(child);
+  current.recursiveFileCount = total;
+  return total;
 }
 
-function emitNode(node, parentFqn, indent, out, map) {
-  for (const child of [...node.folders.values()].sort((a, b) => a.name.localeCompare(b.name))) {
-    const id = elementId('dir', child.path);
+function emitChildren(current, parentFqn, indent, lines, pathToFqn) {
+  for (const child of [...current.folders.values()].sort((a, b) => a.name.localeCompare(b.name))) {
+    const id = elementId('dir', child.relativePath);
     const fqn = `${parentFqn}.${id}`;
-    register(map, `${child.path}/`, fqn);
-
-    out.push(
-      `${indent}${id} = folder '${esc(child.name)}/ — ${child.count} files' {`,
-      `${indent}  #structureDerived`,
-      `${indent}  description 'Directory observed in the pinned Git tree.'`,
-      `${indent}  metadata {`,
-      `${indent}    provenance 'STRUCTURE-DERIVED'`,
-      `${indent}    sourcePath '${esc(posix.join(scope, child.path))}'`,
-      `${indent}    recursiveFileCount '${child.count}'`,
-      `${indent}    directFileCount '${child.files.length}'`,
-      `${indent}    baselineSha '${baselineSha}'`,
-      `${indent}  }`,
-      `${indent}  link https://github.com/${repository}/tree/${baselineSha}/${urlPath(posix.join(scope, child.path))} 'Pinned directory'`,
+    pathToFqn.set(`${child.relativePath}/`, fqn);
+    lines.push(`${indent}${id} = folder '${esc(child.name)}/ — ${child.recursiveFileCount} files' {`);
+    lines.push(`${indent}  #structureDerived`);
+    lines.push(`${indent}  description 'Directory observed in the pinned Git tree.'`);
+    lines.push(`${indent}  metadata {`);
+    lines.push(`${indent}    provenance 'STRUCTURE-DERIVED'`);
+    lines.push(`${indent}    sourcePath '${esc(posix.join(scope, child.relativePath))}'`);
+    lines.push(`${indent}    recursiveFileCount '${child.recursiveFileCount}'`);
+    lines.push(`${indent}    directFileCount '${child.files.length}'`);
+    lines.push(`${indent}    baselineSha '${baselineSha}'`);
+    lines.push(`${indent}  }`);
+    lines.push(
+      `${indent}  link https://github.com/${repository}/tree/${baselineSha}/${urlPath(posix.join(scope, child.relativePath))} 'Pinned directory'`,
     );
-
-    emitNode(child, fqn, `${indent}  `, out, map);
-    emitFiles(child.files, fqn, `${indent}  `, out, map);
-    out.push(`${indent}}`);
+    emitChildren(child, fqn, `${indent}  `, lines, pathToFqn);
+    emitDirectFiles(child.files, fqn, `${indent}  `, lines, pathToFqn);
+    lines.push(`${indent}}`);
   }
-
-  if (!node.path) emitFiles(node.files, parentFqn, indent, out, map);
+  emitDirectFiles(current.files, parentFqn, indent, lines, pathToFqn);
 }
 
-function emitFiles(files, parentFqn, indent, out, map) {
-  for (const file of [...files].sort((a, b) => a.filename.localeCompare(b.filename))) {
+function emitDirectFiles(filesInFolder, parentFqn, indent, lines, pathToFqn) {
+  for (const file of [...filesInFolder].sort((a, b) => a.filename.localeCompare(b.filename))) {
     const id = elementId('file', file.relativePath);
-    const fqn = `${parentFqn}.${id}`;
-    register(map, file.relativePath, fqn);
-
-    out.push(
-      `${indent}${id} = file '${esc(file.filename)}' {`,
-      `${indent}  #sourceDerived`,
-      `${indent}  description '${esc(file.ownedConcern ?? 'Tracked file from the pinned Git tree.')}'`,
-      `${indent}  metadata {`,
-      `${indent}    provenance 'SOURCE-DERIVED'`,
-      `${indent}    sourcePath '${esc(file.path)}'`,
-      `${indent}    blobSha '${file.blobSha}'`,
-    );
-    if (file.sizeBytes !== null) out.push(`${indent}    sizeBytes '${file.sizeBytes}'`);
-    out.push(`${indent}    baselineSha '${baselineSha}'`);
-    if (file.ownedConcern) out.push(`${indent}    ownedConcern '${esc(file.ownedConcern)}'`);
-    if (file.decision) out.push(`${indent}    decision '${esc(file.decision)}'`);
-    out.push(`${indent}  }`, `${indent}  link ${file.githubUrl} 'Open pinned source'`, `${indent}}`);
+    pathToFqn.set(file.relativePath, `${parentFqn}.${id}`);
+    lines.push(`${indent}${id} = file '${esc(file.filename)}' {`);
+    lines.push(`${indent}  #sourceDerived`);
+    lines.push(`${indent}  description '${esc(file.ownedConcern ?? 'Tracked file from the pinned Git tree.')}'`);
+    lines.push(`${indent}  metadata {`);
+    lines.push(`${indent}    provenance 'SOURCE-DERIVED'`);
+    lines.push(`${indent}    sourcePath '${esc(file.path)}'`);
+    lines.push(`${indent}    blobSha '${file.blobSha}'`);
+    if (file.sizeBytes !== null) lines.push(`${indent}    sizeBytes '${file.sizeBytes}'`);
+    lines.push(`${indent}    baselineSha '${baselineSha}'`);
+    if (file.ownedConcern) lines.push(`${indent}    ownedConcern '${esc(file.ownedConcern)}'`);
+    if (file.decision) lines.push(`${indent}    decision '${esc(file.decision)}'`);
+    lines.push(`${indent}  }`);
+    lines.push(`${indent}  link ${file.githubUrl} 'Open pinned source'`);
+    lines.push(`${indent}}`);
   }
 }
 
-function emitFolderViews(node, out, map) {
-  for (const child of [...node.folders.values()].sort((a, b) => a.name.localeCompare(b.name))) {
-    const fqn = map.get(`${child.path}/`);
-    out.push(
-      `  view ${modelId}_${elementId('dir', child.path)} of ${fqn} {`,
-      `    title 'Source — ${esc(child.path)}/ (${child.count} files)'`,
-      "    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'",
-      '    include *',
-      '    autoLayout TopBottom',
-      '  }',
-      '',
-    );
-    emitFolderViews(child, out, map);
+function emitFolderViews(current, lines, pathToFqn) {
+  for (const child of [...current.folders.values()].sort((a, b) => a.name.localeCompare(b.name))) {
+    const fqn = pathToFqn.get(`${child.relativePath}/`);
+    lines.push(`  view ${folderViewId(child.relativePath)} of ${fqn} {`);
+    lines.push(`    title 'Source — ${esc(child.relativePath)}/ (${child.recursiveFileCount} files)'`);
+    lines.push("    description 'STRUCTURE-DERIVED directory view; child files are SOURCE-DERIVED from Git.'");
+    lines.push('    include *', '    autoLayout TopBottom', '  }', '');
+    emitFolderViews(child, lines, pathToFqn);
   }
-}
-
-function register(map, key, fqn) {
-  if (map.has(key)) throw new Error(`Duplicate generated source element: ${key}`);
-  map.set(key, fqn);
-}
-
-function folderCount(node) {
-  let count = node.folders.size;
-  for (const child of node.folders.values()) count += folderCount(child);
-  return count;
-}
-
-function safeId(value) {
-  return value.replace(/[^A-Za-z0-9_-]+/g, '_');
 }
 
 function elementId(prefix, value) {
-  const stem = value
-    .replace(/[^A-Za-z0-9_-]+/g, '_')
-    .replace(/^([^A-Za-z_])/, '_$1')
-    .slice(-48);
-  return `${prefix}_${stem || 'root'}_${createHash('sha1').update(value).digest('hex').slice(0, 8)}`;
+  const stem = value.replace(/[^A-Za-z0-9_-]+/g, '_').replace(/^([^A-Za-z_])/, '_$1').slice(-48);
+  const hash = createHash('sha1').update(value).digest('hex').slice(0, 8);
+  return `${prefix}_${stem || 'root'}_${hash}`;
+}
+
+function folderViewId(relativePath) {
+  return `${modelId}_${elementId('dir', relativePath)}`;
+}
+
+function componentViewId(id) {
+  return `${modelId.replace(/Source$/, '')}Files_${id.replace(/[^A-Za-z0-9_-]+/g, '_')}`;
 }
 
 function urlPath(value) {
@@ -400,8 +345,5 @@ function urlPath(value) {
 }
 
 function esc(value) {
-  return String(value)
-    .replace(/\\/g, '\\\\')
-    .replace(/'/g, "\\'")
-    .replace(/\r?\n/g, ' ');
+  return String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, ' ');
 }
