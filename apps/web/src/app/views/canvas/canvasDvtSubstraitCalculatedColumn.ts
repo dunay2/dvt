@@ -1,6 +1,7 @@
 /** Owned concern: append one calculated output to an admitted connected-source projection. */
 import { fromBinary, toBinary } from '@bufbuild/protobuf';
 import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
+import { allocateDvtFieldId } from '@dvt/contracts/substrait';
 
 import {
   buildDvtSubstraitCalculatedExpression,
@@ -22,10 +23,6 @@ export type DvtSubstraitCalculatedColumnRequest =
       capabilityId: string;
     }>
   | Readonly<{ kind: 'row-number'; alias: string; orderFieldId: string }>;
-
-function calculatedFieldId(targetNodeId: string, alias: string): string {
-  return `field:${targetNodeId}:calculated:${encodeURIComponent(alias)}`;
-}
 
 function directCalculation(
   request: Exclude<DvtSubstraitCalculatedColumnRequest, { kind: 'scalar-function' }>,
@@ -80,7 +77,7 @@ export function appendDvtSubstraitCalculatedColumn(
     (relation) => relation.relAnchor === project.value.common?.relAnchor
   );
   if (targetBinding == null) return draft;
-  const fieldId = calculatedFieldId(inspection.projection.targetNodeId, alias);
+  const fieldId = allocateDvtFieldId();
   const outputOrdinal = inspection.projection.outputs.length;
   const sidecar = {
     ...draft.sidecar,
