@@ -1,0 +1,54 @@
+model {
+  webModel = app 'apps/web' {
+    #asIs
+    description 'React product surface. Presents and edits user intent through API/read boundaries; it does not own canonical run execution state.'
+    metadata {
+      repository 'dunay2/dvt'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      sourceRoot 'apps/web'
+      provenance 'SOURCE-FIRST'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/apps/web 'Pinned app tree'
+
+    sourceEvidence = component 'Source evidence' { #sourceDerived description 'Complete tracked-file inventory at the resolved main SHA.' }
+    bootstrap = component 'Web application bootstrap' { #asIs description 'React entrypoint and top-level providers.' }
+    shell = component 'Application shell' { #asIs description 'Raven shell chrome, navigation, capability/health posture and contextual presentation.' }
+    routing = component 'Route + bootstrap boundary' { #asIs description 'Static/plugin route construction and route readiness/bootstrap behavior.' }
+    plugins = component 'Web plugin registry + contributions' { #asIs description 'Plugin manifests, route/view contributions and canvas strategy boundaries.' }
+    queries = component 'Web query boundary' { #asIs description 'Frontend query hooks used to reflect backend state/capabilities.' }
+    services = component 'Frontend application services' { #asIs description 'Application-facing frontend services and service context.' }
+    stores = component 'Frontend interaction stores' { #asIs description 'Presentation/interaction state only; not canonical execution truth.' }
+    views = component 'Route views' { #asIs description 'Route-level product views.' }
+    platformHealth = component 'Platform health capability' { #asIs description 'Platform health/readiness presentation capability.' }
+    runtimeCapabilities = component 'Runtime capabilities capability' { #asIs description 'Runtime/provider capability discovery surface.' }
+
+    bootstrap .uses shell 'mount app shell'
+    shell .uses routing 'render routed workspace'
+    shell .uses queries 'read backend state/capabilities'
+    shell .uses services 'frontend application services'
+    shell .uses stores 'interaction/presentation state'
+    shell .uses platformHealth 'health posture'
+    shell .uses runtimeCapabilities 'capability posture'
+    routing .uses plugins 'plugin route contributions'
+    routing .uses views 'route views'
+  }
+}
+
+views {
+  view webBoundary of webModel {
+    title 'DVT+ Web — Shell, plugins, state boundaries and source evidence'
+    description 'Source-first Web view. Interaction stores are presentation state; backend/run truth remains outside the UI.'
+    include sourceEvidence with { navigateTo webSourceInventory }
+    include bootstrap with { navigateTo webFiles_bootstrap }
+    include shell with { navigateTo webFiles_shell }
+    include routing with { navigateTo webFiles_routing }
+    include plugins with { navigateTo webFiles_plugins }
+    include queries with { navigateTo webFiles_queries }
+    include services with { navigateTo webFiles_services }
+    include stores with { navigateTo webFiles_stores }
+    include views with { navigateTo webFiles_views }
+    include platformHealth with { navigateTo webFiles_platformHealth }
+    include runtimeCapabilities with { navigateTo webFiles_runtimeCapabilities }
+    autoLayout LeftRight
+  }
+}
