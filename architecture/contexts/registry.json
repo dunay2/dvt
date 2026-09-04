@@ -3,6 +3,8 @@
   "baselineRef": "origin/main",
   "lastValidatedSha": "42504563629f0b998d8a3382ea839eead99a36d1",
   "contexts": [
+    "contracts",
+    "crypto",
     "planner",
     "plan-verifier",
     "plan-interpreter",
@@ -11,7 +13,18 @@
     "artifacts",
     "state-store",
     "delivery",
+    "observability",
+    "observability-otel",
+    "traceability-service",
     "adapter-temporal",
-    "adapter-postgres"
+    "adapter-postgres",
+    "temporal-dbt-plugin",
+    "temporal-http-json-plugin",
+    "temporal-object-file-postgres-plugin",
+    "api",
+    "temporal-worker",
+    "outbox-worker",
+    "projector-worker",
+    "lineage-worker"
   ]
 }
