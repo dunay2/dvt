@@ -56,7 +56,7 @@ const out = [
   '    }',
   "    global = component 'Global evidence views' {",
   '      #sourceDerived',
-  "      description 'Three independent global projections: package manifests, observed imports and logical classification coverage.'",
+  "      description 'Independent projections of package declarations, observed imports, composition reachability and logical classification coverage.'",
   "      dependencies = component 'Workspace dependencies' {",
   '        #sourceDerived',
   "        description 'Edges derived from package.json workspace dependencies.'",
@@ -64,6 +64,10 @@ const out = [
   "      imports = component 'Observed source imports' {",
   '        #sourceDerived',
   "        description 'Edges derived from Dependency Cruiser over the exact main SHA.'",
+  '      }',
+  "      composition = component 'Composition-root reachability' {",
+  '        #sourceDerived',
+  "        description 'Source-verified application roots plus transitive same-app reachability to registered bounded contexts.'",
   '      }',
   `      coverage = component 'Logical source coverage — ${summary.totals.coveragePercent}%' {`,
   '        #sourceDerived',
@@ -88,7 +92,7 @@ out.push("    title 'DVT+ — Source-first architecture home'");
 out.push(
   `    description 'Navigation generated at main@${baselineSha.slice(0, 8)}. Workspace/file existence is source-derived; logical component coverage is declared-and-measured.'`,
 );
-out.push('    include global with { navigateTo componentClassificationCoverage }');
+out.push('    include global with { navigateTo globalEvidenceHome }');
 out.push('    include applications');
 out.push('    include workspaces');
 for (const context of contexts) {
@@ -99,6 +103,7 @@ out.push('    autoLayout LeftRight', '  }', '', '  view globalEvidenceHome of ar
 out.push("    title 'DVT+ — Global architecture evidence'");
 out.push('    include dependencies with { navigateTo workspaceDependencyLandscape }');
 out.push('    include imports with { navigateTo observedImportLandscape }');
+out.push('    include composition with { navigateTo compositionReachabilityLandscape }');
 out.push('    include coverage with { navigateTo componentClassificationCoverage }');
 out.push('    autoLayout LeftRight', '  }', '}', '');
 
@@ -107,10 +112,16 @@ writeFileSync(
   join(generatedDir, 'architecture-home.json'),
   JSON.stringify(
     {
-      schemaVersion: 1,
+      schemaVersion: 2,
       generatedFrom: 'context-registry+component-classification-summary',
       baselineSha,
       contexts,
+      globalViews: [
+        'workspaceDependencyLandscape',
+        'observedImportLandscape',
+        'compositionReachabilityLandscape',
+        'componentClassificationCoverage',
+      ],
       groups: {
         apps: apps.map((item) => item.contextId),
         packages: packages.map((item) => item.contextId),
