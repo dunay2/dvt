@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "components": [
+    {
+      "id": "host",
+      "title": "API process host",
+      "paths": ["src/server.ts"],
+      "rationale": "Owns process startup, Fastify listen lifecycle and reconciler host/watchdog bootstrapping."
+    },
+    {
+      "id": "appComposition",
+      "title": "Fastify application composition",
+      "paths": ["src/app.ts"],
+      "rationale": "Builds Fastify, observability, readiness, operational/protected routes and the protected runtime module."
+    },
+    {
+      "id": "application",
+      "title": "Application services and ports",
+      "prefixes": ["src/application"],
+      "rationale": "Application-facing use cases, authorization/start-run boundaries and explicit ports."
+    },
+    {
+      "id": "domain",
+      "title": "API-owned domain behavior",
+      "prefixes": ["src/domain"],
+      "rationale": "Domain behavior owned by the API bounded application rather than provider adapters."
+    },
+    {
+      "id": "entrypoints",
+      "title": "HTTP entrypoints",
+      "prefixes": ["src/entrypoints"],
+      "rationale": "Inbound HTTP registration and request boundary code."
+    },
+    {
+      "id": "infrastructure",
+      "title": "Infrastructure adapters",
+      "prefixes": ["src/infrastructure"],
+      "rationale": "Concrete infrastructure implementations behind API application boundaries."
+    },
+    {
+      "id": "modules",
+      "title": "Runtime module composition",
+      "prefixes": ["src/modules"],
+      "rationale": "Protected runtime composition and operational hook wiring."
+    },
+    {
+      "id": "plugins",
+      "title": "API plugins",
+      "prefixes": ["src/plugins"],
+      "rationale": "Environment, logging, observability and other host-level plugin concerns."
+    },
+    {
+      "id": "routes",
+      "title": "Operational routes",
+      "prefixes": ["src/routes"],
+      "rationale": "Operational/readiness and route-level behavior."
+    },
+    {
+      "id": "runtime",
+      "title": "API runtime services",
+      "prefixes": ["src/runtime"],
+      "rationale": "Long-lived runtime concerns such as reconciliation health and startup/shutdown coordination."
+    },
+    {
+      "id": "db",
+      "title": "API database support",
+      "prefixes": ["src/db"],
+      "rationale": "API-local database support code that is physically separate from @dvt/adapter-postgres."
+    }
+  ]
+}
