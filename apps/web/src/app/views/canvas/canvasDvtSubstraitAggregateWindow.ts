@@ -305,8 +305,10 @@ export function applyDvtSubstraitPilotAggregateRowNumber(
   const plan = clonePlan(draft.plan);
   const root = plan.relations[0]?.relType;
   if (root?.case !== 'root' || root.value.input?.relType.case !== 'aggregate') return draft;
+  const aggregateRelation = root.value.input.relType;
+  if (aggregateRelation.case !== 'aggregate') return draft;
   const aggregate = root.value.input;
-  const aggregateAnchor = aggregate.relType.value.common?.relAnchor;
+  const aggregateAnchor = aggregateRelation.value.common?.relAnchor;
   const aggregateBinding =
     aggregateAnchor == null
       ? null
