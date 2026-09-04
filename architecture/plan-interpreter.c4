@@ -1,0 +1,39 @@
+model {
+  planInterpreterModel = package '@dvt/plan-interpreter' {
+    #asIs
+    description 'Adapter-agnostic analysis of the executable DAG. Validates dependency structure, computes execution layers and downstream closure; it does not translate frontend view models.'
+    metadata {
+      repository 'dunay2/dvt'
+      baselineSha '42504563629f0b998d8a3382ea839eead99a36d1'
+      sourceRoot 'packages/@dvt/plan-interpreter'
+      provenance 'SOURCE-FIRST'
+    }
+    link https://github.com/dunay2/dvt/tree/42504563629f0b998d8a3382ea839eead99a36d1/packages/%40dvt/plan-interpreter 'Pinned package tree'
+
+    sourceEvidence = component 'Source evidence' { #sourceDerived }
+    publicBoundary = component 'Plan Interpreter public boundary' { #asIs }
+    dagAnalysis = component 'DAG validation + execution layering' {
+      #asIs
+      description 'Validates the executable DAG, computes deterministic execution layers and downstream step closure.'
+    }
+    types = contract 'Interpreter result types' { #asIs }
+    errors = component 'DAG interpretation errors' { #asIs }
+
+    publicBoundary .delegates dagAnalysis 'DAG analysis functions'
+    dagAnalysis .uses types 'typed results'
+    dagAnalysis .uses errors 'fails invalid DAGs'
+  }
+}
+
+views {
+  view planInterpreterBoundary of planInterpreterModel {
+    title 'DVT+ Plan Interpreter — DAG analysis and execution layers'
+    description 'Source-first Plan Interpreter view pinned to main@42504563.'
+    include sourceEvidence with { navigateTo planInterpreterSourceInventory }
+    include publicBoundary with { navigateTo plan-interpreterFiles_publicBoundary }
+    include dagAnalysis with { navigateTo plan-interpreterFiles_dagAnalysis }
+    include types with { navigateTo plan-interpreterFiles_types }
+    include errors with { navigateTo plan-interpreterFiles_errors }
+    autoLayout LeftRight
+  }
+}
