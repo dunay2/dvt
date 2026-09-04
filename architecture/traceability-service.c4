@@ -1,0 +1,42 @@
+model {
+  traceabilityModel = package '@dvt/traceability-service' {
+    #asIs
+    description 'Traceability and lineage evidence service spanning contracts, core validation, adapters, lineage projection and CLI access.'
+    metadata {
+      repository 'dunay2/dvt'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      sourceRoot 'packages/@dvt/traceability-service'
+      provenance 'SOURCE-FIRST'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/traceability-service 'Pinned package tree'
+
+    sourceEvidence = component 'Source evidence' { #sourceDerived description 'Complete tracked-file inventory at the resolved main SHA.' }
+    publicBoundary = contract 'Traceability public boundary' { #asIs description 'Exports traceability contracts/types and service entrypoints.' }
+    service = component 'Traceability service' { #asIs description 'Coordinates traceability behavior across core, adapters and lineage evidence.' }
+    core = component 'Traceability core' { #asIs description 'Core manifest, validation and source-trace behavior.' }
+    adapters = adapter 'Traceability adapters' { #asIs description 'Concrete adapters used behind traceability boundaries.' }
+    lineage = component 'Lineage mapping' { #asIs description 'Maps operational evidence into lineage-oriented representations.' }
+    cli = component 'Traceability CLI' { #asIs description 'Command-line entrypoint over the traceability service.' }
+
+    publicBoundary .uses service 'exports service'
+    service .uses core 'core traceability behavior'
+    service .uses adapters 'infrastructure access'
+    service .uses lineage 'lineage projection'
+    cli .uses service 'CLI facade'
+  }
+}
+
+views {
+  view traceabilityBoundary of traceabilityModel {
+    title 'DVT+ Traceability — Evidence, lineage and source map'
+    description 'Source-first traceability view separating core traceability, adapters and lineage mapping.'
+    include sourceEvidence with { navigateTo traceabilitySourceInventory }
+    include publicBoundary with { navigateTo traceability-serviceFiles_publicBoundary }
+    include service with { navigateTo traceability-serviceFiles_service }
+    include core with { navigateTo traceability-serviceFiles_core }
+    include adapters with { navigateTo traceability-serviceFiles_adapters }
+    include lineage with { navigateTo traceability-serviceFiles_lineage }
+    include cli with { navigateTo traceability-serviceFiles_cli }
+    autoLayout LeftRight
+  }
+}
