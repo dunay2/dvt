@@ -22,6 +22,7 @@ import {
   type DvtSubstraitProjectionDraft,
   type DvtSubstraitProjectionOutput,
   type DvtSubstraitProjectionSemantics,
+  type DvtSubstraitProjectionSource,
 } from './canvasDvtSubstraitProjection';
 
 export type EditableCanvasProjection =
@@ -53,6 +54,25 @@ function sameProjectionSource(
     left.fields.map((field) => field.name).join('\u0000') ===
       right.fields.map((field) => field.name).join('\u0000')
   );
+}
+
+function bindProjectionSourceTypes(
+  targetNodeId: string,
+  source: DvtSubstraitProjectionSource,
+  projection: DvtSubstraitProjectionSemantics
+): DvtSubstraitProjection {
+  return {
+    targetNodeId,
+    source,
+    outputs: projection.outputs.map((output) => ({
+      ...output,
+      dataType:
+        output.calculation == null
+          ? (source.fields.find((field) => field.name === output.sourceFieldName)?.dataType ??
+            'unknown')
+          : output.dataType,
+    })),
+  };
 }
 
 function carryForwardProjectionIdentity(
@@ -194,15 +214,33 @@ export function readEditableCanvasProjectionEntry(args: {
     const nodes = [...nodeIds]
       .map((nodeId) => args.resolveNode(nodeId))
       .filter((node): node is CanonicalNode => node != null);
-    const projection = resolveDvtSubstraitProjectionEntry({
+    const resolved = resolveDvtSubstraitProjectionEntry({
       targetNode: args.targetNode,
       nodes,
       edges: args.edges,
       draft,
     });
-    return projection == null
-      ? { outcome: 'rejected', reason: 'target_not_canonical_transform' }
-      : { outcome: 'ready', projection };
+    if (resolved != null) return { outcome: 'ready', projection: resolved };
+
+    const matchingSources = args.edges
+      .filter((edge) => edge.targetId === args.targetNode.id)
+      .flatMap((edge) => {
+        const node = args.resolveNode(edge.sourceId);
+        const source = node == null ? null : resolveDvtSubstraitProjectionSource(node);
+        return source != null && sameProjectionSource(inspection.projection.source, source)
+          ? [source]
+          : [];
+      });
+    return matchingSources.length === 1
+      ? {
+          outcome: 'ready',
+          projection: bindProjectionSourceTypes(
+            args.targetNode.id,
+            matchingSources[0]!,
+            inspection.projection
+          ),
+        }
+      : { outcome: 'rejected', reason: 'target_not_canonical_transform' };
   } catch {
     return { outcome: 'rejected', reason: 'invalid_transform_authority' };
   }
