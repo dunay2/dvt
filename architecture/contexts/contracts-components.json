@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "components": [
+    {"id":"publicBoundary","title":"Contracts public boundary","paths":["src/index.ts","src/schemas.ts"],"rationale":"Root contract/schema export surface consumed across DVT."},
+    {"id":"contractFamilies","title":"Versioned contract families","prefixes":["src/contracts"],"rationale":"Versioned domain/source/workspace/planner/dbt contract families."},
+    {"id":"substrait","title":"Substrait public boundary","paths":["src/substrait.ts"],"rationale":"Explicit @dvt/contracts/substrait export boundary for pinned Substrait semantics and DVT sidecar contracts."},
+    {"id":"engineCompat","title":"Engine contract compatibility surface","prefixes":["src/engine"],"rationale":"Engine-facing contract surface retained inside the contracts package."},
+    {"id":"schemaPacks","title":"Schema packs","prefixes":["src/schema-packs"],"rationale":"Governed schema-pack definitions and helpers."},
+    {"id":"stepRegistry","title":"Step registry contracts","prefixes":["src/step-registry"],"rationale":"Canonical step-kind registry and executable step contract support."},
+    {"id":"types","title":"Shared contract types","prefixes":["src/types"],"rationale":"Shared contract-owned type definitions."},
+    {"id":"utils","title":"Contract utilities","prefixes":["src/utils"],"rationale":"Utilities owned by contract representation/validation rather than product runtime."},
+    {"id":"errors","title":"Error contracts","paths":["src/errorContract.ts","src/errors.ts"],"rationale":"Versioned error and failure contract surfaces."}
+  ]
+}
