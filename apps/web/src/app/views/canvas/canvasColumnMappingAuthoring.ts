@@ -13,9 +13,22 @@ import {
 import {
   isSimpleCanvasPassthrough,
   persistCanvasProjectionOutputs,
-  readEditableCanvasProjection,
+  readEditableCanvasProjectionEntry,
 } from './canvasColumnProjectionAuthority';
 import type { DvtSubstraitProjectionOutput } from './canvasDvtSubstraitProjection';
+
+function readProjectionEntry(args: {
+  draftSession: CanvasDraftSession;
+  canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
+  targetNode: CanonicalNode;
+}) {
+  return readEditableCanvasProjectionEntry({
+    targetNode: args.targetNode,
+    edges: args.draftSession.workingSet.visibleEdges,
+    resolveNode: (nodeId) =>
+      resolveCanvasSessionNode(args.draftSession, args.canonicalNodesById, nodeId),
+  });
+}
 
 export function applyCanvasColumnMapping(args: {
   draftSession: CanvasDraftSession;
@@ -43,7 +56,11 @@ export function applyCanvasColumnMapping(args: {
   );
   if (sourceColumn == null) return { outcome: 'rejected', reason: 'source_column_not_found' };
 
-  const projectionResult = readEditableCanvasProjection(targetNode);
+  const projectionResult = readProjectionEntry({
+    draftSession: args.draftSession,
+    canonicalNodesById: args.canonicalNodesById,
+    targetNode,
+  });
   if (projectionResult.outcome === 'rejected') return projectionResult;
   if (
     projectionResult.projection != null &&
@@ -99,7 +116,11 @@ export function removeCanvasColumnMapping(args: {
   outputId: string;
   source: CanvasColumnMappingSource;
 }): CanvasColumnMappingResult {
-  const projectionResult = readEditableCanvasProjection(args.targetNode);
+  const projectionResult = readProjectionEntry({
+    draftSession: args.draftSession,
+    canonicalNodesById: args.canonicalNodesById,
+    targetNode: args.targetNode,
+  });
   if (projectionResult.outcome === 'rejected') return projectionResult;
   if (projectionResult.projection == null) {
     return { outcome: 'rejected', reason: 'mapping_not_found' };
