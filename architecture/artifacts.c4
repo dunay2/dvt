@@ -1,0 +1,83 @@
+model {
+  artifactsModel = package '@dvt/artifacts' {
+    #asIs
+    description 'Artifact bounded context for immutable artifact publication, plan storage boundaries, runtime artifact resolution and compiled-code storage/enrichment currently exposed by the package.'
+
+    metadata {
+      repository 'dunay2/dvt'
+      baselineSha '42504563629f0b998d8a3382ea839eead99a36d1'
+      sourceRoot 'packages/@dvt/artifacts'
+      provenance 'SOURCE-FIRST'
+    }
+
+    link https://github.com/dunay2/dvt/tree/42504563629f0b998d8a3382ea839eead99a36d1/packages/%40dvt/artifacts 'Pinned package tree'
+
+    sourceEvidence = component 'Source evidence' {
+      #sourceDerived
+      description 'Machine-generated inventory of every tracked file under @dvt/artifacts at the pinned main SHA.'
+    }
+
+    publicBoundary = component 'Artifacts public boundary' {
+      #asIs
+      description 'Package export surface for ports, runtime readers, content-addressed storage and compiled-code concerns.'
+      link https://github.com/dunay2/dvt/blob/42504563629f0b998d8a3382ea839eead99a36d1/packages/%40dvt/artifacts/src/index.ts 'Source'
+    }
+
+    contentAddressed = store 'Content-addressed artifact storage' {
+      #asIs
+      description 'Immutable content-addressed artifact publication and retrieval boundary with an S3 implementation.'
+    }
+
+    planStorage = port 'Plan artifact storage ports' {
+      #asIs
+      description 'Read/write boundaries for plans and stored plan artifacts; storage semantics are separate from planning decisions.'
+    }
+
+    executionContext = component 'Run execution context artifacts' {
+      #asIs
+      description 'Stores references to run execution contexts and reconstructs exact runtime context from backing artifacts.'
+    }
+
+    dbtBundle = component 'dbt project bundle artifacts' {
+      #asIs
+      description 'Reads dbt project bundles from artifact storage and verifies their binding to execution context.'
+    }
+
+    artifactReadIntegrity = component 'Artifact reading + integrity' {
+      #asIs
+      description 'Shared byte-reading, integrity verification and typed read errors for runtime artifact consumers.'
+    }
+
+    compiledCode = component 'Compiled-code storage + enrichment' {
+      #asIs
+      description 'Current package surface for compiled-code storage adapters, hashing and ExecutionPlan enrichment. Modeled as AS-IS because it remains exported at the pinned main SHA.'
+    }
+
+    publicBoundary .uses contentAddressed 'exports CAS port + S3 implementation'
+    publicBoundary .uses planStorage 'exports plan storage ports'
+    publicBoundary .uses executionContext 'exports runtime context readers/stores'
+    publicBoundary .uses dbtBundle 'exports dbt bundle reader'
+    publicBoundary .uses artifactReadIntegrity 'exports runtime read helpers'
+    publicBoundary .uses compiledCode 'exports compiled-code surface'
+    executionContext .uses artifactReadIntegrity 'reads + verifies referenced artifacts'
+    dbtBundle .uses artifactReadIntegrity 'reads + validates project bundle artifacts'
+  }
+}
+
+views {
+  view artifactsBoundary of artifactsModel {
+    title 'DVT+ Artifacts — Responsibilities, boundaries and source evidence'
+    description 'Source-first Artifacts view pinned to main@42504563. Logical boxes drill into exact Git-derived evidence files.'
+
+    include sourceEvidence with { navigateTo artifactsSourceInventory }
+    include publicBoundary with { navigateTo artifactsFiles_publicBoundary }
+    include contentAddressed with { navigateTo artifactsFiles_contentAddressed }
+    include planStorage with { navigateTo artifactsFiles_planStorage }
+    include executionContext with { navigateTo artifactsFiles_executionContext }
+    include dbtBundle with { navigateTo artifactsFiles_dbtBundle }
+    include artifactReadIntegrity with { navigateTo artifactsFiles_artifactReadIntegrity }
+    include compiledCode with { navigateTo artifactsFiles_compiledCode }
+
+    autoLayout LeftRight
+  }
+}
