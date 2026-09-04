@@ -29,23 +29,48 @@ const contexts = contextIds.map((contextId) => {
   const claims = new Map();
 
   for (const component of inventory.componentMappings ?? []) {
+    const classificationRole = component.classificationRole ?? 'owner';
     for (const path of component.files ?? []) {
       if (!productionSet.has(path)) continue;
-      const owners = claims.get(path) ?? [];
-      owners.push(component.id);
-      claims.set(path, owners);
+      const fileClaims = claims.get(path) ?? [];
+      fileClaims.push({ componentId: component.id, classificationRole });
+      claims.set(path, fileClaims);
     }
   }
 
   const mappedProductionFiles = productionSourceFiles.filter((path) => claims.has(path));
   const unmappedProductionFiles = productionSourceFiles.filter((path) => !claims.has(path));
-  const multiMappedFiles = [...claims.entries()]
-    .filter(([, owners]) => owners.length > 1)
-    .map(([path, owners]) => ({ path, components: [...owners].sort() }))
+  const ownershipConflicts = [...claims.entries()]
+    .map(([path, fileClaims]) => ({
+      path,
+      owners: fileClaims.filter((claim) => claim.classificationRole !== 'aggregate'),
+      aggregates: fileClaims.filter((claim) => claim.classificationRole === 'aggregate'),
+    }))
+    .filter((item) => item.owners.length > 1)
+    .map((item) => ({
+      path: item.path,
+      components: item.owners.map((claim) => claim.componentId).sort(),
+      aggregateViews: item.aggregates.map((claim) => claim.componentId).sort(),
+    }))
     .sort((a, b) => a.path.localeCompare(b.path));
+  const aggregateOverlaps = [...claims.entries()]
+    .map(([path, fileClaims]) => ({
+      path,
+      owners: fileClaims.filter((claim) => claim.classificationRole !== 'aggregate'),
+      aggregates: fileClaims.filter((claim) => claim.classificationRole === 'aggregate'),
+    }))
+    .filter((item) => item.aggregates.length > 0 && item.owners.length > 0)
+    .map((item) => ({
+      path: item.path,
+      owners: item.owners.map((claim) => claim.componentId).sort(),
+      aggregateViews: item.aggregates.map((claim) => claim.componentId).sort(),
+    }))
+    .sort((a, b) => a.path.localeCompare(b.path));
+
   const componentCoverage = (inventory.componentMappings ?? []).map((component) => ({
     id: component.id,
     title: component.title,
+    classificationRole: component.classificationRole ?? 'owner',
     productionFiles: (component.files ?? []).filter((path) => productionSet.has(path)).sort(),
     productionFileCount: (component.files ?? []).filter((path) => productionSet.has(path)).length,
     evidenceFileCount: component.fileCount ?? (component.files ?? []).length,
@@ -63,11 +88,15 @@ const contexts = contextIds.map((contextId) => {
     productionSourceFileCount: productionCount,
     mappedProductionFileCount: mappedCount,
     unmappedProductionFileCount: unmappedProductionFiles.length,
-    multiMappedProductionFileCount: multiMappedFiles.length,
+    ownershipConflictFileCount: ownershipConflicts.length,
+    aggregateOverlapFileCount: aggregateOverlaps.length,
+    multiMappedProductionFileCount: ownershipConflicts.length,
     coveragePercent,
     mappedProductionFiles,
     unmappedProductionFiles,
-    multiMappedFiles,
+    ownershipConflicts,
+    aggregateOverlaps,
+    multiMappedFiles: ownershipConflicts,
     components: componentCoverage,
   };
 });
@@ -77,26 +106,34 @@ const totals = contexts.reduce(
     acc.productionSourceFiles += context.productionSourceFileCount;
     acc.mappedProductionFiles += context.mappedProductionFileCount;
     acc.unmappedProductionFiles += context.unmappedProductionFileCount;
-    acc.multiMappedProductionFiles += context.multiMappedProductionFileCount;
+    acc.ownershipConflictFiles += context.ownershipConflictFileCount;
+    acc.aggregateOverlapFiles += context.aggregateOverlapFileCount;
     return acc;
   },
   {
     productionSourceFiles: 0,
     mappedProductionFiles: 0,
     unmappedProductionFiles: 0,
-    multiMappedProductionFiles: 0,
+    ownershipConflictFiles: 0,
+    aggregateOverlapFiles: 0,
   },
 );
+totals.multiMappedProductionFiles = totals.ownershipConflictFiles;
 totals.coveragePercent =
   totals.productionSourceFiles === 0
     ? 100
     : Number(((totals.mappedProductionFiles / totals.productionSourceFiles) * 100).toFixed(1));
 
 const evidenceBase = {
-  schemaVersion: 2,
+  schemaVersion: 3,
   generatedFrom: 'source-inventory+architecture-declared-component-mappings',
   baselineSha,
   contextCount: contexts.length,
+  semantics: {
+    owner: 'Claims logical ownership/classification of a production source file.',
+    aggregate: 'Provides a parent/overview evidence view and is not counted as a competing owner.',
+    ownershipConflict: 'More than one non-aggregate component claims the same production source file.',
+  },
   totals,
   contexts,
 };
@@ -114,17 +151,20 @@ const ranking = [...contexts]
     productionSourceFiles: context.productionSourceFileCount,
     mappedProductionFiles: context.mappedProductionFileCount,
     unmappedProductionFiles: context.unmappedProductionFileCount,
-    multiMappedProductionFiles: context.multiMappedProductionFileCount,
+    ownershipConflictFiles: context.ownershipConflictFileCount,
+    aggregateOverlapFiles: context.aggregateOverlapFileCount,
+    multiMappedProductionFiles: context.ownershipConflictFileCount,
     coveragePercent: context.coveragePercent,
   }))
   .sort(
     (a, b) =>
       b.unmappedProductionFiles - a.unmappedProductionFiles ||
       a.coveragePercent - b.coveragePercent ||
+      b.ownershipConflictFiles - a.ownershipConflictFiles ||
       a.contextId.localeCompare(b.contextId),
   );
 const summaryBase = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   generatedFrom: 'component-classification-coverage',
   baselineSha,
   totals,
@@ -151,7 +191,7 @@ writeFileSync(
 );
 
 console.log(
-  `Logical classification coverage: ${totals.mappedProductionFiles}/${totals.productionSourceFiles} production source files (${totals.coveragePercent}%) across ${contexts.length} contexts; ${totals.multiMappedProductionFiles} multi-mapped.`,
+  `Logical classification coverage: ${totals.mappedProductionFiles}/${totals.productionSourceFiles} production source files (${totals.coveragePercent}%) across ${contexts.length} contexts; ${totals.ownershipConflictFiles} ownership conflict(s), ${totals.aggregateOverlapFiles} intentional aggregate overlap(s).`,
 );
 console.log(
   `Top classification gaps: ${ranking
@@ -179,7 +219,7 @@ function renderLikeC4(contextsToRender, total) {
     'model {',
     "  classificationCoverage = system 'Architecture source classification coverage' {",
     "    #sourceDerived",
-    `    description 'Measures how much production source is assigned to ARCHITECTURE-DECLARED logical components. Overall ${total.mappedProductionFiles}/${total.productionSourceFiles} (${total.coveragePercent}%).'`,
+    `    description 'Measures how much production source is assigned to ARCHITECTURE-DECLARED logical components. Overall ${total.mappedProductionFiles}/${total.productionSourceFiles} (${total.coveragePercent}%). Aggregate evidence views do not count as competing owners.'`,
   ];
 
   for (const context of contextsToRender) {
@@ -187,7 +227,7 @@ function renderLikeC4(contextsToRender, total) {
     lines.push(`    ${id} = component '${esc(`${context.displayName} — ${context.coveragePercent}%`)}' {`);
     lines.push('      #sourceDerived');
     lines.push(
-      `      description '${esc(`${context.mappedProductionFileCount}/${context.productionSourceFileCount} production source files mapped; ${context.unmappedProductionFileCount} unmapped; ${context.multiMappedProductionFileCount} multi-mapped.`)}'`,
+      `      description '${esc(`${context.mappedProductionFileCount}/${context.productionSourceFileCount} production source files mapped; ${context.unmappedProductionFileCount} unmapped; ${context.ownershipConflictFileCount} ownership conflict(s); ${context.aggregateOverlapFileCount} aggregate overlap(s).`)}'`,
     );
     lines.push('      metadata {');
     lines.push(`        provenance 'SOURCE-DERIVED + ARCHITECTURE-DECLARED'`);
@@ -196,6 +236,8 @@ function renderLikeC4(contextsToRender, total) {
     lines.push(`        coveragePercent '${context.coveragePercent}'`);
     lines.push(`        mappedProductionFiles '${context.mappedProductionFileCount}'`);
     lines.push(`        unmappedProductionFiles '${context.unmappedProductionFileCount}'`);
+    lines.push(`        ownershipConflictFiles '${context.ownershipConflictFileCount}'`);
+    lines.push(`        aggregateOverlapFiles '${context.aggregateOverlapFileCount}'`);
     lines.push('      }');
     lines.push('    }');
   }
@@ -218,7 +260,7 @@ function renderLikeC4(contextsToRender, total) {
     lines.push(`  view ${unmappedViewId(context.contextId)} {`);
     lines.push(`    title 'Unmapped production source — ${esc(context.displayName)}'`);
     lines.push(
-      `    description '${context.unmappedProductionFileCount} production source file(s) exist in Git but are not yet claimed by any ARCHITECTURE-DECLARED logical component.'`,
+      `    description '${context.unmappedProductionFileCount} production source file(s) exist in Git but are not yet claimed by any ARCHITECTURE-DECLARED logical owner.'`,
     );
     for (const path of context.unmappedProductionFiles) {
       lines.push(`    include ${sourceFileFqn(context.sourceModelId, path)}`);
