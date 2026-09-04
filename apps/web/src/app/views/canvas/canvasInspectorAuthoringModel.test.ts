@@ -164,7 +164,7 @@ describe('canvasInspectorAuthoringModel', () => {
     ).toEqual(['finance', 'critical']);
   });
 
-  it('accepts the plugin-owned DBT model SQL field through the shared inspector draft', () => {
+  it('accepts DBT model metadata without a writable SQL field', () => {
     expect(
       validateCanvasInspectorNodeDraft({
         name: 'Orders Model',
@@ -177,7 +177,6 @@ describe('canvasInspectorAuthoringModel', () => {
           tableName: 'orders',
           materialized: 'view',
           selectedSourceId: 'source-orders',
-          modelSql: null,
           projectionColumns: null,
         },
       })
@@ -441,7 +440,6 @@ describe('canvasInspectorAuthoringModel', () => {
         tableName: ' Order Lines ',
         materialized: 'view',
         selectedSourceId: '  source.orders  ',
-        modelSql: '',
         projectionColumns: null,
       },
     };
@@ -470,7 +468,6 @@ describe('canvasInspectorAuthoringModel', () => {
         schemaName: 'curated',
         tableName: 'order_lines',
         selectedSourceId: 'source.orders',
-        modelSql: null,
       },
     });
   });

@@ -16,8 +16,11 @@ interface MonacoAuthorityFixture {
   source: string;
 }
 
-const CANVAS_MONACO_EDITOR_OWNERS = new Set(['views/canvas/DbtModelCodeAuthoringSection.tsx']);
-const CANVAS_MONACO_READ_ONLY_OWNERS = new Set(['views/canvas/DvtTransformOutputView.tsx']);
+const CANVAS_MONACO_EDITOR_OWNERS = new Set<string>();
+const CANVAS_MONACO_READ_ONLY_OWNERS = new Set([
+  'views/canvas/DbtModelCodeAuthoringSection.tsx',
+  'views/canvas/DvtTransformOutputView.tsx',
+]);
 
 const ACCEPTED_MONACO_AUTHORITY_FIXTURES: readonly MonacoAuthorityFixture[] = [
   {

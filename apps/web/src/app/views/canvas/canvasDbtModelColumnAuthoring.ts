@@ -80,9 +80,6 @@ export function setDbtModelProjectionColumnOutput(args: {
     return { outcome: 'rejected', reason: 'column_not_found' };
   }
   const metadata = createDbtNodeAuthoringMetadata(args.node);
-  if (metadata.modelSql != null) {
-    return { outcome: 'rejected', reason: 'not_generated_dbt_model' };
-  }
   const projectionColumns = resolveDbtModelProjectionColumns(
     metadata.projectionColumns,
     availableColumns
@@ -117,9 +114,6 @@ export function reorderDbtModelProjectionColumn(args: {
     return { outcome: 'rejected', reason: 'column_not_found' };
   }
   const metadata = createDbtNodeAuthoringMetadata(args.node);
-  if (metadata.modelSql != null) {
-    return { outcome: 'rejected', reason: 'not_generated_dbt_model' };
-  }
   const projectionColumns = [
     ...resolveDbtModelProjectionColumns(metadata.projectionColumns, availableColumns),
   ];

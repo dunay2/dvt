@@ -139,10 +139,9 @@ export const canvasViewAuthoringCopyEs = {
   inspectorDbtMaterializedLabel: 'Materialización',
   inspectorDbtOriginLabel: 'Entrada',
   inspectorDbtOriginPlaceholder: 'Selecciona un origen conectado',
-  inspectorDbtModelSqlLabel: 'SQL del modelo',
+  inspectorDbtModelSqlLabel: 'Proyección SQL generada',
   inspectorDbtModelSqlGeneratedDetailTemplate:
-    'Artefacto DBT generado: {path}. Edítalo para asumir su autoría.',
-  inspectorDbtModelSqlAuthoredDetailTemplate: 'SQL DBT escrita: {path}.',
+    'Artefacto DBT generado: {path}. Es una proyección de solo lectura.',
   inspectorDbtNoConnectedOriginsMessage: 'No hay orígenes dbt conectados.',
   inspectorDbtOriginKindSourceLabel: 'source',
   inspectorDbtOriginKindModelLabel: 'modelo',

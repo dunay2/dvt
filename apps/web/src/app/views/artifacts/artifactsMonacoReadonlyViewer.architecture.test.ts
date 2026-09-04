@@ -6,7 +6,10 @@ import { describe, expect, it } from 'vitest';
 
 const APP_ROOT = path.resolve(import.meta.dirname, '../..');
 const REPO_ROOT = path.resolve(APP_ROOT, '../../../..');
-const CANVAS_MONACO_READ_ONLY_OWNERS = new Set(['views/canvas/DvtTransformOutputView.tsx']);
+const CANVAS_MONACO_READ_ONLY_OWNERS = new Set([
+  'views/canvas/DbtModelCodeAuthoringSection.tsx',
+  'views/canvas/DvtTransformOutputView.tsx',
+]);
 
 function readAppSource(relativePathFromApp: string): string {
   return readFileSync(path.join(APP_ROOT, relativePathFromApp), 'utf8');
@@ -177,11 +180,7 @@ describe('Artifacts Monaco read-only viewer architecture', () => {
         expect(source, modulePath).not.toContain('MonacoCodeViewer');
       }
       expect(source, modulePath).not.toContain('MonacoDiffViewer');
-      if (canvasModule.endsWith('DbtModelCodeAuthoringSection.tsx')) {
-        expect(source, modulePath).toContain('MonacoCodeEditor');
-      } else {
-        expect(source, modulePath).not.toContain('MonacoCodeEditor');
-      }
+      expect(source, modulePath).not.toContain('MonacoCodeEditor');
     }
   });
 });

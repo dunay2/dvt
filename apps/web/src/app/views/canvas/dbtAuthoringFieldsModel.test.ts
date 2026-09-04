@@ -307,9 +307,16 @@ describe('dbtAuthoringFieldsModel', () => {
     );
   });
 
-  it('projects authored SQL through the same artifact used by execution', () => {
+  it('projects generated SQL even when legacy SQL metadata is present', () => {
     const source = buildDbtSourceNode('source-a', 'Raw Orders', 'raw');
-    const model = buildDbtModelNode();
+    const baseModel = buildDbtModelNode();
+    const model = {
+      ...baseModel,
+      metadata: {
+        ...baseModel.metadata,
+        config: { sql: "select order_id from {{ source('legacy', 'orders') }}" },
+      },
+    };
     const projection = buildDbtAuthoringModelProjection({
       node: model,
       nodes: [source, model],
@@ -317,7 +324,6 @@ describe('dbtAuthoringFieldsModel', () => {
       authoringMetadata: {
         ...createDbtNodeAuthoringMetadata(model),
         selectedSourceId: source.id,
-        modelSql: "select order_id from {{ source('raw', 'orders') }}",
       },
       kindLabels: {
         'dbt:source': 'Source',
@@ -326,9 +332,10 @@ describe('dbtAuthoringFieldsModel', () => {
     });
 
     expect(projection.modelArtifact).toMatchObject({
-      provenance: 'authored',
-      body: "select order_id from {{ source('raw', 'orders') }}",
+      provenance: 'generated',
       path: 'models/orders_model.sql',
     });
+    expect(projection.modelArtifact?.body).toContain("from {{ source('raw', 'orders') }}");
+    expect(projection.modelArtifact?.body).not.toContain("source('legacy', 'orders')");
   });
 });

@@ -32,7 +32,7 @@ export type DbtModelArtifactProjection = Readonly<{
   path: string;
   language: 'sql';
   materialized: string;
-  provenance: 'authored' | 'generated';
+  provenance: 'generated';
   outputColumns: readonly string[];
   body: string;
   content: string;
@@ -240,7 +240,7 @@ function resolveOriginProjection(
     edges: [],
   }).columns.declared.map((column) => column.name);
   const originColumns =
-    authoredOriginColumns.length === 0 && originMetadata.modelSql == null
+    authoredOriginColumns.length === 0
       ? projectDbtModelArtifactInternal(
           { modelNode: origin, nodes: args.nodes, edges: args.edges },
           ancestorModelIds
@@ -319,18 +319,17 @@ function projectDbtModelArtifactInternal(
     return origin;
   }
 
-  const authoredBody = metadata.modelSql;
-  const hasAuthoredBody = authoredBody != null && authoredBody.trim().length > 0;
-  if (!hasAuthoredBody && origin.columnNames.length === 0) {
+  if (origin.columnNames.length === 0) {
     return {
       ok: false,
       reason: 'origin_columns_unavailable',
       message: `DBT model origin "${origin.nodeName}" does not expose canonical columns.`,
     };
   }
-  const projectionRejection = hasAuthoredBody
-    ? null
-    : validateDbtModelProjectionColumns(metadata.projectionColumns, origin.columnNames);
+  const projectionRejection = validateDbtModelProjectionColumns(
+    metadata.projectionColumns,
+    origin.columnNames
+  );
   if (projectionRejection != null) {
     return {
       ok: false,
@@ -344,17 +343,8 @@ function projectDbtModelArtifactInternal(
   )
     .filter((column) => column.output)
     .map((column) => column.name);
-  const body = hasAuthoredBody
-    ? authoredBody
-    : buildGeneratedBody({ ...origin, columnNames: generatedColumnNames });
+  const body = buildGeneratedBody({ ...origin, columnNames: generatedColumnNames });
   const name = normalizeDbtArtifactIdentifier(args.modelNode.name, args.modelNode.id);
-  const outputColumns = hasAuthoredBody
-    ? buildCanvasNodePresentationTruth({
-        node: args.modelNode,
-        nodes: [args.modelNode],
-        edges: [],
-      }).columns.declared.map((column) => column.name)
-    : generatedColumnNames;
 
   return {
     ok: true,
@@ -364,8 +354,8 @@ function projectDbtModelArtifactInternal(
       path: `models/${name}.sql`,
       language: 'sql',
       materialized: metadata.materialized,
-      provenance: hasAuthoredBody ? 'authored' : 'generated',
-      outputColumns,
+      provenance: 'generated',
+      outputColumns: generatedColumnNames,
       body,
       content: buildArtifactContent(metadata.materialized, body),
       origin: {

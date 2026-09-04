@@ -110,8 +110,6 @@ function projectGeneratedDbtModelMenus(args: {
   presentedColumns?: readonly Readonly<{ name: string; type: string }>[];
 }): CanvasColumnFunctionMenuProjection {
   const metadata = createDbtNodeAuthoringMetadata(args.node);
-  if (metadata.modelSql != null)
-    return { hasEditableProjection: false, supportsCalculatedColumns: false };
   const sourceIds = args.edges
     .filter((edge) => edge.targetId === args.node.id)
     .map((edge) => edge.sourceId);

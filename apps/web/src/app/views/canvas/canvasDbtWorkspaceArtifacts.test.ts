@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { buildDbtWorkspaceArtifacts } from './canvasDbtWorkspaceArtifacts';
-import { createGraphDraftMarkedDbtModelSql } from './dbtGraphModelSqlPublicationPolicy';
 
 const sourceNode: CanonicalNode = {
   id: 'source-orders',
@@ -265,8 +264,8 @@ describe('canvas dbt workspace artifacts', () => {
     expect(result.artifacts[1]?.content).not.toContain('select *');
   });
 
-  it('uses authored model SQL as the executable workspace artifact body', () => {
-    const authoredModel: CanonicalNode = {
+  it('regenerates executable SQL instead of adopting legacy model SQL metadata', () => {
+    const legacySqlModel: CanonicalNode = {
       ...modelNode,
       metadata: {
         ...modelNode.metadata,
@@ -277,7 +276,7 @@ describe('canvas dbt workspace artifacts', () => {
     };
 
     const result = buildDbtWorkspaceArtifacts({
-      nodes: [sourceNode, authoredModel],
+      nodes: [sourceNode, legacySqlModel],
       edges: [sourceEdge],
       scopedNodeIds: ['source-orders', 'model-orders'],
     });
@@ -285,11 +284,9 @@ describe('canvas dbt workspace artifacts', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
 
-    expect(result.artifacts[1]?.content).toBe(
-      createGraphDraftMarkedDbtModelSql(
-        "{{ config(materialized='table') }}\n\nselect order_id, amount\nfrom {{ source('raw', 'orders') }}\n"
-      )
-    );
+    expect(result.artifacts[1]?.content).toContain('origin."order_id" as "order_id"');
+    expect(result.artifacts[1]?.content).toContain('origin."customer" as "customer"');
+    expect(result.artifacts[1]?.content).not.toContain('select order_id, amount');
   });
 
   it('serializes free-form model descriptions as valid YAML scalars', () => {

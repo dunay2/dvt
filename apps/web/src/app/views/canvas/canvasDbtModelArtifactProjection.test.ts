@@ -291,7 +291,7 @@ describe('canvas DBT model artifact projection', () => {
     });
   });
 
-  it('uses authored SQL unchanged as the body consumed by the executable artifact', () => {
+  it('does not use legacy SQL to bypass unavailable canonical origin columns', () => {
     const sourceWithoutColumns = {
       ...warehouseSource,
       metadata: {
@@ -299,26 +299,27 @@ describe('canvas DBT model artifact projection', () => {
         columns: undefined,
       },
     };
-    const metadata = {
-      ...createDbtNodeAuthoringMetadata(model),
-      modelSql:
-        "select order_id, amount\nfrom {{ source('warehouse_prod_analytics_erp', 'orders') }}",
+    const modelWithLegacySql = {
+      ...model,
+      metadata: {
+        ...model.metadata,
+        config: {
+          ...(model.metadata?.config as Record<string, unknown>),
+          sql: "select order_id from {{ source('legacy', 'orders') }}",
+        },
+      },
     };
 
     const result = projectDbtModelArtifact({
-      modelNode: model,
-      nodes: [sourceWithoutColumns, model],
+      modelNode: modelWithLegacySql,
+      nodes: [sourceWithoutColumns, modelWithLegacySql],
       edges: [edge(warehouseSource.id)],
-      authoringMetadata: metadata,
     });
 
-    expect(result).toMatchObject({
-      ok: true,
-      artifact: {
-        provenance: 'authored',
-        body: metadata.modelSql,
-        content: `{{ config(materialized='table') }}\n\n${metadata.modelSql}\n`,
-      },
+    expect(result).toEqual({
+      ok: false,
+      reason: 'origin_columns_unavailable',
+      message: 'DBT model origin "Warehouse Orders" does not expose canonical columns.',
     });
   });
 

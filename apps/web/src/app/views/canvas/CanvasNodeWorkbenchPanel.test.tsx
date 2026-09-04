@@ -371,7 +371,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(container.querySelector('[data-slot="dvt-filter-authoring"]')).not.toBeNull();
   });
 
-  it('does not repeat an external code action when the node already supports inline authoring', () => {
+  it('does not repeat an external code action when the node already supports an inline projection', () => {
     act(() => {
       root.render(
         <CanvasNodeWorkbenchPanel
@@ -398,7 +398,8 @@ describe('CanvasNodeWorkbenchPanel', () => {
       fireEvent.click(codeTab!);
     });
 
-    expect(container.querySelector('[data-testid="monaco-code-editor"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="monaco-code-viewer"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="monaco-code-editor"]')).toBeNull();
   });
 
   it('does not synthesize a duplicate code action for a file-backed node', () => {
@@ -688,23 +689,23 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(container.querySelector('[data-slot="scroll-area"]')).not.toBeNull();
   });
 
-  it('renders one DBT model editor in Code without duplicating passive generated SQL', () => {
+  it('renders one read-only DBT SQL projection in Code', () => {
     renderNodePanel(root, MODEL_NODE, 'code');
 
     const codeSection = container.querySelector('[data-slot="canvas-node-workbench-code-section"]');
-    const sqlEditor = codeSection?.querySelector<HTMLTextAreaElement>(
-      '[data-testid="monaco-code-editor"]'
-    );
+    const sqlViewer = codeSection?.querySelector<HTMLElement>('[data-testid="monaco-code-viewer"]');
 
     expect(codeSection).not.toBeNull();
-    expect(sqlEditor?.value).toContain('origin."order_id" as "order_id"');
-    expect(sqlEditor?.value).toContain('origin."discount_code" as "discount_code"');
-    expect(sqlEditor?.value).not.toContain('select *');
-    expect(sqlEditor?.value).toContain('{{ source(');
-    expect(sqlEditor?.dataset.language).toBe('sql');
-    expect(sqlEditor?.dataset.path).toBe('models/orders_model.sql');
+    expect(sqlViewer?.textContent).toContain('origin."order_id" as "order_id"');
+    expect(sqlViewer?.textContent).toContain('origin."discount_code" as "discount_code"');
+    expect(sqlViewer?.textContent).not.toContain('select *');
+    expect(sqlViewer?.textContent).toContain('{{ source(');
+    expect(sqlViewer?.dataset.language).toBe('sql');
+    expect(sqlViewer?.dataset.path).toBe('models/orders_model.sql');
     expect(codeSection?.querySelector('pre')).toBeNull();
-    expect(codeSection?.querySelectorAll('[data-testid="monaco-code-editor"]')).toHaveLength(1);
+    expect(codeSection?.querySelector('[data-testid="monaco-code-editor"]')).toBeNull();
+    expect(codeSection?.querySelectorAll('[data-testid="monaco-code-viewer"]')).toHaveLength(1);
+    expect(codeSection?.textContent).toContain('read-only projection');
     expect(codeSection?.textContent).not.toContain('No properties are recorded for this section.');
   });
 
@@ -835,60 +836,6 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(generalSection?.textContent).toContain('Schema');
     expect(generalSection?.textContent).toContain('dvt');
     expect(generalSection?.textContent).not.toContain('Select a connected origin');
-  });
-
-  it('preserves an empty DBT SQL draft across equivalent graph-node projections', () => {
-    renderNodePanel(root, MODEL_NODE, 'code');
-
-    const sqlEditor = container.querySelector<HTMLTextAreaElement>(
-      '[data-testid="monaco-code-editor"]'
-    );
-    expect(sqlEditor?.value).toContain('origin."order_id" as "order_id"');
-
-    act(() => {
-      fireEvent.change(sqlEditor!, { target: { value: '' } });
-    });
-
-    expect(sqlEditor?.value).toBe('');
-
-    renderNodePanel(
-      root,
-      {
-        ...MODEL_NODE,
-        metadata: { ...MODEL_NODE.metadata },
-      },
-      'code',
-      {
-        canEditNode: true,
-        onApplyNodeDraft: vi.fn(),
-      },
-      2
-    );
-
-    expect(
-      container.querySelector<HTMLTextAreaElement>('[data-testid="monaco-code-editor"]')?.value
-    ).toBe('');
-
-    renderNodePanel(
-      root,
-      {
-        ...MODEL_NODE,
-        metadata: {
-          ...MODEL_NODE.metadata,
-          config: { materialized: 'table' },
-        },
-      },
-      'code',
-      {
-        canEditNode: true,
-        onApplyNodeDraft: vi.fn(),
-      },
-      3
-    );
-
-    expect(
-      container.querySelector<HTMLTextAreaElement>('[data-testid="monaco-code-editor"]')?.value
-    ).toBe('');
   });
 
   it('renders DVT sink target editing in a dedicated Sink tab without duplicating it in General', () => {

@@ -8,7 +8,6 @@ export type DbtNodeAuthoringMetadata = Readonly<{
   tableName: string;
   materialized: string;
   selectedSourceId: string;
-  modelSql: string | null;
   projectionColumns: readonly DbtModelProjectionColumn[] | null;
 }>;
 
@@ -46,10 +45,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function readString(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
-}
-
-function readAuthoredSql(value: unknown): string | null {
-  return typeof value === 'string' && value.trim().length > 0 ? value : null;
 }
 
 function readProjectionColumns(value: unknown): readonly DbtModelProjectionColumn[] | null {
@@ -119,7 +114,6 @@ export function createDbtNodeAuthoringMetadata(node: CanonicalNode): DbtNodeAuth
       readString(dbtMetadata?.materialized) ?? readString(configMetadata?.materialized)
     ),
     selectedSourceId: readString(dbtMetadata?.selectedSourceId) ?? '',
-    modelSql: readAuthoredSql(configMetadata?.sql) ?? readAuthoredSql(node.metadata?.sql),
     projectionColumns: readProjectionColumns(dbtMetadata?.projectionColumns),
   };
 }
@@ -133,8 +127,6 @@ export function applyDbtNodeAuthoringMetadata(
   const { sql: _existingSql, ...configWithoutSql } = existingConfig;
   const schemaName = metadata.schemaName.trim() || DEFAULT_SCHEMA_NAME;
   const tableName = normalizeIdentifier(metadata.tableName, 'table');
-  const modelSql = metadata.modelSql;
-  const hasAuthoredModelSql = modelSql != null && modelSql.trim().length > 0;
   const { sql: _legacyTopLevelSql, ...metadataWithoutLegacyTopLevelSql } = node.metadata ?? {};
 
   return {
@@ -146,7 +138,6 @@ export function applyDbtNodeAuthoringMetadata(
         schema: schemaName,
         table: tableName,
         materialized,
-        ...(node.kind === 'dbt:model' && hasAuthoredModelSql ? { sql: modelSql } : {}),
       },
       dbt: {
         packageName: metadata.packageName.trim() || DEFAULT_PACKAGE_NAME,

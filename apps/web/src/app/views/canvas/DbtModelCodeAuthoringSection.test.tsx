@@ -1,13 +1,10 @@
 // @vitest-environment jsdom
 
-import { fireEvent } from '@testing-library/dom';
-import React, { act, useState } from 'react';
+import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
-import { createCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import { DbtModelCodeAuthoringSection } from './DbtModelCodeAuthoringSection';
 import { buildDbtAuthoringModelProjection } from './dbtAuthoringFieldsModel';
 
@@ -15,27 +12,45 @@ vi.mock('../../components/monaco/MonacoCodeEditor', () => ({
   MonacoCodeEditor: ({
     ariaLabel,
     language,
-    onChange,
     path,
-    readOnly,
     value,
   }: {
     ariaLabel: string;
     language: string;
-    onChange: (value: string) => void;
     path?: string;
-    readOnly?: boolean;
     value: string;
   }) => (
     <textarea
       aria-label={ariaLabel}
       data-language={language}
       data-path={path}
-      data-read-only={readOnly ? 'true' : 'false'}
       data-testid="dbt-model-sql-editor"
-      onChange={(event) => onChange(event.currentTarget.value)}
       value={value}
+      readOnly
     />
+  ),
+}));
+
+vi.mock('../../components/monaco/MonacoCodeViewer', () => ({
+  MonacoCodeViewer: ({
+    ariaLabel,
+    language,
+    path,
+    value,
+  }: {
+    ariaLabel: string;
+    language: string;
+    path?: string;
+    value: string;
+  }) => (
+    <pre
+      aria-label={ariaLabel}
+      data-language={language}
+      data-path={path}
+      data-testid="dbt-model-sql-viewer"
+    >
+      {value}
+    </pre>
   ),
 }));
 
@@ -74,53 +89,36 @@ const edge: CanonicalEdge = {
   relation: 'lineage',
 };
 
-function Harness({ disabled = false }: Readonly<{ disabled?: boolean }>): JSX.Element {
-  const [draft, setDraft] = useState<CanvasInspectorNodeDraft>(() =>
-    createCanvasInspectorNodeDraft(model)
-  );
-  const dbtDraft = draft.dbt!;
+function Harness(): JSX.Element {
   const projection = buildDbtAuthoringModelProjection({
     node: model,
     nodes: [source, model],
     edges: [edge],
-    authoringMetadata: dbtDraft,
+    authoringMetadata: {
+      packageName: 'analytics',
+      sourceName: 'orders_model',
+      schemaName: 'raw',
+      tableName: 'orders_model',
+      materialized: 'view',
+      selectedSourceId: source.id,
+      projectionColumns: null,
+    },
     kindLabels: { 'dbt:source': 'Source', 'dbt:model': 'Model' },
   });
 
-  return (
-    <>
-      <DbtModelCodeAuthoringSection
-        node={model}
-        disabled={disabled}
-        draft={dbtDraft}
-        projection={projection}
-        onChange={setDraft}
-      />
-      <output data-slot="model-sql-draft">{dbtDraft.modelSql}</output>
-    </>
-  );
+  return <DbtModelCodeAuthoringSection node={model} projection={projection} />;
 }
 
 function UnconnectedHarness(): JSX.Element {
-  const [draft, setDraft] = useState<CanvasInspectorNodeDraft>(() =>
-    createCanvasInspectorNodeDraft({
-      ...model,
-      metadata: { dbt: { materialized: 'view' } },
-    })
-  );
-
   return (
     <DbtModelCodeAuthoringSection
       node={model}
-      disabled={false}
-      draft={draft.dbt!}
       projection={{
         originOptions: [],
         selectedOriginId: '',
         modelArtifact: null,
         projectionError: null,
       }}
-      onChange={setDraft}
     />
   );
 }
@@ -143,63 +141,31 @@ describe('DbtModelCodeAuthoringSection', () => {
     container.remove();
   });
 
-  it('shows generated SQL with provenance and turns edits into authored draft SQL', () => {
+  it('shows generated SQL only as a read-only projection', () => {
     act(() => root.render(<Harness />));
 
-    const editor = container.querySelector<HTMLTextAreaElement>(
-      '[data-testid="dbt-model-sql-editor"]'
-    );
-    expect(editor?.value).toBe(
+    const viewer = container.querySelector<HTMLElement>('[data-testid="dbt-model-sql-viewer"]');
+    expect(viewer?.textContent).toBe(
       'select\n  origin."order_id" as "order_id",\n  origin."customer" as "customer"\nfrom {{ source(\'raw\', \'orders\') }} as origin'
     );
+    expect(viewer?.dataset.language).toBe('sql');
+    expect(viewer?.dataset.path).toBe('models/orders_model.sql');
+    expect(container.querySelector('[data-testid="dbt-model-sql-editor"]')).toBeNull();
     expect(
       container.querySelector('[data-slot="dbt-model-code-provenance"]')?.textContent
-    ).toContain('models/orders_model.sql');
-
-    act(() => {
-      fireEvent.input(editor!, {
-        target: { value: "select order_id\nfrom {{ source('raw', 'orders') }}" },
-      });
-    });
-
-    expect(container.querySelector('[data-slot="model-sql-draft"]')?.textContent).toBe(
-      "select order_id\nfrom {{ source('raw', 'orders') }}"
-    );
-    expect(
-      container.querySelector('[data-slot="dbt-model-code-provenance"]')?.textContent
-    ).toContain('Authored');
+    ).toContain('read-only projection');
   });
 
-  it('keeps an explicitly cleared editor empty instead of restoring generated SQL', () => {
-    act(() => root.render(<Harness />));
-
-    const editor = container.querySelector<HTMLTextAreaElement>(
-      '[data-testid="dbt-model-sql-editor"]'
-    );
-    act(() => {
-      fireEvent.input(editor!, { target: { value: '' } });
-    });
-
-    expect(editor?.value).toBe('');
-    expect(container.querySelector('[data-slot="model-sql-draft"]')?.textContent).toBe('');
-  });
-
-  it('shows the empty SQL editor without redundant helper copy', () => {
+  it('shows an empty read-only projection when no artifact is available', () => {
     act(() => root.render(<UnconnectedHarness />));
 
-    expect(container.querySelector('label')?.textContent).toBe('Model SQL');
-    const editor = container.querySelector<HTMLElement>('[data-testid="dbt-model-sql-editor"]');
-    expect(editor).not.toBeNull();
-    expect(editor?.dataset.language).toBe('sql');
-    expect(editor?.dataset.path).toBe('models/orders_model.sql');
+    expect(container.querySelector('label')?.textContent).toBe('Generated SQL projection');
+    const viewer = container.querySelector<HTMLElement>('[data-testid="dbt-model-sql-viewer"]');
+    expect(viewer).not.toBeNull();
+    expect(viewer?.dataset.language).toBe('sql');
+    expect(viewer?.dataset.path).toBe('models/orders_model.sql');
+    expect(viewer?.textContent).toBe('');
     expect(container.querySelector('[data-slot="dbt-model-code-provenance"]')).toBeNull();
-    expect(container.textContent).not.toContain('Define the SQL this node runs.');
-  });
-
-  it('delegates disabled authoring to Monaco read-only mode', () => {
-    act(() => root.render(<Harness disabled />));
-
-    const editor = container.querySelector<HTMLElement>('[data-testid="dbt-model-sql-editor"]');
-    expect(editor?.dataset.readOnly).toBe('true');
+    expect(container.querySelector('[data-testid="dbt-model-sql-editor"]')).toBeNull();
   });
 });

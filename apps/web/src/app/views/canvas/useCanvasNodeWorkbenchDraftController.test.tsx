@@ -113,9 +113,7 @@ describe('useCanvasNodeWorkbenchDraftController', () => {
     expect(harness.getController().draft).toMatchObject({
       name: 'Orders Model',
       tags: ['mart'],
-      dbt: {
-        modelSql: 'select * from {{ ref("orders") }}',
-      },
+      dbt: expect.not.objectContaining({ modelSql: expect.anything() }),
     });
     expect(harness.getController().tagsText).toBe('mart');
   });
@@ -181,44 +179,6 @@ describe('useCanvasNodeWorkbenchDraftController', () => {
     expect(harness.getController().tagsText).toBe('mart, daily');
   });
 
-  it('preserves a dirty empty SQL edit through a same-node authoritative refresh', async () => {
-    await harness.renderNode(MODEL_NODE);
-
-    await act(async () => {
-      harness.getController().onDraftChange((currentDraft) => ({
-        ...currentDraft,
-        dbt: currentDraft.dbt ? { ...currentDraft.dbt, modelSql: '' } : undefined,
-      }));
-    });
-    await harness.renderNode({
-      ...MODEL_NODE,
-      description: 'Refreshed by the graph query',
-    });
-
-    expect(harness.getController().draft.dbt?.modelSql).toBe('');
-    expect(harness.getController().draft.description).toBe('');
-  });
-
-  it('accepts canonical no-SQL authority after an empty SQL draft is applied', async () => {
-    await harness.renderNode(MODEL_NODE);
-
-    await act(async () => {
-      harness.getController().onDraftChange((currentDraft) => ({
-        ...currentDraft,
-        dbt: currentDraft.dbt ? { ...currentDraft.dbt, modelSql: '' } : undefined,
-      }));
-      harness.getController().onDraftSubmitted();
-    });
-    await harness.renderNode({
-      ...MODEL_NODE,
-      metadata: {
-        config: {},
-      },
-    });
-
-    expect(harness.getController().draft.dbt?.modelSql).toBeNull();
-  });
-
   it('accepts every normalization performed by the submitted authoring command', async () => {
     await harness.renderNode(MODEL_NODE);
 
@@ -236,7 +196,6 @@ describe('useCanvasNodeWorkbenchDraftController', () => {
               schemaName: '  curated  ',
               tableName: ' Order Lines ',
               selectedSourceId: '  source.orders  ',
-              modelSql: '',
             }
           : undefined,
       }));
@@ -257,7 +216,6 @@ describe('useCanvasNodeWorkbenchDraftController', () => {
         schemaName: 'curated',
         tableName: 'order_lines',
         selectedSourceId: 'source.orders',
-        modelSql: null,
       },
     });
   });

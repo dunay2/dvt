@@ -147,11 +147,15 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasDbtModelColumnAuthoring.ts
   - apps/web/src/app/views/canvas/canvasColumnFunctionMenuProjection.ts
   - apps/web/src/app/views/canvas/canvasGeneratedDbtModelReplacement.ts
+  - apps/web/src/app/views/canvas/canvasColumnFunctionAuthoring.test.ts
+  - apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts
   - apps/web/src/app/views/canvas/useCanvasControllerReadModel.ts
   - apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts
   - apps/web/src/app/views/canvas/dbtAuthoringFieldsModel.test.ts
   - apps/web/src/app/views/canvas/useCanvasNodeWorkbenchDraftController.test.tsx
   - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx
+  - apps/web/src/app/views/artifacts/artifactsMonacoReadonlyViewer.architecture.test.ts
+  - apps/web/src/app/views/templates/templatesMonacoPreview.architecture.test.ts
   - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
 forbiddenImplementationSurfaces:
   - packages/@dvt/contracts/**

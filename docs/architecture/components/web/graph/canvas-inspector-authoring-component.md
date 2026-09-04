@@ -40,17 +40,26 @@ state as semantic truth, or create a second transform authority.
 There is no separate SQL command, visual-recipe command, column-mapping store, or React Flow
 edge authority for this intent.
 
+The legacy `dbt:model` compatibility surface uses `ConfigureCanvasDbtNode` for supported
+metadata and ordered output selection, then `GenerateDbtWorkspaceArtifacts` to project the
+current graph definition into dbt SQL. Its Code tab is a read-only projection. Neither the
+Inspector draft nor graph metadata accepts generated SQL as an implicit authoring authority.
+Complete migration of that legacy node species onto the shared canonical Substrait Model /
+Transform semantics is tracked separately by issue #2903.
+
 ## Public Contracts
 
-| Contract                           | Responsibility                                        |
-| ---------------------------------- | ----------------------------------------------------- |
-| `CanvasInspectorNodeDraft`         | local semantic editing DTO                            |
-| `DvtNodeAuthoringMetadata`         | source, canonical Transform, and sink authoring union |
-| `DvtTransformAuthoringAuthorityV1` | strict Substrait semantic-document envelope           |
-| `CanvasColumnMappingSource`        | typed source field identity                           |
-| `CanvasColumnMappingTarget`        | typed Transform output identity                       |
-| `CanvasColumnMappingResult`        | applied draft or typed rejection                      |
-| `CanvasColumnLineage`              | derived visible field handles and edges               |
+| Contract                           | Responsibility                                         |
+| ---------------------------------- | ------------------------------------------------------ |
+| `CanvasInspectorNodeDraft`         | local semantic editing DTO                             |
+| `DvtNodeAuthoringMetadata`         | source, canonical Transform, and sink authoring union  |
+| `DvtTransformAuthoringAuthorityV1` | strict Substrait semantic-document envelope            |
+| `CanvasColumnMappingSource`        | typed source field identity                            |
+| `CanvasColumnMappingTarget`        | typed Transform output identity                        |
+| `CanvasColumnMappingResult`        | applied draft or typed rejection                       |
+| `CanvasColumnLineage`              | derived visible field handles and edges                |
+| `DbtNodeAuthoringMetadata`         | legacy dbt compatibility metadata without writable SQL |
+| `DbtModelArtifactProjection`       | generated read-only dbt SQL artifact                   |
 
 An empty Transform is explicitly `uninitialized`. Its first admitted authoring action creates
 one canonical Substrait projection or composition. Removed SQL/VTX1 metadata fails closed.
@@ -67,6 +76,8 @@ Source kind, connection authority and physical provenance.
   renamed Transform.
 - Editable SQL, VTX1 recipes, SQL mirrors, and visual-to-SQL conversion are not supported
   authoring states.
+- A graph-draft `dbt:model` never adopts `metadata.sql` or `metadata.config.sql`; legacy values
+  are stripped when supported metadata is applied and ignored by artifact projection.
 - Column order, output inclusion, functions, aliases, descriptions, and multi-input
   composition are mutations of the canonical semantic document.
 - React Flow field edges are derived lineage projections. Deleting a projected field edge
