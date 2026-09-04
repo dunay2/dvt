@@ -22,6 +22,7 @@ import {
   stringValue,
 } from '../graph/graphNodeCardStrategyUtils';
 import { isCanvasNodePresentationCopy } from '../../components/canvas/canvasNodePresentationCopy.contract';
+import { buildDvtGraphNodeSemanticMetric } from './dvtGraphNodeSemanticMetric';
 
 function buildDvtSubtitle(
   metadata: Record<string, unknown>,
@@ -100,6 +101,8 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
 
   pushRuntimeMetrics(metrics, metadata, runtimeData);
   pushCanonicalCostMetric(metrics, node, metadata, data);
+  const semanticMetric = buildDvtGraphNodeSemanticMetric(node, presentationCopy?.locale);
+  if (semanticMetric != null) metrics.push(semanticMetric);
 
   const operationalSummary = buildGraphNodeOperationalSummary({
     projectionKind: isSourceObject ? 'source' : 'execution',

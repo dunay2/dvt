@@ -257,6 +257,11 @@ export function CanvasNodeWorkbenchPanel({
   const dvtTransformAuthoringMode = readDvtTransformAuthoringMode(node);
   const canonicalSubstraitTransformAuthority =
     dvtTransformAuthoringMode === DVT_TRANSFORM_AUTHORING_MODE.substrait;
+  const canonicalDvtRelationColumnAuthority =
+    canonicalSubstraitTransformAuthority ||
+    (node.kind === 'dvt:source' &&
+      draftController.draft.dvt?.kind === 'source' &&
+      draftController.draft.dvt.semantic != null);
   const baseModel = buildNodePropertiesReadModel({
     node,
     nodes,
@@ -364,7 +369,7 @@ export function CanvasNodeWorkbenchPanel({
         </>
       );
     }
-    if (canonicalSubstraitTransformAuthority) {
+    if (canonicalDvtRelationColumnAuthority) {
       sectionAfterChildren.columns = (
         <>
           {sectionAfterChildren.columns}

@@ -16,7 +16,7 @@ import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthorin
 const source: CanonicalNode = {
   id: 'orders',
   name: 'Orders',
-  pluginId: 'dvt',
+  pluginId: 'dvt.warehouse-source',
   kind: 'dvt:source',
   role: 'input',
   status: 'success',
@@ -97,7 +97,7 @@ function projectionTransform(): CanonicalNode {
 }
 
 describe('Canvas calculated column authoring', () => {
-  it('promotes a physical Source in place and appends a string literal projection', () => {
+  it('appends a string literal projection without changing the Source identity', () => {
     const result = applyCanvasCalculatedColumn({
       draftSession: session(source),
       canonicalNodesById: new Map([[source.id, source]]),
@@ -108,11 +108,12 @@ describe('Canvas calculated column authoring', () => {
     const replacement = result.draftSession.localNodeCatalog?.[source.id];
     expect(replacement).toMatchObject({
       id: source.id,
-      kind: 'dvt:transform',
-      role: 'transform',
+      pluginId: 'dvt.warehouse-source',
+      kind: 'dvt:source',
+      role: 'input',
       metadata: { schema: 'raw', tableName: 'orders' },
     });
-    if (replacement == null) throw new Error('Expected a promoted Transform.');
+    if (replacement == null) throw new Error('Expected an updated Source.');
     expect(inspect(replacement).outputs).toMatchObject([
       { name: 'order_id', sourceFieldName: 'order_id' },
       { name: 'customer', sourceFieldName: 'customer' },
@@ -164,7 +165,7 @@ describe('Canvas calculated column authoring', () => {
     expect(result).toEqual({ outcome: 'rejected' });
     expect(initial.localNodeCatalog?.[source.id]).toBe(source);
   });
-  it('continues authoring timestamp and ordered row-number fields on a promoted Source', () => {
+  it('continues authoring timestamp and ordered row-number fields on the Source', () => {
     const promoted = applyCanvasCalculatedColumn({
       draftSession: session(source),
       canonicalNodesById: new Map([[source.id, source]]),
@@ -175,7 +176,7 @@ describe('Canvas calculated column authoring', () => {
         value: '2026-09-02T12:30:00Z',
       },
     });
-    if (promoted.outcome !== 'applied') throw new Error('Expected Source promotion.');
+    if (promoted.outcome !== 'applied') throw new Error('Expected Source authoring.');
     const rowNumbered = applyCanvasCalculatedColumn({
       draftSession: promoted.draftSession,
       canonicalNodesById: new Map([[source.id, source]]),
@@ -189,7 +190,7 @@ describe('Canvas calculated column authoring', () => {
     expect(rowNumbered.outcome).toBe('applied');
     if (rowNumbered.outcome !== 'applied') return;
     const replacement = rowNumbered.draftSession.localNodeCatalog?.[source.id];
-    if (replacement == null) throw new Error('Expected updated promoted Transform.');
+    if (replacement == null) throw new Error('Expected updated Source.');
     expect(inspect(replacement).outputs.slice(-2)).toMatchObject([
       {
         name: 'loaded_at',

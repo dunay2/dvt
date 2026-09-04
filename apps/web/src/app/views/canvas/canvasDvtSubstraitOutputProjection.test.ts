@@ -4,6 +4,11 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { projectDvtSubstraitTransformOutputToPostgresSql } from './canvasDvtSubstraitOutputProjection';
 import {
+  applyDvtSubstraitFilter,
+  encodeDvtSubstraitFilterDocument,
+  resolveDvtSubstraitFilterCapabilities,
+} from './canvasDvtSubstraitFilter';
+import {
   createDvtSubstraitProjectionDraft,
   encodeDvtSubstraitProjectionDocument,
   resolveDvtSubstraitProjectionSource,
@@ -103,5 +108,41 @@ describe('DVT Substrait output projection', () => {
         edges: [EDGE],
       })
     ).rejects.toThrow('source identities do not match');
+  });
+
+  it('projects a connected FilterRel from the exact canonical revision', async () => {
+    const source = resolveDvtSubstraitProjectionSource(SOURCE);
+    const capability = resolveDvtSubstraitFilterCapabilities({
+      dataType: 'text',
+      provider: 'postgres',
+    })[0];
+    if (source == null || capability == null) throw new Error('Expected admitted filter fixtures.');
+    const filtered = applyDvtSubstraitFilter(
+      createDvtSubstraitProjectionDraft({
+        source,
+        targetNodeId: TRANSFORM.id,
+        outputs: [
+          { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
+          { fieldId: 'output:customer', name: 'customer', sourceFieldName: 'customer' },
+        ],
+      }),
+      {
+        fieldId: 'output:customer',
+        dataType: 'text',
+        capabilityId: capability.capabilityId,
+        value: 'Ada',
+      }
+    );
+    const transform = applyDvtSubstraitSemanticDocument(
+      TRANSFORM,
+      encodeDvtSubstraitFilterDocument(filtered)
+    );
+
+    const sql = await projectDvtSubstraitTransformOutputToPostgresSql({
+      transformNode: transform,
+      nodes: [SOURCE, transform],
+      edges: [EDGE],
+    });
+    expect(sql.replaceAll(/\s+/g, ' ')).toMatch(/where customer = 'Ada'/i);
   });
 });

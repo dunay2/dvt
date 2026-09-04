@@ -47,6 +47,18 @@ export function pgStringLiteral(value: string): PostgresAstNode {
   return { A_Const: { sval: { sval: value } } };
 }
 
+export function pgEquals(left: PostgresAstNode, right: PostgresAstNode): PostgresAstNode {
+  return {
+    A_Expr: {
+      kind: 'AEXPR_OP',
+      name: [pgString('=')],
+      lexpr: left,
+      rexpr: right,
+      location: -1,
+    },
+  };
+}
+
 export function pgTimestampTzLiteral(value: string): PostgresAstNode {
   return {
     TypeCast: {

@@ -26,6 +26,23 @@ function buildTransformNode(metadata: CanonicalNode['metadata'] = {}): Canonical
   };
 }
 
+function buildSourceNode(metadata: CanonicalNode['metadata'] = {}): CanonicalNode {
+  return {
+    id: 'source-orders',
+    name: 'Orders',
+    pluginId: 'dvt.warehouse-source',
+    kind: 'dvt:source',
+    role: 'input',
+    status: 'success',
+    tags: ['source'],
+    metadata: {
+      schema: 'raw',
+      tableName: 'orders',
+      ...metadata,
+    },
+  };
+}
+
 function buildSemanticDocument(): ReturnType<typeof encodeDvtSubstraitPilotDocument> {
   return encodeDvtSubstraitPilotDocument(
     createDvtSubstraitPilotDraft({
@@ -94,10 +111,24 @@ describe('DVT transform authoring authority', () => {
     });
   });
 
-  it('rejects non-Transform nodes and malformed canonical metadata', () => {
+  it('persists canonical semantics on a Source without changing its physical identity', () => {
+    const semanticDocument = buildSemanticDocument();
+    const source = applyDvtSubstraitSemanticDocument(buildSourceNode(), semanticDocument);
+
+    expect(source).toMatchObject({
+      id: 'source-orders',
+      pluginId: 'dvt.warehouse-source',
+      kind: 'dvt:source',
+      role: 'input',
+      metadata: { schema: 'raw', tableName: 'orders' },
+    });
+    expect(readDvtTransformAuthoringAuthority(source)?.semanticDocument).toEqual(semanticDocument);
+  });
+
+  it('rejects non-semantic nodes and malformed canonical metadata', () => {
     expect(() =>
-      readDvtTransformAuthoringAuthority({ ...buildTransformNode(), kind: 'dvt:source' })
-    ).toThrow('DVT transform authoring authority requires a dvt:transform node.');
+      readDvtTransformAuthoringAuthority({ ...buildTransformNode(), kind: 'dvt:sink' })
+    ).toThrow('DVT semantic authoring authority requires a DVT Source or Transform node.');
     expect(() =>
       readDvtTransformAuthoringAuthority(
         buildTransformNode({ transformAuthoring: { version: 'v1', mode: 'substrait' } })

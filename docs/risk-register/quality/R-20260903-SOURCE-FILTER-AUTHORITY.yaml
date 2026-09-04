@@ -1,0 +1,21 @@
+---
+id: R-20260903-SOURCE-FILTER-AUTHORITY
+title: Source operations could diverge from canonical Substrait authority
+status: Open
+date: 2026-09-03
+owners:
+  - '@dvt/contracts'
+  - '@dvt/web'
+severity: Medium
+probability: Low
+---
+mitigations:
+  - Admit only the exact standard FilterRel capability with explicit visual and PostgreSQL evidence.
+  - Persist operations through ConfigureCanvasDvtNode in the existing semantic envelope.
+  - Preserve Source kind, connection authority and stable field provenance across reload.
+  - Reject unsupported shapes, fields, types, providers and capabilities before draft mutation.
+  - Keep broader operation parity and semantic Preview execution explicit in issue #2894.
+
+evidence:
+  - docs/evidence/ED-20260903-source-filter-capability-admission.md
+  - docs/planning/proposals/mandatory/frontend-and-ux/canvas-source-semantic-operations-plan-20260903.md
