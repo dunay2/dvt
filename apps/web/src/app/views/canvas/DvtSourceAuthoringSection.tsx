@@ -84,10 +84,6 @@ export function DvtSourceAuthoringSection({
           </span>
           <code className="mt-1 block truncate text-(--text-default)">{sourceTarget}</code>
         </div>
-        <div>
-          <span className="block text-(--text-muted)">{canvasViewCopy.inspectorDvtAliasLabel}</span>
-          <code className="mt-1 block truncate text-(--text-default)">{draft.alias || '-'}</code>
-        </div>
       </div>
       <div className="grid grid-cols-1 gap-3">
         <div className="space-y-2">
