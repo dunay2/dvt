@@ -13,6 +13,10 @@ import {
 } from './canvasDvtSubstraitProjection';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+
+const OPAQUE_FIELD_ID =
+  /^dvt_fld_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 const source: CanonicalNode = {
   id: 'orders',
   name: 'Orders',
@@ -149,11 +153,14 @@ describe('Canvas calculated column authoring', () => {
     if (result.outcome !== 'applied') return;
     const replacement = result.draftSession.localNodeCatalog?.[transform.id];
     if (replacement == null) throw new Error('Expected an updated Transform.');
-    expect(inspect(replacement).outputs.at(-1)).toMatchObject({
+    const created = inspect(replacement).outputs.at(-1);
+    expect(created).toMatchObject({
       name: 'customer_clean',
       sourceFieldName: 'customer',
       operations: ['trim'],
     });
+    expect(created?.fieldId).toMatch(OPAQUE_FIELD_ID);
+    expect(created?.fieldId).not.toContain('customer_clean');
   });
   it('rejects a duplicate alias without changing the draft', () => {
     const initial = session(source);
