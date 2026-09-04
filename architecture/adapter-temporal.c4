@@ -38,11 +38,17 @@ model {
     }
     stateWriteProtection = component 'Run-state command circuit breaker' { #asIs }
     observability = component 'Temporal observability + error policy' { #asIs }
+    engineTypes = contract 'Engine type bridge' {
+      #asIs
+      description 'Adapter-local Engine-facing type compatibility surface; it does not own Engine semantics.'
+    }
 
     publicBoundary .uses providerAdapter 'exports adapter'
     publicBoundary .uses workerHost 'exports worker host'
+    publicBoundary .uses engineTypes 'exports Engine-facing adapter types'
     providerAdapter .uses temporalClient 'provider API calls'
     providerAdapter .uses policyMapping 'Temporal-specific translation'
+    providerAdapter .uses engineTypes 'Engine-facing type bridge'
     workerHost .uses workflowRuntime 'hosts workflow code'
     workerHost .uses activities 'registers activities'
     activities .uses stepPlugins 'dispatches step capability'
@@ -56,7 +62,7 @@ model {
 views {
   view temporalAdapterBoundary of temporalAdapterModel {
     title 'DVT+ Temporal Adapter — Provider translation and runtime composition'
-    description 'Source-first Temporal adapter view pinned to main@42504563.'
+    description 'Source-first Temporal adapter view pinned to the resolved main SHA.'
 
     include sourceEvidence with { navigateTo temporalAdapterSourceInventory }
     include publicBoundary with { navigateTo adapter-temporalFiles_publicBoundary }
@@ -69,6 +75,7 @@ views {
     include policyMapping with { navigateTo adapter-temporalFiles_policyMapping }
     include stateWriteProtection with { navigateTo adapter-temporalFiles_stateWriteProtection }
     include observability with { navigateTo adapter-temporalFiles_observability }
+    include engineTypes with { navigateTo adapter-temporalFiles_engineTypes }
 
     autoLayout LeftRight
   }
