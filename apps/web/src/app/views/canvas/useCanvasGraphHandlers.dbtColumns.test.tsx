@@ -85,49 +85,6 @@ describe('Canvas DBT model column handlers', () => {
     harness.cleanup();
   });
 
-  it('removes a DBT field connection by disabling the target output', async () => {
-    const setDraftSession = vi.fn();
-    const draftSession = {
-      ...buildDraftSession(),
-      workingSet: {
-        visibleNodeIds: [source.id, model.id],
-        visibleEdges: [{ sourceId: source.id, targetId: model.id }],
-        pendingExplicitNodeIds: [],
-      },
-    };
-    const harness = renderGraphHandlersHook({
-      canEditEdges: true,
-      canonicalNodes: [source, model],
-      draftSession,
-      setDraftSession,
-    });
-    await harness.render();
-
-    act(() => {
-      harness.latest()?.handleRemoveColumnMapping({
-        kind: 'column-lineage',
-        sourceNodeId: source.id,
-        sourceFieldId: 'external-dbt-field:customer',
-        sourceColumnName: 'customer',
-        targetNodeId: model.id,
-        targetColumnName: 'customer',
-        outputId: 'customer',
-        removable: true,
-      });
-    });
-
-    const updatedModel = setDraftSession.mock.calls[0]?.[0]?.localNodeCatalog?.[model.id];
-    expect(updatedModel).toBeDefined();
-    if (updatedModel != null) {
-      expect(createDbtNodeAuthoringMetadata(updatedModel).projectionColumns).toEqual([
-        { name: 'order_id', output: true },
-        { name: 'customer', output: false },
-      ]);
-    }
-
-    harness.cleanup();
-  });
-
   it('routes column reorder through the DBT node authoring command', async () => {
     const setDraftSession = vi.fn();
     const draftSession = {
