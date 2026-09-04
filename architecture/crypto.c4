@@ -1,0 +1,45 @@
+model {
+  cryptoModel = package '@dvt/crypto' {
+    #asIs
+    description 'Central authority for JCS canonicalization, hashes, encoding, secure randomness and UUID primitives.'
+    metadata {
+      repository 'dunay2/dvt'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      sourceRoot 'packages/@dvt/crypto'
+      provenance 'SOURCE-FIRST'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/crypto 'Pinned package tree'
+
+    sourceEvidence = component 'Source evidence' { #sourceDerived description 'Complete tracked-file inventory at the resolved main SHA.' }
+    publicBoundary = component 'Crypto public boundary' { #asIs description 'Single export surface for DVT cryptographic/canonicalization primitives.' }
+    jcs = component 'JCS canonicalization' { #asIs description 'Canonical JSON representation.' }
+    sha256 = component 'SHA-256' { #asIs description 'Canonical SHA-256 hashing primitive.' }
+    md5 = component 'MD5 compatibility' { #asIs description 'Compatibility-only MD5 primitive.' }
+    uuid = component 'UUID generation' { #asIs description 'Central UUID generation.' }
+    random = component 'Secure randomness' { #asIs description 'Secure random primitive.' }
+    encoding = component 'Encoding primitives' { #asIs description 'UTF-8/base64 and binary encoding helpers.' }
+
+    publicBoundary .uses jcs 'exports canonicalization'
+    publicBoundary .uses sha256 'exports SHA-256'
+    publicBoundary .uses md5 'exports compatibility MD5'
+    publicBoundary .uses uuid 'exports UUID'
+    publicBoundary .uses random 'exports secure random'
+    publicBoundary .uses encoding 'exports encoding'
+  }
+}
+
+views {
+  view cryptoBoundary of cryptoModel {
+    title 'DVT+ Crypto — Primitive authority and source evidence'
+    description 'Source-first view of the centralized crypto/canonicalization authority.'
+    include sourceEvidence with { navigateTo cryptoSourceInventory }
+    include publicBoundary with { navigateTo cryptoFiles_publicBoundary }
+    include jcs with { navigateTo cryptoFiles_jcs }
+    include sha256 with { navigateTo cryptoFiles_sha256 }
+    include md5 with { navigateTo cryptoFiles_md5 }
+    include uuid with { navigateTo cryptoFiles_uuid }
+    include random with { navigateTo cryptoFiles_random }
+    include encoding with { navigateTo cryptoFiles_encoding }
+    autoLayout LeftRight
+  }
+}
