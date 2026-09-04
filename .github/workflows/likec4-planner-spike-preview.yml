@@ -1,6 +1,9 @@
 name: LikeC4 source-first architecture preview
 
 on:
+  push:
+    branches:
+      - spike/likec4-planner-source-first
   workflow_dispatch:
 
 permissions:
@@ -20,18 +23,16 @@ jobs:
 
       - name: Generate source-first evidence
         run: |
-          node architecture/tools/generate-source-first-context.mjs planner
-          node architecture/tools/generate-source-first-context.mjs artifacts
-          node architecture/tools/generate-source-first-context.mjs state-store
-          node architecture/tools/generate-source-first-context.mjs delivery
-          node architecture/tools/generate-source-first-context.mjs engine
+          for context in planner plan-verifier plan-interpreter engine run-domain artifacts state-store delivery adapter-temporal adapter-postgres; do
+            node architecture/tools/generate-source-first-context.mjs "$context"
+          done
 
       - name: Stage combined LikeC4 workspace
         run: |
           rm -rf .source-first-likec4-preview
           mkdir -p .source-first-likec4-preview .architecture-evidence
           cp architecture/specification.c4 .source-first-likec4-preview/specification.c4
-          for context in planner artifacts state-store delivery engine; do
+          for context in planner plan-verifier plan-interpreter engine run-domain artifacts state-store delivery adapter-temporal adapter-postgres; do
             cp "architecture/${context}.c4" ".source-first-likec4-preview/${context}.c4"
             cp "architecture/generated/${context}-source.c4" ".source-first-likec4-preview/${context}-source.c4"
             cp "architecture/generated/${context}-inventory.json" ".architecture-evidence/${context}-inventory.json"
@@ -48,7 +49,7 @@ jobs:
               "status": "manual-spike",
               "repository": "dunay2/dvt",
               "baselineSha": "42504563629f0b998d8a3382ea839eead99a36d1",
-              "contexts": "planner,artifacts,state-store,delivery,engine"
+              "contexts": "planner,plan-verifier,plan-interpreter,engine,run-domain,artifacts,state-store,delivery,adapter-temporal,adapter-postgres"
             }
           }
           JSON
