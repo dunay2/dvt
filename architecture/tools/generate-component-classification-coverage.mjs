@@ -57,7 +57,8 @@ const contexts = contextIds.map((contextId) => {
   return {
     contextId,
     displayName: baseline.displayName ?? contextId,
-    modelId: baseline.modelId,
+    logicalModelId: inventory.logicalModelId,
+    sourceModelId: inventory.sourceModelId,
     scope: baseline.scope,
     productionSourceFileCount: productionCount,
     mappedProductionFileCount: mappedCount,
@@ -92,7 +93,7 @@ totals.coveragePercent =
     : Number(((totals.mappedProductionFiles / totals.productionSourceFiles) * 100).toFixed(1));
 
 const evidenceBase = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   generatedFrom: 'source-inventory+architecture-declared-component-mappings',
   baselineSha,
   contextCount: contexts.length,
@@ -160,19 +161,64 @@ function renderLikeC4(contextsToRender, total) {
   lines.push('  }', '}', '', 'views {', '  view componentClassificationCoverage of classificationCoverage {');
   lines.push("    title 'DVT+ — Logical component source coverage'");
   lines.push(
-    `    description 'Coverage of production source files by ARCHITECTURE-DECLARED component mappings at main@${baselineSha.slice(0, 8)}. Low coverage is visible evidence, not silently filled in.'`,
+    `    description 'Coverage of production source files by ARCHITECTURE-DECLARED component mappings at main@${baselineSha.slice(0, 8)}. Click a context with gaps to inspect its unmapped production files.'`,
   );
   for (const context of contextsToRender) {
     lines.push(`    include ${coverageElementId(context.contextId)} with {`);
-    lines.push(`      navigateTo ${context.modelId}Inventory`);
+    lines.push(
+      `      navigateTo ${context.unmappedProductionFileCount ? unmappedViewId(context.contextId) : `${context.sourceModelId}Inventory`}`,
+    );
     lines.push('    }');
   }
-  lines.push('    autoLayout LeftRight', '  }', '}', '');
+  lines.push('    autoLayout LeftRight', '  }', '');
+
+  for (const context of contextsToRender) {
+    if (!context.unmappedProductionFileCount) continue;
+    lines.push(`  view ${unmappedViewId(context.contextId)} {`);
+    lines.push(`    title 'Unmapped production source — ${esc(context.displayName)}'`);
+    lines.push(
+      `    description '${context.unmappedProductionFileCount} production source file(s) exist in Git but are not yet claimed by any ARCHITECTURE-DECLARED logical component.'`,
+    );
+    for (const path of context.unmappedProductionFiles) {
+      lines.push(`    include ${sourceFileFqn(context.sourceModelId, path)}`);
+    }
+    lines.push('    autoLayout TopBottom', '  }', '');
+  }
+
+  lines.push('}', '');
   return lines.join('\n');
 }
 
+function sourceFileFqn(sourceModelId, relativePath) {
+  const parts = relativePath.split('/');
+  parts.pop();
+  let fqn = sourceModelId;
+  let currentPath = '';
+  for (const part of parts) {
+    currentPath = currentPath ? `${currentPath}/${part}` : part;
+    fqn += `.${elementId('dir', currentPath)}`;
+  }
+  return `${fqn}.${elementId('file', relativePath)}`;
+}
+
+function elementId(prefix, value) {
+  const stem = value
+    .replace(/[^A-Za-z0-9_-]+/g, '_')
+    .replace(/^([^A-Za-z_])/, '_$1')
+    .slice(-48);
+  return `${prefix}_${stem || 'root'}_${createHash('sha1').update(value).digest('hex').slice(0, 8)}`;
+}
+
 function coverageElementId(contextId) {
-  return `coverage_${contextId.replace(/[^A-Za-z0-9_-]+/g, '_')}`;
+  return `coverage_${safeId(contextId)}`;
+}
+
+function unmappedViewId(contextId) {
+  return `unmappedProduction_${safeId(contextId)}`;
+}
+
+function safeId(value) {
+  return value.replace(/[^A-Za-z0-9_-]+/g, '_');
 }
 
 function esc(value) {
