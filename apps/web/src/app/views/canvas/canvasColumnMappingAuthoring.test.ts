@@ -224,7 +224,7 @@ describe('Canvas column mapping authoring', () => {
       fieldId: 'output:event_id',
       sourceFieldName: 'renamed_id',
     });
-    expect(inspection.projection.source.nodeId).toBe('source-2');
+    expect(inspection.projection.source.sourceRef.sourceObjectId).toBe('public.source-2');
   });
 
   it('keeps the source type when a prospective target has no declared type yet', () => {
