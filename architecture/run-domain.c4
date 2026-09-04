@@ -1,0 +1,49 @@
+model {
+  runDomainModel = package '@dvt/run-domain' {
+    #asIs
+    description 'Provider-independent run lifecycle rules. Folds persisted run events into derived snapshots, validates transitions and normalizes projectable events.'
+    metadata {
+      repository 'dunay2/dvt'
+      baselineSha '42504563629f0b998d8a3382ea839eead99a36d1'
+      sourceRoot 'packages/@dvt/run-domain'
+      provenance 'SOURCE-FIRST'
+    }
+    link https://github.com/dunay2/dvt/tree/42504563629f0b998d8a3382ea839eead99a36d1/packages/%40dvt/run-domain 'Pinned package tree'
+
+    sourceEvidence = component 'Source evidence' { #sourceDerived }
+    publicBoundary = component 'Run Domain public boundary' { #asIs }
+    eventFolding = component 'Run event folding' {
+      #asIs
+      description 'Applies canonical persisted events to derived workflow state.'
+    }
+    transitionPolicy = component 'Run transition policy' {
+      #asIs
+      description 'Defines legal lifecycle/terminal transitions independently from providers.'
+    }
+    projectionMapping = component 'Projectable event mapping' {
+      #asIs
+      description 'Maps persisted event envelopes to normalized projectable events.'
+    }
+    errors = component 'Run-domain invariant errors' { #asIs }
+
+    publicBoundary .uses eventFolding 'exports event fold'
+    publicBoundary .uses transitionPolicy 'exports transition rules'
+    publicBoundary .uses projectionMapping 'exports projection normalization'
+    eventFolding .uses transitionPolicy 'guards legal transitions'
+    eventFolding .uses errors 'fails invalid state transitions'
+  }
+}
+
+views {
+  view runDomainBoundary of runDomainModel {
+    title 'DVT+ Run Domain — Canonical lifecycle rules'
+    description 'Source-first Run Domain view pinned to main@42504563.'
+    include sourceEvidence with { navigateTo runDomainSourceInventory }
+    include publicBoundary with { navigateTo run-domainFiles_publicBoundary }
+    include eventFolding with { navigateTo run-domainFiles_eventFolding }
+    include transitionPolicy with { navigateTo run-domainFiles_transitionPolicy }
+    include projectionMapping with { navigateTo run-domainFiles_projectionMapping }
+    include errors with { navigateTo run-domainFiles_errors }
+    autoLayout LeftRight
+  }
+}
