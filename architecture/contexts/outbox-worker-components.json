@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "components": [
+    {"id":"host","title":"Outbox worker process host","paths":["src/server.ts"],"rationale":"Owns the process entrypoint and worker lifecycle."},
+    {"id":"hostComposition","title":"Outbox host composition","prefixes":["src/host"],"rationale":"Composes the outbox worker runtime and host dependencies."},
+    {"id":"runtime","title":"Outbox runtime","prefixes":["src/runtime"],"rationale":"Long-lived runtime behavior built around @dvt/delivery outbox movement."},
+    {"id":"ownership","title":"Shard ownership","prefixes":["src/ownership"],"rationale":"Worker-side shard ownership/assignment behavior."},
+    {"id":"bus","title":"Event bus integration","prefixes":["src/bus"],"rationale":"Concrete event transport integration used by the worker."},
+    {"id":"db","title":"Outbox database composition","prefixes":["src/db"],"rationale":"Database composition and adapter wiring for outbox persistence."},
+    {"id":"lifecycle","title":"Outbox lifecycle support","prefixes":["src/lifecycle"],"rationale":"Worker lifecycle and retention/support behavior."},
+    {"id":"ops","title":"Outbox operations","prefixes":["src/ops"],"rationale":"Operational concerns and diagnostics."},
+    {"id":"plugins","title":"Outbox host plugins","prefixes":["src/plugins"],"rationale":"Host-level plugin/configuration concerns."}
+  ]
+}
