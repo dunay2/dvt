@@ -77,7 +77,6 @@ const EXACT_PACKAGE_SCRIPT_DOMAINS = new Map([
   ['pr:checks', 'developer-workflow'],
   ['pr:checks:json', 'developer-workflow'],
   ['pr:checks:first-failure', 'developer-workflow'],
-  ['postgit:format', 'developer-workflow'],
   ['test:ai-preflight', 'test-tooling'],
   ['test:verify-prepush', 'test-tooling'],
   ['test:pr-closeout', 'test-tooling'],
@@ -154,7 +153,7 @@ const SCRIPT_FILE_RULES = [
   [/^scripts\/lib\/feature-mechanization-manifest\.cjs$/u, 'docs-governance'],
   [/^tools\/docs\/.+\.ts$/u, 'docs-governance'],
   [
-    /^scripts\/(ai-preflight|closeout-changed|commit|fix-changed|format-git-operation-changes|format-markdown-changed|git-local-changes|local-validation-plan|pr-closeout|run-determinism-precommit|setup-git-hooks|validate-pr-title|verify-changed|verify-prepush)\.cjs$/u,
+    /^scripts\/(ai-preflight|closeout-changed|commit|fix-changed|format-markdown-changed|git-local-changes|local-validation-plan|pr-closeout|run-determinism-precommit|setup-git-hooks|validate-pr-title|verify-changed|verify-prepush)\.cjs$/u,
     'developer-workflow',
   ],
   [
