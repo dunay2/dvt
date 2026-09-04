@@ -28,6 +28,8 @@ import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProj
 const UUID_V7 = '[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}';
 const DVT_FIELD_ID = new RegExp(`^dvt_fld_${UUID_V7}$`, 'i');
 
+type PilotField = Readonly<{ name: string; fieldId: string; outputOrdinal: number }>;
+
 function pilot(): DvtSubstraitPilotDraft {
   return createDvtSubstraitPilotDraft({
     sourceNodeId: 'source-customers',
@@ -35,7 +37,7 @@ function pilot(): DvtSubstraitPilotDraft {
   });
 }
 
-function requirePilotField(draft: DvtSubstraitPilotDraft, name: string) {
+function requirePilotField(draft: DvtSubstraitPilotDraft, name: string): PilotField {
   const inspection = inspectDvtSubstraitPilotDraft(draft);
   if (!inspection.ok) throw new Error('Expected the admitted pilot.');
   const field = inspection.projection.outputs.find((output) => output.name === name);
