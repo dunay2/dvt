@@ -93,8 +93,11 @@ export function importLivePostgresSource(
         timeout: 20_000,
       })
         .scrollIntoView()
-        .should('be.visible')
-        .click();
+        .should('be.visible');
+      cy.get('[data-source-import-object="relation/dvt/public/source_1"]')
+        .dblclick()
+        .find('[data-source-import-object-select="relation/dvt/public/source_1"]')
+        .should('have.attr', 'data-state', 'checked');
     });
   cy.contains('[role="dialog"]', 'Selected: 1').should('be.visible');
   cy.contains('[role="dialog"]', 'Selected sources').should('be.visible');
