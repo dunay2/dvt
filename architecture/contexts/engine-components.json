@@ -1,15 +1,15 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "components": [
     {"id":"workflowPort","title":"IWorkflowEngine","paths":["src/ports/IWorkflowEngine.ts"],"rationale":"Public workflow behavior port owned by the Engine."},
     {"id":"workflowFacade","title":"WorkflowEngine facade","paths":["src/core/WorkflowEngine.ts"],"rationale":"WorkflowEngine implements IWorkflowEngine and delegates to explicit application use cases."},
-    {"id":"useCases","title":"Workflow engine use cases","prefixes":["src/application/workflow-engine-use-cases"],"rationale":"Application boundary for start/recover/cancel/status/signal behavior."},
+    {"id":"useCases","title":"Workflow engine use cases","classificationRole":"aggregate","prefixes":["src/application/workflow-engine-use-cases"],"rationale":"Aggregate evidence view over the application boundary for start/recover/cancel/status/signal behavior; child components own the individual operation files."},
     {"id":"startRun","title":"Start run","paths":["src/application/workflow-engine-use-cases/WorkflowStartRunUseCase.ts"]},
     {"id":"recoverRun","title":"Recover run","paths":["src/application/workflow-engine-use-cases/WorkflowRecoverRunUseCase.ts"]},
     {"id":"cancelRun","title":"Cancel run","paths":["src/application/workflow-engine-use-cases/WorkflowCancelRunUseCase.ts"]},
     {"id":"status","title":"Canonical status","paths":["src/application/workflow-engine-use-cases/WorkflowRunStatusUseCase.ts"]},
     {"id":"signal","title":"Signal run","paths":["src/application/workflow-engine-use-cases/WorkflowSignalRunUseCase.ts"]},
-    {"id":"startPipeline","title":"StartRun application pipeline","paths":["src/application/IStartRunApplicationService.ts","src/application/StartRunAdmissionGuard.ts","src/application/StartRunApplicationService.ts"],"prefixes":["src/services/startRun"],"rationale":"Sequences admission, intent creation, dispatch, telemetry and failure policy."},
+    {"id":"startPipeline","title":"StartRun application pipeline","classificationRole":"aggregate","paths":["src/application/IStartRunApplicationService.ts","src/application/StartRunAdmissionGuard.ts","src/application/StartRunApplicationService.ts"],"prefixes":["src/services/startRun"],"rationale":"Aggregate evidence view over admission, intent creation, dispatch, telemetry and failure policy; focused child components own their phase files."},
     {"id":"coordinator","title":"StartRun coordinator","paths":["src/application/StartRunApplicationService.ts"]},
     {"id":"admission","title":"Admission + integrity","paths":["src/application/StartRunAdmissionGuard.ts","src/services/startRun/RunExecutionContextAdmissionPolicy.ts","src/services/startRun/StartRunAdmissionService.ts","src/services/startRun/StartRunValidationPolicy.ts","src/ports/IPlanIntegrityValidator.ts"]},
     {"id":"intent","title":"Pre-dispatch intent","paths":["src/services/startRun/StartRunIntentService.ts","src/ports/IStartRunIntentStore.ts"]},
@@ -17,7 +17,7 @@
     {"id":"failure","title":"Failure policy","paths":["src/services/startRun/StartRunFailurePolicy.ts"]},
     {"id":"providerPort","title":"IProviderAdapter","paths":["src/adapters/IProviderAdapter.ts"]},
     {"id":"statePort","title":"IRunStateStore","paths":["src/ports/IRunStateStore.ts"]},
-    {"id":"planIntegrityPort","title":"IPlanIntegrityValidator","paths":["src/ports/IPlanIntegrityValidator.ts"]},
+    {"id":"planIntegrityPort","title":"IPlanIntegrityValidator","classificationRole":"aggregate","paths":["src/ports/IPlanIntegrityValidator.ts"],"rationale":"Named port view retained for navigation; admission is the owning behavioral classification for this file."},
 
     {"id":"publicSurfaces","title":"Stable + runtime public surfaces","paths":["src/index.ts","src/runtime.ts","src/testing.ts"],"rationale":"Separates stable package exports, composition/runtime exports and testing-only surface."},
     {"id":"providerResilience","title":"Provider resilience + in-memory provider","paths":["src/adapters/CircuitBreakingProviderAdapter.ts"],"prefixes":["src/adapters/inMemory"],"rationale":"Provider-side resilience wrapper and in-memory provider implementation; neither owns canonical lifecycle truth."},
