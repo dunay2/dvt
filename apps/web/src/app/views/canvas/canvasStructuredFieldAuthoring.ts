@@ -1,7 +1,8 @@
 /** Owned concern: apply structured-field authoring through ConfigureCanvasDvtNode. */
+import { allocateDvtFieldId } from '@dvt/contracts/substrait';
+
 import type { CanonicalNode } from '../../types/canonical';
 import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
-import { createCanvasColumnOutputId } from './canvasColumnMappingModel';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import {
   decodeDvtSubstraitProjectionDocument,
@@ -110,7 +111,7 @@ export function applyCanvasStructuredField(args: {
     const composed = composeDvtSubstraitProjectionFields(resolved.draft, {
       draggedFieldId: args.request.draggedFieldId,
       targetFieldId: args.request.targetFieldId,
-      parentFieldId: createCanvasColumnOutputId(args.request.parentName.trim()),
+      parentFieldId: allocateDvtFieldId(),
       parentName: args.request.parentName,
     });
     if (composed === resolved.draft) return { outcome: 'rejected' };
