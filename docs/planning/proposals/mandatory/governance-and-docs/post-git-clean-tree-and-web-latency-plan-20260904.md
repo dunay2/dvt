@@ -99,7 +99,9 @@ architecture rule. The guard is discovered automatically by the existing
 Keep the current Web Vitest topology unchanged until a dedicated benchmark
 proves a lower-latency configuration within the same memory and coverage
 constraints. Record the observed timing decomposition and create the follow-up
-before closing this issue.
+before closing this issue. GitHub issue
+[#2900](https://github.com/dunay2/dvt/issues/2900) owns that benchmark and any
+subsequent implementation.
 
 ### Fowler opportunity matrix
 

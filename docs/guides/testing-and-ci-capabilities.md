@@ -22,32 +22,32 @@ See also:
 
 ## Root Commands
 
-| Capability                       | Command                                | Source                                                                                                                                                                                             |
-| -------------------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Full workspace build             | `pnpm build`                           | [`package.json`](../../package.json)                                                                                                                                                               |
-| Full recursive test run          | `pnpm test`                            | [`package.json`](../../package.json)                                                                                                                                                               |
-| Web PR CI test partition         | `pnpm test:web:ci`                     | [`package.json`](../../package.json), [`apps/web/vitest.suites.ts`](../../apps/web/vitest.suites.ts)                                                                                               |
-| Web changed-file test routing    | `pnpm test:web:changed`                | [`package.json`](../../package.json), [`apps/web/vitest.suites.ts`](../../apps/web/vitest.suites.ts)                                                                                               |
-| Web E2E test run                 | `pnpm test:web:e2e`                    | [`package.json`](../../package.json)                                                                                                                                                               |
-| Full type-check gate             | `pnpm type-check`                      | [`package.json`](../../package.json)                                                                                                                                                               |
-| Fast pre-push changed gate       | `pnpm verify:changed`                  | [`package.json`](../../package.json)                                                                                                                                                               |
-| Pre-push verification gate       | `pnpm verify:prepush`                  | [`package.json`](../../package.json)                                                                                                                                                               |
-| Affected local PR preflight      | `pnpm preflight:affected`              | [`package.json`](../../package.json), [`turbo.json`](../../turbo.json)                                                                                                                             |
-| Affected CI preflight            | `pnpm preflight:affected:ci`           | [`package.json`](../../package.json), [`turbo.json`](../../turbo.json), [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)                                                               |
-| Full CI baseline                 | `pnpm ci:full`                         | [`package.json`](../../package.json)                                                                                                                                                               |
-| Planning DB current-schema tests | `pnpm test:planning:db:current-schema` | [`package.json`](../../package.json), [`scripts/planning-db-schema.test.cjs`](../../scripts/planning-db-schema.test.cjs)                                                                           |
-| Changed-files auto-fix           | `pnpm fix:changed`                     | [`package.json`](../../package.json)                                                                                                                                                               |
-| Post-Git Prettier auto-format    | `pnpm postgit:format`                  | [`scripts/format-git-operation-changes.cjs`](../../scripts/format-git-operation-changes.cjs), [`.husky/post-merge`](../../.husky/post-merge), [`.husky/post-checkout`](../../.husky/post-checkout) |
-| AI local preflight               | `pnpm ai:preflight`                    | [`scripts/ai-preflight.cjs`](../../scripts/ai-preflight.cjs)                                                                                                                                       |
-| Changed-files lint/format gate   | `node scripts/check-changed.cjs`       | [`scripts/check-changed.cjs`](../../scripts/check-changed.cjs)                                                                                                                                     |
-| PR closeout rail                 | `pnpm pr:closeout`                     | [`scripts/pr-closeout.cjs`](../../scripts/pr-closeout.cjs)                                                                                                                                         |
-| Immediate PR check gate          | `pnpm pr:checks`                       | [`tools/ci/pr-check-triage.mjs`](../../tools/ci/pr-check-triage.mjs)                                                                                                                               |
-| CI tool contract suite           | `pnpm test:ci-tools`                   | [`package.json`](../../package.json)                                                                                                                                                               |
-| Affected workspace build         | `pnpm ci:affected:build`               | [`package.json`](../../package.json)                                                                                                                                                               |
-| Affected workspace lint          | `pnpm ci:affected:lint`                | [`package.json`](../../package.json)                                                                                                                                                               |
-| Affected workspace test          | `pnpm ci:affected:test`                | [`package.json`](../../package.json)                                                                                                                                                               |
-| Affected workspace type-check    | `pnpm ci:affected:typecheck`           | [`package.json`](../../package.json)                                                                                                                                                               |
-| ADR-0000 regression gate         | `pnpm traceability:adr0`               | [`package.json`](../../package.json), [`traceability.config.json`](../../traceability.config.json)                                                                                                 |
+| Capability                       | Command                                | Source                                                                                                                               |
+| -------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Full workspace build             | `pnpm build`                           | [`package.json`](../../package.json)                                                                                                 |
+| Full recursive test run          | `pnpm test`                            | [`package.json`](../../package.json)                                                                                                 |
+| Web PR CI test partition         | `pnpm test:web:ci`                     | [`package.json`](../../package.json), [`apps/web/vitest.suites.ts`](../../apps/web/vitest.suites.ts)                                 |
+| Web changed-file test routing    | `pnpm test:web:changed`                | [`package.json`](../../package.json), [`apps/web/vitest.suites.ts`](../../apps/web/vitest.suites.ts)                                 |
+| Web E2E test run                 | `pnpm test:web:e2e`                    | [`package.json`](../../package.json)                                                                                                 |
+| Full type-check gate             | `pnpm type-check`                      | [`package.json`](../../package.json)                                                                                                 |
+| Fast pre-push changed gate       | `pnpm verify:changed`                  | [`package.json`](../../package.json)                                                                                                 |
+| Pre-push verification gate       | `pnpm verify:prepush`                  | [`package.json`](../../package.json)                                                                                                 |
+| Affected local PR preflight      | `pnpm preflight:affected`              | [`package.json`](../../package.json), [`turbo.json`](../../turbo.json)                                                               |
+| Affected CI preflight            | `pnpm preflight:affected:ci`           | [`package.json`](../../package.json), [`turbo.json`](../../turbo.json), [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) |
+| Full CI baseline                 | `pnpm ci:full`                         | [`package.json`](../../package.json)                                                                                                 |
+| Planning DB current-schema tests | `pnpm test:planning:db:current-schema` | [`package.json`](../../package.json), [`scripts/planning-db-schema.test.cjs`](../../scripts/planning-db-schema.test.cjs)             |
+| Changed-files auto-fix           | `pnpm fix:changed`                     | [`package.json`](../../package.json)                                                                                                 |
+| Post-Git hook purity guard       | `pnpm test:ci-tools:static`            | [`tools/ci/post-git-hook-purity.test.mjs`](../../tools/ci/post-git-hook-purity.test.mjs)                                             |
+| AI local preflight               | `pnpm ai:preflight`                    | [`scripts/ai-preflight.cjs`](../../scripts/ai-preflight.cjs)                                                                         |
+| Changed-files lint/format gate   | `node scripts/check-changed.cjs`       | [`scripts/check-changed.cjs`](../../scripts/check-changed.cjs)                                                                       |
+| PR closeout rail                 | `pnpm pr:closeout`                     | [`scripts/pr-closeout.cjs`](../../scripts/pr-closeout.cjs)                                                                           |
+| Immediate PR check gate          | `pnpm pr:checks`                       | [`tools/ci/pr-check-triage.mjs`](../../tools/ci/pr-check-triage.mjs)                                                                 |
+| CI tool contract suite           | `pnpm test:ci-tools`                   | [`package.json`](../../package.json)                                                                                                 |
+| Affected workspace build         | `pnpm ci:affected:build`               | [`package.json`](../../package.json)                                                                                                 |
+| Affected workspace lint          | `pnpm ci:affected:lint`                | [`package.json`](../../package.json)                                                                                                 |
+| Affected workspace test          | `pnpm ci:affected:test`                | [`package.json`](../../package.json)                                                                                                 |
+| Affected workspace type-check    | `pnpm ci:affected:typecheck`           | [`package.json`](../../package.json)                                                                                                 |
+| ADR-0000 regression gate         | `pnpm traceability:adr0`               | [`package.json`](../../package.json), [`traceability.config.json`](../../traceability.config.json)                                   |
 
 Warm-build note:
 
@@ -105,6 +105,16 @@ The Web CI primary suites run with one isolated fork at a time. Each test file
 gets a fresh fork so completed processes release module and DOM memory while
 the governed suite coverage remains unchanged. Do not enable `singleFork`: it
 disables this isolation and can exhaust the 4 GB worker limit.
+
+A hosted full-route baseline captured on 2026-09-04 took about 845 seconds:
+roughly 35 seconds for setup and dependency build, 320 seconds for 273 unit
+files, 379 seconds for 217 presentation files, and 101 seconds for 101
+architecture files. Vitest environment creation and module collection dominate
+assertion time because the three suites run sequentially with one isolated
+`jsdom` fork per file. This is a diagnostic baseline rather than an SLA;
+optimization must preserve coverage and the 4 GB memory boundary. GitHub issue
+[#2900](https://github.com/dunay2/dvt/issues/2900) owns the bounded-batch and
+non-DOM partition benchmarks.
 
 | Capability                         | Command                                                                    | Scope                                                | Source                                                                                                 |
 | ---------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
@@ -400,11 +410,13 @@ Command semantics:
   runs. The `test:ai-preflight` contract checks those settings so save-time
   formatting and lint-fix behavior remain part of the repository automation
   posture.
-- Git `post-merge` and branch-level `post-checkout` hooks run
-  `pnpm postgit:format` over the explicit Git ref range, so files that enter
-  through `git pull`, merge, or branch switch are Prettier-normalized even
-  though VS Code save hooks did not fire. Set `DVT_SKIP_POST_GIT_FORMAT=1` to
-  disable that local hook for one operation.
+- Git `post-merge` and branch-level `post-checkout` hooks are prohibited. A
+  completed Git operation must leave the exact committed tree in place and
+  must not start a formatter or another worktree writer afterward. The static
+  CI-tool suite enforces the absence of both hooks and of the retired
+  `postgit:format` command. Formatting remains owned by `lint-staged` in
+  pre-commit, the explicit `pnpm fix:changed` / `pnpm ai:preflight` rails, and
+  the Prettier check in `pnpm verify:prepush`.
 - `pnpm verify:prepush -- --full` keeps three outcomes for code diffs:
   - skip when no TypeScript-affecting files changed
   - run `pnpm ci:affected:typecheck` when the diff is workspace-scoped
