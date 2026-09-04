@@ -1,0 +1,34 @@
+model {
+  cliModel = package '@dvt/cli' {
+    #asIs
+    description 'Script-backed contract validation and golden-path support package. Current source explicitly marks it userFacingCli=false.'
+    metadata {
+      repository 'dunay2/dvt'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      sourceRoot 'packages/@dvt/cli'
+      provenance 'SOURCE-FIRST'
+      userFacingCli 'false'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/cli 'Pinned package tree'
+
+    sourceEvidence = component 'Source evidence' { #sourceDerived description 'Complete tracked-file inventory at the resolved main SHA.' }
+    metadataSurface = component 'CLI validation metadata' { #asIs description 'Declares runtime validation/golden-path script surface; not a current user-facing CLI.' }
+    contractValidation = component 'Contract validation script' { #asIs description 'Script-backed contract validation command.' }
+    goldenPaths = component 'Golden-path runner' { #asIs description 'Script-backed golden-path command.' }
+
+    metadataSurface .uses contractValidation 'declares validation command'
+    metadataSurface .uses goldenPaths 'declares golden-path command'
+  }
+}
+
+views {
+  view cliBoundary of cliModel {
+    title 'DVT+ CLI package — Validation support, not user-facing CLI'
+    description 'Source-first correction of older lore: the current package explicitly declares userFacingCli=false.'
+    include sourceEvidence with { navigateTo cliSourceInventory }
+    include metadataSurface with { navigateTo cliFiles_metadata }
+    include contractValidation with { navigateTo cliFiles_contractValidation }
+    include goldenPaths with { navigateTo cliFiles_goldenPaths }
+    autoLayout LeftRight
+  }
+}
