@@ -87,6 +87,20 @@ copyFileSync(
 
 execFileSync(
   process.execPath,
+  [join(architectureDir, 'tools', 'generate-component-classification-coverage.mjs')],
+  { cwd: repoRoot, stdio: 'inherit', env: generationEnv },
+);
+copyFileSync(
+  join(generatedDir, 'component-classification-coverage.c4'),
+  join(previewDir, 'component-classification-coverage.c4'),
+);
+copyFileSync(
+  join(generatedDir, 'component-classification-coverage.json'),
+  join(evidenceDir, 'component-classification-coverage.json'),
+);
+
+execFileSync(
+  process.execPath,
   [join(architectureDir, 'tools', 'generate-context-dependency-landscape.mjs')],
   { cwd: repoRoot, stdio: 'inherit', env: generationEnv },
 );
