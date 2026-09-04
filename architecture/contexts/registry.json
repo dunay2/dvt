@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
-  "baselineSha": "42504563629f0b998d8a3382ea839eead99a36d1",
+  "schemaVersion": 2,
+  "baselineRef": "origin/main",
+  "lastValidatedSha": "42504563629f0b998d8a3382ea839eead99a36d1",
   "contexts": [
     "planner",
     "plan-verifier",
