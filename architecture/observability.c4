@@ -1,0 +1,36 @@
+model {
+  observabilityModel = package '@dvt/observability' {
+    #asIs
+    description 'Provider-neutral observability contracts, telemetry policy and no-op fallback.'
+    metadata {
+      repository 'dunay2/dvt'
+      baselineSha '3695f07c9ba3c66ab51f88a2dabe18e18556a244'
+      sourceRoot 'packages/@dvt/observability'
+      provenance 'SOURCE-FIRST'
+    }
+    link https://github.com/dunay2/dvt/tree/3695f07c9ba3c66ab51f88a2dabe18e18556a244/packages/%40dvt/observability 'Pinned package tree'
+
+    sourceEvidence = component 'Source evidence' { #sourceDerived description 'Complete tracked-file inventory at the resolved main SHA.' }
+    publicBoundary = port 'Observability public boundary' { #asIs description 'Provider-neutral observability API exported to DVT consumers.' }
+    contracts = contract 'Observability contracts' { #asIs description 'Metrics, logs, traces and observability context contracts.' }
+    policy = component 'Telemetry cardinality policy' { #asIs description 'Controls bounded telemetry shape/cardinality independently from concrete exporters.' }
+    noop = adapter 'No-op observability' { #asIs description 'Bounded no-op implementation for fallback/testing scenarios.' }
+
+    publicBoundary .uses contracts 'exports provider-neutral contracts'
+    publicBoundary .uses policy 'exports telemetry policy'
+    noop .implements publicBoundary 'no-op implementation'
+  }
+}
+
+views {
+  view observabilityBoundary of observabilityModel {
+    title 'DVT+ Observability — Contract authority and source evidence'
+    description 'Provider-neutral observability remains separate from its OpenTelemetry implementation.'
+    include sourceEvidence with { navigateTo observabilitySourceInventory }
+    include publicBoundary with { navigateTo observabilityFiles_publicBoundary }
+    include contracts with { navigateTo observabilityFiles_contracts }
+    include policy with { navigateTo observabilityFiles_policy }
+    include noop with { navigateTo observabilityFiles_noop }
+    autoLayout LeftRight
+  }
+}
