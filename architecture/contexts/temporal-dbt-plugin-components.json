@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "components": [
+    {"id":"publicBoundary","title":"dbt plugin public boundary","paths":["src/index.ts"],"rationale":"Publishes the concrete dbt Temporal step plugin API and explicitly keeps dbt runner/manifest ownership outside the generic Temporal adapter."},
+    {"id":"manifest","title":"dbt step plugin manifest","paths":["src/dbtPluginManifest.ts","src/dbtPluginTypes.ts"],"rationale":"Declares plugin identity, executable step kinds and plugin-owned types."},
+    {"id":"activity","title":"dbt step activity","paths":["src/DbtStepActivity.ts"],"rationale":"Temporal activity boundary for dbt execution steps."},
+    {"id":"runner","title":"dbt CLI plugin runner","paths":["src/DbtCliPluginRunner.ts"],"rationale":"Concrete dbt CLI execution runner."},
+    {"id":"cliRuntime","title":"dbt CLI runtime support","paths":["src/dbtCliArguments.ts","src/dbtCliFailures.ts","src/dbtCliProcess.ts","src/dbtCliProjectMaterializer.ts","src/dbtCliTypes.ts"],"rationale":"Process invocation, argument construction, project materialization, failures and CLI-owned types."},
+    {"id":"runtimeProfile","title":"dbt runtime profile materialization","paths":["src/dbtRuntimeProfile.ts"],"rationale":"Resolves/materializes runtime profile input for dbt execution."}
+  ]
+}
