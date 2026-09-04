@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "components": [
+    {"id":"publicBoundary","title":"Delivery public boundary","rationale":"src/index.ts exposes runtime delivery APIs for outbox movement, projection refresh, sharding and start-run backpressure admission.","paths":["src/index.ts","src/contracts.ts"]},
+    {"id":"outboxWorker","title":"Outbox delivery worker","rationale":"Moves outbox facts through the delivery boundary and owns worker execution behavior.","paths":["src/application/OutboxWorker.ts"]},
+    {"id":"outboxRuntime","title":"Outbox worker runtime","rationale":"Owns runtime looping, hook execution and bounded error handling around outbox delivery.","paths":["src/application/OutboxWorkerRuntime.ts","src/application/OutboxWorkerRuntimeHookRunner.ts","src/application/OutboxWorkerRuntimeLoopController.ts","src/application/outboxWorkerRuntimeErrorSupport.ts"]},
+    {"id":"projectorRuntime","title":"Projector worker runtime","rationale":"Refreshes read-model projections from delivered facts using the delivery runtime boundary.","paths":["src/application/ProjectorWorkerRuntime.ts"]},
+    {"id":"sharding","title":"Outbox shard assignment","rationale":"Deterministically assigns outbox work to shards for scale-out ownership.","paths":["src/outboxShardAssignment.ts"]},
+    {"id":"backpressure","title":"Start-run backpressure admission","rationale":"Applies delivery-pressure admission rules before allowing new run starts.","prefixes":["src/backpressure"]},
+    {"id":"testingAdapters","title":"In-memory delivery test adapters","rationale":"Testing-only event bus and outbox storage implementations used to prove delivery semantics.","prefixes":["src/testing"],"paths":["src/testing.ts"]}
+  ]
+}
