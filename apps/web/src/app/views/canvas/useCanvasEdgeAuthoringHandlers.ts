@@ -352,23 +352,6 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
         toast.error(canvasViewCopy.columnMappingUnavailableMessage);
         return;
       }
-      const dbtTarget = targetNode.pluginId === 'dbt' && targetNode.kind === 'dbt:model';
-      if (dbtTarget) {
-        const result = configureDbtModelColumnOutput({
-          draftSession: state.draftSession,
-          canonicalNodesById: state.canonicalNodesById,
-          nodeId: targetNode.id,
-          columnName: mapping.targetColumnName,
-          output: false,
-        });
-        if (result.outcome === 'rejected') {
-          toast.error(canvasViewCopy.columnMappingUnavailableMessage);
-          return;
-        }
-        effects.setDraftSession(result.draftSession);
-        toast.success(canvasViewCopy.columnMappingRemovedMessage);
-        return;
-      }
       const result = removeCanvasColumnMapping({
         draftSession: state.draftSession,
         canonicalNodesById: state.canonicalNodesById,

@@ -3,7 +3,6 @@ export const lineageViewCopy = {
   loading: 'Loading...',
   nodesSuffix: 'nodes',
   searchPlaceholder: 'Search by model name...',
-  columnSwitch: 'Column-level lineage',
   pinToCanvas: 'Pin to Canvas',
   pathLabel: 'Path:',
   fullGraphTitle: 'Full graph',
@@ -17,8 +16,4 @@ export const lineageViewCopy = {
   routeEmptyMessage: 'Search for a model or load workspace graph data to inspect lineage.',
   routeErrorTitle: 'Lineage graph unavailable',
   routeErrorFallbackMessage: 'The workspace graph could not be loaded for lineage analysis.',
-  metadataMissingTitle: 'Column metadata unavailable',
-  metadataMissingMessage:
-    'Add columns to the manifest to enable column-level lineage for this node.',
-  noColumnMatchesMessage: 'No matching upstream columns were found for this lineage focus.',
 } as const;

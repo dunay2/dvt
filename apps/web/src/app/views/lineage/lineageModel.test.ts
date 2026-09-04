@@ -1,13 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import {
-  assignLevels,
-  bfsReachable,
-  buildColumnLineage,
-  groupNodesByLevel,
-  kindStyle,
-} from './lineageModel';
+import { assignLevels, bfsReachable, groupNodesByLevel, kindStyle } from './lineageModel';
 
 function buildNode(overrides?: Partial<CanonicalNode>): CanonicalNode {
   return {
@@ -47,24 +41,6 @@ describe('lineageModel', () => {
     const levels = assignLevels(nodes, edges);
     expect(levels.get('n1')).toBe(0);
     expect(levels.get('n2')).toBe(1);
-  });
-
-  it('builds column lineage by matching column names', () => {
-    const nodes = [
-      buildNode({
-        id: 'n1',
-        name: 'stg_orders',
-        metadata: { columns: [{ name: 'order_id' }] },
-      }),
-      buildNode({
-        id: 'n2',
-        name: 'fct_orders',
-        metadata: { columns: [{ name: 'order_id' }] },
-      }),
-    ];
-    const edges = [buildEdge({ sourceId: 'n1', targetId: 'n2' })];
-    const lineage = buildColumnLineage(nodes[1]!, nodes, edges);
-    expect(lineage).toEqual([{ from: 'stg_orders.order_id', to: 'fct_orders.order_id' }]);
   });
 
   it('returns default style for unknown kind', () => {

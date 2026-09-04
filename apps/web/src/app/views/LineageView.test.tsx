@@ -189,7 +189,7 @@ describe('LineageView', () => {
     expect(mounted.container.textContent).toContain('Graph snapshot unavailable');
   });
 
-  it('switches to column-level lineage', async () => {
+  it('does not expose inferred column lineage from graph column-name metadata', async () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
         overrides={{
@@ -202,139 +202,11 @@ describe('LineageView', () => {
     );
 
     await waitForReactQuery(() => mounted?.container.textContent?.includes('fct_orders') === true, {
-      description: 'lineage graph render for column mode',
+      description: 'lineage graph render without heuristic column mode',
     });
 
-    const searchInput = document.querySelector('input');
-    expect(searchInput).toBeTruthy();
-    await act(async () => {
-      if (searchInput) {
-        searchInput.value = 'fct_orders';
-        searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-        searchInput.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-    });
-
-    const switchInput = document.getElementById('column-level');
-    expect(switchInput).toBeTruthy();
-    await act(async () => {
-      switchInput?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-
-    expect(mounted.container.textContent).toContain('Column lineage:');
-    expect(mounted.container.textContent).toContain('source_orders.order_id');
-    expect(mounted.container.textContent).toContain('fct_orders.order_id');
-  });
-
-  it('renders metadata-missing state in column mode when column metadata is unavailable', async () => {
-    mounted = await withTestQueryClient(
-      <AppServicesProvider
-        overrides={{
-          ...createAppServicesTestOverrides(),
-          workspaceGraphSnapshotQuery: buildWorkspaceGraphSnapshotQueryPort({
-            getGraphSnapshot: async () =>
-              buildGraphSnapshot({
-                nodes: [
-                  {
-                    id: 'model.fct_orders',
-                    name: 'fct_orders',
-                    type: 'MODEL',
-                    package: 'analytics',
-                    path: 'models/fct_orders.sql',
-                    tags: [],
-                    status: 'success',
-                    dependencies: ['source.orders'],
-                    columns: [],
-                  },
-                  {
-                    id: 'source.orders',
-                    name: 'source_orders',
-                    type: 'SOURCE',
-                    package: 'analytics',
-                    path: 'models/source_orders.yml',
-                    tags: [],
-                    status: 'success',
-                    dependencies: [],
-                    columns: [{ name: 'order_id', type: 'int', nullable: false }],
-                  },
-                ],
-              }),
-          }),
-        }}
-      >
-        <LineageView />
-      </AppServicesProvider>
-    );
-
-    await waitForReactQuery(() => mounted?.container.textContent?.includes('fct_orders') === true, {
-      description: 'lineage metadata-missing setup render',
-    });
-
-    const switchInput = document.getElementById('column-level');
-    expect(switchInput).toBeTruthy();
-    await act(async () => {
-      switchInput?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-
-    expect(mounted.container.textContent).toContain('Column metadata unavailable');
-    expect(mounted.container.textContent).toContain(
-      'Add columns to the manifest to enable column-level lineage for this node.'
-    );
-  });
-
-  it('does not render metadata-missing state when metadata exists but no column names match', async () => {
-    mounted = await withTestQueryClient(
-      <AppServicesProvider
-        overrides={{
-          ...createAppServicesTestOverrides(),
-          workspaceGraphSnapshotQuery: buildWorkspaceGraphSnapshotQueryPort({
-            getGraphSnapshot: async () =>
-              buildGraphSnapshot({
-                nodes: [
-                  {
-                    id: 'model.fct_orders',
-                    name: 'fct_orders',
-                    type: 'MODEL',
-                    package: 'analytics',
-                    path: 'models/fct_orders.sql',
-                    tags: [],
-                    status: 'success',
-                    dependencies: ['source.orders'],
-                    columns: [{ name: 'customer_id', type: 'int', nullable: false }],
-                  },
-                  {
-                    id: 'source.orders',
-                    name: 'source_orders',
-                    type: 'SOURCE',
-                    package: 'analytics',
-                    path: 'models/source_orders.yml',
-                    tags: [],
-                    status: 'success',
-                    dependencies: [],
-                    columns: [{ name: 'order_id', type: 'int', nullable: false }],
-                  },
-                ],
-              }),
-          }),
-        }}
-      >
-        <LineageView />
-      </AppServicesProvider>
-    );
-
-    await waitForReactQuery(() => mounted?.container.textContent?.includes('fct_orders') === true, {
-      description: 'lineage no-match setup render',
-    });
-
-    const switchInput = document.getElementById('column-level');
-    expect(switchInput).toBeTruthy();
-    await act(async () => {
-      switchInput?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-
-    expect(mounted.container.textContent).toContain(
-      'No matching upstream columns were found for this lineage focus.'
-    );
-    expect(mounted.container.textContent).not.toContain('Column metadata unavailable');
+    expect(document.getElementById('column-level')).toBeNull();
+    expect(mounted.container.textContent).not.toContain('source_orders.order_id');
+    expect(mounted.container.textContent).not.toContain('fct_orders.order_id');
   });
 });

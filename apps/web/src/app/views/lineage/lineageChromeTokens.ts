@@ -1,13 +1,10 @@
 /**
- * Owned concern: own Lineage panel chrome visual tokens for route-local panels.
+ * Owned concern: own Lineage route chrome visual tokens for graph and impact panels.
  */
 export const lineageChromeClasses = {
   panel: 'border-[color:var(--border-default)] bg-[var(--surface-panel)]',
-  nestedPanel: 'border-[color:var(--border-default)] bg-[var(--surface-app)]',
   mutedText: 'text-[var(--text-muted)]',
   subtleText: 'text-[var(--text-subtle)]',
-  sourceColumn: 'text-[var(--status-running)]',
-  targetColumn: 'text-[var(--status-success)]',
   focusBadge: 'bg-[var(--status-success)] text-[var(--surface-app)]',
 } as const;
 
