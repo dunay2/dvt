@@ -1,6 +1,9 @@
 name: LikeC4 source-first architecture preview
 
 on:
+  push:
+    branches:
+      - spike/likec4-planner-source-first
   workflow_dispatch:
 
 permissions:
@@ -18,21 +21,27 @@ jobs:
       - name: Fetch source baseline
         run: git fetch --no-tags origin main
 
-      - name: Generate Planner source evidence
-        run: node architecture/tools/generate-source-first-context.mjs planner
-
-      - name: Generate Artifacts source evidence
-        run: node architecture/tools/generate-source-first-context.mjs artifacts
+      - name: Generate source-first evidence
+        run: |
+          node architecture/tools/generate-source-first-context.mjs planner
+          node architecture/tools/generate-source-first-context.mjs artifacts
+          node architecture/tools/generate-source-first-context.mjs state-store
+          node architecture/tools/generate-source-first-context.mjs delivery
+          node architecture/tools/generate-source-first-context.mjs engine
 
       - name: Stage combined LikeC4 workspace
         run: |
           rm -rf .source-first-likec4-preview
           mkdir -p .source-first-likec4-preview .architecture-evidence
           cp architecture/specification.c4 .source-first-likec4-preview/specification.c4
-          cp architecture/planner.c4 .source-first-likec4-preview/planner.c4
-          cp architecture/artifacts.c4 .source-first-likec4-preview/artifacts.c4
-          cp architecture/generated/planner-source.c4 .source-first-likec4-preview/planner-source.c4
-          cp architecture/generated/artifacts-source.c4 .source-first-likec4-preview/artifacts-source.c4
+          for context in planner artifacts state-store delivery engine; do
+            cp "architecture/${context}.c4" ".source-first-likec4-preview/${context}.c4"
+            cp "architecture/generated/${context}-source.c4" ".source-first-likec4-preview/${context}-source.c4"
+            cp "architecture/generated/${context}-inventory.json" ".architecture-evidence/${context}-inventory.json"
+            cp "architecture/generated/${context}-source.c4" ".architecture-evidence/${context}-source.c4"
+            cp "architecture/contexts/${context}-components.json" ".architecture-evidence/${context}-components.json"
+            cp "architecture/contexts/${context}-source-baseline.json" ".architecture-evidence/${context}-source-baseline.json"
+          done
           cat > .source-first-likec4-preview/likec4.config.json <<'JSON'
           {
             "$schema": "https://likec4.dev/schemas/config.json",
@@ -41,18 +50,11 @@ jobs:
             "metadata": {
               "status": "manual-spike",
               "repository": "dunay2/dvt",
-              "baselineSha": "42504563629f0b998d8a3382ea839eead99a36d1"
+              "baselineSha": "42504563629f0b998d8a3382ea839eead99a36d1",
+              "contexts": "planner,artifacts,state-store,delivery,engine"
             }
           }
           JSON
-          cp architecture/generated/planner-inventory.json .architecture-evidence/planner-inventory.json
-          cp architecture/generated/planner-source.c4 .architecture-evidence/planner-source.c4
-          cp architecture/contexts/planner-components.json .architecture-evidence/planner-components.json
-          cp architecture/contexts/planner-source-baseline.json .architecture-evidence/planner-source-baseline.json
-          cp architecture/generated/artifacts-inventory.json .architecture-evidence/artifacts-inventory.json
-          cp architecture/generated/artifacts-source.c4 .architecture-evidence/artifacts-source.c4
-          cp architecture/contexts/artifacts-components.json .architecture-evidence/artifacts-components.json
-          cp architecture/contexts/artifacts-source-baseline.json .architecture-evidence/artifacts-source-baseline.json
 
       - name: Validate source-first LikeC4 model
         run: |
