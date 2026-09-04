@@ -5,6 +5,8 @@
   "contexts": [
     "contracts",
     "crypto",
+    "dsl",
+    "cli",
     "planner",
     "plan-verifier",
     "plan-interpreter",
@@ -25,6 +27,7 @@
     "temporal-worker",
     "outbox-worker",
     "projector-worker",
-    "lineage-worker"
+    "lineage-worker",
+    "web"
   ]
 }
