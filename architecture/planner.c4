@@ -5,135 +5,63 @@ model {
 
     metadata {
       repository 'dunay2/dvt'
-      baselineSha '4e63f9a65e25f409ad975fa1da5620e569bb3a36'
+      baselineSha '42504563629f0b998d8a3382ea839eead99a36d1'
       sourceRoot 'packages/@dvt/planner'
       provenance 'SOURCE-FIRST'
     }
 
-    link https://github.com/dunay2/dvt/tree/4e63f9a65e25f409ad975fa1da5620e569bb3a36/packages/%40dvt/planner 'Pinned package tree'
+    link https://github.com/dunay2/dvt/tree/42504563629f0b998d8a3382ea839eead99a36d1/packages/%40dvt/planner 'Pinned package tree'
 
-    sourceEvidence = component 'Source evidence' {
-      #sourceDerived
-      description 'Machine-generated from the pinned Git tree. Drill down through every tracked Planner folder and file.'
-      metadata {
-        provenance 'SOURCE-DERIVED'
-        sourceRoot 'packages/@dvt/planner'
-        baselineSha '4e63f9a65e25f409ad975fa1da5620e569bb3a36'
-      }
-    }
-
+    sourceEvidence = component 'Source evidence' { #sourceDerived }
     publicBoundary = component 'PlannerFacade + stable boundary' {
       #asIs
-      description 'src/index.ts makes PlannerFacade the sole public entry point. The facade validates canonical contracts and delegates into planner-owned behavior.'
-      link https://github.com/dunay2/dvt/blob/4e63f9a65e25f409ad975fa1da5620e569bb3a36/packages/%40dvt/planner/src/index.ts 'Stable boundary'
+      description 'src/index.ts exposes PlannerFacade as the stable public entry; the domain Planner remains internal.'
     }
-
-    executableSubgraph = component 'Executable subgraph derivation' {
-      #asIs
-      description 'Derives the executable selected closure from workspace authoring truth plus canonical execution-selection intent.'
-      link https://github.com/dunay2/dvt/blob/4e63f9a65e25f409ad975fa1da5620e569bb3a36/packages/%40dvt/planner/src/application/ExecutableSubgraphDeriver.ts 'Source'
-    }
-
-    envelopeMapping = component 'Input normalization + graph mapping' {
-      #asIs
-      description 'Maps validated contract envelopes and manifest-derived graph sources into the planner domain input.'
-    }
-
+    executableSubgraph = component 'Executable subgraph derivation' { #asIs }
+    envelopeMapping = component 'Input normalization + graph mapping' { #asIs }
     planningPipeline = component 'Deterministic planning pipeline' {
       #asIs
-      description 'Planner domain service orchestrates validation, graph construction, policies, selection, topological order, step construction, limits and immutable plan assembly.'
-      link https://github.com/dunay2/dvt/blob/4e63f9a65e25f409ad975fa1da5620e569bb3a36/packages/%40dvt/planner/src/domain/Planner.ts 'Source'
+      description 'Validates, builds the graph, applies policy/selection, orders nodes, constructs steps and assembles immutable plan material.'
     }
-
-    graph = component 'Graph construction + topology' {
-      #asIs
-      description 'Builds validated dependency graphs, computes deterministic topological order and depth.'
-    }
-
-    selection = component 'Node selection' {
-      #asIs
-      description 'Resolves which graph nodes participate in the run from canonical planner selection.'
-    }
-
-    planAssembly = component 'Immutable plan assembly' {
-      #asIs
-      description 'Assembles canonical plan material, hashes deterministic inputs and projects execution decisions.'
-    }
-
-    stepFactory = component 'Execution-step factory' {
-      #asIs
-      description 'Maps graph nodes plus resolved policies into deterministic execution steps.'
-    }
-
-    behaviorContracts = contract 'Planner-owned behavior contracts' {
-      #asIs
-      description 'Explicit planner-owned extension/validation boundaries for custom policies, execution binding and plan executability.'
-    }
-
-    runtimeClock = component 'Runtime clock boundary' {
-      #asIs
-      description 'Small timing boundary used for timeout/metrics measurement; it is not part of canonical plan identity.'
-    }
-
+    graph = component 'Graph construction + topology' { #asIs }
+    selection = component 'Node selection' { #asIs }
+    planAssembly = component 'Immutable plan assembly' { #asIs }
+    stepFactory = component 'Execution-step factory' { #asIs }
+    behaviorContracts = contract 'Planner-owned behavior contracts' { #asIs }
+    runtimeClock = component 'Runtime clock boundary' { #asIs }
     artifactCompatibilityBridge = component 'Artifact compatibility bridge' {
       #asIs
-      description 'Transitional bridge only. ICompiledCodeStorage moved to @dvt/artifacts and this planner-local path is explicitly marked for removal.'
+      description 'Explicit transitional re-export of ICompiledCodeStorage from @dvt/artifacts; source warns against new imports.'
     }
 
-    publicBoundary .uses envelopeMapping 'normalizes canonical planner input'
+    publicBoundary .uses envelopeMapping 'normalizes planner input'
     publicBoundary .delegates planningPipeline 'buildPlan'
-    publicBoundary .delegates executableSubgraph 'deriveExecutableSubgraph'
-    publicBoundary .uses behaviorContracts 'planner-owned behavior boundaries'
-    planningPipeline .uses graph 'build + order dependency graph'
-    planningPipeline .uses selection 'resolve selected nodes'
-    planningPipeline .uses stepFactory 'create execution steps'
-    planningPipeline .delegates planAssembly 'assemble immutable plan'
-    planningPipeline .uses runtimeClock 'timeout + metrics timing only'
+    publicBoundary .delegates executableSubgraph 'derive executable closure'
+    publicBoundary .uses behaviorContracts 'behavior boundaries'
+    planningPipeline .uses graph 'dependency graph + order'
+    planningPipeline .uses selection 'selected nodes'
+    planningPipeline .uses stepFactory 'execution responsibilities'
+    planningPipeline .delegates planAssembly 'immutable plan'
+    planningPipeline .uses runtimeClock 'timing only'
   }
 }
 
 views {
   view plannerBoundary of plannerModel {
     title 'DVT+ Planner — Responsibilities, components and source evidence'
-    description 'Source-first Planner view pinned to main@4e63f9a. Click a logical component to open the exact Git-derived files that justify it.'
-
-    include sourceEvidence with {
-      navigateTo plannerSourceInventory
-    }
-    include publicBoundary with {
-      navigateTo plannerFiles_publicBoundary
-    }
-    include executableSubgraph with {
-      navigateTo plannerFiles_executableSubgraph
-    }
-    include envelopeMapping with {
-      navigateTo plannerFiles_envelopeMapping
-    }
-    include planningPipeline with {
-      navigateTo plannerFiles_planningPipeline
-    }
-    include graph with {
-      navigateTo plannerFiles_graph
-    }
-    include selection with {
-      navigateTo plannerFiles_selection
-    }
-    include planAssembly with {
-      navigateTo plannerFiles_planAssembly
-    }
-    include stepFactory with {
-      navigateTo plannerFiles_stepFactory
-    }
-    include behaviorContracts with {
-      navigateTo plannerFiles_behaviorContracts
-    }
-    include runtimeClock with {
-      navigateTo plannerFiles_runtimeClock
-    }
-    include artifactCompatibilityBridge with {
-      navigateTo plannerFiles_artifactCompatibilityBridge
-    }
-
+    description 'Source-first Planner view pinned to main@42504563.'
+    include sourceEvidence with { navigateTo plannerSourceInventory }
+    include publicBoundary with { navigateTo plannerFiles_publicBoundary }
+    include executableSubgraph with { navigateTo plannerFiles_executableSubgraph }
+    include envelopeMapping with { navigateTo plannerFiles_envelopeMapping }
+    include planningPipeline with { navigateTo plannerFiles_planningPipeline }
+    include graph with { navigateTo plannerFiles_graph }
+    include selection with { navigateTo plannerFiles_selection }
+    include planAssembly with { navigateTo plannerFiles_planAssembly }
+    include stepFactory with { navigateTo plannerFiles_stepFactory }
+    include behaviorContracts with { navigateTo plannerFiles_behaviorContracts }
+    include runtimeClock with { navigateTo plannerFiles_runtimeClock }
+    include artifactCompatibilityBridge with { navigateTo plannerFiles_artifactCompatibilityBridge }
     autoLayout LeftRight
   }
 }
