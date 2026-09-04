@@ -295,7 +295,15 @@ export function SourceImportObjectCard({
     : sourceImportCatalogClassNames.objectCard;
 
   return (
-    <article data-source-import-object={sourceObject.identityKey} className={objectCardClassName}>
+    <article
+      data-source-import-object={sourceObject.identityKey}
+      className={objectCardClassName}
+      onDoubleClick={() => {
+        if (sourceObject.selectable) {
+          onToggle();
+        }
+      }}
+    >
       <div className={sourceImportCatalogClassNames.objectHeader}>
         <div className={sourceImportCatalogClassNames.objectIdentity}>
           <Checkbox
@@ -303,7 +311,13 @@ export function SourceImportObjectCard({
             data-source-import-object-select={sourceObject.identityKey}
             checked={sourceObject.selected}
             disabled={!sourceObject.selectable}
+            onClick={(event) => {
+              if (event.detail > 1) {
+                event.preventDefault();
+              }
+            }}
             onCheckedChange={onToggle}
+            onDoubleClick={(event) => event.stopPropagation()}
           />
           <button
             type="button"

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { fireEvent, getByRole } from '@testing-library/dom';
-import React, { act } from 'react';
+import React, { act, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -138,6 +138,108 @@ describe('SourceImportCatalogView', () => {
     expect(onToggleSchema).toHaveBeenCalledWith({ database: 'RAW', schema: 'ERP' });
   });
 
+  it('delegates a table-row double click to the existing selection toggle', async () => {
+    const onActivateSourceObject = vi.fn();
+    const onToggleSourceObject = vi.fn();
+    const relation = buildSourceImportTestObject();
+
+    function StatefulCatalog(): JSX.Element {
+      const [selected, setSelected] = useState(false);
+      return (
+        <SourceImportCatalogView
+          catalog={buildCatalog([{ ...relation, selected }])}
+          emptyLabel="No source objects"
+          onActivateSourceObject={onActivateSourceObject}
+          onSelectFilter={vi.fn()}
+          onToggleDatabase={vi.fn()}
+          onToggleSchema={vi.fn()}
+          onToggleSourceObject={(index) => {
+            onToggleSourceObject(index);
+            setSelected((current) => !current);
+          }}
+        />
+      );
+    }
+
+    await act(async () => {
+      root.render(<StatefulCatalog />);
+    });
+
+    await act(async () => {
+      fireEvent.click(
+        getByRole(container, 'button', {
+          name: 'Expand source schema ERP. In source database RAW. 1 object.',
+        })
+      );
+    });
+
+    const tableRow = container.querySelector(`[data-source-import-object="${relation.objectId}"]`);
+    expect(tableRow).not.toBeNull();
+
+    await act(async () => {
+      fireEvent.doubleClick(tableRow!);
+    });
+
+    expect(onToggleSourceObject).toHaveBeenCalledOnce();
+    expect(onToggleSourceObject).toHaveBeenCalledWith(0);
+    expect(onActivateSourceObject).not.toHaveBeenCalled();
+    expect(
+      getByRole(container, 'checkbox', {
+        name: 'Select source object RAW.ERP.ORDERS. 1,500 rows. 3.9 MB. 0 columns.',
+      }).getAttribute('aria-checked')
+    ).toBe('true');
+
+    await act(async () => {
+      fireEvent.doubleClick(tableRow!);
+    });
+
+    expect(onToggleSourceObject).toHaveBeenCalledTimes(2);
+    expect(
+      getByRole(container, 'checkbox', {
+        name: 'Select source object RAW.ERP.ORDERS. 1,500 rows. 3.9 MB. 0 columns.',
+      }).getAttribute('aria-checked')
+    ).toBe('false');
+  });
+
+  it('applies one net toggle when the double click starts on the checkbox', async () => {
+    const onToggleSourceObject = vi.fn();
+    const relation = buildSourceImportTestObject();
+
+    await act(async () => {
+      root.render(
+        <SourceImportCatalogView
+          catalog={buildCatalog([relation])}
+          emptyLabel="No source objects"
+          onActivateSourceObject={vi.fn()}
+          onSelectFilter={vi.fn()}
+          onToggleDatabase={vi.fn()}
+          onToggleSchema={vi.fn()}
+          onToggleSourceObject={onToggleSourceObject}
+        />
+      );
+    });
+
+    await act(async () => {
+      fireEvent.click(
+        getByRole(container, 'button', {
+          name: 'Expand source schema ERP. In source database RAW. 1 object.',
+        })
+      );
+    });
+
+    const checkbox = getByRole(container, 'checkbox', {
+      name: 'Select source object RAW.ERP.ORDERS. 1,500 rows. 3.9 MB. 0 columns.',
+    });
+
+    await act(async () => {
+      fireEvent.click(checkbox, { detail: 1 });
+      fireEvent.click(checkbox, { detail: 2 });
+      fireEvent.doubleClick(checkbox);
+    });
+
+    expect(onToggleSourceObject).toHaveBeenCalledOnce();
+  });
+
   it('reveals a collapsed schema when its selection is toggled', async () => {
     const relation = buildSourceImportTestObject();
 
@@ -174,6 +276,7 @@ describe('SourceImportCatalogView', () => {
 
   it('renders every SourceObject kind and disables unsupported imports without hiding inspection', async () => {
     const onActivateSourceObject = vi.fn();
+    const onToggleSourceObject = vi.fn();
     const file = buildSourceImportTestFileObject();
 
     await act(async () => {
@@ -190,7 +293,7 @@ describe('SourceImportCatalogView', () => {
           onSelectFilter={vi.fn()}
           onToggleDatabase={vi.fn()}
           onToggleSchema={vi.fn()}
-          onToggleSourceObject={vi.fn()}
+          onToggleSourceObject={onToggleSourceObject}
         />
       );
     });
@@ -214,6 +317,14 @@ describe('SourceImportCatalogView', () => {
     });
 
     expect(onActivateSourceObject).toHaveBeenCalledWith(1);
+
+    await act(async () => {
+      fireEvent.doubleClick(
+        container.querySelector(`[data-source-import-object="${file.objectId}"]`)!
+      );
+    });
+
+    expect(onToggleSourceObject).not.toHaveBeenCalled();
   });
 
   it('keeps filters usable when the active category has no matches', async () => {
