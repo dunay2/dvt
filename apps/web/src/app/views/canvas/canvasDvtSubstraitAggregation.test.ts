@@ -23,6 +23,8 @@ const UUID_V7 = '[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]
 const DVT_FIELD_ID = new RegExp(`^dvt_fld_${UUID_V7}$`, 'i');
 const DVT_RELATION_ID = new RegExp(`^dvt_rel_${UUID_V7}$`, 'i');
 
+type PilotField = Readonly<{ name: string; fieldId: string; outputOrdinal: number }>;
+
 function pilot(): DvtSubstraitPilotDraft {
   return createDvtSubstraitPilotDraft({
     sourceNodeId: 'source-customers',
@@ -36,7 +38,7 @@ function requireAggregation(draft: DvtSubstraitPilotDraft): DvtSubstraitPilotAgg
   return inspection.projection;
 }
 
-function requirePilotField(draft: DvtSubstraitPilotDraft, name: string) {
+function requirePilotField(draft: DvtSubstraitPilotDraft, name: string): PilotField {
   const inspection = inspectDvtSubstraitPilotDraft(draft);
   if (!inspection.ok) throw new Error('Expected the admitted pilot.');
   const field = inspection.projection.outputs.find((output) => output.name === name);
