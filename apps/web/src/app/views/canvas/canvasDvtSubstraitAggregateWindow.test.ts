@@ -8,15 +8,23 @@ import {
   encodeDvtSubstraitPilotDocument,
   type DvtSubstraitPilotDraft,
 } from './canvasDvtSubstraitPilot';
-import { applyDvtSubstraitPilotAggregation } from './canvasDvtSubstraitAggregation';
+import {
+  applyDvtSubstraitPilotAggregation,
+  inspectDvtSubstraitPilotAggregationDraft,
+} from './canvasDvtSubstraitAggregation';
 import {
   applyDvtSubstraitPilotAggregateRowNumber,
   inspectDvtSubstraitPilotAggregateWindowDraft,
   removeDvtSubstraitPilotAggregateRowNumber,
   renameDvtSubstraitPilotAggregateRowNumberOutput,
+  type DvtSubstraitPilotAggregateWindowProjection,
 } from './canvasDvtSubstraitAggregateWindow';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
+
+const UUID_V7 = '[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}';
+const DVT_FIELD_ID = new RegExp(`^dvt_fld_${UUID_V7}$`, 'i');
+const DVT_RELATION_ID = new RegExp(`^dvt_rel_${UUID_V7}$`, 'i');
 
 function groupedDraft(): DvtSubstraitPilotDraft {
   return applyDvtSubstraitPilotAggregation(
@@ -31,53 +39,58 @@ function groupedDraft(): DvtSubstraitPilotDraft {
   );
 }
 
+function requireAggregateWindow(
+  draft: DvtSubstraitPilotDraft
+): DvtSubstraitPilotAggregateWindowProjection {
+  const inspection = inspectDvtSubstraitPilotAggregateWindowDraft(draft);
+  if (!inspection.ok) throw new Error('Expected admitted aggregate-window composition.');
+  return inspection.projection;
+}
+
+function relationIdAtRootProject(draft: DvtSubstraitPilotDraft): string {
+  const root = draft.plan.relations[0]?.relType;
+  if (root?.case !== 'root' || root.value.input?.relType.case !== 'project') {
+    throw new Error('Expected outer ProjectRel.');
+  }
+  const anchor = root.value.input.relType.value.common?.relAnchor;
+  const binding = draft.sidecar.relations.find((relation) => relation.relAnchor === anchor);
+  if (binding == null) throw new Error('Expected outer relation binding.');
+  return binding.relationId;
+}
+
+function aggregateRelationId(draft: DvtSubstraitPilotDraft): string {
+  const root = draft.plan.relations[0]?.relType;
+  const aggregate =
+    root?.case === 'root' && root.value.input?.relType.case === 'project'
+      ? root.value.input.relType.value.input?.relType
+      : root?.case === 'root'
+        ? root.value.input?.relType
+        : undefined;
+  if (aggregate?.case !== 'aggregate') throw new Error('Expected AggregateRel.');
+  const anchor = aggregate.value.common?.relAnchor;
+  const binding = draft.sidecar.relations.find((relation) => relation.relAnchor === anchor);
+  if (binding == null) throw new Error('Expected aggregate relation binding.');
+  return binding.relationId;
+}
+
 describe('VTX2 typed Substrait aggregate and window composition', () => {
-  it('persists grouped rows ranked globally by their count in one relation tree', () => {
+  it('allocates opaque outer relation/result identities and persists the full composition', () => {
     const grouped = groupedDraft();
+    const groupedInspection = inspectDvtSubstraitPilotAggregationDraft(grouped);
+    if (!groupedInspection.ok) throw new Error('Expected grouped draft.');
+    expect(groupedInspection.projection.measure.fieldId).toMatch(DVT_FIELD_ID);
+    expect(aggregateRelationId(grouped)).toMatch(DVT_RELATION_ID);
+
     const ranked = applyDvtSubstraitPilotAggregateRowNumber(grouped, {
       outputName: 'count_rank',
     });
-    const reopened = decodeDvtSubstraitPilotDocument(encodeDvtSubstraitPilotDocument(ranked));
+    const projection = requireAggregateWindow(ranked);
+    expect(relationIdAtRootProject(ranked)).toMatch(DVT_RELATION_ID);
+    expect(projection.result.fieldId).toMatch(DVT_FIELD_ID);
+    expect(projection.measure.fieldId).toBe(groupedInspection.projection.measure.fieldId);
 
-    expect(inspectDvtSubstraitPilotAggregateWindowDraft(reopened)).toEqual({
-      ok: true,
-      projection: {
-        sourceName: 'customers',
-        groupField: {
-          name: 'country',
-          fieldId: 'field:transform-customers:country',
-          inputOrdinal: 0,
-        },
-        measure: {
-          name: 'customer_count',
-          fieldId: 'field:transform-customers:count',
-          inputOrdinal: 1,
-        },
-        result: {
-          name: 'count_rank',
-          fieldId: 'field:transform-customers:aggregate-row-number',
-          capabilityId:
-            'substrait/simple-extension/window-function/extension%3Aio.substrait%3Afunctions_arithmetic/row_number',
-        },
-        outputs: [
-          {
-            name: 'country',
-            fieldId: 'field:transform-customers:country',
-            outputOrdinal: 0,
-          },
-          {
-            name: 'customer_count',
-            fieldId: 'field:transform-customers:count',
-            outputOrdinal: 1,
-          },
-          {
-            name: 'count_rank',
-            fieldId: 'field:transform-customers:aggregate-row-number',
-            outputOrdinal: 2,
-          },
-        ],
-      },
-    });
+    const reopened = decodeDvtSubstraitPilotDocument(encodeDvtSubstraitPilotDocument(ranked));
+    expect(requireAggregateWindow(reopened)).toEqual(projection);
 
     const root = reopened.plan.relations[0]?.relType;
     expect(root?.case === 'root' ? root.value.input?.relType.case : null).toBe('project');
@@ -105,31 +118,71 @@ describe('VTX2 typed Substrait aggregate and window composition', () => {
     ]);
   });
 
-  it('renames and removes only the window while preserving the grouped revision and identities', () => {
+  it('renames and removes only the window while preserving grouped and result identities', () => {
     const grouped = groupedDraft();
     const ranked = applyDvtSubstraitPilotAggregateRowNumber(grouped, {
       outputName: 'count_rank',
     });
+    const before = requireAggregateWindow(ranked);
+    const outerRelationId = relationIdAtRootProject(ranked);
     const renamed = renameDvtSubstraitPilotAggregateRowNumberOutput(ranked, 'country_rank');
+    const after = requireAggregateWindow(renamed);
 
-    expect(inspectDvtSubstraitPilotAggregateWindowDraft(renamed)).toMatchObject({
-      ok: true,
-      projection: {
-        result: {
-          name: 'country_rank',
-          fieldId: 'field:transform-customers:aggregate-row-number',
-        },
-      },
+    expect(after.result).toMatchObject({
+      name: 'country_rank',
+      fieldId: before.result.fieldId,
     });
+    expect(relationIdAtRootProject(renamed)).toBe(outerRelationId);
     expect(
       encodeDvtSubstraitPilotDocument(removeDvtSubstraitPilotAggregateRowNumber(renamed))
     ).toEqual(encodeDvtSubstraitPilotDocument(grouped));
+  });
+
+  it('can compose over legacy aggregate/count identities without parsing their strings', () => {
+    const grouped = groupedDraft();
+    const groupedInspection = inspectDvtSubstraitPilotAggregationDraft(grouped);
+    if (!groupedInspection.ok) throw new Error('Expected grouped draft.');
+    const currentAggregateId = aggregateRelationId(grouped);
+    const legacyAggregateId = 'relation:transform-customers:aggregate';
+    const legacyCountId = 'field:transform-customers:count';
+    const legacyGrouped: DvtSubstraitPilotDraft = {
+      plan: grouped.plan,
+      sidecar: {
+        ...grouped.sidecar,
+        relations: grouped.sidecar.relations.map((relation) =>
+          relation.relationId === currentAggregateId
+            ? { ...relation, relationId: legacyAggregateId }
+            : relation
+        ),
+        fields: grouped.sidecar.fields.map((field) => ({
+          ...field,
+          relationId:
+            field.relationId === currentAggregateId ? legacyAggregateId : field.relationId,
+          fieldId:
+            field.fieldId === groupedInspection.projection.measure.fieldId
+              ? legacyCountId
+              : field.fieldId,
+        })),
+      },
+    };
+    const legacyInspection = inspectDvtSubstraitPilotAggregationDraft(legacyGrouped);
+    expect(legacyInspection.ok).toBe(true);
+
+    const ranked = applyDvtSubstraitPilotAggregateRowNumber(legacyGrouped, {
+      outputName: 'count_rank',
+    });
+    const projection = requireAggregateWindow(ranked);
+    expect(projection.measure.fieldId).toBe(legacyCountId);
+    expect(projection.result.fieldId).toMatch(DVT_FIELD_ID);
+    expect(relationIdAtRootProject(ranked)).toMatch(DVT_RELATION_ID);
+    expect(aggregateRelationId(ranked)).toBe(legacyAggregateId);
   });
 
   it('projects grain, count and rank fields on the Transform card from the same Plan', () => {
     const ranked = applyDvtSubstraitPilotAggregateRowNumber(groupedDraft(), {
       outputName: 'count_rank',
     });
+    const projection = requireAggregateWindow(ranked);
     const transform = applyDvtSubstraitSemanticDocument(
       {
         id: 'transform-customers',
@@ -162,9 +215,9 @@ describe('VTX2 typed Substrait aggregate and window composition', () => {
       edges: [{ sourceId: source.id, targetId: transform.id }],
     });
     expect(truth.columns.visible.map((column) => [column.name, column.reference])).toEqual([
-      ['country', 'field:transform-customers:country'],
-      ['customer_count', 'field:transform-customers:count'],
-      ['count_rank', 'field:transform-customers:aggregate-row-number'],
+      ['country', projection.groupField.fieldId],
+      ['customer_count', projection.measure.fieldId],
+      ['count_rank', projection.result.fieldId],
     ]);
   });
 
@@ -202,11 +255,12 @@ describe('VTX2 typed Substrait aggregate and window composition', () => {
     const staleBinding = applyDvtSubstraitPilotAggregateRowNumber(groupedDraft(), {
       outputName: 'count_rank',
     });
+    const staleProjection = requireAggregateWindow(staleBinding);
     const resultBinding = staleBinding.sidecar.fields.find(
-      (field) => field.fieldId === 'field:transform-customers:aggregate-row-number'
+      (field) => field.fieldId === staleProjection.result.fieldId
     );
     if (resultBinding == null) throw new Error('Expected the rank field binding.');
-    resultBinding.relationId = 'relation:transform-customers:aggregate';
+    resultBinding.relationId = aggregateRelationId(staleBinding);
     expect(inspectDvtSubstraitPilotAggregateWindowDraft(staleBinding)).toEqual({ ok: false });
 
     const malformedEmit = applyDvtSubstraitPilotAggregateRowNumber(groupedDraft(), {
