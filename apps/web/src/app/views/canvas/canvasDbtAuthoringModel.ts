@@ -173,6 +173,17 @@ function isCompatibleDbtModelOrigin(node: CanonicalNode): boolean {
   );
 }
 
+export function resolveDbtModelConnectedOrigin(
+  compatibleOrigins: readonly CanonicalNode[],
+  selectedSourceId: string
+): CanonicalNode | undefined {
+  const normalizedSelectedSourceId = selectedSourceId.trim();
+  return (
+    compatibleOrigins.find((candidate) => candidate.id === normalizedSelectedSourceId) ??
+    (compatibleOrigins.length === 1 ? compatibleOrigins[0] : undefined)
+  );
+}
+
 function resolveDbtModelOriginSchemaName(node: CanonicalNode): string | undefined {
   const configMetadata = readNodeMetadataRecord(node, 'config');
   const dbtMetadata = readNodeMetadataRecord(node, 'dbt');
@@ -204,9 +215,10 @@ export function reconcileDbtModelConnectedOrigin({
       candidate == null ? false : isCompatibleDbtModelOrigin(candidate)
     );
   const authoringMetadata = createDbtNodeAuthoringMetadata(node);
-  const selectedOrigin =
-    connectedOrigins.find((candidate) => candidate.id === authoringMetadata.selectedSourceId) ??
-    (connectedOrigins.length === 1 ? connectedOrigins[0] : undefined);
+  const selectedOrigin = resolveDbtModelConnectedOrigin(
+    connectedOrigins,
+    authoringMetadata.selectedSourceId
+  );
   if (selectedOrigin == null) return node;
 
   const originSchemaName = resolveDbtModelOriginSchemaName(selectedOrigin);

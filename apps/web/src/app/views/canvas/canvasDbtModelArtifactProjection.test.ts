@@ -416,6 +416,35 @@ describe('canvas DBT model artifact projection', () => {
     });
   });
 
+  it('uses the only compatible incoming edge when duplicate selected-source metadata is stale', () => {
+    const staleSelectionModel = {
+      ...model,
+      metadata: {
+        dbt: {
+          packageName: 'analytics',
+          materialized: 'table',
+          selectedSourceId: 'detached-source',
+        },
+      },
+    };
+
+    expect(
+      projectDbtModelArtifact({
+        modelNode: staleSelectionModel,
+        nodes: [warehouseSource, staleSelectionModel],
+        edges: [edge(warehouseSource.id)],
+      })
+    ).toMatchObject({
+      ok: true,
+      artifact: {
+        origin: {
+          nodeId: warehouseSource.id,
+          sql: "{{ source('warehouse_prod_analytics_erp', 'orders') }}",
+        },
+      },
+    });
+  });
+
   it('does not fall back to edge order when an origin was not explicitly selected', () => {
     expect(
       projectDbtModelArtifact({

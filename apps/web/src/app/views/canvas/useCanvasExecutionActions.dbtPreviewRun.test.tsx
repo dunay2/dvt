@@ -288,4 +288,77 @@ describe('useCanvasExecutionActions dbt preview and run', () => {
     );
     expect(harness.shellFeedback.error).not.toHaveBeenCalled();
   });
+
+  it('previews a model chain when the terminal model has stale duplicate origin metadata', async () => {
+    const plansService = createPlansServiceMock();
+    const runsService = createRunsServiceMock();
+    const [source, upstreamModel] = buildDbtNodes();
+    const terminalModel: CanonicalNode = {
+      id: 'model-orders-final',
+      name: 'Orders Final',
+      pluginId: 'dbt',
+      kind: 'dbt:model',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        dbt: {
+          packageName: 'analytics',
+          materialized: 'view',
+          selectedSourceId: 'detached-model',
+        },
+      },
+    };
+    const chainEdges: CanonicalEdge[] = [
+      ...buildDbtEdges(),
+      {
+        id: 'edge-model-model',
+        sourceId: upstreamModel!.id,
+        targetId: terminalModel.id,
+        relation: 'lineage',
+      },
+    ];
+
+    harness = renderExecutionActionsHarness({
+      plansService,
+      runsService,
+      initialPlan: null,
+      stateful: true,
+      canonicalNodes: [source!, upstreamModel!, terminalModel],
+      canonicalEdges: chainEdges,
+      executionStrategy: {
+        kind: 'planner_generic_preview',
+        previewProfile: 'planner-generic-v1',
+        sourceFamily: 'dbt',
+      },
+      selectionIntent: { mode: 'explicit', nodeIds: [terminalModel.id] },
+      workspaceNodeIds: [source!.id, upstreamModel!.id, terminalModel.id],
+    });
+    await harness.render();
+    await harness.clickPlan();
+
+    expect(harness.graphDbtWorkspaceArtifactPublicationCommand.publish).toHaveBeenCalledWith(
+      expect.objectContaining({
+        artifacts: expect.arrayContaining([
+          expect.objectContaining({
+            path: 'models/orders_final.sql',
+            content: expect.stringContaining("{{ ref('orders_model') }}"),
+          }),
+        ]),
+      })
+    );
+    expect(plansService.previewPlan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        graphSource: expect.objectContaining({
+          nodes: expect.arrayContaining([
+            expect.objectContaining({
+              nodeId: terminalModel.id,
+              metadata: expect.objectContaining({ sourceRef: upstreamModel!.id }),
+            }),
+          ]),
+        }),
+      })
+    );
+    expect(harness.shellFeedback.error).not.toHaveBeenCalled();
+  });
 });

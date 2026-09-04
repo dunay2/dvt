@@ -397,6 +397,29 @@ describe('canvas dbt planner graph source', () => {
     );
   });
 
+  it('projects the sole connected origin instead of stale duplicate source metadata', () => {
+    const staleModelNode: CanonicalNode = {
+      ...modelNode,
+      metadata: {
+        dbt: {
+          selectedSourceId: 'detached-source',
+        },
+      },
+    };
+
+    const result = buildDbtPlannerGraphSource({
+      nodes: [sourceNode, staleModelNode],
+      edges,
+      scopedNodeIds: ['source-orders', 'model-orders'],
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.graphSource.nodes[0]?.metadata).toEqual(
+      expect.objectContaining({ sourceRef: 'source-orders' })
+    );
+  });
+
   it('rejects an explicit selection that has no executable dbt resources', () => {
     expect(
       resolveDbtExecutionScopeNodeIds({

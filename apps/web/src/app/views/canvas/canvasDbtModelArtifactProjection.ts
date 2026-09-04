@@ -5,6 +5,7 @@ import { buildCanvasNodePresentationTruth } from '../../components/canvas/canvas
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
   createDbtNodeAuthoringMetadata,
+  resolveDbtModelConnectedOrigin,
   type DbtNodeAuthoringMetadata,
 } from './canvasDbtAuthoringModel';
 import {
@@ -203,14 +204,8 @@ function resolveOriginProjection(
   metadata: DbtNodeAuthoringMetadata,
   ancestorModelIds: ReadonlySet<string>
 ): DbtModelOriginProjection | DbtModelArtifactProjectionResult {
-  const selectedSourceId = metadata.selectedSourceId.trim();
   const compatibleOrigins = resolveCompatibleDbtModelOrigins(args);
-  const origin =
-    selectedSourceId.length > 0
-      ? compatibleOrigins.find((candidate) => candidate.id === selectedSourceId)
-      : compatibleOrigins.length === 1
-        ? compatibleOrigins[0]
-        : undefined;
+  const origin = resolveDbtModelConnectedOrigin(compatibleOrigins, metadata.selectedSourceId);
 
   if (origin == null) {
     return {

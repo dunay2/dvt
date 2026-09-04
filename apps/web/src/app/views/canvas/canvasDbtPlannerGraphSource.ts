@@ -12,14 +12,20 @@ import {
   resolveDbtExecutableStepKind,
   resolveDbtExecutionScope,
 } from './dbtExecutionScopePolicy';
-import { createDbtNodeAuthoringMetadata } from './canvasDbtAuthoringModel';
+import {
+  createDbtNodeAuthoringMetadata,
+  resolveDbtModelConnectedOrigin,
+} from './canvasDbtAuthoringModel';
 import {
   isObjectFilePostgresNode,
   projectObjectFilePostgresStepTypeConfig,
   type ObjectFilePostgresExecutionScope,
 } from './objectFilePostgresAuthoringModel';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
-import { normalizeDbtArtifactIdentifier } from './canvasDbtModelArtifactProjection';
+import {
+  normalizeDbtArtifactIdentifier,
+  resolveCompatibleDbtModelOrigins,
+} from './canvasDbtModelArtifactProjection';
 import { projectDbtTestArtifact } from './canvasDbtTestArtifactProjection';
 import {
   isHttpJsonArtifactNode,
@@ -160,6 +166,17 @@ function buildGenericGraphNode(args: {
     args.node.pluginId === 'dbt' && args.node.kind === 'dbt:model'
       ? createDbtNodeAuthoringMetadata(args.node)
       : null;
+  const connectedOrigin =
+    nodeMetadata == null
+      ? undefined
+      : resolveDbtModelConnectedOrigin(
+          resolveCompatibleDbtModelOrigins({
+            modelNode: args.node,
+            nodes: args.nodes,
+            edges: args.edges,
+          }),
+          nodeMetadata.selectedSourceId
+        );
   return {
     ok: true,
     node: {
@@ -175,9 +192,9 @@ function buildGenericGraphNode(args: {
             : {}),
       metadata: {
         displayName: args.node.name,
-        ...(nodeMetadata?.selectedSourceId
+        ...(connectedOrigin
           ? {
-              sourceRef: nodeMetadata.selectedSourceId,
+              sourceRef: connectedOrigin.id,
             }
           : {}),
         tags: {

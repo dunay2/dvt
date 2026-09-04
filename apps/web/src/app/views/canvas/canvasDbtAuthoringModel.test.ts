@@ -5,6 +5,7 @@ import {
   applyDbtNodeAuthoringMetadata,
   createDbtNodeAuthoringMetadata,
   reconcileDbtModelConnectedOrigin,
+  resolveDbtModelConnectedOrigin,
   resolveDbtSourceRelationshipSelection,
 } from './canvasDbtAuthoringModel';
 
@@ -60,6 +61,21 @@ function buildSourceEdge(): CanonicalEdge {
 }
 
 describe('canvas dbt authoring model', () => {
+  it('resolves the sole connected origin when duplicated selection metadata is stale', () => {
+    const source = buildDbtSourceNode();
+
+    expect(resolveDbtModelConnectedOrigin([source], 'detached-source')).toBe(source);
+  });
+
+  it('preserves an explicitly selected connected origin', () => {
+    const firstSource = buildDbtSourceNode();
+    const selectedSource = { ...firstSource, id: 'source-customers', name: 'Raw Customers' };
+
+    expect(resolveDbtModelConnectedOrigin([firstSource, selectedSource], selectedSource.id)).toBe(
+      selectedSource
+    );
+  });
+
   it('projects dbt source metadata into a route-owned authoring value object', () => {
     expect(createDbtNodeAuthoringMetadata(buildDbtSourceNode())).toEqual({
       packageName: 'analytics',
