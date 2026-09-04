@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Source-verified application composition roots used to derive composition reachability. A root declaration does not invent runtime edges; the generated edges come from the pinned source dependency graph.",
+  "roots": [
+    {
+      "id": "api-protected-runtime",
+      "contextId": "api",
+      "path": "apps/api/src/modules/buildProtectedRuntimeModule.ts",
+      "title": "API protected runtime composition",
+      "rationale": "The source explicitly states this is the only composition root binding planner, validator, adapters, stores, auth and runtime services into ProtectedRuntimeModule."
+    },
+    {
+      "id": "temporal-worker-runtime",
+      "contextId": "temporal-worker",
+      "path": "apps/temporal-worker/src/runtime/createTemporalWorkerRuntime.ts",
+      "title": "Temporal worker runtime composition",
+      "rationale": "Public worker runtime entrypoint assembling resources, host and lifecycle handle."
+    },
+    {
+      "id": "outbox-worker-runtime",
+      "contextId": "outbox-worker",
+      "path": "apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts",
+      "title": "Outbox worker runtime composition",
+      "rationale": "Creates PostgreSQL state, event bus, outbox runtime, purge and retention runtimes."
+    },
+    {
+      "id": "projector-worker-process",
+      "contextId": "projector-worker",
+      "path": "apps/projector-worker/src/server.ts",
+      "title": "Projector worker process composition",
+      "rationale": "Process entrypoint directly creates the PostgreSQL adapter and ProjectorWorkerRuntime."
+    },
+    {
+      "id": "lineage-worker-bootstrap",
+      "contextId": "lineage-worker",
+      "path": "apps/lineage-worker/src/bootstrap.ts",
+      "title": "Lineage worker bootstrap composition",
+      "rationale": "Creates the PostgreSQL state adapter and OpenLineage sink behind the worker bootstrap result."
+    },
+    {
+      "id": "web-bootstrap",
+      "contextId": "web",
+      "path": "apps/web/src/main.tsx",
+      "title": "Web application bootstrap",
+      "rationale": "Browser process bootstrap; included to prove which registered DVT workspaces are composition-reachable from the UI source graph, if any."
+    }
+  ]
+}
