@@ -47,6 +47,7 @@ import {
   type DvtSubstraitAuthoringSidecarV1,
   type DvtSubstraitSemanticDocumentV1,
 } from '@dvt/contracts';
+import { allocateDvtRelationId } from '@dvt/contracts/substrait';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 
@@ -274,13 +275,14 @@ export function createDvtSubstraitPilotDraft(args: {
       }),
     ],
   });
-  const projectRelationId = `relation:${args.targetNodeId}:project`;
+  const sourceRelationId = allocateDvtRelationId();
+  const projectRelationId = allocateDvtRelationId();
   const sidecar: DvtSubstraitAuthoringSidecarV1 = {
     schemaVersion: DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION,
     semanticPlanSha256: ZERO_SHA256,
     relations: [
       {
-        relationId: `relation:${args.sourceNodeId}`,
+        relationId: sourceRelationId,
         relAnchor: 1,
         displayName: PILOT_SOURCE_NAME,
       },
