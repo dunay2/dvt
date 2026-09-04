@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "components": [
+    {"id":"publicBoundary","title":"HTTP JSON plugin public boundary","paths":["src/index.ts"],"rationale":"Publishes the concrete HTTP JSON artifact Temporal step plugin API."},
+    {"id":"activity","title":"HTTP JSON artifact activity","paths":["src/HttpJsonArtifactStepActivity.ts"],"rationale":"Temporal activity boundary for HTTP JSON artifact acquisition."},
+    {"id":"runner","title":"HTTP JSON artifact runner","paths":["src/HttpJsonArtifactPluginRunner.ts"],"rationale":"Concrete HTTP JSON acquisition/plugin execution runner."},
+    {"id":"typesAndErrors","title":"HTTP JSON plugin contracts","paths":["src/httpJsonArtifactPluginTypes.ts","src/httpJsonArtifactPluginErrors.ts"],"rationale":"Plugin-owned input/output types and bounded failure model."}
+  ]
+}
