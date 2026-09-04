@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "components": [
+    {"id":"publicBoundary","title":"Postgres adapter public boundary","paths":["src/index.ts","src/types.ts"],"rationale":"Exports transactional state, plan, archive, delivery and capability adapters behind stable PostgreSQL boundaries."},
+    {"id":"stateStore","title":"Run state persistence","paths":["src/PostgresStateStoreAdapter.ts","src/PostgresRunEventStore.ts","src/PostgresRunEventStorage.ts","src/PostgresRunSnapshotStore.ts","src/PostgresRunMetadataRepository.ts","src/PostgresRunStateCoordinator.ts"],"rationale":"Persists run events, snapshots and metadata without owning lifecycle rules."},
+    {"id":"runStateCommandBridge","title":"RunStateCommandPort bridge","paths":["src/runStateCommandPortBridge.ts"],"rationale":"Explicit bridge from the DVT run-state command boundary into PostgreSQL write storage."},
+    {"id":"planStore","title":"Postgres plan store","prefixes":["src/PostgresPlanStore"],"rationale":"Stores and queries immutable/admitted plan records and executable plan artifacts."},
+    {"id":"outboxDelivery","title":"Outbox + lineage persistence","paths":["src/PostgresOutboxStore.ts","src/PostgresLineageOutboxStore.ts"],"rationale":"PostgreSQL implementations for delivery/outbox facts and lineage outbox storage."},
+    {"id":"archiveLifecycle","title":"Run archive persistence","paths":["src/PostgresRunArchiveStore.ts","src/PostgresArchiveLeaseStore.ts","src/PostgresDeliveryBufferPurgeStore.ts"],"rationale":"Persistence adapters used by state-store archive/retention lifecycle."},
+    {"id":"backpressure","title":"Backpressure snapshot reader","paths":["src/PostgresBackpressureSnapshotReader.ts","src/PostgresBackpressureSnapshotReaderSql.ts"],"rationale":"Reads bounded delivery-pressure snapshots used by admission policies."},
+    {"id":"objectFile","title":"Object-file to Postgres capability","paths":["src/PostgresObjectFileLoader.ts","src/PostgresObjectFileLoadingCapability.ts"],"rationale":"Provider-specific object-file materialization capability exposed to runtime plugins."},
+    {"id":"schemaAndRuntime","title":"Schema + runtime composition","paths":["src/PostgresSchemaManager.ts","src/PostgresStateStoreRuntimeConfig.ts","src/migratePostgresRuntimeStores.ts"],"rationale":"Owns PostgreSQL schema migration/runtime configuration mechanics, not domain semantics."},
+    {"id":"credentialsAndPool","title":"Credentials + pool policy","paths":["src/PostgresCredentialBindingResolver.ts","src/PostgresPoolErrorPolicy.ts","src/PostgresAdapterConnectionString.ts"],"rationale":"Infrastructure-level credential binding and observed pool failure policy."}
+  ]
+}
