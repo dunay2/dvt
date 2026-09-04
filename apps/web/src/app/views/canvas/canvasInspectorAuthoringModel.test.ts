@@ -700,7 +700,7 @@ describe('canvasInspectorAuthoringModel', () => {
     expect(applyCanvasInspectorNodeDraft(node, draft)).toEqual(node);
   });
 
-  it('persists an admitted filter on a Source without changing its identity', () => {
+  it('removes a filter injected into a Source draft without changing physical identity', () => {
     const source = buildImportedWarehouseSourceNode({
       connectedSourceRef: {
         schemaVersion: 'connected-source-ref.v1',
@@ -745,7 +745,7 @@ describe('canvasInspectorAuthoringModel', () => {
     });
     expect(
       inspectDvtSubstraitFilter(decodeDvtSubstraitProjectionDocument(authority?.semanticDocument))
-    ).toMatchObject({ fieldName: 'customer', value: 'Ada' });
+    ).toBeNull();
   });
 
   it('routes object-file load drafts through their plugin-owned authoring model', () => {

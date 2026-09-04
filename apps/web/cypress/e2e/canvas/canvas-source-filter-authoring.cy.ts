@@ -1,4 +1,4 @@
-/** Owned concern: prove Source filter authoring persists one canonical relation recipe. */
+/** Owned concern: prove filters belong to Transform and never to Source. */
 import { inspectDvtSubstraitFilter } from '../../../src/app/views/canvas/canvasDvtSubstraitFilter';
 import { decodeDvtSubstraitProjectionDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitProjection';
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
@@ -41,59 +41,66 @@ function visitCanvas(): void {
   waitForE2eApiCall('/workspace/graph/draft', 'GET');
 }
 
-function sourceCard(): Cypress.Chainable<JQuery<HTMLElement>> {
-  return cy.get('.react-flow__node[data-id="source-orders"]');
+function card(nodeId: string): Cypress.Chainable<JQuery<HTMLElement>> {
+  return cy.get(`.react-flow__node[data-id="${nodeId}"]`);
 }
 
-function openSourceColumns(): void {
-  sourceCard().find('[data-slot="canvas-node-shell"]').rightclick();
+function openColumns(nodeId: string): void {
+  card(nodeId).find('[data-slot="canvas-node-shell"]').rightclick();
   cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Properties').click();
   cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
-  cy.get('[data-slot="dvt-filter-authoring"]').should('be.visible');
 }
 
-function latestFilter(): ReturnType<typeof inspectDvtSubstraitFilter> | undefined {
-  const source = getE2eApiCalls('/workspace/graph/draft', 'PUT')
+function latestFilter(nodeId: string): ReturnType<typeof inspectDvtSubstraitFilter> | undefined {
+  const node = getE2eApiCalls('/workspace/graph/draft', 'PUT')
     .map((call) => call.body as DraftSave)
-    .map((save) => save.draft.nodes.find((node) => node.id === 'source-orders'))
-    .filter((node) => node != null)
+    .map((save) => save.draft.nodes.find((candidate) => candidate.id === nodeId))
+    .filter((candidate) => candidate != null)
     .at(-1);
-  const authority = source?.metadata?.transformAuthoring as
+  const authority = node?.metadata?.transformAuthoring as
     { semanticDocument?: unknown } | undefined;
   if (authority?.semanticDocument == null) return undefined;
   return inspectDvtSubstraitFilter(
-    decodeDvtSubstraitProjectionDocument(authority?.semanticDocument)
+    decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
   );
 }
 
-describe('Canvas Source filter authoring', () => {
+describe('Canvas Source filter boundary', () => {
   beforeEach(() => stubCanvas());
 
-  it('applies, reloads, and removes a filter without changing the Source identity', () => {
+  it('keeps Source stable while a connected Transform authors and reloads the filter', () => {
     cy.viewport(1920, 1080);
     visitCanvas();
-    openSourceColumns();
+
+    openColumns('source-orders');
+    cy.get('[data-slot="dvt-filter-authoring"]').should('not.exist');
+    card('source-orders').should('not.contain.text', 'Filter');
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+
+    card('model-orders').find('[data-slot="graph-node-column-toggle"]').click();
+    card('model-orders').contains('button', 'Map compatible columns').click();
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+
+    openColumns('model-orders');
+    cy.get('[data-slot="dvt-filter-authoring"]').should('be.visible');
     cy.get('select[name="dvt-filter-field"]').select('output:customer');
     cy.get('input[name="dvt-filter-value"]').type('Ada');
     cy.get('[data-slot="dvt-filter-apply"]').click();
-    cy.get('[data-slot="dvt-filter-active"]').should('contain.text', 'customer');
     cy.contains('button', /^Apply$/).click();
     waitForE2eApiCall('/workspace/graph/draft', 'PUT');
 
     cy.wrap(null).should(() => {
-      expect(latestFilter()).to.deep.include({ fieldName: 'customer', value: 'Ada' });
+      expect(latestFilter('source-orders')).to.equal(undefined);
+      expect(latestFilter('model-orders')).to.deep.include({
+        fieldName: 'customer',
+        value: 'Ada',
+      });
     });
-    sourceCard().should('contain.text', 'customer = "Ada"').and('contain.text', 'Source');
+    card('source-orders').should('not.contain.text', 'customer = "Ada"');
+    card('model-orders').should('contain.text', 'customer = "Ada"');
 
     visitCanvas();
-    sourceCard().should('contain.text', 'customer = "Ada"');
-    openSourceColumns();
-    cy.get('[data-slot="dvt-filter-remove"]').click();
-    cy.get('[data-slot="dvt-filter-active"]').should('not.exist');
-    cy.contains('button', /^Apply$/).click();
-    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
-
-    cy.wrap(null).should(() => expect(latestFilter()).to.equal(null));
-    sourceCard().should('not.contain.text', 'customer = "Ada"').and('contain.text', 'Source');
+    card('source-orders').should('not.contain.text', 'customer = "Ada"');
+    card('model-orders').should('contain.text', 'customer = "Ada"');
   });
 });

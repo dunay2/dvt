@@ -10,7 +10,7 @@ export function buildDvtGraphNodeSemanticMetric(
   node: CanonicalNode,
   locale?: string
 ): GraphNodeCardMetric | null {
-  if (node.kind !== 'dvt:source' && node.kind !== 'dvt:transform') return null;
+  if (node.kind !== 'dvt:transform') return null;
   try {
     const authority = readDvtTransformAuthoringAuthority(node);
     const filter =

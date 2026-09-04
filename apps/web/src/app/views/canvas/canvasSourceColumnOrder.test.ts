@@ -120,7 +120,7 @@ describe('Canvas Source column order', () => {
     ]);
   });
 
-  it('reorders a filtered Source atomically without losing its columns or filter', () => {
+  it('reorders a legacy filtered Source while removing the invalid filter authority', () => {
     const filteredSource = filteredSemanticSource();
     const result = reorderCanvasSourceColumns({
       draftSession: buildDraftSession(),
@@ -148,11 +148,32 @@ describe('Canvas Source column order', () => {
       'order_id',
       'amount',
     ]);
-    expect(semanticDraft == null ? null : inspectDvtSubstraitFilter(semanticDraft)).toMatchObject({
-      fieldId: 'output:customer',
-      value: 'Ada',
-    });
+    expect(semanticDraft == null ? null : inspectDvtSubstraitFilter(semanticDraft)).toBeNull();
     expect(updated.metadata?.columns).toEqual(semanticSource.metadata?.columns);
+  });
+
+  it('normalizes a legacy Source filter even when its column order already agrees', () => {
+    const filteredSource = filteredSemanticSource();
+    const projection = buildCanvasAuthoringGraphProjection({
+      visibleNodeIds: [filteredSource.id],
+      visibleEdges: [],
+      draftSemanticGraph: { canonicalNodes: [filteredSource], canonicalEdges: [] },
+      localCanonicalNodes: [],
+    });
+    const normalized = projection.canonicalNodesById.get(filteredSource.id);
+    if (normalized == null) throw new Error('Expected a normalized Source.');
+
+    const semanticDraft = createDvtSourceSemanticDraft(normalized);
+    expect(semanticDraft == null ? null : inspectDvtSubstraitFilter(semanticDraft)).toBeNull();
+    expect(normalized).toMatchObject({
+      id: semanticSource.id,
+      kind: 'dvt:source',
+      role: 'input',
+      metadata: {
+        connectedSourceRef: semanticSource.metadata?.connectedSourceRef,
+        columns: semanticSource.metadata?.columns,
+      },
+    });
   });
 
   it('repairs a persisted order-only divergence before presenting or saving the Source', () => {
@@ -188,10 +209,7 @@ describe('Canvas Source column order', () => {
       'amount',
     ]);
     expect(reconciled.metadata?.columns).toEqual(semanticSource.metadata?.columns);
-    expect(semanticDraft == null ? null : inspectDvtSubstraitFilter(semanticDraft)).toMatchObject({
-      fieldId: 'output:customer',
-      value: 'Ada',
-    });
+    expect(semanticDraft == null ? null : inspectDvtSubstraitFilter(semanticDraft)).toBeNull();
   });
 
   it('rejects reordering outside a Source declaration', () => {
