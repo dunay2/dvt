@@ -365,10 +365,11 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(tabsList?.textContent).not.toContain('Columns');
   });
 
-  it('offers semantic filter authoring from a Source columns tab', () => {
+  it('keeps the Source columns tab factual without Transform filter authoring', () => {
     renderPanel(root, 'columns');
 
-    expect(container.querySelector('[data-slot="dvt-filter-authoring"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="dvt-filter-authoring"]')).toBeNull();
+    expect(container.textContent).toContain('order_id');
   });
 
   it('does not repeat an external code action when the node already supports an inline projection', () => {
