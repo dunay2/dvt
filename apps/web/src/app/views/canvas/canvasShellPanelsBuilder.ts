@@ -46,9 +46,6 @@ export function buildCanvasShellPanels({
     activeCanvas,
     canvasDocuments: routePresentation.canvasDocuments,
     executionEnvironmentOptions: panelState.executionEnvironmentOptions,
-    canEditCanvas: userPermissions.canEditEdges,
-    canDeleteActiveCanvas:
-      userPermissions.canEditEdges && routePresentation.canvasDocuments.length > 1,
     inspectorNode: panelState.inspectorNode,
     inspectorPreferredTabId:
       panelState.inspectorNode == null ? null : panelState.inspectorPreferredTabId,

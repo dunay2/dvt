@@ -30,6 +30,8 @@ export function CanvasWorkspaceMenuContributionRegistrar(
   const latestPropsRef = useRef(props);
   latestPropsRef.current = props;
   const activeCanvas = props.activeCanvas;
+  const hasExportProjectSnapshotCommand = props.onExportProjectSnapshot != null;
+  const hasImportProjectSnapshotCommand = props.onImportProjectSnapshotFile != null;
   const hasImportDbtProjectCommand = props.onImportDbtProject != null;
   const hasOpenProjectCodeCommand = props.onOpenProjectCode != null;
   const hasOpenProjectExplorerCommand = props.onOpenProjectExplorer != null;
@@ -50,18 +52,24 @@ export function CanvasWorkspaceMenuContributionRegistrar(
       canImportDbtProject: props.canImportDbtProject,
       canOpenProjectCode: props.canOpenProjectCode,
       canOpenProjectExplorer: props.canOpenProjectExplorer,
-      onExportProjectSnapshot: () => latestPropsRef.current.onExportProjectSnapshot(),
-      onImportProjectSnapshotFile: (file) =>
-        latestPropsRef.current.onImportProjectSnapshotFile(file),
-      onImportDbtProject: hasImportDbtProjectCommand
-        ? () => latestPropsRef.current.onImportDbtProject?.()
-        : undefined,
-      onOpenProjectCode: hasOpenProjectCodeCommand
-        ? () => latestPropsRef.current.onOpenProjectCode?.()
-        : undefined,
-      onOpenProjectExplorer: hasOpenProjectExplorerCommand
-        ? () => latestPropsRef.current.onOpenProjectExplorer?.()
-        : undefined,
+      ...(hasExportProjectSnapshotCommand
+        ? { onExportProjectSnapshot: () => latestPropsRef.current.onExportProjectSnapshot?.() }
+        : {}),
+      ...(hasImportProjectSnapshotCommand
+        ? {
+            onImportProjectSnapshotFile: (file: File) =>
+              latestPropsRef.current.onImportProjectSnapshotFile?.(file),
+          }
+        : {}),
+      ...(hasImportDbtProjectCommand
+        ? { onImportDbtProject: () => latestPropsRef.current.onImportDbtProject?.() }
+        : {}),
+      ...(hasOpenProjectCodeCommand
+        ? { onOpenProjectCode: () => latestPropsRef.current.onOpenProjectCode?.() }
+        : {}),
+      ...(hasOpenProjectExplorerCommand
+        ? { onOpenProjectExplorer: () => latestPropsRef.current.onOpenProjectExplorer?.() }
+        : {}),
     }),
     [
       activeCanvas?.defaultPermission,
@@ -74,6 +82,8 @@ export function CanvasWorkspaceMenuContributionRegistrar(
       props.canImportProjectSnapshot,
       props.canOpenProjectCode,
       props.canOpenProjectExplorer,
+      hasExportProjectSnapshotCommand,
+      hasImportProjectSnapshotCommand,
       hasImportDbtProjectCommand,
       hasOpenProjectCodeCommand,
       hasOpenProjectExplorerCommand,
@@ -143,7 +153,9 @@ export function CanvasWorkspaceMenuControls({
       <DropdownMenuLabel>{canvasViewCopy.toolbarProjectSnapshotMenuLabel}</DropdownMenuLabel>
       <DropdownMenuItem
         data-slot="canvas-workspace-export-command"
-        disabled={!contribution.canExportProjectSnapshot}
+        disabled={
+          !contribution.canExportProjectSnapshot || contribution.onExportProjectSnapshot == null
+        }
         onClick={contribution.onExportProjectSnapshot}
       >
         <Download className="mr-2 size-4" />
@@ -151,7 +163,9 @@ export function CanvasWorkspaceMenuControls({
       </DropdownMenuItem>
       <DropdownMenuItem
         data-slot="canvas-workspace-import-command"
-        disabled={!contribution.canImportProjectSnapshot}
+        disabled={
+          !contribution.canImportProjectSnapshot || contribution.onImportProjectSnapshotFile == null
+        }
         onClick={() => importInputRef.current?.click()}
       >
         <Upload className="mr-2 size-4" />
@@ -168,7 +182,7 @@ export function CanvasWorkspaceMenuControls({
           const file = event.currentTarget.files?.[0];
           event.currentTarget.value = '';
           if (file != null) {
-            contribution.onImportProjectSnapshotFile(file);
+            contribution.onImportProjectSnapshotFile?.(file);
           }
         }}
       />

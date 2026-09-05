@@ -4,7 +4,7 @@ import {
 } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
-import { resolveDbtProjectFileSourceImportFocus } from './useDbtProjectFileCanvasController';
+import { resolveDbtProjectFileSourceImportFocus } from './useDbtProjectFilesAuthorityController';
 
 const AUTHORITY_BINDING = {
   schemaVersion: 'canvas-authoring-authority-binding.v1' as const,

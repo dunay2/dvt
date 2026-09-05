@@ -3,10 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { readArchitectureSiblingSource } from '../architecture.test.support';
 
 const TOKEN_SOURCE = readArchitectureSiblingSource(import.meta.dirname, 'lineageChromeTokens.ts');
-const COLUMN_PANEL_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'LineageColumnPanel.tsx'
-);
 const GRAPH_PANEL_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'LineageGraphPanel.tsx'
@@ -24,13 +20,15 @@ const USER_STORIES = readArchitectureSiblingSource(
   '../../../../../../docs/architecture/components/web/lineage/lineage-panel-token-user-stories.md'
 );
 
-const PANEL_SOURCES = [COLUMN_PANEL_SOURCE, GRAPH_PANEL_SOURCE, IMPACT_SUMMARY_SOURCE];
+const PANEL_SOURCES = [GRAPH_PANEL_SOURCE, IMPACT_SUMMARY_SOURCE];
 
 describe('lineage panel token convergence architecture', () => {
-  it('keeps Lineage panel chrome behind a named token component', () => {
-    expect(TOKEN_SOURCE).toContain('Owned concern: own Lineage panel chrome visual tokens');
+  it('keeps current Lineage route chrome behind a named token component', () => {
+    expect(TOKEN_SOURCE).toContain('Owned concern: own Lineage route chrome visual tokens');
     expect(TOKEN_SOURCE).toContain('lineageChromeClasses');
     expect(TOKEN_SOURCE).toContain('resolveLineageNodeKindClassName');
+    expect(TOKEN_SOURCE).not.toContain('sourceColumn:');
+    expect(TOKEN_SOURCE).not.toContain('targetColumn:');
 
     for (const source of PANEL_SOURCES) {
       expect(source).toContain("from './lineageChromeTokens'");
@@ -39,7 +37,7 @@ describe('lineage panel token convergence architecture', () => {
     }
   });
 
-  it('documents the Lineage panel token API, invariants, transitions, and consumers', () => {
+  it('documents only the surviving graph and impact consumers', () => {
     for (const expected of [
       '## Public API',
       '## Invariants',
@@ -48,16 +46,16 @@ describe('lineage panel token convergence architecture', () => {
       '```mermaid',
       'lineageChromeClasses',
       'resolveLineageNodeKindClassName',
+      'LineageGraphPanel',
+      'LineageImpactSummary',
     ]) {
       expect(COMPONENT_GUIDE).toContain(expected);
     }
+    expect(COMPONENT_GUIDE).not.toContain('LineageColumnPanel');
 
-    for (const storyId of [
-      'US-F24-LINEAGE-TOKEN-01',
-      'US-F24-LINEAGE-TOKEN-02',
-      'US-F24-LINEAGE-TOKEN-03',
-    ]) {
+    for (const storyId of ['US-F24-LINEAGE-TOKEN-01', 'US-F24-LINEAGE-TOKEN-02']) {
       expect(USER_STORIES).toContain(storyId);
     }
+    expect(USER_STORIES).not.toContain('US-F24-LINEAGE-TOKEN-03');
   });
 });

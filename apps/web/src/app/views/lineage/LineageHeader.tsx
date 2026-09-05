@@ -2,8 +2,6 @@ import { GitGraph, Pin, Search } from 'lucide-react';
 
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Switch } from '../../components/ui/switch';
 import {
   routeWorkbenchFieldClassName,
   routeWorkbenchHeaderBandClassName,
@@ -14,20 +12,16 @@ import { lineageViewCopy as copy } from './copy';
 
 interface LineageHeaderProps {
   searchQuery: string;
-  columnLevel: boolean;
   isLoading: boolean;
   nodeCount: number;
   onSearchQueryChange: (value: string) => void;
-  onColumnLevelChange: (value: boolean) => void;
 }
 
 export function LineageHeader({
   searchQuery,
-  columnLevel,
   isLoading,
   nodeCount,
   onSearchQueryChange,
-  onColumnLevelChange,
 }: LineageHeaderProps) {
   return (
     <div className={cn('space-y-4', routeWorkbenchHeaderBandClassName)}>
@@ -54,12 +48,6 @@ export function LineageHeader({
             placeholder={copy.searchPlaceholder}
             className={cn(routeWorkbenchFieldClassName, 'pl-10')}
           />
-        </div>
-        <div className="flex items-center gap-2">
-          <Switch id="column-level" checked={columnLevel} onCheckedChange={onColumnLevelChange} />
-          <Label htmlFor="column-level" className="cursor-pointer text-sm">
-            {copy.columnSwitch}
-          </Label>
         </div>
         <Button variant="outline" size="sm" disabled>
           <Pin className="mr-2 size-4" />

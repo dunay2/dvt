@@ -49,8 +49,8 @@ type CanvasViewportProps = {
   readonly onNodesChange: NonNullable<ReactFlowProps<Node, Edge>['onNodesChange']>;
   readonly onEdgesChange: NonNullable<ReactFlowProps<Node, Edge>['onEdgesChange']>;
   readonly onSetEdgeExecutionGate?: CanvasEdgeCommandRunner['setExecutionGate'];
-  readonly onConnect: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
-  readonly onReconnect: NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>;
+  readonly onConnect?: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
+  readonly onReconnect?: NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>;
   readonly onViewportChange: (viewport: { x: number; y: number; zoom: number }) => void;
   readonly onNodeDrag: NonNullable<ReactFlowProps<Node, Edge>['onNodeDrag']>;
   readonly onNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']>;
@@ -59,7 +59,7 @@ type CanvasViewportProps = {
   readonly frozenNodeIds?: ReadonlySet<string>;
   readonly onToggleFrozenNode?: (nodeId: string) => void;
   readonly authoringNodeKinds: readonly NodeKindRegistration[];
-  readonly onCreateAuthoringNode: CreateCanvasAuthoringNode;
+  readonly onCreateAuthoringNode?: CreateCanvasAuthoringNode;
   readonly importedNodeFocusIds: string[];
   readonly onImportedNodeFocusComplete: () => void;
   readonly onImpactFocusNodeChange?: (nodeId: string | null) => void;
@@ -331,8 +331,8 @@ function CanvasViewportWithPresenter({
       viewport={props.viewport}
       onNodesChange={props.onNodesChange}
       onEdgesChange={props.onEdgesChange}
-      onConnect={props.onConnect}
-      onReconnect={props.onReconnect}
+      {...(props.onConnect == null ? {} : { onConnect: props.onConnect })}
+      {...(props.onReconnect == null ? {} : { onReconnect: props.onReconnect })}
       onViewportChange={props.onViewportChange}
       onNodeDrag={props.onNodeDrag}
       onNodeDragStop={props.onNodeDragStop}

@@ -63,8 +63,12 @@ function CanvasShellMenuContributionRegistrars({
       canOpenProjectExplorer={typeof onOpenProjectExplorer === 'function'}
       canOpenProjectCode={typeof onOpenProjectCode === 'function'}
       canImportDbtProject={typeof onImportDbtProject === 'function'}
-      onExportProjectSnapshot={chromeCommands.onExportProjectSnapshot}
-      onImportProjectSnapshotFile={chromeCommands.onImportProjectSnapshotFile}
+      {...(chromeCommands.onExportProjectSnapshot == null
+        ? {}
+        : { onExportProjectSnapshot: chromeCommands.onExportProjectSnapshot })}
+      {...(chromeCommands.onImportProjectSnapshotFile == null
+        ? {}
+        : { onImportProjectSnapshotFile: chromeCommands.onImportProjectSnapshotFile })}
       onOpenProjectExplorer={onOpenProjectExplorer}
       onOpenProjectCode={onOpenProjectCode}
       onImportDbtProject={onImportDbtProject}

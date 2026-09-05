@@ -173,8 +173,6 @@ function buildCanvasInteractionViewModel(args: CanvasControllerViewModelArgs) {
     handleRemoveNode: graphHandlers.handleRemoveNode,
     handleCreateCanvasDocument,
     handleSelectCanvasDocument: args.authoringRuntime.handleSelectCanvasDocument,
-    handleApplyCanvasDocumentPatch: args.authoringRuntime.handleApplyCanvasDocumentPatch,
-    handleDeleteCanvasDocument: args.authoringRuntime.handleDeleteCanvasDocument,
     handleExportProjectSnapshot: args.authoringRuntime.handleExportProjectSnapshot,
     handleImportProjectSnapshotFile: args.authoringRuntime.handleImportProjectSnapshotFile,
     handleSourceImportComplete: mutationHandlers.handleSourceImportComplete,

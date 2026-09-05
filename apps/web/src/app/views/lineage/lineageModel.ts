@@ -63,36 +63,6 @@ export function assignLevels(nodes: CanonicalNode[], edges: CanonicalEdge[]): Ma
   return levels;
 }
 
-type ColumnLineageEntry = { from: string; to: string };
-
-export function buildColumnLineage(
-  focusNode: CanonicalNode,
-  nodes: CanonicalNode[],
-  edges: CanonicalEdge[]
-): ColumnLineageEntry[] {
-  const focusColumns = (focusNode.metadata?.columns as Array<{ name: string }> | undefined) ?? [];
-  if (focusColumns.length === 0) {
-    return [];
-  }
-  const upstreamIds = bfsReachable(focusNode.id, edges, 'upstream');
-  const upstreamNodes = nodes.filter((node) => upstreamIds.has(node.id));
-  const entries: ColumnLineageEntry[] = [];
-
-  for (const column of focusColumns) {
-    for (const upstream of upstreamNodes) {
-      const upstreamColumns =
-        (upstream.metadata?.columns as Array<{ name: string }> | undefined) ?? [];
-      if (upstreamColumns.some((candidate) => candidate.name === column.name)) {
-        entries.push({
-          from: `${upstream.name}.${column.name}`,
-          to: `${focusNode.name}.${column.name}`,
-        });
-      }
-    }
-  }
-  return entries;
-}
-
 export function kindStyle(kind: string) {
   const styles: Record<string, { badge: string }> = {
     'dbt:source': { badge: 'SOURCE' },

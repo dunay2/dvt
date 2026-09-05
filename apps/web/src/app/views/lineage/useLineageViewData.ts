@@ -5,11 +5,7 @@ import { resolveCanvasGraphStrategy } from '../../plugins/graphStrategyRegistry'
 import type { CanvasGraphStrategy } from '../../plugins/graphStrategyContracts';
 import { useWorkspaceGraphForViewQuery } from '../../queries/workspaceQueries';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { assignLevels, bfsReachable, buildColumnLineage, groupNodesByLevel } from './lineageModel';
-
-function getNodeColumns(node: CanonicalNode | null): Array<{ name: string }> {
-  return (node?.metadata?.columns as Array<{ name: string }> | undefined) ?? [];
-}
+import { assignLevels, bfsReachable, groupNodesByLevel } from './lineageModel';
 
 type LineageGraphProjection = Readonly<{
   canonicalNodes: CanonicalNode[];
@@ -43,7 +39,6 @@ export function projectLineageGraph(
 
 export function useLineageViewData() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [columnLevel, setColumnLevel] = useState(false);
   const graphStrategy = useMemo(() => resolveCanvasGraphStrategy('dbt'), []);
   const snapshotQuery = useWorkspaceGraphForViewQuery('lineage', 60_000);
 
@@ -85,15 +80,8 @@ export function useLineageViewData() {
   }, [canonicalNodes, downstream, focusNode, upstream]);
 
   const nodesByLevel = useMemo(() => groupNodesByLevel(scopeNodes, levels), [scopeNodes, levels]);
-
-  const columnLineage = useMemo(
-    () => (focusNode ? buildColumnLineage(focusNode, canonicalNodes, canonicalEdges) : []),
-    [focusNode, canonicalNodes, canonicalEdges]
-  );
-
   const upstreamCount = upstream.size;
   const downstreamCount = downstream.size;
-  const upstreamNodes = canonicalNodes.filter((node) => upstream.has(node.id));
   const exposureCount = [...downstream]
     .map((id) => canonicalNodes.find((node) => node.id === id))
     .filter((node) => node?.kind === 'dbt:exposure').length;
@@ -111,22 +99,14 @@ export function useLineageViewData() {
 
   return {
     searchQuery,
-    columnLevel,
     setSearchQuery,
-    setColumnLevel,
     isLoadingSnapshot: snapshotQuery.isLoading,
     snapshotError:
       projectionError ?? (snapshotQuery.error instanceof Error ? snapshotQuery.error : null),
-    focusNodeHasColumnMetadata: getNodeColumns(focusNode).length > 0,
-    hasReachableUpstreamNodes: upstreamNodes.length > 0,
-    reachableUpstreamHasColumnMetadata: upstreamNodes.some(
-      (node) => getNodeColumns(node).length > 0
-    ),
     canonicalNodes,
     focusNode,
     nodesByLevel,
     breadcrumbPath,
-    columnLineage,
     upstreamCount,
     downstreamCount,
     exposureCount,

@@ -1,56 +1,63 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-function readAppSource(relativePath: string): string {
-  return readFileSync(resolve(import.meta.dirname, relativePath), 'utf8');
+function appPath(relativePath: string): string {
+  return resolve(import.meta.dirname, relativePath);
 }
 
-describe('dbt project file Canvas architecture', () => {
-  it('branches semantic authority before invoking either Canvas controller', () => {
+function readAppSource(relativePath: string): string {
+  return readFileSync(appPath(relativePath), 'utf8');
+}
+
+describe('dbt external-authority Canvas projection architecture', () => {
+  it('adapts external dbt authority into the one shared Canvas composition', () => {
     const route = readAppSource('../Canvas.tsx');
+    const authoritySurface = readAppSource('useDbtProjectFilesAuthoritySurface.tsx');
 
-    expect(route).toContain('resolveCanvasRouteAuthority');
-    expect(route).toContain('GraphDraftCanvasContent');
-    expect(route).toContain('DbtProjectFileCanvas');
-    expect(route).not.toMatch(/function CanvasContent[\s\S]*useCanvasController\(\)/);
+    expect(route).toContain('function CanvasRouteSurface');
+    expect(route).toContain('useDbtProjectFilesAuthoritySurface');
+    expect(route.match(/<CanvasShell\b/g)).toHaveLength(1);
+    expect(route.match(/<CanvasModalHost\b/g)).toHaveLength(1);
+    expect(route).not.toContain('DbtProjectFileCanvas');
+    expect(route).not.toContain('DbtProjectFileCanvasView');
+    expect(authoritySurface).toContain('shellProps: CanvasShellProps');
+    expect(authoritySurface).toContain('modalHostProps: CanvasModalHostProps');
+    expect(authoritySurface).not.toContain("from './CanvasShell'");
+    expect(authoritySurface).not.toContain("from './CanvasModalHost'");
+    expect(existsSync(appPath('DbtProjectFileCanvas.tsx'))).toBe(false);
+    expect(existsSync(appPath('DbtProjectFileCanvasView.tsx'))).toBe(false);
   });
 
-  it('keeps query orchestration, pure projection, and presentation in separate modules', () => {
-    const composition = readAppSource('DbtProjectFileCanvas.tsx');
-    const controller = readAppSource('useDbtProjectFileCanvasController.ts');
-    const view = readAppSource('DbtProjectFileCanvasView.tsx');
-    const codeWorkbench = readAppSource('dbtProjectFileCodeWorkbench.tsx');
-    const sqlWorkbench = readAppSource('SqlContextWorkbench.tsx');
+  it('uses the shared dbt Canvas surface policy instead of a file-authority Canvas species', () => {
+    const authoritySurface = readAppSource('useDbtProjectFilesAuthoritySurface.tsx');
+    const sharedStrategy = readAppSource('../../plugins/dbt/dbtCanvasSurfaceStrategy.ts');
 
-    expect(composition).toContain('useDbtProjectFileCanvasController');
-    expect(controller).toContain('useDbtProjectGraphQuery');
-    expect(controller).toContain('projectDbtProjectGraphToCanonicalCanvas');
-    expect(controller).toContain('projectCanvasNodeAccessibleHealth');
-    expect(view).toContain('CanvasShell');
-    expect(view).toContain('buildDbtProjectFileCodeWorkbench');
-    expect(codeWorkbench).toContain('SqlContextWorkbench');
-    expect(sqlWorkbench).toContain('import CodeView, { type CodeViewFileScope');
-    expect(sqlWorkbench).not.toContain("lazy(() => import('../CodeView'))");
-    expect(sqlWorkbench).toContain('publishRouteBootstrap={false}');
-    expect(controller).not.toContain('useCanvasController');
-    expect(composition).not.toContain('WorkspaceGraphAuthoringDraft');
-    expect(controller).not.toContain('WorkspaceGraphAuthoringDraft');
-    expect(view).not.toContain('WorkspaceGraphAuthoringDraft');
+    expect(authoritySurface).toContain("from '../../plugins/dbt/dbtCanvasSurfaceStrategy'");
+    expect(authoritySurface).toContain('surfaceStrategy: dbtCanvasSurfaceStrategy');
+    expect(sharedStrategy).toContain("id: 'dbt-contextual-canvas'");
+    expect(existsSync(appPath('../../plugins/dbt/dbtProjectFileCanvasSurfaceStrategy.ts'))).toBe(
+      false
+    );
   });
 
-  it('keeps file authority read-only while delegating Preview and Run to its execution child', () => {
-    const strategy = readAppSource('../../plugins/dbt/dbtProjectFileCanvasSurfaceStrategy.ts');
-    const controller = readAppSource('useDbtProjectFileCanvasController.ts');
+  it('keeps external dbt authority read-only without a parallel Canvas controller contract', () => {
+    const authoritySurface = readAppSource('useDbtProjectFilesAuthoritySurface.tsx');
+    const authorityController = readAppSource('useDbtProjectFilesAuthorityController.ts');
     const execution = readAppSource('useDbtProjectFileExecution.ts');
 
-    expect(strategy).toContain("id: 'dbt-project-files-read-only-canvas'");
-    expect(strategy).toContain("openedFrom: ['double-click']");
-    expect(strategy).not.toContain("'node-context-menu'");
-    expect(strategy).toContain('operationalDrawer');
-    expect(strategy).toContain("openedFrom: ['canvas-context-menu']");
-    expect(controller).toContain('useDbtProjectFileExecution');
+    expect(authoritySurface).toContain('canEditEdges: false');
+    expect(authoritySurface).not.toContain('canEditCanvas');
+    expect(authoritySurface).not.toContain('canDeleteActiveCanvas');
+    expect(authorityController).toContain('useDbtProjectFileExecution');
+    expect(authorityController).not.toContain('unsupportedSemanticMutation');
+    expect(authorityController).not.toContain('onAutoLayout:');
+    expect(authorityController).not.toContain('onToggleCostOverlay:');
+    expect(authorityController).not.toContain('onExportProjectSnapshot:');
+    expect(authorityController).not.toContain('onImportProjectSnapshotFile:');
+    expect(authorityController).toContain('canvasCommands: {}');
+    expect(existsSync(appPath('useDbtProjectFileCanvasController.ts'))).toBe(false);
     expect(execution).toContain('useCanvasExecutionActions');
     expect(execution).not.toContain('saveFileContent');
     expect(execution).not.toContain('WorkspaceGraphAuthoringDraft');

@@ -1,19 +1,12 @@
-/** Owned concern: persist project-canvas lifecycle commands through protected draft CAS semantics. */
+/** Owned concern: persist project-canvas selection through protected draft CAS semantics. */
 import { createBrowserIdempotencyKey } from '../../services/idempotency/createBrowserIdempotencyKey';
 
-import type {
-  CanvasProjectCanvasLifecycleCommandDto,
-  CanvasUpdateCanvasDocumentCommand,
-} from './canvasDraftLifecycle.types';
+import type { CanvasProjectCanvasLifecycleCommandDto } from './canvasDraftLifecycle.types';
 import {
   applyCanvasDocumentSaveConflict,
   applyCanvasDocumentSaveSuccess,
 } from './canvasCreateCanvasDocumentSaveResult';
-import {
-  buildDraftWithDeletedActiveProjectCanvas,
-  buildDraftWithSelectedProjectCanvas,
-  buildDraftWithUpdatedActiveProjectCanvas,
-} from './canvasProjectCanvasLifecycle';
+import { buildDraftWithSelectedProjectCanvas } from './canvasProjectCanvasLifecycle';
 
 type SaveGraphDraftInput = Parameters<
   CanvasProjectCanvasLifecycleCommandDto['draftRepository']['saveGraphDraft']
@@ -76,51 +69,6 @@ export async function executeSelectCanvasDocumentCommand(
           currentDraft: args.currentDraftPayload,
           canvasId: args.canvasId,
         });
-
-  await executeProjectCanvasDraftSave(
-    args,
-    draft == null
-      ? null
-      : {
-          expectedRevision,
-          idempotencyKey: createBrowserIdempotencyKey('canvas-draft'),
-          draft,
-        }
-  );
-}
-
-export async function executeUpdateCanvasDocumentCommand(
-  args: CanvasProjectCanvasLifecycleCommandDto & { command: CanvasUpdateCanvasDocumentCommand }
-): Promise<void> {
-  const expectedRevision = resolveExpectedRevision(args);
-  const draft =
-    expectedRevision == null
-      ? null
-      : buildDraftWithUpdatedActiveProjectCanvas({
-          currentDraft: args.currentDraftPayload,
-          patch: args.command,
-        });
-
-  await executeProjectCanvasDraftSave(
-    args,
-    draft == null
-      ? null
-      : {
-          expectedRevision,
-          idempotencyKey: createBrowserIdempotencyKey('canvas-draft'),
-          draft,
-        }
-  );
-}
-
-export async function executeDeleteCanvasDocumentCommand(
-  args: CanvasProjectCanvasLifecycleCommandDto
-): Promise<void> {
-  const expectedRevision = resolveExpectedRevision(args);
-  const draft =
-    expectedRevision == null
-      ? null
-      : buildDraftWithDeletedActiveProjectCanvas(args.currentDraftPayload);
 
   await executeProjectCanvasDraftSave(
     args,

@@ -48,8 +48,8 @@ type CanvasViewportSurfaceViewProps = Readonly<{
   viewport: { x: number; y: number; zoom: number } | null;
   onNodesChange: NonNullable<ReactFlowProps<Node, Edge>['onNodesChange']>;
   onEdgesChange: NonNullable<ReactFlowProps<Node, Edge>['onEdgesChange']>;
-  onConnect: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
-  onReconnect: NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>;
+  onConnect?: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
+  onReconnect?: NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>;
   onViewportChange: (viewport: { x: number; y: number; zoom: number }) => void;
   onNodeDrag: NonNullable<ReactFlowProps<Node, Edge>['onNodeDrag']>;
   onNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']>;

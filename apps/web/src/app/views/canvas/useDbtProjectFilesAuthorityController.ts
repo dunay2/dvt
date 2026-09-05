@@ -1,4 +1,4 @@
-/** Owned concern: orchestrate the read-only file-authoritative dbt Canvas read model. */
+/** Owned concern: orchestrate the read-only external dbt project-file authority read model. */
 import type { Node, NodeTypes } from '@xyflow/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -43,12 +43,6 @@ const EMPTY_CANONICAL_EDGES: CanonicalEdge[] = [];
 const DBT_PROJECT_FILE_NODE_TYPES: NodeTypes = {
   dbtNode: DbtNodeComponent,
 };
-
-function unsupportedSemanticMutation(commandName: string): never {
-  throw new Error(
-    `${commandName} is unavailable because dbt project files are the Canvas semantic authority.`
-  );
-}
 
 function buildLayoutKey(
   workspaceLayoutKey: string,
@@ -97,7 +91,7 @@ export function resolveDbtProjectFileSourceImportFocus(
   return [...result.outcome.projectedSourceUniqueIds];
 }
 
-export function useDbtProjectFileCanvasController(
+export function useDbtProjectFilesAuthorityController(
   authorityBinding: DbtProjectFilesAuthorityBinding
 ) {
   const capabilitiesQuery = useCapabilitiesQuery();
@@ -472,13 +466,10 @@ export function useDbtProjectFileCanvasController(
       onNodeDrag: persistence.handleNodeDrag,
       onNodeDragStop: persistence.handleNodeDragStop,
       onEdgesChange: graphModel.onEdgesChange,
-      onConnect: () => unsupportedSemanticMutation('Connect nodes'),
-      onReconnect: () => unsupportedSemanticMutation('Reconnect nodes'),
       onViewportChange: persistence.handleViewportChange,
       onDrop: handleDrop,
       onDragOver: handleDragOver,
       onToggleFrozenNode: (nodeId: string) => toggleFrozenCanvasNode(layoutKey, nodeId),
-      onCreateAuthoringNode: () => unsupportedSemanticMutation('Create node'),
       onSourceImportComplete: handleSourceImportComplete,
       onImportedNodeFocusComplete: () => setImportedNodeFocusIds([]),
     },
@@ -491,8 +482,6 @@ export function useDbtProjectFileCanvasController(
         });
       },
       onShowInspector: showInspectorPanel,
-      onAutoLayout: () => unsupportedSemanticMutation('Automatic semantic layout'),
-      onToggleCostOverlay: () => unsupportedSemanticMutation('Cost overlay'),
       onToggleImpact: toggleImpactOverlay,
       onToggleColumns: toggleColumnLevelLineage,
       onGridSizeChange: setGridSize,
@@ -500,8 +489,6 @@ export function useDbtProjectFileCanvasController(
       onToggleGridVisible: () => setCanvasGridVisible(!canvasGridVisible),
       onGridColorChange: setCanvasGridColor,
       onToggleSnapToGrid: () => setCanvasSnapToGrid(!canvasSnapToGrid),
-      onExportProjectSnapshot: () => unsupportedSemanticMutation('Export draft snapshot'),
-      onImportProjectSnapshotFile: () => unsupportedSemanticMutation('Import draft snapshot'),
       onReloadLatestDraft: () => {
         void query.refetch();
       },
@@ -513,10 +500,6 @@ export function useDbtProjectFileCanvasController(
       },
       executionSelectionRecovery: executionSelectionRecovery.commands,
     },
-    canvasCommands: {
-      onSelectCanvas: () => unsupportedSemanticMutation('Select draft canvas'),
-      onApplyCanvasPatch: () => unsupportedSemanticMutation('Edit canvas properties'),
-      onDeleteActiveCanvas: () => unsupportedSemanticMutation('Delete draft canvas'),
-    },
+    canvasCommands: {},
   };
 }

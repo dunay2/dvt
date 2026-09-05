@@ -64,6 +64,7 @@ describe('CanvasColumnLineageEdge', () => {
             data={{
               kind: 'column-lineage',
               sourceNodeId: 'source',
+              sourceFieldId: 'field:source:order_id',
               sourceColumnName: 'order_id',
               targetNodeId: 'model',
               targetColumnName: 'order_id',
@@ -107,6 +108,7 @@ describe('CanvasColumnLineageEdge', () => {
             data={{
               kind: 'column-lineage-terminal',
               sourceNodeId: 'model',
+              sourceFieldId: 'field:model:order_id',
               sourceColumnName: 'order_id',
               targetNodeId: 'sink',
               targetColumnName: 'order_id',

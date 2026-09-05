@@ -9,12 +9,6 @@ import type { CanvasCreateCanvasDocumentCommand } from './canvasDraftLifecycle.t
 
 export type ProjectCanvasDocument = WorkspaceGraphAuthoringCanvasDocument & { id: string };
 
-export type ProjectCanvasPatch = Readonly<{
-  title?: string;
-  environmentId?: string | undefined;
-  defaultPermission?: WorkspaceGraphAuthoringCanvasDocument['defaultPermission'];
-}>;
-
 function slugifyCanvasIdPart(value: string): string {
   return value
     .trim()
@@ -213,63 +207,4 @@ export function buildDraftWithSelectedProjectCanvas(args: {
   return targetWorkspace == null
     ? null
     : workspaceToDraft(targetWorkspace, normalizedDraft.canvases ?? []);
-}
-
-export function buildDraftWithUpdatedActiveProjectCanvas(args: {
-  currentDraft: WorkspaceGraphAuthoringDraft;
-  patch: ProjectCanvasPatch;
-}): WorkspaceGraphAuthoringDraft | null {
-  const normalizedDraft = normalizeProjectCanvasDraft(args.currentDraft);
-  const activeCanvasId = normalizedDraft.activeCanvasId;
-  if (activeCanvasId == null) {
-    return null;
-  }
-
-  const title = args.patch.title?.trim();
-  if (args.patch.title != null && !title) {
-    return null;
-  }
-
-  const canvases = (normalizedDraft.canvases ?? []).map((workspace) => {
-    if (workspace.canvas.id !== activeCanvasId) {
-      return workspace;
-    }
-
-    return {
-      ...workspace,
-      canvas: {
-        ...workspace.canvas,
-        ...(title == null ? {} : { title }),
-        ...(args.patch.environmentId === undefined
-          ? {}
-          : { environmentId: args.patch.environmentId }),
-        ...(args.patch.defaultPermission === undefined
-          ? {}
-          : { defaultPermission: args.patch.defaultPermission }),
-      },
-    };
-  });
-  const activeWorkspace = canvases.find((workspace) => workspace.canvas.id === activeCanvasId);
-
-  return activeWorkspace == null ? null : workspaceToDraft(activeWorkspace, canvases);
-}
-
-export function buildDraftWithDeletedActiveProjectCanvas(
-  currentDraft: WorkspaceGraphAuthoringDraft
-): WorkspaceGraphAuthoringDraft | null {
-  const normalizedDraft = normalizeProjectCanvasDraft(currentDraft);
-  const canvases = normalizedDraft.canvases ?? [];
-  const activeIndex = canvases.findIndex(
-    (workspace) => workspace.canvas.id === normalizedDraft.activeCanvasId
-  );
-
-  if (activeIndex < 0 || canvases.length <= 1) {
-    return null;
-  }
-
-  const remainingCanvases = canvases.filter((_, index) => index !== activeIndex);
-  const fallbackIndex = Math.max(0, activeIndex - 1);
-  const fallbackWorkspace = remainingCanvases[fallbackIndex] ?? remainingCanvases[0];
-
-  return fallbackWorkspace == null ? null : workspaceToDraft(fallbackWorkspace, remainingCanvases);
 }
