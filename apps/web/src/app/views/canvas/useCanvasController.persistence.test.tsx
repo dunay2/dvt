@@ -149,20 +149,25 @@ describe('useCanvasController persistence guards', () => {
     );
   });
 
-  it('persists the observed node-drag payload before a drag-stop event is available', async () => {
+  it('does not persist an in-flight drag frame and persists the final drag-stop payload', async () => {
     const controller = harness.getLatestResult() as NodeDragController | null;
+    const draggedNode = { id: 'node_1', position: { x: 225, y: 210 } } as never;
+    const allNodes = [
+      { id: 'node_1', position: { x: 0, y: 0 } },
+      { id: 'node_2', position: { x: 100, y: 0 } },
+    ] as never;
 
     await act(async () => {
-      controller?.handleNodeDrag?.(
-        {} as never,
-        { id: 'node_1', position: { x: 225, y: 210 } } as never,
-        [
-          { id: 'node_1', position: { x: 0, y: 0 } },
-          { id: 'node_2', position: { x: 100, y: 0 } },
-        ] as never
-      );
+      controller?.handleNodeDrag?.({} as never, draggedNode, allNodes);
     });
 
+    expect(harness.state.store.setCanvasNodePositions).not.toHaveBeenCalled();
+
+    await act(async () => {
+      harness.getLatestResult()?.handleNodeDragStop?.({} as never, draggedNode, allNodes);
+    });
+
+    expect(harness.state.store.setCanvasNodePositions).toHaveBeenCalledTimes(1);
     expect(harness.state.store.setCanvasNodePositions).toHaveBeenCalledWith(
       'tenant-a::project-a::dev',
       {
