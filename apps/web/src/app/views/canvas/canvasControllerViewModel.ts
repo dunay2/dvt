@@ -3,7 +3,6 @@ import { type NodeTypes } from '@xyflow/react';
 
 import DbtNodeComponent from '../../components/canvas/DbtNodeComponent';
 import type { CanvasSurfaceStrategy } from '../../plugins/canvasSurfaceStrategyContracts';
-import type { CanvasGraphAuthoringMode } from '../../plugins/nodeTypeContracts';
 import { getAllCanvasKinds, getRegisteredPluginIds } from '../../plugins/registry';
 import type { CanvasRuntimePolicy } from './canvasRuntimePolicy';
 import type { useCanvasAuthoringRuntime } from './useCanvasAuthoringRuntime';
@@ -36,7 +35,6 @@ type CanvasControllerReadModel = ReturnType<typeof useCanvasControllerReadModel>
 type CanvasInspectorCommands = ReturnType<typeof useCanvasInspectorCommands>;
 type CanvasExecutionSelectionRecovery = ReturnType<typeof useCanvasExecutionSelectionRecovery>;
 type CanvasControllerGraphPolicy = {
-  canvasAuthoringMode: CanvasGraphAuthoringMode;
   runtimePolicy: CanvasRuntimePolicy;
   surfaceStrategy: CanvasSurfaceStrategy | null;
 };
@@ -79,7 +77,7 @@ function resolveRouteDraftRecord({
 function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
   const {
     environment: { applicationLanguage, capabilities, store },
-    graphPolicy: { canvasAuthoringMode, runtimePolicy, surfaceStrategy },
+    graphPolicy: { runtimePolicy, surfaceStrategy },
     authoringRuntime: {
       backendPosture,
       graphModel,
@@ -125,7 +123,6 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
       canRun: runtimePolicy.commands.canRun,
       canEditEdges: runtimePolicy.commands.canMutateGraph,
     },
-    canvasAuthoringMode,
     canvasSurfaceStrategy: surfaceStrategy,
     canOpenSourceImport: runtimePolicy.commands.canOpenSourceImport,
     nodesWithImpact,
