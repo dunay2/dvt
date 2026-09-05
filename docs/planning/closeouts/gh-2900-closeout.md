@@ -143,6 +143,54 @@ presentation control reached 384.80 MiB. All observed workers therefore retain
 over 90% headroom to 4096 MiB, exceeding the planned 20% margin. The canonical
 aggregate process-tree peak was 904.019 MiB, including pnpm/Node ancestors.
 
+## Integration and delivery status
+
+The branch integrates main at `6db9ba43b946054d8490512a205acd0474a7f006`
+through `edf2e967e`. The full canonical command was rerun on this integration:
+`docker exec -w /work dvt-gh2900 python3 tmp/gh-2900/canonical.py integration-main`.
+It **failed** in unit: 274 files passed, one failed; 1596 cases passed, one failed.
+The upstream test counts changed since the fixed-source benchmark. Presentation
+and architecture were not reached by this sequential integration command.
+
+The failing case is `canvasDbtModelColumnLineage.test.ts:82`, which expects
+three removable dbt lineage edges but receives an empty list. It also fails with
+`--environment=jsdom` on the integrated branch. Checking out pristine main at
+`6db9ba43b` and running `DVT_CI=1 pnpm exec vitest run --config
+vitest.unit.config.ts src/app/views/canvas/canvasDbtModelColumnLineage.test.ts`
+from `apps/web` reproduces the same failure. Upstream commit `73614be55`
+removed the false dbt column-lineage behavior; the old test still expects it.
+This is an existing main integration blocker, not a Node-environment regression.
+The test and product semantics remain untouched by #2900. Delivery remains a
+**draft PR**, with the issue open until this discrepancy and required checks are
+resolved; the integrated tree is not claimed green.
+
+Normal merge hooks also normalized three upstream files:
+`CanvasSettingsDialog.tsx`, `lineageWorkbenchStateModel.ts`, and
+`canvasColumnLineageProjection.test.ts`. Formatting the pristine upstream
+versions in memory with the repository Prettier configuration reproduces these
+files exactly. This bounded formatting scope is recorded in the proposal.
+
+Validation commands on the integration:
+
+- `pnpm --filter @dvt/web lint`: passed.
+- `pnpm --filter @dvt/web typecheck`: passed.
+- `pnpm docs:status:generate --code-state-only` and `pnpm docs:sync`: passed.
+- `pnpm docs:feature-mechanization:implementation -- --feature GH-2900-WEB-VITEST`:
+  passed after explicitly admitting the hook-only formatting paths; its initial
+  rejection correctly detected those paths.
+- `pnpm governance:refresh`: passed, generated surfaces converged in three passes.
+- Final committed-tree `pnpm verify:prepush` outcome is recorded in the PR and
+  issue journal after hook normalization; it cannot override the full-suite failure.
+
+Governing sources are the inventory, ADR-0000, ADR-0061, command/query rail
+rules, GitHub MVP issue workflow, frontend test component, and the governing
+proposal linked above. Actual changes are the suite environment policy, catalog
+guards, 33 browser declarations, four documentation sources, and the three
+hook-only formatting files. No workflow/package command or product logic changed.
+No new debt entry, stub, placeholder, disabled rule, suppressed failure, skipped
+hook, or test exclusion was introduced. The existing upstream blocker is disclosed
+rather than converted into a passing expectation.
+
 ## Reproduction
 
 Use a disposable complete Linux clone, Node 22.19.0, pnpm 10.28.0, Python 3
@@ -235,6 +283,7 @@ if __name__ == '__main__':
     mode = sys.argv[1]
     repetition = sys.argv[2] if len(sys.argv)>2 else '1'
     suites = sys.argv[3:] or (['unit','architecture'] if mode == 'node' else ['unit','presentation','architecture'])
+    results = []
     for suite in suites:
         label = f'{mode}-{repetition}-{suite}'
         report = str(OUT/(label+'.tests.json'))
@@ -242,15 +291,16 @@ if __name__ == '__main__':
             args = ['run','--config',f'vitest.{suite}.config.ts','--reporter=json','--outputFile',report]
             if mode == 'node' and suite != 'presentation':
                 args += ['--environment=node']
-            run(label,args)
+            results.append(run(label,args))
         elif mode == 'batch':
             baseline = json.loads((OUT/f'control-1-{suite}.tests.json').read_text(encoding='utf8'))
             files = sorted(entry['name'] for entry in baseline['testResults'])
             for offset in range(0,len(files),10):
                 batch_label = label+f'-{offset//10:03}'
-                run(batch_label,['run','--config',str(OUT/'batch.config.ts'),
+                results.append(run(batch_label,['run','--config',str(OUT/'batch.config.ts'),
                     '--reporter=json','--outputFile',str(OUT/(batch_label+'.tests.json'))],
-                    {'GH_2900_SUITE':suite,'GH_2900_FILES':json.dumps([os.path.relpath(f,WEB).replace('\\','/') for f in files[offset:offset+10]])})
+                    {'GH_2900_SUITE':suite,'GH_2900_FILES':json.dumps([os.path.relpath(f,WEB).replace('\\','/') for f in files[offset:offset+10]])}))
+    sys.exit(1 if any(result['exitCode'] for result in results) else 0)
 ```
 
 ### rss.cjs
@@ -289,9 +339,11 @@ export default config;
 
 ```python
 import shutil
+import sys
 import measure
 
 measure.WEB = measure.ROOT
 measure.VITEST = shutil.which('pnpm')
-measure.run('canonical-1',['test:web:ci'])
+result = measure.run(sys.argv[1] if len(sys.argv)>1 else 'canonical-1',['test:web:ci'])
+sys.exit(result['exitCode'])
 ```

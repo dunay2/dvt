@@ -9,6 +9,15 @@ featureId: GH-2900-WEB-VITEST
 
 # GH-2900 Web Vitest Isolation Benchmark
 
+## Integration formatting scope
+
+Integrating `origin/main` at `6db9ba43b` with normal commit hooks normalized
+formatting in `CanvasSettingsDialog.tsx`, `lineageWorkbenchStateModel.ts`, and
+`canvasColumnLineageProjection.test.ts`. The two exact non-test paths are admitted
+only for this hook normalization; formatting the upstream versions reproduces
+these files exactly, with no behavior changes.
+No general product implementation surface is added.
+
 ## Think-first analysis
 
 Issue #2900 owns this experiment. Baseline Git head is
@@ -157,6 +166,8 @@ governingSources:
   - docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
   - docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md
 allowedImplementationSurfaces:
+  - apps/web/src/app/views/canvas/CanvasSettingsDialog.tsx
+  - apps/web/src/app/views/lineage/lineageWorkbenchStateModel.ts
   - apps/web/vitest.suites.ts
   - apps/web/src/**/*.test.ts
   - apps/web/src/**/*.test.tsx
