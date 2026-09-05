@@ -2,7 +2,7 @@
 import { OBJECT_FILE_POSTGRES_DBT_STAGING_SCHEMA_ENV } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { createDbtNodeAuthoringMetadata } from './canvasDbtAuthoringModel';
+import { createDbtNodeAuthoringMetadata, isDbtCompatibleModel } from './canvasDbtAuthoringModel';
 import {
   normalizeDbtArtifactIdentifier,
   projectDbtModelArtifact,
@@ -46,9 +46,7 @@ function resolveScopedModelNodes(args: {
       ? new Set(args.scopedNodeIds)
       : new Set(args.nodes.map((node) => node.id));
 
-  return args.nodes.filter(
-    (node) => scopedNodeIdSet.has(node.id) && node.pluginId === 'dbt' && node.kind === 'dbt:model'
-  );
+  return args.nodes.filter((node) => scopedNodeIdSet.has(node.id) && isDbtCompatibleModel(node));
 }
 
 function resolveScopedTestNodes(args: {

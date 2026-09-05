@@ -10,7 +10,7 @@ import {
 import { usePublishedRouteBootstrap } from '../../bootstrap/usePublishedRouteBootstrap';
 import { cn } from '../../components/ui/utils';
 import { dbtCanvasSurfaceStrategy } from '../../plugins/dbt/dbtCanvasSurfaceStrategy';
-import { DBT_NODE_KINDS } from '../../plugins/nodeTypeCatalog.dbt';
+import { DVT_AUTHORING_NODE_KINDS } from '../../plugins/dvt/dvtNodeTypeCatalog';
 import type { DbtProjectFilesAuthorityBinding } from '../../ports/dbtProjectGraph';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import type { CanvasModalHostProps } from './canvasModalHost.types';
@@ -26,8 +26,8 @@ import type { SqlContextWorkbenchHandle } from './SqlContextWorkbench';
 import { useCanvasRunControlSurface } from './useCanvasRunControlSurface';
 import { useDbtProjectFilesAuthorityController } from './useDbtProjectFilesAuthorityController';
 
-const FILE_AUTHORITY_SOURCE_IMPORT_KINDS = DBT_NODE_KINDS.filter(
-  (registration) => registration.kind === 'dbt:source'
+const FILE_AUTHORITY_SOURCE_IMPORT_KINDS = DVT_AUTHORING_NODE_KINDS.filter(
+  (registration) => registration.kind === 'dvt:source'
 );
 
 type DbtProjectFilesAuthorityController = ReturnType<typeof useDbtProjectFilesAuthorityController>;

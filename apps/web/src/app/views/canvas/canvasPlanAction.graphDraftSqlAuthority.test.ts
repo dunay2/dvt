@@ -14,8 +14,8 @@ import { executeCanvasPlanAction } from './canvasPlanAction';
 const sourceNode: CanonicalNode = {
   id: 'source-orders',
   name: 'Raw Orders',
-  pluginId: 'dbt',
-  kind: 'dbt:source',
+  pluginId: 'dvt',
+  kind: 'dvt:source',
   role: 'input',
   status: 'idle',
   tags: [],
@@ -28,8 +28,8 @@ const sourceNode: CanonicalNode = {
 const modelNode: CanonicalNode = {
   id: 'model-orders',
   name: 'Orders',
-  pluginId: 'dbt',
-  kind: 'dbt:model',
+  pluginId: 'dvt',
+  kind: 'dvt:transform',
   role: 'transform',
   status: 'idle',
   tags: [],

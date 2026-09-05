@@ -130,7 +130,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
       },
     };
     const model: CanonicalNode = {
-      ...buildCanonicalNode('transform-node', 'transform', 'dbt:model'),
+      ...buildCanonicalNode('transform-node', 'transform', 'dvt:transform'),
       pluginId: 'dbt',
       metadata: {
         config: { schema: 'raw', table: 'model_1', materialized: 'view' },

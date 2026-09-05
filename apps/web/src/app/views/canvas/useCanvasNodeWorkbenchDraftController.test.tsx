@@ -15,12 +15,17 @@ import {
 const MODEL_NODE: CanonicalNode = {
   id: 'model.orders',
   name: 'Orders Model',
-  pluginId: 'dbt',
-  kind: 'dbt:model',
+  pluginId: 'dvt',
+  kind: 'dvt:transform',
   role: 'transform',
   status: 'idle',
   tags: ['mart'],
   metadata: {
+    authority: 'dbt-project-files',
+    dbt: {
+      packageName: 'analytics',
+      materialized: 'view',
+    },
     config: {
       sql: 'select * from {{ ref("orders") }}',
     },

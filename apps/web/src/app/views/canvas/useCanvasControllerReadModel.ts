@@ -19,7 +19,7 @@ import type { GraphNodeColumn } from '../../plugins/graph/graphNodeColumnContrac
 import { canAuthorCanvasColumnMappings } from './canvasColumnProjectionAuthority';
 import { projectCanvasNodeAccessibleHealth } from './canvasNodeMapper';
 import { projectCanvasColumnFunctionMenus } from './canvasColumnFunctionMenuProjection';
-import { isReorderableCanvasSource } from './canvasSourceColumnOrder';
+import { isDbtCompatibleModel } from './canvasDbtAuthoringModel';
 
 function isInteractiveColumn(value: unknown): value is GraphNodeColumn {
   if (
@@ -225,8 +225,7 @@ export function useCanvasControllerReadModel({
         const canAuthorColumnMappings =
           canonicalNode?.role !== 'transform' || canAuthorCanvasColumnMappings(canonicalNode);
         const canAuthorDbtModelColumns =
-          canonicalNode?.pluginId === 'dbt' && canonicalNode.kind === 'dbt:model';
-        const canReorderSourceColumns = isReorderableCanvasSource(canonicalNode);
+          canonicalNode != null && isDbtCompatibleModel(canonicalNode);
         const hasReadOnlyColumnLineage =
           canonicalNode?.role === 'transform' &&
           !canAuthorColumnMappings &&
@@ -243,9 +242,6 @@ export function useCanvasControllerReadModel({
                         targetId: edge.target,
                       }))
                     : visibleScope.canonicalEdges,
-                presentationTruth: node.data.presentationTruth as
-                  CanvasNodePresentationTruth | undefined,
-                presentedColumns: readInteractiveColumns(node),
               })
             : { hasEditableProjection: false, supportsCalculatedColumns: false };
         const columnFunctionMenus = functionProjection.menus;
@@ -280,10 +276,7 @@ export function useCanvasControllerReadModel({
               ? node.data.onToggleCanvasColumnOutput
               : undefined,
           onReorderCanvasColumnOutput:
-            hasEditableProjection ||
-            hasStructuredProjection ||
-            canAuthorDbtModelColumns ||
-            canReorderSourceColumns
+            hasEditableProjection || hasStructuredProjection || canAuthorDbtModelColumns
               ? node.data.onReorderCanvasColumnOutput
               : undefined,
           canReorderTopLevelColumns: !hasStructuredProjection,

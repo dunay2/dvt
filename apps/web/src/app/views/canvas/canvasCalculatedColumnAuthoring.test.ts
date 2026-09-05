@@ -97,29 +97,15 @@ function projectionTransform(): CanonicalNode {
 }
 
 describe('Canvas calculated column authoring', () => {
-  it('appends a string literal projection without changing the Source identity', () => {
+  it('rejects calculated columns on a Source declaration without changing its authority', () => {
+    const initial = session(source);
     const result = applyCanvasCalculatedColumn({
-      draftSession: session(source),
+      draftSession: initial,
       canonicalNodesById: new Map([[source.id, source]]),
       request: { nodeId: source.id, kind: 'string-literal', alias: 'channel', value: 'web' },
     });
-    expect(result.outcome).toBe('applied');
-    if (result.outcome !== 'applied') return;
-    const replacement = result.draftSession.localNodeCatalog?.[source.id];
-    expect(replacement).toMatchObject({
-      id: source.id,
-      pluginId: 'dvt.warehouse-source',
-      kind: 'dvt:source',
-      role: 'input',
-      metadata: { schema: 'raw', tableName: 'orders' },
-    });
-    if (replacement == null) throw new Error('Expected an updated Source.');
-    expect(inspect(replacement).outputs).toMatchObject([
-      { name: 'order_id', sourceFieldName: 'order_id' },
-      { name: 'customer', sourceFieldName: 'customer' },
-      { name: 'channel', calculation: { kind: 'string-literal', value: 'web' } },
-    ]);
-    expect(replacement.metadata?.columns).toEqual(source.metadata?.columns);
+    expect(result).toEqual({ outcome: 'rejected' });
+    expect(initial.localNodeCatalog?.[source.id]).toBe(source);
   });
   it('appends an admitted scalar function to an existing projection Transform', () => {
     const transform = projectionTransform();
@@ -164,39 +150,5 @@ describe('Canvas calculated column authoring', () => {
     });
     expect(result).toEqual({ outcome: 'rejected' });
     expect(initial.localNodeCatalog?.[source.id]).toBe(source);
-  });
-  it('continues authoring timestamp and ordered row-number fields on the Source', () => {
-    const promoted = applyCanvasCalculatedColumn({
-      draftSession: session(source),
-      canonicalNodesById: new Map([[source.id, source]]),
-      request: {
-        nodeId: source.id,
-        kind: 'timestamp-literal',
-        alias: 'loaded_at',
-        value: '2026-09-02T12:30:00Z',
-      },
-    });
-    if (promoted.outcome !== 'applied') throw new Error('Expected Source authoring.');
-    const rowNumbered = applyCanvasCalculatedColumn({
-      draftSession: promoted.draftSession,
-      canonicalNodesById: new Map([[source.id, source]]),
-      request: {
-        nodeId: source.id,
-        kind: 'row-number',
-        alias: 'row_id',
-        orderFieldId: 'order_id',
-      },
-    });
-    expect(rowNumbered.outcome).toBe('applied');
-    if (rowNumbered.outcome !== 'applied') return;
-    const replacement = rowNumbered.draftSession.localNodeCatalog?.[source.id];
-    if (replacement == null) throw new Error('Expected updated Source.');
-    expect(inspect(replacement).outputs.slice(-2)).toMatchObject([
-      {
-        name: 'loaded_at',
-        calculation: { kind: 'timestamp-literal', value: '2026-09-02T12:30:00.000Z' },
-      },
-      { name: 'row_id', calculation: { kind: 'row-number', orderSourceOrdinal: 0 } },
-    ]);
   });
 });

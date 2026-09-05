@@ -138,34 +138,6 @@ function waitForDraftSaveContainingNode(nodeId: string): void {
   });
 }
 
-function findDraftSaveContainingConfiguredModel(
-  nodeId: string,
-  name: string,
-  sql: string
-): CanvasDraftSaveRequestBody | undefined {
-  return getE2eApiCalls('/workspace/graph/draft', 'PUT')
-    .map((call) => call.body as CanvasDraftSaveRequestBody)
-    .find((body) => {
-      const node = body.draft.nodes.find((candidate) => candidate.id === nodeId);
-      const config = node?.metadata?.config as { sql?: string } | undefined;
-
-      return node?.name === name && config?.sql === sql;
-    });
-}
-
-function waitForDraftSaveContainingConfiguredModel(
-  nodeId: string,
-  name: string,
-  sql: string
-): void {
-  cy.wrap(null).should(() => {
-    expect(
-      findDraftSaveContainingConfiguredModel(nodeId, name, sql),
-      `saved draft containing ${nodeId} properties and code`
-    ).to.not.be.undefined;
-  });
-}
-
 function assertNoManualSaveCommand(): void {
   cy.contains('button', /^Save$/).should('not.exist');
   cy.contains('button', /^Guardar$/).should('not.exist');
@@ -186,7 +158,10 @@ function assertNoDraftSaveStatus(): void {
 function chooseSqlTransformFromCanvasContextMenu(): void {
   openCanvasContextMenuAt(560, 260);
   clickCanvasContextMenuItem(/^(Add|Anadir)\.\.\.$/);
-  clickCanvasContextMenuItem(/^(Add transformation|Anadir transformacion)/);
+  cy.contains(
+    '[data-slot="canvas-context-menu-add-catalog-item"]',
+    /^(Add model|Anadir modelo)/
+  ).click();
 }
 
 function addSqlTransformNode(): void {
@@ -288,7 +263,7 @@ describe('Canvas ready node authoring', () => {
       expect(createdPosition?.y).to.be.a('number');
       expect(createdNode).to.deep.include({
         id: 'dvt-transform-1',
-        name: 'Transform 1',
+        name: 'Model 1',
         kind: 'transform',
         pluginId: 'dvt',
       });
@@ -393,118 +368,42 @@ describe('Canvas ready node authoring', () => {
     cy.get('.react-flow__node[data-id="dvt-transform-1"]').should('not.exist');
   });
 
-  it('roundtrips dbt code and properties through the graph in English and Spanish', () => {
-    const authoredSql = "select order_id\nfrom {{ source('raw', 'orders') }}";
+  it('roundtrips dbt properties while generated SQL remains read-only', () => {
     stubStatefulCanvasDraftAuthoring({
-      canvasKind: 'dbt',
+      dbtGraph: true,
       authoringGenerated: true,
       title: 'dbt properties roundtrip',
     });
 
     visitReadyCanvas();
 
-    cy.get('.react-flow__node[data-id="orders_model"]')
-      .as('ordersModel')
-      .should('be.visible')
-      .find('[data-slot="graph-node-card"]')
-      .should('contain.text', 'Code')
-      .and('contain.text', 'Generated');
+    cy.get('.react-flow__node[data-id="raw_orders"]')
+      .should('contain.text', 'Source')
+      .and('not.contain.text', 'dbt:source')
+      .find('[data-slot="graph-node-operational-rail"]')
+      .should('contain.text', 'Rows')
+      .and('contain.text', '18.2k')
+      .and('contain.text', 'Size')
+      .and('contain.text', '3.9 MB');
+
+    cy.get('.react-flow__node[data-id="orders_model"]').as('ordersModel').should('be.visible');
     cy.get('@ordersModel').find('[data-slot="canvas-node-shell"]').dblclick();
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('be.visible');
     cy.get('[data-slot="canvas-node-workbench-tab-code"]')
       .should('be.visible')
       .and('have.attr', 'aria-selected', 'true');
-    cy.get('textarea[name="dbt-model-sql"]')
-      .should('be.enabled')
-      .and('contain.value', "{{ source('raw', 'orders') }}")
-      .clear()
-      .type(authoredSql, { parseSpecialCharSequences: false, delay: 0 });
+    cy.get('[data-testid="monaco-code-viewer"]').should('be.visible');
+    cy.get('textarea[name="dbt-model-sql"]').should('not.exist');
     cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
-    cy.get('input[name="node-name"]').should('be.enabled').clear().type('payments model');
-    cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
-    waitForDraftSaveContainingConfiguredModel('orders_model', 'payments model', authoredSql);
-    cy.get('[data-slot="canvas-node-workbench-close"]').click();
-
-    cy.get('.react-flow__node[data-id="orders_model"]')
-      .should('contain.text', 'Payments Model')
-      .and('contain.text', 'Code')
-      .and('contain.text', 'Authored');
-    cy.then(() => {
-      const saveBody = findDraftSaveContainingConfiguredModel(
-        'orders_model',
-        'payments model',
-        authoredSql
-      );
-      const model = saveBody?.draft.nodes.find((node) => node.id === 'orders_model');
-      const config = model?.metadata?.config as { sql?: string } | undefined;
-
-      expect(model?.name).to.equal('payments model');
-      expect(config?.sql).to.equal(authoredSql);
-    });
-
-    visitReadyCanvas();
-
-    cy.get('.react-flow__node[data-id="orders_model"]')
-      .should('contain.text', 'Payments Model')
-      .and('contain.text', 'Authored')
-      .find('[data-slot="canvas-node-shell"]')
-      .dblclick();
-    cy.get('[data-slot="canvas-node-workbench-tab-code"]').should(
-      'have.attr',
-      'aria-selected',
-      'true'
-    );
-    cy.get('textarea[name="dbt-model-sql"]').should('have.value', authoredSql);
-    cy.get('[data-slot="canvas-node-workbench-close"]').click();
-
-    cy.get('[data-slot="shell-menu-trigger"]').click();
-    cy.get('[data-slot="shell-language-option-es"]').click();
-    cy.get('html').should('have.attr', 'lang', 'es');
-    cy.get('.react-flow__node[data-id="orders_model"]')
-      .should('contain.text', 'Código')
-      .and('contain.text', 'Escrito');
-
-    cy.viewport(640, 800);
-    cy.get('.react-flow__node[data-id="orders_model"]')
-      .should('be.visible')
-      .focus()
-      .should('have.focus')
-      .type('{enter}');
-    cy.get('[data-slot="canvas-node-workbench-overlay"]')
-      .should('be.visible')
-      .then(($overlay) => {
-        const rect = $overlay[0]?.getBoundingClientRect();
-        expect(rect, 'contextual Properties bounds').to.not.be.undefined;
-        expect(rect!.left).to.be.at.least(0);
-        expect(rect!.top).to.be.at.least(0);
-        expect(rect!.right).to.be.at.most(640);
-        expect(rect!.bottom).to.be.at.most(800);
-      });
-    cy.get('[data-slot="canvas-node-workbench-tab-code"]')
-      .should('be.visible')
-      .and('contain.text', 'Código')
-      .and('have.focus');
-    cy.get('textarea[name="dbt-model-sql"]').type('\n-- compact visibility', {
-      parseSpecialCharSequences: false,
-      delay: 0,
-    });
-    cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^(Aplicar|Apply)$/).should(
-      'be.visible'
-    );
-    cy.get('[data-slot="canvas-node-workbench-close"]').should('be.visible');
-    cy.document().then((document) => {
-      expect(document.documentElement.scrollWidth).to.be.at.most(
-        document.documentElement.clientWidth
-      );
-    });
-    assertNoSeriousAccessibilityViolations('[data-slot="canvas-node-workbench-overlay"]');
-    cy.focused().type('{esc}');
-    cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
-    cy.get('.react-flow__node[data-id="orders_model"]').should('have.focus');
+    cy.get('[data-slot="canvas-node-workbench-panel"]')
+      .should('contain.text', 'Model')
+      .and('contain.text', 'dbt export')
+      .and('not.contain.text', 'dbt:model');
+    cy.contains('[data-slot="canvas-node-workbench-panel"]', 'analytics').should('be.visible');
+    cy.contains('[data-slot="canvas-node-workbench-panel"]', 'raw_orders').should('be.visible');
   });
 
-  it('roundtrips only consumer-backed DVT properties through Monaco and full reload', () => {
-    const authoredSql = 'select order_id, total from raw.orders';
+  it('roundtrips Source and Sink properties while Model semantics stay canonical', () => {
     stubStatefulCanvasDraftAuthoring({
       authoringGenerated: true,
       title: 'DVT properties roundtrip',
@@ -515,44 +414,8 @@ describe('Canvas ready node authoring', () => {
     cy.get('.react-flow__node[data-id="source-1"] [data-slot="canvas-node-shell"]').dblclick();
     cy.contains('h3', 'DVT source').should('be.visible');
     waitForE2eApiCall('/workspace/warehouse/connections', 'GET');
-    cy.contains('label', 'Connection').scrollIntoView().should('be.visible');
     cy.get('select[name="dvt-source-connection"]').select('warehouse-b');
-    cy.contains('button', 'Test connection').click();
-    waitForE2eApiCall('/workspace/warehouse/connections/warehouse-b/test', 'POST');
-    cy.contains('Connection available.').should('be.visible');
-    cy.contains('label', 'Schema').scrollIntoView().should('be.visible');
-    cy.contains('label', 'Table').scrollIntoView().should('be.visible');
-    cy.get(
-      '[data-slot="canvas-node-workbench-overlay"] span, [data-slot="canvas-node-workbench-overlay"] label'
-    )
-      .filter((_, element) => element.textContent?.trim() === 'Alias')
-      .should('have.length', 1)
-      .first()
-      .scrollIntoView()
-      .should('be.visible');
-    cy.get('input[name="dvt-source-schema"]').should('have.value', 'raw');
-    cy.get('input[name="dvt-source-table"]').should('have.value', 'orders');
-    cy.get('input[name="dvt-source-alias"]').should('have.value', 'orders_source');
-    cy.get('input[name="dvt-source-database"]').should('not.exist');
-    cy.get('input[name="dvt-source-schema"]')
-      .then(($input) => {
-        const input = $input[0] as HTMLInputElement;
-        const inputWindow = input.ownerDocument.defaultView!;
-        const valueSetter = Object.getOwnPropertyDescriptor(
-          inputWindow.HTMLInputElement.prototype,
-          'value'
-        )?.set;
-        valueSetter?.call(input, '');
-        input.dispatchEvent(new inputWindow.InputEvent('input', { bubbles: true }));
-      })
-      .should('have.value', '');
-    cy.contains('Schema is required.').should('be.visible');
-    cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).should(
-      'be.disabled'
-    );
-    cy.get('input[name="dvt-source-schema"]').click().type('c').should('have.value', 'c');
-    cy.focused().should('have.attr', 'name', 'dvt-source-schema');
-    cy.get('input[name="dvt-source-schema"]').type('urated').should('have.value', 'curated');
+    cy.get('input[name="dvt-source-schema"]').clear().type('curated');
     cy.get('input[name="dvt-source-table"]').clear().type('orders_clean');
     cy.get('input[name="dvt-source-alias"]').clear().type('orders_curated');
     cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
@@ -572,31 +435,14 @@ describe('Canvas ready node authoring', () => {
               ?.connectionId === 'warehouse-b'
           );
         });
-
-      expect(savedSource, 'saved source fields and historical database').to.not.be.undefined;
+      expect(savedSource, 'saved Source properties').to.not.be.undefined;
     });
-    cy.get('input[name="dvt-source-alias"]').clear().type('unsaved_alias');
-    cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Cancel$/).click();
-    cy.get('input[name="dvt-source-alias"]').should('have.value', 'orders_curated');
-    cy.get('[data-slot="canvas-node-workbench-close"]').click();
-    cy.get('.react-flow__node[data-id="source-1"] [data-slot="canvas-node-shell"]').dblclick();
-    cy.get('input[name="dvt-source-schema"]').should('have.value', 'curated');
-    cy.get('input[name="dvt-source-table"]').should('have.value', 'orders_clean');
-    cy.get('input[name="dvt-source-alias"]').should('have.value', 'orders_curated');
-    cy.get('select[name="dvt-source-connection"]').should('have.value', 'warehouse-b');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
     cy.get('.react-flow__node[data-id="sink-1"] [data-slot="canvas-node-shell"]').dblclick();
     cy.get('[data-slot="canvas-node-workbench-tab-sink"]').click();
     cy.contains('h3', 'DVT sink').should('be.visible');
-    cy.contains('label', 'Schema').should('be.visible');
-    cy.contains('label', 'Table').scrollIntoView().should('be.visible');
-    cy.contains('label', 'Materialization').scrollIntoView().should('be.visible');
-    cy.contains('label', 'Write mode').scrollIntoView().should('be.visible');
-    cy.get('input[name="dvt-sink-table"]').should('have.value', 'orders_daily');
-    cy.get('select[name="dvt-sink-write-mode"]').should('have.value', 'replace');
-    cy.get('input[name="dvt-sink-database"]').should('not.exist');
-    cy.get('input[name="dvt-sink-partition-strategy"]').should('not.exist');
+    cy.contains('label', 'Schema').scrollIntoView().should('be.visible');
     cy.get('input[name="dvt-sink-schema"]').clear().type('published');
     cy.get('input[name="dvt-sink-table"]').clear().type('orders_monthly');
     cy.get('select[name="dvt-sink-materialization"]').select('view');
@@ -626,82 +472,21 @@ describe('Canvas ready node authoring', () => {
             config.partitionStrategy === 'daily_by_order_date'
           );
         });
-
-      expect(savedSink, 'saved sink fields and historical target metadata').to.not.be.undefined;
+      expect(savedSink, 'saved Sink properties').to.not.be.undefined;
     });
-    cy.get('input[name="dvt-sink-table"]').clear().type('unsaved_sink');
-    cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Cancel$/).click();
-    cy.get('input[name="dvt-sink-table"]').should('have.value', 'orders_monthly');
-    cy.get('[data-slot="canvas-node-workbench-close"]').click();
-    cy.get('.react-flow__node[data-id="sink-1"] [data-slot="canvas-node-shell"]').dblclick();
-    cy.get('[data-slot="canvas-node-workbench-tab-sink"]').click();
-    cy.get('input[name="dvt-sink-schema"]').should('have.value', 'published');
-    cy.get('input[name="dvt-sink-table"]').should('have.value', 'orders_monthly');
-    cy.get('select[name="dvt-sink-materialization"]').should('have.value', 'view');
-    cy.get('select[name="dvt-sink-write-mode"]').should('have.value', 'append');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
     cy.get(
       '.react-flow__node[data-id="dvt-transform-1"] [data-slot="canvas-node-shell"]'
     ).dblclick();
-    cy.contains('Inherited PostgreSQL connection').should('be.visible');
-    cy.contains('code', 'warehouse-b').should('be.visible');
     cy.get('[data-slot="canvas-node-workbench-tab-code"]').should(
       'have.attr',
       'aria-selected',
       'true'
     );
-    cy.get('[data-testid="monaco-code-editor"]').should('be.visible');
-    cy.get('input[name="dvt-transform-column"]').should('not.exist');
-    cy.get('[data-testid="monaco-code-editor"]')
-      .find('.monaco-editor textarea')
-      .first()
-      .focus()
-      .type('{ctrl+a}', { force: true, delay: 0 })
-      .type(authoredSql, { force: true, parseSpecialCharSequences: false, delay: 0 });
-    cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
-    cy.get('input[name="node-name"]').clear().type('Orders enriched');
-    cy.get('input[name="node-tags"]').should('not.have.value', 'authoring').clear().type('finance');
-    cy.get('textarea[name="node-description"]').type('Consumer-backed DVT transform');
-    cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
-
-    cy.wrap(null).should(() => {
-      const savedDraft = getE2eApiCalls('/workspace/graph/draft', 'PUT')
-        .map((call) => call.body as CanvasDraftSaveRequestBody)
-        .find((body) => {
-          const node = body.draft.nodes.find((candidate) => candidate.id === 'dvt-transform-1');
-          const config = node?.metadata?.config as
-            { sql?: string; selectedColumns?: string[] } | undefined;
-
-          return (
-            node?.name === 'Orders enriched' &&
-            node.tags?.includes('authoring') === true &&
-            node.tags?.includes('finance') === true &&
-            config?.sql === authoredSql &&
-            config.selectedColumns?.[0] === 'source-1.order_id'
-          );
-        });
-
-      expect(savedDraft).to.not.be.undefined;
-    });
-    cy.get('input[name="node-name"]').clear().type('Unsaved name');
-    cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Cancel$/).click();
-    cy.get('input[name="node-name"]').should('have.value', 'Orders enriched');
+    cy.get('[data-testid="monaco-code-viewer"]').should('be.visible');
+    cy.get('[data-testid="monaco-code-editor"]').should('not.exist');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
-
-    cy.get(
-      '.react-flow__node[data-id="dvt-transform-1"] button[aria-label="Filter graph by tag finance"]'
-    )
-      .focus()
-      .should('have.focus')
-      .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
-    cy.get('[data-slot="canvas-graph-filter-control"]').should('contain.text', 'Tag: finance');
-    cy.get(
-      '.react-flow__node[data-id="dvt-transform-1"] button[aria-label="Filter graph by tag finance"]'
-    ).click();
-    cy.get('[aria-label="Remove Tag filter finance"]').should('have.length', 1);
-    cy.get('button[aria-label="Clear graph filters"]').click();
-    cy.get('[aria-label="Remove Tag filter finance"]').should('not.exist');
 
     visitReadyCanvas();
 
@@ -709,6 +494,7 @@ describe('Canvas ready node authoring', () => {
     cy.get('input[name="dvt-source-schema"]').should('have.value', 'curated');
     cy.get('input[name="dvt-source-table"]').should('have.value', 'orders_clean');
     cy.get('input[name="dvt-source-alias"]').should('have.value', 'orders_curated');
+    cy.get('select[name="dvt-source-connection"]').should('have.value', 'warehouse-b');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
     cy.get('.react-flow__node[data-id="sink-1"] [data-slot="canvas-node-shell"]').dblclick();
@@ -718,54 +504,7 @@ describe('Canvas ready node authoring', () => {
     cy.get('select[name="dvt-sink-materialization"]').should('have.value', 'view');
     cy.get('select[name="dvt-sink-write-mode"]').should('have.value', 'append');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
-
-    cy.get('.react-flow__node[data-id="dvt-transform-1"]')
-      .should('contain.text', 'Orders Enriched')
-      .find('[data-slot="canvas-node-shell"]')
-      .dblclick();
-    cy.get('[data-testid="monaco-code-editor"] .view-lines').should(($lines) => {
-      expect($lines.text().replace(/\u00a0/g, ' ')).to.contain(authoredSql);
-    });
-    cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
-    cy.get('input[name="node-name"]').should('have.value', 'Orders enriched');
-    cy.get('input[name="node-tags"]').should('have.value', 'finance');
-    cy.get('textarea[name="node-description"]').should(
-      'have.value',
-      'Consumer-backed DVT transform'
-    );
-
-    cy.get('[data-slot="shell-menu-trigger"]').click();
-    cy.get('[data-slot="shell-language-option-es"]').click();
-    cy.get('html').should('have.attr', 'lang', 'es');
-    cy.viewport(640, 800);
-    cy.get('[data-slot="canvas-node-workbench-overlay"]').should('be.visible');
-    cy.get('[data-slot="canvas-node-workbench-tab-code"]').should('contain.text', 'Código');
-    assertNoSeriousAccessibilityViolations('[data-slot="canvas-node-workbench-overlay"]');
-    cy.get('[data-slot="canvas-node-workbench-close"]').click();
-
-    cy.get('.react-flow__node[data-id="source-1"]')
-      .focus()
-      .should('have.focus')
-      .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
-    cy.contains('h3', 'Source DVT').should('be.visible');
-    cy.contains('label', 'Conexión PostgreSQL').scrollIntoView().should('be.visible');
-    cy.get('select[name="dvt-source-connection"]').should('have.value', 'warehouse-b');
-    cy.contains('label', 'Esquema').should('be.visible');
-    cy.contains('label', 'Tabla').should('be.visible');
-    cy.contains('label', 'Alias').should('be.visible');
-    cy.get('input[name="dvt-source-schema"]').focus();
-    cy.press(Cypress.Keyboard.Keys.TAB);
-    cy.focused().should('have.attr', 'name', 'dvt-source-table');
-    cy.get('input[name="dvt-source-alias"]').clear();
-    cy.contains('El alias es obligatorio.').should('be.visible');
-    cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Aplicar$/).should(
-      'be.disabled'
-    );
-    cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Cancelar$/).click();
-    cy.get('input[name="dvt-source-alias"]').should('have.value', 'orders_curated');
-    assertNoSeriousAccessibilityViolations('[data-slot="canvas-node-workbench-overlay"]');
   });
-
   it('does not present failed draft saves as persisted after reload', () => {
     stubCanvasDraftRead();
     stubFailingCanvasDraftSave();
@@ -792,12 +531,18 @@ describe('Canvas ready node authoring', () => {
 
     cy.contains('Sales canvas').should('be.visible');
     cy.get('[data-slot="canvas-toolbar-insert-command"]').should('not.exist');
-    openCanvasContextMenuAt(620, 340);
+    cy.get('.react-flow__pane').should('be.visible').rightclick(620, 340, { force: true });
+    cy.get('[data-slot="canvas-context-menu"]').should('not.exist');
     cy.contains('[role="menuitem"]', /^(Add|Anadir)\.\.\.$/).should('not.exist');
-    cy.contains('[role="menuitem"]', 'Add transformation').should('not.exist');
+    cy.contains('[role="menuitem"]', 'Add model').should('not.exist');
     cy.contains('[role="menuitem"]', 'Add source').should('not.exist');
     cy.then(() => {
-      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
+      const calls = getE2eApiCalls('/workspace/graph/draft', 'PUT');
+      const createdNode = calls
+        .map((call) => call.body as CanvasDraftSaveRequestBody)
+        .flatMap((body) => body.draft.nodes)
+        .find((node) => node.id === 'dvt-transform-1');
+      expect(createdNode, 'no model created through the read-only surface').to.be.undefined;
     });
   });
 

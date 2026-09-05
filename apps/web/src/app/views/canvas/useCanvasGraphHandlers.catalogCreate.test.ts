@@ -105,7 +105,7 @@ describe('useCanvasGraphHandlers catalog node creation', () => {
         id: 'dvt-transform-1',
         position: { x: 160, y: 120 },
         data: expect.objectContaining({
-          name: 'Transform 1',
+          name: 'Model 1',
           pluginKind: 'dvt:transform',
           role: 'transform',
         }),
@@ -147,7 +147,7 @@ describe('useCanvasGraphHandlers catalog node creation', () => {
     await harness.render();
 
     act(() => {
-      harness.latest()?.handleCreateAuthoringNode(requireAuthoringNodeKind('dbt:model'));
+      harness.latest()?.handleCreateAuthoringNode(requireAuthoringNodeKind('dvt:transform'));
     });
 
     expect(setDraftSession).toHaveBeenCalledTimes(1);
@@ -167,12 +167,12 @@ describe('useCanvasGraphHandlers catalog node creation', () => {
     );
     expect(nextDraftSession.workingSet.visibleNodeIds).toEqual([
       'src_local_postgres_dvt_public_source_1',
-      'dbt-model-1',
+      'dvt-transform-1',
     ]);
-    expect(nextDraftSession.localNodeCatalog?.['dbt-model-1']).toEqual(
+    expect(nextDraftSession.localNodeCatalog?.['dvt-transform-1']).toEqual(
       expect.objectContaining({
-        id: 'dbt-model-1',
-        kind: 'dbt:model',
+        id: 'dvt-transform-1',
+        kind: 'dvt:transform',
         role: 'transform',
       })
     );
@@ -296,7 +296,7 @@ describe('useCanvasGraphHandlers catalog node creation', () => {
     harness.cleanup();
   });
 
-  it('creates source, model, transformation, test, and output nodes at explicit canvas positions', async () => {
+  it('creates source, model, test, and output nodes at explicit canvas positions', async () => {
     let currentNodes: Node[] = [];
     const setNodes = vi.fn((nextNodes) => {
       currentNodes = nextNodes;
@@ -321,10 +321,9 @@ describe('useCanvasGraphHandlers catalog node creation', () => {
 
     const authoringRequests = [
       { kind: 'dvt:source', position: { x: 100, y: 80 } },
-      { kind: 'dbt:model', position: { x: 320, y: 80 } },
-      { kind: 'dvt:transform', position: { x: 540, y: 80 } },
-      { kind: 'dbt:test', position: { x: 760, y: 80 } },
-      { kind: 'dvt:sink', position: { x: 980, y: 80 } },
+      { kind: 'dvt:transform', position: { x: 320, y: 80 } },
+      { kind: 'dbt:test', position: { x: 540, y: 80 } },
+      { kind: 'dvt:sink', position: { x: 760, y: 80 } },
     ] as const;
 
     act(() => {
@@ -337,10 +336,9 @@ describe('useCanvasGraphHandlers catalog node creation', () => {
 
     expect(currentNodes.map((node) => ({ id: node.id, position: node.position }))).toEqual([
       { id: 'dvt-source-1', position: { x: 100, y: 80 } },
-      { id: 'dbt-model-1', position: { x: 320, y: 80 } },
-      { id: 'dvt-transform-1', position: { x: 540, y: 80 } },
-      { id: 'dbt-test-1', position: { x: 760, y: 80 } },
-      { id: 'dvt-sink-1', position: { x: 980, y: 80 } },
+      { id: 'dvt-transform-1', position: { x: 320, y: 80 } },
+      { id: 'dbt-test-1', position: { x: 540, y: 80 } },
+      { id: 'dvt-sink-1', position: { x: 760, y: 80 } },
     ]);
     expect(setDraftSession).toHaveBeenCalledTimes(authoringRequests.length);
     const latestDraftSession = applyDraftSessionUpdates(
@@ -349,14 +347,12 @@ describe('useCanvasGraphHandlers catalog node creation', () => {
     );
     expect(latestDraftSession.workingSet.visibleNodeIds).toEqual([
       'dvt-source-1',
-      'dbt-model-1',
       'dvt-transform-1',
       'dbt-test-1',
       'dvt-sink-1',
     ]);
     expect(Object.keys(latestDraftSession.localNodeCatalog ?? {})).toEqual([
       'dvt-source-1',
-      'dbt-model-1',
       'dvt-transform-1',
       'dbt-test-1',
       'dvt-sink-1',

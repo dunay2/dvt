@@ -70,9 +70,9 @@ describe('canvasConnectionAggregate', () => {
   });
 
   it('allows realistic dbt authoring graph connections through registered plugin policy', () => {
-    const source = dbtNode('source-node', 'input', 'dbt:source');
-    const firstModel = dbtNode('first-model', 'transform', 'dbt:model');
-    const secondModel = dbtNode('second-model', 'transform', 'dbt:model');
+    const source = dbtNode('source-node', 'input', 'dvt:source');
+    const firstModel = dbtNode('first-model', 'transform', 'dvt:transform');
+    const secondModel = dbtNode('second-model', 'transform', 'dvt:transform');
     const modelTest = dbtNode('model-test', 'check', 'dbt:test');
     const exposure = dbtNode('exposure', 'output', 'dbt:exposure');
     const canonicalNodesById = byId([source, firstModel, secondModel, modelTest, exposure]);
@@ -116,7 +116,7 @@ describe('canvasConnectionAggregate', () => {
   });
 
   it('allows dbt input resources to connect to dbt tests through plugin rules', () => {
-    const source = dbtNode('source-node', 'input', 'dbt:source');
+    const source = dbtNode('source-node', 'input', 'dvt:source');
     const seed = dbtNode('seed-node', 'input', 'dbt:seed');
     const sourceTest = dbtNode('source-test', 'check', 'dbt:test');
     const seedTest = dbtNode('seed-test', 'check', 'dbt:test');
@@ -143,8 +143,8 @@ describe('canvasConnectionAggregate', () => {
   });
 
   it('rejects same-plugin authoring connections when the plugin policy is unavailable', () => {
-    const firstModel = dbtNode('first-model', 'transform', 'dbt:model');
-    const secondModel = dbtNode('second-model', 'transform', 'dbt:model');
+    const firstModel = dbtNode('first-model', 'transform', 'dvt:transform');
+    const secondModel = dbtNode('second-model', 'transform', 'dvt:transform');
 
     expect(
       proposeConnection({
@@ -161,7 +161,7 @@ describe('canvasConnectionAggregate', () => {
 
   it('rejects cross-plugin bridges into input nodes before evaluating tabular ports', () => {
     const dvtTransform = node('dvt-transform', 'transform', 'dvt:transform');
-    const dbtSource = dbtNode('dbt-source', 'input', 'dbt:source');
+    const dbtSource = dbtNode('dbt-source', 'input', 'dvt:source');
 
     expect(
       proposeConnection({

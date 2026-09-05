@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
 import { dbtGraphNodeCardStrategy } from '../../plugins/dbt/dbtGraphNodeCardStrategy';
+import { sharedSourceModelGraphNodeCardStrategy } from '../../plugins/graph/sharedSourceModelGraphNodeCardStrategy';
 import type { GraphNodeCardStrategy } from '../../plugins/graph/graphNodeCardStrategyContracts';
 import {
   mapCanonicalEdgeToCanvasEdge,
@@ -54,8 +55,8 @@ describe('canvasNodeMapper', () => {
     const mappedNode = mapCanonicalNodeToCanvasNode({
       canonicalNode: {
         ...buildCanonicalNode(),
-        kind: 'dbt:model',
-        pluginId: 'dbt',
+        kind: 'dvt:transform',
+        pluginId: 'dvt',
         role: 'transform',
         tags: ['authoring', 'finance'],
       },
@@ -76,8 +77,8 @@ describe('canvasNodeMapper', () => {
     const canonicalNode = {
       ...buildCanonicalNode(),
       name: 'Failed model',
-      pluginId: 'dbt',
-      kind: 'dbt:model',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
       role: 'transform',
       status: 'failed',
     } satisfies CanonicalNode;
@@ -91,7 +92,7 @@ describe('canvasNodeMapper', () => {
       node: mappedNode,
       canonicalNode,
       data: mappedNode.data,
-      graphNodeCardStrategies: [dbtGraphNodeCardStrategy],
+      graphNodeCardStrategies: [sharedSourceModelGraphNodeCardStrategy, dbtGraphNodeCardStrategy],
     });
 
     expect(projectedNode.ariaLabel).toBe('Failed model, Model, Failed');
@@ -256,8 +257,8 @@ describe('canvasNodeMapper', () => {
       canonicalNode: {
         ...buildCanonicalNode(),
         id: 'model-orders',
-        pluginId: 'dbt',
-        kind: 'dbt:model',
+        pluginId: 'dvt',
+        kind: 'dvt:transform',
         role: 'transform',
         metadata: {
           dbt: {

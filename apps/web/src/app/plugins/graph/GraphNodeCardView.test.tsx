@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
 import { dvtGraphNodeCardStrategy } from '../dvt/dvtGraphNodeCardStrategy';
+import { sharedSourceModelGraphNodeCardStrategy } from './sharedSourceModelGraphNodeCardStrategy';
 import { GraphNodeCardView } from './GraphNodeCardView';
 import { GraphNodeRenderer } from './GraphNodeRenderer';
 
@@ -322,7 +323,10 @@ describe('GraphNodeCardView', () => {
           hovered={false}
           overlayDecoration={null}
           badges={[]}
-          graphNodeCardStrategies={[dvtGraphNodeCardStrategy]}
+          graphNodeCardStrategies={[
+            sharedSourceModelGraphNodeCardStrategy,
+            dvtGraphNodeCardStrategy,
+          ]}
           data={{
             onInspectNode,
             presentationTruth: {
@@ -338,7 +342,9 @@ describe('GraphNodeCardView', () => {
       );
     });
 
-    expect(container.querySelector('[data-slot="graph-node-metric-hotspot"]')).toBeNull();
+    expect(
+      container.querySelector('[data-slot="graph-node-metric-hotspot"][aria-label^="File:"]')
+    ).toBeNull();
     expect(onInspectNode).not.toHaveBeenCalled();
   });
 

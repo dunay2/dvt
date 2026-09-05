@@ -14,13 +14,10 @@ describe('canvasAddNodeCatalogModel', () => {
     expect(inferCanvasAddNodeCatalogCategory(buildTestNodeKind('dvt:source', 'Source'))).toBe(
       'source'
     );
-    expect(inferCanvasAddNodeCatalogCategory(buildTestNodeKind('dbt:model', 'Model'))).toBe(
+    expect(inferCanvasAddNodeCatalogCategory(buildTestNodeKind('dvt:transform', 'Model'))).toBe(
       'model'
     );
     expect(inferCanvasAddNodeCatalogCategory(buildTestNodeKind('dbt:seed', 'Seed'))).toBe('seed');
-    expect(inferCanvasAddNodeCatalogCategory(buildTestNodeKind('dvt:transform', 'Transform'))).toBe(
-      'transformation'
-    );
     expect(inferCanvasAddNodeCatalogCategory(buildTestNodeKind('dbt:test', 'Test'))).toBe('test');
     expect(inferCanvasAddNodeCatalogCategory(buildTestNodeKind('dvt:sink', 'Sink'))).toBe('output');
     expect(inferCanvasAddNodeCatalogCategory(buildTestNodeKind('dbt:macro', 'Macro'))).toBe(
@@ -39,7 +36,7 @@ describe('canvasAddNodeCatalogModel', () => {
 
     expect(items.map((item) => [item.id, item.category, item.actionLabel])).toEqual([
       ['create-node:dvt:source', 'source', 'Add source'],
-      ['create-node:dvt:transform', 'transformation', 'Add transformation'],
+      ['create-node:dvt:transform', 'model', 'Add model'],
       ['create-node:dvt:sink', 'output', 'Add output'],
     ]);
     expect(items.every((item) => item.categoryLabel.length > 0)).toBe(true);
@@ -85,13 +82,12 @@ describe('canvasAddNodeCatalogModel', () => {
     const items = buildCanvasAddNodeCatalogItems({
       authoringNodeKinds: [
         buildTestNodeKind('dvt:source', 'Source'),
-        buildTestNodeKind('dbt:model', 'Model'),
-        buildTestNodeKind('dvt:transform', 'Transform'),
+        buildTestNodeKind('dvt:transform', 'Model'),
       ],
     });
 
-    const filtered = filterCanvasAddNodeCatalogItems(items, 'transform');
-    const filteredAgain = filterCanvasAddNodeCatalogItems(filtered, 'transform');
+    const filtered = filterCanvasAddNodeCatalogItems(items, 'model');
+    const filteredAgain = filterCanvasAddNodeCatalogItems(filtered, 'model');
 
     expect(filtered.map((item) => item.id)).toEqual(['create-node:dvt:transform']);
     expect(filteredAgain).toEqual(filtered);
@@ -102,7 +98,7 @@ describe('canvasAddNodeCatalogModel', () => {
     const items = buildCanvasAddNodeCatalogItems({
       authoringNodeKinds: [
         buildTestNodeKind('dvt:source', 'Source'),
-        buildTestNodeKind('dbt:model', 'Model'),
+        buildTestNodeKind('dvt:transform', 'Model'),
       ],
     });
 

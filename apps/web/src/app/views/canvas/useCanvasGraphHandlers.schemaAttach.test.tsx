@@ -27,8 +27,8 @@ describe('useCanvasGraphHandlers schema attachment', () => {
   it('attaches a schema project resource to a visible node through the draft lifecycle', async () => {
     const modelNode = {
       ...buildCanonicalNode('model-orders', 'transform'),
-      pluginId: 'dbt',
-      kind: 'dbt:model' as const,
+      pluginId: 'dvt',
+      kind: 'dvt:transform' as const,
       role: 'transform' as const,
       metadata: {
         config: {

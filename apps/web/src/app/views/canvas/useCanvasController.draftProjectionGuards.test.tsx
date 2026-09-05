@@ -58,8 +58,8 @@ describe('useCanvasController persisted draft projection guards', () => {
       {
         id: 'node_3',
         name: 'payments',
-        pluginId: 'dbt',
-        kind: 'dbt:model',
+        pluginId: 'dvt',
+        kind: 'dvt:transform',
         role: 'transform',
         status: 'idle',
         tags: [],

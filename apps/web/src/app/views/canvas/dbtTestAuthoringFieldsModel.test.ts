@@ -16,12 +16,13 @@ const testNode: CanonicalNode = {
 const modelNode: CanonicalNode = {
   id: 'dbt-model-1',
   name: 'Orders Model',
-  pluginId: 'dbt',
-  kind: 'dbt:model',
+  pluginId: 'dvt',
+  kind: 'dvt:transform',
   role: 'transform',
   status: 'idle',
   tags: [],
   metadata: {
+    dbt: { packageName: 'analytics', materialized: 'view' },
     columns: [
       { name: 'order_id', type: 'bigint' },
       { name: 'amount', type: 'numeric' },
@@ -56,14 +57,20 @@ describe('DBT test authoring fields model', () => {
     const sourceNode: CanonicalNode = {
       id: 'dbt-source-orders',
       name: 'Raw orders',
-      pluginId: 'dbt',
-      kind: 'dbt:source',
+      pluginId: 'dvt',
+      kind: 'dvt:source',
       role: 'input',
       status: 'idle',
       tags: [],
-      metadata: { columns: [{ name: 'order_id', type: 'bigint' }] },
+      metadata: {
+        dbt: { packageName: 'analytics', sourceName: 'raw' },
+        columns: [{ name: 'order_id', type: 'bigint' }],
+      },
     };
-    const generatedModel = { ...modelNode, metadata: {} };
+    const generatedModel = {
+      ...modelNode,
+      metadata: { dbt: { packageName: 'analytics', materialized: 'view' } },
+    };
     const sourceEdge: CanonicalEdge = {
       id: 'edge-source-model',
       sourceId: sourceNode.id,
@@ -85,7 +92,7 @@ describe('DBT test authoring fields model', () => {
     expect(
       buildDbtTestAuthoringFieldsModel({
         node: testNode,
-        nodes: [{ ...modelNode, kind: 'dbt:source', role: 'input' }, testNode],
+        nodes: [{ ...modelNode, kind: 'dvt:source', role: 'input' }, testNode],
         edges: [edge],
         targetModelId: '',
       })

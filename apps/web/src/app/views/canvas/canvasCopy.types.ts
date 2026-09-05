@@ -118,7 +118,6 @@ export type CanvasViewCopy = {
   readonly canvasContextMenuAddSourceLabel: string;
   readonly canvasContextMenuAddModelLabel: string;
   readonly canvasContextMenuAddSeedLabel: string;
-  readonly canvasContextMenuAddTransformationLabel: string;
   readonly canvasContextMenuAddTestLabel: string;
   readonly canvasContextMenuAddOutputLabel: string;
   readonly canvasContextMenuAddMacroLabel: string;
@@ -155,7 +154,6 @@ export type CanvasViewCopy = {
   readonly canvasAddNodeCatalogSourceCategoryLabel: string;
   readonly canvasAddNodeCatalogModelCategoryLabel: string;
   readonly canvasAddNodeCatalogSeedCategoryLabel: string;
-  readonly canvasAddNodeCatalogTransformationCategoryLabel: string;
   readonly canvasAddNodeCatalogTestCategoryLabel: string;
   readonly canvasAddNodeCatalogOutputCategoryLabel: string;
   readonly canvasAddNodeCatalogMacroCategoryLabel: string;
@@ -163,7 +161,6 @@ export type CanvasViewCopy = {
   readonly canvasAddNodeCatalogSourceDescription: string;
   readonly canvasAddNodeCatalogModelDescription: string;
   readonly canvasAddNodeCatalogSeedDescription: string;
-  readonly canvasAddNodeCatalogTransformationDescription: string;
   readonly canvasAddNodeCatalogTestDescription: string;
   readonly canvasAddNodeCatalogOutputDescription: string;
   readonly canvasAddNodeCatalogMacroDescription: string;

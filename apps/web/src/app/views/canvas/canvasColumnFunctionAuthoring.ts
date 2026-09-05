@@ -9,7 +9,6 @@ import {
   applyDvtNodeAuthoringMetadata,
   createDvtNodeAuthoringMetadata,
 } from './canvasDvtAuthoringModel';
-import { replaceGeneratedDbtModelWithTransform } from './canvasGeneratedDbtModelReplacement';
 
 export type CanvasColumnFunctionIdentity = Readonly<{
   nodeId: string;
@@ -103,19 +102,6 @@ export function applyCanvasColumnFunction(args: {
   const targetNode = nodeCatalog.get(args.identity.nodeId);
   if (targetNode?.pluginId === 'dvt' && targetNode.kind === 'dvt:transform') {
     return applyToDvtTransform({ ...args, nodeCatalog, targetNode });
-  }
-  if (targetNode?.pluginId === 'dbt' && targetNode.kind === 'dbt:model') {
-    const replacement = replaceGeneratedDbtModelWithTransform({
-      ...args,
-      nodeCatalog,
-      targetNode,
-    });
-    return replacement == null
-      ? { outcome: 'rejected' }
-      : {
-          outcome: 'applied',
-          draftSession: canvasDraftSession.workingSet.upsertNode(args.draftSession, replacement),
-        };
   }
   return { outcome: 'rejected' };
 }

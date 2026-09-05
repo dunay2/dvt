@@ -7,8 +7,8 @@ function buildNode(overrides?: Partial<CanonicalNode>): CanonicalNode {
   return {
     id: 'n1',
     name: 'stg_orders',
-    pluginId: 'dbt',
-    kind: 'dbt:model',
+    pluginId: 'dvt',
+    kind: 'dvt:transform',
     role: 'transform',
     status: 'success',
     tags: [],

@@ -72,7 +72,7 @@ describe('Canvas source import live proof architecture', () => {
     expect(cypressSpecSource).toContain('openCanvasContextMenuAt');
     expect(cypressSpecSource).toContain("clickCanvasContextMenuAction('open-add-node-catalog')");
     expect(cypressSpecSource).toContain(
-      "clickCanvasAddCatalogAction('open-source-import', 'dbt:source')"
+      "clickCanvasAddCatalogAction('open-source-import', 'dvt:source')"
     );
     expect(liveInteractionSource).toContain('source-import-connection-option');
     expect(liveInteractionSource).toContain('data-source-import-object');

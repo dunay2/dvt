@@ -7,8 +7,8 @@ function buildCanonicalNode(overrides?: Partial<CanonicalNode>): CanonicalNode {
   return {
     id: 'model.fct_orders',
     name: 'fct_orders',
-    pluginId: 'dbt',
-    kind: 'dbt:model',
+    pluginId: 'dvt',
+    kind: 'dvt:transform',
     role: 'transform',
     status: 'success',
     tags: [],

@@ -19,7 +19,7 @@ export const DVT_AUTHORING_NODE_KINDS: NodeKindRegistration[] = [
   {
     kind: 'dvt:transform',
     pluginId: 'dvt',
-    label: 'Transform',
+    label: 'Model',
     role: 'transform',
     icon: Table,
     ...resolveGraphNodeKindTone('dvt:transform'),

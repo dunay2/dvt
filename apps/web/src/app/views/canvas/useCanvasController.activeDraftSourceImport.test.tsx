@@ -57,8 +57,8 @@ describe('useCanvasController active draft source import', () => {
       {
         id: 'node_3',
         name: 'src_erp_orders',
-        pluginId: 'dbt',
-        kind: 'dbt:model',
+        pluginId: 'dvt',
+        kind: 'dvt:transform',
         role: 'transform',
         status: 'idle',
         tags: [],

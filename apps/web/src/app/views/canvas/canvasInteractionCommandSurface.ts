@@ -93,12 +93,12 @@ function formatCreateNodeActionLabel(
     return copy.canvasContextMenuAddSourceLabel;
   }
 
-  if (registration.kind === 'dbt:model') {
+  if (
+    registration.role === 'transform' ||
+    registration.kind.endsWith(':model') ||
+    registration.kind.endsWith(':transform')
+  ) {
     return copy.canvasContextMenuAddModelLabel;
-  }
-
-  if (registration.kind === 'dvt:transform' || registration.role === 'transform') {
-    return copy.canvasContextMenuAddTransformationLabel;
   }
 
   if (registration.kind.endsWith(':test') || registration.role === 'check') {

@@ -1,6 +1,10 @@
 /** Owned concern: derive dbt Inspector authoring presentation state from Canvas graph inputs. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import type { DbtNodeAuthoringMetadata } from './canvasDbtAuthoringModel';
+import {
+  isDbtCompatibleModel,
+  isDbtCompatibleSource,
+  type DbtNodeAuthoringMetadata,
+} from './canvasDbtAuthoringModel';
 import {
   projectDbtModelArtifact,
   type DbtModelArtifactProjection,
@@ -22,7 +26,7 @@ export type DbtAuthoringModelProjection = Readonly<{
 }>;
 
 function isDbtSourceOrigin(candidate: CanonicalNode | undefined): candidate is CanonicalNode {
-  return candidate?.pluginId === 'dbt' && candidate.kind === 'dbt:source';
+  return candidate != null && isDbtCompatibleSource(candidate);
 }
 
 function isWarehouseSourceOrigin(candidate: CanonicalNode | undefined): candidate is CanonicalNode {
@@ -30,7 +34,7 @@ function isWarehouseSourceOrigin(candidate: CanonicalNode | undefined): candidat
 }
 
 function isDbtModelOrigin(candidate: CanonicalNode | undefined): candidate is CanonicalNode {
-  return candidate?.pluginId === 'dbt' && candidate.kind === 'dbt:model';
+  return candidate != null && isDbtCompatibleModel(candidate);
 }
 
 function isDbtOriginNode(candidate: CanonicalNode | undefined): candidate is DbtOriginNode {
@@ -44,16 +48,16 @@ function isDbtOriginNode(candidate: CanonicalNode | undefined): candidate is Dbt
 
 function formatOriginKindLabel(
   candidate: DbtOriginNode,
-  kindLabels: Readonly<Record<'dbt:source' | 'dbt:model', string>>
+  kindLabels: Readonly<Record<'dvt:source' | 'dvt:transform', string>>
 ): string {
-  return isDbtModelOrigin(candidate) ? kindLabels['dbt:model'] : kindLabels['dbt:source'];
+  return isDbtModelOrigin(candidate) ? kindLabels['dvt:transform'] : kindLabels['dvt:source'];
 }
 
 export function buildDbtOriginOptions(args: {
   node: CanonicalNode;
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
-  kindLabels: Readonly<Record<'dbt:source' | 'dbt:model', string>>;
+  kindLabels: Readonly<Record<'dvt:source' | 'dvt:transform', string>>;
 }): readonly DbtOriginOption[] {
   const nodeById = new Map(args.nodes.map((candidate) => [candidate.id, candidate]));
   return args.edges
@@ -71,7 +75,7 @@ export function buildDbtAuthoringModelProjection(args: {
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
   authoringMetadata: DbtNodeAuthoringMetadata;
-  kindLabels: Readonly<Record<'dbt:source' | 'dbt:model', string>>;
+  kindLabels: Readonly<Record<'dvt:source' | 'dvt:transform', string>>;
 }): DbtAuthoringModelProjection {
   const originOptions = buildDbtOriginOptions(args);
   const selectedOriginId = originOptions.some(

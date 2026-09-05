@@ -410,7 +410,7 @@ export const canvasViewAuthoringCopyByKey = {
   },
   inspectorDbtCardTitle: {
     key: 'canvas.inspector.authoring.dbtCardTitle',
-    fallback: 'dbt card',
+    fallback: 'dbt export',
   },
   inspectorDbtPackageLabel: {
     key: 'canvas.inspector.authoring.dbtPackageLabel',

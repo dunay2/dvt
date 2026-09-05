@@ -9,6 +9,7 @@ import {
   type WorkspaceFileCodeEditorHandle,
 } from '../code/WorkspaceFileCodeEditor';
 import type { CanvasNodeWorkbenchContribution } from './canvasNodeWorkbenchContribution';
+import { hasDbtCompatibilityMetadata } from './canvasDbtAuthoringModel';
 
 type BuildDbtWorkspaceFileCodeContributionsOptions = Readonly<{
   node: CanonicalNode | null;
@@ -32,7 +33,12 @@ export function buildDbtWorkspaceFileCodeContributions({
     'reasons' in visualEditability &&
     Array.isArray(visualEditability.reasons) &&
     visualEditability.reasons.includes('external_package');
-  if (node == null || node.pluginId !== 'dbt' || node.path == null || isExternalPackage) {
+  if (
+    node == null ||
+    !hasDbtCompatibilityMetadata(node) ||
+    node.path == null ||
+    isExternalPackage
+  ) {
     return [];
   }
   const normalizedProjectRoot = projectRoot

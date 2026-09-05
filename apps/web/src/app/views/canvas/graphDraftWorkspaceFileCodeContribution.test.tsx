@@ -7,8 +7,8 @@ import { buildGraphDraftWorkspaceFileCodeContributions } from './graphDraftWorks
 const NODE: CanonicalNode = {
   id: 'model-1',
   name: 'Model 1',
-  pluginId: 'dbt',
-  kind: 'dbt:model',
+  pluginId: 'dvt',
+  kind: 'dvt:transform',
   role: 'transform',
   status: 'idle',
   tags: [],

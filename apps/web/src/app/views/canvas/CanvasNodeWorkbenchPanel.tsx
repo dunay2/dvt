@@ -5,6 +5,7 @@ import { DVT_TRANSFORM_AUTHORING_MODE } from '@dvt/contracts';
 
 import { getInspectorPanels } from '../../plugins/registry';
 import { PluginContributionBoundary } from '../../plugins/PluginContributionBoundary';
+import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
 import {
   inspectorStatusDotClasses,
   inspectorVisualClasses,
@@ -40,7 +41,7 @@ import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProj
 import { useCanvasNodeWorkbenchDraftController } from './useCanvasNodeWorkbenchDraftController';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { DvtTransformOutputView } from './DvtTransformOutputView';
-import { reconcileDbtModelConnectedOrigin } from './canvasDbtAuthoringModel';
+import { isDbtCompatibleModel, reconcileDbtModelConnectedOrigin } from './canvasDbtAuthoringModel';
 import { useCanvasColumnCommentCellRenderer } from './useCanvasColumnCommentCellRenderer';
 import { SourceNodeWorkbenchHeaderIdentity } from './SourceNodeWorkbenchHeaderIdentity';
 import { SourceOverviewPanel } from './SourceOverviewPanel';
@@ -169,7 +170,7 @@ function buildNodeWorkbenchReadModel({
         const resolvedSection =
           section.id === 'code' &&
           (contributedSectionIds.has(section.id) ||
-            (canEditNode && node.pluginId === 'dbt' && node.kind === 'dbt:model') ||
+            (canEditNode && isDbtCompatibleModel(node)) ||
             (node.pluginId === 'dvt' &&
               node.kind === 'dvt:transform' &&
               readDvtTransformAuthoringMode(node) === DVT_TRANSFORM_AUTHORING_MODE.substrait))
@@ -470,7 +471,7 @@ export function CanvasNodeWorkbenchPanel({
                 </h2>
               </div>
               <p className={cn('font-mono', inspectorVisualClasses.contextPanelSubtitle)}>
-                {node.kind}
+                {resolveNodeKindRegistration(node.kind).label}
               </p>
             </>
           )}

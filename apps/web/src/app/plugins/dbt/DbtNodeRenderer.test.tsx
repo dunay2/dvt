@@ -16,9 +16,11 @@ import { useApplicationLanguageStore } from '../../stores/applicationLanguageSto
 import type { CanonicalNode } from '../../types/canonical';
 import { resolveString } from '../contracts/PluginManifest';
 import { dbtGraphNodeCardStrategy } from './dbtGraphNodeCardStrategy';
-import { DbtNodeRenderer, dbtInspectorPanels } from './DbtNodeRenderer';
+import { GraphNodeRenderer } from '../graph/GraphNodeRenderer';
+import { sharedSourceModelGraphNodeCardStrategy } from '../graph/sharedSourceModelGraphNodeCardStrategy';
+import { dbtInspectorPanels } from './DbtNodeRenderer';
 
-describe('DbtNodeRenderer history panel', () => {
+describe('DBT runtime contributions', () => {
   let container: HTMLDivElement | null = null;
   let root: Root | null = null;
   let queryClient: QueryClient | null = null;
@@ -26,8 +28,8 @@ describe('DbtNodeRenderer history panel', () => {
   const buildNode = (overrides: Partial<CanonicalNode> = {}): CanonicalNode => ({
     id: 'model_orders',
     name: 'Orders model',
-    pluginId: 'dbt',
-    kind: 'dbt:model',
+    pluginId: 'dvt',
+    kind: 'dvt:transform',
     role: 'transform',
     status: 'success',
     tags: [],
@@ -244,10 +246,15 @@ describe('DbtNodeRenderer history panel', () => {
 
     await act(async () => {
       root?.render(
-        <DbtNodeRenderer
+        <GraphNodeRenderer
           node={buildNode({
             name: 'fct_orders',
             metadata: {
+              authority: 'dbt-project-files',
+              dbt: {
+                packageName: 'analytics',
+                materialized: 'incremental',
+              },
               package: 'analytics',
               dependencies: ['source.raw.orders', 'ref.stg_customers'],
               config: {
@@ -260,7 +267,10 @@ describe('DbtNodeRenderer history panel', () => {
           hovered={false}
           overlayDecoration={null}
           badges={[]}
-          graphNodeCardStrategies={[dbtGraphNodeCardStrategy]}
+          graphNodeCardStrategies={[
+            sharedSourceModelGraphNodeCardStrategy,
+            dbtGraphNodeCardStrategy,
+          ]}
           data={{}}
         />
       );
@@ -315,13 +325,16 @@ describe('DbtNodeRenderer history panel', () => {
     await act(async () => {
       root?.render(
         <ReactFlowProvider>
-          <DbtNodeRenderer
+          <GraphNodeRenderer
             node={buildNode()}
             selected={false}
             hovered={false}
             overlayDecoration={null}
             badges={[]}
-            graphNodeCardStrategies={[dbtGraphNodeCardStrategy]}
+            graphNodeCardStrategies={[
+              sharedSourceModelGraphNodeCardStrategy,
+              dbtGraphNodeCardStrategy,
+            ]}
             data={{
               showColumns: true,
               columns: [
@@ -352,7 +365,7 @@ describe('DbtNodeRenderer history panel', () => {
     ).not.toBeNull();
   });
 
-  it('does not restore the removed File metric on dbt cards', async () => {
+  it('does not restore the removed File metric on dbt-specific cards', async () => {
     const onInspectNode = vi.fn();
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -365,13 +378,16 @@ describe('DbtNodeRenderer history panel', () => {
 
     await act(async () => {
       root?.render(
-        <DbtNodeRenderer
+        <GraphNodeRenderer
           node={buildNode({ path: 'models/marts/orders.sql' })}
           selected={false}
           hovered={false}
           overlayDecoration={null}
           badges={[]}
-          graphNodeCardStrategies={[dbtGraphNodeCardStrategy]}
+          graphNodeCardStrategies={[
+            sharedSourceModelGraphNodeCardStrategy,
+            dbtGraphNodeCardStrategy,
+          ]}
           data={{
             onInspectNode,
             presentationTruth: {
@@ -406,13 +422,16 @@ describe('DbtNodeRenderer history panel', () => {
 
     await act(async () => {
       root?.render(
-        <DbtNodeRenderer
+        <GraphNodeRenderer
           node={buildNode({ id: 'model_orders', name: 'fct_orders' })}
           selected={false}
           hovered={false}
           overlayDecoration={null}
           badges={[]}
-          graphNodeCardStrategies={[dbtGraphNodeCardStrategy]}
+          graphNodeCardStrategies={[
+            sharedSourceModelGraphNodeCardStrategy,
+            dbtGraphNodeCardStrategy,
+          ]}
           data={{
             selectedForExecution: false,
             onToggleNodeSelection: toggleNodeSelection,
@@ -442,13 +461,16 @@ describe('DbtNodeRenderer history panel', () => {
 
     await act(async () => {
       root?.render(
-        <DbtNodeRenderer
+        <GraphNodeRenderer
           node={buildNode({ id: 'model_orders', name: 'fct_orders' })}
           selected={false}
           hovered={false}
           overlayDecoration={null}
           badges={[]}
-          graphNodeCardStrategies={[dbtGraphNodeCardStrategy]}
+          graphNodeCardStrategies={[
+            sharedSourceModelGraphNodeCardStrategy,
+            dbtGraphNodeCardStrategy,
+          ]}
           data={{}}
         />
       );

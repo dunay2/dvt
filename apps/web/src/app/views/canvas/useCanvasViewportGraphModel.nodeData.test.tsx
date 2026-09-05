@@ -18,8 +18,8 @@ describe('useCanvasViewportGraphModel node data', () => {
       metadata: { schema: 'dvt', tableName: 'orders' },
     };
     const model = {
-      ...buildCanonicalNode('dbt-model', 'dbt:model', 'transform'),
-      pluginId: 'dbt',
+      ...buildCanonicalNode('dbt-model', 'dvt:transform', 'transform'),
+      pluginId: 'dvt',
       metadata: {
         config: { schema: 'raw', table: 'model_1', materialized: 'view' },
         dbt: { schemaName: 'raw', tableName: 'model_1', materialized: 'view' },
@@ -91,8 +91,12 @@ describe('useCanvasViewportGraphModel node data', () => {
               pluginId: 'dvt.warehouse-source',
             },
             {
-              ...buildCanonicalNode('dbt-model', 'dbt:model', 'transform'),
-              pluginId: 'dbt',
+              ...buildCanonicalNode('dbt-model', 'dvt:transform', 'transform'),
+              pluginId: 'dvt',
+              metadata: {
+                authority: 'dbt-project-files',
+                dbt: { packageName: 'analytics' },
+              },
             },
           ],
           canonicalEdges: [],
@@ -257,7 +261,7 @@ describe('useCanvasViewportGraphModel node data', () => {
 
   it('projects inherited transform columns as the same semantic truth consumed by the card', async () => {
     const source = {
-      ...buildCanonicalNode('source-node', 'dbt:source', 'input'),
+      ...buildCanonicalNode('source-node', 'dvt:source', 'input'),
       metadata: {
         columns: [
           { name: 'order_id', type: 'integer' },
@@ -266,8 +270,12 @@ describe('useCanvasViewportGraphModel node data', () => {
       },
     };
     const model = {
-      ...buildCanonicalNode('model-node', 'dbt:model', 'transform'),
+      ...buildCanonicalNode('model-node', 'dvt:transform', 'transform'),
       path: 'models/orders.sql',
+      metadata: {
+        authority: 'dbt-project-files',
+        dbt: { packageName: 'analytics' },
+      },
     };
     const mounted = await renderViewportGraphModel(
       buildViewportGraphModelArgs({

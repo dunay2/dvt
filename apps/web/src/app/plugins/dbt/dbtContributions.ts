@@ -3,7 +3,8 @@ import { LayoutDashboard } from 'lucide-react';
 import { CANVAS_ROUTE_BOOTSTRAP_HANDLE } from '../../views/canvas/canvasDraftPresentationStore';
 import type { PluginContributions } from '../registry';
 import { DBT_NODE_KINDS } from '../nodeTypeCatalog.dbt';
-import { DbtNodeRenderer, dbtInspectorPanels, mapRunToCanonical } from './DbtNodeRenderer';
+import { dbtInspectorPanels, mapRunToCanonical } from './DbtNodeRenderer';
+import { GraphNodeRenderer } from '../graph/GraphNodeRenderer';
 import { dbtGraphNodeCardStrategy } from './dbtGraphNodeCardStrategy';
 import { createDeferredView } from '../createDeferredView';
 
@@ -25,7 +26,7 @@ const nodeRenderers = new Map(
     {
       kind: kind.kind,
       priority: 100,
-      component: DbtNodeRenderer,
+      component: GraphNodeRenderer,
     },
   ])
 );
@@ -77,16 +78,16 @@ export const dbtContributions: PluginContributions = {
   // invariants still run before these plugin rules are evaluated.
   connectionRules: [
     { sourceKind: 'dbt:macro', targetKind: '*', allowed: true },
-    { sourceKind: 'dbt:source', targetKind: 'dbt:model', allowed: true },
-    { sourceKind: 'dbt:source', targetKind: 'dbt:test', allowed: true },
-    { sourceKind: 'dbt:seed', targetKind: 'dbt:model', allowed: true },
+    { sourceKind: 'dvt:source', targetKind: 'dvt:transform', allowed: true },
+    { sourceKind: 'dvt:source', targetKind: 'dbt:test', allowed: true },
+    { sourceKind: 'dbt:seed', targetKind: 'dvt:transform', allowed: true },
     { sourceKind: 'dbt:seed', targetKind: 'dbt:test', allowed: true },
-    { sourceKind: 'dbt:model', targetKind: 'dbt:model', allowed: true },
-    { sourceKind: 'dbt:model', targetKind: 'dbt:test', allowed: true },
-    { sourceKind: 'dbt:model', targetKind: 'dbt:snapshot', allowed: true },
-    { sourceKind: 'dbt:model', targetKind: 'dbt:exposure', allowed: true },
-    { sourceKind: 'dbt:model', targetKind: 'dbt:metric', allowed: true },
-    { sourceKind: 'dbt:snapshot', targetKind: 'dbt:model', allowed: true },
+    { sourceKind: 'dvt:transform', targetKind: 'dvt:transform', allowed: true },
+    { sourceKind: 'dvt:transform', targetKind: 'dbt:test', allowed: true },
+    { sourceKind: 'dvt:transform', targetKind: 'dbt:snapshot', allowed: true },
+    { sourceKind: 'dvt:transform', targetKind: 'dbt:exposure', allowed: true },
+    { sourceKind: 'dvt:transform', targetKind: 'dbt:metric', allowed: true },
+    { sourceKind: 'dbt:snapshot', targetKind: 'dvt:transform', allowed: true },
     { sourceKind: 'dbt:snapshot', targetKind: 'dbt:test', allowed: true },
     {
       sourceKind: 'dbt:test',

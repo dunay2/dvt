@@ -240,7 +240,7 @@ describe('HET2 public REST artifact DBT vertical', () => {
       closeNodeWorkbench();
       connectCanvasNodes(ACQUISITION_NODE_NAME, OBJECT_NODE_NAME);
 
-      addCatalogNode(760, 240, 'dbt:model');
+      addCatalogNode(760, 240, 'dvt:transform');
       cy.contains('.react-flow__node', MODEL_NODE_NAME, { timeout: 20_000 }).should('be.visible');
       dragCanvasNodeByViewportDelta(MODEL_NODE_NAME, { x: 120, y: -120 });
       connectCanvasNodes(OBJECT_NODE_NAME, MODEL_NODE_NAME);

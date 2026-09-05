@@ -51,17 +51,8 @@ describe('Canvas route first-canvas catalog', () => {
       kindLabel: 'Transformation',
     });
     expectViewportAuthoringKinds(
-      ['dvt:transform'],
-      [
-        'dbt:source',
-        'dbt:model',
-        'dbt:test',
-        'dbt:seed',
-        'dbt:snapshot',
-        'dbt:exposure',
-        'dbt:metric',
-        'dbt:macro',
-      ]
+      ['dvt:source', 'dvt:transform'],
+      ['dbt:test', 'dbt:seed', 'dbt:snapshot', 'dbt:exposure', 'dbt:metric', 'dbt:macro']
     );
   });
 });

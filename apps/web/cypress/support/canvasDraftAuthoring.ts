@@ -1,6 +1,7 @@
 import {
   WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
   WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
+  type SourceObjectMetricEvidence,
 } from '@dvt/contracts';
 
 import {
@@ -21,6 +22,10 @@ import {
   createDvtSubstraitPilotDraft,
   encodeDvtSubstraitPilotDocument,
 } from '../../src/app/views/canvas/canvasDvtSubstraitPilot';
+import {
+  createDvtSubstraitProjectionDraft,
+  encodeDvtSubstraitProjectionDocument,
+} from '../../src/app/views/canvas/canvasDvtSubstraitProjection';
 import { normalizeProjectCanvasDraft } from '../../src/app/views/canvas/canvasProjectCanvasLifecycle';
 
 import { stubE2eApi } from './e2eApiStub';
@@ -34,7 +39,8 @@ export type CanvasDraftSessionScope = {
 
 export type StubCanvasDraftReadOptions = {
   includeLooseNode?: boolean;
-  canvasKind?: 'transformation' | 'dbt';
+  canvasKind?: 'transformation';
+  dbtGraph?: boolean;
   emptyCanvas?: boolean;
   importedWarehouseSource?: boolean;
   authoringGenerated?: boolean;
@@ -62,6 +68,7 @@ type CanvasDraftSaveRequest = {
 export function buildCanvasAuthoringDraft({
   includeLooseNode = false,
   canvasKind = 'transformation',
+  dbtGraph = false,
   emptyCanvas = false,
   importedWarehouseSource = false,
   authoringGenerated = false,
@@ -81,7 +88,7 @@ export function buildCanvasAuthoringDraft({
   const canvas = {
     id: 'main-canvas',
     kind: canvasKind,
-    title: title ?? (canvasKind === 'dbt' ? 'dbt canvas' : 'Sales canvas'),
+    title: title ?? (dbtGraph ? 'dbt graph' : 'Sales canvas'),
   };
 
   if (emptyCanvas) {
@@ -413,7 +420,7 @@ export function buildCanvasAuthoringDraft({
     });
   }
 
-  if (canvasKind === 'dbt' && importedWarehouseSource) {
+  if (dbtGraph && importedWarehouseSource) {
     return buildWorkspaceGraphAuthoringDraft({
       canvas,
       nodeIds: ['src_erp_orders'],
@@ -424,8 +431,8 @@ export function buildCanvasAuthoringDraft({
         {
           id: 'src_erp_orders',
           name: 'src_erp_orders',
-          pluginId: 'dbt',
-          kind: 'dbt:source',
+          pluginId: 'dvt',
+          kind: 'dvt:source',
           role: 'input',
           status: 'idle',
           tags: ['source', 'warehouse'],
@@ -461,7 +468,24 @@ export function buildCanvasAuthoringDraft({
     });
   }
 
-  if (canvasKind === 'dbt') {
+  if (dbtGraph) {
+    const sourceMetricEvidence = (rowCount: number): SourceObjectMetricEvidence => ({
+      observedAt: '2026-09-05T10:00:00.000Z',
+      observationScope: { kind: 'snapshot' as const },
+      rowCount: {
+        value: rowCount,
+        provenance: 'estimated' as const,
+        method: 'provider-statistics',
+        confidence: 'medium' as const,
+      },
+      byteSize: {
+        value: 4_096_000,
+        provenance: 'measured' as const,
+        method: 'provider-storage-metadata',
+        confidence: 'exact' as const,
+        basis: 'physical-allocation' as const,
+      },
+    });
     return buildWorkspaceGraphAuthoringDraft({
       canvas,
       nodeIds: ['raw_orders', 'warehouse_payments', 'orders_model'],
@@ -474,12 +498,13 @@ export function buildCanvasAuthoringDraft({
         {
           id: 'raw_orders',
           name: 'raw_orders',
-          pluginId: 'dbt',
-          kind: 'dbt:source',
+          pluginId: 'dvt',
+          kind: 'dvt:source',
           role: 'input',
           status: 'idle',
           tags: ['source'],
           metadata: {
+            sourceMetricEvidence: sourceMetricEvidence(18_240),
             dbt: {
               packageName: 'analytics',
               sourceName: 'raw',
@@ -491,12 +516,13 @@ export function buildCanvasAuthoringDraft({
         {
           id: 'warehouse_payments',
           name: 'warehouse_payments',
-          pluginId: 'dbt',
-          kind: 'dbt:source',
+          pluginId: 'dvt',
+          kind: 'dvt:source',
           role: 'input',
           status: 'idle',
           tags: ['source'],
           metadata: {
+            sourceMetricEvidence: sourceMetricEvidence(9_600),
             dbt: {
               packageName: 'analytics',
               sourceName: 'warehouse',
@@ -508,8 +534,8 @@ export function buildCanvasAuthoringDraft({
         {
           id: 'orders_model',
           name: 'orders_model',
-          pluginId: 'dbt',
-          kind: 'dbt:model',
+          pluginId: 'dvt',
+          kind: 'dvt:transform',
           role: 'transform',
           status: 'idle',
           tags: ['model'],
@@ -629,6 +655,33 @@ export function buildCanvasAuthoringDraft({
   }
 
   if (authoringGenerated) {
+    const semanticDocument = encodeDvtSubstraitProjectionDocument(
+      createDvtSubstraitProjectionDraft({
+        source: {
+          nodeId: 'source-1',
+          schema: 'raw',
+          table: 'orders',
+          sourceRef: {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef: {
+              schemaVersion: 'connection-ref.v1',
+              provider: 'postgres',
+              connectionId: 'warehouse-a',
+            },
+            sourceObjectId: 'raw.orders',
+          },
+          fields: [
+            { name: 'order_id', dataType: 'integer' },
+            { name: 'total', dataType: 'decimal' },
+          ],
+        },
+        targetNodeId: 'dvt-transform-1',
+        outputs: [
+          { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
+          { fieldId: 'output:total', name: 'total', sourceFieldName: 'total' },
+        ],
+      })
+    );
     return buildWorkspaceGraphAuthoringDraft({
       canvas,
       nodeIds: [
@@ -676,10 +729,10 @@ export function buildCanvasAuthoringDraft({
           tags: ['authoring'],
           metadata: {
             typeLabel: 'Transform',
-            config: {
-              dialect: 'postgres',
-              sql: 'select order_id from raw.orders',
-              selectedColumns: ['source-1.order_id'],
+            transformAuthoring: {
+              version: 'v1',
+              mode: 'substrait',
+              semanticDocument,
             },
           },
         },

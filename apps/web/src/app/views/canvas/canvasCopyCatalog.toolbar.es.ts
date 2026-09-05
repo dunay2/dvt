@@ -54,7 +54,6 @@ export const canvasViewToolbarCopyEs = {
   canvasContextMenuAddSourceLabel: 'Añadir origen',
   canvasContextMenuAddModelLabel: 'Añadir modelo',
   canvasContextMenuAddSeedLabel: 'Añadir seed',
-  canvasContextMenuAddTransformationLabel: 'Añadir transformación',
   canvasContextMenuAddTestLabel: 'Añadir test',
   canvasContextMenuAddOutputLabel: 'Añadir salida',
   canvasContextMenuAddMacroLabel: 'Añadir macro',
@@ -93,7 +92,6 @@ export const canvasViewToolbarCopyEs = {
   canvasAddNodeCatalogSourceCategoryLabel: 'Orígenes',
   canvasAddNodeCatalogModelCategoryLabel: 'Modelos',
   canvasAddNodeCatalogSeedCategoryLabel: 'Seeds',
-  canvasAddNodeCatalogTransformationCategoryLabel: 'Transformaciones',
   canvasAddNodeCatalogTestCategoryLabel: 'Tests',
   canvasAddNodeCatalogOutputCategoryLabel: 'Salidas',
   canvasAddNodeCatalogMacroCategoryLabel: 'Macros',
@@ -103,8 +101,6 @@ export const canvasViewToolbarCopyEs = {
     'Crea un dataset modelado que recibe entradas y alimenta validaciones posteriores.',
   canvasAddNodeCatalogSeedDescription:
     'Agrega un dataset seed estático gestionado por el proyecto.',
-  canvasAddNodeCatalogTransformationDescription:
-    'Agrega una transformación entre orígenes aguas arriba y salidas aguas abajo.',
   canvasAddNodeCatalogTestDescription:
     'Agrega una validación que explica qué comprueba y contra qué objetivo aplica.',
   canvasAddNodeCatalogOutputDescription:

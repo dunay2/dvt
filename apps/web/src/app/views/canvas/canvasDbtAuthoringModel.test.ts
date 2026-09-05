@@ -13,8 +13,8 @@ function buildDbtSourceNode(): CanonicalNode {
   return {
     id: 'source-orders',
     name: 'Raw Orders',
-    pluginId: 'dbt',
-    kind: 'dbt:source',
+    pluginId: 'dvt',
+    kind: 'dvt:source',
     role: 'input',
     status: 'idle',
     tags: ['authoring'],
@@ -33,8 +33,8 @@ function buildDbtModelNode(): CanonicalNode {
   return {
     id: 'model-orders',
     name: 'Orders Model',
-    pluginId: 'dbt',
-    kind: 'dbt:model',
+    pluginId: 'dvt',
+    kind: 'dvt:transform',
     role: 'transform',
     status: 'idle',
     tags: [],

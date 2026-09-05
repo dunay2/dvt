@@ -14,7 +14,7 @@ import {
 describe('canvasInteractionCommandSurface', () => {
   it('offers only the add catalog command for an editable background context menu', () => {
     const sourceKind = buildTestNodeKind('dvt:source', 'Source');
-    const modelKind = buildTestNodeKind('dbt:model', 'Model');
+    const modelKind = buildTestNodeKind('dvt:transform', 'Model');
     const model = buildCanvasContextMenuModel({
       target: {
         kind: 'pane',
@@ -37,7 +37,7 @@ describe('canvasInteractionCommandSurface', () => {
   });
 
   it('keeps source import out of the background root menu', () => {
-    const sourceKind = buildTestNodeKind('dbt:source', 'Source');
+    const sourceKind = buildTestNodeKind('dvt:source', 'Source');
     const model = buildCanvasContextMenuModel({
       target: {
         kind: 'pane',
@@ -76,7 +76,7 @@ describe('canvasInteractionCommandSurface', () => {
 
   it('keeps source import as a categorized add-node catalog action when the source rail is available', () => {
     const sourceKind = buildTestNodeKind('dvt:source', 'Source');
-    const modelKind = buildTestNodeKind('dbt:model', 'Model');
+    const modelKind = buildTestNodeKind('dvt:transform', 'Model');
     const model = buildCanvasAddNodeCatalogMenuModel({
       sourceModel: buildCanvasContextMenuModel({
         target: {
@@ -148,8 +148,8 @@ describe('canvasInteractionCommandSurface', () => {
   });
 
   it('offers only source import when file authority permits import but forbids graph mutation', () => {
-    const sourceKind = buildTestNodeKind('dbt:source', 'Source');
-    const modelKind = buildTestNodeKind('dbt:model', 'Model');
+    const sourceKind = buildTestNodeKind('dvt:source', 'Source');
+    const modelKind = buildTestNodeKind('dvt:transform', 'Model');
     const rootModel = buildCanvasContextMenuModel({
       target: {
         kind: 'pane',
@@ -205,7 +205,10 @@ describe('canvasInteractionCommandSurface', () => {
   });
 
   it('uses role-level spatial add grammar for model, transformation, test and output nodes', () => {
-    const modelKind = { ...buildTestNodeKind('dbt:model', 'Model'), role: 'transform' as const };
+    const modelKind = {
+      ...buildTestNodeKind('dvt:transform', 'Model'),
+      role: 'transform' as const,
+    };
     const transformKind = {
       ...buildTestNodeKind('dvt:transform', 'Transform'),
       role: 'transform' as const,
@@ -237,12 +240,12 @@ describe('canvasInteractionCommandSurface', () => {
 
     expect(model?.createNodeActions.map((action) => action.label)).toEqual([
       'Add model',
-      'Add transformation',
+      'Add model',
       'Add test',
       'Add output',
     ]);
     expect(model?.createNodeActions.map((action) => action.registration.kind)).toEqual([
-      'dbt:model',
+      'dvt:transform',
       'dvt:transform',
       'dbt:test',
       'dvt:sink',

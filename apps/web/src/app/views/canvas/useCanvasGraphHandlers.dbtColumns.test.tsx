@@ -15,8 +15,8 @@ import {
 const source: CanonicalNode = {
   id: 'source-orders',
   name: 'Orders',
-  pluginId: 'dbt',
-  kind: 'dbt:source',
+  pluginId: 'dvt',
+  kind: 'dvt:source',
   role: 'input',
   status: 'idle',
   tags: [],
@@ -31,8 +31,8 @@ const source: CanonicalNode = {
 const model: CanonicalNode = {
   id: 'model-orders',
   name: 'Orders model',
-  pluginId: 'dbt',
-  kind: 'dbt:model',
+  pluginId: 'dvt',
+  kind: 'dvt:transform',
   role: 'transform',
   status: 'idle',
   tags: [],

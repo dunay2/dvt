@@ -18,6 +18,7 @@ import { toCanvasAuthoringMetadata } from './canvasAuthoringMetadata';
 import type { CanvasAuthoringDraftRecord } from './canvasDraftReadModel';
 import { serializeWorkspaceGraphAuthoringDraftStructuralSignature } from './canvasDraftStructuralSignature';
 import type { CanvasDraftEdge } from './canvasDraftSession.types';
+import { isDbtCompatibleModel, isDbtCompatibleSource } from './canvasDbtAuthoringModel';
 
 export type CanvasAuthoringDraftBuildInput = {
   canvas: WorkspaceGraphAuthoringDraft['canvas'];
@@ -87,15 +88,16 @@ function isDbtReferenceOnlyEdge(args: {
   targetNode: CanonicalNode | undefined;
 }): boolean {
   const { sourceNode, targetNode } = args;
-  if (sourceNode == null || targetNode?.pluginId !== 'dbt') {
+  if (sourceNode == null || targetNode == null) {
     return false;
   }
 
   const targetConsumesReference =
-    targetNode.kind === 'dbt:model' || targetNode.kind === 'dbt:snapshot';
+    isDbtCompatibleModel(targetNode) ||
+    (targetNode.pluginId === 'dbt' && targetNode.kind === 'dbt:snapshot');
   const sourceProvidesReference =
-    (sourceNode.pluginId === 'dbt' &&
-      (sourceNode.kind === 'dbt:source' || sourceNode.kind === 'dbt:macro')) ||
+    isDbtCompatibleSource(sourceNode) ||
+    (sourceNode.pluginId === 'dbt' && sourceNode.kind === 'dbt:macro') ||
     (sourceNode.pluginId === 'dvt.warehouse-source' && sourceNode.kind === 'dvt:source');
 
   return targetConsumesReference && sourceProvidesReference;

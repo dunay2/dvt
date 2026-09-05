@@ -65,9 +65,7 @@ export function assignLevels(nodes: CanonicalNode[], edges: CanonicalEdge[]): Ma
 
 export function kindStyle(kind: string) {
   const styles: Record<string, { badge: string }> = {
-    'dbt:source': { badge: 'SOURCE' },
     'dbt:seed': { badge: 'SEED' },
-    'dbt:model': { badge: 'MODEL' },
     'dbt:snapshot': { badge: 'SNAPSHOT' },
     'dbt:test': { badge: 'TEST' },
     'dbt:exposure': { badge: 'EXPOSURE' },

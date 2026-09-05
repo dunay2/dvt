@@ -32,8 +32,8 @@ therefore agreed on the wrong ownership boundary.
   rail. No Source-filter command, store or recipe is introduced.
 - A Source cannot create, retain, display or execute `FilterRel`.
 - Filter authoring, persistence, card summary and PostgreSQL projection remain valid for Transform.
-- Existing Source column presentation/order may remain, but it cannot preserve a filter or become a
-  second relational-operation authority.
+- Source column presentation follows the physical declaration. Reordering, functions, calculated
+  columns, filters, and casts belong to a connected Model / Transform.
 - Legacy polluted Source envelopes normalize to their unfiltered relation without changing physical
   identity, connection, schema or provenance.
 - Unsupported or malformed semantic shapes fail closed.
@@ -64,9 +64,10 @@ flowchart LR
 1. Remove the filter section from Source Properties; retain it for projection-shaped Transform.
 2. Normalize any Source semantic draft to its filter-free base projection on read and write.
 3. Normalize persisted/local Source nodes before Canvas presentation and autosave consume them.
-4. Restrict the compact filter metric to Transform cards.
-5. Replace the obsolete Source-filter end-to-end story with a Source/Transform boundary story.
-6. Keep the generic FilterRel capability, mutation and PostgreSQL projection modules because they are
+4. Remove relation-changing column functions, calculated columns, and reordering from Source.
+5. Restrict the compact filter metric to Transform cards.
+6. Replace the obsolete Source-filter end-to-end story with a Source/Transform boundary story.
+7. Keep the generic FilterRel capability, mutation and PostgreSQL projection modules because they are
    still owned by Transform.
 
 The correction does not auto-create a hidden Transform and does not silently move a predicate to a
@@ -149,10 +150,10 @@ redGreenCycles:
     patchSurfaces: [apps/web/src/app/views/canvas/DvtAuthoringFields.tsx]
     greenTest: pnpm --filter @dvt/web test:canvas:run -- DvtAuthoringFields.test.tsx
   - id: source-semantic-normalization
-    redTest: apps/web/src/app/views/canvas/canvasSourceColumnOrder.test.ts
+    redTest: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.test.ts
     expectedFailure: A legacy filtered Source remains authoritative after graph projection.
     patchSurfaces: [apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts, apps/web/src/app/views/canvas/canvasAuthoringGraphProjection.ts]
-    greenTest: pnpm --filter @dvt/web test:canvas:run -- canvasSourceColumnOrder.test.ts
+    greenTest: pnpm --filter @dvt/web test:canvas:run -- canvasDvtSourceSemanticAuthoring.test.ts
   - id: source-card-boundary
     redTest: apps/web/src/app/plugins/dvt/dvtGraphNodeSemanticMetric.test.ts
     expectedFailure: A Source projects a Transform filter metric.
@@ -161,10 +162,10 @@ redGreenCycles:
 symbolDefaults: &symbolDefaults { dddOwner: DvtNodeAuthoringMetadata, cqRails: [ConfigureCanvasDvtNode, GetWorkspaceGraphDraft], fowlerSignals: [Boundary drift, Hidden authority], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-SOURCE-SEMANTIC-OPERATIONS-2894, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts }
 symbols:
   - { <<: *symbolDefaults, name: DvtAuthoringFields, path: apps/web/src/app/views/canvas/DvtAuthoringFields.tsx, unitTests: [apps/web/src/app/views/canvas/DvtAuthoringFields.test.tsx] }
-  - { <<: *symbolDefaults, name: createDvtSourceSemanticDraft, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts, unitTests: [apps/web/src/app/views/canvas/canvasSourceColumnOrder.test.ts] }
-  - { <<: *symbolDefaults, name: applyDvtSourceSemanticDraft, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts, unitTests: [apps/web/src/app/views/canvas/canvasSourceColumnOrder.test.ts] }
-  - { <<: *symbolDefaults, name: normalizeDvtSourceFilterAuthority, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts, unitTests: [apps/web/src/app/views/canvas/canvasSourceColumnOrder.test.ts] }
-  - { <<: *symbolDefaults, name: reconcileDvtSourceSemanticColumnOrder, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts, unitTests: [apps/web/src/app/views/canvas/canvasSourceColumnOrder.test.ts] }
+  - { <<: *symbolDefaults, name: createDvtSourceSemanticDraft, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts, unitTests: [apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.test.ts] }
+  - { <<: *symbolDefaults, name: applyDvtSourceSemanticDraft, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts, unitTests: [apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.test.ts] }
+  - { <<: *symbolDefaults, name: normalizeDvtSourceFilterAuthority, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts, unitTests: [apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.test.ts] }
+  - { <<: *symbolDefaults, name: reconcileDvtSourceSemanticColumnOrder, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts, unitTests: [apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.test.ts] }
   - { <<: *symbolDefaults, name: buildDvtGraphNodeSemanticMetric, path: apps/web/src/app/plugins/dvt/dvtGraphNodeSemanticMetric.ts, unitTests: [apps/web/src/app/plugins/dvt/dvtGraphNodeSemanticMetric.test.ts] }
   - { <<: *symbolDefaults, name: card, path: apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts, unitTests: [apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts] }
   - { <<: *symbolDefaults, name: latestFilter, path: apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts, unitTests: [apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts] }

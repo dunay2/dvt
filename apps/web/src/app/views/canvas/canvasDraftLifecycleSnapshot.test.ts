@@ -12,7 +12,7 @@ function buildNode(overrides: Partial<CanonicalNode> & Pick<CanonicalNode, 'id'>
     id: overrides.id,
     name: overrides.name ?? overrides.id,
     pluginId: overrides.pluginId ?? 'dbt',
-    kind: overrides.kind ?? 'dbt:model',
+    kind: overrides.kind ?? 'dvt:transform',
     role: overrides.role ?? 'transform',
     status: overrides.status ?? 'idle',
     tags: overrides.tags ?? ['authoring'],
@@ -33,8 +33,8 @@ describe('canvas draft lifecycle snapshot', () => {
     const localModelNode = buildNode({
       id: 'dbt-model-1',
       name: 'Model 1',
-      pluginId: 'dbt',
-      kind: 'dbt:model',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
       role: 'transform',
     });
     const draftSession: CanvasDraftSession = {

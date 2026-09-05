@@ -2,7 +2,7 @@
 title: Graph Frontend Architecture
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-09-03
+last_reviewed: 2026-09-05
 ---
 
 # Graph Frontend Architecture
@@ -258,6 +258,47 @@ Runtime projection rule:
 
 - every registry helper that contributes route-visible behavior must accept
   `RuntimeCapabilities`;
+
+## Shared Source And Model Presentation
+
+Canvas presents Source and Model through one product card projection and one
+React Flow node shell. The only product kinds are:
+
+- `dvt:source` for a stable physical source declaration;
+- `dvt:transform` for a Model.
+
+An external dbt project maps its sources and models to those kinds and
+retains file identity, revision, configuration, and supported write-back rules
+as explicit authority and compatibility metadata. dbt-qualified kinds remain
+only for independently meaningful resources such as tests and snapshots. The
+shared card read model derives product role from `input` or `transform`
+and adds authority-specific evidence as metadata, metrics, badges, or
+inspector capabilities rather than selecting a second card species.
+
+```mermaid
+flowchart LR
+  External["External dbt project projection"] --> Metadata["dbt compatibility metadata"]
+  Native["DVT native graph authority"] --> Shared["Shared Source / Model card read model"]
+  Metadata --> Shared
+  Shared --> Shell["Canvas node shell"]
+  Shell --> Canvas["One Canvas surface"]
+
+  External --> DbtEdits["Strict dbt file write-back"]
+  Native --> SemanticEdits["Canonical Substrait mutation"]
+```
+
+The authority profile may change which edits are valid. External dbt metadata
+uses the existing dbt file-authority commands; native Model semantics use
+`ConfigureCanvasDvtNode`. A request that external dbt authority cannot
+round-trip fails closed until a separate, explicit authority transition is
+accepted. Canvas must never strip dbt metadata or change node identity as a
+side effect of a column gesture.
+
+A Source is a declaration of physical input. Reordering, filtering, casting,
+calculated columns, and scalar functions change a relation and therefore belong
+to a connected Model / Transform. Canvas does not expose those operations on
+either dbt or DVT Source authority.
+
 - unavailable plugins must not contribute canvas kinds, node kinds, renderers,
   badges, overlays, run adapters, or connection port maps;
 - route bootstrap handles for plugin-contributed views are plugin-owned
@@ -604,7 +645,7 @@ string checks. Current semantic coverage includes:
   renderers through `RuntimeCapabilities`;
 - route shell composition closing graph, Inspector authoring, Plan, and Run for
   unsupported persisted canvas kinds;
-- route coverage proving DBT first-node authoring stays available, dbt card
+- route coverage proving dbt export authoring stays available, shared card
   config can be applied through Inspector, generated dbt workspace files are
   written before preview, and run start uses only a persisted `PlanRef`;
 - Cypress preview/run status assertions consuming resolved Canvas copy instead

@@ -40,8 +40,8 @@ describe('useCanvasController source import contract', () => {
   const localDbtModelNode: CanonicalNode = {
     id: 'dbt-model-1',
     name: 'Model 1',
-    pluginId: 'dbt',
-    kind: 'dbt:model',
+    pluginId: 'dvt',
+    kind: 'dvt:transform',
     role: 'transform',
     status: 'idle',
     tags: ['authoring'],
@@ -53,8 +53,8 @@ describe('useCanvasController source import contract', () => {
     },
   };
   const dbtModelRegistration: NodeKindRegistration = {
-    pluginId: 'dbt',
-    kind: 'dbt:model',
+    pluginId: 'dvt',
+    kind: 'dvt:transform',
     label: 'Model',
     role: 'transform',
     icon: Box,

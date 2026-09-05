@@ -184,7 +184,7 @@ describe('CanvasViewport graph search', () => {
         position: { x: 0, y: 0 },
         data: {
           name: 'Orders A',
-          pluginKind: 'dbt:model',
+          pluginKind: 'dvt:transform',
           pluginId: 'dbt',
           role: 'transform',
           tags: [],
@@ -196,7 +196,7 @@ describe('CanvasViewport graph search', () => {
         position: { x: 200, y: 0 },
         data: {
           name: 'Orders B',
-          pluginKind: 'dbt:model',
+          pluginKind: 'dvt:transform',
           pluginId: 'dbt',
           role: 'transform',
           tags: [],
@@ -208,7 +208,7 @@ describe('CanvasViewport graph search', () => {
         position: { x: 400, y: 0 },
         data: {
           name: 'Customers',
-          pluginKind: 'dbt:model',
+          pluginKind: 'dvt:transform',
           pluginId: 'dbt',
           role: 'transform',
           tags: [],

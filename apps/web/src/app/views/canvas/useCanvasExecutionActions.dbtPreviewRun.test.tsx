@@ -19,8 +19,8 @@ function buildDbtNodes(): CanonicalNode[] {
     {
       id: 'source-orders',
       name: 'Raw Orders',
-      pluginId: 'dbt',
-      kind: 'dbt:source',
+      pluginId: 'dvt',
+      kind: 'dvt:source',
       role: 'input',
       status: 'idle',
       tags: [],
@@ -37,8 +37,8 @@ function buildDbtNodes(): CanonicalNode[] {
     {
       id: 'model-orders',
       name: 'Orders Model',
-      pluginId: 'dbt',
-      kind: 'dbt:model',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
       role: 'transform',
       status: 'idle',
       tags: [],
@@ -242,7 +242,7 @@ describe('useCanvasExecutionActions dbt preview and run', () => {
     const plansService = createPlansServiceMock();
     const runsService = createRunsServiceMock();
     const emptyModelNodes = buildDbtNodes().map((node) =>
-      node.kind === 'dbt:model'
+      node.kind === 'dvt:transform'
         ? {
             ...node,
             metadata: {
@@ -296,8 +296,8 @@ describe('useCanvasExecutionActions dbt preview and run', () => {
     const terminalModel: CanonicalNode = {
       id: 'model-orders-final',
       name: 'Orders Final',
-      pluginId: 'dbt',
-      kind: 'dbt:model',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
       role: 'transform',
       status: 'idle',
       tags: [],

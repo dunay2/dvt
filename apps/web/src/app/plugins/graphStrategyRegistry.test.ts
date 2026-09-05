@@ -35,6 +35,7 @@ describe('resolveCanvasGraphStrategy', () => {
 
   it('resolves graph node card strategies from available plugins rather than Canvas kind', () => {
     expect(getGraphNodeCardStrategies().map((strategy) => strategy.id)).toEqual([
+      'shared-source-model-card',
       'dbt-card',
       'dvt-card',
     ]);
@@ -44,7 +45,7 @@ describe('resolveCanvasGraphStrategy', () => {
           dbt: { available: false, reason: 'disabled_for_workspace' },
         },
       }).map((strategy) => strategy.id)
-    ).toEqual(['dvt-card']);
+    ).toEqual(['shared-source-model-card', 'dvt-card']);
   });
 
   it('defaults to transformation strategy when strategy id is missing', () => {

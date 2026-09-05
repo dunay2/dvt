@@ -20,6 +20,7 @@ import type {
   NodeRendererRegistration,
 } from './contracts/NodeRendering';
 import type { GraphNodeCardStrategy } from './graph/graphNodeCardStrategyContracts';
+import { sharedSourceModelGraphNodeCardStrategy } from './graph/sharedSourceModelGraphNodeCardStrategy';
 import type {
   BottomDiagnosticsContribution,
   CommandPaletteContribution,
@@ -327,7 +328,15 @@ export function getAllOverlays(capabilities?: RuntimeCapabilities): CanvasOverla
 export function getGraphNodeCardStrategies(
   capabilities?: RuntimeCapabilities
 ): GraphNodeCardStrategy[] {
-  return getRuntimePlugins(capabilities).flatMap((plugin) => plugin.graphNodeCardStrategies ?? []);
+  const strategies = new Map<string, GraphNodeCardStrategy>([
+    [sharedSourceModelGraphNodeCardStrategy.id, sharedSourceModelGraphNodeCardStrategy],
+  ]);
+  for (const strategy of getRuntimePlugins(capabilities).flatMap(
+    (plugin) => plugin.graphNodeCardStrategies ?? []
+  )) {
+    if (!strategies.has(strategy.id)) strategies.set(strategy.id, strategy);
+  }
+  return [...strategies.values()];
 }
 
 export function mapRunToCanonical(

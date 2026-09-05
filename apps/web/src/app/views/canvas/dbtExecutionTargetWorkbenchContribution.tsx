@@ -7,6 +7,7 @@ import type { ApplicationLanguage } from '../../stores/applicationLanguageStore'
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasNodeWorkbenchContribution } from './canvasNodeWorkbenchContribution';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
+import { hasDbtCompatibilityMetadata } from './canvasDbtAuthoringModel';
 
 function DbtExecutionTargetBindingSummary({
   target,
@@ -54,7 +55,7 @@ export function buildDbtExecutionTargetWorkbenchContributions({
   target: DbtExecutionTargetIdentity | undefined;
   language: ApplicationLanguage;
 }>): readonly CanvasNodeWorkbenchContribution[] {
-  if (node == null || node.pluginId !== 'dbt' || target === undefined) {
+  if (node == null || !hasDbtCompatibilityMetadata(node) || target === undefined) {
     return [];
   }
 

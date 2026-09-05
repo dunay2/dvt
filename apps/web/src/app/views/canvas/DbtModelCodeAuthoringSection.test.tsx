@@ -57,8 +57,8 @@ vi.mock('../../components/monaco/MonacoCodeViewer', () => ({
 const source: CanonicalNode = {
   id: 'source-orders',
   name: 'Raw orders',
-  pluginId: 'dbt',
-  kind: 'dbt:source',
+  pluginId: 'dvt',
+  kind: 'dvt:source',
   role: 'input',
   status: 'idle',
   tags: [],
@@ -74,8 +74,8 @@ const source: CanonicalNode = {
 const model: CanonicalNode = {
   id: 'model-orders',
   name: 'Orders model',
-  pluginId: 'dbt',
-  kind: 'dbt:model',
+  pluginId: 'dvt',
+  kind: 'dvt:transform',
   role: 'transform',
   status: 'idle',
   tags: [],
@@ -103,7 +103,7 @@ function Harness(): JSX.Element {
       selectedSourceId: source.id,
       projectionColumns: null,
     },
-    kindLabels: { 'dbt:source': 'Source', 'dbt:model': 'Model' },
+    kindLabels: { 'dvt:source': 'Source', 'dvt:transform': 'Model' },
   });
 
   return <DbtModelCodeAuthoringSection node={model} projection={projection} />;

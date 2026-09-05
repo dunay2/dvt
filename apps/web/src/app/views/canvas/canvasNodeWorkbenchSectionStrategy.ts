@@ -74,10 +74,6 @@ function isEditableSection(
     return true;
   }
 
-  if (nodeKind === 'dbt:model') {
-    return sectionId === 'code';
-  }
-
   if (nodeKind === 'dvt:transform') {
     return sectionId === 'code' || sectionId === 'columns';
   }

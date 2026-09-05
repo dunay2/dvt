@@ -16,8 +16,8 @@ function buildDbtSourceNode(id: string, name: string, sourceName: string): Canon
   return {
     id,
     name,
-    pluginId: 'dbt',
-    kind: 'dbt:source',
+    pluginId: 'dvt',
+    kind: 'dvt:source',
     role: 'input',
     status: 'idle',
     tags: [],
@@ -36,8 +36,8 @@ function buildDbtModelNode(): CanonicalNode {
   return {
     id: 'model-orders',
     name: 'Orders Model',
-    pluginId: 'dbt',
-    kind: 'dbt:model',
+    pluginId: 'dvt',
+    kind: 'dvt:transform',
     role: 'transform',
     status: 'idle',
     tags: [],
@@ -129,14 +129,14 @@ describe('DbtAuthoringFields', () => {
     return container.querySelector('[data-slot="dbt-draft-json"]')?.textContent ?? '';
   }
 
-  it('renders dbt source identity fields and updates the table draft', () => {
+  it('renders dbt export identity for a shared Source and updates the table draft', () => {
     renderFields(buildDbtSourceNode('source-a', 'Raw Orders', 'raw_orders'));
 
     const sourceInput = container.querySelector('input[name="dbt-source"]') as HTMLInputElement;
     const schemaInput = container.querySelector('input[name="dbt-schema"]') as HTMLInputElement;
     const tableInput = container.querySelector('input[name="dbt-table"]') as HTMLInputElement;
 
-    expect(container.textContent).toContain('dbt card');
+    expect(container.textContent).toContain('dbt export');
     expect(sourceInput.value).toBe('raw_orders');
     expect(schemaInput.value).toBe('raw');
     expect(tableInput.value).toBe('orders');
@@ -148,7 +148,7 @@ describe('DbtAuthoringFields', () => {
     expect(draftJson()).toContain('"tableName":"orders_archive"');
   });
 
-  it('lets dbt models choose connected origins and materialization without Inspector coupling', () => {
+  it('lets a dbt-compatible Model choose origins and materialization without Inspector coupling', () => {
     const sourceA = buildDbtSourceNode('source-a', 'Raw Orders', 'raw');
     const sourceB = buildDbtSourceNode('source-b', 'Staging Orders', 'staging');
     const model = buildDbtModelNode();

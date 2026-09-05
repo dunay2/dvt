@@ -19,6 +19,7 @@ import { DvtAuthoringFields } from './DvtAuthoringFields';
 import type { CanvasNodeWorkbenchDraftController } from './useCanvasNodeWorkbenchDraftController';
 import { ObjectFilePostgresAuthoringFields } from '../../plugins/objectFilePostgres/ObjectFilePostgresAuthoringFields';
 import { HttpJsonArtifactAuthoringFields } from '../../plugins/httpJson/HttpJsonArtifactAuthoringFields';
+import { isDbtCompatibleModel } from './canvasDbtAuthoringModel';
 
 type CanvasInspectorAuthoringSectionProps = Readonly<{
   node: CanonicalNode;
@@ -66,7 +67,7 @@ export function CanvasInspectorAuthoringSection({
     (draft.dbt != null || draft.dbtTest != null) &&
     (section === 'all' ||
       section === 'general' ||
-      (section === 'code' && node.kind === 'dbt:model'));
+      (section === 'code' && isDbtCompatibleModel(node)));
   const showObjectFilePostgresAuthoring =
     draft.objectFilePostgres != null && (section === 'all' || section === 'general');
   const showHttpJsonArtifactAuthoring =
@@ -92,7 +93,7 @@ export function CanvasInspectorAuthoringSection({
     draftController.onDraftSubmitted(nextDraft);
   };
   const commitCurrentDbtModelDraft = (): void => {
-    if (node.kind === 'dbt:model') commitDbtModelDraft(draft);
+    if (isDbtCompatibleModel(node)) commitDbtModelDraft(draft);
   };
 
   if (
@@ -233,7 +234,7 @@ export function CanvasInspectorAuthoringSection({
           </p>
         ) : null}
 
-        {authoring.canEditNode && isDirty && !(node.kind === 'dbt:model' && showGeneral) ? (
+        {authoring.canEditNode && isDirty && !(isDbtCompatibleModel(node) && showGeneral) ? (
           <div className="flex items-center justify-end gap-2">
             <Button type="button" variant="ghost" size="sm" onClick={draftController.onResetDraft}>
               {canvasViewCopy.inspectorCancelLabel}

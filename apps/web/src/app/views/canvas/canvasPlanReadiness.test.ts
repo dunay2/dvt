@@ -237,8 +237,8 @@ describe('canvasPlanReadiness', () => {
         {
           id: 'model.analytics.orders',
           name: 'orders',
-          pluginId: 'dbt',
-          kind: 'dbt:model',
+          pluginId: 'dvt',
+          kind: 'dvt:transform',
           role: 'transform',
           status: 'idle',
           tags: [],
@@ -293,8 +293,8 @@ describe('canvasPlanReadiness', () => {
         {
           id: 'source.analytics.raw.orders',
           name: 'raw_orders',
-          pluginId: 'dbt',
-          kind: 'dbt:source',
+          pluginId: 'dvt',
+          kind: 'dvt:source',
           role: 'input',
           status: 'idle',
           tags: [],
@@ -302,8 +302,8 @@ describe('canvasPlanReadiness', () => {
         {
           id: 'model.analytics.orders',
           name: 'orders',
-          pluginId: 'dbt',
-          kind: 'dbt:model',
+          pluginId: 'dvt',
+          kind: 'dvt:transform',
           role: 'transform',
           status: 'idle',
           tags: [],

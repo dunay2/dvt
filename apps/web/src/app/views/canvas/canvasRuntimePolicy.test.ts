@@ -112,18 +112,18 @@ describe('resolveCanvasRuntimePolicy', () => {
     });
     expect(policy.execution.kind).toBe('blocked');
     expect(policy.admission.nodeKinds).toEqual([]);
-    expect(policy.admission.allowsNodeKind('dbt:model')).toBe(false);
+    expect(policy.admission.allowsNodeKind('dvt:transform')).toBe(false);
   });
 
-  it('keeps DBT authoring available while making execution unavailable', () => {
+  it('keeps dbt export metadata on the shared Model without adding a node profile', () => {
     const policy = resolveCanvasRuntimePolicy({
       activeRuntime: {
         kind: 'ready',
-        canvasKind: 'dbt',
+        canvasKind: 'transformation',
         executionStrategy: {
           kind: 'not_executable',
         },
-        nodeKinds: DBT_NODE_KINDS,
+        nodeKinds: DVT_AUTHORING_NODE_KINDS,
       },
       canMutateGraph: true,
       canOpenSourceImport: true,
@@ -134,7 +134,7 @@ describe('resolveCanvasRuntimePolicy', () => {
 
     expect(policy.document).toEqual({
       kind: 'ready',
-      canvasKind: 'dbt',
+      canvasKind: 'transformation',
     });
     expect(policy.commands.canMutateGraph).toBe(true);
     expect(policy.commands.canEditInspectorNode).toBe(true);
@@ -144,9 +144,10 @@ describe('resolveCanvasRuntimePolicy', () => {
     expect(
       policy.admission.allowsCanonicalNode(
         buildCanonicalNode({
-          pluginId: 'dbt',
-          kind: 'dbt:model',
+          pluginId: 'dvt',
+          kind: 'dvt:transform',
           role: 'transform',
+          metadata: { dbt: { materialized: 'view' } },
         })
       )
     ).toBe(true);
@@ -194,7 +195,7 @@ describe('resolveCanvasRuntimePolicy', () => {
       policy.admission.allowsCanonicalNode(
         buildCanonicalNode({
           pluginId: 'dbt',
-          kind: 'dbt:model',
+          kind: 'dvt:transform',
           role: 'transform',
         })
       )
@@ -203,11 +204,11 @@ describe('resolveCanvasRuntimePolicy', () => {
       policy.admission.allowsCanonicalNode(
         buildCanonicalNode({
           pluginId: 'dvt',
-          kind: 'dbt:model',
+          kind: 'dvt:transform',
           role: 'transform',
         })
       )
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it('admits a composed plugin node by its explicit catalog ownership', () => {

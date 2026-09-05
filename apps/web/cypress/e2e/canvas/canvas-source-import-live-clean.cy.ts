@@ -227,7 +227,7 @@ describe('Canvas source import live clean proof', () => {
     waitForLiveDraftSaved(session);
     openCanvasContextMenuAt(420, 280);
     clickCanvasContextMenuAction('open-add-node-catalog');
-    clickCanvasAddCatalogAction('open-source-import', 'dbt:source');
+    clickCanvasAddCatalogAction('open-source-import', 'dvt:source');
     importLivePostgresSource();
 
     cy.contains('.react-flow__node', 'Postgres', { timeout: 20_000 })
@@ -243,7 +243,7 @@ describe('Canvas source import live clean proof', () => {
 
     openCanvasContextMenuAt(820, 500);
     clickCanvasContextMenuAction('open-add-node-catalog');
-    clickCanvasAddCatalogAction('open-source-import', 'dbt:source');
+    clickCanvasAddCatalogAction('open-source-import', 'dvt:source');
     importLivePostgresSource({ kind: 'graph-draft' }, secondaryConnectionSuffix);
 
     readLiveGraphDraft(session).then((draftResponse) => {
@@ -292,7 +292,7 @@ describe('Canvas source import live clean proof', () => {
 
     openCanvasContextMenuAt(640, 420);
     clickCanvasContextMenuAction('open-add-node-catalog');
-    clickCanvasAddCatalogAction('open-source-import', 'dbt:source');
+    clickCanvasAddCatalogAction('open-source-import', 'dvt:source');
     for (const viewport of viewportMatrix) {
       cy.viewport(viewport.width, viewport.height);
       cy.contains('[role="dialog"]', 'Add source', { timeout: 20_000 })
@@ -435,7 +435,7 @@ describe('Canvas source import live clean proof', () => {
 
     openCanvasContextMenuAt(740, 280);
     clickCanvasContextMenuAction('open-add-node-catalog');
-    clickCanvasAddCatalogAction('create-node', 'dbt:model');
+    clickCanvasAddCatalogAction('create-node', 'dvt:transform');
     cy.contains('.react-flow__node', 'Model 1', { timeout: 20_000 }).should('be.visible');
 
     connectCanvasNodes('Postgres', 'Model 1');
@@ -588,7 +588,7 @@ describe('Canvas source import live clean proof', () => {
 
     openCanvasContextMenuAt(420, 280);
     clickCanvasContextMenuAction('open-add-node-catalog');
-    clickCanvasAddCatalogAction('open-source-import', 'dbt:source');
+    clickCanvasAddCatalogAction('open-source-import', 'dvt:source');
     importLivePostgresSource({ kind: 'graph-draft' }, scopeBConnectionSuffix);
 
     cy.get('[data-slot="graph-node-card-title"]', { timeout: 20_000 })

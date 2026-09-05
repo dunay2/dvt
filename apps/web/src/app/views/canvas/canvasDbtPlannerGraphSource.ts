@@ -14,6 +14,7 @@ import {
 } from './dbtExecutionScopePolicy';
 import {
   createDbtNodeAuthoringMetadata,
+  isDbtCompatibleModel,
   resolveDbtModelConnectedOrigin,
 } from './canvasDbtAuthoringModel';
 import {
@@ -146,8 +147,8 @@ function buildGenericGraphNode(args: {
   const selector =
     testProjection?.ok === true
       ? testProjection.artifact.selector
-      : args.node.pluginId === 'dbt' &&
-          (args.node.kind === 'dbt:model' || args.node.kind === 'dbt:snapshot')
+      : isDbtCompatibleModel(args.node) ||
+          (args.node.pluginId === 'dbt' && args.node.kind === 'dbt:snapshot')
         ? normalizeDbtArtifactIdentifier(args.node.name, args.node.id)
         : null;
   const dbtStepTypeConfig =
@@ -162,10 +163,9 @@ function buildGenericGraphNode(args: {
         }
       : undefined;
 
-  const nodeMetadata =
-    args.node.pluginId === 'dbt' && args.node.kind === 'dbt:model'
-      ? createDbtNodeAuthoringMetadata(args.node)
-      : null;
+  const nodeMetadata = isDbtCompatibleModel(args.node)
+    ? createDbtNodeAuthoringMetadata(args.node)
+    : null;
   const connectedOrigin =
     nodeMetadata == null
       ? undefined

@@ -76,12 +76,13 @@ const objectFileLoad: CanonicalNode = {
 const upstreamModel: CanonicalNode = {
   id: 'stg-orders',
   name: 'Staging Orders',
-  pluginId: 'dbt',
-  kind: 'dbt:model',
+  pluginId: 'dvt',
+  kind: 'dvt:transform',
   role: 'transform',
   status: 'idle',
   tags: [],
   metadata: {
+    dbt: { packageName: 'analytics', materialized: 'view' },
     columns: [
       { name: 'order_id', type: 'bigint' },
       { name: 'customer', type: 'text' },
@@ -92,8 +93,8 @@ const upstreamModel: CanonicalNode = {
 const model: CanonicalNode = {
   id: 'orders-model',
   name: 'Orders Model',
-  pluginId: 'dbt',
-  kind: 'dbt:model',
+  pluginId: 'dvt',
+  kind: 'dvt:transform',
   role: 'transform',
   status: 'idle',
   tags: [],

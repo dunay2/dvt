@@ -64,7 +64,7 @@ export function buildGraphNodeTitlePresentation({
     stringValue(data.sourceName) ??
     stringValue(dbtData.sourceName) ??
     stringValue(configData.sourceName);
-  if (kind === 'dbt:source' && physicalTableIdentifier) {
+  if (kind === 'dvt:source' && physicalTableIdentifier) {
     return {
       title: physicalTableIdentifier,
       technicalName: nodeName,
@@ -87,14 +87,14 @@ export function buildGraphNodeTitlePresentation({
     }
   }
 
-  if ((kind === 'dbt:source' || kind === 'dvt:source') && sourceName && tableName) {
+  if (kind === 'dvt:source' && sourceName && tableName) {
     return {
       title: `${displayIdentifier(sourceName, schema)} ${titleCaseIdentifier(tableName)}`,
       technicalName: nodeName,
     };
   }
 
-  if ((kind === 'dbt:source' || kind === 'dvt:source') && database && schema) {
+  if (kind === 'dvt:source' && database && schema) {
     return {
       title: `${titleCaseIdentifier(database)} · ${schema}`,
       technicalName: nodeName,

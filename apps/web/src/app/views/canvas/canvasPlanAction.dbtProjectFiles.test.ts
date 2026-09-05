@@ -15,8 +15,8 @@ import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrat
 const modelNode: CanonicalNode = {
   id: 'model.analytics.orders',
   name: 'orders',
-  pluginId: 'dbt',
-  kind: 'dbt:model',
+  pluginId: 'dvt',
+  kind: 'dvt:transform',
   role: 'transform',
   status: 'idle',
   tags: [],
@@ -25,8 +25,8 @@ const modelNode: CanonicalNode = {
 const sourceNode: CanonicalNode = {
   id: 'source.analytics.raw.orders',
   name: 'raw_orders',
-  pluginId: 'dbt',
-  kind: 'dbt:source',
+  pluginId: 'dvt',
+  kind: 'dvt:source',
   role: 'input',
   status: 'idle',
   tags: [],
@@ -68,7 +68,7 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
             dependsOn: [],
             metadata: {
               displayName: 'orders',
-              tags: { kind: 'dbt:model', pluginId: 'dbt', role: 'transform' },
+              tags: { kind: 'dvt:transform', pluginId: 'dvt', role: 'transform' },
             },
           },
           {

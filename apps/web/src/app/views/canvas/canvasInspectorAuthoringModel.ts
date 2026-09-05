@@ -3,6 +3,8 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
   applyDbtNodeAuthoringMetadata,
   createDbtNodeAuthoringMetadata,
+  hasDbtCompatibilityMetadata,
+  isDbtCompatibleModel,
 } from './canvasDbtAuthoringModel';
 import {
   applyDbtTestAuthoringMetadata,
@@ -54,7 +56,8 @@ function normalizeNodeDescription(value: string): string | undefined {
 }
 
 export function createCanvasInspectorNodeDraft(node: CanonicalNode): CanvasInspectorNodeDraft {
-  const dvtMetadata = createDvtNodeAuthoringMetadata(node);
+  const hasDbtCompatibility = hasDbtCompatibilityMetadata(node);
+  const dvtMetadata = hasDbtCompatibility ? null : createDvtNodeAuthoringMetadata(node);
   const objectFilePostgresDraft = createObjectFilePostgresAuthoringDraft(node);
   const httpJsonArtifactDraft = createHttpJsonArtifactAuthoringDraft(node);
   const tags = Array.from(
@@ -65,7 +68,7 @@ export function createCanvasInspectorNodeDraft(node: CanonicalNode): CanvasInspe
     name: node.name,
     description: node.description ?? '',
     tags,
-    ...(node.pluginId === 'dbt' && node.kind !== 'dbt:test'
+    ...(hasDbtCompatibility && node.kind !== 'dbt:test'
       ? { dbt: createDbtNodeAuthoringMetadata(node) }
       : {}),
     ...(node.pluginId === 'dbt' && node.kind === 'dbt:test'
@@ -111,7 +114,7 @@ export function validateCanvasInspectorNodeDraft(
     if (!['view', 'table', 'incremental', 'ephemeral'].includes(draft.dbt.materialized)) {
       dbtErrors.materialized = 'dbt_materialization_invalid';
     }
-    if (context?.node.pluginId === 'dbt' && context.node.kind === 'dbt:model') {
+    if (context != null && isDbtCompatibleModel(context.node)) {
       const selectedSourceId = draft.dbt.selectedSourceId.trim();
       const connectedOriginIds = new Set(
         resolveCompatibleDbtModelOrigins({

@@ -6,11 +6,12 @@ import { projectDbtTestArtifact } from './canvasDbtTestArtifactProjection';
 const modelNode: CanonicalNode = {
   id: 'model-orders',
   name: 'Orders Model',
-  pluginId: 'dbt',
-  kind: 'dbt:model',
+  pluginId: 'dvt',
+  kind: 'dvt:transform',
   role: 'transform',
   status: 'idle',
   tags: [],
+  metadata: { dbt: { packageName: 'analytics', materialized: 'view' } },
 };
 
 const testNode: CanonicalNode = {

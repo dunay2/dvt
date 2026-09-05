@@ -390,8 +390,8 @@ describe('canvasDraftSession', () => {
     const localModelNode: CanonicalNode = {
       id: 'node_local',
       name: 'Model 1',
-      pluginId: 'dbt',
-      kind: 'dbt:model',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
       role: 'transform',
       status: 'idle',
       tags: ['authoring'],
@@ -426,8 +426,8 @@ describe('canvasDraftSession', () => {
     const submittedNode: CanonicalNode = {
       id: 'node_2',
       name: 'Orders model',
-      pluginId: 'dbt',
-      kind: 'dbt:model',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
       role: 'transform',
       status: 'idle',
       tags: ['authoring'],
@@ -477,8 +477,8 @@ describe('canvasDraftSession', () => {
     const localModelNode: CanonicalNode = {
       id: 'dbt_model_1',
       name: 'Model 1',
-      pluginId: 'dbt',
-      kind: 'dbt:model',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
       role: 'transform',
       status: 'idle',
       tags: ['authoring'],

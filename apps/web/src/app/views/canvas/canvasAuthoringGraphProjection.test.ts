@@ -52,8 +52,8 @@ describe('buildCanvasAuthoringGraphProjection', () => {
       draftSemanticGraph: protectedSemanticGraph,
       localCanonicalNodes: [
         {
-          ...buildCanonicalNode('sink-node', 'dbt:model', 'transform'),
-          pluginId: 'dbt',
+          ...buildCanonicalNode('sink-node', 'dvt:transform', 'transform'),
+          pluginId: 'dvt',
           name: 'edited-sink',
           description: 'edited description',
         },
@@ -72,8 +72,8 @@ describe('buildCanvasAuthoringGraphProjection', () => {
     expect(projection.canonicalNodesById.get('sink-node')).toEqual(
       expect.objectContaining({
         id: 'sink-node',
-        pluginId: 'dbt',
-        kind: 'dbt:model',
+        pluginId: 'dvt',
+        kind: 'dvt:transform',
         name: 'edited-sink',
         description: 'edited description',
       })

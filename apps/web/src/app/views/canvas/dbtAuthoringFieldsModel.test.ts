@@ -8,8 +8,8 @@ function buildDbtSourceNode(id: string, name: string, sourceName: string): Canon
   return {
     id,
     name,
-    pluginId: 'dbt',
-    kind: 'dbt:source',
+    pluginId: 'dvt',
+    kind: 'dvt:source',
     role: 'input',
     status: 'idle',
     tags: [],
@@ -105,8 +105,8 @@ function buildDbtModelNode(id = 'model-orders', name = 'Orders Model'): Canonica
   return {
     id,
     name,
-    pluginId: 'dbt',
-    kind: 'dbt:model',
+    pluginId: 'dvt',
+    kind: 'dvt:transform',
     role: 'transform',
     status: 'idle',
     tags: [],
@@ -141,8 +141,8 @@ describe('dbtAuthoringFieldsModel', () => {
       ],
       authoringMetadata: createDbtNodeAuthoringMetadata(model),
       kindLabels: {
-        'dbt:source': 'Source',
-        'dbt:model': 'Model',
+        'dvt:source': 'Source',
+        'dvt:transform': 'Model',
       },
     });
 
@@ -170,8 +170,8 @@ describe('dbtAuthoringFieldsModel', () => {
         selectedSourceId: 'detached-source',
       },
       kindLabels: {
-        'dbt:source': 'Source',
-        'dbt:model': 'Model',
+        'dvt:source': 'Source',
+        'dvt:transform': 'Model',
       },
     });
 
@@ -194,8 +194,8 @@ describe('dbtAuthoringFieldsModel', () => {
       edges,
       authoringMetadata: createDbtNodeAuthoringMetadata(model),
       kindLabels: {
-        'dbt:source': 'Source',
-        'dbt:model': 'Model',
+        'dvt:source': 'Source',
+        'dvt:transform': 'Model',
       },
     });
 
@@ -230,8 +230,8 @@ describe('dbtAuthoringFieldsModel', () => {
         selectedSourceId: source.id,
       },
       kindLabels: {
-        'dbt:source': 'Source',
-        'dbt:model': 'Model',
+        'dvt:source': 'Source',
+        'dvt:transform': 'Model',
       },
     });
 
@@ -263,8 +263,8 @@ describe('dbtAuthoringFieldsModel', () => {
         selectedSourceId: source.id,
       },
       kindLabels: {
-        'dbt:source': 'Source',
-        'dbt:model': 'Model',
+        'dvt:source': 'Source',
+        'dvt:transform': 'Model',
       },
     });
 
@@ -297,8 +297,8 @@ describe('dbtAuthoringFieldsModel', () => {
         selectedSourceId: upstreamModel.id,
       },
       kindLabels: {
-        'dbt:source': 'Source',
-        'dbt:model': 'Model',
+        'dvt:source': 'Source',
+        'dvt:transform': 'Model',
       },
     });
 
@@ -326,8 +326,8 @@ describe('dbtAuthoringFieldsModel', () => {
         selectedSourceId: source.id,
       },
       kindLabels: {
-        'dbt:source': 'Source',
-        'dbt:model': 'Model',
+        'dvt:source': 'Source',
+        'dvt:transform': 'Model',
       },
     });
 

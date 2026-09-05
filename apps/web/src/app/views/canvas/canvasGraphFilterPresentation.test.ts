@@ -17,16 +17,16 @@ const edges: Edge[] = [
 const filterNodes = [
   {
     id: 'source',
-    pluginId: 'dbt',
-    kind: 'dbt:source' as const,
+    pluginId: 'dvt',
+    kind: 'dvt:source' as const,
     role: 'input' as const,
     status: 'success' as const,
     tags: [],
   },
   {
     id: 'model',
-    pluginId: 'dbt',
-    kind: 'dbt:model' as const,
+    pluginId: 'dvt',
+    kind: 'dvt:transform' as const,
     role: 'transform' as const,
     status: 'failed' as const,
     tags: [],

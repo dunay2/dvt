@@ -21,7 +21,7 @@ export type DbtProjectFileExecutionStrategy = Extract<
 >;
 
 const EXECUTABLE_RESOURCE = {
-  model: { stepKind: 'DBT_MODEL', kind: 'dbt:model', role: 'transform' },
+  model: { stepKind: 'DBT_MODEL', kind: 'dvt:transform', role: 'transform' },
   snapshot: { stepKind: 'DBT_SNAPSHOT', kind: 'dbt:snapshot', role: 'transform' },
   test: { stepKind: 'DBT_TEST', kind: 'dbt:test', role: 'check' },
 } as const;
@@ -57,7 +57,7 @@ function buildPlannerGraphSource(projection: DbtProjectGraphProjection): Generic
         displayName: resource.name,
         tags: {
           kind: presentation.kind,
-          pluginId: 'dbt',
+          pluginId: resource.resourceType === 'model' ? 'dvt' : 'dbt',
           role: presentation.role,
         },
       },

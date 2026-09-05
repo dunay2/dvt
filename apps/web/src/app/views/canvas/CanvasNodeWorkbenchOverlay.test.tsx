@@ -33,8 +33,8 @@ vi.mock('./CanvasNodeWorkbenchPanel', () => ({
 const NODE = {
   id: 'node.orders',
   name: 'orders',
-  pluginId: 'dbt',
-  kind: 'dbt:model',
+  pluginId: 'dvt',
+  kind: 'dvt:transform',
   role: 'transform',
   status: 'idle',
   tags: [],

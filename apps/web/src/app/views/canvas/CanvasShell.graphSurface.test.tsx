@@ -21,6 +21,7 @@ import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import type { CanonicalNode } from '../../types/canonical';
 import { dvtGraphNodeCardStrategy } from '../../plugins/dvt/dvtGraphNodeCardStrategy';
+import { sharedSourceModelGraphNodeCardStrategy } from '../../plugins/graph/sharedSourceModelGraphNodeCardStrategy';
 import { projectCanvasNodeAccessibleHealth } from './canvasNodeMapper';
 
 describe('CanvasShell graph base surface', () => {
@@ -43,7 +44,7 @@ describe('CanvasShell graph base surface', () => {
     expect(
       resolveWorkspaceFilePath({
         name: 'Model 1',
-        pluginKind: 'dbt:model',
+        pluginKind: 'dvt:transform',
         status: 'idle',
       })
     ).toBeNull();
@@ -60,7 +61,7 @@ describe('CanvasShell graph base surface', () => {
             position: { x: 0, y: 0 },
             data: {
               name: 'Model 1',
-              pluginKind: 'dbt:model',
+              pluginKind: 'dvt:transform',
               status: 'idle',
               presentationTruth: {
                 code: {
@@ -152,7 +153,7 @@ describe('CanvasShell graph base surface', () => {
             position: { x: 0, y: 0 },
             data: {
               name: 'Model 1',
-              pluginKind: 'dbt:model',
+              pluginKind: 'dvt:transform',
               status: 'idle',
               path: 'models/model_1.sql',
               onInspectNode,
@@ -305,7 +306,7 @@ describe('CanvasShell graph base surface', () => {
       },
       canonicalNode: canonicalSink,
       data: sinkNodeData,
-      graphNodeCardStrategies: [dvtGraphNodeCardStrategy],
+      graphNodeCardStrategies: [sharedSourceModelGraphNodeCardStrategy, dvtGraphNodeCardStrategy],
     });
     expect(draftSinkNode.ariaLabel).toBe('Sink 1, Output, Draft');
 

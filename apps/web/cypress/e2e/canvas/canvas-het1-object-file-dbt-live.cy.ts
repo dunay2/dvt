@@ -101,7 +101,7 @@ describe('HET1 public object-file DBT vertical', () => {
       });
       closeNodeWorkbench();
 
-      addCatalogNode(650, 260, 'dbt:model');
+      addCatalogNode(650, 260, 'dvt:transform');
       cy.contains('.react-flow__node', MODEL_NODE_NAME, { timeout: 20_000 }).should('be.visible');
       dragCanvasNodeByViewportDelta(MODEL_NODE_NAME, { x: 0, y: -140 });
       connectCanvasNodes(OBJECT_NODE_CARD_TITLE, MODEL_NODE_NAME);

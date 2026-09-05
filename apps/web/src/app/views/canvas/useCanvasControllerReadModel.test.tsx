@@ -463,7 +463,7 @@ describe('useCanvasControllerReadModel', () => {
     }
   });
 
-  it('keeps generated DBT outputs editable when the upstream projection changes', async () => {
+  it('keeps only round-trippable DBT output edits and withholds transform gestures', async () => {
     const columns = [{ name: 'order_id', type: 'text' }];
     const sourceNode = {
       ...testNode,
@@ -488,10 +488,14 @@ describe('useCanvasControllerReadModel', () => {
       ...testNode,
       id: 'dbt-model-orders',
       name: 'Orders Model',
-      pluginId: 'dbt',
-      kind: 'dbt:model',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
       role: 'transform',
-      metadata: { typeLabel: 'Model' },
+      metadata: {
+        authority: 'dbt-project-files',
+        dbt: { packageName: 'analytics' },
+        typeLabel: 'Model',
+      },
     } satisfies CanonicalNode;
     const dependency = {
       id: 'source-to-dbt-model',
@@ -537,12 +541,11 @@ describe('useCanvasControllerReadModel', () => {
     try {
       const state = mounted.readState();
       const sourceData = state?.nodesWithImpact[0]?.data as ReadModelNodeData;
-      expect(sourceData.onAddCanvasCalculatedColumn).toBe(
-        args.graphHandlers.handleAddCanvasCalculatedColumn
-      );
+      expect(sourceData.onAddCanvasCalculatedColumn).toBeUndefined();
       expect(
         (sourceData.columns as ReadonlyArray<{ functionMenu?: unknown }>)[0]?.functionMenu
-      ).toEqual(expect.objectContaining({ category: 'text' }));
+      ).toBeUndefined();
+      expect(sourceData.onReorderCanvasColumnOutput).toBeUndefined();
       expect(state?.edgesWithImpact).toEqual([]);
       expect((state?.nodesWithImpact[1]?.data as ReadModelNodeData).columnPortDirections).toEqual([
         'target',
@@ -555,12 +558,10 @@ describe('useCanvasControllerReadModel', () => {
         (state?.nodesWithImpact[1]?.data as ReadModelNodeData).onReorderCanvasColumnOutput
       ).toEqual(args.graphHandlers.handleReorderCanvasColumnOutput);
       const modelData = state?.nodesWithImpact[1]?.data as ReadModelNodeData;
-      expect(modelData.onApplyCanvasColumnFunction).toEqual(
-        args.graphHandlers.handleApplyCanvasColumnFunction
-      );
+      expect(modelData.onApplyCanvasColumnFunction).toBeUndefined();
       expect(
         (modelData.columns as ReadonlyArray<{ functionMenu?: unknown }>)[0]?.functionMenu
-      ).toEqual(expect.objectContaining({ category: 'text' }));
+      ).toBeUndefined();
 
       const staleModelNode = {
         ...modelNode,

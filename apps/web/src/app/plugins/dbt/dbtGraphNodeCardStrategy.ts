@@ -24,6 +24,7 @@ import {
   stringValue,
 } from '../graph/graphNodeCardStrategyUtils';
 import { isCanvasNodePresentationCopy } from '../../components/canvas/canvasNodePresentationCopy.contract';
+import { isSharedSourceModelKind } from '../graph/sharedSourceModelGraphNodeCardStrategy';
 
 function resolveDbtMaterialization(metadata: Record<string, unknown>): string | null {
   const config = metadata.config;
@@ -94,12 +95,12 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     stringValue(data.testTarget) ??
     (composedTestTarget.length > 0 ? composedTestTarget : null);
   const severity = stringValue(metadata.severity) ?? stringValue(data.severity);
-  const isSource = node.kind === 'dbt:source';
+  const isSourceObject = node.role === 'input';
   const presentationCopy = isCanvasNodePresentationCopy(data.presentationCopy)
     ? data.presentationCopy
     : null;
   const volumeMetricProjection = buildGraphNodeVolumeMetricProjection({
-    isSourceObject: isSource || node.role === 'input',
+    isSourceObject,
     metadata,
     data,
     locale: presentationCopy?.locale,
@@ -127,7 +128,7 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     data,
   });
   const operationalSummary = buildGraphNodeOperationalSummary({
-    projectionKind: isSource || node.role === 'input' ? 'source' : 'execution',
+    projectionKind: isSourceObject ? 'source' : 'execution',
     title: titlePresentation.title,
     metadata,
     data,
@@ -136,36 +137,6 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     locale: presentationCopy?.locale,
   });
   const operationalCopy = resolveGraphNodeCardCopy(presentationCopy?.locale);
-  const projectedRows = volumeMetricProjection.metrics.find((metric) => metric.id === 'rows');
-  const projectedSize = volumeMetricProjection.metrics.find(
-    (metric) => metric.id === 'bytes' || metric.id === 'estimated-bytes'
-  );
-  const currentRows = operationalSummary.metrics.find((metric) => metric.id === 'rows');
-  const currentSize = operationalSummary.metrics.find((metric) => metric.id === 'size');
-  const operationalMetrics =
-    node.kind === 'dbt:model'
-      ? [
-          ...operationalSummary.metrics.filter(
-            (metric) => metric.id !== 'rows' && metric.id !== 'size'
-          ),
-          projectedRows == null
-            ? (currentRows ?? {
-                id: 'rows',
-                label: operationalCopy.rowsLabel,
-                value: operationalCopy.notCalculatedLabel,
-                icon: 'rows' as const,
-              })
-            : { ...projectedRows, id: 'rows', icon: 'rows' as const },
-          projectedSize == null
-            ? (currentSize ?? {
-                id: 'size',
-                label: operationalCopy.sizeLabel,
-                value: operationalCopy.notCalculatedLabel,
-                icon: 'database' as const,
-              })
-            : { ...projectedSize, id: 'size', icon: 'database' as const },
-        ]
-      : operationalSummary.metrics;
 
   return {
     title: titlePresentation.title,
@@ -173,13 +144,13 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     technicalName: titlePresentation.technicalName,
     subtitle: stringValue(metadata.package) ?? relationPath ?? node.path ?? null,
     path: node.path ?? relationPath ?? null,
-    kindLabel: node.kind === 'dbt:model' ? null : (stringValue(data.typeLabel) ?? node.kind),
+    kindLabel: stringValue(data.typeLabel) ?? node.kind,
     accentTone: resolveNodeCardAccentTone(node),
     health: resolveNodeCardHealth(
       node,
       metadata,
       data,
-      isSource
+      isSourceObject
         ? {
             label: presentationCopy?.readyStatusLabel ?? operationalCopy.readyStatusLabel,
             tone: 'healthy',
@@ -190,7 +161,7 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
           }
     ),
     metrics,
-    operationalMetrics,
+    operationalMetrics: operationalSummary.metrics,
     operationalDetail: operationalSummary.detail,
     sourceIdentity: buildGraphNodeSourceIdentity(
       node,
@@ -203,6 +174,8 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
 
 export const dbtGraphNodeCardStrategy: GraphNodeCardStrategy = {
   id: 'dbt-card',
-  matches: (node) => node.pluginId === 'dbt' || node.kind.startsWith('dbt:'),
+  matches: (node) =>
+    (node.pluginId === 'dbt' || node.kind.startsWith('dbt:')) &&
+    !isSharedSourceModelKind(node.kind),
   build: buildDbtCard,
 };

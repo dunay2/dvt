@@ -30,6 +30,18 @@ const DVT_STRATEGY_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../dvt/dvtGraphNodeCardStrategy.ts'
 );
+const DBT_NODE_CATALOG_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  '../nodeTypeCatalog.dbt.ts'
+);
+const DBT_PROJECT_PROJECTION_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  '../../views/canvas/dbtProjectFileProjection.ts'
+);
+const SHARED_SOURCE_MODEL_STRATEGY_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'sharedSourceModelGraphNodeCardStrategy.ts'
+);
 const DEFAULT_STRATEGY_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'defaultGraphNodeCardStrategy.ts'
@@ -38,13 +50,13 @@ const GRAPH_CARD_RENDERER_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'GraphNodeRenderer.tsx'
 );
-const DBT_NODE_RENDERER_SOURCE = readArchitectureSiblingSource(
+const DBT_RUNTIME_CONTRIBUTIONS_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../dbt/DbtNodeRenderer.tsx'
 );
 
 describe('Graph node card strategy architecture', () => {
-  it('keeps plugin-specific card decisions outside the generic graph read model', () => {
+  it('uses one product card strategy for equivalent Source and Model roles', () => {
     expect(CONTRACT_SOURCE).toContain('export type GraphNodeCardStrategy');
     expect(CONTRACT_SOURCE).toContain('GraphNodeCardReadModel');
 
@@ -60,6 +72,7 @@ describe('Graph node card strategy architecture', () => {
 
     expect(REGISTRY_SOURCE).toContain('graphNodeCardStrategies?:');
     expect(REGISTRY_SOURCE).toContain('function getGraphNodeCardStrategies(');
+    expect(REGISTRY_SOURCE).toContain('sharedSourceModelGraphNodeCardStrategy');
     expect(DBT_CONTRIBUTIONS_SOURCE).toContain(
       'graphNodeCardStrategies: [dbtGraphNodeCardStrategy]'
     );
@@ -75,6 +88,20 @@ describe('Graph node card strategy architecture', () => {
     expect(DVT_STRATEGY_SOURCE).toContain("node.pluginId === 'dvt'");
     expect(DVT_STRATEGY_SOURCE).toContain("node.kind.startsWith('dvt:')");
 
+    expect(SHARED_SOURCE_MODEL_STRATEGY_SOURCE).toContain("id: 'shared-source-model-card'");
+    for (const kind of ['dvt:source', 'dvt:transform']) {
+      expect(SHARED_SOURCE_MODEL_STRATEGY_SOURCE).toContain(`'${kind}'`);
+    }
+    for (const retiredKind of ['dbt:source', 'dbt:model']) {
+      expect(SHARED_SOURCE_MODEL_STRATEGY_SOURCE).not.toContain(`'${retiredKind}'`);
+      expect(DBT_NODE_CATALOG_SOURCE).not.toContain(`kind: '${retiredKind}'`);
+      expect(DBT_PROJECT_PROJECTION_SOURCE).not.toContain(`kind: '${retiredKind}'`);
+    }
+    expect(DBT_STRATEGY_SOURCE).not.toContain("node.kind === 'dvt:source'");
+    expect(DBT_STRATEGY_SOURCE).not.toContain("node.kind === 'dvt:transform'");
+    expect(DVT_STRATEGY_SOURCE).not.toContain("node.kind === 'dvt:source'");
+    expect(DVT_STRATEGY_SOURCE).not.toContain("node.kind === 'dvt:transform'");
+
     expect(DEFAULT_STRATEGY_SOURCE).toContain("id: 'default-card'");
     expect(DEFAULT_STRATEGY_SOURCE).toContain('matches: () => true');
   });
@@ -89,7 +116,12 @@ describe('Graph node card strategy architecture', () => {
     expect(copyTokensSource).toContain('resolveGraphNodeCardCopy');
     expect(copyTokensSource).not.toContain('nodeActionsLabel');
 
-    for (const source of [DEFAULT_STRATEGY_SOURCE, DBT_STRATEGY_SOURCE, DVT_STRATEGY_SOURCE]) {
+    for (const source of [
+      DEFAULT_STRATEGY_SOURCE,
+      DBT_STRATEGY_SOURCE,
+      DVT_STRATEGY_SOURCE,
+      SHARED_SOURCE_MODEL_STRATEGY_SOURCE,
+    ]) {
       expect(source).not.toContain('nodeActionsLabel');
       expect(source).not.toContain("'Más acciones del nodo'");
       expect(source).not.toContain('"Más acciones del nodo"');
@@ -97,13 +129,15 @@ describe('Graph node card strategy architecture', () => {
 
     expect(DBT_STRATEGY_SOURCE).toContain('resolveGraphNodeCardCopy');
     expect(DVT_STRATEGY_SOURCE).toContain('resolveGraphNodeCardCopy');
+    expect(SHARED_SOURCE_MODEL_STRATEGY_SOURCE).toContain('resolveGraphNodeCardCopy');
   });
 
   it('keeps graph card markup in a shared presentational view', () => {
     expect(GRAPH_CARD_RENDERER_SOURCE).toContain('GraphNodeCardView');
-    expect(DBT_NODE_RENDERER_SOURCE).toContain('GraphNodeCardView');
+    expect(DBT_CONTRIBUTIONS_SOURCE).toContain('component: GraphNodeRenderer');
+    expect(DBT_RUNTIME_CONTRIBUTIONS_SOURCE).not.toContain('function DbtNodeRenderer');
 
-    for (const source of [GRAPH_CARD_RENDERER_SOURCE, DBT_NODE_RENDERER_SOURCE]) {
+    for (const source of [GRAPH_CARD_RENDERER_SOURCE]) {
       expect(source).not.toContain('cardModel.metrics.map');
       expect(source).not.toContain('columnsExpanded');
       expect(source).not.toContain('graphVisualClasses.columnRow');

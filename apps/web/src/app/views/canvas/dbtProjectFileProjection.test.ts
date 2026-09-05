@@ -162,14 +162,31 @@ describe('projectDbtProjectGraphToCanonicalCanvas', () => {
   it('preserves all dbt resource identities, roles, paths, metadata, and edge semantics', () => {
     const projection = projectDbtProjectGraphToCanonicalCanvas(buildProjection());
 
-    expect(projection.nodes.map(({ id, kind, role }) => ({ id, kind, role }))).toEqual([
-      { id: 'source.analytics.raw_orders', kind: 'dbt:source', role: 'input' },
-      { id: 'model.analytics.orders', kind: 'dbt:model', role: 'transform' },
-      { id: 'seed.analytics.country_codes', kind: 'dbt:seed', role: 'input' },
-      { id: 'snapshot.analytics.orders_snapshot', kind: 'dbt:snapshot', role: 'transform' },
-      { id: 'test.analytics.not_null_orders_order_id', kind: 'dbt:test', role: 'check' },
-      { id: 'exposure.analytics.orders_dashboard', kind: 'dbt:exposure', role: 'output' },
-      { id: 'metric.analytics.order_count', kind: 'dbt:metric', role: 'output' },
+    expect(
+      projection.nodes.map(({ id, pluginId, kind, role }) => ({ id, pluginId, kind, role }))
+    ).toEqual([
+      { id: 'source.analytics.raw_orders', pluginId: 'dvt', kind: 'dvt:source', role: 'input' },
+      { id: 'model.analytics.orders', pluginId: 'dvt', kind: 'dvt:transform', role: 'transform' },
+      { id: 'seed.analytics.country_codes', pluginId: 'dbt', kind: 'dbt:seed', role: 'input' },
+      {
+        id: 'snapshot.analytics.orders_snapshot',
+        pluginId: 'dbt',
+        kind: 'dbt:snapshot',
+        role: 'transform',
+      },
+      {
+        id: 'test.analytics.not_null_orders_order_id',
+        pluginId: 'dbt',
+        kind: 'dbt:test',
+        role: 'check',
+      },
+      {
+        id: 'exposure.analytics.orders_dashboard',
+        pluginId: 'dbt',
+        kind: 'dbt:exposure',
+        role: 'output',
+      },
+      { id: 'metric.analytics.order_count', pluginId: 'dbt', kind: 'dbt:metric', role: 'output' },
     ]);
     expect(projection.edges.map((edge) => edge.relation)).toEqual([
       'lineage',

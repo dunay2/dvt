@@ -90,8 +90,6 @@ const SOURCE_NODE: CanonicalNode = {
         name: 'order_id',
         type: 'integer',
         nullable: false,
-        primaryKey: true,
-        description: 'Warehouse order id',
       },
       {
         name: 'discount_code',
@@ -99,6 +97,7 @@ const SOURCE_NODE: CanonicalNode = {
         nullable: true,
       },
     ],
+    constraints: [{ name: 'orders_pkey', kind: 'primary-key', columns: ['order_id'] }],
     tests: [
       {
         name: 'not_null_orders_order_id',
@@ -114,8 +113,8 @@ const SOURCE_NODE: CanonicalNode = {
 const MODEL_NODE: CanonicalNode = {
   id: 'model.orders',
   name: 'Orders Model',
-  pluginId: 'dbt',
-  kind: 'dbt:model',
+  pluginId: 'dvt',
+  kind: 'dvt:transform',
   role: 'transform',
   status: 'idle',
   tags: [],
@@ -448,8 +447,8 @@ describe('CanvasNodeWorkbenchPanel', () => {
 
     expect(container.textContent).toContain('order_id');
     expect(container.textContent).toContain('integer');
-    expect(container.textContent).toContain('not null');
-    expect(container.textContent).toContain('Warehouse order id');
+    expect(container.textContent).toContain('Not null');
+    expect(container.textContent).toContain('Primary key');
 
     renderPanel(root, 'inputs-outputs');
     expect(container.textContent).toContain('Output');
@@ -593,7 +592,9 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(container.querySelector('[data-slot="canvas-node-workbench-more-trigger"]')).toBeNull();
 
     renderPanel(root, 'summary');
-    expect(container.querySelector('[data-slot="canvas-node-workbench-summary-section"]')).toBeNull();
+    expect(
+      container.querySelector('[data-slot="canvas-node-workbench-summary-section"]')
+    ).toBeNull();
     expect(container.querySelector('[data-slot="canvas-source-overview"]')).not.toBeNull();
   });
 

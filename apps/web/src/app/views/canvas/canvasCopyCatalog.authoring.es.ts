@@ -131,7 +131,7 @@ export const canvasViewAuthoringCopyEs = {
   inspectorTransformOutputLoadingMessage: 'Generando SQL PostgreSQL...',
   inspectorTransformOutputErrorMessage:
     'No se pudo generar SQL PostgreSQL desde esta revisión canónica.',
-  inspectorDbtCardTitle: 'Ficha dbt',
+  inspectorDbtCardTitle: 'Exportación dbt',
   inspectorDbtPackageLabel: 'Paquete',
   inspectorDbtSourceLabel: 'Origen',
   inspectorDbtSchemaLabel: 'Esquema',

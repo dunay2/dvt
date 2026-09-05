@@ -175,8 +175,18 @@ describe('buildCanvasExecutionSelectionRecoveryGraph', () => {
     expect(
       buildCanvasExecutionSelectionRecoveryGraph({
         canonicalNodes: [
-          { id: 'source.raw', pluginId: 'dbt', kind: 'dbt:source' },
-          { id: 'model.orders', pluginId: 'dbt', kind: 'dbt:model' },
+          {
+            id: 'source.raw',
+            pluginId: 'dvt',
+            kind: 'dvt:source',
+            metadata: { dbt: { sourceName: 'raw' } },
+          },
+          {
+            id: 'model.orders',
+            pluginId: 'dvt',
+            kind: 'dvt:transform',
+            metadata: { dbt: { materialized: 'view' } },
+          },
           { id: 'test.orders', pluginId: 'dbt', kind: 'dbt:test' },
         ],
         canonicalEdges: [
@@ -196,8 +206,8 @@ describe('buildCanvasExecutionSelectionRecoveryGraph', () => {
     expect(
       buildCanvasExecutionSelectionRecoveryGraph({
         canonicalNodes: [
-          { id: 'model.supported', pluginId: 'dbt', kind: 'dbt:model' },
-          { id: 'model.code-only', pluginId: 'dbt', kind: 'dbt:model' },
+          { id: 'model.supported', pluginId: 'dvt', kind: 'dvt:transform' },
+          { id: 'model.code-only', pluginId: 'dvt', kind: 'dvt:transform' },
         ],
         canonicalEdges: [],
         workspaceNodeIds: ['model.supported', 'model.code-only'],

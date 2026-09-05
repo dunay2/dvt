@@ -95,8 +95,8 @@ describe('dbt project file execution strategy', () => {
             metadata: {
               displayName: 'orders',
               tags: {
-                kind: 'dbt:model',
-                pluginId: 'dbt',
+                kind: 'dvt:transform',
+                pluginId: 'dvt',
                 role: 'transform',
               },
             },

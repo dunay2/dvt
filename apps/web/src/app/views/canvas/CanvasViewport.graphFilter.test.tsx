@@ -145,8 +145,8 @@ describe('CanvasViewport graph filtering', () => {
     const canonicalNode: CanonicalNode = {
       id: 'customers',
       name: 'Customers',
-      pluginId: 'dbt',
-      kind: 'dbt:source',
+      pluginId: 'dvt',
+      kind: 'dvt:source',
       role: 'input',
       status: 'idle',
       tags: ['source'],
@@ -258,7 +258,7 @@ function graphNodes(): CanvasViewportProps['nodesWithImpact'] {
       position: { x: 0, y: 0 },
       data: {
         name: 'Orders failed',
-        pluginKind: 'dbt:model',
+        pluginKind: 'dvt:transform',
         pluginId: 'dbt',
         role: 'transform',
         status: 'failed',
@@ -271,7 +271,7 @@ function graphNodes(): CanvasViewportProps['nodesWithImpact'] {
       position: { x: 200, y: 0 },
       data: {
         name: 'Orders success',
-        pluginKind: 'dbt:model',
+        pluginKind: 'dvt:transform',
         pluginId: 'dbt',
         role: 'transform',
         status: 'success',
@@ -284,7 +284,7 @@ function graphNodes(): CanvasViewportProps['nodesWithImpact'] {
       position: { x: 400, y: 0 },
       data: {
         name: 'Customers',
-        pluginKind: 'dbt:source',
+        pluginKind: 'dvt:source',
         pluginId: 'dbt',
         role: 'input',
         status: 'success',

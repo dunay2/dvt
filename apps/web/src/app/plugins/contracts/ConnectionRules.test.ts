@@ -41,7 +41,7 @@ describe('evaluateConnection', () => {
     const pluginPortMap = getPluginPortMap();
 
     const sourceToTransform = evaluateConnection(
-      buildNode('dbt', 'dbt:source', 'input'),
+      buildNode('dbt', 'dvt:source', 'input'),
       buildNode('dvt', 'dvt:transform', 'transform'),
       [],
       pluginPortMap
@@ -82,7 +82,7 @@ describe('evaluateConnection', () => {
 
     const sourceToModel = evaluateConnection(
       buildNode('dvt.warehouse-source', 'dvt:source', 'input'),
-      buildNode('dbt', 'dbt:model', 'transform'),
+      buildNode('dbt', 'dvt:transform', 'transform'),
       [],
       pluginPortMap
     );
@@ -102,7 +102,7 @@ describe('evaluateConnection', () => {
     const dvtTransform = buildNode('dvt', 'dvt:transform', 'transform');
 
     for (const target of [
-      buildNode('dbt', 'dbt:source', 'input'),
+      buildNode('dbt', 'dvt:source', 'input'),
       buildNode('dbt', 'dbt:seed', 'input'),
     ]) {
       expect(evaluateConnection(dvtTransform, target, [], pluginPortMap)).toEqual({
@@ -121,7 +121,7 @@ describe('evaluateConnection', () => {
 
     const connection = evaluateConnection(
       buildNode('dvt', 'dvt:transform', 'transform'),
-      buildNode('dbt', 'dbt:model', 'transform'),
+      buildNode('dbt', 'dvt:transform', 'transform'),
       [],
       pluginPortMap
     );
@@ -140,7 +140,7 @@ describe('evaluateConnection', () => {
     const pluginPortMap = getPluginPortMap();
 
     const sourceToSink = evaluateConnection(
-      buildNode('dbt', 'dbt:source', 'input'),
+      buildNode('dbt', 'dvt:source', 'input'),
       buildNode('dvt', 'dvt:sink', 'output'),
       [],
       pluginPortMap

@@ -9,16 +9,16 @@ import { filterCanvasGraph } from './canvasGraphFilter';
 const nodes: readonly CanvasGraphFilterNode[] = [
   {
     id: 'orders-source',
-    pluginId: 'dbt',
-    kind: 'dbt:source',
+    pluginId: 'dvt',
+    kind: 'dvt:source',
     role: 'input',
     status: 'success',
     tags: ['finance', 'critical'],
   },
   {
     id: 'orders-model',
-    pluginId: 'dbt',
-    kind: 'dbt:model',
+    pluginId: 'dvt',
+    kind: 'dvt:transform',
     role: 'transform',
     status: 'failed',
     tags: ['finance'],
@@ -40,7 +40,7 @@ describe('filterCanvasGraph', () => {
       createCanvasGraphFilterQuery({
         composition: 'and',
         predicates: [
-          { dimension: 'pluginId', value: 'dbt' },
+          { dimension: 'pluginId', value: 'dvt' },
           { dimension: 'role', value: 'transform' },
           { dimension: 'tag', value: 'finance' },
         ],

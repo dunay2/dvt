@@ -1,9 +1,8 @@
 import type { CanvasGraphStrategy } from './graphStrategyContracts';
 import type { CanvasSurfaceStrategy } from './canvasSurfaceStrategyContracts';
-import type { GraphNodeCardStrategy } from './graph/graphNodeCardStrategyContracts';
 import {
   getAllCanvasRuntimeRegistrations,
-  getRuntimePlugins,
+  getGraphNodeCardStrategies as getRegisteredGraphNodeCardStrategies,
   type RuntimeCapabilities,
 } from './registry';
 import type { CanvasRuntimeRegistration } from './nodeTypeContracts';
@@ -53,18 +52,8 @@ export function findCanvasSurfaceStrategy(
 
 export function getGraphNodeCardStrategies(
   capabilities?: RuntimeCapabilities
-): GraphNodeCardStrategy[] {
-  const uniqueStrategies = new Map<string, GraphNodeCardStrategy>();
-
-  for (const strategy of getRuntimePlugins(capabilities).flatMap(
-    (plugin) => plugin.graphNodeCardStrategies ?? []
-  )) {
-    if (!uniqueStrategies.has(strategy.id)) {
-      uniqueStrategies.set(strategy.id, strategy);
-    }
-  }
-
-  return [...uniqueStrategies.values()];
+): ReturnType<typeof getRegisteredGraphNodeCardStrategies> {
+  return getRegisteredGraphNodeCardStrategies(capabilities);
 }
 
 export function resolveCanvasGraphStrategy(

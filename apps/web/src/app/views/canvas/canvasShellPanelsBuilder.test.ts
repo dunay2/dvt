@@ -67,7 +67,7 @@ function buildArgs(
       ],
       activeCanvasId: 'transformation-canvas',
       availableCanvasKinds: [
-        buildTestCanvasKind('dbt', [buildTestNodeKind('dbt:model', 'Model')]),
+        buildTestCanvasKind('dbt', [buildTestNodeKind('dvt:transform', 'Model')]),
         buildTestCanvasKind('transformation', [buildTestNodeKind('dvt:source', 'Source')]),
       ],
     },
@@ -120,7 +120,7 @@ describe('buildCanvasShellPanels', () => {
           ],
           activeCanvasId: 'transformation-canvas',
           availableCanvasKinds: [
-            buildTestCanvasKind('dbt', [buildTestNodeKind('dbt:model', 'Model')]),
+            buildTestCanvasKind('dbt', [buildTestNodeKind('dvt:transform', 'Model')]),
             buildTestCanvasKind('transformation', [buildTestNodeKind('dvt:source', 'Source')]),
           ],
         },

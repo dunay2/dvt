@@ -147,8 +147,8 @@ describe('Canvas column lineage projection', () => {
     const source: CanonicalNode = {
       id: 'dbt-source',
       name: 'source_orders',
-      pluginId: 'dbt',
-      kind: 'dbt:source',
+      pluginId: 'dvt',
+      kind: 'dvt:source',
       role: 'input',
       status: 'idle',
       tags: [],
@@ -157,8 +157,8 @@ describe('Canvas column lineage projection', () => {
     const model: CanonicalNode = {
       id: 'dbt-model',
       name: 'fct_orders',
-      pluginId: 'dbt',
-      kind: 'dbt:model',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
       role: 'transform',
       status: 'idle',
       tags: [],

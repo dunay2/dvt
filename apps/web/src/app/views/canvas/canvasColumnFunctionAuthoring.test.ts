@@ -3,12 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { CanonicalNode } from '../../types/canonical';
 import { applyCanvasColumnFunction } from './canvasColumnFunctionAuthoring';
 import type { CanvasDraftSession } from './canvasDraftSession';
-import {
-  decodeDvtSubstraitProjectionDocument,
-  inspectDvtSubstraitProjectionDraft,
-  resolveDvtSubstraitColumnFunctions,
-} from './canvasDvtSubstraitProjection';
-import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import { resolveDvtSubstraitColumnFunctions } from './canvasDvtSubstraitProjection';
 
 const source: CanonicalNode = {
   id: 'source-events',
@@ -40,8 +35,8 @@ const source: CanonicalNode = {
 const model: CanonicalNode = {
   id: 'model-events',
   name: 'Model 2',
-  pluginId: 'dbt',
-  kind: 'dbt:model',
+  pluginId: 'dvt',
+  kind: 'dvt:transform',
   role: 'transform',
   status: 'idle',
   tags: ['finance'],
@@ -74,15 +69,16 @@ function draftSession(): CanvasDraftSession {
 }
 
 describe('Canvas column function authoring', () => {
-  it('replaces a generated DBT model with one canonical Substrait Transform', () => {
+  it('rejects a function on an external DBT model without changing its identity or authority', () => {
     const trim = resolveDvtSubstraitColumnFunctions({
       dataType: 'text',
       provider: 'postgres',
     }).find((candidate) => candidate.name === 'trim');
     if (trim == null) throw new Error('Expected admitted TRIM capability.');
 
+    const initial = draftSession();
     const result = applyCanvasColumnFunction({
-      draftSession: draftSession(),
+      draftSession: initial,
       canonicalNodesById: new Map([
         [source.id, source],
         [model.id, model],
@@ -95,64 +91,7 @@ describe('Canvas column function authoring', () => {
       },
     });
 
-    expect(result.outcome).toBe('applied');
-    if (result.outcome !== 'applied') return;
-    const replacement = result.draftSession.localNodeCatalog?.[model.id];
-    expect(replacement).toMatchObject({
-      id: model.id,
-      pluginId: 'dvt',
-      kind: 'dvt:transform',
-      metadata: { rowCount: 7800, sizeBytes: 2_600_000 },
-    });
-    expect(replacement?.metadata).not.toHaveProperty('dbt');
-    expect(replacement?.metadata).not.toHaveProperty('config');
-    if (replacement == null) throw new Error('Expected replacement Transform.');
-    const authority = readDvtTransformAuthoringAuthority(replacement)!;
-    if (authority.mode !== 'substrait') throw new Error('Expected Substrait authority.');
-    const inspection = inspectDvtSubstraitProjectionDraft(
-      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
-    );
-    expect(inspection.ok ? inspection.projection.outputs : []).toMatchObject([
-      { name: 'event_type_clean', sourceFieldName: 'event_type', operations: ['trim'] },
-      { name: 'event_id', sourceFieldName: 'event_id' },
-    ]);
-  });
-
-  it('replaces legacy SQL metadata with canonical Substrait semantics', () => {
-    const trim = resolveDvtSubstraitColumnFunctions({
-      dataType: 'text',
-      provider: 'postgres',
-    }).find((candidate) => candidate.name === 'trim');
-    if (trim == null) throw new Error('Expected admitted TRIM capability.');
-
-    const result = applyCanvasColumnFunction({
-      draftSession: {
-        ...draftSession(),
-        localNodeCatalog: {
-          [source.id]: source,
-          [model.id]: {
-            ...model,
-            metadata: { ...model.metadata, sql: 'select * from raw.events' },
-          },
-        },
-      },
-      canonicalNodesById: new Map([
-        [source.id, source],
-        [model.id, model],
-      ]),
-      identity: {
-        nodeId: model.id,
-        columnId: 'event_type',
-        capabilityId: trim.capabilityId,
-        alias: 'event_type_clean',
-      },
-    });
-
-    expect(result.outcome).toBe('applied');
-    if (result.outcome !== 'applied') return;
-    const replacement = result.draftSession.localNodeCatalog?.[model.id];
-    expect(replacement).toMatchObject({ pluginId: 'dvt', kind: 'dvt:transform' });
-    expect(replacement?.metadata).not.toHaveProperty('sql');
-    expect(replacement?.metadata).not.toHaveProperty('config');
+    expect(result).toEqual({ outcome: 'rejected' });
+    expect(initial.localNodeCatalog?.[model.id]).toBe(model);
   });
 });

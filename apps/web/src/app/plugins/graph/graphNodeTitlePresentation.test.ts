@@ -24,7 +24,7 @@ describe('buildGraphNodeTitlePresentation', () => {
     expect(
       buildGraphNodeTitlePresentation({
         nodeName: 'source.raw.orders',
-        kind: 'dbt:source',
+        kind: 'dvt:source',
         metadata: {
           sourceName: 'raw',
           tableName: 'orders',
@@ -41,7 +41,7 @@ describe('buildGraphNodeTitlePresentation', () => {
     expect(
       buildGraphNodeTitlePresentation({
         nodeName: 'source.raw.orders',
-        kind: 'dbt:source',
+        kind: 'dvt:source',
         metadata: {
           dbt: {
             sourceName: 'raw',
@@ -210,7 +210,7 @@ describe('buildGraphNodeTitlePresentation', () => {
     expect(
       buildGraphNodeTitlePresentation({
         nodeName: 'orders_model',
-        kind: 'dbt:model',
+        kind: 'dvt:transform',
         metadata: {},
         data: {},
       })
@@ -224,7 +224,7 @@ describe('buildGraphNodeTitlePresentation', () => {
     expect(
       buildGraphNodeTitlePresentation({
         nodeName: 'model_1',
-        kind: 'dbt:model',
+        kind: 'dvt:transform',
         metadata: {},
         data: {},
       })
