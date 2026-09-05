@@ -161,7 +161,7 @@ from `apps/web` reproduces the same failure. Upstream commit `73614be55`
 removed the false dbt column-lineage behavior; the old test still expects it.
 This is an existing main integration blocker, not a Node-environment regression.
 The test and product semantics remain untouched by #2900. Delivery remains a
-**draft PR**, with the issue open until this discrepancy and required checks are
+**local committed branch**, with the issue open until this discrepancy and required checks are
 resolved; the integrated tree is not claimed green.
 
 Normal merge hooks also normalized three upstream files:
@@ -179,8 +179,24 @@ Validation commands on the integration:
   passed after explicitly admitting the hook-only formatting paths; its initial
   rejection correctly detected those paths.
 - `pnpm governance:refresh`: passed, generated surfaces converged in three passes.
-- Final committed-tree `pnpm verify:prepush` outcome is recorded in the PR and
-  issue journal after hook normalization; it cannot override the full-suite failure.
+- Final committed-tree `pnpm verify:prepush`: **failed** after governance and
+  mechanization checks passed. Canvas unit selection passed 13 files / 89 cases;
+  Canvas presentation passed 109 files / 455 cases and failed one case in
+  `useCanvasControllerReadModel.test.tsx:562`. This same failure reproduces on
+  pristine main using `DVT_CI=1 pnpm exec vitest run --config
+vitest.presentation.config.ts src/app/views/canvas/useCanvasControllerReadModel.test.tsx`
+  (12 passed, one failed). It also expects the removed dbt lineage.
+- Independent `DVT_CI=1 pnpm run test:architecture:run` on the integrated branch:
+  98 files / 283 cases passed, three failed. The failures are
+  `Canvas.architecture.test.tsx`, `dbtProjectFileProjection.architecture.test.ts`,
+  and `lineagePanelTokenConvergence.architecture.test.ts`. Running those exact
+  three paths with `vitest run --config vitest.architecture.config.ts` on pristine
+  main reproduces all three failures (five other cases pass).
+
+There are therefore five independently reproduced upstream failures across the
+primary suites. The normal pre-push gate prevents publication. No push or PR was
+created, and no hook was bypassed. The final evidence-only commit does not change
+the tested code. Raw local logs are retained under `tmp/gh-2900/`.
 
 Governing sources are the inventory, ADR-0000, ADR-0061, command/query rail
 rules, GitHub MVP issue workflow, frontend test component, and the governing
