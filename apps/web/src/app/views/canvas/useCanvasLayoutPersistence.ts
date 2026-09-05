@@ -235,7 +235,7 @@ function useCanvasViewportPersistenceHandler({
   setCanvasViewport: (layoutKey: string, viewport: CanvasViewport) => void;
 }) {
   return useCallback(
-    (viewport) => {
+    (viewport: CanvasViewport) => {
       if (!canPersistLayout) {
         return;
       }
