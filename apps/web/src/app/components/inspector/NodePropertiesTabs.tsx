@@ -20,6 +20,7 @@ import {
   type NodePropertyTableCellRenderContext,
 } from './NodePropertySectionView';
 import { SourceColumnsPanel } from './SourceColumnsPanel';
+import { SourceInputsOutputsPanel } from './SourceInputsOutputsPanel';
 import type { NodePropertiesReadModel, NodePropertySection } from './nodePropertiesReadModel';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 
@@ -104,11 +105,15 @@ function resolvePresentedSection(
   };
 }
 
-function usesApprovedWarehouseSourceColumns(node: CanonicalNode, section: NodePropertySection): boolean {
+function isApprovedWarehouseSourceSection(
+  node: CanonicalNode,
+  section: NodePropertySection,
+  sectionId: 'columns' | 'inputs-outputs'
+): boolean {
   return (
     node.kind === 'dvt:source' &&
     node.pluginId === 'dvt.warehouse-source' &&
-    section.id === 'columns'
+    section.id === sectionId
   );
 }
 
@@ -249,7 +254,12 @@ export function NodePropertiesTabs({
         const beforeBody =
           sectionBeforeChildren?.[section.id] ?? (section.id === 'general' ? beforePanels : null);
         const afterBody = sectionAfterChildren?.[section.id];
-        const sourceColumns = usesApprovedWarehouseSourceColumns(node, section);
+        const sourceColumns = isApprovedWarehouseSourceSection(node, section, 'columns');
+        const sourceInputsOutputs = isApprovedWarehouseSourceSection(
+          node,
+          section,
+          'inputs-outputs'
+        );
 
         return (
           <TabsContent
@@ -264,6 +274,13 @@ export function NodePropertiesTabs({
           >
             {sourceColumns ? (
               <SourceColumnsPanel node={node} beforeBody={beforeBody} afterBody={afterBody} />
+            ) : sourceInputsOutputs ? (
+              <SourceInputsOutputsPanel
+                node={node}
+                section={section}
+                beforeBody={beforeBody}
+                afterBody={afterBody}
+              />
             ) : (
               <NodePropertySectionView
                 section={section}
