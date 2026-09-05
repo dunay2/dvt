@@ -1,6 +1,6 @@
 /** Owned concern: render the Source Columns A-v2 schema scanner from existing read-model facts. */
 import { Check, Search } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { Badge } from '../../components/ui/badge';
 import { Input } from '../../components/ui/input';
@@ -16,6 +16,7 @@ import {
 } from './sourceColumnPresentation';
 
 type ColumnFilter = 'all' | 'keyed' | 'not-null' | 'nullable';
+type SourceColumnsCopy = (typeof COPY)['en'] | (typeof COPY)['es'];
 
 const COPY = {
   en: {
@@ -27,9 +28,12 @@ const COPY = {
     nullable: 'Nullable',
     noColumns: 'No columns match the current search and filter.',
     selected: 'Selected',
-    physicalType: 'Physical type',
     nullability: 'Nullability',
     keySemantics: 'Key semantics',
+    primaryKey: 'Primary key',
+    foreignKey: 'Foreign key',
+    uniqueKey: 'Unique key',
+    indexed: 'Indexed',
     references: 'References',
     uniqueKeys: 'Unique keys',
     indexes: 'Indexes',
@@ -49,9 +53,12 @@ const COPY = {
     nullable: 'Anulables',
     noColumns: 'Ninguna columna coincide con la búsqueda y el filtro.',
     selected: 'Seleccionada',
-    physicalType: 'Tipo físico',
     nullability: 'Nulabilidad',
     keySemantics: 'Semántica de clave',
+    primaryKey: 'Clave primaria',
+    foreignKey: 'Clave foránea',
+    uniqueKey: 'Clave única',
+    indexed: 'Indexada',
     references: 'Referencias',
     uniqueKeys: 'Claves únicas',
     indexes: 'Índices',
@@ -105,28 +112,28 @@ function badgeClass(badge: SourceColumnBadge): string {
   return 'border-slate-600 bg-slate-700/60 text-slate-300';
 }
 
-function nullabilityLabel(
-  column: SourceColumnPresentation,
-  copy: (typeof COPY)['en'] | (typeof COPY)['es']
-): string {
+function nullabilityLabel(column: SourceColumnPresentation, copy: SourceColumnsCopy): string {
   if (column.nullability === 'not-null') return copy.notNullValue;
   if (column.nullability === 'nullable') return copy.nullableValue;
   return copy.unknown;
 }
 
-function keySemantics(column: SourceColumnPresentation): readonly string[] {
+function keySemantics(
+  column: SourceColumnPresentation,
+  copy: SourceColumnsCopy
+): readonly string[] {
   const meanings: string[] = [];
-  if (column.badges.includes('PK')) meanings.push('Primary key');
-  if (column.badges.includes('FK')) meanings.push('Foreign key');
-  if (column.badges.includes('UK')) meanings.push('Unique key');
-  if (column.badges.includes('IDX')) meanings.push('Indexed');
+  if (column.badges.includes('PK')) meanings.push(copy.primaryKey);
+  if (column.badges.includes('FK')) meanings.push(copy.foreignKey);
+  if (column.badges.includes('UK')) meanings.push(copy.uniqueKey);
+  if (column.badges.includes('IDX')) meanings.push(copy.indexed);
   return meanings;
 }
 
 function DetailFact({
   label,
   children,
-}: Readonly<{ label: string; children: React.ReactNode }>): JSX.Element {
+}: Readonly<{ label: string; children: ReactNode }>): JSX.Element {
   return (
     <div className="contents">
       <dt className={inspectorVisualClasses.inspectorLabel}>{label}</dt>
@@ -184,21 +191,20 @@ export function SourceColumnsPanel({
             onChange={(event) => setSearchText(event.target.value)}
           />
         </div>
-        <label className="sr-only" htmlFor="source-columns-filter">
-          {copy.filter}
+        <label className="shrink-0">
+          <span className="sr-only">{copy.filter}</span>
+          <select
+            aria-label={copy.filter}
+            value={filter}
+            className={cn(inspectorVisualClasses.inspectorSelectInput, 'w-36')}
+            onChange={(event) => setFilter(event.currentTarget.value as ColumnFilter)}
+          >
+            <option value="all">{copy.all}</option>
+            <option value="keyed">{copy.keyed}</option>
+            <option value="not-null">{copy.notNull}</option>
+            <option value="nullable">{copy.nullable}</option>
+          </select>
         </label>
-        <select
-          id="source-columns-filter"
-          aria-label={copy.filter}
-          value={filter}
-          className={cn(inspectorVisualClasses.inspectorSelectInput, 'w-36 shrink-0')}
-          onChange={(event) => setFilter(event.currentTarget.value as ColumnFilter)}
-        >
-          <option value="all">{copy.all}</option>
-          <option value="keyed">{copy.keyed}</option>
-          <option value="not-null">{copy.notNull}</option>
-          <option value="nullable">{copy.nullable}</option>
-        </select>
       </div>
 
       <div className="grid min-h-[420px] grid-cols-[minmax(0,0.4fr)_minmax(0,0.6fr)] divide-x divide-(--border-subtle)">
@@ -290,15 +296,12 @@ export function SourceColumnsPanel({
               </div>
 
               <dl className="grid grid-cols-[minmax(100px,0.34fr)_minmax(0,1fr)] gap-x-4 gap-y-3 text-xs">
-                <DetailFact label={copy.physicalType}>
-                  <code>{selectedColumn.physicalType}</code>
-                </DetailFact>
                 <DetailFact label={copy.nullability}>
                   {nullabilityLabel(selectedColumn, copy)}
                 </DetailFact>
-                {keySemantics(selectedColumn).length > 0 ? (
+                {keySemantics(selectedColumn, copy).length > 0 ? (
                   <DetailFact label={copy.keySemantics}>
-                    {keySemantics(selectedColumn).join(' · ')}
+                    {keySemantics(selectedColumn, copy).join(' · ')}
                   </DetailFact>
                 ) : null}
                 {selectedColumn.foreignKeyTargets.length > 0 ? (
