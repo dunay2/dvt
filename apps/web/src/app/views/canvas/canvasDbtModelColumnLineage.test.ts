@@ -54,7 +54,7 @@ function model(
 }
 
 describe('DBT model column lineage', () => {
-  it('projects removable active fields across model-to-model dependencies', () => {
+  it('does not infer lineage from DBT field names without stable field references', () => {
     const first = model('model-1', source.id);
     const second = model('model-2', first.id, [
       { name: 'order_id', output: true },
@@ -72,17 +72,6 @@ describe('DBT model column lineage', () => {
       expandedNodeIds: new Set(nodes.map((node) => node.id)),
     });
 
-    expect(
-      projected.map((edge) => ({
-        source: edge.source,
-        target: edge.target,
-        column: edge.data?.targetColumnName,
-        removable: edge.data?.removable,
-      }))
-    ).toEqual([
-      { source: source.id, target: first.id, column: 'order_id', removable: true },
-      { source: source.id, target: first.id, column: 'customer', removable: true },
-      { source: first.id, target: second.id, column: 'order_id', removable: true },
-    ]);
+    expect(projected).toEqual([]);
   });
 });
