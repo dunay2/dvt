@@ -21,4 +21,30 @@ describe('useCanvasControllerReadModel semantic input sharing', () => {
     expect(projectorInputs).not.toContain('[...graphModel.canonicalNodesById.values()]');
     expect(projectorInputs).not.toContain('graphModel.edges.map');
   });
+
+  it('does not materialize whole-graph column-function inputs for a non-mutable Canvas', () => {
+    const nodeMaterializationStart = READ_MODEL_SOURCE.indexOf(
+      'const columnFunctionNodes = useMemo('
+    );
+    const edgeMaterializationStart = READ_MODEL_SOURCE.indexOf(
+      'const columnFunctionEdges = useMemo('
+    );
+    const lineageProjectionStart = READ_MODEL_SOURCE.indexOf(
+      'const projectedColumnLineage = useMemo('
+    );
+
+    const nodeMaterialization = READ_MODEL_SOURCE.slice(
+      nodeMaterializationStart,
+      edgeMaterializationStart
+    );
+    const edgeMaterialization = READ_MODEL_SOURCE.slice(
+      edgeMaterializationStart,
+      lineageProjectionStart
+    );
+
+    expect(nodeMaterialization).toContain('canMutateGraph');
+    expect(nodeMaterialization).toContain('EMPTY_COLUMN_FUNCTION_NODES');
+    expect(edgeMaterialization).toContain('!canMutateGraph');
+    expect(edgeMaterialization).toContain('EMPTY_COLUMN_FUNCTION_EDGES');
+  });
 });
