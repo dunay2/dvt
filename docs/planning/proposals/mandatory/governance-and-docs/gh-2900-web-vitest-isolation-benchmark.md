@@ -174,7 +174,6 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/frontend-test-governance-component.md
   - docs/guides/testing-and-ci-capabilities.md
   - docs/planning/proposals/mandatory/governance-and-docs/gh-2900-web-vitest-isolation-benchmark.md
-  - docs/planning/closeouts/gh-2900-closeout.md
 forbiddenImplementationSurfaces:
   - apps/api/**
   - packages/@dvt/**

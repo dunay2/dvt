@@ -118,9 +118,9 @@ assertion time because the three suites then ran sequentially with one isolated
 `jsdom` fork per file. This is a diagnostic baseline rather than an SLA;
 optimization must preserve coverage and the 4 GB memory boundary. GitHub issue
 [#2900](https://github.com/dunay2/dvt/issues/2900) owns the bounded-batch and
-non-DOM partition benchmarks. The
-[GH-2900 evidence](../planning/closeouts/gh-2900-closeout.md) records the local
-comparison and rejected shared-fork alternative. The selected environment policy
+non-DOM partition benchmarks, including the evidence journal and final closeout.
+The issue records the local comparison and rejected shared-fork alternative.
+The selected environment policy
 retains all primary files, assertions, isolated workers and existing commands.
 
 | Capability                         | Command                                                                    | Scope                                                | Source                                                                                                 |

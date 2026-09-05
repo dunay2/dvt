@@ -67,7 +67,7 @@ contract validation, or engine determinism tests.
 - Every CI file retains an isolated fork. The GH-2900 experiment found that
   ten-file shared-fork batches introduce presentation-test interference; bounded
   memory alone is not sufficient evidence to remove isolation. See the
-  [benchmark evidence](../../../planning/closeouts/gh-2900-closeout.md).
+  [benchmark evidence and closeout in issue #2900](https://github.com/dunay2/dvt/issues/2900).
 - The CI job name for the web Vitest lane is `Web Frontend Tests`.
 - Ordinary web pull requests route through `pnpm test:web:changed`.
 - Pushes to `main`, manual workflow runs, and root-build-sensitive PRs route
