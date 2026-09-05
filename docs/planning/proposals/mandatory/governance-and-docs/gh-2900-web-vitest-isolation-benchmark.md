@@ -38,6 +38,47 @@ No new dependency is needed. An unbounded shared fork and increased concurrency
 are rejected before benchmarking because they repeat the known memory risk.
 No candidate is selected until measurements and test outcomes justify it.
 
+### Evidence-based selection before production changes
+
+The first Linux control passed all 592 files / 2838 tests in 1088.976 s.
+Node architecture passed the identical 101 files / 273 test identities in
+40.897 s versus 134.329 s. The raw Node unit probe took 200.220 s versus
+435.132 s but failed browser-dependent tests in `routeBootstrapErrorCopy`,
+`sessionStore`, and `runsService`; that probe is not accepted as validation.
+Their browser environment must be explicit. Session-store consumers must also
+retain jsdom to preserve real persistence and avoid new storage warnings.
+
+The Windows full-unit probe additionally exposed host-locale dependence:
+Node 22 reports `navigator.language === 'es-ES'` on this workstation, whereas
+jsdom supplied the browser-default English locale expected by 16 existing
+presentation-model tests. These are browser-language dependencies, not pure
+Node tests. Keep their original jsdom semantics explicitly; do not force an OS
+locale, disable Node globals, or alter expected copy. The indirect
+`installWorkspaceScopeHarness` consumers also retain jsdom, with an architecture
+guard requiring an explicit browser declaration for that persistent harness.
+
+Ten-file shared-fork batches already fail presentation cases that pass in the
+control: `AppProviders`, `Root.bootstrapFlow`, and
+`useActiveRouteBootstrapRegistration`, plus inspector tests. Failures include
+missing expected mock calls and missing expected exceptions. The full batch
+experiment and a repeat of a failing batch are retained as rejected evidence.
+
+Select Node defaults for `unit` and `architecture`, explicit jsdom annotations
+for browser-dependent unit tests, and the current isolated forks everywhere.
+Presentation and mixed/focus configurations keep their jsdom defaults. This
+preserves exact-file/focus routing and avoids introducing a batch runner or
+changing test isolation to obtain speed. No assertions, mocks, package commands,
+workflow gates, timeouts, or worker/heap limits change. Repeated green runs and
+the final canonical validation remain required before claiming completion.
+
+The first Windows control completed 275 unit files / 1602 tests in 811.281 s
+with no failures. Its sampled aggregate RSS peak was 349.05 MiB. The remaining
+Windows control was deliberately stopped to move the comparative experiment to
+Linux, the CI operating-system family. Keep this sample separate from the Linux
+comparison. Use an isolated Node 22.19.0 Debian container with two CPUs and 7 GiB
+total memory, a complete Git checkout on its Linux filesystem, and the frozen
+workspace install. This is a local container comparison, not a hosted-runner SLA.
+
 ## Current and candidate execution
 
 ```mermaid
@@ -65,6 +106,13 @@ Node/Vitest versions, baseline SHA, and warm-cache limitations. The 4096 MiB
 old-space setting is not an RSS limit; report both independently and require
 worker RSS below 4096 MiB with at least 20% headroom. Never label local Windows
 timings as Ubuntu hosted-runner measurements.
+
+Identical presentation configuration may reuse the same two control samples
+across the control and environment-partition comparison; the final canonical
+full-suite validation supplies the second presentation sample. A candidate with
+reproducible correctness failures is rejected rather than repeated exhaustively:
+rerun its failing batch to confirm the cause. Neither rule excludes tests from
+the full primary-suite inventory.
 
 Coverage is the complete current primary-suite inventory, including additions
 since the issue's 591-file sample. An environment-only candidate must preserve

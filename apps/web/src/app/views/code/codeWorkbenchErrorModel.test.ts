@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 import { describe, expect, it } from 'vitest';
 
 import { WorkspaceFileLoadError } from '../../services/workspace/workspaceErrors';

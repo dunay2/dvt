@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -46,14 +48,12 @@ describe('routeBootstrapErrorCopy', () => {
     expect(resolveRouteBootstrapErrorCopy('es-ES')).toEqual({
       dataRouterContextMissing:
         'El bootstrap de ruta requiere un contexto de React Router data router (RouterProvider).',
-      activeRegistrationMissing:
-        'Falta el registro activo de route bootstrap para la ruta actual.',
-      registrationNotFoundPrefix:
-        'No se encontro el registro de route bootstrap para route id',
+      activeRegistrationMissing: 'Falta el registro activo de route bootstrap para la ruta actual.',
+      registrationNotFoundPrefix: 'No se encontro el registro de route bootstrap para route id',
     });
-    expect(
-      formatRouteBootstrapRegistrationNotFoundMessage('dbt.canvas', 'es-ES')
-    ).toBe('No se encontro el registro de route bootstrap para route id: dbt.canvas');
+    expect(formatRouteBootstrapRegistrationNotFoundMessage('dbt.canvas', 'es-ES')).toBe(
+      'No se encontro el registro de route bootstrap para route id: dbt.canvas'
+    );
   });
 
   it('falls back to English copy for unsupported locales', () => {
@@ -75,9 +75,7 @@ describe('routeBootstrapErrorCopy', () => {
     });
 
     expect(error.code).toBe('ROUTE_BOOTSTRAP_ACTIVE_REGISTRATION_MISSING');
-    expect(error.message).toBe(
-      'Falta el registro activo de route bootstrap para la ruta actual.'
-    );
+    expect(error.message).toBe('Falta el registro activo de route bootstrap para la ruta actual.');
   });
 
   it('localizes registration-not-found errors for supported locales', () => {

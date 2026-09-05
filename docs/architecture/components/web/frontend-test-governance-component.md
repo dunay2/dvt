@@ -2,7 +2,7 @@
 title: Frontend Test Governance Component
 status: Active
 owner: Frontend / CI
-last_reviewed: 2026-05-31
+last_reviewed: 2026-09-05
 planning_type: architecture
 ---
 
@@ -53,6 +53,21 @@ contract validation, or engine determinism tests.
 - Feature-owned focus suites may narrow local feedback loops without changing
   primary suite ownership.
 - Architecture tests are excluded from unit and presentation suites.
+- The `unit` and `architecture` primary suites default to Node. Unit tests that
+  exercise browser APIs, browser-backed persistence, or browser-derived language explicitly declare
+  `@vitest-environment jsdom`; this also keeps their environment consistent when
+  exact-file routing invokes the primary config. Presentation, focus suites and
+  the aggregate watch config retain jsdom. Environment selection does not change
+  file ownership or changed-suite routing.
+- Tests using `installWorkspaceScopeHarness` explicitly declare jsdom because
+  the harness updates the real persisted session store. The catalog architecture
+  guard checks this dependency. Localized presentation-model tests likewise keep
+  their browser environment; Node's host-language default must not change their
+  expected copy across contributor operating systems.
+- Every CI file retains an isolated fork. The GH-2900 experiment found that
+  ten-file shared-fork batches introduce presentation-test interference; bounded
+  memory alone is not sufficient evidence to remove isolation. See the
+  [benchmark evidence](../../../planning/closeouts/gh-2900-closeout.md).
 - The CI job name for the web Vitest lane is `Web Frontend Tests`.
 - Ordinary web pull requests route through `pnpm test:web:changed`.
 - Pushes to `main`, manual workflow runs, and root-build-sensitive PRs route

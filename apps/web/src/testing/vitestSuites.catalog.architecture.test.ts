@@ -24,6 +24,24 @@ afterEach(() => {
 });
 
 describe('web Vitest suite catalog', () => {
+  it.each(['unit', 'architecture'] as const)(
+    'uses Node by default for the %s suite without changing its file ownership',
+    (suiteName) => {
+      expect(createWebVitestConfig(suiteName).test).toMatchObject({
+        environment: 'node',
+        include: WEB_VITEST_SUITES[suiteName].include,
+        exclude: WEB_VITEST_SUITES[suiteName].exclude,
+      });
+    }
+  );
+
+  it.each(['all', 'presentation', ...WEB_VITEST_FOCUS_SUITE_NAMES] as const)(
+    'retains the browser environment for the %s suite',
+    (suiteName) => {
+      expect(createWebVitestConfig(suiteName).test?.environment).toBe('jsdom');
+    }
+  );
+
   it('assigns every web Vitest file to exactly one primary suite', () => {
     for (const filePath of listWebVitestFiles()) {
       const classification = classifyWebVitestFile(filePath);
@@ -31,6 +49,17 @@ describe('web Vitest suite catalog', () => {
       expect(classification, filePath).not.toBeNull();
       expect(classification?.primarySuites, filePath).toHaveLength(1);
       expect(WEB_VITEST_PRIMARY_SUITE_NAMES, filePath).toContain(classification?.primarySuites[0]);
+    }
+  });
+
+  it('requires a browser environment for the persisted workspace-scope harness', () => {
+    for (const filePath of listWebVitestFiles()) {
+      if (classifyWebVitestFile(filePath)?.primarySuites[0] !== 'unit') continue;
+
+      const source = readFileSync(resolve(webRoot, filePath), 'utf8');
+      if (source.includes('installWorkspaceScopeHarness(')) {
+        expect(source, filePath).toMatch(/@vitest-environment\s+jsdom/);
+      }
     }
   });
 

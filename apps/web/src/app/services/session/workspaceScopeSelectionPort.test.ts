@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { WORKSPACE_SCOPE_SELECTION_REJECTION_REASON } from '../../ports/workspaceScopeSelection';
