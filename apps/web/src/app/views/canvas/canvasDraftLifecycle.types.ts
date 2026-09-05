@@ -85,12 +85,6 @@ export type CanvasCreateCanvasDocumentCommand = {
   mode?: 'create_first' | 'replace_current' | 'create_new';
 };
 
-export type CanvasUpdateCanvasDocumentCommand = {
-  title?: string;
-  environmentId?: string | undefined;
-  defaultPermission?: 'read' | 'write' | undefined;
-};
-
 export type CanvasCreateCanvasDocumentCommandDto = {
   command: CanvasCreateCanvasDocumentCommand;
   currentDraftPayload: WorkspaceGraphAuthoringDraft;
@@ -151,8 +145,6 @@ export type CanvasDraftLifecycle = {
   reloadLatestDraft: () => void;
   handleCreateCanvasDocument: (command: CanvasCreateCanvasDocumentCommand) => Promise<void>;
   handleSelectCanvasDocument: (canvasId: string) => Promise<void>;
-  handleApplyCanvasDocumentPatch: (command: CanvasUpdateCanvasDocumentCommand) => Promise<void>;
-  handleDeleteCanvasDocument: () => Promise<void>;
   canCreateCanvasDocument: boolean;
   canExportProjectSnapshot: boolean;
   canImportProjectSnapshot: boolean;
