@@ -33,6 +33,7 @@ export type NodePropertiesTabsProps = Readonly<{
   beforePanels?: ReactNode;
   sectionBeforeChildren?: Partial<Record<NodePropertySection['id'], ReactNode>>;
   sectionAfterChildren?: Partial<Record<NodePropertySection['id'], ReactNode>>;
+  sectionBodyOverrides?: Partial<Record<NodePropertySection['id'], ReactNode>>;
   moreLabel: string;
   tagsEditor?: ReactNode;
   fillAvailableHeight?: boolean;
@@ -114,6 +115,7 @@ export function NodePropertiesTabs({
   beforePanels,
   sectionBeforeChildren,
   sectionAfterChildren,
+  sectionBodyOverrides,
   moreLabel,
   tagsEditor,
   fillAvailableHeight = false,
@@ -247,19 +249,21 @@ export function NodePropertiesTabs({
             fillAvailableHeight && section.id === activeTab && 'min-h-0 overflow-hidden'
           )}
         >
-          <NodePropertySectionView
-            section={section}
-            slots={slots}
-            surface={surface}
-            showCountBadge={showSectionCountBadge}
-            fillAvailableHeight={fillAvailableHeight && section.id === activeTab}
-            beforeBody={
-              sectionBeforeChildren?.[section.id] ??
-              (section.id === 'general' ? beforePanels : null)
-            }
-            afterBody={sectionAfterChildren?.[section.id]}
-            renderTableCell={renderTableCell}
-          />
+          {sectionBodyOverrides?.[section.id] ?? (
+            <NodePropertySectionView
+              section={section}
+              slots={slots}
+              surface={surface}
+              showCountBadge={showSectionCountBadge}
+              fillAvailableHeight={fillAvailableHeight && section.id === activeTab}
+              beforeBody={
+                sectionBeforeChildren?.[section.id] ??
+                (section.id === 'general' ? beforePanels : null)
+              }
+              afterBody={sectionAfterChildren?.[section.id]}
+              renderTableCell={renderTableCell}
+            />
+          )}
         </TabsContent>
       ))}
 
