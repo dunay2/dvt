@@ -13,7 +13,7 @@ import {
 } from './canvasDvtSubstraitJoinComposition';
 import {
   decodeDvtSubstraitProjectionDocument,
-  inspectDvtSubstraitProjectionDraft,
+  resolveDvtSubstraitProjectionEntry,
   type DvtSubstraitProjection,
 } from './canvasDvtSubstraitProjection';
 import { flattenCanvasStructuredLineage } from './canvasStructuredFieldLineage';
@@ -111,17 +111,21 @@ function readColumns(node: CanonicalNode): readonly Column[] {
   });
 }
 
-function readSubstraitProjectionLineage(node: CanonicalNode): DvtSubstraitProjection | null {
-  if (node.pluginId !== 'dvt' || node.kind !== 'dvt:transform') return null;
+function readSubstraitProjectionLineage(args: {
+  node: CanonicalNode;
+  nodes: readonly CanonicalNode[];
+  edges: readonly Readonly<{ sourceId: string; targetId: string }>[];
+}): DvtSubstraitProjection | null {
+  if (args.node.pluginId !== 'dvt' || args.node.kind !== 'dvt:transform') return null;
   try {
-    const authority = readDvtTransformAuthoringAuthority(node);
+    const authority = readDvtTransformAuthoringAuthority(args.node);
     if (authority == null) return null;
-    const inspection = inspectDvtSubstraitProjectionDraft(
-      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
-    );
-    return inspection.ok && inspection.projection.targetNodeId === node.id
-      ? inspection.projection
-      : null;
+    return resolveDvtSubstraitProjectionEntry({
+      targetNode: args.node,
+      nodes: args.nodes,
+      edges: args.edges,
+      draft: decodeDvtSubstraitProjectionDocument(authority.semanticDocument),
+    });
   } catch {
     return null;
   }
@@ -253,7 +257,11 @@ export function projectCanvasColumnLineage(args: {
   const projected: CanvasColumnLineageEdge[] = [];
 
   for (const model of args.nodes) {
-    const substraitProjection = readSubstraitProjectionLineage(model);
+    const substraitProjection = readSubstraitProjectionLineage({
+      node: model,
+      nodes: args.nodes,
+      edges: args.edges,
+    });
     if (substraitProjection != null && args.expandedNodeIds.has(model.id)) {
       const sourceNode = nodeById.get(substraitProjection.source.nodeId);
       const sourceRef = ConnectedSourceRefSchema.safeParse(
