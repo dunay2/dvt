@@ -77,7 +77,10 @@ Canonical local C&Q catalog:
   `allNodes` snapshot supplied by React Flow.
 - Active drag frames are not layout durability boundaries and must not persist
   route-local node positions merely because the pointer moved.
-- Settled live drag frames may persist observed viewport-model positions.
+- A settled observer frame following an active drag does not persist the drag a
+  second time; `handleNodeDragStop` is the drag completion durability boundary.
+- Settled coordinate changes that did not come from an active pointer drag may
+  still persist through the viewport-model observer.
 - Remote draft coordinates may seed route-local layout only when the active
   workspace layout has no locally persisted node positions.
 - Bootstrap and reload must not overwrite operator-owned card positions after a
@@ -134,6 +137,7 @@ sequenceDiagram
   Viewport->>Layout: onNodeDragStop(event, draggedNode, allNodes)
   Layout->>Layout: mergeDraggedNodePosition(allNodes, draggedNode)
   Layout->>Store: setCanvasNodePositions(layoutKey, final positions)
+  Note over Layout,Store: settled observer does not write the same drag again
 ```
 
 ### Viewport preference command
@@ -149,13 +153,14 @@ flowchart LR
   Layout --> Projection["CanvasLayoutProjection"]
 ```
 
-### Settled live viewport persistence
+### Settled viewport observation
 
 ```mermaid
 stateDiagram-v2
   [*] --> ObserveNodes
   ObserveNodes --> ActiveDrag: any node dragging=true
-  ActiveDrag --> SettledCandidate: drag frame settles
+  ActiveDrag --> DragOwnedByStop: drag frame settles
+  DragOwnedByStop --> ObserveNodes: observer records no duplicate persistence
   ObserveNodes --> SettledCandidate: positions changed without active drag
   SettledCandidate --> Noop: same as persistedNodePositions
   SettledCandidate --> Persist: changed and route can persist
@@ -212,11 +217,12 @@ Primary tests:
 - `apps/web/src/app/views/canvas/canvasDraftRecoveryBoundary.architecture.test.ts`
 
 The tests cover automatic store hydration, pre-hydration node-position queueing,
-pending-query viewport denial, stale drag-stop payload replacement, active live
-drag non-persistence, settled live drag persistence, remote-draft hydration not
-overwriting local layout after refresh/reload, grid preference persistence, grid
-background visibility/color, snap-to-grid propagation, snapped auto-layout
-coordinates, and semantic boundary rules.
+pending-query viewport denial, stale drag-stop payload replacement, active drag
+non-persistence, drag-stop-only drag completion persistence, non-drag settled
+coordinate persistence, remote-draft hydration not overwriting local layout after
+refresh/reload, grid preference persistence, grid background visibility/color,
+snap-to-grid propagation, snapped auto-layout coordinates, and semantic boundary
+rules.
 
 ## Drift To Watch
 
@@ -225,7 +231,8 @@ coordinates, and semantic boundary rules.
 - Do not allow React Flow's stale `allNodes` array to overwrite the event
   payload for the dragged card.
 - Do not reintroduce route-local layout persistence on active drag frames; the
-  settled gesture is the durability boundary.
+  settled drag-stop gesture is the durability boundary.
+- Do not let the settled viewport observer duplicate a drag-stop layout write.
 - Do not let protected draft bootstrap or reload overwrite a workspace layout
   that already contains local card positions.
 - Do not re-enable drag gestures outside `CanvasViewport` permission policy.
