@@ -42,15 +42,19 @@ describe('dbt external-authority Canvas projection architecture', () => {
     );
   });
 
-  it('keeps external dbt authority read-only while preserving its execution adapter', () => {
+  it('keeps external dbt authority read-only without a parallel Canvas controller contract', () => {
     const authoritySurface = readAppSource('useDbtProjectFilesAuthoritySurface.tsx');
-    const controller = readAppSource('useDbtProjectFileCanvasController.ts');
+    const authorityController = readAppSource('useDbtProjectFilesAuthorityController.ts');
     const execution = readAppSource('useDbtProjectFileExecution.ts');
 
-    expect(authoritySurface).toContain('canEditCanvas: false');
     expect(authoritySurface).toContain('canEditEdges: false');
-    expect(controller).toContain('useDbtProjectFileExecution');
-    expect(controller).toContain('unsupportedSemanticMutation');
+    expect(authoritySurface).not.toContain('canEditCanvas');
+    expect(authoritySurface).not.toContain('canDeleteActiveCanvas');
+    expect(authorityController).toContain('useDbtProjectFileExecution');
+    expect(authorityController).not.toContain("unsupportedSemanticMutation('Connect nodes')");
+    expect(authorityController).not.toContain("unsupportedSemanticMutation('Reconnect nodes')");
+    expect(authorityController).not.toContain("unsupportedSemanticMutation('Create node')");
+    expect(existsSync(appPath('useDbtProjectFileCanvasController.ts'))).toBe(false);
     expect(execution).toContain('useCanvasExecutionActions');
     expect(execution).not.toContain('saveFileContent');
     expect(execution).not.toContain('WorkspaceGraphAuthoringDraft');
