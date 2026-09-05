@@ -114,15 +114,6 @@ describe('canvasFirstAuthoringLiveProof', () => {
       persistedTransformationInput(),
       { kind: 'layout_persisted', layout: persistedLayout, nextQuery: 'GetWorkspaceGraphDraft' },
     ],
-    [
-      'uses dbt first-node defaults',
-      baseInput({
-        activeCanvas: dbtCanvas,
-        createdCanvas: savedCanvas(dbtCanvas),
-        createdNode: savedNode(dbtNode),
-      }),
-      { kind: 'node_created', canvas: dbtCanvas, node: dbtNode },
-    ],
   ])('%s', (_name, input, expected) => {
     expect(deriveCanvasFirstAuthoringLiveProof(input)).toMatchObject(expected);
   });
@@ -172,6 +163,15 @@ describe('canvasFirstAuthoringLiveProof', () => {
         createdNode: savedNode(dbtNode),
       }),
       { reason: 'first_node_mismatch', expectedNode: transformationNode },
+    ],
+    [
+      'legacy dbt canvas kind is unsupported',
+      baseInput({
+        activeCanvas: dbtCanvas,
+        createdCanvas: savedCanvas(dbtCanvas),
+        createdNode: savedNode(dbtNode),
+      }),
+      { reason: 'unsupported_canvas_kind', blockedCommand: 'CreateCanvasNode' },
     ],
     [
       'canvas kind is unsupported',
