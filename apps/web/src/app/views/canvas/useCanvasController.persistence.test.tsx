@@ -210,7 +210,7 @@ describe('useCanvasController persistence guards', () => {
     );
   });
 
-  it('persists settled live drag positions from the viewport model', async () => {
+  it('leaves an observed drag completion to the drag-stop persistence boundary', async () => {
     const setCanvasNodePositions = vi.fn();
     const args: LayoutPersistenceArgs = {
       hasHydrated: true,
@@ -235,10 +235,7 @@ describe('useCanvasController persistence guards', () => {
       ],
     });
 
-    expect(setCanvasNodePositions).toHaveBeenCalledWith('tenant-a::project-a::dev', {
-      node_1: { x: 225, y: 210 },
-      node_2: { x: 100, y: 0 },
-    });
+    expect(setCanvasNodePositions).not.toHaveBeenCalled();
     mounted.cleanup();
   });
 
