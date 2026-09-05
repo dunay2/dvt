@@ -10,10 +10,8 @@ const NODE_CHANGE_HANDLERS_SOURCE = readArchitectureSiblingSource(
 describe('useCanvasNodeChangeHandlers architecture', () => {
   it('delegates node lifecycle semantics to the graph lifecycle component', () => {
     expect(NODE_CHANGE_HANDLERS_SOURCE).toContain('canvasGraphLifecycle.node.applyChanges');
-    expect(NODE_CHANGE_HANDLERS_SOURCE).toContain('hasLayoutPersistablePositionChange');
-    expect(NODE_CHANGE_HANDLERS_SOURCE).toContain('extractCanvasNodePositions');
-    expect(NODE_CHANGE_HANDLERS_SOURCE).toContain('onLayoutComplete');
     expect(NODE_CHANGE_HANDLERS_SOURCE).toContain('CanvasNodeChangeContracts');
+    expect(NODE_CHANGE_HANDLERS_SOURCE).not.toContain('onLayoutComplete');
     expect(NODE_CHANGE_HANDLERS_SOURCE).not.toContain('Pick<');
     expect(NODE_CHANGE_HANDLERS_SOURCE).not.toContain('applyNodeChanges(');
     expect(NODE_CHANGE_HANDLERS_SOURCE).not.toContain('removeNodeFromCanvasWorkingSet');
