@@ -44,12 +44,6 @@ const DBT_PROJECT_FILE_NODE_TYPES: NodeTypes = {
   dbtNode: DbtNodeComponent,
 };
 
-function unsupportedSemanticMutation(commandName: string): never {
-  throw new Error(
-    `${commandName} is unavailable because dbt project files are the Canvas semantic authority.`
-  );
-}
-
 function buildLayoutKey(
   workspaceLayoutKey: string,
   authorityBinding: DbtProjectFilesAuthorityBinding
@@ -488,8 +482,6 @@ export function useDbtProjectFilesAuthorityController(
         });
       },
       onShowInspector: showInspectorPanel,
-      onAutoLayout: () => unsupportedSemanticMutation('Automatic semantic layout'),
-      onToggleCostOverlay: () => unsupportedSemanticMutation('Cost overlay'),
       onToggleImpact: toggleImpactOverlay,
       onToggleColumns: toggleColumnLevelLineage,
       onGridSizeChange: setGridSize,
@@ -497,8 +489,6 @@ export function useDbtProjectFilesAuthorityController(
       onToggleGridVisible: () => setCanvasGridVisible(!canvasGridVisible),
       onGridColorChange: setCanvasGridColor,
       onToggleSnapToGrid: () => setCanvasSnapToGrid(!canvasSnapToGrid),
-      onExportProjectSnapshot: () => unsupportedSemanticMutation('Export draft snapshot'),
-      onImportProjectSnapshotFile: () => unsupportedSemanticMutation('Import draft snapshot'),
       onReloadLatestDraft: () => {
         void query.refetch();
       },
@@ -510,8 +500,6 @@ export function useDbtProjectFilesAuthorityController(
       },
       executionSelectionRecovery: executionSelectionRecovery.commands,
     },
-    canvasCommands: {
-      onSelectCanvas: () => unsupportedSemanticMutation('Select draft canvas'),
-    },
+    canvasCommands: {},
   };
 }
