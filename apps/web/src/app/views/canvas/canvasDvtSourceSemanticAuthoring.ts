@@ -1,16 +1,12 @@
-/** Owns creation and persistence of the Source relation's canonical semantic draft. */
-import { allocateDvtFieldId } from '@dvt/contracts/substrait';
-
+/** Owns persistence and normalization of an existing Source semantic draft. */
 import type { CanonicalNode } from '../../types/canonical';
 import { inspectDvtSubstraitFilter, removeDvtSubstraitFilter } from './canvasDvtSubstraitFilter';
 import {
-  createDvtSubstraitProjectionDraft,
   decodeDvtSubstraitProjectionDocument,
   encodeDvtSubstraitProjectionDocument,
   inspectDvtSubstraitProjectionDraft,
   reorderDvtSubstraitProjectionOutputs,
   resolveDvtSubstraitProjectionEntry,
-  resolveDvtSubstraitProjectionSource,
   type DvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
 import {
@@ -71,27 +67,14 @@ export function createDvtSourceSemanticDraft(
   node: CanonicalNode
 ): DvtSubstraitProjectionDraft | undefined {
   const authority = readDvtTransformAuthoringAuthority(node);
-  if (authority != null) {
-    const draft = removeDvtSubstraitFilter(
-      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
-    );
-    if (!inspectDvtSubstraitProjectionDraft(draft).ok) {
-      throw new Error('DVT Source semantic authority is not an admitted projection shape.');
-    }
-    return draft;
+  if (authority == null) return undefined;
+  const draft = removeDvtSubstraitFilter(
+    decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+  );
+  if (!inspectDvtSubstraitProjectionDraft(draft).ok) {
+    throw new Error('DVT Source semantic authority is not an admitted projection shape.');
   }
-  const source = resolveDvtSubstraitProjectionSource(node);
-  return source == null
-    ? undefined
-    : createDvtSubstraitProjectionDraft({
-        source,
-        targetNodeId: node.id,
-        outputs: source.fields.map((field) => ({
-          fieldId: allocateDvtFieldId(),
-          name: field.name,
-          sourceFieldName: field.name,
-        })),
-      });
+  return draft;
 }
 
 export function applyDvtSourceSemanticDraft(
@@ -115,8 +98,8 @@ function normalizeDvtSourceFilterAuthority(node: CanonicalNode): CanonicalNode {
 
 /**
  * Repairs the legacy Source state where a display reorder mutated the physical column declaration
- * without applying the same order to the semantic projection. The repair is intentionally narrow:
- * every output must still be a one-to-one passthrough of the exact connected-source field set.
+ * without applying the same order to an already persisted semantic projection. Sources without a
+ * semantic projection keep presentation order in metadata and do not mint one just for display.
  */
 export function reconcileDvtSourceSemanticColumnOrder(node: CanonicalNode): CanonicalNode {
   if (node.kind !== 'dvt:source' || node.role !== 'input') return node;
