@@ -158,9 +158,47 @@ redGreenCycles:
       - tools/planning-db-mcp/planningDbQueryAdapter.test.mjs
     greenTest: node --test tools/planning-db-mcp/planningDbQueryAdapter.test.mjs
 symbols:
-  - { name: ALLOWED_PLANNING_DB_QUERIES, path: tools/planning-db-mcp/planningDbQueryAdapter.mjs, dddOwner: PlanningDbQueryInvocation, cqRails: [planning:db:query], fowlerSignals: [Command Gateway], architectureGuard: node --test tools/planning-db-mcp/planningDbQueryAdapter.test.mjs, cypressCoverage: N/A, unitTests: [node --test tools/planning-db-mcp/planningDbQueryAdapter.test.mjs] }
-  - { name: buildPlanningDbQueryInvocation, path: tools/planning-db-mcp/planningDbQueryAdapter.mjs, dddOwner: PlanningDbQueryInvocation, cqRails: [planning:db:query], fowlerSignals: [Command Gateway], architectureGuard: node --test tools/planning-db-mcp/planningDbQueryAdapter.test.mjs, cypressCoverage: N/A, unitTests: [node --test tools/planning-db-mcp/planningDbQueryAdapter.test.mjs] }
-  - { name: runPlanningDbQuery, path: tools/planning-db-mcp/planningDbQueryAdapter.mjs, dddOwner: PlanningDbQueryInvocation, cqRails: [planning:db:query], fowlerSignals: [Gateway], architectureGuard: MCP Inspector planning_db_query smoke, cypressCoverage: N/A, unitTests: [node --test tools/planning-db-mcp/planningDbQueryAdapter.test.mjs] }
-  - { name: createPlanningDbMcpServer, path: tools/planning-db-mcp/server.mjs, dddOwner: PlanningDbQueryInvocation, cqRails: [planning:db:query], fowlerSignals: [Gateway], architectureGuard: MCP Inspector tools/list smoke, cypressCoverage: N/A, unitTests: [node --check tools/planning-db-mcp/server.mjs] }
-  - { name: startPlanningDbMcpServer, path: tools/planning-db-mcp/server.mjs, dddOwner: PlanningDbQueryInvocation, cqRails: [planning:db:query], fowlerSignals: [Gateway], architectureGuard: MCP Inspector tools/list smoke, cypressCoverage: N/A, unitTests: [node --check tools/planning-db-mcp/server.mjs] }
+  - &queryAdapterSymbol
+    name: ALLOWED_PLANNING_DB_QUERIES
+    path: tools/planning-db-mcp/planningDbQueryAdapter.mjs
+    dddOwner: PlanningDbQueryInvocation
+    cqRails: [planning:db:query]
+    fowlerSignals: [Command Gateway]
+    architectureGuard: node --test tools/planning-db-mcp/planningDbQueryAdapter.test.mjs
+    cypressCoverage: N/A
+    unitTests: [node --test tools/planning-db-mcp/planningDbQueryAdapter.test.mjs]
+  - { <<: *queryAdapterSymbol, name: DEFAULT_LIMIT }
+  - { <<: *queryAdapterSymbol, name: MAX_LIMIT }
+  - { <<: *queryAdapterSymbol, name: MAX_OUTPUT_BYTES }
+  - { <<: *queryAdapterSymbol, name: QUERY_TIMEOUT_MS }
+  - { <<: *queryAdapterSymbol, name: allowedQueries }
+  - { <<: *queryAdapterSymbol, name: componentIdPattern }
+  - { <<: *queryAdapterSymbol, name: execFileAsync }
+  - { <<: *queryAdapterSymbol, name: planningDbQueryScript }
+  - { <<: *queryAdapterSymbol, name: repoRoot }
+  - { <<: *queryAdapterSymbol, name: requireQuery }
+  - { <<: *queryAdapterSymbol, name: resolveComponent }
+  - { <<: *queryAdapterSymbol, name: resolveLimit }
+  - { <<: *queryAdapterSymbol, name: buildPlanningDbQueryInvocation }
+  - { <<: *queryAdapterSymbol, name: runPlanningDbQuery }
+  - { <<: *queryAdapterSymbol, name: sanitizeFailure }
+  - { <<: *queryAdapterSymbol, name: toolDir }
+  - &mcpServerSymbol
+    name: DEFAULT_PORT
+    path: tools/planning-db-mcp/server.mjs
+    dddOwner: PlanningDbQueryInvocation
+    cqRails: [planning:db:query]
+    fowlerSignals: [Gateway]
+    architectureGuard: MCP Inspector tools/list and planning_db_query smoke
+    cypressCoverage: N/A
+    unitTests: [node --test tools/planning-db-mcp/server.test.mjs]
+  - { <<: *mcpServerSymbol, name: HOST }
+  - { <<: *mcpServerSymbol, name: MCP_PATH }
+  - { <<: *mcpServerSymbol, name: hasRejectedOrigin }
+  - { <<: *mcpServerSymbol, name: inputSchema }
+  - { <<: *mcpServerSymbol, name: isMain }
+  - { <<: *mcpServerSymbol, name: localOrigins }
+  - { <<: *mcpServerSymbol, name: resolvePort }
+  - { <<: *mcpServerSymbol, name: createPlanningDbMcpServer }
+  - { <<: *mcpServerSymbol, name: startPlanningDbMcpServer }
 ```
