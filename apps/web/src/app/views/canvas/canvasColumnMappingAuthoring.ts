@@ -1,5 +1,5 @@
 /** Translates one column-mapping intent into the canonical Transform authority. */
-import { allocateDvtFieldId } from '@dvt/contracts/substrait';
+import { allocateDvtFieldId } from '@dvt/contracts';
 
 import type { CanonicalNode } from '../../types/canonical';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
