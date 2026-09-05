@@ -43,6 +43,7 @@ import { DvtTransformOutputView } from './DvtTransformOutputView';
 import { reconcileDbtModelConnectedOrigin } from './canvasDbtAuthoringModel';
 import { useCanvasColumnCommentCellRenderer } from './useCanvasColumnCommentCellRenderer';
 import { SourceNodeWorkbenchHeaderIdentity } from './SourceNodeWorkbenchHeaderIdentity';
+import { SourceOverviewPanel } from './SourceOverviewPanel';
 
 export type CanvasNodeWorkbenchPanelProps = Readonly<{
   node: CanonicalNode;
@@ -263,6 +264,8 @@ export function CanvasNodeWorkbenchPanel({
     (node.kind === 'dvt:source' &&
       draftController.draft.dvt?.kind === 'source' &&
       draftController.draft.dvt.semantic != null);
+  const approvedWarehouseSourceOverview =
+    node.kind === 'dvt:source' && node.pluginId === 'dvt.warehouse-source';
   const baseModel = buildNodePropertiesReadModel({
     node,
     nodes,
@@ -298,7 +301,14 @@ export function CanvasNodeWorkbenchPanel({
     contributedSectionIds,
     sections: unfilteredModel.sections,
   });
-  const model = { ...unfilteredModel, sections: sectionModel.sections };
+  const model = {
+    ...unfilteredModel,
+    sections: sectionModel.sections.map((section) =>
+      approvedWarehouseSourceOverview && section.id === 'general'
+        ? { ...section, rows: [] }
+        : section
+    ),
+  };
   const resolvedPrimarySectionIds = sectionModel.primarySectionIds;
   const panelIds = panels.map((panel) => panel.id);
   const resolvedActiveTab = resolveActiveNodeWorkbenchTab({ activeTab, model, panelIds });
@@ -354,13 +364,31 @@ export function CanvasNodeWorkbenchPanel({
     setActiveTab(nextTabId);
   };
 
-  if (authoring.canEditNode) {
+  if (approvedWarehouseSourceOverview) {
     sectionBeforeChildren.general = (
       <>
-        {renderAuthoringSection('general')}
+        <SourceOverviewPanel
+          node={node}
+          nodes={nodes}
+          edges={edges}
+          readModel={baseModel}
+          authoring={authoring}
+          draftController={draftController}
+        />
         {sectionBeforeChildren.general}
       </>
     );
+  }
+
+  if (authoring.canEditNode) {
+    if (!approvedWarehouseSourceOverview) {
+      sectionBeforeChildren.general = (
+        <>
+          {renderAuthoringSection('general')}
+          {sectionBeforeChildren.general}
+        </>
+      );
+    }
     for (const sectionId of ['code', 'sink'] as const) {
       if (sectionId === 'code' && canonicalSubstraitTransformAuthority) continue;
       sectionAfterChildren[sectionId] = (
