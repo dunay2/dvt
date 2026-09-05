@@ -1,8 +1,9 @@
 /** Translates one column-mapping intent into the canonical Transform authority. */
+import { allocateDvtFieldId } from '@dvt/contracts/substrait';
+
 import type { CanonicalNode } from '../../types/canonical';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import {
-  createCanvasColumnOutputId,
   hasCanvasStageDependency,
   readCanvasNodeColumns,
   resolveCanvasSessionNode,
@@ -82,10 +83,7 @@ export function applyCanvasColumnMapping(args: {
   }
 
   const nextOutput: DvtSubstraitProjectionOutput = {
-    fieldId:
-      currentOutput?.fieldId ??
-      args.target.outputId ??
-      createCanvasColumnOutputId(args.target.columnName),
+    fieldId: currentOutput?.fieldId ?? allocateDvtFieldId(),
     name: currentOutput?.name ?? args.target.columnName,
     sourceFieldName: args.source.columnName,
     dataType: currentOutput?.dataType ?? args.target.dataType ?? sourceColumn.type,
