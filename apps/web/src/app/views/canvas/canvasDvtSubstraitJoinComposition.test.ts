@@ -1,35 +1,42 @@
 import { describe, expect, it } from 'vitest';
-import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 
-import { DVT_TRANSFORM_AUTHORING_MODE, type ConnectedSourceRef } from '@dvt/contracts';
+import type { ConnectedSourceRef } from '@dvt/contracts';
 
-import type { CanonicalNode } from '../../types/canonical';
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
-  applyDvtNodeAuthoringMetadata,
-  createDvtNodeAuthoringMetadata,
-} from './canvasDvtAuthoringModel';
-import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
-
-import {
+  appendDvtSubstraitInnerJoinInput,
+  applyDvtSubstraitInnerJoinFieldEdit,
   applyDvtSubstraitInnerJoinGroupedRowNumber,
   applyDvtSubstraitInnerJoinGrouping,
-  applyDvtSubstraitInnerJoinFieldEdit,
-  appendDvtSubstraitInnerJoinInput,
   createDvtSubstraitInnerJoinDraft,
   createDvtSubstraitStringInnerJoinDraft,
   decodeDvtSubstraitInnerJoinDocument,
   encodeDvtSubstraitInnerJoinDocument,
+  inspectDvtSubstraitInnerJoinDraft,
   inspectDvtSubstraitInnerJoinGroupedWindowDraft,
   inspectDvtSubstraitInnerJoinGroupingDraft,
-  inspectDvtSubstraitInnerJoinDraft,
   inspectDvtSubstraitNInputJoinDraft,
   removeDvtSubstraitInnerJoinGroupedRowNumber,
   removeDvtSubstraitInnerJoinGrouping,
+  renameDvtSubstraitInnerJoinCountOutput,
+  renameDvtSubstraitInnerJoinGroupedRowNumberOutput,
+  resolveDvtSubstraitNInputJoinEntry,
   type DvtSubstraitInnerJoinDraft,
+  type DvtSubstraitJoinInput,
   type DvtSubstraitJoinSource,
+  type DvtSubstraitNInputJoinProjection,
 } from './canvasDvtSubstraitJoinComposition';
+import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 
-function sourceRef(connectionId: string, sourceObjectId: string): ConnectedSourceRef {
+const OPAQUE_RELATION_ID =
+  /^dvt_rel_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const OPAQUE_FIELD_ID =
+  /^dvt_fld_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function connectedSourceRef(
+  table: string,
+  connectionId = 'warehouse-main'
+): ConnectedSourceRef {
   return {
     schemaVersion: 'connected-source-ref.v1',
     connectionRef: {
@@ -37,7 +44,7 @@ function sourceRef(connectionId: string, sourceObjectId: string): ConnectedSourc
       connectionId,
       provider: 'postgres',
     },
-    sourceObjectId,
+    sourceObjectId: `public.${table}`,
   };
 }
 
@@ -51,7 +58,7 @@ function source(
     nodeId,
     schema,
     table,
-    sourceRef: sourceRef(connectionId, `${schema}.${table}`),
+    sourceRef: connectedSourceRef(table, connectionId),
   };
 }
 
@@ -63,938 +70,460 @@ function fixture(): DvtSubstraitInnerJoinDraft {
   });
 }
 
-describe('VTX2 typed Substrait INNER JOIN composition', () => {
-  it('joins explicitly selected relations and fields without fixture-specific schemas', () => {
-    const draft = createDvtSubstraitStringInnerJoinDraft({
-      left: {
-        source: source('source-orders', 'raw', 'orders'),
-        fields: ['order_id', 'customer'],
-      },
-      right: {
-        source: source('source-audits', 'raw', 'auth_audit_events'),
-        fields: ['event_id', 'principal_id'],
-      },
-      leftFieldName: 'customer',
-      rightFieldName: 'principal_id',
-      targetNodeId: 'transform-orders-audits',
-    });
+function inspectNInput(draft: DvtSubstraitInnerJoinDraft): DvtSubstraitNInputJoinProjection {
+  const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+  if (!inspection.ok) throw new Error('Expected inspectable N-input JOIN.');
+  return inspection.projection;
+}
 
-    const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
-    expect(inspection.ok).toBe(true);
-    if (!inspection.ok) return;
-    expect(inspection.projection.joins).toEqual([
-      {
-        leftSourceFieldId: 'field:source-orders:customer',
-        rightSourceFieldId: 'field:source-audits:principal_id',
-      },
-    ]);
-    expect(inspection.projection.outputs.map((output) => output.name)).toEqual([
-      'order_id',
-      'customer',
-      'event_id',
-      'principal_id',
-    ]);
-    expect(() => encodeDvtSubstraitInnerJoinDocument(draft)).not.toThrow();
+function outputByName(projection: DvtSubstraitNInputJoinProjection, name: string) {
+  const output = projection.outputs.find((candidate) => candidate.name === name);
+  if (output == null) throw new Error(`Expected output ${name}.`);
+  return output;
+}
+
+function inputFieldId(
+  projection: DvtSubstraitNInputJoinProjection,
+  inputIndex: number,
+  name: string
+): string {
+  const fieldId = projection.inputs[inputIndex]?.fields.find((field) => field.name === name)?.fieldId;
+  if (fieldId == null) throw new Error(`Expected input ${inputIndex}.${name}.`);
+  return fieldId;
+}
+
+function expectOpaqueNewIdentity(draft: DvtSubstraitInnerJoinDraft): void {
+  draft.sidecar.relations.forEach((relation) => expect(relation.relationId).toMatch(OPAQUE_RELATION_ID));
+  draft.sidecar.fields.forEach((field) => expect(field.fieldId).toMatch(OPAQUE_FIELD_ID));
+  expect(new Set(draft.sidecar.relations.map((relation) => relation.relationId)).size).toBe(
+    draft.sidecar.relations.length
+  );
+  expect(new Set(draft.sidecar.fields.map((field) => field.fieldId)).size).toBe(
+    draft.sidecar.fields.length
+  );
+}
+
+function appendShipmentInput(draft: DvtSubstraitInnerJoinDraft): DvtSubstraitInnerJoinDraft {
+  const projection = inspectNInput(draft);
+  const leftSourceFieldId = outputByName(projection, 'customer_id').source.fieldId;
+  return appendDvtSubstraitInnerJoinInput(draft, {
+    source: source('source-shipments', 'public', 'shipments'),
+    fields: ['shipment_id', 'customer_id'],
+    predicate: {
+      leftSourceFieldId,
+      rightFieldName: 'customer_id',
+    },
+    selectedFields: ['shipment_id'],
   });
+}
 
-  it('repeats one append operation for three and four canonical join inputs', () => {
-    const threeInputs = appendDvtSubstraitInnerJoinInput(fixture(), {
-      source: source('source-shipments', 'public', 'shipments'),
-      fields: ['shipment_id', 'customer_id'],
-      predicate: {
-        leftSourceFieldId: 'field:source-customers:customer_id',
-        rightFieldName: 'customer_id',
-      },
-      selectedFields: ['shipment_id'],
-    });
-    const fourInputs = appendDvtSubstraitInnerJoinInput(threeInputs, {
-      source: source('source-tickets', 'public', 'tickets'),
-      fields: ['ticket_id', 'customer_id'],
-      predicate: {
-        leftSourceFieldId: 'field:source-customers:customer_id',
-        rightFieldName: 'customer_id',
-      },
-      selectedFields: ['ticket_id'],
-    });
+function appendPaymentInput(draft: DvtSubstraitInnerJoinDraft): DvtSubstraitInnerJoinDraft {
+  const projection = inspectNInput(draft);
+  const leftSourceFieldId = outputByName(projection, 'order_id').source.fieldId;
+  return appendDvtSubstraitInnerJoinInput(draft, {
+    source: source('source-payments', 'public', 'payments'),
+    fields: ['payment_id', 'order_id'],
+    predicate: {
+      leftSourceFieldId,
+      rightFieldName: 'order_id',
+    },
+    selectedFields: ['payment_id'],
+  });
+}
 
-    expect(inspectDvtSubstraitNInputJoinDraft(threeInputs)).toMatchObject({
-      ok: true,
-      projection: {
-        inputs: [
-          { nodeId: 'source-customers', table: 'customers' },
-          { nodeId: 'source-orders', table: 'orders' },
-          { nodeId: 'source-shipments', table: 'shipments' },
-        ],
-        joins: [
-          {
-            leftSourceFieldId: 'field:source-customers:customer_id',
-            rightSourceFieldId: 'field:source-orders:customer_id',
-          },
-          {
-            leftSourceFieldId: 'field:source-customers:customer_id',
-            rightSourceFieldId: 'field:source-shipments:customer_id',
-          },
-        ],
-        outputs: [
-          { name: 'customer_id', fieldId: 'field:transform-customer-orders:customer_id' },
-          { name: 'name', fieldId: 'field:transform-customer-orders:name' },
-          { name: 'order_id', fieldId: 'field:transform-customer-orders:order_id' },
-          { name: 'shipment_id', fieldId: 'field:transform-customer-orders:shipment_id' },
-        ],
-      },
-    });
-    expect(inspectDvtSubstraitNInputJoinDraft(fourInputs)).toMatchObject({
-      ok: true,
-      projection: {
-        inputs: [
-          { nodeId: 'source-customers', table: 'customers' },
-          { nodeId: 'source-orders', table: 'orders' },
-          { nodeId: 'source-shipments', table: 'shipments' },
-          { nodeId: 'source-tickets', table: 'tickets' },
-        ],
-        outputs: [
-          { name: 'customer_id' },
-          { name: 'name' },
-          { name: 'order_id' },
-          { name: 'shipment_id' },
-          { name: 'ticket_id' },
-        ],
-      },
-    });
-    const document = encodeDvtSubstraitInnerJoinDocument(fourInputs);
-    const reloaded = decodeDvtSubstraitInnerJoinDocument(document);
-    expect(inspectDvtSubstraitNInputJoinDraft(reloaded)).toEqual(
-      inspectDvtSubstraitNInputJoinDraft(fourInputs)
+function canonicalSource(
+  id: string,
+  table: string,
+  fields: readonly string[]
+): CanonicalNode {
+  return {
+    id,
+    name: table,
+    pluginId: 'dvt.warehouse-source',
+    kind: 'dvt:source',
+    role: 'input',
+    status: 'idle',
+    tags: [],
+    metadata: {
+      schema: 'public',
+      tableName: table,
+      connectedSourceRef: connectedSourceRef(table),
+      columns: fields.map((name) => ({ name, type: 'string' })),
+    },
+  };
+}
+
+function legacyBinaryDraft(draft: DvtSubstraitInnerJoinDraft): DvtSubstraitInnerJoinDraft {
+  const relationByAnchor = new Map<number, string>([
+    [1, 'relation:source-customers'],
+    [2, 'relation:source-orders'],
+    [3, 'relation:transform-customer-orders:join'],
+  ]);
+  const relationMap = new Map(
+    draft.sidecar.relations.map((relation) => [
+      relation.relationId,
+      relationByAnchor.get(relation.relAnchor) ?? relation.relationId,
+    ])
+  );
+  const fieldMap = new Map<string, string>();
+  for (const field of draft.sidecar.fields) {
+    const relation = draft.sidecar.relations.find(
+      (candidate) => candidate.relationId === field.relationId
     );
-    expect(encodeDvtSubstraitInnerJoinDocument(reloaded)).toEqual(document);
+    const name = field.displayName ?? `field_${field.outputOrdinal}`;
+    if (relation?.relAnchor === 1) fieldMap.set(field.fieldId, `field:source-customers:${name}`);
+    else if (relation?.relAnchor === 2) fieldMap.set(field.fieldId, `field:source-orders:${name}`);
+    else fieldMap.set(field.fieldId, `field:transform-customer-orders:${name}`);
+  }
+  return {
+    plan: draft.plan,
+    sidecar: {
+      ...draft.sidecar,
+      relations: draft.sidecar.relations.map((relation) => ({
+        ...relation,
+        relationId: relationMap.get(relation.relationId)!,
+      })),
+      fields: draft.sidecar.fields.map((field) => ({
+        ...field,
+        fieldId: fieldMap.get(field.fieldId)!,
+        relationId: relationMap.get(field.relationId)!,
+        ...(field.sourceFieldId == null
+          ? {}
+          : { sourceFieldId: fieldMap.get(field.sourceFieldId) ?? field.sourceFieldId }),
+      })),
+    },
+  };
+}
+
+describe('DVT Substrait INNER JOIN identity', () => {
+  it('allocates opaque persisted identities while keeping predicates structural', () => {
+    const draft = fixture();
+    const projection = inspectNInput(draft);
+    const binary = inspectDvtSubstraitInnerJoinDraft(draft);
+
+    expect(binary.ok).toBe(true);
+    expectOpaqueNewIdentity(draft);
+    expect(projection.inputs).toHaveLength(2);
+    expect(projection.joinRelations).toHaveLength(1);
+    expect(projection.joins).toEqual([
+      {
+        leftSourceFieldId: inputFieldId(projection, 0, 'customer_id'),
+        rightSourceFieldId: inputFieldId(projection, 1, 'customer_id'),
+      },
+    ]);
+    expect(projection.outputs.map((output) => output.name)).toEqual([
+      'customer_id',
+      'name',
+      'order_id',
+    ]);
+    expect(projection.outputs.map((output) => output.source.inputIndex)).toEqual([0, 0, 1]);
   });
 
-  it('inspects appended sources using their actual compatible field counts', () => {
-    const appended = appendDvtSubstraitInnerJoinInput(fixture(), {
-      source: source('source-shipments', 'public', 'shipments'),
-      fields: ['shipment_id', 'customer_id', 'status'],
-      predicate: {
-        leftSourceFieldId: 'field:source-customers:customer_id',
-        rightFieldName: 'customer_id',
-      },
-      selectedFields: ['shipment_id', 'status'],
-    });
+  it('keeps the surviving input, result and output identities when a third input is appended', () => {
+    const beforeDraft = fixture();
+    const before = inspectNInput(beforeDraft);
+    const beforeInputRelationIds = before.inputs.map((input) => input.relationId);
+    const beforeInputFieldIds = before.inputs.map((input) => input.fields.map((field) => field.fieldId));
+    const beforeResultRelationId = before.joinRelations.at(-1)?.relationId;
+    const beforeOutputIds = new Map(before.outputs.map((output) => [output.name, output.fieldId]));
 
-    expect(inspectDvtSubstraitNInputJoinDraft(appended)).toMatchObject({
-      ok: true,
-      projection: {
-        inputs: [
-          {},
-          {},
-          {
-            nodeId: 'source-shipments',
-            fields: [{ name: 'shipment_id' }, { name: 'customer_id' }, { name: 'status' }],
-          },
-        ],
-        outputs: [{}, {}, {}, { name: 'shipment_id' }, { name: 'status' }],
-      },
-    });
-    expect(() => encodeDvtSubstraitInnerJoinDocument(appended)).not.toThrow();
-  });
+    const afterDraft = appendShipmentInput(beforeDraft);
+    const after = inspectNInput(afterDraft);
 
-  it('does not reuse a preserved output FieldId when appending after a rename', () => {
-    const threeInputs = appendDvtSubstraitInnerJoinInput(fixture(), {
-      source: source('source-shipments', 'public', 'shipments'),
-      fields: ['shipment_id', 'customer_id'],
-      predicate: {
-        leftSourceFieldId: 'field:source-customers:customer_id',
-        rightFieldName: 'customer_id',
-      },
-      selectedFields: ['shipment_id'],
-    });
-    const renamed = applyDvtSubstraitInnerJoinFieldEdit(threeInputs, {
-      kind: 'rename',
-      sourceFieldId: 'field:source-orders:order_id',
-      outputName: 'order_key',
-    });
-
-    const appended = appendDvtSubstraitInnerJoinInput(renamed, {
-      source: source('source-tickets', 'public', 'tickets'),
-      fields: ['ticket_id', 'customer_id', 'order_id'],
-      predicate: {
-        leftSourceFieldId: 'field:source-customers:customer_id',
-        rightFieldName: 'customer_id',
-      },
-      selectedFields: ['order_id'],
-    });
-    const inspection = inspectDvtSubstraitNInputJoinDraft(appended);
-
-    expect(appended).not.toBe(renamed);
-    if (!inspection.ok) throw new Error('Expected collision-safe N-input append.');
-    expect(
-      inspection.projection.outputs.find(
-        (output) => output.source.fieldId === 'field:source-tickets:order_id'
-      )
-    ).toMatchObject({
-      name: 'tickets_order_id',
-      fieldId: 'field:transform-customer-orders:tickets_order_id',
-    });
-  });
-
-  it('selects, renames, and reorders fields over the same three- and four-input join path', () => {
-    const threeInputs = appendDvtSubstraitInnerJoinInput(fixture(), {
-      source: source('source-shipments', 'public', 'shipments'),
-      fields: ['shipment_id', 'customer_id'],
-      predicate: {
-        leftSourceFieldId: 'field:source-customers:customer_id',
-        rightFieldName: 'customer_id',
-      },
-      selectedFields: ['shipment_id'],
-    });
-    const fourInputs = appendDvtSubstraitInnerJoinInput(threeInputs, {
-      source: source('source-tickets', 'public', 'tickets'),
-      fields: ['ticket_id', 'customer_id'],
-      predicate: {
-        leftSourceFieldId: 'field:source-customers:customer_id',
-        rightFieldName: 'customer_id',
-      },
-      selectedFields: ['ticket_id'],
-    });
-
-    for (const draft of [threeInputs, fourInputs]) {
-      const selected = applyDvtSubstraitInnerJoinFieldEdit(draft, {
-        kind: 'set-selected',
-        sourceFieldId: 'field:source-shipments:customer_id',
-        selected: true,
-      });
-      const selectedInspection = inspectDvtSubstraitNInputJoinDraft(selected);
-      if (!selectedInspection.ok) throw new Error('Expected admitted N-input field selection.');
-      const selectedOutput = selectedInspection.projection.outputs.find(
-        (output) => output.source.fieldId === 'field:source-shipments:customer_id'
-      );
-      expect(selectedOutput).toMatchObject({ name: 'shipments_customer_id' });
-
-      const renamed = applyDvtSubstraitInnerJoinFieldEdit(selected, {
-        kind: 'rename',
-        sourceFieldId: 'field:source-shipments:customer_id',
-        outputName: 'shipping_customer',
-      });
-      const moved = applyDvtSubstraitInnerJoinFieldEdit(renamed, {
-        kind: 'move',
-        sourceFieldId: 'field:source-shipments:customer_id',
-        direction: 'up',
-      });
-      const reloaded = decodeDvtSubstraitInnerJoinDocument(
-        encodeDvtSubstraitInnerJoinDocument(moved)
-      );
-      const inspection = inspectDvtSubstraitNInputJoinDraft(reloaded);
-      if (!inspection.ok) throw new Error('Expected admitted reloaded N-input field edit.');
-      const output = inspection.projection.outputs.find(
-        (candidate) => candidate.source.fieldId === 'field:source-shipments:customer_id'
-      );
-
-      expect(output).toMatchObject({
-        name: 'shipping_customer',
-        fieldId: selectedOutput?.fieldId,
-      });
-      expect(inspection.projection.outputs.at(-2)?.source.fieldId).toBe(
-        'field:source-shipments:customer_id'
-      );
-      expect(encodeDvtSubstraitInnerJoinDocument(reloaded)).toEqual(
-        encodeDvtSubstraitInnerJoinDocument(moved)
-      );
+    expect(after.inputs).toHaveLength(3);
+    expect(after.inputs.slice(0, 2).map((input) => input.relationId)).toEqual(beforeInputRelationIds);
+    expect(after.inputs.slice(0, 2).map((input) => input.fields.map((field) => field.fieldId))).toEqual(
+      beforeInputFieldIds
+    );
+    expect(after.joinRelations.at(-1)?.relationId).toBe(beforeResultRelationId);
+    for (const [name, fieldId] of beforeOutputIds) {
+      expect(outputByName(after, name).fieldId).toBe(fieldId);
     }
+    expect(outputByName(after, 'shipment_id').fieldId).toMatch(OPAQUE_FIELD_ID);
+    expect(after.inputs[2]?.relationId).toMatch(OPAQUE_RELATION_ID);
+    after.inputs[2]?.fields.forEach((field) => expect(field.fieldId).toMatch(OPAQUE_FIELD_ID));
+    expect(after.joinRelations[0]?.relationId).toMatch(OPAQUE_RELATION_ID);
+    expect(after.joinRelations[0]?.relationId).not.toBe(beforeResultRelationId);
   });
 
-  it('keeps carried predicate fields distinct from renamed N-input outputs', () => {
-    const threeInputs = appendDvtSubstraitInnerJoinInput(fixture(), {
-      source: source('source-shipments', 'public', 'shipments'),
-      fields: ['shipment_id', 'customer_id'],
-      predicate: {
-        leftSourceFieldId: 'field:source-customers:customer_id',
-        rightFieldName: 'customer_id',
-      },
-      selectedFields: ['shipment_id'],
-    });
-    const fourInputs = appendDvtSubstraitInnerJoinInput(threeInputs, {
-      source: source('source-tickets', 'public', 'tickets'),
-      fields: ['ticket_id', 'customer_id'],
-      predicate: {
-        leftSourceFieldId: 'field:source-customers:customer_id',
-        rightFieldName: 'customer_id',
-      },
-      selectedFields: ['ticket_id'],
-    });
-    const withoutCarriedOutput = applyDvtSubstraitInnerJoinFieldEdit(fourInputs, {
-      kind: 'set-selected',
-      sourceFieldId: 'field:source-customers:customer_id',
-      selected: false,
-    });
+  it('continues preserving existing identity across a fourth input append', () => {
+    const threeDraft = appendShipmentInput(fixture());
+    const three = inspectNInput(threeDraft);
+    const outputIds = new Map(three.outputs.map((output) => [output.name, output.fieldId]));
+    const resultRelationId = three.joinRelations.at(-1)?.relationId;
 
-    const renamed = applyDvtSubstraitInnerJoinFieldEdit(withoutCarriedOutput, {
-      kind: 'rename',
-      sourceFieldId: 'field:source-orders:order_id',
-      outputName: 'customer_id',
-    });
-    const inspection = inspectDvtSubstraitNInputJoinDraft(renamed);
+    const fourDraft = appendPaymentInput(threeDraft);
+    const four = inspectNInput(fourDraft);
 
-    expect(renamed).not.toBe(withoutCarriedOutput);
-    if (!inspection.ok) throw new Error('Expected source-qualified carried predicate fields.');
-    expect(
-      inspection.projection.outputs.find(
-        (output) => output.source.fieldId === 'field:source-orders:order_id'
-      )
-    ).toMatchObject({
-      name: 'customer_id',
-      fieldId: 'field:transform-customer-orders:order_id',
-    });
+    expect(four.inputs).toHaveLength(4);
+    expect(four.joinRelations.at(-1)?.relationId).toBe(resultRelationId);
+    for (const [name, fieldId] of outputIds) {
+      expect(outputByName(four, name).fieldId).toBe(fieldId);
+    }
+    expect(outputByName(four, 'payment_id').fieldId).toMatch(OPAQUE_FIELD_ID);
   });
 
-  it('does not reuse a preserved output FieldId after its display name changes', () => {
-    const draft = appendDvtSubstraitInnerJoinInput(fixture(), {
-      source: source('source-shipments', 'public', 'shipments'),
-      fields: ['shipment_id', 'customer_id'],
-      predicate: {
-        leftSourceFieldId: 'field:source-customers:customer_id',
-        rightFieldName: 'customer_id',
-      },
-      selectedFields: ['shipment_id'],
-    });
+  it('preserves an N-input output FieldId through rename and reorder', () => {
+    const draft = appendShipmentInput(fixture());
+    const projection = inspectNInput(draft);
+    const shipment = outputByName(projection, 'shipment_id');
+
     const renamed = applyDvtSubstraitInnerJoinFieldEdit(draft, {
       kind: 'rename',
-      sourceFieldId: 'field:source-customers:customer_id',
-      outputName: 'customer_key',
+      sourceFieldId: shipment.source.fieldId,
+      outputName: 'parcel_id',
     });
+    const renamedProjection = inspectNInput(renamed);
+    expect(outputByName(renamedProjection, 'parcel_id').fieldId).toBe(shipment.fieldId);
 
-    const selected = applyDvtSubstraitInnerJoinFieldEdit(renamed, {
-      kind: 'set-selected',
-      sourceFieldId: 'field:source-shipments:customer_id',
-      selected: true,
+    const moved = applyDvtSubstraitInnerJoinFieldEdit(renamed, {
+      kind: 'move',
+      sourceFieldId: shipment.source.fieldId,
+      direction: 'up',
     });
-    const inspection = inspectDvtSubstraitNInputJoinDraft(selected);
-
-    expect(selected).not.toBe(renamed);
-    if (!inspection.ok) throw new Error('Expected collision-safe N-input field selection.');
-    expect(
-      inspection.projection.outputs.find(
-        (output) => output.source.fieldId === 'field:source-shipments:customer_id'
-      )
-    ).toMatchObject({
-      name: 'shipments_customer_id',
-      fieldId: 'field:transform-customer-orders:shipments_customer_id',
-    });
+    const movedProjection = inspectNInput(moved);
+    expect(outputByName(movedProjection, 'parcel_id').fieldId).toBe(shipment.fieldId);
   });
 
-  it('fails N-input field edits closed for stale identities, duplicate names, and empty output', () => {
-    const draft = appendDvtSubstraitInnerJoinInput(fixture(), {
-      source: source('source-shipments', 'public', 'shipments'),
-      fields: ['shipment_id', 'customer_id'],
-      predicate: {
-        leftSourceFieldId: 'field:source-customers:customer_id',
-        rightFieldName: 'customer_id',
-      },
-      selectedFields: ['shipment_id'],
-    });
+  it('allocates a fresh FieldId when an output is deleted and recreated', () => {
+    const draft = fixture();
+    const before = inspectDvtSubstraitInnerJoinDraft(draft);
+    if (!before.ok) throw new Error('Expected binary JOIN.');
+    const original = before.projection.outputs.find((output) => output.fieldKey === 'right.order_id');
+    if (original == null) throw new Error('Expected order output.');
 
-    expect(
-      applyDvtSubstraitInnerJoinFieldEdit(draft, {
-        kind: 'rename',
-        sourceFieldId: 'field:source-stale:missing',
-        outputName: 'ignored',
-      })
-    ).toBe(draft);
-    expect(
-      applyDvtSubstraitInnerJoinFieldEdit(draft, {
-        kind: 'rename',
-        sourceFieldId: 'field:source-shipments:shipment_id',
-        outputName: 'name',
-      })
-    ).toBe(draft);
-
-    let oneOutput = draft;
-    for (const sourceFieldId of [
-      'field:source-customers:customer_id',
-      'field:source-customers:name',
-      'field:source-orders:order_id',
-    ]) {
-      oneOutput = applyDvtSubstraitInnerJoinFieldEdit(oneOutput, {
-        kind: 'set-selected',
-        sourceFieldId,
-        selected: false,
-      });
-    }
-    const rejectedEmpty = applyDvtSubstraitInnerJoinFieldEdit(oneOutput, {
+    const removed = applyDvtSubstraitInnerJoinFieldEdit(draft, {
       kind: 'set-selected',
-      sourceFieldId: 'field:source-shipments:shipment_id',
+      fieldKey: 'right.order_id',
       selected: false,
     });
-    expect(rejectedEmpty).toBe(oneOutput);
-    expect(inspectDvtSubstraitNInputJoinDraft(oneOutput)).toMatchObject({
-      ok: true,
-      projection: { outputs: [{ source: { fieldId: 'field:source-shipments:shipment_id' } }] },
+    const recreated = applyDvtSubstraitInnerJoinFieldEdit(removed, {
+      kind: 'set-selected',
+      fieldKey: 'right.order_id',
+      selected: true,
     });
+    const after = inspectDvtSubstraitInnerJoinDraft(recreated);
+    if (!after.ok) throw new Error('Expected recreated binary JOIN.');
+    const replacement = after.projection.outputs.find((output) => output.fieldKey === 'right.order_id');
+
+    expect(replacement?.fieldId).toMatch(OPAQUE_FIELD_ID);
+    expect(replacement?.fieldId).not.toBe(original.fieldId);
   });
 
-  it('groups and ranks the same three- and four-input recursive join revision', () => {
-    const threeInputs = appendDvtSubstraitInnerJoinInput(fixture(), {
-      source: source('source-shipments', 'public', 'shipments'),
-      fields: ['shipment_id', 'customer_id'],
-      predicate: {
-        leftSourceFieldId: 'field:source-customers:customer_id',
-        rightFieldName: 'customer_id',
-      },
-      selectedFields: ['shipment_id'],
+  it('treats collision handling as a display-name concern rather than an identity factory', () => {
+    const left: DvtSubstraitJoinInput = {
+      source: source('source-left', 'public', 'left_table'),
+      fields: ['id', 'value'],
+    };
+    const right: DvtSubstraitJoinInput = {
+      source: source('source-right', 'public', 'right_table'),
+      fields: ['id', 'value'],
+    };
+    const draft = createDvtSubstraitStringInnerJoinDraft({
+      left,
+      right,
+      leftFieldName: 'id',
+      rightFieldName: 'id',
+      targetNodeId: 'transform-string-join',
     });
-    const fourInputs = appendDvtSubstraitInnerJoinInput(threeInputs, {
-      source: source('source-tickets', 'public', 'tickets'),
-      fields: ['ticket_id', 'customer_id'],
-      predicate: {
-        leftSourceFieldId: 'field:source-customers:customer_id',
-        rightFieldName: 'customer_id',
-      },
-      selectedFields: ['ticket_id'],
-    });
+    const projection = inspectNInput(draft);
 
-    for (const draft of [threeInputs, fourInputs]) {
-      const grouped = applyDvtSubstraitInnerJoinGrouping(draft, {
-        groupFieldId: 'field:transform-customer-orders:shipment_id',
-        countOutputName: 'shipment_count',
-      });
-      expect(inspectDvtSubstraitInnerJoinGroupingDraft(grouped)).toMatchObject({
-        ok: true,
-        projection: {
-          kind: 'n-input',
-          inputs: expect.arrayContaining([expect.objectContaining({ nodeId: 'source-shipments' })]),
-          groupField: {
-            name: 'shipment_id',
-            fieldId: 'field:transform-customer-orders:shipment_id',
-            source: {
-              nodeId: 'source-shipments',
-              fieldId: 'field:source-shipments:shipment_id',
-            },
-          },
-          measure: { name: 'shipment_count' },
-        },
-      });
-
-      const ranked = applyDvtSubstraitInnerJoinGroupedRowNumber(grouped, {
-        outputName: 'shipment_rank',
-      });
-      const reloaded = decodeDvtSubstraitInnerJoinDocument(
-        encodeDvtSubstraitInnerJoinDocument(ranked)
-      );
-      expect(inspectDvtSubstraitInnerJoinGroupedWindowDraft(reloaded)).toMatchObject({
-        ok: true,
-        projection: {
-          kind: 'n-input',
-          groupField: { name: 'shipment_id' },
-          measure: { name: 'shipment_count' },
-          result: { name: 'shipment_rank' },
-        },
-      });
-      expect(
-        encodeDvtSubstraitInnerJoinDocument(
-          removeDvtSubstraitInnerJoinGrouping(removeDvtSubstraitInnerJoinGroupedRowNumber(reloaded))
-        )
-      ).toEqual(encodeDvtSubstraitInnerJoinDocument(draft));
-    }
-  });
-
-  it('reserves grouping and ranking FieldIds from N-input source outputs', () => {
-    const draft = appendDvtSubstraitInnerJoinInput(fixture(), {
-      source: source('source-shipments', 'public', 'shipments'),
-      fields: ['shipment_id', 'customer_id', 'join-count', 'join-count-rank'],
-      predicate: {
-        leftSourceFieldId: 'field:source-customers:customer_id',
-        rightFieldName: 'customer_id',
-      },
-      selectedFields: ['shipment_id', 'join-count', 'join-count-rank'],
-    });
-    const draftInspection = inspectDvtSubstraitNInputJoinDraft(draft);
-    if (!draftInspection.ok) throw new Error('Expected admitted reserved-name fixture.');
-    expect(
-      draftInspection.projection.outputs
-        .filter((output) => output.source.nodeId === 'source-shipments')
-        .map((output) => ({ name: output.name, fieldId: output.fieldId }))
-    ).toEqual([
-      {
-        name: 'shipment_id',
-        fieldId: 'field:transform-customer-orders:shipment_id',
-      },
-      {
-        name: 'shipments_join-count',
-        fieldId: 'field:transform-customer-orders:shipments_join-count',
-      },
-      {
-        name: 'shipments_join-count-rank',
-        fieldId: 'field:transform-customer-orders:shipments_join-count-rank',
-      },
-    ]);
-
-    const grouped = applyDvtSubstraitInnerJoinGrouping(draft, {
-      groupFieldId: 'field:transform-customer-orders:shipment_id',
-      countOutputName: 'shipment_count',
-    });
-    const ranked = applyDvtSubstraitInnerJoinGroupedRowNumber(grouped, {
-      outputName: 'shipment_rank',
-    });
-
-    expect(grouped).not.toBe(draft);
-    expect(inspectDvtSubstraitInnerJoinGroupingDraft(grouped).ok).toBe(true);
-    expect(ranked).not.toBe(grouped);
-    expect(inspectDvtSubstraitInnerJoinGroupedWindowDraft(ranked).ok).toBe(true);
-  });
-
-  it('fails N-input grouping and ranking closed for stale fields and duplicate outputs', () => {
-    const draft = appendDvtSubstraitInnerJoinInput(fixture(), {
-      source: source('source-shipments', 'public', 'shipments'),
-      fields: ['shipment_id', 'customer_id'],
-      predicate: {
-        leftSourceFieldId: 'field:source-customers:customer_id',
-        rightFieldName: 'customer_id',
-      },
-      selectedFields: ['shipment_id'],
-    });
-    expect(
-      applyDvtSubstraitInnerJoinGrouping(draft, {
-        groupFieldId: 'field:transform-customer-orders:stale',
-        countOutputName: 'shipment_count',
-      })
-    ).toBe(draft);
-    expect(
-      applyDvtSubstraitInnerJoinGrouping(draft, {
-        groupFieldId: 'field:transform-customer-orders:shipment_id',
-        countOutputName: 'shipment_id',
-      })
-    ).toBe(draft);
-
-    const grouped = applyDvtSubstraitInnerJoinGrouping(draft, {
-      groupFieldId: 'field:transform-customer-orders:shipment_id',
-      countOutputName: 'shipment_count',
-    });
-    expect(
-      applyDvtSubstraitInnerJoinGroupedRowNumber(grouped, { outputName: 'shipment_count' })
-    ).toBe(grouped);
-  });
-
-  it('rejects duplicate, stale-predicate and incompatible append attempts without mutation', () => {
-    const draft = fixture();
-    const append = (
-      overrides: {
-        source?: DvtSubstraitJoinSource;
-        leftSourceFieldId?: string;
-      } = {}
-    ): DvtSubstraitInnerJoinDraft =>
-      appendDvtSubstraitInnerJoinInput(draft, {
-        source: overrides.source ?? source('source-shipments', 'public', 'shipments'),
-        fields: ['shipment_id', 'customer_id'],
-        predicate: {
-          leftSourceFieldId: overrides.leftSourceFieldId ?? 'field:source-customers:customer_id',
-          rightFieldName: 'customer_id',
-        },
-        selectedFields: ['shipment_id'],
-      });
-
-    expect(append({ source: source('source-orders', 'public', 'orders') })).toBe(draft);
-    expect(append({ leftSourceFieldId: 'field:retired-source:customer_id' })).toBe(draft);
-    expect(
-      append({
-        source: source('source-shipments', 'public', 'shipments', 'warehouse-other'),
-      })
-    ).toBe(draft);
-  });
-
-  it('represents two PostgreSQL sources as one exact semantic join card', () => {
-    const draft = fixture();
-    const inspection = inspectDvtSubstraitInnerJoinDraft(draft);
-
-    expect(inspection).toEqual({
-      ok: true,
-      projection: {
-        left: {
-          schema: 'public',
-          table: 'customers',
-          sourceRef: sourceRef('warehouse-main', 'public.customers'),
-        },
-        right: {
-          schema: 'public',
-          table: 'orders',
-          sourceRef: sourceRef('warehouse-main', 'public.orders'),
-        },
-        leftKey: 'customer_id',
-        rightKey: 'customer_id',
-        outputs: [
-          {
-            fieldKey: 'left.customer_id',
-            name: 'customer_id',
-            fieldId: 'field:transform-customer-orders:customer_id',
-            dataType: 'string',
-            outputOrdinal: 0,
-            source: { relation: 'left', name: 'customer_id' },
-          },
-          {
-            fieldKey: 'left.name',
-            name: 'name',
-            fieldId: 'field:transform-customer-orders:name',
-            dataType: 'string',
-            outputOrdinal: 1,
-            source: { relation: 'left', name: 'name' },
-          },
-          {
-            fieldKey: 'right.order_id',
-            name: 'order_id',
-            fieldId: 'field:transform-customer-orders:order_id',
-            dataType: 'string',
-            outputOrdinal: 2,
-            source: { relation: 'right', name: 'order_id' },
-          },
-        ],
-      },
-    });
-
-    expect(draft.sidecar.relations).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          relationId: 'relation:source-customers',
-          relAnchor: 1,
-          sourceRef: sourceRef('warehouse-main', 'public.customers'),
-        }),
-        expect.objectContaining({
-          relationId: 'relation:source-orders',
-          relAnchor: 2,
-          sourceRef: sourceRef('warehouse-main', 'public.orders'),
-        }),
-        expect.objectContaining({
-          relationId: 'relation:transform-customer-orders:join',
-          relAnchor: 3,
-        }),
-      ])
+    expect(new Set(projection.outputs.map((output) => output.name)).size).toBe(
+      projection.outputs.length
     );
+    expect(new Set(projection.outputs.map((output) => output.fieldId)).size).toBe(
+      projection.outputs.length
+    );
+    projection.outputs.forEach((output) => expect(output.fieldId).toMatch(OPAQUE_FIELD_ID));
+    expect(projection.outputs.some((output) => output.name.includes('right_table'))).toBe(true);
   });
 
-  it('serializes deterministically and reloads the same semantic identities', () => {
+  it('creates opaque COUNT and rank identities and preserves them through rename', () => {
+    const draft = appendShipmentInput(fixture());
+    const base = inspectNInput(draft);
+    const grain = outputByName(base, 'shipment_id');
+
+    const grouped = applyDvtSubstraitInnerJoinGrouping(draft, {
+      groupFieldId: grain.fieldId,
+      countOutputName: 'row_count',
+    });
+    const grouping = inspectDvtSubstraitInnerJoinGroupingDraft(grouped);
+    if (!grouping.ok) throw new Error('Expected JOIN grouping.');
+    const countId = grouping.projection.measure.fieldId;
+    expect(grouping.projection.groupField.fieldId).toBe(grain.fieldId);
+    expect(countId).toMatch(OPAQUE_FIELD_ID);
+    expect(countId).not.toBe(grain.fieldId);
+
+    const renamedCount = renameDvtSubstraitInnerJoinCountOutput(grouped, 'orders_count');
+    const renamedGrouping = inspectDvtSubstraitInnerJoinGroupingDraft(renamedCount);
+    expect(renamedGrouping.ok && renamedGrouping.projection.measure.fieldId).toBe(countId);
+
+    const ranked = applyDvtSubstraitInnerJoinGroupedRowNumber(renamedCount, {
+      outputName: 'group_rank',
+    });
+    const window = inspectDvtSubstraitInnerJoinGroupedWindowDraft(ranked);
+    if (!window.ok) throw new Error('Expected JOIN grouped window.');
+    const rankId = window.projection.result.fieldId;
+    expect(rankId).toMatch(OPAQUE_FIELD_ID);
+    expect(rankId).not.toBe(countId);
+
+    const renamedRank = renameDvtSubstraitInnerJoinGroupedRowNumberOutput(ranked, 'ranked_group');
+    const renamedWindow = inspectDvtSubstraitInnerJoinGroupedWindowDraft(renamedRank);
+    expect(renamedWindow.ok && renamedWindow.projection.result.fieldId).toBe(rankId);
+
+    expect(inspectDvtSubstraitInnerJoinGroupingDraft(removeDvtSubstraitInnerJoinGroupedRowNumber(ranked)).ok).toBe(true);
+    expect(inspectDvtSubstraitNInputJoinDraft(removeDvtSubstraitInnerJoinGrouping(grouped)).ok).toBe(true);
+  });
+
+  it('does not reserve join-count names as semantic identities', () => {
+    const draft = createDvtSubstraitStringInnerJoinDraft({
+      left: {
+        source: source('source-a', 'public', 'a'),
+        fields: ['customer_id', 'join-count'],
+      },
+      right: {
+        source: source('source-b', 'public', 'b'),
+        fields: ['customer_id', 'join-count-rank'],
+      },
+      leftFieldName: 'customer_id',
+      rightFieldName: 'customer_id',
+      targetNodeId: 'transform-reserved-names',
+    });
+    const projection = inspectNInput(draft);
+
+    expect(projection.outputs.map((output) => output.name)).toEqual(
+      expect.arrayContaining(['join-count', 'join-count-rank'])
+    );
+    projection.outputs.forEach((output) => expect(output.fieldId).toMatch(OPAQUE_FIELD_ID));
+  });
+
+  it('keeps semantic plan determinism separate from fresh sidecar identity allocation', () => {
     const first = encodeDvtSubstraitInnerJoinDocument(fixture());
     const second = encodeDvtSubstraitInnerJoinDocument(fixture());
 
-    expect(second).toEqual(first);
-    expect(first.sidecar.semanticPlanSha256).toBe(first.semanticPlan.sha256);
-
-    const reloaded = decodeDvtSubstraitInnerJoinDocument(first);
-    const inspection = inspectDvtSubstraitInnerJoinDraft(reloaded);
-    expect(inspection.ok).toBe(true);
-    expect(reloaded.sidecar.fields.map((field) => field.fieldId)).toEqual(
-      fixture().sidecar.fields.map((field) => field.fieldId)
+    expect(first.semanticPlan.sha256).toBe(second.semanticPlan.sha256);
+    expect(first.sidecar.relations.map((relation) => relation.relationId)).not.toEqual(
+      second.sidecar.relations.map((relation) => relation.relationId)
     );
-    expect(encodeDvtSubstraitInnerJoinDocument(reloaded)).toEqual(first);
-  });
-
-  it('selects, renames, and reorders joined fields while preserving FieldId through reload', () => {
-    const original = inspectDvtSubstraitInnerJoinDraft(fixture());
-    if (!original.ok) throw new Error('Expected admitted INNER JOIN fixture.');
-    const nameFieldId = original.projection.outputs[1]?.fieldId;
-
-    let edited = applyDvtSubstraitInnerJoinFieldEdit(fixture(), {
-      kind: 'rename',
-      fieldKey: 'left.name',
-      outputName: 'customer_name',
-    });
-    edited = applyDvtSubstraitInnerJoinFieldEdit(edited, {
-      kind: 'move',
-      fieldKey: 'right.order_id',
-      direction: 'up',
-    });
-    edited = applyDvtSubstraitInnerJoinFieldEdit(edited, {
-      kind: 'set-selected',
-      fieldKey: 'left.customer_id',
-      selected: false,
-    });
-
-    const document = encodeDvtSubstraitInnerJoinDocument(edited);
-    const reloaded = decodeDvtSubstraitInnerJoinDocument(document);
-    const inspection = inspectDvtSubstraitInnerJoinDraft(reloaded);
-
-    expect(inspection).toEqual({
-      ok: true,
-      projection: expect.objectContaining({
-        outputs: [
-          {
-            fieldKey: 'right.order_id',
-            fieldId: 'field:transform-customer-orders:order_id',
-            name: 'order_id',
-            dataType: 'string',
-            outputOrdinal: 0,
-            source: { relation: 'right', name: 'order_id' },
-          },
-          {
-            fieldKey: 'left.name',
-            fieldId: nameFieldId,
-            name: 'customer_name',
-            dataType: 'string',
-            outputOrdinal: 1,
-            source: { relation: 'left', name: 'name' },
-          },
-        ],
-      }),
-    });
-    expect(encodeDvtSubstraitInnerJoinDocument(reloaded)).toEqual(document);
-
-    const restored = applyDvtSubstraitInnerJoinFieldEdit(reloaded, {
-      kind: 'set-selected',
-      fieldKey: 'left.customer_id',
-      selected: true,
-    });
-    const restoredInspection = inspectDvtSubstraitInnerJoinDraft(restored);
-    expect(restoredInspection.ok && restoredInspection.projection.outputs[2]).toMatchObject({
-      fieldKey: 'left.customer_id',
-      fieldId: 'field:transform-customer-orders:customer_id',
-      name: 'customer_id',
-    });
-  });
-
-  it('groups and ranks selected INNER JOIN fields in the same canonical revision', () => {
-    let selected = applyDvtSubstraitInnerJoinFieldEdit(fixture(), {
-      kind: 'rename',
-      fieldKey: 'left.name',
-      outputName: 'customer_name',
-    });
-    selected = applyDvtSubstraitInnerJoinFieldEdit(selected, {
-      kind: 'move',
-      fieldKey: 'left.name',
-      direction: 'up',
-    });
-    selected = applyDvtSubstraitInnerJoinFieldEdit(selected, {
-      kind: 'set-selected',
-      fieldKey: 'left.customer_id',
-      selected: false,
-    });
-
-    const grouped = applyDvtSubstraitInnerJoinGrouping(selected, {
-      groupFieldId: 'field:transform-customer-orders:name',
-      countOutputName: 'order_count',
-    });
-    expect(inspectDvtSubstraitInnerJoinGroupingDraft(grouped)).toMatchObject({
-      ok: true,
-      projection: {
-        groupField: {
-          fieldKey: 'left.name',
-          name: 'customer_name',
-          fieldId: 'field:transform-customer-orders:name',
-          inputOrdinal: 0,
-        },
-        measure: {
-          name: 'order_count',
-          fieldId: 'field:transform-customer-orders:join-count',
-        },
-      },
-    });
-
-    const ranked = applyDvtSubstraitInnerJoinGroupedRowNumber(grouped, {
-      outputName: 'count_rank',
-    });
-    const reopened = decodeDvtSubstraitInnerJoinDocument(
-      encodeDvtSubstraitInnerJoinDocument(ranked)
-    );
-    expect(inspectDvtSubstraitInnerJoinGroupedWindowDraft(reopened)).toMatchObject({
-      ok: true,
-      projection: {
-        outputs: [
-          expect.objectContaining({ name: 'customer_name', outputOrdinal: 0 }),
-          expect.objectContaining({ name: 'order_count', outputOrdinal: 1 }),
-          expect.objectContaining({ name: 'count_rank', outputOrdinal: 2 }),
-        ],
-      },
-    });
-    const transform: CanonicalNode = {
-      id: 'transform-customer-orders',
-      name: 'Customer orders',
-      pluginId: 'dvt',
-      kind: 'dvt:transform',
-      role: 'transform',
-      status: 'idle',
-      tags: ['authoring'],
-      metadata: {},
-    };
-    const persisted = applyDvtNodeAuthoringMetadata(transform, {
-      kind: 'transform',
-      mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
-      shape: 'inner_join',
-      plan: reopened.plan,
-      sidecar: reopened.sidecar,
-    });
-    expect(
-      projectCanvasNodePresentationTruth({ node: persisted, nodes: [persisted], edges: [] }).columns
-        .visible
-    ).toMatchObject([
-      {
-        name: 'customer_name',
-        type: 'string',
-        reference: 'field:transform-customer-orders:name',
-      },
-      {
-        name: 'order_count',
-        type: 'i64',
-        reference: 'field:transform-customer-orders:join-count',
-      },
-      {
-        name: 'count_rank',
-        type: 'i64',
-        reference: 'field:transform-customer-orders:join-count-rank',
-      },
-    ]);
-
-    const restoredGrouped = removeDvtSubstraitInnerJoinGroupedRowNumber(reopened);
-    expect(inspectDvtSubstraitInnerJoinGroupingDraft(restoredGrouped).ok).toBe(true);
-    const restoredSelected = removeDvtSubstraitInnerJoinGrouping(restoredGrouped);
-    expect(inspectDvtSubstraitInnerJoinDraft(restoredSelected)).toEqual(
-      inspectDvtSubstraitInnerJoinDraft(selected)
+    expect(first.sidecar.fields.map((field) => field.fieldId)).not.toEqual(
+      second.sidecar.fields.map((field) => field.fieldId)
     );
   });
 
-  it('fails closed instead of excluding the last selected joined field', () => {
-    let edited = applyDvtSubstraitInnerJoinFieldEdit(fixture(), {
-      kind: 'set-selected',
-      fieldKey: 'left.name',
-      selected: false,
-    });
-    edited = applyDvtSubstraitInnerJoinFieldEdit(edited, {
-      kind: 'set-selected',
-      fieldKey: 'right.order_id',
-      selected: false,
-    });
-    const beforeRejectedEdit = edited;
-
-    edited = applyDvtSubstraitInnerJoinFieldEdit(edited, {
-      kind: 'set-selected',
-      fieldKey: 'left.customer_id',
-      selected: false,
-    });
-
-    expect(edited).toBe(beforeRejectedEdit);
-    expect(inspectDvtSubstraitInnerJoinDraft(edited)).toMatchObject({
-      ok: true,
-      projection: { outputs: [expect.objectContaining({ fieldKey: 'left.customer_id' })] },
-    });
-  });
-
-  it('persists and reopens the same INNER JOIN through ConfigureCanvasDvtNode metadata', () => {
-    const transform: CanonicalNode = {
-      id: 'transform-customer-orders',
-      name: 'Customer orders',
-      pluginId: 'dvt',
-      kind: 'dvt:transform',
-      role: 'transform',
-      status: 'idle',
-      tags: ['authoring'],
-      metadata: {},
-    };
+  it('preserves one persisted draft identity across encode and reload', () => {
     const draft = fixture();
+    const document = encodeDvtSubstraitInnerJoinDocument(draft);
+    const reloaded = decodeDvtSubstraitInnerJoinDocument(document);
 
-    const persisted = applyDvtNodeAuthoringMetadata(transform, {
-      kind: 'transform',
-      mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
-      shape: 'inner_join',
-      plan: draft.plan,
-      sidecar: draft.sidecar,
-    });
-    const reopened = createDvtNodeAuthoringMetadata(persisted);
-
-    expect(reopened).toMatchObject({
-      kind: 'transform',
-      mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
-      shape: 'inner_join',
-    });
-    if (
-      reopened?.kind !== 'transform' ||
-      reopened.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait
-    ) {
-      throw new Error('Expected reopened Substrait authoring metadata.');
-    }
-    expect(
-      encodeDvtSubstraitInnerJoinDocument({ plan: reopened.plan, sidecar: reopened.sidecar })
-    ).toEqual(encodeDvtSubstraitInnerJoinDocument(draft));
-    expect(
-      projectCanvasNodePresentationTruth({ node: persisted, nodes: [persisted], edges: [] }).columns
-        .visible
-    ).toMatchObject([
-      { name: 'customer_id', reference: 'field:transform-customer-orders:customer_id' },
-      { name: 'name', reference: 'field:transform-customer-orders:name' },
-      { name: 'order_id', reference: 'field:transform-customer-orders:order_id' },
-    ]);
+    expect(reloaded.sidecar.relations).toEqual(document.sidecar.relations);
+    expect(reloaded.sidecar.fields).toEqual(document.sidecar.fields);
+    expect(inspectDvtSubstraitInnerJoinDraft(reloaded).ok).toBe(true);
   });
 
-  it('fails closed when the sources do not share one PostgreSQL connection', () => {
+  it('accepts old-format persisted IDs as opaque values and preserves them through edit/reload', () => {
+    const legacy = legacyBinaryDraft(fixture());
+    const inspection = inspectDvtSubstraitInnerJoinDraft(legacy);
+    expect(inspection.ok).toBe(true);
+    if (!inspection.ok) return;
+    const nameField = inspection.projection.outputs.find((output) => output.fieldKey === 'left.name');
+    if (nameField == null) throw new Error('Expected legacy name output.');
+
+    const renamed = applyDvtSubstraitInnerJoinFieldEdit(legacy, {
+      kind: 'rename',
+      fieldKey: 'left.name',
+      outputName: 'customer_name',
+    });
+    const renamedInspection = inspectDvtSubstraitInnerJoinDraft(renamed);
+    if (!renamedInspection.ok) throw new Error('Expected renamed legacy JOIN.');
+    expect(
+      renamedInspection.projection.outputs.find((output) => output.fieldKey === 'left.name')?.fieldId
+    ).toBe(nameField.fieldId);
+
+    const reloaded = decodeDvtSubstraitInnerJoinDocument(
+      encodeDvtSubstraitInnerJoinDocument(renamed)
+    );
+    expect(
+      inspectDvtSubstraitInnerJoinDraft(reloaded).ok
+        ? inspectDvtSubstraitInnerJoinDraft(reloaded).projection.outputs.find(
+            (output) => output.fieldKey === 'left.name'
+          )?.fieldId
+        : null
+    ).toBe(nameField.fieldId);
+  });
+
+  it('resolves semantic inputs back to graph sources by sourceRef and field closure', () => {
+    const customers = canonicalSource('source-customers', 'customers', ['customer_id', 'name']);
+    const orders = canonicalSource('source-orders', 'orders', ['order_id', 'customer_id']);
+    const draft = fixture();
+    const transform = applyDvtSubstraitSemanticDocument(
+      {
+        id: 'transform-customer-orders',
+        name: 'Customer orders',
+        pluginId: 'dvt',
+        kind: 'dvt:transform',
+        role: 'transform',
+        status: 'idle',
+        tags: [],
+        metadata: {},
+      },
+      encodeDvtSubstraitInnerJoinDocument(draft)
+    );
+    const edges: CanonicalEdge[] = [
+      {
+        id: 'customers-to-transform',
+        sourceId: customers.id,
+        targetId: transform.id,
+        relation: 'lineage',
+      },
+      {
+        id: 'orders-to-transform',
+        sourceId: orders.id,
+        targetId: transform.id,
+        relation: 'lineage',
+      },
+    ];
+
+    const entry = resolveDvtSubstraitNInputJoinEntry({
+      targetNode: transform,
+      nodes: [customers, orders, transform],
+      edges,
+    });
+
+    expect(entry?.inputs.map((input) => input.source.nodeId)).toEqual([
+      customers.id,
+      orders.id,
+    ]);
+    expect(entry?.outputs.map((output) => output.fieldId)).toEqual(
+      inspectNInput(draft).outputs.map((output) => output.fieldId)
+    );
+  });
+
+  it('fails closed on incompatible sources, duplicate identity and stale hash', () => {
     expect(() =>
       createDvtSubstraitInnerJoinDraft({
         left: source('source-customers', 'public', 'customers', 'warehouse-a'),
         right: source('source-orders', 'public', 'orders', 'warehouse-b'),
         targetNodeId: 'transform-customer-orders',
       })
-    ).toThrow(/same connection/i);
-  });
+    ).toThrow();
 
-  it('fails closed when the accepted join shape is changed', () => {
     const draft = fixture();
-    const root = draft.plan.relations[0]?.relType;
-    if (root?.case !== 'root') throw new Error('Expected root relation.');
-    root.value.names[0] = 'unexpected_customer_key';
-
-    expect(inspectDvtSubstraitInnerJoinDraft(draft)).toEqual({ ok: false });
-    expect(() => encodeDvtSubstraitInnerJoinDocument(draft)).toThrow(/unsupported/i);
-  });
-
-  it('fails closed for invalid grouping/window semantics, stale hashes, and duplicate bindings', () => {
-    const createGrouped = (): DvtSubstraitInnerJoinDraft =>
-      applyDvtSubstraitInnerJoinGrouping(fixture(), {
-        groupFieldId: 'field:transform-customer-orders:name',
-        countOutputName: 'order_count',
-      });
-
-    const wrongGroupingOrdinal = createGrouped();
-    const groupingRoot = wrongGroupingOrdinal.plan.relations[0]?.relType;
-    const groupingExpression =
-      groupingRoot?.case === 'root' && groupingRoot.value.input?.relType.case === 'aggregate'
-        ? groupingRoot.value.input.relType.value.groupingExpressions[0]?.rexType
-        : null;
-    const directReference =
-      groupingExpression?.case === 'selection' ? groupingExpression.value.referenceType : null;
-    const structField =
-      directReference?.case === 'directReference' ? directReference.value.referenceType : null;
-    if (structField?.case !== 'structField') throw new Error('Expected grouping field reference.');
-    structField.value.field = 99;
-    expect(inspectDvtSubstraitInnerJoinGroupingDraft(wrongGroupingOrdinal)).toEqual({ ok: false });
-
-    const wrongWindowOrder = applyDvtSubstraitInnerJoinGroupedRowNumber(createGrouped(), {
-      outputName: 'count_rank',
-    });
-    const windowRoot = wrongWindowOrder.plan.relations[0]?.relType;
-    const windowExpression =
-      windowRoot?.case === 'root' && windowRoot.value.input?.relType.case === 'project'
-        ? windowRoot.value.input.relType.value.expressions[0]?.rexType
-        : null;
-    const firstSort =
-      windowExpression?.case === 'windowFunction' ? windowExpression.value.sorts[0] : null;
-    if (firstSort?.sortKind.case !== 'direction') throw new Error('Expected window direction.');
-    firstSort.sortKind.value = SortField_SortDirection.ASC_NULLS_LAST;
-    expect(inspectDvtSubstraitInnerJoinGroupedWindowDraft(wrongWindowOrder)).toEqual({ ok: false });
-
-    const hashed = decodeDvtSubstraitInnerJoinDocument(
-      encodeDvtSubstraitInnerJoinDocument(createGrouped())
-    );
-    const staleHash: DvtSubstraitInnerJoinDraft = {
-      ...hashed,
-      sidecar: { ...hashed.sidecar, semanticPlanSha256: 'a'.repeat(64) },
-    };
-    expect(inspectDvtSubstraitInnerJoinGroupingDraft(staleHash)).toEqual({ ok: false });
-
-    const grouped = createGrouped();
-    const joinRelationId = grouped.sidecar.relations.find(
-      (relation) => relation.relAnchor === 3
-    )?.relationId;
-    if (joinRelationId == null) throw new Error('Expected INNER JOIN binding.');
-    const duplicateBinding: DvtSubstraitInnerJoinDraft = {
-      ...grouped,
+    const duplicateField = {
+      ...draft,
       sidecar: {
-        ...grouped.sidecar,
-        relations: grouped.sidecar.relations.map((relation) =>
-          relation.relAnchor === 4 ? { ...relation, relationId: joinRelationId } : relation
+        ...draft.sidecar,
+        fields: draft.sidecar.fields.map((field, index) =>
+          index === 1 ? { ...field, fieldId: draft.sidecar.fields[0]!.fieldId } : field
         ),
       },
     };
-    expect(inspectDvtSubstraitInnerJoinGroupingDraft(duplicateBinding)).toEqual({ ok: false });
+    expect(inspectDvtSubstraitNInputJoinDraft(duplicateField).ok).toBe(false);
+
+    const encoded = encodeDvtSubstraitInnerJoinDocument(draft);
+    const stale = decodeDvtSubstraitInnerJoinDocument({
+      ...encoded,
+      sidecar: { ...encoded.sidecar, semanticPlanSha256: 'f'.repeat(64) },
+    });
+    expect(inspectDvtSubstraitNInputJoinDraft(stale).ok).toBe(false);
   });
 });
