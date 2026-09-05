@@ -110,7 +110,6 @@ function buildCanvasShellChromeStateArgs({
 }: CanvasShellRouteComposerArgs): CanvasShellChromeStateBuilderArgs {
   return {
     chromeStateSource: {
-      canvasAuthoringMode: controller.canvasAuthoringMode,
       canPlanGraph: controller.canPlanGraph,
       canStartRun: controller.canStartRun,
       canExportProjectSnapshot: controller.canExportProjectSnapshot,
