@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import React, { act, useState } from 'react';
+import { fireEvent } from '@testing-library/dom';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -163,16 +164,12 @@ describe('SourceOverviewPanel', () => {
     );
     expect(editButton).toBeDefined();
 
-    act(() => editButton?.click());
+    act(() => fireEvent.click(editButton!));
     const input = container.querySelector('input[aria-label="Name"]') as HTMLInputElement | null;
     expect(input).not.toBeNull();
 
-    act(() => {
-      if (input == null) return;
-      input.value = 'audit events';
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-    });
-    act(() => input?.dispatchEvent(new FocusEvent('focusout', { bubbles: true })));
+    act(() => fireEvent.input(input!, { target: { value: 'audit events' } }));
+    act(() => fireEvent.focusOut(input!));
 
     expect(onApply).toHaveBeenCalledTimes(1);
     expect(onApply.mock.calls[0]?.[0]).toMatchObject({ name: 'audit events' });
