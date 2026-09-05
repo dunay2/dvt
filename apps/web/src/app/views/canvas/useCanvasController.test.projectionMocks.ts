@@ -53,7 +53,7 @@ export function configureCanvasHarnessHookAndProjectionMocks(
   configureZustandLikeStoreMock(mocks.useSessionStore, state);
   mocks.useUiLayoutStore.mockImplementation(selectFromStore);
   mocks.useCapabilitiesQuery.mockReturnValue({ data: undefined });
-  mocks.getCanvasGraphNodeCardStrategies.mockReturnValue([]);
+  mocks.getGraphNodeCardStrategies.mockReturnValue([]);
   mocks.resolveCanvasGraphStrategy.mockReturnValue(transformationGraphStrategy);
   mocks.findCanvasGraphStrategy.mockImplementation((strategyId?: unknown) =>
     strategyId === 'transformation' || strategyId === undefined ? transformationGraphStrategy : null
