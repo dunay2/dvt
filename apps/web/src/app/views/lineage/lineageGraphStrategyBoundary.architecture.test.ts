@@ -12,9 +12,13 @@ const GRAPH_STRATEGY_REGISTRY_SOURCE = readArchitectureSiblingSource(
 );
 
 describe('lineage graph strategy boundary', () => {
-  it('uses the DBT snapshot strategy explicitly instead of the Canvas authoring default', () => {
-    expect(GRAPH_STRATEGY_REGISTRY_SOURCE).toContain("const DEFAULT_STRATEGY_ID = 'transformation'");
-    expect(LINEAGE_VIEW_DATA_SOURCE).toContain("resolveCanvasGraphStrategy('dbt')");
-    expect(LINEAGE_VIEW_DATA_SOURCE).not.toMatch(/resolveCanvasGraphStrategy\(\s*\)/);
+  it('projects the workspace DBT snapshot without resolving a Canvas authoring runtime', () => {
+    expect(GRAPH_STRATEGY_REGISTRY_SOURCE).toContain(
+      "const DEFAULT_STRATEGY_ID = 'transformation'"
+    );
+    expect(LINEAGE_VIEW_DATA_SOURCE).toContain("useWorkspaceGraphForViewQuery('lineage', 60_000)");
+    expect(LINEAGE_VIEW_DATA_SOURCE).toContain('projectLineageGraph(rawNodes, rawEdges)');
+    expect(LINEAGE_VIEW_DATA_SOURCE).not.toContain('resolveCanvasGraphStrategy');
+    expect(LINEAGE_VIEW_DATA_SOURCE).not.toContain('graphStrategyRegistry');
   });
 });
