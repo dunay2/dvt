@@ -260,11 +260,9 @@ describe('CanvasViewport', () => {
     });
 
     const reactFlowOnNodeDrag = xyflowState.lastReactFlowProps?.onNodeDrag as
-      | ReactFlowNodeDragCallback
-      | undefined;
+      ReactFlowNodeDragCallback | undefined;
     const reactFlowOnNodeDragStop = xyflowState.lastReactFlowProps?.onNodeDragStop as
-      | ReactFlowNodeDragCallback
-      | undefined;
+      ReactFlowNodeDragCallback | undefined;
 
     act(() => {
       reactFlowOnNodeDrag?.({}, source, [source, target]);
