@@ -19,6 +19,7 @@ import {
   NodePropertySectionView,
   type NodePropertyTableCellRenderContext,
 } from './NodePropertySectionView';
+import { SourceColumnsPanel } from './SourceColumnsPanel';
 import type { NodePropertiesReadModel, NodePropertySection } from './nodePropertiesReadModel';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 
@@ -101,6 +102,14 @@ function resolvePresentedSection(
     ...section,
     label: resolveString(SOURCE_OVERVIEW_LABEL, applicationLanguage),
   };
+}
+
+function usesApprovedWarehouseSourceColumns(node: CanonicalNode, section: NodePropertySection): boolean {
+  return (
+    node.kind === 'dvt:source' &&
+    node.pluginId === 'dvt.warehouse-source' &&
+    section.id === 'columns'
+  );
 }
 
 export function NodePropertiesTabs({
@@ -236,32 +245,40 @@ export function NodePropertiesTabs({
         ) : null}
       </div>
 
-      {presentedSections.map((section) => (
-        <TabsContent
-          key={section.id}
-          value={section.id}
-          forceMount={persistentSectionIds.includes(section.id) ? true : undefined}
-          data-slot={`${slots.sectionPrefix}-${section.id}-content`}
-          className={cn(
-            'm-0 data-[state=inactive]:hidden',
-            fillAvailableHeight && section.id === activeTab && 'min-h-0 overflow-hidden'
-          )}
-        >
-          <NodePropertySectionView
-            section={section}
-            slots={slots}
-            surface={surface}
-            showCountBadge={showSectionCountBadge}
-            fillAvailableHeight={fillAvailableHeight && section.id === activeTab}
-            beforeBody={
-              sectionBeforeChildren?.[section.id] ??
-              (section.id === 'general' ? beforePanels : null)
-            }
-            afterBody={sectionAfterChildren?.[section.id]}
-            renderTableCell={renderTableCell}
-          />
-        </TabsContent>
-      ))}
+      {presentedSections.map((section) => {
+        const beforeBody =
+          sectionBeforeChildren?.[section.id] ?? (section.id === 'general' ? beforePanels : null);
+        const afterBody = sectionAfterChildren?.[section.id];
+        const sourceColumns = usesApprovedWarehouseSourceColumns(node, section);
+
+        return (
+          <TabsContent
+            key={section.id}
+            value={section.id}
+            forceMount={persistentSectionIds.includes(section.id) ? true : undefined}
+            data-slot={`${slots.sectionPrefix}-${section.id}-content`}
+            className={cn(
+              'm-0 data-[state=inactive]:hidden',
+              fillAvailableHeight && section.id === activeTab && 'min-h-0 overflow-hidden'
+            )}
+          >
+            {sourceColumns ? (
+              <SourceColumnsPanel node={node} beforeBody={beforeBody} afterBody={afterBody} />
+            ) : (
+              <NodePropertySectionView
+                section={section}
+                slots={slots}
+                surface={surface}
+                showCountBadge={showSectionCountBadge}
+                fillAvailableHeight={fillAvailableHeight && section.id === activeTab}
+                beforeBody={beforeBody}
+                afterBody={afterBody}
+                renderTableCell={renderTableCell}
+              />
+            )}
+          </TabsContent>
+        );
+      })}
 
       {panels.map((panel) => {
         const PanelComponent = panel.component;
