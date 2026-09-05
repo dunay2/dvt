@@ -3,17 +3,17 @@
 import { act } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
-const { resolveCanvasViewCopyCall } = vi.hoisted(() => ({
-  resolveCanvasViewCopyCall: vi.fn(),
+const { createCanvasDirectionalEdgeCall } = vi.hoisted(() => ({
+  createCanvasDirectionalEdgeCall: vi.fn(),
 }));
 
-vi.mock('./canvasCopyCatalog', async () => {
-  const actual = await vi.importActual<typeof import('./canvasCopyCatalog')>('./canvasCopyCatalog');
+vi.mock('./canvasNodeMapper', async () => {
+  const actual = await vi.importActual<typeof import('./canvasNodeMapper')>('./canvasNodeMapper');
   return {
     ...actual,
-    resolveCanvasViewCopy: (...args: Parameters<typeof actual.resolveCanvasViewCopy>) => {
-      resolveCanvasViewCopyCall(...args);
-      return actual.resolveCanvasViewCopy(...args);
+    createCanvasDirectionalEdge: (...args: Parameters<typeof actual.createCanvasDirectionalEdge>) => {
+      createCanvasDirectionalEdgeCall(...args);
+      return actual.createCanvasDirectionalEdge(...args);
     },
   };
 });
@@ -49,7 +49,7 @@ describe('useCanvasViewportGraphModel geometry invalidation', () => {
 
     try {
       const originalEdges = mounted.readState()?.edges;
-      resolveCanvasViewCopyCall.mockClear();
+      createCanvasDirectionalEdgeCall.mockClear();
 
       await act(async () => {
         mounted.readState()?.onNodesChange([
@@ -69,7 +69,7 @@ describe('useCanvasViewportGraphModel geometry invalidation', () => {
         y: 40,
       });
       expect(mounted.readState()?.edges).toBe(originalEdges);
-      expect(resolveCanvasViewCopyCall).not.toHaveBeenCalled();
+      expect(createCanvasDirectionalEdgeCall).not.toHaveBeenCalled();
     } finally {
       await mounted.cleanup();
     }
