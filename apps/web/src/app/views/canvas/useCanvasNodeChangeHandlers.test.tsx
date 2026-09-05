@@ -237,7 +237,7 @@ describe('useCanvasNodeChangeHandlers', () => {
     harness.cleanup();
   });
 
-  it('publishes settled position changes to the route-local layout rail', async () => {
+  it('keeps settled position changes local to the viewport model', async () => {
     let currentNodes: Node[] = buildNodes();
     const setNodes = vi.fn((nextNodes: Node[] | ((existingNodes: Node[]) => Node[])) => {
       currentNodes = typeof nextNodes === 'function' ? nextNodes(currentNodes) : nextNodes;
@@ -259,16 +259,13 @@ describe('useCanvasNodeChangeHandlers', () => {
     });
 
     expect(currentNodes[0]?.position).toEqual({ x: 225, y: 210 });
-    expect(harness.spies.onLayoutComplete).toHaveBeenCalledWith({
-      'source-node': { x: 225, y: 210 },
-      'sink-node': { x: 1, y: 1 },
-    });
+    expect(harness.spies.onLayoutComplete).not.toHaveBeenCalled();
     expect(harness.spies.setDraftSession).not.toHaveBeenCalled();
 
     harness.cleanup();
   });
 
-  it('publishes active drag coordinates to the route-local layout rail when the stop frame is absent', async () => {
+  it('keeps active drag coordinates local when the change carries a position payload', async () => {
     let currentNodes: Node[] = buildNodes();
     const setNodes = vi.fn((nextNodes: Node[] | ((existingNodes: Node[]) => Node[])) => {
       currentNodes = typeof nextNodes === 'function' ? nextNodes(currentNodes) : nextNodes;
@@ -290,16 +287,13 @@ describe('useCanvasNodeChangeHandlers', () => {
     });
 
     expect(currentNodes[0]?.position).toEqual({ x: 96, y: 72 });
-    expect(harness.spies.onLayoutComplete).toHaveBeenCalledWith({
-      'source-node': { x: 96, y: 72 },
-      'sink-node': { x: 1, y: 1 },
-    });
+    expect(harness.spies.onLayoutComplete).not.toHaveBeenCalled();
     expect(harness.spies.setDraftSession).not.toHaveBeenCalled();
 
     harness.cleanup();
   });
 
-  it('publishes settled drag completion when React Flow omits the final position payload', async () => {
+  it('keeps a settled drag marker local when React Flow omits the final position payload', async () => {
     const harness = renderHookHost({
       nodes: [
         { id: 'source-node', data: { name: 'source-node' }, position: { x: 225, y: 210 } },
@@ -318,10 +312,8 @@ describe('useCanvasNodeChangeHandlers', () => {
       ]);
     });
 
-    expect(harness.spies.onLayoutComplete).toHaveBeenCalledWith({
-      'source-node': { x: 225, y: 210 },
-      'sink-node': { x: 1, y: 1 },
-    });
+    expect(harness.spies.setNodes).toHaveBeenCalledWith(expect.any(Function));
+    expect(harness.spies.onLayoutComplete).not.toHaveBeenCalled();
     expect(harness.spies.setDraftSession).not.toHaveBeenCalled();
 
     harness.cleanup();
