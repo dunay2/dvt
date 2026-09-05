@@ -125,6 +125,48 @@ describe('NodePropertiesTabs primary sections', () => {
     expect(container.querySelector('[data-slot="node-inspector-more-trigger"]')).not.toBeNull();
   });
 
+  it('allows a semantic body override without forking tabs or the tab count', () => {
+    const modelWithColumns: NodePropertiesReadModel = {
+      ...readModel,
+      sections: readModel.sections.map((section) =>
+        section.id === 'columns'
+          ? {
+              ...section,
+              tableRows: [
+                { id: 'order_id', cells: { name: 'order_id', type: 'uuid' } },
+                { id: 'customer_id', cells: { name: 'customer_id', type: 'bigint' } },
+              ],
+            }
+          : section
+      ),
+    };
+
+    act(() => {
+      root.render(
+        <NodePropertiesTabs
+          node={node}
+          model={modelWithColumns}
+          activeRunId={null}
+          panels={[]}
+          activeTab="columns"
+          moreLabel="More"
+          primarySectionIds={['general', 'columns', 'inputs-outputs']}
+          sectionBodyOverrides={{
+            columns: <div data-slot="source-columns-body">custom columns</div>,
+          }}
+          onActiveTabChange={vi.fn()}
+          onHide={vi.fn()}
+        />
+      );
+    });
+
+    expect(container.querySelector('[data-slot="source-columns-body"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="node-inspector-columns-section"]')).toBeNull();
+    expect(container.querySelector('[data-slot="node-inspector-tab-columns"]')?.textContent).toContain(
+      '2'
+    );
+  });
+
   it('keeps a contributed Code editor mounted while another Properties tab is active', () => {
     act(() => {
       root.render(
