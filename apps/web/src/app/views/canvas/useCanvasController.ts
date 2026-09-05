@@ -292,7 +292,6 @@ export function useCanvasController() {
     overlayModel,
     graphHandlers,
     onToggleExecutionSelection: graphHandlers.handleToggleNodeSelection,
-    activeCanvasKind: canvasAuthoringMode,
     runtimeCapabilities: capabilities,
     canMutateGraph: canMutateActiveCanvas,
     canSelectExecution,
