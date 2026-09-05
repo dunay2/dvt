@@ -1,7 +1,7 @@
 /** Owned concern: append one calculated output to an admitted connected-source projection. */
 import { fromBinary, toBinary } from '@bufbuild/protobuf';
 import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
-import { allocateDvtFieldId } from '@dvt/contracts/substrait';
+import { allocateDvtFieldId } from '@dvt/contracts';
 
 import {
   buildDvtSubstraitCalculatedExpression,
