@@ -18,28 +18,17 @@ import {
 } from './Canvas.test.support';
 
 type FirstCanvasCycleFixture = Readonly<{
-  canvasKind: 'transformation' | 'dbt';
+  canvasKind: 'transformation';
   createLabel: string;
   title: string;
   firstNodeKind: string;
 }>;
 
-const FIRST_CANVAS_CYCLE_FIXTURES: Record<
-  FirstCanvasCycleFixture['canvasKind'],
-  FirstCanvasCycleFixture
-> = {
-  transformation: {
-    canvasKind: 'transformation',
-    createLabel: 'Transformation',
-    title: 'Transformation canvas',
-    firstNodeKind: 'dvt:source',
-  },
-  dbt: {
-    canvasKind: 'dbt',
-    createLabel: 'dbt',
-    title: 'dbt canvas',
-    firstNodeKind: 'dbt:source',
-  },
+const FIRST_CANVAS_CYCLE_FIXTURE: FirstCanvasCycleFixture = {
+  canvasKind: 'transformation',
+  createLabel: 'Transformation',
+  title: 'Transformation canvas',
+  firstNodeKind: 'dvt:source',
 };
 
 function installFirstCanvasCycleController(fixture: FirstCanvasCycleFixture): {
@@ -106,59 +95,57 @@ describe('Canvas route host-cycle persistence', () => {
     createFromViewport?.(registration);
   }
 
-  it.each(Object.values(FIRST_CANVAS_CYCLE_FIXTURES))(
-    'proves the first $canvasKind host cycle from create canvas to graph-ready authoring',
-    async (fixture) => {
-      const { handleCreateCanvasDocument, handleCreateAuthoringNode } =
-        installFirstCanvasCycleController(fixture);
+  it('proves the shared Canvas host cycle from create canvas to graph-ready authoring', async () => {
+    const fixture = FIRST_CANVAS_CYCLE_FIXTURE;
+    const { handleCreateCanvasDocument, handleCreateAuthoringNode } =
+      installFirstCanvasCycleController(fixture);
 
-      await harness.render();
+    await harness.render();
 
-      const createButton = Array.from(harness.container.querySelectorAll('button')).find((button) =>
-        button.textContent?.includes(fixture.createLabel)
-      );
-      expect(createButton).toBeDefined();
+    const createButton = Array.from(harness.container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes(fixture.createLabel)
+    );
+    expect(createButton).toBeDefined();
 
-      createButton?.click();
-      await harness.render();
+    createButton?.click();
+    await harness.render();
 
-      expect(handleCreateCanvasDocument).toHaveBeenCalledWith({
-        kind: fixture.canvasKind,
-        title: fixture.title,
-      });
-      expect(harness.container.querySelector('[data-slot="canvas-empty-state"]')).toBeNull();
-      expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
-      expectCanvasBootstrapState({
-        routeState: 'empty',
-        readinessStatus: 'complete',
-        readinessDetail: canvasViewCopy.emptyCanvasReadyDetail,
-      });
+    expect(handleCreateCanvasDocument).toHaveBeenCalledWith({
+      kind: fixture.canvasKind,
+      title: fixture.title,
+    });
+    expect(harness.container.querySelector('[data-slot="canvas-empty-state"]')).toBeNull();
+    expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
+    expectCanvasBootstrapState({
+      routeState: 'empty',
+      readinessStatus: 'complete',
+      readinessDetail: canvasViewCopy.emptyCanvasReadyDetail,
+    });
 
-      expect(
-        harness.container.querySelector('[data-slot="canvas-add-node-palette-trigger"]')
-      ).toBeNull();
-      expect(document.body.querySelector('[data-slot="canvas-add-node-palette"]')).toBeNull();
+    expect(
+      harness.container.querySelector('[data-slot="canvas-add-node-palette-trigger"]')
+    ).toBeNull();
+    expect(document.body.querySelector('[data-slot="canvas-add-node-palette"]')).toBeNull();
 
-      createFirstNodeFromViewport(fixture.firstNodeKind);
-      await harness.render();
+    createFirstNodeFromViewport(fixture.firstNodeKind);
+    await harness.render();
 
-      expect(handleCreateAuthoringNode).toHaveBeenCalledWith(
-        requireAuthoringNodeKind(fixture.firstNodeKind)
-      );
-      expect(harness.container.querySelector('[data-slot="canvas-empty-state"]')).toBeNull();
-      expect(
-        harness.container.querySelector('[data-slot="canvas-playground-empty-state"]')
-      ).toBeNull();
-      expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
-      expectCanvasBootstrapState({
-        routeState: 'ready',
-        readinessStatus: 'complete',
-        readinessDetail: canvasViewCopy.canvasReadyDetail,
-      });
-    }
-  );
+    expect(handleCreateAuthoringNode).toHaveBeenCalledWith(
+      requireAuthoringNodeKind(fixture.firstNodeKind)
+    );
+    expect(harness.container.querySelector('[data-slot="canvas-empty-state"]')).toBeNull();
+    expect(
+      harness.container.querySelector('[data-slot="canvas-playground-empty-state"]')
+    ).toBeNull();
+    expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
+    expectCanvasBootstrapState({
+      routeState: 'ready',
+      readinessStatus: 'complete',
+      readinessDetail: canvasViewCopy.canvasReadyDetail,
+    });
+  });
 
-  it('continues the typed transformation host cycle into contextual preview without losing host context', async () => {
+  it('continues the shared Canvas host cycle into contextual preview without losing host context', async () => {
     let currentController = buildController(
       buildCanvasHostCycleControllerState({ kind: 'needs_canvas' })
     );
@@ -265,20 +252,20 @@ describe('Canvas route host-cycle persistence', () => {
     });
   });
 
-  it('restores the authoritative typed empty canvas tab and posture from draft truth on reopen', async () => {
+  it('restores the authoritative empty shared Canvas posture from draft truth on reopen', async () => {
     await renderCanvasRouteWithController(harness, {
       ...buildCanvasHostCycleControllerState({
         kind: 'restored_empty',
-        canvasKind: 'dbt',
-        title: 'Warehouse dbt',
+        canvasKind: 'transformation',
+        title: 'Warehouse flow',
       }),
       canvasAuthoringMode: 'transformation',
     });
 
     expectActiveCanvasShellIdentity({
       container: harness.container,
-      title: 'Warehouse dbt',
-      kindLabel: 'dbt',
+      title: 'Warehouse flow',
+      kindLabel: 'Transformation',
     });
     expect(harness.container.textContent).not.toContain('Create canvas');
     expect(harness.container.querySelector('[data-slot="canvas-empty-state"]')).toBeNull();
@@ -290,7 +277,7 @@ describe('Canvas route host-cycle persistence', () => {
     });
   });
 
-  it('restores the authoritative graph-ready canvas tab and posture from draft truth on reopen', async () => {
+  it('restores the authoritative graph-ready shared Canvas posture from draft truth on reopen', async () => {
     await renderCanvasRouteWithController(harness, {
       ...buildCanvasHostCycleControllerState({
         kind: 'restored_graph_ready',
@@ -298,7 +285,7 @@ describe('Canvas route host-cycle persistence', () => {
         title: 'Transformation canvas',
         firstNodeKind: 'dvt:source',
       }),
-      canvasAuthoringMode: 'dbt',
+      canvasAuthoringMode: 'transformation',
     });
 
     expectActiveCanvasShellIdentity({

@@ -36,7 +36,7 @@ describe('Canvas route first-canvas catalog', () => {
     }
   }
 
-  it('publishes a typed transformation empty canvas catalog to the contextual viewport', async () => {
+  it('publishes the shared transformation Canvas catalog to the contextual viewport', async () => {
     await renderCanvasRouteWithController(harness, {
       canvasDocument: {
         kind: 'transformation',
@@ -50,27 +50,18 @@ describe('Canvas route first-canvas catalog', () => {
       title: 'Main canvas',
       kindLabel: 'Transformation',
     });
-    expectViewportAuthoringKinds(['dvt:transform'], ['dbt:exposure', 'dbt:metric']);
-  });
-
-  it('publishes a typed dbt empty canvas catalog to the contextual viewport', async () => {
-    await renderCanvasRouteWithController(harness, {
-      canvasDocument: {
-        kind: 'dbt',
-        title: 'dbt canvas',
-      },
-      canvasAuthoringMode: 'dbt',
-    });
-
-    expect(harness.container.querySelector('[data-slot="canvas-empty-state"]')).toBeNull();
-    expectActiveCanvasShellIdentity({
-      container: harness.container,
-      title: 'dbt canvas',
-      kindLabel: 'dbt',
-    });
     expectViewportAuthoringKinds(
-      ['dbt:source', 'dbt:model', 'dbt:test'],
-      ['dbt:seed', 'dbt:snapshot', 'dbt:exposure', 'dbt:metric', 'dbt:macro', 'dvt:transform']
+      ['dvt:transform'],
+      [
+        'dbt:source',
+        'dbt:model',
+        'dbt:test',
+        'dbt:seed',
+        'dbt:snapshot',
+        'dbt:exposure',
+        'dbt:metric',
+        'dbt:macro',
+      ]
     );
   });
 });

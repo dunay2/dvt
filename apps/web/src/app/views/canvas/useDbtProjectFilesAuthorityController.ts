@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import DbtNodeComponent, { type DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import type { DbtProjectFilesAuthorityBinding } from '../../ports/dbtProjectGraph';
 import { getRegisteredPluginIds } from '../../plugins/registry';
-import { getCanvasGraphNodeCardStrategies } from '../../plugins/graphStrategyRegistry';
+import { getGraphNodeCardStrategies } from '../../plugins/graphStrategyRegistry';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { ImportSourcesResult, WorkspaceFileSaveReceipt } from '../../ports/workspace';
 import { createCanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
@@ -318,7 +318,7 @@ export function useDbtProjectFilesAuthorityController(
     setProjectCodeWorkbenchOpen(false);
   }, []);
   const graphNodeCardStrategies = useMemo(
-    () => getCanvasGraphNodeCardStrategies('dbt', runtimeCapabilities),
+    () => getGraphNodeCardStrategies(runtimeCapabilities),
     [runtimeCapabilities]
   );
   const nodesWithCommands = useMemo<Node[]>(
@@ -326,7 +326,6 @@ export function useDbtProjectFilesAuthorityController(
       graphModel.nodes.map((node) => {
         const data: DbtNodeData = {
           ...(node.data as DbtNodeData),
-          canvasKind: 'dbt',
           runtimeCapabilities,
           canMutateGraph: false,
           selectedForExecution: selectedNodeIds.includes(node.id),

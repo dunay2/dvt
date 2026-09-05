@@ -1,6 +1,5 @@
 /** Owned concern: provide story-shaped Canvas host-cycle scenarios for route proofs. */
 import { DVT_AUTHORING_NODE_KINDS } from '../plugins/dvt/dvtNodeTypeCatalog';
-import { DBT_NODE_KINDS } from '../plugins/nodeTypeCatalog.dbt';
 import type { NodeKindRegistration } from '../plugins/nodeTypeContracts';
 import type { CanvasController } from './Canvas.test.controller';
 
@@ -47,26 +46,14 @@ function buildDefaultCanvasUserPermissions(): CanvasController['userPermissions'
   };
 }
 
-function resolveCanvasHostCycleTitle(kind: CanvasDocumentKind): string {
-  return kind === 'dbt' ? 'dbt canvas' : 'Transformation canvas';
+function resolveCanvasHostCycleTitle(_kind: CanvasDocumentKind): string {
+  return 'Transformation canvas';
 }
 
 function buildCanvasHostCycleNode(
-  kind: CanvasDocumentKind,
+  _kind: CanvasDocumentKind,
   firstNodeKind?: NodeKindRegistration['kind']
 ): CanvasHostCycleNode {
-  if (kind === 'dbt') {
-    return {
-      id: 'node.orders',
-      name: 'orders',
-      pluginId: 'dbt',
-      kind: firstNodeKind ?? 'dbt:model',
-      role: 'transform',
-      status: 'idle',
-      tags: [],
-    };
-  }
-
   return {
     id: 'node.source',
     name: 'Source',
@@ -80,14 +67,6 @@ function buildCanvasHostCycleNode(
 
 function buildCanvasKinds(): CanvasController['availableCanvasKinds'] {
   return [
-    {
-      kind: 'dbt',
-      pluginId: 'dbt',
-      label: 'dbt',
-      description: 'Model-first canvas for dbt resources and dependencies.',
-      createTitle: 'dbt canvas',
-      nodeKinds: DBT_NODE_KINDS,
-    },
     {
       kind: 'transformation',
       pluginId: 'dvt',

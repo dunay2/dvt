@@ -1,4 +1,3 @@
-import { act } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
@@ -31,19 +30,6 @@ function readLatestExecutionCall(harness: CanvasControllerHarness):
         canRun?: boolean;
       }
     | undefined;
-}
-
-function readLatestGraphRemovalSelectionReconciler(
-  harness: CanvasControllerHarness
-): (nodeIds: string[]) => void {
-  const graphHandlerArgs = harness.mocks.useCanvasGraphHandlers.mock.calls.at(-1)?.[0] as
-    { reconcileSelectionAfterNodeRemoval?: (nodeIds: string[]) => void } | undefined;
-
-  if (!graphHandlerArgs?.reconcileSelectionAfterNodeRemoval) {
-    throw new Error('Canvas graph handlers did not receive a node-removal selection adapter.');
-  }
-
-  return graphHandlerArgs.reconcileSelectionAfterNodeRemoval;
 }
 
 function expectSelectionPrunedToVisibleScope(harness: CanvasControllerHarness): void {
@@ -155,81 +141,6 @@ describe('useCanvasController draft lifecycle scope and projection', () => {
 
     expectSelectionPrunedToVisibleScope(harness);
     expectTransformationExecutionScopeSubset(harness);
-  });
-
-  it('preserves hidden explicit DBT selection intent until execution validation rejects it', async () => {
-    harness = await createHarnessWithDraft(
-      buildRemoteDraftRecord(
-        {
-          canvas: { kind: 'dbt', title: 'DBT canvas' },
-          nodeIds: ['node_1'],
-          nodePositions: {
-            node_1: { x: 0, y: 0 },
-          },
-          edges: [],
-        },
-        'rev-dbt-1',
-        '2026-04-17T00:00:00Z'
-      )
-    );
-    harness.state.store.setExecutionSelectionIntent({
-      mode: 'explicit',
-      nodeIds: ['node_2'],
-    });
-    harness.state.store.inspectorNodeId = 'node_2';
-
-    await harness.renderProbe();
-
-    expect(harness.state.store.setSelectedNodes).not.toHaveBeenCalledWith([]);
-    expect(harness.state.store.setInspectorNode).toHaveBeenCalledWith(null);
-    expect(readLatestExecutionCall(harness)?.selectionIntent).toEqual({
-      mode: 'explicit',
-      nodeIds: ['node_2'],
-    });
-    expect(readLatestExecutionCall(harness)?.workspaceNodeIds).toEqual(['node_1']);
-    expect(harness.getLatestResult()?.executionSelectionRecovery).toMatchObject({
-      queryRail: 'CollectCanvasExecutionSelection',
-      commandRail: 'RecoverCanvasExecutionSelection',
-      status: 'blocked',
-      requestedRootNodeIds: ['node_2'],
-      unavailableRootNodeIds: ['node_2'],
-      admittedScopeNodeIds: [],
-      canUseWorkspaceScope: false,
-    });
-
-    harness.state.store.setExecutionSelectionIntent.mockClear();
-    act(() => {
-      harness?.getLatestResult()?.executionSelectionRecoveryCommands?.useWorkspaceScope();
-    });
-
-    expect(harness.state.store.setExecutionSelectionIntent).not.toHaveBeenCalled();
-  });
-
-  it('preserves the only selected DBT root when graph removal reports no visible selection', async () => {
-    harness = await createHarnessWithDraft(
-      buildRemoteDraftRecord(
-        {
-          canvas: { kind: 'dbt', title: 'DBT canvas' },
-          nodeIds: ['node_1'],
-          nodePositions: {
-            node_1: { x: 0, y: 0 },
-          },
-          edges: [],
-        },
-        'rev-dbt-lifecycle-1',
-        '2026-04-17T00:00:00Z'
-      )
-    );
-    harness.state.store.setExecutionSelectionIntent({
-      mode: 'explicit',
-      nodeIds: ['node_1'],
-    });
-    await harness.renderProbe();
-    harness.state.store.setExecutionSelectionIntent.mockClear();
-
-    readLatestGraphRemovalSelectionReconciler(harness)([]);
-
-    expect(harness.state.store.setExecutionSelectionIntent).not.toHaveBeenCalled();
   });
 
   it('projects the full persisted draft from protected semantic truth even before snapshot hydration catches up', async () => {

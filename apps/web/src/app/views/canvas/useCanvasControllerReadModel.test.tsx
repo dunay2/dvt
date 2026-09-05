@@ -16,7 +16,6 @@ import {
 type ReadModelArgs = Parameters<typeof useCanvasControllerReadModel>[0];
 type ReadModelState = ReturnType<typeof useCanvasControllerReadModel>;
 type ReadModelNodeData = {
-  canvasKind?: unknown;
   columns?: unknown;
   onDuplicateNode?: unknown;
   onRemoveNode?: unknown;
@@ -109,7 +108,6 @@ function buildReadModelArgs(
       handleComposeCanvasNodes: vi.fn(),
     },
     onToggleExecutionSelection: vi.fn(),
-    activeCanvasKind: 'transformation',
     canMutateGraph: false,
     canSelectExecution: true,
     columnLevelLineageEnabled: false,
@@ -186,19 +184,6 @@ describe('useCanvasControllerReadModel', () => {
       expect(nodeData?.onRemoveNode).toBe(args.graphHandlers.handleRemoveNode);
       expect(nodeData?.onAttachSchemaToNode).toBe(args.graphHandlers.handleAttachSchemaToNode);
       expect(nodeData?.onToggleNodeSelection).toBe(args.onToggleExecutionSelection);
-    } finally {
-      await mounted.cleanup();
-    }
-  });
-
-  it('projects the active canvas kind into node data for strategy-owned card rendering', async () => {
-    const args = buildReadModelArgs();
-    const mounted = await renderReadModel(args);
-
-    try {
-      const nodeData = readProjectedNodeData(mounted.readState());
-
-      expect(nodeData?.canvasKind).toBe('transformation');
     } finally {
       await mounted.cleanup();
     }
@@ -546,7 +531,6 @@ describe('useCanvasControllerReadModel', () => {
         selectedNodeIds: [],
         workspaceNodeIds: [sourceNode.id, modelNode.id],
       },
-      activeCanvasKind: 'dbt',
     };
     const mounted = await renderReadModel(args);
 
@@ -732,134 +716,6 @@ describe('useCanvasControllerReadModel', () => {
       expect(nodeData?.onRemoveNode).toBeUndefined();
       expect(nodeData?.onAttachSchemaToNode).toBeUndefined();
       expect(nodeData?.onToggleNodeSelection).toBe(args.onToggleExecutionSelection);
-    } finally {
-      await mounted.cleanup();
-    }
-  });
-
-  it('exposes DBT execution selection only on executable roots', async () => {
-    const sourceNode = {
-      ...testNode,
-      id: 'dbt-source',
-      pluginId: 'dbt',
-      kind: 'dbt:source',
-    } satisfies CanonicalNode;
-    const modelNode = {
-      ...testNode,
-      id: 'dbt-model',
-      pluginId: 'dbt',
-      kind: 'dbt:model',
-      role: 'transform',
-    } satisfies CanonicalNode;
-    const canonicalNodes = [sourceNode, modelNode];
-    const args: ReadModelArgs = {
-      ...buildReadModelArgs({ canSelectExecution: true }),
-      activeCanvasKind: 'dbt',
-      graphModel: {
-        nodes: canonicalNodes.map((canonicalNode, index) =>
-          mapCanonicalNodeToCanvasNode({ canonicalNode, index, showColumns: false })
-        ),
-        edges: [],
-        canonicalNodesById: new Map(canonicalNodes.map((node) => [node.id, node])),
-        onEdgesChange: vi.fn(),
-      },
-      visibleScope: { canonicalNodes, canonicalEdges: [] },
-      executionScope: {
-        selectedNodeIds: [],
-        workspaceNodeIds: canonicalNodes.map((node) => node.id),
-      },
-    };
-    const mounted = await renderReadModel(args);
-
-    try {
-      const nodes = mounted.readState()?.nodesWithImpact ?? [];
-      const sourceData = nodes.find((node) => node.id === sourceNode.id)?.data as ReadModelNodeData;
-      const modelData = nodes.find((node) => node.id === modelNode.id)?.data as ReadModelNodeData;
-
-      expect(sourceData.onToggleNodeSelection).toBeUndefined();
-      expect(modelData.onToggleNodeSelection).toBe(args.onToggleExecutionSelection);
-    } finally {
-      await mounted.cleanup();
-    }
-  });
-
-  it('keeps only the deselection path for a persisted non-executable DBT selection', async () => {
-    const sourceNode = {
-      ...testNode,
-      id: 'selected-dbt-source',
-      pluginId: 'dbt',
-      kind: 'dbt:source',
-    } satisfies CanonicalNode;
-    const args: ReadModelArgs = {
-      ...buildReadModelArgs({ canSelectExecution: true }),
-      activeCanvasKind: 'dbt',
-      graphModel: {
-        nodes: [
-          mapCanonicalNodeToCanvasNode({ canonicalNode: sourceNode, index: 0, showColumns: false }),
-        ],
-        edges: [],
-        canonicalNodesById: new Map([[sourceNode.id, sourceNode]]),
-        onEdgesChange: vi.fn(),
-      },
-      visibleScope: { canonicalNodes: [sourceNode], canonicalEdges: [] },
-      executionScope: { selectedNodeIds: [sourceNode.id], workspaceNodeIds: [sourceNode.id] },
-      uiScope: { selectedNodeIds: [sourceNode.id], inspectorNodeId: null },
-    };
-    const mounted = await renderReadModel(args);
-
-    try {
-      expect(readProjectedNodeData(mounted.readState())?.selectedForExecution).toBe(true);
-      expect(readProjectedNodeData(mounted.readState())?.onToggleNodeSelection).toBe(
-        args.onToggleExecutionSelection
-      );
-    } finally {
-      await mounted.cleanup();
-    }
-  });
-
-  it('re-evaluates DBT selection eligibility when canonical node identity changes', async () => {
-    const sourceNode = {
-      ...testNode,
-      id: 'dbt-resource',
-      pluginId: 'dbt',
-      kind: 'dbt:source',
-    } satisfies CanonicalNode;
-    const modelNode = {
-      ...sourceNode,
-      kind: 'dbt:model',
-      role: 'transform',
-    } satisfies CanonicalNode;
-    const graphNodes = [
-      mapCanonicalNodeToCanvasNode({ canonicalNode: sourceNode, index: 0, showColumns: false }),
-    ];
-    const args: ReadModelArgs = {
-      ...buildReadModelArgs({ canSelectExecution: true }),
-      activeCanvasKind: 'dbt',
-      graphModel: {
-        nodes: graphNodes,
-        edges: [],
-        canonicalNodesById: new Map([[sourceNode.id, sourceNode]]),
-        onEdgesChange: vi.fn(),
-      },
-      visibleScope: { canonicalNodes: [sourceNode], canonicalEdges: [] },
-      executionScope: { selectedNodeIds: [], workspaceNodeIds: [sourceNode.id] },
-    };
-    const mounted = await renderReadModel(args);
-
-    try {
-      expect(readProjectedNodeData(mounted.readState())?.onToggleNodeSelection).toBeUndefined();
-
-      await mounted.rerender({
-        ...args,
-        graphModel: {
-          ...args.graphModel,
-          canonicalNodesById: new Map([[modelNode.id, modelNode]]),
-        },
-      });
-
-      expect(readProjectedNodeData(mounted.readState())?.onToggleNodeSelection).toBe(
-        args.onToggleExecutionSelection
-      );
     } finally {
       await mounted.cleanup();
     }

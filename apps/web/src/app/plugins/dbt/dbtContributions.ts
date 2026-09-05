@@ -4,11 +4,7 @@ import { CANVAS_ROUTE_BOOTSTRAP_HANDLE } from '../../views/canvas/canvasDraftPre
 import type { PluginContributions } from '../registry';
 import { DBT_NODE_KINDS } from '../nodeTypeCatalog.dbt';
 import { DbtNodeRenderer, dbtInspectorPanels, mapRunToCanonical } from './DbtNodeRenderer';
-import { dbtCanvasSurfaceStrategy } from './dbtCanvasSurfaceStrategy';
-import { dbtCanvasGraphStrategy } from './dbtNodeAdapter';
 import { dbtGraphNodeCardStrategy } from './dbtGraphNodeCardStrategy';
-import { OBJECT_FILE_POSTGRES_NODE_KINDS } from '../objectFilePostgres/objectFilePostgresNodeTypeCatalog';
-import { HTTP_JSON_NODE_KINDS } from '../httpJson/httpJsonNodeTypeCatalog';
 import { createDeferredView } from '../createDeferredView';
 
 /**
@@ -75,36 +71,6 @@ export const dbtContributions: PluginContributions = {
         order: 10,
         level: 'core',
       },
-    },
-  ],
-  canvasKinds: [
-    {
-      kind: 'dbt',
-      pluginId: DBT_PLUGIN_ID,
-      executionStrategy: {
-        kind: 'planner_generic_preview',
-        previewProfile: 'planner-generic-v1',
-        sourceFamily: 'dbt',
-      },
-      graphStrategy: dbtCanvasGraphStrategy,
-      surfaceStrategy: dbtCanvasSurfaceStrategy,
-      label: 'dbt',
-      description: 'Model-first canvas for dbt resources and dependencies.',
-      createTitle: 'dbt canvas',
-      localizedCopy: {
-        es: {
-          label: 'dbt',
-          description: 'Canvas basado en modelos para recursos y dependencias dbt.',
-          createTitle: 'Canvas dbt',
-        },
-      },
-      nodeKinds: [
-        ...DBT_NODE_KINDS.filter(
-          ({ kind }) => kind === 'dbt:source' || kind === 'dbt:model' || kind === 'dbt:test'
-        ),
-        ...HTTP_JSON_NODE_KINDS,
-        ...OBJECT_FILE_POSTGRES_NODE_KINDS,
-      ],
     },
   ],
   // Connection rules express dbt-local authoring policy; shell-level graph

@@ -33,18 +33,28 @@ function buildDraftReadModelWithCanvasKind(kind: string): CanvasAuthoringDraftRe
 }
 
 describe('resolveActiveCanvasGraphStrategy', () => {
-  it('uses the current draft canvas kind as the graph strategy selector', () => {
+  it('uses the shared transformation Canvas runtime for persisted Canvas documents', () => {
     expect(
-      resolveActiveCanvasGraphStrategy(buildDraftReadModelWithCanvasKind('dbt'))
+      resolveActiveCanvasGraphStrategy(buildDraftReadModelWithCanvasKind('transformation'))
     ).toMatchObject({
       kind: 'ready',
-      canvasKind: 'dbt',
+      canvasKind: 'transformation',
       strategy: {
-        id: 'dbt',
+        id: 'transformation',
       },
       surfaceStrategy: {
-        id: 'dbt-contextual-canvas',
+        id: 'dvt-transformation-contextual-canvas',
       },
+    });
+    expect(
+      resolveActiveCanvasAuthoringMode(buildDraftReadModelWithCanvasKind('transformation'))
+    ).toBe('transformation');
+  });
+
+  it('fails closed for obsolete persisted dbt Canvas kinds instead of aliasing them', () => {
+    expect(resolveActiveCanvasGraphStrategy(buildDraftReadModelWithCanvasKind('dbt'))).toEqual({
+      kind: 'unsupported_kind',
+      canvasKind: 'dbt',
     });
     expect(resolveActiveCanvasAuthoringMode(buildDraftReadModelWithCanvasKind('dbt'))).toBe('dbt');
   });
@@ -87,7 +97,7 @@ describe('resolveActiveCanvasGraphStrategy', () => {
     });
   });
 
-  it('distinguishes disabled registered plugins from unsupported canvas kinds', () => {
+  it('does not turn dbt plugin availability into a Canvas kind registration', () => {
     expect(
       resolveActiveCanvasGraphStrategy(buildDraftReadModelWithCanvasKind('dbt'), {
         plugins: {
@@ -98,30 +108,22 @@ describe('resolveActiveCanvasGraphStrategy', () => {
         },
       })
     ).toEqual({
-      kind: 'disabled_plugin',
+      kind: 'unsupported_kind',
       canvasKind: 'dbt',
-      pluginId: 'dbt',
-      reason: 'disabled_for_workspace',
     });
   });
 
-  it('does not invent fallback strategies for unsupported or disabled active runtimes', () => {
+  it('does not invent fallback strategies for unsupported active runtimes', () => {
     const unsupported = resolveActiveCanvasGraphStrategy(
       buildDraftReadModelWithCanvasKind('unknown')
     );
-    const disabled = resolveActiveCanvasGraphStrategy(buildDraftReadModelWithCanvasKind('dbt'), {
-      plugins: {
-        dbt: {
-          available: false,
-        },
-      },
-    });
+    const obsoleteDbt = resolveActiveCanvasGraphStrategy(buildDraftReadModelWithCanvasKind('dbt'));
 
     expect(selectActiveCanvasGraphStrategy(unsupported)).toBeNull();
     expect(selectActiveCanvasExecutionStrategy(unsupported)).toBeNull();
     expect(selectActiveCanvasSurfaceStrategy(unsupported)).toBeNull();
-    expect(selectActiveCanvasGraphStrategy(disabled)).toBeNull();
-    expect(selectActiveCanvasExecutionStrategy(disabled)).toBeNull();
-    expect(selectActiveCanvasSurfaceStrategy(disabled)).toBeNull();
+    expect(selectActiveCanvasGraphStrategy(obsoleteDbt)).toBeNull();
+    expect(selectActiveCanvasExecutionStrategy(obsoleteDbt)).toBeNull();
+    expect(selectActiveCanvasSurfaceStrategy(obsoleteDbt)).toBeNull();
   });
 });

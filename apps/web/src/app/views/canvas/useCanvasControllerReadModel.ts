@@ -4,13 +4,9 @@ import type { Edge, EdgeChange, Node } from '@xyflow/react';
 import { buildCanvasNodeInteractionPresentation } from './canvasNodeInteractionPresentation';
 import { validateTransformationGraph } from './transformationGraphValidation';
 import type { RuntimeCapabilities } from '../../plugins/registry';
-import { getCanvasGraphNodeCardStrategies } from '../../plugins/graphStrategyRegistry';
+import { getGraphNodeCardStrategies } from '../../plugins/graphStrategyRegistry';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { UseCanvasGraphHandlersResult } from './useCanvasGraphHandlers.types';
-import {
-  canOfferDbtExecutionSelectionToggle,
-  isDbtExecutionSelectableNode,
-} from './dbtExecutionScopePolicy';
 import {
   createCanvasColumnHandleId,
   projectCanvasColumnLineage,
@@ -125,7 +121,6 @@ type UseCanvasControllerReadModelArgs = {
     | 'handleComposeCanvasNodes'
   >;
   onToggleExecutionSelection: (nodeId: string, shouldSelect: boolean) => void;
-  activeCanvasKind: string;
   runtimeCapabilities?: RuntimeCapabilities;
   canMutateGraph: boolean;
   canSelectExecution: boolean;
@@ -140,7 +135,6 @@ export function useCanvasControllerReadModel({
   overlayModel,
   graphHandlers,
   onToggleExecutionSelection,
-  activeCanvasKind,
   runtimeCapabilities,
   canMutateGraph,
   canSelectExecution,
@@ -149,7 +143,6 @@ export function useCanvasControllerReadModel({
   const [selectedColumnLineageEdgeId, setSelectedColumnLineageEdgeId] = useState<string | null>(
     null
   );
-  const presentsColumnLineage = activeCanvasKind === 'transformation' || activeCanvasKind === 'dbt';
   const transformationValidation = useMemo(
     () =>
       validateTransformationGraph({
@@ -166,11 +159,10 @@ export function useCanvasControllerReadModel({
     ]
   );
   const graphNodeCardStrategies = useMemo(
-    () => getCanvasGraphNodeCardStrategies(activeCanvasKind, runtimeCapabilities),
-    [activeCanvasKind, runtimeCapabilities]
+    () => getGraphNodeCardStrategies(runtimeCapabilities),
+    [runtimeCapabilities]
   );
   const projectedColumnLineage = useMemo(() => {
-    if (!presentsColumnLineage) return [];
     const expandedNodeIds = new Set(
       graphModel.nodes
         .filter((node) => node.data.columnDisclosureExpanded === true)
@@ -181,12 +173,7 @@ export function useCanvasControllerReadModel({
       edges: visibleScope.canonicalEdges,
       expandedNodeIds,
     });
-  }, [
-    graphModel.nodes,
-    presentsColumnLineage,
-    visibleScope.canonicalEdges,
-    visibleScope.canonicalNodes,
-  ]);
+  }, [graphModel.nodes, visibleScope.canonicalEdges, visibleScope.canonicalNodes]);
   const readOnlyColumnLineageNodeIds = useMemo(
     () =>
       new Set(
@@ -244,15 +231,6 @@ export function useCanvasControllerReadModel({
           canonicalNode?.role === 'transform' &&
           !canAuthorColumnMappings &&
           readOnlyColumnLineageNodeIds.has(canonicalNode.id);
-        const selectedForExecution = uiScope.selectedNodeIds.includes(node.id);
-        const canSelectNode =
-          canSelectExecution &&
-          (activeCanvasKind !== 'dbt' ||
-            canOfferDbtExecutionSelectionToggle({
-              isExecutableRoot:
-                canonicalNode != null && isDbtExecutionSelectableNode(canonicalNode),
-              selectedForExecution,
-            }));
         const functionProjection =
           canMutateGraph && canonicalNode != null
             ? projectCanvasColumnFunctionMenus({
@@ -280,9 +258,8 @@ export function useCanvasControllerReadModel({
 
         const projectedNodeData = {
           ...node.data,
-          onToggleNodeSelection: canSelectNode ? onToggleExecutionSelection : undefined,
+          onToggleNodeSelection: canSelectExecution ? onToggleExecutionSelection : undefined,
           activeRunId: overlayModel.activeRunId,
-          canvasKind: activeCanvasKind,
           runStatusByNodeId: overlayModel.runStatusByNodeId,
           overlayDecoration: overlayModel.overlayDecorations.get(node.id) ?? null,
           runtimeCapabilities,
@@ -311,11 +288,9 @@ export function useCanvasControllerReadModel({
               : undefined,
           canReorderTopLevelColumns: !hasStructuredProjection,
           onAutomapColumns: canAuthorColumnMappings ? node.data.onAutomapColumns : undefined,
-          columns: presentsColumnLineage
-            ? projectInteractiveColumns(node, columnFunctionMenus)
-            : node.data.columns,
+          columns: projectInteractiveColumns(node, columnFunctionMenus),
           columnPortDirections:
-            presentsColumnLineage && canonicalNode != null
+            canonicalNode != null
               ? canonicalNode.role === 'transform' &&
                 !canAuthorColumnMappings &&
                 !hasReadOnlyColumnLineage &&
@@ -356,21 +331,16 @@ export function useCanvasControllerReadModel({
       graphModel.edges,
       graphModel.nodes,
       graphNodeCardStrategies,
-      activeCanvasKind,
       overlayModel.activeRunId,
       overlayModel.overlayDecorations,
       overlayModel.runStatusByNodeId,
       runtimeCapabilities,
-      uiScope.selectedNodeIds,
       readOnlyColumnLineageNodeIds,
-      presentsColumnLineage,
       visibleScope.canonicalEdges,
-      visibleScope.canonicalNodes,
     ]
   );
 
   const edgesWithImpact = useMemo(() => {
-    if (!presentsColumnLineage) return graphModel.edges;
     const lineageEdges = projectedColumnLineage.map((edge) => ({
       ...edge,
       selected: edge.id === selectedColumnLineageEdgeId,
@@ -388,7 +358,6 @@ export function useCanvasControllerReadModel({
   }, [
     graphHandlers.handleRemoveColumnMapping,
     graphModel.edges,
-    presentsColumnLineage,
     projectedColumnLineage,
     selectedColumnLineageEdgeId,
   ]);

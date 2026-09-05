@@ -19,14 +19,6 @@ export const FIRST_AUTHORING_DEFAULTS: readonly CanvasFirstAuthoringDefault[] = 
       name: 'Transform 1',
     },
   },
-  {
-    canvasKind: 'dbt',
-    node: {
-      id: 'dbt-model-1',
-      kind: 'dbt:model',
-      name: 'Model 1',
-    },
-  },
 ];
 
 export function resolveExpectedFirstNode(

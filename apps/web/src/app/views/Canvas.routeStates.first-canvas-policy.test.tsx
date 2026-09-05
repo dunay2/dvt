@@ -1,11 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { buildCanvasHostCycleControllerState } from './Canvas.test.hostCycleScenario';
 import {
   createCanvasRouteHarness,
   expectActiveCanvasShellIdentity,
   currentCanvasRouteState,
-  getPrimaryCanvasButtons,
   renderCanvasRouteWithController,
   requireAuthoringNodeKind,
   type CanvasRouteHarness,
@@ -91,30 +89,5 @@ describe('Canvas route first-canvas policy', () => {
     expect(harness.container.querySelector('[data-slot="canvas-empty-state"]')).toBeNull();
     expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
     expect(currentCanvasRouteState().viewportProps?.canEditEdges).toBe(false);
-  });
-
-  it('keeps dbt authoring available without restoring an empty-state overlay', async () => {
-    await renderCanvasRouteWithController(harness, {
-      ...buildCanvasHostCycleControllerState({
-        kind: 'typed_empty',
-        canvasKind: 'dbt',
-        title: 'Warehouse dbt',
-      }),
-      canStartRun: false,
-    });
-
-    expectActiveCanvasShellIdentity({
-      container: harness.container,
-      title: 'Warehouse dbt',
-      kindLabel: 'dbt',
-    });
-    expect(harness.container.querySelector('[data-slot="canvas-empty-state"]')).toBeNull();
-    expect(currentCanvasRouteState().viewportProps?.authoringNodeKinds).toContain(
-      requireAuthoringNodeKind('dbt:source')
-    );
-
-    const { planButton, runButton } = getPrimaryCanvasButtons(harness.container);
-    expect(planButton).toBeUndefined();
-    expect(runButton).toBeUndefined();
   });
 });

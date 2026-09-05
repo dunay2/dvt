@@ -182,7 +182,7 @@ export function useDbtProjectFilesAuthoritySurface({
   const projectRoot = controller.authorityBinding.authority.projectRoot;
   const activeCanvas = {
     id: controller.authorityBinding.canvasId,
-    kind: 'dbt',
+    kind: 'transformation',
     title: resolveProjectTitle(projectRoot),
     defaultPermission: 'read' as const,
   };
@@ -265,7 +265,7 @@ export function useDbtProjectFilesAuthoritySurface({
       frozenNodeIds: controller.frozenNodeIds,
     },
     chromeState: {
-      canvasAuthoringMode: 'dbt',
+      canvasAuthoringMode: 'transformation',
       routeState: controller.query.isPending
         ? 'loading_graph'
         : controller.query.isError

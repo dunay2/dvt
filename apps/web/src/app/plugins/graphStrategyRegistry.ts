@@ -51,26 +51,14 @@ export function findCanvasSurfaceStrategy(
   return findCanvasRuntimeRegistration(strategyId, capabilities)?.surfaceStrategy ?? null;
 }
 
-export function getCanvasGraphNodeCardStrategies(
-  strategyId: unknown,
+export function getGraphNodeCardStrategies(
   capabilities?: RuntimeCapabilities
 ): GraphNodeCardStrategy[] {
-  const runtimeRegistration = findCanvasRuntimeRegistration(strategyId, capabilities);
-  if (runtimeRegistration == null) {
-    return [];
-  }
-
-  const strategies = getRuntimePlugins(capabilities)
-    .filter(
-      (plugin) =>
-        plugin.id === runtimeRegistration.pluginId ||
-        ((plugin.sourceImport?.length ?? 0) > 0 &&
-          (plugin.graphNodeCardStrategies?.length ?? 0) > 0)
-    )
-    .flatMap((plugin) => plugin.graphNodeCardStrategies ?? []);
   const uniqueStrategies = new Map<string, GraphNodeCardStrategy>();
 
-  for (const strategy of strategies) {
+  for (const strategy of getRuntimePlugins(capabilities).flatMap(
+    (plugin) => plugin.graphNodeCardStrategies ?? []
+  )) {
     if (!uniqueStrategies.has(strategy.id)) {
       uniqueStrategies.set(strategy.id, strategy);
     }

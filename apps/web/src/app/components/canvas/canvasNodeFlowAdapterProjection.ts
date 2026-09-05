@@ -1,7 +1,7 @@
 /** Owned concern: project Canvas node data into the existing React Flow adapter boundary. */
 import type { NodeRendererProps } from '../../plugins/contracts/NodeRendering';
 import { FallbackNodeRenderer } from '../../plugins/FallbackNodeRenderer';
-import { getCanvasGraphNodeCardStrategies } from '../../plugins/graphStrategyRegistry';
+import { getGraphNodeCardStrategies } from '../../plugins/graphStrategyRegistry';
 import { mapDbtTypeToKind } from '../../plugins/nodeTypeCatalog.dbt';
 import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
 import { getNodeBadges, getNodeRenderer } from '../../plugins/registry';
@@ -106,10 +106,7 @@ export function projectCanvasNodeFlowAdapter({
     hovered: false,
     overlayDecoration: data.overlayDecoration ?? null,
     badges,
-    graphNodeCardStrategies: getCanvasGraphNodeCardStrategies(
-      data.canvasKind,
-      data.runtimeCapabilities
-    ),
+    graphNodeCardStrategies: getGraphNodeCardStrategies(data.runtimeCapabilities),
     data: { ...data, onColumnLayoutChange },
   };
   const canMutateNodeCommands = data.canMutateGraph === true;

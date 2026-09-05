@@ -14,10 +14,6 @@ import { useApplicationLanguageStore } from '../../stores/applicationLanguageSto
 
 type CanvasWorkspaceMenuContributionRegistrarProps = CanvasWorkspaceMenuContribution;
 
-function resolveCanvasKindLabel(kind: string): string {
-  return kind === 'dbt' ? 'dbt' : canvasViewCopy.workspaceTransformationKindLabel;
-}
-
 export function CanvasWorkspaceMenuContributionRegistrar(
   props: CanvasWorkspaceMenuContributionRegistrarProps
 ): null {
@@ -212,9 +208,6 @@ export function CanvasWorkspaceTopBarIdentity(): JSX.Element | null {
       )}
     >
       <span className="truncate font-semibold text-(--text-primary)">{activeCanvas.title}</span>
-      <span className="hidden shrink-0 text-(--text-muted) sm:inline">
-        {resolveCanvasKindLabel(activeCanvas.kind)}
-      </span>
     </div>
   );
 }

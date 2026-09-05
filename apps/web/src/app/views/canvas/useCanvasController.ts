@@ -22,17 +22,7 @@ import { useCanvasMutationHandlers } from './useCanvasMutationHandlers';
 import { useCanvasOverlayModel } from './useCanvasOverlayModel';
 import { useCanvasInspectorCommands } from './useCanvasInspectorCommands';
 import { useCanvasSelectionSync } from './useCanvasSelectionSync';
-import {
-  applyDbtExecutionSelectionToggle,
-  reconcileDbtExecutionSelectionVisibleSubset,
-} from './dbtExecutionScopePolicy';
 import { createCanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
-import {
-  buildCanvasExecutionSelectionRecoveryGraph,
-  resolveCanvasExecutionSelectionLastPreviewRevision,
-} from './canvasExecutionSelectionRecovery';
-import { refreshCanvasExecutionSelectionAuthority } from './canvasExecutionSelectionRecoveryAuthorityAdapter';
-import { useCanvasExecutionSelectionRecovery } from './useCanvasExecutionSelectionRecovery';
 
 export function useCanvasController() {
   const environment = useCanvasControllerEnvironment();
@@ -159,56 +149,28 @@ export function useCanvasController() {
   ]);
   const canMutateActiveCanvas = runtimePolicy.commands.canMutateGraph;
   const canSelectExecution = runtimePolicy.commands.canPlan || runtimePolicy.commands.canRun;
-  const preservesDbtExecutionSelectionIntent = canvasAuthoringMode === 'dbt';
   const executionSelectionIntent = useMemo(
     () =>
       createCanvasExecutionSelectionIntent(
-        preservesDbtExecutionSelectionIntent
-          ? executionScope.requestedNodeIds
-          : executionScope.selectedNodeIds,
+        executionScope.selectedNodeIds,
         executionScope.selectionMode
       ),
-    [
-      executionScope.requestedNodeIds,
-      executionScope.selectedNodeIds,
-      executionScope.selectionMode,
-      preservesDbtExecutionSelectionIntent,
-    ]
+    [executionScope.selectedNodeIds, executionScope.selectionMode]
   );
   const setSelectedNodesForActiveCanvas = useCallback(
-    (nodeIds: string[]) => {
-      if (preservesDbtExecutionSelectionIntent) {
-        store.setExecutionSelectionIntent(
-          reconcileDbtExecutionSelectionVisibleSubset({
-            requestedNodeIds: executionScope.requestedNodeIds,
-            visibleNodeIds: executionScope.workspaceNodeIds,
-            nextSelectedNodeIds: nodeIds,
-          })
-        );
-        return;
-      }
-
-      store.setSelectedNodes(nodeIds);
-    },
-    [
-      executionScope.requestedNodeIds,
-      executionScope.workspaceNodeIds,
-      preservesDbtExecutionSelectionIntent,
-      store.setExecutionSelectionIntent,
-      store.setSelectedNodes,
-    ]
+    (nodeIds: string[]) => store.setSelectedNodes(nodeIds),
+    [store.setSelectedNodes]
   );
   const reconcileSelectionAfterNodeRemoval = useCallback(
     (remainingVisibleNodeIds: string[]) => {
-      if (preservesDbtExecutionSelectionIntent) return;
       setSelectedNodesForActiveCanvas(remainingVisibleNodeIds);
     },
-    [preservesDbtExecutionSelectionIntent, setSelectedNodesForActiveCanvas]
+    [setSelectedNodesForActiveCanvas]
   );
 
   useCanvasSelectionSync({
     isBootstrapping: draftSession.syncState === 'bootstrapping',
-    preserveSelectionIntent: preservesDbtExecutionSelectionIntent,
+    preserveSelectionIntent: false,
     storeSelection: store.selectedNodeIds,
     storeInspectorNodeId: store.inspectorNodeId,
     uiScope,
@@ -287,29 +249,6 @@ export function useCanvasController() {
     impactOverlayEnabled: store.impactOverlayEnabled,
   });
 
-  const handleToggleExecutionSelection = useCallback(
-    (nodeId: string, shouldSelect: boolean) => {
-      if (!preservesDbtExecutionSelectionIntent) {
-        graphHandlers.handleToggleNodeSelection(nodeId, shouldSelect);
-        return;
-      }
-
-      store.setExecutionSelectionIntent(
-        applyDbtExecutionSelectionToggle({
-          requestedNodeIds: executionScope.requestedNodeIds,
-          nodeId,
-          shouldSelect,
-        })
-      );
-    },
-    [
-      executionScope.requestedNodeIds,
-      graphHandlers.handleToggleNodeSelection,
-      preservesDbtExecutionSelectionIntent,
-      store.setExecutionSelectionIntent,
-    ]
-  );
-
   const executionActions = useCanvasExecutionActions({
     graphDraftCanvasId: resolvedGraphDraftCanvasId,
     plansService,
@@ -335,40 +274,6 @@ export function useCanvasController() {
     toggleBottomDrawer: store.toggleBottomDrawer,
     onRunStarted: navigationActions.handleRunStarted,
   });
-  const executionSelectionRecoveryGraph = useMemo(
-    () =>
-      buildCanvasExecutionSelectionRecoveryGraph({
-        canonicalNodes: visibleScope.canonicalNodes,
-        canonicalEdges: visibleScope.canonicalEdges,
-        workspaceNodeIds: executionScope.workspaceNodeIds,
-        plannerGraphSource:
-          executionStrategy?.kind === 'dbt_project_file_preview'
-            ? executionStrategy.plannerGraphSource
-            : null,
-      }),
-    [
-      executionScope.workspaceNodeIds,
-      executionStrategy,
-      visibleScope.canonicalEdges,
-      visibleScope.canonicalNodes,
-    ]
-  );
-  const refetchGraphAuthority = authoringRuntime.refreshGraphAuthority;
-  const refreshExecutionSelectionAnalysis = useCallback(
-    () => refreshCanvasExecutionSelectionAuthority(refetchGraphAuthority),
-    [refetchGraphAuthority]
-  );
-  const executionSelectionRecovery = useCanvasExecutionSelectionRecovery({
-    enabled: preservesDbtExecutionSelectionIntent,
-    selectionIntent: executionSelectionIntent,
-    workspaceNodeIds: executionScope.workspaceNodeIds,
-    executableNodeIds: executionSelectionRecoveryGraph.executableNodeIds,
-    dependencyIdsByNodeId: executionSelectionRecoveryGraph.dependencyIdsByNodeId,
-    lastPreviewRevision: resolveCanvasExecutionSelectionLastPreviewRevision(store.currentPlan),
-    canRefreshAnalysis: true,
-    setSelectionIntent: store.setExecutionSelectionIntent,
-    refreshAnalysis: refreshExecutionSelectionAnalysis,
-  });
 
   const {
     transformationValidation,
@@ -386,8 +291,7 @@ export function useCanvasController() {
     uiScope,
     overlayModel,
     graphHandlers,
-    onToggleExecutionSelection: handleToggleExecutionSelection,
-    activeCanvasKind: canvasAuthoringMode,
+    onToggleExecutionSelection: graphHandlers.handleToggleNodeSelection,
     runtimeCapabilities: capabilities,
     canMutateGraph: canMutateActiveCanvas,
     canSelectExecution,
@@ -420,7 +324,7 @@ export function useCanvasController() {
       inspectorNode,
     },
     inspectorCommands,
-    executionSelectionRecovery,
+    executionSelectionRecovery: { model: null, commands: null },
     handleImpactFocusNodeChange: setImpactFocusNodeId,
   });
 }

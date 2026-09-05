@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
 import { evaluateConnectionPolicy } from '../contracts/ConnectionRules';
-import { getAllCanvasRuntimeRegistrations, getPluginPortMap } from '../registry';
+import { getAllNodeKinds, getPluginPortMap } from '../registry';
 import { HTTP_JSON_PLUGIN_ID, httpJsonContributions } from './httpJsonContributions';
 
 const acquisition: CanonicalNode = {
@@ -32,7 +32,7 @@ describe('HTTP JSON plugin contributions', () => {
     },
   } as const;
 
-  it('publishes an input node into the DBT canvas and bridges only artifacts to HET1', () => {
+  it('publishes an input node capability and bridges only artifacts to HET1', () => {
     expect(httpJsonContributions.backendPluginId).toBe(HTTP_JSON_PLUGIN_ID);
     expect(httpJsonContributions.nodeKinds).toEqual([
       expect.objectContaining({
@@ -43,9 +43,10 @@ describe('HTTP JSON plugin contributions', () => {
       }),
     ]);
     expect(
-      getAllCanvasRuntimeRegistrations(availableCapabilities)
-        .find((registration) => registration.kind === 'dbt')
-        ?.nodeKinds.some((kind) => kind.kind === 'dvt:http_json_acquisition')
+      getAllNodeKinds(availableCapabilities).some(
+        (kind) =>
+          kind.kind === 'dvt:http_json_acquisition' && kind.pluginId === HTTP_JSON_PLUGIN_ID
+      )
     ).toBe(true);
     expect(
       evaluateConnectionPolicy(acquisition, load, getPluginPortMap(availableCapabilities))
@@ -56,15 +57,13 @@ describe('HTTP JSON plugin contributions', () => {
   });
 
   it('removes the acquisition node when its backend capability is unavailable', () => {
-    const dbtCanvas = getAllCanvasRuntimeRegistrations({
+    const nodeKinds = getAllNodeKinds({
       plugins: {
         [HTTP_JSON_PLUGIN_ID]: { available: false, reason: 'disabled in test' },
         'dvt.object-file-postgres': { available: true },
       },
-    }).find((registration) => registration.kind === 'dbt');
+    });
 
-    expect(dbtCanvas?.nodeKinds).not.toContainEqual(
-      expect.objectContaining({ pluginId: HTTP_JSON_PLUGIN_ID })
-    );
+    expect(nodeKinds).not.toContainEqual(expect.objectContaining({ pluginId: HTTP_JSON_PLUGIN_ID }));
   });
 });

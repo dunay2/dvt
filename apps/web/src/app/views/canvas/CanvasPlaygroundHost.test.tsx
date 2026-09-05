@@ -17,14 +17,6 @@ const workspaceScope: WorkspaceScope = {
 
 const canvasKinds: readonly CanvasKindRegistration[] = [
   {
-    kind: 'dbt',
-    pluginId: 'dbt',
-    label: 'dbt',
-    description: 'Model-first canvas for dbt resources and dependencies.',
-    createTitle: 'dbt canvas',
-    nodeKinds: [],
-  },
-  {
     kind: 'transformation',
     pluginId: 'dvt',
     label: 'Transformation',
@@ -74,7 +66,7 @@ describe('CanvasPlaygroundHost', () => {
     vi.clearAllMocks();
   });
 
-  it('presents canvas templates inside the active workspace context', () => {
+  it('presents the shared Canvas entrypoint inside the active workspace context', () => {
     const { container, root } = renderHost();
 
     expect(container.textContent).toContain('Create canvas in this workspace');
@@ -82,8 +74,8 @@ describe('CanvasPlaygroundHost', () => {
     expect(container.textContent).toContain('tenant-a / project-orders / dev');
     expect(container.textContent).toContain('Adapter: temporal');
     expect(container.textContent).toContain('Choose a canvas template');
-    expect(container.textContent).toContain('dbt canvas');
     expect(container.textContent).toContain('Transformation canvas');
+    expect(container.textContent).not.toContain('dbt canvas');
     expect(container.textContent).not.toContain('governed canvas kind');
 
     act(() => {
@@ -91,7 +83,7 @@ describe('CanvasPlaygroundHost', () => {
     });
   });
 
-  it('dispatches the selected template through the host-owned create command', async () => {
+  it('dispatches the shared Canvas through the host-owned create command', async () => {
     const { container, onCreateCanvasDocument, root } = renderHost();
     const transformationButton = Array.from(container.querySelectorAll('button')).find((button) =>
       button.textContent?.includes('Transformation canvas')
@@ -114,7 +106,7 @@ describe('CanvasPlaygroundHost', () => {
     });
   });
 
-  it('renders unavailable template choices as disabled instead of no-op buttons', async () => {
+  it('renders the unavailable Canvas choice as disabled instead of a no-op button', async () => {
     const { container, onCreateCanvasDocument, root } = renderHost({
       onCreateCanvasDocument: undefined,
       unavailableMessage: 'Graph edits are unavailable for this workspace scope.',
