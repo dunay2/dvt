@@ -30,7 +30,7 @@ describe('useCanvasController canvas document contract', () => {
     harness.cleanup();
   });
 
-  it('selects graph strategy from the active canvas document kind', async () => {
+  it('fails closed for legacy dbt canvas documents', async () => {
     setHarnessRemoteDraftRecord(
       harness,
       buildRemoteDraftRecord({
@@ -51,20 +51,26 @@ describe('useCanvasController canvas document contract', () => {
     await harness.renderProbe();
 
     expect(harness.mocks.findCanvasRuntimeRegistration).toHaveBeenCalledWith('dbt', undefined);
-    expect(harness.getLatestResult()?.canvasAuthoringMode).toBe('dbt');
-    expect(harness.getLatestResult()?.canEditInspectorNode).toBe(true);
+    expect(harness.getLatestResult()?.canEditInspectorNode).toBe(false);
+    expect(harness.getLatestResult()?.canOpenSourceImport).toBe(false);
     expect(harness.getLatestResult()?.userPermissions).toEqual(
       expect.objectContaining({
-        canEditEdges: true,
+        canEditEdges: false,
         canPlan: false,
         canRun: false,
       })
     );
     expect(harness.mocks.useCanvasGraphHandlers).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        graphStrategy: expect.objectContaining({
-          id: 'dbt',
-        }),
+        graphStrategy: null,
+        canEditEdges: false,
+      })
+    );
+    expect(harness.mocks.useCanvasExecutionActions).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        executionStrategy: null,
+        canPlan: false,
+        canRun: false,
       })
     );
   });
