@@ -44,6 +44,7 @@ import { reconcileDbtModelConnectedOrigin } from './canvasDbtAuthoringModel';
 import { useCanvasColumnCommentCellRenderer } from './useCanvasColumnCommentCellRenderer';
 import { SourceNodeWorkbenchHeaderIdentity } from './SourceNodeWorkbenchHeaderIdentity';
 import { SourceOverviewPanel } from './SourceOverviewPanel';
+import { SourceColumnsPanel } from './SourceColumnsPanel';
 
 export type CanvasNodeWorkbenchPanelProps = Readonly<{
   node: CanonicalNode;
@@ -398,7 +399,7 @@ export function CanvasNodeWorkbenchPanel({
         </>
       );
     }
-    if (canonicalDvtRelationColumnAuthority) {
+    if (canonicalDvtRelationColumnAuthority && !approvedWarehouseSourceOverview) {
       sectionAfterChildren.columns = (
         <>
           {sectionAfterChildren.columns}
@@ -434,6 +435,11 @@ export function CanvasNodeWorkbenchPanel({
       persistentSectionIds={contributedSectionIds.has('code') ? ['code'] : undefined}
       sectionBeforeChildren={sectionBeforeChildren}
       sectionAfterChildren={sectionAfterChildren}
+      sectionBodyOverrides={
+        approvedWarehouseSourceOverview
+          ? { columns: <SourceColumnsPanel readModel={baseModel} /> }
+          : undefined
+      }
       fillAvailableHeight={containsCanonicalCodeOutput}
       moreLabel={copy.nodeWorkbenchMoreLabel}
       slotPrefix="canvas-node-workbench"
