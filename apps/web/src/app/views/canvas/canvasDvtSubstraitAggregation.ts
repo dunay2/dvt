@@ -30,10 +30,11 @@ import {
 } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import {
   DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1,
+  allocateDvtFieldId,
+  allocateDvtRelationId,
   buildDvtSubstraitStandardCapabilityId,
   type DvtSubstraitAuthoringSidecarV1,
 } from '@dvt/contracts';
-import { allocateDvtFieldId, allocateDvtRelationId } from '@dvt/contracts/substrait';
 
 import {
   inspectDvtSubstraitPilotDraft,
