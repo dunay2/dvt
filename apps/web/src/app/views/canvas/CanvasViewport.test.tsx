@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@xyflow/react', () => import('./canvasViewportXyflowTestAdapter'));
@@ -221,6 +222,58 @@ describe('CanvasViewport', () => {
     expect(xyflowState.lastReactFlowProps).toMatchObject({
       snapToGrid: true,
       nodesDraggable: true,
+    });
+  });
+
+  it('keeps algebraic drag completion on the existing command path exactly once', async () => {
+    const onNodeDrag = vi.fn();
+    const onNodeDragStop = vi.fn();
+    const onComposeCanvasNodes = vi.fn();
+    const source = {
+      id: 'source',
+      position: { x: 80, y: 0 },
+      measured: { width: 100, height: 100 },
+      data: {},
+      type: 'dbtNode',
+    } as CanvasViewportProps['nodesWithImpact'][number];
+    const target = {
+      id: 'target',
+      position: { x: 100, y: 0 },
+      measured: { width: 100, height: 100 },
+      data: {
+        resolveAlgebraicCompositionOperations: vi.fn(() => ['inner_join']),
+        onComposeCanvasNodes,
+      },
+      type: 'dbtNode',
+    } as CanvasViewportProps['nodesWithImpact'][number];
+
+    await renderViewport({
+      nodesWithImpact: [source, target],
+      onNodeDrag,
+      onNodeDragStop,
+    });
+
+    const reactFlowOnNodeDrag = xyflowState.lastReactFlowProps?.onNodeDrag as
+      | ((event: unknown, node: typeof source, nodes: typeof source[]) => void)
+      | undefined;
+    const reactFlowOnNodeDragStop = xyflowState.lastReactFlowProps?.onNodeDragStop as
+      | ((event: unknown, node: typeof source, nodes: typeof source[]) => void)
+      | undefined;
+
+    act(() => {
+      reactFlowOnNodeDrag?.({}, source, [source, target]);
+    });
+    act(() => {
+      reactFlowOnNodeDragStop?.({}, source, [source, target]);
+    });
+
+    expect(onNodeDrag).toHaveBeenCalledTimes(1);
+    expect(onNodeDragStop).toHaveBeenCalledTimes(1);
+    expect(onComposeCanvasNodes).toHaveBeenCalledTimes(1);
+    expect(onComposeCanvasNodes).toHaveBeenCalledWith({
+      sourceNodeId: 'source',
+      targetNodeId: 'target',
+      operation: 'inner_join',
     });
   });
 
