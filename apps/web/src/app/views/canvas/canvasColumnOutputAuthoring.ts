@@ -3,7 +3,6 @@ import type { CanonicalNode } from '../../types/canonical';
 import { automapCanvasColumns } from './canvasColumnAutomap';
 import { removeCanvasColumnMapping } from './canvasColumnMappingAuthoring';
 import {
-  createCanvasColumnOutputId,
   resolveCanvasSessionNode,
   type CanvasColumnMappingResult,
 } from './canvasColumnMappingModel';
@@ -101,11 +100,30 @@ export function setCanvasColumnOutputIncluded(args: {
         ? mapped
         : { outcome: 'applied', draftSession: mapped.draftSession };
     }
+    const mappedTargetNode = resolveCanvasSessionNode(
+      mapped.draftSession,
+      args.canonicalNodesById,
+      targetNode.id
+    );
+    if (mappedTargetNode == null) return { outcome: 'rejected', reason: 'target_node_not_found' };
+    const mappedProjection = readEditableCanvasProjectionEntry({
+      targetNode: mappedTargetNode,
+      edges: mapped.draftSession.workingSet.visibleEdges,
+      resolveNode: (nodeId) =>
+        resolveCanvasSessionNode(mapped.draftSession, args.canonicalNodesById, nodeId),
+    });
+    if (mappedProjection.outcome === 'rejected') return mappedProjection;
+    const createdOutputs =
+      mappedProjection.projection?.outputs.filter(
+        (candidate) =>
+          candidate.name === args.columnId && candidate.sourceFieldName === args.columnId
+      ) ?? [];
+    if (createdOutputs.length !== 1) return { outcome: 'rejected', reason: 'mapping_not_found' };
     return reorderCanvasColumnOutput({
       draftSession: mapped.draftSession,
       canonicalNodesById: args.canonicalNodesById,
       targetNodeId: targetNode.id,
-      columnId: createCanvasColumnOutputId(args.columnId),
+      columnId: createdOutputs[0]!.fieldId,
       targetColumnId: args.placement.targetColumnId,
       placement: args.placement.placement,
     });
