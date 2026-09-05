@@ -76,7 +76,10 @@ function inspectNInput(draft: DvtSubstraitInnerJoinDraft): DvtSubstraitNInputJoi
   return inspection.projection;
 }
 
-function outputByName(projection: DvtSubstraitNInputJoinProjection, name: string) {
+function outputByName(
+  projection: DvtSubstraitNInputJoinProjection,
+  name: string
+): DvtSubstraitNInputJoinProjection['outputs'][number] {
   const output = projection.outputs.find((candidate) => candidate.name === name);
   if (output == null) throw new Error(`Expected output ${name}.`);
   return output;
@@ -371,8 +374,13 @@ describe('DVT Substrait INNER JOIN identity', () => {
     const renamedWindow = inspectDvtSubstraitInnerJoinGroupedWindowDraft(renamedRank);
     expect(renamedWindow.ok && renamedWindow.projection.result.fieldId).toBe(rankId);
 
-    expect(inspectDvtSubstraitInnerJoinGroupingDraft(removeDvtSubstraitInnerJoinGroupedRowNumber(ranked)).ok).toBe(true);
-    expect(inspectDvtSubstraitNInputJoinDraft(removeDvtSubstraitInnerJoinGrouping(grouped)).ok).toBe(true);
+    expect(
+      inspectDvtSubstraitInnerJoinGroupingDraft(removeDvtSubstraitInnerJoinGroupedRowNumber(ranked))
+        .ok
+    ).toBe(true);
+    expect(inspectDvtSubstraitNInputJoinDraft(removeDvtSubstraitInnerJoinGrouping(grouped)).ok).toBe(
+      true
+    );
   });
 
   it('does not reserve join-count names as semantic identities', () => {
@@ -520,10 +528,11 @@ describe('DVT Substrait INNER JOIN identity', () => {
     expect(inspectDvtSubstraitNInputJoinDraft(duplicateField).ok).toBe(false);
 
     const encoded = encodeDvtSubstraitInnerJoinDocument(draft);
-    const stale = decodeDvtSubstraitInnerJoinDocument({
-      ...encoded,
-      sidecar: { ...encoded.sidecar, semanticPlanSha256: 'f'.repeat(64) },
-    });
-    expect(inspectDvtSubstraitNInputJoinDraft(stale).ok).toBe(false);
+    expect(() =>
+      decodeDvtSubstraitInnerJoinDocument({
+        ...encoded,
+        sidecar: { ...encoded.sidecar, semanticPlanSha256: 'f'.repeat(64) },
+      })
+    ).toThrow();
   });
 });
