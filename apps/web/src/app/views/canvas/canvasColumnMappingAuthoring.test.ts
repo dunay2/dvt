@@ -22,6 +22,9 @@ import {
   resolveDvtSubstraitColumnFunctions,
 } from './canvasDvtSubstraitProjection';
 
+const OPAQUE_FIELD_ID =
+  /^dvt_fld_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 function buildNode(
   id: string,
   kind: CanonicalNode['kind'],
@@ -82,6 +85,20 @@ function readMappedTransform(result: ReturnType<typeof applyCanvasColumnMapping>
   return node;
 }
 
+function readOutputFieldId(node: CanonicalNode, name: string): string {
+  const authority = readDvtTransformAuthoringAuthority(node);
+  if (authority?.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+    throw new Error('Expected canonical Substrait authority.');
+  }
+  const inspection = inspectDvtSubstraitProjectionDraft(
+    decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+  );
+  if (!inspection.ok) throw new Error('Expected inspectable projection.');
+  const output = inspection.projection.outputs.find((candidate) => candidate.name === name);
+  if (output == null) throw new Error(`Expected output ${name}.`);
+  return output.fieldId;
+}
+
 describe('Canvas column mapping authoring', () => {
   it('persists an orders passthrough as canonical Substrait authority', () => {
     const source = buildNode(
@@ -134,7 +151,7 @@ describe('Canvas column mapping authoring', () => {
     expect(mapped.metadata).not.toHaveProperty('sql');
   });
 
-  it('creates one canonical passthrough projection through the existing graph draft aggregate', () => {
+  it('creates one canonical passthrough output with an opaque allocated FieldId', () => {
     const source = buildNode('source', 'dvt:source', 'input', [
       { name: 'event_id', type: 'integer' },
     ]);
@@ -162,12 +179,41 @@ describe('Canvas column mapping authoring', () => {
     if (!inspection.ok) return;
     expect(inspection.projection.outputs).toEqual([
       expect.objectContaining({
-        fieldId: 'output:event_id',
         name: 'event_id',
         sourceFieldName: 'event_id',
       }),
     ]);
+    expect(inspection.projection.outputs[0]?.fieldId).toMatch(OPAQUE_FIELD_ID);
+    expect(inspection.projection.outputs[0]?.fieldId).not.toContain('event_id');
     expect(session.localNodeCatalog?.model?.metadata).not.toHaveProperty('transformAuthoring');
+  });
+
+  it('does not accept a caller-fabricated output id when creating a new mapping', () => {
+    const source = buildNode('source', 'dvt:source', 'input', [
+      { name: 'event_id', type: 'integer' },
+    ]);
+    const model = buildNode('model', 'dvt:transform', 'transform');
+    const session = buildSession([source, model], [{ sourceId: source.id, targetId: model.id }]);
+
+    const result = applyCanvasColumnMapping({
+      draftSession: session,
+      canonicalNodesById: new Map([
+        [source.id, source],
+        [model.id, model],
+      ]),
+      source: { nodeId: source.id, columnName: 'event_id' },
+      target: {
+        nodeId: model.id,
+        outputId: 'output:event_id',
+        columnName: 'event_id',
+        dataType: 'integer',
+      },
+    });
+    const mapped = readMappedTransform(result);
+    const fieldId = readOutputFieldId(mapped, 'event_id');
+
+    expect(fieldId).toMatch(OPAQUE_FIELD_ID);
+    expect(fieldId).not.toBe('output:event_id');
   });
 
   it('changes an existing mapping while preserving the stable output id', () => {
@@ -196,6 +242,7 @@ describe('Canvas column mapping authoring', () => {
       target: { nodeId: model.id, columnName: 'event_id', dataType: 'integer' },
     });
     const mapped = readMappedTransform(firstResult);
+    const stableOutputId = readOutputFieldId(mapped, 'event_id');
     const secondResult = applyCanvasColumnMapping({
       draftSession: firstResult.outcome === 'applied' ? firstResult.draftSession : initial,
       canonicalNodesById: new Map([
@@ -206,7 +253,7 @@ describe('Canvas column mapping authoring', () => {
       source: { nodeId: second.id, columnName: 'renamed_id' },
       target: {
         nodeId: model.id,
-        outputId: 'output:event_id',
+        outputId: stableOutputId,
         columnName: 'event_id',
         dataType: 'integer',
       },
@@ -221,7 +268,7 @@ describe('Canvas column mapping authoring', () => {
     expect(inspection.ok).toBe(true);
     if (!inspection.ok) return;
     expect(inspection.projection.outputs[0]).toMatchObject({
-      fieldId: 'output:event_id',
+      fieldId: stableOutputId,
       sourceFieldName: 'renamed_id',
     });
     expect(inspection.projection.source.sourceRef.sourceObjectId).toBe('public.source-2');
@@ -254,7 +301,7 @@ describe('Canvas column mapping authoring', () => {
     expect(inspection.projection.outputs[0]?.sourceFieldName).toBe('customer');
   });
 
-  it('preserves LOWER while another output mapping is added', () => {
+  it('preserves LOWER while another opaque output mapping is added', () => {
     const source = buildNode('source', 'dvt:source', 'input', [
       { name: 'customer', type: 'text' },
       { name: 'amount', type: 'numeric' },
@@ -271,6 +318,7 @@ describe('Canvas column mapping authoring', () => {
       target: { nodeId: model.id, columnName: 'customer', dataType: 'text' },
     });
     const mapped = readMappedTransform(firstResult);
+    const customerOutputId = readOutputFieldId(mapped, 'customer');
     const authority = readDvtTransformAuthoringAuthority(mapped)!;
     if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return;
     const lower = resolveDvtSubstraitColumnFunctions({
@@ -281,7 +329,7 @@ describe('Canvas column mapping authoring', () => {
     const withLowerDraft = applyDvtSubstraitProjectionFunction(
       decodeDvtSubstraitProjectionDocument(authority.semanticDocument),
       {
-        fieldId: 'output:customer',
+        fieldId: customerOutputId,
         capabilityId: lower.capabilityId,
         alias: 'customer',
         dataType: 'text',
@@ -316,12 +364,13 @@ describe('Canvas column mapping authoring', () => {
     expect(inspection.ok).toBe(true);
     if (!inspection.ok) return;
     expect(inspection.projection.outputs[0]).toEqual(
-      expect.objectContaining({ fieldId: 'output:customer', operations: ['lower'] })
+      expect.objectContaining({ fieldId: customerOutputId, operations: ['lower'] })
     );
-    expect(inspection.projection.outputs[1]).toEqual(
-      expect.objectContaining({ fieldId: 'output:amount' })
-    );
-    expect(inspection.projection.outputs[1]).not.toHaveProperty('operations');
+    const amountOutput = inspection.projection.outputs[1];
+    expect(amountOutput).toEqual(expect.objectContaining({ name: 'amount' }));
+    expect(amountOutput?.fieldId).toMatch(OPAQUE_FIELD_ID);
+    expect(amountOutput?.fieldId).not.toBe(customerOutputId);
+    expect(amountOutput).not.toHaveProperty('operations');
   });
 
   it('fails closed rather than discarding nonblank SQL authority', () => {
@@ -392,11 +441,12 @@ describe('Canvas column mapping authoring', () => {
     expect(inspection.ok).toBe(true);
     if (!inspection.ok) return;
     expect(inspection.projection.outputs.map((output) => output.name)).toEqual(['event_id']);
+    expect(inspection.projection.outputs[0]?.fieldId).toMatch(OPAQUE_FIELD_ID);
     expect(result.appliedCount).toBe(1);
     expect(result.skippedCount).toBe(3);
   });
 
-  it('toggles the last output without leaving canonical Substrait authority', () => {
+  it('delete and recreate allocates a fresh output FieldId without leaving canonical authority', () => {
     const source = buildNode('source', 'dvt:source', 'input', [
       { name: 'event_id', type: 'integer' },
     ]);
@@ -412,6 +462,7 @@ describe('Canvas column mapping authoring', () => {
       target: { nodeId: model.id, columnName: 'event_id', dataType: 'integer' },
     });
     const mapped = readMappedTransform(mappedResult);
+    const originalFieldId = readOutputFieldId(mapped, 'event_id');
 
     const canonicalNodesById = new Map([
       [source.id, source],
@@ -421,7 +472,7 @@ describe('Canvas column mapping authoring', () => {
       draftSession: mappedResult.outcome === 'applied' ? mappedResult.draftSession : initial,
       canonicalNodesById,
       targetNodeId: mapped.id,
-      columnId: 'output:event_id',
+      columnId: originalFieldId,
       columnType: 'integer',
       output: false,
     });
@@ -451,24 +502,15 @@ describe('Canvas column mapping authoring', () => {
     if (restored.outcome !== 'applied') return;
     const restoredNode = restored.draftSession.localNodeCatalog?.model;
     if (restoredNode == null) throw new Error('Expected restored transform node.');
-    const restoredAuthority = readDvtTransformAuthoringAuthority(restoredNode)!;
-    if (restoredAuthority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) {
-      throw new Error('Expected canonical Substrait authority after inclusion.');
-    }
-    const restoredProjection = inspectDvtSubstraitProjectionDraft(
-      decodeDvtSubstraitProjectionDocument(restoredAuthority.semanticDocument)
-    );
-    expect(
-      restoredProjection.ok
-        ? restoredProjection.projection.outputs.map((output) => output.fieldId)
-        : []
-    ).toEqual(['output:event_id']);
+    const restoredFieldId = readOutputFieldId(restoredNode, 'event_id');
+    expect(restoredFieldId).toMatch(OPAQUE_FIELD_ID);
+    expect(restoredFieldId).not.toBe(originalFieldId);
     expect(removed.draftSession.workingSet.visibleEdges).toEqual([
       { sourceId: 'source', targetId: 'model' },
     ]);
   });
 
-  it('reorders outputs while preserving their canonical field identities', () => {
+  it('reorders outputs while preserving their opaque canonical field identities', () => {
     const sourceColumns = [
       { name: 'first', type: 'text' },
       { name: 'second', type: 'text' },
@@ -488,13 +530,18 @@ describe('Canvas column mapping authoring', () => {
       targetColumns: sourceColumns,
     });
     if (mapped.outcome !== 'applied') throw new Error('Expected mapped outputs.');
+    const mappedNode = mapped.draftSession.localNodeCatalog?.model;
+    if (mappedNode == null) throw new Error('Expected mapped transform node.');
+    const firstId = readOutputFieldId(mappedNode, 'first');
+    const secondId = readOutputFieldId(mappedNode, 'second');
+    const thirdId = readOutputFieldId(mappedNode, 'third');
 
     const reordered = reorderCanvasColumnOutput({
       draftSession: mapped.draftSession,
       canonicalNodesById,
       targetNodeId: model.id,
-      columnId: 'output:third',
-      targetColumnId: 'output:first',
+      columnId: thirdId,
+      targetColumnId: firstId,
       placement: 'before',
     });
     if (reordered.outcome !== 'applied') throw new Error('Expected reordered outputs.');
@@ -515,9 +562,34 @@ describe('Canvas column mapping authoring', () => {
           }))
         : []
     ).toEqual([
-      { fieldId: 'output:third', sourceFieldName: 'third' },
-      { fieldId: 'output:first', sourceFieldName: 'first' },
-      { fieldId: 'output:second', sourceFieldName: 'second' },
+      { fieldId: thirdId, sourceFieldName: 'third' },
+      { fieldId: firstId, sourceFieldName: 'first' },
+      { fieldId: secondId, sourceFieldName: 'second' },
     ]);
+  });
+
+  it('resolves mapping targets by actual opaque FieldId once authority exists', () => {
+    const source = buildNode('source', 'dvt:source', 'input', [
+      { name: 'event_id', type: 'integer' },
+    ]);
+    const model = buildNode('model', 'dvt:transform', 'transform');
+    const initial = buildSession([source, model], [{ sourceId: source.id, targetId: model.id }]);
+    const mappedResult = applyCanvasColumnMapping({
+      draftSession: initial,
+      canonicalNodesById: new Map([
+        [source.id, source],
+        [model.id, model],
+      ]),
+      source: { nodeId: source.id, columnName: 'event_id' },
+      target: { nodeId: model.id, columnName: 'event_id', dataType: 'integer' },
+    });
+    const mapped = readMappedTransform(mappedResult);
+    const fieldId = readOutputFieldId(mapped, 'event_id');
+
+    expect(resolveCanvasColumnMappingTarget(mapped, fieldId)).toEqual({
+      nodeId: model.id,
+      outputId: fieldId,
+      columnName: 'event_id',
+    });
   });
 });
