@@ -62,7 +62,9 @@ describe('useCanvasViewportGraphModel geometry invalidation', () => {
         ]);
       });
 
-      expect(mounted.readState()?.nodes.find((node) => node.id === 'source-node')?.position).toEqual({
+      expect(
+        mounted.readState()?.nodes.find((node) => node.id === 'source-node')?.position
+      ).toEqual({
         x: 180,
         y: 40,
       });
