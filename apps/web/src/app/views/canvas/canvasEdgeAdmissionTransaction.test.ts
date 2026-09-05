@@ -77,6 +77,8 @@ function buildDraftSession(
 }
 
 const pluginPortMap = getPluginPortMap();
+const OPAQUE_FIELD_ID =
+  /^dvt_fld_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 describe('canvasEdgeAdmissionTransaction', () => {
   afterEach(() => {
@@ -164,7 +166,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
     });
   });
 
-  it('creates deterministic column mappings in the same transaction as the stage edge', () => {
+  it('creates canonical column mappings with opaque output identities in the stage transaction', () => {
     const source = buildConnectedSourceNode('source-node', [
       { name: 'order_id', type: 'integer' },
       { name: 'customer', type: 'text' },
@@ -209,17 +211,15 @@ describe('canvasEdgeAdmissionTransaction', () => {
     if (!inspection.ok) return;
     expect(inspection.projection.source.sourceRef.sourceObjectId).toBe(`raw.${source.id}`);
     expect(inspection.projection.outputs).toMatchObject([
-      {
-        fieldId: 'output:order_id',
-        name: 'order_id',
-        sourceFieldName: 'order_id',
-      },
-      {
-        fieldId: 'output:customer',
-        name: 'customer',
-        sourceFieldName: 'customer',
-      },
+      { name: 'order_id', sourceFieldName: 'order_id' },
+      { name: 'customer', sourceFieldName: 'customer' },
     ]);
+    const outputIds = inspection.projection.outputs.map((output) => output.fieldId);
+    expect(outputIds).toHaveLength(2);
+    outputIds.forEach((fieldId) => expect(fieldId).toMatch(OPAQUE_FIELD_ID));
+    expect(new Set(outputIds).size).toBe(2);
+    expect(outputIds[0]).not.toContain('order_id');
+    expect(outputIds[1]).not.toContain('customer');
   });
 
   it('creates a second source edge without inventing a multi-source projection', () => {
