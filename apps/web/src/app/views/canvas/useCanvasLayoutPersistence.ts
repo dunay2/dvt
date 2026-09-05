@@ -105,14 +105,14 @@ function usePersistSettledNodePositions({
   const lastNodePositionsRef = useRef<CanvasNodePositions | null>(null);
 
   useEffect(() => {
-    const nextNodePositions = extractNodePositions(nodes);
-    const previousNodePositions = lastNodePositionsRef.current;
-    lastNodePositionsRef.current = nextNodePositions;
-
     if (hasActiveDragFrame(nodes)) {
       observedNodeDragRef.current = true;
       return;
     }
+
+    const nextNodePositions = extractNodePositions(nodes);
+    const previousNodePositions = lastNodePositionsRef.current;
+    lastNodePositionsRef.current = nextNodePositions;
 
     if (
       !shouldSaveObservedNodePositions({
