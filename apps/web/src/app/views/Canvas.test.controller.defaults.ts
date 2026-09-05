@@ -276,8 +276,6 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'handleCreateAuthoringNode'
   | 'handleCreateCanvasDocument'
   | 'handleSelectCanvasDocument'
-  | 'handleApplyCanvasDocumentPatch'
-  | 'handleDeleteCanvasDocument'
   | 'handleExportProjectSnapshot'
   | 'handleImportProjectSnapshotFile'
   | 'applyInspectorNodeDraft'
@@ -319,8 +317,6 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     handleCreateAuthoringNode: vi.fn(),
     handleCreateCanvasDocument: vi.fn(),
     handleSelectCanvasDocument: vi.fn(),
-    handleApplyCanvasDocumentPatch: vi.fn(),
-    handleDeleteCanvasDocument: vi.fn(),
     handleExportProjectSnapshot: vi.fn(),
     handleImportProjectSnapshotFile: vi.fn(),
     applyInspectorNodeDraft: vi.fn(),
