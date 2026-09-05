@@ -125,15 +125,15 @@ describe('CanvasWorkspaceMenuControls', () => {
     expect(onImportProjectSnapshotFile).toHaveBeenCalledWith(snapshotFile);
   });
 
-  it('renders the active canvas identity as minimal shell top-bar context', async () => {
+  it('renders the active Canvas identity as minimal shell top-bar context', async () => {
     await act(async () => {
       root.render(
         <>
           <CanvasWorkspaceMenuContributionRegistrar
             activeCanvas={{
-              id: 'warehouse-dbt',
-              kind: 'dbt',
-              title: 'Warehouse dbt',
+              id: 'warehouse-canvas',
+              kind: 'transformation',
+              title: 'Warehouse project',
             }}
             canExportProjectSnapshot
             canImportProjectSnapshot
@@ -150,14 +150,14 @@ describe('CanvasWorkspaceMenuControls', () => {
     );
 
     expect(activeCanvasIdentity).not.toBeNull();
-    expect(activeCanvasIdentity?.textContent).toContain('Warehouse dbt');
-    expect(activeCanvasIdentity?.getAttribute('data-canvas-id')).toBe('warehouse-dbt');
-    expect(activeCanvasIdentity?.getAttribute('data-kind')).toBe('dbt');
+    expect(activeCanvasIdentity?.textContent).toBe('Warehouse project');
+    expect(activeCanvasIdentity?.getAttribute('data-canvas-id')).toBe('warehouse-canvas');
+    expect(activeCanvasIdentity?.getAttribute('data-kind')).toBe('transformation');
     expect(container.textContent).not.toContain('Export');
     expect(container.textContent).not.toContain('Import');
   });
 
-  it('renders project commands and active canvas context in the configured language', async () => {
+  it('renders project commands and active Canvas context in the configured language', async () => {
     useApplicationLanguageStore.getState().configureApplicationLanguage('es');
 
     await act(async () => {
@@ -196,7 +196,9 @@ describe('CanvasWorkspaceMenuControls', () => {
         .querySelector('[data-slot="shell-active-canvas-identity"]')
         ?.getAttribute('aria-label')
     ).toBe('Canvas activo: Ventas');
-    expect(document.body.textContent).toContain('Transformación');
+    expect(
+      document.body.querySelector('[data-slot="shell-active-canvas-identity"]')?.textContent
+    ).toBe('Ventas');
   });
 
   it('does not let a stale Workspace menu cleanup clear an active replacement contribution', async () => {
