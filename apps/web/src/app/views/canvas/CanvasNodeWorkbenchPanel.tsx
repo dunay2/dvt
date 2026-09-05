@@ -274,6 +274,9 @@ export function CanvasNodeWorkbenchPanel({
     presentationCopy: buildCanvasNodePresentationCopy(copy, applicationLanguage),
     presentationTruth,
   });
+  const sourceAuthorityModel = approvedWarehouseSourceOverview
+    ? buildNodePropertiesReadModel({ node, nodes, edges, presentationTruth })
+    : baseModel;
   const contributionModel = resolveCanvasNodeWorkbenchContributions(node.id, contributions);
   const contributedSectionIds = new Set<NodePropertySectionId>([
     ...contributionModel.beforeBodyBySection.keys(),
@@ -437,7 +440,7 @@ export function CanvasNodeWorkbenchPanel({
       sectionAfterChildren={sectionAfterChildren}
       sectionBodyOverrides={
         approvedWarehouseSourceOverview
-          ? { columns: <SourceColumnsPanel readModel={baseModel} /> }
+          ? { columns: <SourceColumnsPanel readModel={sourceAuthorityModel} /> }
           : undefined
       }
       fillAvailableHeight={containsCanonicalCodeOutput}
