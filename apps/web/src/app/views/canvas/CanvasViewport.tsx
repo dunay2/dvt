@@ -331,8 +331,8 @@ function CanvasViewportWithPresenter({
       viewport={props.viewport}
       onNodesChange={props.onNodesChange}
       onEdgesChange={props.onEdgesChange}
-      onConnect={props.onConnect}
-      onReconnect={props.onReconnect}
+      {...(props.onConnect == null ? {} : { onConnect: props.onConnect })}
+      {...(props.onReconnect == null ? {} : { onReconnect: props.onReconnect })}
       onViewportChange={props.onViewportChange}
       onNodeDrag={props.onNodeDrag}
       onNodeDragStop={props.onNodeDragStop}
