@@ -329,18 +329,21 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(CanvasNodeWorkbenchPanelSource).not.toContain('PRIMARY_NODE_WORKBENCH_SECTION_IDS');
   });
 
-  it('renders only source capabilities and keeps data-backed extras in More', () => {
+  it('renders the approved Source tabs without an overflow bucket', () => {
     renderPanel(root);
 
     const tabsList = container.querySelector('[data-slot="canvas-node-workbench-tabs-list"]');
     expect(tabsList).not.toBeNull();
     expect(tabsList?.querySelectorAll('svg')).toHaveLength(0);
 
-    for (const label of ['General', 'Columns', 'Inputs / Outputs', 'Tests', 'More']) {
+    for (const label of ['Overview', 'Columns', 'Inputs / Outputs']) {
       expect(tabsList?.textContent).toContain(label);
     }
-    expect(tabsList?.textContent).not.toContain('Code');
-    expect(tabsList?.textContent).not.toContain('Indexes');
+    for (const rejectedLabel of ['General', 'Tests', 'More', 'Code', 'Indexes']) {
+      expect(tabsList?.textContent).not.toContain(rejectedLabel);
+    }
+    expect(container.textContent).toContain('PostgreSQL');
+    expect(container.querySelector('[data-slot="canvas-source-provider-icon"] svg')).not.toBeNull();
   });
 
   it('does not mistake the read-model empty-columns description for a source capability', () => {
@@ -440,7 +443,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(dragHandle?.contains(closeButton!)).toBe(false);
   });
 
-  it('shows column metadata, graph IO, and test target semantics from the node read model', () => {
+  it('shows Source column metadata and Canvas graph IO from the node read model', () => {
     renderPanel(root, 'columns');
 
     expect(container.textContent).toContain('order_id');
@@ -451,12 +454,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     renderPanel(root, 'inputs-outputs');
     expect(container.textContent).toContain('Output');
     expect(container.textContent).toContain('Orders Model');
-
-    renderPanel(root, 'tests');
-    expect(container.textContent).toContain('not_null_orders_order_id');
-    expect(container.textContent).toContain('orders');
-    expect(container.textContent).toContain('order_id');
-    expect(container.textContent).toContain('error');
+    expect(container.textContent).not.toContain('not_null_orders_order_id');
   });
 
   it('shows dbt test meaning, execution selection, readiness impact and run history', () => {
@@ -483,27 +481,24 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(container.textContent).toContain('failed in 1.7s');
   });
 
-  it('keeps editable node properties inside the workbench general section', () => {
+  it('renders the warehouse Source Overview without permanent CRUD controls', () => {
     renderPanel(root, 'general');
 
     const generalSection = container.querySelector(
       '[data-slot="canvas-node-workbench-general-section"]'
     );
+    const overview = generalSection?.querySelector('[data-slot="canvas-source-overview"]');
+
     expect(generalSection).not.toBeNull();
-    expect(generalSection?.textContent).toContain('Name');
-    expect(generalSection?.querySelector('input[name="node-name"]')).not.toBeNull();
-    expect(generalSection?.querySelector('input[name="node-tags"]')).not.toBeNull();
-    expect(generalSection?.querySelector('textarea[name="node-description"]')).not.toBeNull();
-    expect(
-      Array.from(generalSection?.querySelectorAll('h3') ?? [], (heading) =>
-        heading.textContent?.trim()
-      )
-    ).not.toContain('General');
-    expect(generalSection?.textContent).not.toContain('Editable properties');
-    expect(generalSection?.textContent).not.toContain(
-      'Name, tags, and description saved with this canvas.'
-    );
-    expect(container.querySelector('[data-slot="canvas-node-workbench-authoring"]')).not.toBeNull();
+    expect(overview).not.toBeNull();
+    expect(overview?.textContent).toContain('Source metadata');
+    expect(overview?.textContent).toContain('DVT metadata');
+    expect(overview?.querySelector('input[name="node-name"]')).toBeNull();
+    expect(overview?.querySelector('input[name="node-tags"]')).toBeNull();
+    expect(overview?.querySelector('textarea[name="node-description"]')).toBeNull();
+    expect(container.querySelector('[data-slot="canvas-node-workbench-authoring"]')).toBeNull();
+    expect(container.textContent).not.toContain('Apply');
+    expect(container.textContent).not.toContain('Autosaved');
   });
 
   it('projects saved business tags to the card only after Apply', () => {
@@ -554,7 +549,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     ]);
   });
 
-  it('keeps a read-only workbench factual without rendering disabled authoring controls', () => {
+  it('keeps the read-only Source Overview factual without disabled authoring controls', () => {
     renderNodePanel(root, SOURCE_NODE, 'general', {
       canEditNode: false,
       onApplyNodeDraft: vi.fn(),
@@ -563,53 +558,43 @@ describe('CanvasNodeWorkbenchPanel', () => {
     const generalSection = container.querySelector(
       '[data-slot="canvas-node-workbench-general-section"]'
     );
-    const readonlyLabels = Array.from(generalSection?.querySelectorAll('dt') ?? []).map((label) =>
+    const external = generalSection?.querySelector('[data-slot="canvas-source-overview-external"]');
+    const readonlyLabels = Array.from(external?.querySelectorAll('dt') ?? []).map((label) =>
       label.textContent?.trim()
     );
 
     expect(container.querySelector('[data-slot="canvas-node-workbench-authoring"]')).toBeNull();
-    expect(generalSection?.querySelector('input[name="node-name"]')).toBeNull();
-    expect(generalSection?.textContent).not.toContain('Editable properties');
-    expect(readonlyLabels).toEqual(expect.arrayContaining(['Database', 'Schema', 'Table']));
+    expect(generalSection?.querySelector('input')).toBeNull();
+    expect(generalSection?.querySelector('textarea')).toBeNull();
+    expect(readonlyLabels).toEqual(expect.arrayContaining(['Kind', 'Schema', 'Table', 'Columns']));
+    expect(generalSection?.textContent).toContain('read-only');
   });
 
-  it('orders editable identity before readonly facts without repeating source target rows', () => {
+  it('separates external Source authority from DVT-owned metadata without a Summary overflow', () => {
     renderPanel(root, 'general');
 
     const generalSection = container.querySelector(
       '[data-slot="canvas-node-workbench-general-section"]'
     );
-    const editableName = generalSection?.querySelector('input[name="node-name"]');
-    const firstReadonlyLabel = generalSection?.querySelector('dt');
-    const readonlyLabels = Array.from(generalSection?.querySelectorAll('dt') ?? []).map((label) =>
-      label.textContent?.trim()
-    );
+    const external = generalSection?.querySelector('[data-slot="canvas-source-overview-external"]');
+    const dvt = generalSection?.querySelector('[data-slot="canvas-source-overview-dvt"]');
 
     expect(generalSection).not.toBeNull();
-    expect(editableName).not.toBeNull();
-    expect(firstReadonlyLabel).not.toBeNull();
-    expect(
-      Boolean(
-        editableName!.compareDocumentPosition(firstReadonlyLabel!) &
-        Node.DOCUMENT_POSITION_FOLLOWING
-      )
-    ).toBe(true);
-    expect(readonlyLabels).not.toContain('Name');
-    expect(readonlyLabels).not.toContain('Database');
-    expect(readonlyLabels).not.toContain('Schema');
-    expect(readonlyLabels).not.toContain('Table');
-    expect(readonlyLabels).not.toContain('Source');
-    expect(generalSection?.textContent).not.toContain('Node ID');
-    expect(generalSection?.textContent).not.toContain('Plugin');
+    expect(external).not.toBeNull();
+    expect(dvt).not.toBeNull();
+    expect(external?.textContent).toContain('Schema');
+    expect(external?.textContent).toContain('raw');
+    expect(external?.textContent).toContain('orders');
+    expect(dvt?.textContent).toContain('Name');
+    expect(dvt?.textContent).toContain('Tags');
+    expect(dvt?.textContent).toContain('Description');
+    expect(external?.textContent).not.toContain('Node ID');
+    expect(external?.textContent).not.toContain('Plugin');
+    expect(container.querySelector('[data-slot="canvas-node-workbench-more-trigger"]')).toBeNull();
+
     renderPanel(root, 'summary');
-    const summarySection = container.querySelector(
-      '[data-slot="canvas-node-workbench-summary-section"]'
-    );
-    expect(summarySection?.textContent).toContain('Node ID');
-    expect(summarySection?.textContent).toContain('Kind');
-    expect(summarySection?.textContent).toContain('Role');
-    expect(summarySection?.textContent).toContain('Status');
-    expect(summarySection?.textContent).toContain('Plugin');
+    expect(container.querySelector('[data-slot="canvas-node-workbench-summary-section"]')).toBeNull();
+    expect(container.querySelector('[data-slot="canvas-source-overview"]')).not.toBeNull();
   });
 
   it('renders DVT transform upstream columns as read-only facts inside the Columns tab', () => {

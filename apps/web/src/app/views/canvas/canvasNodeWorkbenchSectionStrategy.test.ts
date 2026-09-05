@@ -44,6 +44,54 @@ describe('resolveCanvasNodeWorkbenchSectionModel', () => {
     ).toEqual(['general', 'columns', 'tests', 'inputs-outputs']);
   });
 
+  it('hard-cuts Source to Overview, Columns and Inputs / Outputs in that order', () => {
+    const result = resolveCanvasNodeWorkbenchSectionModel({
+      nodeKind: 'dvt:source',
+      canEditNode: true,
+      canOpenNodeCode: true,
+      strategySectionIds: ['properties', 'columns', 'sql', 'tests', 'lineage'],
+      contributedSectionIds: new Set(),
+      sections: [
+        section('general', { rows: [{ id: 'name', label: 'Name', value: 'Orders' }] }),
+        section('columns', {
+          tableRows: [{ id: 'order_id', cells: { name: 'order_id', type: 'uuid' } }],
+        }),
+        section('inputs-outputs', {
+          tableRows: [{ id: 'output:1', cells: { direction: 'Output', node: 'Model 1' } }],
+        }),
+        section('tests', {
+          tableRows: [{ id: 'test:1', cells: { name: 'not_null' } }],
+        }),
+        section('keys', {
+          tableRows: [{ id: 'pk', cells: { name: 'Primary key', columns: 'order_id' } }],
+        }),
+        section('indexes', {
+          tableRows: [{ id: 'idx', cells: { name: 'orders_pk' } }],
+        }),
+        section('foreign-keys', {
+          tableRows: [{ id: 'fk', cells: { name: 'orders_customer_fk' } }],
+        }),
+        section('constraints', {
+          tableRows: [{ id: 'check', cells: { name: 'orders_check' } }],
+        }),
+        section('comments', {
+          rows: [{ id: 'comment', label: 'Comment', value: 'External comment' }],
+        }),
+        section('code', { code: 'select * from orders' }),
+        section('summary', {
+          rows: [{ id: 'tags', label: 'Tags', value: 'source' }],
+        }),
+      ],
+    });
+
+    expect(result.sections.map(({ id }) => id)).toEqual([
+      'general',
+      'columns',
+      'inputs-outputs',
+    ]);
+    expect(result.primarySectionIds).toEqual(['general', 'columns', 'inputs-outputs']);
+  });
+
   it('orders Code first and removes empty unsupported sections', () => {
     const result = resolveCanvasNodeWorkbenchSectionModel({
       nodeKind: 'dbt:model',

@@ -8,6 +8,7 @@ import type {
 } from './canvasShell.types';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { cn } from '../../components/ui/utils';
 import { findCanvasGraphNodeElement } from './canvasNodeWorkbenchDomGeometry';
 import type { CanvasNodeWorkbenchPosition } from './canvasNodeWorkbenchPositionModel';
 import { isCanvasNodeWorkbenchVisible } from './canvasNodeWorkbenchVisibility';
@@ -39,6 +40,7 @@ function CanvasNodeWorkbenchOverlaySurface({
   onPointerMove,
   onPointerUp,
   position,
+  sourceLayout,
   surfaceRef,
 }: Readonly<{
   accessibleLabel: string;
@@ -47,6 +49,7 @@ function CanvasNodeWorkbenchOverlaySurface({
   onPointerMove: HTMLAttributes<HTMLDivElement>['onPointerMove'];
   onPointerUp: HTMLAttributes<HTMLDivElement>['onPointerUp'];
   position: CanvasNodeWorkbenchPosition;
+  sourceLayout: boolean;
   surfaceRef: RefObject<HTMLDivElement>;
 }>): JSX.Element {
   return (
@@ -55,7 +58,12 @@ function CanvasNodeWorkbenchOverlaySurface({
       data-slot="canvas-node-workbench-overlay"
       role="dialog"
       aria-label={accessibleLabel}
-      className={canvasNodeWorkbenchVisualTokens.overlay}
+      className={cn(
+        canvasNodeWorkbenchVisualTokens.overlay,
+        sourceLayout
+          ? canvasNodeWorkbenchVisualTokens.sourceOverlaySize
+          : canvasNodeWorkbenchVisualTokens.defaultOverlaySize
+      )}
       style={{
         left: `${position.left}px`,
         top: `${position.top}px`,
@@ -137,6 +145,7 @@ export function CanvasNodeWorkbenchOverlay({
     <CanvasNodeWorkbenchOverlaySurface
       accessibleLabel={copy.inspectorEditablePropertiesTitle}
       position={positionController.position}
+      sourceLayout={panels.inspectorNode.kind === 'dvt:source'}
       surfaceRef={positionController.surfaceRef}
       {...positionController.surfacePointerProps}
     >
