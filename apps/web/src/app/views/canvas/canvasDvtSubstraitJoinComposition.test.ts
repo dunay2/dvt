@@ -450,12 +450,10 @@ describe('DVT Substrait INNER JOIN identity', () => {
     const reloaded = decodeDvtSubstraitInnerJoinDocument(
       encodeDvtSubstraitInnerJoinDocument(renamed)
     );
+    const reloadedInspection = inspectDvtSubstraitInnerJoinDraft(reloaded);
+    if (!reloadedInspection.ok) throw new Error('Expected reloaded legacy JOIN.');
     expect(
-      inspectDvtSubstraitInnerJoinDraft(reloaded).ok
-        ? inspectDvtSubstraitInnerJoinDraft(reloaded).projection.outputs.find(
-            (output) => output.fieldKey === 'left.name'
-          )?.fieldId
-        : null
+      reloadedInspection.projection.outputs.find((output) => output.fieldKey === 'left.name')?.fieldId
     ).toBe(nameField.fieldId);
   });
 
