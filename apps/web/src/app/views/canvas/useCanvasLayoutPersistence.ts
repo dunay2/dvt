@@ -200,7 +200,10 @@ function useCanvasNodePositionPersistence({
     saveNodePositions: saveOrQueueNodePositions,
   });
 
-  const handleNodeDrag = useCallback<NonNullable<ReactFlowProps['onNodeDrag']>>(() => undefined, []);
+  const handleNodeDrag = useCallback<NonNullable<ReactFlowProps['onNodeDrag']>>(
+    () => undefined,
+    []
+  );
 
   const handleNodeDragStop = useCallback<NonNullable<ReactFlowProps['onNodeDragStop']>>(
     (_event, draggedNode, allNodes) => {
