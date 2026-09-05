@@ -472,13 +472,10 @@ export function useDbtProjectFileCanvasController(
       onNodeDrag: persistence.handleNodeDrag,
       onNodeDragStop: persistence.handleNodeDragStop,
       onEdgesChange: graphModel.onEdgesChange,
-      onConnect: () => unsupportedSemanticMutation('Connect nodes'),
-      onReconnect: () => unsupportedSemanticMutation('Reconnect nodes'),
       onViewportChange: persistence.handleViewportChange,
       onDrop: handleDrop,
       onDragOver: handleDragOver,
       onToggleFrozenNode: (nodeId: string) => toggleFrozenCanvasNode(layoutKey, nodeId),
-      onCreateAuthoringNode: () => unsupportedSemanticMutation('Create node'),
       onSourceImportComplete: handleSourceImportComplete,
       onImportedNodeFocusComplete: () => setImportedNodeFocusIds([]),
     },
@@ -515,8 +512,6 @@ export function useDbtProjectFileCanvasController(
     },
     canvasCommands: {
       onSelectCanvas: () => unsupportedSemanticMutation('Select draft canvas'),
-      onApplyCanvasPatch: () => unsupportedSemanticMutation('Edit canvas properties'),
-      onDeleteActiveCanvas: () => unsupportedSemanticMutation('Delete draft canvas'),
     },
   };
 }
