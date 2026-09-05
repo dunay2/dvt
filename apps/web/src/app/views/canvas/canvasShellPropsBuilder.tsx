@@ -31,7 +31,6 @@ function buildCanvasShellLayoutArgs({
     },
     recoveryCommands: {
       reloadLatestDraft: controller.reloadLatestDraft,
-      // The API client owns token refresh; Canvas only re-enters the protected draft port.
       refetchDraftAfterAuthRefresh: () => {
         controller.reloadLatestDraft();
       },
@@ -195,12 +194,6 @@ export function buildCanvasShellProps(args: CanvasShellRouteComposerArgs): Canva
     canvasCommands: {
       onSelectCanvas: (canvasId) => {
         void args.controller.handleSelectCanvasDocument(canvasId);
-      },
-      onApplyCanvasPatch: (patch) => {
-        void args.controller.handleApplyCanvasDocumentPatch(patch);
-      },
-      onDeleteActiveCanvas: () => {
-        void args.controller.handleDeleteCanvasDocument();
       },
     },
   };

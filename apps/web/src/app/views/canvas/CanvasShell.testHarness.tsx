@@ -139,8 +139,6 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
         },
       ],
       executionEnvironmentOptions: [{ value: 'dev', label: 'dev' }],
-      canEditCanvas: true,
-      canDeleteActiveCanvas: false,
       inspectorNode: null,
       inspectorPreferredTabId: null,
       inspectorPreferredTabRequestId: 0,
@@ -238,8 +236,6 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
     },
     canvasCommands: {
       onSelectCanvas: vi.fn(),
-      onApplyCanvasPatch: vi.fn(),
-      onDeleteActiveCanvas: vi.fn(),
       ...overrides?.canvasCommands,
     },
     runControls: overrides?.runControls ?? null,

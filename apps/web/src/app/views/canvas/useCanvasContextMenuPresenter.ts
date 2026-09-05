@@ -268,7 +268,7 @@ export function useCanvasContextMenuPresenter({
   const handleCreateNodeAction = useCallback(
     (action: CanvasContextMenuCreateNodeAction) => {
       if (model?.flowPosition != null) {
-        onCreateAuthoringNode(action.registration, model.flowPosition);
+        onCreateAuthoringNode?.(action.registration, model.flowPosition);
       }
 
       closeContextMenu();

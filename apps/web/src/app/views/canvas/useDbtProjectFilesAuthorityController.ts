@@ -1,4 +1,4 @@
-/** Owned concern: orchestrate the read-only file-authoritative dbt Canvas read model. */
+/** Owned concern: orchestrate the read-only external dbt project-file authority read model. */
 import type { Node, NodeTypes } from '@xyflow/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -97,7 +97,7 @@ export function resolveDbtProjectFileSourceImportFocus(
   return [...result.outcome.projectedSourceUniqueIds];
 }
 
-export function useDbtProjectFileCanvasController(
+export function useDbtProjectFilesAuthorityController(
   authorityBinding: DbtProjectFilesAuthorityBinding
 ) {
   const capabilitiesQuery = useCapabilitiesQuery();
@@ -472,13 +472,10 @@ export function useDbtProjectFileCanvasController(
       onNodeDrag: persistence.handleNodeDrag,
       onNodeDragStop: persistence.handleNodeDragStop,
       onEdgesChange: graphModel.onEdgesChange,
-      onConnect: () => unsupportedSemanticMutation('Connect nodes'),
-      onReconnect: () => unsupportedSemanticMutation('Reconnect nodes'),
       onViewportChange: persistence.handleViewportChange,
       onDrop: handleDrop,
       onDragOver: handleDragOver,
       onToggleFrozenNode: (nodeId: string) => toggleFrozenCanvasNode(layoutKey, nodeId),
-      onCreateAuthoringNode: () => unsupportedSemanticMutation('Create node'),
       onSourceImportComplete: handleSourceImportComplete,
       onImportedNodeFocusComplete: () => setImportedNodeFocusIds([]),
     },
@@ -515,8 +512,6 @@ export function useDbtProjectFileCanvasController(
     },
     canvasCommands: {
       onSelectCanvas: () => unsupportedSemanticMutation('Select draft canvas'),
-      onApplyCanvasPatch: () => unsupportedSemanticMutation('Edit canvas properties'),
-      onDeleteActiveCanvas: () => unsupportedSemanticMutation('Delete draft canvas'),
     },
   };
 }

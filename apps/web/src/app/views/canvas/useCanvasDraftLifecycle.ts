@@ -15,11 +15,7 @@ import { useCanvasDraftPersistence } from './useCanvasDraftPersistence';
 import { useCanvasExecutionDraftFlush } from './useCanvasExecutionDraftFlush';
 import { executeCreateCanvasDocumentCommand } from './canvasCreateCanvasDocumentCommand';
 import { deriveCanCreateCanvasDocument } from './canvasCreateCanvasDocumentAvailability';
-import {
-  executeDeleteCanvasDocumentCommand,
-  executeSelectCanvasDocumentCommand,
-  executeUpdateCanvasDocumentCommand,
-} from './canvasProjectCanvasLifecycleCommand';
+import { executeSelectCanvasDocumentCommand } from './canvasProjectCanvasLifecycleCommand';
 import { executeImportProjectSnapshotCommand } from './canvasProjectSnapshotImportCommand';
 import { canvasProjectSnapshot } from './canvasProjectSnapshot';
 import { canvasViewCopy } from './copy';
@@ -162,22 +158,6 @@ export function useCanvasDraftLifecycle({
     },
     [canvasLifecycleCommandDto]
   );
-  const handleApplyCanvasDocumentPatch = useCallback<
-    CanvasDraftLifecycle['handleApplyCanvasDocumentPatch']
-  >(
-    async (command) => {
-      await executeUpdateCanvasDocumentCommand({
-        ...canvasLifecycleCommandDto,
-        command,
-      });
-    },
-    [canvasLifecycleCommandDto]
-  );
-  const handleDeleteCanvasDocument = useCallback<
-    CanvasDraftLifecycle['handleDeleteCanvasDocument']
-  >(async () => {
-    await executeDeleteCanvasDocumentCommand(canvasLifecycleCommandDto);
-  }, [canvasLifecycleCommandDto]);
   const flushDraftForExecution = useCanvasExecutionDraftFlush({
     draftRepository,
     draftQueryCache,
@@ -268,8 +248,6 @@ export function useCanvasDraftLifecycle({
     reloadLatestDraft,
     handleCreateCanvasDocument,
     handleSelectCanvasDocument,
-    handleApplyCanvasDocumentPatch,
-    handleDeleteCanvasDocument,
     canCreateCanvasDocument,
     canExportProjectSnapshot,
     canImportProjectSnapshot,

@@ -31,9 +31,9 @@ const AUTHORED_CONTROLLER_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'useCanvasController.ts'
 );
-const FILE_CONTROLLER_SOURCE = readArchitectureSiblingSource(
+const EXTERNAL_AUTHORITY_CONTROLLER_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
-  'useDbtProjectFileCanvasController.ts'
+  'useDbtProjectFilesAuthorityController.ts'
 );
 const DRAWER_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
@@ -79,13 +79,17 @@ describe('canvas execution-selection recovery architecture', () => {
     expect(MODEL_SOURCE).toContain("rail: 'RecoverCanvasExecutionSelection'");
   });
 
-  it('adapts both DBT authorities into the same recovery component', () => {
+  it('adapts authored and external dbt authorities into the same recovery component', () => {
     expect(AUTHORED_CONTROLLER_SOURCE).toContain('useCanvasExecutionSelectionRecovery({');
-    expect(FILE_CONTROLLER_SOURCE).toContain('useCanvasExecutionSelectionRecovery({');
+    expect(EXTERNAL_AUTHORITY_CONTROLLER_SOURCE).toContain('useCanvasExecutionSelectionRecovery({');
     expect(AUTHORED_CONTROLLER_SOURCE).toContain('buildCanvasExecutionSelectionRecoveryGraph({');
-    expect(FILE_CONTROLLER_SOURCE).toContain('buildCanvasExecutionSelectionRecoveryGraph({');
+    expect(EXTERNAL_AUTHORITY_CONTROLLER_SOURCE).toContain(
+      'buildCanvasExecutionSelectionRecoveryGraph({'
+    );
     expect(AUTHORED_CONTROLLER_SOURCE).toContain('refreshCanvasExecutionSelectionAuthority');
-    expect(FILE_CONTROLLER_SOURCE).toContain('refreshCanvasExecutionSelectionAuthority');
+    expect(EXTERNAL_AUTHORITY_CONTROLLER_SOURCE).toContain(
+      'refreshCanvasExecutionSelectionAuthority'
+    );
     expect(DRAWER_SOURCE).toContain('<OperationalDrawerSelectionRecoveryView');
   });
 });

@@ -23,7 +23,7 @@ export type UseCanvasContextMenuPresenterArgs = Readonly<{
   canOpenCanvasSettings?: boolean;
   authoringNodeKinds: readonly NodeKindRegistration[];
   screenToFlowPosition: (screenPosition: CanvasContextMenuPosition) => CanvasContextMenuPosition;
-  onCreateAuthoringNode: CreateCanvasAuthoringNode;
+  onCreateAuthoringNode?: CreateCanvasAuthoringNode;
   onEdgesChange: NonNullable<ReactFlowProps<FlowNode, Edge>['onEdgesChange']>;
   onSetEdgeExecutionGate?: CanvasEdgeCommandRunner['setExecutionGate'];
   onOpenSourceImport?: (flowPosition?: CanvasContextMenuPosition) => void;
