@@ -40,6 +40,16 @@ const NODE = {
   tags: [],
 } satisfies CanonicalNode;
 
+const SOURCE_NODE = {
+  id: 'source.orders',
+  name: 'orders source',
+  pluginId: 'dvt.warehouse-source',
+  kind: 'dvt:source',
+  role: 'input',
+  status: 'idle',
+  tags: [],
+} satisfies CanonicalNode;
+
 function renderOverlay(
   root: Root,
   overrides?: Partial<React.ComponentProps<typeof CanvasNodeWorkbenchOverlay>>
@@ -108,6 +118,39 @@ describe('CanvasNodeWorkbenchOverlay', () => {
       preferredTabRequestId: 7,
       primarySectionIds: dvtCanvasSurfaceStrategy.nodeWorkbench.sections,
     });
+  });
+
+  it('keeps default workbenches compact and gives Source the approved desktop work surface', () => {
+    renderOverlay(root);
+
+    const defaultOverlay = container.querySelector<HTMLElement>(
+      '[data-slot="canvas-node-workbench-overlay"]'
+    )!;
+    expect(defaultOverlay.className).toContain('w-[min(28rem,calc(100%-2rem))]');
+    expect(defaultOverlay.className).toContain('h-[min(40rem,calc(100%-2rem))]');
+
+    renderOverlay(root, {
+      panels: {
+        activeRunId: 'run-42',
+        inspectorAuthoring: {
+          canEditNode: true,
+          onApplyNodeDraft: vi.fn(),
+        },
+        inspectorGraphEdges: [],
+        inspectorGraphNodes: [SOURCE_NODE],
+        inspectorNode: SOURCE_NODE,
+        inspectorPreferredTabId: 'general',
+        inspectorPreferredTabRequestId: 8,
+        inspectorWorkbenchContributions: [],
+        registeredPlugins: new Set(['dvt.warehouse-source']),
+      },
+    });
+
+    const sourceOverlay = container.querySelector<HTMLElement>(
+      '[data-slot="canvas-node-workbench-overlay"]'
+    )!;
+    expect(sourceOverlay.className).toContain('w-[min(52rem,calc(100%-2rem))]');
+    expect(sourceOverlay.className).toContain('h-[min(56rem,calc(100%-2rem))]');
   });
 
   it('opens semi-docked beside the inspected graph card', () => {

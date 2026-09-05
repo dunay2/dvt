@@ -42,6 +42,8 @@ import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthorin
 import { DvtTransformOutputView } from './DvtTransformOutputView';
 import { reconcileDbtModelConnectedOrigin } from './canvasDbtAuthoringModel';
 import { useCanvasColumnCommentCellRenderer } from './useCanvasColumnCommentCellRenderer';
+import { SourceNodeWorkbenchHeaderIdentity } from './SourceNodeWorkbenchHeaderIdentity';
+import { SourceOverviewPanel } from './SourceOverviewPanel';
 
 export type CanvasNodeWorkbenchPanelProps = Readonly<{
   node: CanonicalNode;
@@ -262,6 +264,8 @@ export function CanvasNodeWorkbenchPanel({
     (node.kind === 'dvt:source' &&
       draftController.draft.dvt?.kind === 'source' &&
       draftController.draft.dvt.semantic != null);
+  const approvedWarehouseSourceOverview =
+    node.kind === 'dvt:source' && node.pluginId === 'dvt.warehouse-source';
   const baseModel = buildNodePropertiesReadModel({
     node,
     nodes,
@@ -297,7 +301,14 @@ export function CanvasNodeWorkbenchPanel({
     contributedSectionIds,
     sections: unfilteredModel.sections,
   });
-  const model = { ...unfilteredModel, sections: sectionModel.sections };
+  const model = {
+    ...unfilteredModel,
+    sections: sectionModel.sections.map((section) =>
+      approvedWarehouseSourceOverview && section.id === 'general'
+        ? { ...section, rows: [] }
+        : section
+    ),
+  };
   const resolvedPrimarySectionIds = sectionModel.primarySectionIds;
   const panelIds = panels.map((panel) => panel.id);
   const resolvedActiveTab = resolveActiveNodeWorkbenchTab({ activeTab, model, panelIds });
@@ -353,13 +364,31 @@ export function CanvasNodeWorkbenchPanel({
     setActiveTab(nextTabId);
   };
 
-  if (authoring.canEditNode) {
+  if (approvedWarehouseSourceOverview) {
     sectionBeforeChildren.general = (
       <>
-        {renderAuthoringSection('general')}
+        <SourceOverviewPanel
+          node={node}
+          nodes={nodes}
+          edges={edges}
+          readModel={baseModel}
+          authoring={authoring}
+          draftController={draftController}
+        />
         {sectionBeforeChildren.general}
       </>
     );
+  }
+
+  if (authoring.canEditNode) {
+    if (!approvedWarehouseSourceOverview) {
+      sectionBeforeChildren.general = (
+        <>
+          {renderAuthoringSection('general')}
+          {sectionBeforeChildren.general}
+        </>
+      );
+    }
     for (const sectionId of ['code', 'sink'] as const) {
       if (sectionId === 'code' && canonicalSubstraitTransformAuthority) continue;
       sectionAfterChildren[sectionId] = (
@@ -430,15 +459,21 @@ export function CanvasNodeWorkbenchPanel({
             dragHandleProps?.className
           )}
         >
-          <div className="flex items-center gap-2">
-            <div className={cn('size-2 shrink-0 rounded-full', dotClass)} />
-            <h2 className={cn('truncate', inspectorVisualClasses.contextPanelTitle)}>
-              {node.name}
-            </h2>
-          </div>
-          <p className={cn('font-mono', inspectorVisualClasses.contextPanelSubtitle)}>
-            {node.kind}
-          </p>
+          {node.kind === 'dvt:source' ? (
+            <SourceNodeWorkbenchHeaderIdentity node={node} />
+          ) : (
+            <>
+              <div className="flex items-center gap-2">
+                <div className={cn('size-2 shrink-0 rounded-full', dotClass)} />
+                <h2 className={cn('truncate', inspectorVisualClasses.contextPanelTitle)}>
+                  {node.name}
+                </h2>
+              </div>
+              <p className={cn('font-mono', inspectorVisualClasses.contextPanelSubtitle)}>
+                {node.kind}
+              </p>
+            </>
+          )}
         </div>
         <div
           data-slot="canvas-node-workbench-header-actions"

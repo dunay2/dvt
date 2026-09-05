@@ -74,6 +74,9 @@ describe('NodePropertiesTabs primary sections', () => {
     );
 
     expect(container.querySelector('[data-slot="node-inspector-tab-general"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="node-inspector-tab-general"]')?.textContent).toContain(
+      'Overview'
+    );
     expect(container.querySelector('[data-slot="node-inspector-tab-columns"]')).not.toBeNull();
     expect(
       container.querySelector('[data-slot="node-inspector-tab-inputs-outputs"]')
@@ -113,7 +116,8 @@ describe('NodePropertiesTabs primary sections', () => {
 
     const tabsList = container.querySelector('[data-slot="node-inspector-core-tabs-list"]');
 
-    expect(tabsList?.textContent).toContain('General');
+    expect(tabsList?.textContent).toContain('Overview');
+    expect(tabsList?.textContent).not.toContain('General');
     expect(tabsList?.textContent).toContain('Columns');
     expect(tabsList?.textContent).toContain('Code');
     expect(container.querySelector('[data-slot="node-inspector-tab-inputs-outputs"]')).toBeNull();
