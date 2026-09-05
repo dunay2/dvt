@@ -40,12 +40,13 @@ import {
   DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION,
   DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1,
   DVT_SUBSTRAIT_PROFILE_REF_V1,
+  allocateDvtFieldId,
+  allocateDvtRelationId,
   type ConnectedSourceRef,
   type DvtSubstraitAuthoringSidecarV1,
   type DvtSubstraitFieldBindingV1,
   type DvtSubstraitSemanticDocumentV1,
 } from '@dvt/contracts';
-import { allocateDvtFieldId, allocateDvtRelationId } from '@dvt/contracts/substrait';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
