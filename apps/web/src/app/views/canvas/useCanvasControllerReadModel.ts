@@ -162,6 +162,20 @@ export function useCanvasControllerReadModel({
     () => getGraphNodeCardStrategies(runtimeCapabilities),
     [runtimeCapabilities]
   );
+  const columnFunctionNodes = useMemo(
+    () => [...graphModel.canonicalNodesById.values()],
+    [graphModel.canonicalNodesById]
+  );
+  const columnFunctionEdges = useMemo(
+    () =>
+      graphModel.edges.length > 0
+        ? graphModel.edges.map((edge) => ({
+            sourceId: edge.source,
+            targetId: edge.target,
+          }))
+        : visibleScope.canonicalEdges,
+    [graphModel.edges, visibleScope.canonicalEdges]
+  );
   const projectedColumnLineage = useMemo(() => {
     const expandedNodeIds = new Set(
       graphModel.nodes
@@ -234,14 +248,8 @@ export function useCanvasControllerReadModel({
           canMutateGraph && canonicalNode != null
             ? projectCanvasColumnFunctionMenus({
                 node: canonicalNode,
-                nodes: [...graphModel.canonicalNodesById.values()],
-                edges:
-                  graphModel.edges.length > 0
-                    ? graphModel.edges.map((edge) => ({
-                        sourceId: edge.source,
-                        targetId: edge.target,
-                      }))
-                    : visibleScope.canonicalEdges,
+                nodes: columnFunctionNodes,
+                edges: columnFunctionEdges,
               })
             : { hasEditableProjection: false, supportsCalculatedColumns: false };
         const columnFunctionMenus = functionProjection.menus;
@@ -304,6 +312,8 @@ export function useCanvasControllerReadModel({
     [
       canMutateGraph,
       canSelectExecution,
+      columnFunctionEdges,
+      columnFunctionNodes,
       columnLevelLineageEnabled,
       graphHandlers.handleInspectNode,
       graphHandlers.handleDuplicateNode,
@@ -321,7 +331,6 @@ export function useCanvasControllerReadModel({
       graphHandlers.handleComposeCanvasNodes,
       onToggleExecutionSelection,
       graphModel.canonicalNodesById,
-      graphModel.edges,
       graphModel.nodes,
       graphNodeCardStrategies,
       overlayModel.activeRunId,
@@ -329,7 +338,6 @@ export function useCanvasControllerReadModel({
       overlayModel.runStatusByNodeId,
       runtimeCapabilities,
       readOnlyColumnLineageNodeIds,
-      visibleScope.canonicalEdges,
     ]
   );
 
