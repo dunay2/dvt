@@ -232,8 +232,6 @@ export function useDbtProjectFilesAuthoritySurface({
       activeCanvas,
       canvasDocuments: [activeCanvas],
       executionEnvironmentOptions: [],
-      canEditCanvas: false,
-      canDeleteActiveCanvas: false,
       inspectorNode: controller.inspectorNode,
       inspectorPreferredTabId: controller.presentation.inspectorPreferredTabId,
       inspectorPreferredTabRequestId: controller.presentation.inspectorPreferredTabRequestId,
