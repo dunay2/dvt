@@ -1,4 +1,6 @@
 /** Owns creation and persistence of the Source relation's canonical semantic draft. */
+import { allocateDvtFieldId } from '@dvt/contracts/substrait';
+
 import type { CanonicalNode } from '../../types/canonical';
 import { inspectDvtSubstraitFilter, removeDvtSubstraitFilter } from './canvasDvtSubstraitFilter';
 import {
@@ -15,10 +17,6 @@ import {
   applyDvtSubstraitSemanticDocument,
   readDvtTransformAuthoringAuthority,
 } from './canvasDvtTransformAuthoringAuthority';
-
-function outputFieldId(name: string): string {
-  return `output:${encodeURIComponent(name)}`;
-}
 
 function isNamedSourceColumn(value: unknown): value is Record<string, unknown> & { name: string } {
   return (
@@ -89,7 +87,7 @@ export function createDvtSourceSemanticDraft(
         source,
         targetNodeId: node.id,
         outputs: source.fields.map((field) => ({
-          fieldId: outputFieldId(field.name),
+          fieldId: allocateDvtFieldId(),
           name: field.name,
           sourceFieldName: field.name,
         })),
