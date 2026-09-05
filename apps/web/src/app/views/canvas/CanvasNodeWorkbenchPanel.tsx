@@ -42,6 +42,7 @@ import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthorin
 import { DvtTransformOutputView } from './DvtTransformOutputView';
 import { reconcileDbtModelConnectedOrigin } from './canvasDbtAuthoringModel';
 import { useCanvasColumnCommentCellRenderer } from './useCanvasColumnCommentCellRenderer';
+import { SourceNodeWorkbenchHeaderIdentity } from './SourceNodeWorkbenchHeaderIdentity';
 
 export type CanvasNodeWorkbenchPanelProps = Readonly<{
   node: CanonicalNode;
@@ -430,15 +431,21 @@ export function CanvasNodeWorkbenchPanel({
             dragHandleProps?.className
           )}
         >
-          <div className="flex items-center gap-2">
-            <div className={cn('size-2 shrink-0 rounded-full', dotClass)} />
-            <h2 className={cn('truncate', inspectorVisualClasses.contextPanelTitle)}>
-              {node.name}
-            </h2>
-          </div>
-          <p className={cn('font-mono', inspectorVisualClasses.contextPanelSubtitle)}>
-            {node.kind}
-          </p>
+          {node.kind === 'dvt:source' ? (
+            <SourceNodeWorkbenchHeaderIdentity node={node} />
+          ) : (
+            <>
+              <div className="flex items-center gap-2">
+                <div className={cn('size-2 shrink-0 rounded-full', dotClass)} />
+                <h2 className={cn('truncate', inspectorVisualClasses.contextPanelTitle)}>
+                  {node.name}
+                </h2>
+              </div>
+              <p className={cn('font-mono', inspectorVisualClasses.contextPanelSubtitle)}>
+                {node.kind}
+              </p>
+            </>
+          )}
         </div>
         <div
           data-slot="canvas-node-workbench-header-actions"
