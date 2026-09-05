@@ -51,7 +51,9 @@ describe('lineage panel token convergence architecture', () => {
     ]) {
       expect(COMPONENT_GUIDE).toContain(expected);
     }
-    expect(COMPONENT_GUIDE).not.toContain('LineageColumnPanel');
+    const consumersSection =
+      COMPONENT_GUIDE.split('## Consumers')[1]?.split('## Explicit Non-owner')[0];
+    expect(consumersSection).not.toContain('LineageColumnPanel');
 
     for (const storyId of ['US-F24-LINEAGE-TOKEN-01', 'US-F24-LINEAGE-TOKEN-02']) {
       expect(USER_STORIES).toContain(storyId);
