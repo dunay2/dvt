@@ -7,9 +7,7 @@ import {
   inspectDvtSubstraitProjectionDraft,
   resolveDvtSubstraitProjectionSource,
 } from './canvasDvtSubstraitProjection';
-import {
-  createDvtSourceSemanticDraft,
-} from './canvasDvtSourceSemanticAuthoring';
+import { createDvtSourceSemanticDraft } from './canvasDvtSourceSemanticAuthoring';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 
 const OPAQUE_FIELD_ID =
