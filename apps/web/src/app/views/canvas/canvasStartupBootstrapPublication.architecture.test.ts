@@ -233,7 +233,8 @@ describe('canvas startup bootstrap publication architecture', () => {
     expect(cypressSpecSource).toContain('waitForLiveFirstAuthoringLayoutPositionChange');
     expect(cypressSpecSource).not.toContain('waitForLiveFirstAuthoringDraftNodePositionChange');
     expect(cypressSpecSource).toContain('/transform 1/i');
-    expect(cypressSpecSource).toContain('Model 1');
+    expect(cypressSpecSource).not.toContain("id: 'dbt'");
+    expect(cypressSpecSource).not.toContain('Model 1');
     expect(liveRunnerSource).toContain('CYPRESS_requireLiveProtectedRuntime=1');
     expect(liveRunnerSource).toContain('VITE_PROJECT_OPTIONS');
     expect(liveRunnerSource).toContain('canvas-first-authoring-live.cy.ts');

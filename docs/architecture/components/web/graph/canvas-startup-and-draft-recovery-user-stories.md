@@ -251,41 +251,38 @@ Acceptance criteria:
   mutation controls.
 - Cypress does not rely on uncontrolled token expiry timing.
 
-### US-CANVAS-FIRST-AUTHORING-001: create the first transformation canvas live
+### US-CANVAS-FIRST-AUTHORING-001: create the first shared Canvas live
 
-As an operator in a clean workspace, I want to create the first transformation
-canvas through the live protected route, so Canvas becomes useful without seed
-data or hidden setup.
+As an operator in a clean workspace, I want to create the first shared Canvas
+through the live protected route, so Canvas becomes useful without seed data or
+hidden setup.
 
 Acceptance criteria:
 
 - A protected empty draft renders the typed create-canvas entrypoint.
 - The canvas surface renders no seeded project nodes before creation.
-- Selecting `transformation` sends `CreateCanvas` through the existing command
-  path.
-- The empty transformation canvas is saved with `SaveWorkspaceGraphDraft`.
-- The first transformation node is created from `dvt:source` and resolves to
-  `dvt-source-1` / `Source 1`.
+- The single offered Canvas entry sends `CreateCanvas` through the existing
+  command path using the internal `transformation` runtime registration.
+- The empty Canvas is saved with `SaveWorkspaceGraphDraft`.
+- The first node is created from `dvt:transform` and resolves to
+  `dvt-transform-1` / `Transform 1`.
 - Cypress proves the flow without intercepting draft read or write endpoints.
 - Cypress fails fast when the test-owned live workspace already contains a
   draft instead of overwriting that draft directly.
 
-### US-CANVAS-FIRST-AUTHORING-002: create the first dbt canvas live
+### US-CANVAS-FIRST-AUTHORING-002: reject a retired Canvas kind
 
-As an operator in a clean workspace, I want to create the first dbt canvas
-through the same route, so dbt is a plugin canvas type instead of a special
-startup seed.
+As an operator opening a persisted document with a retired Canvas kind, I want
+the route to fail closed, so unsupported topology is never silently treated as
+the shared Canvas runtime.
 
 Acceptance criteria:
 
-- Selecting `dbt` sends the same `CreateCanvas` command rail with dbt type
-  data.
-- The first dbt canvas contains no automatic project nodes until the user adds
-  one.
-- The dbt path shares the first-authoring proof model with transformation.
-- The first dbt node is created from `dbt:source` and resolves to
-  `dbt-source-1` / `Source 1`.
-- Unsupported or duplicate first-canvas attempts fail closed.
+- A persisted `dbt` Canvas kind has no runtime registration.
+- The route reports the unsupported kind and disables unsafe commands.
+- No alias converts the retired kind into `transformation`.
+- dbt authority and provenance may survive as profile data without selecting a
+  second Canvas runtime.
 
 ### US-CANVAS-FIRST-AUTHORING-003: add the first node after authoritative save
 
@@ -342,19 +339,18 @@ Acceptance criteria:
 - No first-authoring proof state can be complete while draft posture is not
   writable.
 
-### US-CANVAS-FIRST-AUTHORING-007: choose a canvas template inside the active workspace
+### US-CANVAS-FIRST-AUTHORING-007: create Canvas inside the active workspace
 
 As an operator in an empty workspace, I want Canvas to show the active
-workspace before I choose `dbt` or `Transformation`, so I understand I am
-creating a canvas document template in this workspace and not choosing a new
-project type.
+workspace before I create the shared Canvas, so I understand where the document
+will be created.
 
 Acceptance criteria:
 
 - The first-canvas host shows tenant, project, environment, and adapter context.
-- The startup copy says canvas template, not governed canvas kind.
-- `dbt` and `Transformation` choices render `CanvasTemplatePresentation` titles.
-- Choosing a template still dispatches `CreateCanvasDocumentCommand` through
+- The startup copy presents one Canvas creation choice.
+- The registered Canvas renders one `CanvasTemplatePresentation` title.
+- Choosing it dispatches `CreateCanvasDocumentCommand` through
   the existing protected draft command rail.
 - The passive host template does not import copy catalogs or command DTOs.
 - No new workspace or project selector is introduced in this route slice.
@@ -427,7 +423,7 @@ grip target.
 Acceptance criteria:
 
 - Mapped and dropped nodes omit a React Flow `dragHandle` selector.
-- `DbtNodeComponent.tsx` does not render a separate grip-only drag handle.
+- `GraphNodeRenderer.tsx` does not render a separate grip-only drag handle.
 - Drag enablement remains governed by `CanvasViewport` permissions.
 
 ### US-CANVAS-ARCH-001: validate semantics, not only barrels
@@ -479,19 +475,19 @@ Acceptance criteria:
 | US-CANVAS-DRAFT-009           | Format failures stay separate                   | `canvasDraftAccessPostureModel.ts`, `canvasDraftTransportErrorState.ts`        | `canvasDraftAccessPostureModel.test.ts`, architecture guard                                                                                                     |
 | US-CANVAS-DRAFT-010           | Single posture controls route surfaces          | auth posture, route state, authoring state, toolbar, banner models             | auth posture test, authoring state test, architecture guard                                                                                                     |
 | US-CANVAS-DRAFT-011           | Browser proof for denied and read-only posture  | Cypress draft access spec                                                      | Cypress draft access posture spec                                                                                                                               |
-| US-CANVAS-FIRST-AUTHORING-001 | Live transformation first canvas                | `canvasFirstAuthoringLiveProof.ts`, `canvasCreateCanvasDocumentCommand.ts`     | proof test, create-canvas command test, Cypress live first-authoring spec                                                                                       |
-| US-CANVAS-FIRST-AUTHORING-002 | Live dbt first canvas                           | `canvasFirstAuthoringLiveProof.ts`, `canvasCreateCanvasDocumentCommand.ts`     | proof test, create-canvas command test, Cypress live first-authoring spec                                                                                       |
+| US-CANVAS-FIRST-AUTHORING-001 | Live shared first Canvas                        | `canvasFirstAuthoringLiveProof.ts`, `canvasCreateCanvasDocumentCommand.ts`     | proof test, create-canvas command test, Cypress live first-authoring spec                                                                                       |
+| US-CANVAS-FIRST-AUTHORING-002 | Retired Canvas kind fails closed                | `canvasActiveGraphStrategy.ts`, `canvasRouteInteractionState.ts`               | graph-strategy test, route interaction test, route presentation test                                                                                            |
 | US-CANVAS-FIRST-AUTHORING-003 | First node after authoritative save             | `useCanvasController.ts`, `useCanvasNodeAuthoringHandlers.ts`                  | controller core test, first-authoring proof test                                                                                                                |
-| US-CANVAS-FIRST-AUTHORING-004 | First-node card-body layout persistence         | `canvasNodeMapper.ts`, `DbtNodeComponent.tsx`, layout persistence              | layout tests, viewport drag-surface test, Cypress live first-authoring spec                                                                                     |
+| US-CANVAS-FIRST-AUTHORING-004 | First-node card-body layout persistence         | `canvasNodeMapper.ts`, `GraphNodeRenderer.tsx`, layout persistence             | layout tests, viewport drag-surface test, Cypress live first-authoring spec                                                                                     |
 | US-CANVAS-FIRST-AUTHORING-005 | Reload restores first authored canvas           | protected draft query and layout projection                                    | controller persistence test, viewport graph model test, Cypress live proof                                                                                      |
 | US-CANVAS-FIRST-AUTHORING-006 | Unsafe draft access blocks first authoring      | `CanvasDraftAccessPosture`, first-authoring proof model                        | draft access posture tests, first-authoring proof negative tests                                                                                                |
-| US-CANVAS-FIRST-AUTHORING-007 | Template choice inside active workspace         | `CanvasPlaygroundHost`, `CanvasPlaygroundHost.templates.tsx`                   | `CanvasPlaygroundHost.test.tsx`, `CanvasPlaygroundHost.architecture.test.tsx`                                                                                   |
+| US-CANVAS-FIRST-AUTHORING-007 | Canvas creation inside active workspace         | `CanvasPlaygroundHost`, `CanvasPlaygroundHost.templates.tsx`                   | `CanvasPlaygroundHost.test.tsx`, `CanvasPlaygroundHost.architecture.test.tsx`                                                                                   |
 | US-CANVAS-LAYOUT-001          | Drag-stop payload coordinates persist           | `useCanvasLayoutPersistence.ts`                                                | `useCanvasController.persistence.test.tsx`                                                                                                                      |
 | US-CANVAS-LAYOUT-002          | Settled live drag positions persist             | `useCanvasLayoutPersistence.ts`, `useCanvasViewportGraphModel.ts`              | `useCanvasController.persistence.test.tsx`, `useCanvasViewportGraphModel.layout.test.tsx`                                                                       |
 | US-CANVAS-LAYOUT-003          | Pending route state blocks layout writes        | `useCanvasLayoutPersistence.ts`                                                | `useCanvasController.persistence.test.tsx`                                                                                                                      |
 | US-CANVAS-PRESENTATION-001    | Passive host template                           | `CanvasPlaygroundHost.templates.tsx`                                           | `canvasDraftRecoveryBoundary.architecture.test.ts`                                                                                                              |
 | US-CANVAS-PRESENTATION-002    | Passive graph-first shell                       | `CanvasShell.tsx`, shell builders                                              | `CanvasShell.architecture.test.tsx`, `canvasRoutePosturePriority.architecture.test.ts`                                                                          |
-| US-CANVAS-PRESENTATION-003    | Drag surface is explicit                        | `canvasNodeMapper.ts`, `DbtNodeComponent.tsx`                                  | `canvasStartupBootstrapPublication.architecture.test.ts`                                                                                                        |
+| US-CANVAS-PRESENTATION-003    | Drag surface is explicit                        | `canvasNodeMapper.ts`, `GraphNodeRenderer.tsx`                                 | `canvasStartupBootstrapPublication.architecture.test.ts`                                                                                                        |
 | US-CANVAS-ARCH-001            | Semantic architecture guard                     | split Canvas architecture tests                                                | `canvasStartupBootstrapPublication.architecture.test.ts`, `canvasDraftRecoveryBoundary.architecture.test.ts`, `canvasRoutePosturePriority.architecture.test.ts` |
 | US-CANVAS-ARCH-002            | Fixture boundaries                              | `workspaceGraphDraftFixtureBoundaries.architecture.test.ts`                    | `workspaceGraphDraftFixtureBoundaries.architecture.test.ts`                                                                                                     |
 
@@ -541,9 +537,9 @@ Red case for `TF-E2-M-C` first-authoring mechanization:
   that no feature mechanization manifest existed;
 - no local component guide named the first-authoring proof API, invariants,
   transitions, or consumers;
-- the story catalog did not cover transformation/dbt first-canvas creation,
-  first-node creation, drag-surface persistence, reload restore, and unsafe
-  posture denial as one feature lane.
+- the story catalog did not cover first-Canvas creation, first-node creation,
+  drag-surface persistence, reload restore, and unsafe posture denial as one
+  feature lane.
 
 Green case for `TF-E2-M-C` planning:
 

@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
-  buildController,
   buildInspectorFixtureNode,
   createCanvasRouteHarness,
   expectBlockedCanvasRouteState,
@@ -80,17 +79,12 @@ describe('Canvas route backend and recovery priority', () => {
     });
   });
 
-  it('fails closed with disabled-plugin guidance for registered but unavailable canvas kinds', async () => {
-    const controller = buildController();
-
+  it('fails closed when a retired canvas kind has no runtime registration', async () => {
     await renderCanvasRouteWithController(harness, {
       canvasDocument: {
         kind: 'dbt',
         title: 'dbt canvas',
       },
-      availableCanvasKinds: controller.availableCanvasKinds.filter(
-        (registration) => registration.kind !== 'dbt'
-      ),
       inspectorNode: buildInspectorFixtureNode(),
       canEditInspectorNode: true,
       userPermissions: {
@@ -107,7 +101,7 @@ describe('Canvas route backend and recovery priority', () => {
       harness,
       text: 'Canvas unavailable',
       extraText:
-        'Canvas cannot open persisted canvas kind "dbt" because its plugin is disabled or unavailable.',
+        'Canvas cannot open persisted canvas kind "dbt" because no runtime registration is available.',
       slot: 'canvas-error-state',
       viewportVisible: false,
     });
@@ -117,7 +111,7 @@ describe('Canvas route backend and recovery priority', () => {
       routeState: 'error_graph',
       readinessStatus: 'failed',
       readinessDetail:
-        'Canvas cannot open persisted canvas kind "dbt" because its plugin is disabled or unavailable.',
+        'Canvas cannot open persisted canvas kind "dbt" because no runtime registration is available.',
     });
   });
 

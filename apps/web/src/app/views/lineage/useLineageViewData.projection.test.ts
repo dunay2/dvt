@@ -1,82 +1,68 @@
 import { describe, expect, it } from 'vitest';
 
-import type { CanvasGraphStrategy } from '../../plugins/graphStrategyContracts';
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { DbtNode } from '../../types/dbt';
 import { projectLineageGraph } from './useLineageViewData';
 
-const canonicalNode: CanonicalNode = {
-  id: 'node-1',
-  name: 'Node 1',
-  pluginId: 'dbt',
-  kind: 'dbt:model',
-  role: 'transform',
+const modelNode: DbtNode = {
+  id: 'model.orders',
+  name: 'orders',
+  type: 'MODEL',
+  package: 'analytics',
+  path: 'models/orders.sql',
   status: 'idle',
   tags: [],
+  dependencies: ['source.orders'],
+  columns: [{ name: 'order_id', type: 'integer', nullable: false }],
 };
 
-const canonicalEdge: CanonicalEdge = {
+const lineageEdge = {
   id: 'edge-1',
-  sourceId: 'node-1',
-  targetId: 'node-2',
-  relation: 'lineage',
+  source: 'source.orders',
+  target: 'model.orders',
+  type: 'ref' as const,
 };
-
-function strategy(overrides: Partial<CanvasGraphStrategy> = {}): CanvasGraphStrategy {
-  return {
-    id: 'test',
-    mapNodeToCanonical: () => canonicalNode,
-    mapEdgeToCanonical: () => canonicalEdge,
-    parseDropPayload: () => null,
-    ...overrides,
-  };
-}
 
 describe('Lineage graph projection', () => {
-  it('discards all projected nodes and edges when a node mapper throws', () => {
-    let nodeCalls = 0;
-    const result = projectLineageGraph(
-      [{ id: 'healthy-node' }, { id: 'failing-node' }],
-      [{ id: 'edge-1' }],
-      strategy({
-        mapNodeToCanonical: () => {
-          nodeCalls += 1;
-          if (nodeCalls === 2) throw new Error('node mapping failed');
-          return canonicalNode;
+  it('projects the workspace DBT snapshot without selecting a Canvas runtime', () => {
+    const result = projectLineageGraph([modelNode], [lineageEdge]);
+
+    expect(result).toMatchObject({
+      canonicalNodes: [
+        {
+          id: 'model.orders',
+          pluginId: 'dbt',
+          kind: 'dbt:model',
+          role: 'transform',
+          metadata: {
+            package: 'analytics',
+            dependencies: ['source.orders'],
+            columns: [{ name: 'order_id', type: 'integer', nullable: false }],
+          },
         },
-      })
-    );
+      ],
+      canonicalEdges: [
+        {
+          id: 'edge-1',
+          sourceId: 'source.orders',
+          targetId: 'model.orders',
+          relation: 'lineage',
+        },
+      ],
+      projectionError: null,
+    });
+  });
+
+  it('discards partial projection when trusted snapshot access throws', () => {
+    const invalidNode = {
+      ...modelNode,
+      get type(): DbtNode['type'] {
+        throw new Error('node projection failed');
+      },
+    };
+    const result = projectLineageGraph([invalidNode], [lineageEdge]);
 
     expect(result.canonicalNodes).toEqual([]);
     expect(result.canonicalEdges).toEqual([]);
-    expect(result.projectionError?.message).toBe('node mapping failed');
-  });
-
-  it('discards all projected nodes and edges when an edge mapper throws', () => {
-    let edgeCalls = 0;
-    const result = projectLineageGraph(
-      [{ id: 'node-1' }],
-      [{ id: 'healthy-edge' }, { id: 'failing-edge' }],
-      strategy({
-        mapEdgeToCanonical: () => {
-          edgeCalls += 1;
-          if (edgeCalls === 2) throw new Error('edge mapping failed');
-          return canonicalEdge;
-        },
-      })
-    );
-
-    expect(result.canonicalNodes).toEqual([]);
-    expect(result.canonicalEdges).toEqual([]);
-    expect(result.projectionError?.message).toBe('edge mapping failed');
-  });
-
-  it('filters normal null mapper results without producing an error', () => {
-    const result = projectLineageGraph(
-      [{ id: 'ignored-node' }],
-      [{ id: 'ignored-edge' }],
-      strategy({ mapNodeToCanonical: () => null, mapEdgeToCanonical: () => null })
-    );
-
-    expect(result).toEqual({ canonicalNodes: [], canonicalEdges: [], projectionError: null });
+    expect(result.projectionError?.message).toBe('node projection failed');
   });
 });

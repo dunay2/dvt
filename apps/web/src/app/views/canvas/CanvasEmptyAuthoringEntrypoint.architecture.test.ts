@@ -97,7 +97,6 @@ describe('Canvas empty authoring entrypoint architecture', () => {
     expect(cycleState).toMatchObject({ kind: 'needs_canvas' });
     if (cycleState?.kind !== 'needs_canvas') return;
     expect(cycleState.availableCanvasKinds.map((canvasKind) => canvasKind.kind)).toEqual([
-      'dbt',
       'transformation',
     ]);
   });
