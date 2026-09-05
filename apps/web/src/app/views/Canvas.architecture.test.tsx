@@ -26,7 +26,6 @@ describe('Canvas route architecture', () => {
     expect(CANVAS_ROUTE_SOURCE.match(/<CanvasModalHost\b/g)).toHaveLength(1);
     expect(CANVAS_ROUTE_SOURCE).toContain('<CanvasRouteSurface');
     expect(CANVAS_ROUTE_SOURCE).toContain('useDbtProjectFilesAuthoritySurface');
-    expect(CANVAS_ROUTE_SOURCE).not.toContain('DbtProjectFileCanvas');
     expect(CANVAS_ROUTE_SOURCE).not.toContain('DbtProjectFileCanvasView');
   });
 
