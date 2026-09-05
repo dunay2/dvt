@@ -82,26 +82,6 @@ function projectDvtTransformMenus(args: {
   }
 }
 
-function projectDvtSourceMenus(node: CanonicalNode): CanvasColumnFunctionMenuProjection {
-  const source = resolveDvtSubstraitProjectionSource(node);
-  if (source == null) return { hasEditableProjection: false, supportsCalculatedColumns: false };
-  const menus: CanvasColumnFunctionMenuMap = new Map();
-  for (const field of source.fields) {
-    addMenu({
-      menus,
-      columnId: field.name,
-      name: field.name,
-      dataType: field.dataType,
-      provider: source.sourceRef.connectionRef.provider,
-    });
-  }
-  return {
-    hasEditableProjection: false,
-    supportsCalculatedColumns: true,
-    ...(menus.size === 0 ? {} : { menus }),
-  };
-}
-
 function projectGeneratedDbtModelMenus(args: {
   node: CanonicalNode;
   nodes: readonly CanonicalNode[];
@@ -149,7 +129,9 @@ export function projectCanvasColumnFunctionMenus(args: {
   if (args.node.pluginId === 'dvt' && args.node.kind === 'dvt:transform') {
     return projectDvtTransformMenus(args);
   }
-  if (args.node.kind === 'dvt:source') return projectDvtSourceMenus(args.node);
+  if (args.node.kind === 'dvt:source') {
+    return { hasEditableProjection: false, supportsCalculatedColumns: false };
+  }
   if (args.node.pluginId === 'dbt' && args.node.kind === 'dbt:model') {
     return projectGeneratedDbtModelMenus(args);
   }
