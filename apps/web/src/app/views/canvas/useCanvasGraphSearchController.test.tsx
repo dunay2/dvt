@@ -2,9 +2,9 @@
 
 import { fireEvent } from '@testing-library/dom';
 import type { Node } from '@xyflow/react';
-import React, { act } from 'react';
+import React, { act, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useCanvasGraphSearchController } from './useCanvasGraphSearchController';
 
@@ -138,5 +138,87 @@ describe('useCanvasGraphSearchController', () => {
     function state(): Record<string, unknown> {
       return JSON.parse(container.querySelector('[data-testid="state"]')?.textContent ?? '{}');
     }
+  });
+
+  it('does not inspect search fields for geometry-only changes while the query is empty', () => {
+    const readName = vi.fn(() => 'Orders');
+    const node: Node = {
+      id: 'orders',
+      position: { x: 0, y: 0 },
+      data: {
+        get name() {
+          return readName();
+        },
+        description: 'Orders description',
+        path: 'models/orders.sql',
+        pluginKind: 'dbt:model',
+        pluginId: 'dbt',
+        role: 'transform',
+        tags: ['finance'],
+      },
+    };
+
+    function Harness(): JSX.Element {
+      const [nodes, setNodes] = useState<Node[]>([node]);
+      const controller = useCanvasGraphSearchController({ nodes });
+      return (
+        <div>
+          <button
+            type="button"
+            onClick={() =>
+              setNodes((current) =>
+                current.map((currentNode) => ({
+                  ...currentNode,
+                  position: { x: currentNode.position.x + 20, y: currentNode.position.y + 10 },
+                }))
+              )
+            }
+          >
+            Move
+          </button>
+          <button type="button" onClick={() => controller.setQuery('orders')}>
+            Search
+          </button>
+          <output data-testid="lazy-state">
+            {JSON.stringify({
+              status: controller.model.status,
+              matches: controller.matchingNodeIds,
+              x: nodes[0]?.position.x,
+            })}
+          </output>
+        </div>
+      );
+    }
+
+    act(() => root.render(<Harness />));
+    expect(readName).not.toHaveBeenCalled();
+
+    act(() => {
+      fireEvent.click(
+        Array.from(container.querySelectorAll('button')).find(
+          (button) => button.textContent === 'Move'
+        )!
+      );
+    });
+    expect(readName).not.toHaveBeenCalled();
+    expect(JSON.parse(container.querySelector('[data-testid="lazy-state"]')?.textContent ?? '{}')).toMatchObject({
+      status: 'idle',
+      matches: [],
+      x: 20,
+    });
+
+    act(() => {
+      fireEvent.click(
+        Array.from(container.querySelectorAll('button')).find(
+          (button) => button.textContent === 'Search'
+        )!
+      );
+    });
+    expect(readName).toHaveBeenCalled();
+    expect(JSON.parse(container.querySelector('[data-testid="lazy-state"]')?.textContent ?? '{}')).toMatchObject({
+      status: 'matched',
+      matches: ['orders'],
+      x: 20,
+    });
   });
 });
