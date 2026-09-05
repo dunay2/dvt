@@ -218,7 +218,7 @@ describe('dbt project file projection live vertical', () => {
       timeout: 60_000,
     })
       .should('be.visible')
-      .and('contain.text', 'Orders');
+      .and('contain.text', 'orders');
     cy.get('.react-flow__node[data-id="model.analytics.orders"]')
       .should('be.visible')
       .find('[data-slot="graph-node-metric-row"]')
