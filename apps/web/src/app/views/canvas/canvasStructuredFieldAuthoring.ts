@@ -1,5 +1,5 @@
 /** Owned concern: apply structured-field authoring through ConfigureCanvasDvtNode. */
-import { allocateDvtFieldId } from '@dvt/contracts/substrait';
+import { allocateDvtFieldId } from '@dvt/contracts';
 
 import type { CanonicalNode } from '../../types/canonical';
 import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
