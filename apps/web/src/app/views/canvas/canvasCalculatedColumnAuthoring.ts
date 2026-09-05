@@ -8,18 +8,12 @@ import type { CanvasDraftSession } from './canvasDraftSession';
 import { canvasDraftSession } from './canvasDraftSession';
 import { createDvtNodeAuthoringMetadata } from './canvasDvtAuthoringModel';
 import {
-  createDvtSubstraitProjectionDraft,
-  decodeDvtSubstraitProjectionDocument,
   encodeDvtSubstraitProjectionDocument,
   resolveDvtSubstraitProjectionEntry,
-  resolveDvtSubstraitProjectionSource,
   type DvtSubstraitProjection,
   type DvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
-import {
-  applyDvtSubstraitSemanticDocument,
-  readDvtTransformAuthoringAuthority,
-} from './canvasDvtTransformAuthoringAuthority';
+import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 
 export type CanvasCalculatedColumnRequest = Readonly<{ nodeId: string }> &
   DvtSubstraitCalculatedColumnRequest;
@@ -27,10 +21,6 @@ export type CanvasCalculatedColumnRequest = Readonly<{ nodeId: string }> &
 export type CanvasCalculatedColumnResult =
   | Readonly<{ outcome: 'applied'; draftSession: CanvasDraftSession }>
   | Readonly<{ outcome: 'rejected' }>;
-
-function outputFieldId(name: string): string {
-  return `output:${encodeURIComponent(name)}`;
-}
 
 function nodeCatalog(
   draftSession: CanvasDraftSession,
@@ -87,53 +77,6 @@ function append(args: {
   );
 }
 
-function applyToSource(
-  target: CanonicalNode,
-  request: CanvasCalculatedColumnRequest
-): CanonicalNode | null {
-  const source = resolveDvtSubstraitProjectionSource(target);
-  if (source == null) return null;
-  const authority = readDvtTransformAuthoringAuthority(target);
-  const existingDraft =
-    authority == null ? null : decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
-  const existingProjection =
-    existingDraft == null
-      ? null
-      : resolveDvtSubstraitProjectionEntry({
-          targetNode: target,
-          nodes: [target],
-          edges: [],
-          draft: existingDraft,
-        });
-  if (existingDraft != null && existingProjection == null) return null;
-  const draft =
-    existingDraft ??
-    createDvtSubstraitProjectionDraft({
-      source,
-      targetNodeId: target.id,
-      outputs: source.fields.map((field) => ({
-        fieldId: outputFieldId(field.name),
-        name: field.name,
-        sourceFieldName: field.name,
-      })),
-    });
-  const projection: DvtSubstraitProjection = existingProjection ?? {
-    targetNodeId: target.id,
-    source,
-    outputs: source.fields.map((field, outputOrdinal) => ({
-      fieldId: outputFieldId(field.name),
-      name: field.name,
-      sourceFieldId: `field:${source.nodeId}:${field.name}`,
-      sourceFieldName: field.name,
-      dataType: field.dataType,
-      outputOrdinal,
-    })),
-  };
-  const nextDraft = append({ request, projection, draft });
-  if (nextDraft === draft) return null;
-  return applyDvtSubstraitSemanticDocument(target, encodeDvtSubstraitProjectionDocument(nextDraft));
-}
-
 function applyToTransform(args: {
   target: CanonicalNode;
   nodes: readonly CanonicalNode[];
@@ -173,18 +116,15 @@ export function applyCanvasCalculatedColumn(args: {
   try {
     const catalog = nodeCatalog(args.draftSession, args.canonicalNodesById);
     const target = catalog.get(args.request.nodeId);
-    if (target == null) return { outcome: 'rejected' };
-    const node =
-      target.kind === 'dvt:source'
-        ? applyToSource(target, args.request)
-        : target.kind === 'dvt:transform'
-          ? applyToTransform({
-              target,
-              nodes: [...catalog.values()],
-              edges: args.draftSession.workingSet.visibleEdges,
-              request: args.request,
-            })
-          : null;
+    if (target?.pluginId !== 'dvt' || target.kind !== 'dvt:transform') {
+      return { outcome: 'rejected' };
+    }
+    const node = applyToTransform({
+      target,
+      nodes: [...catalog.values()],
+      edges: args.draftSession.workingSet.visibleEdges,
+      request: args.request,
+    });
     return node == null
       ? { outcome: 'rejected' }
       : {
