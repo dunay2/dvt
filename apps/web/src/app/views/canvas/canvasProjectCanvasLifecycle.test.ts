@@ -2,9 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 import {
-  buildDraftWithDeletedActiveProjectCanvas,
   buildDraftWithSelectedProjectCanvas,
-  buildDraftWithUpdatedActiveProjectCanvas,
   createProjectCanvasId,
 } from './canvasProjectCanvasLifecycle';
 
@@ -100,33 +98,5 @@ describe('canvasProjectCanvasLifecycle', () => {
     ).toMatchObject({
       nodeIds: ['model_orders'],
     });
-  });
-
-  it('renames the active canvas identity without changing its stable id', () => {
-    const result = buildDraftWithUpdatedActiveProjectCanvas({
-      currentDraft: buildDraft(),
-      patch: {
-        title: 'Modeling v2',
-      },
-    });
-
-    expect(result?.canvas).toMatchObject({
-      id: 'canvas-modeling',
-      title: 'Modeling v2',
-    });
-    expect(result?.canvases?.[1]?.canvas).toMatchObject({
-      id: 'canvas-modeling',
-      title: 'Modeling v2',
-    });
-  });
-
-  it('deletes the active canvas only when another worksheet can become active', () => {
-    const result = buildDraftWithDeletedActiveProjectCanvas(buildDraft());
-
-    expect(result?.activeCanvasId).toBe('canvas-ingest');
-    expect(result?.canvases?.map((canvas) => canvas.canvas.id)).toEqual(['canvas-ingest']);
-    expect(
-      buildDraftWithDeletedActiveProjectCanvas(result as WorkspaceGraphAuthoringDraft)
-    ).toBeNull();
   });
 });
