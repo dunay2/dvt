@@ -158,9 +158,3 @@ export function isActiveCanvasGraphStrategySupported(
 ): boolean {
   return resolution.kind === 'ready' || resolution.kind === 'missing_document';
 }
-
-export function resolveActiveCanvasAuthoringMode(
-  draftReadModel: CanvasAuthoringDraftReadModel | undefined
-): CanvasGraphAuthoringMode {
-  return resolveDraftCanvasKind(draftReadModel) ?? DEFAULT_CANVAS_AUTHORING_MODE;
-}

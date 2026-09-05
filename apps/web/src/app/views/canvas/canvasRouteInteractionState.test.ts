@@ -77,17 +77,13 @@ describe('canvasRouteInteractionState', () => {
     );
   });
 
-  it('fails closed with disabled-plugin copy when a registered canvas kind is unavailable', () => {
-    const controller = buildController();
+  it('fails closed when a retired canvas kind has no runtime registration', () => {
     const interactionState = deriveCanvasRouteInteractionState(
       buildController({
         canvasDocument: {
           kind: 'dbt',
           title: 'dbt canvas',
         },
-        availableCanvasKinds: controller.availableCanvasKinds.filter(
-          (registration) => registration.kind !== 'dbt'
-        ),
       }),
       null
     );
@@ -95,7 +91,7 @@ describe('canvasRouteInteractionState', () => {
     expect(interactionState.effectiveWorkbenchState).toEqual({
       kind: 'error',
       message:
-        'Canvas cannot open persisted canvas kind "dbt" because its plugin is disabled or unavailable.',
+        'Canvas cannot open persisted canvas kind "dbt" because no runtime registration is available.',
     });
     expect(interactionState.effectiveUserPermissions).toMatchObject({
       canPlan: false,
@@ -104,7 +100,7 @@ describe('canvasRouteInteractionState', () => {
     });
     expect(interactionState.readOnlyState).toBeNull();
     expect(interactionState.workbenchErrorMessage).toBe(
-      'Canvas cannot open persisted canvas kind "dbt" because its plugin is disabled or unavailable.'
+      'Canvas cannot open persisted canvas kind "dbt" because no runtime registration is available.'
     );
   });
 

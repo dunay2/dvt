@@ -2,7 +2,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
-  resolveActiveCanvasAuthoringMode,
   resolveActiveCanvasGraphStrategy,
   selectActiveCanvasExecutionStrategy,
   selectActiveCanvasGraphStrategy,
@@ -111,10 +110,6 @@ export function useCanvasController() {
     activeCanvasGraphStrategyResolution
   );
   const surfaceStrategy = selectActiveCanvasSurfaceStrategy(activeCanvasGraphStrategyResolution);
-  const canvasAuthoringMode = useMemo(
-    () => resolveActiveCanvasAuthoringMode(draftReadModel),
-    [draftReadModel?.record?.draft.canvas.kind]
-  );
   const resolvedGraphDraftCanvasId = resolveGraphDraftAuthoringCanvasId(draftReadModel);
   const hasResolvedGraphDraftAuthority = resolvedGraphDraftCanvasId !== null;
   const runtimePolicy = useMemo(() => {
@@ -312,7 +307,6 @@ export function useCanvasController() {
     overlayModel,
     executionActions,
     graphPolicy: {
-      canvasAuthoringMode,
       runtimePolicy,
       surfaceStrategy,
     },

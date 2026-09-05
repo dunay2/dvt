@@ -169,7 +169,6 @@ describe('useCanvasController core', () => {
       })
     );
     expect(result?.currentPlan).toEqual(harness.state.currentPlan);
-    expect(result?.canvasAuthoringMode).toBe('transformation');
     expect(result?.transformationValidation).toEqual(
       expect.objectContaining({
         valid: false,

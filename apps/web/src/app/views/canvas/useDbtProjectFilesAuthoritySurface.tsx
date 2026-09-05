@@ -265,7 +265,6 @@ export function useDbtProjectFilesAuthoritySurface({
       frozenNodeIds: controller.frozenNodeIds,
     },
     chromeState: {
-      canvasAuthoringMode: 'transformation',
       routeState: controller.query.isPending
         ? 'loading_graph'
         : controller.query.isError

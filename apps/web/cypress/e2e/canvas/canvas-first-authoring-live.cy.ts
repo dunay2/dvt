@@ -17,26 +17,18 @@ import {
 import { seedE2eWorkspaceSession } from '../../support/workspaceSession';
 
 describe('Canvas first-authoring live protected runtime', () => {
-  const variants = [
-    {
-      id: 'transformation',
-      createButton: 'Transformation',
-      addCatalogItem: 'Add transformation',
-      firstNodeName: /transform 1/i,
-    },
-    {
-      id: 'dbt',
-      createButton: 'dbt',
-      addCatalogItem: 'Add model',
-      firstNodeName: 'Model 1',
-    },
-  ] as const;
+  const canvas = {
+    id: 'transformation',
+    createButton: 'Transformation',
+    addCatalogItem: 'Add transformation',
+    firstNodeName: /transform 1/i,
+  } as const;
 
   type FirstAuthoringNodeState = Readonly<{ nodeId: string; left: number; top: number }>;
   type DragPoint = Readonly<{ x: number; y: number }>;
 
-  function visitFirstAuthoringCanvas(variant: (typeof variants)[number]['id']): void {
-    const session = resolveLiveFirstAuthoringWorkspaceSession(variant);
+  function visitFirstAuthoringCanvas(): void {
+    const session = resolveLiveFirstAuthoringWorkspaceSession(canvas.id);
 
     cy.visit('/canvas', {
       onBeforeLoad(window) {
@@ -157,47 +149,41 @@ describe('Canvas first-authoring live protected runtime', () => {
     }
   });
 
-  for (const variant of variants) {
-    it(`creates, drags, saves, and restores the first ${variant.id} canvas node`, () => {
-      assertLiveFirstAuthoringDraftScopeIsClean(variant.id);
-      visitFirstAuthoringCanvas(variant.id);
+  it('creates, drags, saves, and restores the first shared Canvas node', () => {
+    assertLiveFirstAuthoringDraftScopeIsClean(canvas.id);
+    visitFirstAuthoringCanvas();
 
-      cy.contains('Create canvas', { timeout: 20_000 }).should('be.visible');
-      cy.get('[data-slot="canvas-playground-empty-state"]').within(() => {
-        cy.contains('button', variant.createButton).should('be.enabled').click();
-      });
-      waitForLiveFirstAuthoringDraftRecord(variant.id);
-
-      cy.get('[data-slot="canvas-viewport"]', { timeout: 20_000 }).should('be.visible');
-      cy.get('[data-slot="canvas-empty-state"]').should('not.exist');
-      cy.contains('button', /^Add first /).should('not.exist');
-      openCanvasContextMenuAt(360, 260);
-      clickCanvasContextMenuItem('Add...');
-      clickCanvasContextMenuItem(variant.addCatalogItem);
-
-      getFirstAuthoringNode(variant.firstNodeName);
-      captureFirstAuthoringNodeState(variant.firstNodeName, 'beforeDragState');
-      cy.get<FirstAuthoringNodeState>('@beforeDragState').then((before) =>
-        waitForLiveFirstAuthoringDraftNode(variant.id, before.nodeId).as('beforeDragDraftPosition')
-      );
-
-      dragFirstAuthoringNodeFromCardBody(variant.firstNodeName);
-      assertFirstAuthoringNodeMovedFrom(variant.firstNodeName, 'beforeDragState');
-      captureFirstAuthoringNodeState(variant.firstNodeName, 'afterDragState');
-      cy.get<FirstAuthoringNodeState>('@beforeDragState').then((before) => {
-        cy.get<{ x: number; y: number }>('@beforeDragDraftPosition').then((beforeDraftPosition) =>
-          waitForLiveFirstAuthoringLayoutPositionChange(
-            variant.id,
-            before.nodeId,
-            beforeDraftPosition
-          )
-        );
-      });
-
-      cy.reload();
-
-      getFirstAuthoringNode(variant.firstNodeName);
-      assertFirstAuthoringNodeRestoredAwayFromOriginal(variant.firstNodeName, 'beforeDragState');
+    cy.contains('Create canvas', { timeout: 20_000 }).should('be.visible');
+    cy.get('[data-slot="canvas-playground-empty-state"]').within(() => {
+      cy.contains('button', canvas.createButton).should('be.enabled').click();
     });
-  }
+    waitForLiveFirstAuthoringDraftRecord(canvas.id);
+
+    cy.get('[data-slot="canvas-viewport"]', { timeout: 20_000 }).should('be.visible');
+    cy.get('[data-slot="canvas-empty-state"]').should('not.exist');
+    cy.contains('button', /^Add first /).should('not.exist');
+    openCanvasContextMenuAt(360, 260);
+    clickCanvasContextMenuItem('Add...');
+    clickCanvasContextMenuItem(canvas.addCatalogItem);
+
+    getFirstAuthoringNode(canvas.firstNodeName);
+    captureFirstAuthoringNodeState(canvas.firstNodeName, 'beforeDragState');
+    cy.get<FirstAuthoringNodeState>('@beforeDragState').then((before) =>
+      waitForLiveFirstAuthoringDraftNode(canvas.id, before.nodeId).as('beforeDragDraftPosition')
+    );
+
+    dragFirstAuthoringNodeFromCardBody(canvas.firstNodeName);
+    assertFirstAuthoringNodeMovedFrom(canvas.firstNodeName, 'beforeDragState');
+    captureFirstAuthoringNodeState(canvas.firstNodeName, 'afterDragState');
+    cy.get<FirstAuthoringNodeState>('@beforeDragState').then((before) => {
+      cy.get<{ x: number; y: number }>('@beforeDragDraftPosition').then((beforeDraftPosition) =>
+        waitForLiveFirstAuthoringLayoutPositionChange(canvas.id, before.nodeId, beforeDraftPosition)
+      );
+    });
+
+    cy.reload();
+
+    getFirstAuthoringNode(canvas.firstNodeName);
+    assertFirstAuthoringNodeRestoredAwayFromOriginal(canvas.firstNodeName, 'beforeDragState');
+  });
 });

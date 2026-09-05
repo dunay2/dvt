@@ -54,10 +54,9 @@ Those concerns stay behind their existing ports and component guides.
 The component treats the first-node defaults as domain facts for this feature,
 not as implementation-time choices.
 
-| Canvas kind      | First node kind | First node id  | First node label | Registration source                                |
-| ---------------- | --------------- | -------------- | ---------------- | -------------------------------------------------- |
-| `transformation` | `dvt:source`    | `dvt-source-1` | `Source 1`       | `apps/web/src/app/plugins/dvt/dvtContributions.ts` |
-| `dbt`            | `dbt:source`    | `dbt-source-1` | `Source 1`       | `apps/web/src/app/plugins/dbt/dbtContributions.ts` |
+| Canvas runtime registration | First node kind | First node id     | First node label | Registration source                                |
+| --------------------------- | --------------- | ----------------- | ---------------- | -------------------------------------------------- |
+| `transformation`            | `dvt:transform` | `dvt-transform-1` | `Transform 1`    | `apps/web/src/app/plugins/dvt/dvtContributions.ts` |
 
 `canvasAuthoringNodeCommand.ts` owns the id and label construction. This
 component guide fixes the implemented first values so later changes cannot pick
@@ -75,8 +74,8 @@ derivation.
 | `CanvasFirstAuthoringLiveProof`                     | `canvasFirstAuthoringLiveProof.types.ts`      | Closed discriminated state for first-authoring proof.                    |
 | `CanvasFirstAuthoringLiveProofInput`                | `canvasFirstAuthoringLiveProof.types.ts`      | Named input object for draft, active canvas, node, layout, and reload.   |
 | `CanvasFirstAuthoringLiveProofTransition`           | `canvasFirstAuthoringLiveProof.types.ts`      | Allowed transition names used by tests and diagnostics.                  |
-| `FIRST_AUTHORING_DEFAULTS`                          | `canvasFirstAuthoringFirstNodePolicy.ts`      | Closed first-node defaults for supported first-authored canvas kinds.    |
-| `resolveExpectedFirstNode(canvas)`                  | `canvasFirstAuthoringFirstNodePolicy.ts`      | Maps a supported canvas kind to the expected first node.                 |
+| `FIRST_AUTHORING_DEFAULTS`                          | `canvasFirstAuthoringFirstNodePolicy.ts`      | Closed first-node default for the shared first-authored Canvas.          |
+| `resolveExpectedFirstNode(canvas)`                  | `canvasFirstAuthoringFirstNodePolicy.ts`      | Resolves the expected first node for the registered Canvas runtime.      |
 | `matchesExpectedFirstNode(node, expectedNode)`      | `canvasFirstAuthoringFirstNodePolicy.ts`      | Compares actual first-node identity, kind, and label.                    |
 | `hasRestoredLayout(restoredDraft, layout)`          | `canvasFirstAuthoringRestoredLayoutPolicy.ts` | Verifies restored route-local coordinates match persisted coordinates.   |
 | `deriveCanvasFirstAuthoringLiveProof(input)`        | `canvasFirstAuthoringLiveProof.ts`            | Pure decision function for current proof transition state.               |
@@ -201,7 +200,7 @@ sequenceDiagram
     CanvasRoute->>DraftQuery: Read protected draft
     DraftQuery-->>CanvasRoute: Empty writable draft
     CanvasRoute->>Proof: needs_canvas
-    User->>CanvasRoute: Create transformation or dbt canvas
+    User->>CanvasRoute: Create the shared Canvas
     CanvasRoute->>DraftSave: Save typed empty canvas
     DraftSave-->>CanvasRoute: Saved revision
     User->>CanvasRoute: Add first node
@@ -225,8 +224,8 @@ sequenceDiagram
 - `useCanvasNodeAuthoringHandlers.ts` sends first-node command intent through
   controller seams.
 - `canvasNodeMapper.ts` owns the absence of a React Flow drag-handle selector.
-- `DbtNodeComponent.tsx` renders the node shell without a separate grip-only
-  drag affordance.
+- `GraphNodeRenderer.tsx` renders the shared node card without a separate
+  grip-only drag affordance.
 - `useCanvasLayoutPersistence.ts` persists route-local coordinates after
   automatic store hydration.
 - `canvasStartupBootstrapPublication.architecture.test.ts` guards semantic
@@ -243,18 +242,19 @@ sequenceDiagram
 - `US-CANVAS-FIRST-AUTHORING-001`: as a user, I open a clean protected Canvas
   draft. The route shows the create-canvas entrypoint, no seeded project nodes
   appear, and blocked draft postures prevent creation.
-- `US-CANVAS-FIRST-AUTHORING-002`: as a user, I create the first transformation
-  canvas. The document is typed `transformation`, saves through
-  `SaveWorkspaceGraphDraft`, and duplicate creation is rejected.
-- `US-CANVAS-FIRST-AUTHORING-003`: as a user, I create the first dbt canvas.
-  The document is typed `dbt`, uses the same draft CAS path, and unsupported
-  canvas kinds block first-node proof.
+- `US-CANVAS-FIRST-AUTHORING-002`: as a user, I create the first shared Canvas.
+  The document uses the internal `transformation` runtime registration, saves
+  through `SaveWorkspaceGraphDraft`, and duplicate creation is rejected. dbt
+  authority or provenance does not select a second Canvas runtime.
+- `US-CANVAS-FIRST-AUTHORING-003`: as a user opening a retired persisted Canvas
+  kind, I receive a fail-closed unsupported state instead of an alias to the
+  shared Canvas runtime.
 - `US-CANVAS-FIRST-AUTHORING-004`: as a user, I add the first node after the
-  canvas save settles. Transformation creates `dvt:source`, dbt creates
-  `dbt:source`, both render `Source 1`, and premature or wrong-kind nodes fail.
+  canvas save settles. The command creates the canonical `dvt:transform`
+  first node, rendered as `Transform 1`; premature or wrong-kind nodes fail.
 - `US-CANVAS-FIRST-AUTHORING-005`: as a user, I drag the first node from the
-  semantic drag handle. Active and stopped coordinates persist to route-local
-  layout state, and dragging outside the handle does not count as proof.
+  node card body. Active and stopped coordinates persist to route-local layout
+  state, and the proof does not depend on a separate grip-only affordance.
 - `US-CANVAS-FIRST-AUTHORING-006`: as a user, I reload after moving the node.
   Protected draft truth restores the canvas and node, route-local layout
   restores position, and missing restored truth blocks completion.
@@ -306,8 +306,10 @@ The implementation proves these failures:
 - duplicate first-canvas creation is rejected when an authoritative document
   already exists;
 - first-node creation is rejected before first-canvas save settles;
-- first-node creation using any kind other than `dvt:source` for
-  transformation or `dbt:source` for dbt fails proof;
+- first-node creation using any kind other than the registered
+  `dvt:transform` default fails proof;
+- retired persisted Canvas kinds such as `dbt` fail closed and are not aliased
+  to the shared Canvas runtime;
 - read-only, unauthenticated, forbidden-scope, pending, and format-error draft
   postures block first authoring;
 - drag attempts from the node card body count as first-authoring proof;
@@ -324,8 +326,8 @@ The implementation proves these failures:
 - SRP: proof logic is split by owned concern; the transition derivation does
   not own proof vocabulary, first-node defaults, restored-layout matching, or
   invariant assertions.
-- Open/Closed: adding a new canvas type updates command data and tests without
-  changing proof semantics.
+- Open/Closed: authority and provenance profiles can add behavior without
+  adding another Canvas runtime or changing proof semantics.
 - Hexagonal boundary: protected draft read/write and local layout projection
   remain ports consumed by route code.
 - DDD: document, graph, node, layout projection, and proof state are named

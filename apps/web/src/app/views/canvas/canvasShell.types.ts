@@ -11,10 +11,7 @@ import type {
   IWarehouseSourceImportPort,
 } from '../../ports/workspace';
 import type { SourceImportInitialSelection } from '../../components/sourceImportWizard/types';
-import type {
-  CanvasGraphAuthoringMode,
-  NodeKindRegistration,
-} from '../../plugins/nodeTypeContracts';
+import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CanvasSurfaceStrategy } from '../../plugins/canvasSurfaceStrategyContracts';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasPaletteId } from './canvasPalette';
@@ -106,7 +103,6 @@ export type CanvasShellGraph = {
 };
 
 export type CanvasShellChromeState = {
-  canvasAuthoringMode: CanvasGraphAuthoringMode;
   routeState: CanvasRouteState;
   draftStatusState: CanvasDraftStatusState;
   canPlanGraph: boolean;

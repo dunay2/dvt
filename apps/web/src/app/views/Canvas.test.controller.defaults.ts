@@ -38,7 +38,6 @@ type CanvasWorkbenchDefaultsDto = {
   canCreateCanvasDocument: CanvasController['canCreateCanvasDocument'];
   authorizationPermissions: CanvasController['authorizationPermissions'];
   userPermissions: CanvasController['userPermissions'];
-  canvasAuthoringMode: CanvasController['canvasAuthoringMode'];
   canvasSurfaceStrategy: CanvasController['canvasSurfaceStrategy'];
   nodesWithImpact: CanvasController['nodesWithImpact'];
   edges: CanvasController['edges'];
@@ -174,7 +173,6 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
     canCreateCanvasDocument: false,
     authorizationPermissions: buildDefaultCanvasUserPermissions(),
     userPermissions: buildDefaultCanvasUserPermissions(),
-    canvasAuthoringMode: 'transformation',
     canvasSurfaceStrategy: dvtCanvasSurfaceStrategy,
     nodesWithImpact: [],
     edges: [],

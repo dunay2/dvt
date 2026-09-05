@@ -9,7 +9,6 @@ export function buildCanvasShellChromeState({
   routePresentation,
 }: CanvasShellChromeStateBuilderArgs): CanvasShellChromeState {
   return {
-    canvasAuthoringMode: chromeStateSource.canvasAuthoringMode,
     routeState: routePresentation.presentationState.routeState,
     draftStatusState: routePresentation.presentationState.draftStatusState,
     canPlanGraph: chromeStateSource.canPlanGraph,
