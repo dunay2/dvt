@@ -24,13 +24,13 @@ import { buildDbtWorkspaceFileCodeContributions } from './dbtWorkspaceFileCodeCo
 import { buildDbtYamlDescriptionWorkbenchContributions } from './dbtYamlDescriptionWorkbenchContribution';
 import type { SqlContextWorkbenchHandle } from './SqlContextWorkbench';
 import { useCanvasRunControlSurface } from './useCanvasRunControlSurface';
-import { useDbtProjectFileCanvasController } from './useDbtProjectFileCanvasController';
+import { useDbtProjectFilesAuthorityController } from './useDbtProjectFilesAuthorityController';
 
 const FILE_AUTHORITY_SOURCE_IMPORT_KINDS = DBT_NODE_KINDS.filter(
   (registration) => registration.kind === 'dbt:source'
 );
 
-type DbtProjectFileAuthorityController = ReturnType<typeof useDbtProjectFileCanvasController>;
+type DbtProjectFilesAuthorityController = ReturnType<typeof useDbtProjectFilesAuthorityController>;
 
 type DbtProjectFilesAuthoritySurface = Readonly<{
   shellProps: CanvasShellProps;
@@ -48,7 +48,7 @@ function resolveProjectTitle(projectRoot: string): string {
 
 function DbtProjectAuthorityNotice({
   controller,
-}: Readonly<{ controller: DbtProjectFileAuthorityController }>): JSX.Element | null {
+}: Readonly<{ controller: DbtProjectFilesAuthorityController }>): JSX.Element | null {
   const source = controller.query.data;
   if (source == null) return null;
 
@@ -107,7 +107,7 @@ function DbtProjectAuthorityNotice({
 }
 
 function resolveCenterSurface(
-  controller: DbtProjectFileAuthorityController
+  controller: DbtProjectFilesAuthorityController
 ): ReactNode | undefined {
   if (controller.query.isPending) {
     return (
@@ -143,7 +143,7 @@ export function useDbtProjectFilesAuthoritySurface({
   sourceImportInitialSelection?: CanvasShellProps['sourceImportInitialSelection'];
   onSourceImportInitialSelectionConsumed?: CanvasShellProps['onSourceImportInitialSelectionConsumed'];
 }>): DbtProjectFilesAuthoritySurface {
-  const controller = useDbtProjectFileCanvasController(authorityBinding);
+  const controller = useDbtProjectFilesAuthorityController(authorityBinding);
   const bootstrapPresentation = useMemo(() => {
     if (controller.query.isPending) {
       return createPendingRouteBootstrapPresentation('Analyzing the scoped dbt project.');
