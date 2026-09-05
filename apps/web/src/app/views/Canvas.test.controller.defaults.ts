@@ -1,7 +1,6 @@
 /** Owned concern: provide canonical Canvas route test defaults and controller callback stubs. */
 import { vi } from 'vitest';
 
-import { dbtContributions } from '../plugins/dbt/dbtContributions';
 import { DVT_AUTHORING_NODE_KINDS } from '../plugins/dvt/dvtNodeTypeCatalog';
 import { dvtCanvasSurfaceStrategy } from '../plugins/dvt/dvtCanvasSurfaceStrategy';
 import type { WorkspaceScope } from '../ports/sessionContext';
@@ -149,16 +148,6 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
     registeredPlugins: new Set(['dbt']),
     runtimeCapabilities: undefined,
     availableCanvasKinds: [
-      {
-        kind: 'dbt',
-        pluginId: 'dbt',
-        label: 'dbt',
-        description: 'Model-first canvas for dbt resources and dependencies.',
-        createTitle: 'dbt canvas',
-        nodeKinds:
-          dbtContributions.canvasKinds?.find((registration) => registration.kind === 'dbt')
-            ?.nodeKinds ?? [],
-      },
       {
         kind: 'transformation',
         pluginId: 'dvt',

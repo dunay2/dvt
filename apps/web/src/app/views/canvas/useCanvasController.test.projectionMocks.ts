@@ -1,6 +1,5 @@
 import { vi } from 'vitest';
 
-import { dbtContributions } from '../../plugins/dbt/dbtContributions';
 import { DVT_AUTHORING_NODE_KINDS } from '../../plugins/dvt/dvtNodeTypeCatalog';
 import type { CanvasHarnessMocks, CanvasHarnessState } from './useCanvasController.test.types';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
@@ -47,16 +46,6 @@ export function configureCanvasHarnessHookAndProjectionMocks(
     ),
     parseDropPayload: vi.fn(() => null),
   };
-  const dbtGraphStrategy = {
-    id: 'dbt',
-    mapNodeToCanonical: vi.fn(
-      (node: { id: string }) => state.canonicalNodes.find((n) => n.id === node.id) ?? null
-    ),
-    mapEdgeToCanonical: vi.fn(
-      (edge: { id: string }) => state.canonicalEdges.find((e) => e.id === edge.id) ?? null
-    ),
-    parseDropPayload: vi.fn(() => null),
-  };
 
   mocks.useAuthorizationStore.mockImplementation(selectFromStore);
   mocks.useCanvasInteractionStore.mockImplementation(selectFromStore);
@@ -64,32 +53,12 @@ export function configureCanvasHarnessHookAndProjectionMocks(
   configureZustandLikeStoreMock(mocks.useSessionStore, state);
   mocks.useUiLayoutStore.mockImplementation(selectFromStore);
   mocks.useCapabilitiesQuery.mockReturnValue({ data: undefined });
-  mocks.getCanvasGraphNodeCardStrategies.mockReturnValue([]);
-  mocks.resolveCanvasGraphStrategy.mockImplementation((strategyId?: unknown) =>
-    strategyId === 'dbt' ? dbtGraphStrategy : transformationGraphStrategy
+  mocks.getGraphNodeCardStrategies.mockReturnValue([]);
+  mocks.resolveCanvasGraphStrategy.mockReturnValue(transformationGraphStrategy);
+  mocks.findCanvasGraphStrategy.mockImplementation((strategyId?: unknown) =>
+    strategyId === 'transformation' || strategyId === undefined ? transformationGraphStrategy : null
   );
-  mocks.findCanvasGraphStrategy.mockImplementation((strategyId?: unknown) => {
-    if (strategyId === 'dbt') {
-      return dbtGraphStrategy;
-    }
-    if (strategyId === 'transformation') {
-      return transformationGraphStrategy;
-    }
-    return null;
-  });
   mocks.findCanvasRuntimeRegistration.mockImplementation((strategyId?: unknown) => {
-    if (strategyId === 'dbt') {
-      return {
-        kind: 'dbt',
-        graphStrategy: dbtGraphStrategy,
-        nodeKinds:
-          dbtContributions.canvasKinds?.find((registration) => registration.kind === 'dbt')
-            ?.nodeKinds ?? [],
-        executionStrategy: {
-          kind: 'not_executable',
-        },
-      };
-    }
     if (strategyId === 'transformation' || strategyId === undefined) {
       return {
         kind: 'transformation',
@@ -128,16 +97,6 @@ export function configureCanvasHarnessHookAndProjectionMocks(
   mocks.getAllOverlays.mockReturnValue([{ id: 'impact' }]);
   mocks.getPluginPortMap.mockReturnValue(new Map());
   mocks.getAllCanvasKinds.mockReturnValue([
-    {
-      kind: 'dbt',
-      pluginId: 'dbt',
-      label: 'dbt',
-      description: 'Model-first canvas for dbt resources and dependencies.',
-      createTitle: 'dbt canvas',
-      nodeKinds:
-        dbtContributions.canvasKinds?.find((registration) => registration.kind === 'dbt')
-          ?.nodeKinds ?? [],
-    },
     {
       kind: 'transformation',
       pluginId: 'dvt',

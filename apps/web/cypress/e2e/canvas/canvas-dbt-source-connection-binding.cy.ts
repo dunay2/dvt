@@ -169,7 +169,7 @@ function stubDbtSourceBindingFlow(): void {
     minFrontendVersion: '0.0.1',
     plugins: { dbt: { available: true }, dvt: { available: true } },
   });
-  stubStatefulCanvasDraftAuthoring({ emptyCanvas: true, canvasKind: 'dbt' });
+  stubStatefulCanvasDraftAuthoring({ emptyCanvas: true, canvasKind: 'transformation' });
 
   stubE2eJsonApi('POST', '/workspace/dbt/import/validate', {
     schemaVersion: 'dbt-project-import-validation-report.v1',

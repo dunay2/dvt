@@ -184,7 +184,7 @@ describe('canvas startup bootstrap publication architecture', () => {
     expect(firstNodePolicySource).toContain('export function resolveExpectedFirstNode');
     expect(firstNodePolicySource).toContain('export function matchesExpectedFirstNode');
     expect(firstNodePolicySource).toContain("canvasKind: 'transformation'");
-    expect(firstNodePolicySource).toContain("canvasKind: 'dbt'");
+    expect(firstNodePolicySource).not.toContain("canvasKind: 'dbt'");
 
     expect(restoredLayoutPolicySource).toContain(
       'Owned concern: decide whether restored route-local layout matches'

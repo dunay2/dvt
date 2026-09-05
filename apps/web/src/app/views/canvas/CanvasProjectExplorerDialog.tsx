@@ -23,10 +23,6 @@ type CanvasProjectExplorerDialogProps = Readonly<{
   onRestoreFocus?: () => void;
 }>;
 
-function formatCanvasKind(kind: string): string {
-  return kind === 'dbt' ? 'dbt' : canvasViewCopy.workspaceTransformationKindLabel;
-}
-
 export function CanvasProjectExplorerDialog({
   open,
   activeCanvasId,
@@ -44,7 +40,7 @@ export function CanvasProjectExplorerDialog({
     }
 
     return canvasDocuments.filter((canvasDocument) =>
-      [canvasDocument.title, canvasDocument.kind, canvasDocument.environmentId, canvasDocument.id]
+      [canvasDocument.title, canvasDocument.environmentId, canvasDocument.id]
         .join(' ')
         .toLowerCase()
         .includes(normalizedQuery)
@@ -103,9 +99,11 @@ export function CanvasProjectExplorerDialog({
                         <p className="truncate text-sm font-semibold text-(--text-default)">
                           {canvasDocument.title}
                         </p>
-                        <p className="mt-1 text-xs text-(--text-muted)">
-                          {formatCanvasKind(canvasDocument.kind)} - {canvasDocument.environmentId}
-                        </p>
+                        {canvasDocument.environmentId == null ? null : (
+                          <p className="mt-1 text-xs text-(--text-muted)">
+                            {canvasDocument.environmentId}
+                          </p>
+                        )}
                       </div>
                       {selected ? (
                         <span className="rounded border border-(--status-info) px-2 py-1 text-xs text-(--status-info)">
