@@ -13,66 +13,57 @@ type LineageGraphProjection = Readonly<{
   projectionError: Error | null;
 }>;
 
-const ROLE_BY_DBT_TYPE: Record<DbtNodeType, CoreNodeRole> = {
-  SOURCE: 'input',
-  MODEL: 'transform',
-  SEED: 'input',
-  SNAPSHOT: 'transform',
-  TEST: 'check',
-  EXPOSURE: 'output',
-  METRIC: 'output',
-  MACRO: 'control',
-};
-
-const RELATION_BY_DBT_EDGE_TYPE: Record<DbtEdge['type'], CanonicalEdge['relation']> = {
-  source: 'lineage',
-  ref: 'lineage',
-  test: 'validation',
-  exposure: 'consumption',
-  metric: 'metric',
-};
-
-function projectWorkspaceSnapshotNode(node: DbtNode): CanonicalNode {
-  return {
-    id: node.id,
-    name: node.name,
-    pluginId: 'dbt',
-    kind: mapDbtTypeToKind(node.type),
-    role: ROLE_BY_DBT_TYPE[node.type],
-    status: node.status,
-    tags: node.tags,
-    path: node.path,
-    description: node.description,
-    lastDuration: node.lastDuration,
-    lastCost: node.lastCost,
-    metadata: {
-      ...node.metadata,
-      package: node.package,
-      dependencies: node.dependencies,
-      compiledSql: node.compiledSql,
-      config: node.config,
-      columns: node.columns,
-    },
-  };
-}
-
-function projectWorkspaceSnapshotEdge(edge: DbtEdge): CanonicalEdge {
-  return {
-    id: edge.id,
-    sourceId: edge.source,
-    targetId: edge.target,
-    relation: RELATION_BY_DBT_EDGE_TYPE[edge.type],
-  };
-}
-
 export function projectLineageGraph(
   rawNodes: readonly DbtNode[],
   rawEdges: readonly DbtEdge[]
 ): LineageGraphProjection {
+  const roleByDbtType: Record<DbtNodeType, CoreNodeRole> = {
+    SOURCE: 'input',
+    MODEL: 'transform',
+    SEED: 'input',
+    SNAPSHOT: 'transform',
+    TEST: 'check',
+    EXPOSURE: 'output',
+    METRIC: 'output',
+    MACRO: 'control',
+  };
+  const relationByDbtEdgeType: Record<DbtEdge['type'], CanonicalEdge['relation']> = {
+    source: 'lineage',
+    ref: 'lineage',
+    test: 'validation',
+    exposure: 'consumption',
+    metric: 'metric',
+  };
+
   try {
     return {
-      canonicalNodes: rawNodes.map(projectWorkspaceSnapshotNode),
-      canonicalEdges: rawEdges.map(projectWorkspaceSnapshotEdge),
+      canonicalNodes: rawNodes.map((node) => ({
+        id: node.id,
+        name: node.name,
+        pluginId: 'dbt',
+        kind: mapDbtTypeToKind(node.type),
+        role: roleByDbtType[node.type],
+        status: node.status,
+        tags: node.tags,
+        path: node.path,
+        description: node.description,
+        lastDuration: node.lastDuration,
+        lastCost: node.lastCost,
+        metadata: {
+          ...node.metadata,
+          package: node.package,
+          dependencies: node.dependencies,
+          compiledSql: node.compiledSql,
+          config: node.config,
+          columns: node.columns,
+        },
+      })),
+      canonicalEdges: rawEdges.map((edge) => ({
+        id: edge.id,
+        sourceId: edge.source,
+        targetId: edge.target,
+        relation: relationByDbtEdgeType[edge.type],
+      })),
       projectionError: null,
     };
   } catch (error) {

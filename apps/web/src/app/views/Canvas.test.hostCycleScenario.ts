@@ -3,34 +3,33 @@ import { DVT_AUTHORING_NODE_KINDS } from '../plugins/dvt/dvtNodeTypeCatalog';
 import type { NodeKindRegistration } from '../plugins/nodeTypeContracts';
 import type { CanvasController } from './Canvas.test.controller';
 
-type CanvasDocumentKind = NonNullable<CanvasController['canvasDocument']>['kind'];
 type CanvasHostCycleNode = CanvasController['inspectorGraphNodes'][number];
 
 export type CanvasHostCycleControllerStateDto =
   | { kind: 'needs_canvas' }
   | {
       kind: 'typed_empty';
-      canvasKind: CanvasDocumentKind;
+      canvasKind: NonNullable<CanvasController['canvasDocument']>['kind'];
       title?: string;
       canEditEdges?: boolean;
       canOpenSourceImport?: boolean;
     }
   | {
       kind: 'restored_empty';
-      canvasKind: CanvasDocumentKind;
+      canvasKind: NonNullable<CanvasController['canvasDocument']>['kind'];
       title?: string;
       canEditEdges?: boolean;
       canOpenSourceImport?: boolean;
     }
   | {
       kind: 'graph_ready';
-      canvasKind: CanvasDocumentKind;
+      canvasKind: NonNullable<CanvasController['canvasDocument']>['kind'];
       title?: string;
       firstNodeKind?: NodeKindRegistration['kind'];
     }
   | {
       kind: 'restored_graph_ready';
-      canvasKind: CanvasDocumentKind;
+      canvasKind: NonNullable<CanvasController['canvasDocument']>['kind'];
       title?: string;
       firstNodeKind?: NodeKindRegistration['kind'];
     };
@@ -46,12 +45,8 @@ function buildDefaultCanvasUserPermissions(): CanvasController['userPermissions'
   };
 }
 
-function resolveCanvasHostCycleTitle(_kind: CanvasDocumentKind): string {
-  return 'Transformation canvas';
-}
-
 function buildCanvasHostCycleNode(
-  _kind: CanvasDocumentKind,
+  _kind: NonNullable<CanvasController['canvasDocument']>['kind'],
   firstNodeKind?: NodeKindRegistration['kind']
 ): CanvasHostCycleNode {
   return {
@@ -93,7 +88,7 @@ export function buildCanvasHostCycleControllerState(
     return {
       canvasDocument: {
         kind: dto.canvasKind,
-        title: dto.title ?? resolveCanvasHostCycleTitle(dto.canvasKind),
+        title: dto.title ?? 'Transformation canvas',
       },
       availableCanvasKinds: buildCanvasKinds(),
       canCreateCanvasDocument: false,
@@ -112,7 +107,7 @@ export function buildCanvasHostCycleControllerState(
   return {
     canvasDocument: {
       kind: dto.canvasKind,
-      title: dto.title ?? resolveCanvasHostCycleTitle(dto.canvasKind),
+      title: dto.title ?? 'Transformation canvas',
     },
     availableCanvasKinds: buildCanvasKinds(),
     canCreateCanvasDocument: false,
