@@ -51,9 +51,12 @@ describe('dbt external-authority Canvas projection architecture', () => {
     expect(authoritySurface).not.toContain('canEditCanvas');
     expect(authoritySurface).not.toContain('canDeleteActiveCanvas');
     expect(authorityController).toContain('useDbtProjectFileExecution');
-    expect(authorityController).not.toContain("unsupportedSemanticMutation('Connect nodes')");
-    expect(authorityController).not.toContain("unsupportedSemanticMutation('Reconnect nodes')");
-    expect(authorityController).not.toContain("unsupportedSemanticMutation('Create node')");
+    expect(authorityController).not.toContain('unsupportedSemanticMutation');
+    expect(authorityController).not.toContain('onAutoLayout:');
+    expect(authorityController).not.toContain('onToggleCostOverlay:');
+    expect(authorityController).not.toContain('onExportProjectSnapshot:');
+    expect(authorityController).not.toContain('onImportProjectSnapshotFile:');
+    expect(authorityController).toContain('canvasCommands: {}');
     expect(existsSync(appPath('useDbtProjectFileCanvasController.ts'))).toBe(false);
     expect(execution).toContain('useCanvasExecutionActions');
     expect(execution).not.toContain('saveFileContent');

@@ -10,8 +10,8 @@ export type CanvasWorkspaceMenuContribution = Readonly<{
   canImportDbtProject?: boolean;
   canOpenProjectExplorer?: boolean;
   canOpenProjectCode?: boolean;
-  onExportProjectSnapshot: () => void;
-  onImportProjectSnapshotFile: (file: File) => void;
+  onExportProjectSnapshot?: () => void;
+  onImportProjectSnapshotFile?: (file: File) => void;
   onImportDbtProject?: () => void;
   onOpenProjectExplorer?: () => void;
   onOpenProjectCode?: () => void;

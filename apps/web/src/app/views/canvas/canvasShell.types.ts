@@ -147,8 +147,8 @@ export type CanvasShellGraphCommands = {
 export type CanvasShellChromeCommands = {
   onHideInspector: () => void;
   onShowInspector: () => void;
-  onAutoLayout: () => void;
-  onToggleCostOverlay: () => void;
+  onAutoLayout?: () => void;
+  onToggleCostOverlay?: () => void;
   onToggleImpact: () => void;
   onToggleColumns: () => void;
   onGridSizeChange: (size: number) => void;
@@ -156,8 +156,8 @@ export type CanvasShellChromeCommands = {
   onToggleGridVisible: () => void;
   onGridColorChange: (color: CanvasPaletteId) => void;
   onToggleSnapToGrid: () => void;
-  onExportProjectSnapshot: () => void;
-  onImportProjectSnapshotFile: (file: File) => void;
+  onExportProjectSnapshot?: () => void;
+  onImportProjectSnapshotFile?: (file: File) => void;
   onReloadLatestDraft: () => void;
   onPreviewExecutionPlan: () => void;
   onRun: () => void;
@@ -165,7 +165,7 @@ export type CanvasShellChromeCommands = {
 };
 
 export type CanvasShellCanvasCommands = {
-  onSelectCanvas: (canvasId: string) => void;
+  onSelectCanvas?: (canvasId: string) => void;
 };
 
 export type CanvasShellWorkspaceCommands = Readonly<{

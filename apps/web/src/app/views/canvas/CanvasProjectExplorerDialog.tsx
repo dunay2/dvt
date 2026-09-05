@@ -18,7 +18,7 @@ type CanvasProjectExplorerDialogProps = Readonly<{
   open: boolean;
   activeCanvasId: string | null;
   canvasDocuments: readonly ProjectCanvasDocument[];
-  onSelectCanvas: (canvasId: string) => void;
+  onSelectCanvas?: (canvasId: string) => void;
   onClose: () => void;
   onRestoreFocus?: () => void;
 }>;
@@ -111,7 +111,7 @@ export function CanvasProjectExplorerDialog({
                         <span className="rounded border border-(--status-info) px-2 py-1 text-xs text-(--status-info)">
                           {canvasViewCopy.projectExplorerCurrentCanvasLabel}
                         </span>
-                      ) : (
+                      ) : onSelectCanvas == null ? null : (
                         <button
                           type="button"
                           className="rounded border border-(--border-default) px-3 py-1.5 text-sm text-(--text-default) hover:bg-(--surface-elevated)"
