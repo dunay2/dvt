@@ -23,7 +23,7 @@ import type { CanvasDraftStatusState } from './canvasDraftStatusState';
 import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
 import type { CanvasNodeWorkbenchContribution } from './canvasNodeWorkbenchContribution';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
-import type { ProjectCanvasDocument, ProjectCanvasPatch } from './canvasProjectCanvasLifecycle';
+import type { ProjectCanvasDocument } from './canvasProjectCanvasLifecycle';
 import type { WorkspaceOption } from '../../services/config/workspaceConfig';
 import type { RuntimeCapabilities } from '../../plugins/registry';
 import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
@@ -78,8 +78,6 @@ export type CanvasShellPanels = {
   activeCanvas: ProjectCanvasDocument | null;
   canvasDocuments: readonly ProjectCanvasDocument[];
   executionEnvironmentOptions: readonly WorkspaceOption[];
-  canEditCanvas: boolean;
-  canDeleteActiveCanvas: boolean;
   inspectorNode: CanonicalNode | null;
   inspectorPreferredTabId: string | null;
   inspectorPreferredTabRequestId: number;
@@ -130,14 +128,14 @@ export type CanvasShellGraphCommands = {
   onNodeDrag: NonNullable<ReactFlowProps<Node, Edge>['onNodeDrag']>;
   onNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']>;
   onEdgesChange: NonNullable<ReactFlowProps<Node, Edge>['onEdgesChange']>;
-  onConnect: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
-  onReconnect: NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>;
+  onConnect?: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
+  onReconnect?: NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>;
   onSetEdgeExecutionGate?: CanvasEdgeCommandRunner['setExecutionGate'];
   onViewportChange: (viewport: CanvasViewport) => void;
   onDrop: React.DragEventHandler<HTMLDivElement>;
   onDragOver: React.DragEventHandler<HTMLDivElement>;
   onToggleFrozenNode: (nodeId: string) => void;
-  onCreateAuthoringNode: CreateCanvasAuthoringNode;
+  onCreateAuthoringNode?: CreateCanvasAuthoringNode;
   onSourceImportComplete: (
     result: ImportSourcesResult,
     context?: CanvasSourceImportCompletionContext
@@ -168,8 +166,6 @@ export type CanvasShellChromeCommands = {
 
 export type CanvasShellCanvasCommands = {
   onSelectCanvas: (canvasId: string) => void;
-  onApplyCanvasPatch: (patch: ProjectCanvasPatch) => void;
-  onDeleteActiveCanvas: () => void;
 };
 
 export type CanvasShellWorkspaceCommands = Readonly<{
