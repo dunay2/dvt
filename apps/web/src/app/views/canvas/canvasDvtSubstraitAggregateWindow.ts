@@ -19,8 +19,11 @@ import {
   type Expression,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { PlanSchema, type Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
-import type { DvtSubstraitAuthoringSidecarV1 } from '@dvt/contracts';
-import { allocateDvtFieldId, allocateDvtRelationId } from '@dvt/contracts/substrait';
+import {
+  allocateDvtFieldId,
+  allocateDvtRelationId,
+  type DvtSubstraitAuthoringSidecarV1,
+} from '@dvt/contracts';
 
 import {
   inspectDvtSubstraitPilotAggregationDraft,
