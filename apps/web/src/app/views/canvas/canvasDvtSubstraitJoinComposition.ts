@@ -55,13 +55,14 @@ import {
   DVT_SUBSTRAIT_PROFILE_REF_V1,
   DVT_SUBSTRAIT_SEMANTIC_DOCUMENT_SCHEMA_VERSION,
   ConnectedSourceRefSchema,
+  allocateDvtFieldId,
+  allocateDvtRelationId,
   buildDvtSubstraitStandardCapabilityId,
   canonicalizeDvtSubstraitSemanticDocumentV1,
   type ConnectedSourceRef,
   type DvtSubstraitAuthoringSidecarV1,
   type DvtSubstraitSemanticDocumentV1,
 } from '@dvt/contracts';
-import { allocateDvtFieldId, allocateDvtRelationId } from '@dvt/contracts/substrait';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
@@ -2335,6 +2336,7 @@ export function applyDvtSubstraitInnerJoinGroupedRowNumber(
     return draft;
   }
   const aggregateInput = root.value.input;
+  if (aggregateInput.relType.case !== 'aggregate') return draft;
   const aggregateAnchor = aggregateInput.relType.value.common?.relAnchor;
   const aggregateBinding = draft.sidecar.relations.find(
     (relation) => relation.relAnchor === aggregateAnchor
