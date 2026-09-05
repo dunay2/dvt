@@ -1,5 +1,5 @@
 /** Owned concern: render the approved data-first Source Overview without duplicating mutation authority. */
-import { useMemo, useState, type KeyboardEvent } from 'react';
+import { useMemo, useRef, useState, type KeyboardEvent } from 'react';
 
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
@@ -21,6 +21,7 @@ const SOURCE_OVERVIEW_COPY = {
     sourceMetadata: 'Source metadata',
     readOnly: 'read-only',
     kind: 'Kind',
+    tableKind: 'Table',
     schema: 'Schema',
     table: 'Table',
     columns: 'Columns',
@@ -40,6 +41,7 @@ const SOURCE_OVERVIEW_COPY = {
     sourceMetadata: 'Metadatos del origen',
     readOnly: 'solo lectura',
     kind: 'Tipo',
+    tableKind: 'Tabla',
     schema: 'Esquema',
     table: 'Tabla',
     columns: 'Columnas',
@@ -92,6 +94,13 @@ function ExternalFact({
   );
 }
 
+function visibleBusinessTags(tagsText: string): readonly string[] {
+  return tagsText
+    .split(',')
+    .map((tag) => tag.trim())
+    .filter((tag) => tag.length > 0);
+}
+
 export function SourceOverviewPanel({
   node,
   nodes,
@@ -105,15 +114,17 @@ export function SourceOverviewPanel({
     ? SOURCE_OVERVIEW_COPY.es
     : SOURCE_OVERVIEW_COPY.en;
   const [editingField, setEditingField] = useState<EditableField>(null);
+  const skipNextBlurCommit = useRef(false);
   const draft = draftController.draft;
   const generalSection = readModel.sections.find((section) => section.id === 'general');
   const columnsSection = readModel.sections.find((section) => section.id === 'columns');
   const databaseComment = readRowValue(readModel, 'comments', 'comment');
   const schema = readRowValue(readModel, 'general', 'schema') ?? copy.empty;
   const table = readRowValue(readModel, 'general', 'table') ?? copy.empty;
-  const kind = table === copy.empty ? node.kind : 'Table';
+  const kind = table === copy.empty ? node.kind : copy.tableKind;
   const columnCount = String(columnsSection?.tableRows.length ?? 0);
   const alias = draft.dvt?.kind === 'source' ? draft.dvt.alias : '';
+  const businessTags = visibleBusinessTags(draftController.tagsText);
   const errors = useMemo(
     () =>
       validateCanvasInspectorNodeDraft(draft, {
@@ -126,6 +137,10 @@ export function SourceOverviewPanel({
   );
 
   const commitCurrentDraft = (): void => {
+    if (skipNextBlurCommit.current) {
+      skipNextBlurCommit.current = false;
+      return;
+    }
     if (!authoring.canEditNode) {
       setEditingField(null);
       return;
@@ -141,6 +156,7 @@ export function SourceOverviewPanel({
   };
 
   const cancelFieldEdit = (field: Exclude<EditableField, null>): void => {
+    skipNextBlurCommit.current = true;
     if (field === 'name') {
       draftController.onDraftChange((current) => ({ ...current, name: node.name }));
     } else if (field === 'description') {
@@ -254,8 +270,8 @@ export function SourceOverviewPanel({
             />
           ) : (
             <div className="flex flex-wrap gap-2">
-              {draft.tags.length > 0 ? (
-                draft.tags.map((tag) => (
+              {businessTags.length > 0 ? (
+                businessTags.map((tag) => (
                   <Badge key={tag} variant="secondary" className="font-normal">
                     {tag}
                   </Badge>
