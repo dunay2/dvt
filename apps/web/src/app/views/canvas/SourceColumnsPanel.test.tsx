@@ -144,7 +144,7 @@ describe('SourceColumnsPanel', () => {
     act(() => root.render(<SourceColumnsPanel readModel={readModel} />));
 
     const search = container.querySelector<HTMLInputElement>('input[type="search"]')!;
-    const filter = container.querySelector<HTMLSelectElement>('#source-columns-filter')!;
+    const filter = container.querySelector<HTMLSelectElement>('select[aria-label="Filter columns"]')!;
 
     act(() => fireEvent.input(search, { target: { value: 'customer' } }));
     expect(container.querySelectorAll('[data-slot="canvas-source-column-row"]')).toHaveLength(1);
