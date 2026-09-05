@@ -3,7 +3,7 @@ import { DVT_AUTHORING_NODE_KINDS } from '../plugins/dvt/dvtNodeTypeCatalog';
 import type { NodeKindRegistration } from '../plugins/nodeTypeContracts';
 import type { CanvasController } from './Canvas.test.controller';
 
-type CanvasDocumentKind = Exclude<CanvasController['canvasAuthoringMode'], undefined>;
+type CanvasDocumentKind = NonNullable<CanvasController['canvasDocument']>['kind'];
 type CanvasHostCycleNode = CanvasController['inspectorGraphNodes'][number];
 
 export type CanvasHostCycleControllerStateDto =
@@ -104,7 +104,6 @@ export function buildCanvasHostCycleControllerState(
       },
       canPlanGraph: false,
       canOpenSourceImport: dto.canOpenSourceImport ?? true,
-      canvasAuthoringMode: dto.canvasKind,
     };
   }
 
@@ -132,7 +131,6 @@ export function buildCanvasHostCycleControllerState(
         },
       },
     ] as unknown as CanvasController['nodesWithImpact'],
-    canvasAuthoringMode: dto.canvasKind,
     canPlanGraph: true,
   };
 }
