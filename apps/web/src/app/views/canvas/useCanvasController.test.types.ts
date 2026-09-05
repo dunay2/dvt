@@ -68,7 +68,7 @@ export type CanvasHarnessState = {
 export type CanvasHarnessMocks = {
   useQuery: MockFn;
   useQueryClient: MockFn;
-  getCanvasGraphNodeCardStrategies: MockFn;
+  getGraphNodeCardStrategies: MockFn;
   findCanvasGraphStrategy: MockFn;
   findCanvasRuntimeRegistration: MockFn;
   resolveCanvasGraphStrategy: MockFn;
