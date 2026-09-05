@@ -92,7 +92,7 @@ function readSourceColumnFacts(node: CanonicalNode): readonly SourceColumnFacts[
   if (!parsedColumns.success) return [];
 
   const parsedConstraints = SourceObjectConstraintSchema.array().safeParse(metadata.constraints);
-  const constraints: readonly SourceObjectConstraint[] = parsedConstraints.success
+  const constraints: SourceObjectConstraint[] = parsedConstraints.success
     ? parsedConstraints.data
     : [];
 
