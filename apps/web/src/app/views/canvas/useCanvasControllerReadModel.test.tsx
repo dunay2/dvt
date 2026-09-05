@@ -553,12 +553,11 @@ describe('useCanvasControllerReadModel', () => {
     try {
       const state = mounted.readState();
       const sourceData = state?.nodesWithImpact[0]?.data as ReadModelNodeData;
-      expect(sourceData.onAddCanvasCalculatedColumn).toBe(
-        args.graphHandlers.handleAddCanvasCalculatedColumn
-      );
+      expect(sourceData.onAddCanvasCalculatedColumn).toBeUndefined();
+      expect(sourceData.onApplyCanvasColumnFunction).toBeUndefined();
       expect(
         (sourceData.columns as ReadonlyArray<{ functionMenu?: unknown }>)[0]?.functionMenu
-      ).toEqual(expect.objectContaining({ category: 'text' }));
+      ).toBeUndefined();
       expect(state?.edgesWithImpact).toEqual([
         expect.objectContaining({
           type: 'columnLineage',
