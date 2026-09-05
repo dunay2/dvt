@@ -103,3 +103,195 @@ correction, without stderr/storage warnings.
 - `pnpm --filter @dvt/web lint` and `pnpm --filter @dvt/web typecheck` passed
   on the initial configuration patch; final hook/prepush validation still owns
   the completed, formatted tree.
+
+## Accepted fixed-source results
+
+Implementation commit: `a2d3c43369d15b8af77d7654edab8e652c659169`.
+
+| Suite                   | Control runs, seconds | Final runs, seconds            | Control mean | Final mean | Reduction     |
+| ----------------------- | --------------------- | ------------------------------ | ------------ | ---------- | ------------- |
+| unit                    | 435.132 / 460.311     | 253.528 / 253.272              | 447.722      | 253.400    | 43.4%         |
+| architecture            | 134.329 / 136.448     | 45.401 / 48.495                | 135.389      | 46.948     | 65.3%         |
+| presentation, unchanged | 519.515 / 580.821     | Same configuration and samples | 550.168      | 550.168    | Not optimized |
+
+Standalone measurements time the Vitest CLI. The second final sample observes
+the actual Vitest process lifetime during `pnpm test:web:ci` at 100 ms resolution;
+its native Vitest summaries were 252.31 / 579.91 / 47.67 seconds. These small
+clock-boundary differences are explicit and far below the observed unit and
+architecture improvements. Presentation varied by about 12% without configuration
+changes, so it is not evidence of a speedup or a regression from this patch.
+
+The real `pnpm test:web:ci` completed successfully in **886.109 s**, versus
+1088.976 s summed over the first control's three Vitest invocations. That is
+18.6% less elapsed time in this local comparison, despite the slower unchanged
+presentation sample. It is not a hosted-runner or install-time claim.
+
+Coverage proof:
+
+- 592 primary files retained: 275 unit, 216 presentation, 101 architecture.
+- All original 1602 unit test identities are identical; all 273 original
+  architecture identities remain, with 12 additional catalog guards.
+- Canonical full run: 1602 + 963 + 285 = **2850 passed tests**, no skipped tests.
+- TypeScript token comparison of the 33 annotated unit files found no changed
+  executable tokens. The hook normalized formatting in one existing test.
+- No package command, changed-file routing rule, workflow, assertion, fixture,
+  worker count, old-space limit, or isolation policy was removed or weakened.
+
+Final observed worker RSS peaks were 228.10 MiB (unit), 321.50 MiB
+(presentation canonical run), and 168.77 MiB (architecture). The unchanged
+presentation control reached 384.80 MiB. All observed workers therefore retain
+over 90% headroom to 4096 MiB, exceeding the planned 20% margin. The canonical
+aggregate process-tree peak was 904.019 MiB, including pnpm/Node ancestors.
+
+## Reproduction
+
+Use a disposable complete Linux clone, Node 22.19.0, pnpm 10.28.0, Python 3
+with psutil, two CPUs and 7 GiB memory. Copy the listings below into the ignored
+`tmp/gh-2900/` directory. Install with `pnpm install --frozen-lockfile
+--prefer-offline` and explicitly build the web dependency closure. The observer
+adds no assertion filters, retries, timeouts, or production commands.
+
+At admission commit `05115fbb8` (unchanged test/configuration control), run:
+
+```sh
+python3 tmp/gh-2900/measure.py control 1
+python3 tmp/gh-2900/measure.py node 1
+python3 tmp/gh-2900/measure.py batch 1
+python3 tmp/gh-2900/measure.py control 2 unit architecture
+```
+
+At implementation commit `a2d3c4336`, with the same dependency outputs, run:
+
+```sh
+python3 tmp/gh-2900/measure.py final 1 unit architecture
+python3 tmp/gh-2900/canonical.py
+```
+
+The latter executes the real `pnpm test:web:ci` command and retains its complete
+console log. Unit and architecture repeat on the final code; the unchanged
+presentation configuration supplies a second presentation control. Never overlap
+benchmark processes or compare the Windows sample with the Linux samples.
+
+Each invocation writes a console log, JSON test report when the JSON reporter
+is selected, per-process observations, and aggregate process-tree peak. Test
+identity comparison uses sorted `(relative file path, full test name)` pairs;
+failed runs are retained as failed evidence. The final observer also records
+lifecycle metadata to attribute processes in the canonical package command to
+unit, presentation or architecture. This metadata does not change execution.
+
+### measure.py
+
+```python
+import json, os, pathlib, subprocess, sys, time, platform
+import psutil
+
+ROOT = pathlib.Path(__file__).resolve().parents[2]
+WEB = ROOT / 'apps/web'
+OUT = pathlib.Path(__file__).resolve().parent
+NODE = 'node'
+VITEST = str(ROOT / 'node_modules/vitest/vitest.mjs')
+
+def run(label, args, env=None):
+    log = OUT / (label + '.log')
+    rss_dir = OUT / (label + '.rss')
+    rss_dir.mkdir(exist_ok=True)
+    processes = {}
+    peak_tree = 0
+    start = time.monotonic()
+    with log.open('w', encoding='utf8') as stream:
+        child = subprocess.Popen([NODE, VITEST, *args], cwd=WEB,
+                                 env={**os.environ, 'DVT_CI':'1', 'NODE_OPTIONS':f'--max-old-space-size=4096 --require={OUT / "rss.cjs"}', 'GH_2900_RSS_DIRECTORY':str(rss_dir), **(env or {})},
+                                 stdout=stream, stderr=subprocess.STDOUT)
+        parent = psutil.Process(child.pid)
+        while child.poll() is None:
+            total = 0
+            try:
+                descendants = [parent, *parent.children(recursive=True)]
+            except psutil.Error:
+                descendants = []
+            for proc in descendants:
+                try:
+                    mem = proc.memory_info()
+                    total += mem.rss
+                    key = str(proc.pid)
+                    prior = processes.get(key, {})
+                    processes[key] = {'pid':proc.pid, 'parent':proc.ppid(),
+                        'peakRssBytes':max(prior.get('peakRssBytes',0), getattr(mem,'peak_wset',mem.rss)),
+                        'command':proc.cmdline(), 'createdAt':proc.create_time(), 'lastObservedAt':time.time(),
+                        'lifecycle':prior.get('lifecycle') or proc.environ().get('npm_lifecycle_event','')}
+                except psutil.Error:
+                    pass
+            peak_tree = max(peak_tree, total)
+            time.sleep(.1)
+    result = {'label':label, 'exitCode':child.returncode, 'wallSeconds':round(time.monotonic()-start,3),
+              'sampledPeakTreeRssBytes':peak_tree, 'processes':list(processes.values()),
+              'command':[NODE,VITEST,*args], 'platform':platform.platform(), 'sampleIntervalSeconds':.1,
+              'exitResourceUsage':[json.loads(p.read_text()) for p in rss_dir.glob('*.json')]}
+    (OUT/(label+'.metrics.json')).write_text(json.dumps(result,indent=2), encoding='utf8')
+    print(json.dumps({k:v for k,v in result.items() if k not in ('processes','command','exitResourceUsage')}),flush=True)
+    return result
+
+if __name__ == '__main__':
+    mode = sys.argv[1]
+    repetition = sys.argv[2] if len(sys.argv)>2 else '1'
+    suites = sys.argv[3:] or (['unit','architecture'] if mode == 'node' else ['unit','presentation','architecture'])
+    for suite in suites:
+        label = f'{mode}-{repetition}-{suite}'
+        report = str(OUT/(label+'.tests.json'))
+        if mode in ('control','node','final'):
+            args = ['run','--config',f'vitest.{suite}.config.ts','--reporter=json','--outputFile',report]
+            if mode == 'node' and suite != 'presentation':
+                args += ['--environment=node']
+            run(label,args)
+        elif mode == 'batch':
+            baseline = json.loads((OUT/f'control-1-{suite}.tests.json').read_text(encoding='utf8'))
+            files = sorted(entry['name'] for entry in baseline['testResults'])
+            for offset in range(0,len(files),10):
+                batch_label = label+f'-{offset//10:03}'
+                run(batch_label,['run','--config',str(OUT/'batch.config.ts'),
+                    '--reporter=json','--outputFile',str(OUT/(batch_label+'.tests.json'))],
+                    {'GH_2900_SUITE':suite,'GH_2900_FILES':json.dumps([os.path.relpath(f,WEB).replace('\\','/') for f in files[offset:offset+10]])})
+```
+
+### rss.cjs
+
+```javascript
+const fs = require('node:fs');
+const path = require('node:path');
+const output = process.env.GH_2900_RSS_DIRECTORY;
+const command = [...process.execArgv, ...process.argv];
+if (output)
+  process.on('exit', () => {
+    fs.writeFileSync(
+      path.join(output, `${process.pid}.json`),
+      JSON.stringify({
+        pid: process.pid,
+        parent: process.ppid,
+        peakRssBytes: process.resourceUsage().maxRSS * 1024,
+        command,
+      })
+    );
+  });
+```
+
+### batch.config.ts
+
+```typescript
+import { createWebVitestConfig, type WebVitestSuiteName } from '../../apps/web/vitest.suites';
+const config = createWebVitestConfig(process.env.GH_2900_SUITE as WebVitestSuiteName);
+config.test!.include = JSON.parse(process.env.GH_2900_FILES!);
+config.test!.poolOptions!.forks!.singleFork = true;
+config.test!.poolOptions!.forks!.isolate = false;
+export default config;
+```
+
+### canonical.py
+
+```python
+import shutil
+import measure
+
+measure.WEB = measure.ROOT
+measure.VITEST = shutil.which('pnpm')
+measure.run('canonical-1',['test:web:ci'])
+```
