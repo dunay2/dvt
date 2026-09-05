@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 /** Owned concern: prove stable workspace snapshots across concurrent query subscribers. */
 import { describe, expect, it, vi } from 'vitest';
 

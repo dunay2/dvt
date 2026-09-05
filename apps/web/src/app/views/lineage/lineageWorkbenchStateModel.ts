@@ -1,10 +1,7 @@
 import type { CanonicalNode } from '../../types/canonical';
 
 export type LineageWorkbenchState =
-  | { kind: 'loading' }
-  | { kind: 'error'; message: string }
-  | { kind: 'empty' }
-  | { kind: 'ready' };
+  { kind: 'loading' } | { kind: 'error'; message: string } | { kind: 'empty' } | { kind: 'ready' };
 
 type BuildLineageWorkbenchStateInput = {
   canonicalNodes: CanonicalNode[];

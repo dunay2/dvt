@@ -63,7 +63,9 @@ function buildProjectionGraph(outputName = 'order_id'): readonly [CanonicalNode,
           fields: [{ name: 'order_id', dataType: 'integer' }],
         },
         targetNodeId: 'model-orders',
-        outputs: [{ fieldId: 'output:stable-order-id', name: outputName, sourceFieldName: 'order_id' }],
+        outputs: [
+          { fieldId: 'output:stable-order-id', name: outputName, sourceFieldName: 'order_id' },
+        ],
       })
     )
   );
@@ -136,9 +138,7 @@ describe('Canvas column lineage projection', () => {
     expect(originalLineage).toHaveLength(1);
     expect(renamedLineage).toHaveLength(1);
     expect(renamedLineage[0]?.id).toBe(originalLineage[0]?.id);
-    expect(renamedLineage[0]?.data?.sourceFieldId).toBe(
-      originalLineage[0]?.data?.sourceFieldId
-    );
+    expect(renamedLineage[0]?.data?.sourceFieldId).toBe(originalLineage[0]?.data?.sourceFieldId);
     expect(renamedLineage[0]?.data?.outputId).toBe(originalLineage[0]?.data?.outputId);
     expect(renamedLineage[0]?.data?.targetColumnName).toBe('customer_order_id');
   });

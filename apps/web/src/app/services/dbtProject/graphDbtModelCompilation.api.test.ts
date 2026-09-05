@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 import type { CompileGraphDbtModelsRequest } from '@dvt/contracts';
 import { GraphDbtModelCompilationResultSchema } from '@dvt/contracts';
 import { beforeEach, describe, expect, it } from 'vitest';

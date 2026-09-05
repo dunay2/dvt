@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 import { DbtProjectGraphProjectionSchema, type DbtProjectGraphProjection } from '@dvt/contracts';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 

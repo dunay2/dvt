@@ -173,7 +173,7 @@ export function createWebVitestConfig(suiteName: WebVitestSuiteName): UserConfig
   return {
     test: {
       globals: true,
-      environment: 'jsdom',
+      environment: suiteName === 'unit' || suiteName === 'architecture' ? 'node' : 'jsdom',
       include: [...suite.include],
       exclude: [...suite.exclude],
       ...(isWebVitestCi() ? createWebVitestCiWorkerConfig() : {}),

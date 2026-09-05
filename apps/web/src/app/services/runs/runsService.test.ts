@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 import { parseExecutionSelection } from '@dvt/contracts';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 

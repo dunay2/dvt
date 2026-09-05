@@ -396,7 +396,8 @@ export function CanvasSettingsDialog(props: CanvasSettingsDialogProps): JSX.Elem
     if (!backgroundColorValid || !gridColorValid) return;
     if (draft.impactOverlayEnabled !== impactOverlayEnabled) onToggleImpact();
     if (draft.columnLevelLineageEnabled !== columnLevelLineageEnabled) onToggleColumns();
-    if (canUseCostOverlay && draft.costOverlayEnabled !== costOverlayEnabled) onToggleCostOverlay?.();
+    if (canUseCostOverlay && draft.costOverlayEnabled !== costOverlayEnabled)
+      onToggleCostOverlay?.();
     if (draft.gridSize !== gridSize) onGridSizeChange(draft.gridSize);
     if (normalizedCanvasPaletteInput !== normalizeCanvasPaletteId(canvasPalette)) {
       onCanvasPaletteChange(normalizedCanvasPaletteInput);
