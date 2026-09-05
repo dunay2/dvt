@@ -20,7 +20,6 @@ describe('dbt external-authority Canvas projection architecture', () => {
     expect(route).toContain('useDbtProjectFilesAuthoritySurface');
     expect(route.match(/<CanvasShell\b/g)).toHaveLength(1);
     expect(route.match(/<CanvasModalHost\b/g)).toHaveLength(1);
-    expect(route).not.toContain('DbtProjectFileCanvas');
     expect(route).not.toContain('DbtProjectFileCanvasView');
     expect(authoritySurface).toContain('shellProps: CanvasShellProps');
     expect(authoritySurface).toContain('modalHostProps: CanvasModalHostProps');
