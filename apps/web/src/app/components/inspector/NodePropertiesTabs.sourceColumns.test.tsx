@@ -81,6 +81,7 @@ describe('NodePropertiesTabs Source Columns presentation', () => {
           activeTab="columns"
           primarySectionIds={['columns']}
           moreLabel="More"
+          surface="workbench"
           onActiveTabChange={vi.fn()}
           onHide={vi.fn()}
         />
