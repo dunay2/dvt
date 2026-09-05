@@ -1,7 +1,7 @@
-/** Owned concern: present the read-only file-authoritative dbt Canvas surface. */
+/** Owned concern: present the read-only file-authoritative dbt projection in the shared Canvas surface. */
 import { useRef, type ReactNode } from 'react';
 import { cn } from '../../components/ui/utils';
-import { dbtProjectFileCanvasSurfaceStrategy } from '../../plugins/dbt/dbtProjectFileCanvasSurfaceStrategy';
+import { dbtCanvasSurfaceStrategy } from '../../plugins/dbt/dbtCanvasSurfaceStrategy';
 import { DBT_NODE_KINDS } from '../../plugins/nodeTypeCatalog.dbt';
 import type { CanvasShellProps } from './canvasShell.types';
 import CanvasShell from './CanvasShell';
@@ -177,7 +177,7 @@ export function DbtProjectFileCanvasView({
       canOpenSourceImport: true,
       canMoveNodes: true,
       canSelectNodes: true,
-      surfaceStrategy: dbtProjectFileCanvasSurfaceStrategy,
+      surfaceStrategy: dbtCanvasSurfaceStrategy,
       contextualWorkbench,
       centerSurface,
       readOnlyBanner: <DbtProjectProjectionNotice controller={controller} />,
