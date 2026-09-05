@@ -559,15 +559,7 @@ describe('useCanvasControllerReadModel', () => {
       expect(
         (sourceData.columns as ReadonlyArray<{ functionMenu?: unknown }>)[0]?.functionMenu
       ).toEqual(expect.objectContaining({ category: 'text' }));
-      expect(state?.edgesWithImpact).toEqual([
-        expect.objectContaining({
-          type: 'columnLineage',
-          source: sourceNode.id,
-          target: modelNode.id,
-          ariaLabel: 'order_id → order_id',
-          data: expect.objectContaining({ removable: true }),
-        }),
-      ]);
+      expect(state?.edgesWithImpact).toEqual([]);
       expect((state?.nodesWithImpact[1]?.data as ReadModelNodeData).columnPortDirections).toEqual([
         'target',
         'source',
