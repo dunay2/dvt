@@ -71,9 +71,6 @@ describe('plugin runtime projection architecture', () => {
 
     expect(getAllViews(capabilities).map((view) => view.pluginId)).not.toContain('dbt');
     expect(
-      getAllCanvasRuntimeRegistrations(capabilities).map((registration) => registration.kind)
-    ).not.toContain('dbt');
-    expect(
       getAllNodeKinds(capabilities).map((registration) => registration.pluginId)
     ).not.toContain('dbt');
     expect(getPluginPortMap(capabilities).has('dbt')).toBe(false);
@@ -81,6 +78,16 @@ describe('plugin runtime projection architecture', () => {
     expect(getGraphNodeCardStrategies(capabilities).map((strategy) => strategy.id)).not.toContain(
       'dbt-card'
     );
+  });
+
+  it('publishes one Canvas runtime while keeping dbt as a plugin capability', () => {
+    const dbtContributionsSource = readAppSource('src/app/plugins/dbt/dbtContributions.ts');
+
+    expect(getAllCanvasRuntimeRegistrations().map((registration) => registration.kind)).toEqual([
+      'transformation',
+    ]);
+    expect(getAllNodeKinds().some((registration) => registration.pluginId === 'dbt')).toBe(true);
+    expect(dbtContributionsSource).not.toContain('canvasKinds:');
   });
 
   it('projects unavailable monitoring plugins out of overlays and node badges', () => {
