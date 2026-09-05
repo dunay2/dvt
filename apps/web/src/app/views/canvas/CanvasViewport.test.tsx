@@ -23,6 +23,12 @@ import {
 const mockResolveNodeKindRegistration = getCanvasViewportRegistryMock();
 const xyflowState = getCanvasViewportXyflowState();
 
+type ReactFlowNodeDragCallback = (
+  event: unknown,
+  node: CanvasViewportProps['nodesWithImpact'][number],
+  nodes: CanvasViewportProps['nodesWithImpact']
+) => void;
+
 describe('CanvasViewport', () => {
   let container: HTMLDivElement;
   let renderViewport: (props?: Partial<CanvasViewportProps>) => Promise<CanvasViewportProps>;
@@ -254,10 +260,10 @@ describe('CanvasViewport', () => {
     });
 
     const reactFlowOnNodeDrag = xyflowState.lastReactFlowProps?.onNodeDrag as
-      | ((event: unknown, node: typeof source, nodes: typeof source[]) => void)
+      | ReactFlowNodeDragCallback
       | undefined;
     const reactFlowOnNodeDragStop = xyflowState.lastReactFlowProps?.onNodeDragStop as
-      | ((event: unknown, node: typeof source, nodes: typeof source[]) => void)
+      | ReactFlowNodeDragCallback
       | undefined;
 
     act(() => {
