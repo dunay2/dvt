@@ -8,6 +8,8 @@ import type { DbtProjectImportResult, DbtProjectSourceTableDeclaration } from '@
 
 import CanvasModalHost from './canvas/CanvasModalHost';
 import CanvasShell from './canvas/CanvasShell';
+import { CanvasInvalidAuthorityState } from './canvas/CanvasInvalidAuthorityState';
+import type { CanvasModalHostProps } from './canvas/canvasModalHost.types';
 import { buildCanvasModalHostProps } from './canvas/canvasModalHostPropsBuilder';
 import { deriveCanvasRouteViewState } from './canvas/canvasRouteViewState';
 import { buildCanvasShellProps } from './canvas/canvasShellPropsBuilder';
@@ -15,7 +17,6 @@ import {
   buildDbtProjectFileCanvasPath,
   resolveCanvasRouteAuthority,
 } from './canvas/canvasRouteAuthority';
-import { DbtProjectFileCanvas, InvalidCanvasAuthority } from './canvas/DbtProjectFileCanvas';
 import { useCanvasRoutePresentationSync } from './canvas/useCanvasRoutePresentationSync';
 import { useCanvasController } from './canvas/useCanvasController';
 import {
@@ -23,15 +24,32 @@ import {
   useWarehouseSourceDataSampleQueryPort,
   useWarehouseSourceImportPort,
 } from '../services/AppServicesContext';
+import type { DbtProjectFilesAuthorityBinding } from '../ports/dbtProjectGraph';
 import type { CanvasShellProps } from './canvas/canvasShell.types';
 import { useCanvasRunControlSurface } from './canvas/useCanvasRunControlSurface';
 import {
   resolveDbtSourceImportContinuation,
   useCanvasDbtSourceImportContinuationStore,
 } from './canvas/canvasDbtSourceImportContinuationStore';
+import { useDbtProjectFilesAuthoritySurface } from './canvas/useDbtProjectFilesAuthoritySurface';
 import { useRunSnapshotQuery } from '../queries/runsQueries';
 
-function GraphDraftCanvasContent({
+function CanvasRouteSurface({
+  shellProps,
+  modalHostProps,
+}: Readonly<{
+  shellProps: CanvasShellProps;
+  modalHostProps: CanvasModalHostProps;
+}>): JSX.Element {
+  return (
+    <>
+      <CanvasShell {...shellProps} />
+      <CanvasModalHost {...modalHostProps} />
+    </>
+  );
+}
+
+function GraphDraftAuthorityContent({
   onDbtProjectImported,
   referencedRunId,
 }: Readonly<{
@@ -54,29 +72,50 @@ function GraphDraftCanvasContent({
 
   useCanvasRoutePresentationSync(presentationState);
 
-  const shellProps = buildCanvasShellProps({
-    controller,
-    routeViewState,
-    runControls,
-  });
-  const modalHostProps = buildCanvasModalHostProps(controller);
+  const shellProps: CanvasShellProps = {
+    ...buildCanvasShellProps({
+      controller,
+      routeViewState,
+      runControls,
+    }),
+    warehouseSourceImport,
+    warehouseSourceDataSampleQuery,
+    runSnapshot: runSnapshotQuery.data ?? null,
+    runMaterializationSampleQuery: runsService.getRunMaterializationSample,
+    canvasContextScreenToFlowPosition: (screenPosition) =>
+      reactFlow.screenToFlowPosition(screenPosition),
+    onDbtProjectImported,
+  };
 
   return (
-    <>
-      <CanvasShell
-        {...shellProps}
-        warehouseSourceImport={warehouseSourceImport}
-        warehouseSourceDataSampleQuery={warehouseSourceDataSampleQuery}
-        runSnapshot={runSnapshotQuery.data ?? null}
-        runMaterializationSampleQuery={runsService.getRunMaterializationSample}
-        canvasContextScreenToFlowPosition={(screenPosition) =>
-          reactFlow.screenToFlowPosition(screenPosition)
-        }
-        onDbtProjectImported={onDbtProjectImported}
-      />
-      <CanvasModalHost {...modalHostProps} />
-    </>
+    <CanvasRouteSurface
+      shellProps={shellProps}
+      modalHostProps={buildCanvasModalHostProps(controller)}
+    />
   );
+}
+
+function DbtProjectFilesAuthorityContent({
+  authorityBinding,
+  onDbtProjectImported,
+  sourceImportInitialSelection,
+  onSourceImportInitialSelectionConsumed,
+}: Readonly<{
+  authorityBinding: DbtProjectFilesAuthorityBinding;
+  onDbtProjectImported: NonNullable<CanvasShellProps['onDbtProjectImported']>;
+  sourceImportInitialSelection?: CanvasShellProps['sourceImportInitialSelection'];
+  onSourceImportInitialSelectionConsumed?: CanvasShellProps['onSourceImportInitialSelectionConsumed'];
+}>): JSX.Element {
+  const reactFlow = useReactFlow<Node, Edge>();
+  const surface = useDbtProjectFilesAuthoritySurface({
+    authorityBinding,
+    onDbtProjectImported,
+    screenToFlowPosition: (screenPosition) => reactFlow.screenToFlowPosition(screenPosition),
+    sourceImportInitialSelection,
+    onSourceImportInitialSelectionConsumed,
+  });
+
+  return <CanvasRouteSurface {...surface} />;
 }
 
 function CanvasContent(): JSX.Element {
@@ -112,7 +151,7 @@ function CanvasContent(): JSX.Element {
   switch (authorityResolution.kind) {
     case 'graph-draft':
       return (
-        <GraphDraftCanvasContent
+        <GraphDraftAuthorityContent
           onDbtProjectImported={onDbtProjectImported}
           referencedRunId={referencedRunId}
         />
@@ -123,7 +162,7 @@ function CanvasContent(): JSX.Element {
         authorityResolution.binding
       );
       return (
-        <DbtProjectFileCanvas
+        <DbtProjectFilesAuthorityContent
           authorityBinding={authorityResolution.binding}
           onDbtProjectImported={onDbtProjectImported}
           sourceImportInitialSelection={sourceImportInitialSelection}
@@ -134,7 +173,7 @@ function CanvasContent(): JSX.Element {
       );
     }
     case 'invalid':
-      return <InvalidCanvasAuthority message={authorityResolution.message} />;
+      return <CanvasInvalidAuthorityState message={authorityResolution.message} />;
   }
 }
 

@@ -1,28 +1,44 @@
-/** Owned concern: present the read-only file-authoritative dbt projection in the shared Canvas surface. */
-import { useRef, type ReactNode } from 'react';
+/** Owned concern: adapt external dbt project-file authority into the shared Canvas surface contracts. */
+import { useMemo, useRef, type ReactNode } from 'react';
+
+import {
+  createCompleteRouteBootstrapPresentation,
+  createErrorRouteBootstrapPresentation,
+  createFailedRouteBootstrapPresentation,
+  createPendingRouteBootstrapPresentation,
+} from '../../bootstrap/routeBootstrapContract';
+import { usePublishedRouteBootstrap } from '../../bootstrap/usePublishedRouteBootstrap';
 import { cn } from '../../components/ui/utils';
 import { dbtCanvasSurfaceStrategy } from '../../plugins/dbt/dbtCanvasSurfaceStrategy';
 import { DBT_NODE_KINDS } from '../../plugins/nodeTypeCatalog.dbt';
-import type { CanvasShellProps } from './canvasShell.types';
-import CanvasShell from './CanvasShell';
-import { resolveCanvasViewCopy } from './canvasCopyCatalog';
+import type { DbtProjectFilesAuthorityBinding } from '../../ports/dbtProjectGraph';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import type { CanvasModalHostProps } from './canvasModalHost.types';
+import { CANVAS_ROUTE_ID } from './canvasDraftPresentationStore';
+import type { CanvasShellProps } from './canvasShell.types';
 import { CanvasErrorStateView, CanvasLoadingStateView } from './CanvasStateViews';
-import { buildDbtProjectFileCodeWorkbench } from './dbtProjectFileCodeWorkbench';
-import type { SqlContextWorkbenchHandle } from './SqlContextWorkbench';
-import { buildDbtYamlDescriptionWorkbenchContributions } from './dbtYamlDescriptionWorkbenchContribution';
-import { buildDbtWorkspaceFileCodeContributions } from './dbtWorkspaceFileCodeContribution';
+import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { buildDbtExecutionTargetWorkbenchContributions } from './dbtExecutionTargetWorkbenchContribution';
+import { buildDbtProjectFileCodeWorkbench } from './dbtProjectFileCodeWorkbench';
+import { buildDbtWorkspaceFileCodeContributions } from './dbtWorkspaceFileCodeContribution';
+import { buildDbtYamlDescriptionWorkbenchContributions } from './dbtYamlDescriptionWorkbenchContribution';
+import type { SqlContextWorkbenchHandle } from './SqlContextWorkbench';
 import { useCanvasRunControlSurface } from './useCanvasRunControlSurface';
-import type { useDbtProjectFileCanvasController } from './useDbtProjectFileCanvasController';
+import { useDbtProjectFileCanvasController } from './useDbtProjectFileCanvasController';
 
-type DbtProjectFileCanvasController = ReturnType<typeof useDbtProjectFileCanvasController>;
 const FILE_AUTHORITY_SOURCE_IMPORT_KINDS = DBT_NODE_KINDS.filter(
   (registration) => registration.kind === 'dbt:source'
 );
 
+type DbtProjectFileAuthorityController = ReturnType<typeof useDbtProjectFileCanvasController>;
+
+type DbtProjectFilesAuthoritySurface = Readonly<{
+  shellProps: CanvasShellProps;
+  modalHostProps: CanvasModalHostProps;
+}>;
+
 function unsupportedFileProjectionCommand(commandName: string): never {
-  throw new Error(`${commandName} is unavailable in the read-only dbt project file projection.`);
+  throw new Error(`${commandName} is unavailable while dbt project files are semantic authority.`);
 }
 
 function resolveProjectTitle(projectRoot: string): string {
@@ -30,13 +46,11 @@ function resolveProjectTitle(projectRoot: string): string {
   return pathSegments.at(-1) ?? projectRoot;
 }
 
-function DbtProjectProjectionNotice({
+function DbtProjectAuthorityNotice({
   controller,
-}: Readonly<{ controller: DbtProjectFileCanvasController }>): JSX.Element | null {
+}: Readonly<{ controller: DbtProjectFileAuthorityController }>): JSX.Element | null {
   const source = controller.query.data;
-  if (source == null) {
-    return null;
-  }
+  if (source == null) return null;
 
   const codeOnlyCount = source.capabilities.codeOnlyResourceCount;
   if (source.freshness === 'fresh' && source.diagnostics.length === 0 && codeOnlyCount === 0) {
@@ -92,7 +106,9 @@ function DbtProjectProjectionNotice({
   );
 }
 
-function resolveCenterSurface(controller: DbtProjectFileCanvasController): ReactNode | undefined {
+function resolveCenterSurface(
+  controller: DbtProjectFileAuthorityController
+): ReactNode | undefined {
   if (controller.query.isPending) {
     return (
       <CanvasLoadingStateView
@@ -114,19 +130,48 @@ function resolveCenterSurface(controller: DbtProjectFileCanvasController): React
   return undefined;
 }
 
-export function DbtProjectFileCanvasView({
-  controller,
-  screenToFlowPosition,
+export function useDbtProjectFilesAuthoritySurface({
+  authorityBinding,
   onDbtProjectImported,
+  screenToFlowPosition,
   sourceImportInitialSelection,
   onSourceImportInitialSelectionConsumed,
 }: Readonly<{
-  controller: DbtProjectFileCanvasController;
-  screenToFlowPosition: NonNullable<CanvasShellProps['canvasContextScreenToFlowPosition']>;
+  authorityBinding: DbtProjectFilesAuthorityBinding;
   onDbtProjectImported: NonNullable<CanvasShellProps['onDbtProjectImported']>;
+  screenToFlowPosition: NonNullable<CanvasShellProps['canvasContextScreenToFlowPosition']>;
   sourceImportInitialSelection?: CanvasShellProps['sourceImportInitialSelection'];
   onSourceImportInitialSelectionConsumed?: CanvasShellProps['onSourceImportInitialSelectionConsumed'];
-}>): JSX.Element {
+}>): DbtProjectFilesAuthoritySurface {
+  const controller = useDbtProjectFileCanvasController(authorityBinding);
+  const bootstrapPresentation = useMemo(() => {
+    if (controller.query.isPending) {
+      return createPendingRouteBootstrapPresentation('Analyzing the scoped dbt project.');
+    }
+
+    if (controller.projectionErrorMessage != null) {
+      return createErrorRouteBootstrapPresentation(controller.projectionErrorMessage);
+    }
+
+    const freshness = controller.query.data?.freshness;
+    if (freshness === 'invalid' || freshness === 'unavailable') {
+      return createFailedRouteBootstrapPresentation(
+        'The dbt project remains file-authoritative, but its current analysis is unavailable.'
+      );
+    }
+
+    return createCompleteRouteBootstrapPresentation(
+      freshness === 'stale-last-valid'
+        ? 'The last valid file-authoritative dbt graph is ready with diagnostics.'
+        : 'The file-authoritative dbt graph is ready.'
+    );
+  }, [
+    controller.projectionErrorMessage,
+    controller.query.data?.freshness,
+    controller.query.isPending,
+  ]);
+  usePublishedRouteBootstrap(CANVAS_ROUTE_ID, bootstrapPresentation);
+
   const codeWorkbenchRef = useRef<SqlContextWorkbenchHandle>(null);
   const runControls = useCanvasRunControlSurface(
     controller.workspaceLayoutKey,
@@ -135,14 +180,12 @@ export function DbtProjectFileCanvasView({
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasViewCopy(applicationLanguage);
   const projectRoot = controller.authorityBinding.authority.projectRoot;
-  const projectTitle = resolveProjectTitle(projectRoot);
   const activeCanvas = {
     id: controller.authorityBinding.canvasId,
     kind: 'dbt',
-    title: projectTitle,
+    title: resolveProjectTitle(projectRoot),
     defaultPermission: 'read' as const,
   };
-  const centerSurface = resolveCenterSurface(controller);
   const inspectorWorkbenchContributions = [
     ...buildDbtExecutionTargetWorkbenchContributions({
       node: controller.inspectorNode,
@@ -170,6 +213,7 @@ export function DbtProjectFileCanvasView({
     projectRoot,
     open: controller.projectCodeWorkbenchOpen,
   });
+
   const shellProps: CanvasShellProps = {
     layout: {
       focusMode: controller.presentation.focusMode,
@@ -179,8 +223,8 @@ export function DbtProjectFileCanvasView({
       canSelectNodes: true,
       surfaceStrategy: dbtCanvasSurfaceStrategy,
       contextualWorkbench,
-      centerSurface,
-      readOnlyBanner: <DbtProjectProjectionNotice controller={controller} />,
+      centerSurface: resolveCenterSurface(controller),
+      readOnlyBanner: <DbtProjectAuthorityNotice controller={controller} />,
     },
     panels: {
       authoringNodeKinds: FILE_AUTHORITY_SOURCE_IMPORT_KINDS,
@@ -265,5 +309,19 @@ export function DbtProjectFileCanvasView({
     onDbtProjectImported,
   };
 
-  return <CanvasShell {...shellProps} />;
+  const modalHostProps: CanvasModalHostProps = {
+    planPreview: {
+      open: controller.execution.planModalOpen,
+      plan: controller.currentPlan,
+      outcome: controller.execution.latestPreviewOutcome,
+      canStartRun: controller.execution.canStartRun,
+      planStatusSummary: controller.execution.planStatusSummary,
+      onClose: () => controller.execution.setPlanModalOpen(false),
+      onStartRun: () => {
+        void controller.execution.handleStartRun();
+      },
+    },
+  };
+
+  return { shellProps, modalHostProps };
 }
