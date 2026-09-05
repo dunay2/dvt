@@ -167,8 +167,8 @@ function buildOrdinaryNode(id: string): WorkspaceGraphAuthoringNode {
   return {
     id,
     name: 'Orders model',
-    pluginId: 'dbt',
-    kind: 'dbt:model',
+    pluginId: 'dvt',
+    kind: 'dvt:transform',
     role: 'transform',
     status: 'idle',
     tags: ['model'],

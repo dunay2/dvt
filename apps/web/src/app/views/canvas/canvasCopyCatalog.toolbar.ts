@@ -195,10 +195,6 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.contextMenu.addSeedLabel',
     fallback: 'Add seed',
   },
-  canvasContextMenuAddTransformationLabel: {
-    key: 'canvas.contextMenu.addTransformationLabel',
-    fallback: 'Add transformation',
-  },
   canvasContextMenuAddTestLabel: {
     key: 'canvas.contextMenu.addTestLabel',
     fallback: 'Add test',
@@ -343,10 +339,6 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.addNodeCatalog.seedCategoryLabel',
     fallback: 'Seeds',
   },
-  canvasAddNodeCatalogTransformationCategoryLabel: {
-    key: 'canvas.addNodeCatalog.transformationCategoryLabel',
-    fallback: 'Transformations',
-  },
   canvasAddNodeCatalogTestCategoryLabel: {
     key: 'canvas.addNodeCatalog.testCategoryLabel',
     fallback: 'Tests',
@@ -374,10 +366,6 @@ export const canvasViewToolbarCopyByKey = {
   canvasAddNodeCatalogSeedDescription: {
     key: 'canvas.addNodeCatalog.seedDescription',
     fallback: 'Add a static seed dataset managed by the project.',
-  },
-  canvasAddNodeCatalogTransformationDescription: {
-    key: 'canvas.addNodeCatalog.transformationDescription',
-    fallback: 'Add a Transformation between upstream sources and downstream outputs.',
   },
   canvasAddNodeCatalogTestDescription: {
     key: 'canvas.addNodeCatalog.testDescription',

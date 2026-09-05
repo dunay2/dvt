@@ -1,5 +1,6 @@
 /** Owned concern: execute DBT model column intent against the active Canvas draft. */
 import type { CanonicalNode } from '../../types/canonical';
+import { isDbtCompatibleModel } from './canvasDbtAuthoringModel';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import {
@@ -24,7 +25,7 @@ export function configureDbtModelColumnOutput(args: {
     nodeCatalog.set(node.id, node)
   );
   const node = nodeCatalog.get(args.nodeId);
-  if (node == null || node.pluginId !== 'dbt' || node.kind !== 'dbt:model') {
+  if (node == null || !isDbtCompatibleModel(node)) {
     return { outcome: 'rejected', reason: 'not_generated_dbt_model' };
   }
   const nodes = [...nodeCatalog.values()];
@@ -60,7 +61,7 @@ export function configureDbtModelColumnOrder(args: {
     nodeCatalog.set(node.id, node)
   );
   const node = nodeCatalog.get(args.nodeId);
-  if (node == null || node.pluginId !== 'dbt' || node.kind !== 'dbt:model') {
+  if (node == null || !isDbtCompatibleModel(node)) {
     return { outcome: 'rejected', reason: 'not_generated_dbt_model' };
   }
   const result = reorderDbtModelProjectionColumn({

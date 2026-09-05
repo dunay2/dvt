@@ -3,6 +3,7 @@ import { DbtYamlDescriptionEditor } from '../../components/dbtYamlDescriptionEdi
 import { NODE_PROPERTY_ROW_ID } from '../../components/inspector/nodePropertiesReadModel';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasNodeWorkbenchContribution } from './canvasNodeWorkbenchContribution';
+import { hasDbtCompatibilityMetadata } from './canvasDbtAuthoringModel';
 
 type BuildDbtYamlDescriptionWorkbenchContributionOptions = Readonly<{
   canvasId: string;
@@ -22,7 +23,7 @@ export function buildDbtYamlDescriptionWorkbenchContributions({
   onProjectChanged,
   onReloadLatest,
 }: BuildDbtYamlDescriptionWorkbenchContributionOptions): readonly CanvasNodeWorkbenchContribution[] {
-  if (node == null || node.pluginId !== 'dbt') {
+  if (node == null || !hasDbtCompatibilityMetadata(node)) {
     return [];
   }
 

@@ -7,8 +7,8 @@ function buildNode(overrides: Partial<CanonicalNode> = {}): CanonicalNode {
   return {
     id: 'model.orders',
     name: 'Orders',
-    pluginId: 'dbt',
-    kind: 'dbt:model',
+    pluginId: 'dvt',
+    kind: 'dvt:transform',
     role: 'transform',
     status: 'idle',
     tags: [],
@@ -19,7 +19,7 @@ function buildNode(overrides: Partial<CanonicalNode> = {}): CanonicalNode {
 const SOURCE = buildNode({
   id: 'source.orders',
   name: 'Raw orders',
-  kind: 'dbt:source',
+  kind: 'dvt:source',
   role: 'input',
   path: 'models/sources.yml',
   metadata: {

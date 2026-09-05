@@ -6,6 +6,13 @@ import { dbtGraphNodeCardStrategy } from '../dbt/dbtGraphNodeCardStrategy';
 import { dvtGraphNodeCardStrategy } from '../dvt/dvtGraphNodeCardStrategy';
 import { buildGraphNodeCardReadModel } from './graphNodeCardReadModel';
 import { defaultGraphNodeCardStrategy } from './defaultGraphNodeCardStrategy';
+import { sharedSourceModelGraphNodeCardStrategy } from './sharedSourceModelGraphNodeCardStrategy';
+
+const CARD_STRATEGIES = [
+  sharedSourceModelGraphNodeCardStrategy,
+  dbtGraphNodeCardStrategy,
+  dvtGraphNodeCardStrategy,
+];
 
 const SOURCE_METRICS_OBSERVED_AT = '2026-07-10T21:00:00.000Z';
 const SPANISH_PRESENTATION_COPY = {
@@ -84,11 +91,11 @@ describe('buildGraphNodeCardReadModel', () => {
     const cases = [
       {
         node: buildNode({ kind: 'dvt:transform', pluginId: 'dvt', role: 'transform' }),
-        strategy: dvtGraphNodeCardStrategy,
+        strategy: sharedSourceModelGraphNodeCardStrategy,
       },
       {
-        node: buildNode({ kind: 'dbt:model', pluginId: 'dbt', role: 'transform' }),
-        strategy: dbtGraphNodeCardStrategy,
+        node: buildNode({ kind: 'dvt:transform', pluginId: 'dvt', role: 'transform' }),
+        strategy: sharedSourceModelGraphNodeCardStrategy,
       },
       {
         node: buildNode({ kind: 'custom:node', pluginId: 'custom', role: 'transform' }),
@@ -121,7 +128,7 @@ describe('buildGraphNodeCardReadModel', () => {
         },
       }),
       {},
-      [dvtGraphNodeCardStrategy]
+      CARD_STRATEGIES
     );
 
     expect(model.title).toBe('Warehouse · public');
@@ -153,7 +160,7 @@ describe('buildGraphNodeCardReadModel', () => {
     ]);
   });
 
-  it('suppresses unverified flat source volume instead of presenting it as evidence', () => {
+  it('keeps source analysis metrics visible without presenting unverified values as evidence', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({
         kind: 'dvt:source',
@@ -173,11 +180,14 @@ describe('buildGraphNodeCardReadModel', () => {
         },
       }),
       {},
-      [dvtGraphNodeCardStrategy]
+      CARD_STRATEGIES
     );
 
     expect(model.metrics).toEqual([]);
-    expect(model.operationalMetrics).toEqual([]);
+    expect(model.operationalMetrics).toEqual([
+      { id: 'rows', label: 'Rows', value: 'Not calculated', icon: 'rows' },
+      { id: 'size', label: 'Size', value: 'Not calculated', icon: 'database' },
+    ]);
     expect(model.operationalDetail).toBeNull();
   });
 
@@ -201,7 +211,7 @@ describe('buildGraphNodeCardReadModel', () => {
         },
       }),
       {},
-      [dvtGraphNodeCardStrategy]
+      CARD_STRATEGIES
     );
 
     expect(model.metrics).toEqual([]);
@@ -264,7 +274,7 @@ describe('buildGraphNodeCardReadModel', () => {
         },
       }),
       { presentationCopy: { ...SPANISH_PRESENTATION_COPY, locale: 'es' } },
-      [dvtGraphNodeCardStrategy]
+      CARD_STRATEGIES
     );
 
     expect(model.operationalMetrics).toEqual([
@@ -329,7 +339,7 @@ describe('buildGraphNodeCardReadModel', () => {
         },
       }),
       {},
-      [dvtGraphNodeCardStrategy]
+      CARD_STRATEGIES
     );
 
     expect(model.title).toBe('orders');
@@ -353,7 +363,7 @@ describe('buildGraphNodeCardReadModel', () => {
         },
       }),
       {},
-      [dvtGraphNodeCardStrategy]
+      CARD_STRATEGIES
     );
 
     expect(model.title).toBe('outbox2');
@@ -376,7 +386,7 @@ describe('buildGraphNodeCardReadModel', () => {
         },
       }),
       { presentationCopy: { ...SPANISH_PRESENTATION_COPY, locale: 'es' } },
-      [dvtGraphNodeCardStrategy]
+      CARD_STRATEGIES
     );
 
     expect(model.sourceIdentity).toEqual({
@@ -404,7 +414,7 @@ describe('buildGraphNodeCardReadModel', () => {
         },
       }),
       {},
-      [dvtGraphNodeCardStrategy]
+      CARD_STRATEGIES
     );
 
     expect(model.sourceIdentity).toBeNull();
@@ -413,8 +423,8 @@ describe('buildGraphNodeCardReadModel', () => {
   it('projects the same governed identity for a dbt-project-files source card', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({
-        kind: 'dbt:source',
-        pluginId: 'dbt',
+        kind: 'dvt:source',
+        pluginId: 'dvt',
         name: 'orders',
         metadata: {
           tableIdentifier: 'orders',
@@ -425,7 +435,7 @@ describe('buildGraphNodeCardReadModel', () => {
         },
       }),
       { presentationCopy: { ...SPANISH_PRESENTATION_COPY, locale: 'es' } },
-      [dbtGraphNodeCardStrategy]
+      CARD_STRATEGIES
     );
 
     expect(model.sourceIdentity).toEqual({
@@ -459,7 +469,7 @@ describe('buildGraphNodeCardReadModel', () => {
         },
       }),
       {},
-      [dvtGraphNodeCardStrategy]
+      CARD_STRATEGIES
     );
 
     expect(model.health).toEqual({ label: 'Completed', tone: 'healthy' });
@@ -503,7 +513,7 @@ describe('buildGraphNodeCardReadModel', () => {
         },
       }),
       {},
-      [dvtGraphNodeCardStrategy]
+      CARD_STRATEGIES
     );
 
     expect(model.operationalMetrics).toEqual([
@@ -539,7 +549,7 @@ describe('buildGraphNodeCardReadModel', () => {
           name: 'customer_rollup',
         }),
         presentationCopy == null ? {} : { presentationCopy },
-        [dvtGraphNodeCardStrategy]
+        CARD_STRATEGIES
       );
 
       expect(model.operationalMetrics).toEqual([
@@ -567,7 +577,7 @@ describe('buildGraphNodeCardReadModel', () => {
         },
       }),
       {},
-      [dvtGraphNodeCardStrategy]
+      CARD_STRATEGIES
     );
 
     expect(model.metrics).toEqual([
@@ -590,7 +600,7 @@ describe('buildGraphNodeCardReadModel', () => {
         },
       }),
       {},
-      [dvtGraphNodeCardStrategy]
+      CARD_STRATEGIES
     );
 
     expect(model.health).toEqual({ label: 'Warning', tone: 'neutral' });
@@ -610,7 +620,7 @@ describe('buildGraphNodeCardReadModel', () => {
         },
       }),
       {},
-      [dvtGraphNodeCardStrategy]
+      CARD_STRATEGIES
     );
 
     expect(model.health).toEqual({ label: 'Running', tone: 'neutral' });
@@ -630,7 +640,7 @@ describe('buildGraphNodeCardReadModel', () => {
         },
       }),
       {},
-      [dvtGraphNodeCardStrategy]
+      CARD_STRATEGIES
     );
 
     expect(model.health).toEqual({ label: 'Running', tone: 'neutral' });
@@ -654,7 +664,7 @@ describe('buildGraphNodeCardReadModel', () => {
         presentationCopy: SPANISH_PRESENTATION_COPY,
         runStatusByNodeId: new Map([[node.id, 'running']]),
       },
-      [dvtGraphNodeCardStrategy]
+      CARD_STRATEGIES
     );
 
     expect(model.health).toEqual({ label: 'En ejecución', tone: 'neutral' });
@@ -675,7 +685,7 @@ describe('buildGraphNodeCardReadModel', () => {
         presentationCopy: SPANISH_PRESENTATION_COPY,
         runStatusByNodeId: new Map([[node.id, 'success']]),
       },
-      [dvtGraphNodeCardStrategy]
+      CARD_STRATEGIES
     );
 
     expect(model.health).toEqual({ label: 'Correcto', tone: 'healthy' });
@@ -701,7 +711,7 @@ describe('buildGraphNodeCardReadModel', () => {
           presentationCopy: SPANISH_PRESENTATION_COPY,
           runStatusByNodeId: new Map([[node.id, runStatus]]),
         },
-        [dvtGraphNodeCardStrategy]
+        CARD_STRATEGIES
       );
 
       expect(model.health).toEqual({ label, tone });
@@ -711,13 +721,13 @@ describe('buildGraphNodeCardReadModel', () => {
   it.each([
     [
       buildNode({ kind: 'dvt:source', pluginId: 'dvt', role: 'input' }),
-      dvtGraphNodeCardStrategy,
+      sharedSourceModelGraphNodeCardStrategy,
       'Listo',
       'healthy',
     ],
     [
-      buildNode({ kind: 'dbt:model', pluginId: 'dbt', role: 'transform' }),
-      dbtGraphNodeCardStrategy,
+      buildNode({ kind: 'dvt:transform', pluginId: 'dvt', role: 'transform' }),
+      sharedSourceModelGraphNodeCardStrategy,
       'Borrador',
       'neutral',
     ],
@@ -755,22 +765,23 @@ describe('buildGraphNodeCardReadModel', () => {
         presentationCopy: SPANISH_PRESENTATION_COPY,
         runStatusByNodeId: new Map([['transform-2', 'running']]),
       },
-      [dvtGraphNodeCardStrategy]
+      CARD_STRATEGIES
     );
 
     expect(model.health).toEqual({ label: 'Borrador', tone: 'neutral' });
   });
 
-  it('uses a DBT card strategy for model context instead of DVT table ownership', () => {
+  it('uses the shared Model card while retaining dbt export context', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({
-        kind: 'dbt:model',
-        pluginId: 'dbt',
+        kind: 'dvt:transform',
+        pluginId: 'dvt',
         name: 'fct_orders',
         description: 'Daily finance orders',
         tags: ['finance', 'critical'],
         path: 'models/marts/fct_orders.sql',
         metadata: {
+          authority: 'dbt-project-files',
           package: 'analytics',
           dependencies: ['source.raw.orders', 'ref.stg_customers'],
           config: {
@@ -780,7 +791,7 @@ describe('buildGraphNodeCardReadModel', () => {
         },
       }),
       {},
-      [dbtGraphNodeCardStrategy]
+      CARD_STRATEGIES
     );
 
     expect(model.health).toEqual({ label: 'Draft', tone: 'neutral' });
@@ -807,8 +818,8 @@ describe('buildGraphNodeCardReadModel', () => {
   it('uses inherited presentation truth instead of reporting zero model columns', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({
-        kind: 'dbt:model',
-        pluginId: 'dbt',
+        kind: 'dvt:transform',
+        pluginId: 'dvt',
         role: 'transform',
         name: 'fct_orders',
       }),
@@ -853,7 +864,7 @@ describe('buildGraphNodeCardReadModel', () => {
           codeUnavailableMessage: 'No code.',
         },
       },
-      [dbtGraphNodeCardStrategy]
+      CARD_STRATEGIES
     );
 
     expect(model.metrics).toEqual([]);
@@ -882,8 +893,8 @@ describe('buildGraphNodeCardReadModel', () => {
       },
     };
     const node = buildNode({
-      kind: 'dbt:model',
-      pluginId: 'dbt',
+      kind: 'dvt:transform',
+      pluginId: 'dvt',
       role: 'transform',
       name: 'orders',
     });
@@ -910,7 +921,7 @@ describe('buildGraphNodeCardReadModel', () => {
           },
         },
       },
-      [dbtGraphNodeCardStrategy]
+      CARD_STRATEGIES
     );
     const authored = buildGraphNodeCardReadModel(
       node,
@@ -929,7 +940,7 @@ describe('buildGraphNodeCardReadModel', () => {
           code: { kind: 'inline', content: 'select order_id from raw_orders', language: 'sql' },
         },
       },
-      [dbtGraphNodeCardStrategy]
+      CARD_STRATEGIES
     );
     const fileBacked = buildGraphNodeCardReadModel(
       node,
@@ -948,7 +959,7 @@ describe('buildGraphNodeCardReadModel', () => {
           code: { kind: 'workspace-file', path: 'models/orders.sql', language: 'sql' },
         },
       },
-      [dbtGraphNodeCardStrategy]
+      CARD_STRATEGIES
     );
     const canonical = buildGraphNodeCardReadModel(
       buildNode({
@@ -978,7 +989,7 @@ describe('buildGraphNodeCardReadModel', () => {
           },
         },
       },
-      [dvtGraphNodeCardStrategy]
+      CARD_STRATEGIES
     );
 
     expect(generated.metrics).toEqual([]);
@@ -987,11 +998,11 @@ describe('buildGraphNodeCardReadModel', () => {
     expect(canonical.metrics).toEqual([]);
   });
 
-  it('adds DBT source operational metrics from recorded warehouse metadata', () => {
+  it('keeps Source row and byte evidence when dbt is the external authority', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({
-        kind: 'dbt:source',
-        pluginId: 'dbt',
+        kind: 'dvt:source',
+        pluginId: 'dvt',
         name: 'src_erp_orders',
         metadata: {
           database: 'RAW',
@@ -1005,7 +1016,7 @@ describe('buildGraphNodeCardReadModel', () => {
         },
       }),
       {},
-      [dbtGraphNodeCardStrategy]
+      CARD_STRATEGIES
     );
 
     expect(model.title).toBe('Raw · ERP');
@@ -1037,11 +1048,11 @@ describe('buildGraphNodeCardReadModel', () => {
     ]);
   });
 
-  it('uses the same DBT relation projection for title and path metadata', () => {
+  it('uses the same external dbt relation projection for title and path metadata', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({
-        kind: 'dbt:source',
-        pluginId: 'dbt',
+        kind: 'dvt:source',
+        pluginId: 'dvt',
         name: 'src_erp_orders',
         metadata: {
           database: 'RAW',
@@ -1052,7 +1063,7 @@ describe('buildGraphNodeCardReadModel', () => {
         },
       }),
       {},
-      [dbtGraphNodeCardStrategy]
+      CARD_STRATEGIES
     );
 
     expect(model.title).toBe('Raw · ERP');
@@ -1075,7 +1086,7 @@ describe('buildGraphNodeCardReadModel', () => {
         },
       }),
       {},
-      [dvtGraphNodeCardStrategy]
+      CARD_STRATEGIES
     );
 
     expect(model.operationalMetrics).toEqual([
@@ -1085,6 +1096,8 @@ describe('buildGraphNodeCardReadModel', () => {
         value: '2026-06-28T10:15:00Z',
         icon: 'refresh',
       },
+      { id: 'rows', label: 'Rows', value: 'Not calculated', icon: 'rows' },
+      { id: 'size', label: 'Size', value: 'Not calculated', icon: 'database' },
     ]);
     expect(model.operationalDetail).toBeNull();
   });
@@ -1105,7 +1118,7 @@ describe('buildGraphNodeCardReadModel', () => {
         },
       }),
       {},
-      [dbtGraphNodeCardStrategy]
+      CARD_STRATEGIES
     );
 
     expect(model.metrics).toEqual([

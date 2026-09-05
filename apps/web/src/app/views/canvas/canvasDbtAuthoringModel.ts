@@ -1,4 +1,4 @@
-/** Owned concern: derive and apply route-owned dbt card authoring metadata. */
+/** Owned concern: derive and apply route-owned dbt export/round-trip metadata. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 
 export type DbtNodeAuthoringMetadata = Readonly<{
@@ -62,11 +62,27 @@ function readProjectionColumns(value: unknown): readonly DbtModelProjectionColum
 }
 
 function readNodeMetadataRecord(
-  node: CanonicalNode,
+  node: Pick<CanonicalNode, 'metadata'>,
   key: string
 ): Record<string, unknown> | undefined {
   const value = node.metadata?.[key];
   return isRecord(value) ? value : undefined;
+}
+
+type DbtCompatibilityNode = Pick<CanonicalNode, 'kind' | 'metadata'>;
+
+export function hasDbtCompatibilityMetadata(node: DbtCompatibilityNode): boolean {
+  return (
+    readNodeMetadataRecord(node, 'dbt') != null || node.metadata?.authority === 'dbt-project-files'
+  );
+}
+
+export function isDbtCompatibleSource(node: DbtCompatibilityNode): boolean {
+  return node.kind === 'dvt:source' && hasDbtCompatibilityMetadata(node);
+}
+
+export function isDbtCompatibleModel(node: DbtCompatibilityNode): boolean {
+  return node.kind === 'dvt:transform' && hasDbtCompatibilityMetadata(node);
 }
 
 function normalizeIdentifier(value: string | undefined, fallback: string): string {
@@ -158,7 +174,8 @@ export function applyDbtNodeAuthoringMetadata(
 
 function isCompatibleDbtModelOrigin(node: CanonicalNode): boolean {
   return (
-    (node.pluginId === 'dbt' && (node.kind === 'dbt:source' || node.kind === 'dbt:model')) ||
+    isDbtCompatibleSource(node) ||
+    isDbtCompatibleModel(node) ||
     (node.pluginId === 'dvt.warehouse-source' && node.kind === 'dvt:source') ||
     (node.pluginId === 'dvt.object-file-postgres' && node.kind === 'dvt:object_file_load')
   );
@@ -196,7 +213,7 @@ export function reconcileDbtModelConnectedOrigin({
   nodes,
   edges,
 }: ReconcileDbtModelConnectedOriginArgs): CanonicalNode {
-  if (node.pluginId !== 'dbt' || node.kind !== 'dbt:model') return node;
+  if (!isDbtCompatibleModel(node)) return node;
 
   const nodeById = new Map(nodes.map((candidate) => [candidate.id, candidate]));
   const connectedOrigins = edges
@@ -249,7 +266,7 @@ function findConnectedSourceNode(args: {
     args.selectedSourceId ||
     [...connectedSourceIds].find((nodeId) => {
       const candidate = args.nodes.find((node) => node.id === nodeId);
-      return candidate?.pluginId === 'dbt' && candidate.kind === 'dbt:source';
+      return candidate != null && isDbtCompatibleSource(candidate);
     }) ||
     '';
 
@@ -257,8 +274,7 @@ function findConnectedSourceNode(args: {
     args.nodes.find(
       (candidate) =>
         candidate.id === sourceId &&
-        candidate.pluginId === 'dbt' &&
-        candidate.kind === 'dbt:source' &&
+        isDbtCompatibleSource(candidate) &&
         connectedSourceIds.has(candidate.id)
     ) ?? null
   );
@@ -269,7 +285,7 @@ export function resolveDbtSourceRelationshipSelection(args: {
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
 }): DbtSourceRelationshipSelection {
-  if (args.node.pluginId !== 'dbt' || args.node.kind !== 'dbt:model') {
+  if (!isDbtCompatibleModel(args.node)) {
     return {
       status: 'blocked',
       reason: 'not_dbt_model',

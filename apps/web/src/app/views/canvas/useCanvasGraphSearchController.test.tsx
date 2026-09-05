@@ -16,7 +16,7 @@ function graphNode(id: string, name: string): Node {
       name,
       description: `${name} description`,
       path: `models/${id}.sql`,
-      pluginKind: 'dbt:model',
+      pluginKind: 'dvt:transform',
       pluginId: 'dbt',
       role: 'transform',
       tags: ['finance'],

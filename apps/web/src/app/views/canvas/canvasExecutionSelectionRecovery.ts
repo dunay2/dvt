@@ -21,7 +21,7 @@ type CanvasExecutionSelectionRecoveryGraph = Readonly<{
 
 export function buildCanvasExecutionSelectionRecoveryGraph(
   args: Readonly<{
-    canonicalNodes: readonly Pick<CanonicalNode, 'id' | 'pluginId' | 'kind'>[];
+    canonicalNodes: readonly Pick<CanonicalNode, 'id' | 'pluginId' | 'kind' | 'metadata'>[];
     canonicalEdges: readonly Pick<CanonicalEdge, 'sourceId' | 'targetId'>[];
     workspaceNodeIds: readonly string[];
     plannerGraphSource: GenericGraphSourceV1 | null;

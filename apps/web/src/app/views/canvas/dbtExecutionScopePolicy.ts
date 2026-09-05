@@ -5,6 +5,7 @@ import {
 } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { isDbtCompatibleModel } from './canvasDbtAuthoringModel';
 import { isObjectFilePostgresNode } from './objectFilePostgresAuthoringModel';
 import { isHttpJsonArtifactNode } from './httpJsonArtifactAuthoringModel';
 import {
@@ -20,18 +21,20 @@ export const DBT_EXECUTION_SCOPE_REJECTION = {
 } as const;
 
 export const DBT_EXECUTABLE_STEP_KIND_BY_NODE_KIND = {
-  'dbt:model': 'DBT_MODEL',
   'dbt:test': 'DBT_TEST',
   'dbt:snapshot': 'DBT_SNAPSHOT',
 } as const;
 
-export function resolveDbtExecutableStepKind(node: Pick<CanonicalNode, 'pluginId' | 'kind'>) {
+export function resolveDbtExecutableStepKind(
+  node: Pick<CanonicalNode, 'pluginId' | 'kind' | 'metadata'>
+) {
   if (isHttpJsonArtifactNode(node)) {
     return ACQUIRE_HTTP_JSON_ARTIFACT_STEP_KIND;
   }
   if (isObjectFilePostgresNode(node)) {
     return LOAD_OBJECT_FILE_TO_POSTGRES_STEP_KIND;
   }
+  if (isDbtCompatibleModel(node)) return 'DBT_MODEL';
   if (node.pluginId !== 'dbt') return null;
 
   return (
@@ -42,7 +45,7 @@ export function resolveDbtExecutableStepKind(node: Pick<CanonicalNode, 'pluginId
 }
 
 export function isDbtExecutionSelectableNode(
-  node: Pick<CanonicalNode, 'pluginId' | 'kind'>
+  node: Pick<CanonicalNode, 'pluginId' | 'kind' | 'metadata'>
 ): boolean {
   return resolveDbtExecutableStepKind(node) !== null;
 }
@@ -74,7 +77,7 @@ export type DbtExecutionScopeGraph = Readonly<{
 }>;
 
 export function buildDbtExecutionScopeGraph(args: {
-  readonly nodes: readonly Pick<CanonicalNode, 'id' | 'pluginId' | 'kind'>[];
+  readonly nodes: readonly Pick<CanonicalNode, 'id' | 'pluginId' | 'kind' | 'metadata'>[];
   readonly edges: readonly Pick<CanonicalEdge, 'sourceId' | 'targetId'>[];
   readonly workspaceNodeIds: readonly string[];
 }): DbtExecutionScopeGraph {

@@ -74,7 +74,7 @@ describe('plugin runtime projection architecture', () => {
       getAllNodeKinds(capabilities).map((registration) => registration.pluginId)
     ).not.toContain('dbt');
     expect(getPluginPortMap(capabilities).has('dbt')).toBe(false);
-    expect(getNodeRenderer('dbt:model', FallbackRenderer, capabilities)).toBe(FallbackRenderer);
+    expect(getNodeRenderer('dbt:test', FallbackRenderer, capabilities)).toBe(FallbackRenderer);
     expect(getGraphNodeCardStrategies(capabilities).map((strategy) => strategy.id)).not.toContain(
       'dbt-card'
     );

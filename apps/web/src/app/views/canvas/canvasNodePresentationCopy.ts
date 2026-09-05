@@ -205,9 +205,8 @@ export function buildCanvasNodePresentationCopy(
     columnLabels: nodePropertyCopy.columnLabels,
     valueLabels: nodePropertyCopy.valueLabels,
     kindLabels: {
-      'dbt:source': copy.nodePresentationSourceKindLabel,
       'dvt:source': copy.nodePresentationSourceKindLabel,
-      'dbt:model': copy.nodePresentationModelKindLabel,
+      'dvt:transform': copy.nodePresentationModelKindLabel,
       'dbt:test': copy.nodePresentationTestKindLabel,
     },
   };

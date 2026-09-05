@@ -25,11 +25,11 @@ import {
 } from './canvasColumnOutputAuthoring';
 import { reorderCanvasStructuredFieldChildren } from './canvasStructuredFieldAuthoring';
 import { resolveCanvasColumnMappingTarget } from './canvasColumnProjectionAuthority';
+import { isDbtCompatibleModel } from './canvasDbtAuthoringModel';
 import {
   configureDbtModelColumnOrder,
   configureDbtModelColumnOutput,
 } from './canvasDbtModelColumnCommand';
-import { isReorderableCanvasSource, reorderCanvasSourceColumns } from './canvasSourceColumnOrder';
 import type { GraphNodeColumnOutputToggleIdentity } from '../../plugins/graph/graphNodeColumnContracts';
 import {
   createCanvasColumnHandleId,
@@ -226,7 +226,7 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
         return;
       }
       const targetNode = resolveCurrentNode(state, identity.nodeId);
-      const dbtTarget = targetNode?.pluginId === 'dbt' && targetNode.kind === 'dbt:model';
+      const dbtTarget = targetNode != null && isDbtCompatibleModel(targetNode);
       if (dbtTarget) {
         const result = configureDbtModelColumnOutput({
           draftSession: state.draftSession,
@@ -292,24 +292,8 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
         effects.setDraftSession(result.draftSession);
         return;
       }
-      if (targetNode?.pluginId === 'dbt' && targetNode.kind === 'dbt:model') {
+      if (targetNode != null && isDbtCompatibleModel(targetNode)) {
         const result = configureDbtModelColumnOrder({
-          draftSession: state.draftSession,
-          canonicalNodesById: state.canonicalNodesById,
-          nodeId: identity.nodeId,
-          columnName: identity.columnId,
-          targetColumnName: identity.targetColumnId,
-          placement: identity.placement,
-        });
-        if (result.outcome === 'rejected') {
-          toast.error(canvasViewCopy.columnMappingUnavailableMessage);
-          return;
-        }
-        effects.setDraftSession(result.draftSession);
-        return;
-      }
-      if (isReorderableCanvasSource(targetNode)) {
-        const result = reorderCanvasSourceColumns({
           draftSession: state.draftSession,
           canonicalNodesById: state.canonicalNodesById,
           nodeId: identity.nodeId,

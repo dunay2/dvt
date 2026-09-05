@@ -11,8 +11,8 @@ function node(id: string): CanonicalNode {
   return {
     id,
     name: id,
-    pluginId: 'dbt',
-    kind: 'dbt:model',
+    pluginId: 'dvt',
+    kind: 'dvt:transform',
     role: 'transform',
     status: 'idle',
     tags: [],

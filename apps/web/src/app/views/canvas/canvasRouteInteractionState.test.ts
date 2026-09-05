@@ -25,7 +25,7 @@ describe('canvasRouteInteractionState', () => {
           position: { x: 0, y: 0 },
           data: {
             name: 'orders',
-            pluginKind: 'dbt:model',
+            pluginKind: 'dvt:transform',
           },
         },
       ] as unknown as CanvasController['nodesWithImpact'],

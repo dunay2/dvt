@@ -94,7 +94,7 @@ describe('resolveCanvasNodeWorkbenchSectionModel', () => {
 
   it('orders Code first and removes empty unsupported sections', () => {
     const result = resolveCanvasNodeWorkbenchSectionModel({
-      nodeKind: 'dbt:model',
+      nodeKind: 'dvt:transform',
       canEditNode: true,
       canOpenNodeCode: false,
       strategySectionIds: ['properties', 'columns', 'tests', 'lineage'],
@@ -123,11 +123,12 @@ describe('resolveCanvasNodeWorkbenchSectionModel', () => {
     expect(result.sections.map(({ id }) => id)).toEqual([
       'code',
       'general',
+      'columns',
       'inputs-outputs',
       'keys',
       'summary',
     ]);
-    expect(result.primarySectionIds).toEqual(['code', 'general', 'inputs-outputs']);
+    expect(result.primarySectionIds).toEqual(['code', 'general', 'columns', 'inputs-outputs']);
   });
 
   it('keeps editor-only sections and contribution hosts even before they contain facts', () => {
@@ -152,7 +153,7 @@ describe('resolveCanvasNodeWorkbenchSectionModel', () => {
 
   it('keeps file-backed Code and recorded Summary reachable while passive empty sections stay absent', () => {
     const result = resolveCanvasNodeWorkbenchSectionModel({
-      nodeKind: 'dbt:model',
+      nodeKind: 'dvt:transform',
       canEditNode: false,
       canOpenNodeCode: true,
       strategySectionIds: ['properties', 'columns', 'tests', 'lineage', 'code'],

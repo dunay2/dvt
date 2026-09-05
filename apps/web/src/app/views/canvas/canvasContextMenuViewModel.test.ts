@@ -21,7 +21,7 @@ describe('canvasContextMenuViewModel', () => {
       canMutateGraph: true,
       canOpenCanvasSettings: true,
       authoringNodeKinds: [
-        buildTestNodeKind('dbt:model', 'Model'),
+        buildTestNodeKind('dvt:transform', 'Model'),
         buildTestNodeKind('dvt:transform', 'Transform'),
       ],
     });
@@ -56,7 +56,7 @@ describe('canvasContextMenuViewModel', () => {
   });
 
   it('groups add-node catalog entries only after the add catalog action is selected', () => {
-    const modelKind = buildTestNodeKind('dbt:model', 'Model');
+    const modelKind = buildTestNodeKind('dvt:transform', 'Model');
     const transformKind = buildTestNodeKind('dvt:transform', 'Transform');
     const model = buildCanvasContextMenuModel({
       target: {
@@ -82,14 +82,14 @@ describe('canvasContextMenuViewModel', () => {
         id: 'add',
         items: [
           {
-            id: 'create-node:dbt:model',
+            id: 'create-node:dvt:transform',
             label: 'Add model',
             kind: 'catalog',
             action: catalogModel.catalogActions[0],
           },
           {
             id: 'create-node:dvt:transform',
-            label: 'Add transformation',
+            label: 'Add model',
             kind: 'catalog',
             action: catalogModel.catalogActions[1],
           },

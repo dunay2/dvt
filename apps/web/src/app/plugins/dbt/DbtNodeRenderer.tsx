@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import type { ReactElement } from 'react';
 import { Clock, Code, Info, Loader2, Table } from 'lucide-react';
 
 import { Badge } from '../../components/ui/badge';
@@ -29,13 +28,19 @@ import type {
 } from '../../types/canonical';
 import type { RunEvent as EngineRunEvent } from '../../types/engine';
 import type { InspectorPanelContribution, InspectorPanelProps } from '../contracts/PluginManifest';
-import type { NodeRendererProps } from '../contracts/NodeRendering';
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
 import { graphStatusBadgeClasses } from '../graph/graphVisualTokens';
-import { projectGraphNodeCardViewProps } from '../graph/graphNodeCardReadModel';
-import { GraphNodeCardView } from '../graph/GraphNodeCardView';
 
 const DBT_PLUGIN_ID = 'dbt';
+
+function supportsDbtInspector(node: InspectorPanelProps['node']): boolean {
+  const dbt = node.metadata?.dbt;
+  return (
+    node.pluginId === DBT_PLUGIN_ID ||
+    node.metadata?.authority === 'dbt-project-files' ||
+    (typeof dbt === 'object' && dbt !== null && !Array.isArray(dbt))
+  );
+}
 
 const DBT_INSPECTOR_COPY = {
   en: {
@@ -170,10 +175,6 @@ export function buildDbtNodeRunHistoryEntries(
         stepId: presentation.stepId,
       };
     });
-}
-
-export function DbtNodeRenderer(props: Readonly<NodeRendererProps>): ReactElement {
-  return <GraphNodeCardView {...projectGraphNodeCardViewProps(props)} />;
 }
 
 function DbtOverviewPanel({ node, tagsEditor }: InspectorPanelProps) {
@@ -564,7 +565,7 @@ export const dbtInspectorPanels: InspectorPanelContribution[] = [
     },
     icon: Info,
     order: 10,
-    shouldShow: (node) => node.pluginId === DBT_PLUGIN_ID,
+    shouldShow: supportsDbtInspector,
     component: DbtOverviewPanel,
   },
   {
@@ -573,7 +574,7 @@ export const dbtInspectorPanels: InspectorPanelContribution[] = [
     label: 'SQL',
     icon: Code,
     order: 20,
-    shouldShow: (node) => node.pluginId === DBT_PLUGIN_ID && node.metadata?.compiledSql != null,
+    shouldShow: (node) => supportsDbtInspector(node) && node.metadata?.compiledSql != null,
     component: DbtSqlPanel,
   },
   {
@@ -587,7 +588,7 @@ export const dbtInspectorPanels: InspectorPanelContribution[] = [
     icon: Table,
     order: 40,
     shouldShow: (node) =>
-      node.pluginId === DBT_PLUGIN_ID &&
+      supportsDbtInspector(node) &&
       Array.isArray(node.metadata?.columns) &&
       (node.metadata.columns as unknown[]).length > 0,
     component: DbtColumnsPanel,
@@ -602,7 +603,7 @@ export const dbtInspectorPanels: InspectorPanelContribution[] = [
     },
     icon: Clock,
     order: 50,
-    shouldShow: (node) => node.pluginId === DBT_PLUGIN_ID,
+    shouldShow: supportsDbtInspector,
     component: DbtHistoryPanel,
   },
 ];

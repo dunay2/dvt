@@ -38,15 +38,15 @@ describe('DbtNodeComponent plugin failure containment', () => {
       version: '1.0.0',
       nodeRenderers: new Map([
         [
-          'dbt:model',
-          { kind: 'dbt:model', priority: Number.MAX_SAFE_INTEGER, component: ThrowingRenderer },
+          'dvt:transform',
+          { kind: 'dvt:transform', priority: Number.MAX_SAFE_INTEGER, component: ThrowingRenderer },
         ],
       ]),
       nodeBadges: [
         {
           id: 'failing-badge',
           pluginId: 'failure-containment-test',
-          forKinds: ['dbt:model'],
+          forKinds: ['dvt:transform'],
           priority: 20,
           getBadge: () => ({
             icon: ThrowingBadgeIcon as never,
@@ -58,7 +58,7 @@ describe('DbtNodeComponent plugin failure containment', () => {
         {
           id: 'healthy-badge',
           pluginId: 'failure-containment-test',
-          forKinds: ['dbt:model'],
+          forKinds: ['dvt:transform'],
           priority: 10,
           getBadge: () => ({
             text: 'Healthy',

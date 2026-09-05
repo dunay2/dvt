@@ -361,6 +361,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/plugins/graph/graphNodeCardPresentation.test.ts
   - apps/web/src/app/plugins/graph/graphNodeCardReadModel.ts
   - apps/web/src/app/plugins/graph/graphNodeCardReadModel.test.ts
+  - apps/web/src/app/plugins/graph/sharedSourceModelGraphNodeCardStrategy.ts
   - apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts
   - apps/web/src/app/plugins/graph/graphVisualTokens.ts
   - apps/web/src/app/plugins/dvt/dvtGraphNodeCardStrategy.ts
@@ -859,6 +860,14 @@ symbols:
     architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
     cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
     unitTests: [node --test scripts/run-selected-closure-live-proof.test.cjs]
+  - { name: SHARED_SOURCE_MODEL_KINDS, path: apps/web/src/app/plugins/graph/sharedSourceModelGraphNodeCardStrategy.ts, dddOwner: CanvasGraphPresentation, cqRails: [ProjectGraphNodeCardReadModel], fowlerSignals: [Duplicate semantics], architectureGuard: pnpm --filter @dvt/web test:architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts, unitTests: [apps/web/src/app/plugins/graph/graphNodeCardReadModel.test.ts] }
+  - { name: buildAuthorityMetrics, path: apps/web/src/app/plugins/graph/sharedSourceModelGraphNodeCardStrategy.ts, dddOwner: CanvasGraphPresentation, cqRails: [ProjectGraphNodeCardReadModel], fowlerSignals: [Hidden authority], architectureGuard: pnpm --filter @dvt/web test:architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts, unitTests: [apps/web/src/app/plugins/graph/graphNodeCardReadModel.test.ts] }
+  - { name: buildSharedSourceModelCard, path: apps/web/src/app/plugins/graph/sharedSourceModelGraphNodeCardStrategy.ts, dddOwner: CanvasGraphPresentation, cqRails: [ProjectGraphNodeCardReadModel], fowlerSignals: [Duplicate semantics], architectureGuard: pnpm --filter @dvt/web test:architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts, unitTests: [apps/web/src/app/plugins/graph/graphNodeCardReadModel.test.ts] }
+  - { name: buildTitleDetail, path: apps/web/src/app/plugins/graph/sharedSourceModelGraphNodeCardStrategy.ts, dddOwner: CanvasGraphPresentation, cqRails: [ProjectGraphNodeCardReadModel], fowlerSignals: [Duplicate semantics], architectureGuard: pnpm --filter @dvt/web test:architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts, unitTests: [apps/web/src/app/plugins/graph/graphNodeCardReadModel.test.ts] }
+  - { name: isSharedSourceModelKind, path: apps/web/src/app/plugins/graph/sharedSourceModelGraphNodeCardStrategy.ts, dddOwner: CanvasGraphPresentation, cqRails: [ProjectGraphNodeCardReadModel], fowlerSignals: [Primitive obsession], architectureGuard: pnpm --filter @dvt/web test:architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts, unitTests: [apps/web/src/app/plugins/graph/graphNodeCardReadModel.test.ts] }
+  - { name: resolveMaterialization, path: apps/web/src/app/plugins/graph/sharedSourceModelGraphNodeCardStrategy.ts, dddOwner: CanvasGraphPresentation, cqRails: [ProjectGraphNodeCardReadModel], fowlerSignals: [Hidden authority], architectureGuard: pnpm --filter @dvt/web test:architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts, unitTests: [apps/web/src/app/plugins/graph/graphNodeCardReadModel.test.ts] }
+  - { name: resolveMaterializationIcon, path: apps/web/src/app/plugins/graph/sharedSourceModelGraphNodeCardStrategy.ts, dddOwner: CanvasGraphPresentation, cqRails: [ProjectGraphNodeCardReadModel], fowlerSignals: [Duplicate semantics], architectureGuard: pnpm --filter @dvt/web test:architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts, unitTests: [apps/web/src/app/plugins/graph/graphNodeCardReadModel.test.ts] }
+  - { name: sharedSourceModelGraphNodeCardStrategy, path: apps/web/src/app/plugins/graph/sharedSourceModelGraphNodeCardStrategy.ts, dddOwner: CanvasGraphPresentation, cqRails: [ProjectGraphNodeCardReadModel], fowlerSignals: [Replace conditional with strategy], architectureGuard: pnpm --filter @dvt/web test:architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts, unitTests: [apps/web/src/app/plugins/graph/graphNodeCardReadModel.test.ts] }
 fowlerSignals:
   - duplicate node gestures and adjacent action surfaces
   - split Code versus Workbench node-entry semantics

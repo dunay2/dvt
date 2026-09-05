@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  CANONICAL_EDGE_RELATIONS,
-  CANONICAL_NODE_STATUSES,
-  CORE_NODE_ROLES,
-} from './canonical';
+import { CANONICAL_EDGE_RELATIONS, CANONICAL_NODE_STATUSES, CORE_NODE_ROLES } from './canonical';
 import {
   isPluginNodeKind,
   isCanonicalEdgeRelation,
@@ -30,10 +26,10 @@ describe('canonicalGuards', () => {
   });
 
   it('parses plugin node kinds through one canonical helper', () => {
-    expect(isPluginNodeKind('dbt:model')).toBe(true);
-    expect(parsePluginNodeKind('dbt:model')).toEqual({
-      pluginId: 'dbt',
-      nodeKind: 'model',
+    expect(isPluginNodeKind('dvt:transform')).toBe(true);
+    expect(parsePluginNodeKind('dvt:transform')).toEqual({
+      pluginId: 'dvt',
+      nodeKind: 'transform',
     });
   });
 
@@ -41,6 +37,6 @@ describe('canonicalGuards', () => {
     expect(isPluginNodeKind('dbt')).toBe(false);
     expect(isPluginNodeKind('dbt:')).toBe(false);
     expect(isPluginNodeKind(':model')).toBe(false);
-    expect(isPluginNodeKind('dbt:model:extra')).toBe(false);
+    expect(isPluginNodeKind('dvt:transform:extra')).toBe(false);
   });
 });

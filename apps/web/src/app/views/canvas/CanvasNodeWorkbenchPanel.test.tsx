@@ -114,8 +114,8 @@ const SOURCE_NODE: CanonicalNode = {
 const MODEL_NODE: CanonicalNode = {
   id: 'model.orders',
   name: 'Orders Model',
-  pluginId: 'dbt',
-  kind: 'dbt:model',
+  pluginId: 'dvt',
+  kind: 'dvt:transform',
   role: 'transform',
   status: 'idle',
   tags: [],

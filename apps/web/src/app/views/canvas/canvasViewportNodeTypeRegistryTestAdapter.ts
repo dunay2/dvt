@@ -9,6 +9,6 @@ export function getCanvasViewportRegistryMock(): typeof resolveNodeKindRegistrat
 export function resetCanvasViewportNodeTypeRegistryTestAdapter(): void {
   resolveNodeKindRegistration.mockReset();
   resolveNodeKindRegistration.mockImplementation((kind: string) => ({
-    minimapColor: kind === 'dbt:model' ? '#22c55e' : '#6b7280',
+    minimapColor: kind === 'dvt:transform' ? '#22c55e' : '#6b7280',
   }));
 }

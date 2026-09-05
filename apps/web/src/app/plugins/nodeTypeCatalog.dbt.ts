@@ -1,13 +1,4 @@
-import {
-  Cpu,
-  Database,
-  FileText,
-  Package,
-  Presentation,
-  Table,
-  TestTube,
-  TrendingUp,
-} from 'lucide-react';
+import { Cpu, FileText, Package, Presentation, TestTube, TrendingUp } from 'lucide-react';
 
 import type { CoreNodeRole, PluginNodeKind } from '../types/canonical';
 import type { DbtNodeType } from '../types/dbt';
@@ -16,28 +7,6 @@ import { resolveGraphNodeKindTone } from './graph/graphVisualTokens';
 import type { EdgeTypeStrategy, NodeKindRegistration } from './nodeTypeContracts';
 
 export const DBT_NODE_KINDS: NodeKindRegistration[] = [
-  {
-    kind: 'dbt:source',
-    pluginId: 'dbt',
-    label: 'Source',
-    role: 'input',
-    icon: Database,
-    ...resolveGraphNodeKindTone('dbt:source'),
-    allowsIncoming: false,
-    allowsOutgoing: true,
-    supportsColumns: true,
-  },
-  {
-    kind: 'dbt:model',
-    pluginId: 'dbt',
-    label: 'Model',
-    role: 'transform',
-    icon: Table,
-    ...resolveGraphNodeKindTone('dbt:model'),
-    allowsIncoming: true,
-    allowsOutgoing: true,
-    supportsColumns: true,
-  },
   {
     kind: 'dbt:seed',
     pluginId: 'dbt',
@@ -107,8 +76,8 @@ export const DBT_NODE_KINDS: NodeKindRegistration[] = [
 ];
 
 export const DBT_TYPE_TO_KIND: Record<DbtNodeType, PluginNodeKind> = {
-  SOURCE: 'dbt:source',
-  MODEL: 'dbt:model',
+  SOURCE: 'dvt:source',
+  MODEL: 'dvt:transform',
   SEED: 'dbt:seed',
   SNAPSHOT: 'dbt:snapshot',
   TEST: 'dbt:test',

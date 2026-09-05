@@ -13,8 +13,9 @@ task_id: 2915
 
 ### Problem and root cause
 
-Creating and connecting a `dbt:model` currently produces SQL and then presents
-that SQL in `DbtModelCodeAuthoringSection` through `MonacoCodeEditor`. An edit is
+Before the shared-kind hard cut, creating and connecting a dbt-qualified Model
+produced SQL and presented it in `DbtModelCodeAuthoringSection` through
+`MonacoCodeEditor`. An edit was
 stored as `metadata.config.sql`; `projectDbtModelArtifact` subsequently treats
 that value as authored authority and stops deriving the body from the connected
 graph. The generated projection can therefore become an autonomous second model
@@ -42,13 +43,13 @@ dbt files are outputs, not a silent alternative authoring authority.
   through an implicit ownership transition.
 - Legacy `metadata.sql` and `metadata.config.sql` must not continue to influence
   a graph-draft Model projection.
-- Column selection, reordering, and semantic-function affordances must not be
-  disabled by a historical authored-SQL branch.
+- Supported external dbt column selection and reordering must not be disabled
+  by a historical authored-SQL branch. Native semantic functions require DVT
+  Model authority.
 - External dbt file authority remains a separate explicit mode under ADR-0060;
   this slice does not invent adoption or round-trip semantics.
-- The complete `dbt:model` to shared DVT Model/Transform Substrait convergence is
-  owned by issue #2903. This slice removes the SQL authority conflict without
-  claiming that the legacy node species has already converged.
+- Shared Source/Model product kinds and explicit dbt compatibility metadata
+  are owned by issue #2903. This slice removes the SQL authority conflict.
 - No API, engine, planner, contracts, adapters, or database behavior changes.
 
 ### Command/query rail posture
@@ -66,9 +67,9 @@ No SQL-authoring command, reverse parser, service, route, or store is added.
 2. Keep editing but add an explicit "take ownership" confirmation. Rejected
    because ADR-0060 has no graph-draft-to-file-authority transition in MVP and
    ADR-0064 does not make SQL the native semantic model.
-3. Convert every newly created `dbt:model` to `dvt:transform` in this issue.
-   Rejected as undeclared expansion: shared node/card convergence and migration
-   policy belong to #2903.
+3. Convert every newly created dbt-qualified Model into another node kind.
+   Rejected because #2903 instead keeps one stable `dvt:transform` identity and
+   represents dbt compatibility as metadata.
 4. Selected: remove writable SQL state and the authored projection branch;
    present generated SQL in the existing read-only Monaco viewer and prove that
    Preview persists the regenerated artifact.
@@ -146,7 +147,6 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts
   - apps/web/src/app/views/canvas/canvasDbtModelColumnAuthoring.ts
   - apps/web/src/app/views/canvas/canvasColumnFunctionMenuProjection.ts
-  - apps/web/src/app/views/canvas/canvasGeneratedDbtModelReplacement.ts
   - apps/web/src/app/views/canvas/canvasColumnFunctionAuthoring.test.ts
   - apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts
   - apps/web/src/app/views/canvas/useCanvasControllerReadModel.ts

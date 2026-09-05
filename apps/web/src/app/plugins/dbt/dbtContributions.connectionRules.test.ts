@@ -20,16 +20,16 @@ function buildNode(kind: `${string}:${string}`, role: CanonicalNode['role']): Ca
 describe('dbtContributions connection rules', () => {
   const allowedPairs = new Set([
     ...DBT_NODE_KINDS.map(({ kind }) => `dbt:macro->${kind}`),
-    'dbt:source->dbt:model',
-    'dbt:source->dbt:test',
-    'dbt:seed->dbt:model',
+    'dvt:source->dvt:transform',
+    'dvt:source->dbt:test',
+    'dbt:seed->dvt:transform',
     'dbt:seed->dbt:test',
-    'dbt:model->dbt:model',
-    'dbt:model->dbt:test',
-    'dbt:model->dbt:snapshot',
-    'dbt:model->dbt:exposure',
-    'dbt:model->dbt:metric',
-    'dbt:snapshot->dbt:model',
+    'dvt:transform->dvt:transform',
+    'dvt:transform->dbt:test',
+    'dvt:transform->dbt:snapshot',
+    'dvt:transform->dbt:exposure',
+    'dvt:transform->dbt:metric',
+    'dbt:snapshot->dvt:transform',
     'dbt:snapshot->dbt:test',
   ]);
   const connectionMatrix = DBT_NODE_KINDS.flatMap((source) =>

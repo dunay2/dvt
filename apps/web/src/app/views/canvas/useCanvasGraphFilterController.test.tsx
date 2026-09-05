@@ -128,7 +128,7 @@ function graphNodes(): Node[] {
       position: { x: 0, y: 0 },
       data: {
         pluginId: 'dbt',
-        pluginKind: 'dbt:source',
+        pluginKind: 'dvt:source',
         role: 'input',
         status: 'success',
         tags: ['finance'],
@@ -139,7 +139,7 @@ function graphNodes(): Node[] {
       position: { x: 1, y: 0 },
       data: {
         pluginId: 'dbt',
-        pluginKind: 'dbt:model',
+        pluginKind: 'dvt:transform',
         role: 'transform',
         status: 'failed',
         tags: ['finance'],

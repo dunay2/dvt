@@ -297,7 +297,6 @@ export default function CanvasShell({
         const canInspectNodeCode =
           typeof data.onInspectNode === 'function' &&
           (workspaceFilePath != null ||
-            data.pluginKind === 'dbt:model' ||
             codeTruthKind === 'inline' ||
             codeTruthKind === 'generated' ||
             codeTruthKind === 'canonical');

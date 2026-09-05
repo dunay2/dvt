@@ -40,8 +40,8 @@ describe('CanvasAddNodeCatalogView', () => {
     expect(container.textContent).toContain('Add source');
     expect(container.textContent).toContain('Sources');
     expect(container.textContent).toContain('Attach a governed warehouse or dbt source');
-    expect(container.textContent).toContain('Add transformation');
-    expect(container.textContent).toContain('Transformations');
+    expect(container.textContent).toContain('Add model');
+    expect(container.textContent).toContain('Models');
     expect(
       container.querySelectorAll('[data-slot="canvas-context-menu-add-catalog-category"]')
     ).toHaveLength(2);
@@ -67,7 +67,7 @@ describe('CanvasAddNodeCatalogView', () => {
       input.dispatchEvent(new Event('input', { bubbles: true }));
     });
 
-    expect(container.textContent).toContain('Add transformation');
+    expect(container.textContent).toContain('Add model');
     expect(container.textContent).not.toContain('Add source');
   });
 
@@ -76,13 +76,13 @@ describe('CanvasAddNodeCatalogView', () => {
     await renderCatalog(onSelectItem);
 
     await act(async () => {
-      findButton('Add transformation')?.click();
+      findButton('Add model')?.click();
     });
 
     expect(onSelectItem).toHaveBeenCalledWith(
       expect.objectContaining({
         id: 'create-node:dvt:transform',
-        category: 'transformation',
+        category: 'model',
       })
     );
   });

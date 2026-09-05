@@ -5,6 +5,8 @@ import { buildCanvasNodePresentationTruth } from '../../components/canvas/canvas
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
   createDbtNodeAuthoringMetadata,
+  isDbtCompatibleModel,
+  isDbtCompatibleSource,
   resolveDbtModelConnectedOrigin,
   type DbtNodeAuthoringMetadata,
 } from './canvasDbtAuthoringModel';
@@ -85,24 +87,16 @@ export function normalizeDbtArtifactIdentifier(value: string, fallback: string):
   return normalized.length > 0 ? normalized : fallback;
 }
 
-function isDbtSource(node: CanonicalNode): boolean {
-  return node.pluginId === 'dbt' && node.kind === 'dbt:source';
-}
-
 function isWarehouseSource(node: CanonicalNode): boolean {
   return node.pluginId === 'dvt.warehouse-source' && node.kind === 'dvt:source';
 }
 
-function isDbtModel(node: CanonicalNode): boolean {
-  return node.pluginId === 'dbt' && node.kind === 'dbt:model';
-}
-
 function isCompatibleOrigin(node: CanonicalNode): boolean {
   return (
-    isDbtSource(node) ||
+    isDbtCompatibleSource(node) ||
     isWarehouseSource(node) ||
     isObjectFilePostgresNode(node) ||
-    isDbtModel(node)
+    isDbtCompatibleModel(node)
   );
 }
 
@@ -119,7 +113,7 @@ export function resolveCompatibleDbtModelOrigins(
 function projectSourceOrigin(
   origin: CanonicalNode
 ): DbtModelOriginProjection | DbtModelArtifactProjectionResult {
-  if (isDbtSource(origin)) {
+  if (isDbtCompatibleSource(origin)) {
     const metadata = createDbtNodeAuthoringMetadata(origin);
     return {
       nodeId: origin.id,
@@ -215,7 +209,11 @@ function resolveOriginProjection(
     };
   }
 
-  if (isDbtSource(origin) || isWarehouseSource(origin) || isObjectFilePostgresNode(origin)) {
+  if (
+    isDbtCompatibleSource(origin) ||
+    isWarehouseSource(origin) ||
+    isObjectFilePostgresNode(origin)
+  ) {
     const projection = projectSourceOrigin(origin);
     if ('ok' in projection) {
       return projection;
@@ -296,7 +294,7 @@ function projectDbtModelArtifactInternal(
   args: ProjectDbtModelArtifactArgs,
   ancestorModelIds: ReadonlySet<string>
 ): DbtModelArtifactProjectionResult {
-  if (!isDbtModel(args.modelNode)) {
+  if (!isDbtCompatibleModel(args.modelNode)) {
     return {
       ok: false,
       reason: 'not_dbt_model',

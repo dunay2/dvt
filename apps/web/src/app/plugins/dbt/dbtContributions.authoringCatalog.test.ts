@@ -8,6 +8,9 @@ describe('dbt plugin node catalog', () => {
     expect(dbtContributions.nodeKinds?.map((registration) => registration.kind)).toEqual(
       DBT_NODE_KINDS.map((registration) => registration.kind)
     );
+    expect(DBT_NODE_KINDS.map((registration) => registration.label)).not.toEqual(
+      expect.arrayContaining(['Source', 'Model'])
+    );
     expect(dbtContributions.canvasKinds).toBeUndefined();
   });
 });

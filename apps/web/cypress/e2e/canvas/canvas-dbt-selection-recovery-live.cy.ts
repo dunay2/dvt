@@ -36,7 +36,7 @@ function visitCleanDbtCanvas(): void {
 function addDbtModelAt(x: number, y: number): void {
   openCanvasContextMenuAt(x, y);
   clickCanvasContextMenuItem(/^(Add|Anadir)\.\.\.$/);
-  clickCanvasAddCatalogAction('create-node', 'dbt:model');
+  clickCanvasAddCatalogAction('create-node', 'dvt:transform');
 }
 
 function readPersistedNodeIds(response: Cypress.Response<unknown>): readonly string[] | null {

@@ -8,6 +8,7 @@ import type { CanvasNodeDropContracts } from './canvasGraphHandlerContracts';
 import { canvasDraftSessionWorkingSet } from './canvasDraftSessionWorkingSet';
 import { canvasViewCopy, formatCanvasNodeAddedMessage } from './copy';
 import { parseCanonicalNodeDragPayload } from './canvasNodeDropPayload';
+import { hasDbtCompatibilityMetadata } from './canvasDbtAuthoringModel';
 import { useCanvasNodeAdmissionCommandRunner } from './useCanvasNodeAdmissionCommandRunner';
 
 type UseCanvasNodeDropHandlersArgs = CanvasNodeDropContracts;
@@ -124,7 +125,7 @@ export function useCanvasNodeDropHandlers({
         },
       };
 
-      if (targetNode.pluginId === 'dbt') {
+      if (hasDbtCompatibilityMetadata(targetNode)) {
         nextMetadata.dbt = {
           ...readRecord(existingMetadata.dbt),
           schemaName: normalizedSchemaName,

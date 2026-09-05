@@ -216,8 +216,6 @@ export const graphNodeKindToneClasses: Record<string, GraphNodeKindTone> = {
 };
 
 const graphNodeKindToneByKind: Partial<Record<PluginNodeKind, GraphNodeKindTone>> = {
-  'dbt:source': graphNodeKindToneClasses.input,
-  'dbt:model': graphNodeKindToneClasses.transform,
   'dbt:seed': graphNodeKindToneClasses.seed,
   'dbt:snapshot': graphNodeKindToneClasses.snapshot,
   'dbt:test': graphNodeKindToneClasses.check,

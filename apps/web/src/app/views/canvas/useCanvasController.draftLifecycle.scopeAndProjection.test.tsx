@@ -55,8 +55,8 @@ function configureProtectedSemanticProjectionHarness(harness: CanvasControllerHa
     {
       id: 'node_remote_only',
       name: 'remote_only',
-      pluginId: 'dbt',
-      kind: 'dbt:model',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
       role: 'transform',
       status: 'idle',
       tags: [],

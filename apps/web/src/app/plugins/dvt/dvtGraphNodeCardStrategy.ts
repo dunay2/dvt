@@ -23,6 +23,7 @@ import {
 } from '../graph/graphNodeCardStrategyUtils';
 import { isCanvasNodePresentationCopy } from '../../components/canvas/canvasNodePresentationCopy.contract';
 import { buildDvtGraphNodeSemanticMetric } from './dvtGraphNodeSemanticMetric';
+import { isSharedSourceModelKind } from '../graph/sharedSourceModelGraphNodeCardStrategy';
 
 function buildDvtSubtitle(
   metadata: Record<string, unknown>,
@@ -90,10 +91,7 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     metadata,
     data,
   });
-  const title =
-    node.pluginId === 'dvt.warehouse-source' && node.kind === 'dvt:source' && node.name !== node.id
-      ? node.name
-      : titlePresentation.title;
+  const title = titlePresentation.title;
   const runtimeData = {
     ...data,
     durationMs: numericValue(data.durationMs) ?? resolveCanonicalDurationMs(node, metadata, data),
@@ -115,36 +113,6 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     locale: presentationCopy?.locale,
   });
   const operationalCopy = resolveGraphNodeCardCopy(presentationCopy?.locale);
-  const projectedRows = volumeMetricProjection.metrics.find((metric) => metric.id === 'rows');
-  const projectedSize = volumeMetricProjection.metrics.find(
-    (metric) => metric.id === 'bytes' || metric.id === 'estimated-bytes'
-  );
-  const currentRows = operationalSummary.metrics.find((metric) => metric.id === 'rows');
-  const currentSize = operationalSummary.metrics.find((metric) => metric.id === 'size');
-  const operationalMetrics =
-    node.kind === 'dvt:transform'
-      ? [
-          ...operationalSummary.metrics.filter(
-            (metric) => metric.id !== 'rows' && metric.id !== 'size'
-          ),
-          projectedRows == null
-            ? (currentRows ?? {
-                id: 'rows',
-                label: operationalCopy.rowsLabel,
-                value: operationalCopy.notCalculatedLabel,
-                icon: 'rows' as const,
-              })
-            : { ...projectedRows, id: 'rows', icon: 'rows' as const },
-          projectedSize == null
-            ? (currentSize ?? {
-                id: 'size',
-                label: operationalCopy.sizeLabel,
-                value: operationalCopy.notCalculatedLabel,
-                icon: 'database' as const,
-              })
-            : { ...projectedSize, id: 'size', icon: 'database' as const },
-        ]
-      : operationalSummary.metrics;
 
   return {
     title,
@@ -169,7 +137,7 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
           }
     ),
     metrics,
-    operationalMetrics,
+    operationalMetrics: operationalSummary.metrics,
     operationalDetail: operationalSummary.detail,
     sourceIdentity: buildGraphNodeSourceIdentity(node, metadata, title, presentationCopy?.locale),
   };
@@ -177,6 +145,8 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
 
 export const dvtGraphNodeCardStrategy: GraphNodeCardStrategy = {
   id: 'dvt-card',
-  matches: (node) => node.pluginId === 'dvt' || node.kind.startsWith('dvt:'),
+  matches: (node) =>
+    (node.pluginId === 'dvt' || node.kind.startsWith('dvt:')) &&
+    !isSharedSourceModelKind(node.kind),
   build: buildDvtCard,
 };

@@ -25,7 +25,7 @@ const transformationNode: CanvasFirstAuthoringNode = {
 };
 const dbtNode: CanvasFirstAuthoringNode = {
   id: 'dbt-model-1',
-  kind: 'dbt:model',
+  kind: 'dvt:transform',
   name: 'Model 1',
 };
 const persistedLayout = {

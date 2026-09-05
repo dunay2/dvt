@@ -15,8 +15,8 @@ const RESOURCE_PRESENTATION: Record<
   DbtProjectedNode['resourceType'],
   Readonly<{ kind: PluginNodeKind; role: CoreNodeRole }>
 > = {
-  source: { kind: 'dbt:source', role: 'input' },
-  model: { kind: 'dbt:model', role: 'transform' },
+  source: { kind: 'dvt:source', role: 'input' },
+  model: { kind: 'dvt:transform', role: 'transform' },
   seed: { kind: 'dbt:seed', role: 'input' },
   snapshot: { kind: 'dbt:snapshot', role: 'transform' },
   test: { kind: 'dbt:test', role: 'check' },
@@ -57,7 +57,7 @@ function projectNode(
   return {
     id: node.uniqueId,
     name: node.name,
-    pluginId: 'dbt',
+    pluginId: node.resourceType === 'source' || node.resourceType === 'model' ? 'dvt' : 'dbt',
     kind: presentation.kind,
     role: presentation.role,
     status: hasProjectionWarning ? 'warn' : 'idle',

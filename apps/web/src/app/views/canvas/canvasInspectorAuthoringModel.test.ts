@@ -187,20 +187,22 @@ describe('canvasInspectorAuthoringModel', () => {
     const source: CanonicalNode = {
       id: 'source-orders',
       name: 'Orders source',
-      pluginId: 'dbt',
-      kind: 'dbt:source',
+      pluginId: 'dvt',
+      kind: 'dvt:source',
       role: 'input',
       status: 'idle',
       tags: [],
+      metadata: { dbt: { packageName: 'analytics', sourceName: 'raw' } },
     };
     const model: CanonicalNode = {
       id: 'model-orders',
       name: 'Orders model',
-      pluginId: 'dbt',
-      kind: 'dbt:model',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
       role: 'transform',
       status: 'idle',
       tags: [],
+      metadata: { dbt: { packageName: 'analytics', materialized: 'view' } },
     };
     const edges: readonly CanonicalEdge[] = [
       {
@@ -238,11 +240,12 @@ describe('canvasInspectorAuthoringModel', () => {
     const firstSource: CanonicalNode = {
       id: 'source-orders',
       name: 'Orders source',
-      pluginId: 'dbt',
-      kind: 'dbt:source',
+      pluginId: 'dvt',
+      kind: 'dvt:source',
       role: 'input',
       status: 'idle',
       tags: [],
+      metadata: { dbt: { packageName: 'analytics', sourceName: 'raw' } },
     };
     const secondSource: CanonicalNode = {
       ...firstSource,
@@ -252,11 +255,12 @@ describe('canvasInspectorAuthoringModel', () => {
     const model: CanonicalNode = {
       id: 'model-orders',
       name: 'Orders model',
-      pluginId: 'dbt',
-      kind: 'dbt:model',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
       role: 'transform',
       status: 'idle',
       tags: [],
+      metadata: { dbt: { packageName: 'analytics', materialized: 'view' } },
     };
     const draft = createCanvasInspectorNodeDraft(model);
     const edges: readonly CanonicalEdge[] = [firstSource, secondSource].map((source) => ({
@@ -311,18 +315,24 @@ describe('canvasInspectorAuthoringModel', () => {
     const firstModel: CanonicalNode = {
       id: 'dbt-model-orders',
       name: 'Orders',
-      pluginId: 'dbt',
-      kind: 'dbt:model',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
       role: 'transform',
       status: 'idle',
       tags: [],
-      metadata: { columns: [{ name: 'order_id', type: 'bigint' }] },
+      metadata: {
+        dbt: { packageName: 'analytics', materialized: 'view' },
+        columns: [{ name: 'order_id', type: 'bigint' }],
+      },
     };
     const secondModel: CanonicalNode = {
       ...firstModel,
       id: 'dbt-model-customers',
       name: 'Customers',
-      metadata: { columns: [{ name: 'customer_id', type: 'bigint' }] },
+      metadata: {
+        dbt: { packageName: 'analytics', materialized: 'view' },
+        columns: [{ name: 'customer_id', type: 'bigint' }],
+      },
     };
     const testNode: CanonicalNode = {
       id: 'dbt-test-key',
@@ -369,22 +379,25 @@ describe('canvasInspectorAuthoringModel', () => {
     const sourceNode: CanonicalNode = {
       id: 'dbt-source-orders',
       name: 'Raw orders',
-      pluginId: 'dbt',
-      kind: 'dbt:source',
+      pluginId: 'dvt',
+      kind: 'dvt:source',
       role: 'input',
       status: 'idle',
       tags: [],
-      metadata: { columns: [{ name: 'order_id', type: 'bigint' }] },
+      metadata: {
+        dbt: { packageName: 'analytics', sourceName: 'raw' },
+        columns: [{ name: 'order_id', type: 'bigint' }],
+      },
     };
     const modelNode: CanonicalNode = {
       id: 'dbt-model-orders',
       name: 'Orders',
-      pluginId: 'dbt',
-      kind: 'dbt:model',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
       role: 'transform',
       status: 'idle',
       tags: [],
-      metadata: {},
+      metadata: { dbt: { packageName: 'analytics', materialized: 'view' } },
     };
     const testNode: CanonicalNode = {
       id: 'dbt-test-key',
@@ -446,8 +459,8 @@ describe('canvasInspectorAuthoringModel', () => {
     const modelNode: CanonicalNode = {
       id: 'model.orders',
       name: 'Orders Model',
-      pluginId: 'dbt',
-      kind: 'dbt:model',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
       role: 'transform',
       status: 'idle',
       tags: [],

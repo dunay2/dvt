@@ -19,6 +19,7 @@ import type { CanvasNodePresentationTruth } from '../../components/canvas/canvas
 import { buildCanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth';
 import { buildCanvasNodePresentationCopy } from './canvasNodePresentationCopy';
 import { projectDbtModelColumnStates } from './canvasDbtModelColumnAuthoring';
+import { isDbtCompatibleModel } from './canvasDbtAuthoringModel';
 import type { CanvasDependencyEdgeData } from './canvasDependencyEdgeModel';
 import { projectGraphNodeColumn } from './canvasGraphNodeColumnProjection';
 
@@ -125,13 +126,12 @@ export function mapCanonicalNodeToCanvasNode({
   const resolvedPresentationTruth =
     presentationTruth ??
     buildCanvasNodePresentationTruth({ node: canonicalNode, nodes: [canonicalNode], edges: [] });
-  const presentedColumns =
-    canonicalNode.pluginId === 'dbt' && canonicalNode.kind === 'dbt:model'
-      ? projectDbtModelColumnStates(canonicalNode, resolvedPresentationTruth.columns.visible)
-      : resolvedPresentationTruth.columns.visible.map((column) => ({
-          column,
-          output: canonicalNode.kind !== 'dvt:transform' || column.provenance === 'declared',
-        }));
+  const presentedColumns = isDbtCompatibleModel(canonicalNode)
+    ? projectDbtModelColumnStates(canonicalNode, resolvedPresentationTruth.columns.visible)
+    : resolvedPresentationTruth.columns.visible.map((column) => ({
+        column,
+        output: canonicalNode.kind !== 'dvt:transform' || column.provenance === 'declared',
+      }));
   const columns = presentedColumns.map(({ column, output }) =>
     projectGraphNodeColumn(column, output)
   );

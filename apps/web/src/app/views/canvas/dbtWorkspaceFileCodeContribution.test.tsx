@@ -8,12 +8,16 @@ import { buildDbtWorkspaceFileCodeContributions } from './dbtWorkspaceFileCodeCo
 const NODE: CanonicalNode = {
   id: 'model.analytics.orders',
   name: 'orders',
-  pluginId: 'dbt',
-  kind: 'dbt:model',
+  pluginId: 'dvt',
+  kind: 'dvt:transform',
   role: 'transform',
   status: 'idle',
   tags: [],
   path: 'models/orders.sql',
+  metadata: {
+    authority: 'dbt-project-files',
+    dbt: { packageName: 'analytics' },
+  },
 };
 
 describe('buildDbtWorkspaceFileCodeContributions', () => {
@@ -74,6 +78,8 @@ describe('buildDbtWorkspaceFileCodeContributions', () => {
           ...NODE,
           id: 'model.dbt_utils.orders',
           metadata: {
+            authority: 'dbt-project-files',
+            dbt: { packageName: 'dbt_utils' },
             packageName: 'dbt_utils',
             visualEditability: { status: 'code_only', reasons: ['external_package'] },
           },

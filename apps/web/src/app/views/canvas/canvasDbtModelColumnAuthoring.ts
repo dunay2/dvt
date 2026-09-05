@@ -3,6 +3,7 @@ import type { CanonicalNode } from '../../types/canonical';
 import {
   applyDbtNodeAuthoringMetadata,
   createDbtNodeAuthoringMetadata,
+  isDbtCompatibleModel,
   type DbtModelProjectionColumn,
 } from './canvasDbtAuthoringModel';
 
@@ -72,7 +73,7 @@ export function setDbtModelProjectionColumnOutput(args: {
   columnName: string;
   output: boolean;
 }): DbtModelColumnAuthoringResult {
-  if (args.node.pluginId !== 'dbt' || args.node.kind !== 'dbt:model') {
+  if (!isDbtCompatibleModel(args.node)) {
     return { outcome: 'rejected', reason: 'not_generated_dbt_model' };
   }
   const availableColumns = uniqueColumnNames(args.availableColumns);
@@ -102,7 +103,7 @@ export function reorderDbtModelProjectionColumn(args: {
   targetColumnName: string;
   placement: 'before' | 'after';
 }): DbtModelColumnAuthoringResult {
-  if (args.node.pluginId !== 'dbt' || args.node.kind !== 'dbt:model') {
+  if (!isDbtCompatibleModel(args.node)) {
     return { outcome: 'rejected', reason: 'not_generated_dbt_model' };
   }
   const availableColumns = uniqueColumnNames(args.availableColumns);

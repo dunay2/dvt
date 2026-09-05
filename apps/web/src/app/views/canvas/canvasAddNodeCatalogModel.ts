@@ -3,7 +3,7 @@ import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import { canvasViewCopy, type CanvasViewCopy } from './copy';
 
 export type CanvasAddNodeCatalogCategory =
-  'source' | 'model' | 'seed' | 'transformation' | 'test' | 'output' | 'macro' | 'node';
+  'source' | 'model' | 'seed' | 'test' | 'output' | 'macro' | 'node';
 
 export type CanvasAddNodeCatalogItem = Readonly<{
   id: string;
@@ -32,7 +32,6 @@ const CATEGORY_ORDER: readonly CanvasAddNodeCatalogCategory[] = [
   'source',
   'model',
   'seed',
-  'transformation',
   'test',
   'output',
   'macro',
@@ -50,16 +49,16 @@ export function inferCanvasAddNodeCatalogCategory(
     return 'source';
   }
 
-  if (registration.kind === 'dbt:model') {
+  if (
+    registration.role === 'transform' ||
+    registration.kind.endsWith(':model') ||
+    registration.kind.endsWith(':transform')
+  ) {
     return 'model';
   }
 
   if (registration.kind.endsWith(':seed')) {
     return 'seed';
-  }
-
-  if (registration.kind === 'dvt:transform' || registration.role === 'transform') {
-    return 'transformation';
   }
 
   if (registration.kind.endsWith(':test') || registration.role === 'check') {
@@ -203,8 +202,6 @@ function resolveCanvasAddNodeCatalogActionLabel(
       return copy.canvasContextMenuAddModelLabel;
     case 'seed':
       return copy.canvasContextMenuAddSeedLabel;
-    case 'transformation':
-      return copy.canvasContextMenuAddTransformationLabel;
     case 'test':
       return copy.canvasContextMenuAddTestLabel;
     case 'output':
@@ -227,8 +224,6 @@ function resolveCanvasAddNodeCatalogCategoryLabel(
       return copy.canvasAddNodeCatalogModelCategoryLabel;
     case 'seed':
       return copy.canvasAddNodeCatalogSeedCategoryLabel;
-    case 'transformation':
-      return copy.canvasAddNodeCatalogTransformationCategoryLabel;
     case 'test':
       return copy.canvasAddNodeCatalogTestCategoryLabel;
     case 'output':
@@ -251,8 +246,6 @@ function resolveCanvasAddNodeCatalogDescription(
       return copy.canvasAddNodeCatalogModelDescription;
     case 'seed':
       return copy.canvasAddNodeCatalogSeedDescription;
-    case 'transformation':
-      return copy.canvasAddNodeCatalogTransformationDescription;
     case 'test':
       return copy.canvasAddNodeCatalogTestDescription;
     case 'output':

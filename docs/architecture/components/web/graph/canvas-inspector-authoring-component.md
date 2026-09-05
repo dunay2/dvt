@@ -2,7 +2,7 @@
 title: Canvas Inspector Authoring Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-09-04
+last_reviewed: 2026-09-05
 planning_type: architecture
 ---
 
@@ -40,26 +40,27 @@ state as semantic truth, or create a second transform authority.
 There is no separate SQL command, visual-recipe command, column-mapping store, or React Flow
 edge authority for this intent.
 
-The legacy `dbt:model` compatibility surface uses `ConfigureCanvasDbtNode` for supported
-metadata and ordered output selection, then `GenerateDbtWorkspaceArtifacts` to project the
-current graph definition into dbt SQL. Its Code tab is a read-only projection. Neither the
-Inspector draft nor graph metadata accepts generated SQL as an implicit authoring authority.
-Complete migration of that legacy node species onto the shared canonical Substrait Model /
-Transform semantics is tracked separately by issue #2903.
+A shared `dvt:transform` with external dbt authority uses `ConfigureCanvasDbtNode` for supported
+export and round-trip metadata, while its file-backed code follows the explicit workspace-file
+write-back rails. A DVT-native Model uses `ConfigureCanvasDvtNode` and canonical Substrait
+authority. Both use the same `dvt:transform` kind, product card, and Canvas node shell. The
+authority metadata selects valid mutation commands; it does not create another Model kind.
+Neither the Inspector draft nor graph metadata accepts generated SQL as an implicit authoring
+authority.
 
 ## Public Contracts
 
-| Contract                           | Responsibility                                         |
-| ---------------------------------- | ------------------------------------------------------ |
-| `CanvasInspectorNodeDraft`         | local semantic editing DTO                             |
-| `DvtNodeAuthoringMetadata`         | stable Source, canonical Transform, and sink union     |
-| `DvtTransformAuthoringAuthorityV1` | strict Substrait semantic-document envelope            |
-| `CanvasColumnMappingSource`        | typed source field identity                            |
-| `CanvasColumnMappingTarget`        | typed Transform output identity                        |
-| `CanvasColumnMappingResult`        | applied draft or typed rejection                       |
-| `CanvasColumnLineage`              | derived visible field handles and edges                |
-| `DbtNodeAuthoringMetadata`         | legacy dbt compatibility metadata without writable SQL |
-| `DbtModelArtifactProjection`       | generated read-only dbt SQL artifact                   |
+| Contract                           | Responsibility                                     |
+| ---------------------------------- | -------------------------------------------------- |
+| `CanvasInspectorNodeDraft`         | local semantic editing DTO                         |
+| `DvtNodeAuthoringMetadata`         | stable Source, canonical Transform, and sink union |
+| `DvtTransformAuthoringAuthorityV1` | strict Substrait semantic-document envelope        |
+| `CanvasColumnMappingSource`        | typed source field identity                        |
+| `CanvasColumnMappingTarget`        | typed Transform output identity                    |
+| `CanvasColumnMappingResult`        | applied draft or typed rejection                   |
+| `CanvasColumnLineage`              | derived visible field handles and edges            |
+| `DbtNodeAuthoringMetadata`         | external dbt round-trip metadata                   |
+| `DbtModelArtifactProjection`       | generated read-only dbt SQL artifact               |
 
 An empty Transform is explicitly `uninitialized`. Its first admitted authoring action creates
 one canonical Substrait projection or composition. Removed SQL/VTX1 metadata fails closed.
@@ -75,9 +76,13 @@ changes the relation. Those operations require an explicit connected Transform.
   semantic document after its first accepted mutation.
 - A connection-backed Source cannot own Transform operations. Legacy Source envelopes are
   normalized to their filter-free base relation without changing physical identity or provenance.
+- Source cards never offer column reordering, functions, filters, calculated columns, or casts;
+  those relation-changing operations start on a connected Model / Transform.
+- External dbt Model mutations that cannot round-trip fail closed. They never trigger an implicit
+  authority transition or discard dbt identity/configuration.
 - Editable SQL, VTX1 recipes, SQL mirrors, and visual-to-SQL conversion are not supported
   authoring states.
-- A graph-draft `dbt:model` never adopts `metadata.sql` or `metadata.config.sql`; legacy values
+- A dbt-compatible Model never adopts `metadata.sql` or `metadata.config.sql`; legacy values
   are stripped when supported metadata is applied and ignored by artifact projection.
 - Column order, output inclusion, functions, aliases, descriptions, and multi-input
   composition are mutations of the canonical semantic document.

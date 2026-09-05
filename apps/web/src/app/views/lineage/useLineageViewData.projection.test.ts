@@ -30,8 +30,8 @@ describe('Lineage graph projection', () => {
       canonicalNodes: [
         {
           id: 'model.orders',
-          pluginId: 'dbt',
-          kind: 'dbt:model',
+          pluginId: 'dvt',
+          kind: 'dvt:transform',
           role: 'transform',
           metadata: {
             package: 'analytics',

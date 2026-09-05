@@ -279,8 +279,8 @@ export function buildCanonicalNodes(): CanonicalNode[] {
     {
       id: 'source-node',
       name: 'Source',
-      pluginId: 'dbt',
-      kind: 'dbt:source',
+      pluginId: 'dvt',
+      kind: 'dvt:source',
       role: 'input',
       status: 'idle',
       tags: [],
@@ -296,8 +296,8 @@ export function buildCanonicalNodes(): CanonicalNode[] {
     {
       id: 'model-node',
       name: 'Model',
-      pluginId: 'dbt',
-      kind: 'dbt:model',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
       role: 'transform',
       status: 'idle',
       tags: [],

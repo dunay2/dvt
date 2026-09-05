@@ -9,9 +9,7 @@ export const lineageChromeClasses = {
 } as const;
 
 const nodeKindClasses: Record<string, string> = {
-  'dbt:source': 'border-[color:var(--status-info)] bg-[var(--surface-elevated)]',
   'dbt:seed': 'border-[color:var(--status-success)] bg-[var(--surface-elevated)]',
-  'dbt:model': 'border-[color:var(--status-running)] bg-[var(--surface-elevated)]',
   'dbt:snapshot': 'border-[color:var(--status-warning)] bg-[var(--surface-elevated)]',
   'dbt:test': 'border-[color:var(--status-danger)] bg-[var(--surface-elevated)]',
   'dbt:exposure': 'border-[color:var(--status-degraded)] bg-[var(--surface-elevated)]',

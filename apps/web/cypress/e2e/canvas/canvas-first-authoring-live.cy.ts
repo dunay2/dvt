@@ -20,7 +20,7 @@ describe('Canvas first-authoring live protected runtime', () => {
   const canvas = {
     id: 'transformation',
     createButton: 'Transformation',
-    addCatalogItem: 'Add transformation',
+    addCatalogItem: 'Add model',
     firstNodeName: /transform 1/i,
   } as const;
 

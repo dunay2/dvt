@@ -9,11 +9,15 @@ import { buildDbtExecutionTargetWorkbenchContributions } from './dbtExecutionTar
 const NODE: CanonicalNode = {
   id: 'model.analytics.orders',
   name: 'orders',
-  pluginId: 'dbt',
-  kind: 'dbt:model',
+  pluginId: 'dvt',
+  kind: 'dvt:transform',
   role: 'transform',
   status: 'idle',
   tags: [],
+  metadata: {
+    authority: 'dbt-project-files',
+    dbt: { packageName: 'analytics' },
+  },
 };
 
 const TARGET = {

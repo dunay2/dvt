@@ -7,8 +7,8 @@ import { costContributions } from './costContributions';
 const node: CanonicalNode = {
   id: 'node-1',
   name: 'node-1',
-  pluginId: 'dbt',
-  kind: 'dbt:model',
+  pluginId: 'dvt',
+  kind: 'dvt:transform',
   role: 'transform',
   status: 'idle',
   tags: [],

@@ -10,11 +10,12 @@ import {
 const sourceNode: CanonicalNode = {
   id: 'source-orders',
   name: 'Raw Orders',
-  pluginId: 'dbt',
-  kind: 'dbt:source',
+  pluginId: 'dvt',
+  kind: 'dvt:source',
   role: 'input',
   status: 'idle',
   tags: ['raw'],
+  metadata: { dbt: { packageName: 'analytics', sourceName: 'raw', tableName: 'orders' } },
 };
 
 const objectFileLoadNode: CanonicalNode = {
@@ -94,8 +95,8 @@ const httpJsonAcquisitionNode: CanonicalNode = {
 const modelNode: CanonicalNode = {
   id: 'model-orders',
   name: 'Orders Model',
-  pluginId: 'dbt',
-  kind: 'dbt:model',
+  pluginId: 'dvt',
+  kind: 'dvt:transform',
   role: 'transform',
   status: 'idle',
   tags: ['mart'],
@@ -127,8 +128,8 @@ const testNode: CanonicalNode = {
 const downstreamModelNode: CanonicalNode = {
   id: 'model-order-revenue',
   name: 'Order Revenue',
-  pluginId: 'dbt',
-  kind: 'dbt:model',
+  pluginId: 'dvt',
+  kind: 'dvt:transform',
   role: 'transform',
   status: 'idle',
   tags: ['mart'],
@@ -329,8 +330,8 @@ describe('canvas dbt planner graph source', () => {
             displayName: 'Orders Model',
             sourceRef: 'source-orders',
             tags: {
-              kind: 'dbt:model',
-              pluginId: 'dbt',
+              kind: 'dvt:transform',
+              pluginId: 'dvt',
               role: 'transform',
             },
           },

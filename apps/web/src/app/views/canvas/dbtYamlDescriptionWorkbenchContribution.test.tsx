@@ -7,14 +7,18 @@ import { buildDbtYamlDescriptionWorkbenchContributions } from './dbtYamlDescript
 const MODEL_NODE: CanonicalNode = {
   id: 'model.analytics.orders',
   name: 'orders',
-  pluginId: 'dbt',
-  kind: 'dbt:model',
+  pluginId: 'dvt',
+  kind: 'dvt:transform',
   role: 'transform',
   status: 'idle',
   tags: [],
   path: 'models/marts/orders.sql',
   description: 'Existing description.',
-  metadata: { descriptionFilePath: 'models/marts/schema.yml' },
+  metadata: {
+    authority: 'dbt-project-files',
+    dbt: { packageName: 'analytics' },
+    descriptionFilePath: 'models/marts/schema.yml',
+  },
 };
 
 describe('buildDbtYamlDescriptionWorkbenchContributions', () => {

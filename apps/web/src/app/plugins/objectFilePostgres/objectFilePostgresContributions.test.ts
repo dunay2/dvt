@@ -21,8 +21,8 @@ const objectFileNode: CanonicalNode = {
 const dbtModelNode: CanonicalNode = {
   id: 'model-orders',
   name: 'Orders',
-  pluginId: 'dbt',
-  kind: 'dbt:model',
+  pluginId: 'dvt',
+  kind: 'dvt:transform',
   role: 'transform',
   status: 'idle',
   tags: [],

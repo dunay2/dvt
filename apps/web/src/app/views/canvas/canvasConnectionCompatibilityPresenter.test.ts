@@ -57,7 +57,7 @@ describe('canvasConnectionCompatibilityPresenter', () => {
         table: 'orders',
       },
     };
-    const model = node('orders-model', 'dbt:model', 'transform', 'dbt');
+    const model = node('orders-model', 'dvt:transform', 'transform', 'dbt');
     const sink = node('warehouse-sink', 'dvt:sink', 'output', 'dvt');
     const canonicalNodesById = new Map([
       [source.id, source],
@@ -87,8 +87,8 @@ describe('canvasConnectionCompatibilityPresenter', () => {
   });
 
   it('marks ports blocked when candidate nodes exist but the current graph rejects every edge', () => {
-    const firstModel = node('first-model', 'dbt:model', 'transform', 'dbt');
-    const secondModel = node('second-model', 'dbt:model', 'transform', 'dbt');
+    const firstModel = node('first-model', 'dvt:transform', 'transform', 'dbt');
+    const secondModel = node('second-model', 'dvt:transform', 'transform', 'dbt');
     const canonicalNodesById = new Map([
       [firstModel.id, firstModel],
       [secondModel.id, secondModel],

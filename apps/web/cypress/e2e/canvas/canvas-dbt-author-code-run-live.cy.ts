@@ -151,12 +151,12 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     }
 
     seedLiveSelectedClosureDraft({
-      canvasKind: 'dbt',
+      dbtGraph: true,
       title: 'dbt authoring live',
     });
   });
 
-  it('lets a user configure dbt cards, select origin, inspect generated code, and execute', () => {
+  it('lets a user configure dbt-compatible models, inspect generated code, and execute', () => {
     cy.viewport(1500, 900);
     visitWithLiveWorkspaceSession('/canvas');
 

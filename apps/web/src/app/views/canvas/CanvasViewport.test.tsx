@@ -82,9 +82,11 @@ describe('CanvasViewport', () => {
     expect(viewportStyle.getPropertyValue('--canvas-grid')).toBe('rgba(148, 163, 184, 0.18)');
     expect(viewportStyle.getPropertyValue('--canvas-grid-gap')).toBe('32px');
     expect(xyflowState.miniMapNodeColor).toBeTypeOf('function');
-    expect(xyflowState.miniMapNodeColor?.({ data: { pluginKind: 'dbt:model' } })).toBe('#22c55e');
+    expect(xyflowState.miniMapNodeColor?.({ data: { pluginKind: 'dvt:transform' } })).toBe(
+      '#22c55e'
+    );
     expect(xyflowState.miniMapNodeColor?.({ data: {} })).toBe('#6b7280');
-    expect(mockResolveNodeKindRegistration).toHaveBeenCalledWith('dbt:model');
+    expect(mockResolveNodeKindRegistration).toHaveBeenCalledWith('dvt:transform');
     expect(mockResolveNodeKindRegistration).toHaveBeenCalledWith('dvt:unknown');
     expect(xyflowState.lastReactFlowProps).toMatchObject({
       fitView: true,

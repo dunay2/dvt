@@ -9,8 +9,8 @@ import { buildNodeDecorations, buildOverlayContext } from './canvasOverlayContex
 const node: CanonicalNode = {
   id: 'node-1',
   name: 'Node 1',
-  pluginId: 'dbt',
-  kind: 'dbt:model',
+  pluginId: 'dvt',
+  kind: 'dvt:transform',
   role: 'transform',
   status: 'idle',
   tags: [],

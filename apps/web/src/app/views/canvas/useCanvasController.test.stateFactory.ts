@@ -22,8 +22,8 @@ function buildDefaultCanvasHarnessCanonicalNodes(): CanonicalNode[] {
     {
       id: 'node_1',
       name: 'orders',
-      pluginId: 'dbt',
-      kind: 'dbt:model',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
       role: 'transform',
       status: 'idle',
       tags: [],
@@ -33,8 +33,8 @@ function buildDefaultCanvasHarnessCanonicalNodes(): CanonicalNode[] {
     {
       id: 'node_2',
       name: 'customers',
-      pluginId: 'dbt',
-      kind: 'dbt:model',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
       role: 'transform',
       status: 'idle',
       tags: [],

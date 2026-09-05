@@ -16,6 +16,8 @@ import { buildDbtTestAuthoringFieldsModel } from './dbtTestAuthoringFieldsModel'
 import {
   applyDbtNodeAuthoringMetadata,
   createDbtNodeAuthoringMetadata,
+  isDbtCompatibleModel,
+  isDbtCompatibleSource,
   reconcileDbtModelConnectedOrigin,
 } from './canvasDbtAuthoringModel';
 
@@ -66,7 +68,7 @@ export function DbtAuthoringFields({
     return null;
   }
 
-  if (node.kind === 'dbt:source') {
+  if (isDbtCompatibleSource(node)) {
     if (section === 'code') {
       return null;
     }
@@ -82,7 +84,7 @@ export function DbtAuthoringFields({
     );
   }
 
-  if (node.kind !== 'dbt:model') {
+  if (!isDbtCompatibleModel(node)) {
     return null;
   }
 
@@ -92,8 +94,8 @@ export function DbtAuthoringFields({
     edges,
     authoringMetadata: draft.dbt,
     kindLabels: {
-      'dbt:source': canvasViewCopy.inspectorDbtOriginKindSourceLabel,
-      'dbt:model': canvasViewCopy.inspectorDbtOriginKindModelLabel,
+      'dvt:source': canvasViewCopy.inspectorDbtOriginKindSourceLabel,
+      'dvt:transform': canvasViewCopy.inspectorDbtOriginKindModelLabel,
     },
   });
   const commitModelChange = (nextDbt: typeof draft.dbt): void => {

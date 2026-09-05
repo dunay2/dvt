@@ -452,8 +452,8 @@ describe('useCanvasGraphHandlers edge authoring', () => {
         {
           id: 'dbt-model',
           name: 'dbt-model',
-          pluginId: 'dbt',
-          kind: 'dbt:model',
+          pluginId: 'dvt',
+          kind: 'dvt:transform',
           role: 'transform',
           status: 'idle',
           tags: [],
@@ -474,7 +474,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
           id: 'dbt-model',
           data: {
             name: 'dbt-model',
-            pluginKind: 'dbt:model',
+            pluginKind: 'dvt:transform',
             role: 'transform',
             status: 'idle',
           },
@@ -532,8 +532,8 @@ describe('useCanvasGraphHandlers edge authoring', () => {
         {
           id: 'dbt-model',
           name: 'dbt-model',
-          pluginId: 'dbt',
-          kind: 'dbt:model',
+          pluginId: 'dvt',
+          kind: 'dvt:transform',
           role: 'transform',
           status: 'idle',
           tags: [],
@@ -554,7 +554,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
           id: 'dbt-model',
           data: {
             name: 'dbt-model',
-            pluginKind: 'dbt:model',
+            pluginKind: 'dvt:transform',
             role: 'transform',
             status: 'idle',
           },

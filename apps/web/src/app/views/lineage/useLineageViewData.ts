@@ -40,7 +40,7 @@ export function projectLineageGraph(
       canonicalNodes: rawNodes.map((node) => ({
         id: node.id,
         name: node.name,
-        pluginId: 'dbt',
+        pluginId: node.type === 'SOURCE' || node.type === 'MODEL' ? 'dvt' : 'dbt',
         kind: mapDbtTypeToKind(node.type),
         role: roleByDbtType[node.type],
         status: node.status,
