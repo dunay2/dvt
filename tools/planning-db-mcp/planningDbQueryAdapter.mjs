@@ -70,9 +70,7 @@ function sanitizeFailure(error) {
   const stderr = typeof error?.stderr === 'string' ? error.stderr : '';
   const message =
     stderr.trim() || (error instanceof Error ? error.message : 'Planning DB query failed.');
-  return message
-    .replace(/postgres(?:ql)?:\/\/[^@\s]+@/giu, 'postgresql://***@')
-    .slice(0, 2000);
+  return message.replace(/postgres(?:ql)?:\/\/[^@\s]+@/giu, 'postgresql://***@').slice(0, 2000);
 }
 
 export async function runPlanningDbQuery(input) {

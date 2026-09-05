@@ -24,7 +24,10 @@ test('builds a forced no-refresh argv without a shell command string', () => {
   assert.equal(invocation.executable, process.execPath);
   assert.deepEqual(invocation.args.slice(-3), ['--limit', '100', '--no-refresh']);
   assert.equal(invocation.args.includes('--no-refresh'), true);
-  assert.equal(invocation.args.some((value) => value.includes('planning:db:import')), false);
+  assert.equal(
+    invocation.args.some((value) => value.includes('planning:db:import')),
+    false
+  );
 });
 
 test('requires an explicit bounded component id only for component-profile', () => {

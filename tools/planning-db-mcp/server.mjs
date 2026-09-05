@@ -5,10 +5,7 @@ import { pathToFileURL } from 'node:url';
 import { createMcpHandler, fromJsonSchema, McpServer } from '@modelcontextprotocol/server';
 import { toNodeHandler } from '@modelcontextprotocol/node';
 
-import {
-  ALLOWED_PLANNING_DB_QUERIES,
-  runPlanningDbQuery,
-} from './planningDbQueryAdapter.mjs';
+import { ALLOWED_PLANNING_DB_QUERIES, runPlanningDbQuery } from './planningDbQueryAdapter.mjs';
 
 const HOST = '127.0.0.1';
 const DEFAULT_PORT = 3333;
@@ -32,7 +29,8 @@ export function createPlanningDbMcpServer() {
     'planning_db_query',
     {
       title: 'Query DVT Planning DB',
-      description: 'Runs one approved read-only DVT Planning DB governance query with refresh disabled.',
+      description:
+        'Runs one approved read-only DVT Planning DB governance query with refresh disabled.',
       inputSchema,
       annotations: {
         readOnlyHint: true,
