@@ -84,11 +84,7 @@ describe('resolveCanvasNodeWorkbenchSectionModel', () => {
       ],
     });
 
-    expect(result.sections.map(({ id }) => id)).toEqual([
-      'general',
-      'columns',
-      'inputs-outputs',
-    ]);
+    expect(result.sections.map(({ id }) => id)).toEqual(['general', 'columns', 'inputs-outputs']);
     expect(result.primarySectionIds).toEqual(['general', 'columns', 'inputs-outputs']);
   });
 
