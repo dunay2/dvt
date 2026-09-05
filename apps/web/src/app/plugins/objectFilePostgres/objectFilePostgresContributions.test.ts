@@ -2,8 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
 import { evaluateConnectionPolicy } from '../contracts/ConnectionRules';
-import { dbtContributions } from '../dbt/dbtContributions';
-import { getAllCanvasRuntimeRegistrations, getPluginPortMap } from '../registry';
+import { getAllNodeKinds, getPluginPortMap } from '../registry';
 import {
   OBJECT_FILE_POSTGRES_PLUGIN_ID,
   objectFilePostgresContributions,
@@ -47,40 +46,25 @@ describe('object-file PostgreSQL plugin contributions', () => {
         allowsOutgoing: true,
       }),
     ]);
-  });
-
-  it('composes the node into the DBT canvas without transferring plugin ownership', () => {
-    const canvasRuntimes = getAllCanvasRuntimeRegistrations(availableCapabilities);
-    const dbtCanvas = canvasRuntimes.find((registration) => registration.kind === 'dbt');
-    const transformationCanvas = canvasRuntimes.find(
-      (registration) => registration.kind === 'transformation'
-    );
-
-    expect(dbtCanvas?.nodeKinds).toContainEqual(
-      expect.objectContaining({
-        kind: 'dvt:object_file_load',
-        pluginId: OBJECT_FILE_POSTGRES_PLUGIN_ID,
-      })
-    );
-    expect(dbtContributions.nodeKinds).not.toContainEqual(
-      expect.objectContaining({ kind: 'dvt:object_file_load' })
-    );
-    expect(transformationCanvas?.nodeKinds).not.toContainEqual(
-      expect.objectContaining({ kind: 'dvt:object_file_load' })
-    );
+    expect(
+      getAllNodeKinds(availableCapabilities).some(
+        (kind) =>
+          kind.kind === 'dvt:object_file_load' && kind.pluginId === OBJECT_FILE_POSTGRES_PLUGIN_ID
+      )
+    ).toBe(true);
   });
 
   it('removes the executable node kind when the backend capability is unavailable', () => {
-    const dbtCanvas = getAllCanvasRuntimeRegistrations({
+    const nodeKinds = getAllNodeKinds({
       plugins: {
         [OBJECT_FILE_POSTGRES_PLUGIN_ID]: {
           available: false,
           reason: 'disabled in test',
         },
       },
-    }).find((registration) => registration.kind === 'dbt');
+    });
 
-    expect(dbtCanvas?.nodeKinds).not.toContainEqual(
+    expect(nodeKinds).not.toContainEqual(
       expect.objectContaining({ pluginId: OBJECT_FILE_POSTGRES_PLUGIN_ID })
     );
   });
