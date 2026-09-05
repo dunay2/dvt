@@ -253,14 +253,14 @@ describe('Canvas route host-cycle persistence', () => {
   });
 
   it('restores the authoritative empty shared Canvas posture from draft truth on reopen', async () => {
-    await renderCanvasRouteWithController(harness, {
-      ...buildCanvasHostCycleControllerState({
+    await renderCanvasRouteWithController(
+      harness,
+      buildCanvasHostCycleControllerState({
         kind: 'restored_empty',
         canvasKind: 'transformation',
         title: 'Warehouse flow',
-      }),
-      canvasAuthoringMode: 'transformation',
-    });
+      })
+    );
 
     expectActiveCanvasShellIdentity({
       container: harness.container,
@@ -278,15 +278,15 @@ describe('Canvas route host-cycle persistence', () => {
   });
 
   it('restores the authoritative graph-ready shared Canvas posture from draft truth on reopen', async () => {
-    await renderCanvasRouteWithController(harness, {
-      ...buildCanvasHostCycleControllerState({
+    await renderCanvasRouteWithController(
+      harness,
+      buildCanvasHostCycleControllerState({
         kind: 'restored_graph_ready',
         canvasKind: 'transformation',
         title: 'Transformation canvas',
         firstNodeKind: 'dvt:source',
-      }),
-      canvasAuthoringMode: 'transformation',
-    });
+      })
+    );
 
     expectActiveCanvasShellIdentity({
       container: harness.container,

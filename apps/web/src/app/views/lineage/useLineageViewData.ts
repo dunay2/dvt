@@ -1,10 +1,10 @@
 /** Owned concern: derive the Lineage route read model from the workspace DBT snapshot. */
 import { useMemo, useState } from 'react';
 
-import { resolveCanvasGraphStrategy } from '../../plugins/graphStrategyRegistry';
-import type { CanvasGraphStrategy } from '../../plugins/graphStrategyContracts';
+import { mapDbtTypeToKind } from '../../plugins/nodeTypeCatalog.dbt';
 import { useWorkspaceGraphForViewQuery } from '../../queries/workspaceQueries';
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { CanonicalEdge, CanonicalNode, CoreNodeRole } from '../../types/canonical';
+import type { DbtEdge, DbtNode, DbtNodeType } from '../../types/dbt';
 import { assignLevels, bfsReachable, groupNodesByLevel } from './lineageModel';
 
 type LineageGraphProjection = Readonly<{
@@ -14,18 +14,56 @@ type LineageGraphProjection = Readonly<{
 }>;
 
 export function projectLineageGraph(
-  rawNodes: readonly unknown[],
-  rawEdges: readonly unknown[],
-  graphStrategy: CanvasGraphStrategy
+  rawNodes: readonly DbtNode[],
+  rawEdges: readonly DbtEdge[]
 ): LineageGraphProjection {
+  const roleByDbtType: Record<DbtNodeType, CoreNodeRole> = {
+    SOURCE: 'input',
+    MODEL: 'transform',
+    SEED: 'input',
+    SNAPSHOT: 'transform',
+    TEST: 'check',
+    EXPOSURE: 'output',
+    METRIC: 'output',
+    MACRO: 'control',
+  };
+  const relationByDbtEdgeType: Record<DbtEdge['type'], CanonicalEdge['relation']> = {
+    source: 'lineage',
+    ref: 'lineage',
+    test: 'validation',
+    exposure: 'consumption',
+    metric: 'metric',
+  };
+
   try {
     return {
-      canonicalNodes: rawNodes
-        .map((node) => graphStrategy.mapNodeToCanonical(node))
-        .filter((node): node is CanonicalNode => node !== null),
-      canonicalEdges: rawEdges
-        .map((edge) => graphStrategy.mapEdgeToCanonical(edge))
-        .filter((edge): edge is CanonicalEdge => edge !== null),
+      canonicalNodes: rawNodes.map((node) => ({
+        id: node.id,
+        name: node.name,
+        pluginId: 'dbt',
+        kind: mapDbtTypeToKind(node.type),
+        role: roleByDbtType[node.type],
+        status: node.status,
+        tags: node.tags,
+        path: node.path,
+        description: node.description,
+        lastDuration: node.lastDuration,
+        lastCost: node.lastCost,
+        metadata: {
+          ...node.metadata,
+          package: node.package,
+          dependencies: node.dependencies,
+          compiledSql: node.compiledSql,
+          config: node.config,
+          columns: node.columns,
+        },
+      })),
+      canonicalEdges: rawEdges.map((edge) => ({
+        id: edge.id,
+        sourceId: edge.source,
+        targetId: edge.target,
+        relation: relationByDbtEdgeType[edge.type],
+      })),
       projectionError: null,
     };
   } catch (error) {
@@ -39,14 +77,13 @@ export function projectLineageGraph(
 
 export function useLineageViewData() {
   const [searchQuery, setSearchQuery] = useState('');
-  const graphStrategy = useMemo(() => resolveCanvasGraphStrategy('dbt'), []);
   const snapshotQuery = useWorkspaceGraphForViewQuery('lineage', 60_000);
 
   const { canonicalNodes, canonicalEdges, projectionError } = useMemo(() => {
     const rawNodes = snapshotQuery.data?.nodes ?? [];
     const rawEdges = snapshotQuery.data?.edges ?? [];
-    return projectLineageGraph(rawNodes, rawEdges, graphStrategy);
-  }, [graphStrategy, snapshotQuery.data?.edges, snapshotQuery.data?.nodes]);
+    return projectLineageGraph(rawNodes, rawEdges);
+  }, [snapshotQuery.data?.edges, snapshotQuery.data?.nodes]);
 
   const levels = useMemo(
     () => assignLevels(canonicalNodes, canonicalEdges),

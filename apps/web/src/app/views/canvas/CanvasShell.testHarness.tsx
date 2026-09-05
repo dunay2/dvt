@@ -174,7 +174,6 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
       ...overrides?.graph,
     },
     chromeState: {
-      canvasAuthoringMode: 'transformation',
       routeState: 'ready',
       draftStatusState: defaultDraftStatusState,
       canPlanGraph: false,

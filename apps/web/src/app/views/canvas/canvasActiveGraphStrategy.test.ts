@@ -6,7 +6,6 @@ import {
   type CanvasAuthoringDraftReadModel,
 } from './canvasDraftReadModel';
 import {
-  resolveActiveCanvasAuthoringMode,
   resolveActiveCanvasGraphStrategy,
   selectActiveCanvasExecutionStrategy,
   selectActiveCanvasGraphStrategy,
@@ -46,9 +45,6 @@ describe('resolveActiveCanvasGraphStrategy', () => {
         id: 'dvt-transformation-contextual-canvas',
       },
     });
-    expect(
-      resolveActiveCanvasAuthoringMode(buildDraftReadModelWithCanvasKind('transformation'))
-    ).toBe('transformation');
   });
 
   it('fails closed for obsolete persisted dbt Canvas kinds instead of aliasing them', () => {
@@ -56,7 +52,6 @@ describe('resolveActiveCanvasGraphStrategy', () => {
       kind: 'unsupported_kind',
       canvasKind: 'dbt',
     });
-    expect(resolveActiveCanvasAuthoringMode(buildDraftReadModelWithCanvasKind('dbt'))).toBe('dbt');
   });
 
   it('falls back to the transformation strategy before a canvas document exists', () => {
@@ -69,7 +64,6 @@ describe('resolveActiveCanvasGraphStrategy', () => {
         id: 'dvt-transformation-contextual-canvas',
       },
     });
-    expect(resolveActiveCanvasAuthoringMode(undefined)).toBe('transformation');
   });
 
   it('fails closed without throwing when the default canvas plugin is disabled before document creation', () => {

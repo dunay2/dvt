@@ -79,16 +79,21 @@ describe('canvas execution-selection recovery architecture', () => {
     expect(MODEL_SOURCE).toContain("rail: 'RecoverCanvasExecutionSelection'");
   });
 
-  it('adapts authored and external dbt authorities into the same recovery component', () => {
-    expect(AUTHORED_CONTROLLER_SOURCE).toContain('useCanvasExecutionSelectionRecovery({');
+  it('keeps recovery on the external dbt authority after the Canvas runtime hard cut', () => {
+    expect(AUTHORED_CONTROLLER_SOURCE).not.toContain('useCanvasExecutionSelectionRecovery({');
     expect(EXTERNAL_AUTHORITY_CONTROLLER_SOURCE).toContain('useCanvasExecutionSelectionRecovery({');
-    expect(AUTHORED_CONTROLLER_SOURCE).toContain('buildCanvasExecutionSelectionRecoveryGraph({');
+    expect(AUTHORED_CONTROLLER_SOURCE).not.toContain(
+      'buildCanvasExecutionSelectionRecoveryGraph({'
+    );
     expect(EXTERNAL_AUTHORITY_CONTROLLER_SOURCE).toContain(
       'buildCanvasExecutionSelectionRecoveryGraph({'
     );
-    expect(AUTHORED_CONTROLLER_SOURCE).toContain('refreshCanvasExecutionSelectionAuthority');
+    expect(AUTHORED_CONTROLLER_SOURCE).not.toContain('refreshCanvasExecutionSelectionAuthority');
     expect(EXTERNAL_AUTHORITY_CONTROLLER_SOURCE).toContain(
       'refreshCanvasExecutionSelectionAuthority'
+    );
+    expect(AUTHORED_CONTROLLER_SOURCE).toContain(
+      'executionSelectionRecovery: { model: null, commands: null }'
     );
     expect(DRAWER_SOURCE).toContain('<OperationalDrawerSelectionRecoveryView');
   });

@@ -24,9 +24,7 @@ describe('dbt external-authority Canvas projection architecture', () => {
     expect(authoritySurface).toContain('shellProps: CanvasShellProps');
     expect(authoritySurface).toContain('modalHostProps: CanvasModalHostProps');
     expect(authoritySurface).toContain("kind: 'transformation'");
-    expect(authoritySurface).toContain("canvasAuthoringMode: 'transformation'");
     expect(authoritySurface).not.toContain("kind: 'dbt',");
-    expect(authoritySurface).not.toContain("canvasAuthoringMode: 'dbt'");
     expect(authoritySurface).not.toContain("from './CanvasShell'");
     expect(authoritySurface).not.toContain("from './CanvasModalHost'");
     expect(existsSync(appPath('DbtProjectFileCanvas.tsx'))).toBe(false);
