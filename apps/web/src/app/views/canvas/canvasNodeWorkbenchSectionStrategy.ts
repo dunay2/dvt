@@ -22,6 +22,12 @@ const STRATEGY_SECTION_TO_NODE_PROPERTY_SECTION = new Map<
   ['sink', 'sink'],
 ]);
 
+const SOURCE_PRIMARY_SECTION_IDS: readonly NodePropertySectionId[] = [
+  'general',
+  'columns',
+  'inputs-outputs',
+];
+
 export function resolveNodeWorkbenchPrimarySectionIds(
   strategySectionIds: readonly CanvasNodeWorkbenchSectionPolicyId[]
 ): readonly NodePropertySectionId[] {
@@ -109,15 +115,41 @@ function isSupportedSection(
   );
 }
 
+function resolveSourceSectionModel(
+  supportedSections: readonly NodePropertySection[]
+): CanvasNodeWorkbenchSectionModel {
+  const supportedSectionById = new Map(
+    supportedSections.map((section) => [section.id, section] as const)
+  );
+  const sections = SOURCE_PRIMARY_SECTION_IDS.flatMap(
+    (sectionId): readonly NodePropertySection[] => {
+      const section = supportedSectionById.get(sectionId);
+      return section == null ? [] : [section];
+    }
+  );
+
+  return {
+    sections,
+    primarySectionIds: sections.map((section) => section.id),
+  };
+}
+
 /**
  * Resolves section capability separately from tab/overflow placement. Code is
- * first when supported; data-backed sections survive only when they carry
- * current facts, editing semantics, or a plugin contribution.
+ * first when supported for non-Source nodes. Source is intentionally bounded
+ * to Overview, Columns and Inputs / Outputs: key/index/constraint facts are
+ * consumed by the Source Columns experience rather than reintroduced through
+ * overflow tabs.
  */
 export function resolveCanvasNodeWorkbenchSectionModel(
   args: ResolveCanvasNodeWorkbenchSectionModelArgs
 ): CanvasNodeWorkbenchSectionModel {
   const supportedSections = args.sections.filter((section) => isSupportedSection(section, args));
+
+  if (args.nodeKind === 'dvt:source') {
+    return resolveSourceSectionModel(supportedSections);
+  }
+
   const supportedSectionById = new Map(
     supportedSections.map((section) => [section.id, section] as const)
   );
