@@ -79,13 +79,12 @@ function didNodePositionsChange(
 }
 
 function shouldSaveObservedNodePositions(args: {
-  hasObservedDrag: boolean;
   hasSettledDrag: boolean;
   nodePositionsChanged: boolean;
   persistedNodePositions: CanvasNodePositions;
   nextNodePositions: CanvasNodePositions;
 }): boolean {
-  const hasSaveCandidate = args.hasObservedDrag || args.hasSettledDrag || args.nodePositionsChanged;
+  const hasSaveCandidate = args.hasSettledDrag || args.nodePositionsChanged;
 
   return (
     hasSaveCandidate && !areNodePositionsEqual(args.persistedNodePositions, args.nextNodePositions)
@@ -114,9 +113,13 @@ function usePersistSettledNodePositions({
     const previousNodePositions = lastNodePositionsRef.current;
     lastNodePositionsRef.current = nextNodePositions;
 
+    if (observedNodeDragRef.current) {
+      observedNodeDragRef.current = false;
+      return;
+    }
+
     if (
       !shouldSaveObservedNodePositions({
-        hasObservedDrag: observedNodeDragRef.current,
         hasSettledDrag: hasSettledDragFrame(nodes),
         nodePositionsChanged: didNodePositionsChange(previousNodePositions, nextNodePositions),
         persistedNodePositions,
@@ -127,7 +130,6 @@ function usePersistSettledNodePositions({
     }
 
     saveNodePositions(nextNodePositions);
-    observedNodeDragRef.current = false;
   }, [nodes, persistedNodePositions, saveNodePositions]);
 }
 
@@ -233,7 +235,7 @@ function useCanvasViewportPersistenceHandler({
   setCanvasViewport: (layoutKey: string, viewport: CanvasViewport) => void;
 }) {
   return useCallback(
-    (viewport: CanvasViewport) => {
+    (viewport) => {
       if (!canPersistLayout) {
         return;
       }
