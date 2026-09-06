@@ -75,7 +75,7 @@ export type DbtPluginContextSchemaT = z.infer<typeof DbtPluginContextSchema>;
 export const RunExecutionContextRefSchema = z
   .object({
     uri: NonBlankStringSchema,
-    sha256: NonBlankStringSchema,
+    sha256: Sha256HexStringSchema,
     schemaVersion: NonBlankStringSchema,
     planId: NonBlankStringSchema,
     planVersion: NonBlankStringSchema,
@@ -88,7 +88,7 @@ export const RunExecutionContextSchema = z
     schemaVersion: NonBlankStringSchema,
     planId: NonBlankStringSchema,
     planVersion: NonBlankStringSchema,
-    planSha256: NonBlankStringSchema,
+    planSha256: Sha256HexStringSchema,
     pluginCompatibilityFingerprint: Sha256HexStringSchema.optional(),
     tenantId: NonBlankStringSchema,
     projectId: NonBlankStringSchema,

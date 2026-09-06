@@ -115,7 +115,7 @@ describe('startRunRoute validation', () => {
           ...VALID_BODY,
           planRef: {
             uri: ' https://plans.example.com/plan-2.json ',
-            sha256: ' abc456 ',
+            sha256: ' ' + 'a'.repeat(64) + ' ',
             schemaVersion: ' 1.0.0 ',
             planId: ' plan-2 ',
             planVersion: ' 1.0 ',

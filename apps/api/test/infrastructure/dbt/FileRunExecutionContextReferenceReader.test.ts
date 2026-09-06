@@ -63,6 +63,11 @@ describe('FileRunExecutionContextReferenceReader', () => {
     const reader = new FileRunExecutionContextReferenceReader(store);
     const written = await writer.write({ runId: 'run-source-1', context });
 
+    expect(written).toMatchObject({
+      ok: true,
+      ref: { sha256: 'f599f604f8f5dc22a6a8301a65528cbb2be89928d46b85019a6e7676acb4393a' },
+    });
+
     await expect(reader.read(referenceQuery('run-source-1'))).resolves.toEqual(
       written.ok ? { kind: 'trusted', ref: written.ref } : { kind: 'absent' }
     );

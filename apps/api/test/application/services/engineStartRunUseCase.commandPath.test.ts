@@ -144,7 +144,7 @@ describe('EngineStartRunUseCase command path', () => {
       targetAdapter: 'temporal',
       runExecutionContextRef: {
         uri: 'dvt-runctx://tenant-1/run-test-1/context.json',
-        sha256: 'ctxsha',
+        sha256: 'c'.repeat(64),
         schemaVersion: 'v1.0',
         planId: PLAN_REF.planId,
         planVersion: PLAN_REF.planVersion,

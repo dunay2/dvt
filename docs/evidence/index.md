@@ -184,6 +184,7 @@ Evidence documents that justify or validate relevant changes.
 - [Summary](ED-20260805-het1-public-object-file-dbt-vertical.md)
 - [Summary](ED-20260805-het2-public-rest-artifact-dbt-vertical.md)
 - [Summary](ED-20260808-pth1-connected-source-truth.md)
+- [Summary](ED-20260903-run-execution-context-sha256-crypto-migration.md)
 - [Summary](ed-20260423-access-decision-vocabulary-hardening.md)
 - [Summary](ed-20260423-rc-c2-turbo-ci-governance.md)
 - [Summary](ed-20260423-runtime-boundary-hardening.md)
