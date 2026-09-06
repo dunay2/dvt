@@ -300,7 +300,7 @@ describe('dbt project file projection live vertical', () => {
 
     // Enter the node once: Properties opens with Code as the preferred section.
     cy.get('.react-flow__node[data-id="model.analytics.orders"]')
-      .find('[data-slot="canvas-node-shell"]')
+      .find('[data-slot="graph-node-card-title"]')
       .dblclick();
     cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
     cy.get('[data-slot="canvas-node-workbench-tab-code"]')
