@@ -138,11 +138,11 @@ logical IDs through without reminting them.
 
 ## Command/query and DDD ownership
 
-| Rail                                    | Type                | DDD owner                           | Effect of this slice                                                     |
-| --------------------------------------- | ------------------- | ----------------------------------- | ------------------------------------------------------------------------ |
-| `ImportWarehouseSources`                | command             | Warehouse source import             | allocate opaque logical graph ID; preserve connected binding separately  |
-| `PreviewExecutionPlan` / Planner facade | query/plan boundary | Planner                             | accepts canonical `GenericGraphSource`; obsolete manifest bridge removed |
-| Workspace semantic admission            | contract validation | Workspace graph authoring aggregate | stable sidecar identity remains canonical; no new rail                   |
+| Rail                                      | Type                | DDD owner                           | Effect of this slice                                                     |
+| ----------------------------------------- | ------------------- | ----------------------------------- | ------------------------------------------------------------------------ |
+| `ImportWarehouseSources`                  | command             | Warehouse source import             | allocate opaque logical graph ID; preserve connected binding separately  |
+| `StartRun` / PlannerBackedStartRunUseCase | command             | Run command application service     | accepts canonical `GenericGraphSource`; obsolete manifest bridge removed |
+| Workspace semantic admission              | contract validation | Workspace graph authoring aggregate | stable sidecar identity remains canonical; no new rail                   |
 
 No new route, endpoint, store or command/query rail is introduced.
 
@@ -263,9 +263,9 @@ opaque IDs for distinct physical objects.
       "name": "DvtSubstraitAuthoringSidecarV1Schema",
       "path": "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts",
       "cqRails": [
-        "PreviewExecutionPlan"
+        "StartRun"
       ],
-      "dddOwner": "Planner",
+      "dddOwner": "Run command application service",
       "unitTests": [
         "pnpm --filter @dvt/contracts test",
         "pnpm --filter @dvt/planner test",
@@ -285,9 +285,9 @@ opaque IDs for distinct physical objects.
       "name": "PlannerFacade",
       "path": "packages/@dvt/planner/src/application/PlannerFacade.ts",
       "cqRails": [
-        "PreviewExecutionPlan"
+        "StartRun"
       ],
-      "dddOwner": "Planner",
+      "dddOwner": "Run command application service",
       "unitTests": [
         "pnpm --filter @dvt/contracts test",
         "pnpm --filter @dvt/planner test",
@@ -370,7 +370,7 @@ opaque IDs for distinct physical objects.
       "expectedFailure": "Four route witnesses expect physical-name-derived IDs instead of persisted opaque Source identity"
     },
     {
-      "id": "previewexecutionplan-record",
+      "id": "startrun-record",
       "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/warehouseSourceImportRoutes.test.ts",
       "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/warehouseSourceImportRoutes.test.ts test/application/services/graphDraftWarehouseSourceImportStrategy.test.ts",
       "patchSurfaces": [
@@ -426,16 +426,16 @@ opaque IDs for distinct physical objects.
       "authorizationScope": "existing tenant project environment capability"
     },
     {
-      "name": "PreviewExecutionPlan",
-      "type": "query",
+      "name": "StartRun",
+      "type": "command",
       "status": "implemented",
-      "dddOwner": "Planner",
+      "dddOwner": "Run command application service",
       "negativeTests": [
         "invalid or duplicate logical graph IDs reject"
       ],
-      "adapterSurface": "existing plan preview/compile boundary",
-      "applicationPort": "PlannerFacade",
-      "authorizationScope": "existing plan scope"
+      "adapterSurface": "Existing protected StartRun HTTP command",
+      "applicationPort": "PlannerBackedStartRunUseCase",
+      "authorizationScope": "Authorized tenant, project and environment run-start scope"
     }
   ],
   "architectureGuards": [
