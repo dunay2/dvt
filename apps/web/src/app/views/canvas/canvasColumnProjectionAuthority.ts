@@ -270,11 +270,15 @@ export function resolveCanvasColumnMappingTarget(
       );
       if (!inspection.ok) return null;
       const output = inspection.projection.outputs.find(
-        (candidate) => candidate.fieldId === columnId || candidate.name === columnId
+        (candidate) => candidate.fieldId === columnId
       );
-      return output == null
-        ? { nodeId: targetNode.id, columnName: columnId }
-        : { nodeId: targetNode.id, outputId: output.fieldId, columnName: output.name };
+      if (output != null) {
+        return { nodeId: targetNode.id, outputId: output.fieldId, columnName: output.name };
+      }
+      if (inspection.projection.outputs.some((candidate) => candidate.name === columnId)) {
+        return null;
+      }
+      return { nodeId: targetNode.id, columnName: columnId };
     }
     const targetColumn = readCanvasNodeColumns(targetNode).find(
       (column) => column.name === columnId
