@@ -4,6 +4,7 @@ import {
   MiniMap,
   ReactFlow,
   type Edge,
+  type MiniMapProps,
   type Node,
   type NodeTypes,
   type ReactFlowProps,
@@ -65,6 +66,7 @@ type CanvasViewportSurfaceViewProps = Readonly<{
   } | null;
   onCloseNodeHealthPopover: (restoreTriggerFocus?: boolean) => void;
   onImpactFocusNodeChange?: (nodeId: string | null) => void;
+  onMiniMapNodeClick: NonNullable<MiniMapProps<Node>['onNodeClick']>;
   graphSearchController: CanvasGraphSearchController;
   graphFilterController: CanvasGraphFilterController;
   copy: CanvasViewCopy;
@@ -154,6 +156,7 @@ function CanvasViewportReactFlowSurface({
   contextSurfaceLabel,
   onCloseNodeHealthPopover,
   onImpactFocusNodeChange,
+  onMiniMapNodeClick,
   graphSearchController,
   copy,
 }: Omit<
@@ -270,6 +273,7 @@ function CanvasViewportReactFlowSurface({
         <MiniMap
           pannable
           zoomable
+          onNodeClick={onMiniMapNodeClick}
           className="rounded-lg"
           maskColor="var(--canvas-minimap-mask)"
           maskStrokeColor="var(--canvas-minimap-mask-stroke)"
