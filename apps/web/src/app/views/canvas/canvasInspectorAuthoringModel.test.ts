@@ -15,6 +15,7 @@ import {
 } from './canvasDvtTransformAuthoringAuthority';
 import {
   applyDvtSubstraitFilter,
+  encodeDvtSubstraitFilterDocument,
   inspectDvtSubstraitFilter,
   resolveDvtSubstraitFilterCapabilities,
 } from './canvasDvtSubstraitFilter';
@@ -78,6 +79,25 @@ function buildImportedWarehouseSourceNode(metadata?: Record<string, unknown>): C
 }
 
 describe('canvasInspectorAuthoringModel', () => {
+  it('keeps repeated inspection of a connected physical Source clean without allocating semantics', () => {
+    const node = buildImportedWarehouseSourceNode({
+      connectedSourceRef: {
+        schemaVersion: 'connected-source-ref.v1',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: 'warehouse-main',
+          provider: 'postgres',
+        },
+        sourceObjectId: 'erp.orders',
+      },
+    });
+    const first = createCanvasInspectorNodeDraft(node);
+    const second = createCanvasInspectorNodeDraft(node);
+    expect(first).toEqual(second);
+    expect(hasCanvasInspectorNodeDraftChanges(node, first)).toBe(false);
+    expect(hasCanvasInspectorNodeDraftChanges(node, second)).toBe(false);
+    expect(readDvtTransformAuthoringAuthority(node)).toBeNull();
+  });
   it('creates a semantic inspector draft from the selected canonical node', () => {
     expect(createCanvasInspectorNodeDraft(buildNode())).toEqual({
       name: 'orders_source',
@@ -713,7 +733,7 @@ describe('canvasInspectorAuthoringModel', () => {
     expect(applyCanvasInspectorNodeDraft(node, draft)).toEqual(node);
   });
 
-  it('removes a filter injected into a Source draft without changing physical identity', () => {
+  it('normalizes a persisted legacy Source filter without changing physical identity', () => {
     const source = buildImportedWarehouseSourceNode({
       connectedSourceRef: {
         schemaVersion: 'connected-source-ref.v1',
@@ -726,28 +746,40 @@ describe('canvasInspectorAuthoringModel', () => {
       },
       columns: [{ name: 'customer', type: 'text', nullable: false }],
     });
-    const draft = createCanvasInspectorNodeDraft(source);
-    if (draft.dvt?.kind !== 'source' || draft.dvt.semantic == null) {
-      throw new Error('Expected editable Source semantics.');
-    }
+    const projectionSource = resolveDvtSubstraitProjectionSource(source);
     const capability = resolveDvtSubstraitFilterCapabilities({
       dataType: 'text',
       provider: 'postgres',
     })[0];
-    if (capability == null) throw new Error('Expected an admitted filter capability.');
-    const projection = inspectDvtSubstraitProjectionDraft(draft.dvt.semantic);
-    if (!projection.ok) throw new Error('Expected an editable Source projection.');
-    const filtered = applyDvtSubstraitFilter(draft.dvt.semantic, {
-      fieldId: projection.projection.outputs[0]!.fieldId,
+    if (projectionSource == null || capability == null) {
+      throw new Error('Expected an admitted legacy Source fixture.');
+    }
+    const base = createDvtSubstraitProjectionDraft({
+      source: projectionSource,
+      targetNodeId: source.id,
+      outputs: [
+        { fieldId: 'legacy-output:customer', name: 'customer', sourceFieldName: 'customer' },
+      ],
+    });
+    const filtered = applyDvtSubstraitFilter(base, {
+      fieldId: 'legacy-output:customer',
       dataType: 'text',
       capabilityId: capability.capabilityId,
       value: 'Ada',
     });
+    const legacySource = applyDvtSubstraitSemanticDocument(
+      source,
+      encodeDvtSubstraitFilterDocument(filtered)
+    );
 
-    const updated = applyCanvasInspectorNodeDraft(source, {
-      ...draft,
-      dvt: { ...draft.dvt, semantic: filtered },
-    });
+    const draft = createCanvasInspectorNodeDraft(legacySource);
+    if (draft.dvt?.kind !== 'source' || draft.dvt.semantic == null) {
+      throw new Error('Expected persisted legacy Source semantics to be normalized.');
+    }
+    expect(inspectDvtSubstraitFilter(draft.dvt.semantic)).toBeNull();
+    expect(inspectDvtSubstraitProjectionDraft(draft.dvt.semantic).ok).toBe(true);
+
+    const updated = applyCanvasInspectorNodeDraft(legacySource, draft);
     const authority = readDvtTransformAuthoringAuthority(updated);
 
     expect(updated).toMatchObject({
@@ -755,6 +787,11 @@ describe('canvasInspectorAuthoringModel', () => {
       pluginId: source.pluginId,
       kind: 'dvt:source',
       role: 'input',
+      metadata: {
+        connectedSourceRef: source.metadata?.connectedSourceRef,
+        schema: source.metadata?.schema,
+        tableName: source.metadata?.tableName,
+      },
     });
     expect(
       inspectDvtSubstraitFilter(decodeDvtSubstraitProjectionDocument(authority?.semanticDocument))

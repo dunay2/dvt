@@ -282,7 +282,7 @@ describe('DvtAuthoringFields', () => {
       columns: ['order_id', 'customer'],
     });
     renderFields(source, undefined, undefined, [source], [], 'columns');
-    expect(draftJson()).toContain('"semantic"');
+    expect(draftJson()).not.toContain('"semantic"');
     expect(container.querySelector('[data-slot="dvt-filter-authoring"]')).toBeNull();
     expect(container.querySelector('select[name="dvt-filter-field"]')).toBeNull();
     expect(container.querySelector('input[name="dvt-filter-value"]')).toBeNull();
@@ -412,8 +412,9 @@ describe('DvtAuthoringFields', () => {
     });
 
     expect(draftJson()).toContain('"shape":"inner_join"');
-    expect(draftJson()).toContain('"field:source-orders:customer"');
-    expect(draftJson()).toContain('"field:source-audits:principal_id"');
+    expect(draftJson()).toMatch(/"fieldId":"dvt_fld_[^"]+"/);
+    expect(draftJson()).not.toContain('"field:source-orders:customer"');
+    expect(draftJson()).not.toContain('"field:source-audits:principal_id"');
     expect(
       container.querySelector('[data-slot="dvt-substrait-n-input-join-authoring"]')
     ).not.toBeNull();
@@ -518,43 +519,50 @@ describe('DvtAuthoringFields', () => {
     };
 
     chooseConnectedField(shipments.id);
-    expect(draftJson()).toContain('field:dvt-transform:shipment_id');
+    expect(draftJson()).toContain('"displayName":"shipment_id"');
     expect(
       container.querySelector('[data-slot="dvt-substrait-n-input-join-authoring"]')
     ).not.toBeNull();
     expect(container.textContent).toContain('customers + orders + shipments');
 
     chooseConnectedField(tickets.id);
-    expect(draftJson()).toContain('field:dvt-transform:ticket_id');
+    expect(draftJson()).toContain('"displayName":"ticket_id"');
     expect(container.textContent).toContain('customers + orders + shipments + tickets');
     expect(draftJson()).toContain('dvt-vtx2-n-input-inner-join-card');
 
     chooseConnectedField(profiles.id);
-    expect(draftJson()).toContain('field:dvt-transform:profiles_name');
+    expect(draftJson()).toContain('"displayName":"profiles_name"');
     expect(container.textContent).toContain('customers + orders + shipments + tickets + profiles');
 
-    const shipmentCustomerSelection = container.querySelector<HTMLInputElement>(
-      'input[name="dvt-substrait-n-input-field"][value="field:source-shipments:customer_id"]'
-    );
+    const shipmentCustomerSelection = [
+      ...container.querySelectorAll<HTMLInputElement>('input[name="dvt-substrait-n-input-field"]'),
+    ].find((input) => input.getAttribute('aria-label')?.endsWith('shipments.customer_id'));
+    expect(shipmentCustomerSelection).toBeDefined();
     expect(shipmentCustomerSelection?.checked).toBe(false);
+    const shipmentCustomerFieldId = shipmentCustomerSelection!.value;
+    expect(shipmentCustomerFieldId).toMatch(/^dvt_fld_/);
     act(() => {
       fireEvent.click(shipmentCustomerSelection!);
     });
-    const shipmentCustomerOutput = container.querySelector<HTMLInputElement>(
-      'input[data-slot="dvt-substrait-n-input-output-name"][data-source-field-id="field:source-shipments:customer_id"]'
-    );
+    const shipmentCustomerOutput = [
+      ...container.querySelectorAll<HTMLInputElement>(
+        'input[data-slot="dvt-substrait-n-input-output-name"]'
+      ),
+    ].find((input) => input.dataset.sourceFieldId === shipmentCustomerFieldId);
     expect(shipmentCustomerOutput?.value).toBe('shipments_customer_id');
+    const moveShipmentCustomerUp = [
+      ...container.querySelectorAll<HTMLButtonElement>(
+        'button[data-action="move-substrait-n-input-field-up"]'
+      ),
+    ].find((button) => button.dataset.sourceFieldId === shipmentCustomerFieldId);
+    expect(moveShipmentCustomerUp).toBeDefined();
     act(() => {
       fireEvent.input(shipmentCustomerOutput!, { target: { value: 'shipping_customer' } });
       fireEvent.focusOut(shipmentCustomerOutput!);
-      fireEvent.click(
-        container.querySelector<HTMLButtonElement>(
-          'button[data-action="move-substrait-n-input-field-up"][data-source-field-id="field:source-shipments:customer_id"]'
-        )!
-      );
+      fireEvent.click(moveShipmentCustomerUp!);
     });
-    expect(draftJson()).toContain('"fieldId":"field:dvt-transform:shipments_customer_id"');
     expect(draftJson()).toContain('"displayName":"shipping_customer"');
+    expect(draftJson()).not.toContain('field:dvt-transform:shipments_customer_id');
 
     const grainField = container.querySelector<HTMLSelectElement>(
       '[data-slot="dvt-substrait-inner-join-grain-field"]'
@@ -562,9 +570,13 @@ describe('DvtAuthoringFields', () => {
     const countOutput = container.querySelector<HTMLInputElement>(
       '[data-slot="dvt-substrait-inner-join-count-output-name"]'
     );
+    const shipmentGrain = [...(grainField?.options ?? [])].find(
+      (option) => option.textContent?.trim() === 'shipment_id'
+    );
+    expect(shipmentGrain?.value).toMatch(/^dvt_fld_/);
     act(() => {
       fireEvent.change(grainField!, {
-        target: { value: 'field:dvt-transform:shipment_id' },
+        target: { value: shipmentGrain!.value },
       });
       fireEvent.input(countOutput!, { target: { value: 'shipment_count' } });
       fireEvent.click(
@@ -711,8 +723,8 @@ describe('DvtAuthoringFields', () => {
       );
     });
     expect(draftJson()).toContain('"names":["region","customer_id"]');
-    expect(draftJson()).toContain('"fieldId":"field:dvt-transform:country"');
     expect(draftJson()).toContain('"displayName":"region"');
+    expect(draftJson()).not.toContain('field:dvt-transform:country');
 
     const grainField = container.querySelector<HTMLSelectElement>(
       '[data-slot="dvt-substrait-union-all-grain-field"]'
@@ -723,11 +735,15 @@ describe('DvtAuthoringFields', () => {
     const applyGrouping = container.querySelector<HTMLButtonElement>(
       '[data-slot="dvt-substrait-union-all-apply-grouping"]'
     );
+    const regionGrain = [...(grainField?.options ?? [])].find(
+      (option) => option.textContent?.trim() === 'region'
+    );
     expect(grainField).not.toBeNull();
     expect(countOutput).not.toBeNull();
+    expect(regionGrain?.value).toMatch(/^dvt_fld_/);
     act(() => {
       fireEvent.change(grainField!, {
-        target: { value: 'field:dvt-transform:country' },
+        target: { value: regionGrain!.value },
       });
       fireEvent.input(countOutput!, { target: { value: 'customer_count' } });
       fireEvent.keyDown(applyGrouping!, { key: 'Enter' });

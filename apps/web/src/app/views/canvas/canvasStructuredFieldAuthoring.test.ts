@@ -20,6 +20,9 @@ import {
   reorderCanvasStructuredFieldChildren,
 } from './canvasStructuredFieldAuthoring';
 
+const OPAQUE_FIELD_ID =
+  /^dvt_fld_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 const source: CanonicalNode = {
   id: 'source-orders',
   name: 'orders',
@@ -115,10 +118,13 @@ describe('ConfigureCanvasDvtNode structured-field command', () => {
     const inspection = inspectDvtSubstraitStructuredFieldDraft(
       decodeDvtSubstraitStructuredFieldDocument(authority.semanticDocument)
     );
-    expect(inspection.ok ? inspection.fields[0] : null).toMatchObject({
+    const created = inspection.ok ? inspection.fields[0] : null;
+    expect(created).toMatchObject({
       name: 'identity',
       children: [{ name: 'order_id' }, { name: 'customer' }],
     });
+    expect(created?.fieldId).toMatch(OPAQUE_FIELD_ID);
+    expect(created?.fieldId).not.toContain('identity');
   });
 
   it('rejects an unsupported node without mutating the session', () => {
@@ -154,6 +160,15 @@ describe('ConfigureCanvasDvtNode structured-field command', () => {
     if (composed.outcome !== 'applied') throw new Error('Expected structured field creation.');
     const persistedTarget = composed.draftSession.localNodeCatalog?.[target.id];
     if (persistedTarget == null) throw new Error('Expected composed Transform.');
+    const persistedAuthority = readDvtTransformAuthoringAuthority(persistedTarget)!;
+    const persistedInspection = inspectDvtSubstraitStructuredFieldDraft(
+      decodeDvtSubstraitStructuredFieldDocument(persistedAuthority.semanticDocument)
+    );
+    const parentFieldId = persistedInspection.ok
+      ? persistedInspection.fields[0]?.fieldId
+      : undefined;
+    if (parentFieldId == null) throw new Error('Expected stable structured parent FieldId.');
+
     const persistedSession: CanvasDraftSession = {
       ...composed.draftSession,
       baseline: {
@@ -182,7 +197,7 @@ describe('ConfigureCanvasDvtNode structured-field command', () => {
       canonicalNodesById: new Map([[source.id, source]]),
       request: {
         nodeId: target.id,
-        parentFieldId: 'output:identity',
+        parentFieldId,
         fieldId: 'output:customer',
         targetFieldId: 'output:order_id',
         placement: 'before',
@@ -196,6 +211,7 @@ describe('ConfigureCanvasDvtNode structured-field command', () => {
     const inspection = inspectDvtSubstraitStructuredFieldDraft(
       decodeDvtSubstraitStructuredFieldDocument(authority.semanticDocument)
     );
+    expect(inspection.ok ? inspection.fields[0]?.fieldId : null).toBe(parentFieldId);
     expect(inspection.ok ? inspection.fields[0]?.children : null).toMatchObject([
       { fieldId: 'output:customer' },
       { fieldId: 'output:order_id' },

@@ -6,6 +6,26 @@ import {
 } from './canvasDuplicateNodeCommand';
 
 describe('canvasDuplicateNodeCommand', () => {
+  it('rejects malformed semantic authority before admitting a duplicate', () => {
+    const sourceCanonicalNode = {
+      id: 'broken-transform',
+      name: 'Broken',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+      metadata: { transformAuthoring: { version: 'invalid' } },
+    } as const;
+    expect(
+      resolveCanvasNodeDuplicateTransaction({
+        nodeId: sourceCanonicalNode.id,
+        sourceCanonicalNode: { ...sourceCanonicalNode, tags: [] },
+        existingNodes: [{ id: sourceCanonicalNode.id, position: { x: 0, y: 0 } }],
+        visibleNodeIds: [sourceCanonicalNode.id],
+      })
+    ).toEqual({ outcome: 'noop', reason: 'invalid_semantic_authority' });
+  });
   it('builds a new node identity, resets runtime status, and displaces position', () => {
     const duplicate = buildDuplicateNodeCommand({
       sourceNode: {

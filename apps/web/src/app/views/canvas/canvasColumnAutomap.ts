@@ -7,7 +7,7 @@ import {
   type CanvasColumn,
   type CanvasColumnAutomapResult,
 } from './canvasColumnMappingModel';
-import { readEditableCanvasProjection } from './canvasColumnProjectionAuthority';
+import { readEditableCanvasProjectionEntry } from './canvasColumnProjectionAuthority';
 import type { CanvasDraftSession } from './canvasDraftSession';
 
 function normalizeKnownType(value: string | undefined): string | null {
@@ -42,7 +42,12 @@ export function automapCanvasColumns(args: {
     args.targetNodeId
   );
   if (targetNode == null) return { outcome: 'rejected', reason: 'target_node_not_found' };
-  const projectionResult = readEditableCanvasProjection(targetNode);
+  const projectionResult = readEditableCanvasProjectionEntry({
+    targetNode,
+    edges: args.draftSession.workingSet.visibleEdges,
+    resolveNode: (nodeId) =>
+      resolveCanvasSessionNode(args.draftSession, args.canonicalNodesById, nodeId),
+  });
   if (projectionResult.outcome === 'rejected') return projectionResult;
   const mappedInputs = new Set(
     (projectionResult.projection?.outputs ?? []).flatMap((output) =>

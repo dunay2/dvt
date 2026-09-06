@@ -19,10 +19,16 @@ import {
   inspectDvtSubstraitPilotWindowDraft,
   removeDvtSubstraitPilotRowNumber,
   renameDvtSubstraitPilotRowNumberOutput,
+  type DvtSubstraitPilotWindowProjection,
 } from './canvasDvtSubstraitWindow';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { createDvtNodeAuthoringMetadata } from './canvasDvtAuthoringModel';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
+
+const UUID_V7 = '[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}';
+const DVT_FIELD_ID = new RegExp(`^dvt_fld_${UUID_V7}$`, 'i');
+
+type PilotField = Readonly<{ name: string; fieldId: string; outputOrdinal: number }>;
 
 function pilot(): DvtSubstraitPilotDraft {
   return createDvtSubstraitPilotDraft({
@@ -31,12 +37,29 @@ function pilot(): DvtSubstraitPilotDraft {
   });
 }
 
+function requirePilotField(draft: DvtSubstraitPilotDraft, name: string): PilotField {
+  const inspection = inspectDvtSubstraitPilotDraft(draft);
+  if (!inspection.ok) throw new Error('Expected the admitted pilot.');
+  const field = inspection.projection.outputs.find((output) => output.name === name);
+  if (field == null) throw new Error(`Expected pilot field ${name}.`);
+  return field;
+}
+
 function withRowNumber(): DvtSubstraitPilotDraft {
-  return applyDvtSubstraitPilotRowNumber(pilot(), {
-    partitionFieldId: 'field:transform-customers:country',
-    orderFieldId: 'field:transform-customers:name',
+  const draft = pilot();
+  const partition = requirePilotField(draft, 'country');
+  const order = requirePilotField(draft, 'name');
+  return applyDvtSubstraitPilotRowNumber(draft, {
+    partitionFieldId: partition.fieldId,
+    orderFieldId: order.fieldId,
     outputName: 'country_row_number',
   });
+}
+
+function requireWindow(draft: DvtSubstraitPilotDraft): DvtSubstraitPilotWindowProjection {
+  const inspection = inspectDvtSubstraitPilotWindowDraft(draft);
+  if (!inspection.ok) throw new Error('Expected an admitted row-number window.');
+  return inspection.projection;
 }
 
 function requireWindowFunction(draft: DvtSubstraitPilotDraft): Expression_WindowFunction {
@@ -50,63 +73,52 @@ function requireWindowFunction(draft: DvtSubstraitPilotDraft): Expression_Window
 }
 
 describe('VTX2 typed Substrait row-number window', () => {
-  it('persists partition, ordering and row_number with stable field identity', () => {
-    const persisted = encodeDvtSubstraitPilotDocument(withRowNumber());
-    const reopened = decodeDvtSubstraitPilotDocument(persisted);
+  it('allocates an opaque row-number FieldId and persists it unchanged', () => {
+    const windowed = withRowNumber();
+    const projection = requireWindow(windowed);
+    expect(projection.result.fieldId).toMatch(DVT_FIELD_ID);
 
-    expect(inspectDvtSubstraitPilotWindowDraft(reopened)).toEqual({
-      ok: true,
-      projection: {
-        sourceName: 'customers',
-        partitionField: {
-          name: 'country',
-          fieldId: 'field:transform-customers:country',
-          inputOrdinal: 2,
-        },
-        orderField: {
-          name: 'name',
-          fieldId: 'field:transform-customers:name',
-          inputOrdinal: 0,
-        },
-        result: {
-          name: 'country_row_number',
-          fieldId: 'field:transform-customers:row-number',
-          capabilityId:
-            'substrait/simple-extension/window-function/extension%3Aio.substrait%3Afunctions_arithmetic/row_number',
-        },
-        outputs: [
-          { name: 'name', fieldId: 'field:transform-customers:name', outputOrdinal: 0 },
-          { name: 'email', fieldId: 'field:transform-customers:email', outputOrdinal: 1 },
-          { name: 'country', fieldId: 'field:transform-customers:country', outputOrdinal: 2 },
-          {
-            name: 'country_row_number',
-            fieldId: 'field:transform-customers:row-number',
-            outputOrdinal: 3,
-          },
-        ],
-      },
-    });
+    const persisted = encodeDvtSubstraitPilotDocument(windowed);
+    const reopened = decodeDvtSubstraitPilotDocument(persisted);
+    expect(requireWindow(reopened)).toEqual(projection);
     expect(persisted.sidecar.semanticPlanSha256).toBe(persisted.semanticPlan.sha256);
   });
 
-  it('renames and removes the window without changing existing FieldIds', () => {
-    const renamed = renameDvtSubstraitPilotRowNumberOutput(withRowNumber(), 'row_in_country');
-    expect(inspectDvtSubstraitPilotWindowDraft(renamed)).toMatchObject({
-      ok: true,
-      projection: { result: { name: 'row_in_country' } },
-    });
+  it('renames and removes the window without changing any surviving FieldId', () => {
+    const windowed = withRowNumber();
+    const before = requireWindow(windowed);
+    const renamed = renameDvtSubstraitPilotRowNumberOutput(windowed, 'row_in_country');
+    const after = requireWindow(renamed);
+    expect(after.result).toMatchObject({ name: 'row_in_country', fieldId: before.result.fieldId });
 
     const restored = removeDvtSubstraitPilotRowNumber(renamed);
-    expect(inspectDvtSubstraitPilotDraft(restored)).toMatchObject({
-      ok: true,
-      projection: {
-        outputs: [
-          { name: 'name', fieldId: 'field:transform-customers:name', outputOrdinal: 0 },
-          { name: 'email', fieldId: 'field:transform-customers:email', outputOrdinal: 1 },
-          { name: 'country', fieldId: 'field:transform-customers:country', outputOrdinal: 2 },
-        ],
+    const restoredInspection = inspectDvtSubstraitPilotDraft(restored);
+    expect(restoredInspection.ok).toBe(true);
+    if (!restoredInspection.ok) return;
+    expect(restoredInspection.projection.outputs).toEqual(before.outputs.slice(0, 3));
+  });
+
+  it('treats a persisted legacy row-number FieldId as opaque identity', () => {
+    const windowed = withRowNumber();
+    const current = requireWindow(windowed);
+    const legacyResultId = 'field:transform-customers:row-number';
+    const legacy: DvtSubstraitPilotDraft = {
+      plan: windowed.plan,
+      sidecar: {
+        ...windowed.sidecar,
+        fields: windowed.sidecar.fields.map((field) =>
+          field.fieldId === current.result.fieldId ? { ...field, fieldId: legacyResultId } : field
+        ),
       },
+    };
+
+    expect(requireWindow(legacy).result.fieldId).toBe(legacyResultId);
+    const renamed = renameDvtSubstraitPilotRowNumberOutput(legacy, 'legacy_row');
+    expect(requireWindow(renamed).result).toMatchObject({
+      name: 'legacy_row',
+      fieldId: legacyResultId,
     });
+    expect(inspectDvtSubstraitPilotDraft(removeDvtSubstraitPilotRowNumber(renamed)).ok).toBe(true);
   });
 
   it('fails closed for a wrong function signature, direction or frame', () => {
@@ -195,9 +207,8 @@ describe('VTX2 typed Substrait row-number window', () => {
     [
       'sidecar binding',
       (draft: DvtSubstraitPilotDraft) => {
-        const binding = draft.sidecar.fields.find(
-          (field) => field.fieldId === 'field:transform-customers:row-number'
-        );
+        const resultId = requireWindow(draft).result.fieldId;
+        const binding = draft.sidecar.fields.find((field) => field.fieldId === resultId);
         if (binding == null) throw new Error('Expected row-number binding.');
         binding.outputOrdinal = 2;
       },
@@ -210,23 +221,31 @@ describe('VTX2 typed Substrait row-number window', () => {
   });
 
   it('rejects duplicate names and degenerate partition/order selections', () => {
+    const degenerate = pilot();
+    const country = requirePilotField(degenerate, 'country');
     expect(
-      applyDvtSubstraitPilotRowNumber(pilot(), {
-        partitionFieldId: 'field:transform-customers:country',
-        orderFieldId: 'field:transform-customers:country',
+      applyDvtSubstraitPilotRowNumber(degenerate, {
+        partitionFieldId: country.fieldId,
+        orderFieldId: country.fieldId,
         outputName: 'row_number',
       })
-    ).toEqual(pilot());
+    ).toBe(degenerate);
+
+    const duplicateName = pilot();
+    const duplicateCountry = requirePilotField(duplicateName, 'country');
+    const name = requirePilotField(duplicateName, 'name');
     expect(
-      applyDvtSubstraitPilotRowNumber(pilot(), {
-        partitionFieldId: 'field:transform-customers:country',
-        orderFieldId: 'field:transform-customers:name',
+      applyDvtSubstraitPilotRowNumber(duplicateName, {
+        partitionFieldId: duplicateCountry.fieldId,
+        orderFieldId: name.fieldId,
         outputName: 'country',
       })
-    ).toEqual(pilot());
+    ).toBe(duplicateName);
   });
 
   it('projects the persisted window output on the Transform card', () => {
+    const windowed = withRowNumber();
+    const projection = requireWindow(windowed);
     const transform = applyDvtSubstraitSemanticDocument(
       {
         id: 'transform-customers',
@@ -238,7 +257,7 @@ describe('VTX2 typed Substrait row-number window', () => {
         tags: ['authoring'],
         metadata: {},
       },
-      encodeDvtSubstraitPilotDocument(withRowNumber())
+      encodeDvtSubstraitPilotDocument(windowed)
     );
     const source: CanonicalNode = {
       id: 'source-customers',
@@ -258,12 +277,9 @@ describe('VTX2 typed Substrait row-number window', () => {
       nodes: [source, transform],
       edges: [{ sourceId: source.id, targetId: transform.id }],
     });
-    expect(truth.columns.visible.map((column) => [column.name, column.reference])).toEqual([
-      ['name', 'field:transform-customers:name'],
-      ['email', 'field:transform-customers:email'],
-      ['country', 'field:transform-customers:country'],
-      ['country_row_number', 'field:transform-customers:row-number'],
-    ]);
+    expect(truth.columns.visible.map((column) => [column.name, column.reference])).toEqual(
+      projection.outputs.map((output) => [output.name, output.fieldId])
+    );
     expect(createDvtNodeAuthoringMetadata(transform)).toMatchObject({
       kind: 'transform',
       mode: 'substrait',

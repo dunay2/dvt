@@ -54,7 +54,9 @@ describe('canvas draft recovery boundary architecture', () => {
 
     expect(layoutPersistenceSource).toContain('function useCanvasNodePositionPersistence(');
     expect(layoutPersistenceSource).toContain('function useCanvasViewportPersistenceHandler(');
-    expect(layoutPersistenceSource).toContain('mergeDraggedNodePosition(allNodes, draggedNode)');
+    expect(layoutPersistenceSource).toContain(
+      'mergeDraggedNodePosition([...nodes, ...draggedNodes], draggedNode)'
+    );
     expect(layoutPersistenceSource).not.toContain('workspaceGraphDraftAuthoringPort');
     expect(layoutPersistenceSource).not.toContain('saveGraphDraft');
     expect(readAppSource('canvasDraftLayoutHydrationPolicy.ts')).toContain(

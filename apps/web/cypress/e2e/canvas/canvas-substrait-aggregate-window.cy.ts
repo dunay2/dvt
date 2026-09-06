@@ -9,6 +9,9 @@ import {
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
 
+const DVT_FIELD_ID =
+  /^dvt_fld_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 type CanvasDraftSaveRequestBody = {
   draft: {
     nodes: Array<{
@@ -60,12 +63,13 @@ describe('Canvas Substrait aggregate and window composition', () => {
     visitCanvas();
 
     cy.get(
-      '.react-flow__node[data-id="transform-customers"] [data-slot="canvas-node-shell"]'
+      '.react-flow__node[data-id="transform-customers"] [data-slot="graph-node-card-title"]'
     ).dblclick();
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
-    cy.get('select[data-slot="dvt-substrait-grain-field"]').select(
-      'field:transform-customers:country'
-    );
+    cy.get('select[data-slot="dvt-substrait-grain-field"]')
+      .select('country')
+      .find('option:selected')
+      .should('have.text', 'country');
     cy.get('input[data-slot="dvt-substrait-count-output-name"]').clear().type('customer_count');
     cy.get('button[data-slot="dvt-substrait-apply-aggregation"]').click();
 
@@ -101,30 +105,25 @@ describe('Canvas Substrait aggregate and window composition', () => {
         decodeDvtSubstraitPilotDocument(transformAuthoring?.semanticDocument)
       );
 
-      expect(inspection.ok && inspection.projection.outputs).to.deep.equal([
-        {
-          name: 'country',
-          fieldId: 'field:transform-customers:country',
-          outputOrdinal: 0,
-        },
-        {
-          name: 'customer_count',
-          fieldId: 'field:transform-customers:count',
-          outputOrdinal: 1,
-        },
-        {
-          name: 'country_rank',
-          fieldId: 'field:transform-customers:aggregate-row-number',
-          outputOrdinal: 2,
-        },
+      expect(inspection.ok).to.equal(true);
+      if (!inspection.ok) return;
+      expect(
+        inspection.projection.outputs.map(({ name, outputOrdinal }) => ({ name, outputOrdinal }))
+      ).to.deep.equal([
+        { name: 'country', outputOrdinal: 0 },
+        { name: 'customer_count', outputOrdinal: 1 },
+        { name: 'country_rank', outputOrdinal: 2 },
       ]);
+      inspection.projection.outputs.forEach((output) =>
+        expect(output.fieldId).to.match(DVT_FIELD_ID)
+      );
     });
 
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     visitCanvas();
     cy.get('.react-flow__node[data-id="transform-customers"]')
-      .should('contain.text', 'Columns3')
-      .find('[data-slot="canvas-node-shell"]')
+      .should('contain.text', 'Columns (3)')
+      .find('[data-slot="graph-node-card-title"]')
       .dblclick();
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
     cy.get('[data-slot="dvt-substrait-grain-field-readonly"]').should('contain.text', 'country');

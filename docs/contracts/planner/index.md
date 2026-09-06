@@ -15,6 +15,7 @@ ExecutionPlan and planner-related schemas and admission contracts.
 - `packages/@dvt/contracts/src/contracts/planner/CustomPolicyNamespaceRegistry.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DbtProjectGraphProjection.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DbtStepSelector.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitAuthoringIdentity.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityAdmission.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalogSchema.v1.ts`

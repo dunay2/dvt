@@ -28,6 +28,7 @@ import {
 } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import {
   DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1,
+  allocateDvtFieldId,
   buildDvtSubstraitStandardCapabilityId,
   type DvtSubstraitAuthoringSidecarV1,
 } from '@dvt/contracts';
@@ -240,11 +241,6 @@ export function isDvtSubstraitRowNumberFunction(
   );
 }
 
-function parseTargetId(projectRelationId: string): string | null {
-  const match = /^relation:(.+):project$/.exec(projectRelationId);
-  return match?.[1] ?? null;
-}
-
 export function removeDvtSubstraitRowNumberExtension(plan: Plan): void {
   plan.extensions = plan.extensions.filter(
     (entry) =>
@@ -316,21 +312,20 @@ function inspectValidWindow(draft: DvtSubstraitPilotDraft): ValidWindow | null {
   const projectBinding = draft.sidecar.relations.find(
     (relation) => relation.relAnchor === projectAnchor
   );
-  const targetId = projectBinding == null ? null : parseTargetId(projectBinding.relationId);
-  if (projectBinding == null || targetId == null) return null;
-  const resultFieldId = `field:${targetId}:row-number`;
+  if (projectBinding == null) return null;
   const projectFields = draft.sidecar.fields
     .filter((field) => field.relationId === projectBinding.relationId)
     .sort((left, right) => left.outputOrdinal - right.outputOrdinal);
   const resultField = projectFields[3];
   if (
     projectFields.length !== 4 ||
-    resultField?.fieldId !== resultFieldId ||
+    resultField == null ||
     resultField.outputOrdinal !== 3 ||
     resultField.displayName !== root.names[3]
   ) {
     return null;
   }
+  const resultFieldId = resultField.fieldId;
 
   const basePlan = clonePlan(draft.plan);
   const baseRoot = basePlan.relations[0]?.relType;
@@ -425,8 +420,7 @@ export function applyDvtSubstraitPilotRowNumber(
   const projectBinding = draft.sidecar.relations.find(
     (relation) => relation.relAnchor === project.common?.relAnchor
   );
-  const targetId = projectBinding == null ? null : parseTargetId(projectBinding.relationId);
-  if (projectBinding == null || targetId == null) return draft;
+  if (projectBinding == null) return draft;
   const functionReference = ensureDvtSubstraitRowNumberFunction(plan);
   project.expressions.push(
     create(ExpressionSchema, {
@@ -459,7 +453,7 @@ export function applyDvtSubstraitPilotRowNumber(
     fields: [
       ...draft.sidecar.fields,
       {
-        fieldId: `field:${targetId}:row-number`,
+        fieldId: allocateDvtFieldId(),
         relationId: projectBinding.relationId,
         outputOrdinal: 3,
         displayName: outputName,

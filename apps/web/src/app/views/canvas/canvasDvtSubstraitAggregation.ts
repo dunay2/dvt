@@ -30,6 +30,8 @@ import {
 } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import {
   DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1,
+  allocateDvtFieldId,
+  allocateDvtRelationId,
   buildDvtSubstraitStandardCapabilityId,
   type DvtSubstraitAuthoringSidecarV1,
 } from '@dvt/contracts';
@@ -253,11 +255,6 @@ export function removeDvtSubstraitCountExtension(plan: Plan): void {
   );
 }
 
-function parseTargetId(projectRelationId: string): string | null {
-  const match = /^relation:(.+):project$/.exec(projectRelationId);
-  return match?.[1] ?? null;
-}
-
 function inspectValidAggregation(draft: DvtSubstraitPilotDraft): ValidAggregation | null {
   const rootRelation = draft.plan.relations.length === 1 ? draft.plan.relations[0]?.relType : null;
   if (rootRelation?.case !== 'root') return null;
@@ -298,9 +295,11 @@ function inspectValidAggregation(draft: DvtSubstraitPilotDraft): ValidAggregatio
   const aggregateBinding = draft.sidecar.relations.find(
     (relation) => relation.relAnchor === aggregateAnchor
   );
-  if (projectBinding == null || aggregateBinding == null) return null;
-  const targetId = parseTargetId(projectBinding.relationId);
-  if (targetId == null || aggregateBinding.relationId !== `relation:${targetId}:aggregate`) {
+  if (
+    projectBinding == null ||
+    aggregateBinding == null ||
+    projectBinding.relationId === aggregateBinding.relationId
+  ) {
     return null;
   }
   const aggregateFields = draft.sidecar.fields
@@ -313,7 +312,6 @@ function inspectValidAggregation(draft: DvtSubstraitPilotDraft): ValidAggregatio
     groupField?.outputOrdinal !== 0 ||
     groupField.displayName !== root.names[0] ||
     countField?.outputOrdinal !== 1 ||
-    countField.fieldId !== `field:${targetId}:count` ||
     countField.displayName !== root.names[1]
   ) {
     return null;
@@ -406,8 +404,7 @@ export function applyDvtSubstraitPilotAggregation(
   const projectBinding = draft.sidecar.relations.find(
     (relation) => relation.relAnchor === projectAnchor
   );
-  const targetId = projectBinding == null ? null : parseTargetId(projectBinding.relationId);
-  if (projectBinding == null || targetId == null) return draft;
+  if (projectBinding == null) return draft;
 
   const aggregateAnchor =
     Math.max(0, ...draft.sidecar.relations.map((relation) => relation.relAnchor)) + 1;
@@ -434,7 +431,7 @@ export function applyDvtSubstraitPilotAggregation(
     },
   });
   root.value.names = [groupField.name, countOutputName];
-  const aggregateRelationId = `relation:${targetId}:aggregate`;
+  const aggregateRelationId = allocateDvtRelationId();
   const sidecar: DvtSubstraitAuthoringSidecarV1 = {
     ...draft.sidecar,
     relations: [
@@ -457,7 +454,7 @@ export function applyDvtSubstraitPilotAggregation(
           : field
       ),
       {
-        fieldId: `field:${targetId}:count`,
+        fieldId: allocateDvtFieldId(),
         relationId: aggregateRelationId,
         outputOrdinal: 1,
         displayName: countOutputName,

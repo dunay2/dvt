@@ -7,6 +7,7 @@ import {
 import {
   inspectDvtSubstraitStructuredFieldDraft,
   orderedDvtSubstraitFields,
+  resolveDvtSubstraitStructuredProjectionParts,
 } from './canvasDvtSubstraitStructuredField';
 import { composeDvtSubstraitProjectionFields } from './canvasDvtSubstraitStructuredFieldMutation';
 import { reorderDvtSubstraitStructuredFieldChildren } from './canvasDvtSubstraitStructuredFieldReorder';
@@ -66,9 +67,8 @@ describe('reorderDvtSubstraitStructuredFieldChildren', () => {
       fieldId: 'output:identity',
       children: [{ fieldId: 'output:customer' }, { fieldId: 'output:order_id' }],
     });
-    const targetRelationId = reordered.sidecar.relations.find(
-      (relation) => relation.displayName === 'transform-orders'
-    )?.relationId;
+    const targetRelationId =
+      resolveDvtSubstraitStructuredProjectionParts(reordered)?.targetRelation.relationId;
     expect(targetRelationId).toBeDefined();
     expect(
       orderedDvtSubstraitFields(reordered.sidecar.fields, targetRelationId!, 'output:identity').map(
