@@ -219,7 +219,8 @@ command in Planning DB. GitHub #2524 owns task status and acceptance.
   "governingSources": [
     "AGENTS.md",
     "docs/architecture/command-query-rail-governance.md",
-    "docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md"
+    "docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md",
+    "docs/architecture/fowler-opportunity-planning-governance.md"
   ],
   "commandQueryRails": [
     {
