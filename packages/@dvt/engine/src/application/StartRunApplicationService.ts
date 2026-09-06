@@ -23,6 +23,7 @@ import type {
   IStartRunExecutionService,
   IStartRunFailurePolicy,
   StartRunErrorContext,
+  StartRunPreparation,
 } from '../services/startRun/StartRunTypes.js';
 import type { IClock } from '../utils/clock.js';
 
@@ -86,22 +87,21 @@ export class StartRunApplicationService {
     resolvedContext: ResolvedRunContext,
     traceContext: StartRunTraceContext
   ): Promise<EngineRunRef> {
-    return this.runWithTelemetry(planRef, resolvedContext, traceContext, false);
+    return this.runWithTelemetry(planRef, resolvedContext, traceContext, null);
   }
 
   async startPreparedRun(
     planRef: PlanRef,
     resolvedContext: ResolvedRunContext,
     traceContext: StartRunTraceContext,
-    preparedRunRef: EngineRunRef,
+    preparation: StartRunPreparation,
     admittedAdapter: IProviderAdapter
   ): Promise<EngineRunRef> {
     return this.runWithTelemetry(
       planRef,
       resolvedContext,
       traceContext,
-      true,
-      preparedRunRef,
+      preparation,
       admittedAdapter
     );
   }
@@ -110,8 +110,7 @@ export class StartRunApplicationService {
     planRef: PlanRef,
     resolvedContext: ResolvedRunContext,
     traceContext: StartRunTraceContext,
-    preparedRun: boolean,
-    preparedRunRef?: EngineRunRef,
+    preparation: StartRunPreparation | null,
     admittedAdapter?: IProviderAdapter
   ): Promise<EngineRunRef> {
     const startMs = this.telemetryPolicy.nowMs();
@@ -120,7 +119,7 @@ export class StartRunApplicationService {
       resolvedContext.tenantId,
       { operation: 'startRun' }
     );
-    const errorContext: StartRunErrorContext = preparedRun ? { preparedRun: true } : {};
+    const errorContext: StartRunErrorContext = { preparation, phase: 'admission' };
 
     this.telemetryPolicy.recordStart(planRef, resolvedContext, traceContext);
 
@@ -130,7 +129,7 @@ export class StartRunApplicationService {
         resolvedContext,
         traceContext,
         errorContext,
-        preparedRunRef,
+        preparation?.runRef,
         admittedAdapter
       );
       this.telemetryPolicy.recordStarted({ resolvedContext, startedAtMs: startMs });
@@ -162,6 +161,7 @@ export class StartRunApplicationService {
           resolvedContext,
         })
       ).adapter;
+    errorContext.phase = 'intent';
     const intentId = await this.intentService.createIntent(resolvedContext, adapter.provider);
     errorContext.intentId = intentId;
 
@@ -171,6 +171,7 @@ export class StartRunApplicationService {
       resolvedContext,
       traceContext,
       intentId,
+      errorContext,
     };
     return preparedRunRef === undefined
       ? this.executionService.executeStartRun(executionInput)

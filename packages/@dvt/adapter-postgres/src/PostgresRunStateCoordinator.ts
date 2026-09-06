@@ -8,6 +8,7 @@
  * @version 1.0.0
  * @date 2026-03-28
  */
+import { RunAlreadyExistsError } from '@dvt/engine';
 import type { PoolClient } from 'pg';
 
 import { POSTGRES_RUN_STATE_COORDINATOR_CONSTANTS as C } from './PostgresRunStateCoordinatorConstants.js';
@@ -94,18 +95,11 @@ export class PostgresRunStateCoordinator {
   }
 
   async bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult> {
-    try {
-      return await this.withTransaction(async (client) => {
-        const tenantId = requireTenantId(input.metadata.tenantId);
-        await this.setTenantContext(client, tenantId);
-        return this.bootstrapRunWithClient(client, tenantId, input);
-      });
-    } catch (error: unknown) {
-      if (isRunMetadataUniqueViolation(error)) {
-        throw createRunAlreadyExistsError(error);
-      }
-      throw error;
-    }
+    return this.withTransaction(async (client) => {
+      const tenantId = requireTenantId(input.metadata.tenantId);
+      await this.setTenantContext(client, tenantId);
+      return this.bootstrapRunWithClient(client, tenantId, input);
+    });
   }
 
   async bootstrapRecoveryRunTx(
@@ -113,26 +107,19 @@ export class PostgresRunStateCoordinator {
     sourceRunId: RunId,
     buildInput: RecoveryRunBootstrapFactory
   ): Promise<RecoveryRunBootstrapResult> {
-    try {
-      return await this.withTransaction(async (client) => {
-        const tenantId = requireTenantId(tenantIdInput);
-        await this.setTenantContext(client, tenantId);
-        const reservation = await this.metadataRepo.reserveRetryAttemptWithClient(
-          client,
-          tenantId,
-          sourceRunId
-        );
-        const input = buildInput(reservation);
-        assertRecoveryBootstrapMatchesReservation(input, tenantId, reservation);
-        const appendResult = await this.bootstrapRunWithClient(client, tenantId, input);
-        return { reservation, metadata: input.metadata, appendResult };
-      });
-    } catch (error: unknown) {
-      if (isRunMetadataUniqueViolation(error)) {
-        throw createRunAlreadyExistsError(error);
-      }
-      throw error;
-    }
+    return this.withTransaction(async (client) => {
+      const tenantId = requireTenantId(tenantIdInput);
+      await this.setTenantContext(client, tenantId);
+      const reservation = await this.metadataRepo.reserveRetryAttemptWithClient(
+        client,
+        tenantId,
+        sourceRunId
+      );
+      const input = buildInput(reservation);
+      assertRecoveryBootstrapMatchesReservation(input, tenantId, reservation);
+      const appendResult = await this.bootstrapRunWithClient(client, tenantId, input);
+      return { reservation, metadata: input.metadata, appendResult };
+    });
   }
 
   /**
@@ -177,7 +164,14 @@ export class PostgresRunStateCoordinator {
     tenantId: string,
     input: RunBootstrapInput
   ): Promise<AppendResult> {
-    await this.metadataRepo.insertWithClient(client, input.metadata);
+    try {
+      await this.metadataRepo.insertWithClient(client, input.metadata);
+    } catch (error: unknown) {
+      if (isRunMetadataUniqueViolation(error)) {
+        throw new RunAlreadyExistsError(input.metadata.runId, { cause: error });
+      }
+      throw error;
+    }
     const runId = input.metadata.runId as RunId;
     const append = await this.appendEventsTxWithClient(client, tenantId, runId, input.firstEvents);
     await this.snapshotStore.updateWithClient(client, runId, append.appended, 0, append.lastSeq);
@@ -212,13 +206,6 @@ function isRunMetadataUniqueViolation(
     (error as { code?: unknown }).code === C.pgUniqueViolationCode &&
     (isRunMetadataTable(error) || isRunMetadataConstraint(error))
   );
-}
-
-function createRunAlreadyExistsError(cause: unknown): Error {
-  const error = new Error(C.runAlreadyExistsErrorMessage);
-  error.name = C.runAlreadyExistsErrorName;
-  (error as Error & { cause?: unknown }).cause = cause;
-  return error;
 }
 
 function isRunMetadataTable(error: unknown): boolean {

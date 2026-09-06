@@ -58,7 +58,7 @@ The current implementation units are:
 | Context admission       | [`RunExecutionContextAdmissionPolicy`](../../../../../../packages/@dvt/engine/src/services/startRun/RunExecutionContextAdmissionPolicy.ts) | Validates `runExecutionContextRef` alignment and compatibility fingerprints                                                   |
 | Intent creation         | [`StartRunIntentService`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunIntentService.ts)                           | Derives deterministic pre-dispatch intent ids and persists `PENDING` intents                                                  |
 | Dispatch + bootstrap    | [`StartRunExecutionService`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts)                     | Calls provider adapter, marks intent dispatched, bootstraps run state, compensates on bootstrap failure                       |
-| Failure handling        | [`StartRunFailurePolicy`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunFailurePolicy.ts)                           | Logs/metrics, best-effort intent resolution, guarded `RunFailed` emission after persisted metadata exists                     |
+| Failure handling        | [`StartRunFailurePolicy`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunFailurePolicy.ts)                           | Logs/metrics, best-effort intent resolution, guarded `RunFailed` emission after this invocation prepared the run              |
 | Metadata/event factory  | [`StartRunEventFactory`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunEventFactory.ts)                             | Constructs `RunMetadata`, `RunQueued`, provider-ref updates, and failure events                                               |
 
 ---
@@ -123,7 +123,7 @@ sequenceDiagram
 
     opt other handled failure
         App->>Failure: handleStartRunError(...)
-        Failure->>State: appendAndEnqueueTx(RunFailed) when metadata exists
+        Failure->>State: appendAndEnqueueTx(RunFailed) only with own preparation and eligible phase
     end
 ```
 
@@ -326,13 +326,59 @@ Current failure behavior:
    - log/report the failure
    - do not fabricate a synthetic success path
 4. if a start-run error reaches `StartRunFailurePolicy.handleStartRunError(...)`:
-   - report metrics/logging
+   - report metrics/logging and preserve `PostStartIntentPersistenceError`
+   - require a typed preparation receipt with disposition `created`, returned
+     from this invocation's successful bootstrap; `reused` grants no failure authority
+   - reject admission/intent-phase failures without canonical mutation, including
+     recovery whose child was prepared but whose intent could not be persisted
+   - perform these authority/phase checks before reading metadata or intent for
+     failure emission; neither metadata existence nor error text grants authority
    - if metadata does not exist yet, rethrow without emitting `RunFailed`
    - if the tracked intent is still `PENDING`, rethrow without emitting `RunFailed`
    - otherwise append `RunFailed` best-effort through `appendAndEnqueueTx(...)`
 
-This keeps failure emission aligned with persisted run existence rather than
-inventing lifecycle facts for runs that never completed bootstrap.
+Fresh execution acquires preparation authority only after its own `bootstrapRunTx`
+succeeds. Recovery preserves a readonly `created | reused` result from its
+preparation boundary: an existing child and a child found after a bootstrap
+collision are both `reused`. A failed bootstrap cannot fail the winner's run.
+The coordinator transports that result and the current phase through the existing
+execution and failure services.
+
+This protects common failure reporting. It does not establish exclusive ownership
+of a deterministic start intent: non-estimated dispatch and reused recovery can
+perform intent/reconciliation/compensation effects before reaching this handler.
+Those pre-existing concurrent-dispatch limitations remain tracked by
+[#2678](https://github.com/dunay2/dvt/issues/2678) and provider-outcome work in
+[#2679](https://github.com/dunay2/dvt/issues/2679). The global invariant in
+[#2676](https://github.com/dunay2/dvt/issues/2676) remains open until those paths
+are also proven.
+
+### 4.7 Start Failure Authority Conformance
+
+PostgreSQL conformance also requires a duplicate metadata insert in either
+bootstrap path to throw the exported Engine RunAlreadyExistsError class with
+the child logical runId and original PostgreSQL cause. The transaction must roll
+back the losing recovery reservation. The real recovery-service/PostgreSQL
+regression in adapter-postgres/test/smoke.test.ts must observe created then reused
+preparations, preserve the winner's persisted state and allocate the next attempt
+without a gap. This proves the preparation boundary; it does not certify provider
+dispatch or exclusive intent ownership.
+
+The [mutation-authority regressions](../../../../../../packages/@dvt/engine/test/core/WorkflowEngine.startMutationAuthority.test.ts)
+exercise this protocol through the actual Engine application services and
+in-memory transactional stores. They MUST compare complete metadata, ordered
+events, snapshot and intent after duplicate/admission rejection. Deterministic
+barriers MUST cover a dispatched winner with a losing bootstrap, both recovery
+reuse paths, and a run appearing during capability/context admission. An owned
+reconciliation failure MUST retain its legitimate failure event and compensation.
+
+Run these proofs with
+`pnpm --filter @dvt/engine exec vitest run test/core/WorkflowEngine.startMutationAuthority.test.ts`.
+The [ARC evidence](../../../../../evidence/ed-20260906-eng1-start-mutation-authority.md)
+records the local observations and remaining boundaries. A Planning DB execution
+evidence record using this protocol as its governed source MUST bind the actual
+CI job, the tested commit, and this document's exact committed content hash.
+The protocol declares the obligation; the authenticated job supplies its result.
 
 ---
 
@@ -409,7 +455,7 @@ Reviewers can verify the protocol by checking:
 7. one of the two documented bootstrap branches executes
 8. `RunQueued` is the first persisted lifecycle event
 9. bootstrap failure in the non-estimated branch compensates with `cancelRun`
-10. `RunFailed` is only emitted when persisted run metadata exists
+10. common start failure emission requires this invocation's created preparation, an eligible phase, persisted metadata and the existing intent guards
 
 No new protocol is defined by this artifact.
 

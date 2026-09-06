@@ -129,6 +129,14 @@ export class StartRunFailurePolicy implements IStartRunFailurePolicy {
       throw error;
     }
 
+    if (
+      errorContext.preparation?.disposition !== 'created' ||
+      errorContext.phase === 'admission' ||
+      errorContext.phase === 'intent'
+    ) {
+      throw error;
+    }
+
     const failMeta = await this.getFailureMetadata(resolvedContext.tenantId, resolvedContext.runId);
     if (failMeta === null) throw error;
 
@@ -138,9 +146,6 @@ export class StartRunFailurePolicy implements IStartRunFailurePolicy {
     );
     if (pendingIntent?.status === 'PENDING') {
       this.reportSkipRunFailedPendingIntent(pendingIntent, traceContext);
-      throw error;
-    }
-    if (errorContext.preparedRun === true && errorContext.intentId === undefined) {
       throw error;
     }
 

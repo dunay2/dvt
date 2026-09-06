@@ -8,8 +8,6 @@
  */
 export const POSTGRES_RUN_STATE_COORDINATOR_CONSTANTS = Object.freeze({
   pgUniqueViolationCode: '23505',
-  runAlreadyExistsErrorMessage: 'RUN_ALREADY_EXISTS',
-  runAlreadyExistsErrorName: 'RunAlreadyExistsError',
   tenantScopeRequiredErrorMessage: 'TENANT_SCOPE_REQUIRED',
   runMetadataTableName: 'run_metadata',
   runMetadataConstraintPrefix: 'run_metadata_',
