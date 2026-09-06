@@ -1,5 +1,4 @@
 /** Owned concern: persist one server-created run execution context in the configured artifact store. */
-import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 
 import {
@@ -10,6 +9,7 @@ import {
   type IRunExecutionContextReferenceStore,
 } from '@dvt/artifacts';
 import { parseRunExecutionContextRef, type RunExecutionContextRef } from '@dvt/contracts';
+import { sha256Hex } from '@dvt/crypto';
 
 import type {
   IRunExecutionContextWriter,
@@ -37,7 +37,7 @@ export class ArtifactBackedRunExecutionContextWriter implements IRunExecutionCon
     if (this.store === undefined) return { ok: false, reason: 'artifact_store_unavailable' };
 
     const bytes = Buffer.from(JSON.stringify(input.context), 'utf8');
-    const sha256 = createHash('sha256').update(bytes).digest('hex');
+    const sha256 = sha256Hex(bytes);
 
     if (this.store.kind === 's3') {
       if (this.referenceStore === undefined) {

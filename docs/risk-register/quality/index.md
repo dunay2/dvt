@@ -174,6 +174,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Riesgo de inconsistencia en guards de transición y shape-checking entre run-domain y](R-20260404-guards-alignment-adapter-postgres.yaml)
 - [Run events partitioning could drift from idempotency and tenant isolation constraints](R-20260513-RUN-EVENTS-HASH-PARTITIONING.yaml)
 - [Run execution context provenance drift at start-run boundary](R-20260403-RUN-EXECUTION-CONTEXT-BOUNDARY.yaml)
+- [Run execution context sha256 fields tightened to Sha256HexString; writers migrated to @dvt/crypto](R-20260903-RUN-EXECUTION-CONTEXT-SHA256-CRYPTO-MIGRATION.yaml)
 - [Run lifecycle could diverge across API, engine, persistence and public contracts](R-20260813-RUN-LIFECYCLE-RAIL.yaml)
 - [Run read evidence derivation can regress if attempt authority and event-history scope diverge](R-20260409-TF-C2-B-RUN-READ-EVIDENCE-ATTEMPT-SAFETY.yaml)
 - [Runtime boundary hardening can drift across engine ownership and API authorization seams](R-20260423-RUNTIME-BOUNDARY-HARDENING.yaml)

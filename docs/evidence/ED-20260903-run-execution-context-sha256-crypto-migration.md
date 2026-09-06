@@ -97,6 +97,21 @@ recovery bindings and artifact integrity rejection remain unchanged.
 Integration validation results are recorded and verified in GitHub issue #2191;
 the older counts below describe the original PR, not a rerun on this baseline.
 
+## Delete-first discovery on the integration branch
+
+The frozen reader/writer context digest passed before removal. Removing the
+three imports produced exactly three TS2304 errors in API typecheck/build and
+16 failing domain tests (two no-hash cases still passed). Contracts and engine
+remained green, as expected for this API-only removal. Five added malformed-SHA
+cases also failed before tightening the schemas and pass after the repair.
+
+The attempted deletion-only commit was rejected by the mandatory pre-commit
+ESLint `no-undef` rule at those same three consumers. No hook was bypassed and no
+rule was relaxed. The deletion and red-discovery sequence occurred in the working
+branch, but a separate red commit could not be recorded. The explicit #2191
+requirement for that intermediate commit therefore remains an acceptance
+constraint for the owner to reconcile with the mandatory hooks before merge.
+
 # Original validation notes
 
 - `@dvt/contracts` build and full vitest suite pass (489/489 tests).
