@@ -7,17 +7,23 @@ owners:
   - packages/@dvt/contracts
   - packages/@dvt/planner
   - apps/api
+  - apps/web
 severity: High
 probability: Low
 ---
 mitigation:
-  summary: Stable logical IDs are separate from mutable bindings; unresolved bindings fail closed.
+  summary: Stable logical IDs are separate from mutable bindings; existing semantic mutations are FieldId-only and physical Source rebind is explicit, verified, CAS-protected, and fail-closed on drift.
   evidence:
     - docs/evidence/ED-20260905-gh-2904-stable-logical-physical-binding.md
     - docs/planning/proposals/mandatory/runtime-and-contracts/gh-2904-stable-logical-physical-binding-hardcut-20260905.md
     - packages/@dvt/contracts/test/dvt-substrait-semantic-document-decoding.contract.test.ts
+    - packages/@dvt/contracts/test/dvt-substrait-source-rebind.contract.test.ts
     - packages/@dvt/planner/test/unit/determinism.test.ts
     - apps/api/test/application/services/graphDraftWarehouseSourceImportStrategy.test.ts
+    - apps/api/test/application/services/rebindWarehouseSourceUseCase.test.ts
+    - apps/api/test/entrypoints/http/warehouseSourceRebindRoute.test.ts
+    - apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.identity.test.ts
+    - apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.test.ts
   follow_up:
-    - Reconcile the remaining Canvas name fallback after GH-2936.
-    - Never restore name, path, ordinal, provider, alias, or compatibility fallbacks.
+    - Mark mitigated only after final PR CI, current-main overlap, and review-thread audit pass.
+    - Never restore name, path, ordinal, provider, alias, physical-binding, or compatibility fallbacks as logical identity.
