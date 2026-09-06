@@ -11,7 +11,10 @@ import type {
   IWarehouseConnectionProbe,
   WarehouseConnectionCatalogEntry,
 } from '../../../src/application/ports/warehouseSourceImport.js';
-import { WarehouseSourceRebindBindingConflictError, WarehouseSourceRebindSchemaDriftError } from '../../../src/application/ports/warehouseSourceRebind.js';
+import {
+  WarehouseSourceRebindBindingConflictError,
+  WarehouseSourceRebindSchemaDriftError,
+} from '../../../src/application/ports/warehouseSourceRebind.js';
 import type {
   IWorkspaceFileBatchMutationPort,
   WorkspaceFileBatchMutation,
@@ -69,6 +72,12 @@ const TARGET: RelationalSourceObject = {
   ],
 };
 
+type RebindUseCaseFixture = Readonly<{
+  service: RebindWarehouseSourceUseCase;
+  draftStore: IWorkspaceGraphDraftStore;
+  batch: IWorkspaceFileBatchMutationPort;
+}>;
+
 function draft(): WorkspaceGraphAuthoringDraft {
   const nodes = [
     {
@@ -109,9 +118,19 @@ function draft(): WorkspaceGraphAuthoringDraft {
     },
   ];
   const edges = [
-    { id: 'edge-source-transform', sourceId: SOURCE_ID, targetId: 'transform-orders', relation: 'lineage' as const },
+    {
+      id: 'edge-source-transform',
+      sourceId: SOURCE_ID,
+      targetId: 'transform-orders',
+      relation: 'lineage' as const,
+    },
   ];
-  const canvas = { id: 'canvas-a', kind: 'canvas', title: 'Canvas', environmentId: SCOPE.environmentId } as const;
+  const canvas = {
+    id: 'canvas-a',
+    kind: 'canvas',
+    title: 'Canvas',
+    environmentId: SCOPE.environmentId,
+  } as const;
   return {
     canvas,
     activeCanvasId: canvas.id,
@@ -223,7 +242,7 @@ function useCase(args: {
   target?: RelationalSourceObject;
   sourceYaml?: string;
   saveResult?: Awaited<ReturnType<IWorkspaceGraphDraftStore['save']>>;
-}) {
+}): RebindUseCaseFixture {
   const draftStore = store(draft(), args.saveResult);
   const batch = batchMutation();
   const content = args.sourceYaml ?? yaml();
@@ -296,9 +315,9 @@ describe('RebindWarehouseSourceUseCase', () => {
     } satisfies RelationalSourceObject;
     const { service, draftStore, batch } = useCase({ target });
 
-    await expect(service.execute({ ...REQUEST, sourceObjectId: target.objectId })).rejects.toBeInstanceOf(
-      WarehouseSourceRebindSchemaDriftError
-    );
+    await expect(
+      service.execute({ ...REQUEST, sourceObjectId: target.objectId })
+    ).rejects.toBeInstanceOf(WarehouseSourceRebindSchemaDriftError);
     expect(batch.apply).not.toHaveBeenCalled();
     expect(draftStore.save).not.toHaveBeenCalled();
   });
