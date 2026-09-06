@@ -137,7 +137,7 @@ sequenceDiagram
   Note over Viewport,Layout: active drag frames do not persist layout
   Operator->>Viewport: release card
   Viewport->>Layout: onNodeDragStop(event, draggedNode, allNodes)
-  Layout->>Layout: mergeDraggedNodePosition(nodes, draggedNode, draggedNodes)
+  Layout->>Layout: mergeDraggedNodePosition(current nodes + dragged selection, draggedNode)
   Layout->>Store: setCanvasNodePositions(layoutKey, final positions)
   Note over Layout,Store: settled observer does not write the same drag again
 ```
