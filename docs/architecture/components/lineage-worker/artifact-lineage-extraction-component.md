@@ -74,7 +74,9 @@ flowchart LR
 These catalog entries reuse the existing operations. The artifact and lineage
 rails were absent from the consulted Planning DB catalog and are recorded through
 RecordFeatureMechanizationRail for the hard cut. StartRun and GetRunEvents retain
-their existing product identity and authorization boundaries.
+their existing product identity and authorization boundaries. The existing API
+run-context resolver translates generic integrity failure into the established
+StartRun domain rejection; verification remains owned by the generic reader.
 
 ## Runtime configuration
 

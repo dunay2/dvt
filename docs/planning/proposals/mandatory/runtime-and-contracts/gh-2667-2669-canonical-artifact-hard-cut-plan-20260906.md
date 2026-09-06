@@ -64,6 +64,9 @@ in the component catalog and exported mechanization below.
 - Remove Planner's unused artifacts dependency together with its lockfile entry.
 - Keep generic ArtifactStoreError integrity assertions and StepArtifactRef UI
   fixtures aligned with their surviving owners.
+- Preserve the existing StartRun domain rejection: the API resolver translates
+  canonical ArtifactStoreError integrity failures into RunExecutionContextRejectedError.
+  The generic reader still owns verification; the API owns domain error translation.
 - Update normative traceability headers and the current operations inventory.
   Historical Planner proposal clauses are explicitly superseded by ADR-0067.
 - Keep the global retired-symbol guard's scope unchanged and report violations
@@ -232,7 +235,8 @@ working Planning DB. It records architecture evidence, not local task state.
       "dddOwner": "Run command application service",
       "unitTests": [
         "pnpm --filter @dvt/contracts test",
-        "pnpm --filter @dvt/adapter-temporal test"
+        "pnpm --filter @dvt/adapter-temporal test",
+        "pnpm --filter dvt-api test:unit"
       ],
       "fowlerSignals": [
         "Delete duplicate artifact publication, reference and read authority"
@@ -249,7 +253,8 @@ working Planning DB. It records architecture evidence, not local task state.
       "dddOwner": "Run command application service",
       "unitTests": [
         "pnpm --filter @dvt/contracts test",
-        "pnpm --filter @dvt/adapter-temporal test"
+        "pnpm --filter @dvt/adapter-temporal test",
+        "pnpm --filter dvt-api test:unit"
       ],
       "fowlerSignals": [
         "Delete duplicate artifact publication, reference and read authority"
@@ -266,7 +271,26 @@ working Planning DB. It records architecture evidence, not local task state.
       "dddOwner": "Run command application service",
       "unitTests": [
         "pnpm --filter @dvt/contracts test",
-        "pnpm --filter @dvt/adapter-temporal test"
+        "pnpm --filter @dvt/adapter-temporal test",
+        "pnpm --filter dvt-api test:unit"
+      ],
+      "fowlerSignals": [
+        "Delete duplicate artifact publication, reference and read authority"
+      ],
+      "cypressCoverage": "N/A: artifact/runtime hard cut proved by real generic artifact reads, worker composition and Run workspace DOM presentation; no browser proof claimed",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2667-2669-CANONICAL-ARTIFACT-HARD-CUT"
+    },
+    {
+      "name": "ArtifactBackedRunExecutionContextResolver",
+      "path": "apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts",
+      "cqRails": [
+        "StartRun"
+      ],
+      "dddOwner": "Run command application service",
+      "unitTests": [
+        "pnpm --filter @dvt/contracts test",
+        "pnpm --filter @dvt/adapter-temporal test",
+        "pnpm --filter dvt-api test:unit"
       ],
       "fowlerSignals": [
         "Delete duplicate artifact publication, reference and read authority"
@@ -424,7 +448,9 @@ working Planning DB. It records architecture evidence, not local task state.
         "docs/evidence/index.md",
         "docs/risk-register/quality/index.md",
         "tools/ci/contracts-package-governance.test.mjs",
-        "traceability.manifest.json"
+        "traceability.manifest.json",
+        "apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts",
+        "docs/.manifest.json"
       ],
       "expectedFailure": "Deleted computeSha256 import throws; active retired-symbol references and old integrity error assertions fail"
     },
@@ -556,7 +582,9 @@ working Planning DB. It records architecture evidence, not local task state.
         "docs/evidence/index.md",
         "docs/risk-register/quality/index.md",
         "tools/ci/contracts-package-governance.test.mjs",
-        "traceability.manifest.json"
+        "traceability.manifest.json",
+        "apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts",
+        "docs/.manifest.json"
       ],
       "expectedFailure": "Deleted computeSha256 import throws; active retired-symbol references and old integrity error assertions fail"
     },
@@ -688,7 +716,9 @@ working Planning DB. It records architecture evidence, not local task state.
         "docs/evidence/index.md",
         "docs/risk-register/quality/index.md",
         "tools/ci/contracts-package-governance.test.mjs",
-        "traceability.manifest.json"
+        "traceability.manifest.json",
+        "apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts",
+        "docs/.manifest.json"
       ],
       "expectedFailure": "Deleted computeSha256 import throws; active retired-symbol references and old integrity error assertions fail"
     },
@@ -820,14 +850,16 @@ working Planning DB. It records architecture evidence, not local task state.
         "docs/evidence/index.md",
         "docs/risk-register/quality/index.md",
         "tools/ci/contracts-package-governance.test.mjs",
-        "traceability.manifest.json"
+        "traceability.manifest.json",
+        "apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts",
+        "docs/.manifest.json"
       ],
       "expectedFailure": "Deleted computeSha256 import throws; active retired-symbol references and old integrity error assertions fail"
     },
     {
       "id": "startrun-record",
       "redTest": "pnpm --filter @dvt/artifacts test",
-      "greenTest": "pnpm --filter @dvt/adapter-temporal test",
+      "greenTest": "pnpm --filter dvt-api test:unit",
       "patchSurfaces": [
         "apps/lineage-worker/src/compiled-code-resolver/S3UriCompiledCodeReader.ts",
         "apps/lineage-worker/src/compiled-code-resolver/errorMapping.ts",
@@ -952,7 +984,9 @@ working Planning DB. It records architecture evidence, not local task state.
         "docs/evidence/index.md",
         "docs/risk-register/quality/index.md",
         "tools/ci/contracts-package-governance.test.mjs",
-        "traceability.manifest.json"
+        "traceability.manifest.json",
+        "apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts",
+        "docs/.manifest.json"
       ],
       "expectedFailure": "Deleted computeSha256 import throws; active retired-symbol references and old integrity error assertions fail"
     }
@@ -1159,7 +1193,9 @@ working Planning DB. It records architecture evidence, not local task state.
     "docs/evidence/index.md",
     "docs/risk-register/quality/index.md",
     "tools/ci/contracts-package-governance.test.mjs",
-    "traceability.manifest.json"
+    "traceability.manifest.json",
+    "apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts",
+    "docs/.manifest.json"
   ],
   "forbiddenImplementationSurfaces": [
     ".github/workflows/**",
