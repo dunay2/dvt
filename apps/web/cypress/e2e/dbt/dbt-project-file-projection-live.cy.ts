@@ -182,7 +182,7 @@ describe('dbt project file projection live vertical', () => {
 
   it('projects real dbt files without draft semantics and remains inspectable', () => {
     const observedRequests: string[] = [];
-    cy.intercept('**/workspace/**', (request) => {
+    cy.intercept('GET', '**/workspace/dbt/graph?*', (request) => {
       observedRequests.push(request.url);
     });
     cy.viewport(1500, 900);
@@ -235,9 +235,14 @@ describe('dbt project file projection live vertical', () => {
 
     cy.wrap(null).should(() => {
       expect(observedRequests.some((url) => url.includes('/workspace/dbt/graph?'))).to.equal(true);
-      expect(observedRequests.some((url) => url.includes('/workspace/graph/draft'))).to.equal(
-        false
-      );
+    });
+    cy.window().should((window) => {
+      expect(
+        window.performance
+          .getEntriesByType('resource')
+          .some((entry) => entry.name.includes('/workspace/graph/draft')),
+        'no graph-draft request during file-authoritative rendering'
+      ).to.equal(false);
     });
     cy.get('[data-slot="dbt-project-file-projection-notice"]')
       .should('be.visible')
@@ -353,7 +358,7 @@ describe('dbt project file projection live vertical', () => {
 
   it('keeps invalid projects file-authoritative and reports the analyzer diagnostic', () => {
     const observedRequests: string[] = [];
-    cy.intercept('**/workspace/**', (request) => {
+    cy.intercept('GET', '**/workspace/dbt/graph?*', (request) => {
       observedRequests.push(request.url);
     });
     visitWithLiveWorkspaceSession(
@@ -376,9 +381,14 @@ describe('dbt project file projection live vertical', () => {
     cy.location('search').should('contain', 'authority=dbt-project-files');
     cy.wrap(null).should(() => {
       expect(observedRequests.some((url) => url.includes('/workspace/dbt/graph?'))).to.equal(true);
-      expect(observedRequests.some((url) => url.includes('/workspace/graph/draft'))).to.equal(
-        false
-      );
+    });
+    cy.window().should((window) => {
+      expect(
+        window.performance
+          .getEntriesByType('resource')
+          .some((entry) => entry.name.includes('/workspace/graph/draft')),
+        'no graph-draft request during file-authoritative rendering'
+      ).to.equal(false);
     });
   });
 });
