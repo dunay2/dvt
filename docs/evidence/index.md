@@ -142,6 +142,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED-20260419 RC-G1-C owner-package migration](ED-20260419-rc-g1-c-owner-package-migration.md)
 - [ED-20260502 S08 Temporal Legacy Removal](ed-20260502-s08-temporal-legacy-removal.md)
 - [Engine Public API Surface Split](ed-20260514-ea-20260429-05-engine-public-api-surface.md)
+- [GH-2904 stable logical identity and physical binding evidence](ED-20260905-gh-2904-stable-logical-physical-binding.md)
 - [MW-D2 Temporal Worker Routing By Capability](ed-20260513-mw-d2-temporal-worker-routing.md)
 - [Opaque DVT authoring identity evidence](ED-20260906-opaque-dvt-authoring-identity.md)
 - [Planner environment input removal evidence](ED-20260902-planner-environment-contract-truth.md)

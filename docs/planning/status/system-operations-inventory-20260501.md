@@ -748,7 +748,6 @@ that are still drifting toward the S08 model.
 | `ExecutableSubgraphDeriver.derive(input)`                            | `AS` (subgraph derivation orchestrator) | `QRY` (pure derivation) | `OK`   |       |
 | `PlannerEnvelopeMapper.toNormalizedPlannerInput(envelope)`           | `DS` (envelope mapper)                  | `QRY` (pure)            | `OK`   |       |
 | `PlannerFacade.buildPlan(input)` / `deriveExecutableSubgraph(input)` | `AS` (planner façade — impl `IPlanner`) | `CMD-RET` / `QRY`       | `OK`   |       |
-| `derivePlannerGraphSourceFromManifest(...)`                          | `DS`                                    | `QRY` (pure)            | `OK`   |       |
 
 ### 6.4 Planner domain — `src/domain/`
 

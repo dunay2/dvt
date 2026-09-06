@@ -27,6 +27,9 @@ const SCOPE = {
   environmentId: 'environment-source',
 } as const;
 
+const DVT_SOURCE_NODE_ID_PATTERN =
+  /^dvt_src_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
+
 const SOURCE_OBJECT: SourceObject = {
   objectId: 'relation/analytics/erp/orders',
   displayName: 'orders',
@@ -58,7 +61,7 @@ const SOURCE_OBJECT: SourceObject = {
 };
 
 describe('GraphDraftWarehouseSourceImportStrategy', () => {
-  it('publishes YAML and appends a metadata-rich source to the requested Canvas', async () => {
+  it('publishes YAML and appends a metadata-rich source with opaque logical identity', async () => {
     const draftStore = createDraftStore(createDraft('orders-canvas'));
     const batchMutation = createBatchMutation();
     const strategy = createStrategy(draftStore, batchMutation);
@@ -89,7 +92,6 @@ describe('GraphDraftWarehouseSourceImportStrategy', () => {
           activeCanvasId: 'orders-canvas',
           nodes: [
             expect.objectContaining({
-              id: 'src_warehouse_prod_analytics_erp_orders',
               metadata: expect.objectContaining({
                 connectedSourceRef: {
                   schemaVersion: 'connected-source-ref.v1',
@@ -115,10 +117,16 @@ describe('GraphDraftWarehouseSourceImportStrategy', () => {
       outcome: {
         kind: 'graph-draft',
         draftRevision: 'draft-revision-2',
-        importedNodeIds: ['src_warehouse_prod_analytics_erp_orders'],
       },
     });
     const savedNode = vi.mocked(draftStore.save).mock.calls[0]?.[0].draft.nodes[0];
+    expect(savedNode?.id).toMatch(DVT_SOURCE_NODE_ID_PATTERN);
+    expect(savedNode?.id).not.toContain('warehouse');
+    expect(savedNode?.id).not.toContain('analytics');
+    expect(savedNode?.id).not.toContain('erp');
+    expect(savedNode?.id).not.toContain('orders');
+    if (result.outcome.kind !== 'graph-draft') throw new Error('Expected graph-draft outcome.');
+    expect(result.outcome.importedNodeIds).toEqual([savedNode?.id]);
     expect(savedNode?.metadata).not.toHaveProperty('sourceObjectId');
     expect(savedNode?.metadata).not.toHaveProperty('connectionType');
     expect(savedNode?.metadata).not.toHaveProperty('credentialRef');
@@ -141,8 +149,8 @@ describe('GraphDraftWarehouseSourceImportStrategy', () => {
     expect(draftStore.save).not.toHaveBeenCalled();
   });
 
-  it('keeps the same physical object distinct across two connections', async () => {
-    const existingNodeId = 'src_warehouse_prod_analytics_erp_orders';
+  it('keeps the same physical object distinct across two connections without binding-derived IDs', async () => {
+    const existingNodeId = 'dvt_src_01991dc0-0000-7000-8000-000000000001';
     const draftStore = createDraftStore(createDraftWithSourceNode('orders-canvas', existingNodeId));
     const batchMutation = createBatchMutation();
     const strategy = createStrategy(draftStore, batchMutation);
@@ -168,6 +176,9 @@ describe('GraphDraftWarehouseSourceImportStrategy', () => {
 
     const savedNodes = vi.mocked(draftStore.save).mock.calls[0]?.[0].draft.nodes ?? [];
     expect(savedNodes).toHaveLength(2);
+    expect(savedNodes[0]?.id).toBe(existingNodeId);
+    expect(savedNodes[1]?.id).toMatch(DVT_SOURCE_NODE_ID_PATTERN);
+    expect(savedNodes[1]?.id).not.toBe(existingNodeId);
     expect(savedNodes.map((node) => node.metadata?.connectedSourceRef)).toEqual([
       expect.objectContaining({
         connectionRef: expect.objectContaining({ connectionId: 'warehouse-prod' }),
@@ -215,18 +226,19 @@ describe('GraphDraftWarehouseSourceImportStrategy', () => {
     expect(new Set(yamlPaths)).toHaveLength(2);
     expect(graphPaths).toEqual(yamlPaths);
     expect(new Set(graphSourceNames)).toHaveLength(2);
+    expect(savedNodes.every((node) => DVT_SOURCE_NODE_ID_PATTERN.test(node.id))).toBe(true);
   });
 
-  it('fails closed when persisted nodes repeat one connected-source identity', async () => {
+  it('fails closed when persisted nodes repeat one connected-source binding', async () => {
     const draftStore = createDraftStore(
       createDraftWithSourceNodes('orders-canvas', [
         {
-          nodeId: 'src_warehouse_prod_analytics_erp_orders',
+          nodeId: 'dvt_src_01991dc0-0000-7000-8000-000000000002',
           connectionId: 'warehouse-prod',
           sourceObjectId: SOURCE_OBJECT.objectId,
         },
         {
-          nodeId: 'src_warehouse_prod_analytics_erp_orders_clone',
+          nodeId: 'dvt_src_01991dc0-0000-7000-8000-000000000003',
           connectionId: 'warehouse-prod',
           sourceObjectId: SOURCE_OBJECT.objectId,
         },
@@ -247,54 +259,12 @@ describe('GraphDraftWarehouseSourceImportStrategy', () => {
     expect(draftStore.save).not.toHaveBeenCalled();
   });
 
-  it('fails closed when every canonical node ID is owned by another source identity', async () => {
-    const connectionId = 'warehouse-backup';
-    const stableNodeId = 'src_warehouse_backup_analytics_erp_orders';
-    const collisionSuffix = sha256(JSON.stringify([connectionId, SOURCE_OBJECT.objectId])).slice(
-      0,
-      8
-    );
-    const collisionNodeId = `${stableNodeId}_${collisionSuffix}`;
+  it('fails closed on legacy source binding metadata before publishing files', async () => {
     const draftStore = createDraftStore(
-      createDraftWithSourceNodes('orders-canvas', [
-        {
-          nodeId: stableNodeId,
-          connectionId: 'occupied-stable',
-          sourceObjectId: 'relation/occupied/stable',
-        },
-        {
-          nodeId: collisionNodeId,
-          connectionId: 'occupied-collision',
-          sourceObjectId: 'relation/occupied/collision',
-        },
-      ])
-    );
-    const batchMutation = createBatchMutation();
-    const strategy = createStrategy(draftStore, batchMutation);
-    const context: WarehouseSourceImportCommandContext = {
-      ...CONTEXT,
-      connection: { ...CONTEXT.connection, id: connectionId },
-      sourceObjects: CONTEXT.sourceObjects.map((sourceObject) => ({
-        ...sourceObject,
-        connectionId,
-      })),
-    };
-
-    await expect(
-      strategy.execute(context, {
-        schemaVersion: 'canvas-authoring-authority-binding.v1',
-        canvasId: 'orders-canvas',
-        authority: { kind: 'graph-draft' },
-      })
-    ).rejects.toBeInstanceOf(WarehouseSourceImportDraftConflictError);
-
-    expect(batchMutation.apply).not.toHaveBeenCalled();
-    expect(draftStore.save).not.toHaveBeenCalled();
-  });
-
-  it('fails closed on legacy source identity before publishing files', async () => {
-    const draftStore = createDraftStore(
-      createDraftWithLegacySourceNode('orders-canvas', 'src_warehouse_prod_analytics_erp_orders')
+      createDraftWithLegacySourceNode(
+        'orders-canvas',
+        'dvt_src_01991dc0-0000-7000-8000-000000000004'
+      )
     );
     const batchMutation = createBatchMutation();
     const strategy = createStrategy(draftStore, batchMutation);
@@ -395,8 +365,8 @@ describe('GraphDraftWarehouseSourceImportStrategy', () => {
     expect(batchMutation.apply).toHaveBeenCalledTimes(1);
   });
 
-  it('reports persisted node identities for a deduplicated save', async () => {
-    const persistedNodeId = 'src_existing_collision_3a7f63de';
+  it('reports the persisted logical node identity for a deduplicated save', async () => {
+    const persistedNodeId = 'dvt_src_01991dc0-0000-7000-8000-000000000005';
     const draftStore = createDraftStore(
       createDraft('orders-canvas'),
       {

@@ -50,10 +50,13 @@ test('source import live proof exposes each workspace option once', () => {
 });
 
 test('source import live proof uses locally resolvable Cypress dependencies on Windows', () => {
-  const runner = new CanvasSourceImportLiveProofRunner({
-    ELECTRON_RUN_AS_NODE: '1',
-    EXISTING_ENV: 'preserved',
-  });
+  const runner = new CanvasSourceImportLiveProofRunner(
+    {
+      ELECTRON_RUN_AS_NODE: '1',
+      EXISTING_ENV: 'preserved',
+    },
+    'canvas-source-identity-live.cy.ts'
+  );
   const invocation = runner.buildCypressInvocation(
     {
       apiPort: 3300,
@@ -85,6 +88,11 @@ test('source import live proof uses locally resolvable Cypress dependencies on W
   assert.equal(invocation.options.env.CYPRESS_secondaryWorkspaceProjectId, 'proof-project-b');
   assert.equal(invocation.options.env.CYPRESS_secondaryWorkspaceEnvironmentId, 'test');
   assert.equal(invocation.options.env.CYPRESS_apiBearerToken, 'test-token');
+  assert.equal(invocation.options.env.CYPRESS_requireLiveProtectedRuntime, '1');
+  assert.match(
+    invocation.args[invocation.args.indexOf('--spec') + 1],
+    /canvas-source-identity-live\.cy\.ts$/u
+  );
   assert.equal(invocation.options.env.EXISTING_ENV, 'preserved');
   assert.equal(invocation.options.env.ELECTRON_RUN_AS_NODE, undefined);
 });

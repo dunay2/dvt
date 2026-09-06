@@ -21,7 +21,7 @@ const {
 } = require('./run-dev-stack.auth.cjs');
 
 class CanvasSourceImportLiveProofRunner {
-  constructor(env = process.env) {
+  constructor(env = process.env, specFile = 'canvas-source-import-live-clean.cy.ts') {
     this.env = env;
     this.pnpmCommand = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
     this.apiPort = 3300;
@@ -31,11 +31,8 @@ class CanvasSourceImportLiveProofRunner {
     this.postgresBootstrapScript = path.resolve(__dirname, 'run-local-postgres.cjs');
     this.temporalPackageRoot = path.resolve(__dirname, '../packages/@dvt/adapter-temporal');
     this.webPackageRoot = path.resolve(__dirname, '../apps/web');
-    this.localSpecPath = path.resolve(
-      this.webPackageRoot,
-      'cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts'
-    );
-    this.specPath = '/repo/apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts';
+    this.localSpecPath = path.resolve(this.webPackageRoot, 'cypress/e2e/canvas/' + specFile);
+    this.specPath = '/repo/apps/web/cypress/e2e/canvas/' + specFile;
     this.cypressImage = 'cypress/included:15.18.1';
     this.localAuthHost = '127.0.0.1';
     this.apiBindHost = '0.0.0.0';
@@ -570,7 +567,12 @@ class CanvasSourceImportLiveProofRunner {
 }
 
 async function main() {
-  await new CanvasSourceImportLiveProofRunner().run();
+  for (const specFile of [
+    'canvas-source-identity-live.cy.ts',
+    'canvas-source-import-live-clean.cy.ts',
+  ]) {
+    await new CanvasSourceImportLiveProofRunner(process.env, specFile).run();
+  }
 }
 
 module.exports = {

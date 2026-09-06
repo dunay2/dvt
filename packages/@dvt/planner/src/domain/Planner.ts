@@ -7,10 +7,13 @@
  *
  *  Delegated sub-responsibilities (SRP):
  *   - InputEnvelopeValidator → validates shape of the input envelope
- *   - ManifestGraphDeriver   → derives GraphNodes from a dbt manifest
- *   - GraphBuilder           → builds and validates the dependency graph
+ *   - GraphBuilder           → builds and validates the canonical dependency graph
  *   - NodeSelector           → resolves which nodes participate in the run
  *   - PlanAssembler          → hashes inputs and assembles the immutable plan
+ *
+ *  Source adapters own translation into GenericGraphSource before this boundary.
+ *  Planner consumes admitted logical node identity verbatim and never derives it
+ *  from manifest keys, names, paths, providers, or other physical bindings.
  *
  *  This class is the entry-point Domain Service: it orchestrates the pipeline
  *  and owns cross-cutting concerns (abort, metrics, limits).
@@ -112,10 +115,7 @@ export class Planner {
     return this.buildPlan(command.input);
   }
 
-  /**
-   * Primary public API (retained for call-site compatibility).
-   * Internally delegates to the CQRS collaborators.
-   */
+  /** Domain build API. Public callers enter through PlannerFacade. */
   public async buildPlan(input: PlannerInputEnvelopeV1): Promise<{
     plan: ExecutionPlan;
     executionPolicy: import('@dvt/contracts').RunExecutionPolicy;

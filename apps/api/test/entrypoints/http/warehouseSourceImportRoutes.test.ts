@@ -8,6 +8,7 @@ import {
   type SourceObjectConstraint,
   type SourceObjectMetricEvidence,
   type WorkspaceGraphDraftScope,
+  type WorkspaceGraphAuthoringNode,
 } from '@dvt/contracts';
 import Fastify from 'fastify';
 import type { FastifyInstance } from 'fastify';
@@ -61,6 +62,9 @@ import {
 } from '../../../src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.js';
 
 const SCOPE_QUERY = 'tenantId=tenant-a&projectId=project-a&environmentId=env-a';
+const DVT_SOURCE_NODE_ID_PATTERN =
+  /^dvt_src_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
+
 const ROUTE_SCOPE = {
   tenantId: 'tenant-a',
   projectId: 'project-a',
@@ -1086,7 +1090,7 @@ describe('warehouseSourceImportRoutes', () => {
   });
 
   it('imports selected source objects into the authoritative workspace graph draft', async () => {
-    const { app, authorize, workspaceFiles } = buildApp();
+    const { app, authorize, workspaceFiles, draftStore } = buildApp();
 
     const response = await app.inject({
       method: 'POST',
@@ -1103,6 +1107,12 @@ describe('warehouseSourceImportRoutes', () => {
     });
 
     expect(response.statusCode).toBe(200);
+    const importedNodeIds = vi
+      .mocked(draftStore.save)
+      .mock.calls[0]![0].draft.nodes.map((node: WorkspaceGraphAuthoringNode) => node.id);
+    expect(importedNodeIds).toHaveLength(1);
+    expect(new Set(importedNodeIds).size).toBe(1);
+    for (const nodeId of importedNodeIds) expect(nodeId).toMatch(DVT_SOURCE_NODE_ID_PATTERN);
     expect(response.json()).toMatchObject({
       success: true,
       schemaVersion: 'source-import-result.v2',
@@ -1112,7 +1122,7 @@ describe('warehouseSourceImportRoutes', () => {
       outcome: {
         kind: 'graph-draft',
         draftRevision: 'rev-2',
-        importedNodeIds: ['src_warehouse_prod_analytics_erp_orders'],
+        importedNodeIds,
       },
       grouping: 'schema',
     });
@@ -1212,7 +1222,7 @@ describe('warehouseSourceImportRoutes', () => {
     expect(draftStore.save).not.toHaveBeenCalled();
   });
 
-  it('scopes imported source identity by connection when warehouse objects share physical names', async () => {
+  it('persists opaque source identity independently from the selected physical connection', async () => {
     const { app, draftStore, workspaceFiles } = buildApp({
       catalogEntries: [
         {
@@ -1247,11 +1257,17 @@ describe('warehouseSourceImportRoutes', () => {
     });
 
     expect(response.statusCode).toBe(200);
+    const importedNodeIds = vi
+      .mocked(draftStore.save)
+      .mock.calls[0]![0].draft.nodes.map((node: WorkspaceGraphAuthoringNode) => node.id);
+    expect(importedNodeIds).toHaveLength(1);
+    expect(new Set(importedNodeIds).size).toBe(1);
+    for (const nodeId of importedNodeIds) expect(nodeId).toMatch(DVT_SOURCE_NODE_ID_PATTERN);
     expect(response.json()).toMatchObject({
       sourcesCreated: 1,
       outcome: {
         kind: 'graph-draft',
-        importedNodeIds: ['src_warehouse_sandbox_analytics_erp_orders'],
+        importedNodeIds,
       },
     });
     expect(workspaceFiles.saveFileContent).toHaveBeenCalledWith(
@@ -1267,7 +1283,7 @@ describe('warehouseSourceImportRoutes', () => {
         draft: expect.objectContaining({
           nodes: expect.arrayContaining([
             expect.objectContaining({
-              id: 'src_warehouse_sandbox_analytics_erp_orders',
+              id: importedNodeIds[0],
               metadata: expect.objectContaining({
                 sourceName: 'warehouse_sandbox_analytics_erp',
               }),
@@ -1279,7 +1295,7 @@ describe('warehouseSourceImportRoutes', () => {
   });
 
   it('imports same schema and table name from different databases as distinct source nodes', async () => {
-    const { app } = buildApp({
+    const { app, draftStore } = buildApp({
       catalogEntries: [
         {
           id: 'warehouse-prod',
@@ -1320,6 +1336,12 @@ describe('warehouseSourceImportRoutes', () => {
     });
 
     expect(response.statusCode).toBe(200);
+    const importedNodeIds = vi
+      .mocked(draftStore.save)
+      .mock.calls[0]![0].draft.nodes.map((node: WorkspaceGraphAuthoringNode) => node.id);
+    expect(importedNodeIds).toHaveLength(2);
+    expect(new Set(importedNodeIds).size).toBe(2);
+    for (const nodeId of importedNodeIds) expect(nodeId).toMatch(DVT_SOURCE_NODE_ID_PATTERN);
     expect(response.json()).toMatchObject({
       success: true,
       sourcesCreated: 2,
@@ -1327,10 +1349,7 @@ describe('warehouseSourceImportRoutes', () => {
       yamlFiles: ['models/sources/src_analytics.yml', 'models/sources/src_finance.yml'],
       outcome: {
         kind: 'graph-draft',
-        importedNodeIds: [
-          'src_warehouse_prod_analytics_erp_orders',
-          'src_warehouse_prod_finance_erp_orders',
-        ],
+        importedNodeIds,
       },
       grouping: 'database',
     });
@@ -1403,6 +1422,12 @@ describe('warehouseSourceImportRoutes', () => {
     });
 
     expect(response.statusCode).toBe(200);
+    const importedNodeIds = vi
+      .mocked(draftStore.save)
+      .mock.calls[0]![0].draft.nodes.map((node: WorkspaceGraphAuthoringNode) => node.id);
+    expect(importedNodeIds).toHaveLength(2);
+    expect(new Set(importedNodeIds).size).toBe(2);
+    for (const nodeId of importedNodeIds) expect(nodeId).toMatch(DVT_SOURCE_NODE_ID_PATTERN);
     expect(response.json()).toMatchObject({
       success: true,
       sourcesCreated: 1,
@@ -1410,10 +1435,7 @@ describe('warehouseSourceImportRoutes', () => {
       yamlFiles: ['models/sources/src_erp.yml'],
       outcome: {
         kind: 'graph-draft',
-        importedNodeIds: [
-          'src_warehouse_prod_analytics_erp_orders',
-          'src_warehouse_prod_finance_erp_orders',
-        ],
+        importedNodeIds,
       },
       grouping: 'schema',
     });
@@ -1451,14 +1473,14 @@ describe('warehouseSourceImportRoutes', () => {
         draft: expect.objectContaining({
           nodes: expect.arrayContaining([
             expect.objectContaining({
-              id: 'src_warehouse_prod_analytics_erp_orders',
+              id: importedNodeIds[0],
               metadata: expect.objectContaining({
                 sourceName: 'warehouse_prod_analytics_erp',
                 tableName: 'orders',
               }),
             }),
             expect.objectContaining({
-              id: 'src_warehouse_prod_finance_erp_orders',
+              id: importedNodeIds[1],
               metadata: expect.objectContaining({
                 sourceName: 'warehouse_prod_finance_erp',
                 tableName: 'orders',

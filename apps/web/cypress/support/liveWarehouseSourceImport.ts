@@ -27,7 +27,7 @@ function createLivePostgresConnection(connectionNameSuffix = ''): void {
   cy.get('[data-slot="source-import-create-connection-database"]').clear().type('dvt');
   cy.get('[data-slot="source-import-create-connection-credential-ref"]')
     .clear()
-    .type('postgres:local-warehouse');
+    .type('postgres:local-postgres-proof');
   cy.contains('[role="dialog"] button', 'Create connection').should('be.enabled').click();
   cy.contains('[data-slot="source-import-connection-option"]', connectionName, {
     timeout: 30_000,
@@ -81,9 +81,6 @@ export function importLivePostgresSource(
       })
         .scrollIntoView()
         .within(() => {
-          cy.contains('order_id').should('be.visible');
-          cy.contains('3 rows').should('be.visible');
-          cy.contains('32 KB').should('be.visible');
           cy.get('button[aria-label^="Inspect source object"]')
             .scrollIntoView()
             .should('be.visible')
@@ -104,7 +101,9 @@ export function importLivePostgresSource(
   cy.contains('[role="dialog"]', 'dvt.public.source_1').should('be.visible');
 
   cy.contains('[role="tab"]', 'Metadata').click();
-  cy.contains('[role="dialog"]', 'order_id', { timeout: 20_000 }).should('be.visible');
+  cy.contains('[role="dialog"]', 'order_id', { timeout: 20_000 })
+    .scrollIntoView()
+    .should('be.visible');
   cy.contains('[role="dialog"]', '3 rows').should('be.visible');
   cy.contains('[role="dialog"]', '32 KB').should('be.visible');
   cy.contains('[role="dialog"]', 'customer').should('be.visible');

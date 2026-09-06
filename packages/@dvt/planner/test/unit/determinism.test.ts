@@ -4,7 +4,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { Planner } from '../../src/domain/Planner.js';
 import type { PlannerInputEnvelopeV1 } from '../../src/domain/types.js';
-import { derivePlannerGraphSourceFromManifest } from '../../src/index.js';
 import { FIXED_VECTOR } from '../vectors/fixed-vector.inline.js';
 
 /** Helper: sha256 sync for test verification (do not use in planner). */
@@ -45,7 +44,6 @@ describe('determinism', () => {
     expect(a.plan.metadata.planId).toEqual(b.plan.metadata.planId);
     expect(a.plan.metadata.inputHashSha256).toEqual(b.plan.metadata.inputHashSha256);
 
-    // Different observability -> same planId
     const c = await planner.buildPlan({ ...base, observability: { tags: { t: 'DIFF' } } });
     expect(a.plan.metadata.planId).toEqual(c.plan.metadata.planId);
 
@@ -136,60 +134,6 @@ describe('determinism', () => {
     expect(first.plan.metadata.inputHashSha256).toBe(second.plan.metadata.inputHashSha256);
   });
 
-  it('keeps planId stable across dbt manifest node-key ordering (AR-B3 golden vector)', async () => {
-    const planner = new Planner();
-
-    const manifestA = {
-      nodes: {
-        'model.analytics.base_orders': { resource_type: 'model', depends_on: { nodes: [] } },
-        'model.analytics.order_rollup': {
-          resource_type: 'model',
-          depends_on: { nodes: ['model.analytics.base_orders'] },
-        },
-        'test.analytics.order_rollup_not_null': {
-          resource_type: 'test',
-          depends_on: { nodes: ['model.analytics.order_rollup'] },
-        },
-      },
-    };
-
-    const manifestB = {
-      nodes: {
-        'test.analytics.order_rollup_not_null': {
-          resource_type: 'test',
-          depends_on: { nodes: ['model.analytics.order_rollup'] },
-        },
-        'model.analytics.order_rollup': {
-          resource_type: 'model',
-          depends_on: { nodes: ['model.analytics.base_orders'] },
-        },
-        'model.analytics.base_orders': { resource_type: 'model', depends_on: { nodes: [] } },
-      },
-    };
-
-    const first = await planner.buildPlan({
-      graphSource: derivePlannerGraphSourceFromManifest(manifestA),
-      selection: {
-        selectedNodeIds: ['test.analytics.order_rollup_not_null'],
-        includeUpstream: true,
-      },
-    });
-
-    const second = await planner.buildPlan({
-      graphSource: derivePlannerGraphSourceFromManifest(manifestB),
-      selection: {
-        selectedNodeIds: ['test.analytics.order_rollup_not_null'],
-        includeUpstream: true,
-      },
-    });
-
-    expect(first.plan.metadata.planId).toBe(second.plan.metadata.planId);
-    expect(first.plan.metadata.inputHashSha256).toBe(second.plan.metadata.inputHashSha256);
-    expect(first.plan.metadata.planId).toBe(
-      'bc0e5d6a24fb813fb5b44e8121f56106ee6318e14956267a67e0e5e8f93cb0db'
-    );
-  });
-
   it('ignores provenance-only node metadata for inputHash and planId', async () => {
     const planner = new Planner();
 
@@ -197,34 +141,36 @@ describe('determinism', () => {
       graphSource: {
         nodes: [
           {
-            nodeId: 'model.a',
+            nodeId: 'dvt_src_01991dc0-0000-7000-8000-000000000010',
             stepKind: 'DBT_MODEL',
             dependsOn: [],
             metadata: { displayName: 'Model A', sourceRef: 'dbt://a' },
           },
         ],
       },
-      selection: { selectedNodeIds: ['model.a'] },
+      selection: { selectedNodeIds: ['dvt_src_01991dc0-0000-7000-8000-000000000010'] },
     });
 
     const second = await planner.buildPlan({
       graphSource: {
         nodes: [
           {
-            nodeId: 'model.a',
+            nodeId: 'dvt_src_01991dc0-0000-7000-8000-000000000010',
             stepKind: 'DBT_MODEL',
             dependsOn: [],
             metadata: {
-              displayName: 'Modelo A',
-              sourceRef: 'dbt://different/a',
+              displayName: 'Renamed model',
+              sourceRef: 'dbt://different/path',
               tags: { owner: 'analytics' },
             },
           },
         ],
       },
-      selection: { selectedNodeIds: ['model.a'] },
+      selection: { selectedNodeIds: ['dvt_src_01991dc0-0000-7000-8000-000000000010'] },
     });
 
+    expect(first.plan.steps[0]?.stepId).toBe('dvt_src_01991dc0-0000-7000-8000-000000000010');
+    expect(second.plan.steps[0]?.stepId).toBe(first.plan.steps[0]?.stepId);
     expect(first.plan.metadata.planId).toBe(second.plan.metadata.planId);
     expect(first.plan.metadata.inputHashSha256).toBe(second.plan.metadata.inputHashSha256);
   });

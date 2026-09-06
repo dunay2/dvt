@@ -8,7 +8,7 @@ import {
   type WorkspaceGraphAuthoringDraft,
   type WorkspaceGraphAuthoringNode,
 } from '@dvt/contracts';
-import { jcsCanonicalize, sha256HexUtf8 } from '@dvt/crypto';
+import { jcsCanonicalize, randomUuidV7, sha256HexUtf8 } from '@dvt/crypto';
 
 import {
   WarehouseSourceImportDraftConflictError,
@@ -171,10 +171,10 @@ async function readPersistedImportedNodeIds(
     if (!connectedSourceRef.success || node.metadata?.sourceObjectId !== undefined) {
       throw new WarehouseSourceImportDraftConflictError();
     }
-    const identityKey = jcsCanonicalize(connectedSourceRef.data);
-    const nodeIds = nodeIdsByConnectedSourceRef.get(identityKey) ?? [];
+    const bindingKey = jcsCanonicalize(connectedSourceRef.data);
+    const nodeIds = nodeIdsByConnectedSourceRef.get(bindingKey) ?? [];
     nodeIds.push(node.id);
-    nodeIdsByConnectedSourceRef.set(identityKey, nodeIds);
+    nodeIdsByConnectedSourceRef.set(bindingKey, nodeIds);
   }
 
   return context.sourceObjects.map((sourceObject) => {
@@ -215,19 +215,11 @@ function appendImportedSourceNodes(
     if (!connectedSourceRef.success || node.metadata?.sourceObjectId !== undefined) {
       throw new WarehouseSourceImportDraftConflictError();
     }
-    const identityKey = jcsCanonicalize(connectedSourceRef.data);
-    if (existingNodeIdByConnectedSourceRef.has(identityKey)) {
+    const bindingKey = jcsCanonicalize(connectedSourceRef.data);
+    if (existingNodeIdByConnectedSourceRef.has(bindingKey)) {
       throw new WarehouseSourceImportDraftConflictError();
     }
-    existingNodeIdByConnectedSourceRef.set(identityKey, node.id);
-  }
-
-  const stableIdOwners = new Map<string, Set<string>>();
-  for (const sourceObject of context.sourceObjects) {
-    const stableNodeId = toStableSourceNodeId(sourceObject);
-    const owners = stableIdOwners.get(stableNodeId) ?? new Set<string>();
-    owners.add(sourceObject.objectId);
-    stableIdOwners.set(stableNodeId, owners);
+    existingNodeIdByConnectedSourceRef.set(bindingKey, node.id);
   }
 
   const importedNodes: WorkspaceGraphAuthoringNode[] = [];
@@ -255,12 +247,7 @@ function appendImportedSourceNodes(
       continue;
     }
 
-    const stableNodeId = toStableSourceNodeId(sourceObject);
-    const hasRequestedCollision = (stableIdOwners.get(stableNodeId)?.size ?? 0) > 1;
-    const nodeId =
-      hasRequestedCollision || existingIds.has(stableNodeId)
-        ? toCollisionResistantSourceNodeId(sourceObject)
-        : stableNodeId;
+    const nodeId = `dvt_src_${randomUuidV7()}`;
     if (existingIds.has(nodeId)) {
       throw new WarehouseSourceImportDraftConflictError();
     }
@@ -380,27 +367,4 @@ function readTargetCanvas(draft: WorkspaceGraphAuthoringDraft, canvasId: string)
     };
   }
   throw new WarehouseSourceImportCanvasNotFoundError(canvasId);
-}
-
-function toStableSourceNodeId(
-  sourceObject: WarehouseSourceImportCommandContext['sourceObjects'][number]
-): string {
-  return [
-    'src',
-    toStableYamlIdentifierPart(sourceObject.connectionId),
-    toStableYamlIdentifierPart(sourceObject.locator.catalog),
-    toStableYamlIdentifierPart(sourceObject.locator.schema),
-    toStableYamlIdentifierPart(sourceObject.locator.name),
-  ]
-    .filter((part): part is string => typeof part === 'string' && part.length > 0)
-    .join('_');
-}
-
-function toCollisionResistantSourceNodeId(
-  sourceObject: WarehouseSourceImportCommandContext['sourceObjects'][number]
-): string {
-  const suffix = sha256HexUtf8(
-    jcsCanonicalize([sourceObject.connectionId, sourceObject.objectId])
-  ).slice(0, 8);
-  return `${toStableSourceNodeId(sourceObject)}_${suffix}`;
 }

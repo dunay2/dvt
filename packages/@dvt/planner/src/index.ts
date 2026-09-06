@@ -6,7 +6,6 @@
 // Governing: ADR-0034, ADR-0035, planner-slice3-physical-reorganization-plan.md
 //
 export { PlannerFacade, type PlannerFacadeOptions } from './application/PlannerFacade.js';
-export { derivePlannerGraphSourceFromManifest } from './application/derivePlannerGraphSourceFromManifest.js';
 
 export type { StepFactory } from './domain/stepFactory/StepFactory.js';
 export type { PlannerLimits } from './domain/limits.js';

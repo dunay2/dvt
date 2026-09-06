@@ -1,7 +1,5 @@
 import { Buffer } from 'node:buffer';
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
-import { URL } from 'node:url';
 
 import {
   RUN_EVENT_PAYLOAD_VERSION,
@@ -47,13 +45,8 @@ import {
   InMemoryTxStore,
 } from '@dvt/engine/testing';
 import { createNoopObservability } from '@dvt/observability';
-import { PlannerFacade, derivePlannerGraphSourceFromManifest } from '@dvt/planner';
+import { PlannerFacade } from '@dvt/planner';
 import { describe, it, expect } from 'vitest';
-
-const PLANNER_MANIFEST_FIXTURE_URL = new URL(
-  '../fixtures/planner/basic-manifest.json',
-  import.meta.url
-);
 
 function plannerOutputToEnginePlan(plannerPlan: {
   metadata: {
@@ -353,28 +346,6 @@ function makeStepEvent(
 }
 
 describe('planner -> engine contract', () => {
-  it('canonical planner translation converts a manifest before PlannerFacade runs', async () => {
-    const planner = new PlannerFacade();
-    const manifest = JSON.parse(readFileSync(PLANNER_MANIFEST_FIXTURE_URL, 'utf8')) as Record<
-      string,
-      unknown
-    >;
-    const graphSource = derivePlannerGraphSourceFromManifest(manifest);
-
-    const { plan } = await planner.buildPlan({
-      graphSource,
-      selection: {
-        selectedNodeIds: ['model.analytics.order_items'],
-        includeUpstream: true,
-      },
-    });
-
-    expect(plan.steps.map((step) => step.stepId)).toEqual([
-      'model.analytics.orders',
-      'model.analytics.order_items',
-    ]);
-  });
-
   it('full lifecycle with 3-step DAG', async () => {
     const planner = new PlannerFacade();
     const { plan: plannerPlan } = await planner.buildPlan({

@@ -13,6 +13,12 @@
  * missing, or digest-mismatched bindings rather than silently executing against
  * drifted artifacts.
  *
+ * Binding verification has no identity-allocation authority. It verifies the
+ * `planId` / `stepId` supplied by the admitted plan and MUST NOT mint, repair, or
+ * recover logical identity from artifact names, storage URIs, paths, ordinals,
+ * aliases, provider coordinates, or compatibility heuristics. An unresolved
+ * binding is a rejection, not an identity-discovery opportunity.
+ *
  * ## Storage split
  *
  * - The state store persists the **canonical plan core** identified by `planId`.
