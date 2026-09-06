@@ -182,6 +182,9 @@ describe('dbt project file projection live vertical', () => {
 
   it('projects real dbt files without draft semantics and remains inspectable', () => {
     const observedRequests: string[] = [];
+    cy.intercept('**/workspace/**', (request) => {
+      observedRequests.push(request.url);
+    });
     cy.viewport(1500, 900);
     requestLiveDbtProjectGraph(PROJECT_ROOT, CANVAS_ID).then((response) => {
       const body = response.body as {
@@ -199,17 +202,6 @@ describe('dbt project file projection live vertical', () => {
             'dvt-web-application-language',
             JSON.stringify({ state: { language: 'en' }, version: 0 })
           );
-          const originalFetch = window.fetch.bind(window);
-          window.fetch = (input, init) => {
-            observedRequests.push(
-              typeof input === 'string'
-                ? input
-                : input instanceof window.Request
-                  ? input.url
-                  : input.toString()
-            );
-            return originalFetch(input, init);
-          };
         },
       }
     );
@@ -265,15 +257,38 @@ describe('dbt project file projection live vertical', () => {
         ).to.be.greaterThan(20);
       });
     });
+    cy.get('.react-flow__node[data-id="model.analytics.orders"]').then(($node) => {
+      const transform = new DOMMatrix($node[0].style.transform);
+      const position = { x: transform.m41, y: transform.m42 };
+      cy.wrap(position).as('settledModelPosition');
+      cy.window().should((window) => {
+        const saved = JSON.parse(
+          window.localStorage.getItem('dvt-web-canvas-interaction') ?? '{}'
+        ) as {
+          state?: {
+            canvasLayouts?: Record<
+              string,
+              { nodePositions: Record<string, { x: number; y: number }> }
+            >;
+          };
+        };
+        const positions = Object.values(saved.state?.canvasLayouts ?? {}).map(
+          (layout) => layout.nodePositions['model.analytics.orders']
+        );
+        const savedPosition = positions.find((candidate) => candidate != null);
+        expect(savedPosition, 'persisted drag-stop coordinates').not.to.equal(undefined);
+        expect(savedPosition?.x).to.be.closeTo(position.x, 0.001);
+        expect(savedPosition?.y).to.be.closeTo(position.y, 0.001);
+      });
+    });
     cy.wait(400);
     cy.reload();
-    cy.get<Record<string, number>>('@originalModelPosition').then((original) => {
+    cy.get<{ x: number; y: number }>('@settledModelPosition').then((settled) => {
       cy.get('.react-flow__node[data-id="model.analytics.orders"]', { timeout: 60_000 }).should(
         ($node) => {
-          const rect = $node[0].getBoundingClientRect();
-          expect(
-            Math.abs(rect.left - original.left) + Math.abs(rect.top - original.top)
-          ).to.be.greaterThan(20);
+          const transform = new DOMMatrix($node[0].style.transform);
+          expect(transform.m41, 'restored Canvas x').to.be.closeTo(settled.x, 0.001);
+          expect(transform.m42, 'restored Canvas y').to.be.closeTo(settled.y, 0.001);
         }
       );
     });
@@ -338,6 +353,9 @@ describe('dbt project file projection live vertical', () => {
 
   it('keeps invalid projects file-authoritative and reports the analyzer diagnostic', () => {
     const observedRequests: string[] = [];
+    cy.intercept('**/workspace/**', (request) => {
+      observedRequests.push(request.url);
+    });
     visitWithLiveWorkspaceSession(
       `/canvas?authority=dbt-project-files&canvasId=${INVALID_CANVAS_ID}&projectRoot=${INVALID_PROJECT_ROOT}`,
       {
@@ -346,17 +364,6 @@ describe('dbt project file projection live vertical', () => {
             'dvt-web-application-language',
             JSON.stringify({ state: { language: 'en' }, version: 0 })
           );
-          const originalFetch = window.fetch.bind(window);
-          window.fetch = (input, init) => {
-            observedRequests.push(
-              typeof input === 'string'
-                ? input
-                : input instanceof window.Request
-                  ? input.url
-                  : input.toString()
-            );
-            return originalFetch(input, init);
-          };
         },
       }
     );

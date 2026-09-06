@@ -37,14 +37,17 @@ function extractNodePositions(nodes: readonly Node[]): CanvasNodePositions {
   );
 }
 
-function mergeDraggedNodePosition(allNodes: readonly Node[], draggedNode: Node): Node[] {
-  const nodesWithDraggedPosition = allNodes.map((node) =>
-    node.id === draggedNode.id ? { ...node, position: draggedNode.position } : node
-  );
-
-  return allNodes.some((node) => node.id === draggedNode.id)
-    ? nodesWithDraggedPosition
-    : [...nodesWithDraggedPosition, draggedNode];
+function extractFinalNodePositions(
+  nodes: readonly Node[],
+  draggedNode: Node,
+  draggedNodes: readonly Node[]
+): CanvasNodePositions {
+  const positions = extractNodePositions(nodes);
+  for (const node of draggedNodes) {
+    positions[node.id] = { x: node.position.x, y: node.position.y };
+  }
+  positions[draggedNode.id] = { x: draggedNode.position.x, y: draggedNode.position.y };
+  return positions;
 }
 
 function hasSettledDragFrame(nodes: readonly Node[]): boolean {
@@ -208,12 +211,10 @@ function useCanvasNodePositionPersistence({
   );
 
   const handleNodeDragStop = useCallback<NonNullable<ReactFlowProps['onNodeDragStop']>>(
-    (_event, draggedNode, allNodes) => {
-      saveOrQueueNodePositions(
-        extractNodePositions(mergeDraggedNodePosition(allNodes, draggedNode))
-      );
+    (_event, draggedNode, draggedNodes) => {
+      saveOrQueueNodePositions(extractFinalNodePositions(nodes, draggedNode, draggedNodes));
     },
-    [saveOrQueueNodePositions]
+    [nodes, saveOrQueueNodePositions]
   );
 
   return {

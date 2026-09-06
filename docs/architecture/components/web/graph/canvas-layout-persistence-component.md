@@ -74,7 +74,9 @@ Canonical local C&Q catalog:
 - Node-position observations captured before hydration are queued and flushed
   after hydration completes; they must not be dropped.
 - Drag-stop persistence trusts the `draggedNode` event payload over the stale
-  `allNodes` snapshot supplied by React Flow.
+  viewport snapshot. React Flow supplies only the dragged selection in its final
+  node-array payload; merge those final coordinates into the complete current
+  viewport map so moving one selection preserves every other node position.
 - Active drag frames are not layout durability boundaries and must not persist
   route-local node positions merely because the pointer moved.
 - A settled observer frame following an active drag does not persist the drag a
@@ -135,7 +137,7 @@ sequenceDiagram
   Note over Viewport,Layout: active drag frames do not persist layout
   Operator->>Viewport: release card
   Viewport->>Layout: onNodeDragStop(event, draggedNode, allNodes)
-  Layout->>Layout: mergeDraggedNodePosition(allNodes, draggedNode)
+  Layout->>Layout: extractFinalNodePositions(nodes, draggedNode, draggedNodes)
   Layout->>Store: setCanvasNodePositions(layoutKey, final positions)
   Note over Layout,Store: settled observer does not write the same drag again
 ```
