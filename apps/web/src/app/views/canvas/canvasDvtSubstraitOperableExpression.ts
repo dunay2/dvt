@@ -1,4 +1,7 @@
 /** Owned concern: project one canonical Substrait output into an operable, non-persistent expression view. */
+import type { Expression } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+
+import { inspectDvtSubstraitCalculatedExpression } from './canvasDvtSubstraitCalculatedExpression';
 import type {
   DvtSubstraitProjection,
   DvtSubstraitProjectionDraft,
@@ -23,7 +26,7 @@ export type DvtSubstraitOperableExpression =
       kind: 'scalar-function';
       capabilityId: string;
       name: string;
-      arguments: readonly [DvtSubstraitOperableExpression];
+      arguments: readonly DvtSubstraitOperableExpression[];
     }>
   | Readonly<{
       kind: 'row-number';
@@ -64,6 +67,108 @@ function sourceFieldReference(args: {
   };
 }
 
+function readSourceOrdinal(expression: Expression): number | null {
+  if (expression.rexType.case !== 'selection') return null;
+  const reference = expression.rexType.value;
+  const segment =
+    reference.referenceType.case === 'directReference'
+      ? reference.referenceType.value.referenceType
+      : undefined;
+  return reference.rootType.case === 'rootReference' &&
+    segment?.case === 'structField' &&
+    segment.value.child == null &&
+    segment.value.field >= 0
+    ? segment.value.field
+    : null;
+}
+
+function resolveScalarCapability(args: {
+  draft: DvtSubstraitProjectionDraft;
+  projection: DvtSubstraitProjection;
+  functionReference: number;
+}): DvtSubstraitColumnFunction | null {
+  const declaration = args.draft.plan.extensions.find(
+    (entry) =>
+      entry.mappingType.case === 'extensionFunction' &&
+      entry.mappingType.value.functionAnchor === args.functionReference
+  );
+  if (declaration?.mappingType.case !== 'extensionFunction') return null;
+  const signature = declaration.mappingType.value.name;
+  const functionName = signature.endsWith(':str') ? signature.slice(0, -':str'.length) : null;
+  return functionName == null
+    ? null
+    : (resolveDvtSubstraitColumnFunctions({
+        dataType: 'text',
+        provider: args.projection.source.sourceRef.connectionRef.provider,
+      }).find((candidate) => candidate.name === functionName) ?? null);
+}
+
+function projectCanonicalExpression(args: {
+  draft: DvtSubstraitProjectionDraft;
+  projection: DvtSubstraitProjection;
+  expression: Expression;
+}): DvtSubstraitOperableExpression | null {
+  const calculated = inspectDvtSubstraitCalculatedExpression(args.draft.plan, args.expression);
+  if (calculated?.calculation.kind === 'string-literal') {
+    return {
+      kind: 'literal',
+      literalType: 'string',
+      value: calculated.calculation.value,
+    };
+  }
+  if (calculated?.calculation.kind === 'timestamp-literal') {
+    return {
+      kind: 'literal',
+      literalType: 'timestamp-tz',
+      value: calculated.calculation.value,
+    };
+  }
+  if (calculated?.calculation.kind === 'row-number') {
+    const orderBy = sourceFieldReference({
+      draft: args.draft,
+      projection: args.projection,
+      sourceOrdinal: calculated.calculation.orderSourceOrdinal,
+    });
+    return orderBy == null ? null : { kind: 'row-number', orderBy };
+  }
+
+  const sourceOrdinal = readSourceOrdinal(args.expression);
+  if (sourceOrdinal != null) {
+    return sourceFieldReference({
+      draft: args.draft,
+      projection: args.projection,
+      sourceOrdinal,
+    });
+  }
+
+  if (args.expression.rexType.case !== 'scalarFunction') return null;
+  const scalar = args.expression.rexType.value;
+  const capability = resolveScalarCapability({
+    draft: args.draft,
+    projection: args.projection,
+    functionReference: scalar.functionReference,
+  });
+  if (capability == null) return null;
+  const projectedArguments = scalar.arguments.map((argument) =>
+    argument.argType.case === 'value'
+      ? projectCanonicalExpression({
+          draft: args.draft,
+          projection: args.projection,
+          expression: argument.argType.value,
+        })
+      : null
+  );
+  if (projectedArguments.length === 0 || projectedArguments.some((argument) => argument == null)) {
+    return null;
+  }
+  return {
+    kind: 'scalar-function',
+    capabilityId: capability.capabilityId,
+    name: capability.name,
+    arguments: projectedArguments.filter((argument) => argument != null),
+  };
+}
+
 export function projectDvtSubstraitOperableOutput(args: {
   draft: DvtSubstraitProjectionDraft;
   projection: DvtSubstraitProjection;
@@ -71,45 +176,26 @@ export function projectDvtSubstraitOperableOutput(args: {
 }): DvtSubstraitOperableOutput | null {
   const output = args.projection.outputs.find((candidate) => candidate.fieldId === args.fieldId);
   if (output == null) return null;
-  const calculation = output.calculation;
+  const root = args.draft.plan.relations[0]?.relType;
+  const project = root?.case === 'root' ? root.value.input?.relType : undefined;
+  const emit = project?.case === 'project' ? project.value.common?.emitKind : undefined;
+  if (project?.case !== 'project' || emit?.case !== 'emit') return null;
 
-  let expression: DvtSubstraitOperableExpression | null = null;
-  if (calculation?.kind === 'string-literal') {
-    expression = { kind: 'literal', literalType: 'string', value: calculation.value };
-  } else if (calculation?.kind === 'timestamp-literal') {
-    expression = { kind: 'literal', literalType: 'timestamp-tz', value: calculation.value };
-  } else if (calculation?.kind === 'row-number') {
-    const orderBy = sourceFieldReference({
-      draft: args.draft,
-      projection: args.projection,
-      sourceOrdinal: calculation.orderSourceOrdinal,
-    });
-    expression = orderBy == null ? null : { kind: 'row-number', orderBy };
-  } else if (calculation == null && output.sourceFieldName != null) {
-    const sourceOrdinal = args.projection.source.fields.findIndex(
-      (field) => field.name === output.sourceFieldName
-    );
-    expression =
-      sourceOrdinal < 0
-        ? null
-        : sourceFieldReference({ draft: args.draft, projection: args.projection, sourceOrdinal });
-    if (expression == null) return null;
-
-    for (const operation of output.operations ?? []) {
-      const capability: DvtSubstraitColumnFunction | undefined =
-        resolveDvtSubstraitColumnFunctions({
-          dataType: expression.kind === 'field-ref' ? expression.dataType : 'string',
-          provider: args.projection.source.sourceRef.connectionRef.provider,
-        }).find((candidate) => candidate.name === operation);
-      if (capability == null) return null;
-      expression = {
-        kind: 'scalar-function',
-        capabilityId: capability.capabilityId,
-        name: capability.name,
-        arguments: [expression],
-      };
-    }
-  }
+  const sourceFieldCount = args.projection.source.fields.length;
+  const mapping = emit.value.outputMapping[output.outputOrdinal];
+  if (mapping == null) return null;
+  const expression =
+    mapping < sourceFieldCount
+      ? sourceFieldReference({
+          draft: args.draft,
+          projection: args.projection,
+          sourceOrdinal: mapping,
+        })
+      : projectCanonicalExpression({
+          draft: args.draft,
+          projection: args.projection,
+          expression: project.value.expressions[mapping - sourceFieldCount]!,
+        });
 
   return expression == null
     ? null
