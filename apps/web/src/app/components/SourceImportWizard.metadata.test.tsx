@@ -186,6 +186,74 @@ describe('SourceImportWizard metadata exploration', () => {
     );
   });
 
+  it('refreshes metadata focus for a mandatory dbt source without changing binding selection', async () => {
+    const orders = buildSourceObject({
+      table: 'ORDERS',
+      columns: [{ name: 'order_id', type: 'INTEGER', nullable: false }],
+    });
+    const customers = buildSourceObject({
+      table: 'CUSTOMERS',
+      metricEvidence: buildSourceImportTestMetricEvidence(45000, 7000000),
+      columns: [{ name: 'customer_email', type: 'VARCHAR', nullable: true }],
+    });
+
+    await harness.renderWizard({
+      initialSelection: {
+        kind: 'dbt-source-binding',
+        sourceTableDeclarations: [
+          {
+            uniqueId: 'source.analytics.raw.orders',
+            filePath: 'models/sources.yml',
+            sourceName: 'raw',
+            tableName: 'orders',
+            database: 'RAW',
+            schema: 'ERP',
+            identifier: 'ORDERS',
+          },
+          {
+            uniqueId: 'source.analytics.raw.customers',
+            filePath: 'models/sources.yml',
+            sourceName: 'raw',
+            tableName: 'customers',
+            database: 'RAW',
+            schema: 'ERP',
+            identifier: 'CUSTOMERS',
+          },
+        ],
+      },
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        listSourceObjects: async () => [orders, customers],
+      }),
+    });
+
+    await harness.clickConnectionOption('Local Postgres proof');
+    await harness.flushPendingWork();
+    await harness.clickSourceObjectSelectionCheckbox(customers.objectId);
+
+    const activeMetadata = document.querySelector<HTMLElement>(
+      '[data-source-import-object-metadata]'
+    );
+
+    expect(activeMetadata?.getAttribute('data-source-import-object-metadata')).toBe(
+      customers.objectId
+    );
+    expect(activeMetadata?.textContent).toContain('customer_email');
+    expect(activeMetadata?.textContent).toContain('45,000 rows');
+    expect(activeMetadata?.textContent).toContain('7 MB');
+    expect(activeMetadata?.textContent).not.toContain('order_id');
+    expect(
+      document
+        .querySelector(`[data-source-import-object-select="${orders.objectId}"]`)
+        ?.getAttribute('aria-checked')
+    ).toBe('true');
+    expect(
+      document
+        .querySelector(`[data-source-import-object-select="${customers.objectId}"]`)
+        ?.getAttribute('aria-checked')
+    ).toBe('true');
+    expect(document.body.textContent).toContain('Selected: 2');
+  });
+
   it('does not carry explorer preselection into a different warehouse connection', async () => {
     const listSourceObjects = vi.fn(async () => [buildSourceObject({ table: 'CUSTOMERS' })]);
 
