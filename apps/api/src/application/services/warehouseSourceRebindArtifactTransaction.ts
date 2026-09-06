@@ -1,13 +1,13 @@
 /** Owned concern: apply and compensate the dbt artifact mutation for one Source rebind. */
 import type { WorkspaceGraphDraftScope } from '@dvt/contracts';
 
+import { WarehouseSourceRebindBindingConflictError } from '../ports/warehouseSourceRebind.js';
+import { WorkspaceFileRevisionConflictError } from '../ports/workspaceFiles.js';
 import type {
   IWorkspaceFileBatchMutationPort,
   WorkspaceFileBatchReceipt,
   WorkspaceFileContent,
 } from '../ports/workspaceFiles.js';
-import { WorkspaceFileRevisionConflictError } from '../ports/workspaceFiles.js';
-import { WarehouseSourceRebindBindingConflictError } from '../ports/warehouseSourceRebind.js';
 
 export type SourceYamlRebindPlan = Readonly<{
   path: string;
