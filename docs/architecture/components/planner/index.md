@@ -2,7 +2,7 @@
 title: @dvt/planner
 status: Active
 owner: Planning Domain / Architecture / Docs
-last_reviewed: 2026-04-10
+last_reviewed: 2026-09-05
 ---
 
 # @dvt/planner
@@ -36,10 +36,11 @@ last_reviewed: 2026-04-10
 - VTX2 Substrait is the sole DVT transformation authoring authority; the
   generic preview rail does not admit a DVT-specific preview profile
 - source-native adaptation happens before planner admission
+- source-native manifest keys, names, paths, provider coordinates, and ordinals
+  are not Planner logical-identity authorities
 - canonical plan artifact: `ExecutionPlan.v1.ts`
 - canonical per-step retry ownership: `ExecutionStep.retryPolicy`
 - plan version source: `CURRENT_EXECUTION_PLAN_VERSION`
-- retained manifest normalization utility: `derivePlannerGraphSourceFromManifest`
 - planner-private behavior ports live in `@dvt/planner/src/contracts`; shared
   serializable vocabulary for those ports remains in `@dvt/contracts`
 
@@ -50,13 +51,17 @@ last_reviewed: 2026-04-10
   no SQL-shaped preview profile or second planner ingress exists
 - source-native refs such as DBT manifest artifacts stay outside the planner
   package and do not appear in the canonical planner ingress
+- logical IDs are assigned/persisted by their owning authoring/source boundary
+  and cross Planner unchanged; Planner verifies graph structure rather than
+  repairing identity
 - planner component pages stay summary-only and point back to canonical planner docs
 
 ## Component map
 
 ```mermaid
 flowchart LR
-  Caller["API or integrator"] --> Facade["PlannerFacade"]
+  Caller["API or source adapter"] --> GraphSource["Canonical GenericGraphSource"]
+  GraphSource --> Facade["PlannerFacade"]
   Facade --> Mapper["PlannerEnvelopeMapper"]
   Facade --> Planner["Planner domain service"]
   Facade --> Deriver["ExecutableSubgraphDeriver"]

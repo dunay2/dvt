@@ -1110,7 +1110,7 @@
         "Keep protected source discovery and import request/response DTOs in one canonical contract component.",
         "Keep row samples separate from source-object catalog discovery and reject client SQL.",
         "Keep source import scope bound to protected runtime workspace authorization.",
-        "Persist one strict, versioned ConnectedSourceRef instead of parallel loose connection and object identifiers.",
+        "Persist one strict, versioned ConnectedSourceRef instead of parallel loose connection and object binding coordinates.",
         "Re-export only source-object catalog and source-import operation contracts from this barrel.",
         "Represent discoverable inputs as source objects instead of relational-table-only DTOs."
       ],
@@ -1202,12 +1202,13 @@
         "Export the pinned Substrait profile, stable authoring bindings, and single semantic capability catalog through one bounded public contract surface.",
         "Fail closed when persisted bytes are not one decodable Plan at the pinned version.",
         "Logical transformation semantics stay outside ExecutionPlan; plan steps represent runtime responsibilities only.",
+        "Persist one strict, versioned ConnectedSourceRef instead of parallel loose connection and object binding coordinates.",
         "Pin one exact Substrait release and map stable DVT ids to rel_anchor/output ordinals.",
         "Require typed standard-first evidence before semantic admission.",
         "Retain product gaps separately from standard semantic identities.",
         "Seed candidates only from pinned core and official extension identities.",
         "Validate and serialize the capability read model deterministically.",
-        "Validate stable field hierarchy independently from document transport."
+        "Validate stable FieldId hierarchy against the current structural binding independently from document transport. FieldId/relationId own logical identity; outputOrdinal is only the current sibling position and must never be used to mint or repair identity."
       ],
       "implemented_by": [
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitAuthoringIdentity.ts",
@@ -1224,6 +1225,7 @@
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSupportedCapabilities.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts",
+        "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts",
         "packages/@dvt/contracts/src/substrait.ts"
       ],
       "title": "ADR-0064 - Substrait as the Semantic Reference and Bounded Logical Profile for DVT Transformations"

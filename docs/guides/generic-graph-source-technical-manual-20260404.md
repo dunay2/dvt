@@ -1,125 +1,57 @@
 ﻿---
 title: GenericGraphSource Technical Manual
-status: Draft
+status: Active
 owner: Planning Domain / Architecture / API
-last_reviewed: 2026-04-04
+last_reviewed: 2026-09-05
 ---
 
 # GenericGraphSource Technical Manual
 
 ## Purpose
 
-This manual defines the target technical model for `MW-A2`: making
-`GenericGraphSource` the canonical planner input instead of treating dbt
-manifest ingestion as the planner's semantic center.
+`GenericGraphSourceV1` is the canonical typed graph ingress for Planner.
+Source-native syntax and artifacts are translated before this boundary. Planner
+owns deterministic graph validation, selection and execution-plan materialization;
+it does not own source parsing or logical-identity allocation.
 
-It describes the target boundary, the intended collaborator split, the
-governing invariants, and the negative-path test plan needed before the slice
-can be considered closed.
-
-This manual also enforces the execution rule for this arc: documentation is a
-hard gate before TDD-based implementation waves.
+This page supersedes the old MW-A2 target wording that described a retained
+manifest-normalization utility inside `@dvt/planner`.
 
 ## Governing sources
 
 - `AGENTS.md`
-- `docs/adr/ADR-0003-execution-model.md`
-- `docs/adr/ADR-0012-plan-integrity-ownership.md`
-- `docs/adr/ADR-0017_ExecutionPlan_Schema_Versioning.md`
 - `docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md`
 - `docs/adr/ADR-0035-planner-public-contract-evolution-protocol.md`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/dvt-dbt-agnostic-generalization-plan-20260403.md`
-- `docs/planning/status/planner-current-state-assessment.md`
+- `docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md`
+- `docs/architecture/domain-planning.md`
+- `docs/planning/proposals/mandatory/runtime-and-contracts/gh-2904-stable-logical-physical-binding-hardcut-20260905.md`
 
-## Current baseline
-
-The repository already has a typed planner boundary, but it is still too thin
-to be the long-term generic source model:
-
-- `PlannerGraphSourceV1` exists in
-  `packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts`
-- the current normalized shape is only:
-  - `kind`
-  - `nodes[{ nodeId, stepKind, dependsOn, stepTypeConfig? }]`
-- `PlannerFacade` now accepts canonical `graphSource` only
-- source-native seams such as dbt manifest parsing must live before planner
-  admission and are not part of the shared planner contract
-
-That is enough for normalized dbt topology, but it is not enough to describe a
-general workflow source with explicit step semantics, stable provenance, and a
-clear source-family adaptation model.
-
-## Current architecture (as-is)
+## Current architecture
 
 ```mermaid
 flowchart LR
-  Caller["API caller"] --> Adapter["source adapter or caller normalization"]
-  Adapter --> Facade["PlannerFacade"]
-  Facade --> Nodes["Current graph nodes(stepKind, dependsOn)"]
-  Nodes --> Planner["Planner core"]
+  Native["Source-native authority\nCanvas / dbt / import"] --> Adapter["Owning adapter / application boundary"]
+  Adapter --> Graph["GenericGraphSourceV1\nexplicit logical nodeId + dependsOn"]
+  Graph --> Facade["PlannerFacade"]
+  Facade --> Mapper["PlannerEnvelopeMapper"]
+  Mapper --> Planner["Planner core"]
   Planner --> Plan["ExecutionPlan"]
 ```
 
-## Target outcome
+The adapter boundary may consume external dbt artifacts, provider catalogs or
+Canvas state. It must emit an already-governed graph. Planner never falls back
+to dbt manifest keys, names, paths, provider coordinates, ordinals or aliases to
+manufacture missing logical identity.
 
-`GenericGraphSource` becomes the canonical planner input contract.
+## Canonical contract model
 
-This means:
-
-- the planner core accepts a generic normalized graph, not a dbt-shaped payload
-- dbt manifest parsing becomes one source adapter into that contract
-- non-dbt systems can describe a DAG without pretending to be dbt
-- `PlannerFacade` remains the application boundary and the domain planner
-  remains pure
-
-This slice does **not** claim that every documented step kind is executable
-today. Runtime dispatch still depends on `MW-A1`, `MW-A3`, and `MW-C1`.
-
-## In-system context
-
-```mermaid
-flowchart LR
-  Caller["API or external integrator"] --> Facade["PlannerFacade"]
-  DbtAdapter["DbtManifestGraphSourceAdapter"]
-  DirectSource["Inline GenericGraphSource"]
-  Facade --> Validator["GenericGraphSourceValidator"]
-  Facade --> DbtAdapter
-  Facade --> Planner["Planner domain core"]
-  Planner --> Builder["GraphBuilder"]
-  Planner --> Selector["NodeSelector"]
-  Planner --> Translator["GraphSourceStepTranslator"]
-  Planner --> Registry["IStepTypeRegistry"]
-  Planner --> Assembler["PlanAssembler"]
-  Assembler --> Plan["ExecutionPlan"]
-
-  Caller --> DirectSource
-  Caller --> RefResolver
-```
-
-## Target architecture (to-be)
-
-```mermaid
-flowchart LR
-  Caller["API or integrator"] --> Facade["PlannerFacade"]
-  Facade --> GResolver["IGraphSourceResolver"]
-  Facade --> GValidator["GenericGraphSourceValidator"]
-  Facade --> DbtAdapter["DbtManifestGraphSourceAdapter"]
-  GResolver --> GValidator
-  DbtAdapter --> GValidator
-  GValidator --> Translator["GraphSourceStepTranslator"]
-  Translator --> Planner["Planner core (source-agnostic)"]
-  Planner --> Plan["ExecutionPlan (deterministic)"]
-```
-
-## Target contract model
-
-`GenericGraphSourceV1` is the canonical target contract for `MW-A2`.
+The planner contract remains:
 
 ```ts
 export interface GenericGraphSourceV1 {
   kind: 'generic-graph-v1';
-  sourceFamily: string;
-  sourceVersion: string;
+  sourceFamily?: string;
+  sourceVersion?: string;
   nodes: readonly GenericGraphNodeV1[];
 }
 
@@ -136,240 +68,117 @@ export interface GenericGraphNodeV1 {
 }
 ```
 
-### Boundary notes
+The executable schema in `@dvt/contracts` is authoritative if this explanatory
+snippet ever drifts.
 
-- `sourceFamily` identifies the producer family, not the execution runtime.
-- `stepKind` is explicit in the target node shape even if per-kind schema
-  enforcement lands in `MW-A1`.
-- authoring adapters must derive `stepKind` from an explicit source-owned
-  mapping seam such as a typed node-kind registry. Free-form metadata is not a
-  governed `stepKind` authority.
-- `stepTypeConfig` stays open at the shared-kernel contract level. Per-kind
-  semantic validation remains registry-owned.
-- `dependsOn` is the only dependency authority. No implicit ordering is
-  accepted.
-- identity rule (must remain deterministic): in `MW-A2`, plan identity keeps
-  following current planner semantics where `inputHashSha256` is computed from
-  normalized `nodes`, `selection`, and `policies` only. `sourceFamily`,
-  `sourceVersion`, and node `metadata` are provenance fields and do not
-  participate in `planId` unless a later ADR changes the hash contract.
+## Identity versus provenance
 
-## Target collaborator map
+| Field                  | Owner                              | Semantics                                               |
+| ---------------------- | ---------------------------------- | ------------------------------------------------------- |
+| `nodeId`               | authoring/source owner             | logical identity used by dependencies and Planner steps |
+| `dependsOn[]`          | authoring/source owner             | references logical `nodeId` values only                 |
+| `stepKind`             | source mapping / governed registry | explicit execution responsibility                       |
+| `stepTypeConfig`       | step-kind contract                 | typed/configured execution semantics                    |
+| `sourceFamily`         | source adapter                     | provenance only                                         |
+| `sourceVersion`        | source adapter                     | provenance only                                         |
+| `metadata.displayName` | presentation/source adapter        | mutable metadata                                        |
+| `metadata.sourceRef`   | source adapter                     | provenance/binding metadata, not logical identity       |
+| `metadata.tags`        | source adapter                     | provenance/observability metadata                       |
 
-1. `PlannerFacade`
-   Owner: `@dvt/planner`
-   Role: application boundary, one-active-source rule, orchestration
-   Current mapping: existing class remains
-2. `IGraphSourceResolver`
-   Owner: future optional planner-facing port
-   Role: resolve immutable generic graph-source refs into canonical graph
-   sources
-   Current mapping: not implemented in the active hard-cut planner runtime
-3. `GenericGraphSourceValidator`
-   Owner: `@dvt/contracts` + `@dvt/planner`
-   Role: contract parsing plus semantic graph-source checks
-   Current mapping: today split across parser + planner
-4. `DbtManifestGraphSourceAdapter`
-   Owner: `apps/api` composition root and infrastructure boundary
-   Role: normalize dbt manifest payloads into `GenericGraphSourceV1` and adapt
-   external artifact IO to planner ports
-   Current mapping: evolves current `ManifestGraphDeriver` and
-   `ManifestArtifactResolver` path
-5. `GraphSourceStepTranslator`
-   Owner: `@dvt/planner`
-   Role: map normalized graph nodes to planner steps without hard-coding dbt
-   as the universal source
-   Current mapping: new collaborator
-6. `GraphBuilder`
-   Owner: `@dvt/planner`
-   Role: DAG validation and adjacency build
-   Current mapping: existing class remains
-7. `NodeSelector`
-   Owner: `@dvt/planner`
-   Role: subgraph selection
-   Current mapping: existing class remains
-8. `PlanAssembler`
-   Owner: `@dvt/planner`
-   Role: canonical plan assembly and hashing
-   Current mapping: existing class remains
+For DVT-native semantic authoring, ADR-0064 remains stronger and more specific:
+Substrait owns relational semantics while the DVT sidecar owns stable
+`RelationId` / `FieldId` and provenance bindings. `GenericGraphSource` does not
+replace that semantic authority; it is the Planner-facing graph boundary.
 
-## Main procedures
+## Planner responsibilities
 
-### Procedure 1: Direct inline generic graph source
+`PlannerFacade` and Planner collaborators:
 
-```mermaid
-sequenceDiagram
-  participant Caller
-  participant Facade as PlannerFacade
-  participant Validator as GenericGraphSourceValidator
-  participant Planner as Planner
-  participant Translator as GraphSourceStepTranslator
-  participant Registry as IStepTypeRegistry
-  participant Assembler as PlanAssembler
+1. parse/validate the canonical planner envelope;
+2. pass `graphSource.nodeId` and `dependsOn` through without reminting identity;
+3. reject duplicate nodes, missing dependency targets and cycles;
+4. resolve selection and policies deterministically;
+5. validate step-kind configuration through the registry;
+6. assemble/hash the immutable `ExecutionPlan`.
 
-  Caller->>Facade: buildPlan({ graphSource, selection, policies })
-  Facade->>Validator: parse and validate graphSource
-  Validator-->>Facade: GenericGraphSourceV1
-  Facade->>Planner: buildPlan(domainInput)
-  Planner->>Translator: translate nodes to step candidates
-  Translator-->>Planner: normalized steps
-  Planner->>Registry: validate per-kind config when registry knows the kind
-  Registry-->>Planner: success or failure
-  Planner->>Assembler: assemble canonical plan
-  Assembler-->>Caller: ExecutionPlan + canonicalPlanCoreJson
-```
+Planner does **not**:
 
-### Procedure 2: Ref-based generic graph source
+- parse raw dbt manifests;
+- derive DVT node IDs from dbt `unique_id`;
+- repair a missing ID from a display name, path or ordinal;
+- query provider catalogs to recover identity;
+- persist authoring identity;
+- create a second relational IR.
 
-```mermaid
-sequenceDiagram
-  participant Caller
-  participant Facade as PlannerFacade
-  participant Resolver as IGraphSourceResolver
-  participant Validator as GenericGraphSourceValidator
-  participant Planner as Planner
+## Source-adapter responsibilities
 
-  Caller->>Facade: buildPlan({ graphSourceRef, selection, policies })
-  Facade->>Resolver: resolveGraphSource(graphSourceRef)
-  Resolver-->>Facade: bytes or normalized source
-  Facade->>Validator: parse and validate resolved source
-  Validator-->>Facade: GenericGraphSourceV1
-  Facade->>Planner: buildPlan(domainInput)
-  Planner-->>Caller: ExecutionPlan + canonicalPlanCoreJson
-```
+An owning source adapter/application boundary must:
 
-Status: planned target path. The current implementation does not expose a
-ref-based planner input. Any source-native artifact resolution must happen
-before the canonical planner boundary.
+1. validate the source-native representation;
+2. resolve/preserve the source's governed logical identity according to that
+   source's authority contract;
+3. map dependencies to explicit logical IDs;
+4. map source-native node kinds to governed `stepKind` values;
+5. retain external/source-native identifiers as provenance when required for
+   round-trip or binding, not as an implicit DVT identity fallback;
+6. emit `GenericGraphSourceV1` before calling Planner.
 
-### Procedure 3: dbt manifest source-adapter path
+A dbt source adapter may therefore retain dbt `unique_id` for dbt authority and
+round-trip, while DVT-native logical identity remains independently governed.
+The removed `derivePlannerGraphSourceFromManifest()` bridge is not a supported
+compatibility path.
 
-1. Caller provides dbt manifest input through the dbt adapter boundary.
-2. The dbt-specific adapter reads and validates the raw manifest artifact.
-3. The adapter converts that payload into `GenericGraphSourceV1`.
-4. `PlannerFacade` forwards only the normalized graph source into the planner
-   core.
-5. The planner does not branch on dbt semantics after that boundary.
+## Determinism
 
-## Invariants
+Plan identity follows the existing Planner hash contract. `sourceFamily`,
+`sourceVersion` and node metadata are provenance-only and do not affect
+`inputHashSha256` / `planId`; logical `nodeId`, dependency topology, step
+semantics, selection and policies do.
 
-- `INV-GGS-001`: exactly one active source is allowed at the planner boundary.
-- `INV-GGS-002`: the canonical planner input is a normalized graph source, not
-  a raw dbt manifest.
-- `INV-GGS-003`: every `nodeId` is unique inside one graph source.
-- `INV-GGS-004`: every dependency target named in `dependsOn` must exist in the
-  same graph source.
-- `INV-GGS-005`: the normalized graph must be acyclic before plan assembly.
-- `INV-GGS-006`: step ordering is determined by the planner's deterministic
-  graph algorithm, never by caller-provided array order.
-- `INV-GGS-007`: dbt manifest ingestion is an adapter path, not a core planner
-  semantic contract.
-- `INV-GGS-008`: source-family metadata may explain provenance but must not
-  change the DAG semantics of the normalized graph.
-- `INV-GGS-009`: ref-based graph sources must resolve through immutable,
-  integrity-verifiable references.
-- `INV-GGS-010`: runtime-only adapter data must not be embedded in the graph
-  source contract.
-- `INV-GGS-011`: `stepTypeConfig` remains open in the shared contract but must
-  not bypass registry validation for known step kinds.
-- `INV-GGS-012`: mixed plans are valid at the model layer if all dependencies
-  are explicit and every node can be translated into a planner step.
-- `INV-GGS-013`: `sourceFamily`, `sourceVersion`, and node `metadata` are
-  non-identity provenance fields in `MW-A2`; changing those fields alone must
-  not change `inputHashSha256` or `planId`.
+Consequences:
 
-## Negative-path test plan
+- renaming display metadata does not change plan identity when logical IDs and
+  semantics are unchanged;
+- moving a physical binding/path does not change dependency identity;
+- changing a logical `nodeId` is a semantic graph change;
+- node/dependency array ordering is normalized deterministically.
 
-### Contract tests
+## Fail-closed invariants
 
-- reject graph sources with duplicate `nodeId` values
-- reject graph sources with missing dependency targets
-- reject graph sources with empty `nodes`
-- reject graph sources where `stepKind` is missing on a generic node
-- reject malformed `graphSourceRef`
-- reject planner envelopes with more than one active source
+- `INV-GGS-001`: `GenericGraphSource` is the only Planner graph ingress.
+- `INV-GGS-002`: every `nodeId` is explicit and unique.
+- `INV-GGS-003`: every `dependsOn` target resolves to an explicit node in the
+  admitted graph.
+- `INV-GGS-004`: dependency cycles reject before plan assembly.
+- `INV-GGS-005`: Planner never derives or repairs identity from metadata,
+  manifest keys, names, paths, providers or ordinals.
+- `INV-GGS-006`: provenance-only changes do not mutate plan identity.
+- `INV-GGS-007`: source-native adapters remain outside `@dvt/planner`.
+- `INV-GGS-008`: no compatibility alias or second graph ingress is retained for
+  the removed dbt-manifest bridge.
 
-### Planner application tests
+## Verification
 
-- reject malformed graph sources returned by the resolver
-- reject inline graph sources whose nodes cannot be translated into planner
-  steps
-- reject selections that name unknown node ids
-- reject cycles in generic graph sources before plan assembly
-- reject graph sources that differ only by source-order noise if canonical
-  sorting is missing
-
-### Compatibility adapter tests
-
-- reject dbt manifests that cannot be normalized into a valid generic graph
-- reject ref payloads whose integrity metadata does not match
-- reject unsupported resolver schemes on the graph-source ref path
-- prove that dbt manifest key ordering does not change the normalized graph
-
-### Determinism tests
-
-- same generic graph with different node array order yields the same
-  `canonicalPlanCoreJson`
-- same dbt manifest content with different raw key ordering yields the same
-  normalized graph source
-- graph-source provenance-only differences (`sourceFamily`, `sourceVersion`,
-  node `metadata`) do not affect `inputHashSha256` or `planId`
-
-## Validation baseline
-
-The implementation slice for `MW-A2` should not be considered complete without
-at least:
+Focused gates for this boundary:
 
 ```bash
-pnpm --filter @dvt/contracts build
 pnpm --filter @dvt/contracts test
-pnpm --filter @dvt/planner build
+pnpm --filter @dvt/contracts typecheck
 pnpm --filter @dvt/planner test
+pnpm --filter @dvt/planner typecheck
 pnpm --filter dvt-api test
+pnpm --filter dvt-api typecheck
+GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs
 pnpm verify:prepush
 ```
 
-## Documentation gate before TDD
+Required negative proofs include duplicate logical IDs, unknown dependency
+references, cycles, invalid step kinds/config, unresolved execution bindings and
+absence of the retired manifest identity bridge from current source/public
+exports.
 
-### Gate rule
+## Historical note
 
-No implementation PR for `MW-A2-B/C/D/E` is valid until these are aligned and
-accepted as the canonical source:
-
-- this technical manual
-- `docs/guides/generic-graph-source-user-manual-20260404.md`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md`
-
-### Documentation DoD
-
-- as-is and to-be diagrams are explicit and consistent
-- invariants are fully enumerated and testable
-- negative paths are mapped to test ownership
-- current-vs-target gaps are explicit and sequenced
-- `MW-A2-A..E` wave ordering is documented with no hidden scope
-
-### TDD sequence after gate
-
-1. `MW-A2-B`: write failing contract tests, then evolve parser/schema/contracts.
-2. `MW-A2-C`: write failing planner-boundary tests, then refactor facade and translator seams.
-3. `MW-A2-D`: write failing API/ref-resolution tests, then update composition-root wiring.
-4. `MW-A2-E`: write failing determinism and negative integration tests, then harden behavior.
-
-## Current-to-target gap summary
-
-1. The planner input contract is not yet cleanly swapped to
-   `GenericGraphSourceV1` across all entry points.
-2. Step translation in planner core is still dbt-centered (`stepKind` is mapped
-   through DBT-only resource types in this wave).
-3. The resolver port is still manifest-specific.
-4. The active dbt normalization path is still the semantic center for graph
-   derivation.
-5. Determinism coverage for dbt key ordering is still an explicit queued item.
-6. Runtime execution for non-dbt kinds remains outside `MW-A2`.
-
-## Non-goals
-
-- implementing worker dispatch for new step kinds
-- replacing `IStepTypeRegistry`
-- defining the full step artifact model
-- introducing provider runtime behavior into planner contracts
+The 2026-04 MW-A2 plans and closeouts are historical evidence for the migration
+toward a generic planner source. They must not be read as permission to restore
+the temporary `ManifestGraphDeriver` compatibility path after GH-2904.

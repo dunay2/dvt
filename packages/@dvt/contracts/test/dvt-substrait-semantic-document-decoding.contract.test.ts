@@ -40,7 +40,7 @@ describe('DVT Substrait semantic document decoding', () => {
     ).toBe(false);
   });
 
-  it('preserves stable field identity through deterministic serialization', () => {
+  it('preserves stable field identity through deterministic serialization and reload', () => {
     const document = canonicalizeDvtSubstraitSemanticDocumentV1(
       buildDvtSubstraitSemanticDocumentFixture()
     );
@@ -49,13 +49,69 @@ describe('DVT Substrait semantic document decoding', () => {
       sidecar: { ...document.sidecar, fields: [...document.sidecar.fields].reverse() },
     };
 
-    const reloaded = DvtSubstraitSemanticDocumentV1Schema.parse(
-      JSON.parse(serializeDvtSubstraitSemanticDocumentV1(reversed))
-    );
+    const serialized = serializeDvtSubstraitSemanticDocumentV1(reversed);
+    const reloaded = DvtSubstraitSemanticDocumentV1Schema.parse(JSON.parse(serialized));
     expect(reloaded.sidecar.fields.map(({ fieldId }) => fieldId)).toEqual(
       reversed.sidecar.fields.map(({ fieldId }) => fieldId)
     );
     expect(reloaded.semanticPlan).toEqual(document.semanticPlan);
+    expect(serializeDvtSubstraitSemanticDocumentV1(reloaded)).toBe(serialized);
+  });
+
+  it('keeps RelationId and FieldId stable across rename and physical rebinding', () => {
+    const document = buildDvtSubstraitSemanticDocumentFixture();
+    const originalRelationIds = document.sidecar.relations.map(({ relationId }) => relationId);
+    const originalFieldIds = document.sidecar.fields.map(({ fieldId }) => fieldId);
+
+    const rebound = canonicalizeDvtSubstraitSemanticDocumentV1({
+      ...document,
+      sidecar: {
+        ...document.sidecar,
+        relations: document.sidecar.relations.map((relation, index) =>
+          index === 0
+            ? {
+                ...relation,
+                displayName: 'customers_renamed',
+                sourceRef: {
+                  schemaVersion: 'connected-source-ref.v1',
+                  connectionRef: {
+                    schemaVersion: 'connection-ref.v1',
+                    connectionId: 'warehouse-rebound',
+                    provider: 'postgres',
+                  },
+                  sourceObjectId: 'relation/analytics/new_schema/customers_renamed',
+                },
+              }
+            : { ...relation, displayName: 'projection_renamed' }
+        ),
+        fields: document.sidecar.fields.map((field, index) => ({
+          ...field,
+          displayName: `renamed_${index}`,
+        })),
+      },
+    });
+
+    expect(rebound.sidecar.relations.map(({ relationId }) => relationId)).toEqual(
+      originalRelationIds
+    );
+    expect(rebound.sidecar.fields.map(({ fieldId }) => fieldId)).toEqual(originalFieldIds);
+  });
+
+  it('reorders structural field ordinals without reminting FieldId', () => {
+    const document = buildDvtSubstraitSemanticDocumentFixture();
+    const originalFieldIds = document.sidecar.fields.map(({ fieldId }) => fieldId);
+    const reorderedOrdinals = [2, 0, 1];
+
+    const reordered = DvtSubstraitAuthoringSidecarV1Schema.parse({
+      ...document.sidecar,
+      fields: document.sidecar.fields.map((field, index) => ({
+        ...field,
+        outputOrdinal: reorderedOrdinals[index],
+      })),
+    });
+
+    expect(reordered.fields.map(({ fieldId }) => fieldId)).toEqual(originalFieldIds);
+    expect(reordered.fields.map(({ outputOrdinal }) => outputOrdinal)).toEqual(reorderedOrdinals);
   });
 
   it('rejects duplicate and unbound sidecar identities', () => {

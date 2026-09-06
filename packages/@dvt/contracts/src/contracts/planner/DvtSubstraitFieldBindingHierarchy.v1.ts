@@ -1,7 +1,7 @@
 /**
  * @baseline ADR-0064: Substrait semantic reference and bounded logical profile
- * @decision Validate stable field hierarchy independently from document transport.
- * @consequence Root and nested sibling order share one fail-closed invariant.
+ * @decision Validate stable FieldId hierarchy against the current structural binding independently from document transport. FieldId/relationId own logical identity; outputOrdinal is only the current sibling position and must never be used to mint or repair identity.
+ * @consequence Root and nested sibling order share one fail-closed structural invariant while reorder can preserve persisted FieldId values.
  * @version 1.0.0
  */
 

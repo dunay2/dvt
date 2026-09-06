@@ -1,10 +1,11 @@
 /**
- * Owned concern: qualify an external source object through the non-secret
- * connection identity by which DVT addresses it.
+ * Owned concern: qualify the current physical binding of an external source
+ * object through the non-secret connection coordinates by which DVT addresses it.
  *
  * @baseline ADR-0058: Warehouse Source Import Rails
- * @decision Persist one strict, versioned ConnectedSourceRef instead of parallel loose connection and object identifiers.
- * @consequence Import replay, Canvas presentation, and later execution bindings can share one unambiguous non-secret identity.
+ * @baseline ADR-0064: Substrait Semantic Reference And Bounded Logical Profile
+ * @decision Persist one strict, versioned ConnectedSourceRef instead of parallel loose connection and object binding coordinates.
+ * @consequence Import replay, Canvas presentation, and later execution binding verification can share one unambiguous physical reference without treating connection/provider/object coordinates as DVT logical Source, RelationId, or FieldId identity.
  * @version 1.0.0
  */
 import { z } from 'zod';

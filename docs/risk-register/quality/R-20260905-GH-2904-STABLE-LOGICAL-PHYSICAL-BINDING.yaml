@@ -1,0 +1,23 @@
+---
+id: R-20260905-GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING
+title: Mutable physical bindings may silently become logical identity authorities
+status: Open
+date: 2026-09-05
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/planner
+  - apps/api
+severity: High
+probability: Low
+---
+mitigation:
+  summary: Stable logical IDs are separate from mutable bindings; unresolved bindings fail closed.
+  evidence:
+    - docs/evidence/ED-20260905-gh-2904-stable-logical-physical-binding.md
+    - docs/planning/proposals/mandatory/runtime-and-contracts/gh-2904-stable-logical-physical-binding-hardcut-20260905.md
+    - packages/@dvt/contracts/test/dvt-substrait-semantic-document-decoding.contract.test.ts
+    - packages/@dvt/planner/test/unit/determinism.test.ts
+    - apps/api/test/application/services/graphDraftWarehouseSourceImportStrategy.test.ts
+  follow_up:
+    - Reconcile the remaining Canvas name fallback after GH-2936.
+    - Never restore name, path, ordinal, provider, alias, or compatibility fallbacks.
