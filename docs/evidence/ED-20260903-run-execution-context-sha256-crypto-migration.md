@@ -108,9 +108,11 @@ cases also failed before tightening the schemas and pass after the repair.
 The attempted deletion-only commit was rejected by the mandatory pre-commit
 ESLint `no-undef` rule at those same three consumers. No hook was bypassed and no
 rule was relaxed. The deletion and red-discovery sequence occurred in the working
-branch, but a separate red commit could not be recorded. The explicit #2191
-requirement for that intermediate commit therefore remains an acceptance
-constraint for the owner to reconcile with the mandatory hooks before merge.
+branch, but a separate red commit could not be recorded. For this bounded cut,
+the owner explicitly accepted the recorded deletion and RED evidence in place of
+the broken commit, with every hook retained. The decision is recorded and read
+back in [issue #2191](https://github.com/dunay2/dvt/issues/2191#issuecomment-5558405468).
+This acceptance does not authorize bypasses or change other migration cuts.
 
 # Original validation notes
 
