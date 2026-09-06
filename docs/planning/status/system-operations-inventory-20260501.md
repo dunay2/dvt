@@ -652,7 +652,7 @@ use-case separation in the repo. Other packages should mirror this pattern.
 
 `@dvt/artifacts` owns the canonical plan-store ports (ADR-0043). It also
 hosts artifact-backed runtime readers for execution context and dbt bundles,
-plus compiled-code blob storage adapters.
+plus generic content-addressed artifact publication.
 
 ### 5.1 Plan-store ports — `src/ports/{IPlanStoreReader,IPlanStoreWriter,IStoredPlanArtifactStore}.ts`
 
@@ -677,13 +677,10 @@ plus compiled-code blob storage adapters.
 
 ### 5.2 Other plan-related ports — `src/ports/`
 
-| Symbol                                                   | DDD    | C&Q   | Legacy | Notes                                                          |
-| -------------------------------------------------------- | ------ | ----- | ------ | -------------------------------------------------------------- |
-| `ICompiledCodeStorage.upload(tenantId, sha256, content)` | `PORT` | `CMD` | `OK`   | Tenant-scoped.                                                 |
-| `ICompiledCodeStorage.read(tenantId, sha256)`            | `PORT` | `QRY` | `OK`   |                                                                |
-| `ICompiledCodeStorage.exists(tenantId, sha256)`          | `PORT` | `QRY` | `OK`   |                                                                |
-| `IDbtProjectBundleReader.read(...)`                      | `PORT` | `QRY` | `OK`   |                                                                |
-| `IRunExecutionContextReader.resolve(ref)`                | `PORT` | `QRY` | `OK`   | Should require tenant scope at call site (caller must verify). |
+| Symbol                                    | DDD    | C&Q   | Legacy | Notes                                                          |
+| ----------------------------------------- | ------ | ----- | ------ | -------------------------------------------------------------- |
+| `IDbtProjectBundleReader.read(...)`       | `PORT` | `QRY` | `OK`   |                                                                |
+| `IRunExecutionContextReader.resolve(ref)` | `PORT` | `QRY` | `OK`   | Should require tenant scope at call site (caller must verify). |
 
 ### 5.3 Runtime — `src/runtime/`
 
@@ -696,27 +693,19 @@ plus compiled-code blob storage adapters.
 | `readArtifactBytes(opts)`                                                     | `INFRA` (helper)        | `QRY` (FETCH)     | `OK`   |                                             |
 | `validateArtifactIntegrity(input)`                                            | `DS` (integrity policy) | `QRY` (assertion) | `OK`   |                                             |
 
-### 5.4 Compiled-code adapters — `src/compiledCode/`
+### 5.4 Artifact publication authority
 
-| Symbol                          | DDD                                    | C&Q          | Legacy      | Notes                                                                              |
-| ------------------------------- | -------------------------------------- | ------------ | ----------- | ---------------------------------------------------------------------------------- |
-| `FileSystemCompiledCodeStorage` | `ADP`                                  | `CMD/QRY`    | `OK`        | Dev.                                                                               |
-| `InMemoryCompiledCodeStorage`   | `ADP`                                  | `CMD/QRY`    | `OK`        | Tests.                                                                             |
-| `MinioCompiledCodeStorage`      | `ADP`                                  | `CMD/QRY`    | `OK`        | Local prod-like.                                                                   |
-| `NoopCompiledCodeStorage`       | `ADP`                                  | n/a          | `OK`        | Disabled mode.                                                                     |
-| `S3CompiledCodeStorage`         | `ADP`                                  | `CMD/QRY`    | `OK`        | Production.                                                                        |
-| `attachCompiledCodeRefs(opts)`  | `DS` (compiled-code attachment policy) | `CMD-RET`    | `OK`        | ADR-0032.                                                                          |
-| `computeSha256(content)`        | `INFRA`                                | `QRY` (pure) | **`SUPER`** | Duplicates `@dvt/contracts/utils/sha256HexUtf8`. Should depend on contracts utils. |
+ADR-0067 retires the compiled-code storage family. Generic content-addressed
+publication and verified artifact reads are the surviving authority.
 
 **Verdict for `@dvt/artifacts`**:
 
-- Compiled-code, dbt-bundle, run-execution-context, and plan-store port
+- Generic artifact, dbt-bundle, run-execution-context, and plan-store port
   surfaces are well-shaped.
 - **Closed S08 drift**: plan-store behavior ports now require `ScopedPlanId`,
   `ScopedPlanRef`, or scoped record payloads; `IStoredPlanArtifactStore` is a
   composition convenience over reader/writer roles, not a duplicate semantic
   rail.
-- Minor `computeSha256` duplication remains outside this S08 closure.
 
 ## 6. `@dvt/planner`
 
@@ -725,21 +714,18 @@ that are still drifting toward the S08 model.
 
 ### 6.1 Planner private contracts — `src/contracts/`
 
-| Symbol                                                                                    | DDD                              | C&Q                   | Legacy | Notes                                                          |
-| ----------------------------------------------------------------------------------------- | -------------------------------- | --------------------- | ------ | -------------------------------------------------------------- |
-| `ICustomPolicyNamespaceRegistry.lookup(namespace)` / `listNamespaces()`                   | `PORT` (planner policy registry) | `QRY`                 | `OK`   |                                                                |
-| `IExecutionBindingVerifier.verifyStepBinding(planId, stepId, storageUri, expectedSha256)` | `PORT` (binding verifier)        | `QRY` (assertion+ret) | `OK`   |                                                                |
-| `IPlanExecutabilityValidator.validatePlan({ scope, planRef, adapterId })`                 | `PORT` (executability validator) | `QRY`                 | `OK`   | S08-DRIFT-31 closed by requiring the full plan-store scope.    |
-| `IStoredPlanArtifactWriter.storePlanArtifact(buildResult)`                                | `PORT` (artifact store writer)   | `CMD-RET`             | `OK`   | Scoped artifact persistence command lives in `@dvt/artifacts`. |
-| `IStoredPlanArtifactWriter.markStoredPlanArtifactValid(ScopedPlanRef)`                    | `PORT`                           | `CMD`                 | `OK`   | Scoped artifact validation transition.                         |
-| `IStoredPlanArtifactWriter.markStoredPlanArtifactInvalid(ScopedPlanRef, report)`          | `PORT`                           | `CMD`                 | `OK`   | Scoped artifact rejection transition.                          |
-| `IStoredPlanArtifactReader.getStoredPlanValidationRecord(ScopedPlanId)`                   | `PORT`                           | `QRY`                 | `OK`   | Scoped validation read model query.                            |
+| Symbol                                                                           | DDD                              | C&Q       | Legacy | Notes                                                          |
+| -------------------------------------------------------------------------------- | -------------------------------- | --------- | ------ | -------------------------------------------------------------- |
+| `ICustomPolicyNamespaceRegistry.lookup(namespace)` / `listNamespaces()`          | `PORT` (planner policy registry) | `QRY`     | `OK`   |                                                                |
+| `IPlanExecutabilityValidator.validatePlan({ scope, planRef, adapterId })`        | `PORT` (executability validator) | `QRY`     | `OK`   | S08-DRIFT-31 closed by requiring the full plan-store scope.    |
+| `IStoredPlanArtifactWriter.storePlanArtifact(buildResult)`                       | `PORT` (artifact store writer)   | `CMD-RET` | `OK`   | Scoped artifact persistence command lives in `@dvt/artifacts`. |
+| `IStoredPlanArtifactWriter.markStoredPlanArtifactValid(ScopedPlanRef)`           | `PORT`                           | `CMD`     | `OK`   | Scoped artifact validation transition.                         |
+| `IStoredPlanArtifactWriter.markStoredPlanArtifactInvalid(ScopedPlanRef, report)` | `PORT`                           | `CMD`     | `OK`   | Scoped artifact rejection transition.                          |
+| `IStoredPlanArtifactReader.getStoredPlanValidationRecord(ScopedPlanId)`          | `PORT`                           | `QRY`     | `OK`   | Scoped validation read model query.                            |
 
-### 6.2 Planner ports — `src/ports/`
+### 6.2 Planner ports
 
-| Symbol                          | DDD                                      | C&Q | Legacy | Notes |
-| ------------------------------- | ---------------------------------------- | --- | ------ | ----- |
-| `ports/ICompiledCodeStorage.ts` | `PORT` (re-export from `@dvt/artifacts`) | n/a | `OK`   |       |
+Planner exposes no artifact storage port or compatibility re-export (ADR-0067).
 
 ### 6.3 Planner application — `src/application/`
 
@@ -781,7 +767,6 @@ that are still drifting toward the S08 model.
 | ------------------------------------------------------------------ | --- | --- | ------ | ------------------------------------------------------------ |
 | Re-export of scoped `IPlanExecutabilityValidator`                  | n/a | n/a | `OK`   | Public planner validator now requires scope plus adapter id. |
 | Re-exports of `IPlanner`/`PlannerFacade`/`Planner` and graph types | n/a | n/a | `OK`   |                                                              |
-| Re-export of `ICompiledCodeStorage` from `@dvt/artifacts`          | n/a | n/a | `OK`   |                                                              |
 
 **Verdict for `@dvt/planner`**:
 
@@ -1025,12 +1010,8 @@ OpenLineage emission. 36 source files.
 | `LineageWorkerRuntime.{start, stop, runOnce}`                                                                                                        | `AS` (worker)                   | `CMD-RET`      | `OK`   |       |
 | `LineageOutboxObserver`                                                                                                                              | `INFRA` (observer)              | `CMD` (notify) | `OK`   |       |
 | `HttpOpenLineageSink`                                                                                                                                | `ADP` (OpenLineage HTTP sink)   | `CMD`          | `OK`   |       |
-| `mapper/StepStartedLineageMapper`, `mapCompiledCodeResolutionWarning`                                                                                | `DS` (event-to-OL mapper)       | `QRY` (pure)   | `OK`   |       |
 | `facets/SqlJobFacetBuilder`                                                                                                                          | `DS` (facet builder)            | `QRY` (pure)   | `OK`   |       |
-| `readers/CompositeCompiledCodeReader`, `FileUriCompiledCodeReader`, `InMemoryCompiledCodeReader`                                                     | `ADP` (compiled-code readers)   | `QRY`          | `OK`   |       |
-| `resolver/CachedRetryCompiledCodeResolver`                                                                                                           | `DS` (caching resolver)         | `QRY`          | `OK`   |       |
-| `cache/InMemoryCompiledCodeCache`                                                                                                                    | `ADP`                           | `CMD/QRY`      | `OK`   |       |
-| `compiledCodeRef.ts`, `openlineageSchema.ts`                                                                                                         | `INFRA`                         | `QRY` (pure)   | `OK`   |       |
+| `openlineageSchema.ts`                                                                                                                               | `INFRA`                         | `QRY` (pure)   | `OK`   |       |
 | `runtime/lineageWorkerRecordProcessor`, `lineageWorkerDeadLetterSupport`, `lineageWorkerRuntimeConfig`                                               | `AS`/`INFRA` (worker internals) | mixed          | `OK`   |       |
 | `errorContract.ts`, `warningContract.ts`, `errorPersistenceSupport.ts`, `errorSupport.ts`, `errors.ts`, `logMessages.ts`, `contracts.ts`, `types.ts` | `INFRA` (typed errors / shapes) | `N/A`          | `OK`   |       |
 
@@ -1208,14 +1189,11 @@ separated.
 
 ## 17. `apps/lineage-worker`
 
-| File                                                      | DDD                                      | C&Q          | Legacy | Notes |
-| --------------------------------------------------------- | ---------------------------------------- | ------------ | ------ | ----- |
-| `server.ts`, `bootstrap.ts`                               | `ENTRY`                                  | `CMD`        | `OK`   |       |
-| `env.ts`                                                  | `INFRA`                                  | `QRY`        | `OK`   |       |
-| `compiled-code-resolver/S3UriCompiledCodeReader.ts`       | `ADP` (compiled-code reader for S3 URIs) | `QRY`        | `OK`   |       |
-| `compiled-code-resolver/{errorMapping, policy, types}.ts` | `DS`/`INFRA`                             | `QRY` (pure) | `OK`   |       |
-| `compiledCodeResolver.ts`                                 | `AS` (resolver wiring)                   | `QRY`        | `OK`   |       |
-| `types/pg.d.ts`                                           | `N/A`                                    | `N/A`        | `OK`   |       |
+| File                        | DDD     | C&Q   | Legacy | Notes |
+| --------------------------- | ------- | ----- | ------ | ----- |
+| `server.ts`, `bootstrap.ts` | `ENTRY` | `CMD` | `OK`   |       |
+| `env.ts`                    | `INFRA` | `QRY` | `OK`   |       |
+| `types/pg.d.ts`             | `N/A`   | `N/A` | `OK`   |       |
 
 **Verdict**: clean — drives `LineageWorkerRuntime` from
 `@dvt/traceability-service`.
@@ -1364,8 +1342,7 @@ it does not re-expose retired behavior ports.
 ### 18.4 `@dvt/crypto` primitive authority and consumer retirement
 
 **Current**: `@dvt/crypto` is the only physical/public primitive package.
-`@dvt/contracts/utils`, `@dvt/engine/utils`, `@dvt/planner/domain/hashing.ts`
-and `@dvt/artifacts/compiledCode/sha256.ts` remain bounded consumer-migration
+`@dvt/contracts/utils`, `@dvt/engine/utils`, and `@dvt/planner/domain/hashing.ts` remain bounded consumer-migration
 surfaces for #2191; their domain preimages remain owned by those domains.
 
 **Target**:

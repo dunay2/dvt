@@ -15,13 +15,6 @@ const plannerOwnedPorts = [
     symbol: 'IPlanExecutabilityValidator',
   },
   {
-    barrelExport: './contracts/ExecutionBindingVerification.js',
-    contractVocabulary: ['ExecutionBindingVerificationResult'],
-    ownedConcern: 'verify compiled artifact bindings for planner-authored steps',
-    sourcePath: 'packages/@dvt/planner/src/contracts/ExecutionBindingVerification.ts',
-    symbol: 'IExecutionBindingVerifier',
-  },
-  {
     barrelExport: './contracts/CustomPolicyNamespaceRegistry.js',
     contractVocabulary: ['CustomPolicyNamespaceEntry'],
     ownedConcern: 'resolve custom policy namespace registration for planner policy checks',

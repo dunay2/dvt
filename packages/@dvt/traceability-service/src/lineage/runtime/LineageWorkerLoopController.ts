@@ -1,6 +1,6 @@
 /**
  * @file packages/@dvt/traceability-service/src/lineage/runtime/LineageWorkerLoopController.ts
- * @baseline ADR-0032: compiledCodeRef Ownership
+ * @baseline ADR-0067: Canonical Artifact Authority and Compiled-Code Hard Cut
  * @baseline ADR-0033: Outbox Worker Sharding And Fencing Model
  * @decision Own lineage worker lifecycle loop, abort cleanup, and backoff without owning tick semantics
  * @consequence The public lineage runtime remains a compatibility facade while loop mechanics are independently testable

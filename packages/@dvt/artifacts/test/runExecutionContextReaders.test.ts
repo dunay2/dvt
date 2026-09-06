@@ -259,8 +259,9 @@ describe('@dvt/artifacts runtime readers', () => {
         }
       )
     ).rejects.toMatchObject({
-      name: 'ArtifactReadError',
-      message: 'dbt project bundle artifact integrity mismatch',
+      name: 'ArtifactStoreError',
+      code: 'ARTIFACT_INTEGRITY_ERROR',
+      messageKey: 'contracts.error.artifact_integrity_digest_mismatch',
     });
   });
 

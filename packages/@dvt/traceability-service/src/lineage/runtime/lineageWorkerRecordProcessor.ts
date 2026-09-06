@@ -1,6 +1,6 @@
 /**
  * @file packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerRecordProcessor.ts
- * @baseline ADR-0032: compiledCodeRef Ownership
+ * @baseline ADR-0067: Canonical Artifact Authority and Compiled-Code Hard Cut
  * @baseline ADR-0033: Outbox Worker Sharding And Fencing Model
  * @decision Process lineage outbox records through mapper, sink, delivered, failed, and dead-letter states
  * @consequence OpenLineage publication failures remain isolated from DVT event delivery and remain retryable

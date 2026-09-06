@@ -10,7 +10,6 @@ export type { IStoredPlanArtifactReader } from '@dvt/artifacts';
 
 export type {
   AppendResult,
-  CompiledCodeRef,
   EventEnvelope,
   EventIdempotencyInput,
   EventInput,

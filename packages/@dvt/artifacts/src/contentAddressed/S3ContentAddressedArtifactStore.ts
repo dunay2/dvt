@@ -1,7 +1,8 @@
+import { createHash } from 'node:crypto';
+
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { ArtifactStoreError } from '@dvt/contracts';
 
-import { computeSha256 } from '../compiledCode/sha256.js';
 import { ArtifactReadError } from '../runtime/ArtifactReadError.js';
 import { readArtifact } from '../runtime/readArtifactBytes.js';
 
@@ -128,7 +129,7 @@ function validateBytes(input: PublishContentAddressedArtifactInput): void {
   if (input.bytes.byteLength !== input.sizeBytes) {
     throw ArtifactStoreError.integritySizeMismatch(input.sizeBytes, input.bytes.byteLength);
   }
-  const actualSha256 = computeSha256(Buffer.from(input.bytes));
+  const actualSha256 = sha256Hex(input.bytes);
   if (actualSha256 !== input.sha256) {
     throw ArtifactStoreError.integrityDigestMismatch(input.sha256, actualSha256);
   }
@@ -148,13 +149,17 @@ function validateExistingArtifact(
   if (existing.bytes.byteLength !== input.sizeBytes) {
     throw ArtifactStoreError.integritySizeMismatch(input.sizeBytes, existing.bytes.byteLength);
   }
-  const actualSha256 = computeSha256(Buffer.from(existing.bytes));
+  const actualSha256 = sha256Hex(existing.bytes);
   if (actualSha256 !== input.sha256) {
     throw ArtifactStoreError.integrityDigestMismatch(input.sha256, actualSha256);
   }
   if (existing.contentType !== undefined && existing.contentType !== input.mediaType) {
     throw ArtifactStoreError.uploadFailed('existing artifact media type conflicts with plan');
   }
+}
+
+function sha256Hex(bytes: Uint8Array): string {
+  return createHash('sha256').update(bytes).digest('hex');
 }
 
 function isAlreadyExistsError(error: unknown): boolean {

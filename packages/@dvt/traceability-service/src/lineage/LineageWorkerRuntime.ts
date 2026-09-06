@@ -1,6 +1,6 @@
 /**
  * @file packages/@dvt/traceability-service/src/lineage/LineageWorkerRuntime.ts
- * @baseline ADR-0032: compiledCodeRef Ownership
+ * @baseline ADR-0067: Canonical Artifact Authority and Compiled-Code Hard Cut
  * @baseline ADR-0033: Outbox Worker Sharding And Fencing Model
  * @decision Run lineage outbox polling, delivery, dead-letter, and replay loops outside domain outbox authority
  * @consequence OpenLineage publication can be retried and monitored without blocking DVT run lifecycle events

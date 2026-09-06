@@ -29,7 +29,6 @@ ExecutionPlan and planner-related schemas and admission contracts.
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSupportedCapabilities.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/ExecutableSubgraph.v1.ts`
-- `packages/@dvt/contracts/src/contracts/planner/ExecutionBindingVerification.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/ExecutionSelection.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/HttpJsonArtifactStepTypeConfig.v1.ts`

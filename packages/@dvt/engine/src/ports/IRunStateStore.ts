@@ -55,27 +55,21 @@ export type EventEnvelope = EventInput & {
 
 /**
  * Generic content-addressable artifact reference emitted in step lifecycle events.
- * This is the step-kind-agnostic runtime contract (`MW-A3`).
+ * This mirrors the canonical shared runtime vocabulary without introducing
+ * step-kind-specific reference models in the engine boundary.
  */
 export interface StepArtifactRef {
-  /**
-   * Canonical artifact discriminator, e.g. `compiled-sql`, `python.script`, `spark.job-spec`.
-   */
+  /** Canonical artifact discriminator, e.g. `compiled-sql`, `python.script`, `spark.job-spec`. */
   artifactKind: string;
-  /** SHA-256 hex digest of the compiled SQL bytes (content-addressable key). */
+  /** SHA-256 hex digest of the referenced artifact bytes. */
   sha256: string;
-  /** Object storage URI: s3://<bucket>/<key> | gs://<bucket>/<key> | file://<path> (dev only). */
+  /** Object storage URI for the content-addressed artifact. */
   storageUri: string;
-  /** Size of the compiled SQL blob in bytes. */
+  /** Exact artifact size in bytes. */
   sizeBytes: number;
-  /** Character encoding. MUST be 'utf-8'. Default: 'utf-8'. */
+  /** Character encoding when the artifact is textual. */
   encoding?: 'utf-8';
 }
-
-/**
- * Compiled-code reference view for callers that do not need the artifact discriminator.
- */
-export interface CompiledCodeRef extends Omit<StepArtifactRef, 'artifactKind'> {}
 
 export interface RunMetadata {
   tenantId: string;

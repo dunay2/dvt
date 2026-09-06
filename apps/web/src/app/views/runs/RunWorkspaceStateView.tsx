@@ -151,10 +151,7 @@ function deriveExecutor(workspace: RunWorkspaceViewModel): RunExecutor | undefin
   return workspace.snapshot.executor;
 }
 
-function deriveExecutionProvenance(
-  workspace: RunWorkspaceViewModel,
-  compiledCodeArtifactKind: string
-): ProvenanceArtifact[] {
+function deriveExecutionProvenance(workspace: RunWorkspaceViewModel): ProvenanceArtifact[] {
   const seen = new Set<string>();
   const provenance: ProvenanceArtifact[] = [];
 
@@ -167,22 +164,13 @@ function deriveExecutionProvenance(
       ? event.payload.stepArtifactRef
       : null;
     const stepArtifactRef = readArtifactFields(stepArtifactPayload);
-    const compiledCodeRef = stepArtifactRef
-      ? null
-      : readArtifactFields(event.payload.compiledCodeRef);
-
     const artifact =
       stepArtifactRef && typeof stepArtifactPayload?.artifactKind === 'string'
         ? {
             artifactKind: stepArtifactPayload.artifactKind,
             ...stepArtifactRef,
           }
-        : compiledCodeRef
-          ? {
-              artifactKind: compiledCodeArtifactKind,
-              ...compiledCodeRef,
-            }
-          : null;
+        : null;
 
     if (!artifact) {
       continue;
@@ -562,7 +550,7 @@ export function RunWorkspaceStateView({
     copy.graphArtifactTitle,
     copy.sqlArtifactTitle
   );
-  const executionProvenance = deriveExecutionProvenance(workspace, copy.compiledCodeArtifactKind);
+  const executionProvenance = deriveExecutionProvenance(workspace);
   const materializationEvidence = deriveMaterializationEvidence(workspace);
   const showMaterializationSection = snapshot.status === 'completed';
 

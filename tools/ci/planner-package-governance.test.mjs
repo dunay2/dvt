@@ -96,15 +96,19 @@ test('planner public barrel keeps domain internals private and exports planner-o
 
   for (const exportedType of [
     'ICustomPolicyNamespaceRegistry',
-    'IExecutionBindingVerifier',
     'IPlanExecutabilityValidator',
     'PlanExecutabilityValidationInput',
   ]) {
     assert.match(rootEntrypoint, new RegExp(`export type \\{ ${exportedType} \\}`, 'u'));
   }
 
+  assert.doesNotMatch(rootEntrypoint, /IExecutionBindingVerifier/u);
+  assert.doesNotMatch(rootEntrypoint, /from ['"]@dvt\/artifacts/u);
+  assert.doesNotMatch(
+    rootEntrypoint,
+    /ICompiledCodeStorage|CompiledCodeStorage|attachCompiledCodeRefs/u
+  );
   assert.match(rootEntrypoint, /DO NOT add new contract re-exports here/u);
-  assert.match(rootEntrypoint, /DO NOT add new artifact exports here/u);
 });
 
 test('planner local docs and examples remain explicit package-owned surfaces', () => {

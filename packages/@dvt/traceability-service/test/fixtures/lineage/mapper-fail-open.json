@@ -1,26 +1,14 @@
 {
-  "jobFacets": {
-    "dvt_dbt_details": {
-      "_producer": "https://github.com/dunay2/dvt/tree/main/packages/@dvt/traceability-service",
-      "_schemaURL": "https://dvt.local/contracts/traceability/facets/DvtDbtDetailsJobFacet.v1.schema.json",
-      "compiledCodeRef": {
-        "sha256": "5a8b07d0bfedcd0da2460304234320a87eb1c4efbd83f31f2e23e0b041214d0c",
-        "storageUri": "memory://compiled/sql-step",
-        "sizeBytes": 27,
-        "encoding": "utf-8"
-      }
-    }
-  },
+  "jobFacets": {},
   "warnings": [
     {
-      "code": "COMPILED_CODE_RESOLUTION_FAILED",
-      "messageKey": "traceability.lineage.warning.compiled_code_resolution_failed",
+      "code": "ARTIFACT_READ_FAILED",
+      "messageKey": "traceability.lineage.warning.artifact_read_failed",
       "messageParams": {
-        "storageUri": "memory://compiled/sql-step",
-        "causeCode": "COMPILED_CODE_NOT_FOUND",
-        "causeMessageKey": "traceability.lineage.error.compiled_code_not_found"
+        "storageUri": "s3://dvt-artifacts/compiled/sql-step",
+        "causeCode": "ARTIFACT_NOT_FOUND"
       },
-      "message": "Compiled code not found for URI: memory://compiled/sql-step"
+      "message": "lineage source artifact could not be found"
     }
   ]
 }

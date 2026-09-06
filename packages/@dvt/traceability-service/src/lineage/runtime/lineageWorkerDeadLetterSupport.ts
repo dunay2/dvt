@@ -1,6 +1,6 @@
 /**
  * @file packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerDeadLetterSupport.ts
- * @baseline ADR-0032: compiledCodeRef Ownership
+ * @baseline ADR-0067: Canonical Artifact Authority and Compiled-Code Hard Cut
  * @baseline ADR-0033: Outbox Worker Sharding And Fencing Model
  * @decision Manage lineage dead-letter counting, alerting, and replay as worker-owned recovery behavior
  * @consequence Failed traceability delivery can be recovered without rewriting immutable run events

@@ -31,27 +31,17 @@ describe('DbtStepTypeConfigSchema', () => {
     if (result.success) expect(result.data).toStrictEqual(config);
   });
 
-  it('accepts compiledCodeRef when present', () => {
-    const config = {
-      compiledCodeRef: {
-        sha256: 'a'.repeat(64),
-        storageUri: 's3://bucket/compiled/step.sql',
-        sizeBytes: 512,
-        encoding: 'utf-8' as const,
-      },
-    };
-    expect(DbtStepTypeConfigSchema.safeParse(config).success).toBe(true);
-  });
-
-  it('rejects invalid sha256 in compiledCodeRef', () => {
-    const config = {
-      compiledCodeRef: {
-        sha256: 'not-a-hex-sha',
-        storageUri: 's3://bucket/step.sql',
-        sizeBytes: 10,
-      },
-    };
-    expect(DbtStepTypeConfigSchema.safeParse(config).success).toBe(false);
+  it('rejects the retired compiled-code reference field', () => {
+    expect(
+      DbtStepTypeConfigSchema.safeParse({
+        compiledCodeRef: {
+          sha256: 'a'.repeat(64),
+          storageUri: 's3://bucket/compiled/step.sql',
+          sizeBytes: 512,
+          encoding: 'utf-8',
+        },
+      }).success
+    ).toBe(false);
   });
 
   it('rejects unknown fields', () => {

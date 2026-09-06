@@ -93,7 +93,7 @@ test('contracts test suite keeps validation and boundary coverage wired', () => 
   }
 
   for (const testPath of [
-    'packages/@dvt/contracts/test/compiled-code-ref.contract.test.ts',
+    'packages/@dvt/contracts/test/step-artifact-ref.contract.test.ts',
     'packages/@dvt/contracts/test/errors.test.ts',
     'packages/@dvt/contracts/test/planner.contract.test.ts',
     'packages/@dvt/contracts/test/schema-sync.test.ts',

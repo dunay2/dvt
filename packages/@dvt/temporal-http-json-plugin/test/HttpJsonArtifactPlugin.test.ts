@@ -1,5 +1,6 @@
+import { createHash } from 'node:crypto';
+
 import type { StepDefinition, StepExecutionContext } from '@dvt/adapter-temporal';
-import { computeSha256 } from '@dvt/artifacts';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -10,7 +11,7 @@ import {
 } from '../src/index.js';
 
 const BYTES = Buffer.from('{"order_id":1}\n', 'utf8');
-const SHA256 = computeSha256(BYTES);
+const SHA256 = createHash('sha256').update(BYTES).digest('hex');
 const SCOPE = { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'dev' } as const;
 const STORAGE_URI = `s3://het2-artifacts/tenants/${SCOPE.tenantId}/${SHA256}`;
 const CONFIG = {

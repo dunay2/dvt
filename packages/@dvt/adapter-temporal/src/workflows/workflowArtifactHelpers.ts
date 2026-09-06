@@ -2,45 +2,18 @@
  * @file packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts
  * @ownedConcern Execution artifact payload interpretation
  * @baseline ADR-0003: Execution Model
- * @baseline ADR-0032: compiledCodeRef Ownership
  * @baseline ADR-0040: Retry Ownership And Attempt Authority
- * @decision Extract plugin-agnostic artifact references and retry policy before event emission
- * @consequence StepStarted payloads carry traceability references without making workflow core know plugin step kinds
- * @version 1.3.0
+ * @decision Keep workflow helpers step-kind agnostic and free of artifact publication concerns
+ * @consequence Temporal executes admitted plans without projecting legacy artifact models
+ * @version 2.0.0
  */
 import type {
-  CompiledCodeRef,
   ExecutionPlan,
   ExecutionStep,
   StepResultEvidence,
-  StepArtifactRef,
   TransformationExecutor,
 } from '@dvt/contracts';
-import {
-  CompiledCodeRefSchema,
-  StepResultEvidenceSchema,
-  TransformationFlowRuntimeBindingSchema,
-} from '@dvt/contracts';
-
-type StepStartedPayload = {
-  stepArtifactRef: StepArtifactRef;
-};
-
-const COMPILED_SQL_ARTIFACT_KIND = 'compiled-sql';
-
-export function buildStepStartedPayload(step: ExecutionStep): StepStartedPayload | undefined {
-  const compiledCodeRef = extractCompiledCodeRef(step.stepTypeConfig);
-  if (!compiledCodeRef) {
-    return undefined;
-  }
-
-  return {
-    stepArtifactRef: {
-      artifactKind: COMPILED_SQL_ARTIFACT_KIND,
-      ...compiledCodeRef,
-    },
-  };
-}
+import { StepResultEvidenceSchema, TransformationFlowRuntimeBindingSchema } from '@dvt/contracts';
 
 export type StepActivityRetryPolicy = {
   initialInterval: `${number}s`;
@@ -85,26 +58,4 @@ export function resolveTransformationExecutor(
   const runtimeBinding = plan.observability?.extra?.['transformationFlowRuntime'];
   const parsed = TransformationFlowRuntimeBindingSchema.safeParse(runtimeBinding);
   return parsed.success ? parsed.data.executor : undefined;
-}
-
-export function extractCompiledCodeRef(stepTypeConfig: unknown): CompiledCodeRef | undefined {
-  if (!isPlainObject(stepTypeConfig)) {
-    return undefined;
-  }
-
-  const compiledCodeRef = stepTypeConfig['compiledCodeRef'];
-  if (compiledCodeRef === undefined) {
-    return undefined;
-  }
-
-  const result = CompiledCodeRefSchema.safeParse(compiledCodeRef);
-  if (!result.success) {
-    throw new TypeError('INVALID_PLAN_SCHEMA: step_compiledCodeRef_invalid');
-  }
-
-  return result.data;
-}
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

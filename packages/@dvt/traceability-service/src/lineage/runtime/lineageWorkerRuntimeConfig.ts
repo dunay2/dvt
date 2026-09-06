@@ -1,6 +1,6 @@
 /**
  * @file packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerRuntimeConfig.ts
- * @baseline ADR-0032: compiledCodeRef Ownership
+ * @baseline ADR-0067: Canonical Artifact Authority and Compiled-Code Hard Cut
  * @baseline ADR-0033: Outbox Worker Sharding And Fencing Model
  * @decision Normalize lineage worker runtime options before polling, replay, or dead-letter processing starts
  * @consequence Worker behavior is bounded and explicit across local and CI runtime configurations

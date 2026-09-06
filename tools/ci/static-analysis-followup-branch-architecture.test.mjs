@@ -15,13 +15,13 @@ const componentGuides = [
     ],
   },
   {
-    label: 'compiled-code-ref lineage extraction',
-    path: 'docs/architecture/components/lineage-worker/compiled-code-ref-lineage-extraction-component.md',
+    label: 'generic artifact lineage extraction',
+    path: 'docs/architecture/components/lineage-worker/artifact-lineage-extraction-component.md',
     requiredTerms: [
-      'extractCompiledCodeRefFromPayload',
-      'stepArtifactRef',
-      'compiledCodeRef',
-      'ADR-0032',
+      'StepArtifactRef',
+      'readVerifiedArtifactBytes',
+      'compiled-sql',
+      '@dvt/artifacts',
       '```mermaid',
     ],
   },
@@ -50,17 +50,16 @@ const userStoryDocs = [
     ],
   },
   {
-    label: 'compiled-code-ref lineage extraction',
-    path: 'docs/architecture/components/lineage-worker/compiled-code-ref-lineage-extraction-user-stories.md',
+    label: 'generic artifact lineage extraction',
+    path: 'docs/architecture/components/lineage-worker/artifact-lineage-extraction-user-stories.md',
     requiredTerms: [
       'As a lineage consumer',
-      'stepArtifactRef',
-      'compiledCodeRef',
+      'StepArtifactRef',
       'Given',
-      'When',
-      'Then',
+      'when',
+      'then',
       'Negative scenarios',
-      'ADR-0032',
+      'Traceability',
     ],
   },
 ];
@@ -99,11 +98,11 @@ test('branch-adjacent source modules declare semantic ownership at module start'
   assert.match(runExecutionContextPolicy, /^\/\*\*[\s\S]*@ownedConcern/);
   assert.match(runExecutionContextPolicy, /generic run-execution-context admission/);
 
-  const compiledCodeRef = read(
-    'packages/@dvt/traceability-service/src/lineage/compiledCodeRef.ts'
-  ).slice(0, 260);
-  assert.match(compiledCodeRef, /^\/\*\*[\s\S]*@ownedConcern/);
-  assert.match(compiledCodeRef, /canonical compiled-code references/);
+  const lineageMapper = read(
+    'packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts'
+  ).slice(0, 300);
+  assert.match(lineageMapper, /^\/\*\*[\s\S]*@ownedConcern/);
+  assert.match(lineageMapper, /generic artifact references/);
 });
 
 test('branch semantics keep policy, lineage extraction, and test setup behind named objects', () => {
@@ -111,8 +110,8 @@ test('branch semantics keep policy, lineage extraction, and test setup behind na
   const policySource = read(
     'packages/@dvt/engine/src/services/startRun/RunExecutionContextAdmissionPolicy.ts'
   );
-  const compiledCodeRefSource = read(
-    'packages/@dvt/traceability-service/src/lineage/compiledCodeRef.ts'
+  const lineageMapperSource = read(
+    'packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts'
   );
   const temporalActivitiesTestSource = read(
     'packages/@dvt/adapter-temporal/test/activities.test.ts'
@@ -126,13 +125,10 @@ test('branch semantics keep policy, lineage extraction, and test setup behind na
   );
   assert.match(guardSource, /this\.runExecutionContextPolicy\.assertAllowed\(\{/);
 
-  assert.match(compiledCodeRefSource, /function extractCompiledSqlArtifactRef\(/);
-  assert.match(compiledCodeRefSource, /function extractDirectCompiledCodeRef\(/);
-  assert.match(
-    compiledCodeRefSource,
-    /extractCompiledSqlArtifactRef\(payload\) \?\? extractDirectCompiledCodeRef\(payload\)/
-  );
-  assert.doesNotMatch(compiledCodeRefSource, /dbt\.compiled-sql/);
+  assert.match(lineageMapperSource, /StepArtifactRefSchema\.safeParse/);
+  assert.match(lineageMapperSource, /readVerifiedArtifactBytes\(artifactRef/);
+  assert.match(lineageMapperSource, /artifactRef\.artifactKind !== COMPILED_SQL_ARTIFACT_KIND/);
+  assert.doesNotMatch(lineageMapperSource, /compiledCodeRef|CompiledCodeRef/);
 
   assert.match(temporalActivitiesTestSource, /type SetupActivitiesOptions = Readonly<\{/);
   assert.match(
@@ -142,13 +138,11 @@ test('branch semantics keep policy, lineage extraction, and test setup behind na
   assert.doesNotMatch(temporalActivitiesTestSource, /setupActivities\(undefined/);
 });
 
-test('branch review links every non-Canvas local component guide added for the branch', () => {
-  const review = read(
-    'buzon/20260429-codex-static-analysis-followup-fowler-architecture-review.md'
-  );
-  assert.match(review, /start-run-admission-component\.md/);
-  assert.match(review, /compiled-code-ref-lineage-extraction-component\.md/);
-  assert.match(review, /temporal-step-plugin-profile\.md/);
+test('active component indexes link the generic lineage guide', () => {
+  const lineageIndex = read('docs/architecture/components/lineage-worker/index.md');
+  assert.match(lineageIndex, /artifact-lineage-extraction-component\.md/);
+  assert.match(lineageIndex, /artifact-lineage-extraction-user-stories\.md/);
+  assert.doesNotMatch(lineageIndex, /compiled-code-ref-lineage-extraction/);
 });
 
 test('branch-adjacent user stories cover success, degraded, and negative scenarios', () => {

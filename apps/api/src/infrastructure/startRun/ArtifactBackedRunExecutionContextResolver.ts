@@ -4,13 +4,11 @@ import {
   type ArtifactBackedRunExecutionContextReaderOptions,
 } from '@dvt/artifacts';
 import {
+  ArtifactStoreError,
   type RunExecutionContext,
   type RunExecutionContextRef,
 } from '@dvt/contracts';
-import {
-  RunExecutionContextRejectedError,
-  type IRunExecutionContextResolver,
-} from '@dvt/engine';
+import { RunExecutionContextRejectedError, type IRunExecutionContextResolver } from '@dvt/engine';
 
 export type ArtifactBackedRunExecutionContextResolverOptions =
   ArtifactBackedRunExecutionContextReaderOptions;
@@ -28,6 +26,12 @@ export class ArtifactBackedRunExecutionContextResolver implements IRunExecutionC
     } catch (error) {
       if (error instanceof ArtifactReadError) {
         throw new RunExecutionContextRejectedError(error.message);
+      }
+
+      if (error instanceof ArtifactStoreError && error.code === 'ARTIFACT_INTEGRITY_ERROR') {
+        throw new RunExecutionContextRejectedError(
+          'runExecutionContext artifact integrity mismatch'
+        );
       }
 
       throw error;

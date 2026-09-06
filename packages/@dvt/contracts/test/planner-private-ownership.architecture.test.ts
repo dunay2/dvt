@@ -12,10 +12,6 @@ const plannerPrivatePorts = [
     symbol: 'IPlanExecutabilityValidator',
   },
   {
-    sourcePath: 'packages/@dvt/contracts/src/contracts/planner/ExecutionBindingVerification.v1.ts',
-    symbol: 'IExecutionBindingVerifier',
-  },
-  {
     sourcePath: 'packages/@dvt/contracts/src/contracts/planner/CustomPolicyNamespaceRegistry.v1.ts',
     symbol: 'ICustomPolicyNamespaceRegistry',
   },
@@ -43,7 +39,6 @@ describe('planner-private behavior ownership', () => {
 
     expect(rootBarrel).toContain('EXECUTABILITY_REJECTION_CODES');
     expect(rootBarrel).toContain('ExecutabilityValidationResult');
-    expect(rootBarrel).toContain('ExecutionBindingVerificationResult');
     expect(rootBarrel).toContain('StoredPlanArtifactValidationRecord');
     expect(rootBarrel).toContain('CustomPolicyNamespaceEntry');
   });

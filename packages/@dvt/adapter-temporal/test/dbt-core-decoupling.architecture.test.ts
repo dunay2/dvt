@@ -217,15 +217,20 @@ describe('Temporal DBT core decoupling architecture', () => {
     }
   });
 
-  it('keeps workflow artifact emission plugin-agnostic instead of DBT step-kind gated', () => {
-    const source = readWorkflowSource('workflowArtifactHelpers.ts');
+  it('keeps artifact publication ownership out of the Temporal workflow core', () => {
+    const workflowSources = [
+      readWorkflowSource('workflowArtifactHelpers.ts'),
+      readWorkflowSource('runPlanWorkflow.stepExecution.ts'),
+    ];
 
-    expect(source).toContain('compiledCodeRef');
-    expect(source).toContain("COMPILED_SQL_ARTIFACT_KIND = 'compiled-sql'");
-    expect(source).toContain('artifactKind: COMPILED_SQL_ARTIFACT_KIND');
-    expect(source).not.toContain('KNOWN_STEP_KINDS.DBT_');
-    expect(source).not.toContain('TEMPORAL_DBT_PLUGIN');
-    expect(source).not.toContain("artifactKind: 'dbt.compiled-sql'");
+    for (const source of workflowSources) {
+      expect(source).not.toContain('compiledCodeRef');
+      expect(source).not.toContain('CompiledCodeRef');
+      expect(source).not.toContain('COMPILED_SQL_ARTIFACT_KIND');
+      expect(source).not.toContain('stepArtifactRef');
+      expect(source).not.toContain('attachCompiledCodeRefs');
+      expect(source).not.toContain('publishArtifact');
+    }
   });
 
   it('documents core registry ownership as plugin-free by default', () => {

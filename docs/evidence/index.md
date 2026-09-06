@@ -22,6 +22,7 @@ Evidence documents that justify or validate relevant changes.
 - [AR-C5 Adapter Circuit Breaker Evidence](ed-20260512-ar-c5-adapter-circuit-breaker.md)
 - [AR-D3 Worker Scaling Strategy Closeout](ed-20260514-ar-d3-worker-scaling-strategy.md)
 - [AR-D4 zero-downtime schema rollback evidence](ed-20260513-ar-d4-zero-downtime-schema-rollback.md)
+- [Canonical artifact authority and compiled-code hard cut](ED-20260905-artifact-authority-compiled-code-hard-cut.md)
 - [Canonical Plan Admission Findings](ED-20260731-plan-admission-findings.md)
 - [Canvas calculated-column Substrait authoring evidence](ED-20260902-canvas-calculated-column-authoring.md)
 - [Canvas edge execution gate evidence](ED-20260902-canvas-edge-execution-gate.md)

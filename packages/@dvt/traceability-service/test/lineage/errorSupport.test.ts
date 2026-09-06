@@ -1,44 +1,40 @@
+import { ArtifactReadError } from '@dvt/artifacts';
 import { describe, expect, it } from 'vitest';
 
-import {
-  LINEAGE_ERROR_CODE,
-  LINEAGE_ERROR_MESSAGE_KEY,
-  LINEAGE_ERROR_REASON_CODE,
-} from '../../src/lineage/errorContract.js';
-import { CompiledCodeNotFoundError, CompiledCodeReaderError } from '../../src/lineage/errors.js';
 import {
   sanitizeLineageErrorForPersistence,
   toLineageErrorLike,
 } from '../../src/lineage/errorSupport.js';
 
-describe('lineage error contract', () => {
-  it('exposes stable code, messageKey, and messageParams on typed lineage errors', () => {
-    const error = new CompiledCodeNotFoundError({ storageUri: 'memory://compiled/missing.sql' });
-
-    expect(error).toBeInstanceOf(Error);
-    expect(error.code).toBe(LINEAGE_ERROR_CODE.COMPILED_CODE_NOT_FOUND);
-    expect(error.messageKey).toBe(LINEAGE_ERROR_MESSAGE_KEY.COMPILED_CODE_NOT_FOUND);
-    expect(error.messageParams).toEqual({ storageUri: 'memory://compiled/missing.sql' });
-    expect(error.message).toBe('Compiled code not found for URI: memory://compiled/missing.sql');
-  });
-
-  it('preserves structured metadata when projecting errors for logs', () => {
-    const error = new CompiledCodeReaderError({
-      reason: 'token=super-secret',
-      reasonCode: LINEAGE_ERROR_REASON_CODE.COMPILED_CODE_READER_READ_FAILED,
-      sourceUri: 's3://bucket/path.sql',
-    });
+describe('lineage error support', () => {
+  it('preserves generic artifact error codes without introducing a lineage-owned artifact error hierarchy', () => {
+    const error = new ArtifactReadError(
+      'ARTIFACT_NOT_FOUND',
+      'artifact read failed for token=super-secret'
+    );
 
     expect(toLineageErrorLike(error)).toEqual({
-      code: LINEAGE_ERROR_CODE.COMPILED_CODE_READER_ERROR,
-      message: 'Compiled code read failed for s3://bucket/path.sql: token=[REDACTED]',
-      messageKey: LINEAGE_ERROR_MESSAGE_KEY.COMPILED_CODE_READER_ERROR,
-      messageParams: {
-        reason: 'token=[REDACTED]',
-        reasonCode: LINEAGE_ERROR_REASON_CODE.COMPILED_CODE_READER_READ_FAILED,
-        sourceUri: 's3://bucket/path.sql',
-      },
-      name: 'CompiledCodeReaderError',
+      code: 'ARTIFACT_NOT_FOUND',
+      message: 'artifact read failed for token=[REDACTED]',
+      name: 'ArtifactReadError',
+    });
+  });
+
+  it('preserves structured metadata from generic error-like values', () => {
+    const error = {
+      name: 'ExternalArtifactError',
+      code: 'REMOTE_READ_FAILED',
+      messageKey: 'artifact.remote.read_failed',
+      messageParams: { sourceUri: 's3://bucket/path.sql' },
+      message: 'failed token=super-secret',
+    };
+
+    expect(toLineageErrorLike(error)).toEqual({
+      code: 'REMOTE_READ_FAILED',
+      message: 'failed token=[REDACTED]',
+      messageKey: 'artifact.remote.read_failed',
+      messageParams: { sourceUri: 's3://bucket/path.sql' },
+      name: 'ExternalArtifactError',
     });
   });
 

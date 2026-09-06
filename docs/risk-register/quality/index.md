@@ -49,6 +49,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Capability matrix tests and docs governance can drift after doc relocations](R-20260409-CAPABILITY-MATRIX-DOCS-GOVERNANCE-DRIFT.yaml)
 - [Capability-routed Temporal workers require operational queue alignment](R-20260513-MW-D2-TEMPORAL-WORKER-ROUTING.yaml)
 - [CI rebuild dedupe or job consolidation could hide missing explicit build prerequisites](R-20260409-CI-REBUILD-DEDUPE-AND-ADAPTER-POSTGRES-CONSOLIDATION.yaml)
+- [Compiled-code hard cut invalidates histories and payloads that depend on the retired wire model](R-20260905-ARTIFACT-COMPILED-CODE-HARD-CUT.yaml)
 - [Concurrent cancel deliveries could dispatch duplicate provider commands](R-20260802-RUN-CANCEL-SUBMISSION-RECEIPT.yaml)
 - [Connected source identity can collide or cross workspace boundaries](R-20260808-PTH1-CONNECTED-SOURCE-TRUTH.yaml)
 - [Consumers may expect DVT lifecycle statuses (PAUSED, CANCELLING) in ProviderRunStatusView](R-20260409-PROVIDER-STATUS-SEMANTIC-DRIFT.yaml)

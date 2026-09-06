@@ -1,15 +1,5 @@
 {
   "jobFacets": {
-    "dvt_dbt_details": {
-      "_producer": "https://github.com/dunay2/dvt/tree/main/packages/@dvt/traceability-service",
-      "_schemaURL": "https://dvt.local/contracts/traceability/facets/DvtDbtDetailsJobFacet.v1.schema.json",
-      "compiledCodeRef": {
-        "sha256": "ca9602050b3ba61e3617df16b28dc4819ad3a6fd6e707f5a71984e6a177b1041",
-        "storageUri": "memory://compiled/sql-step",
-        "sizeBytes": 54,
-        "encoding": "utf-8"
-      }
-    },
     "sql": {
       "_producer": "https://github.com/dunay2/dvt/tree/main/packages/@dvt/traceability-service",
       "_schemaURL": "https://openlineage.io/spec/facets/1-0-0/SqlJobFacet.json",
