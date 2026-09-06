@@ -1,4 +1,9 @@
-/** Owned concern: allocate opaque stable DVT authoring identities for Substrait sidecar bindings. */
+/**
+ * @baseline ADR-0064: Substrait semantic reference and bounded logical profile
+ * @decision Assign new relation and field identities through the shared UUIDv7 primitive.
+ * @consequence Persisted identity is opaque and independent from mutable semantic or display content.
+ * @version 1.0.0
+ */
 import { randomUuidV7 } from '@dvt/crypto';
 
 const RELATION_ID_PREFIX = 'dvt_rel_';

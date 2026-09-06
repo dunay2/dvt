@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-09-03",
+  "generated": "2026-09-06",
   "repo": {
     "sha": "local"
   },
@@ -1194,6 +1194,7 @@
       "number": "ADR-0064",
       "decisions": [
         "Admit Substrait as the sole DVT transform authoring authority.",
+        "Assign new relation and field identities through the shared UUIDv7 primitive.",
         "Attach typed evidence from one admission-group collection.",
         "Bind catalog entries to exact core or official extension identities.",
         "Bind exact pinned Plan bytes to one identity-only DVT sidecar.",
@@ -1209,6 +1210,7 @@
         "Validate stable field hierarchy independently from document transport."
       ],
       "implemented_by": [
+        "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitAuthoringIdentity.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityAdmission.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalogSchema.v1.ts",
