@@ -23,6 +23,14 @@ describe('Canvas route access states', () => {
   it('keeps the viewport visible and shows a read-only banner when mutations are gated', async () => {
     await renderCanvasRouteWithController(harness, {
       nodesWithImpact: buildCanvasRouteReadyNodes(),
+      authorizationPermissions: {
+        canPlan: false,
+        canRun: false,
+        canEditEdges: false,
+        canPersistGraphDraft: false,
+        canManagePlugins: false,
+        canManageRBAC: false,
+      },
       userPermissions: {
         canPlan: false,
         canRun: false,

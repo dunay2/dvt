@@ -149,7 +149,7 @@ describe('canvas draft recovery boundary architecture', () => {
     const recoveryTemplateSource = readAppSource('CanvasRecoveryBanner.templates.tsx');
 
     expect(hostSource).toContain("from './CanvasPlaygroundHost.templates'");
-    expect(hostSource).toContain('onCreateCanvasTemplate');
+    expect(hostSource).toContain('onCreateCanvas');
     expect(hostSource).not.toContain('<div');
     expect(hostSource).not.toContain('Button');
     expect(hostSource).not.toContain('Card');

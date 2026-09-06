@@ -17,6 +17,36 @@ function buildReadyNodes(): CanvasController['nodesWithImpact'] {
 }
 
 describe('canvasRouteInteractionState', () => {
+  it.each([null, { kind: 'transformation', title: 'Canvas' }])(
+    'does not present runtime readiness as a permission denial: %j',
+    (canvasDocument) => {
+      const controller = buildController({ canvasDocument });
+      const interaction = deriveCanvasRouteInteractionState(
+        {
+          ...controller,
+          userPermissions: {
+            ...controller.userPermissions,
+            canPlan: false,
+            canRun: false,
+            canEditEdges: false,
+          },
+          authorizationPermissions: {
+            ...controller.authorizationPermissions,
+            canPlan: true,
+            canRun: true,
+            canEditEdges: true,
+          },
+        },
+        null
+      );
+      expect(interaction.readOnlyState).toBeNull();
+      expect(interaction.effectiveUserPermissions).toMatchObject({
+        canPlan: false,
+        canRun: false,
+        canEditEdges: false,
+      });
+    }
+  );
   it('converts draft transport failures into a route-safe disabled interaction posture', () => {
     const controller = buildController({
       nodesWithImpact: [
