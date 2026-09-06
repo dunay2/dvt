@@ -64,7 +64,7 @@ flowchart LR
 
 PreviewExecutionPlan is retired as an execution transport (#2762). This cut does
 not reintroduce it. The broader workload lowering and target projection work in
-#2524 remains open; this guard does not manufacture Source or operator workloads.
+Issue #2524 remains open; this guard does not manufacture Source or operator workloads.
 
 ## Validation design
 
