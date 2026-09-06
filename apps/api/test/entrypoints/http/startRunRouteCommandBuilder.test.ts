@@ -121,17 +121,38 @@ describe('startRun command builders', () => {
   });
 
   it('rejects padded pluginCompatibilityFingerprint instead of omitting it', () => {
+    const runExecutionContextRef = {
+      uri: 'dvt-runctx://tenant-a/run-1/context.json',
+      sha256: 'a'.repeat(64),
+      schemaVersion: 'v1.0',
+      planId: 'p1',
+      planVersion: '1.0',
+      pluginCompatibilityFingerprint: '1'.repeat(64),
+    };
+    expect(
+      buildPlanRefStartRunCommand({
+        rawPlanRef: VALID_PLAN_REF,
+        rawRunExecutionContextRef: runExecutionContextRef,
+        runId: 'run-1',
+        targetAdapter: 'temporal',
+        selection: VALID_SELECTION,
+      })
+    ).toEqual({
+      ok: true,
+      value: {
+        planRef: VALID_PLAN_REF,
+        runExecutionContextRef,
+        runId: 'run-1',
+        targetAdapter: 'temporal',
+        selection: VALID_SELECTION,
+      },
+    });
     expect(
       buildPlanRefStartRunCommand({
         rawPlanRef: VALID_PLAN_REF,
         rawRunExecutionContextRef: {
-          uri: 'dvt-runctx://tenant-a/run-1/context.json',
-          sha256: 'abc123',
-          schemaVersion: 'v1.0',
-          planId: 'p1',
-          planVersion: '1.0',
-          pluginCompatibilityFingerprint:
-            ' 1111111111111111111111111111111111111111111111111111111111111111 ',
+          ...runExecutionContextRef,
+          pluginCompatibilityFingerprint: ` ${runExecutionContextRef.pluginCompatibilityFingerprint} `,
         },
         runId: 'run-1',
         targetAdapter: 'temporal',
