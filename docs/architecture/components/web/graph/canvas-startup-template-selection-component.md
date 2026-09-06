@@ -11,7 +11,7 @@ planning_type: architecture
 ## Purpose
 
 This component owns entry into the single Canvas inside the active workspace.
-There are no user-facing Canvas types or start Canvass.
+There are no user-facing Canvas types or template choices.
 
 ## Public API
 
@@ -38,7 +38,7 @@ There are no user-facing Canvas types or start Canvass.
   startup command or fake local success path is allowed.
 - First-canvas creation is a canvas-document transition. Its availability must
   follow draft persistence eligibility and must not reuse `canEditEdges`, which
-  belongs to graph/node/edge mutation after a typed document exists.
+  belongs to graph/node/edge mutation after a persisted document exists.
 - Draft persistence eligibility is projected as `canPersistGraphDraft`; graph
   editability remains `canEditEdges`.
 - The component does not introduce a workspace/project selector.
@@ -51,8 +51,8 @@ stateDiagram-v2
   ActiveWorkspaceResolved --> NeedsCanvas: protected draft has no canvas document
   NeedsCanvas --> CreatingFirstCanvas: operator starts Canvas
   CreatingFirstCanvas --> DraftBackedCanvas: CreateCanvasDocumentCommand saved
-  DraftBackedCanvas --> TypedEmptyCanvas: route projects authoritative draft
-  TypedEmptyCanvas --> GraphReady: first node is saved
+  DraftBackedCanvas --> EmptyCanvas: route projects authoritative draft
+  EmptyCanvas --> GraphReady: first node is saved
 ```
 
 ## Component Flow
@@ -149,6 +149,16 @@ projection, or in-flight save cannot manufacture a permission denial. Runtime
 commands remain disabled until their own policy admits them. Real write denial
 continues to prevent mutation. Existing rails, scope authorization, application
 ports and CAS semantics are unchanged.
+
+The protected read result `not_found` projects an unknown draft access mode and
+the `unknown_pending` posture. Its `mutationBlocked` flag prevents commands that
+require a document; it does not establish an access denial. Only the `read_only`
+posture overrides the authorization permissions for the read-only banner.
+Transport denials and draft recovery retain their existing dedicated surfaces.
+
+| scenario                                                      | opportunity                                                                               | Fowler pattern                                                    | DDD owner                                          | command/query rail                                  | implementation surfaces                                                                           | unit or package test                                                                                                                               | architecture test                                            | user-flow test                                                     | out of scope                                                |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | -------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------ | ----------------------------------------------------------- |
+| First Canvas after a protected draft read returns `not_found` | Hidden authority and test-only confidence: command unavailability was presented as denial | Presentation Model separates authorization from command admission | Canvas draft access posture and route presentation | Existing `CreateCanvasDocumentCommand`; no new rail | `canvasRouteInteractionState.ts`, its regression test, existing first-use route and Cypress tests | Derive the real `not_found` read model and posture; no false banner, creation eligible, runtime commands blocked; preserve actual read-only denial | Existing draft posture priority and recovery boundary guards | Visible first creation and reload through the protected draft save | New grants, draft admission changes, new workspace creation |
 
 Acceptance: EN/ES direct action, no redundant scope/adapter/template explanation,
 keyboard accessible native button, original command dispatch, no creation when

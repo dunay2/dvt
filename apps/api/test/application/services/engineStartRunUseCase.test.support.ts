@@ -1,5 +1,5 @@
 import {
-  asNonBlankString,
+  parseRunExecutionContextRef,
   parseExecutionSelection,
   parsePlanRef,
   type RunExecutionContextRef,
@@ -86,11 +86,11 @@ export function buildNoisyPlanRef(): StartRunPlanRef & {
 }
 
 export function buildRunExecutionContextRef(): RunExecutionContextRef {
-  return {
-    uri: asNonBlankString('dvt-runctx://tenant-1/run-test-1/context.json'),
-    sha256: asNonBlankString('ctxsha'),
-    schemaVersion: asNonBlankString('v1.0'),
-    planId: asNonBlankString(PLAN_REF.planId),
-    planVersion: asNonBlankString(PLAN_REF.planVersion),
-  };
+  return parseRunExecutionContextRef({
+    uri: 'dvt-runctx://tenant-1/run-test-1/context.json',
+    sha256: 'c'.repeat(64),
+    schemaVersion: 'v1.0',
+    planId: PLAN_REF.planId,
+    planVersion: PLAN_REF.planVersion,
+  });
 }

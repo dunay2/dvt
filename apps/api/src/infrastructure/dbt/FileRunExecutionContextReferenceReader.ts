@@ -1,5 +1,4 @@
 /** Owned concern: reload immutable references for server-persisted run contexts. */
-import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 
@@ -9,6 +8,7 @@ import {
   parseRunExecutionContextRef,
   type RunExecutionContextRef,
 } from '@dvt/contracts';
+import { sha256Hex } from '@dvt/crypto';
 
 import type {
   IRunExecutionContextReferenceReader,
@@ -59,7 +59,7 @@ export class FileRunExecutionContextReferenceReader implements IRunExecutionCont
     if (contextBytes === undefined) {
       return { kind: 'untrusted', reason: 'context_missing' };
     }
-    if (createHash('sha256').update(contextBytes).digest('hex') !== ref.sha256) {
+    if (sha256Hex(contextBytes) !== ref.sha256) {
       return { kind: 'untrusted', reason: 'digest_mismatch' };
     }
     const context = parseStoredContext(contextBytes);

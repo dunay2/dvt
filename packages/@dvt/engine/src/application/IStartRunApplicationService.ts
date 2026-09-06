@@ -2,6 +2,7 @@ import type { EngineRunRef, PlanRef, ResolvedRunContext } from '@dvt/contracts';
 
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
 import type { StartRunTraceContext } from '../core/lifecycle/StartRunTraceContext.js';
+import type { StartRunPreparation } from '../services/startRun/StartRunTypes.js';
 
 export interface IStartRunApplicationService {
   startRun(
@@ -13,7 +14,7 @@ export interface IStartRunApplicationService {
     planRef: PlanRef,
     resolvedContext: ResolvedRunContext,
     traceContext: StartRunTraceContext,
-    preparedRunRef: EngineRunRef,
+    preparation: StartRunPreparation,
     admittedAdapter: IProviderAdapter
   ): Promise<EngineRunRef>;
 }

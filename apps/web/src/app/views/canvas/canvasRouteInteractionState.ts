@@ -134,9 +134,15 @@ export function deriveCanvasRouteInteractionState(
     controller,
     shouldDisableCanvasInteractions,
   });
-  const permissionPresentation = isCanvasDraftPostureMutationBlocked(controller.draftAccessPosture)
-    ? { ...controller.authorizationPermissions, canPlan: false, canRun: false, canEditEdges: false }
-    : controller.authorizationPermissions;
+  const permissionPresentation =
+    controller.draftAccessPosture.kind === 'read_only'
+      ? {
+          ...controller.authorizationPermissions,
+          canPlan: false,
+          canRun: false,
+          canEditEdges: false,
+        }
+      : controller.authorizationPermissions;
   const readOnlyState = shouldDisableCanvasInteractions
     ? null
     : getCanvasReadOnlyState(permissionPresentation);

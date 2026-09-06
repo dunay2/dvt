@@ -22,6 +22,7 @@ Operational runbooks for incidents, recovery, and maintenance.
 - [Local PostgreSQL development environment](temporal-postgres-proof-environment.md)
 - [Outbox Worker Runbook](outbox-worker-g5.md)
 - [Planning Generated Artifacts Operations](planning-generated-artifacts-operations-20260403.md)
+- [PostgreSQL Backup and Disaster Recovery Runbook](postgresql-backup-and-disaster-recovery.md)
 - [Read-Your-Writes Freshness SLO](read-your-writes-freshness-slo-20260330.md)
 - [Temporal PlanRef Drained Cutover Runbook](temporal-planref-drained-cutover-20260427.md)
 - [Temporal Worker DBT Runtime Runbook](temporal-worker-dbt-plugin-runtime-20260414.md)

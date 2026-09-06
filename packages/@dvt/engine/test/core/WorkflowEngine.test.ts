@@ -298,7 +298,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       ...makeContext('ctx-no-resolver-1'),
       runExecutionContextRef: {
         uri: 'dvt-runctx://t/ctx-no-resolver-1',
-        sha256: 'ctxsha',
+        sha256: 'c'.repeat(64),
         schemaVersion: 'v1.0',
         planId: planRef.planId,
         planVersion: planRef.planVersion,
@@ -361,7 +361,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
       ...makeContext('ctx-ok-1'),
       runExecutionContextRef: {
         uri: 'dvt-runctx://t/ctx-ok-1',
-        sha256: 'ctxsha',
+        sha256: 'c'.repeat(64),
         schemaVersion: 'v1.0',
         planId: planRef.planId,
         planVersion: planRef.planVersion,
@@ -405,7 +405,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
     const planRef = makePlanRefForPlan(plan);
     const runExecutionContextRef = {
       uri: 'dvt-runctx://t/plugin-store-mismatch-1',
-      sha256: 'ctxsha',
+      sha256: 'c'.repeat(64),
       schemaVersion: 'v1.0',
       planId: planRef.planId,
       planVersion: planRef.planVersion,

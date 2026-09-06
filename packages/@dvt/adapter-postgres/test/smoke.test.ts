@@ -17,9 +17,28 @@
  */
 import { randomUUID } from 'node:crypto';
 
+import {
+  asIsoUtcString,
+  asNonBlankString,
+  type ExecutionPlan,
+  type PlanRef,
+  type RunContext,
+} from '@dvt/contracts';
+import { jcsCanonicalize, sha256Hex, sha256HexUtf8 } from '@dvt/crypto';
 import { resolveOutboxShardId } from '@dvt/delivery';
+import { RunAlreadyExistsError } from '@dvt/engine';
+import {
+  AllowAllAuthorizer,
+  buildRunRecoveryService,
+  IdempotencyKeyBuilder,
+  PlanRefPolicy,
+  RunAccessPolicy,
+  SnapshotProjector,
+  type IStartRunApplicationService,
+} from '@dvt/engine/runtime';
+import { InMemoryProviderAdapter } from '@dvt/engine/testing';
 import { Client } from 'pg';
-import { afterAll, describe, expect, test } from 'vitest';
+import { afterAll, describe, expect, test, vi } from 'vitest';
 
 import { PostgresStateStoreAdapter } from '../src/index.js';
 import { RUN_EVENT_STORE_ERROR_CODE } from '../src/runEventStoreErrors.js';
@@ -237,9 +256,196 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
   test('bootstrapRunTx: throws RUN_ALREADY_EXISTS on duplicate runId', () =>
     withAdapter(async (adapter) => {
       await adapter.bootstrapRunTx(makeBootstrap('run-bs-dup'));
-      await expect(adapter.bootstrapRunTx(makeBootstrap('run-bs-dup'))).rejects.toThrow(
-        'RUN_ALREADY_EXISTS'
+      const rejection = adapter.bootstrapRunTx(makeBootstrap('run-bs-dup'));
+      await expect(rejection).rejects.toBeInstanceOf(RunAlreadyExistsError);
+      await expect(rejection).rejects.toMatchObject({
+        code: 'RUN_ALREADY_EXISTS',
+        runId: 'run-bs-dup',
+        cause: { code: '23505', table: 'run_metadata' },
+      });
+    }));
+
+  test('recoverRun: reuses a PostgreSQL recovery child after a real bootstrap collision', () =>
+    withAdapter(async (store) => {
+      const sourceId = 'run-recovery-engine-root';
+      const childId = 'run-recovery-engine-child';
+      const clock = { nowIsoUtc: () => asIsoUtcString(NOW) };
+      const inputHashSha256 = '1'.repeat(64);
+      const planId = sha256HexUtf8(
+        jcsCanonicalize({
+          metadata: { planVersion: '1.0', inputHashSha256 },
+          steps: [],
+        })
       );
+      const plan: ExecutionPlan = {
+        metadata: {
+          planId,
+          planVersion: '1.0',
+          schemaVersion: '1.0',
+          contractVersion: '1.0.0',
+          inputHashSha256,
+          createdAtIso: NOW,
+        },
+        steps: [],
+      };
+      const bytes = Buffer.from(JSON.stringify(plan));
+      const planRef: PlanRef = {
+        uri: asNonBlankString('https://plans.example/recovery.json'),
+        sha256: asNonBlankString(sha256Hex(bytes)),
+        schemaVersion: asNonBlankString('1.0'),
+        planId: asNonBlankString(planId),
+        planVersion: asNonBlankString('1.0'),
+        sizeBytes: bytes.byteLength,
+      };
+      const source = makeBootstrap(sourceId);
+      await store.bootstrapRunTx({
+        metadata: { ...source.metadata, planId },
+        firstEvents: source.firstEvents.map((event) => ({ ...event, planId })),
+      });
+      await store.appendAndEnqueueTx(rid(sourceId), [
+        makeEvent({
+          runId: sourceId,
+          planId,
+          eventType: 'RunFailed',
+          idempotencyKey: sourceId + ':failed',
+          payload: { reason: 'WORKFLOW_FAILURE' },
+        }),
+      ]);
+      await store.rebuildSnapshot('t1', rid(sourceId));
+      const projector = new SnapshotProjector();
+      const provider = new InMemoryProviderAdapter({
+        stateStore: store,
+        stateStoreWrite: store,
+        clock,
+        projector,
+      });
+      const span = {
+        setAttribute: vi.fn(),
+        setAttributes: vi.fn(),
+        recordException: vi.fn(),
+        setStatus: vi.fn(),
+        end: vi.fn(),
+      };
+      const preparedPort = vi.fn<IStartRunApplicationService['startPreparedRun']>(
+        async (_plan, _context, _trace, preparation) => preparation.runRef
+      );
+      const recovery = buildRunRecoveryService({
+        stateStoreRead: store,
+        stateStoreWrite: store,
+        projector,
+        clock,
+        idempotency: new IdempotencyKeyBuilder(),
+        policy: new RunAccessPolicy({
+          authorizer: new AllowAllAuthorizer(),
+          planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
+        }),
+        adapters: new Map([['temporal', provider]]),
+        planFetcher: {
+          async getStoredPlanValidationRecord() {
+            return undefined;
+          },
+          async fetchStoredPlanArtifact() {
+            return { bytes, executionPolicy: {} };
+          },
+          async fetchStoredPlanArtifactForValidation() {
+            return { bytes, executionPolicy: {} };
+          },
+        },
+        observability: {
+          withContext: (_context, fn) => fn(),
+          traces: { startSpan: () => span, withSpan: (_name, _options, fn) => fn(span) },
+          logs: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+          metrics: {
+            counter: () => ({ add: vi.fn() }),
+            histogram: () => ({ record: vi.fn() }),
+            gauge: () => ({ set: vi.fn() }),
+          },
+        },
+        startRunApplicationService: {
+          async startRun() {
+            throw new Error('Recovery must use the prepared-start port');
+          },
+          startPreparedRun: preparedPort,
+        },
+      });
+      const context: RunContext = {
+        tenantId: asNonBlankString('t1'),
+        projectId: asNonBlankString('p1'),
+        environmentId: asNonBlankString('dev'),
+        runId: asNonBlankString(childId),
+        targetAdapter: 'temporal',
+      };
+      const captureState = async (): Promise<unknown[]> =>
+        Promise.all(
+          [sourceId, childId].map(async (runId) => ({
+            metadata: await store.getRunMetadataByRunId('t1', runId),
+            events: await store.listEvents('t1', runId),
+            snapshot: await store.getSnapshot('t1', rid(runId)),
+          }))
+        );
+      const createBarrier = (): { reached: Promise<void>; release: () => void } => {
+        let release!: () => void;
+        const reached = new Promise<void>((resolve) => {
+          release = resolve;
+        });
+        return { reached, release };
+      };
+      const firstPreparing = createBarrier();
+      const bothPreparing = createBarrier();
+      const releaseLoser = createBarrier();
+      const bootstrap = store.bootstrapRecoveryRunTx.bind(store);
+      let preparations = 0;
+      const intercepted = vi
+        .spyOn(store, 'bootstrapRecoveryRunTx')
+        .mockImplementation(async (...args) => {
+          if (++preparations === 1) {
+            firstPreparing.release();
+            await bothPreparing.reached;
+          } else {
+            bothPreparing.release();
+            await releaseLoser.reached;
+          }
+          return bootstrap(...args);
+        });
+      const request = { sourceRunId: sourceId, planRef, context };
+      const winner = recovery.recoverRun(request);
+      await Promise.race([firstPreparing.reached, winner]);
+      const loser = recovery.recoverRun(request);
+      const drained = Promise.allSettled([winner, loser]);
+      try {
+        const winnerRef = await Promise.race([
+          winner,
+          loser.then(() => {
+            throw new Error('Recovery loser completed before its bootstrap was released');
+          }),
+        ]);
+        const before = await captureState();
+        releaseLoser.release();
+        await expect(loser).resolves.toEqual(winnerRef);
+        expect(preparations).toBe(2);
+        expect(preparedPort.mock.calls.map((call) => call[3].disposition)).toEqual([
+          'created',
+          'reused',
+        ]);
+        expect(preparedPort.mock.calls[1]?.[3].runRef).toEqual(winnerRef);
+        expect(await captureState()).toEqual(before);
+      } finally {
+        bothPreparing.release();
+        releaseLoser.release();
+        await drained;
+        intercepted.mockRestore();
+      }
+      const next = await store.bootstrapRecoveryRunTx('t1', rid(sourceId), (reservation) => ({
+        metadata: {
+          ...makeBootstrap('run-recovery-engine-next').metadata,
+          planId,
+          logicalAttemptId: reservation.logicalAttemptId,
+          parentRunId: reservation.parentRunId,
+          originRunId: reservation.originRunId,
+        },
+        firstEvents: [],
+      }));
+      expect(next.reservation.logicalAttemptId).toBe(3);
     }));
 
   test('bootstrapRecoveryRunTx: allocates monotonic logical attempts from the origin run', () =>
