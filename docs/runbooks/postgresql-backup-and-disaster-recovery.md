@@ -90,7 +90,7 @@ certification is claimed by this documentation cut.
 | VerifyOperationalPostgresRecovery | Query / persistence and runtime    | Recovery evidence / governed integrity proof bundle (#2876)      | Approved SQL and existing domain tests; isolated target and reviewer-authorized evidence access        | Cross-tenant access, corrupt events, missing artifacts, stale writer accepted                |
 
 Projection rebuild and workflow reconciliation reuse their existing authorities;
-#2875 owns fencing and reopening. The verification query invokes those commands
+Issue #2875 owns fencing and reopening. The verification query invokes those commands
 only through their declared, separately authorized rails when a proof needs them.
 
 ## 5. Roles
