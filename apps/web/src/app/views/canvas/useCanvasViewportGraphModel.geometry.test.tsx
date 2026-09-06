@@ -11,7 +11,9 @@ vi.mock('./canvasNodeMapper', async () => {
   const actual = await vi.importActual<typeof import('./canvasNodeMapper')>('./canvasNodeMapper');
   return {
     ...actual,
-    createCanvasDirectionalEdge: (...args: Parameters<typeof actual.createCanvasDirectionalEdge>) => {
+    createCanvasDirectionalEdge: (
+      ...args: Parameters<typeof actual.createCanvasDirectionalEdge>
+    ) => {
       createCanvasDirectionalEdgeCall(...args);
       return actual.createCanvasDirectionalEdge(...args);
     },
@@ -74,4 +76,44 @@ describe('useCanvasViewportGraphModel geometry invalidation', () => {
       await mounted.cleanup();
     }
   });
+  it.each(['source-node', 'transform-node'])(
+    'omits edges while %s is unresolved',
+    async (missingId) => {
+      const args = buildViewportGraphModelArgs({
+        visibleNodeIds: ['source-node', 'transform-node'],
+        visibleEdges: [{ sourceId: 'source-node', targetId: 'transform-node' }],
+        draftSemanticGraph: {
+          canonicalNodes: [
+            buildCanonicalNode('source-node', 'dvt:source', 'input'),
+            buildCanonicalNode('transform-node', 'dvt:transform', 'transform'),
+          ],
+          canonicalEdges: [
+            {
+              id: 'source-transform',
+              sourceId: 'source-node',
+              targetId: 'transform-node',
+              relation: 'lineage',
+            },
+          ],
+        },
+      });
+      const unresolvedArgs = {
+        ...args,
+        canonicalNodesById: new Map(
+          [...args.canonicalNodesById].filter(([id]) => id !== missingId)
+        ),
+      };
+      const mounted = await renderViewportGraphModel(unresolvedArgs);
+      try {
+        expect(mounted.readState()?.nodes.map((node) => node.id)).not.toContain(missingId);
+        expect(mounted.readState()?.edges).toEqual([]);
+        await mounted.rerender(args);
+        expect(mounted.readState()?.edges).toHaveLength(1);
+        await mounted.rerender(unresolvedArgs);
+        expect(mounted.readState()?.edges).toEqual([]);
+      } finally {
+        await mounted.cleanup();
+      }
+    }
+  );
 });
