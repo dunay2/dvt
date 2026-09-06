@@ -2,6 +2,7 @@
 import type { GraphNodeColumn } from '../../plugins/graph/graphNodeColumnContracts';
 import type { CanonicalNode } from '../../types/canonical';
 import { createDvtNodeAuthoringMetadata } from './canvasDvtAuthoringModel';
+import { projectDvtSubstraitOperableOutput } from './canvasDvtSubstraitOperableExpression';
 import {
   resolveDvtSubstraitColumnFunctions,
   resolveDvtSubstraitProjectionEntry,
@@ -46,21 +47,30 @@ function projectDvtTransformMenus(args: {
 }): CanvasColumnFunctionMenuProjection {
   try {
     const metadata = createDvtNodeAuthoringMetadata(args.node);
-    const projection =
+    const draft =
       metadata?.kind === 'transform' &&
       metadata.mode === 'substrait' &&
       metadata.shape === 'projection'
-        ? resolveDvtSubstraitProjectionEntry({
+        ? { plan: metadata.plan, sidecar: metadata.sidecar }
+        : null;
+    const projection =
+      draft == null
+        ? null
+        : resolveDvtSubstraitProjectionEntry({
             targetNode: args.node,
             nodes: args.nodes,
             edges: args.edges,
-            draft: { plan: metadata.plan, sidecar: metadata.sidecar },
-          })
-        : null;
-    if (projection == null)
+            draft,
+          });
+    if (projection == null || draft == null)
       return { hasEditableProjection: false, supportsCalculatedColumns: false };
     const menus: CanvasColumnFunctionMenuMap = new Map();
     for (const output of projection.outputs) {
+      if (
+        projectDvtSubstraitOperableOutput({ draft, projection, fieldId: output.fieldId }) == null
+      ) {
+        return { hasEditableProjection: false, supportsCalculatedColumns: false };
+      }
       addMenu({
         menus,
         columnId: output.fieldId,
