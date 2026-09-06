@@ -15,6 +15,7 @@ export const PROJECT_ONBOARDING_POLICY = Object.freeze({
     AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionRename,
     AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionTest,
     AUTHORIZATION_ACTION_NAME.workspaceSourceImportImport,
+    AUTHORIZATION_ACTION_NAME.workspaceSourceImportRebind,
     AUTHORIZATION_ACTION_NAME.workspacePluginsView,
   ]),
 });
