@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
 
 import { WarehouseSourceRebindSchemaDriftError } from '../../../src/application/ports/warehouseSourceRebind.js';
@@ -26,6 +27,12 @@ const RESULT = {
   },
 };
 
+type RebindRouteFixture = Readonly<{
+  app: FastifyInstance;
+  authorize: ReturnType<typeof vi.fn>;
+  execute: ReturnType<typeof vi.fn>;
+}>;
+
 function principal(): Record<string, unknown> {
   return {
     principalId: 'user-1',
@@ -40,11 +47,13 @@ function principal(): Record<string, unknown> {
   };
 }
 
-function buildApp(options: {
-  authenticated?: boolean;
-  authorized?: boolean;
-  execute?: ReturnType<typeof vi.fn>;
-} = {}) {
+function buildApp(
+  options: {
+    authenticated?: boolean;
+    authorized?: boolean;
+    execute?: ReturnType<typeof vi.fn>;
+  } = {}
+): RebindRouteFixture {
   const app = Fastify({ logger: false });
   const execute = options.execute ?? vi.fn().mockResolvedValue(RESULT);
   const authorize = vi.fn().mockResolvedValue(
