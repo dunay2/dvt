@@ -1,5 +1,51 @@
 # Changelog
 
+## 0.14.0 (2026-09-06)
+
+## What's Changed
+* feat(web): Deliver structured Transform fields by @dunay2 in https://github.com/dunay2/dvt/pull/2866
+* docs(docs): Freeze PostgreSQL stable-table publication contract by @dunay2 in https://github.com/dunay2/dvt/pull/2868
+* feat(web): Make the Add Source dialog draggable by @dunay2 in https://github.com/dunay2/dvt/pull/2870
+* fix(web): Show all selected source metadata by @dunay2 in https://github.com/dunay2/dvt/pull/2881
+* fix(web): Name data tab after selected card by @dunay2 in https://github.com/dunay2/dvt/pull/2886
+* feat(web): Make operational drawer tabs closable by @dunay2 in https://github.com/dunay2/dvt/pull/2888
+* fix(web): Stop presenting a fixed Preview topology by @dunay2 in https://github.com/dunay2/dvt/pull/2891
+* feat(web): Reposition and sort Canvas data columns by @dunay2 in https://github.com/dunay2/dvt/pull/2893
+* feat(web): Add Source semantic filter authoring by @dunay2 in https://github.com/dunay2/dvt/pull/2895
+* fix(ci): Prevent post-Git hooks from mutating worktrees by @dunay2 in https://github.com/dunay2/dvt/pull/2901
+* refactor(web): Retire obsolete empty Canvas guide by @dunay2 in https://github.com/dunay2/dvt/pull/2898
+* feat(web): Toggle source selection from table rows by @dunay2 in https://github.com/dunay2/dvt/pull/2907
+* fix(web): Remove duplicate source alias presentation by @dunay2 in https://github.com/dunay2/dvt/pull/2910
+* fix(web): Resolve connected model origins for execution preview by @dunay2 in https://github.com/dunay2/dvt/pull/2912
+* fix(web): Keep generated Model SQL as a read-only projection by @dunay2 in https://github.com/dunay2/dvt/pull/2916
+* fix(web): Keep Source semantics stable by @dunay2 in https://github.com/dunay2/dvt/pull/2918
+* refactor(web): hard-cut false column lineage data (#2953) by @dunay2 in https://github.com/dunay2/dvt/pull/2959
+* refactor(web): collapse duplicate dbt Canvas surface policy (#2903) by @dunay2 in https://github.com/dunay2/dvt/pull/2960
+* refactor(web): collapse parallel dbt Canvas composition (#2903) by @dunay2 in https://github.com/dunay2/dvt/pull/2961
+* refactor(web): retire parallel dbt Canvas controller contract (#2903) by @dunay2 in https://github.com/dunay2/dvt/pull/2962
+* refactor(web): remove external dbt Canvas command traps (#2903) by @dunay2 in https://github.com/dunay2/dvt/pull/2965
+* fix(web): Reconcile stale lineage hard-cut expectations by @dunay2 in https://github.com/dunay2/dvt/pull/2978
+* feat(ci): Expose Planning DB through read-only MCP by @dunay2 in https://github.com/dunay2/dvt/pull/2977
+* refactor(web): Retire dbt Canvas kind taxonomy (#2903) by @dunay2 in https://github.com/dunay2/dvt/pull/2968
+* test(web): Reconcile retired dbt Canvas witnesses (#2903) by @dunay2 in https://github.com/dunay2/dvt/pull/2987
+* refactor(web): Remove Canvas authoring mode presentation (#2903) by @dunay2 in https://github.com/dunay2/dvt/pull/2989
+* perf(web): Reduce primary Vitest environment overhead by @dunay2 in https://github.com/dunay2/dvt/pull/2985
+* feat(web): Implement Source Inspector A-v2 cut 1 (#2971) by @dunay2 in https://github.com/dunay2/dvt/pull/2972
+* feat(web): Implement Source Inspector A-v2 Columns cut 2 (#2974) by @dunay2 in https://github.com/dunay2/dvt/pull/2976
+* feat(web): Implement Source Inspector A-v2 Inputs / Outputs cut 3 (#2979) by @dunay2 in https://github.com/dunay2/dvt/pull/2981
+* refactor(web): Converge Source and Model on one vocabulary by @dunay2 in https://github.com/dunay2/dvt/pull/2993
+* perf(web): Stop Canvas layout writes on drag frames (#2963) by @dunay2 in https://github.com/dunay2/dvt/pull/2966
+* perf(web): Decouple Canvas edge projection from drag geometry (#2964) by @dunay2 in https://github.com/dunay2/dvt/pull/2983
+* perf(web): Reuse Canvas semantic graph inputs across card projection (#2964) by @dunay2 in https://github.com/dunay2/dvt/pull/2988
+* perf(web): Skip idle Canvas search projection (#2964) by @dunay2 in https://github.com/dunay2/dvt/pull/2990
+* refactor(web): Integrate opaque DVT semantic identity across Canvas authoring by @dunay2 in https://github.com/dunay2/dvt/pull/2991
+* refactor(contracts): Separate Source logical identity from physical binding by @dunay2 in https://github.com/dunay2/dvt/pull/2992
+* fix(api): Reject client drift from protected executable topology by @dunay2 in https://github.com/dunay2/dvt/pull/2984
+* refactor(contracts): Consolidate runtime artifact authority by @dunay2 in https://github.com/dunay2/dvt/pull/2967
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.13.0...v0.14.0
+
 ## 0.13.0 (2026-09-03)
 
 ## What's Changed
