@@ -5,15 +5,21 @@ import { buildCanvasAuthoringGraphProjection } from './canvasAuthoringGraphProje
 import {
   applyDvtSubstraitFilter,
   encodeDvtSubstraitFilterDocument,
-  inspectDvtSubstraitFilter,
   resolveDvtSubstraitFilterCapabilities,
 } from './canvasDvtSubstraitFilter';
 import {
   createDvtSubstraitProjectionDraft,
+  encodeDvtSubstraitProjectionDocument,
   resolveDvtSubstraitProjectionSource,
 } from './canvasDvtSubstraitProjection';
 import { createDvtSourceSemanticDraft } from './canvasDvtSourceSemanticAuthoring';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+
+const FIELD_IDS = [
+  'dvt_fld_01991dc0-0000-7000-8000-000000000101',
+  'dvt_fld_01991dc0-0000-7000-8000-000000000102',
+  'dvt_fld_01991dc0-0000-7000-8000-000000000103',
+] as const;
 
 const source: CanonicalNode = {
   id: 'source-1',
@@ -43,66 +49,52 @@ const source: CanonicalNode = {
   },
 };
 
-function legacyFilteredSource(): CanonicalNode {
+function semanticSource(): CanonicalNode {
   const projectionSource = resolveDvtSubstraitProjectionSource(source);
+  if (projectionSource == null) throw new Error('Invalid Source fixture.');
+  const draft = createDvtSubstraitProjectionDraft({
+    source: projectionSource,
+    targetNodeId: source.id,
+    outputs: projectionSource.fields.map((field, index) => ({
+      fieldId: FIELD_IDS[index]!,
+      name: field.name,
+      sourceFieldName: field.name,
+    })),
+  });
+  return applyDvtSubstraitSemanticDocument(source, encodeDvtSubstraitProjectionDocument(draft));
+}
+
+function legacyFilteredSource(): CanonicalNode {
+  const semantic = semanticSource();
+  const draft = createDvtSourceSemanticDraft(semantic);
   const capability = resolveDvtSubstraitFilterCapabilities({
     dataType: 'text',
     provider: 'postgres',
   })[0];
-  if (projectionSource == null || capability == null) throw new Error('Invalid Source fixture.');
-  const filtered = applyDvtSubstraitFilter(
-    createDvtSubstraitProjectionDraft({
-      source: projectionSource,
-      targetNodeId: source.id,
-      outputs: projectionSource.fields.map((field) => ({
-        fieldId: `output:${field.name}`,
-        name: field.name,
-        sourceFieldName: field.name,
-      })),
-    }),
-    {
-      fieldId: 'output:customer',
-      dataType: 'text',
-      capabilityId: capability.capabilityId,
-      value: 'Ada',
-    }
-  );
+  if (draft == null || capability == null) throw new Error('Invalid Source fixture.');
+  const filtered = applyDvtSubstraitFilter(draft, {
+    fieldId: FIELD_IDS[1],
+    dataType: 'text',
+    capabilityId: capability.capabilityId,
+    value: 'Ada',
+  });
   return applyDvtSubstraitSemanticDocument(source, encodeDvtSubstraitFilterDocument(filtered));
 }
 
 describe('DVT Source semantic authority', () => {
-  it('normalizes a legacy Source filter without changing physical identity', () => {
-    const legacy = legacyFilteredSource();
-    const projection = buildCanvasAuthoringGraphProjection({
-      visibleNodeIds: [legacy.id],
-      visibleEdges: [],
-      draftSemanticGraph: { canonicalNodes: [legacy], canonicalEdges: [] },
-      localCanonicalNodes: [],
-    });
-    const normalized = projection.canonicalNodesById.get(legacy.id);
-    if (normalized == null) throw new Error('Expected normalized Source.');
-
-    const draft = createDvtSourceSemanticDraft(normalized);
-    expect(draft == null ? null : inspectDvtSubstraitFilter(draft)).toBeNull();
-    expect(normalized).toMatchObject({
-      id: source.id,
-      pluginId: source.pluginId,
-      kind: 'dvt:source',
-      role: 'input',
-      metadata: {
-        connectedSourceRef: source.metadata?.connectedSourceRef,
-        columns: source.metadata?.columns,
-      },
-    });
+  it('fails closed on a retired filtered Source authority instead of normalizing it', () => {
+    expect(() => createDvtSourceSemanticDraft(legacyFilteredSource())).toThrow(
+      'DVT Source semantic authority is not an admitted projection shape.'
+    );
   });
 
-  it('repairs a persisted semantic order to the physical Source declaration', () => {
-    const legacy = legacyFilteredSource();
-    const columns = legacy.metadata?.columns;
+  it('does not repair persisted semantic order from physical column names during projection', () => {
+    const semantic = semanticSource();
+    const columns = semantic.metadata?.columns;
     if (!Array.isArray(columns)) throw new Error('Expected Source columns.');
-    const divergent = {
-      ...legacy,
-      metadata: { ...legacy.metadata, columns: [...columns].reverse() },
+    const divergent: CanonicalNode = {
+      ...semantic,
+      metadata: { ...semantic.metadata, columns: [...columns].reverse() },
     };
     const projection = buildCanvasAuthoringGraphProjection({
       visibleNodeIds: [divergent.id],
@@ -110,8 +102,9 @@ describe('DVT Source semantic authority', () => {
       draftSemanticGraph: { canonicalNodes: [divergent], canonicalEdges: [] },
       localCanonicalNodes: [],
     });
-    const normalized = projection.canonicalNodesById.get(divergent.id);
+    const projected = projection.canonicalNodesById.get(divergent.id);
 
-    expect(normalized?.metadata?.columns).toEqual(source.metadata?.columns);
+    expect(projected?.metadata?.columns).toEqual([...columns].reverse());
+    expect(projected?.metadata?.transformAuthoring).toEqual(divergent.metadata?.transformAuthoring);
   });
 });
