@@ -17,7 +17,7 @@ function graphNode(id: string, name: string): Node {
       description: `${name} description`,
       path: `models/${id}.sql`,
       pluginKind: 'dvt:transform',
-      pluginId: 'dbt',
+      pluginId: 'dvt',
       role: 'transform',
       tags: ['finance'],
     },
@@ -151,8 +151,8 @@ describe('useCanvasGraphSearchController', () => {
         },
         description: 'Orders description',
         path: 'models/orders.sql',
-        pluginKind: 'dbt:model',
-        pluginId: 'dbt',
+        pluginKind: 'dvt:transform',
+        pluginId: 'dvt',
         role: 'transform',
         tags: ['finance'],
       },
@@ -201,7 +201,9 @@ describe('useCanvasGraphSearchController', () => {
       );
     });
     expect(readName).not.toHaveBeenCalled();
-    expect(JSON.parse(container.querySelector('[data-testid="lazy-state"]')?.textContent ?? '{}')).toMatchObject({
+    expect(
+      JSON.parse(container.querySelector('[data-testid="lazy-state"]')?.textContent ?? '{}')
+    ).toMatchObject({
       status: 'idle',
       matches: [],
       x: 20,
@@ -215,7 +217,9 @@ describe('useCanvasGraphSearchController', () => {
       );
     });
     expect(readName).toHaveBeenCalled();
-    expect(JSON.parse(container.querySelector('[data-testid="lazy-state"]')?.textContent ?? '{}')).toMatchObject({
+    expect(
+      JSON.parse(container.querySelector('[data-testid="lazy-state"]')?.textContent ?? '{}')
+    ).toMatchObject({
       status: 'matched',
       matches: ['orders'],
       x: 20,
