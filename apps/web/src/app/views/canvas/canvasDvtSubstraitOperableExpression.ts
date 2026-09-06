@@ -5,6 +5,8 @@ import type {
 } from './canvasDvtSubstraitProjection';
 import { resolveDvtSubstraitColumnFunctions } from './canvasDvtSubstraitProjection';
 
+type DvtSubstraitColumnFunction = ReturnType<typeof resolveDvtSubstraitColumnFunctions>[number];
+
 export type DvtSubstraitOperableExpression =
   | Readonly<{
       kind: 'field-ref';
@@ -94,10 +96,11 @@ export function projectDvtSubstraitOperableOutput(args: {
     if (expression == null) return null;
 
     for (const operation of output.operations ?? []) {
-      const capability = resolveDvtSubstraitColumnFunctions({
-        dataType: expression.kind === 'field-ref' ? expression.dataType : 'string',
-        provider: args.projection.source.sourceRef.connectionRef.provider,
-      }).find((candidate) => candidate.name === operation);
+      const capability: DvtSubstraitColumnFunction | undefined =
+        resolveDvtSubstraitColumnFunctions({
+          dataType: expression.kind === 'field-ref' ? expression.dataType : 'string',
+          provider: args.projection.source.sourceRef.connectionRef.provider,
+        }).find((candidate) => candidate.name === operation);
       if (capability == null) return null;
       expression = {
         kind: 'scalar-function',
