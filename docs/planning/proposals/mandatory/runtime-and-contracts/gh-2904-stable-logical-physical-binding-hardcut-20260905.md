@@ -1,8 +1,8 @@
 ---
 title: GH-2904 stable logical identity and physical binding hard cut
 status: Approved
-owner: Architecture / Contracts / API / Planner
-last_reviewed: 2026-09-05
+owner: Architecture / Contracts / API / Web / Planner
+last_reviewed: 2026-09-06
 planning_type: implementation-plan
 task_id: GH-2904
 ---
@@ -13,320 +13,198 @@ task_id: GH-2904
 
 - `AGENTS.md`
 - `docs/planning/status/governance-document-rule-inventory.md`
-- Planning DB `architecture-designs`, `component-profile`, `component-integrity`,
-  `frontend-component-rails`, `canvas-cq-rail-drift`, and
-  `canvas-component-registry-drift`
+- Planning DB architecture/component/command-query records
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md`
 - `docs/adr/ADR-0060-dbt-project-authoring-authority.md`
 - `docs/adr/ADR-0058-warehouse-source-import-rails.md`
-- GitHub issue `#2904`
+- GitHub `#2904`
 
-## Baseline and overlap
+## Baseline and integration sequence
 
-The branch was created from
-`main@94004a81920f0fe25e097c974829a39601f7881e`, refreshed through
-`main@f8947a68c99a141ef35fe7b4eb1f949a948c361e` and
-`main@0b58b06d0a887f9e5181ec0546536638b304d98a`, then merged for final review onto
-current `main@6d14a3db8894a00a116b0f52478ac176952ce180`. The intervening main-only
-changes belong to already-owned #2903, #2985, and #2979 work and are carried
-forward without modification or reinterpretation by this task. The #2979 delta is
-limited to Web/Inspector surfaces and has no file overlap with this PR. This task
-does not modify or reopen `#2903`.
+`#2992` merged the independent first hard cut: imported warehouse Sources now receive
+opaque persisted DVT node IDs, `ConnectedSourceRef` is physical binding only, and the
+obsolete manifest-to-Planner identity bridge is deleted.
 
-`#2936` and its open stacked PRs own Canvas-side `RelationId` / `FieldId`
-allocation. Their production semantic-authoring files are forbidden surfaces for
-this independent cut. `#2904` owns the remaining boundary: logical identity must
-not be manufactured from physical Source coordinates or external dbt naming on
-the path into downstream planning.
+`#2936` is now closed. Its allocator work makes the former Canvas exclusion obsolete.
+The final #2904 cut therefore owns the remaining semantic mutation fallback and the
+explicit physical Source rebind behavior.
 
-## Problem and root cause
+PR #3001 started from `main@cf292cd6018c868cc14528adf035c8bf09e1a705` and is validated
+against the current PR base. Main-only #2996 changes the composition menu and #2999 is
+bounded documentation research; neither owns a surface in this cut.
 
-Two independent current paths still blur identity and binding:
+## Invariant
 
-1. `GraphDraftWarehouseSourceImportStrategy` manufactures a graph node ID from
-   `connectionId + catalog + schema + table`, with a collision suffix derived
-   from `connectionId + sourceObjectId`. The graph node is a logical dependency
-   target, so this makes a mutable physical binding the identity authority.
-2. `derivePlannerGraphSourceFromManifest()` and `ManifestGraphDeriver` still
-   expose a public dbt-manifest-to-Planner bridge that promotes dbt manifest keys
-   and dependency strings directly into Planner `nodeId` / `dependsOn`. The
-   current `PlannerFacade` already accepts only `GenericGraphSource`; repository
-   search found no production consumer of the legacy bridge.
+```text
+logical identity
+!= display name
+!= physical connection/relation/path
+!= output ordinal
+```
 
-The canonical Substrait sidecar already has the right shape: stable
-`RelationId` / `FieldId` plus structural and provenance bindings. The defect is
-therefore not a missing IR or identity framework. It is residual authority drift
-at ingress and stale bridge code.
-
-## Live proof execution boundary
-
-The source-import live command executes both the opaque-identity proof and the
-broader source-import/export proof, each in a fresh protected runtime and project
-scope. Separate scopes preserve their initial missing-draft assertions. Generic
-Cypress runs use the existing environment-aware guard; the dedicated live runner
-sets `requireLiveProtectedRuntime`, so absent credentials remain a hard failure.
-The older export flow remains tracked by #2994 until its shared-Canvas assumptions
-are reconciled; wiring identity coverage must not hide that failure.
+One persisted `RelationId` / `FieldId` is the authority for an existing semantic
+relation/output. A physical Source rebind changes only binding/provenance coordinates
+when the discovered target is schema-compatible.
 
 ## Identity and binding classification
 
-| Surface                                                   | Classification                | Rule                                                   |
-| --------------------------------------------------------- | ----------------------------- | ------------------------------------------------------ |
-| `RelationId`                                              | logical identity              | stable; never name/path/provider/ordinal-derived       |
-| `FieldId`                                                 | logical identity              | stable; never column-name/ordinal-derived              |
-| field `relationId` / `parentFieldId`                      | logical reference             | references stable IDs only                             |
-| `sourceFieldId`                                           | provenance                    | lineage reference, not a physical name fallback        |
-| `relAnchor`                                               | structural binding            | current Substrait anchor, never logical identity       |
-| `outputOrdinal`                                           | structural binding            | mutable position, never logical identity               |
-| relation `sourceRef`                                      | physical binding/provenance   | connected source coordinates                           |
-| `displayName` / `description`                             | derived presentation metadata | mutable without reminting IDs                          |
-| semantic-plan and sidecar SHA                             | derived integrity metadata    | exact plan binding, not semantic identity              |
-| `ConnectedSourceRef.connectionId/provider/sourceObjectId` | physical binding              | identifies a connected binding, not the DVT Source     |
-| Workspace graph `node.id`                                 | logical identity              | survives physical rename/rebind                        |
-| database/schema/table/column/connection/path              | physical/projection binding   | never dependency identity                              |
-| dbt `unique_id`                                           | external dbt identity         | round-trip/provenance, not native DVT logical identity |
-| `GenericGraphSource.nodeId/dependsOn`                     | logical identity/reference    | admitted verbatim by Planner                           |
+| Surface | Classification | Rule |
+| --- | --- | --- |
+| Workspace graph `node.id` | logical identity | stable through physical rebind |
+| `RelationId` | logical identity | stable; assigned once |
+| `FieldId` | logical identity | stable; existing semantic mutation resolves by this ID only |
+| `field.name` / `displayName` | presentation/projection naming | never fallback identity |
+| `sourceFieldName` | physical/provenance field name | never fallback for an existing FieldId |
+| `ConnectedSourceRef` | physical connected binding | replaceable only by the governed rebind command |
+| database/schema/table/identifier | physical/projection binding | mutable without reminting logical identity |
+| `outputOrdinal` | structural binding | reorder only |
+| dbt `unique_id` | external dbt identity | provenance/round-trip, not native DVT identity |
+| `GenericGraphSource.nodeId/dependsOn` | logical identity/reference | admitted verbatim by Planner |
 
-## Selected hard cut
+## Hard cut A — Canvas FieldId-only semantic mutation
 
-### A. Source import logical identity
+Existing semantic outputs are no longer found through `fieldId || name`, name equality,
+or a source-column name repair path.
 
-`ImportWarehouseSources` remains the existing command rail. New graph-draft
-Sources receive an opaque DVT node ID at creation time. The implementation reuses
-`@dvt/crypto` UUIDv7 allocation directly; no identity service or store is added.
+- `canvasColumnMappingAuthoring.ts` edits an existing output only through `outputId -> fieldId`.
+- `canvasColumnOutputAuthoring.ts` toggles/reorders existing outputs only through `fieldId`.
+- `canvasColumnProjectionAuthority.ts` refuses a display-name collision instead of resolving
+  that name to an existing semantic output.
+- `canvasDvtSourceSemanticAuthoring.ts` no longer repairs persisted semantic field identity
+  or order from physical column names.
+- `canvasAuthoringGraphProjection.ts` is a projection only; it does not mutate semantic
+  authority while reading it.
 
-`ConnectedSourceRef` remains the exact connected physical binding used for
-import idempotency/deduplication and later physical resolution. Replaying an
-already-persisted import returns the persisted logical node ID; it never derives
-that ID again from the binding.
+Names remain valid before semantic identity exists, for example when selecting a physical
+source column to create a new output. Creation allocates a fresh opaque `FieldId`; after
+creation, the `FieldId` is the only mutation identity.
 
-Delete the physical-locator ID builder and collision-hash fallback. A Source
-created from a different physical connection receives a distinct opaque logical
-ID, while a later governed rebind can change the binding without changing the
-already-persisted logical ID.
+## Hard cut B — explicit physical Source rebind
 
-### B. Planner ingress hard cut
+A dedicated protected command is introduced:
 
-Delete `derivePlannerGraphSourceFromManifest()` and `ManifestGraphDeriver`, their
-public export, and tests that exist only to preserve that obsolete ingress.
-External dbt authority must first be projected by its owning adapter/application
-boundary into the canonical `GenericGraphSource` with explicit logical IDs.
-Planner does not mint or repair identity from a manifest key, path or name.
+```text
+PATCH /workspace/sources/:nodeId/binding
+Authorization: workspace:source-import:rebind
+Application owner: RebindWarehouseSourceUseCase
+```
 
-### C. Contract clarity and invariants
+The caller supplies only the logical Source node ID plus the requested target
+`connectionId` and `sourceObjectId`. The server discovers the target and owns all
+compatibility checks.
 
-Keep the existing serializable shapes. Narrow `ConnectedSourceRef` documentation
-to physical binding semantics and make the sidecar contract explicit that
-anchors/ordinals are structural coordinates rather than identities.
+### Verification rules
 
-Add behavior proof that changing display metadata, structural ordinal and
-physical `sourceRef` coordinates does not mutate `RelationId` / `FieldId`; exact
-serialization remains deterministic; duplicate/unbound identities continue to
-fail closed.
+1. the Source must be one canonical imported `dvt.warehouse-source` with one
+   `ConnectedSourceRef`;
+2. persisted Source column schema must be complete and unambiguous;
+3. the target must be a discovered relational object with complete schema evidence;
+4. column names, normalized types and nullability must match independent of presentation
+   order;
+5. another logical Source in the Canvas must not already own the requested binding;
+6. the target connection must expose the governed database user required by the dbt source
+   metadata;
+7. changing source-level database/schema through a single-Source rebind is rejected when
+   the dbt source group contains sibling tables.
 
-`ExecutionBindingVerification` remains a verifier only. `PlanAssembler` and
-`PlannerEnvelopeMapper` are retained because current source already passes
-logical IDs through without reminting them.
+Any unverifiable or incompatible case fails closed. There is no old-name lookup, dual read,
+dual write, schema coercion or compatibility alias.
+
+### Atomicity and identity preservation
+
+The command plans the dbt source artifact and graph draft before mutation. It applies the
+artifact with revision CAS, then saves the graph with draft CAS. If graph CAS loses the
+race, the artifact mutation is compensated with its own revision-checked rollback.
+
+The rebind preserves:
+
+- logical Source `node.id`;
+- `nodeIds`, graph edges and downstream dependency targets;
+- persisted Source column identity/order;
+- Substrait semantic Plan bytes;
+- sidecar `RelationId` and `FieldId`.
+
+Only the exact matching semantic `sourceRef` and physical dbt/source metadata change.
+`rebindDvtSubstraitSemanticSourceRefV1()` is the single contract operation that performs
+that sidecar binding substitution and re-validates the document.
+
+## Planner boundary retained from #2992
+
+Planner continues to accept only canonical `GenericGraphSource` with explicit logical
+`nodeId` / `dependsOn`. The deleted manifest bridge remains deleted. Planner does not mint,
+repair or infer DVT identity from dbt names, paths or provider coordinates.
 
 ## Rejected options
 
-1. Keep physical-derived IDs and add a hash. Rejected: a hash of binding data is
-   still binding-derived identity.
-2. Maintain a logical-id/name/path fallback map. Rejected: permanent dual
-   authority and silent compatibility heuristics are forbidden.
-3. Add a generic identity service/repository. Rejected: allocation is a narrow
-   creation concern and the persisted graph already owns the ID.
-4. Keep the manifest bridge as a compatibility adapter. Rejected: zero
-   production consumers and hard-cut posture require deletion rather than an
-   alias.
-5. Edit Canvas semantic identity generators now. Rejected: `#2936` is the active
-   owner and has overlapping open PRs.
-6. Add a second relational or source-binding IR. Rejected by ADR-0064 and the
-   existing bounded contracts.
+1. Keep name lookup as fallback for old semantic outputs — rejected: permanent dual authority.
+2. Re-key existing Source/Field IDs during rebind — rejected: destroys logical identity.
+3. Trust client-supplied target schema — rejected: the server discovery boundary owns facts.
+4. Require the old physical source to remain reachable — rejected: rebind must recover from a
+   replaced/unavailable old binding; persisted logical schema is the comparison authority.
+5. Mutate a shared dbt source group silently — rejected: would alter sibling bindings.
+6. Add a generic identity/rebind service or second IR — rejected: existing graph and Substrait
+   sidecar already own identity.
+7. Restore the retired dbt Canvas profile to make the old E2E pass — rejected; #2994 owns that
+   separate test-story reconciliation.
 
 ## Command/query and DDD ownership
 
-| Rail                                      | Type                | DDD owner                           | Effect of this slice                                                     |
-| ----------------------------------------- | ------------------- | ----------------------------------- | ------------------------------------------------------------------------ |
-| `ImportWarehouseSources`                  | command             | Warehouse source import             | allocate opaque logical graph ID; preserve connected binding separately  |
-| `StartRun` / PlannerBackedStartRunUseCase | command             | Run command application service     | accepts canonical `GenericGraphSource`; obsolete manifest bridge removed |
-| Workspace semantic admission              | contract validation | Workspace graph authoring aggregate | stable sidecar identity remains canonical; no new rail                   |
+| Rail | Type | DDD owner | Responsibility |
+| --- | --- | --- | --- |
+| `ImportWarehouseSources` | command | Warehouse source import | create a new opaque logical Source and physical binding |
+| `RebindWarehouseSource` | command | Warehouse source import | replace one verified physical binding without changing logical identity |
+| `StartRun` | command | Run command application service | consume canonical graph identity without reminting it |
+| Workspace semantic admission | validation | Workspace graph authoring | validate one stable Substrait sidecar authority |
 
-No new route, endpoint, store or command/query rail is introduced.
+## Test strategy
 
-## Fowler opportunity matrix
+The final cut requires executable witnesses for:
 
-| scenario                                 | opportunity                             | Fowler pattern                                                    | DDD owner                       | command/query rail        | implementation surfaces                               | unit or package test       | architecture test                         | user-flow test                    | out of scope            |
-| ---------------------------------------- | --------------------------------------- | ----------------------------------------------------------------- | ------------------------------- | ------------------------- | ----------------------------------------------------- | -------------------------- | ----------------------------------------- | --------------------------------- | ----------------------- |
-| import connected Source into graph draft | hidden authority / primitive obsession  | replace derived primitive identity with opaque persisted identity | Warehouse source import         | `ImportWarehouseSources`  | API import strategy + tests                           | API focused strategy tests | zero physical-ID-builder search           | existing route behavior unchanged | explicit rebind UI      |
-| plan from already-governed graph         | duplicate semantics / boundary drift    | remove obsolete adapter and use canonical boundary                | Planner                         | existing Planner facade   | planner export/domain/tests + API integration witness | planner determinism tests  | public export / zero legacy bridge search | none                              | dbt reverse translation |
-| decode/reload semantic sidecar           | test-only confidence / hidden authority | executable value-object invariant                                 | DVT Substrait semantic document | none - contract admission | contracts + tests                                     | contract behavior tests    | duplicate/fallback guards                 | existing Canvas persistence proof | #2936 ID generator work |
+- display-name collision cannot resolve an existing semantic output;
+- legacy Source semantic repair by physical name is absent/fail-closed;
+- compatible physical rebind preserves node ID, edges and persisted field order;
+- reordered target discovery columns remain compatible;
+- field type/nullability/name drift fails before writes;
+- shared dbt source-group database/schema mutation fails closed;
+- graph CAS failure rolls the artifact back;
+- semantic `sourceRef` rebind preserves Plan bytes, RelationIds and FieldIds;
+- protected HTTP authorization and error translation remain fail closed.
 
-## Current and target flow
+`#2994` remains a separate E2E repair for the retired dbt Canvas profile. It is not an
+identity compatibility mechanism and does not block the #2904 architectural hard cut once
+the new command and identity witnesses are green.
 
-```mermaid
-flowchart LR
-  Physical[Connection + catalog + schema + table] --> Derived[Derived Source node.id]
-  Derived --> Graph[Workspace graph dependencies]
-  Dbt[dbt manifest unique_id] --> Legacy[ManifestGraphDeriver]
-  Legacy --> Planner[Planner GenericGraphSource]
-```
+## Completion gates
 
-```mermaid
-flowchart LR
-  Allocator[@dvt/crypto opaque UUIDv7] --> Logical[Stable graph node.id]
-  Physical[ConnectedSourceRef + relation locator] --> Binding[Mutable physical binding]
-  Logical --> Graph[Workspace graph dependencies]
-  Binding --> Graph
-  Adapter[Authoritative source/dbt adapter] --> Canonical[GenericGraphSource with explicit logical IDs]
-  Canonical --> Planner[Planner]
-  Legacy[manifest/name/path fallback] -. deleted .-> Planner
-```
-
-## Delivery order
-
-1. Add this implementation plan and freeze overlap/authority.
-2. Hard-cut graph-draft Source logical ID allocation away from physical binding
-   and update API behavior tests.
-3. Delete the dead manifest-to-Planner identity bridge and obsolete witnesses.
-4. Clarify binding contracts and add deterministic stable-identity tests.
-5. Audit the complete diff, rerun Planning DB drift checks, run focused package
-   validation, ARC-2/feature mechanization and `pnpm verify:prepush`.
-6. Open a PR, inspect every CI job/review thread/conflict, and correct until the
-   branch is healthy.
-
-## Residual work deliberately not absorbed
-
-- `#2936` owns Canvas-side opaque `RelationId` / `FieldId` generation.
-- `#2905` owns calculated target compatibility.
-- Explicit physical Source rebind UX/command is not invented in this cut. The
-  invariant established here is that persisted logical ID and downstream edges
-  no longer encode the binding, so such a governed command can mutate the
-  binding in place once its own product rail is admitted.
-- No new provider, renderer, compatibility engine or generic naming service.
-
-The identity browser witness imports Sources through the shared Canvas against
-real API/PostgreSQL, checks distinct opaque IDs for two physical connections,
-keeps row/byte evidence visible, and verifies identity after reload. The older
-monolithic source-import/dbt-export story is tracked separately in GitHub #2994:
-it stops on the retired dbt Canvas profile and is not claimed as passing here.
+- affected workspace build/lint/typecheck;
+- contracts and API/Web focused tests;
+- Contracts & Determinism;
+- PR Quality / ARC / feature mechanization;
+- CodeQL and dependency review when Ready;
+- `pnpm verify:prepush` on the final integrated head;
+- current-main overlap and review-thread audit before squash merge.
 
 ## Feature mechanization
 
-This mechanization snapshot is exported from the two existing command/query rails
-recorded in Planning DB by Superyo. GitHub #2904 owns task state; #2992 owns this
-bounded integration. CI validation bootstraps an isolated database from evidence
-and does not import or rebuild the working architecture authority. The HTTP
-regressions verify returned identity against the saved draft, including unique
-opaque IDs for distinct physical objects.
-
 ```feature-mechanization
 {
-  "symbols": [
-    {
-      "name": "ConnectedSourceRefSchema",
-      "path": "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts",
-      "cqRails": [
-        "ImportWarehouseSources"
-      ],
-      "dddOwner": "Warehouse source import",
-      "unitTests": [
-        "pnpm --filter @dvt/contracts test",
-        "pnpm --filter @dvt/planner test",
-        "pnpm --filter dvt-api test:unit"
-      ],
-      "fowlerSignals": [
-        "Hidden authority",
-        "Primitive obsession",
-        "Duplicate semantics",
-        "Boundary drift",
-        "Test-only confidence"
-      ],
-      "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts",
-      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING"
-    },
-    {
-      "name": "GraphDraftWarehouseSourceImportStrategy",
-      "path": "apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts",
-      "cqRails": [
-        "ImportWarehouseSources"
-      ],
-      "dddOwner": "Warehouse source import",
-      "unitTests": [
-        "pnpm --filter @dvt/contracts test",
-        "pnpm --filter @dvt/planner test",
-        "pnpm --filter dvt-api test:unit"
-      ],
-      "fowlerSignals": [
-        "Hidden authority",
-        "Primitive obsession",
-        "Duplicate semantics",
-        "Boundary drift",
-        "Test-only confidence"
-      ],
-      "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts",
-      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING"
-    },
-    {
-      "name": "DvtSubstraitAuthoringSidecarV1Schema",
-      "path": "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts",
-      "cqRails": [
-        "StartRun"
-      ],
-      "dddOwner": "Run command application service",
-      "unitTests": [
-        "pnpm --filter @dvt/contracts test",
-        "pnpm --filter @dvt/planner test",
-        "pnpm --filter dvt-api test:unit"
-      ],
-      "fowlerSignals": [
-        "Hidden authority",
-        "Primitive obsession",
-        "Duplicate semantics",
-        "Boundary drift",
-        "Test-only confidence"
-      ],
-      "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts",
-      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING"
-    },
-    {
-      "name": "PlannerFacade",
-      "path": "packages/@dvt/planner/src/application/PlannerFacade.ts",
-      "cqRails": [
-        "StartRun"
-      ],
-      "dddOwner": "Run command application service",
-      "unitTests": [
-        "pnpm --filter @dvt/contracts test",
-        "pnpm --filter @dvt/planner test",
-        "pnpm --filter dvt-api test:unit"
-      ],
-      "fowlerSignals": [
-        "Hidden authority",
-        "Primitive obsession",
-        "Duplicate semantics",
-        "Boundary drift",
-        "Test-only confidence"
-      ],
-      "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts",
-      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING"
-    }
-  ],
   "version": 1,
   "featureId": "GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING",
   "userStories": [
-    "Stable Substrait IDs survive mutable binding and position changes"
+    "Existing semantic outputs mutate only by stable FieldId",
+    "A compatible physical Source rebind preserves logical graph and Substrait identity"
   ],
   "cypressFlows": [
-    "N/A - no apps/web implementation; existing Canvas Source import flows remain unchanged",
-    "apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts"
+    "apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts",
+    "N/A - the new rebind command is covered at contract/application/HTTP boundaries; #2994 separately owns the retired dbt-profile E2E"
   ],
   "domainObjects": [
     "Workspace graph Source identity",
     "ConnectedSourceRef physical binding",
     "DVT Substrait identity sidecar",
+    "Semantic FieldId",
     "GenericGraphSource"
   ],
   "fowlerSignals": [
@@ -336,83 +214,96 @@ opaque IDs for distinct physical objects.
     "Boundary drift",
     "Test-only confidence"
   ],
+  "symbols": [
+    {
+      "name": "RebindWarehouseSourceUseCase",
+      "path": "apps/api/src/application/services/rebindWarehouseSourceUseCase.ts",
+      "cqRails": ["RebindWarehouseSource"],
+      "dddOwner": "Warehouse source import",
+      "unitTests": ["pnpm --filter dvt-api test:unit"],
+      "fowlerSignals": ["Hidden authority", "Boundary drift"],
+      "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING"
+    },
+    {
+      "name": "rebindDvtSubstraitSemanticSourceRefV1",
+      "path": "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts",
+      "cqRails": ["RebindWarehouseSource"],
+      "dddOwner": "Warehouse source import",
+      "unitTests": ["pnpm --filter @dvt/contracts test"],
+      "fowlerSignals": ["Duplicate semantics", "Boundary drift"],
+      "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING"
+    },
+    {
+      "name": "resolveCanvasColumnMappingTarget",
+      "path": "apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts",
+      "cqRails": [],
+      "dddOwner": "Canvas semantic authoring",
+      "unitTests": ["pnpm --filter @dvt/web test"],
+      "fowlerSignals": ["Hidden authority", "Primitive obsession"],
+      "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING"
+    },
+    {
+      "name": "PlannerFacade",
+      "path": "packages/@dvt/planner/src/application/PlannerFacade.ts",
+      "cqRails": ["StartRun"],
+      "dddOwner": "Run command application service",
+      "unitTests": ["pnpm --filter @dvt/planner test"],
+      "fowlerSignals": ["Boundary drift"],
+      "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING"
+    }
+  ],
   "completionGate": [
     "pnpm --filter @dvt/contracts test",
     "pnpm --filter @dvt/contracts typecheck",
-    "pnpm --filter @dvt/planner test",
-    "pnpm --filter @dvt/planner typecheck",
     "pnpm --filter dvt-api test",
     "pnpm --filter dvt-api typecheck",
+    "pnpm --filter @dvt/web test",
+    "pnpm --filter @dvt/web typecheck",
     "GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs",
     "pnpm docs:feature-mechanization:implementation -- --feature GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING",
     "pnpm verify:prepush"
   ],
   "redGreenCycles": [
     {
-      "id": "importwarehousesources-record",
-      "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/warehouseSourceImportRoutes.test.ts",
-      "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/warehouseSourceImportRoutes.test.ts test/application/services/graphDraftWarehouseSourceImportStrategy.test.ts",
+      "id": "fieldid-only-semantic-mutation",
+      "redTest": "pnpm --filter @dvt/web test",
+      "greenTest": "pnpm --filter @dvt/web test",
       "patchSurfaces": [
-        "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts",
-        "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts",
-        "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitFieldBindingHierarchy.v1.ts",
-        "packages/@dvt/contracts/src/contracts/planner/ExecutionBindingVerification.v1.ts",
-        "packages/@dvt/contracts/test/**",
-        "packages/@dvt/planner/src/application/derivePlannerGraphSourceFromManifest.ts",
-        "packages/@dvt/planner/src/domain/manifest.ts",
-        "packages/@dvt/planner/src/domain/Planner.ts",
-        "packages/@dvt/planner/src/index.ts",
-        "packages/@dvt/planner/test/**",
-        "apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts",
-        "apps/api/test/application/services/graphDraftWarehouseSourceImportStrategy.test.ts",
-        "apps/api/test/integration/plannerEngineContract.test.ts",
-        "docs/architecture/components/planner/index.md",
-        "docs/architecture/domain-planning.md",
-        "docs/architecture/system/subsystems/semantic-transformation/index.md",
-        "docs/guides/generic-graph-source-technical-manual-20260404.md",
-        "docs/evidence/ED-20260905-gh-2904-stable-logical-physical-binding.md",
-        "docs/risk-register/quality/R-20260905-GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING.yaml",
-        "docs/planning/proposals/mandatory/runtime-and-contracts/gh-2904-stable-logical-physical-binding-hardcut-20260905.md",
-        "apps/api/test/entrypoints/http/warehouseSourceImportRoutes.test.ts",
-        "apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts",
-        "apps/web/cypress/support/liveWarehouseSourceImport.ts",
-        "scripts/run-canvas-source-import-live-proof.cjs",
-        "scripts/run-canvas-source-import-live-proof.test.cjs"
+        "apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.ts",
+        "apps/web/src/app/views/canvas/canvasColumnOutputAuthoring.ts",
+        "apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts",
+        "apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts",
+        "apps/web/src/app/views/canvas/canvasAuthoringGraphProjection.ts",
+        "apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.identity.test.ts",
+        "apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.test.ts"
       ],
-      "expectedFailure": "Four route witnesses expect physical-name-derived IDs instead of persisted opaque Source identity"
+      "expectedFailure": "Existing semantic output is incorrectly recoverable by display/physical name or legacy Source repair"
     },
     {
-      "id": "startrun-record",
-      "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/warehouseSourceImportRoutes.test.ts",
-      "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/warehouseSourceImportRoutes.test.ts test/application/services/graphDraftWarehouseSourceImportStrategy.test.ts",
+      "id": "verified-source-rebind",
+      "redTest": "pnpm --filter dvt-api test",
+      "greenTest": "pnpm --filter @dvt/contracts test && pnpm --filter dvt-api test",
       "patchSurfaces": [
-        "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts",
+        "packages/@dvt/contracts/src/contracts/source-import/SourceRebindOperations.v1.ts",
+        "packages/@dvt/contracts/src/contracts/source-import/index.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts",
-        "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitFieldBindingHierarchy.v1.ts",
-        "packages/@dvt/contracts/src/contracts/planner/ExecutionBindingVerification.v1.ts",
-        "packages/@dvt/contracts/test/**",
-        "packages/@dvt/planner/src/application/derivePlannerGraphSourceFromManifest.ts",
-        "packages/@dvt/planner/src/domain/manifest.ts",
-        "packages/@dvt/planner/src/domain/Planner.ts",
-        "packages/@dvt/planner/src/index.ts",
-        "packages/@dvt/planner/test/**",
-        "apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts",
-        "apps/api/test/application/services/graphDraftWarehouseSourceImportStrategy.test.ts",
-        "apps/api/test/integration/plannerEngineContract.test.ts",
-        "docs/architecture/components/planner/index.md",
-        "docs/architecture/domain-planning.md",
-        "docs/architecture/system/subsystems/semantic-transformation/index.md",
-        "docs/guides/generic-graph-source-technical-manual-20260404.md",
-        "docs/evidence/ED-20260905-gh-2904-stable-logical-physical-binding.md",
-        "docs/risk-register/quality/R-20260905-GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING.yaml",
-        "docs/planning/proposals/mandatory/runtime-and-contracts/gh-2904-stable-logical-physical-binding-hardcut-20260905.md",
-        "apps/api/test/entrypoints/http/warehouseSourceImportRoutes.test.ts",
-        "apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts",
-        "apps/web/cypress/support/liveWarehouseSourceImport.ts",
-        "scripts/run-canvas-source-import-live-proof.cjs",
-        "scripts/run-canvas-source-import-live-proof.test.cjs"
+        "packages/@dvt/contracts/test/dvt-substrait-source-rebind.contract.test.ts",
+        "apps/api/src/application/ports/accessDecisionActions.ts",
+        "apps/api/src/application/ports/warehouseSourceRebind.ts",
+        "apps/api/src/application/services/projectOnboardingPolicy.ts",
+        "apps/api/src/application/services/rebindWarehouseSourceUseCase.ts",
+        "apps/api/src/application/services/warehouseSourceRebindPlan.ts",
+        "apps/api/src/application/services/warehouseSourceRebindArtifactTransaction.ts",
+        "apps/api/src/entrypoints/http/runtimeRoutes.constants.ts",
+        "apps/api/src/entrypoints/http/warehouseSourceImportRouteGroup.ts",
+        "apps/api/src/entrypoints/http/warehouseSourceRebindRoute.ts",
+        "apps/api/test/application/services/rebindWarehouseSourceUseCase.test.ts"
       ],
-      "expectedFailure": "Four route witnesses expect physical-name-derived IDs instead of persisted opaque Source identity"
+      "expectedFailure": "Physical binding cannot be changed through one verified command while preserving logical identity"
     }
   ],
   "componentGuides": [
@@ -431,25 +322,35 @@ opaque IDs for distinct physical objects.
       "type": "command",
       "status": "implemented",
       "dddOwner": "Warehouse source import",
-      "negativeTests": [
-        "duplicate connected binding fails closed",
-        "stale draft CAS does not overwrite"
-      ],
-      "adapterSurface": "existing warehouse Source Import HTTP rail",
+      "negativeTests": ["duplicate connected binding fails closed"],
+      "adapterSurface": "warehouse Source Import HTTP rail",
       "applicationPort": "ImportWarehouseSourcesUseCase",
-      "authorizationScope": "existing tenant project environment capability"
+      "authorizationScope": "tenant/project/environment source-import command"
+    },
+    {
+      "name": "RebindWarehouseSource",
+      "type": "command",
+      "status": "implemented",
+      "dddOwner": "Warehouse source import",
+      "negativeTests": [
+        "schema drift fails before mutation",
+        "duplicate target binding fails closed",
+        "shared dbt source-group physical move fails closed",
+        "graph CAS failure compensates artifact mutation"
+      ],
+      "adapterSurface": "PATCH /workspace/sources/:nodeId/binding",
+      "applicationPort": "RebindWarehouseSourceUseCase",
+      "authorizationScope": "workspace:source-import:rebind"
     },
     {
       "name": "StartRun",
       "type": "command",
       "status": "implemented",
       "dddOwner": "Run command application service",
-      "negativeTests": [
-        "invalid or duplicate logical graph IDs reject"
-      ],
-      "adapterSurface": "Existing protected StartRun HTTP command",
+      "negativeTests": ["invalid or duplicate logical graph IDs reject"],
+      "adapterSurface": "protected StartRun HTTP command",
       "applicationPort": "PlannerBackedStartRunUseCase",
-      "authorizationScope": "Authorized tenant, project and environment run-start scope"
+      "authorizationScope": "tenant/project/environment run-start command"
     }
   ],
   "architectureGuards": [
@@ -461,37 +362,44 @@ opaque IDs for distinct physical objects.
   "noHumanDecisionsRemaining": true,
   "allowedImplementationSurfaces": [
     "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts",
+    "packages/@dvt/contracts/src/contracts/source-import/SourceRebindOperations.v1.ts",
+    "packages/@dvt/contracts/src/contracts/source-import/index.ts",
     "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts",
     "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitFieldBindingHierarchy.v1.ts",
     "packages/@dvt/contracts/src/contracts/planner/ExecutionBindingVerification.v1.ts",
     "packages/@dvt/contracts/test/**",
-    "packages/@dvt/planner/src/application/derivePlannerGraphSourceFromManifest.ts",
-    "packages/@dvt/planner/src/domain/manifest.ts",
-    "packages/@dvt/planner/src/domain/Planner.ts",
-    "packages/@dvt/planner/src/index.ts",
-    "packages/@dvt/planner/test/**",
+    "packages/@dvt/planner/**",
+    "apps/api/src/application/ports/accessDecisionActions.ts",
+    "apps/api/src/application/ports/warehouseSourceRebind.ts",
+    "apps/api/src/application/services/projectOnboardingPolicy.ts",
     "apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts",
-    "apps/api/test/application/services/graphDraftWarehouseSourceImportStrategy.test.ts",
-    "apps/api/test/integration/plannerEngineContract.test.ts",
-    "docs/architecture/components/planner/index.md",
-    "docs/architecture/domain-planning.md",
-    "docs/architecture/system/subsystems/semantic-transformation/index.md",
-    "docs/guides/generic-graph-source-technical-manual-20260404.md",
-    "docs/evidence/ED-20260905-gh-2904-stable-logical-physical-binding.md",
-    "docs/risk-register/quality/R-20260905-GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING.yaml",
-    "docs/planning/proposals/mandatory/runtime-and-contracts/gh-2904-stable-logical-physical-binding-hardcut-20260905.md",
-    "apps/api/test/entrypoints/http/warehouseSourceImportRoutes.test.ts",
+    "apps/api/src/application/services/rebindWarehouseSourceUseCase.ts",
+    "apps/api/src/application/services/warehouseSourceRebindPlan.ts",
+    "apps/api/src/application/services/warehouseSourceRebindArtifactTransaction.ts",
+    "apps/api/src/entrypoints/http/runtimeRoutes.constants.ts",
+    "apps/api/src/entrypoints/http/warehouseSourceImportRouteGroup.ts",
+    "apps/api/src/entrypoints/http/warehouseSourceRebindRoute.ts",
+    "apps/api/test/**",
+    "apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.ts",
+    "apps/web/src/app/views/canvas/canvasColumnOutputAuthoring.ts",
+    "apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts",
+    "apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts",
+    "apps/web/src/app/views/canvas/canvasAuthoringGraphProjection.ts",
+    "apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.identity.test.ts",
+    "apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.test.ts",
     "apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts",
     "apps/web/cypress/support/liveWarehouseSourceImport.ts",
     "scripts/run-canvas-source-import-live-proof.cjs",
-    "scripts/run-canvas-source-import-live-proof.test.cjs"
+    "scripts/run-canvas-source-import-live-proof.test.cjs",
+    "docs/architecture/**",
+    "docs/evidence/ED-20260905-gh-2904-stable-logical-physical-binding.md",
+    "docs/guides/generic-graph-source-technical-manual-20260404.md",
+    "docs/risk-register/quality/R-20260905-GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING.yaml",
+    "docs/planning/proposals/mandatory/runtime-and-contracts/gh-2904-stable-logical-physical-binding-hardcut-20260905.md"
   ],
   "forbiddenImplementationSurfaces": [
-    "apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts",
-    "apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.ts",
-    "apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts",
     "packages/@dvt/engine/**",
-    "new identity stores, IRs, compatibility aliases, feature flags or dual lookup paths"
+    "new identity stores, second IRs, compatibility aliases, feature flags, name/physical fallback paths or dual lookup modes"
   ]
 }
 ```
