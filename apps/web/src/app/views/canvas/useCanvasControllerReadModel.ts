@@ -167,9 +167,7 @@ export function useCanvasControllerReadModel({
   );
   const columnFunctionNodes = useMemo(
     () =>
-      canMutateGraph
-        ? [...graphModel.canonicalNodesById.values()]
-        : EMPTY_COLUMN_FUNCTION_NODES,
+      canMutateGraph ? [...graphModel.canonicalNodesById.values()] : EMPTY_COLUMN_FUNCTION_NODES,
     [canMutateGraph, graphModel.canonicalNodesById]
   );
   const columnFunctionEdges = useMemo(

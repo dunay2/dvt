@@ -13,7 +13,9 @@ describe('useCanvasControllerReadModel semantic input sharing', () => {
     expect(READ_MODEL_SOURCE).toContain('const columnFunctionEdges = useMemo(');
 
     const callStart = READ_MODEL_SOURCE.indexOf('projectCanvasColumnFunctionMenus({');
-    const callEnd = READ_MODEL_SOURCE.indexOf('presentationTruth:', callStart);
+    const callEnd = READ_MODEL_SOURCE.indexOf('})', callStart);
+    expect(callStart).toBeGreaterThanOrEqual(0);
+    expect(callEnd).toBeGreaterThan(callStart);
     const projectorInputs = READ_MODEL_SOURCE.slice(callStart, callEnd);
 
     expect(projectorInputs).toContain('nodes: columnFunctionNodes');
