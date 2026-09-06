@@ -132,6 +132,15 @@ No implementation for `TF-E2-A` may add a UI action, service method, route
 helper, Cypress workflow, or architecture test outside these rails without
 updating this component and the implementation plan first.
 
+Node duplication remains an `add_node` operation under
+`ApplyWorkspaceGraphAuthoringCommand`, gated by writable draft posture. When the
+node carries a canonical Substrait document, the copied semantic objects receive
+fresh RelationIds and FieldIds through the shared contracts allocator. Every
+internal relation, source-field and parent-field reference is remapped together.
+The semantic plan and physical provenance remain equivalent; the original node
+and its identities remain unchanged. Negative tests retain missing-source,
+read-only and duplicate-node admission rejection through the same aggregate.
+
 ## Current-State Drift
 
 ```mermaid

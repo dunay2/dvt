@@ -16,11 +16,11 @@ vi.mock('../monaco/MonacoCodeViewer', () => ({
 }));
 
 const node: CanonicalNode = {
-  id: 'src-orders',
-  name: 'Orders Source',
-  pluginId: 'dvt.warehouse-source',
-  kind: 'dvt:source',
-  role: 'input',
+  id: 'model-orders',
+  name: 'Orders Model',
+  pluginId: 'dvt',
+  kind: 'dvt:transform',
+  role: 'transform',
   status: 'idle',
   tags: [],
 };

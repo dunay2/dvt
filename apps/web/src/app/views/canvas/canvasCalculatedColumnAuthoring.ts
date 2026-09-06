@@ -19,7 +19,7 @@ export type CanvasCalculatedColumnRequest = Readonly<{ nodeId: string }> &
   DvtSubstraitCalculatedColumnRequest;
 
 export type CanvasCalculatedColumnResult =
-  | Readonly<{ outcome: 'applied'; draftSession: CanvasDraftSession }>
+  | Readonly<{ outcome: 'applied'; draftSession: CanvasDraftSession; createdFieldId: string }>
   | Readonly<{ outcome: 'rejected' }>;
 
 function nodeCatalog(
@@ -82,7 +82,7 @@ function applyToTransform(args: {
   nodes: readonly CanonicalNode[];
   edges: CanvasDraftSession['workingSet']['visibleEdges'];
   request: CanvasCalculatedColumnRequest;
-}): CanonicalNode | null {
+}): Readonly<{ node: CanonicalNode; createdFieldId: string }> | null {
   const metadata = createDvtNodeAuthoringMetadata(args.target);
   if (
     metadata?.kind !== 'transform' ||
@@ -100,12 +100,19 @@ function applyToTransform(args: {
   });
   if (projection == null) return null;
   const nextDraft = append({ request: args.request, projection, draft });
-  return nextDraft === draft
-    ? null
-    : applyDvtSubstraitSemanticDocument(
-        args.target,
-        encodeDvtSubstraitProjectionDocument(nextDraft)
-      );
+  if (nextDraft === draft) return null;
+  const previousFieldIds = new Set(draft.sidecar.fields.map((field) => field.fieldId));
+  const createdFields = nextDraft.sidecar.fields.filter(
+    (field) => !previousFieldIds.has(field.fieldId)
+  );
+  if (createdFields.length !== 1) return null;
+  return {
+    node: applyDvtSubstraitSemanticDocument(
+      args.target,
+      encodeDvtSubstraitProjectionDocument(nextDraft)
+    ),
+    createdFieldId: createdFields[0]!.fieldId,
+  };
 }
 
 export function applyCanvasCalculatedColumn(args: {
@@ -117,7 +124,7 @@ export function applyCanvasCalculatedColumn(args: {
     const catalog = nodeCatalog(args.draftSession, args.canonicalNodesById);
     const target = catalog.get(args.request.nodeId);
     if (target == null) return { outcome: 'rejected' };
-    const node =
+    const update =
       target.kind === 'dvt:transform'
         ? applyToTransform({
             target,
@@ -126,11 +133,12 @@ export function applyCanvasCalculatedColumn(args: {
             request: args.request,
           })
         : null;
-    return node == null
+    return update == null
       ? { outcome: 'rejected' }
       : {
           outcome: 'applied',
-          draftSession: canvasDraftSession.workingSet.upsertNode(args.draftSession, node),
+          draftSession: canvasDraftSession.workingSet.upsertNode(args.draftSession, update.node),
+          createdFieldId: update.createdFieldId,
         };
   } catch {
     return { outcome: 'rejected' };

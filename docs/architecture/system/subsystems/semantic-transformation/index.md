@@ -186,6 +186,27 @@ display identity where required by the product
 semantic field/relation ordinal binding
 ```
 
+New relation and output identities are assigned once by `allocateDvtRelationId()` and
+`allocateDvtFieldId()` from `@dvt/contracts`, backed by the existing `@dvt/crypto`
+UUIDv7 primitive. They do not encode names, graph node IDs, ordinals, expressions, or
+physical bindings. Existing persisted IDs remain opaque values and are never mass-rekeyed.
+
+```mermaid
+flowchart LR
+  Create[Create semantic relation or output] --> Allocate[Allocate identity once]
+  Allocate --> Persist[Persist plan and identity sidecar]
+  Persist --> Edit[Rename, reorder, edit, or reload]
+  Edit --> Reuse[Reuse surviving identities]
+  Read[Inspect clean physical Source] --> Physical[Read physical declaration without allocating]
+  Graph[Graph edges and explicit provenance] --> Resolve[Resolve operands without parsing IDs]
+```
+
+A physical Source inspection does not manufacture a semantic projection. A new or duplicated
+semantic object receives fresh identity; editing or reopening an existing object preserves
+its surviving identities. JOIN and SET operand resolution uses graph context and explicit
+provenance, independently of identifier text. Creating an output returns its actual allocated
+`createdFieldId` to the existing authoring command caller.
+
 These bindings support rename/reload identity guarantees without duplicating Substrait
 relation/expression semantics. The sidecar must not grow into a second relational IR.
 
@@ -337,3 +358,13 @@ at minimum:
 - https://substrait.io/expressions/field_references/
 - https://substrait.io/types/type_system/
 - https://substrait.io/extensions/
+
+### Multi-input Canvas lineage
+
+The existing ProjectCanvasAuthoringViewportGraph query projects JOIN and UNION ALL
+column lineage from admitted Substrait semantics and sidecar references. UNION ALL
+connects each selected output to its corresponding field in every input. Grouping
+and grouped windows retain direct lineage for the group field; count and row-number
+outputs are derived and must not invent direct field mappings. Binding requires an
+exact, unambiguous incoming graph closure and explicit connected-source references.
+Disconnected, ambiguous, or invalid authority yields no lineage.

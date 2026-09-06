@@ -40,6 +40,8 @@ import {
   DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION,
   DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1,
   DVT_SUBSTRAIT_PROFILE_REF_V1,
+  allocateDvtFieldId,
+  allocateDvtRelationId,
   type ConnectedSourceRef,
   type DvtSubstraitAuthoringSidecarV1,
   type DvtSubstraitFieldBindingV1,
@@ -65,6 +67,13 @@ export type DvtSubstraitProjectionField = Readonly<{
 
 export type DvtSubstraitProjectionSource = Readonly<{
   nodeId: string;
+  schema: string;
+  table: string;
+  sourceRef: ConnectedSourceRef;
+  fields: readonly DvtSubstraitProjectionField[];
+}>;
+
+type DvtSubstraitProjectionSemanticSource = Readonly<{
   schema: string;
   table: string;
   sourceRef: ConnectedSourceRef;
@@ -100,8 +109,13 @@ export type DvtSubstraitProjection = Readonly<{
   outputs: readonly DvtSubstraitProjectionOutput[];
 }>;
 
+export type DvtSubstraitProjectionSemantics = Readonly<{
+  source: DvtSubstraitProjectionSemanticSource;
+  outputs: readonly DvtSubstraitProjectionOutput[];
+}>;
+
 export type DvtSubstraitProjectionInspection =
-  Readonly<{ ok: true; projection: DvtSubstraitProjection }> | Readonly<{ ok: false }>;
+  Readonly<{ ok: true; projection: DvtSubstraitProjectionSemantics }> | Readonly<{ ok: false }>;
 
 export function resolveDvtSubstraitColumnFunctions(args: {
   dataType: string;
@@ -182,18 +196,6 @@ function sameConnectedSourceRef(first: ConnectedSourceRef, second: ConnectedSour
     first.connectionRef.provider === second.connectionRef.provider &&
     first.connectionRef.connectionId === second.connectionRef.connectionId
   );
-}
-
-function sourceRelationId(nodeId: string): string {
-  return `relation:${nodeId}`;
-}
-
-function projectRelationId(nodeId: string): string {
-  return `relation:${nodeId}:project`;
-}
-
-function sourceFieldId(nodeId: string, fieldName: string): string {
-  return `field:${nodeId}:${fieldName}`;
 }
 
 function hasPinnedPlanVersion(plan: Plan): boolean {
@@ -314,31 +316,35 @@ export function createDvtSubstraitProjectionDraft(args: {
       }),
     ],
   });
-  const sourceId = sourceRelationId(args.source.nodeId);
-  const targetId = projectRelationId(args.targetNodeId);
+  const sourceRelationId = allocateDvtRelationId();
+  const targetRelationId = allocateDvtRelationId();
+  const sourceFields = args.source.fields.map((field, outputOrdinal) => ({
+    fieldId: allocateDvtFieldId(),
+    relationId: sourceRelationId,
+    outputOrdinal,
+    displayName: field.name,
+  }));
+  const sourceFieldIdByName = new Map(
+    sourceFields.map((field) => [field.displayName, field.fieldId] as const)
+  );
   const sidecar: DvtSubstraitAuthoringSidecarV1 = {
     schemaVersion: DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION,
     semanticPlanSha256: ZERO_SHA256,
     relations: [
       {
-        relationId: sourceId,
+        relationId: sourceRelationId,
         relAnchor: 1,
         sourceRef: args.source.sourceRef,
         displayName: args.source.table,
       },
-      { relationId: targetId, relAnchor: 2, displayName: args.targetNodeId },
+      { relationId: targetRelationId, relAnchor: 2 },
     ],
     fields: [
-      ...args.source.fields.map((field, outputOrdinal) => ({
-        fieldId: sourceFieldId(args.source.nodeId, field.name),
-        relationId: sourceId,
-        outputOrdinal,
-        displayName: field.name,
-      })),
+      ...sourceFields,
       ...args.outputs.map((output, outputOrdinal) => ({
         fieldId: output.fieldId,
-        relationId: targetId,
-        sourceFieldId: sourceFieldId(args.source.nodeId, output.sourceFieldName),
+        relationId: targetRelationId,
+        sourceFieldId: sourceFieldIdByName.get(output.sourceFieldName)!,
         outputOrdinal,
         displayName: output.name,
       })),
@@ -448,27 +454,24 @@ export function inspectDvtSubstraitProjectionDraft(
   if (readAnchor == null || projectAnchor == null || readAnchor === projectAnchor) {
     return { ok: false };
   }
-  const sourceBinding = draft.sidecar.relations.find(
+  const sourceBindings = draft.sidecar.relations.filter(
     (relation) => relation.relAnchor === readAnchor
   );
-  const targetBinding = draft.sidecar.relations.find(
+  const targetBindings = draft.sidecar.relations.filter(
     (relation) => relation.relAnchor === projectAnchor
   );
+  const sourceBinding = sourceBindings.length === 1 ? sourceBindings[0] : null;
+  const targetBinding = targetBindings.length === 1 ? targetBindings[0] : null;
   if (
     draft.sidecar.relations.length !== 2 ||
     sourceBinding?.sourceRef == null ||
     sourceBinding.sourceRef.connectionRef.provider !== 'postgres' ||
     targetBinding == null ||
     targetBinding.sourceRef != null ||
-    !sourceBinding.relationId.startsWith('relation:') ||
-    !targetBinding.relationId.startsWith('relation:') ||
-    !targetBinding.relationId.endsWith(':project')
+    sourceBinding.relationId === targetBinding.relationId
   ) {
     return { ok: false };
   }
-  const sourceNodeId = sourceBinding.relationId.slice('relation:'.length);
-  const targetNodeId = targetBinding.relationId.slice('relation:'.length, -':project'.length);
-  if (sourceNodeId.length === 0 || targetNodeId.length === 0) return { ok: false };
   const sourceFields = sortedRelationFields(draft.sidecar, sourceBinding.relationId);
   const targetFields = sortedRelationFields(draft.sidecar, targetBinding.relationId);
   const mappings = project.common?.emitKind;
@@ -479,9 +482,7 @@ export function inspectDvtSubstraitProjectionDraft(
     mappings.value.outputMapping.length !== targetFields.length ||
     sourceFields.some(
       (field, ordinal) =>
-        field.outputOrdinal !== ordinal ||
-        field.displayName == null ||
-        field.fieldId !== sourceFieldId(sourceNodeId, field.displayName)
+        field.outputOrdinal !== ordinal || field.displayName == null || field.parentFieldId != null
     ) ||
     targetFields.some(
       (field, ordinal) =>
@@ -587,6 +588,9 @@ export function inspectDvtSubstraitProjectionDraft(
       ('sourceOrdinal' in resolvedExpression && sourceField == null) ||
       targetField == null ||
       (sourceField != null && sourceField.displayName == null) ||
+      (sourceField != null &&
+        targetField.sourceFieldId != null &&
+        targetField.sourceFieldId !== sourceField.fieldId) ||
       (calculation?.kind === 'row-number' && calculation.orderSourceOrdinal >= sourceFields.length)
     ) {
       return null;
@@ -648,9 +652,7 @@ export function inspectDvtSubstraitProjectionDraft(
   return {
     ok: true,
     projection: {
-      targetNodeId,
       source: {
-        nodeId: sourceNodeId,
         schema,
         table,
         sourceRef: sourceBinding.sourceRef,
@@ -871,7 +873,9 @@ export function applyDvtSubstraitProjectionFunction(
     sidecar: {
       ...draft.sidecar,
       fields: draft.sidecar.fields.map((field) =>
-        field.fieldId === output.fieldId ? { ...field, displayName: alias } : field
+        field.fieldId === output.fieldId
+          ? { ...field, sourceFieldId: inputOutput.sourceFieldId, displayName: alias }
+          : field
       ),
     },
   };
@@ -885,43 +889,40 @@ export function resolveDvtSubstraitProjectionEntry(args: {
   draft: DvtSubstraitProjectionDraft;
 }): DvtSubstraitProjection | null {
   const inspection = inspectDvtSubstraitProjectionDraft(args.draft);
-  if (!inspection.ok || inspection.projection.targetNodeId !== args.targetNode.id) return null;
+  if (!inspection.ok) return null;
   const incomingSourceIds = [
     ...new Set(
       args.edges.filter((edge) => edge.targetId === args.targetNode.id).map((edge) => edge.sourceId)
     ),
   ];
-  const selfBacked =
-    inspection.projection.source.nodeId === args.targetNode.id && incomingSourceIds.length === 0;
+  if (incomingSourceIds.length > 1) return null;
+  const sourceNode =
+    incomingSourceIds.length === 0
+      ? args.targetNode
+      : args.nodes.find((node) => node.id === incomingSourceIds[0]);
+  const source = sourceNode == null ? null : resolveDvtSubstraitProjectionSource(sourceNode);
   if (
-    !selfBacked &&
-    (incomingSourceIds.length !== 1 || incomingSourceIds[0] !== inspection.projection.source.nodeId)
+    source == null ||
+    source.schema !== inspection.projection.source.schema ||
+    source.table !== inspection.projection.source.table ||
+    !sameConnectedSourceRef(source.sourceRef, inspection.projection.source.sourceRef) ||
+    source.fields.map((field) => field.name).join('\u0000') !==
+      inspection.projection.source.fields.map((field) => field.name).join('\u0000')
   ) {
     return null;
   }
-  const sourceNode: CanonicalNode | undefined = selfBacked
-    ? { ...args.targetNode, kind: 'dvt:source' as const, role: 'input' as const }
-    : args.nodes.find((node) => node.id === inspection.projection.source.nodeId);
-  const source = sourceNode == null ? null : resolveDvtSubstraitProjectionSource(sourceNode);
-  return source != null &&
-    source.schema === inspection.projection.source.schema &&
-    source.table === inspection.projection.source.table &&
-    sameConnectedSourceRef(source.sourceRef, inspection.projection.source.sourceRef) &&
-    source.fields.map((field) => field.name).join('\u0000') ===
-      inspection.projection.source.fields.map((field) => field.name).join('\u0000')
-    ? {
-        ...inspection.projection,
-        source,
-        outputs: inspection.projection.outputs.map((output) => ({
-          ...output,
-          dataType:
-            output.calculation == null
-              ? (source.fields.find((field) => field.name === output.sourceFieldName)?.dataType ??
-                'unknown')
-              : output.dataType,
-        })),
-      }
-    : null;
+  return {
+    targetNodeId: args.targetNode.id,
+    source,
+    outputs: inspection.projection.outputs.map((output) => ({
+      ...output,
+      dataType:
+        output.calculation == null
+          ? (source.fields.find((field) => field.name === output.sourceFieldName)?.dataType ??
+            'unknown')
+          : output.dataType,
+    })),
+  };
 }
 
 export function decodeDvtSubstraitProjectionDocument(input: unknown): DvtSubstraitProjectionDraft {

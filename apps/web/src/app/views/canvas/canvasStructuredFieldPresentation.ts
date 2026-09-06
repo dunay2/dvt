@@ -84,9 +84,7 @@ export function projectCanvasStructuredFieldOutputs(
 ): readonly CanvasStructuredPresentedOutput[] | null {
   const inspection = inspectDvtSubstraitStructuredFieldDraft(args.draft);
   const parts = resolveDvtSubstraitStructuredProjectionParts(args.draft);
-  if (!inspection.ok || parts == null || parts.targetRelation.displayName !== args.node.id) {
-    return null;
-  }
+  if (!inspection.ok || parts == null) return null;
   const incomingIds = new Set(
     args.edges.filter((edge) => edge.targetId === args.node.id).map((edge) => edge.sourceId)
   );

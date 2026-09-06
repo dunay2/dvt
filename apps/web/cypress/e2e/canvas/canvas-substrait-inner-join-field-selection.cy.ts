@@ -80,11 +80,11 @@ describe('Canvas Substrait INNER JOIN field selection', () => {
     visitCanvas();
 
     cy.get('.react-flow__node[data-id="join-transform"]')
-      .should('contain.text', 'Transform')
+      .should('contain.text', 'Customer Orders')
       .and('contain.text', 'Not calculated')
       .and('not.contain.text', 'SQL transform')
       .and('not.contain.text', 'DBT artifact')
-      .find('[data-slot="canvas-node-shell"]')
+      .find('[data-slot="graph-node-card-title"]')
       .dblclick();
     cy.get('[data-slot="canvas-node-workbench-tab-code"]').click();
     cy.get('[data-slot="canvas-node-workbench-code-content"]')
@@ -101,7 +101,7 @@ describe('Canvas Substrait INNER JOIN field selection', () => {
     visitCanvas();
 
     cy.get(
-      '.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]'
+      '.react-flow__node[data-id="join-transform"] [data-slot="graph-node-card-title"]'
     ).dblclick();
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
     cy.get('input[name="dvt-substrait-inner-join-field"][value="left.customer_id"]').uncheck();
@@ -112,9 +112,7 @@ describe('Canvas Substrait INNER JOIN field selection', () => {
     cy.get(
       'button[data-action="move-substrait-inner-join-field-up"][data-field-key="right.order_id"]'
     ).click();
-    cy.get('[data-slot="dvt-substrait-inner-join-grain-field"]').select(
-      'field:join-transform:name'
-    );
+    cy.get('[data-slot="dvt-substrait-inner-join-grain-field"]').select('customer_name');
     cy.get('[data-slot="dvt-substrait-inner-join-count-output-name"]').clear().type('order_count');
     cy.get('[data-slot="dvt-substrait-inner-join-apply-grouping"]').click();
     cy.get('[data-slot="dvt-substrait-inner-join-window-output-name"]').clear().type('count_rank');
@@ -134,32 +132,30 @@ describe('Canvas Substrait INNER JOIN field selection', () => {
         decodeDvtSubstraitInnerJoinDocument(transformAuthoring?.semanticDocument)
       );
 
-      expect(inspection.ok && inspection.projection.outputs).to.deep.equal([
-        {
-          fieldId: 'field:join-transform:name',
-          name: 'customer_name',
-          dataType: 'string',
-          outputOrdinal: 0,
-        },
-        {
-          fieldId: 'field:join-transform:join-count',
-          name: 'order_count',
-          dataType: 'i64',
-          outputOrdinal: 1,
-        },
-        {
-          fieldId: 'field:join-transform:join-count-rank',
-          name: 'count_rank',
-          dataType: 'i64',
-          outputOrdinal: 2,
-        },
+      expect(
+        inspection.ok &&
+          inspection.projection.outputs.map(({ name, dataType, outputOrdinal }) => ({
+            name,
+            dataType,
+            outputOrdinal,
+          }))
+      ).to.deep.equal([
+        { name: 'customer_name', dataType: 'string', outputOrdinal: 0 },
+        { name: 'order_count', dataType: 'i64', outputOrdinal: 1 },
+        { name: 'count_rank', dataType: 'i64', outputOrdinal: 2 },
       ]);
+      const fieldIds = inspection.ok
+        ? inspection.projection.outputs.map((output) => output.fieldId)
+        : [];
+      expect(fieldIds).to.have.length(3);
+      expect(new Set(fieldIds).size).to.equal(3);
+      expect(fieldIds.every((fieldId) => /^dvt_fld_/.test(fieldId))).to.equal(true);
     });
 
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     visitCanvas();
     cy.get(
-      '.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]'
+      '.react-flow__node[data-id="join-transform"] [data-slot="graph-node-card-title"]'
     ).dblclick();
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
     cy.get('[data-slot="dvt-substrait-inner-join-grouped-window-authoring"]').should('exist');
@@ -183,7 +179,7 @@ describe('Canvas Substrait N-input INNER JOIN authoring', () => {
     visitCanvas();
 
     cy.get(
-      '.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]'
+      '.react-flow__node[data-id="join-transform"] [data-slot="graph-node-card-title"]'
     ).dblclick();
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
     cy.get('[data-slot="dvt-substrait-append-right-field"]').select(
@@ -203,21 +199,22 @@ describe('Canvas Substrait N-input INNER JOIN authoring', () => {
       'customers + orders + shipments + tickets'
     );
     cy.get(
-      'input[name="dvt-substrait-n-input-field"][value="field:source-shipments:customer_id"]'
+      'input[name="dvt-substrait-n-input-field"][aria-label$="shipments.customer_id"]'
     ).check();
     cy.get(
-      'input[data-slot="dvt-substrait-n-input-output-name"][data-source-field-id="field:source-shipments:customer_id"]'
+      'input[data-slot="dvt-substrait-n-input-output-name"][aria-label$="shipments.customer_id"]'
     )
       .should('have.value', 'shipments_customer_id')
       .clear()
       .type('shipping_customer')
       .blur();
     cy.get(
-      'button[data-action="move-substrait-n-input-field-up"][data-source-field-id="field:source-shipments:customer_id"]'
-    ).click();
-    cy.get('[data-slot="dvt-substrait-inner-join-grain-field"]').select(
-      'field:join-transform:shipment_id'
-    );
+      'input[data-slot="dvt-substrait-n-input-output-name"][aria-label$="shipments.customer_id"]'
+    )
+      .closest('[data-slot="dvt-substrait-n-input-field"]')
+      .find('button[data-action="move-substrait-n-input-field-up"]')
+      .click();
+    cy.get('[data-slot="dvt-substrait-inner-join-grain-field"]').select('shipment_id');
     cy.get('[data-slot="dvt-substrait-inner-join-count-output-name"]')
       .clear()
       .type('shipment_count');
@@ -249,22 +246,26 @@ describe('Canvas Substrait N-input INNER JOIN authoring', () => {
       ).to.deep.equal(['customers', 'orders', 'shipments', 'tickets']);
       expect(inspection.ok && inspection.projection)
         .to.have.property('groupField')
-        .that.deep.includes({
-          name: 'shipment_id',
-          fieldId: 'field:join-transform:shipment_id',
-        });
+        .that.deep.includes({ name: 'shipment_id' });
+      if (inspection.ok && 'groupField' in inspection.projection) {
+        expect(inspection.projection.groupField.fieldId).to.match(/^dvt_fld_/);
+      }
       expect(inspection.ok && inspection.projection)
         .to.have.property('result')
         .that.deep.includes({ name: 'shipment_rank' });
       expect(
         inspection.ok && inspection.projection.outputs.map((output) => output.name)
       ).to.deep.equal(['shipment_id', 'shipment_count', 'shipment_rank']);
+      const outputFieldIds = inspection.ok
+        ? inspection.projection.outputs.map((output) => output.fieldId)
+        : [];
+      expect(outputFieldIds.every((fieldId) => /^dvt_fld_/.test(fieldId))).to.equal(true);
     });
 
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     visitCanvas();
     cy.get(
-      '.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]'
+      '.react-flow__node[data-id="join-transform"] [data-slot="graph-node-card-title"]'
     ).dblclick();
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
     cy.get('[data-slot="dvt-substrait-inner-join-grouped-window-authoring"]').should(

@@ -20,6 +20,9 @@ type CanvasDraftSaveRequestBody = {
   };
 };
 
+const OPAQUE_FIELD_ID =
+  /^dvt_fld_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 function stubRuntimeCapabilities(): void {
   stubShellBootstrapApis({
     scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'],
@@ -62,13 +65,10 @@ describe('Canvas Substrait UNION ALL', () => {
     visitCanvas();
 
     cy.get(
-      '.react-flow__node[data-id="union-transform"] [data-slot="canvas-node-shell"]'
+      '.react-flow__node[data-id="union-transform"] [data-slot="graph-node-card-title"]'
     ).dblclick();
     cy.get('[data-slot="canvas-node-workbench-tab-code"]').click();
-    cy.get('button[data-slot="dvt-start-substrait-union-all"]')
-      .focus()
-      .should('have.focus')
-      .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
+    cy.get('button[data-slot="dvt-start-connected-union-all"]').click();
     cy.get('[data-slot="dvt-substrait-union-all-authoring"]')
       .should('be.visible')
       .and('contain.text', 'customers_north')
@@ -81,16 +81,11 @@ describe('Canvas Substrait UNION ALL', () => {
     cy.get(
       'button[data-action="move-substrait-union-all-field-up"][data-field-key="country"]'
     ).click();
-    cy.get('[data-slot="dvt-substrait-union-all-grain-field"]').select(
-      'field:union-transform:country'
-    );
+    cy.get('[data-slot="dvt-substrait-union-all-grain-field"]').select('region');
     cy.get('[data-slot="dvt-substrait-union-all-count-output-name"]')
       .clear()
       .type('customer_count');
-    cy.get('[data-slot="dvt-substrait-union-all-apply-grouping"]')
-      .focus()
-      .should('have.focus')
-      .then(() => cy.press(Cypress.Keyboard.Keys.ENTER));
+    cy.get('[data-slot="dvt-substrait-union-all-apply-grouping"]').click();
     cy.get('[data-slot="dvt-substrait-union-all-grouping-authoring"]')
       .should('be.visible')
       .and('contain.text', 'region')
@@ -115,30 +110,29 @@ describe('Canvas Substrait UNION ALL', () => {
         decodeDvtSubstraitUnionAllDocument(transformAuthoring?.semanticDocument)
       );
 
-      expect(inspection.ok && inspection.projection.outputs).to.deep.equal([
-        {
-          name: 'region',
-          fieldId: 'field:union-transform:country',
-          outputOrdinal: 0,
-        },
-        {
-          name: 'customer_count',
-          fieldId: 'field:union-transform:union-all-count',
-          outputOrdinal: 1,
-        },
-        {
-          name: 'count_rank',
-          fieldId: 'field:union-transform:union-all-count-rank',
-          outputOrdinal: 2,
-        },
+      expect(inspection.ok).to.equal(true);
+      if (!inspection.ok) throw new Error('Expected persisted UNION ALL grouped window.');
+      expect(inspection.projection.outputs.map((output) => output.name)).to.deep.equal([
+        'region',
+        'customer_count',
+        'count_rank',
       ]);
+      expect(inspection.projection.outputs.map((output) => output.outputOrdinal)).to.deep.equal([
+        0, 1, 2,
+      ]);
+      inspection.projection.outputs.forEach((output) =>
+        expect(output.fieldId).to.match(OPAQUE_FIELD_ID)
+      );
+      expect(new Set(inspection.projection.outputs.map((output) => output.fieldId)).size).to.equal(
+        3
+      );
     });
 
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     visitCanvas();
     cy.get('.react-flow__node[data-id="union-transform"]')
-      .should('contain.text', 'Columns3')
-      .find('[data-slot="canvas-node-shell"]')
+      .should('contain.text', 'Columns (3)')
+      .find('[data-slot="graph-node-card-title"]')
       .dblclick();
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
     cy.get('[data-slot="dvt-substrait-union-all-authoring"]').should(

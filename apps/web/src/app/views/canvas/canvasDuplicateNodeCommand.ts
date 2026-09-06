@@ -1,5 +1,14 @@
 /** Owned concern: derive semantic duplicate-node commands from a source node and current graph state. */
 
+import {
+  allocateDvtFieldId,
+  allocateDvtRelationId,
+  DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY,
+} from '@dvt/contracts';
+import {
+  applyDvtSubstraitSemanticDocument,
+  readDvtTransformAuthoringAuthority,
+} from './canvasDvtTransformAuthoringAuthority';
 import type { CanonicalNode } from '../../types/canonical';
 import { toCanvasAuthoringMetadata } from './canvasAuthoringMetadata';
 import { admitCanonicalNodeToCanvas } from './canvasNodeDropAggregate';
@@ -65,26 +74,62 @@ export function buildDuplicateNodeCommand({
 }: BuildDuplicateNodeCommandArgs): CanvasDuplicateNodeCommand {
   const nextIndex = resolveNextDuplicateIndex(sourceNode.id, existingNodes);
 
+  let canonicalNode: CanonicalNode = {
+    id: `${sourceNode.id}-copy-${nextIndex}`,
+    name: `${sourceCanonicalNode.name} (copy ${nextIndex})`,
+    pluginId: sourceCanonicalNode.pluginId,
+    kind: sourceCanonicalNode.kind,
+    role: sourceCanonicalNode.role,
+    status: 'idle',
+    tags: [...sourceCanonicalNode.tags],
+    path: sourceCanonicalNode.path,
+    description: sourceCanonicalNode.description,
+    metadata: toCanvasAuthoringMetadata(sourceCanonicalNode.metadata),
+  };
+  if (
+    (canonicalNode.kind === 'dvt:source' || canonicalNode.kind === 'dvt:transform') &&
+    canonicalNode.metadata?.[DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY] != null
+  ) {
+    const authority = readDvtTransformAuthoringAuthority(canonicalNode);
+    if (authority != null) {
+      const { sidecar } = authority.semanticDocument;
+      const relationIds = new Map(
+        sidecar.relations.map((relation) => [relation.relationId, allocateDvtRelationId()])
+      );
+      const fieldIds = new Map(
+        sidecar.fields.map((field) => [field.fieldId, allocateDvtFieldId()])
+      );
+      canonicalNode = applyDvtSubstraitSemanticDocument(canonicalNode, {
+        ...authority.semanticDocument,
+        sidecar: {
+          ...sidecar,
+          relations: sidecar.relations.map((relation) => ({
+            ...relation,
+            relationId: relationIds.get(relation.relationId)!,
+          })),
+          fields: sidecar.fields.map((field) => ({
+            ...field,
+            fieldId: fieldIds.get(field.fieldId)!,
+            relationId: relationIds.get(field.relationId)!,
+            ...(field.sourceFieldId == null
+              ? {}
+              : { sourceFieldId: fieldIds.get(field.sourceFieldId)! }),
+            ...(field.parentFieldId == null
+              ? {}
+              : { parentFieldId: fieldIds.get(field.parentFieldId)! }),
+          })),
+        },
+      });
+    }
+  }
   return {
-    canonicalNode: {
-      id: `${sourceNode.id}-copy-${nextIndex}`,
-      name: `${sourceCanonicalNode.name} (copy ${nextIndex})`,
-      pluginId: sourceCanonicalNode.pluginId,
-      kind: sourceCanonicalNode.kind,
-      role: sourceCanonicalNode.role,
-      status: 'idle',
-      tags: [...sourceCanonicalNode.tags],
-      path: sourceCanonicalNode.path,
-      description: sourceCanonicalNode.description,
-      metadata: toCanvasAuthoringMetadata(sourceCanonicalNode.metadata),
-    },
+    canonicalNode,
     position: {
       x: sourceNode.position.x + DUPLICATE_NODE_POSITION_OFFSET * nextIndex,
       y: sourceNode.position.y + DUPLICATE_NODE_POSITION_OFFSET * nextIndex,
     },
   };
 }
-
 export function resolveCanvasNodeDuplicateTransaction({
   nodeId,
   sourceCanonicalNode,
@@ -96,11 +141,13 @@ export function resolveCanvasNodeDuplicateTransaction({
     return { outcome: 'missing_source_node' };
   }
 
-  const { canonicalNode, position } = buildDuplicateNodeCommand({
-    sourceNode,
-    sourceCanonicalNode,
-    existingNodes,
-  });
+  let command: CanvasDuplicateNodeCommand;
+  try {
+    command = buildDuplicateNodeCommand({ sourceNode, sourceCanonicalNode, existingNodes });
+  } catch {
+    return { outcome: 'noop', reason: 'invalid_semantic_authority' };
+  }
+  const { canonicalNode, position } = command;
   const admission = admitCanonicalNodeToCanvas({
     canonicalNode,
     visibleNodeIds,

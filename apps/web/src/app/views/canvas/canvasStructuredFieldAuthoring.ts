@@ -1,7 +1,8 @@
 /** Owned concern: apply structured-field authoring through ConfigureCanvasDvtNode. */
+import { allocateDvtFieldId } from '@dvt/contracts';
+
 import type { CanonicalNode } from '../../types/canonical';
 import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
-import { createCanvasColumnOutputId } from './canvasColumnMappingModel';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import {
   decodeDvtSubstraitProjectionDocument,
@@ -71,12 +72,7 @@ function resolveStructuredFieldDraft(args: {
   });
   if (flatEntry != null) return { target, draft };
   const parts = resolveDvtSubstraitStructuredProjectionParts(draft);
-  if (
-    !inspectDvtSubstraitStructuredFieldDraft(draft).ok ||
-    parts == null ||
-    parts.targetRelation.displayName !== target.id
-  )
-    return null;
+  if (!inspectDvtSubstraitStructuredFieldDraft(draft).ok || parts == null) return null;
   const incomingSourceIds = new Set(
     args.draftSession.workingSet.visibleEdges
       .filter((edge) => edge.targetId === target.id)
@@ -110,7 +106,7 @@ export function applyCanvasStructuredField(args: {
     const composed = composeDvtSubstraitProjectionFields(resolved.draft, {
       draggedFieldId: args.request.draggedFieldId,
       targetFieldId: args.request.targetFieldId,
-      parentFieldId: createCanvasColumnOutputId(args.request.parentName.trim()),
+      parentFieldId: allocateDvtFieldId(),
       parentName: args.request.parentName,
     });
     if (composed === resolved.draft) return { outcome: 'rejected' };

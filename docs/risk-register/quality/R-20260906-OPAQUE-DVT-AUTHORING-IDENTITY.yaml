@@ -1,0 +1,26 @@
+---
+id: R-20260906-OPAQUE-DVT-AUTHORING-IDENTITY
+title: Identifier-derived consumers could misbind opaque semantic identities
+status: Open
+date: 2026-09-06
+owners:
+  - web
+  - packages/@dvt/contracts
+severity: Medium
+probability: Low
+---
+mitigation:
+  summary: >
+    All new production semantic identities use one contracts allocator backed by the existing UUIDv7
+    primitive. Existing persisted identities are preserved. Graph context and explicit sidecar
+    provenance resolve operands independently of identifier text. Negative and stability tests cover
+    clean Source reads, creation results, source replacement, rename, reorder, reload, JOIN and SET.
+    Invalid or ambiguous bindings fail closed through existing admission paths.
+  evidence:
+    - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
+    - docs/evidence/ED-20260906-opaque-dvt-authoring-identity.md
+    - docs/architecture/system/subsystems/semantic-transformation/index.md
+    - packages/@dvt/contracts/test/dvt-substrait-authoring-identity.contract.test.ts
+    - apps/web/src/app/views/canvas/canvasCalculatedColumnAuthoring.test.ts
+    - apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts
+    - apps/web/src/app/views/canvas/canvasColumnLineageProjection.test.ts

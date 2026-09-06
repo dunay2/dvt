@@ -9,8 +9,14 @@ import { describe, expect, it } from 'vitest';
 import {
   applyDvtSubstraitPilotFunction,
   createDvtSubstraitPilotDraft,
+  decodeDvtSubstraitPilotDocument,
+  encodeDvtSubstraitPilotDocument,
   inspectDvtSubstraitPilotDraft,
+  renameDvtSubstraitPilotOutput,
 } from './canvasDvtSubstraitPilot';
+
+const UUID_V7 = '[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}';
+const DVT_FIELD_ID = new RegExp(`^dvt_fld_${UUID_V7}$`, 'i');
 
 function projectExpression(draft: ReturnType<typeof createDvtSubstraitPilotDraft>): Expression {
   const root = draft.plan.relations[0]?.relType;
@@ -32,26 +38,68 @@ function pilotRead(draft: ReturnType<typeof createDvtSubstraitPilotDraft>): Read
 }
 
 describe('typed Substrait pilot review guards', () => {
-  it('creates the exact production-entry fixture with stable target-owned field ids', () => {
+  it('allocates opaque base FieldIds and preserves them through rename and reload', () => {
     const draft = createDvtSubstraitPilotDraft({
       sourceNodeId: 'source-customers',
       targetNodeId: 'transform-customers',
     });
+    const inspection = inspectDvtSubstraitPilotDraft(draft);
+    expect(inspection.ok).toBe(true);
+    if (!inspection.ok) return;
 
-    expect(inspectDvtSubstraitPilotDraft(draft)).toEqual({
+    expect(
+      inspection.projection.outputs.map(({ name, outputOrdinal }) => ({ name, outputOrdinal }))
+    ).toEqual([
+      { name: 'name', outputOrdinal: 0 },
+      { name: 'email', outputOrdinal: 1 },
+      { name: 'country', outputOrdinal: 2 },
+    ]);
+    const fieldIds = inspection.projection.outputs.map((output) => output.fieldId);
+    expect(new Set(fieldIds).size).toBe(3);
+    fieldIds.forEach((fieldId) => expect(fieldId).toMatch(DVT_FIELD_ID));
+    expect(fieldIds.some((fieldId) => fieldId.includes('transform-customers'))).toBe(false);
+    expect(inspection.projection.fieldId).toBe(fieldIds[0]);
+
+    const renamed = renameDvtSubstraitPilotOutput(draft, 'customer_name');
+    const renamedInspection = inspectDvtSubstraitPilotDraft(renamed);
+    expect(renamedInspection.ok).toBe(true);
+    if (!renamedInspection.ok) return;
+    expect(renamedInspection.projection.outputs.map((output) => output.fieldId)).toEqual(fieldIds);
+
+    const reopened = decodeDvtSubstraitPilotDocument(encodeDvtSubstraitPilotDocument(renamed));
+    const reopenedInspection = inspectDvtSubstraitPilotDraft(reopened);
+    expect(reopenedInspection.ok).toBe(true);
+    if (!reopenedInspection.ok) return;
+    expect(reopenedInspection.projection.outputs.map((output) => output.fieldId)).toEqual(fieldIds);
+  });
+
+  it('allocates opaque base relation ids once and preserves them through rename and reload', () => {
+    const draft = createDvtSubstraitPilotDraft({
+      sourceNodeId: 'source-customers',
+      targetNodeId: 'transform-customers',
+    });
+    const relationIds = draft.sidecar.relations.map((relation) => relation.relationId);
+
+    expect(relationIds).toHaveLength(2);
+    expect(new Set(relationIds).size).toBe(2);
+    relationIds.forEach((relationId) =>
+      expect(relationId).toMatch(new RegExp(`^dvt_rel_${UUID_V7}$`, 'i'))
+    );
+    expect(
+      relationIds.some(
+        (relationId) =>
+          relationId.includes('source-customers') || relationId.includes('transform-customers')
+      )
+    ).toBe(false);
+
+    const renamed = renameDvtSubstraitPilotOutput(draft, 'customer_name');
+    expect(renamed.sidecar.relations.map((relation) => relation.relationId)).toEqual(relationIds);
+
+    const reopened = decodeDvtSubstraitPilotDocument(encodeDvtSubstraitPilotDocument(renamed));
+    expect(reopened.sidecar.relations.map((relation) => relation.relationId)).toEqual(relationIds);
+    expect(inspectDvtSubstraitPilotDraft(reopened)).toMatchObject({
       ok: true,
-      projection: {
-        sourceName: 'customers',
-        inputFieldName: 'name',
-        outputName: 'name',
-        fieldId: 'field:transform-customers:name',
-        operations: [],
-        outputs: [
-          { name: 'name', fieldId: 'field:transform-customers:name', outputOrdinal: 0 },
-          { name: 'email', fieldId: 'field:transform-customers:email', outputOrdinal: 1 },
-          { name: 'country', fieldId: 'field:transform-customers:country', outputOrdinal: 2 },
-        ],
-      },
+      projection: { outputName: 'customer_name' },
     });
   });
 

@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vitest';
 import {
   applyDvtSubstraitPilotFunction,
   createDvtSubstraitPilotDraft,
+  inspectDvtSubstraitPilotDraft,
   renameDvtSubstraitPilotOutput,
   type DvtSubstraitPilotDraft,
 } from './canvasDvtSubstraitPilot';
@@ -42,13 +43,55 @@ import {
   applyDvtSubstraitInnerJoinGrouping,
   appendDvtSubstraitInnerJoinInput,
   createDvtSubstraitInnerJoinDraft,
+  inspectDvtSubstraitNInputJoinDraft,
+  type DvtSubstraitInnerJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import {
   applyDvtSubstraitUnionAllGroupedRowNumber,
   applyDvtSubstraitUnionAllGrouping,
   applyDvtSubstraitUnionAllFieldEdit,
   createDvtSubstraitUnionAllDraft,
+  inspectDvtSubstraitUnionAllDraft,
+  type DvtSubstraitUnionAllDraft,
 } from './canvasDvtSubstraitSetComposition';
+
+function requirePilotOutputId(draft: DvtSubstraitPilotDraft, name: string): string {
+  const inspection = inspectDvtSubstraitPilotDraft(draft);
+  if (!inspection.ok) throw new Error('Expected admitted pilot projection.');
+  const output = inspection.projection.outputs.find((candidate) => candidate.name === name);
+  if (output == null) throw new Error(`Expected pilot output ${name}.`);
+  return output.fieldId;
+}
+
+function requireJoinInputFieldId(
+  draft: DvtSubstraitInnerJoinDraft,
+  inputIndex: number,
+  name: string
+): string {
+  const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+  if (!inspection.ok) throw new Error('Expected admitted INNER JOIN projection.');
+  const field = inspection.projection.inputs[inputIndex]?.fields.find(
+    (candidate) => candidate.name === name
+  );
+  if (field == null) throw new Error(`Expected INNER JOIN input field ${inputIndex}:${name}.`);
+  return field.fieldId;
+}
+
+function requireJoinOutputFieldId(draft: DvtSubstraitInnerJoinDraft, name: string): string {
+  const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+  if (!inspection.ok) throw new Error('Expected admitted INNER JOIN projection.');
+  const output = inspection.projection.outputs.find((candidate) => candidate.name === name);
+  if (output == null) throw new Error(`Expected INNER JOIN output ${name}.`);
+  return output.fieldId;
+}
+
+function requireUnionOutputFieldId(draft: DvtSubstraitUnionAllDraft, name: string): string {
+  const inspection = inspectDvtSubstraitUnionAllDraft(draft);
+  if (!inspection.ok) throw new Error('Expected admitted UNION ALL projection.');
+  const output = inspection.projection.outputs.find((candidate) => candidate.name === name);
+  if (output == null) throw new Error(`Expected UNION ALL output ${name}.`);
+  return output.fieldId;
+}
 
 function completedPilotDraft(): DvtSubstraitPilotDraft {
   let draft = createDvtSubstraitPilotDraft({
@@ -276,14 +319,29 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       dataType: 'text',
       provider: 'postgres',
     });
+    const trimInspection = inspectDvtSubstraitProjectionDraft(withTrim);
+    if (!trimInspection.ok) throw new Error('Expected admitted trim projection.');
+    const sharedSourceFieldId = trimInspection.projection.outputs[1]?.sourceFieldId;
+    if (sharedSourceFieldId == null) throw new Error('Expected trim source lineage.');
     const root = withTrim.plan.relations[0]?.relType;
     const project = root?.case === 'root' ? root.value.input?.relType : undefined;
     const emitKind = project?.case === 'project' ? project.value.common?.emitKind : undefined;
     if (emitKind?.case !== 'emit') throw new Error('Expected projection output mapping.');
     emitKind.value.outputMapping[2] = emitKind.value.outputMapping[1]!;
-    expect(inspectDvtSubstraitProjectionDraft(withTrim).ok).toBe(true);
+    const sharedTrim: DvtSubstraitProjectionDraft = {
+      ...withTrim,
+      sidecar: {
+        ...withTrim.sidecar,
+        fields: withTrim.sidecar.fields.map((field) =>
+          field.fieldId === 'output:amount'
+            ? { ...field, sourceFieldId: sharedSourceFieldId }
+            : field
+        ),
+      },
+    };
+    expect(inspectDvtSubstraitProjectionDraft(sharedTrim).ok).toBe(true);
 
-    const withUpper = applyDvtSubstraitProjectionFunction(withTrim, {
+    const withUpper = applyDvtSubstraitProjectionFunction(sharedTrim, {
       fieldId: 'output:customer',
       capabilityId: upper.capabilityId,
       alias: 'buyer',
@@ -334,13 +392,14 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
   });
 
   it('projects one admitted Substrait grain field and row count', async () => {
-    const draft = applyDvtSubstraitPilotAggregation(
-      createDvtSubstraitPilotDraft({
-        sourceNodeId: 'source-customers',
-        targetNodeId: 'transform-customers',
-      }),
-      { groupFieldId: 'field:transform-customers:country', countOutputName: 'customer_count' }
-    );
+    const base = createDvtSubstraitPilotDraft({
+      sourceNodeId: 'source-customers',
+      targetNodeId: 'transform-customers',
+    });
+    const draft = applyDvtSubstraitPilotAggregation(base, {
+      groupFieldId: requirePilotOutputId(base, 'country'),
+      countOutputName: 'customer_count',
+    });
 
     const sql = await projectDvtSubstraitPilotAggregationToPostgresSql(draft, {
       schema: 'public',
@@ -354,9 +413,10 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
   });
 
   it('projects one admitted Substrait row_number partition and ordering', async () => {
-    const draft = applyDvtSubstraitPilotRowNumber(completedPilotDraft(), {
-      partitionFieldId: 'field:transform-customers:country',
-      orderFieldId: 'field:transform-customers:name',
+    const base = completedPilotDraft();
+    const draft = applyDvtSubstraitPilotRowNumber(base, {
+      partitionFieldId: requirePilotOutputId(base, 'country'),
+      orderFieldId: requirePilotOutputId(base, 'customer_name'),
       outputName: 'country_row_number',
     });
 
@@ -372,13 +432,14 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
   });
 
   it('projects grouped rows ranked globally by their count from one Substrait revision', async () => {
-    const grouped = applyDvtSubstraitPilotAggregation(
-      createDvtSubstraitPilotDraft({
-        sourceNodeId: 'source-customers',
-        targetNodeId: 'transform-customers',
-      }),
-      { groupFieldId: 'field:transform-customers:country', countOutputName: 'customer_count' }
-    );
+    const base = createDvtSubstraitPilotDraft({
+      sourceNodeId: 'source-customers',
+      targetNodeId: 'transform-customers',
+    });
+    const grouped = applyDvtSubstraitPilotAggregation(base, {
+      groupFieldId: requirePilotOutputId(base, 'country'),
+      countOutputName: 'customer_count',
+    });
     const ranked = applyDvtSubstraitPilotAggregateRowNumber(grouped, {
       outputName: 'count_rank',
     });
@@ -478,6 +539,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
         targetNodeId: 'transform-customer-orders',
       });
       for (const appended of fixture.appendedSources) {
+        const leftSourceFieldId = requireJoinInputFieldId(draft, 0, 'customer_id');
         draft = appendDvtSubstraitInnerJoinInput(draft, {
           source: {
             nodeId: appended.nodeId,
@@ -491,7 +553,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
           },
           fields: [appended.output, 'customer_id'],
           predicate: {
-            leftSourceFieldId: 'field:source-customers:customer_id',
+            leftSourceFieldId,
             rightFieldName: 'customer_id',
           },
           selectedFields: [appended.output],
@@ -549,13 +611,13 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       },
       fields: ['shipment_id', 'customer_id'],
       predicate: {
-        leftSourceFieldId: 'field:source-customers:customer_id',
+        leftSourceFieldId: requireJoinInputFieldId(draft, 0, 'customer_id'),
         rightFieldName: 'customer_id',
       },
       selectedFields: ['shipment_id'],
     });
     draft = applyDvtSubstraitInnerJoinGrouping(draft, {
-      groupFieldId: 'field:transform-customer-orders:shipment_id',
+      groupFieldId: requireJoinOutputFieldId(draft, 'shipment_id'),
       countOutputName: 'shipment_count',
     });
     draft = applyDvtSubstraitInnerJoinGroupedRowNumber(draft, {
@@ -670,7 +732,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       selected: false,
     });
     draft = applyDvtSubstraitInnerJoinGrouping(draft, {
-      groupFieldId: 'field:transform-customer-orders:name',
+      groupFieldId: requireJoinOutputFieldId(draft, 'customer_name'),
       countOutputName: 'order_count',
     });
     draft = applyDvtSubstraitInnerJoinGroupedRowNumber(draft, {
@@ -853,7 +915,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       outputName: 'region',
     });
     draft = applyDvtSubstraitUnionAllGrouping(draft, {
-      groupFieldId: 'field:transform-all-customers:country',
+      groupFieldId: requireUnionOutputFieldId(draft, 'region'),
       countOutputName: 'customer_count',
     });
     draft = applyDvtSubstraitUnionAllGroupedRowNumber(draft, {

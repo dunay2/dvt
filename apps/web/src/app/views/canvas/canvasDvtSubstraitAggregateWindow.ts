@@ -19,7 +19,11 @@ import {
   type Expression,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { PlanSchema, type Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
-import type { DvtSubstraitAuthoringSidecarV1 } from '@dvt/contracts';
+import {
+  allocateDvtFieldId,
+  allocateDvtRelationId,
+  type DvtSubstraitAuthoringSidecarV1,
+} from '@dvt/contracts';
 
 import {
   inspectDvtSubstraitPilotAggregationDraft,
@@ -107,17 +111,10 @@ function readFieldReferenceOrdinal(expression: Expression | undefined): number |
   return segment.value.field;
 }
 
-function parseTargetId(relationId: string): string | null {
-  return /^relation:(.+):aggregate-window$/.exec(relationId)?.[1] ?? null;
-}
-
-function parseTargetIdFromMeasure(fieldId: string): string | null {
-  return /^field:(.+):count$/.exec(fieldId)?.[1] ?? null;
-}
-
 function restoreAggregateDraft(
   draft: DvtSubstraitPilotDraft,
-  targetId: string,
+  aggregateRelationId: string,
+  aggregateWindowRelationId: string,
   resultFieldId: string
 ): DvtSubstraitPilotDraft | null {
   const plan = clonePlan(draft.plan);
@@ -129,8 +126,6 @@ function restoreAggregateDraft(
   root.value.names = root.value.names.slice(0, 2);
   removeDvtSubstraitRowNumberExtension(plan);
 
-  const aggregateRelationId = `relation:${targetId}:aggregate`;
-  const aggregateWindowRelationId = `relation:${targetId}:aggregate-window`;
   const sidecar: DvtSubstraitAuthoringSidecarV1 = {
     ...draft.sidecar,
     relations: draft.sidecar.relations.filter(
@@ -201,19 +196,45 @@ function inspectValidAggregateWindow(draft: DvtSubstraitPilotDraft): ValidAggreg
     (relation) => relation.relAnchor === project.common?.relAnchor
   );
   const relationBinding = relationBindings.length === 1 ? relationBindings[0] : null;
-  const targetId = relationBinding == null ? null : parseTargetId(relationBinding.relationId);
-  if (relationBinding == null || targetId == null) return null;
-  const resultFieldId = `field:${targetId}:aggregate-row-number`;
-  const baseDraft = restoreAggregateDraft(draft, targetId, resultFieldId);
-  if (baseDraft == null) return null;
-  const baseInspection = inspectDvtSubstraitPilotAggregationDraft(baseDraft);
-  if (!baseInspection.ok || relationBinding.displayName !== baseInspection.projection.sourceName) {
+  const aggregateAnchor = project.input.relType.value.common?.relAnchor;
+  const aggregateBinding =
+    aggregateAnchor == null
+      ? null
+      : (draft.sidecar.relations.find((relation) => relation.relAnchor === aggregateAnchor) ??
+        null);
+  if (
+    relationBinding == null ||
+    aggregateBinding == null ||
+    relationBinding.relationId === aggregateBinding.relationId
+  ) {
     return null;
   }
 
   const outerFields = draft.sidecar.fields
     .filter((field) => field.relationId === relationBinding.relationId)
     .sort((left, right) => left.outputOrdinal - right.outputOrdinal);
+  const resultField = outerFields[2];
+  if (
+    outerFields.length !== 3 ||
+    resultField == null ||
+    resultField.outputOrdinal !== 2 ||
+    resultField.displayName !== root.names[2]
+  ) {
+    return null;
+  }
+  const resultFieldId = resultField.fieldId;
+  const baseDraft = restoreAggregateDraft(
+    draft,
+    aggregateBinding.relationId,
+    relationBinding.relationId,
+    resultFieldId
+  );
+  if (baseDraft == null) return null;
+  const baseInspection = inspectDvtSubstraitPilotAggregationDraft(baseDraft);
+  if (!baseInspection.ok || relationBinding.displayName !== baseInspection.projection.sourceName) {
+    return null;
+  }
+
   const expectedOutputs = [
     {
       name: baseInspection.projection.groupField.name,
@@ -228,7 +249,6 @@ function inspectValidAggregateWindow(draft: DvtSubstraitPilotDraft): ValidAggreg
     { name: root.names[2]!, fieldId: resultFieldId, outputOrdinal: 2 },
   ];
   if (
-    outerFields.length !== 3 ||
     outerFields.some(
       (field, outputOrdinal) =>
         field.fieldId !== expectedOutputs[outputOrdinal]?.fieldId ||
@@ -285,13 +305,20 @@ export function applyDvtSubstraitPilotAggregateRowNumber(
   ) {
     return draft;
   }
-  const targetId = parseTargetIdFromMeasure(aggregateInspection.projection.measure.fieldId);
-  if (targetId == null) return draft;
 
   const plan = clonePlan(draft.plan);
   const root = plan.relations[0]?.relType;
   if (root?.case !== 'root' || root.value.input?.relType.case !== 'aggregate') return draft;
+  const aggregateRelation = root.value.input.relType;
+  if (aggregateRelation.case !== 'aggregate') return draft;
   const aggregate = root.value.input;
+  const aggregateAnchor = aggregateRelation.value.common?.relAnchor;
+  const aggregateBinding =
+    aggregateAnchor == null
+      ? null
+      : (draft.sidecar.relations.find((relation) => relation.relAnchor === aggregateAnchor) ??
+        null);
+  if (aggregateBinding == null) return draft;
   const relationAnchor =
     Math.max(0, ...draft.sidecar.relations.map((relation) => relation.relAnchor)) + 1;
   const functionReference = ensureDvtSubstraitRowNumberFunction(plan);
@@ -342,8 +369,8 @@ export function applyDvtSubstraitPilotAggregateRowNumber(
   });
   root.value.names.push(outputName);
 
-  const relationId = `relation:${targetId}:aggregate-window`;
-  const resultFieldId = `field:${targetId}:aggregate-row-number`;
+  const relationId = allocateDvtRelationId();
+  const resultFieldId = allocateDvtFieldId();
   const sidecar: DvtSubstraitAuthoringSidecarV1 = {
     ...draft.sidecar,
     relations: [
@@ -356,7 +383,7 @@ export function applyDvtSubstraitPilotAggregateRowNumber(
     ],
     fields: [
       ...draft.sidecar.fields.map((field) =>
-        field.relationId === `relation:${targetId}:aggregate` ? { ...field, relationId } : field
+        field.relationId === aggregateBinding.relationId ? { ...field, relationId } : field
       ),
       { fieldId: resultFieldId, relationId, outputOrdinal: 2, displayName: outputName },
     ],

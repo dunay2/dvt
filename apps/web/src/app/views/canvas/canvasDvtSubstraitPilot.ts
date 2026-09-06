@@ -43,6 +43,8 @@ import {
   DVT_SUBSTRAIT_PLAN_ENCODING,
   DVT_SUBSTRAIT_PROFILE_REF_V1,
   DVT_SUBSTRAIT_SEMANTIC_DOCUMENT_SCHEMA_VERSION,
+  allocateDvtFieldId,
+  allocateDvtRelationId,
   canonicalizeDvtSubstraitSemanticDocumentV1,
   type DvtSubstraitAuthoringSidecarV1,
   type DvtSubstraitSemanticDocumentV1,
@@ -219,7 +221,7 @@ function fieldReference(ordinal: number) {
  * Create only the exact production-entry fixture owned by #2598. The caller is
  * responsible for admitting the matching connected source before invoking it.
  */
-export function createDvtSubstraitPilotDraft(args: {
+export function createDvtSubstraitPilotDraft(_args: {
   sourceNodeId: string;
   targetNodeId: string;
 }): DvtSubstraitPilotDraft {
@@ -274,20 +276,21 @@ export function createDvtSubstraitPilotDraft(args: {
       }),
     ],
   });
-  const projectRelationId = `relation:${args.targetNodeId}:project`;
+  const sourceRelationId = allocateDvtRelationId();
+  const projectRelationId = allocateDvtRelationId();
   const sidecar: DvtSubstraitAuthoringSidecarV1 = {
     schemaVersion: DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION,
     semanticPlanSha256: ZERO_SHA256,
     relations: [
       {
-        relationId: `relation:${args.sourceNodeId}`,
+        relationId: sourceRelationId,
         relAnchor: 1,
         displayName: PILOT_SOURCE_NAME,
       },
       { relationId: projectRelationId, relAnchor: 2, displayName: PILOT_SOURCE_NAME },
     ],
     fields: PILOT_FIELD_NAMES.map((name, outputOrdinal) => ({
-      fieldId: `field:${args.targetNodeId}:${name}`,
+      fieldId: allocateDvtFieldId(),
       relationId: projectRelationId,
       outputOrdinal,
       displayName: name,

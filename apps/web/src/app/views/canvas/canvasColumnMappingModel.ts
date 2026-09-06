@@ -82,7 +82,3 @@ export function hasCanvasStageDependency(
     (edge) => edge.sourceId === sourceNodeId && edge.targetId === targetNodeId
   );
 }
-
-export function createCanvasColumnOutputId(columnName: string): string {
-  return `output:${encodeURIComponent(columnName)}`;
-}

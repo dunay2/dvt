@@ -215,10 +215,7 @@ function projectCanvasNodePresentationTruthInternal(
                   .map((edge) => edge.sourceId)
               );
               unresolvedMultiInputProjection =
-                projectionInspection.ok &&
-                projectionInspection.projection.targetNodeId === args.node.id &&
-                incomingSourceIds.size > 1 &&
-                incomingSourceIds.has(projectionInspection.projection.source.nodeId);
+                projectionInspection.ok && incomingSourceIds.size > 1;
               const pilotInspection = inspectDvtSubstraitPilotDraft(
                 decodeDvtSubstraitPilotDocument(authority.semanticDocument)
               );

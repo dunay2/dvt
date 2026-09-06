@@ -6,16 +6,20 @@ import type { CoreNodeRole, CanonicalNode } from '../../types/canonical';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import {
-  decodeDvtSubstraitInnerJoinDocument,
   inspectDvtSubstraitNInputJoinDraft,
   inspectDvtSubstraitInnerJoinGroupedWindowDraft,
   inspectDvtSubstraitInnerJoinGroupingDraft,
 } from './canvasDvtSubstraitJoinComposition';
 import {
   decodeDvtSubstraitProjectionDocument,
-  inspectDvtSubstraitProjectionDraft,
+  resolveDvtSubstraitProjectionEntry,
   type DvtSubstraitProjection,
 } from './canvasDvtSubstraitProjection';
+import {
+  inspectDvtSubstraitUnionAllDraft,
+  inspectDvtSubstraitUnionAllGroupingDraft,
+  inspectDvtSubstraitUnionAllGroupedWindowDraft,
+} from './canvasDvtSubstraitSetComposition';
 import { flattenCanvasStructuredLineage } from './canvasStructuredFieldLineage';
 
 export type CanvasColumnPortDirection = 'source' | 'target';
@@ -111,71 +115,93 @@ function readColumns(node: CanonicalNode): readonly Column[] {
   });
 }
 
-function readSubstraitProjectionLineage(node: CanonicalNode): DvtSubstraitProjection | null {
-  if (node.pluginId !== 'dvt' || node.kind !== 'dvt:transform') return null;
+function readSubstraitProjectionLineage(args: {
+  node: CanonicalNode;
+  nodes: readonly CanonicalNode[];
+  edges: readonly Readonly<{ sourceId: string; targetId: string }>[];
+}): DvtSubstraitProjection | null {
+  if (args.node.pluginId !== 'dvt' || args.node.kind !== 'dvt:transform') return null;
   try {
-    const authority = readDvtTransformAuthoringAuthority(node);
+    const authority = readDvtTransformAuthoringAuthority(args.node);
     if (authority == null) return null;
-    const inspection = inspectDvtSubstraitProjectionDraft(
-      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
-    );
-    return inspection.ok && inspection.projection.targetNodeId === node.id
-      ? inspection.projection
-      : null;
+    return resolveDvtSubstraitProjectionEntry({
+      targetNode: args.node,
+      nodes: args.nodes,
+      edges: args.edges,
+      draft: decodeDvtSubstraitProjectionDocument(authority.semanticDocument),
+    });
   } catch {
     return null;
   }
 }
 
-type DvtSubstraitNInputJoinLineage = Readonly<{
+type DvtSubstraitMultiInputLineage = Readonly<{
   inputs: readonly Readonly<{
-    nodeId: string;
     sourceRef: ConnectedSourceRef;
     fields: readonly Readonly<{ name: string; fieldId: string }>[];
   }>[];
   outputs: readonly Readonly<{
     name: string;
     fieldId: string;
-    source: Readonly<{ nodeId: string; name: string; fieldId: string }>;
+    source: Readonly<{ inputIndex: number; name: string; fieldId: string }>;
   }>[];
 }>;
 
-function readSubstraitNInputJoinLineage(node: CanonicalNode): DvtSubstraitNInputJoinLineage | null {
+function readSubstraitMultiInputLineage(node: CanonicalNode): DvtSubstraitMultiInputLineage | null {
   if (node.pluginId !== 'dvt' || node.kind !== 'dvt:transform') return null;
   try {
     const authority = readDvtTransformAuthoringAuthority(node);
     if (authority == null) return null;
-    const draft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
+    const draft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
     const nInput = inspectDvtSubstraitNInputJoinDraft(draft);
-    if (nInput.ok && nInput.projection.targetNodeId === node.id) {
+    if (nInput.ok) {
       return {
         inputs: nInput.projection.inputs,
         outputs: nInput.projection.outputs,
       };
     }
     const groupedWindow = inspectDvtSubstraitInnerJoinGroupedWindowDraft(draft);
-    if (
-      groupedWindow.ok &&
-      groupedWindow.projection.kind === 'n-input' &&
-      groupedWindow.projection.targetNodeId === node.id
-    ) {
+    if (groupedWindow.ok && groupedWindow.projection.kind === 'n-input') {
       return {
         inputs: groupedWindow.projection.inputs,
         outputs: [groupedWindow.projection.groupField],
       };
     }
     const grouping = inspectDvtSubstraitInnerJoinGroupingDraft(draft);
-    if (
-      grouping.ok &&
-      grouping.projection.kind === 'n-input' &&
-      grouping.projection.targetNodeId === node.id
-    ) {
+    if (grouping.ok && grouping.projection.kind === 'n-input') {
       return {
         inputs: grouping.projection.inputs,
         outputs: [grouping.projection.groupField],
       };
     }
-    return null;
+    const union = inspectDvtSubstraitUnionAllDraft(draft);
+    const unionGrouping = inspectDvtSubstraitUnionAllGroupingDraft(draft);
+    const unionWindow = inspectDvtSubstraitUnionAllGroupedWindowDraft(draft);
+    const projection = union.ok
+      ? { inputs: union.projection.inputs, outputs: union.projection.outputs }
+      : unionGrouping.ok
+        ? {
+            inputs: unionGrouping.projection.inputs,
+            outputs: [unionGrouping.projection.groupField],
+          }
+        : unionWindow.ok
+          ? { inputs: unionWindow.projection.inputs, outputs: [unionWindow.projection.groupField] }
+          : null;
+    if (projection == null) return null;
+    return {
+      inputs: projection.inputs,
+      outputs: projection.outputs.flatMap((output) =>
+        projection.inputs.map((input, inputIndex) => {
+          const field = input.fields.find((candidate) => candidate.name === output.fieldKey);
+          if (field == null) throw new Error('UNION ALL input field is not admitted.');
+          return {
+            name: output.name,
+            fieldId: output.fieldId,
+            source: { inputIndex, name: field.name, fieldId: field.fieldId },
+          };
+        })
+      ),
+    };
   } catch {
     return null;
   }
@@ -262,7 +288,11 @@ export function projectCanvasColumnLineage(args: {
   const projected: CanvasColumnLineageEdge[] = [];
 
   for (const model of args.nodes) {
-    const substraitProjection = readSubstraitProjectionLineage(model);
+    const substraitProjection = readSubstraitProjectionLineage({
+      node: model,
+      nodes: args.nodes,
+      edges: args.edges,
+    });
     if (substraitProjection != null && args.expandedNodeIds.has(model.id)) {
       const sourceNode = nodeById.get(substraitProjection.source.nodeId);
       const sourceRef = ConnectedSourceRefSchema.safeParse(
@@ -351,14 +381,15 @@ export function projectCanvasColumnLineage(args: {
       }
     }
 
-    const substraitJoin = readSubstraitNInputJoinLineage(model);
-    if (substraitJoin != null && args.expandedNodeIds.has(model.id)) {
+    const multiInputLineage = readSubstraitMultiInputLineage(model);
+    if (multiInputLineage != null && args.expandedNodeIds.has(model.id)) {
       const incomingEdges = args.edges.filter((edge) => edge.targetId === model.id);
-      const sourceByInputId = new Map<string, CanonicalNode>();
-      let exactClosure = incomingEdges.length === substraitJoin.inputs.length;
-      for (const input of substraitJoin.inputs) {
+      const sourceByInputIndex = new Map<number, CanonicalNode>();
+      const usedSourceNodeIds = new Set<string>();
+      let exactClosure = incomingEdges.length === multiInputLineage.inputs.length;
+      for (const [inputIndex, input] of multiInputLineage.inputs.entries()) {
         const matchingSources = incomingEdges.flatMap((edge) => {
-          if (edge.sourceId !== input.nodeId) return [];
+          if (usedSourceNodeIds.has(edge.sourceId)) return [];
           const sourceNode = nodeById.get(edge.sourceId);
           if (sourceNode == null || !args.expandedNodeIds.has(sourceNode.id)) return [];
           const sourceRef = ConnectedSourceRefSchema.safeParse(
@@ -371,19 +402,19 @@ export function projectCanvasColumnLineage(args: {
             ? [sourceNode]
             : [];
         });
-        if (matchingSources.length !== 1 || sourceByInputId.has(input.nodeId)) {
+        if (matchingSources.length !== 1) {
           exactClosure = false;
           break;
         }
-        sourceByInputId.set(input.nodeId, matchingSources[0]!);
+        const sourceNode = matchingSources[0]!;
+        usedSourceNodeIds.add(sourceNode.id);
+        sourceByInputIndex.set(inputIndex, sourceNode);
       }
       if (!exactClosure) continue;
 
-      const resolvedOutputs = substraitJoin.outputs.map((output) => {
-        const input = substraitJoin.inputs.find(
-          (candidate) => candidate.nodeId === output.source.nodeId
-        );
-        const sourceNode = sourceByInputId.get(output.source.nodeId);
+      const resolvedOutputs = multiInputLineage.outputs.map((output) => {
+        const input = multiInputLineage.inputs[output.source.inputIndex];
+        const sourceNode = sourceByInputIndex.get(output.source.inputIndex);
         const sourceField = input?.fields.find(
           (field) => field.fieldId === output.source.fieldId && field.name === output.source.name
         );

@@ -5,7 +5,12 @@ import type { CanonicalNode } from '../../types/canonical';
 import {
   createDvtSubstraitProjectionDraft,
   encodeDvtSubstraitProjectionDocument,
+  inspectDvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
+import {
+  persistCanvasProjectionOutputs,
+  readEditableCanvasProjectionEntry,
+} from './canvasColumnProjectionAuthority';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import {
   createCanvasColumnHandleId,
@@ -32,7 +37,7 @@ function buildNode(
   };
 }
 
-function buildProjectionGraph(outputName = 'order_id'): readonly [CanonicalNode, CanonicalNode] {
+function buildProjectionGraph(): readonly [CanonicalNode, CanonicalNode, string] {
   const sourceRef: ConnectedSourceRef = {
     schemaVersion: 'connected-source-ref.v1',
     connectionRef: {
@@ -51,25 +56,27 @@ function buildProjectionGraph(outputName = 'order_id'): readonly [CanonicalNode,
       columns: [{ name: 'order_id', type: 'integer' }],
     },
   };
+  const draft = createDvtSubstraitProjectionDraft({
+    source: {
+      nodeId: source.id,
+      schema: 'raw',
+      table: 'orders',
+      sourceRef,
+      fields: [{ name: 'order_id', dataType: 'integer' }],
+    },
+    targetNodeId: 'model-orders',
+    outputs: [{ fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' }],
+  });
+  const inspection = inspectDvtSubstraitProjectionDraft(draft);
+  if (!inspection.ok || inspection.projection.outputs[0]?.sourceFieldId == null) {
+    throw new Error('Expected admitted connected source lineage.');
+  }
+  const sourceFieldId = inspection.projection.outputs[0].sourceFieldId;
   const model = applyDvtSubstraitSemanticDocument(
     buildNode('model-orders', 'dvt:transform', 'transform'),
-    encodeDvtSubstraitProjectionDocument(
-      createDvtSubstraitProjectionDraft({
-        source: {
-          nodeId: source.id,
-          schema: 'raw',
-          table: 'orders',
-          sourceRef,
-          fields: [{ name: 'order_id', dataType: 'integer' }],
-        },
-        targetNodeId: 'model-orders',
-        outputs: [
-          { fieldId: 'output:stable-order-id', name: outputName, sourceFieldName: 'order_id' },
-        ],
-      })
-    )
+    encodeDvtSubstraitProjectionDocument(draft)
   );
-  return [source, model];
+  return [source, model, sourceFieldId];
 }
 
 describe('Canvas column lineage projection', () => {
@@ -91,8 +98,8 @@ describe('Canvas column lineage projection', () => {
     expect(resolveCanvasColumnPortDirections('output')).toEqual(['target']);
   });
 
-  it('derives removable lineage only from connected reference-backed canonical fields', () => {
-    const [source, model] = buildProjectionGraph();
+  it('derives removable lineage only from connected, disclosed canonical fields', () => {
+    const [source, model, sourceFieldId] = buildProjectionGraph();
     const project = (
       expandedNodeIds: ReadonlySet<string>,
       connected = true
@@ -108,8 +115,8 @@ describe('Canvas column lineage projection', () => {
         source: source.id,
         target: model.id,
         data: expect.objectContaining({
-          sourceFieldId: 'field:source-orders:order_id',
-          outputId: 'output:stable-order-id',
+          sourceFieldId,
+          outputId: 'output:order_id',
           removable: true,
         }),
       }),
@@ -119,10 +126,23 @@ describe('Canvas column lineage projection', () => {
   });
 
   it('keeps lineage identity stable when only the target display name changes', () => {
-    const [source, original] = buildProjectionGraph('order_id');
-    const [, renamed] = buildProjectionGraph('customer_order_id');
+    const [source, original] = buildProjectionGraph();
     const expanded = new Set([source.id, original.id]);
     const edges = [{ sourceId: source.id, targetId: original.id }];
+    const resolveNode = (nodeId: string): CanonicalNode | undefined =>
+      [source, original].find((node) => node.id === nodeId);
+    const entry = readEditableCanvasProjectionEntry({ targetNode: original, edges, resolveNode });
+    if (entry.outcome === 'rejected' || entry.projection == null) {
+      throw new Error('Expected editable projection.');
+    }
+    const renamedResult = persistCanvasProjectionOutputs({
+      targetNode: original,
+      resolveNode,
+      projection: entry.projection,
+      outputs: entry.projection.outputs.map((output) => ({ ...output, name: 'customer_order_id' })),
+    });
+    if (renamedResult.outcome === 'rejected') throw new Error('Expected renamed projection.');
+    const renamed = renamedResult.node;
 
     const originalLineage = projectCanvasColumnLineage({
       nodes: [source, original],

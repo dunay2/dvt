@@ -8,8 +8,8 @@ import {
 } from './canvasDvtSubstraitPilot';
 import {
   inspectDvtSubstraitProjectionDraft,
-  type DvtSubstraitProjection,
   type DvtSubstraitProjectionDraft,
+  type DvtSubstraitProjectionSemantics,
 } from './canvasDvtSubstraitProjection';
 import {
   inspectDvtSubstraitPilotAggregationDraft,
@@ -94,7 +94,7 @@ function buildPilotOutputExpression(projection: DvtSubstraitPilotProjection): Po
 
 function requireConnectedFieldProjection(
   draft: DvtSubstraitProjectionDraft
-): DvtSubstraitProjection {
+): DvtSubstraitProjectionSemantics {
   const inspection = inspectDvtSubstraitProjectionDraft(draft);
   if (!inspection.ok) {
     throw new DvtSubstraitPostgresProjectionError(
@@ -106,11 +106,11 @@ function requireConnectedFieldProjection(
 }
 
 function buildConnectedFieldPostgresAst(
-  projection: DvtSubstraitProjection,
+  projection: DvtSubstraitProjectionSemantics,
   whereClause?: PostgresAstNode
 ): PostgresAstNode {
   const calculatedExpression = (
-    output: DvtSubstraitProjection['outputs'][number]
+    output: DvtSubstraitProjectionSemantics['outputs'][number]
   ): PostgresAstNode | null => {
     const calculation = output.calculation;
     if (calculation?.kind === 'string-literal') return pgStringLiteral(calculation.value);
@@ -121,7 +121,9 @@ function buildConnectedFieldPostgresAst(
     }
     return null;
   };
-  const outputExpression = (output: DvtSubstraitProjection['outputs'][number]): PostgresAstNode => {
+  const outputExpression = (
+    output: DvtSubstraitProjectionSemantics['outputs'][number]
+  ): PostgresAstNode => {
     const calculated = calculatedExpression(output);
     if (calculated != null) return calculated;
     if (output.sourceFieldName == null) {

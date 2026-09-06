@@ -1,4 +1,5 @@
 /** Owned concern: rebase a stale simple Transform projection onto its sole connected source. */
+import { allocateDvtFieldId } from '@dvt/contracts';
 import type { CanonicalNode } from '../../types/canonical';
 import { resolveCanvasDraftNodes } from './canvasDraftNodeCatalog';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
@@ -11,6 +12,7 @@ import {
   decodeDvtSubstraitProjectionDocument,
   encodeDvtSubstraitProjectionDocument,
   inspectDvtSubstraitProjectionDraft,
+  resolveDvtSubstraitProjectionEntry,
   resolveDvtSubstraitProjectionSource,
 } from './canvasDvtSubstraitProjection';
 
@@ -37,10 +39,17 @@ export function rebaseStaleTransformProjection(args: {
   try {
     const authority = readDvtTransformAuthoringAuthority(targetNode);
     if (authority == null) return args.draftSession;
-    const inspection = inspectDvtSubstraitProjectionDraft(
-      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
-    );
-    if (!inspection.ok || inspection.projection.source.nodeId === source.nodeId) {
+    const currentDraft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
+    const inspection = inspectDvtSubstraitProjectionDraft(currentDraft);
+    if (!inspection.ok) return args.draftSession;
+    if (
+      resolveDvtSubstraitProjectionEntry({
+        targetNode,
+        nodes,
+        edges: args.draftSession.workingSet.visibleEdges,
+        draft: currentDraft,
+      }) != null
+    ) {
       return args.draftSession;
     }
 
@@ -48,7 +57,7 @@ export function rebaseStaleTransformProjection(args: {
       source,
       targetNodeId: targetNode.id,
       outputs: source.fields.map((field) => ({
-        fieldId: `output:${encodeURIComponent(field.name)}`,
+        fieldId: allocateDvtFieldId(),
         name: field.name,
         sourceFieldName: field.name,
       })),

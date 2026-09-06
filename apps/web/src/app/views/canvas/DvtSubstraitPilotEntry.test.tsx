@@ -12,6 +12,8 @@ import {
 } from './canvasInspectorAuthoringModel';
 import { DvtAuthoringFields } from './DvtAuthoringFields';
 
+const DVT_FIELD_ID = /dvt_fld_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i;
+
 function sourceNode(type = 'string'): CanonicalNode {
   return {
     id: 'source-customers',
@@ -106,7 +108,8 @@ describe('Substrait pilot entry through ConfigureCanvasDvtNode', () => {
 
     const draft = container.querySelector('[data-slot="dvt-draft-json"]')?.textContent ?? '';
     expect(draft).toContain('"mode":"substrait"');
-    expect(draft).toContain('field:transform-customers:name');
+    expect(draft).toMatch(DVT_FIELD_ID);
+    expect(draft).not.toContain('field:transform-customers:');
     expect(draft).not.toContain('"sql"');
     expect(container.querySelector('[data-slot="dvt-substrait-pilot-authoring"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="dvt-transform-sql-editor"]')).toBeNull();
@@ -134,9 +137,13 @@ describe('Substrait pilot entry through ConfigureCanvasDvtNode', () => {
     expect(grain).not.toBeNull();
     expect(countName?.value).toBe('row_count');
     expect(summarize).not.toBeNull();
+    const countryOption = Array.from(grain?.options ?? []).find(
+      (option) => option.textContent?.trim() === 'country'
+    );
+    expect(countryOption).not.toBeUndefined();
 
     act(() => {
-      fireEvent.change(grain!, { target: { value: 'field:transform-customers:country' } });
+      fireEvent.change(grain!, { target: { value: countryOption!.value } });
       fireEvent.input(countName!, { target: { value: 'customer_count' } });
       fireEvent.click(summarize!);
     });
@@ -144,7 +151,8 @@ describe('Substrait pilot entry through ConfigureCanvasDvtNode', () => {
     const draft = container.querySelector('[data-slot="dvt-draft-json"]')?.textContent ?? '';
     expect(draft).toContain('"case":"aggregate"');
     expect(draft).toContain('"names":["country","customer_count"]');
-    expect(draft).toContain('field:transform-customers:count');
+    expect(draft).toMatch(DVT_FIELD_ID);
+    expect(draft).not.toContain('field:transform-customers:');
     expect(
       container.querySelector('[data-slot="dvt-substrait-aggregation-authoring"]')
     ).not.toBeNull();
@@ -162,8 +170,9 @@ describe('Substrait pilot entry through ConfigureCanvasDvtNode', () => {
       fireEvent.keyDown(rank!, { key: 'Enter' });
     });
     const composed = container.querySelector('[data-slot="dvt-draft-json"]')?.textContent ?? '';
-    expect(composed).toContain('field:transform-customers:aggregate-row-number');
     expect(composed).toContain('"names":["country","customer_count","count_rank"]');
+    expect(composed).toMatch(DVT_FIELD_ID);
+    expect(composed).not.toContain('field:transform-customers:');
     expect(
       container.querySelector('[data-slot="dvt-substrait-aggregate-window-authoring"]')
     ).not.toBeNull();
@@ -188,7 +197,8 @@ describe('Substrait pilot entry through ConfigureCanvasDvtNode', () => {
     });
     const restored = container.querySelector('[data-slot="dvt-draft-json"]')?.textContent ?? '';
     expect(restored).toContain('"case":"project"');
-    expect(restored).not.toContain('"fieldId":"field:transform-customers:count"');
+    expect(restored).not.toContain('customer_count');
+    expect(restored).not.toContain('count_rank');
   });
 
   it('does not offer the pilot for a non-string fixture', () => {
