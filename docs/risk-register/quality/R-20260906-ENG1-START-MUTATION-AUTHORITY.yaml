@@ -4,6 +4,7 @@ status: Open
 date: 2026-09-06
 owners:
   - '@dvt/engine'
+  - '@dvt/adapter-postgres'
 severity: High
 probability: Low
 context: >
@@ -20,6 +21,8 @@ mitigations:
   - Sixteen regressions preserve complete run state on admission rejection and deterministic
     bootstrap/recovery races while retaining owned failure behavior.
   - StartRunProtocol documents the authority requirement and the remaining boundary.
+  - PostgreSQL metadata collisions must preserve the canonical Engine error class, child runId and
+    original cause; real database regressions cover reuse and reservation rollback.
 limitations:
   - This first cut does not add an exclusive intent claim; GH-2678 owns fencing.
   - Pre-catch compensation and unknown provider outcomes remain governed by GH-2679.

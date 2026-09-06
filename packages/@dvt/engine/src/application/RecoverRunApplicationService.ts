@@ -274,7 +274,7 @@ export class RecoverRunApplicationService implements IRunRecoveryService {
             parentRunId: asNonBlankString(reservation.parentRunId),
             originRunId: asNonBlankString(reservation.originRunId),
           };
-          const runRef = estimateRunRef(resolvedContext);
+          const runRef = estimateRunRef.call(adapter, resolvedContext);
           const metadata = this.eventFactory.buildRunMetadata(
             resolvedContext,
             planRef,

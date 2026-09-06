@@ -1,3 +1,4 @@
+import { RunAlreadyExistsError } from '@dvt/engine';
 import { describe, expect, it, vi } from 'vitest';
 
 import { PostgresRunStateCoordinator } from '../src/PostgresRunStateCoordinator.js';
@@ -16,8 +17,7 @@ const RUN_METADATA_TABLE = 'run_metadata';
 const RUN_METADATA_PKEY_CONSTRAINT = 'run_metadata_pkey';
 const RUN_EVENTS_TABLE = 'run_events';
 const RUN_EVENTS_IDEMPOTENCY_CONSTRAINT = 'run_events_run_id_idempotency_key_key';
-const RUN_ALREADY_EXISTS_MESSAGE = 'RUN_ALREADY_EXISTS';
-const RUN_ALREADY_EXISTS_NAME = 'RunAlreadyExistsError';
+const RUN_ALREADY_EXISTS_CODE = 'RUN_ALREADY_EXISTS';
 const TENANT_SCOPE_REQUIRED_MESSAGE = 'TENANT_SCOPE_REQUIRED';
 const EMPTY_TENANT = '   ';
 const ZERO_SEQ = 0;
@@ -85,9 +85,12 @@ describe('PostgresRunStateCoordinator', () => {
       withTransaction: async (fn) => fn({} as never),
     });
 
-    await expect(coordinator.bootstrapRunTx(makeBootstrapInput())).rejects.toMatchObject({
-      message: RUN_ALREADY_EXISTS_MESSAGE,
-      name: RUN_ALREADY_EXISTS_NAME,
+    const rejection = coordinator.bootstrapRunTx(makeBootstrapInput());
+    await expect(rejection).rejects.toBeInstanceOf(RunAlreadyExistsError);
+    await expect(rejection).rejects.toMatchObject({
+      code: RUN_ALREADY_EXISTS_CODE,
+      runId: TEST_RUN_ID,
+      cause: pgUniqueError,
     });
   });
 

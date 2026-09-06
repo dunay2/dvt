@@ -126,6 +126,47 @@ Provider refs remain provider addresses, not logical-run authorization IDs.
 The design was closed before RED. The implemented manifest records this bounded
 failure-reporting cut; it does not close the global GitHub issue.
 
+## PostgreSQL Review Delta
+
+PR #3022 review found that PostgreSQL labels a plain Error as RunAlreadyExistsError.
+The recovery service requires the exported Engine class, so a concurrent child
+collision cannot reach its reused preparation path on the production store.
+Planning design GH-2676-PG-START-COLLISION-CONFORMANCE extends conformance of the
+same rail and issue; the previous Engine design retains its bounded evidence.
+
+```mermaid
+flowchart LR
+    A[Metadata insert: PostgreSQL 23505] --> B[Current plain Error]
+    B --> C[Engine instanceof fails: recovery rejects]
+    A --> D[Selected: canonical RunAlreadyExistsError]
+    D --> E[Rollback transaction and reserved attempt]
+    E --> F[Engine reads committed child and returns reused receipt]
+```
+
+Translate only run_metadata insert uniqueness at bootstrapRunWithClient, where
+both start and recovery have the actual child logical runId. Preserve the original
+cause through an optional RunAlreadyExistsError constructor option. Remove the
+outer duplicate translators and their unused name/message constants. Other
+PostgreSQL errors retain their identity. No error-name allowlist is added to Engine.
+
+| Scenario                                  | Opportunity    | Fowler pattern                            | DDD owner                           | Command/query rail                             | Implementation surfaces                                           | Unit or package test                                                       | Architecture test                                  | User-flow test                                                                                    | Out of scope                                     |
+| ----------------------------------------- | -------------- | ----------------------------------------- | ----------------------------------- | ---------------------------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| PostgreSQL child collision bypasses reuse | Boundary drift | Error translation at transaction boundary | Engine Run / PostgreSQL persistence | IWorkflowEngine.startRun and existing recovery | PostgresRunStateCoordinator, its constants, RunAlreadyExistsError | Typed class, code, child runId, original cause; unrelated errors unchanged | Existing dependency and Engine architecture guards | Real PostgreSQL duplicate, concurrent child and Engine recovery reuse; loser reservation rollback | New error taxonomy, intent ownership or new rail |
+
+The real recovery fixture also exposed a detached estimateRunRef method call.
+Temporal and the in-memory provider require their adapter receiver. Preserve that
+receiver with Function.call at the existing invocation; the same regression uses
+an unbound provider method and must pass without a test-only binding workaround.
+The original Engine design is reopened through drift because this surface is
+already declared there; no new recovery service is introduced.
+
+Before production changes, strengthen coordinator assertions and reproduce the
+collision against isolated PostgreSQL schemas. Require the actual recovery
+service to consume that collision, then prove one child, unchanged winner state
+and the next attempt without a gap. Run full Engine and PostgreSQL package checks,
+live PostgreSQL integration, ARC and pre-push gates. The existing evidence and
+risk artifacts will record this review delta after execution.
+
 ## Feature Mechanization
 
 ```feature-mechanization
@@ -148,6 +189,11 @@ governingSources:
   - docs/adr/ADR-0013-run-state-store-bootstrapRunTx.md
   - docs/adr/ADR-0030-pre-dispatch-intent-log.md
 allowedImplementationSurfaces:
+  - packages/@dvt/adapter-postgres/src/PostgresRunStateCoordinator.ts
+  - packages/@dvt/adapter-postgres/src/PostgresRunStateCoordinatorConstants.ts
+  - packages/@dvt/adapter-postgres/test/PostgresRunStateCoordinator.test.ts
+  - packages/@dvt/adapter-postgres/test/smoke.test.ts
+  - packages/@dvt/engine/src/contracts/errors/runErrors.ts
   - packages/@dvt/engine/src/services/startRun/StartRunTypes.ts
   - packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts
   - packages/@dvt/engine/src/services/startRun/StartRunFailurePolicy.ts
@@ -168,7 +214,7 @@ forbiddenImplementationSurfaces:
   - packages/@dvt/engine/src/ports/IStartRunIntentStore.ts
   - packages/@dvt/engine/src/state/**
   - packages/@dvt/contracts/**
-  - packages/@dvt/adapter-*/**
+  - packages/@dvt/adapter-temporal/**
   - scripts/**
   - tools/**
 commandQueryRails:
@@ -208,7 +254,47 @@ redGreenCycles:
       - packages/@dvt/engine/src/application/IStartRunApplicationService.ts
       - packages/@dvt/engine/src/application/RecoverRunApplicationService.ts
     greenTest: pnpm --filter @dvt/engine exec vitest run test/core/WorkflowEngine.startMutationAuthority.test.ts
+  - id: postgres-recovery-collision-preserves-typed-boundary
+    redTest: DVT_PG_INTEGRATION=1 pnpm --filter @dvt/adapter-postgres exec vitest run test/PostgresRunStateCoordinator.test.ts test/smoke.test.ts
+    expectedFailure: PostgreSQL collision is not an Engine RunAlreadyExistsError and recovery cannot reuse the committed child
+    patchSurfaces:
+      - packages/@dvt/adapter-postgres/src/PostgresRunStateCoordinator.ts
+      - packages/@dvt/adapter-postgres/src/PostgresRunStateCoordinatorConstants.ts
+      - packages/@dvt/engine/src/contracts/errors/runErrors.ts
+    greenTest: DVT_PG_INTEGRATION=1 pnpm --filter @dvt/adapter-postgres exec vitest run test/PostgresRunStateCoordinator.test.ts test/smoke.test.ts
 symbols:
+  - name: captureState
+    path: packages/@dvt/adapter-postgres/test/smoke.test.ts
+    dddOwner: Run persistence
+    cqRails: [IWorkflowEngine.startRun]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: pnpm arch:deps
+    cypressCoverage: N/A - Engine recovery and live PostgreSQL integration
+    unitTests: [pnpm --filter @dvt/adapter-postgres exec vitest run test/smoke.test.ts]
+  - name: createBarrier
+    path: packages/@dvt/adapter-postgres/test/smoke.test.ts
+    dddOwner: Run persistence
+    cqRails: [IWorkflowEngine.startRun]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: pnpm arch:deps
+    cypressCoverage: N/A - Engine recovery and live PostgreSQL integration
+    unitTests: [pnpm --filter @dvt/adapter-postgres exec vitest run test/smoke.test.ts]
+  - name: RunAlreadyExistsError
+    path: packages/@dvt/engine/src/contracts/errors/runErrors.ts
+    dddOwner: StartRunApplicationFlow
+    cqRails: [IWorkflowEngine.startRun]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: pnpm arch:deps
+    cypressCoverage: N/A - Engine recovery and live PostgreSQL integration
+    unitTests: [pnpm --filter @dvt/adapter-postgres exec vitest run test/PostgresRunStateCoordinator.test.ts test/smoke.test.ts]
+  - name: PostgresRunStateCoordinator
+    path: packages/@dvt/adapter-postgres/src/PostgresRunStateCoordinator.ts
+    dddOwner: Run persistence
+    cqRails: [IWorkflowEngine.startRun]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: pnpm arch:deps
+    cypressCoverage: N/A - Engine recovery and live PostgreSQL integration
+    unitTests: [pnpm --filter @dvt/adapter-postgres exec vitest run test/PostgresRunStateCoordinator.test.ts test/smoke.test.ts]
   - name: StartRunPreparation
     path: packages/@dvt/engine/src/services/startRun/StartRunTypes.ts
     dddOwner: StartRunApplicationFlow

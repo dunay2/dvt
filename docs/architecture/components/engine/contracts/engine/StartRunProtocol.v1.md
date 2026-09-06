@@ -355,6 +355,15 @@ are also proven.
 
 ### 4.7 Start Failure Authority Conformance
 
+PostgreSQL conformance also requires a duplicate metadata insert in either
+bootstrap path to throw the exported Engine RunAlreadyExistsError class with
+the child logical runId and original PostgreSQL cause. The transaction must roll
+back the losing recovery reservation. The real recovery-service/PostgreSQL
+regression in adapter-postgres/test/smoke.test.ts must observe created then reused
+preparations, preserve the winner's persisted state and allocate the next attempt
+without a gap. This proves the preparation boundary; it does not certify provider
+dispatch or exclusive intent ownership.
+
 The [mutation-authority regressions](../../../../../../packages/@dvt/engine/test/core/WorkflowEngine.startMutationAuthority.test.ts)
 exercise this protocol through the actual Engine application services and
 in-memory transactional stores. They MUST compare complete metadata, ordered
