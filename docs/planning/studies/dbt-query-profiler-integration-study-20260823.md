@@ -283,7 +283,7 @@ Do not broaden #2474 into five warehouse adapters.
 
 ### 2. OBS1.2 — provider-gated
 
-#2624 is the follow-up and remains Not Ready until DVT supports one upstream-covered warehouse adapter and exact provider query correlation is proven.
+Issue #2624 is the follow-up and remains Not Ready until DVT supports one upstream-covered warehouse adapter and exact provider query correlation is proven.
 
 Implement exactly one provider first.
 
