@@ -224,7 +224,7 @@ describe('dbt project file projection live vertical', () => {
       .find('[data-slot="graph-node-column-toggle"]')
       .should('contain.text', 'Columns (2)');
     cy.get('.react-flow__node[data-id="model.analytics.orders"]')
-      .find('[data-slot="graph-node-metric-row"][data-placement="body"]')
+      .find('[data-slot="graph-node-operational-rail"]')
       .within(() => {
         cy.contains('Rows').should('be.visible');
         cy.contains('Size').should('be.visible');
