@@ -1,7 +1,7 @@
 /**
  * @file packages/@dvt/traceability-service/src/lineage/LineageOutboxObserver.ts
  * @baseline ADR-0004: Event Sourcing Strategy
- * @baseline ADR-0032: compiledCodeRef Ownership
+ * @baseline ADR-0067: Canonical Artifact Authority and Compiled-Code Hard Cut
  * @baseline ADR-0033: Outbox Worker Sharding And Fencing Model
  * @decision Observe delivered StepStarted outbox records and enqueue lineage work fail-open
  * @consequence Domain delivery remains authoritative while traceability processing can lag or fail independently

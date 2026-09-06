@@ -2,11 +2,10 @@
  * @file packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.stepExecution.ts
  * @ownedConcern Per-layer step activity execution orchestration
  * @baseline ADR-0003: Execution Model
- * @baseline ADR-0032: compiledCodeRef Ownership
  * @baseline ADR-0040: Retry Ownership And Attempt Authority
- * @decision Emit StepStarted artifact references before executing DVT-owned step activities with explicit retry handling
- * @consequence Traceability receives immutable compiled-code references while activity retries remain under DVT policy
- * @version 1.2.0
+ * @decision Emit step lifecycle events and execute DVT-owned step activities with explicit retry handling
+ * @consequence Temporal executes the admitted plan without publishing or projecting artifacts
+ * @version 2.0.0
  */
 import {
   ActivityFailure,
@@ -24,7 +23,6 @@ import type {
   WorkflowPlanRef,
   WorkflowStep,
 } from './runPlanWorkflow.types.js';
-import { buildStepStartedPayload } from './workflowArtifactHelpers.js';
 import { formatUnknownError } from './workflowErrorHelpers.js';
 import { buildGatewayContext } from './workflowGatewayHelpers.js';
 
@@ -34,13 +32,11 @@ export async function emitStepStartedForLayer(
   layer: ReadonlyArray<WorkflowStep>
 ): Promise<void> {
   for (const step of layer) {
-    const stepStartedPayload = buildStepStartedPayload(step);
     await eventActivities.emitEvent({
       ctx,
       planRef,
       eventType: 'StepStarted',
       stepId: step.stepId,
-      ...(stepStartedPayload === undefined ? {} : { payload: stepStartedPayload }),
     });
   }
 }

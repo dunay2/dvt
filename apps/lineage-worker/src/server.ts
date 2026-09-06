@@ -5,8 +5,8 @@ import { LineageWorkerRuntime } from '@dvt/traceability-service';
 import pino from 'pino';
 
 import { buildLineageWorkerBootstrap } from './bootstrap.js';
-import { createStepStartedLineageMapper } from './compiledCodeResolver.js';
 import { loadEnv } from './env.js';
+import { createStepStartedLineageMapper } from './lineageMapper.js';
 
 async function main(): Promise<void> {
   const env = loadEnv(process.env);

@@ -1,7 +1,6 @@
+import { ArtifactReadError } from '@dvt/artifacts';
 import { describe, expect, it, vi } from 'vitest';
 
-import { LINEAGE_ERROR_CODE, LINEAGE_ERROR_MESSAGE_KEY } from '../../src/lineage/errorContract.js';
-import { CompiledCodeNotFoundError } from '../../src/lineage/errors.js';
 import { LineageOutboxObserver } from '../../src/lineage/LineageOutboxObserver.js';
 import { LINEAGE_LOG_MESSAGE } from '../../src/lineage/logMessages.js';
 
@@ -47,13 +46,14 @@ describe('LineageOutboxObserver', () => {
     expect(logger.warn).toHaveBeenCalled();
   });
 
-  it('projects structured lineage error metadata in fail-open warnings', async () => {
-    const lineageError = new CompiledCodeNotFoundError({
-      storageUri: 'memory://compiled/missing.sql',
-    });
+  it('projects generic structured error metadata in fail-open warnings', async () => {
+    const artifactError = new ArtifactReadError(
+      'ARTIFACT_NOT_FOUND',
+      'lineage artifact could not be found'
+    );
     const lineageStore = {
       ...makeStore(),
-      enqueue: vi.fn().mockRejectedValue(lineageError),
+      enqueue: vi.fn().mockRejectedValue(artifactError),
     };
     const logger = makeSilentLogger();
     const observer = new LineageOutboxObserver(lineageStore, logger);
@@ -63,11 +63,9 @@ describe('LineageOutboxObserver', () => {
     expect(logger.warn).toHaveBeenCalledWith(
       expect.objectContaining({
         err: {
-          code: LINEAGE_ERROR_CODE.COMPILED_CODE_NOT_FOUND,
-          message: 'Compiled code not found for URI: memory://compiled/missing.sql',
-          messageKey: LINEAGE_ERROR_MESSAGE_KEY.COMPILED_CODE_NOT_FOUND,
-          messageParams: { storageUri: 'memory://compiled/missing.sql' },
-          name: 'CompiledCodeNotFoundError',
+          code: 'ARTIFACT_NOT_FOUND',
+          message: 'lineage artifact could not be found',
+          name: 'ArtifactReadError',
         },
         eventType: 'StepStarted',
         runId: 'run-1',

@@ -3,22 +3,11 @@
  *
  * @baseline ADR-0003: Execution Model
  * @baseline ADR-0035: Planner Public Contract Evolution Protocol
- * @decision Keep common timeout, concurrency, and compiled-code fields independent of DBT.
- * @consequence Step contracts can reuse one strict schema without depending on another step family.
- * @version 1.0.0
+ * @decision Keep common timeout, concurrency, and custom fields independent of step-family artifacts.
+ * @consequence Step contracts reuse one strict schema without introducing artifact-specific reference models.
+ * @version 2.0.0
  */
 import { z } from 'zod';
-
-const HexSha256Schema = z.string().regex(/^[a-f0-9]{64}$/u);
-
-export const CompiledCodeRefSchema = z
-  .object({
-    sha256: HexSha256Schema,
-    storageUri: z.string().min(1),
-    sizeBytes: z.number().int().nonnegative(),
-    encoding: z.literal('utf-8').optional(),
-  })
-  .strict();
 
 export const CommonStepTypeConfigSchema = z
   .object({
@@ -30,6 +19,5 @@ export const CommonStepTypeConfigSchema = z
       .strict()
       .optional(),
     custom: z.record(z.string(), z.unknown()).optional(),
-    compiledCodeRef: CompiledCodeRefSchema.optional(),
   })
   .strict();

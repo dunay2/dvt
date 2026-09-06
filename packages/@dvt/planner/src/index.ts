@@ -13,7 +13,6 @@ export { PlannerError, PlannerErrorCode } from './domain/errors.js';
 
 // -- Planner-owned behavior ports ------------------------------------------------
 export type { ICustomPolicyNamespaceRegistry } from './contracts/CustomPolicyNamespaceRegistry.js';
-export type { IExecutionBindingVerifier } from './contracts/ExecutionBindingVerification.js';
 export type { IPlanExecutabilityValidator } from './contracts/PlanExecutabilityValidation.js';
 export type { PlanExecutabilityValidationInput } from './contracts/PlanExecutabilityValidation.js';
 
@@ -38,21 +37,3 @@ export type {
   ResolvedPolicies,
   StepKind,
 } from '@dvt/contracts';
-
-// ── Artifact concern — transitional compatibility bridge (Slice 4) ────────────
-//
-// These symbols have moved to @dvt/artifacts (ADR-0034, Slice 4).
-// Re-exports here are a migration bridge for downstream consumers.
-//
-// DO NOT add new artifact exports here.
-// DO NOT import artifact storage from @dvt/planner in new code — use @dvt/artifacts directly.
-// Removal criteria: remove this section once all downstream imports point to @dvt/artifacts.
-//
-export type { ICompiledCodeStorage } from '@dvt/artifacts';
-export { computeSha256 } from '@dvt/artifacts';
-export { attachCompiledCodeRefs, type AttachCompiledCodeRefsOptions } from '@dvt/artifacts';
-export { S3CompiledCodeStorage } from '@dvt/artifacts';
-export { MinioCompiledCodeStorage } from '@dvt/artifacts';
-export { FileSystemCompiledCodeStorage } from '@dvt/artifacts';
-export { InMemoryCompiledCodeStorage } from '@dvt/artifacts';
-export { NoopCompiledCodeStorage } from '@dvt/artifacts';

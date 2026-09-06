@@ -1,27 +1,23 @@
 /**
- * G6 Slice 3 — Golden fixture regression for StepStartedLineageMapper
+ * Golden fixture regression for StepStartedLineageMapper.
  *
- * Proves that the full serialized output shape of all three mapper paths is
- * stable and makes any drift visible as a PR diff in the fixture files under
- * test/fixtures/lineage/. Update fixtures intentionally with:
- *   pnpm --filter @dvt/traceability-service test --update-snapshots
+ * The hard-cut surface is intentionally generic: StepStarted may carry a
+ * StepArtifactRef, and traceability specializes only `compiled-sql` into the
+ * standard OpenLineage SQL facet. No compiled-code-specific facet survives.
  */
+import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import type { CompiledCodeRef, EventEnvelope } from '@dvt/contracts';
+import type { ArtifactReadRuntimeOptions } from '@dvt/artifacts';
+import type { EventEnvelope, StepArtifactRef } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
-import { sha256HexUtf8 } from '../../src/lineage/compiledCodeRef.js';
-import { CompiledCodeNotFoundError } from '../../src/lineage/errors.js';
 import { SqlJobFacetBuilder } from '../../src/lineage/facets/SqlJobFacetBuilder.js';
 import { StepStartedLineageMapper } from '../../src/lineage/mapper/StepStartedLineageMapper.js';
 
-// ---------------------------------------------------------------------------
-// Fixtures directory — committed JSON files under test/fixtures/lineage/
-// ---------------------------------------------------------------------------
-
 const FIXTURES_DIR = join(fileURLToPath(import.meta.url), '../../fixtures/lineage');
+const STORAGE_URI = 's3://dvt-artifacts/compiled/sql-step';
 
 function fixtureFile(name: string): string {
   return join(FIXTURES_DIR, name);
@@ -31,15 +27,13 @@ function toSnapshotJson(value: unknown): string {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
 
-// ---------------------------------------------------------------------------
-// Helpers (same as the unit test suite to keep fixtures representative)
-// ---------------------------------------------------------------------------
-
-function mkCompiledCodeRef(sqlText: string): CompiledCodeRef {
+function mkStepArtifactRef(sqlText: string): StepArtifactRef {
+  const bytes = Buffer.from(sqlText, 'utf8');
   return {
-    sha256: sha256HexUtf8(sqlText),
-    storageUri: 'memory://compiled/sql-step',
-    sizeBytes: Buffer.byteLength(sqlText, 'utf8'),
+    artifactKind: 'compiled-sql',
+    sha256: createHash('sha256').update(bytes).digest('hex'),
+    storageUri: STORAGE_URI,
+    sizeBytes: bytes.byteLength,
     encoding: 'utf-8',
   };
 }
@@ -65,55 +59,44 @@ function mkStepStartedEvent(payload?: Record<string, unknown>): EventEnvelope {
   };
 }
 
-function makeMapper(
-  resolveImpl: () => Promise<{
-    sourceUri: string;
-    sqlText: string;
-    sha256: string;
-    sizeBytes: number;
-    encoding: string;
-  }>
-): StepStartedLineageMapper {
+function makeMapper(send: (...args: unknown[]) => Promise<unknown>): StepStartedLineageMapper {
+  const s3Client = { send } as unknown as NonNullable<ArtifactReadRuntimeOptions['s3Client']>;
   return new StepStartedLineageMapper({
-    compiledCodeResolver: { resolve: resolveImpl },
+    artifactReadOptions: { nodeEnv: 'test', s3Client },
     sqlFacetBuilder: new SqlJobFacetBuilder(),
   });
 }
 
-// ---------------------------------------------------------------------------
-// Golden tests
-// ---------------------------------------------------------------------------
-
 describe('StepStartedLineageMapper golden fixtures', () => {
-  it('success path: both sql and dvt_dbt_details facets emitted', async () => {
+  it('success path: standard SQL facet emitted from a verified generic artifact', async () => {
     const sqlText = 'select id, name from dim_customers where active = true';
-    const compiledCodeRef = mkCompiledCodeRef(sqlText);
+    const bytes = Buffer.from(sqlText, 'utf8');
+    const stepArtifactRef = mkStepArtifactRef(sqlText);
     const mapper = makeMapper(async () => ({
-      sourceUri: compiledCodeRef.storageUri,
-      sqlText,
-      sha256: compiledCodeRef.sha256,
-      sizeBytes: compiledCodeRef.sizeBytes,
-      encoding: 'utf-8',
+      Body: bytes,
+      ContentLength: bytes.byteLength,
     }));
 
-    const result = await mapper.map(mkStepStartedEvent({ compiledCodeRef }));
+    const result = await mapper.map(mkStepStartedEvent({ stepArtifactRef }));
 
     await expect(toSnapshotJson(result)).toMatchFileSnapshot(fixtureFile('mapper-success.json'));
   });
 
-  it('fail-open path: only dvt_dbt_details emitted with warning', async () => {
-    const sqlText = 'select count(*) from orders';
-    const compiledCodeRef = mkCompiledCodeRef(sqlText);
+  it('fail-open path: generic artifact warning and no lineage facet', async () => {
+    const stepArtifactRef = mkStepArtifactRef('select count(*) from orders');
     const mapper = makeMapper(async () => {
-      throw new CompiledCodeNotFoundError({ storageUri: compiledCodeRef.storageUri });
+      throw Object.assign(new Error('Missing object'), {
+        name: 'NoSuchKey',
+        $metadata: { httpStatusCode: 404 },
+      });
     });
 
-    const result = await mapper.map(mkStepStartedEvent({ compiledCodeRef }));
+    const result = await mapper.map(mkStepStartedEvent({ stepArtifactRef }));
 
     await expect(toSnapshotJson(result)).toMatchFileSnapshot(fixtureFile('mapper-fail-open.json'));
   });
 
-  it('no-compiledCodeRef path: empty facets and no warnings', async () => {
+  it('no-ref path: empty facets and no warnings', async () => {
     const mapper = makeMapper(async () => {
       throw new Error('should not be called');
     });

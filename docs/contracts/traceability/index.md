@@ -2,7 +2,7 @@
 title: Traceability Contracts
 status: Active
 owner: Core Architecture / Traceability / Docs
-last_reviewed: 2026-03-08
+last_reviewed: 2026-09-05
 ---
 
 # Traceability Contracts
@@ -19,8 +19,6 @@ The repo-governed lineage facet artifacts live here:
 
 - [OpenLineage vendored facets provenance](./facets/openlineage/index.md)
 - [OpenLineage SQL Job Facet 1-0-0 vendored copy](./facets/openlineage/SqlJobFacet.1-0-0.schema.json)
-- [DvtDbtDetailsJobFacet v1](./facets/DvtDbtDetailsJobFacet.v1.schema.json)
-- [CompiledCodeRef v1 shared contract](../shared/CompiledCodeRef.v1.schema.json)
 
 Contract ownership split:
 
@@ -28,17 +26,18 @@ Contract ownership split:
   emitted `_schemaURL` stays pinned to the public OpenLineage schema URL
   `https://openlineage.io/spec/facets/1-0-0/SqlJobFacet.json`
   while this repo vendors a local copy for offline validation and review.
-- `dvt_dbt_details` facet:
-  emitted `_schemaURL` points to the repo-governed DVT schema ID
-  `https://dvt.local/contracts/traceability/facets/DvtDbtDetailsJobFacet.v1.schema.json`
-  and the normative schema artifact is versioned locally in this folder.
-  Its `compiledCodeRef` property mirrors the shared-kernel contract artifact
-  under `docs/contracts/shared/CompiledCodeRef.v1.schema.json` so the facet
-  schema stays self-contained for offline AJV compilation.
+- artifact identity/read/integrity:
+  traceability does not own a second artifact model or reader hierarchy.
+  Step lifecycle events use the generic `StepArtifactRef` runtime contract and
+  artifact bytes are read and verified through `@dvt/artifacts`.
+- SQL lineage specialization:
+  when a generic step artifact has `artifactKind = compiled-sql`, the mapper may
+  build the standard OpenLineage SQL job facet from the verified artifact bytes.
+  This specialization does not create a compiled-code artifact authority.
 
 ## Runtime And Code Anchors
 
-The emitted schema URLs are defined in:
+The emitted schema URL is defined in:
 
 - `packages/@dvt/traceability-service/src/lineage/openlineageSchema.ts`
 
@@ -51,21 +50,33 @@ The current builder and mapper surface is implemented in:
 - `packages/@dvt/traceability-service/src/lineage/facets/SqlJobFacetBuilder.ts`
 - `packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts`
 
+The canonical generic artifact read/integrity path is implemented in:
+
+- `packages/@dvt/artifacts/src/runtime/readVerifiedArtifactBytes.ts`
+- `packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts`
+- `packages/@dvt/artifacts/src/runtime/validateArtifactIntegrity.ts`
+
 ## Governance Rules
 
-- Planning docs under `docs/planning/archive/gaps/g6/` explain execution sequence and
-  closure strategy, but they are not the normative facet contract.
+- Planning docs under `docs/planning/archive/gaps/g6/` explain historical execution
+  sequence and closure strategy, but they are not the normative facet contract.
 - Any change to emitted `_schemaURL`, facet field names, or required properties
-  must update the schema artifact in this folder and the corresponding evidence
-  or gap closeout docs.
+  must update the schema artifact in this folder and the corresponding canonical
+  architecture evidence where required.
 - Vendored OpenLineage mirrors must keep explicit provenance and update-policy
   notes in this folder so offline validation remains auditable during review.
-- Repo-local traceability facets that embed shared-kernel structures must stay
-  aligned with the shared contract artifact and document that linkage
-  explicitly; use a self-contained mirror when offline AJV compilation cannot
-  resolve external schema references.
-- Validation lanes introduced in later `G6` slices must validate mapper output
-  against these local artifacts, not against the network.
+- Traceability must not introduce a step-kind-specific artifact reference,
+  reader, cache, resolver, fallback, or compatibility surface beside the
+  canonical generic artifact authority.
+- Validation lanes must validate mapper output against these local artifacts,
+  not against the network.
+
+## Hard Cut — 2026-09-05
+
+The compiled-code-specific lineage contract and reader subsystem were removed.
+There is no compatibility alias, dual-read path, or legacy replay reader.
+Historical evidence may still describe the retired model at the commit where it
+was valid; it is not active architecture.
 
 ## Related
 

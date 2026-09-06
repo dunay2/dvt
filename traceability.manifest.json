@@ -140,11 +140,10 @@
         "Delivery-facing port delegation remains the stable aggregate entrypoint for PostgreSQL state storage",
         "Derive active requirements from the injected binding policy before dispatch.",
         "Drive Temporal layer execution from resolved DVT execution segments and canonical workflow state",
-        "Emit StepStarted artifact references before executing DVT-owned step activities with explicit retry handling",
+        "Emit step lifecycle events and execute DVT-owned step activities with explicit retry handling",
         "Engine entry-point plan integrity verification resolves the executable plan,",
         "Every production PostgreSQL pool observes idle-client failures without terminating its host process",
         "Expose one bounded capability that owns its pool unless the caller supplies one.",
-        "Extract plugin-agnostic artifact references and retry policy before event emission",
         "Groups authorizer, planRefPolicy, and outboxRateLimiter into a single",
         "Implement in-memory run-state writes through event-log authority and port-owned lifecycle state",
         "In-memory intent store for unit tests; mirrors InMemoryTxStore patterns",
@@ -153,7 +152,7 @@
         "Isolate signal transition checks and dispatch from the combined run-control delegator.",
         "Keep cancel command behavior behind a command-specific runtime port.",
         "Keep combined run-control delegation without owning cancel or signal semantics.",
-        "Keep common timeout, concurrency, and compiled-code fields independent of DBT.",
+        "Keep common timeout, concurrency, and custom fields independent of step-family artifacts.",
         "Keep deterministic start-run intent creation in a named phase service.",
         "Keep implementation composition behind a governed entrypoint instead of the root barrel.",
         "Keep layer cursor, skipped-step emission, and continue-as-new handoff derived from DVT workflow state",
@@ -166,6 +165,7 @@
         "Keep start-run start and success telemetry in a policy seam instead of the application coordinator.",
         "Keep the authorization role interface in the engine public ports surface.",
         "Keep the facade use-case export surface local to the component boundary.",
+        "Keep workflow helpers step-kind agnostic and free of artifact publication concerns",
         "Keep workflow side effects behind Temporal activities and await activity cleanup before terminal cancellation",
         "Map verified execution scope to a deterministic physical schema and replace one relation atomically",
         "Mark the object-file staging dependency explicitly in admitted DBT step configuration.",
@@ -763,44 +763,6 @@
       "title": "ADR-0031 - Storage Adapter Tenant Isolation Strategy"
     },
     {
-      "number": "ADR-0032",
-      "decisions": [
-        "Coordinate one lineage worker tick without owning lifecycle mechanics",
-        "Define stable lineage error codes, reason codes, and message keys for compiled-code resolution",
-        "Define stable lineage warning codes, message keys, and parameters for fail-open compiled-code resolution",
-        "Emit StepStarted artifact references before executing DVT-owned step activities with explicit retry handling",
-        "Extract plugin-agnostic artifact references and retry policy before event emission",
-        "Keep lineage runtime log message keys explicit and separate from published lineage warning contracts",
-        "Manage lineage dead-letter counting, alerting, and replay as worker-owned recovery behavior",
-        "Map compiled-code resolution failures into stable lineage warnings",
-        "Normalize arbitrary lineage runtime errors into structured fail-open diagnostics",
-        "Normalize lineage worker runtime options before polling, replay, or dead-letter processing starts",
-        "Observe delivered StepStarted outbox records and enqueue lineage work fail-open",
-        "Own lineage worker lifecycle loop, abort cleanup, and backoff without owning tick semantics",
-        "Process lineage outbox records through mapper, sink, delivered, failed, and dead-letter states",
-        "Run lineage outbox polling, delivery, dead-letter, and replay loops outside domain outbox authority",
-        "Sanitize, redact, and bound lineage error metadata before persistence"
-      ],
-      "implemented_by": [
-        "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.stepExecution.ts",
-        "packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts",
-        "packages/@dvt/traceability-service/src/lineage/LineageOutboxObserver.ts",
-        "packages/@dvt/traceability-service/src/lineage/LineageWorkerRuntime.ts",
-        "packages/@dvt/traceability-service/src/lineage/errorContract.ts",
-        "packages/@dvt/traceability-service/src/lineage/errorPersistenceSupport.ts",
-        "packages/@dvt/traceability-service/src/lineage/errorSupport.ts",
-        "packages/@dvt/traceability-service/src/lineage/logMessages.ts",
-        "packages/@dvt/traceability-service/src/lineage/mapper/mapCompiledCodeResolutionWarning.ts",
-        "packages/@dvt/traceability-service/src/lineage/runtime/LineageWorkerLoopController.ts",
-        "packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerDeadLetterSupport.ts",
-        "packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerRecordProcessor.ts",
-        "packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerRuntimeConfig.ts",
-        "packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerTick.ts",
-        "packages/@dvt/traceability-service/src/lineage/warningContract.ts"
-      ],
-      "title": "ADR-0032 — compiledCodeRef Ownership: Reference in StepStarted Payload"
-    },
-    {
       "number": "ADR-0033",
       "decisions": [
         "Coordinate one lineage worker tick without owning lifecycle mechanics",
@@ -851,7 +813,7 @@
         "Admit one UTF-8 CSV or JSON Lines object and one scoped staging relation.",
         "Carry one bounded dbt selector in the admitted step configuration.",
         "Define plan-compile step-type configuration schemas as explicit planner contract surface",
-        "Keep common timeout, concurrency, and compiled-code fields independent of DBT.",
+        "Keep common timeout, concurrency, and custom fields independent of step-family artifacts.",
         "Keep executable-selection intent as a canonical planner contract instead of UI-local state.",
         "Keep execution decisions in the persisted plan artifact so Web renders planner truth without reconstructing selection semantics.",
         "Mark the object-file staging dependency explicitly in admitted DBT step configuration.",
@@ -940,9 +902,9 @@
     {
       "number": "ADR-0040",
       "decisions": [
-        "Emit StepStarted artifact references before executing DVT-owned step activities with explicit retry handling",
-        "Extract plugin-agnostic artifact references and retry policy before event emission",
+        "Emit step lifecycle events and execute DVT-owned step activities with explicit retry handling",
         "Keep provider-ref and retry-attempt administration behind DVT-owned in-memory run-state support",
+        "Keep workflow helpers step-kind agnostic and free of artifact publication concerns",
         "Keep workflow side effects behind Temporal activities and await activity cleanup before terminal cancellation",
         "Publish one run-control boundary without exposing adapter-owned lifecycle authority"
       ],
@@ -1229,6 +1191,38 @@
         "packages/@dvt/contracts/src/substrait.ts"
       ],
       "title": "ADR-0064 - Substrait as the Semantic Reference and Bounded Logical Profile for DVT Transformations"
+    },
+    {
+      "number": "ADR-0067",
+      "decisions": [
+        "Coordinate one lineage worker tick without owning lifecycle mechanics",
+        "Keep lineage runtime log message keys explicit and separate from published lineage warning contracts",
+        "Manage lineage dead-letter counting, alerting, and replay as worker-owned recovery behavior",
+        "Normalize arbitrary lineage runtime errors into structured fail-open diagnostics",
+        "Normalize lineage worker runtime options before polling, replay, or dead-letter processing starts",
+        "Observe delivered StepStarted outbox records and enqueue lineage work fail-open",
+        "Own lineage worker lifecycle loop, abort cleanup, and backoff without owning tick semantics",
+        "Preserve bounded generic artifact read warnings in lineage events",
+        "Preserve structured artifact errors through the existing lineage warning contract",
+        "Process lineage outbox records through mapper, sink, delivered, failed, and dead-letter states",
+        "Run lineage outbox polling, delivery, dead-letter, and replay loops outside domain outbox authority",
+        "Sanitize, redact, and bound lineage error metadata before persistence"
+      ],
+      "implemented_by": [
+        "packages/@dvt/traceability-service/src/lineage/LineageOutboxObserver.ts",
+        "packages/@dvt/traceability-service/src/lineage/LineageWorkerRuntime.ts",
+        "packages/@dvt/traceability-service/src/lineage/errorPersistenceSupport.ts",
+        "packages/@dvt/traceability-service/src/lineage/errorSupport.ts",
+        "packages/@dvt/traceability-service/src/lineage/logMessages.ts",
+        "packages/@dvt/traceability-service/src/lineage/mapper/mapArtifactReadWarning.ts",
+        "packages/@dvt/traceability-service/src/lineage/runtime/LineageWorkerLoopController.ts",
+        "packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerDeadLetterSupport.ts",
+        "packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerRecordProcessor.ts",
+        "packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerRuntimeConfig.ts",
+        "packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerTick.ts",
+        "packages/@dvt/traceability-service/src/lineage/warningContract.ts"
+      ],
+      "title": "ADR-0067 - Canonical Artifact Authority and Compiled-Code Hard Cut"
     }
   ]
 }

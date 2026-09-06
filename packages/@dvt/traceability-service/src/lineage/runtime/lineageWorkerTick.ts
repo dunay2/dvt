@@ -1,6 +1,6 @@
 /**
  * @file packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerTick.ts
- * @baseline ADR-0032: compiledCodeRef Ownership
+ * @baseline ADR-0067: Canonical Artifact Authority and Compiled-Code Hard Cut
  * @baseline ADR-0033: Outbox Worker Sharding And Fencing Model
  * @decision Coordinate one lineage worker tick without owning lifecycle mechanics
  * @consequence Tick processing, dead-letter recovery, lag reporting, and summary logging can evolve without bloating the public runtime facade

@@ -7,7 +7,7 @@
  * kernel while keeping behavior ports in their owner package.
  * @consequence Engine and adapters can share persisted event shapes without
  * reintroducing shared-kernel authority over runtime behavior.
- * @version 1.0.0
+ * @version 2.0.0
  */
 
 import type {
@@ -63,7 +63,7 @@ export type EventEnvelope = EventInput & {
 
 /**
  * Generic content-addressable artifact reference emitted in step lifecycle events.
- * This is the step-kind-agnostic runtime contract (`MW-A3`).
+ * This is the single step-kind-agnostic runtime artifact-reference contract (`MW-A3`).
  */
 export interface StepArtifactRef {
   artifactKind: string;
@@ -72,11 +72,6 @@ export interface StepArtifactRef {
   sizeBytes: number;
   encoding?: 'utf-8';
 }
-
-/**
- * Compiled-code reference view for callers that do not need the artifact discriminator.
- */
-export interface CompiledCodeRef extends Omit<StepArtifactRef, 'artifactKind'> {}
 
 export interface RunMetadata {
   tenantId: string;

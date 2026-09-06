@@ -1,0 +1,24 @@
+---
+id: R-20260905-ARTIFACT-COMPILED-CODE-HARD-CUT
+title:
+  Compiled-code hard cut invalidates histories and payloads that depend on the retired wire model
+status: Open
+date: 2026-09-05
+owners:
+  - '@dvt/artifacts'
+  - '@dvt/contracts'
+  - '@dvt/adapter-temporal'
+  - '@dvt/traceability-service'
+severity: High
+probability: Medium
+---
+summary: >
+  The artifact authority hard cut removes CompiledCodeRef and the compiled-code-specific storage and
+  lineage access subsystem. Temporal histories or persisted event payloads created with the retired
+  wire shape can no longer rely on a compatibility reader or replay branch after deployment.
+mitigation: >
+  Treat the release as an explicit operational compatibility boundary: drain or complete
+  incompatible in-flight histories before rollout, deploy contracts/runtime/traceability together,
+  and verify the global zero-reachability gate plus affected determinism/golden tests. Roll back by
+  reverting the atomic PR rather than reintroducing aliases, dual reads, or compatibility adapters.
+next_review: 2026-10-05

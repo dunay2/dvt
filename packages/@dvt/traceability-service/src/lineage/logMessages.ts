@@ -1,6 +1,6 @@
 /**
  * @file packages/@dvt/traceability-service/src/lineage/logMessages.ts
- * @baseline ADR-0032: compiledCodeRef Ownership
+ * @baseline ADR-0067: Canonical Artifact Authority and Compiled-Code Hard Cut
  * @baseline ADR-0033: Outbox Worker Sharding And Fencing Model
  * @decision Keep lineage runtime log message keys explicit and separate from published lineage warning contracts
  * @consequence Operational logs can describe fail-open behavior without mutating OpenLineage warning payloads

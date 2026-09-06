@@ -4,11 +4,11 @@ import {
   type RunExecutionContextRef,
 } from '@dvt/contracts';
 
-import { computeSha256 } from '../compiledCode/sha256.js';
 import type { IRunExecutionContextReader } from '../ports/IRunExecutionContextReader.js';
 
 import { ArtifactReadError } from './ArtifactReadError.js';
-import { readArtifactBytes, type ArtifactReadRuntimeOptions } from './readArtifactBytes.js';
+import { type ArtifactReadRuntimeOptions } from './readArtifactBytes.js';
+import { readVerifiedArtifactBytes } from './readVerifiedArtifactBytes.js';
 
 const ARTIFACT_LABEL = 'runExecutionContext';
 const URI_LABEL = 'runExecutionContextRef';
@@ -19,26 +19,21 @@ export class ArtifactBackedRunExecutionContextReader implements IRunExecutionCon
   public constructor(private readonly options?: ArtifactBackedRunExecutionContextReaderOptions) {}
 
   public async resolve(ref: RunExecutionContextRef): Promise<RunExecutionContext> {
-    const bytes = await readArtifactBytes(ref.uri, {
-      artifactLabel: ARTIFACT_LABEL,
-      uriLabel: URI_LABEL,
-      ...this.options,
-    });
-    assertSha256(bytes, ref.sha256);
+    const bytes = await readVerifiedArtifactBytes(
+      {
+        storageUri: ref.uri,
+        sha256: ref.sha256,
+      },
+      {
+        artifactLabel: ARTIFACT_LABEL,
+        uriLabel: URI_LABEL,
+        ...this.options,
+      }
+    );
     const resolved = parseRunExecutionContextArtifact(bytes);
 
     assertRefAlignment(ref, resolved);
     return resolved;
-  }
-}
-
-function assertSha256(bytes: Uint8Array, expectedSha256: string): void {
-  const actualSha256 = computeSha256(Buffer.from(bytes));
-  if (actualSha256 !== expectedSha256) {
-    throw new ArtifactReadError(
-      'ARTIFACT_INTEGRITY_MISMATCH',
-      'runExecutionContext artifact integrity mismatch'
-    );
   }
 }
 

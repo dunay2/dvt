@@ -948,9 +948,6 @@ importers:
 
   packages/@dvt/planner:
     dependencies:
-      '@dvt/artifacts':
-        specifier: workspace:*
-        version: link:../artifacts
       '@dvt/contracts':
         specifier: workspace:*
         version: link:../contracts

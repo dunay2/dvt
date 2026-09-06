@@ -10,8 +10,7 @@ function baseEnv(): NodeJS.ProcessEnv {
     DVT_PG_SCHEMA: 'dvt',
     DVT_PG_STATEMENT_TIMEOUT_MS: '0',
     DVT_PG_QUERY_TIMEOUT_MS: '0',
-    DVT_COMPILED_CODE_RESOLVER_BACKEND: 'auto',
-    DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE: 'false',
+    DVT_ARTIFACT_S3_FORCE_PATH_STYLE: 'false',
     DVT_LINEAGE_API_URL: 'https://lineage.example/api',
     DVT_LINEAGE_NAMESPACE: 'dvt',
     DVT_LINEAGE_BATCH_SIZE: '50',
@@ -27,28 +26,28 @@ describe('loadEnv', () => {
   it('parses explicit false string as false', () => {
     const env = loadEnv({
       ...baseEnv(),
-      DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE: 'false',
+      DVT_ARTIFACT_S3_FORCE_PATH_STYLE: 'false',
     });
 
-    expect(env.DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE).toBe(false);
+    expect(env.DVT_ARTIFACT_S3_FORCE_PATH_STYLE).toBe(false);
   });
 
   it('parses explicit true string as true', () => {
     const env = loadEnv({
       ...baseEnv(),
-      DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE: 'true',
+      DVT_ARTIFACT_S3_FORCE_PATH_STYLE: 'true',
     });
 
-    expect(env.DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE).toBe(true);
+    expect(env.DVT_ARTIFACT_S3_FORCE_PATH_STYLE).toBe(true);
   });
 
   it('rejects invalid boolean strings', () => {
     expect(() =>
       loadEnv({
         ...baseEnv(),
-        DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE: 'not-a-bool',
+        DVT_ARTIFACT_S3_FORCE_PATH_STYLE: 'not-a-bool',
       })
-    ).toThrow(/DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE/i);
+    ).toThrow(/DVT_ARTIFACT_S3_FORCE_PATH_STYLE/i);
   });
 
   it('parses explicit false string as false for DLQ auto replay flag', () => {

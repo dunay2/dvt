@@ -14,6 +14,15 @@ source:
 
 # Stage 1.1 — Planner Contract, Canonical Ownership, and Documentation Placement
 
+## Artifact authority supersession
+
+ADR-0067 supersedes every compiled-code-specific reference, enrichment, storage
+and execution-binding proposal in this document. Those passages are historical
+proposal evidence, not current requirements. Planner publishes no artifacts;
+current runtime artifact references use StepArtifactRef and verified artifact
+reads belong to @dvt/artifacts. See
+[ADR-0067](../../../../../docs/adr/ADR-0067-canonical-artifact-authority-and-compiled-code-hard-cut.md).
+
 ## 1. Purpose
 
 This document converts the Stage 1.1 planner discussion into an operational proposal.
@@ -572,9 +581,7 @@ type RetryPolicy = { kind: 'at-most-once' } | { kind: 'at-most-N'; maxAttempts: 
 type TimeoutPolicy = { kind: 'unbounded' } | { kind: 'budget'; maxSeconds: number };
 
 type ConcurrencyPolicy =
-  | { kind: 'sequential' }
-  | { kind: 'bounded'; maxParallel: number }
-  | { kind: 'unbounded' };
+  { kind: 'sequential' } | { kind: 'bounded'; maxParallel: number } | { kind: 'unbounded' };
 ```
 
 The shared contract surface also now includes:

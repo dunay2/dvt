@@ -33,10 +33,10 @@ const EnvSchema = z.object({
   DVT_PG_SCHEMA: z.string().default('dvt'),
   DVT_PG_STATEMENT_TIMEOUT_MS: z.coerce.number().int().min(0).default(0),
   DVT_PG_QUERY_TIMEOUT_MS: z.coerce.number().int().min(0).default(0),
-  DVT_COMPILED_CODE_RESOLVER_BACKEND: z.enum(['auto', 'file', 's3']).default('auto'),
-  DVT_COMPILED_CODE_RESOLVER_S3_ENDPOINT: z.string().url().optional(),
-  DVT_COMPILED_CODE_RESOLVER_S3_REGION: z.string().min(1).optional(),
-  DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE: explicitBooleanWithDefault(false),
+  DVT_ARTIFACT_S3_ENDPOINT: z.string().url().optional(),
+  DVT_ARTIFACT_S3_REGION: z.string().min(1).optional(),
+  DVT_ARTIFACT_S3_FORCE_PATH_STYLE: explicitBooleanWithDefault(false),
+  DVT_ARTIFACT_FILE_READ_ROOT: z.string().min(1).optional(),
   /** Base URL for the OpenLineage / Marquez API. */
   DVT_LINEAGE_API_URL: z.string().url(),
   /** Namespace for all OpenLineage RunEvents emitted by this worker. */

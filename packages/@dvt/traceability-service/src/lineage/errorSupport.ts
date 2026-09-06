@@ -1,6 +1,6 @@
 /**
  * @file packages/@dvt/traceability-service/src/lineage/errorSupport.ts
- * @baseline ADR-0032: compiledCodeRef Ownership
+ * @baseline ADR-0067: Canonical Artifact Authority and Compiled-Code Hard Cut
  * @baseline ADR-0033: Outbox Worker Sharding And Fencing Model
  * @decision Normalize arbitrary lineage runtime errors into structured fail-open diagnostics
  * @consequence Worker logs and dead-letter records remain deterministic without leaking unsafe error content
@@ -67,7 +67,10 @@ function toLineageErrorLikeFromObject(
   metadata: StructuredLineageErrorMetadata
 ): LineageErrorLike {
   const name = resolveErrorLikeName(error);
-  const message = tryStringifyObjectError(error);
+  const message =
+    typeof error['message'] === 'string'
+      ? sanitizeLineageErrorForPersistence(error['message'])
+      : tryStringifyObjectError(error);
 
   return {
     ...metadata,

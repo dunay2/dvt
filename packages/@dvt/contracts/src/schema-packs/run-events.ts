@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { CompiledCodeRefSchema, StepArtifactRefSchema } from '../step-registry/StepTypeRegistry.js';
+import { StepArtifactRefSchema } from '../step-registry/StepTypeRegistry.js';
 
 import {
   IsoUtcStringSchema,
@@ -45,15 +45,8 @@ const RunFailedPayloadSchema = z
 
 const StepStartedPayloadSchema = z
   .object({
-    stepArtifactRef: StepArtifactRefSchema.optional(),
-    compiledCodeRef: CompiledCodeRefSchema.optional(),
+    stepArtifactRef: StepArtifactRefSchema,
   })
-  .refine(
-    (payload) => payload.stepArtifactRef !== undefined || payload.compiledCodeRef !== undefined,
-    {
-      message: 'StepStarted payload must contain stepArtifactRef or compiledCodeRef',
-    }
-  )
   .strict();
 
 const StepCompletedPayloadSchema = z

@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { CommonStepTypeConfigSchema } from './CommonStepTypeConfig.js';
 
-export { CommonStepTypeConfigSchema, CompiledCodeRefSchema } from './CommonStepTypeConfig.js';
+export { CommonStepTypeConfigSchema } from './CommonStepTypeConfig.js';
 
 const HexSha256Schema = z.string().regex(/^[a-f0-9]{64}$/u);
 
@@ -22,12 +22,6 @@ export interface DbtStepTypeConfig extends Record<string, unknown> {
     maxInFlight: number;
   };
   custom?: Record<string, unknown>;
-  compiledCodeRef?: {
-    sha256: string;
-    storageUri: string;
-    sizeBytes: number;
-    encoding?: 'utf-8';
-  };
 }
 
 export const DbtStepTypeConfigSchema = CommonStepTypeConfigSchema;

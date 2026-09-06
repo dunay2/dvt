@@ -190,7 +190,8 @@ describe('RunStates timeline trust boundaries', () => {
               eventId: 'evt-step-started-2',
               stepId: stepId('step-evidence'),
               payload: {
-                compiledCodeRef: {
+                stepArtifactRef: {
+                  artifactKind: 'compiled-sql',
                   storageUri: 's3://dvt-artifacts/dev/compiled/evidence.sql',
                   sha256: 'b'.repeat(64),
                   sizeBytes: 128,
@@ -217,7 +218,7 @@ describe('RunStates timeline trust boundaries', () => {
     expect(harness.container.textContent).toContain('a'.repeat(64));
     expect(harness.container.textContent).toContain('2.0 KB');
     expect(harness.container.textContent).toContain('step-evidence');
-    expect(harness.container.textContent).toContain('compiled-code');
+    expect(harness.container.textContent).toContain('compiled-sql');
     expect(harness.container.textContent).toContain('s3://dvt-artifacts/dev/compiled/evidence.sql');
   });
 

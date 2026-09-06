@@ -1,6 +1,6 @@
-import type { CompiledCodeRef, EventEnvelope } from '@dvt/contracts';
+import type { EventEnvelope } from '@dvt/contracts';
 
-import type { CompiledCodeBlob, LineageJobFacets, SqlJobFacet } from './types.js';
+import type { LineageJobFacets, SqlJobFacet } from './types.js';
 import type { LineageWarning } from './warningContract.js';
 
 export const MAX_LINEAGE_ATTEMPTS = 5;
@@ -54,25 +54,6 @@ export interface LineagePublishPayload {
 
 export interface ILineageSink {
   publish(payload: LineagePublishPayload): Promise<void>;
-}
-
-export interface ICompiledCodeReader {
-  read(ref: CompiledCodeRef): Promise<CompiledCodeBlob>;
-}
-
-export interface ICompiledCodeCache {
-  get(key: string): CompiledCodeBlob | undefined;
-  set(key: string, value: CompiledCodeBlob): void;
-}
-
-export interface ICompiledCodeResolver {
-  resolve(ref: CompiledCodeRef): Promise<CompiledCodeBlob>;
-}
-
-export interface ICompiledCodeRetryPolicy {
-  maxAttempts: number;
-  initialDelayMs: number;
-  maxDelayMs: number;
 }
 
 export interface ISqlJobFacetBuilder {

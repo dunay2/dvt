@@ -1,18 +1,18 @@
 /**
- * @file packages/@dvt/traceability-service/src/lineage/warningContract.ts
- * @baseline ADR-0032: compiledCodeRef Ownership
- * @decision Define stable lineage warning codes, message keys, and parameters for fail-open compiled-code resolution
- * @consequence Consumers can distinguish traceability degradation from run execution failures
- * @version 0.1.0
+ * Stable lineage warning contract for fail-open artifact reads.
+ * @baseline ADR-0067: Canonical Artifact Authority and Compiled-Code Hard Cut
+ * @decision Preserve bounded generic artifact read warnings in lineage events
+ * @consequence Read failures do not restore the retired compiled-code resolver
+ * @version 1.0.0
  */
 export const LINEAGE_WARNING_CODE = {
-  COMPILED_CODE_RESOLUTION_FAILED: 'COMPILED_CODE_RESOLUTION_FAILED',
+  ARTIFACT_READ_FAILED: 'ARTIFACT_READ_FAILED',
 } as const;
 
 export type LineageWarningCode = (typeof LINEAGE_WARNING_CODE)[keyof typeof LINEAGE_WARNING_CODE];
 
 export const LINEAGE_WARNING_MESSAGE_KEY = {
-  COMPILED_CODE_RESOLUTION_FAILED: 'traceability.lineage.warning.compiled_code_resolution_failed',
+  ARTIFACT_READ_FAILED: 'traceability.lineage.warning.artifact_read_failed',
 } as const;
 
 export type LineageWarningMessageKeyName = keyof typeof LINEAGE_WARNING_MESSAGE_KEY;
@@ -20,7 +20,7 @@ export type LineageWarningMessageKey =
   (typeof LINEAGE_WARNING_MESSAGE_KEY)[LineageWarningMessageKeyName];
 
 interface LineageWarningMessageParamMap {
-  COMPILED_CODE_RESOLUTION_FAILED: {
+  ARTIFACT_READ_FAILED: {
     storageUri: string;
     causeCode?: string;
     causeMessageKey?: string;
@@ -43,12 +43,12 @@ export function defaultLineageWarningMessage<K extends LineageWarningMessageKeyN
   params: LineageWarningMessageParams<K>
 ): string {
   switch (messageKeyName) {
-    case 'COMPILED_CODE_RESOLUTION_FAILED': {
-      const p = params as LineageWarningMessageParams<'COMPILED_CODE_RESOLUTION_FAILED'>;
+    case 'ARTIFACT_READ_FAILED': {
+      const p = params as LineageWarningMessageParams<'ARTIFACT_READ_FAILED'>;
       if (p.causeCode) {
-        return `Compiled code resolution failed for ${p.storageUri}: ${p.causeCode}`;
+        return `Artifact read failed for ${p.storageUri}: ${p.causeCode}`;
       }
-      return `Compiled code resolution failed for ${p.storageUri}`;
+      return `Artifact read failed for ${p.storageUri}`;
     }
   }
 

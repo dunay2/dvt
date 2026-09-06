@@ -10,10 +10,10 @@ const bootstrapMocks = vi.hoisted(() => {
     DVT_PG_SCHEMA: 'dvt',
     DVT_PG_STATEMENT_TIMEOUT_MS: 0,
     DVT_PG_QUERY_TIMEOUT_MS: 0,
-    DVT_COMPILED_CODE_RESOLVER_BACKEND: 's3',
-    DVT_COMPILED_CODE_RESOLVER_S3_ENDPOINT: undefined,
-    DVT_COMPILED_CODE_RESOLVER_S3_REGION: undefined,
-    DVT_COMPILED_CODE_RESOLVER_S3_FORCE_PATH_STYLE: false,
+    DVT_ARTIFACT_S3_ENDPOINT: undefined,
+    DVT_ARTIFACT_S3_REGION: undefined,
+    DVT_ARTIFACT_S3_FORCE_PATH_STYLE: false,
+    DVT_ARTIFACT_FILE_READ_ROOT: undefined,
     DVT_LINEAGE_API_URL: 'https://lineage.example/api',
     DVT_LINEAGE_NAMESPACE: 'dvt',
     DVT_LINEAGE_API_TOKEN: undefined,
@@ -29,25 +29,9 @@ const bootstrapMocks = vi.hoisted(() => {
     SERVICE_NAME: 'dvt-lineage-worker',
   }));
 
-  const mapperFactory = vi.fn(
-    (env: {
-      DVT_COMPILED_CODE_RESOLVER_BACKEND?: string;
-      DVT_COMPILED_CODE_RESOLVER_S3_REGION?: string;
-    }) => {
-      if (
-        env.DVT_COMPILED_CODE_RESOLVER_BACKEND === 's3' &&
-        env.DVT_COMPILED_CODE_RESOLVER_S3_REGION === undefined
-      ) {
-        throw new Error(
-          'Missing S3 region for compiled code resolver. Set DVT_COMPILED_CODE_RESOLVER_S3_REGION, AWS_REGION, or AWS_DEFAULT_REGION.'
-        );
-      }
-
-      return {
-        map: vi.fn(),
-      };
-    }
-  );
+  const mapperFactory = vi.fn(() => {
+    throw new Error('artifact reader composition failed');
+  });
 
   const stateStoreCtor = vi.fn();
   const migrate = vi.fn().mockResolvedValue(undefined);
@@ -97,7 +81,7 @@ vi.mock('../src/env.js', () => ({
   loadEnv: bootstrapMocks.loadEnv,
 }));
 
-vi.mock('../src/compiledCodeResolver.js', () => ({
+vi.mock('../src/lineageMapper.js', () => ({
   createStepStartedLineageMapper: bootstrapMocks.mapperFactory,
 }));
 
@@ -120,7 +104,7 @@ vi.mock('pino', () => ({
 }));
 
 describe('lineage worker bootstrap', () => {
-  it('validates the lineage mapper before starting database side effects', async () => {
+  it('validates generic artifact mapper composition before database side effects', async () => {
     const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 

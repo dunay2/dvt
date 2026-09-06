@@ -13,7 +13,6 @@ const ALLOWED_STEP_FIELDS = new Set([
   'type',
   'gateway',
   'stepTypeConfig',
-  'compiledCodeRef',
   'dependsOn',
   'retryPolicy',
 ]);

@@ -1,21 +1,18 @@
-import type { EventEnvelope } from '@dvt/contracts';
+/**
+ * @ownedConcern Map StepStarted generic artifact references to lineage facets without owning artifact I/O.
+ */
+import { readVerifiedArtifactBytes, type ArtifactReadRuntimeOptions } from '@dvt/artifacts';
+import { StepArtifactRefSchema, type EventEnvelope, type StepArtifactRef } from '@dvt/contracts';
 
-import { extractCompiledCodeRefFromPayload } from '../compiledCodeRef.js';
-import type {
-  ICompiledCodeResolver,
-  ILineageStepEventMapper,
-  ISqlJobFacetBuilder,
-} from '../contracts.js';
-import {
-  buildLineageFacetMetadata,
-  DVT_DBT_DETAILS_JOB_FACET_SCHEMA_URL,
-} from '../openlineageSchema.js';
+import type { ILineageStepEventMapper, ISqlJobFacetBuilder } from '../contracts.js';
 import type { LineageJobFacets, LineageWarning } from '../types.js';
 
-import { mapCompiledCodeResolutionWarning } from './mapCompiledCodeResolutionWarning.js';
+import { mapArtifactReadWarning } from './mapArtifactReadWarning.js';
+
+const COMPILED_SQL_ARTIFACT_KIND = 'compiled-sql';
 
 export interface StepStartedLineageMapperDeps {
-  compiledCodeResolver: ICompiledCodeResolver;
+  artifactReadOptions?: ArtifactReadRuntimeOptions;
   sqlFacetBuilder: ISqlJobFacetBuilder;
 }
 
@@ -31,30 +28,42 @@ export class StepStartedLineageMapper implements ILineageStepEventMapper {
   ): Promise<{ jobFacets: LineageJobFacets; warnings: LineageWarning[] }> {
     if (!this.supports(event)) return { jobFacets: {}, warnings: [] };
 
-    const compiledCodeRef = extractCompiledCodeRefFromPayload(event.payload);
-    if (compiledCodeRef === null) return { jobFacets: {}, warnings: [] };
-
-    const baseFacets: LineageJobFacets = {
-      dvt_dbt_details: {
-        ...buildLineageFacetMetadata(DVT_DBT_DETAILS_JOB_FACET_SCHEMA_URL),
-        compiledCodeRef,
-      },
-    };
+    const artifactRef = extractStepArtifactRef(event.payload);
+    if (artifactRef === null || artifactRef.artifactKind !== COMPILED_SQL_ARTIFACT_KIND) {
+      return { jobFacets: {}, warnings: [] };
+    }
 
     try {
-      const compiled = await this.deps.compiledCodeResolver.resolve(compiledCodeRef);
+      const bytes = await readVerifiedArtifactBytes(artifactRef, {
+        artifactLabel: 'lineage source',
+        uriLabel: 'stepArtifactRef.storageUri',
+        ...this.deps.artifactReadOptions,
+      });
       return {
         jobFacets: {
-          ...baseFacets,
-          sql: this.deps.sqlFacetBuilder.fromSql(compiled.sqlText),
+          sql: this.deps.sqlFacetBuilder.fromSql(Buffer.from(bytes).toString('utf8')),
         },
         warnings: [],
       };
     } catch (error) {
       return {
-        jobFacets: baseFacets,
-        warnings: [mapCompiledCodeResolutionWarning({ error, ref: compiledCodeRef })],
+        jobFacets: {},
+        warnings: [mapArtifactReadWarning({ error, ref: artifactRef })],
       };
     }
   }
+}
+
+function extractStepArtifactRef(
+  payload: Record<string, unknown> | undefined
+): StepArtifactRef | null {
+  const candidate = payload?.['stepArtifactRef'];
+  const parsed = StepArtifactRefSchema.safeParse(candidate);
+  if (!parsed.success) return null;
+
+  const { encoding, ...requiredRef } = parsed.data;
+  return {
+    ...requiredRef,
+    ...(encoding === undefined ? {} : { encoding }),
+  };
 }

@@ -2,14 +2,14 @@
 title: Architecture Problem Register
 status: Review
 owner: Architecture / Docs
-last_reviewed: 2026-08-28
+last_reviewed: 2026-09-05
 ---
 
 # DVT+ Architecture Problem Register
 
 Source-first register of **current architecture problems and their delivery owners**.
 
-Baseline reviewed: `main@53ab4051c72794f279076513246306dbee782613`.
+Baseline reviewed: `main@6db9ba43b946054d8490512a205acd0474a7f006`.
 
 This page preserves the useful pattern of the architecture problem graph while preventing historical reviews from becoming phantom backlog.
 
@@ -52,12 +52,9 @@ flowchart LR
     O4["⚪ Real PostgreSQL race proof + operational evidence<br/>#2670 · #2672"]
   end
 
-  subgraph RUNTIME["Temporal & artifact authority hardening"]
+  subgraph RUNTIME["Temporal runtime hardening"]
     T1["🟠 Semantic concurrency vs process worker capacity conflated<br/>#2663"]
     T2["🟠 Truthful worker saturation/capacity projection missing<br/>#2665"]
-    A1["🟠 Legacy compiled-code storage authority needs disposition<br/>#2660 · #2661"]
-    A2["🟠 Retained legacy adapters must fail closed / publish atomically<br/>#2667"]
-    A3["🟠 DBT-only compiled-code policy sits in generic artifact core<br/>#2669"]
   end
 
   subgraph GOV["Contract / compatibility truth"]
@@ -80,8 +77,6 @@ flowchart LR
   O2 -->|must pass| O4
 
   T1 -->|capacity authority before telemetry| T2
-  A1 -->|disposition gates| A2
-  A1 -->|disposition gates| A3
 
   E3 -.->|shared invariant: unknown ≠ missing| O1
   E2 -.->|same fencing principle, different state owner| O1
@@ -118,21 +113,21 @@ Each entry has one explicit primary delivery owner. Coordinating issues are list
 
 - **T1 — Semantic concurrency and worker-process capacity have different owners/lifecycles.** Current evidence: `TemporalPolicyMapper`, `TemporalWorkerHost` and worker config. Primary delivery owner: [#2663](https://github.com/dunay2/dvt/issues/2663). Parent: [#2660](https://github.com/dunay2/dvt/issues/2660). Status: `OWNED`.
 - **T2 — Worker capacity/saturation lacks one bounded truthful projection.** Current evidence: Temporal worker host/observability. Primary delivery owner: [#2665](https://github.com/dunay2/dvt/issues/2665). Parent: [#2660](https://github.com/dunay2/dvt/issues/2660). Status: `OWNED`.
-- **A1 — Canonical CAS coexists with a legacy SQL-specific compiled-code storage surface whose reachability needs disposition.** Current evidence: `@dvt/artifacts` CAS plus `ICompiledCodeStorage`. Primary delivery owner: [#2661](https://github.com/dunay2/dvt/issues/2661). Parent: [#2660](https://github.com/dunay2/dvt/issues/2660). Status: `OWNED`.
-- **A2 — Retained legacy adapters must fail closed and publish safely.** Current evidence: compiled-code adapters. Primary delivery owner: [#2667](https://github.com/dunay2/dvt/issues/2667). Parent: [#2660](https://github.com/dunay2/dvt/issues/2660). Status: `OWNED`.
-- **A3 — DBT eligibility/resource policy is misplaced inside generic artifact core if retained.** Current evidence: `attachCompiledCodeRefs()`. Primary delivery owner: [#2669](https://github.com/dunay2/dvt/issues/2669). Parent: [#2660](https://github.com/dunay2/dvt/issues/2660). Status: `OWNED`.
+
+The inactive SQL-specific compiled-code storage/enrichment family formerly tracked as A1/A2/A3 is retired by the #2667/#2669 hard cut in [#2967](https://github.com/dunay2/dvt/pull/2967). Generic content-addressed artifact storage and independently consumed immutable readers/references remain active and are not part of that retirement.
 
 ### Contract / Compatibility truth
 
 - **G1 — Adapter schema compatibility must be exact and must not become a second runtime admission authority.** Current evidence: `PlanAdmission.v1.ts`, `contracts/compat/plan-compat.json` and the Temporal support descriptor. Primary delivery owner: [#2677](https://github.com/dunay2/dvt/issues/2677). Parent: [#2674](https://github.com/dunay2/dvt/issues/2674). Status: `OWNED`.
 
-## Coverage result — 2026-08-28
+## Coverage result — 2026-09-05
 
-- **20 graph entries checked: 16 active problems and 4 explicit prerequisites/gates.**
-- **All 16 active problems have an explicit issue/epic owner.**
+- **17 graph entries checked: 13 active problems and 4 explicit prerequisites/gates.**
+- **All 13 active problems have an explicit issue/epic owner.**
 - **0 unresolved defects are unowned.**
 - **0 new issues are required by this reconciliation.**
 - `#2595` is deliberately recorded as a **delivered prerequisite**, not reopened as backlog.
+- The former compiled-code A1/A2/A3 entries are absent because #2967 deletes their source mechanism rather than preserving it as compatibility debt.
 
 If a future source-first audit finds a current defect without an owner, the audit is not complete until either:
 

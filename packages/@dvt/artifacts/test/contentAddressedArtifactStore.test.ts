@@ -1,8 +1,9 @@
+import { createHash } from 'node:crypto';
+
 import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
-  computeSha256,
   createDefaultS3ContentAddressedArtifactStore,
   type PublishContentAddressedArtifactInput,
   S3ContentAddressedArtifactStore,
@@ -11,7 +12,7 @@ import {
 
 const TENANT_ID = 'tenant-a';
 const BYTES = Buffer.from('{"order_id":1}\n', 'utf8');
-const SHA256 = computeSha256(BYTES);
+const SHA256 = createHash('sha256').update(BYTES).digest('hex');
 const STORAGE_URI = `s3://het2-artifacts/tenants/${TENANT_ID}/${SHA256}`;
 
 function input(bytes: Uint8Array = BYTES): PublishContentAddressedArtifactInput {

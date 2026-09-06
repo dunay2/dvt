@@ -21,9 +21,9 @@
     "dist"
   ],
   "scripts": {
-    "pretest": "node ../../../scripts/skip-pretest-if-ci.cjs || (pnpm --filter @dvt/contracts build && pnpm --filter @dvt/artifacts build)",
+    "pretest": "node ../../../scripts/skip-pretest-if-ci.cjs || pnpm --filter @dvt/contracts build",
     "build": "tsc -p tsconfig.json",
-    "pretypecheck": "node ../../../scripts/skip-pretest-if-ci.cjs || (pnpm --filter @dvt/contracts build && pnpm --filter @dvt/artifacts build)",
+    "pretypecheck": "node ../../../scripts/skip-pretest-if-ci.cjs || pnpm --filter @dvt/contracts build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -31,7 +31,6 @@
     "test:slow": "vitest run -c vitest.config.ts --dir test/slow"
   },
   "dependencies": {
-    "@dvt/artifacts": "workspace:*",
     "@dvt/contracts": "workspace:*",
     "@dvt/crypto": "workspace:*"
   },
