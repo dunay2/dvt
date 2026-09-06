@@ -1,6 +1,6 @@
 /** Owned concern: apply node-change fallout through the graph lifecycle component and route-local UI scope. */
 
-import { type Node, type NodeChange } from '@xyflow/react';
+import { type NodeChange } from '@xyflow/react';
 import { useCallback } from 'react';
 
 import { canvasGraphLifecycle } from './canvasGraphLifecycle';
@@ -13,26 +13,8 @@ type UseCanvasNodeChangeHandlersResult = {
   handleNodesChange: (changes: NodeChange[]) => void;
 };
 
-type CanvasNodePositions = Record<string, { x: number; y: number }>;
-
 function hasNodeRemoval(changes: readonly NodeChange[]): boolean {
   return changes.some((change) => change.type === 'remove');
-}
-
-function hasLayoutPersistablePositionChange(changes: readonly NodeChange[]): boolean {
-  return changes.some((change) => {
-    if (change.type !== 'position') {
-      return false;
-    }
-
-    return change.dragging === false || (change.dragging === true && change.position != null);
-  });
-}
-
-function extractCanvasNodePositions(nodes: readonly Node[]): CanvasNodePositions {
-  return Object.fromEntries(
-    nodes.map((node) => [node.id, { x: node.position.x, y: node.position.y }])
-  );
 }
 
 export function useCanvasNodeChangeHandlers({
@@ -40,24 +22,11 @@ export function useCanvasNodeChangeHandlers({
   effects,
 }: UseCanvasNodeChangeHandlersArgs): UseCanvasNodeChangeHandlersResult {
   const { graphModel, draftSession, uiScope, selectedNodeIds } = state;
-  const {
-    setDraftSession,
-    reconcileSelectionAfterNodeRemoval,
-    setInspectorNode,
-    onLayoutComplete,
-  } = effects;
+  const { setDraftSession, reconcileSelectionAfterNodeRemoval, setInspectorNode } = effects;
 
   const handleNodesChange = useCallback(
     (changes: NodeChange[]) => {
       if (!hasNodeRemoval(changes)) {
-        if (hasLayoutPersistablePositionChange(changes)) {
-          onLayoutComplete(
-            extractCanvasNodePositions(
-              canvasGraphLifecycle.node.applyLocalChanges(graphModel.nodes, changes)
-            )
-          );
-        }
-
         graphModel.setNodes((currentNodes) =>
           canvasGraphLifecycle.node.applyLocalChanges(currentNodes, changes)
         );
@@ -85,7 +54,6 @@ export function useCanvasNodeChangeHandlers({
     [
       draftSession,
       graphModel,
-      onLayoutComplete,
       selectedNodeIds,
       setDraftSession,
       setInspectorNode,

@@ -79,13 +79,12 @@ function didNodePositionsChange(
 }
 
 function shouldSaveObservedNodePositions(args: {
-  hasObservedDrag: boolean;
   hasSettledDrag: boolean;
   nodePositionsChanged: boolean;
   persistedNodePositions: CanvasNodePositions;
   nextNodePositions: CanvasNodePositions;
 }): boolean {
-  const hasSaveCandidate = args.hasObservedDrag || args.hasSettledDrag || args.nodePositionsChanged;
+  const hasSaveCandidate = args.hasSettledDrag || args.nodePositionsChanged;
 
   return (
     hasSaveCandidate && !areNodePositionsEqual(args.persistedNodePositions, args.nextNodePositions)
@@ -105,18 +104,22 @@ function usePersistSettledNodePositions({
   const lastNodePositionsRef = useRef<CanvasNodePositions | null>(null);
 
   useEffect(() => {
-    const nextNodePositions = extractNodePositions(nodes);
-    const previousNodePositions = lastNodePositionsRef.current;
-    lastNodePositionsRef.current = nextNodePositions;
-
     if (hasActiveDragFrame(nodes)) {
       observedNodeDragRef.current = true;
       return;
     }
 
+    const nextNodePositions = extractNodePositions(nodes);
+    const previousNodePositions = lastNodePositionsRef.current;
+    lastNodePositionsRef.current = nextNodePositions;
+
+    if (observedNodeDragRef.current) {
+      observedNodeDragRef.current = false;
+      return;
+    }
+
     if (
       !shouldSaveObservedNodePositions({
-        hasObservedDrag: observedNodeDragRef.current,
         hasSettledDrag: hasSettledDragFrame(nodes),
         nodePositionsChanged: didNodePositionsChange(previousNodePositions, nextNodePositions),
         persistedNodePositions,
@@ -127,7 +130,6 @@ function usePersistSettledNodePositions({
     }
 
     saveNodePositions(nextNodePositions);
-    observedNodeDragRef.current = false;
   }, [nodes, persistedNodePositions, saveNodePositions]);
 }
 
@@ -201,21 +203,17 @@ function useCanvasNodePositionPersistence({
   });
 
   const handleNodeDrag = useCallback<NonNullable<ReactFlowProps['onNodeDrag']>>(
-    (_event, draggedNode, allNodes) => {
-      saveOrQueueNodePositions(
-        extractNodePositions(mergeDraggedNodePosition(allNodes, draggedNode))
-      );
-    },
-    [saveOrQueueNodePositions]
+    () => undefined,
+    []
   );
 
   const handleNodeDragStop = useCallback<NonNullable<ReactFlowProps['onNodeDragStop']>>(
-    (_event, draggedNode, allNodes) => {
+    (_event, draggedNode, draggedNodes) => {
       saveOrQueueNodePositions(
-        extractNodePositions(mergeDraggedNodePosition(allNodes, draggedNode))
+        extractNodePositions(mergeDraggedNodePosition([...nodes, ...draggedNodes], draggedNode))
       );
     },
-    [saveOrQueueNodePositions]
+    [nodes, saveOrQueueNodePositions]
   );
 
   return {

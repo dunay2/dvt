@@ -182,6 +182,9 @@ describe('dbt project file projection live vertical', () => {
 
   it('projects real dbt files without draft semantics and remains inspectable', () => {
     const observedRequests: string[] = [];
+    cy.intercept('GET', '**/workspace/dbt/graph?*', (request) => {
+      observedRequests.push(request.url);
+    });
     cy.viewport(1500, 900);
     requestLiveDbtProjectGraph(PROJECT_ROOT, CANVAS_ID).then((response) => {
       const body = response.body as {
@@ -199,17 +202,6 @@ describe('dbt project file projection live vertical', () => {
             'dvt-web-application-language',
             JSON.stringify({ state: { language: 'en' }, version: 0 })
           );
-          const originalFetch = window.fetch.bind(window);
-          window.fetch = (input, init) => {
-            observedRequests.push(
-              typeof input === 'string'
-                ? input
-                : input instanceof window.Request
-                  ? input.url
-                  : input.toString()
-            );
-            return originalFetch(input, init);
-          };
         },
       }
     );
@@ -218,13 +210,16 @@ describe('dbt project file projection live vertical', () => {
       timeout: 60_000,
     })
       .should('be.visible')
-      .and('contain.text', 'Orders');
+      .and('contain.text', 'orders');
     cy.get('.react-flow__node[data-id="model.analytics.orders"]')
       .should('be.visible')
-      .find('[data-slot="graph-node-metric-row"]')
+      .find('[data-slot="graph-node-column-toggle"]')
+      .should('contain.text', 'Columns (2)');
+    cy.get('.react-flow__node[data-id="model.analytics.orders"]')
+      .find('[data-slot="graph-node-operational-rail"]')
       .within(() => {
-        cy.contains('Columns').should('be.visible');
-        cy.contains('2').should('be.visible');
+        cy.contains('Rows').should('be.visible');
+        cy.contains('Size').should('be.visible');
       });
     cy.get('.react-flow__node[data-id="seed.analytics.country_codes"]').should('be.visible');
     cy.get('.react-flow__node[data-id="snapshot.analytics.orders_snapshot"]').should('be.visible');
@@ -240,9 +235,14 @@ describe('dbt project file projection live vertical', () => {
 
     cy.wrap(null).should(() => {
       expect(observedRequests.some((url) => url.includes('/workspace/dbt/graph?'))).to.equal(true);
-      expect(observedRequests.some((url) => url.includes('/workspace/graph/draft'))).to.equal(
-        false
-      );
+    });
+    cy.window().should((window) => {
+      expect(
+        window.performance
+          .getEntriesByType('resource')
+          .some((entry) => entry.name.includes('/workspace/graph/draft')),
+        'no graph-draft request during file-authoritative rendering'
+      ).to.equal(false);
     });
     cy.get('[data-slot="dbt-project-file-projection-notice"]')
       .should('be.visible')
@@ -262,22 +262,45 @@ describe('dbt project file projection live vertical', () => {
         ).to.be.greaterThan(20);
       });
     });
+    cy.get('.react-flow__node[data-id="model.analytics.orders"]').then(($node) => {
+      const transform = new DOMMatrix($node[0].style.transform);
+      const position = { x: transform.m41, y: transform.m42 };
+      cy.wrap(position).as('settledModelPosition');
+      cy.window().should((window) => {
+        const saved = JSON.parse(
+          window.localStorage.getItem('dvt-web-canvas-interaction') ?? '{}'
+        ) as {
+          state?: {
+            canvasLayouts?: Record<
+              string,
+              { nodePositions: Record<string, { x: number; y: number }> }
+            >;
+          };
+        };
+        const positions = Object.values(saved.state?.canvasLayouts ?? {}).map(
+          (layout) => layout.nodePositions['model.analytics.orders']
+        );
+        const savedPosition = positions.find((candidate) => candidate != null);
+        expect(savedPosition, 'persisted drag-stop coordinates').not.to.equal(undefined);
+        expect(savedPosition?.x).to.be.closeTo(position.x, 0.001);
+        expect(savedPosition?.y).to.be.closeTo(position.y, 0.001);
+      });
+    });
     cy.wait(400);
     cy.reload();
-    cy.get<Record<string, number>>('@originalModelPosition').then((original) => {
+    cy.get<{ x: number; y: number }>('@settledModelPosition').then((settled) => {
       cy.get('.react-flow__node[data-id="model.analytics.orders"]', { timeout: 60_000 }).should(
         ($node) => {
-          const rect = $node[0].getBoundingClientRect();
-          expect(
-            Math.abs(rect.left - original.left) + Math.abs(rect.top - original.top)
-          ).to.be.greaterThan(20);
+          const transform = new DOMMatrix($node[0].style.transform);
+          expect(transform.m41, 'restored Canvas x').to.be.closeTo(settled.x, 0.001);
+          expect(transform.m42, 'restored Canvas y').to.be.closeTo(settled.y, 0.001);
         }
       );
     });
 
     // Enter the node once: Properties opens with Code as the preferred section.
     cy.get('.react-flow__node[data-id="model.analytics.orders"]')
-      .find('[data-slot="canvas-node-shell"]')
+      .find('[data-slot="graph-node-card-title"]')
       .dblclick();
     cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
     cy.get('[data-slot="canvas-node-workbench-tab-code"]')
@@ -317,24 +340,25 @@ describe('dbt project file projection live vertical', () => {
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
     cy.get('[data-slot="canvas-node-floating-toolbar"]').should('not.exist');
 
-    // Ellipsis is operations-only; it must not expose inspect/workbench/code navigation.
+    // The shared context menu keeps one Properties entry for node inspection.
     cy.get('.react-flow__node[data-id="model.analytics.orders"]')
-      .find('[data-slot="graph-node-card-actions"]')
+      .find('[data-slot="graph-node-card-title"]')
+      .rightclick();
+    cy.get('[data-slot="canvas-node-context-menu"]', { timeout: 20_000 })
       .should('be.visible')
-      .click();
-    cy.get('[data-slot="canvas-node-context-menu"]', { timeout: 20_000 }).should('be.visible');
-    cy.get('[data-slot="canvas-node-context-menu"] [data-menu-action="inspect-node"]').should(
-      'not.exist'
-    );
-    cy.get('[data-slot="canvas-node-context-menu"] [data-menu-action="open-node-code"]').should(
-      'not.exist'
-    );
+      .within(() => {
+        cy.contains('[role="menuitem"]', 'Properties').should('be.visible');
+        cy.contains('[role="menuitem"]', 'Open code').should('not.exist');
+      });
     cy.get('body').type('{esc}', { force: true });
     cy.get('[data-slot="canvas-node-context-menu"]').should('not.exist');
   });
 
   it('keeps invalid projects file-authoritative and reports the analyzer diagnostic', () => {
     const observedRequests: string[] = [];
+    cy.intercept('GET', '**/workspace/dbt/graph?*', (request) => {
+      observedRequests.push(request.url);
+    });
     visitWithLiveWorkspaceSession(
       `/canvas?authority=dbt-project-files&canvasId=${INVALID_CANVAS_ID}&projectRoot=${INVALID_PROJECT_ROOT}`,
       {
@@ -343,17 +367,6 @@ describe('dbt project file projection live vertical', () => {
             'dvt-web-application-language',
             JSON.stringify({ state: { language: 'en' }, version: 0 })
           );
-          const originalFetch = window.fetch.bind(window);
-          window.fetch = (input, init) => {
-            observedRequests.push(
-              typeof input === 'string'
-                ? input
-                : input instanceof window.Request
-                  ? input.url
-                  : input.toString()
-            );
-            return originalFetch(input, init);
-          };
         },
       }
     );
@@ -366,9 +379,14 @@ describe('dbt project file projection live vertical', () => {
     cy.location('search').should('contain', 'authority=dbt-project-files');
     cy.wrap(null).should(() => {
       expect(observedRequests.some((url) => url.includes('/workspace/dbt/graph?'))).to.equal(true);
-      expect(observedRequests.some((url) => url.includes('/workspace/graph/draft'))).to.equal(
-        false
-      );
+    });
+    cy.window().should((window) => {
+      expect(
+        window.performance
+          .getEntriesByType('resource')
+          .some((entry) => entry.name.includes('/workspace/graph/draft')),
+        'no graph-draft request during file-authoritative rendering'
+      ).to.equal(false);
     });
   });
 });

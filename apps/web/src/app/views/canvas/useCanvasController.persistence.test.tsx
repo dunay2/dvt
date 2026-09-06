@@ -149,20 +149,62 @@ describe('useCanvasController persistence guards', () => {
     );
   });
 
-  it('persists the observed node-drag payload before a drag-stop event is available', async () => {
-    const controller = harness.getLatestResult() as NodeDragController | null;
+  it('preserves unselected positions when drag-stop reports only the dragged selection', async () => {
+    harness.cleanup();
+    harness = await createHarnessWithDraft(
+      buildRemoteDraftRecord({
+        nodeIds: ['node_1', 'node_2', 'node_3'],
+        nodePositions: {
+          node_1: { x: 0, y: 0 },
+          node_2: { x: 250, y: 0 },
+          node_3: { x: 640, y: 80 },
+        },
+        edges: [],
+      })
+    );
+    harness.state.store.setCanvasNodePositions.mockClear();
 
     await act(async () => {
-      controller?.handleNodeDrag?.(
+      harness.getLatestResult()?.handleNodeDragStop?.(
         {} as never,
         { id: 'node_1', position: { x: 225, y: 210 } } as never,
         [
-          { id: 'node_1', position: { x: 0, y: 0 } },
-          { id: 'node_2', position: { x: 100, y: 0 } },
+          { id: 'node_1', position: { x: 225, y: 210 } },
+          { id: 'node_2', position: { x: 475, y: 210 } },
         ] as never
       );
     });
 
+    expect(harness.state.store.setCanvasNodePositions).toHaveBeenCalledTimes(1);
+    expect(harness.state.store.setCanvasNodePositions).toHaveBeenLastCalledWith(
+      'tenant-a::project-a::dev',
+      {
+        node_1: { x: 225, y: 210 },
+        node_2: { x: 475, y: 210 },
+        node_3: { x: 640, y: 80 },
+      }
+    );
+  });
+
+  it('does not persist an in-flight drag frame and persists the final drag-stop payload', async () => {
+    const controller = harness.getLatestResult() as NodeDragController | null;
+    const draggedNode = { id: 'node_1', position: { x: 225, y: 210 } } as never;
+    const allNodes = [
+      { id: 'node_1', position: { x: 0, y: 0 } },
+      { id: 'node_2', position: { x: 100, y: 0 } },
+    ] as never;
+
+    await act(async () => {
+      controller?.handleNodeDrag?.({} as never, draggedNode, allNodes);
+    });
+
+    expect(harness.state.store.setCanvasNodePositions).not.toHaveBeenCalled();
+
+    await act(async () => {
+      harness.getLatestResult()?.handleNodeDragStop?.({} as never, draggedNode, allNodes);
+    });
+
+    expect(harness.state.store.setCanvasNodePositions).toHaveBeenCalledTimes(1);
     expect(harness.state.store.setCanvasNodePositions).toHaveBeenCalledWith(
       'tenant-a::project-a::dev',
       {
@@ -205,7 +247,7 @@ describe('useCanvasController persistence guards', () => {
     );
   });
 
-  it('persists settled live drag positions from the viewport model', async () => {
+  it('leaves an observed drag completion to the drag-stop persistence boundary', async () => {
     const setCanvasNodePositions = vi.fn();
     const args: LayoutPersistenceArgs = {
       hasHydrated: true,
@@ -230,10 +272,7 @@ describe('useCanvasController persistence guards', () => {
       ],
     });
 
-    expect(setCanvasNodePositions).toHaveBeenCalledWith('tenant-a::project-a::dev', {
-      node_1: { x: 225, y: 210 },
-      node_2: { x: 100, y: 0 },
-    });
+    expect(setCanvasNodePositions).not.toHaveBeenCalled();
     mounted.cleanup();
   });
 

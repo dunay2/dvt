@@ -2,7 +2,7 @@
 title: Canvas Layout Persistence Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-29
+last_reviewed: 2026-09-05
 planning_type: architecture
 ---
 
@@ -54,8 +54,8 @@ Canonical local C&Q catalog:
 | -------------------------------------------- | ------------------------------------- | -------------------------------------------------------------------------------------------- |
 | `useCanvasLayoutPersistence(...)`            | `useCanvasLayoutPersistence.ts`       | Return node-position, node-drag, and viewport persistence handlers.                          |
 | `handleNodePositionsSave`                    | `useCanvasLayoutPersistence.ts`       | Persist a complete node-position map for the active layout key.                              |
-| `handleNodeDrag`                             | `useCanvasLayoutPersistence.ts`       | Persist active React Flow drag payloads once layout hydration is complete.                   |
-| `handleNodeDragStop`                         | `useCanvasLayoutPersistence.ts`       | Persist the drag-stop event payload over stale React Flow arrays.                            |
+| `handleNodeDrag`                             | `useCanvasLayoutPersistence.ts`       | Preserve the current viewport callback seam without persisting active drag frames.           |
+| `handleNodeDragStop`                         | `useCanvasLayoutPersistence.ts`       | Persist the final drag-stop event payload over stale React Flow arrays.                      |
 | `handleViewportChange`                       | `useCanvasLayoutPersistence.ts`       | Persist viewport only after hydration and graph readiness.                                   |
 | `shouldSeedCanvasLayoutFromRemoteDraft(...)` | `canvasDraftLayoutHydrationPolicy.ts` | Allow remote draft coordinates to seed local layout only when no local card positions exist. |
 | `useCanvasViewportGraphModel(...)`           | `useCanvasViewportGraphModel.ts`      | Project canonical graph nodes into live React Flow viewport nodes.                           |
@@ -74,10 +74,15 @@ Canonical local C&Q catalog:
 - Node-position observations captured before hydration are queued and flushed
   after hydration completes; they must not be dropped.
 - Drag-stop persistence trusts the `draggedNode` event payload over the stale
-  `allNodes` snapshot supplied by React Flow.
-- Active drag frames may persist the current React Flow payload so live UI
-  gestures do not depend on a later drag-stop frame.
-- Settled live drag frames may persist observed viewport-model positions.
+  viewport snapshot. React Flow supplies only the dragged selection in its final
+  node-array payload; merge those final coordinates into the complete current
+  viewport map so moving one selection preserves every other node position.
+- Active drag frames are not layout durability boundaries and must not persist
+  route-local node positions merely because the pointer moved.
+- A settled observer frame following an active drag does not persist the drag a
+  second time; `handleNodeDragStop` is the drag completion durability boundary.
+- Settled coordinate changes that did not come from an active pointer drag may
+  still persist through the viewport-model observer.
 - Remote draft coordinates may seed route-local layout only when the active
   workspace layout has no locally persisted node positions.
 - Bootstrap and reload must not overwrite operator-owned card positions after a
@@ -128,12 +133,13 @@ sequenceDiagram
   participant Store as canvasInteractionStore
 
   Operator->>Viewport: drag card from governed handle
-  Viewport->>Layout: onNodeDrag(event, draggedNode, allNodes)
-  Layout->>Layout: mergeDraggedNodePosition(allNodes, draggedNode)
-  Layout->>Store: setCanvasNodePositions(layoutKey, positions)
+  Viewport->>Viewport: update live React Flow geometry and required ephemeral interaction
+  Note over Viewport,Layout: active drag frames do not persist layout
+  Operator->>Viewport: release card
   Viewport->>Layout: onNodeDragStop(event, draggedNode, allNodes)
-  Layout->>Layout: mergeDraggedNodePosition(allNodes, draggedNode)
-  Layout->>Store: setCanvasNodePositions(layoutKey, positions)
+  Layout->>Layout: mergeDraggedNodePosition(current nodes + dragged selection, draggedNode)
+  Layout->>Store: setCanvasNodePositions(layoutKey, final positions)
+  Note over Layout,Store: settled observer does not write the same drag again
 ```
 
 ### Viewport preference command
@@ -149,14 +155,14 @@ flowchart LR
   Layout --> Projection["CanvasLayoutProjection"]
 ```
 
-### Settled live viewport persistence
+### Settled viewport observation
 
 ```mermaid
 stateDiagram-v2
   [*] --> ObserveNodes
   ObserveNodes --> ActiveDrag: any node dragging=true
-  ActiveDrag --> Persist: active drag payload changes and hydration complete
-  ActiveDrag --> SettledCandidate: drag frame settles
+  ActiveDrag --> DragOwnedByStop: drag frame settles
+  DragOwnedByStop --> ObserveNodes: observer records no duplicate persistence
   ObserveNodes --> SettledCandidate: positions changed without active drag
   SettledCandidate --> Noop: same as persistedNodePositions
   SettledCandidate --> Persist: changed and route can persist
@@ -198,7 +204,6 @@ Indirect consumers:
 | ----------------------------- | ---------------------------------- | --------------------------------------------------------- |
 | Presentation Model            | viewport graph model               | Keep renderer coordinates separate from graph semantics.  |
 | Application Controller seam   | `useCanvasLayoutPersistence()`     | Coordinate layout effects without owning draft authority. |
-| Intention-Revealing Interface | `handleNodeDrag` payload merge     | Name active UI gesture persistence directly.              |
 | Intention-Revealing Interface | `handleNodeDragStop` payload merge | Name the stale snapshot hazard directly.                  |
 | Policy Object                 | hydration and equality guards      | Persist only when hydrated and materially changed.        |
 | Value Object                  | `CanvasViewportPreferences`        | Keep visual preferences separate from graph truth.        |
@@ -214,11 +219,12 @@ Primary tests:
 - `apps/web/src/app/views/canvas/canvasDraftRecoveryBoundary.architecture.test.ts`
 
 The tests cover automatic store hydration, pre-hydration node-position queueing,
-pending-query viewport denial, stale drag-stop payload replacement, active live
-drag persistence, settled live drag persistence, remote-draft hydration not
-overwriting local layout after refresh/reload, grid preference persistence, grid
-background visibility/color, snap-to-grid propagation, snapped auto-layout
-coordinates, and semantic boundary rules.
+pending-query viewport denial, stale drag-stop payload replacement, active drag
+non-persistence, drag-stop-only drag completion persistence, non-drag settled
+coordinate persistence, remote-draft hydration not overwriting local layout after
+refresh/reload, grid preference persistence, grid background visibility/color,
+snap-to-grid propagation, snapped auto-layout coordinates, and semantic boundary
+rules.
 
 ## Drift To Watch
 
@@ -226,6 +232,9 @@ coordinates, and semantic boundary rules.
 - Do not infer graph meaning from stored coordinates.
 - Do not allow React Flow's stale `allNodes` array to overwrite the event
   payload for the dragged card.
+- Do not reintroduce route-local layout persistence on active drag frames; the
+  settled drag-stop gesture is the durability boundary.
+- Do not let the settled viewport observer duplicate a drag-stop layout write.
 - Do not let protected draft bootstrap or reload overwrite a workspace layout
   that already contains local card positions.
 - Do not re-enable drag gestures outside `CanvasViewport` permission policy.
