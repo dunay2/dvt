@@ -1,0 +1,26 @@
+id: R-20260906-ENG1-START-MUTATION-AUTHORITY
+title: Start failure reporting could confuse run existence with preparation authority
+status: Open
+date: 2026-09-06
+owners:
+  - '@dvt/engine'
+severity: High
+probability: Low
+context: >
+  Concurrent starts and recovery deliveries share logical run and deterministic intent identities. A
+  handler that derives authority from metadata existence can append RunFailed to another
+  invocation's run.
+risk: >
+  A future coordinator or recovery change could discard the created/reused preparation disposition
+  or grant failure authority before bootstrap succeeds.
+mitigations:
+  - Typed readonly preparation and explicit phase travel through the existing start coordinator,
+    execution service and common failure handler.
+  - Created authority originates only after successful fresh or recovery bootstrap.
+  - Sixteen regressions preserve complete run state on admission rejection and deterministic
+    bootstrap/recovery races while retaining owned failure behavior.
+  - StartRunProtocol documents the authority requirement and the remaining boundary.
+limitations:
+  - This first cut does not add an exclusive intent claim; GH-2678 owns fencing.
+  - Pre-catch compensation and unknown provider outcomes remain governed by GH-2679.
+  - GH-2676 remains open until the global invariant is proven on those paths.

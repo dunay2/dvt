@@ -8,11 +8,14 @@ import { toErrorMessage } from '../../utils/errorUtils.js';
 import { START_RUN_MESSAGE } from './StartRunDomainConstants.js';
 import type { StartRunEventFactory } from './StartRunEventFactory.js';
 import { PostStartIntentPersistenceError } from './StartRunFailurePolicy.js';
-import type { IStartRunExecutionService, IStartRunFailurePolicy } from './StartRunTypes.js';
+import type {
+  IStartRunExecutionService,
+  IStartRunFailurePolicy,
+  StartRunErrorContext,
+  StartRunExecutionInput,
+} from './StartRunTypes.js';
 
 type EngineRunRef = import('@dvt/contracts').EngineRunRef;
-type PlanRef = import('@dvt/contracts').PlanRef;
-type ResolvedRunContext = import('@dvt/contracts').ResolvedRunContext;
 type IObservability = import('@dvt/observability').IObservability;
 type IProviderAdapter = import('../../adapters/IProviderAdapter.js').IProviderAdapter;
 type IRunStateStoreWrite = import('../../ports/IRunStateStore.js').IRunStateStoreWrite;
@@ -35,41 +38,25 @@ export interface StartRunExecutionServiceDeps {
 export class StartRunExecutionService implements IStartRunExecutionService {
   constructor(private readonly deps: StartRunExecutionServiceDeps) {}
 
-  async executeStartRun(input: {
-    adapter: IProviderAdapter;
-    planRef: PlanRef;
-    resolvedContext: ResolvedRunContext;
-    traceContext: StartRunTraceContext;
-    intentId: string;
-  }): Promise<EngineRunRef> {
-    const { adapter } = input;
-    if (adapter.estimateRunRef) {
-      const estimatedRef = adapter.estimateRunRef(input.resolvedContext);
-      return this.startRunWithEstimatedRef({
-        ...input,
-        estimatedRef,
-      });
+  async executeStartRun(input: StartRunExecutionInput): Promise<EngineRunRef> {
+    input.errorContext.phase = 'bootstrap';
+    if (input.adapter.estimateRunRef) {
+      const estimatedRef = input.adapter.estimateRunRef(input.resolvedContext);
+      return this.startRunWithEstimatedRef({ ...input, estimatedRef });
     }
     return this.startRunWithoutEstimatedRef(input);
   }
 
-  async executePreparedRun(input: {
-    adapter: IProviderAdapter;
-    planRef: PlanRef;
-    resolvedContext: ResolvedRunContext;
-    traceContext: StartRunTraceContext;
-    intentId: string;
-    preparedRunRef: EngineRunRef;
-  }): Promise<EngineRunRef> {
+  async executePreparedRun(
+    input: StartRunExecutionInput & { preparedRunRef: EngineRunRef }
+  ): Promise<EngineRunRef> {
     const runRef = await this.startAdapterAndMarkDispatched(input);
     await this.reconcileEstimatedRunRef({
-      adapter: input.adapter,
-      resolvedContext: input.resolvedContext,
+      ...input,
       estimatedRef: input.preparedRunRef,
       runRef,
-      traceContext: input.traceContext,
-      intentId: input.intentId,
     });
+    input.errorContext.phase = 'completion';
     await this.deps.failurePolicy.markIntentResolvedBestEffort({
       intentId: input.intentId,
       tenantId: input.resolvedContext.tenantId,
@@ -80,15 +67,10 @@ export class StartRunExecutionService implements IStartRunExecutionService {
     return runRef;
   }
 
-  private async startRunWithEstimatedRef(input: {
-    adapter: IProviderAdapter;
-    planRef: PlanRef;
-    estimatedRef: EngineRunRef;
-    resolvedContext: ResolvedRunContext;
-    traceContext: StartRunTraceContext;
-    intentId: string;
-  }): Promise<EngineRunRef> {
-    const { adapter, planRef, estimatedRef, resolvedContext, traceContext, intentId } = input;
+  private async startRunWithEstimatedRef(
+    input: StartRunExecutionInput & { estimatedRef: EngineRunRef }
+  ): Promise<EngineRunRef> {
+    const { planRef, estimatedRef, resolvedContext, traceContext, intentId, errorContext } = input;
     const bootMeta = this.deps.eventFactory.buildRunMetadata(
       resolvedContext,
       planRef,
@@ -99,22 +81,11 @@ export class StartRunExecutionService implements IStartRunExecutionService {
       metadata: bootMeta,
       firstEvents: [this.deps.eventFactory.buildRunEvent(bootMeta, 'RunQueued')],
     });
+    errorContext.preparation = { disposition: 'created', runRef: estimatedRef };
 
-    const runRef = await this.startAdapterAndMarkDispatched({
-      adapter,
-      planRef,
-      resolvedContext,
-      intentId,
-    });
-
-    await this.reconcileEstimatedRunRef({
-      adapter,
-      resolvedContext,
-      estimatedRef,
-      runRef,
-      traceContext,
-      intentId,
-    });
+    const runRef = await this.startAdapterAndMarkDispatched(input);
+    await this.reconcileEstimatedRunRef({ ...input, runRef });
+    errorContext.phase = 'completion';
     await this.deps.failurePolicy.markIntentResolvedBestEffort({
       intentId,
       tenantId: resolvedContext.tenantId,
@@ -125,21 +96,9 @@ export class StartRunExecutionService implements IStartRunExecutionService {
     return runRef;
   }
 
-  private async startRunWithoutEstimatedRef(input: {
-    adapter: IProviderAdapter;
-    planRef: PlanRef;
-    resolvedContext: ResolvedRunContext;
-    traceContext: StartRunTraceContext;
-    intentId: string;
-  }): Promise<EngineRunRef> {
-    const { adapter, planRef, resolvedContext, traceContext, intentId } = input;
-    const runRef = await this.startAdapterAndMarkDispatched({
-      adapter,
-      planRef,
-      resolvedContext,
-      intentId,
-    });
-
+  private async startRunWithoutEstimatedRef(input: StartRunExecutionInput): Promise<EngineRunRef> {
+    const { adapter, planRef, resolvedContext, traceContext, intentId, errorContext } = input;
+    const runRef = await this.startAdapterAndMarkDispatched(input);
     const bootMeta = this.deps.eventFactory.buildRunMetadata(
       resolvedContext,
       planRef,
@@ -152,17 +111,16 @@ export class StartRunExecutionService implements IStartRunExecutionService {
       runRef,
       intentId,
       traceContext,
+      errorContext,
     });
     return runRef;
   }
 
-  private async startAdapterAndMarkDispatched(input: {
-    adapter: IProviderAdapter;
-    planRef: PlanRef;
-    resolvedContext: ResolvedRunContext;
-    intentId: string;
-  }): Promise<EngineRunRef> {
-    const { adapter, planRef, resolvedContext, intentId } = input;
+  private async startAdapterAndMarkDispatched(
+    input: StartRunExecutionInput
+  ): Promise<EngineRunRef> {
+    const { adapter, planRef, resolvedContext, intentId, errorContext } = input;
+    errorContext.phase = 'provider_dispatch';
     const runRef = await this.withTimeout(
       adapter.startRun(planRef, resolvedContext),
       this.deps.timeouts?.adapterCallMs ?? 30_000,
@@ -185,13 +143,17 @@ export class StartRunExecutionService implements IStartRunExecutionService {
     runRef: EngineRunRef;
     intentId: string;
     traceContext: StartRunTraceContext;
+    errorContext: StartRunErrorContext;
   }): Promise<void> {
-    const { bootMeta, adapter, runRef, intentId, traceContext } = input;
+    const { bootMeta, adapter, runRef, intentId, traceContext, errorContext } = input;
+    errorContext.phase = 'bootstrap';
     try {
       await this.deps.stateStoreWrite.bootstrapRunTx({
         metadata: bootMeta,
         firstEvents: [this.deps.eventFactory.buildRunEvent(bootMeta, 'RunQueued')],
       });
+      errorContext.preparation = { disposition: 'created', runRef };
+      errorContext.phase = 'completion';
       await this.deps.failurePolicy.markIntentResolvedBestEffort({
         intentId,
         tenantId: bootMeta.tenantId,
@@ -225,15 +187,14 @@ export class StartRunExecutionService implements IStartRunExecutionService {
     }
   }
 
-  private async reconcileEstimatedRunRef(input: {
-    adapter: IProviderAdapter;
-    resolvedContext: ResolvedRunContext;
-    estimatedRef: EngineRunRef;
-    runRef: EngineRunRef;
-    traceContext: StartRunTraceContext;
-    intentId: string;
-  }): Promise<void> {
+  private async reconcileEstimatedRunRef(
+    input: Omit<StartRunExecutionInput, 'planRef'> & {
+      estimatedRef: EngineRunRef;
+      runRef: EngineRunRef;
+    }
+  ): Promise<void> {
     const { adapter, resolvedContext, estimatedRef, runRef, traceContext, intentId } = input;
+    input.errorContext.phase = 'provider_ref_reconciliation';
     if (engineRunRefsEqual(estimatedRef, runRef)) {
       return;
     }
