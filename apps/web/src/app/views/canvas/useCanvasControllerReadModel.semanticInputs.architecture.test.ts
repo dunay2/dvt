@@ -45,8 +45,8 @@ describe('useCanvasControllerReadModel semantic input sharing', () => {
     );
 
     expect(nodeMaterialization).toContain('canMutateGraph');
-    expect(nodeMaterialization).toContain('EMPTY_COLUMN_FUNCTION_NODES');
+    expect(nodeMaterialization).toContain(': undefined');
     expect(edgeMaterialization).toContain('!canMutateGraph');
-    expect(edgeMaterialization).toContain('EMPTY_COLUMN_FUNCTION_EDGES');
+    expect(edgeMaterialization).toContain('? undefined');
   });
 });

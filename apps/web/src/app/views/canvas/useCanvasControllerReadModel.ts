@@ -21,9 +21,6 @@ import { projectCanvasNodeAccessibleHealth } from './canvasNodeMapper';
 import { projectCanvasColumnFunctionMenus } from './canvasColumnFunctionMenuProjection';
 import { isDbtCompatibleModel } from './canvasDbtAuthoringModel';
 
-const EMPTY_COLUMN_FUNCTION_NODES: readonly CanonicalNode[] = [];
-const EMPTY_COLUMN_FUNCTION_EDGES: readonly Readonly<{ sourceId: string; targetId: string }>[] = [];
-
 function isInteractiveColumn(value: unknown): value is GraphNodeColumn {
   if (
     typeof value !== 'object' ||
@@ -166,14 +163,13 @@ export function useCanvasControllerReadModel({
     [runtimeCapabilities]
   );
   const columnFunctionNodes = useMemo(
-    () =>
-      canMutateGraph ? [...graphModel.canonicalNodesById.values()] : EMPTY_COLUMN_FUNCTION_NODES,
+    () => (canMutateGraph ? [...graphModel.canonicalNodesById.values()] : undefined),
     [canMutateGraph, graphModel.canonicalNodesById]
   );
   const columnFunctionEdges = useMemo(
     () =>
       !canMutateGraph
-        ? EMPTY_COLUMN_FUNCTION_EDGES
+        ? undefined
         : graphModel.edges.length > 0
           ? graphModel.edges.map((edge) => ({
               sourceId: edge.source,
@@ -251,7 +247,7 @@ export function useCanvasControllerReadModel({
           !canAuthorColumnMappings &&
           readOnlyColumnLineageNodeIds.has(canonicalNode.id);
         const functionProjection =
-          canMutateGraph && canonicalNode != null
+          columnFunctionNodes != null && columnFunctionEdges != null && canonicalNode != null
             ? projectCanvasColumnFunctionMenus({
                 node: canonicalNode,
                 nodes: columnFunctionNodes,

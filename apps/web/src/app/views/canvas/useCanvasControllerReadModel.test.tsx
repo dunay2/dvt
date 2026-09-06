@@ -170,6 +170,30 @@ afterEach(() => {
 });
 
 describe('useCanvasControllerReadModel', () => {
+  it('materializes semantic inputs only for mutation and reuses them across geometry changes', async () => {
+    const args = buildReadModelArgs({ canMutateGraph: false });
+    const values = vi.spyOn(args.graphModel.canonicalNodesById, 'values');
+    const mounted = await renderReadModel(args);
+    try {
+      expect(values).not.toHaveBeenCalled();
+      const moved = {
+        ...args,
+        graphModel: {
+          ...args.graphModel,
+          nodes: args.graphModel.nodes.map((node) => ({ ...node, position: { x: 120, y: 80 } })),
+        },
+      };
+      await mounted.rerender(moved);
+      expect(values).not.toHaveBeenCalled();
+      await mounted.rerender({ ...moved, canMutateGraph: true });
+      expect(values).toHaveBeenCalledTimes(1);
+      await mounted.rerender({ ...args, canMutateGraph: true });
+      expect(values).toHaveBeenCalledTimes(1);
+    } finally {
+      await mounted.cleanup();
+      values.mockRestore();
+    }
+  });
   it('keeps execution selection handlers when graph mutation and execution selection are allowed', async () => {
     const args = buildReadModelArgs({
       canMutateGraph: true,
