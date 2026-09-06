@@ -15,6 +15,7 @@ export const AUTHORIZATION_ACTION_NAME = {
   workspaceSourceConnectionRename: 'workspace:source-connection:rename',
   workspaceSourceConnectionTest: 'workspace:source-connection:test',
   workspaceSourceImportImport: 'workspace:source-import:import',
+  workspaceSourceImportRebind: 'workspace:source-import:rebind',
   adminRebuildSnapshot: 'admin:rebuild-snapshot',
   runView: 'run:view',
   runList: 'run:list',
@@ -38,6 +39,7 @@ export type CommandAuthorizationActionName =
   | typeof AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionRename
   | typeof AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionTest
   | typeof AUTHORIZATION_ACTION_NAME.workspaceSourceImportImport
+  | typeof AUTHORIZATION_ACTION_NAME.workspaceSourceImportRebind
   | typeof AUTHORIZATION_ACTION_NAME.adminRebuildSnapshot;
 
 export type QueryAuthorizationActionName =
@@ -108,6 +110,10 @@ export const AUTHORIZATION_ACTION = {
   workspaceSourceImportImport: {
     kind: 'command',
     name: AUTHORIZATION_ACTION_NAME.workspaceSourceImportImport,
+  },
+  workspaceSourceImportRebind: {
+    kind: 'command',
+    name: AUTHORIZATION_ACTION_NAME.workspaceSourceImportRebind,
   },
   adminRebuildSnapshot: {
     kind: 'command',
