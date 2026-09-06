@@ -221,10 +221,13 @@ describe('dbt project file projection live vertical', () => {
       .and('contain.text', 'orders');
     cy.get('.react-flow__node[data-id="model.analytics.orders"]')
       .should('be.visible')
-      .find('[data-slot="graph-node-metric-row"]')
+      .find('[data-slot="graph-node-column-toggle"]')
+      .should('contain.text', 'Columns (2)');
+    cy.get('.react-flow__node[data-id="model.analytics.orders"]')
+      .find('[data-slot="graph-node-metric-row"][data-placement="body"]')
       .within(() => {
-        cy.contains('Columns').should('be.visible');
-        cy.contains('2').should('be.visible');
+        cy.contains('Rows').should('be.visible');
+        cy.contains('Size').should('be.visible');
       });
     cy.get('.react-flow__node[data-id="seed.analytics.country_codes"]').should('be.visible');
     cy.get('.react-flow__node[data-id="snapshot.analytics.orders_snapshot"]').should('be.visible');
