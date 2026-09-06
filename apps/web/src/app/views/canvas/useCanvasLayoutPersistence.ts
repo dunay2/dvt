@@ -37,7 +37,7 @@ function extractNodePositions(nodes: readonly Node[]): CanvasNodePositions {
   );
 }
 
-function extractFinalNodePositions(
+function mergeDraggedNodePosition(
   nodes: readonly Node[],
   draggedNode: Node,
   draggedNodes: readonly Node[]
@@ -212,7 +212,7 @@ function useCanvasNodePositionPersistence({
 
   const handleNodeDragStop = useCallback<NonNullable<ReactFlowProps['onNodeDragStop']>>(
     (_event, draggedNode, draggedNodes) => {
-      saveOrQueueNodePositions(extractFinalNodePositions(nodes, draggedNode, draggedNodes));
+      saveOrQueueNodePositions(mergeDraggedNodePosition(nodes, draggedNode, draggedNodes));
     },
     [nodes, saveOrQueueNodePositions]
   );
