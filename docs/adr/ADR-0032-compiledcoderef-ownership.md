@@ -1,6 +1,7 @@
 # ADR-0032 — compiledCodeRef Ownership: Reference in StepStarted Payload
 
-- **Status**: Superseded by [ADR-0067](./ADR-0067-canonical-artifact-authority-and-compiled-code-hard-cut.md)
+- **Status**: Superseded
+- **Superseded by**: [ADR-0067](./ADR-0067-canonical-artifact-authority-and-compiled-code-hard-cut.md)
 - **Date**: 2026-03-04
 - **Superseded**: 2026-09-05
 - **Owners**: Engine Domain / Planner / Traceability
