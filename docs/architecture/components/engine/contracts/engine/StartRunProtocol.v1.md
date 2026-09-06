@@ -353,6 +353,24 @@ Those pre-existing concurrent-dispatch limitations remain tracked by
 [#2676](https://github.com/dunay2/dvt/issues/2676) remains open until those paths
 are also proven.
 
+### 4.7 Start Failure Authority Conformance
+
+The [mutation-authority regressions](../../../../../../packages/@dvt/engine/test/core/WorkflowEngine.startMutationAuthority.test.ts)
+exercise this protocol through the actual Engine application services and
+in-memory transactional stores. They MUST compare complete metadata, ordered
+events, snapshot and intent after duplicate/admission rejection. Deterministic
+barriers MUST cover a dispatched winner with a losing bootstrap, both recovery
+reuse paths, and a run appearing during capability/context admission. An owned
+reconciliation failure MUST retain its legitimate failure event and compensation.
+
+Run these proofs with
+`pnpm --filter @dvt/engine exec vitest run test/core/WorkflowEngine.startMutationAuthority.test.ts`.
+The [ARC evidence](../../../../../evidence/ed-20260906-eng1-start-mutation-authority.md)
+records the local observations and remaining boundaries. A Planning DB execution
+evidence record using this protocol as its governed source MUST bind the actual
+CI job, the tested commit, and this document's exact committed content hash.
+The protocol declares the obligation; the authenticated job supplies its result.
+
 ---
 
 ## 5) Existing ADR-Governed Invariants
