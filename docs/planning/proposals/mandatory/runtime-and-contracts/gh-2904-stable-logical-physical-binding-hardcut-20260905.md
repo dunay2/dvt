@@ -60,6 +60,16 @@ The canonical Substrait sidecar already has the right shape: stable
 therefore not a missing IR or identity framework. It is residual authority drift
 at ingress and stale bridge code.
 
+## Live proof execution boundary
+
+The source-import live command executes both the opaque-identity proof and the
+broader source-import/export proof, each in a fresh protected runtime and project
+scope. Separate scopes preserve their initial missing-draft assertions. Generic
+Cypress runs use the existing environment-aware guard; the dedicated live runner
+sets `requireLiveProtectedRuntime`, so absent credentials remain a hard failure.
+The older export flow remains tracked by #2994 until its shared-Canvas assumptions
+are reconciled; wiring identity coverage must not hide that failure.
+
 ## Identity and binding classification
 
 | Surface                                                   | Classification                | Rule                                                   |
@@ -365,7 +375,9 @@ opaque IDs for distinct physical objects.
         "docs/planning/proposals/mandatory/runtime-and-contracts/gh-2904-stable-logical-physical-binding-hardcut-20260905.md",
         "apps/api/test/entrypoints/http/warehouseSourceImportRoutes.test.ts",
         "apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts",
-        "apps/web/cypress/support/liveWarehouseSourceImport.ts"
+        "apps/web/cypress/support/liveWarehouseSourceImport.ts",
+        "scripts/run-canvas-source-import-live-proof.cjs",
+        "scripts/run-canvas-source-import-live-proof.test.cjs"
       ],
       "expectedFailure": "Four route witnesses expect physical-name-derived IDs instead of persisted opaque Source identity"
     },
@@ -396,7 +408,9 @@ opaque IDs for distinct physical objects.
         "docs/planning/proposals/mandatory/runtime-and-contracts/gh-2904-stable-logical-physical-binding-hardcut-20260905.md",
         "apps/api/test/entrypoints/http/warehouseSourceImportRoutes.test.ts",
         "apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts",
-        "apps/web/cypress/support/liveWarehouseSourceImport.ts"
+        "apps/web/cypress/support/liveWarehouseSourceImport.ts",
+        "scripts/run-canvas-source-import-live-proof.cjs",
+        "scripts/run-canvas-source-import-live-proof.test.cjs"
       ],
       "expectedFailure": "Four route witnesses expect physical-name-derived IDs instead of persisted opaque Source identity"
     }
@@ -468,7 +482,9 @@ opaque IDs for distinct physical objects.
     "docs/planning/proposals/mandatory/runtime-and-contracts/gh-2904-stable-logical-physical-binding-hardcut-20260905.md",
     "apps/api/test/entrypoints/http/warehouseSourceImportRoutes.test.ts",
     "apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts",
-    "apps/web/cypress/support/liveWarehouseSourceImport.ts"
+    "apps/web/cypress/support/liveWarehouseSourceImport.ts",
+    "scripts/run-canvas-source-import-live-proof.cjs",
+    "scripts/run-canvas-source-import-live-proof.test.cjs"
   ],
   "forbiddenImplementationSurfaces": [
     "apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts",

@@ -6,7 +6,7 @@ import {
   clickCanvasContextMenuAction,
   openCanvasContextMenuAt,
 } from '../../support/canvasExecutionSelection';
-import { requireLiveProtectedRuntimeEnv } from '../../support/canvasFirstAuthoring';
+import { skipWhenFirstAuthoringLiveEnvIsMissing } from '../../support/canvasFirstAuthoring';
 import {
   readLiveGraphDraft,
   resolveLiveWorkspaceSession,
@@ -15,8 +15,10 @@ import { importLivePostgresSource } from '../../support/liveWarehouseSourceImpor
 import { seedE2eWorkspaceSession } from '../../support/workspaceSession';
 
 describe('Shared Canvas imported Source identity', () => {
+  beforeEach(function () {
+    skipWhenFirstAuthoringLiveEnvIsMissing(this);
+  });
   it('persists opaque IDs across reload and separates identical objects on two connections', () => {
-    requireLiveProtectedRuntimeEnv();
     const session = resolveLiveWorkspaceSession();
     Cypress.env('firstAuthoringRunId', 'source-identity-' + Date.now());
     const identityPattern =
