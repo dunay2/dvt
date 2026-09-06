@@ -1,3 +1,9 @@
+import {
+  WorkspaceGraphAuthoringDraftSchema,
+  isWorkspaceGraphAuthoringEdgeEffectivelyExecutable,
+} from '@dvt/contracts';
+import { PlannerFacade } from '../../../../../../packages/@dvt/planner/src/application/PlannerFacade';
+import { findExecutableGraphSourceTopologyMismatch } from '../../../../../api/src/application/services/validateExecutableGraphSourceTopology';
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
@@ -522,4 +528,72 @@ describe('canvas dbt planner graph source', () => {
     expect(downstreamOnly.selection).toEqual(bothRoots.selection);
     expect(downstreamOnly.draftSignature).not.toBe(bothRoots.draftSignature);
   });
+
+  it.each([
+    { metadata: {}, executable: true },
+    { metadata: { executionGate: 'open' }, executable: false },
+    { metadata: { executionGate: 'closed' }, executable: false },
+    { metadata: { executionGate: 'future-state' }, executable: false },
+    { metadata: { executionDependency: false }, executable: false },
+  ])(
+    'keeps Canvas projection admissible for protected edge policy %o',
+    ({ metadata, executable }) => {
+      const nodes = [modelNode, downstreamModelNode];
+      const canonicalEdges: CanonicalEdge[] = [
+        {
+          id: 'edge-model-downstream',
+          sourceId: modelNode.id,
+          targetId: downstreamModelNode.id,
+          relation: 'lineage',
+          metadata,
+        },
+      ];
+      const strategy = {
+        kind: 'planner_generic_preview',
+        previewProfile: 'planner-generic-v1',
+        sourceFamily: 'dbt',
+      } as const;
+      const projection = buildCanvasDbtExecutionProjection({
+        strategy,
+        canonicalNodes: nodes,
+        canonicalEdges,
+        selectionIntent: { mode: 'explicit', nodeIds: nodes.map((node) => node.id) },
+        workspaceNodeIds: nodes.map((node) => node.id),
+      });
+      expect(projection.ok).toBe(true);
+      if (!projection.ok) throw new Error('Canvas projection failed');
+      const protectedDraft = WorkspaceGraphAuthoringDraftSchema.parse({
+        canvas: { kind: 'dvt', title: 'Shared Canvas' },
+        nodeIds: nodes.map((node) => node.id),
+        nodes,
+        nodePositions: Object.fromEntries(
+          nodes.map((node, index) => [node.id, { x: index, y: 0 }])
+        ),
+        edges: canonicalEdges.filter(isWorkspaceGraphAuthoringEdgeEffectivelyExecutable),
+      });
+      const closure = new PlannerFacade().deriveExecutableSubgraph({
+        draft: protectedDraft,
+        selection: projection.selection,
+      });
+      expect(closure.executable).toBe(true);
+      expect(
+        findExecutableGraphSourceTopologyMismatch(projection.graphSource, closure, protectedDraft)
+      ).toBeNull();
+      expect(
+        projection.graphSource.nodes.find((node) => node.nodeId === downstreamModelNode.id)
+          ?.dependsOn
+      ).toEqual(executable ? [modelNode.id] : []);
+      const partial = resolveDbtExecutionScopeNodeIds({
+        nodes,
+        edges: canonicalEdges,
+        selectionIntent: { mode: 'explicit', nodeIds: [downstreamModelNode.id] },
+        workspaceNodeIds: nodes.map((node) => node.id),
+      });
+      expect(partial).toMatchObject({
+        ok: true,
+        derivedDependencyNodeIds: executable ? [modelNode.id] : [],
+      });
+      expect(canonicalEdges).toHaveLength(1);
+    }
+  );
 });

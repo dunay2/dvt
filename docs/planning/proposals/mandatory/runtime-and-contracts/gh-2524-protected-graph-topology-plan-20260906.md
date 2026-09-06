@@ -75,6 +75,20 @@ exact-match acceptance, including effective edge gates. Retain existing scope,
 missing-draft and corrupt-payload tests. Run API tests, lint and source/test type
 checks, code-state generation, governance refresh and normal pre-push.
 
+## First-party producer alignment
+
+Canvas dependency projection and selection recovery must apply the same shared
+effective-execution policy as the protected resolver. Otherwise a legitimate
+closed gate becomes a client topology mismatch. Filter scheduling dependencies
+in both the shared selection-scope builder and the graphSource dependency builder;
+retain all authoring edges for semantic/provenance inspection.
+
+A boundary regression runs the actual Canvas projector, PlannerFacade closure
+and API topology comparator together for open, closed, future-state and
+reference-only edges. It also checks that partial selection does not pull an
+upstream node through a closed edge. These are producer-to-admission tests, not
+a claim of browser or HTTP execution.
+
 ## Mechanization evidence
 
 The following evidence is exported from the existing RecordFeatureMechanizationRail
@@ -91,12 +105,13 @@ command in Planning DB. GitHub #2524 owns task status and acceptance.
       ],
       "dddOwner": "Run command application service",
       "unitTests": [
-        "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/resolveAuthorizedExecutableSubgraph.topology.test.ts test/application/services/resolveAuthorizedExecutableSubgraph.test.ts"
+        "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/resolveAuthorizedExecutableSubgraph.topology.test.ts test/application/services/resolveAuthorizedExecutableSubgraph.test.ts",
+        "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts src/app/views/canvas/canvasExecutionSelectionRecovery.test.ts"
       ],
       "fowlerSignals": [
         "Separate pure topology comparison from protected command orchestration"
       ],
-      "cypressCoverage": "N/A: backend rejection boundary verified with real Planner and protected draft-store port; no browser surface changes",
+      "cypressCoverage": "N/A: producer-to-admission boundary verified with actual Canvas projector, Planner and API comparator; no browser or HTTP execution claimed",
       "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2524-PROTECTED-GRAPH-TOPOLOGY"
     },
     {
@@ -107,12 +122,13 @@ command in Planning DB. GitHub #2524 owns task status and acceptance.
       ],
       "dddOwner": "Run command application service",
       "unitTests": [
-        "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/resolveAuthorizedExecutableSubgraph.topology.test.ts test/application/services/resolveAuthorizedExecutableSubgraph.test.ts"
+        "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/resolveAuthorizedExecutableSubgraph.topology.test.ts test/application/services/resolveAuthorizedExecutableSubgraph.test.ts",
+        "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts src/app/views/canvas/canvasExecutionSelectionRecovery.test.ts"
       ],
       "fowlerSignals": [
         "Separate pure topology comparison from protected command orchestration"
       ],
-      "cypressCoverage": "N/A: backend rejection boundary verified with real Planner and protected draft-store port; no browser surface changes",
+      "cypressCoverage": "N/A: producer-to-admission boundary verified with actual Canvas projector, Planner and API comparator; no browser or HTTP execution claimed",
       "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2524-PROTECTED-GRAPH-TOPOLOGY"
     },
     {
@@ -123,12 +139,13 @@ command in Planning DB. GitHub #2524 owns task status and acceptance.
       ],
       "dddOwner": "Run command application service",
       "unitTests": [
-        "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/resolveAuthorizedExecutableSubgraph.topology.test.ts test/application/services/resolveAuthorizedExecutableSubgraph.test.ts"
+        "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/resolveAuthorizedExecutableSubgraph.topology.test.ts test/application/services/resolveAuthorizedExecutableSubgraph.test.ts",
+        "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts src/app/views/canvas/canvasExecutionSelectionRecovery.test.ts"
       ],
       "fowlerSignals": [
         "Separate pure topology comparison from protected command orchestration"
       ],
-      "cypressCoverage": "N/A: backend rejection boundary verified with real Planner and protected draft-store port; no browser surface changes",
+      "cypressCoverage": "N/A: producer-to-admission boundary verified with actual Canvas projector, Planner and API comparator; no browser or HTTP execution claimed",
       "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2524-PROTECTED-GRAPH-TOPOLOGY"
     },
     {
@@ -139,12 +156,13 @@ command in Planning DB. GitHub #2524 owns task status and acceptance.
       ],
       "dddOwner": "Run command application service",
       "unitTests": [
-        "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/resolveAuthorizedExecutableSubgraph.topology.test.ts test/application/services/resolveAuthorizedExecutableSubgraph.test.ts"
+        "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/resolveAuthorizedExecutableSubgraph.topology.test.ts test/application/services/resolveAuthorizedExecutableSubgraph.test.ts",
+        "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts src/app/views/canvas/canvasExecutionSelectionRecovery.test.ts"
       ],
       "fowlerSignals": [
         "Separate pure topology comparison from protected command orchestration"
       ],
-      "cypressCoverage": "N/A: backend rejection boundary verified with real Planner and protected draft-store port; no browser surface changes",
+      "cypressCoverage": "N/A: producer-to-admission boundary verified with actual Canvas projector, Planner and API comparator; no browser or HTTP execution claimed",
       "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2524-PROTECTED-GRAPH-TOPOLOGY"
     },
     {
@@ -155,12 +173,13 @@ command in Planning DB. GitHub #2524 owns task status and acceptance.
       ],
       "dddOwner": "Run command application service",
       "unitTests": [
-        "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/resolveAuthorizedExecutableSubgraph.topology.test.ts test/application/services/resolveAuthorizedExecutableSubgraph.test.ts"
+        "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/resolveAuthorizedExecutableSubgraph.topology.test.ts test/application/services/resolveAuthorizedExecutableSubgraph.test.ts",
+        "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts src/app/views/canvas/canvasExecutionSelectionRecovery.test.ts"
       ],
       "fowlerSignals": [
         "Separate pure topology comparison from protected command orchestration"
       ],
-      "cypressCoverage": "N/A: backend rejection boundary verified with real Planner and protected draft-store port; no browser surface changes",
+      "cypressCoverage": "N/A: producer-to-admission boundary verified with actual Canvas projector, Planner and API comparator; no browser or HTTP execution claimed",
       "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2524-PROTECTED-GRAPH-TOPOLOGY"
     },
     {
@@ -171,12 +190,13 @@ command in Planning DB. GitHub #2524 owns task status and acceptance.
       ],
       "dddOwner": "Run command application service",
       "unitTests": [
-        "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/resolveAuthorizedExecutableSubgraph.topology.test.ts test/application/services/resolveAuthorizedExecutableSubgraph.test.ts"
+        "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/services/resolveAuthorizedExecutableSubgraph.topology.test.ts test/application/services/resolveAuthorizedExecutableSubgraph.test.ts",
+        "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts src/app/views/canvas/canvasExecutionSelectionRecovery.test.ts"
       ],
       "fowlerSignals": [
         "Separate pure topology comparison from protected command orchestration"
       ],
-      "cypressCoverage": "N/A: backend rejection boundary verified with real Planner and protected draft-store port; no browser surface changes",
+      "cypressCoverage": "N/A: producer-to-admission boundary verified with actual Canvas projector, Planner and API comparator; no browser or HTTP execution claimed",
       "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2524-PROTECTED-GRAPH-TOPOLOGY"
     }
   ],
@@ -186,7 +206,8 @@ command in Planning DB. GitHub #2524 owns task status and acceptance.
     "https://github.com/dunay2/dvt/issues/2524"
   ],
   "cypressFlows": [
-    "N/A: backend rejection boundary verified with real Planner and protected draft-store port; no browser surface changes"
+    "N/A: backend rejection boundary verified with real Planner and protected draft-store port; no browser surface changes",
+    "N/A: producer-to-admission boundary verified with actual Canvas projector, Planner and API comparator; no browser or HTTP execution claimed"
   ],
   "domainObjects": [
     "Authorized executable subgraph derived from Workspace Graph Draft"
@@ -208,7 +229,10 @@ command in Planning DB. GitHub #2524 owns task status and acceptance.
         "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts",
         "apps/api/src/application/services/validateExecutableGraphSourceTopology.ts",
         "apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.topology.test.ts",
-        "docs/planning/proposals/mandatory/runtime-and-contracts/gh-2524-protected-graph-topology-plan-20260906.md"
+        "docs/planning/proposals/mandatory/runtime-and-contracts/gh-2524-protected-graph-topology-plan-20260906.md",
+        "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.ts",
+        "apps/web/src/app/views/canvas/dbtExecutionScopePolicy.ts",
+        "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts"
       ],
       "expectedFailure": "Six topology witnesses accept client dependency drift before the comparator is installed"
     }
@@ -248,12 +272,15 @@ command in Planning DB. GitHub #2524 owns task status and acceptance.
     "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts",
     "apps/api/src/application/services/validateExecutableGraphSourceTopology.ts",
     "apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.topology.test.ts",
-    "docs/planning/proposals/mandatory/runtime-and-contracts/gh-2524-protected-graph-topology-plan-20260906.md"
+    "docs/planning/proposals/mandatory/runtime-and-contracts/gh-2524-protected-graph-topology-plan-20260906.md",
+    "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.ts",
+    "apps/web/src/app/views/canvas/dbtExecutionScopePolicy.ts",
+    "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts"
   ],
   "forbiddenImplementationSurfaces": [
     "packages/@dvt/contracts/**",
     "packages/@dvt/planner/**",
-    "apps/web/src/**"
+    "apps/web/src/app/views/canvas/CanvasView.tsx"
   ]
 }
 ```
