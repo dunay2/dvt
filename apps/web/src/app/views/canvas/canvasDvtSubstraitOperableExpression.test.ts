@@ -1,3 +1,4 @@
+import type { ConnectedSourceRef } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
@@ -18,6 +19,16 @@ import {
 const OPAQUE_FIELD_ID =
   /^dvt_fld_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+const sourceRef: ConnectedSourceRef = {
+  schemaVersion: 'connected-source-ref.v1',
+  connectionRef: {
+    schemaVersion: 'connection-ref.v1',
+    connectionId: 'postgres-main',
+    provider: 'postgres',
+  },
+  sourceObjectId: 'raw.orders',
+};
+
 const source: CanonicalNode = {
   id: 'source-orders',
   name: 'Orders',
@@ -29,15 +40,7 @@ const source: CanonicalNode = {
   metadata: {
     schema: 'raw',
     tableName: 'orders',
-    connectedSourceRef: {
-      schemaVersion: 'connected-source-ref.v1',
-      connectionRef: {
-        schemaVersion: 'connection-ref.v1',
-        connectionId: 'postgres-main',
-        provider: 'postgres',
-      },
-      sourceObjectId: 'raw.orders',
-    },
+    connectedSourceRef: sourceRef,
     columns: [
       { name: 'order_id', type: 'integer' },
       { name: 'customer', type: 'text' },
@@ -61,7 +64,7 @@ function baseDraft(): DvtSubstraitProjectionDraft {
       nodeId: source.id,
       schema: 'raw',
       table: 'orders',
-      sourceRef: source.metadata?.connectedSourceRef as never,
+      sourceRef,
       fields: [
         { name: 'order_id', dataType: 'integer' },
         { name: 'customer', dataType: 'text' },
@@ -159,9 +162,16 @@ describe('DVT Substrait operable output grammar', () => {
     expect(second.createdFieldId).toMatch(OPAQUE_FIELD_ID);
     expect(second.createdFieldId).not.toBe(first.createdFieldId);
 
+    const canonicalProjection = resolveProjection(second.draft);
+    const misleadingLinearProjection: DvtSubstraitProjection = {
+      ...canonicalProjection,
+      outputs: canonicalProjection.outputs.map((output) =>
+        output.fieldId === second.createdFieldId ? { ...output, operations: ['lower'] } : output
+      ),
+    };
     const operable = projectDvtSubstraitOperableOutput({
       draft: second.draft,
-      projection: resolveProjection(second.draft),
+      projection: misleadingLinearProjection,
       fieldId: second.createdFieldId,
     });
     expect(operable).toMatchObject({
