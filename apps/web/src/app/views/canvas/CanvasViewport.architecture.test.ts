@@ -20,6 +20,14 @@ const CANVAS_VIEWPORT_LIFECYCLE_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'useCanvasViewportLifecycle.ts'
 );
+const CANVAS_VIEWPORT_NODE_FOCUS_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasViewportNodeFocus.ts'
+);
+const CANVAS_GRAPH_SEARCH_ACTIVATION_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useCanvasGraphSearchActivation.ts'
+);
 const CANVAS_VIEWPORT_TEST_HARNESS_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'CanvasViewport.testHarness.tsx'
@@ -76,6 +84,16 @@ describe('CanvasViewport architecture', () => {
     );
     expect(CANVAS_VIEWPORT_LIFECYCLE_SOURCE).toContain('reactFlow.setViewport');
     expect(CANVAS_VIEWPORT_LIFECYCLE_SOURCE).toContain('.fitView({');
+  });
+
+  it('routes minimap and graph-search node focus through one viewport command policy', () => {
+    expect(CANVAS_VIEWPORT_SOURCE).toContain('focusCanvasViewportNode');
+    expect(CANVAS_VIEWPORT_SOURCE).toContain('onMiniMapNodeClick={handleMiniMapNodeClick}');
+    expect(CANVAS_VIEWPORT_SURFACE_VIEW_SOURCE).toContain('onNodeClick={onMiniMapNodeClick}');
+    expect(CANVAS_GRAPH_SEARCH_ACTIVATION_SOURCE).toContain('focusCanvasViewportNode');
+    expect(CANVAS_GRAPH_SEARCH_ACTIVATION_SOURCE).not.toContain('.fitView({');
+    expect(CANVAS_VIEWPORT_NODE_FOCUS_SOURCE).toContain('export function focusCanvasViewportNode');
+    expect(CANVAS_VIEWPORT_NODE_FOCUS_SOURCE).toContain('.fitView({');
   });
 
   it('keeps test doubles in explicit adapters registered before the subject harness', () => {

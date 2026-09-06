@@ -121,6 +121,72 @@ describe('CanvasViewport', () => {
     expect(minimapDataset?.zoomable).toBe('true');
   });
 
+  it('centers the requested Canvas node when its minimap node is activated', async () => {
+    const onNodesChange = vi.fn();
+    const nodesWithImpact = [
+      { id: 'orders', position: { x: 0, y: 0 }, data: {}, selected: true },
+      { id: 'customers', position: { x: 3600, y: 2200 }, data: {} },
+    ];
+    await renderViewport({ nodesWithImpact, onNodesChange });
+
+    expect(xyflowState.miniMapOnNodeClick).toBeTypeOf('function');
+    xyflowState.miniMapOnNodeClick?.(new MouseEvent('click'), nodesWithImpact[1]!);
+
+    expect(onNodesChange).toHaveBeenCalledWith([
+      { id: 'orders', type: 'select', selected: false },
+      { id: 'customers', type: 'select', selected: true },
+    ]);
+    expect(xyflowState.fitView).toHaveBeenCalledWith({
+      nodes: [expect.objectContaining({ id: 'customers' })],
+      padding: 0.5,
+      maxZoom: 0.9,
+      duration: 180,
+    });
+  });
+
+  it('uses current nodes and capabilities through the callback captured by an empty minimap', async () => {
+    const initialChanges = vi.fn();
+    await renderViewport({
+      nodesWithImpact: [],
+      canSelectNodes: false,
+      onNodesChange: initialChanges,
+    });
+    const retainedClick = xyflowState.miniMapOnNodeClick!;
+    const target = { id: 'later-node', position: { x: 2400, y: 1200 }, data: {} };
+    const currentChanges = vi.fn();
+    await renderViewport({
+      nodesWithImpact: [target],
+      canSelectNodes: true,
+      onNodesChange: currentChanges,
+    });
+
+    retainedClick(new MouseEvent('click'), target);
+    expect(currentChanges).toHaveBeenCalledWith([
+      { id: target.id, type: 'select', selected: true },
+    ]);
+    expect(initialChanges).not.toHaveBeenCalled();
+    expect(xyflowState.fitView).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        nodes: [expect.objectContaining({ id: target.id, position: target.position })],
+      })
+    );
+
+    currentChanges.mockClear();
+    const movedTarget = { ...target, position: { x: 4800, y: 2400 } };
+    await renderViewport({
+      nodesWithImpact: [movedTarget],
+      canSelectNodes: false,
+      onNodesChange: currentChanges,
+    });
+    retainedClick(new MouseEvent('click'), target);
+    expect(currentChanges).not.toHaveBeenCalled();
+    expect(xyflowState.fitView).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        nodes: [expect.objectContaining({ id: target.id, position: movedTarget.position })],
+      })
+    );
+  });
+
   it('restores a persisted viewport instead of forcing fitView', async () => {
     await renderViewport({
       viewport: { x: 120, y: 48, zoom: 0.68 },

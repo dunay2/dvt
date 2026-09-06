@@ -13,6 +13,7 @@ type MockMiniMapProps = Readonly<{
   maskColor?: string;
   maskStrokeColor?: string;
   className?: string;
+  onNodeClick?: (event: MouseEvent, node: { id: string }) => void;
 }>;
 
 const xyflowState = {
@@ -20,6 +21,7 @@ const xyflowState = {
   miniMapMaskColor: null as null | string,
   miniMapMaskStrokeColor: null as null | string,
   miniMapClassName: null as null | string,
+  miniMapOnNodeClick: null as null | ((event: MouseEvent, node: { id: string }) => void),
   controlsFitViewOptions: null as unknown,
   lastReactFlowProps: null as null | Record<string, unknown>,
   setViewport: vi.fn(),
@@ -44,11 +46,13 @@ export function MiniMap({
   maskColor,
   maskStrokeColor,
   className,
+  onNodeClick,
 }: MockMiniMapProps): JSX.Element {
   xyflowState.miniMapNodeColor = nodeColor;
   xyflowState.miniMapMaskColor = maskColor ?? null;
   xyflowState.miniMapMaskStrokeColor = maskStrokeColor ?? null;
   xyflowState.miniMapClassName = className ?? null;
+  xyflowState.miniMapOnNodeClick = onNodeClick ?? null;
   return (
     <div data-testid="minimap" data-pannable={String(pannable)} data-zoomable={String(zoomable)} />
   );
@@ -74,6 +78,7 @@ export function resetCanvasViewportXyflowTestAdapter(): void {
   xyflowState.miniMapMaskColor = null;
   xyflowState.miniMapMaskStrokeColor = null;
   xyflowState.miniMapClassName = null;
+  xyflowState.miniMapOnNodeClick = null;
   xyflowState.controlsFitViewOptions = null;
   xyflowState.lastReactFlowProps = null;
   xyflowState.setViewport.mockReset();

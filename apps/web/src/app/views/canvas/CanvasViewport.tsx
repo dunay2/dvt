@@ -4,9 +4,18 @@ import {
   type Edge,
   type Node,
   type NodeTypes,
+  type MiniMapProps,
   type ReactFlowProps,
 } from '@xyflow/react';
-import { useCallback, useEffect, useMemo, useReducer, useRef, type DragEventHandler } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  type DragEventHandler,
+} from 'react';
 
 import type { GraphNodeOperationalDetail } from '../../plugins/graph/graphNodeCardStrategyContracts';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
@@ -21,6 +30,7 @@ import {
   reduceCanvasNodeContextSurface,
 } from './canvasNodeContextSurfaceModel';
 import { CanvasViewportSurfaceView } from './CanvasViewportSurfaceView';
+import { focusCanvasViewportNode } from './canvasViewportNodeFocus';
 import { resolveCanvasViewportStyle } from './canvasViewportStyle';
 import {
   useCanvasContextMenuPresenter,
@@ -247,6 +257,25 @@ function CanvasViewportWithPresenter({
       graphFilterPresentation.nodes,
     ]
   );
+  const miniMapFocusRef = useRef({
+    nodes: graphSearchPresentation.nodes,
+    selectNode: canSelectNodes,
+    port: graphSearchActivationPort,
+  });
+  useLayoutEffect(() => {
+    miniMapFocusRef.current = {
+      nodes: graphSearchPresentation.nodes,
+      selectNode: canSelectNodes,
+      port: graphSearchActivationPort,
+    };
+  }, [canSelectNodes, graphSearchActivationPort, graphSearchPresentation.nodes]);
+  // XYFlow retains the first callback; read the latest committed focus inputs.
+  const handleMiniMapNodeClick = useCallback<NonNullable<MiniMapProps<Node>['onNodeClick']>>(
+    (_event, node) => {
+      focusCanvasViewportNode({ nodeId: node.id, ...miniMapFocusRef.current });
+    },
+    []
+  );
 
   useEffect(() => {
     if (nodeHealthPopoverModel == null) {
@@ -344,6 +373,7 @@ function CanvasViewportWithPresenter({
       nodeHealthPopoverModel={nodeHealthPopoverModel}
       onCloseNodeHealthPopover={closeNodeHealthPopover}
       onImpactFocusNodeChange={props.onImpactFocusNodeChange}
+      onMiniMapNodeClick={handleMiniMapNodeClick}
       graphSearchController={graphSearchController}
       graphFilterController={graphFilterController}
       copy={copy}

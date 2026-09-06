@@ -2,6 +2,8 @@
 import type { Node, NodeChange } from '@xyflow/react';
 import { useEffect, useRef } from 'react';
 
+import { focusCanvasViewportNode } from './canvasViewportNodeFocus';
+
 export type CanvasGraphSearchActivationPort = Readonly<{
   onNodesChange: (changes: NodeChange[]) => void;
   fitView: (options: {
@@ -19,18 +21,6 @@ export type UseCanvasGraphSearchActivationArgs = Readonly<{
   port: CanvasGraphSearchActivationPort;
 }>;
 
-function buildSelectionChanges(nodes: readonly Node[], activeNode: Node): NodeChange[] {
-  const deselectionChanges: NodeChange[] = nodes
-    .filter((node) => node.id !== activeNode.id && node.selected === true)
-    .map((node) => ({ id: node.id, type: 'select', selected: false }));
-
-  if (activeNode.selected === true) {
-    return deselectionChanges;
-  }
-
-  return [...deselectionChanges, { id: activeNode.id, type: 'select', selected: true }];
-}
-
 export function useCanvasGraphSearchActivation({
   activeNodeId,
   nodes,
@@ -47,29 +37,28 @@ export function useCanvasGraphSearchActivation({
       return;
     }
 
-    const activeNode = nodes.find((node) => node.id === activeNodeId);
-    if (activeNode == null) {
+    const shouldSelect = canSelectNodes && lastSelectedNodeId.current !== activeNodeId;
+    const shouldReveal = lastFocusedNodeId.current !== activeNodeId;
+    if (!shouldSelect && !shouldReveal) {
       return;
     }
 
-    if (canSelectNodes && lastSelectedNodeId.current !== activeNodeId) {
-      const selectionChanges = buildSelectionChanges(nodes, activeNode);
-      if (selectionChanges.length > 0) {
-        port.onNodesChange(selectionChanges);
-      }
-      lastSelectedNodeId.current = activeNodeId;
+    const focused = focusCanvasViewportNode({
+      nodeId: activeNodeId,
+      nodes,
+      selectNode: shouldSelect,
+      revealNode: shouldReveal,
+      port,
+    });
+    if (!focused) {
+      return;
     }
 
-    if (lastFocusedNodeId.current !== activeNodeId) {
+    if (shouldSelect) {
+      lastSelectedNodeId.current = activeNodeId;
+    }
+    if (shouldReveal) {
       lastFocusedNodeId.current = activeNodeId;
-      port
-        .fitView({
-          nodes: [activeNode],
-          padding: 0.5,
-          maxZoom: 0.9,
-          duration: 180,
-        })
-        .catch(() => undefined);
     }
   }, [activeNodeId, canSelectNodes, nodes, port]);
 }
