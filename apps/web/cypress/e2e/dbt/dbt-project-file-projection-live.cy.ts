@@ -340,18 +340,16 @@ describe('dbt project file projection live vertical', () => {
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
     cy.get('[data-slot="canvas-node-floating-toolbar"]').should('not.exist');
 
-    // Ellipsis is operations-only; it must not expose inspect/workbench/code navigation.
+    // The shared context menu keeps one Properties entry for node inspection.
     cy.get('.react-flow__node[data-id="model.analytics.orders"]')
-      .find('[data-slot="graph-node-card-actions"]')
+      .find('[data-slot="graph-node-card-title"]')
+      .rightclick();
+    cy.get('[data-slot="canvas-node-context-menu"]', { timeout: 20_000 })
       .should('be.visible')
-      .click();
-    cy.get('[data-slot="canvas-node-context-menu"]', { timeout: 20_000 }).should('be.visible');
-    cy.get('[data-slot="canvas-node-context-menu"] [data-menu-action="inspect-node"]').should(
-      'not.exist'
-    );
-    cy.get('[data-slot="canvas-node-context-menu"] [data-menu-action="open-node-code"]').should(
-      'not.exist'
-    );
+      .within(() => {
+        cy.contains('[role="menuitem"]', 'Properties').should('be.visible');
+        cy.contains('[role="menuitem"]', 'Open code').should('not.exist');
+      });
     cy.get('body').type('{esc}', { force: true });
     cy.get('[data-slot="canvas-node-context-menu"]').should('not.exist');
   });
