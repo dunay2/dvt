@@ -30,6 +30,7 @@ describe('accessDecision contract vocabulary', () => {
       'workspace:source-connection:rename',
       'workspace:source-connection:test',
       'workspace:source-import:import',
+      'workspace:source-import:rebind',
       'workspace:plugins:view',
     ]);
   });
