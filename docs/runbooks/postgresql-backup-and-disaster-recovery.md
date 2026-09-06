@@ -443,8 +443,11 @@ evidence.
 
 ```bash
 export PGSERVICE=dvt_physical_backup
-BASE_DIR="${DVT_BACKUP_ROOT}/physical/${DVT_BACKUP_ID}/data"
-install -d -m 0700 "${BASE_DIR}"
+PHYSICAL_BACKUP_DIR="${DVT_BACKUP_ROOT}/physical/${DVT_BACKUP_ID}"
+install -d -m 0700 "${DVT_BACKUP_ROOT}/physical"
+mkdir -m 0700 "${PHYSICAL_BACKUP_DIR}"
+BASE_DIR="${PHYSICAL_BACKUP_DIR}/data"
+mkdir -m 0700 "${BASE_DIR}"
 
 pg_basebackup \
   --pgdata="${BASE_DIR}" \
@@ -457,6 +460,11 @@ pg_basebackup \
 
 pg_verifybackup --exit-on-error --progress "${BASE_DIR}"
 ```
+
+The exclusive directory creation reserves the local physical backup ID even if
+a previous attempt stopped before writing data. The implementation profile must
+also reject an already published ID and use conditional creation at publication
+so concurrent writers cannot claim the same immutable evidence identity.
 
 The implementation profile adds any required tablespace mappings and resource
 limits. `pg_verifybackup` is necessary evidence but does not replace a test
@@ -479,7 +487,18 @@ Do not mark the backup selectable until every required WAL segment is durable.
 
 ## 12. PITR restore procedure
 
-### 12.1 Declare the target
+### 12.1 Quiesce and preserve
+
+Before selecting the recovery target, record T0 and then confirm T1:
+
+- reject new API commands;
+- stop/disable API write instances and all DVT workers;
+- stop outbound delivery;
+- preserve the failed primary and its newest available WAL;
+- invoke the BCDR1.3 fencing procedure so pre-recovery writers cannot reconnect;
+- copy, do not move, any unarchived WAL selected for evidence/recovery.
+
+### 12.2 Declare the target
 
 The incident commander records:
 
@@ -495,17 +514,6 @@ required WAL range
 
 The target must be before the destructive/corrupting event and within the proven
 WAL window.
-
-### 12.2 Quiesce and preserve
-
-Before restore:
-
-- reject new API commands;
-- stop/disable API write instances and all DVT workers;
-- stop outbound delivery;
-- preserve the failed primary and its newest available WAL;
-- invoke the BCDR1.3 fencing procedure so pre-recovery writers cannot reconnect;
-- copy, do not move, any unarchived WAL selected for evidence/recovery.
 
 ### 12.3 Restore the base backup into an empty target
 
@@ -785,8 +793,17 @@ participants: [<roles-or-approved-identities>]
 independent_reviewer: <approved-identity>
 evidence_location: <immutable-reference>
 follow_up_issues: [<issue-urls>]
-final_posture: PROVEN | FAILED | EXPIRED | IMPLEMENTED_UNPROVEN
+exercise_result: PASS | FAIL
+deployment_continuity_evidence: <current-aggregate-evidence-reference-or-null>
 ```
+
+This record reports the outcome of one exercise only. A monthly restore may
+pass with no service reopen, but that result cannot elevate deployment continuity
+to `PROVEN`. The separate aggregate continuity assessment requires the current
+production backup configuration, all required restore evidence, a current witnessed
+game day, successful fencing/reconciliation and measured service reopen. Missing
+required proof remains unproven; stale required proof is `EXPIRED`; a failed
+required proof is `FAILED`, even when this individual exercise passes.
 
 Never include credentials, raw customer rows or backup payloads in this record.
 
