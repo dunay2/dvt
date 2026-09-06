@@ -20,6 +20,8 @@ import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js
 import type { IWorkspaceGraphDraftStore } from '../ports/workspaceGraphDraft.js';
 import { WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION } from '../ports/workspaceGraphDraft.js';
 
+import { findExecutableGraphSourceTopologyMismatch } from './validateExecutableGraphSourceTopology.js';
+
 export interface ExecutableSubgraphSelectionRejection {
   readonly code: 'REJECTED';
   readonly reason: string;
@@ -108,21 +110,13 @@ export class ResolveAuthorizedExecutableSubgraphService {
     }
 
     if (input.graphSource !== undefined) {
-      const sourceNodeIds = input.graphSource.nodes
-        .map((node) => node.nodeId)
-        .slice()
-        .sort((left, right) => left.localeCompare(right));
-      const selectedNodeIds = [...executableSubgraph.nodeIds].sort((left, right) =>
-        left.localeCompare(right)
+      const mismatch = findExecutableGraphSourceTopologyMismatch(
+        input.graphSource,
+        executableSubgraph,
+        draft
       );
-      if (
-        sourceNodeIds.length !== selectedNodeIds.length ||
-        sourceNodeIds.some((nodeId, index) => nodeId !== selectedNodeIds[index])
-      ) {
-        return reject(
-          'graph_source_selection_mismatch',
-          'graphSource nodes must match the planner-derived executable subgraph for the selection.'
-        );
+      if (mismatch !== null) {
+        return reject(mismatch.cause, mismatch.reason);
       }
     }
 

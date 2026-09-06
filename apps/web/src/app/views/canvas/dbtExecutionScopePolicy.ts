@@ -1,6 +1,7 @@
 import type { ExecutionSelection, GenericGraphSourceV1 } from '@dvt/contracts';
 import {
   ACQUIRE_HTTP_JSON_ARTIFACT_STEP_KIND,
+  isWorkspaceGraphAuthoringEdgeEffectivelyExecutable,
   LOAD_OBJECT_FILE_TO_POSTGRES_STEP_KIND,
 } from '@dvt/contracts';
 
@@ -78,7 +79,7 @@ export type DbtExecutionScopeGraph = Readonly<{
 
 export function buildDbtExecutionScopeGraph(args: {
   readonly nodes: readonly Pick<CanonicalNode, 'id' | 'pluginId' | 'kind' | 'metadata'>[];
-  readonly edges: readonly Pick<CanonicalEdge, 'sourceId' | 'targetId'>[];
+  readonly edges: readonly Pick<CanonicalEdge, 'sourceId' | 'targetId' | 'metadata'>[];
   readonly workspaceNodeIds: readonly string[];
 }): DbtExecutionScopeGraph {
   const nodeById = new Map(args.nodes.map((node) => [node.id, node]));
@@ -90,6 +91,7 @@ export function buildDbtExecutionScopeGraph(args: {
   const dependencyIdsByNodeId = new Map<string, string[]>();
 
   for (const edge of args.edges) {
+    if (!isWorkspaceGraphAuthoringEdgeEffectivelyExecutable(edge)) continue;
     if (!executableNodeIdSet.has(edge.sourceId) || !executableNodeIdSet.has(edge.targetId)) {
       continue;
     }

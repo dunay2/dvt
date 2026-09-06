@@ -619,6 +619,9 @@ importers:
         specifier: ^5.0.12
         version: 5.0.12(@types/react@18.3.28)(immer@11.1.4)(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1))
     devDependencies:
+      '@dvt/planner':
+        specifier: workspace:*
+        version: link:../../packages/@dvt/planner
       '@tailwindcss/vite':
         specifier: 4.2.2
         version: 4.2.2(vite@8.0.8(@types/node@26.1.1)(esbuild@0.27.7)(jiti@2.6.1)(terser@5.51.2)(tsx@4.21.0)(yaml@2.8.2))

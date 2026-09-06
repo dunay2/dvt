@@ -4,6 +4,7 @@ import {
   DBT_STEP_SELECTOR_CUSTOM_KEY,
   OBJECT_FILE_POSTGRES_DBT_BRIDGE_CUSTOM_KEY,
   parseExecutionSelection,
+  isWorkspaceGraphAuthoringEdgeEffectivelyExecutable,
 } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
@@ -87,6 +88,7 @@ function resolveExecutableDependencies(args: {
   executableNodeIdSet: ReadonlySet<string>;
 }): string[] {
   return args.edges
+    .filter(isWorkspaceGraphAuthoringEdgeEffectivelyExecutable)
     .filter(
       (edge) =>
         edge.targetId === args.node.id &&
