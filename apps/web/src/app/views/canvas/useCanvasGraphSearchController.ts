@@ -87,10 +87,14 @@ export function useCanvasGraphSearchController({
   const [focusRequestId, setFocusRequestId] = useState(0);
   const [query, setQueryState] = useState('');
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
-  const searchNodes = useMemo(() => nodes.map(toSearchNode), [nodes]);
+  const request = useMemo(() => createCanvasGraphSearchRequest(query), [query]);
+  const searchNodes = useMemo(
+    () => (request.normalizedQuery.length === 0 ? [] : nodes.map(toSearchNode)),
+    [nodes, request.normalizedQuery]
+  );
   const result = useMemo(
-    () => searchCanvasGraph(searchNodes, createCanvasGraphSearchRequest(query), activeNodeId),
-    [activeNodeId, query, searchNodes]
+    () => searchCanvasGraph(searchNodes, request, activeNodeId),
+    [activeNodeId, request, searchNodes]
   );
   const matchingNodeIds = useMemo(
     () => result.matches.map((match) => match.nodeId),
