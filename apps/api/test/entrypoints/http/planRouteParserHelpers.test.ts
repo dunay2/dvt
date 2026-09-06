@@ -101,7 +101,7 @@ describe('plan-route helper parsers', () => {
     expect(
       parsePlanRoutePlanRef({
         uri: ' https://plans.example.com/p.json ',
-        sha256: ' abc123 ',
+        sha256: ' ' + 'a'.repeat(64) + ' ',
         schemaVersion: ' 1.0.0 ',
         planId: ' p1 ',
         planVersion: ' 1.0 ',
@@ -140,7 +140,7 @@ describe('plan-route helper parsers', () => {
     expect(
       parsePlanRouteRunExecutionContextRef({
         uri: ' dvt-runctx://tenant-a/run-1/context.json ',
-        sha256: ' abc123 ',
+        sha256: ' ' + 'a'.repeat(64) + ' ',
         schemaVersion: ' v1.0 ',
         planId: ' p1 ',
         planVersion: ' 1.0 ',
