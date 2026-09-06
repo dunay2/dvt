@@ -23,7 +23,7 @@ needed.
 
 This first cut establishes authority for common failure reporting. It does not
 claim exclusive intent ownership. The global issue invariant remains open:
-#2678 owns durable claims/fencing; #2679 owns unknown provider outcomes.
+Issue #2678 owns durable claims/fencing; #2679 owns unknown provider outcomes.
 The no-estimate path dispatches before bootstrap, and reused recovery can
 dispatch an existing intent. Their pre-catch intent/reconciliation/compensation
 effects remain separate, pre-existing limitations, not guarantees of this guard.
