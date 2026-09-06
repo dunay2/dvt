@@ -128,6 +128,72 @@ added after mount and a later transition to selection-disabled posture.
       ],
       "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-minimap-focus-live.cy.ts",
       "architectureGuard": "pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/views/canvas/CanvasViewport.architecture.test.ts"
+    },
+    {
+      "name": "createModel",
+      "path": "apps/web/cypress/e2e/canvas/canvas-minimap-focus-live.cy.ts",
+      "cqRails": [
+        "FocusCanvasGraphNode"
+      ],
+      "dddOwner": "CanvasViewportNodeFocus",
+      "unitTests": [
+        "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/canvasViewportNodeFocus.test.ts",
+        "pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/CanvasViewport.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+      ],
+      "fowlerSignals": [
+        "duplicate-semantics",
+        "feature-envy",
+        "test-only-confidence",
+        "Duplicate semantics",
+        "Feature envy",
+        "Test-only confidence"
+      ],
+      "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-minimap-focus-live.cy.ts",
+      "architectureGuard": "pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/views/canvas/CanvasViewport.architecture.test.ts"
+    },
+    {
+      "name": "waitForSavedNodes",
+      "path": "apps/web/cypress/e2e/canvas/canvas-minimap-focus-live.cy.ts",
+      "cqRails": [
+        "FocusCanvasGraphNode"
+      ],
+      "dddOwner": "CanvasViewportNodeFocus",
+      "unitTests": [
+        "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/canvasViewportNodeFocus.test.ts",
+        "pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/CanvasViewport.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+      ],
+      "fowlerSignals": [
+        "duplicate-semantics",
+        "feature-envy",
+        "test-only-confidence",
+        "Duplicate semantics",
+        "Feature envy",
+        "Test-only confidence"
+      ],
+      "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-minimap-focus-live.cy.ts",
+      "architectureGuard": "pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/views/canvas/CanvasViewport.architecture.test.ts"
+    },
+    {
+      "name": "assertNodeCentered",
+      "path": "apps/web/cypress/e2e/canvas/canvas-minimap-focus-live.cy.ts",
+      "cqRails": [
+        "FocusCanvasGraphNode"
+      ],
+      "dddOwner": "CanvasViewportNodeFocus",
+      "unitTests": [
+        "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/canvasViewportNodeFocus.test.ts",
+        "pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/CanvasViewport.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+      ],
+      "fowlerSignals": [
+        "duplicate-semantics",
+        "feature-envy",
+        "test-only-confidence",
+        "Duplicate semantics",
+        "Feature envy",
+        "Test-only confidence"
+      ],
+      "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-minimap-focus-live.cy.ts",
+      "architectureGuard": "pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/views/canvas/CanvasViewport.architecture.test.ts"
     }
   ],
   "version": 1,
