@@ -313,7 +313,7 @@ export function useCanvasViewportGraphModel({
     () =>
       projectViewportEdges({
         visibleEdges,
-        allowedNodeIds: new Set(visibleNodeIds),
+        allowedNodeIds: new Set(visibleNodeIds.filter((nodeId) => canonicalNodesById.has(nodeId))),
         canonicalEdgeIdBySignature,
         canonicalEdgeBySignature,
         canonicalNodesById,
@@ -364,7 +364,7 @@ export function useCanvasViewportGraphModel({
     setEdges((currentEdges) => {
       const nextEdges = projectViewportEdges({
         visibleEdges,
-        allowedNodeIds: new Set(nodes.map((node) => node.id)),
+        allowedNodeIds: new Set(visibleNodeIds.filter((nodeId) => canonicalNodesById.has(nodeId))),
         canonicalEdgeIdBySignature,
         canonicalEdgeBySignature,
         canonicalNodesById,
@@ -378,9 +378,9 @@ export function useCanvasViewportGraphModel({
     canonicalEdgeIdBySignature,
     canonicalEdgeBySignature,
     canonicalNodesById,
-    nodes,
     setEdges,
     visibleEdges,
+    visibleNodeIds,
   ]);
 
   return {

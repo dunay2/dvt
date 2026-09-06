@@ -101,6 +101,10 @@ Canonical local C&Q catalog:
 - Snap-to-grid may adjust renderer coordinates produced by drag or auto-layout,
   but it must not modify canonical node identity, node kind, graph edges, or
   protected draft authority.
+- Viewport edges connect only visible nodes present in the canonical projection.
+  Unresolved draft endpoints remain in the authoring working set, but their edges
+  do not render. Edge projection depends on semantic membership, not node position
+  or dragging flags.
 - Auto-layout must preserve React Flow node type, data, and gesture capability;
   layout is a coordinate projection, not a node replacement authority.
 
