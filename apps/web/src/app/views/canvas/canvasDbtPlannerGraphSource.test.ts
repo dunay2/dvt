@@ -2,7 +2,7 @@ import {
   WorkspaceGraphAuthoringDraftSchema,
   isWorkspaceGraphAuthoringEdgeEffectivelyExecutable,
 } from '@dvt/contracts';
-import { PlannerFacade } from '../../../../../../packages/@dvt/planner/src/application/PlannerFacade';
+import { PlannerFacade } from '@dvt/planner';
 import { findExecutableGraphSourceTopologyMismatch } from '../../../../../api/src/application/services/validateExecutableGraphSourceTopology';
 import { describe, expect, it } from 'vitest';
 

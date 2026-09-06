@@ -232,7 +232,9 @@ command in Planning DB. GitHub #2524 owns task status and acceptance.
         "docs/planning/proposals/mandatory/runtime-and-contracts/gh-2524-protected-graph-topology-plan-20260906.md",
         "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.ts",
         "apps/web/src/app/views/canvas/dbtExecutionScopePolicy.ts",
-        "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts"
+        "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts",
+        "apps/web/package.json",
+        "pnpm-lock.yaml"
       ],
       "expectedFailure": "Six topology witnesses accept client dependency drift before the comparator is installed"
     }
@@ -275,7 +277,9 @@ command in Planning DB. GitHub #2524 owns task status and acceptance.
     "docs/planning/proposals/mandatory/runtime-and-contracts/gh-2524-protected-graph-topology-plan-20260906.md",
     "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.ts",
     "apps/web/src/app/views/canvas/dbtExecutionScopePolicy.ts",
-    "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts"
+    "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts",
+    "apps/web/package.json",
+    "pnpm-lock.yaml"
   ],
   "forbiddenImplementationSurfaces": [
     "packages/@dvt/contracts/**",
