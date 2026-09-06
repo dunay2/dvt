@@ -170,7 +170,8 @@ The final cut requires executable witnesses for:
 - shared dbt source-group database/schema mutation fails closed;
 - graph CAS failure rolls the artifact back;
 - semantic `sourceRef` rebind preserves Plan bytes, RelationIds and FieldIds;
-- protected HTTP authorization and error translation remain fail closed.
+- protected HTTP authorization and error translation remain fail closed;
+- project onboarding and the coordinated local protected runtime grant the dedicated rebind action.
 
 `#2994` remains a separate E2E repair for the retired dbt Canvas profile. It is not an
 identity compatibility mechanism and does not block the #2904 architectural hard cut once
@@ -301,7 +302,15 @@ the new command and identity witnesses are green.
         "apps/api/src/entrypoints/http/runtimeRoutes.constants.ts",
         "apps/api/src/entrypoints/http/warehouseSourceImportRouteGroup.ts",
         "apps/api/src/entrypoints/http/warehouseSourceRebindRoute.ts",
-        "apps/api/test/application/services/rebindWarehouseSourceUseCase.test.ts"
+        "apps/api/test/application/ports/accessDecision.test.ts",
+        "apps/api/test/application/services/createProjectUseCase.test.ts",
+        "apps/api/test/application/services/rebindWarehouseSourceUseCase.test.ts",
+        "apps/api/test/entrypoints/http/warehouseSourceRebindRoute.test.ts",
+        "scripts/run-dev-stack.auth.cjs",
+        "scripts/run-dev-stack.source-rebind.auth.test.cjs",
+        "docs/adr/ADR-0058-warehouse-source-import-rails.md",
+        "docs/evidence/ED-20260905-gh-2904-stable-logical-physical-binding.md",
+        "docs/risk-register/quality/R-20260905-GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING.yaml"
       ],
       "expectedFailure": "Physical binding cannot be changed through one verified command while preserving logical identity"
     }
@@ -391,6 +400,9 @@ the new command and identity witnesses are green.
     "apps/web/cypress/support/liveWarehouseSourceImport.ts",
     "scripts/run-canvas-source-import-live-proof.cjs",
     "scripts/run-canvas-source-import-live-proof.test.cjs",
+    "scripts/run-dev-stack.auth.cjs",
+    "scripts/run-dev-stack.source-rebind.auth.test.cjs",
+    "docs/adr/ADR-0058-warehouse-source-import-rails.md",
     "docs/architecture/**",
     "docs/evidence/ED-20260905-gh-2904-stable-logical-physical-binding.md",
     "docs/guides/generic-graph-source-technical-manual-20260404.md",
