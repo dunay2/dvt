@@ -1,6 +1,10 @@
-/** Owned concern: expose admitted column functions through pointer and keyboard menus. */
+/** Owned concern: render the canonical ResolveCanvasContextMenu column projection. */
 import { useState, type ReactElement } from 'react';
 
+import {
+  buildCanvasColumnContextMenuModel,
+  type CanvasColumnContextMenuAction,
+} from '../../components/canvas/canvasNodeContextMenuModel';
 import { usePointerGraceDismiss } from '../../components/transientSurface/usePointerGraceDismiss';
 import {
   ContextMenu,
@@ -26,16 +30,67 @@ import { graphNodeColumnClasses } from './graphVisualTokens';
 type FunctionMenu = NonNullable<GraphNodeColumn['functionMenu']>;
 type PointerMenuSession = Readonly<{ key: number; open: boolean }>;
 
+function actionSlot(action: CanvasColumnContextMenuAction): string | undefined {
+  if (action.id === 'invoke-function') return 'graph-node-column-function';
+  if (action.id === 'append-field') return 'graph-node-structured-field-append';
+  return undefined;
+}
+
 export function GraphNodeColumnFunctionMenu(props: {
-  menu: FunctionMenu;
+  nodeId: string;
+  columnId: string;
+  menu?: FunctionMenu;
+  columnName: string;
+  appendCandidates?: readonly GraphNodeColumn[];
   copy: GraphNodeColumnCopy;
   keyboardOpen: boolean;
   onKeyboardOpenChange: (open: boolean) => void;
-  onRequest: (capabilityId: string) => void;
+  onRequest?: (capabilityId: string) => void;
+  onStructuredAppend?: (column: GraphNodeColumn) => void;
   piece: ReactElement;
   tooltip: ReactElement;
 }): ReactElement {
-  const categoryLabel = props.copy.columnFunctionCategoryLabels[props.menu.category];
+  const categoryLabel =
+    props.menu == null
+      ? props.copy.columnActionsLabelTemplate.replace('{column}', props.columnName)
+      : props.copy.columnFunctionCategoryLabels[props.menu.category];
+  const model = buildCanvasColumnContextMenuModel({
+    target: {
+      kind: 'column',
+      nodeId: props.nodeId,
+      columnId: props.columnId,
+      columnName: props.columnName,
+    },
+    label: categoryLabel,
+    functions:
+      props.onRequest == null
+        ? []
+        : (props.menu?.items ?? []).map((item) => ({
+            id: item.capabilityId,
+            label: item.name.toUpperCase(),
+          })),
+    appendFields:
+      props.onStructuredAppend == null
+        ? []
+        : (props.appendCandidates ?? []).map((column) => ({
+            id: column.id ?? column.name,
+            label: props.copy.appendColumnLabelTemplate.replace('{column}', column.name),
+          })),
+    unavailableLabel: props.copy.noColumnActionsLabel,
+  });
+  const selectAction = (action: CanvasColumnContextMenuAction) => {
+    if (action.disabled) return;
+    if (action.id === 'invoke-function') {
+      props.onRequest?.(action.targetId);
+      return;
+    }
+    if (action.id === 'append-field') {
+      const column = props.appendCandidates?.find(
+        (candidate) => (candidate.id ?? candidate.name) === action.targetId
+      );
+      if (column != null) props.onStructuredAppend?.(column);
+    }
+  };
   const [pointerSession, setPointerSession] = useState<PointerMenuSession>({ key: 0, open: false });
   const pointerGraceProps = usePointerGraceDismiss({
     enabled: pointerSession.open,
@@ -53,24 +108,20 @@ export function GraphNodeColumnFunctionMenu(props: {
         </ContextMenuTrigger>
         {pointerSession.open ? (
           <ContextMenuContent data-slot="graph-node-column-function-menu" {...pointerGraceProps}>
-            <ContextMenuLabel>{categoryLabel}</ContextMenuLabel>
+            <ContextMenuLabel>{model.label}</ContextMenuLabel>
             <ContextMenuGroup>
-              {props.menu.items.length === 0 ? (
-                <ContextMenuItem disabled>
-                  {props.copy.noCompatibleColumnFunctionsLabel}
+              {model.actions.map((action) => (
+                <ContextMenuItem
+                  key={action.id + ('targetId' in action ? ':' + action.targetId : '')}
+                  data-slot={actionSlot(action)}
+                  data-capability-id={action.id === 'invoke-function' ? action.targetId : undefined}
+                  data-field-id={action.id === 'append-field' ? action.targetId : undefined}
+                  disabled={action.disabled}
+                  onSelect={() => selectAction(action)}
+                >
+                  {action.label}
                 </ContextMenuItem>
-              ) : (
-                props.menu.items.map((item) => (
-                  <ContextMenuItem
-                    key={item.capabilityId}
-                    data-slot="graph-node-column-function"
-                    data-capability-id={item.capabilityId}
-                    onSelect={() => props.onRequest(item.capabilityId)}
-                  >
-                    {item.name.toUpperCase()}
-                  </ContextMenuItem>
-                ))
-              )}
+              ))}
             </ContextMenuGroup>
           </ContextMenuContent>
         ) : null}
@@ -85,24 +136,20 @@ export function GraphNodeColumnFunctionMenu(props: {
           />
         </DropdownMenuTrigger>
         <DropdownMenuContent data-slot="graph-node-column-function-menu" side="right" align="start">
-          <DropdownMenuLabel>{categoryLabel}</DropdownMenuLabel>
+          <DropdownMenuLabel>{model.label}</DropdownMenuLabel>
           <DropdownMenuGroup>
-            {props.menu.items.length === 0 ? (
-              <DropdownMenuItem disabled>
-                {props.copy.noCompatibleColumnFunctionsLabel}
+            {model.actions.map((action) => (
+              <DropdownMenuItem
+                key={action.id + ('targetId' in action ? ':' + action.targetId : '')}
+                data-slot={actionSlot(action)}
+                data-capability-id={action.id === 'invoke-function' ? action.targetId : undefined}
+                data-field-id={action.id === 'append-field' ? action.targetId : undefined}
+                disabled={action.disabled}
+                onSelect={() => selectAction(action)}
+              >
+                {action.label}
               </DropdownMenuItem>
-            ) : (
-              props.menu.items.map((item) => (
-                <DropdownMenuItem
-                  key={item.capabilityId}
-                  data-slot="graph-node-column-function"
-                  data-capability-id={item.capabilityId}
-                  onSelect={() => props.onRequest(item.capabilityId)}
-                >
-                  {item.name.toUpperCase()}
-                </DropdownMenuItem>
-              ))
-            )}
+            ))}
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>

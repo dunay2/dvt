@@ -149,3 +149,86 @@ export function buildCanvasNodeModelerActionModel({
     actionGroups: groups,
   };
 }
+export type CanvasColumnContextMenuTarget = Readonly<{
+  kind: 'column';
+  nodeId: string;
+  columnId: string;
+  columnName: string;
+  parentColumnId?: string;
+}>;
+
+export type CanvasColumnContextMenuAction =
+  | Readonly<{
+      id: 'invoke-function' | 'append-field';
+      targetId: string;
+      label: string;
+      disabled: false;
+    }>
+  | Readonly<{
+      id: 'move-field-up' | 'move-field-down';
+      label: string;
+      disabled: boolean;
+    }>
+  | Readonly<{
+      id: 'unavailable';
+      label: string;
+      disabled: true;
+    }>;
+
+export type CanvasColumnContextMenuModel = Readonly<{
+  target: CanvasColumnContextMenuTarget;
+  label: string;
+  actions: readonly CanvasColumnContextMenuAction[];
+}>;
+
+export function buildCanvasColumnContextMenuModel(args: {
+  target: CanvasColumnContextMenuTarget;
+  label: string;
+  functions?: readonly Readonly<{ id: string; label: string }>[];
+  appendFields?: readonly Readonly<{ id: string; label: string }>[];
+  move?: Readonly<{
+    upLabel: string;
+    downLabel: string;
+    canMoveUp: boolean;
+    canMoveDown: boolean;
+  }>;
+  unavailableLabel: string;
+}): CanvasColumnContextMenuModel {
+  const actions: CanvasColumnContextMenuAction[] = [
+    ...(args.functions ?? []).map((item) => ({
+      id: 'invoke-function' as const,
+      targetId: item.id,
+      label: item.label,
+      disabled: false as const,
+    })),
+    ...(args.appendFields ?? []).map((item) => ({
+      id: 'append-field' as const,
+      targetId: item.id,
+      label: item.label,
+      disabled: false as const,
+    })),
+    ...(args.move == null
+      ? []
+      : [
+          {
+            id: 'move-field-up' as const,
+            label: args.move.upLabel,
+            disabled: !args.move.canMoveUp,
+          },
+          {
+            id: 'move-field-down' as const,
+            label: args.move.downLabel,
+            disabled: !args.move.canMoveDown,
+          },
+        ]),
+  ];
+
+  return {
+    target: args.target,
+    label: args.label,
+    actions:
+      actions.length === 0
+        ? [{ id: 'unavailable', label: args.unavailableLabel, disabled: true }]
+        : actions,
+  };
+}
