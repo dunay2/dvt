@@ -903,7 +903,6 @@ export function resolveDvtSubstraitProjectionEntry(args: {
   const source = sourceNode == null ? null : resolveDvtSubstraitProjectionSource(sourceNode);
   if (
     source == null ||
-    source.schema !== inspection.projection.source.schema ||
     source.table !== inspection.projection.source.table ||
     !sameConnectedSourceRef(source.sourceRef, inspection.projection.source.sourceRef) ||
     source.fields.map((field) => field.name).join('\u0000') !==

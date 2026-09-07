@@ -21,6 +21,7 @@ code_refs:
   - apps/api/src/application/services/warehouseSourceRebindPlan.ts
   - apps/api/src/entrypoints/http/warehouseSourceRebindRoute.ts
   - apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts
+  - apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.ts
   - apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts
 evidence:
   tests:
@@ -93,8 +94,9 @@ workspace:source-import:rebind
 Existing project creators retain this additive action only when their complete governed
 creator grant is present; partial grants remain denied.
 
-The client identifies the logical Source and requested physical target. Server
-side discovery owns target facts. The command rejects:
+The client identifies the logical Source and requested physical target. Server-side discovery owns target facts. Canvas resolution follows the exact rebound
+ConnectedSourceRef and stable logical table name, so a permitted physical schema move does
+not invalidate the preserved Plan. The command rejects:
 
 - missing or ambiguous persisted Source schema evidence;
 - missing/ambiguous target schema evidence;

@@ -37,12 +37,12 @@ const OLD_REF = {
   sourceObjectId: 'relation/analytics/erp/orders',
 };
 const TARGET: RelationalSourceObject = {
-  objectId: 'relation/analytics/erp/orders_v2',
+  objectId: 'relation/analytics/recovery/orders_v2',
   displayName: 'orders_v2',
   locator: {
     kind: 'relation',
     catalog: 'analytics',
-    schema: 'erp',
+    schema: 'recovery',
     name: 'orders_v2',
     relationType: 'table',
   },
@@ -294,11 +294,13 @@ describe('RebindWarehouseSourceUseCase', () => {
     expect(reboundSource?.id).toBe(SOURCE_ID);
     expect(reboundSource?.metadata?.columns).toEqual(draft().nodes[0]?.metadata?.columns);
     expect(reboundSource?.metadata?.connectedSourceRef).toEqual(result.connectedSourceRef);
+    expect(reboundSource?.metadata?.schema).toBe('recovery');
     expect(reboundSource?.metadata?.tableIdentifier).toBe('orders_v2');
 
     const appliedYaml = vi.mocked(batch.apply).mock.calls[0]?.[1].writes[0]?.content ?? '';
     expect(appliedYaml).toContain('name: warehouse_prod_analytics_erp');
     expect(appliedYaml).toContain('name: orders');
+    expect(appliedYaml).toContain('schema: recovery');
     expect(appliedYaml).toContain('identifier: orders_v2');
     expect(appliedYaml).toContain('connection_id: warehouse-dr');
     expect(appliedYaml).toContain('database_user: dr_reader');

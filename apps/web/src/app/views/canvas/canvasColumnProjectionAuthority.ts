@@ -44,7 +44,6 @@ function sameProjectionSource(
   right: DvtSubstraitProjectionSemantics['source']
 ): boolean {
   return (
-    left.schema === right.schema &&
     left.table === right.table &&
     left.sourceRef.schemaVersion === right.sourceRef.schemaVersion &&
     left.sourceRef.sourceObjectId === right.sourceRef.sourceObjectId &&
