@@ -106,8 +106,7 @@ function draftSession(...nodes: CanonicalNode[]): CanvasDraftSession {
     baseline: { record: null },
     workingSet: {
       visibleNodeIds: nodes.map((node) => node.id),
-      visibleEdges:
-        transform == null ? [] : [{ sourceId: source.id, targetId: transform.id }],
+      visibleEdges: transform == null ? [] : [{ sourceId: source.id, targetId: transform.id }],
       pendingExplicitNodeIds: [],
     },
     draftRevision: null,
