@@ -123,6 +123,12 @@ allowedImplementationSurfaces:
   - buzon/20260523-codex-fowler-ci-delivery-governance-canon.md
   - docs/architecture/components/ci-governance/ci-delivery-governance-component.md
   - docs/architecture/components/ci-governance/ci-delivery-governance-user-stories.md
+  - docs/planning/status/release-please-continuous.md
+  - tools/ci/release-candidate-integrity/releaseCandidateIntegrity.mjs
+  - tools/ci/release-candidate-integrity/releaseCandidateIntegrity.test.mjs
+  - tools/ci/release-candidate-integrity/releaseCandidateIntegrityCli.test.mjs
+  - tools/ci/release-candidate-integrity/releaseMergePolicyCli.mjs
+  - tools/ci/release-candidate-integrity/releaseMergePolicyCli.test.mjs
   - docs/architecture/components/ci-governance/index.md
   - docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md # Task: GOV-PROP-DISP-1
   - tools/ci/ci-delivery-governance-canon.test.mjs
@@ -134,10 +140,25 @@ commandQueryRails:
   - name: ValidateCiDeliveryGovernanceCanon
     type: query
     dddOwner: CiDeliveryGovernanceCanon
+  - name: ConfigureReleasePullRequestMergePolicy
+    type: command
+    dddOwner: ReleasePullRequestMergePolicy
+  - name: InspectReleasePullRequestMergePolicy
+    type: query
+    dddOwner: ReleaseMergePolicyAdapter
+  - name: AssessReleaseCandidateIntegrity
+    type: query
+    dddOwner: ReleaseCandidateIntegrity
 domainObjects:
   - name: CiDeliveryGovernanceCanon
     type: read-model
     owner: Repository delivery governance
+  - name: ReleasePullRequestMergePolicy
+    type: policy-object
+    owner: Repository release governance
+  - name: ReleaseCandidateIntegrity
+    type: read-model
+    owner: Repository release governance
 fowlerSignals:
   - Documentation Drift
   - Duplicate Semantics
@@ -145,11 +166,13 @@ fowlerSignals:
   - Service Layer
 architectureGuards:
   - node --test tools/ci/ci-delivery-governance-canon.test.mjs
+  - node --test tools/ci/release-candidate-integrity/releaseMergePolicyCli.test.mjs tools/ci/release-candidate-integrity/releaseCandidateIntegrity.test.mjs tools/ci/release-candidate-integrity/releaseCandidateIntegrityCli.test.mjs
   - pnpm test:ci-tools
 cypressFlows:
   - not-applicable: Repository delivery governance has no browser workflow.
 completionGate:
   - node --test tools/ci/ci-delivery-governance-canon.test.mjs
+  - node --test tools/ci/release-candidate-integrity/releaseMergePolicyCli.test.mjs tools/ci/release-candidate-integrity/releaseCandidateIntegrity.test.mjs tools/ci/release-candidate-integrity/releaseCandidateIntegrityCli.test.mjs
   - pnpm test:ci-tools
   - pnpm docs:feature-mechanization -- --feature CI-Delivery-Governance-Canon
   - pnpm docs:feature-mechanization:implementation
@@ -166,6 +189,18 @@ redGreenCycles:
       - docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md # Task: GOV-PROP-DISP-1
       - tools/ci/ci-delivery-governance-canon.test.mjs
     greenTest: node --test tools/ci/ci-delivery-governance-canon.test.mjs
+  - id: release-required-check-authority
+    redTest: node --test tools/ci/release-candidate-integrity/releaseMergePolicyCli.test.mjs tools/ci/release-candidate-integrity/releaseCandidateIntegrity.test.mjs tools/ci/release-candidate-integrity/releaseCandidateIntegrityCli.test.mjs
+    expectedFailure: The inspector rejects the real final workflow job because it still requires the legacy custom check.
+    patchSurfaces:
+      - docs/architecture/components/ci-governance/ci-delivery-governance-component.md
+      - docs/planning/status/release-please-continuous.md
+      - tools/ci/release-candidate-integrity/releaseCandidateIntegrity.mjs
+      - tools/ci/release-candidate-integrity/releaseCandidateIntegrity.test.mjs
+      - tools/ci/release-candidate-integrity/releaseCandidateIntegrityCli.test.mjs
+      - tools/ci/release-candidate-integrity/releaseMergePolicyCli.mjs
+      - tools/ci/release-candidate-integrity/releaseMergePolicyCli.test.mjs
+    greenTest: node --test tools/ci/release-candidate-integrity/releaseMergePolicyCli.test.mjs tools/ci/release-candidate-integrity/releaseCandidateIntegrity.test.mjs tools/ci/release-candidate-integrity/releaseCandidateIntegrityCli.test.mjs
 symbolDefaults: &ciDeliveryCanonSymbolDefaults
   dddOwner: CiDeliveryGovernanceCanon
   cqRails:
@@ -186,6 +221,31 @@ symbols:
   - <<: *ciDeliveryCanonSymbolDefaults
     name: CiDeliveryGovernanceCanon
     path: docs/architecture/components/ci-governance/ci-delivery-governance-component.md
+  - name: REQUIRED_CHECK_CONTEXTS
+    path: tools/ci/release-candidate-integrity/releaseCandidateIntegrity.mjs
+    dddOwner: ReleaseCandidateIntegrity
+    cqRails:
+      - AssessReleaseCandidateIntegrity
+    fowlerSignals:
+      - Explicit Gate
+      - Configuration as Policy
+    architectureGuard: node --test tools/ci/release-candidate-integrity/releaseCandidateIntegrity.test.mjs
+    cypressCoverage: "not-applicable: Repository release governance has no browser workflow."
+    unitTests:
+      - node --test tools/ci/release-candidate-integrity/releaseCandidateIntegrity.test.mjs
+  - name: REQUIRED_CHECKS
+    path: tools/ci/release-candidate-integrity/releaseMergePolicyCli.mjs
+    dddOwner: ReleasePullRequestMergePolicy
+    cqRails:
+      - ConfigureReleasePullRequestMergePolicy
+      - InspectReleasePullRequestMergePolicy
+    fowlerSignals:
+      - Explicit Gate
+      - Configuration as Policy
+    architectureGuard: node --test tools/ci/release-candidate-integrity/releaseMergePolicyCli.test.mjs
+    cypressCoverage: "not-applicable: Repository release governance has no browser workflow."
+    unitTests:
+      - node --test tools/ci/release-candidate-integrity/releaseMergePolicyCli.test.mjs
 ```
 
 ## 2026-07-09 Release Please Pre-1.0 Governance
