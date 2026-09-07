@@ -273,6 +273,22 @@ describe('sourceImportCatalogModel relational catalog', () => {
       })
     );
   });
+  it('disables aggregate selection for filtered search results', () => {
+    const matchingOrder = buildRelation({ table: 'ORDERS', selected: false });
+    const catalog = buildSourceImportCatalogViewModel({
+      sourceObjects: [matchingOrder],
+      activeSourceObjectKey: null,
+      searchQuery: 'orders',
+      visibleObjectIds: new Set([matchingOrder.objectId]),
+      copy,
+      numberFormatter,
+    });
+
+    expect(catalog.databaseGroups[0]).toEqual(expect.objectContaining({ selectable: false }));
+    expect(catalog.databaseGroups[0]?.schemaGroups[0]).toEqual(
+      expect.objectContaining({ loaded: false, selectable: false })
+    );
+  });
   it('merges lazy pages by objectId while preserving selection and refreshed metrics', () => {
     const original = buildRelation({
       table: 'ORDERS',

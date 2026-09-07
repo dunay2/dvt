@@ -147,27 +147,23 @@ export function useSourceCatalogLoader({
           const names = [
             ...new Set(requestedDbtSourceDeclarations.map((declaration) => declaration.tableName)),
           ];
-          const pages = await Promise.all(
-            names.map(async (name) => {
-              const objects: SourceObject[] = [];
-              let cursor: string | undefined;
-              do {
-                const page = await warehouseSourceImport.listSourceObjectCatalog(
-                  selectedConnection,
-                  {
-                    kind: 'name-search',
-                    name,
-                    limit: SOURCE_OBJECT_CATALOG_DEFAULT_PAGE_SIZE,
-                    ...(cursor ? { cursor } : {}),
-                  }
-                );
-                if (page.kind !== 'object-page') throw new Error('Expected a source object page.');
-                objects.push(...page.objects);
-                cursor = page.nextCursor;
-              } while (cursor);
-              return objects;
-            })
-          );
+          const pages: SourceObject[][] = [];
+          for (const name of names) {
+            const objects: SourceObject[] = [];
+            let cursor: string | undefined;
+            do {
+              const page = await warehouseSourceImport.listSourceObjectCatalog(selectedConnection, {
+                kind: 'name-search',
+                name,
+                limit: SOURCE_OBJECT_CATALOG_DEFAULT_PAGE_SIZE,
+                ...(cursor ? { cursor } : {}),
+              });
+              if (page.kind !== 'object-page') throw new Error('Expected a source object page.');
+              objects.push(...page.objects);
+              cursor = page.nextCursor;
+            } while (cursor);
+            pages.push(objects);
+          }
           requestedObjects = pages.flat();
         }
 

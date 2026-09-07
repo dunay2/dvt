@@ -499,7 +499,8 @@ export function buildSourceImportCatalogViewModel({
         numberFormatter,
         schemaSummaries.find((summary) => summary.catalog === database && summary.schema === schema)
           ?.objectCount,
-        schemaPageStates[buildSourceImportSchemaKey({ database, schema })]
+        schemaPageStates[buildSourceImportSchemaKey({ database, schema })],
+        normalizedSearchQuery.length === 0 && visibleObjectIds == null
       )
     );
   const databaseGroups = Array.from(relationalGroups.entries())
@@ -517,7 +518,8 @@ export function buildSourceImportCatalogViewModel({
             schemaSummaries.find(
               (summary) => summary.catalog === database && summary.schema === schema
             )?.objectCount,
-            schemaPageStates[buildSourceImportSchemaKey({ database, schema })]
+            schemaPageStates[buildSourceImportSchemaKey({ database, schema })],
+            normalizedSearchQuery.length === 0 && visibleObjectIds == null
           )
         );
       const databaseObjects = databaseSchemas.flatMap((schemaGroup) => schemaGroup.sourceObjects);
@@ -629,13 +631,15 @@ function buildSourceImportSchemaGroup(
   copy: SourceImportCatalogCopy,
   numberFormatter: Intl.NumberFormat,
   authoritativeObjectCount?: number,
-  pageState?: SourceImportCatalogPageState
+  pageState?: SourceImportCatalogPageState,
+  allowImplicitLoaded = true
 ): SourceImportSchemaGroupViewModel {
   const objectCount = authoritativeObjectCount ?? groupObjects.length;
   const resolvedPageState =
     pageState ??
     ({
-      loaded: authoritativeObjectCount === undefined && groupObjects.length > 0,
+      loaded:
+        allowImplicitLoaded && authoritativeObjectCount === undefined && groupObjects.length > 0,
       loading: false,
       nextCursor: null,
     } satisfies SourceImportCatalogPageState);

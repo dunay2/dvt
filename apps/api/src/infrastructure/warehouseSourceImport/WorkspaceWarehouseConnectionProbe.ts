@@ -149,16 +149,10 @@ export class WorkspaceWarehouseConnectionProbe
     try {
       await client.connect();
       if (request.kind === 'schema-list') {
-        return await loadPostgresSchemaCatalogPage(
-          client,
-          input.database,
-          request,
-          cursorAuthority
-        );
+        return await loadPostgresSchemaCatalogPage(client, request, cursorAuthority);
       }
       return await loadPostgresObjectCatalogPage(
         client,
-        input.database,
         request,
         this.checkedAt(),
         cursorAuthority
@@ -441,24 +435,23 @@ type ObjectPageRequest = Exclude<SourceObjectCatalogRequest, SchemaListRequest>;
 
 async function loadPostgresSchemaCatalogPage(
   client: Pick<Client, 'query'>,
-  database: string,
   request: SchemaListRequest,
   cursorAuthority: CatalogCursorAuthority
 ): Promise<SourceObjectCatalogResponse> {
   const after = request.cursor
-    ? (readCatalogCursor(request.cursor, 2, database, cursorAuthority)[1] ?? '')
+    ? (readCatalogCursor(request.cursor, 2, cursorAuthority)[1] ?? '')
     : '';
   const result = await client.query<PostgresSchemaSummaryRow>(
     [
       'select current_database() as table_catalog, namespace.nspname as table_schema, count(*)::bigint as object_count',
       'from pg_class relation join pg_namespace namespace on namespace.oid = relation.relnamespace',
-      'where current_database() = $1 and namespace.nspname > $2',
+      'where namespace.nspname > $1',
       "and namespace.nspname not in ('pg_catalog', 'information_schema')",
       "and relation.relkind in ('r', 'p', 'v', 'm', 'f')",
       "and has_table_privilege(relation.oid, 'SELECT')",
-      'group by table_catalog, table_schema order by table_catalog, table_schema limit $3',
+      'group by table_catalog, table_schema order by table_catalog, table_schema limit $2',
     ].join(' '),
-    [database, after, request.limit + 1]
+    [after, request.limit + 1]
   );
   const rows = result.rows.slice(0, request.limit);
   const schemas: SourceObjectCatalogSchemaSummary[] = rows.map((row) => {
@@ -485,17 +478,13 @@ async function loadPostgresSchemaCatalogPage(
 
 async function loadPostgresObjectCatalogPage(
   client: Pick<Client, 'query'>,
-  database: string,
   request: ObjectPageRequest,
   observedAt: string,
   cursorAuthority: CatalogCursorAuthority
 ): Promise<SourceObjectCatalogResponse> {
-  if (request.kind === 'schema-page' && request.catalog !== database) {
-    return { kind: 'object-page', objects: [], truncated: false };
-  }
   const cursor = request.cursor
-    ? readCatalogCursor(request.cursor, 3, database, cursorAuthority)
-    : [database, '', ''];
+    ? readCatalogCursor(request.cursor, 3, cursorAuthority)
+    : ['', '', ''];
   const schemaPage = request.kind === 'schema-page';
   const sql = schemaPage
     ? [
@@ -512,16 +501,16 @@ async function loadPostgresObjectCatalogPage(
         'select current_database() as table_catalog, current_user as database_user, namespace.nspname as table_schema, relation.relname as table_name, relation.relkind as relation_kind,',
         "case when relation.reltuples >= 0 then relation.reltuples::bigint when relation.relkind in ('r', 'p', 'm') then pg_stat_get_live_tuples(relation.oid)::bigint else null end as row_count",
         'from pg_class relation join pg_namespace namespace on namespace.oid = relation.relnamespace',
-        'where current_database() = $1 and position(lower($2) in lower(relation.relname)) > 0',
-        'and (namespace.nspname, relation.relname) > ($3, $4)',
+        'where position(lower($1) in lower(relation.relname)) > 0',
+        'and (namespace.nspname, relation.relname) > ($2, $3)',
         "and namespace.nspname not in ('pg_catalog', 'information_schema')",
         "and relation.relkind in ('r', 'p', 'v', 'm', 'f')",
         "and has_table_privilege(relation.oid, 'SELECT')",
-        'order by table_catalog, table_schema, table_name limit $5',
+        'order by table_catalog, table_schema, table_name limit $4',
       ].join(' ');
   const parameters = schemaPage
-    ? [database, request.schema, cursor[2] ?? '', request.limit + 1]
-    : [database, request.name, cursor[1] ?? '', cursor[2] ?? '', request.limit + 1];
+    ? [request.catalog, request.schema, cursor[2] ?? '', request.limit + 1]
+    : [request.name, cursor[1] ?? '', cursor[2] ?? '', request.limit + 1];
   const result = await client.query<PostgresTableDiscoveryRow>(sql, parameters);
   const visibleRows = result.rows.slice(0, request.limit);
   const columnRows = await loadPostgresCatalogColumnsForRelations(client, visibleRows);
@@ -640,7 +629,6 @@ function writeCatalogCursor(parts: readonly string[], authority: CatalogCursorAu
 function readCatalogCursor(
   value: string,
   expectedLength: number,
-  expectedCatalog: string,
   authority: CatalogCursorAuthority
 ): readonly string[] {
   try {
@@ -660,8 +648,7 @@ function readCatalogCursor(
       !('parts' in parsed) ||
       !Array.isArray(parsed.parts) ||
       parsed.parts.length !== expectedLength ||
-      parsed.parts.some((part) => typeof part !== 'string' || part.length === 0) ||
-      parsed.parts[0] !== expectedCatalog
+      parsed.parts.some((part) => typeof part !== 'string' || part.length === 0)
     ) {
       throw new Error('invalid');
     }

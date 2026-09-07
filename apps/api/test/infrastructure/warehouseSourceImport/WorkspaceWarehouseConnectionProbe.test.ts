@@ -90,9 +90,29 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
     expect(result.nextCursor).toBeTypeOf('string');
     expect(pgMock.query).toHaveBeenCalledOnce();
     expect(pgMock.query.mock.calls[0]?.[0]).toContain('group by table_catalog, table_schema');
-    expect(pgMock.query.mock.calls[0]?.[1]).toEqual(['dvt', '', 2]);
+    expect(pgMock.query.mock.calls[0]?.[1]).toEqual(['', 2]);
   });
 
+  it('uses the database resolved by the credential for schema discovery', async () => {
+    pgMock.query.mockResolvedValueOnce({
+      rows: [{ table_catalog: 'dvt', table_schema: 'public', object_count: '1' }],
+    });
+    const probe = new WorkspaceWarehouseConnectionProbe({
+      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
+      now: () => new Date('2026-09-07T12:00:00.000Z'),
+    });
+
+    await expect(
+      probe.listSourceObjectCatalog(
+        { ...CATALOG_TARGET, database: 'stale-configured-name' },
+        { kind: 'schema-list', limit: 10 }
+      )
+    ).resolves.toMatchObject({
+      schemas: [{ catalog: 'dvt', schema: 'public', objectCount: 1 }],
+    });
+    expect(pgMock.query.mock.calls[0]?.[0]).not.toContain('current_database() =');
+    expect(pgMock.query.mock.calls[0]?.[1]).toEqual(['', 11]);
+  });
   it('binds signed cursors to the connection, scope, request kind and filter', async () => {
     pgMock.query.mockResolvedValueOnce({
       rows: [
@@ -204,9 +224,9 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
       truncated: true,
     });
     expect(pgMock.query.mock.calls[0]?.[0]).toContain(
-      'position(lower($2) in lower(relation.relname)) > 0'
+      'position(lower($1) in lower(relation.relname)) > 0'
     );
-    expect(pgMock.query.mock.calls[0]?.[1]).toEqual(['dvt', 'orders', '', '', 2]);
+    expect(pgMock.query.mock.calls[0]?.[1]).toEqual(['orders', '', '', 2]);
     expect(pgMock.query.mock.calls[1]?.[0]).toContain('selected_relations');
     expect(pgMock.query.mock.calls[1]?.[1]).toEqual([['dvt'], ['public'], ['orders']]);
     expect(pgMock.query.mock.calls.some(([sql]) => sql.includes('orders_archive'))).toBe(false);
