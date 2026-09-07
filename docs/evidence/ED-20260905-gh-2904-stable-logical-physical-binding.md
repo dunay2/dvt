@@ -39,7 +39,7 @@ evidence:
 
 ## Scope
 
-#2904 is implemented as two integration stages rather than one competing rewrite.
+Issue #2904 is implemented as two integration stages rather than one competing rewrite.
 PR #2992 performed the ingress/Planner hard cut. PR #3001 completes the Canvas
 FieldId-only mutation boundary and introduces the explicit physical Source rebind
 command.
@@ -65,7 +65,7 @@ reload.
 
 ## Stage 2A — FieldId-only Canvas semantic mutation
 
-#2936 completed opaque RelationId/FieldId allocation before this final cut. The
+Issue #2936 completed opaque RelationId/FieldId allocation before this final cut. The
 remaining mutation/read fallback is now removed:
 
 - existing projection outputs resolve by `fieldId` only;
@@ -139,7 +139,7 @@ The old `canvasSourceColumnOrder.ts` residual cited by #2992 disappeared as part
 of completed #2936. #3001 reconciles the surviving FieldId/name mutation paths
 against that merged authority.
 
-#2994 remains open only for the older monolithic live E2E that still assumes a
+Issue #2994 remains open only for the older monolithic live E2E that still assumes a
 retired dbt Canvas profile and implicit dbt model generation. Restoring that
 profile would contradict the current product architecture; #2994 is not an
 identity fallback and is not part of the #2904 hard-cut authority.
