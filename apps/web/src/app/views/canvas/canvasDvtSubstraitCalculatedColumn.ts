@@ -1,4 +1,4 @@
-/** Owned concern: append one calculated output to an admitted connected-source projection. */
+/** Owned concern: create one derived output in an admitted connected-source projection. */
 import { fromBinary, toBinary } from '@bufbuild/protobuf';
 import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import { allocateDvtFieldId } from '@dvt/contracts';
@@ -10,29 +10,42 @@ import {
 import {
   applyDvtSubstraitProjectionFunction,
   inspectDvtSubstraitProjectionDraft,
+  resolveDvtSubstraitColumnFunctions,
   type DvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
 
-export type DvtSubstraitCalculatedColumnRequest =
-  | Readonly<{ kind: 'string-literal'; alias: string; value: string }>
-  | Readonly<{ kind: 'timestamp-literal'; alias: string; value: string }>
+export type DvtSubstraitOutputExpressionCandidate =
+  | Readonly<{ kind: 'string-literal'; value: string }>
+  | Readonly<{ kind: 'timestamp-literal'; value: string }>
   | Readonly<{
       kind: 'scalar-function';
-      alias: string;
       inputFieldId: string;
       capabilityId: string;
     }>
-  | Readonly<{ kind: 'row-number'; alias: string; orderFieldId: string }>;
+  | Readonly<{ kind: 'row-number'; orderFieldId: string }>;
+
+export type DvtSubstraitCreateOutputRequest = Readonly<{
+  alias: string;
+  expression: DvtSubstraitOutputExpressionCandidate;
+}>;
+
+export type DvtSubstraitCreateOutputResult =
+  | Readonly<{
+      outcome: 'applied';
+      draft: DvtSubstraitProjectionDraft;
+      createdFieldId: string;
+    }>
+  | Readonly<{ outcome: 'rejected' }>;
 
 function directCalculation(
-  request: Exclude<DvtSubstraitCalculatedColumnRequest, { kind: 'scalar-function' }>,
+  expression: Exclude<DvtSubstraitOutputExpressionCandidate, { kind: 'scalar-function' }>,
   sourceOrdinal: number | null
 ): DvtSubstraitCalculatedExpression | null {
-  if (request.kind === 'string-literal') {
-    return { kind: 'string-literal', value: request.value };
+  if (expression.kind === 'string-literal') {
+    return { kind: 'string-literal', value: expression.value };
   }
-  if (request.kind === 'timestamp-literal') {
-    const milliseconds = Date.parse(request.value);
+  if (expression.kind === 'timestamp-literal') {
+    const milliseconds = Date.parse(expression.value);
     return Number.isFinite(milliseconds)
       ? { kind: 'timestamp-literal', value: new Date(milliseconds).toISOString() }
       : null;
@@ -40,11 +53,11 @@ function directCalculation(
   return sourceOrdinal == null ? null : { kind: 'row-number', orderSourceOrdinal: sourceOrdinal };
 }
 
-export function appendDvtSubstraitCalculatedColumn(
+export function createDvtSubstraitProjectionOutput(
   draft: DvtSubstraitProjectionDraft,
-  request: DvtSubstraitCalculatedColumnRequest,
+  request: DvtSubstraitCreateOutputRequest,
   context?: Readonly<{ inputDataType: string; provider: string }>
-): DvtSubstraitProjectionDraft {
+): DvtSubstraitCreateOutputResult {
   const inspection = inspectDvtSubstraitProjectionDraft(draft);
   const alias = request.alias.trim();
   if (
@@ -53,30 +66,64 @@ export function appendDvtSubstraitCalculatedColumn(
     inspection.projection.outputs.some((output) => output.name === alias) ||
     inspection.projection.source.fields.some((field) => field.name === alias)
   ) {
-    return draft;
+    return { outcome: 'rejected' };
   }
+
+  const expression = request.expression;
   const inputFieldId =
-    request.kind === 'scalar-function'
-      ? request.inputFieldId
-      : request.kind === 'row-number'
-        ? request.orderFieldId
+    expression.kind === 'scalar-function'
+      ? expression.inputFieldId
+      : expression.kind === 'row-number'
+        ? expression.orderFieldId
         : undefined;
   const input =
     inputFieldId == null
       ? undefined
       : inspection.projection.outputs.find((output) => output.fieldId === inputFieldId);
-  if (inputFieldId != null && (input == null || input.sourceFieldName == null)) return draft;
+  if (inputFieldId != null && input == null) return { outcome: 'rejected' };
+  if (expression.kind === 'row-number' && input?.sourceFieldName == null) {
+    return { outcome: 'rejected' };
+  }
+
+  if (expression.kind === 'scalar-function') {
+    if (
+      context == null ||
+      !resolveDvtSubstraitColumnFunctions({
+        dataType: context.inputDataType,
+        provider: context.provider,
+      }).some((capability) => capability.capabilityId === expression.capabilityId)
+    ) {
+      return { outcome: 'rejected' };
+    }
+  }
 
   const plan = fromBinary(PlanSchema, toBinary(PlanSchema, draft.plan));
   const root = plan.relations[0]?.relType;
   const project = root?.case === 'root' ? root.value.input?.relType : undefined;
-  if (root?.case !== 'root' || project?.case !== 'project') return draft;
+  if (root?.case !== 'root' || project?.case !== 'project') return { outcome: 'rejected' };
   const emit = project.value.common?.emitKind;
-  if (emit?.case !== 'emit') return draft;
+  if (emit?.case !== 'emit') return { outcome: 'rejected' };
   const targetBinding = draft.sidecar.relations.find(
     (relation) => relation.relAnchor === project.value.common?.relAnchor
   );
-  if (targetBinding == null) return draft;
+  if (targetBinding == null) return { outcome: 'rejected' };
+
+  if (expression.kind !== 'scalar-function') {
+    const sourceOrdinal =
+      input?.sourceFieldName == null
+        ? null
+        : inspection.projection.source.fields.findIndex(
+            (field) => field.name === input.sourceFieldName
+          );
+    const calculation = directCalculation(expression, sourceOrdinal === -1 ? null : sourceOrdinal);
+    if (calculation == null) return { outcome: 'rejected' };
+    try {
+      project.value.expressions.push(buildDvtSubstraitCalculatedExpression(plan, calculation));
+    } catch {
+      return { outcome: 'rejected' };
+    }
+  }
+
   const fieldId = allocateDvtFieldId();
   const outputOrdinal = inspection.projection.outputs.length;
   const sidecar = {
@@ -93,39 +140,29 @@ export function appendDvtSubstraitCalculatedColumn(
   };
   root.value.names.push(alias);
 
-  if (request.kind === 'scalar-function') {
-    if (context == null) return draft;
+  if (expression.kind === 'scalar-function') {
     const inputMapping = emit.value.outputMapping[input!.outputOrdinal];
-    if (inputMapping == null) return draft;
+    if (inputMapping == null) return { outcome: 'rejected' };
     emit.value.outputMapping.push(inputMapping);
     const appended = { plan, sidecar };
     const applied = applyDvtSubstraitProjectionFunction(appended, {
       fieldId,
       inputFieldId: input!.fieldId,
-      capabilityId: request.capabilityId,
+      capabilityId: expression.capabilityId,
       alias,
-      dataType: context.inputDataType,
-      provider: context.provider,
+      dataType: context!.inputDataType,
+      provider: context!.provider,
     });
-    return applied === appended ? draft : applied;
+    return applied === appended
+      ? { outcome: 'rejected' }
+      : { outcome: 'applied', draft: applied, createdFieldId: fieldId };
   }
 
-  const sourceOrdinal =
-    input?.sourceFieldName == null
-      ? null
-      : inspection.projection.source.fields.findIndex(
-          (field) => field.name === input.sourceFieldName
-        );
-  const calculation = directCalculation(request, sourceOrdinal === -1 ? null : sourceOrdinal);
-  if (calculation == null) return draft;
-  try {
-    project.value.expressions.push(buildDvtSubstraitCalculatedExpression(plan, calculation));
-  } catch {
-    return draft;
-  }
   emit.value.outputMapping.push(
     inspection.projection.source.fields.length + project.value.expressions.length - 1
   );
   const appended = { plan, sidecar };
-  return inspectDvtSubstraitProjectionDraft(appended).ok ? appended : draft;
+  return inspectDvtSubstraitProjectionDraft(appended).ok
+    ? { outcome: 'applied', draft: appended, createdFieldId: fieldId }
+    : { outcome: 'rejected' };
 }

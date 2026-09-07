@@ -29,7 +29,10 @@ import {
   resolveDvtSubstraitColumnFunctions,
   type DvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
-import { appendDvtSubstraitCalculatedColumn } from './canvasDvtSubstraitCalculatedColumn';
+import {
+  createDvtSubstraitProjectionOutput,
+  type DvtSubstraitCreateOutputRequest,
+} from './canvasDvtSubstraitCalculatedColumn';
 import { applyDvtSubstraitPilotAggregation } from './canvasDvtSubstraitAggregation';
 import { applyDvtSubstraitPilotAggregateRowNumber } from './canvasDvtSubstraitAggregateWindow';
 import { applyDvtSubstraitPilotRowNumber } from './canvasDvtSubstraitWindow';
@@ -133,6 +136,15 @@ function connectedOrdersProjectionDraft(): DvtSubstraitProjectionDraft {
   });
 }
 
+function createProjectionOutput(
+  draft: DvtSubstraitProjectionDraft,
+  request: DvtSubstraitCreateOutputRequest
+): DvtSubstraitProjectionDraft {
+  const result = createDvtSubstraitProjectionOutput(draft, request);
+  if (result.outcome !== 'applied') throw new Error('Expected output creation to be admitted.');
+  return result.draft;
+}
+
 describe('VTX2 Substrait -> PostgreSQL projection', () => {
   it('renders the accepted typed pilot recipe through the PostgreSQL deparser', async () => {
     const sql = await projectDvtSubstraitPilotToPostgresSql(completedPilotDraft());
@@ -183,20 +195,17 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
 
   it('derives literals and ordered row numbers from the canonical projection', async () => {
     let draft = connectedOrdersProjectionDraft();
-    draft = appendDvtSubstraitCalculatedColumn(draft, {
-      kind: 'string-literal',
+    draft = createProjectionOutput(draft, {
       alias: 'channel',
-      value: 'web',
+      expression: { kind: 'string-literal', value: 'web' },
     });
-    draft = appendDvtSubstraitCalculatedColumn(draft, {
-      kind: 'timestamp-literal',
+    draft = createProjectionOutput(draft, {
       alias: 'loaded_at',
-      value: '2026-09-02T12:30:00Z',
+      expression: { kind: 'timestamp-literal', value: '2026-09-02T12:30:00Z' },
     });
-    draft = appendDvtSubstraitCalculatedColumn(draft, {
-      kind: 'row-number',
+    draft = createProjectionOutput(draft, {
       alias: 'row_id',
-      orderFieldId: 'output:order_id',
+      expression: { kind: 'row-number', orderFieldId: 'output:order_id' },
     });
 
     const sql = (await projectDvtSubstraitProjectionToPostgresSql(draft))
