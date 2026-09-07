@@ -2,6 +2,7 @@
  * Owned concern: define the provider-neutral source-object catalog contract,
  * including paged discovery, locators, schema metadata, and operational metric evidence.
  *
+ * @version 1.0.0
  * @baseline ADR-0058: Warehouse Source Import Rails
  * @decision Represent discoverable inputs as source objects instead of relational-table-only DTOs.
  * @consequence API and web consumers share one canonical vocabulary across relations, files, endpoints, and streams.

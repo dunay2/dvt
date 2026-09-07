@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-09-06",
+  "generated": "2026-09-07",
   "repo": {
     "sha": "local"
   },
@@ -1074,6 +1074,7 @@
         "Keep source import scope bound to protected runtime workspace authorization.",
         "Persist one strict, versioned ConnectedSourceRef instead of parallel loose connection and object binding coordinates.",
         "Re-export only source-object catalog and source-import operation contracts from this barrel.",
+        "Rebind a persisted logical Source to one discovered physical object without changing logical identity.",
         "Represent discoverable inputs as source objects instead of relational-table-only DTOs."
       ],
       "implemented_by": [
@@ -1081,7 +1082,8 @@
         "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts",
         "packages/@dvt/contracts/src/contracts/source-import/SourceDataSample.v1.ts",
         "packages/@dvt/contracts/src/contracts/source-import/SourceImportOperations.v1.ts",
-        "packages/@dvt/contracts/src/contracts/source-import/SourceObjectCatalog.v1.ts",
+        "packages/@dvt/contracts/src/contracts/source-import/SourceObjectCatalog.ts",
+        "packages/@dvt/contracts/src/contracts/source-import/SourceRebindOperations.v1.ts",
         "packages/@dvt/contracts/src/contracts/source-import/index.ts"
       ],
       "title": "ADR-0058: Warehouse Source Import Rails"
@@ -1166,6 +1168,7 @@
         "Logical transformation semantics stay outside ExecutionPlan; plan steps represent runtime responsibilities only.",
         "Persist one strict, versioned ConnectedSourceRef instead of parallel loose connection and object binding coordinates.",
         "Pin one exact Substrait release and map stable DVT ids to rel_anchor/output ordinals.",
+        "Rebind a persisted logical Source to one discovered physical object without changing logical identity.",
         "Require typed standard-first evidence before semantic admission.",
         "Retain product gaps separately from standard semantic identities.",
         "Seed candidates only from pinned core and official extension identities.",
@@ -1188,6 +1191,7 @@
         "packages/@dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts",
         "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts",
+        "packages/@dvt/contracts/src/contracts/source-import/SourceRebindOperations.v1.ts",
         "packages/@dvt/contracts/src/substrait.ts"
       ],
       "title": "ADR-0064 - Substrait as the Semantic Reference and Bounded Logical Profile for DVT Transformations"
