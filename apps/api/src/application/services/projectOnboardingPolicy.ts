@@ -15,6 +15,7 @@ export const PROJECT_ONBOARDING_POLICY = Object.freeze({
     AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionRename,
     AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionTest,
     AUTHORIZATION_ACTION_NAME.workspaceSourceImportImport,
+    AUTHORIZATION_ACTION_NAME.workspaceSourceImportRebind,
     AUTHORIZATION_ACTION_NAME.workspacePluginsView,
   ]),
 });
@@ -28,11 +29,13 @@ export function isCreatorWorkspaceActionGranted(
   }
 
   return (
-    actionName === AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionRename &&
+    (actionName === AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionRename ||
+      actionName === AUTHORIZATION_ACTION_NAME.workspaceSourceImportRebind) &&
     PROJECT_ONBOARDING_POLICY.creatorWorkspaceActions
       .filter(
         (requiredAction) =>
-          requiredAction !== AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionRename
+          requiredAction !== AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionRename &&
+          requiredAction !== AUTHORIZATION_ACTION_NAME.workspaceSourceImportRebind
       )
       .every((requiredAction) => allowedActions.includes(requiredAction))
   );
