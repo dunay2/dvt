@@ -20,6 +20,10 @@ export const PROJECT_ONBOARDING_POLICY = Object.freeze({
   ]),
 });
 
+const CREATOR_WORKSPACE_ADDITIVE_ACTIONS: ReadonlySet<string> = new Set([
+  AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionRename,
+  AUTHORIZATION_ACTION_NAME.workspaceSourceImportRebind,
+]);
 export function isCreatorWorkspaceActionGranted(
   allowedActions: readonly string[],
   actionName: string
@@ -29,12 +33,9 @@ export function isCreatorWorkspaceActionGranted(
   }
 
   return (
-    actionName === AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionRename &&
+    CREATOR_WORKSPACE_ADDITIVE_ACTIONS.has(actionName) &&
     PROJECT_ONBOARDING_POLICY.creatorWorkspaceActions
-      .filter(
-        (requiredAction) =>
-          requiredAction !== AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionRename
-      )
+      .filter((requiredAction) => !CREATOR_WORKSPACE_ADDITIVE_ACTIONS.has(requiredAction))
       .every((requiredAction) => allowedActions.includes(requiredAction))
   );
 }

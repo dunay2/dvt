@@ -17,6 +17,7 @@ code_refs:
   - packages/@dvt/planner/src/application/PlannerFacade.ts
   - apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts
   - apps/api/src/application/services/rebindWarehouseSourceUseCase.ts
+  - apps/api/src/application/services/projectOnboardingPolicy.ts
   - apps/api/src/application/services/warehouseSourceRebindPlan.ts
   - apps/api/src/entrypoints/http/warehouseSourceRebindRoute.ts
   - apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts
@@ -88,6 +89,9 @@ RebindWarehouseSource
 PATCH /workspace/sources/:nodeId/binding
 workspace:source-import:rebind
 ```
+
+Existing project creators retain this additive action only when their complete governed
+creator grant is present; partial grants remain denied.
 
 The client identifies the logical Source and requested physical target. Server
 side discovery owns target facts. The command rejects:
