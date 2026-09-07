@@ -1,7 +1,7 @@
 ---
 id: R-20260905-GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING
 title: Mutable physical bindings may silently become logical identity authorities
-status: Open
+status: Mitigated
 date: 2026-09-05
 owners:
   - packages/@dvt/contracts
@@ -28,6 +28,7 @@ mitigation:
     - apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.identity.test.ts
     - apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.test.ts
   follow_up:
-    - Mark mitigated only after final PR CI, current-main overlap, and review-thread audit pass.
+    - Final PR CI, current-main overlap, and review-thread audit passed on the final implementation
+      head.
     - Never restore name, path, ordinal, provider, alias, physical-binding, or compatibility
       fallbacks as logical identity.
