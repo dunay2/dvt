@@ -133,7 +133,8 @@ flowchart LR
 | Centre drop has function-only meaning  | Divergent change       | Replace conditional with typed intent | Field interaction   | pointer/keyboard behavior |
 | Flat sidecar cannot represent children | Primitive obsession    | Introduce value object                | Semantic document   | encode/reload tests       |
 | Card could own a private tree          | Hidden authority       | Projection from aggregate             | Canvas presentation | cross-view agreement      |
-| PostgreSQL has no composite mapping    | Speculative generality | Fail closed                           | Target projection   | negative projection test  |     | Struct detection disables root actions | Feature envy | Move policy to canonical command | Canvas read model | integrated gate test |
+| PostgreSQL has no composite mapping    | Speculative generality | Fail closed                           | Target projection   | negative projection test  |
+| Struct detection disables root actions | Feature envy           | Move policy to canonical command      | Canvas read model   | integrated gate test      |
 | Composition consumes input roots       | Destructive update     | Append derived output                 | Semantic document   | compose/reload test       |
 | Derived struct has no inverse          | Incomplete lifecycle   | Add inverse aggregate operation       | Semantic document   | removal/reload test       |
 | Inactive inputs disappear with structs | Divergent change       | Reuse stable-order projection         | Canvas presentation | mixed projection test     |
