@@ -2,7 +2,7 @@
 title: UX Implementation Guide
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-07
+last_reviewed: 2026-09-07
 ---
 
 # UX Implementation Guide
@@ -317,9 +317,9 @@ Done when:
 
 - [Main Workspace Views And UX](./main-workspace-views-and-ux.md)
 - [Screen Manuals And User Stories](./screen-manuals-and-user-stories.md)
-- [Workbench UI Contract And Component Inventory](./workbench-ui-contract-and-component-inventory.md)
+- [DVT Style Guide v0.2](./style-guide.md)
+- [Frontend Component Inventory](./frontend-component-inventory.md)
 - [Iconography And Design Tokens Contract](./iconography-and-design-tokens-contract.md)
-- [Screen Layout And Cross-Surface Behavior Rules](./screen-layout-and-cross-surface-behavior-rules.md)
 - [Frontend Runtime Contract Technical Manual](./runs/frontend-runtime-contract-technical-manual.md)
 - [Frontend Runtime Contract User Manual](./runs/frontend-runtime-contract-user-manual.md)
 - [Library And Open-Source Reference Stack](./library-and-open-source-reference-stack.md)

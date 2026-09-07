@@ -2,7 +2,7 @@
 title: Iconography And Design Tokens Contract
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-08-06
+last_reviewed: 2026-09-07
 planning_type: architecture
 ---
 
@@ -23,8 +23,8 @@ It exists to answer five implementation questions before more screens are built:
 
 Use it with:
 
-- [Workbench UI Contract And Component Inventory](./workbench-ui-contract-and-component-inventory.md)
-- [Screen Layout And Cross-Surface Behavior Rules](./screen-layout-and-cross-surface-behavior-rules.md)
+- [DVT Style Guide v0.2](./style-guide.md)
+- [Frontend Component Inventory](./frontend-component-inventory.md)
 - [UX Implementation Guide](./ux-implementation-guide.md)
 - [Library And Open-Source Reference Stack](./library-and-open-source-reference-stack.md)
 

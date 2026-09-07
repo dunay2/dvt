@@ -44,7 +44,9 @@ out of the active tree.
   [Frontend runtime contract technical manual](./runs/frontend-runtime-contract-technical-manual.md),
   [Frontend runtime contract user manual](./runs/frontend-runtime-contract-user-manual.md)
 - cross-cutting UX:
+  [DVT Style Guide v0.2](./style-guide.md),
   [UX implementation guide](./ux-implementation-guide.md),
+  [Iconography and design tokens contract](./iconography-and-design-tokens-contract.md),
   [Workbench UX Canon Component](./workbench-ux-canon-component.md),
   [Frontend component inventory](./frontend-component-inventory.md),
   [Frontend command and query rail inventory](./frontend-command-query-rail-inventory.md),
@@ -54,7 +56,6 @@ out of the active tree.
   [Web Vitest changed suite router component](./web-vitest-changed-suite-router-component.md),
   [Web store domain ownership component](./web-store-domain-ownership-component.md),
   [Route Workbench Frame Component](./route-workbench-frame-component.md),
-  [Workbench UI contract and component inventory](./workbench-ui-contract-and-component-inventory.md),
   [Library and open-source reference stack](./library-and-open-source-reference-stack.md),
   [Marquez public-data visual system](./public-data/marquez-visual-system-component.md),
   [Plugin Contributions Developer Guide](./plugin-contributions-developer-guide.md)
