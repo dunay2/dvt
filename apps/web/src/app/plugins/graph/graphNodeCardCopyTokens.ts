@@ -51,6 +51,9 @@ type GraphNodeCardCopy = Readonly<{
     Record<'text' | 'numeric' | 'date-time' | 'conversion' | 'aggregate' | 'window', string>
   >;
   noCompatibleColumnFunctionsLabel: string;
+  noColumnActionsLabel: string;
+  columnActionsLabelTemplate: string;
+  appendColumnLabelTemplate: string;
   columnFunctionAliasLabelTemplate: string;
   columnFunctionAliasSubmitLabel: string;
   columnFunctionAliasCancelLabel: string;
@@ -144,6 +147,9 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
     window: 'Window functions',
   },
   noCompatibleColumnFunctionsLabel: 'No functions are compatible with this type and target.',
+  noColumnActionsLabel: 'No actions are available for this column.',
+  columnActionsLabelTemplate: 'Actions for {column}',
+  appendColumnLabelTemplate: 'Add {column}',
   columnFunctionAliasLabelTemplate: 'Output alias after {function}',
   columnFunctionAliasSubmitLabel: 'Create output',
   columnFunctionAliasCancelLabel: 'Cancel',
@@ -240,6 +246,9 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
     window: 'Funciones de ventana',
   },
   noCompatibleColumnFunctionsLabel: 'No hay funciones compatibles con este tipo y destino.',
+  noColumnActionsLabel: 'No hay acciones disponibles para esta columna.',
+  columnActionsLabelTemplate: 'Acciones de {column}',
+  appendColumnLabelTemplate: 'Añadir {column}',
   columnFunctionAliasLabelTemplate: 'Alias de salida tras {function}',
   columnFunctionAliasSubmitLabel: 'Crear salida',
   columnFunctionAliasCancelLabel: 'Cancelar',

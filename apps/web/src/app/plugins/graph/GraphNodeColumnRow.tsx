@@ -33,6 +33,7 @@ export function GraphNodeColumnRow(props: {
   copy: GraphNodeColumnCopy;
   reorder: GraphNodeColumnReorderController;
   unavailableAliases: readonly string[];
+  structuredAppendCandidates: readonly GraphNodeColumn[];
   compositionRequest?: Readonly<{
     sourceColumn: GraphNodeColumn;
     targetColumn: GraphNodeColumn;
@@ -74,20 +75,39 @@ export function GraphNodeColumnRow(props: {
   );
   const tooltip = <GraphNodeColumnTooltip column={column} isOutput={isOutput} copy={copy} />;
   const content =
-    nodeId != null && column.functionMenu != null && props.onColumnFunctionApply != null ? (
+    nodeId != null ? (
       <GraphNodeColumnFunctionMenu
+        nodeId={nodeId}
+        columnId={columnId}
         menu={column.functionMenu}
+        columnName={column.name}
+        appendCandidates={props.structuredAppendCandidates}
         copy={copy}
         keyboardOpen={keyboardFunctionMenuOpen}
         onKeyboardOpenChange={setKeyboardFunctionMenuOpen}
-        onRequest={(capabilityId) => {
-          const selectedFunction = column.functionMenu?.items.find(
-            (item) => item.capabilityId === capabilityId
-          );
-          if (selectedFunction != null) {
-            setPendingFunction({ capabilityId, functionName: selectedFunction.name });
-          }
-        }}
+        onRequest={
+          props.onColumnFunctionApply == null
+            ? undefined
+            : (capabilityId) => {
+                const selectedFunction = column.functionMenu?.items.find(
+                  (item) => item.capabilityId === capabilityId
+                );
+                if (selectedFunction != null) {
+                  setPendingFunction({ capabilityId, functionName: selectedFunction.name });
+                }
+              }
+        }
+        onStructuredAppend={
+          column.children == null || props.onStructuredFieldApply == null
+            ? undefined
+            : (candidate) =>
+                props.onStructuredFieldApply?.({
+                  nodeId,
+                  draggedFieldId: candidate.id ?? candidate.name,
+                  targetFieldId: columnId,
+                  parentName: column.name,
+                })
+        }
         piece={piece}
         tooltip={tooltip}
       />
@@ -110,8 +130,7 @@ export function GraphNodeColumnRow(props: {
         if (reorder.composeWithKeyboard(column, event)) return;
         if (reorder.moveWithKeyboard(column, event)) return;
         if (
-          column.functionMenu != null &&
-          props.onColumnFunctionApply != null &&
+          nodeId != null &&
           ((event.key === 'F10' && event.shiftKey) || event.key === 'ContextMenu')
         ) {
           event.preventDefault();

@@ -77,6 +77,19 @@ export function GraphNodeColumnSection(props: GraphNodeColumnSectionProps): Reac
                     (candidate) => (candidate.id ?? candidate.name) !== (column.id ?? column.name)
                   )
                   .map((candidate) => candidate.name)}
+                structuredAppendCandidates={
+                  column.children == null
+                    ? []
+                    : section.columnReorder.orderedColumns.filter(
+                        (candidate) =>
+                          candidate.children == null &&
+                          candidate.output !== false &&
+                          (candidate.id ?? candidate.name) !== (column.id ?? column.name) &&
+                          !column.children?.some(
+                            (child) => (child.id ?? child.name) === (candidate.id ?? candidate.name)
+                          )
+                      )
+                }
                 compositionRequest={
                   section.compositionRequest != null &&
                   (section.compositionRequest.targetColumn.id ??

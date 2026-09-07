@@ -8,6 +8,10 @@ export function resolveGraphNodeStructuredFieldCopy(language: string) {
         cancel: 'Cancelar',
         apply: 'Aplicar',
         conflict: 'Ya existe un campo con ese nombre',
+        childActions: 'Acciones de {column}',
+        moveUp: 'Mover arriba',
+        moveDown: 'Mover abajo',
+        unavailable: 'No hay acciones disponibles para esta columna.',
       }
     : {
         action: 'Create structured field',
@@ -16,5 +20,9 @@ export function resolveGraphNodeStructuredFieldCopy(language: string) {
         cancel: 'Cancel',
         apply: 'Apply',
         conflict: 'A field with that name already exists',
+        childActions: 'Actions for {column}',
+        moveUp: 'Move up',
+        moveDown: 'Move down',
+        unavailable: 'No actions are available for this column.',
       };
 }

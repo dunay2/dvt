@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildCanvasNodeModelerActionModel } from './canvasNodeContextMenuModel';
+import {
+  buildCanvasColumnContextMenuModel,
+  buildCanvasNodeModelerActionModel,
+} from './canvasNodeContextMenuModel';
 
 function actionIds(model: ReturnType<typeof buildCanvasNodeModelerActionModel>): string[] {
   return model.actionGroups.flatMap((group) => group.actions.map((action) => action.id));
@@ -98,5 +101,62 @@ describe('canvasNodeContextMenuModel', () => {
     });
 
     expect(actionIds(model)).toEqual([]);
+  });
+  it('projects column actions and truthful availability through the same menu rail', () => {
+    const model = buildCanvasColumnContextMenuModel({
+      target: {
+        kind: 'column',
+        nodeId: 'transform-orders',
+        columnId: 'output:identity',
+        columnName: 'identity',
+      },
+      label: 'Actions for identity',
+      functions: [{ id: 'capability:trim', label: 'TRIM' }],
+      appendFields: [{ id: 'output:amount', label: 'Add amount' }],
+      move: {
+        upLabel: 'Move up',
+        downLabel: 'Move down',
+        canMoveUp: false,
+        canMoveDown: true,
+      },
+      unavailableLabel: 'No actions are available for this column.',
+    });
+
+    expect(model.target).toMatchObject({ kind: 'column', columnId: 'output:identity' });
+    expect(model.actions).toEqual([
+      {
+        id: 'invoke-function',
+        targetId: 'capability:trim',
+        label: 'TRIM',
+        disabled: false,
+      },
+      {
+        id: 'append-field',
+        targetId: 'output:amount',
+        label: 'Add amount',
+        disabled: false,
+      },
+      { id: 'move-field-up', label: 'Move up', disabled: true },
+      { id: 'move-field-down', label: 'Move down', disabled: false },
+    ]);
+
+    expect(
+      buildCanvasColumnContextMenuModel({
+        target: {
+          kind: 'column',
+          nodeId: 'source-orders',
+          columnId: 'source:order_id',
+          columnName: 'order_id',
+        },
+        label: 'Actions for order_id',
+        unavailableLabel: 'No actions are available for this column.',
+      }).actions
+    ).toEqual([
+      {
+        id: 'unavailable',
+        label: 'No actions are available for this column.',
+        disabled: true,
+      },
+    ]);
   });
 });

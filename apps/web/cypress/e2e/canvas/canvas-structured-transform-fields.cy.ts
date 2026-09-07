@@ -78,7 +78,7 @@ function latestStructuredFields(): ReturnType<typeof inspectDvtSubstraitStructur
     inspections
       .filter(
         (inspection) =>
-          inspection.ok && inspection.fields.some((field) => field.fieldId === 'output:identity')
+          inspection.ok && inspection.fields.some((field) => field.name === 'identity')
       )
       .at(-1) ?? inspections.at(-1)!
   );
@@ -88,6 +88,11 @@ describe('Canvas structured Transform fields', () => {
   beforeEach(() => stubCanvas());
 
   it('proposes, persists, displays, and restores an ordered structured field', () => {
+    let identityFieldId = '';
+    let orderIdFieldId = '';
+    let customerFieldId = '';
+    let amountFieldId = '';
+
     cy.viewport(1920, 1080);
     visitCanvas();
     expandAndAssignColumns();
@@ -104,48 +109,74 @@ describe('Canvas structured Transform fields', () => {
     });
 
     cy.wrap(null, { timeout: 10_000 }).should(() => {
-      expect(latestStructuredFields()).to.deep.equal({
-        ok: true,
-        fields: [
-          {
-            fieldId: 'output:identity',
-            name: 'identity',
-            children: [
-              { fieldId: 'output:order_id', name: 'order_id' },
-              { fieldId: 'output:customer', name: 'customer' },
-            ],
-          },
-          { fieldId: 'output:amount', name: 'amount' },
-          { fieldId: 'output:status', name: 'status' },
-          { fieldId: 'output:created_at', name: 'created_at' },
-          { fieldId: 'output:region', name: 'region' },
-        ],
-      });
+      const inspection = latestStructuredFields();
+      expect(inspection.ok ? inspection.fields.map((field) => field.name) : null).to.deep.equal([
+        'identity',
+        'amount',
+        'status',
+        'created_at',
+        'region',
+      ]);
+      expect(
+        inspection.ok ? inspection.fields[0]?.children.map((field) => field.name) : null
+      ).to.deep.equal(['order_id', 'customer']);
+      if (inspection.ok) {
+        identityFieldId = inspection.fields[0]?.fieldId ?? '';
+        orderIdFieldId = inspection.fields[0]?.children[0]?.fieldId ?? '';
+        customerFieldId = inspection.fields[0]?.children[1]?.fieldId ?? '';
+        expect(identityFieldId).not.to.equal('');
+        expect(orderIdFieldId).not.to.equal('');
+        expect(customerFieldId).not.to.equal('');
+      }
     });
     modelCard().should('contain.text', 'identity').and('contain.text', 'order_id');
     modelCard()
-      .find('[data-slot="graph-node-nested-column"]')
-      .eq(1)
-      .should('contain.text', 'customer')
-      .and('have.attr', 'data-field-id', 'output:customer')
-      .and('have.attr', 'data-parent-field-id', 'output:identity')
-      .focus()
-      .trigger('keydown', { key: 'ArrowUp', altKey: true });
+      .find('[data-slot="graph-node-column-piece"][data-column-name="identity"]')
+      .rightclick(20, 10);
+    cy.contains('[data-slot="graph-node-structured-field-append"]', 'amount').click();
     cy.wrap(null, { timeout: 10_000 }).should(() => {
       const inspection = latestStructuredFields();
       expect(
         inspection.ok ? inspection.fields[0]?.children.map((field) => field.name) : null
-      ).to.deep.equal(['customer', 'order_id']);
+      ).to.deep.equal(['order_id', 'customer', 'amount']);
+      if (inspection.ok) {
+        expect(inspection.fields[0]?.fieldId).to.equal(identityFieldId);
+        expect(
+          inspection.fields[0]?.children.slice(0, 2).map((field) => field.fieldId)
+        ).to.deep.equal([orderIdFieldId, customerFieldId]);
+        amountFieldId = inspection.fields[0]?.children[2]?.fieldId ?? '';
+        expect(amountFieldId).not.to.equal('');
+      }
+    });
+
+    modelCard().find('[data-slot="graph-node-nested-column"]').eq(2).rightclick();
+    cy.get('[data-slot="nested-column-move-up"]').click();
+    cy.wrap(null, { timeout: 10_000 }).should(() => {
+      const inspection = latestStructuredFields();
+      expect(
+        inspection.ok ? inspection.fields[0]?.children.map((field) => field.name) : null
+      ).to.deep.equal(['order_id', 'amount', 'customer']);
+      expect(
+        inspection.ok ? inspection.fields[0]?.children.map((field) => field.fieldId) : null
+      ).to.deep.equal([orderIdFieldId, amountFieldId, customerFieldId]);
     });
 
     visitCanvas();
+    cy.wrap(null, { timeout: 10_000 }).should(() => {
+      const inspection = latestStructuredFields();
+      expect(inspection.ok ? inspection.fields[0]?.fieldId : null).to.equal(identityFieldId);
+      expect(
+        inspection.ok ? inspection.fields[0]?.children.map((field) => field.fieldId) : null
+      ).to.deep.equal([orderIdFieldId, amountFieldId, customerFieldId]);
+    });
     modelCard().find('[data-slot="graph-node-column-toggle"]').click();
     modelCard()
       .find('[data-slot="graph-node-nested-column"]')
       .then(($children) => {
         expect([...$children].map((child) => child.textContent)).to.deep.equal([
-          'customertext',
           'order_idinteger',
+          'amountnumeric',
+          'customertext',
         ]);
       });
   });

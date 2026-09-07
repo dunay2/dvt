@@ -2,7 +2,7 @@
 title: Canvas Structured Transform Fields Plan
 status: Active
 owner: Web / Canvas / VTX2
-last_reviewed: 2026-09-03
+last_reviewed: 2026-09-07
 planning_type: proposal
 ---
 
@@ -47,6 +47,21 @@ flowchart LR
   STRUCT --> LINEAGE[Lineage]
   STRUCT --> PREVIEW[Preview / target projection]
 ```
+
+## Regression Recovery #3046
+
+The delivered semantic mutation remains authoritative. The regression is in the
+interactive projection: a column pointer event can reach the node context menu,
+and structured-child append/reorder exists without a clear column-owned entry.
+
+- A column always owns its pointer and keyboard context-menu request, including
+  when no scalar function is compatible.
+- The column surface exposes truthful unavailable state instead of falling back
+  to node actions.
+- An existing structured output keeps append and child reorder on
+  `ConfigureCanvasDvtNode`; no second tree or menu model is introduced.
+- Tests must compose the column surface inside the real node shell so nested
+  context-menu ownership is proven rather than inferred from isolated tests.
 
 ## Product And Architecture Decisions
 
@@ -98,6 +113,7 @@ componentGuides:
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
 userStories:
   - https://github.com/dunay2/dvt/issues/2771
+  - https://github.com/dunay2/dvt/issues/3046
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -163,6 +179,13 @@ completionGate:
   - pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts
   - pnpm verify:prepush
 redGreenCycles:
+  - id: column-context-ownership-regression
+    redTest: pnpm --filter @dvt/web test:presentation:run -- GraphNodeColumnSection.contextMenuOwnership.test.tsx
+    expectedFailure: A column context-menu event reaches the surrounding node trigger or provides no truthful column surface.
+    patchSurfaces:
+      - apps/web/src/app/plugins/graph/GraphNodeColumn*.tsx
+      - apps/web/src/app/components/canvas/CanvasNodeShell*.tsx
+    greenTest: pnpm --filter @dvt/web test:presentation:run -- GraphNodeColumnSection.contextMenuOwnership.test.tsx
   - id: admitted-structured-capability
     redTest: pnpm --filter @dvt/contracts test -- dvt-substrait-struct-capability.contract.test.ts
     expectedFailure: The pinned standard-first catalog rejects kind.struct and nested expressions.
@@ -198,6 +221,11 @@ symbols:
   - { name: composeDvtSubstraitProjectionFields, path: apps/web/src/app/views/canvas/canvasDvtSubstraitStructuredFieldMutation.ts, dddOwner: DvtSubstraitProjectionDraft, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:canvas:run] }
   - { name: reorderDvtSubstraitStructuredFieldChildren, path: apps/web/src/app/views/canvas/canvasDvtSubstraitStructuredFieldReorder.ts, dddOwner: DvtSubstraitProjectionDraft, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:canvas:run] }
   - { name: applyCanvasStructuredField, path: apps/web/src/app/views/canvas/canvasStructuredFieldAuthoring.ts, dddOwner: CanvasStructuredFieldProposal, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Move Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:canvas:run] }
+  - { name: CanvasColumnContextMenuAction, path: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts, dddOwner: CanvasColumnContextMenuReadModel, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Introduce Value Object], architectureGuard: pnpm --filter @dvt/web test:architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:unit:run] }
+  - { name: CanvasColumnContextMenuModel, path: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts, dddOwner: CanvasColumnContextMenuReadModel, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Presentation Model], architectureGuard: pnpm --filter @dvt/web test:architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:unit:run] }
+  - { name: CanvasColumnContextMenuTarget, path: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts, dddOwner: CanvasColumnContextMenuReadModel, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Introduce Value Object], architectureGuard: pnpm --filter @dvt/web test:architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:unit:run] }
+  - { name: buildCanvasColumnContextMenuModel, path: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts, dddOwner: CanvasColumnContextMenuReadModel, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Extract Function], architectureGuard: pnpm --filter @dvt/web test:architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:unit:run] }
+  - { name: actionSlot, path: apps/web/src/app/plugins/graph/GraphNodeColumnFunctionMenu.tsx, dddOwner: CanvasColumnContextMenuReadModel, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Extract Function], architectureGuard: pnpm --filter @dvt/web test:architecture:run, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:presentation:run] }
   - { name: GraphNodeColumnChildren, path: apps/web/src/app/plugins/graph/GraphNodeColumnChildren.tsx, dddOwner: CanvasStructuredFieldPresentation, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Extract Component], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:presentation:run] }
   - { name: projectCanvasStructuredFieldOutputs, path: apps/web/src/app/views/canvas/canvasStructuredFieldPresentation.ts, dddOwner: CanvasStructuredFieldPresentation, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Replace Derived Variable with Query], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:canvas:run] }
   - { name: DraftSave, path: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, dddOwner: StructuredFieldBrowserProof, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Introduce Assertion], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:e2e:native] }
