@@ -116,10 +116,14 @@ describe('canvas copy catalog', () => {
   it('resolves Canvas workbench and autosave chrome from one locale catalog', () => {
     const spanishCopy = resolveCanvasViewCopy('es-ES');
 
-    expect(canvasViewCopy.routeNeedsCanvasTitle).toBe('Create canvas in this workspace');
-    expect(canvasViewCopy.routeNeedsCanvasTemplateLabel).toBe('Choose a canvas template');
-    expect(spanishCopy.routeNeedsCanvasTitle).toBe('Crear canvas en este workspace');
-    expect(spanishCopy.routeNeedsCanvasTemplateLabel).toBe('Elige una plantilla de canvas');
+    expect(canvasViewCopy.routeNeedsCanvasTitle).toBe('Canvas');
+    expect(canvasViewCopy.routeNeedsCanvasMessage).toBe(
+      'Add sources and build your transformations here.'
+    );
+    expect(spanishCopy.routeNeedsCanvasTitle).toBe('Canvas');
+    expect(spanishCopy.routeNeedsCanvasMessage).toBe(
+      'Añade fuentes y construye tus transformaciones aquí.'
+    );
     expect(spanishCopy.toolbarLayoutLabel).toBe('Disposición');
     expect(spanishCopy.workspaceProjectActionsMenuLabel).toBe('Acciones del proyecto');
     expect(spanishCopy.toolbarProjectSnapshotMenuLabel).toBe('Instantáneas del proyecto');

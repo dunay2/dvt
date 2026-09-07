@@ -10,10 +10,7 @@ export type CanvasViewCopy = {
   readonly canvasContextMenuLabel: string;
   readonly routeNeedsCanvasTitle: string;
   readonly routeNeedsCanvasMessage: string;
-  readonly routeNeedsCanvasHelper: string;
-  readonly routeNeedsCanvasWorkspaceLabel: string;
-  readonly routeNeedsCanvasAdapterLabel: string;
-  readonly routeNeedsCanvasTemplateLabel: string;
+  readonly routeNeedsCanvasActionLabel: string;
   readonly routeNeedsCanvasReadOnlyMessage: string;
   readonly routeErrorTitle: string;
   readonly routeErrorFallbackMessage: string;
