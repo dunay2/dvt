@@ -56,7 +56,7 @@ const validPolicy = {
     strictRequiredStatusChecksPolicy: true,
     requiredStatusChecks: [
       { context: 'All Checks Required for Merge', integrationId: 15368 },
-      { context: 'Release candidate integrity', integrationId: 15368 },
+      { context: 'Complete release candidate integrity check', integrationId: 15368 },
     ],
   },
 };

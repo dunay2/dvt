@@ -1,7 +1,10 @@
 const RELEASE_HEADING = /^##\s+(?:\[(\d+\.\d+\.\d+)\]|(\d+\.\d+\.\d+))(?:\s|\(|$)/u;
 const CHANGELOG_METADATA_SECTIONS = new Set(['new contributors']);
 const STRICT_SEMVER = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/u;
-const REQUIRED_CHECK_CONTEXTS = ['All Checks Required for Merge', 'Release candidate integrity'];
+const REQUIRED_CHECK_CONTEXTS = [
+  'All Checks Required for Merge',
+  'Complete release candidate integrity check',
+];
 const GITHUB_ACTIONS_APP_ID = 15368;
 const GITHUB_PULL_REQUEST_TRAILER =
   /\s+by\s+@\S+\s+in\s+https:\/\/github\.com\/([^/\s]+\/[^/\s]+)\/pull\/(\d+)\s*$/iu;

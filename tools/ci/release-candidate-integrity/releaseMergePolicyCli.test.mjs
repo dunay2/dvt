@@ -91,7 +91,7 @@ test('policy update preserves unrelated rules and requires the candidate check',
   assert.deepEqual(pullRequestRule.parameters.allowed_merge_methods, ['squash']);
   assert.deepEqual(requiredChecksRule.parameters.required_status_checks, [
     { context: 'All Checks Required for Merge', integration_id: 15368 },
-    { context: 'Release candidate integrity', integration_id: 15368 },
+    { context: 'Complete release candidate integrity check', integration_id: 15368 },
   ]);
   assert.equal(update.ruleset.target, 'branch');
   assert.equal(update.ruleset.enforcement, 'active');
@@ -117,7 +117,10 @@ test('policy update is idempotent and does not duplicate an existing required ch
   const checks = second.ruleset.rules.find((rule) => rule.type === 'required_status_checks')
     .parameters.required_status_checks;
 
-  assert.equal(checks.filter((check) => check.context === 'Release candidate integrity').length, 1);
+  assert.equal(
+    checks.filter((check) => check.context === 'Complete release candidate integrity check').length,
+    1
+  );
 });
 
 test('policy CLI arguments fail closed on unknown or duplicate values', () => {

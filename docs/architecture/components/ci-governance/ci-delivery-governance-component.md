@@ -21,7 +21,7 @@ assertion.
 | `pnpm test:ci-tools`                                | root `package.json` | Runs the CI-tool contract suite over `tools/ci/*.test.mjs` and `tools/ci/test/*.test.mjs`.                                                                                                |
 | `.github/workflows/ci.yml` `CI tool contracts`      | CI - Code Quality   | Required CI-tool contract lane for pull requests, pushes to `main`, and manual workflow runs.                                                                                             |
 | `.github/workflows/release.yml`                     | Release governance  | Runs Release Please with the mandatory trusted governance credential and repository-owned manifest/config so generated release PRs trigger required checks.                               |
-| `.github/workflows/release-candidate-integrity.yml` | Release governance  | Classifies trusted PR metadata before mutation, then coordinates the single `Release candidate integrity` check from `pull_request_target`; candidate assessment has read-only authority. |
+| `.github/workflows/release-candidate-integrity.yml` | Release governance  | Classifies trusted PR metadata before mutation, assesses candidate code read-only, then exposes `Complete release candidate integrity check` as the sole required ruleset authority rail. |
 | `.github/workflows/pr-labeler.yml`                  | PR metadata policy  | Applies file-derived labels from trusted base configuration without checking out or executing candidate code.                                                                             |
 | `release-please-config.json`                        | Release governance  | Owns Release Please title/version behavior instead of relying on action defaults.                                                                                                         |
 | `.release-please-manifest.json`                     | Release governance  | Owns the current release base version used by Release Please manifest mode.                                                                                                               |
@@ -75,14 +75,15 @@ Command/query rail:
    and changelog. Unsupported extra-file strategies fail closed.
 10. Package, manifest, and latest changelog versions MUST match and remain below
     `1.0.0` while the product is in pre-release development.
-11. `Release candidate integrity` has exactly one producer: the check
-    publication service invoked by the trusted `pull_request_target` workflow
-    loaded from the PR base. Candidate code is checked out without credentials
-    in a separate read-only assessment job and is inspected as Git data; it is
-    never installed or executed in that workflow.
-12. `All Checks Required for Merge` and `Release candidate integrity` MUST both
-    be strict required checks from GitHub Actions on the active ruleset for the
-    default branch. Product CI cannot be bypassed by an integrity-only success.
+11. `Complete release candidate integrity check` is the required fan-in job
+    loaded from the trusted PR base. Candidate code is checked out without
+    credentials in a separate read-only assessment job and is inspected as Git
+    data; it is never installed or executed in that workflow. The custom
+    `Release candidate integrity` check is informational evidence only.
+12. `All Checks Required for Merge` and
+    `Complete release candidate integrity check` MUST both be strict required
+    checks from GitHub Actions on the active ruleset. Product CI cannot be
+    bypassed by an integrity-only success.
 13. The candidate check result MUST be attached to the exact candidate head
     SHA; a green result from an older candidate revision is not release evidence.
 14. Jobs that check out pull-request candidate code MUST remain read-only and
