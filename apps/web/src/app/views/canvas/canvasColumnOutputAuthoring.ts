@@ -85,8 +85,14 @@ export function setCanvasColumnOutputIncluded(args: {
   });
   if (projectionResult.outcome === 'rejected') return projectionResult;
   const existingOutput = projectionResult.projection?.outputs.find(
-    (candidate) => candidate.fieldId === args.columnId || candidate.name === args.columnId
+    (candidate) => candidate.fieldId === args.columnId
   );
+  if (
+    existingOutput == null &&
+    projectionResult.projection?.outputs.some((candidate) => candidate.name === args.columnId)
+  ) {
+    return { outcome: 'rejected', reason: 'mapping_not_found' };
+  }
   if (args.output) {
     if (existingOutput != null) return { outcome: 'applied', draftSession: args.draftSession };
     const mapped = automapCanvasColumns({

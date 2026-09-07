@@ -347,10 +347,11 @@ will be created.
 
 Acceptance criteria:
 
-- The first-canvas host shows tenant, project, environment, and adapter context.
+- The shell shows Project and Environment; the first-canvas host does not repeat
+  raw scope IDs or the runtime adapter.
 - The startup copy presents one Canvas creation choice.
-- The registered Canvas renders one `CanvasTemplatePresentation` title.
-- Choosing it dispatches `CreateCanvasDocumentCommand` through
+- The host renders one Start canvas action, without a Canvas type or template.
+- Starting Canvas dispatches `CreateCanvasDocumentCommand` through
   the existing protected draft command rail.
 - The passive host template does not import copy catalogs or command DTOs.
 - No new workspace or project selector is introduced in this route slice.

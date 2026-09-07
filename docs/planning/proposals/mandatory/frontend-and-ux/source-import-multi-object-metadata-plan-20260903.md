@@ -101,6 +101,27 @@ No new rail is introduced; import behavior is unchanged.
 - [ ] Mechanization, governance, lint, type-check, test, and pre-push gates pass.
 - [ ] PR review and CI pass without debt, stubs, or disabled rules.
 
+## Mandatory Source Inspection Focus Correction (#2399)
+
+The Browse pane uses one active object even when all declared dbt sources are
+selected. Its checkbox currently returns before updating focus because the same
+guard protects the mandatory selection. Updating focus is a presentation action;
+it must preserve the selected object set, count, row counts and byte metrics.
+The multi-object Metadata step keeps its existing independent accordions.
+
+```mermaid
+flowchart LR
+  Checkbox[Activate source checkbox] --> Guard[Mandatory selection guard]
+  Guard --> Old[Focus discarded: stale Browse metadata]
+  Checkbox --> Focus[Update active object identity]
+  Focus --> Read[Existing active metadata projection]
+  Guard --> Keep[Keep mandatory selection unchanged]
+```
+
+| scenario                                       | opportunity                                                 | Fowler pattern                                       | DDD owner                        | command/query rail                                         | implementation surfaces                                                                                    | unit or package test                                                                                                                  | architecture test                                         | user-flow test                                                             | out of scope                                                                      |
+| ---------------------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------- | -------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Inspect a different mandatory source in Browse | Responsibility overload: one guard owns focus and selection | Separate presentation focus from selection authority | SourceImportMetadataPresentation | Existing ListWarehouseConnectionSourceObjects; no new rail | useSourceImportWizard.ts, SourceImportWizard.metadata.test.tsx, canvas-dbt-source-connection-binding.cy.ts | Checkbox changes visible identity and columns while the mandatory set, count and metrics remain intact; normal toggles remain covered | Existing Web architecture suite and feature mechanization | Visible checkbox and keyboard focus A to B using the existing binding flow | Metadata accordion behavior, new copy, connection selection behavior, API changes |
+
 ```feature-mechanization
 version: 1
 featureId: GH-2269-SOURCE-IMPORT-MULTI-OBJECT-METADATA
@@ -111,6 +132,7 @@ componentGuides:
   - docs/architecture/components/web/frontend-component-inventory.md
 userStories:
   - https://github.com/dunay2/dvt/issues/2269
+  - https://github.com/dunay2/dvt/issues/2399
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -121,6 +143,7 @@ allowedImplementationSurfaces:
   - docs/.manifest.json
   - docs/planning/proposals/mandatory/frontend-and-ux/source-import-multi-object-metadata-plan-20260903.md
   - docs/**/index.md
+  - apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
   - apps/web/src/app/components/SourceImportWizard.metadata.test.tsx
   - apps/web/src/app/components/SourceImportWizard.pluginOptions.test.tsx
   - apps/web/src/app/components/sourceImportWizard/**
@@ -148,6 +171,7 @@ architectureGuards:
   - pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts
   - pnpm docs:feature-mechanization:implementation
 cypressFlows:
+  - apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
   - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
 completionGate:
   - pnpm --filter @dvt/web lint
@@ -159,6 +183,12 @@ completionGate:
   - pnpm governance:refresh
   - pnpm verify:prepush
 redGreenCycles:
+  - id: mandatory-source-inspection-focus
+    redTest: pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts SourceImportWizard.metadata.test.tsx
+    expectedFailure: Mandatory source checkbox leaves the previous metadata identity visible.
+    patchSurfaces:
+      - apps/web/src/app/components/sourceImportWizard/useSourceImportWizard.ts
+    greenTest: pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts SourceImportWizard.metadata.test.tsx
   - id: multi-object-metadata
     redTest: pnpm --filter @dvt/web exec vitest run SourceImportObjectsMetadata.test.tsx
     expectedFailure: Only the last active table is represented in metadata.
@@ -180,6 +210,14 @@ redGreenCycles:
       - apps/web/src/app/components/sourceImportWizard/WizardStepContent.tsx
     greenTest: pnpm --filter @dvt/web exec vitest run SourceImportWizard.metadata.test.tsx
 symbols:
+  - name: useSourceImportWizard
+    path: apps/web/src/app/components/sourceImportWizard/useSourceImportWizard.ts
+    dddOwner: SourceImportMetadataPresentation
+    cqRails: [ListWarehouseConnectionSourceObjects]
+    fowlerSignals: [Responsibility overload]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+    unitTests: [apps/web/src/app/components/SourceImportWizard.metadata.test.tsx]
   - name: SourceImportObjectsMetadata
     path: apps/web/src/app/components/sourceImportWizard/SourceImportObjectsMetadata.tsx
     dddOwner: SourceImportMetadataPresentation

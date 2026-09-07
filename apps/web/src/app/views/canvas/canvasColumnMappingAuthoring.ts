@@ -72,11 +72,19 @@ export function applyCanvasColumnMapping(args: {
     return { outcome: 'rejected', reason: 'projection_requires_one_connected_source' };
   }
   const outputs = projectionResult.projection?.outputs ?? [];
-  const outputIndex = outputs.findIndex((output) =>
-    args.target.outputId != null
-      ? output.fieldId === args.target.outputId
-      : output.name === args.target.columnName
-  );
+  if (
+    args.target.outputId == null &&
+    outputs.some((output) => output.name === args.target.columnName)
+  ) {
+    return { outcome: 'rejected', reason: 'mapping_not_found' };
+  }
+  const outputIndex =
+    args.target.outputId == null
+      ? -1
+      : outputs.findIndex((output) => output.fieldId === args.target.outputId);
+  if (args.target.outputId != null && outputIndex < 0) {
+    return { outcome: 'rejected', reason: 'mapping_not_found' };
+  }
   const currentOutput = outputs[outputIndex];
   if (currentOutput != null && !isSimpleCanvasPassthrough(currentOutput)) {
     return { outcome: 'rejected', reason: 'complex_expression_not_editable' };

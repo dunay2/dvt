@@ -6,10 +6,13 @@
  * @decision Bind exact pinned Plan bytes to one identity-only DVT sidecar.
  * @version 1.0.0
  */
-import { base64Bytes, sha256Hex } from '@dvt/crypto';
+import { base64Bytes, jcsCanonicalize, sha256Hex } from '@dvt/crypto';
 import { z } from 'zod';
 
-import { ConnectedSourceRefSchema } from '../source-import/ConnectedSourceRef.v1.js';
+import {
+  ConnectedSourceRefSchema,
+  type ConnectedSourceRef,
+} from '../source-import/ConnectedSourceRef.v1.js';
 
 import { validateDvtSubstraitFieldHierarchyV1 } from './DvtSubstraitFieldBindingHierarchy.v1.js';
 import { decodeDvtSubstraitPlanV1 } from './DvtSubstraitPlanBinary.v1.js';
@@ -153,4 +156,33 @@ export function canonicalizeDvtSubstraitSemanticDocumentV1(
 
 export function serializeDvtSubstraitSemanticDocumentV1(input: unknown): string {
   return JSON.stringify(canonicalizeDvtSubstraitSemanticDocumentV1(input));
+}
+
+export function rebindDvtSubstraitSemanticSourceRefV1(
+  input: unknown,
+  currentSourceRef: ConnectedSourceRef,
+  nextSourceRef: ConnectedSourceRef
+): DvtSubstraitSemanticDocumentV1 {
+  const document = canonicalizeDvtSubstraitSemanticDocumentV1(input);
+  const current = ConnectedSourceRefSchema.parse(currentSourceRef);
+  const next = ConnectedSourceRefSchema.parse(nextSourceRef);
+  const currentKey = jcsCanonicalize(current);
+  if (
+    !document.sidecar.relations.some(
+      (relation) => relation.sourceRef != null && jcsCanonicalize(relation.sourceRef) === currentKey
+    )
+  ) {
+    return document;
+  }
+  return canonicalizeDvtSubstraitSemanticDocumentV1({
+    ...document,
+    sidecar: {
+      ...document.sidecar,
+      relations: document.sidecar.relations.map((relation) =>
+        relation.sourceRef != null && jcsCanonicalize(relation.sourceRef) === currentKey
+          ? { ...relation, sourceRef: next }
+          : relation
+      ),
+    },
+  });
 }

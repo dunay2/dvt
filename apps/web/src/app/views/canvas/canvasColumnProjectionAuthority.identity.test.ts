@@ -1,11 +1,17 @@
+import { rebindDvtSubstraitSemanticSourceRefV1 } from '@dvt/contracts';
+
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
 import {
   persistCanvasProjectionOutputs,
   readEditableCanvasProjectionEntry,
+  resolveCanvasColumnMappingTarget,
 } from './canvasColumnProjectionAuthority';
-import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import {
+  applyDvtSubstraitSemanticDocument,
+  readDvtTransformAuthoringAuthority,
+} from './canvasDvtTransformAuthoringAuthority';
 import { decodeDvtSubstraitProjectionDocument } from './canvasDvtSubstraitProjection';
 
 const sourceRef = {
@@ -128,5 +134,89 @@ describe('Canvas projection identity persistence', () => {
     if (edited.outcome !== 'applied') throw new Error('Expected edited projection persistence.');
 
     expect(identitySnapshot(edited.node)).toEqual(before);
+  });
+
+  it('does not resolve an existing semantic output by its display name', () => {
+    const source = sourceNode();
+    const target = targetNode();
+    const created = persistCanvasProjectionOutputs({
+      targetNode: target,
+      projection: null,
+      outputs: [
+        {
+          fieldId: 'dvt_fld_01991dc0-0000-7000-8000-000000000201',
+          name: 'buyer',
+          sourceFieldName: 'customer',
+          dataType: 'text',
+          outputOrdinal: 0,
+        },
+      ],
+      resolveNode: (nodeId) => (nodeId === source.id ? source : undefined),
+      sourceNodeIdHint: source.id,
+    });
+    if (created.outcome !== 'applied') throw new Error('Expected initial projection persistence.');
+
+    expect(resolveCanvasColumnMappingTarget(created.node, 'buyer')).toBeNull();
+    expect(
+      resolveCanvasColumnMappingTarget(created.node, 'dvt_fld_01991dc0-0000-7000-8000-000000000201')
+    ).toEqual({
+      nodeId: target.id,
+      outputId: 'dvt_fld_01991dc0-0000-7000-8000-000000000201',
+      columnName: 'buyer',
+    });
+  });
+  it('reopens a Transform after a compatible Source schema rebind', () => {
+    const source = sourceNode();
+    const target = targetNode();
+    const created = persistCanvasProjectionOutputs({
+      targetNode: target,
+      projection: null,
+      outputs: [
+        {
+          fieldId: 'output:order_id',
+          name: 'order_id',
+          sourceFieldName: 'order_id',
+          dataType: 'integer',
+          outputOrdinal: 0,
+        },
+      ],
+      resolveNode: (nodeId) => (nodeId === source.id ? source : undefined),
+      sourceNodeIdHint: source.id,
+    });
+    if (created.outcome !== 'applied') throw new Error('Expected initial projection persistence.');
+    const before = identitySnapshot(created.node);
+    const authority = readDvtTransformAuthoringAuthority(created.node);
+    if (authority == null) throw new Error('Expected Transform authoring authority.');
+    const reboundSourceRef = {
+      ...sourceRef,
+      connectionRef: { ...sourceRef.connectionRef, connectionId: 'warehouse-recovery' },
+      sourceObjectId: 'archive.orders',
+    };
+    const reboundTarget = applyDvtSubstraitSemanticDocument(
+      created.node,
+      rebindDvtSubstraitSemanticSourceRefV1(authority.semanticDocument, sourceRef, reboundSourceRef)
+    );
+    const reboundSource: CanonicalNode = {
+      ...source,
+      metadata: {
+        ...source.metadata,
+        connectedSourceRef: reboundSourceRef,
+        schema: 'archive',
+      },
+    };
+
+    const entry = readEditableCanvasProjectionEntry({
+      targetNode: reboundTarget,
+      edges: [{ sourceId: reboundSource.id, targetId: reboundTarget.id }],
+      resolveNode: (nodeId) =>
+        nodeId === reboundSource.id
+          ? reboundSource
+          : nodeId === reboundTarget.id
+            ? reboundTarget
+            : undefined,
+    });
+
+    expect(entry.outcome).toBe('ready');
+    expect(identitySnapshot(reboundTarget)).toEqual(before);
   });
 });

@@ -5,15 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CanvasPlaygroundHost } from './CanvasPlaygroundHost';
-import type { WorkspaceScope } from '../../ports/sessionContext';
 import type { CanvasKindRegistration } from '../../plugins/nodeTypeContracts';
-
-const workspaceScope: WorkspaceScope = {
-  tenantId: 'tenant-a',
-  projectId: 'project-orders',
-  environmentId: 'dev',
-  targetAdapter: 'temporal',
-};
 
 const canvasKinds: readonly CanvasKindRegistration[] = [
   {
@@ -39,7 +31,6 @@ function renderHost(overrides: Partial<React.ComponentProps<typeof CanvasPlaygro
   act(() => {
     root.render(
       <CanvasPlaygroundHost
-        workspaceScope={workspaceScope}
         canvasKinds={canvasKinds}
         onCreateCanvasDocument={onCreateCanvasDocument}
         {...overrides}
@@ -69,12 +60,13 @@ describe('CanvasPlaygroundHost', () => {
   it('presents the shared Canvas entrypoint inside the active workspace context', () => {
     const { container, root } = renderHost();
 
-    expect(container.textContent).toContain('Create canvas in this workspace');
-    expect(container.textContent).toContain('Active workspace');
-    expect(container.textContent).toContain('tenant-a / project-orders / dev');
-    expect(container.textContent).toContain('Adapter: temporal');
-    expect(container.textContent).toContain('Choose a canvas template');
-    expect(container.textContent).toContain('Transformation canvas');
+    expect(container.textContent).toContain('Canvas');
+    expect(container.textContent).not.toContain('Active workspace');
+    expect(container.textContent).not.toContain('tenant-a / project-orders / dev');
+    expect(container.textContent).not.toContain('Adapter: temporal');
+    expect(container.textContent).not.toContain('Choose a canvas template');
+    expect(container.querySelectorAll('button')).toHaveLength(1);
+    expect(container.querySelector('button')?.textContent).toBe('Start canvas');
     expect(container.textContent).not.toContain('dbt canvas');
     expect(container.textContent).not.toContain('governed canvas kind');
 
@@ -86,7 +78,7 @@ describe('CanvasPlaygroundHost', () => {
   it('dispatches the shared Canvas through the host-owned create command', async () => {
     const { container, onCreateCanvasDocument, root } = renderHost();
     const transformationButton = Array.from(container.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Transformation canvas')
+      button.textContent?.includes('Start canvas')
     );
 
     expect(transformationButton).not.toBeUndefined();
@@ -98,7 +90,7 @@ describe('CanvasPlaygroundHost', () => {
     expect(onCreateCanvasDocument).toHaveBeenCalledTimes(1);
     expect(onCreateCanvasDocument).toHaveBeenCalledWith({
       kind: 'transformation',
-      title: 'Transformation canvas',
+      title: 'Canvas',
     });
 
     act(() => {

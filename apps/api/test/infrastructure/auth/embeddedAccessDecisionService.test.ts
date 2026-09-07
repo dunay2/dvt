@@ -142,7 +142,29 @@ describe('EmbeddedAccessDecisionService', () => {
       },
     });
     await expect(
-      buildService(['workspace:source-connection:create']).decide(principal, requestedScope)
+      buildService(legacyCreatorActions).decide(principal, {
+        ...requestedScope,
+        action: AUTHORIZATION_ACTION.workspaceSourceImportRebind,
+      })
+    ).resolves.toEqual({
+      ok: true,
+      approvedScope: {
+        resource: 'environment',
+        tenantId: TenantId.unsafe('t1'),
+        projectId: ProjectId.unsafe('p1'),
+        environmentId: EnvironmentId.unsafe('dev'),
+      },
+    });
+    const partialCreator = buildService(['workspace:source-connection:create']);
+    await expect(partialCreator.decide(principal, requestedScope)).resolves.toEqual({
+      ok: false,
+      reason: 'ACTION_NOT_GRANTED',
+    });
+    await expect(
+      partialCreator.decide(principal, {
+        ...requestedScope,
+        action: AUTHORIZATION_ACTION.workspaceSourceImportRebind,
+      })
     ).resolves.toEqual({ ok: false, reason: 'ACTION_NOT_GRANTED' });
   });
 

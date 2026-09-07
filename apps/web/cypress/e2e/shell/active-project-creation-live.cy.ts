@@ -72,9 +72,11 @@ describe('Active project creation live vertical', () => {
         cy.get('[data-slot="shell-workspace-menu-trigger"]')
           .should('contain.text', projectName)
           .and('not.contain.text', initialProjectTriggerText.trim());
-        cy.contains(/Create canvas in this workspace|Crear canvas en este workspace/, {
-          timeout: 30_000,
-        }).should('be.visible');
+        cy.get('[data-slot="canvas-playground-empty-state"] h2')
+          .contains('Canvas', {
+            timeout: 30_000,
+          })
+          .should('be.visible');
         cy.get('.react-flow__node').should('not.exist');
 
         cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
@@ -93,9 +95,9 @@ describe('Active project creation live vertical', () => {
           'contain.text',
           projectName
         );
-        cy.contains(/Create canvas in this workspace|Crear canvas en este workspace/).should(
-          'be.visible'
-        );
+        cy.get('[data-slot="canvas-playground-empty-state"] h2')
+          .contains('Canvas')
+          .should('be.visible');
       });
   });
 });
