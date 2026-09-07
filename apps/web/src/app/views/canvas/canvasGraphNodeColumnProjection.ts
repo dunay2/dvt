@@ -15,6 +15,7 @@ export function projectGraphNodeColumn(
     ...(column.primaryKey == null ? {} : { primaryKey: column.primaryKey }),
     ...(column.sourceNodeName == null ? {} : { sourceNodeName: column.sourceNodeName }),
     ...(column.sourceFieldName == null ? {} : { sourceFieldName: column.sourceFieldName }),
+    ...(column.sourceReference == null ? {} : { sourceReference: column.sourceReference }),
     ...(column.reference == null ? {} : { reference: column.reference }),
     ...(column.operations == null ? {} : { operations: column.operations }),
     ...(column.description == null ? {} : { description: column.description }),

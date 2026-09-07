@@ -8,6 +8,9 @@ import type { CanonicalNode } from '../../types/canonical';
 import { mapCanonicalNodeToCanvasNode } from './canvasNodeMapper';
 import { useCanvasControllerReadModel } from './useCanvasControllerReadModel';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import { encodeDvtSubstraitStructuredFieldDocument } from './canvasDvtSubstraitStructuredField';
+import { composeDvtSubstraitProjectionFields } from './canvasDvtSubstraitStructuredFieldMutation';
+import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import {
   createDvtSubstraitProjectionDraft,
   encodeDvtSubstraitProjectionDocument,
@@ -355,6 +358,114 @@ describe('useCanvasControllerReadModel', () => {
     }
   });
 
+  it('keeps structured Transform output toggles and root reorder on the canonical handlers', async () => {
+    const sourceRef = {
+      schemaVersion: 'connected-source-ref.v1' as const,
+      connectionRef: {
+        schemaVersion: 'connection-ref.v1' as const,
+        connectionId: 'warehouse-main',
+        provider: 'postgres' as const,
+      },
+      sourceObjectId: 'raw.orders',
+    };
+    const sourceNode = {
+      ...testNode,
+      metadata: {
+        schema: 'raw',
+        tableName: 'orders',
+        connectedSourceRef: sourceRef,
+        columns: [
+          { name: 'order_id', type: 'integer' },
+          { name: 'customer', type: 'text' },
+          { name: 'amount', type: 'numeric' },
+        ],
+      },
+    } satisfies CanonicalNode;
+    const flatDraft = createDvtSubstraitProjectionDraft({
+      source: {
+        nodeId: sourceNode.id,
+        schema: 'raw',
+        table: 'orders',
+        sourceRef,
+        fields: sourceNode.metadata.columns.map((column) => ({
+          name: column.name,
+          dataType: column.type,
+        })),
+      },
+      targetNodeId: 'transform-orders',
+      outputs: sourceNode.metadata.columns.map((column) => ({
+        fieldId: 'output:' + column.name,
+        name: column.name,
+        sourceFieldName: column.name,
+      })),
+    });
+    const structuredDraft = composeDvtSubstraitProjectionFields(flatDraft, {
+      draggedFieldId: 'output:customer',
+      targetFieldId: 'output:order_id',
+      parentFieldId: 'output:identity',
+      parentName: 'identity',
+    });
+    const transformNode = applyDvtSubstraitSemanticDocument(
+      {
+        ...testNode,
+        id: 'transform-orders',
+        name: 'Transform orders',
+        kind: 'dvt:transform',
+        role: 'transform',
+      },
+      encodeDvtSubstraitStructuredFieldDocument(structuredDraft)
+    );
+    const dependency = {
+      id: 'source-to-transform',
+      sourceId: sourceNode.id,
+      targetId: transformNode.id,
+      relation: 'lineage' as const,
+    };
+    const presentationTruth = projectCanvasNodePresentationTruth({
+      node: transformNode,
+      nodes: [sourceNode, transformNode],
+      edges: [dependency],
+    });
+    const graphNodes = [sourceNode, transformNode].map((node, index) =>
+      mapCanonicalNodeToCanvasNode({
+        canonicalNode: node,
+        index,
+        showColumns: true,
+        ...(node.id === transformNode.id ? { presentationTruth } : {}),
+      })
+    );
+    const base = buildReadModelArgs({ canMutateGraph: true });
+    const args: ReadModelArgs = {
+      ...base,
+      graphModel: {
+        nodes: graphNodes,
+        edges: [{ id: dependency.id, source: dependency.sourceId, target: dependency.targetId }],
+        canonicalNodesById: new Map([sourceNode, transformNode].map((node) => [node.id, node])),
+        onEdgesChange: vi.fn(),
+      },
+      visibleScope: {
+        canonicalNodes: [sourceNode, transformNode],
+        canonicalEdges: [dependency],
+      },
+      executionScope: {
+        selectedNodeIds: [],
+        workspaceNodeIds: [sourceNode.id, transformNode.id],
+      },
+    };
+    const mounted = await renderReadModel(args);
+
+    try {
+      const modelData = mounted.readState()?.nodesWithImpact[1]?.data as ReadModelNodeData;
+      expect(modelData.onToggleCanvasColumnOutput).toBe(
+        args.graphHandlers.handleToggleCanvasColumnOutput
+      );
+      expect(modelData.onReorderCanvasColumnOutput).toBe(
+        args.graphHandlers.handleReorderCanvasColumnOutput
+      );
+    } finally {
+      await mounted.cleanup();
+    }
+  });
   it('projects admitted Substrait function menus from connected column truth', async () => {
     const sourceNode = {
       ...testNode,

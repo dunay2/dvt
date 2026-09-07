@@ -118,7 +118,9 @@ describe('ConfigureCanvasDvtNode structured-field command', () => {
     const inspection = inspectDvtSubstraitStructuredFieldDraft(
       decodeDvtSubstraitStructuredFieldDocument(authority.semanticDocument)
     );
-    const created = inspection.ok ? inspection.fields[0] : null;
+    const created = inspection.ok
+      ? inspection.fields.find((field) => field.name === 'identity')
+      : null;
     expect(created).toMatchObject({
       name: 'identity',
       children: [{ name: 'order_id' }, { name: 'customer' }],
@@ -164,10 +166,15 @@ describe('ConfigureCanvasDvtNode structured-field command', () => {
     const persistedInspection = inspectDvtSubstraitStructuredFieldDraft(
       decodeDvtSubstraitStructuredFieldDocument(persistedAuthority.semanticDocument)
     );
-    const parentFieldId = persistedInspection.ok
-      ? persistedInspection.fields[0]?.fieldId
+    const parent = persistedInspection.ok
+      ? persistedInspection.fields.find((field) => field.name === 'identity')
       : undefined;
-    if (parentFieldId == null) throw new Error('Expected stable structured parent FieldId.');
+    const parentFieldId = parent?.fieldId;
+    const orderChildId = parent?.children?.[0]?.fieldId;
+    const customerChildId = parent?.children?.[1]?.fieldId;
+    if (parentFieldId == null || orderChildId == null || customerChildId == null) {
+      throw new Error('Expected stable structured field identities.');
+    }
 
     const persistedSession: CanvasDraftSession = {
       ...composed.draftSession,
@@ -198,8 +205,8 @@ describe('ConfigureCanvasDvtNode structured-field command', () => {
       request: {
         nodeId: target.id,
         parentFieldId,
-        fieldId: 'output:customer',
-        targetFieldId: 'output:order_id',
+        fieldId: customerChildId,
+        targetFieldId: orderChildId,
         placement: 'before',
       },
     });
@@ -211,10 +218,12 @@ describe('ConfigureCanvasDvtNode structured-field command', () => {
     const inspection = inspectDvtSubstraitStructuredFieldDraft(
       decodeDvtSubstraitStructuredFieldDocument(authority.semanticDocument)
     );
-    expect(inspection.ok ? inspection.fields[0]?.fieldId : null).toBe(parentFieldId);
-    expect(inspection.ok ? inspection.fields[0]?.children : null).toMatchObject([
-      { fieldId: 'output:customer' },
-      { fieldId: 'output:order_id' },
+    const reorderedParent = inspection.ok
+      ? inspection.fields.find((field) => field.fieldId === parentFieldId)
+      : undefined;
+    expect(reorderedParent?.children).toMatchObject([
+      { fieldId: customerChildId },
+      { fieldId: orderChildId },
     ]);
   });
 });

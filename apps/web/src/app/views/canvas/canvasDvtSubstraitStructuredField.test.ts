@@ -46,43 +46,50 @@ function projectionDraft(): DvtSubstraitProjectionDraft {
   });
 }
 
-describe('canonical Substrait structured Transform fields', () => {
-  it('persists one explicit parent while retaining ordered child identities', () => {
-    const composed = composeDvtSubstraitProjectionFields(projectionDraft(), {
-      draggedFieldId: 'output:customer',
-      targetFieldId: 'output:order_id',
-      parentFieldId: 'output:identity',
-      parentName: 'identity',
-    });
-    const reloaded = decodeDvtSubstraitStructuredFieldDocument(
-      encodeDvtSubstraitStructuredFieldDocument(composed)
-    );
+function composeIdentity(draft = projectionDraft()): DvtSubstraitProjectionDraft {
+  return composeDvtSubstraitProjectionFields(draft, {
+    draggedFieldId: 'output:customer',
+    targetFieldId: 'output:order_id',
+    parentFieldId: 'output:identity',
+    parentName: 'identity',
+  });
+}
 
-    expect(inspectDvtSubstraitStructuredFieldDraft(reloaded)).toEqual({
-      ok: true,
-      fields: [
-        {
-          fieldId: 'output:identity',
-          name: 'identity',
-          children: [
-            { fieldId: 'output:order_id', name: 'order_id' },
-            { fieldId: 'output:customer', name: 'customer' },
-          ],
-        },
-        { fieldId: 'output:amount', name: 'amount' },
-      ],
+const identityChildren = [
+  'output:identity:child:output:order_id',
+  'output:identity:child:output:customer',
+];
+
+function inspectFields(
+  draft: DvtSubstraitProjectionDraft
+): Extract<ReturnType<typeof inspectDvtSubstraitStructuredFieldDraft>, { ok: true }>['fields'] {
+  const inspection = inspectDvtSubstraitStructuredFieldDraft(draft);
+  if (!inspection.ok) throw new Error('Expected inspectable structured projection.');
+  return inspection.fields;
+}
+
+describe('canonical Substrait structured Transform fields', () => {
+  it('appends a derived parent while retaining original roots and fresh child identities', () => {
+    const reloaded = decodeDvtSubstraitStructuredFieldDocument(
+      encodeDvtSubstraitStructuredFieldDocument(composeIdentity())
+    );
+    const fields = inspectFields(reloaded);
+
+    expect(fields.map((field) => field.fieldId)).toEqual([
+      'output:order_id',
+      'output:customer',
+      'output:amount',
+      'output:identity',
+    ]);
+    expect(fields[3]).toMatchObject({
+      fieldId: 'output:identity',
+      name: 'identity',
+      children: identityChildren.map((fieldId) => ({ fieldId })),
     });
   });
 
-  it('projects the persisted parent and children back into the Canvas card truth', () => {
-    const document = encodeDvtSubstraitStructuredFieldDocument(
-      composeDvtSubstraitProjectionFields(projectionDraft(), {
-        draggedFieldId: 'output:customer',
-        targetFieldId: 'output:order_id',
-        parentFieldId: 'output:identity',
-        parentName: 'identity',
-      })
-    );
+  it('projects original roots and the persisted struct into the Canvas card truth', () => {
+    const document = encodeDvtSubstraitStructuredFieldDocument(composeIdentity());
     const sourceNode: CanonicalNode = {
       id: SOURCE.nodeId,
       name: SOURCE.table,
@@ -118,17 +125,20 @@ describe('canonical Substrait structured Transform fields', () => {
       edges: [{ sourceId: sourceNode.id, targetId: transformNode.id }],
     });
 
-    expect(truth.columns.declared).toMatchObject([
-      {
-        name: 'identity',
-        type: 'struct',
-        children: [
-          { name: 'order_id', type: 'integer', sourceFieldName: 'order_id' },
-          { name: 'customer', type: 'text', sourceFieldName: 'customer' },
-        ],
-      },
-      { name: 'amount', type: 'numeric', sourceFieldName: 'amount' },
+    expect(truth.columns.declared.map((column) => column.name)).toEqual([
+      'order_id',
+      'customer',
+      'amount',
+      'identity',
     ]);
+    expect(truth.columns.declared[3]).toMatchObject({
+      name: 'identity',
+      type: 'struct',
+      children: [
+        { name: 'order_id', type: 'integer', sourceFieldName: 'order_id' },
+        { name: 'customer', type: 'text', sourceFieldName: 'customer' },
+      ],
+    });
   });
 
   it('fails closed without changing the draft for invalid composition identities', () => {
@@ -165,37 +175,28 @@ describe('canonical Substrait structured Transform fields', () => {
     });
   });
 
-  it('appends a scalar field to an existing parent without replacing field identities', () => {
-    const first = composeDvtSubstraitProjectionFields(projectionDraft(), {
-      draggedFieldId: 'output:customer',
-      targetFieldId: 'output:order_id',
-      parentFieldId: 'output:identity',
-      parentName: 'identity',
-    });
-    const appended = composeDvtSubstraitProjectionFields(first, {
+  it('appends a scalar to a struct without consuming the scalar root', () => {
+    const appended = composeDvtSubstraitProjectionFields(composeIdentity(), {
       draggedFieldId: 'output:amount',
       targetFieldId: 'output:identity',
       parentFieldId: 'output:identity',
       parentName: 'identity',
     });
+    const fields = inspectFields(appended);
 
-    expect(inspectDvtSubstraitStructuredFieldDraft(appended)).toEqual({
-      ok: true,
-      fields: [
-        {
-          fieldId: 'output:identity',
-          name: 'identity',
-          children: [
-            { fieldId: 'output:order_id', name: 'order_id' },
-            { fieldId: 'output:customer', name: 'customer' },
-            { fieldId: 'output:amount', name: 'amount' },
-          ],
-        },
-      ],
-    });
+    expect(fields.map((field) => field.fieldId)).toEqual([
+      'output:order_id',
+      'output:customer',
+      'output:amount',
+      'output:identity',
+    ]);
+    expect(fields[3]?.children?.map((field) => field.fieldId)).toEqual([
+      ...identityChildren,
+      'output:identity:child:output:amount',
+    ]);
   });
 
-  it('creates another structured root from remaining scalar outputs', () => {
+  it('creates another derived struct while retaining every scalar root', () => {
     const fields = [...SOURCE.fields, { name: 'tax', dataType: 'numeric' }];
     const draft = createDvtSubstraitProjectionDraft({
       source: { ...SOURCE, fields },
@@ -206,39 +207,25 @@ describe('canonical Substrait structured Transform fields', () => {
         sourceFieldName: field.name,
       })),
     });
-    const identity = composeDvtSubstraitProjectionFields(draft, {
-      draggedFieldId: 'output:customer',
-      targetFieldId: 'output:order_id',
-      parentFieldId: 'output:identity',
-      parentName: 'identity',
-    });
-    const totals = composeDvtSubstraitProjectionFields(identity, {
+    const totals = composeDvtSubstraitProjectionFields(composeIdentity(draft), {
       draggedFieldId: 'output:tax',
       targetFieldId: 'output:amount',
       parentFieldId: 'output:totals',
       parentName: 'totals',
     });
+    const inspected = inspectFields(totals);
 
-    expect(inspectDvtSubstraitStructuredFieldDraft(totals)).toEqual({
-      ok: true,
-      fields: [
-        {
-          fieldId: 'output:identity',
-          name: 'identity',
-          children: [
-            { fieldId: 'output:order_id', name: 'order_id' },
-            { fieldId: 'output:customer', name: 'customer' },
-          ],
-        },
-        {
-          fieldId: 'output:totals',
-          name: 'totals',
-          children: [
-            { fieldId: 'output:amount', name: 'amount' },
-            { fieldId: 'output:tax', name: 'tax' },
-          ],
-        },
-      ],
-    });
+    expect(inspected.map((field) => field.fieldId)).toEqual([
+      'output:order_id',
+      'output:customer',
+      'output:amount',
+      'output:tax',
+      'output:identity',
+      'output:totals',
+    ]);
+    expect(inspected[5]?.children?.map((field) => field.fieldId)).toEqual([
+      'output:totals:child:output:amount',
+      'output:totals:child:output:tax',
+    ]);
   });
 });

@@ -63,6 +63,48 @@ and structured-child append/reorder exists without a clear column-owned entry.
 - Tests must compose the column surface inside the real node shell so nested
   context-menu ownership is proven rather than inferred from isolated tests.
 
+## Complete Structured Lifecycle Recovery #3054
+
+The hard cut left structured projections with only part of the column command
+surface. Detecting one structured root currently disables output selection and
+top-level reorder, omits inactive inherited fields, and provides no inverse for
+composition.
+
+```mermaid
+flowchart LR
+  STRUCT[Structured root detected] --> GATE[Flat authoring gate disabled]
+  GATE --> CHECK[Output check disabled]
+  GATE --> ORDER[Root reorder disabled]
+  GATE --> HIDDEN[Inactive inherited fields omitted]
+  STRUCT --> TRAPPED[Children have no dissolve action]
+```
+
+The repair keeps one command and one authority:
+
+```mermaid
+flowchart LR
+  CARD[Model column list] --> CMD[ConfigureCanvasDvtNode]
+  CMD --> TOGGLE[Include or exclude root]
+  CMD --> ORDER[Reorder scalar or struct roots]
+  CMD --> COMPOSE[Compose roots]
+  CMD --> DISSOLVE[Remove derived struct]
+  DISSOLVE --> ROOTS[Original roots remain unchanged]
+  TOGGLE --> REVISION[Canonical Substrait plus DVT sidecar revision]
+  ORDER --> REVISION
+  COMPOSE --> REVISION
+  ROOTS --> REVISION
+  REVISION --> RELOAD[Card and reload projection]
+```
+
+- Composition appends a derived struct and never consumes its input roots.
+- Removing the group deletes only that derived root; the original outputs remain unchanged.
+- Inactive inherited fields remain visible with `output: false` and can re-enter
+  the projection through the existing output-selection command.
+- Scalar and structured roots share the existing pointer and keyboard reorder
+  command; structure never disables the whole list.
+- Integrated read-model and browser tests must traverse the real gates rather
+  than inject callbacks directly into a presentation component.
+
 ## Product And Architecture Decisions
 
 - Admit the pinned core identity `substrait.Type kind.struct` through the
@@ -76,6 +118,8 @@ and structured-child append/reorder exists without a clear column-owned entry.
 - Apply creates one new parent identity and retains both child identities,
   types, nullability, provenance and order. Dropping into an existing struct
   retains the parent identity and inserts the child at the selected position.
+- Remove grouping is the inverse command: it removes only the derived struct
+  because composition leaves the original outputs unchanged.
 - Self-nesting, ancestry cycles, duplicate identities, incompatible shapes,
   unknown fields, stale revisions and unsupported projections fail closed.
 - PostgreSQL exposure remains unavailable until a governed row/composite
@@ -90,6 +134,10 @@ and structured-child append/reorder exists without a clear column-owned entry.
 | Flat sidecar cannot represent children | Primitive obsession    | Introduce value object                | Semantic document   | encode/reload tests       |
 | Card could own a private tree          | Hidden authority       | Projection from aggregate             | Canvas presentation | cross-view agreement      |
 | PostgreSQL has no composite mapping    | Speculative generality | Fail closed                           | Target projection   | negative projection test  |
+| Struct detection disables root actions | Feature envy           | Move policy to canonical command      | Canvas read model   | integrated gate test      |
+| Composition consumes input roots       | Destructive update     | Append derived output                 | Semantic document   | compose/reload test       |
+| Derived struct has no inverse          | Incomplete lifecycle   | Add inverse aggregate operation       | Semantic document   | removal/reload test       |
+| Inactive inputs disappear with structs | Divergent change       | Reuse stable-order projection         | Canvas presentation | mixed projection test     |
 
 ## Delivery Boundaries
 
@@ -113,7 +161,7 @@ componentGuides:
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
 userStories:
   - https://github.com/dunay2/dvt/issues/2771
-  - https://github.com/dunay2/dvt/issues/3046
+  - https://github.com/dunay2/dvt/issues/3046  - https://github.com/dunay2/dvt/issues/3054
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -179,6 +227,22 @@ completionGate:
   - pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts
   - pnpm verify:prepush
 redGreenCycles:
+  - id: complete-structured-column-lifecycle-regression
+    redTest: pnpm --filter @dvt/web test:canvas:run -- useCanvasControllerReadModel.test.tsx canvasNodePresentationProjection.test.ts
+    expectedFailure: A structured Model disables root output selection and reorder or hides inactive inherited fields.
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/useCanvasControllerReadModel.ts
+      - apps/web/src/app/views/canvas/canvasNodePresentationProjection.ts
+      - apps/web/src/app/views/canvas/canvasColumnOutputAuthoring.ts
+    greenTest: pnpm --filter @dvt/web test:canvas:run -- useCanvasControllerReadModel.test.tsx canvasNodePresentationProjection.test.ts
+  - id: preserve-inputs-and-remove-structured-output
+    redTest: pnpm --filter @dvt/web test:canvas:run -- canvasDvtSubstraitStructuredFieldRemove.test.ts canvasStructuredFieldAuthoring.test.ts
+    expectedFailure: Composition consumes its input roots and ConfigureCanvasDvtNode cannot remove only the derived struct.
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/canvasDvtSubstraitStructuredFieldRemove.ts
+      - apps/web/src/app/views/canvas/canvasStructuredFieldAuthoring.ts
+      - apps/web/src/app/plugins/graph/GraphNodeColumn*.tsx
+    greenTest: pnpm --filter @dvt/web test:canvas:run -- canvasDvtSubstraitStructuredFieldRemove.test.ts canvasStructuredFieldAuthoring.test.ts
   - id: column-context-ownership-regression
     redTest: pnpm --filter @dvt/web test:presentation:run -- GraphNodeColumnSection.contextMenuOwnership.test.tsx
     expectedFailure: A column context-menu event reaches the surrounding node trigger or provides no truthful column surface.
@@ -217,6 +281,11 @@ redGreenCycles:
       - apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts
     greenTest: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts
 symbols:
+  - { name: appendDvtSubstraitSourceFieldRoot, path: apps/web/src/app/views/canvas/canvasDvtSubstraitStructuredFieldAppend.ts, dddOwner: DvtSubstraitProjectionDraft, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:canvas:run] }
+  - { name: removeDvtSubstraitProjectionRoot, path: apps/web/src/app/views/canvas/canvasDvtSubstraitStructuredFieldRemove.ts, dddOwner: DvtSubstraitProjectionDraft, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:canvas:run] }
+  - { name: reorderCanvasStructuredFieldRoots, path: apps/web/src/app/views/canvas/canvasStructuredFieldRootAuthoring.ts, dddOwner: DvtSubstraitProjectionDraft, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Move Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:canvas:run] }
+  - { name: reorderDvtSubstraitStructuredFieldRoots, path: apps/web/src/app/views/canvas/canvasDvtSubstraitStructuredFieldReorder.ts, dddOwner: DvtSubstraitProjectionDraft, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:canvas:run] }
+  - { name: setCanvasStructuredRootOutputIncluded, path: apps/web/src/app/views/canvas/canvasStructuredFieldRootAuthoring.ts, dddOwner: DvtSubstraitProjectionDraft, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Move Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:canvas:run] }
   - { name: validateDvtSubstraitFieldHierarchyV1, path: packages/@dvt/contracts/src/contracts/planner/DvtSubstraitFieldBindingHierarchy.v1.ts, dddOwner: DvtSubstraitFieldBindingV1, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Introduce Value Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/contracts test] }
   - { name: composeDvtSubstraitProjectionFields, path: apps/web/src/app/views/canvas/canvasDvtSubstraitStructuredFieldMutation.ts, dddOwner: DvtSubstraitProjectionDraft, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:canvas:run] }
   - { name: reorderDvtSubstraitStructuredFieldChildren, path: apps/web/src/app/views/canvas/canvasDvtSubstraitStructuredFieldReorder.ts, dddOwner: DvtSubstraitProjectionDraft, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:canvas:run] }

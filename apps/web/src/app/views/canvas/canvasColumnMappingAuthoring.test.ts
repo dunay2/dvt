@@ -1,4 +1,4 @@
-import { DVT_TRANSFORM_AUTHORING_MODE } from '@dvt/contracts';
+import { DVT_TRANSFORM_AUTHORING_MODE, type ConnectedSourceRef } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
@@ -16,11 +16,17 @@ import {
 } from './canvasDvtTransformAuthoringAuthority';
 import {
   applyDvtSubstraitProjectionFunction,
+  createDvtSubstraitProjectionDraft,
   decodeDvtSubstraitProjectionDocument,
   encodeDvtSubstraitProjectionDocument,
   inspectDvtSubstraitProjectionDraft,
   resolveDvtSubstraitColumnFunctions,
 } from './canvasDvtSubstraitProjection';
+import {
+  encodeDvtSubstraitStructuredFieldDocument,
+  inspectDvtSubstraitStructuredFieldDraft,
+} from './canvasDvtSubstraitStructuredField';
+import { composeDvtSubstraitProjectionFields } from './canvasDvtSubstraitStructuredFieldMutation';
 
 const OPAQUE_FIELD_ID =
   /^dvt_fld_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -588,5 +594,95 @@ describe('Canvas column mapping authoring', () => {
       outputId: fieldId,
       columnName: 'event_id',
     });
+  });
+  it('reorders and removes a derived struct through the canonical output command', () => {
+    const source = buildNode('source', 'dvt:source', 'input', [
+      { name: 'order_id', type: 'integer' },
+      { name: 'customer', type: 'text' },
+      { name: 'amount', type: 'numeric' },
+    ]);
+    const baseModel = buildNode('model', 'dvt:transform', 'transform');
+    const sourceRef = source.metadata?.connectedSourceRef;
+    if (sourceRef == null) throw new Error('Expected connected source ref.');
+    const structuredDraft = composeDvtSubstraitProjectionFields(
+      createDvtSubstraitProjectionDraft({
+        source: {
+          nodeId: source.id,
+          schema: 'public',
+          table: source.id,
+          sourceRef: sourceRef as ConnectedSourceRef,
+          fields: [
+            { name: 'order_id', dataType: 'integer' },
+            { name: 'customer', dataType: 'text' },
+            { name: 'amount', dataType: 'numeric' },
+          ],
+        },
+        targetNodeId: baseModel.id,
+        outputs: [
+          { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
+          { fieldId: 'output:customer', name: 'customer', sourceFieldName: 'customer' },
+          { fieldId: 'output:amount', name: 'amount', sourceFieldName: 'amount' },
+        ],
+      }),
+      {
+        draggedFieldId: 'output:customer',
+        targetFieldId: 'output:order_id',
+        parentFieldId: 'output:identity',
+        parentName: 'identity',
+      }
+    );
+    const model = applyDvtSubstraitSemanticDocument(
+      baseModel,
+      encodeDvtSubstraitStructuredFieldDocument(structuredDraft)
+    );
+    const canonicalNodesById = new Map([
+      [source.id, source],
+      [model.id, model],
+    ]);
+    const session = buildSession([source, model], [{ sourceId: source.id, targetId: model.id }]);
+
+    const reordered = reorderCanvasColumnOutput({
+      draftSession: session,
+      canonicalNodesById,
+      targetNodeId: model.id,
+      columnId: 'output:identity',
+      targetColumnId: 'output:order_id',
+      placement: 'before',
+    });
+    expect(reordered.outcome).toBe('applied');
+    if (reordered.outcome !== 'applied') return;
+    const reorderedNode = reordered.draftSession.localNodeCatalog?.model;
+    if (reorderedNode == null) throw new Error('Expected reordered transform.');
+    const reorderedAuthority = readDvtTransformAuthoringAuthority(reorderedNode)!;
+    if (reorderedAuthority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return;
+    const reorderedInspection = inspectDvtSubstraitStructuredFieldDraft(
+      decodeDvtSubstraitProjectionDocument(reorderedAuthority.semanticDocument)
+    );
+    expect(
+      reorderedInspection.ok && reorderedInspection.fields.map((field) => field.fieldId)
+    ).toEqual(['output:identity', 'output:order_id', 'output:customer', 'output:amount']);
+
+    const removed = setCanvasColumnOutputIncluded({
+      draftSession: reordered.draftSession,
+      canonicalNodesById,
+      targetNodeId: model.id,
+      columnId: 'output:identity',
+      columnType: 'struct',
+      output: false,
+    });
+    expect(removed.outcome).toBe('applied');
+    if (removed.outcome !== 'applied') return;
+    const removedNode = removed.draftSession.localNodeCatalog?.model;
+    if (removedNode == null) throw new Error('Expected updated transform.');
+    const removedAuthority = readDvtTransformAuthoringAuthority(removedNode)!;
+    if (removedAuthority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return;
+    const removedInspection = inspectDvtSubstraitStructuredFieldDraft(
+      decodeDvtSubstraitProjectionDocument(removedAuthority.semanticDocument)
+    );
+    expect(removedInspection.ok && removedInspection.fields.map((field) => field.fieldId)).toEqual([
+      'output:order_id',
+      'output:customer',
+      'output:amount',
+    ]);
   });
 });

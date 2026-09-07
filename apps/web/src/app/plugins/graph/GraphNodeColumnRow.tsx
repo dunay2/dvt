@@ -108,6 +108,17 @@ export function GraphNodeColumnRow(props: {
                   parentName: column.name,
                 })
         }
+        onStructuredRemove={
+          column.children == null || props.onColumnOutputToggle == null
+            ? undefined
+            : () =>
+                props.onColumnOutputToggle?.({
+                  nodeId,
+                  columnId,
+                  columnType: column.type,
+                  output: false,
+                })
+        }
         piece={piece}
         tooltip={tooltip}
       />

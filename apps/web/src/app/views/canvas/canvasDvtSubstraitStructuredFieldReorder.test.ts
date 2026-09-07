@@ -10,7 +10,13 @@ import {
   resolveDvtSubstraitStructuredProjectionParts,
 } from './canvasDvtSubstraitStructuredField';
 import { composeDvtSubstraitProjectionFields } from './canvasDvtSubstraitStructuredFieldMutation';
-import { reorderDvtSubstraitStructuredFieldChildren } from './canvasDvtSubstraitStructuredFieldReorder';
+import {
+  reorderDvtSubstraitStructuredFieldChildren,
+  reorderDvtSubstraitStructuredFieldRoots,
+} from './canvasDvtSubstraitStructuredFieldReorder';
+
+const ORDER_CHILD = 'output:identity:child:output:order_id';
+const CUSTOMER_CHILD = 'output:identity:child:output:customer';
 
 function buildStructuredProjectionDraft(): DvtSubstraitProjectionDraft {
   const source = {
@@ -51,30 +57,53 @@ function buildStructuredProjectionDraft(): DvtSubstraitProjectionDraft {
   );
 }
 
-describe('reorderDvtSubstraitStructuredFieldChildren', () => {
-  it('moves a child inside its parent while preserving field identities', () => {
+describe('structured projection reordering', () => {
+  it('moves a child inside its parent while preserving derived field identities', () => {
     const draft = buildStructuredProjectionDraft();
     const reordered = reorderDvtSubstraitStructuredFieldChildren(draft, {
       parentFieldId: 'output:identity',
-      fieldId: 'output:customer',
-      targetFieldId: 'output:order_id',
+      fieldId: CUSTOMER_CHILD,
+      targetFieldId: ORDER_CHILD,
       placement: 'before',
     });
 
     const inspection = inspectDvtSubstraitStructuredFieldDraft(reordered);
     expect(inspection.ok).toBe(true);
-    expect(inspection.ok ? inspection.fields[0] : null).toMatchObject({
-      fieldId: 'output:identity',
-      children: [{ fieldId: 'output:customer' }, { fieldId: 'output:order_id' }],
-    });
+    const identity = inspection.ok
+      ? inspection.fields.find((field) => field.fieldId === 'output:identity')
+      : undefined;
+    expect(identity?.children).toMatchObject([
+      { fieldId: CUSTOMER_CHILD },
+      { fieldId: ORDER_CHILD },
+    ]);
     const targetRelationId =
       resolveDvtSubstraitStructuredProjectionParts(reordered)?.targetRelation.relationId;
-    expect(targetRelationId).toBeDefined();
     expect(
       orderedDvtSubstraitFields(reordered.sidecar.fields, targetRelationId!, 'output:identity').map(
         (field) => field.fieldId
       )
-    ).toEqual(['output:customer', 'output:order_id']);
+    ).toEqual([CUSTOMER_CHILD, ORDER_CHILD]);
+  });
+
+  it('moves a structured root among scalar roots without changing its children', () => {
+    const draft = buildStructuredProjectionDraft();
+    const reordered = reorderDvtSubstraitStructuredFieldRoots(draft, {
+      fieldId: 'output:identity',
+      targetFieldId: 'output:order_id',
+      placement: 'before',
+    });
+    const inspection = inspectDvtSubstraitStructuredFieldDraft(reordered);
+    expect(inspection.ok && inspection.fields.map((field) => field.fieldId)).toEqual([
+      'output:identity',
+      'output:order_id',
+      'output:customer',
+      'output:amount',
+    ]);
+    const identity = inspection.ok ? inspection.fields[0] : undefined;
+    expect(identity?.children?.map((field) => field.fieldId)).toEqual([
+      ORDER_CHILD,
+      CUSTOMER_CHILD,
+    ]);
   });
 
   it('rejects cross-parent and unknown identities without mutation', () => {
@@ -82,8 +111,8 @@ describe('reorderDvtSubstraitStructuredFieldChildren', () => {
     expect(
       reorderDvtSubstraitStructuredFieldChildren(draft, {
         parentFieldId: 'output:missing',
-        fieldId: 'output:customer',
-        targetFieldId: 'output:order_id',
+        fieldId: CUSTOMER_CHILD,
+        targetFieldId: ORDER_CHILD,
         placement: 'after',
       })
     ).toBe(draft);

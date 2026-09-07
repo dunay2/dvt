@@ -86,7 +86,10 @@ export function GraphNodeColumnSection(props: GraphNodeColumnSectionProps): Reac
                           candidate.output !== false &&
                           (candidate.id ?? candidate.name) !== (column.id ?? column.name) &&
                           !column.children?.some(
-                            (child) => (child.id ?? child.name) === (candidate.id ?? candidate.name)
+                            (child) =>
+                              (child.id ?? child.name) === (candidate.id ?? candidate.name) ||
+                              (child.sourceReference != null &&
+                                child.sourceReference === candidate.sourceReference)
                           )
                       )
                 }

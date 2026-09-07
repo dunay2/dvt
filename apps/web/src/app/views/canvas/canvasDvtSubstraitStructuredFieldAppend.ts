@@ -68,7 +68,15 @@ export function appendDvtSubstraitProjectionFieldToStruct(
     sourceParts.targetRelation.relationId,
     args.targetFieldId
   );
-  if (draggedIndex < 0 || targetIndex < 0 || targetChildren.length === 0) return draft;
+  const dragged = roots[draggedIndex];
+  const childFieldId = `${args.targetFieldId}:child:${args.draggedFieldId}`;
+  if (
+    dragged == null ||
+    targetIndex < 0 ||
+    targetChildren.length === 0 ||
+    draft.sidecar.fields.some((field) => field.fieldId === childFieldId)
+  )
+    return draft;
 
   const next = {
     plan: fromBinary(PlanSchema, toBinary(PlanSchema, draft.plan)),
@@ -91,13 +99,9 @@ export function appendDvtSubstraitProjectionFieldToStruct(
     return draft;
   }
   targetExpression.rexType.value.nestedType.value.fields.push(draggedExpression);
-  const retainedExpressions = rootExpressions.filter((_, index) => index !== draggedIndex);
-  parts.project.expressions = retainedExpressions;
-  parts.emit.outputMapping = retainedExpressions.map((_, index) => sourceCount + index);
-
-  const retainedRoots = roots
-    .filter((_, index) => index !== draggedIndex)
-    .map((field, outputOrdinal) => ({ ...field, outputOrdinal }));
+  const targetMapping = parts.emit.outputMapping[targetIndex];
+  if (targetMapping == null || targetMapping < sourceCount) return draft;
+  parts.project.expressions[targetMapping - sourceCount] = targetExpression;
   const nested = draft.sidecar.fields.filter(
     (field) => field.relationId === parts.targetRelation.relationId && field.parentFieldId != null
   );
@@ -107,17 +111,69 @@ export function appendDvtSubstraitProjectionFieldToStruct(
       ...draft.sidecar.fields.filter(
         (field) => field.relationId !== parts.targetRelation.relationId
       ),
-      ...retainedRoots,
+      ...roots,
       ...nested,
       {
-        ...roots[draggedIndex]!,
+        ...dragged,
+        fieldId: childFieldId,
         parentFieldId: args.targetFieldId,
         outputOrdinal: targetChildren.length,
       },
     ],
   };
   parts.root.names = flattenDvtSubstraitFieldNames(
-    retainedRoots.map((field) => buildDvtSubstraitFieldTree(field, next.sidecar.fields))
+    roots.map((field) => buildDvtSubstraitFieldTree(field, next.sidecar.fields))
+  );
+  return inspectDvtSubstraitStructuredFieldDraft(next).ok ? next : draft;
+}
+export function appendDvtSubstraitSourceFieldRoot(
+  draft: DvtSubstraitProjectionDraft,
+  args: Readonly<{ fieldId: string; sourceFieldName: string }>
+): DvtSubstraitProjectionDraft {
+  const inspection = inspectDvtSubstraitStructuredFieldDraft(draft);
+  const sourceParts = resolveDvtSubstraitStructuredProjectionParts(draft);
+  if (!inspection.ok || sourceParts == null) return draft;
+  const sourceFields = orderedDvtSubstraitFields(
+    draft.sidecar.fields,
+    sourceParts.sourceRelation.relationId
+  );
+  const roots = orderedDvtSubstraitFields(
+    draft.sidecar.fields,
+    sourceParts.targetRelation.relationId
+  );
+  const sourceIndex = sourceFields.findIndex((field) => field.displayName === args.sourceFieldName);
+  const sourceField = sourceFields[sourceIndex];
+  if (
+    sourceField == null ||
+    roots.some(
+      (field) =>
+        field.fieldId === args.fieldId ||
+        field.displayName === args.sourceFieldName ||
+        field.sourceFieldId === sourceField.fieldId
+    )
+  )
+    return draft;
+
+  const next = {
+    plan: fromBinary(PlanSchema, toBinary(PlanSchema, draft.plan)),
+    sidecar: draft.sidecar,
+  };
+  const parts = resolveDvtSubstraitStructuredProjectionParts(next);
+  if (parts == null) return draft;
+  parts.emit.outputMapping = [...parts.emit.outputMapping, sourceIndex];
+  const binding = {
+    fieldId: args.fieldId,
+    relationId: parts.targetRelation.relationId,
+    sourceFieldId: sourceField.fieldId,
+    outputOrdinal: roots.length,
+    displayName: args.sourceFieldName,
+  };
+  next.sidecar = {
+    ...draft.sidecar,
+    fields: [...draft.sidecar.fields, binding],
+  };
+  parts.root.names = flattenDvtSubstraitFieldNames(
+    [...roots, binding].map((field) => buildDvtSubstraitFieldTree(field, next.sidecar.fields))
   );
   return inspectDvtSubstraitStructuredFieldDraft(next).ok ? next : draft;
 }

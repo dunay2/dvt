@@ -282,14 +282,13 @@ export function useCanvasControllerReadModel({
             ? node.data.onAddCanvasCalculatedColumn
             : undefined,
           onToggleCanvasColumnOutput:
-            hasEditableProjection || canAuthorDbtModelColumns
+            hasEditableProjection || hasStructuredProjection || canAuthorDbtModelColumns
               ? node.data.onToggleCanvasColumnOutput
               : undefined,
           onReorderCanvasColumnOutput:
             hasEditableProjection || hasStructuredProjection || canAuthorDbtModelColumns
               ? node.data.onReorderCanvasColumnOutput
               : undefined,
-          canReorderTopLevelColumns: !hasStructuredProjection,
           onAutomapColumns: canAuthorColumnMappings ? node.data.onAutomapColumns : undefined,
           columns: projectInteractiveColumns(node, columnFunctionMenus),
           columnPortDirections:
