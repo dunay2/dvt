@@ -559,6 +559,15 @@ server grants scope A and scope B
       CI blocker is integrated through #2276; final merge remains protected by
       the required remote checks.
 
+### 13.8 Late corrective mechanization record for the lazy catalog hard cut
+
+The #2173 lazy-catalog implementation began before its new surfaces, red/green cycle, rail
+reuse and symbols were added to this existing manifest. That ordering deviated from the
+Feature Mechanization Placement Rule in `docs/guides/ai-work-protocol.md`. The corrective
+action is recorded here: reuse `PTH1-CONNECTED-SOURCE-TRUTH`, declare the actual slice, and
+run both feature-specific gates before closeout. A passing late manifest records the
+correction; it does not claim the required pre-implementation order occurred.
+
 ## 14. Feature mechanization
 
 ```feature-mechanization
@@ -587,6 +596,43 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md
   - packages/@dvt/contracts/src/contracts/source-import/**
   - packages/@dvt/contracts/test/source-import/ConnectedSourceRef.v1.test.ts
+  - packages/@dvt/contracts/test/source-import/SourceObjectCatalog.test.ts
+  - apps/api/src/application/ports/warehouseSourceImport.ts
+  - apps/api/src/application/services/WarehouseConnectionSourceObjectReader.ts
+  - apps/api/src/application/services/listWarehouseConnectionSourceObjectsUseCase.ts
+  - apps/api/src/entrypoints/http/warehouseSourceImportRoutes.ts
+  - apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts
+  - apps/api/test/application/services/WarehouseConnectionSourceObjectReader.test.ts
+  - apps/api/test/application/services/rebindWarehouseSourceUseCase.test.ts
+  - apps/api/test/entrypoints/http/warehouseSourceImportRoutes.test.ts
+  - apps/api/test/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.test.ts
+  - apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts
+  - apps/web/src/app/components/SourceImportWizard.metadata.test.tsx
+  - apps/web/src/app/components/SourceImportWizard.navigation.test.tsx
+  - apps/web/src/app/components/SourceImportWizard.test.tsx
+  - apps/web/src/app/components/SourceImportWizard.testHarness.tsx
+  - apps/web/src/app/components/sourceImportWizard/SelectionStep.tsx
+  - apps/web/src/app/components/sourceImportWizard/SourceImportCatalogPrimitives.tsx
+  - apps/web/src/app/components/sourceImportWizard/SourceImportCatalogView.test.tsx
+  - apps/web/src/app/components/sourceImportWizard/SourceImportCatalogView.tsx
+  - apps/web/src/app/components/sourceImportWizard/WizardStepContent.tsx
+  - apps/web/src/app/components/sourceImportWizard/copy.ts
+  - apps/web/src/app/components/sourceImportWizard/sourceImportCatalogModel.test.ts
+  - apps/web/src/app/components/sourceImportWizard/sourceImportCatalogModel.ts
+  - apps/web/src/app/components/sourceImportWizard/types.ts
+  - apps/web/src/app/components/sourceImportWizard/useSourceImportWizard.ts
+  - apps/web/src/app/components/sourceImportWizard/useSourceImportWizardDataLoaders.ts
+  - apps/web/src/app/ports/workspace.ts
+  - apps/web/src/app/services/AppServicesContext.test.tsx
+  - apps/web/src/app/services/composition/appServices.test.ts
+  - apps/web/src/app/services/workspace/workspacePorts.api.test.ts
+  - apps/web/src/app/services/workspace/workspacePorts.api.ts
+  - apps/web/src/app/services/workspace/workspacePorts.imports.test.ts
+  - apps/web/src/app/services/workspace/workspacePorts.operability.test.ts
+  - apps/web/src/app/views/canvas/CanvasShell.sourceImportLifecycle.test.tsx
+  - apps/web/src/testing/workspacePortDoubles.ts
+  - docs/adr/ADR-0058-warehouse-source-import-rails.md
+  - docs/architecture/components/web/frontend-command-query-rail-inventory.md
   - apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts
   - apps/api/src/application/services/importWarehouseSourcesUseCase.ts
   - apps/api/src/application/services/warehouseSourceYamlBindings.ts
@@ -645,6 +691,9 @@ forbiddenImplementationSurfaces:
   - new API routes, services, providers, registries, or fake adapters
   - dbt target binding or runtime connection resolution from issue 2257
 commandQueryRails:
+  - name: ListWarehouseConnectionSourceObjects
+    type: query
+    dddOwner: Warehouse Source Import
   - name: ImportWarehouseSources
     type: command
     dddOwner: Warehouse Source Import
@@ -692,6 +741,21 @@ completionGate:
   - pnpm --filter @dvt/web test:e2e:source-import:live
   - pnpm verify:prepush
 redGreenCycles:
+  - id: lazy-source-object-catalog-hard-cut
+    redTest: pnpm --filter @dvt/web exec vitest run src/app/components/SourceImportWizard.metadata.test.tsx src/app/components/SourceImportWizard.navigation.test.tsx src/app/components/SourceImportWizard.test.tsx src/app/components/sourceImportWizard/SourceImportCatalogView.test.tsx src/app/components/sourceImportWizard/sourceImportCatalogModel.test.ts src/app/services/workspace/workspacePorts.api.test.ts
+    expectedFailure: The Web eagerly loads every source object, derives schema counts and search locally, and exposes the retired listSourceObjects port instead of the canonical lazy catalog query.
+    patchSurfaces:
+      - packages/@dvt/contracts/src/contracts/source-import/SourceObjectCatalog.ts
+      - apps/api/src/application/ports/warehouseSourceImport.ts
+      - apps/api/src/application/services/WarehouseConnectionSourceObjectReader.ts
+      - apps/api/src/application/services/listWarehouseConnectionSourceObjectsUseCase.ts
+      - apps/api/src/entrypoints/http/warehouseSourceImportRoutes.ts
+      - apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts
+      - apps/web/src/app/components/sourceImportWizard/useSourceImportWizardDataLoaders.ts
+      - apps/web/src/app/components/sourceImportWizard/sourceImportCatalogModel.ts
+      - apps/web/src/app/components/sourceImportWizard/SourceImportCatalogView.tsx
+      - apps/web/src/app/services/workspace/workspacePorts.api.ts
+    greenTest: pnpm --filter @dvt/web exec vitest run src/app/components/SourceImportWizard.metadata.test.tsx src/app/components/SourceImportWizard.navigation.test.tsx src/app/components/SourceImportWizard.test.tsx src/app/components/sourceImportWizard/SourceImportCatalogView.test.tsx src/app/components/sourceImportWizard/sourceImportCatalogModel.test.ts src/app/services/workspace/workspacePorts.api.test.ts
   - id: connection-reference-contract
     redTest: pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts
     expectedFailure: ConnectionRefSchema and ConnectedSourceRefSchema are not exported.
@@ -883,4 +947,37 @@ symbols:
   - { name: createLivePostgresConnection, path: apps/web/cypress/support/liveWarehouseSourceImport.ts, dddOwner: ConnectedSourceRefLiveProof, cqRails: [ImportWarehouseSources], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/web test:e2e:source-import:live] }
   - { name: CANVAS_FIT_VIEW_OPTIONS, path: apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx, dddOwner: CanvasViewportPresentation, cqRails: [GetWorkspaceGraphDraft], fowlerSignals: [Move Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/web test:canvas -- CanvasViewport.test.tsx] }
   - { name: Controls, path: apps/web/src/app/views/canvas/canvasViewportXyflowTestAdapter.tsx, dddOwner: CanvasViewportPresentationProof, cqRails: [GetWorkspaceGraphDraft], fowlerSignals: [Introduce Assertion], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/web test:canvas -- CanvasViewport.test.tsx] }
+  - { name: WarehouseSourceObjectCatalogProbeTarget, path: apps/api/src/application/ports/warehouseSourceImport.ts, dddOwner: WarehouseSourceImport, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Introduce Parameter Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter dvt-api test -- WorkspaceWarehouseConnectionProbe.test.ts] }
+  - { name: WarehouseSourceObjectCatalogQuery, path: apps/api/src/entrypoints/http/warehouseSourceImportRoutes.ts, dddOwner: WarehouseSourceImportHttp, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Introduce Parameter Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter dvt-api test -- warehouseSourceImportRoutes.test.ts] }
+  - { name: parseSourceObjectCatalogQuery, path: apps/api/src/entrypoints/http/warehouseSourceImportRoutes.ts, dddOwner: WarehouseSourceImportHttp, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter dvt-api test -- warehouseSourceImportRoutes.test.ts] }
+  - { name: CatalogCursorAuthority, path: apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts, dddOwner: PostgresSourceObjectCatalog, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Introduce Value Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter dvt-api test -- WorkspaceWarehouseConnectionProbe.test.ts] }
+  - { name: ObjectPageRequest, path: apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts, dddOwner: PostgresSourceObjectCatalog, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Introduce Parameter Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter dvt-api test -- WorkspaceWarehouseConnectionProbe.test.ts] }
+  - { name: PostgresSchemaSummaryRow, path: apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts, dddOwner: PostgresSourceObjectCatalog, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Replace Primitive with Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter dvt-api test -- WorkspaceWarehouseConnectionProbe.test.ts] }
+  - { name: SchemaListRequest, path: apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts, dddOwner: PostgresSourceObjectCatalog, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Introduce Parameter Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter dvt-api test -- WorkspaceWarehouseConnectionProbe.test.ts] }
+  - { name: buildCatalogCursorAuthority, path: apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts, dddOwner: PostgresSourceObjectCatalog, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter dvt-api test -- WorkspaceWarehouseConnectionProbe.test.ts] }
+  - { name: loadPostgresCatalogColumnsForRelations, path: apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts, dddOwner: PostgresSourceObjectCatalog, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter dvt-api test -- WorkspaceWarehouseConnectionProbe.test.ts] }
+  - { name: loadPostgresObjectCatalogPage, path: apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts, dddOwner: PostgresSourceObjectCatalog, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter dvt-api test -- WorkspaceWarehouseConnectionProbe.test.ts] }
+  - { name: loadPostgresSchemaCatalogPage, path: apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts, dddOwner: PostgresSourceObjectCatalog, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter dvt-api test -- WorkspaceWarehouseConnectionProbe.test.ts] }
+  - { name: readCatalogCursor, path: apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts, dddOwner: PostgresSourceObjectCatalog, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter dvt-api test -- WorkspaceWarehouseConnectionProbe.test.ts] }
+  - { name: signCatalogCursor, path: apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts, dddOwner: PostgresSourceObjectCatalog, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter dvt-api test -- WorkspaceWarehouseConnectionProbe.test.ts] }
+  - { name: writeCatalogCursor, path: apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.ts, dddOwner: PostgresSourceObjectCatalog, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter dvt-api test -- WorkspaceWarehouseConnectionProbe.test.ts] }
+  - { name: buildSourceObjectCatalogResponder, path: apps/web/src/app/components/SourceImportWizard.testHarness.tsx, dddOwner: SourceImportCatalogPresentation, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter @dvt/web test -- SourceImportWizard.test.tsx] }
+  - { name: SourceImportCatalogPageState, path: apps/web/src/app/components/sourceImportWizard/types.ts, dddOwner: SourceImportCatalogPresentation, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Introduce Value Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter @dvt/web test -- sourceImportCatalogModel.test.ts] }
+  - { name: SourceImportSearchPageState, path: apps/web/src/app/components/sourceImportWizard/types.ts, dddOwner: SourceImportCatalogPresentation, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Introduce Value Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter @dvt/web test -- sourceImportCatalogModel.test.ts] }
+  - { name: SourceCatalogLoaderParams, path: apps/web/src/app/components/sourceImportWizard/useSourceImportWizardDataLoaders.ts, dddOwner: SourceImportCatalogPresentation, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Introduce Parameter Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter @dvt/web test -- SourceImportWizard.test.tsx] }
+  - { name: mergeSchemaSummaries, path: apps/web/src/app/components/sourceImportWizard/useSourceImportWizardDataLoaders.ts, dddOwner: SourceImportCatalogPresentation, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter @dvt/web test -- SourceImportWizard.test.tsx] }
+  - { name: mergeSourceImportCatalogObjects, path: apps/web/src/app/components/sourceImportWizard/useSourceImportWizardDataLoaders.ts, dddOwner: SourceImportCatalogPresentation, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter @dvt/web test -- sourceImportCatalogModel.test.ts] }
+  - { name: unloadedPage, path: apps/web/src/app/components/sourceImportWizard/useSourceImportWizardDataLoaders.ts, dddOwner: SourceImportCatalogPresentation, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter @dvt/web test -- SourceImportWizard.test.tsx] }
+  - { name: useSourceCatalogLoader, path: apps/web/src/app/components/sourceImportWizard/useSourceImportWizardDataLoaders.ts, dddOwner: SourceImportCatalogPresentation, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter @dvt/web test -- SourceImportWizard.test.tsx] }
+  - { name: buildWarehouseConnectionSourceObjectsEndpoint, path: apps/web/src/app/services/workspace/workspacePorts.api.ts, dddOwner: SourceImportCatalogPresentation, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter @dvt/web test -- workspacePorts.api.test.ts] }
+  - { name: SOURCE_OBJECT_CATALOG_DEFAULT_PAGE_SIZE, path: packages/@dvt/contracts/src/contracts/source-import/SourceObjectCatalog.ts, dddOwner: SourceObjectCatalog, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Replace Magic Number with Symbolic Constant], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- SourceObjectCatalog.test.ts] }
+  - { name: SOURCE_OBJECT_CATALOG_MAX_PAGE_SIZE, path: packages/@dvt/contracts/src/contracts/source-import/SourceObjectCatalog.ts, dddOwner: SourceObjectCatalog, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Replace Magic Number with Symbolic Constant], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- SourceObjectCatalog.test.ts] }
+  - { name: SourceObjectCatalogPageRequestFields, path: packages/@dvt/contracts/src/contracts/source-import/SourceObjectCatalog.ts, dddOwner: SourceObjectCatalog, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Extract Variable], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- SourceObjectCatalog.test.ts] }
+  - { name: SourceObjectCatalogPageResponseFields, path: packages/@dvt/contracts/src/contracts/source-import/SourceObjectCatalog.ts, dddOwner: SourceObjectCatalog, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Extract Variable], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- SourceObjectCatalog.test.ts] }
+  - { name: SourceObjectCatalogPageSizeSchema, path: packages/@dvt/contracts/src/contracts/source-import/SourceObjectCatalog.ts, dddOwner: SourceObjectCatalog, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Extract Variable], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- SourceObjectCatalog.test.ts] }
+  - { name: SourceObjectCatalogRequest, path: packages/@dvt/contracts/src/contracts/source-import/SourceObjectCatalog.ts, dddOwner: SourceObjectCatalog, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Introduce Parameter Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- SourceObjectCatalog.test.ts] }
+  - { name: SourceObjectCatalogRequestSchema, path: packages/@dvt/contracts/src/contracts/source-import/SourceObjectCatalog.ts, dddOwner: SourceObjectCatalog, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Introduce Parameter Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- SourceObjectCatalog.test.ts] }
+  - { name: SourceObjectCatalogResponseSchema, path: packages/@dvt/contracts/src/contracts/source-import/SourceObjectCatalog.ts, dddOwner: SourceObjectCatalog, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Introduce Value Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- SourceObjectCatalog.test.ts] }
+  - { name: SourceObjectCatalogSchemaSummary, path: packages/@dvt/contracts/src/contracts/source-import/SourceObjectCatalog.ts, dddOwner: SourceObjectCatalog, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Introduce Value Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- SourceObjectCatalog.test.ts] }
+  - { name: SourceObjectCatalogSchemaSummarySchema, path: packages/@dvt/contracts/src/contracts/source-import/SourceObjectCatalog.ts, dddOwner: SourceObjectCatalog, cqRails: [ListWarehouseConnectionSourceObjects], fowlerSignals: [Introduce Value Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- SourceObjectCatalog.test.ts] }
 ```
