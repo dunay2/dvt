@@ -104,12 +104,84 @@ capability, invalid literal, malformed projection, and Source authoring write no
   ],
   "symbols": [
     {
+      "name": "CanvasCalculatedColumnRequest",
+      "path": "apps/web/src/app/views/canvas/canvasCalculatedColumnAuthoring.ts",
+      "cqRails": ["ConfigureCanvasDvtNode"],
+      "dddOwner": "Canvas semantic authoring",
+      "unitTests": [
+        "pnpm --filter @dvt/web test:unit:run -- canvasCalculatedColumnAuthoring.test.ts canvasDvtSubstraitPostgresProjection.test.ts"
+      ],
+      "fowlerSignals": ["Boundary drift"],
+      "cypressCoverage": "N/A - no new interaction surface",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2920-CREATE-OUTPUT-RECEIPT"
+    },
+    {
+      "name": "creationRequest",
+      "path": "apps/web/src/app/views/canvas/canvasCalculatedColumnAuthoring.ts",
+      "cqRails": ["ConfigureCanvasDvtNode"],
+      "dddOwner": "Canvas semantic authoring",
+      "unitTests": [
+        "pnpm --filter @dvt/web test:unit:run -- canvasCalculatedColumnAuthoring.test.ts canvasDvtSubstraitPostgresProjection.test.ts"
+      ],
+      "fowlerSignals": ["Boundary drift"],
+      "cypressCoverage": "N/A - no new interaction surface",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2920-CREATE-OUTPUT-RECEIPT"
+    },
+    {
+      "name": "createOutput",
+      "path": "apps/web/src/app/views/canvas/canvasCalculatedColumnAuthoring.ts",
+      "cqRails": ["ConfigureCanvasDvtNode"],
+      "dddOwner": "Canvas semantic authoring",
+      "unitTests": [
+        "pnpm --filter @dvt/web test:unit:run -- canvasCalculatedColumnAuthoring.test.ts canvasDvtSubstraitPostgresProjection.test.ts"
+      ],
+      "fowlerSignals": ["Duplicate semantics"],
+      "cypressCoverage": "N/A - no new interaction surface",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2920-CREATE-OUTPUT-RECEIPT"
+    },
+    {
+      "name": "DvtSubstraitCreateOutputRequest",
+      "path": "apps/web/src/app/views/canvas/canvasDvtSubstraitCalculatedColumn.ts",
+      "cqRails": ["ConfigureCanvasDvtNode"],
+      "dddOwner": "Canvas semantic authoring",
+      "unitTests": [
+        "pnpm --filter @dvt/web test:unit:run -- canvasCalculatedColumnAuthoring.test.ts canvasDvtSubstraitPostgresProjection.test.ts"
+      ],
+      "fowlerSignals": ["Boundary drift"],
+      "cypressCoverage": "N/A - no new interaction surface",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2920-CREATE-OUTPUT-RECEIPT"
+    },
+    {
+      "name": "DvtSubstraitCreateOutputResult",
+      "path": "apps/web/src/app/views/canvas/canvasDvtSubstraitCalculatedColumn.ts",
+      "cqRails": ["ConfigureCanvasDvtNode"],
+      "dddOwner": "Canvas semantic authoring",
+      "unitTests": [
+        "pnpm --filter @dvt/web test:unit:run -- canvasCalculatedColumnAuthoring.test.ts canvasDvtSubstraitPostgresProjection.test.ts"
+      ],
+      "fowlerSignals": ["Hidden mutation"],
+      "cypressCoverage": "N/A - no new interaction surface",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2920-CREATE-OUTPUT-RECEIPT"
+    },
+    {
+      "name": "DvtSubstraitOutputExpressionCandidate",
+      "path": "apps/web/src/app/views/canvas/canvasDvtSubstraitCalculatedColumn.ts",
+      "cqRails": ["ConfigureCanvasDvtNode"],
+      "dddOwner": "Canvas semantic authoring",
+      "unitTests": [
+        "pnpm --filter @dvt/web test:unit:run -- canvasCalculatedColumnAuthoring.test.ts canvasDvtSubstraitPostgresProjection.test.ts"
+      ],
+      "fowlerSignals": ["Boundary drift"],
+      "cypressCoverage": "N/A - no new interaction surface",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2920-CREATE-OUTPUT-RECEIPT"
+    },
+    {
       "name": "createDvtSubstraitProjectionOutput",
       "path": "apps/web/src/app/views/canvas/canvasDvtSubstraitCalculatedColumn.ts",
       "cqRails": ["ConfigureCanvasDvtNode"],
       "dddOwner": "Canvas semantic authoring",
       "unitTests": [
-        "pnpm --filter @dvt/web test -- canvasCalculatedColumnAuthoring.test.ts canvasDvtSubstraitPostgresProjection.test.ts"
+        "pnpm --filter @dvt/web test:unit:run -- canvasCalculatedColumnAuthoring.test.ts canvasDvtSubstraitPostgresProjection.test.ts"
       ],
       "fowlerSignals": ["Duplicate semantics", "Hidden mutation"],
       "cypressCoverage": "N/A - no new interaction surface",
@@ -121,7 +193,7 @@ capability, invalid literal, malformed projection, and Source authoring write no
       "cqRails": ["ConfigureCanvasDvtNode"],
       "dddOwner": "Canvas semantic authoring",
       "unitTests": [
-        "pnpm --filter @dvt/web test -- canvasCalculatedColumnAuthoring.test.ts"
+        "pnpm --filter @dvt/web test:unit:run -- canvasCalculatedColumnAuthoring.test.ts"
       ],
       "fowlerSignals": ["Boundary drift"],
       "cypressCoverage": "N/A - existing authoring adapter",
@@ -129,7 +201,7 @@ capability, invalid literal, malformed projection, and Source authoring write no
     }
   ],
   "completionGate": [
-    "pnpm --filter @dvt/web test -- canvasCalculatedColumnAuthoring.test.ts canvasDvtSubstraitPostgresProjection.test.ts",
+    "pnpm --filter @dvt/web test:unit:run -- canvasCalculatedColumnAuthoring.test.ts canvasDvtSubstraitPostgresProjection.test.ts",
     "pnpm --filter @dvt/web lint",
     "pnpm --filter @dvt/web typecheck",
     "pnpm docs:feature-mechanization:implementation -- --feature GH-2920-CREATE-OUTPUT-RECEIPT",
@@ -138,8 +210,8 @@ capability, invalid literal, malformed projection, and Source authoring write no
   "redGreenCycles": [
     {
       "id": "direct-create-output-receipt",
-      "redTest": "pnpm --filter @dvt/web test -- canvasCalculatedColumnAuthoring.test.ts",
-      "greenTest": "pnpm --filter @dvt/web test -- canvasCalculatedColumnAuthoring.test.ts",
+      "redTest": "pnpm --filter @dvt/web test:unit:run -- canvasCalculatedColumnAuthoring.test.ts",
+      "greenTest": "pnpm --filter @dvt/web test:unit:run -- canvasCalculatedColumnAuthoring.test.ts",
       "patchSurfaces": [
         "apps/web/src/app/views/canvas/canvasCalculatedColumnAuthoring.ts",
         "apps/web/src/app/views/canvas/canvasDvtSubstraitCalculatedColumn.ts",
