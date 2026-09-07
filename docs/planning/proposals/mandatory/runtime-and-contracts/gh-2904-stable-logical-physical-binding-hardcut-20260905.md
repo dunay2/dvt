@@ -154,6 +154,7 @@ repair or infer DVT identity from dbt names, paths or provider coordinates.
 | Rail                         | Type       | DDD owner                       | Responsibility                                                          |
 | ---------------------------- | ---------- | ------------------------------- | ----------------------------------------------------------------------- |
 | `ImportWarehouseSources`     | command    | Warehouse source import         | create a new opaque logical Source and physical binding                 |
+| ConfigureCanvasDvtNode       | command    | Canvas semantic authoring       | mutate existing semantic outputs only by persisted FieldId              |
 | `RebindWarehouseSource`      | command    | Warehouse source import         | replace one verified physical binding without changing logical identity |
 | `StartRun`                   | command    | Run command application service | consume canonical graph identity without reminting it                   |
 | Workspace semantic admission | validation | Workspace graph authoring       | validate one stable Substrait sidecar authority                         |
@@ -239,7 +240,7 @@ the new command and identity witnesses are green.
     {
       "name": "resolveCanvasColumnMappingTarget",
       "path": "apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts",
-      "cqRails": [],
+      "cqRails": ["ConfigureCanvasDvtNode"],
       "dddOwner": "Canvas semantic authoring",
       "unitTests": ["pnpm --filter @dvt/web test"],
       "fowlerSignals": ["Hidden authority", "Primitive obsession"],
@@ -327,6 +328,18 @@ the new command and identity witnesses are green.
   ],
   "commandQueryRails": [
     {
+      "name": "ConfigureCanvasDvtNode",
+      "type": "command",
+      "status": "implemented",
+      "dddOwner": "Canvas semantic authoring",
+      "negativeTests": [
+        "unknown FieldId fails closed",
+        "display-name collision cannot resolve an existing output"
+      ],
+      "adapterSurface": "Canvas DVT authoring command",
+      "applicationPort": "ConfigureCanvasDvtNode",
+      "authorizationScope": "writable project Canvas scope"
+    },    {
       "name": "ImportWarehouseSources",
       "type": "command",
       "status": "implemented",
