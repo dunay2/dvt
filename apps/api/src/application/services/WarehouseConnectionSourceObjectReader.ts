@@ -1,5 +1,10 @@
 /** Owned concern: resolve the authoritative live SourceObject catalog for one connection. */
-import type { SourceObject, WorkspaceGraphDraftScope } from '@dvt/contracts';
+import type {
+  SourceObject,
+  SourceObjectCatalogRequest,
+  SourceObjectCatalogResponse,
+  WorkspaceGraphDraftScope,
+} from '@dvt/contracts';
 
 import type {
   IWarehouseConnectionCatalog,
@@ -46,5 +51,28 @@ export class WarehouseConnectionSourceObjectReader {
       ...(inspected.databaseUser === undefined ? {} : { databaseUser: inspected.databaseUser }),
       sourceObjects: inspected.sourceObjects,
     };
+  }
+  public async readCatalog(
+    scope: WorkspaceGraphDraftScope,
+    connectionId: string,
+    request: SourceObjectCatalogRequest
+  ): Promise<SourceObjectCatalogResponse> {
+    const connection = await this.catalog.getConnection(scope, connectionId);
+    if (connection.credentialRef === undefined) {
+      throw new WarehouseSourceDiscoveryFailedError(
+        'invalid_credentials',
+        'Credential reference is missing.'
+      );
+    }
+    return this.probe.listSourceObjectCatalog(
+      {
+        connectionId,
+        scope,
+        type: connection.type,
+        database: connection.database,
+        credentialRef: connection.credentialRef,
+      },
+      request
+    );
   }
 }

@@ -8,7 +8,7 @@
  */
 import { z } from 'zod';
 
-import { SourceObjectColumnSchema } from './SourceObjectCatalog.v1.js';
+import { SourceObjectColumnSchema } from './SourceObjectCatalog.js';
 
 export const SOURCE_DATA_SAMPLE_CONTRACT_VERSION = 1 as const;
 export const SOURCE_DATA_SAMPLE_DEFAULT_LIMIT = 20 as const;

@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Loader2 } from 'lucide-react';
+import { useState } from 'react';
 
 import {
-  SourceImportCatalogFilterList,
   SourceImportCatalogEmptyState,
+  SourceImportCatalogFilterList,
   SourceImportCatalogGroup,
   SourceImportCatalogGroups,
   SourceImportDatabaseHeader,
@@ -23,7 +24,11 @@ import type { SourceImportDatabaseIdentity, SourceImportSchemaIdentity } from '.
 type SourceImportCatalogViewProps = Readonly<{
   catalog: SourceImportCatalogViewModel;
   emptyLabel: string;
+  loadMoreLabel?: string;
+  loadingLabel?: string;
   onActivateSourceObject: (index: number) => void;
+  onExpandSchema?: (schema: SourceImportSchemaIdentity) => void;
+  onLoadMoreSchema?: (schema: SourceImportSchemaIdentity, cursor: string) => void;
   onSelectFilter: (filterId: SourceImportCatalogFilterId) => void;
   onToggleDatabase: (database: SourceImportDatabaseIdentity) => void;
   onToggleSchema: (schema: SourceImportSchemaIdentity) => void;
@@ -34,59 +39,37 @@ type SourceImportCatalogViewProps = Readonly<{
 export function SourceImportCatalogView({
   catalog,
   emptyLabel,
+  loadMoreLabel = 'Load more',
+  loadingLabel = 'Loading...',
   onActivateSourceObject,
+  onExpandSchema,
+  onLoadMoreSchema,
   onSelectFilter,
   onToggleDatabase,
   onToggleSchema,
   onToggleSourceObject,
   revealMatchingSchemas = false,
 }: SourceImportCatalogViewProps): JSX.Element {
-  const selectedSchemaKeys = useMemo(
-    () =>
-      catalog.databaseGroups.flatMap((databaseGroup) =>
-        databaseGroup.schemaGroups
-          .filter((schemaGroup) => schemaGroup.selected)
-          .map((schemaGroup) =>
-            buildSourceImportSchemaKey({
-              database: databaseGroup.database,
-              schema: schemaGroup.schema,
-            })
-          )
-      ),
-    [catalog.databaseGroups]
-  );
   const [expandedSchemaKeys, setExpandedSchemaKeys] = useState<ReadonlySet<string>>(
-    () => new Set(selectedSchemaKeys)
+    () => new Set()
   );
 
-  useEffect(() => {
-    if (selectedSchemaKeys.length === 0) {
-      return;
-    }
+  const setSchemaExpanded = (
+    schemaIdentity: SourceImportSchemaIdentity,
+    loaded: boolean,
+    loading: boolean,
+    expanded: boolean
+  ) => {
+    const schemaKey = buildSourceImportSchemaKey(schemaIdentity);
     setExpandedSchemaKeys((currentKeys) => {
       const nextKeys = new Set(currentKeys);
-      let changed = false;
-      selectedSchemaKeys.forEach((key) => {
-        if (!nextKeys.has(key)) {
-          nextKeys.add(key);
-          changed = true;
-        }
-      });
-      return changed ? nextKeys : currentKeys;
-    });
-  }, [selectedSchemaKeys]);
-
-  const setSchemaExpanded = (schemaKey: string, expanded: boolean) => {
-    setExpandedSchemaKeys((currentKeys) => {
-      const nextKeys = new Set(currentKeys);
-      if (expanded) {
-        nextKeys.add(schemaKey);
-      } else {
-        nextKeys.delete(schemaKey);
-      }
+      if (expanded) nextKeys.add(schemaKey);
+      else nextKeys.delete(schemaKey);
       return nextKeys;
     });
+    if (expanded && !loaded && !loading) onExpandSchema?.(schemaIdentity);
   };
+
   const filterList = (
     <SourceImportCatalogFilterList
       label={catalog.filterListLabel}
@@ -118,6 +101,7 @@ export function SourceImportCatalogView({
                 schemaCountLabel={databaseGroup.schemaCountLabel}
                 objectCountLabel={databaseGroup.objectCountLabel}
                 selected={databaseGroup.selected}
+                selectable={databaseGroup.selectable}
                 selectedLabel={databaseGroup.selectedLabel}
                 onToggle={() => onToggleDatabase({ database: databaseGroup.database })}
               />
@@ -133,7 +117,14 @@ export function SourceImportCatalogView({
                   <SourceImportSchemaDisclosure
                     key={schemaKey}
                     expanded={expanded}
-                    onExpandedChange={(nextExpanded) => setSchemaExpanded(schemaKey, nextExpanded)}
+                    onExpandedChange={(nextExpanded) =>
+                      setSchemaExpanded(
+                        schemaIdentity,
+                        schemaGroup.loaded,
+                        schemaGroup.loading,
+                        nextExpanded
+                      )
+                    }
                   >
                     <SourceImportSchemaHeader
                       schema={schemaGroup.schema}
@@ -144,13 +135,20 @@ export function SourceImportCatalogView({
                       schemaIdentityKey={schemaKey}
                       expanded={expanded}
                       selected={schemaGroup.selected}
+                      selectable={schemaGroup.selectable}
                       objectCountLabel={schemaGroup.objectCountLabel}
-                      onToggle={() => {
-                        setSchemaExpanded(schemaKey, true);
-                        onToggleSchema(schemaIdentity);
-                      }}
+                      onToggle={() => onToggleSchema(schemaIdentity)}
                     />
                     <SourceImportSchemaObjects>
+                      {schemaGroup.loading ? (
+                        <div
+                          className="flex items-center gap-2 py-2 text-xs text-slate-400"
+                          role="status"
+                        >
+                          <Loader2 className="size-3 animate-spin" aria-hidden="true" />
+                          {loadingLabel}
+                        </div>
+                      ) : null}
                       {schemaGroup.sourceObjects.map((sourceObject) => (
                         <SourceImportObjectCard
                           key={sourceObject.identityKey}
@@ -159,6 +157,18 @@ export function SourceImportCatalogView({
                           onToggle={() => onToggleSourceObject(sourceObject.index)}
                         />
                       ))}
+                      {schemaGroup.nextCursor ? (
+                        <button
+                          type="button"
+                          className="rounded border border-slate-700 px-2.5 py-1 text-xs text-slate-300"
+                          disabled={schemaGroup.loading}
+                          onClick={() =>
+                            onLoadMoreSchema?.(schemaIdentity, schemaGroup.nextCursor!)
+                          }
+                        >
+                          {loadMoreLabel}
+                        </button>
+                      ) : null}
                     </SourceImportSchemaObjects>
                   </SourceImportSchemaDisclosure>
                 );

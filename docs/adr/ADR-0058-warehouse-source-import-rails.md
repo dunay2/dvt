@@ -12,7 +12,8 @@ arc_level: ARC-2
 
 ## Status
 
-Accepted. Extended 2026-09-06 by GH-2904 to admit explicit physical Source rebind.
+Accepted. Extended 2026-09-06 by GH-2904 to admit explicit physical Source rebind and
+2026-09-07 by GH-2173 to bound large source catalogs behind one paged query rail.
 
 ## Context
 
@@ -34,10 +35,13 @@ The accepted rails are:
 
 - `ListWarehouseConnections` query: returns the server-owned
   `WarehouseConnectionCatalog` read model.
-- `ListWarehouseConnectionSourceObjects` query: returns a versioned
-  `SourceObjectCatalogResponse` for one authorized connection. `SourceObject` is
-  provider-neutral and discriminates relation, file, endpoint and stream locators while
-  keeping row-count and byte-size evidence explicit.
+- `ListWarehouseConnectionSourceObjects` query: returns the sole canonical, bounded
+  `SourceObjectCatalogResponse` for one authorized connection. One rail exposes three
+  request projections over the same live catalog authority: schema summaries with
+  discoverable-object counts, an opaque-cursor page for one selected schema, and an
+  opaque-cursor search page across every authorized schema in the connection. `SourceObject`
+  remains provider-neutral and discriminates relation, file, endpoint and stream locators
+  while keeping row-count and byte-size evidence explicit for each returned object.
 - `ImportWarehouseSources` command: accepts a non-empty set of unique object-ID-only
   selections, resolves authoritative metadata from the server catalog, and appends new
   logical Source nodes to the authoritative `WorkspaceGraphAuthoringDraft`.
@@ -67,6 +71,63 @@ Scope is an explicit application-port argument. It is not read from ambient requ
 and is not inferred from a caller-supplied path. Local filesystem adapters own safe scope-key
 projection/path containment; HTTP routes own authentication/authorization; application
 services own command orchestration.
+
+## Bounded catalog browsing
+
+The catalog query loads the smallest useful projection for the user action. Opening a
+connection returns schema summaries and object counts before object details. Opening one
+schema returns only that schema's bounded object page. Search is evaluated server-side across
+all schemas authorized for the connection and returns qualified `database.schema.object`
+identity, including the schema needed to disambiguate equal table names.
+
+```mermaid
+flowchart LR
+    U[Open connection] --> Q[One catalog query]
+    Q --> D[Discover every object]
+    D --> M[Enrich rows and bytes]
+    M --> R[Return full catalog]
+    R --> C[Client derives counts and searches locally]
+```
+
+```mermaid
+flowchart LR
+    U[Open connection] --> Q[ListWarehouseConnectionSourceObjects]
+    Q --> S[Schema summaries and counts]
+    U2[Open schema] --> Q
+    Q --> P[Paged objects for selected schema]
+    U3[Search table] --> Q
+    Q --> G[Paged matches across schemas]
+    P --> E[Explicit row and byte evidence]
+    G --> E
+```
+
+The initial object counts describe discoverable catalog objects; they are not warehouse row
+counts. Row-count and byte-size evidence remain object facts and preserve explicit
+unavailable or estimated provenance. Catalog browsing must not perform exact `COUNT(*)` data
+scans by default.
+
+Opaque cursors, page limits, deadlines and truncation posture are server-owned. A cursor is
+bound to authorized tenant, project, environment, connection, projection and filter state.
+Unknown, stale, malformed or cross-scope cursors fail closed. Search accepts data, never SQL,
+and cannot broaden connection authorization.
+
+This is an evolution of `ListWarehouseConnectionSourceObjects`, not a new command/query
+rail. The canonical lazy contract replaces the eager full-catalog contract in one hard cut;
+transports, provider adapters and the web port implement the same product intent. No suffixed
+v1/v2 contract family, version selector, compatibility parser, dual read, dual write or
+forwarding export is retained. `SourceObjectCatalogRequest` and
+`SourceObjectCatalogResponse` are the only public catalog request/response authority.
+
+Import continues to resolve selected objects through server authority and must not trust a
+partial client page as a complete catalog snapshot.
+
+## Rationale
+
+A full catalog is unnecessary before the user chooses a schema and grows provider work,
+response bytes and browser memory with warehouse size. Schema-first summaries give immediate
+orientation, scoped pages bound provider cost, and server-side search preserves discovery
+across schemas. Keeping one rail avoids a second authorization and catalog authority while a
+single canonical contract makes the behavior and authority explicit.
 
 ## Import identity
 
@@ -133,4 +194,4 @@ are protected explicitly rather than allowing one table-level command to mutate 
 - `packages/@dvt/contracts/test/dvt-substrait-source-rebind.contract.test.ts`
 - `apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.identity.test.ts`
 - `apps/web/src/app/services/workspace/workspacePorts.api.test.ts`
-- `packages/@dvt/contracts/test/source-import/SourceObjectCatalog.v1.test.ts`
+- `packages/@dvt/contracts/test/source-import/SourceObjectCatalog.test.ts`

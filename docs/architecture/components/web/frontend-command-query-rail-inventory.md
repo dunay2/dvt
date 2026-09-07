@@ -291,10 +291,28 @@ commands or queries are still needed for a mature end-to-end workflow.
 ### `ListWarehouseConnectionSourceObjects`
 
 - Type: query.
-- Status: `implemented-api`.
+- Status: `implemented-api`; GH-2173 hard-cuts the eager response to one canonical lazy
+  contract.
 - Owner: provider-neutral source object catalog read model.
-- Frontend surface: `IWarehouseSourceImportPort.listSourceObjects`.
+- Frontend surface: `IWarehouseSourceImportPort.listSourceObjectCatalog`.
 - Backend surface: `GET /workspace/warehouse/connections/:connectionId/objects`.
+- Contract authority: one unsuffixed `SourceObjectCatalogRequest` /
+  `SourceObjectCatalogResponse` pair. Suffixed versions, compatibility parsers, version
+  selectors, forwarding exports, dual reads and dual writes are forbidden.
+- Projections: schema summaries with discoverable-object counts; opaque-cursor object pages
+  for one selected schema; opaque-cursor table search across all authorized schemas.
+- Scope and authorization: tenant, project, environment and connection come from the
+  protected runtime scope. Cursor scope, projection and filter state are server-bound;
+  malformed, stale or cross-scope cursors fail closed.
+- Presentation rule: opening a connection shows counts before object details; opening a
+  schema loads only its object page; search results retain qualified
+  `database.schema.object` identity. Returned objects keep explicit row-count and byte-size
+  evidence, including estimated or unavailable provenance.
+- Boundedness rule: provider deadlines, page limits and truncation are explicit. Initial
+  catalog counts do not authorize exact table-row `COUNT(*)` scans.
+- Negative evidence: unknown connection or schema, cross-scope access, unsupported provider,
+  invalid/stale cursor, provider timeout, explicit truncation, duplicate names across schemas
+  and a search with no authorized matches.
 
 ### `PreviewWarehouseSourceObjectRows`
 

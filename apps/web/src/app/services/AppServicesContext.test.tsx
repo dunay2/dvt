@@ -198,7 +198,7 @@ describe('AppServicesProvider', () => {
     };
     const warehouseSourceImport: IWarehouseSourceImportPort = {
       listWarehouseConnections: async () => [],
-      listSourceObjects: async () => [],
+      listSourceObjectCatalog: async () => ({ kind: 'schema-list', schemas: [], truncated: false }),
       createWarehouseConnection: async (input) => ({
         id: 'conn-created',
         name: input.name,

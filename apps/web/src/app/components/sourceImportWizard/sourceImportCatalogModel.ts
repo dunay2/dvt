@@ -1,12 +1,14 @@
 import {
   isRelationalSourceObject,
   resolveSourceObjectColumnConstraintSemantics,
+  type SourceObjectCatalogSchemaSummary,
   type SourceObjectLocatorKind,
 } from '@dvt/contracts';
 
 import type {
   SelectableRelationalSourceObject,
   SelectableSourceObject,
+  SourceImportCatalogPageState,
   SourceImportSchemaIdentity,
 } from './types';
 import {
@@ -70,7 +72,12 @@ export type SourceImportSchemaGroupViewModel = Readonly<{
   expandAccessibilityLabel: string;
   collapseAccessibilityLabel: string;
   objectCountLabel: string;
+  objectCount: number;
   selected: boolean;
+  selectable: boolean;
+  loaded: boolean;
+  loading: boolean;
+  nextCursor: string | null;
   sourceObjects: readonly SourceImportObjectViewModel[];
 }>;
 
@@ -81,6 +88,7 @@ export type SourceImportDatabaseGroupViewModel = Readonly<{
   objectCountLabel: string;
   selectedLabel: string | null;
   selected: boolean;
+  selectable: boolean;
   schemaGroups: readonly SourceImportSchemaGroupViewModel[];
 }>;
 
@@ -407,6 +415,9 @@ export function buildSourceImportCatalogViewModel({
   sourceObjects,
   activeSourceObjectKey,
   searchQuery,
+  schemaSummaries = [],
+  schemaPageStates = {},
+  visibleObjectIds,
   filterId = 'all',
   copy,
   numberFormatter = new Intl.NumberFormat(),
@@ -414,6 +425,9 @@ export function buildSourceImportCatalogViewModel({
   sourceObjects: readonly SelectableSourceObject[];
   activeSourceObjectKey: string | null;
   searchQuery?: string;
+  schemaSummaries?: readonly SourceObjectCatalogSchemaSummary[];
+  schemaPageStates?: Readonly<Record<string, SourceImportCatalogPageState>>;
+  visibleObjectIds?: ReadonlySet<string>;
   filterId?: SourceImportCatalogFilterId;
   copy: SourceImportCatalogCopy;
   numberFormatter?: Intl.NumberFormat;
@@ -424,12 +438,27 @@ export function buildSourceImportCatalogViewModel({
   );
   const searchableEntries = sourceObjects
     .map((sourceObject, index) => ({ sourceObject, viewModel: allObjectViewModels[index]! }))
+    .filter(
+      ({ sourceObject }) => visibleObjectIds == null || visibleObjectIds.has(sourceObject.objectId)
+    )
     .filter(({ sourceObject }) => sourceObjectMatchesSearch(sourceObject, normalizedSearchQuery));
   const visibleEntries = searchableEntries.filter(({ sourceObject }) =>
     sourceObjectMatchesFilter(sourceObject, filterId)
   );
   const visibleViewModels = visibleEntries.map(({ viewModel }) => viewModel);
+  const authoritativeTotalObjectCount =
+    schemaSummaries.length > 0
+      ? schemaSummaries.reduce((total, summary) => total + summary.objectCount, 0)
+      : visibleObjectIds != null
+        ? visibleViewModels.length
+        : allObjectViewModels.length;
   const relationalGroups = new Map<string, Map<string, SourceImportObjectViewModel[]>>();
+
+  schemaSummaries.forEach((summary) => {
+    const databaseSchemas = relationalGroups.get(summary.catalog) ?? new Map();
+    if (!databaseSchemas.has(summary.schema)) databaseSchemas.set(summary.schema, []);
+    relationalGroups.set(summary.catalog, databaseSchemas);
+  });
 
   visibleEntries.forEach(({ sourceObject, viewModel }) => {
     if (!isRelationalSourceObject(sourceObject)) {
@@ -462,7 +491,16 @@ export function buildSourceImportCatalogViewModel({
         left.database.localeCompare(right.database) || left.schema.localeCompare(right.schema)
     )
     .map(({ database, schema, groupObjects }) =>
-      buildSourceImportSchemaGroup(database, schema, groupObjects, copy, numberFormatter)
+      buildSourceImportSchemaGroup(
+        database,
+        schema,
+        groupObjects,
+        copy,
+        numberFormatter,
+        schemaSummaries.find((summary) => summary.catalog === database && summary.schema === schema)
+          ?.objectCount,
+        schemaPageStates[buildSourceImportSchemaKey({ database, schema })]
+      )
     );
   const databaseGroups = Array.from(relationalGroups.entries())
     .sort(([left], [right]) => left.localeCompare(right))
@@ -470,9 +508,23 @@ export function buildSourceImportCatalogViewModel({
       const databaseSchemas = Array.from(databaseSchemaGroups.entries())
         .sort(([left], [right]) => left.localeCompare(right))
         .map(([schema, groupObjects]) =>
-          buildSourceImportSchemaGroup(database, schema, groupObjects, copy, numberFormatter)
+          buildSourceImportSchemaGroup(
+            database,
+            schema,
+            groupObjects,
+            copy,
+            numberFormatter,
+            schemaSummaries.find(
+              (summary) => summary.catalog === database && summary.schema === schema
+            )?.objectCount,
+            schemaPageStates[buildSourceImportSchemaKey({ database, schema })]
+          )
         );
       const databaseObjects = databaseSchemas.flatMap((schemaGroup) => schemaGroup.sourceObjects);
+      const authoritativeDatabaseObjectCount = databaseSchemas.reduce(
+        (total, schemaGroup) => total + schemaGroup.objectCount,
+        0
+      );
 
       return {
         database,
@@ -480,18 +532,21 @@ export function buildSourceImportCatalogViewModel({
           databaseSchemas.length,
           copy,
           numberFormatter
-        )}. ${formatSourceImportObjectCount(databaseObjects.length, copy, numberFormatter)}.`,
+        )}. ${formatSourceImportObjectCount(authoritativeDatabaseObjectCount, copy, numberFormatter)}.`,
         schemaCountLabel: formatSourceImportSchemaCount(
           databaseSchemas.length,
           copy,
           numberFormatter
         ),
         objectCountLabel: formatSourceImportObjectCount(
-          databaseObjects.length,
+          authoritativeDatabaseObjectCount,
           copy,
           numberFormatter
         ),
         selected: databaseObjects.length > 0 && databaseObjects.every((object) => object.selected),
+        selectable:
+          databaseSchemas.length > 0 &&
+          databaseSchemas.every((schemaGroup) => schemaGroup.selectable),
         selectedLabel:
           databaseObjects.length > 0 && databaseObjects.every((object) => object.selected)
             ? copy.allSelected
@@ -524,12 +579,14 @@ export function buildSourceImportCatalogViewModel({
     databaseGroups,
     schemaGroups,
     relationGroup:
-      relationObjects.length > 0
+      relationObjects.length > 0 || schemaSummaries.length > 0
         ? {
             locatorKind: 'relation',
             label: copy.locatorKindLabels.relation,
             objectCountLabel: formatSourceImportObjectCount(
-              relationObjects.length,
+              schemaSummaries.length > 0
+                ? schemaSummaries.reduce((total, summary) => total + summary.objectCount, 0)
+                : relationObjects.length,
               copy,
               numberFormatter
             ),
@@ -539,18 +596,19 @@ export function buildSourceImportCatalogViewModel({
     locatorGroups,
     activeSourceObject,
     selectedSourceObjects: allObjectViewModels.filter((sourceObject) => sourceObject.selected),
-    totalObjectCount: allObjectViewModels.length,
+    totalObjectCount: authoritativeTotalObjectCount,
     visibleObjectCount: visibleViewModels.length,
     selectedObjectCount: allObjectViewModels.filter((sourceObject) => sourceObject.selected).length,
     resultCountLabel:
-      visibleViewModels.length === allObjectViewModels.length
+      (filterId === 'all' && normalizedSearchQuery.length === 0) ||
+      visibleViewModels.length === authoritativeTotalObjectCount
         ? `${formatSourceImportObjectCount(
-            allObjectViewModels.length,
+            authoritativeTotalObjectCount,
             copy,
             numberFormatter
           )} ${copy.available}`
         : `${copy.showing} ${formatNumber(visibleViewModels.length, numberFormatter)} ${copy.of} ${formatNumber(
-            allObjectViewModels.length,
+            authoritativeTotalObjectCount,
             numberFormatter
           )} ${copy.objectPlural}`,
     activeFilterId: filterId,
@@ -569,13 +627,19 @@ function buildSourceImportSchemaGroup(
   schema: string,
   groupObjects: readonly SourceImportObjectViewModel[],
   copy: SourceImportCatalogCopy,
-  numberFormatter: Intl.NumberFormat
+  numberFormatter: Intl.NumberFormat,
+  authoritativeObjectCount?: number,
+  pageState?: SourceImportCatalogPageState
 ): SourceImportSchemaGroupViewModel {
-  const objectCountLabel = formatSourceImportObjectCount(
-    groupObjects.length,
-    copy,
-    numberFormatter
-  );
+  const objectCount = authoritativeObjectCount ?? groupObjects.length;
+  const resolvedPageState =
+    pageState ??
+    ({
+      loaded: authoritativeObjectCount === undefined && groupObjects.length > 0,
+      loading: false,
+      nextCursor: null,
+    } satisfies SourceImportCatalogPageState);
+  const objectCountLabel = formatSourceImportObjectCount(objectCount, copy, numberFormatter);
   const schemaLocationLabel = `${schema}. ${copy.inSourceDatabase} ${database}. ${objectCountLabel}.`;
 
   return {
@@ -585,8 +649,13 @@ function buildSourceImportSchemaGroup(
     expandAccessibilityLabel: `${copy.expandSourceSchema} ${schemaLocationLabel}`,
     collapseAccessibilityLabel: `${copy.collapseSourceSchema} ${schemaLocationLabel}`,
     objectCountLabel,
+    objectCount,
     selected:
       groupObjects.length > 0 && groupObjects.every((sourceObject) => sourceObject.selected),
+    selectable: resolvedPageState.loaded && resolvedPageState.nextCursor == null,
+    loaded: resolvedPageState.loaded,
+    loading: resolvedPageState.loading,
+    nextCursor: resolvedPageState.nextCursor,
     sourceObjects: groupObjects,
   };
 }

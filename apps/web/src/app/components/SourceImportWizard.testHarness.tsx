@@ -9,6 +9,7 @@ import type {
   ImportSourcesResult,
   IWarehouseSourceImportPort,
   RelationalSourceObject,
+  SourceObject,
 } from '../ports/workspace';
 import type { SourceImportOptionContribution } from '../plugins/registry';
 import { AppServicesProvider } from '../services/AppServicesContext';
@@ -45,6 +46,42 @@ function requireElement<T>(value: T | undefined, errorCode: string): T {
   return value;
 }
 
+export function buildSourceObjectCatalogResponder(sourceObjects: readonly SourceObject[]) {
+  return async (
+    _connectionId: string,
+    request: Parameters<IWarehouseSourceImportPort['listSourceObjectCatalog']>[1]
+  ): ReturnType<IWarehouseSourceImportPort['listSourceObjectCatalog']> => {
+    if (request.kind === 'schema-list') {
+      const counts = new Map<string, { catalog: string; schema: string; objectCount: number }>();
+      sourceObjects.forEach((sourceObject) => {
+        if (sourceObject.locator.kind !== 'relation') return;
+        const key = JSON.stringify([sourceObject.locator.catalog, sourceObject.locator.schema]);
+        const current = counts.get(key);
+        counts.set(key, {
+          catalog: sourceObject.locator.catalog,
+          schema: sourceObject.locator.schema,
+          objectCount: (current?.objectCount ?? 0) + 1,
+        });
+      });
+      return { kind: 'schema-list', schemas: [...counts.values()], truncated: false };
+    }
+    const relationalObjects = sourceObjects.filter(
+      (sourceObject): sourceObject is RelationalSourceObject =>
+        sourceObject.locator.kind === 'relation'
+    );
+    const objects =
+      request.kind === 'schema-page'
+        ? relationalObjects.filter(
+            (sourceObject) =>
+              sourceObject.locator.catalog === request.catalog &&
+              sourceObject.locator.schema === request.schema
+          )
+        : relationalObjects.filter((sourceObject) =>
+            sourceObject.locator.name.toLowerCase().includes(request.name.toLowerCase())
+          );
+    return { kind: 'object-page', objects, truncated: false };
+  };
+}
 export function buildWarehouseSourceImportPort(
   overrides?: Partial<IWarehouseSourceImportPort>
 ): IWarehouseSourceImportPort {
@@ -57,14 +94,14 @@ export function buildWarehouseSourceImportPort(
         database: 'dvt',
       },
     ],
-    listSourceObjects: async () => [
+    listSourceObjectCatalog: buildSourceObjectCatalogResponder([
       buildSourceObject({
         database: 'RAW',
         schema: 'ERP',
         table: 'ORDERS',
         metricEvidence: buildSourceImportTestMetricEvidence(100, 4096),
       }),
-    ],
+    ]),
     createWarehouseConnection: async (input) => ({
       id: 'conn-created',
       name: input.name,
@@ -328,6 +365,7 @@ export function createSourceImportWizardHarness() {
     findConnectionOption,
     clickTab,
     clickConnectionOption,
+    expandCollapsedSourceSchemas,
     clickSourceObjectInspectionButton,
     clickDatabaseSelection,
     clickSourceObjectSelectionCheckbox,

@@ -27,7 +27,15 @@ describe('workspace ports source import', () => {
   it('imports selected warehouse tables into the mock workspace graph', async () => {
     const ports = createMockWorkspacePorts();
     const before = await ports.workspaceGraphSnapshotQuery.getGraphSnapshot();
-    const events = (await ports.warehouseSourceImport.listSourceObjects('conn-1')).find(
+    const eventsPage = await ports.warehouseSourceImport.listSourceObjectCatalog('conn-1', {
+      kind: 'schema-page',
+      catalog: 'RAW',
+      schema: 'MARKETING',
+      limit: 100,
+    });
+    expect(eventsPage.kind).toBe('object-page');
+    if (eventsPage.kind !== 'object-page') throw new Error('Expected an object page.');
+    const events = eventsPage.objects.find(
       (sourceObject) =>
         sourceObject.locator.kind === 'relation' &&
         sourceObject.locator.catalog === 'RAW' &&
@@ -79,7 +87,15 @@ describe('workspace ports source import', () => {
     const firstPorts = createMockWorkspacePorts();
     const secondPorts = createMockWorkspacePorts();
     const secondBefore = await secondPorts.workspaceGraphSnapshotQuery.getGraphSnapshot();
-    const campaigns = (await firstPorts.warehouseSourceImport.listSourceObjects('conn-1')).find(
+    const campaignsPage = await firstPorts.warehouseSourceImport.listSourceObjectCatalog('conn-1', {
+      kind: 'schema-page',
+      catalog: 'RAW',
+      schema: 'MARKETING',
+      limit: 100,
+    });
+    expect(campaignsPage.kind).toBe('object-page');
+    if (campaignsPage.kind !== 'object-page') throw new Error('Expected an object page.');
+    const campaigns = campaignsPage.objects.find(
       (sourceObject) =>
         sourceObject.locator.kind === 'relation' &&
         sourceObject.locator.schema === 'MARKETING' &&
@@ -108,7 +124,15 @@ describe('workspace ports source import', () => {
     const sharedState = createMockWorkspaceState();
     const firstPorts = createMockWorkspacePorts(sharedState);
     const secondPorts = createMockWorkspacePorts(sharedState);
-    const contacts = (await firstPorts.warehouseSourceImport.listSourceObjects('conn-1')).find(
+    const contactsPage = await firstPorts.warehouseSourceImport.listSourceObjectCatalog('conn-1', {
+      kind: 'schema-page',
+      catalog: 'RAW',
+      schema: 'CRM',
+      limit: 100,
+    });
+    expect(contactsPage.kind).toBe('object-page');
+    if (contactsPage.kind !== 'object-page') throw new Error('Expected an object page.');
+    const contacts = contactsPage.objects.find(
       (sourceObject) =>
         sourceObject.locator.kind === 'relation' &&
         sourceObject.locator.schema === 'CRM' &&

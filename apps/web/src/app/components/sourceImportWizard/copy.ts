@@ -85,7 +85,8 @@ const EN_COPY = {
     loading: 'Loading source objects...',
     empty: 'No source objects are available for this connection.',
     searchLabel: 'Search source catalog',
-    searchPlaceholder: 'Search name, locator, column, or type',
+    searchPlaceholder: 'Search table name across all schemas',
+    loadMore: 'Load more',
   },
   metadata: {
     activeTitle: 'Source metadata',
@@ -298,7 +299,8 @@ const ES_COPY = {
     loading: 'Cargando objetos de origen...',
     empty: 'No hay objetos de origen disponibles para esta conexión.',
     searchLabel: 'Buscar en el catálogo de orígenes',
-    searchPlaceholder: 'Buscar por nombre, localizador, columna o tipo',
+    searchPlaceholder: 'Buscar tablas por nombre en todos los esquemas',
+    loadMore: 'Cargar más',
   },
   metadata: {
     activeTitle: 'Metadatos del origen',

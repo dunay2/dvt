@@ -757,8 +757,68 @@ export function createMockWarehouseSourceImportPort(
 ): IWarehouseSourceImportPort {
   return {
     listWarehouseConnections: async () => mockConnections.map((connection) => ({ ...connection })),
-    listSourceObjects: async (connectionId) =>
-      (mockRelationDefinitionsByConnectionId[connectionId] ?? []).map(toMockSourceObject),
+    listSourceObjectCatalog: async (connectionId, request) => {
+      const sourceObjects = (mockRelationDefinitionsByConnectionId[connectionId] ?? []).map(
+        toMockSourceObject
+      );
+      const startIndex =
+        request.cursor === undefined ? 0 : Number.parseInt(request.cursor, 10) || 0;
+
+      if (request.kind === 'schema-list') {
+        const schemasByIdentity = new Map<
+          string,
+          { catalog: string; schema: string; objectCount: number }
+        >();
+        for (const sourceObject of sourceObjects) {
+          if (sourceObject.locator.kind !== 'relation') continue;
+          const key = `${sourceObject.locator.catalog}\0${sourceObject.locator.schema}`;
+          const current = schemasByIdentity.get(key);
+          schemasByIdentity.set(key, {
+            catalog: sourceObject.locator.catalog,
+            schema: sourceObject.locator.schema,
+            objectCount: (current?.objectCount ?? 0) + 1,
+          });
+        }
+        const schemas = [...schemasByIdentity.values()].sort(
+          (left, right) =>
+            left.catalog.localeCompare(right.catalog) || left.schema.localeCompare(right.schema)
+        );
+        const page = schemas.slice(startIndex, startIndex + request.limit);
+        const nextIndex = startIndex + page.length;
+        return nextIndex < schemas.length
+          ? {
+              kind: 'schema-list',
+              schemas: page,
+              truncated: true,
+              nextCursor: String(nextIndex),
+            }
+          : { kind: 'schema-list', schemas: page, truncated: false };
+      }
+
+      const matches =
+        request.kind === 'schema-page'
+          ? sourceObjects.filter(
+              (sourceObject) =>
+                sourceObject.locator.kind === 'relation' &&
+                sourceObject.locator.catalog === request.catalog &&
+                sourceObject.locator.schema === request.schema
+            )
+          : sourceObjects.filter((sourceObject) =>
+              sourceObject.displayName
+                .toLocaleLowerCase()
+                .includes(request.name.toLocaleLowerCase())
+            );
+      const objects = matches.slice(startIndex, startIndex + request.limit);
+      const nextIndex = startIndex + objects.length;
+      return nextIndex < matches.length
+        ? {
+            kind: 'object-page',
+            objects,
+            truncated: true,
+            nextCursor: String(nextIndex),
+          }
+        : { kind: 'object-page', objects, truncated: false };
+    },
     createWarehouseConnection: async (input) => ({
       id: toMockWarehouseConnectionId(input.name),
       name: input.name,

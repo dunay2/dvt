@@ -158,13 +158,23 @@ function buildWarehouseConnectionsEndpoint(): string {
   )}`;
 }
 
-function buildWarehouseConnectionSourceObjectsEndpoint(connectionId: string): string {
+function buildWarehouseConnectionSourceObjectsEndpoint(
+  connectionId: string,
+  request: Parameters<IWarehouseSourceImportPort['listSourceObjectCatalog']>[1]
+): string {
   const scope = readWorkspaceGraphDraftScope();
-  return `/workspace/warehouse/connections/${encodeURIComponent(
-    connectionId
-  )}/objects?tenantId=${encodeURIComponent(scope.tenantId)}&projectId=${encodeURIComponent(
-    scope.projectId
-  )}&environmentId=${encodeURIComponent(scope.environmentId)}`;
+  const params = new URLSearchParams({
+    tenantId: scope.tenantId,
+    projectId: scope.projectId,
+    environmentId: scope.environmentId,
+    kind: request.kind,
+    limit: String(request.limit),
+  });
+  if ('catalog' in request) params.set('catalog', request.catalog);
+  if ('schema' in request) params.set('schema', request.schema);
+  if ('name' in request) params.set('name', request.name);
+  if (request.cursor) params.set('cursor', request.cursor);
+  return `/workspace/warehouse/connections/${encodeURIComponent(connectionId)}/objects?${params}`;
 }
 
 function buildWarehouseConnectionSourceDataSampleEndpoint(
@@ -227,9 +237,9 @@ export function createApiWarehouseSourceImportPort(
       WarehouseConnectionListSchema.parse(
         await apiClient.getJson(buildWarehouseConnectionsEndpoint())
       ),
-    listSourceObjects: async (connectionId) => {
+    listSourceObjectCatalog: async (connectionId, request) => {
       const response = await apiClient.getJson(
-        buildWarehouseConnectionSourceObjectsEndpoint(connectionId)
+        buildWarehouseConnectionSourceObjectsEndpoint(connectionId, request)
       );
       const parsed = SourceObjectCatalogResponseSchema.safeParse(response);
       if (!parsed.success) {
@@ -243,7 +253,7 @@ export function createApiWarehouseSourceImportPort(
         throw parsed.error;
       }
 
-      return parsed.data.objects;
+      return parsed.data;
     },
     createWarehouseConnection: async (input) =>
       WarehouseConnectionSchema.parse(

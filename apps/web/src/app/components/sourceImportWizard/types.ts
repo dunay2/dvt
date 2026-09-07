@@ -1,4 +1,7 @@
-import type { DbtProjectSourceTableDeclaration } from '@dvt/contracts';
+import type {
+  DbtProjectSourceTableDeclaration,
+  SourceObjectCatalogSchemaSummary,
+} from '@dvt/contracts';
 
 import type {
   CreateWarehouseConnectionInput,
@@ -96,6 +99,11 @@ export interface SourceImportWizardState {
   renameConnectionFormOpen: boolean;
   renameConnectionForm: RenameWarehouseConnectionInput;
   sourceObjects: SelectableSourceObject[];
+  sourceObjectSchemas: SourceObjectCatalogSchemaSummary[];
+  sourceObjectSchemaListPage: SourceImportCatalogPageState;
+  sourceObjectSchemaPages: Record<string, SourceImportCatalogPageState>;
+  sourceObjectSearchPage: SourceImportSearchPageState;
+  sourceObjectSearchObjectIds: string[];
   groupingStrategy: SourceImportGroupingStrategy;
   includeColumns: boolean;
   addTests: boolean;
@@ -115,3 +123,15 @@ export interface SourceImportWizardState {
   activeSourceObjectKey: string | null;
   sourceObjectSearchQuery: string;
 }
+
+export type SourceImportCatalogPageState = Readonly<{
+  loaded: boolean;
+  loading: boolean;
+  nextCursor: string | null;
+}>;
+
+export type SourceImportSearchPageState = Readonly<{
+  query: string;
+  loading: boolean;
+  nextCursor: string | null;
+}>;

@@ -21,7 +21,12 @@ describe('warehouse source-object contract operability', () => {
       { record }
     );
 
-    await expect(warehouseSourceImport.listSourceObjects('warehouse-prod')).rejects.toThrow();
+    await expect(
+      warehouseSourceImport.listSourceObjectCatalog('warehouse-prod', {
+        kind: 'schema-list',
+        limit: 50,
+      })
+    ).rejects.toThrow();
     expect(record).toHaveBeenCalledOnce();
     expect(record).toHaveBeenCalledWith({
       type: 'frontend.contract.failed',
@@ -43,9 +48,12 @@ describe('warehouse source-object contract operability', () => {
       { record }
     );
 
-    await expect(warehouseSourceImport.listSourceObjects('warehouse-prod')).rejects.toBe(
-      transportFailure
-    );
+    await expect(
+      warehouseSourceImport.listSourceObjectCatalog('warehouse-prod', {
+        kind: 'schema-list',
+        limit: 50,
+      })
+    ).rejects.toBe(transportFailure);
     expect(record).not.toHaveBeenCalled();
   });
 });

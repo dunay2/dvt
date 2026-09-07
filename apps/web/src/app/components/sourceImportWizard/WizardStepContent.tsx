@@ -74,6 +74,11 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
         <div id="source-import-section-browse">
           <SelectionStep
             sourceObjects={state.sourceObjects}
+            sourceObjectSchemas={state.sourceObjectSchemas}
+            sourceObjectSchemaListPage={state.sourceObjectSchemaListPage}
+            sourceObjectSchemaPages={state.sourceObjectSchemaPages}
+            sourceObjectSearchPage={state.sourceObjectSearchPage}
+            sourceObjectSearchObjectIds={state.sourceObjectSearchObjectIds}
             selectedCount={controller.selectedCount}
             activeSourceObjectKey={state.activeSourceObjectKey}
             sourceObjectSearchQuery={state.sourceObjectSearchQuery}
@@ -81,6 +86,18 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
             loadError={loadError}
             onSourceObjectSearchQueryChange={controller.setSourceObjectSearchQuery}
             onActivateSourceObject={controller.activateSourceObject}
+            onExpandSchema={(schema) => {
+              void controller.loadSourceObjectSchemaPage(schema);
+            }}
+            onLoadMoreSchema={(schema, cursor) => {
+              void controller.loadSourceObjectSchemaPage(schema, cursor);
+            }}
+            onLoadMoreSchemas={(cursor) => {
+              void controller.loadMoreSourceObjectSchemas(cursor);
+            }}
+            onLoadMoreSearchResults={(cursor) => {
+              void controller.loadMoreSourceObjectSearchResults(cursor);
+            }}
             onToggleDatabase={controller.toggleDatabase}
             onToggleSchema={controller.toggleSchema}
             onToggleSourceObject={controller.toggleSourceObject}

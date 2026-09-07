@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  SOURCE_OBJECT_CATALOG_CONTRACT_VERSION,
+  SourceObjectCatalogRequestSchema,
   SourceObjectCatalogResponseSchema,
   SourceObjectListSchema,
   SourceObjectSchema,
@@ -11,7 +11,7 @@ import {
   isRelationalSourceObject,
   resolveSourceObjectColumnConstraintSemantics,
   type SourceObject,
-} from '../../src/contracts/source-import/SourceObjectCatalog.v1.js';
+} from '../../src/contracts/source-import/SourceObjectCatalog.js';
 
 const measuredMetricEvidence = {
   observedAt: '2026-07-10T21:00:00.000Z',
@@ -53,7 +53,7 @@ function sourceObject(locator: SourceObject['locator']): SourceObject {
   };
 }
 
-describe('SourceObjectCatalog v1', () => {
+describe('SourceObjectCatalog', () => {
   it.each<SourceObject['locator']>([
     {
       kind: 'relation',
@@ -134,7 +134,30 @@ describe('SourceObjectCatalog v1', () => {
     ).toThrow();
   });
 
-  it('carries an explicit contract version on catalog query responses', () => {
+  it('parses bounded schema and object catalog requests', () => {
+    expect(SourceObjectCatalogRequestSchema.parse({ kind: 'schema-list' })).toEqual({
+      kind: 'schema-list',
+      limit: 50,
+    });
+    expect(
+      SourceObjectCatalogRequestSchema.parse({
+        kind: 'schema-page',
+        catalog: 'analytics',
+        schema: 'public',
+        limit: 100,
+      })
+    ).toEqual({
+      kind: 'schema-page',
+      catalog: 'analytics',
+      schema: 'public',
+      limit: 100,
+    });
+    expect(() =>
+      SourceObjectCatalogRequestSchema.parse({ kind: 'name-search', name: 'orders', limit: 101 })
+    ).toThrow();
+  });
+
+  it('parses discriminated schema summaries and object pages', () => {
     const relation = sourceObject({
       kind: 'relation',
       catalog: 'analytics',
@@ -142,16 +165,38 @@ describe('SourceObjectCatalog v1', () => {
       name: 'orders',
       relationType: 'table',
     });
-
     expect(
       SourceObjectCatalogResponseSchema.parse({
-        contractVersion: SOURCE_OBJECT_CATALOG_CONTRACT_VERSION,
-        objects: [relation],
+        kind: 'schema-list',
+        schemas: [{ catalog: 'analytics', schema: 'public', objectCount: 1 }],
+        truncated: false,
       })
-    ).toEqual({ contractVersion: 1, objects: [relation] });
-    expect(() => SourceObjectCatalogResponseSchema.parse([relation])).toThrow();
+    ).toMatchObject({ kind: 'schema-list', truncated: false });
+    expect(
+      SourceObjectCatalogResponseSchema.parse({
+        kind: 'object-page',
+        objects: [relation],
+        truncated: true,
+        nextCursor: 'opaque-cursor',
+      })
+    ).toMatchObject({ kind: 'object-page', objects: [relation], truncated: true });
+  });
+
+  it('requires a continuation cursor exactly when a catalog page is truncated', () => {
     expect(() =>
-      SourceObjectCatalogResponseSchema.parse({ contractVersion: 2, objects: [relation] })
+      SourceObjectCatalogResponseSchema.parse({
+        kind: 'object-page',
+        objects: [],
+        truncated: true,
+      })
+    ).toThrow();
+    expect(() =>
+      SourceObjectCatalogResponseSchema.parse({
+        kind: 'schema-list',
+        schemas: [],
+        truncated: false,
+        nextCursor: 'unexpected',
+      })
     ).toThrow();
   });
 

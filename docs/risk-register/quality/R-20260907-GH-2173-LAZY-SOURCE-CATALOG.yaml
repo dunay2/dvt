@@ -1,0 +1,26 @@
+---
+id: R-20260907-GH-2173-LAZY-SOURCE-CATALOG
+title: Partial source catalog pages may hide or misidentify warehouse objects
+status: Open
+date: 2026-09-07
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+  - apps/web
+severity: High
+probability: Medium
+---
+mitigation:
+  summary:
+    Replace eager discovery with one canonical schema-first query contract whose opaque cursors are
+    scope-bound, whose global search preserves qualified identity, and whose object pages retain
+    explicit row-count and byte-size evidence.
+  evidence:
+    - docs/adr/ADR-0058-warehouse-source-import-rails.md
+    - docs/architecture/components/web/frontend-command-query-rail-inventory.md
+    - docs/evidence/ED-20260907-gh-2173-lazy-source-catalog.md
+  follow_up:
+    - Keep the risk Open until final implementation evidence records bounded provider query count,
+      response bytes, latency, cursor rejection and large-catalog truncation.
+    - Reject any suffixed contract family, compatibility parser, forwarding export, dual read, dual
+      write, client-only global search or exact row COUNT scan during catalog browsing.

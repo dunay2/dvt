@@ -388,14 +388,19 @@ describe('workspace ports api warehouse source import', () => {
     };
     const { getJson, warehouseSourceImport } = createApiWorkspacePortHarness({
       getJson: async <TResponse>() =>
-        ({ contractVersion: 1, objects: [sourceObject] }) as TResponse,
+        ({ kind: 'object-page', objects: [sourceObject], truncated: false }) as TResponse,
     });
 
-    await expect(warehouseSourceImport.listSourceObjects('warehouse-prod')).resolves.toEqual([
-      sourceObject,
-    ]);
+    await expect(
+      warehouseSourceImport.listSourceObjectCatalog('warehouse-prod', {
+        kind: 'schema-page',
+        catalog: 'analytics',
+        schema: 'erp',
+        limit: 50,
+      })
+    ).resolves.toEqual({ kind: 'object-page', objects: [sourceObject], truncated: false });
     expect(getJson).toHaveBeenCalledWith(
-      `/workspace/warehouse/connections/warehouse-prod/objects?tenantId=${scope.tenantId}&projectId=${scope.projectId}&environmentId=${scope.environmentId}`
+      `/workspace/warehouse/connections/warehouse-prod/objects?tenantId=${scope.tenantId}&projectId=${scope.projectId}&environmentId=${scope.environmentId}&kind=schema-page&limit=50&catalog=analytics&schema=erp`
     );
   });
 
@@ -428,14 +433,21 @@ describe('workspace ports api warehouse source import', () => {
     );
   });
 
-  it('rejects an unversioned source-object catalog response', async () => {
+  it('rejects a malformed source-object catalog response', async () => {
     const scope = buildWorkspaceScope();
     setWorkspaceScope(scope);
     const { warehouseSourceImport } = createApiWorkspacePortHarness({
       getJson: async <TResponse>() => [] as TResponse,
     });
 
-    await expect(warehouseSourceImport.listSourceObjects('warehouse-prod')).rejects.toThrow();
+    await expect(
+      warehouseSourceImport.listSourceObjectCatalog('warehouse-prod', {
+        kind: 'schema-page',
+        catalog: 'analytics',
+        schema: 'erp',
+        limit: 50,
+      })
+    ).rejects.toThrow();
   });
 
   it('imports selected warehouse sources through the scoped protected runtime command endpoint', async () => {

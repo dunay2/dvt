@@ -14,6 +14,8 @@ import type {
   ImportSourceObjectsRequestV2,
   ImportSourceObjectsResultV2,
   SourceObject,
+  SourceObjectCatalogRequest,
+  SourceObjectCatalogResponse,
   SourceImportGrouping as ContractSourceImportGrouping,
   RenameWarehouseConnectionRequest,
   SourceDataSampleRequest,
@@ -82,6 +84,12 @@ export type WarehouseConnectionProbeTarget = Readonly<{
   name?: string;
 }>;
 
+export type WarehouseSourceObjectCatalogProbeTarget = WarehouseConnectionProbeTarget &
+  Readonly<{
+    connectionId: string;
+    scope: WorkspaceGraphDraftScope;
+  }>;
+
 export const SUPPORTED_SOURCE_IMPORT_GROUPINGS = SOURCE_IMPORT_GROUPING;
 
 export type SourceImportGrouping = ContractSourceImportGrouping;
@@ -118,6 +126,10 @@ export interface IWarehouseConnectionProbe {
     input: WarehouseConnectionProbeTarget
   ): Promise<InspectWarehouseConnectionResult>;
   testConnection(input: WarehouseConnectionCatalogEntry): Promise<TestWarehouseConnectionResult>;
+  listSourceObjectCatalog(
+    input: WarehouseSourceObjectCatalogProbeTarget,
+    request: SourceObjectCatalogRequest
+  ): Promise<SourceObjectCatalogResponse>;
 }
 
 export type PreviewWarehouseSourceObjectRowsInput = SourceDataSampleRequest & {

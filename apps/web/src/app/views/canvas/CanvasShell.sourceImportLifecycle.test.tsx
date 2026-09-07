@@ -52,7 +52,11 @@ describe('CanvasShell source import lifecycle', () => {
   it('opens the source import wizard from the viewport contextual source command', async () => {
     const warehouseSourceImport = {
       listWarehouseConnections: vi.fn(),
-      listSourceObjects: vi.fn(),
+      listSourceObjectCatalog: vi.fn(async () => ({
+        kind: 'schema-list' as const,
+        schemas: [],
+        truncated: false,
+      })),
       createWarehouseConnection: vi.fn(),
       renameWarehouseConnection: vi.fn(),
       testWarehouseConnection: vi.fn(),
