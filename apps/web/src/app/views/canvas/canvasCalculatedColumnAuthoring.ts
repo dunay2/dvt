@@ -45,25 +45,13 @@ function nodeCatalog(
   return catalog;
 }
 
-function creationRequest(
-  request: CanvasCalculatedColumnRequest,
-  projection: DvtSubstraitProjection
-): DvtSubstraitCreateOutputRequest {
-  const resolveFieldId = (identity: string): string =>
-    projection.outputs.find(
-      (output) =>
-        output.fieldId === identity ||
-        output.name === identity ||
-        output.sourceFieldId === identity ||
-        output.sourceFieldName === identity
-    )?.fieldId ?? identity;
-
+function creationRequest(request: CanvasCalculatedColumnRequest): DvtSubstraitCreateOutputRequest {
   if (request.kind === 'scalar-function') {
     return {
       alias: request.alias,
       expression: {
         kind: 'scalar-function',
-        inputFieldId: resolveFieldId(request.inputFieldId),
+        inputFieldId: request.inputFieldId,
         capabilityId: request.capabilityId,
       },
     };
@@ -71,7 +59,7 @@ function creationRequest(
   if (request.kind === 'row-number') {
     return {
       alias: request.alias,
-      expression: { kind: 'row-number', orderFieldId: resolveFieldId(request.orderFieldId) },
+      expression: { kind: 'row-number', orderFieldId: request.orderFieldId },
     };
   }
   return {
@@ -79,13 +67,12 @@ function creationRequest(
     expression: { kind: request.kind, value: request.value },
   };
 }
-
 function createOutput(args: {
   request: CanvasCalculatedColumnRequest;
   projection: DvtSubstraitProjection;
   draft: DvtSubstraitProjectionDraft;
 }) {
-  const request = creationRequest(args.request, args.projection);
+  const request = creationRequest(args.request);
   const inputFieldId =
     request.expression.kind === 'scalar-function' ? request.expression.inputFieldId : undefined;
   const input = args.projection.outputs.find((output) => output.fieldId === inputFieldId);

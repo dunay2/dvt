@@ -157,6 +157,75 @@ describe('Canvas calculated column authoring', () => {
     expect(created?.fieldId).not.toContain('customer_clean');
   });
 
+  it('chains derived outputs by FieldId and rejects mutable names as identities', () => {
+    const transform = projectionTransform();
+    const functions = resolveDvtSubstraitColumnFunctions({
+      dataType: 'text',
+      provider: 'postgres',
+    });
+    const trim = functions.find((candidate) => candidate.name === 'trim');
+    const upper = functions.find((candidate) => candidate.name === 'upper');
+    if (trim == null || upper == null) throw new Error('Expected admitted text capabilities.');
+    const initial = session(source, transform);
+    initial.workingSet.visibleEdges.push({ sourceId: source.id, targetId: transform.id });
+    const canonicalNodesById = new Map([
+      [source.id, source],
+      [transform.id, transform],
+    ]);
+
+    const first = applyCanvasCalculatedColumn({
+      draftSession: initial,
+      canonicalNodesById,
+      request: {
+        nodeId: transform.id,
+        kind: 'scalar-function',
+        alias: 'customer_clean',
+        inputFieldId: 'output:customer',
+        capabilityId: trim.capabilityId,
+      },
+    });
+    expect(first.outcome).toBe('applied');
+    if (first.outcome !== 'applied') return;
+
+    expect(
+      applyCanvasCalculatedColumn({
+        draftSession: first.draftSession,
+        canonicalNodesById,
+        request: {
+          nodeId: transform.id,
+          kind: 'scalar-function',
+          alias: 'customer_by_name',
+          inputFieldId: 'customer_clean',
+          capabilityId: upper.capabilityId,
+        },
+      })
+    ).toEqual({ outcome: 'rejected' });
+
+    const second = applyCanvasCalculatedColumn({
+      draftSession: first.draftSession,
+      canonicalNodesById,
+      request: {
+        nodeId: transform.id,
+        kind: 'scalar-function',
+        alias: 'customer_normalized',
+        inputFieldId: first.createdFieldId,
+        capabilityId: upper.capabilityId,
+      },
+    });
+    expect(second.outcome).toBe('applied');
+    if (second.outcome !== 'applied') return;
+    expect(second.createdFieldId).toMatch(OPAQUE_FIELD_ID);
+    expect(second.createdFieldId).not.toBe(first.createdFieldId);
+
+    const replacement = second.draftSession.localNodeCatalog?.[transform.id];
+    if (replacement == null) throw new Error('Expected an updated Transform.');
+    expect(inspect(replacement).outputs.map((output) => output.name)).toEqual([
+      'order_id',
+      'customer',
+      'customer_clean',
+      'customer_normalized',
+    ]);
+  });
   it('allocates opaque outputs when replacing a stale upstream source and preserves them on reread', () => {
     const transform = projectionTransform();
     const replacement: CanonicalNode = {
