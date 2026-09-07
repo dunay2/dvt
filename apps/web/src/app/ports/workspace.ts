@@ -11,6 +11,8 @@ import {
   type SourceDataSampleRequest,
   type SourceDataSampleResponse,
   type SourceObject,
+  type SourceObjectCatalogRequest,
+  type SourceObjectCatalogResponse,
   type TestWarehouseConnectionResult as ContractTestWarehouseConnectionResult,
   type WarehouseConnection as ContractWarehouseConnection,
   type WarehouseConnectionType as ContractWarehouseConnectionType,
@@ -192,7 +194,10 @@ export interface IWorkspaceAdminReadPort {
 /** Owns warehouse source discovery queries and source import command access. */
 export interface IWarehouseSourceImportPort {
   listWarehouseConnections: () => Promise<WarehouseConnection[]>;
-  listSourceObjects: (connectionId: string) => Promise<SourceObject[]>;
+  listSourceObjectCatalog: (
+    connectionId: string,
+    request: SourceObjectCatalogRequest
+  ) => Promise<SourceObjectCatalogResponse>;
   createWarehouseConnection: (
     input: CreateWarehouseConnectionInput
   ) => Promise<WarehouseConnection>;

@@ -1,26 +1,35 @@
 import { Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+
+import type { SourceObjectCatalogSchemaSummary } from '@dvt/contracts';
 
 import { Card } from '../ui/card';
 import { Input } from '../ui/input';
 import { ScrollArea } from '../ui/scroll-area';
 import { useSourceImportLocalization } from './copy';
-import { SourceImportObjectsMetadata } from './SourceImportObjectsMetadata';
 import { SourceImportCatalogView } from './SourceImportCatalogView';
+import { SourceImportObjectsMetadata } from './SourceImportObjectsMetadata';
 import { SourceImportSelectionBasket } from './SourceImportSelectionBasket';
 import {
-  buildSourceObjectIdentityKey,
   buildSourceImportCatalogViewModel,
+  buildSourceObjectIdentityKey,
   type SourceImportCatalogFilterId,
 } from './sourceImportCatalogModel';
 import type {
   SelectableSourceObject,
+  SourceImportCatalogPageState,
   SourceImportDatabaseIdentity,
   SourceImportSchemaIdentity,
+  SourceImportSearchPageState,
 } from './types';
 
 interface SelectionStepProps {
   sourceObjects: SelectableSourceObject[];
+  sourceObjectSchemas: readonly SourceObjectCatalogSchemaSummary[];
+  sourceObjectSchemaListPage: SourceImportCatalogPageState;
+  sourceObjectSchemaPages: Readonly<Record<string, SourceImportCatalogPageState>>;
+  sourceObjectSearchPage: SourceImportSearchPageState;
+  sourceObjectSearchObjectIds: readonly string[];
   selectedCount: number;
   activeSourceObjectKey: string | null;
   sourceObjectSearchQuery: string;
@@ -28,6 +37,10 @@ interface SelectionStepProps {
   loadError: string | null;
   onSourceObjectSearchQueryChange: (query: string) => void;
   onActivateSourceObject: (index: number) => void;
+  onExpandSchema: (schema: SourceImportSchemaIdentity) => void;
+  onLoadMoreSchema: (schema: SourceImportSchemaIdentity, cursor: string) => void;
+  onLoadMoreSchemas: (cursor: string) => void;
+  onLoadMoreSearchResults: (cursor: string) => void;
   onToggleDatabase: (database: SourceImportDatabaseIdentity) => void;
   onToggleSchema: (schema: SourceImportSchemaIdentity) => void;
   onToggleSourceObject: (index: number) => void;
@@ -45,10 +58,17 @@ export const sourceImportSelectionStepClassNames = {
   searchLabel: 'text-xs font-medium uppercase tracking-wide text-slate-400',
   resultCount: 'text-xs text-slate-400',
   detail: 'space-y-4',
+  loadMore:
+    'rounded border border-slate-700 px-2.5 py-1 text-xs text-slate-300 disabled:opacity-50',
 } as const;
 
 export function SelectionStep({
   sourceObjects,
+  sourceObjectSchemas,
+  sourceObjectSchemaListPage,
+  sourceObjectSchemaPages,
+  sourceObjectSearchPage,
+  sourceObjectSearchObjectIds,
   selectedCount,
   activeSourceObjectKey,
   sourceObjectSearchQuery,
@@ -56,16 +76,28 @@ export function SelectionStep({
   loadError,
   onSourceObjectSearchQueryChange,
   onActivateSourceObject,
+  onExpandSchema,
+  onLoadMoreSchema,
+  onLoadMoreSchemas,
+  onLoadMoreSearchResults,
   onToggleDatabase,
   onToggleSchema,
   onToggleSourceObject,
 }: SelectionStepProps) {
   const { copy, numberFormatter } = useSourceImportLocalization();
   const [catalogFilterId, setCatalogFilterId] = useState<SourceImportCatalogFilterId>('all');
+  const normalizedSearch = sourceObjectSearchQuery.trim();
+  const visibleObjectIds = useMemo(
+    () => (normalizedSearch.length > 0 ? new Set(sourceObjectSearchObjectIds) : undefined),
+    [normalizedSearch.length, sourceObjectSearchObjectIds]
+  );
   const catalogViewModel = buildSourceImportCatalogViewModel({
     sourceObjects,
     activeSourceObjectKey,
-    searchQuery: sourceObjectSearchQuery,
+    searchQuery: normalizedSearch,
+    schemaSummaries: normalizedSearch.length === 0 ? sourceObjectSchemas : [],
+    schemaPageStates: sourceObjectSchemaPages,
+    visibleObjectIds,
     filterId: catalogFilterId,
     copy: copy.catalog,
     numberFormatter,
@@ -76,6 +108,7 @@ export function SelectionStep({
         buildSourceObjectIdentityKey(sourceObject) ===
         catalogViewModel.activeSourceObject?.identityKey
     ) ?? null;
+  const loadMoreLabel = copy.selection.loadMore ?? 'Load more';
 
   return (
     <div className={sourceImportSelectionStepClassNames.root}>
@@ -113,7 +146,9 @@ export function SelectionStep({
                 onChange={(event) => onSourceObjectSearchQueryChange(event.target.value)}
               />
               <div className={sourceImportSelectionStepClassNames.resultCount}>
-                {catalogViewModel.resultCountLabel}
+                {sourceObjectSearchPage.loading
+                  ? copy.selection.loading
+                  : catalogViewModel.resultCountLabel}
               </div>
             </div>
             <ScrollArea
@@ -123,15 +158,37 @@ export function SelectionStep({
               <SourceImportCatalogView
                 catalog={catalogViewModel}
                 emptyLabel={copy.selection.empty}
+                loadMoreLabel={loadMoreLabel}
+                loadingLabel={copy.selection.loading}
                 onActivateSourceObject={onActivateSourceObject}
+                onExpandSchema={onExpandSchema}
+                onLoadMoreSchema={onLoadMoreSchema}
                 onSelectFilter={setCatalogFilterId}
                 onToggleDatabase={onToggleDatabase}
                 onToggleSchema={onToggleSchema}
                 onToggleSourceObject={onToggleSourceObject}
-                revealMatchingSchemas={
-                  sourceObjectSearchQuery.trim().length > 0 || catalogFilterId !== 'all'
-                }
+                revealMatchingSchemas={normalizedSearch.length > 0 || catalogFilterId !== 'all'}
               />
+              {normalizedSearch.length === 0 && sourceObjectSchemaListPage.nextCursor ? (
+                <button
+                  type="button"
+                  className={sourceImportSelectionStepClassNames.loadMore}
+                  disabled={sourceObjectSchemaListPage.loading}
+                  onClick={() => onLoadMoreSchemas(sourceObjectSchemaListPage.nextCursor!)}
+                >
+                  {loadMoreLabel}
+                </button>
+              ) : null}
+              {normalizedSearch.length > 0 && sourceObjectSearchPage.nextCursor ? (
+                <button
+                  type="button"
+                  className={sourceImportSelectionStepClassNames.loadMore}
+                  disabled={sourceObjectSearchPage.loading}
+                  onClick={() => onLoadMoreSearchResults(sourceObjectSearchPage.nextCursor!)}
+                >
+                  {loadMoreLabel}
+                </button>
+              ) : null}
             </ScrollArea>
           </div>
           <div className={sourceImportSelectionStepClassNames.detail}>

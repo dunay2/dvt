@@ -121,6 +121,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Object-file load admission could cross scope or imply unavailable execution](R-20260804-OBJECT-FILE-POSTGRES-ADMISSION.yaml)
 - [Online rollback classification could mislabel a future destructive schema step](R-20260513-AR-D4-ZERO-DOWNTIME-SCHEMA-ROLLBACK.yaml)
 - [Packaged compatibility schema can drift from canonical root compatibility matrix](R-20260612-CONTRACTS-COMPAT-SCHEMA-PARITY.yaml)
+- [Partial source catalog pages may hide or misidentify warehouse objects](R-20260907-GH-2173-LAZY-SOURCE-CATALOG.yaml)
 - [Persisted plan decisions could diverge from the authorized executable graph](R-20260801-PLAN-EXECUTION-DECISIONS.yaml)
 - [Persisted plan record contracts can drift back into dual truth and invalid state acceptance](R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml)
 - [Persisted plans may contain retired SQL-first step kinds](R-20260903-VTX2-RUNTIME-STEP-HARDCUT.yaml)

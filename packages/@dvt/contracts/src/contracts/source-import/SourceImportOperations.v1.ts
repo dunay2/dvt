@@ -9,7 +9,7 @@
  */
 import { z } from 'zod';
 
-import { SourceObjectSelectionListSchema } from './SourceObjectCatalog.v1.js';
+import { SourceObjectSelectionListSchema } from './SourceObjectCatalog.js';
 
 export const WAREHOUSE_CONNECTION_TYPE = ['postgres'] as const;
 export const POSTGRES_CREDENTIAL_REF_PREFIX = 'postgres:' as const;

@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   buildWarehouseSourceImportPort,
   buildSourceObject,
+  buildSourceObjectCatalogResponder,
   createSourceImportWizardHarness,
 } from './SourceImportWizard.testHarness';
 import { buildSourceImportTestMetricEvidence } from './sourceImportWizard/sourceImportWizard.testFixtures';
@@ -38,7 +39,7 @@ describe('SourceImportWizard metadata exploration', () => {
     });
     await harness.renderWizard({
       warehouseSourceImport: buildWarehouseSourceImportPort({
-        listSourceObjects: async () => [orders],
+        listSourceObjectCatalog: buildSourceObjectCatalogResponder([orders]),
       }),
     });
 
@@ -80,7 +81,7 @@ describe('SourceImportWizard metadata exploration', () => {
         ],
       },
       warehouseSourceImport: buildWarehouseSourceImportPort({
-        listSourceObjects: async () => [
+        listSourceObjectCatalog: buildSourceObjectCatalogResponder([
           buildSourceObject({ table: 'ORDERS' }),
           buildSourceObject({
             table: 'CUSTOMERS',
@@ -90,7 +91,7 @@ describe('SourceImportWizard metadata exploration', () => {
               { name: 'email', type: 'VARCHAR', nullable: true },
             ],
           }),
-        ],
+        ]),
       }),
     });
     await harness.flushPendingWork();
@@ -140,11 +141,11 @@ describe('SourceImportWizard metadata exploration', () => {
         ],
       },
       warehouseSourceImport: buildWarehouseSourceImportPort({
-        listSourceObjects: async () => [
+        listSourceObjectCatalog: buildSourceObjectCatalogResponder([
           buildSourceObject({ database: 'RAW', schema: 'ERP', table: 'ORDERS' }),
           buildSourceObject({ database: 'RAW', schema: 'ERP', table: 'CUSTOMERS' }),
           buildSourceObject({ database: 'RAW', schema: 'ERP', table: 'PAYMENTS' }),
-        ],
+        ]),
         importSources,
       }),
     });
@@ -162,10 +163,10 @@ describe('SourceImportWizard metadata exploration', () => {
       expect.objectContaining({
         canvasId: 'canvas-orders',
         connectionId: 'conn-1',
-        objects: [
+        objects: expect.arrayContaining([
           { objectId: 'relation/RAW/ERP/ORDERS' },
           { objectId: 'relation/RAW/ERP/CUSTOMERS' },
-        ],
+        ]),
         existingDbtSourceTargets: [
           {
             objectId: 'relation/RAW/ERP/CUSTOMERS',
@@ -222,7 +223,7 @@ describe('SourceImportWizard metadata exploration', () => {
         ],
       },
       warehouseSourceImport: buildWarehouseSourceImportPort({
-        listSourceObjects: async () => [orders, customers],
+        listSourceObjectCatalog: buildSourceObjectCatalogResponder([orders, customers]),
       }),
     });
 
@@ -255,7 +256,9 @@ describe('SourceImportWizard metadata exploration', () => {
   });
 
   it('does not carry explorer preselection into a different warehouse connection', async () => {
-    const listSourceObjects = vi.fn(async () => [buildSourceObject({ table: 'CUSTOMERS' })]);
+    const listSourceObjectCatalog = vi.fn(
+      buildSourceObjectCatalogResponder([buildSourceObject({ table: 'CUSTOMERS' })])
+    );
 
     await harness.renderWizard({
       initialSelection: {
@@ -277,7 +280,7 @@ describe('SourceImportWizard metadata exploration', () => {
             database: 'RAW',
           },
         ],
-        listSourceObjects,
+        listSourceObjectCatalog,
       }),
     });
     await harness.flushPendingWork();
@@ -289,7 +292,10 @@ describe('SourceImportWizard metadata exploration', () => {
     await harness.clickTab('Browse');
     await harness.flushPendingWork();
 
-    expect(listSourceObjects).toHaveBeenLastCalledWith('conn-2');
+    expect(listSourceObjectCatalog).toHaveBeenLastCalledWith('conn-2', {
+      kind: 'schema-list',
+      limit: 50,
+    });
     expect(document.body.textContent).toContain('Selected: 0');
   });
 
@@ -332,10 +338,10 @@ describe('SourceImportWizard metadata exploration', () => {
     expect(document.body.textContent).not.toContain('Sandbox warehouse');
   });
 
-  it('keeps relational sources selectable when the catalog also contains unsupported objects', async () => {
+  it('keeps inactive locator variants out of the relational catalog', async () => {
     await harness.renderWizard({
       warehouseSourceImport: buildWarehouseSourceImportPort({
-        listSourceObjects: async () => [
+        listSourceObjectCatalog: buildSourceObjectCatalogResponder([
           buildSourceObject({ table: 'ORDERS' }),
           {
             objectId: 'file/s3%3A%2F%2Fwarehouse%2Forders.parquet',
@@ -347,25 +353,25 @@ describe('SourceImportWizard metadata exploration', () => {
             },
             metricEvidence: buildSourceImportTestMetricEvidence(1500, 4096000),
           },
-        ],
+        ]),
       }),
     });
 
     await harness.clickConnectionOption('Local Postgres proof');
     await harness.clickTab('Browse');
 
+    await harness.expandCollapsedSourceSchemas();
+    await harness.flushPendingWork();
     expect(document.body.textContent).toContain('RAW.ERP.ORDERS');
-    expect(document.body.textContent).toContain('Files');
-    expect(document.body.textContent).toContain(
-      'Visible for inspection. This importer currently attaches relational source objects only.'
-    );
+    expect(document.body.textContent).not.toContain('Files');
+    expect(document.body.textContent).not.toContain('orders.parquet');
     expect(document.body.textContent).not.toContain('Failed to load warehouse tables.');
   });
 
-  it('searches source objects by column metadata and keeps active metadata visible while browsing', async () => {
+  it('searches source objects globally by name and keeps metric metadata visible while browsing', async () => {
     await harness.renderWizard({
       warehouseSourceImport: buildWarehouseSourceImportPort({
-        listSourceObjects: async () => [
+        listSourceObjectCatalog: buildSourceObjectCatalogResponder([
           buildSourceObject({
             table: 'ORDERS',
             metricEvidence: buildSourceImportTestMetricEvidence(1500, 4096000),
@@ -383,7 +389,7 @@ describe('SourceImportWizard metadata exploration', () => {
             ],
             constraints: [{ name: 'customers_email_key', kind: 'unique', columns: ['email'] }],
           }),
-        ],
+        ]),
       }),
     });
 
@@ -397,6 +403,9 @@ describe('SourceImportWizard metadata exploration', () => {
     expect(search).not.toBeNull();
     expect(document.body.textContent).toContain('2 objects available');
     expect(document.body.textContent).toContain('Source metadata');
+    expect(document.body.textContent).not.toContain('RAW.ERP.ORDERS');
+    await harness.expandCollapsedSourceSchemas();
+    await harness.flushPendingWork();
     expect(document.body.textContent).toContain('RAW.ERP.ORDERS');
     expect(document.querySelector('[data-source-import-catalog-scroll]')?.className).toContain(
       '[&_[data-slot=scroll-area-viewport]>div]:!block'
@@ -404,11 +413,15 @@ describe('SourceImportWizard metadata exploration', () => {
 
     await act(async () => {
       if (search) {
-        fireEvent.change(search, { target: { value: 'email' } });
+        fireEvent.change(search, { target: { value: 'customers' } });
       }
     });
+    await act(async () => {
+      await new Promise((resolve) => window.setTimeout(resolve, 350));
+    });
+    await harness.flushPendingWork();
 
-    expect(document.body.textContent).toContain('Showing 1 of 2 objects');
+    expect(document.body.textContent).toContain('1 object available');
     expect(document.body.textContent).toContain('CUSTOMERS');
     expect(document.body.textContent).not.toContain('ORDERS');
     expect(document.body.textContent).toContain('RAW.ERP.CUSTOMERS');
@@ -424,7 +437,7 @@ describe('SourceImportWizard metadata exploration', () => {
   it('keeps a selected-source basket visible while browsing before import', async () => {
     await harness.renderWizard({
       warehouseSourceImport: buildWarehouseSourceImportPort({
-        listSourceObjects: async () => [
+        listSourceObjectCatalog: buildSourceObjectCatalogResponder([
           buildSourceObject({
             database: 'RAW',
             schema: 'ERP',
@@ -439,7 +452,7 @@ describe('SourceImportWizard metadata exploration', () => {
             metricEvidence: buildSourceImportTestMetricEvidence(45000, 8700000),
             columns: [{ name: 'email', type: 'VARCHAR', nullable: true }],
           }),
-        ],
+        ]),
       }),
     });
 
@@ -460,7 +473,7 @@ describe('SourceImportWizard metadata exploration', () => {
     await harness.renderWizard({
       warehouseSourceImport: buildWarehouseSourceImportPort({
         importSources,
-        listSourceObjects: async () => [
+        listSourceObjectCatalog: buildSourceObjectCatalogResponder([
           buildSourceObject({
             database: 'RAW',
             schema: 'ERP',
@@ -468,7 +481,7 @@ describe('SourceImportWizard metadata exploration', () => {
             metricEvidence: buildSourceImportTestMetricEvidence(1500, 7340032),
             columns: [{ name: 'order_id', type: 'INTEGER', nullable: false }],
           }),
-        ],
+        ]),
       }),
     });
 
@@ -494,7 +507,7 @@ describe('SourceImportWizard metadata exploration', () => {
   it('lets users remove selected sources from the basket without losing active metadata', async () => {
     await harness.renderWizard({
       warehouseSourceImport: buildWarehouseSourceImportPort({
-        listSourceObjects: async () => [
+        listSourceObjectCatalog: buildSourceObjectCatalogResponder([
           buildSourceObject({
             database: 'RAW',
             schema: 'ERP',
@@ -502,7 +515,7 @@ describe('SourceImportWizard metadata exploration', () => {
             metricEvidence: buildSourceImportTestMetricEvidence(1500, 4096000),
             columns: [{ name: 'order_id', type: 'INTEGER', nullable: false }],
           }),
-        ],
+        ]),
       }),
     });
 

@@ -7,7 +7,7 @@
  * @consequence Consumers receive one governed source-import vocabulary without unrelated contract leakage.
  * @version 1.0.0
  */
-export * from './SourceObjectCatalog.v1.js';
+export * from './SourceObjectCatalog.js';
 export * from './SourceImportOperations.v1.js';
 export * from './SourceImportOperations.v2.js';
 export * from './SourceRebindOperations.v1.js';

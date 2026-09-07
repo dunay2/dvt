@@ -235,13 +235,35 @@ function stubDbtSourceBindingFlow(): void {
       database: 'RAW',
     },
   ]);
-  stubE2eJsonApi('GET', `/workspace/warehouse/connections/${CONNECTION_ID}/objects`, {
-    contractVersion: 1,
-    objects: [
-      buildSourceObject('ORDERS', 42),
-      buildSourceObject('CUSTOMERS', 12),
-      buildSourceObject('PRODUCTS', 24),
-    ],
+  const sourceObjects = [
+    buildSourceObject('ORDERS', 42),
+    buildSourceObject('CUSTOMERS', 12),
+    buildSourceObject('PRODUCTS', 24),
+  ];
+  stubE2eApi('GET', `/workspace/warehouse/connections/${CONNECTION_ID}/objects`, ({ url }) => {
+    const kind = url.searchParams.get('kind');
+    if (kind === 'schema-list') {
+      return {
+        body: {
+          kind: 'schema-list',
+          schemas: [{ catalog: 'RAW', schema: 'ERP', objectCount: sourceObjects.length }],
+          truncated: false,
+        },
+      };
+    }
+    const name = url.searchParams.get('name')?.toLowerCase();
+    return {
+      body: {
+        kind: 'object-page',
+        objects:
+          kind === 'name-search' && name
+            ? sourceObjects.filter((sourceObject) =>
+                sourceObject.locator.name.toLowerCase().includes(name)
+              )
+            : sourceObjects,
+        truncated: false,
+      },
+    };
   });
   stubE2eApi('POST', '/workspace/sources/import', ({ body }) => {
     const command = body as {
@@ -387,7 +409,7 @@ describe('dbt source connection binding', () => {
         }>;
       };
       expect(command.connectionId).to.equal(CONNECTION_ID);
-      expect(command.objects.map(({ objectId }) => objectId)).to.deep.equal([
+      expect(command.objects.map(({ objectId }) => objectId)).to.have.members([
         'relation/RAW/ERP/ORDERS',
         'relation/RAW/ERP/CUSTOMERS',
         'relation/RAW/ERP/PRODUCTS',

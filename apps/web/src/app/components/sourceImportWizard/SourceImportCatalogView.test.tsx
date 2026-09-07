@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { sourceImportCatalogNumberFormatter, sourceImportWizardCopy } from './copy';
 import {
   buildSourceImportCatalogViewModel,
+  buildSourceImportSchemaKey,
   type SourceImportCatalogViewModel,
 } from './sourceImportCatalogModel';
 import { SourceImportDatabaseHeader } from './SourceImportCatalogPrimitives';
@@ -58,6 +59,7 @@ describe('SourceImportCatalogView', () => {
           schemaCountLabel="11 schemas"
           objectCountLabel="234 objects"
           selected={false}
+          selectable={true}
           selectedLabel={null}
           onToggle={vi.fn()}
         />
@@ -240,7 +242,7 @@ describe('SourceImportCatalogView', () => {
     expect(onToggleSourceObject).toHaveBeenCalledOnce();
   });
 
-  it('reveals a collapsed schema when its selection is toggled', async () => {
+  it('keeps a schema closed when its selection is toggled', async () => {
     const relation = buildSourceImportTestObject();
 
     await act(async () => {
@@ -271,7 +273,7 @@ describe('SourceImportCatalogView', () => {
 
     expect(
       container.querySelector(`[data-source-import-object="${relation.objectId}"]`)
-    ).not.toBeNull();
+    ).toBeNull();
   });
 
   it('renders every SourceObject kind and disables unsupported imports without hiding inspection', async () => {
@@ -383,5 +385,52 @@ describe('SourceImportCatalogView', () => {
     );
     expect(identities).toHaveLength(2);
     expect(new Set(identities).size).toBe(2);
+  });
+
+  it('shows schema continuation only when the loaded page has a cursor', async () => {
+    const relation = buildSourceImportTestObject();
+    const schema = { database: 'RAW', schema: 'ERP' };
+    const onLoadMoreSchema = vi.fn();
+    const catalog = buildSourceImportCatalogViewModel({
+      sourceObjects: [relation],
+      activeSourceObjectKey: null,
+      schemaSummaries: [{ catalog: 'RAW', schema: 'ERP', objectCount: 75 }],
+      schemaPageStates: {
+        [buildSourceImportSchemaKey(schema)]: {
+          loaded: true,
+          loading: false,
+          nextCursor: 'page-2',
+        },
+      },
+      copy: sourceImportWizardCopy.catalog,
+      numberFormatter: sourceImportCatalogNumberFormatter,
+    });
+
+    await act(async () => {
+      root.render(
+        <SourceImportCatalogView
+          catalog={catalog}
+          emptyLabel="No source objects"
+          onActivateSourceObject={vi.fn()}
+          onLoadMoreSchema={onLoadMoreSchema}
+          onSelectFilter={vi.fn()}
+          onToggleDatabase={vi.fn()}
+          onToggleSchema={vi.fn()}
+          onToggleSourceObject={vi.fn()}
+        />
+      );
+    });
+    await act(async () => {
+      fireEvent.click(
+        getByRole(container, 'button', {
+          name: 'Expand source schema ERP. In source database RAW. 75 objects.',
+        })
+      );
+    });
+    await act(async () => {
+      fireEvent.click(getByRole(container, 'button', { name: 'Load more' }));
+    });
+
+    expect(onLoadMoreSchema).toHaveBeenCalledWith(schema, 'page-2');
   });
 });

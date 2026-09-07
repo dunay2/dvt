@@ -184,6 +184,9 @@ function reader(target: RelationalSourceObject): WarehouseConnectionSourceObject
     renameConnection: vi.fn(),
   };
   const probe: IWarehouseConnectionProbe = {
+    listSourceObjectCatalog: vi.fn(() =>
+      Promise.reject(new Error('Unexpected source catalog query.'))
+    ),
     inspectConnection: vi.fn(async () => ({
       status: 'passed' as const,
       checkedAt: '2026-09-06T08:00:00.000Z',

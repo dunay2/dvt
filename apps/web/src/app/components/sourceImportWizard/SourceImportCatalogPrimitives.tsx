@@ -73,6 +73,7 @@ type SourceImportSchemaHeaderProps = Readonly<{
   schemaIdentityKey: string;
   expanded: boolean;
   selected: boolean;
+  selectable: boolean;
   objectCountLabel: string;
   onToggle: () => void;
 }>;
@@ -89,6 +90,7 @@ type SourceImportDatabaseHeaderProps = Readonly<{
   schemaCountLabel: string;
   objectCountLabel: string;
   selected: boolean;
+  selectable: boolean;
   selectedLabel: string | null;
   onToggle: () => void;
 }>;
@@ -161,6 +163,7 @@ export function SourceImportDatabaseHeader({
   schemaCountLabel,
   objectCountLabel,
   selected,
+  selectable,
   selectedLabel,
   onToggle,
 }: SourceImportDatabaseHeaderProps): JSX.Element {
@@ -171,7 +174,12 @@ export function SourceImportDatabaseHeader({
     >
       <div className={sourceImportCatalogClassNames.groupHeaderContent}>
         <span className={sourceImportCatalogClassNames.groupIdentity}>
-          <Checkbox aria-label={accessibilityLabel} checked={selected} onCheckedChange={onToggle} />
+          <Checkbox
+            aria-label={accessibilityLabel}
+            checked={selected}
+            disabled={!selectable}
+            onCheckedChange={onToggle}
+          />
           <Database className={sourceImportCatalogClassNames.objectIcon} aria-hidden="true" />
           <span className={sourceImportCatalogClassNames.groupTitle}>{database}</span>
         </span>
@@ -224,6 +232,7 @@ export function SourceImportSchemaHeader({
   schemaIdentityKey,
   expanded,
   selected,
+  selectable,
   objectCountLabel,
   onToggle,
 }: SourceImportSchemaHeaderProps): JSX.Element {
@@ -232,7 +241,12 @@ export function SourceImportSchemaHeader({
       data-source-import-schema={schemaIdentityKey}
       className={sourceImportCatalogClassNames.schemaHeader}
     >
-      <Checkbox aria-label={accessibilityLabel} checked={selected} onCheckedChange={onToggle} />
+      <Checkbox
+        aria-label={accessibilityLabel}
+        checked={selected}
+        disabled={!selectable}
+        onCheckedChange={onToggle}
+      />
       <CollapsibleTrigger asChild>
         <button
           type="button"

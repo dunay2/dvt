@@ -136,7 +136,11 @@ function buildWorkspacePortStubs(): {
     },
     warehouseSourceImport: {
       listWarehouseConnections: vi.fn(async () => []),
-      listSourceObjects: vi.fn(async () => []),
+      listSourceObjectCatalog: vi.fn(async () => ({
+        kind: 'schema-list' as const,
+        schemas: [],
+        truncated: false,
+      })),
       createWarehouseConnection: vi.fn(async (input) => ({
         id: 'conn-created',
         name: input.name,
@@ -228,7 +232,15 @@ describe('buildAppServices', () => {
     const firstServices = buildAppServices(createAppServicesTestOverrides());
     const secondServices = buildAppServices(createAppServicesTestOverrides());
     const secondBefore = await secondServices.workspaceGraphSnapshotQuery.getGraphSnapshot();
-    const orders = (await firstServices.warehouseSourceImport.listSourceObjects('conn-1')).find(
+    const ordersPage = await firstServices.warehouseSourceImport.listSourceObjectCatalog('conn-1', {
+      kind: 'schema-page',
+      catalog: 'RAW',
+      schema: 'ERP',
+      limit: 100,
+    });
+    expect(ordersPage.kind).toBe('object-page');
+    if (ordersPage.kind !== 'object-page') throw new Error('Expected an object page.');
+    const orders = ordersPage.objects.find(
       (sourceObject) =>
         sourceObject.locator.kind === 'relation' &&
         sourceObject.locator.schema === 'ERP' &&

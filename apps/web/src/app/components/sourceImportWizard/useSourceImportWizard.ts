@@ -38,7 +38,7 @@ import {
   toggleSourceImportDatabaseSelection,
   toggleSourceImportSchemaSelection,
 } from './sourceImportWizardModel';
-import { useConnectionsLoader, useSourceObjectsLoader } from './useSourceImportWizardDataLoaders';
+import { useConnectionsLoader, useSourceCatalogLoader } from './useSourceImportWizardDataLoaders';
 import {
   buildSourceImportFailure,
   type SourceImportDatabaseIdentity,
@@ -75,6 +75,11 @@ const initialState: SourceImportWizardState = {
   renameConnectionFormOpen: false,
   renameConnectionForm: { name: '' },
   sourceObjects: [],
+  sourceObjectSchemas: [],
+  sourceObjectSchemaListPage: { loaded: false, loading: false, nextCursor: null },
+  sourceObjectSchemaPages: {},
+  sourceObjectSearchPage: { query: '', loading: false, nextCursor: null },
+  sourceObjectSearchObjectIds: [],
   groupingStrategy: 'schema',
   includeColumns: false,
   addTests: false,
@@ -175,6 +180,11 @@ export function useSourceImportWizard({
       renameConnectionSucceeded: false,
       createConnectionError: null,
       sourceObjects: [],
+      sourceObjectSchemas: [],
+      sourceObjectSchemaListPage: { loaded: false, loading: false, nextCursor: null },
+      sourceObjectSchemaPages: {},
+      sourceObjectSearchPage: { query: '', loading: false, nextCursor: null },
+      sourceObjectSearchObjectIds: [],
       activeSourceObjectKey: null,
       sourceObjectSearchQuery: '',
       loadError: null,
@@ -227,9 +237,10 @@ export function useSourceImportWizard({
   }, [dbtSourceBinding, dbtSourceTargetMatch, selectedSourceObjects]);
 
   useConnectionsLoader({ open, warehouseSourceImport, setState });
-  useSourceObjectsLoader({
+  const { loadSchemaPage, loadMoreSchemas, loadSearchPage } = useSourceCatalogLoader({
     open,
     selectedConnection: state.selectedConnection,
+    sourceObjectSearchQuery: state.sourceObjectSearchQuery,
     initiallySelectedSourceObjects: initiallySelectedSourceObjectsForConnection,
     requestedDbtSourceDeclarations: dbtSourceBinding?.sourceTableDeclarations,
     warehouseSourceImport,
@@ -262,6 +273,20 @@ export function useSourceImportWizard({
       renameConnectionError: null,
       renameConnectionSucceeded: false,
       sourceObjects: selectedConnection === prev.selectedConnection ? prev.sourceObjects : [],
+      sourceObjectSchemas:
+        selectedConnection === prev.selectedConnection ? prev.sourceObjectSchemas : [],
+      sourceObjectSchemaListPage:
+        selectedConnection === prev.selectedConnection
+          ? prev.sourceObjectSchemaListPage
+          : { loaded: false, loading: false, nextCursor: null },
+      sourceObjectSchemaPages:
+        selectedConnection === prev.selectedConnection ? prev.sourceObjectSchemaPages : {},
+      sourceObjectSearchPage:
+        selectedConnection === prev.selectedConnection
+          ? prev.sourceObjectSearchPage
+          : { query: '', loading: false, nextCursor: null },
+      sourceObjectSearchObjectIds:
+        selectedConnection === prev.selectedConnection ? prev.sourceObjectSearchObjectIds : [],
       activeSourceObjectKey:
         selectedConnection === prev.selectedConnection ? prev.activeSourceObjectKey : null,
       sourceObjectSearchQuery:
@@ -280,7 +305,16 @@ export function useSourceImportWizard({
   const setSourceImportOption = (optionId: SourceImportOptionId, value: boolean) =>
     setState((prev) => ({ ...prev, [optionId]: value }));
   const setSourceObjectSearchQuery = (sourceObjectSearchQuery: string) =>
-    setState((prev) => ({ ...prev, sourceObjectSearchQuery }));
+    setState((prev) => ({
+      ...prev,
+      sourceObjectSearchQuery,
+      sourceObjectSearchObjectIds: [],
+      sourceObjectSearchPage: {
+        query: sourceObjectSearchQuery.trim(),
+        loading: false,
+        nextCursor: null,
+      },
+    }));
   const openCreateConnectionForm = () =>
     setState((prev) => ({
       ...prev,
@@ -413,6 +447,11 @@ export function useSourceImportWizard({
         createConnectionFormOpen: false,
         createConnectionForm: initialWizardState.createConnectionForm,
         sourceObjects: [],
+        sourceObjectSchemas: [],
+        sourceObjectSchemaListPage: { loaded: false, loading: false, nextCursor: null },
+        sourceObjectSchemaPages: {},
+        sourceObjectSearchPage: { query: '', loading: false, nextCursor: null },
+        sourceObjectSearchObjectIds: [],
         activeSourceObjectKey: null,
         sourceObjectSearchQuery: '',
         connectionTestResult: null,
@@ -636,6 +675,10 @@ export function useSourceImportWizard({
     setAddFreshness,
     setSourceImportOption,
     setSourceObjectSearchQuery,
+    loadSourceObjectSchemaPage: loadSchemaPage,
+    loadMoreSourceObjectSchemas: loadMoreSchemas,
+    loadMoreSourceObjectSearchResults: (cursor: string) =>
+      loadSearchPage(state.sourceObjectSearchQuery.trim(), cursor),
     handleNext,
     handleBack,
     handleCreateConnection,

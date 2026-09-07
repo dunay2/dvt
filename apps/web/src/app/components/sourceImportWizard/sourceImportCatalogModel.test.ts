@@ -5,6 +5,7 @@ import {
   buildSourceImportCatalogViewModel,
   buildSourceObjectIdentityKey,
 } from './sourceImportCatalogModel';
+import { mergeSourceImportCatalogObjects } from './useSourceImportWizardDataLoaders';
 import { resolveSourceImportWizardCopy, sourceImportWizardCopy } from './copy';
 import {
   buildSourceImportTestMetricEvidence,
@@ -227,6 +228,89 @@ describe('sourceImportCatalogModel relational catalog', () => {
         expect.objectContaining({ id: 'withColumns', countLabel: '1', active: true }),
         expect.objectContaining({ id: 'importable', countLabel: '2', active: false }),
       ])
+    );
+  });
+
+  it('reports authoritative schema counts before any objects are loaded', () => {
+    const catalog = buildSourceImportCatalogViewModel({
+      sourceObjects: [],
+      activeSourceObjectKey: null,
+      schemaSummaries: [
+        { catalog: 'RAW', schema: 'ERP', objectCount: 200 },
+        { catalog: 'RAW', schema: 'CRM', objectCount: 35 },
+      ],
+      copy,
+      numberFormatter,
+    });
+
+    expect(catalog.totalObjectCount).toBe(235);
+    expect(catalog.resultCountLabel).toBe('235 objects available');
+    expect(catalog.databaseGroups[0]?.objectCountLabel).toBe('235 objects');
+    expect(catalog.databaseGroups[0]?.accessibilityLabel).toContain('235 objects');
+    expect(catalog.databaseGroups[0]?.schemaGroups).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ schema: 'ERP', objectCountLabel: '200 objects', loaded: false }),
+        expect.objectContaining({ schema: 'CRM', objectCountLabel: '35 objects', loaded: false }),
+      ])
+    );
+  });
+  it('keeps a schema unloaded and bulk selection disabled for a partial preselection', () => {
+    const selectedOrder = buildRelation({ table: 'ORDERS', selected: true });
+    const catalog = buildSourceImportCatalogViewModel({
+      sourceObjects: [selectedOrder],
+      activeSourceObjectKey: selectedOrder.objectId,
+      schemaSummaries: [{ catalog: 'RAW', schema: 'ERP', objectCount: 20 }],
+      copy,
+      numberFormatter,
+    });
+
+    expect(catalog.databaseGroups[0]?.schemaGroups[0]).toEqual(
+      expect.objectContaining({
+        objectCount: 20,
+        loaded: false,
+        selectable: false,
+        selected: true,
+      })
+    );
+  });
+  it('disables aggregate selection for filtered search results', () => {
+    const matchingOrder = buildRelation({ table: 'ORDERS', selected: false });
+    const catalog = buildSourceImportCatalogViewModel({
+      sourceObjects: [matchingOrder],
+      activeSourceObjectKey: null,
+      searchQuery: 'orders',
+      visibleObjectIds: new Set([matchingOrder.objectId]),
+      copy,
+      numberFormatter,
+    });
+
+    expect(catalog.databaseGroups[0]).toEqual(expect.objectContaining({ selectable: false }));
+    expect(catalog.databaseGroups[0]?.schemaGroups[0]).toEqual(
+      expect.objectContaining({ loaded: false, selectable: false })
+    );
+  });
+  it('merges lazy pages by objectId while preserving selection and refreshed metrics', () => {
+    const original = buildRelation({
+      table: 'ORDERS',
+      selected: true,
+      metricEvidence: buildSourceImportTestMetricEvidence(10, 1024),
+    });
+    const refreshed = buildRelation({
+      table: 'ORDERS',
+      metricEvidence: buildSourceImportTestMetricEvidence(25, 4096),
+      columns: [{ name: 'order_id', type: 'INTEGER', nullable: false }],
+    });
+
+    const merged = mergeSourceImportCatalogObjects([original], [refreshed]);
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0]).toEqual(
+      expect.objectContaining({
+        objectId: original.objectId,
+        selected: true,
+        metricEvidence: refreshed.metricEvidence,
+        columns: refreshed.columns,
+      })
     );
   });
 });

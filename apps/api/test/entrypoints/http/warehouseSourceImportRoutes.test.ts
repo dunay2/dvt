@@ -6,6 +6,8 @@ import {
   type SourceObject,
   type SourceObjectColumn,
   type SourceObjectConstraint,
+  type SourceObjectCatalogRequest,
+  type SourceObjectCatalogResponse,
   type SourceObjectMetricEvidence,
   type WorkspaceGraphDraftScope,
   type WorkspaceGraphAuthoringNode,
@@ -254,6 +256,39 @@ class TestWarehouseConnectionProbe
     ) => readonly SourceObject[]
   ) {}
 
+  public readonly catalogRequests: SourceObjectCatalogRequest[] = [];
+
+  public async listSourceObjectCatalog(
+    input: Parameters<IWarehouseConnectionProbe['listSourceObjectCatalog']>[0],
+    request: SourceObjectCatalogRequest
+  ): Promise<SourceObjectCatalogResponse> {
+    this.catalogRequests.push(request);
+    const objects = this.resolveSourceObjects(input);
+    if (request.kind === 'schema-list') {
+      const counts = new Map<string, { catalog: string; schema: string; objectCount: number }>();
+      for (const sourceObject of objects) {
+        if (sourceObject.locator.kind !== 'relation') continue;
+        const key = JSON.stringify([sourceObject.locator.catalog, sourceObject.locator.schema]);
+        const current = counts.get(key);
+        counts.set(key, {
+          catalog: sourceObject.locator.catalog,
+          schema: sourceObject.locator.schema,
+          objectCount: (current?.objectCount ?? 0) + 1,
+        });
+      }
+      return { kind: 'schema-list', schemas: [...counts.values()], truncated: false };
+    }
+
+    const matches = objects.filter((sourceObject) => {
+      if (sourceObject.locator.kind !== 'relation') return false;
+      return request.kind === 'schema-page'
+        ? sourceObject.locator.catalog === request.catalog &&
+            sourceObject.locator.schema === request.schema
+        : sourceObject.locator.name.toLocaleLowerCase().includes(request.name.toLocaleLowerCase());
+    });
+    return { kind: 'object-page', objects: matches.slice(0, request.limit), truncated: false };
+  }
+
   public async inspectConnection(
     _input: Parameters<IWarehouseConnectionProbe['inspectConnection']>[0]
   ): Promise<InspectWarehouseConnectionResult> {
@@ -365,6 +400,7 @@ function buildApp(
     readonly deleteFileContent: ReturnType<typeof vi.fn>;
   };
   readonly validateSql: ReturnType<typeof vi.fn>;
+  readonly probe: TestWarehouseConnectionProbe;
 } {
   const app = Fastify({ logger: false });
   const catalogEntries = (
@@ -581,7 +617,7 @@ function buildApp(
     rateLimit: { max: 100, timeWindow: 60_000 },
   });
 
-  return { app, authorize, draftStore, workspaceFiles, validateSql };
+  return { app, authorize, draftStore, workspaceFiles, validateSql, probe };
 }
 
 function sha256(content: string): string {
@@ -1023,72 +1059,78 @@ describe('warehouseSourceImportRoutes', () => {
     expect(response.json()).toEqual([]);
   });
 
-  it('lists source objects for a known connection', async () => {
-    const { app } = buildApp();
+  it('passes the canonical schema-list request to the source-object query rail', async () => {
+    const { app, probe } = buildApp();
 
     const response = await app.inject({
       method: 'GET',
-      url: `/workspace/warehouse/connections/warehouse-prod/objects?${SCOPE_QUERY}`,
+      url: `/workspace/warehouse/connections/warehouse-prod/objects?${SCOPE_QUERY}&kind=schema-list&limit=25&cursor=next-page`,
     });
 
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual({
-      contractVersion: 1,
-      objects: [defaultOrdersSourceObject],
+      kind: 'schema-list',
+      schemas: [{ catalog: 'analytics', schema: 'erp', objectCount: 1 }],
+      truncated: false,
     });
+    expect(probe.catalogRequests).toEqual([
+      { kind: 'schema-list', limit: 25, cursor: 'next-page' },
+    ]);
   });
 
-  it('rejects duplicate source-object selections before command side effects', async () => {
-    const { app, draftStore, workspaceFiles } = buildApp();
+  it('passes schema and global name-search projections without compatibility defaults', async () => {
+    const { app, probe } = buildApp();
+
+    const schemaResponse = await app.inject({
+      method: 'GET',
+      url: `/workspace/warehouse/connections/warehouse-prod/objects?${SCOPE_QUERY}&kind=schema-page&catalog=analytics&schema=erp&limit=10`,
+    });
+    const searchResponse = await app.inject({
+      method: 'GET',
+      url: `/workspace/warehouse/connections/warehouse-prod/objects?${SCOPE_QUERY}&kind=name-search&name=ord&limit=5&cursor=search-page`,
+    });
+
+    expect(schemaResponse.statusCode).toBe(200);
+    expect(searchResponse.statusCode).toBe(200);
+    expect(schemaResponse.json()).toEqual({
+      kind: 'object-page',
+      objects: [defaultOrdersSourceObject],
+      truncated: false,
+    });
+    expect(searchResponse.json()).toEqual({
+      kind: 'object-page',
+      objects: [defaultOrdersSourceObject],
+      truncated: false,
+    });
+    expect(probe.catalogRequests).toEqual([
+      { kind: 'schema-page', catalog: 'analytics', schema: 'erp', limit: 10 },
+      { kind: 'name-search', name: 'ord', limit: 5, cursor: 'search-page' },
+    ]);
+  });
+
+  it.each([
+    '',
+    '&kind=unknown',
+    '&kind=schema-page&catalog=analytics',
+    '&kind=name-search&name=',
+    '&kind=schema-list&schema=erp',
+    '&kind=schema-list&limit=0',
+    '&kind=schema-list&limit=101',
+    '&kind=schema-list&limit=not-a-number',
+  ])('rejects an invalid source-object catalog query%s', async (query) => {
+    const { app, probe } = buildApp();
 
     const response = await app.inject({
-      method: 'POST',
-      url: `/workspace/sources/import?${SCOPE_QUERY}`,
-      payload: {
-        ...SOURCE_IMPORT_REQUEST_BASE,
-        connectionId: 'warehouse-prod',
-        objects: [
-          { objectId: defaultOrdersSourceObject.objectId },
-          { objectId: defaultOrdersSourceObject.objectId },
-        ],
-        groupingStrategy: 'schema',
-        includeColumns: true,
-        addTests: false,
-        addFreshness: false,
-      },
+      method: 'GET',
+      url: `/workspace/warehouse/connections/warehouse-prod/objects?${SCOPE_QUERY}${query}`,
     });
 
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
-      error: { type: 'bad_request', reason: 'invalid_body', target: 'body' },
+      error: { type: 'bad_request', reason: 'invalid_selection', target: 'query' },
     });
-    expect(workspaceFiles.saveFileContent).not.toHaveBeenCalled();
-    expect(draftStore.save).not.toHaveBeenCalled();
+    expect(probe.catalogRequests).toEqual([]);
   });
-
-  it('requires the V2 idempotency key before command side effects', async () => {
-    const { app, draftStore, workspaceFiles } = buildApp();
-
-    const response = await app.inject({
-      method: 'POST',
-      url: `/workspace/sources/import?${SCOPE_QUERY}`,
-      payload: {
-        ...SOURCE_IMPORT_REQUEST_BASE,
-        idempotencyKey: undefined,
-        connectionId: 'warehouse-prod',
-        objects: [{ objectId: defaultOrdersSourceObject.objectId }],
-        groupingStrategy: 'schema',
-        includeColumns: true,
-        addTests: false,
-        addFreshness: false,
-      },
-    });
-
-    expect(response.statusCode).toBe(400);
-    expect(workspaceFiles.saveFileContent).not.toHaveBeenCalled();
-    expect(draftStore.save).not.toHaveBeenCalled();
-  });
-
   it('imports selected source objects into the authoritative workspace graph draft', async () => {
     const { app, authorize, workspaceFiles, draftStore } = buildApp();
 

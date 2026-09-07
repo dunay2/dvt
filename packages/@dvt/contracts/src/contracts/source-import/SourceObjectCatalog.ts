@@ -1,15 +1,13 @@
 /**
  * Owned concern: define the provider-neutral source-object catalog contract,
- * including locators, schema metadata, and operational metric evidence.
+ * including paged discovery, locators, schema metadata, and operational metric evidence.
  *
+ * @version 1.0.0
  * @baseline ADR-0058: Warehouse Source Import Rails
  * @decision Represent discoverable inputs as source objects instead of relational-table-only DTOs.
- * @consequence API and web consumers share one versioned vocabulary across relations, files, endpoints, and streams.
- * @version 1.0.0
+ * @consequence API and web consumers share one canonical vocabulary across relations, files, endpoints, and streams.
  */
 import { z } from 'zod';
-
-export const SOURCE_OBJECT_CATALOG_CONTRACT_VERSION = 1 as const;
 
 export const SOURCE_OBJECT_LOCATOR_KIND = ['relation', 'file', 'endpoint', 'stream'] as const;
 export const SOURCE_OBJECT_RELATION_TYPE = [
@@ -296,12 +294,79 @@ export const SourceObjectListSchema = z
     });
   });
 
-export const SourceObjectCatalogResponseSchema = z
+export const SOURCE_OBJECT_CATALOG_DEFAULT_PAGE_SIZE = 50;
+export const SOURCE_OBJECT_CATALOG_MAX_PAGE_SIZE = 100;
+
+const SourceObjectCatalogPageSizeSchema = z
+  .number()
+  .int()
+  .min(1)
+  .max(SOURCE_OBJECT_CATALOG_MAX_PAGE_SIZE)
+  .default(SOURCE_OBJECT_CATALOG_DEFAULT_PAGE_SIZE);
+
+const SourceObjectCatalogPageRequestFields = {
+  limit: SourceObjectCatalogPageSizeSchema,
+  cursor: OpaqueNonBlankStringSchema.optional(),
+} as const;
+
+export const SourceObjectCatalogRequestSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('schema-list'), ...SourceObjectCatalogPageRequestFields }).strict(),
+  z
+    .object({
+      kind: z.literal('schema-page'),
+      catalog: OpaqueNonBlankStringSchema,
+      schema: OpaqueNonBlankStringSchema,
+      ...SourceObjectCatalogPageRequestFields,
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal('name-search'),
+      name: NonBlankStringSchema,
+      ...SourceObjectCatalogPageRequestFields,
+    })
+    .strict(),
+]);
+
+export const SourceObjectCatalogSchemaSummarySchema = z
   .object({
-    contractVersion: z.literal(SOURCE_OBJECT_CATALOG_CONTRACT_VERSION),
-    objects: SourceObjectListSchema,
+    catalog: OpaqueNonBlankStringSchema,
+    schema: OpaqueNonBlankStringSchema,
+    objectCount: NonNegativeSafeIntegerSchema,
   })
   .strict();
+
+const SourceObjectCatalogPageResponseFields = {
+  truncated: z.boolean(),
+  nextCursor: OpaqueNonBlankStringSchema.optional(),
+} as const;
+
+export const SourceObjectCatalogResponseSchema = z
+  .discriminatedUnion('kind', [
+    z
+      .object({
+        ...SourceObjectCatalogPageResponseFields,
+        kind: z.literal('schema-list'),
+        schemas: z.array(SourceObjectCatalogSchemaSummarySchema),
+      })
+      .strict(),
+    z
+      .object({
+        ...SourceObjectCatalogPageResponseFields,
+        kind: z.literal('object-page'),
+        objects: SourceObjectListSchema,
+      })
+      .strict(),
+  ])
+  .superRefine((page, context) => {
+    if (page.truncated !== (page.nextCursor !== undefined)) {
+      context.addIssue({
+        code: 'custom',
+        message: 'A truncated catalog page requires exactly one continuation cursor.',
+        path: ['nextCursor'],
+      });
+    }
+  });
 
 export type SourceObjectLocatorKind = (typeof SOURCE_OBJECT_LOCATOR_KIND)[number];
 export type SourceObjectMetricProvenance = (typeof SOURCE_OBJECT_METRIC_PROVENANCE)[number];
@@ -323,6 +388,10 @@ export type SourceObjectColumnConstraintSemantics = Readonly<{
   independentlyUnique: boolean;
 }>;
 export type SourceObjectSelection = z.infer<typeof SourceObjectSelectionSchema>;
+export type SourceObjectCatalogRequest = z.infer<typeof SourceObjectCatalogRequestSchema>;
+export type SourceObjectCatalogSchemaSummary = z.infer<
+  typeof SourceObjectCatalogSchemaSummarySchema
+>;
 export type SourceObjectCatalogResponse = z.infer<typeof SourceObjectCatalogResponseSchema>;
 export type SourceObject = z.infer<typeof SourceObjectSchema>;
 export type RelationalSourceObject = SourceObject & {

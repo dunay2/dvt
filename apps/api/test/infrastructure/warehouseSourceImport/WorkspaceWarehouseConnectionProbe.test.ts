@@ -47,6 +47,14 @@ function expectedRelationIdentity(
   };
 }
 
+const CATALOG_TARGET = {
+  connectionId: 'conn-1',
+  scope: { tenantId: 'tenant-1', projectId: 'project-1', environmentId: 'dev' },
+  type: 'postgres',
+  database: 'dvt',
+  credentialRef: 'postgres:warehouse',
+} as const;
+
 describe('WorkspaceWarehouseConnectionProbe', () => {
   beforeEach(() => {
     pgMock.Client.mockClear();
@@ -55,6 +63,265 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
     pgMock.query.mockReset();
     pgMock.connect.mockResolvedValue(undefined);
     pgMock.end.mockResolvedValue(undefined);
+  });
+
+  it('lists schema summaries without loading columns or metrics', async () => {
+    pgMock.query.mockResolvedValueOnce({
+      rows: [
+        { table_catalog: 'dvt', table_schema: 'analytics', object_count: '12' },
+        { table_catalog: 'dvt', table_schema: 'public', object_count: '8' },
+      ],
+    });
+    const probe = new WorkspaceWarehouseConnectionProbe({
+      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
+      now: () => new Date('2026-09-07T12:00:00.000Z'),
+    });
+
+    const result = await probe.listSourceObjectCatalog(CATALOG_TARGET, {
+      kind: 'schema-list',
+      limit: 1,
+    });
+
+    expect(result).toMatchObject({
+      kind: 'schema-list',
+      schemas: [{ catalog: 'dvt', schema: 'analytics', objectCount: 12 }],
+      truncated: true,
+    });
+    expect(result.nextCursor).toBeTypeOf('string');
+    expect(pgMock.query).toHaveBeenCalledOnce();
+    expect(pgMock.query.mock.calls[0]?.[0]).toContain('group by table_catalog, table_schema');
+    expect(pgMock.query.mock.calls[0]?.[1]).toEqual(['', 2]);
+  });
+
+  it('uses the database resolved by the credential for schema discovery', async () => {
+    pgMock.query.mockResolvedValueOnce({
+      rows: [{ table_catalog: 'dvt', table_schema: 'public', object_count: '1' }],
+    });
+    const probe = new WorkspaceWarehouseConnectionProbe({
+      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
+      now: () => new Date('2026-09-07T12:00:00.000Z'),
+    });
+
+    await expect(
+      probe.listSourceObjectCatalog(
+        { ...CATALOG_TARGET, database: 'stale-configured-name' },
+        { kind: 'schema-list', limit: 10 }
+      )
+    ).resolves.toMatchObject({
+      schemas: [{ catalog: 'dvt', schema: 'public', objectCount: 1 }],
+    });
+    expect(pgMock.query.mock.calls[0]?.[0]).not.toContain('current_database() =');
+    expect(pgMock.query.mock.calls[0]?.[1]).toEqual(['', 11]);
+  });
+  it('binds signed cursors to the connection, scope, request kind and filter', async () => {
+    pgMock.query.mockResolvedValueOnce({
+      rows: [
+        { table_catalog: 'dvt', table_schema: 'analytics', object_count: '12' },
+        { table_catalog: 'dvt', table_schema: 'public', object_count: '8' },
+      ],
+    });
+    const probe = new WorkspaceWarehouseConnectionProbe({
+      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
+      now: () => new Date('2026-09-07T12:00:00.000Z'),
+    });
+    const firstPage = await probe.listSourceObjectCatalog(CATALOG_TARGET, {
+      kind: 'schema-list',
+      limit: 1,
+    });
+    const cursor = firstPage.nextCursor;
+    if (cursor === undefined) throw new Error('Expected a continuation cursor.');
+    const [payload, signature] = cursor.split('.');
+    if (!payload || !signature) throw new Error('Expected a signed cursor.');
+    const tamperedSignature = `${signature[0] === 'a' ? 'b' : 'a'}${signature.slice(1)}`;
+    pgMock.query.mockClear();
+
+    await expect(
+      probe.listSourceObjectCatalog(
+        { ...CATALOG_TARGET, connectionId: 'conn-2' },
+        {
+          kind: 'schema-list',
+          limit: 1,
+          cursor,
+        }
+      )
+    ).rejects.toThrow('cursor is invalid');
+    await expect(
+      probe.listSourceObjectCatalog(
+        {
+          ...CATALOG_TARGET,
+          scope: { ...CATALOG_TARGET.scope, environmentId: 'prod' },
+        },
+        { kind: 'schema-list', limit: 1, cursor }
+      )
+    ).rejects.toThrow('cursor is invalid');
+    await expect(
+      probe.listSourceObjectCatalog(CATALOG_TARGET, {
+        kind: 'schema-page',
+        catalog: 'dvt',
+        schema: 'public',
+        limit: 1,
+        cursor,
+      })
+    ).rejects.toThrow('cursor is invalid');
+    await expect(
+      probe.listSourceObjectCatalog(CATALOG_TARGET, {
+        kind: 'schema-list',
+        limit: 1,
+        cursor: `${payload}.${tamperedSignature}`,
+      })
+    ).rejects.toThrow('cursor is invalid');
+    expect(pgMock.query).not.toHaveBeenCalled();
+  });
+  it('filters global name search before loading columns and metrics', async () => {
+    pgMock.query
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            table_catalog: 'dvt',
+            table_schema: 'public',
+            table_name: 'orders',
+            database_user: 'warehouse_reader',
+            relation_kind: 'r',
+            row_count: '128',
+          },
+          {
+            table_catalog: 'dvt',
+            table_schema: 'raw',
+            table_name: 'orders_archive',
+            database_user: 'warehouse_reader',
+            relation_kind: 'r',
+            row_count: '64',
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            table_catalog: 'dvt',
+            table_schema: 'public',
+            table_name: 'orders',
+            column_name: 'order_id',
+            data_type: 'integer',
+            is_nullable: 'NO',
+          },
+        ],
+      })
+      .mockResolvedValueOnce({ rows: [{ byte_size: '4096' }] });
+    const probe = new WorkspaceWarehouseConnectionProbe({
+      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
+      now: () => new Date('2026-09-07T12:00:00.000Z'),
+    });
+
+    const result = await probe.listSourceObjectCatalog(CATALOG_TARGET, {
+      kind: 'name-search',
+      name: 'orders',
+      limit: 1,
+    });
+
+    expect(result).toMatchObject({
+      kind: 'object-page',
+      objects: [{ objectId: 'relation/dvt/public/orders' }],
+      truncated: true,
+    });
+    expect(pgMock.query.mock.calls[0]?.[0]).toContain(
+      'position(lower($1) in lower(relation.relname)) > 0'
+    );
+    expect(pgMock.query.mock.calls[0]?.[1]).toEqual(['orders', '', '', 2]);
+    expect(pgMock.query.mock.calls[1]?.[0]).toContain('selected_relations');
+    expect(pgMock.query.mock.calls[1]?.[1]).toEqual([['dvt'], ['public'], ['orders']]);
+    expect(pgMock.query.mock.calls.some(([sql]) => sql.includes('orders_archive'))).toBe(false);
+    const cursor = result.nextCursor;
+    if (cursor === undefined) throw new Error('Expected a continuation cursor.');
+    pgMock.query.mockClear();
+    await expect(
+      probe.listSourceObjectCatalog(CATALOG_TARGET, {
+        kind: 'name-search',
+        name: 'customers',
+        limit: 1,
+        cursor,
+      })
+    ).rejects.toThrow('cursor is invalid');
+    expect(pgMock.query).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      label: 'schema page',
+      request: { kind: 'schema-page', catalog: 'dvt', schema: 'public', limit: 10 } as const,
+    },
+    {
+      label: 'global name search',
+      request: { kind: 'name-search', name: 'orders', limit: 10 } as const,
+    },
+  ])('does not run an exact row count for $label', async ({ request }) => {
+    pgMock.query
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            table_catalog: 'dvt',
+            table_schema: 'public',
+            table_name: 'orders',
+            database_user: 'warehouse_reader',
+            relation_kind: 'r',
+            row_count: null,
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            table_catalog: 'dvt',
+            table_schema: 'public',
+            table_name: 'orders',
+            column_name: 'order_id',
+            data_type: 'integer',
+            is_nullable: 'NO',
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        rows: [{ 'QUERY PLAN': [{ Plan: { 'Plan Rows': 42 } }] }],
+      })
+      .mockResolvedValueOnce({ rows: [{ byte_size: '4096' }] });
+    const probe = new WorkspaceWarehouseConnectionProbe({
+      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
+      now: () => new Date('2026-09-07T12:00:00.000Z'),
+    });
+
+    await expect(probe.listSourceObjectCatalog(CATALOG_TARGET, request)).resolves.toMatchObject({
+      kind: 'object-page',
+      objects: [
+        {
+          metricEvidence: {
+            rowCount: { value: 42, method: 'query-plan' },
+            byteSize: { value: 4096 },
+          },
+        },
+      ],
+    });
+    expect(
+      pgMock.query.mock.calls.some(([sql]) =>
+        sql.includes('select count(*)::bigint as row_count from')
+      )
+    ).toBe(false);
+  });
+
+  it('binds schema pages to the exact catalog and schema', async () => {
+    pgMock.query.mockResolvedValueOnce({ rows: [] });
+    const probe = new WorkspaceWarehouseConnectionProbe({
+      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
+      now: () => new Date('2026-09-07T12:00:00.000Z'),
+    });
+
+    await expect(
+      probe.listSourceObjectCatalog(CATALOG_TARGET, {
+        kind: 'schema-page',
+        catalog: 'dvt',
+        schema: 'RAW.PROD',
+        limit: 25,
+      })
+    ).resolves.toEqual({ kind: 'object-page', objects: [], truncated: false });
+    expect(pgMock.query.mock.calls[0]?.[1]).toEqual(['dvt', 'RAW.PROD', '', 26]);
   });
 
   it('samples an authorized relation inside a bounded read-only transaction', async () => {

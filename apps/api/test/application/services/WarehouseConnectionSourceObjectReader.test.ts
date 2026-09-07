@@ -71,6 +71,9 @@ function catalog(): IWarehouseConnectionCatalog {
 describe('WarehouseConnectionSourceObjectReader', () => {
   it('returns freshly inspected source objects instead of the stored creation snapshot', async () => {
     const probe: IWarehouseConnectionProbe = {
+      listSourceObjectCatalog: vi.fn(() =>
+        Promise.reject(new Error('Unexpected source catalog query.'))
+      ),
       inspectConnection: vi.fn(
         async (): Promise<Awaited<ReturnType<IWarehouseConnectionProbe['inspectConnection']>>> => ({
           status: 'passed',
@@ -97,6 +100,9 @@ describe('WarehouseConnectionSourceObjectReader', () => {
 
   it('fails explicitly when live discovery cannot produce an authoritative catalog', async () => {
     const probe: IWarehouseConnectionProbe = {
+      listSourceObjectCatalog: vi.fn(() =>
+        Promise.reject(new Error('Unexpected source catalog query.'))
+      ),
       inspectConnection: vi.fn(
         async (): Promise<Awaited<ReturnType<IWarehouseConnectionProbe['inspectConnection']>>> => ({
           status: 'failed',

@@ -1,8 +1,8 @@
 /** Owned concern: execute the ListWarehouseConnectionSourceObjects query rail. */
-import {
-  SOURCE_OBJECT_CATALOG_CONTRACT_VERSION,
-  type SourceObjectCatalogResponse,
-  type WorkspaceGraphDraftScope,
+import type {
+  SourceObjectCatalogRequest,
+  SourceObjectCatalogResponse,
+  WorkspaceGraphDraftScope,
 } from '@dvt/contracts';
 
 import type { WarehouseConnectionSourceObjectReader } from './WarehouseConnectionSourceObjectReader.js';
@@ -10,14 +10,11 @@ import type { WarehouseConnectionSourceObjectReader } from './WarehouseConnectio
 export class ListWarehouseConnectionSourceObjectsUseCase {
   public constructor(private readonly reader: WarehouseConnectionSourceObjectReader) {}
 
-  public async execute(
+  public execute(
     scope: WorkspaceGraphDraftScope,
-    connectionId: string
+    connectionId: string,
+    request: SourceObjectCatalogRequest
   ): Promise<SourceObjectCatalogResponse> {
-    const result = await this.reader.read(scope, connectionId);
-    return {
-      contractVersion: SOURCE_OBJECT_CATALOG_CONTRACT_VERSION,
-      objects: [...result.sourceObjects],
-    };
+    return this.reader.readCatalog(scope, connectionId, request);
   }
 }

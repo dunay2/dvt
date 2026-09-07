@@ -5,6 +5,8 @@ import {
   ImportSourceObjectsRequestV2Schema,
   RenameWarehouseConnectionRequestSchema,
   SourceDataSampleRequestSchema,
+  SourceObjectCatalogRequestSchema,
+  type SourceObjectCatalogRequest,
 } from '@dvt/contracts';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
@@ -63,6 +65,15 @@ type WarehouseSourceImportQuery = {
 type WarehouseSourceDataSampleQuery = WarehouseSourceImportQuery & {
   readonly objectId?: string;
   readonly limit?: string;
+};
+
+type WarehouseSourceObjectCatalogQuery = WarehouseSourceImportQuery & {
+  readonly kind?: string;
+  readonly catalog?: string;
+  readonly schema?: string;
+  readonly name?: string;
+  readonly limit?: string;
+  readonly cursor?: string;
 };
 
 type WarehouseConnectionParams = {
@@ -155,13 +166,20 @@ export function registerWarehouseSourceImportRoutes(
       const authorized = await authorizeWarehouseSourceImportRequest(request, reply, deps);
       if (!authorized) return;
 
+      const parsed = parseSourceObjectCatalogQuery(request.query);
+      if (!parsed.ok) {
+        httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(parsed.issue));
+        return;
+      }
+
       try {
         reply
           .code(200)
           .send(
             await deps.listSourceObjectsUseCase.execute(
               toDraftScope(authorized.scope),
-              request.params.connectionId
+              request.params.connectionId,
+              parsed.value
             )
           );
       } catch (error) {
@@ -552,6 +570,27 @@ function parseRenameWarehouseConnectionBody(
       ...parsed.data,
     },
   };
+}
+
+function parseSourceObjectCatalogQuery(
+  query: WarehouseSourceObjectCatalogQuery
+): RouteParseResult<SourceObjectCatalogRequest> {
+  const parsed = SourceObjectCatalogRequestSchema.safeParse({
+    kind: query.kind,
+    ...(query.catalog === undefined ? {} : { catalog: query.catalog }),
+    ...(query.schema === undefined ? {} : { schema: query.schema }),
+    ...(query.name === undefined ? {} : { name: query.name }),
+    ...(query.limit === undefined ? {} : { limit: Number(query.limit) }),
+    ...(query.cursor === undefined ? {} : { cursor: query.cursor }),
+  });
+  if (!parsed.success) {
+    return {
+      ok: false,
+      issue: badRequestIssue(HTTP_ERROR_REASON.invalidSelection, { target: 'query' }),
+    };
+  }
+
+  return { ok: true, value: parsed.data };
 }
 
 function parseSourceDataSampleQuery(

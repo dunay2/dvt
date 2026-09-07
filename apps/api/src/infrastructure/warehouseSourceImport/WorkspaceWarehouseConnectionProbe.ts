@@ -1,8 +1,13 @@
+import { createHmac, timingSafeEqual } from 'node:crypto';
+
 /** Owned concern: verify warehouse connection metadata with server-resolved credentials. */
 import type { IPostgresCredentialBindingResolver } from '@dvt/adapter-postgres';
 import {
   buildRelationalSourceObjectId,
   SourceObjectConstraintSchema,
+  type SourceObjectCatalogRequest,
+  type SourceObjectCatalogResponse,
+  type SourceObjectCatalogSchemaSummary,
   type RelationalSourceObjectLocator,
   type SourceObject,
   type SourceObjectColumn,
@@ -17,6 +22,7 @@ import type {
   TestWarehouseConnectionResult,
   WarehouseConnectionCatalogEntry,
   WarehouseConnectionProbeTarget,
+  WarehouseSourceObjectCatalogProbeTarget,
   WarehouseSourceDataSampleProbeResult,
   WarehouseSourceDataSampleProbeTarget,
 } from '../../application/ports/warehouseSourceImport.js';
@@ -60,6 +66,12 @@ type PostgresColumnDiscoveryRow = {
 };
 
 type PostgresObjectCountRow = {
+  readonly object_count: number | string;
+};
+
+type PostgresSchemaSummaryRow = {
+  readonly table_catalog: string;
+  readonly table_schema: string;
   readonly object_count: number | string;
 };
 
@@ -118,6 +130,48 @@ export class WorkspaceWarehouseConnectionProbe
     };
   }
 
+  public async listSourceObjectCatalog(
+    input: WarehouseSourceObjectCatalogProbeTarget,
+    request: SourceObjectCatalogRequest
+  ): Promise<SourceObjectCatalogResponse> {
+    if (input.type !== 'postgres') throw new UnsupportedWarehouseAdapterError(input.type);
+    const connectionString = await this.options.credentialResolver.resolveCredential(
+      input.credentialRef
+    );
+    if (connectionString === null || connectionString.trim().length === 0) {
+      throw new WarehouseSourceDiscoveryFailedError(
+        'invalid_credentials',
+        'Credential reference could not be resolved.'
+      );
+    }
+    const cursorAuthority = buildCatalogCursorAuthority(input, request, connectionString);
+    const client = new Client({ connectionString });
+    try {
+      await client.connect();
+      if (request.kind === 'schema-list') {
+        return await loadPostgresSchemaCatalogPage(client, request, cursorAuthority);
+      }
+      return await loadPostgresObjectCatalogPage(
+        client,
+        request,
+        this.checkedAt(),
+        cursorAuthority
+      );
+    } catch (error) {
+      if (
+        error instanceof UnsupportedWarehouseAdapterError ||
+        error instanceof WarehouseSourceDiscoveryFailedError
+      )
+        throw error;
+      throw new WarehouseSourceDiscoveryFailedError(
+        classifyPostgresProbeFailure(error),
+        'Warehouse source discovery failed.'
+      );
+    } finally {
+      await client.end().catch(() => undefined);
+    }
+  }
+
   public async testConnection(
     input: WarehouseConnectionCatalogEntry
   ): Promise<TestWarehouseConnectionResult> {
@@ -164,7 +218,6 @@ export class WorkspaceWarehouseConnectionProbe
         'Credential reference could not be resolved.'
       );
     }
-
     const client = new Client({ connectionString });
     let transactionStarted = false;
     try {
@@ -251,7 +304,6 @@ export class WorkspaceWarehouseConnectionProbe
         message: 'Credential reference could not be resolved.',
       };
     }
-
     const client = new Client({ connectionString });
     try {
       await client.connect();
@@ -318,7 +370,6 @@ export class WorkspaceWarehouseConnectionProbe
         message: 'Credential reference could not be resolved.',
       };
     }
-
     const client = new Client({ connectionString });
     try {
       await client.connect();
@@ -379,6 +430,236 @@ export class WorkspaceWarehouseConnectionProbe
   }
 }
 
+type SchemaListRequest = Extract<SourceObjectCatalogRequest, { kind: 'schema-list' }>;
+type ObjectPageRequest = Exclude<SourceObjectCatalogRequest, SchemaListRequest>;
+
+async function loadPostgresSchemaCatalogPage(
+  client: Pick<Client, 'query'>,
+  request: SchemaListRequest,
+  cursorAuthority: CatalogCursorAuthority
+): Promise<SourceObjectCatalogResponse> {
+  const after = request.cursor
+    ? (readCatalogCursor(request.cursor, 2, cursorAuthority)[1] ?? '')
+    : '';
+  const result = await client.query<PostgresSchemaSummaryRow>(
+    [
+      'select current_database() as table_catalog, namespace.nspname as table_schema, count(*)::bigint as object_count',
+      'from pg_class relation join pg_namespace namespace on namespace.oid = relation.relnamespace',
+      'where namespace.nspname > $1',
+      "and namespace.nspname not in ('pg_catalog', 'information_schema')",
+      "and relation.relkind in ('r', 'p', 'v', 'm', 'f')",
+      "and has_table_privilege(relation.oid, 'SELECT')",
+      'group by table_catalog, table_schema order by table_catalog, table_schema limit $2',
+    ].join(' '),
+    [after, request.limit + 1]
+  );
+  const rows = result.rows.slice(0, request.limit);
+  const schemas: SourceObjectCatalogSchemaSummary[] = rows.map((row) => {
+    const objectCount = parseOptionalNonNegativeInteger(row.object_count);
+    if (objectCount === undefined) {
+      throw new WarehouseSourceDiscoveryFailedError(
+        'connection_failed',
+        'Warehouse schema object count is invalid.'
+      );
+    }
+    return { catalog: row.table_catalog, schema: row.table_schema, objectCount };
+  });
+  const truncated = result.rows.length > request.limit;
+  const last = schemas.at(-1);
+  return {
+    kind: 'schema-list',
+    schemas,
+    truncated,
+    ...(truncated && last
+      ? { nextCursor: writeCatalogCursor([last.catalog, last.schema], cursorAuthority) }
+      : {}),
+  };
+}
+
+async function loadPostgresObjectCatalogPage(
+  client: Pick<Client, 'query'>,
+  request: ObjectPageRequest,
+  observedAt: string,
+  cursorAuthority: CatalogCursorAuthority
+): Promise<SourceObjectCatalogResponse> {
+  const cursor = request.cursor
+    ? readCatalogCursor(request.cursor, 3, cursorAuthority)
+    : ['', '', ''];
+  const schemaPage = request.kind === 'schema-page';
+  const sql = schemaPage
+    ? [
+        'select current_database() as table_catalog, current_user as database_user, namespace.nspname as table_schema, relation.relname as table_name, relation.relkind as relation_kind,',
+        "case when relation.reltuples >= 0 then relation.reltuples::bigint when relation.relkind in ('r', 'p', 'm') then pg_stat_get_live_tuples(relation.oid)::bigint else null end as row_count",
+        'from pg_class relation join pg_namespace namespace on namespace.oid = relation.relnamespace',
+        'where current_database() = $1 and namespace.nspname = $2 and relation.relname > $3',
+        "and namespace.nspname not in ('pg_catalog', 'information_schema')",
+        "and relation.relkind in ('r', 'p', 'v', 'm', 'f')",
+        "and has_table_privilege(relation.oid, 'SELECT')",
+        'order by table_catalog, table_schema, table_name limit $4',
+      ].join(' ')
+    : [
+        'select current_database() as table_catalog, current_user as database_user, namespace.nspname as table_schema, relation.relname as table_name, relation.relkind as relation_kind,',
+        "case when relation.reltuples >= 0 then relation.reltuples::bigint when relation.relkind in ('r', 'p', 'm') then pg_stat_get_live_tuples(relation.oid)::bigint else null end as row_count",
+        'from pg_class relation join pg_namespace namespace on namespace.oid = relation.relnamespace',
+        'where position(lower($1) in lower(relation.relname)) > 0',
+        'and (namespace.nspname, relation.relname) > ($2, $3)',
+        "and namespace.nspname not in ('pg_catalog', 'information_schema')",
+        "and relation.relkind in ('r', 'p', 'v', 'm', 'f')",
+        "and has_table_privilege(relation.oid, 'SELECT')",
+        'order by table_catalog, table_schema, table_name limit $4',
+      ].join(' ');
+  const parameters = schemaPage
+    ? [request.catalog, request.schema, cursor[2] ?? '', request.limit + 1]
+    : [request.name, cursor[1] ?? '', cursor[2] ?? '', request.limit + 1];
+  const result = await client.query<PostgresTableDiscoveryRow>(sql, parameters);
+  const visibleRows = result.rows.slice(0, request.limit);
+  const columnRows = await loadPostgresCatalogColumnsForRelations(client, visibleRows);
+  const columnsByTable = groupPostgresColumnsByTable(columnRows);
+  const constraintsByTable = groupPostgresConstraintsByTable(columnRows);
+  const objects: SourceObject[] = [];
+  for (const row of visibleRows) {
+    const sourceObject = await toPostgresSourceObject(
+      client,
+      row,
+      columnsByTable.get(postgresTableKey(row)) ?? [],
+      constraintsByTable.get(postgresTableKey(row)) ?? [],
+      observedAt,
+      { allowExactRowCount: false }
+    );
+    if (sourceObject !== null) objects.push(sourceObject);
+  }
+  const truncated = result.rows.length > request.limit;
+  const last = visibleRows.at(-1);
+  return {
+    kind: 'object-page',
+    objects,
+    truncated,
+    ...(truncated && last
+      ? {
+          nextCursor: writeCatalogCursor(
+            [last.table_catalog, last.table_schema, last.table_name],
+            cursorAuthority
+          ),
+        }
+      : {}),
+  };
+}
+
+async function loadPostgresCatalogColumnsForRelations(
+  client: Pick<Client, 'query'>,
+  relations: readonly PostgresTableDiscoveryRow[]
+): Promise<readonly PostgresColumnDiscoveryRow[]> {
+  if (relations.length === 0) return [];
+  try {
+    const result = await client.query<PostgresColumnDiscoveryRow>(
+      [
+        'with selected_relations as (select * from unnest($1::text[], $2::text[], $3::text[]) as selected(table_catalog, table_schema, table_name)),',
+        'relation_constraints as (',
+        'select constraints.constraint_catalog as table_catalog, constraints.constraint_schema as table_schema, constraints.table_name,',
+        'constraints.constraint_name, constraints.constraint_type, array_agg(keys.column_name order by keys.ordinal_position) as column_names',
+        'from selected_relations selected join information_schema.table_constraints constraints',
+        'on constraints.constraint_catalog = selected.table_catalog and constraints.constraint_schema = selected.table_schema and constraints.table_name = selected.table_name',
+        'join information_schema.key_column_usage keys',
+        'on keys.constraint_catalog = constraints.constraint_catalog and keys.constraint_schema = constraints.constraint_schema',
+        'and keys.constraint_name = constraints.constraint_name and keys.table_schema = constraints.table_schema and keys.table_name = constraints.table_name',
+        "where constraints.constraint_type in ('PRIMARY KEY', 'UNIQUE')",
+        'group by constraints.constraint_catalog, constraints.constraint_schema, constraints.table_name, constraints.constraint_name, constraints.constraint_type)',
+        'select columns.table_catalog, columns.table_schema, columns.table_name, columns.column_name, columns.data_type, columns.is_nullable,',
+        "coalesce(jsonb_agg(distinct jsonb_build_object('name', constraints.constraint_name, 'kind', case when constraints.constraint_type = 'PRIMARY KEY' then 'primary-key' else 'unique' end, 'columns', constraints.column_names)) filter (where constraints.constraint_name is not null), '[]'::jsonb) as constraints",
+        'from selected_relations selected join information_schema.columns columns',
+        'on columns.table_catalog = selected.table_catalog and columns.table_schema = selected.table_schema and columns.table_name = selected.table_name',
+        'left join relation_constraints constraints on constraints.table_catalog = columns.table_catalog',
+        'and constraints.table_schema = columns.table_schema and constraints.table_name = columns.table_name',
+        'and columns.column_name = any(constraints.column_names)',
+        'group by columns.table_catalog, columns.table_schema, columns.table_name, columns.ordinal_position, columns.column_name, columns.data_type, columns.is_nullable',
+        'order by columns.table_catalog, columns.table_schema, columns.table_name, columns.ordinal_position',
+      ].join(' '),
+      [
+        relations.map((row) => row.table_catalog),
+        relations.map((row) => row.table_schema),
+        relations.map((row) => row.table_name),
+      ]
+    );
+    return result.rows;
+  } catch (error) {
+    if (isPostgresPermissionError(error)) return [];
+    throw error;
+  }
+}
+
+type CatalogCursorAuthority = Readonly<{ context: string; signingKey: string }>;
+
+function buildCatalogCursorAuthority(
+  input: WarehouseSourceObjectCatalogProbeTarget,
+  request: SourceObjectCatalogRequest,
+  signingKey: string
+): CatalogCursorAuthority {
+  const filter =
+    request.kind === 'schema-list'
+      ? null
+      : request.kind === 'schema-page'
+        ? { catalog: request.catalog, schema: request.schema }
+        : { name: request.name };
+  return {
+    context: JSON.stringify({
+      tenantId: input.scope.tenantId,
+      projectId: input.scope.projectId,
+      environmentId: input.scope.environmentId,
+      connectionId: input.connectionId,
+      database: input.database,
+      kind: request.kind,
+      filter,
+    }),
+    signingKey,
+  };
+}
+
+function signCatalogCursor(payload: string, signingKey: string): string {
+  return createHmac('sha256', signingKey).update(payload, 'utf8').digest('base64url');
+}
+
+function writeCatalogCursor(parts: readonly string[], authority: CatalogCursorAuthority): string {
+  const payload = Buffer.from(
+    JSON.stringify({ context: authority.context, parts }),
+    'utf8'
+  ).toString('base64url');
+  return `${payload}.${signCatalogCursor(payload, authority.signingKey)}`;
+}
+
+function readCatalogCursor(
+  value: string,
+  expectedLength: number,
+  authority: CatalogCursorAuthority
+): readonly string[] {
+  try {
+    const [payload, signature, extra] = value.split('.');
+    if (!payload || !signature || extra !== undefined) throw new Error('invalid');
+    const actual = Buffer.from(signature, 'base64url');
+    const expected = Buffer.from(signCatalogCursor(payload, authority.signingKey), 'base64url');
+    if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) {
+      throw new Error('invalid');
+    }
+    const parsed: unknown = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    if (
+      typeof parsed !== 'object' ||
+      parsed === null ||
+      !('context' in parsed) ||
+      parsed.context !== authority.context ||
+      !('parts' in parsed) ||
+      !Array.isArray(parsed.parts) ||
+      parsed.parts.length !== expectedLength ||
+      parsed.parts.some((part) => typeof part !== 'string' || part.length === 0)
+    ) {
+      throw new Error('invalid');
+    }
+    return parsed.parts;
+  } catch (_error) {
+    throw new WarehouseSourceDiscoveryFailedError(
+      'connection_failed',
+      'Warehouse source catalog cursor is invalid.'
+    );
+  }
+}
 async function loadPostgresCatalogColumns(
   client: Pick<Client, 'query'>
 ): Promise<readonly PostgresColumnDiscoveryRow[]> {
@@ -442,14 +723,15 @@ async function toPostgresSourceObject(
   row: PostgresTableDiscoveryRow,
   columns: readonly SourceObjectColumn[],
   constraints: readonly SourceObjectConstraint[],
-  observedAt: string
+  observedAt: string,
+  options: Readonly<{ allowExactRowCount: boolean }> = { allowExactRowCount: true }
 ): Promise<SourceObject | null> {
   const fallbackColumns =
     columns.length > 0 ? columns : await loadPostgresColumnsFromDataPlane(client, row);
   const rowCount =
     resolvePostgresStatisticsRowCount(row.row_count) ??
     (await loadPostgresPlanRowCount(client, row)) ??
-    (await loadPostgresExactRowCount(client, row));
+    (options.allowExactRowCount ? await loadPostgresExactRowCount(client, row) : null);
   if (rowCount === null) {
     return null;
   }
