@@ -50,18 +50,18 @@ when the discovered target is schema-compatible.
 
 ## Identity and binding classification
 
-| Surface | Classification | Rule |
-| --- | --- | --- |
-| Workspace graph `node.id` | logical identity | stable through physical rebind |
-| `RelationId` | logical identity | stable; assigned once |
-| `FieldId` | logical identity | stable; existing semantic mutation resolves by this ID only |
-| `field.name` / `displayName` | presentation/projection naming | never fallback identity |
-| `sourceFieldName` | physical/provenance field name | never fallback for an existing FieldId |
-| `ConnectedSourceRef` | physical connected binding | replaceable only by the governed rebind command |
-| database/schema/table/identifier | physical/projection binding | mutable without reminting logical identity |
-| `outputOrdinal` | structural binding | reorder only |
-| dbt `unique_id` | external dbt identity | provenance/round-trip, not native DVT identity |
-| `GenericGraphSource.nodeId/dependsOn` | logical identity/reference | admitted verbatim by Planner |
+| Surface                               | Classification                 | Rule                                                        |
+| ------------------------------------- | ------------------------------ | ----------------------------------------------------------- |
+| Workspace graph `node.id`             | logical identity               | stable through physical rebind                              |
+| `RelationId`                          | logical identity               | stable; assigned once                                       |
+| `FieldId`                             | logical identity               | stable; existing semantic mutation resolves by this ID only |
+| `field.name` / `displayName`          | presentation/projection naming | never fallback identity                                     |
+| `sourceFieldName`                     | physical/provenance field name | never fallback for an existing FieldId                      |
+| `ConnectedSourceRef`                  | physical connected binding     | replaceable only by the governed rebind command             |
+| database/schema/table/identifier      | physical/projection binding    | mutable without reminting logical identity                  |
+| `outputOrdinal`                       | structural binding             | reorder only                                                |
+| dbt `unique_id`                       | external dbt identity          | provenance/round-trip, not native DVT identity              |
+| `GenericGraphSource.nodeId/dependsOn` | logical identity/reference     | admitted verbatim by Planner                                |
 
 ## Hard cut A — Canvas FieldId-only semantic mutation
 
@@ -151,12 +151,12 @@ repair or infer DVT identity from dbt names, paths or provider coordinates.
 
 ## Command/query and DDD ownership
 
-| Rail | Type | DDD owner | Responsibility |
-| --- | --- | --- | --- |
-| `ImportWarehouseSources` | command | Warehouse source import | create a new opaque logical Source and physical binding |
-| `RebindWarehouseSource` | command | Warehouse source import | replace one verified physical binding without changing logical identity |
-| `StartRun` | command | Run command application service | consume canonical graph identity without reminting it |
-| Workspace semantic admission | validation | Workspace graph authoring | validate one stable Substrait sidecar authority |
+| Rail                         | Type       | DDD owner                       | Responsibility                                                          |
+| ---------------------------- | ---------- | ------------------------------- | ----------------------------------------------------------------------- |
+| `ImportWarehouseSources`     | command    | Warehouse source import         | create a new opaque logical Source and physical binding                 |
+| `RebindWarehouseSource`      | command    | Warehouse source import         | replace one verified physical binding without changing logical identity |
+| `StartRun`                   | command    | Run command application service | consume canonical graph identity without reminting it                   |
+| Workspace semantic admission | validation | Workspace graph authoring       | validate one stable Substrait sidecar authority                         |
 
 ## Test strategy
 
@@ -308,7 +308,7 @@ the new command and identity witnesses are green.
         "apps/api/test/entrypoints/http/warehouseSourceRebindRoute.test.ts",
         "scripts/run-dev-stack.auth.cjs",
         "scripts/run-dev-stack.source-rebind.auth.test.cjs",
-        "docs/adr/ADR-0058-warehouse-source-import-rails.md",
+    "docs/adr/ADR-0058-warehouse-source-import-rails.md",
         "docs/evidence/ED-20260905-gh-2904-stable-logical-physical-binding.md",
         "docs/risk-register/quality/R-20260905-GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING.yaml"
       ],
@@ -404,6 +404,7 @@ the new command and identity witnesses are green.
     "scripts/run-dev-stack.source-rebind.auth.test.cjs",
     "docs/adr/ADR-0058-warehouse-source-import-rails.md",
     "docs/architecture/**",
+    "docs/.manifest.json",
     "docs/evidence/ED-20260905-gh-2904-stable-logical-physical-binding.md",
     "docs/guides/generic-graph-source-technical-manual-20260404.md",
     "docs/risk-register/quality/R-20260905-GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING.yaml",

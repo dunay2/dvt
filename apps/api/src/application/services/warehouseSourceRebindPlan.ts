@@ -204,7 +204,9 @@ function assertCompatibleColumns(
 
 function assertUniqueColumnNames(columns: readonly Readonly<{ name: string }>[]): void {
   if (new Set(columns.map((column) => column.name)).size !== columns.length) {
-    throw new WarehouseSourceRebindUnverifiedError('Column identity is ambiguous in Source schema evidence.');
+    throw new WarehouseSourceRebindUnverifiedError(
+      'Column identity is ambiguous in Source schema evidence.'
+    );
   }
 }
 
@@ -257,7 +259,9 @@ async function buildSourceYamlRebindPlan(input: {
   const matchingSources = document.sources.filter((candidate) => candidate.name === sourceName);
   const source = matchingSources[0];
   if (matchingSources.length !== 1 || source == null) {
-    throw new WarehouseSourceRebindBindingConflictError('The bound dbt source declaration is ambiguous.');
+    throw new WarehouseSourceRebindBindingConflictError(
+      'The bound dbt source declaration is ambiguous.'
+    );
   }
   const matchingTables = source.tables.filter((candidate) => candidate.name === tableName);
   const table = matchingTables[0];
@@ -313,10 +317,7 @@ function rebindDraft(input: {
 }): WorkspaceGraphAuthoringDraft {
   const reachableNodeIds = collectReachableNodeIds(input.located.canvas, input.located.node.id);
   const nodes = input.located.canvas.nodes.map((node) => {
-    const reboundNode =
-      node.id === input.located.node.id
-        ? rebindSourceNode(node, input)
-        : node;
+    const reboundNode = node.id === input.located.node.id ? rebindSourceNode(node, input) : node;
     return reachableNodeIds.has(node.id)
       ? rebindNodeSemanticAuthority(reboundNode, input.currentRef, input.nextRef)
       : reboundNode;
@@ -406,15 +407,17 @@ function rebindNodeSemanticAuthority(
     currentRef,
     nextRef
   );
-  if (jcsCanonicalize(semanticDocument) === jcsCanonicalize(parsed.data.semanticDocument)) return node;
+  if (jcsCanonicalize(semanticDocument) === jcsCanonicalize(parsed.data.semanticDocument))
+    return node;
   return {
     ...node,
     metadata: {
       ...node.metadata,
-      [DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY]: DvtTransformAuthoringAuthorityV1Schema.parse({
-        ...parsed.data,
-        semanticDocument,
-      }),
+      [DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY]:
+        DvtTransformAuthoringAuthorityV1Schema.parse({
+          ...parsed.data,
+          semanticDocument,
+        }),
     },
   };
 }

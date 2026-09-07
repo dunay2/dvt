@@ -203,22 +203,34 @@ function parseRequestedScope(
 
 function parseTenantId(value: string | undefined): RouteParseResult<TenantId> {
   if (value == null) {
-    return { ok: false, issue: badRequestIssue(HTTP_ERROR_REASON.missingTenantId, { target: 'tenantId' }) };
+    return {
+      ok: false,
+      issue: badRequestIssue(HTTP_ERROR_REASON.missingTenantId, { target: 'tenantId' }),
+    };
   }
   const parsed = TenantId.parse(value);
   return parsed.ok
     ? { ok: true, value: parsed.value }
-    : { ok: false, issue: badRequestIssue(HTTP_ERROR_REASON.invalidTenantId, { target: 'tenantId' }) };
+    : {
+        ok: false,
+        issue: badRequestIssue(HTTP_ERROR_REASON.invalidTenantId, { target: 'tenantId' }),
+      };
 }
 
 function parseProjectId(value: string | undefined): RouteParseResult<ProjectId> {
   if (value == null) {
-    return { ok: false, issue: badRequestIssue(HTTP_ERROR_REASON.missingProjectId, { target: 'projectId' }) };
+    return {
+      ok: false,
+      issue: badRequestIssue(HTTP_ERROR_REASON.missingProjectId, { target: 'projectId' }),
+    };
   }
   const parsed = ProjectId.parse(value);
   return parsed.ok
     ? { ok: true, value: parsed.value }
-    : { ok: false, issue: badRequestIssue(HTTP_ERROR_REASON.invalidProjectId, { target: 'projectId' }) };
+    : {
+        ok: false,
+        issue: badRequestIssue(HTTP_ERROR_REASON.invalidProjectId, { target: 'projectId' }),
+      };
 }
 
 function parseEnvironmentId(value: string | undefined): RouteParseResult<EnvironmentId> {

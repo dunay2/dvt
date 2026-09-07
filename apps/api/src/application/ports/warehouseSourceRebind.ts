@@ -20,14 +20,18 @@ export class WarehouseSourceRebindNodeNotFoundError extends Error {
 }
 
 export class WarehouseSourceRebindSchemaDriftError extends Error {
-  public constructor(message = 'The target warehouse object is not schema-compatible with the logical Source.') {
+  public constructor(
+    message = 'The target warehouse object is not schema-compatible with the logical Source.'
+  ) {
     super(message);
     this.name = 'WarehouseSourceRebindSchemaDriftError';
   }
 }
 
 export class WarehouseSourceRebindBindingConflictError extends Error {
-  public constructor(message = 'The requested physical Source binding conflicts with the current draft.') {
+  public constructor(
+    message = 'The requested physical Source binding conflicts with the current draft.'
+  ) {
     super(message);
     this.name = 'WarehouseSourceRebindBindingConflictError';
   }

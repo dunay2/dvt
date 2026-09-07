@@ -169,8 +169,7 @@ export function rebindDvtSubstraitSemanticSourceRefV1(
   const currentKey = jcsCanonicalize(current);
   if (
     !document.sidecar.relations.some(
-      (relation) =>
-        relation.sourceRef != null && jcsCanonicalize(relation.sourceRef) === currentKey
+      (relation) => relation.sourceRef != null && jcsCanonicalize(relation.sourceRef) === currentKey
     )
   ) {
     return document;

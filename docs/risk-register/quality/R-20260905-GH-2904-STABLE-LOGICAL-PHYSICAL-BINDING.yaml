@@ -12,7 +12,10 @@ severity: High
 probability: Low
 ---
 mitigation:
-  summary: Stable logical IDs are separate from mutable bindings; existing semantic mutations are FieldId-only and physical Source rebind is explicit, verified, CAS-protected, and fail-closed on drift.
+  summary:
+    Stable logical IDs are separate from mutable bindings; existing semantic mutations are
+    FieldId-only and physical Source rebind is explicit, verified, CAS-protected, and fail-closed on
+    drift.
   evidence:
     - docs/evidence/ED-20260905-gh-2904-stable-logical-physical-binding.md
     - docs/planning/proposals/mandatory/runtime-and-contracts/gh-2904-stable-logical-physical-binding-hardcut-20260905.md
@@ -26,4 +29,5 @@ mitigation:
     - apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.test.ts
   follow_up:
     - Mark mitigated only after final PR CI, current-main overlap, and review-thread audit pass.
-    - Never restore name, path, ordinal, provider, alias, physical-binding, or compatibility fallbacks as logical identity.
+    - Never restore name, path, ordinal, provider, alias, physical-binding, or compatibility
+      fallbacks as logical identity.

@@ -153,10 +153,7 @@ describe('Canvas projection identity persistence', () => {
 
     expect(resolveCanvasColumnMappingTarget(created.node, 'buyer')).toBeNull();
     expect(
-      resolveCanvasColumnMappingTarget(
-        created.node,
-        'dvt_fld_01991dc0-0000-7000-8000-000000000201'
-      )
+      resolveCanvasColumnMappingTarget(created.node, 'dvt_fld_01991dc0-0000-7000-8000-000000000201')
     ).toEqual({
       nodeId: target.id,
       outputId: 'dvt_fld_01991dc0-0000-7000-8000-000000000201',
