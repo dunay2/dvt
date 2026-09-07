@@ -31,12 +31,13 @@ Repository Actions workflow permissions were also updated on 2026-03-08 so GitHu
   state. This ensures generated or updated release PRs trigger their required
   workflows without manual approval.
 - `.github/workflows/release-candidate-integrity.yml` is the sole coordinator
-  of the required `Release candidate integrity` context. A read-only trusted
-  query classifies authority before publisher jobs receive `checks:write`.
-  Release candidates use the exact same-repository PR head SHA; fork product
-  PRs use GitHub's base-repository test merge SHA. A separate read-only job
-  inspects immutable candidate Git objects without installing or executing
-  candidate code.
+  of the required `Complete release candidate integrity check` job. A trusted
+  read-only query classifies authority before publisher jobs receive
+  `checks:write`. Release candidates use the exact same-repository PR head SHA;
+  fork product PRs use GitHub's base-repository test merge SHA. A separate
+  read-only job inspects immutable candidate Git objects without installing or
+  executing candidate code. The custom `Release candidate integrity` check
+  remains informational and is not a ruleset authority.
 - The default-branch ruleset requires both the ordinary product quality
   aggregator and the exact release-candidate check with strict branch freshness.
 - Candidate admission inspects merge policy with the same trusted governance

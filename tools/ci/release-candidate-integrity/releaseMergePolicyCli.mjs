@@ -5,7 +5,7 @@ import { assessRepositoryMergePolicy } from './releaseCandidateIntegrity.mjs';
 
 const REQUIRED_CHECKS = [
   { context: 'All Checks Required for Merge', integration_id: 15368 },
-  { context: 'Release candidate integrity', integration_id: 15368 },
+  { context: 'Complete release candidate integrity check', integration_id: 15368 },
 ];
 const SUPPORTED_FLAGS = new Set(['repo', 'ruleset']);
 

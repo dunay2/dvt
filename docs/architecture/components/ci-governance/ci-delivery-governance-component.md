@@ -16,22 +16,22 @@ assertion.
 
 ## Public API
 
-| Surface                                             | Owner               | Contract                                                                                                                                                                                  |
-| --------------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm test:ci-tools`                                | root `package.json` | Runs the CI-tool contract suite over `tools/ci/*.test.mjs` and `tools/ci/test/*.test.mjs`.                                                                                                |
-| `.github/workflows/ci.yml` `CI tool contracts`      | CI - Code Quality   | Required CI-tool contract lane for pull requests, pushes to `main`, and manual workflow runs.                                                                                             |
-| `.github/workflows/release.yml`                     | Release governance  | Runs Release Please with the mandatory trusted governance credential and repository-owned manifest/config so generated release PRs trigger required checks.                               |
-| `.github/workflows/release-candidate-integrity.yml` | Release governance  | Classifies trusted PR metadata before mutation, then coordinates the single `Release candidate integrity` check from `pull_request_target`; candidate assessment has read-only authority. |
-| `.github/workflows/pr-labeler.yml`                  | PR metadata policy  | Applies file-derived labels from trusted base configuration without checking out or executing candidate code.                                                                             |
-| `release-please-config.json`                        | Release governance  | Owns Release Please title/version behavior instead of relying on action defaults.                                                                                                         |
-| `.release-please-manifest.json`                     | Release governance  | Owns the current release base version used by Release Please manifest mode.                                                                                                               |
-| `CHANGELOG.md`                                      | Release governance  | Generated Release Please artifact; it is not hand-authored documentation and is ignored by changed-markdown lint.                                                                         |
-| `tools/ci/release-candidate-integrity/`             | Release governance  | Pure candidate read model, check-publication service, and Git/GitHub adapters for exact-tree assessment, merge policy, and Checks API lifecycle.                                          |
-| `.markdownlintignore`                               | Markdown governance | Records generated Markdown artifacts that changed-file markdownlint must not lint as hand-authored prose.                                                                                 |
-| `scripts/lint-markdown-changed.cjs`                 | Markdown governance | Computes the changed Markdown read model after applying repository ignore policy before invoking markdownlint.                                                                            |
-| `tools/ci/workflow-pattern-parity.test.mjs`         | CI governance tests | Semantic guard that proves the workflow still invokes `pnpm test:ci-tools` and shared scope policy emitters.                                                                              |
-| `tools/ci/ci-delivery-governance-canon.test.mjs`    | CI governance tests | Canonical absorption guard for the local component guide, user stories, and mandatory proposal state.                                                                                     |
-| `docs/guides/testing-and-ci-capabilities.md`        | CI documentation    | Operator-facing command map for reproducing local and remote delivery gates.                                                                                                              |
+| Surface                                             | Owner               | Contract                                                                                                                                                    |
+| --------------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm test:ci-tools`                                | root `package.json` | Runs the CI-tool contract suite over `tools/ci/*.test.mjs` and `tools/ci/test/*.test.mjs`.                                                                  |
+| `.github/workflows/ci.yml` `CI tool contracts`      | CI - Code Quality   | Required CI-tool contract lane for pull requests, pushes to `main`, and manual workflow runs.                                                               |
+| `.github/workflows/release.yml`                     | Release governance  | Runs Release Please with the mandatory trusted governance credential and repository-owned manifest/config so generated release PRs trigger required checks. |
+| `.github/workflows/release-candidate-integrity.yml` | Release governance  | Coordinates the trusted `pull_request_target` assessment and its required `Complete release candidate integrity check` fan-in job.                          |
+| `.github/workflows/pr-labeler.yml`                  | PR metadata policy  | Applies file-derived labels from trusted base configuration without checking out or executing candidate code.                                               |
+| `release-please-config.json`                        | Release governance  | Owns Release Please title/version behavior instead of relying on action defaults.                                                                           |
+| `.release-please-manifest.json`                     | Release governance  | Owns the current release base version used by Release Please manifest mode.                                                                                 |
+| `CHANGELOG.md`                                      | Release governance  | Generated Release Please artifact; it is not hand-authored documentation and is ignored by changed-markdown lint.                                           |
+| `tools/ci/release-candidate-integrity/`             | Release governance  | Pure candidate read model, check-publication service, and Git/GitHub adapters for exact-tree assessment, merge policy, and Checks API lifecycle.            |
+| `.markdownlintignore`                               | Markdown governance | Records generated Markdown artifacts that changed-file markdownlint must not lint as hand-authored prose.                                                   |
+| `scripts/lint-markdown-changed.cjs`                 | Markdown governance | Computes the changed Markdown read model after applying repository ignore policy before invoking markdownlint.                                              |
+| `tools/ci/workflow-pattern-parity.test.mjs`         | CI governance tests | Semantic guard that proves the workflow still invokes `pnpm test:ci-tools` and shared scope policy emitters.                                                |
+| `tools/ci/ci-delivery-governance-canon.test.mjs`    | CI governance tests | Canonical absorption guard for the local component guide, user stories, and mandatory proposal state.                                                       |
+| `docs/guides/testing-and-ci-capabilities.md`        | CI documentation    | Operator-facing command map for reproducing local and remote delivery gates.                                                                                |
 
 Command/query rail:
 
@@ -75,14 +75,15 @@ Command/query rail:
    and changelog. Unsupported extra-file strategies fail closed.
 10. Package, manifest, and latest changelog versions MUST match and remain below
     `1.0.0` while the product is in pre-release development.
-11. `Release candidate integrity` has exactly one producer: the check
-    publication service invoked by the trusted `pull_request_target` workflow
-    loaded from the PR base. Candidate code is checked out without credentials
-    in a separate read-only assessment job and is inspected as Git data; it is
-    never installed or executed in that workflow.
-12. `All Checks Required for Merge` and `Release candidate integrity` MUST both
-    be strict required checks from GitHub Actions on the active ruleset for the
-    default branch. Product CI cannot be bypassed by an integrity-only success.
+11. `Complete release candidate integrity check` is the required fan-in job
+    loaded from the trusted PR base. Candidate code is checked out without
+    credentials in a separate read-only assessment job and is inspected as Git
+    data; it is never installed or executed in that workflow. The custom
+    `Release candidate integrity` check is informational evidence only.
+12. `All Checks Required for Merge` and
+    `Complete release candidate integrity check` MUST both be strict required
+    checks from GitHub Actions on the active ruleset. Product CI cannot be
+    bypassed by an integrity-only success.
 13. The candidate check result MUST be attached to the exact candidate head
     SHA; a green result from an older candidate revision is not release evidence.
 14. Jobs that check out pull-request candidate code MUST remain read-only and
