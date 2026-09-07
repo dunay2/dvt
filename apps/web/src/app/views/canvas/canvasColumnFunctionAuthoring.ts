@@ -1,4 +1,4 @@
-/** Owned concern: apply one admitted column function to the canonical Canvas transform authority. */
+/** Owned concern: derive card-level unary outputs and confine centre-drop replacement until #2921. */
 import type { CanonicalNode } from '../../types/canonical';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import {
@@ -9,6 +9,7 @@ import {
   applyDvtNodeAuthoringMetadata,
   createDvtNodeAuthoringMetadata,
 } from './canvasDvtAuthoringModel';
+import { applyCanvasCalculatedColumn } from './canvasCalculatedColumnAuthoring';
 
 export type CanvasColumnFunctionIdentity = Readonly<{
   nodeId: string;
@@ -98,6 +99,22 @@ export function applyCanvasColumnFunction(args: {
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
   identity: CanvasColumnFunctionIdentity;
 }): CanvasColumnFunctionResult {
+  if (args.identity.sourceColumnId == null) {
+    const result = applyCanvasCalculatedColumn({
+      draftSession: args.draftSession,
+      canonicalNodesById: args.canonicalNodesById,
+      request: {
+        nodeId: args.identity.nodeId,
+        kind: 'scalar-function',
+        alias: args.identity.alias,
+        inputFieldId: args.identity.columnId,
+        capabilityId: args.identity.capabilityId,
+      },
+    });
+    return result.outcome === 'applied'
+      ? { outcome: 'applied', draftSession: result.draftSession }
+      : { outcome: 'rejected' };
+  }
   const nodeCatalog = buildNodeCatalog(args.draftSession, args.canonicalNodesById);
   const targetNode = nodeCatalog.get(args.identity.nodeId);
   if (targetNode?.pluginId === 'dvt' && targetNode.kind === 'dvt:transform') {

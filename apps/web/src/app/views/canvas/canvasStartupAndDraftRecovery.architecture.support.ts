@@ -90,9 +90,9 @@ export const ownedConcernModules = [
     phrase: 'Owned concern: apply authoritative create-canvas save outcomes',
   },
   {
-    label: 'canvas playground host templates',
+    label: 'first Canvas action',
     path: 'CanvasPlaygroundHost.templates.tsx',
-    phrase: 'Owned concern: render Canvas playground first-document host templates',
+    phrase: 'Owned concern: render the first Canvas action without owning command policy',
   },
   {
     label: 'canvas recovery banner model',

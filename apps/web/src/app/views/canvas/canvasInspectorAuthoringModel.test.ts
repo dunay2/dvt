@@ -733,7 +733,7 @@ describe('canvasInspectorAuthoringModel', () => {
     expect(applyCanvasInspectorNodeDraft(node, draft)).toEqual(node);
   });
 
-  it('normalizes a persisted legacy Source filter without changing physical identity', () => {
+  it('rejects persisted legacy Source filter authority without changing physical identity', () => {
     const source = buildImportedWarehouseSourceNode({
       connectedSourceRef: {
         schemaVersion: 'connected-source-ref.v1',
@@ -772,30 +772,10 @@ describe('canvasInspectorAuthoringModel', () => {
       encodeDvtSubstraitFilterDocument(filtered)
     );
 
-    const draft = createCanvasInspectorNodeDraft(legacySource);
-    if (draft.dvt?.kind !== 'source' || draft.dvt.semantic == null) {
-      throw new Error('Expected persisted legacy Source semantics to be normalized.');
-    }
-    expect(inspectDvtSubstraitFilter(draft.dvt.semantic)).toBeNull();
-    expect(inspectDvtSubstraitProjectionDraft(draft.dvt.semantic).ok).toBe(true);
-
-    const updated = applyCanvasInspectorNodeDraft(legacySource, draft);
-    const authority = readDvtTransformAuthoringAuthority(updated);
-
-    expect(updated).toMatchObject({
-      id: source.id,
-      pluginId: source.pluginId,
-      kind: 'dvt:source',
-      role: 'input',
-      metadata: {
-        connectedSourceRef: source.metadata?.connectedSourceRef,
-        schema: source.metadata?.schema,
-        tableName: source.metadata?.tableName,
-      },
-    });
-    expect(
-      inspectDvtSubstraitFilter(decodeDvtSubstraitProjectionDocument(authority?.semanticDocument))
-    ).toBeNull();
+    expect(() => createCanvasInspectorNodeDraft(legacySource)).toThrow(
+      'DVT Source semantic authority is not an admitted projection shape.'
+    );
+    expect(legacySource.metadata?.connectedSourceRef).toEqual(source.metadata?.connectedSourceRef);
   });
 
   it('routes object-file load drafts through their plugin-owned authoring model', () => {

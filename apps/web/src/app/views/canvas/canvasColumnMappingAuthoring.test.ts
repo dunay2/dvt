@@ -209,11 +209,8 @@ describe('Canvas column mapping authoring', () => {
         dataType: 'integer',
       },
     });
-    const mapped = readMappedTransform(result);
-    const fieldId = readOutputFieldId(mapped, 'event_id');
-
-    expect(fieldId).toMatch(OPAQUE_FIELD_ID);
-    expect(fieldId).not.toBe('output:event_id');
+    expect(result).toEqual({ outcome: 'rejected', reason: 'mapping_not_found' });
+    expect(session.localNodeCatalog?.model).toBe(model);
   });
 
   it('changes an existing mapping while preserving the stable output id', () => {
