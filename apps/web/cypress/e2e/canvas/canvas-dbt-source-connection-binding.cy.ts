@@ -335,6 +335,33 @@ describe('dbt source connection binding', () => {
     cy.contains('[role="dialog"]', 'Add source', { timeout: 20_000 }).should('be.visible');
     cy.contains('[data-slot="source-import-connection-option"]', 'Governed warehouse').click();
     cy.contains('[role="dialog"]', 'Selected: 3', { timeout: 20_000 }).should('be.visible');
+    cy.get('[data-source-import-object-metadata="relation/RAW/ERP/ORDERS"]')
+      .should('be.visible')
+      .and('contain.text', 'order_id')
+      .and('contain.text', '42 rows')
+      .and('contain.text', '5.3 KB');
+    cy.get('[data-source-import-object-select="relation/RAW/ERP/CUSTOMERS"]')
+      .click({ scrollBehavior: 'center' })
+      .should('have.attr', 'aria-checked', 'true');
+    cy.get('[data-source-import-object-metadata="relation/RAW/ERP/CUSTOMERS"]')
+      .should('be.visible')
+      .and('contain.text', 'customer_id')
+      .and('contain.text', '12 rows')
+      .and('contain.text', '1.5 KB');
+    cy.get('[data-source-import-object-select="relation/RAW/ERP/ORDERS"]')
+      .focus()
+      .then(() => cy.press(Cypress.Keyboard.Keys.SPACE));
+    cy.get('[data-source-import-object-select="relation/RAW/ERP/ORDERS"]').should(
+      'have.attr',
+      'aria-checked',
+      'true'
+    );
+    cy.get('[data-source-import-object-metadata="relation/RAW/ERP/ORDERS"]')
+      .should('be.visible')
+      .and('contain.text', 'order_id')
+      .and('contain.text', '42 rows')
+      .and('contain.text', '5.3 KB');
+    cy.contains('[role="dialog"]', 'Selected: 3').should('be.visible');
     assertSeriousAccessibility();
     cy.contains('button', 'Attach sources to canvas').should('be.enabled').click();
 

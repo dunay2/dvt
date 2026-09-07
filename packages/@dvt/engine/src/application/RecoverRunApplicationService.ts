@@ -36,6 +36,7 @@ import type { IRunStateStoreRead, IRunStateStoreWrite } from '../ports/IRunState
 import { PlanIntegrityValidator } from '../security/planIntegrity.js';
 import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
 import { StartRunEventFactory } from '../services/startRun/StartRunEventFactory.js';
+import type { StartRunPreparation } from '../services/startRun/StartRunTypes.js';
 import type { IClock } from '../utils/clock.js';
 import { toErrorMessage } from '../utils/errorUtils.js';
 
@@ -99,10 +100,13 @@ export class RecoverRunApplicationService implements IRunRecoveryService {
       preflightContext,
       existingRecovery !== null
     );
-    const prepared =
+    const prepared: { context: ResolvedRunContext; preparation: StartRunPreparation } =
       existingRecovery === null
         ? await this.prepareRecoveryRun(sourceMetadata, planRef, context, adapter)
-        : { context: preflightContext, runRef: existingRecovery.providerRef };
+        : {
+            context: preflightContext,
+            preparation: { disposition: 'reused', runRef: existingRecovery.providerRef },
+          };
     const resolvedContext = prepared.context;
     const traceContext = buildTraceContext(resolvedContext, planRef.planId);
 
@@ -124,7 +128,7 @@ export class RecoverRunApplicationService implements IRunRecoveryService {
               planRef,
               resolvedContext,
               traceContext,
-              prepared.runRef,
+              prepared.preparation,
               adapter
             );
             span.setStatus('ok');
@@ -250,7 +254,7 @@ export class RecoverRunApplicationService implements IRunRecoveryService {
     planRef: PlanRef,
     context: RunContext,
     adapter: IProviderAdapter
-  ): Promise<{ context: ResolvedRunContext; runRef: EngineRunRef }> {
+  ): Promise<{ context: ResolvedRunContext; preparation: StartRunPreparation }> {
     const estimateRunRef = adapter.estimateRunRef;
     if (estimateRunRef === undefined) {
       throw new Error('adapter.estimateRunRef is required for recoverRun');
@@ -270,7 +274,7 @@ export class RecoverRunApplicationService implements IRunRecoveryService {
             parentRunId: asNonBlankString(reservation.parentRunId),
             originRunId: asNonBlankString(reservation.originRunId),
           };
-          const runRef = estimateRunRef(resolvedContext);
+          const runRef = estimateRunRef.call(adapter, resolvedContext);
           const metadata = this.eventFactory.buildRunMetadata(
             resolvedContext,
             planRef,
@@ -299,7 +303,7 @@ export class RecoverRunApplicationService implements IRunRecoveryService {
           parentRunId: asNonBlankString(concurrentRecovery.parentRunId),
           originRunId: asNonBlankString(concurrentRecovery.originRunId),
         },
-        runRef: concurrentRecovery.providerRef,
+        preparation: { disposition: 'reused', runRef: concurrentRecovery.providerRef },
       };
     }
     return {
@@ -309,7 +313,7 @@ export class RecoverRunApplicationService implements IRunRecoveryService {
         parentRunId: asNonBlankString(prepared.reservation.parentRunId),
         originRunId: asNonBlankString(prepared.reservation.originRunId),
       },
-      runRef: prepared.metadata.providerRef,
+      preparation: { disposition: 'created', runRef: prepared.metadata.providerRef },
     };
   }
 }

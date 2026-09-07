@@ -1,10 +1,10 @@
 /** Owned concern: copy a verified execution context into a recovery descendant artifact. */
-import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 
 import type { DbtProjectBundleArtifactStore } from '@dvt/artifacts';
 import { parseRunExecutionContextRef, type RunExecutionContextRef } from '@dvt/contracts';
+import { sha256Hex } from '@dvt/crypto';
 
 import type {
   IRunExecutionContextInheritanceWriter,
@@ -37,7 +37,7 @@ export class FileRunExecutionContextInheritanceWriter implements IRunExecutionCo
     }
 
     const contextBytes = await readFile(sourcePath);
-    const digest = createHash('sha256').update(contextBytes).digest('hex');
+    const digest = sha256Hex(contextBytes);
     if (digest !== command.sourceRef.sha256) {
       throw new Error('The recovery source context failed immutable digest verification.');
     }

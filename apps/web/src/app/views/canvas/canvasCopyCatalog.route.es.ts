@@ -9,16 +9,10 @@ export const canvasViewRouteCopyEs = {
     'Canvas espera a que terminen las comprobaciones de disponibilidad del backend antes de cargar la superficie de authoring.',
   canvasViewportContextSurfaceLabel: 'Fondo del grafo del canvas',
   canvasContextMenuLabel: 'Acciones del canvas',
-  routeNeedsCanvasTitle: 'Crear canvas en este workspace',
-  routeNeedsCanvasMessage:
-    'Este workspace activo todavia no tiene un documento de canvas persistido. Elige una plantilla de canvas para empezar a trabajar.',
-  routeNeedsCanvasHelper:
-    'La plantilla de canvas elegida se persiste mediante la frontera protegida del workspace graph draft antes de agregar nodos.',
-  routeNeedsCanvasWorkspaceLabel: 'Workspace activo',
-  routeNeedsCanvasAdapterLabel: 'Adaptador',
-  routeNeedsCanvasTemplateLabel: 'Elige una plantilla de canvas',
-  routeNeedsCanvasReadOnlyMessage:
-    'La creacion de plantillas de canvas esta deshabilitada porque la edicion del grafo no esta disponible para este scope del workspace.',
+  routeNeedsCanvasTitle: 'Canvas',
+  routeNeedsCanvasMessage: 'Añade fuentes y construye tus transformaciones aquí.',
+  routeNeedsCanvasActionLabel: 'Empezar Canvas',
+  routeNeedsCanvasReadOnlyMessage: 'No tienes permiso para crear el Canvas en este proyecto.',
   routeErrorTitle: 'Canvas no disponible',
   routeErrorFallbackMessage: 'No se ha podido cargar el grafo del workspace para Canvas.',
   routeErrorMessage:

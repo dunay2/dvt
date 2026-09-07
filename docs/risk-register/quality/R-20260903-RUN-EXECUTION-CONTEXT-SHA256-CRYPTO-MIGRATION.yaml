@@ -1,0 +1,48 @@
+---
+id: R-20260903-RUN-EXECUTION-CONTEXT-SHA256-CRYPTO-MIGRATION
+title:
+  Run execution context sha256 fields tightened to Sha256HexString; writers migrated to @dvt/crypto
+status: Open
+date: 2026-09-03
+owners:
+  - '@dvt/contracts'
+  - 'dvt-api'
+severity: Low
+probability: Low
+---
+summary: >
+  RunExecutionContextRef.sha256 and RunExecutionContext.planSha256 were loosely typed as
+  NonBlankString and validated with node:crypto createHash('sha256') in three apps/api writers/
+  readers. Tightening the Zod schema to Sha256HexStringSchema is a backward-compatible narrowing for
+  any caller that already produces valid SHA-256 hex digests (which all known production callers
+  do), but any external or future caller that supplied a non-64-char-hex value in this field would
+  now be rejected at validation time instead of silently accepted.
+
+mitigations:
+  - Reused the already-existing Sha256HexString branded type and Sha256HexStringSchema (already
+    applied to pluginCompatibilityFingerprint and PlanRef.sha256) rather than introducing a new
+    validation primitive.
+  - Full build + test pass across @dvt/contracts, dvt-api, @dvt/engine, @dvt/artifacts,
+    @dvt/adapter-temporal, @dvt/temporal-dbt-plugin, and dvt-temporal-worker confirms no production
+    caller regresses.
+  - sha256Hex(bytes) from @dvt/crypto is a byte-for-byte drop-in replacement for
+    createHash('sha256').update(bytes).digest('hex'); no digest value produced by the migrated
+    writers changes.
+  - Repo-wide grep confirmed apps/web does not consume the RunExecutionContext.v1 parsers, so the
+    frontend surface is unaffected.
+
+monitoring:
+  - Watch for new ContractValidationError occurrences tagged to
+    RunExecutionContextRefSchema/RunExecutionContextSchema after rollout, which would indicate an
+    undiscovered caller producing non-canonical sha256/planSha256 values.
+
+follow_up:
+  - >-
+    Issue #2191 (epic #2185) tracks the remaining ~39-file crypto duplication cleanup inventory;
+    this change addresses only the first, highest-consensus item (this file's code_refs).
+  - >-
+    Issue #2193 tracks the CI guard to prevent new node:crypto duplicates from being introduced; not
+    yet implemented.
+  - A recurring md5($1) SQL-side pattern for Postgres advisory locks (6 files) and a
+    non-cryptographic CRC32 usage in @dvt/state-store/archiveLifecycle.ts remain open, non-blocking
+    governance notes from the issue's inventory, out of scope for this cut.

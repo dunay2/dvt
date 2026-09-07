@@ -11,10 +11,6 @@ const PLAYGROUND_HOST_TEMPLATE_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'CanvasPlaygroundHost.templates.tsx'
 );
-const ROUTE_COPY_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'canvasCopyCatalog.route.ts'
-);
 const HOST_CYCLE_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasHostCycleState.ts'
@@ -31,8 +27,7 @@ const RUNTIME_CONTRACT_SOURCE = readArchitectureSiblingSource(
 describe('CanvasPlaygroundHost architecture', () => {
   it('keeps first-canvas host HTML in templates while the host builds commands', () => {
     expect(PLAYGROUND_HOST_SOURCE).toContain("from './CanvasPlaygroundHost.templates'");
-    expect(PLAYGROUND_HOST_SOURCE).toContain('onCreateCanvasTemplate');
-    expect(PLAYGROUND_HOST_SOURCE).toContain('resolveCanvasTemplatePresentation');
+    expect(PLAYGROUND_HOST_SOURCE).toContain('onCreateCanvas');
     expect(PLAYGROUND_HOST_SOURCE).not.toContain('<div');
     expect(PLAYGROUND_HOST_SOURCE).not.toContain('Button');
     expect(PLAYGROUND_HOST_SOURCE).not.toContain('Card');
@@ -115,19 +110,5 @@ describe('CanvasPlaygroundHost architecture', () => {
     expect(CONTROLLER_SOURCE).not.toContain(
       'canEditDraftTransport: store.userPermissions.canEditEdges'
     );
-  });
-
-  it('keeps visible copy and template slots aligned with the template-selection meaning', () => {
-    expect(PLAYGROUND_HOST_SOURCE).toContain('workspaceScope');
-    expect(PLAYGROUND_HOST_SOURCE).toContain('routeNeedsCanvasWorkspaceLabel');
-    expect(PLAYGROUND_HOST_SOURCE).toContain('resolveCanvasTemplatePresentation');
-    expect(PLAYGROUND_HOST_TEMPLATE_SOURCE).toContain('canvas-playground-workspace-context');
-    expect(PLAYGROUND_HOST_TEMPLATE_SOURCE).toContain('canvas-playground-template-choice');
-    expect(PLAYGROUND_HOST_TEMPLATE_SOURCE).toContain('template.title');
-    expect(PLAYGROUND_HOST_TEMPLATE_SOURCE).toContain('template.description');
-    expect(PLAYGROUND_HOST_TEMPLATE_SOURCE).not.toContain('registration.createTitle');
-    expect(ROUTE_COPY_SOURCE).toContain('Create canvas in this workspace');
-    expect(ROUTE_COPY_SOURCE).toContain('Choose a canvas template');
-    expect(ROUTE_COPY_SOURCE).not.toContain('Choose a governed canvas kind to start authoring');
   });
 });

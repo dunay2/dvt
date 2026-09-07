@@ -57,7 +57,7 @@ describe('Canvas route state smoke', () => {
         canvasDocument: null,
       },
       surface: {
-        text: 'Create canvas',
+        text: 'Canvas',
         slot: 'canvas-playground-empty-state',
         viewportVisible: false,
       },

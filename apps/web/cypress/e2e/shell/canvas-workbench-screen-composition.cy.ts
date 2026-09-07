@@ -461,11 +461,13 @@ describe('Canvas workbench screen composition', () => {
     cy.get('@topBar').should('not.contain.text', 'Importar');
 
     cy.get('[data-slot="canvas-playground-empty-state"]').should('be.visible');
-    cy.contains('Crear canvas en este workspace').should('be.visible');
+    cy.get('[data-slot="canvas-playground-empty-state"] h2')
+      .contains('Canvas')
+      .should('be.visible');
     cy.contains('Canvas dbt').should('be.visible');
     cy.contains('Canvas de transformación').should('be.visible');
     cy.contains('button', 'Canvas de transformación').should('not.be.disabled');
-    cy.contains('Flow-based transformation canvas').should('not.exist');
+    cy.contains('Flow-based transformation canvas').should('not.be.visible');
     cy.get('[data-slot="canvas-toolbar-plan-command"]').should('not.exist');
     cy.get('[data-slot="canvas-toolbar-run-command"]').should('not.exist');
 

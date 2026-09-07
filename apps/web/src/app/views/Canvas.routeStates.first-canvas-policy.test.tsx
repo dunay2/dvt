@@ -29,7 +29,7 @@ describe('Canvas route first-canvas policy', () => {
     });
 
     const createButton = Array.from(harness.container.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Transformation')
+      button.textContent?.includes('Start canvas')
     );
 
     expect(createButton).toBeDefined();
@@ -37,7 +37,7 @@ describe('Canvas route first-canvas policy', () => {
 
     expect(handleCreateCanvasDocument).toHaveBeenCalledWith({
       kind: 'transformation',
-      title: 'Transformation canvas',
+      title: 'Canvas',
     });
   });
 

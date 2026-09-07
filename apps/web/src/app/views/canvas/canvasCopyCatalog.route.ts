@@ -31,34 +31,19 @@ export const canvasViewRouteCopyByKey = {
   },
   routeNeedsCanvasTitle: {
     key: 'canvas.route.needsCanvasTitle',
-    fallback: 'Create canvas in this workspace',
+    fallback: 'Canvas',
   },
   routeNeedsCanvasMessage: {
     key: 'canvas.route.needsCanvasMessage',
-    fallback:
-      'This active workspace does not have a persisted canvas document yet. Choose a canvas template to start authoring.',
+    fallback: 'Add sources and build your transformations here.',
   },
-  routeNeedsCanvasHelper: {
-    key: 'canvas.route.needsCanvasHelper',
-    fallback:
-      'The selected canvas template is persisted through the protected workspace graph draft boundary before any nodes are added.',
-  },
-  routeNeedsCanvasWorkspaceLabel: {
-    key: 'canvas.route.needsCanvasWorkspaceLabel',
-    fallback: 'Active workspace',
-  },
-  routeNeedsCanvasAdapterLabel: {
-    key: 'canvas.route.needsCanvasAdapterLabel',
-    fallback: 'Adapter',
-  },
-  routeNeedsCanvasTemplateLabel: {
-    key: 'canvas.route.needsCanvasTemplateLabel',
-    fallback: 'Choose a canvas template',
+  routeNeedsCanvasActionLabel: {
+    key: 'canvas.route.needsCanvasActionLabel',
+    fallback: 'Start canvas',
   },
   routeNeedsCanvasReadOnlyMessage: {
     key: 'canvas.route.needsCanvasReadOnlyMessage',
-    fallback:
-      'Canvas template creation is disabled because graph edits are unavailable for this workspace scope.',
+    fallback: 'You do not have permission to create the Canvas in this project.',
   },
   routeErrorTitle: {
     key: 'canvas.route.errorTitle',

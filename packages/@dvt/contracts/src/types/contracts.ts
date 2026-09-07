@@ -157,7 +157,7 @@ export interface RunExecutionPolicy {
 
 export interface RunExecutionContextRef {
   uri: NonBlankString;
-  sha256: NonBlankString;
+  sha256: Sha256HexString;
   schemaVersion: NonBlankString;
   planId: NonBlankString;
   planVersion: NonBlankString;
@@ -182,7 +182,7 @@ export interface RunExecutionContext {
   schemaVersion: NonBlankString;
   planId: NonBlankString;
   planVersion: NonBlankString;
-  planSha256: NonBlankString;
+  planSha256: Sha256HexString;
   /**
    * Deterministic fingerprint used to verify plugin/runtime compatibility
    * against the governing plan artifact at admission and replay boundaries.

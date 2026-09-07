@@ -3,6 +3,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildController, type CanvasController } from '../Canvas.test.controller';
+import { buildDraftReadNotFoundResponse } from '../../services/workspace/workspaceGraphDraftProtocol.test.fixtures';
+import { projectCanvasAuthoringDraftReadModel } from './canvasDraftReadModel';
 import { deriveCanvasDraftAccessPosture } from './canvasDraftAccessPostureModel';
 import { deriveCanvasRouteInteractionState } from './canvasRouteInteractionState';
 
@@ -17,6 +19,64 @@ function buildReadyNodes(): CanvasController['nodesWithImpact'] {
 }
 
 describe('canvasRouteInteractionState', () => {
+  it('does not present a missing protected draft as a permission denial', () => {
+    const draft = projectCanvasAuthoringDraftReadModel(
+      buildDraftReadNotFoundResponse({
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'dev',
+      })
+    );
+    const controller = buildController({
+      canvasDocument: null,
+      canCreateCanvasDocument: true,
+      draftAccessMode: draft.accessMode,
+      draftCapabilityReason: draft.capabilityReason,
+      draftFormatError: draft.formatError,
+    });
+
+    const interaction = deriveCanvasRouteInteractionState(controller, null);
+
+    expect(controller.draftAccessPosture.kind).toBe('unknown_pending');
+    expect(interaction.effectiveWorkbenchState).toEqual({ kind: 'needs_canvas' });
+    expect(interaction.readOnlyState).toBeNull();
+    expect(interaction.effectiveUserPermissions).toMatchObject({
+      canPlan: false,
+      canRun: false,
+      canEditEdges: false,
+      canPersistGraphDraft: true,
+    });
+  });
+  it.each([null, { kind: 'transformation', title: 'Canvas' }])(
+    'does not present runtime readiness as a permission denial: %j',
+    (canvasDocument) => {
+      const controller = buildController({ canvasDocument });
+      const interaction = deriveCanvasRouteInteractionState(
+        {
+          ...controller,
+          userPermissions: {
+            ...controller.userPermissions,
+            canPlan: false,
+            canRun: false,
+            canEditEdges: false,
+          },
+          authorizationPermissions: {
+            ...controller.authorizationPermissions,
+            canPlan: true,
+            canRun: true,
+            canEditEdges: true,
+          },
+        },
+        null
+      );
+      expect(interaction.readOnlyState).toBeNull();
+      expect(interaction.effectiveUserPermissions).toMatchObject({
+        canPlan: false,
+        canRun: false,
+        canEditEdges: false,
+      });
+    }
+  );
   it('converts draft transport failures into a route-safe disabled interaction posture', () => {
     const controller = buildController({
       nodesWithImpact: [

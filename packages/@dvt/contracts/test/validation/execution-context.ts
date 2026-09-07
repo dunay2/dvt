@@ -45,7 +45,7 @@ export function registerValidationExecutionContextSuite(): void {
         targetAdapter: 'temporal',
         runExecutionContextRef: {
           uri: 'dvt-runctx://tenant-a/run-1/context.json',
-          sha256: 'abc123',
+          sha256: 'a'.repeat(64),
           schemaVersion: 'v1.0',
           planId: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planId,
           planVersion: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planVersion,
@@ -96,7 +96,7 @@ export function registerValidationExecutionContextSuite(): void {
     it('parses RunExecutionContextRef with valid input', () => {
       const ref = parseRunExecutionContextRef({
         uri: 'dvt-runctx://tenant-a/run-1/context.json',
-        sha256: 'abc123',
+        sha256: 'a'.repeat(64),
         schemaVersion: 'v1.0',
         planId: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planId,
         planVersion: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planVersion,
@@ -112,7 +112,7 @@ export function registerValidationExecutionContextSuite(): void {
       expect(() =>
         parseRunExecutionContextRef({
           uri: '',
-          sha256: 'abc123',
+          sha256: 'a'.repeat(64),
           schemaVersion: 'v1.0',
           planId: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planId,
           planVersion: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planVersion,
@@ -124,7 +124,7 @@ export function registerValidationExecutionContextSuite(): void {
       expect(() =>
         parseRunExecutionContextRef({
           uri: 'dvt-runctx://tenant-a/run-1/context.json',
-          sha256: 'abc123',
+          sha256: 'a'.repeat(64),
           schemaVersion: 'v1.0',
           planId: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planId,
           planVersion: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planVersion,
@@ -133,6 +133,35 @@ export function registerValidationExecutionContextSuite(): void {
       ).toThrow(ContractValidationError);
     });
 
+    it.each(['abc123', 'g'.repeat(64), 'A'.repeat(64), 'a'.repeat(63), 'a'.repeat(65)])(
+      'rejects malformed execution-context SHA representation %s at both boundaries',
+      (digest) => {
+        expect(() =>
+          parseRunExecutionContextRef({
+            uri: 'dvt-runctx://tenant-a/run-1/context.json',
+            sha256: digest,
+            schemaVersion: 'v1.0',
+            planId: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planId,
+            planVersion: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planVersion,
+          })
+        ).toThrow(ContractValidationError);
+        expect(() =>
+          parseRunExecutionContext({
+            schemaVersion: 'v1.0',
+            planId: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planId,
+            planVersion: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planVersion,
+            planSha256: digest,
+            tenantId: 'tenant-a',
+            projectId: 'project-a',
+            environmentId: 'prod',
+            targetAdapter: 'temporal',
+            createdAtIso: '2026-04-03T10:00:00.000Z',
+            createdBy: 'system',
+            pluginContexts: {},
+          })
+        ).toThrow(ContractValidationError);
+      }
+    );
     it('rejects RunExecutionContext when createdAtIso is not strict ISO UTC', () => {
       expect(() =>
         parseRunExecutionContext({

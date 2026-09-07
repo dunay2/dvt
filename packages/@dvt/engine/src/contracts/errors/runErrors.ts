@@ -15,10 +15,11 @@ export class RunNotFoundError extends DvtError {
 }
 
 export class RunAlreadyExistsError extends DvtError {
-  constructor(runId: string) {
+  constructor(runId: string, options?: { cause?: unknown }) {
     const messageKey = ENGINE_ERROR_MESSAGE_KEY.RUN_ALREADY_EXISTS;
     const messageParams = { runId };
     super(ENGINE_ERROR_CODE.RUN_ALREADY_EXISTS, messageKey, runId, {
+      cause: options?.cause,
       messageKey,
       messageParams,
     });
