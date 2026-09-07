@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.15.0 (2026-09-07)
+
+## What's Changed
+* feat(web): Center Canvas nodes from the minimap by @dunay2 in https://github.com/dunay2/dvt/pull/2914
+* docs(docs): Define PostgreSQL backup and recovery contract by @dunay2 in https://github.com/dunay2/dvt/pull/2880
+* fix(web): Keep column composition menu open until explicit dismissal by @dunay2 in https://github.com/dunay2/dvt/pull/2996
+* docs(docs): Preserve bounded dbt research evidence by @dunay2 in https://github.com/dunay2/dvt/pull/2999
+* fix(contracts): Harden run-execution-context sha256 fields and migrate to @dvt/crypto by @dunay2 in https://github.com/dunay2/dvt/pull/2897
+* docs(docs): Align artifact terminology with the completed hard cut by @dunay2 in https://github.com/dunay2/dvt/pull/3014
+* test(api): Remove unused architecture AST helper by @dunay2 in https://github.com/dunay2/dvt/pull/3015
+* fix(engine): Require own preparation before reporting start failure by @dunay2 in https://github.com/dunay2/dvt/pull/3022
+* fix(web): Refresh mandatory Source metadata focus by @dunay2 in https://github.com/dunay2/dvt/pull/3026
+* fix(web): Remove Canvas template choice and false access warnings by @dunay2 in https://github.com/dunay2/dvt/pull/2997
+* refactor(vtx2): Complete FieldId and Source rebind hard cut by @dunay2 in https://github.com/dunay2/dvt/pull/3001
+* refactor(web): Derive card unary functions as new outputs by @dunay2 in https://github.com/dunay2/dvt/pull/3025
+* refactor(web): Return created output identity directly by @dunay2 in https://github.com/dunay2/dvt/pull/3000
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.14.0...v0.15.0
+
 ## 0.14.0 (2026-09-06)
 
 ## What's Changed
