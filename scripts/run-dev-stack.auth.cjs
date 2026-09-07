@@ -37,6 +37,7 @@ const LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS = Object.freeze([
   'workspace:source-connection:rename',
   'workspace:source-connection:test',
   'workspace:source-import:import',
+  'workspace:source-import:rebind',
 ]);
 
 let joseModulePromise;

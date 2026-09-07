@@ -542,11 +542,14 @@ export function useSourceImportWizard({
   };
 
   const toggleSourceObject = (index: number) => {
-    if (dbtSourceBinding != null) return;
     setState((prev) => {
       const sourceObject = prev.sourceObjects[index];
       if (sourceObject == null || !isSourceObjectImportable(sourceObject)) {
         return prev;
+      }
+
+      if (dbtSourceBinding != null) {
+        return { ...prev, activeSourceObjectKey: buildSourceObjectIdentityKey(sourceObject) };
       }
 
       return {

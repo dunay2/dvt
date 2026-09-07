@@ -196,6 +196,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [SQL-first execution could drift from its governed PostgreSQL connection](R-20260813-PTH2-DVT-POSTGRES-CONNECTION-AUTHORITY.yaml)
 - [SQL-first seam hardening can regress into local convenience modules as new profiles land](R-20260414-TF-A1-C-SRP-HARDENING-DRIFT.yaml)
 - [Staleness telemetry fires on engine failures after Promise.all parallelization](R-20260330-STALENESS-PARALLEL-TELEMETRY-ON-ENGINE-FAILURE.yaml)
+- [Start failure reporting could confuse run existence with preparation authority](R-20260906-ENG1-START-MUTATION-AUTHORITY.yaml)
 - [Start-run adapter IDs can drift back into concrete runtime construction](R-20260424-START-RUN-ADAPTER-FACTORY-DRIFT.yaml)
 - [Start-run admission phase can drift back into coordinator construction](R-20260518-DHM-WS3-ADMISSION-SEAM.yaml)
 - [Start-run alias deprecation drift during migration to StartRunApplicationService](R-20260405-START-RUN-ALIAS-DEPRECATION.yaml)

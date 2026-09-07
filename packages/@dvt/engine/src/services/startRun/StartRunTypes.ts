@@ -45,9 +45,23 @@ export interface IStartRunAdmissionService {
   admit(request: StartRunAdmissionRequest): Promise<StartRunAdmissionResult>;
 }
 
+export type StartRunPreparation = Readonly<{
+  disposition: 'created' | 'reused';
+  runRef: EngineRunRef;
+}>;
+
+export type StartRunPhase =
+  | 'admission'
+  | 'intent'
+  | 'bootstrap'
+  | 'provider_dispatch'
+  | 'provider_ref_reconciliation'
+  | 'completion';
+
 export interface StartRunErrorContext {
+  preparation: StartRunPreparation | null;
+  phase: StartRunPhase;
   intentId?: string;
-  preparedRun?: boolean;
 }
 
 export interface StartRunExecutionInput {
@@ -56,6 +70,7 @@ export interface StartRunExecutionInput {
   resolvedContext: ResolvedRunContext;
   traceContext: StartRunTraceContext;
   intentId: string;
+  errorContext: StartRunErrorContext;
 }
 
 export interface IStartRunExecutionService {

@@ -115,20 +115,16 @@ before that boundary exists.
   `CanvasPlaygroundHost.tsx` owns copy selection and create-canvas command
   construction.
 - Host templates must not construct `CanvasCreateCanvasDocumentCommand` DTOs.
-- First-canvas startup must show active workspace context before the template
-  choices.
-- User-facing first-canvas choices are canvas templates; route copy must not
-  describe `dbt` or `Transformation` as project types.
-- First-canvas template titles and descriptions must render through
-  `CanvasTemplatePresentation` so registry labels and raw plugin copy do not
-  leak as the primary startup taxonomy.
+- First-canvas startup offers one Start canvas action. Project and environment
+  context remain visible in the shell; the host does not repeat scope IDs or
+  adapter details. No canvas template or type is a user-facing choice.
 
 ## Transitions
 
 ```mermaid
 stateDiagram-v2
   [*] --> HostNeedsCanvas
-  HostNeedsCanvas --> CreatingCanvas: choose kind
+  HostNeedsCanvas --> CreatingCanvas: start Canvas
   CreatingCanvas --> DraftBackedCanvas: saved empty draft with canvas identity
   DraftBackedCanvas --> TypedEmptyCanvas: restore canvas identity from workspace draft
   TypedEmptyCanvas --> ActiveCanvas: first node persisted

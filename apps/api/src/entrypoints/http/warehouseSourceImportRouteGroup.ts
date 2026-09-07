@@ -7,6 +7,7 @@ import { GraphDraftWarehouseSourceImportStrategy } from '../../application/servi
 import { ImportWarehouseSourcesUseCase } from '../../application/services/importWarehouseSourcesUseCase.js';
 import { ListWarehouseConnectionSourceObjectsUseCase } from '../../application/services/listWarehouseConnectionSourceObjectsUseCase.js';
 import { ListWarehouseConnectionsUseCase } from '../../application/services/listWarehouseConnectionsUseCase.js';
+import { RebindWarehouseSourceUseCase } from '../../application/services/rebindWarehouseSourceUseCase.js';
 import { RenameWarehouseConnectionUseCase } from '../../application/services/renameWarehouseConnectionUseCase.js';
 import { TestWarehouseConnectionUseCase } from '../../application/services/testWarehouseConnectionUseCase.js';
 import { WarehouseConnectionSourceObjectReader } from '../../application/services/WarehouseConnectionSourceObjectReader.js';
@@ -18,6 +19,7 @@ import type { Env } from '../../plugins/env.js';
 import type { RuntimeAuth } from './protectedRuntimeRouteDependencies.js';
 import type { ProtectedRuntimeRouteDependencies } from './protectedRuntimeRouteDependencies.js';
 import { registerWarehouseSourceImportRoutes } from './warehouseSourceImportRoutes.js';
+import { registerWarehouseSourceRebindRoute } from './warehouseSourceRebindRoute.js';
 
 export type ProtectedWarehouseSourceImportRouteGroupOptions = {
   readonly env: Env;
@@ -40,6 +42,10 @@ export function registerProtectedWarehouseSourceImportRouteGroup(
   const catalog = options.protectedModule.warehouseConnectionCatalog;
   const probe = options.connectionProbe;
   const sourceObjectReader = new WarehouseConnectionSourceObjectReader(catalog, probe);
+  const rateLimit = {
+    max: options.env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX,
+    timeWindow: options.env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_TIME_WINDOW_MS,
+  };
   registerWarehouseSourceImportRoutes(app, {
     ...options.runtimeAuth,
     listConnectionsUseCase: new ListWarehouseConnectionsUseCase(catalog),
@@ -64,9 +70,17 @@ export function registerProtectedWarehouseSourceImportRouteGroup(
         projectGraph: options.protectedModule.dbtProjectImport.projectGraphUseCase,
       }),
     }),
-    rateLimit: {
-      max: options.env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX,
-      timeWindow: options.env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_TIME_WINDOW_MS,
-    },
+    rateLimit,
+  });
+  registerWarehouseSourceRebindRoute(app, {
+    ...options.runtimeAuth,
+    rebindSourceUseCase: new RebindWarehouseSourceUseCase({
+      draftStore: options.protectedModule.workspaceGraphDraftStore,
+      sourceObjectReader,
+      workspaceFiles,
+      batchMutation,
+      now: () => new Date(),
+    }),
+    rateLimit,
   });
 }
