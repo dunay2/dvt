@@ -1,9 +1,6 @@
 import { createHash } from 'node:crypto';
 
-import type {
-  RelationalSourceObject,
-  WorkspaceGraphAuthoringDraft,
-} from '@dvt/contracts';
+import type { RelationalSourceObject, WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import type {
@@ -239,11 +236,12 @@ function batchMutation(): IWorkspaceFileBatchMutationPort {
 }
 
 function useCase(args: {
+  initialDraft?: WorkspaceGraphAuthoringDraft;
   target?: RelationalSourceObject;
   sourceYaml?: string;
   saveResult?: Awaited<ReturnType<IWorkspaceGraphDraftStore['save']>>;
 }): RebindUseCaseFixture {
-  const draftStore = store(draft(), args.saveResult);
+  const draftStore = store(args.initialDraft ?? draft(), args.saveResult);
   const batch = batchMutation();
   const content = args.sourceYaml ?? yaml();
   const service = new RebindWarehouseSourceUseCase({
@@ -335,6 +333,46 @@ describe('RebindWarehouseSourceUseCase', () => {
     ).rejects.toBeInstanceOf(WarehouseSourceRebindBindingConflictError);
     expect(batch.apply).not.toHaveBeenCalled();
     expect(draftStore.save).not.toHaveBeenCalled();
+  });
+
+  it('resumes graph persistence when the dbt artifact already has the requested binding', async () => {
+    const first = useCase({});
+    await first.service.execute(REQUEST);
+    const appliedYaml = vi.mocked(first.batch.apply).mock.calls[0]?.[1].writes[0]?.content;
+    if (appliedYaml == null) throw new Error('Expected applied Source YAML.');
+
+    const recovery = useCase({ sourceYaml: appliedYaml });
+    const result = await recovery.service.execute(REQUEST);
+
+    expect(result.draftRevision).toBe('source-rebind-revision');
+    expect(recovery.batch.apply).not.toHaveBeenCalled();
+    expect(recovery.draftStore.save).toHaveBeenCalledOnce();
+  });
+
+  it('deduplicates a retry after both artifact and graph were persisted', async () => {
+    const first = useCase({});
+    await first.service.execute(REQUEST);
+    const appliedYaml = vi.mocked(first.batch.apply).mock.calls[0]?.[1].writes[0]?.content;
+    const persistedDraft = vi.mocked(first.draftStore.save).mock.calls[0]?.[0].draft;
+    if (appliedYaml == null) throw new Error('Expected applied Source YAML.');
+    if (persistedDraft == null) throw new Error('Expected persisted graph draft.');
+
+    const replay = useCase({
+      initialDraft: persistedDraft,
+      sourceYaml: appliedYaml,
+      saveResult: {
+        kind: 'saved',
+        schemaVersion: 'workspace-graph-draft.v1',
+        revision: 'source-rebind-revision',
+        updatedAt: '2026-09-06T08:00:01.000Z',
+        deduplicated: true,
+      },
+    });
+    const result = await replay.service.execute(REQUEST);
+
+    expect(result.draftRevision).toBe('source-rebind-revision');
+    expect(replay.batch.apply).not.toHaveBeenCalled();
+    expect(replay.draftStore.save).toHaveBeenCalledOnce();
   });
 
   it('rolls the dbt artifact back when graph CAS loses the race', async () => {

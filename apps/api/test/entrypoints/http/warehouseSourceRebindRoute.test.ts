@@ -73,11 +73,13 @@ function buildApp(
 
   registerWarehouseSourceRebindRoute(app, {
     authenticator: {
-      authenticateBearerToken: vi.fn().mockResolvedValue(
-        options.authenticated === false
-          ? { ok: false, code: 'missing_token' }
-          : { ok: true, principal: principal() }
-      ),
+      authenticateBearerToken: vi
+        .fn()
+        .mockResolvedValue(
+          options.authenticated === false
+            ? { ok: false, code: 'missing_token' }
+            : { ok: true, principal: principal() }
+        ),
     } as never,
     authorizer: { authorize } as never,
     rebindSourceUseCase: { execute } as never,
@@ -97,7 +99,7 @@ describe('warehouseSourceRebindRoute', () => {
       headers: { authorization: 'Bearer token' },
     });
 
-    expect(response.statusCode).toBe(200);
+    expect(response.statusCode, response.body).toBe(200);
     expect(response.json()).toEqual(RESULT);
     expect(execute).toHaveBeenCalledWith({
       scope: { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'env-a' },
@@ -124,7 +126,7 @@ describe('warehouseSourceRebindRoute', () => {
       headers: { authorization: 'Bearer token' },
     });
 
-    expect(response.statusCode).toBe(422);
+    expect(response.statusCode, response.body).toBe(422);
     expect(response.json()).toEqual({
       error: { type: 'unprocessable_entity', reason: 'warehouse_source_rebind_schema_drift' },
     });

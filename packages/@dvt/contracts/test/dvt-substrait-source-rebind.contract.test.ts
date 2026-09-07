@@ -1,13 +1,43 @@
 import { describe, expect, it } from 'vitest';
 
-import { rebindDvtSubstraitSemanticSourceRefV1 } from '../src/substrait.js';
+import {
+  canonicalizeDvtSubstraitSemanticDocumentV1,
+  rebindDvtSubstraitSemanticSourceRefV1,
+} from '../src/substrait.js';
 
 import { buildDvtSubstraitSemanticDocumentFixture } from './fixtures/dvtSubstraitSemanticDocument.js';
 
+const CURRENT_SOURCE_REF = {
+  schemaVersion: 'connected-source-ref.v1' as const,
+  connectionRef: {
+    schemaVersion: 'connection-ref.v1' as const,
+    connectionId: 'warehouse-current',
+    provider: 'postgres' as const,
+  },
+  sourceObjectId: 'relation/analytics/current/customers',
+};
+
+function buildSourceBoundDocument() {
+  const document = buildDvtSubstraitSemanticDocumentFixture();
+  return canonicalizeDvtSubstraitSemanticDocumentV1({
+    ...document,
+    sidecar: {
+      ...document.sidecar,
+      relations: document.sidecar.relations.map((relation) =>
+        relation.relationId === 'relation:source-node'
+          ? { ...relation, sourceRef: CURRENT_SOURCE_REF }
+          : relation
+      ),
+    },
+  });
+}
+
 describe('DVT Substrait source rebind', () => {
   it('changes only the matching physical sourceRef while preserving logical identity and Plan bytes', () => {
-    const document = buildDvtSubstraitSemanticDocumentFixture();
-    const sourceRelation = document.sidecar.relations.find((relation) => relation.sourceRef != null);
+    const document = buildSourceBoundDocument();
+    const sourceRelation = document.sidecar.relations.find(
+      (relation) => relation.relationId === 'relation:source-node'
+    );
     if (sourceRelation?.sourceRef == null) throw new Error('Expected source binding fixture.');
     const relationIds = document.sidecar.relations.map((relation) => relation.relationId);
     const fieldIds = document.sidecar.fields.map((field) => field.fieldId);
@@ -39,7 +69,7 @@ describe('DVT Substrait source rebind', () => {
   });
 
   it('does not treat a non-matching physical binding as a logical alias', () => {
-    const document = buildDvtSubstraitSemanticDocumentFixture();
+    const document = buildSourceBoundDocument();
     const rebound = rebindDvtSubstraitSemanticSourceRefV1(
       document,
       {

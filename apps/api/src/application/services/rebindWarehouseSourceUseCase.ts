@@ -53,12 +53,15 @@ export class RebindWarehouseSourceUseCase {
       sourceObjectReader: this.deps.sourceObjectReader,
       workspaceFiles: this.deps.workspaceFiles,
     });
-    const appliedFile = await applySourceYamlRebindPlan({
-      scope: input.scope,
-      idempotencyKey: input.idempotencyKey,
-      plan: prepared.yamlPlan,
-      batchMutation: this.deps.batchMutation,
-    });
+    const appliedFile =
+      prepared.yamlPlan.previousFile.content === prepared.yamlPlan.content
+        ? null
+        : await applySourceYamlRebindPlan({
+            scope: input.scope,
+            idempotencyKey: input.idempotencyKey,
+            plan: prepared.yamlPlan,
+            batchMutation: this.deps.batchMutation,
+          });
 
     try {
       const saveResult = await this.deps.draftStore.save({
@@ -83,7 +86,7 @@ export class RebindWarehouseSourceUseCase {
         connectedSourceRef: prepared.nextRef,
       };
     } catch (error) {
-      if (!appliedFile.deduplicated) {
+      if (appliedFile != null && !appliedFile.deduplicated) {
         await rollbackSourceYamlRebindPlan({
           scope: input.scope,
           idempotencyKey: input.idempotencyKey,
