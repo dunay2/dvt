@@ -16,7 +16,7 @@ import {
   type WorkspaceGraphAuthoringDraft,
   type WorkspaceGraphAuthoringNode,
 } from '@dvt/contracts';
-import { rebindDvtSubstraitSemanticSourceRefV1 } from '@dvt/contracts/substrait';
+import { rebindDvtSubstraitSemanticSourceRefV1 } from '@dvt/contracts';
 import { jcsCanonicalize, sha256HexUtf8 } from '@dvt/crypto';
 
 import {
