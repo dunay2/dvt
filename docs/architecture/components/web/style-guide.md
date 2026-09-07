@@ -128,8 +128,8 @@ content access.
 | S08  | ES and EN copy are equivalent; code, identifiers and external data are not translated.                        |
 
 `ProjectGraphNodeCardReadModel` is the governing query for database identity. It
-projects only the provider and connection identity already authorized on the
-canonical Source node; opening or closing its disclosure performs no catalog,
+projects the database, governed connection name, schema and database user already
+authorized on the canonical Source node; opening or closing its disclosure performs no catalog,
 provider or credential query. The disclosure opens only from the provider/database
 icon with click, Enter or Space; Escape and outside activation close it and return
 focus. Full-name recovery is a separate interaction. Inline editing uses one native
