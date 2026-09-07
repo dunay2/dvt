@@ -32,27 +32,6 @@ function buildNodeCatalog(
   return nodes;
 }
 
-function deriveUnaryOutput(args: {
-  draftSession: CanvasDraftSession;
-  canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
-  identity: CanvasColumnFunctionIdentity;
-}): CanvasColumnFunctionResult {
-  const result = applyCanvasCalculatedColumn({
-    draftSession: args.draftSession,
-    canonicalNodesById: args.canonicalNodesById,
-    request: {
-      nodeId: args.identity.nodeId,
-      kind: 'scalar-function',
-      alias: args.identity.alias,
-      inputFieldId: args.identity.columnId,
-      capabilityId: args.identity.capabilityId,
-    },
-  });
-  return result.outcome === 'applied'
-    ? { outcome: 'applied', draftSession: result.draftSession }
-    : { outcome: 'rejected' };
-}
-
 function applyToDvtTransform(args: {
   draftSession: CanvasDraftSession;
   nodeCatalog: ReadonlyMap<string, CanonicalNode>;
@@ -121,7 +100,20 @@ export function applyCanvasColumnFunction(args: {
   identity: CanvasColumnFunctionIdentity;
 }): CanvasColumnFunctionResult {
   if (args.identity.sourceColumnId == null) {
-    return deriveUnaryOutput(args);
+    const result = applyCanvasCalculatedColumn({
+      draftSession: args.draftSession,
+      canonicalNodesById: args.canonicalNodesById,
+      request: {
+        nodeId: args.identity.nodeId,
+        kind: 'scalar-function',
+        alias: args.identity.alias,
+        inputFieldId: args.identity.columnId,
+        capabilityId: args.identity.capabilityId,
+      },
+    });
+    return result.outcome === 'applied'
+      ? { outcome: 'applied', draftSession: result.draftSession }
+      : { outcome: 'rejected' };
   }
   const nodeCatalog = buildNodeCatalog(args.draftSession, args.canonicalNodesById);
   const targetNode = nodeCatalog.get(args.identity.nodeId);
