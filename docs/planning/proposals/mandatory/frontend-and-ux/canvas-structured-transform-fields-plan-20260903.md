@@ -161,7 +161,8 @@ componentGuides:
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
 userStories:
   - https://github.com/dunay2/dvt/issues/2771
-  - https://github.com/dunay2/dvt/issues/3046  - https://github.com/dunay2/dvt/issues/3054
+  - https://github.com/dunay2/dvt/issues/3046
+  - https://github.com/dunay2/dvt/issues/3054
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
