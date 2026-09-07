@@ -53,7 +53,7 @@ function nodeCatalog(
   return nodes;
 }
 
-function resolveStructuredFieldDraft(args: {
+export function resolveStructuredFieldDraft(args: {
   draftSession: CanvasDraftSession;
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
   nodeId: string;

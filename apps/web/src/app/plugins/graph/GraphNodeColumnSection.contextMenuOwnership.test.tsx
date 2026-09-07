@@ -50,6 +50,7 @@ describe('GraphNodeColumnSection context menu ownership', () => {
 
   it('keeps a structured column in its own menu and appends an existing output', async () => {
     const onStructuredFieldApply = vi.fn();
+    const onColumnOutputToggle = vi.fn();
     await act(async () => {
       root.render(
         <CanvasNodeShell
@@ -73,9 +74,9 @@ describe('GraphNodeColumnSection context menu ownership', () => {
               },
               { id: 'output:amount', name: 'amount', type: 'numeric' },
             ]}
-            canReorderTopLevelColumns={false}
             onColumnReorder={vi.fn()}
             onStructuredFieldApply={onStructuredFieldApply}
+            onColumnOutputToggle={onColumnOutputToggle}
           />
         </CanvasNodeShell>
       );
@@ -105,6 +106,22 @@ describe('GraphNodeColumnSection context menu ownership', () => {
       targetFieldId: 'output:identity',
       parentName: 'identity',
     });
+
+    await act(async () => {
+      fireEvent.contextMenu(structuredColumn);
+      await Promise.resolve();
+    });
+    await act(async () => {
+      fireEvent.click(
+        document.querySelector<HTMLElement>('[data-slot="graph-node-structured-field-remove"]')!
+      );
+    });
+    expect(onColumnOutputToggle).toHaveBeenCalledWith({
+      nodeId: 'transform-orders',
+      columnId: 'output:identity',
+      columnType: 'struct',
+      output: false,
+    });
   });
 
   it('keeps nested fields in their own menu and reorders through the existing command', async () => {
@@ -131,7 +148,6 @@ describe('GraphNodeColumnSection context menu ownership', () => {
                 ],
               },
             ]}
-            canReorderTopLevelColumns={false}
             onColumnReorder={onColumnReorder}
             onStructuredFieldApply={vi.fn()}
           />

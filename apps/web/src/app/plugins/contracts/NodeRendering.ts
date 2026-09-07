@@ -109,7 +109,6 @@ export type GraphNodeRendererData = Readonly<{
   onAddCanvasCalculatedColumn?: (identity: GraphNodeCalculatedColumnIdentity) => void;
   onToggleCanvasColumnOutput?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
   onReorderCanvasColumnOutput?: (identity: GraphNodeColumnReorderIdentity) => void;
-  canReorderTopLevelColumns?: boolean;
   onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;
   onColumnLayoutChange?: () => void;
   onAutomapColumns?: (nodeId: string, columns: readonly GraphNodeColumn[]) => void;

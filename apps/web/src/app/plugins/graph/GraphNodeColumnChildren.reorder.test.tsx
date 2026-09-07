@@ -72,7 +72,7 @@ describe('GraphNodeColumnChildren reorder', () => {
     });
   });
 
-  it('keeps nested reorder available when structured roots cannot be reordered', async () => {
+  it('keeps root and nested reorder available together', async () => {
     const onColumnReorder = vi.fn();
     await act(async () => {
       root.render(
@@ -92,7 +92,6 @@ describe('GraphNodeColumnChildren reorder', () => {
             { id: 'output:amount', name: 'amount', type: 'numeric' },
           ]}
           onColumnReorder={onColumnReorder}
-          canReorderTopLevelColumns={false}
         />
       );
     });
@@ -101,7 +100,7 @@ describe('GraphNodeColumnChildren reorder', () => {
     const nested = container.querySelectorAll<HTMLElement>(
       '[data-slot="graph-node-nested-column"]'
     );
-    expect([...roots].every((rootColumn) => !rootColumn.draggable)).toBe(true);
+    expect([...roots].every((rootColumn) => rootColumn.draggable)).toBe(true);
 
     await act(async () => {
       nested[1]!.focus();

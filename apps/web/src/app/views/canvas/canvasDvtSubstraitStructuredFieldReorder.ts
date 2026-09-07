@@ -81,3 +81,53 @@ export function reorderDvtSubstraitStructuredFieldChildren(
   );
   return inspectDvtSubstraitStructuredFieldDraft(next).ok ? next : draft;
 }
+export function reorderDvtSubstraitStructuredFieldRoots(
+  draft: DvtSubstraitProjectionDraft,
+  args: Readonly<{
+    fieldId: string;
+    targetFieldId: string;
+    placement: 'before' | 'after';
+  }>
+): DvtSubstraitProjectionDraft {
+  const inspection = inspectDvtSubstraitStructuredFieldDraft(draft);
+  const sourceParts = resolveDvtSubstraitStructuredProjectionParts(draft);
+  if (!inspection.ok || sourceParts == null || args.fieldId === args.targetFieldId) return draft;
+  const roots = orderedDvtSubstraitFields(
+    draft.sidecar.fields,
+    sourceParts.targetRelation.relationId
+  );
+  const sourceIndex = roots.findIndex((field) => field.fieldId === args.fieldId);
+  const targetIndex = roots.findIndex((field) => field.fieldId === args.targetFieldId);
+  if (sourceIndex < 0 || targetIndex < 0) return draft;
+
+  const reordered = [...roots];
+  const [moved] = reordered.splice(sourceIndex, 1);
+  const insertionIndex = reordered.findIndex((field) => field.fieldId === args.targetFieldId);
+  if (moved == null || insertionIndex < 0) return draft;
+  reordered.splice(args.placement === 'after' ? insertionIndex + 1 : insertionIndex, 0, moved);
+
+  const next = {
+    plan: fromBinary(PlanSchema, toBinary(PlanSchema, draft.plan)),
+    sidecar: draft.sidecar,
+  };
+  const parts = resolveDvtSubstraitStructuredProjectionParts(next);
+  if (parts == null) return draft;
+  const mappingByFieldId = new Map(
+    roots.map((field, index) => [field.fieldId, parts.emit.outputMapping[index]!] as const)
+  );
+  parts.emit.outputMapping = reordered.map((field) => mappingByFieldId.get(field.fieldId)!);
+  const ordinalById = new Map(reordered.map((field, index) => [field.fieldId, index]));
+  next.sidecar = {
+    ...draft.sidecar,
+    fields: draft.sidecar.fields.map((field) => {
+      if (field.relationId !== parts.targetRelation.relationId || field.parentFieldId != null) {
+        return field;
+      }
+      return { ...field, outputOrdinal: ordinalById.get(field.fieldId)! };
+    }),
+  };
+  parts.root.names = flattenDvtSubstraitFieldNames(
+    reordered.map((field) => buildDvtSubstraitFieldTree(field, next.sidecar.fields))
+  );
+  return inspectDvtSubstraitStructuredFieldDraft(next).ok ? next : draft;
+}

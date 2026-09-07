@@ -397,10 +397,11 @@ function projectCanvasNodePresentationTruthInternal(
     const declared = substraitOutputs.map((output) =>
       presentSubstraitOutput(output, presentationTruth.columns.inherited)
     );
-    const hasConnectedFieldProjection = substraitOutputs.every(
-      (output) => output.sourceNodeId != null && output.sourceFieldName != null
+    const preservesSourceRelativeInputs = substraitOutputs.every(
+      (output) =>
+        (output.sourceNodeId != null && output.sourceFieldName != null) || output.children != null
     );
-    const visible = hasConnectedFieldProjection
+    const visible = preservesSourceRelativeInputs
       ? projectTransformColumnsInStableOrder({
           declared,
           inherited: presentationTruth.columns.inherited,

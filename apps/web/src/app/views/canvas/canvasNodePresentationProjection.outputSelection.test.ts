@@ -9,6 +9,8 @@ import {
   encodeDvtSubstraitProjectionDocument,
 } from './canvasDvtSubstraitProjection';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
+import { encodeDvtSubstraitStructuredFieldDocument } from './canvasDvtSubstraitStructuredField';
+import { composeDvtSubstraitProjectionFields } from './canvasDvtSubstraitStructuredFieldMutation';
 
 const connectedSourceRef: ConnectedSourceRef = {
   schemaVersion: 'connected-source-ref.v1',
@@ -34,7 +36,7 @@ const source: CanonicalNode = {
     connectedSourceRef,
     columns: [
       { name: 'order_id', type: 'integer' },
-      { name: 'customer', type: 'text' },
+      { name: 'customer', type: 'text', nullable: false },
       { name: 'amount', type: 'numeric' },
     ],
   },
@@ -87,5 +89,82 @@ describe('Transform output-selection presentation', () => {
       { name: 'customer', provenance: 'inherited' },
       { name: 'amount', provenance: 'declared' },
     ]);
+    expect(truth.columns.visible.find((column) => column.name === 'customer')?.nullable).toBe(
+      false
+    );
+  });
+  it('keeps original roots and inherited inactive fields visible beside a derived struct', () => {
+    const sourceWithInactive: CanonicalNode = {
+      ...source,
+      metadata: {
+        ...source.metadata,
+        columns: [
+          ...((source.metadata?.columns as readonly unknown[] | undefined) ?? []),
+          { name: 'status', type: 'text' },
+        ],
+      },
+    };
+    const flatDraft = createDvtSubstraitProjectionDraft({
+      source: {
+        nodeId: sourceWithInactive.id,
+        schema: 'raw',
+        table: 'orders',
+        sourceRef: connectedSourceRef,
+        fields: [
+          { name: 'order_id', dataType: 'integer' },
+          { name: 'customer', dataType: 'text' },
+          { name: 'amount', dataType: 'numeric' },
+          { name: 'status', dataType: 'text' },
+        ],
+      },
+      targetNodeId: 'transform-orders',
+      outputs: [
+        { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
+        { fieldId: 'output:customer', name: 'customer', sourceFieldName: 'customer' },
+        { fieldId: 'output:amount', name: 'amount', sourceFieldName: 'amount' },
+      ],
+    });
+    const structuredDraft = composeDvtSubstraitProjectionFields(flatDraft, {
+      draggedFieldId: 'output:customer',
+      targetFieldId: 'output:order_id',
+      parentFieldId: 'output:identity',
+      parentName: 'identity',
+    });
+    const transform = applyDvtSubstraitSemanticDocument(
+      {
+        id: 'transform-orders',
+        name: 'Transform orders',
+        pluginId: 'dvt',
+        kind: 'dvt:transform',
+        role: 'transform',
+        status: 'idle',
+        tags: [],
+        metadata: {},
+      },
+      encodeDvtSubstraitStructuredFieldDocument(structuredDraft)
+    );
+
+    const truth = projectCanvasNodePresentationTruth({
+      node: transform,
+      nodes: [sourceWithInactive, transform],
+      edges: [{ sourceId: sourceWithInactive.id, targetId: transform.id }],
+    });
+    const visibleByName = new Map(truth.columns.visible.map((column) => [column.name, column]));
+
+    expect([...visibleByName.keys()]).toEqual(
+      expect.arrayContaining(['order_id', 'customer', 'identity', 'amount', 'status'])
+    );
+    expect(visibleByName.size).toBe(5);
+    expect(visibleByName.get('order_id')).toMatchObject({ provenance: 'declared' });
+    expect(visibleByName.get('customer')).toMatchObject({ provenance: 'declared' });
+    expect(visibleByName.get('identity')).toMatchObject({
+      provenance: 'declared',
+      children: [
+        expect.objectContaining({ name: 'order_id' }),
+        expect.objectContaining({ name: 'customer' }),
+      ],
+    });
+    expect(visibleByName.get('amount')).toMatchObject({ provenance: 'declared' });
+    expect(visibleByName.get('status')).toMatchObject({ provenance: 'inherited' });
   });
 });

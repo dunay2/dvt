@@ -33,6 +33,7 @@ type PointerMenuSession = Readonly<{ key: number; open: boolean }>;
 function actionSlot(action: CanvasColumnContextMenuAction): string | undefined {
   if (action.id === 'invoke-function') return 'graph-node-column-function';
   if (action.id === 'append-field') return 'graph-node-structured-field-append';
+  if (action.id === 'remove-structured-field') return 'graph-node-structured-field-remove';
   return undefined;
 }
 
@@ -47,6 +48,7 @@ export function GraphNodeColumnFunctionMenu(props: {
   onKeyboardOpenChange: (open: boolean) => void;
   onRequest?: (capabilityId: string) => void;
   onStructuredAppend?: (column: GraphNodeColumn) => void;
+  onStructuredRemove?: () => void;
   piece: ReactElement;
   tooltip: ReactElement;
 }): ReactElement {
@@ -76,7 +78,12 @@ export function GraphNodeColumnFunctionMenu(props: {
             id: column.id ?? column.name,
             label: props.copy.appendColumnLabelTemplate.replace('{column}', column.name),
           })),
-    unavailableLabel: props.copy.noColumnActionsLabel,
+    removeStructuredFieldLabel:
+      props.onStructuredRemove == null ? undefined : props.copy.removeStructuredFieldLabel,
+    unavailableLabel:
+      props.menu == null
+        ? props.copy.noColumnActionsLabel
+        : props.copy.noCompatibleColumnFunctionsLabel,
   });
   const selectAction = (action: CanvasColumnContextMenuAction) => {
     if (action.disabled) return;
@@ -89,7 +96,9 @@ export function GraphNodeColumnFunctionMenu(props: {
         (candidate) => (candidate.id ?? candidate.name) === action.targetId
       );
       if (column != null) props.onStructuredAppend?.(column);
+      return;
     }
+    if (action.id === 'remove-structured-field') props.onStructuredRemove?.();
   };
   const [pointerSession, setPointerSession] = useState<PointerMenuSession>({ key: 0, open: false });
   const pointerGraceProps = usePointerGraceDismiss({

@@ -113,6 +113,7 @@ describe('canvasNodeContextMenuModel', () => {
       label: 'Actions for identity',
       functions: [{ id: 'capability:trim', label: 'TRIM' }],
       appendFields: [{ id: 'output:amount', label: 'Add amount' }],
+      removeStructuredFieldLabel: 'Remove grouping',
       move: {
         upLabel: 'Move up',
         downLabel: 'Move down',
@@ -136,6 +137,7 @@ describe('canvasNodeContextMenuModel', () => {
         label: 'Add amount',
         disabled: false,
       },
+      { id: 'remove-structured-field', label: 'Remove grouping', disabled: false },
       { id: 'move-field-up', label: 'Move up', disabled: true },
       { id: 'move-field-down', label: 'Move down', disabled: false },
     ]);

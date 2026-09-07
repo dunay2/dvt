@@ -16,7 +16,7 @@ export function useGraphNodeColumnSectionState(props: GraphNodeColumnSectionProp
   const columnReorder = useGraphNodeColumnReorder({
     columns: props.columns,
     nodeId: props.nodeId,
-    onColumnReorder: props.canReorderTopLevelColumns === false ? undefined : props.onColumnReorder,
+    onColumnReorder: props.onColumnReorder,
     onColumnComposeRequest:
       props.onColumnFunctionApply == null && props.onStructuredFieldApply == null
         ? undefined

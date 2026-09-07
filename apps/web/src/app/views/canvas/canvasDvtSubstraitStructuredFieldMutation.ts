@@ -93,32 +93,20 @@ export function composeDvtSubstraitProjectionFields(
       }),
     },
   });
-  const insertionIndex = Math.min(draggedIndex, targetIndex);
-  const retained = roots
-    .map((field, index) => ({ field, expression: expressions[index]! }))
-    .filter((_, index) => !childIndexes.includes(index));
-  retained.splice(insertionIndex, 0, {
-    field: {
-      ...roots[targetIndex]!,
-      fieldId: args.parentFieldId,
-      displayName: parentName,
-    },
-    expression: parentExpression,
-  });
-  parts.project.expressions = retained.map(({ expression }) => expression);
-  parts.emit.outputMapping = retained.map((_, index) => sourceCount + index);
+  const parentOrdinal = roots.length;
+  const parentMapping = sourceCount + parts.project.expressions.length;
+  parts.project.expressions = [...parts.project.expressions, parentExpression];
+  parts.emit.outputMapping = [...parts.emit.outputMapping, parentMapping];
 
   const parentBinding = {
     fieldId: args.parentFieldId,
     relationId: parts.targetRelation.relationId,
-    outputOrdinal: insertionIndex,
+    outputOrdinal: parentOrdinal,
     displayName: parentName,
   };
-  const retainedBindings = retained.map(({ field }, outputOrdinal) =>
-    field.fieldId === args.parentFieldId ? parentBinding : { ...field, outputOrdinal }
-  );
   const children = childIndexes.map((index, outputOrdinal) => ({
     ...roots[index]!,
+    fieldId: `${args.parentFieldId}:child:${roots[index]!.fieldId}`,
     parentFieldId: args.parentFieldId,
     outputOrdinal,
   }));
@@ -131,13 +119,14 @@ export function composeDvtSubstraitProjectionFields(
       ...draft.sidecar.fields.filter(
         (field) => field.relationId !== parts.targetRelation.relationId
       ),
-      ...retainedBindings,
+      ...roots,
       ...existingChildren,
+      parentBinding,
       ...children,
     ],
   };
   parts.root.names = flattenDvtSubstraitFieldNames(
-    retainedBindings.map((field) => buildDvtSubstraitFieldTree(field, next.sidecar.fields))
+    [...roots, parentBinding].map((field) => buildDvtSubstraitFieldTree(field, next.sidecar.fields))
   );
   return inspectDvtSubstraitStructuredFieldDraft(next).ok ? next : draft;
 }

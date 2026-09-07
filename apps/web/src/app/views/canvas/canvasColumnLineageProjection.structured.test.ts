@@ -95,6 +95,8 @@ describe('structured Canvas column lineage', () => {
     ).toEqual([
       expect.objectContaining({ source: 'order_id', target: 'identity.order_id' }),
       expect.objectContaining({ source: 'customer', target: 'identity.customer' }),
+      expect.objectContaining({ source: 'order_id', target: 'order_id' }),
+      expect.objectContaining({ source: 'customer', target: 'customer' }),
       expect.objectContaining({ source: 'amount', target: 'amount' }),
     ]);
     expect(edges[0]?.targetHandle).toBe(edges[1]?.targetHandle);

@@ -74,24 +74,17 @@ function latestStructuredFields(): ReturnType<typeof inspectDvtSubstraitStructur
         decodeDvtSubstraitStructuredFieldDocument(authority?.semanticDocument)
       );
     });
-  return (
-    inspections
-      .filter(
-        (inspection) =>
-          inspection.ok && inspection.fields.some((field) => field.name === 'identity')
-      )
-      .at(-1) ?? inspections.at(-1)!
-  );
+  return inspections.at(-1)!;
 }
 
 describe('Canvas structured Transform fields', () => {
   beforeEach(() => stubCanvas());
 
-  it('proposes, persists, displays, and restores an ordered structured field', () => {
+  it('retains roots, reorders the struct, restores it, and removes the grouping', () => {
     let identityFieldId = '';
-    let orderIdFieldId = '';
-    let customerFieldId = '';
-    let amountFieldId = '';
+    let orderChildId = '';
+    let customerChildId = '';
+    let amountChildId = '';
 
     cy.viewport(1920, 1080);
     visitCanvas();
@@ -111,73 +104,89 @@ describe('Canvas structured Transform fields', () => {
     cy.wrap(null, { timeout: 10_000 }).should(() => {
       const inspection = latestStructuredFields();
       expect(inspection.ok ? inspection.fields.map((field) => field.name) : null).to.deep.equal([
-        'identity',
+        'order_id',
+        'customer',
         'amount',
         'status',
         'created_at',
         'region',
+        'identity',
       ]);
-      expect(
-        inspection.ok ? inspection.fields[0]?.children.map((field) => field.name) : null
-      ).to.deep.equal(['order_id', 'customer']);
-      if (inspection.ok) {
-        identityFieldId = inspection.fields[0]?.fieldId ?? '';
-        orderIdFieldId = inspection.fields[0]?.children[0]?.fieldId ?? '';
-        customerFieldId = inspection.fields[0]?.children[1]?.fieldId ?? '';
-        expect(identityFieldId).not.to.equal('');
-        expect(orderIdFieldId).not.to.equal('');
-        expect(customerFieldId).not.to.equal('');
-      }
+      if (!inspection.ok) return;
+      const identity = inspection.fields.find((field) => field.name === 'identity');
+      const orderRoot = inspection.fields.find((field) => field.name === 'order_id');
+      const customerRoot = inspection.fields.find((field) => field.name === 'customer');
+      expect(identity?.children.map((field) => field.name)).to.deep.equal(['order_id', 'customer']);
+      identityFieldId = identity?.fieldId ?? '';
+      orderChildId = identity?.children[0]?.fieldId ?? '';
+      customerChildId = identity?.children[1]?.fieldId ?? '';
+      expect(orderChildId).not.to.equal(orderRoot?.fieldId);
+      expect(customerChildId).not.to.equal(customerRoot?.fieldId);
     });
-    modelCard().should('contain.text', 'identity').and('contain.text', 'order_id');
+
+    modelCard().contains('button', 'Show remaining columns').click();
     modelCard()
       .find('[data-slot="graph-node-column-piece"][data-column-name="identity"]')
       .rightclick(20, 10);
     cy.contains('[data-slot="graph-node-structured-field-append"]', 'amount').click();
     cy.wrap(null, { timeout: 10_000 }).should(() => {
       const inspection = latestStructuredFields();
-      expect(
-        inspection.ok ? inspection.fields[0]?.children.map((field) => field.name) : null
-      ).to.deep.equal(['order_id', 'customer', 'amount']);
-      if (inspection.ok) {
-        expect(inspection.fields[0]?.fieldId).to.equal(identityFieldId);
-        expect(
-          inspection.fields[0]?.children.slice(0, 2).map((field) => field.fieldId)
-        ).to.deep.equal([orderIdFieldId, customerFieldId]);
-        amountFieldId = inspection.fields[0]?.children[2]?.fieldId ?? '';
-        expect(amountFieldId).not.to.equal('');
-      }
+      if (!inspection.ok) return;
+      const identity = inspection.fields.find((field) => field.fieldId === identityFieldId);
+      expect(identity?.children.map((field) => field.name)).to.deep.equal([
+        'order_id',
+        'customer',
+        'amount',
+      ]);
+      amountChildId = identity?.children[2]?.fieldId ?? '';
+      expect(inspection.fields.some((field) => field.name === 'amount')).to.equal(true);
     });
 
     modelCard().find('[data-slot="graph-node-nested-column"]').eq(2).rightclick();
     cy.get('[data-slot="nested-column-move-up"]').click();
     cy.wrap(null, { timeout: 10_000 }).should(() => {
       const inspection = latestStructuredFields();
-      expect(
-        inspection.ok ? inspection.fields[0]?.children.map((field) => field.name) : null
-      ).to.deep.equal(['order_id', 'amount', 'customer']);
-      expect(
-        inspection.ok ? inspection.fields[0]?.children.map((field) => field.fieldId) : null
-      ).to.deep.equal([orderIdFieldId, amountFieldId, customerFieldId]);
+      const identity = inspection.ok
+        ? inspection.fields.find((field) => field.fieldId === identityFieldId)
+        : undefined;
+      expect(identity?.children.map((field) => field.fieldId)).to.deep.equal([
+        orderChildId,
+        amountChildId,
+        customerChildId,
+      ]);
+    });
+
+    modelCard()
+      .find('[data-slot="graph-node-column-piece"][data-column-name="identity"]')
+      .focus()
+      .trigger('keydown', { key: 'ArrowUp', altKey: true });
+    cy.wrap(null, { timeout: 10_000 }).should(() => {
+      const inspection = latestStructuredFields();
+      expect(inspection.ok ? inspection.fields.at(-2)?.fieldId : null).to.equal(identityFieldId);
     });
 
     visitCanvas();
+    modelCard().find('[data-slot="graph-node-column-toggle"]').click();
+    modelCard().contains('button', 'Show remaining columns').click();
+    modelCard()
+      .find('[data-slot="graph-node-column-piece"][data-column-name="identity"]')
+      .rightclick(20, 10);
+    cy.get('[data-slot="graph-node-structured-field-remove"]').click();
     cy.wrap(null, { timeout: 10_000 }).should(() => {
       const inspection = latestStructuredFields();
-      expect(inspection.ok ? inspection.fields[0]?.fieldId : null).to.equal(identityFieldId);
-      expect(
-        inspection.ok ? inspection.fields[0]?.children.map((field) => field.fieldId) : null
-      ).to.deep.equal([orderIdFieldId, amountFieldId, customerFieldId]);
+      expect(inspection.ok ? inspection.fields.map((field) => field.name) : null).to.deep.equal([
+        'order_id',
+        'customer',
+        'amount',
+        'status',
+        'created_at',
+        'region',
+      ]);
     });
+
+    visitCanvas();
     modelCard().find('[data-slot="graph-node-column-toggle"]').click();
-    modelCard()
-      .find('[data-slot="graph-node-nested-column"]')
-      .then(($children) => {
-        expect([...$children].map((child) => child.textContent)).to.deep.equal([
-          'order_idinteger',
-          'amountnumeric',
-          'customertext',
-        ]);
-      });
+    modelCard().should('not.contain.text', 'identity');
+    modelCard().should('contain.text', 'order_id').and('contain.text', 'customer');
   });
 });

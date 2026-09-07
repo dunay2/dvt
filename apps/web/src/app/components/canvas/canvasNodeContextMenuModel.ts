@@ -170,6 +170,11 @@ export type CanvasColumnContextMenuAction =
       disabled: boolean;
     }>
   | Readonly<{
+      id: 'remove-structured-field';
+      label: string;
+      disabled: false;
+    }>
+  | Readonly<{
       id: 'unavailable';
       label: string;
       disabled: true;
@@ -186,6 +191,7 @@ export function buildCanvasColumnContextMenuModel(args: {
   label: string;
   functions?: readonly Readonly<{ id: string; label: string }>[];
   appendFields?: readonly Readonly<{ id: string; label: string }>[];
+  removeStructuredFieldLabel?: string;
   move?: Readonly<{
     upLabel: string;
     downLabel: string;
@@ -207,6 +213,15 @@ export function buildCanvasColumnContextMenuModel(args: {
       label: item.label,
       disabled: false as const,
     })),
+    ...(args.removeStructuredFieldLabel == null
+      ? []
+      : [
+          {
+            id: 'remove-structured-field' as const,
+            label: args.removeStructuredFieldLabel,
+            disabled: false as const,
+          },
+        ]),
     ...(args.move == null
       ? []
       : [

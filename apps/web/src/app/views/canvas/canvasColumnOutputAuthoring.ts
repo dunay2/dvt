@@ -11,6 +11,10 @@ import {
   readEditableCanvasProjectionEntry,
 } from './canvasColumnProjectionAuthority';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
+import {
+  reorderCanvasStructuredFieldRoots,
+  setCanvasStructuredRootOutputIncluded,
+} from './canvasStructuredFieldRootAuthoring';
 
 export function reorderCanvasColumnOutput(args: {
   draftSession: CanvasDraftSession;
@@ -32,7 +36,19 @@ export function reorderCanvasColumnOutput(args: {
     resolveNode: (nodeId) =>
       resolveCanvasSessionNode(args.draftSession, args.canonicalNodesById, nodeId),
   });
-  if (projectionResult.outcome === 'rejected') return projectionResult;
+  if (projectionResult.outcome === 'rejected') {
+    const structuredResult = reorderCanvasStructuredFieldRoots({
+      draftSession: args.draftSession,
+      canonicalNodesById: args.canonicalNodesById,
+      nodeId: args.targetNodeId,
+      fieldId: args.columnId,
+      targetFieldId: args.targetColumnId,
+      placement: args.placement,
+    });
+    return structuredResult.outcome === 'applied'
+      ? structuredResult
+      : { outcome: 'rejected', reason: 'mapping_not_found' };
+  }
   if (projectionResult.projection == null) {
     return { outcome: 'rejected', reason: 'mapping_not_found' };
   }
@@ -83,7 +99,19 @@ export function setCanvasColumnOutputIncluded(args: {
     resolveNode: (nodeId) =>
       resolveCanvasSessionNode(args.draftSession, args.canonicalNodesById, nodeId),
   });
-  if (projectionResult.outcome === 'rejected') return projectionResult;
+  if (projectionResult.outcome === 'rejected') {
+    const structuredResult = setCanvasStructuredRootOutputIncluded({
+      draftSession: args.draftSession,
+      canonicalNodesById: args.canonicalNodesById,
+      nodeId: args.targetNodeId,
+      columnId: args.columnId,
+      output: args.output,
+      ...(args.placement == null ? {} : { placement: args.placement }),
+    });
+    return structuredResult.outcome === 'applied'
+      ? structuredResult
+      : { outcome: 'rejected', reason: 'mapping_not_found' };
+  }
   const existingOutput = projectionResult.projection?.outputs.find(
     (candidate) => candidate.fieldId === args.columnId
   );

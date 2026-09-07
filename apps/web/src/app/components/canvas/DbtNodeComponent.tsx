@@ -87,7 +87,6 @@ export interface DbtNodeData extends Record<string, unknown> {
   activeColumnHandleId?: string | null;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
   columnPortDirections?: readonly GraphNodeColumnPortDirection[];
-  canReorderTopLevelColumns?: boolean;
   onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;
   onColumnLayoutChange?: () => void;
   onAutomapColumns?: (nodeId: string, columns: readonly GraphNodeColumn[]) => void;

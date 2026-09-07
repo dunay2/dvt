@@ -54,6 +54,7 @@ type GraphNodeCardCopy = Readonly<{
   noColumnActionsLabel: string;
   columnActionsLabelTemplate: string;
   appendColumnLabelTemplate: string;
+  removeStructuredFieldLabel: string;
   columnFunctionAliasLabelTemplate: string;
   columnFunctionAliasSubmitLabel: string;
   columnFunctionAliasCancelLabel: string;
@@ -150,6 +151,7 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   noColumnActionsLabel: 'No actions are available for this column.',
   columnActionsLabelTemplate: 'Actions for {column}',
   appendColumnLabelTemplate: 'Add {column}',
+  removeStructuredFieldLabel: 'Remove grouping',
   columnFunctionAliasLabelTemplate: 'Output alias after {function}',
   columnFunctionAliasSubmitLabel: 'Create output',
   columnFunctionAliasCancelLabel: 'Cancel',
@@ -249,6 +251,7 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   noColumnActionsLabel: 'No hay acciones disponibles para esta columna.',
   columnActionsLabelTemplate: 'Acciones de {column}',
   appendColumnLabelTemplate: 'Añadir {column}',
+  removeStructuredFieldLabel: 'Eliminar agrupación',
   columnFunctionAliasLabelTemplate: 'Alias de salida tras {function}',
   columnFunctionAliasSubmitLabel: 'Crear salida',
   columnFunctionAliasCancelLabel: 'Cancelar',
