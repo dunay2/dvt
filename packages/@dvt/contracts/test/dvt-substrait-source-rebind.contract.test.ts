@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   canonicalizeDvtSubstraitSemanticDocumentV1,
+  type DvtSubstraitSemanticDocumentV1,
   rebindDvtSubstraitSemanticSourceRefV1,
 } from '../src/substrait.js';
 
@@ -17,7 +18,7 @@ const CURRENT_SOURCE_REF = {
   sourceObjectId: 'relation/analytics/current/customers',
 };
 
-function buildSourceBoundDocument() {
+function buildSourceBoundDocument(): DvtSubstraitSemanticDocumentV1 {
   const document = buildDvtSubstraitSemanticDocumentFixture();
   return canonicalizeDvtSubstraitSemanticDocumentV1({
     ...document,
