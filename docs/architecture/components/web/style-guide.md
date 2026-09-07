@@ -127,10 +127,13 @@ content access.
 | S07  | Pointer and keyboard converge on the same existing command. New gestures require an accepted interaction map. |
 | S08  | ES and EN copy are equivalent; code, identifiers and external data are not translated.                        |
 
-Database identity opens only from the provider/database icon with click, Enter or
-Space; Escape and outside activation close it and return focus. Full-name recovery
-is a separate interaction. Inline editing uses one native textual **Edit** action,
-without a duplicate pencil action.
+`ProjectGraphNodeCardReadModel` is the governing query for database identity. It
+projects only the provider and connection identity already authorized on the
+canonical Source node; opening or closing its disclosure performs no catalog,
+provider or credential query. The disclosure opens only from the provider/database
+icon with click, Enter or Space; Escape and outside activation close it and return
+focus. Full-name recovery is a separate interaction. Inline editing uses one native
+textual **Edit** action, without a duplicate pencil action.
 
 ## Object anatomy
 
