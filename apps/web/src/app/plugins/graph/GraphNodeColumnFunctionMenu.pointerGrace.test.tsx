@@ -31,7 +31,7 @@ describe('GraphNodeColumnFunctionMenu pointer grace', () => {
               type: 'text',
               functionMenu: {
                 category: 'text',
-                items: [{ capabilityId: 'capability:trim', name: 'trim' }],
+                items: [{ capabilityId: 'capability:trim', name: 'trim', argumentCount: 1 }],
               },
             },
           ]}

@@ -20,7 +20,7 @@ export type DvtSubstraitOutputExpressionCandidate =
   | Readonly<{ kind: 'timestamp-literal'; value: string }>
   | Readonly<{
       kind: 'scalar-function';
-      inputFieldId: string;
+      operandFieldIds: readonly [string, ...string[]];
       capabilityId: string;
     }>
   | Readonly<{ kind: 'row-number'; orderFieldId: string }>;
@@ -60,7 +60,7 @@ function directCalculation(
 export function createDvtSubstraitProjectionOutput(
   draft: DvtSubstraitProjectionDraft,
   request: DvtSubstraitCreateOutputRequest,
-  context?: Readonly<{ inputDataType: string; provider: string }>
+  context?: Readonly<{ inputDataTypes: readonly string[]; provider: string }>
 ): DvtSubstraitCreateOutputResult {
   const inspection = inspectDvtSubstraitProjectionDraft(draft);
   const alias = request.alias.trim();
@@ -74,31 +74,37 @@ export function createDvtSubstraitProjectionOutput(
   }
 
   const expression = request.expression;
-  const inputFieldId =
-    expression.kind === 'scalar-function' || expression.kind === 'field-ref'
-      ? expression.inputFieldId
-      : expression.kind === 'row-number'
-        ? expression.orderFieldId
-        : undefined;
-  const input =
-    inputFieldId == null
-      ? undefined
-      : inspection.projection.outputs.find((output) => output.fieldId === inputFieldId);
-  if (inputFieldId != null && input == null) return { outcome: 'rejected' };
-  if (expression.kind === 'row-number' && input?.sourceFieldName == null) {
+  const operandFieldIds =
+    expression.kind === 'scalar-function'
+      ? expression.operandFieldIds
+      : expression.kind === 'field-ref'
+        ? [expression.inputFieldId]
+        : expression.kind === 'row-number'
+          ? [expression.orderFieldId]
+          : [];
+  const operands = operandFieldIds.map((fieldId) =>
+    inspection.projection.outputs.find((output) => output.fieldId === fieldId)
+  );
+  if (
+    operands.some((operand) => operand == null) ||
+    new Set(operandFieldIds).size !== operandFieldIds.length
+  ) {
+    return { outcome: 'rejected' };
+  }
+  const firstOperand = operands[0];
+  if (expression.kind === 'row-number' && firstOperand?.sourceFieldName == null) {
     return { outcome: 'rejected' };
   }
 
-  if (expression.kind === 'scalar-function') {
-    if (
-      context == null ||
+  if (
+    expression.kind === 'scalar-function' &&
+    (context == null ||
       !resolveDvtSubstraitColumnFunctions({
-        dataType: context.inputDataType,
+        dataTypes: context.inputDataTypes,
         provider: context.provider,
-      }).some((capability) => capability.capabilityId === expression.capabilityId)
-    ) {
-      return { outcome: 'rejected' };
-    }
+      }).some((capability) => capability.capabilityId === expression.capabilityId))
+  ) {
+    return { outcome: 'rejected' };
   }
 
   const plan = fromBinary(PlanSchema, toBinary(PlanSchema, draft.plan));
@@ -114,10 +120,10 @@ export function createDvtSubstraitProjectionOutput(
 
   if (expression.kind !== 'scalar-function' && expression.kind !== 'field-ref') {
     const sourceOrdinal =
-      input?.sourceFieldName == null
+      firstOperand?.sourceFieldName == null
         ? null
         : inspection.projection.source.fields.findIndex(
-            (field) => field.name === input.sourceFieldName
+            (field) => field.name === firstOperand.sourceFieldName
           );
     const calculation = directCalculation(expression, sourceOrdinal === -1 ? null : sourceOrdinal);
     if (calculation == null) return { outcome: 'rejected' };
@@ -145,7 +151,7 @@ export function createDvtSubstraitProjectionOutput(
   root.value.names.push(alias);
 
   if (expression.kind === 'field-ref') {
-    const inputMapping = emit.value.outputMapping[input!.outputOrdinal];
+    const inputMapping = emit.value.outputMapping[firstOperand!.outputOrdinal];
     if (inputMapping == null) return { outcome: 'rejected' };
     emit.value.outputMapping.push(inputMapping);
     const appended = { plan, sidecar };
@@ -155,16 +161,16 @@ export function createDvtSubstraitProjectionOutput(
   }
 
   if (expression.kind === 'scalar-function') {
-    const inputMapping = emit.value.outputMapping[input!.outputOrdinal];
+    const inputMapping = emit.value.outputMapping[firstOperand!.outputOrdinal];
     if (inputMapping == null) return { outcome: 'rejected' };
     emit.value.outputMapping.push(inputMapping);
     const appended = { plan, sidecar };
     const applied = applyDvtSubstraitProjectionFunction(appended, {
       fieldId,
-      inputFieldId: input!.fieldId,
+      operandFieldIds: expression.operandFieldIds,
       capabilityId: expression.capabilityId,
       alias,
-      dataType: context!.inputDataType,
+      dataTypes: context!.inputDataTypes,
       provider: context!.provider,
     });
     return applied === appended

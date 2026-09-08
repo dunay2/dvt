@@ -10,6 +10,7 @@ import {
   inspectDvtSubstraitProjectionDraft,
   type DvtSubstraitProjectionDraft,
   type DvtSubstraitProjectionSemantics,
+  type DvtSubstraitScalarExpression,
 } from './canvasDvtSubstraitProjection';
 import {
   inspectDvtSubstraitPilotAggregationDraft,
@@ -52,6 +53,7 @@ import {
 } from './canvasDvtSubstraitSetComposition';
 import {
   pgColumnRef,
+  pgConcatAcceptNulls,
   pgCountRows,
   pgFunction,
   pgOrderedRowNumber,
@@ -105,6 +107,41 @@ function requireConnectedFieldProjection(
   return inspection.projection;
 }
 
+function buildScalarExpressionPostgresAst(
+  expression: DvtSubstraitScalarExpression
+): PostgresAstNode {
+  if (expression.kind === 'field-reference') {
+    return pgColumnRef(expression.sourceFieldName);
+  }
+  if (
+    expression.kind === 'scalar-function' &&
+    (expression.functionName === 'trim' ||
+      expression.functionName === 'upper' ||
+      expression.functionName === 'lower') &&
+    expression.arguments.length === 1
+  ) {
+    return pgFunction(
+      expression.functionName,
+      buildScalarExpressionPostgresAst(expression.arguments[0])
+    );
+  }
+  if (
+    expression.kind === 'scalar-function' &&
+    expression.functionName === 'concat' &&
+    expression.arguments.length === 2 &&
+    expression.nullHandling === 'ACCEPT_NULLS'
+  ) {
+    return pgConcatAcceptNulls(
+      buildScalarExpressionPostgresAst(expression.arguments[0]),
+      buildScalarExpressionPostgresAst(expression.arguments[1])
+    );
+  }
+  throw new DvtSubstraitPostgresProjectionError(
+    'unsupported_shape',
+    'Projection output contains an unsupported scalar expression.'
+  );
+}
+
 function buildConnectedFieldPostgresAst(
   projection: DvtSubstraitProjectionSemantics,
   whereClause?: PostgresAstNode
@@ -126,6 +163,9 @@ function buildConnectedFieldPostgresAst(
   ): PostgresAstNode => {
     const calculated = calculatedExpression(output);
     if (calculated != null) return calculated;
+    if (output.scalarExpression != null) {
+      return buildScalarExpressionPostgresAst(output.scalarExpression);
+    }
     if (output.sourceFieldName == null) {
       throw new DvtSubstraitPostgresProjectionError(
         'unsupported_shape',

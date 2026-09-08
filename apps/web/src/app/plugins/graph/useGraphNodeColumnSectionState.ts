@@ -8,6 +8,7 @@ export function useGraphNodeColumnSectionState(props: GraphNodeColumnSectionProp
   const maxPreviewColumns = 5;
   const [columnsExpanded, setColumnsExpanded] = useState(props.expanded ?? false);
   const [showAllColumns, setShowAllColumns] = useState(false);
+  const [pendingFocusFieldId, setPendingFocusFieldId] = useState<string | null>(null);
   const [compositionRequest, setCompositionRequest] = useState<Readonly<{
     sourceColumn: GraphNodeColumn;
     targetColumn: GraphNodeColumn;
@@ -45,10 +46,16 @@ export function useGraphNodeColumnSectionState(props: GraphNodeColumnSectionProp
     columnsExpanded,
     showAllColumns,
     compositionRequest,
+    pendingFocusFieldId,
     columnReorder,
     visibleColumns,
     remainingColumnCount,
     dismissComposition: () => setCompositionRequest(null),
+    revealCreatedColumn: (fieldId: string) => {
+      setShowAllColumns(true);
+      setPendingFocusFieldId(fieldId);
+    },
+    fulfillCreatedColumnFocus: () => setPendingFocusFieldId(null),
     toggleAllColumns: () => setShowAllColumns((current) => !current),
     toggleDisclosure: () => {
       const next = !columnsExpanded;

@@ -152,16 +152,24 @@ SQL rendering, provider execution, joins, aggregates, windows, or a universal vi
 The capability catalog contains a broader standard-first candidate dictionary, but only a
 small pilot subset is currently promoted to `supported-profile` on `main`:
 
-| Category        | Supported pilot semantic identity                   |
-| --------------- | --------------------------------------------------- |
-| relation        | `substrait.ReadRel` / `read_type.named_table`       |
-| relation        | `substrait.RelCommon` / `emit_kind.emit`            |
-| relation        | `substrait.ProjectRel`                              |
-| expression form | `substrait.Expression` / `rex_type.selection`       |
-| expression form | `substrait.Expression` / `rex_type.scalar_function` |
-| type            | `substrait.Type` / `kind.string`                    |
-| scalar function | `extension:io.substrait:functions_string` / `trim`  |
-| scalar function | `extension:io.substrait:functions_string` / `upper` |
+| Category        | Supported pilot semantic identity                    |
+| --------------- | ---------------------------------------------------- |
+| relation        | `substrait.ReadRel` / `read_type.named_table`        |
+| relation        | `substrait.RelCommon` / `emit_kind.emit`             |
+| relation        | `substrait.ProjectRel`                               |
+| expression form | `substrait.Expression` / `rex_type.selection`        |
+| expression form | `substrait.Expression` / `rex_type.scalar_function`  |
+| type            | `substrait.Type` / `kind.string`                     |
+| scalar function | `extension:io.substrait:functions_string` / `trim`   |
+| scalar function | `extension:io.substrait:functions_string` / `upper`  |
+| scalar function | `extension:io.substrait:functions_string` / `lower`  |
+| scalar function | `extension:io.substrait:functions_string` / `concat` |
+
+Substrait defines string CONCAT with the variadic signature `concat:str`. The admitted DVT
+profile deliberately narrows that standard function to exactly two ordered string operands
+and the `ACCEPT_NULLS` option. Canvas appends a new stable `FieldId` while preserving both
+operands; the PostgreSQL renderer projects the recursive expression through its governed AST
+and keeps null propagation explicit.
 
 Entries such as Filter, Join, Set, Aggregate, Sort, Fetch, additional types, aggregate/window
 functions, and other scalar functions may exist in the catalog as `candidate-standard` or

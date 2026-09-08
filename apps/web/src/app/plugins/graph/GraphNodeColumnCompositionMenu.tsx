@@ -9,21 +9,20 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '../../components/ui/dropdown-menu';
-import type { GraphNodeColumn } from './graphNodeColumnContracts';
+import type { GraphNodeColumn, GraphNodeColumnFunction } from './graphNodeColumnContracts';
 import type { GraphNodeColumnCopy } from './GraphNodeColumnPiece';
 import { graphNodeColumnClasses } from './graphVisualTokens';
 
 export function GraphNodeColumnCompositionMenu(props: {
   sourceColumn: GraphNodeColumn;
   targetColumn: GraphNodeColumn;
+  compatibleFunctions: readonly GraphNodeColumnFunction[];
   copy: GraphNodeColumnCopy;
   onOpenChange: (open: boolean) => void;
   onRequest: (capabilityId: string) => void;
   structuredFieldLabel: string;
   onStructuredRequest: () => void;
 }): ReactElement {
-  const menu = props.sourceColumn.functionMenu;
-
   return (
     <DropdownMenu open onOpenChange={props.onOpenChange}>
       <DropdownMenuTrigger asChild>
@@ -40,7 +39,7 @@ export function GraphNodeColumnCompositionMenu(props: {
         align="center"
       >
         <DropdownMenuLabel>
-          {props.sourceColumn.name} → {props.targetColumn.name}
+          {props.targetColumn.name} → {props.sourceColumn.name}
         </DropdownMenuLabel>
         <DropdownMenuGroup>
           <DropdownMenuItem
@@ -49,12 +48,12 @@ export function GraphNodeColumnCompositionMenu(props: {
           >
             {props.structuredFieldLabel}
           </DropdownMenuItem>
-          {menu == null || menu.items.length === 0 ? (
+          {props.compatibleFunctions.length === 0 ? (
             <DropdownMenuItem disabled>
               {props.copy.noCompatibleColumnFunctionsLabel}
             </DropdownMenuItem>
           ) : (
-            menu.items.map((item) => (
+            props.compatibleFunctions.map((item) => (
               <DropdownMenuItem
                 key={item.capabilityId}
                 data-slot="graph-node-column-composition-function"

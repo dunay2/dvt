@@ -84,7 +84,7 @@ describe('GraphNodeCalculatedColumnForm', () => {
               type: 'text',
               functionMenu: {
                 category: 'text',
-                items: [{ capabilityId: 'trim-capability', name: 'trim' }],
+                items: [{ capabilityId: 'trim-capability', name: 'trim', argumentCount: 1 }],
               },
             },
           ]}

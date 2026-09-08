@@ -1,11 +1,13 @@
 /** Owned concern: compose one interactive graph-node column row. */
-import { useState, type ReactElement } from 'react';
+import { useEffect, useRef, useState, type ReactElement } from 'react';
 
 import { CanvasNodePortHandle } from '../../components/canvas/CanvasNodePortHandle';
 import { Tooltip, TooltipTrigger } from '../../components/ui/tooltip';
 import type {
   GraphNodeColumn,
+  GraphNodeColumnCompositionFunctionResolver,
   GraphNodeColumnFunctionApplyIdentity,
+  GraphNodeColumnFunctionApplyResult,
   GraphNodeColumnOutputToggleIdentity,
   GraphNodeColumnPortDirection,
   GraphNodeColumnPortIdentity,
@@ -39,19 +41,32 @@ export function GraphNodeColumnRow(props: {
     targetColumn: GraphNodeColumn;
   }>;
   onCompositionDismiss?: () => void;
+  focusRequested?: boolean;
+  onFocusFulfilled?: () => void;
+  onFunctionApplied?: (createdFieldId: string) => void;
+  resolveColumnCompositionFunctions?: GraphNodeColumnCompositionFunctionResolver;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
-  onColumnFunctionApply?: (identity: GraphNodeColumnFunctionApplyIdentity) => void;
+  onColumnFunctionApply?: (
+    identity: GraphNodeColumnFunctionApplyIdentity
+  ) => GraphNodeColumnFunctionApplyResult;
   onStructuredFieldApply?: (identity: GraphNodeStructuredFieldIdentity) => void;
   onColumnOutputToggle?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
   onColumnReorder?: (identity: GraphNodeColumnReorderIdentity) => void;
 }): ReactElement {
+  const pieceRef = useRef<HTMLDivElement>(null);
   const [keyboardFunctionMenuOpen, setKeyboardFunctionMenuOpen] = useState(false);
   const [pendingFunction, setPendingFunction] = useState<PendingFunctionRequest | null>(null);
   const { column, nodeId, copy, reorder } = props;
   const columnId = column.id ?? column.name;
   const isOutput = column.output !== false;
+  useEffect(() => {
+    if (!props.focusRequested) return;
+    pieceRef.current?.focus();
+    props.onFocusFulfilled?.();
+  }, [props.focusRequested, props.onFocusFulfilled]);
   const piece = (
     <GraphNodeColumnPiece
+      ref={pieceRef}
       column={column}
       isOutput={isOutput}
       canReorder={reorder.canReorder(column)}
@@ -90,7 +105,7 @@ export function GraphNodeColumnRow(props: {
             ? undefined
             : (capabilityId) => {
                 const selectedFunction = column.functionMenu?.items.find(
-                  (item) => item.capabilityId === capabilityId
+                  (item) => item.capabilityId === capabilityId && item.argumentCount === 1
                 );
                 if (selectedFunction != null) {
                   setPendingFunction({ capabilityId, functionName: selectedFunction.name });
@@ -172,24 +187,33 @@ export function GraphNodeColumnRow(props: {
           unavailableNames={props.unavailableAliases}
           copy={copy}
           onDismiss={() => props.onCompositionDismiss?.()}
+          resolveCompositionFunctions={props.resolveColumnCompositionFunctions}
           onFunctionApply={props.onColumnFunctionApply}
+          onFunctionApplied={props.onFunctionApplied}
           onStructuredFieldApply={props.onStructuredFieldApply}
         />
       )}
       {nodeId != null && pendingFunction != null && props.onColumnFunctionApply != null ? (
         <GraphNodeColumnFunctionAliasForm
           functionName={pendingFunction.functionName}
+          expressionLabel={[pendingFunction.functionName.toUpperCase(), '(', column.name, ')'].join(
+            ''
+          )}
           unavailableAliases={props.unavailableAliases}
           copy={copy}
           onCancel={() => setPendingFunction(null)}
           onSubmit={(alias) => {
-            props.onColumnFunctionApply?.({
+            const result = props.onColumnFunctionApply?.({
               nodeId,
               columnId,
+              operandFieldIds: [columnId],
               capabilityId: pendingFunction.capabilityId,
               alias,
             });
-            setPendingFunction(null);
+            if (result?.outcome === 'applied') {
+              props.onFunctionApplied?.(result.createdFieldId);
+              setPendingFunction(null);
+            }
           }}
         />
       ) : null}

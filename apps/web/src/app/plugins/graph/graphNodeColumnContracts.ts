@@ -4,6 +4,7 @@ import type { ActiveColumnPlacement } from './useGraphNodeColumnOrder';
 export type GraphNodeColumnFunction = Readonly<{
   capabilityId: string;
   name: string;
+  argumentCount: number;
 }>;
 
 export type GraphNodeColumn = Readonly<{
@@ -27,6 +28,13 @@ export type GraphNodeColumn = Readonly<{
     items: readonly GraphNodeColumnFunction[];
   }>;
 }>;
+
+export type GraphNodeColumnCompositionFunctionResolver = (
+  args: Readonly<{
+    targetType: string;
+    sourceType: string;
+  }>
+) => readonly GraphNodeColumnFunction[];
 
 export type GraphNodeColumnPortDirection = 'source' | 'target';
 export type GraphNodeColumnPortIdentity = Readonly<{
@@ -53,8 +61,10 @@ export type GraphNodeColumnFunctionApplyIdentity = Readonly<{
   columnId: string;
   capabilityId: string;
   alias: string;
-  sourceColumnId?: string;
+  operandFieldIds: readonly [string, ...string[]];
 }>;
+export type GraphNodeColumnFunctionApplyResult =
+  Readonly<{ outcome: 'applied'; createdFieldId: string }> | Readonly<{ outcome: 'rejected' }>;
 export type GraphNodeStructuredFieldIdentity = Readonly<{
   nodeId: string;
   draggedFieldId: string;
@@ -86,7 +96,10 @@ export type GraphNodeColumnSectionProps = Readonly<{
   portDirections?: readonly GraphNodeColumnPortDirection[];
   activeColumnHandleId?: string | null;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
-  onColumnFunctionApply?: (identity: GraphNodeColumnFunctionApplyIdentity) => void;
+  onColumnFunctionApply?: (
+    identity: GraphNodeColumnFunctionApplyIdentity
+  ) => GraphNodeColumnFunctionApplyResult;
+  resolveColumnCompositionFunctions?: GraphNodeColumnCompositionFunctionResolver;
   onStructuredFieldApply?: (identity: GraphNodeStructuredFieldIdentity) => void;
   onCalculatedColumnAdd?: (identity: GraphNodeCalculatedColumnIdentity) => void;
   onColumnOutputToggle?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
@@ -121,25 +134,30 @@ export function resolveGraphNodeColumnInteractionProps(args: {
       args.nodeRole === 'transform' && typeof data.onApplyCanvasColumnFunction === 'function'
         ? (data.onApplyCanvasColumnFunction as (
             identity: GraphNodeColumnFunctionApplyIdentity
-          ) => void)
+          ) => GraphNodeColumnFunctionApplyResult)
+        : undefined,
+    resolveColumnCompositionFunctions:
+      args.nodeRole === 'transform' &&
+      typeof data.resolveCanvasColumnCompositionFunctions === 'function'
+        ? (data.resolveCanvasColumnCompositionFunctions as GraphNodeColumnCompositionFunctionResolver)
         : undefined,
     onStructuredFieldApply:
       args.nodeRole === 'transform' && typeof data.onApplyCanvasStructuredField === 'function'
         ? (data.onApplyCanvasStructuredField as (
             identity: GraphNodeStructuredFieldIdentity
-          ) => void)
+          ) => GraphNodeColumnFunctionApplyResult)
         : undefined,
     onCalculatedColumnAdd:
       typeof data.onAddCanvasCalculatedColumn === 'function'
         ? (data.onAddCanvasCalculatedColumn as (
             identity: GraphNodeCalculatedColumnIdentity
-          ) => void)
+          ) => GraphNodeColumnFunctionApplyResult)
         : undefined,
     onColumnOutputToggle:
       args.nodeRole === 'transform' && typeof data.onToggleCanvasColumnOutput === 'function'
         ? (data.onToggleCanvasColumnOutput as (
             identity: GraphNodeColumnOutputToggleIdentity
-          ) => void)
+          ) => GraphNodeColumnFunctionApplyResult)
         : undefined,
     onColumnReorder:
       (args.nodeRole === 'input' || args.nodeRole === 'transform') &&

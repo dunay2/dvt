@@ -8,6 +8,7 @@ import { graphNodeColumnClasses } from './graphVisualTokens';
 
 export function GraphNodeColumnFunctionAliasForm(props: {
   functionName: string;
+  expressionLabel?: string;
   unavailableAliases: readonly string[];
   copy: GraphNodeColumnCopy;
   onSubmit: (alias: string) => void;
@@ -34,6 +35,9 @@ export function GraphNodeColumnFunctionAliasForm(props: {
         align="center"
         className={graphNodeColumnClasses.functionAliasForm}
       >
+        {props.expressionLabel == null ? null : (
+          <code data-slot="graph-node-column-function-expression">{props.expressionLabel}</code>
+        )}
         <form
           onSubmit={(event) => {
             event.preventDefault();

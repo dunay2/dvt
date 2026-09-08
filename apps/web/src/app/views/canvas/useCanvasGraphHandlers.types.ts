@@ -1,6 +1,8 @@
 import type { Edge, Node, ReactFlowProps } from '@xyflow/react';
 import type {
   GraphNodeCalculatedColumnIdentity,
+  GraphNodeColumnFunctionApplyIdentity,
+  GraphNodeColumnFunctionApplyResult,
   GraphNodeColumnPortIdentity,
   GraphNodeStructuredFieldIdentity,
 } from '../../plugins/graph/graphNodeColumnContracts';
@@ -38,13 +40,9 @@ export type UseCanvasGraphHandlersResult = {
   handleAttachSchemaToNode: (nodeId: string, schemaName: string) => void;
   activeColumnHandleId: string | null;
   handleColumnPortActivate: (identity: GraphNodeColumnPortIdentity) => void;
-  handleApplyCanvasColumnFunction: (identity: {
-    nodeId: string;
-    columnId: string;
-    capabilityId: string;
-    alias: string;
-    sourceColumnId?: string;
-  }) => void;
+  handleApplyCanvasColumnFunction: (
+    identity: GraphNodeColumnFunctionApplyIdentity
+  ) => GraphNodeColumnFunctionApplyResult;
   handleApplyCanvasStructuredField: (identity: GraphNodeStructuredFieldIdentity) => void;
   handleAddCanvasCalculatedColumn: (identity: GraphNodeCalculatedColumnIdentity) => void;
   handleToggleCanvasColumnOutput: (identity: {

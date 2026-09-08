@@ -125,6 +125,79 @@ function inspect(node: CanonicalNode): DvtSubstraitProjectionSemantics {
 }
 
 describe('Canvas column function authoring', () => {
+  it('appends a binary CONCAT output and preserves reusable operands', () => {
+    const transform = projectionTransform();
+    const concat = resolveDvtSubstraitColumnFunctions({
+      dataTypes: ['text', 'text'],
+      provider: 'postgres',
+    }).find((candidate) => candidate.name === 'concat');
+    if (concat == null) throw new Error('Expected admitted CONCAT capability.');
+    const initial = draftSession(source, transform);
+    const before = inspect(transform);
+    const left = before.outputs.find((output) => output.name === 'event_id');
+    const right = before.outputs.find((output) => output.name === 'event_type');
+    if (left == null || right == null) throw new Error('Expected two operands.');
+
+    const first = applyCanvasColumnFunction({
+      draftSession: initial,
+      canonicalNodesById: new Map([
+        [source.id, source],
+        [transform.id, transform],
+      ]),
+      identity: {
+        nodeId: transform.id,
+        operandFieldIds: [left.fieldId, right.fieldId],
+        capabilityId: concat.capabilityId,
+        alias: 'event_key',
+      },
+    });
+
+    expect(first.outcome).toBe('applied');
+    if (first.outcome !== 'applied') return;
+    const firstNode = first.draftSession.localNodeCatalog?.[transform.id];
+    if (firstNode == null) throw new Error('Expected updated Transform.');
+    const afterFirst = inspect(firstNode);
+    expect(afterFirst.outputs.slice(0, 2)).toEqual(before.outputs);
+    const derived = afterFirst.outputs.find((output) => output.name === 'event_key');
+    expect(derived?.fieldId).toMatch(OPAQUE_FIELD_ID);
+    expect(derived?.scalarExpression).toEqual({
+      kind: 'scalar-function',
+      functionName: 'concat',
+      arguments: [
+        { kind: 'field-reference', sourceFieldName: 'event_id' },
+        { kind: 'field-reference', sourceFieldName: 'event_type' },
+      ],
+      nullHandling: 'ACCEPT_NULLS',
+    });
+
+    const second = applyCanvasColumnFunction({
+      draftSession: first.draftSession,
+      canonicalNodesById: new Map([
+        [source.id, source],
+        [transform.id, transform],
+      ]),
+      identity: {
+        nodeId: transform.id,
+        operandFieldIds: [derived!.fieldId, right.fieldId],
+        capabilityId: concat.capabilityId,
+        alias: 'event_key_extended',
+      },
+    });
+    expect(second.outcome).toBe('applied');
+    if (second.outcome !== 'applied') return;
+    const secondNode = second.draftSession.localNodeCatalog?.[transform.id];
+    if (secondNode == null) throw new Error('Expected recursively updated Transform.');
+    expect(
+      inspect(secondNode).outputs.find((output) => output.name === 'event_key_extended')
+    ).toMatchObject({
+      scalarExpression: {
+        kind: 'scalar-function',
+        functionName: 'concat',
+        nullHandling: 'ACCEPT_NULLS',
+      },
+    });
+  });
+
   it('derives a new unary output from a card function without mutating the selected output', () => {
     const transform = projectionTransform();
     const trim = resolveDvtSubstraitColumnFunctions({
@@ -145,7 +218,7 @@ describe('Canvas column function authoring', () => {
       ]),
       identity: {
         nodeId: transform.id,
-        columnId: selectedBefore.fieldId,
+        operandFieldIds: [selectedBefore.fieldId],
         capabilityId: trim.capabilityId,
         alias: 'event_type_clean',
       },
@@ -189,7 +262,7 @@ describe('Canvas column function authoring', () => {
       ]),
       identity: {
         nodeId: transform.id,
-        columnId: selected.fieldId,
+        operandFieldIds: [selected.fieldId],
         capabilityId: trim.capabilityId,
         alias: 'event_type',
       },
@@ -215,7 +288,7 @@ describe('Canvas column function authoring', () => {
       ]),
       identity: {
         nodeId: externalModel.id,
-        columnId: 'event_type',
+        operandFieldIds: ['event_type'],
         capabilityId: trim.capabilityId,
         alias: 'event_type_clean',
       },

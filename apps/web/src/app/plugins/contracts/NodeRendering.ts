@@ -10,6 +10,7 @@ import type {
   GraphNodeCalculatedColumnIdentity,
   GraphNodeColumn,
   GraphNodeColumnFunctionApplyIdentity,
+  GraphNodeColumnFunctionApplyResult,
   GraphNodeColumnOutputToggleIdentity,
   GraphNodeColumnPortDirection,
   GraphNodeColumnPortIdentity,
@@ -104,7 +105,9 @@ export type GraphNodeRendererData = Readonly<{
   onFilterByTag?: (tag: string) => void;
   getTagFilterLabel?: (tag: string) => string;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
-  onApplyCanvasColumnFunction?: (identity: GraphNodeColumnFunctionApplyIdentity) => void;
+  onApplyCanvasColumnFunction?: (
+    identity: GraphNodeColumnFunctionApplyIdentity
+  ) => GraphNodeColumnFunctionApplyResult;
   onApplyCanvasStructuredField?: (identity: GraphNodeStructuredFieldIdentity) => void;
   onAddCanvasCalculatedColumn?: (identity: GraphNodeCalculatedColumnIdentity) => void;
   onToggleCanvasColumnOutput?: (identity: GraphNodeColumnOutputToggleIdentity) => void;

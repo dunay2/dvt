@@ -8,7 +8,9 @@ import { GraphNodeColumnSection } from './GraphNodeColumnSection';
 import type {
   GraphNodeColumn,
   GraphNodeCalculatedColumnIdentity,
+  GraphNodeColumnCompositionFunctionResolver,
   GraphNodeColumnFunctionApplyIdentity,
+  GraphNodeColumnFunctionApplyResult,
   GraphNodeColumnPortDirection,
   GraphNodeColumnPortIdentity,
   GraphNodeColumnReorderIdentity,
@@ -60,7 +62,10 @@ export type GraphNodeCardViewProps = Readonly<{
   activeColumnHandleId?: string | null;
   columnDisclosureExpanded?: boolean;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
-  onColumnFunctionApply?: (identity: GraphNodeColumnFunctionApplyIdentity) => void;
+  onColumnFunctionApply?: (
+    identity: GraphNodeColumnFunctionApplyIdentity
+  ) => GraphNodeColumnFunctionApplyResult;
+  resolveColumnCompositionFunctions?: GraphNodeColumnCompositionFunctionResolver;
   onStructuredFieldApply?: (identity: GraphNodeStructuredFieldIdentity) => void;
   onCalculatedColumnAdd?: (identity: GraphNodeCalculatedColumnIdentity) => void;
   onColumnOutputToggle?: (identity: {
@@ -147,6 +152,7 @@ export function GraphNodeCardView({
   columnDisclosureExpanded,
   onColumnPortActivate,
   onColumnFunctionApply,
+  resolveColumnCompositionFunctions,
   onStructuredFieldApply,
   onCalculatedColumnAdd,
   onColumnOutputToggle,
@@ -242,6 +248,7 @@ export function GraphNodeCardView({
             activeColumnHandleId={activeColumnHandleId}
             onColumnPortActivate={onColumnPortActivate}
             onColumnFunctionApply={onColumnFunctionApply}
+            resolveColumnCompositionFunctions={resolveColumnCompositionFunctions}
             onStructuredFieldApply={onStructuredFieldApply}
             onCalculatedColumnAdd={onCalculatedColumnAdd}
             onColumnOutputToggle={onColumnOutputToggle}

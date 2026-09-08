@@ -1,0 +1,28 @@
+---
+id: R-20260908-ALGEBRAIC-DERIVED-OUTPUT-DRIFT
+title: Binary Canvas composition could drift from admitted Substrait semantics
+status: Open
+date: 2026-09-08
+owners:
+  - web
+  - packages/@dvt/contracts
+severity: Medium
+probability: Low
+---
+mitigation:
+  summary: >
+    The capability catalog retains the official variadic concat:str identity while the DVT
+    invocation profile admits exactly two ordered string operands with ACCEPT_NULLS. Canvas writes
+    through ConfigureCanvasDvtNode, allocates a new stable FieldId, preserves both operands, and
+    re-inspects the recursive expression after mutation. PostgreSQL rendering consumes that same
+    expression through the governed AST. Incompatible types, malformed arity or options, duplicate
+    aliases, unknown FieldIds, unsupported providers, Cancel, and read-only scope fail closed.
+  evidence:
+    - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
+    - docs/evidence/ED-20260908-algebraic-derived-output.md
+    - packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts
+    - apps/web/src/app/views/canvas/canvasColumnFunctionAuthoring.test.ts
+    - apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresProjection.test.ts
+    - apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts
+  follow_up:
+    - Further arities or functions require their own governed capability admission and target proof.

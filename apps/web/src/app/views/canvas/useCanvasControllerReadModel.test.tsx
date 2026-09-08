@@ -29,6 +29,7 @@ type ReadModelNodeData = {
   activeColumnHandleId?: unknown;
   onColumnPortActivate?: unknown;
   onApplyCanvasColumnFunction?: unknown;
+  resolveCanvasColumnCompositionFunctions?: unknown;
   onApplyCanvasStructuredField?: unknown;
   onAddCanvasCalculatedColumn?: unknown;
   onToggleCanvasColumnOutput?: unknown;
@@ -562,7 +563,10 @@ describe('useCanvasControllerReadModel', () => {
             ...mapped,
             data: {
               ...mapped.data,
-              columns: sourceNode.metadata.columns,
+              columns: sourceNode.metadata.columns.map((column) => ({
+                ...column,
+                type: 'unknown',
+              })),
               columnDisclosureExpanded: true,
             },
           }
@@ -598,6 +602,7 @@ describe('useCanvasControllerReadModel', () => {
       const transformData = mounted.readState()?.nodesWithImpact[1]?.data as ReadModelNodeData;
       const columns = transformData.columns as ReadonlyArray<{
         id: string;
+        type: string;
         functionMenu?: Readonly<{
           category: string;
           items: readonly Readonly<{ name: string }>[];
@@ -607,12 +612,22 @@ describe('useCanvasControllerReadModel', () => {
       expect(transformData.onApplyCanvasColumnFunction).toBe(
         args.graphHandlers.handleApplyCanvasColumnFunction
       );
+      expect(transformData.resolveCanvasColumnCompositionFunctions).toEqual(expect.any(Function));
+      expect(
+        (
+          transformData.resolveCanvasColumnCompositionFunctions as (args: {
+            targetType: string;
+            sourceType: string;
+          }) => readonly Readonly<{ name: string }>[]
+        )({ targetType: 'text', sourceType: 'text' })
+      ).toEqual([expect.objectContaining({ name: 'concat' })]);
       expect(transformData.onApplyCanvasStructuredField).toBe(
         args.graphHandlers.handleApplyCanvasStructuredField
       );
       expect(transformData.onAddCanvasCalculatedColumn).toBe(
         args.graphHandlers.handleAddCanvasCalculatedColumn
       );
+      expect(columns.find((column) => column.id === 'output:customer')?.type).toBe('text');
       expect(columns.find((column) => column.id === 'output:customer')?.functionMenu).toEqual({
         category: 'text',
         items: expect.arrayContaining([

@@ -44,6 +44,7 @@ function projectInteractiveColumns(
     string,
     Readonly<{
       columnId: string;
+      dataType: string;
       menu: NonNullable<GraphNodeColumn['functionMenu']>;
     }>
   >
@@ -61,6 +62,7 @@ function projectInteractiveColumns(
     return {
       ...column,
       id: interactiveId,
+      type: functionProjection?.dataType ?? column.type,
       ...(functionProjection == null ? {} : { functionMenu: functionProjection.menu }),
       sourceHandleId: createCanvasColumnHandleId({
         direction: 'source',
@@ -273,8 +275,12 @@ export function useCanvasControllerReadModel({
           onColumnPortActivate: canAuthorColumnMappings
             ? node.data.onColumnPortActivate
             : undefined,
-          onApplyCanvasColumnFunction:
-            columnFunctionMenus == null ? undefined : node.data.onApplyCanvasColumnFunction,
+          onApplyCanvasColumnFunction: hasEditableProjection
+            ? node.data.onApplyCanvasColumnFunction
+            : undefined,
+          resolveCanvasColumnCompositionFunctions: hasEditableProjection
+            ? functionProjection.resolveCompositionFunctions
+            : undefined,
           onApplyCanvasStructuredField: canApplyStructuredField
             ? node.data.onApplyCanvasStructuredField
             : undefined,
