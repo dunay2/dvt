@@ -71,12 +71,9 @@ function findNodePort(
     .should('be.visible');
 }
 
-function connectCanvasNodePorts(
-  resolveSource: () => Cypress.Chainable<JQuery<HTMLElement>>,
-  resolveTarget: () => Cypress.Chainable<JQuery<HTMLElement>>
-): void {
-  resolveSource().then(($sourceHandle) => {
-    resolveTarget().then(($targetHandle) => {
+export function connectCanvasNodes(sourceName: string, targetName: string): void {
+  findNodePort(sourceName, 'source').then(($sourceHandle) => {
+    findNodePort(targetName, 'target').then(($targetHandle) => {
       const sourcePoint = readHandleCenter($sourceHandle[0]!);
       const targetPoint = readHandleCenter($targetHandle[0]!);
       const middlePoint = {
@@ -92,30 +89,6 @@ function connectCanvasNodePorts(
       });
     });
   });
-}
-
-export function connectCanvasNodes(sourceName: string, targetName: string): void {
-  connectCanvasNodePorts(
-    () => findNodePort(sourceName, 'source'),
-    () => findNodePort(targetName, 'target')
-  );
-}
-
-export function connectCanvasNodeIds(sourceNodeId: string, targetNodeId: string): void {
-  const findById = (
-    nodeId: string,
-    port: 'source' | 'target'
-  ): Cypress.Chainable<JQuery<HTMLElement>> =>
-    cy
-      .get(`.react-flow__node[data-id="${nodeId}"]`)
-      .should('be.visible')
-      .find(`[data-slot="canvas-node-port-handle"][data-port="${port}"]`)
-      .should('be.visible');
-
-  connectCanvasNodePorts(
-    () => findById(sourceNodeId, 'source'),
-    () => findById(targetNodeId, 'target')
-  );
 }
 
 export function dragCanvasNodeByViewportDelta(nodeName: string, delta: DragPoint): void {
