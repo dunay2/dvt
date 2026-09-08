@@ -2,7 +2,7 @@
 title: GH-2935 card unary derived output hard cut
 status: Approved
 owner: Web / Canvas semantic authoring
-last_reviewed: 2026-09-07
+last_reviewed: 2026-09-08
 planning_type: implementation-plan
 task_id: GH-2935
 ---
@@ -35,11 +35,14 @@ calculated-output authoring seam. Capability admission, alias validation, Substr
 and FieldId allocation remain owned by that seam. Requests with `sourceColumnId` retain the
 existing centre-drop behavior until `#2921`; no second command, AST, registry, or store is added.
 
-## Command rail
+## Command rail reuse
 
-| Rail                     | Type    | Bounded context           | DDD object                       | Application port       | Adapter              | Scope and authorization                                     |
-| ------------------------ | ------- | ------------------------- | -------------------------------- | ---------------------- | -------------------- | ----------------------------------------------------------- |
-| `ConfigureCanvasDvtNode` | command | Canvas semantic authoring | `DvtSubstraitAuthoringSidecarV1` | Canvas draft authoring | Web Canvas authoring | Active writable workspace draft; existing save/CAS boundary |
+This feature reuses the canonical `ConfigureCanvasDvtNode` command declared in
+`docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`.
+The feature-mechanization manifest below records feature-to-rail usage only; it is not a second
+command/query rail declaration. For this slice, Canvas draft authoring is the application seam,
+Web Canvas authoring is the adapter surface, and authorization remains the active writable
+workspace draft through the existing save/CAS boundary.
 
 Negative behavior is fail closed: invalid target, unsupported capability, duplicate alias,
 external dbt model, or unresolved FieldId writes nothing.
