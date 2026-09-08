@@ -24,7 +24,7 @@ describe('dvtContributions connection rules', () => {
     ['dvt:source', 'input', 'dvt:transform', 'transform', true],
     ['dvt:source', 'input', 'dvt:sink', 'output', false],
     ['dvt:transform', 'transform', 'dvt:source', 'input', false],
-    ['dvt:transform', 'transform', 'dvt:transform', 'transform', false],
+    ['dvt:transform', 'transform', 'dvt:transform', 'transform', true],
     ['dvt:transform', 'transform', 'dvt:sink', 'output', true],
     ['dvt:sink', 'output', 'dvt:source', 'input', false],
     ['dvt:sink', 'output', 'dvt:transform', 'transform', false],

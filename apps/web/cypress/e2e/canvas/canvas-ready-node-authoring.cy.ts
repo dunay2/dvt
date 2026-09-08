@@ -10,6 +10,7 @@ import {
   clickCanvasContextMenuItem,
   openCanvasContextMenuAt,
 } from '../../support/canvasExecutionSelection';
+import { connectCanvasNodeIds } from '../../support/canvasGraphAuthoring';
 import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
 import {
   E2E_PROJECT_WORKSPACE,
@@ -21,6 +22,7 @@ type CanvasDraftSaveRequestBody = {
   draft: {
     nodeIds: string[];
     nodePositions: Record<string, { x: number; y: number }>;
+    edges: Array<{ sourceId: string; targetId: string }>;
     nodes: Array<{
       id: string;
       name: string;
@@ -238,6 +240,37 @@ describe('Canvas ready node authoring', () => {
     ).click();
     cy.get('[data-slot="canvas-graph-filter-control"]').should('contain.text', 'Etiqueta: finance');
     assertNoSeriousAccessibilityViolations('[data-slot="canvas-graph-filter-control"]');
+  });
+
+  it('connects, saves, and reloads a native Model chain with inherited columns', () => {
+    const modelChainEdge =
+      '.react-flow__edge[data-id="draft_edge_dvt-transform-1_orphan-transform-1"]';
+    stubStatefulCanvasDraftAuthoring({ authoringGenerated: true, includeLooseNode: true });
+
+    visitReadyCanvas();
+
+    cy.get(modelChainEdge).should('not.exist');
+    connectCanvasNodeIds('dvt-transform-1', 'orphan-transform-1');
+    cy.wrap(null).should(() => {
+      const savedEdge = getE2eApiCalls('/workspace/graph/draft', 'PUT')
+        .map((call) => call.body as CanvasDraftSaveRequestBody)
+        .flatMap((body) => body.draft.edges)
+        .find(
+          (edge) => edge.sourceId === 'dvt-transform-1' && edge.targetId === 'orphan-transform-1'
+        );
+      expect(savedEdge, 'persisted Model dependency').to.not.be.undefined;
+    });
+
+    visitReadyCanvas();
+
+    cy.get(modelChainEdge).should('be.visible');
+    cy.get('.react-flow__node[data-id="orphan-transform-1"]')
+      .should('be.visible')
+      .within(() => {
+        cy.contains('button', 'Columns (2)').click();
+        cy.contains('order_id').should('be.visible');
+        cy.contains('total').should('be.visible');
+      });
   });
 
   it('adds a governed authoring node from the canvas context menu on an existing canvas', () => {
