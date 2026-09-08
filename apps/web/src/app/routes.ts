@@ -9,6 +9,7 @@ import {
 import { Navigate, createBrowserRouter, type RouteObject } from 'react-router';
 
 import AppRouteErrorBoundary from './AppRouteErrorBoundary';
+import AuthRouteGate from './bootstrap/AuthRouteGate';
 import { completeBootstrapScreen, setBootstrapStepStatus } from './bootstrap/appBootstrapScreen';
 import StaticRouteBootstrapBoundary from './bootstrap/StaticRouteBootstrapBoundary';
 import {
@@ -19,10 +20,10 @@ import {
 } from './bootstrap/routeBootstrapContract';
 import { getRouteBootstrapRegistration } from './bootstrap/routeBootstrapRegistration';
 import { usePublishedRouteBootstrap } from './bootstrap/usePublishedRouteBootstrap';
+import SemanticWorkbenchLab from './labs/SemanticWorkbenchLab';
 import type { ViewContribution } from './plugins/contracts/PluginManifest';
 import { getRouteViews } from './plugins/registry';
 import Root from './Root';
-import AuthRouteGate from './bootstrap/AuthRouteGate';
 import { useShellRuntime } from './shell/useShellRuntime';
 import AdminView from './views/AdminView';
 import LoginView from './views/LoginView';
@@ -213,6 +214,13 @@ export function createAppRoutes(): RouteObject[] {
       path: '/login',
       element: createElement(PublicRouteBootstrapBoundary, {
         children: createElement(LoginView),
+      }),
+    },
+    {
+      path: '/lab/semantic-workbench',
+      errorElement: createElement(AppRouteErrorBoundary),
+      element: createElement(PublicRouteBootstrapBoundary, {
+        children: createElement(SemanticWorkbenchLab),
       }),
     },
   ];
