@@ -14,6 +14,7 @@ import { graphNodeColumnClasses } from './graphVisualTokens';
 
 type CalculationKind = GraphNodeCalculatedColumnIdentity['kind'];
 const KINDS: readonly CalculationKind[] = [
+  'field-ref',
   'string-literal',
   'timestamp-literal',
   'scalar-function',
@@ -28,7 +29,7 @@ export function GraphNodeCalculatedColumnForm(props: {
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveGraphNodeCardCopy(language);
   const [open, setOpen] = useState(false);
-  const [kind, setKind] = useState<CalculationKind>('string-literal');
+  const [kind, setKind] = useState<CalculationKind>('field-ref');
   const [alias, setAlias] = useState('');
   const [value, setValue] = useState('');
   const [inputFieldId, setInputFieldId] = useState(
@@ -58,7 +59,9 @@ export function GraphNodeCalculatedColumnForm(props: {
     const normalizedAlias = alias.trim();
     if (normalizedAlias.length === 0) return;
     let identity: GraphNodeCalculatedColumnIdentity | null = null;
-    if (kind === 'string-literal' || kind === 'timestamp-literal') {
+    if (kind === 'field-ref' && inputFieldId) {
+      identity = { nodeId: props.nodeId, kind, alias: normalizedAlias, inputFieldId };
+    } else if (kind === 'string-literal' || kind === 'timestamp-literal') {
       identity = { nodeId: props.nodeId, kind, alias: normalizedAlias, value };
     } else if (kind === 'scalar-function' && inputFieldId && selectedCapabilityId) {
       identity = {

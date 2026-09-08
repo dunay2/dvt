@@ -69,7 +69,10 @@ type GraphNodeCardCopy = Readonly<{
   calculatedColumnSubmitLabel: string;
   calculatedColumnCancelLabel: string;
   calculatedColumnKindLabels: Readonly<
-    Record<'string-literal' | 'timestamp-literal' | 'scalar-function' | 'row-number', string>
+    Record<
+      'field-ref' | 'string-literal' | 'timestamp-literal' | 'scalar-function' | 'row-number',
+      string
+    >
   >;
   sourceIdentityAriaLabelTemplate: string;
   sourceIdentityDatabaseLabel: string;
@@ -166,6 +169,7 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   calculatedColumnSubmitLabel: 'Create column',
   calculatedColumnCancelLabel: 'Cancel',
   calculatedColumnKindLabels: {
+    'field-ref': 'Alias column',
     'string-literal': 'Text value',
     'timestamp-literal': 'Timestamp with timezone',
     'scalar-function': 'Column function',
@@ -266,6 +270,7 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   calculatedColumnSubmitLabel: 'Crear columna',
   calculatedColumnCancelLabel: 'Cancelar',
   calculatedColumnKindLabels: {
+    'field-ref': 'Alias de columna',
     'string-literal': 'Valor de texto',
     'timestamp-literal': 'Timestamp con zona',
     'scalar-function': 'Función de columna',

@@ -157,6 +157,68 @@ describe('Canvas calculated column authoring', () => {
     expect(created?.fieldId).not.toContain('customer_clean');
   });
 
+  it('adds a direct alias with a fresh FieldId and preserves its source mapping on reread', () => {
+    const transform = projectionTransform();
+    const initial = session(source, transform);
+    initial.workingSet.visibleEdges.push({ sourceId: source.id, targetId: transform.id });
+
+    const result = applyCanvasCalculatedColumn({
+      draftSession: initial,
+      canonicalNodesById: new Map([
+        [source.id, source],
+        [transform.id, transform],
+      ]),
+      request: {
+        nodeId: transform.id,
+        kind: 'field-ref',
+        alias: 'customer_alias',
+        inputFieldId: 'output:customer',
+      },
+    });
+
+    expect(result.outcome).toBe('applied');
+    if (result.outcome !== 'applied') return;
+    const replacement = result.draftSession.localNodeCatalog?.[transform.id];
+    if (replacement == null) throw new Error('Expected an updated Transform.');
+    const outputs = inspect(replacement).outputs;
+    const created = outputs.at(-1);
+    expect(outputs.map((output) => output.name)).toEqual([
+      'order_id',
+      'customer',
+      'customer_alias',
+    ]);
+    expect(created).toMatchObject({
+      name: 'customer_alias',
+      sourceFieldName: 'customer',
+    });
+    expect(created).not.toHaveProperty('operations');
+    expect(created?.fieldId).toMatch(OPAQUE_FIELD_ID);
+    expect(created?.fieldId).not.toBe('output:customer');
+    expect(result.createdFieldId).toBe(created?.fieldId);
+  });
+
+  it('rejects a direct alias for an unknown FieldId without mutating the Transform', () => {
+    const transform = projectionTransform();
+    const initial = session(source, transform);
+    const result = applyCanvasCalculatedColumn({
+      draftSession: initial,
+      canonicalNodesById: new Map([
+        [source.id, source],
+        [transform.id, transform],
+      ]),
+      request: {
+        nodeId: transform.id,
+        kind: 'field-ref',
+        alias: 'missing_alias',
+        inputFieldId: 'missing-field-id',
+      },
+    });
+
+    expect(result).toEqual({ outcome: 'rejected' });
+    expect(initial.localNodeCatalog?.[transform.id]).toBe(transform);
+    expect(inspect(transform).outputs).toHaveLength(2);
+  });
+
   it('chains derived outputs by FieldId and rejects mutable names as identities', () => {
     const transform = projectionTransform();
     const functions = resolveDvtSubstraitColumnFunctions({
