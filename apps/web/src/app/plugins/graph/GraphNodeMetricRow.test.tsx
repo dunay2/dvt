@@ -91,7 +91,7 @@ describe('GraphNodeMetricRow', () => {
     expect(container.textContent).toBe(`Mat.${value}`);
   });
 
-  it('keeps the materialization icon slot stable while its configured icon changes', () => {
+  it('keeps the materialization icon stable while its configured icon changes', () => {
     act(() => {
       root.render(
         <GraphNodeMetricRow
@@ -106,9 +106,10 @@ describe('GraphNodeMetricRow', () => {
       );
     });
 
-    const reservedSlot = container.querySelector('[data-slot="graph-node-summary-icon"]');
-    expect(reservedSlot?.className).toContain('size-3.5');
-    expect(reservedSlot?.querySelector('svg')).toBeNull();
+    const fallbackIcon = container.querySelector('[data-slot="graph-node-summary-icon"]');
+    expect(fallbackIcon?.className).toContain('size-3.5');
+    expect(fallbackIcon?.getAttribute('data-icon')).toBe('database');
+    expect(fallbackIcon?.querySelector('svg')).not.toBeNull();
 
     act(() => {
       root.render(
@@ -126,7 +127,7 @@ describe('GraphNodeMetricRow', () => {
     });
 
     const configuredSlot = container.querySelector('[data-slot="graph-node-summary-icon"]');
-    expect(configuredSlot).toBe(reservedSlot);
+    expect(configuredSlot).toBe(fallbackIcon);
     expect(configuredSlot?.getAttribute('data-icon')).toBe('eye');
   });
 
@@ -143,6 +144,44 @@ describe('GraphNodeMetricRow', () => {
     const row = container.querySelector('[data-slot="graph-node-metric-row"]');
     expect(row?.getAttribute('data-placement')).toBe('header');
     expect(row?.className).not.toContain('mt-3');
+  });
+
+  it('orders header metrics as compact icon tooltips with a materialization fallback icon', () => {
+    act(() => {
+      root.render(
+        <GraphNodeMetricRow
+          metrics={[
+            { id: 'materialization', label: 'Mat.', value: 'Not configured' },
+            {
+              id: 'last-run',
+              label: 'Last run',
+              value: 'Not calculated',
+              icon: 'clock',
+            },
+          ]}
+          placement="header"
+        />
+      );
+    });
+
+    const row = container.querySelector('[data-slot="graph-node-metric-row"]');
+    const hotspots = Array.from(
+      container.querySelectorAll('[data-slot="graph-node-metric-hotspot"]')
+    );
+
+    expect(row?.className).toContain('grid-cols-2');
+    expect(hotspots).toHaveLength(2);
+    expect(
+      hotspots.map((hotspot) =>
+        hotspot.querySelector('[data-slot="graph-node-summary-icon"]')?.getAttribute('data-icon')
+      )
+    ).toEqual(['database', 'clock']);
+    expect(
+      hotspots.map(
+        (hotspot) => hotspot.querySelector('[data-slot="graph-node-summary-label"]')?.className
+      )
+    ).toEqual(['sr-only', 'sr-only']);
+    expect(row?.textContent).toBe('Mat.Not configuredLast runNot calculated');
   });
 
   it('marks measured and estimated values as accessible tone-aware hotspots', () => {

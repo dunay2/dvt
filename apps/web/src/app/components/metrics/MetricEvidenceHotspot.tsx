@@ -1,5 +1,5 @@
 /** Owned concern: reveal complete metric evidence from a compact UI value. */
-import type { HTMLAttributes, MouseEventHandler, ReactElement } from 'react';
+import type { HTMLAttributes, MouseEventHandler, ReactElement, ReactNode } from 'react';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { cn } from '../ui/utils';
@@ -20,7 +20,7 @@ export type MetricEvidenceHotspotProps = Readonly<{
   onActivate?: MouseEventHandler<HTMLButtonElement>;
   tone?: MetricEvidenceTone;
   triggerProps?: MetricEvidenceTriggerProps;
-  value: string;
+  value: ReactNode;
 }>;
 
 export function MetricEvidenceHotspot({
