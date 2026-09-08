@@ -35,7 +35,9 @@ export type EditableCanvasProjectionEntry =
 
 function hasEditableOutputs(projection: DvtSubstraitProjectionSemantics): boolean {
   return projection.outputs.every(
-    (output) => output.sourceFieldName != null && output.calculation == null
+    (output) =>
+      (output.sourceFieldName != null || output.scalarExpression != null) &&
+      output.calculation == null
   );
 }
 
@@ -66,10 +68,12 @@ function bindProjectionSourceTypes(
     outputs: projection.outputs.map((output) => ({
       ...output,
       dataType:
-        output.calculation == null
-          ? (source.fields.find((field) => field.name === output.sourceFieldName)?.dataType ??
-            'unknown')
-          : output.dataType,
+        output.scalarExpression != null
+          ? output.dataType
+          : output.calculation == null
+            ? (source.fields.find((field) => field.name === output.sourceFieldName)?.dataType ??
+              'unknown')
+            : output.dataType,
     })),
   };
 }

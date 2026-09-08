@@ -39,6 +39,21 @@ export function pgFunction(name: string, argument: PostgresAstNode): PostgresAst
   };
 }
 
+export function pgConcatAcceptNulls(
+  left: PostgresAstNode,
+  right: PostgresAstNode
+): PostgresAstNode {
+  return {
+    A_Expr: {
+      kind: 'AEXPR_OP',
+      name: [pgString('||')],
+      lexpr: left,
+      rexpr: right,
+      location: -1,
+    },
+  };
+}
+
 export function pgCountRows(): PostgresAstNode {
   return { FuncCall: { funcname: [pgString('count')], agg_star: true } };
 }

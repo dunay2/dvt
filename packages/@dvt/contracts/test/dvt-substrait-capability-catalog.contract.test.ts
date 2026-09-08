@@ -92,6 +92,73 @@ describe('DVT Substrait capability catalog V1', () => {
     });
   });
 
+  it('admits only the bounded binary CONCAT invocation for field stacking', () => {
+    const concatId = buildDvtSubstraitStandardCapabilityId('scalar-function', {
+      sourceKind: 'simple-extension',
+      urn: 'extension:io.substrait:functions_string',
+      name: 'concat',
+    });
+
+    expect(findCapability(concatId)).toMatchObject({
+      profileStatus: 'supported-profile',
+      invocation: {
+        signature: 'concat:str',
+        argumentTypes: ['str'],
+        argumentCount: 2,
+        outputType: 'str',
+        options: [{ name: 'null_handling', preference: ['ACCEPT_NULLS'] }],
+      },
+      admission: {
+        productUseCaseRef: 'dvt:#2921',
+        targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+        visualExposure: { status: 'exposed' },
+      },
+    });
+    expect(
+      DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.filter(
+        (entry) => entry.kind === 'standard' && entry.invocation !== undefined
+      )
+    ).toHaveLength(1);
+  });
+
+  it('rejects malformed or missing bounded CONCAT invocations', () => {
+    const concat = findCapability(
+      buildDvtSubstraitStandardCapabilityId('scalar-function', {
+        sourceKind: 'simple-extension',
+        urn: 'extension:io.substrait:functions_string',
+        name: 'concat',
+      })
+    );
+    if (concat?.kind !== 'standard') throw new Error('Expected the standard CONCAT capability.');
+
+    const { invocation: _invocation, ...withoutInvocation } = concat;
+    expect(DvtSubstraitStandardCapabilityV1Schema.safeParse(withoutInvocation).success).toBe(false);
+    expect(
+      DvtSubstraitStandardCapabilityV1Schema.safeParse({
+        ...concat,
+        invocation: { ...concat.invocation, signature: 'concat:str_str' },
+      }).success
+    ).toBe(false);
+    expect(
+      DvtSubstraitStandardCapabilityV1Schema.safeParse({
+        ...concat,
+        invocation: { ...concat.invocation, argumentCount: 1 },
+      }).success
+    ).toBe(false);
+    expect(
+      DvtSubstraitStandardCapabilityV1Schema.safeParse({
+        ...concat,
+        invocation: { ...concat.invocation, outputType: 'bool' },
+      }).success
+    ).toBe(false);
+    expect(
+      DvtSubstraitStandardCapabilityV1Schema.safeParse({
+        ...concat,
+        invocation: { ...concat.invocation, options: [] },
+      }).success
+    ).toBe(false);
+  });
+
   it('keeps same-named functions from different upstream families distinct', () => {
     const arithmetic = buildDvtSubstraitStandardCapabilityId('aggregate-function', {
       sourceKind: 'simple-extension',

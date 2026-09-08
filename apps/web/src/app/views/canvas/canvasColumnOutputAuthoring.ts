@@ -6,10 +6,16 @@ import {
   resolveCanvasSessionNode,
   type CanvasColumnMappingResult,
 } from './canvasColumnMappingModel';
+import { readEditableCanvasProjectionEntry } from './canvasColumnProjectionAuthority';
 import {
-  persistCanvasProjectionOutputs,
-  readEditableCanvasProjectionEntry,
-} from './canvasColumnProjectionAuthority';
+  applyDvtSubstraitSemanticDocument,
+  readDvtTransformAuthoringAuthority,
+} from './canvasDvtTransformAuthoringAuthority';
+import {
+  decodeDvtSubstraitProjectionDocument,
+  encodeDvtSubstraitProjectionDocument,
+  reorderDvtSubstraitProjectionOutputs,
+} from './canvasDvtSubstraitProjection';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import {
   reorderCanvasStructuredFieldRoots,
@@ -52,30 +58,29 @@ export function reorderCanvasColumnOutput(args: {
   if (projectionResult.projection == null) {
     return { outcome: 'rejected', reason: 'mapping_not_found' };
   }
-  const outputs = [...projectionResult.projection.outputs];
-  const sourceIndex = outputs.findIndex((output) => output.fieldId === args.columnId);
-  if (sourceIndex < 0 || args.columnId === args.targetColumnId) {
+  const authority = readDvtTransformAuthoringAuthority(targetNode);
+  if (authority == null) return { outcome: 'rejected', reason: 'mapping_not_found' };
+  try {
+    const currentDraft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
+    const reorderedDraft = reorderDvtSubstraitProjectionOutputs(currentDraft, {
+      fieldId: args.columnId,
+      targetFieldId: args.targetColumnId,
+      placement: args.placement,
+    });
+    if (reorderedDraft === currentDraft) {
+      return { outcome: 'rejected', reason: 'mapping_not_found' };
+    }
+    const node = applyDvtSubstraitSemanticDocument(
+      targetNode,
+      encodeDvtSubstraitProjectionDocument(reorderedDraft)
+    );
+    return {
+      outcome: 'applied',
+      draftSession: canvasDraftSession.workingSet.upsertNode(args.draftSession, node),
+    };
+  } catch {
     return { outcome: 'rejected', reason: 'mapping_not_found' };
   }
-  const [movedOutput] = outputs.splice(sourceIndex, 1);
-  const targetIndex = outputs.findIndex((output) => output.fieldId === args.targetColumnId);
-  if (movedOutput == null || targetIndex < 0) {
-    return { outcome: 'rejected', reason: 'mapping_not_found' };
-  }
-  outputs.splice(args.placement === 'after' ? targetIndex + 1 : targetIndex, 0, movedOutput);
-  const persisted = persistCanvasProjectionOutputs({
-    targetNode,
-    resolveNode: (nodeId) =>
-      resolveCanvasSessionNode(args.draftSession, args.canonicalNodesById, nodeId),
-    projection: projectionResult.projection,
-    outputs,
-  });
-  return persisted.outcome === 'rejected'
-    ? persisted
-    : {
-        outcome: 'applied',
-        draftSession: canvasDraftSession.workingSet.upsertNode(args.draftSession, persisted.node),
-      };
 }
 
 export function setCanvasColumnOutputIncluded(args: {

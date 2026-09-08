@@ -49,9 +49,16 @@ describe('GraphNodeColumnSection functional composition', () => {
   async function openCompatibleCompositionMenu(): Promise<{
     onColumnFunctionApply: ReturnType<typeof vi.fn>;
     onColumnReorder: ReturnType<typeof vi.fn>;
+    resolveColumnCompositionFunctions: ReturnType<typeof vi.fn>;
   }> {
     const onColumnFunctionApply = vi.fn();
     const onColumnReorder = vi.fn();
+    const resolveColumnCompositionFunctions = vi.fn(
+      ({ targetType, sourceType }: { targetType: string; sourceType: string }) =>
+        targetType === 'buyer-id' && sourceType === 'text'
+          ? [{ capabilityId: 'capability:concat', name: 'concat', argumentCount: 2 }]
+          : []
+    );
     await act(async () => {
       root.render(
         <GraphNodeColumnSection
@@ -63,11 +70,16 @@ describe('GraphNodeColumnSection functional composition', () => {
               type: 'text',
               functionMenu: {
                 category: 'text',
-                items: [{ capabilityId: 'capability:upper', name: 'upper' }],
+                items: [{ capabilityId: 'capability:upper', name: 'upper', argumentCount: 1 }],
               },
             },
-            { id: 'output:buyer', name: 'buyer', type: 'text' },
+            {
+              id: 'output:buyer',
+              name: 'buyer',
+              type: 'buyer-id',
+            },
           ]}
+          resolveColumnCompositionFunctions={resolveColumnCompositionFunctions}
           onColumnFunctionApply={onColumnFunctionApply}
           onColumnReorder={onColumnReorder}
         />
@@ -113,7 +125,12 @@ describe('GraphNodeColumnSection functional composition', () => {
       document.body.querySelector('[data-slot="graph-node-column-composition-menu"]')
     ).not.toBeNull();
 
-    return { onColumnFunctionApply, onColumnReorder };
+    expect(resolveColumnCompositionFunctions).toHaveBeenCalledWith({
+      targetType: 'buyer-id',
+      sourceType: 'text',
+    });
+
+    return { onColumnFunctionApply, onColumnReorder, resolveColumnCompositionFunctions };
   }
 
   it('keeps a centre-drop choice open until the user selects an operation', async () => {
@@ -131,10 +148,12 @@ describe('GraphNodeColumnSection functional composition', () => {
     expect(onColumnFunctionApply).not.toHaveBeenCalled();
     expect(onColumnReorder).not.toHaveBeenCalled();
 
-    const functionChoice = document.body.querySelector<HTMLElement>(
+    const functionChoices = document.body.querySelectorAll<HTMLElement>(
       '[data-slot="graph-node-column-composition-function"]'
     );
-    expect(functionChoice).not.toBeNull();
+    expect(functionChoices).toHaveLength(1);
+    const functionChoice = functionChoices[0]!;
+    expect(functionChoice.dataset.capabilityId).toBe('capability:concat');
     await act(async () => {
       fireEvent.click(functionChoice!);
     });
@@ -153,8 +172,8 @@ describe('GraphNodeColumnSection functional composition', () => {
     expect(onColumnFunctionApply).toHaveBeenCalledWith({
       nodeId: 'transform-orders',
       columnId: 'output:buyer',
-      sourceColumnId: 'output:customer',
-      capabilityId: 'capability:upper',
+      operandFieldIds: ['output:buyer', 'output:customer'],
+      capabilityId: 'capability:concat',
       alias: 'buyer_clean',
     });
   });
@@ -199,7 +218,7 @@ describe('GraphNodeColumnSection functional composition', () => {
               type: 'text',
               functionMenu: {
                 category: 'text',
-                items: [{ capabilityId: 'capability:upper', name: 'upper' }],
+                items: [{ capabilityId: 'capability:upper', name: 'upper', argumentCount: 1 }],
               },
             },
           ]}

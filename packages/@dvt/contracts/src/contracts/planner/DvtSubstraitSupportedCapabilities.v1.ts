@@ -10,6 +10,7 @@ import {
 } from './DvtSubstraitCapabilityAdmission.v1.js';
 import {
   DvtSubstraitStandardCapabilityV1Schema,
+  type DvtSubstraitFunctionInvocationV1,
   type DvtSubstraitStandardCapabilityV1,
 } from './DvtSubstraitCapabilityCatalogSchema.v1.js';
 import {
@@ -44,9 +45,11 @@ interface SupportedCapabilityGroup {
   readonly proofRef: string;
   readonly targetStatus?: 'unavailable' | 'mapped' | 'provider-accepted';
   readonly visualExposure?: 'not-exposed' | 'exposed';
+  readonly invocationByEntryId?: Readonly<Record<string, DvtSubstraitFunctionInvocationV1>>;
 }
 
 const LOWER_ID = functionId('scalar-function', 'functions_string', 'lower');
+const CONCAT_ID = functionId('scalar-function', 'functions_string', 'concat');
 const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
   {
     entryIds: [
@@ -66,6 +69,20 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
     entryIds: [LOWER_ID],
     useCaseRefs: ['dvt:#2598', 'dvt:#2827'],
     proofRef: 'docs/evidence/ED-20260902-transform-function-alias-authoring.md',
+  },
+  {
+    entryIds: [CONCAT_ID],
+    useCaseRefs: ['dvt:#2642', 'dvt:#2921'],
+    proofRef: 'docs/evidence/ED-20260908-algebraic-derived-output.md',
+    invocationByEntryId: {
+      [CONCAT_ID]: {
+        signature: 'concat:str',
+        argumentTypes: ['str'],
+        argumentCount: 2,
+        outputType: 'str',
+        options: [{ name: 'null_handling', preference: ['ACCEPT_NULLS'] }],
+      },
+    },
   },
   {
     entryIds: [standardId('relation', 'substrait.FilterRel')],
@@ -171,6 +188,9 @@ export function admitDvtSubstraitStandardCandidatesV1(
           profileStatus: 'supported-profile',
           evidenceRefs: [...entry.evidenceRefs, ...group.useCaseRefs],
           admission: admissionFor(entry, group),
+          ...(group.invocationByEntryId?.[entry.entryId] === undefined
+            ? {}
+            : { invocation: group.invocationByEntryId[entry.entryId] }),
         });
   });
 }

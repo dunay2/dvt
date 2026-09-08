@@ -11,11 +11,18 @@ export type DvtSubstraitHierarchyFieldV1 = Readonly<{
   outputOrdinal: number;
   parentFieldId?: string | undefined;
   sourceFieldId?: string | undefined;
+  operandFieldIds?: readonly string[] | undefined;
 }>;
 
 export type DvtSubstraitFieldHierarchyIssueV1 = Readonly<{
   index: number;
-  property: 'fieldId' | 'relationId' | 'outputOrdinal' | 'parentFieldId' | 'sourceFieldId';
+  property:
+    | 'fieldId'
+    | 'relationId'
+    | 'outputOrdinal'
+    | 'parentFieldId'
+    | 'sourceFieldId'
+    | 'operandFieldIds';
   message: string;
 }>;
 
@@ -46,6 +53,21 @@ export function validateDvtSubstraitFieldHierarchyV1(
   fields.forEach((field, index) => {
     if (field.sourceFieldId != null && !fieldsById.has(field.sourceFieldId)) {
       issues.push({ index, property: 'sourceFieldId', message: 'Unknown source field.' });
+    }
+    if (field.operandFieldIds != null) {
+      if (new Set(field.operandFieldIds).size !== field.operandFieldIds.length) {
+        issues.push({ index, property: 'operandFieldIds', message: 'Duplicate operand field.' });
+      }
+      if (field.operandFieldIds.some((fieldId) => !fieldsById.has(fieldId))) {
+        issues.push({ index, property: 'operandFieldIds', message: 'Unknown operand field.' });
+      }
+      if (field.operandFieldIds.includes(field.fieldId)) {
+        issues.push({
+          index,
+          property: 'operandFieldIds',
+          message: 'A field cannot be its own operand.',
+        });
+      }
     }
     if (field.parentFieldId == null) return;
     const parent = fieldsById.get(field.parentFieldId);

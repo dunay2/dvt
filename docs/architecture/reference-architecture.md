@@ -180,11 +180,13 @@ The Web edits a generated typed Substrait `Plan` for that admitted shape, preser
 uses the existing Workspace Graph Draft Apply/Cancel/reload rail, and fails closed for
 unsupported shapes.
 
-The capability catalog currently promotes only the pilot capabilities needed for that
-slice to `supported-profile`: named-table `ReadRel`, `RelCommon.Emit`, `ProjectRel`, field
-selection, scalar-function expressions, string type, `trim`, and `upper`. Catalog presence
-for other relations/functions/types remains governance metadata, not execution or UI
-support evidence.
+The capability catalog promotes the bounded capabilities proven by Canvas authoring:
+named-table `ReadRel`, `RelCommon.Emit`, `ProjectRel`, field selection, scalar-function
+expressions, string type, `trim`, `upper`, `lower`, and `concat`. Substrait owns the
+official variadic `concat:str` meaning; the DVT profile admits exactly two ordered string
+operands with `ACCEPT_NULLS`, and the PostgreSQL renderer projects that recursive expression
+through the governed AST. Catalog presence for other relations/functions/types remains
+governance metadata, not execution or UI support evidence.
 
 ### TARGET beyond that slice
 

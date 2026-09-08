@@ -1,5 +1,9 @@
 /** Owned concern: prove structured Transform fields through the canonical Canvas command rail. */
 import {
+  decodeDvtSubstraitProjectionDocument,
+  inspectDvtSubstraitProjectionDraft,
+} from '../../../src/app/views/canvas/canvasDvtSubstraitProjection';
+import {
   decodeDvtSubstraitStructuredFieldDocument,
   inspectDvtSubstraitStructuredFieldDraft,
 } from '../../../src/app/views/canvas/canvasDvtSubstraitStructuredField';
@@ -77,8 +81,124 @@ function latestStructuredFields(): ReturnType<typeof inspectDvtSubstraitStructur
   return inspections.at(-1)!;
 }
 
+function latestProjection(): ReturnType<typeof inspectDvtSubstraitProjectionDraft> {
+  const inspections = getE2eApiCalls('/workspace/graph/draft', 'PUT')
+    .map((call) => call.body as DraftSave)
+    .map((save) => save.draft.nodes.find((node) => node.id === 'model-orders'))
+    .filter((node) => node != null)
+    .map((model) => {
+      const authority = model.metadata?.transformAuthoring as
+        { semanticDocument?: unknown } | undefined;
+      return inspectDvtSubstraitProjectionDraft(
+        decodeDvtSubstraitProjectionDocument(authority?.semanticDocument)
+      );
+    });
+  return inspections.at(-1)!;
+}
+
 describe('Canvas structured Transform fields', () => {
   beforeEach(() => stubCanvas());
+
+  it('creates and reloads one reusable CONCAT output without losing operands', () => {
+    cy.viewport(1920, 1080);
+    visitCanvas();
+    expandAndAssignColumns();
+
+    modelCard().contains('button', 'Show remaining columns').click();
+    modelCard()
+      .find('[data-slot="graph-node-column-piece"][data-column-name="region"]')
+      .focus()
+      .trigger('keydown', { key: 'ArrowUp', altKey: true });
+    modelCard()
+      .find('[data-slot="graph-node-column-piece"]')
+      .should((pieces) => {
+        const names = [...pieces].map((piece) => piece.getAttribute('data-column-name'));
+        expect(names.indexOf('region')).to.equal(names.indexOf('status') + 1);
+      });
+    modelCard()
+      .find('[data-slot="graph-node-column-piece"][data-column-name="region"]')
+      .focus()
+      .trigger('keydown', { key: 'ArrowLeft', altKey: true });
+    cy.contains('[data-slot="graph-node-column-composition-function"]', 'CONCAT').click();
+    cy.get('[data-slot="graph-node-column-function-alias-input"]').type('status_region');
+    cy.get('[data-slot="graph-node-column-function-alias-submit"]').click();
+
+    cy.wrap(null, { timeout: 10_000 }).should(() => {
+      const inspection = latestProjection();
+      expect(inspection.ok).to.equal(true);
+      if (!inspection.ok) return;
+      expect(inspection.projection.outputs.map((output) => output.name)).to.include.members([
+        'order_id',
+        'customer',
+        'status_region',
+      ]);
+      const derived = inspection.projection.outputs.find(
+        (output) => output.name === 'status_region'
+      );
+      expect(derived?.scalarExpression).to.deep.equal({
+        kind: 'scalar-function',
+        functionName: 'concat',
+        arguments: [
+          { kind: 'field-reference', sourceFieldName: 'status' },
+          { kind: 'field-reference', sourceFieldName: 'region' },
+        ],
+        nullHandling: 'ACCEPT_NULLS',
+      });
+    });
+
+    modelCard().should('contain.text', 'status');
+    modelCard().should('contain.text', 'region');
+    modelCard()
+      .find('[data-slot="graph-node-column-piece"][data-column-name="status_region"]')
+      .should('be.focused');
+
+    visitCanvas();
+    modelCard().find('[data-slot="graph-node-column-toggle"]').click();
+    modelCard().contains('button', 'Show remaining columns').click();
+    modelCard().should('contain.text', 'order_id');
+    modelCard().should('contain.text', 'customer');
+    modelCard().should('contain.text', 'status_region');
+    modelCard()
+      .find('[data-slot="graph-node-column-piece"][data-column-name="status_region"]')
+      .rightclick(20, 10);
+    cy.get('[data-slot="graph-node-column-function-menu"]').should('be.visible');
+    cy.get('[data-slot="graph-node-column-function"]').should('contain.text', 'UPPER');
+    cy.get('[data-slot="graph-node-column-function"]').should('not.contain.text', 'CONCAT');
+    cy.get('body').type('{esc}');
+    modelCard()
+      .find('[data-slot="graph-node-column-piece"][data-column-name="status_region"]')
+      .focus()
+      .trigger('keydown', { key: 'ArrowUp', altKey: true });
+    modelCard()
+      .find('[data-slot="graph-node-column-piece"]')
+      .should((pieces) => {
+        const names = [...pieces].map((piece) => piece.getAttribute('data-column-name'));
+        expect(names.indexOf('status_region')).to.equal(names.indexOf('region') + 1);
+      });
+    modelCard()
+      .find('[data-slot="graph-node-column-piece"][data-column-name="status_region"]')
+      .focus()
+      .trigger('keydown', { key: 'ArrowLeft', altKey: true });
+    cy.contains('[data-slot="graph-node-column-composition-function"]', 'CONCAT').click();
+    cy.get('[data-slot="graph-node-column-function-expression"]').should(
+      'contain.text',
+      'CONCAT(region, status_region)'
+    );
+    cy.get('[data-slot="graph-node-column-function-alias-input"]').type('region_status_region');
+    cy.get('[data-slot="graph-node-column-function-alias-submit"]').click();
+    modelCard()
+      .find('[data-slot="graph-node-column-piece"][data-column-name="region_status_region"]')
+      .should('be.focused');
+    cy.wrap(null).should(() => {
+      const inspection = latestProjection();
+      expect(inspection.ok).to.equal(true);
+      if (!inspection.ok) return;
+      expect(
+        inspection.projection.outputs.find((output) => output.name === 'region_status_region')
+          ?.operandFieldIds
+      ).to.have.length(2);
+    });
+  });
 
   it('retains roots, reorders the struct, restores it, and removes the grouping', () => {
     let identityFieldId = '';

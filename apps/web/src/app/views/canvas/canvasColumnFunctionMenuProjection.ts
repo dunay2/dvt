@@ -1,5 +1,9 @@
 /** Owned concern: project admitted column functions for one editable Canvas node. */
-import type { GraphNodeColumn } from '../../plugins/graph/graphNodeColumnContracts';
+import type {
+  GraphNodeColumn,
+  GraphNodeColumnCompositionFunctionResolver,
+  GraphNodeColumnFunction,
+} from '../../plugins/graph/graphNodeColumnContracts';
 import type { CanonicalNode } from '../../types/canonical';
 import { createDvtNodeAuthoringMetadata } from './canvasDvtAuthoringModel';
 import {
@@ -11,6 +15,7 @@ export type CanvasColumnFunctionMenuMap = Map<
   string,
   Readonly<{
     columnId: string;
+    dataType: string;
     menu: NonNullable<GraphNodeColumn['functionMenu']>;
   }>
 >;
@@ -19,6 +24,7 @@ export type CanvasColumnFunctionMenuProjection = Readonly<{
   hasEditableProjection: boolean;
   supportsCalculatedColumns: boolean;
   menus?: CanvasColumnFunctionMenuMap;
+  resolveCompositionFunctions?: GraphNodeColumnCompositionFunctionResolver;
 }>;
 
 function addMenu(args: {
@@ -31,12 +37,27 @@ function addMenu(args: {
   const items = resolveDvtSubstraitColumnFunctions({
     dataType: args.dataType,
     provider: args.provider,
-  });
+  }).filter((item) => item.argumentCount === 1);
   const category = items[0]?.category;
   if (category == null || items.length === 0) return;
-  const value = { columnId: args.columnId, menu: { category, items } };
+  const value = {
+    columnId: args.columnId,
+    dataType: args.dataType,
+    menu: { category, items },
+  };
   args.menus.set(args.columnId, value);
   args.menus.set(args.name, value);
+}
+
+export function resolveCanvasColumnCompositionFunctions(args: {
+  provider: string;
+  targetType: string;
+  sourceType: string;
+}): readonly GraphNodeColumnFunction[] {
+  return resolveDvtSubstraitColumnFunctions({
+    dataTypes: [args.targetType, args.sourceType],
+    provider: args.provider,
+  }).filter((item) => item.argumentCount === 2);
 }
 
 function projectDvtTransformMenus(args: {
@@ -69,10 +90,13 @@ function projectDvtTransformMenus(args: {
         provider: projection.source.sourceRef.connectionRef.provider,
       });
     }
+    const provider = projection.source.sourceRef.connectionRef.provider;
     return {
       hasEditableProjection: true,
       supportsCalculatedColumns: true,
       ...(menus.size === 0 ? {} : { menus }),
+      resolveCompositionFunctions: ({ targetType, sourceType }) =>
+        resolveCanvasColumnCompositionFunctions({ provider, targetType, sourceType }),
     };
   } catch {
     return { hasEditableProjection: false, supportsCalculatedColumns: false };

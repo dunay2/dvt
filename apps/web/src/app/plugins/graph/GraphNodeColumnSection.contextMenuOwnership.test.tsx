@@ -143,7 +143,7 @@ describe('GraphNodeColumnSection context menu ownership', () => {
                 type: 'text',
                 functionMenu: {
                   category: 'text',
-                  items: [{ capabilityId: 'capability:upper', name: 'upper' }],
+                  items: [{ capabilityId: 'capability:upper', name: 'upper', argumentCount: 1 }],
                 },
               },
             ]}

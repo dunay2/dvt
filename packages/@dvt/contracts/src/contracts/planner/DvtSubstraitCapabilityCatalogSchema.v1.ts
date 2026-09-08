@@ -31,6 +31,58 @@ const compareStrings = (left: string, right: string): number =>
 export const DVT_SUBSTRAIT_CAPABILITY_CATALOG_SCHEMA_VERSION =
   'dvt-substrait-capability-catalog.v1' as const;
 
+export const DvtSubstraitFunctionInvocationOptionV1Schema = z
+  .object({
+    name: NonBlankStringSchema,
+    preference: z.array(NonBlankStringSchema).min(1),
+  })
+  .strict()
+  .superRefine((option, context) => {
+    if (new Set(option.preference).size !== option.preference.length) {
+      context.addIssue({
+        code: 'custom',
+        message: `Invocation option ${option.name} contains duplicate preferences.`,
+        path: ['preference'],
+      });
+    }
+  });
+
+export const DvtSubstraitFunctionInvocationV1Schema = z
+  .object({
+    signature: NonBlankStringSchema,
+    argumentTypes: z.array(NonBlankStringSchema),
+    argumentCount: z.number().int().positive(),
+    outputType: NonBlankStringSchema,
+    options: z.array(DvtSubstraitFunctionInvocationOptionV1Schema),
+  })
+  .strict()
+  .superRefine((invocation, context) => {
+    const separator = invocation.signature.indexOf(':');
+    const signatureArguments = separator < 0 ? null : invocation.signature.slice(separator + 1);
+    if (signatureArguments !== invocation.argumentTypes.join('_')) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Invocation signature arguments must match argumentTypes in order.',
+        path: ['signature'],
+      });
+    }
+    if (invocation.argumentCount < invocation.argumentTypes.length) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Invocation argumentCount cannot be smaller than its signature arity.',
+        path: ['argumentCount'],
+      });
+    }
+    const optionNames = invocation.options.map((option) => option.name);
+    if (new Set(optionNames).size !== optionNames.length) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Invocation option names must be unique.',
+        path: ['options'],
+      });
+    }
+  });
+
 export const DvtSubstraitStandardCapabilityV1Schema = z
   .object({
     kind: z.literal('standard'),
@@ -40,6 +92,7 @@ export const DvtSubstraitStandardCapabilityV1Schema = z
     profileStatus: DvtSubstraitStandardProfileStatusSchema,
     evidenceRefs: EvidenceRefsSchema,
     admission: DvtSubstraitStandardAdmissionEvidenceV1Schema.optional(),
+    invocation: DvtSubstraitFunctionInvocationV1Schema.optional(),
   })
   .strict()
   .superRefine((entry, context) => {
@@ -84,6 +137,54 @@ export const DvtSubstraitStandardCapabilityV1Schema = z
         message: 'Only supported-profile capabilities may carry admission evidence.',
         path: ['admission'],
       });
+    }
+    if (entry.invocation !== undefined) {
+      const isFunction =
+        entry.identity.sourceKind === 'simple-extension' &&
+        ['scalar-function', 'aggregate-function', 'window-function'].includes(entry.category);
+      if (!isFunction) {
+        context.addIssue({
+          code: 'custom',
+          message: 'Only official simple-extension functions may expose an invocation.',
+          path: ['invocation'],
+        });
+      }
+      const expectedName = `${entry.identity.sourceKind === 'simple-extension' ? entry.identity.name : ''}:`;
+      if (!entry.invocation.signature.startsWith(expectedName)) {
+        context.addIssue({
+          code: 'custom',
+          message: 'Invocation signature must retain the exact function identity name.',
+          path: ['invocation', 'signature'],
+        });
+      }
+    }
+    const isSupportedConcat =
+      entry.profileStatus === 'supported-profile' &&
+      entry.category === 'scalar-function' &&
+      entry.identity.sourceKind === 'simple-extension' &&
+      entry.identity.urn === 'extension:io.substrait:functions_string' &&
+      entry.identity.name === 'concat';
+    if (isSupportedConcat) {
+      const invocation = entry.invocation;
+      if (
+        invocation == null ||
+        invocation.signature !== 'concat:str' ||
+        invocation.argumentTypes.length !== 1 ||
+        invocation.argumentTypes[0] !== 'str' ||
+        invocation.argumentCount !== 2 ||
+        invocation.outputType !== 'str' ||
+        invocation.options.length !== 1 ||
+        invocation.options[0]?.name !== 'null_handling' ||
+        invocation.options[0].preference.length !== 1 ||
+        invocation.options[0].preference[0] !== 'ACCEPT_NULLS'
+      ) {
+        context.addIssue({
+          code: 'custom',
+          message:
+            'Supported CONCAT requires the official variadic signature and bounded DVT arity.',
+          path: ['invocation'],
+        });
+      }
     }
   });
 export const DvtSubstraitProductNeedCapabilityV1Schema = z
@@ -145,6 +246,12 @@ export const DvtSubstraitCapabilityCatalogV1Schema = z
 
 export type DvtSubstraitStandardCapabilityV1 = z.infer<
   typeof DvtSubstraitStandardCapabilityV1Schema
+>;
+export type DvtSubstraitFunctionInvocationOptionV1 = z.infer<
+  typeof DvtSubstraitFunctionInvocationOptionV1Schema
+>;
+export type DvtSubstraitFunctionInvocationV1 = z.infer<
+  typeof DvtSubstraitFunctionInvocationV1Schema
 >;
 export type DvtSubstraitProductNeedCapabilityV1 = z.infer<
   typeof DvtSubstraitProductNeedCapabilityV1Schema

@@ -24,6 +24,15 @@ export type CanvasCalculatedColumnRequest =
       kind: 'scalar-function';
       alias: string;
       inputFieldId: string;
+      operandFieldIds?: never;
+      capabilityId: string;
+    }>
+  | Readonly<{
+      nodeId: string;
+      kind: 'scalar-function';
+      alias: string;
+      operandFieldIds: readonly [string, ...string[]];
+      inputFieldId?: never;
       capabilityId: string;
     }>
   | Readonly<{
@@ -58,7 +67,7 @@ function creationRequest(request: CanvasCalculatedColumnRequest): DvtSubstraitCr
       alias: request.alias,
       expression: {
         kind: 'scalar-function',
-        inputFieldId: request.inputFieldId,
+        operandFieldIds: request.operandFieldIds ?? [request.inputFieldId],
         capabilityId: request.capabilityId,
       },
     };
@@ -74,21 +83,25 @@ function creationRequest(request: CanvasCalculatedColumnRequest): DvtSubstraitCr
     expression: { kind: request.kind, value: request.value },
   };
 }
+
 function createOutput(args: {
   request: CanvasCalculatedColumnRequest;
   projection: DvtSubstraitProjection;
   draft: DvtSubstraitProjectionDraft;
 }) {
   const request = creationRequest(args.request);
-  const inputFieldId =
-    request.expression.kind === 'scalar-function' ? request.expression.inputFieldId : undefined;
-  const input = args.projection.outputs.find((output) => output.fieldId === inputFieldId);
+  const operands =
+    request.expression.kind === 'scalar-function'
+      ? request.expression.operandFieldIds.map((fieldId) =>
+          args.projection.outputs.find((output) => output.fieldId === fieldId)
+        )
+      : [];
   return createDvtSubstraitProjectionOutput(
     args.draft,
     request,
-    request.expression.kind === 'scalar-function' && input != null
+    request.expression.kind === 'scalar-function' && operands.every((operand) => operand != null)
       ? {
-          inputDataType: input.dataType,
+          inputDataTypes: operands.map((operand) => operand!.dataType),
           provider: args.projection.source.sourceRef.connectionRef.provider,
         }
       : undefined

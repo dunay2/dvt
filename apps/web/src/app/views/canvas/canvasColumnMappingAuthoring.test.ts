@@ -26,6 +26,7 @@ import {
   encodeDvtSubstraitStructuredFieldDocument,
   inspectDvtSubstraitStructuredFieldDraft,
 } from './canvasDvtSubstraitStructuredField';
+import { createDvtSubstraitProjectionOutput } from './canvasDvtSubstraitCalculatedColumn';
 import { composeDvtSubstraitProjectionFields } from './canvasDvtSubstraitStructuredFieldMutation';
 
 const OPAQUE_FIELD_ID =
@@ -569,6 +570,98 @@ describe('Canvas column mapping authoring', () => {
       { fieldId: firstId, sourceFieldName: 'first' },
       { fieldId: secondId, sourceFieldName: 'second' },
     ]);
+  });
+
+  it('reorders a scalar output without losing its expression or operand bindings', () => {
+    const sourceColumns = [
+      { name: 'first', type: 'text' },
+      { name: 'second', type: 'text' },
+    ];
+    const source = buildNode('source', 'dvt:source', 'input', sourceColumns);
+    const model = buildNode('model', 'dvt:transform', 'transform');
+    const canonicalNodesById = new Map([
+      [source.id, source],
+      [model.id, model],
+    ]);
+    const mapped = automapCanvasColumns({
+      draftSession: buildSession([source, model], [{ sourceId: source.id, targetId: model.id }]),
+      canonicalNodesById,
+      targetNodeId: model.id,
+      targetColumns: sourceColumns,
+    });
+    if (mapped.outcome !== 'applied') throw new Error('Expected mapped outputs.');
+    const mappedNode = mapped.draftSession.localNodeCatalog?.model;
+    if (mappedNode == null) throw new Error('Expected mapped transform node.');
+    const authority = readDvtTransformAuthoringAuthority(mappedNode);
+    if (authority == null) throw new Error('Expected canonical Substrait authority.');
+    const mappedDraft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
+    const mappedInspection = inspectDvtSubstraitProjectionDraft(mappedDraft);
+    if (!mappedInspection.ok) throw new Error('Expected admitted mapped projection.');
+    const firstId = mappedInspection.projection.outputs[0]!.fieldId;
+    const secondId = mappedInspection.projection.outputs[1]!.fieldId;
+    const concat = resolveDvtSubstraitColumnFunctions({
+      dataTypes: ['text', 'text'],
+      provider: 'postgres',
+    }).find((candidate) => candidate.name === 'concat');
+    if (concat == null) throw new Error('Expected admitted CONCAT capability.');
+
+    const created = createDvtSubstraitProjectionOutput(
+      mappedDraft,
+      {
+        alias: 'event_key',
+        expression: {
+          kind: 'scalar-function',
+          operandFieldIds: [firstId, secondId],
+          capabilityId: concat.capabilityId,
+        },
+      },
+      { inputDataTypes: ['text', 'text'], provider: 'postgres' }
+    );
+    if (created.outcome !== 'applied') throw new Error('Expected CONCAT output creation.');
+    const derivedNode = applyDvtSubstraitSemanticDocument(
+      mappedNode,
+      encodeDvtSubstraitProjectionDocument(created.draft)
+    );
+    const derivedSession: CanvasDraftSession = {
+      ...mapped.draftSession,
+      localNodeCatalog: {
+        ...mapped.draftSession.localNodeCatalog,
+        [model.id]: derivedNode,
+      },
+    };
+    const before = inspectDvtSubstraitProjectionDraft(created.draft);
+    if (!before.ok) throw new Error('Expected admitted derived projection.');
+    const derivedBefore = before.projection.outputs.find(
+      (output) => output.fieldId === created.createdFieldId
+    );
+    if (derivedBefore == null) throw new Error('Expected created derived output.');
+
+    const reordered = reorderCanvasColumnOutput({
+      draftSession: derivedSession,
+      canonicalNodesById,
+      targetNodeId: model.id,
+      columnId: created.createdFieldId,
+      targetColumnId: firstId,
+      placement: 'before',
+    });
+    if (reordered.outcome !== 'applied') throw new Error('Expected reordered scalar output.');
+    const updated = reordered.draftSession.localNodeCatalog?.model;
+    if (updated == null) throw new Error('Expected updated transform node.');
+    const updatedAuthority = readDvtTransformAuthoringAuthority(updated);
+    if (updatedAuthority == null) throw new Error('Expected persisted Transform authority.');
+    const after = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(updatedAuthority.semanticDocument)
+    );
+    if (!after.ok) throw new Error('Expected admitted reordered projection.');
+
+    expect(after.projection.outputs.map((output) => output.fieldId)).toEqual([
+      created.createdFieldId,
+      firstId,
+      secondId,
+    ]);
+    expect(
+      after.projection.outputs.find((output) => output.fieldId === created.createdFieldId)
+    ).toEqual({ ...derivedBefore, outputOrdinal: 0 });
   });
 
   it('resolves mapping targets by actual opaque FieldId once authority exists', () => {

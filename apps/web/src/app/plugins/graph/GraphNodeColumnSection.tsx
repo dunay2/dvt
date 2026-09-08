@@ -19,6 +19,7 @@ export function GraphNodeColumnSection(props: GraphNodeColumnSectionProps): Reac
     activeColumnHandleId,
     onColumnPortActivate,
     onColumnFunctionApply,
+    resolveColumnCompositionFunctions,
     onStructuredFieldApply,
     onCalculatedColumnAdd,
     onColumnOutputToggle,
@@ -101,8 +102,12 @@ export function GraphNodeColumnSection(props: GraphNodeColumnSectionProps): Reac
                     : undefined
                 }
                 onCompositionDismiss={section.dismissComposition}
+                focusRequested={section.pendingFocusFieldId === (column.id ?? column.name)}
+                onFocusFulfilled={section.fulfillCreatedColumnFocus}
+                onFunctionApplied={section.revealCreatedColumn}
                 onColumnPortActivate={onColumnPortActivate}
                 onColumnFunctionApply={onColumnFunctionApply}
+                resolveColumnCompositionFunctions={resolveColumnCompositionFunctions}
                 onStructuredFieldApply={onStructuredFieldApply}
                 onColumnOutputToggle={onColumnOutputToggle}
                 onColumnReorder={onColumnReorder}

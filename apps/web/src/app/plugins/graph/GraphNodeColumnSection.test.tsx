@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { GraphNodeColumnSection } from './GraphNodeColumnSection';
+import type { GraphNodeColumn } from './graphNodeColumnContracts';
 
 describe('GraphNodeColumnSection', () => {
   const EIGHT_COLUMNS = [
@@ -308,8 +309,9 @@ describe('GraphNodeColumnSection', () => {
               functionMenu: {
                 category: 'text',
                 items: [
-                  { capabilityId: 'capability:trim', name: 'trim' },
-                  { capabilityId: 'capability:upper', name: 'upper' },
+                  { capabilityId: 'capability:trim', name: 'trim', argumentCount: 1 },
+                  { capabilityId: 'capability:upper', name: 'upper', argumentCount: 1 },
+                  { capabilityId: 'capability:concat', name: 'concat', argumentCount: 2 },
                 ],
               },
             },
@@ -337,6 +339,11 @@ describe('GraphNodeColumnSection', () => {
       '[data-slot="graph-node-column-function"][data-capability-id="capability:upper"]'
     );
     expect(upperItem).not.toBeNull();
+    expect(
+      document.body.querySelector(
+        '[data-slot="graph-node-column-function"][data-capability-id="capability:concat"]'
+      )
+    ).toBeNull();
     await act(async () => {
       fireEvent.click(upperItem!);
     });
@@ -365,6 +372,7 @@ describe('GraphNodeColumnSection', () => {
     expect(onColumnFunctionApply).toHaveBeenCalledWith({
       nodeId: 'transform-orders',
       columnId: 'output:customer',
+      operandFieldIds: ['output:customer'],
       capabilityId: 'capability:upper',
       alias: 'customer_clean',
     });
@@ -379,6 +387,101 @@ describe('GraphNodeColumnSection', () => {
     ).not.toBeNull();
   });
 
+  it('reveals and focuses the created output while retaining a rejected proposal', async () => {
+    function Harness(): React.ReactElement {
+      const [columns, setColumns] = React.useState<GraphNodeColumn[]>([
+        {
+          id: 'output:column_1',
+          name: 'column_1',
+          type: 'text',
+          functionMenu: {
+            category: 'text' as const,
+            items: [{ capabilityId: 'capability:upper', name: 'upper', argumentCount: 1 }],
+          },
+        },
+        ...EIGHT_COLUMNS.slice(1, 6),
+      ]);
+      return (
+        <GraphNodeColumnSection
+          expanded
+          nodeId="transform-orders"
+          columns={columns}
+          onColumnFunctionApply={(identity) => {
+            if (identity.alias === 'rejected_alias') return { outcome: 'rejected' };
+            const createdFieldId = 'field:derived';
+            setColumns((current) => [
+              ...current,
+              {
+                id: createdFieldId,
+                name: identity.alias,
+                type: 'text',
+                output: true,
+                operations: ['UPPER'],
+              },
+            ]);
+            return { outcome: 'applied', createdFieldId };
+          }}
+        />
+      );
+    }
+
+    await act(async () => {
+      root.render(<Harness />);
+    });
+    const firstPiece = container.querySelector<HTMLElement>(
+      '[data-slot="graph-node-column-piece"][data-column-name="column_1"]'
+    );
+    await act(async () => {
+      firstPiece?.dispatchEvent(
+        new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 })
+      );
+      await Promise.resolve();
+    });
+    await act(async () => {
+      fireEvent.click(
+        document.body.querySelector<HTMLElement>(
+          '[data-slot="graph-node-column-function"][data-capability-id="capability:upper"]'
+        )!
+      );
+    });
+    const expression = document.body.querySelector(
+      '[data-slot="graph-node-column-function-expression"]'
+    );
+    expect(expression?.textContent).toBe('UPPER(column_1)');
+
+    const aliasInput = document.body.querySelector<HTMLInputElement>(
+      '[data-slot="graph-node-column-function-alias-input"]'
+    );
+    await act(async () => {
+      fireEvent.change(aliasInput!, { target: { value: 'rejected_alias' } });
+      fireEvent.click(
+        document.body.querySelector<HTMLButtonElement>(
+          '[data-slot="graph-node-column-function-alias-submit"]'
+        )!
+      );
+    });
+    expect(aliasInput?.value).toBe('rejected_alias');
+    expect(
+      document.body.querySelector('[data-slot="graph-node-column-function-alias-form"]')
+    ).not.toBeNull();
+
+    await act(async () => {
+      fireEvent.change(aliasInput!, { target: { value: 'column_1_upper' } });
+      fireEvent.click(
+        document.body.querySelector<HTMLButtonElement>(
+          '[data-slot="graph-node-column-function-alias-submit"]'
+        )!
+      );
+      await Promise.resolve();
+    });
+
+    const created = container.querySelector<HTMLElement>(
+      '[data-slot="graph-node-column-piece"][data-column-name="column_1_upper"]'
+    );
+    expect(created).not.toBeNull();
+    expect(container.querySelectorAll('[data-slot="graph-node-column-row"]')).toHaveLength(7);
+    expect(document.activeElement).toBe(created);
+  });
   it('explains truthfully when the connected profile admits no function for a type', async () => {
     await act(async () => {
       root.render(

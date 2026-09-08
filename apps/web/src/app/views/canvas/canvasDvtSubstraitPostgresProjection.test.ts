@@ -138,11 +138,40 @@ function connectedOrdersProjectionDraft(): DvtSubstraitProjectionDraft {
 
 function createProjectionOutput(
   draft: DvtSubstraitProjectionDraft,
-  request: DvtSubstraitCreateOutputRequest
+  request: DvtSubstraitCreateOutputRequest,
+  context?: Readonly<{ inputDataTypes: readonly string[]; provider: string }>
 ): DvtSubstraitProjectionDraft {
-  const result = createDvtSubstraitProjectionOutput(draft, request);
+  const result = createDvtSubstraitProjectionOutput(draft, request, context);
   if (result.outcome !== 'applied') throw new Error('Expected output creation to be admitted.');
   return result.draft;
+}
+
+function connectedNamesProjectionDraft(): DvtSubstraitProjectionDraft {
+  return createDvtSubstraitProjectionDraft({
+    source: {
+      nodeId: 'source-people',
+      schema: 'raw',
+      table: 'people',
+      sourceRef: {
+        schemaVersion: 'connected-source-ref.v1',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: 'warehouse-main',
+          provider: 'postgres',
+        },
+        sourceObjectId: 'raw.people',
+      },
+      fields: [
+        { name: 'first_name', dataType: 'text' },
+        { name: 'last_name', dataType: 'text' },
+      ],
+    },
+    targetNodeId: 'transform-people',
+    outputs: [
+      { fieldId: 'output:first_name', name: 'first_name', sourceFieldName: 'first_name' },
+      { fieldId: 'output:last_name', name: 'last_name', sourceFieldName: 'last_name' },
+    ],
+  });
 }
 
 describe('VTX2 Substrait -> PostgreSQL projection', () => {
@@ -171,6 +200,163 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     expect(sql.replaceAll(/\s+/g, ' ').trim().toLowerCase()).toMatch(
       /^select order_id, customer as buyer, amount from raw\.orders;?$/
     );
+  });
+
+  it('projects inspected CONCAT with ACCEPT_NULLS semantics and a quoted alias', async () => {
+    const concat = resolveDvtSubstraitColumnFunctions({
+      dataTypes: ['text', 'text'],
+      provider: 'postgres',
+    }).find((candidate) => candidate.name === 'concat');
+    if (concat == null) throw new Error('Expected admitted CONCAT capability.');
+
+    const result = createDvtSubstraitProjectionOutput(
+      connectedNamesProjectionDraft(),
+      {
+        alias: 'display name',
+        expression: {
+          kind: 'scalar-function',
+          operandFieldIds: ['output:first_name', 'output:last_name'],
+          capabilityId: concat.capabilityId,
+        },
+      },
+      { inputDataTypes: ['text', 'text'], provider: 'postgres' }
+    );
+    if (result.outcome !== 'applied') throw new Error('Expected CONCAT output creation.');
+    const createdBinding = result.draft.sidecar.fields.find(
+      (field) => field.fieldId === result.createdFieldId
+    );
+    expect(createdBinding?.operandFieldIds).toEqual(['output:first_name', 'output:last_name']);
+    const extension = result.draft.plan.extensions.find(
+      (entry) => entry.mappingType.case === 'extensionFunction'
+    );
+    expect(extension?.mappingType.case).toBe('extensionFunction');
+    if (extension?.mappingType.case !== 'extensionFunction') {
+      throw new Error('Expected CONCAT extension declaration.');
+    }
+    expect(extension.mappingType.value.name).toBe('concat:str');
+
+    const sql = (await projectDvtSubstraitProjectionToPostgresSql(result.draft))
+      .replaceAll(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+
+    expect(sql).toMatch(
+      /^select first_name, last_name, first_name \|\| last_name as "display name" from raw\.people;?$/
+    );
+    expect(sql).not.toContain('concat(');
+  });
+
+  it('rejects false caller type claims against canonical Substrait source types', () => {
+    const concat = resolveDvtSubstraitColumnFunctions({
+      dataTypes: ['text', 'text'],
+      provider: 'postgres',
+    }).find((candidate) => candidate.name === 'concat');
+    if (concat == null) throw new Error('Expected admitted CONCAT capability.');
+
+    expect(
+      createDvtSubstraitProjectionOutput(
+        connectedOrdersProjectionDraft(),
+        {
+          alias: 'invalid_concat',
+          expression: {
+            kind: 'scalar-function',
+            operandFieldIds: ['output:order_id', 'output:amount'],
+            capabilityId: concat.capabilityId,
+          },
+        },
+        { inputDataTypes: ['text', 'text'], provider: 'postgres' }
+      ).outcome
+    ).toBe('rejected');
+  });
+
+  it('projects recursively inspected CONCAT operands without losing their order', async () => {
+    const concat = resolveDvtSubstraitColumnFunctions({
+      dataTypes: ['text', 'text'],
+      provider: 'postgres',
+    }).find((candidate) => candidate.name === 'concat');
+    if (concat == null) throw new Error('Expected admitted CONCAT capability.');
+
+    const first = createDvtSubstraitProjectionOutput(
+      connectedNamesProjectionDraft(),
+      {
+        alias: 'full_name',
+        expression: {
+          kind: 'scalar-function',
+          operandFieldIds: ['output:first_name', 'output:last_name'],
+          capabilityId: concat.capabilityId,
+        },
+      },
+      { inputDataTypes: ['text', 'text'], provider: 'postgres' }
+    );
+    if (first.outcome !== 'applied') throw new Error('Expected first CONCAT output creation.');
+    const second = createDvtSubstraitProjectionOutput(
+      first.draft,
+      {
+        alias: 'extended_name',
+        expression: {
+          kind: 'scalar-function',
+          operandFieldIds: [first.createdFieldId, 'output:first_name'],
+          capabilityId: concat.capabilityId,
+        },
+      },
+      { inputDataTypes: ['text', 'text'], provider: 'postgres' }
+    );
+    if (second.outcome !== 'applied') throw new Error('Expected recursive CONCAT output creation.');
+
+    const sql = (await projectDvtSubstraitProjectionToPostgresSql(second.draft))
+      .replaceAll(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+
+    expect(sql).toContain('first_name || last_name as full_name');
+    expect(sql).toMatch(
+      /(?:first_name \|\| last_name|\(first_name \|\| last_name\)) \|\| first_name as extended_name/
+    );
+  });
+
+  it('projects an admitted unary function around a recursive CONCAT tree', async () => {
+    const functions = resolveDvtSubstraitColumnFunctions({
+      dataTypes: ['text', 'text'],
+      provider: 'postgres',
+    });
+    const concat = functions.find((candidate) => candidate.name === 'concat');
+    const upper = resolveDvtSubstraitColumnFunctions({
+      dataTypes: ['text'],
+      provider: 'postgres',
+    }).find((candidate) => candidate.name === 'upper');
+    if (concat == null || upper == null) {
+      throw new Error('Expected admitted CONCAT and UPPER capabilities.');
+    }
+
+    const concatResult = createDvtSubstraitProjectionOutput(
+      connectedNamesProjectionDraft(),
+      {
+        alias: 'full_name',
+        expression: {
+          kind: 'scalar-function',
+          operandFieldIds: ['output:first_name', 'output:last_name'],
+          capabilityId: concat.capabilityId,
+        },
+      },
+      { inputDataTypes: ['text', 'text'], provider: 'postgres' }
+    );
+    if (concatResult.outcome !== 'applied') throw new Error('Expected CONCAT output creation.');
+    const upperDraft = applyDvtSubstraitProjectionFunction(concatResult.draft, {
+      fieldId: concatResult.createdFieldId,
+      operandFieldIds: [concatResult.createdFieldId],
+      capabilityId: upper.capabilityId,
+      alias: 'full_name',
+      dataTypes: ['text'],
+      provider: 'postgres',
+    });
+    expect(upperDraft).not.toBe(concatResult.draft);
+
+    const sql = (await projectDvtSubstraitProjectionToPostgresSql(upperDraft))
+      .replaceAll(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+
+    expect(sql).toMatch(/upper\(\(?first_name \|\| last_name\)?\) as full_name/);
   });
 
   it('renders an admitted Source filter from the canonical FilterRel', async () => {
@@ -220,7 +406,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
 
   it('projects only admitted scalar functions compatible with the field type and target', () => {
     const textFunctions = resolveDvtSubstraitColumnFunctions({
-      dataType: 'text',
+      dataTypes: ['text'],
       provider: 'postgres',
     });
 
@@ -240,7 +426,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
 
   it('stacks admitted functions on one canonical field and derives SQL from that revision', async () => {
     const functions = resolveDvtSubstraitColumnFunctions({
-      dataType: 'text',
+      dataTypes: ['text'],
       provider: 'postgres',
     });
     const trim = functions.find((item) => item.name === 'trim');
@@ -250,16 +436,18 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     const base = connectedOrdersProjectionDraft();
     const withTrim = applyDvtSubstraitProjectionFunction(base, {
       fieldId: 'output:customer',
+      operandFieldIds: ['output:customer'],
       capabilityId: trim.capabilityId,
       alias: 'buyer',
-      dataType: 'text',
+      dataTypes: ['text'],
       provider: 'postgres',
     });
     const withUpper = applyDvtSubstraitProjectionFunction(withTrim, {
       fieldId: 'output:customer',
+      operandFieldIds: ['output:customer'],
       capabilityId: upper.capabilityId,
       alias: 'buyer',
-      dataType: 'text',
+      dataTypes: ['text'],
       provider: 'postgres',
     });
 
@@ -270,9 +458,10 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     expect(
       applyDvtSubstraitProjectionFunction(base, {
         fieldId: 'output:amount',
+        operandFieldIds: ['output:amount'],
         capabilityId: trim.capabilityId,
         alias: 'amount',
-        dataType: 'numeric',
+        dataTypes: ['numeric'],
         provider: 'postgres',
       })
     ).toBe(base);
@@ -280,16 +469,17 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
 
   it('rejects scalar functions whose return type or behavioral options exceed the profile', () => {
     const trim = resolveDvtSubstraitColumnFunctions({
-      dataType: 'text',
+      dataTypes: ['text'],
       provider: 'postgres',
     }).find((item) => item.name === 'trim');
     if (trim == null) throw new Error('Expected admitted trim capability.');
     const applyTrim = (): DvtSubstraitProjectionDraft =>
       applyDvtSubstraitProjectionFunction(connectedOrdersProjectionDraft(), {
         fieldId: 'output:customer',
+        operandFieldIds: ['output:customer'],
         capabilityId: trim.capabilityId,
         alias: 'buyer',
-        dataType: 'text',
+        dataTypes: ['text'],
         provider: 'postgres',
       });
     const readScalarFunction = (draft: DvtSubstraitProjectionDraft): Expression_ScalarFunction => {
@@ -315,7 +505,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
 
   it('applies a function only to the selected output when expressions are shared', () => {
     const functions = resolveDvtSubstraitColumnFunctions({
-      dataType: 'text',
+      dataTypes: ['text'],
       provider: 'postgres',
     });
     const trim = functions.find((item) => item.name === 'trim');
@@ -323,9 +513,10 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     if (trim == null || upper == null) throw new Error('Expected admitted text functions.');
     const withTrim = applyDvtSubstraitProjectionFunction(connectedOrdersProjectionDraft(), {
       fieldId: 'output:customer',
+      operandFieldIds: ['output:customer'],
       capabilityId: trim.capabilityId,
       alias: 'buyer',
-      dataType: 'text',
+      dataTypes: ['text'],
       provider: 'postgres',
     });
     const trimInspection = inspectDvtSubstraitProjectionDraft(withTrim);
@@ -352,9 +543,10 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
 
     const withUpper = applyDvtSubstraitProjectionFunction(sharedTrim, {
       fieldId: 'output:customer',
+      operandFieldIds: ['output:customer'],
       capabilityId: upper.capabilityId,
       alias: 'buyer',
-      dataType: 'text',
+      dataTypes: ['text'],
       provider: 'postgres',
     });
     const inspection = inspectDvtSubstraitProjectionDraft(withUpper);

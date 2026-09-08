@@ -95,14 +95,19 @@ export function useCanvasGraphHandlers({
   };
   const handleApplyCanvasColumnFunction: UseCanvasGraphHandlersResult['handleApplyCanvasColumnFunction'] =
     (identity) => {
-      setDraftSession((currentSession) => {
-        const result = applyCanvasColumnFunction({
-          draftSession: currentSession,
-          canonicalNodesById,
-          identity,
-        });
-        return result.outcome === 'applied' ? result.draftSession : currentSession;
+      const result = applyCanvasColumnFunction({
+        draftSession,
+        canonicalNodesById,
+        identity: {
+          nodeId: identity.nodeId,
+          operandFieldIds: identity.operandFieldIds,
+          capabilityId: identity.capabilityId,
+          alias: identity.alias,
+        },
       });
+      if (result.outcome !== 'applied') return { outcome: 'rejected' };
+      setDraftSession(result.draftSession);
+      return { outcome: 'applied', createdFieldId: result.createdFieldId };
     };
   const handleAddCanvasCalculatedColumn: UseCanvasGraphHandlersResult['handleAddCanvasCalculatedColumn'] =
     (request) => {

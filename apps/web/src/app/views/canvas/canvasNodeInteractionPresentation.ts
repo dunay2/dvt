@@ -3,6 +3,7 @@ import type {
   GraphNodeColumn,
   GraphNodeCalculatedColumnIdentity,
   GraphNodeColumnFunctionApplyIdentity,
+  GraphNodeColumnFunctionApplyResult,
   GraphNodeColumnOutputToggleIdentity,
   GraphNodeColumnPortIdentity,
   GraphNodeColumnReorderIdentity,
@@ -20,7 +21,9 @@ type NodeActionHandlers = {
   onToggleNodeSelection?: (nodeId: string, shouldSelect: boolean) => void;
   onAttachSchemaToNode?: (nodeId: string, schemaName: string) => void;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
-  onApplyCanvasColumnFunction?: (identity: GraphNodeColumnFunctionApplyIdentity) => void;
+  onApplyCanvasColumnFunction?: (
+    identity: GraphNodeColumnFunctionApplyIdentity
+  ) => GraphNodeColumnFunctionApplyResult;
   onApplyCanvasStructuredField?: (identity: GraphNodeStructuredFieldIdentity) => void;
   onAddCanvasCalculatedColumn?: (identity: GraphNodeCalculatedColumnIdentity) => void;
   onToggleCanvasColumnOutput?: (identity: GraphNodeColumnOutputToggleIdentity) => void;

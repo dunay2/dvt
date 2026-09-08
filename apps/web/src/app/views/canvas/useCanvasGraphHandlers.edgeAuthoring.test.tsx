@@ -726,7 +726,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
           sourceObjectId: 'raw.orders',
         } as const,
         columns: [
-          { name: 'order_id', type: 'integer' },
+          { name: 'order_id', type: 'text' },
           { name: 'customer', type: 'text' },
           { name: 'amount', type: 'numeric' },
         ],
@@ -778,27 +778,29 @@ describe('useCanvasGraphHandlers edge authoring', () => {
       setDraftSession,
     });
     await harness.render();
-    const trim = resolveDvtSubstraitColumnFunctions({
-      dataType: 'text',
+    const concat = resolveDvtSubstraitColumnFunctions({
+      dataTypes: ['text', 'text'],
       provider: 'postgres',
-    }).find((item) => item.name === 'trim');
-    if (trim == null) throw new Error('Expected admitted trim capability.');
+    }).find((item) => item.name === 'concat');
+    if (concat == null) throw new Error('Expected admitted concat capability.');
 
+    let functionResult:
+      | Readonly<{ outcome: 'applied'; createdFieldId: string }>
+      | Readonly<{ outcome: 'rejected' }>
+      | undefined;
     act(() => {
-      harness.latest()?.handleApplyCanvasColumnFunction({
+      functionResult = harness.latest()?.handleApplyCanvasColumnFunction({
         nodeId: transform.id,
         columnId: 'output:order_id',
-        sourceColumnId: 'output:customer',
-        capabilityId: trim.capabilityId,
-        alias: 'order_id_clean',
+        operandFieldIds: ['output:order_id', 'output:customer'],
+        capabilityId: concat.capabilityId,
+        alias: 'order_customer',
       });
     });
 
+    expect(functionResult).toMatchObject({ outcome: 'applied' });
     expect(setDraftSession).toHaveBeenCalledOnce();
-    const updateDraftSession = setDraftSession.mock.calls[0]?.[0] as (
-      current: typeof draftSession
-    ) => typeof draftSession;
-    const nextSession = updateDraftSession(draftSession);
+    const nextSession = setDraftSession.mock.calls[0]?.[0] as typeof draftSession;
     const nextNode = nextSession.localNodeCatalog?.[transform.id];
     if (nextNode == null) throw new Error('Expected updated transform.');
     const authority = readDvtTransformAuthoringAuthority(nextNode)!;
@@ -808,15 +810,22 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     );
 
     expect(inspection.ok).toBe(true);
+    expect(inspection.ok ? inspection.projection.outputs.slice(0, 3) : []).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ fieldId: 'output:order_id', name: 'order_id' }),
+        expect.objectContaining({ fieldId: 'output:customer', name: 'customer' }),
+        expect.objectContaining({ fieldId: 'output:amount', name: 'amount' }),
+      ])
+    );
     expect(
       inspection.ok
-        ? inspection.projection.outputs.find((output) => output.fieldId === 'output:order_id')
-        : []
+        ? inspection.projection.outputs.find((output) => output.name === 'order_customer')
+        : null
     ).toMatchObject({
-      fieldId: 'output:order_id',
-      name: 'order_id_clean',
-      sourceFieldName: 'customer',
-      operations: ['trim'],
+      scalarExpression: {
+        kind: 'scalar-function',
+        functionName: 'concat',
+      },
     });
 
     setDraftSession.mockClear();
