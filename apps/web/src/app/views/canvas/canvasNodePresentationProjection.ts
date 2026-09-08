@@ -56,6 +56,7 @@ type DvtSubstraitPresentedOutput = Readonly<{
   sourceFieldId?: string;
   sourceFieldName?: string;
   operations?: readonly string[];
+  nullable?: boolean;
   description?: string;
   children?: readonly DvtSubstraitPresentedOutput[];
 }>;
@@ -68,6 +69,7 @@ function presentSubstraitOutput(
     (column) =>
       column.sourceNodeId === output.sourceNodeId && column.name === output.sourceFieldName
   );
+  const nullable = output.nullable ?? sourceColumn?.nullable;
   return {
     name: output.name,
     type: output.dataType ?? 'string',
@@ -80,7 +82,7 @@ function presentSubstraitOutput(
     ...(sourceColumn?.sourceNodeName == null
       ? {}
       : { sourceNodeName: sourceColumn.sourceNodeName }),
-    ...(sourceColumn?.nullable == null ? {} : { nullable: sourceColumn.nullable }),
+    ...(nullable == null ? {} : { nullable }),
     ...(output.sourceFieldId == null && sourceColumn?.reference == null
       ? {}
       : { sourceReference: output.sourceFieldId ?? sourceColumn?.reference }),
@@ -191,6 +193,7 @@ function projectCanvasNodePresentationTruthInternal(
                       sourceFieldId: output.sourceFieldId,
                       sourceFieldName,
                     }),
+                ...(calculation?.kind === 'row-number' ? { nullable: false } : {}),
                 ...(calculatedOperations == null
                   ? output.operations == null
                     ? {}

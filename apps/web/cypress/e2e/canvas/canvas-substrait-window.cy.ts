@@ -113,10 +113,20 @@ describe('Canvas Substrait row-number window', () => {
 
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     visitCanvas();
+    cy.get('.react-flow__node[data-id="transform-customers"]').should(
+      'contain.text',
+      'Columns (4)'
+    );
     cy.get('.react-flow__node[data-id="transform-customers"]')
-      .should('contain.text', 'Columns (4)')
-      .find('[data-slot="graph-node-card-title"]')
-      .dblclick();
+      .find('button[aria-expanded]')
+      .contains('Columns')
+      .click();
+    cy.get('.react-flow__node[data-id="transform-customers"]')
+      .contains('[data-slot="graph-node-column-row"]', 'country_row_number')
+      .should('contain.text', 'NN');
+    cy.get(
+      '.react-flow__node[data-id="transform-customers"] [data-slot="graph-node-card-title"]'
+    ).dblclick();
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
     cy.get('[data-slot="dvt-substrait-window-partition-readonly"]').should(
       'contain.text',

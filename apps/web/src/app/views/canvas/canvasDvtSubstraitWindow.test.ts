@@ -77,6 +77,7 @@ describe('VTX2 typed Substrait row-number window', () => {
     const windowed = withRowNumber();
     const projection = requireWindow(windowed);
     expect(projection.result.fieldId).toMatch(DVT_FIELD_ID);
+    expect(projection.result.nullable).toBe(false);
 
     const persisted = encodeDvtSubstraitPilotDocument(windowed);
     const reopened = decodeDvtSubstraitPilotDocument(persisted);
