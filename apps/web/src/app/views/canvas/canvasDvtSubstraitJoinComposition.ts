@@ -2326,7 +2326,7 @@ function inspectValidInnerJoinGroupedWindow(
       name: root.value.names[2]!,
       fieldId: resultField.fieldId,
       capabilityId: DVT_SUBSTRAIT_ROW_NUMBER_CAPABILITY_ID,
-      nullable: false,
+      nullable: false as const,
     },
     outputs: [
       {
@@ -2346,7 +2346,7 @@ function inspectValidInnerJoinGroupedWindow(
         fieldId: resultField.fieldId,
         dataType: 'i64' as const,
         outputOrdinal: 2,
-        nullable: false,
+        nullable: false as const,
       },
     ],
   };
