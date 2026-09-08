@@ -5,6 +5,7 @@ import {
   Database,
   FileJson,
   Globe2,
+  Loader2,
   RadioTower,
   Table2,
   type LucideIcon,
@@ -53,6 +54,8 @@ export const sourceImportCatalogClassNames = {
   objectName: 'block truncate font-mono text-sm',
   objectCanonicalName: 'block truncate font-mono text-xs text-slate-400',
   importability: 'mt-2 text-[11px] leading-4 text-amber-300',
+  loadingState: 'flex items-center gap-2 py-2 text-xs text-slate-400',
+  loadMoreButton: 'rounded border border-slate-700 px-2.5 py-1 text-xs text-slate-300',
 } as const;
 
 const sourceObjectIconByKind: Readonly<
@@ -284,10 +287,36 @@ export function SourceImportSchemaDisclosure({
 
 export function SourceImportSchemaObjects({
   children,
-}: Readonly<{ children: ReactNode }>): JSX.Element {
+  loadingLabel,
+  loadMoreLabel,
+  onLoadMore,
+}: Readonly<{
+  children: ReactNode;
+  loadingLabel: string | null;
+  loadMoreLabel: string | null;
+  onLoadMore?: () => void;
+}>): JSX.Element {
   return (
     <CollapsibleContent>
-      <SourceImportObjectList>{children}</SourceImportObjectList>
+      <SourceImportObjectList>
+        {loadingLabel ? (
+          <div className={sourceImportCatalogClassNames.loadingState} role="status">
+            <Loader2 className="size-3 animate-spin" aria-hidden="true" />
+            {loadingLabel}
+          </div>
+        ) : null}
+        {children}
+        {loadMoreLabel && onLoadMore ? (
+          <button
+            type="button"
+            className={sourceImportCatalogClassNames.loadMoreButton}
+            disabled={loadingLabel !== null}
+            onClick={onLoadMore}
+          >
+            {loadMoreLabel}
+          </button>
+        ) : null}
+      </SourceImportObjectList>
     </CollapsibleContent>
   );
 }

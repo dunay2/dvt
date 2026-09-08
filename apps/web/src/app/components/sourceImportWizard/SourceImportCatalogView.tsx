@@ -1,4 +1,3 @@
-import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
 
 import {
@@ -139,16 +138,15 @@ export function SourceImportCatalogView({
                       objectCountLabel={schemaGroup.objectCountLabel}
                       onToggle={() => onToggleSchema(schemaIdentity)}
                     />
-                    <SourceImportSchemaObjects>
-                      {schemaGroup.loading ? (
-                        <div
-                          className="flex items-center gap-2 py-2 text-xs text-slate-400"
-                          role="status"
-                        >
-                          <Loader2 className="size-3 animate-spin" aria-hidden="true" />
-                          {loadingLabel}
-                        </div>
-                      ) : null}
+                    <SourceImportSchemaObjects
+                      loadingLabel={schemaGroup.loading ? loadingLabel : null}
+                      loadMoreLabel={schemaGroup.nextCursor ? loadMoreLabel : null}
+                      onLoadMore={
+                        schemaGroup.nextCursor
+                          ? () => onLoadMoreSchema?.(schemaIdentity, schemaGroup.nextCursor!)
+                          : undefined
+                      }
+                    >
                       {schemaGroup.sourceObjects.map((sourceObject) => (
                         <SourceImportObjectCard
                           key={sourceObject.identityKey}
@@ -157,18 +155,6 @@ export function SourceImportCatalogView({
                           onToggle={() => onToggleSourceObject(sourceObject.index)}
                         />
                       ))}
-                      {schemaGroup.nextCursor ? (
-                        <button
-                          type="button"
-                          className="rounded border border-slate-700 px-2.5 py-1 text-xs text-slate-300"
-                          disabled={schemaGroup.loading}
-                          onClick={() =>
-                            onLoadMoreSchema?.(schemaIdentity, schemaGroup.nextCursor!)
-                          }
-                        >
-                          {loadMoreLabel}
-                        </button>
-                      ) : null}
                     </SourceImportSchemaObjects>
                   </SourceImportSchemaDisclosure>
                 );
