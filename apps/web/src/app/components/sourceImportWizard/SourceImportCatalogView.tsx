@@ -5,8 +5,6 @@ import {
   SourceImportCatalogFilterList,
   SourceImportCatalogGroup,
   SourceImportCatalogGroups,
-  SourceImportCatalogLoadingState,
-  SourceImportCatalogLoadMoreButton,
   SourceImportDatabaseHeader,
   SourceImportLocatorGroup,
   SourceImportObjectCard,
@@ -140,12 +138,15 @@ export function SourceImportCatalogView({
                       objectCountLabel={schemaGroup.objectCountLabel}
                       onToggle={() => onToggleSchema(schemaIdentity)}
                     />
-                    <SourceImportSchemaObjects>
-                      {schemaGroup.loading ? (
-                        <SourceImportCatalogLoadingState>
-                          {loadingLabel}
-                        </SourceImportCatalogLoadingState>
-                      ) : null}
+                    <SourceImportSchemaObjects
+                      loadingLabel={schemaGroup.loading ? loadingLabel : null}
+                      loadMoreLabel={schemaGroup.nextCursor ? loadMoreLabel : null}
+                      onLoadMore={
+                        schemaGroup.nextCursor
+                          ? () => onLoadMoreSchema?.(schemaIdentity, schemaGroup.nextCursor!)
+                          : undefined
+                      }
+                    >
                       {schemaGroup.sourceObjects.map((sourceObject) => (
                         <SourceImportObjectCard
                           key={sourceObject.identityKey}
@@ -154,16 +155,6 @@ export function SourceImportCatalogView({
                           onToggle={() => onToggleSourceObject(sourceObject.index)}
                         />
                       ))}
-                      {schemaGroup.nextCursor ? (
-                        <SourceImportCatalogLoadMoreButton
-                          disabled={schemaGroup.loading}
-                          onClick={() =>
-                            onLoadMoreSchema?.(schemaIdentity, schemaGroup.nextCursor!)
-                          }
-                        >
-                          {loadMoreLabel}
-                        </SourceImportCatalogLoadMoreButton>
-                      ) : null}
                     </SourceImportSchemaObjects>
                   </SourceImportSchemaDisclosure>
                 );

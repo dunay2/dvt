@@ -287,10 +287,36 @@ export function SourceImportSchemaDisclosure({
 
 export function SourceImportSchemaObjects({
   children,
-}: Readonly<{ children: ReactNode }>): JSX.Element {
+  loadingLabel,
+  loadMoreLabel,
+  onLoadMore,
+}: Readonly<{
+  children: ReactNode;
+  loadingLabel: string | null;
+  loadMoreLabel: string | null;
+  onLoadMore?: () => void;
+}>): JSX.Element {
   return (
     <CollapsibleContent>
-      <SourceImportObjectList>{children}</SourceImportObjectList>
+      <SourceImportObjectList>
+        {loadingLabel ? (
+          <div className={sourceImportCatalogClassNames.loadingState} role="status">
+            <Loader2 className="size-3 animate-spin" aria-hidden="true" />
+            {loadingLabel}
+          </div>
+        ) : null}
+        {children}
+        {loadMoreLabel && onLoadMore ? (
+          <button
+            type="button"
+            className={sourceImportCatalogClassNames.loadMoreButton}
+            disabled={loadingLabel !== null}
+            onClick={onLoadMore}
+          >
+            {loadMoreLabel}
+          </button>
+        ) : null}
+      </SourceImportObjectList>
     </CollapsibleContent>
   );
 }
@@ -299,38 +325,6 @@ export function SourceImportObjectList({
   children,
 }: Readonly<{ children: ReactNode }>): JSX.Element {
   return <div className={sourceImportCatalogClassNames.objectList}>{children}</div>;
-}
-
-export function SourceImportCatalogLoadingState({
-  children,
-}: Readonly<{ children: string }>): JSX.Element {
-  return (
-    <div className={sourceImportCatalogClassNames.loadingState} role="status">
-      <Loader2 className="size-3 animate-spin" aria-hidden="true" />
-      {children}
-    </div>
-  );
-}
-
-export function SourceImportCatalogLoadMoreButton({
-  children,
-  disabled,
-  onClick,
-}: Readonly<{
-  children: string;
-  disabled: boolean;
-  onClick: () => void;
-}>): JSX.Element {
-  return (
-    <button
-      type="button"
-      className={sourceImportCatalogClassNames.loadMoreButton}
-      disabled={disabled}
-      onClick={onClick}
-    >
-      {children}
-    </button>
-  );
 }
 
 export function SourceImportObjectCard({
