@@ -260,6 +260,58 @@ describe('CanvasShell graph base surface', () => {
     });
   });
 
+  it('projects the active run timestamp onto each participating Transform', async () => {
+    await renderShell({
+      runSnapshot: {
+        runId: 'run-1',
+        status: 'completed',
+        startedAt: '2026-08-18T10:00:00.000Z',
+        completedAt: '2026-08-18T10:00:01.500Z',
+        durationMs: 1_500,
+      },
+      graph: {
+        nodesWithImpact: [
+          {
+            id: 'transform-1',
+            type: 'dbtNode',
+            position: { x: 0, y: 0 },
+            data: {
+              name: 'Transform 1',
+              pluginId: 'dvt',
+              pluginKind: 'dvt:transform',
+              status: 'idle',
+              runStatusByNodeId: new Map([['transform-1', 'completed']]),
+            },
+          },
+          {
+            id: 'transform-outside-run',
+            type: 'dbtNode',
+            position: { x: 0, y: 0 },
+            data: {
+              name: 'Transform outside run',
+              pluginId: 'dvt',
+              pluginKind: 'dvt:transform',
+              status: 'idle',
+              runStatusByNodeId: new Map(),
+            },
+          },
+        ],
+      },
+    });
+
+    const forwardedNodes = getCanvasShellState().canvasViewportProps?.nodesWithImpact as Array<{
+      id: string;
+      data: { lastRunAt?: string; durationMs?: number };
+    }>;
+
+    expect(forwardedNodes[0]?.data).toMatchObject({
+      lastRunAt: '2026-08-18T10:00:01.500Z',
+      durationMs: 1_500,
+    });
+    expect(forwardedNodes[1]?.data.lastRunAt).toBeUndefined();
+    expect(forwardedNodes[1]?.data.durationMs).toBeUndefined();
+  });
+
   it('projects a completed run result onto its exact sink and opens the existing data drawer', async () => {
     const getRunMaterializationSample = vi.fn().mockResolvedValue({
       contractVersion: 1,
