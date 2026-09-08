@@ -66,6 +66,38 @@ describe('DbtNodeComponent behavior', () => {
     expect(onRemoveNode).toHaveBeenCalledWith('model.orders');
   });
 
+  it('opens source data on card double-click instead of the node inspector', () => {
+    const onInspectNode = vi.fn();
+    const onOpenSourceDataSample = vi.fn();
+    const nodeProps = {
+      id: 'source.orders',
+      selected: false,
+      data: {
+        name: 'Orders',
+        type: 'SOURCE',
+        status: 'idle',
+        onInspectNode,
+        onOpenSourceDataSample,
+      },
+    } as unknown as ComponentProps<typeof DbtNodeComponent>;
+
+    act(() => {
+      root.render(
+        <ReactFlowProvider>
+          <DbtNodeComponent {...nodeProps} />
+        </ReactFlowProvider>
+      );
+    });
+
+    act(() => {
+      fireEvent.dblClick(container.querySelector('[data-slot="canvas-node-shell"]')!);
+    });
+
+    expect(onOpenSourceDataSample).toHaveBeenCalledOnce();
+    expect(onOpenSourceDataSample).toHaveBeenCalledWith('source.orders');
+    expect(onInspectNode).not.toHaveBeenCalled();
+  });
+
   it('translates a valid schema resource drop into one attachment command', () => {
     const onAttachSchemaToNode = vi.fn();
     const nodeProps = {

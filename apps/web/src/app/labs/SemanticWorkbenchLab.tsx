@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   Background,
   MiniMap,
@@ -9,6 +9,7 @@ import {
 } from '@xyflow/react';
 
 import DbtNodeComponent from '../components/canvas/DbtNodeComponent';
+import { OperationalDrawerDataTable } from '../components/shell/OperationalDrawerDataTable';
 import { CanvasDependencyEdge } from '../views/canvas/CanvasDependencyEdge';
 import { useCanvasViewportGraphModel } from '../views/canvas/useCanvasViewportGraphModel';
 import {
@@ -30,6 +31,54 @@ const accent = '#7dd3fc';
 
 const DVT_NODE_TYPES: NodeTypes = { dbtNode: DbtNodeComponent };
 const DVT_EDGE_TYPES: EdgeTypes = { dependency: CanvasDependencyEdge };
+
+type SemanticWorkbenchSourceSample = Readonly<{
+  nodeId: string;
+  nodeName: string;
+  columns: readonly Readonly<{ name: string }>[];
+  rows: readonly Readonly<{ values: readonly (string | null)[] }>[];
+}>;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value != null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function projectSourceSample(
+  source: (typeof SEMANTIC_WORKBENCH_SOURCE)[number]
+): SemanticWorkbenchSourceSample | null {
+  const rawColumns = source.metadata?.columns;
+  const rawRows = source.metadata?.sampleRows;
+  if (!Array.isArray(rawColumns) || !Array.isArray(rawRows)) return null;
+
+  const columns = rawColumns.flatMap((column) =>
+    isRecord(column) && typeof column.name === 'string' ? [{ name: column.name }] : []
+  );
+  if (columns.length !== rawColumns.length) return null;
+
+  const rows = rawRows.flatMap((row) =>
+    isRecord(row)
+      ? [
+          {
+            values: columns.map(({ name }) => {
+              const value = row[name];
+              return value == null ? null : String(value);
+            }),
+          },
+        ]
+      : []
+  );
+  if (rows.length !== rawRows.length) return null;
+
+  return { nodeId: source.id, nodeName: source.name, columns, rows };
+}
+
+const SEMANTIC_WORKBENCH_SOURCE_SAMPLES = SEMANTIC_WORKBENCH_SOURCE.flatMap((source) => {
+  const sample = projectSourceSample(source);
+  return sample == null ? [] : [sample];
+});
+const SEMANTIC_WORKBENCH_SOURCE_SAMPLE_IDS = new Set(
+  SEMANTIC_WORKBENCH_SOURCE_SAMPLES.map(({ nodeId }) => nodeId)
+);
 
 function buildCanvasProcess() {
   const canonicalNodes = [...SEMANTIC_WORKBENCH_SOURCE, SEMANTIC_WORKBENCH_TRANSFORM] as const;
@@ -64,6 +113,28 @@ function SemanticWorkbenchLab() {
   const [selectedSemantic, setSelectedSemantic] = useState<Node<SemanticWorkbenchNodeData> | null>(
     null
   );
+  const [selectedSourceSampleId, setSelectedSourceSampleId] = useState<string | null>(null);
+  const openSourceDataSample = useCallback((nodeId: string) => {
+    setSelectedSourceSampleId(nodeId);
+  }, []);
+  const canvasNodes = useMemo(
+    () =>
+      canvasProcess.nodes.map((node) =>
+        SEMANTIC_WORKBENCH_SOURCE_SAMPLE_IDS.has(node.id)
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                onOpenSourceDataSample: openSourceDataSample,
+              },
+            }
+          : node
+      ),
+    [canvasProcess.nodes, openSourceDataSample]
+  );
+  const selectedSourceSample =
+    SEMANTIC_WORKBENCH_SOURCE_SAMPLES.find(({ nodeId }) => nodeId === selectedSourceSampleId) ??
+    null;
 
   const selectedCanvasNode =
     [...SEMANTIC_WORKBENCH_SOURCE, SEMANTIC_WORKBENCH_TRANSFORM].find(
@@ -118,7 +189,7 @@ function SemanticWorkbenchLab() {
 
       <section style={{ minHeight: 0, position: 'relative', borderBottom: `1px solid ${border}` }}>
         <ReactFlow
-          nodes={canvasProcess.nodes}
+          nodes={canvasNodes}
           edges={canvasProcess.edges}
           onNodesChange={canvasProcess.onNodesChange}
           nodeTypes={DVT_NODE_TYPES}
@@ -132,7 +203,12 @@ function SemanticWorkbenchLab() {
           elementsSelectable
           selectNodesOnDrag
           multiSelectionKeyCode="Shift"
-          onNodeClick={(_, node) => setSelectedCanvasId(node.id)}
+          onNodeClick={(_, node) => {
+            setSelectedCanvasId(node.id);
+            if (node.id === SEMANTIC_WORKBENCH_TRANSFORM.id) {
+              setSelectedSourceSampleId(null);
+            }
+          }}
           proOptions={{ hideAttribution: true }}
         >
           <Background color="#182844" gap={24} size={1} />
@@ -201,8 +277,45 @@ function SemanticWorkbenchLab() {
           minHeight: 0,
           display: 'grid',
           gridTemplateColumns: 'minmax(0, 1fr) 255px',
+          position: 'relative',
         }}
       >
+        {selectedSourceSample == null ? null : (
+          <div
+            data-slot="semantic-workbench-source-sample"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              zIndex: 6,
+              minWidth: 0,
+              overflow: 'auto',
+              background: '#05090f',
+              padding: 18,
+            }}
+          >
+            <div
+              style={{
+                marginBottom: 14,
+                color: accent,
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: '0.06em',
+              }}
+            >
+              SOURCE DATA - {selectedSourceSample.nodeName}
+              <span style={{ marginLeft: 12, color: muted, fontWeight: 400 }}>
+                {selectedSourceSample.rows.length} JSON rows
+              </span>
+            </div>
+            <OperationalDrawerDataTable
+              key={selectedSourceSample.nodeId}
+              caption={`Data sample from ${selectedSourceSample.nodeName}`}
+              columns={selectedSourceSample.columns}
+              rows={selectedSourceSample.rows}
+              nullValueLabel="NULL"
+            />
+          </div>
+        )}
         <div style={{ minWidth: 0, minHeight: 0, position: 'relative' }}>
           <ReactFlow
             nodes={semanticGraph.nodes}

@@ -24,6 +24,9 @@ describe('semanticWorkbenchFixture', () => {
     expect(SEMANTIC_WORKBENCH_SOURCE.map((source) => source.metadata?.columns)).toEqual(
       datasets.map((dataset) => dataset.columns)
     );
+    expect(SEMANTIC_WORKBENCH_SOURCE.map((source) => source.metadata?.sampleRows)).toEqual(
+      datasets.map((dataset) => dataset.rows)
+    );
     expect(SEMANTIC_WORKBENCH_EDGE.map((edge) => edge.sourceId)).toEqual([
       'lab-source-orders',
       'lab-source-client',

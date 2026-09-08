@@ -10,4 +10,11 @@ describe('Semantic Workbench Canvas movement architecture', () => {
     expect(labSource).not.toContain('useNodesState(');
     expect(labSource).not.toContain('applyNodeChanges(');
   });
+
+  it('reuses the DVT data table and existing source sample callback', () => {
+    expect(labSource).toContain('metadata?.sampleRows');
+    expect(labSource).toContain('OperationalDrawerDataTable');
+    expect(labSource).toContain('onOpenSourceDataSample: openSourceDataSample');
+    expect(labSource).not.toContain('<table');
+  });
 });
