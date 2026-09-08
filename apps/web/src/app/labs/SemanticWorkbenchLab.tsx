@@ -2,10 +2,14 @@ import { useCallback, useMemo, useState } from 'react';
 import { Background, ReactFlow, type EdgeTypes, type NodeTypes } from '@xyflow/react';
 import { Braces, Database, Equal, GitMerge, Hash } from 'lucide-react';
 
-import DbtNodeComponent from '../components/canvas/DbtNodeComponent';
+import DbtNodeComponent, { type DbtNodeData } from '../components/canvas/DbtNodeComponent';
 import { OperationalDrawerDataTable } from '../components/shell/OperationalDrawerDataTable';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../components/ui/tooltip';
+import { dvtCanvasSurfaceStrategy } from '../plugins/dvt/dvtCanvasSurfaceStrategy';
+import { getRegisteredPluginIds } from '../plugins/registry';
 import { CanvasDependencyEdge } from '../views/canvas/CanvasDependencyEdge';
+import { CanvasNodeWorkbenchOverlay } from '../views/canvas/CanvasNodeWorkbenchOverlay';
+import type { CanvasInspectorAuthoringContract } from '../views/canvas/canvasInspectorAuthoring.types';
 import { useCanvasViewportGraphModel } from '../views/canvas/useCanvasViewportGraphModel';
 import {
   SEMANTIC_WORKBENCH_EDGE,
@@ -23,6 +27,18 @@ const accent = '#7dd3fc';
 
 const DVT_NODE_TYPES: NodeTypes = { dbtNode: DbtNodeComponent };
 const DVT_EDGE_TYPES: EdgeTypes = { dependency: CanvasDependencyEdge };
+const SEMANTIC_WORKBENCH_CANONICAL_NODES = [
+  ...SEMANTIC_WORKBENCH_SOURCE,
+  SEMANTIC_WORKBENCH_TRANSFORM,
+] as const;
+const SEMANTIC_WORKBENCH_CANONICAL_EDGES = SEMANTIC_WORKBENCH_EDGE;
+const SEMANTIC_WORKBENCH_REGISTERED_PLUGINS = getRegisteredPluginIds();
+const READ_ONLY_SEMANTIC_WORKBENCH_AUTHORING: CanvasInspectorAuthoringContract = {
+  canEditNode: false,
+  onApplyNodeDraft: () => {
+    throw new Error('Semantic Workbench lab is read-only.');
+  },
+};
 
 type SemanticWorkbenchSourceSample = Readonly<{
   nodeId: string;
@@ -73,26 +89,37 @@ const SEMANTIC_WORKBENCH_SOURCE_SAMPLE_IDS = new Set(
 );
 
 function buildCanvasProcess() {
-  const canonicalNodes = [...SEMANTIC_WORKBENCH_SOURCE, SEMANTIC_WORKBENCH_TRANSFORM] as const;
-  const canonicalEdges = SEMANTIC_WORKBENCH_EDGE;
   return {
-    visibleNodeIds: canonicalNodes.map((node) => node.id),
-    visibleEdges: canonicalEdges.map(({ sourceId, targetId }) => ({ sourceId, targetId })),
-    canonicalNodesById: new Map(canonicalNodes.map((node) => [node.id, node])),
+    visibleNodeIds: SEMANTIC_WORKBENCH_CANONICAL_NODES.map((node) => node.id),
+    visibleEdges: SEMANTIC_WORKBENCH_CANONICAL_EDGES.map(({ sourceId, targetId }) => ({
+      sourceId,
+      targetId,
+    })),
+    canonicalNodesById: new Map(SEMANTIC_WORKBENCH_CANONICAL_NODES.map((node) => [node.id, node])),
     canonicalEdgeIdBySignature: new Map(
-      canonicalEdges.map((edge) => [`${edge.sourceId}::${edge.targetId}`, edge.id])
+      SEMANTIC_WORKBENCH_CANONICAL_EDGES.map((edge) => [
+        `${edge.sourceId}::${edge.targetId}`,
+        edge.id,
+      ])
     ),
     canonicalEdgeBySignature: new Map(
-      canonicalEdges.map((edge) => [`${edge.sourceId}::${edge.targetId}`, edge])
+      SEMANTIC_WORKBENCH_CANONICAL_EDGES.map((edge) => [`${edge.sourceId}::${edge.targetId}`, edge])
     ),
     columnLevelLineageEnabled: true,
     persistedNodePositions: {
-      [canonicalNodes[0].id]: { x: 50, y: 72 },
-      [canonicalNodes[1].id]: { x: 500, y: 72 },
-      [canonicalNodes[2].id]: { x: 950, y: 72 },
+      [SEMANTIC_WORKBENCH_CANONICAL_NODES[0].id]: { x: 50, y: 72 },
+      [SEMANTIC_WORKBENCH_CANONICAL_NODES[1].id]: { x: 500, y: 72 },
+      [SEMANTIC_WORKBENCH_CANONICAL_NODES[2].id]: { x: 950, y: 72 },
     },
   };
 }
+
+type InspectNode = NonNullable<DbtNodeData['onInspectNode']>;
+type WorkbenchRequest = Readonly<{
+  nodeId: string;
+  preferredTabId: 'general' | 'inputs-outputs' | 'tests' | 'code' | null;
+  requestId: number;
+}>;
 
 function SemanticWorkbenchLab() {
   const canvasProjection = useMemo(buildCanvasProcess, []);
@@ -104,23 +131,33 @@ function SemanticWorkbenchLab() {
   const [selectedCanvasId, setSelectedCanvasId] = useState(SEMANTIC_WORKBENCH_TRANSFORM.id);
   const [selectedSemanticId, setSelectedSemanticId] = useState(semanticGraph.relationId);
   const [selectedSourceSampleId, setSelectedSourceSampleId] = useState<string | null>(null);
+  const [workbenchRequest, setWorkbenchRequest] = useState<WorkbenchRequest | null>(null);
+  const handleInspectNode = useCallback<InspectNode>((nodeId, preferredTabId) => {
+    if (!SEMANTIC_WORKBENCH_CANONICAL_NODES.some((node) => node.id === nodeId)) return;
+    setSelectedCanvasId(nodeId);
+    setWorkbenchRequest((current) => ({
+      nodeId,
+      preferredTabId: preferredTabId ?? 'general',
+      requestId: (current?.requestId ?? 0) + 1,
+    }));
+  }, []);
+  const closeWorkbench = useCallback(() => setWorkbenchRequest(null), []);
   const openSourceDataSample = useCallback((nodeId: string) => {
     setSelectedSourceSampleId(nodeId);
   }, []);
   const canvasNodes = useMemo(
     () =>
-      canvasProcess.nodes.map((node) =>
-        SEMANTIC_WORKBENCH_SOURCE_SAMPLE_IDS.has(node.id)
-          ? {
-              ...node,
-              data: {
-                ...node.data,
-                onOpenSourceDataSample: openSourceDataSample,
-              },
-            }
-          : node
-      ),
-    [canvasProcess.nodes, openSourceDataSample]
+      canvasProcess.nodes.map((node) => ({
+        ...node,
+        data: {
+          ...node.data,
+          onInspectNode: handleInspectNode,
+          ...(SEMANTIC_WORKBENCH_SOURCE_SAMPLE_IDS.has(node.id)
+            ? { onOpenSourceDataSample: openSourceDataSample }
+            : {}),
+        },
+      })),
+    [canvasProcess.nodes, handleInspectNode, openSourceDataSample]
   );
   const selectedSourceSample =
     SEMANTIC_WORKBENCH_SOURCE_SAMPLES.find(({ nodeId }) => nodeId === selectedSourceSampleId) ??
@@ -241,12 +278,40 @@ function SemanticWorkbenchLab() {
     [...SEMANTIC_WORKBENCH_SOURCE, SEMANTIC_WORKBENCH_TRANSFORM].find(
       (node) => node.id === selectedCanvasId
     ) ?? SEMANTIC_WORKBENCH_TRANSFORM;
+  const inspectorNode =
+    workbenchRequest == null
+      ? null
+      : (SEMANTIC_WORKBENCH_CANONICAL_NODES.find((node) => node.id === workbenchRequest.nodeId) ??
+        null);
+  const workbenchLayout = useMemo(
+    () => ({
+      focusMode: false,
+      inspectorPanelVisible: inspectorNode != null,
+      surfaceStrategy: dvtCanvasSurfaceStrategy,
+    }),
+    [inspectorNode]
+  );
+  const workbenchPanels = useMemo(
+    () => ({
+      activeRunId: null,
+      inspectorAuthoring: READ_ONLY_SEMANTIC_WORKBENCH_AUTHORING,
+      inspectorGraphEdges: SEMANTIC_WORKBENCH_CANONICAL_EDGES,
+      inspectorGraphNodes: SEMANTIC_WORKBENCH_CANONICAL_NODES,
+      inspectorNode,
+      inspectorPreferredTabId: workbenchRequest?.preferredTabId ?? null,
+      inspectorPreferredTabRequestId: workbenchRequest?.requestId ?? 0,
+      inspectorWorkbenchContributions: [],
+      registeredPlugins: SEMANTIC_WORKBENCH_REGISTERED_PLUGINS,
+    }),
+    [inspectorNode, workbenchRequest]
+  );
 
   return (
     <main
       style={{
         height: '100vh',
         overflow: 'hidden',
+        position: 'relative',
         background: surface,
         color: text,
         fontFamily: 'IBM Plex Sans, sans-serif',
@@ -616,6 +681,12 @@ function SemanticWorkbenchLab() {
           </div>
         </aside>
       </section>
+
+      <CanvasNodeWorkbenchOverlay
+        layout={workbenchLayout}
+        panels={workbenchPanels}
+        onHide={closeWorkbench}
+      />
     </main>
   );
 }
