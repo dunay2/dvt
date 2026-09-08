@@ -1,4 +1,5 @@
 /** Owned concern: expose canonical command/query rail vocabulary findings. */
+/** Diagnostic-only #3071: force Planning DB committed-diff validation; revert before merge. */
 const { appendFilter } = require('../query-filter.cjs');
 const { textValue } = require('../query-format.cjs');
 const { parseLimit } = require('../query-limit.cjs');
