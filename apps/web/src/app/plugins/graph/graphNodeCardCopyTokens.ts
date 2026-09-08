@@ -32,6 +32,8 @@ type GraphNodeCardCopy = Readonly<{
   healthTitleTemplate: string;
   healthAriaLabelTemplate: string;
   remainingColumnsLabelTemplate: string;
+  compactRemainingColumnsLabelTemplate: string;
+  compactCollapseColumnsLabel: string;
   showFirstFiveColumnsLabel: string;
   automapColumnsLabel: string;
   sourceColumnPortLabelTemplate: string;
@@ -132,6 +134,8 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   healthTitleTemplate: '{title} health',
   healthAriaLabelTemplate: 'Open {title} health metrics',
   remainingColumnsLabelTemplate: 'Show remaining columns ({count})',
+  compactRemainingColumnsLabelTemplate: '+{count} more',
+  compactCollapseColumnsLabel: 'Show less',
   showFirstFiveColumnsLabel: 'Show first 5 columns',
   automapColumnsLabel: 'Map compatible columns',
   sourceColumnPortLabelTemplate: 'Connect {column} output',
@@ -241,6 +245,8 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   healthTitleTemplate: 'Estado de {title}',
   healthAriaLabelTemplate: 'Abrir métricas de estado de {title}',
   remainingColumnsLabelTemplate: 'Ver columnas restantes ({count})',
+  compactRemainingColumnsLabelTemplate: '+{count} más',
+  compactCollapseColumnsLabel: 'Ver menos',
   showFirstFiveColumnsLabel: 'Mostrar solo las 5 primeras',
   automapColumnsLabel: 'Asignar columnas compatibles',
   sourceColumnPortLabelTemplate: 'Conectar salida de {column}',
