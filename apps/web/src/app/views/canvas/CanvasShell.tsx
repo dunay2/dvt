@@ -308,6 +308,9 @@ export default function CanvasShell({
         const canOpenSinkDataSample =
           sinkDataSampleTarget != null && runMaterializationSampleQuery != null;
         const canOpenDataSample = canOpenSourceDataSample || canOpenSinkDataSample;
+        const participatesInActiveRun = data.runStatusByNodeId?.has(node.id) === true;
+        const activeRunAt =
+          runSnapshot?.completedAt ?? runSnapshot?.startedAt ?? runSnapshot?.createdAt;
         const runStatusByNodeId =
           sinkDataSampleTarget == null
             ? data.runStatusByNodeId
@@ -315,6 +318,12 @@ export default function CanvasShell({
         const projectedData: DbtNodeData = {
           ...data,
           canOpenNodeCode,
+          ...(participatesInActiveRun
+            ? {
+                ...(activeRunAt == null ? {} : { lastRunAt: activeRunAt }),
+                ...(runSnapshot?.durationMs == null ? {} : { durationMs: runSnapshot.durationMs }),
+              }
+            : {}),
           ...(sinkDataSampleTarget == null
             ? {}
             : {

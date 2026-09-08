@@ -51,17 +51,20 @@ export function GraphNodeMetricRow({
     >
       {metrics.map((metric) => {
         const Icon = metric.icon == null ? null : summaryMetricIconByName[metric.icon];
+        const reservesIconSpace = metric.id === 'materialization';
 
         return (
           <span key={metric.id} className={graphNodeMetricRowClasses.item} data-tone={metric.tone}>
-            {Icon == null ? null : (
+            {Icon == null && !reservesIconSpace ? null : (
               <span
                 data-slot="graph-node-summary-icon"
                 data-icon={metric.icon}
                 className={graphNodeMetricRowClasses.icon}
                 aria-hidden="true"
               >
-                <Icon className={graphNodeMetricRowClasses.iconSvg} aria-hidden="true" />
+                {Icon == null ? null : (
+                  <Icon className={graphNodeMetricRowClasses.iconSvg} aria-hidden="true" />
+                )}
               </span>
             )}
             <span className={graphNodeMetricRowClasses.label}>{metric.label}</span>

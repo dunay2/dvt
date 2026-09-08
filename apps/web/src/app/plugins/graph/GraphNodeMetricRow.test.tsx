@@ -91,6 +91,45 @@ describe('GraphNodeMetricRow', () => {
     expect(container.textContent).toBe(`Mat.${value}`);
   });
 
+  it('keeps the materialization icon slot stable while its configured icon changes', () => {
+    act(() => {
+      root.render(
+        <GraphNodeMetricRow
+          metrics={[
+            {
+              id: 'materialization',
+              label: 'Mat.',
+              value: 'Not configured',
+            },
+          ]}
+        />
+      );
+    });
+
+    const reservedSlot = container.querySelector('[data-slot="graph-node-summary-icon"]');
+    expect(reservedSlot?.className).toContain('size-3.5');
+    expect(reservedSlot?.querySelector('svg')).toBeNull();
+
+    act(() => {
+      root.render(
+        <GraphNodeMetricRow
+          metrics={[
+            {
+              id: 'materialization',
+              label: 'Mat.',
+              value: 'view',
+              icon: 'eye',
+            },
+          ]}
+        />
+      );
+    });
+
+    const configuredSlot = container.querySelector('[data-slot="graph-node-summary-icon"]');
+    expect(configuredSlot).toBe(reservedSlot);
+    expect(configuredSlot?.getAttribute('data-icon')).toBe('eye');
+  });
+
   it('renders a header metric row without the body spacing contract', () => {
     act(() => {
       root.render(

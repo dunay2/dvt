@@ -347,6 +347,7 @@ describe('Canvas ready node authoring', () => {
   });
 
   it('persists native Transform materialization and restores its header icon', () => {
+    let materializationIconOffset = 0;
     stubStatefulCanvasDraftAuthoring();
 
     visitReadyCanvas();
@@ -354,7 +355,14 @@ describe('Canvas ready node authoring', () => {
     cy.get('.react-flow__node[data-id="model_orders"]')
       .as('modelNode')
       .find('[data-slot="graph-node-card-header-rail"]')
-      .should('contain.text', 'Not configured');
+      .should('contain.text', 'Not configured')
+      .find('[data-slot="graph-node-summary-icon"]')
+      .should('be.visible')
+      .then(($icon) => {
+        const icon = $icon[0]!.getBoundingClientRect();
+        const rail = $icon[0]!.closest('[data-slot="graph-node-card-header-rail"]')!;
+        materializationIconOffset = icon.left - rail.getBoundingClientRect().left;
+      });
     cy.get('@modelNode').find('[data-slot="canvas-node-shell"]').dblclick();
     cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
     cy.get('select[name="dvt-transform-materialization"]').select('table');
@@ -369,7 +377,12 @@ describe('Canvas ready node authoring', () => {
       .find('[data-slot="graph-node-card-header-rail"]')
       .should('contain.text', 'table')
       .find('[data-icon="table"]')
-      .should('be.visible');
+      .should('be.visible')
+      .and(($icon) => {
+        const icon = $icon[0]!.getBoundingClientRect();
+        const rail = $icon[0]!.closest('[data-slot="graph-node-card-header-rail"]')!;
+        expect(icon.left - rail.getBoundingClientRect().left).to.equal(materializationIconOffset);
+      });
     cy.wrap(null).should(() => {
       const savedModel = getE2eApiCalls('/workspace/graph/draft', 'PUT')
         .map((call) => call.body as CanvasDraftSaveRequestBody)
