@@ -2,6 +2,7 @@ import dagre from 'dagre';
 import { Position, type Edge, type Node } from '@xyflow/react';
 import type { Expression, Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
+import type { CSSProperties } from 'react';
 
 import type { CanonicalNode } from '../types/canonical';
 import { readDvtSubstraitFieldReferenceOrdinal } from '../views/canvas/canvasDvtSubstraitAggregation';
@@ -14,14 +15,14 @@ export type SemanticWorkbenchNodeData = Readonly<{
 }>;
 
 export type SemanticWorkbenchGraph = Readonly<{
-  nodes: readonly Node<SemanticWorkbenchNodeData>[];
-  edges: readonly Edge[];
+  nodes: Node<SemanticWorkbenchNodeData>[];
+  edges: Edge[];
   relationCount: number;
   expressionCount: number;
   relationId: string;
 }>;
 
-const RELATION_STYLE = {
+const RELATION_STYLE: CSSProperties = {
   width: 184,
   minHeight: 56,
   border: '1px solid #2f4368',
@@ -34,7 +35,7 @@ const RELATION_STYLE = {
   whiteSpace: 'pre-line',
 };
 
-const EXPRESSION_STYLE = {
+const EXPRESSION_STYLE: CSSProperties = {
   width: 138,
   minHeight: 44,
   border: '1px solid #3b5b88',
@@ -46,14 +47,14 @@ const EXPRESSION_STYLE = {
   whiteSpace: 'pre-line',
 };
 
-const FIELD_STYLE = {
+const FIELD_STYLE: CSSProperties = {
   ...EXPRESSION_STYLE,
   border: '1px solid #245f88',
   background: '#0a1829',
   color: '#7dd3fc',
 };
 
-const LITERAL_STYLE = {
+const LITERAL_STYLE: CSSProperties = {
   ...EXPRESSION_STYLE,
   border: '1px solid #67552d',
   background: '#211b0d',
@@ -176,7 +177,7 @@ function literalLabel(expression: Expression): string {
 function layoutGraph(
   nodes: readonly Node<SemanticWorkbenchNodeData>[],
   edges: readonly Edge[]
-): readonly Node<SemanticWorkbenchNodeData>[] {
+): Node<SemanticWorkbenchNodeData>[] {
   const graph = new dagre.graphlib.Graph();
   graph.setDefaultEdgeLabel(() => ({}));
   graph.setGraph({ rankdir: 'LR', ranksep: 92, nodesep: 34, marginx: 24, marginy: 24 });
