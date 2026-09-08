@@ -1,4 +1,3 @@
-import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
 
 import {
@@ -6,6 +5,8 @@ import {
   SourceImportCatalogFilterList,
   SourceImportCatalogGroup,
   SourceImportCatalogGroups,
+  SourceImportCatalogLoadingState,
+  SourceImportCatalogLoadMoreButton,
   SourceImportDatabaseHeader,
   SourceImportLocatorGroup,
   SourceImportObjectCard,
@@ -141,13 +142,9 @@ export function SourceImportCatalogView({
                     />
                     <SourceImportSchemaObjects>
                       {schemaGroup.loading ? (
-                        <div
-                          className="flex items-center gap-2 py-2 text-xs text-slate-400"
-                          role="status"
-                        >
-                          <Loader2 className="size-3 animate-spin" aria-hidden="true" />
+                        <SourceImportCatalogLoadingState>
                           {loadingLabel}
-                        </div>
+                        </SourceImportCatalogLoadingState>
                       ) : null}
                       {schemaGroup.sourceObjects.map((sourceObject) => (
                         <SourceImportObjectCard
@@ -158,16 +155,14 @@ export function SourceImportCatalogView({
                         />
                       ))}
                       {schemaGroup.nextCursor ? (
-                        <button
-                          type="button"
-                          className="rounded border border-slate-700 px-2.5 py-1 text-xs text-slate-300"
+                        <SourceImportCatalogLoadMoreButton
                           disabled={schemaGroup.loading}
                           onClick={() =>
                             onLoadMoreSchema?.(schemaIdentity, schemaGroup.nextCursor!)
                           }
                         >
                           {loadMoreLabel}
-                        </button>
+                        </SourceImportCatalogLoadMoreButton>
                       ) : null}
                     </SourceImportSchemaObjects>
                   </SourceImportSchemaDisclosure>
