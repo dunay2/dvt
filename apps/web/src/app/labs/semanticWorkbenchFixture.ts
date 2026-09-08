@@ -1,50 +1,17 @@
 import type { CanonicalEdge, CanonicalNode } from '../types/canonical';
 import {
-  applyDvtSubstraitFilter,
-  encodeDvtSubstraitFilterDocument,
-  resolveDvtSubstraitFilterCapabilities,
-} from '../views/canvas/canvasDvtSubstraitFilter';
-import {
-  createDvtSubstraitProjectionDraft,
-  resolveDvtSubstraitProjectionSource,
-} from '../views/canvas/canvasDvtSubstraitProjection';
+  createDvtSubstraitStringInnerJoinDraft,
+  encodeDvtSubstraitInnerJoinDocument,
+  type DvtSubstraitJoinSource,
+} from '../views/canvas/canvasDvtSubstraitJoinComposition';
 import { applyDvtSubstraitSemanticDocument } from '../views/canvas/canvasDvtTransformAuthoringAuthority';
-
-export const SEMANTIC_WORKBENCH_SOURCE: CanonicalNode = {
-  id: 'lab-source-orders',
-  name: 'Orders',
-  pluginId: 'dvt',
-  kind: 'dvt:source',
-  role: 'input',
-  status: 'idle',
-  tags: ['semantic-workbench'],
-  metadata: {
-    schema: 'raw',
-    tableName: 'orders',
-    connectedSourceRef: {
-      schemaVersion: 'connected-source-ref.v1',
-      connectionRef: {
-        schemaVersion: 'connection-ref.v1',
-        connectionId: 'semantic-workbench-local',
-        provider: 'postgres',
-      },
-      sourceObjectId: 'raw.orders',
-    },
-    columns: [
-      { name: 'order_id', type: 'integer' },
-      { name: 'customer_id', type: 'integer' },
-      { name: 'amount', type: 'numeric' },
-      { name: 'discount', type: 'numeric' },
-      { name: 'country', type: 'text' },
-      { name: 'vip', type: 'boolean' },
-      { name: 'order_date', type: 'timestamp' },
-    ],
-  },
-};
+import clientFixture from './fixtures/client.json';
+import ordersFixture from './fixtures/orders.json';
+import { loadSemanticWorkbenchDataset } from './semanticWorkbenchDataset';
 
 const BASE_TRANSFORM: CanonicalNode = {
-  id: 'lab-transform-orders',
-  name: 'Orders Transform',
+  id: 'lab-transform-orders-client',
+  name: 'Orders + Client',
   pluginId: 'dvt',
   kind: 'dvt:transform',
   role: 'transform',
@@ -53,48 +20,116 @@ const BASE_TRANSFORM: CanonicalNode = {
   metadata: {},
 };
 
-function buildSemanticWorkbenchTransform(): CanonicalNode {
-  const source = resolveDvtSubstraitProjectionSource(SEMANTIC_WORKBENCH_SOURCE);
-  const equality = resolveDvtSubstraitFilterCapabilities({
-    dataType: 'text',
-    provider: 'postgres',
-  })[0];
-  if (source == null || equality == null) {
-    throw new Error('Semantic Workbench requires the admitted DVT projection and filter capabilities.');
-  }
+export function buildSemanticWorkbenchFixture(
+  input: {
+    orders?: unknown;
+    client?: unknown;
+  } = {}
+) {
+  type Dataset = ReturnType<typeof loadSemanticWorkbenchDataset>;
+  const orders = loadSemanticWorkbenchDataset(input.orders ?? ordersFixture);
+  const clients = loadSemanticWorkbenchDataset(input.client ?? clientFixture);
+  const clientIds = new Set(clients.rows.map((row) => row.client_id));
+  orders.rows.forEach((row) => {
+    if (!clientIds.has(row.client_id)) {
+      throw new Error(
+        `orders.client_id references missing client.client_id value "${String(row.client_id)}".`
+      );
+    }
+  });
 
-  const projection = createDvtSubstraitProjectionDraft({
-    source,
+  const buildSourceNode = (dataset: Dataset): CanonicalNode => {
+    const logicalPayloadBytes = new TextEncoder().encode(JSON.stringify(dataset.rows)).byteLength;
+    return {
+      id: `lab-source-${dataset.tableName}`,
+      name: dataset.displayName,
+      pluginId: 'dvt',
+      kind: 'dvt:source',
+      role: 'input',
+      status: 'idle',
+      tags: ['semantic-workbench', 'json-fixture'],
+      metadata: {
+        schema: dataset.schema,
+        tableName: dataset.tableName,
+        sampleRows: dataset.rows,
+        sourceMetricEvidence: {
+          observedAt: dataset.observedAt,
+          observationScope: { kind: 'snapshot' },
+          rowCount: {
+            value: dataset.rows.length,
+            provenance: 'measured',
+            method: 'data-scan',
+            confidence: 'exact',
+          },
+          byteSize: {
+            value: logicalPayloadBytes,
+            provenance: 'measured',
+            method: 'data-scan',
+            confidence: 'exact',
+            basis: 'logical-payload',
+          },
+        },
+        connectedSourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'semantic-workbench-local-json',
+            provider: 'postgres',
+          },
+          sourceObjectId: `${dataset.schema}.${dataset.tableName}`,
+        },
+        columns: dataset.columns,
+      },
+    };
+  };
+  const buildJoinSource = (node: CanonicalNode, dataset: Dataset): DvtSubstraitJoinSource => ({
+    nodeId: node.id,
+    schema: dataset.schema,
+    table: dataset.tableName,
+    sourceRef: {
+      schemaVersion: 'connected-source-ref.v1',
+      connectionRef: {
+        schemaVersion: 'connection-ref.v1',
+        connectionId: 'semantic-workbench-local-json',
+        provider: 'postgres',
+      },
+      sourceObjectId: `${dataset.schema}.${dataset.tableName}`,
+    },
+  });
+
+  const sources = [buildSourceNode(orders), buildSourceNode(clients)] as const;
+  const join = createDvtSubstraitStringInnerJoinDraft({
+    left: {
+      source: buildJoinSource(sources[0], orders),
+      fields: orders.columns.map((column) => column.name),
+    },
+    right: {
+      source: buildJoinSource(sources[1], clients),
+      fields: clients.columns.map((column) => column.name),
+    },
+    leftFieldName: 'client_id',
+    rightFieldName: 'client_id',
     targetNodeId: BASE_TRANSFORM.id,
-    outputs: source.fields.map((field) => ({
-      fieldId: `lab-output:${field.name}`,
-      name: field.name,
-      sourceFieldName: field.name,
-    })),
   });
-  const countryField = projection.sidecar.fields.find(
-    (field) => field.displayName === 'country' && field.fieldId === 'lab-output:country'
-  );
-  if (countryField == null) throw new Error('Semantic Workbench country output is missing.');
-
-  const filtered = applyDvtSubstraitFilter(projection, {
-    fieldId: countryField.fieldId,
-    dataType: 'text',
-    capabilityId: equality.capabilityId,
-    value: 'ES',
-  });
-
-  return applyDvtSubstraitSemanticDocument(
+  const transform = applyDvtSubstraitSemanticDocument(
     BASE_TRANSFORM,
-    encodeDvtSubstraitFilterDocument(filtered)
+    encodeDvtSubstraitInnerJoinDocument(join)
   );
+  const edges: readonly CanonicalEdge[] = sources.map((source) => ({
+    id: `${source.id}-${transform.id}`,
+    sourceId: source.id,
+    targetId: transform.id,
+    relation: 'lineage',
+  }));
+  return Object.freeze({
+    sources: Object.freeze(sources),
+    transform,
+    edges: Object.freeze(edges),
+  });
 }
 
-export const SEMANTIC_WORKBENCH_TRANSFORM = buildSemanticWorkbenchTransform();
-
-export const SEMANTIC_WORKBENCH_EDGE: CanonicalEdge = {
-  id: 'lab-source-transform',
-  sourceId: SEMANTIC_WORKBENCH_SOURCE.id,
-  targetId: SEMANTIC_WORKBENCH_TRANSFORM.id,
-  relation: 'lineage',
-};
+export const {
+  sources: SEMANTIC_WORKBENCH_SOURCE,
+  transform: SEMANTIC_WORKBENCH_TRANSFORM,
+  edges: SEMANTIC_WORKBENCH_EDGE,
+} = buildSemanticWorkbenchFixture();

@@ -36,11 +36,12 @@ const DVT_NODE_TYPES: NodeTypes = { dbtNode: DbtNodeComponent };
 const DVT_EDGE_TYPES: EdgeTypes = { dependency: CanvasDependencyEdge };
 
 function buildCanvasProcess() {
-  const canonicalNodes = [SEMANTIC_WORKBENCH_SOURCE, SEMANTIC_WORKBENCH_TRANSFORM] as const;
-  const canonicalEdges = [SEMANTIC_WORKBENCH_EDGE] as const;
+  const canonicalNodes = [...SEMANTIC_WORKBENCH_SOURCE, SEMANTIC_WORKBENCH_TRANSFORM] as const;
+  const canonicalEdges = SEMANTIC_WORKBENCH_EDGE;
   const positions = [
-    { x: 90, y: 72 },
-    { x: 680, y: 72 },
+    { x: 50, y: 72 },
+    { x: 500, y: 72 },
+    { x: 950, y: 72 },
   ] as const;
 
   const nodes = canonicalNodes.map((canonicalNode, index) => {
@@ -72,13 +73,14 @@ function SemanticWorkbenchLab() {
     []
   );
   const [selectedCanvasId, setSelectedCanvasId] = useState(SEMANTIC_WORKBENCH_TRANSFORM.id);
-  const [selectedSemantic, setSelectedSemantic] =
-    useState<Node<SemanticWorkbenchNodeData> | null>(null);
+  const [selectedSemantic, setSelectedSemantic] = useState<Node<SemanticWorkbenchNodeData> | null>(
+    null
+  );
 
   const selectedCanvasNode =
-    selectedCanvasId === SEMANTIC_WORKBENCH_SOURCE.id
-      ? SEMANTIC_WORKBENCH_SOURCE
-      : SEMANTIC_WORKBENCH_TRANSFORM;
+    [...SEMANTIC_WORKBENCH_SOURCE, SEMANTIC_WORKBENCH_TRANSFORM].find(
+      (node) => node.id === selectedCanvasId
+    ) ?? SEMANTIC_WORKBENCH_TRANSFORM;
 
   return (
     <main
@@ -122,7 +124,7 @@ function SemanticWorkbenchLab() {
         >
           127.0.0.1:5174/lab/semantic-workbench
           <br />
-          real DVT objects · local only · no backend · no CI
+          real DVT objects · synthetic JSON · local only · no backend
         </div>
       </header>
 
@@ -161,7 +163,7 @@ function SemanticWorkbenchLab() {
             pointerEvents: 'none',
           }}
         >
-          DVT CANVAS · real Source + Transform cards · real dependency edge
+          DVT CANVAS · 2 JSON-backed Sources + real Join Transform
         </div>
 
         <div
@@ -256,7 +258,8 @@ function SemanticWorkbenchLab() {
               pointerEvents: 'none',
             }}
           >
-            {semanticGraph.relationCount} semantic relations · {semanticGraph.expressionCount} expression nodes
+            {semanticGraph.relationCount} semantic relations · {semanticGraph.expressionCount}{' '}
+            expression nodes
           </div>
         </div>
 
@@ -312,7 +315,8 @@ function SemanticWorkbenchLab() {
               lineHeight: 1.55,
             }}
           >
-            Top level is the DVT Canvas. This lower graph is only the internal semantic focus of the selected Transform; it is not another set of DVT cards.
+            Top level is the DVT Canvas. This lower graph is only the internal semantic focus of the
+            selected Transform; it is not another set of DVT cards.
           </div>
         </aside>
       </section>
