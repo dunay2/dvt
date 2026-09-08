@@ -57,7 +57,7 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
     return (
       <div
         {...elementProps}
-        {...canvasColumnContextMenuOwnerProps}
+        data-canvas-context-menu-owner="column"
         ref={ref}
         data-slot="graph-node-column-piece"
         data-column-name={column.name}

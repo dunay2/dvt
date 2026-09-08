@@ -62,7 +62,11 @@ export function CanvasNodeShell({
   };
 
   const handleContextMenu = (event: ReactMouseEvent<HTMLDivElement>): void => {
-    if (!isCanvasColumnContextMenuTarget(event.target)) return;
+    if (
+      !(event.target instanceof Element) ||
+      event.target.closest('[data-canvas-context-menu-owner="column"]') == null
+    )
+      return;
     event.preventDefault();
     event.stopPropagation();
   };
