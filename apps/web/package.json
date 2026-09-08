@@ -9,7 +9,7 @@
     "build": "vite build",
     "build:e2e": "vite build --mode e2e",
     "dev": "vite",
-    "dev:semantic-lab": "vite --host 0.0.0.0 --port 5174 --strictPort",
+    "dev:semantic-lab": "vite --host 127.0.0.1 --port 5174 --strictPort",
     "preview:e2e": "vite preview --host 0.0.0.0 --port 4173 --strictPort",
     "test:e2e": "pnpm build:e2e && start-server-and-test preview:e2e http://127.0.0.1:4173 \"node ./scripts/run-cypress-docker.mjs\"",
     "test:e2e:first-authoring:live": "node ../../scripts/run-canvas-first-authoring-live-proof.cjs",
