@@ -2,6 +2,7 @@ import {
   Fragment,
   Suspense,
   createElement,
+  lazy,
   useEffect,
   type ComponentType,
   type ReactNode,
@@ -20,7 +21,6 @@ import {
 } from './bootstrap/routeBootstrapContract';
 import { getRouteBootstrapRegistration } from './bootstrap/routeBootstrapRegistration';
 import { usePublishedRouteBootstrap } from './bootstrap/usePublishedRouteBootstrap';
-import SemanticWorkbenchLab from './labs/SemanticWorkbenchLab';
 import type { ViewContribution } from './plugins/contracts/PluginManifest';
 import { getRouteViews } from './plugins/registry';
 import Root from './Root';
@@ -28,6 +28,8 @@ import { useShellRuntime } from './shell/useShellRuntime';
 import AdminView from './views/AdminView';
 import LoginView from './views/LoginView';
 import PluginsView from './views/PluginsView';
+
+const SemanticWorkbenchLab = lazy(() => import('./labs/SemanticWorkbenchLab'));
 
 function normalizeChildPath(path: string): string {
   return path.startsWith('/') ? path.slice(1) : path;
@@ -220,7 +222,11 @@ export function createAppRoutes(): RouteObject[] {
       path: '/lab/semantic-workbench',
       errorElement: createElement(AppRouteErrorBoundary),
       element: createElement(PublicRouteBootstrapBoundary, {
-        children: createElement(SemanticWorkbenchLab),
+        children: createElement(
+          Suspense,
+          { fallback: createElement(PluginRouteFallback) },
+          createElement(SemanticWorkbenchLab)
+        ),
       }),
     },
   ];
