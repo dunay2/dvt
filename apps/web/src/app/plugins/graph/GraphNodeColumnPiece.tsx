@@ -7,10 +7,7 @@ import {
   type ReactElement,
 } from 'react';
 
-import {
-  canvasColumnContextMenuOwnerProps,
-  canvasNodeEmbeddedControlProps,
-} from '../../components/canvas/canvasNodeInteractionBoundary';
+import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
 import { TooltipContent } from '../../components/ui/tooltip';
 import type { GraphNodeColumn } from './graphNodeColumnContracts';
 import type { GraphNodeColumnReorderIdentity } from './graphNodeColumnContracts';

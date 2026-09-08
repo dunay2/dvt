@@ -14,10 +14,7 @@ import type {
   CanvasNodeContextMenuActionId,
   CanvasNodeContextMenuModel,
 } from './canvasNodeContextMenuModel';
-import {
-  isCanvasColumnContextMenuTarget,
-  isCanvasNodeEmbeddedControlTarget,
-} from './canvasNodeInteractionBoundary';
+import { isCanvasNodeEmbeddedControlTarget } from './canvasNodeInteractionBoundary';
 import styles from './CanvasNodeShell.module.css';
 
 type CanvasNodeShellProps = Readonly<{
