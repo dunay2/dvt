@@ -72,11 +72,14 @@ sidecar FieldId. It does not persist a redundant expression, mutate the input ou
 another algebra model. The card form projects this candidate alongside the other admitted output
 builders. Unknown FieldIds and duplicate aliases write nothing.
 
-## Command rail
+## Command rail reuse
 
-| Rail                     | Type    | Bounded context           | DDD object                       | Application port              | Adapter              | Scope and authorization                                                |
-| ------------------------ | ------- | ------------------------- | -------------------------------- | ----------------------------- | -------------------- | ---------------------------------------------------------------------- |
-| `ConfigureCanvasDvtNode` | command | Canvas semantic authoring | `DvtSubstraitAuthoringSidecarV1` | `applyCanvasCalculatedColumn` | Web Canvas authoring | Active writable workspace draft through the existing save/CAS boundary |
+This feature reuses the canonical `ConfigureCanvasDvtNode` command declared in
+`docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`.
+The feature-mechanization manifest below records feature-to-rail usage only; it is not a second
+command/query rail declaration. For this slice, `applyCanvasCalculatedColumn` is the application
+seam, Web Canvas authoring is the adapter surface, and authorization remains the active writable
+workspace draft through the existing save/CAS boundary.
 
 Negative behavior is fail closed: blank or duplicate alias, unknown FieldId, unsupported
 capability, invalid literal, malformed projection, and Source authoring write nothing.
