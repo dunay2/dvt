@@ -61,33 +61,22 @@ function visitCanvas(): void {
   waitForE2eApiCall('/workspace/graph/draft', 'GET');
 }
 
-function transformCard(): Cypress.Chainable<JQuery<HTMLElement>> {
-  return cy.get('.react-flow__node[data-id="model-orders"]');
-}
-
-function toggleTransformColumns(): void {
-  transformCard().find('button[aria-expanded]').contains('Columns').click();
-}
-
-function showAllTransformColumns(): void {
-  transformCard()
-    .contains('button', /Show remaining columns/)
-    .then(($button) => {
-      if ($button.length > 0) cy.wrap($button).click();
-    });
-}
-
 describe('Canvas calculated-column authoring', () => {
   beforeEach(() => stubCanvas());
 
   it('creates, persists, and restores a direct alias on the Transform', () => {
     cy.viewport(1920, 1080);
     visitCanvas();
-    toggleTransformColumns();
-    transformCard().contains('button', 'Map compatible columns').click();
+    cy.get('.react-flow__node[data-id="model-orders"]')
+      .find('button[aria-expanded]')
+      .contains('Columns')
+      .click();
+    cy.get('.react-flow__node[data-id="model-orders"]')
+      .contains('button', 'Map compatible columns')
+      .click();
     waitForE2eApiCall('/workspace/graph/draft', 'PUT');
 
-    transformCard()
+    cy.get('.react-flow__node[data-id="model-orders"]')
       .find('[data-slot="graph-node-calculated-column-trigger"]')
       .focus()
       .should('have.focus')
@@ -121,12 +110,19 @@ describe('Canvas calculated-column authoring', () => {
       expect(alias).not.to.have.property('operations');
     });
 
-    showAllTransformColumns();
-    transformCard().should('contain.text', 'customer_alias');
+    cy.get('.react-flow__node[data-id="model-orders"]')
+      .contains('button', /Show remaining columns/)
+      .click();
+    cy.get('.react-flow__node[data-id="model-orders"]').should('contain.text', 'customer_alias');
 
     visitCanvas();
-    toggleTransformColumns();
-    showAllTransformColumns();
-    transformCard().should('contain.text', 'customer_alias');
+    cy.get('.react-flow__node[data-id="model-orders"]')
+      .find('button[aria-expanded]')
+      .contains('Columns')
+      .click();
+    cy.get('.react-flow__node[data-id="model-orders"]')
+      .contains('button', /Show remaining columns/)
+      .click();
+    cy.get('.react-flow__node[data-id="model-orders"]').should('contain.text', 'customer_alias');
   });
 });
