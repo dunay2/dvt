@@ -372,6 +372,8 @@ describe('DVT Substrait INNER JOIN identity', () => {
     const window = inspectDvtSubstraitInnerJoinGroupedWindowDraft(ranked);
     if (!window.ok) throw new Error('Expected JOIN grouped window.');
     const rankId = window.projection.result.fieldId;
+    expect(window.projection.result.nullable).toBe(false);
+    expect(window.projection.outputs.at(-1)?.nullable).toBe(false);
     expect(rankId).toMatch(OPAQUE_FIELD_ID);
     expect(rankId).not.toBe(countId);
 

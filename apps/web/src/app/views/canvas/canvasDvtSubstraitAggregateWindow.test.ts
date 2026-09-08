@@ -90,6 +90,7 @@ describe('VTX2 typed Substrait aggregate and window composition', () => {
     const projection = requireAggregateWindow(ranked);
     expect(relationIdAtRootProject(ranked)).toMatch(DVT_RELATION_ID);
     expect(projection.result.fieldId).toMatch(DVT_FIELD_ID);
+    expect(projection.result.nullable).toBe(false);
     expect(projection.measure.fieldId).toBe(groupedInspection.projection.measure.fieldId);
 
     const reopened = decodeDvtSubstraitPilotDocument(encodeDvtSubstraitPilotDocument(ranked));
@@ -177,6 +178,7 @@ describe('VTX2 typed Substrait aggregate and window composition', () => {
     const projection = requireAggregateWindow(ranked);
     expect(projection.measure.fieldId).toBe(legacyCountId);
     expect(projection.result.fieldId).toMatch(DVT_FIELD_ID);
+    expect(projection.result.nullable).toBe(false);
     expect(relationIdAtRootProject(ranked)).toMatch(DVT_RELATION_ID);
     expect(aggregateRelationId(ranked)).toBe(legacyAggregateId);
   });

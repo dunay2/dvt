@@ -52,11 +52,13 @@ export type DvtSubstraitPilotAggregateWindowProjection = Readonly<{
     name: string;
     fieldId: string;
     capabilityId: string;
+    nullable: false;
   }>;
   outputs: readonly Readonly<{
     name: string;
     fieldId: string;
     outputOrdinal: number;
+    nullable?: boolean;
   }>[];
 }>;
 
@@ -246,7 +248,7 @@ function inspectValidAggregateWindow(draft: DvtSubstraitPilotDraft): ValidAggreg
       fieldId: baseInspection.projection.measure.fieldId,
       outputOrdinal: 1,
     },
-    { name: root.names[2]!, fieldId: resultFieldId, outputOrdinal: 2 },
+    { name: root.names[2]!, fieldId: resultFieldId, outputOrdinal: 2, nullable: false },
   ];
   if (
     outerFields.some(
@@ -279,6 +281,7 @@ function inspectValidAggregateWindow(draft: DvtSubstraitPilotDraft): ValidAggreg
         name: expectedOutputs[2]!.name,
         fieldId: resultFieldId,
         capabilityId: DVT_SUBSTRAIT_ROW_NUMBER_CAPABILITY_ID,
+        nullable: false,
       },
       outputs: expectedOutputs,
     },

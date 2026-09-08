@@ -153,11 +153,13 @@ export type DvtSubstraitUnionAllGroupedWindowProjection = Readonly<{
     name: string;
     fieldId: string;
     capabilityId: string;
+    nullable: false;
   }>;
   outputs: readonly Readonly<{
     name: string;
     fieldId: string;
     outputOrdinal: number;
+    nullable?: boolean;
   }>[];
 }>;
 
@@ -1291,6 +1293,7 @@ function inspectValidUnionAllGroupedWindow(
         name: root.value.names[2]!,
         fieldId: resultField.fieldId,
         capabilityId: DVT_SUBSTRAIT_ROW_NUMBER_CAPABILITY_ID,
+        nullable: false,
       },
       outputs: [
         {
@@ -1303,7 +1306,12 @@ function inspectValidUnionAllGroupedWindow(
           fieldId: outerFields[1]!.fieldId,
           outputOrdinal: 1,
         },
-        { name: root.value.names[2]!, fieldId: resultField.fieldId, outputOrdinal: 2 },
+        {
+          name: root.value.names[2]!,
+          fieldId: resultField.fieldId,
+          outputOrdinal: 2,
+          nullable: false,
+        },
       ],
     },
   };

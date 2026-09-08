@@ -63,11 +63,13 @@ export type DvtSubstraitPilotWindowProjection = Readonly<{
     name: string;
     fieldId: string;
     capabilityId: string;
+    nullable: false;
   }>;
   outputs: readonly Readonly<{
     name: string;
     fieldId: string;
     outputOrdinal: number;
+    nullable?: boolean;
   }>[];
 }>;
 
@@ -348,7 +350,7 @@ function inspectValidWindow(draft: DvtSubstraitPilotDraft): ValidWindow | null {
   if (partitionField == null || orderField == null) return null;
   const outputs = [
     ...baseInspection.projection.outputs,
-    { name: root.names[3]!, fieldId: resultFieldId, outputOrdinal: 3 },
+    { name: root.names[3]!, fieldId: resultFieldId, outputOrdinal: 3, nullable: false },
   ];
   if (
     projectFields.some(
@@ -377,6 +379,7 @@ function inspectValidWindow(draft: DvtSubstraitPilotDraft): ValidWindow | null {
         name: root.names[3]!,
         fieldId: resultFieldId,
         capabilityId: DVT_SUBSTRAIT_ROW_NUMBER_CAPABILITY_ID,
+        nullable: false,
       },
       outputs,
     },

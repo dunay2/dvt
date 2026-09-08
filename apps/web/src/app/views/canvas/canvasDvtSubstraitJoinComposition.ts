@@ -240,12 +240,18 @@ export type DvtSubstraitInnerJoinGroupingInspection =
 
 type DvtSubstraitInnerJoinGroupedWindowCommon = Readonly<{
   measure: Readonly<{ name: string; fieldId: string }>;
-  result: Readonly<{ name: string; fieldId: string; capabilityId: string }>;
+  result: Readonly<{
+    name: string;
+    fieldId: string;
+    capabilityId: string;
+    nullable: false;
+  }>;
   outputs: readonly Readonly<{
     name: string;
     fieldId: string;
     dataType: 'string' | 'i64';
     outputOrdinal: number;
+    nullable?: boolean;
   }>[];
 }>;
 
@@ -2320,6 +2326,7 @@ function inspectValidInnerJoinGroupedWindow(
       name: root.value.names[2]!,
       fieldId: resultField.fieldId,
       capabilityId: DVT_SUBSTRAIT_ROW_NUMBER_CAPABILITY_ID,
+      nullable: false as const,
     },
     outputs: [
       {
@@ -2339,6 +2346,7 @@ function inspectValidInnerJoinGroupedWindow(
         fieldId: resultField.fieldId,
         dataType: 'i64' as const,
         outputOrdinal: 2,
+        nullable: false as const,
       },
     ],
   };

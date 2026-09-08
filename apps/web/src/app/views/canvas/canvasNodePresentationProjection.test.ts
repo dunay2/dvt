@@ -9,6 +9,7 @@ import {
   resolveDvtSubstraitColumnFunctions,
   resolveDvtSubstraitProjectionSource,
 } from './canvasDvtSubstraitProjection';
+import { createDvtSubstraitProjectionOutput } from './canvasDvtSubstraitCalculatedColumn';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import {
   applyDvtSubstraitFilter,
@@ -156,6 +157,63 @@ describe('projectCanvasNodePresentationTruth', () => {
     ]);
   });
 
+  it('keeps row-number non-null when its ordering column is nullable', () => {
+    const nullableSource: CanonicalNode = {
+      ...SOURCE,
+      metadata: {
+        ...SOURCE.metadata,
+        columns: [
+          { name: 'order_id', type: 'integer' },
+          { name: 'customer', type: 'text', nullable: false },
+          { name: 'amount', type: 'numeric', nullable: true },
+        ],
+      },
+    };
+    const draft = createDvtSubstraitProjectionDraft({
+      source: {
+        nodeId: nullableSource.id,
+        schema: 'raw',
+        table: 'orders',
+        sourceRef: SOURCE_REF,
+        fields: [
+          { name: 'order_id', dataType: 'integer' },
+          { name: 'customer', dataType: 'text' },
+          { name: 'amount', dataType: 'numeric' },
+        ],
+      },
+      targetNodeId: 'transform-row-number',
+      outputs: [{ fieldId: 'output:amount', name: 'amount', sourceFieldName: 'amount' }],
+    });
+    const created = createDvtSubstraitProjectionOutput(draft, {
+      alias: 'row_id',
+      expression: { kind: 'row-number', orderFieldId: 'output:amount' },
+    });
+    if (created.outcome !== 'applied') throw new Error('Expected row-number output.');
+    const transform = applyDvtSubstraitSemanticDocument(
+      {
+        id: 'transform-row-number',
+        name: 'Transform row number',
+        pluginId: 'dvt',
+        kind: 'dvt:transform',
+        role: 'transform',
+        status: 'idle',
+        tags: [],
+        metadata: {},
+      },
+      encodeDvtSubstraitProjectionDocument(created.draft)
+    );
+
+    const truth = projectCanvasNodePresentationTruth({
+      node: transform,
+      nodes: [nullableSource, transform],
+      edges: [{ sourceId: nullableSource.id, targetId: transform.id }],
+    });
+
+    expect(truth.columns.declared.find((column) => column.name === 'row_id')).toMatchObject({
+      operations: ['ROW_NUMBER'],
+      nullable: false,
+    });
+  });
   it('preserves mapped outputs when an unrelated second Source is connected', () => {
     const transform = buildCanonicalTransform();
     const secondSource: CanonicalNode = {
