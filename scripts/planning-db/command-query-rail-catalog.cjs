@@ -191,12 +191,18 @@ function createCommandQueryRailCatalogComponent(deps = {}) {
     };
   }
 
+  function railSourceIdentity(rail) {
+    return `${rail.sourcePath}#${rail.railType}#${rail.normalizedRailName}`;
+  }
+
   function buildCommandQueryRailSnapshot(options = {}) {
     const { documents, referenceDocuments, sourceFiles } = resolveSnapshotInputs(options);
-    const rails = [
-      ...buildManifestRailRows(documents),
-      ...extractDocumentedRailRows(referenceDocuments),
-    ];
+    const manifestRails = buildManifestRailRows(documents);
+    const manifestRailSourceIdentities = new Set(manifestRails.map(railSourceIdentity));
+    const documentedRails = extractDocumentedRailRows(referenceDocuments).filter(
+      (rail) => !manifestRailSourceIdentities.has(railSourceIdentity(rail))
+    );
+    const rails = [...manifestRails, ...documentedRails];
     const sourceImplementationRefIndex = buildSourceImplementationRefIndex(sourceFiles, rails);
     const documentationRefIndex = buildDocumentationRefIndex(referenceDocuments, rails);
     const governanceImplementationRefIndex = buildGovernanceImplementationRefIndex(
