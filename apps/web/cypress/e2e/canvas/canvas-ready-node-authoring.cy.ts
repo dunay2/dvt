@@ -21,6 +21,7 @@ type CanvasDraftSaveRequestBody = {
   draft: {
     nodeIds: string[];
     nodePositions: Record<string, { x: number; y: number }>;
+    edges: Array<{ sourceId: string; targetId: string }>;
     nodes: Array<{
       id: string;
       name: string;
@@ -238,6 +239,67 @@ describe('Canvas ready node authoring', () => {
     ).click();
     cy.get('[data-slot="canvas-graph-filter-control"]').should('contain.text', 'Etiqueta: finance');
     assertNoSeriousAccessibilityViolations('[data-slot="canvas-graph-filter-control"]');
+  });
+
+  it('connects, saves, and reloads a native Model chain with inherited columns', () => {
+    const modelChainEdge =
+      '.react-flow__edge[data-id="draft_edge_dvt-transform-1_orphan-transform-1"]';
+    stubStatefulCanvasDraftAuthoring({ authoringGenerated: true, includeLooseNode: true });
+
+    visitReadyCanvas();
+
+    cy.get(modelChainEdge).should('not.exist');
+    const sourceHandle =
+      '.react-flow__node[data-id="dvt-transform-1"] [data-slot="canvas-node-port-handle"][data-port="source"]';
+    const targetHandle =
+      '.react-flow__node[data-id="orphan-transform-1"] [data-slot="canvas-node-port-handle"][data-port="target"]';
+    cy.get(sourceHandle).then(($sourceHandle) => {
+      const sourceRect = $sourceHandle[0]!.getBoundingClientRect();
+      cy.get(targetHandle).then(($targetHandle) => {
+        const targetRect = $targetHandle[0]!.getBoundingClientRect();
+        cy.wrap($sourceHandle).trigger('mousedown', {
+          button: 0,
+          buttons: 1,
+          clientX: sourceRect.left + sourceRect.width / 2,
+          clientY: sourceRect.top + sourceRect.height / 2,
+          force: true,
+        });
+        cy.get('body')
+          .trigger('mousemove', {
+            buttons: 1,
+            clientX: targetRect.left + targetRect.width / 2,
+            clientY: targetRect.top + targetRect.height / 2,
+            force: true,
+          })
+          .trigger('mouseup', {
+            button: 0,
+            buttons: 0,
+            clientX: targetRect.left + targetRect.width / 2,
+            clientY: targetRect.top + targetRect.height / 2,
+            force: true,
+          });
+      });
+    });
+    cy.wrap(null).should(() => {
+      const savedEdge = getE2eApiCalls('/workspace/graph/draft', 'PUT')
+        .map((call) => call.body as CanvasDraftSaveRequestBody)
+        .flatMap((body) => body.draft.edges)
+        .find(
+          (edge) => edge.sourceId === 'dvt-transform-1' && edge.targetId === 'orphan-transform-1'
+        );
+      expect(savedEdge, 'persisted Model dependency').to.not.be.undefined;
+    });
+
+    visitReadyCanvas();
+
+    cy.get(modelChainEdge).should('be.visible');
+    cy.get('.react-flow__node[data-id="orphan-transform-1"]')
+      .should('be.visible')
+      .within(() => {
+        cy.contains('button', 'Columns (2)').click();
+        cy.contains('order_id').should('be.visible');
+        cy.contains('total').should('be.visible');
+      });
   });
 
   it('adds a governed authoring node from the canvas context menu on an existing canvas', () => {

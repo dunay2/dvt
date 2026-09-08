@@ -753,6 +753,21 @@ export function buildCanvasAuthoringDraft({
           tags: ['authoring'],
           metadata: {
             typeLabel: 'Source',
+            schema: 'raw',
+            tableName: 'orders',
+            connectedSourceRef: {
+              schemaVersion: 'connected-source-ref.v1',
+              connectionRef: {
+                schemaVersion: 'connection-ref.v1',
+                provider: 'postgres',
+                connectionId: 'warehouse-a',
+              },
+              sourceObjectId: 'raw.orders',
+            },
+            columns: [
+              { name: 'order_id', type: 'integer' },
+              { name: 'total', type: 'decimal' },
+            ],
             config: {
               database: 'legacy_warehouse',
               schema: 'raw',

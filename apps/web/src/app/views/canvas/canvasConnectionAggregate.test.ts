@@ -115,6 +115,23 @@ describe('canvasConnectionAggregate', () => {
     ).toMatchObject({ outcome: 'allowed', edgeType: 'exposure' });
   });
 
+  it('allows native Model chains through the shared DVT policy', () => {
+    const firstModel = node('first-model', 'transform');
+    const secondModel = node('second-model', 'transform');
+
+    expect(
+      createConnection({
+        connection: link(firstModel.id, secondModel.id),
+        canonicalNodesById: byId([firstModel, secondModel]),
+        edges: [],
+        pluginPortMap: getPluginPortMap(),
+      })
+    ).toMatchObject({
+      outcome: 'added',
+      nextEdges: [{ source: firstModel.id, target: secondModel.id, type: 'dependency' }],
+    });
+  });
+
   it('allows dbt input resources to connect to dbt tests through plugin rules', () => {
     const source = dbtNode('source-node', 'input', 'dvt:source');
     const seed = dbtNode('seed-node', 'input', 'dbt:seed');

@@ -81,6 +81,7 @@ export const dvtContributions: PluginContributions = {
   nodeRenderers,
   connectionRules: [
     { sourceKind: 'dvt:source', targetKind: 'dvt:transform', allowed: true },
+    { sourceKind: 'dvt:transform', targetKind: 'dvt:transform', allowed: true },
     { sourceKind: 'dvt:transform', targetKind: 'dvt:sink', allowed: true },
     {
       sourceKind: 'dvt:sink',
