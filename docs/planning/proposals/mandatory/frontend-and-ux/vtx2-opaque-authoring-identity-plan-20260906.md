@@ -2,21 +2,21 @@
 title: Opaque DVT authoring identity integration plan
 status: Accepted
 owner: Web / Contracts
-last_reviewed: 2026-09-06
+last_reviewed: 2026-09-08
 planning_type: implementation-plan
 task_id: 2936
 ---
 
 # Opaque DVT authoring identity
 
-GitHub issue #2936 owns delivery state and acceptance. Planning DB owns the
+GitHub issues #2936 and #2904 own delivery state and acceptance. Planning DB owns the
 existing ConfigureCanvasDvtNode rail and its feature mechanization. The canonical
 identity rule and design rationale live in the semantic-transformation component.
 
 ## Contract and integration
 
 Assign new RelationId and FieldId values through the shared contracts allocator.
-Reuse surviving identities on rename, reorder, expression edit and reload. Read a
+Reuse surviving identities on rename, reorder, expression edit and reload. Resolve an immediate upstream Transform by its exact RelationId and FieldIds. Read a
 clean physical Source without manufacturing a semantic projection. Resolve JOIN
 and SET operands through graph context and explicit provenance, never ID text.
 Return the actual createdFieldId from the existing output creation command.
@@ -42,7 +42,7 @@ identity after Source replacement. Source Inspector tests cover repeated clean
 reads; lineage tests preserve identity across a real edit of one persisted draft.
 Duplication allocates disjoint identities and remaps structured references. UNION
 ALL lineage covers every input, including grouping and grouped windows, and
-rejects disconnected or ambiguous graph provenance.
+rejects disconnected or ambiguous graph provenance. Model chains preserve output selection, order, nullability and function semantics across reload.
 
 The manifest below is an evidence snapshot exported from Planning DB revision
 2; it is not an alternative authoring authority or a task board.
@@ -1242,16 +1242,26 @@ can otherwise perform an implicit import when a Markdown snapshot changes.
       ],
       "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-substrait-inner-join-field-selection.cy.ts",
       "architectureGuard": "pnpm --filter @dvt/web test:architecture:run"
-    }
+    },
+    { "name": "visitReadyCanvas", "path": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts", "cqRails": ["ConfigureCanvasDvtNode"], "dddOwner": "DvtSubstraitAuthoringSidecarV1", "unitTests": ["apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"], "fowlerSignals": ["Hidden authority in identifier text", "Replace derived identity with assigned identity"], "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts", "architectureGuard": "pnpm --filter @dvt/web test:architecture:run" },
+    { "name": "sourceNodeIsTransform", "path": "apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.ts", "cqRails": ["ConfigureCanvasDvtNode"], "dddOwner": "DvtSubstraitAuthoringSidecarV1", "unitTests": ["apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts"], "fowlerSignals": ["Hidden authority in identifier text", "Replace derived identity with assigned identity"], "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts", "architectureGuard": "pnpm --filter @dvt/web test:architecture:run" },
+    { "name": "CanvasColumnMappingInputField", "path": "apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts", "cqRails": ["ConfigureCanvasDvtNode"], "dddOwner": "DvtSubstraitAuthoringSidecarV1", "unitTests": ["apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts"], "fowlerSignals": ["Hidden authority in identifier text", "Replace derived identity with assigned identity"], "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts", "architectureGuard": "pnpm --filter @dvt/web test:architecture:run" },
+    { "name": "readCanvasColumnMappingInputFields", "path": "apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts", "cqRails": ["ConfigureCanvasDvtNode"], "dddOwner": "DvtSubstraitAuthoringSidecarV1", "unitTests": ["apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts"], "fowlerSignals": ["Hidden authority in identifier text", "Replace derived identity with assigned identity"], "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts", "architectureGuard": "pnpm --filter @dvt/web test:architecture:run" },
+    { "name": "ResolveDvtSubstraitProjectionEntryArgs", "path": "apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.ts", "cqRails": ["ConfigureCanvasDvtNode"], "dddOwner": "DvtSubstraitAuthoringSidecarV1", "unitTests": ["apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.identity.test.ts"], "fowlerSignals": ["Hidden authority in identifier text", "Replace derived identity with assigned identity"], "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts", "architectureGuard": "pnpm --filter @dvt/web test:architecture:run" },
+    { "name": "createDvtSubstraitProjectionDraftFromTransform", "path": "apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.ts", "cqRails": ["ConfigureCanvasDvtNode"], "dddOwner": "DvtSubstraitAuthoringSidecarV1", "unitTests": ["apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.identity.test.ts"], "fowlerSignals": ["Hidden authority in identifier text", "Replace derived identity with assigned identity"], "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts", "architectureGuard": "pnpm --filter @dvt/web test:architecture:run" },
+    { "name": "inspectChainedDvtSubstraitProjectionDraft", "path": "apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.ts", "cqRails": ["ConfigureCanvasDvtNode"], "dddOwner": "DvtSubstraitAuthoringSidecarV1", "unitTests": ["apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.identity.test.ts"], "fowlerSignals": ["Hidden authority in identifier text", "Replace derived identity with assigned identity"], "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts", "architectureGuard": "pnpm --filter @dvt/web test:architecture:run" },
+    { "name": "resolveDvtSubstraitProjectionEntryInternal", "path": "apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.ts", "cqRails": ["ConfigureCanvasDvtNode"], "dddOwner": "DvtSubstraitAuthoringSidecarV1", "unitTests": ["apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.identity.test.ts"], "fowlerSignals": ["Hidden authority in identifier text", "Replace derived identity with assigned identity"], "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts", "architectureGuard": "pnpm --filter @dvt/web test:architecture:run" }
   ],
   "version": 1,
   "featureId": "VTX2-OPAQUE-AUTHORING-IDENTITY-2936",
   "userStories": [
-    "https://github.com/dunay2/dvt/issues/2936"
+    "https://github.com/dunay2/dvt/issues/2936",
+    "https://github.com/dunay2/dvt/issues/2904"
   ],
   "cypressFlows": [
     "apps/web/cypress/e2e/canvas/canvas-substrait-inner-join-field-selection.cy.ts",
-    "apps/web/cypress/e2e/canvas/canvas-substrait-union-all.cy.ts"
+    "apps/web/cypress/e2e/canvas/canvas-substrait-union-all.cy.ts",
+    "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
   ],
   "domainObjects": [
     "DvtSubstraitAuthoringSidecarV1",
