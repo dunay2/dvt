@@ -78,16 +78,32 @@ describe('Transform output-selection presentation', () => {
       semanticDocument
     );
 
+    const secondSource: CanonicalNode = {
+      ...source,
+      id: 'source-health-check',
+      name: 'health_check',
+      metadata: {
+        ...source.metadata,
+        schema: 'core',
+        tableName: 'health_check',
+        connectedSourceRef: { ...connectedSourceRef, sourceObjectId: 'core.health_check' },
+        columns: [{ name: 'id', type: 'integer', nullable: false }],
+      },
+    };
     const truth = projectCanvasNodePresentationTruth({
       node: transform,
-      nodes: [source, transform],
-      edges: [{ sourceId: source.id, targetId: transform.id }],
+      nodes: [source, secondSource, transform],
+      edges: [
+        { sourceId: source.id, targetId: transform.id },
+        { sourceId: secondSource.id, targetId: transform.id },
+      ],
     });
 
     expect(truth.columns.visible.map(({ name, provenance }) => ({ name, provenance }))).toEqual([
       { name: 'order_id', provenance: 'declared' },
       { name: 'customer', provenance: 'inherited' },
       { name: 'amount', provenance: 'declared' },
+      { name: 'id', provenance: 'inherited' },
     ]);
     expect(truth.columns.visible.find((column) => column.name === 'customer')?.nullable).toBe(
       false

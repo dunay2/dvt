@@ -139,6 +139,24 @@ flowchart LR
 | Derived struct has no inverse          | Incomplete lifecycle   | Add inverse aggregate operation       | Semantic document   | removal/reload test       |
 | Inactive inputs disappear with structs | Divergent change       | Reuse stable-order projection         | Canvas presentation | mixed projection test     |
 
+## Second Source Mapping Preservation
+
+A simple projection remains owned by its persisted Source identity when another
+Source edge is attached. Resolution selects the single incoming Source whose
+connection identity and field shape match the projection. Zero or multiple
+matches fail closed; unrelated inputs remain available for later composition.
+
+```mermaid
+flowchart LR
+  S1["Mapped Source"] --> T["Transform projection"]
+  S2["Additional Source"] --> T
+  T --> M["Existing mapped outputs preserved"]
+```
+
+Fowler signal: the previous edge-count conditional confused graph topology with
+projection identity. Replace it with a unique matching-source query in the
+`DvtSubstraitProjectionDraft` aggregate.
+
 ## Delivery Boundaries
 
 - Mode: Full vertical slice.
@@ -163,6 +181,7 @@ userStories:
   - https://github.com/dunay2/dvt/issues/2771
   - https://github.com/dunay2/dvt/issues/3046
   - https://github.com/dunay2/dvt/issues/3054
+  - https://github.com/dunay2/dvt/issues/3057
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -181,6 +200,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/components/SourceImportWizard.test.tsx
   - apps/web/src/app/views/canvas/**
   - apps/web/cypress/e2e/canvas/**
+  - apps/web/cypress/support/canvasDraftAuthoring.ts
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-structured-transform-fields-plan-20260903.md
   - docs/evidence/**
@@ -217,6 +237,7 @@ architectureGuards:
   - pnpm docs:feature-mechanization:implementation -- --feature CANVAS-STRUCTURED-TRANSFORM-FIELDS-2771
 cypressFlows:
   - apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts
+  - apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts
 completionGate:
   - pnpm docs:feature-mechanization -- --feature CANVAS-STRUCTURED-TRANSFORM-FIELDS-2771
   - pnpm docs:feature-mechanization:implementation -- --feature CANVAS-STRUCTURED-TRANSFORM-FIELDS-2771
@@ -226,8 +247,22 @@ completionGate:
   - pnpm --filter @dvt/web test:presentation:run
   - pnpm --filter @dvt/web test:architecture:run
   - pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts
+  - pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts
   - pnpm verify:prepush
 redGreenCycles:
+  - id: preserve-simple-projection-with-additional-source
+    redTest: pnpm --filter @dvt/web test:canvas:run -- canvasNodePresentationProjection.test.ts canvasNodePresentationProjection.outputSelection.test.ts canvasColumnLineageProjection.test.ts useCanvasControllerReadModel.test.tsx
+    expectedFailure: Adding an unrelated second Source hides the existing mapped projection even though exactly one incoming Source still matches its persisted identity.
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.ts
+      - apps/web/src/app/views/canvas/canvasNodePresentationProjection.ts
+      - apps/web/src/app/views/canvas/canvasNodePresentationProjection.test.ts
+      - apps/web/src/app/views/canvas/canvasNodePresentationProjection.outputSelection.test.ts
+      - apps/web/src/app/views/canvas/canvasColumnLineageProjection.test.ts
+      - apps/web/src/app/views/canvas/useCanvasControllerReadModel.test.tsx
+      - apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts
+      - apps/web/cypress/support/canvasDraftAuthoring.ts
+    greenTest: pnpm --filter @dvt/web test:canvas:run -- canvasNodePresentationProjection.test.ts canvasNodePresentationProjection.outputSelection.test.ts canvasColumnLineageProjection.test.ts useCanvasControllerReadModel.test.tsx
   - id: complete-structured-column-lifecycle-regression
     redTest: pnpm --filter @dvt/web test:canvas:run -- useCanvasControllerReadModel.test.tsx canvasNodePresentationProjection.test.ts
     expectedFailure: A structured Model disables root output selection and reorder or hides inactive inherited fields.
@@ -279,7 +314,8 @@ redGreenCycles:
       - apps/web/src/app/plugins/graph/GraphNodeColumnChildren.tsx
       - apps/web/src/app/views/canvas/canvasDraftLifecycleSnapshot.ts
       - apps/web/src/app/views/canvas/canvasDvtSubstraitStructuredFieldReorder.ts
-      - apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts
+      - apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts
+      - apps/web/cypress/support/canvasDraftAuthoring.ts
     greenTest: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts
 symbols:
   - { name: appendDvtSubstraitSourceFieldRoot, path: apps/web/src/app/views/canvas/canvasDvtSubstraitStructuredFieldAppend.ts, dddOwner: DvtSubstraitProjectionDraft, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:canvas:run] }
@@ -303,6 +339,7 @@ symbols:
   - { name: latestStructuredFields, path: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, dddOwner: StructuredFieldBrowserProof, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:e2e:native] }
   - { name: modelCard, path: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, dddOwner: StructuredFieldBrowserProof, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:e2e:native] }
   - { name: stubCanvas, path: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, dddOwner: StructuredFieldBrowserProof, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:e2e:native] }
+  - { name: stubColumnMappingCanvas, path: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, dddOwner: StructuredFieldBrowserProof, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [pnpm --filter @dvt/web test:e2e:native] }
   - { name: visitCanvas, path: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, dddOwner: StructuredFieldBrowserProof, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:e2e:native] }
   - { name: InspectorPresentedColumn, path: apps/web/src/app/components/inspector/structuredColumnPresentation.ts, dddOwner: StructuredFieldInspectorPresentation, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Introduce Value Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:canvas:run] }
   - { name: flattenStructuredColumns, path: apps/web/src/app/components/inspector/structuredColumnPresentation.ts, dddOwner: StructuredFieldInspectorPresentation, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:canvas:run] }

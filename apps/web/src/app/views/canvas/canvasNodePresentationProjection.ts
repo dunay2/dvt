@@ -80,6 +80,7 @@ function presentSubstraitOutput(
     ...(sourceColumn?.sourceNodeName == null
       ? {}
       : { sourceNodeName: sourceColumn.sourceNodeName }),
+    ...(sourceColumn?.nullable == null ? {} : { nullable: sourceColumn.nullable }),
     ...(output.sourceFieldId == null && sourceColumn?.reference == null
       ? {}
       : { sourceReference: output.sourceFieldId ?? sourceColumn?.reference }),

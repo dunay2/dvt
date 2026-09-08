@@ -46,6 +46,7 @@ export type StubCanvasDraftReadOptions = {
   authoringGenerated?: boolean;
   columnMapping?: boolean;
   columnMappingDisconnected?: boolean;
+  columnMappingSecondSource?: boolean;
   substraitInnerJoin?: boolean;
   substraitNInputJoin?: boolean;
   substraitUnionAll?: boolean;
@@ -74,6 +75,7 @@ export function buildCanvasAuthoringDraft({
   authoringGenerated = false,
   columnMapping = false,
   columnMappingDisconnected = false,
+  columnMappingSecondSource = false,
   substraitInnerJoin = false,
   substraitNInputJoin = false,
   substraitUnionAll = false,
@@ -574,7 +576,11 @@ export function buildCanvasAuthoringDraft({
   if (columnMapping) {
     const columns = [
       { name: 'order_id', type: 'integer' },
-      { name: 'customer', type: 'text' },
+      {
+        name: 'customer',
+        type: 'text',
+        ...(columnMappingSecondSource ? { nullable: false } : {}),
+      },
       { name: 'amount', type: 'numeric' },
       { name: 'status', type: 'text' },
       { name: 'created_at', type: 'timestamp' },
@@ -582,9 +588,15 @@ export function buildCanvasAuthoringDraft({
     ];
     return buildWorkspaceGraphAuthoringDraft({
       canvas,
-      nodeIds: ['source-orders', 'model-orders', 'sink-orders'],
+      nodeIds: [
+        'source-orders',
+        ...(columnMappingSecondSource ? ['source-health-check'] : []),
+        'model-orders',
+        'sink-orders',
+      ],
       nodePositions: {
-        'source-orders': { x: 40, y: 140 },
+        'source-orders': { x: 40, y: columnMappingSecondSource ? 80 : 140 },
+        ...(columnMappingSecondSource ? { 'source-health-check': { x: 40, y: 440 } } : {}),
         'model-orders': { x: 620, y: 140 },
         'sink-orders': { x: 1200, y: 140 },
       },
@@ -612,6 +624,36 @@ export function buildCanvasAuthoringDraft({
             columns,
           },
         },
+        ...(columnMappingSecondSource
+          ? [
+              {
+                id: 'source-health-check',
+                name: 'Health check',
+                pluginId: 'dvt.warehouse-source',
+                kind: 'dvt:source',
+                role: 'input',
+                status: 'idle',
+                tags: ['source'],
+                metadata: {
+                  schema: 'core',
+                  tableName: 'health_check',
+                  connectedSourceRef: {
+                    schemaVersion: 'connected-source-ref.v1',
+                    connectionRef: {
+                      schemaVersion: 'connection-ref.v1',
+                      connectionId: 'canvas-e2e-postgres',
+                      provider: 'postgres',
+                    },
+                    sourceObjectId: 'core.health_check',
+                  },
+                  columns: [
+                    { name: 'id', type: 'integer', nullable: false },
+                    { name: 'created_at', type: 'timestamp without time zone' },
+                  ],
+                },
+              },
+            ]
+          : []),
         {
           id: 'model-orders',
           name: 'Orders model',

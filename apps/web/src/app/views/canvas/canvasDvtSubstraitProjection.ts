@@ -895,21 +895,25 @@ export function resolveDvtSubstraitProjectionEntry(args: {
       args.edges.filter((edge) => edge.targetId === args.targetNode.id).map((edge) => edge.sourceId)
     ),
   ];
-  if (incomingSourceIds.length > 1) return null;
-  const sourceNode =
+  const candidateNodes =
     incomingSourceIds.length === 0
-      ? args.targetNode
-      : args.nodes.find((node) => node.id === incomingSourceIds[0]);
-  const source = sourceNode == null ? null : resolveDvtSubstraitProjectionSource(sourceNode);
-  if (
-    source == null ||
-    source.table !== inspection.projection.source.table ||
-    !sameConnectedSourceRef(source.sourceRef, inspection.projection.source.sourceRef) ||
-    source.fields.map((field) => field.name).join('\u0000') !==
-      inspection.projection.source.fields.map((field) => field.name).join('\u0000')
-  ) {
-    return null;
-  }
+      ? [args.targetNode]
+      : incomingSourceIds.flatMap((sourceId) => {
+          const sourceNode = args.nodes.find((node) => node.id === sourceId);
+          return sourceNode == null ? [] : [sourceNode];
+        });
+  const matchingSources = candidateNodes.flatMap((sourceNode) => {
+    const source = resolveDvtSubstraitProjectionSource(sourceNode);
+    return source != null &&
+      source.table === inspection.projection.source.table &&
+      sameConnectedSourceRef(source.sourceRef, inspection.projection.source.sourceRef) &&
+      source.fields.map((field) => field.name).join('\u0000') ===
+        inspection.projection.source.fields.map((field) => field.name).join('\u0000')
+      ? [source]
+      : [];
+  });
+  if (matchingSources.length !== 1) return null;
+  const source = matchingSources[0]!;
   return {
     targetNodeId: args.targetNode.id,
     source,

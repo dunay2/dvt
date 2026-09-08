@@ -125,6 +125,47 @@ describe('Canvas column lineage projection', () => {
     expect(project(new Set([source.id, model.id]), false)).toEqual([]);
   });
 
+  it('preserves mapped lineage when an unrelated second Source is connected', () => {
+    const [source, model, sourceFieldId] = buildProjectionGraph();
+    const secondSource: CanonicalNode = {
+      ...buildNode('source-health-check', 'dvt:source', 'input', [{ name: 'id', type: 'integer' }]),
+      metadata: {
+        schema: 'core',
+        tableName: 'health_check',
+        connectedSourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'warehouse-main',
+            provider: 'postgres',
+          },
+          sourceObjectId: 'core.health_check',
+        },
+        columns: [{ name: 'id', type: 'integer' }],
+      },
+    };
+
+    const lineage = projectCanvasColumnLineage({
+      nodes: [source, secondSource, model],
+      edges: [
+        { sourceId: source.id, targetId: model.id },
+        { sourceId: secondSource.id, targetId: model.id },
+      ],
+      expandedNodeIds: new Set([source.id, secondSource.id, model.id]),
+    });
+
+    expect(lineage).toEqual([
+      expect.objectContaining({
+        source: source.id,
+        target: model.id,
+        data: expect.objectContaining({
+          sourceFieldId,
+          outputId: 'output:order_id',
+          removable: true,
+        }),
+      }),
+    ]);
+  });
   it('keeps lineage identity stable when only the target display name changes', () => {
     const [source, original] = buildProjectionGraph();
     const expanded = new Set([source.id, original.id]);
