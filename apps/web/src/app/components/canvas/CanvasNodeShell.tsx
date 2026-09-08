@@ -14,7 +14,10 @@ import type {
   CanvasNodeContextMenuActionId,
   CanvasNodeContextMenuModel,
 } from './canvasNodeContextMenuModel';
-import { isCanvasNodeEmbeddedControlTarget } from './canvasNodeInteractionBoundary';
+import {
+  isCanvasColumnContextMenuTarget,
+  isCanvasNodeEmbeddedControlTarget,
+} from './canvasNodeInteractionBoundary';
 import styles from './CanvasNodeShell.module.css';
 
 type CanvasNodeShellProps = Readonly<{
@@ -58,6 +61,12 @@ export function CanvasNodeShell({
     onOpenNode?.();
   };
 
+  const handleContextMenu = (event: ReactMouseEvent<HTMLDivElement>): void => {
+    if (!isCanvasColumnContextMenuTarget(event.target)) return;
+    event.preventDefault();
+    event.stopPropagation();
+  };
+
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
@@ -65,6 +74,7 @@ export function CanvasNodeShell({
           data-slot="canvas-node-shell"
           className={cn(styles.root, 'relative')}
           onDoubleClick={handleDoubleClick}
+          onContextMenu={handleContextMenu}
           onDragOver={onDragOver}
           onDrop={onDrop}
         >

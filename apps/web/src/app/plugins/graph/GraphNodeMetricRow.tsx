@@ -1,6 +1,6 @@
 /** Owned concern: render graph-node summary metrics from an already-projected card model. */
 import type { ReactElement } from 'react';
-import { Database, Eye, RefreshCw, Table2, Workflow, type LucideIcon } from 'lucide-react';
+import { Clock, Database, Eye, RefreshCw, Table2, Workflow, type LucideIcon } from 'lucide-react';
 
 import type {
   GraphNodeCardMetric,
@@ -14,6 +14,7 @@ import {
 import { graphNodeMetricRowClasses } from './graphVisualTokens';
 
 const summaryMetricIconByName: Partial<Record<GraphNodeCardMetricIcon, LucideIcon>> = {
+  clock: Clock,
   database: Database,
   eye: Eye,
   refresh: RefreshCw,

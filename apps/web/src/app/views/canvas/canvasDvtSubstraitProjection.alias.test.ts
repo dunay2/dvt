@@ -121,6 +121,7 @@ describe('Substrait projection function aliases', () => {
     const documented = setDvtSubstraitFieldDescription({
       metadata: {
         kind: 'transform',
+        materialized: 'view',
         mode: 'substrait',
         shape: 'projection',
         plan: draft.plan,

@@ -59,7 +59,7 @@ export function CanvasInspectorAuthoringSection({
   const showDvtAuthoring =
     draft.dvt != null &&
     (section === 'all' ||
-      (section === 'general' && draft.dvt.kind === 'source') ||
+      (section === 'general' && (draft.dvt.kind === 'source' || draft.dvt.kind === 'transform')) ||
       (section === 'code' && draft.dvt.kind === 'transform') ||
       (section === 'columns' && (draft.dvt.kind === 'transform' || draft.dvt.kind === 'source')) ||
       (section === 'sink' && draft.dvt.kind === 'sink'));

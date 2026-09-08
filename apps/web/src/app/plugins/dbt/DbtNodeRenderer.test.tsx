@@ -297,7 +297,10 @@ describe('DBT runtime contributions', () => {
     expect(
       document.querySelector('[data-slot="graph-node-metric-row"][data-placement="header"]')
         ?.textContent
-    ).toBe('Mat.incremental');
+    ).toBe('Mat.incrementalLast runNot calculated');
+    expect(
+      document.querySelector('[data-slot="graph-node-summary-icon"][data-icon="clock"]')
+    ).not.toBeNull();
     expect(
       document.querySelector('[data-slot="graph-node-metric-row"][data-placement="body"]')
         ?.textContent

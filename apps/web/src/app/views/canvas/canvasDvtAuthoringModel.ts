@@ -15,6 +15,7 @@ import {
 import {
   applyDvtTransformAuthoringMetadata,
   createDvtTransformAuthoringMetadata,
+  validateDvtTransformAuthoringMetadata,
 } from './canvasDvtTransformAuthoring';
 import type {
   DvtNodeAuthoringMetadata,
@@ -63,7 +64,7 @@ export function validateDvtNodeAuthoringMetadata(
     ? validateDvtSourceAuthoringMetadata(metadata)
     : metadata.kind === 'sink'
       ? validateDvtSinkAuthoringMetadata(metadata)
-      : {};
+      : validateDvtTransformAuthoringMetadata(metadata);
 }
 
 export function applyDvtNodeAuthoringMetadata(

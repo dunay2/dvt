@@ -66,6 +66,8 @@ export function DvtSubstraitTransformStart({
           ...currentDraft,
           dvt: {
             kind: 'transform',
+            materialized:
+              currentDraft.dvt?.kind === 'transform' ? currentDraft.dvt.materialized : 'view',
             mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
             shape: 'pilot',
             plan: pilot.plan,

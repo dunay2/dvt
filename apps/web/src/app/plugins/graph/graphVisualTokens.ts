@@ -20,7 +20,7 @@ export const graphNodeCardLayoutClasses = {
   title: 'truncate text-sm font-semibold leading-tight text-slate-50',
   sourceIdentityTrigger:
     'min-w-0 cursor-help rounded-sm text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300',
-  headerActions: 'flex shrink-0 items-center gap-2',
+  headerActions: 'flex min-w-36 shrink-0 items-center justify-end gap-2',
   kind: 'mt-2 text-xs font-medium text-blue-200',
   path: 'mt-1 truncate text-xs text-slate-400',
   actionsButton:

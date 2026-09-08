@@ -205,7 +205,10 @@ export function GraphNodeCardView({
             <GraphNodeCardTitle cardModel={cardModel} />
           </div>
           {headerMetrics.length === 0 ? null : (
-            <div className={graphNodeCardLayoutClasses.headerActions}>
+            <div
+              data-slot="graph-node-card-header-rail"
+              className={graphNodeCardLayoutClasses.headerActions}
+            >
               <GraphNodeMetricRow metrics={headerMetrics} placement="header" />
             </div>
           )}

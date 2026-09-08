@@ -346,6 +346,49 @@ describe('Canvas ready node authoring', () => {
     cy.get('[data-slot="canvas-node-workbench-panel"]').should('contain.text', 'model_orders');
   });
 
+  it('persists native Transform materialization and restores its header icon', () => {
+    stubStatefulCanvasDraftAuthoring();
+
+    visitReadyCanvas();
+
+    cy.get('.react-flow__node[data-id="model_orders"]')
+      .as('modelNode')
+      .find('[data-slot="graph-node-card-header-rail"]')
+      .should('contain.text', 'Not configured');
+    cy.get('@modelNode').find('[data-slot="canvas-node-shell"]').dblclick();
+    cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
+    cy.get('select[name="dvt-transform-materialization"]').select('table');
+    cy.get('[data-slot="canvas-node-workbench-panel"] button')
+      .filter(':visible')
+      .contains(/^Apply$/)
+      .click();
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+
+    cy.get('@modelNode')
+      .find('[data-slot="graph-node-card-header-rail"]')
+      .should('contain.text', 'table')
+      .find('[data-icon="table"]')
+      .should('be.visible');
+    cy.wrap(null).should(() => {
+      const savedModel = getE2eApiCalls('/workspace/graph/draft', 'PUT')
+        .map((call) => call.body as CanvasDraftSaveRequestBody)
+        .map((body) => body.draft.nodes.find((candidate) => candidate.id === 'model_orders'))
+        .find(
+          (candidate) =>
+            (candidate?.metadata?.config as { materialized?: string } | undefined)?.materialized ===
+            'table'
+        );
+      expect(savedModel, 'saved native Transform materialization').to.not.be.undefined;
+    });
+
+    visitReadyCanvas();
+    cy.get('.react-flow__node[data-id="model_orders"]')
+      .find('[data-slot="graph-node-card-header-rail"]')
+      .should('contain.text', 'table')
+      .find('[data-icon="table"]')
+      .should('be.visible');
+  });
   it('persists add and remove authoring changes across route reloads', () => {
     stubStatefulCanvasDraftAuthoring();
 

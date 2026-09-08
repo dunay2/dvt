@@ -122,19 +122,27 @@ describe('GraphNodeCardView', () => {
     ).not.toBe('model_1');
   });
 
-  it('places the complete materialization block at the top right without repeating it below', () => {
+  it('reserves the materialization and last-run rail beside a long title with their icons', () => {
     act(() => {
       root.render(
         <GraphNodeCardView
           {...BASE_PROPS}
           cardModel={{
             ...BASE_PROPS.cardModel,
+            title: 'A transform name long enough to yield space to the governed header rail',
             metrics: [
               {
                 id: 'materialization',
                 label: 'Mat.',
                 value: 'incremental',
                 icon: 'refresh',
+                placement: 'header',
+              },
+              {
+                id: 'last-run',
+                label: 'Last run',
+                value: '12 min',
+                icon: 'clock',
                 placement: 'header',
               },
               { id: 'dependencies', label: 'Deps', value: '2' },
@@ -145,11 +153,17 @@ describe('GraphNodeCardView', () => {
     });
 
     const header = container.querySelector('[data-slot="graph-node-card-header"]');
-    expect(header?.querySelector('[data-placement="header"]')?.textContent).toBe('Mat.incremental');
+    const rail = header?.querySelector('[data-slot="graph-node-card-header-rail"]');
+    expect(rail?.className).toContain('min-w-36');
+    expect(rail?.textContent).toBe('Mat.incrementalLast run12 min');
+    expect(rail?.querySelector('[data-icon="refresh"]')).not.toBeNull();
+    expect(rail?.querySelector('[data-icon="clock"]')).not.toBeNull();
+    expect(header?.querySelector('[data-slot="graph-node-card-title"]')?.className).toContain(
+      'truncate'
+    );
     expect(container.querySelector('[data-placement="body"]')?.textContent).toBe('Deps2');
     expect(container.textContent?.match(/incremental/g)).toHaveLength(1);
   });
-
   it('uses a stable professional card width from graph visual tokens', () => {
     act(() => {
       root.render(<GraphNodeCardView {...BASE_PROPS} />);

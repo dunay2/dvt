@@ -7,7 +7,10 @@ import {
   type ReactElement,
 } from 'react';
 
-import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
+import {
+  canvasColumnContextMenuOwnerProps,
+  canvasNodeEmbeddedControlProps,
+} from '../../components/canvas/canvasNodeInteractionBoundary';
 import { TooltipContent } from '../../components/ui/tooltip';
 import type { GraphNodeColumn } from './graphNodeColumnContracts';
 import type { GraphNodeColumnReorderIdentity } from './graphNodeColumnContracts';
@@ -45,7 +48,6 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
       onOutputToggle,
       nodeId,
       onNestedColumnReorder,
-      onContextMenu,
       ...elementProps
     } = props;
     const accessibleLabel = (
@@ -55,6 +57,7 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
     return (
       <div
         {...elementProps}
+        {...canvasColumnContextMenuOwnerProps}
         ref={ref}
         data-slot="graph-node-column-piece"
         data-column-name={column.name}
@@ -64,10 +67,6 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
         draggable={canReorder}
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
-        onContextMenu={(event) => {
-          onContextMenu?.(event);
-          event.stopPropagation();
-        }}
         className={graphNodeColumnClasses.piece}
       >
         {column.sourceFieldName != null && column.sourceFieldName !== column.name ? (

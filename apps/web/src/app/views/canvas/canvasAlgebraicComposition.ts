@@ -7,7 +7,10 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { proposeConnection } from './canvasConnectionAggregate';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import { resolveCanvasDraftNodes } from './canvasDraftNodeCatalog';
-import { applyDvtNodeAuthoringMetadata } from './canvasDvtAuthoringModel';
+import {
+  applyDvtNodeAuthoringMetadata,
+  createDvtNodeAuthoringMetadata,
+} from './canvasDvtAuthoringModel';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import {
   createDvtSubstraitInnerJoinDraft,
@@ -144,8 +147,13 @@ export function resolveCanvasAlgebraicCompositionTransaction(
   if (semanticDraft == null) {
     return { outcome: 'noop', rejection: { code: 'operation_not_available' } };
   }
+  const targetAuthoring = createDvtNodeAuthoringMetadata(targetNode);
+  if (targetAuthoring == null || targetAuthoring.kind !== 'transform') {
+    return { outcome: 'noop', rejection: { code: 'operation_not_available' } };
+  }
   const composedNode = applyDvtNodeAuthoringMetadata(targetNode, {
     kind: 'transform',
+    materialized: targetAuthoring.materialized,
     mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
     shape: args.operation,
     plan: semanticDraft.plan,

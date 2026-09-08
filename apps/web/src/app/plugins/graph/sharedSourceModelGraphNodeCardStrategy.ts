@@ -72,17 +72,21 @@ function resolveMaterializationIcon(value: string | null): GraphNodeCardMetricIc
 function buildAuthorityMetrics(
   node: CanonicalNode,
   metadata: Record<string, unknown>,
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
+  isSource: boolean,
+  copy: ReturnType<typeof resolveGraphNodeCardCopy>
 ): GraphNodeCardMetric[] {
   const metrics: GraphNodeCardMetric[] = [];
-  if (containsDbtCompatibilityMetadata(metadata)) {
+  if (!isSource) {
     const materialization = resolveMaterialization(metadata);
-    pushMetric(metrics, 'materialization', 'Mat.', materialization, {
+    pushMetric(metrics, 'materialization', 'Mat.', materialization ?? copy.notConfiguredLabel, {
       placement: 'header',
       ...(resolveMaterializationIcon(materialization) == null
         ? {}
         : { icon: resolveMaterializationIcon(materialization) }),
     });
+  }
+  if (containsDbtCompatibilityMetadata(metadata)) {
     pushMetric(metrics, 'dependencies', 'Deps', arrayCount(metadata.dependencies));
   } else {
     pushRuntimeMetrics(metrics, metadata, data);
@@ -153,6 +157,23 @@ function buildSharedSourceModelCard(
     locale: presentationCopy?.locale,
   });
   const copy = resolveGraphNodeCardCopy(presentationCopy?.locale);
+  const lastRunMetric = summary.metrics.find((metric) => metric.id === 'last-run');
+  const authorityMetrics = buildAuthorityMetrics(
+    node,
+    metadata,
+    runtimeData,
+    isSource,
+    copy
+  ).filter((metric) => metric.id !== 'last-run');
+  if (!isSource) {
+    authorityMetrics.push({
+      id: 'last-run',
+      label: copy.lastRunLabel,
+      value: lastRunMetric?.value ?? copy.notCalculatedLabel,
+      icon: 'clock',
+      placement: 'header',
+    });
+  }
   const authorityLabel = containsDbtCompatibilityMetadata(metadata)
     ? (stringValue(metadata.package) ?? stringValue(metadata.packageName))
     : null;
@@ -163,7 +184,10 @@ function buildSharedSourceModelCard(
   const currentRows = summary.metrics.find((metric) => metric.id === 'rows');
   const currentSize = summary.metrics.find((metric) => metric.id === 'size');
   const operationalMetrics = [
-    ...summary.metrics.filter((metric) => metric.id !== 'rows' && metric.id !== 'size'),
+    ...summary.metrics.filter(
+      (metric) =>
+        metric.id !== 'rows' && metric.id !== 'size' && (isSource || metric.id !== 'last-run')
+    ),
     projectedRows == null
       ? (currentRows ?? {
           id: 'rows',
@@ -198,7 +222,7 @@ function buildSharedSourceModelCard(
         ? { label: presentationCopy?.readyStatusLabel ?? copy.readyStatusLabel, tone: 'healthy' }
         : { label: presentationCopy?.draftStatusLabel ?? copy.draftStatusLabel, tone: 'neutral' }
     ),
-    metrics: buildAuthorityMetrics(node, metadata, runtimeData),
+    metrics: authorityMetrics,
     operationalMetrics,
     operationalDetail: summary.detail,
     sourceIdentity: buildGraphNodeSourceIdentity(node, metadata, title, presentationCopy?.locale),
