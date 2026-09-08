@@ -11,6 +11,9 @@ import { GraphNodeCalculatedColumnForm } from './GraphNodeCalculatedColumnForm';
 import { graphNodeColumnClasses } from './graphVisualTokens';
 import { useGraphNodeColumnSectionState } from './useGraphNodeColumnSectionState';
 
+const compactRemainderClassName =
+  'nodrag nopan mt-1 inline-flex cursor-pointer items-center rounded-sm px-1 py-1 text-left text-[11px] font-medium text-blue-300 transition-colors hover:text-blue-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-400';
+
 export function GraphNodeColumnSection(props: GraphNodeColumnSectionProps): ReactElement {
   const {
     columns,
@@ -34,6 +37,12 @@ export function GraphNodeColumnSection(props: GraphNodeColumnSectionProps): Reac
     '{count}',
     String(section.remainingColumnCount)
   );
+  const compactRemainderLabel = applicationLanguage.trim().toLowerCase().startsWith('es')
+    ? `+${section.remainingColumnCount} más`
+    : `+${section.remainingColumnCount} more`;
+  const compactCollapseLabel = applicationLanguage.trim().toLowerCase().startsWith('es')
+    ? 'Ver menos'
+    : 'Show less';
 
   return (
     <div data-slot="graph-node-column-section" className={graphNodeColumnClasses.shell}>
@@ -129,9 +138,14 @@ export function GraphNodeColumnSection(props: GraphNodeColumnSectionProps): Reac
               aria-expanded={section.showAllColumns}
               aria-controls={columnListId}
               onClick={section.toggleAllColumns}
-              className={graphNodeColumnClasses.remainderToggle}
+              className={compactRemainderClassName}
             >
-              {section.showAllColumns ? copy.showFirstFiveColumnsLabel : remainderActionLabel}
+              <span className="sr-only">
+                {section.showAllColumns ? copy.showFirstFiveColumnsLabel : remainderActionLabel}
+              </span>
+              <span aria-hidden="true">
+                {section.showAllColumns ? compactCollapseLabel : compactRemainderLabel}
+              </span>
             </button>
           ) : null}
           {onAutomap != null ? (
