@@ -107,7 +107,9 @@ test('feature plan rail tables do not become second documented rail authorities'
     referenceDocuments: [...featurePlans, canonicalCatalog],
     sourceFiles: [],
   });
-  const rows = snapshot.rails.filter((rail) => rail.railName === 'ConfigureCanvasDvtNode');
+  const rows = snapshot.rails.filter(
+    (rail) => rail.railName === 'ConfigureCanvasDvtNode'
+  );
   const featureUsageRows = rows.filter(
     (rail) => rail.featureId !== 'DOCUMENTED-COMMAND-QUERY-RAIL-CATALOG'
   );
@@ -116,7 +118,11 @@ test('feature plan rail tables do not become second documented rail authorities'
   );
 
   assert.equal(featureUsageRows.length, 3);
-  assert.ok(featureUsageRows.every((rail) => rail.dddOwner === 'DvtSubstraitAuthoringSidecarV1'));
+  assert.ok(
+    featureUsageRows.every(
+      (rail) => rail.dddOwner === 'DvtSubstraitAuthoringSidecarV1'
+    )
+  );
   assert.deepEqual(
     documentedAuthorityRows.map((rail) => ({
       sourcePath: rail.sourcePath,
