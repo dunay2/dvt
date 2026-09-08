@@ -1,4 +1,4 @@
-/** Owned concern: prove calculated-column authoring from the stable card gap. */
+/** Owned concern: prove direct alias authoring through the governed Transform command rail. */
 import {
   decodeDvtSubstraitProjectionDocument,
   inspectDvtSubstraitProjectionDraft,
@@ -15,7 +15,6 @@ type DraftSave = {
   draft: {
     nodes: Array<{
       id: string;
-      kind: string;
       metadata?: Record<string, unknown>;
     }>;
   };
@@ -62,32 +61,48 @@ function visitCanvas(): void {
   waitForE2eApiCall('/workspace/graph/draft', 'GET');
 }
 
-function sourceCard(): Cypress.Chainable<JQuery<HTMLElement>> {
-  return cy.get('.react-flow__node[data-id="source-orders"]');
+function transformCard(): Cypress.Chainable<JQuery<HTMLElement>> {
+  return cy.get('.react-flow__node[data-id="model-orders"]');
+}
+
+function toggleTransformColumns(): void {
+  transformCard().find('button[aria-expanded]').contains('Columns').click();
+}
+
+function showAllTransformColumns(): void {
+  transformCard()
+    .contains('button', /Show remaining columns/)
+    .then(($button) => {
+      if ($button.length > 0) cy.wrap($button).click();
+    });
 }
 
 describe('Canvas calculated-column authoring', () => {
   beforeEach(() => stubCanvas());
 
-  it('promotes Source in place, persists the Plan, and restores the calculated output', () => {
+  it('creates, persists, and restores a direct alias on the Transform', () => {
     cy.viewport(1920, 1080);
     visitCanvas();
-    sourceCard().find('[data-slot="graph-node-column-toggle"]').click();
-    sourceCard()
+    toggleTransformColumns();
+    transformCard().contains('button', 'Map compatible columns').click();
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+
+    transformCard()
       .find('[data-slot="graph-node-calculated-column-trigger"]')
       .focus()
       .should('have.focus')
       .click();
     cy.get('[data-slot="graph-node-calculated-column-form"]').within(() => {
-      cy.get('input[name="alias"]').type('channel');
-      cy.get('input[name="value"]').type('web');
+      cy.get('select[name="kind"]').should('have.value', 'field-ref');
+      cy.get('select[name="inputFieldId"]').select('customer');
+      cy.get('input[name="alias"]').type('customer_alias');
       cy.get('button[type="submit"]').click();
     });
 
     cy.wrap(null).should(() => {
       const savedNode = getE2eApiCalls('/workspace/graph/draft', 'PUT')
         .map((call) => call.body as DraftSave)
-        .map((save) => save.draft.nodes.find((node) => node.id === 'source-orders'))
+        .map((save) => save.draft.nodes.find((node) => node.id === 'model-orders'))
         .filter((node) => node != null)
         .at(-1);
       const authority = savedNode?.metadata?.transformAuthoring as
@@ -95,17 +110,23 @@ describe('Canvas calculated-column authoring', () => {
       const inspection = inspectDvtSubstraitProjectionDraft(
         decodeDvtSubstraitProjectionDocument(authority?.semanticDocument)
       );
-      expect(inspection.ok ? inspection.projection.outputs.at(-1) : null).to.deep.include({
-        name: 'channel',
-        calculation: { kind: 'string-literal', value: 'web' },
+      const alias = inspection.ok ? inspection.projection.outputs.at(-1) : null;
+      expect(alias).to.deep.include({
+        name: 'customer_alias',
+        sourceFieldName: 'customer',
       });
+      expect(alias?.fieldId).to.match(
+        /^dvt_fld_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+      );
+      expect(alias).not.to.have.property('operations');
     });
 
-    sourceCard().contains('button', 'Show remaining columns (2)').click();
-    sourceCard().should('contain.text', 'channel');
+    showAllTransformColumns();
+    transformCard().should('contain.text', 'customer_alias');
+
     visitCanvas();
-    sourceCard().find('[data-slot="graph-node-column-toggle"]').click();
-    sourceCard().contains('button', 'Show remaining columns (2)').click();
-    sourceCard().should('contain.text', 'channel');
+    toggleTransformColumns();
+    showAllTransformColumns();
+    transformCard().should('contain.text', 'customer_alias');
   });
 });

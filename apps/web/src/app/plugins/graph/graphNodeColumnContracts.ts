@@ -62,6 +62,7 @@ export type GraphNodeStructuredFieldIdentity = Readonly<{
   parentName: string;
 }>;
 export type GraphNodeCalculatedColumnIdentity =
+  | Readonly<{ nodeId: string; kind: 'field-ref'; alias: string; inputFieldId: string }>
   | Readonly<{ nodeId: string; kind: 'string-literal'; alias: string; value: string }>
   | Readonly<{ nodeId: string; kind: 'timestamp-literal'; alias: string; value: string }>
   | Readonly<{

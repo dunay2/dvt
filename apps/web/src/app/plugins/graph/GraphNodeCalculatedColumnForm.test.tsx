@@ -28,6 +28,49 @@ describe('GraphNodeCalculatedColumnForm', () => {
     container.remove();
   });
 
+  it('creates a direct alias from the default visual operation', () => {
+    const onSubmit = vi.fn();
+    act(() => {
+      root.render(
+        <GraphNodeCalculatedColumnForm
+          nodeId="orders"
+          columns={[
+            { id: 'output:order_id', name: 'order_id', type: 'integer' },
+            { id: 'output:customer', name: 'customer', type: 'text' },
+          ]}
+          onSubmit={onSubmit}
+        />
+      );
+    });
+
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>(
+          '[data-slot="graph-node-calculated-column-trigger"]'
+        )!
+      );
+    });
+    const form = document
+      .querySelector<HTMLElement>('[data-slot="graph-node-calculated-column-form"]')
+      ?.querySelector('form');
+    const kind = form?.elements.namedItem('kind') as HTMLSelectElement;
+    const input = form?.elements.namedItem('inputFieldId') as HTMLSelectElement;
+    const alias = form?.elements.namedItem('alias') as HTMLInputElement;
+    expect(kind.value).toBe('field-ref');
+    act(() => {
+      fireEvent.change(input, { target: { value: 'output:customer' } });
+      fireEvent.input(alias, { target: { value: 'customer_alias' } });
+      fireEvent.submit(form!);
+    });
+
+    expect(onSubmit).toHaveBeenCalledWith({
+      nodeId: 'orders',
+      kind: 'field-ref',
+      alias: 'customer_alias',
+      inputFieldId: 'output:customer',
+    });
+  });
+
   it('creates a function output from a keyboard-accessible gap action', () => {
     const onSubmit = vi.fn();
     act(() => {

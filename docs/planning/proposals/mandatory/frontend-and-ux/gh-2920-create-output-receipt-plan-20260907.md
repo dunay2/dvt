@@ -2,7 +2,7 @@
 title: GH-2920 create-output receipt hard cut
 status: Approved
 owner: Web / Canvas semantic authoring
-last_reviewed: 2026-09-07
+last_reviewed: 2026-09-08
 planning_type: implementation-plan
 task_id: GH-2920
 ---
@@ -55,6 +55,23 @@ derived output by its FieldId.
 The operable expression tree and menu coupling from the original PR are removed from this cut.
 They belong to `#2922`, where the first visual consumer can constrain that projection.
 
+## Direct alias output extension
+
+The first visual consumer is a direct alias output:
+
+```mermaid
+flowchart LR
+  Field[Existing output FieldId] --> Proposal[Alias proposal]
+  Proposal --> Command[ConfigureCanvasDvtNode]
+  Command --> Output[New output FieldId]
+  Field --> Output
+```
+
+`alias_copy := FieldRef(existing_output)` reuses the existing output mapping and creates a new
+sidecar FieldId. It does not persist a redundant expression, mutate the input output, or introduce
+another algebra model. The card form projects this candidate alongside the other admitted output
+builders. Unknown FieldIds and duplicate aliases write nothing.
+
 ## Command rail
 
 | Rail                     | Type    | Bounded context           | DDD object                       | Application port              | Adapter              | Scope and authorization                                                |
@@ -68,6 +85,7 @@ capability, invalid literal, malformed projection, and Source authoring write no
 
 - The mutation returns the allocated `createdFieldId` directly.
 - The upper command no longer diffs sidecar fields to infer identity.
+- A direct alias receives a fresh FieldId while preserving the selected output mapping.
 - A derived scalar output can be the operand of another admitted scalar output.
 - Mutable output names are rejected when supplied as operand identity.
 - Literal and row-number PostgreSQL fixtures consume the same create-output seam.
@@ -87,10 +105,11 @@ capability, invalid literal, malformed projection, and Source authoring write no
   "version": 1,
   "featureId": "GH-2920-CREATE-OUTPUT-RECEIPT",
   "userStories": [
-    "A calculated output returns its stable identity directly and can feed a later derivation"
+    "A calculated output returns its stable identity directly and can feed a later derivation",
+    "A user can add and persist a direct alias for an existing Transform output"
   ],
   "cypressFlows": [
-    "N/A - semantic command cut with no new interaction surface"
+    "apps/web/cypress/e2e/canvas/canvas-calculated-column-authoring.cy.ts"
   ],
   "domainObjects": [
     "Canvas Transform output",
@@ -258,6 +277,11 @@ capability, invalid literal, malformed projection, and Source authoring write no
     "apps/web/src/app/views/canvas/canvasDvtSubstraitCalculatedColumn.ts",
     "apps/web/src/app/views/canvas/canvasCalculatedColumnAuthoring.test.ts",
     "apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresProjection.test.ts",
+"apps/web/src/app/plugins/graph/GraphNodeCalculatedColumnForm.tsx",
+    "apps/web/src/app/plugins/graph/GraphNodeCalculatedColumnForm.test.tsx",
+    "apps/web/src/app/plugins/graph/graphNodeColumnContracts.ts",
+    "apps/web/src/app/plugins/graph/graphNodeCardCopyTokens.ts",
+    "apps/web/cypress/e2e/canvas/canvas-calculated-column-authoring.cy.ts",
     "docs/.manifest.json",
     "docs/planning/proposals/mandatory/frontend-and-ux/gh-2920-create-output-receipt-plan-20260907.md"
   ],

@@ -15,6 +15,7 @@ import {
 } from './canvasDvtSubstraitProjection';
 
 export type DvtSubstraitOutputExpressionCandidate =
+  | Readonly<{ kind: 'field-ref'; inputFieldId: string }>
   | Readonly<{ kind: 'string-literal'; value: string }>
   | Readonly<{ kind: 'timestamp-literal'; value: string }>
   | Readonly<{
@@ -38,7 +39,10 @@ export type DvtSubstraitCreateOutputResult =
   | Readonly<{ outcome: 'rejected' }>;
 
 function directCalculation(
-  expression: Exclude<DvtSubstraitOutputExpressionCandidate, { kind: 'scalar-function' }>,
+  expression: Exclude<
+    DvtSubstraitOutputExpressionCandidate,
+    { kind: 'scalar-function' } | { kind: 'field-ref' }
+  >,
   sourceOrdinal: number | null
 ): DvtSubstraitCalculatedExpression | null {
   if (expression.kind === 'string-literal') {
@@ -71,7 +75,7 @@ export function createDvtSubstraitProjectionOutput(
 
   const expression = request.expression;
   const inputFieldId =
-    expression.kind === 'scalar-function'
+    expression.kind === 'scalar-function' || expression.kind === 'field-ref'
       ? expression.inputFieldId
       : expression.kind === 'row-number'
         ? expression.orderFieldId
@@ -108,7 +112,7 @@ export function createDvtSubstraitProjectionOutput(
   );
   if (targetBinding == null) return { outcome: 'rejected' };
 
-  if (expression.kind !== 'scalar-function') {
+  if (expression.kind !== 'scalar-function' && expression.kind !== 'field-ref') {
     const sourceOrdinal =
       input?.sourceFieldName == null
         ? null
@@ -139,6 +143,16 @@ export function createDvtSubstraitProjectionOutput(
     ],
   };
   root.value.names.push(alias);
+
+  if (expression.kind === 'field-ref') {
+    const inputMapping = emit.value.outputMapping[input!.outputOrdinal];
+    if (inputMapping == null) return { outcome: 'rejected' };
+    emit.value.outputMapping.push(inputMapping);
+    const appended = { plan, sidecar };
+    return inspectDvtSubstraitProjectionDraft(appended).ok
+      ? { outcome: 'applied', draft: appended, createdFieldId: fieldId }
+      : { outcome: 'rejected' };
+  }
 
   if (expression.kind === 'scalar-function') {
     const inputMapping = emit.value.outputMapping[input!.outputOrdinal];

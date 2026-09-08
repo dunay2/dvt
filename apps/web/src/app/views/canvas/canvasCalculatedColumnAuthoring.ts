@@ -16,6 +16,7 @@ import {
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 
 export type CanvasCalculatedColumnRequest =
+  | Readonly<{ nodeId: string; kind: 'field-ref'; alias: string; inputFieldId: string }>
   | Readonly<{ nodeId: string; kind: 'string-literal'; alias: string; value: string }>
   | Readonly<{ nodeId: string; kind: 'timestamp-literal'; alias: string; value: string }>
   | Readonly<{
@@ -46,6 +47,12 @@ function nodeCatalog(
 }
 
 function creationRequest(request: CanvasCalculatedColumnRequest): DvtSubstraitCreateOutputRequest {
+  if (request.kind === 'field-ref') {
+    return {
+      alias: request.alias,
+      expression: { kind: 'field-ref', inputFieldId: request.inputFieldId },
+    };
+  }
   if (request.kind === 'scalar-function') {
     return {
       alias: request.alias,
