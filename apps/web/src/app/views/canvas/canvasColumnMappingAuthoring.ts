@@ -5,7 +5,6 @@ import type { CanonicalNode } from '../../types/canonical';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import {
   hasCanvasStageDependency,
-  readCanvasNodeColumns,
   resolveCanvasSessionNode,
   type CanvasColumnMappingResult,
   type CanvasColumnMappingSource,
@@ -14,6 +13,7 @@ import {
 import {
   isSimpleCanvasPassthrough,
   persistCanvasProjectionOutputs,
+  readCanvasColumnMappingInputFields,
   readEditableCanvasProjectionEntry,
   type EditableCanvasProjectionEntry,
 } from './canvasColumnProjectionAuthority';
@@ -53,9 +53,13 @@ export function applyCanvasColumnMapping(args: {
   if (!hasCanvasStageDependency(args.draftSession, sourceNode.id, targetNode.id)) {
     return { outcome: 'rejected', reason: 'source_not_connected' };
   }
-  const sourceColumn = readCanvasNodeColumns(sourceNode).find(
-    (column) => column.name === args.source.columnName
-  );
+  const resolveNode = (nodeId: string): CanonicalNode | undefined =>
+    resolveCanvasSessionNode(args.draftSession, args.canonicalNodesById, nodeId);
+  const sourceColumn = readCanvasColumnMappingInputFields({
+    sourceNode,
+    edges: args.draftSession.workingSet.visibleEdges,
+    resolveNode,
+  }).find((column) => column.columnId === args.source.columnId);
   if (sourceColumn == null) return { outcome: 'rejected', reason: 'source_column_not_found' };
 
   const projectionResult = readProjectionEntry({
@@ -93,8 +97,9 @@ export function applyCanvasColumnMapping(args: {
   const nextOutput: DvtSubstraitProjectionOutput = {
     fieldId: currentOutput?.fieldId ?? allocateDvtFieldId(),
     name: currentOutput?.name ?? args.target.columnName,
-    sourceFieldName: args.source.columnName,
-    dataType: currentOutput?.dataType ?? args.target.dataType ?? sourceColumn.type,
+    ...(sourceNode.kind === 'dvt:transform' ? { sourceFieldId: sourceColumn.columnId } : {}),
+    sourceFieldName: sourceColumn.name,
+    dataType: currentOutput?.dataType ?? args.target.dataType ?? sourceColumn.dataType,
     outputOrdinal: currentOutput?.outputOrdinal ?? outputs.length,
     ...(currentOutput?.description == null ? {} : { description: currentOutput.description }),
   };
@@ -114,6 +119,17 @@ export function applyCanvasColumnMapping(args: {
     outcome: 'applied',
     draftSession: canvasDraftSession.workingSet.upsertNode(args.draftSession, persisted.node),
   };
+}
+
+function sourceNodeIsTransform(
+  sourceNodeId: string,
+  draftSession: CanvasDraftSession,
+  canonicalNodesById: ReadonlyMap<string, CanonicalNode>
+): boolean {
+  return (
+    resolveCanvasSessionNode(draftSession, canonicalNodesById, sourceNodeId)?.kind ===
+    'dvt:transform'
+  );
 }
 
 export function removeCanvasColumnMapping(args: {
@@ -139,7 +155,9 @@ export function removeCanvasColumnMapping(args: {
   if (
     output?.sourceFieldName == null ||
     projectionResult.projection.source.nodeId !== args.source.nodeId ||
-    output.sourceFieldName !== args.source.columnName
+    (sourceNodeIsTransform(args.source.nodeId, args.draftSession, args.canonicalNodesById)
+      ? output.sourceFieldId !== args.source.columnId
+      : output.sourceFieldName !== args.source.columnId)
   ) {
     return { outcome: 'rejected', reason: 'mapping_not_found' };
   }

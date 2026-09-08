@@ -9,16 +9,26 @@ import type { CanonicalNode } from '../../types/canonical';
 import { buildCanvasAuthoringGraphProjection } from './canvasAuthoringGraphProjection';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import { buildCurrentDraftPayload } from './canvasDraftLifecycleSnapshot';
-import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import {
+  applyDvtSubstraitSemanticDocument,
+  readDvtTransformAuthoringAuthority,
+} from './canvasDvtTransformAuthoringAuthority';
+import {
+  createDvtSubstraitProjectionDraft,
   decodeDvtSubstraitProjectionDocument,
+  encodeDvtSubstraitProjectionDocument,
   inspectDvtSubstraitProjectionDraft,
+  resolveDvtSubstraitProjectionSource,
 } from './canvasDvtSubstraitProjection';
 import {
   resolveCanvasEdgeCreationTransaction,
   resolveCanvasEdgeReconnectTransaction,
 } from './canvasEdgeAdmissionTransaction';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
+import {
+  reorderCanvasColumnOutput,
+  setCanvasColumnOutputIncluded,
+} from './canvasColumnOutputAuthoring';
 
 function buildCanonicalNode(
   id: string,
@@ -220,6 +230,180 @@ describe('canvasEdgeAdmissionTransaction', () => {
     expect(new Set(outputIds).size).toBe(2);
     expect(outputIds[0]).not.toContain('order_id');
     expect(outputIds[1]).not.toContain('customer');
+  });
+
+  it('creates editable downstream Model outputs when connecting Model to Model', () => {
+    const source = buildConnectedSourceNode('source-node', [
+      { name: 'order_id', type: 'integer' },
+      { name: 'customer', type: 'text' },
+    ]);
+    const upstreamBase = buildCanonicalNode('upstream-model', 'transform', 'dvt:transform');
+    const physicalSource = resolveDvtSubstraitProjectionSource(source);
+    if (physicalSource == null) throw new Error('Expected valid physical source.');
+    const upstream = applyDvtSubstraitSemanticDocument(
+      upstreamBase,
+      encodeDvtSubstraitProjectionDocument(
+        createDvtSubstraitProjectionDraft({
+          source: physicalSource,
+          targetNodeId: upstreamBase.id,
+          outputs: [
+            { fieldId: 'upstream:order_id', name: 'order_id', sourceFieldName: 'order_id' },
+            { fieldId: 'upstream:customer', name: 'customer', sourceFieldName: 'customer' },
+          ],
+        })
+      )
+    );
+    const downstream = buildCanonicalNode('downstream-model', 'transform', 'dvt:transform');
+    const draftSession: CanvasDraftSession = {
+      ...buildDraftSession([{ sourceId: source.id, targetId: upstream.id }]),
+      workingSet: {
+        visibleNodeIds: [source.id, upstream.id, downstream.id],
+        visibleEdges: [{ sourceId: source.id, targetId: upstream.id }],
+        pendingExplicitNodeIds: [],
+      },
+      localNodeCatalog: {
+        [source.id]: source,
+        [upstream.id]: upstream,
+        [downstream.id]: downstream,
+      },
+    };
+    const transaction = resolveCanvasEdgeCreationTransaction({
+      canonicalNodesById: new Map([
+        [source.id, source],
+        [upstream.id, upstream],
+        [downstream.id, downstream],
+      ]),
+      connection: {
+        source: upstream.id,
+        sourceHandle: null,
+        target: downstream.id,
+        targetHandle: null,
+      },
+      draftSession,
+      edges: [{ id: 'source-upstream', source: source.id, target: upstream.id }],
+      pluginPortMap,
+    });
+
+    expect(transaction.outcome).toBe('created');
+    if (transaction.outcome !== 'created') throw new Error('Expected Model chain connection.');
+    const mappedDownstream = transaction.draftSession.localNodeCatalog?.[downstream.id];
+    if (mappedDownstream == null) throw new Error('Expected downstream semantic authority.');
+    const authority = readDvtTransformAuthoringAuthority(mappedDownstream);
+    if (authority == null) throw new Error('Expected downstream transform authority.');
+    const inspection = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+    );
+    expect(inspection.ok).toBe(true);
+    if (!inspection.ok) return;
+    expect(inspection.projection.outputs).toMatchObject([
+      { name: 'order_id', sourceFieldId: 'upstream:order_id' },
+      { name: 'customer', sourceFieldId: 'upstream:customer' },
+    ]);
+    expect(inspection.projection.outputs.map((output) => output.fieldId)).not.toEqual([
+      'upstream:order_id',
+      'upstream:customer',
+    ]);
+
+    const customerOutputId = inspection.projection.outputs[1]!.fieldId;
+    const removed = setCanvasColumnOutputIncluded({
+      draftSession: transaction.draftSession,
+      canonicalNodesById: new Map([
+        [source.id, source],
+        [upstream.id, upstream],
+        [downstream.id, downstream],
+      ]),
+      targetNodeId: downstream.id,
+      columnId: customerOutputId,
+      columnType: 'text',
+      output: false,
+    });
+    expect(removed.outcome).toBe('applied');
+    if (removed.outcome !== 'applied') return;
+    const removedNode = removed.draftSession.localNodeCatalog?.[downstream.id];
+    if (removedNode == null) throw new Error('Expected downstream output selection.');
+    expect(
+      projectCanvasNodePresentationTruth({
+        node: removedNode,
+        nodes: [source, upstream, removedNode],
+        edges: removed.draftSession.workingSet.visibleEdges,
+      }).columns.visible.find((column) => column.name === 'customer')
+    ).toMatchObject({
+      provenance: 'inherited',
+      reference: 'upstream:customer',
+      sourceNodeId: upstream.id,
+    });
+    const restored = setCanvasColumnOutputIncluded({
+      draftSession: removed.draftSession,
+      canonicalNodesById: new Map([
+        [source.id, source],
+        [upstream.id, upstream],
+        [downstream.id, downstream],
+      ]),
+      targetNodeId: downstream.id,
+      columnId: 'upstream:customer',
+      columnType: 'text',
+      output: true,
+    });
+    expect(restored.outcome).toBe('applied');
+    if (restored.outcome !== 'applied') return;
+    const restoredNode = restored.draftSession.localNodeCatalog?.[downstream.id];
+    if (restoredNode == null) throw new Error('Expected restored downstream output.');
+    const restoredAuthority = readDvtTransformAuthoringAuthority(restoredNode);
+    if (restoredAuthority == null) throw new Error('Expected restored downstream authority.');
+    const restoredInspection = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(restoredAuthority.semanticDocument)
+    );
+    if (!restoredInspection.ok) throw new Error('Expected restored downstream projection.');
+    const restoredOrder = restoredInspection.projection.outputs.find(
+      (output) => output.sourceFieldId === 'upstream:order_id'
+    );
+    const restoredCustomer = restoredInspection.projection.outputs.find(
+      (output) => output.sourceFieldId === 'upstream:customer'
+    );
+    if (restoredOrder == null || restoredCustomer == null) {
+      throw new Error('Expected both downstream outputs.');
+    }
+    const reordered = reorderCanvasColumnOutput({
+      draftSession: restored.draftSession,
+      canonicalNodesById: new Map([
+        [source.id, source],
+        [upstream.id, upstream],
+        [downstream.id, downstream],
+      ]),
+      targetNodeId: downstream.id,
+      columnId: restoredCustomer.fieldId,
+      targetColumnId: restoredOrder.fieldId,
+      placement: 'before',
+    });
+    expect(reordered.outcome).toBe('applied');
+    if (reordered.outcome !== 'applied') return;
+    const reorderedNode = reordered.draftSession.localNodeCatalog?.[downstream.id];
+    if (reorderedNode == null) throw new Error('Expected reordered downstream node.');
+    const reorderedAuthority = readDvtTransformAuthoringAuthority(reorderedNode);
+    if (reorderedAuthority == null) throw new Error('Expected reordered downstream authority.');
+    const reorderedInspection = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(reorderedAuthority.semanticDocument)
+    );
+    expect(reorderedInspection.ok).toBe(true);
+    if (!reorderedInspection.ok) return;
+    expect(reorderedInspection.projection.targetRelationId).toBe(
+      inspection.projection.targetRelationId
+    );
+    expect(
+      reorderedInspection.projection.outputs.map((output) => ({
+        fieldId: output.fieldId,
+        sourceFieldId: output.sourceFieldId,
+      }))
+    ).toEqual([
+      {
+        fieldId: restoredCustomer.fieldId,
+        sourceFieldId: 'upstream:customer',
+      },
+      {
+        fieldId: restoredOrder.fieldId,
+        sourceFieldId: 'upstream:order_id',
+      },
+    ]);
   });
 
   it('creates a second source edge without inventing a multi-source projection', () => {

@@ -40,6 +40,7 @@ function readInteractiveColumns(node: Node): GraphNodeColumn[] {
 
 function projectInteractiveColumns(
   node: Node,
+  canonicalNodesById: ReadonlyMap<string, CanonicalNode>,
   functionMenus?: ReadonlyMap<
     string,
     Readonly<{
@@ -53,9 +54,11 @@ function projectInteractiveColumns(
   const presentationTruth = node.data.presentationTruth as CanvasNodePresentationTruth | undefined;
   return columns.map((column, index) => {
     const presentationColumn = presentationTruth?.columns.visible[index];
+    const sourceNodeId = presentationColumn?.sourceNodeId;
+    const sourceNode = sourceNodeId == null ? undefined : canonicalNodesById.get(sourceNodeId);
     const id =
-      presentationColumn?.provenance === 'declared'
-        ? (presentationColumn.reference ?? column.name)
+      presentationColumn?.provenance === 'declared' || sourceNode?.kind === 'dvt:transform'
+        ? (presentationColumn?.reference ?? column.name)
         : column.name;
     const functionProjection = functionMenus?.get(id) ?? functionMenus?.get(column.name);
     const interactiveId = functionProjection?.columnId ?? id;
@@ -296,7 +299,11 @@ export function useCanvasControllerReadModel({
               ? node.data.onReorderCanvasColumnOutput
               : undefined,
           onAutomapColumns: canAuthorColumnMappings ? node.data.onAutomapColumns : undefined,
-          columns: projectInteractiveColumns(node, columnFunctionMenus),
+          columns: projectInteractiveColumns(
+            node,
+            graphModel.canonicalNodesById,
+            columnFunctionMenus
+          ),
           columnPortDirections:
             canonicalNode != null
               ? canonicalNode.role === 'transform' &&

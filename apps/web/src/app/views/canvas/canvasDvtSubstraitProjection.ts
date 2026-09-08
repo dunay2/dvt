@@ -19,6 +19,7 @@ import {
   type Expression,
   type ProjectRel,
   type ReadRel,
+  type Rel,
   type RelCommon,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import {
@@ -53,6 +54,7 @@ import {
 } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import {
   inspectDvtSubstraitCalculatedExpression,
   type DvtSubstraitCalculatedExpression,
@@ -132,6 +134,13 @@ export type DvtSubstraitProjection = Readonly<{
 
 export type DvtSubstraitProjectionSemantics = Readonly<{
   source: DvtSubstraitProjectionSemanticSource;
+  inputRelationId: string;
+  inputFields: readonly Readonly<{
+    fieldId: string;
+    name: string;
+    dataType: string;
+  }>[];
+  targetRelationId: string;
   outputs: readonly DvtSubstraitProjectionOutput[];
 }>;
 
@@ -425,6 +434,94 @@ export function createDvtSubstraitProjectionDraft(args: {
   return { plan, sidecar };
 }
 
+export function createDvtSubstraitProjectionDraftFromTransform(args: {
+  source: DvtSubstraitProjectionDraft;
+  targetNodeId: string;
+  outputs: readonly Readonly<{
+    fieldId: string;
+    name: string;
+    sourceFieldId: string;
+  }>[];
+}): DvtSubstraitProjectionDraft {
+  if (args.targetNodeId.trim().length === 0 || args.targetNodeId !== args.targetNodeId.trim()) {
+    throw new Error('Substrait projection requires a target identity.');
+  }
+  const sourceInspection = inspectDvtSubstraitProjectionDraft(args.source);
+  if (!sourceInspection.ok) {
+    throw new Error('Substrait Transform input must be a valid projection.');
+  }
+  const existingFieldIds = new Set(args.source.sidecar.fields.map((field) => field.fieldId));
+  if (
+    args.outputs.some(
+      (output) =>
+        output.fieldId.trim().length === 0 ||
+        output.name.trim().length === 0 ||
+        output.sourceFieldId.trim().length === 0 ||
+        existingFieldIds.has(output.fieldId)
+    ) ||
+    new Set(args.outputs.map((output) => output.fieldId)).size !== args.outputs.length
+  ) {
+    throw new Error('Substrait projection output identities must be unique and nonblank.');
+  }
+  const sourceOrdinalByFieldId = new Map(
+    sourceInspection.projection.outputs.map((output, ordinal) => [output.fieldId, ordinal] as const)
+  );
+  const outputMapping = args.outputs.map((output) => {
+    const ordinal = sourceOrdinalByFieldId.get(output.sourceFieldId);
+    if (ordinal == null) {
+      throw new Error('Substrait Transform input must reference an existing FieldId.');
+    }
+    return ordinal;
+  });
+
+  const plan = fromBinary(PlanSchema, toBinary(PlanSchema, args.source.plan));
+  const root = plan.relations[0]?.relType;
+  if (root?.case !== 'root' || root.value.input == null) {
+    throw new Error('Substrait Transform input must expose one root relation.');
+  }
+  const input = root.value.input;
+  const nextAnchor =
+    Math.max(0, ...args.source.sidecar.relations.map((relation) => relation.relAnchor)) + 1;
+  root.value.input = create(RelSchema, {
+    relType: {
+      case: 'project',
+      value: create(ProjectRelSchema, {
+        common: create(RelCommonSchema, {
+          relAnchor: nextAnchor,
+          emitKind: {
+            case: 'emit',
+            value: create(RelCommon_EmitSchema, { outputMapping }),
+          },
+        }),
+        input,
+        expressions: [],
+      }),
+    },
+  });
+  root.value.names = args.outputs.map((output) => output.name);
+
+  const targetRelationId = allocateDvtRelationId();
+  return {
+    plan,
+    sidecar: {
+      ...args.source.sidecar,
+      relations: [
+        ...args.source.sidecar.relations,
+        { relationId: targetRelationId, relAnchor: nextAnchor },
+      ],
+      fields: [
+        ...args.source.sidecar.fields,
+        ...args.outputs.map((output, outputOrdinal) => ({
+          fieldId: output.fieldId,
+          relationId: targetRelationId,
+          sourceFieldId: output.sourceFieldId,
+          outputOrdinal,
+          displayName: output.name,
+        })),
+      ],
+    },
+  };
+}
 export function reorderDvtSubstraitProjectionOutputs(
   draft: DvtSubstraitProjectionDraft,
   args: Readonly<{
@@ -497,6 +594,262 @@ export function reorderDvtSubstraitProjectionOutputs(
   };
 }
 
+function inspectChainedDvtSubstraitProjectionDraft(
+  draft: DvtSubstraitProjectionDraft,
+  root: Extract<Plan['relations'][number]['relType'], { case: 'root' }>['value'],
+  project: ProjectRel
+): DvtSubstraitProjectionInspection {
+  const inputProject = project.input?.relType;
+  const inputAnchor =
+    inputProject?.case === 'project' ? inputProject.value.common?.relAnchor : undefined;
+  const targetAnchor = project.common?.relAnchor;
+  if (
+    inputProject?.case !== 'project' ||
+    inputAnchor == null ||
+    targetAnchor == null ||
+    inputAnchor === targetAnchor ||
+    !projectHasOnlyFieldSelection(project)
+  ) {
+    return { ok: false };
+  }
+  const inputBindings = draft.sidecar.relations.filter(
+    (relation) => relation.relAnchor === inputAnchor
+  );
+  const targetBindings = draft.sidecar.relations.filter(
+    (relation) => relation.relAnchor === targetAnchor
+  );
+  const inputBinding = inputBindings.length === 1 ? inputBindings[0] : null;
+  const targetBinding = targetBindings.length === 1 ? targetBindings[0] : null;
+  if (
+    inputBinding == null ||
+    inputBinding.sourceRef != null ||
+    targetBinding == null ||
+    targetBinding.sourceRef != null ||
+    inputBinding.relationId === targetBinding.relationId ||
+    new Set(draft.sidecar.relations.map((relation) => relation.relationId)).size !==
+      draft.sidecar.relations.length ||
+    new Set(draft.sidecar.fields.map((field) => field.fieldId)).size !== draft.sidecar.fields.length
+  ) {
+    return { ok: false };
+  }
+  const inputFields = sortedRelationFields(draft.sidecar, inputBinding.relationId);
+  const targetFields = sortedRelationFields(draft.sidecar, targetBinding.relationId);
+  const mappings = project.common?.emitKind;
+  if (
+    mappings?.case !== 'emit' ||
+    inputFields.length === 0 ||
+    targetFields.length !== root.names.length ||
+    mappings.value.outputMapping.length !== targetFields.length ||
+    inputFields.some(
+      (field, ordinal) =>
+        field.outputOrdinal !== ordinal || field.displayName == null || field.parentFieldId != null
+    ) ||
+    targetFields.some(
+      (field, ordinal) =>
+        field.outputOrdinal !== ordinal || field.displayName !== root.names[ordinal]
+    )
+  ) {
+    return { ok: false };
+  }
+
+  const upstreamPlan = fromBinary(PlanSchema, toBinary(PlanSchema, draft.plan));
+  const upstreamRoot = upstreamPlan.relations[0]?.relType;
+  if (upstreamRoot?.case !== 'root') return { ok: false };
+  upstreamRoot.value.input = project.input;
+  upstreamRoot.value.names = inputFields.map((field) => field.displayName!);
+  const upstreamFunctionAnchors = new Set<number>();
+  const collectExpressionFunctionAnchors = (expression: Expression): void => {
+    if (expression.rexType.case !== 'scalarFunction') return;
+    upstreamFunctionAnchors.add(expression.rexType.value.functionReference);
+    expression.rexType.value.arguments.forEach((argument) => {
+      if (argument.argType.case === 'value')
+        collectExpressionFunctionAnchors(argument.argType.value);
+    });
+  };
+  const collectRelationFunctionAnchors = (relation: Rel | undefined): void => {
+    if (relation?.relType.case !== 'project') return;
+    relation.relType.value.expressions.forEach(collectExpressionFunctionAnchors);
+    collectRelationFunctionAnchors(relation.relType.value.input);
+  };
+  collectRelationFunctionAnchors(upstreamRoot.value.input);
+  upstreamPlan.extensions = upstreamPlan.extensions.filter(
+    (entry) =>
+      entry.mappingType.case !== 'extensionFunction' ||
+      upstreamFunctionAnchors.has(entry.mappingType.value.functionAnchor)
+  );
+  const upstreamUrnAnchors = new Set(
+    upstreamPlan.extensions.flatMap((entry) =>
+      entry.mappingType.case === 'extensionFunction'
+        ? [entry.mappingType.value.extensionUrnReference]
+        : []
+    )
+  );
+  upstreamPlan.extensionUrns = upstreamPlan.extensionUrns.filter((entry) =>
+    upstreamUrnAnchors.has(entry.extensionUrnAnchor)
+  );
+  const upstreamDraft: DvtSubstraitProjectionDraft = {
+    plan: upstreamPlan,
+    sidecar: {
+      ...draft.sidecar,
+      relations: draft.sidecar.relations.filter(
+        (relation) => relation.relationId !== targetBinding.relationId
+      ),
+      fields: draft.sidecar.fields.filter((field) => field.relationId !== targetBinding.relationId),
+    },
+  };
+  const upstreamInspection = inspectDvtSubstraitProjectionDraft(upstreamDraft);
+  if (
+    !upstreamInspection.ok ||
+    upstreamInspection.projection.targetRelationId !== inputBinding.relationId ||
+    upstreamInspection.projection.outputs.length !== inputFields.length ||
+    upstreamInspection.projection.outputs.some((output, ordinal) => {
+      const field = inputFields[ordinal];
+      return (
+        field == null ||
+        output.fieldId !== field.fieldId ||
+        output.name !== field.displayName ||
+        output.outputOrdinal !== field.outputOrdinal
+      );
+    })
+  ) {
+    return { ok: false };
+  }
+
+  if (project.expressions.length > 0) {
+    const validationPlan = fromBinary(PlanSchema, toBinary(PlanSchema, draft.plan));
+    const validationRoot = validationPlan.relations[0]?.relType;
+    const validationProject =
+      validationRoot?.case === 'root' ? validationRoot.value.input?.relType : undefined;
+    if (validationRoot?.case !== 'root' || validationProject?.case !== 'project') {
+      return { ok: false };
+    }
+    const stringTypes = new Set([
+      'text',
+      'string',
+      'varchar',
+      'character varying',
+      'char',
+      'character',
+      'bpchar',
+    ]);
+    validationProject.value.input = create(RelSchema, {
+      relType: {
+        case: 'read',
+        value: create(ReadRelSchema, {
+          common: create(RelCommonSchema, { relAnchor: inputAnchor }),
+          baseSchema: create(NamedStructSchema, {
+            names: inputFields.map((field) => field.displayName!),
+            struct: create(Type_StructSchema, {
+              types: upstreamInspection.projection.outputs.map((output) =>
+                create(TypeSchema, {
+                  kind: stringTypes.has(output.dataType.trim().toLowerCase())
+                    ? {
+                        case: 'string',
+                        value: create(Type_StringSchema, {
+                          nullability: Type_Nullability.NULLABLE,
+                        }),
+                      }
+                    : { case: 'unbound', value: create(Type_UnboundSchema) },
+                })
+              ),
+              nullability: Type_Nullability.REQUIRED,
+            }),
+          }),
+          readType: {
+            case: 'namedTable',
+            value: create(ReadRel_NamedTableSchema, {
+              names: [
+                upstreamInspection.projection.source.schema,
+                upstreamInspection.projection.source.table,
+              ],
+            }),
+          },
+        }),
+      },
+    });
+    const validationInspection = inspectDvtSubstraitProjectionDraft({
+      plan: validationPlan,
+      sidecar: {
+        ...draft.sidecar,
+        relations: [
+          { ...inputBinding, sourceRef: upstreamInspection.projection.source.sourceRef },
+          targetBinding,
+        ],
+        fields: draft.sidecar.fields.filter(
+          (field) =>
+            field.relationId === inputBinding.relationId ||
+            field.relationId === targetBinding.relationId
+        ),
+      },
+    });
+    if (!validationInspection.ok) return { ok: false };
+    const actualTypeByFieldId = new Map(
+      upstreamInspection.projection.outputs.map(
+        (output) => [output.fieldId, output.dataType] as const
+      )
+    );
+    return {
+      ok: true,
+      projection: {
+        ...validationInspection.projection,
+        source: upstreamInspection.projection.source,
+        inputRelationId: inputBinding.relationId,
+        inputFields: inputFields.map((field, ordinal) => ({
+          fieldId: field.fieldId,
+          name: field.displayName!,
+          dataType: upstreamInspection.projection.outputs[ordinal]!.dataType,
+        })),
+        targetRelationId: targetBinding.relationId,
+        outputs: validationInspection.projection.outputs.map((output) => ({
+          ...output,
+          ...(output.sourceFieldId == null ||
+          output.calculation != null ||
+          output.scalarExpression != null
+            ? {}
+            : { dataType: actualTypeByFieldId.get(output.sourceFieldId) ?? output.dataType }),
+        })),
+      },
+    };
+  }
+  const outputs = mappings.value.outputMapping.map((sourceOrdinal, outputOrdinal) => {
+    const sourceField = inputFields[sourceOrdinal];
+    const sourceOutput = upstreamInspection.projection.outputs[sourceOrdinal];
+    const targetField = targetFields[outputOrdinal];
+    if (
+      sourceField == null ||
+      sourceOutput == null ||
+      targetField == null ||
+      targetField.sourceFieldId !== sourceField.fieldId
+    ) {
+      return null;
+    }
+    return {
+      fieldId: targetField.fieldId,
+      name: targetField.displayName!,
+      sourceFieldId: sourceField.fieldId,
+      sourceFieldName: sourceField.displayName!,
+      dataType: sourceOutput.dataType,
+      outputOrdinal,
+      ...(targetField.description == null ? {} : { description: targetField.description }),
+    };
+  });
+  if (outputs.some((output) => output == null)) return { ok: false };
+
+  return {
+    ok: true,
+    projection: {
+      source: upstreamInspection.projection.source,
+      inputRelationId: inputBinding.relationId,
+      inputFields: inputFields.map((field, ordinal) => ({
+        fieldId: field.fieldId,
+        name: field.displayName!,
+        dataType: upstreamInspection.projection.outputs[ordinal]!.dataType,
+      })),
+      targetRelationId: targetBinding.relationId,
+      outputs: outputs.filter((output) => output != null),
+    },
+  };
+}
 export function inspectDvtSubstraitProjectionDraft(
   draft: DvtSubstraitProjectionDraft
 ): DvtSubstraitProjectionInspection {
@@ -509,6 +862,9 @@ export function inspectDvtSubstraitProjectionDraft(
   if (projectRelation?.case !== 'project') return { ok: false };
   const project = projectRelation.value;
   if (!projectHasOnlyFieldSelection(project)) return { ok: false };
+  if (project.input?.relType.case === 'project') {
+    return inspectChainedDvtSubstraitProjectionDraft(draft, rootRelation.value, project);
+  }
   const readRelation = project.input?.relType;
   if (readRelation?.case !== 'read' || !readHasOnlyProjectionSemantics(readRelation.value)) {
     return { ok: false };
@@ -865,6 +1221,13 @@ export function inspectDvtSubstraitProjectionDraft(
           dataType: sourceTypes[ordinal]!.kind.case === 'string' ? 'string' : 'unknown',
         })),
       },
+      inputRelationId: sourceBinding.relationId,
+      inputFields: sourceFields.map((field, ordinal) => ({
+        fieldId: field.fieldId,
+        name: field.displayName!,
+        dataType: sourceTypes[ordinal]!.kind.case === 'string' ? 'string' : 'unknown',
+      })),
+      targetRelationId: targetBinding.relationId,
       outputs: outputs.filter((output) => output != null),
     },
   };
@@ -915,7 +1278,7 @@ export function applyDvtSubstraitProjectionFunction(
     inspection.projection.outputs.some(
       (candidate) => candidate.fieldId !== args.fieldId && candidate.name === alias
     ) ||
-    inspection.projection.source.fields.some(
+    inspection.projection.inputFields.some(
       (field) => field.name === alias && field.name !== output.sourceFieldName
     )
   ) {
@@ -932,7 +1295,7 @@ export function applyDvtSubstraitProjectionFunction(
   if (emitKind?.case !== 'emit') return draft;
   const outputMapping = emitKind.value.outputMapping;
   const targetMapping = outputMapping[output.outputOrdinal];
-  const sourceFieldCount = inspection.projection.source.fields.length;
+  const sourceFieldCount = inspection.projection.inputFields.length;
   if (targetMapping == null) return draft;
 
   const buildFieldReference = (ordinal: number) =>
@@ -1095,14 +1458,26 @@ export function applyDvtSubstraitProjectionFunction(
   return inspectDvtSubstraitProjectionDraft(nextDraft).ok ? nextDraft : draft;
 }
 
-export function resolveDvtSubstraitProjectionEntry(args: {
+type ResolveDvtSubstraitProjectionEntryArgs = Readonly<{
   targetNode: CanonicalNode;
   nodes: readonly CanonicalNode[];
   edges: readonly Pick<CanonicalEdge, 'sourceId' | 'targetId'>[];
   draft: DvtSubstraitProjectionDraft;
-}): DvtSubstraitProjection | null {
+}>;
+
+function resolveDvtSubstraitProjectionEntryInternal(
+  args: ResolveDvtSubstraitProjectionEntryArgs,
+  visitedNodeIds: ReadonlySet<string>
+): DvtSubstraitProjection | null {
+  if (visitedNodeIds.has(args.targetNode.id)) return null;
+  const nextVisitedNodeIds = new Set(visitedNodeIds);
+  nextVisitedNodeIds.add(args.targetNode.id);
   const inspection = inspectDvtSubstraitProjectionDraft(args.draft);
   if (!inspection.ok) return null;
+  const inputBinding = args.draft.sidecar.relations.find(
+    (relation) => relation.relationId === inspection.projection.inputRelationId
+  );
+  if (inputBinding == null) return null;
   const incomingSourceIds = [
     ...new Set(
       args.edges.filter((edge) => edge.targetId === args.targetNode.id).map((edge) => edge.sourceId)
@@ -1115,32 +1490,109 @@ export function resolveDvtSubstraitProjectionEntry(args: {
           const sourceNode = args.nodes.find((node) => node.id === sourceId);
           return sourceNode == null ? [] : [sourceNode];
         });
-  const matchingSources = candidateNodes.flatMap((sourceNode) => {
-    const source = resolveDvtSubstraitProjectionSource(sourceNode);
-    return source != null &&
-      source.table === inspection.projection.source.table &&
-      sameConnectedSourceRef(source.sourceRef, inspection.projection.source.sourceRef) &&
-      source.fields.map((field) => field.name).join('\u0000') ===
-        inspection.projection.source.fields.map((field) => field.name).join('\u0000')
-      ? [source]
-      : [];
+
+  if (inputBinding.sourceRef != null) {
+    const matchingSources = candidateNodes.flatMap((sourceNode) => {
+      const source = resolveDvtSubstraitProjectionSource(sourceNode);
+      return source != null &&
+        source.table === inspection.projection.source.table &&
+        sameConnectedSourceRef(source.sourceRef, inspection.projection.source.sourceRef) &&
+        source.fields.map((field) => field.name).join('\u0000') ===
+          inspection.projection.inputFields.map((field) => field.name).join('\u0000')
+        ? [source]
+        : [];
+    });
+    if (matchingSources.length !== 1) return null;
+    const source = matchingSources[0]!;
+    return {
+      targetNodeId: args.targetNode.id,
+      source,
+      outputs: inspection.projection.outputs.map((output) => ({
+        ...output,
+        dataType:
+          output.scalarExpression != null
+            ? output.dataType
+            : output.calculation == null
+              ? (source.fields.find((field) => field.name === output.sourceFieldName)?.dataType ??
+                'unknown')
+              : output.dataType,
+      })),
+    };
+  }
+
+  const matchingTransforms = candidateNodes.flatMap((sourceNode) => {
+    if (sourceNode.pluginId !== 'dvt' || sourceNode.kind !== 'dvt:transform') return [];
+    try {
+      const authority = readDvtTransformAuthoringAuthority(sourceNode);
+      if (authority == null) return [];
+      const sourceDraft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
+      const sourceInspection = inspectDvtSubstraitProjectionDraft(sourceDraft);
+      if (
+        !sourceInspection.ok ||
+        sourceInspection.projection.targetRelationId !== inspection.projection.inputRelationId ||
+        sourceInspection.projection.outputs.length !== inspection.projection.inputFields.length
+      ) {
+        return [];
+      }
+      const resolvedUpstream = resolveDvtSubstraitProjectionEntryInternal(
+        { ...args, targetNode: sourceNode, draft: sourceDraft },
+        nextVisitedNodeIds
+      );
+      if (
+        resolvedUpstream == null ||
+        sourceInspection.projection.outputs.some((output, ordinal) => {
+          const input = inspection.projection.inputFields[ordinal];
+          const resolvedInput = resolvedUpstream.outputs[ordinal];
+          return (
+            input == null ||
+            resolvedInput == null ||
+            output.fieldId !== input.fieldId ||
+            resolvedInput.fieldId !== input.fieldId
+          );
+        })
+      ) {
+        return [];
+      }
+      return [{ sourceNode, sourceInspection, resolvedUpstream }] as const;
+    } catch {
+      return [];
+    }
   });
-  if (matchingSources.length !== 1) return null;
-  const source = matchingSources[0]!;
+  if (matchingTransforms.length !== 1) return null;
+  const match = matchingTransforms[0]!;
+  const currentInputByFieldId = new Map(
+    match.resolvedUpstream.outputs.map((output) => [output.fieldId, output] as const)
+  );
+  const source = {
+    nodeId: match.sourceNode.id,
+    schema: match.resolvedUpstream.source.schema,
+    table: match.resolvedUpstream.source.table,
+    sourceRef: match.resolvedUpstream.source.sourceRef,
+    fields: match.resolvedUpstream.outputs.map((output) => ({
+      name: output.name,
+      dataType: output.dataType,
+    })),
+  };
   return {
     targetNodeId: args.targetNode.id,
     source,
-    outputs: inspection.projection.outputs.map((output) => ({
-      ...output,
-      dataType:
-        output.scalarExpression != null
-          ? output.dataType
-          : output.calculation == null
-            ? (source.fields.find((field) => field.name === output.sourceFieldName)?.dataType ??
-              'unknown')
-            : output.dataType,
-    })),
+    outputs: inspection.projection.outputs.map((output) => {
+      const currentInput =
+        output.sourceFieldId == null ? undefined : currentInputByFieldId.get(output.sourceFieldId);
+      return {
+        ...output,
+        ...(currentInput == null
+          ? {}
+          : { sourceFieldName: currentInput.name, dataType: currentInput.dataType }),
+      };
+    }),
   };
+}
+
+export function resolveDvtSubstraitProjectionEntry(
+  args: ResolveDvtSubstraitProjectionEntryArgs
+): DvtSubstraitProjection | null {
+  return resolveDvtSubstraitProjectionEntryInternal(args, new Set());
 }
 
 export function decodeDvtSubstraitProjectionDocument(input: unknown): DvtSubstraitProjectionDraft {

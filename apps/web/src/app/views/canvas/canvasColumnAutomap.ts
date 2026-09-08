@@ -2,12 +2,14 @@
 import type { CanonicalNode } from '../../types/canonical';
 import { applyCanvasColumnMapping } from './canvasColumnMappingAuthoring';
 import {
-  readCanvasNodeColumns,
   resolveCanvasSessionNode,
   type CanvasColumn,
   type CanvasColumnAutomapResult,
 } from './canvasColumnMappingModel';
-import { readEditableCanvasProjectionEntry } from './canvasColumnProjectionAuthority';
+import {
+  readCanvasColumnMappingInputFields,
+  readEditableCanvasProjectionEntry,
+} from './canvasColumnProjectionAuthority';
 import type { CanvasDraftSession } from './canvasDraftSession';
 
 function normalizeKnownType(value: string | undefined): string | null {
@@ -42,29 +44,39 @@ export function automapCanvasColumns(args: {
     args.targetNodeId
   );
   if (targetNode == null) return { outcome: 'rejected', reason: 'target_node_not_found' };
+  const resolveNode = (nodeId: string): CanonicalNode | undefined =>
+    resolveCanvasSessionNode(args.draftSession, args.canonicalNodesById, nodeId);
   const projectionResult = readEditableCanvasProjectionEntry({
     targetNode,
     edges: args.draftSession.workingSet.visibleEdges,
-    resolveNode: (nodeId) =>
-      resolveCanvasSessionNode(args.draftSession, args.canonicalNodesById, nodeId),
+    resolveNode,
   });
   if (projectionResult.outcome === 'rejected') return projectionResult;
+  const mappedProjection = projectionResult.projection;
+  const mappedSourceNodeId = mappedProjection?.source.nodeId;
+  const mappedSourceNode = mappedSourceNodeId == null ? undefined : resolveNode(mappedSourceNodeId);
   const mappedInputs = new Set(
-    (projectionResult.projection?.outputs ?? []).flatMap((output) =>
-      output.sourceFieldName == null || projectionResult.projection == null
+    (mappedProjection?.outputs ?? []).flatMap((output) => {
+      const columnId =
+        mappedSourceNode?.pluginId === 'dvt' && mappedSourceNode.kind === 'dvt:transform'
+          ? output.sourceFieldId
+          : output.sourceFieldName;
+      return columnId == null || mappedSourceNodeId == null
         ? []
-        : [`${projectionResult.projection.source.nodeId}\u0000${output.sourceFieldName}`]
-    )
+        : [`${mappedSourceNodeId}\u0000${columnId}`];
+    })
   );
   const upstreamNodes = args.draftSession.workingSet.visibleEdges
     .filter((edge) => edge.targetId === args.targetNodeId)
-    .map((edge) =>
-      resolveCanvasSessionNode(args.draftSession, args.canonicalNodesById, edge.sourceId)
-    )
+    .map((edge) => resolveNode(edge.sourceId))
     .filter((node): node is CanonicalNode => node != null);
   const candidates = upstreamNodes.flatMap((node) =>
-    readCanvasNodeColumns(node).flatMap((column) =>
-      mappedInputs.has(`${node.id}\u0000${column.name}`) ? [] : [{ node, column }]
+    readCanvasColumnMappingInputFields({
+      sourceNode: node,
+      edges: args.draftSession.workingSet.visibleEdges,
+      resolveNode,
+    }).flatMap((column) =>
+      mappedInputs.has(`${node.id}\u0000${column.columnId}`) ? [] : [{ node, column }]
     )
   );
   let draftSession = args.draftSession;
@@ -74,14 +86,14 @@ export function automapCanvasColumns(args: {
     const matches = candidates.filter(
       ({ column }) =>
         column.name === targetColumn.name &&
-        areCanvasColumnTypesCompatible(column.type, targetColumn.type)
+        areCanvasColumnTypesCompatible(column.dataType, targetColumn.type)
     );
     const match = matches.length === 1 ? matches[0] : undefined;
     if (match == null) continue;
     const result = applyCanvasColumnMapping({
       draftSession,
       canonicalNodesById: args.canonicalNodesById,
-      source: { nodeId: match.node.id, columnName: match.column.name },
+      source: { nodeId: match.node.id, columnId: match.column.columnId },
       target: {
         nodeId: args.targetNodeId,
         columnName: targetColumn.name,

@@ -115,7 +115,7 @@ export function inspectDvtSubstraitFilter(
   const stripped = stripFilter(draft);
   const inspection = stripped == null ? null : inspectDvtSubstraitProjectionDraft(stripped.draft);
   if (stripped == null || inspection?.ok !== true) return null;
-  const fieldName = inspection.projection.source.fields[stripped.sourceOrdinal]?.name;
+  const fieldName = inspection.projection.inputFields[stripped.sourceOrdinal]?.name;
   const output = inspection.projection.outputs.find(
     (candidate) => candidate.sourceFieldName === fieldName
   );
@@ -156,10 +156,10 @@ export function applyDvtSubstraitFilter(
   const inspection = inspectDvtSubstraitProjectionDraft(base);
   if (!inspection.ok) return draft;
   const output = inspection.projection.outputs.find((entry) => entry.fieldId === request.fieldId);
-  const sourceOrdinal = inspection.projection.source.fields.findIndex(
+  const sourceOrdinal = inspection.projection.inputFields.findIndex(
     (field) => field.name === output?.sourceFieldName
   );
-  const sourceField = inspection.projection.source.fields[sourceOrdinal];
+  const sourceField = inspection.projection.inputFields[sourceOrdinal];
   if (
     output == null ||
     sourceField == null ||

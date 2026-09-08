@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest';
 import type { CanonicalNode } from '../../types/canonical';
 import {
   createDvtSubstraitProjectionDraft,
+  createDvtSubstraitProjectionDraftFromTransform,
+  decodeDvtSubstraitProjectionDocument,
   encodeDvtSubstraitProjectionDocument,
   inspectDvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
@@ -11,7 +13,10 @@ import {
   persistCanvasProjectionOutputs,
   readEditableCanvasProjectionEntry,
 } from './canvasColumnProjectionAuthority';
-import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import {
+  applyDvtSubstraitSemanticDocument,
+  readDvtTransformAuthoringAuthority,
+} from './canvasDvtTransformAuthoringAuthority';
 import {
   createCanvasColumnHandleId,
   parseCanvasColumnHandleId,
@@ -123,6 +128,51 @@ describe('Canvas column lineage projection', () => {
     ]);
     expect(project(new Set([source.id]))).toEqual([]);
     expect(project(new Set([source.id, model.id]), false)).toEqual([]);
+  });
+
+  it('projects Model-to-Model lineage through stable FieldIds', () => {
+    const [source, upstream] = buildProjectionGraph();
+    const upstreamAuthority = readDvtTransformAuthoringAuthority(upstream);
+    if (upstreamAuthority == null) throw new Error('Expected upstream authority.');
+    const downstreamDraft = createDvtSubstraitProjectionDraftFromTransform({
+      source: decodeDvtSubstraitProjectionDocument(upstreamAuthority.semanticDocument),
+      targetNodeId: 'model-customer-orders',
+      outputs: [
+        {
+          fieldId: 'downstream:order_id',
+          name: 'order_id',
+          sourceFieldId: 'output:order_id',
+        },
+      ],
+    });
+    const downstream = applyDvtSubstraitSemanticDocument(
+      buildNode('model-customer-orders', 'dvt:transform', 'transform'),
+      encodeDvtSubstraitProjectionDocument(downstreamDraft)
+    );
+    const lineage = projectCanvasColumnLineage({
+      nodes: [source, upstream, downstream],
+      edges: [
+        { sourceId: source.id, targetId: upstream.id },
+        { sourceId: upstream.id, targetId: downstream.id },
+      ],
+      expandedNodeIds: new Set([source.id, upstream.id, downstream.id]),
+    });
+
+    expect(lineage).toHaveLength(2);
+    expect(lineage[1]).toMatchObject({
+      source: upstream.id,
+      target: downstream.id,
+      sourceHandle: createCanvasColumnHandleId({
+        direction: 'source',
+        nodeId: upstream.id,
+        columnId: 'output:order_id',
+      }),
+      data: {
+        sourceFieldId: 'output:order_id',
+        outputId: 'downstream:order_id',
+        removable: true,
+      },
+    });
   });
 
   it('preserves mapped lineage when an unrelated second Source is connected', () => {

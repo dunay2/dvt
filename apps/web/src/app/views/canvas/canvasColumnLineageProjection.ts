@@ -295,25 +295,49 @@ export function projectCanvasColumnLineage(args: {
     });
     if (substraitProjection != null && args.expandedNodeIds.has(model.id)) {
       const sourceNode = nodeById.get(substraitProjection.source.nodeId);
-      const sourceRef = ConnectedSourceRefSchema.safeParse(
-        sourceNode?.metadata?.connectedSourceRef
-      );
       if (
         sourceNode == null ||
         !args.expandedNodeIds.has(sourceNode.id) ||
-        !hasDependency(args.edges, sourceNode.id, model.id) ||
-        !sourceRef.success ||
-        !sameConnectedSourceRef(sourceRef.data, substraitProjection.source.sourceRef)
+        !hasDependency(args.edges, sourceNode.id, model.id)
       ) {
         continue;
       }
-      const sourceColumns = new Set(readColumns(sourceNode).map((column) => column.name));
       const sourcedOutputs = substraitProjection.outputs.filter(
         (output): output is typeof output & { sourceFieldName: string; sourceFieldId: string } =>
           output.sourceFieldName != null && output.sourceFieldId != null
       );
-      if (sourcedOutputs.some((output) => !sourceColumns.has(output.sourceFieldName))) {
-        continue;
+      const sourceIsTransform =
+        sourceNode.pluginId === 'dvt' && sourceNode.kind === 'dvt:transform';
+      if (sourceIsTransform) {
+        const sourceColumns = projectCanvasNodePresentationTruth({
+          node: sourceNode,
+          nodes: args.nodes,
+          edges: args.edges,
+        }).columns.declared;
+        if (
+          sourcedOutputs.some(
+            (output) =>
+              !sourceColumns.some(
+                (column) =>
+                  column.reference === output.sourceFieldId &&
+                  column.name === output.sourceFieldName
+              )
+          )
+        ) {
+          continue;
+        }
+      } else {
+        const sourceRef = ConnectedSourceRefSchema.safeParse(
+          sourceNode.metadata?.connectedSourceRef
+        );
+        const sourceColumns = new Set(readColumns(sourceNode).map((column) => column.name));
+        if (
+          !sourceRef.success ||
+          !sameConnectedSourceRef(sourceRef.data, substraitProjection.source.sourceRef) ||
+          sourcedOutputs.some((output) => !sourceColumns.has(output.sourceFieldName))
+        ) {
+          continue;
+        }
       }
       for (const output of sourcedOutputs) {
         projected.push(
@@ -321,7 +345,7 @@ export function projectCanvasColumnLineage(args: {
             sourceNodeId: sourceNode.id,
             sourceFieldId: output.sourceFieldId,
             sourceColumnName: output.sourceFieldName,
-            sourceHandleColumnId: output.sourceFieldName,
+            sourceHandleColumnId: sourceIsTransform ? output.sourceFieldId : output.sourceFieldName,
             targetNodeId: model.id,
             outputId: output.fieldId,
             targetColumnName: output.name,

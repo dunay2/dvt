@@ -2,8 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
 import {
+  applyDvtSubstraitProjectionFunction,
   createDvtSubstraitProjectionDraft,
+  createDvtSubstraitProjectionDraftFromTransform,
+  encodeDvtSubstraitProjectionDocument,
   inspectDvtSubstraitProjectionDraft,
+  resolveDvtSubstraitColumnFunctions,
   resolveDvtSubstraitProjectionEntry,
   type DvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
@@ -77,6 +81,174 @@ function targetNode(): CanonicalNode {
 }
 
 describe('generic Substrait projection identity', () => {
+  it('wraps a Transform output by RelationId and FieldId without inventing a source binding', () => {
+    const upstream = draft();
+    const upstreamInspection = inspectDvtSubstraitProjectionDraft(upstream);
+    if (!upstreamInspection.ok) throw new Error('Expected valid upstream projection.');
+
+    const chained = createDvtSubstraitProjectionDraftFromTransform({
+      source: upstream,
+      targetNodeId: 'transform-orders-summary',
+      outputs: [
+        {
+          fieldId: 'output:summary-buyer',
+          name: 'buyer',
+          sourceFieldId: 'output:customer',
+        },
+        {
+          fieldId: 'output:summary-order-id',
+          name: 'order_id',
+          sourceFieldId: 'output:order_id',
+        },
+      ],
+    });
+
+    expect(chained.sidecar.relations.filter((relation) => relation.sourceRef != null)).toEqual(
+      upstream.sidecar.relations.filter((relation) => relation.sourceRef != null)
+    );
+    expect(chained.sidecar.relations).toHaveLength(upstream.sidecar.relations.length + 1);
+
+    const inspection = inspectDvtSubstraitProjectionDraft(chained);
+    expect(inspection.ok).toBe(true);
+    if (!inspection.ok) return;
+    expect(inspection.projection.inputRelationId).toBe(
+      upstreamInspection.projection.targetRelationId
+    );
+    expect(inspection.projection.inputFields.map((field) => field.fieldId)).toEqual([
+      'output:order_id',
+      'output:customer',
+    ]);
+    expect(
+      inspection.projection.outputs.map(({ fieldId, sourceFieldId, name }) => ({
+        fieldId,
+        sourceFieldId,
+        name,
+      }))
+    ).toEqual([
+      {
+        fieldId: 'output:summary-buyer',
+        sourceFieldId: 'output:customer',
+        name: 'buyer',
+      },
+      {
+        fieldId: 'output:summary-order-id',
+        sourceFieldId: 'output:order_id',
+        name: 'order_id',
+      },
+    ]);
+  });
+
+  it('resolves a chained Transform by exact RelationId and ordered FieldIds', () => {
+    const upstream = draft();
+    const chained = createDvtSubstraitProjectionDraftFromTransform({
+      source: upstream,
+      targetNodeId: 'transform-orders-summary',
+      outputs: [
+        { fieldId: 'output:summary-buyer', name: 'buyer', sourceFieldId: 'output:customer' },
+      ],
+    });
+    const source = sourceNode();
+    const upstreamNode: CanonicalNode = {
+      id: 'transform-orders',
+      name: 'Orders',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        transformAuthoring: {
+          version: 'v1',
+          mode: 'substrait',
+          semanticDocument: encodeDvtSubstraitProjectionDocument(upstream),
+        },
+      },
+    };
+    const downstreamNode: CanonicalNode = {
+      ...targetNode(),
+      id: 'transform-orders-summary',
+      name: 'Order summary',
+    };
+    const nodes = [source, upstreamNode, downstreamNode];
+    const edges = [
+      { sourceId: source.id, targetId: upstreamNode.id },
+      { sourceId: upstreamNode.id, targetId: downstreamNode.id },
+    ];
+
+    const resolved = resolveDvtSubstraitProjectionEntry({
+      targetNode: downstreamNode,
+      nodes,
+      edges,
+      draft: chained,
+    });
+
+    expect(resolved).toMatchObject({
+      targetNodeId: downstreamNode.id,
+      source: {
+        nodeId: upstreamNode.id,
+        fields: [
+          { name: 'order_id', dataType: 'integer' },
+          { name: 'buyer', dataType: 'text' },
+        ],
+      },
+      outputs: [
+        {
+          fieldId: 'output:summary-buyer',
+          sourceFieldId: 'output:customer',
+          sourceFieldName: 'buyer',
+        },
+      ],
+    });
+  });
+  it('applies a scalar function to a Model output consumed by another Model', () => {
+    const chained = createDvtSubstraitProjectionDraftFromTransform({
+      source: draft(),
+      targetNodeId: 'transform-orders-summary',
+      outputs: [
+        { fieldId: 'output:summary-buyer', name: 'buyer', sourceFieldId: 'output:customer' },
+      ],
+    });
+    const lower = resolveDvtSubstraitColumnFunctions({
+      dataType: 'text',
+      provider: 'postgres',
+    }).find((candidate) => candidate.name === 'lower');
+    if (lower == null) throw new Error('Expected admitted LOWER capability.');
+    expect(
+      resolveDvtSubstraitColumnFunctions({ dataTypes: ['string'], provider: 'postgres' }).find(
+        (candidate) => candidate.name === 'lower'
+      )?.capabilityId
+    ).toBe(lower.capabilityId);
+
+    const next = applyDvtSubstraitProjectionFunction(chained, {
+      fieldId: 'output:summary-buyer',
+      capabilityId: lower.capabilityId,
+      alias: 'buyer_normalized',
+      dataType: 'text',
+      provider: 'postgres',
+    });
+
+    expect(next).not.toBe(chained);
+    const inspection = inspectDvtSubstraitProjectionDraft(next);
+    expect(inspection.ok).toBe(true);
+    if (!inspection.ok) return;
+    expect(inspection.projection.outputs).toEqual([
+      expect.objectContaining({
+        fieldId: 'output:summary-buyer',
+        name: 'buyer_normalized',
+        sourceFieldId: 'output:customer',
+        operations: ['lower'],
+      }),
+    ]);
+  });
+  it('rejects a chained Transform reference when only the mutable name matches', () => {
+    expect(() =>
+      createDvtSubstraitProjectionDraftFromTransform({
+        source: draft(),
+        targetNodeId: 'transform-orders-summary',
+        outputs: [{ fieldId: 'output:summary-buyer', name: 'buyer', sourceFieldId: 'buyer' }],
+      })
+    ).toThrow('FieldId');
+  });
   it('allocates opaque relation and source-field identities without changing caller-owned outputs', () => {
     const projectionDraft = draft();
     const relationIds = projectionDraft.sidecar.relations.map((relation) => relation.relationId);

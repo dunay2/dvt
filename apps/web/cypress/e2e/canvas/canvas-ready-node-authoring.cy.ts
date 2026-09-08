@@ -1,4 +1,9 @@
 /** Owned concern: prove governed Canvas draft reads, saves, and reload posture in browser. */
+import {
+  decodeDvtSubstraitProjectionDocument,
+  inspectDvtSubstraitProjectionDraft,
+  type DvtSubstraitProjectionSemantics,
+} from '../../../src/app/views/canvas/canvasDvtSubstraitProjection';
 import { resolveCanvasViewCopy, type CanvasViewCopy } from '../../../src/app/views/canvas/copy';
 import {
   stubFailingCanvasDraftSave,
@@ -106,8 +111,8 @@ function assertNoSeriousAccessibilityViolations(context: string): void {
   );
 }
 
-function visitReadyCanvas(): void {
-  visitWithE2eWorkspaceSession('/canvas', {
+function visitReadyCanvas(path = '/canvas'): void {
+  visitWithE2eWorkspaceSession(path, {
     onBeforeLoad(window) {
       window.localStorage.setItem(
         'dvt-web-application-language',
@@ -241,9 +246,26 @@ describe('Canvas ready node authoring', () => {
     assertNoSeriousAccessibilityViolations('[data-slot="canvas-graph-filter-control"]');
   });
 
-  it('connects, saves, and reloads a native Model chain with inherited columns', () => {
+  it('connects, edits, saves, and reloads a native Model chain', () => {
     const modelChainEdge =
       '.react-flow__edge[data-id="draft_edge_dvt-transform-1_orphan-transform-1"]';
+    const downstreamNode = '.react-flow__node[data-id="orphan-transform-1"]';
+    const totalColumn = `${downstreamNode} [data-slot="graph-node-column-piece"][data-column-name="total"]`;
+    const readLatestDownstreamProjection = (): DvtSubstraitProjectionSemantics | null => {
+      const savedNodes = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as
+        CanvasDraftSaveRequestBody | undefined;
+      const matchingNodes =
+        savedNodes?.draft.nodes.filter((node) => node.id === 'orphan-transform-1') ?? [];
+      expect(matchingNodes, 'one persisted downstream node').to.have.length(1);
+      const savedNode = matchingNodes[0];
+      const authority = savedNode?.metadata?.transformAuthoring as
+        { semanticDocument?: unknown } | undefined;
+      if (authority?.semanticDocument == null) return null;
+      const inspection = inspectDvtSubstraitProjectionDraft(
+        decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+      );
+      return inspection.ok ? inspection.projection : null;
+    };
     stubStatefulCanvasDraftAuthoring({ authoringGenerated: true, includeLooseNode: true });
 
     visitReadyCanvas();
@@ -251,8 +273,7 @@ describe('Canvas ready node authoring', () => {
     cy.get(modelChainEdge).should('not.exist');
     const sourceHandle =
       '.react-flow__node[data-id="dvt-transform-1"] [data-slot="canvas-node-port-handle"][data-port="source"]';
-    const targetHandle =
-      '.react-flow__node[data-id="orphan-transform-1"] [data-slot="canvas-node-port-handle"][data-port="target"]';
+    const targetHandle = `${downstreamNode} [data-slot="canvas-node-port-handle"][data-port="target"]`;
     cy.get(sourceHandle).then(($sourceHandle) => {
       const sourceRect = $sourceHandle[0]!.getBoundingClientRect();
       cy.get(targetHandle).then(($targetHandle) => {
@@ -280,26 +301,97 @@ describe('Canvas ready node authoring', () => {
           });
       });
     });
+
+    let targetRelationId = '';
+    let restoredFieldIds: string[] = [];
     cy.wrap(null).should(() => {
-      const savedEdge = getE2eApiCalls('/workspace/graph/draft', 'PUT')
-        .map((call) => call.body as CanvasDraftSaveRequestBody)
-        .flatMap((body) => body.draft.edges)
-        .find(
-          (edge) => edge.sourceId === 'dvt-transform-1' && edge.targetId === 'orphan-transform-1'
-        );
-      expect(savedEdge, 'persisted Model dependency').to.not.be.undefined;
+      const projection = readLatestDownstreamProjection();
+      expect(projection, 'persisted downstream projection').not.to.be.null;
+      if (projection == null) return;
+      expect(projection.outputs.map((output) => output.name)).to.deep.equal(['order_id', 'total']);
+      expect(projection.outputs.map((output) => output.sourceFieldId)).to.deep.equal(
+        projection.inputFields.map((field) => field.fieldId)
+      );
+      targetRelationId = projection.targetRelationId;
     });
 
-    visitReadyCanvas();
+    cy.get(downstreamNode).contains('button', 'Columns (2)').click();
+    cy.get(totalColumn)
+      .should('contain.text', 'NN')
+      .find('[data-slot="graph-node-column-output-state"]')
+      .should('have.attr', 'aria-pressed', 'true')
+      .click({ force: true });
+    cy.wrap(null).should(() => {
+      expect(readLatestDownstreamProjection()?.outputs.map((output) => output.name)).to.deep.equal([
+        'order_id',
+      ]);
+    });
+    cy.get(totalColumn)
+      .should('contain.text', 'NN')
+      .find('[data-slot="graph-node-column-output-state"]')
+      .should('have.attr', 'aria-pressed', 'false')
+      .click({ force: true });
+    cy.wrap(null).should(() => {
+      const projection = readLatestDownstreamProjection();
+      expect(projection?.outputs.map((output) => output.name)).to.deep.equal(['order_id', 'total']);
+      expect(projection?.targetRelationId).to.equal(targetRelationId);
+      restoredFieldIds = projection?.outputs.map((output) => output.fieldId) ?? [];
+    });
+
+    cy.get(totalColumn)
+      .should('contain.text', 'NN')
+      .find('[data-slot="graph-node-column-output-state"]')
+      .should('have.attr', 'aria-pressed', 'true');
+    cy.get(totalColumn)
+      .closest('[data-slot="graph-node-column-row"]')
+      .find('[data-slot="canvas-node-port-handle"][data-port="source"]')
+      .should(($handle) => {
+        expect($handle.attr('data-handleid')).to.equal(
+          'column:source:' +
+            encodeURIComponent('orphan-transform-1') +
+            ':' +
+            encodeURIComponent(restoredFieldIds[1] ?? '')
+        );
+      });
+    cy.get(totalColumn)
+      .should('have.attr', 'draggable', 'true')
+      .focus()
+      .trigger('keydown', { key: 'ArrowUp', altKey: true });
+    cy.get(downstreamNode)
+      .find('[data-slot="graph-node-column-piece"]')
+      .should(($pieces) => {
+        expect([...$pieces].map((piece) => piece.getAttribute('data-column-name'))).to.deep.equal([
+          'total',
+          'order_id',
+        ]);
+      });
+    cy.get('[data-sonner-toast]').should('not.exist');
+    cy.wrap(null).should(() => {
+      const projection = readLatestDownstreamProjection();
+      expect(projection?.outputs.map((output) => output.name)).to.deep.equal(['total', 'order_id']);
+      expect(projection?.outputs.map((output) => output.fieldId)).to.deep.equal([
+        restoredFieldIds[1],
+        restoredFieldIds[0],
+      ]);
+      expect(projection?.targetRelationId).to.equal(targetRelationId);
+    });
+
+    visitReadyCanvas('/canvas?reload=model-chain');
 
     cy.get(modelChainEdge).should('be.visible');
-    cy.get('.react-flow__node[data-id="orphan-transform-1"]')
-      .should('be.visible')
-      .within(() => {
-        cy.contains('button', 'Columns (2)').click();
-        cy.contains('order_id').should('be.visible');
-        cy.contains('total').should('be.visible');
+    cy.get(downstreamNode).contains('button', 'Columns (2)').click();
+    cy.get(downstreamNode)
+      .find('[data-slot="graph-node-column-piece"]')
+      .then(($pieces) => {
+        expect([...$pieces].map((piece) => piece.getAttribute('data-column-name'))).to.deep.equal([
+          'total',
+          'order_id',
+        ]);
       });
+    cy.get(totalColumn)
+      .should('contain.text', 'NN')
+      .find('[data-slot="graph-node-column-output-state"]')
+      .should('have.attr', 'aria-pressed', 'true');
   });
 
   it('adds a governed authoring node from the canvas context menu on an existing canvas', () => {

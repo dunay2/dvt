@@ -154,7 +154,7 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
       const result = applyCanvasColumnMapping({
         draftSession: state.draftSession,
         canonicalNodesById: state.canonicalNodesById,
-        source: { nodeId: sourceHandle.nodeId, columnName: sourceHandle.columnId },
+        source: { nodeId: sourceHandle.nodeId, columnId: sourceHandle.columnId },
         target,
       });
       if (result.outcome === 'rejected') {
@@ -343,7 +343,7 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
         outputId: mapping.outputId,
         source: {
           nodeId: mapping.sourceNodeId,
-          columnName: mapping.sourceColumnName,
+          columnId: mapping.sourceFieldId,
         },
       });
       if (result.outcome === 'rejected') {
