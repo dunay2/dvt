@@ -58,6 +58,8 @@ export function DvtSubstraitCompositionStart({
           ...currentDraft,
           dvt: {
             kind: 'transform',
+            materialized:
+              currentDraft.dvt?.kind === 'transform' ? currentDraft.dvt.materialized : 'view',
             mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
             shape: 'inner_join',
             plan: join.plan,
@@ -74,6 +76,8 @@ export function DvtSubstraitCompositionStart({
                 ...currentDraft,
                 dvt: {
                   kind: 'transform',
+                  materialized:
+                    currentDraft.dvt?.kind === 'transform' ? currentDraft.dvt.materialized : 'view',
                   mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
                   shape: 'union_all',
                   plan: unionAll.plan,

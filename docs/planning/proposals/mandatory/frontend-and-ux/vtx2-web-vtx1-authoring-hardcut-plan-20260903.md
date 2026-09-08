@@ -259,6 +259,11 @@ symbols:
   - { <<: *vtx2Symbol, name: validateDvtSourceAuthoringMetadata, path: apps/web/src/app/views/canvas/canvasDvtSourceAuthoring.ts }
   - { <<: *vtx2Symbol, name: withDvtConfig, path: apps/web/src/app/views/canvas/canvasDvtSourceAuthoring.ts }
   - { <<: *vtx2Symbol, name: TransformMetadata, path: apps/web/src/app/views/canvas/canvasDvtTransformAuthoring.ts }
+  - { <<: *vtx2Symbol, name: DEFAULT_MATERIALIZATION, path: apps/web/src/app/views/canvas/canvasDvtTransformAuthoring.ts }
+  - { <<: *vtx2Symbol, name: VALID_MATERIALIZATIONS, path: apps/web/src/app/views/canvas/canvasDvtTransformAuthoring.ts }
+  - { <<: *vtx2Symbol, name: normalizeMaterialized, path: apps/web/src/app/views/canvas/canvasDvtTransformAuthoring.ts }
+  - { <<: *vtx2Symbol, name: readMaterialized, path: apps/web/src/app/views/canvas/canvasDvtTransformAuthoring.ts }
+  - { <<: *vtx2Symbol, name: validateDvtTransformAuthoringMetadata, path: apps/web/src/app/views/canvas/canvasDvtTransformAuthoring.ts }
   - { <<: *vtx2Symbol, name: applyDvtTransformAuthoringMetadata, path: apps/web/src/app/views/canvas/canvasDvtTransformAuthoring.ts }
   - { <<: *vtx2Symbol, name: createDvtTransformAuthoringMetadata, path: apps/web/src/app/views/canvas/canvasDvtTransformAuthoring.ts }
   - { <<: *vtx2Symbol, name: fromDraft, path: apps/web/src/app/views/canvas/canvasDvtTransformAuthoring.ts }

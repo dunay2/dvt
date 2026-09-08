@@ -45,7 +45,6 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
       onOutputToggle,
       nodeId,
       onNestedColumnReorder,
-      onContextMenu,
       ...elementProps
     } = props;
     const accessibleLabel = (
@@ -55,6 +54,7 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
     return (
       <div
         {...elementProps}
+        data-canvas-context-menu-owner="column"
         ref={ref}
         data-slot="graph-node-column-piece"
         data-column-name={column.name}
@@ -64,10 +64,6 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
         draggable={canReorder}
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
-        onContextMenu={(event) => {
-          onContextMenu?.(event);
-          event.stopPropagation();
-        }}
         className={graphNodeColumnClasses.piece}
       >
         {column.sourceFieldName != null && column.sourceFieldName !== column.name ? (

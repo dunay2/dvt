@@ -58,6 +58,16 @@ export function CanvasNodeShell({
     onOpenNode?.();
   };
 
+  const handleContextMenu = (event: ReactMouseEvent<HTMLDivElement>): void => {
+    if (
+      !(event.target instanceof Element) ||
+      event.target.closest('[data-canvas-context-menu-owner="column"]') == null
+    )
+      return;
+    event.preventDefault();
+    event.stopPropagation();
+  };
+
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
@@ -65,6 +75,7 @@ export function CanvasNodeShell({
           data-slot="canvas-node-shell"
           className={cn(styles.root, 'relative')}
           onDoubleClick={handleDoubleClick}
+          onContextMenu={handleContextMenu}
           onDragOver={onDragOver}
           onDrop={onDrop}
         >

@@ -21,6 +21,7 @@ type GraphNodeCardCopy = Readonly<{
   estimatedAverageRowSizeLabel: string;
   averageRowSizeLabel: string;
   lastRunLabel: string;
+  notConfiguredLabel: string;
   durationLabel: string;
   costLabel: string;
   testsLabel: string;
@@ -103,6 +104,7 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   estimatedAverageRowSizeLabel: 'Est. avg row size',
   averageRowSizeLabel: 'Avg row size',
   lastRunLabel: 'Last run',
+  notConfiguredLabel: 'Not configured',
   durationLabel: 'Duration',
   costLabel: 'Cost',
   testsLabel: 'Tests',
@@ -204,6 +206,7 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   estimatedAverageRowSizeLabel: 'Tamaño medio estimado por fila',
   averageRowSizeLabel: 'Tamaño medio por fila',
   lastRunLabel: 'Última ejecución',
+  notConfiguredLabel: 'Sin configurar',
   durationLabel: 'Duración',
   costLabel: 'Coste',
   testsLabel: 'Pruebas',

@@ -17,11 +17,13 @@ export type DvtSourceAuthoringMetadata = Readonly<{
 export type DvtUninitializedTransformAuthoringMetadata = Readonly<{
   kind: 'transform';
   mode: 'uninitialized';
+  materialized: string;
 }>;
 
 export type DvtSubstraitTransformAuthoringMetadata = Readonly<{
   kind: 'transform';
   mode: typeof DVT_TRANSFORM_AUTHORING_MODE.substrait;
+  materialized: string;
   shape: 'projection' | 'pilot' | 'inner_join' | 'union_all';
   plan: Plan;
   sidecar: DvtSubstraitAuthoringSidecarV1;

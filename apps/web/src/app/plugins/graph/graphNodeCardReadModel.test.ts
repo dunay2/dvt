@@ -14,6 +14,16 @@ const CARD_STRATEGIES = [
   dvtGraphNodeCardStrategy,
 ];
 
+const UNCONFIGURED_TRANSFORM_HEADER = [
+  { id: 'materialization', label: 'Mat.', value: 'Not configured', placement: 'header' },
+  {
+    id: 'last-run',
+    label: 'Last run',
+    value: 'Not calculated',
+    icon: 'clock',
+    placement: 'header',
+  },
+] as const;
 const SOURCE_METRICS_OBSERVED_AT = '2026-07-10T21:00:00.000Z';
 const SPANISH_PRESENTATION_COPY = {
   columnsLabel: 'Columnas',
@@ -475,13 +485,19 @@ describe('buildGraphNodeCardReadModel', () => {
     expect(model.health).toEqual({ label: 'Completed', tone: 'healthy' });
     expect(model.accentTone).toBe('model');
     expect(model.metrics).toEqual([
+      { id: 'materialization', label: 'Mat.', value: 'Not configured', placement: 'header' },
       { id: 'status', label: 'Status', value: 'completed' },
-      { id: 'last-run', label: 'Last run', value: '2026-06-12T20:45:00Z' },
       { id: 'duration', label: 'Duration', value: '1m 15s' },
       { id: 'warnings', label: 'Warnings', value: '2' },
+      {
+        id: 'last-run',
+        label: 'Last run',
+        value: '2026-06-12T20:45:00Z',
+        icon: 'clock',
+        placement: 'header',
+      },
     ]);
     expect(model.operationalMetrics).toEqual([
-      { id: 'last-run', label: 'Last run', value: '2026-06-12T20:45:00Z', icon: 'clock' },
       { id: 'duration', label: 'Duration', value: '1m 15s', icon: 'timer' },
       {
         id: 'rows',
@@ -517,7 +533,6 @@ describe('buildGraphNodeCardReadModel', () => {
     );
 
     expect(model.operationalMetrics).toEqual([
-      { id: 'last-run', label: 'Last run', value: '2026-06-12T20:45:00Z', icon: 'clock' },
       { id: 'rows', label: 'Rows', value: 'Not calculated', icon: 'rows' },
       { id: 'size', label: 'Size', value: 'Not calculated', icon: 'database' },
     ]);
@@ -569,6 +584,7 @@ describe('buildGraphNodeCardReadModel', () => {
         lastDuration: 75,
         lastCost: 0.42,
         metadata: {
+          config: { materialized: 'table' },
           database: 'warehouse',
           schema: 'mart',
           table: 'customer_rollup',
@@ -581,8 +597,16 @@ describe('buildGraphNodeCardReadModel', () => {
     );
 
     expect(model.metrics).toEqual([
+      {
+        id: 'materialization',
+        label: 'Mat.',
+        value: 'table',
+        icon: 'table',
+        placement: 'header',
+      },
       { id: 'duration', label: 'Duration', value: '1m 15s' },
       { id: 'cost', label: 'Cost', value: '$0.42' },
+      UNCONFIGURED_TRANSFORM_HEADER[1],
     ]);
   });
 
@@ -808,6 +832,13 @@ describe('buildGraphNodeCardReadModel', () => {
         placement: 'header',
       },
       { id: 'dependencies', label: 'Deps', value: '2' },
+      {
+        id: 'last-run',
+        label: 'Last run',
+        value: 'Not calculated',
+        icon: 'clock',
+        placement: 'header',
+      },
     ]);
     expect(model.operationalMetrics).toEqual([
       { id: 'rows', label: 'Rows', value: 'Not calculated', icon: 'rows' },
@@ -867,7 +898,7 @@ describe('buildGraphNodeCardReadModel', () => {
       CARD_STRATEGIES
     );
 
-    expect(model.metrics).toEqual([]);
+    expect(model.metrics).toEqual(UNCONFIGURED_TRANSFORM_HEADER);
   });
 
   it('keeps localized code posture in the inspector instead of the graph card header', () => {
@@ -992,10 +1023,10 @@ describe('buildGraphNodeCardReadModel', () => {
       CARD_STRATEGIES
     );
 
-    expect(generated.metrics).toEqual([]);
-    expect(authored.metrics).toEqual([]);
-    expect(fileBacked.metrics).toEqual([]);
-    expect(canonical.metrics).toEqual([]);
+    expect(generated.metrics).toEqual(UNCONFIGURED_TRANSFORM_HEADER);
+    expect(authored.metrics).toEqual(UNCONFIGURED_TRANSFORM_HEADER);
+    expect(fileBacked.metrics).toEqual(UNCONFIGURED_TRANSFORM_HEADER);
+    expect(canonical.metrics).toEqual(UNCONFIGURED_TRANSFORM_HEADER);
   });
 
   it('keeps Source row and byte evidence when dbt is the external authority', () => {

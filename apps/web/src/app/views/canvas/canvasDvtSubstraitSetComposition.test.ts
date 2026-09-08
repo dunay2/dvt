@@ -374,6 +374,7 @@ describe('VTX2 Substrait UNION ALL identity', () => {
     const draft = fixture();
     const target = applyDvtNodeAuthoringMetadata(targetNode(), {
       kind: 'transform',
+      materialized: 'view',
       mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
       shape: 'union_all',
       plan: draft.plan,
@@ -443,6 +444,7 @@ describe('VTX2 Substrait UNION ALL identity', () => {
 
     const persisted = applyDvtNodeAuthoringMetadata(targetNode(), {
       kind: 'transform',
+      materialized: 'view',
       mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
       shape: 'union_all',
       plan: draft.plan,
@@ -450,6 +452,7 @@ describe('VTX2 Substrait UNION ALL identity', () => {
     });
     expect(createDvtNodeAuthoringMetadata(persisted)).toMatchObject({
       kind: 'transform',
+      materialized: 'view',
       mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
       shape: 'union_all',
     });
@@ -485,6 +488,7 @@ describe('UNION ALL reference-backed Canvas lineage', () => {
       const south = sourceNode('south-node', 'customers_south');
       const target = applyDvtNodeAuthoringMetadata(targetNode(), {
         kind: 'transform',
+        materialized: 'view',
         mode: DVT_TRANSFORM_AUTHORING_MODE.substrait,
         shape: 'union_all',
         plan: draft.plan,

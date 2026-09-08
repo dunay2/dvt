@@ -690,6 +690,50 @@ describe('canvasInspectorAuthoringModel', () => {
     });
   });
 
+  it('roundtrips native Transform materialization through metadata.config without a dbt profile', () => {
+    const node = buildDvtNode('dvt:transform', {
+      config: { owner: 'finance', materialized: 'table' },
+    });
+    const draft = createCanvasInspectorNodeDraft(node);
+
+    expect(draft.dvt).toEqual({
+      kind: 'transform',
+      mode: 'uninitialized',
+      materialized: 'table',
+    });
+    expect(validateCanvasInspectorNodeDraft(draft)).toEqual({});
+
+    const editedDraft = {
+      ...draft,
+      dvt: { ...draft.dvt!, materialized: 'view' },
+    };
+    const applied = applyCanvasInspectorNodeDraft(node, editedDraft);
+
+    expect(applied.metadata).toEqual({
+      config: { owner: 'finance', materialized: 'view' },
+    });
+    expect(applied.metadata).not.toHaveProperty('dbt');
+    expect(createCanvasInspectorNodeDraft(applied).dvt).toEqual({
+      kind: 'transform',
+      mode: 'uninitialized',
+      materialized: 'view',
+    });
+  });
+
+  it('rejects unsupported native Transform materialization without accepting a dbt mode', () => {
+    const draft = createCanvasInspectorNodeDraft(buildDvtNode('dvt:transform'));
+    if (draft.dvt?.kind !== 'transform') throw new Error('Expected Transform authoring.');
+
+    expect(
+      validateCanvasInspectorNodeDraft({
+        ...draft,
+        dvt: { ...draft.dvt, materialized: 'incremental' },
+      })
+    ).toEqual({
+      dvt: { materialization: 'dvt_materialization_invalid' },
+    });
+  });
+
   it('roundtrips a connected-field Substrait projection through the inspector draft', () => {
     const source: CanonicalNode = {
       id: 'source_orders',
@@ -730,7 +774,9 @@ describe('canvasInspectorAuthoringModel', () => {
     const draft = createCanvasInspectorNodeDraft(node);
 
     expect(draft.dvt).toMatchObject({ kind: 'transform', mode: 'substrait', shape: 'projection' });
-    expect(applyCanvasInspectorNodeDraft(node, draft)).toEqual(node);
+    const applied = applyCanvasInspectorNodeDraft(node, draft);
+    expect(applied).toMatchObject(node);
+    expect(applied.metadata).toMatchObject({ config: { materialized: 'view' } });
   });
 
   it('rejects persisted legacy Source filter authority without changing physical identity', () => {

@@ -93,6 +93,14 @@ describe('Canvas structured Transform fields', () => {
     modelCard()
       .contains('[data-slot="graph-node-column-row"]', 'customer')
       .find('[data-slot="graph-node-column-piece"]')
+      .rightclick(20, 10);
+    cy.get('[data-slot="graph-node-column-function-menu"]').should('be.visible');
+    cy.get('[data-slot="canvas-node-context-menu"]').should('not.exist');
+    cy.get('body').type('{esc}');
+
+    modelCard()
+      .contains('[data-slot="graph-node-column-row"]', 'customer')
+      .find('[data-slot="graph-node-column-piece"]')
       .focus()
       .trigger('keydown', { key: 'ArrowLeft', altKey: true });
     cy.get('[data-slot="graph-node-column-composition-structured-field"]').click();

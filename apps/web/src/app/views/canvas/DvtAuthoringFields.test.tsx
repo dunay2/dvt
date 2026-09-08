@@ -288,6 +288,34 @@ describe('DvtAuthoringFields', () => {
     expect(container.querySelector('input[name="dvt-filter-value"]')).toBeNull();
   });
 
+  it('renders native Transform materialization in General and updates the canonical draft', () => {
+    renderFields(
+      buildDvtNode('dvt:transform', {
+        config: { materialized: 'table' },
+      }),
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      'general'
+    );
+
+    const select = container.querySelector(
+      'select[name="dvt-transform-materialization"]'
+    ) as HTMLSelectElement | null;
+
+    expect(select?.value).toBe('table');
+    expect([...select!.options].map((option) => option.value)).toEqual(['view', 'table']);
+    expect(draftJson()).not.toContain('"dbt"');
+
+    act(() => {
+      fireEvent.change(select!, { target: { value: 'view' } });
+    });
+
+    expect(draftJson()).toContain('"materialized":"view"');
+    expect(draftJson()).not.toContain('"dbt"');
+  });
+
   it('starts one typed Substrait INNER JOIN from two compatible connected datasets', () => {
     const customers = buildJoinWarehouseSourceNode({
       id: 'source-customers',
