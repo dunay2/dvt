@@ -8,7 +8,7 @@ import {
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
 
-function stubColumnMappingCanvas(disconnected = false): void {
+function stubColumnMappingCanvas(disconnected = false, secondSource = false): void {
   stubShellBootstrapApis({
     scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'],
   });
@@ -25,6 +25,7 @@ function stubColumnMappingCanvas(disconnected = false): void {
     canvasKind: 'transformation',
     columnMapping: true,
     columnMappingDisconnected: disconnected,
+    columnMappingSecondSource: secondSource,
   });
 }
 
@@ -139,6 +140,61 @@ describe('Canvas column lineage mapping', () => {
     cy.contains('button', 'Convertir a SQL').should('not.exist');
   });
 
+  it('preserves mappings, NN, output click, and reorder after connecting a second Source', () => {
+    cy.viewport(1920, 1080);
+    stubColumnMappingCanvas(false, true);
+    visitColumnMappingCanvas('en');
+
+    toggleColumns('source-orders');
+    toggleColumns('model-orders');
+    canvasNode('model-orders').contains('button', 'Map compatible columns').click();
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    cy.wait(600);
+    cy.get('.react-flow__edge-columnLineage[aria-label="customer → customer"]').should('exist');
+
+    connectCanvasNodes('Health check', 'Orders Model');
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    cy.get('.react-flow__edge-columnLineage[aria-label="customer → customer"]').should('exist');
+
+    canvasNode('model-orders')
+      .contains('[data-slot="graph-node-column-row"]', 'customer')
+      .as('customerRow');
+    cy.get('@customerRow').should('contain.text', 'NN');
+    cy.get('@customerRow').find('[data-slot="graph-node-column-output-state"]').click();
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    cy.get('@customerRow')
+      .should('contain.text', 'NN')
+      .find('[data-slot="graph-node-column-output-state"]')
+      .should('have.attr', 'aria-pressed', 'false');
+
+    canvasNode('model-orders')
+      .find('[data-slot="graph-node-column-piece"][data-column-name="amount"]')
+      .focus()
+      .trigger('keydown', { key: 'ArrowUp', altKey: true });
+    canvasNode('model-orders')
+      .find('[data-slot="graph-node-column-piece"]')
+      .then(($columns) => {
+        expect([...$columns].map((column) => column.dataset.columnName).slice(0, 3)).to.deep.equal([
+          'order_id',
+          'amount',
+          'customer',
+        ]);
+      });
+    canvasNode('model-orders')
+      .find('[data-slot="graph-node-column-piece"][data-column-name="amount"]')
+      .focus()
+      .trigger('keydown', { key: 'ArrowUp', altKey: true });
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    canvasNode('model-orders')
+      .find('[data-slot="graph-node-column-piece"]')
+      .then(($columns) => {
+        expect([...$columns].map((column) => column.dataset.columnName).slice(0, 3)).to.deep.equal([
+          'amount',
+          'order_id',
+          'customer',
+        ]);
+      });
+  });
   it('creates deterministic mappings when the stage dependency is connected', () => {
     cy.viewport(1920, 1080);
     stubColumnMappingCanvas(true);

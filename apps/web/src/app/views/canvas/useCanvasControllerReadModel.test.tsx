@@ -358,7 +358,7 @@ describe('useCanvasControllerReadModel', () => {
     }
   });
 
-  it('keeps structured Transform output toggles and root reorder on the canonical handlers', async () => {
+  it('keeps structured output toggles and root reorder after a second Source is connected', async () => {
     const sourceRef = {
       schemaVersion: 'connected-source-ref.v1' as const,
       connectionRef: {
@@ -379,6 +379,18 @@ describe('useCanvasControllerReadModel', () => {
           { name: 'customer', type: 'text' },
           { name: 'amount', type: 'numeric' },
         ],
+      },
+    } satisfies CanonicalNode;
+    const secondSourceNode = {
+      ...sourceNode,
+      id: 'source-health-check',
+      name: 'Health check',
+      metadata: {
+        ...sourceNode.metadata,
+        schema: 'core',
+        tableName: 'health_check',
+        connectedSourceRef: { ...sourceRef, sourceObjectId: 'core.health_check' },
+        columns: [{ name: 'id', type: 'integer' }],
       },
     } satisfies CanonicalNode;
     const flatDraft = createDvtSubstraitProjectionDraft({
@@ -415,18 +427,26 @@ describe('useCanvasControllerReadModel', () => {
       },
       encodeDvtSubstraitStructuredFieldDocument(structuredDraft)
     );
-    const dependency = {
-      id: 'source-to-transform',
-      sourceId: sourceNode.id,
-      targetId: transformNode.id,
-      relation: 'lineage' as const,
-    };
+    const dependencies = [
+      {
+        id: 'source-to-transform',
+        sourceId: sourceNode.id,
+        targetId: transformNode.id,
+        relation: 'lineage' as const,
+      },
+      {
+        id: 'second-source-to-transform',
+        sourceId: secondSourceNode.id,
+        targetId: transformNode.id,
+        relation: 'lineage' as const,
+      },
+    ];
     const presentationTruth = projectCanvasNodePresentationTruth({
       node: transformNode,
-      nodes: [sourceNode, transformNode],
-      edges: [dependency],
+      nodes: [sourceNode, secondSourceNode, transformNode],
+      edges: dependencies,
     });
-    const graphNodes = [sourceNode, transformNode].map((node, index) =>
+    const graphNodes = [sourceNode, secondSourceNode, transformNode].map((node, index) =>
       mapCanonicalNodeToCanvasNode({
         canonicalNode: node,
         index,
@@ -439,23 +459,31 @@ describe('useCanvasControllerReadModel', () => {
       ...base,
       graphModel: {
         nodes: graphNodes,
-        edges: [{ id: dependency.id, source: dependency.sourceId, target: dependency.targetId }],
-        canonicalNodesById: new Map([sourceNode, transformNode].map((node) => [node.id, node])),
+        edges: dependencies.map((dependency) => ({
+          id: dependency.id,
+          source: dependency.sourceId,
+          target: dependency.targetId,
+        })),
+        canonicalNodesById: new Map(
+          [sourceNode, secondSourceNode, transformNode].map((node) => [node.id, node])
+        ),
         onEdgesChange: vi.fn(),
       },
       visibleScope: {
-        canonicalNodes: [sourceNode, transformNode],
-        canonicalEdges: [dependency],
+        canonicalNodes: [sourceNode, secondSourceNode, transformNode],
+        canonicalEdges: dependencies,
       },
       executionScope: {
         selectedNodeIds: [],
-        workspaceNodeIds: [sourceNode.id, transformNode.id],
+        workspaceNodeIds: [sourceNode.id, secondSourceNode.id, transformNode.id],
       },
     };
     const mounted = await renderReadModel(args);
 
     try {
-      const modelData = mounted.readState()?.nodesWithImpact[1]?.data as ReadModelNodeData;
+      const modelData = mounted
+        .readState()
+        ?.nodesWithImpact.find((node) => node.id === transformNode.id)?.data as ReadModelNodeData;
       expect(modelData.onToggleCanvasColumnOutput).toBe(
         args.graphHandlers.handleToggleCanvasColumnOutput
       );

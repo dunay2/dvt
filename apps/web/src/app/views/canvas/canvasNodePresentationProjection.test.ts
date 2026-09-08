@@ -41,7 +41,7 @@ const SOURCE: CanonicalNode = {
     connectedSourceRef: SOURCE_REF,
     columns: [
       { name: 'order_id', type: 'integer' },
-      { name: 'customer', type: 'text' },
+      { name: 'customer', type: 'text', nullable: false },
       { name: 'amount', type: 'numeric' },
     ],
   },
@@ -156,6 +156,45 @@ describe('projectCanvasNodePresentationTruth', () => {
     ]);
   });
 
+  it('preserves mapped outputs when an unrelated second Source is connected', () => {
+    const transform = buildCanonicalTransform();
+    const secondSource: CanonicalNode = {
+      ...SOURCE,
+      id: 'source-health-check',
+      name: 'health_check',
+      metadata: {
+        ...SOURCE.metadata,
+        tableName: 'health_check',
+        connectedSourceRef: {
+          ...SOURCE_REF,
+          sourceObjectId: 'core.health_check',
+        },
+        columns: [
+          { name: 'id', type: 'integer' },
+          { name: 'created_at', type: 'timestamp without time zone' },
+        ],
+      },
+    };
+
+    const truth = projectCanvasNodePresentationTruth({
+      node: transform,
+      nodes: [SOURCE, secondSource, transform],
+      edges: [
+        { sourceId: SOURCE.id, targetId: transform.id },
+        { sourceId: secondSource.id, targetId: transform.id },
+      ],
+    });
+
+    expect(truth.columns.declared).toEqual([
+      expect.objectContaining({
+        name: 'customer_clean',
+        sourceNodeId: SOURCE.id,
+        sourceFieldName: 'customer',
+        operations: ['trim'],
+        nullable: false,
+      }),
+    ]);
+  });
   it('projects only a direct upstream schema and keeps declared outputs authoritative', () => {
     const transform: CanonicalNode = {
       ...buildCanonicalTransform(),
@@ -191,7 +230,7 @@ describe('projectCanvasNodePresentationTruth', () => {
         .columns.visible
     ).toEqual([
       expect.objectContaining({ name: 'order_id', type: 'integer' }),
-      expect.objectContaining({ name: 'customer', type: 'text' }),
+      expect.objectContaining({ name: 'customer', type: 'text', nullable: false }),
       expect.objectContaining({ name: 'amount', type: 'numeric' }),
     ]);
 
