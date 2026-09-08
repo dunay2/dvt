@@ -9,12 +9,8 @@ import {
 } from '@xyflow/react';
 
 import DbtNodeComponent from '../components/canvas/DbtNodeComponent';
-import { buildCanvasNodePresentationTruth } from '../components/canvas/canvasNodePresentationTruth';
 import { CanvasDependencyEdge } from '../views/canvas/CanvasDependencyEdge';
-import {
-  mapCanonicalEdgeToCanvasEdge,
-  mapCanonicalNodeToCanvasNode,
-} from '../views/canvas/canvasNodeMapper';
+import { useCanvasViewportGraphModel } from '../views/canvas/useCanvasViewportGraphModel';
 import {
   SEMANTIC_WORKBENCH_EDGE,
   SEMANTIC_WORKBENCH_SOURCE,
@@ -38,36 +34,28 @@ const DVT_EDGE_TYPES: EdgeTypes = { dependency: CanvasDependencyEdge };
 function buildCanvasProcess() {
   const canonicalNodes = [...SEMANTIC_WORKBENCH_SOURCE, SEMANTIC_WORKBENCH_TRANSFORM] as const;
   const canonicalEdges = SEMANTIC_WORKBENCH_EDGE;
-  const positions = [
-    { x: 50, y: 72 },
-    { x: 500, y: 72 },
-    { x: 950, y: 72 },
-  ] as const;
-
-  const nodes = canonicalNodes.map((canonicalNode, index) => {
-    const presentationTruth = buildCanvasNodePresentationTruth({
-      node: canonicalNode,
-      nodes: canonicalNodes,
-      edges: canonicalEdges,
-    });
-    return mapCanonicalNodeToCanvasNode({
-      canonicalNode,
-      index,
-      showColumns: true,
-      frozen: true,
-      persistedPosition: positions[index],
-      presentationTruth,
-    });
-  });
-
   return {
-    nodes,
-    edges: canonicalEdges.map(mapCanonicalEdgeToCanvasEdge),
+    visibleNodeIds: canonicalNodes.map((node) => node.id),
+    visibleEdges: canonicalEdges.map(({ sourceId, targetId }) => ({ sourceId, targetId })),
+    canonicalNodesById: new Map(canonicalNodes.map((node) => [node.id, node])),
+    canonicalEdgeIdBySignature: new Map(
+      canonicalEdges.map((edge) => [`${edge.sourceId}::${edge.targetId}`, edge.id])
+    ),
+    canonicalEdgeBySignature: new Map(
+      canonicalEdges.map((edge) => [`${edge.sourceId}::${edge.targetId}`, edge])
+    ),
+    columnLevelLineageEnabled: true,
+    persistedNodePositions: {
+      [canonicalNodes[0].id]: { x: 50, y: 72 },
+      [canonicalNodes[1].id]: { x: 500, y: 72 },
+      [canonicalNodes[2].id]: { x: 950, y: 72 },
+    },
   };
 }
 
 function SemanticWorkbenchLab() {
-  const canvasProcess = useMemo(buildCanvasProcess, []);
+  const canvasProjection = useMemo(buildCanvasProcess, []);
+  const canvasProcess = useCanvasViewportGraphModel(canvasProjection);
   const semanticGraph = useMemo(
     () => projectSemanticWorkbenchGraph(SEMANTIC_WORKBENCH_TRANSFORM),
     []
@@ -132,15 +120,18 @@ function SemanticWorkbenchLab() {
         <ReactFlow
           nodes={canvasProcess.nodes}
           edges={canvasProcess.edges}
+          onNodesChange={canvasProcess.onNodesChange}
           nodeTypes={DVT_NODE_TYPES}
           edgeTypes={DVT_EDGE_TYPES}
           fitView
           fitViewOptions={{ padding: 0.16, maxZoom: 0.88 }}
           minZoom={0.35}
           maxZoom={1.1}
-          nodesDraggable={false}
+          nodesDraggable
           nodesConnectable={false}
           elementsSelectable
+          selectNodesOnDrag
+          multiSelectionKeyCode="Shift"
           onNodeClick={(_, node) => setSelectedCanvasId(node.id)}
           proOptions={{ hideAttribution: true }}
         >
