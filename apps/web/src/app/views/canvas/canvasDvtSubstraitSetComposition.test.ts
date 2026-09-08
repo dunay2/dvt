@@ -327,6 +327,8 @@ describe('VTX2 Substrait UNION ALL identity', () => {
     const window = inspectDvtSubstraitUnionAllGroupedWindowDraft(ranked);
     if (!window.ok) throw new Error('Expected UNION ALL grouped window.');
     const rankId = window.projection.result.fieldId;
+    expect(window.projection.result.nullable).toBe(false);
+    expect(window.projection.outputs.at(-1)?.nullable).toBe(false);
     expect(rankId).toMatch(OPAQUE_FIELD_ID);
     expect(rankId).not.toBe(countId);
     const renamedRank = renameDvtSubstraitUnionAllGroupedRowNumberOutput(ranked, 'ranked_group');
@@ -436,6 +438,8 @@ describe('VTX2 Substrait UNION ALL identity', () => {
     const window = inspectDvtSubstraitUnionAllGroupedWindowDraft(draft);
     if (!window.ok) throw new Error('Expected grouped window.');
     const rankId = window.projection.result.fieldId;
+    expect(window.projection.result.nullable).toBe(false);
+    expect(window.projection.outputs.at(-1)?.nullable).toBe(false);
 
     const persisted = applyDvtNodeAuthoringMetadata(targetNode(), {
       kind: 'transform',
