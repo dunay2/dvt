@@ -158,6 +158,47 @@ describe('Canvas column mapping authoring', () => {
     expect(mapped.metadata).not.toHaveProperty('sql');
   });
 
+  it('reautomaps a physical Source without remapping existing outputs', () => {
+    const source = buildNode('source', 'dvt:source', 'input', [
+      { name: 'order_id', type: 'integer' },
+      { name: 'customer', type: 'text' },
+    ]);
+    const model = buildNode('model', 'dvt:transform', 'transform');
+    const canonicalNodesById = new Map([
+      [source.id, source],
+      [model.id, model],
+    ]);
+    const first = automapCanvasColumns({
+      draftSession: buildSession([source, model], [{ sourceId: source.id, targetId: model.id }]),
+      canonicalNodesById,
+      targetNodeId: model.id,
+      targetColumns: [{ name: 'order_id', type: 'integer' }],
+    });
+    if (first.outcome !== 'applied') throw new Error('Expected initial automap.');
+
+    const second = automapCanvasColumns({
+      draftSession: first.draftSession,
+      canonicalNodesById,
+      targetNodeId: model.id,
+      targetColumns: [
+        { name: 'order_id', type: 'integer' },
+        { name: 'customer', type: 'text' },
+      ],
+    });
+
+    expect(second.outcome).toBe('applied');
+    if (second.outcome !== 'applied') return;
+    const mapped = second.draftSession.localNodeCatalog?.model;
+    if (mapped == null) throw new Error('Expected mapped Transform node.');
+    const authority = readDvtTransformAuthoringAuthority(mapped);
+    if (authority == null) throw new Error('Expected canonical Substrait authority.');
+    const inspection = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+    );
+    expect(inspection.ok ? inspection.projection.outputs.map((output) => output.name) : []).toEqual(
+      ['order_id', 'customer']
+    );
+  });
   it('creates one canonical passthrough output with an opaque allocated FieldId', () => {
     const source = buildNode('source', 'dvt:source', 'input', [
       { name: 'event_id', type: 'integer' },
@@ -171,7 +212,7 @@ describe('Canvas column mapping authoring', () => {
         [source.id, source],
         [model.id, model],
       ]),
-      source: { nodeId: 'source', columnName: 'event_id' },
+      source: { nodeId: 'source', columnId: 'event_id' },
       target: { nodeId: 'model', columnName: 'event_id', dataType: 'integer' },
     });
     const mapped = readMappedTransform(result);
@@ -208,7 +249,7 @@ describe('Canvas column mapping authoring', () => {
         [source.id, source],
         [model.id, model],
       ]),
-      source: { nodeId: source.id, columnName: 'event_id' },
+      source: { nodeId: source.id, columnId: 'event_id' },
       target: {
         nodeId: model.id,
         outputId: 'output:event_id',
@@ -242,7 +283,7 @@ describe('Canvas column mapping authoring', () => {
         [second.id, second],
         [model.id, model],
       ]),
-      source: { nodeId: first.id, columnName: 'event_id' },
+      source: { nodeId: first.id, columnId: 'event_id' },
       target: { nodeId: model.id, columnName: 'event_id', dataType: 'integer' },
     });
     const mapped = readMappedTransform(firstResult);
@@ -254,7 +295,7 @@ describe('Canvas column mapping authoring', () => {
         [second.id, second],
         [model.id, mapped],
       ]),
-      source: { nodeId: second.id, columnName: 'renamed_id' },
+      source: { nodeId: second.id, columnId: 'renamed_id' },
       target: {
         nodeId: model.id,
         outputId: stableOutputId,
@@ -290,7 +331,7 @@ describe('Canvas column mapping authoring', () => {
           [source.id, source],
           [model.id, model],
         ]),
-        source: { nodeId: source.id, columnName: 'customer' },
+        source: { nodeId: source.id, columnId: 'customer' },
         target: { nodeId: model.id, columnName: 'customer' },
       })
     );
@@ -318,7 +359,7 @@ describe('Canvas column mapping authoring', () => {
         [source.id, source],
         [model.id, model],
       ]),
-      source: { nodeId: source.id, columnName: 'customer' },
+      source: { nodeId: source.id, columnId: 'customer' },
       target: { nodeId: model.id, columnName: 'customer', dataType: 'text' },
     });
     const mapped = readMappedTransform(firstResult);
@@ -355,7 +396,7 @@ describe('Canvas column mapping authoring', () => {
         [source.id, source],
         [withLower.id, withLower],
       ]),
-      source: { nodeId: source.id, columnName: 'amount' },
+      source: { nodeId: source.id, columnId: 'amount' },
       target: { nodeId: withLower.id, columnName: 'amount', dataType: 'numeric' },
     });
     const updated = readMappedTransform(secondResult);
@@ -392,7 +433,7 @@ describe('Canvas column mapping authoring', () => {
         [source.id, source],
         [model.id, model],
       ]),
-      source: { nodeId: 'source', columnName: 'event_id' },
+      source: { nodeId: 'source', columnId: 'event_id' },
       target: { nodeId: 'model', columnName: 'event_id', dataType: 'integer' },
     });
 
@@ -462,7 +503,7 @@ describe('Canvas column mapping authoring', () => {
         [source.id, source],
         [model.id, model],
       ]),
-      source: { nodeId: source.id, columnName: 'event_id' },
+      source: { nodeId: source.id, columnId: 'event_id' },
       target: { nodeId: model.id, columnName: 'event_id', dataType: 'integer' },
     });
     const mapped = readMappedTransform(mappedResult);
@@ -676,7 +717,7 @@ describe('Canvas column mapping authoring', () => {
         [source.id, source],
         [model.id, model],
       ]),
-      source: { nodeId: source.id, columnName: 'event_id' },
+      source: { nodeId: source.id, columnId: 'event_id' },
       target: { nodeId: model.id, columnName: 'event_id', dataType: 'integer' },
     });
     const mapped = readMappedTransform(mappedResult);

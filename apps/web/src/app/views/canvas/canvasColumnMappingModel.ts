@@ -1,7 +1,7 @@
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftSession } from './canvasDraftSession';
 
-export type CanvasColumnMappingSource = Readonly<{ nodeId: string; columnName: string }>;
+export type CanvasColumnMappingSource = Readonly<{ nodeId: string; columnId: string }>;
 export type CanvasColumnMappingTarget = Readonly<{
   nodeId: string;
   outputId?: string;

@@ -12,6 +12,7 @@ import {
 import {
   applyDvtSubstraitProjectionFunction,
   createDvtSubstraitProjectionDraft,
+  createDvtSubstraitProjectionDraftFromTransform,
   decodeDvtSubstraitProjectionDocument,
   encodeDvtSubstraitProjectionDocument,
   inspectDvtSubstraitProjectionDraft,
@@ -32,6 +33,40 @@ export type EditableCanvasProjection =
 export type EditableCanvasProjectionEntry =
   | Readonly<{ outcome: 'ready'; projection: DvtSubstraitProjection | null }>
   | Readonly<{ outcome: 'rejected'; reason: CanvasColumnMappingRejection }>;
+
+export type CanvasColumnMappingInputField = Readonly<{
+  columnId: string;
+  name: string;
+  dataType: string;
+}>;
+
+export function readCanvasColumnMappingInputFields(args: {
+  sourceNode: CanonicalNode;
+  edges: readonly Readonly<{ sourceId: string; targetId: string }>[];
+  resolveNode: (nodeId: string) => CanonicalNode | undefined;
+}): readonly CanvasColumnMappingInputField[] {
+  const physicalSource = resolveDvtSubstraitProjectionSource(args.sourceNode);
+  if (physicalSource != null) {
+    return physicalSource.fields.map((field) => ({
+      columnId: field.name,
+      name: field.name,
+      dataType: field.dataType,
+    }));
+  }
+  if (args.sourceNode.pluginId !== 'dvt' || args.sourceNode.kind !== 'dvt:transform') return [];
+  const entry = readEditableCanvasProjectionEntry({
+    targetNode: args.sourceNode,
+    edges: args.edges,
+    resolveNode: args.resolveNode,
+  });
+  return entry.outcome === 'ready' && entry.projection != null
+    ? entry.projection.outputs.map((output) => ({
+        columnId: output.fieldId,
+        name: output.name,
+        dataType: output.dataType,
+      }))
+    : [];
+}
 
 function hasEditableOutputs(projection: DvtSubstraitProjectionSemantics): boolean {
   return projection.outputs.every(
@@ -86,6 +121,37 @@ function carryForwardProjectionIdentity(
   const previousInspection = inspectDvtSubstraitProjectionDraft(previous);
   const nextInspection = inspectDvtSubstraitProjectionDraft(next);
   if (!previousInspection.ok || !nextInspection.ok) return next;
+
+  const previousInput = previous.sidecar.relations.find(
+    (relation) => relation.relationId === previousInspection.projection.inputRelationId
+  );
+  const nextInput = next.sidecar.relations.find(
+    (relation) => relation.relationId === nextInspection.projection.inputRelationId
+  );
+  if (
+    previousInput?.sourceRef == null &&
+    nextInput?.sourceRef == null &&
+    previousInput?.relationId === nextInput?.relationId
+  ) {
+    const previousTargetRelationId = previousInspection.projection.targetRelationId;
+    const nextTargetRelationId = nextInspection.projection.targetRelationId;
+    return {
+      plan: next.plan,
+      sidecar: {
+        ...next.sidecar,
+        relations: next.sidecar.relations.map((relation) =>
+          relation.relationId === nextTargetRelationId
+            ? { ...relation, relationId: previousTargetRelationId }
+            : relation
+        ),
+        fields: next.sidecar.fields.map((field) =>
+          field.relationId === nextTargetRelationId
+            ? { ...field, relationId: previousTargetRelationId }
+            : field
+        ),
+      },
+    };
+  }
 
   const previousSources = previous.sidecar.relations.filter(
     (relation) => relation.sourceRef != null
@@ -314,32 +380,84 @@ export function persistCanvasProjectionOutputs(args: {
     }> {
   const sourceNodeId = args.sourceNodeIdHint ?? args.projection?.source.nodeId;
   const sourceNode = sourceNodeId == null ? undefined : args.resolveNode(sourceNodeId);
-  const source = sourceNode == null ? null : resolveDvtSubstraitProjectionSource(sourceNode);
-  if (source == null || args.outputs.some((output) => output.sourceFieldName == null)) {
+  const physicalSource =
+    sourceNode == null ? null : resolveDvtSubstraitProjectionSource(sourceNode);
+  let transformSourceDraft: DvtSubstraitProjectionDraft | null = null;
+  let transformSourceInspection: ReturnType<typeof inspectDvtSubstraitProjectionDraft> | null =
+    null;
+  if (
+    physicalSource == null &&
+    sourceNode?.pluginId === 'dvt' &&
+    sourceNode.kind === 'dvt:transform'
+  ) {
+    try {
+      const authority = readDvtTransformAuthoringAuthority(sourceNode);
+      if (authority != null) {
+        transformSourceDraft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
+        transformSourceInspection = inspectDvtSubstraitProjectionDraft(transformSourceDraft);
+      }
+    } catch {
+      transformSourceDraft = null;
+      transformSourceInspection = null;
+    }
+  }
+  if (
+    args.outputs.some((output) => output.sourceFieldName == null) ||
+    (physicalSource == null &&
+      (transformSourceDraft == null ||
+        transformSourceInspection?.ok !== true ||
+        args.outputs.some(
+          (output) =>
+            output.sourceFieldId == null ||
+            !transformSourceInspection!.projection.outputs.some(
+              (sourceOutput) => sourceOutput.fieldId === output.sourceFieldId
+            )
+        )))
+  ) {
     return { outcome: 'rejected', reason: 'projection_requires_one_connected_source' };
   }
   const previousDraft = readCurrentProjectionDraft(args.targetNode);
-  let draft = carryForwardProjectionIdentity(
-    previousDraft,
-    createDvtSubstraitProjectionDraft({
-      source,
-      targetNodeId: args.targetNode.id,
-      outputs: args.outputs.map((output) => ({
-        fieldId: output.fieldId,
-        name: output.name,
-        sourceFieldName: output.sourceFieldName!,
-      })),
-    })
-  );
+  const nextDraft =
+    physicalSource != null
+      ? createDvtSubstraitProjectionDraft({
+          source: physicalSource,
+          targetNodeId: args.targetNode.id,
+          outputs: args.outputs.map((output) => ({
+            fieldId: output.fieldId,
+            name: output.name,
+            sourceFieldName: output.sourceFieldName!,
+          })),
+        })
+      : createDvtSubstraitProjectionDraftFromTransform({
+          source: transformSourceDraft!,
+          targetNodeId: args.targetNode.id,
+          outputs: args.outputs.map((output) => ({
+            fieldId: output.fieldId,
+            name: output.name,
+            sourceFieldId: output.sourceFieldId!,
+          })),
+        });
+  let draft = carryForwardProjectionIdentity(previousDraft, nextDraft);
+  const provider =
+    physicalSource?.sourceRef.connectionRef.provider ??
+    (transformSourceInspection?.ok === true
+      ? transformSourceInspection.projection.source.sourceRef.connectionRef.provider
+      : null);
   for (const output of args.outputs) {
-    const sourceField = source.fields.find((field) => field.name === output.sourceFieldName);
-    if (sourceField == null) {
+    const sourceField =
+      physicalSource?.fields.find((field) => field.name === output.sourceFieldName) ??
+      (transformSourceInspection?.ok === true
+        ? transformSourceInspection.projection.outputs.find(
+            (field) => field.fieldId === output.sourceFieldId
+          )
+        : undefined);
+    if (sourceField == null || provider == null) {
       return { outcome: 'rejected', reason: 'projection_requires_one_connected_source' };
     }
     for (const functionName of output.operations ?? []) {
       const capability = resolveDvtSubstraitColumnFunctions({
         dataType: sourceField.dataType,
-        provider: source.sourceRef.connectionRef.provider,
+        provider,
       }).find((candidate) => candidate.name === functionName);
       if (capability == null) {
         return { outcome: 'rejected', reason: 'projection_requires_one_connected_source' };
@@ -349,7 +467,7 @@ export function persistCanvasProjectionOutputs(args: {
         capabilityId: capability.capabilityId,
         alias: output.name,
         dataType: sourceField.dataType,
-        provider: source.sourceRef.connectionRef.provider,
+        provider,
       });
       if (nextDraft === draft) {
         return { outcome: 'rejected', reason: 'projection_requires_one_connected_source' };

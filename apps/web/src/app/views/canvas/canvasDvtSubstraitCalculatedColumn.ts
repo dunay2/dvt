@@ -68,7 +68,7 @@ export function createDvtSubstraitProjectionOutput(
     !inspection.ok ||
     alias.length === 0 ||
     inspection.projection.outputs.some((output) => output.name === alias) ||
-    inspection.projection.source.fields.some((field) => field.name === alias)
+    inspection.projection.inputFields.some((field) => field.name === alias)
   ) {
     return { outcome: 'rejected' };
   }
@@ -122,7 +122,7 @@ export function createDvtSubstraitProjectionOutput(
     const sourceOrdinal =
       firstOperand?.sourceFieldName == null
         ? null
-        : inspection.projection.source.fields.findIndex(
+        : inspection.projection.inputFields.findIndex(
             (field) => field.name === firstOperand.sourceFieldName
           );
     const calculation = directCalculation(expression, sourceOrdinal === -1 ? null : sourceOrdinal);
@@ -179,7 +179,7 @@ export function createDvtSubstraitProjectionOutput(
   }
 
   emit.value.outputMapping.push(
-    inspection.projection.source.fields.length + project.value.expressions.length - 1
+    inspection.projection.inputFields.length + project.value.expressions.length - 1
   );
   const appended = { plan, sidecar };
   return inspectDvtSubstraitProjectionDraft(appended).ok

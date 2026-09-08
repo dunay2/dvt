@@ -5,6 +5,7 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
   applyDvtSubstraitProjectionFunction,
   createDvtSubstraitProjectionDraft,
+  createDvtSubstraitProjectionDraftFromTransform,
   encodeDvtSubstraitProjectionDocument,
   resolveDvtSubstraitColumnFunctions,
   resolveDvtSubstraitProjectionSource,
@@ -157,6 +158,99 @@ describe('projectCanvasNodePresentationTruth', () => {
     ]);
   });
 
+  it('scopes chained FieldId matches to the immediate upstream Model', () => {
+    const buildSource = (id: string, nullable: boolean): CanonicalNode => ({
+      ...SOURCE,
+      id,
+      name: id,
+      metadata: {
+        ...SOURCE.metadata,
+        connectedSourceRef: {
+          ...SOURCE_REF,
+          sourceObjectId: 'raw.' + id,
+        },
+        columns: [{ name: 'customer', type: 'text', nullable }],
+      },
+    });
+    const buildTransform = (
+      id: string,
+      semanticDocument: ReturnType<typeof encodeDvtSubstraitProjectionDocument>
+    ): CanonicalNode =>
+      applyDvtSubstraitSemanticDocument(
+        {
+          id,
+          name: id,
+          pluginId: 'dvt',
+          kind: 'dvt:transform',
+          role: 'transform',
+          status: 'idle',
+          tags: [],
+          metadata: {},
+        },
+        semanticDocument
+      );
+    const sourceA = buildSource('source-a', false);
+    const sourceB = buildSource('source-b', true);
+    const sourceProjectionA = resolveDvtSubstraitProjectionSource(sourceA);
+    const sourceProjectionB = resolveDvtSubstraitProjectionSource(sourceB);
+    if (sourceProjectionA == null || sourceProjectionB == null) {
+      throw new Error('Expected source projections.');
+    }
+    const upstreamDraftA = createDvtSubstraitProjectionDraft({
+      source: sourceProjectionA,
+      targetNodeId: 'upstream-a',
+      outputs: [{ fieldId: 'shared:customer', name: 'customer', sourceFieldName: 'customer' }],
+    });
+    const upstreamDraftB = createDvtSubstraitProjectionDraft({
+      source: sourceProjectionB,
+      targetNodeId: 'upstream-b',
+      outputs: [{ fieldId: 'shared:customer', name: 'customer', sourceFieldName: 'customer' }],
+    });
+    const upstreamA = buildTransform(
+      'upstream-a',
+      encodeDvtSubstraitProjectionDocument(upstreamDraftA)
+    );
+    const upstreamB = buildTransform(
+      'upstream-b',
+      encodeDvtSubstraitProjectionDocument(upstreamDraftB)
+    );
+    const downstream = buildTransform(
+      'downstream',
+      encodeDvtSubstraitProjectionDocument(
+        createDvtSubstraitProjectionDraftFromTransform({
+          source: upstreamDraftB,
+          targetNodeId: 'downstream',
+          outputs: [
+            {
+              fieldId: 'downstream:customer',
+              name: 'customer',
+              sourceFieldId: 'shared:customer',
+            },
+          ],
+        })
+      )
+    );
+
+    const truth = projectCanvasNodePresentationTruth({
+      node: downstream,
+      nodes: [sourceA, sourceB, upstreamA, upstreamB, downstream],
+      edges: [
+        { sourceId: sourceA.id, targetId: upstreamA.id },
+        { sourceId: sourceB.id, targetId: upstreamB.id },
+        { sourceId: upstreamA.id, targetId: downstream.id },
+        { sourceId: upstreamB.id, targetId: downstream.id },
+      ],
+    });
+
+    expect(truth.columns.declared).toEqual([
+      expect.objectContaining({
+        reference: 'downstream:customer',
+        sourceNodeId: upstreamB.id,
+        sourceNodeName: upstreamB.name,
+        nullable: true,
+      }),
+    ]);
+  });
   it('keeps row-number non-null when its ordering column is nullable', () => {
     const nullableSource: CanonicalNode = {
       ...SOURCE,

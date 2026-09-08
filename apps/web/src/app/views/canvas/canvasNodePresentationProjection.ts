@@ -67,7 +67,10 @@ function presentSubstraitOutput(
 ): CanvasNodePresentationColumn {
   const sourceColumn = inherited.find(
     (column) =>
-      column.sourceNodeId === output.sourceNodeId && column.name === output.sourceFieldName
+      (output.sourceFieldId != null &&
+        column.sourceNodeId === output.sourceNodeId &&
+        column.reference === output.sourceFieldId) ||
+      (column.sourceNodeId === output.sourceNodeId && column.name === output.sourceFieldName)
   );
   const nullable = output.nullable ?? sourceColumn?.nullable;
   return {
@@ -353,8 +356,8 @@ function projectCanvasNodePresentationTruthInternal(
         .map((column) => ({
           ...column,
           provenance: 'inherited' as const,
-          sourceNodeId: column.sourceNodeId ?? node.id,
-          sourceNodeName: column.sourceNodeName ?? node.name,
+          sourceNodeId: node.id,
+          sourceNodeName: node.name,
         }));
     });
   if (args.node.role === 'output') {

@@ -765,8 +765,8 @@ export function buildCanvasAuthoringDraft({
               sourceObjectId: 'raw.orders',
             },
             columns: [
-              { name: 'order_id', type: 'integer' },
-              { name: 'total', type: 'decimal' },
+              { name: 'order_id', type: 'integer', nullable: false },
+              { name: 'total', type: 'decimal', nullable: false },
             ],
             config: {
               database: 'legacy_warehouse',
