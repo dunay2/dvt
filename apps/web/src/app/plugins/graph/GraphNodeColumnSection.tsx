@@ -37,12 +37,11 @@ export function GraphNodeColumnSection(props: GraphNodeColumnSectionProps): Reac
     '{count}',
     String(section.remainingColumnCount)
   );
-  const compactRemainderLabel = applicationLanguage.trim().toLowerCase().startsWith('es')
-    ? `+${section.remainingColumnCount} más`
-    : `+${section.remainingColumnCount} more`;
-  const compactCollapseLabel = applicationLanguage.trim().toLowerCase().startsWith('es')
-    ? 'Ver menos'
-    : 'Show less';
+  const compactRemainderLabel = copy.compactRemainingColumnsLabelTemplate.replace(
+    '{count}',
+    String(section.remainingColumnCount)
+  );
+  const compactCollapseLabel = copy.compactCollapseColumnsLabel;
 
   return (
     <div data-slot="graph-node-column-section" className={graphNodeColumnClasses.shell}>
