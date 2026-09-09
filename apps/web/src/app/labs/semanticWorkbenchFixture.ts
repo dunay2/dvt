@@ -1,5 +1,6 @@
 import type { CanonicalEdge, CanonicalNode } from '../types/canonical';
 import {
+  appendDvtSubstraitInnerJoinInput,
   createDvtSubstraitStringInnerJoinDraft,
   decodeDvtSubstraitInnerJoinDocument,
   encodeDvtSubstraitInnerJoinDocument,
@@ -12,6 +13,7 @@ import {
   readDvtTransformAuthoringAuthority,
 } from '../views/canvas/canvasDvtTransformAuthoringAuthority';
 import clientFixture from './fixtures/client.json';
+import orderDetailsFixture from './fixtures/order-details.json';
 import ordersFixture from './fixtures/orders.json';
 import { loadSemanticWorkbenchDataset } from './semanticWorkbenchDataset';
 
@@ -28,7 +30,7 @@ const SUBSTRAIT_TYPE_BY_DATASET_TYPE = {
 
 const BASE_TRANSFORM: CanonicalNode = {
   id: 'lab-transform-orders-client',
-  name: 'Orders + Client',
+  name: 'Orders + Client + Details',
   pluginId: 'dvt',
   kind: 'dvt:transform',
   role: 'transform',
@@ -41,16 +43,26 @@ export function buildSemanticWorkbenchFixture(
   input: {
     orders?: unknown;
     client?: unknown;
+    orderDetails?: unknown;
   } = {}
 ) {
   type Dataset = ReturnType<typeof loadSemanticWorkbenchDataset>;
   const orders = loadSemanticWorkbenchDataset(input.orders ?? ordersFixture);
   const clients = loadSemanticWorkbenchDataset(input.client ?? clientFixture);
+  const orderDetails = loadSemanticWorkbenchDataset(input.orderDetails ?? orderDetailsFixture);
   const clientIds = new Set(clients.rows.map((row) => row.client_id));
   orders.rows.forEach((row) => {
     if (!clientIds.has(row.client_id)) {
       throw new Error(
         `orders.client_id references missing client.client_id value "${String(row.client_id)}".`
+      );
+    }
+  });
+  const orderIds = new Set(orders.rows.map((row) => row.order_id));
+  orderDetails.rows.forEach((row) => {
+    if (!orderIds.has(row.order_id)) {
+      throw new Error(
+        `order_details.order_id references missing orders.order_id value "${String(row.order_id)}".`
       );
     }
   });
@@ -114,7 +126,11 @@ export function buildSemanticWorkbenchFixture(
     },
   });
 
-  const sources = [buildSourceNode(orders), buildSourceNode(clients)] as const;
+  const sources = [
+    buildSourceNode(orders),
+    buildSourceNode(clients),
+    buildSourceNode(orderDetails),
+  ] as const;
   const join = createDvtSubstraitStringInnerJoinDraft({
     left: {
       source: buildJoinSource(sources[0], orders),
@@ -130,11 +146,29 @@ export function buildSemanticWorkbenchFixture(
     rightFieldName: 'client_id',
     targetNodeId: BASE_TRANSFORM.id,
   });
+  const initialInspection = inspectDvtSubstraitNInputJoinDraft(join);
+  if (!initialInspection.ok) throw new Error('Expected the admitted Orders and Client join.');
+  const orderIdFieldId = initialInspection.projection.outputs.find(
+    (output) => output.source.inputIndex === 0 && output.source.name === 'order_id'
+  )?.source.fieldId;
+  if (orderIdFieldId == null) throw new Error('Expected orders.order_id in the join outputs.');
+  const joinedWithDetails = appendDvtSubstraitInnerJoinInput(join, {
+    source: buildJoinSource(sources[2], orderDetails),
+    fields: orderDetails.columns.map((column) => column.name),
+    fieldTypes: orderDetails.columns.map((column) => SUBSTRAIT_TYPE_BY_DATASET_TYPE[column.type]),
+    predicate: {
+      leftSourceFieldId: orderIdFieldId,
+      rightFieldName: 'order_id',
+    },
+    selectedFields: orderDetails.columns.map((column) => column.name),
+  });
+  if (joinedWithDetails === join)
+    throw new Error('Expected Order Details to join through N-source.');
   const transform = applyDvtSubstraitSemanticDocument(
     BASE_TRANSFORM,
-    encodeDvtSubstraitInnerJoinDocument(join)
+    encodeDvtSubstraitInnerJoinDocument(joinedWithDetails)
   );
-  const datasets = [orders, clients] as const;
+  const datasets = [orders, clients, orderDetails] as const;
   const projectTransformSample = (currentTransform: CanonicalNode) => {
     try {
       const authority = readDvtTransformAuthoringAuthority(currentTransform);

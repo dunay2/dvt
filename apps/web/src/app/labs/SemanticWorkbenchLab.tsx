@@ -123,9 +123,10 @@ function buildCanvasProcess(fixture: SemanticWorkbenchFixture) {
     ),
     columnLevelLineageEnabled: true,
     persistedNodePositions: {
-      [fixture.sources[0].id]: { x: 50, y: 72 },
-      [fixture.sources[1].id]: { x: 500, y: 72 },
-      [fixture.transform.id]: { x: 950, y: 72 },
+      [fixture.sources[0].id]: { x: 50, y: 20 },
+      [fixture.sources[1].id]: { x: 50, y: 230 },
+      [fixture.sources[2].id]: { x: 500, y: 125 },
+      [fixture.transform.id]: { x: 950, y: 125 },
     },
   };
 }

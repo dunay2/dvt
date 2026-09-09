@@ -131,6 +131,11 @@ function relationInputs(rel: Rel): readonly Rel[] {
   }
 }
 
+function relationSourceCount(rel: Rel): number {
+  if (rel.relType.case === 'read') return 1;
+  return relationInputs(rel).reduce((count, input) => count + relationSourceCount(input), 0);
+}
+
 function expressionsOwnedByRelation(rel: Rel): readonly Expression[] {
   switch (rel.relType.case) {
     case 'filter':
@@ -555,7 +560,7 @@ export function projectSemanticWorkbenchGraph(
           : {
               inputSummary:
                 rel.relType.case === 'join'
-                  ? `${inputs.length} fuentes`
+                  ? `${relationSourceCount(rel)} fuentes`
                   : `${inputs.length} entradas`,
             }),
         outputSummary: `${outputFields.length} columnas`,

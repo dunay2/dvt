@@ -11,6 +11,7 @@ import {
   readDvtTransformAuthoringAuthority,
 } from '../views/canvas/canvasDvtTransformAuthoringAuthority';
 import clientFixture from './fixtures/client.json';
+import orderDetailsFixture from './fixtures/order-details.json';
 import ordersFixture from './fixtures/orders.json';
 import {
   SEMANTIC_WORKBENCH_EDGE,
@@ -22,12 +23,17 @@ import { loadSemanticWorkbenchDataset } from './semanticWorkbenchDataset';
 import { projectSemanticWorkbenchGraph } from './semanticWorkbenchProjection';
 
 describe('semanticWorkbenchFixture', () => {
-  it('derives both canonical source cards from the JSON dataset schemas', () => {
+  it('derives all three canonical source cards from the JSON dataset schemas', () => {
     const datasets = [
       loadSemanticWorkbenchDataset(ordersFixture),
       loadSemanticWorkbenchDataset(clientFixture),
+      loadSemanticWorkbenchDataset(orderDetailsFixture),
     ];
-    expect(SEMANTIC_WORKBENCH_SOURCE.map((source) => source.name)).toEqual(['Orders', 'Client']);
+    expect(SEMANTIC_WORKBENCH_SOURCE.map((source) => source.name)).toEqual([
+      'Orders',
+      'Client',
+      'Order Details',
+    ]);
     expect(SEMANTIC_WORKBENCH_SOURCE.map((source) => source.metadata?.columns)).toEqual(
       datasets.map((dataset) => dataset.columns)
     );
@@ -37,13 +43,14 @@ describe('semanticWorkbenchFixture', () => {
     expect(SEMANTIC_WORKBENCH_EDGE.map((edge) => edge.sourceId)).toEqual([
       'lab-source-orders',
       'lab-source-client',
+      'lab-source-order_details',
     ]);
     expect(
       SEMANTIC_WORKBENCH_SOURCE.map(
         (source) =>
           (source.metadata?.sourceMetricEvidence as { rowCount: { value: number } }).rowCount.value
       )
-    ).toEqual([8, 5]);
+    ).toEqual([8, 5, 10]);
   });
 
   it('projects the real join predicate into grouped semantic nodes', () => {
@@ -57,31 +64,47 @@ describe('semanticWorkbenchFixture', () => {
         'TRANSFORMACIÓN',
         'SOURCE\nraw.orders',
         'SOURCE\nraw.client',
+        'SOURCE\nraw.order_details',
         'FIELD\nraw.orders.client_id',
         'FIELD\nraw.client.client_id',
+        'FIELD\nraw.orders.order_id',
+        'FIELD\nraw.order_details.order_id',
         'EQUAL\n=',
         'JOIN\nJoinRel',
       ])
     );
     const joinNode = graph.nodes.find((node) => node.id === graph.relationId);
-    expect(joinNode?.data.expression).toBe('raw.orders.client_id = raw.client.client_id');
-    expect(joinNode?.data.inputSummary).toBe('2 fuentes');
-    expect(joinNode?.data.outputSummary).toBe('15 columnas');
+    expect(joinNode?.data.expression).toBe('raw.orders.order_id = raw.order_details.order_id');
     expect(
       graph.nodes
-        .filter((node) => node.data.semanticKind === 'field')
-        .map((node) => node.data.joinOperand)
-    ).toEqual([
-      { joinRelationId: graph.relationId, operand: 'left' },
-      { joinRelationId: graph.relationId, operand: 'right' },
-    ]);
-    expect(graph.expressionCount).toBe(3);
+        .filter((node) => node.data.semanticKind === 'relation')
+        .map((node) => node.data.expression)
+    ).toEqual(
+      expect.arrayContaining([
+        'raw.orders.client_id = raw.client.client_id',
+        'raw.orders.order_id = raw.order_details.order_id',
+      ])
+    );
+    expect(joinNode?.data.inputSummary).toBe('3 fuentes');
+    expect(joinNode?.data.outputSummary).toBe('22 columnas');
+    const joinOperands = graph.nodes
+      .filter((node) => node.data.semanticKind === 'field')
+      .flatMap((node) => (node.data.joinOperand == null ? [] : [node.data.joinOperand]));
+    expect(joinOperands).toHaveLength(4);
+    expect(new Set(joinOperands.map((operand) => operand.joinRelationId)).size).toBe(2);
+    expect(joinOperands).toEqual(
+      expect.arrayContaining([
+        { joinRelationId: graph.relationId, operand: 'left' },
+        { joinRelationId: graph.relationId, operand: 'right' },
+      ])
+    );
+    expect(graph.expressionCount).toBe(6);
     expect(graph.edges.map((edge) => edge.data?.semanticEdgeKind)).toEqual(
       expect.arrayContaining(['relation', 'expression'])
     );
   });
 
-  it('uses the admitted two-input Substrait join as transform authority', () => {
+  it('uses the admitted N-input Substrait join as transform authority', () => {
     const authority = readDvtTransformAuthoringAuthority(SEMANTIC_WORKBENCH_TRANSFORM);
     expect(authority?.mode).toBe('substrait');
     if (authority == null) throw new Error('Expected Substrait authority.');
@@ -91,7 +114,12 @@ describe('semanticWorkbenchFixture', () => {
     );
     expect(inspection.ok).toBe(true);
     if (!inspection.ok) throw new Error('Expected an accepted join.');
-    expect(inspection.projection.inputs.map((input) => input.table)).toEqual(['orders', 'client']);
+    expect(inspection.projection.inputs.map((input) => input.table)).toEqual([
+      'orders',
+      'client',
+      'order_details',
+    ]);
+    expect(inspection.projection.joins).toHaveLength(2);
     expect(
       Object.fromEntries(
         inspection.projection.inputs.flatMap((input) =>
@@ -106,6 +134,10 @@ describe('semanticWorkbenchFixture', () => {
       'client.lifetime_value': 'fp64',
       'client.active': 'bool',
       'client.signup_at': 'precisionTimestampTz',
+      'order_details.quantity': 'i64',
+      'order_details.unit_price': 'fp64',
+      'order_details.gift': 'bool',
+      'order_details.added_at': 'precisionTimestampTz',
     });
   });
 
@@ -115,9 +147,19 @@ describe('semanticWorkbenchFixture', () => {
     if (authority == null) throw new Error('Expected Substrait authority.');
     const draft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
     const ordersEdge = fixture.edges[0];
-    if (ordersEdge == null) throw new Error('Expected the Orders connection.');
+    const orderDetailsEdge = fixture.edges[2];
+    if (ordersEdge == null || orderDetailsEdge == null) {
+      throw new Error('Expected the Orders and Order Details connections.');
+    }
     const selectedDraft = setDvtSubstraitJoinConnectionFieldSelected({
-      draft,
+      draft: setDvtSubstraitJoinConnectionFieldSelected({
+        draft,
+        sourceNode: fixture.sources[2],
+        targetNode: fixture.transform,
+        edge: orderDetailsEdge,
+        columnName: 'gift',
+        selected: false,
+      }),
       sourceNode: fixture.sources[0],
       targetNode: fixture.transform,
       edge: ordersEdge,
@@ -130,10 +172,17 @@ describe('semanticWorkbenchFixture', () => {
     );
 
     const sample = fixture.projectTransformSample(selectedTransform);
-    expect(sample?.rows).toHaveLength(8);
+    expect(sample?.rows).toHaveLength(10);
     expect(sample?.columns.map((column) => column.name)).not.toContain('discount');
+    expect(sample?.columns.map((column) => column.name)).not.toContain('gift');
     expect(sample?.columns.map((column) => column.name)).toEqual(
-      expect.arrayContaining(['order_id', 'client_client_id', 'client_name'])
+      expect.arrayContaining([
+        'order_id',
+        'client_client_id',
+        'client_name',
+        'order_detail_id',
+        'order_details_order_id',
+      ])
     );
     const firstRow = Object.fromEntries(
       sample?.columns.map((column, index) => [column.name, sample.rows[0]?.values[index]]) ?? []
@@ -142,7 +191,18 @@ describe('semanticWorkbenchFixture', () => {
       order_id: 'ORD-1001',
       client_client_id: 'CLI-001',
       client_name: 'Acme Iberia',
+      order_detail_id: 'OD-1001-1',
+      order_details_order_id: 'ORD-1001',
     });
+  });
+
+  it('rejects Order Details rows that do not reference an existing order', () => {
+    const invalidOrderDetails = structuredClone(orderDetailsFixture);
+    invalidOrderDetails.rows[0]!.order_id = 'ORD-MISSING';
+
+    expect(() => buildSemanticWorkbenchFixture({ orderDetails: invalidOrderDetails })).toThrow(
+      'order_details.order_id references missing orders.order_id value "ORD-MISSING".'
+    );
   });
 
   it('keeps field selection scoped to each source-to-transform connection in an N:M graph', () => {
