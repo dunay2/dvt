@@ -72,7 +72,8 @@ export function DvtSubstraitInnerJoinAuthoringSection({
     clearOutputNameDraft(key);
   };
   const mutateDraft = (
-    transform: (current: DvtSubstraitInnerJoinDraft) => DvtSubstraitInnerJoinDraft
+    transform: (current: DvtSubstraitInnerJoinDraft) => DvtSubstraitInnerJoinDraft,
+    discardedOutputNameDraftKeys: readonly string[] = []
   ): void => {
     onChange((currentDraft) => {
       if (
@@ -82,10 +83,21 @@ export function DvtSubstraitInnerJoinAuthoringSection({
       ) {
         return currentDraft;
       }
-      return {
+      const nextDraft = {
         ...currentDraft,
         dvt: { ...currentDraft.dvt, ...transform(currentDraft.dvt) },
       };
+      if (discardedOutputNameDraftKeys.length === 0) return nextDraft;
+      const discardedKeys = new Set(discardedOutputNameDraftKeys);
+      const remainingOutputNameDrafts = Object.fromEntries(
+        Object.entries(currentDraft.outputNameDrafts ?? {}).filter(
+          ([key]) => !discardedKeys.has(key)
+        )
+      );
+      const { outputNameDrafts: _discarded, ...nextDraftWithoutOutputNames } = nextDraft;
+      return Object.keys(remainingOutputNameDrafts).length > 0
+        ? { ...nextDraftWithoutOutputNames, outputNameDrafts: remainingOutputNameDrafts }
+        : nextDraftWithoutOutputNames;
     });
   };
   const renderShell = (content: ReactNode): JSX.Element => (
@@ -362,7 +374,9 @@ export function DvtSubstraitInnerJoinAuthoringSection({
           variant="outline"
           data-slot="dvt-substrait-inner-join-remove-window"
           disabled={disabled}
-          onClick={() => mutateDraft(removeDvtSubstraitInnerJoinGroupedRowNumber)}
+          onClick={() =>
+            mutateDraft(removeDvtSubstraitInnerJoinGroupedRowNumber, [projection.result.fieldId])
+          }
         >
           {canvasViewCopy.inspectorDvtSubstraitRemoveAggregateWindowLabel}
         </Button>
@@ -473,7 +487,12 @@ export function DvtSubstraitInnerJoinAuthoringSection({
           variant="outline"
           data-slot="dvt-substrait-inner-join-remove-grouping"
           disabled={disabled}
-          onClick={() => mutateDraft(removeDvtSubstraitInnerJoinGrouping)}
+          onClick={() =>
+            mutateDraft(removeDvtSubstraitInnerJoinGrouping, [
+              projection.measure.fieldId,
+              windowOutputDraftKey,
+            ])
+          }
         >
           {canvasViewCopy.inspectorDvtSubstraitRemoveAggregationLabel}
         </Button>

@@ -767,6 +767,46 @@ describe('DvtAuthoringFields', () => {
     expect(draftJson()).not.toContain('"displayName":"shipment_rank "');
     expect(draftJson()).toContain('"displayName":"shipment_count"');
     expect(draftJson()).toContain('"displayName":"shipment_rank"');
+    const removeWindow = container.querySelector<HTMLButtonElement>(
+      '[data-slot="dvt-substrait-inner-join-remove-window"]'
+    )!;
+    act(() => {
+      fireEvent.click(removeWindow);
+    });
+    expect(outputNameDraftsJson()).toBe('{}');
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-inner-join-grouped-window-authoring"]')
+    ).toBeNull();
+
+    const activeCountOutput = container.querySelector<HTMLInputElement>(
+      '[data-slot="dvt-substrait-inner-join-count-output-name"]'
+    )!;
+    const prospectiveRankOutput = container.querySelector<HTMLInputElement>(
+      '[data-slot="dvt-substrait-inner-join-window-output-name"]'
+    )!;
+    act(() => {
+      fireEvent.input(activeCountOutput, { target: { value: oversizedOutput } });
+      fireEvent.focusOut(activeCountOutput);
+    });
+    act(() => {
+      fireEvent.input(prospectiveRankOutput, { target: { value: oversizedOutput } });
+    });
+    expect(Object.keys(JSON.parse(outputNameDraftsJson()))).toHaveLength(2);
+
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>(
+          '[data-slot="dvt-substrait-inner-join-remove-grouping"]'
+        )!
+      );
+    });
+    expect(outputNameDraftsJson()).toBe('{}');
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-inner-join-grouping-authoring"]')
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-n-input-join-authoring"]')
+    ).not.toBeNull();
   });
 
   it('does not offer INNER JOIN when the connected datasets use different connections', () => {
@@ -972,6 +1012,55 @@ describe('DvtAuthoringFields', () => {
     ).not.toBeNull();
     expect(draftJson()).toContain('"names":["region","customer_count","count_rank"]');
     expect(draftJson()).toContain('"case":"windowFunction"');
+    const groupedRankOutput = container.querySelector<HTMLInputElement>(
+      '[data-slot="dvt-substrait-union-all-window-output-name"]'
+    )!;
+    act(() => {
+      fireEvent.input(groupedRankOutput, { target: { value: oversizedOutput } });
+      fireEvent.focusOut(groupedRankOutput);
+    });
+    expect(groupedRankOutput.getAttribute('aria-invalid')).toBe('true');
+    expect(outputNameDraftsJson()).not.toBe('{}');
+
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>(
+          '[data-slot="dvt-substrait-union-all-remove-window"]'
+        )!
+      );
+    });
+    expect(outputNameDraftsJson()).toBe('{}');
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-union-all-grouped-window-authoring"]')
+    ).toBeNull();
+
+    const activeCountOutput = container.querySelector<HTMLInputElement>(
+      '[data-slot="dvt-substrait-union-all-count-output-name"]'
+    )!;
+    const prospectiveRankOutput = container.querySelector<HTMLInputElement>(
+      '[data-slot="dvt-substrait-union-all-window-output-name"]'
+    )!;
+    act(() => {
+      fireEvent.input(activeCountOutput, { target: { value: oversizedOutput } });
+      fireEvent.focusOut(activeCountOutput);
+    });
+    act(() => {
+      fireEvent.input(prospectiveRankOutput, { target: { value: oversizedOutput } });
+    });
+    expect(Object.keys(JSON.parse(outputNameDraftsJson()))).toHaveLength(2);
+
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>(
+          '[data-slot="dvt-substrait-union-all-remove-grouping"]'
+        )!
+      );
+    });
+    expect(outputNameDraftsJson()).toBe('{}');
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-union-all-grouping-authoring"]')
+    ).toBeNull();
+    expect(draftJson()).toContain('"case":"set"');
   });
 
   it('renders sink destination posture and updates materialization controls', () => {

@@ -65,7 +65,8 @@ export function DvtSubstraitUnionAllAuthoringSection({
     clearOutputNameDraft(key);
   };
   const mutateDraft = (
-    transform: (current: DvtSubstraitUnionAllDraft) => DvtSubstraitUnionAllDraft
+    transform: (current: DvtSubstraitUnionAllDraft) => DvtSubstraitUnionAllDraft,
+    discardedOutputNameDraftKeys: readonly string[] = []
   ): void => {
     onChange((currentDraft) => {
       if (
@@ -75,13 +76,24 @@ export function DvtSubstraitUnionAllAuthoringSection({
       ) {
         return currentDraft;
       }
-      return {
+      const nextDraft = {
         ...currentDraft,
         dvt: {
           ...currentDraft.dvt,
           ...transform(currentDraft.dvt),
         },
       };
+      if (discardedOutputNameDraftKeys.length === 0) return nextDraft;
+      const discardedKeys = new Set(discardedOutputNameDraftKeys);
+      const remainingOutputNameDrafts = Object.fromEntries(
+        Object.entries(currentDraft.outputNameDrafts ?? {}).filter(
+          ([key]) => !discardedKeys.has(key)
+        )
+      );
+      const { outputNameDrafts: _discarded, ...nextDraftWithoutOutputNames } = nextDraft;
+      return Object.keys(remainingOutputNameDrafts).length > 0
+        ? { ...nextDraftWithoutOutputNames, outputNameDrafts: remainingOutputNameDrafts }
+        : nextDraftWithoutOutputNames;
     });
   };
   const renderShell = (content: ReactNode): JSX.Element => (
@@ -185,7 +197,9 @@ export function DvtSubstraitUnionAllAuthoringSection({
           variant="outline"
           data-slot="dvt-substrait-union-all-remove-window"
           disabled={disabled}
-          onClick={() => mutateDraft(removeDvtSubstraitUnionAllGroupedRowNumber)}
+          onClick={() =>
+            mutateDraft(removeDvtSubstraitUnionAllGroupedRowNumber, [projection.result.fieldId])
+          }
         >
           {canvasViewCopy.inspectorDvtSubstraitRemoveAggregateWindowLabel}
         </Button>
@@ -304,7 +318,12 @@ export function DvtSubstraitUnionAllAuthoringSection({
           variant="outline"
           data-slot="dvt-substrait-union-all-remove-grouping"
           disabled={disabled}
-          onClick={() => mutateDraft(removeDvtSubstraitUnionAllGrouping)}
+          onClick={() =>
+            mutateDraft(removeDvtSubstraitUnionAllGrouping, [
+              projection.measure.fieldId,
+              windowOutputDraftKey,
+            ])
+          }
         >
           {canvasViewCopy.inspectorDvtSubstraitRemoveAggregationLabel}
         </Button>

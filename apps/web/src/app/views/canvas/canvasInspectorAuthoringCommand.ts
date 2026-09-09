@@ -6,20 +6,19 @@ import {
   validateCanvasInspectorNodeDraft,
 } from './canvasInspectorAuthoringModel';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
+import { resolveCanvasDraftNodes } from './canvasDraftNodeCatalog';
 import type { CanonicalNode } from '../../types/canonical';
 import type { WorkspaceScope } from '../../ports/sessionContext';
 
 export function applyCanvasInspectorNodeDraftToSession(args: {
   draftSession: CanvasDraftSession;
+  canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
   node: CanonicalNode;
   draft: CanvasInspectorNodeDraft;
   workspaceScope: WorkspaceScope;
 }): CanvasDraftSession {
-  const { draftSession, node, draft, workspaceScope } = args;
-  const localNodes = Object.values(draftSession.localNodeCatalog ?? {});
-  const nodes = localNodes.some((candidate) => candidate.id === node.id)
-    ? localNodes
-    : [...localNodes, node];
+  const { canonicalNodesById, draftSession, node, draft, workspaceScope } = args;
+  const nodes = resolveCanvasDraftNodes(draftSession, canonicalNodesById);
   const edges = draftSession.workingSet.visibleEdges.map((edge, index) => ({
     id: `draft-edge-${index}`,
     sourceId: edge.sourceId,
