@@ -18,11 +18,15 @@ type CanvasViewportState = CanvasPosition & {
 };
 
 export type CanvasContextualWorkbenchId = 'project-code';
+export type CanvasInspectorListId = 'columns' | 'outputs';
+
+type CanvasInspectorListOrders = Partial<Record<CanvasInspectorListId, string[]>>;
 
 type WorkspaceCanvasLayout = {
   viewport: CanvasViewportState | null;
   nodePositions: Record<string, CanvasPosition>;
   frozenNodeIds?: string[];
+  inspectorListOrdersByNode?: Record<string, CanvasInspectorListOrders>;
 };
 
 const EMPTY_NODE_POSITIONS: Record<string, CanvasPosition> = {};
@@ -31,11 +35,15 @@ function buildWorkspaceCanvasLayout(args: {
   viewport: CanvasViewportState | null;
   nodePositions: Record<string, CanvasPosition>;
   frozenNodeIds?: string[];
+  inspectorListOrdersByNode?: Record<string, CanvasInspectorListOrders>;
 }): WorkspaceCanvasLayout {
-  const { viewport, nodePositions, frozenNodeIds } = args;
-  return frozenNodeIds === undefined
-    ? { viewport, nodePositions }
-    : { viewport, nodePositions, frozenNodeIds };
+  const { viewport, nodePositions, frozenNodeIds, inspectorListOrdersByNode } = args;
+  return {
+    viewport,
+    nodePositions,
+    ...(frozenNodeIds === undefined ? {} : { frozenNodeIds }),
+    ...(inspectorListOrdersByNode === undefined ? {} : { inspectorListOrdersByNode }),
+  };
 }
 
 function areCanvasNodePositionsEqual(
@@ -58,6 +66,10 @@ function areCanvasNodePositionsEqual(
 
 function areSelectedNodeIdsEqual(left: readonly string[], right: readonly string[]): boolean {
   return left.length === right.length && left.every((nodeId, index) => nodeId === right[index]);
+}
+
+function areOrderedIdsEqual(left: readonly string[], right: readonly string[]): boolean {
+  return left.length === right.length && left.every((id, index) => id === right[index]);
 }
 
 function toggleFrozenNodeId(currentNodeIds: readonly string[], nodeId: string): string[] {
@@ -85,6 +97,12 @@ interface CanvasInteractionState {
   setCanvasViewport: (workspaceKey: string, viewport: CanvasViewportState | null) => void;
   setCanvasNodePositions: (workspaceKey: string, positions: Record<string, CanvasPosition>) => void;
   toggleFrozenCanvasNode: (workspaceKey: string, nodeId: string) => void;
+  setCanvasInspectorListOrder: (
+    workspaceKey: string,
+    nodeId: string,
+    listId: CanvasInspectorListId,
+    orderedIds: string[]
+  ) => void;
   setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
   openContextualWorkbench: (workbenchId: CanvasContextualWorkbenchId, ownerKey: string) => void;
   closeContextualWorkbench: () => void;
@@ -179,6 +197,8 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
               viewport,
               nodePositions: state.canvasLayouts[workspaceKey]?.nodePositions ?? {},
               frozenNodeIds: state.canvasLayouts[workspaceKey]?.frozenNodeIds,
+              inspectorListOrdersByNode:
+                state.canvasLayouts[workspaceKey]?.inspectorListOrdersByNode,
             }),
           },
         })),
@@ -198,6 +218,7 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
                 viewport: currentLayout?.viewport ?? null,
                 nodePositions: positions,
                 frozenNodeIds: currentLayout?.frozenNodeIds,
+                inspectorListOrdersByNode: currentLayout?.inspectorListOrdersByNode,
               }),
             },
           };
@@ -214,7 +235,36 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
                 viewport: currentLayout?.viewport ?? null,
                 nodePositions: currentLayout?.nodePositions ?? EMPTY_NODE_POSITIONS,
                 frozenNodeIds: toggleFrozenNodeId(currentFrozenNodeIds, nodeId),
+                ...(currentLayout?.inspectorListOrdersByNode == null
+                  ? {}
+                  : { inspectorListOrdersByNode: currentLayout.inspectorListOrdersByNode }),
               },
+            },
+          };
+        }),
+      setCanvasInspectorListOrder: (workspaceKey, nodeId, listId, orderedIds) =>
+        set((state) => {
+          const currentLayout = state.canvasLayouts[workspaceKey];
+          const currentOrders = currentLayout?.inspectorListOrdersByNode ?? {};
+          const currentNodeOrders = currentOrders[nodeId] ?? {};
+          const currentOrder = currentNodeOrders[listId] ?? [];
+          if (areOrderedIdsEqual(currentOrder, orderedIds)) return state;
+
+          return {
+            canvasLayouts: {
+              ...state.canvasLayouts,
+              [workspaceKey]: buildWorkspaceCanvasLayout({
+                viewport: currentLayout?.viewport ?? null,
+                nodePositions: currentLayout?.nodePositions ?? EMPTY_NODE_POSITIONS,
+                frozenNodeIds: currentLayout?.frozenNodeIds,
+                inspectorListOrdersByNode: {
+                  ...currentOrders,
+                  [nodeId]: {
+                    ...currentNodeOrders,
+                    [listId]: [...orderedIds],
+                  },
+                },
+              }),
             },
           };
         }),

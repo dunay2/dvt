@@ -7,6 +7,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 import { dvtCanvasSurfaceStrategy } from '../../plugins/dvt/dvtCanvasSurfaceStrategy';
 import type { CanvasNodeWorkbenchSectionPolicyId } from '../../plugins/canvasSurfaceStrategyContracts';
 import CanvasNodeWorkbenchPanelSource from './CanvasNodeWorkbenchPanel.tsx?raw';
@@ -306,6 +307,8 @@ describe('CanvasNodeWorkbenchPanel', () => {
   let root: Root;
 
   beforeEach(() => {
+    localStorage.clear();
+    useCanvasInteractionStore.setState({ canvasLayouts: {} });
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -319,6 +322,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
       root.unmount();
     });
     container.remove();
+    localStorage.clear();
     vi.clearAllMocks();
   });
 
@@ -440,6 +444,35 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(dragHandle?.tabIndex).toBe(0);
     expect(closeButton?.textContent).toBe('Close');
     expect(dragHandle?.contains(closeButton!)).toBe(false);
+  });
+
+  it('connects writable Source lists to workspace-scoped layout persistence', () => {
+    renderNodePanel(root, SOURCE_NODE, 'columns', {
+      canEditNode: true,
+      workspaceScope: {
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'dev',
+        targetAdapter: 'temporal',
+      },
+      onApplyNodeDraft: vi.fn(),
+    });
+
+    const discountCode = container.querySelector<HTMLButtonElement>(
+      '[data-column-name="discount_code"]'
+    )!;
+    act(() => {
+      discountCode.focus();
+      fireEvent.keyDown(discountCode, { key: 'ArrowUp', altKey: true });
+    });
+
+    expect(
+      useCanvasInteractionStore.getState().canvasLayouts['tenant-a::project-a::dev']
+        ?.inspectorListOrdersByNode?.[SOURCE_NODE.id]?.columns
+    ).toEqual(['discount_code', 'order_id']);
+    expect(SOURCE_NODE.metadata).toMatchObject({
+      columns: [{ name: 'order_id' }, { name: 'discount_code' }],
+    });
   });
 
   it('shows Source column metadata and Canvas graph IO from the node read model', () => {
