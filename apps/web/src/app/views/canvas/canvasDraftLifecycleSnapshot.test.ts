@@ -52,10 +52,10 @@ describe('canvas draft lifecycle snapshot', () => {
     };
 
     const payload = buildCurrentDraftPayload(
-      [
-        { id: 'warehouse-source', position: { x: 120, y: 80 } },
-        { id: 'dbt-model-1', position: { x: 420, y: 80 } },
-      ],
+      {
+        'warehouse-source': { x: 120, y: 80 },
+        'dbt-model-1': { x: 420, y: 80 },
+      },
       draftSession,
       { kind: 'dbt', title: 'dbt canvas' },
       null,
@@ -91,7 +91,7 @@ describe('canvas draft lifecycle snapshot', () => {
     };
 
     const payload = buildCurrentDraftPayload(
-      [{ id: canonical.id, position: { x: 120, y: 80 } }],
+      { [canonical.id]: { x: 120, y: 80 } },
       draftSession,
       { kind: 'transformation', title: 'Transform canvas' },
       null,

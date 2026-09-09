@@ -331,10 +331,10 @@ describe('CanvasViewport', () => {
       ReactFlowNodeDragCallback | undefined;
 
     act(() => {
-      reactFlowOnNodeDrag?.({}, source, [source, target]);
+      reactFlowOnNodeDrag?.({}, source, [source]);
     });
     act(() => {
-      reactFlowOnNodeDragStop?.({}, source, [source, target]);
+      reactFlowOnNodeDragStop?.({}, source, [source]);
     });
 
     expect(onNodeDrag).toHaveBeenCalledTimes(1);

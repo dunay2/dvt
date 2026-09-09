@@ -52,7 +52,7 @@ describe('useCanvasGraphHandlers schema attachment', () => {
     ];
     let currentNodes: Node[] = initialNodes;
     const setNodes = vi.fn((nextNodes) => {
-      currentNodes = nextNodes;
+      currentNodes = typeof nextNodes === 'function' ? nextNodes(currentNodes) : nextNodes;
     });
     const setDraftSession = vi.fn();
     const harness = renderGraphHandlersHook({

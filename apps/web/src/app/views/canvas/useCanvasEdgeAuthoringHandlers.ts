@@ -114,14 +114,18 @@ function formatColumnMappingRejection(reason: CanvasColumnMappingRejection): str
 }
 
 function resolveCurrentNode(
-  state: CanvasEdgeAuthoringState,
+  draftSession: CanvasEdgeAuthoringState['draftSession'],
+  canonicalNodesById: CanvasEdgeAuthoringState['canonicalNodesById'],
   nodeId: string
 ): CanonicalNode | undefined {
-  return state.draftSession.localNodeCatalog?.[nodeId] ?? state.canonicalNodesById.get(nodeId);
+  return draftSession.localNodeCatalog?.[nodeId] ?? canonicalNodesById.get(nodeId);
 }
 
 function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAuthoringContracts) {
   const [pendingSource, setPendingSource] = useState<CanvasColumnHandleIdentity | null>(null);
+  const { canonicalNodesById, draftSession } = state;
+  const { setDraftSession } = effects;
+  const { canEditEdges } = policy;
 
   const tryColumnConnection = useCallback(
     (connection: PendingConnection): boolean => {
@@ -129,20 +133,20 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
       const targetHandle = parseCanvasColumnHandleId(connection.targetHandle);
       if (sourceHandle == null && targetHandle == null) return false;
       if (
-        !policy.canEditEdges ||
+        !canEditEdges ||
         sourceHandle?.direction !== 'source' ||
         targetHandle?.direction !== 'target' ||
         sourceHandle.nodeId !== connection.source ||
         targetHandle.nodeId !== connection.target
       ) {
         toast.error(
-          policy.canEditEdges
+          canEditEdges
             ? canvasViewCopy.columnMappingUnavailableMessage
             : canvasViewCopy.mutationUnavailableMessage
         );
         return true;
       }
-      const targetNode = resolveCurrentNode(state, targetHandle.nodeId);
+      const targetNode = resolveCurrentNode(draftSession, canonicalNodesById, targetHandle.nodeId);
       const target =
         targetNode == null
           ? null
@@ -152,8 +156,8 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
         return true;
       }
       const result = applyCanvasColumnMapping({
-        draftSession: state.draftSession,
-        canonicalNodesById: state.canonicalNodesById,
+        draftSession,
+        canonicalNodesById,
         source: { nodeId: sourceHandle.nodeId, columnId: sourceHandle.columnId },
         target,
       });
@@ -161,12 +165,12 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
         toast.error(formatColumnMappingRejection(result.reason));
         return true;
       }
-      effects.setDraftSession(result.draftSession);
+      setDraftSession(result.draftSession);
       setPendingSource(null);
       toast.success(canvasViewCopy.columnMappingAddedMessage);
       return true;
     },
-    [effects, policy.canEditEdges, state]
+    [canEditEdges, canonicalNodesById, draftSession, setDraftSession]
   );
 
   const handleColumnPortActivate = useCallback(
@@ -194,13 +198,13 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
 
   const handleAutomapCanvasColumns = useCallback(
     (nodeId: string, columns: readonly Readonly<{ name: string; type: string }>[]) => {
-      if (!policy.canEditEdges) {
+      if (!canEditEdges) {
         toast.error(canvasViewCopy.mutationUnavailableMessage);
         return;
       }
       const result = automapCanvasColumns({
-        draftSession: state.draftSession,
-        canonicalNodesById: state.canonicalNodesById,
+        draftSession,
+        canonicalNodesById,
         targetNodeId: nodeId,
         targetColumns: columns,
       });
@@ -208,7 +212,7 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
         toast.error(formatColumnMappingRejection(result.reason));
         return;
       }
-      effects.setDraftSession(result.draftSession);
+      setDraftSession(result.draftSession);
       toast.success(
         canvasViewCopy.columnMappingAutomapSummaryTemplate.replace(
           '{count}',
@@ -216,21 +220,21 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
         )
       );
     },
-    [effects, policy.canEditEdges, state]
+    [canEditEdges, canonicalNodesById, draftSession, setDraftSession]
   );
 
   const handleToggleCanvasColumnOutput = useCallback(
     (identity: GraphNodeColumnOutputToggleIdentity) => {
-      if (!policy.canEditEdges) {
+      if (!canEditEdges) {
         toast.error(canvasViewCopy.mutationUnavailableMessage);
         return;
       }
-      const targetNode = resolveCurrentNode(state, identity.nodeId);
+      const targetNode = resolveCurrentNode(draftSession, canonicalNodesById, identity.nodeId);
       const dbtTarget = targetNode != null && isDbtCompatibleModel(targetNode);
       if (dbtTarget) {
         const result = configureDbtModelColumnOutput({
-          draftSession: state.draftSession,
-          canonicalNodesById: state.canonicalNodesById,
+          draftSession,
+          canonicalNodesById,
           nodeId: identity.nodeId,
           columnName: identity.columnId,
           output: identity.output,
@@ -239,12 +243,12 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
           toast.error(canvasViewCopy.columnMappingUnavailableMessage);
           return;
         }
-        effects.setDraftSession(result.draftSession);
+        setDraftSession(result.draftSession);
         return;
       }
       const result = setCanvasColumnOutputIncluded({
-        draftSession: state.draftSession,
-        canonicalNodesById: state.canonicalNodesById,
+        draftSession,
+        canonicalNodesById,
         targetNodeId: identity.nodeId,
         columnId: identity.columnId,
         columnType: identity.columnType,
@@ -255,9 +259,9 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
         toast.error(formatColumnMappingRejection(result.reason));
         return;
       }
-      effects.setDraftSession(result.draftSession);
+      setDraftSession(result.draftSession);
     },
-    [effects, policy.canEditEdges, state]
+    [canEditEdges, canonicalNodesById, draftSession, setDraftSession]
   );
 
   const handleReorderCanvasColumnOutput = useCallback(
@@ -268,15 +272,15 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
       placement: 'before' | 'after';
       parentColumnId?: string;
     }) => {
-      if (!policy.canEditEdges) {
+      if (!canEditEdges) {
         toast.error(canvasViewCopy.mutationUnavailableMessage);
         return;
       }
-      const targetNode = resolveCurrentNode(state, identity.nodeId);
+      const targetNode = resolveCurrentNode(draftSession, canonicalNodesById, identity.nodeId);
       if (identity.parentColumnId != null) {
         const result = reorderCanvasStructuredFieldChildren({
-          draftSession: state.draftSession,
-          canonicalNodesById: state.canonicalNodesById,
+          draftSession,
+          canonicalNodesById,
           request: {
             nodeId: identity.nodeId,
             parentFieldId: identity.parentColumnId,
@@ -289,13 +293,13 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
           toast.error(canvasViewCopy.columnMappingUnavailableMessage);
           return;
         }
-        effects.setDraftSession(result.draftSession);
+        setDraftSession(result.draftSession);
         return;
       }
       if (targetNode != null && isDbtCompatibleModel(targetNode)) {
         const result = configureDbtModelColumnOrder({
-          draftSession: state.draftSession,
-          canonicalNodesById: state.canonicalNodesById,
+          draftSession,
+          canonicalNodesById,
           nodeId: identity.nodeId,
           columnName: identity.columnId,
           targetColumnName: identity.targetColumnId,
@@ -305,12 +309,12 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
           toast.error(canvasViewCopy.columnMappingUnavailableMessage);
           return;
         }
-        effects.setDraftSession(result.draftSession);
+        setDraftSession(result.draftSession);
         return;
       }
       const result = reorderCanvasColumnOutput({
-        draftSession: state.draftSession,
-        canonicalNodesById: state.canonicalNodesById,
+        draftSession,
+        canonicalNodesById,
         targetNodeId: identity.nodeId,
         columnId: identity.columnId,
         targetColumnId: identity.targetColumnId,
@@ -320,25 +324,25 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
         toast.error(formatColumnMappingRejection(result.reason));
         return;
       }
-      effects.setDraftSession(result.draftSession);
+      setDraftSession(result.draftSession);
     },
-    [effects, policy.canEditEdges, state]
+    [canEditEdges, canonicalNodesById, draftSession, setDraftSession]
   );
 
   const handleRemoveColumnMapping = useCallback(
     (mapping: CanvasColumnLineageEdgeData) => {
-      if (!policy.canEditEdges || !mapping.removable) {
+      if (!canEditEdges || !mapping.removable) {
         toast.error(canvasViewCopy.mutationUnavailableMessage);
         return;
       }
-      const targetNode = resolveCurrentNode(state, mapping.targetNodeId);
+      const targetNode = resolveCurrentNode(draftSession, canonicalNodesById, mapping.targetNodeId);
       if (targetNode == null) {
         toast.error(canvasViewCopy.columnMappingUnavailableMessage);
         return;
       }
       const result = removeCanvasColumnMapping({
-        draftSession: state.draftSession,
-        canonicalNodesById: state.canonicalNodesById,
+        draftSession,
+        canonicalNodesById,
         targetNode,
         outputId: mapping.outputId,
         source: {
@@ -350,10 +354,10 @@ function useCanvasColumnMappingHandlers({ state, effects, policy }: CanvasEdgeAu
         toast.error(formatColumnMappingRejection(result.reason));
         return;
       }
-      effects.setDraftSession(result.draftSession);
+      setDraftSession(result.draftSession);
       toast.success(canvasViewCopy.columnMappingRemovedMessage);
     },
-    [effects, policy.canEditEdges, state]
+    [canEditEdges, canonicalNodesById, draftSession, setDraftSession]
   );
 
   return {

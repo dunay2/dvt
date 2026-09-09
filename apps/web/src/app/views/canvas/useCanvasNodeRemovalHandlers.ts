@@ -1,6 +1,6 @@
 /** Owned concern: remove nodes through lifecycle semantics and apply coupled route fallout once. */
 
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 
 import { canvasGraphLifecycle } from './canvasGraphLifecycle';
@@ -28,6 +28,8 @@ export function useCanvasNodeRemovalHandlers({
     setInspectorNode,
   } = effects;
   const { canEditEdges } = policy;
+  const latestNodesRef = useRef(nodes);
+  latestNodesRef.current = nodes;
 
   const handleRemoveNode = useCallback(
     (nodeId: string) => {
@@ -41,7 +43,7 @@ export function useCanvasNodeRemovalHandlers({
       setTimeout(() => {
         const currentState = {
           draftSession,
-          nodes,
+          nodes: latestNodesRef.current,
           edges,
           selectedNodeIds,
           inspectorNodeId,
@@ -68,7 +70,6 @@ export function useCanvasNodeRemovalHandlers({
       draftSession,
       edges,
       inspectorNodeId,
-      nodes,
       selectedNodeIds,
       setDraftSession,
       setEdges,

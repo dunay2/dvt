@@ -1,6 +1,6 @@
 /** Owned concern: own ephemeral Canvas graph filter state and query execution. */
 import type { Node } from '@xyflow/react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 import {
   CANONICAL_NODE_STATUSES,
@@ -52,6 +52,24 @@ export type CanvasGraphFilterController = Readonly<{
   clear: () => void;
 }>;
 
+function canvasGraphFilterInputsEqual(left: readonly Node[], right: readonly Node[]): boolean {
+  return (
+    left.length === right.length &&
+    left.every((node, index) => {
+      const candidate = right[index];
+      return candidate != null && node.id === candidate.id && node.data === candidate.data;
+    })
+  );
+}
+
+function useCanvasGraphFilterSemanticNodes(nodes: readonly Node[]): readonly Node[] {
+  const semanticNodesRef = useRef(nodes);
+  if (!canvasGraphFilterInputsEqual(semanticNodesRef.current, nodes)) {
+    semanticNodesRef.current = nodes;
+  }
+  return semanticNodesRef.current;
+}
+
 export function useCanvasGraphFilterController({
   nodes,
 }: Readonly<{ nodes: readonly Node[] }>): CanvasGraphFilterController {
@@ -60,7 +78,8 @@ export function useCanvasGraphFilterController({
   const [composition, setComposition] = useState<CanvasGraphFilterComposition>('and');
   const [presentation, setPresentation] = useState<CanvasGraphFilterPresentationMode>('dim');
   const [draftDimension, setDraftDimension] = useState<CanvasGraphFilterDimension>('role');
-  const filterNodes = useMemo(() => nodes.map(toFilterNode), [nodes]);
+  const semanticNodes = useCanvasGraphFilterSemanticNodes(nodes);
+  const filterNodes = useMemo(() => semanticNodes.map(toFilterNode), [semanticNodes]);
   const optionGroups = useMemo(() => buildOptionGroups(filterNodes), [filterNodes]);
   const initialDraftValue = resolveFirstOption(optionGroups, draftDimension);
   const [draftValue, setDraftValue] = useState(initialDraftValue);

@@ -78,6 +78,34 @@ describe('CanvasViewport graph filtering', () => {
     expect(viewportNodes()).toHaveLength(3);
   });
 
+  it('retains untouched cards during geometry changes with filter and search active', async () => {
+    const initialNodes = graphNodes();
+    const initialEdges = graphEdges();
+    await harness.render({ nodesWithImpact: initialNodes, edges: initialEdges });
+
+    openFilter();
+    addFilter('status', 'failed');
+    openSearch('orders');
+    const before = viewportNodes();
+
+    const movedNodes = [
+      {
+        ...initialNodes[0]!,
+        position: { x: 640, y: 480 },
+        dragging: true,
+      },
+      ...initialNodes.slice(1),
+    ];
+    await harness.render({ nodesWithImpact: movedNodes, edges: initialEdges });
+    const after = viewportNodes();
+
+    expect(after[0]).not.toBe(before[0]);
+    expect(after[0]?.position).toEqual({ x: 640, y: 480 });
+    expect(after[0]?.data).toBe(before[0]?.data);
+    expect(after[1]).toBe(before[1]);
+    expect(after[2]).toBe(before[2]);
+  });
+
   it('recomputes active search and filters after graph changes without mutating graph input', async () => {
     const initialNodes = graphNodes();
     const initialEdges = graphEdges();

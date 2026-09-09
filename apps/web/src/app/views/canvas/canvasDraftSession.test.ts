@@ -678,7 +678,7 @@ describe('canvasDraftSession', () => {
       [{ id: canonicalEdges[0]!.id, type: 'remove' }]
     );
     const persistedAfterRemoval = buildCurrentDraftPayload(
-      removedState.nodes,
+      persistedDraft.nodePositions,
       removedState.draftSession,
       persistedDraft.canvas,
       persistedDraft,

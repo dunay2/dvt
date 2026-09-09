@@ -572,10 +572,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
     expect(draftSession.workingSet.visibleEdges).toEqual([]);
 
     const persistedDraft = buildCurrentDraftPayload(
-      canonicalNodes.map((node, index) => ({
-        id: node.id,
-        position: { x: index * 100, y: 0 },
-      })),
+      Object.fromEntries(canonicalNodes.map((node, index) => [node.id, { x: index * 100, y: 0 }])),
       draftSession,
       { kind: 'transformation', title: 'Main canvas' },
       null,
