@@ -74,9 +74,9 @@ describe('NodePropertiesTabs primary sections', () => {
     );
 
     expect(container.querySelector('[data-slot="node-inspector-tab-general"]')).not.toBeNull();
-    expect(container.querySelector('[data-slot="node-inspector-tab-general"]')?.textContent).toContain(
-      'Overview'
-    );
+    expect(
+      container.querySelector('[data-slot="node-inspector-tab-general"]')?.textContent
+    ).toContain('Overview');
     expect(container.querySelector('[data-slot="node-inspector-tab-columns"]')).not.toBeNull();
     expect(
       container.querySelector('[data-slot="node-inspector-tab-inputs-outputs"]')
@@ -91,6 +91,8 @@ describe('NodePropertiesTabs primary sections', () => {
       )
     ).toBe(true);
     expect(semanticTabList?.querySelector('[data-slot="node-inspector-more-trigger"]')).toBeNull();
+    expect(semanticTabList?.getAttribute('class')).toContain('w-full');
+    expect(semanticTabList?.getAttribute('class')).toContain('shrink-0');
     expect(tabsList?.getAttribute('class')).toContain('flex-wrap');
     expect(tabsList?.getAttribute('class')).toContain('overflow-visible');
     expect(tabsList?.getAttribute('class')).not.toContain('overflow-x-auto');

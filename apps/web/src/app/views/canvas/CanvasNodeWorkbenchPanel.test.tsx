@@ -489,6 +489,37 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(container.textContent).not.toContain('not_null_orders_order_id');
   });
 
+  it('keeps long Model relationships complete in stacked records', () => {
+    const source = {
+      ...SOURCE_NODE,
+      id: 'src_postgresql_local_2333_dvt_public_source_1',
+      name: 'Imported source for dvt.raw.orders in the local governed environment',
+    };
+    const authoring = { canEditNode: true, onApplyNodeDraft: vi.fn() };
+
+    renderNodePanel(root, MODEL_NODE, 'inputs-outputs', authoring, 1, undefined, {
+      nodes: [source, MODEL_NODE],
+      edges: [
+        {
+          id: 'edge-long-source-model',
+          sourceId: source.id,
+          targetId: MODEL_NODE.id,
+          relation: 'lineage',
+        },
+      ],
+    });
+
+    const section = container.querySelector(
+      '[data-slot="canvas-node-workbench-inputs-outputs-content"]'
+    );
+    const record = section?.querySelector('[data-slot="node-property-relationship-record"]');
+
+    expect(section?.querySelector('table')).toBeNull();
+    expect(record?.textContent).toContain(source.name);
+    expect(record?.textContent).toContain(source.id);
+    expect(record?.textContent).toContain('lineage');
+  });
+
   it('shows dbt test meaning, execution selection, readiness impact and run history', () => {
     renderNodePanel(root, MODEL_NODE, 'tests');
 

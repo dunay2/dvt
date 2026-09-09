@@ -118,6 +118,7 @@ describe('resolveCanvasGraphStrategy', () => {
     expect(strategy.nodeWorkbench.sections).toEqual([
       'properties',
       'columns',
+      'inputs-outputs',
       'sql',
       'sink',
       'preview',
