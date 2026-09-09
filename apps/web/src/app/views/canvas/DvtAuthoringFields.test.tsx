@@ -348,7 +348,9 @@ describe('DvtAuthoringFields', () => {
     const entry = container.querySelector<HTMLButtonElement>(
       '[data-slot="dvt-start-configured-inner-join"]'
     );
-    act(() => fireEvent.click(entry!));
+    act(() => {
+      fireEvent.click(entry!);
+    });
 
     const selector =
       '[data-slot="dvt-substrait-inner-join-output-name"], [data-slot="dvt-substrait-n-input-output-name"]';
@@ -440,11 +442,11 @@ describe('DvtAuthoringFields', () => {
     ];
 
     renderFields(transform, undefined, undefined, nodes, edges, 'code');
-    act(() =>
+    act(() => {
       fireEvent.click(
         container.querySelector<HTMLButtonElement>('[data-slot="dvt-start-configured-inner-join"]')!
-      )
-    );
+      );
+    });
 
     const outputs = [
       ...container.querySelectorAll<HTMLInputElement>(
