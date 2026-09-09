@@ -21,6 +21,7 @@ import {
   renameDvtSubstraitInnerJoinCountOutput,
   renameDvtSubstraitInnerJoinGroupedRowNumberOutput,
   resolveDvtSubstraitNInputJoinEntry,
+  setDvtSubstraitJoinPredicateFields,
   type DvtSubstraitInnerJoinDraft,
   type DvtSubstraitJoinInput,
   type DvtSubstraitJoinSource,
@@ -265,6 +266,87 @@ describe('DVT Substrait INNER JOIN identity', () => {
       expect(outputByName(four, name).fieldId).toBe(fieldId);
     }
     expect(outputByName(four, 'payment_id').fieldId).toMatch(OPAQUE_FIELD_ID);
+  });
+
+  it('changes both join predicate operands atomically through retained identities', () => {
+    const draft = fixture();
+    const before = inspectNInput(draft);
+    const joinRelationId = before.joinRelations[0]?.relationId;
+    if (joinRelationId == null) throw new Error('Expected the join relation identity.');
+    const nextLeftFieldId = inputFieldId(before, 0, 'name');
+    const nextRightFieldId = inputFieldId(before, 1, 'order_id');
+
+    const edited = setDvtSubstraitJoinPredicateFields({
+      draft,
+      joinRelationId,
+      leftSourceFieldId: nextLeftFieldId,
+      rightSourceFieldId: nextRightFieldId,
+    });
+    const after = inspectNInput(edited);
+
+    expect(after.joins).toEqual([
+      {
+        leftSourceFieldId: nextLeftFieldId,
+        rightSourceFieldId: nextRightFieldId,
+      },
+    ]);
+    expect(after.joinRelations[0]?.relationId).toBe(joinRelationId);
+    expect(after.inputs.map((input) => input.relationId)).toEqual(
+      before.inputs.map((input) => input.relationId)
+    );
+    expect(after.outputs.map((output) => output.fieldId)).toEqual(
+      before.outputs.map((output) => output.fieldId)
+    );
+  });
+
+  it('allows an atomic type transition and rejects invalid predicate pairs', () => {
+    const draft = createDvtSubstraitStringInnerJoinDraft({
+      left: {
+        source: source('source-left', 'public', 'left_table'),
+        fields: ['id', 'amount'],
+        fieldTypes: ['string', 'fp64'],
+      },
+      right: {
+        source: source('source-right', 'public', 'right_table'),
+        fields: ['id', 'amount'],
+        fieldTypes: ['string', 'fp64'],
+      },
+      leftFieldName: 'id',
+      rightFieldName: 'id',
+      targetNodeId: 'transform-typed-join',
+    });
+    const projection = inspectNInput(draft);
+    const joinRelationId = projection.joinRelations[0]?.relationId;
+    if (joinRelationId == null) throw new Error('Expected the join relation identity.');
+
+    const numeric = setDvtSubstraitJoinPredicateFields({
+      draft,
+      joinRelationId,
+      leftSourceFieldId: inputFieldId(projection, 0, 'amount'),
+      rightSourceFieldId: inputFieldId(projection, 1, 'amount'),
+    });
+    expect(inspectNInput(numeric).joins).toEqual([
+      {
+        leftSourceFieldId: inputFieldId(projection, 0, 'amount'),
+        rightSourceFieldId: inputFieldId(projection, 1, 'amount'),
+      },
+    ]);
+    expect(
+      setDvtSubstraitJoinPredicateFields({
+        draft,
+        joinRelationId,
+        leftSourceFieldId: inputFieldId(projection, 0, 'amount'),
+        rightSourceFieldId: inputFieldId(projection, 1, 'id'),
+      })
+    ).toBe(draft);
+    expect(
+      setDvtSubstraitJoinPredicateFields({
+        draft,
+        joinRelationId,
+        leftSourceFieldId: inputFieldId(projection, 0, 'id'),
+        rightSourceFieldId: inputFieldId(projection, 0, 'amount'),
+      })
+    ).toBe(draft);
   });
 
   it('preserves an N-input output FieldId through rename and reorder', () => {
