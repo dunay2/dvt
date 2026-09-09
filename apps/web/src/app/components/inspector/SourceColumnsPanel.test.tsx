@@ -111,7 +111,9 @@ describe('SourceColumnsPanel', () => {
     const search = container.querySelector<HTMLInputElement>(
       '[data-slot="source-columns-search"]'
     )!;
-    act(() => fireEvent.input(search, { target: { value: 'tenant' } }));
+    act(() => {
+      fireEvent.input(search, { target: { value: 'tenant' } });
+    });
 
     expect(container.querySelectorAll('[data-slot="source-column-row"]')).toHaveLength(1);
     expect(
@@ -163,7 +165,9 @@ describe('SourceColumnsPanel', () => {
     });
     expect(eventId.dataset.dropPlacement).toBe('after');
     expect(eventId.querySelector('[data-slot="source-column-drop-indicator"]')).not.toBeNull();
-    act(() => fireEvent.drop(eventId, { clientY: 36, dataTransfer }));
+    act(() => {
+      fireEvent.drop(eventId, { clientY: 36, dataTransfer });
+    });
 
     const orderedNames = Array.from(
       container.querySelectorAll<HTMLElement>('[data-slot="source-column-row"]')
@@ -194,7 +198,9 @@ describe('SourceColumnsPanel', () => {
     const search = container.querySelector<HTMLInputElement>(
       '[data-slot="source-columns-search"]'
     )!;
-    act(() => fireEvent.input(search, { target: { value: 'id' } }));
+    act(() => {
+      fireEvent.input(search, { target: { value: 'id' } });
+    });
     const tenantId = container.querySelector<HTMLButtonElement>('[data-column-name="tenant_id"]')!;
     act(() => {
       tenantId.focus();

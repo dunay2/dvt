@@ -115,7 +115,9 @@ describe('SourceInputsOutputsPanel', () => {
     const firstOutput = container.querySelector<HTMLButtonElement>(
       '[data-relationship-id="output:edge-model-1"]'
     )!;
-    act(() => fireEvent.click(firstOutput));
+    act(() => {
+      fireEvent.click(firstOutput);
+    });
 
     const detail = container.querySelector('[data-slot="source-relationship-detail"]');
     expect(detail?.textContent).toContain('Model 1');
@@ -169,7 +171,9 @@ describe('SourceInputsOutputsPanel', () => {
     });
     expect(check.dataset.dropPlacement).toBe('after');
     expect(check.querySelector('[data-slot="source-relationship-drop-indicator"]')).not.toBeNull();
-    act(() => fireEvent.drop(check, { clientY: 36, dataTransfer }));
+    act(() => {
+      fireEvent.drop(check, { clientY: 36, dataTransfer });
+    });
 
     expect(
       Array.from(
