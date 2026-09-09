@@ -3,9 +3,14 @@ set -e
 
 # Fast path by default to reduce local push friction.
 # Use DVT_PREPUSH_STRICT=1 when you explicitly want the full gate locally.
+branch_name=$(git branch --show-current)
+
 if [ "$DVT_PREPUSH_STRICT" = "1" ]; then
   echo "Running strict pre-push verifications: pnpm verify:prepush -- --full --hook"
   pnpm -s verify:prepush -- --full --hook
+elif [ "$branch_name" = "feat/semantic-workbench-lab" ]; then
+  echo "Running Semantic Workbench lab tests: pnpm test:web:semantic-lab"
+  pnpm -s test:web:semantic-lab
 else
   echo "Running fast pre-push verifications: pnpm verify:prepush -- --hook"
   pnpm -s verify:prepush -- --hook

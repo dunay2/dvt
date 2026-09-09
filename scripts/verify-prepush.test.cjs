@@ -339,12 +339,28 @@
     );
   });
 
-  test('pre-push hook routes through verify prepush so the validation stamp can avoid duplication', () => {
+  test('pre-push hook keeps the governed gate and isolates the Semantic Workbench lab fast path', () => {
     const hookSource = fs.readFileSync(path.resolve(__dirname, '..', '.husky', 'pre-push'), 'utf8');
+    const packageJson = JSON.parse(
+      fs.readFileSync(path.resolve(__dirname, '..', 'package.json'), 'utf8')
+    );
+    const webPackageJson = JSON.parse(
+      fs.readFileSync(path.resolve(__dirname, '..', 'apps', 'web', 'package.json'), 'utf8')
+    );
 
     assert.match(hookSource, /pnpm -s verify:prepush -- --hook/);
     assert.match(hookSource, /pnpm -s verify:prepush -- --full --hook/);
+    assert.match(hookSource, /feat\/semantic-workbench-lab/);
+    assert.match(hookSource, /pnpm -s test:web:semantic-lab/);
     assert.doesNotMatch(hookSource, /pnpm -s verify:changed/);
+    assert.equal(
+      packageJson.scripts['test:web:semantic-lab'],
+      'pnpm --filter @dvt/web test:semantic-lab:run'
+    );
+    assert.match(
+      webPackageJson.scripts['test:semantic-lab:run'],
+      /SemanticWorkbenchLab\.architecture\.test\.ts/
+    );
   });
 
   test('web package exposes an owned lint command for local package validation', () => {

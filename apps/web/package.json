@@ -31,6 +31,7 @@
     "test:presentation:run": "vitest run --config vitest.presentation.config.ts",
     "test:architecture": "pnpm run test:deps && pnpm run test:architecture:run",
     "test:architecture:run": "vitest run --config vitest.architecture.config.ts",
+    "test:semantic-lab:run": "vitest run --config vitest.unit.config.ts src/app/labs/semanticWorkbenchDataset.test.ts src/app/labs/semanticWorkbenchFixture.test.ts src/app/views/canvas/canvasGraphUtils.layout.test.ts && vitest run --config vitest.presentation.config.ts src/app/components/canvas/DbtNodeComponent.behavior.test.tsx && vitest run --config vitest.architecture.config.ts src/app/labs/SemanticWorkbenchLab.architecture.test.ts src/app/labs/semanticWorkbenchProjection.architecture.test.ts",
     "test:canvas": "pnpm run test:deps && pnpm run test:canvas:run",
     "test:canvas:run": "vitest run --config vitest.canvas.config.ts",
     "test:canvas-unit": "pnpm run test:deps && pnpm run test:canvas-unit:run",
