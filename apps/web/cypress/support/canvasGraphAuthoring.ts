@@ -1,5 +1,9 @@
 /** Owned concern: drive public Canvas graph authoring through visible node controls. */
 type DragPoint = Readonly<{ x: number; y: number }>;
+type DragCanvasNodeOptions = Readonly<{
+  nodeId?: string;
+  onFramesComplete?: () => void;
+}>;
 
 function buildMouseDragEvent(
   point: DragPoint,
@@ -91,8 +95,22 @@ export function connectCanvasNodes(sourceName: string, targetName: string): void
   });
 }
 
-export function dragCanvasNodeByViewportDelta(nodeName: string, delta: DragPoint): void {
-  getVisibleCanvasNodeByCardTitle(nodeName).then(($node) => {
+function getCanvasNodeByIdentity(
+  nodeName: string,
+  nodeId: string | undefined
+): Cypress.Chainable<JQuery<HTMLElement>> {
+  if (nodeId !== undefined) {
+    return cy.get(`.react-flow__node[data-id="${nodeId}"]`).should('be.visible');
+  }
+  return getVisibleCanvasNodeByCardTitle(nodeName);
+}
+
+export function dragCanvasNodeByViewportDelta(
+  nodeName: string,
+  delta: DragPoint,
+  options: DragCanvasNodeOptions = {}
+): void {
+  getCanvasNodeByIdentity(nodeName, options.nodeId).then(($node) => {
     const node = $node[0]!;
     const rect = node.getBoundingClientRect();
     const startPoint = {
@@ -112,10 +130,15 @@ export function dragCanvasNodeByViewportDelta(nodeName: string, delta: DragPoint
       dispatchMouseDragEvent(node, window, 'mousedown', startPoint, 1);
       dispatchMouseDragEvent(window, window, 'mousemove', middlePoint, 1);
       dispatchMouseDragEvent(window, window, 'mousemove', targetPoint, 1);
+    });
+
+    options.onFramesComplete?.();
+
+    cy.window().then((window) => {
       dispatchMouseDragEvent(window, window, 'mouseup', targetPoint, 0);
     });
 
-    getVisibleCanvasNodeByCardTitle(nodeName).should(($movedNode) => {
+    getCanvasNodeByIdentity(nodeName, options.nodeId).should(($movedNode) => {
       const movedRect = $movedNode[0]!.getBoundingClientRect();
       const movedCenter = {
         x: movedRect.left + movedRect.width / 2,
@@ -126,6 +149,81 @@ export function dragCanvasNodeByViewportDelta(nodeName: string, delta: DragPoint
       expect(distance, `${nodeName} public drag distance`).to.be.greaterThan(40);
     });
   });
+}
+
+export function dragCanvasNodeOntoNode(
+  sourceNodeId: string,
+  targetNodeId: string,
+  onHover?: () => void
+): void {
+  cy.get(`.react-flow__node[data-id="${sourceNodeId}"]`)
+    .should('be.visible')
+    .then(($sourceNode) => {
+      cy.get(`.react-flow__node[data-id="${targetNodeId}"]`)
+        .should('be.visible')
+        .then(($targetNode) => {
+          const sourcePoint = readHandleCenter($sourceNode[0]!);
+          const targetPoint = readHandleCenter($targetNode[0]!);
+          let releasePoint = targetPoint;
+
+          cy.window().then((window) => {
+            const viewport = window.document.querySelector<HTMLElement>('.react-flow__viewport');
+            const transform =
+              viewport == null ? 'none' : window.getComputedStyle(viewport).transform;
+            const zoom = transform === 'none' ? 1 : new window.DOMMatrixReadOnly(transform).a;
+            releasePoint = {
+              x: sourcePoint.x + (targetPoint.x - sourcePoint.x) / zoom,
+              y: sourcePoint.y + (targetPoint.y - sourcePoint.y) / zoom,
+            };
+            const middlePoint = {
+              x: (sourcePoint.x + releasePoint.x) / 2,
+              y: (sourcePoint.y + releasePoint.y) / 2,
+            };
+            dispatchMouseDragEvent($sourceNode[0]!, window, 'mousedown', sourcePoint, 1);
+            dispatchMouseDragEvent(window, window, 'mousemove', middlePoint, 1);
+          });
+          cy.wait(32);
+          cy.window().then((window) => {
+            dispatchMouseDragEvent(window, window, 'mousemove', releasePoint, 1);
+          });
+          cy.wait(32);
+
+          const alignDraggedNodeCenter = (remainingAttempts: number): void => {
+            if (remainingAttempts === 0) return;
+            cy.get(`.react-flow__node[data-id="${sourceNodeId}"]`).then(($movedSource) => {
+              cy.get(`.react-flow__node[data-id="${targetNodeId}"]`).then(($currentTarget) => {
+                const movedCenter = readHandleCenter($movedSource[0]!);
+                const currentTargetCenter = readHandleCenter($currentTarget[0]!);
+                const correction = {
+                  x: currentTargetCenter.x - movedCenter.x,
+                  y: currentTargetCenter.y - movedCenter.y,
+                };
+                if (Math.abs(correction.x) + Math.abs(correction.y) < 4) return;
+                releasePoint = {
+                  x: releasePoint.x + correction.x,
+                  y: releasePoint.y + correction.y,
+                };
+                cy.window().then((window) => {
+                  dispatchMouseDragEvent(window, window, 'mousemove', releasePoint, 1);
+                });
+                cy.wait(32);
+                alignDraggedNodeCenter(remainingAttempts - 1);
+              });
+            });
+          };
+          alignDraggedNodeCenter(6);
+
+          cy.get(`.react-flow__node[data-id="${targetNodeId}"]`)
+            .find('[data-slot="graph-node-algebraic-drop"]')
+            .should('be.visible');
+          onHover?.();
+
+          cy.window().then((window) => {
+            dispatchMouseDragEvent(window, window, 'mouseup', releasePoint, 0);
+          });
+          cy.wait(32);
+        });
+    });
 }
 
 export function openNodeWorkbenchSection(sectionId: string): void {

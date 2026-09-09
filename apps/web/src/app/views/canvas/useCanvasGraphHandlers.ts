@@ -1,5 +1,7 @@
 /** Owned concern: compose graph interaction handlers over the local contract-builder component. */
 
+import { useCallback } from 'react';
+
 import type {
   CanvasGraphInteractionContracts,
   CanvasGraphInteractionEffects,
@@ -84,16 +86,21 @@ export function useCanvasGraphHandlers({
     canvasGraphHandlerContractBuilders.edgeAuthoring(interactionContracts)
   );
   const algebraicComposition = useCanvasAlgebraicCompositionHandler(interactionContracts);
-  const handleColumnDisclosureChange = (nodeId: string, expanded: boolean) => {
-    setNodes((currentNodes) =>
-      currentNodes.map((node) =>
-        node.id === nodeId
-          ? { ...node, data: { ...node.data, columnDisclosureExpanded: expanded } }
-          : node
-      )
-    );
-  };
-  const handleApplyCanvasColumnFunction: UseCanvasGraphHandlersResult['handleApplyCanvasColumnFunction'] =
+  const handleColumnDisclosureChange = useCallback(
+    (nodeId: string, expanded: boolean) => {
+      setNodes((currentNodes) =>
+        currentNodes.map((node) =>
+          node.id === nodeId
+            ? { ...node, data: { ...node.data, columnDisclosureExpanded: expanded } }
+            : node
+        )
+      );
+    },
+    [setNodes]
+  );
+  const handleApplyCanvasColumnFunction = useCallback<
+    UseCanvasGraphHandlersResult['handleApplyCanvasColumnFunction']
+  >(
     (identity) => {
       const result = applyCanvasColumnFunction({
         draftSession,
@@ -108,8 +115,12 @@ export function useCanvasGraphHandlers({
       if (result.outcome !== 'applied') return { outcome: 'rejected' };
       setDraftSession(result.draftSession);
       return { outcome: 'applied', createdFieldId: result.createdFieldId };
-    };
-  const handleAddCanvasCalculatedColumn: UseCanvasGraphHandlersResult['handleAddCanvasCalculatedColumn'] =
+    },
+    [canonicalNodesById, draftSession, setDraftSession]
+  );
+  const handleAddCanvasCalculatedColumn = useCallback<
+    UseCanvasGraphHandlersResult['handleAddCanvasCalculatedColumn']
+  >(
     (request) => {
       setDraftSession((currentSession) => {
         const result = applyCanvasCalculatedColumn({
@@ -119,8 +130,12 @@ export function useCanvasGraphHandlers({
         });
         return result.outcome === 'applied' ? result.draftSession : currentSession;
       });
-    };
-  const handleApplyCanvasStructuredField: UseCanvasGraphHandlersResult['handleApplyCanvasStructuredField'] =
+    },
+    [canonicalNodesById, setDraftSession]
+  );
+  const handleApplyCanvasStructuredField = useCallback<
+    UseCanvasGraphHandlersResult['handleApplyCanvasStructuredField']
+  >(
     (request) => {
       setDraftSession((currentSession) => {
         const result = applyCanvasStructuredField({
@@ -130,7 +145,9 @@ export function useCanvasGraphHandlers({
         });
         return result.outcome === 'applied' ? result.draftSession : currentSession;
       });
-    };
+    },
+    [canonicalNodesById, setDraftSession]
+  );
   const selectionHandlers = useCanvasSelectionHandlers(
     canvasGraphHandlerContractBuilders.selection(interactionContracts)
   );

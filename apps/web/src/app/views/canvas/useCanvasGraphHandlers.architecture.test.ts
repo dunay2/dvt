@@ -29,7 +29,7 @@ describe('useCanvasGraphHandlers architecture', () => {
     expect(GRAPH_HANDLERS_SOURCE).not.toContain('buildCanvasSelectionContracts');
     expect(GRAPH_HANDLERS_SOURCE).not.toContain('buildCanvasLayoutContracts');
     expect(GRAPH_HANDLERS_SOURCE).not.toContain('buildCanvasNodeAuthoringContracts');
-    expect(GRAPH_HANDLERS_SOURCE).not.toContain('useCallback(');
+    expect(GRAPH_HANDLERS_SOURCE).toContain('useCallback');
     expect(GRAPH_HANDLERS_SOURCE).not.toContain('useMemo(');
     expect(GRAPH_HANDLERS_SOURCE).not.toContain('useRef(');
     expect(GRAPH_HANDLERS_SOURCE).not.toContain('useState(');

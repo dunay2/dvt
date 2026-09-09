@@ -2,6 +2,7 @@ import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 
 import type { WorkspaceGraphSnapshot } from '../../ports/workspace';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { CanvasNodePositions } from './canvasAuthoringRuntime.types';
 import { buildCanvasAuthoringDraft } from './canvasDraftAuthoring';
 import type { CanvasDraftEdge, CanvasDraftSession } from './canvasDraftSession';
 import type { CanvasAuthoringCanvasDocument } from './canvasDraftReadModel';
@@ -10,14 +11,6 @@ import { preserveProjectCanvasWorkspaces } from './canvasProjectCanvasLifecycle'
 export type CanvasDraftLifecycleCanonicalSnapshot = {
   canonicalNodeIds: string[];
   canonicalEdges: CanvasDraftEdge[];
-};
-
-export type CanvasDraftLifecycleGraphNode = {
-  id: string;
-  position: {
-    x: number;
-    y: number;
-  };
 };
 
 export type CanvasDraftLifecycleGraphStrategy = {
@@ -70,7 +63,7 @@ export function buildCanonicalSnapshotFromWorkspaceSnapshot(
 }
 
 export function buildCurrentDraftPayload(
-  graphNodes: CanvasDraftLifecycleGraphNode[],
+  persistedNodePositions: CanvasNodePositions,
   draftSession: CanvasDraftSession,
   canvasDocument: CanvasAuthoringCanvasDocument,
   baselineDraft: WorkspaceGraphAuthoringDraft | null,
@@ -85,11 +78,8 @@ export function buildCurrentDraftPayload(
       ])
     ).values(),
   ];
-  const currentNodePositions = Object.fromEntries(
-    graphNodes.map((node) => [node.id, { x: node.position.x, y: node.position.y }])
-  );
   const visibleNodeIds = draftSession.workingSet.visibleNodeIds.filter(
-    (nodeId) => currentNodePositions[nodeId] != null
+    (nodeId) => persistedNodePositions[nodeId] != null
   );
   const knownCanonicalNodeIds = new Set(draftCanonicalNodes.map((node) => node.id));
   const buildableNodeIds = visibleNodeIds.filter((nodeId) => knownCanonicalNodeIds.has(nodeId));
@@ -97,7 +87,7 @@ export function buildCurrentDraftPayload(
   const nodePositions: Record<string, { x: number; y: number }> = {};
 
   for (const nodeId of buildableNodeIds) {
-    const position = currentNodePositions[nodeId];
+    const position = persistedNodePositions[nodeId];
     if (position != null) {
       nodePositions[nodeId] = position;
     }

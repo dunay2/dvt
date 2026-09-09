@@ -12,7 +12,7 @@ import {
 import type { CanvasCurrentDraftPayloadDto } from './canvasDraftLifecycle.types';
 
 export function useCanvasCurrentDraftPayload({
-  graphNodes,
+  persistedNodePositions,
   draftSession,
   canvasDocument,
   baselineDraft,
@@ -22,14 +22,21 @@ export function useCanvasCurrentDraftPayload({
   const currentDraftPayload = useMemo(
     () =>
       buildCurrentDraftPayload(
-        graphNodes,
+        persistedNodePositions,
         draftSession,
         canvasDocument ?? { kind: '', title: '' },
         baselineDraft,
         canonicalNodes,
         canonicalEdges
       ),
-    [baselineDraft, canvasDocument, canonicalEdges, canonicalNodes, draftSession, graphNodes]
+    [
+      baselineDraft,
+      canvasDocument,
+      canonicalEdges,
+      canonicalNodes,
+      draftSession,
+      persistedNodePositions,
+    ]
   );
   const currentDraftPayloadSignature = useMemo(
     () => serializeCanvasDraftAuthoringSignature(currentDraftPayload),

@@ -35,6 +35,45 @@ describe('CanvasViewport node operational rail', () => {
     unmountViewport();
   });
 
+  it('keeps 29 of 30 presented nodes stable during a geometry frame', async () => {
+    const nodes = Array.from({ length: 30 }, (_, index) => ({
+      id: 'node-' + index,
+      position: { x: index * 40, y: 80 },
+      data: {
+        name: 'Node ' + index,
+        selectedForExecution: index === 12,
+        pluginId: 'dvt',
+        pluginKind: 'dvt:transform',
+        role: 'transform',
+        status: 'idle',
+        tags: ['shared'],
+      },
+      type: 'dbtNode',
+    })) as CanvasViewportProps['nodesWithImpact'];
+
+    await renderViewport({ nodesWithImpact: nodes });
+    const before = xyflowState.lastReactFlowProps?.nodes as CanvasViewportProps['nodesWithImpact'];
+
+    await renderViewport({
+      nodesWithImpact: [
+        {
+          ...nodes[0]!,
+          position: { x: 640, y: 480 },
+          dragging: true,
+        },
+        ...nodes.slice(1),
+      ],
+    });
+    const after = xyflowState.lastReactFlowProps?.nodes as CanvasViewportProps['nodesWithImpact'];
+
+    expect(after[0]).not.toBe(before[0]);
+    expect(after[0]?.position).toEqual({ x: 640, y: 480 });
+    for (let index = 1; index < 30; index += 1) {
+      expect(after[index]).toBe(before[index]);
+      expect(after[index]?.data).toBe(before[index]?.data);
+    }
+  });
+
   it('injects an operational detail port into nodes and closes the popover on pane click', async () => {
     await renderViewport({
       nodesWithImpact: [

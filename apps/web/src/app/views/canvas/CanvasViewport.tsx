@@ -86,6 +86,138 @@ type CanvasViewportWithPresenterProps = CanvasViewportProps &
     contextMenuPresenter: CanvasContextMenuPresenter;
   }>;
 
+type CanvasViewportNodeActionProjector = (nodes: readonly Node[]) => Node[];
+
+function createCanvasViewportNodeActionProjector({
+  closeNodeHealthPopover,
+  openNodeHealthPopover,
+  filterByTag,
+  getTagFilterLabel,
+}: Readonly<{
+  closeNodeHealthPopover: (restoreTriggerFocus?: boolean) => void;
+  openNodeHealthPopover: (
+    nodeId: string,
+    detail: GraphNodeOperationalDetail,
+    anchorElement: HTMLElement
+  ) => void;
+  filterByTag: (tag: string) => void;
+  getTagFilterLabel: (tag: string) => string;
+}>): CanvasViewportNodeActionProjector {
+  const projectedNodes = new WeakMap<Node, Node>();
+
+  return (nodes) =>
+    nodes.map((node) => {
+      const previousProjection = projectedNodes.get(node);
+      if (previousProjection != null) {
+        return previousProjection;
+      }
+
+      const nodeData = node.data as Record<string, unknown>;
+      const inspectNode =
+        typeof nodeData.onInspectNode === 'function'
+          ? (nodeData.onInspectNode as (...args: unknown[]) => void)
+          : null;
+      const openSourceDataSample =
+        typeof nodeData.onOpenSourceDataSample === 'function'
+          ? (nodeData.onOpenSourceDataSample as (...args: unknown[]) => void)
+          : null;
+      const projection: Node = {
+        ...node,
+        data: {
+          ...node.data,
+          ...(inspectNode == null
+            ? {}
+            : {
+                onInspectNode: (...args: unknown[]) => {
+                  closeNodeHealthPopover();
+                  inspectNode(...args);
+                },
+              }),
+          ...(openSourceDataSample == null
+            ? {}
+            : {
+                onOpenSourceDataSample: (...args: unknown[]) => {
+                  closeNodeHealthPopover(false);
+                  openSourceDataSample(...args);
+                },
+              }),
+          onOpenOperationalDetails: (
+            detail: GraphNodeOperationalDetail,
+            anchorElement: HTMLElement
+          ) => openNodeHealthPopover(node.id, detail, anchorElement),
+          onFilterByTag: filterByTag,
+          getTagFilterLabel,
+        },
+      };
+      projectedNodes.set(node, projection);
+      return projection;
+    });
+}
+
+type CanvasViewportProjectedNodeReference = Readonly<{
+  liveNode: Node;
+  semanticNode: Node;
+  projectedNode: Node;
+}>;
+
+function canvasViewportSemanticInputsEqual(left: readonly Node[], right: readonly Node[]): boolean {
+  return (
+    left.length === right.length &&
+    left.every((node, index) => {
+      const candidate = right[index];
+      return (
+        candidate != null &&
+        node.id === candidate.id &&
+        node.data === candidate.data &&
+        node.ariaLabel === candidate.ariaLabel &&
+        node.className === candidate.className
+      );
+    })
+  );
+}
+
+function useCanvasViewportSemanticNodes(nodes: Node[]): Node[] {
+  const semanticNodesRef = useRef(nodes);
+  if (!canvasViewportSemanticInputsEqual(semanticNodesRef.current, nodes)) {
+    semanticNodesRef.current = nodes;
+  }
+  return semanticNodesRef.current;
+}
+
+function useCanvasViewportLiveGeometry(semanticNodes: Node[], liveNodes: Node[]): Node[] {
+  const projectedNodesRef = useRef<ReadonlyMap<string, CanvasViewportProjectedNodeReference>>(
+    new Map()
+  );
+
+  return useMemo(() => {
+    const previousNodes = projectedNodesRef.current;
+    const liveNodesById = new Map(liveNodes.map((node) => [node.id, node] as const));
+    const nextNodes = new Map<string, CanvasViewportProjectedNodeReference>();
+    const projectedNodes = semanticNodes.map((semanticNode) => {
+      const liveNode = liveNodesById.get(semanticNode.id);
+      if (liveNode == null) {
+        throw new Error('Canvas viewport semantic projection omitted live node ' + semanticNode.id);
+      }
+
+      const previousNode = previousNodes.get(semanticNode.id);
+      const projectedNode =
+        previousNode?.liveNode === liveNode && previousNode.semanticNode === semanticNode
+          ? previousNode.projectedNode
+          : {
+              ...liveNode,
+              ariaLabel: semanticNode.ariaLabel,
+              className: semanticNode.className,
+              data: semanticNode.data,
+            };
+      nextNodes.set(semanticNode.id, { liveNode, semanticNode, projectedNode });
+      return projectedNode;
+    });
+
+    projectedNodesRef.current = nextNodes;
+    return projectedNodes;
+  }, [liveNodes, semanticNodes]);
+}
+
 function CanvasViewportWithPresenter({
   contextMenuPresenter,
   ...props
@@ -157,75 +289,41 @@ function CanvasViewportWithPresenter({
     });
   }, [props.externalNodeSurfaceActive]);
 
-  const nodesWithOperationalDetails = useMemo(
-    () =>
-      props.nodesWithImpact.map((node) => {
-        const nodeData = node.data as Record<string, unknown>;
-        const inspectNode =
-          typeof nodeData.onInspectNode === 'function'
-            ? (nodeData.onInspectNode as (...args: unknown[]) => void)
-            : null;
-        const openSourceDataSample =
-          typeof nodeData.onOpenSourceDataSample === 'function'
-            ? (nodeData.onOpenSourceDataSample as (...args: unknown[]) => void)
-            : null;
-        return {
-          ...node,
-          data: {
-            ...node.data,
-            ...(inspectNode == null
-              ? {}
-              : {
-                  onInspectNode: (...args: unknown[]) => {
-                    closeNodeHealthPopover();
-                    inspectNode(...args);
-                  },
-                }),
-            ...(openSourceDataSample == null
-              ? {}
-              : {
-                  onOpenSourceDataSample: (...args: unknown[]) => {
-                    closeNodeHealthPopover(false);
-                    openSourceDataSample(...args);
-                  },
-                }),
-            onOpenOperationalDetails: (
-              detail: GraphNodeOperationalDetail,
-              anchorElement: HTMLElement
-            ) => openNodeHealthPopover(node.id, detail, anchorElement),
-          },
-        };
-      }),
-    [closeNodeHealthPopover, openNodeHealthPopover, props.nodesWithImpact]
-  );
-
+  const semanticViewportNodes = useCanvasViewportSemanticNodes(props.nodesWithImpact);
   const graphFilterController = useCanvasGraphFilterController({
-    nodes: nodesWithOperationalDetails,
+    nodes: semanticViewportNodes,
   });
   const getTagFilterLabel = useCallback(
     (tag: string) => formatCanvasCopyTemplate(copy.canvasGraphFilterByTagLabelTemplate, { tag }),
     [copy.canvasGraphFilterByTagLabelTemplate]
   );
-  const nodesWithTagFilterIntent = useMemo(
+  const projectNodeActions = useMemo(
     () =>
-      nodesWithOperationalDetails.map((node) => ({
-        ...node,
-        data: {
-          ...node.data,
-          onFilterByTag: graphFilterController.filterByTag,
-          getTagFilterLabel,
-        },
-      })),
-    [getTagFilterLabel, graphFilterController.filterByTag, nodesWithOperationalDetails]
+      createCanvasViewportNodeActionProjector({
+        closeNodeHealthPopover,
+        openNodeHealthPopover,
+        filterByTag: graphFilterController.filterByTag,
+        getTagFilterLabel,
+      }),
+    [
+      closeNodeHealthPopover,
+      getTagFilterLabel,
+      graphFilterController.filterByTag,
+      openNodeHealthPopover,
+    ]
+  );
+  const nodesWithViewportActions = useMemo(
+    () => projectNodeActions(semanticViewportNodes),
+    [projectNodeActions, semanticViewportNodes]
   );
   const graphFilterPresentation = useMemo(
     () =>
       projectCanvasGraphFilterPresentation({
-        nodes: nodesWithTagFilterIntent,
+        nodes: nodesWithViewportActions,
         edges: props.edges,
         result: graphFilterController.result,
       }),
-    [graphFilterController.result, nodesWithTagFilterIntent, props.edges]
+    [graphFilterController.result, nodesWithViewportActions, props.edges]
   );
   const graphFilterMatchingNodeIds = useMemo(
     () => new Set(graphFilterController.result.matchingNodeIds),
@@ -234,9 +332,9 @@ function CanvasViewportWithPresenter({
   const graphSearchNodes = useMemo(
     () =>
       graphFilterController.result.status === 'idle'
-        ? nodesWithTagFilterIntent
-        : nodesWithTagFilterIntent.filter((node) => graphFilterMatchingNodeIds.has(node.id)),
-    [graphFilterController.result.status, graphFilterMatchingNodeIds, nodesWithTagFilterIntent]
+        ? nodesWithViewportActions
+        : nodesWithViewportActions.filter((node) => graphFilterMatchingNodeIds.has(node.id)),
+    [graphFilterController.result.status, graphFilterMatchingNodeIds, nodesWithViewportActions]
   );
   const graphSearchController = useCanvasGraphSearchController({ nodes: graphSearchNodes });
 
@@ -257,18 +355,22 @@ function CanvasViewportWithPresenter({
       graphFilterPresentation.nodes,
     ]
   );
+  const renderedNodes = useCanvasViewportLiveGeometry(
+    graphSearchPresentation.nodes,
+    props.nodesWithImpact
+  );
   const miniMapFocusRef = useRef({
-    nodes: graphSearchPresentation.nodes,
+    nodes: renderedNodes,
     selectNode: canSelectNodes,
     port: graphSearchActivationPort,
   });
   useLayoutEffect(() => {
     miniMapFocusRef.current = {
-      nodes: graphSearchPresentation.nodes,
+      nodes: renderedNodes,
       selectNode: canSelectNodes,
       port: graphSearchActivationPort,
     };
-  }, [canSelectNodes, graphSearchActivationPort, graphSearchPresentation.nodes]);
+  }, [canSelectNodes, graphSearchActivationPort, renderedNodes]);
   // XYFlow retains the first callback; read the latest committed focus inputs.
   const handleMiniMapNodeClick = useCallback<NonNullable<MiniMapProps<Node>['onNodeClick']>>(
     (_event, node) => {
@@ -282,7 +384,7 @@ function CanvasViewportWithPresenter({
       return;
     }
 
-    const popoverOwnerStillExists = props.nodesWithImpact.some(
+    const popoverOwnerStillExists = semanticViewportNodes.some(
       (node) => node.id === nodeHealthPopoverModel.nodeId
     );
     if (!popoverOwnerStillExists) {
@@ -292,7 +394,7 @@ function CanvasViewportWithPresenter({
         nodeId: nodeHealthPopoverModel.nodeId,
       });
     }
-  }, [nodeHealthPopoverModel, props.nodesWithImpact]);
+  }, [nodeHealthPopoverModel, semanticViewportNodes]);
 
   useEffect(() => {
     if (nodeHealthPopoverModel == null) {
@@ -352,7 +454,7 @@ function CanvasViewportWithPresenter({
       canDeleteWithKeyboard={props.canEditEdges && !(props.externalNodeSurfaceActive ?? false)}
       canMoveNodes={props.canMoveNodes ?? props.canEditEdges}
       canSelectNodes={canSelectNodes}
-      nodesWithImpact={graphSearchPresentation.nodes}
+      nodesWithImpact={renderedNodes}
       edges={graphSearchPresentation.edges}
       nodeTypes={props.nodeTypes}
       gridSize={props.gridSize}

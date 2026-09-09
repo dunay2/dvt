@@ -1,4 +1,6 @@
 /** Owned concern: compose the draft baseline, semantic projection, lifecycle, and local draft-session state inside the Canvas authoring-runtime component. */
+import { useMemo } from 'react';
+
 import type { UseCanvasAuthoringRuntimeDraftFlowArgs } from './canvasAuthoringRuntime.types';
 import { useCanvasAuthoringProjection } from './useCanvasAuthoringProjection';
 import { useCanvasDraftBaseline } from './useCanvasDraftBaseline';
@@ -21,10 +23,13 @@ export function useCanvasAuthoringRuntimeDraftFlow({
     workspaceGraphDraftAuthoringPort,
     workspaceLayoutKey,
   });
-  const localCanonicalNodes =
-    draftSession.syncState === 'missing_remote'
-      ? []
-      : Object.values(draftSession.localNodeCatalog ?? {});
+  const localCanonicalNodes = useMemo(
+    () =>
+      draftSession.syncState === 'missing_remote'
+        ? []
+        : Object.values(draftSession.localNodeCatalog ?? {}),
+    [draftSession.localNodeCatalog, draftSession.syncState]
+  );
   const { graphModel, canonicalSnapshot } = useCanvasAuthoringProjection({
     graphAuthorityQuery: {
       isPending: graphDraftQuery.isPending,
@@ -55,7 +60,6 @@ export function useCanvasAuthoringRuntimeDraftFlow({
       setCanvasNodePositions,
     },
     projection: {
-      graphNodes: graphModel.nodes,
       canonicalNodes: graphModel.canonicalNodes,
       canonicalEdges: graphModel.canonicalEdges,
       workspaceScope,

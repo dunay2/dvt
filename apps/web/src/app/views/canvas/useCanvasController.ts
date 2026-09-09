@@ -226,7 +226,6 @@ export function useCanvasController() {
     toggleInspectorPanel: store.toggleInspectorPanel,
     onLayoutComplete: persistence.handleNodePositionsSave,
   });
-
   const impactFocusNodeIds = useMemo(
     () =>
       impactFocusNodeId != null && graphModel.nodes.some((node) => node.id === impactFocusNodeId)

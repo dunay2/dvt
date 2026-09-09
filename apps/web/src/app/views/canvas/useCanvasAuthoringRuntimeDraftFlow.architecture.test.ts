@@ -23,10 +23,15 @@ describe('useCanvasAuthoringRuntimeDraftFlow architecture', () => {
     expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).toContain('useCanvasDraftBaseline');
     expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).toContain('useCanvasAuthoringProjection');
     expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).toContain('useCanvasDraftLifecycle');
+    expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).toContain('const localCanonicalNodes = useMemo(');
+    expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).toContain(
+      '[draftSession.localNodeCatalog, draftSession.syncState]'
+    );
     expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).toContain('baseline: {');
     expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).toContain('session: {');
     expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).toContain('projection: {');
     expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).toContain('policy: {');
+    expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).not.toContain('graphNodes: graphModel.nodes');
     expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).not.toContain("from './useCanvasAuthoringRuntime'");
     expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).not.toContain('useQuery(');
     expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).not.toContain('useQueryClient(');
