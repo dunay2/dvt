@@ -1,4 +1,11 @@
-/** Owned concern: define the single v1 data budget for editable Canvas fields. */
+/**
+ * Owned concern: define the single v1 data budget for editable Canvas fields.
+ *
+ * @baseline ADR-0035: Planner Public Contract Evolution Protocol
+ * @decision Enforce one shared budget contract across Canvas, API, and persistence boundaries.
+ * @consequence Invalid authoring values fail closed without silent truncation or mutation.
+ * @version 1.0.0
+ */
 import { z } from 'zod';
 
 import {
