@@ -20,7 +20,7 @@ canonical authority wins and the drift must be corrected here.
 
 | Task type | Open next | Additional authority when needed | Minimum closeout baseline |
 | --- | --- | --- | --- |
-| `code` | `docs/guides/ai-work-protocol.md` | relevant ADR/contract + Planning DB for architecture/design | affected validation + `pnpm verify:prepush` |
+| `code` | `docs/guides/ai-work-protocol.md` | relevant ADR/contract + Planning DB for architecture/design | touched-package validation + `pnpm verify:prepush` |
 | `docs` | `docs/index.md` + `docs/guides/ai-work-protocol.md` | governing ADR/contract when documentation is normative | docs/governance checks + `pnpm verify:prepush` |
 | `planning` | governing GitHub Issue | roadmap/status docs only when their durable content changes | issue/PR evidence + `pnpm verify:prepush` when repo files change |
 | `contracts` | `docs/contracts/index.md` | relevant ADRs + contract/versioning policy | contract/package validation + `pnpm verify:prepush` |
