@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { fireEvent } from '@testing-library/dom';
+import { fireEvent, getByRole } from '@testing-library/dom';
 import React, { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -121,6 +121,10 @@ describe('ProjectCreationDialog', () => {
     expect(formBody?.classList).toContain('py-5');
     expect(projectNameHelp?.textContent).toBe('Usa un nombre claro y reconocible.');
     expect(projectNameHelp?.getAttribute('data-slot')).toBe('project-name-help');
+    expect(getByRole(document.body, 'textbox', { name: 'Nombre del proyecto' })).toBe(
+      projectNameInput
+    );
+    expect(projectNameInput?.closest('label')).toBeNull();
     expect(submitButton?.classList).toContain('disabled:bg-(--surface-elevated)');
     expect(submitButton?.disabled).toBe(true);
     expect(dialogFooter?.classList).toContain('border-t');

@@ -267,6 +267,7 @@ export function ProjectCreationForm({
   renderActions,
 }: ProjectCreationFormProps): JSX.Element {
   const projectNameHelpId = useId();
+  const projectNameInputId = `${projectNameHelpId}-input`;
   const actions = (
     <>
       {leadingAction}
@@ -329,12 +330,13 @@ export function ProjectCreationForm({
                 </select>
               </Label>
             ) : null}
-            <Label className="grid gap-2 text-(--text-default)">
-              <span>{copy.projectNameLabel}</span>
+            <div className="grid gap-2 text-(--text-default)">
+              <Label htmlFor={projectNameInputId}>{copy.projectNameLabel}</Label>
               <Input
                 aria-describedby={showProjectNameHelp ? projectNameHelpId : undefined}
                 autoFocus={autoFocusProjectName}
                 className="bg-(--surface-route) text-(--text-default) placeholder:text-(--text-disabled)"
+                id={projectNameInputId}
                 name="projectName"
                 disabled={controller.submissionState !== 'idle'}
                 onChange={(event) => controller.setProjectName(event.target.value)}
@@ -350,7 +352,7 @@ export function ProjectCreationForm({
                   {copy.projectNameHelpText}
                 </span>
               ) : null}
-            </Label>
+            </div>
             {!controller.canCreateProject ? (
               <div
                 className="rounded-md border border-amber-500/40 bg-amber-950/30 px-3 py-2 text-sm text-amber-100"
