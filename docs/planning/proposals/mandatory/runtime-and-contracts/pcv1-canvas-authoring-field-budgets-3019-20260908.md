@@ -228,6 +228,23 @@ unrelated editors are excluded.
       "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature PCV1-CANVAS-AUTHORING-FIELD-BUDGETS-3019"
     },
     {
+      "name": "resolveCanvasDvtOutputNameDraftError",
+      "path": "apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts",
+      "cqRails": [
+        "ConfigureCanvasDvtNode"
+      ],
+      "dddOwner": "CanvasInspectorNodeDraft",
+      "unitTests": [
+        "apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts",
+        "apps/web/src/app/views/canvas/DvtAuthoringFields.test.tsx"
+      ],
+      "fowlerSignals": [
+        "Duplicate validation"
+      ],
+      "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-authoring-field-budgets.cy.ts",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature PCV1-CANVAS-AUTHORING-FIELD-BUDGETS-3019"
+    },
+    {
       "name": "CanvasDescriptionV1Schema",
       "path": "packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringFieldPolicy.v1.ts",
       "cqRails": [
