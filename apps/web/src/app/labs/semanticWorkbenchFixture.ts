@@ -1,13 +1,30 @@
 import type { CanonicalEdge, CanonicalNode } from '../types/canonical';
 import {
   createDvtSubstraitStringInnerJoinDraft,
+  decodeDvtSubstraitInnerJoinDocument,
   encodeDvtSubstraitInnerJoinDocument,
+  inspectDvtSubstraitNInputJoinDraft,
+  type DvtSubstraitJoinDataType,
   type DvtSubstraitJoinSource,
 } from '../views/canvas/canvasDvtSubstraitJoinComposition';
-import { applyDvtSubstraitSemanticDocument } from '../views/canvas/canvasDvtTransformAuthoringAuthority';
+import {
+  applyDvtSubstraitSemanticDocument,
+  readDvtTransformAuthoringAuthority,
+} from '../views/canvas/canvasDvtTransformAuthoringAuthority';
 import clientFixture from './fixtures/client.json';
 import ordersFixture from './fixtures/orders.json';
 import { loadSemanticWorkbenchDataset } from './semanticWorkbenchDataset';
+
+const SUBSTRAIT_TYPE_BY_DATASET_TYPE = {
+  integer: 'i64',
+  numeric: 'fp64',
+  text: 'string',
+  boolean: 'bool',
+  timestamp: 'precisionTimestampTz',
+} as const satisfies Record<
+  ReturnType<typeof loadSemanticWorkbenchDataset>['columns'][number]['type'],
+  DvtSubstraitJoinDataType
+>;
 
 const BASE_TRANSFORM: CanonicalNode = {
   id: 'lab-transform-orders-client',
@@ -102,10 +119,12 @@ export function buildSemanticWorkbenchFixture(
     left: {
       source: buildJoinSource(sources[0], orders),
       fields: orders.columns.map((column) => column.name),
+      fieldTypes: orders.columns.map((column) => SUBSTRAIT_TYPE_BY_DATASET_TYPE[column.type]),
     },
     right: {
       source: buildJoinSource(sources[1], clients),
       fields: clients.columns.map((column) => column.name),
+      fieldTypes: clients.columns.map((column) => SUBSTRAIT_TYPE_BY_DATASET_TYPE[column.type]),
     },
     leftFieldName: 'client_id',
     rightFieldName: 'client_id',
@@ -115,6 +134,75 @@ export function buildSemanticWorkbenchFixture(
     BASE_TRANSFORM,
     encodeDvtSubstraitInnerJoinDocument(join)
   );
+  const datasets = [orders, clients] as const;
+  const projectTransformSample = (currentTransform: CanonicalNode) => {
+    try {
+      const authority = readDvtTransformAuthoringAuthority(currentTransform);
+      if (authority == null) return null;
+      const inspection = inspectDvtSubstraitNInputJoinDraft(
+        decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument)
+      );
+      if (!inspection.ok) return null;
+
+      const datasetsBySourceObjectId = new Map<string, Dataset>(
+        datasets.map((dataset) => [`${dataset.schema}.${dataset.tableName}`, dataset] as const)
+      );
+      const resolvedInputRows = inspection.projection.inputs.map(
+        (input) => datasetsBySourceObjectId.get(input.sourceRef.sourceObjectId)?.rows
+      );
+      if (resolvedInputRows.some((rows) => rows == null) || resolvedInputRows[0] == null) {
+        return null;
+      }
+      const inputRows = resolvedInputRows as readonly (typeof orders.rows)[];
+      type DatasetRow = (typeof orders.rows)[number];
+      type JoinedRow = Map<number, DatasetRow>;
+      const fieldById = new Map(
+        inspection.projection.inputs.flatMap((input, inputIndex) =>
+          input.fields.map(
+            (field) => [field.fieldId, { inputIndex, fieldName: field.name }] as const
+          )
+        )
+      );
+      let joinedRows: JoinedRow[] = inputRows[0]!.map(
+        (row) => new Map<number, DatasetRow>([[0, row]])
+      );
+
+      for (const [predicateIndex, predicate] of inspection.projection.joins.entries()) {
+        const rightInputIndex = predicateIndex + 1;
+        const left = fieldById.get(predicate.leftSourceFieldId);
+        const right = fieldById.get(predicate.rightSourceFieldId);
+        const rightRows = inputRows[rightInputIndex];
+        if (
+          left == null ||
+          right == null ||
+          right.inputIndex !== rightInputIndex ||
+          left.inputIndex >= rightInputIndex ||
+          rightRows == null
+        ) {
+          return null;
+        }
+        joinedRows = joinedRows.flatMap((joined) =>
+          rightRows.flatMap((rightRow) =>
+            Object.is(joined.get(left.inputIndex)?.[left.fieldName], rightRow[right.fieldName])
+              ? [new Map(joined).set(rightInputIndex, rightRow)]
+              : []
+          )
+        );
+      }
+
+      return {
+        columns: inspection.projection.outputs.map((output) => ({ name: output.name })),
+        rows: joinedRows.map((joined) => ({
+          values: inspection.projection.outputs.map((output) => {
+            const value = joined.get(output.source.inputIndex)?.[output.source.name];
+            return value == null ? null : String(value);
+          }),
+        })),
+      };
+    } catch {
+      return null;
+    }
+  };
   const edges: readonly CanonicalEdge[] = sources.map((source) => ({
     id: `${source.id}-${transform.id}`,
     sourceId: source.id,
@@ -125,6 +213,7 @@ export function buildSemanticWorkbenchFixture(
     sources: Object.freeze(sources),
     transform,
     edges: Object.freeze(edges),
+    projectTransformSample,
   });
 }
 

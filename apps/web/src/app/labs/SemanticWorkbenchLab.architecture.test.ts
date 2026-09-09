@@ -15,8 +15,10 @@ describe('SemanticWorkbenchLab architecture', () => {
 
   it('reuses the DVT data table and existing source sample callback', () => {
     expect(SOURCE).toContain('metadata?.sampleRows');
+    expect(SOURCE).toContain('fixture.projectTransformSample(fixture.transform)');
     expect(SOURCE).toContain('OperationalDrawerDataTable');
     expect(SOURCE).toContain('onOpenSourceDataSample: openSourceDataSample');
+    expect(SOURCE).toContain('sourceDataSampleInteractionLabel:');
     expect(SOURCE).not.toContain('<table');
   });
 
@@ -29,8 +31,18 @@ describe('SemanticWorkbenchLab architecture', () => {
   });
 
   it('keeps semantic and Canvas projections memoized across Workbench state changes', () => {
-    expect(SOURCE).toContain('() => projectSemanticWorkbenchGraph(SEMANTIC_WORKBENCH_TRANSFORM),');
-    expect(SOURCE).toContain('useMemo(buildCanvasProcess, [])');
+    expect(SOURCE).toContain('projectSemanticWorkbenchGraph(fixture.transform)');
+    expect(SOURCE).toContain('useState(() => buildCanvasProcess(fixture))');
+    expect(SOURCE).toContain('useCanvasViewportGraphModel(liveCanvasProjection)');
+    expect(SOURCE).toContain('canonicalNodesById: new Map(');
+    expect(SOURCE).not.toContain('useMemo(() => buildCanvasProcess(fixture), [fixture])');
+  });
+
+  it('routes Source field selection through the existing Substrait join authority', () => {
+    expect(SOURCE).toContain('onToggleCanvasConnectionColumn: toggleConnectionColumn');
+    expect(SOURCE).toContain('setDvtSubstraitJoinConnectionFieldSelected');
+    expect(SOURCE).toContain('onEdgeClick={(_, edge) => setSelectedConnectionId(edge.id)}');
+    expect(SOURCE).not.toContain('selectedSourceFields:');
   });
 
   it('renders grouped Substrait nodes and one factual read-only inspector', () => {
@@ -38,7 +50,10 @@ describe('SemanticWorkbenchLab architecture', () => {
     expect(SOURCE).toContain('data-slot="semantic-workbench-inspector"');
     expect(SOURCE).toContain('setSelectedSemanticId');
     expect(SOURCE).toContain('Tooltip');
-    expect(SOURCE).toContain('Proyección semántica de solo lectura');
+    expect(SOURCE).toContain('setDvtSubstraitJoinPredicateFields');
+    expect(SOURCE).toContain('data-slot="semantic-workbench-left-field-select"');
+    expect(SOURCE).toContain('data-slot="semantic-workbench-right-field-select"');
+    expect(SOURCE).toContain('Aplicar condición');
     expect(SOURCE).not.toContain('Impacto estimado');
     expect(SOURCE).not.toContain('Editar nodo');
   });

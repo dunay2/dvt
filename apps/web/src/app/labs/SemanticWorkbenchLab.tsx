@@ -6,15 +6,32 @@ import DbtNodeComponent, { type DbtNodeData } from '../components/canvas/DbtNode
 import { OperationalDrawerDataTable } from '../components/shell/OperationalDrawerDataTable';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../components/ui/tooltip';
 import { dvtCanvasSurfaceStrategy } from '../plugins/dvt/dvtCanvasSurfaceStrategy';
+import type {
+  GraphNodeColumn,
+  GraphNodeColumnOutputToggleIdentity,
+} from '../plugins/graph/graphNodeColumnContracts';
 import { getRegisteredPluginIds } from '../plugins/registry';
 import { CanvasDependencyEdge } from '../views/canvas/CanvasDependencyEdge';
 import { CanvasNodeWorkbenchOverlay } from '../views/canvas/CanvasNodeWorkbenchOverlay';
 import type { CanvasInspectorAuthoringContract } from '../views/canvas/canvasInspectorAuthoring.types';
+import {
+  decodeDvtSubstraitInnerJoinDocument,
+  encodeDvtSubstraitInnerJoinDocument,
+  inspectDvtSubstraitNInputJoinDraft,
+  setDvtSubstraitJoinConnectionFieldSelected,
+  setDvtSubstraitJoinPredicateFields,
+  type DvtSubstraitNInputJoinProjection,
+} from '../views/canvas/canvasDvtSubstraitJoinComposition';
+import {
+  applyDvtSubstraitSemanticDocument,
+  readDvtTransformAuthoringAuthority,
+} from '../views/canvas/canvasDvtTransformAuthoringAuthority';
 import { useCanvasViewportGraphModel } from '../views/canvas/useCanvasViewportGraphModel';
 import {
   SEMANTIC_WORKBENCH_EDGE,
   SEMANTIC_WORKBENCH_SOURCE,
   SEMANTIC_WORKBENCH_TRANSFORM,
+  buildSemanticWorkbenchFixture,
 } from './semanticWorkbenchFixture';
 import { projectSemanticWorkbenchGraph } from './semanticWorkbenchProjection';
 
@@ -27,11 +44,10 @@ const accent = '#7dd3fc';
 
 const DVT_NODE_TYPES: NodeTypes = { dbtNode: DbtNodeComponent };
 const DVT_EDGE_TYPES: EdgeTypes = { dependency: CanvasDependencyEdge };
-const SEMANTIC_WORKBENCH_CANONICAL_NODES = [
-  ...SEMANTIC_WORKBENCH_SOURCE,
-  SEMANTIC_WORKBENCH_TRANSFORM,
-] as const;
-const SEMANTIC_WORKBENCH_CANONICAL_EDGES = SEMANTIC_WORKBENCH_EDGE;
+const SEMANTIC_WORKBENCH_NODE_IDS = new Set([
+  ...SEMANTIC_WORKBENCH_SOURCE.map((node) => node.id),
+  SEMANTIC_WORKBENCH_TRANSFORM.id,
+]);
 const SEMANTIC_WORKBENCH_REGISTERED_PLUGINS = getRegisteredPluginIds();
 const READ_ONLY_SEMANTIC_WORKBENCH_AUTHORING: CanvasInspectorAuthoringContract = {
   canEditNode: false,
@@ -88,30 +104,68 @@ const SEMANTIC_WORKBENCH_SOURCE_SAMPLE_IDS = new Set(
   SEMANTIC_WORKBENCH_SOURCE_SAMPLES.map(({ nodeId }) => nodeId)
 );
 
-function buildCanvasProcess() {
+type SemanticWorkbenchFixture = ReturnType<typeof buildSemanticWorkbenchFixture>;
+
+function buildCanvasProcess(fixture: SemanticWorkbenchFixture) {
+  const canonicalNodes = [...fixture.sources, fixture.transform];
   return {
-    visibleNodeIds: SEMANTIC_WORKBENCH_CANONICAL_NODES.map((node) => node.id),
-    visibleEdges: SEMANTIC_WORKBENCH_CANONICAL_EDGES.map(({ sourceId, targetId }) => ({
+    visibleNodeIds: canonicalNodes.map((node) => node.id),
+    visibleEdges: fixture.edges.map(({ sourceId, targetId }) => ({
       sourceId,
       targetId,
     })),
-    canonicalNodesById: new Map(SEMANTIC_WORKBENCH_CANONICAL_NODES.map((node) => [node.id, node])),
+    canonicalNodesById: new Map(canonicalNodes.map((node) => [node.id, node])),
     canonicalEdgeIdBySignature: new Map(
-      SEMANTIC_WORKBENCH_CANONICAL_EDGES.map((edge) => [
-        `${edge.sourceId}::${edge.targetId}`,
-        edge.id,
-      ])
+      fixture.edges.map((edge) => [`${edge.sourceId}::${edge.targetId}`, edge.id])
     ),
     canonicalEdgeBySignature: new Map(
-      SEMANTIC_WORKBENCH_CANONICAL_EDGES.map((edge) => [`${edge.sourceId}::${edge.targetId}`, edge])
+      fixture.edges.map((edge) => [`${edge.sourceId}::${edge.targetId}`, edge])
     ),
     columnLevelLineageEnabled: true,
     persistedNodePositions: {
-      [SEMANTIC_WORKBENCH_CANONICAL_NODES[0].id]: { x: 50, y: 72 },
-      [SEMANTIC_WORKBENCH_CANONICAL_NODES[1].id]: { x: 500, y: 72 },
-      [SEMANTIC_WORKBENCH_CANONICAL_NODES[2].id]: { x: 950, y: 72 },
+      [fixture.sources[0].id]: { x: 50, y: 72 },
+      [fixture.sources[1].id]: { x: 500, y: 72 },
+      [fixture.transform.id]: { x: 950, y: 72 },
     },
   };
+}
+
+function inspectSemanticWorkbenchJoin(
+  transform: SemanticWorkbenchFixture['transform']
+): DvtSubstraitNInputJoinProjection | null {
+  try {
+    const authority = readDvtTransformAuthoringAuthority(transform);
+    if (authority == null) return null;
+    const inspection = inspectDvtSubstraitNInputJoinDraft(
+      decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument)
+    );
+    return inspection.ok ? inspection.projection : null;
+  } catch {
+    return null;
+  }
+}
+
+function projectSelectedFieldsBySourceId(
+  fixture: SemanticWorkbenchFixture,
+  projection: DvtSubstraitNInputJoinProjection | null
+): ReadonlyMap<string, ReadonlySet<string>> {
+  if (projection == null) return new Map();
+  return new Map(
+    fixture.sources.map((source) => {
+      const rawSourceRef = source.metadata?.connectedSourceRef;
+      const sourceObjectId =
+        isRecord(rawSourceRef) && typeof rawSourceRef.sourceObjectId === 'string'
+          ? rawSourceRef.sourceObjectId
+          : null;
+      const inputIndex = projection.inputs.findIndex(
+        (input) => input.sourceRef.sourceObjectId === sourceObjectId
+      );
+      const selectedFields = projection.outputs.flatMap((output) =>
+        output.source.inputIndex === inputIndex ? [output.source.name] : []
+      );
+      return [source.id, new Set(selectedFields)] as const;
+    })
+  );
 }
 
 type InspectNode = NonNullable<DbtNodeData['onInspectNode']>;
@@ -120,20 +174,60 @@ type WorkbenchRequest = Readonly<{
   preferredTabId: 'general' | 'inputs-outputs' | 'tests' | 'code' | null;
   requestId: number;
 }>;
+type PendingJoinPredicate = Readonly<{
+  joinRelationId: string;
+  leftSourceFieldId: string;
+  rightSourceFieldId: string;
+}>;
 
 function SemanticWorkbenchLab() {
-  const canvasProjection = useMemo(buildCanvasProcess, []);
-  const canvasProcess = useCanvasViewportGraphModel(canvasProjection);
-  const semanticGraph = useMemo(
-    () => projectSemanticWorkbenchGraph(SEMANTIC_WORKBENCH_TRANSFORM),
-    []
+  const [fixture, setFixture] = useState<SemanticWorkbenchFixture>(() =>
+    buildSemanticWorkbenchFixture()
   );
+  const canonicalNodes = useMemo(
+    () => [...fixture.sources, fixture.transform],
+    [fixture.sources, fixture.transform]
+  );
+  const [canvasProjection] = useState(() => buildCanvasProcess(fixture));
+  const liveCanvasProjection = useMemo(
+    () => ({
+      ...canvasProjection,
+      canonicalNodesById: new Map(canonicalNodes.map((node) => [node.id, node])),
+    }),
+    [canvasProjection, canonicalNodes]
+  );
+  const canvasProcess = useCanvasViewportGraphModel(liveCanvasProjection);
+  const semanticGraph = useMemo(() => projectSemanticWorkbenchGraph(fixture.transform), [fixture]);
+  const joinProjection = useMemo(
+    () => inspectSemanticWorkbenchJoin(fixture.transform),
+    [fixture.transform]
+  );
+  const selectedFieldsBySourceId = useMemo(
+    () => projectSelectedFieldsBySourceId(fixture, joinProjection),
+    [fixture, joinProjection]
+  );
+  const transformSample = useMemo(() => {
+    const sample = fixture.projectTransformSample(fixture.transform);
+    return sample == null
+      ? null
+      : {
+          nodeId: fixture.transform.id,
+          nodeName: fixture.transform.name,
+          ...sample,
+        };
+  }, [fixture]);
   const [selectedCanvasId, setSelectedCanvasId] = useState(SEMANTIC_WORKBENCH_TRANSFORM.id);
   const [selectedSemanticId, setSelectedSemanticId] = useState(semanticGraph.relationId);
+  const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(
+    SEMANTIC_WORKBENCH_EDGE[0]?.id ?? null
+  );
   const [selectedSourceSampleId, setSelectedSourceSampleId] = useState<string | null>(null);
   const [workbenchRequest, setWorkbenchRequest] = useState<WorkbenchRequest | null>(null);
+  const [pendingJoinPredicate, setPendingJoinPredicate] = useState<PendingJoinPredicate | null>(
+    null
+  );
   const handleInspectNode = useCallback<InspectNode>((nodeId, preferredTabId) => {
-    if (!SEMANTIC_WORKBENCH_CANONICAL_NODES.some((node) => node.id === nodeId)) return;
+    if (!SEMANTIC_WORKBENCH_NODE_IDS.has(nodeId)) return;
     setSelectedCanvasId(nodeId);
     setWorkbenchRequest((current) => ({
       nodeId,
@@ -145,27 +239,184 @@ function SemanticWorkbenchLab() {
   const openSourceDataSample = useCallback((nodeId: string) => {
     setSelectedSourceSampleId(nodeId);
   }, []);
+  const toggleConnectionColumn = useCallback(
+    (identity: GraphNodeColumnOutputToggleIdentity) => {
+      setFixture((current) => {
+        const outgoing = current.edges.filter((edge) => edge.sourceId === identity.nodeId);
+        const edge =
+          outgoing.length === 1
+            ? outgoing[0]
+            : outgoing.find((candidate) => candidate.id === selectedConnectionId);
+        const sourceNode = current.sources.find((source) => source.id === identity.nodeId);
+        if (edge == null || sourceNode == null || edge.targetId !== current.transform.id) {
+          return current;
+        }
+        const authority = readDvtTransformAuthoringAuthority(current.transform);
+        if (authority == null) return current;
+        const currentDraft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
+        const nextDraft = setDvtSubstraitJoinConnectionFieldSelected({
+          draft: currentDraft,
+          sourceNode,
+          targetNode: current.transform,
+          edge,
+          columnName: identity.columnId,
+          selected: identity.output,
+        });
+        if (nextDraft === currentDraft) return current;
+        return {
+          ...current,
+          transform: applyDvtSubstraitSemanticDocument(
+            current.transform,
+            encodeDvtSubstraitInnerJoinDocument(nextDraft)
+          ),
+        };
+      });
+      setPendingJoinPredicate(null);
+    },
+    [selectedConnectionId]
+  );
+  const applyJoinPredicateFields = useCallback(
+    (joinRelationId: string, leftSourceFieldId: string, rightSourceFieldId: string) => {
+      setFixture((current) => {
+        const authority = readDvtTransformAuthoringAuthority(current.transform);
+        if (authority == null) return current;
+        const currentDraft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
+        const nextDraft = setDvtSubstraitJoinPredicateFields({
+          draft: currentDraft,
+          joinRelationId,
+          leftSourceFieldId,
+          rightSourceFieldId,
+        });
+        if (nextDraft === currentDraft) return current;
+        return {
+          ...current,
+          transform: applyDvtSubstraitSemanticDocument(
+            current.transform,
+            encodeDvtSubstraitInnerJoinDocument(nextDraft)
+          ),
+        };
+      });
+      setPendingJoinPredicate(null);
+    },
+    []
+  );
   const canvasNodes = useMemo(
     () =>
-      canvasProcess.nodes.map((node) => ({
-        ...node,
-        data: {
-          ...node.data,
-          onInspectNode: handleInspectNode,
-          ...(SEMANTIC_WORKBENCH_SOURCE_SAMPLE_IDS.has(node.id)
-            ? { onOpenSourceDataSample: openSourceDataSample }
-            : {}),
-        },
-      })),
-    [canvasProcess.nodes, handleInspectNode, openSourceDataSample]
+      canvasProcess.nodes.map((node) => {
+        const selectedFields = selectedFieldsBySourceId.get(node.id);
+        const outgoing = fixture.edges.filter((edge) => edge.sourceId === node.id);
+        const activeConnection =
+          outgoing.length === 1
+            ? outgoing[0]
+            : outgoing.find((edge) => edge.id === selectedConnectionId);
+        const columns =
+          selectedFields == null || !Array.isArray(node.data.columns)
+            ? node.data.columns
+            : (node.data.columns as GraphNodeColumn[]).map((column) => ({
+                ...column,
+                output: selectedFields.has(column.id ?? column.name),
+              }));
+        const canOpenDataSample =
+          SEMANTIC_WORKBENCH_SOURCE_SAMPLE_IDS.has(node.id) ||
+          (node.id === fixture.transform.id && transformSample != null);
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            columns,
+            ...(node.id === fixture.transform.id && transformSample != null
+              ? { rows: transformSample.rows.length }
+              : {}),
+            onInspectNode: handleInspectNode,
+            ...(activeConnection == null
+              ? {}
+              : { onToggleCanvasConnectionColumn: toggleConnectionColumn }),
+            ...(canOpenDataSample
+              ? {
+                  onOpenSourceDataSample: openSourceDataSample,
+                  sourceDataSampleInteractionLabel:
+                    'Doble clic o Intro para abrir la muestra de datos.',
+                }
+              : {}),
+          },
+        };
+      }),
+    [
+      canvasProcess.nodes,
+      fixture.edges,
+      handleInspectNode,
+      openSourceDataSample,
+      selectedConnectionId,
+      selectedFieldsBySourceId,
+      toggleConnectionColumn,
+      transformSample,
+    ]
   );
   const selectedSourceSample =
-    SEMANTIC_WORKBENCH_SOURCE_SAMPLES.find(({ nodeId }) => nodeId === selectedSourceSampleId) ??
-    null;
+    selectedSourceSampleId === fixture.transform.id
+      ? transformSample
+      : (SEMANTIC_WORKBENCH_SOURCE_SAMPLES.find(
+          ({ nodeId }) => nodeId === selectedSourceSampleId
+        ) ?? null);
   const selectedSemantic =
     semanticGraph.nodes.find((node) => node.id === selectedSemanticId) ??
     semanticGraph.nodes.find((node) => node.data.semanticKind !== 'group') ??
     null;
+  const selectedJoinPredicate = useMemo(() => {
+    const joinOperand = selectedSemantic?.data.joinOperand;
+    if (joinProjection == null || joinOperand == null) return null;
+    const stageIndex = joinProjection.joinRelations.findIndex(
+      (relation) => relation.relationId === joinOperand.joinRelationId
+    );
+    const predicate = joinProjection.joins[stageIndex];
+    if (stageIndex < 0 || predicate == null) return null;
+    const rightInputIndex = stageIndex + 1;
+    const selectedOutputFieldIds = new Set(
+      joinProjection.outputs.map((output) => output.source.fieldId)
+    );
+    const optionsFor = (operand: 'left' | 'right') =>
+      joinProjection.inputs.flatMap((input, inputIndex) =>
+        (operand === 'left' ? inputIndex < rightInputIndex : inputIndex === rightInputIndex)
+          ? input.fields.flatMap((field) =>
+              selectedOutputFieldIds.has(field.fieldId) ||
+              field.fieldId === predicate.leftSourceFieldId ||
+              field.fieldId === predicate.rightSourceFieldId
+                ? [
+                    {
+                      fieldId: field.fieldId,
+                      label: `${input.schema}.${input.table}.${field.name}`,
+                      dataType: field.dataType,
+                    },
+                  ]
+                : []
+            )
+          : []
+      );
+    const pending =
+      pendingJoinPredicate?.joinRelationId === joinOperand.joinRelationId
+        ? pendingJoinPredicate
+        : {
+            joinRelationId: joinOperand.joinRelationId,
+            leftSourceFieldId: predicate.leftSourceFieldId,
+            rightSourceFieldId: predicate.rightSourceFieldId,
+          };
+    const fieldTypeById = new Map(
+      joinProjection.inputs.flatMap((input) =>
+        input.fields.map((field) => [field.fieldId, field.dataType] as const)
+      )
+    );
+    return {
+      ...pending,
+      leftOptions: optionsFor('left'),
+      rightOptions: optionsFor('right'),
+      compatible:
+        fieldTypeById.get(pending.leftSourceFieldId) ===
+        fieldTypeById.get(pending.rightSourceFieldId),
+      dirty:
+        pending.leftSourceFieldId !== predicate.leftSourceFieldId ||
+        pending.rightSourceFieldId !== predicate.rightSourceFieldId,
+    };
+  }, [joinProjection, pendingJoinPredicate, selectedSemantic]);
   const semanticNodes = useMemo(
     () =>
       semanticGraph.nodes.map((node) => {
@@ -275,14 +526,20 @@ function SemanticWorkbenchLab() {
   );
 
   const selectedCanvasNode =
-    [...SEMANTIC_WORKBENCH_SOURCE, SEMANTIC_WORKBENCH_TRANSFORM].find(
-      (node) => node.id === selectedCanvasId
-    ) ?? SEMANTIC_WORKBENCH_TRANSFORM;
+    canonicalNodes.find((node) => node.id === selectedCanvasId) ?? fixture.transform;
+  const selectedConnection = fixture.edges.find((edge) => edge.id === selectedConnectionId) ?? null;
+  const canvasEdges = useMemo(
+    () =>
+      canvasProcess.edges.map((edge) => ({
+        ...edge,
+        selected: edge.id === selectedConnectionId,
+      })),
+    [canvasProcess.edges, selectedConnectionId]
+  );
   const inspectorNode =
     workbenchRequest == null
       ? null
-      : (SEMANTIC_WORKBENCH_CANONICAL_NODES.find((node) => node.id === workbenchRequest.nodeId) ??
-        null);
+      : (canonicalNodes.find((node) => node.id === workbenchRequest.nodeId) ?? null);
   const workbenchLayout = useMemo(
     () => ({
       focusMode: false,
@@ -295,15 +552,15 @@ function SemanticWorkbenchLab() {
     () => ({
       activeRunId: null,
       inspectorAuthoring: READ_ONLY_SEMANTIC_WORKBENCH_AUTHORING,
-      inspectorGraphEdges: SEMANTIC_WORKBENCH_CANONICAL_EDGES,
-      inspectorGraphNodes: SEMANTIC_WORKBENCH_CANONICAL_NODES,
+      inspectorGraphEdges: fixture.edges,
+      inspectorGraphNodes: canonicalNodes,
       inspectorNode,
       inspectorPreferredTabId: workbenchRequest?.preferredTabId ?? null,
       inspectorPreferredTabRequestId: workbenchRequest?.requestId ?? 0,
       inspectorWorkbenchContributions: [],
       registeredPlugins: SEMANTIC_WORKBENCH_REGISTERED_PLUGINS,
     }),
-    [inspectorNode, workbenchRequest]
+    [canonicalNodes, fixture.edges, inspectorNode, workbenchRequest]
   );
 
   return (
@@ -356,8 +613,9 @@ function SemanticWorkbenchLab() {
       <section style={{ minHeight: 0, position: 'relative', borderBottom: `1px solid ${border}` }}>
         <ReactFlow
           nodes={canvasNodes}
-          edges={canvasProcess.edges}
+          edges={canvasEdges}
           onNodesChange={canvasProcess.onNodesChange}
+          onEdgesChange={canvasProcess.onEdgesChange}
           nodeTypes={DVT_NODE_TYPES}
           edgeTypes={DVT_EDGE_TYPES}
           fitView
@@ -371,10 +629,13 @@ function SemanticWorkbenchLab() {
           multiSelectionKeyCode="Shift"
           onNodeClick={(_, node) => {
             setSelectedCanvasId(node.id);
-            if (node.id === SEMANTIC_WORKBENCH_TRANSFORM.id) {
+            const outgoing = fixture.edges.filter((edge) => edge.sourceId === node.id);
+            if (outgoing.length === 1) setSelectedConnectionId(outgoing[0]!.id);
+            if (node.id === fixture.transform.id) {
               setSelectedSourceSampleId(null);
             }
           }}
+          onEdgeClick={(_, edge) => setSelectedConnectionId(edge.id)}
           proOptions={{ hideAttribution: true }}
         >
           <Background color="#182844" gap={24} size={1} />
@@ -415,7 +676,9 @@ function SemanticWorkbenchLab() {
             pointerEvents: 'none',
           }}
         >
-          selected: {selectedCanvasNode.name}
+          {selectedConnection == null
+            ? `selected: ${selectedCanvasNode.name}`
+            : `connection: ${canonicalNodes.find((node) => node.id === selectedConnection.sourceId)?.name ?? selectedConnection.sourceId} -> ${canonicalNodes.find((node) => node.id === selectedConnection.targetId)?.name ?? selectedConnection.targetId}`}
         </div>
       </section>
 
@@ -431,7 +694,7 @@ function SemanticWorkbenchLab() {
         }}
       >
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: accent }}>
-          TRANSFORM FOCUS · {SEMANTIC_WORKBENCH_TRANSFORM.name}
+          TRANSFORM FOCUS · {fixture.transform.name}
         </div>
         <div style={{ color: muted, fontSize: 10, fontFamily: 'IBM Plex Mono, monospace' }}>
           semantic authority projection · relations + expressions · left → right
@@ -469,14 +732,21 @@ function SemanticWorkbenchLab() {
                 letterSpacing: '0.06em',
               }}
             >
-              SOURCE DATA - {selectedSourceSample.nodeName}
+              {selectedSourceSample.nodeId === fixture.transform.id
+                ? 'TRANSFORM OUTPUT'
+                : 'SOURCE DATA'}{' '}
+              - {selectedSourceSample.nodeName}
               <span style={{ marginLeft: 12, color: muted, fontWeight: 400 }}>
                 {selectedSourceSample.rows.length} JSON rows
               </span>
             </div>
             <OperationalDrawerDataTable
               key={selectedSourceSample.nodeId}
-              caption={`Data sample from ${selectedSourceSample.nodeName}`}
+              caption={
+                selectedSourceSample.nodeId === fixture.transform.id
+                  ? `Output sample from ${selectedSourceSample.nodeName}`
+                  : `Data sample from ${selectedSourceSample.nodeName}`
+              }
               columns={selectedSourceSample.columns}
               rows={selectedSourceSample.rows}
               nullValueLabel="NULL"
@@ -565,6 +835,125 @@ function SemanticWorkbenchLab() {
                 {selectedSemantic.data.label.split('\n').slice(1).join(' · ')}
               </div>
 
+              {selectedJoinPredicate == null ? null : (
+                <div style={{ marginTop: 18 }}>
+                  <div style={{ color: muted, fontSize: 9, fontWeight: 700 }}>
+                    CONDICIÓN DEL JOIN
+                  </div>
+                  <label style={{ display: 'block', marginTop: 9, color: muted, fontSize: 9 }}>
+                    CAMPO IZQUIERDO
+                    <select
+                      data-slot="semantic-workbench-left-field-select"
+                      aria-label="Cambiar campo izquierdo del join"
+                      title="Campos habilitados en la conexión superior izquierda."
+                      value={selectedJoinPredicate.leftSourceFieldId}
+                      onChange={(event) =>
+                        setPendingJoinPredicate({
+                          joinRelationId: selectedJoinPredicate.joinRelationId,
+                          leftSourceFieldId: event.currentTarget.value,
+                          rightSourceFieldId: selectedJoinPredicate.rightSourceFieldId,
+                        })
+                      }
+                      style={{
+                        width: '100%',
+                        marginTop: 6,
+                        border: '1px solid #245f88',
+                        borderRadius: 7,
+                        background: '#071827',
+                        padding: '9px 10px',
+                        color: accent,
+                        fontFamily: 'IBM Plex Mono, monospace',
+                        fontSize: 10,
+                      }}
+                    >
+                      {selectedJoinPredicate.leftOptions.map((option) => (
+                        <option key={option.fieldId} value={option.fieldId}>
+                          {option.label} · {option.dataType}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <div style={{ marginTop: 8, color: '#34d399', textAlign: 'center' }}>=</div>
+                  <label style={{ display: 'block', marginTop: 8, color: muted, fontSize: 9 }}>
+                    CAMPO DERECHO
+                    <select
+                      data-slot="semantic-workbench-right-field-select"
+                      aria-label="Cambiar campo derecho del join"
+                      title="Campos habilitados en la conexión superior derecha."
+                      value={selectedJoinPredicate.rightSourceFieldId}
+                      onChange={(event) =>
+                        setPendingJoinPredicate({
+                          joinRelationId: selectedJoinPredicate.joinRelationId,
+                          leftSourceFieldId: selectedJoinPredicate.leftSourceFieldId,
+                          rightSourceFieldId: event.currentTarget.value,
+                        })
+                      }
+                      style={{
+                        width: '100%',
+                        marginTop: 6,
+                        border: '1px solid #245f88',
+                        borderRadius: 7,
+                        background: '#071827',
+                        padding: '9px 10px',
+                        color: accent,
+                        fontFamily: 'IBM Plex Mono, monospace',
+                        fontSize: 10,
+                      }}
+                    >
+                      {selectedJoinPredicate.rightOptions.map((option) => (
+                        <option key={option.fieldId} value={option.fieldId}>
+                          {option.label} · {option.dataType}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <button
+                    type="button"
+                    disabled={!selectedJoinPredicate.compatible || !selectedJoinPredicate.dirty}
+                    title={
+                      selectedJoinPredicate.compatible
+                        ? 'Aplicar ambos campos a la condición.'
+                        : 'Los dos campos deben tener el mismo tipo.'
+                    }
+                    onClick={() =>
+                      applyJoinPredicateFields(
+                        selectedJoinPredicate.joinRelationId,
+                        selectedJoinPredicate.leftSourceFieldId,
+                        selectedJoinPredicate.rightSourceFieldId
+                      )
+                    }
+                    style={{
+                      width: '100%',
+                      marginTop: 12,
+                      border: '1px solid #2563eb',
+                      borderRadius: 7,
+                      background:
+                        selectedJoinPredicate.compatible && selectedJoinPredicate.dirty
+                          ? '#12356b'
+                          : '#111827',
+                      padding: '9px 10px',
+                      color:
+                        selectedJoinPredicate.compatible && selectedJoinPredicate.dirty
+                          ? '#dbeafe'
+                          : '#64748b',
+                      cursor:
+                        selectedJoinPredicate.compatible && selectedJoinPredicate.dirty
+                          ? 'pointer'
+                          : 'not-allowed',
+                      fontSize: 10,
+                      fontWeight: 700,
+                    }}
+                  >
+                    Aplicar condición
+                  </button>
+                  {!selectedJoinPredicate.compatible ? (
+                    <div style={{ marginTop: 7, color: '#fbbf24', fontSize: 9 }}>
+                      Selecciona dos campos del mismo tipo.
+                    </div>
+                  ) : null}
+                </div>
+              )}
+
               {selectedSemantic.data.expression == null ? null : (
                 <div
                   style={{
@@ -650,7 +1039,9 @@ function SemanticWorkbenchLab() {
                   lineHeight: 1.45,
                 }}
               >
-                Proyección semántica de solo lectura. La edición debe usar el rail DVT existente.
+                {selectedJoinPredicate == null
+                  ? 'Proyección semántica de solo lectura.'
+                  : 'El cambio actualiza la autoridad Substrait y recalcula la muestra del Transform.'}
               </div>
 
               <div

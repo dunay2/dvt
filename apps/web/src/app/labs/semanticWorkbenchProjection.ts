@@ -1,4 +1,3 @@
-import dagre from 'dagre';
 import { Position, type Edge, type Node } from '@xyflow/react';
 import type { Expression, Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
@@ -8,6 +7,7 @@ import type { CanonicalNode } from '../types/canonical';
 import { readDvtSubstraitFieldReferenceOrdinal } from '../views/canvas/canvasDvtSubstraitAggregation';
 import { decodeDvtSubstraitSemanticDocument } from '../views/canvas/canvasDvtSubstraitSemanticDocument';
 import { readDvtTransformAuthoringAuthority } from '../views/canvas/canvasDvtTransformAuthoringAuthority';
+import { getLayoutedElements } from '../views/canvas/canvasGraphUtils';
 
 export type SemanticWorkbenchGroup = 'source' | 'condition' | 'transformation';
 
@@ -19,6 +19,10 @@ export type SemanticWorkbenchNodeData = Readonly<{
   expression?: string;
   inputSummary?: string;
   outputSummary?: string;
+  joinOperand?: Readonly<{
+    joinRelationId: string;
+    operand: 'left' | 'right';
+  }>;
 }>;
 
 export type SemanticWorkbenchGraph = Readonly<{
@@ -225,32 +229,27 @@ function layoutGraph(
     if (members.length === 0) continue;
 
     const memberIds = new Set(members.map((node) => node.id));
-    const graph = new dagre.graphlib.Graph();
-    graph.setDefaultEdgeLabel(() => ({}));
-    graph.setGraph({ rankdir: 'LR', ranksep: 68, nodesep: 30, marginx: 0, marginy: 0 });
-    for (const node of members) {
-      graph.setNode(node.id, {
-        width: typeof node.style?.width === 'number' ? node.style.width : 184,
-        height: typeof node.style?.minHeight === 'number' ? node.style.minHeight : 56,
-      });
-    }
-    for (const edge of edges) {
-      if (memberIds.has(edge.source) && memberIds.has(edge.target)) {
-        graph.setEdge(edge.source, edge.target);
-      }
-    }
-    dagre.layout(graph);
+    const memberEdges = edges.filter(
+      (edge) => memberIds.has(edge.source) && memberIds.has(edge.target)
+    );
+    const layouted = getLayoutedElements([...members], memberEdges, {
+      rankdir: 'LR',
+      ranksep: 68,
+      nodesep: 30,
+      marginx: 0,
+      marginy: 0,
+      nodeSize: { width: 206, height: 56 },
+    }).nodes;
 
-    const bounds = members.map((node) => {
-      const position = graph.node(node.id) as { x: number; y: number };
+    const bounds = layouted.map((node) => {
       const width = typeof node.style?.width === 'number' ? node.style.width : 184;
       const height = typeof node.style?.minHeight === 'number' ? node.style.minHeight : 56;
       return {
         node,
-        left: position.x - width / 2,
-        top: position.y - height / 2,
-        right: position.x + width / 2,
-        bottom: position.y + height / 2,
+        left: node.position.x,
+        top: node.position.y,
+        right: node.position.x + width,
+        bottom: node.position.y + height,
       };
     });
     const contentLeft = Math.min(...bounds.map((bound) => bound.left));
@@ -354,7 +353,14 @@ export function projectSemanticWorkbenchGraph(
     return expression.rexType.case ?? 'expression';
   }
 
-  function addExpression(expression: Expression, fieldNames: readonly string[]): string {
+  function addExpression(
+    expression: Expression,
+    fieldNames: readonly string[],
+    joinContext?: Readonly<{
+      joinRelationId: string;
+      operand?: 'left' | 'right';
+    }>
+  ): string {
     expressionCount += 1;
     if (expression.rexType.case === 'selection') {
       const ordinal = readDvtSubstraitFieldReferenceOrdinal(expression);
@@ -370,6 +376,14 @@ export function projectSemanticWorkbenchGraph(
           semanticKind: 'field',
           semanticGroup: 'condition',
           detail: `Campo de entrada: ${label}`,
+          ...(joinContext?.operand == null
+            ? {}
+            : {
+                joinOperand: {
+                  joinRelationId: joinContext.joinRelationId,
+                  operand: joinContext.operand,
+                },
+              }),
         },
         style: FIELD_STYLE,
       });
@@ -412,9 +426,20 @@ export function projectSemanticWorkbenchGraph(
         },
         style: EXPRESSION_STYLE,
       });
-      for (const argument of scalar.arguments) {
+      for (const [argumentIndex, argument] of scalar.arguments.entries()) {
         if (argument.argType.case !== 'value') continue;
-        const argumentId = addExpression(argument.argType.value, fieldNames);
+        const argumentId = addExpression(
+          argument.argType.value,
+          fieldNames,
+          joinContext == null
+            ? undefined
+            : {
+                ...joinContext,
+                ...(functionName === 'equal' && scalar.arguments.length === 2
+                  ? { operand: argumentIndex === 0 ? 'left' : 'right' }
+                  : {}),
+              }
+        );
         edges.push({
           id: nextId('edge'),
           source: argumentId,
@@ -549,7 +574,11 @@ export function projectSemanticWorkbenchGraph(
       });
     }
     for (const ownedExpression of ownedExpressions) {
-      const expressionId = addExpression(ownedExpression, expressionFields);
+      const expressionId = addExpression(
+        ownedExpression,
+        expressionFields,
+        rel.relType.case === 'join' ? { joinRelationId: id } : undefined
+      );
       edges.push({
         id: nextId('edge'),
         source: expressionId,
