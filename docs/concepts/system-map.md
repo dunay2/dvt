@@ -2,7 +2,7 @@
 title: DVT System Map
 status: Active
 owner: Docs / Architecture
-last_reviewed: 2026-03-08
+last_reviewed: 2026-09-09
 ---
 
 # DVT System Map
@@ -49,7 +49,8 @@ reader go next?
 4. [Shared Package Architecture](../architecture/shared/index.md)
 5. [Architecture Index](../architecture/index.md)
 6. [Contracts Index](../contracts/index.md)
-7. [Planning Control Tower](../planning/state/planning-control-tower.md)
+7. [Planning Dashboard](../planning/state/planning-dashboard.md)
+8. [Governance Inventory](../planning/status/governance-document-rule-inventory.md)
 
 ## Where To Go By Question
 
@@ -58,6 +59,6 @@ reader go next?
 - "What do the small shared packages do?" -> [Shared Package Architecture](../architecture/shared/index.md)
 - "What code area is responsible?" -> [Repository Map](./repository-map.md)
 - "What is true in the current implementation?" -> [System Delivery Status](../architecture/system-delivery-status.md)
-- "What is planned or still open?" ->
-  [Planning Control Tower](../planning/state/planning-control-tower.md)
+- "What is active or blocked?" -> GitHub Issues / [Planning Dashboard](../planning/state/planning-dashboard.md)
+- "What architecture or rail owns this?" -> Planning DB using the query route required by `AGENTS.md`
 - "What decision governs this?" -> [ADRs](../adr/index.md)
