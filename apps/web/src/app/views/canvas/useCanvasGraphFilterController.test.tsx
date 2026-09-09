@@ -29,6 +29,42 @@ describe('useCanvasGraphFilterController', () => {
     container.remove();
   });
 
+  it('reuses filter semantics across a 30-node geometry frame', () => {
+    let currentNodes: Node[] = Array.from({ length: 30 }, (_, index) => ({
+      id: 'node-' + index,
+      position: { x: index * 20, y: 0 },
+      data: {
+        pluginId: 'dvt',
+        pluginKind: 'dvt:transform',
+        role: 'transform',
+        status: 'idle',
+        tags: ['shared'],
+      },
+    }));
+    let observedController: ReturnType<typeof useCanvasGraphFilterController> | null = null;
+
+    function Harness(): null {
+      observedController = useCanvasGraphFilterController({ nodes: currentNodes });
+      return null;
+    }
+
+    act(() => root.render(<Harness />));
+    const before = observedController!;
+    currentNodes = [
+      {
+        ...currentNodes[0]!,
+        position: { x: 640, y: 480 },
+        dragging: true,
+      },
+      ...currentNodes.slice(1),
+    ];
+    act(() => root.render(<Harness />));
+
+    expect(observedController!.result).toBe(before.result);
+    expect(observedController!.model.optionGroups).toBe(before.model.optionGroups);
+    expect(observedController!.filterByTag).toBe(before.filterByTag);
+  });
+
   it('derives only available values and clears all ephemeral state', () => {
     function Harness(): JSX.Element {
       const controller = useCanvasGraphFilterController({ nodes: graphNodes() });

@@ -12,10 +12,7 @@ import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
 import type { CanvasDraftRepository } from './canvasDraftRepository';
 import type { CanvasAuthoringDraftReadModel } from './canvasDraftReadModel';
 import type { CanvasDraftSession } from './canvasDraftSession';
-import type {
-  CanvasDraftLifecycleCanonicalSnapshot,
-  CanvasDraftLifecycleGraphNode,
-} from './canvasDraftLifecycleSnapshot';
+import type { CanvasDraftLifecycleCanonicalSnapshot } from './canvasDraftLifecycleSnapshot';
 
 export type GraphAuthorityQueryState = {
   isPending: boolean;
@@ -41,7 +38,7 @@ export type DraftAttemptRefs = {
 };
 
 export type CanvasCurrentDraftPayloadDto = {
-  graphNodes: CanvasDraftLifecycleGraphNode[];
+  persistedNodePositions: CanvasNodePositions;
   draftSession: CanvasDraftSession;
   canvasDocument: NonNullable<CanvasAuthoringDraftReadModel['record']>['draft']['canvas'] | null;
   baselineDraft: WorkspaceGraphAuthoringDraft | null;
@@ -68,7 +65,6 @@ export type CanvasDraftLifecycleSessionDto = {
 };
 
 export type CanvasDraftLifecycleProjectionDto = {
-  graphNodes: CanvasDraftLifecycleGraphNode[];
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
   workspaceScope: WorkspaceScope;

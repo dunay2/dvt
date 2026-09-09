@@ -20,6 +20,10 @@ import { executeImportProjectSnapshotCommand } from './canvasProjectSnapshotImpo
 import { canvasProjectSnapshot } from './canvasProjectSnapshot';
 import { canvasViewCopy } from './copy';
 
+function createCanvasDraftIdempotencyKey(): string {
+  return createBrowserIdempotencyKey('canvas-draft');
+}
+
 export function useCanvasDraftLifecycle({
   baseline,
   session,
@@ -40,14 +44,13 @@ export function useCanvasDraftLifecycle({
     persistedNodePositions,
     setCanvasNodePositions,
   } = session;
-  const { graphNodes, canonicalNodes, canonicalEdges, workspaceScope, previewProvenanceConfig } =
-    projection;
+  const { canonicalNodes, canonicalEdges, workspaceScope, previewProvenanceConfig } = projection;
   const { canPersistGraphDraft } = policy;
   const [draftSaveStatus, setDraftSaveStatus] = useState<DraftSaveStatus>('idle');
   const { refs, invalidateInFlightSaveAttempt } = useCanvasDraftAttemptRefs();
   const { currentDraftPayload, currentDraftPayloadSignature, canPersistCurrentDraft } =
     useCanvasCurrentDraftPayload({
-      graphNodes,
+      persistedNodePositions,
       draftSession,
       canvasDocument: graphDraftQuery.data?.record?.draft.canvas ?? null,
       baselineDraft: graphDraftQuery.data?.record?.draft ?? null,
@@ -56,7 +59,6 @@ export function useCanvasDraftLifecycle({
       workspaceScope,
       previewProvenanceConfig,
     });
-
   const { applyReloadedRemoteDraft } = useCanvasDraftBootstrapSync({
     graphDraftQuery,
     graphAuthorityQuery,
@@ -87,7 +89,7 @@ export function useCanvasDraftLifecycle({
     setDraftSaveStatus,
     invalidateInFlightSaveAttempt,
     applyReloadedRemoteDraft,
-    createDraftIdempotencyKey: () => createBrowserIdempotencyKey('canvas-draft'),
+    createDraftIdempotencyKey: createCanvasDraftIdempotencyKey,
   });
   const effectiveDraftSaveStatus =
     draftSession.syncState === 'editing' &&
@@ -172,7 +174,7 @@ export function useCanvasDraftLifecycle({
     setDraftSession,
     setDraftSaveStatus,
     invalidateInFlightSaveAttempt,
-    createDraftIdempotencyKey: () => createBrowserIdempotencyKey('canvas-draft'),
+    createDraftIdempotencyKey: createCanvasDraftIdempotencyKey,
   });
   const canExportProjectSnapshot =
     graphDraftQuery.data?.record != null &&

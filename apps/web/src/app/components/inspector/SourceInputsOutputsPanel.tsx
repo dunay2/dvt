@@ -1,5 +1,14 @@
 /** Owned concern: render imported Source Canvas relationships as grouped master/detail topology. */
-import { useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { GripVertical } from 'lucide-react';
+import {
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type DragEventHandler,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react';
 
 import { Badge } from '../ui/badge';
 import { cn } from '../ui/utils';
@@ -7,6 +16,8 @@ import { inspectorVisualClasses } from './inspectorVisualTokens';
 import type { NodePropertySection, NodePropertyTableRow } from './nodePropertiesReadModel';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import type { CanonicalNode } from '../../types/canonical';
+import { useCanvasInspectorListOrder } from './useCanvasInspectorListOrder';
+import { useInspectorListReorder } from './useInspectorListReorder';
 
 const COPY = {
   en: {
@@ -28,6 +39,9 @@ const COPY = {
     to: 'To',
     relation: 'Relation',
     listLabel: 'Canvas relationships',
+    reorder: 'Reorder output',
+    reorderHint: 'Drag or press Alt+Up/Down to reorder outputs.',
+    reordered: 'Output reordered',
   },
   es: {
     canvasConnections: 'Conexiones del Canvas',
@@ -48,6 +62,9 @@ const COPY = {
     to: 'Hacia',
     relation: 'Relación',
     listLabel: 'Relaciones del Canvas',
+    reorder: 'Reordenar salida',
+    reorderHint: 'Arrastra o pulsa Alt+Arriba/Abajo para reordenar salidas.',
+    reordered: 'Salida reordenada',
   },
 } as const;
 
@@ -100,6 +117,14 @@ function RelationshipRow({
   setRef,
   onSelect,
   onKeyDown,
+  draggable,
+  dropPlacement,
+  reorderLabel,
+  onDragStart,
+  onDragEnd,
+  onDragOver,
+  onDragLeave,
+  onDrop,
 }: Readonly<{
   relationship: SourceRelationship;
   selected: boolean;
@@ -107,6 +132,14 @@ function RelationshipRow({
   setRef: (element: HTMLButtonElement | null) => void;
   onSelect: () => void;
   onKeyDown: (event: KeyboardEvent<HTMLButtonElement>) => void;
+  draggable: boolean;
+  dropPlacement?: 'before' | 'after';
+  reorderLabel: string;
+  onDragStart?: DragEventHandler<HTMLButtonElement>;
+  onDragEnd?: DragEventHandler<HTMLButtonElement>;
+  onDragOver?: DragEventHandler<HTMLButtonElement>;
+  onDragLeave?: DragEventHandler<HTMLButtonElement>;
+  onDrop?: DragEventHandler<HTMLButtonElement>;
 }>): JSX.Element {
   return (
     <button
@@ -115,17 +148,42 @@ function RelationshipRow({
       role="option"
       aria-selected={selected}
       tabIndex={tabIndex}
+      draggable={draggable}
+      title={draggable ? reorderLabel + ': ' + relationship.relatedNodeName : undefined}
       data-slot="source-relationship-row"
       data-relationship-id={relationship.id}
+      data-drop-placement={dropPlacement}
       onClick={onSelect}
       onKeyDown={onKeyDown}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
       className={cn(
-        'flex w-full items-center gap-2 rounded-md border px-2 py-2 text-left text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-(--focus-ring)',
+        'relative flex w-full items-center gap-2 rounded-md border px-2 py-2 text-left text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-(--focus-ring)',
         selected
           ? 'border-(--focus-ring) bg-(--surface-selected) text-(--text-strong)'
           : 'border-transparent bg-(--surface-elevated) text-(--text-primary) hover:bg-(--surface-selected)'
       )}
     >
+      {dropPlacement == null ? null : (
+        <span
+          data-slot="source-relationship-drop-indicator"
+          aria-hidden="true"
+          className={cn(
+            'pointer-events-none absolute left-1 right-1 h-0.5 bg-(--status-info)',
+            dropPlacement === 'before' ? 'top-0' : 'bottom-0'
+          )}
+        />
+      )}
+      {draggable ? (
+        <GripVertical
+          data-slot="source-relationship-drag-handle"
+          aria-hidden="true"
+          className="size-4 shrink-0 cursor-grab text-(--text-muted)"
+        />
+      ) : null}
       <span
         aria-hidden="true"
         className="flex size-6 shrink-0 items-center justify-center rounded-md bg-(--surface-selected) font-mono text-xs text-(--status-info)"
@@ -140,10 +198,7 @@ function RelationshipRow({
   );
 }
 
-function TopologyNode({
-  name,
-  caption,
-}: Readonly<{ name: string; caption: string }>): JSX.Element {
+function TopologyNode({ name, caption }: Readonly<{ name: string; caption: string }>): JSX.Element {
   return (
     <div className="min-w-0 flex-1 rounded-lg border border-(--border-default) bg-(--surface-selected) px-3 py-3">
       <p className="truncate text-sm font-semibold text-(--text-strong)">{name}</p>
@@ -157,26 +212,62 @@ export function SourceInputsOutputsPanel({
   section,
   beforeBody,
   afterBody,
+  canReorder = false,
+  workspaceLayoutKey = null,
 }: Readonly<{
   node: CanonicalNode;
   section: NodePropertySection;
   beforeBody?: ReactNode;
   afterBody?: ReactNode;
+  canReorder?: boolean;
+  workspaceLayoutKey?: string | null;
 }>): JSX.Element {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = applicationLanguage.trim().toLowerCase().startsWith('es') ? COPY.es : COPY.en;
   const relationships = useMemo(() => readRelationships(section), [section]);
+  const [reorderStatus, setReorderStatus] = useState('');
+  const reorderHintId = useId();
   const inputs = useMemo(
     () => relationships.filter((relationship) => relationship.direction === 'input'),
     [relationships]
   );
-  const outputs = useMemo(
+  const canonicalOutputs = useMemo(
     () => relationships.filter((relationship) => relationship.direction === 'output'),
     [relationships]
   );
+  const canonicalOutputIds = useMemo(
+    () => canonicalOutputs.map((relationship) => relationship.id),
+    [canonicalOutputs]
+  );
+  const outputOrder = useCanvasInspectorListOrder({
+    workspaceLayoutKey,
+    nodeId: node.id,
+    listId: 'outputs',
+    canonicalIds: canonicalOutputIds,
+  });
+  const outputs = useMemo(() => {
+    const outputsById = new Map(
+      canonicalOutputs.map((relationship) => [relationship.id, relationship])
+    );
+    return outputOrder.orderedIds.flatMap((id) => {
+      const relationship = outputsById.get(id);
+      return relationship == null ? [] : [relationship];
+    });
+  }, [canonicalOutputs, outputOrder.orderedIds]);
   const orderedRelationships = useMemo(() => [...inputs, ...outputs], [inputs, outputs]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const rowRefs = useRef(new Map<string, HTMLButtonElement>());
+  const outputReorder = useInspectorListReorder({
+    orderedIds: outputOrder.orderedIds,
+    visibleIds: outputs.map((relationship) => relationship.id),
+    enabled: canReorder && outputOrder.canPersist,
+    onMove: outputOrder.move,
+    onMoved: (movedId) => {
+      setSelectedId(movedId);
+      rowRefs.current.get(movedId)?.focus();
+      setReorderStatus(copy.reordered + ': ' + movedId);
+    },
+  });
   const selected =
     orderedRelationships.find((relationship) => relationship.id === selectedId) ??
     orderedRelationships[0] ??
@@ -203,7 +294,8 @@ export function SourceInputsOutputsPanel({
   const renderGroup = (
     label: string,
     emptyLabel: string,
-    group: readonly SourceRelationship[]
+    group: readonly SourceRelationship[],
+    reorderable = false
   ): JSX.Element => (
     <div role="group" aria-label={`${label} ${group.length}`} className="space-y-2">
       <h4 className="text-[11px] font-semibold uppercase tracking-wide text-(--text-muted)">
@@ -229,9 +321,20 @@ export function SourceInputsOutputsPanel({
                   else rowRefs.current.set(relationship.id, element);
                 }}
                 onSelect={() => setSelectedId(relationship.id)}
+                draggable={reorderable && outputReorder.canReorder}
+                dropPlacement={outputReorder.dropPlacement(relationship.id)}
+                reorderLabel={copy.reorder}
+                onDragStart={(event) => outputReorder.startDrag(relationship.id, event)}
+                onDragEnd={outputReorder.endDrag}
+                onDragOver={(event) => outputReorder.dragOver(relationship.id, event)}
+                onDragLeave={outputReorder.dragLeave}
+                onDrop={(event) => outputReorder.drop(relationship.id, event)}
                 onKeyDown={(event) => {
-                  if (event.key === 'ArrowDown') moveSelection(event, relationshipIndex, relationshipIndex + 1);
-                  else if (event.key === 'ArrowUp') moveSelection(event, relationshipIndex, relationshipIndex - 1);
+                  if (reorderable && outputReorder.moveWithKeyboard(relationship.id, event)) return;
+                  if (event.key === 'ArrowDown')
+                    moveSelection(event, relationshipIndex, relationshipIndex + 1);
+                  else if (event.key === 'ArrowUp')
+                    moveSelection(event, relationshipIndex, relationshipIndex - 1);
                   else if (event.key === 'Home') moveSelection(event, relationshipIndex, 0);
                   else if (event.key === 'End') {
                     moveSelection(event, relationshipIndex, orderedRelationships.length - 1);
@@ -246,17 +349,9 @@ export function SourceInputsOutputsPanel({
   );
 
   const fromName =
-    selected == null
-      ? ''
-      : selected.direction === 'output'
-        ? node.name
-        : selected.relatedNodeName;
+    selected == null ? '' : selected.direction === 'output' ? node.name : selected.relatedNodeName;
   const toName =
-    selected == null
-      ? ''
-      : selected.direction === 'output'
-        ? selected.relatedNodeName
-        : node.name;
+    selected == null ? '' : selected.direction === 'output' ? selected.relatedNodeName : node.name;
 
   return (
     <div data-slot="canvas-source-inputs-outputs" className="space-y-3">
@@ -269,10 +364,23 @@ export function SourceInputsOutputsPanel({
               {orderedRelationships.length} {copy.total}
             </span>
           </div>
-          <div role="listbox" aria-label={copy.listLabel} className="space-y-5">
+          {outputReorder.canReorder ? (
+            <p id={reorderHintId} className="sr-only">
+              {copy.reorderHint}
+            </p>
+          ) : null}
+          <div
+            role="listbox"
+            aria-label={copy.listLabel}
+            aria-describedby={outputReorder.canReorder ? reorderHintId : undefined}
+            className="space-y-5"
+          >
             {renderGroup(copy.inputs, copy.noInputs, inputs)}
-            {renderGroup(copy.outputs, copy.noOutputs, outputs)}
+            {renderGroup(copy.outputs, copy.noOutputs, outputs, true)}
           </div>
+          <p className="sr-only" role="status" aria-live="polite">
+            {reorderStatus}
+          </p>
         </section>
 
         <section data-slot="source-relationship-detail" className="min-w-0 p-5">
@@ -292,12 +400,18 @@ export function SourceInputsOutputsPanel({
               <div className="flex items-center gap-3 rounded-lg border border-(--border-default) bg-(--surface-elevated) p-4">
                 <TopologyNode
                   name={fromName}
-                  caption={selected.direction === 'output' ? copy.currentSource : copy.connectedNode}
+                  caption={
+                    selected.direction === 'output' ? copy.currentSource : copy.connectedNode
+                  }
                 />
-                <span aria-hidden="true" className="shrink-0 text-lg text-(--status-info)">→</span>
+                <span aria-hidden="true" className="shrink-0 text-lg text-(--status-info)">
+                  →
+                </span>
                 <TopologyNode
                   name={toName}
-                  caption={selected.direction === 'output' ? copy.connectedNode : copy.currentSource}
+                  caption={
+                    selected.direction === 'output' ? copy.connectedNode : copy.currentSource
+                  }
                 />
               </div>
 

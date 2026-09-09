@@ -4,6 +4,49 @@ import { act, createElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+const semanticProjectionCounters = vi.hoisted(() => ({
+  transformationValidation: vi.fn(),
+  columnLineage: vi.fn(),
+  columnFunctionMenus: vi.fn(),
+}));
+
+vi.mock('./transformationGraphValidation', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./transformationGraphValidation')>();
+  return {
+    ...actual,
+    validateTransformationGraph: (
+      ...args: Parameters<typeof actual.validateTransformationGraph>
+    ) => {
+      semanticProjectionCounters.transformationValidation();
+      return actual.validateTransformationGraph(...args);
+    },
+  };
+});
+
+vi.mock('./canvasColumnLineageProjection', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./canvasColumnLineageProjection')>();
+  return {
+    ...actual,
+    projectCanvasColumnLineage: (...args: Parameters<typeof actual.projectCanvasColumnLineage>) => {
+      semanticProjectionCounters.columnLineage();
+      return actual.projectCanvasColumnLineage(...args);
+    },
+  };
+});
+
+vi.mock('./canvasColumnFunctionMenuProjection', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./canvasColumnFunctionMenuProjection')>();
+  return {
+    ...actual,
+    projectCanvasColumnFunctionMenus: (
+      ...args: Parameters<typeof actual.projectCanvasColumnFunctionMenus>
+    ) => {
+      semanticProjectionCounters.columnFunctionMenus();
+      return actual.projectCanvasColumnFunctionMenus(...args);
+    },
+  };
+});
+
 import type { CanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
 import type { CanonicalNode } from '../../types/canonical';
 import { mapCanonicalNodeToCanvasNode } from './canvasNodeMapper';
@@ -21,6 +64,7 @@ type ReadModelArgs = Parameters<typeof useCanvasControllerReadModel>[0];
 type ReadModelState = ReturnType<typeof useCanvasControllerReadModel>;
 type ReadModelNodeData = {
   columns?: unknown;
+  onInspectNode?: unknown;
   onDuplicateNode?: unknown;
   onRemoveNode?: unknown;
   onAttachSchemaToNode?: unknown;
@@ -175,6 +219,89 @@ afterEach(() => {
 });
 
 describe('useCanvasControllerReadModel', () => {
+  it('changes only the moved projection during a 30-node geometry frame', async () => {
+    const canonicalNodes = Array.from(
+      { length: 30 },
+      (_, index) =>
+        ({
+          ...testNode,
+          id: 'source-' + index,
+          name: 'Source ' + index,
+        }) satisfies CanonicalNode
+    );
+    const graphNodes = canonicalNodes.map((node, index) =>
+      mapCanonicalNodeToCanvasNode({
+        canonicalNode: node,
+        index,
+        showColumns: false,
+      })
+    );
+    const base = buildReadModelArgs({ canMutateGraph: true });
+    const args: ReadModelArgs = {
+      ...base,
+      graphModel: {
+        nodes: graphNodes,
+        edges: [],
+        canonicalNodesById: new Map(canonicalNodes.map((node) => [node.id, node])),
+        onEdgesChange: vi.fn(),
+      },
+      visibleScope: {
+        canonicalNodes,
+        canonicalEdges: [],
+      },
+      executionScope: {
+        selectedNodeIds: [],
+        workspaceNodeIds: canonicalNodes.map((node) => node.id),
+      },
+    };
+    const mounted = await renderReadModel(args);
+
+    try {
+      const before = mounted.readState()?.nodesWithImpact;
+      expect(before).toHaveLength(30);
+      expect(semanticProjectionCounters.transformationValidation).toHaveBeenCalledTimes(1);
+      expect(semanticProjectionCounters.columnLineage).toHaveBeenCalledTimes(1);
+      expect(semanticProjectionCounters.columnFunctionMenus).toHaveBeenCalledTimes(30);
+      semanticProjectionCounters.transformationValidation.mockClear();
+      semanticProjectionCounters.columnLineage.mockClear();
+      semanticProjectionCounters.columnFunctionMenus.mockClear();
+
+      const movedSourceNode = {
+        ...graphNodes[0]!,
+        position: { x: 640, y: 480 },
+        dragging: true,
+      };
+      await mounted.rerender({
+        ...args,
+        graphModel: {
+          ...args.graphModel,
+          nodes: [movedSourceNode, ...graphNodes.slice(1)],
+        },
+      });
+
+      const after = mounted.readState()?.nodesWithImpact;
+      expect(after).toHaveLength(30);
+      expect(after?.[0]).not.toBe(before?.[0]);
+      expect(after?.[0]?.position).toEqual({ x: 640, y: 480 });
+      expect(after?.[0]?.data).toBe(before?.[0]?.data);
+
+      for (let index = 1; index < 30; index += 1) {
+        expect(after?.[index]).toBe(before?.[index]);
+        expect(after?.[index]?.data).toBe(before?.[index]?.data);
+      }
+
+      expect(semanticProjectionCounters.transformationValidation).toHaveBeenCalledTimes(0);
+      expect(semanticProjectionCounters.columnLineage).toHaveBeenCalledTimes(0);
+      expect(semanticProjectionCounters.columnFunctionMenus).toHaveBeenCalledTimes(0);
+
+      const retainedData = after?.[12]?.data as ReadModelNodeData;
+      (retainedData.onInspectNode as (nodeId: string) => void)(canonicalNodes[12]!.id);
+      expect(args.graphHandlers.handleInspectNode).toHaveBeenCalledWith(canonicalNodes[12]!.id);
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
   it('keeps the upstream Model FieldId when an inherited output is inactive', async () => {
     const upstream = {
       ...testNode,

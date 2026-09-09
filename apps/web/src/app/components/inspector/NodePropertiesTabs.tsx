@@ -41,6 +41,10 @@ export type NodePropertiesTabsProps = Readonly<{
   slotPrefix?: string;
   surface?: 'inspector' | 'workbench';
   showSectionCountBadge?: boolean;
+  sourceListOrdering?: Readonly<{
+    canReorder: boolean;
+    workspaceLayoutKey: string | null;
+  }>;
   renderTableCell?: (context: NodePropertyTableCellRenderContext) => ReactNode;
   onActiveTabChange: (tab: string) => void;
   onHide: () => void;
@@ -134,6 +138,7 @@ export function NodePropertiesTabs({
   slotPrefix,
   surface = 'inspector',
   showSectionCountBadge = false,
+  sourceListOrdering,
   renderTableCell,
   onActiveTabChange,
   onHide,
@@ -194,7 +199,7 @@ export function NodePropertiesTabs({
       <div data-slot={slots.list} className={inspectorVisualClasses.contextPanelFlatTabsList}>
         <TabsList
           data-slot={`${slots.list}-tablist`}
-          className="flex h-auto w-auto flex-wrap justify-start gap-x-3 rounded-none bg-transparent p-0"
+          className="flex h-auto w-full shrink-0 flex-wrap justify-start gap-x-3 rounded-none bg-transparent p-0"
         >
           {primarySections.map((section) => (
             <TabsTrigger
@@ -273,13 +278,21 @@ export function NodePropertiesTabs({
             )}
           >
             {sourceColumns ? (
-              <SourceColumnsPanel node={node} beforeBody={beforeBody} afterBody={afterBody} />
+              <SourceColumnsPanel
+                node={node}
+                beforeBody={beforeBody}
+                afterBody={afterBody}
+                canReorder={sourceListOrdering?.canReorder}
+                workspaceLayoutKey={sourceListOrdering?.workspaceLayoutKey}
+              />
             ) : sourceInputsOutputs ? (
               <SourceInputsOutputsPanel
                 node={node}
                 section={section}
                 beforeBody={beforeBody}
                 afterBody={afterBody}
+                canReorder={sourceListOrdering?.canReorder}
+                workspaceLayoutKey={sourceListOrdering?.workspaceLayoutKey}
               />
             ) : (
               <NodePropertySectionView

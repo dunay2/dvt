@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import type { Edge, EdgeChange, Node } from '@xyflow/react';
 
 import { buildCanvasNodeInteractionPresentation } from './canvasNodeInteractionPresentation';
@@ -132,6 +132,37 @@ type UseCanvasControllerReadModelArgs = {
   columnLevelLineageEnabled: boolean;
 };
 
+function semanticNodeInputsEqual(left: readonly Node[], right: readonly Node[]): boolean {
+  return (
+    left.length === right.length &&
+    left.every((node, index) => {
+      const candidate = right[index];
+      return (
+        candidate != null &&
+        node.id === candidate.id &&
+        node.data === candidate.data &&
+        node.ariaLabel === candidate.ariaLabel
+      );
+    })
+  );
+}
+
+function useCanvasSemanticNodeInputs(nodes: Node[]): Node[] {
+  const semanticNodesRef = useRef(nodes);
+
+  if (!semanticNodeInputsEqual(semanticNodesRef.current, nodes)) {
+    semanticNodesRef.current = nodes;
+  }
+
+  return semanticNodesRef.current;
+}
+
+type ProjectedNodeReference = {
+  sourceNode: Node;
+  semanticNode: Node;
+  projectedNode: Node;
+};
+
 export function useCanvasControllerReadModel({
   graphModel,
   visibleScope,
@@ -183,9 +214,10 @@ export function useCanvasControllerReadModel({
           : visibleScope.canonicalEdges,
     [canMutateGraph, graphModel.edges, visibleScope.canonicalEdges]
   );
+  const semanticGraphNodes = useCanvasSemanticNodeInputs(graphModel.nodes);
   const projectedColumnLineage = useMemo(() => {
     const expandedNodeIds = new Set(
-      graphModel.nodes
+      semanticGraphNodes
         .filter((node) => node.data.columnDisclosureExpanded === true)
         .map((node) => node.id)
     );
@@ -194,7 +226,7 @@ export function useCanvasControllerReadModel({
       edges: visibleScope.canonicalEdges,
       expandedNodeIds,
     });
-  }, [graphModel.nodes, visibleScope.canonicalEdges, visibleScope.canonicalNodes]);
+  }, [semanticGraphNodes, visibleScope.canonicalEdges, visibleScope.canonicalNodes]);
   const readOnlyColumnLineageNodeIds = useMemo(
     () =>
       new Set(
@@ -205,10 +237,10 @@ export function useCanvasControllerReadModel({
     [projectedColumnLineage]
   );
 
-  const nodesWithImpact = useMemo(
+  const semanticNodesWithImpact = useMemo(
     () =>
       buildCanvasNodeInteractionPresentation({
-        nodes: graphModel.nodes,
+        nodes: semanticGraphNodes,
         selectedNodeIds: uiScope.selectedNodeIds,
         canMutateGraph,
         columnLevelLineageEnabled,
@@ -338,6 +370,7 @@ export function useCanvasControllerReadModel({
       graphHandlers.handleColumnDisclosureChange,
       graphHandlers.handleColumnPortActivate,
       graphHandlers.handleApplyCanvasColumnFunction,
+      graphHandlers.handleApplyCanvasStructuredField,
       graphHandlers.handleAddCanvasCalculatedColumn,
       graphHandlers.handleReorderCanvasColumnOutput,
       graphHandlers.handleToggleCanvasColumnOutput,
@@ -345,15 +378,53 @@ export function useCanvasControllerReadModel({
       graphHandlers.handleComposeCanvasNodes,
       onToggleExecutionSelection,
       graphModel.canonicalNodesById,
-      graphModel.nodes,
+      semanticGraphNodes,
       graphNodeCardStrategies,
       overlayModel.activeRunId,
       overlayModel.overlayDecorations,
       overlayModel.runStatusByNodeId,
       runtimeCapabilities,
       readOnlyColumnLineageNodeIds,
+      uiScope.selectedNodeIds,
     ]
   );
+
+  const projectedNodeReferencesRef = useRef<ReadonlyMap<string, ProjectedNodeReference>>(new Map());
+  const nodesWithImpact = useMemo(() => {
+    const previousReferences = projectedNodeReferencesRef.current;
+    const nextReferences = new Map<string, ProjectedNodeReference>();
+    const semanticNodesById = new Map(
+      semanticNodesWithImpact.map((node) => [node.id, node] as const)
+    );
+
+    const projectedNodes = graphModel.nodes.map((sourceNode) => {
+      const semanticNode = semanticNodesById.get(sourceNode.id);
+      if (semanticNode == null) {
+        throw new Error('Canvas semantic projection omitted node ' + sourceNode.id);
+      }
+
+      const previousReference = previousReferences.get(sourceNode.id);
+      const projectedNode =
+        previousReference?.sourceNode === sourceNode &&
+        previousReference.semanticNode === semanticNode
+          ? previousReference.projectedNode
+          : {
+              ...sourceNode,
+              ariaLabel: semanticNode.ariaLabel,
+              data: semanticNode.data,
+            };
+
+      nextReferences.set(sourceNode.id, {
+        sourceNode,
+        semanticNode,
+        projectedNode,
+      });
+      return projectedNode;
+    });
+
+    projectedNodeReferencesRef.current = nextReferences;
+    return projectedNodes;
+  }, [graphModel.nodes, semanticNodesWithImpact]);
 
   const edgesWithImpact = useMemo(() => {
     const lineageEdges = projectedColumnLineage.map((edge) => ({
@@ -424,7 +495,7 @@ export function useCanvasControllerReadModel({
         graphModel.onEdgesChange(baseEdgeChanges);
       }
     },
-    [columnLineageEdgesById, graphModel]
+    [columnLineageEdgesById, graphModel.onEdgesChange]
   );
 
   const inspectorNode = uiScope.inspectorNodeId

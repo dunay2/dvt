@@ -2,7 +2,7 @@
 title: Canvas Layout Persistence Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-09-05
+last_reviewed: 2026-09-09
 planning_type: architecture
 ---
 
@@ -11,9 +11,9 @@ planning_type: architecture
 ## Purpose
 
 This guide defines the local component that persists route-local Canvas layout
-observations and viewport presentation preferences: viewport position, node
-coordinates, grid visibility, grid color, and snap-to-grid behavior. It does not
-own authoritative graph draft state.
+observations and presentation preferences: viewport position, node coordinates,
+Source Inspector list order, grid visibility, grid color, and snap-to-grid
+behavior. It does not own authoritative graph draft state.
 
 This distinction matters because Canvas has two truths:
 
@@ -33,8 +33,8 @@ This distinction matters because Canvas has two truths:
 
 ## Owned Concern
 
-Owned concern: persist route-local Canvas viewport and coordinate projection
-state without becoming protected draft authority.
+Owned concern: persist route-local Canvas viewport, coordinate, and Inspector
+list-order projection state without becoming protected draft authority.
 
 Canonical local C&Q catalog:
 `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`.
@@ -64,6 +64,9 @@ Canonical local C&Q catalog:
 | `setCanvasGridColor(...)`                    | `uiLayoutStore.ts`                    | Persist the grid line color as a normalized hex color.                                       |
 | `setCanvasSnapToGrid(...)`                   | `uiLayoutStore.ts`                    | Persist whether React Flow drag and auto-layout coordinates snap to the grid.                |
 | `ConfigureCanvasViewportPreferences`         | Canvas shell chrome command rail      | Apply grid and snap preferences without changing graph authority.                            |
+| `useCanvasInspectorListOrder(...)`           | `useCanvasInspectorListOrder.ts`      | Reconcile and persist Source Inspector column and outgoing-relationship identity order.      |
+| `useInspectorListReorder(...)`               | `useInspectorListReorder.ts`          | Apply the shared pointer and `Alt+Arrow` presentation-order gesture.                         |
+| `setCanvasInspectorListOrder(...)`           | `canvasInteractionStore.ts`           | Persist one reconciled Inspector list order for a workspace and Source node.                 |
 
 ## Invariants
 
@@ -107,17 +110,25 @@ Canonical local C&Q catalog:
   or dragging flags.
 - Auto-layout must preserve React Flow node type, data, and gesture capability;
   layout is a coordinate projection, not a node replacement authority.
+- Source Inspector order may persist only after local-store hydration, with an
+  editable workspace scope. Pre-hydration gestures cannot overwrite saved order.
+- Reconciliation removes stale and duplicate identities durably and appends new
+  identities in canonical order.
+- Reordering Inspector columns or outputs changes presentation only. It must not
+  mutate Source metadata, column semantics, graph edges, or canonical input order.
+- Pointer and keyboard reordering keep the moved row selected and focused, show
+  the drop position, and announce the completed move.
 
 ## Command And Query Rails
 
 Canonical local catalog:
 `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`.
 
-| Rail                                 | Type    | DDD owner                                | Application surface                              | Negative coverage                                                       |
-| ------------------------------------ | ------- | ---------------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------- |
-| `PersistCanvasLayout`                | command | `CanvasLayoutProjection` value object    | `useCanvasLayoutPersistence(...)`                | pending query and pre-hydration persistence are blocked or queued       |
-| `GetCanvasLayout`                    | query   | `CanvasLayoutProjection` value object    | `canvasInteractionStore` hydration               | local layout is not overwritten when protected draft coordinates reload |
-| `ConfigureCanvasViewportPreferences` | command | `CanvasViewportPreferences` value object | `uiLayoutStore` and Canvas presentation surfaces | hidden grid keeps node creation and drag enabled                        |
+| Rail                                 | Type    | DDD owner                                | Application surface                                             | Negative coverage                                                       |
+| ------------------------------------ | ------- | ---------------------------------------- | --------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `PersistCanvasLayout`                | command | `CanvasLayoutProjection` value object    | layout persistence hook, Inspector order hook and Source panels | pending query and pre-hydration persistence are blocked or queued       |
+| `GetCanvasLayout`                    | query   | `CanvasLayoutProjection` value object    | store hydration and Inspector order reconciliation              | local layout is not overwritten; stale Inspector identities are removed |
+| `ConfigureCanvasViewportPreferences` | command | `CanvasViewportPreferences` value object | `uiLayoutStore` and Canvas presentation surfaces                | hidden grid keeps node creation and drag enabled                        |
 
 `ConfigureCanvasViewportPreferences` is intentionally local to the Web Graph
 bounded frontend context. It changes operator presentation preferences only.
@@ -187,6 +198,21 @@ flowchart LR
   RemoteDraft --> Projection
 ```
 
+### Source Inspector list order
+
+```mermaid
+stateDiagram-v2
+  [*] --> CanonicalOrder
+  CanonicalOrder --> AwaitHydration: layout store not hydrated
+  AwaitHydration --> Reconcile: hydration completes
+  CanonicalOrder --> Reconcile: persisted order exists
+  Reconcile --> PersistCleanOrder: stale or duplicate identities found
+  Reconcile --> Ready: order already clean
+  PersistCleanOrder --> Ready
+  Ready --> PersistMovedOrder: pointer drop or Alt+Arrow
+  PersistMovedOrder --> Ready: keep moved row selected and focused
+```
+
 ## Consumers
 
 Direct consumers:
@@ -195,6 +221,11 @@ Direct consumers:
 - `CanvasViewport.tsx`
 - `useCanvasViewportGraphModel.ts`
 - `canvasInteractionStore`
+- `useCanvasInspectorListOrder.ts`
+- `useInspectorListReorder.ts`
+- `SourceColumnsPanel.tsx`
+- `SourceInputsOutputsPanel.tsx`
+- `CanvasNodeWorkbenchPanel.tsx`
 
 Indirect consumers:
 
@@ -204,14 +235,16 @@ Indirect consumers:
 
 ## Fowler Reading
 
-| Pattern                       | Local expression                   | Maturity rule                                             |
-| ----------------------------- | ---------------------------------- | --------------------------------------------------------- |
-| Presentation Model            | viewport graph model               | Keep renderer coordinates separate from graph semantics.  |
-| Application Controller seam   | `useCanvasLayoutPersistence()`     | Coordinate layout effects without owning draft authority. |
-| Intention-Revealing Interface | `handleNodeDragStop` payload merge | Name the stale snapshot hazard directly.                  |
-| Policy Object                 | hydration and equality guards      | Persist only when hydrated and materially changed.        |
-| Value Object                  | `CanvasViewportPreferences`        | Keep visual preferences separate from graph truth.        |
-| Application Controller seam   | `CanvasToolbar` command callbacks  | Route visual commands without making toolbar own state.   |
+| Pattern                       | Local expression                              | Maturity rule                                                  |
+| ----------------------------- | --------------------------------------------- | -------------------------------------------------------------- |
+| Presentation Model            | viewport graph model                          | Keep renderer coordinates separate from graph semantics.       |
+| Application Controller seam   | `useCanvasLayoutPersistence()`                | Coordinate layout effects without owning draft authority.      |
+| Intention-Revealing Interface | `handleNodeDragStop` payload merge            | Name the stale snapshot hazard directly.                       |
+| Policy Object                 | hydration and equality guards                 | Persist only when hydrated and materially changed.             |
+| Value Object                  | `CanvasViewportPreferences`                   | Keep visual preferences separate from graph truth.             |
+| Application Controller seam   | `CanvasToolbar` command callbacks             | Route visual commands without making toolbar own state.        |
+| Presentation Model            | Source Inspector ordered identity lists       | Keep operator list order separate from Source and graph truth. |
+| Policy Object                 | Inspector hydration and reconciliation guards | Persist only editable, hydrated, clean identity order.         |
 
 ## Negative Coverage
 
@@ -221,6 +254,11 @@ Primary tests:
 - `apps/web/src/app/views/canvas/useCanvasViewportGraphModel.layout.test.tsx`
 - `apps/web/src/app/views/canvas/CanvasViewport.test.tsx`
 - `apps/web/src/app/views/canvas/canvasDraftRecoveryBoundary.architecture.test.ts`
+- `apps/web/src/app/components/inspector/useCanvasInspectorListOrder.test.ts`
+- `apps/web/src/app/components/inspector/SourceColumnsPanel.test.tsx`
+- `apps/web/src/app/components/inspector/SourceInputsOutputsPanel.test.tsx`
+- `apps/web/src/app/stores/canvasInteractionStore.test.ts`
+- `apps/web/cypress/e2e/canvas/canvas-source-inspector-order.cy.ts`
 
 The tests cover automatic store hydration, pre-hydration node-position queueing,
 pending-query viewport denial, stale drag-stop payload replacement, active drag
@@ -228,7 +266,9 @@ non-persistence, drag-stop-only drag completion persistence, non-drag settled
 coordinate persistence, remote-draft hydration not overwriting local layout after
 refresh/reload, grid preference persistence, grid background visibility/color,
 snap-to-grid propagation, snapped auto-layout coordinates, and semantic boundary
-rules.
+rules. Source Inspector tests cover pointer and keyboard order, hydration denial,
+durable stale-identity reconciliation, focus and selection continuity, visible
+drop position, persisted reload, and absence of graph writes.
 
 ## Drift To Watch
 

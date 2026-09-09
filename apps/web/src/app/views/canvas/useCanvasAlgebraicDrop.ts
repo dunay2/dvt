@@ -66,6 +66,8 @@ export function resolveCanvasAlgebraicDropHover(
 export function useCanvasAlgebraicDrop(nodes: Node[], enabled: boolean) {
   const [hover, setHover] = useState<CanvasAlgebraicDropHover | null>(null);
   const hoverRef = useRef<CanvasAlgebraicDropHover | null>(null);
+  const nodesRef = useRef(nodes);
+  nodesRef.current = nodes;
   const updateHover = useCallback((nextHover: CanvasAlgebraicDropHover | null) => {
     hoverRef.current = nextHover;
     setHover(nextHover);
@@ -89,16 +91,20 @@ export function useCanvasAlgebraicDrop(nodes: Node[], enabled: boolean) {
     [hover, nodes]
   );
   const handleNodeDrag = useCallback(
-    (draggedNode: Node, allNodes: Node[]) => {
-      updateHover(enabled ? resolveCanvasAlgebraicDropHover(draggedNode, allNodes) : null);
+    (draggedNode: Node, draggedNodes: Node[]) => {
+      const nextHover =
+        enabled && draggedNodes.length === 1
+          ? resolveCanvasAlgebraicDropHover(draggedNode, nodesRef.current)
+          : null;
+      updateHover(nextHover);
     },
     [enabled, updateHover]
   );
   const handleNodeDragStop = useCallback(
-    (draggedNode: Node, allNodes: Node[]) => {
+    (draggedNode: Node, _draggedNodes: Node[]) => {
       const currentHover = hoverRef.current;
       if (currentHover != null) {
-        const target = allNodes.find((node) => node.id === currentHover.targetNodeId);
+        const target = nodesRef.current.find((node) => node.id === currentHover.targetNodeId);
         const compose = (target?.data as AlgebraicNodeData | undefined)?.onComposeCanvasNodes;
         compose?.({
           sourceNodeId: draggedNode.id,

@@ -15,18 +15,22 @@ export function useCanvasAlgebraicCompositionHandler({
   effects,
   policy,
 }: CanvasGraphInteractionContracts) {
+  const { canonicalNodesById, draftSession, edges } = state;
+  const { setEdges, setDraftSession } = effects;
+  const { canEditEdges } = policy;
+
   const resolveOperations = useCallback(
     (identity: CanvasAlgebraicCompositionIdentity): CanvasAlgebraicCompositionOperation[] =>
-      policy.canEditEdges
+      canEditEdges
         ? resolveCanvasAlgebraicCompositionOperations({
-            canonicalNodesById: state.canonicalNodesById,
-            draftSession: state.draftSession,
-            edges: state.edges,
+            canonicalNodesById,
+            draftSession,
+            edges,
             pluginPortMap: getPluginPortMap(),
             ...identity,
           })
         : [],
-    [policy.canEditEdges, state]
+    [canEditEdges, canonicalNodesById, draftSession, edges]
   );
 
   const composeNodes = useCallback(
@@ -35,19 +39,19 @@ export function useCanvasAlgebraicCompositionHandler({
         operation: CanvasAlgebraicCompositionOperation;
       }
     ) => {
-      if (!policy.canEditEdges) return;
+      if (!canEditEdges) return;
       const transaction = resolveCanvasAlgebraicCompositionTransaction({
-        canonicalNodesById: state.canonicalNodesById,
-        draftSession: state.draftSession,
-        edges: state.edges,
+        canonicalNodesById,
+        draftSession,
+        edges,
         pluginPortMap: getPluginPortMap(),
         ...identity,
       });
       if (transaction.outcome !== 'created') return;
-      effects.setEdges(transaction.edges);
-      effects.setDraftSession(transaction.draftSession);
+      setEdges(transaction.edges);
+      setDraftSession(transaction.draftSession);
     },
-    [effects, policy.canEditEdges, state]
+    [canEditEdges, canonicalNodesById, draftSession, edges, setDraftSession, setEdges]
   );
 
   return { resolveOperations, composeNodes };

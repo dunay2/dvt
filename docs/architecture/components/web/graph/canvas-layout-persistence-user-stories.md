@@ -2,7 +2,7 @@
 title: Canvas Layout Persistence User Stories
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-05-04
+last_reviewed: 2026-09-09
 planning_type: architecture
 ---
 
@@ -40,7 +40,7 @@ drag stop events.
 
 Acceptance:
 
-- active drag frames can persist current positions after hydration;
+- active drag frames do not persist positions;
 - drag-stop trusts the dragged node event payload;
 - stale React Flow `allNodes` snapshots cannot overwrite the dragged node.
 
@@ -114,19 +114,36 @@ Acceptance:
 - likely rail: `ResolveCanvasNodeInitialPosition`;
 - the command must use viewport bounds without mutating graph meaning.
 
+### US-CANVAS-LAYOUT-010 - Source Inspector List Order
+
+As a Canvas user, I want to reorder Source columns and outgoing relationships
+so the Inspector keeps the presentation order I use to analyse the Source.
+
+Acceptance:
+
+- pointer drag and `Alt+ArrowUp/Down` execute `PersistCanvasLayout` only after
+  local-store hydration and with edit permission;
+- the order survives reload for the same workspace and Source;
+- stale or duplicate identities are removed and new identities append in
+  canonical order;
+- the moved row remains selected and focused, and the drop position and result
+  are perceivable;
+- Source metadata, column semantics, graph edges, and input order do not change.
+
 ## Scenario Matrix
 
-| Story                | Rail                                      | DDD owner                      | Primary proof                              | Negative proof                             |
-| -------------------- | ----------------------------------------- | ------------------------------ | ------------------------------------------ | ------------------------------------------ |
-| US-CANVAS-LAYOUT-001 | `PersistCanvasLayout`, `GetCanvasLayout`  | `CanvasLayoutProjection`       | `useCanvasController.persistence.test.tsx` | pending query blocks viewport persistence  |
-| US-CANVAS-LAYOUT-002 | `PersistCanvasLayout`                     | `CanvasLayoutProjection`       | `useCanvasController.persistence.test.tsx` | stale `allNodes` cannot win                |
-| US-CANVAS-LAYOUT-003 | `GetCanvasLayout`                         | `CanvasLayoutProjection`       | `canvasDraftLayoutHydrationPolicy` tests   | local positions are not overwritten        |
-| US-CANVAS-LAYOUT-004 | `ConfigureCanvasViewportPreferences`      | `CanvasViewportPreferences`    | `CanvasViewport.test.tsx`                  | hidden grid keeps dragging enabled         |
-| US-CANVAS-LAYOUT-005 | `ConfigureCanvasViewportPreferences`      | `CanvasViewportPreferences`    | toolbar/store tests                        | invalid colors normalize                   |
-| US-CANVAS-LAYOUT-006 | `ConfigureCanvasViewportPreferences`      | `CanvasViewportPreferences`    | viewport/layout tests                      | snap does not mutate graph identity        |
-| US-CANVAS-LAYOUT-007 | `ConfigureCanvasViewportPreferences`      | `CanvasViewportPreferences`    | store, route, toolbar tests                | hidden guide keeps node creation available |
-| US-CANVAS-LAYOUT-008 | `PersistCanvasLayout`                     | `CanvasLayoutProjection`       | `CanvasViewport.test.tsx`                  | auto-layout cannot strip node data/type    |
-| US-CANVAS-LAYOUT-009 | future `ResolveCanvasNodeInitialPosition` | future initial-position policy | future Cypress/unit proof                  | node cannot spawn outside visible viewport |
+| Story                | Rail                                      | DDD owner                      | Primary proof                               | Negative proof                             |
+| -------------------- | ----------------------------------------- | ------------------------------ | ------------------------------------------- | ------------------------------------------ |
+| US-CANVAS-LAYOUT-001 | `PersistCanvasLayout`, `GetCanvasLayout`  | `CanvasLayoutProjection`       | `useCanvasController.persistence.test.tsx`  | pending query blocks viewport persistence  |
+| US-CANVAS-LAYOUT-002 | `PersistCanvasLayout`                     | `CanvasLayoutProjection`       | `useCanvasController.persistence.test.tsx`  | stale `allNodes` cannot win                |
+| US-CANVAS-LAYOUT-003 | `GetCanvasLayout`                         | `CanvasLayoutProjection`       | `canvasDraftLayoutHydrationPolicy` tests    | local positions are not overwritten        |
+| US-CANVAS-LAYOUT-004 | `ConfigureCanvasViewportPreferences`      | `CanvasViewportPreferences`    | `CanvasViewport.test.tsx`                   | hidden grid keeps dragging enabled         |
+| US-CANVAS-LAYOUT-005 | `ConfigureCanvasViewportPreferences`      | `CanvasViewportPreferences`    | toolbar/store tests                         | invalid colors normalize                   |
+| US-CANVAS-LAYOUT-006 | `ConfigureCanvasViewportPreferences`      | `CanvasViewportPreferences`    | viewport/layout tests                       | snap does not mutate graph identity        |
+| US-CANVAS-LAYOUT-007 | `ConfigureCanvasViewportPreferences`      | `CanvasViewportPreferences`    | store, route, toolbar tests                 | hidden guide keeps node creation available |
+| US-CANVAS-LAYOUT-008 | `PersistCanvasLayout`                     | `CanvasLayoutProjection`       | `CanvasViewport.test.tsx`                   | auto-layout cannot strip node data/type    |
+| US-CANVAS-LAYOUT-009 | future `ResolveCanvasNodeInitialPosition` | future initial-position policy | future Cypress/unit proof                   | node cannot spawn outside visible viewport |
+| US-CANVAS-LAYOUT-010 | `PersistCanvasLayout`, `GetCanvasLayout`  | `CanvasLayoutProjection`       | Inspector panel, store and Chrome E2E tests | no Source metadata or graph-edge mutation  |
 
 ## TDD Traceability
 
@@ -136,3 +153,6 @@ Acceptance:
   layout preferences in protected draft semantics.
 - A future implementation of `ResolveCanvasNodeInitialPosition` must start with
   a failing test for off-screen node creation.
+- US-CANVAS-LAYOUT-010 starts with failing panel tests for pointer and keyboard
+  order, then proves hydration, reconciliation, focus, persisted reload, and no
+  graph write in unit, presentation, and visible Chrome coverage.

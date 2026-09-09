@@ -47,6 +47,7 @@ export type StubCanvasDraftReadOptions = {
   columnMapping?: boolean;
   columnMappingDisconnected?: boolean;
   columnMappingSecondSource?: boolean;
+  sourceInspectorOrdering?: boolean;
   substraitInnerJoin?: boolean;
   substraitNInputJoin?: boolean;
   substraitUnionAll?: boolean;
@@ -54,6 +55,8 @@ export type StubCanvasDraftReadOptions = {
   title?: string;
   readOnly?: boolean;
   largeGraph?: boolean;
+  performanceGraphNodeCount?: 10 | 30 | 60;
+  longNodeNames?: boolean;
 };
 
 type CanvasAuthoringDraft = ReturnType<typeof buildWorkspaceGraphAuthoringDraft>;
@@ -76,13 +79,117 @@ export function buildCanvasAuthoringDraft({
   columnMapping = false,
   columnMappingDisconnected = false,
   columnMappingSecondSource = false,
+  sourceInspectorOrdering = false,
   substraitInnerJoin = false,
   substraitNInputJoin = false,
   substraitUnionAll = false,
   substraitPilot = false,
   title,
   largeGraph = false,
+  performanceGraphNodeCount,
+  longNodeNames = false,
 }: StubCanvasDraftReadOptions = {}): CanvasAuthoringDraft {
+  if (performanceGraphNodeCount !== undefined) {
+    const baseDraft = buildCanvasAuthoringDraft({
+      canvasKind: 'transformation',
+      columnMapping: true,
+      sourceInspectorOrdering: true,
+      title: `Canvas performance ${performanceGraphNodeCount} nodes`,
+    });
+    const additionalNodeCount = performanceGraphNodeCount - baseDraft.nodes.length;
+    const performanceSources: CanonicalNode[] = ['left', 'right'].map((side) => ({
+      id: `performance-source-${side}`,
+      name: `Performance source ${side}`,
+      pluginId: 'dvt.warehouse-source',
+      kind: 'dvt:source',
+      role: 'input',
+      status: 'idle',
+      tags: ['source'],
+      metadata: {
+        schema: 'performance',
+        tableName: `customers_${side}`,
+        connectedSourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'canvas-e2e-postgres',
+            provider: 'postgres',
+          },
+          sourceObjectId: `performance.customers_${side}`,
+        },
+        columns: [
+          { name: 'customer_id', type: 'string', nullable: false },
+          { name: 'name', type: 'string', nullable: false },
+        ],
+      },
+    }));
+    const additionalTransformNodes: CanonicalNode[] = Array.from(
+      { length: additionalNodeCount - performanceSources.length },
+      (_, index) => ({
+        id: `performance-model-${String(index + 1).padStart(2, '0')}`,
+        name: `Performance model ${index + 1}`,
+        pluginId: 'dvt',
+        kind: 'dvt:transform',
+        role: 'transform',
+        status: 'idle',
+        tags: ['transform'],
+        metadata: {},
+      })
+    );
+    const additionalNodes = [...performanceSources, ...additionalTransformNodes];
+
+    return buildWorkspaceGraphAuthoringDraft({
+      canvas: baseDraft.canvas,
+      nodeIds: [...baseDraft.nodeIds, ...additionalNodes.map((node) => node.id)],
+      nodePositions: {
+        ...baseDraft.nodePositions,
+        ...Object.fromEntries(
+          performanceSources.map((node, index) => [node.id, { x: 1000, y: 550 + index * 260 }])
+        ),
+        ...Object.fromEntries(
+          additionalTransformNodes.map((node, index) => [
+            node.id,
+            { x: 1320 + (index % 3) * 320, y: 550 + (index % 2) * 260 },
+          ])
+        ),
+      },
+      nodes: [...baseDraft.nodes, ...additionalNodes],
+      edges: [
+        ...baseDraft.edges,
+        {
+          id: 'edge-performance-left-model-01',
+          sourceId: 'performance-source-left',
+          targetId: 'performance-model-01',
+          relation: 'lineage' as const,
+        },
+        {
+          id: 'edge-performance-right-model-02',
+          sourceId: 'performance-source-right',
+          targetId: 'performance-model-02',
+          relation: 'lineage' as const,
+        },
+        ...additionalTransformNodes.slice(2).map((node) => ({
+          id: `edge-source-${node.id}`,
+          sourceId: 'source-orders',
+          targetId: node.id,
+          relation: 'lineage' as const,
+        })),
+        {
+          id: 'edge-performance-model-01-model-03',
+          sourceId: 'performance-model-01',
+          targetId: 'performance-model-03',
+          relation: 'lineage' as const,
+        },
+        {
+          id: 'edge-performance-model-02-model-04',
+          sourceId: 'performance-model-02',
+          targetId: 'performance-model-04',
+          relation: 'lineage' as const,
+        },
+      ],
+    });
+  }
+
   if (largeGraph) {
     return buildLargeWorkspaceGraphAuthoringDraft();
   }
@@ -499,7 +606,9 @@ export function buildCanvasAuthoringDraft({
       nodes: [
         {
           id: 'raw_orders',
-          name: 'raw_orders',
+          name: longNodeNames
+            ? 'Imported source for dvt.raw.orders in the local governed environment with a complete name'
+            : 'raw_orders',
           pluginId: 'dvt',
           kind: 'dvt:source',
           role: 'input',
@@ -575,16 +684,36 @@ export function buildCanvasAuthoringDraft({
 
   if (columnMapping) {
     const columns = [
-      { name: 'order_id', type: 'integer' },
+      {
+        name: 'order_id',
+        type: 'integer',
+        ...(sourceInspectorOrdering ? { nullable: false } : {}),
+      },
       {
         name: 'customer',
         type: 'text',
-        ...(columnMappingSecondSource ? { nullable: false } : {}),
+        ...(columnMappingSecondSource || sourceInspectorOrdering ? { nullable: false } : {}),
       },
-      { name: 'amount', type: 'numeric' },
-      { name: 'status', type: 'text' },
-      { name: 'created_at', type: 'timestamp' },
-      { name: 'region', type: 'text' },
+      {
+        name: 'amount',
+        type: 'numeric',
+        ...(sourceInspectorOrdering ? { nullable: false } : {}),
+      },
+      {
+        name: 'status',
+        type: 'text',
+        ...(sourceInspectorOrdering ? { nullable: false } : {}),
+      },
+      {
+        name: 'created_at',
+        type: 'timestamp',
+        ...(sourceInspectorOrdering ? { nullable: false } : {}),
+      },
+      {
+        name: 'region',
+        type: 'text',
+        ...(sourceInspectorOrdering ? { nullable: false } : {}),
+      },
     ];
     return buildWorkspaceGraphAuthoringDraft({
       canvas,
@@ -592,12 +721,14 @@ export function buildCanvasAuthoringDraft({
         'source-orders',
         ...(columnMappingSecondSource ? ['source-health-check'] : []),
         'model-orders',
+        ...(sourceInspectorOrdering ? ['model-orders-secondary'] : []),
         'sink-orders',
       ],
       nodePositions: {
         'source-orders': { x: 40, y: columnMappingSecondSource ? 80 : 140 },
         ...(columnMappingSecondSource ? { 'source-health-check': { x: 40, y: 440 } } : {}),
         'model-orders': { x: 620, y: 140 },
+        ...(sourceInspectorOrdering ? { 'model-orders-secondary': { x: 620, y: 440 } } : {}),
         'sink-orders': { x: 1200, y: 140 },
       },
       nodes: [
@@ -664,6 +795,20 @@ export function buildCanvasAuthoringDraft({
           tags: ['transform'],
           metadata: {},
         },
+        ...(sourceInspectorOrdering
+          ? [
+              {
+                id: 'model-orders-secondary',
+                name: 'Orders model secondary',
+                pluginId: 'dvt',
+                kind: 'dvt:transform',
+                role: 'transform' as const,
+                status: 'idle' as const,
+                tags: ['transform'],
+                metadata: {},
+              },
+            ]
+          : []),
         {
           id: 'sink-orders',
           name: 'Orders sink',
@@ -686,6 +831,16 @@ export function buildCanvasAuthoringDraft({
                 relation: 'lineage' as const,
               },
             ]),
+        ...(sourceInspectorOrdering
+          ? [
+              {
+                id: 'edge-source-model-secondary',
+                sourceId: 'source-orders',
+                targetId: 'model-orders-secondary',
+                relation: 'lineage' as const,
+              },
+            ]
+          : []),
         {
           id: 'edge-model-sink',
           sourceId: 'model-orders',

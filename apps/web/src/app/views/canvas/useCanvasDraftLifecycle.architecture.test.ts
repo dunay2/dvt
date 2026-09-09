@@ -17,6 +17,14 @@ describe('useCanvasDraftLifecycle architecture', () => {
     expect(LIFECYCLE_SOURCE).toContain('useCanvasDraftBootstrapSync');
     expect(LIFECYCLE_SOURCE).toContain('useCanvasDraftPersistence');
     expect(LIFECYCLE_SOURCE).toContain('useCanvasCurrentDraftPayload({');
+    expect(LIFECYCLE_SOURCE).toContain('persistedNodePositions,');
+    expect(LIFECYCLE_SOURCE).not.toContain('graphNodes,');
+    expect(
+      LIFECYCLE_SOURCE.match(/createDraftIdempotencyKey: createCanvasDraftIdempotencyKey/g)
+    ).toHaveLength(2);
+    expect(LIFECYCLE_SOURCE).not.toContain(
+      'createDraftIdempotencyKey: () => createBrowserIdempotencyKey'
+    );
     expect(LIFECYCLE_SOURCE).toContain('useCanvasDraftAttemptRefs');
     expect(LIFECYCLE_SOURCE).toContain('executeCreateCanvasDocumentCommand({');
     expect(LIFECYCLE_SOURCE).toContain('executeImportProjectSnapshotCommand({');

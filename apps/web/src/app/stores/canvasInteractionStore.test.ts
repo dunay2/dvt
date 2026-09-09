@@ -141,6 +141,56 @@ describe('useCanvasInteractionStore', () => {
     expect(useCanvasInteractionStore.getState().contextualWorkbenchOwnerKey).toBeNull();
   });
 
+  it('persists Source Inspector list order without changing graph layout facts', () => {
+    useCanvasInteractionStore.getState().setCanvasNodePositions(WORKSPACE_KEY, {
+      source_node: { x: 40, y: 140 },
+    });
+
+    useCanvasInteractionStore
+      .getState()
+      .setCanvasInspectorListOrder(WORKSPACE_KEY, 'source_node', 'columns', [
+        'amount',
+        'order_id',
+        'customer',
+      ]);
+    useCanvasInteractionStore
+      .getState()
+      .setCanvasInspectorListOrder(WORKSPACE_KEY, 'source_node', 'outputs', [
+        'output:edge-model-2',
+        'output:edge-model-1',
+      ]);
+
+    expect(useCanvasInteractionStore.getState().canvasLayouts[WORKSPACE_KEY]).toEqual({
+      viewport: null,
+      nodePositions: { source_node: { x: 40, y: 140 } },
+      inspectorListOrdersByNode: {
+        source_node: {
+          columns: ['amount', 'order_id', 'customer'],
+          outputs: ['output:edge-model-2', 'output:edge-model-1'],
+        },
+      },
+    });
+    expect(localStorage.getItem(CANVAS_INTERACTION_STORAGE_KEY)).toContain(
+      'inspectorListOrdersByNode'
+    );
+  });
+
+  it('does not rewrite Inspector order storage when identities are unchanged', () => {
+    const state = useCanvasInteractionStore.getState();
+    state.setCanvasInspectorListOrder(WORKSPACE_KEY, 'source_node', 'columns', [
+      'order_id',
+      'customer',
+    ]);
+    const firstPersistedValue = localStorage.getItem(CANVAS_INTERACTION_STORAGE_KEY);
+
+    state.setCanvasInspectorListOrder(WORKSPACE_KEY, 'source_node', 'columns', [
+      'order_id',
+      'customer',
+    ]);
+
+    expect(localStorage.getItem(CANVAS_INTERACTION_STORAGE_KEY)).toBe(firstPersistedValue);
+  });
+
   it('toggles frozen canvas nodes per workspace without changing node positions', () => {
     type FrozenCanvasInteractionState = ReturnType<typeof useCanvasInteractionStore.getState> & {
       toggleFrozenCanvasNode: (workspaceKey: string, nodeId: string) => void;

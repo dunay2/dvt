@@ -1,6 +1,6 @@
 /** Owned concern: admit explicit dropped nodes into the draft graph through the node lifecycle API. */
 
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 
 import { CANONICAL_NODE_DRAG_MIME_TYPE, type CanonicalNode } from '../../types/canonical';
@@ -27,6 +27,8 @@ export function useCanvasNodeDropHandlers({
   const { canonicalNodesById, draftSession, nodes } = state;
   const { setNodes, setDraftSession } = effects;
   const { graphStrategy, canEditEdges, columnLevelLineageEnabled, allowsCanonicalNode } = policy;
+  const latestNodesRef = useRef(nodes);
+  latestNodesRef.current = nodes;
   const runAdmissionCommand = useCanvasNodeAdmissionCommandRunner({
     state: {
       draftSession,
@@ -136,7 +138,7 @@ export function useCanvasNodeDropHandlers({
         ...targetNode,
         metadata: nextMetadata,
       };
-      const nextNodes = nodes.map((node) =>
+      const nextNodes = latestNodesRef.current.map((node) =>
         node.id === nodeId
           ? {
               ...node,
@@ -152,7 +154,7 @@ export function useCanvasNodeDropHandlers({
       setDraftSession(canvasDraftSessionWorkingSet.upsertNode(draftSession, nextNode));
       toast.success(`Schema ${normalizedSchemaName} assigned to ${targetNode.name}.`);
     },
-    [canEditEdges, canonicalNodesById, draftSession, nodes, setDraftSession, setNodes]
+    [canEditEdges, canonicalNodesById, draftSession, setDraftSession, setNodes]
   );
 
   return {

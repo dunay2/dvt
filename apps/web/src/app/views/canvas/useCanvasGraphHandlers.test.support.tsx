@@ -141,7 +141,7 @@ export function renderGraphHandlersHook({
   onLayoutComplete = vi.fn(),
 }: RenderGraphHandlersHookArgs): {
   latest: () => LatestHook;
-  render: () => Promise<void>;
+  render: (nextNodes?: Node[]) => Promise<void>;
   cleanup: () => void;
   setNodes: ReturnType<typeof vi.fn>;
   setEdges: ReturnType<typeof vi.fn>;
@@ -152,6 +152,7 @@ export function renderGraphHandlersHook({
   onLayoutComplete: ReturnType<typeof vi.fn>;
 } {
   const canonicalNodesById = new Map(canonicalNodes.map((node) => [node.id, node]));
+  let currentNodes = nodes;
   let latest: LatestHook = null;
   const container = document.createElement('div');
   document.body.appendChild(container);
@@ -167,7 +168,7 @@ export function renderGraphHandlersHook({
       },
       canonicalNodesById,
       edges,
-      nodes,
+      nodes: currentNodes,
       selectedNodeIds,
       inspectorNodeId,
       draftSession,
@@ -193,7 +194,8 @@ export function renderGraphHandlersHook({
 
   return {
     latest: () => latest,
-    render: async () => {
+    render: async (nextNodes) => {
+      if (nextNodes != null) currentNodes = nextNodes;
       await act(async () => {
         root.render(<HookHost />);
       });

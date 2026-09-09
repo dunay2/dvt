@@ -578,6 +578,70 @@ describe('Canvas ready node authoring', () => {
     cy.get('.react-flow__node[data-id="dvt-transform-1"]').should('not.exist');
   });
 
+  it('keeps Inputs and Outputs before More and stacks complete relationship values', () => {
+    const longRelatedNodeName =
+      'Imported source for dvt.raw.orders in the local governed environment with a complete name';
+    stubStatefulCanvasDraftAuthoring({
+      dbtGraph: true,
+      authoringGenerated: true,
+      longNodeNames: true,
+    });
+
+    visitReadyCanvas();
+
+    cy.get('.react-flow__node[data-id="orders_model"] [data-slot="canvas-node-shell"]')
+      .should('be.visible')
+      .dblclick();
+
+    cy.get('[data-slot="canvas-node-workbench-tab-inputs-outputs"]')
+      .should('be.visible')
+      .then(($inputsOutputs) => {
+        const inputsOutputsRect = $inputsOutputs.get(0).getBoundingClientRect();
+
+        cy.get('[data-slot="canvas-node-workbench-more-trigger"]')
+          .should('be.visible')
+          .then(($more) => {
+            const moreRect = $more.get(0).getBoundingClientRect();
+            const sameRow = Math.abs(moreRect.top - inputsOutputsRect.top) < 1;
+
+            expect(
+              moreRect.top > inputsOutputsRect.top ||
+                (sameRow && moreRect.left > inputsOutputsRect.left)
+            ).to.equal(true);
+          });
+      });
+
+    cy.get('[data-slot="canvas-node-workbench-tab-inputs-outputs"]').click();
+    cy.get('[data-slot="canvas-node-workbench-inputs-outputs-content"]')
+      .should('be.visible')
+      .then(($section) => {
+        const section = $section.get(0);
+        const sectionRect = section.getBoundingClientRect();
+        const records = section.querySelectorAll<HTMLElement>(
+          '[data-slot="node-property-relationship-record"]'
+        );
+
+        expect(section.querySelector('table')).to.equal(null);
+        expect(records).to.have.length(2);
+        expect(section.textContent).to.contain(longRelatedNodeName);
+
+        for (const record of records) {
+          const firstLabel = record.querySelector('dt');
+          const firstValue = record.querySelector('dd');
+          expect(firstValue?.getBoundingClientRect().top).to.be.at.least(
+            firstLabel?.getBoundingClientRect().bottom ?? 0
+          );
+        }
+
+        for (const value of section.querySelectorAll<HTMLElement>('dd')) {
+          const valueRect = value.getBoundingClientRect();
+          expect(getComputedStyle(value).overflowWrap).to.equal('anywhere');
+          expect(valueRect.left).to.be.at.least(sectionRect.left);
+          expect(valueRect.right).to.be.at.most(sectionRect.right + 1);
+        }
+      });
+  });
+
   it('roundtrips dbt properties while generated SQL remains read-only', () => {
     stubStatefulCanvasDraftAuthoring({
       dbtGraph: true,
