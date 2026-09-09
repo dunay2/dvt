@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.16.0 (2026-09-09)
+
+## What's Changed
+* perf(web): Load source catalogs by schema on demand by @dunay2 in https://github.com/dunay2/dvt/pull/3040
+* docs(web): Publish style guide v0.2 by @dunay2 in https://github.com/dunay2/dvt/pull/3044
+* docs(web): Bind database identity to card query rail by @dunay2 in https://github.com/dunay2/dvt/pull/3045
+* fix(web): Restore column context and structured field editing by @dunay2 in https://github.com/dunay2/dvt/pull/3047
+* fix(web): Restore structured column lifecycle by @dunay2 in https://github.com/dunay2/dvt/pull/3055
+* docs(docs): Separate structured field user stories by @dunay2 in https://github.com/dunay2/dvt/pull/3056
+* fix(web): Preserve column mappings with additional Sources by @dunay2 in https://github.com/dunay2/dvt/pull/3058
+* feat(web): Add direct column aliases by @dunay2 in https://github.com/dunay2/dvt/pull/3059
+* fix(web): Preserve non-null row-number output by @dunay2 in https://github.com/dunay2/dvt/pull/3061
+* fix(web): Restore Transform card controls and column menus by @dunay2 in https://github.com/dunay2/dvt/pull/3062
+* fix(web): Keep Transform runtime facts visible by @dunay2 in https://github.com/dunay2/dvt/pull/3063
+* fix(web): Delegate Source Import loading presentation by @dunay2 in https://github.com/dunay2/dvt/pull/3064
+* feat(web): Create reusable algebraic Canvas outputs by @dunay2 in https://github.com/dunay2/dvt/pull/3065
+* fix(web): Restore native Model chain connections by @dunay2 in https://github.com/dunay2/dvt/pull/3066
+* fix(web): Preserve Model output authoring across Canvas chains by @dunay2 in https://github.com/dunay2/dvt/pull/3073
+* feat(web): Reorder Source Inspector columns and outputs by @dunay2 in https://github.com/dunay2/dvt/pull/3079
+* fix(web): Stack Model relationships and reorder Workbench tabs by @dunay2 in https://github.com/dunay2/dvt/pull/3081
+* perf(web): Decouple Canvas geometry from semantic projections by @dunay2 in https://github.com/dunay2/dvt/pull/3082
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.15.0...v0.16.0
+
 ## 0.15.0 (2026-09-07)
 
 ## What's Changed
