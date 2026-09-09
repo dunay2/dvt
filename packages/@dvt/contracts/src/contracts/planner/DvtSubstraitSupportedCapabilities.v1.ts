@@ -127,6 +127,11 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
     proofRef: 'docs/evidence/ED-20260831-vtx2-substrait-grouping.md',
   },
   {
+    entryIds: [standardId('type', 'substrait.Type', 'kind.fp64')],
+    useCaseRefs: ['dvt:semantic-workbench-lab'],
+    proofRef: 'apps/web/src/app/labs/semanticWorkbenchFixture.test.ts',
+  },
+  {
     entryIds: [
       standardId('expression-form', 'substrait.Expression', 'rex_type.window_function'),
       functionId('window-function', 'functions_arithmetic', 'row_number'),
