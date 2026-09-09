@@ -1,4 +1,5 @@
 /** Owned concern: capture the canonical output alias before applying one field function. */
+import { PostgresIdentifierV1Schema } from '@dvt/contracts';
 import { useId, useState, type ReactElement } from 'react';
 
 import { Input } from '../../components/ui/input';
@@ -17,7 +18,11 @@ export function GraphNodeColumnFunctionAliasForm(props: {
   const [alias, setAlias] = useState('');
   const [aliasConflict, setAliasConflict] = useState(false);
   const inputId = useId();
-  const normalizedAlias = alias.trim();
+  const errorId = useId();
+
+  const aliasViolatesPolicy =
+    alias.length > 0 &&
+    (alias !== alias.trim() || !PostgresIdentifierV1Schema.safeParse(alias).success);
 
   return (
     <Popover
@@ -41,12 +46,12 @@ export function GraphNodeColumnFunctionAliasForm(props: {
         <form
           onSubmit={(event) => {
             event.preventDefault();
-            if (normalizedAlias.length === 0) return;
-            if (props.unavailableAliases.includes(normalizedAlias)) {
+            if (alias.trim().length === 0 || aliasViolatesPolicy) return;
+            if (props.unavailableAliases.includes(alias)) {
               setAliasConflict(true);
               return;
             }
-            props.onSubmit(normalizedAlias);
+            props.onSubmit(alias);
           }}
         >
           <label htmlFor={inputId} className={graphNodeColumnClasses.functionAliasLabel}>
@@ -61,15 +66,18 @@ export function GraphNodeColumnFunctionAliasForm(props: {
             value={alias}
             autoFocus
             required
-            aria-invalid={aliasConflict}
+            aria-invalid={aliasConflict || aliasViolatesPolicy}
+            aria-describedby={aliasConflict || aliasViolatesPolicy ? errorId : undefined}
             onChange={(event) => {
               setAlias(event.currentTarget.value);
               setAliasConflict(false);
             }}
           />
-          {aliasConflict ? (
-            <p role="alert" className={graphNodeColumnClasses.functionAliasError}>
-              {props.copy.columnFunctionAliasConflictLabel}
+          {aliasConflict || aliasViolatesPolicy ? (
+            <p id={errorId} role="alert" className={graphNodeColumnClasses.functionAliasError}>
+              {aliasConflict
+                ? props.copy.columnFunctionAliasConflictLabel
+                : props.copy.columnFunctionAliasPolicyErrorLabel}
             </p>
           ) : null}
           <div className={graphNodeColumnClasses.functionAliasActions}>
@@ -83,7 +91,7 @@ export function GraphNodeColumnFunctionAliasForm(props: {
             <button
               type="submit"
               data-slot="graph-node-column-function-alias-submit"
-              disabled={normalizedAlias.length === 0}
+              disabled={alias.trim().length === 0 || aliasViolatesPolicy}
               className={graphNodeColumnClasses.functionAliasSubmit}
             >
               {props.copy.columnFunctionAliasSubmitLabel}

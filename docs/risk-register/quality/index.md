@@ -44,6 +44,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Canvas and dbt files can expose conflicting authoring authority](R-20260731-CANVAS-DBT-AUTHORING-AUTHORITY.yaml)
 - [Canvas edge execution gate could diverge across authoring and execution](R-20260902-CANVAS-EDGE-EXECUTION-GATE.yaml)
 - [Canvas empty-state copy is ambiguous and can be interpreted as connectivity failure](R-20260503-CANVAS-EMPTY-STATE-MESSAGE-AMBIGUITY.yaml)
+- [Canvas field budgets can drift between semantic and persistence boundaries](R-20260908-CANVAS-AUTHORING-FIELD-DRIFT.yaml)
 - [Canvas host can overclaim multi-canvas truth before the draft boundary supports it](R-20260423-CANVAS-HOST-DRAFT-BOUNDARY.yaml)
 - [Canvas workflow E2E usability regressions across protected runtime rails](R-20260601-CANVAS-WORKFLOW-E2E-USABILITY.yaml)
 - [Capability evidence can drift into unsupported semantic or provider claims](R-20260903-SUBSTRAIT-CAPABILITY-ADMISSION.yaml)

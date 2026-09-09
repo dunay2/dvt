@@ -4219,6 +4219,7 @@ CREATE VIEW planning_query_store.command_query_rail_query AS
             rail_1.raw_manifest,
             rail_1.rail_source,
             rail_1.imported_at,
+            (rail_1.raw_rail @> '{"referenceOnly": true}'::jsonb) AS is_reference,
             ((((rail_1.rail_type || ':'::text) || rail_1.normalized_rail_name) || ':'::text) || COALESCE(NULLIF(rail_1.ddd_owner, ''::text), '-'::text)) AS canonical_declaration_key,
                 CASE
                     WHEN (rail_1.source_path ~~ 'docs/archive/%'::text) THEN 5
@@ -4233,8 +4234,8 @@ CREATE VIEW planning_query_store.command_query_rail_query AS
         ), rail_group AS (
          SELECT manifest_rails.rail_type,
             manifest_rails.normalized_rail_name,
-            bool_or(((lower(COALESCE(manifest_rails.rail_status, ''::text)) <> ALL (ARRAY['deprecated'::text, 'retired'::text])) AND (NOT manifest_rails.is_gap))) AS has_active_non_gap,
-            bool_or(((manifest_rails.rail_source = 'local'::text) AND (lower(COALESCE(manifest_rails.rail_status, ''::text)) <> ALL (ARRAY['deprecated'::text, 'retired'::text])) AND (NOT manifest_rails.is_gap))) AS has_active_local_non_gap
+            bool_or(((NOT manifest_rails.is_reference) AND (lower(COALESCE(manifest_rails.rail_status, ''::text)) <> ALL (ARRAY['deprecated'::text, 'retired'::text])) AND (NOT manifest_rails.is_gap))) AS has_active_non_gap,
+            bool_or(((NOT manifest_rails.is_reference) AND (manifest_rails.rail_source = 'local'::text) AND (lower(COALESCE(manifest_rails.rail_status, ''::text)) <> ALL (ARRAY['deprecated'::text, 'retired'::text])) AND (NOT manifest_rails.is_gap))) AS has_active_local_non_gap
            FROM manifest_rails
           GROUP BY manifest_rails.rail_type, manifest_rails.normalized_rail_name
         ), reference_rollup AS MATERIALIZED (
@@ -4245,7 +4246,7 @@ CREATE VIEW planning_query_store.command_query_rail_query AS
                 CASE
                     WHEN (rail_1.rail_source = 'local'::text) THEN rail_1.canonical_declaration_key
                     ELSE ((rail_1.canonical_declaration_key || ':'::text) || rail_1.rail_id)
-                END) FILTER (WHERE ((rail_1.authority_priority <= 2) AND (lower(COALESCE(rail_1.rail_status, ''::text)) <> ALL (ARRAY['deprecated'::text, 'retired'::text])) AND (NOT (rail_group.has_active_non_gap AND rail_1.is_gap)) AND (NOT (rail_group.has_active_local_non_gap AND (rail_1.rail_source <> 'local'::text))))))::integer AS canonical_candidate_count,
+                END) FILTER (WHERE ((NOT rail_1.is_reference) AND (rail_1.authority_priority <= 2) AND (lower(COALESCE(rail_1.rail_status, ''::text)) <> ALL (ARRAY['deprecated'::text, 'retired'::text])) AND (NOT (rail_group.has_active_non_gap AND rail_1.is_gap)) AND (NOT (rail_group.has_active_local_non_gap AND (rail_1.rail_source <> 'local'::text))))))::integer AS canonical_candidate_count,
             jsonb_agg(DISTINCT rail_1.feature_id ORDER BY rail_1.feature_id) AS related_feature_ids,
             jsonb_agg(DISTINCT rail_1.source_path ORDER BY rail_1.source_path) AS related_source_paths
            FROM (manifest_rails rail_1
@@ -4295,6 +4296,7 @@ CREATE VIEW planning_query_store.command_query_rail_query AS
                 END, rail_1.is_gap, rail_1.authority_priority, rail_1.implementation_ref_count DESC, rail_1.documentation_ref_count DESC, rail_1.imported_at DESC, rail_1.rail_id) AS canonical_rank
            FROM (manifest_rails rail_1
              JOIN rail_group ON (((rail_group.rail_type = rail_1.rail_type) AND (rail_group.normalized_rail_name = rail_1.normalized_rail_name))))
+          WHERE (NOT rail_1.is_reference)
         )
  SELECT rail.rail_id,
     rail.feature_id,

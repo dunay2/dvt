@@ -54,6 +54,33 @@ describe('Canvas DVT PostgreSQL connection authority', () => {
     expect(resolveEffectiveDvtConnectionRef(imported)).toEqual(connectionA);
   });
 
+  it('preserves one imported authority when editing source metadata', () => {
+    const imported = node({
+      metadata: {
+        ...node().metadata,
+        connectedSourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: connectionA,
+          sourceObjectId: 'relation/analytics/raw/orders',
+        },
+      },
+    });
+    const draft = createDvtNodeAuthoringMetadata(imported);
+    expect(draft?.kind).toBe('source');
+    if (draft?.kind !== 'source') {
+      throw new Error('Expected a DVT source draft.');
+    }
+
+    const updated = applyDvtNodeAuthoringMetadata(imported, {
+      ...draft,
+      alias: 'orders_curated',
+    });
+
+    expect(updated.metadata?.connectedSourceRef).toEqual(imported.metadata?.connectedSourceRef);
+    expect(updated.metadata).not.toHaveProperty('connectionRef');
+    expect(resolveEffectiveDvtConnectionRef(updated)).toEqual(connectionA);
+  });
+
   it('fails closed when a source persists both authorities', () => {
     const conflicting = node({
       metadata: {

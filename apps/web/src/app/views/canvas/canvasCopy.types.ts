@@ -625,6 +625,9 @@ export type CanvasViewCopy = {
   readonly dbtFlowGuideTestSeverityUnknownLabel: string;
   readonly dbtFlowGuideColumnsMissingMessage: string;
   readonly inspectorErrorNodeNameRequired: string;
+  readonly inspectorErrorNodeNameTooLong: string;
+  readonly inspectorErrorNodeDescriptionTooLong: string;
+  readonly inspectorErrorNodeTagsInvalid: string;
   readonly inspectorErrorDbtPackageRequired: string;
   readonly inspectorErrorDbtSourceRequired: string;
   readonly inspectorErrorDbtSchemaRequired: string;
@@ -638,6 +641,8 @@ export type CanvasViewCopy = {
   readonly inspectorErrorDvtSchemaRequired: string;
   readonly inspectorErrorDvtTableRequired: string;
   readonly inspectorErrorDvtAliasRequired: string;
+  readonly inspectorErrorDvtIdentifierTooLong: string;
+  readonly inspectorErrorDvtIdentifierWhitespace: string;
   readonly inspectorErrorDvtConnectionRequired: string;
   readonly inspectorErrorDvtVisualRecipeInvalid: string;
   readonly inspectorErrorDvtMaterializationInvalid: string;

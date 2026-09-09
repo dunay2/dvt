@@ -16,3 +16,14 @@ export * from './contracts/planner/DvtSubstraitSemanticDocument.v1.js';
 export * from './contracts/planner/DvtSubstraitCapabilityCatalog.v1.js';
 export * from './contracts/planner/DvtSubstraitCapabilityAdmission.v1.js';
 export * from './contracts/planner/DvtSubstraitAuthoringIdentity.js';
+export {
+  CANVAS_AUTHORING_FIELD_LIMITS_V1,
+  CanvasDescriptionV1Schema,
+  CanvasHumanNameV1Schema,
+  DvtStringLiteralV1Schema,
+  DvtTimestampLiteralV1Schema,
+  PostgresIdentifierV1Schema,
+  countUnicodeCodePoints,
+  countUtf8Bytes,
+  isWellFormedCanvasText,
+} from './contracts/planner/CanvasAuthoringFieldPolicy.v1.js';

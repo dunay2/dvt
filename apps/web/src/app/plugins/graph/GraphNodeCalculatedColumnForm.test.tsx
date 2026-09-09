@@ -126,4 +126,54 @@ describe('GraphNodeCalculatedColumnForm', () => {
     });
     expect(document.querySelector('[data-slot="graph-node-calculated-column-form"]')).toBeNull();
   });
+
+  it('keeps policy-invalid output data visible and blocks submission', () => {
+    const onSubmit = vi.fn();
+    act(() => {
+      root.render(
+        <GraphNodeCalculatedColumnForm
+          nodeId="orders"
+          columns={[{ id: 'output:customer', name: 'customer', type: 'text' }]}
+          onSubmit={onSubmit}
+        />
+      );
+    });
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>(
+          '[data-slot="graph-node-calculated-column-trigger"]'
+        )!
+      );
+    });
+    const surface = document.querySelector<HTMLElement>(
+      '[data-slot="graph-node-calculated-column-form"]'
+    )!;
+    const form = surface.querySelector('form')!;
+    const alias = form.elements.namedItem('alias') as HTMLInputElement;
+    act(() => {
+      fireEvent.input(alias, { target: { value: '   ' } });
+    });
+    expect(alias.value).toBe('   ');
+    expect(alias.getAttribute('aria-invalid')).toBe('true');
+    expect(surface.querySelector('[role="alert"]')?.textContent).toContain(
+      'without outer whitespace'
+    );
+    expect(surface.querySelector<HTMLButtonElement>('button[type="submit"]')?.disabled).toBe(true);
+
+    act(() => {
+      fireEvent.input(alias, { target: { value: 'x'.repeat(63).concat(' ') } });
+      fireEvent.submit(form);
+    });
+
+    expect(alias.value).toBe('x'.repeat(63).concat(' '));
+    expect(alias.getAttribute('aria-invalid')).toBe('true');
+    const alert = surface.querySelector<HTMLElement>('[role="alert"]');
+    expect(alias.getAttribute('aria-describedby')).toBe(alert?.id);
+    expect(alert?.textContent).toContain('63 UTF-8 bytes');
+    expect(surface.querySelector<HTMLButtonElement>('button[type="submit"]')?.disabled).toBe(true);
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(
+      document.querySelector('[data-slot="graph-node-calculated-column-form"]')
+    ).not.toBeNull();
+  });
 });

@@ -597,6 +597,14 @@ function validateCommandQueryRails(manifest, sourcePath, errors) {
     pushMissingObjectField(errors, owner, 'name', rail?.name);
     pushMissingObjectField(errors, owner, 'dddOwner', rail?.dddOwner);
 
+    if (rail?.referenceOnly !== undefined && rail.referenceOnly !== true) {
+      errors.push(`${owner} referenceOnly must be true when declared.`);
+    }
+
+    if (rail?.referenceOnly === true) {
+      pushMissingObjectField(errors, owner, 'authorityRef', rail.authorityRef);
+    }
+
     if (!allowedRailTypes.has(rail?.type)) {
       errors.push(
         `${owner} has invalid type ${rail?.type || '<missing>'}; expected command or query.`

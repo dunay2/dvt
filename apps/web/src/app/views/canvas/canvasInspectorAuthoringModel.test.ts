@@ -1,3 +1,4 @@
+import { CANVAS_AUTHORING_FIELD_LIMITS_V1 } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -847,5 +848,97 @@ describe('canvasInspectorAuthoringModel', () => {
         storageUri: 'object_file_storage_uri_invalid',
       }),
     });
+  });
+
+  it('applies the shared Canvas field policy without truncating invalid drafts', () => {
+    const initial = createCanvasInspectorNodeDraft(buildNode());
+    const base = {
+      ...initial,
+      dvt: {
+        ...initial.dvt!,
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1' as const,
+          connectionId: 'warehouse-main',
+          provider: 'postgres',
+        },
+      },
+    };
+    const limits = CANVAS_AUTHORING_FIELD_LIMITS_V1;
+    expect(
+      validateCanvasInspectorNodeDraft({ ...base, name: '😀'.repeat(limits.humanNameCodePoints) })
+    ).toEqual({});
+    expect(
+      validateCanvasInspectorNodeDraft({
+        ...base,
+        name: '😀'.repeat(limits.humanNameCodePoints + 1),
+      })
+    ).toEqual({ name: 'node_name_too_long' });
+    expect(
+      validateCanvasInspectorNodeDraft({
+        ...base,
+        description: 'x'.repeat(limits.descriptionCodePoints + 1),
+      })
+    ).toEqual({ description: 'node_description_too_long' });
+    expect(
+      validateCanvasInspectorNodeDraft({
+        ...base,
+        tags: ['😀'.repeat(limits.tagCodePoints + 1)],
+      })
+    ).toEqual({ tags: 'node_tags_invalid' });
+    expect(
+      validateCanvasInspectorNodeDraft({
+        ...base,
+        tags: Array.from({ length: limits.tagsPerNode + 1 }, (_, index) => `tag_${index}`),
+      })
+    ).toEqual({ tags: 'node_tags_invalid' });
+  });
+
+  it('rejects Source and Sink PostgreSQL identifiers above 63 UTF-8 bytes', () => {
+    const tooLong = 'ñ'.repeat(32);
+    const source = createCanvasInspectorNodeDraft(buildDvtNode('dvt:source'));
+    if (source.dvt?.kind !== 'source') throw new Error('Expected Source draft.');
+    expect(
+      validateCanvasInspectorNodeDraft({
+        ...source,
+        dvt: { ...source.dvt, alias: tooLong },
+      }).dvt
+    ).toMatchObject({ alias: 'dvt_identifier_too_long' });
+
+    const sink = createCanvasInspectorNodeDraft(buildDvtNode('dvt:sink'));
+    if (sink.dvt?.kind !== 'sink') throw new Error('Expected Sink draft.');
+    expect(
+      validateCanvasInspectorNodeDraft({
+        ...sink,
+        dvt: { ...sink.dvt, schema: tooLong, table: tooLong },
+      }).dvt
+    ).toMatchObject({
+      schema: 'dvt_identifier_too_long',
+      table: 'dvt_identifier_too_long',
+    });
+  });
+
+  it('retains and rejects Source identifiers with exterior whitespace', () => {
+    const node = buildDvtNode('dvt:source');
+    const draft = createCanvasInspectorNodeDraft(node);
+    if (draft.dvt?.kind !== 'source') throw new Error('Expected Source draft.');
+
+    const invalidDraft = {
+      ...draft,
+      dvt: {
+        ...draft.dvt,
+        schema: ' Sales ',
+        table: ' Orders 2026 ',
+        alias: ' Order Alias ',
+      },
+    };
+
+    expect(validateCanvasInspectorNodeDraft(invalidDraft).dvt).toEqual({
+      schema: 'dvt_identifier_whitespace',
+      table: 'dvt_identifier_whitespace',
+      alias: 'dvt_identifier_whitespace',
+      connectionRef: 'dvt_connection_required',
+    });
+    expect(invalidDraft.dvt.schema).toBe(' Sales ');
+    expect(applyCanvasInspectorNodeDraft(node, invalidDraft)).toEqual(node);
   });
 });

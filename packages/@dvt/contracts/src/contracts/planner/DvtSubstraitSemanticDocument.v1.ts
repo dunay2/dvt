@@ -14,6 +14,12 @@ import {
   type ConnectedSourceRef,
 } from '../source-import/ConnectedSourceRef.v1.js';
 
+import {
+  CanvasDescriptionV1Schema,
+  CanvasHumanNameV1Schema,
+  DvtStringLiteralV1Schema,
+  PostgresIdentifierV1Schema,
+} from './CanvasAuthoringFieldPolicy.v1.js';
 import { validateDvtSubstraitFieldHierarchyV1 } from './DvtSubstraitFieldBindingHierarchy.v1.js';
 import { decodeDvtSubstraitPlanV1 } from './DvtSubstraitPlanBinary.v1.js';
 import {
@@ -60,7 +66,7 @@ export const DvtSubstraitRelationBindingV1Schema = z
     relationId: NonBlankStringSchema,
     relAnchor: z.number().int().positive().max(0xffffffff),
     sourceRef: ConnectedSourceRefSchema.optional(),
-    displayName: NonBlankStringSchema.optional(),
+    displayName: CanvasHumanNameV1Schema.optional(),
   })
   .strict();
 
@@ -72,8 +78,8 @@ export const DvtSubstraitFieldBindingV1Schema = z
     sourceFieldId: NonBlankStringSchema.optional(),
     operandFieldIds: z.array(NonBlankStringSchema).min(2).optional(),
     outputOrdinal: z.number().int().nonnegative(),
-    displayName: NonBlankStringSchema.optional(),
-    description: NonBlankStringSchema.optional(),
+    displayName: PostgresIdentifierV1Schema.optional(),
+    description: CanvasDescriptionV1Schema.optional(),
   })
   .strict();
 
@@ -116,6 +122,60 @@ export const DvtSubstraitAuthoringSidecarV1Schema = z
     });
   });
 
+function addDvtSubstraitPlanFieldPolicyIssues(plan: unknown, context: z.RefinementCtx): void {
+  const visited = new Set<object>();
+  const visit = (value: unknown): void => {
+    if (value === null || typeof value !== 'object' || visited.has(value)) return;
+    visited.add(value);
+    if (Array.isArray(value)) {
+      value.forEach(visit);
+      return;
+    }
+    const record = value as Record<string, unknown>;
+    const relType = record['relType'];
+    if (relType !== null && typeof relType === 'object') {
+      const relation = relType as Record<string, unknown>;
+      const root = relation['case'] === 'root' ? relation['value'] : undefined;
+      if (root !== null && typeof root === 'object') {
+        const names = (root as Record<string, unknown>)['names'];
+        if (Array.isArray(names)) {
+          names.forEach((name, index) => {
+            if (!PostgresIdentifierV1Schema.safeParse(name).success) {
+              context.addIssue({
+                code: 'custom',
+                message: 'Substrait root output name violates the PostgreSQL identifier policy.',
+                path: ['semanticPlan', 'bytesBase64', 'rootNames', index],
+              });
+            }
+          });
+        }
+      }
+    }
+    const rexType = record['rexType'];
+    if (rexType !== null && typeof rexType === 'object') {
+      const expression = rexType as Record<string, unknown>;
+      const literal = expression['case'] === 'literal' ? expression['value'] : undefined;
+      if (literal !== null && typeof literal === 'object') {
+        const literalType = (literal as Record<string, unknown>)['literalType'];
+        if (literalType !== null && typeof literalType === 'object') {
+          const candidate = literalType as Record<string, unknown>;
+          if (
+            candidate['case'] === 'string' &&
+            !DvtStringLiteralV1Schema.safeParse(candidate['value']).success
+          ) {
+            context.addIssue({
+              code: 'custom',
+              message: 'Substrait string literal violates the DVT literal policy.',
+              path: ['semanticPlan', 'bytesBase64', 'stringLiteral'],
+            });
+          }
+        }
+      }
+    }
+    Object.values(record).forEach(visit);
+  };
+  visit(plan);
+}
 export const DvtSubstraitSemanticDocumentV1Schema = z
   .object({
     schemaVersion: z.literal(DVT_SUBSTRAIT_SEMANTIC_DOCUMENT_SCHEMA_VERSION),
@@ -133,7 +193,7 @@ export const DvtSubstraitSemanticDocumentV1Schema = z
       });
     }
     try {
-      decodeDvtSubstraitPlanV1(document);
+      addDvtSubstraitPlanFieldPolicyIssues(decodeDvtSubstraitPlanV1(document), context);
     } catch {
       context.addIssue({
         code: 'custom',

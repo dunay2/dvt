@@ -175,4 +175,39 @@ describe('GraphNodeColumnSection structured composition', () => {
       parentName: 'identity',
     });
   });
+
+  it('keeps an oversized structured-field name visible and blocks Apply', async () => {
+    const onApply = vi.fn();
+    const rows = await render(onApply);
+    await act(async () => {
+      fireEvent.keyDown(rows[1]!, { key: 'ArrowLeft', altKey: true });
+    });
+    await act(async () => {
+      fireEvent.click(
+        document.body.querySelector('[data-slot="graph-node-column-composition-structured-field"]')!
+      );
+    });
+    const input = document.body.querySelector<HTMLInputElement>(
+      '[data-slot="graph-node-structured-field-name"]'
+    )!;
+    await act(async () => {
+      fireEvent.change(input, { target: { value: '   ' } });
+    });
+    expect(input.value).toBe('   ');
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    expect(document.body.querySelector('[role="alert"]')?.textContent).toContain(
+      'sin espacios exteriores'
+    );
+
+    const invalidName = 'x'.repeat(63).concat(' ');
+    await act(async () => {
+      fireEvent.change(input, { target: { value: invalidName } });
+      fireEvent.submit(input.closest('form')!);
+    });
+
+    expect(input.value).toBe(invalidName);
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    expect(document.body.querySelector('[role="alert"]')?.textContent).toContain('63 bytes UTF-8');
+    expect(onApply).not.toHaveBeenCalled();
+  });
 });

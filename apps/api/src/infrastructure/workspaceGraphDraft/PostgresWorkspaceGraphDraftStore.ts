@@ -1,4 +1,4 @@
-import type { WorkspaceGraphDraftScope } from '@dvt/contracts';
+import { CANVAS_AUTHORING_FIELD_LIMITS_V1, type WorkspaceGraphDraftScope } from '@dvt/contracts';
 import type { Pool, PoolClient, QueryConfig, QueryResultRow } from 'pg';
 
 import { serializeCanvasAuthoringAuthorityKey } from '../../application/ports/canvasAuthoringAuthority.js';
@@ -72,6 +72,269 @@ export class PostgresWorkspaceGraphDraftStore implements IWorkspaceGraphDraftSto
         updated_at TIMESTAMPTZ NOT NULL,
         PRIMARY KEY (tenant_id, project_id, environment_id, idempotency_key)
       );
+    `);
+
+    await this.installFieldBudgetConstraint();
+  }
+
+  private async installFieldBudgetConstraint(): Promise<void> {
+    const schema = quoteIdentifier(this.config.schema);
+    const limits = CANVAS_AUTHORING_FIELD_LIMITS_V1;
+    await this.config.pool.query(`
+      CREATE OR REPLACE FUNCTION ${schema}.workspace_graph_draft_trim(
+        input_value TEXT
+      ) RETURNS TEXT
+      LANGUAGE sql
+      IMMUTABLE
+      PARALLEL SAFE
+      AS $field_trim$
+        SELECT btrim(
+          input_value,
+          chr(9) || chr(10) || chr(11) || chr(12) || chr(13) || chr(32) ||
+          chr(160) || chr(5760) || chr(8192) || chr(8193) || chr(8194) ||
+          chr(8195) || chr(8196) || chr(8197) || chr(8198) || chr(8199) ||
+          chr(8200) || chr(8201) || chr(8202) || chr(8232) || chr(8233) ||
+          chr(8239) || chr(8287) || chr(12288) || chr(65279)
+        )
+      $field_trim$;
+    `);
+    await this.config.pool.query(`
+      CREATE OR REPLACE FUNCTION ${schema}.workspace_graph_draft_fields_within_budget(
+        input_draft JSONB
+      ) RETURNS BOOLEAN
+      LANGUAGE plpgsql
+      IMMUTABLE
+      PARALLEL SAFE
+      AS $field_budget$
+      DECLARE
+        node_item JSONB;
+        tag_item JSONB;
+        config_item JSONB;
+        sidecar_item JSONB;
+        binding_item JSONB;
+        workspace_item JSONB;
+        field_key TEXT;
+      BEGIN
+        IF jsonb_typeof(input_draft) <> 'object'
+          OR jsonb_typeof(input_draft #> '{canvas,title}') <> 'string'
+          OR ${schema}.workspace_graph_draft_trim(input_draft #>> '{canvas,title}') = ''
+          OR ${schema}.workspace_graph_draft_trim(input_draft #>> '{canvas,title}') <> input_draft #>> '{canvas,title}'
+          OR char_length(input_draft #>> '{canvas,title}') > ${limits.humanNameCodePoints}
+        THEN
+          RETURN FALSE;
+        END IF;
+
+        FOR workspace_item IN
+          SELECT value FROM jsonb_array_elements(
+            CASE WHEN jsonb_typeof(input_draft -> 'canvases') = 'array'
+              THEN input_draft -> 'canvases' ELSE '[]'::jsonb END
+          )
+        LOOP
+          IF jsonb_typeof(workspace_item #> '{canvas,title}') <> 'string'
+            OR ${schema}.workspace_graph_draft_trim(workspace_item #>> '{canvas,title}') = ''
+            OR ${schema}.workspace_graph_draft_trim(workspace_item #>> '{canvas,title}') <> workspace_item #>> '{canvas,title}'
+            OR char_length(workspace_item #>> '{canvas,title}') > ${limits.humanNameCodePoints}
+          THEN RETURN FALSE;
+          END IF;
+        END LOOP;
+
+        FOR node_item IN
+          SELECT root_node.value
+          FROM jsonb_array_elements(
+            CASE WHEN jsonb_typeof(input_draft -> 'nodes') = 'array'
+              THEN input_draft -> 'nodes' ELSE '[]'::jsonb END
+          ) AS root_node
+          UNION ALL
+          SELECT nested_node.value
+          FROM jsonb_array_elements(
+            CASE WHEN jsonb_typeof(input_draft -> 'canvases') = 'array'
+              THEN input_draft -> 'canvases' ELSE '[]'::jsonb END
+          ) AS canvas_workspace
+          CROSS JOIN LATERAL jsonb_array_elements(
+            CASE WHEN jsonb_typeof(canvas_workspace.value -> 'nodes') = 'array'
+              THEN canvas_workspace.value -> 'nodes' ELSE '[]'::jsonb END
+          ) AS nested_node
+        LOOP
+          IF jsonb_typeof(node_item) <> 'object'
+            OR jsonb_typeof(node_item -> 'name') <> 'string'
+            OR ${schema}.workspace_graph_draft_trim(node_item ->> 'name') = ''
+            OR ${schema}.workspace_graph_draft_trim(node_item ->> 'name') <> node_item ->> 'name'
+            OR char_length(node_item ->> 'name') > ${limits.humanNameCodePoints}
+            OR jsonb_typeof(node_item -> 'tags') <> 'array'
+            OR jsonb_array_length(node_item -> 'tags') > ${limits.tagsPerNode}
+          THEN RETURN FALSE;
+          END IF;
+
+          IF node_item ? 'description'
+            AND node_item -> 'description' <> 'null'::jsonb
+            AND (jsonb_typeof(node_item -> 'description') <> 'string'
+              OR ${schema}.workspace_graph_draft_trim(node_item ->> 'description') = ''
+              OR char_length(node_item ->> 'description') > ${limits.descriptionCodePoints})
+          THEN RETURN FALSE;
+          END IF;
+
+          FOR tag_item IN SELECT value FROM jsonb_array_elements(node_item -> 'tags')
+          LOOP
+            IF jsonb_typeof(tag_item) <> 'string'
+              OR ${schema}.workspace_graph_draft_trim(tag_item #>> '{}') = ''
+              OR ${schema}.workspace_graph_draft_trim(tag_item #>> '{}') <> tag_item #>> '{}'
+              OR char_length(tag_item #>> '{}') > ${limits.tagCodePoints}
+            THEN RETURN FALSE;
+            END IF;
+          END LOOP;
+
+          IF (
+            SELECT count(*) <> count(DISTINCT ${schema}.workspace_graph_draft_trim(value #>> '{}'))
+            FROM jsonb_array_elements(node_item -> 'tags')
+          ) THEN RETURN FALSE;
+          END IF;
+
+          IF (
+              node_item ->> 'pluginId' IN ('dvt', 'dvt.warehouse-source')
+              AND node_item ->> 'kind' = 'dvt:source'
+            )
+            OR (
+              node_item ->> 'pluginId' = 'dvt'
+              AND node_item ->> 'kind' = 'dvt:sink'
+            )
+          THEN
+            config_item := node_item #> '{metadata,config}';
+            IF config_item IS NOT NULL AND jsonb_typeof(config_item) <> 'object'
+            THEN RETURN FALSE;
+            END IF;
+            IF jsonb_typeof(config_item) = 'object' THEN
+              FOREACH field_key IN ARRAY ARRAY['schema', 'table']
+              LOOP
+                IF config_item ? field_key
+                  AND (jsonb_typeof(config_item -> field_key) <> 'string'
+                    OR ${schema}.workspace_graph_draft_trim(config_item ->> field_key) = ''
+                    OR ${schema}.workspace_graph_draft_trim(config_item ->> field_key) <>
+                      config_item ->> field_key
+                    OR octet_length(config_item ->> field_key) >
+                      ${limits.postgresIdentifierUtf8Bytes})
+                THEN RETURN FALSE;
+                END IF;
+              END LOOP;
+              IF node_item ->> 'kind' = 'dvt:source'
+                AND config_item ? 'alias'
+                AND (jsonb_typeof(config_item -> 'alias') <> 'string'
+                  OR ${schema}.workspace_graph_draft_trim(config_item ->> 'alias') = ''
+                  OR ${schema}.workspace_graph_draft_trim(config_item ->> 'alias') <>
+                    config_item ->> 'alias'
+                  OR octet_length(config_item ->> 'alias') >
+                    ${limits.postgresIdentifierUtf8Bytes})
+              THEN RETURN FALSE;
+              END IF;
+            END IF;
+            IF node_item ->> 'kind' = 'dvt:sink' THEN
+              IF config_item ? 'materialization'
+                AND (jsonb_typeof(config_item -> 'materialization') <> 'string'
+                  OR config_item ->> 'materialization' NOT IN ('table', 'view'))
+              THEN RETURN FALSE;
+              END IF;
+              IF config_item ? 'writeMode'
+                AND (jsonb_typeof(config_item -> 'writeMode') <> 'string'
+                  OR config_item ->> 'writeMode' NOT IN ('replace', 'append'))
+              THEN RETURN FALSE;
+              END IF;
+            END IF;
+          END IF;
+
+          IF node_item ->> 'pluginId' = 'dvt'
+            AND node_item ->> 'kind' = 'dvt:transform'
+          THEN
+            config_item := node_item #> '{metadata,config}';
+            IF config_item IS NOT NULL AND jsonb_typeof(config_item) <> 'object'
+            THEN RETURN FALSE;
+            END IF;
+            IF config_item #> '{materialized}' IS NOT NULL
+              AND (jsonb_typeof(config_item #> '{materialized}') <> 'string'
+                OR config_item #>> '{materialized}' NOT IN ('table', 'view'))
+            THEN RETURN FALSE;
+            END IF;
+          END IF;
+
+          IF node_item ->> 'pluginId' IN ('dvt', 'dvt.warehouse-source')
+            AND node_item ->> 'kind' = 'dvt:source'
+          THEN
+            FOREACH field_key IN ARRAY ARRAY['schema', 'tableName', 'sourceName']
+            LOOP
+              IF node_item #> ARRAY['metadata', field_key] IS NOT NULL
+                AND (jsonb_typeof(node_item #> ARRAY['metadata', field_key]) <> 'string'
+                  OR ${schema}.workspace_graph_draft_trim(node_item #>> ARRAY['metadata', field_key]) = ''
+                  OR ${schema}.workspace_graph_draft_trim(node_item #>> ARRAY['metadata', field_key]) <>
+                    node_item #>> ARRAY['metadata', field_key]
+                  OR octet_length(node_item #>> ARRAY['metadata', field_key]) >
+                    ${limits.postgresIdentifierUtf8Bytes})
+              THEN RETURN FALSE;
+              END IF;
+            END LOOP;
+          END IF;
+
+          IF node_item ->> 'kind' = 'dvt:transform' THEN
+            sidecar_item := node_item #> '{metadata,transformAuthoring,semanticDocument,sidecar}';
+            IF jsonb_typeof(sidecar_item) = 'object' THEN
+            FOR binding_item IN SELECT value FROM jsonb_array_elements(
+              CASE WHEN jsonb_typeof(sidecar_item -> 'relations') = 'array'
+                THEN sidecar_item -> 'relations' ELSE '[]'::jsonb END
+            )
+            LOOP
+              IF binding_item ? 'displayName'
+                AND (jsonb_typeof(binding_item -> 'displayName') <> 'string'
+                  OR ${schema}.workspace_graph_draft_trim(binding_item ->> 'displayName') = ''
+                  OR ${schema}.workspace_graph_draft_trim(binding_item ->> 'displayName') <> binding_item ->> 'displayName'
+                  OR char_length(binding_item ->> 'displayName') >
+                    ${limits.humanNameCodePoints})
+              THEN RETURN FALSE;
+              END IF;
+            END LOOP;
+            FOR binding_item IN SELECT value FROM jsonb_array_elements(
+              CASE WHEN jsonb_typeof(sidecar_item -> 'fields') = 'array'
+                THEN sidecar_item -> 'fields' ELSE '[]'::jsonb END
+            )
+            LOOP
+              IF binding_item ? 'displayName'
+                AND (jsonb_typeof(binding_item -> 'displayName') <> 'string'
+                  OR ${schema}.workspace_graph_draft_trim(binding_item ->> 'displayName') = ''
+                  OR ${schema}.workspace_graph_draft_trim(binding_item ->> 'displayName') <>
+                    binding_item ->> 'displayName'
+                  OR octet_length(binding_item ->> 'displayName') >
+                    ${limits.postgresIdentifierUtf8Bytes})
+              THEN RETURN FALSE;
+              END IF;
+              IF binding_item ? 'description'
+                AND (jsonb_typeof(binding_item -> 'description') <> 'string'
+                  OR ${schema}.workspace_graph_draft_trim(binding_item ->> 'description') = ''
+                  OR char_length(binding_item ->> 'description') >
+                    ${limits.descriptionCodePoints})
+              THEN RETURN FALSE;
+              END IF;
+            END LOOP;
+            END IF;
+          END IF;
+        END LOOP;
+        RETURN TRUE;
+      EXCEPTION WHEN OTHERS THEN
+        RETURN FALSE;
+      END;
+      $field_budget$;
+    `);
+
+    await this.config.pool.query(`
+      DO $constraint$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint
+          WHERE conname = 'workspace_graph_drafts_field_budget_check'
+            AND conrelid = '${schema}.workspace_graph_drafts'::regclass
+        ) THEN
+          ALTER TABLE ${schema}.workspace_graph_drafts
+            ADD CONSTRAINT workspace_graph_drafts_field_budget_check
+            CHECK (${schema}.workspace_graph_draft_fields_within_budget(draft_json))
+            NOT VALID;
+        END IF;
+      END;
+      $constraint$;
     `);
   }
 

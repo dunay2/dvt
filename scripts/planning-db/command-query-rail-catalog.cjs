@@ -112,6 +112,7 @@ function createCommandQueryRailCatalogComponent(deps = {}) {
         const featureId = normalizeText(manifest.featureId);
         const mechanizationStatus = normalizeText(manifest.mechanizationStatus);
         for (const [index, rail] of normalizeArray(manifest.commandQueryRails).entries()) {
+          const referenceOnly = rail?.referenceOnly === true;
           const rawRailName = normalizeText(rail?.name).trim();
           const railName = canonicalizeRailName(rawRailName);
           const railType = normalizeRailName(rail?.type);
@@ -134,7 +135,7 @@ function createCommandQueryRailCatalogComponent(deps = {}) {
             normalizedRailName,
             railType,
             dddOwner: normalizeText(rail?.dddOwner),
-            railStatus: normalizeRailStatus(rail?.status),
+            railStatus: referenceOnly ? 'referenced' : normalizeRailStatus(rail?.status),
             isGap: true,
             implementationRefCount: 0,
             symbolRefs: symbolReferencesForRail(manifest, railName),
@@ -162,6 +163,25 @@ function createCommandQueryRailCatalogComponent(deps = {}) {
     }
 
     return rails;
+  }
+
+  function assertManifestRailReferences(rails) {
+    for (const rail of rails.filter((candidate) => candidate.rawRail?.referenceOnly === true)) {
+      const authorityRef = toPosix(normalizeText(rail.rawRail?.authorityRef).trim());
+      const hasAuthority = rails.some(
+        (candidate) =>
+          candidate.rawRail?.referenceOnly !== true &&
+          candidate.sourcePath === authorityRef &&
+          candidate.railType === rail.railType &&
+          candidate.normalizedRailName === rail.normalizedRailName
+      );
+
+      if (!hasAuthority) {
+        throw new Error(
+          `Command/query rail reference ${rail.railType}:${rail.railName} from ${rail.sourcePath} does not resolve authority ${authorityRef || '<missing>'}.`
+        );
+      }
+    }
   }
 
   function resolveSnapshotInputs(options) {
@@ -197,6 +217,7 @@ function createCommandQueryRailCatalogComponent(deps = {}) {
       ...buildManifestRailRows(documents),
       ...extractDocumentedRailRows(referenceDocuments),
     ];
+    assertManifestRailReferences(rails);
     const sourceImplementationRefIndex = buildSourceImplementationRefIndex(sourceFiles, rails);
     const documentationRefIndex = buildDocumentationRefIndex(referenceDocuments, rails);
     const governanceImplementationRefIndex = buildGovernanceImplementationRefIndex(
@@ -220,6 +241,7 @@ function createCommandQueryRailCatalogComponent(deps = {}) {
   }
 
   return {
+    assertManifestRailReferences,
     buildCommandQueryRailSnapshot,
     buildManifestRailRows,
     cleanRailNameCandidate,

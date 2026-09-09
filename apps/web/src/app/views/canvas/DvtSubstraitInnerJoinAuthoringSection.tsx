@@ -1,5 +1,6 @@
 /** Owned concern: edit the admitted two-source Substrait INNER JOIN in Node Properties. */
-import type { Dispatch, ReactNode, SetStateAction } from 'react';
+import { PostgresIdentifierV1Schema } from '@dvt/contracts';
+import { useId, type Dispatch, type ReactNode, type SetStateAction } from 'react';
 
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
 import { Button } from '../../components/ui/button';
@@ -25,6 +26,7 @@ import {
   type DvtSubstraitJoinInput,
   type DvtSubstraitNInputJoinProjection,
 } from './canvasDvtSubstraitJoinComposition';
+import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
 import { canvasViewCopy } from './copy';
 
 export function DvtSubstraitInnerJoinAuthoringSection({
@@ -32,13 +34,55 @@ export function DvtSubstraitInnerJoinAuthoringSection({
   draft,
   appendCandidates,
   onChange,
+  outputNameDrafts,
 }: Readonly<{
   disabled: boolean;
   draft: DvtSubstraitTransformAuthoringMetadata;
   appendCandidates: readonly DvtSubstraitJoinInput[];
   onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
+  outputNameDrafts: Readonly<Record<string, string>>;
 }>): JSX.Element | null {
   const semanticDraft = { plan: draft.plan, sidecar: draft.sidecar };
+  const outputPolicyErrorId = useId();
+  const outputPolicyErrorIdFor = (key: string): string =>
+    `${outputPolicyErrorId}-${encodeURIComponent(key)}`;
+  const outputNameErrorFor = (key: string) => {
+    const value = outputNameDrafts[key];
+    if (value == null) return null;
+    if (value.trim().length === 0) return 'dvt_alias_required' as const;
+    if (value !== value.trim()) return 'dvt_identifier_whitespace' as const;
+    return PostgresIdentifierV1Schema.safeParse(value).success
+      ? null
+      : ('dvt_identifier_too_long' as const);
+  };
+  const invalidOutputNames = new Set(
+    Object.keys(outputNameDrafts).filter((key) => outputNameErrorFor(key) != null)
+  );
+  const updateOutputNameDraft = (key: string, value: string): void => {
+    onChange((current) => ({
+      ...current,
+      joinOutputNameDrafts: { ...current.joinOutputNameDrafts, [key]: value },
+    }));
+  };
+  const clearOutputNameDraft = (key: string): void => {
+    onChange((current) => {
+      const { [key]: _removed, ...remaining } = current.joinOutputNameDrafts ?? {};
+      const { joinOutputNameDrafts: _current, ...rest } = current;
+      return Object.keys(remaining).length > 0
+        ? { ...rest, joinOutputNameDrafts: remaining }
+        : rest;
+    });
+  };
+  const renameOutput = (key: string, value: string, apply: (name: string) => void): void => {
+    if (
+      value.trim().length === 0 ||
+      value !== value.trim() ||
+      !PostgresIdentifierV1Schema.safeParse(value).success
+    )
+      return;
+    apply(value);
+    clearOutputNameDraft(key);
+  };
   const mutateDraft = (
     transform: (current: DvtSubstraitInnerJoinDraft) => DvtSubstraitInnerJoinDraft
   ): void => {
@@ -64,6 +108,19 @@ export function DvtSubstraitInnerJoinAuthoringSection({
       <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>
         {canvasViewCopy.inspectorDvtSubstraitInnerJoinTitle}
       </h3>
+      {Object.keys(outputNameDrafts).map((key) => {
+        const error = outputNameErrorFor(key);
+        return error == null ? null : (
+          <p
+            key={key}
+            id={outputPolicyErrorIdFor(key)}
+            role="alert"
+            className={inspectorVisualClasses.inspectorErrorText}
+          >
+            {formatCanvasInspectorNodeDraftError(error, canvasViewCopy)}
+          </p>
+        );
+      })}
       {content}
     </div>
   );
@@ -407,6 +464,10 @@ export function DvtSubstraitInnerJoinAuthoringSection({
   ) {
     const projection = nInputInspection.projection;
     const mutateField = (edit: DvtSubstraitInnerJoinFieldEdit): void => {
+      if (edit.kind === 'set-selected' && !edit.selected) {
+        const key = 'sourceFieldId' in edit ? edit.sourceFieldId : edit.fieldKey;
+        if (key != null) clearOutputNameDraft(key);
+      }
       mutateDraft((current) => applyDvtSubstraitInnerJoinFieldEdit(current, edit));
     };
     return renderShell(
@@ -480,13 +541,24 @@ export function DvtSubstraitInnerJoinAuthoringSection({
                           data-source-field-id={field.fieldId}
                           aria-label={`${canvasViewCopy.inspectorDvtVisualOutputNameLabel}: ${fieldLabel}`}
                           disabled={disabled}
-                          defaultValue={output.name}
+                          value={outputNameDrafts[field.fieldId] ?? output.name}
+                          onChange={(event) =>
+                            updateOutputNameDraft(field.fieldId, event.currentTarget.value)
+                          }
+                          aria-invalid={invalidOutputNames.has(field.fieldId) ? 'true' : undefined}
+                          aria-describedby={
+                            invalidOutputNames.has(field.fieldId)
+                              ? outputPolicyErrorIdFor(field.fieldId)
+                              : undefined
+                          }
                           onBlur={(event) =>
-                            mutateField({
-                              kind: 'rename',
-                              sourceFieldId: field.fieldId,
-                              outputName: event.currentTarget.value,
-                            })
+                            renameOutput(field.fieldId, event.currentTarget.value, (outputName) =>
+                              mutateField({
+                                kind: 'rename',
+                                sourceFieldId: field.fieldId,
+                                outputName,
+                              })
+                            )
                           }
                         />
                       )}
@@ -547,6 +619,10 @@ export function DvtSubstraitInnerJoinAuthoringSection({
   if (!inspection.ok) return null;
   const { projection } = inspection;
   const mutateField = (edit: DvtSubstraitInnerJoinFieldEdit): void => {
+    if (edit.kind === 'set-selected' && !edit.selected) {
+      const key = 'sourceFieldId' in edit ? edit.sourceFieldId : edit.fieldKey;
+      if (key != null) clearOutputNameDraft(key);
+    }
     mutateDraft((current) => applyDvtSubstraitInnerJoinFieldEdit(current, edit));
   };
 
@@ -597,13 +673,24 @@ export function DvtSubstraitInnerJoinAuthoringSection({
                       data-field-key={fieldKey}
                       aria-label={`${canvasViewCopy.inspectorDvtVisualOutputNameLabel}: ${defaultName}`}
                       disabled={disabled}
-                      defaultValue={output.name}
+                      value={outputNameDrafts[fieldKey] ?? output.name}
+                      onChange={(event) =>
+                        updateOutputNameDraft(fieldKey, event.currentTarget.value)
+                      }
+                      aria-invalid={invalidOutputNames.has(fieldKey) ? 'true' : undefined}
+                      aria-describedby={
+                        invalidOutputNames.has(fieldKey)
+                          ? outputPolicyErrorIdFor(fieldKey)
+                          : undefined
+                      }
                       onBlur={(event) =>
-                        mutateField({
-                          kind: 'rename',
-                          fieldKey,
-                          outputName: event.currentTarget.value,
-                        })
+                        renameOutput(fieldKey, event.currentTarget.value, (outputName) =>
+                          mutateField({
+                            kind: 'rename',
+                            fieldKey,
+                            outputName,
+                          })
+                        )
                       }
                     />
                   )}

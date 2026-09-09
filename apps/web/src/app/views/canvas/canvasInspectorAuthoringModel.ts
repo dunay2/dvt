@@ -1,4 +1,11 @@
 /** Owned concern: derive, validate, and apply the route-owned Inspector DTO for governed node details. */
+import {
+  CanvasDescriptionV1Schema,
+  CanvasHumanNameV1Schema,
+  CanvasTagsV1Schema,
+  PostgresIdentifierV1Schema,
+} from '@dvt/contracts';
+
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
   applyDbtNodeAuthoringMetadata,
@@ -91,12 +98,40 @@ export function validateCanvasInspectorNodeDraft(
   draft: CanvasInspectorNodeDraft,
   context?: CanvasInspectorNodeDraftValidationContext
 ): CanvasInspectorNodeDraftErrors {
-  if (normalizeNodeName(draft.name).length === 0) {
+  const normalizedName = normalizeNodeName(draft.name);
+  if (normalizedName.length === 0) {
     return {
       name: 'node_name_required',
     };
   }
+  if (!CanvasHumanNameV1Schema.safeParse(normalizedName).success) {
+    return { name: 'node_name_too_long' };
+  }
 
+  const normalizedDescription = normalizeNodeDescription(draft.description);
+  if (
+    normalizedDescription != null &&
+    !CanvasDescriptionV1Schema.safeParse(normalizedDescription).success
+  ) {
+    return { description: 'node_description_too_long' };
+  }
+
+  const normalizedTags = Array.from(
+    new Set(draft.tags.map((tag) => tag.trim()).filter((tag) => tag.length > 0))
+  );
+  if (!CanvasTagsV1Schema.safeParse(normalizedTags).success) {
+    return { tags: 'node_tags_invalid' };
+  }
+  const joinOutputNameDrafts = Object.values(draft.joinOutputNameDrafts ?? {});
+  if (joinOutputNameDrafts.some((value) => value.trim().length === 0)) {
+    return { joinOutputNames: 'dvt_alias_required' };
+  }
+  if (joinOutputNameDrafts.some((value) => value !== value.trim())) {
+    return { joinOutputNames: 'dvt_identifier_whitespace' };
+  }
+  if (joinOutputNameDrafts.some((value) => !PostgresIdentifierV1Schema.safeParse(value).success)) {
+    return { joinOutputNames: 'dvt_identifier_too_long' };
+  }
   if (draft.dbt) {
     const dbtErrors: NonNullable<CanvasInspectorNodeDraftErrors['dbt']> = {};
     if (draft.dbt.packageName.trim().length === 0) {
@@ -229,6 +264,7 @@ export function hasCanvasInspectorNodeDraftChanges(
     JSON.stringify(originalDraft.dbt ?? null) !== JSON.stringify(draft.dbt ?? null) ||
     JSON.stringify(originalDraft.dbtTest ?? null) !== JSON.stringify(draft.dbtTest ?? null) ||
     JSON.stringify(originalDraft.dvt ?? null) !== JSON.stringify(draft.dvt ?? null) ||
+    Object.keys(draft.joinOutputNameDrafts ?? {}).length > 0 ||
     JSON.stringify(originalDraft.objectFilePostgres ?? null) !==
       JSON.stringify(draft.objectFilePostgres ?? null) ||
     JSON.stringify(originalDraft.httpJsonArtifact ?? null) !==

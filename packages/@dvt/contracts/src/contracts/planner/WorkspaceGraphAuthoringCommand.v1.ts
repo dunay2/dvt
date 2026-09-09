@@ -33,7 +33,8 @@ export type WorkspaceGraphAuthoringCommandType =
   (typeof WORKSPACE_GRAPH_AUTHORING_COMMAND_TYPE)[keyof typeof WORKSPACE_GRAPH_AUTHORING_COMMAND_TYPE];
 
 const NodeIdSchema = WorkspaceGraphAuthoringNodeSchema.shape.id;
-const NodePatchSchema = WorkspaceGraphAuthoringNodeSchema.omit({ id: true }).partial().strict();
+const { id: _nodeId, ...NodePatchShape } = WorkspaceGraphAuthoringNodeSchema.shape;
+const NodePatchSchema = z.object(NodePatchShape).partial().strict();
 
 export const WorkspaceGraphAuthoringCommandSchema = z.discriminatedUnion('type', [
   z

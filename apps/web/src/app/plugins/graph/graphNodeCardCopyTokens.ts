@@ -60,6 +60,7 @@ type GraphNodeCardCopy = Readonly<{
   columnFunctionAliasSubmitLabel: string;
   columnFunctionAliasCancelLabel: string;
   columnFunctionAliasConflictLabel: string;
+  columnFunctionAliasPolicyErrorLabel: string;
   addCalculatedColumnLabel: string;
   calculatedColumnKindLabel: string;
   calculatedColumnAliasLabel: string;
@@ -69,6 +70,9 @@ type GraphNodeCardCopy = Readonly<{
   calculatedColumnOrderLabel: string;
   calculatedColumnSubmitLabel: string;
   calculatedColumnCancelLabel: string;
+  calculatedColumnIdentifierPolicyError: string;
+  calculatedColumnLiteralPolicyError: string;
+  calculatedColumnTimestampPolicyError: string;
   calculatedColumnKindLabels: Readonly<
     Record<
       'field-ref' | 'string-literal' | 'timestamp-literal' | 'scalar-function' | 'row-number',
@@ -161,6 +165,8 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   columnFunctionAliasSubmitLabel: 'Create output',
   columnFunctionAliasCancelLabel: 'Cancel',
   columnFunctionAliasConflictLabel: 'Another column already uses this output name.',
+  columnFunctionAliasPolicyErrorLabel:
+    'Use a valid PostgreSQL identifier without outer whitespace and with at most 63 UTF-8 bytes.',
   addCalculatedColumnLabel: 'Add calculated column',
   calculatedColumnKindLabel: 'Value source',
   calculatedColumnAliasLabel: 'Output name',
@@ -170,6 +176,11 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   calculatedColumnOrderLabel: 'Order by',
   calculatedColumnSubmitLabel: 'Create column',
   calculatedColumnCancelLabel: 'Cancel',
+  calculatedColumnIdentifierPolicyError:
+    'Use a valid PostgreSQL identifier without outer whitespace and with at most 63 UTF-8 bytes.',
+  calculatedColumnLiteralPolicyError: 'Text values may contain at most 4096 UTF-8 bytes.',
+  calculatedColumnTimestampPolicyError:
+    'Use a canonical UTC timestamp such as 2026-09-08T12:00:00.000Z.',
   calculatedColumnKindLabels: {
     'field-ref': 'Alias column',
     'string-literal': 'Text value',
@@ -263,6 +274,8 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   columnFunctionAliasSubmitLabel: 'Crear salida',
   columnFunctionAliasCancelLabel: 'Cancelar',
   columnFunctionAliasConflictLabel: 'Otra columna ya utiliza este nombre de salida.',
+  columnFunctionAliasPolicyErrorLabel:
+    'Usa un identificador PostgreSQL válido, sin espacios exteriores y con 63 bytes UTF-8 como máximo.',
   addCalculatedColumnLabel: 'Añadir columna calculada',
   calculatedColumnKindLabel: 'Origen del valor',
   calculatedColumnAliasLabel: 'Nombre de salida',
@@ -272,6 +285,10 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   calculatedColumnOrderLabel: 'Ordenar por',
   calculatedColumnSubmitLabel: 'Crear columna',
   calculatedColumnCancelLabel: 'Cancelar',
+  calculatedColumnIdentifierPolicyError:
+    'Usa un identificador PostgreSQL válido, sin espacios exteriores y con 63 bytes UTF-8 como máximo.',
+  calculatedColumnLiteralPolicyError: 'Los valores de texto admiten 4096 bytes UTF-8 como máximo.',
+  calculatedColumnTimestampPolicyError: 'Usa una fecha UTC canonica como 2026-09-08T12:00:00.000Z.',
   calculatedColumnKindLabels: {
     'field-ref': 'Alias de columna',
     'string-literal': 'Valor de texto',

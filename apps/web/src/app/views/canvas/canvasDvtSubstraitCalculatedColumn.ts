@@ -1,7 +1,13 @@
 /** Owned concern: create one derived output in an admitted connected-source projection. */
 import { fromBinary, toBinary } from '@bufbuild/protobuf';
 import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
-import { allocateDvtFieldId } from '@dvt/contracts';
+import {
+  allocateDvtFieldId,
+  DvtStringLiteralV1Schema,
+  DvtTimestampLiteralV1Schema,
+  parseIsoUtcToEpochMs,
+  PostgresIdentifierV1Schema,
+} from '@dvt/contracts';
 
 import {
   buildDvtSubstraitCalculatedExpression,
@@ -49,10 +55,12 @@ function directCalculation(
     return { kind: 'string-literal', value: expression.value };
   }
   if (expression.kind === 'timestamp-literal') {
-    const milliseconds = Date.parse(expression.value);
-    return Number.isFinite(milliseconds)
-      ? { kind: 'timestamp-literal', value: new Date(milliseconds).toISOString() }
-      : null;
+    const timestamp = DvtTimestampLiteralV1Schema.safeParse(expression.value);
+    if (!timestamp.success) return null;
+    return {
+      kind: 'timestamp-literal',
+      value: new Date(parseIsoUtcToEpochMs(timestamp.data)).toISOString(),
+    };
   }
   return sourceOrdinal == null ? null : { kind: 'row-number', orderSourceOrdinal: sourceOrdinal };
 }
@@ -63,10 +71,11 @@ export function createDvtSubstraitProjectionOutput(
   context?: Readonly<{ inputDataTypes: readonly string[]; provider: string }>
 ): DvtSubstraitCreateOutputResult {
   const inspection = inspectDvtSubstraitProjectionDraft(draft);
-  const alias = request.alias.trim();
+  const alias = request.alias;
   if (
     !inspection.ok ||
-    alias.length === 0 ||
+    alias.trim().length === 0 ||
+    !PostgresIdentifierV1Schema.safeParse(alias).success ||
     inspection.projection.outputs.some((output) => output.name === alias) ||
     inspection.projection.inputFields.some((field) => field.name === alias)
   ) {
@@ -74,6 +83,12 @@ export function createDvtSubstraitProjectionOutput(
   }
 
   const expression = request.expression;
+  if (
+    expression.kind === 'string-literal' &&
+    !DvtStringLiteralV1Schema.safeParse(expression.value).success
+  ) {
+    return { outcome: 'rejected' };
+  }
   const operandFieldIds =
     expression.kind === 'scalar-function'
       ? expression.operandFieldIds

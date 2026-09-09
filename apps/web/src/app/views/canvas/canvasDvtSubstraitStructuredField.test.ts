@@ -168,6 +168,12 @@ describe('canonical Substrait structured Transform fields', () => {
         parentFieldId: 'output:identity',
         parentName: 'amount',
       },
+      {
+        draggedFieldId: 'output:customer',
+        targetFieldId: 'output:order_id',
+        parentFieldId: 'output:identity_copy',
+        parentName: ' identity_copy',
+      },
     ];
 
     invalidRequests.forEach((request) => {

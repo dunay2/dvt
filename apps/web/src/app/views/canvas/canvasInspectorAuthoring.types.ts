@@ -26,15 +26,19 @@ export type CanvasInspectorNodeDraft = Readonly<{
   dbt?: DbtNodeAuthoringMetadata;
   dbtTest?: DbtTestAuthoringMetadata;
   dvt?: DvtNodeAuthoringMetadata;
+  joinOutputNameDrafts?: Readonly<Record<string, string>>;
   objectFilePostgres?: ObjectFilePostgresAuthoringDraft;
   httpJsonArtifact?: HttpJsonArtifactAuthoringDraft;
 }>;
 
 export type CanvasInspectorNodeDraftErrors = Readonly<{
   name?: CanvasInspectorNodeDraftErrorCode;
+  description?: CanvasInspectorNodeDraftErrorCode;
+  tags?: CanvasInspectorNodeDraftErrorCode;
   dbt?: Partial<Record<keyof DbtNodeAuthoringMetadata, CanvasInspectorNodeDraftErrorCode>>;
   dbtTest?: DbtTestAuthoringMetadataErrors;
   dvt?: DvtNodeAuthoringMetadataErrors;
+  joinOutputNames?: CanvasInspectorNodeDraftErrorCode;
   objectFilePostgres?: ObjectFilePostgresAuthoringErrors;
   httpJsonArtifact?: HttpJsonArtifactAuthoringErrors;
 }>;

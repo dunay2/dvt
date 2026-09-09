@@ -3,6 +3,7 @@ import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSessio
 import {
   applyCanvasInspectorNodeDraft,
   hasCanvasInspectorNodeDraftChanges,
+  validateCanvasInspectorNodeDraft,
 } from './canvasInspectorAuthoringModel';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
 import type { CanonicalNode } from '../../types/canonical';
@@ -15,8 +16,23 @@ export function applyCanvasInspectorNodeDraftToSession(args: {
   workspaceScope: WorkspaceScope;
 }): CanvasDraftSession {
   const { draftSession, node, draft, workspaceScope } = args;
+  const localNodes = Object.values(draftSession.localNodeCatalog ?? {});
+  const nodes = localNodes.some((candidate) => candidate.id === node.id)
+    ? localNodes
+    : [...localNodes, node];
+  const edges = draftSession.workingSet.visibleEdges.map((edge, index) => ({
+    id: `draft-edge-${index}`,
+    sourceId: edge.sourceId,
+    targetId: edge.targetId,
+    relation: 'lineage' as const,
+    ...(edge.executionGate == null ? {} : { executionGate: edge.executionGate }),
+  }));
 
-  if (!hasCanvasInspectorNodeDraftChanges(node, draft)) {
+  if (
+    !hasCanvasInspectorNodeDraftChanges(node, draft) ||
+    Object.keys(validateCanvasInspectorNodeDraft(draft, { node, nodes, edges, workspaceScope }))
+      .length > 0
+  ) {
     return draftSession;
   }
 

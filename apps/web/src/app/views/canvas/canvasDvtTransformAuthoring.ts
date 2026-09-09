@@ -99,7 +99,7 @@ function fromDraft(
 export function validateDvtTransformAuthoringMetadata(
   metadata: TransformMetadata
 ): DvtNodeAuthoringMetadataErrors {
-  return VALID_MATERIALIZATIONS.has(normalizeDvtIdentifier(metadata.materialized, ''))
+  return VALID_MATERIALIZATIONS.has(metadata.materialized.trim())
     ? {}
     : { materialization: 'dvt_materialization_invalid' };
 }
@@ -108,10 +108,12 @@ export function applyDvtTransformAuthoringMetadata(
   node: CanonicalNode,
   metadata: TransformMetadata
 ): CanonicalNode {
+  const materialized = metadata.materialized.trim();
+  if (!VALID_MATERIALIZATIONS.has(materialized)) return node;
   const withMaterialization = (updatedNode: CanonicalNode): CanonicalNode =>
     withDvtConfig(updatedNode, {
       ...readDvtNodeConfig(updatedNode),
-      materialized: normalizeMaterialized(metadata.materialized),
+      materialized,
     });
   if (metadata.mode === 'uninitialized') return withMaterialization(node);
   const draft = { plan: metadata.plan, sidecar: metadata.sidecar };

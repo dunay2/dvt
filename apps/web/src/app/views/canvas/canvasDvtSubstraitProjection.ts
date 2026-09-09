@@ -45,6 +45,7 @@ import {
   DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION,
   DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1,
   DVT_SUBSTRAIT_PROFILE_REF_V1,
+  PostgresIdentifierV1Schema,
   allocateDvtFieldId,
   allocateDvtRelationId,
   type ConnectedSourceRef,
@@ -1251,7 +1252,7 @@ export function applyDvtSubstraitProjectionFunction(
 ): DvtSubstraitProjectionDraft {
   const operandFieldIds: readonly [string, ...string[]] = args.operandFieldIds ?? [args.fieldId];
   const inspection = inspectDvtSubstraitProjectionDraft(draft);
-  const alias = args.alias.trim();
+  const alias = args.alias;
   const output = inspection.ok
     ? inspection.projection.outputs.find((candidate) => candidate.fieldId === args.fieldId)
     : undefined;
@@ -1271,7 +1272,7 @@ export function applyDvtSubstraitProjectionFunction(
     !inspection.ok ||
     args.provider !== inspection.projection.source.sourceRef.connectionRef.provider ||
     capability == null ||
-    alias.length === 0 ||
+    !PostgresIdentifierV1Schema.safeParse(alias).success ||
     output == null ||
     operands.some((operand) => operand == null) ||
     new Set(operandFieldIds).size !== operandFieldIds.length ||

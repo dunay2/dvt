@@ -387,7 +387,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     });
     draft = createProjectionOutput(draft, {
       alias: 'loaded_at',
-      expression: { kind: 'timestamp-literal', value: '2026-09-02T12:30:00Z' },
+      expression: { kind: 'timestamp-literal', value: '2026-09-02T12:30:00.000Z' },
     });
     draft = createProjectionOutput(draft, {
       alias: 'row_id',

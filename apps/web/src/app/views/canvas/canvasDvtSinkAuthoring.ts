@@ -1,4 +1,6 @@
 /** Owns DVT sink configuration, validation, and persistence. */
+import { PostgresIdentifierV1Schema } from '@dvt/contracts';
+
 import type { CanonicalNode } from '../../types/canonical';
 import type {
   DvtNodeAuthoringMetadataErrors,
@@ -48,13 +50,27 @@ export function createDvtSinkAuthoringMetadata(node: CanonicalNode): DvtSinkAuth
 export function validateDvtSinkAuthoringMetadata(
   metadata: DvtSinkAuthoringMetadata
 ): DvtNodeAuthoringMetadataErrors {
+  const schema = metadata.schema;
+  const table = metadata.table;
   return {
-    ...(metadata.schema.trim() ? {} : { schema: 'dvt_schema_required' as const }),
-    ...(metadata.table.trim() ? {} : { table: 'dvt_table_required' as const }),
-    ...(VALID_MATERIALIZATIONS.has(normalizeDvtIdentifier(metadata.materialization, ''))
+    ...(schema.trim()
+      ? schema !== schema.trim()
+        ? { schema: 'dvt_identifier_whitespace' as const }
+        : PostgresIdentifierV1Schema.safeParse(schema).success
+          ? {}
+          : { schema: 'dvt_identifier_too_long' as const }
+      : { schema: 'dvt_schema_required' as const }),
+    ...(table.trim()
+      ? table !== table.trim()
+        ? { table: 'dvt_identifier_whitespace' as const }
+        : PostgresIdentifierV1Schema.safeParse(table).success
+          ? {}
+          : { table: 'dvt_identifier_too_long' as const }
+      : { table: 'dvt_table_required' as const }),
+    ...(VALID_MATERIALIZATIONS.has(metadata.materialization.trim())
       ? {}
       : { materialization: 'dvt_materialization_invalid' as const }),
-    ...(VALID_WRITE_MODES.has(normalizeDvtIdentifier(metadata.writeMode, ''))
+    ...(VALID_WRITE_MODES.has(metadata.writeMode.trim())
       ? {}
       : { writeMode: 'dvt_write_mode_invalid' as const }),
   };
@@ -64,15 +80,25 @@ export function applyDvtSinkAuthoringMetadata(
   node: CanonicalNode,
   metadata: DvtSinkAuthoringMetadata
 ): CanonicalNode {
+  const schema = metadata.schema;
+  const table = metadata.table;
+  const materialization = metadata.materialization.trim();
+  const writeMode = metadata.writeMode.trim();
+  if (
+    schema !== schema.trim() ||
+    !PostgresIdentifierV1Schema.safeParse(schema).success ||
+    table !== table.trim() ||
+    !PostgresIdentifierV1Schema.safeParse(table).success ||
+    !VALID_MATERIALIZATIONS.has(materialization) ||
+    !VALID_WRITE_MODES.has(writeMode)
+  ) {
+    return node;
+  }
   return withDvtConfig(node, {
     ...readDvtNodeConfig(node),
-    schema: metadata.schema.trim() || DEFAULT_SCHEMA_NAME,
-    table: normalizeDvtIdentifier(metadata.table, 'sink_table'),
-    materialization: normalizeEnum(
-      metadata.materialization,
-      DEFAULT_MATERIALIZATION,
-      VALID_MATERIALIZATIONS
-    ),
-    writeMode: normalizeEnum(metadata.writeMode, DEFAULT_WRITE_MODE, VALID_WRITE_MODES),
+    schema,
+    table,
+    materialization,
+    writeMode,
   });
 }

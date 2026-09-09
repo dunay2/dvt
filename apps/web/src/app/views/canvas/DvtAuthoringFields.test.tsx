@@ -151,6 +151,9 @@ function DvtAuthoringFieldsHarness({
         onChange={setDraft}
       />
       <output data-slot="dvt-draft-json">{JSON.stringify(draft.dvt)}</output>
+      <output data-slot="join-output-name-drafts">
+        {JSON.stringify(draft.joinOutputNameDrafts ?? {})}
+      </output>
     </>
   );
   if (!warehouseSourceImport) return fields;
@@ -215,6 +218,10 @@ describe('DvtAuthoringFields', () => {
 
   function draftJson(): string {
     return container.querySelector('[data-slot="dvt-draft-json"]')?.textContent ?? '';
+  }
+
+  function joinOutputNameDraftsJson(): string {
+    return container.querySelector('[data-slot="join-output-name-drafts"]')?.textContent ?? '';
   }
 
   it('renders imported source target metadata and updates the source alias draft', () => {
@@ -316,7 +323,7 @@ describe('DvtAuthoringFields', () => {
     expect(draftJson()).not.toContain('"dbt"');
   });
 
-  it('starts one typed Substrait INNER JOIN from two compatible connected datasets', () => {
+  it('retains invalid JOIN output text across remount, corrects it, and clears it on deselect', () => {
     const customers = buildJoinWarehouseSourceNode({
       id: 'source-customers',
       table: 'customers',
@@ -328,6 +335,7 @@ describe('DvtAuthoringFields', () => {
       columns: ['order_id', 'customer_id'],
     });
     const transform = buildDvtNode('dvt:transform');
+    const nodes = [customers, orders, transform];
     const edges: readonly CanonicalEdge[] = [
       {
         id: 'customers-transform',
@@ -335,32 +343,80 @@ describe('DvtAuthoringFields', () => {
         targetId: transform.id,
         relation: 'lineage',
       },
-      {
-        id: 'orders-transform',
-        sourceId: orders.id,
-        targetId: transform.id,
-        relation: 'lineage',
-      },
+      { id: 'orders-transform', sourceId: orders.id, targetId: transform.id, relation: 'lineage' },
     ];
 
-    renderFields(transform, undefined, undefined, [customers, orders, transform], edges, 'code');
-
+    renderFields(transform, undefined, undefined, nodes, edges, 'code');
     const entry = container.querySelector<HTMLButtonElement>(
       '[data-slot="dvt-start-configured-inner-join"]'
     );
-    expect(entry).not.toBeNull();
+    act(() => fireEvent.click(entry!));
 
+    const selector =
+      '[data-slot="dvt-substrait-inner-join-output-name"], [data-slot="dvt-substrait-n-input-output-name"]';
+    let outputName = container.querySelector<HTMLInputElement>(selector)!;
+    const fieldRow = outputName.closest<HTMLElement>(
+      '[data-slot="dvt-substrait-inner-join-field"], [data-slot="dvt-substrait-n-input-field"]'
+    )!;
+    let checkbox = fieldRow.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+    const invalidName = `${'x'.repeat(63)} `;
     act(() => {
-      fireEvent.click(entry!);
+      fireEvent.input(outputName, { target: { value: invalidName } });
+      fireEvent.focusOut(outputName);
     });
 
-    expect(
-      container.querySelector('[data-slot="dvt-substrait-inner-join-authoring"]')
-    ).not.toBeNull();
-    expect(container.textContent).toContain('customers');
-    expect(container.textContent).toContain('orders');
-    expect(container.textContent).toContain('customer_id');
-    expect(draftJson()).toContain('"shape":"inner_join"');
+    expect(outputName.value).toBe(invalidName);
+    expect(outputName.getAttribute('aria-invalid')).toBe('true');
+    const alert = container.querySelector<HTMLElement>('[role="alert"]');
+    expect(outputName.getAttribute('aria-describedby')).toBe(alert?.id);
+    expect(joinOutputNameDraftsJson()).toContain(invalidName);
+
+    const firstAlertId = outputName.getAttribute('aria-describedby');
+    expect(firstAlertId).not.toBeNull();
+    expect(document.getElementById(firstAlertId!)?.textContent).toContain(
+      'cannot start or end with whitespace'
+    );
+    const secondOutputName = [...container.querySelectorAll<HTMLInputElement>(selector)].find(
+      (candidate) => candidate !== outputName
+    )!;
+    act(() => {
+      fireEvent.input(secondOutputName, { target: { value: '   ' } });
+      fireEvent.focusOut(secondOutputName);
+    });
+    const secondAlertId = secondOutputName.getAttribute('aria-describedby');
+    expect(secondOutputName.value).toBe('   ');
+    expect(secondOutputName.getAttribute('aria-invalid')).toBe('true');
+    expect(secondAlertId).not.toBe(firstAlertId);
+    expect(document.getElementById(secondAlertId!)?.textContent).toContain('Alias is required');
+    act(() => {
+      fireEvent.input(secondOutputName, { target: { value: 'order_key' } });
+      fireEvent.focusOut(secondOutputName);
+    });
+
+    renderFields(transform, undefined, undefined, nodes, edges, 'general');
+    renderFields(transform, undefined, undefined, nodes, edges, 'code');
+    outputName = container.querySelector<HTMLInputElement>(selector)!;
+    checkbox = outputName
+      .closest<HTMLElement>(
+        '[data-slot="dvt-substrait-inner-join-field"], [data-slot="dvt-substrait-n-input-field"]'
+      )!
+      .querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+    expect(outputName.value).toBe(invalidName);
+
+    act(() => {
+      fireEvent.input(outputName, { target: { value: 'customer_key' } });
+      fireEvent.focusOut(outputName);
+    });
+    expect(outputName.getAttribute('aria-invalid')).toBeNull();
+    expect(draftJson()).toContain('customer_key');
+
+    act(() => {
+      fireEvent.input(outputName, { target: { value: invalidName } });
+      fireEvent.focusOut(outputName);
+      fireEvent.change(checkbox, { target: { checked: false } });
+    });
+    expect(joinOutputNameDraftsJson()).not.toContain(invalidName);
+    expect(container.querySelector('[role="alert"]')).toBeNull();
   });
   it('replaces a stale one-input projection with an explicitly configured connected join', () => {
     const orders = buildJoinWarehouseSourceNode({

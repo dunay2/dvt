@@ -158,6 +158,12 @@ When adding or changing behavior:
 - Do not let mock adapters define semantics that API adapters are not expected
   to satisfy.
 
+A feature-mechanization manifest that reuses an existing rail MUST mark that
+entry with `referenceOnly: true` and name its canonical document in
+`authorityRef`. The referenced entry remains visible as feature evidence, but
+MUST NOT participate in canonical authority selection or duplicate counts. A
+dangling reference fails the catalog import.
+
 ## Canonical Placement
 
 Each bounded context owns its local catalog in the most authoritative surface

@@ -1044,6 +1044,18 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.errorNodeNameRequired',
     fallback: 'Node name is required.',
   },
+  inspectorErrorNodeNameTooLong: {
+    key: 'canvas.inspector.authoring.errorNodeNameTooLong',
+    fallback: 'Node name is too long.',
+  },
+  inspectorErrorNodeDescriptionTooLong: {
+    key: 'canvas.inspector.authoring.errorNodeDescriptionTooLong',
+    fallback: 'Description is too long.',
+  },
+  inspectorErrorNodeTagsInvalid: {
+    key: 'canvas.inspector.authoring.errorNodeTagsInvalid',
+    fallback: 'A tag is too long or there are too many tags.',
+  },
   inspectorErrorDbtPackageRequired: {
     key: 'canvas.inspector.authoring.errorDbtPackageRequired',
     fallback: 'Package is required.',
@@ -1095,6 +1107,14 @@ export const canvasViewAuthoringCopyByKey = {
   inspectorErrorDvtAliasRequired: {
     key: 'canvas.inspector.authoring.errorDvtAliasRequired',
     fallback: 'Alias is required.',
+  },
+  inspectorErrorDvtIdentifierTooLong: {
+    key: 'canvas.inspector.authoring.errorDvtIdentifierTooLong',
+    fallback: 'PostgreSQL identifiers may contain at most 63 UTF-8 bytes.',
+  },
+  inspectorErrorDvtIdentifierWhitespace: {
+    key: 'canvas.inspector.authoring.errorDvtIdentifierWhitespace',
+    fallback: 'PostgreSQL identifiers cannot start or end with whitespace.',
   },
   inspectorErrorDvtConnectionRequired: {
     key: 'canvas.inspector.authoring.errorDvtConnectionRequired',

@@ -54,6 +54,7 @@ import {
   DVT_SUBSTRAIT_PLAN_ENCODING,
   DVT_SUBSTRAIT_PROFILE_REF_V1,
   DVT_SUBSTRAIT_SEMANTIC_DOCUMENT_SCHEMA_VERSION,
+  PostgresIdentifierV1Schema,
   ConnectedSourceRefSchema,
   allocateDvtFieldId,
   allocateDvtRelationId,
@@ -875,7 +876,6 @@ function createDvtSubstraitNInputJoinDraft(args: {
     args.outputs.some(
       (output) =>
         output.name.length === 0 ||
-        output.name !== output.name.trim() ||
         (output.fieldId != null &&
           (output.fieldId.length === 0 || output.fieldId !== output.fieldId.trim()))
     ) ||
@@ -1340,7 +1340,7 @@ function inspectNInputJoinStructure(
     root?.case !== 'root' ||
     root.value.input == null ||
     root.value.names.length === 0 ||
-    root.value.names.some((name) => name.length === 0 || name !== name.trim()) ||
+    root.value.names.some((name) => name.length === 0) ||
     new Set(root.value.names).size !== root.value.names.length
   ) {
     return null;
@@ -1756,10 +1756,11 @@ export function applyDvtSubstraitInnerJoinFieldEdit(
       }
     } else if (edit.kind === 'rename') {
       const current = outputs[currentIndex];
-      const name = edit.outputName.trim();
+      const name = edit.outputName;
       if (
         current == null ||
         name.length === 0 ||
+        !PostgresIdentifierV1Schema.safeParse(name).success ||
         outputs.some((output, index) => index !== currentIndex && output.name === name)
       ) {
         return draft;
@@ -1819,10 +1820,11 @@ export function applyDvtSubstraitInnerJoinFieldEdit(
     }
   } else if (edit.kind === 'rename') {
     const current = outputs[currentIndex];
-    const name = edit.outputName.trim();
+    const name = edit.outputName;
     if (
       current == null ||
       name.length === 0 ||
+      !PostgresIdentifierV1Schema.safeParse(name).success ||
       outputs.some((output, index) => index !== currentIndex && output.name === name)
     ) {
       return draft;
@@ -1905,7 +1907,7 @@ function inspectValidInnerJoinGrouping(
   if (
     root?.case !== 'root' ||
     root.value.names.length !== 2 ||
-    root.value.names.some((name) => name.length === 0 || name !== name.trim()) ||
+    root.value.names.some((name) => name.length === 0) ||
     new Set(root.value.names).size !== 2 ||
     root.value.input?.relType.case !== 'aggregate'
   ) {
@@ -2086,8 +2088,9 @@ export function applyDvtSubstraitInnerJoinGrouping(
   const binary = inspectDvtSubstraitInnerJoinDraft(draft);
   const inspection =
     nInput.ok && (nInput.projection.inputs.length > 2 || !binary.ok) ? nInput : binary;
-  const countOutputName = args.countOutputName.trim();
-  if (!inspection.ok || countOutputName.length === 0) return draft;
+  const countOutputName = args.countOutputName;
+  if (!inspection.ok || !PostgresIdentifierV1Schema.safeParse(countOutputName).success)
+    return draft;
   const groupField = inspection.projection.outputs.find(
     (output) => output.fieldId === args.groupFieldId
   );
@@ -2164,8 +2167,12 @@ export function renameDvtSubstraitInnerJoinCountOutput(
   outputName: string
 ): DvtSubstraitInnerJoinDraft {
   const valid = inspectValidInnerJoinGrouping(draft);
-  const normalized = outputName.trim();
-  if (valid == null || normalized.length === 0 || normalized === valid.projection.groupField.name) {
+  const normalized = outputName;
+  if (
+    valid == null ||
+    !PostgresIdentifierV1Schema.safeParse(normalized).success ||
+    normalized === valid.projection.groupField.name
+  ) {
     return draft;
   }
   const plan = clonePlan(draft.plan);
@@ -2212,7 +2219,7 @@ function inspectValidInnerJoinGroupedWindow(
   if (
     root?.case !== 'root' ||
     root.value.names.length !== 3 ||
-    root.value.names.some((name) => name.length === 0 || name !== name.trim()) ||
+    root.value.names.some((name) => name.length === 0) ||
     new Set(root.value.names).size !== 3 ||
     root.value.input?.relType.case !== 'project'
   ) {
@@ -2387,10 +2394,10 @@ export function applyDvtSubstraitInnerJoinGroupedRowNumber(
   args: Readonly<{ outputName: string }>
 ): DvtSubstraitInnerJoinDraft {
   const grouping = inspectDvtSubstraitInnerJoinGroupingDraft(draft);
-  const outputName = args.outputName.trim();
+  const outputName = args.outputName;
   if (
     !grouping.ok ||
-    outputName.length === 0 ||
+    !PostgresIdentifierV1Schema.safeParse(outputName).success ||
     grouping.projection.outputs.some((output) => output.name === outputName)
   ) {
     return draft;
@@ -2496,10 +2503,10 @@ export function renameDvtSubstraitInnerJoinGroupedRowNumberOutput(
   outputName: string
 ): DvtSubstraitInnerJoinDraft {
   const valid = inspectValidInnerJoinGroupedWindow(draft);
-  const normalized = outputName.trim();
+  const normalized = outputName;
   if (
     valid == null ||
-    normalized.length === 0 ||
+    !PostgresIdentifierV1Schema.safeParse(normalized).success ||
     valid.projection.outputs.slice(0, 2).some((output) => output.name === normalized)
   ) {
     return draft;

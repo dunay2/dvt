@@ -1,6 +1,9 @@
 /** Owned concern: declare locale-neutral Inspector authoring validation error codes. */
 export type CanvasInspectorNodeDraftErrorCode =
   | 'node_name_required'
+  | 'node_name_too_long'
+  | 'node_description_too_long'
+  | 'node_tags_invalid'
   | 'dbt_package_required'
   | 'dbt_source_required'
   | 'dbt_schema_required'
@@ -14,6 +17,8 @@ export type CanvasInspectorNodeDraftErrorCode =
   | 'dvt_schema_required'
   | 'dvt_table_required'
   | 'dvt_alias_required'
+  | 'dvt_identifier_too_long'
+  | 'dvt_identifier_whitespace'
   | 'dvt_connection_required'
   | 'dvt_visual_recipe_invalid'
   | 'dvt_materialization_invalid'
