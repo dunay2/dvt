@@ -7789,7 +7789,7 @@ CREATE VIEW planning_query_store.governed_source_drift_query AS
             governed_sources.reference_count
            FROM (governed_sources
              LEFT JOIN planning_query_store.governance_files file_ref ON ((file_ref.path = governed_sources.source_path)))
-          WHERE ((file_ref.path IS NULL) AND (governed_sources.source_path !~ '^\.generated-docs/'::text))
+          WHERE ((file_ref.path IS NULL) AND (governed_sources.source_path !~ '^\.generated-docs/'::text) AND (governed_sources.source_path !~* '^https?://'::text))
         )
  SELECT 'missing_source_file'::text AS finding_kind,
         CASE

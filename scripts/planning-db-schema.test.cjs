@@ -85,6 +85,17 @@ test('command/query rail authority excludes feature references while retaining t
   assert.ok(viewSql.includes('jsonb_agg(DISTINCT rail_1.feature_id'));
 });
 
+test('governed source drift checks repository paths without treating external evidence as files', () => {
+  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+  const viewSql = schemaSql.slice(
+    schemaSql.indexOf('CREATE VIEW planning_query_store.governed_source_drift_query AS'),
+    schemaSql.indexOf('-- Name: governance_problem_dashboard_query')
+  );
+
+  assert.ok(viewSql.includes("source_path !~* '^https?://'::text"));
+  assert.ok(viewSql.includes("source_path !~ '^\\.generated-docs/'::text"));
+});
+
 test('current schema accepts audited architecture storage I/O records', () => {
   const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
 

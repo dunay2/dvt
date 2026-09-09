@@ -164,6 +164,11 @@ entry with `referenceOnly: true` and name its canonical document in
 MUST NOT participate in canonical authority selection or duplicate counts. A
 dangling reference fails the catalog import.
 
+A governed source reference may be a repository-relative path or external
+planning evidence such as a GitHub issue or pull request URL. Filesystem drift
+checks apply only to repository-relative paths; they must not classify external
+evidence as a missing repository file.
+
 ## Canonical Placement
 
 Each bounded context owns its local catalog in the most authoritative surface
