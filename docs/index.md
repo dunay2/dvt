@@ -39,7 +39,7 @@ specifically about execution invariants or adapters.
 - [Engine Architecture](./architecture/components/engine/index.md)
 - [Roadmap Of Record](./planning/roadmap/index.md)
 - [Planning Dashboard](./planning/state/planning-dashboard.md)
-- [Planning Control Tower](./planning/state/planning-control-tower.md)
+- [GitHub MVP Issue Workflow](./planning/state/github-mvp-issue-workflow.md)
 - [Planning Gaps](./planning/gaps/index.md)
 - [Current Delivery Status](./architecture/system-delivery-status.md)
 - [Planning Governance Inventory](./planning/status/governance-document-rule-inventory.md)
@@ -62,7 +62,7 @@ specifically about execution invariants or adapters.
 3. [Shared Package Architecture](./architecture/shared/index.md)
 4. [Architecture Index](./architecture/index.md)
 5. [Planning Dashboard](./planning/state/planning-dashboard.md)
-6. [Planning Control Tower](./planning/state/planning-control-tower.md)
+6. [GitHub MVP Issue Workflow](./planning/state/github-mvp-issue-workflow.md)
 7. [Risk Register](./risk-register/index.md)
 8. [Evidence](./evidence/index.md)
 
@@ -74,17 +74,17 @@ specifically about execution invariants or adapters.
 4. [Planning Gaps](./planning/gaps/index.md)
 5. [Planning Governance Inventory](./planning/status/governance-document-rule-inventory.md)
 
-## Transitional Notes
+## Authority Notes
 
-- The canonical roadmap entry point now lives at
+- GitHub Issues owns task identity and lifecycle.
+- Planning DB owns architecture and mechanization.
+- Code, contracts, tests, and CI on `main` own executable truth.
+- [ADR-0061](./adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md)
+  defines the planning/architecture authority boundary.
+- The canonical roadmap entry point is
   [Roadmap Of Record](./planning/roadmap/index.md).
 - [System Delivery Status](./architecture/system-delivery-status.md) remains the
   active status surface for current implementation truth.
-- Legacy aliases were removed from the active tree. Start from
-  [Concepts](./concepts/index.md),
-  [Planning Dashboard](./planning/state/planning-dashboard.md),
-  [Planning Control Tower](./planning/state/planning-control-tower.md), and
-  [ADRs](./adr/index.md) for the active surface.
 
 ## Governance and Contribution
 
