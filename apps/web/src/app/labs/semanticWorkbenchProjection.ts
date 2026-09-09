@@ -9,9 +9,16 @@ import { readDvtSubstraitFieldReferenceOrdinal } from '../views/canvas/canvasDvt
 import { decodeDvtSubstraitSemanticDocument } from '../views/canvas/canvasDvtSubstraitSemanticDocument';
 import { readDvtTransformAuthoringAuthority } from '../views/canvas/canvasDvtTransformAuthoringAuthority';
 
+export type SemanticWorkbenchGroup = 'source' | 'condition' | 'transformation';
+
 export type SemanticWorkbenchNodeData = Readonly<{
   label: string;
-  semanticKind: 'relation' | 'expression' | 'field' | 'literal';
+  semanticKind: 'group' | 'relation' | 'expression' | 'field' | 'literal';
+  semanticGroup: SemanticWorkbenchGroup;
+  detail: string;
+  expression?: string;
+  inputSummary?: string;
+  outputSummary?: string;
 }>;
 
 export type SemanticWorkbenchGraph = Readonly<{
@@ -25,6 +32,7 @@ export type SemanticWorkbenchGraph = Readonly<{
 const RELATION_STYLE: CSSProperties = {
   width: 184,
   minHeight: 56,
+  padding: 0,
   border: '1px solid #2f4368',
   borderRadius: 8,
   background: '#0b1425',
@@ -32,23 +40,25 @@ const RELATION_STYLE: CSSProperties = {
   fontFamily: 'IBM Plex Sans, sans-serif',
   fontSize: 12,
   fontWeight: 600,
-  whiteSpace: 'pre-line',
+  textAlign: 'left',
 };
 
 const EXPRESSION_STYLE: CSSProperties = {
   width: 138,
   minHeight: 44,
+  padding: 0,
   border: '1px solid #3b5b88',
   borderRadius: 8,
   background: '#10192d',
   color: '#e2e8f0',
   fontFamily: 'IBM Plex Mono, monospace',
   fontSize: 11,
-  whiteSpace: 'pre-line',
+  textAlign: 'left',
 };
 
 const FIELD_STYLE: CSSProperties = {
   ...EXPRESSION_STYLE,
+  width: 206,
   border: '1px solid #245f88',
   background: '#0a1829',
   color: '#7dd3fc',
@@ -121,6 +131,8 @@ function expressionsOwnedByRelation(rel: Rel): readonly Expression[] {
   switch (rel.relType.case) {
     case 'filter':
       return rel.relType.value.condition == null ? [] : [rel.relType.value.condition];
+    case 'join':
+      return rel.relType.value.expression == null ? [] : [rel.relType.value.expression];
     case 'project':
       return rel.relType.value.expressions;
     default:
@@ -128,13 +140,34 @@ function expressionsOwnedByRelation(rel: Rel): readonly Expression[] {
   }
 }
 
-function firstReadFieldNames(rel: Rel): readonly string[] {
-  if (rel.relType.case === 'read') return rel.relType.value.baseSchema?.names ?? [];
-  for (const input of relationInputs(rel)) {
-    const names = firstReadFieldNames(input);
-    if (names.length > 0) return names;
+function relationFieldNames(rel: Rel, qualifyReadFields = false): readonly string[] {
+  if (rel.relType.case === 'read') {
+    const names = rel.relType.value.baseSchema?.names ?? [];
+    const readType = rel.relType.value.readType;
+    const relationName = readType.case === 'namedTable' ? readType.value.names.join('.') : null;
+    return qualifyReadFields && relationName
+      ? names.map((name) => `${relationName}.${name}`)
+      : names;
   }
-  return [];
+
+  const inputs = relationInputs(rel);
+  const inputNames =
+    rel.relType.case === 'join'
+      ? inputs.flatMap((input) => relationFieldNames(input, qualifyReadFields))
+      : inputs.flatMap((input) => relationFieldNames(input, false));
+  const common =
+    rel.relType.case === 'filter' ||
+    rel.relType.case === 'project' ||
+    rel.relType.case === 'join' ||
+    rel.relType.case === 'aggregate' ||
+    rel.relType.case === 'set'
+      ? rel.relType.value.common
+      : undefined;
+  return common?.emitKind.case === 'emit'
+    ? common.emitKind.value.outputMapping.flatMap((ordinal) =>
+        inputNames[ordinal] == null ? [] : [inputNames[ordinal]]
+      )
+    : inputNames;
 }
 
 function functionNames(plan: Plan): ReadonlyMap<number, string> {
@@ -178,22 +211,103 @@ function layoutGraph(
   nodes: readonly Node<SemanticWorkbenchNodeData>[],
   edges: readonly Edge[]
 ): Node<SemanticWorkbenchNodeData>[] {
-  const graph = new dagre.graphlib.Graph();
-  graph.setDefaultEdgeLabel(() => ({}));
-  graph.setGraph({ rankdir: 'LR', ranksep: 92, nodesep: 34, marginx: 24, marginy: 24 });
-  for (const node of nodes) graph.setNode(node.id, { width: 184, height: 58 });
-  for (const edge of edges) graph.setEdge(edge.source, edge.target);
-  dagre.layout(graph);
-  return nodes.map((node) => {
-    const position = graph.node(node.id) as { x: number; y: number };
-    return {
-      ...node,
-      position: { x: position.x - 92, y: position.y - 29 },
-    };
-  });
+  const groups = [
+    { id: 'source', label: 'FUENTES', color: '#3b82f6' },
+    { id: 'condition', label: 'CONDICIÓN DEL JOIN', color: '#10b981' },
+    { id: 'transformation', label: 'TRANSFORMACIÓN', color: '#06b6d4' },
+  ] as const;
+  const frames: Node<SemanticWorkbenchNodeData>[] = [];
+  const positionedNodes: Node<SemanticWorkbenchNodeData>[] = [];
+  let groupLeft = 24;
+
+  for (const group of groups) {
+    const members = nodes.filter((node) => node.data.semanticGroup === group.id);
+    if (members.length === 0) continue;
+
+    const memberIds = new Set(members.map((node) => node.id));
+    const graph = new dagre.graphlib.Graph();
+    graph.setDefaultEdgeLabel(() => ({}));
+    graph.setGraph({ rankdir: 'LR', ranksep: 68, nodesep: 30, marginx: 0, marginy: 0 });
+    for (const node of members) {
+      graph.setNode(node.id, {
+        width: typeof node.style?.width === 'number' ? node.style.width : 184,
+        height: typeof node.style?.minHeight === 'number' ? node.style.minHeight : 56,
+      });
+    }
+    for (const edge of edges) {
+      if (memberIds.has(edge.source) && memberIds.has(edge.target)) {
+        graph.setEdge(edge.source, edge.target);
+      }
+    }
+    dagre.layout(graph);
+
+    const bounds = members.map((node) => {
+      const position = graph.node(node.id) as { x: number; y: number };
+      const width = typeof node.style?.width === 'number' ? node.style.width : 184;
+      const height = typeof node.style?.minHeight === 'number' ? node.style.minHeight : 56;
+      return {
+        node,
+        left: position.x - width / 2,
+        top: position.y - height / 2,
+        right: position.x + width / 2,
+        bottom: position.y + height / 2,
+      };
+    });
+    const contentLeft = Math.min(...bounds.map((bound) => bound.left));
+    const contentTop = Math.min(...bounds.map((bound) => bound.top));
+    const contentRight = Math.max(...bounds.map((bound) => bound.right));
+    const contentBottom = Math.max(...bounds.map((bound) => bound.bottom));
+    const frameWidth = contentRight - contentLeft + 48;
+    const frameHeight = contentBottom - contentTop + 76;
+
+    frames.push({
+      id: `semantic-group-${group.id}`,
+      position: { x: groupLeft, y: 24 },
+      data: {
+        label: group.label,
+        semanticKind: 'group',
+        semanticGroup: group.id,
+        detail: group.label,
+      },
+      selectable: false,
+      draggable: false,
+      connectable: false,
+      focusable: false,
+      zIndex: -1,
+      style: {
+        width: frameWidth,
+        height: frameHeight,
+        padding: '10px 12px',
+        border: `1px dashed ${group.color}`,
+        borderRadius: 10,
+        background: `${group.color}0a`,
+        color: group.color,
+        boxSizing: 'border-box',
+        fontSize: 10,
+        fontWeight: 700,
+        letterSpacing: '0.07em',
+        textAlign: 'left',
+        pointerEvents: 'none',
+      },
+    });
+    positionedNodes.push(
+      ...bounds.map(({ node, left, top }) => ({
+        ...node,
+        position: {
+          x: groupLeft + 24 + left - contentLeft,
+          y: 68 + top - contentTop,
+        },
+      }))
+    );
+    groupLeft += frameWidth + 72;
+  }
+
+  return [...frames, ...positionedNodes];
 }
 
-export function projectSemanticWorkbenchGraph(transformNode: CanonicalNode): SemanticWorkbenchGraph {
+export function projectSemanticWorkbenchGraph(
+  transformNode: CanonicalNode
+): SemanticWorkbenchGraph {
   const authority = readDvtTransformAuthoringAuthority(transformNode);
   if (authority == null) throw new Error('Semantic Workbench requires a DVT semantic authority.');
   const draft = decodeDvtSubstraitSemanticDocument(authority.semanticDocument);
@@ -202,7 +316,6 @@ export function projectSemanticWorkbenchGraph(transformNode: CanonicalNode): Sem
     throw new Error('Semantic Workbench requires one canonical Substrait root relation.');
   }
 
-  const fieldNames = firstReadFieldNames(root.value.input);
   const namesByFunctionAnchor = functionNames(draft.plan);
   const relationIdByAnchor = new Map(
     draft.sidecar.relations.map((binding) => [binding.relAnchor, binding.relationId] as const)
@@ -218,7 +331,30 @@ export function projectSemanticWorkbenchGraph(transformNode: CanonicalNode): Sem
     return `${prefix}-${sequence}`;
   }
 
-  function addExpression(expression: Expression): string {
+  function describeExpression(expression: Expression, fieldNames: readonly string[]): string {
+    if (expression.rexType.case === 'selection') {
+      const ordinal = readDvtSubstraitFieldReferenceOrdinal(expression);
+      return ordinal == null ? 'field' : (fieldNames[ordinal] ?? `field[${ordinal}]`);
+    }
+    if (expression.rexType.case === 'literal') return literalLabel(expression);
+    if (expression.rexType.case === 'scalarFunction') {
+      const scalar = expression.rexType.value;
+      const functionName =
+        namesByFunctionAnchor.get(scalar.functionReference) ?? `fn#${scalar.functionReference}`;
+      const operator = operatorLabel(functionName);
+      const argumentsList = scalar.arguments.flatMap((argument) =>
+        argument.argType.case === 'value'
+          ? [describeExpression(argument.argType.value, fieldNames)]
+          : []
+      );
+      return argumentsList.length === 2
+        ? `${argumentsList[0]} ${operator} ${argumentsList[1]}`
+        : `${operator}(${argumentsList.join(', ')})`;
+    }
+    return expression.rexType.case ?? 'expression';
+  }
+
+  function addExpression(expression: Expression, fieldNames: readonly string[]): string {
     expressionCount += 1;
     if (expression.rexType.case === 'selection') {
       const ordinal = readDvtSubstraitFieldReferenceOrdinal(expression);
@@ -229,7 +365,12 @@ export function projectSemanticWorkbenchGraph(transformNode: CanonicalNode): Sem
         position: { x: 0, y: 0 },
         sourcePosition: Position.Right,
         targetPosition: Position.Left,
-        data: { label, semanticKind: 'field' },
+        data: {
+          label: `FIELD\n${label}`,
+          semanticKind: 'field',
+          semanticGroup: 'condition',
+          detail: `Campo de entrada: ${label}`,
+        },
         style: FIELD_STYLE,
       });
       return id;
@@ -241,55 +382,100 @@ export function projectSemanticWorkbenchGraph(transformNode: CanonicalNode): Sem
         position: { x: 0, y: 0 },
         sourcePosition: Position.Right,
         targetPosition: Position.Left,
-        data: { label: literalLabel(expression), semanticKind: 'literal' },
+        data: {
+          label: `VALUE\n${literalLabel(expression)}`,
+          semanticKind: 'literal',
+          semanticGroup: 'condition',
+          detail: `Valor literal: ${literalLabel(expression)}`,
+        },
         style: LITERAL_STYLE,
       });
       return id;
     }
     if (expression.rexType.case === 'scalarFunction') {
       const scalar = expression.rexType.value;
-      const functionName = namesByFunctionAnchor.get(scalar.functionReference) ?? `fn#${scalar.functionReference}`;
+      const functionName =
+        namesByFunctionAnchor.get(scalar.functionReference) ?? `fn#${scalar.functionReference}`;
       const id = nextId('function');
+      const expressionDetail = describeExpression(expression, fieldNames);
       nodes.push({
         id,
         position: { x: 0, y: 0 },
         sourcePosition: Position.Right,
         targetPosition: Position.Left,
-        data: { label: operatorLabel(functionName), semanticKind: 'expression' },
+        data: {
+          label: `${functionName.toUpperCase()}\n${operatorLabel(functionName)}`,
+          semanticKind: 'expression',
+          semanticGroup: 'condition',
+          detail: expressionDetail,
+          expression: expressionDetail,
+        },
         style: EXPRESSION_STYLE,
       });
       for (const argument of scalar.arguments) {
         if (argument.argType.case !== 'value') continue;
-        const argumentId = addExpression(argument.argType.value);
-        edges.push({ id: nextId('edge'), source: argumentId, target: id, type: 'smoothstep' });
+        const argumentId = addExpression(argument.argType.value, fieldNames);
+        edges.push({
+          id: nextId('edge'),
+          source: argumentId,
+          target: id,
+          type: 'smoothstep',
+          data: { semanticEdgeKind: 'expression' },
+          style: { stroke: '#10b981', strokeWidth: 1.4 },
+        });
       }
       return id;
     }
     if (expression.rexType.case === 'windowFunction') {
       const window = expression.rexType.value;
-      const functionName = namesByFunctionAnchor.get(window.functionReference) ?? `fn#${window.functionReference}`;
+      const functionName =
+        namesByFunctionAnchor.get(window.functionReference) ?? `fn#${window.functionReference}`;
       const id = nextId('window');
       nodes.push({
         id,
         position: { x: 0, y: 0 },
         sourcePosition: Position.Right,
         targetPosition: Position.Left,
-        data: { label: `WINDOW\n${functionName}`, semanticKind: 'expression' },
+        data: {
+          label: `WINDOW\n${functionName}`,
+          semanticKind: 'expression',
+          semanticGroup: 'condition',
+          detail: `Window function: ${functionName}`,
+        },
         style: EXPRESSION_STYLE,
       });
       for (const argument of window.arguments) {
         if (argument.argType.case !== 'value') continue;
-        const argumentId = addExpression(argument.argType.value);
-        edges.push({ id: nextId('edge'), source: argumentId, target: id, type: 'smoothstep' });
+        const argumentId = addExpression(argument.argType.value, fieldNames);
+        edges.push({
+          id: nextId('edge'),
+          source: argumentId,
+          target: id,
+          type: 'smoothstep',
+          data: { semanticEdgeKind: 'expression' },
+          style: { stroke: '#10b981', strokeWidth: 1.4 },
+        });
       }
       for (const partition of window.partitions) {
-        const partitionId = addExpression(partition);
-        edges.push({ id: nextId('edge'), source: partitionId, target: id, label: 'partition' });
+        const partitionId = addExpression(partition, fieldNames);
+        edges.push({
+          id: nextId('edge'),
+          source: partitionId,
+          target: id,
+          label: 'partition',
+          data: { semanticEdgeKind: 'expression' },
+        });
       }
       for (const sort of window.sorts) {
         if (sort.expr == null) continue;
-        const sortId = addExpression(sort.expr);
-        edges.push({ id: nextId('edge'), source: sortId, target: id, label: 'order' });
+        const sortId = addExpression(sort.expr, fieldNames);
+        edges.push({
+          id: nextId('edge'),
+          source: sortId,
+          target: id,
+          label: 'order',
+          data: { semanticEdgeKind: 'expression' },
+        });
       }
       return id;
     }
@@ -301,8 +487,10 @@ export function projectSemanticWorkbenchGraph(transformNode: CanonicalNode): Sem
       sourcePosition: Position.Right,
       targetPosition: Position.Left,
       data: {
-        label: expression.rexType.case ?? 'expression',
+        label: `EXPRESSION\n${expression.rexType.case ?? 'unknown'}`,
         semanticKind: 'expression',
+        semanticGroup: 'condition',
+        detail: describeExpression(expression, fieldNames),
       },
       style: EXPRESSION_STYLE,
     });
@@ -314,12 +502,39 @@ export function projectSemanticWorkbenchGraph(transformNode: CanonicalNode): Sem
     const anchor = relationAnchor(rel);
     const relationId = anchor == null ? null : relationIdByAnchor.get(anchor);
     const id = relationId ?? nextId('relation');
+    const inputs = relationInputs(rel);
+    const outputFields = relationFieldNames(rel);
+    const expressionFields =
+      rel.relType.case === 'join'
+        ? inputs.flatMap((input) => relationFieldNames(input, true))
+        : inputs.flatMap((input) => relationFieldNames(input));
+    const ownedExpressions = expressionsOwnedByRelation(rel);
+    const expression =
+      ownedExpressions[0] == null
+        ? undefined
+        : describeExpression(ownedExpressions[0], expressionFields);
+    const displayName = relationDisplayName(rel);
     nodes.push({
       id,
       position: { x: 0, y: 0 },
       sourcePosition: Position.Right,
       targetPosition: Position.Left,
-      data: { label: relationDisplayName(rel), semanticKind: 'relation' },
+      data: {
+        label: displayName,
+        semanticKind: 'relation',
+        semanticGroup: rel.relType.case === 'read' ? 'source' : 'transformation',
+        detail: `${displayName.replace('\n', ' · ')} · ${outputFields.length} columnas`,
+        ...(expression == null ? {} : { expression }),
+        ...(inputs.length === 0
+          ? {}
+          : {
+              inputSummary:
+                rel.relType.case === 'join'
+                  ? `${inputs.length} fuentes`
+                  : `${inputs.length} entradas`,
+            }),
+        outputSummary: `${outputFields.length} columnas`,
+      },
       style: RELATION_STYLE,
     });
     for (const input of relationInputs(rel)) {
@@ -329,17 +544,19 @@ export function projectSemanticWorkbenchGraph(transformNode: CanonicalNode): Sem
         source: inputId,
         target: id,
         type: 'smoothstep',
+        data: { semanticEdgeKind: 'relation' },
         style: { stroke: '#4f8cff', strokeWidth: 1.5 },
       });
     }
-    for (const expression of expressionsOwnedByRelation(rel)) {
-      const expressionId = addExpression(expression);
+    for (const ownedExpression of ownedExpressions) {
+      const expressionId = addExpression(ownedExpression, expressionFields);
       edges.push({
         id: nextId('edge'),
         source: expressionId,
         target: id,
         type: 'smoothstep',
-        style: { stroke: '#7dd3fc', strokeWidth: 1 },
+        data: { semanticEdgeKind: 'expression' },
+        style: { stroke: '#10b981', strokeWidth: 1.4 },
       });
     }
     return id;

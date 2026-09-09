@@ -13,6 +13,7 @@ import {
   SEMANTIC_WORKBENCH_TRANSFORM,
 } from './semanticWorkbenchFixture';
 import { loadSemanticWorkbenchDataset } from './semanticWorkbenchDataset';
+import { projectSemanticWorkbenchGraph } from './semanticWorkbenchProjection';
 
 describe('semanticWorkbenchFixture', () => {
   it('derives both canonical source cards from the JSON dataset schemas', () => {
@@ -37,6 +38,33 @@ describe('semanticWorkbenchFixture', () => {
           (source.metadata?.sourceMetricEvidence as { rowCount: { value: number } }).rowCount.value
       )
     ).toEqual([8, 5]);
+  });
+
+  it('projects the real join predicate into grouped semantic nodes', () => {
+    const graph = projectSemanticWorkbenchGraph(SEMANTIC_WORKBENCH_TRANSFORM);
+    const labels = graph.nodes.map((node) => node.data.label);
+
+    expect(labels).toEqual(
+      expect.arrayContaining([
+        'FUENTES',
+        'CONDICIÓN DEL JOIN',
+        'TRANSFORMACIÓN',
+        'SOURCE\nraw.orders',
+        'SOURCE\nraw.client',
+        'FIELD\nraw.orders.client_id',
+        'FIELD\nraw.client.client_id',
+        'EQUAL\n=',
+        'JOIN\nJoinRel',
+      ])
+    );
+    const joinNode = graph.nodes.find((node) => node.id === graph.relationId);
+    expect(joinNode?.data.expression).toBe('raw.orders.client_id = raw.client.client_id');
+    expect(joinNode?.data.inputSummary).toBe('2 fuentes');
+    expect(joinNode?.data.outputSummary).toBe('15 columnas');
+    expect(graph.expressionCount).toBe(3);
+    expect(graph.edges.map((edge) => edge.data?.semanticEdgeKind)).toEqual(
+      expect.arrayContaining(['relation', 'expression'])
+    );
   });
 
   it('uses the admitted two-input Substrait join as transform authority', () => {

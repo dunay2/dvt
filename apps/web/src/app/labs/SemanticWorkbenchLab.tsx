@@ -1,15 +1,10 @@
 import { useCallback, useMemo, useState } from 'react';
-import {
-  Background,
-  MiniMap,
-  ReactFlow,
-  type EdgeTypes,
-  type Node,
-  type NodeTypes,
-} from '@xyflow/react';
+import { Background, ReactFlow, type EdgeTypes, type NodeTypes } from '@xyflow/react';
+import { Braces, Database, Equal, GitMerge, Hash } from 'lucide-react';
 
 import DbtNodeComponent from '../components/canvas/DbtNodeComponent';
 import { OperationalDrawerDataTable } from '../components/shell/OperationalDrawerDataTable';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../components/ui/tooltip';
 import { CanvasDependencyEdge } from '../views/canvas/CanvasDependencyEdge';
 import { useCanvasViewportGraphModel } from '../views/canvas/useCanvasViewportGraphModel';
 import {
@@ -17,10 +12,7 @@ import {
   SEMANTIC_WORKBENCH_SOURCE,
   SEMANTIC_WORKBENCH_TRANSFORM,
 } from './semanticWorkbenchFixture';
-import {
-  projectSemanticWorkbenchGraph,
-  type SemanticWorkbenchNodeData,
-} from './semanticWorkbenchProjection';
+import { projectSemanticWorkbenchGraph } from './semanticWorkbenchProjection';
 
 const surface = '#040712';
 const panel = '#09111f';
@@ -110,9 +102,7 @@ function SemanticWorkbenchLab() {
     []
   );
   const [selectedCanvasId, setSelectedCanvasId] = useState(SEMANTIC_WORKBENCH_TRANSFORM.id);
-  const [selectedSemantic, setSelectedSemantic] = useState<Node<SemanticWorkbenchNodeData> | null>(
-    null
-  );
+  const [selectedSemanticId, setSelectedSemanticId] = useState(semanticGraph.relationId);
   const [selectedSourceSampleId, setSelectedSourceSampleId] = useState<string | null>(null);
   const openSourceDataSample = useCallback((nodeId: string) => {
     setSelectedSourceSampleId(nodeId);
@@ -135,6 +125,117 @@ function SemanticWorkbenchLab() {
   const selectedSourceSample =
     SEMANTIC_WORKBENCH_SOURCE_SAMPLES.find(({ nodeId }) => nodeId === selectedSourceSampleId) ??
     null;
+  const selectedSemantic =
+    semanticGraph.nodes.find((node) => node.id === selectedSemanticId) ??
+    semanticGraph.nodes.find((node) => node.data.semanticKind !== 'group') ??
+    null;
+  const semanticNodes = useMemo(
+    () =>
+      semanticGraph.nodes.map((node) => {
+        if (node.data.semanticKind === 'group') {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              label: <span data-slot="semantic-workbench-group-label">{node.data.label}</span>,
+            },
+          };
+        }
+
+        const [title, subtitle = ''] = node.data.label.split('\n');
+        const Icon =
+          node.data.semanticKind === 'field'
+            ? Hash
+            : node.data.semanticKind === 'expression'
+              ? Equal
+              : node.data.semanticKind === 'literal'
+                ? Braces
+                : title === 'SOURCE'
+                  ? Database
+                  : GitMerge;
+        const iconColor =
+          node.data.semanticKind === 'field'
+            ? '#7dd3fc'
+            : node.data.semanticKind === 'expression'
+              ? '#34d399'
+              : title === 'SOURCE'
+                ? '#60a5fa'
+                : '#22d3ee';
+
+        return {
+          ...node,
+          selected: node.id === selectedSemanticId,
+          data: {
+            ...node.data,
+            label: (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span
+                    data-slot="semantic-workbench-node"
+                    tabIndex={0}
+                    style={{
+                      display: 'flex',
+                      minWidth: 0,
+                      alignItems: 'center',
+                      gap: 9,
+                      padding: '9px 10px',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        display: 'grid',
+                        width: 28,
+                        height: 28,
+                        flex: '0 0 28px',
+                        placeItems: 'center',
+                        border: `1px solid ${iconColor}`,
+                        borderRadius: 6,
+                        color: iconColor,
+                        background: `${iconColor}14`,
+                      }}
+                    >
+                      <Icon size={15} strokeWidth={1.8} />
+                    </span>
+                    <span style={{ minWidth: 0 }}>
+                      <span
+                        style={{
+                          display: 'block',
+                          color: iconColor,
+                          fontSize: 9,
+                          fontWeight: 750,
+                          letterSpacing: '0.06em',
+                        }}
+                      >
+                        {title}
+                      </span>
+                      <span
+                        style={{
+                          display: 'block',
+                          overflow: 'hidden',
+                          color: text,
+                          fontFamily: 'IBM Plex Mono, monospace',
+                          fontSize: 10,
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {subtitle}
+                      </span>
+                    </span>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top" sideOffset={6}>
+                  {node.data.detail}
+                </TooltipContent>
+              </Tooltip>
+            ),
+          },
+        };
+      }),
+    [semanticGraph.nodes, selectedSemanticId]
+  );
 
   const selectedCanvasNode =
     [...SEMANTIC_WORKBENCH_SOURCE, SEMANTIC_WORKBENCH_TRANSFORM].find(
@@ -150,7 +251,7 @@ function SemanticWorkbenchLab() {
         color: text,
         fontFamily: 'IBM Plex Sans, sans-serif',
         display: 'grid',
-        gridTemplateRows: '72px minmax(310px, 42vh) 42px minmax(0, 1fr)',
+        gridTemplateRows: '72px minmax(220px, 36vh) 42px minmax(0, 1fr)',
       }}
     >
       <header
@@ -276,8 +377,9 @@ function SemanticWorkbenchLab() {
         style={{
           minHeight: 0,
           display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1fr) 255px',
+          gridTemplateColumns: 'minmax(0, 1fr) 320px',
           position: 'relative',
+          overflow: 'hidden',
         }}
       >
         {selectedSourceSample == null ? null : (
@@ -318,7 +420,7 @@ function SemanticWorkbenchLab() {
         )}
         <div style={{ minWidth: 0, minHeight: 0, position: 'relative' }}>
           <ReactFlow
-            nodes={semanticGraph.nodes}
+            nodes={semanticNodes}
             edges={semanticGraph.edges}
             fitView
             fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
@@ -327,23 +429,14 @@ function SemanticWorkbenchLab() {
             nodesDraggable={false}
             nodesConnectable={false}
             elementsSelectable
-            onNodeClick={(_, node) => setSelectedSemantic(node)}
+            onNodeClick={(_, node) => {
+              if (node.data.semanticKind !== 'group') {
+                setSelectedSemanticId(node.id);
+              }
+            }}
             proOptions={{ hideAttribution: true }}
           >
             <Background color="#182844" gap={24} size={1} />
-            <MiniMap
-              pannable
-              zoomable
-              nodeColor={(node) =>
-                node.data?.semanticKind === 'relation'
-                  ? '#4f8cff'
-                  : node.data?.semanticKind === 'field'
-                    ? '#7dd3fc'
-                    : '#7084a5'
-              }
-              maskColor="rgba(4, 7, 18, 0.72)"
-              style={{ background: '#07101e', border: `1px solid ${border}` }}
-            />
           </ReactFlow>
 
           <div
@@ -362,49 +455,148 @@ function SemanticWorkbenchLab() {
               pointerEvents: 'none',
             }}
           >
-            {semanticGraph.relationCount} semantic relations · {semanticGraph.expressionCount}{' '}
-            expression nodes
+            {semanticGraph.relationCount} relaciones · {semanticGraph.expressionCount} expresiones
+            <span style={{ marginLeft: 12, color: '#60a5fa' }}>— flujo relacional</span>
+            <span style={{ marginLeft: 10, color: '#34d399' }}>— expresión</span>
           </div>
         </div>
 
         <aside
+          data-slot="semantic-workbench-inspector"
           style={{
+            minHeight: 0,
+            overflow: 'auto',
             borderLeft: `1px solid ${border}`,
             background: '#05090f',
             padding: 16,
           }}
         >
-          <div style={{ color: muted, fontSize: 10, fontWeight: 700, letterSpacing: '0.07em' }}>
-            SEMANTIC SELECTION
+          <div style={{ color: accent, fontSize: 10, fontWeight: 700, letterSpacing: '0.07em' }}>
+            RESUMEN
           </div>
           {selectedSemantic == null ? (
             <p style={{ marginTop: 16, color: muted, fontSize: 11, lineHeight: 1.55 }}>
-              Select a relation, field, literal or function inside the Transform focus.
+              Selecciona una relación, campo o expresión.
             </p>
           ) : (
             <div style={{ marginTop: 16 }}>
               <div
                 style={{
-                  color: accent,
-                  fontFamily: 'IBM Plex Mono, monospace',
-                  fontSize: 12,
-                  whiteSpace: 'pre-line',
+                  color: text,
+                  fontSize: 15,
+                  fontWeight: 700,
                 }}
               >
-                {selectedSemantic.data.label}
-              </div>
-              <div style={{ marginTop: 9, color: muted, fontSize: 11 }}>
-                kind: {selectedSemantic.data.semanticKind}
+                {selectedSemantic.data.label.split('\n')[0]}
               </div>
               <div
                 style={{
-                  marginTop: 5,
+                  marginTop: 3,
                   color: muted,
                   fontFamily: 'IBM Plex Mono, monospace',
                   fontSize: 10,
                 }}
               >
-                node: {selectedSemantic.id}
+                {selectedSemantic.data.label.split('\n').slice(1).join(' · ')}
+              </div>
+
+              {selectedSemantic.data.expression == null ? null : (
+                <div
+                  style={{
+                    marginTop: 18,
+                    border: '1px solid #245f88',
+                    borderRadius: 8,
+                    background: '#071827',
+                    padding: '10px 11px',
+                  }}
+                >
+                  <div style={{ color: muted, fontSize: 9, fontWeight: 700 }}>EXPRESIÓN</div>
+                  <div
+                    style={{
+                      marginTop: 6,
+                      color: accent,
+                      fontFamily: 'IBM Plex Mono, monospace',
+                      fontSize: 11,
+                    }}
+                  >
+                    {selectedSemantic.data.expression}
+                  </div>
+                </div>
+              )}
+
+              {selectedSemantic.data.detail === selectedSemantic.data.expression ? null : (
+                <p style={{ margin: '16px 0 0', color: muted, fontSize: 11, lineHeight: 1.55 }}>
+                  {selectedSemantic.data.detail}
+                </p>
+              )}
+
+              {selectedSemantic.data.inputSummary == null &&
+              selectedSemantic.data.outputSummary == null ? null : (
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                    gap: 8,
+                    marginTop: 16,
+                  }}
+                >
+                  {selectedSemantic.data.inputSummary == null ? null : (
+                    <div
+                      style={{
+                        border: `1px solid ${border}`,
+                        borderRadius: 8,
+                        background: panel,
+                        padding: 10,
+                      }}
+                    >
+                      <div style={{ color: muted, fontSize: 9 }}>ENTRADAS</div>
+                      <div style={{ marginTop: 5, color: text, fontSize: 12, fontWeight: 650 }}>
+                        {selectedSemantic.data.inputSummary}
+                      </div>
+                    </div>
+                  )}
+                  {selectedSemantic.data.outputSummary == null ? null : (
+                    <div
+                      style={{
+                        border: `1px solid ${border}`,
+                        borderRadius: 8,
+                        background: panel,
+                        padding: 10,
+                      }}
+                    >
+                      <div style={{ color: muted, fontSize: 9 }}>SALIDAS</div>
+                      <div style={{ marginTop: 5, color: text, fontSize: 12, fontWeight: 650 }}>
+                        {selectedSemantic.data.outputSummary}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div
+                style={{
+                  marginTop: 16,
+                  border: '1px solid #6d4b9e',
+                  borderRadius: 8,
+                  background: '#171026',
+                  padding: '10px 11px',
+                  color: '#c4b5fd',
+                  fontSize: 10,
+                  lineHeight: 1.45,
+                }}
+              >
+                Proyección semántica de solo lectura. La edición debe usar el rail DVT existente.
+              </div>
+
+              <div
+                style={{
+                  marginTop: 12,
+                  color: muted,
+                  fontFamily: 'IBM Plex Mono, monospace',
+                  fontSize: 9,
+                }}
+              >
+                {selectedSemantic.id}
               </div>
             </div>
           )}
@@ -419,8 +611,8 @@ function SemanticWorkbenchLab() {
               lineHeight: 1.55,
             }}
           >
-            Top level is the DVT Canvas. This lower graph is only the internal semantic focus of the
-            selected Transform; it is not another set of DVT cards.
+            El nivel superior es el Canvas DVT. Este grafo solo proyecta la semántica interna del
+            Transform seleccionado.
           </div>
         </aside>
       </section>

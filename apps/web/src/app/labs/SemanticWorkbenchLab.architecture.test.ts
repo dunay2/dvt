@@ -17,4 +17,14 @@ describe('Semantic Workbench Canvas movement architecture', () => {
     expect(labSource).toContain('onOpenSourceDataSample: openSourceDataSample');
     expect(labSource).not.toContain('<table');
   });
+
+  it('renders grouped Substrait nodes and one factual read-only inspector', () => {
+    expect(labSource).toContain('data-slot="semantic-workbench-node"');
+    expect(labSource).toContain('data-slot="semantic-workbench-inspector"');
+    expect(labSource).toContain('setSelectedSemanticId');
+    expect(labSource).toContain('Tooltip');
+    expect(labSource).toContain('Proyección semántica de solo lectura');
+    expect(labSource).not.toContain('Impacto estimado');
+    expect(labSource).not.toContain('Editar nodo');
+  });
 });
