@@ -1,4 +1,4 @@
-import { Position, type Edge, type Node } from '@xyflow/react';
+import { Position, type Edge, type Node, type SmoothStepPathOptions } from '@xyflow/react';
 import type { Expression, Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import type { CSSProperties } from 'react';
@@ -25,9 +25,17 @@ export type SemanticWorkbenchNodeData = Readonly<{
   }>;
 }>;
 
+type SemanticWorkbenchEdgeData = Readonly<{
+  semanticEdgeKind: 'relation' | 'expression';
+}>;
+
+type SemanticWorkbenchEdge = Edge<SemanticWorkbenchEdgeData, 'smoothstep'> & {
+  pathOptions?: SmoothStepPathOptions;
+};
+
 export type SemanticWorkbenchGraph = Readonly<{
   nodes: Node<SemanticWorkbenchNodeData>[];
-  edges: Edge[];
+  edges: SemanticWorkbenchEdge[];
   relationCount: number;
   expressionCount: number;
   relationId: string;
@@ -216,9 +224,40 @@ function literalLabel(expression: Expression): string {
   return `${literal.case}: ${String(literal.value)}`;
 }
 
+function routeEdgesByTransition(
+  nodes: readonly Node<SemanticWorkbenchNodeData>[],
+  edges: readonly SemanticWorkbenchEdge[]
+): SemanticWorkbenchEdge[] {
+  const semanticGroupByNodeId = new Map(
+    nodes.map((node) => [node.id, node.data.semanticGroup] as const)
+  );
+  const transitionKey = (edge: SemanticWorkbenchEdge) =>
+    `${edge.data?.semanticEdgeKind ?? 'unknown'}:${semanticGroupByNodeId.get(edge.source) ?? 'unknown'}->${semanticGroupByNodeId.get(edge.target) ?? 'unknown'}`;
+  const laneCountByTransition = new Map<string, number>();
+  edges.forEach((edge) => {
+    const key = transitionKey(edge);
+    laneCountByTransition.set(key, (laneCountByTransition.get(key) ?? 0) + 1);
+  });
+  const laneIndexByTransition = new Map<string, number>();
+
+  return edges.map((edge) => {
+    const key = transitionKey(edge);
+    const laneIndex = laneIndexByTransition.get(key) ?? 0;
+    const laneCount = laneCountByTransition.get(key) ?? 1;
+    laneIndexByTransition.set(key, laneIndex + 1);
+    return {
+      ...edge,
+      pathOptions: {
+        ...edge.pathOptions,
+        stepPosition: (laneIndex + 1) / (laneCount + 1),
+      },
+    };
+  });
+}
+
 function layoutGraph(
   nodes: readonly Node<SemanticWorkbenchNodeData>[],
-  edges: readonly Edge[]
+  edges: readonly SemanticWorkbenchEdge[]
 ): Node<SemanticWorkbenchNodeData>[] {
   const groups = [
     { id: 'source', label: 'FUENTES', color: '#3b82f6' },
@@ -331,7 +370,7 @@ export function projectSemanticWorkbenchGraph(
     draft.sidecar.relations.map((binding) => [binding.relAnchor, binding.relationId] as const)
   );
   const nodes: Node<SemanticWorkbenchNodeData>[] = [];
-  const edges: Edge[] = [];
+  const edges: SemanticWorkbenchEdge[] = [];
   let sequence = 0;
   let relationCount = 0;
   let expressionCount = 0;
@@ -608,10 +647,11 @@ export function projectSemanticWorkbenchGraph(
     rootRelationAnchor == null
       ? transformNode.id
       : (relationIdByAnchor.get(rootRelationAnchor) ?? transformNode.id);
+  const routedEdges = routeEdgesByTransition(nodes, edges);
 
   return {
-    nodes: layoutGraph(nodes, edges),
-    edges,
+    nodes: layoutGraph(nodes, routedEdges),
+    edges: routedEdges,
     relationCount,
     expressionCount,
     relationId,

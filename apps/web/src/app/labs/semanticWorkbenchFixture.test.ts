@@ -146,6 +146,25 @@ describe('semanticWorkbenchFixture', () => {
         expect.objectContaining({ source: secondEqual.id, target: secondJoin.id }),
       ])
     );
+
+    const nodeById = new Map(graph.nodes.map((node) => [node.id, node] as const));
+    const lanesByTransition = new Map<string, number[]>();
+    graph.edges.forEach((edge) => {
+      const sourceGroup = nodeById.get(edge.source)?.data.semanticGroup;
+      const targetGroup = nodeById.get(edge.target)?.data.semanticGroup;
+      const kind = edge.data?.semanticEdgeKind;
+      const stepPosition = edge.pathOptions?.stepPosition;
+      if (sourceGroup == null || targetGroup == null || kind == null || stepPosition == null) {
+        throw new Error('Expected every semantic edge to have a deterministic routing lane.');
+      }
+      const key = `${kind}:${sourceGroup}->${targetGroup}`;
+      lanesByTransition.set(key, [...(lanesByTransition.get(key) ?? []), stepPosition]);
+    });
+    expect(
+      [...lanesByTransition.values()]
+        .filter((lanes) => lanes.length > 1)
+        .every((lanes) => new Set(lanes).size === lanes.length)
+    ).toBe(true);
   });
 
   it('uses the admitted N-input Substrait join as transform authority', () => {
