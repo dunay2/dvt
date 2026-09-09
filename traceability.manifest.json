@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-09-07",
+  "generated": "2026-09-09",
   "repo": {
     "sha": "local"
   },
@@ -813,6 +813,7 @@
         "Admit one UTF-8 CSV or JSON Lines object and one scoped staging relation.",
         "Carry one bounded dbt selector in the admitted step configuration.",
         "Define plan-compile step-type configuration schemas as explicit planner contract surface",
+        "Enforce one shared budget contract across Canvas, API, and persistence boundaries.",
         "Keep common timeout, concurrency, and custom fields independent of step-family artifacts.",
         "Keep executable-selection intent as a canonical planner contract instead of UI-local state.",
         "Keep execution decisions in the persisted plan artifact so Web renders planner truth without reconstructing selection semantics.",
@@ -829,6 +830,7 @@
         "Validate canonical plan-admission findings through one focused strict schema pack."
       ],
       "implemented_by": [
+        "packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringFieldPolicy.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DbtStepSelector.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/ExecutableSubgraph.v1.ts",

@@ -102,6 +102,11 @@ export function DvtSourceAuthoringSection({
               disabled={disabled || loadState === 'loading' || warehouseSourceImport == null}
               className={inspectorVisualClasses.inspectorSelectInput}
               aria-invalid={errors?.connectionRef ? 'true' : undefined}
+              aria-describedby={
+                errors?.connectionRef
+                  ? `inspector-dvt-source-connection-error-${node.id}`
+                  : undefined
+              }
               onChange={(event) => {
                 const connection = connections.find(
                   (candidate) => candidate.id === event.currentTarget.value
@@ -148,7 +153,11 @@ export function DvtSourceAuthoringSection({
             </p>
           ) : null}
           {errors?.connectionRef ? (
-            <p className={inspectorVisualClasses.inspectorErrorText}>
+            <p
+              id={`inspector-dvt-source-connection-error-${node.id}`}
+              className={inspectorVisualClasses.inspectorErrorText}
+              role="alert"
+            >
               {formatCanvasInspectorNodeDraftError(errors.connectionRef, canvasViewCopy)}
             </p>
           ) : null}
@@ -226,6 +235,9 @@ export function DvtSourceAuthoringSection({
               value={draft.schema}
               disabled={disabled}
               aria-invalid={errors?.schema ? 'true' : undefined}
+              aria-describedby={
+                errors?.schema ? `inspector-dvt-source-schema-error-${node.id}` : undefined
+              }
               onChange={(event) =>
                 onChange((currentDraft) =>
                   currentDraft.dvt?.kind === 'source'
@@ -238,7 +250,11 @@ export function DvtSourceAuthoringSection({
               }
             />
             {errors?.schema ? (
-              <p className={inspectorVisualClasses.inspectorErrorText}>
+              <p
+                id={`inspector-dvt-source-schema-error-${node.id}`}
+                className={inspectorVisualClasses.inspectorErrorText}
+                role="alert"
+              >
                 {formatCanvasInspectorNodeDraftError(errors.schema, canvasViewCopy)}
               </p>
             ) : null}
@@ -268,6 +284,9 @@ export function DvtSourceAuthoringSection({
               value={draft.table}
               disabled={disabled}
               aria-invalid={errors?.table ? 'true' : undefined}
+              aria-describedby={
+                errors?.table ? `inspector-dvt-source-table-error-${node.id}` : undefined
+              }
               onChange={(event) =>
                 onChange((currentDraft) =>
                   currentDraft.dvt?.kind === 'source'
@@ -280,7 +299,11 @@ export function DvtSourceAuthoringSection({
               }
             />
             {errors?.table ? (
-              <p className={inspectorVisualClasses.inspectorErrorText}>
+              <p
+                id={`inspector-dvt-source-table-error-${node.id}`}
+                className={inspectorVisualClasses.inspectorErrorText}
+                role="alert"
+              >
                 {formatCanvasInspectorNodeDraftError(errors.table, canvasViewCopy)}
               </p>
             ) : null}
@@ -296,6 +319,9 @@ export function DvtSourceAuthoringSection({
             value={draft.alias}
             disabled={disabled}
             aria-invalid={errors?.alias ? 'true' : undefined}
+            aria-describedby={
+              errors?.alias ? `inspector-dvt-source-alias-error-${node.id}` : undefined
+            }
             onChange={(event) =>
               onChange((currentDraft) =>
                 currentDraft.dvt?.kind === 'source'
@@ -308,7 +334,11 @@ export function DvtSourceAuthoringSection({
             }
           />
           {errors?.alias ? (
-            <p className={inspectorVisualClasses.inspectorErrorText}>
+            <p
+              id={`inspector-dvt-source-alias-error-${node.id}`}
+              className={inspectorVisualClasses.inspectorErrorText}
+              role="alert"
+            >
               {formatCanvasInspectorNodeDraftError(errors.alias, canvasViewCopy)}
             </p>
           ) : null}

@@ -375,6 +375,79 @@ test('command/query rail snapshot indexes feature manifests for DB-first gap and
   assert.equal(duplicateRows.length, 2);
 });
 
+test('command/query rail snapshot keeps feature references without creating rail authority', () => {
+  const authorityPath = 'docs/planning/proposals/mandatory/authority.md';
+  const docs = [
+    {
+      path: authorityPath,
+      content: [
+        '```feature-mechanization',
+        'version: 1',
+        'featureId: AUTHORITY-FEATURE',
+        'mechanizationStatus: implemented',
+        'commandQueryRails:',
+        '  - name: ConfigureWidget',
+        '    type: command',
+        '    dddOwner: WidgetAggregate',
+        'symbols: []',
+        '```',
+      ].join('\n'),
+    },
+    {
+      path: 'docs/planning/proposals/mandatory/reference.md',
+      content: [
+        '```feature-mechanization',
+        'version: 1',
+        'featureId: REFERENCE-FEATURE',
+        'mechanizationStatus: implemented',
+        'commandQueryRails:',
+        '  - name: ConfigureWidget',
+        '    type: command',
+        '    dddOwner: WidgetAggregate',
+        '    referenceOnly: true',
+        `    authorityRef: ${authorityPath}`,
+        'symbols: []',
+        '```',
+      ].join('\n'),
+    },
+  ];
+
+  const snapshot = buildCommandQueryRailSnapshot({ docs });
+  const reference = snapshot.rails.find((rail) => rail.featureId === 'REFERENCE-FEATURE');
+
+  assert.equal(snapshot.rails.length, 2);
+  assert.equal(reference.railStatus, 'referenced');
+  assert.equal(reference.rawRail.referenceOnly, true);
+  assert.equal(reference.rawRail.authorityRef, authorityPath);
+});
+
+test('command/query rail snapshot rejects a dangling feature reference', () => {
+  const docs = [
+    {
+      path: 'docs/planning/proposals/mandatory/reference.md',
+      content: [
+        '```feature-mechanization',
+        'version: 1',
+        'featureId: REFERENCE-FEATURE',
+        'mechanizationStatus: implemented',
+        'commandQueryRails:',
+        '  - name: ConfigureWidget',
+        '    type: command',
+        '    dddOwner: WidgetAggregate',
+        '    referenceOnly: true',
+        '    authorityRef: docs/planning/proposals/mandatory/missing.md',
+        'symbols: []',
+        '```',
+      ].join('\n'),
+    },
+  ];
+
+  assert.throws(
+    () => buildCommandQueryRailSnapshot({ docs }),
+    /does not resolve authority docs\/planning\/proposals\/mandatory\/missing\.md/
+  );
+});
+
 test('command/query rail snapshot joins documented rails with source implementation refs', () => {
   const docs = [
     {

@@ -72,6 +72,30 @@ test('current Planning DB schema is one declarative artifact without migration s
   assert.doesNotThrow(() => assertCurrentPlanningDbSchema(schemaSql));
 });
 
+test('command/query rail authority excludes feature references while retaining their evidence', () => {
+  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+  const viewSql = schemaSql.slice(
+    schemaSql.indexOf('CREATE VIEW planning_query_store.command_query_rail_query AS'),
+    schemaSql.indexOf('-- Name: evidence_subject_implementation_query')
+  );
+
+  assert.ok(viewSql.includes(`raw_rail @> '{"referenceOnly": true}'::jsonb) AS is_reference`));
+  assert.ok(viewSql.includes('FILTER (WHERE ((NOT rail_1.is_reference)'));
+  assert.ok(viewSql.includes('WHERE (NOT rail_1.is_reference)'));
+  assert.ok(viewSql.includes('jsonb_agg(DISTINCT rail_1.feature_id'));
+});
+
+test('governed source drift checks repository paths without treating external evidence as files', () => {
+  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+  const viewSql = schemaSql.slice(
+    schemaSql.indexOf('CREATE VIEW planning_query_store.governed_source_drift_query AS'),
+    schemaSql.indexOf('-- Name: governance_problem_dashboard_query')
+  );
+
+  assert.ok(viewSql.includes("source_path !~* '^https?://'::text"));
+  assert.ok(viewSql.includes("source_path !~ '^\\.generated-docs/'::text"));
+});
+
 test('current schema accepts audited architecture storage I/O records', () => {
   const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
 

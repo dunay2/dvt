@@ -421,4 +421,38 @@ describe('Canvas calculated column authoring', () => {
     expect(rowNumber).toEqual({ outcome: 'rejected' });
     expect(initial.localNodeCatalog?.[source.id]).toBe(source);
   });
+
+  it('rejects policy-invalid aliases and literals without mutating the Transform', () => {
+    const transform = projectionTransform();
+    const initial = session(source, transform);
+    initial.workingSet.visibleEdges.push({ sourceId: source.id, targetId: transform.id });
+    const context = new Map([
+      [source.id, source],
+      [transform.id, transform],
+    ]);
+
+    for (const request of [
+      {
+        nodeId: transform.id,
+        kind: 'field-ref' as const,
+        alias: 'x'.repeat(64),
+        inputFieldId: 'output:customer',
+      },
+      {
+        nodeId: transform.id,
+        kind: 'string-literal' as const,
+        alias: 'channel',
+        value: '😀'.repeat(1025),
+      },
+    ]) {
+      expect(
+        applyCanvasCalculatedColumn({
+          draftSession: initial,
+          canonicalNodesById: context,
+          request,
+        })
+      ).toEqual({ outcome: 'rejected' });
+      expect(initial.localNodeCatalog?.[transform.id]).toBe(transform);
+    }
+  });
 });

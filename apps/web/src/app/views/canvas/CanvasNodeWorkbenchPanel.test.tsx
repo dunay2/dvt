@@ -612,6 +612,25 @@ describe('CanvasNodeWorkbenchPanel', () => {
     ]);
   });
 
+  it('keeps an invalid business tag visible and blocks Apply with an accessible error', () => {
+    const node = { ...DVT_TRANSFORM_NODE, tags: ['authoring'] };
+    const onApplyNodeDraft = vi.fn();
+    renderNodePanel(root, node, 'general', { canEditNode: true, onApplyNodeDraft });
+    const tagsInput = container.querySelector<HTMLInputElement>('input[name="node-tags"]')!;
+    const invalidTag = '😀'.repeat(33);
+
+    act(() => {
+      fireEvent.input(tagsInput, { target: { value: invalidTag } });
+    });
+
+    expect(tagsInput.value).toBe(invalidTag);
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain('too long');
+    const applyButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent === 'Apply'
+    );
+    expect(applyButton?.disabled).toBe(true);
+    expect(onApplyNodeDraft).not.toHaveBeenCalled();
+  });
   it('keeps the read-only Source Overview factual without disabled authoring controls', () => {
     renderNodePanel(root, SOURCE_NODE, 'general', {
       canEditNode: false,

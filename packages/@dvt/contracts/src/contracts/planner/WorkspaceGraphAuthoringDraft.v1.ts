@@ -16,6 +16,12 @@ import { z } from 'zod';
 import { isNonBlankString, NON_BLANK_STRING_MESSAGE } from '../../utils/contractPrimitives.js';
 
 import {
+  CanvasDescriptionV1Schema,
+  CanvasHumanNameV1Schema,
+  CanvasTagsV1Schema,
+  PostgresIdentifierV1Schema,
+} from './CanvasAuthoringFieldPolicy.v1.js';
+import {
   DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY,
   DvtTransformAuthoringAuthorityV1Schema,
 } from './DvtTransformAuthoringAuthority.v1.js';
@@ -139,16 +145,140 @@ export const WorkspaceGraphAuthoringCanvasDocumentSchema = z
   .object({
     id: NonBlankStringSchema.optional(),
     kind: NonBlankStringSchema,
-    title: NonBlankStringSchema,
+    title: CanvasHumanNameV1Schema,
     environmentId: NonBlankStringSchema.optional(),
     defaultPermission: z.enum(['read', 'write']).optional(),
   })
   .strict() satisfies z.ZodType<WorkspaceGraphAuthoringCanvasDocument>;
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function addPostgresIdentifierMetadataIssue(
+  record: Record<string, unknown>,
+  key: string,
+  path: string[],
+  context: z.RefinementCtx
+): void {
+  if (Object.hasOwn(record, key) && !PostgresIdentifierV1Schema.safeParse(record[key]).success) {
+    context.addIssue({
+      code: 'custom',
+      message: `DVT metadata ${key} violates the PostgreSQL identifier policy.`,
+      path: [...path, key],
+    });
+  }
+}
+
+function addStringEnumMetadataIssue(
+  record: Record<string, unknown>,
+  key: string,
+  allowed: readonly string[],
+  path: string[],
+  context: z.RefinementCtx
+): void {
+  if (
+    Object.hasOwn(record, key) &&
+    (typeof record[key] !== 'string' || !allowed.includes(record[key]))
+  ) {
+    context.addIssue({
+      code: 'custom',
+      message: `DVT metadata ${key} is not an admitted value.`,
+      path: [...path, key],
+    });
+  }
+}
+
+export function addDvtNodeFieldPolicyIssues(
+  node: Pick<WorkspaceGraphAuthoringNode, 'pluginId' | 'kind' | 'metadata'>,
+  context: z.RefinementCtx
+): void {
+  const isSource =
+    node.kind === 'dvt:source' &&
+    (node.pluginId === 'dvt' || node.pluginId === 'dvt.warehouse-source');
+  const isSink = node.kind === 'dvt:sink' && node.pluginId === 'dvt';
+  const isTransform = node.kind === 'dvt:transform' && node.pluginId === 'dvt';
+  if (!isSource && !isSink && !isTransform) return;
+
+  const metadata = node.metadata ?? {};
+  const config = metadata['config'];
+  if (config !== undefined && !isRecord(config)) {
+    context.addIssue({
+      code: 'custom',
+      message: 'DVT node metadata config must be an object.',
+      path: ['metadata', 'config'],
+    });
+    return;
+  }
+  if (isRecord(config)) {
+    if (isSource || isSink) {
+      for (const key of isSource ? ['schema', 'table', 'alias'] : ['schema', 'table']) {
+        addPostgresIdentifierMetadataIssue(config, key, ['metadata', 'config'], context);
+      }
+    }
+    if (isSink) {
+      addStringEnumMetadataIssue(
+        config,
+        'materialization',
+        ['table', 'view'],
+        ['metadata', 'config'],
+        context
+      );
+      addStringEnumMetadataIssue(
+        config,
+        'writeMode',
+        ['replace', 'append'],
+        ['metadata', 'config'],
+        context
+      );
+    }
+    if (isTransform) {
+      addStringEnumMetadataIssue(
+        config,
+        'materialized',
+        ['table', 'view'],
+        ['metadata', 'config'],
+        context
+      );
+    }
+  }
+  if (isSource) {
+    for (const key of ['schema', 'tableName', 'sourceName']) {
+      addPostgresIdentifierMetadataIssue(metadata, key, ['metadata'], context);
+    }
+  }
+}
+function canonicalizeDvtTransformAuthoringAuthority<Node extends WorkspaceGraphAuthoringNode>(
+  node: Node
+): Node {
+  if (
+    node.kind !== 'dvt:transform' ||
+    node.metadata === undefined ||
+    !Object.hasOwn(node.metadata, DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY)
+  ) {
+    return node;
+  }
+
+  const parsed = DvtTransformAuthoringAuthorityV1Schema.safeParse(
+    node.metadata[DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY]
+  );
+  if (!parsed.success) {
+    return node;
+  }
+
+  return {
+    ...node,
+    metadata: {
+      ...node.metadata,
+      [DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY]: parsed.data,
+    },
+  } as Node;
+}
+
 export const WorkspaceGraphAuthoringNodeSchema = z
   .object({
     id: NonBlankStringSchema,
-    name: NonBlankStringSchema,
+    name: CanvasHumanNameV1Schema,
     pluginId: NonBlankStringSchema,
     kind: NonBlankStringSchema,
     role: z.enum([
@@ -166,14 +296,18 @@ export const WorkspaceGraphAuthoringNodeSchema = z
       WORKSPACE_GRAPH_AUTHORING_NODE_STATUS.skipped,
       WORKSPACE_GRAPH_AUTHORING_NODE_STATUS.warn,
     ]),
-    tags: z.array(NonBlankStringSchema),
+    tags: CanvasTagsV1Schema,
     path: NonBlankStringSchema.optional(),
-    description: NonBlankStringSchema.optional(),
+    description: CanvasDescriptionV1Schema.optional(),
     lastDuration: z.float64().nonnegative().optional(),
     lastCost: z.float64().nonnegative().optional(),
     metadata: RecordStringUnknownSchema.optional(),
   })
-  .strict() satisfies z.ZodType<WorkspaceGraphAuthoringNode>;
+  .strict()
+  .superRefine(addDvtNodeFieldPolicyIssues)
+  .overwrite(
+    canonicalizeDvtTransformAuthoringAuthority
+  ) satisfies z.ZodType<WorkspaceGraphAuthoringNode>;
 
 export const WorkspaceGraphAuthoringEdgeSchema = z
   .object({

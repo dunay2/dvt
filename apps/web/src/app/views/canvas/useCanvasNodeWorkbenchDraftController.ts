@@ -11,7 +11,6 @@ import {
 import type { CanonicalNode } from '../../types/canonical';
 import type { WorkspaceScope } from '../../ports/sessionContext';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
-import { limitCanvasNodeTagsText } from './canvasNodeTagPolicy';
 import {
   areCanvasInspectorNodeDraftsEqual,
   canonicalizeCanvasInspectorNodeDraft,
@@ -62,14 +61,10 @@ function tagsTextFromDraft(draft: CanvasInspectorNodeDraft): string {
 }
 
 function tagsFromText(value: string): readonly string[] {
-  return Array.from(
-    new Set(
-      value
-        .split(',')
-        .map((tag) => tag.trim())
-        .filter((tag) => tag.length > 0 && !isSemanticCanvasNodeTag(tag))
-    )
-  );
+  return value
+    .split(',')
+    .map((tag) => tag.trim())
+    .filter((tag) => tag.length > 0 && !isSemanticCanvasNodeTag(tag));
 }
 
 function isSemanticCanvasNodeTag(tag: string): boolean {
@@ -136,7 +131,7 @@ function reduceDraftControllerState(
         submittedDraft: null,
       };
     case 'tags-text-changed': {
-      const tagsText = limitCanvasNodeTagsText(resolveStateUpdate(state.tagsText, action.update));
+      const tagsText = resolveStateUpdate(state.tagsText, action.update);
       return {
         ...state,
         draft: {

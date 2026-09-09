@@ -9,12 +9,14 @@ import type { CanonicalNode } from '../../types/canonical';
 import type { WorkspaceScope } from '../../ports/sessionContext';
 
 type UseCanvasInspectorCommandsArgs = {
+  canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
   inspectorNode: CanonicalNode | null;
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
   workspaceScope: WorkspaceScope;
 };
 
 export function useCanvasInspectorCommands({
+  canonicalNodesById,
   inspectorNode,
   setDraftSession,
   workspaceScope,
@@ -27,6 +29,7 @@ export function useCanvasInspectorCommands({
 
       setDraftSession((currentSession) =>
         applyCanvasInspectorNodeDraftToSession({
+          canonicalNodesById,
           draftSession: currentSession,
           node: inspectorNode,
           draft,
@@ -34,7 +37,7 @@ export function useCanvasInspectorCommands({
         })
       );
     },
-    [inspectorNode, setDraftSession, workspaceScope]
+    [canonicalNodesById, inspectorNode, setDraftSession, workspaceScope]
   );
 
   return {

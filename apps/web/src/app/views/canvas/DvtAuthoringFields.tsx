@@ -75,6 +75,9 @@ function DvtTransformMaterializationField({
         disabled={disabled}
         className={inspectorVisualClasses.inspectorSelectInput}
         aria-invalid={errors?.materialization ? 'true' : undefined}
+        aria-describedby={
+          errors?.materialization ? 'dvt-transform-materialization-error' : undefined
+        }
         onChange={(event) =>
           onChange((current) =>
             current.dvt?.kind === 'transform'
@@ -90,7 +93,11 @@ function DvtTransformMaterializationField({
         ))}
       </select>
       {errors?.materialization ? (
-        <p className={inspectorVisualClasses.inspectorErrorText}>
+        <p
+          id="dvt-transform-materialization-error"
+          className={inspectorVisualClasses.inspectorErrorText}
+          role="alert"
+        >
           {formatCanvasInspectorNodeDraftError(errors.materialization, canvasViewCopy)}
         </p>
       ) : null}
@@ -185,6 +192,7 @@ export function DvtAuthoringFields({
             draft: { plan: draft.dvt.plan, sidecar: draft.dvt.sidecar },
           })}
           onChange={onChange}
+          outputNameDrafts={draft.outputNameDrafts ?? {}}
         />
       );
     } else if (draft.dvt.shape === 'union_all') {
@@ -193,6 +201,7 @@ export function DvtAuthoringFields({
           disabled={disabled}
           draft={draft.dvt}
           onChange={onChange}
+          outputNameDrafts={draft.outputNameDrafts ?? {}}
         />
       );
     } else {

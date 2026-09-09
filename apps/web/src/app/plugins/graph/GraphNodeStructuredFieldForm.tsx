@@ -1,4 +1,5 @@
 /** Owned concern: confirm one explicit structured-field proposal. */
+import { PostgresIdentifierV1Schema } from '@dvt/contracts';
 import { useId, useState, type ReactElement } from 'react';
 
 import { Input } from '../../components/ui/input';
@@ -29,9 +30,12 @@ export function GraphNodeStructuredFieldForm(props: {
   const copy = resolveGraphNodeStructuredFieldCopy(props.language);
   const [name, setName] = useState(props.initialName ?? '');
   const inputId = useId();
-  const normalizedName = name.trim();
-  const conflict =
-    normalizedName !== props.allowedExistingName && props.unavailableNames.includes(normalizedName);
+  const errorId = useId();
+
+  const conflict = name !== props.allowedExistingName && props.unavailableNames.includes(name);
+  const invalid =
+    name.length > 0 &&
+    (name !== name.trim() || !PostgresIdentifierV1Schema.safeParse(name).success);
   return (
     <Popover open onOpenChange={(open) => !open && props.onCancel()}>
       <PopoverAnchor asChild>
@@ -46,7 +50,7 @@ export function GraphNodeStructuredFieldForm(props: {
         <form
           onSubmit={(event) => {
             event.preventDefault();
-            if (normalizedName.length > 0 && !conflict) props.onApply(normalizedName);
+            if (name.trim().length > 0 && !conflict && !invalid) props.onApply(name);
           }}
         >
           <label htmlFor={inputId} className={classes.label}>
@@ -57,16 +61,18 @@ export function GraphNodeStructuredFieldForm(props: {
               value={name}
               autoFocus
               required
+              aria-invalid={conflict || invalid ? 'true' : undefined}
+              aria-describedby={conflict || invalid ? errorId : undefined}
               onChange={(event) => setName(event.currentTarget.value)}
             />
           </label>
           <div className={classes.preview}>
             <div className={classes.previewLabel}>{copy.preview}</div>
-            {normalizedName || '…'} → {props.childNames.join(', ')}
+            {name || '…'} → {props.childNames.join(', ')}
           </div>
-          {conflict ? (
-            <p role="alert" className={classes.error}>
-              {copy.conflict}
+          {conflict || invalid ? (
+            <p id={errorId} role="alert" className={classes.error}>
+              {conflict ? copy.conflict : copy.invalid}
             </p>
           ) : null}
           <div className={classes.actions}>
@@ -76,7 +82,7 @@ export function GraphNodeStructuredFieldForm(props: {
             <button
               type="submit"
               data-slot="graph-node-structured-field-apply"
-              disabled={normalizedName.length === 0 || conflict}
+              disabled={name.trim().length === 0 || conflict || invalid}
               className={classes.apply}
             >
               {copy.apply}

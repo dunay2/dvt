@@ -151,6 +151,7 @@ function DvtAuthoringFieldsHarness({
         onChange={setDraft}
       />
       <output data-slot="dvt-draft-json">{JSON.stringify(draft.dvt)}</output>
+      <output data-slot="output-name-drafts">{JSON.stringify(draft.outputNameDrafts ?? {})}</output>
     </>
   );
   if (!warehouseSourceImport) return fields;
@@ -215,6 +216,10 @@ describe('DvtAuthoringFields', () => {
 
   function draftJson(): string {
     return container.querySelector('[data-slot="dvt-draft-json"]')?.textContent ?? '';
+  }
+
+  function outputNameDraftsJson(): string {
+    return container.querySelector('[data-slot="output-name-drafts"]')?.textContent ?? '';
   }
 
   it('renders imported source target metadata and updates the source alias draft', () => {
@@ -316,7 +321,7 @@ describe('DvtAuthoringFields', () => {
     expect(draftJson()).not.toContain('"dbt"');
   });
 
-  it('starts one typed Substrait INNER JOIN from two compatible connected datasets', () => {
+  it('retains invalid JOIN output text across remount, corrects it, and clears it on deselect', () => {
     const customers = buildJoinWarehouseSourceNode({
       id: 'source-customers',
       table: 'customers',
@@ -328,6 +333,7 @@ describe('DvtAuthoringFields', () => {
       columns: ['order_id', 'customer_id'],
     });
     const transform = buildDvtNode('dvt:transform');
+    const nodes = [customers, orders, transform];
     const edges: readonly CanonicalEdge[] = [
       {
         id: 'customers-transform',
@@ -335,33 +341,133 @@ describe('DvtAuthoringFields', () => {
         targetId: transform.id,
         relation: 'lineage',
       },
-      {
-        id: 'orders-transform',
-        sourceId: orders.id,
-        targetId: transform.id,
-        relation: 'lineage',
-      },
+      { id: 'orders-transform', sourceId: orders.id, targetId: transform.id, relation: 'lineage' },
     ];
 
-    renderFields(transform, undefined, undefined, [customers, orders, transform], edges, 'code');
-
+    renderFields(transform, undefined, undefined, nodes, edges, 'code');
     const entry = container.querySelector<HTMLButtonElement>(
       '[data-slot="dvt-start-configured-inner-join"]'
     );
-    expect(entry).not.toBeNull();
-
     act(() => {
       fireEvent.click(entry!);
     });
 
-    expect(
-      container.querySelector('[data-slot="dvt-substrait-inner-join-authoring"]')
-    ).not.toBeNull();
-    expect(container.textContent).toContain('customers');
-    expect(container.textContent).toContain('orders');
-    expect(container.textContent).toContain('customer_id');
-    expect(draftJson()).toContain('"shape":"inner_join"');
+    const selector =
+      '[data-slot="dvt-substrait-inner-join-output-name"], [data-slot="dvt-substrait-n-input-output-name"]';
+    let outputName = container.querySelector<HTMLInputElement>(selector)!;
+    const fieldRow = outputName.closest<HTMLElement>(
+      '[data-slot="dvt-substrait-inner-join-field"], [data-slot="dvt-substrait-n-input-field"]'
+    )!;
+    let checkbox = fieldRow.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+    const invalidName = `${'x'.repeat(63)} `;
+    act(() => {
+      fireEvent.input(outputName, { target: { value: invalidName } });
+      fireEvent.focusOut(outputName);
+    });
+
+    expect(outputName.value).toBe(invalidName);
+    expect(outputName.getAttribute('aria-invalid')).toBe('true');
+    const alert = container.querySelector<HTMLElement>('[role="alert"]');
+    expect(outputName.getAttribute('aria-describedby')).toBe(alert?.id);
+    expect(outputNameDraftsJson()).toContain(invalidName);
+
+    const firstAlertId = outputName.getAttribute('aria-describedby');
+    expect(firstAlertId).not.toBeNull();
+    expect(document.getElementById(firstAlertId!)?.textContent).toContain(
+      'cannot start or end with whitespace'
+    );
+    const secondOutputName = [...container.querySelectorAll<HTMLInputElement>(selector)].find(
+      (candidate) => candidate !== outputName
+    )!;
+    act(() => {
+      fireEvent.input(secondOutputName, { target: { value: '   ' } });
+      fireEvent.focusOut(secondOutputName);
+    });
+    const secondAlertId = secondOutputName.getAttribute('aria-describedby');
+    expect(secondOutputName.value).toBe('   ');
+    expect(secondOutputName.getAttribute('aria-invalid')).toBe('true');
+    expect(secondAlertId).not.toBe(firstAlertId);
+    expect(document.getElementById(secondAlertId!)?.textContent).toContain('Alias is required');
+    act(() => {
+      fireEvent.input(secondOutputName, { target: { value: 'order_key' } });
+      fireEvent.focusOut(secondOutputName);
+    });
+
+    renderFields(transform, undefined, undefined, nodes, edges, 'general');
+    renderFields(transform, undefined, undefined, nodes, edges, 'code');
+    outputName = container.querySelector<HTMLInputElement>(selector)!;
+    checkbox = outputName
+      .closest<HTMLElement>(
+        '[data-slot="dvt-substrait-inner-join-field"], [data-slot="dvt-substrait-n-input-field"]'
+      )!
+      .querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+    expect(outputName.value).toBe(invalidName);
+
+    act(() => {
+      fireEvent.input(outputName, { target: { value: 'customer_key' } });
+      fireEvent.focusOut(outputName);
+    });
+    expect(outputName.getAttribute('aria-invalid')).toBeNull();
+    expect(draftJson()).toContain('customer_key');
+
+    act(() => {
+      fireEvent.input(outputName, { target: { value: invalidName } });
+      fireEvent.focusOut(outputName);
+      fireEvent.change(checkbox, { target: { checked: false } });
+    });
+    expect(outputNameDraftsJson()).not.toContain(invalidName);
+    expect(container.querySelector('[role="alert"]')).toBeNull();
   });
+  it('retains a duplicate JOIN output alias and leaves the semantic draft unchanged', () => {
+    const customers = buildJoinWarehouseSourceNode({
+      id: 'source-customers',
+      table: 'customers',
+      columns: ['customer_id', 'name'],
+    });
+    const orders = buildJoinWarehouseSourceNode({
+      id: 'source-orders',
+      table: 'orders',
+      columns: ['order_id', 'customer_id'],
+    });
+    const transform = buildDvtNode('dvt:transform');
+    const nodes = [customers, orders, transform];
+    const edges: readonly CanonicalEdge[] = [
+      {
+        id: 'customers-transform',
+        sourceId: customers.id,
+        targetId: transform.id,
+        relation: 'lineage',
+      },
+      { id: 'orders-transform', sourceId: orders.id, targetId: transform.id, relation: 'lineage' },
+    ];
+
+    renderFields(transform, undefined, undefined, nodes, edges, 'code');
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="dvt-start-configured-inner-join"]')!
+      );
+    });
+
+    const outputs = [
+      ...container.querySelectorAll<HTMLInputElement>(
+        '[data-slot="dvt-substrait-inner-join-output-name"], [data-slot="dvt-substrait-n-input-output-name"]'
+      ),
+    ];
+    const first = outputs[0]!;
+    const duplicateName = outputs[1]!.value;
+    const before = draftJson();
+    act(() => {
+      fireEvent.input(first, { target: { value: duplicateName } });
+      fireEvent.focusOut(first);
+    });
+
+    expect(first.value).toBe(duplicateName);
+    expect(first.getAttribute('aria-invalid')).toBe('true');
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain('already used');
+    expect(outputNameDraftsJson()).toContain(duplicateName);
+    expect(draftJson()).toBe(before);
+  });
+
   it('replaces a stale one-input projection with an explicitly configured connected join', () => {
     const orders = buildJoinWarehouseSourceNode({
       id: 'source-orders',
@@ -602,16 +708,25 @@ describe('DvtAuthoringFields', () => {
       (option) => option.textContent?.trim() === 'shipment_id'
     );
     expect(shipmentGrain?.value).toMatch(/^dvt_fld_/);
+    const applyGrouping = container.querySelector<HTMLButtonElement>(
+      '[data-slot="dvt-substrait-inner-join-apply-grouping"]'
+    )!;
+    const oversizedOutput = 'x'.repeat(64);
     act(() => {
-      fireEvent.change(grainField!, {
-        target: { value: shipmentGrain!.value },
-      });
+      fireEvent.change(grainField!, { target: { value: shipmentGrain!.value } });
+      fireEvent.input(countOutput!, { target: { value: oversizedOutput } });
+      fireEvent.click(applyGrouping);
+    });
+    expect(countOutput?.value).toBe(oversizedOutput);
+    expect(countOutput?.getAttribute('aria-invalid')).toBe('true');
+    expect(draftJson()).not.toContain(oversizedOutput);
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-inner-join-grouping-authoring"]')
+    ).toBeNull();
+
+    act(() => {
       fireEvent.input(countOutput!, { target: { value: 'shipment_count' } });
-      fireEvent.click(
-        container.querySelector<HTMLButtonElement>(
-          '[data-slot="dvt-substrait-inner-join-apply-grouping"]'
-        )!
-      );
+      fireEvent.click(applyGrouping);
     });
     expect(
       container.querySelector('[data-slot="dvt-substrait-inner-join-grouping-authoring"]')
@@ -620,19 +735,78 @@ describe('DvtAuthoringFields', () => {
     const rankOutput = container.querySelector<HTMLInputElement>(
       '[data-slot="dvt-substrait-inner-join-window-output-name"]'
     );
+    const applyWindow = container.querySelector<HTMLButtonElement>(
+      '[data-slot="dvt-substrait-inner-join-apply-window"]'
+    )!;
+    act(() => {
+      fireEvent.input(rankOutput!, { target: { value: oversizedOutput } });
+      fireEvent.click(applyWindow);
+    });
+    expect(rankOutput?.value).toBe(oversizedOutput);
+    expect(rankOutput?.getAttribute('aria-invalid')).toBe('true');
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-inner-join-grouped-window-authoring"]')
+    ).toBeNull();
+
     act(() => {
       fireEvent.input(rankOutput!, { target: { value: 'shipment_rank' } });
-      fireEvent.click(
-        container.querySelector<HTMLButtonElement>(
-          '[data-slot="dvt-substrait-inner-join-apply-window"]'
-        )!
-      );
+      fireEvent.click(applyWindow);
     });
     expect(
       container.querySelector('[data-slot="dvt-substrait-inner-join-grouped-window-authoring"]')
     ).not.toBeNull();
+    const groupedRankOutput = container.querySelector<HTMLInputElement>(
+      '[data-slot="dvt-substrait-inner-join-window-output-name"]'
+    )!;
+    act(() => {
+      fireEvent.input(groupedRankOutput, { target: { value: 'shipment_rank ' } });
+      fireEvent.focusOut(groupedRankOutput);
+    });
+    expect(groupedRankOutput.value).toBe('shipment_rank ');
+    expect(groupedRankOutput.getAttribute('aria-invalid')).toBe('true');
+    expect(draftJson()).not.toContain('"displayName":"shipment_rank "');
     expect(draftJson()).toContain('"displayName":"shipment_count"');
     expect(draftJson()).toContain('"displayName":"shipment_rank"');
+    const removeWindow = container.querySelector<HTMLButtonElement>(
+      '[data-slot="dvt-substrait-inner-join-remove-window"]'
+    )!;
+    act(() => {
+      fireEvent.click(removeWindow);
+    });
+    expect(outputNameDraftsJson()).toBe('{}');
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-inner-join-grouped-window-authoring"]')
+    ).toBeNull();
+
+    const activeCountOutput = container.querySelector<HTMLInputElement>(
+      '[data-slot="dvt-substrait-inner-join-count-output-name"]'
+    )!;
+    const prospectiveRankOutput = container.querySelector<HTMLInputElement>(
+      '[data-slot="dvt-substrait-inner-join-window-output-name"]'
+    )!;
+    act(() => {
+      fireEvent.input(activeCountOutput, { target: { value: oversizedOutput } });
+      fireEvent.focusOut(activeCountOutput);
+    });
+    act(() => {
+      fireEvent.input(prospectiveRankOutput, { target: { value: oversizedOutput } });
+    });
+    expect(Object.keys(JSON.parse(outputNameDraftsJson()))).toHaveLength(2);
+
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>(
+          '[data-slot="dvt-substrait-inner-join-remove-grouping"]'
+        )!
+      );
+    });
+    expect(outputNameDraftsJson()).toBe('{}');
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-inner-join-grouping-authoring"]')
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-n-input-join-authoring"]')
+    ).not.toBeNull();
   });
 
   it('does not offer INNER JOIN when the connected datasets use different connections', () => {
@@ -738,8 +912,33 @@ describe('DvtAuthoringFields', () => {
     expect(nameSelection?.checked).toBe(true);
     expect(countryOutput?.value).toBe('country');
 
+    const nameOutput = container.querySelector<HTMLInputElement>(
+      'input[data-slot="dvt-substrait-union-all-output-name"][data-field-key="name"]'
+    );
+    const beforeDuplicate = draftJson();
+    act(() => {
+      fireEvent.input(countryOutput!, { target: { value: nameOutput!.value } });
+      fireEvent.focusOut(countryOutput!);
+    });
+    expect(countryOutput?.value).toBe(nameOutput?.value);
+    expect(countryOutput?.getAttribute('aria-invalid')).toBe('true');
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain('already used');
+    expect(draftJson()).toBe(beforeDuplicate);
+    act(() => {
+      fireEvent.input(countryOutput!, { target: { value: 'country' } });
+      fireEvent.focusOut(countryOutput!);
+    });
+    expect(countryOutput?.getAttribute('aria-invalid')).toBeNull();
+
     act(() => {
       fireEvent.click(nameSelection!);
+      fireEvent.input(countryOutput!, { target: { value: 'region ' } });
+      fireEvent.focusOut(countryOutput!);
+    });
+    expect(countryOutput?.value).toBe('region ');
+    expect(countryOutput?.getAttribute('aria-invalid')).toBe('true');
+    expect(draftJson()).not.toContain('"displayName":"region "');
+    act(() => {
       fireEvent.input(countryOutput!, { target: { value: 'region' } });
       fireEvent.focusOut(countryOutput!);
     });
@@ -769,10 +968,18 @@ describe('DvtAuthoringFields', () => {
     expect(grainField).not.toBeNull();
     expect(countOutput).not.toBeNull();
     expect(regionGrain?.value).toMatch(/^dvt_fld_/);
+    const oversizedOutput = 'x'.repeat(64);
     act(() => {
-      fireEvent.change(grainField!, {
-        target: { value: regionGrain!.value },
-      });
+      fireEvent.change(grainField!, { target: { value: regionGrain!.value } });
+      fireEvent.input(countOutput!, { target: { value: oversizedOutput } });
+      fireEvent.keyDown(applyGrouping!, { key: 'Enter' });
+    });
+    expect(countOutput?.value).toBe(oversizedOutput);
+    expect(countOutput?.getAttribute('aria-invalid')).toBe('true');
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-union-all-grouping-authoring"]')
+    ).toBeNull();
+    act(() => {
       fireEvent.input(countOutput!, { target: { value: 'customer_count' } });
       fireEvent.keyDown(applyGrouping!, { key: 'Enter' });
     });
@@ -788,6 +995,15 @@ describe('DvtAuthoringFields', () => {
       '[data-slot="dvt-substrait-union-all-apply-window"]'
     );
     act(() => {
+      fireEvent.input(rankOutput!, { target: { value: oversizedOutput } });
+      fireEvent.click(applyWindow!);
+    });
+    expect(rankOutput?.value).toBe(oversizedOutput);
+    expect(rankOutput?.getAttribute('aria-invalid')).toBe('true');
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-union-all-grouped-window-authoring"]')
+    ).toBeNull();
+    act(() => {
       fireEvent.input(rankOutput!, { target: { value: 'count_rank' } });
       fireEvent.click(applyWindow!);
     });
@@ -796,6 +1012,55 @@ describe('DvtAuthoringFields', () => {
     ).not.toBeNull();
     expect(draftJson()).toContain('"names":["region","customer_count","count_rank"]');
     expect(draftJson()).toContain('"case":"windowFunction"');
+    const groupedRankOutput = container.querySelector<HTMLInputElement>(
+      '[data-slot="dvt-substrait-union-all-window-output-name"]'
+    )!;
+    act(() => {
+      fireEvent.input(groupedRankOutput, { target: { value: oversizedOutput } });
+      fireEvent.focusOut(groupedRankOutput);
+    });
+    expect(groupedRankOutput.getAttribute('aria-invalid')).toBe('true');
+    expect(outputNameDraftsJson()).not.toBe('{}');
+
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>(
+          '[data-slot="dvt-substrait-union-all-remove-window"]'
+        )!
+      );
+    });
+    expect(outputNameDraftsJson()).toBe('{}');
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-union-all-grouped-window-authoring"]')
+    ).toBeNull();
+
+    const activeCountOutput = container.querySelector<HTMLInputElement>(
+      '[data-slot="dvt-substrait-union-all-count-output-name"]'
+    )!;
+    const prospectiveRankOutput = container.querySelector<HTMLInputElement>(
+      '[data-slot="dvt-substrait-union-all-window-output-name"]'
+    )!;
+    act(() => {
+      fireEvent.input(activeCountOutput, { target: { value: oversizedOutput } });
+      fireEvent.focusOut(activeCountOutput);
+    });
+    act(() => {
+      fireEvent.input(prospectiveRankOutput, { target: { value: oversizedOutput } });
+    });
+    expect(Object.keys(JSON.parse(outputNameDraftsJson()))).toHaveLength(2);
+
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>(
+          '[data-slot="dvt-substrait-union-all-remove-grouping"]'
+        )!
+      );
+    });
+    expect(outputNameDraftsJson()).toBe('{}');
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-union-all-grouping-authoring"]')
+    ).toBeNull();
+    expect(draftJson()).toContain('"case":"set"');
   });
 
   it('renders sink destination posture and updates materialization controls', () => {

@@ -177,7 +177,7 @@ function createCodeSymbolReadModelComponent(deps = {}) {
 
   async function readSourceDriftRows(client, filters = {}) {
     const params = [];
-    const predicates = [];
+    const predicates = ["source_path !~* '^https?://'"];
     appendFilter(predicates, params, 'source_path', filters.path);
     appendFilter(predicates, params, 'severity', filters.severity);
 

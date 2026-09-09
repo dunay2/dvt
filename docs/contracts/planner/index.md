@@ -12,6 +12,7 @@ ExecutionPlan and planner-related schemas and admission contracts.
 ## Normative Sources (`@dvt/contracts`)
 
 - `packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringFieldPolicy.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/CustomPolicyNamespaceRegistry.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DbtProjectGraphProjection.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DbtStepSelector.v1.ts`

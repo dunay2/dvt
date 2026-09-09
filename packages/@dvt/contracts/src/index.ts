@@ -154,6 +154,19 @@ export type {
   TransformationGitArtifactsProvenance,
 } from './contracts/planner/PlanPreviewProvenance.v1.js';
 export {
+  CANVAS_AUTHORING_FIELD_LIMITS_V1,
+  CanvasDescriptionV1Schema,
+  CanvasHumanNameV1Schema,
+  CanvasTagV1Schema,
+  CanvasTagsV1Schema,
+  DvtStringLiteralV1Schema,
+  DvtTimestampLiteralV1Schema,
+  PostgresIdentifierV1Schema,
+  countUnicodeCodePoints,
+  countUtf8Bytes,
+  isWellFormedCanvasText,
+} from './contracts/planner/CanvasAuthoringFieldPolicy.v1.js';
+export {
   WORKSPACE_GRAPH_AUTHORING_EDGE_RELATION,
   WORKSPACE_GRAPH_AUTHORING_NODE_ROLE,
   WORKSPACE_GRAPH_AUTHORING_NODE_STATUS,

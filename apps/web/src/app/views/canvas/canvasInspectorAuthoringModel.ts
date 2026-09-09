@@ -1,4 +1,14 @@
 /** Owned concern: derive, validate, and apply the route-owned Inspector DTO for governed node details. */
+import {
+  CANVAS_AUTHORING_FIELD_LIMITS_V1,
+  CanvasDescriptionV1Schema,
+  CanvasHumanNameV1Schema,
+  CanvasTagsV1Schema,
+  countUnicodeCodePoints,
+  isWellFormedCanvasText,
+  PostgresIdentifierV1Schema,
+} from '@dvt/contracts';
+
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
   applyDbtNodeAuthoringMetadata,
@@ -16,6 +26,8 @@ import {
   createDvtNodeAuthoringMetadata,
   validateDvtNodeAuthoringMetadata,
 } from './canvasDvtAuthoringModel';
+import type { DvtNodeAuthoringMetadata } from './canvasDvtAuthoringTypes';
+import type { CanvasInspectorNodeDraftErrorCode } from './canvasInspectorAuthoringErrorCodes';
 import type {
   CanvasInspectorNodeDraft,
   CanvasInspectorNodeDraftErrors,
@@ -51,8 +63,41 @@ function normalizeNodeName(value: string): string {
 }
 
 function normalizeNodeDescription(value: string): string | undefined {
-  const trimmed = value.trim();
-  return trimmed.length === 0 ? undefined : trimmed;
+  return value.trim().length === 0 ? undefined : value;
+}
+
+function normalizeNodeTags(tags: readonly string[]): string[] {
+  return tags.map((tag) => tag.trim()).filter((tag) => tag.length > 0);
+}
+
+export function resolveCanvasDvtOutputNameDraftError(
+  dvt: DvtNodeAuthoringMetadata | undefined,
+  outputNameDrafts: Readonly<Record<string, string>>,
+  key: string
+): CanvasInspectorNodeDraftErrorCode | null {
+  const value = outputNameDrafts[key];
+  if (value == null) return null;
+  if (value.trim().length === 0) return 'dvt_alias_required';
+  if (!isWellFormedCanvasText(value)) return 'dvt_identifier_invalid';
+  if (value !== value.trim()) return 'dvt_identifier_whitespace';
+  if (!PostgresIdentifierV1Schema.safeParse(value).success) return 'dvt_identifier_too_long';
+  if (dvt?.kind !== 'transform' || dvt.mode !== 'substrait') return null;
+
+  const resultRelation = dvt.sidecar.relations
+    .filter((relation) => relation.sourceRef == null)
+    .reduce<(typeof dvt.sidecar.relations)[number] | undefined>(
+      (current, relation) =>
+        current == null || relation.relAnchor > current.relAnchor ? relation : current,
+      undefined
+    );
+  if (resultRelation == null) return null;
+  const duplicate = dvt.sidecar.fields.some(
+    (field) =>
+      field.relationId === resultRelation.relationId &&
+      field.fieldId !== key &&
+      field.displayName === value
+  );
+  return duplicate ? 'dvt_alias_duplicate' : null;
 }
 
 export function createCanvasInspectorNodeDraft(node: CanonicalNode): CanvasInspectorNodeDraft {
@@ -60,9 +105,7 @@ export function createCanvasInspectorNodeDraft(node: CanonicalNode): CanvasInspe
   const dvtMetadata = hasDbtCompatibility ? null : createDvtNodeAuthoringMetadata(node);
   const objectFilePostgresDraft = createObjectFilePostgresAuthoringDraft(node);
   const httpJsonArtifactDraft = createHttpJsonArtifactAuthoringDraft(node);
-  const tags = Array.from(
-    new Set(node.tags.map((tag) => tag.trim()).filter((tag) => tag.length > 0))
-  );
+  const tags = normalizeNodeTags(node.tags);
 
   return {
     name: node.name,
@@ -91,12 +134,49 @@ export function validateCanvasInspectorNodeDraft(
   draft: CanvasInspectorNodeDraft,
   context?: CanvasInspectorNodeDraftValidationContext
 ): CanvasInspectorNodeDraftErrors {
-  if (normalizeNodeName(draft.name).length === 0) {
+  const normalizedName = normalizeNodeName(draft.name);
+  if (normalizedName.length === 0) {
     return {
       name: 'node_name_required',
     };
   }
+  if (!isWellFormedCanvasText(normalizedName)) {
+    return { name: 'node_name_invalid' };
+  }
+  if (!CanvasHumanNameV1Schema.safeParse(normalizedName).success) {
+    return { name: 'node_name_too_long' };
+  }
 
+  const normalizedDescription = normalizeNodeDescription(draft.description);
+  if (normalizedDescription != null && !isWellFormedCanvasText(normalizedDescription)) {
+    return { description: 'node_description_invalid' };
+  }
+  if (
+    normalizedDescription != null &&
+    !CanvasDescriptionV1Schema.safeParse(normalizedDescription).success
+  ) {
+    return { description: 'node_description_too_long' };
+  }
+
+  const normalizedTags = normalizeNodeTags(draft.tags);
+  if (normalizedTags.some((tag) => !isWellFormedCanvasText(tag))) {
+    return { tags: 'node_tags_invalid' };
+  }
+  if (
+    normalizedTags.some(
+      (tag) => countUnicodeCodePoints(tag) > CANVAS_AUTHORING_FIELD_LIMITS_V1.tagCodePoints
+    )
+  ) {
+    return { tags: 'node_tag_too_long' };
+  }
+  if (!CanvasTagsV1Schema.safeParse(normalizedTags).success) {
+    return { tags: 'node_tags_invalid' };
+  }
+  const outputNameDrafts = draft.outputNameDrafts ?? {};
+  for (const key of Object.keys(outputNameDrafts)) {
+    const error = resolveCanvasDvtOutputNameDraftError(draft.dvt, outputNameDrafts, key);
+    if (error != null) return { outputNames: error };
+  }
   if (draft.dbt) {
     const dbtErrors: NonNullable<CanvasInspectorNodeDraftErrors['dbt']> = {};
     if (draft.dbt.packageName.trim().length === 0) {
@@ -218,9 +298,7 @@ export function hasCanvasInspectorNodeDraftChanges(
   draft: CanvasInspectorNodeDraft
 ): boolean {
   const originalDraft = createCanvasInspectorNodeDraft(node);
-  const draftTags = Array.from(
-    new Set(draft.tags.map((tag) => tag.trim()).filter((tag) => tag.length > 0))
-  );
+  const draftTags = normalizeNodeTags(draft.tags);
 
   return (
     node.name !== normalizeNodeName(draft.name) ||
@@ -229,6 +307,7 @@ export function hasCanvasInspectorNodeDraftChanges(
     JSON.stringify(originalDraft.dbt ?? null) !== JSON.stringify(draft.dbt ?? null) ||
     JSON.stringify(originalDraft.dbtTest ?? null) !== JSON.stringify(draft.dbtTest ?? null) ||
     JSON.stringify(originalDraft.dvt ?? null) !== JSON.stringify(draft.dvt ?? null) ||
+    Object.keys(draft.outputNameDrafts ?? {}).length > 0 ||
     JSON.stringify(originalDraft.objectFilePostgres ?? null) !==
       JSON.stringify(draft.objectFilePostgres ?? null) ||
     JSON.stringify(originalDraft.httpJsonArtifact ?? null) !==
@@ -241,9 +320,7 @@ export function applyCanvasInspectorNodeDraft(
   draft: CanvasInspectorNodeDraft,
   workspaceScope?: WorkspaceScope
 ): CanonicalNode {
-  const tags = Array.from(
-    new Set(draft.tags.map((tag) => tag.trim()).filter((tag) => tag.length > 0))
-  );
+  const tags = normalizeNodeTags(draft.tags);
   const baseNode = {
     ...node,
     name: normalizeNodeName(draft.name),

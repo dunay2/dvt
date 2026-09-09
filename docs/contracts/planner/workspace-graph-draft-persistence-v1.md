@@ -2,7 +2,7 @@
 title: Workspace graph draft persistence v1
 status: Active
 owner: docs
-last_reviewed: 2026-08-13
+last_reviewed: 2026-09-08
 ---
 
 # Workspace graph draft persistence v1
@@ -117,6 +117,39 @@ flowchart LR
   Subgraph --> Compile["Canonical Substrait plan"]
   Save -. must not accept .-> Legacy["Compile artifact as editable payload"]
 ```
+
+## Canvas authoring field budgets
+
+Every editable string admitted into `WorkspaceGraphAuthoringDraft` has one
+contract-owned category, unit, normalization and maximum. The closed PCV1-I1
+census and implementation sequence live in
+[GH-3019 Canvas authoring field budgets](../../planning/proposals/mandatory/runtime-and-contracts/pcv1-canvas-authoring-field-budgets-3019-20260908.md).
+
+The v1 field categories are:
+
+| Category                                     | Maximum and unit                        | Normalization                                             |
+| -------------------------------------------- | --------------------------------------- | --------------------------------------------------------- |
+| Human node name                              | 256 Unicode code points                 | trim surrounding whitespace; required                     |
+| Node description                             | 4,096 Unicode code points               | preserve admitted Unicode and line breaks                 |
+| Business tag                                 | 32 Unicode code points; at most 32 tags | trim surrounding whitespace; reject normalized duplicates |
+| PostgreSQL Source, output or Sink identifier | 63 UTF-8 bytes per segment              | validate the exact proposed identifier; no silent repair  |
+| String literal                               | 4,096 UTF-8 bytes                       | preserve the exact admitted value                         |
+| Timestamp literal                            | canonical RFC3339 with milliseconds     | parse the exact trimmed value                             |
+| Closed choice                                | exact declared enum members             | no fallback from an unknown value                         |
+| Opaque reference                             | declared membership and scope           | no user-text budget or identity derivation                |
+
+Malformed Unicode, excess length, excess tag count, and unknown closed choices
+are typed validation failures. They must leave the stored revision unchanged.
+No boundary truncates, slices, repairs or relies on PostgreSQL identifier
+truncation. Logical output names remain provider-neutral; publication separately
+rejects a name that the selected physical target cannot represent.
+
+`metadata` is not an unbounded user-editable escape hatch. Every editable member
+inside node or edge metadata must be represented by a typed contract with one of
+these categories or by a separately governed document budget. UI controls consume
+the same policy but do not own it. Rejected proposals and focus are preserved by
+the existing authoring-result rail; persistence is claimed only after the
+`SaveWorkspaceGraphDraft` acknowledgement.
 
 ## Selection-to-execution seam
 

@@ -136,6 +136,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED 20260822 Crypto Primitive Authority](ED-20260822-crypto-primitive-authority.md)
 - [Ed 20260824 Substrait Semantic Reference Traceability](ed-20260824-substrait-semantic-reference-traceability.md)
 - [ED 20260903 Source Filter Capability Admission](ED-20260903-source-filter-capability-admission.md)
+- [ED 20260908 Canvas Authoring Field Budgets](ED-20260908-canvas-authoring-field-budgets.md)
 - [ED-20260402 RC-G1 governance startup and health reconciliation](ED-20260402-rc-g1-governance-startup-reconciliation.md)
 - [ED-20260402 S05 envelope boundary hardening](ED-20260402-s05-envelope-boundary-hardening.md)
 - [ED-20260402 S08 contract-layer hardening](ED-20260402-s08-contract-layer-hardening.md)

@@ -453,6 +453,22 @@ describe('GraphNodeColumnSection', () => {
       '[data-slot="graph-node-column-function-alias-input"]'
     );
     await act(async () => {
+      fireEvent.change(aliasInput!, { target: { value: '   ' } });
+    });
+    expect(aliasInput?.value).toBe('   ');
+    expect(aliasInput?.getAttribute('aria-invalid')).toBe('true');
+    const aliasAlert = document.body.querySelector<HTMLElement>(
+      '[data-slot="graph-node-column-function-alias-form"] [role="alert"]'
+    );
+    expect(aliasInput?.getAttribute('aria-describedby')).toBe(aliasAlert?.id);
+    expect(aliasAlert?.textContent).toContain('sin espacios exteriores');
+    expect(
+      document.body.querySelector<HTMLButtonElement>(
+        '[data-slot="graph-node-column-function-alias-submit"]'
+      )?.disabled
+    ).toBe(true);
+
+    await act(async () => {
       fireEvent.change(aliasInput!, { target: { value: 'rejected_alias' } });
       fireEvent.click(
         document.body.querySelector<HTMLButtonElement>(
