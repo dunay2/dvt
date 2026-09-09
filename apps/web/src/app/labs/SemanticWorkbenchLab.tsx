@@ -1,5 +1,11 @@
-import { useCallback, useMemo, useState } from 'react';
-import { Background, ReactFlow, type EdgeTypes, type NodeTypes } from '@xyflow/react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  Background,
+  ReactFlow,
+  useNodesState,
+  type EdgeTypes,
+  type NodeTypes,
+} from '@xyflow/react';
 import { Braces, Database, Equal, GitMerge, Hash } from 'lucide-react';
 
 import DbtNodeComponent, { type DbtNodeData } from '../components/canvas/DbtNodeComponent';
@@ -418,7 +424,7 @@ function SemanticWorkbenchLab() {
         pending.rightSourceFieldId !== predicate.rightSourceFieldId,
     };
   }, [joinProjection, pendingJoinPredicate, selectedSemantic]);
-  const semanticNodes = useMemo(
+  const projectedSemanticNodes = useMemo(
     () =>
       semanticGraph.nodes.map((node) => {
         if (node.data.semanticKind === 'group') {
@@ -525,6 +531,17 @@ function SemanticWorkbenchLab() {
       }),
     [semanticGraph.nodes, selectedSemanticId]
   );
+  const [semanticNodes, setSemanticNodes, onSemanticNodesChange] =
+    useNodesState(projectedSemanticNodes);
+  useEffect(() => {
+    setSemanticNodes((current) => {
+      const positionsById = new Map(current.map((node) => [node.id, node.position] as const));
+      return projectedSemanticNodes.map((node) => ({
+        ...node,
+        position: positionsById.get(node.id) ?? node.position,
+      }));
+    });
+  }, [projectedSemanticNodes, setSemanticNodes]);
 
   const selectedCanvasNode =
     canonicalNodes.find((node) => node.id === selectedCanvasId) ?? fixture.transform;
@@ -762,9 +779,10 @@ function SemanticWorkbenchLab() {
             fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
             minZoom={0.25}
             maxZoom={1.6}
-            nodesDraggable={false}
+            nodesDraggable
             nodesConnectable={false}
             elementsSelectable
+            onNodesChange={onSemanticNodesChange}
             onNodeClick={(_, node) => {
               if (node.data.semanticKind !== 'group') {
                 setSelectedSemanticId(node.id);

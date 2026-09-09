@@ -232,13 +232,14 @@ function layoutGraph(
   for (const group of groups) {
     const members = nodes.filter((node) => node.data.semanticGroup === group.id);
     if (members.length === 0) continue;
+    const groupNodeId = `semantic-group-${group.id}`;
 
     const memberIds = new Set(members.map((node) => node.id));
     const memberEdges = edges.filter(
       (edge) => memberIds.has(edge.source) && memberIds.has(edge.target)
     );
     const layouted = getLayoutedElements([...members], memberEdges, {
-      rankdir: 'LR',
+      rankdir: group.id === 'transformation' ? 'TB' : 'LR',
       ranksep: 68,
       nodesep: 30,
       marginx: 0,
@@ -265,7 +266,8 @@ function layoutGraph(
     const frameHeight = contentBottom - contentTop + 76;
 
     frames.push({
-      id: `semantic-group-${group.id}`,
+      id: groupNodeId,
+      type: 'group',
       position: { x: groupLeft, y: 24 },
       data: {
         label: group.label,
@@ -274,10 +276,10 @@ function layoutGraph(
         detail: group.label,
       },
       selectable: false,
-      draggable: false,
+      draggable: true,
       connectable: false,
       focusable: false,
-      zIndex: -1,
+      zIndex: 0,
       style: {
         width: frameWidth,
         height: frameHeight,
@@ -291,15 +293,19 @@ function layoutGraph(
         fontWeight: 700,
         letterSpacing: '0.07em',
         textAlign: 'left',
-        pointerEvents: 'none',
+        cursor: 'grab',
       },
     });
     positionedNodes.push(
       ...bounds.map(({ node, left, top }) => ({
         ...node,
+        parentId: groupNodeId,
+        extent: 'parent' as const,
+        draggable: false,
+        zIndex: 1,
         position: {
-          x: groupLeft + 24 + left - contentLeft,
-          y: 68 + top - contentTop,
+          x: 24 + left - contentLeft,
+          y: 44 + top - contentTop,
         },
       }))
     );

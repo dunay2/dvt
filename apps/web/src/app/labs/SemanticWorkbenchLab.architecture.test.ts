@@ -9,8 +9,13 @@ describe('SemanticWorkbenchLab architecture', () => {
     expect(SOURCE).toContain('useCanvasViewportGraphModel');
     expect(SOURCE).toContain('onNodesChange={canvasProcess.onNodesChange}');
     expect(SOURCE).toContain('nodesDraggable');
-    expect(SOURCE).not.toContain('useNodesState(');
     expect(SOURCE).not.toContain('applyNodeChanges(');
+  });
+
+  it('uses React Flow node state only to preserve movable semantic group geometry', () => {
+    expect(SOURCE).toContain('useNodesState(');
+    expect(SOURCE).toContain('positionsById');
+    expect(SOURCE).toContain('onNodesChange={onSemanticNodesChange}');
   });
 
   it('reuses the DVT data table and existing source sample callback', () => {

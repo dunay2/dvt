@@ -104,6 +104,50 @@ describe('semanticWorkbenchFixture', () => {
     );
   });
 
+  it('groups nodes for shared movement and stacks the JOIN chain in execution order', () => {
+    const graph = projectSemanticWorkbenchGraph(SEMANTIC_WORKBENCH_TRANSFORM);
+    const groups = graph.nodes.filter((node) => node.data.semanticKind === 'group');
+    const members = graph.nodes.filter((node) => node.data.semanticKind !== 'group');
+
+    expect(groups).toHaveLength(3);
+    expect(groups.every((node) => node.draggable === true)).toBe(true);
+    expect(
+      members.every(
+        (node) =>
+          node.draggable === false &&
+          node.extent === 'parent' &&
+          node.parentId === `semantic-group-${node.data.semanticGroup}`
+      )
+    ).toBe(true);
+
+    const firstJoin = members.find(
+      (node) =>
+        node.data.semanticKind === 'relation' &&
+        node.data.expression === 'raw.orders.client_id = raw.client.client_id'
+    );
+    const secondJoin = members.find(
+      (node) =>
+        node.data.semanticKind === 'relation' &&
+        node.data.expression === 'raw.orders.order_id = raw.order_details.order_id'
+    );
+    const secondEqual = members.find(
+      (node) =>
+        node.data.semanticKind === 'expression' &&
+        node.data.expression === 'raw.orders.order_id = raw.order_details.order_id'
+    );
+    if (firstJoin == null || secondJoin == null || secondEqual == null) {
+      throw new Error('Expected both JOIN stages and the second equality expression.');
+    }
+    expect(firstJoin.position.x).toBe(secondJoin.position.x);
+    expect(firstJoin.position.y).toBeLessThan(secondJoin.position.y);
+    expect(graph.edges).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ source: firstJoin.id, target: secondJoin.id }),
+        expect.objectContaining({ source: secondEqual.id, target: secondJoin.id }),
+      ])
+    );
+  });
+
   it('uses the admitted N-input Substrait join as transform authority', () => {
     const authority = readDvtTransformAuthoringAuthority(SEMANTIC_WORKBENCH_TRANSFORM);
     expect(authority?.mode).toBe('substrait');
