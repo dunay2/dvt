@@ -1,5 +1,7 @@
 /** Owns output inclusion and ordering for canonical Transform projections. */
 import type { CanonicalNode } from '../../types/canonical';
+import { automapCanvasColumns } from './canvasColumnAutomap';
+import { resolveCanvasDraftNodes } from './canvasDraftNodeCatalog';
 import {
   applyCanvasColumnMapping,
   removeCanvasColumnMapping,
@@ -22,6 +24,7 @@ import {
   reorderDvtSubstraitProjectionOutputs,
 } from './canvasDvtSubstraitProjection';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
+import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import {
   reorderCanvasStructuredFieldRoots,
   setCanvasStructuredRootOutputIncluded,
@@ -121,6 +124,49 @@ export function setCanvasColumnOutputIncluded(args: {
     return structuredResult.outcome === 'applied'
       ? structuredResult
       : { outcome: 'rejected', reason: 'mapping_not_found' };
+  }
+  if (projectionResult.projection == null) {
+    const nodes = resolveCanvasDraftNodes(args.draftSession, args.canonicalNodesById);
+    const declaredColumns = projectCanvasNodePresentationTruth({
+      node: targetNode,
+      nodes,
+      edges: args.draftSession.workingSet.visibleEdges,
+    }).columns.visible.filter((column) => column.provenance === 'declared');
+    if (declaredColumns.length > 0) {
+      const materialized = automapCanvasColumns({
+        draftSession: args.draftSession,
+        canonicalNodesById: args.canonicalNodesById,
+        targetNodeId: args.targetNodeId,
+        targetColumns: declaredColumns.map((column) => ({ name: column.name, type: column.type })),
+      });
+      if (materialized.outcome === 'rejected') return materialized;
+      if (materialized.appliedCount !== declaredColumns.length) {
+        return { outcome: 'rejected', reason: 'mapping_not_found' };
+      }
+      const materializedNode = resolveCanvasSessionNode(
+        materialized.draftSession,
+        args.canonicalNodesById,
+        args.targetNodeId
+      );
+      if (materializedNode == null) {
+        return { outcome: 'rejected', reason: 'target_node_not_found' };
+      }
+      const materializedProjection = readEditableCanvasProjectionEntry({
+        targetNode: materializedNode,
+        edges: materialized.draftSession.workingSet.visibleEdges,
+        resolveNode: (nodeId) =>
+          resolveCanvasSessionNode(materialized.draftSession, args.canonicalNodesById, nodeId),
+      });
+      if (materializedProjection.outcome === 'rejected') return materializedProjection;
+      const materializedOutput = materializedProjection.projection?.outputs.find(
+        (candidate) => candidate.fieldId === args.columnId || candidate.name === args.columnId
+      );
+      return setCanvasColumnOutputIncluded({
+        ...args,
+        draftSession: materialized.draftSession,
+        ...(materializedOutput == null ? {} : { columnId: materializedOutput.fieldId }),
+      });
+    }
   }
   const existingOutput = projectionResult.projection?.outputs.find(
     (candidate) => candidate.fieldId === args.columnId

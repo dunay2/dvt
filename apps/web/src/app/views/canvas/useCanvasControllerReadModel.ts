@@ -323,7 +323,7 @@ export function useCanvasControllerReadModel({
             ? node.data.onAddCanvasCalculatedColumn
             : undefined,
           onToggleCanvasColumnOutput:
-            hasEditableProjection || hasStructuredProjection || canAuthorDbtModelColumns
+            canAuthorColumnMappings || hasStructuredProjection || canAuthorDbtModelColumns
               ? node.data.onToggleCanvasColumnOutput
               : undefined,
           onReorderCanvasColumnOutput:
