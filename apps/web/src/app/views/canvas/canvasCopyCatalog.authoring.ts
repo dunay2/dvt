@@ -1120,6 +1120,10 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.errorDvtAliasRequired',
     fallback: 'Alias is required.',
   },
+  inspectorErrorDvtAliasDuplicate: {
+    key: 'canvas.inspector.authoring.errorDvtAliasDuplicate',
+    fallback: 'Alias is already used.',
+  },
   inspectorErrorDvtIdentifierInvalid: {
     key: 'canvas.inspector.authoring.errorDvtIdentifierInvalid',
     fallback: 'PostgreSQL identifiers contain invalid text, such as a NUL character.',

@@ -319,6 +319,7 @@ export const canvasViewAuthoringCopyEs = {
   inspectorErrorDvtSchemaRequired: 'El esquema es obligatorio.',
   inspectorErrorDvtTableRequired: 'La tabla es obligatoria.',
   inspectorErrorDvtAliasRequired: 'El alias es obligatorio.',
+  inspectorErrorDvtAliasDuplicate: 'El alias ya está en uso.',
   inspectorErrorDvtIdentifierInvalid:
     'Los identificadores PostgreSQL contienen texto no válido, como un carácter NUL.',
   inspectorErrorDvtIdentifierTooLong:

@@ -792,6 +792,47 @@ describe('canvasInspectorAuthoringModel', () => {
     expect(applied.metadata).toMatchObject({ config: { materialized: 'view' } });
   });
 
+  it('blocks Apply when an output alias duplicates another root output', () => {
+    const source = buildImportedWarehouseSourceNode({
+      connectedSourceRef: {
+        schemaVersion: 'connected-source-ref.v1',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: 'warehouse-main',
+          provider: 'postgres',
+        },
+        sourceObjectId: 'erp.orders',
+      },
+      columns: [
+        { name: 'order_id', type: 'integer', nullable: false },
+        { name: 'customer', type: 'text', nullable: false },
+      ],
+    });
+    const projectionSource = resolveDvtSubstraitProjectionSource(source);
+    if (projectionSource == null) throw new Error('Expected a connected source fixture.');
+    const node = applyDvtSubstraitSemanticDocument(
+      buildDvtNode('dvt:transform'),
+      encodeDvtSubstraitProjectionDocument(
+        createDvtSubstraitProjectionDraft({
+          source: projectionSource,
+          targetNodeId: 'node_transform',
+          outputs: [
+            { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
+            { fieldId: 'output:customer', name: 'customer', sourceFieldName: 'customer' },
+          ],
+        })
+      )
+    );
+    const draft = createCanvasInspectorNodeDraft(node);
+
+    expect(
+      validateCanvasInspectorNodeDraft({
+        ...draft,
+        outputNameDrafts: { 'output:order_id': 'customer' },
+      })
+    ).toEqual({ outputNames: 'dvt_alias_duplicate' });
+  });
+
   it('rejects persisted legacy Source filter authority without changing physical identity', () => {
     const source = buildImportedWarehouseSourceNode({
       connectedSourceRef: {

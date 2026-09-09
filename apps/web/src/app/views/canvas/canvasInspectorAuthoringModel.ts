@@ -26,6 +26,8 @@ import {
   createDvtNodeAuthoringMetadata,
   validateDvtNodeAuthoringMetadata,
 } from './canvasDvtAuthoringModel';
+import type { DvtNodeAuthoringMetadata } from './canvasDvtAuthoringTypes';
+import type { CanvasInspectorNodeDraftErrorCode } from './canvasInspectorAuthoringErrorCodes';
 import type {
   CanvasInspectorNodeDraft,
   CanvasInspectorNodeDraftErrors,
@@ -66,6 +68,36 @@ function normalizeNodeDescription(value: string): string | undefined {
 
 function normalizeNodeTags(tags: readonly string[]): string[] {
   return tags.map((tag) => tag.trim()).filter((tag) => tag.length > 0);
+}
+
+export function resolveCanvasDvtOutputNameDraftError(
+  dvt: DvtNodeAuthoringMetadata | undefined,
+  outputNameDrafts: Readonly<Record<string, string>>,
+  key: string
+): CanvasInspectorNodeDraftErrorCode | null {
+  const value = outputNameDrafts[key];
+  if (value == null) return null;
+  if (value.trim().length === 0) return 'dvt_alias_required';
+  if (!isWellFormedCanvasText(value)) return 'dvt_identifier_invalid';
+  if (value !== value.trim()) return 'dvt_identifier_whitespace';
+  if (!PostgresIdentifierV1Schema.safeParse(value).success) return 'dvt_identifier_too_long';
+  if (dvt?.kind !== 'transform' || dvt.mode !== 'substrait') return null;
+
+  const resultRelation = dvt.sidecar.relations
+    .filter((relation) => relation.sourceRef == null)
+    .reduce<(typeof dvt.sidecar.relations)[number] | undefined>(
+      (current, relation) =>
+        current == null || relation.relAnchor > current.relAnchor ? relation : current,
+      undefined
+    );
+  if (resultRelation == null) return null;
+  const duplicate = dvt.sidecar.fields.some(
+    (field) =>
+      field.relationId === resultRelation.relationId &&
+      field.fieldId !== key &&
+      field.displayName === value
+  );
+  return duplicate ? 'dvt_alias_duplicate' : null;
 }
 
 export function createCanvasInspectorNodeDraft(node: CanonicalNode): CanvasInspectorNodeDraft {
@@ -140,18 +172,10 @@ export function validateCanvasInspectorNodeDraft(
   if (!CanvasTagsV1Schema.safeParse(normalizedTags).success) {
     return { tags: 'node_tags_invalid' };
   }
-  const outputNameDrafts = Object.values(draft.outputNameDrafts ?? {});
-  if (outputNameDrafts.some((value) => value.trim().length === 0)) {
-    return { outputNames: 'dvt_alias_required' };
-  }
-  if (outputNameDrafts.some((value) => !isWellFormedCanvasText(value))) {
-    return { outputNames: 'dvt_identifier_invalid' };
-  }
-  if (outputNameDrafts.some((value) => value !== value.trim())) {
-    return { outputNames: 'dvt_identifier_whitespace' };
-  }
-  if (outputNameDrafts.some((value) => !PostgresIdentifierV1Schema.safeParse(value).success)) {
-    return { outputNames: 'dvt_identifier_too_long' };
+  const outputNameDrafts = draft.outputNameDrafts ?? {};
+  for (const key of Object.keys(outputNameDrafts)) {
+    const error = resolveCanvasDvtOutputNameDraftError(draft.dvt, outputNameDrafts, key);
+    if (error != null) return { outputNames: error };
   }
   if (draft.dbt) {
     const dbtErrors: NonNullable<CanvasInspectorNodeDraftErrors['dbt']> = {};

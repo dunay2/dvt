@@ -120,6 +120,8 @@ export function formatCanvasInspectorNodeDraftError(
       return copy.inspectorErrorDvtTableRequired;
     case 'dvt_alias_required':
       return copy.inspectorErrorDvtAliasRequired;
+    case 'dvt_alias_duplicate':
+      return copy.inspectorErrorDvtAliasDuplicate;
     case 'dvt_identifier_invalid':
       return copy.inspectorErrorDvtIdentifierInvalid;
     case 'dvt_identifier_too_long':

@@ -416,6 +416,56 @@ describe('DvtAuthoringFields', () => {
     expect(outputNameDraftsJson()).not.toContain(invalidName);
     expect(container.querySelector('[role="alert"]')).toBeNull();
   });
+  it('retains a duplicate JOIN output alias and leaves the semantic draft unchanged', () => {
+    const customers = buildJoinWarehouseSourceNode({
+      id: 'source-customers',
+      table: 'customers',
+      columns: ['customer_id', 'name'],
+    });
+    const orders = buildJoinWarehouseSourceNode({
+      id: 'source-orders',
+      table: 'orders',
+      columns: ['order_id', 'customer_id'],
+    });
+    const transform = buildDvtNode('dvt:transform');
+    const nodes = [customers, orders, transform];
+    const edges: readonly CanonicalEdge[] = [
+      {
+        id: 'customers-transform',
+        sourceId: customers.id,
+        targetId: transform.id,
+        relation: 'lineage',
+      },
+      { id: 'orders-transform', sourceId: orders.id, targetId: transform.id, relation: 'lineage' },
+    ];
+
+    renderFields(transform, undefined, undefined, nodes, edges, 'code');
+    act(() =>
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="dvt-start-configured-inner-join"]')!
+      )
+    );
+
+    const outputs = [
+      ...container.querySelectorAll<HTMLInputElement>(
+        '[data-slot="dvt-substrait-inner-join-output-name"], [data-slot="dvt-substrait-n-input-output-name"]'
+      ),
+    ];
+    const first = outputs[0]!;
+    const duplicateName = outputs[1]!.value;
+    const before = draftJson();
+    act(() => {
+      fireEvent.input(first, { target: { value: duplicateName } });
+      fireEvent.focusOut(first);
+    });
+
+    expect(first.value).toBe(duplicateName);
+    expect(first.getAttribute('aria-invalid')).toBe('true');
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain('already used');
+    expect(outputNameDraftsJson()).toContain(duplicateName);
+    expect(draftJson()).toBe(before);
+  });
+
   it('replaces a stale one-input projection with an explicitly configured connected join', () => {
     const orders = buildJoinWarehouseSourceNode({
       id: 'source-orders',
@@ -819,6 +869,24 @@ describe('DvtAuthoringFields', () => {
     );
     expect(nameSelection?.checked).toBe(true);
     expect(countryOutput?.value).toBe('country');
+
+    const nameOutput = container.querySelector<HTMLInputElement>(
+      'input[data-slot="dvt-substrait-union-all-output-name"][data-field-key="name"]'
+    );
+    const beforeDuplicate = draftJson();
+    act(() => {
+      fireEvent.input(countryOutput!, { target: { value: nameOutput!.value } });
+      fireEvent.focusOut(countryOutput!);
+    });
+    expect(countryOutput?.value).toBe(nameOutput?.value);
+    expect(countryOutput?.getAttribute('aria-invalid')).toBe('true');
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain('already used');
+    expect(draftJson()).toBe(beforeDuplicate);
+    act(() => {
+      fireEvent.input(countryOutput!, { target: { value: 'country' } });
+      fireEvent.focusOut(countryOutput!);
+    });
+    expect(countryOutput?.getAttribute('aria-invalid')).toBeNull();
 
     act(() => {
       fireEvent.click(nameSelection!);

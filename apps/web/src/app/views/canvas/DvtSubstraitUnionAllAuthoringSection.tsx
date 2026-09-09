@@ -1,5 +1,4 @@
 /** Owned concern: edit the admitted N-source Substrait UNION ALL in Node Properties. */
-import { isWellFormedCanvasText, PostgresIdentifierV1Schema } from '@dvt/contracts';
 import { useId, type Dispatch, type ReactNode, type SetStateAction } from 'react';
 
 import { Button } from '../../components/ui/button';
@@ -7,6 +6,7 @@ import { Input } from '../../components/ui/input';
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
 import type { DvtSubstraitTransformAuthoringMetadata } from './canvasDvtAuthoringModel';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
+import { resolveCanvasDvtOutputNameDraftError } from './canvasInspectorAuthoringModel';
 import {
   applyDvtSubstraitUnionAllFieldEdit,
   applyDvtSubstraitUnionAllGroupedRowNumber,
@@ -41,16 +41,8 @@ export function DvtSubstraitUnionAllAuthoringSection({
   const outputPolicyErrorId = useId();
   const outputPolicyErrorIdFor = (key: string): string =>
     `${outputPolicyErrorId}-${encodeURIComponent(key)}`;
-  const outputNameErrorFor = (key: string) => {
-    const value = outputNameDrafts[key];
-    if (value == null) return null;
-    if (value.trim().length === 0) return 'dvt_alias_required' as const;
-    if (!isWellFormedCanvasText(value)) return 'dvt_identifier_invalid' as const;
-    if (value !== value.trim()) return 'dvt_identifier_whitespace' as const;
-    return PostgresIdentifierV1Schema.safeParse(value).success
-      ? null
-      : ('dvt_identifier_too_long' as const);
-  };
+  const outputNameErrorFor = (key: string) =>
+    resolveCanvasDvtOutputNameDraftError(draft, outputNameDrafts, key);
   const invalidOutputNames = new Set(
     Object.keys(outputNameDrafts).filter((key) => outputNameErrorFor(key) != null)
   );
@@ -68,13 +60,7 @@ export function DvtSubstraitUnionAllAuthoringSection({
     });
   };
   const renameOutput = (key: string, value: string, apply: (name: string) => void): void => {
-    if (
-      value.trim().length === 0 ||
-      !isWellFormedCanvasText(value) ||
-      value !== value.trim() ||
-      !PostgresIdentifierV1Schema.safeParse(value).success
-    )
-      return;
+    if (resolveCanvasDvtOutputNameDraftError(draft, outputNameDrafts, key) != null) return;
     apply(value);
     clearOutputNameDraft(key);
   };
@@ -329,7 +315,12 @@ export function DvtSubstraitUnionAllAuthoringSection({
   const inspection = inspectDvtSubstraitUnionAllDraft(semanticDraft);
   if (!inspection.ok) return null;
   const mutateField = (edit: DvtSubstraitUnionAllFieldEdit): void => {
-    if (edit.kind === 'set-selected' && !edit.selected) clearOutputNameDraft(edit.fieldKey);
+    if (edit.kind === 'set-selected' && !edit.selected) {
+      const output = inspection.projection.outputs.find(
+        (candidate) => candidate.fieldKey === edit.fieldKey
+      );
+      if (output != null) clearOutputNameDraft(output.fieldId);
+    }
     mutateDraft((current) => applyDvtSubstraitUnionAllFieldEdit(current, edit));
   };
   const applyGrouping = (form: HTMLFormElement): void => {
@@ -405,18 +396,18 @@ export function DvtSubstraitUnionAllAuthoringSection({
                       data-field-key={field.fieldKey}
                       aria-label={`${canvasViewCopy.inspectorDvtVisualOutputNameLabel}: ${field.defaultName}`}
                       disabled={disabled}
-                      value={outputNameDrafts[field.fieldKey] ?? output.name}
+                      value={outputNameDrafts[output.fieldId] ?? output.name}
                       onChange={(event) =>
-                        updateOutputNameDraft(field.fieldKey, event.currentTarget.value)
+                        updateOutputNameDraft(output.fieldId, event.currentTarget.value)
                       }
-                      aria-invalid={invalidOutputNames.has(field.fieldKey) ? 'true' : undefined}
+                      aria-invalid={invalidOutputNames.has(output.fieldId) ? 'true' : undefined}
                       aria-describedby={
-                        invalidOutputNames.has(field.fieldKey)
-                          ? outputPolicyErrorIdFor(field.fieldKey)
+                        invalidOutputNames.has(output.fieldId)
+                          ? outputPolicyErrorIdFor(output.fieldId)
                           : undefined
                       }
                       onBlur={(event) =>
-                        renameOutput(field.fieldKey, event.currentTarget.value, (outputName) =>
+                        renameOutput(output.fieldId, event.currentTarget.value, (outputName) =>
                           mutateField({ kind: 'rename', fieldKey: field.fieldKey, outputName })
                         )
                       }

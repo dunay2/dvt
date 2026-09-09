@@ -1,5 +1,4 @@
 /** Owned concern: edit the admitted two-source Substrait INNER JOIN in Node Properties. */
-import { isWellFormedCanvasText, PostgresIdentifierV1Schema } from '@dvt/contracts';
 import { useId, type Dispatch, type ReactNode, type SetStateAction } from 'react';
 
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
@@ -7,6 +6,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import type { DvtSubstraitTransformAuthoringMetadata } from './canvasDvtAuthoringModel';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
+import { resolveCanvasDvtOutputNameDraftError } from './canvasInspectorAuthoringModel';
 import {
   DVT_SUBSTRAIT_INNER_JOIN_FIELD_KEYS,
   applyDvtSubstraitInnerJoinFieldEdit,
@@ -48,16 +48,8 @@ export function DvtSubstraitInnerJoinAuthoringSection({
   const outputPolicyErrorId = useId();
   const outputPolicyErrorIdFor = (key: string): string =>
     `${outputPolicyErrorId}-${encodeURIComponent(key)}`;
-  const outputNameErrorFor = (key: string) => {
-    const value = outputNameDrafts[key];
-    if (value == null) return null;
-    if (value.trim().length === 0) return 'dvt_alias_required' as const;
-    if (!isWellFormedCanvasText(value)) return 'dvt_identifier_invalid' as const;
-    if (value !== value.trim()) return 'dvt_identifier_whitespace' as const;
-    return PostgresIdentifierV1Schema.safeParse(value).success
-      ? null
-      : ('dvt_identifier_too_long' as const);
-  };
+  const outputNameErrorFor = (key: string) =>
+    resolveCanvasDvtOutputNameDraftError(draft, outputNameDrafts, key);
   const invalidOutputNames = new Set(
     Object.keys(outputNameDrafts).filter((key) => outputNameErrorFor(key) != null)
   );
@@ -75,13 +67,7 @@ export function DvtSubstraitInnerJoinAuthoringSection({
     });
   };
   const renameOutput = (key: string, value: string, apply: (name: string) => void): void => {
-    if (
-      value.trim().length === 0 ||
-      !isWellFormedCanvasText(value) ||
-      value !== value.trim() ||
-      !PostgresIdentifierV1Schema.safeParse(value).success
-    )
-      return;
+    if (resolveCanvasDvtOutputNameDraftError(draft, outputNameDrafts, key) != null) return;
     apply(value);
     clearOutputNameDraft(key);
   };
@@ -501,9 +487,11 @@ export function DvtSubstraitInnerJoinAuthoringSection({
   ) {
     const projection = nInputInspection.projection;
     const mutateField = (edit: DvtSubstraitInnerJoinFieldEdit): void => {
-      if (edit.kind === 'set-selected' && !edit.selected) {
-        const key = 'sourceFieldId' in edit ? edit.sourceFieldId : edit.fieldKey;
-        if (key != null) clearOutputNameDraft(key);
+      if (edit.kind === 'set-selected' && !edit.selected && 'sourceFieldId' in edit) {
+        const output = projection.outputs.find(
+          (candidate) => candidate.source.fieldId === edit.sourceFieldId
+        );
+        if (output != null) clearOutputNameDraft(output.fieldId);
       }
       mutateDraft((current) => applyDvtSubstraitInnerJoinFieldEdit(current, edit));
     };
@@ -578,18 +566,18 @@ export function DvtSubstraitInnerJoinAuthoringSection({
                           data-source-field-id={field.fieldId}
                           aria-label={`${canvasViewCopy.inspectorDvtVisualOutputNameLabel}: ${fieldLabel}`}
                           disabled={disabled}
-                          value={outputNameDrafts[field.fieldId] ?? output.name}
+                          value={outputNameDrafts[output.fieldId] ?? output.name}
                           onChange={(event) =>
-                            updateOutputNameDraft(field.fieldId, event.currentTarget.value)
+                            updateOutputNameDraft(output.fieldId, event.currentTarget.value)
                           }
-                          aria-invalid={invalidOutputNames.has(field.fieldId) ? 'true' : undefined}
+                          aria-invalid={invalidOutputNames.has(output.fieldId) ? 'true' : undefined}
                           aria-describedby={
-                            invalidOutputNames.has(field.fieldId)
-                              ? outputPolicyErrorIdFor(field.fieldId)
+                            invalidOutputNames.has(output.fieldId)
+                              ? outputPolicyErrorIdFor(output.fieldId)
                               : undefined
                           }
                           onBlur={(event) =>
-                            renameOutput(field.fieldId, event.currentTarget.value, (outputName) =>
+                            renameOutput(output.fieldId, event.currentTarget.value, (outputName) =>
                               mutateField({
                                 kind: 'rename',
                                 sourceFieldId: field.fieldId,
@@ -656,9 +644,9 @@ export function DvtSubstraitInnerJoinAuthoringSection({
   if (!inspection.ok) return null;
   const { projection } = inspection;
   const mutateField = (edit: DvtSubstraitInnerJoinFieldEdit): void => {
-    if (edit.kind === 'set-selected' && !edit.selected) {
-      const key = 'sourceFieldId' in edit ? edit.sourceFieldId : edit.fieldKey;
-      if (key != null) clearOutputNameDraft(key);
+    if (edit.kind === 'set-selected' && !edit.selected && 'fieldKey' in edit) {
+      const output = projection.outputs.find((candidate) => candidate.fieldKey === edit.fieldKey);
+      if (output != null) clearOutputNameDraft(output.fieldId);
     }
     mutateDraft((current) => applyDvtSubstraitInnerJoinFieldEdit(current, edit));
   };
@@ -710,18 +698,18 @@ export function DvtSubstraitInnerJoinAuthoringSection({
                       data-field-key={fieldKey}
                       aria-label={`${canvasViewCopy.inspectorDvtVisualOutputNameLabel}: ${defaultName}`}
                       disabled={disabled}
-                      value={outputNameDrafts[fieldKey] ?? output.name}
+                      value={outputNameDrafts[output.fieldId] ?? output.name}
                       onChange={(event) =>
-                        updateOutputNameDraft(fieldKey, event.currentTarget.value)
+                        updateOutputNameDraft(output.fieldId, event.currentTarget.value)
                       }
-                      aria-invalid={invalidOutputNames.has(fieldKey) ? 'true' : undefined}
+                      aria-invalid={invalidOutputNames.has(output.fieldId) ? 'true' : undefined}
                       aria-describedby={
-                        invalidOutputNames.has(fieldKey)
-                          ? outputPolicyErrorIdFor(fieldKey)
+                        invalidOutputNames.has(output.fieldId)
+                          ? outputPolicyErrorIdFor(output.fieldId)
                           : undefined
                       }
                       onBlur={(event) =>
-                        renameOutput(fieldKey, event.currentTarget.value, (outputName) =>
+                        renameOutput(output.fieldId, event.currentTarget.value, (outputName) =>
                           mutateField({
                             kind: 'rename',
                             fieldKey,

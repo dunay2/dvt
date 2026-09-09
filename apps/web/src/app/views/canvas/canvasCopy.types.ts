@@ -644,6 +644,7 @@ export type CanvasViewCopy = {
   readonly inspectorErrorDvtSchemaRequired: string;
   readonly inspectorErrorDvtTableRequired: string;
   readonly inspectorErrorDvtAliasRequired: string;
+  readonly inspectorErrorDvtAliasDuplicate: string;
   readonly inspectorErrorDvtIdentifierInvalid: string;
   readonly inspectorErrorDvtIdentifierTooLong: string;
   readonly inspectorErrorDvtIdentifierWhitespace: string;
