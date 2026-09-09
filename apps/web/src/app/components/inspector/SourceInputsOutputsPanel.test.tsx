@@ -3,9 +3,10 @@
 import React, { act } from 'react';
 import { fireEvent } from '@testing-library/dom';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
+import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 import { SourceInputsOutputsPanel } from './SourceInputsOutputsPanel';
 import type { NodePropertySection } from './nodePropertiesReadModel';
 
@@ -70,6 +71,8 @@ describe('SourceInputsOutputsPanel', () => {
   let root: Root;
 
   beforeEach(() => {
+    localStorage.clear();
+    useCanvasInteractionStore.setState({ _hasHydrated: true, canvasLayouts: {} });
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -83,8 +86,17 @@ describe('SourceInputsOutputsPanel', () => {
     container.remove();
   });
 
-  function render(targetSection: NodePropertySection = section): void {
-    act(() => root.render(<SourceInputsOutputsPanel node={sourceNode} section={targetSection} />));
+  function render(targetSection: NodePropertySection = section, canReorder = false): void {
+    act(() =>
+      root.render(
+        <SourceInputsOutputsPanel
+          node={sourceNode}
+          section={targetSection}
+          canReorder={canReorder}
+          workspaceLayoutKey="tenant::project::dev"
+        />
+      )
+    );
   }
 
   it('groups actual Canvas inputs and outputs without synthesizing the physical Source origin', () => {
@@ -134,6 +146,71 @@ describe('SourceInputsOutputsPanel', () => {
     expect(firstOutput.getAttribute('aria-selected')).toBe('true');
     expect(firstOutput.tabIndex).toBe(0);
     expect(document.activeElement).toBe(firstOutput);
+  });
+
+  it('reorders only output rows with pointer and keyboard and persists their presentation', () => {
+    render(section, true);
+
+    const upstream = container.querySelector<HTMLButtonElement>(
+      '[data-relationship-id="input:edge-upstream"]'
+    )!;
+    const model = container.querySelector<HTMLButtonElement>(
+      '[data-relationship-id="output:edge-model-1"]'
+    )!;
+    const check = container.querySelector<HTMLButtonElement>(
+      '[data-relationship-id="output:edge-check"]'
+    )!;
+    vi.spyOn(check, 'getBoundingClientRect').mockReturnValue({ top: 0, height: 40 } as DOMRect);
+    const dataTransfer = { effectAllowed: 'none', dropEffect: 'none', setData: vi.fn() };
+
+    act(() => {
+      fireEvent.dragStart(model, { dataTransfer });
+      fireEvent.dragOver(check, { clientY: 36, dataTransfer });
+    });
+    expect(check.dataset.dropPlacement).toBe('after');
+    expect(check.querySelector('[data-slot="source-relationship-drop-indicator"]')).not.toBeNull();
+    act(() => fireEvent.drop(check, { clientY: 36, dataTransfer }));
+
+    expect(
+      Array.from(
+        container.querySelectorAll<HTMLElement>('[data-slot="source-relationship-row"]')
+      ).map((row) => row.dataset.relationshipId)
+    ).toEqual(['input:edge-upstream', 'output:edge-check', 'output:edge-model-1']);
+    expect(upstream.draggable).toBe(false);
+    expect(document.activeElement).toBe(model);
+    expect(container.querySelector('[role="status"]')?.textContent).toContain(
+      'Output reordered: output:edge-model-1'
+    );
+
+    const movedCheck = container.querySelector<HTMLButtonElement>(
+      '[data-relationship-id="output:edge-check"]'
+    )!;
+    act(() => {
+      movedCheck.focus();
+      fireEvent.keyDown(movedCheck, { key: 'ArrowDown', altKey: true });
+    });
+
+    expect(document.activeElement).toBe(movedCheck);
+    expect(movedCheck.getAttribute('aria-selected')).toBe('true');
+    expect(
+      useCanvasInteractionStore.getState().canvasLayouts['tenant::project::dev']
+        ?.inspectorListOrdersByNode?.[sourceNode.id]?.outputs
+    ).toEqual(['output:edge-model-1', 'output:edge-check']);
+    expect(section.tableRows.map((row) => row.id)).toEqual([
+      'input:edge-upstream',
+      'output:edge-model-1',
+      'output:edge-check',
+    ]);
+  });
+
+  it('does not expose output reorder affordances in read-only mode', () => {
+    render();
+
+    expect(container.querySelector('[data-slot="source-relationship-drag-handle"]')).toBeNull();
+    expect(
+      container.querySelector<HTMLButtonElement>('[data-relationship-id="output:edge-model-1"]')
+        ?.draggable
+    ).toBe(false);
   });
 
   it('renders zero/zero topology coherently instead of inventing an input', () => {

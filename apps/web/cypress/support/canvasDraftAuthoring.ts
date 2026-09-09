@@ -47,6 +47,7 @@ export type StubCanvasDraftReadOptions = {
   columnMapping?: boolean;
   columnMappingDisconnected?: boolean;
   columnMappingSecondSource?: boolean;
+  sourceInspectorOrdering?: boolean;
   substraitInnerJoin?: boolean;
   substraitNInputJoin?: boolean;
   substraitUnionAll?: boolean;
@@ -76,6 +77,7 @@ export function buildCanvasAuthoringDraft({
   columnMapping = false,
   columnMappingDisconnected = false,
   columnMappingSecondSource = false,
+  sourceInspectorOrdering = false,
   substraitInnerJoin = false,
   substraitNInputJoin = false,
   substraitUnionAll = false,
@@ -575,16 +577,36 @@ export function buildCanvasAuthoringDraft({
 
   if (columnMapping) {
     const columns = [
-      { name: 'order_id', type: 'integer' },
+      {
+        name: 'order_id',
+        type: 'integer',
+        ...(sourceInspectorOrdering ? { nullable: false } : {}),
+      },
       {
         name: 'customer',
         type: 'text',
-        ...(columnMappingSecondSource ? { nullable: false } : {}),
+        ...(columnMappingSecondSource || sourceInspectorOrdering ? { nullable: false } : {}),
       },
-      { name: 'amount', type: 'numeric' },
-      { name: 'status', type: 'text' },
-      { name: 'created_at', type: 'timestamp' },
-      { name: 'region', type: 'text' },
+      {
+        name: 'amount',
+        type: 'numeric',
+        ...(sourceInspectorOrdering ? { nullable: false } : {}),
+      },
+      {
+        name: 'status',
+        type: 'text',
+        ...(sourceInspectorOrdering ? { nullable: false } : {}),
+      },
+      {
+        name: 'created_at',
+        type: 'timestamp',
+        ...(sourceInspectorOrdering ? { nullable: false } : {}),
+      },
+      {
+        name: 'region',
+        type: 'text',
+        ...(sourceInspectorOrdering ? { nullable: false } : {}),
+      },
     ];
     return buildWorkspaceGraphAuthoringDraft({
       canvas,
@@ -592,12 +614,14 @@ export function buildCanvasAuthoringDraft({
         'source-orders',
         ...(columnMappingSecondSource ? ['source-health-check'] : []),
         'model-orders',
+        ...(sourceInspectorOrdering ? ['model-orders-secondary'] : []),
         'sink-orders',
       ],
       nodePositions: {
         'source-orders': { x: 40, y: columnMappingSecondSource ? 80 : 140 },
         ...(columnMappingSecondSource ? { 'source-health-check': { x: 40, y: 440 } } : {}),
         'model-orders': { x: 620, y: 140 },
+        ...(sourceInspectorOrdering ? { 'model-orders-secondary': { x: 620, y: 440 } } : {}),
         'sink-orders': { x: 1200, y: 140 },
       },
       nodes: [
@@ -664,6 +688,20 @@ export function buildCanvasAuthoringDraft({
           tags: ['transform'],
           metadata: {},
         },
+        ...(sourceInspectorOrdering
+          ? [
+              {
+                id: 'model-orders-secondary',
+                name: 'Orders model secondary',
+                pluginId: 'dvt',
+                kind: 'dvt:transform',
+                role: 'transform' as const,
+                status: 'idle' as const,
+                tags: ['transform'],
+                metadata: {},
+              },
+            ]
+          : []),
         {
           id: 'sink-orders',
           name: 'Orders sink',
@@ -686,6 +724,16 @@ export function buildCanvasAuthoringDraft({
                 relation: 'lineage' as const,
               },
             ]),
+        ...(sourceInspectorOrdering
+          ? [
+              {
+                id: 'edge-source-model-secondary',
+                sourceId: 'source-orders',
+                targetId: 'model-orders-secondary',
+                relation: 'lineage' as const,
+              },
+            ]
+          : []),
         {
           id: 'edge-model-sink',
           sourceId: 'model-orders',

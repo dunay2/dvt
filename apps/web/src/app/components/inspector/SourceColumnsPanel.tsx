@@ -1,4 +1,5 @@
 /** Owned concern: render imported Source columns as a fast schema scanner with focused detail. */
+import { GripVertical } from 'lucide-react';
 import {
   SourceObjectColumnSchema,
   SourceObjectConstraintSchema,
@@ -6,7 +7,7 @@ import {
   type SourceObjectColumn,
   type SourceObjectConstraint,
 } from '@dvt/contracts';
-import { useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 
 import { Badge } from '../ui/badge';
 import { Input } from '../ui/input';
@@ -14,6 +15,8 @@ import { cn } from '../ui/utils';
 import { inspectorVisualClasses } from './inspectorVisualTokens';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import type { CanonicalNode } from '../../types/canonical';
+import { useCanvasInspectorListOrder } from './useCanvasInspectorListOrder';
+import { useInspectorListReorder } from './useInspectorListReorder';
 
 const COPY = {
   en: {
@@ -30,6 +33,9 @@ const COPY = {
     unique: 'Unique',
     none: '—',
     listLabel: 'Source columns',
+    reorder: 'Reorder column',
+    reorderHint: 'Drag or press Alt+Up/Down to reorder.',
+    reordered: 'Column reordered',
     textFamily: 'Text',
     structuredFamily: 'Structured',
     uuidFamily: 'UUID',
@@ -54,6 +60,9 @@ const COPY = {
     unique: 'Única',
     none: '—',
     listLabel: 'Columnas del origen',
+    reorder: 'Reordenar columna',
+    reorderHint: 'Arrastra o pulsa Alt+Arriba/Abajo para reordenar.',
+    reordered: 'Columna reordenada',
     textFamily: 'Texto',
     structuredFamily: 'Estructurado',
     uuidFamily: 'UUID',
@@ -210,17 +219,40 @@ export function SourceColumnsPanel({
   node,
   beforeBody,
   afterBody,
+  canReorder = false,
+  workspaceLayoutKey = null,
 }: Readonly<{
   node: CanonicalNode;
   beforeBody?: ReactNode;
   afterBody?: ReactNode;
+  canReorder?: boolean;
+  workspaceLayoutKey?: string | null;
 }>): JSX.Element {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = applicationLanguage.trim().toLowerCase().startsWith('es') ? COPY.es : COPY.en;
   const [query, setQuery] = useState('');
   const [selectedName, setSelectedName] = useState<string | null>(null);
+  const [reorderStatus, setReorderStatus] = useState('');
+  const reorderHintId = useId();
   const rowRefs = useRef(new Map<string, HTMLButtonElement>());
-  const facts = useMemo(() => readSourceColumnFacts(node), [node]);
+  const canonicalFacts = useMemo(() => readSourceColumnFacts(node), [node]);
+  const canonicalNames = useMemo(
+    () => canonicalFacts.map(({ column }) => column.name),
+    [canonicalFacts]
+  );
+  const listOrder = useCanvasInspectorListOrder({
+    workspaceLayoutKey,
+    nodeId: node.id,
+    listId: 'columns',
+    canonicalIds: canonicalNames,
+  });
+  const facts = useMemo(() => {
+    const factsByName = new Map(canonicalFacts.map((facts) => [facts.column.name, facts]));
+    return listOrder.orderedIds.flatMap((name) => {
+      const columnFacts = factsByName.get(name);
+      return columnFacts == null ? [] : [columnFacts];
+    });
+  }, [canonicalFacts, listOrder.orderedIds]);
   const filteredFacts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     return normalizedQuery.length === 0
@@ -229,13 +261,25 @@ export function SourceColumnsPanel({
   }, [facts, query]);
   const selectedFacts =
     filteredFacts.find(({ column }) => column.name === selectedName) ?? filteredFacts[0] ?? null;
+  const reorder = useInspectorListReorder({
+    orderedIds: listOrder.orderedIds,
+    visibleIds: filteredFacts.map(({ column }) => column.name),
+    enabled: canReorder && listOrder.canPersist,
+    onMove: listOrder.move,
+    onMoved: (movedName) => {
+      setSelectedName(movedName);
+      rowRefs.current.get(movedName)?.focus();
+      setReorderStatus(copy.reordered + ': ' + movedName);
+    },
+  });
 
   const moveSelection = (
     event: KeyboardEvent<HTMLButtonElement>,
     currentIndex: number,
     targetIndex: number
   ): void => {
-    if (targetIndex === currentIndex || targetIndex < 0 || targetIndex >= filteredFacts.length) return;
+    if (targetIndex === currentIndex || targetIndex < 0 || targetIndex >= filteredFacts.length)
+      return;
     event.preventDefault();
     const nextName = filteredFacts[targetIndex]!.column.name;
     setSelectedName(nextName);
@@ -254,7 +298,10 @@ export function SourceColumnsPanel({
           onChange={(event) => setQuery(event.target.value)}
           className="max-w-[22rem]"
         />
-        <span data-slot="source-columns-visible-count" className="ml-auto text-xs text-(--text-muted)">
+        <span
+          data-slot="source-columns-visible-count"
+          className="ml-auto text-xs text-(--text-muted)"
+        >
           {filteredFacts.length} {copy.columns}
         </span>
       </div>
@@ -266,49 +313,90 @@ export function SourceColumnsPanel({
           ) : filteredFacts.length === 0 ? (
             <p className={inspectorVisualClasses.inspectorSubtle}>{copy.noMatches}</p>
           ) : (
-            <ul role="listbox" aria-label={copy.listLabel} className="space-y-1">
-              {filteredFacts.map((columnFacts, index) => {
-                const selected = selectedFacts?.column.name === columnFacts.column.name;
-                return (
-                  <li key={columnFacts.column.name}>
-                    <button
-                      ref={(element) => {
-                        if (element == null) rowRefs.current.delete(columnFacts.column.name);
-                        else rowRefs.current.set(columnFacts.column.name, element);
-                      }}
-                      type="button"
-                      role="option"
-                      aria-selected={selected}
-                      tabIndex={selected ? 0 : -1}
-                      data-slot="source-column-row"
-                      data-column-name={columnFacts.column.name}
-                      onClick={() => setSelectedName(columnFacts.column.name)}
-                      onKeyDown={(event) => {
-                        if (event.key === 'ArrowDown') moveSelection(event, index, index + 1);
-                        else if (event.key === 'ArrowUp') moveSelection(event, index, index - 1);
-                        else if (event.key === 'Home') moveSelection(event, index, 0);
-                        else if (event.key === 'End') {
-                          moveSelection(event, index, filteredFacts.length - 1);
-                        }
-                      }}
-                      className={cn(
-                        'flex w-full items-center gap-2 rounded-md border px-2 py-2 text-left text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-(--focus-ring)',
-                        selected
-                          ? 'border-(--focus-ring) bg-(--surface-selected) text-(--text-strong)'
-                          : 'border-transparent bg-(--surface-elevated) text-(--text-primary) hover:bg-(--surface-selected)'
-                      )}
-                    >
-                      <TypeFamilyCue type={columnFacts.column.type} labels={copy} />
-                      <span className="min-w-0 flex-1 truncate font-medium">
-                        {columnFacts.column.name}
-                      </span>
-                      <ConstraintBadges facts={columnFacts} />
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
+            <>
+              {reorder.canReorder ? (
+                <p id={reorderHintId} className="sr-only">
+                  {copy.reorderHint}
+                </p>
+              ) : null}
+              <ul
+                role="listbox"
+                aria-label={copy.listLabel}
+                aria-describedby={reorder.canReorder ? reorderHintId : undefined}
+                className="space-y-1"
+              >
+                {filteredFacts.map((columnFacts, index) => {
+                  const selected = selectedFacts?.column.name === columnFacts.column.name;
+                  const dropPlacement = reorder.dropPlacement(columnFacts.column.name);
+                  return (
+                    <li key={columnFacts.column.name}>
+                      <button
+                        ref={(element) => {
+                          if (element == null) rowRefs.current.delete(columnFacts.column.name);
+                          else rowRefs.current.set(columnFacts.column.name, element);
+                        }}
+                        type="button"
+                        role="option"
+                        draggable={reorder.canReorder}
+                        aria-selected={selected}
+                        tabIndex={selected ? 0 : -1}
+                        data-slot="source-column-row"
+                        data-column-name={columnFacts.column.name}
+                        data-drop-placement={dropPlacement}
+                        onClick={() => setSelectedName(columnFacts.column.name)}
+                        onDragStart={(event) => reorder.startDrag(columnFacts.column.name, event)}
+                        onDragEnd={reorder.endDrag}
+                        onDragOver={(event) => reorder.dragOver(columnFacts.column.name, event)}
+                        onDragLeave={reorder.dragLeave}
+                        onDrop={(event) => reorder.drop(columnFacts.column.name, event)}
+                        onKeyDown={(event) => {
+                          if (reorder.moveWithKeyboard(columnFacts.column.name, event)) return;
+                          if (event.key === 'ArrowDown') moveSelection(event, index, index + 1);
+                          else if (event.key === 'ArrowUp') moveSelection(event, index, index - 1);
+                          else if (event.key === 'Home') moveSelection(event, index, 0);
+                          else if (event.key === 'End') {
+                            moveSelection(event, index, filteredFacts.length - 1);
+                          }
+                        }}
+                        className={cn(
+                          'relative flex w-full items-center gap-2 rounded-md border px-2 py-2 text-left text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-(--focus-ring)',
+                          selected
+                            ? 'border-(--focus-ring) bg-(--surface-selected) text-(--text-strong)'
+                            : 'border-transparent bg-(--surface-elevated) text-(--text-primary) hover:bg-(--surface-selected)'
+                        )}
+                      >
+                        {dropPlacement == null ? null : (
+                          <span
+                            data-slot="source-column-drop-indicator"
+                            aria-hidden="true"
+                            className={cn(
+                              'pointer-events-none absolute left-1 right-1 h-0.5 bg-(--status-info)',
+                              dropPlacement === 'before' ? 'top-0' : 'bottom-0'
+                            )}
+                          />
+                        )}
+                        {reorder.canReorder ? (
+                          <GripVertical
+                            data-slot="source-column-drag-handle"
+                            aria-hidden="true"
+                            className="size-4 shrink-0 cursor-grab text-(--text-muted)"
+                          />
+                        ) : null}
+                        <TypeFamilyCue type={columnFacts.column.type} labels={copy} />
+                        <span className="min-w-0 flex-1 truncate font-medium">
+                          {columnFacts.column.name}
+                        </span>
+                        <ConstraintBadges facts={columnFacts} />
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
           )}
+          <p className="sr-only" role="status" aria-live="polite">
+            {reorderStatus}
+          </p>
         </section>
 
         <section data-slot="source-column-detail" className="min-w-0 p-5">
@@ -332,10 +420,7 @@ export function SourceColumnsPanel({
                   label={copy.nullability}
                   value={selectedFacts.column.nullable ? copy.nullable : copy.notNull}
                 />
-                <DetailFact
-                  label={copy.constraints}
-                  value={constraintText(selectedFacts, copy)}
-                />
+                <DetailFact label={copy.constraints} value={constraintText(selectedFacts, copy)} />
               </dl>
             </div>
           )}

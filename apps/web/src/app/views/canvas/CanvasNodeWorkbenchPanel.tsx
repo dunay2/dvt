@@ -245,6 +245,10 @@ export function CanvasNodeWorkbenchPanel({
 }: CanvasNodeWorkbenchPanelProps): JSX.Element {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasViewCopy(applicationLanguage);
+  const workspaceLayoutKey =
+    authoring.workspaceScope == null
+      ? null
+      : `${authoring.workspaceScope.tenantId}::${authoring.workspaceScope.projectId}::${authoring.workspaceScope.environmentId}`;
   const node = useMemo(
     () => reconcileDbtModelConnectedOrigin({ node: canonicalNode, nodes, edges }),
     [canonicalNode, edges, nodes]
@@ -440,6 +444,7 @@ export function CanvasNodeWorkbenchPanel({
       slotPrefix="canvas-node-workbench"
       surface="workbench"
       showSectionCountBadge
+      sourceListOrdering={{ canReorder: authoring.canEditNode, workspaceLayoutKey }}
       renderTableCell={renderTableCell}
       onActiveTabChange={handleActiveTabChange}
       onHide={onClose}
