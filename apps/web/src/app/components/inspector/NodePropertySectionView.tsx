@@ -61,6 +61,45 @@ function renderSectionBody(
     const resolveColumnLabel = (key: string): string =>
       section.columnLabels?.[key] ?? key.replace(/([a-z])([A-Z])/g, '$1 $2');
 
+    if (surface === 'workbench' && section.id === 'inputs-outputs') {
+      return (
+        <ul
+          data-slot="node-property-relationship-list"
+          aria-label={section.label}
+          className="space-y-3"
+        >
+          {section.tableRows.map((row) => (
+            <li
+              key={row.id}
+              data-slot="node-property-relationship-record"
+              className="overflow-hidden rounded border border-(--border-subtle) bg-(--surface-panel)"
+            >
+              <dl className="divide-y divide-(--border-subtle)">
+                {columnKeys.map((key) => (
+                  <div key={`${row.id}:${key}`} className="space-y-1 px-3 py-2.5">
+                    <dt className={inspectorVisualClasses.inspectorLabel}>
+                      {resolveColumnLabel(key)}
+                    </dt>
+                    <dd className="min-w-0 [overflow-wrap:anywhere] text-sm text-(--text-primary)">
+                      {(renderTableCell?.({
+                        sectionId: section.id,
+                        rowId: row.id,
+                        columnKey: key,
+                        value: row.cells[key] ?? '',
+                      }) ??
+                        row.cells[key]) || (
+                        <span className={inspectorVisualClasses.inspectorSubtle}>-</span>
+                      )}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </li>
+          ))}
+        </ul>
+      );
+    }
+
     if (surface === 'workbench' && section.id === 'columns') {
       const detailColumnKeys = columnKeys.filter((key) => key !== 'name');
 

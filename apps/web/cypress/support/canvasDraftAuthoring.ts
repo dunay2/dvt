@@ -55,6 +55,7 @@ export type StubCanvasDraftReadOptions = {
   title?: string;
   readOnly?: boolean;
   largeGraph?: boolean;
+  longNodeNames?: boolean;
 };
 
 type CanvasAuthoringDraft = ReturnType<typeof buildWorkspaceGraphAuthoringDraft>;
@@ -84,6 +85,7 @@ export function buildCanvasAuthoringDraft({
   substraitPilot = false,
   title,
   largeGraph = false,
+  longNodeNames = false,
 }: StubCanvasDraftReadOptions = {}): CanvasAuthoringDraft {
   if (largeGraph) {
     return buildLargeWorkspaceGraphAuthoringDraft();
@@ -501,7 +503,9 @@ export function buildCanvasAuthoringDraft({
       nodes: [
         {
           id: 'raw_orders',
-          name: 'raw_orders',
+          name: longNodeNames
+            ? 'Imported source for dvt.raw.orders in the local governed environment with a complete name'
+            : 'raw_orders',
           pluginId: 'dvt',
           kind: 'dvt:source',
           role: 'input',

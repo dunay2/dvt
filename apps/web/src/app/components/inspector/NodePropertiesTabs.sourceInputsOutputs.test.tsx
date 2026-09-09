@@ -81,6 +81,7 @@ describe('NodePropertiesTabs Source Inputs / Outputs presentation', () => {
           activeTab="inputs-outputs"
           primarySectionIds={['inputs-outputs']}
           moreLabel="More"
+          surface="workbench"
           onActiveTabChange={vi.fn()}
           onHide={vi.fn()}
         />
@@ -98,10 +99,11 @@ describe('NodePropertiesTabs Source Inputs / Outputs presentation', () => {
     ).toContain('1');
   });
 
-  it('preserves the generic relationship table for non-Source nodes', () => {
+  it('uses shared stacked relationship records for non-Source nodes', () => {
     render(genericNode);
 
     expect(container.querySelector('[data-slot="canvas-source-inputs-outputs"]')).toBeNull();
-    expect(container.querySelector('table')).not.toBeNull();
+    expect(container.querySelector('[data-slot="node-property-relationship-list"]')).not.toBeNull();
+    expect(container.querySelector('table')).toBeNull();
   });
 });

@@ -14,7 +14,7 @@ export const dvtCanvasSurfaceStrategy: CanvasSurfaceStrategy = {
   nodeWorkbench: {
     placement: 'contextual-overlay',
     openedFrom: ['double-click'],
-    sections: ['properties', 'columns', 'sql', 'sink', 'preview', 'runs'],
+    sections: ['properties', 'columns', 'inputs-outputs', 'sql', 'sink', 'preview', 'runs'],
   },
   operationalDrawer: contextualCanvasOperationalDrawerPolicy,
   globalNavigation: contextualCanvasGlobalNavigationPolicy,

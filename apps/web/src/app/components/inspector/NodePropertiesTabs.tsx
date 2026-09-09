@@ -199,7 +199,7 @@ export function NodePropertiesTabs({
       <div data-slot={slots.list} className={inspectorVisualClasses.contextPanelFlatTabsList}>
         <TabsList
           data-slot={`${slots.list}-tablist`}
-          className="flex h-auto w-auto flex-wrap justify-start gap-x-3 rounded-none bg-transparent p-0"
+          className="flex h-auto w-full shrink-0 flex-wrap justify-start gap-x-3 rounded-none bg-transparent p-0"
         >
           {primarySections.map((section) => (
             <TabsTrigger
