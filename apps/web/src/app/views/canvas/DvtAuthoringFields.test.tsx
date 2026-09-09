@@ -151,9 +151,7 @@ function DvtAuthoringFieldsHarness({
         onChange={setDraft}
       />
       <output data-slot="dvt-draft-json">{JSON.stringify(draft.dvt)}</output>
-      <output data-slot="join-output-name-drafts">
-        {JSON.stringify(draft.joinOutputNameDrafts ?? {})}
-      </output>
+      <output data-slot="output-name-drafts">{JSON.stringify(draft.outputNameDrafts ?? {})}</output>
     </>
   );
   if (!warehouseSourceImport) return fields;
@@ -220,8 +218,8 @@ describe('DvtAuthoringFields', () => {
     return container.querySelector('[data-slot="dvt-draft-json"]')?.textContent ?? '';
   }
 
-  function joinOutputNameDraftsJson(): string {
-    return container.querySelector('[data-slot="join-output-name-drafts"]')?.textContent ?? '';
+  function outputNameDraftsJson(): string {
+    return container.querySelector('[data-slot="output-name-drafts"]')?.textContent ?? '';
   }
 
   it('renders imported source target metadata and updates the source alias draft', () => {
@@ -369,7 +367,7 @@ describe('DvtAuthoringFields', () => {
     expect(outputName.getAttribute('aria-invalid')).toBe('true');
     const alert = container.querySelector<HTMLElement>('[role="alert"]');
     expect(outputName.getAttribute('aria-describedby')).toBe(alert?.id);
-    expect(joinOutputNameDraftsJson()).toContain(invalidName);
+    expect(outputNameDraftsJson()).toContain(invalidName);
 
     const firstAlertId = outputName.getAttribute('aria-describedby');
     expect(firstAlertId).not.toBeNull();
@@ -415,7 +413,7 @@ describe('DvtAuthoringFields', () => {
       fireEvent.focusOut(outputName);
       fireEvent.change(checkbox, { target: { checked: false } });
     });
-    expect(joinOutputNameDraftsJson()).not.toContain(invalidName);
+    expect(outputNameDraftsJson()).not.toContain(invalidName);
     expect(container.querySelector('[role="alert"]')).toBeNull();
   });
   it('replaces a stale one-input projection with an explicitly configured connected join', () => {
@@ -658,16 +656,25 @@ describe('DvtAuthoringFields', () => {
       (option) => option.textContent?.trim() === 'shipment_id'
     );
     expect(shipmentGrain?.value).toMatch(/^dvt_fld_/);
+    const applyGrouping = container.querySelector<HTMLButtonElement>(
+      '[data-slot="dvt-substrait-inner-join-apply-grouping"]'
+    )!;
+    const oversizedOutput = 'x'.repeat(64);
     act(() => {
-      fireEvent.change(grainField!, {
-        target: { value: shipmentGrain!.value },
-      });
+      fireEvent.change(grainField!, { target: { value: shipmentGrain!.value } });
+      fireEvent.input(countOutput!, { target: { value: oversizedOutput } });
+      fireEvent.click(applyGrouping);
+    });
+    expect(countOutput?.value).toBe(oversizedOutput);
+    expect(countOutput?.getAttribute('aria-invalid')).toBe('true');
+    expect(draftJson()).not.toContain(oversizedOutput);
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-inner-join-grouping-authoring"]')
+    ).toBeNull();
+
+    act(() => {
       fireEvent.input(countOutput!, { target: { value: 'shipment_count' } });
-      fireEvent.click(
-        container.querySelector<HTMLButtonElement>(
-          '[data-slot="dvt-substrait-inner-join-apply-grouping"]'
-        )!
-      );
+      fireEvent.click(applyGrouping);
     });
     expect(
       container.querySelector('[data-slot="dvt-substrait-inner-join-grouping-authoring"]')
@@ -676,17 +683,36 @@ describe('DvtAuthoringFields', () => {
     const rankOutput = container.querySelector<HTMLInputElement>(
       '[data-slot="dvt-substrait-inner-join-window-output-name"]'
     );
+    const applyWindow = container.querySelector<HTMLButtonElement>(
+      '[data-slot="dvt-substrait-inner-join-apply-window"]'
+    )!;
+    act(() => {
+      fireEvent.input(rankOutput!, { target: { value: oversizedOutput } });
+      fireEvent.click(applyWindow);
+    });
+    expect(rankOutput?.value).toBe(oversizedOutput);
+    expect(rankOutput?.getAttribute('aria-invalid')).toBe('true');
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-inner-join-grouped-window-authoring"]')
+    ).toBeNull();
+
     act(() => {
       fireEvent.input(rankOutput!, { target: { value: 'shipment_rank' } });
-      fireEvent.click(
-        container.querySelector<HTMLButtonElement>(
-          '[data-slot="dvt-substrait-inner-join-apply-window"]'
-        )!
-      );
+      fireEvent.click(applyWindow);
     });
     expect(
       container.querySelector('[data-slot="dvt-substrait-inner-join-grouped-window-authoring"]')
     ).not.toBeNull();
+    const groupedRankOutput = container.querySelector<HTMLInputElement>(
+      '[data-slot="dvt-substrait-inner-join-window-output-name"]'
+    )!;
+    act(() => {
+      fireEvent.input(groupedRankOutput, { target: { value: 'shipment_rank ' } });
+      fireEvent.focusOut(groupedRankOutput);
+    });
+    expect(groupedRankOutput.value).toBe('shipment_rank ');
+    expect(groupedRankOutput.getAttribute('aria-invalid')).toBe('true');
+    expect(draftJson()).not.toContain('"displayName":"shipment_rank "');
     expect(draftJson()).toContain('"displayName":"shipment_count"');
     expect(draftJson()).toContain('"displayName":"shipment_rank"');
   });
@@ -796,6 +822,13 @@ describe('DvtAuthoringFields', () => {
 
     act(() => {
       fireEvent.click(nameSelection!);
+      fireEvent.input(countryOutput!, { target: { value: 'region ' } });
+      fireEvent.focusOut(countryOutput!);
+    });
+    expect(countryOutput?.value).toBe('region ');
+    expect(countryOutput?.getAttribute('aria-invalid')).toBe('true');
+    expect(draftJson()).not.toContain('"displayName":"region "');
+    act(() => {
       fireEvent.input(countryOutput!, { target: { value: 'region' } });
       fireEvent.focusOut(countryOutput!);
     });
@@ -825,10 +858,18 @@ describe('DvtAuthoringFields', () => {
     expect(grainField).not.toBeNull();
     expect(countOutput).not.toBeNull();
     expect(regionGrain?.value).toMatch(/^dvt_fld_/);
+    const oversizedOutput = 'x'.repeat(64);
     act(() => {
-      fireEvent.change(grainField!, {
-        target: { value: regionGrain!.value },
-      });
+      fireEvent.change(grainField!, { target: { value: regionGrain!.value } });
+      fireEvent.input(countOutput!, { target: { value: oversizedOutput } });
+      fireEvent.keyDown(applyGrouping!, { key: 'Enter' });
+    });
+    expect(countOutput?.value).toBe(oversizedOutput);
+    expect(countOutput?.getAttribute('aria-invalid')).toBe('true');
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-union-all-grouping-authoring"]')
+    ).toBeNull();
+    act(() => {
       fireEvent.input(countOutput!, { target: { value: 'customer_count' } });
       fireEvent.keyDown(applyGrouping!, { key: 'Enter' });
     });
@@ -843,6 +884,15 @@ describe('DvtAuthoringFields', () => {
     const applyWindow = container.querySelector<HTMLButtonElement>(
       '[data-slot="dvt-substrait-union-all-apply-window"]'
     );
+    act(() => {
+      fireEvent.input(rankOutput!, { target: { value: oversizedOutput } });
+      fireEvent.click(applyWindow!);
+    });
+    expect(rankOutput?.value).toBe(oversizedOutput);
+    expect(rankOutput?.getAttribute('aria-invalid')).toBe('true');
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-union-all-grouped-window-authoring"]')
+    ).toBeNull();
     act(() => {
       fireEvent.input(rankOutput!, { target: { value: 'count_rank' } });
       fireEvent.click(applyWindow!);

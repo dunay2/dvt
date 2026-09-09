@@ -11,6 +11,8 @@ import {
   DvtSubstraitRelationBindingV1Schema,
   DvtTimestampLiteralV1Schema,
   PostgresIdentifierV1Schema,
+  WORKSPACE_GRAPH_AUTHORING_COMMAND_TYPE,
+  WorkspaceGraphAuthoringCommandSchema,
   WorkspaceGraphAuthoringCanvasDocumentSchema,
   WorkspaceGraphAuthoringNodeSchema,
   countUnicodeCodePoints,
@@ -30,7 +32,7 @@ const baseNode = {
 function expectBoundary(
   schema: { safeParse(value: unknown): { success: boolean } },
   values: string[]
-) {
+): void {
   expect(values.map((value) => schema.safeParse(value).success)).toEqual([true, true, false]);
 }
 
@@ -193,6 +195,63 @@ describe('Canvas authoring field policy v1', () => {
         },
       }).success
     ).toBe(false);
+  });
+
+  it.each([
+    [
+      'oversized source alias',
+      {
+        pluginId: 'dvt',
+        kind: 'dvt:source',
+        metadata: { config: { alias: 'a'.repeat(64) } },
+      },
+    ],
+    [
+      'unknown sink write mode',
+      {
+        pluginId: 'dvt',
+        kind: 'dvt:sink',
+        metadata: { config: { writeMode: 'merge' } },
+      },
+    ],
+  ])('rejects update-node patches with invalid DVT metadata: %s', (_label, patch) => {
+    expect(
+      WorkspaceGraphAuthoringCommandSchema.safeParse({
+        type: WORKSPACE_GRAPH_AUTHORING_COMMAND_TYPE.updateNode,
+        nodeId: baseNode.id,
+        patch,
+      }).success
+    ).toBe(false);
+  });
+
+  it.each([
+    ['pluginId', { pluginId: 'dvt', metadata: { config: { alias: 'orders' } } }],
+    ['kind', { kind: 'dvt:source', metadata: { config: { alias: 'orders' } } }],
+  ])(
+    'requires both DVT discriminators when update-node patches metadata: %s only',
+    (_label, patch) => {
+      expect(
+        WorkspaceGraphAuthoringCommandSchema.safeParse({
+          type: WORKSPACE_GRAPH_AUTHORING_COMMAND_TYPE.updateNode,
+          nodeId: baseNode.id,
+          patch,
+        }).success
+      ).toBe(false);
+    }
+  );
+
+  it('does not apply PCV1 text limits recursively to opaque plugin metadata', () => {
+    expect(
+      WorkspaceGraphAuthoringCommandSchema.safeParse({
+        type: WORKSPACE_GRAPH_AUTHORING_COMMAND_TYPE.updateNode,
+        nodeId: baseNode.id,
+        patch: {
+          pluginId: 'external.plugin',
+          kind: 'external:node',
+          metadata: { opaqueDocument: 'x'.repeat(8_192) },
+        },
+      }).success
+    ).toBe(true);
   });
 
   it('applies output-name and description budgets to the semantic sidecar', () => {

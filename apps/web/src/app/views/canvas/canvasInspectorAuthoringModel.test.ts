@@ -165,7 +165,7 @@ describe('canvasInspectorAuthoringModel', () => {
     });
   });
 
-  it('normalizes empty descriptions back to undefined', () => {
+  it('normalizes empty descriptions back to undefined without trimming non-empty text', () => {
     expect(
       applyCanvasInspectorNodeDraft(buildNode(), {
         name: 'orders_source',
@@ -173,16 +173,28 @@ describe('canvasInspectorAuthoringModel', () => {
         tags: [],
       }).description
     ).toBeUndefined();
-  });
-
-  it('normalizes tag edits before applying them to the canonical node', () => {
     expect(
       applyCanvasInspectorNodeDraft(buildNode(), {
         name: 'orders_source',
-        description: 'Source table',
-        tags: [' finance ', 'critical', 'finance', ''],
-      }).tags
-    ).toEqual(['finance', 'critical']);
+        description: '  Source table  ',
+        tags: [],
+      }).description
+    ).toBe('  Source table  ');
+  });
+
+  it('preserves normalized duplicate tags so validation can reject them visibly', () => {
+    const draft = {
+      name: 'orders_source',
+      description: 'Source table',
+      tags: [' finance ', 'critical', 'finance', ''],
+    };
+
+    expect(validateCanvasInspectorNodeDraft(draft)).toEqual({ tags: 'node_tags_invalid' });
+    expect(applyCanvasInspectorNodeDraft(buildNode(), draft).tags).toEqual([
+      'finance',
+      'critical',
+      'finance',
+    ]);
   });
 
   it('accepts DBT model metadata without a writable SQL field', () => {
@@ -494,8 +506,8 @@ describe('canvasInspectorAuthoringModel', () => {
     ).toBe(true);
     expect(canonicalizeCanvasInspectorNodeDraft(modelNode, explicitEmptyDraft)).toMatchObject({
       name: 'Orders Model',
-      description: 'Governed model',
-      tags: ['mart', 'daily'],
+      description: '  Governed model  ',
+      tags: ['mart', 'daily', 'mart'],
       dbt: {
         packageName: 'finance',
         sourceName: 'raw_orders',
@@ -870,9 +882,21 @@ describe('canvasInspectorAuthoringModel', () => {
     expect(
       validateCanvasInspectorNodeDraft({
         ...base,
+        name: 'invalid\0name',
+      })
+    ).toEqual({ name: 'node_name_invalid' });
+    expect(
+      validateCanvasInspectorNodeDraft({
+        ...base,
         name: '😀'.repeat(limits.humanNameCodePoints + 1),
       })
     ).toEqual({ name: 'node_name_too_long' });
+    expect(
+      validateCanvasInspectorNodeDraft({
+        ...base,
+        description: 'invalid\0description',
+      })
+    ).toEqual({ description: 'node_description_invalid' });
     expect(
       validateCanvasInspectorNodeDraft({
         ...base,
@@ -882,7 +906,19 @@ describe('canvasInspectorAuthoringModel', () => {
     expect(
       validateCanvasInspectorNodeDraft({
         ...base,
+        tags: ['invalid\0tag'],
+      })
+    ).toEqual({ tags: 'node_tags_invalid' });
+    expect(
+      validateCanvasInspectorNodeDraft({
+        ...base,
         tags: ['😀'.repeat(limits.tagCodePoints + 1)],
+      })
+    ).toEqual({ tags: 'node_tag_too_long' });
+    expect(
+      validateCanvasInspectorNodeDraft({
+        ...base,
+        tags: ['finance', 'finance'],
       })
     ).toEqual({ tags: 'node_tags_invalid' });
     expect(
@@ -891,6 +927,12 @@ describe('canvasInspectorAuthoringModel', () => {
         tags: Array.from({ length: limits.tagsPerNode + 1 }, (_, index) => `tag_${index}`),
       })
     ).toEqual({ tags: 'node_tags_invalid' });
+    expect(
+      validateCanvasInspectorNodeDraft({
+        ...base,
+        outputNameDrafts: { output_id: 'invalid\0identifier' },
+      })
+    ).toEqual({ outputNames: 'dvt_identifier_invalid' });
   });
 
   it('rejects Source and Sink PostgreSQL identifiers above 63 UTF-8 bytes', () => {

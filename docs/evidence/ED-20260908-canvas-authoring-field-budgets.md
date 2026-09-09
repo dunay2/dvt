@@ -27,7 +27,9 @@ evidence:
 Issue #3019 gives every editable field in the PCV1-I1 Canvas journey one
 contract-owned category and limit. Human names, descriptions and tags use
 Unicode code points. PostgreSQL identifiers and string literals use UTF-8
-bytes. Timestamps and choices use closed semantic validation.
+bytes. Timestamps and choices use closed semantic validation. This denominator covers
+the enumerated fields exposed by PCV1 editors; opaque plugin metadata and binary
+semantic documents remain outside recursive text limits.
 
 The Web keeps rejected text visible, reports an accessible error and prevents
 Apply. The shared v1 draft and Substrait schemas reject direct API bypasses.

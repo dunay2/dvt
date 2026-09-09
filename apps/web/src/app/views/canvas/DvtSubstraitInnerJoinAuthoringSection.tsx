@@ -1,5 +1,5 @@
 /** Owned concern: edit the admitted two-source Substrait INNER JOIN in Node Properties. */
-import { PostgresIdentifierV1Schema } from '@dvt/contracts';
+import { isWellFormedCanvasText, PostgresIdentifierV1Schema } from '@dvt/contracts';
 import { useId, type Dispatch, type ReactNode, type SetStateAction } from 'react';
 
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
@@ -43,6 +43,8 @@ export function DvtSubstraitInnerJoinAuthoringSection({
   outputNameDrafts: Readonly<Record<string, string>>;
 }>): JSX.Element | null {
   const semanticDraft = { plan: draft.plan, sidecar: draft.sidecar };
+  const countOutputDraftKey = 'inner-join:new-count-output';
+  const windowOutputDraftKey = 'inner-join:new-window-output';
   const outputPolicyErrorId = useId();
   const outputPolicyErrorIdFor = (key: string): string =>
     `${outputPolicyErrorId}-${encodeURIComponent(key)}`;
@@ -50,6 +52,7 @@ export function DvtSubstraitInnerJoinAuthoringSection({
     const value = outputNameDrafts[key];
     if (value == null) return null;
     if (value.trim().length === 0) return 'dvt_alias_required' as const;
+    if (!isWellFormedCanvasText(value)) return 'dvt_identifier_invalid' as const;
     if (value !== value.trim()) return 'dvt_identifier_whitespace' as const;
     return PostgresIdentifierV1Schema.safeParse(value).success
       ? null
@@ -61,21 +64,20 @@ export function DvtSubstraitInnerJoinAuthoringSection({
   const updateOutputNameDraft = (key: string, value: string): void => {
     onChange((current) => ({
       ...current,
-      joinOutputNameDrafts: { ...current.joinOutputNameDrafts, [key]: value },
+      outputNameDrafts: { ...current.outputNameDrafts, [key]: value },
     }));
   };
   const clearOutputNameDraft = (key: string): void => {
     onChange((current) => {
-      const { [key]: _removed, ...remaining } = current.joinOutputNameDrafts ?? {};
-      const { joinOutputNameDrafts: _current, ...rest } = current;
-      return Object.keys(remaining).length > 0
-        ? { ...rest, joinOutputNameDrafts: remaining }
-        : rest;
+      const { [key]: _removed, ...remaining } = current.outputNameDrafts ?? {};
+      const { outputNameDrafts: _current, ...rest } = current;
+      return Object.keys(remaining).length > 0 ? { ...rest, outputNameDrafts: remaining } : rest;
     });
   };
   const renameOutput = (key: string, value: string, apply: (name: string) => void): void => {
     if (
       value.trim().length === 0 ||
+      !isWellFormedCanvasText(value) ||
       value !== value.trim() ||
       !PostgresIdentifierV1Schema.safeParse(value).success
     )
@@ -240,15 +242,11 @@ export function DvtSubstraitInnerJoinAuthoringSection({
       const formData = new FormData(form);
       const groupFieldId = formData.get('grainFieldId');
       const countOutputName = formData.get('countOutputName');
-      if (
-        typeof groupFieldId !== 'string' ||
-        typeof countOutputName !== 'string' ||
-        countOutputName.trim().length === 0
-      ) {
-        return;
-      }
-      mutateDraft((current) =>
-        applyDvtSubstraitInnerJoinGrouping(current, { groupFieldId, countOutputName })
+      if (typeof groupFieldId !== 'string' || typeof countOutputName !== 'string') return;
+      renameOutput(countOutputDraftKey, countOutputName, (name) =>
+        mutateDraft((current) =>
+          applyDvtSubstraitInnerJoinGrouping(current, { groupFieldId, countOutputName: name })
+        )
       );
     };
     return (
@@ -281,7 +279,16 @@ export function DvtSubstraitInnerJoinAuthoringSection({
           name="countOutputName"
           aria-label={canvasViewCopy.inspectorDvtSubstraitCountOutputLabel}
           disabled={disabled}
-          defaultValue="row_count"
+          value={outputNameDrafts[countOutputDraftKey] ?? 'row_count'}
+          onChange={(event) =>
+            updateOutputNameDraft(countOutputDraftKey, event.currentTarget.value)
+          }
+          aria-invalid={invalidOutputNames.has(countOutputDraftKey) ? 'true' : undefined}
+          aria-describedby={
+            invalidOutputNames.has(countOutputDraftKey)
+              ? outputPolicyErrorIdFor(countOutputDraftKey)
+              : undefined
+          }
         />
         <Button
           type="submit"
@@ -341,12 +348,20 @@ export function DvtSubstraitInnerJoinAuthoringSection({
             id="dvt-substrait-inner-join-window-output-name"
             data-slot="dvt-substrait-inner-join-window-output-name"
             disabled={disabled}
-            defaultValue={projection.result.name}
+            value={outputNameDrafts[projection.result.fieldId] ?? projection.result.name}
+            onChange={(event) =>
+              updateOutputNameDraft(projection.result.fieldId, event.currentTarget.value)
+            }
+            aria-invalid={invalidOutputNames.has(projection.result.fieldId) ? 'true' : undefined}
+            aria-describedby={
+              invalidOutputNames.has(projection.result.fieldId)
+                ? outputPolicyErrorIdFor(projection.result.fieldId)
+                : undefined
+            }
             onBlur={(event) =>
-              mutateDraft((current) =>
-                renameDvtSubstraitInnerJoinGroupedRowNumberOutput(
-                  current,
-                  event.currentTarget.value
+              renameOutput(projection.result.fieldId, event.currentTarget.value, (name) =>
+                mutateDraft((current) =>
+                  renameDvtSubstraitInnerJoinGroupedRowNumberOutput(current, name)
                 )
               )
             }
@@ -374,8 +389,12 @@ export function DvtSubstraitInnerJoinAuthoringSection({
     const projection = groupingInspection.projection;
     const applyWindow = (form: HTMLFormElement): void => {
       const outputName = new FormData(form).get('windowOutputName');
-      if (typeof outputName !== 'string' || outputName.trim().length === 0) return;
-      mutateDraft((current) => applyDvtSubstraitInnerJoinGroupedRowNumber(current, { outputName }));
+      if (typeof outputName !== 'string') return;
+      renameOutput(windowOutputDraftKey, outputName, (name) =>
+        mutateDraft((current) =>
+          applyDvtSubstraitInnerJoinGroupedRowNumber(current, { outputName: name })
+        )
+      );
     };
     return renderShell(
       <div
@@ -400,10 +419,19 @@ export function DvtSubstraitInnerJoinAuthoringSection({
           data-slot="dvt-substrait-inner-join-count-output-name"
           aria-label={canvasViewCopy.inspectorDvtSubstraitCountOutputLabel}
           disabled={disabled}
-          defaultValue={projection.measure.name}
+          value={outputNameDrafts[projection.measure.fieldId] ?? projection.measure.name}
+          onChange={(event) =>
+            updateOutputNameDraft(projection.measure.fieldId, event.currentTarget.value)
+          }
+          aria-invalid={invalidOutputNames.has(projection.measure.fieldId) ? 'true' : undefined}
+          aria-describedby={
+            invalidOutputNames.has(projection.measure.fieldId)
+              ? outputPolicyErrorIdFor(projection.measure.fieldId)
+              : undefined
+          }
           onBlur={(event) =>
-            mutateDraft((current) =>
-              renameDvtSubstraitInnerJoinCountOutput(current, event.currentTarget.value)
+            renameOutput(projection.measure.fieldId, event.currentTarget.value, (name) =>
+              mutateDraft((current) => renameDvtSubstraitInnerJoinCountOutput(current, name))
             )
           }
           onKeyDown={(event) => {
@@ -428,7 +456,16 @@ export function DvtSubstraitInnerJoinAuthoringSection({
             name="windowOutputName"
             aria-label={canvasViewCopy.inspectorDvtSubstraitWindowOutputLabel}
             disabled={disabled}
-            defaultValue="group_rank"
+            value={outputNameDrafts[windowOutputDraftKey] ?? 'group_rank'}
+            onChange={(event) =>
+              updateOutputNameDraft(windowOutputDraftKey, event.currentTarget.value)
+            }
+            aria-invalid={invalidOutputNames.has(windowOutputDraftKey) ? 'true' : undefined}
+            aria-describedby={
+              invalidOutputNames.has(windowOutputDraftKey)
+                ? outputPolicyErrorIdFor(windowOutputDraftKey)
+                : undefined
+            }
           />
           <Button
             type="submit"

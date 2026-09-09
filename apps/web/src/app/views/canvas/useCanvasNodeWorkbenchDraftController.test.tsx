@@ -123,7 +123,7 @@ describe('useCanvasNodeWorkbenchDraftController', () => {
     expect(harness.getController().tagsText).toBe('mart');
   });
 
-  it('keeps tag text and normalized draft tags in one controller transition', async () => {
+  it('keeps tag text and duplicate draft tags in one controller transition', async () => {
     await harness.renderNode(MODEL_NODE);
 
     await act(async () => {
@@ -131,7 +131,7 @@ describe('useCanvasNodeWorkbenchDraftController', () => {
     });
 
     expect(harness.getController().tagsText).toBe('mart, daily, mart, ');
-    expect(harness.getController().draft.tags).toEqual(['mart', 'daily']);
+    expect(harness.getController().draft.tags).toEqual(['mart', 'daily', 'mart']);
   });
 
   it('preserves an oversized business tag so validation can reject it visibly', async () => {
@@ -213,8 +213,8 @@ describe('useCanvasNodeWorkbenchDraftController', () => {
 
     expect(harness.getController().draft).toMatchObject({
       name: 'Orders Mart',
-      description: 'Governed model',
-      tags: ['mart', 'daily'],
+      description: '  Governed model  ',
+      tags: ['mart', 'daily', 'mart'],
       dbt: {
         packageName: 'finance',
         sourceName: 'raw_orders',

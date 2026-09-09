@@ -294,9 +294,15 @@ export const canvasViewAuthoringCopyEs = {
   dbtFlowGuideTestSeverityUnknownLabel: 'severidad desconocida',
   dbtFlowGuideColumnsMissingMessage: 'Metadatos de columnas no disponibles',
   inspectorErrorNodeNameRequired: 'El nombre del nodo es obligatorio.',
+  inspectorErrorNodeNameInvalid:
+    'El nombre del nodo contiene texto no válido, como un carácter NUL.',
   inspectorErrorNodeNameTooLong: 'El nombre del nodo es demasiado largo.',
+  inspectorErrorNodeDescriptionInvalid:
+    'La descripción contiene texto no válido, como un carácter NUL.',
   inspectorErrorNodeDescriptionTooLong: 'La descripción es demasiado larga.',
-  inspectorErrorNodeTagsInvalid: 'Una etiqueta es demasiado larga o hay demasiadas etiquetas.',
+  inspectorErrorNodeTagTooLong: 'Una etiqueta es demasiado larga.',
+  inspectorErrorNodeTagsInvalid:
+    'Las etiquetas contienen texto no válido, duplicados o exceden la cantidad permitida.',
   inspectorErrorDbtPackageRequired: 'El paquete es obligatorio.',
   inspectorErrorDbtSourceRequired: 'El origen es obligatorio.',
   inspectorErrorDbtSchemaRequired: 'El esquema es obligatorio.',
@@ -313,6 +319,8 @@ export const canvasViewAuthoringCopyEs = {
   inspectorErrorDvtSchemaRequired: 'El esquema es obligatorio.',
   inspectorErrorDvtTableRequired: 'La tabla es obligatoria.',
   inspectorErrorDvtAliasRequired: 'El alias es obligatorio.',
+  inspectorErrorDvtIdentifierInvalid:
+    'Los identificadores PostgreSQL contienen texto no válido, como un carácter NUL.',
   inspectorErrorDvtIdentifierTooLong:
     'Los identificadores PostgreSQL admiten como máximo 63 bytes UTF-8.',
   inspectorErrorDvtIdentifierWhitespace:

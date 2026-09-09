@@ -1,5 +1,6 @@
 /** Owned concern: edit the admitted N-source Substrait UNION ALL in Node Properties. */
-import type { Dispatch, ReactNode, SetStateAction } from 'react';
+import { isWellFormedCanvasText, PostgresIdentifierV1Schema } from '@dvt/contracts';
+import { useId, type Dispatch, type ReactNode, type SetStateAction } from 'react';
 
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -20,18 +21,63 @@ import {
   type DvtSubstraitUnionAllDraft,
   type DvtSubstraitUnionAllFieldEdit,
 } from './canvasDvtSubstraitSetComposition';
+import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
 import { canvasViewCopy } from './copy';
 
 export function DvtSubstraitUnionAllAuthoringSection({
   disabled,
   draft,
   onChange,
+  outputNameDrafts,
 }: Readonly<{
   disabled: boolean;
   draft: DvtSubstraitTransformAuthoringMetadata;
   onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
+  outputNameDrafts: Readonly<Record<string, string>>;
 }>): JSX.Element | null {
   const semanticDraft = { plan: draft.plan, sidecar: draft.sidecar };
+  const countOutputDraftKey = 'union-all:new-count-output';
+  const windowOutputDraftKey = 'union-all:new-window-output';
+  const outputPolicyErrorId = useId();
+  const outputPolicyErrorIdFor = (key: string): string =>
+    `${outputPolicyErrorId}-${encodeURIComponent(key)}`;
+  const outputNameErrorFor = (key: string) => {
+    const value = outputNameDrafts[key];
+    if (value == null) return null;
+    if (value.trim().length === 0) return 'dvt_alias_required' as const;
+    if (!isWellFormedCanvasText(value)) return 'dvt_identifier_invalid' as const;
+    if (value !== value.trim()) return 'dvt_identifier_whitespace' as const;
+    return PostgresIdentifierV1Schema.safeParse(value).success
+      ? null
+      : ('dvt_identifier_too_long' as const);
+  };
+  const invalidOutputNames = new Set(
+    Object.keys(outputNameDrafts).filter((key) => outputNameErrorFor(key) != null)
+  );
+  const updateOutputNameDraft = (key: string, value: string): void => {
+    onChange((current) => ({
+      ...current,
+      outputNameDrafts: { ...current.outputNameDrafts, [key]: value },
+    }));
+  };
+  const clearOutputNameDraft = (key: string): void => {
+    onChange((current) => {
+      const { [key]: _removed, ...remaining } = current.outputNameDrafts ?? {};
+      const { outputNameDrafts: _current, ...rest } = current;
+      return Object.keys(remaining).length > 0 ? { ...rest, outputNameDrafts: remaining } : rest;
+    });
+  };
+  const renameOutput = (key: string, value: string, apply: (name: string) => void): void => {
+    if (
+      value.trim().length === 0 ||
+      !isWellFormedCanvasText(value) ||
+      value !== value.trim() ||
+      !PostgresIdentifierV1Schema.safeParse(value).success
+    )
+      return;
+    apply(value);
+    clearOutputNameDraft(key);
+  };
   const mutateDraft = (
     transform: (current: DvtSubstraitUnionAllDraft) => DvtSubstraitUnionAllDraft
   ): void => {
@@ -60,6 +106,19 @@ export function DvtSubstraitUnionAllAuthoringSection({
       <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>
         {canvasViewCopy.inspectorDvtSubstraitUnionAllTitle}
       </h3>
+      {Object.keys(outputNameDrafts).map((key) => {
+        const error = outputNameErrorFor(key);
+        return error == null ? null : (
+          <p
+            key={key}
+            id={outputPolicyErrorIdFor(key)}
+            role="alert"
+            className={inspectorVisualClasses.inspectorErrorText}
+          >
+            {formatCanvasInspectorNodeDraftError(error, canvasViewCopy)}
+          </p>
+        );
+      })}
       {content}
     </div>
   );
@@ -112,10 +171,21 @@ export function DvtSubstraitUnionAllAuthoringSection({
             id="dvt-substrait-union-all-window-output-name"
             data-slot="dvt-substrait-union-all-window-output-name"
             disabled={disabled}
-            defaultValue={projection.result.name}
+            value={outputNameDrafts[projection.result.fieldId] ?? projection.result.name}
+            onChange={(event) =>
+              updateOutputNameDraft(projection.result.fieldId, event.currentTarget.value)
+            }
+            aria-invalid={invalidOutputNames.has(projection.result.fieldId) ? 'true' : undefined}
+            aria-describedby={
+              invalidOutputNames.has(projection.result.fieldId)
+                ? outputPolicyErrorIdFor(projection.result.fieldId)
+                : undefined
+            }
             onBlur={(event) =>
-              mutateDraft((current) =>
-                renameDvtSubstraitUnionAllGroupedRowNumberOutput(current, event.currentTarget.value)
+              renameOutput(projection.result.fieldId, event.currentTarget.value, (name) =>
+                mutateDraft((current) =>
+                  renameDvtSubstraitUnionAllGroupedRowNumberOutput(current, name)
+                )
               )
             }
             onKeyDown={(event) => {
@@ -142,8 +212,12 @@ export function DvtSubstraitUnionAllAuthoringSection({
     const projection = groupingInspection.projection;
     const applyWindow = (form: HTMLFormElement): void => {
       const outputName = new FormData(form).get('windowOutputName');
-      if (typeof outputName !== 'string' || outputName.trim().length === 0) return;
-      mutateDraft((current) => applyDvtSubstraitUnionAllGroupedRowNumber(current, { outputName }));
+      if (typeof outputName !== 'string') return;
+      renameOutput(windowOutputDraftKey, outputName, (name) =>
+        mutateDraft((current) =>
+          applyDvtSubstraitUnionAllGroupedRowNumber(current, { outputName: name })
+        )
+      );
     };
     return renderShell(
       <div
@@ -175,10 +249,19 @@ export function DvtSubstraitUnionAllAuthoringSection({
             id="dvt-substrait-union-all-count-output-name"
             data-slot="dvt-substrait-union-all-count-output-name"
             disabled={disabled}
-            defaultValue={projection.measure.name}
+            value={outputNameDrafts[projection.measure.fieldId] ?? projection.measure.name}
+            onChange={(event) =>
+              updateOutputNameDraft(projection.measure.fieldId, event.currentTarget.value)
+            }
+            aria-invalid={invalidOutputNames.has(projection.measure.fieldId) ? 'true' : undefined}
+            aria-describedby={
+              invalidOutputNames.has(projection.measure.fieldId)
+                ? outputPolicyErrorIdFor(projection.measure.fieldId)
+                : undefined
+            }
             onBlur={(event) =>
-              mutateDraft((current) =>
-                renameDvtSubstraitUnionAllCountOutput(current, event.currentTarget.value)
+              renameOutput(projection.measure.fieldId, event.currentTarget.value, (name) =>
+                mutateDraft((current) => renameDvtSubstraitUnionAllCountOutput(current, name))
               )
             }
             onKeyDown={(event) => {
@@ -204,7 +287,16 @@ export function DvtSubstraitUnionAllAuthoringSection({
             name="windowOutputName"
             aria-label={canvasViewCopy.inspectorDvtSubstraitWindowOutputLabel}
             disabled={disabled}
-            defaultValue="group_rank"
+            value={outputNameDrafts[windowOutputDraftKey] ?? 'group_rank'}
+            onChange={(event) =>
+              updateOutputNameDraft(windowOutputDraftKey, event.currentTarget.value)
+            }
+            aria-invalid={invalidOutputNames.has(windowOutputDraftKey) ? 'true' : undefined}
+            aria-describedby={
+              invalidOutputNames.has(windowOutputDraftKey)
+                ? outputPolicyErrorIdFor(windowOutputDraftKey)
+                : undefined
+            }
           />
           <Button
             type="submit"
@@ -237,21 +329,18 @@ export function DvtSubstraitUnionAllAuthoringSection({
   const inspection = inspectDvtSubstraitUnionAllDraft(semanticDraft);
   if (!inspection.ok) return null;
   const mutateField = (edit: DvtSubstraitUnionAllFieldEdit): void => {
+    if (edit.kind === 'set-selected' && !edit.selected) clearOutputNameDraft(edit.fieldKey);
     mutateDraft((current) => applyDvtSubstraitUnionAllFieldEdit(current, edit));
   };
   const applyGrouping = (form: HTMLFormElement): void => {
     const formData = new FormData(form);
     const groupFieldId = formData.get('grainFieldId');
     const countOutputName = formData.get('countOutputName');
-    if (
-      typeof groupFieldId !== 'string' ||
-      typeof countOutputName !== 'string' ||
-      countOutputName.trim().length === 0
-    ) {
-      return;
-    }
-    mutateDraft((current) =>
-      applyDvtSubstraitUnionAllGrouping(current, { groupFieldId, countOutputName })
+    if (typeof groupFieldId !== 'string' || typeof countOutputName !== 'string') return;
+    renameOutput(countOutputDraftKey, countOutputName, (name) =>
+      mutateDraft((current) =>
+        applyDvtSubstraitUnionAllGrouping(current, { groupFieldId, countOutputName: name })
+      )
     );
   };
 
@@ -316,13 +405,20 @@ export function DvtSubstraitUnionAllAuthoringSection({
                       data-field-key={field.fieldKey}
                       aria-label={`${canvasViewCopy.inspectorDvtVisualOutputNameLabel}: ${field.defaultName}`}
                       disabled={disabled}
-                      defaultValue={output.name}
+                      value={outputNameDrafts[field.fieldKey] ?? output.name}
+                      onChange={(event) =>
+                        updateOutputNameDraft(field.fieldKey, event.currentTarget.value)
+                      }
+                      aria-invalid={invalidOutputNames.has(field.fieldKey) ? 'true' : undefined}
+                      aria-describedby={
+                        invalidOutputNames.has(field.fieldKey)
+                          ? outputPolicyErrorIdFor(field.fieldKey)
+                          : undefined
+                      }
                       onBlur={(event) =>
-                        mutateField({
-                          kind: 'rename',
-                          fieldKey: field.fieldKey,
-                          outputName: event.currentTarget.value,
-                        })
+                        renameOutput(field.fieldKey, event.currentTarget.value, (outputName) =>
+                          mutateField({ kind: 'rename', fieldKey: field.fieldKey, outputName })
+                        )
                       }
                     />
                   )}
@@ -395,7 +491,16 @@ export function DvtSubstraitUnionAllAuthoringSection({
           name="countOutputName"
           aria-label={canvasViewCopy.inspectorDvtSubstraitCountOutputLabel}
           disabled={disabled}
-          defaultValue="row_count"
+          value={outputNameDrafts[countOutputDraftKey] ?? 'row_count'}
+          onChange={(event) =>
+            updateOutputNameDraft(countOutputDraftKey, event.currentTarget.value)
+          }
+          aria-invalid={invalidOutputNames.has(countOutputDraftKey) ? 'true' : undefined}
+          aria-describedby={
+            invalidOutputNames.has(countOutputDraftKey)
+              ? outputPolicyErrorIdFor(countOutputDraftKey)
+              : undefined
+          }
         />
         <Button
           type="submit"

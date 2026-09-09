@@ -48,13 +48,13 @@ const WellFormedCanvasTextSchema = z.string().refine(isWellFormedCanvasText, {
   message: 'Canvas authoring text must be valid Unicode and must not contain NUL.',
 });
 
-function boundedCodePointString(maximum: number, label: string) {
+function boundedCodePointString(maximum: number, label: string): z.ZodString {
   return WellFormedCanvasTextSchema.refine((value) => countUnicodeCodePoints(value) <= maximum, {
     message: `${label} must contain at most ${maximum} Unicode code points.`,
   });
 }
 
-function boundedUtf8String(maximum: number, label: string) {
+function boundedUtf8String(maximum: number, label: string): z.ZodString {
   return WellFormedCanvasTextSchema.refine((value) => countUtf8Bytes(value) <= maximum, {
     message: `${label} must contain at most ${maximum} UTF-8 bytes.`,
   });

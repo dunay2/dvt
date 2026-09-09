@@ -61,14 +61,10 @@ function tagsTextFromDraft(draft: CanvasInspectorNodeDraft): string {
 }
 
 function tagsFromText(value: string): readonly string[] {
-  return Array.from(
-    new Set(
-      value
-        .split(',')
-        .map((tag) => tag.trim())
-        .filter((tag) => tag.length > 0 && !isSemanticCanvasNodeTag(tag))
-    )
-  );
+  return value
+    .split(',')
+    .map((tag) => tag.trim())
+    .filter((tag) => tag.length > 0 && !isSemanticCanvasNodeTag(tag));
 }
 
 function isSemanticCanvasNodeTag(tag: string): boolean {

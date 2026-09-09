@@ -1044,17 +1044,29 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.errorNodeNameRequired',
     fallback: 'Node name is required.',
   },
+  inspectorErrorNodeNameInvalid: {
+    key: 'canvas.inspector.authoring.errorNodeNameInvalid',
+    fallback: 'Node name contains invalid text, such as a NUL character.',
+  },
   inspectorErrorNodeNameTooLong: {
     key: 'canvas.inspector.authoring.errorNodeNameTooLong',
     fallback: 'Node name is too long.',
+  },
+  inspectorErrorNodeDescriptionInvalid: {
+    key: 'canvas.inspector.authoring.errorNodeDescriptionInvalid',
+    fallback: 'Description contains invalid text, such as a NUL character.',
   },
   inspectorErrorNodeDescriptionTooLong: {
     key: 'canvas.inspector.authoring.errorNodeDescriptionTooLong',
     fallback: 'Description is too long.',
   },
+  inspectorErrorNodeTagTooLong: {
+    key: 'canvas.inspector.authoring.errorNodeTagTooLong',
+    fallback: 'A tag is too long.',
+  },
   inspectorErrorNodeTagsInvalid: {
     key: 'canvas.inspector.authoring.errorNodeTagsInvalid',
-    fallback: 'A tag is too long or there are too many tags.',
+    fallback: 'Tags contain invalid text, duplicates, or exceed the allowed count.',
   },
   inspectorErrorDbtPackageRequired: {
     key: 'canvas.inspector.authoring.errorDbtPackageRequired',
@@ -1107,6 +1119,10 @@ export const canvasViewAuthoringCopyByKey = {
   inspectorErrorDvtAliasRequired: {
     key: 'canvas.inspector.authoring.errorDvtAliasRequired',
     fallback: 'Alias is required.',
+  },
+  inspectorErrorDvtIdentifierInvalid: {
+    key: 'canvas.inspector.authoring.errorDvtIdentifierInvalid',
+    fallback: 'PostgreSQL identifiers contain invalid text, such as a NUL character.',
   },
   inspectorErrorDvtIdentifierTooLong: {
     key: 'canvas.inspector.authoring.errorDvtIdentifierTooLong',

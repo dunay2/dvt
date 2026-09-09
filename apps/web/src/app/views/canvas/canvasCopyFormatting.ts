@@ -82,10 +82,16 @@ export function formatCanvasInspectorNodeDraftError(
   switch (errorCode) {
     case 'node_name_required':
       return copy.inspectorErrorNodeNameRequired;
+    case 'node_name_invalid':
+      return copy.inspectorErrorNodeNameInvalid;
     case 'node_name_too_long':
       return copy.inspectorErrorNodeNameTooLong;
+    case 'node_description_invalid':
+      return copy.inspectorErrorNodeDescriptionInvalid;
     case 'node_description_too_long':
       return copy.inspectorErrorNodeDescriptionTooLong;
+    case 'node_tag_too_long':
+      return copy.inspectorErrorNodeTagTooLong;
     case 'node_tags_invalid':
       return copy.inspectorErrorNodeTagsInvalid;
     case 'dbt_package_required':
@@ -114,6 +120,8 @@ export function formatCanvasInspectorNodeDraftError(
       return copy.inspectorErrorDvtTableRequired;
     case 'dvt_alias_required':
       return copy.inspectorErrorDvtAliasRequired;
+    case 'dvt_identifier_invalid':
+      return copy.inspectorErrorDvtIdentifierInvalid;
     case 'dvt_identifier_too_long':
       return copy.inspectorErrorDvtIdentifierTooLong;
     case 'dvt_identifier_whitespace':

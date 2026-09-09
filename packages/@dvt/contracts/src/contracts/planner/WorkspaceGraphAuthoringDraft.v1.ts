@@ -189,8 +189,8 @@ function addStringEnumMetadataIssue(
   }
 }
 
-function addDvtNodeFieldPolicyIssues(
-  node: WorkspaceGraphAuthoringNode,
+export function addDvtNodeFieldPolicyIssues(
+  node: Pick<WorkspaceGraphAuthoringNode, 'pluginId' | 'kind' | 'metadata'>,
   context: z.RefinementCtx
 ): void {
   const isSource =

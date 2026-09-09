@@ -13,7 +13,7 @@ task_id: GH-3019
 
 Canvas authoring uses one typed field policy at the contract boundary. The UI
 retains rejected input and explains the error; API parsing rejects a direct
-bypass before the command; PostgreSQL rejects invalid JSON-visible authoring fields in a draft. Existing
+bypass before the command; PostgreSQL rejects invalid enumerated JSON-visible authoring fields in a draft. Existing
 incompatible rows fail closed at the v1 contract boundary until an explicit
 operator cleanup. This is a v1 hard cut with no truncation, compatibility path,
 global maxlength, or second field catalog.
@@ -69,9 +69,13 @@ flowchart LR
 | structured field name           | PostgreSQL output identifier    | Substrait document     | 63 UTF-8 bytes                 | field error; atomic no-op      |
 | JOIN left/right FieldId         | opaque reference                | Substrait authoring    | membership and scope           | field error                    |
 | JOIN inclusion                  | output selection                | Substrait authoring    | at least one output            | field error; atomic no-op      |
-| JOIN output alias               | PostgreSQL output identifier    | Substrait document     | 63 UTF-8 bytes                 | field error; atomic no-op      |
+| JOIN/UNION output alias         | PostgreSQL output identifier    | Substrait document     | 63 UTF-8 bytes                 | field error; atomic no-op      |
 | Sink schema/table               | PostgreSQL destination segments | DVT Sink metadata      | 63 UTF-8 bytes each            | field error; no normalize/save |
 | Sink materialization/write mode | enums                           | DVT Sink metadata      | closed membership              | field error                    |
+
+Only the fields enumerated above are editable PCV1 authoring fields. Arbitrary
+members of opaque plugin metadata and binary semantic documents are not editor
+inputs and do not receive a recursive text limit.
 
 Import search filters and catalog checkboxes are ephemeral query controls. They
 remain governed by the Source import rail and do not enter the persisted Canvas
@@ -203,6 +207,22 @@ unrelated editors are excluded.
       ],
       "fowlerSignals": [
         "Test-only confidence"
+      ],
+      "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-authoring-field-budgets.cy.ts",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature PCV1-CANVAS-AUTHORING-FIELD-BUDGETS-3019"
+    },
+    {
+      "name": "normalizeNodeTags",
+      "path": "apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts",
+      "cqRails": [
+        "ConfigureCanvasDvtNode"
+      ],
+      "dddOwner": "CanvasInspectorNodeDraft",
+      "unitTests": [
+        "apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts"
+      ],
+      "fowlerSignals": [
+        "Duplicate validation"
       ],
       "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-authoring-field-budgets.cy.ts",
       "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature PCV1-CANVAS-AUTHORING-FIELD-BUDGETS-3019"
@@ -677,7 +697,9 @@ unrelated editors are excluded.
     "scripts/check-feature-mechanization.test.cjs",
     "scripts/planning-db/command-query-rail-catalog.cjs",
     "scripts/planning-db-import.test.cjs",
+    "scripts/planning-db-query.test.cjs",
     "scripts/planning-db-schema.test.cjs",
+    "scripts/planning-db/queries/code-symbol-query.cjs",
     "tools/planning-db/schema.sql",
     "docs/architecture/command-query-rail-governance.md",
     "docs/.manifest.json",

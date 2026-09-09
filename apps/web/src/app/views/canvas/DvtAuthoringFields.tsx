@@ -192,7 +192,7 @@ export function DvtAuthoringFields({
             draft: { plan: draft.dvt.plan, sidecar: draft.dvt.sidecar },
           })}
           onChange={onChange}
-          outputNameDrafts={draft.joinOutputNameDrafts ?? {}}
+          outputNameDrafts={draft.outputNameDrafts ?? {}}
         />
       );
     } else if (draft.dvt.shape === 'union_all') {
@@ -201,6 +201,7 @@ export function DvtAuthoringFields({
           disabled={disabled}
           draft={draft.dvt}
           onChange={onChange}
+          outputNameDrafts={draft.outputNameDrafts ?? {}}
         />
       );
     } else {
