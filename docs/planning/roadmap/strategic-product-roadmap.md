@@ -2,7 +2,7 @@
 title: Strategic Product Roadmap
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-09-09
+last_reviewed: 2026-09-10
 planning_type: reference
 ---
 
@@ -21,8 +21,7 @@ It is not the execution queue and it does not own task status.
 
 For execution and evidence use:
 
-- [Planning Dashboard](../state/planning-dashboard.md) and GitHub Issues for what
-  is active now;
+- [GitHub Issues](https://github.com/dunay2/dvt/issues) for what is active now;
 - [Roadmap By Domain](roadmap-by-domain.md) for durable cross-domain sequencing;
 - [System Delivery Status](../../architecture/system-delivery-status.md) for what
   is already true in code;
@@ -115,7 +114,7 @@ contracts, tests, CI, and System Delivery Status before planning replacement wor
 
 - `What should we fund next?` -> this page plus current product evidence.
 - `What domain blocks the next move?` -> [Roadmap By Domain](roadmap-by-domain.md).
-- `What is active now?` -> GitHub Issues / [Planning Dashboard](../state/planning-dashboard.md).
+- `What is active now?` -> [GitHub Issues](https://github.com/dunay2/dvt/issues).
 - `Who owns the next executable slice?` -> the governing GitHub issue.
 - `What architecture/rail owns this behavior?` -> Planning DB and its canonical
   evidence paths.
