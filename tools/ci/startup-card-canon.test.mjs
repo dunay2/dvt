@@ -59,14 +59,23 @@ const activePlanningEntrypoints = [
   'README.md',
   'docs/index.md',
   'docs/concepts/index.md',
+  'docs/concepts/glossary.md',
   'docs/concepts/system-map.md',
   'docs/guides/ai-work-protocol.md',
+  'docs/architecture/reference-architecture.md',
+  'docs/architecture/system/index.md',
+  'docs/architecture/domain-map.md',
+  'docs/architecture/components/engine/roadmap/engine-phases.md',
   'docs/planning/status/governance-document-rule-inventory.md',
   'docs/planning/state/index.md',
   'docs/planning/state/planning-dashboard.md',
   'docs/planning/roadmap/index.md',
+  'docs/planning/roadmap/roadmap-by-domain.md',
+  'docs/planning/roadmap/diagrams/planning-domain-map.md',
   'docs/planning/domains/index.md',
+  'docs/planning/domains/documentation-governance.md',
   'docs/planning/gaps/index.md',
+  'docs/planning/proposals/mandatory/frontend-and-ux/index.md',
 ];
 
 test('governance startup card canonization preserves routing semantics and baseline rails', () => {
