@@ -14,7 +14,7 @@ Before analysis, coding, Git actions, or planning, the agent MUST:
 
 `*** Plan-driven. Outcome-agnostic.***`
 
-1. Immediately after that sentence, name the governing sources being used for
+4. Immediately after that sentence, name the governing sources being used for
    the task.
 
 If the agent has not read the inventory first, it MUST stop and do that before
@@ -94,9 +94,10 @@ the previously assembled untracked publication tree and fail if it is absent.
 Use these as procedural complements to this file. They do not override rules in
 `AGENTS.md`.
 
-- `docs/guides/ai-work-protocol.md` - phase-based execution procedure.
+- `docs/guides/ai-work-protocol.md` - AI-assisted work execution procedure.
 - `docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md` -
-  efficiency and cost-reduction playbook (Lane C).
+  historical efficiency and cost-reduction review; use only the still-valid
+  techniques, not its dated lane state as current authority.
 - `scripts/hygiene.ps1` - standard diagnostics/cleanup/preflight helper.
 
 ## Git Commit Format Rule
@@ -122,40 +123,30 @@ pnpm commit chore ci "Upgrade Node to 22.x in workflow files"
 pnpm commit docs docs "Add how-to-add-tasks guide"
 ```
 
-## Git Commit Execution Rule
+## Host Execution Capability Rule
 
-For this repository's agent execution environment, `git commit` is a known
-permission-sensitive command because sandboxed execution does not reliably
-create `.git` lock files.
+Repository Markdown does not grant host, sandbox, filesystem, network, or
+privilege-escalation permissions.
 
-Therefore the agent MUST:
+When a required command is permission-sensitive, the agent MUST:
 
-- run `git commit` with escalated execution directly when a commit is required
-- not waste a first sandboxed attempt on `git commit`
-- keep normal hook execution enabled unless the user explicitly requests
-  otherwise and the risk is stated first
+- use only execution capabilities explicitly available in the current host;
+- use an explicit escalation mechanism only when the host exposes and permits
+  one for that command;
+- keep hooks and validation enabled;
+- report permission or environment failures rather than teaching a bypass;
+- distinguish an environment failure from a product failure using the available
+  evidence.
 
-This is a repository operational rule for agent-driven execution. It does not
-change normal Git usage for human contributors outside the agent environment.
-
-## Sandboxed Validation Execution Rule
-
-Commands that load `vitest`, `vite`, or `esbuild` always require escalated
-execution in this repository's agent environment.
-
-Therefore the agent MUST:
-
-- run `vitest`, `vite`, and `esbuild`-backed commands with escalated execution
-  directly — never attempt them in sandboxed mode first
-- report the escalated run result as the real validation outcome
-- not present `spawn EPERM` output as a product defect — it is an environment
-  signal, not a code failure
+Known environment-specific symptoms such as `.git` lock failures or `spawn
+EPERM` may justify using a host-supported execution mode, but this file does not
+assert that such a mode exists in every agent environment.
 
 ## Required End-Of-Task Validation
 
 For code, config, test, CI, or documentation changes, the agent MUST finish by
 running the relevant validation commands for the touched scope and MUST include
-the lint/pre-push gate in that closeout baseline.
+the lint/pre-push gate in that validation baseline.
 
 At minimum, this means:
 
@@ -227,16 +218,20 @@ MUST stop and report:
 
 The agent MUST wait for explicit approval before introducing that debt.
 
-## Required Evidence In Every Closeout
+## Required Evidence At Task Completion
 
-Every task closeout MUST include evidence for all of the following:
+The governing GitHub issue and final task report MUST make the completion
+evidence explicit. A separate closeout file is required only when another
+canonical policy for the affected artifact requires one.
+
+Record all of the following:
 
 1. Governing sources used
    - Which ADRs, docs, contracts, workflows, or config files governed the work.
 1. Real work performed
    - Which files were actually changed and which systems were affected.
 1. Validation evidence
-   - Exact commands run.
+   - Exact commands or CI checks run.
    - Whether they passed or failed.
 1. No-debt evidence
    - No new debt entry created unless explicitly approved.
