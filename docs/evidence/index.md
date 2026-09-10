@@ -215,6 +215,7 @@ Evidence documents that justify or validate relevant changes.
 - [Temporal TypeScript SDK 1.20 Upgrade](ED-20260721-temporal-sdk-1-20-upgrade.md)
 - [Temporal TypeScript SDK 1.23 Upgrade](ED-20260902-temporal-sdk-1-23-upgrade.md)
 - [Temporal worker DBT Docker canary](ed-20260514-temporal-worker-dbt-canary.md)
+- [Timestamp column function evidence](ED-20260910-timestamp-column-function.md)
 - [Transform column comment authoring evidence](ED-20260902-transform-column-comments.md)
 - [Transform function alias authoring evidence](ED-20260902-transform-function-alias-authoring.md)
 - [VTX1 authoring authority hard cut](ED-20260903-vtx1-authoring-hardcut.md)

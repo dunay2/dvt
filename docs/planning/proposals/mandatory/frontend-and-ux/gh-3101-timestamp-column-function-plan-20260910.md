@@ -105,6 +105,96 @@ writes nothing.
       "fowlerSignals": ["Provider-dependent behavior"],
       "cypressCoverage": "N/A - typed provider boundary",
       "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-3101-TIMESTAMP-COLUMN-FUNCTION"
+    },
+    {
+      "name": "EXTRACT_ID",
+      "path": "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSupportedCapabilities.v1.ts",
+      "cqRails": ["ResolveCanvasContextMenu"],
+      "dddOwner": "DVT Substrait capability catalog",
+      "unitTests": ["pnpm --filter @dvt/contracts test"],
+      "fowlerSignals": ["Duplicate semantics"],
+      "cypressCoverage": "canvas-structured-transform-fields.cy.ts temporal menu flow",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-3101-TIMESTAMP-COLUMN-FUNCTION"
+    },
+    {
+      "name": "pgExtractYearUtc",
+      "path": "apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresAst.ts",
+      "cqRails": ["ConfigureCanvasDvtNode"],
+      "dddOwner": "PostgreSQL semantic projection",
+      "unitTests": ["pnpm --filter @dvt/web test -- canvasDvtSubstraitPostgresProjection.test.ts"],
+      "fowlerSignals": ["Provider-dependent behavior"],
+      "cypressCoverage": "canvas-structured-transform-fields.cy.ts temporal menu flow",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-3101-TIMESTAMP-COLUMN-FUNCTION"
+    },
+    {
+      "name": "I64_DATA_TYPES",
+      "path": "apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.ts",
+      "cqRails": ["ResolveCanvasContextMenu"],
+      "dddOwner": "Canvas semantic authoring",
+      "unitTests": ["pnpm --filter @dvt/web test -- canvasDvtSubstraitPostgresProjection.test.ts"],
+      "fowlerSignals": ["Boundary drift"],
+      "cypressCoverage": "canvas-structured-transform-fields.cy.ts temporal menu flow",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-3101-TIMESTAMP-COLUMN-FUNCTION"
+    },
+    {
+      "name": "STRING_DATA_TYPES",
+      "path": "apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.ts",
+      "cqRails": ["ResolveCanvasContextMenu"],
+      "dddOwner": "Canvas semantic authoring",
+      "unitTests": ["pnpm --filter @dvt/web test -- canvasDvtSubstraitPostgresProjection.test.ts"],
+      "fowlerSignals": ["Boundary drift"],
+      "cypressCoverage": "canvas-structured-transform-fields.cy.ts temporal menu flow",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-3101-TIMESTAMP-COLUMN-FUNCTION"
+    },
+    {
+      "name": "TIMESTAMPTZ_DATA_TYPES",
+      "path": "apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.ts",
+      "cqRails": ["ResolveCanvasContextMenu"],
+      "dddOwner": "Canvas semantic authoring",
+      "unitTests": ["pnpm --filter @dvt/web test -- canvasDvtSubstraitPostgresProjection.test.ts"],
+      "fowlerSignals": ["Provider-dependent behavior"],
+      "cypressCoverage": "canvas-structured-transform-fields.cy.ts temporal menu flow",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-3101-TIMESTAMP-COLUMN-FUNCTION"
+    },
+    {
+      "name": "createProjectionType",
+      "path": "apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.ts",
+      "cqRails": ["ConfigureCanvasDvtNode"],
+      "dddOwner": "DvtSubstraitAuthoringSidecarV1",
+      "unitTests": ["pnpm --filter @dvt/web test -- canvasDvtSubstraitPostgresProjection.test.ts"],
+      "fowlerSignals": ["Boundary drift"],
+      "cypressCoverage": "canvas-structured-transform-fields.cy.ts temporal menu flow",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-3101-TIMESTAMP-COLUMN-FUNCTION"
+    },
+    {
+      "name": "inspectProjectionDataType",
+      "path": "apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.ts",
+      "cqRails": ["ConfigureCanvasDvtNode"],
+      "dddOwner": "DvtSubstraitAuthoringSidecarV1",
+      "unitTests": ["pnpm --filter @dvt/web test -- canvasDvtSubstraitPostgresProjection.test.ts"],
+      "fowlerSignals": ["Boundary drift"],
+      "cypressCoverage": "canvas-structured-transform-fields.cy.ts temporal menu flow",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-3101-TIMESTAMP-COLUMN-FUNCTION"
+    },
+    {
+      "name": "normalizeProjectionDataType",
+      "path": "apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.ts",
+      "cqRails": ["ResolveCanvasContextMenu"],
+      "dddOwner": "Canvas semantic authoring",
+      "unitTests": ["pnpm --filter @dvt/web test -- canvasDvtSubstraitPostgresProjection.test.ts"],
+      "fowlerSignals": ["Boundary drift"],
+      "cypressCoverage": "canvas-structured-transform-fields.cy.ts temporal menu flow",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-3101-TIMESTAMP-COLUMN-FUNCTION"
+    },
+    {
+      "name": "PendingFunctionRequest",
+      "path": "apps/web/src/app/plugins/graph/GraphNodeColumnRow.tsx",
+      "cqRails": ["ResolveCanvasContextMenu", "ConfigureCanvasDvtNode"],
+      "dddOwner": "Canvas semantic authoring",
+      "unitTests": ["pnpm --filter @dvt/web test:presentation:run"],
+      "fowlerSignals": ["Boundary drift"],
+      "cypressCoverage": "canvas-structured-transform-fields.cy.ts temporal menu flow",
+      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-3101-TIMESTAMP-COLUMN-FUNCTION"
     }
   ],
   "completionGate": [
@@ -140,6 +230,8 @@ writes nothing.
   "governingSources": [
     "AGENTS.md",
     "docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md",
+    "docs/architecture/command-query-rail-governance.md",
+    "docs/architecture/fowler-opportunity-planning-governance.md",
     "https://github.com/dunay2/dvt/issues/3101"
   ],
   "commandQueryRails": [
