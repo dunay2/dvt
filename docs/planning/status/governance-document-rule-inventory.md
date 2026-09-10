@@ -18,14 +18,14 @@ canonical authority wins and the drift must be corrected here.
 
 ## Quick Start / Startup Card
 
-| Task type | Open next | Additional authority when needed | Minimum closeout baseline |
-| --- | --- | --- | --- |
-| `code` | `docs/guides/ai-work-protocol.md` | relevant ADR/contract + Planning DB for architecture/design | touched-package validation + `pnpm verify:prepush` |
-| `docs` | `docs/index.md` + `docs/guides/ai-work-protocol.md` | governing ADR/contract when documentation is normative | `pnpm docs:sync` when structure changes + `pnpm verify:prepush` |
-| `planning` | governing GitHub Issue | roadmap/status docs only when their durable content changes | issue/PR evidence + `pnpm verify:prepush` when repo files change |
-| `contracts` | `docs/contracts/index.md` | relevant ADRs + contract/versioning policy | contract/package validation + `pnpm verify:prepush` |
-| `ci` | `package.json` + affected workflows/guides | executable policy/configuration | relevant CI/tool validation + `pnpm verify:prepush` |
-| `cross-cutting` | combine the routes above | all affected canonical authorities | per-slice validation + `pnpm verify:prepush` |
+| Task type       | Open next                                           | Additional authority when needed                            | Minimum closeout baseline                                        |
+| --------------- | --------------------------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------- |
+| `code`          | `docs/guides/ai-work-protocol.md`                   | relevant ADR/contract + Planning DB for architecture/design | touched-package validation + `pnpm verify:prepush`               |
+| `docs`          | `docs/index.md` + `docs/guides/ai-work-protocol.md` | governing ADR/contract when documentation is normative      | `pnpm docs:sync` when structure changes + `pnpm verify:prepush`  |
+| `planning`      | governing GitHub Issue                              | roadmap/status docs only when their durable content changes | issue/PR evidence + `pnpm verify:prepush` when repo files change |
+| `contracts`     | `docs/contracts/index.md`                           | relevant ADRs + contract/versioning policy                  | contract/package validation + `pnpm verify:prepush`              |
+| `ci`            | `package.json` + affected workflows/guides          | executable policy/configuration                             | relevant CI/tool validation + `pnpm verify:prepush`              |
+| `cross-cutting` | combine the routes above                            | all affected canonical authorities                          | per-slice validation + `pnpm verify:prepush`                     |
 
 For architecture or design consultation, follow `AGENTS.md`: query the existing
 Planning DB authority and use the returned identities/evidence paths. Do not
@@ -36,14 +36,14 @@ import or rebuild Planning DB as a routine consultation step.
 [ADR-0061](../../adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md)
 defines the active planning boundary:
 
-| Concern | Canonical authority |
-| --- | --- |
-| task identity, priority, assignment, status, blockers, acceptance, closure | GitHub Issues |
-| implementation review, checks, merge | GitHub pull requests |
-| components, capabilities, relations, ownership | Planning DB |
-| commands, queries, ports, adapters, feature mechanization, architecture evidence | Planning DB |
-| executable product truth | code, contracts, tests, and CI on `main` |
-| durable architecture decisions | accepted ADRs and governed contracts |
+| Concern                                                                          | Canonical authority                      |
+| -------------------------------------------------------------------------------- | ---------------------------------------- |
+| task identity, priority, assignment, status, blockers, acceptance, closure       | GitHub Issues                            |
+| implementation review, checks, merge                                             | GitHub pull requests                     |
+| components, capabilities, relations, ownership                                   | Planning DB                              |
+| commands, queries, ports, adapters, feature mechanization, architecture evidence | Planning DB                              |
+| executable product truth                                                         | code, contracts, tests, and CI on `main` |
+| durable architecture decisions                                                   | accepted ADRs and governed contracts     |
 
 There is no intermediate planning authority. Local lane files, workboards,
 open-task routes, task rows in Planning DB, and DB-to-GitHub task projections
@@ -51,15 +51,15 @@ are retired and MUST NOT be recreated.
 
 ## Governance Layers
 
-| Layer | Purpose | Primary sources |
-| --- | --- | --- |
-| `normative` | accepted decisions, invariants, contracts | `docs/adr/**`, `docs/contracts/**`, normative component contracts |
-| `architectural` | system boundaries, ownership, behavior structure | Planning DB + architecture docs + command/query governance |
-| `operational` | how contributors and agents work | `AGENTS.md`, `docs/guides/ai-work-protocol.md`, CI/preflight guides |
-| `enforcement` | machine-enforced rules | `.arc-policy.yaml`, package scripts, hooks, workflows, CODEOWNERS |
-| `status` | what is true now | code/test/CI state, system delivery status, canonical doc-code matrix |
-| `risk/evidence` | residual risk and proof | `docs/risk-register/**`, `docs/evidence/**`, runbooks |
-| `historical` | prior decisions/workflows | archives, historical reviews, closeouts, superseded proposals |
+| Layer           | Purpose                                          | Primary sources                                                       |
+| --------------- | ------------------------------------------------ | --------------------------------------------------------------------- |
+| `normative`     | accepted decisions, invariants, contracts        | `docs/adr/**`, `docs/contracts/**`, normative component contracts     |
+| `architectural` | system boundaries, ownership, behavior structure | Planning DB + architecture docs + command/query governance            |
+| `operational`   | how contributors and agents work                 | `AGENTS.md`, `docs/guides/ai-work-protocol.md`, CI/preflight guides   |
+| `enforcement`   | machine-enforced rules                           | `.arc-policy.yaml`, package scripts, hooks, workflows, CODEOWNERS     |
+| `status`        | what is true now                                 | code/test/CI state, system delivery status, canonical doc-code matrix |
+| `risk/evidence` | residual risk and proof                          | `docs/risk-register/**`, `docs/evidence/**`, runbooks                 |
+| `historical`    | prior decisions/workflows                        | archives, historical reviews, closeouts, superseded proposals         |
 
 Historical material may accurately mention retired workflows. It is not an active
 startup or work-routing source unless a current authority explicitly promotes a
