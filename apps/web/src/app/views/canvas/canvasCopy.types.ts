@@ -64,6 +64,8 @@ export type CanvasViewCopy = {
   readonly columnMappingComplexExpressionMessage: string;
   readonly columnMappingUnavailableMessage: string;
   readonly columnMappingNoCompatibleColumnsMessage: string;
+  readonly sourceOutputRequiredMessage: string;
+  readonly sourceOutputLastFieldMessage: string;
   readonly layoutAppliedMessage: string;
   readonly toolbarWorkflowRecoveryLabel: string;
   readonly toolbarWorkflowReadOnlyLabel: string;

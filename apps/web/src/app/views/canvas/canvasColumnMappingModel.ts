@@ -19,6 +19,8 @@ export type CanvasColumnMappingRejection =
   | 'complex_expression_not_editable'
   | 'projection_requires_one_connected_source'
   | 'mapping_not_found'
+  | 'source_output_required'
+  | 'source_output_last_field'
   | 'no_compatible_mappings';
 
 export type CanvasColumnMappingResult =

@@ -42,6 +42,14 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.columnMapping.noCompatibleColumnsMessage',
     fallback: 'No unique exact-name columns with known compatible types were found.',
   },
+  sourceOutputRequiredMessage: {
+    key: 'canvas.sourceOutput.requiredMessage',
+    fallback: 'This field is used by a connected Model. Remove or remap that dependency first.',
+  },
+  sourceOutputLastFieldMessage: {
+    key: 'canvas.sourceOutput.lastFieldMessage',
+    fallback: 'A Source must deliver at least one field.',
+  },
   connectionIncompleteMessage: {
     key: 'canvas.connection.incompleteMessage',
     fallback: 'Connection is incomplete.',

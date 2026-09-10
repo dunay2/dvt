@@ -16,6 +16,9 @@ export const canvasViewAuthoringCopyEs = {
     'Esta asignación de columna no está disponible para los nodos seleccionados.',
   columnMappingNoCompatibleColumnsMessage:
     'No se encontraron columnas únicas con el mismo nombre y tipos conocidos compatibles.',
+  sourceOutputRequiredMessage:
+    'Este campo lo usa un Modelo conectado. Elimina o reasigna antes esa dependencia.',
+  sourceOutputLastFieldMessage: 'Un Origen debe entregar al menos un campo.',
   connectionIncompleteMessage: 'La conexión está incompleta.',
   nodeNotFoundInGraphMessage: 'No se ha encontrado el nodo en el grafo.',
   nodeAlreadyOnCanvasMessage: 'El nodo ya está en el canvas',
