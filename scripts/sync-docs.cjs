@@ -246,6 +246,7 @@ function generateAdrLanding(lifecycleAuthority) {
   if (!fs.existsSync(adrDir)) {
     throw new Error('Missing docs/adr directory.');
   }
+
   const entries = fs
     .readdirSync(adrDir, { withFileTypes: true })
     .filter((entry) => entry.isFile())
