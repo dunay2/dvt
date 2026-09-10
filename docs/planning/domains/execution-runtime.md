@@ -2,7 +2,7 @@
 title: Domain - Execution Runtime
 status: Review
 owner: Architecture / Engine / Docs
-last_reviewed: 2026-04-14
+last_reviewed: 2026-09-10
 planning_type: reference
 ---
 
@@ -16,7 +16,7 @@ runtime hardening.
 - [Architecture Surface Inventory](../../architecture/architecture-surface-inventory-20260402.md)
 - [System Delivery Status](../../architecture/system-delivery-status.md)
 - [Canonical Doc Code Matrix](../status/canonical-doc-code-matrix.md)
-- [Planning Control Tower](../state/planning-control-tower.md)
+- [Governance Document And Rule Inventory](../status/governance-document-rule-inventory.md)
 
 ## Active Planning Inputs
 
@@ -39,7 +39,7 @@ active source of truth for execution-runtime planning.
 
 - [Gap 5 Sequence and Module Design](../archive/proposals/gap-5-sequence-and-module-design-20260319.md)
 - [Gap 5 PR1 Minimal Usable Archival](../archive/proposals/gap-5-pr1-minimal-usable-archival-20260319.md)
-- [Gap 5 PR2 Deferred Deletion and Restore](../archive/proposals/gap-5-pr2-deferred-deletion-and-restore-20260319.md)
+- [Gap 5 PR2 Deferred Deletion and Restore](../archive/proposals/gap-5-pr2-deferred-deletion-restore-20260319.md)
 - [Gap 5 PR3 Delivery Buffer Retention](../archive/proposals/gap-5-pr3-delivery-buffer-retention-20260319.md)
 - [Gap 5 PR4 Redaction ADR and Follow-Up](../archive/proposals/gap-5-pr4-redaction-adr-follow-up-20260319.md)
 - [Gap 5 Executive Delivery Roadmap](../archive/proposals/gap-5-executive-delivery-roadmap-20260319.md)
