@@ -1,22 +1,18 @@
 # Claude Instructions
 
-This file is Claude Code-specific. All general agent rules are in `AGENTS.md` —
-read and follow that file first, without exception.
+This file contains Claude Code-specific guidance only.
 
-## Startup
+All repository-wide agent behavior, startup, planning, validation, commit, ARC,
+and evidence rules live in `AGENTS.md` and the canonical surfaces it references.
+Do not duplicate or reinterpret them here.
 
-Before any analysis, code, git action, or planning:
+## Claude Code
 
-1. Read `AGENTS.md` fully.
-2. Read `docs/planning/status/governance-document-rule-inventory.md`.
-3. Identify the governing sources for the task.
-4. Start the first user-visible update with:
-
-`Plan-driven. Outcome-agnostic.`
-
-Then immediately list the governing sources being used.
-
-## Commits
-
-Use `pnpm commit` — never `git commit -m` directly. See `AGENTS.md` for the
-full format rule and valid types/scopes.
+1. Read and follow `AGENTS.md` first.
+2. Respect the host/tool permissions actually available to the current Claude
+   Code execution; this file does not grant additional permissions.
+3. When a repository rule points to a command, policy, ADR, contract, GitHub
+   issue, or Planning DB query, use that canonical source rather than maintaining
+   a Claude-specific copy of the rule.
+4. Report unavailable capabilities or permission failures instead of inventing a
+   workaround that bypasses repository governance.

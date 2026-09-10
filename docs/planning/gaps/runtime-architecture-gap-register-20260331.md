@@ -2,7 +2,7 @@
 title: Runtime Architecture Gap Register 2026-03-31
 status: Review
 owner: Runtime / Architecture
-last_reviewed: 2026-04-17
+last_reviewed: 2026-09-10
 planning_type: status
 ---
 
@@ -21,9 +21,9 @@ review set.
 
 ## Current routing
 
-- [Planning Control Tower](../state/planning-control-tower.md)
-- [Review Status Board](../reviews/review-status-board.md)
 - [GitHub MVP Issue Workflow](../state/github-mvp-issue-workflow.md)
+- [Planning Dashboard](../state/planning-dashboard.md)
+- [Review Status Board](../reviews/review-status-board.md)
 - [Engine boundary current state, target state, and migration review](../reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md)
 - [Contract pack and read boundary reset Fowler review](../reviews/architecture-and-governance/20260410-contract-pack-and-read-boundary-reset-fowler-review.md)
 - [Runtime and shared-kernel risk triage review](../reviews/architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md)
@@ -56,7 +56,8 @@ Prioritize in this order:
 
 - This register is intended for incremental PR planning, not for one-shot
   refactors.
-- Ownership routing should follow lane scope and CODEOWNERS boundaries.
+- Ownership and blockers for executable work belong in the governing GitHub issue;
+  architecture ownership remains in Planning DB and CODEOWNERS where applicable.
 - The malformed embedded second document that previously followed this register
   was removed during the 2026-04-17 governance refresh. Active architecture
   review material belongs under `docs/planning/reviews/**`, not inside an

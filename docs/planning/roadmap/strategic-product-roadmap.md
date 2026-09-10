@@ -2,7 +2,7 @@
 title: Strategic Product Roadmap
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-14
+last_reviewed: 2026-09-09
 planning_type: reference
 ---
 
@@ -10,60 +10,61 @@ planning_type: reference
 
 This is the stable strategic product direction for DVT+.
 
-Use it to answer these questions:
+Use it to answer:
 
-- why the active lanes exist;
+- why the current product work exists;
 - which capability ladder the system is climbing;
-- which platform bets are already absorbed into mainline;
-- which strategic gaps still decide product readiness.
+- which strategic bets are already absorbed into mainline;
+- which gaps still decide product readiness.
 
-It is not the execution queue.
+It is not the execution queue and it does not own task status.
 
-For that, use:
+For execution and evidence use:
 
-- [Planning Dashboard](../state/planning-dashboard.md) for what is active now;
-- [Roadmap By Domain](roadmap-by-domain.md) for cross-domain sequencing;
-- `agent-lane-*.yaml` for task ownership and blockers;
-- [System Delivery Status](../../architecture/system-delivery-status.md) for what is already true in code.
+- [Planning Dashboard](../state/planning-dashboard.md) and GitHub Issues for what
+  is active now;
+- [Roadmap By Domain](roadmap-by-domain.md) for durable cross-domain sequencing;
+- [System Delivery Status](../../architecture/system-delivery-status.md) for what
+  is already true in code;
+- Planning DB for architecture, component ownership, relations, command/query
+  rails, and feature mechanization.
 
 ## Strategic Posture Now
 
 The dated roadmap from `2026-03-24` is no longer a reliable active control
-surface. A large part of that wave is already merged: retention baseline,
-operation-level RBAC, read-your-writes contract, manifest-ref production path,
-and multiple runtime hardening slices are already closed.
+surface. A large part of that wave is already merged. Current planning must be
+read from the live GitHub backlog, current code/status evidence, this roadmap,
+and the architecture authority in Planning DB.
 
-The current strategic center of gravity has moved.
-
-What matters now is:
+The current strategic center of gravity is:
 
 1. close the governed transformation vertical end to end;
 2. make the proof environment repeatable and operationally bounded;
 3. turn the platform from technically credible into enterprise-usable and
    commercially packageable.
 
-## Why The Active Lanes Exist
+## Strategic Workstreams
 
-The active lanes are not parallel wish lists. They are the execution shape of
-the strategic problem:
+The historic A-E lanes are no longer task registries. Their useful strategic
+meaning survives only as workstreams:
 
-- Lane A closes plan, graph, and state-store contracts so the product has a
-  governed design and execution model.
-- Lane B closes provenance, lineage, and evidence semantics so operators can
-  trust what happened.
-- Lane C turns those contracts into protected admission and runtime behavior.
-- Lane D makes the environment repeatable, bounded, and commercially usable.
-- Lane E turns the governed backend surfaces into an operator-visible product
-  loop.
+- design and plan truth;
+- provenance and evidence;
+- admission and runtime behavior;
+- repeatability and packaging;
+- operator-visible product loop.
+
+Task identity, ownership, blockers, and acceptance for concrete slices live in
+GitHub Issues, not in lane YAML or roadmap documents.
 
 ```mermaid
 flowchart LR
-    A["Lane A: plan and graph contracts"] --> C["Lane C: admission and runtime behavior"]
-    B["Lane B: provenance and evidence"] --> C
-    A --> E["Lane E: operator-visible product loop"]
+    A["Design and plan truth"] --> C["Admission and runtime behavior"]
+    B["Provenance and evidence"] --> C
+    A --> E["Operator-visible product loop"]
     B --> E
     C --> E
-    D["Lane D: repeatability and packaging"] --> C
+    D["Repeatability and packaging"] --> C
     D --> E
 ```
 
@@ -71,12 +72,13 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    Q["Need to make a planning decision"] --> Why["Strategic Product Roadmap"]
-    Q --> Now["Planning Dashboard"]
+    Q["Need to decide or execute work"] --> Why["Strategic Product Roadmap"]
+    Q --> Work["GitHub Issues"]
     Why --> Sequence["Roadmap By Domain"]
-    Now --> Ownership["Lane YAML registry"]
-    Sequence --> Ownership
-    Ownership --> Truth["System Delivery Status"]
+    Work --> Review["Pull requests / checks"]
+    Sequence --> Work
+    Work --> Arch["Planning DB when architecture changes"]
+    Review --> Truth["Code + contracts + tests + CI on main"]
 ```
 
 ## Capability Ladder
@@ -95,44 +97,29 @@ flowchart LR
 
 ## Strategic Pillars
 
-<!-- markdownlint-disable MD060 -->
-
-| Pillar                                   | Why it matters                                                                                                            | Active execution surfaces                                                                                                                           | Current posture | Current blockers                                                                                                                                                                                |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Governed design and plan truth           | Without stable graph, plan, and provenance contracts, preview and execution flows lie to the operator.                    | [Planner and Contracts domain](../domains/planner-and-contracts.md), [Roadmap By Domain](roadmap-by-domain.md), `S08`, `RC-G1`, `TF-A1`, `TF-B1`    | In progress     | The first SQL-first contract and provenance pack is now closed; remaining blockers are shared-kernel ownership migration under `RC-G1` and plan-record hardening under `S08`.                   |
-| Truthful admission and runtime execution | The system must only admit executable plans and expose runtime evidence at the protected boundary.                        | [API and Admission domain](../domains/api-and-admission.md), [Execution Runtime domain](../domains/execution-runtime.md), `TF-C2`, `TF-C3`, `WE-HX` | In progress     | The preview-persist boundary, first PostgreSQL runtime vertical, and plugin-backed DBT runtime path are now accepted; remaining blockers are runtime-boundary hardening outside `TF-C3`.        |
-| Operator product loop                    | The product is only usable when `Design -> Plan -> Run -> Result` works on governed contracts and backend-owned evidence. | [UI / Frontend lane in Roadmap By Domain](roadmap-by-domain.md), `TF-E1`, `F-24`, `F-25`, [Planning Dashboard](../state/planning-dashboard.md)      | In progress     | The first SQL-first operator loop is now live in Lane E; remaining blockers are broader frontend professionalization and downstream product rendering, not the closed phase-2 DBT runtime path. |
-| Retention, repeatability, and scale      | Proof environments and retained data must be repeatable, bounded, and diagnosable before scale work is worth funding.     | [Event Lifecycle and Retention domain](../domains/event-lifecycle-and-retention.md), `TF-D1`, `AR-D8`, Lane D                                       | Partial         | Repeatable Docker PostgreSQL reset discipline and mandatory default-retention alerts are still open.                                                                                            |
-| Enterprise packaging                     | Enterprise value requires a usable pilot path, then billing, compliance, and commercial packaging.                        | Lane D GTM tasks, `cost attribution model`, `first enterprise pilot`, `billing integration`, `compliance documentation pack`                        | Queued          | Pilot readiness is now captured in the first enterprise pilot packet; real product-market fit still requires customer-facing POC evidence outside the repository.                               |
-
-<!-- markdownlint-enable MD060 -->
+| Pillar                                   | Why it matters                                                                                     | Primary durable surfaces                                   | Current posture |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | --------------- |
+| Governed design and plan truth           | Preview and execution must share stable graph, plan, and provenance semantics.                     | Planner/contracts domain, Planning DB, Roadmap By Domain   | In progress     |
+| Truthful admission and runtime execution | Only executable plans may cross protected runtime boundaries and evidence must remain trustworthy. | API/admission + execution-runtime domains, contracts/tests | In progress     |
+| Operator product loop                    | Product value requires a governed `Design -> Plan -> Run -> Result` loop.                          | Web/product domains + current GitHub issues                | In progress     |
+| Retention, repeatability, and scale      | Proof environments and retained data must be repeatable, bounded, and diagnosable.                 | Event lifecycle/retention domain + runbooks/evidence       | Partial         |
+| Enterprise packaging                     | Enterprise value requires pilot readiness, billing, compliance, and commercial packaging.          | Product roadmap + governing issues                         | Queued          |
 
 ## What Is Already Absorbed Into Mainline
 
-These are no longer open strategic unknowns even if they appeared that way in the
-March snapshot:
-
-- `run event log retention + TTL` is closed in Lane D.
-- `RBAC at operation level` is closed in Lane C.
-- `read-your-writes contract` is closed in Lane C.
-- `manifestRef production path` is closed in Lane C.
-- baseline planner/runtime hardening from the March review wave has largely been
-  redistributed into current status, lane YAML, and closeouts.
-
-That changes how decisions should be made now: do not plan from the old gap list;
-plan from the active transformation, runtime-evidence, and repeatability
-surfaces.
+Historical roadmap items that are already delivered must not remain open merely
+because an old roadmap or review mentions them. Verify current truth through code,
+contracts, tests, CI, and System Delivery Status before planning replacement work.
 
 ## Decision Rules
 
-- If the question is `what should we fund next?`, read this page first.
-- If the question is `what domain is blocking the next move?`, go to
-  [Roadmap By Domain](roadmap-by-domain.md).
-- If the question is `what is actually active now?`, go to
-  [Planning Dashboard](../state/planning-dashboard.md).
-- If the question is `who owns the next executable slice?`, open the relevant
-  `agent-lane-*.yaml` file.
-- If the question is `is this already true in code?`, verify in
+- `What should we fund next?` -> this page plus current product evidence.
+- `What domain blocks the next move?` -> [Roadmap By Domain](roadmap-by-domain.md).
+- `What is active now?` -> GitHub Issues / [Planning Dashboard](../state/planning-dashboard.md).
+- `Who owns the next executable slice?` -> the governing GitHub issue.
+- `What architecture/rail owns this behavior?` -> Planning DB and its canonical
+  evidence paths.
+- `Is this already true in code?` -> code/contracts/tests/CI plus
   [System Delivery Status](../../architecture/system-delivery-status.md).
 
 ## Historical Snapshot
@@ -141,4 +128,4 @@ The original dated snapshot is preserved for history only:
 
 - [Strategic Product Roadmap 2026-03-24](../archive/proposals/strategic-product-roadmap-20260324.md)
 
-That dated file is not an active decision surface anymore.
+That dated file is not an active decision surface.

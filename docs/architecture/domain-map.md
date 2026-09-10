@@ -1,8 +1,8 @@
-﻿---
+---
 title: Domain Map
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-05-14
+last_reviewed: 2026-09-10
 ---
 
 # DVT Domain Map
@@ -11,10 +11,9 @@ This page is the supporting bounded-context map for the repository as it exists
 today.
 
 It is grounded in current code, active component responsibilities, and the
-queued follow-up work already visible on the workboard. It still does not
-replace the normative architecture rules in
-[Reference Architecture](./reference-architecture.md) or the implementation truth
-in [System Delivery Status](./system-delivery-status.md).
+follow-up work tracked in GitHub Issues. It still does not replace the normative
+architecture rules in [Reference Architecture](./reference-architecture.md) or
+the implementation truth in [System Delivery Status](./system-delivery-status.md).
 
 ## Read This With
 
@@ -23,7 +22,7 @@ in [System Delivery Status](./system-delivery-status.md).
 3. [System Architecture](./system/index.md)
 4. [Subsystem Architecture](./system/subsystems/index.md)
 5. [DVT Component Map](./component-map.md)
-6. [Planning Control Tower](../planning/state/planning-control-tower.md)
+6. [Planning Dashboard](../planning/state/planning-dashboard.md)
 
 ## Current Domain Relationships
 
@@ -75,4 +74,4 @@ flowchart LR
 - [Subsystem Architecture](./system/subsystems/index.md)
 - [Architecture Component Surfaces](./components/index.md)
 - [DVT System Architecture](./system-overview.md)
-- [Planning Control Tower](../planning/state/planning-control-tower.md)
+- [Planning Dashboard](../planning/state/planning-dashboard.md)

@@ -2,7 +2,7 @@
 title: Planning Domain Map
 status: Review
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-02
+last_reviewed: 2026-09-10
 planning_type: reference
 ---
 
@@ -15,7 +15,7 @@ status, and delivery artifacts.
 flowchart TB
   RR[Roadmap Of Record]
   SD[System Delivery Status]
-  PT[Planning Control Tower]
+  GH[GitHub Issues]
   GI[Governance Inventory]
 
   RR --> EX[Execution Runtime]
@@ -27,13 +27,13 @@ flowchart TB
   SD --> EX
   SD --> API
   SD --> PLC
-  PT --> EX
-  PT --> API
-  PT --> EVT
+  GH --> EX
+  GH --> API
+  GH --> EVT
   GI --> PLC
   GI --> DOC
 
-  EX --> EXR[Runtime boards and reviews]
+  EX --> EXR[Runtime reviews and evidence]
   API --> APR[API proposals and reviews]
   PLC --> PLR[Planner target state and manifests]
   EVT --> EVR[Archival, retention, restore]

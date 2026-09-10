@@ -2,7 +2,7 @@
 title: Documentation information architecture current vs target
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-05-07
+last_reviewed: 2026-09-10
 planning_type: status
 ---
 
@@ -19,7 +19,8 @@ surface auditable against real code and planning sources.
 - [Governance document rule inventory](./governance-document-rule-inventory.md)
 - [Architecture surface inventory 2026-04-02](../../architecture/architecture-surface-inventory-20260402.md)
 - [AI work protocol](../../guides/ai-work-protocol.md)
-- [Planning control tower](../state/planning-control-tower.md)
+- [GitHub MVP issue workflow](../state/github-mvp-issue-workflow.md)
+- [ADR-0061 task/architecture authority boundary](../../adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md)
 - [Documentation maintenance guide](../../guides/documentation-maintenance-guide-20260407.md)
 
 ## Current-state model
@@ -35,8 +36,10 @@ flowchart TB
     Domains["Domain and transverse views\ndocs/architecture/domain-*.md\ncomponent-map.md\ndomain-map.md"]
   end
 
-  subgraph Planning["Planning truth"]
-    PlanningState["docs/planning/status\ndocs/planning/reviews\ndocs/planning/state/*.yaml"]
+  subgraph Planning["Planning and task context"]
+    Issues["GitHub Issues\ntask lifecycle"]
+    PlanningState["docs/planning/status\ndocs/planning/reviews"]
+    PlanningDb["Planning DB\narchitecture/mechanization"]
   end
 
   subgraph Historical["Historical and archived"]
@@ -49,6 +52,8 @@ flowchart TB
   System -.-> Subsystems
   Subsystems --> Components
   Components --> Domains
+  Issues --> PlanningState
+  PlanningDb --> Domains
   PlanningState --> Domains
   Archive -. reference only .-> Active
   PlanningArchive -. reference only .-> Planning
@@ -99,6 +104,8 @@ flowchart LR
   are migrated.
 - Docs validation must prove the active tree, not overwhelm contributors with
   archive-only drift.
+- GitHub Issues owns task lifecycle; Planning DB owns architecture and
+  mechanization. Documentation does not recreate either authority.
 
 ## Remaining follow-up space
 
@@ -107,6 +114,6 @@ flowchart LR
   `read` as more end-to-end flows are clarified.
 - Frontmatter normalization and `last_reviewed` coverage across the historical
   corpus are not `GOV-S2` umbrella blockers after its 2026-05-07 closure. Route
-  them through concrete docs-governance tasks or existing changed-file gates.
+  them through concrete docs-governance issues or existing changed-file gates.
 - Several secondary active docs still deep-link straight into component pages
   without first routing through the system/subsystem entrypoints.

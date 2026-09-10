@@ -2,7 +2,7 @@
 title: Execution Runtime Architecture Delta
 status: Review
 owner: Architecture / Engine / Docs
-last_reviewed: 2026-04-02
+last_reviewed: 2026-09-10
 planning_type: reference
 ---
 
@@ -42,4 +42,4 @@ flowchart LR
 ## References
 
 - [Domain - Execution Runtime](../../domains/execution-runtime.md)
-- [Planning Control Tower](../../state/planning-control-tower.md)
+- [Planning Dashboard](../../state/planning-dashboard.md)
