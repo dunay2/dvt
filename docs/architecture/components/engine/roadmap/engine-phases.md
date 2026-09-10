@@ -2,7 +2,7 @@
 title: Engine Roadmap
 status: Active
 owner: Architecture / Engine / Delivery
-last_reviewed: 2026-05-22
+last_reviewed: 2026-09-10
 ---
 
 # Engine Roadmap
@@ -21,7 +21,7 @@ It does not replace:
 - [System Delivery Status](../../../system-delivery-status.md) for what is true in code now;
 - [WorkflowEngine target architecture v1](../workflow-engine-target-architecture.v1.md)
   for the target subsystem shape;
-- Lane YAML for executable task ownership and blockers;
+- GitHub Issues for executable task ownership and blockers;
 - [Roadmap Of Record](../../../../planning/roadmap/index.md) for repository-wide
   roadmap authority.
 
@@ -32,7 +32,7 @@ It does not replace:
 - [StartRun Protocol v1](../contracts/engine/StartRunProtocol.v1.md)
 - [Roadmap By Domain](../../../../planning/roadmap/roadmap-by-domain.md)
 - GitHub MVP issues and their linked pull requests
-- `docs/planning/state/planning-control-tower.md`
+- [Planning Dashboard](../../../../planning/state/planning-dashboard.md)
 
 ## Current posture
 
@@ -116,25 +116,5 @@ These topics should not be treated as current engine delivery commitments:
 - staffing, budget, and quarter-based gate tables from the February snapshot.
 
 If a second runtime becomes real work again, it needs an explicit ADR-backed
-plan and lane tasking first. Until then, old provider-draft material is
+plan and governing GitHub issue first. Until then, old provider-draft material is
 historical context, not an active phase.
-
-## Decision rules
-
-- If the question is `what is true in code now?`, read
-  [System Delivery Status](../../../system-delivery-status.md).
-- If the question is `what shape is the engine moving toward?`, read
-  [WorkflowEngine target architecture v1](../workflow-engine-target-architecture.v1.md).
-- If the question is `what engine slice should we execute next?`, read this page
-  and then Lane A or Lane C.
-- If the question is `what unblocks the first governed runtime vertical now?`,
-  trace the remaining `TF-C2` acceptance on top of landed `MW-C1`, `TF-C2-A`,
-  and `TF-C2-B` in Lane C.
-
-## Historical snapshot
-
-The earlier phase ladder is preserved for archive-only context:
-
-- [Engine roadmap phases snapshot (2026-02-11)](../../../../archive/architecture/engine-roadmap-phases-20260211.md)
-
-That archived snapshot is not active planning authority anymore.
