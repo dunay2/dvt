@@ -2,7 +2,7 @@
 title: MVP Execution Tracking Flow
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-07-31
+last_reviewed: 2026-09-10
 planning_type: reference
 ---
 
@@ -35,6 +35,6 @@ flowchart LR
 ## Canonical Links
 
 - [GitHub MVP Issue Workflow](../../state/github-mvp-issue-workflow.md)
-- [Planning Control Tower](../../state/planning-control-tower.md)
+- [Planning Dashboard](../../state/planning-dashboard.md)
 - [Roadmap By Domain](../roadmap-by-domain.md)
 - [Roadmap Of Record](../index.md)
