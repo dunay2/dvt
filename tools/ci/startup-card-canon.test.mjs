@@ -71,7 +71,6 @@ const activePlanningEntrypoints = [
   'docs/planning/status/governance-document-rule-inventory.md',
   'docs/planning/status/documentation-information-architecture-current-vs-target-20260407.md',
   'docs/planning/state/index.md',
-  'docs/planning/state/planning-dashboard.md',
   'docs/planning/state/gap-execution-route.md',
   'docs/planning/state/gap-execution-status.md',
   'docs/planning/state/inventory-and-coverage.md',
@@ -85,6 +84,24 @@ const activePlanningEntrypoints = [
   'docs/planning/gaps/runtime-architecture-gap-register-20260331.md',
   'docs/planning/proposals/mandatory/frontend-and-ux/index.md',
   'scripts/sync-docs.cjs',
+];
+
+const retiredPlanningSurfaces = [
+  {
+    path: 'docs/planning/state/planning-control-tower.md',
+    linkPattern: /planning-control-tower\.md/i,
+    namePattern: /Planning Control Tower/i,
+  },
+  {
+    path: 'docs/planning/state/planning-dashboard.md',
+    linkPattern: /planning-dashboard\.md/i,
+    namePattern: /Planning Dashboard/i,
+  },
+  {
+    path: 'docs/planning/state/domain-status-board.md',
+    linkPattern: /domain-status-board\.md/i,
+    namePattern: /Domain Status Board/i,
+  },
 ];
 
 test('governance startup card canonization preserves routing semantics and baseline rails', () => {
@@ -138,24 +155,24 @@ test('governance startup card canonization preserves routing semantics and basel
   }
 });
 
-test('active planning entrypoints do not reintroduce the retired control tower', () => {
-  assert.throws(
-    () => readRepoFile('docs/planning/state/planning-control-tower.md'),
-    /ENOENT/,
-    'retired planning control tower file must stay deleted'
-  );
+test('active planning entrypoints do not reintroduce retired planning surfaces', () => {
+  for (const retired of retiredPlanningSurfaces) {
+    assert.throws(
+      () => readRepoFile(retired.path),
+      /ENOENT/,
+      `${retired.path} must stay deleted`
+    );
+  }
 
   for (const path of activePlanningEntrypoints) {
     const content = readRepoFile(path);
-    assert.doesNotMatch(
-      content,
-      /planning-control-tower\.md/i,
-      `${path} must not link the retired file`
-    );
-    assert.doesNotMatch(
-      content,
-      /Planning Control Tower/i,
-      `${path} must not present the retired authority`
-    );
+    for (const retired of retiredPlanningSurfaces) {
+      assert.doesNotMatch(content, retired.linkPattern, `${path} must not link ${retired.path}`);
+      assert.doesNotMatch(
+        content,
+        retired.namePattern,
+        `${path} must not present ${retired.path} as an active surface`
+      );
+    }
   }
 });
