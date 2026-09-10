@@ -45,4 +45,3 @@ Inventory snapshot to make planning sprawl visible and navigable.
 - [Roadmap Of Record](../roadmap/index.md)
 - [Roadmap by Domain](../roadmap/roadmap-by-domain.md)
 - [Planning Roadmap Diagrams](../roadmap/diagrams/index.md)
-- [Planning Dashboard](./planning-dashboard.md)
