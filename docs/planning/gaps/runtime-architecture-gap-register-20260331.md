@@ -21,8 +21,8 @@ review set.
 
 ## Current routing
 
+- [GitHub Issues](https://github.com/dunay2/dvt/issues)
 - [GitHub MVP Issue Workflow](../state/github-mvp-issue-workflow.md)
-- [Planning Dashboard](../state/planning-dashboard.md)
 - [Review Status Board](../reviews/review-status-board.md)
 - [Engine boundary current state, target state, and migration review](../reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md)
 - [Contract pack and read boundary reset Fowler review](../reviews/architecture-and-governance/20260410-contract-pack-and-read-boundary-reset-fowler-review.md)
