@@ -131,7 +131,6 @@ flowchart LR
 ## Related Diagrams
 
 - [Strategic Product Roadmap](strategic-product-roadmap.md)
-- [Planning Dashboard](../state/planning-dashboard.md)
 - [Review Sprint Critical Path 2026-04](./diagrams/review-sprint-critical-path-2026-04.md)
 - [Planning Domain Map](./diagrams/planning-domain-map.md)
 - [Execution Runtime Architecture Delta](./diagrams/execution-runtime-architecture-delta.md)
