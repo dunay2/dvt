@@ -62,6 +62,7 @@ describe('SemanticWorkbenchLab architecture', () => {
     expect(SOURCE).toContain('Aplicar condición');
     expect(SOURCE).toContain('data-slot="semantic-workbench-add-join-condition"');
     expect(SOURCE).toContain("detailLines.join(' · ')");
+    expect(SOURCE).toContain('selectedSemantic?.data.joinOperand');
     expect(SOURCE).toContain('Conector de la condición adicional');
     expect(SOURCE).toContain('Comparador de la condición adicional');
     expect(SOURCE).toContain('DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS');

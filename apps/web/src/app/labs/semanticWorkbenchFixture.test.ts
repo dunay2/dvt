@@ -54,17 +54,23 @@ describe('semanticWorkbenchFixture', () => {
     ).toEqual([8, 5, 10]);
   });
 
-  it('projects each real predicate inside its closed JOIN card', () => {
+  it('projects each real predicate as a semantic tree and summarizes it in its JOIN card', () => {
     const graph = projectSemanticWorkbenchGraph(SEMANTIC_WORKBENCH_TRANSFORM);
     const labels = graph.nodes.map((node) => node.data.label);
 
     expect(labels).toEqual(
       expect.arrayContaining([
         'FUENTES',
+        'CONDICIÓN DEL JOIN',
         'TRANSFORMACIÓN',
         'SOURCE\nraw.orders',
         'SOURCE\nraw.client',
         'SOURCE\nraw.order_details',
+        'FIELD\nraw.orders.client_id',
+        'FIELD\nraw.client.client_id',
+        'FIELD\nraw.orders.order_id',
+        'FIELD\nraw.order_details.order_id',
+        'EQUAL\n=',
         'JOIN\nJoinRel\nraw.orders.client_id = raw.client.client_id',
         'JOIN\nJoinRel\nraw.orders.order_id = raw.order_details.order_id',
       ])
@@ -83,10 +89,20 @@ describe('semanticWorkbenchFixture', () => {
     );
     expect(joinNode?.data.inputSummary).toBe('3 fuentes');
     expect(joinNode?.data.outputSummary).toBe('22 columnas');
-    expect(graph.expressionCount).toBe(2);
-    expect(graph.nodes.some((node) => node.data.semanticGroup === 'condition')).toBe(false);
-    expect(new Set(graph.edges.map((edge) => edge.data?.semanticEdgeKind))).toEqual(
-      new Set(['relation'])
+    const joinOperands = graph.nodes
+      .filter((node) => node.data.semanticKind === 'field')
+      .flatMap((node) => (node.data.joinOperand == null ? [] : [node.data.joinOperand]));
+    expect(joinOperands).toHaveLength(4);
+    expect(new Set(joinOperands.map((operand) => operand.joinRelationId)).size).toBe(2);
+    expect(joinOperands).toEqual(
+      expect.arrayContaining([
+        { joinRelationId: graph.relationId, operand: 'left' },
+        { joinRelationId: graph.relationId, operand: 'right' },
+      ])
+    );
+    expect(graph.expressionCount).toBe(6);
+    expect(graph.edges.map((edge) => edge.data?.semanticEdgeKind)).toEqual(
+      expect.arrayContaining(['relation', 'expression'])
     );
   });
 
@@ -95,7 +111,7 @@ describe('semanticWorkbenchFixture', () => {
     const groups = graph.nodes.filter((node) => node.data.semanticKind === 'group');
     const members = graph.nodes.filter((node) => node.data.semanticKind !== 'group');
 
-    expect(groups).toHaveLength(2);
+    expect(groups).toHaveLength(3);
     expect(groups.every((node) => node.draggable === true)).toBe(true);
     expect(
       members.every(
@@ -116,14 +132,20 @@ describe('semanticWorkbenchFixture', () => {
         node.data.semanticKind === 'relation' &&
         node.data.expression === 'raw.orders.order_id = raw.order_details.order_id'
     );
-    if (firstJoin == null || secondJoin == null) {
-      throw new Error('Expected both closed JOIN stages.');
+    const secondEqual = members.find(
+      (node) =>
+        node.data.semanticKind === 'expression' &&
+        node.data.expression === 'raw.orders.order_id = raw.order_details.order_id'
+    );
+    if (firstJoin == null || secondJoin == null || secondEqual == null) {
+      throw new Error('Expected both JOIN stages and the second equality expression.');
     }
     expect(firstJoin.position.x).toBe(secondJoin.position.x);
     expect(firstJoin.position.y).toBeLessThan(secondJoin.position.y);
     expect(graph.edges).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ source: firstJoin.id, target: secondJoin.id }),
+        expect.objectContaining({ source: secondEqual.id, target: secondJoin.id }),
       ])
     );
 
@@ -272,8 +294,9 @@ describe('semanticWorkbenchFixture', () => {
     const orderIdIndex = sample?.columns.findIndex((column) => column.name === 'order_id') ?? -1;
     expect(sample?.rows.map((row) => row.values[orderIdIndex])).not.toContain('ORD-1004');
     const graph = projectSemanticWorkbenchGraph(transform);
-    expect(graph.nodes.some((node) => node.data.semanticKind === 'literal')).toBe(false);
-    expect(graph.nodes.some((node) => node.data.semanticKind === 'expression')).toBe(false);
+    expect(graph.nodes.map((node) => node.data.label)).toEqual(
+      expect.arrayContaining(['AND\nAND', 'NOT_EQUAL\n!=', 'VALUE\nboolean: false'])
+    );
     expect(graph.nodes.find((node) => node.id === joinRelationId)?.data.label).toContain(
       'raw.client.active != boolean: false'
     );

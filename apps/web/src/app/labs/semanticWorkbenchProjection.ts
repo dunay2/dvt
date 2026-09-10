@@ -5,6 +5,7 @@ import type { CSSProperties } from 'react';
 
 import type { CanonicalNode } from '../types/canonical';
 import { readDvtSubstraitFieldReferenceOrdinal } from '../views/canvas/canvasDvtSubstraitAggregation';
+import { DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS } from '../views/canvas/canvasDvtSubstraitJoinComposition';
 import { decodeDvtSubstraitSemanticDocument } from '../views/canvas/canvasDvtSubstraitSemanticDocument';
 import { readDvtTransformAuthoringAuthority } from '../views/canvas/canvasDvtTransformAuthoringAuthority';
 import { getLayoutedElements } from '../views/canvas/canvasGraphUtils';
@@ -19,6 +20,10 @@ export type SemanticWorkbenchNodeData = Readonly<{
   expression?: string;
   inputSummary?: string;
   outputSummary?: string;
+  joinOperand?: Readonly<{
+    joinRelationId: string;
+    operand: 'left' | 'right';
+  }>;
 }>;
 
 type SemanticWorkbenchEdgeData = Readonly<{
@@ -399,7 +404,14 @@ export function projectSemanticWorkbenchGraph(
     return expression.rexType.case ?? 'expression';
   }
 
-  function addExpression(expression: Expression, fieldNames: readonly string[]): string {
+  function addExpression(
+    expression: Expression,
+    fieldNames: readonly string[],
+    joinContext?: Readonly<{
+      joinRelationId: string;
+      operand?: 'left' | 'right';
+    }>
+  ): string {
     expressionCount += 1;
     if (expression.rexType.case === 'selection') {
       const ordinal = readDvtSubstraitFieldReferenceOrdinal(expression);
@@ -415,6 +427,14 @@ export function projectSemanticWorkbenchGraph(
           semanticKind: 'field',
           semanticGroup: 'condition',
           detail: `Campo de entrada: ${label}`,
+          ...(joinContext?.operand == null
+            ? {}
+            : {
+                joinOperand: {
+                  joinRelationId: joinContext.joinRelationId,
+                  operand: joinContext.operand,
+                },
+              }),
         },
         style: FIELD_STYLE,
       });
@@ -457,9 +477,23 @@ export function projectSemanticWorkbenchGraph(
         },
         style: EXPRESSION_STYLE,
       });
-      for (const argument of scalar.arguments) {
+      const isJoinComparison = DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS.some(
+        (operator) => operator === functionName
+      );
+      for (const [argumentIndex, argument] of scalar.arguments.entries()) {
         if (argument.argType.case !== 'value') continue;
-        const argumentId = addExpression(argument.argType.value, fieldNames);
+        const argumentId = addExpression(
+          argument.argType.value,
+          fieldNames,
+          joinContext == null
+            ? undefined
+            : {
+                ...joinContext,
+                ...(isJoinComparison && scalar.arguments.length === 2
+                  ? { operand: argumentIndex === 0 ? 'left' : 'right' }
+                  : {}),
+              }
+        );
         edges.push({
           id: nextId('edge'),
           source: argumentId,
@@ -598,20 +632,20 @@ export function projectSemanticWorkbenchGraph(
         style: { stroke: '#4f8cff', strokeWidth: 1.5 },
       });
     }
-    if (rel.relType.case === 'join') {
-      expressionCount += ownedExpressions.length;
-    } else {
-      for (const ownedExpression of ownedExpressions) {
-        const expressionId = addExpression(ownedExpression, expressionFields);
-        edges.push({
-          id: nextId('edge'),
-          source: expressionId,
-          target: id,
-          type: 'smoothstep',
-          data: { semanticEdgeKind: 'expression' },
-          style: { stroke: '#10b981', strokeWidth: 1.4 },
-        });
-      }
+    for (const ownedExpression of ownedExpressions) {
+      const expressionId = addExpression(
+        ownedExpression,
+        expressionFields,
+        rel.relType.case === 'join' ? { joinRelationId: id } : undefined
+      );
+      edges.push({
+        id: nextId('edge'),
+        source: expressionId,
+        target: id,
+        type: 'smoothstep',
+        data: { semanticEdgeKind: 'expression' },
+        style: { stroke: '#10b981', strokeWidth: 1.4 },
+      });
     }
     return id;
   }

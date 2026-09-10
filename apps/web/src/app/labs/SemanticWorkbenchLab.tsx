@@ -482,12 +482,14 @@ function SemanticWorkbenchLab() {
     semanticGraph.nodes.find((node) => node.data.semanticKind !== 'group') ??
     null;
   const selectedJoinPredicate = useMemo(() => {
+    const joinOperand = selectedSemantic?.data.joinOperand;
     if (joinProjection == null) return null;
     const joinRelationId =
-      selectedSemantic?.data.semanticKind === 'relation' &&
+      joinOperand?.joinRelationId ??
+      (selectedSemantic?.data.semanticKind === 'relation' &&
       joinProjection.joinRelations.some((relation) => relation.relationId === selectedSemantic.id)
         ? selectedSemantic.id
-        : null;
+        : null);
     if (joinRelationId == null) return null;
     const stageIndex = joinProjection.joinRelations.findIndex(
       (relation) => relation.relationId === joinRelationId
