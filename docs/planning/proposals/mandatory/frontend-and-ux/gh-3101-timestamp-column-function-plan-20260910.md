@@ -218,6 +218,8 @@ writes nothing.
       "apps/web/src/app/plugins/graph/graphNodeColumnContracts.ts",
       "apps/web/src/app/plugins/graph/GraphNodeColumnRow.tsx",
       "apps/web/src/app/plugins/graph/GraphNodeColumnFunctionAliasForm.tsx",
+    "apps/web/src/app/plugins/graph/GraphNodeColumnFunctionMenu.tsx",
+    "apps/web/src/app/plugins/graph/GraphNodeColumnSection.test.tsx",
       "apps/web/cypress/support/canvasDraftAuthoring.ts",
       "apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts"
     ],
@@ -271,6 +273,8 @@ writes nothing.
     "apps/web/src/app/plugins/graph/graphNodeColumnContracts.ts",
     "apps/web/src/app/plugins/graph/GraphNodeColumnRow.tsx",
     "apps/web/src/app/plugins/graph/GraphNodeColumnFunctionAliasForm.tsx",
+    "apps/web/src/app/plugins/graph/GraphNodeColumnFunctionMenu.tsx",
+    "apps/web/src/app/plugins/graph/GraphNodeColumnSection.test.tsx",
     "apps/web/src/app/views/canvas/*.test.ts",
     "apps/web/src/app/views/canvas/*.test.tsx",
     "apps/web/cypress/support/canvasDraftAuthoring.ts",
