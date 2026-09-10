@@ -114,6 +114,9 @@ function buildScalarExpressionPostgresAst(
   if (expression.kind === 'field-reference') {
     return pgColumnRef(expression.sourceFieldName);
   }
+  if (expression.kind === 'timestamp-literal') {
+    return pgTimestampTzLiteral(expression.value);
+  }
   if (
     expression.kind === 'scalar-function' &&
     (expression.functionName === 'trim' ||

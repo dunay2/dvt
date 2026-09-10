@@ -502,6 +502,38 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     ).toEqual([]);
   });
 
+  it('derives the advertised UTC year from a timestamp literal output', async () => {
+    const extractYearUtc = resolveDvtSubstraitColumnFunctions({
+      dataType: 'timestamp with time zone',
+      provider: 'postgres',
+    }).find((item) => item.name === 'extract year (UTC)');
+    if (extractYearUtc == null) throw new Error('Expected admitted UTC year extraction.');
+
+    const literal = createDvtSubstraitProjectionOutput(connectedOrdersProjectionDraft(), {
+      alias: 'loaded_at',
+      expression: { kind: 'timestamp-literal', value: '2026-09-02T12:30:00.000Z' },
+    });
+    if (literal.outcome !== 'applied') throw new Error('Expected timestamp literal output.');
+    const derived = createDvtSubstraitProjectionOutput(
+      literal.draft,
+      {
+        alias: 'loaded_year',
+        expression: {
+          kind: 'scalar-function',
+          capabilityId: extractYearUtc.capabilityId,
+          operandFieldIds: [literal.createdFieldId],
+        },
+      },
+      { inputDataTypes: ['timestamp with time zone'], provider: 'postgres' }
+    );
+
+    expect(derived.outcome).toBe('applied');
+    if (derived.outcome !== 'applied') throw new Error('Expected temporal literal derivation.');
+    await expect(projectDvtSubstraitProjectionToPostgresSql(derived.draft)).resolves.toMatch(
+      /cast\(date_part\('year', timezone\('UTC', '2026-09-02T12:30:00.000Z'::timestamptz\)\) as bigint\) AS loaded_year/i
+    );
+  });
+
   it('stacks admitted functions on one canonical field and derives SQL from that revision', async () => {
     const functions = resolveDvtSubstraitColumnFunctions({
       dataTypes: ['text'],

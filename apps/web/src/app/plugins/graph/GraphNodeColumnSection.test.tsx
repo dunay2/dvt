@@ -387,6 +387,75 @@ describe('GraphNodeColumnSection', () => {
     ).not.toBeNull();
   });
 
+  it('keeps the alias form through the initiating click and dismisses it explicitly', async () => {
+    await act(async () => {
+      root.render(
+        <GraphNodeColumnSection
+          nodeId="transform-orders"
+          expanded
+          columns={[
+            {
+              id: 'output:customer',
+              name: 'customer',
+              type: 'text',
+              functionMenu: {
+                category: 'text',
+                items: [{ capabilityId: 'capability:upper', name: 'upper', argumentCount: 1 }],
+              },
+            },
+          ]}
+          onColumnFunctionApply={vi.fn()}
+        />
+      );
+    });
+    const piece = container.querySelector<HTMLElement>('[data-slot="graph-node-column-piece"]')!;
+    const openAliasForm = async (): Promise<void> => {
+      await act(async () => {
+        piece.dispatchEvent(
+          new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 })
+        );
+        await Promise.resolve();
+      });
+      await act(async () => {
+        fireEvent.click(
+          document.body.querySelector<HTMLElement>(
+            '[data-slot="graph-node-column-function"][data-capability-id="capability:upper"]'
+          )!
+        );
+        await Promise.resolve();
+      });
+      await act(
+        () =>
+          new Promise<void>((resolve) => {
+            requestAnimationFrame(() => resolve());
+          })
+      );
+
+      expect(
+        document.body.querySelector('[data-slot="graph-node-column-function-alias-form"]')
+      ).not.toBeNull();
+    };
+
+    await openAliasForm();
+    await act(async () => {
+      fireEvent.keyDown(document, { key: 'Escape' });
+      await Promise.resolve();
+    });
+    expect(
+      document.body.querySelector('[data-slot="graph-node-column-function-alias-form"]')
+    ).toBeNull();
+
+    await openAliasForm();
+    await act(async () => {
+      fireEvent.pointerDown(container);
+      fireEvent.click(container);
+      await Promise.resolve();
+    });
+    expect(
+      document.body.querySelector('[data-slot="graph-node-column-function-alias-form"]')
+    ).toBeNull();
+  });
+
   it('reveals and focuses the created output while retaining a rejected proposal', async () => {
     function Harness(): React.ReactElement {
       const [columns, setColumns] = React.useState<GraphNodeColumn[]>([
@@ -444,6 +513,12 @@ describe('GraphNodeColumnSection', () => {
         )!
       );
     });
+    await act(
+      () =>
+        new Promise<void>((resolve) => {
+          requestAnimationFrame(() => resolve());
+        })
+    );
     const expression = document.body.querySelector(
       '[data-slot="graph-node-column-function-expression"]'
     );

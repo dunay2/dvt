@@ -13,6 +13,8 @@ code_refs:
   - apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.ts
   - apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresProjection.ts
   - apps/web/src/app/plugins/graph/GraphNodeColumnRow.tsx
+  - apps/web/src/app/plugins/graph/GraphNodeColumnFunctionMenu.tsx
+  - apps/web/src/app/plugins/graph/GraphNodeColumnFunctionAliasForm.tsx
 evidence:
   tests:
     - pnpm --filter @dvt/contracts test -- dvt-substrait-capability-catalog.contract.test.ts
@@ -45,6 +47,9 @@ the same inspected expression after reload.
 The canonical plan uses Substrait v0.101.0 `functions_datetime.extract` with the exact
 `extract:req_ptstz_str` signature, enum `YEAR`, the selected field and literal timezone `UTC`.
 PostgreSQL renders the same expression through the governed AST and casts the result to `bigint`.
+Recursive inspection preserves governed timestamp literals so advertised expressions remain
+composable. The alias form opens after the menu close lifecycle and then supports Escape and
+outside-click dismissal without a timer.
 
 Unsupported types, providers, capabilities, malformed arguments, duplicate aliases and unknown
 FieldIds write nothing. No second function registry, AST, store, API, free-form SQL or implicit text

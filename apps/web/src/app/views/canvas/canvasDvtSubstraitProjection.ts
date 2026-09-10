@@ -167,6 +167,7 @@ type DvtSubstraitProjectionSemanticSource = Readonly<{
 
 export type DvtSubstraitScalarExpression =
   | Readonly<{ kind: 'field-reference'; sourceFieldName: string }>
+  | Readonly<{ kind: 'timestamp-literal'; value: string }>
   | Readonly<{
       kind: 'scalar-function';
       functionName: 'trim' | 'upper' | 'lower';
@@ -996,6 +997,7 @@ export function inspectDvtSubstraitProjectionDraft(
   const usedFunctionAnchors = new Set<number>();
   type InspectedScalar =
     | Readonly<{ kind: 'field-reference'; sourceOrdinal: number }>
+    | Readonly<{ kind: 'timestamp-literal'; value: string }>
     | Readonly<{
         kind: 'scalar-function';
         functionName: 'trim' | 'upper' | 'lower';
@@ -1027,6 +1029,12 @@ export function inspectDvtSubstraitProjectionDraft(
         segment.value.field >= 0 &&
         segment.value.field < sourceFields.length
         ? { kind: 'field-reference', sourceOrdinal: segment.value.field }
+        : null;
+    }
+    if (expression.rexType.case === 'literal') {
+      const calculated = inspectDvtSubstraitCalculatedExpression(draft.plan, expression);
+      return calculated?.calculation.kind === 'timestamp-literal'
+        ? { kind: 'timestamp-literal', value: calculated.calculation.value }
         : null;
     }
     if (expression.rexType.case !== 'scalarFunction') return null;
@@ -1148,31 +1156,33 @@ export function inspectDvtSubstraitProjectionDraft(
           kind: 'field-reference',
           sourceFieldName: sourceFields[expression.sourceOrdinal]!.displayName!,
         }
-      : expression.functionName === 'concat'
-        ? {
-            kind: 'scalar-function',
-            functionName: 'concat',
-            arguments: [
-              publicScalar(expression.arguments[0]),
-              publicScalar(expression.arguments[1]),
-            ],
-            nullHandling: expression.nullHandling,
-          }
-        : expression.functionName === 'extract'
+      : expression.kind === 'timestamp-literal'
+        ? { kind: 'timestamp-literal', value: expression.value }
+        : expression.functionName === 'concat'
           ? {
               kind: 'scalar-function',
-              functionName: 'extract',
-              arguments: [publicScalar(expression.arguments[0])],
-              component: expression.component,
-              timezone: expression.timezone,
+              functionName: 'concat',
+              arguments: [
+                publicScalar(expression.arguments[0]),
+                publicScalar(expression.arguments[1]),
+              ],
+              nullHandling: expression.nullHandling,
             }
-          : {
-              kind: 'scalar-function',
-              functionName: expression.functionName,
-              arguments: [publicScalar(expression.arguments[0])],
-            };
+          : expression.functionName === 'extract'
+            ? {
+                kind: 'scalar-function',
+                functionName: 'extract',
+                arguments: [publicScalar(expression.arguments[0])],
+                component: expression.component,
+                timezone: expression.timezone,
+              }
+            : {
+                kind: 'scalar-function',
+                functionName: expression.functionName,
+                arguments: [publicScalar(expression.arguments[0])],
+              };
   const scalarOperations = (expression: DvtSubstraitScalarExpression): readonly string[] =>
-    expression.kind === 'field-reference'
+    expression.kind !== 'scalar-function'
       ? []
       : [
           ...expression.arguments.flatMap((argument) => scalarOperations(argument)),
@@ -1184,6 +1194,7 @@ export function inspectDvtSubstraitProjectionDraft(
     if (expression.kind === 'field-reference') {
       return { sourceOrdinal: expression.sourceOrdinal, operations: [] };
     }
+    if (expression.kind === 'timestamp-literal') return null;
     if (expression.functionName === 'concat' || expression.functionName === 'extract') return null;
     const input = legacyLineage(expression.arguments[0]);
     return input == null
