@@ -224,14 +224,12 @@ orden:
 
 1. [Planning Dashboard](docs/planning/state/planning-dashboard.md) para la vista
    trazable del estado de entrega.
-2. [Planning Control Tower](docs/planning/state/planning-control-tower.md) para
-   reglas operativas y enrutado de trabajo.
-3. [GitHub Issues](https://github.com/dunay2/dvt/issues) para tareas MVP,
+2. [GitHub Issues](https://github.com/dunay2/dvt/issues) para tareas MVP,
    ownership, prioridad, bloqueos y cierre.
-4. [Roadmap Of Record](docs/planning/roadmap/index.md) para secuencia oficial.
-5. [Review Status Board](docs/planning/reviews/review-status-board.md) para
+3. [Roadmap Of Record](docs/planning/roadmap/index.md) para secuencia oficial.
+4. [Review Status Board](docs/planning/reviews/review-status-board.md) para
    estado de reviews y su enlace con las issues.
-6. [Governance Inventory](docs/planning/status/governance-document-rule-inventory.md)
+5. [Governance Inventory](docs/planning/status/governance-document-rule-inventory.md)
    para localizar la autoridad aplicable antes de cambiar arquitectura o diseño.
 
 Regla practica:
@@ -254,7 +252,6 @@ Regla practica:
   [Contracts](docs/contracts/index.md)
 - **See current state and active work**:
   [Planning Dashboard](docs/planning/state/planning-dashboard.md),
-  [Planning Control Tower](docs/planning/state/planning-control-tower.md),
   [Roadmap Of Record](docs/planning/roadmap/index.md),
   [Planning Gaps](docs/planning/gaps/index.md)
 - **Operate and review risk**:
@@ -351,7 +348,7 @@ packages are located under the `packages/` directory:
 - `packages/@dvt/contracts` - shared contracts and interfaces (`@dvt/contracts`)
 - `packages/@dvt/engine` - orchestration engine core (`@dvt/engine`)
 - `packages/@dvt/adapter-postgres` - PostgreSQL adapter (`@dvt/adapter-postgres`)
-- `packages/@dvt/adapter-temporal` - Temporal adapter (`@dvt/adapter-temporal`)
+- `packages/@dvt/adapter-temporal` - Temporal runtime implementation
 - `packages/@dvt/cli` - CLI tools and scripts (`@dvt/cli`)
 
 ### Key Commands
