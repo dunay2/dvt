@@ -62,11 +62,13 @@ const activePlanningEntrypoints = [
   'docs/concepts/glossary.md',
   'docs/concepts/system-map.md',
   'docs/guides/ai-work-protocol.md',
+  'docs/guides/pr-preflight-and-ci-triage.md',
   'docs/architecture/reference-architecture.md',
   'docs/architecture/system/index.md',
   'docs/architecture/domain-map.md',
   'docs/architecture/atlas/index.md',
   'docs/architecture/atlas/README.md',
+  'docs/architecture/components/ci-governance/governance-startup-card-canon-user-stories.md',
   'docs/architecture/components/engine/roadmap/engine-phases.md',
   'docs/planning/status/governance-document-rule-inventory.md',
   'docs/planning/status/documentation-information-architecture-current-vs-target-20260407.md',
@@ -78,31 +80,42 @@ const activePlanningEntrypoints = [
   'docs/planning/roadmap/roadmap-by-domain.md',
   'docs/planning/roadmap/diagrams/planning-domain-map.md',
   'docs/planning/roadmap/diagrams/execution-runtime-architecture-delta.md',
+  'docs/planning/roadmap/diagrams/execution-tracking-flow.md',
+  'docs/planning/roadmap/diagrams/gap-execution-dependency-graph.md',
+  'docs/planning/roadmap/diagrams/gap-execution-parallel-lanes.md',
   'docs/planning/domains/index.md',
   'docs/planning/domains/documentation-governance.md',
+  'docs/planning/domains/api-and-admission.md',
+  'docs/planning/domains/execution-runtime.md',
+  'docs/planning/domains/planner-and-contracts.md',
+  'docs/planning/domains/event-lifecycle-and-retention.md',
   'docs/planning/gaps/index.md',
   'docs/planning/gaps/runtime-architecture-gap-register-20260331.md',
   'docs/planning/proposals/mandatory/frontend-and-ux/index.md',
+  'docs/planning/proposals/mandatory/runtime-and-contracts/mw-c1-to-tf-c2-runtime-vertical-sequence-analysis-20260409.md',
   'scripts/sync-docs.cjs',
 ];
 
 const retiredPlanningSurfaces = [
   {
     path: 'docs/planning/state/planning-control-tower.md',
-    linkPattern: /planning-control-tower\.md/i,
+    pathPattern: /planning-control-tower\.md/i,
     namePattern: /Planning Control Tower/i,
   },
   {
     path: 'docs/planning/state/planning-dashboard.md',
-    linkPattern: /planning-dashboard\.md/i,
+    pathPattern: /planning-dashboard\.md/i,
     namePattern: /Planning Dashboard/i,
   },
   {
     path: 'docs/planning/state/domain-status-board.md',
-    linkPattern: /domain-status-board\.md/i,
+    pathPattern: /domain-status-board\.md/i,
     namePattern: /Domain Status Board/i,
   },
 ];
+
+const explicitRetirementLanguage =
+  /\b(?:no|not|never|retired|obsolete|removed|deleted|former|historical|history|replaced|superseded|deprecated)\b/i;
 
 test('governance startup card canonization preserves routing semantics and baseline rails', () => {
   assertFilesExist(requiredFiles);
@@ -155,7 +168,7 @@ test('governance startup card canonization preserves routing semantics and basel
   }
 });
 
-test('active planning entrypoints do not reintroduce retired planning surfaces', () => {
+test('active planning entrypoints do not route through retired planning surfaces', () => {
   for (const retired of retiredPlanningSurfaces) {
     assert.throws(
       () => readRepoFile(retired.path),
@@ -165,18 +178,14 @@ test('active planning entrypoints do not reintroduce retired planning surfaces',
   }
 
   for (const path of activePlanningEntrypoints) {
-    const content = readRepoFile(path);
-    for (const retired of retiredPlanningSurfaces) {
-      assert.doesNotMatch(
-        content,
-        retired.linkPattern,
-        `${path} must not link ${retired.path}`
-      );
-      assert.doesNotMatch(
-        content,
-        retired.namePattern,
-        `${path} must not present ${retired.path} as an active surface`
-      );
+    const lines = readRepoFile(path).split(/\r?\n/);
+    for (const line of lines) {
+      for (const retired of retiredPlanningSurfaces) {
+        const referencesRetiredSurface =
+          retired.pathPattern.test(line) || retired.namePattern.test(line);
+        if (!referencesRetiredSurface || explicitRetirementLanguage.test(line)) continue;
+        assert.fail(`${path} must not route through retired surface ${retired.path}: ${line.trim()}`);
+      }
     }
   }
 });

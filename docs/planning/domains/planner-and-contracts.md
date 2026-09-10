@@ -2,7 +2,7 @@
 title: Domain - Planner And Contracts
 status: Review
 owner: Planner / Contracts / Docs
-last_reviewed: 2026-04-08
+last_reviewed: 2026-09-10
 planning_type: reference
 ---
 
@@ -17,7 +17,7 @@ plan-version compatibility.
 - [Canonical Doc Code Matrix](../status/canonical-doc-code-matrix.md)
 - [DB-first Component Map](../../architecture/component-map.md)
 - [Planner Local Doc Triage](../status/planner-local-doc-triage-20260320.md)
-- [Planning Control Tower](../state/planning-control-tower.md)
+- [Governance Document And Rule Inventory](../status/governance-document-rule-inventory.md)
 
 ## Active Planning Inputs
 
