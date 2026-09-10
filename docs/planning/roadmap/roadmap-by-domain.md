@@ -2,7 +2,7 @@
 title: Roadmap By Domain
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-20
+last_reviewed: 2026-09-10
 planning_type: proposal
 ---
 
@@ -124,14 +124,14 @@ flowchart LR
   [Doc-driven framework and tooling plan 2026-04-04](../proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md),
   [Documentation maintenance guide](../../guides/documentation-maintenance-guide-20260407.md),
   [Documentation information architecture current vs target 2026-04-07](../status/documentation-information-architecture-current-vs-target-20260407.md)
-  Near-term target: keep archives, lane registries, roadmaps, and generated
-  boards synchronized with mainline truth, and reduce `docs:doctor` noise so it
-  signals semantic drift instead of missing metadata.
+  Near-term target: keep GitHub issue lifecycle, roadmaps, and generated
+  documentation synchronized with mainline truth, and reduce `docs:doctor` noise
+  so it signals semantic drift instead of missing metadata.
 
 ## Related Diagrams
 
 - [Strategic Product Roadmap](strategic-product-roadmap.md)
-- [Planning Control Tower](../state/planning-control-tower.md)
+- [Planning Dashboard](../state/planning-dashboard.md)
 - [Review Sprint Critical Path 2026-04](./diagrams/review-sprint-critical-path-2026-04.md)
 - [Planning Domain Map](./diagrams/planning-domain-map.md)
 - [Execution Runtime Architecture Delta](./diagrams/execution-runtime-architecture-delta.md)
