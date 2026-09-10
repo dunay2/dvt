@@ -42,4 +42,4 @@ flowchart LR
 ## References
 
 - [Domain - Execution Runtime](../../domains/execution-runtime.md)
-- [Planning Dashboard](../../state/planning-dashboard.md)
+- [GitHub Issues](https://github.com/dunay2/dvt/issues)
