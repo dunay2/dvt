@@ -16,6 +16,7 @@ export type SemanticWorkbenchNodeData = Readonly<{
   label: string;
   semanticKind: 'group' | 'relation' | 'expression' | 'field' | 'literal';
   semanticGroup: SemanticWorkbenchGroup;
+  relationKind?: 'read' | 'filter' | 'project' | 'join' | 'aggregate' | 'set' | 'unknown';
   detail: string;
   expression?: string;
   inputSummary?: string;
@@ -97,7 +98,7 @@ function relationDisplayName(rel: Rel): string {
     case 'project':
       return 'PROJECT\nProjectRel';
     case 'join':
-      return 'JOIN\nJoinRel';
+      return 'JOIN · INNER';
     case 'aggregate':
       return 'GROUP\nAggregateRel';
     case 'set':
@@ -258,7 +259,8 @@ function routeEdgesByTransition(
 
 function layoutGraph(
   nodes: readonly Node<SemanticWorkbenchNodeData>[],
-  edges: readonly SemanticWorkbenchEdge[]
+  edges: readonly SemanticWorkbenchEdge[],
+  transformationRankdir: 'LR' | 'TB' = 'TB'
 ): Node<SemanticWorkbenchNodeData>[] {
   const groups = [
     { id: 'source', label: 'FUENTES', color: '#3b82f6' },
@@ -279,7 +281,7 @@ function layoutGraph(
       (edge) => memberIds.has(edge.source) && memberIds.has(edge.target)
     );
     const layouted = getLayoutedElements([...members], memberEdges, {
-      rankdir: group.id === 'transformation' ? 'TB' : 'LR',
+      rankdir: group.id === 'transformation' ? transformationRankdir : 'LR',
       ranksep: 68,
       nodesep: 30,
       marginx: 0,
@@ -356,7 +358,11 @@ function layoutGraph(
 }
 
 export function projectSemanticWorkbenchGraph(
-  transformNode: CanonicalNode
+  transformNode: CanonicalNode,
+  options: Readonly<{
+    view?: 'complete' | 'relations' | 'join-expression';
+    joinRelationId?: string;
+  }> = {}
 ): SemanticWorkbenchGraph {
   const authority = readDvtTransformAuthoringAuthority(transformNode);
   if (authority == null) throw new Error('Semantic Workbench requires a DVT semantic authority.');
@@ -593,8 +599,18 @@ export function projectSemanticWorkbenchGraph(
         ? undefined
         : describeExpression(ownedExpressions[0], expressionFields);
     const displayName = relationDisplayName(rel);
+    const relationKind =
+      rel.relType.case === 'read' ||
+      rel.relType.case === 'filter' ||
+      rel.relType.case === 'project' ||
+      rel.relType.case === 'join' ||
+      rel.relType.case === 'aggregate' ||
+      rel.relType.case === 'set'
+        ? rel.relType.case
+        : 'unknown';
     nodes.push({
       id,
+      type: 'semanticRelation',
       position: { x: 0, y: 0 },
       sourcePosition: Position.Right,
       targetPosition: Position.Left,
@@ -604,6 +620,7 @@ export function projectSemanticWorkbenchGraph(
             ? `${displayName}\n${expression}`
             : displayName,
         semanticKind: 'relation',
+        relationKind,
         semanticGroup: rel.relType.case === 'read' ? 'source' : 'transformation',
         detail: `${[displayName.replaceAll('\n', ' · '), expression]
           .filter((value) => value != null)
@@ -619,14 +636,19 @@ export function projectSemanticWorkbenchGraph(
             }),
         outputSummary: `${outputFields.length} columnas`,
       },
-      style: RELATION_STYLE,
+      style:
+        rel.relType.case === 'join'
+          ? { ...RELATION_STYLE, width: 250, minHeight: 76 }
+          : RELATION_STYLE,
     });
-    for (const input of relationInputs(rel)) {
+    for (const [inputIndex, input] of relationInputs(rel).entries()) {
       const inputId = addRelation(input);
       edges.push({
         id: nextId('edge'),
         source: inputId,
         target: id,
+        sourceHandle: 'out',
+        targetHandle: rel.relType.case === 'join' ? (inputIndex === 0 ? 'left' : 'right') : 'in',
         type: 'smoothstep',
         data: { semanticEdgeKind: 'relation' },
         style: { stroke: '#4f8cff', strokeWidth: 1.5 },
@@ -657,6 +679,77 @@ export function projectSemanticWorkbenchGraph(
       ? transformNode.id
       : (relationIdByAnchor.get(rootRelationAnchor) ?? transformNode.id);
   const routedEdges = routeEdgesByTransition(nodes, edges);
+
+  if (options.view === 'relations') {
+    const relationNodes = nodes.filter((node) => node.data.semanticKind === 'relation');
+    const relationEdges = routedEdges.filter((edge) => edge.data?.semanticEdgeKind === 'relation');
+    return {
+      nodes: layoutGraph(relationNodes, relationEdges, 'LR'),
+      edges: relationEdges,
+      relationCount,
+      expressionCount,
+      relationId,
+    };
+  }
+
+  if (options.view === 'join-expression') {
+    if (options.joinRelationId == null) {
+      throw new Error('JOIN expression view requires a selected relation identity.');
+    }
+    const includedNodeIds = new Set<string>();
+    const pendingNodeIds = edges.flatMap((edge) =>
+      edge.data?.semanticEdgeKind === 'expression' && edge.target === options.joinRelationId
+        ? [edge.source]
+        : []
+    );
+    while (pendingNodeIds.length > 0) {
+      const nodeId = pendingNodeIds.pop();
+      if (nodeId == null || includedNodeIds.has(nodeId)) continue;
+      includedNodeIds.add(nodeId);
+      pendingNodeIds.push(
+        ...edges.flatMap((edge) =>
+          edge.data?.semanticEdgeKind === 'expression' && edge.target === nodeId
+            ? [edge.source]
+            : []
+        )
+      );
+    }
+    if (includedNodeIds.size === 0) {
+      throw new Error('Selected relation does not own a projected JOIN expression.');
+    }
+    const expressionNodes = nodes
+      .filter((node) => includedNodeIds.has(node.id))
+      .map((node) => ({
+        ...node,
+        sourcePosition: Position.Top,
+        targetPosition: Position.Bottom,
+      }));
+    const expressionEdges = edges
+      .filter(
+        (edge) =>
+          edge.data?.semanticEdgeKind === 'expression' &&
+          includedNodeIds.has(edge.source) &&
+          includedNodeIds.has(edge.target)
+      )
+      .map((edge) => ({
+        ...edge,
+        pathOptions: { borderRadius: 8, offset: 16, stepPosition: 0.5 },
+      }));
+    return {
+      nodes: getLayoutedElements(expressionNodes, expressionEdges, {
+        rankdir: 'BT',
+        ranksep: 64,
+        nodesep: 28,
+        marginx: 24,
+        marginy: 24,
+        nodeSize: { width: 206, height: 56 },
+      }).nodes,
+      edges: expressionEdges,
+      relationCount: 0,
+      expressionCount: expressionNodes.length,
+      relationId: options.joinRelationId,
+    };
+  }
 
   return {
     nodes: layoutGraph(nodes, routedEdges),

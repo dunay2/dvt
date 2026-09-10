@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { Position } from '@xyflow/react';
 
 import {
   addDvtSubstraitJoinPredicateCondition,
@@ -71,8 +72,8 @@ describe('semanticWorkbenchFixture', () => {
         'FIELD\nraw.orders.order_id',
         'FIELD\nraw.order_details.order_id',
         'EQUAL\n=',
-        'JOIN\nJoinRel\nraw.orders.client_id = raw.client.client_id',
-        'JOIN\nJoinRel\nraw.orders.order_id = raw.order_details.order_id',
+        'JOIN · INNER\nraw.orders.client_id = raw.client.client_id',
+        'JOIN · INNER\nraw.orders.order_id = raw.order_details.order_id',
       ])
     );
     const joinNode = graph.nodes.find((node) => node.id === graph.relationId);
@@ -104,6 +105,81 @@ describe('semanticWorkbenchFixture', () => {
     expect(graph.edges.map((edge) => edge.data?.semanticEdgeKind)).toEqual(
       expect.arrayContaining(['relation', 'expression'])
     );
+  });
+
+  it('projects a relation-only flow without flattening the retained semantic tree', () => {
+    const graph = projectSemanticWorkbenchGraph(SEMANTIC_WORKBENCH_TRANSFORM, {
+      view: 'relations',
+    });
+    const relationNodes = graph.nodes.filter((node) => node.data.semanticKind === 'relation');
+    const joinNodes = relationNodes.filter((node) => node.data.relationKind === 'join');
+
+    expect(relationNodes).toHaveLength(5);
+    expect(joinNodes).toHaveLength(2);
+    expect(
+      graph.nodes.every(
+        (node) => node.data.semanticKind === 'group' || node.data.semanticKind === 'relation'
+      )
+    ).toBe(true);
+    expect(graph.edges.every((edge) => edge.data?.semanticEdgeKind === 'relation')).toBe(true);
+    expect(joinNodes.map((node) => node.data.expression)).toEqual(
+      expect.arrayContaining([
+        'raw.orders.client_id = raw.client.client_id',
+        'raw.orders.order_id = raw.order_details.order_id',
+      ])
+    );
+    const firstJoin = joinNodes.find(
+      (node) => node.data.expression === 'raw.orders.client_id = raw.client.client_id'
+    );
+    const secondJoin = joinNodes.find(
+      (node) => node.data.expression === 'raw.orders.order_id = raw.order_details.order_id'
+    );
+    expect(firstJoin?.position.x).toBeLessThan(secondJoin?.position.x ?? 0);
+    expect(
+      graph.edges
+        .filter((edge) => joinNodes.some((join) => join.id === edge.target))
+        .map((edge) => edge.targetHandle)
+    ).toEqual(expect.arrayContaining(['left', 'right']));
+  });
+
+  it('projects only the selected JOIN expression when contextual detail is expanded', () => {
+    const completeGraph = projectSemanticWorkbenchGraph(SEMANTIC_WORKBENCH_TRANSFORM);
+    const selectedJoin = completeGraph.nodes.find(
+      (node) =>
+        node.data.relationKind === 'join' &&
+        node.data.expression === 'raw.orders.order_id = raw.order_details.order_id'
+    );
+    if (selectedJoin == null) throw new Error('Expected the second JOIN relation.');
+
+    const expressionGraph = projectSemanticWorkbenchGraph(SEMANTIC_WORKBENCH_TRANSFORM, {
+      view: 'join-expression',
+      joinRelationId: selectedJoin.id,
+    });
+
+    expect(expressionGraph.nodes.map((node) => node.data.label)).toEqual(
+      expect.arrayContaining([
+        'FIELD\nraw.orders.order_id',
+        'FIELD\nraw.order_details.order_id',
+        'EQUAL\n=',
+      ])
+    );
+    expect(expressionGraph.nodes).toHaveLength(3);
+    expect(expressionGraph.nodes.every((node) => node.data.semanticKind !== 'relation')).toBe(true);
+    expect(expressionGraph.edges).toHaveLength(2);
+    expect(
+      expressionGraph.edges.every((edge) => edge.data?.semanticEdgeKind === 'expression')
+    ).toBe(true);
+    expect(
+      expressionGraph.nodes.every(
+        (node) => node.sourcePosition === Position.Top && node.targetPosition === Position.Bottom
+      )
+    ).toBe(true);
+    expect(
+      projectSemanticWorkbenchGraph(SEMANTIC_WORKBENCH_TRANSFORM, {
+        view: 'join-expression',
+        joinRelationId: selectedJoin.id,
+      }).nodes.map((node) => ({ id: node.id, position: node.position }))
+    ).toEqual(expressionGraph.nodes.map((node) => ({ id: node.id, position: node.position })));
   });
 
   it('groups nodes for shared movement and stacks the JOIN chain in execution order', () => {
@@ -300,6 +376,66 @@ describe('semanticWorkbenchFixture', () => {
     expect(graph.nodes.find((node) => node.id === joinRelationId)?.data.label).toContain(
       'raw.client.active != boolean: false'
     );
+  });
+
+  it('applies an additional FIELD-to-FIELD condition without inventing another JOIN model', () => {
+    const fixture = buildSemanticWorkbenchFixture();
+    const authority = readDvtTransformAuthoringAuthority(fixture.transform);
+    if (authority == null) throw new Error('Expected Substrait authority.');
+    const draft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
+    const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+    if (!inspection.ok) throw new Error('Expected an accepted N-input join.');
+    const priorityFieldId = inspection.projection.inputs[0]?.fields.find(
+      (field) => field.name === 'priority'
+    )?.fieldId;
+    const activeFieldId = inspection.projection.inputs[1]?.fields.find(
+      (field) => field.name === 'active'
+    )?.fieldId;
+    const joinRelationId = inspection.projection.joinRelations[0]?.relationId;
+    if (priorityFieldId == null || activeFieldId == null || joinRelationId == null) {
+      throw new Error('Expected compatible boolean fields and first JOIN identity.');
+    }
+
+    const conditioned = addDvtSubstraitJoinPredicateCondition({
+      draft,
+      joinRelationId,
+      condition: {
+        left: { kind: 'field', sourceFieldId: priorityFieldId },
+        right: { kind: 'field', sourceFieldId: activeFieldId },
+        operator: 'equal',
+        combination: 'or',
+      },
+    });
+    const transform = applyDvtSubstraitSemanticDocument(
+      fixture.transform,
+      encodeDvtSubstraitInnerJoinDocument(conditioned)
+    );
+    const graph = projectSemanticWorkbenchGraph(transform);
+
+    expect(graph.nodes.find((node) => node.id === joinRelationId)?.data.expression).toContain(
+      'raw.orders.priority = raw.client.active'
+    );
+    expect(graph.nodes.map((node) => node.data.label)).not.toContain('VALUE\nboolean: true');
+
+    const expressionGraph = projectSemanticWorkbenchGraph(transform, {
+      view: 'join-expression',
+      joinRelationId,
+    });
+    const rootNode = expressionGraph.nodes.find((node) => node.data.label === 'OR\nOR');
+    const comparisons = expressionGraph.nodes.filter((node) => node.data.label === 'EQUAL\n=');
+    const operands = expressionGraph.nodes.filter((node) => node.data.semanticKind === 'field');
+    expect(rootNode).toBeDefined();
+    expect(new Set(comparisons.map((node) => node.position.y)).size).toBe(1);
+    expect(new Set(operands.map((node) => node.position.y)).size).toBe(1);
+    expect(rootNode!.position.y).toBeLessThan(comparisons[0]!.position.y);
+    expect(comparisons[0]!.position.y).toBeLessThan(operands[0]!.position.y);
+    expect(
+      expressionGraph.edges.every((edge) => {
+        const source = expressionGraph.nodes.find((node) => node.id === edge.source);
+        const target = expressionGraph.nodes.find((node) => node.id === edge.target);
+        return source != null && target != null && source.position.y > target.position.y;
+      })
+    ).toBe(true);
   });
 
   it('rejects Order Details rows that do not reference an existing order', () => {
