@@ -16,7 +16,10 @@ import {
 import type { InteractiveCanvasColumnLineageEdgeData } from './CanvasColumnLineageEdge';
 import type { CanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
 import type { GraphNodeColumn } from '../../plugins/graph/graphNodeColumnContracts';
-import { canAuthorCanvasColumnMappings } from './canvasColumnProjectionAuthority';
+import {
+  canAuthorCanvasColumnMappings,
+  readCanvasColumnMappingInputFields,
+} from './canvasColumnProjectionAuthority';
 import { projectCanvasNodeAccessibleHealth } from './canvasNodeMapper';
 import { projectCanvasColumnFunctionMenus } from './canvasColumnFunctionMenuProjection';
 import { isDbtCompatibleModel } from './canvasDbtAuthoringModel';
@@ -297,6 +300,23 @@ export function useCanvasControllerReadModel({
           canonicalNode.kind === 'dvt:transform' &&
           readInteractiveColumns(node).some((column) => column.children?.length);
         const hasEditableProjection = functionProjection.hasEditableProjection;
+        const hasMaterializableMappingInput =
+          canAuthorColumnMappings &&
+          !hasEditableProjection &&
+          canonicalNode != null &&
+          columnFunctionEdges != null &&
+          columnFunctionEdges.some((edge) => {
+            if (edge.targetId !== canonicalNode.id) return false;
+            const sourceNode = graphModel.canonicalNodesById.get(edge.sourceId);
+            return (
+              sourceNode != null &&
+              readCanvasColumnMappingInputFields({
+                sourceNode,
+                edges: columnFunctionEdges,
+                resolveNode: (nodeId) => graphModel.canonicalNodesById.get(nodeId),
+              }).length > 0
+            );
+          });
         const canApplyStructuredField = hasEditableProjection || hasStructuredProjection;
 
         const projectedNodeData = {
@@ -323,7 +343,9 @@ export function useCanvasControllerReadModel({
             ? node.data.onAddCanvasCalculatedColumn
             : undefined,
           onToggleCanvasColumnOutput:
-            canAuthorColumnMappings || hasStructuredProjection || canAuthorDbtModelColumns
+            (canAuthorColumnMappings && (hasEditableProjection || hasMaterializableMappingInput)) ||
+            hasStructuredProjection ||
+            canAuthorDbtModelColumns
               ? node.data.onToggleCanvasColumnOutput
               : undefined,
           onReorderCanvasColumnOutput:
