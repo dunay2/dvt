@@ -251,6 +251,8 @@ writes nothing.
       "name": "ConfigureCanvasDvtNode",
       "type": "command",
       "status": "implemented",
+      "referenceOnly": true,
+      "authorityRef": "docs/planning/proposals/mandatory/frontend-and-ux/vtx2-opaque-authoring-identity-plan-20260906.md",
       "dddOwner": "DvtSubstraitAuthoringSidecarV1",
       "negativeTests": ["Unknown capability, alias or FieldId writes nothing"],
       "adapterSurface": "Canvas draft authoring",

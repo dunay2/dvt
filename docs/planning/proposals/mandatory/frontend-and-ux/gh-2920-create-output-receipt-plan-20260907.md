@@ -255,6 +255,8 @@ capability, invalid literal, malformed projection, and Source authoring write no
       "name": "ConfigureCanvasDvtNode",
       "type": "command",
       "status": "implemented",
+      "referenceOnly": true,
+      "authorityRef": "docs/planning/proposals/mandatory/frontend-and-ux/vtx2-opaque-authoring-identity-plan-20260906.md",
       "dddOwner": "DvtSubstraitAuthoringSidecarV1",
       "negativeTests": [
         "Unknown FieldId writes nothing",
