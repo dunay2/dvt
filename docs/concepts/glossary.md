@@ -2,7 +2,7 @@
 title: DVT Glossary
 status: Active
 owner: Docs / Architecture
-last_reviewed: 2026-09-06
+last_reviewed: 2026-09-10
 ---
 
 # DVT Glossary
@@ -26,7 +26,7 @@ definition layer for readers across code, planning, operations, and review.
 | Outbox           | The delivery boundary for external event publication. It is not the same thing as the state store.                                    | [System Delivery Status](../architecture/system-delivery-status.md)                    |
 | Run              | One execution instance of a plan under a tenant and environment context.                                                              | [Engine Contracts](../contracts/engine/index.md)                                       |
 | Step             | A unit of work inside a run.                                                                                                          | [Engine Contracts](../contracts/engine/index.md)                                       |
-| Plan             | The executable description consumed by the engine runtime.                                                                            | [Planning Control Tower](../planning/state/planning-control-tower.md)                  |
+| Plan             | The executable description consumed by the engine runtime.                                                                            | [Planner Contracts](../contracts/planner/index.md)                                     |
 | PlanRef          | The metadata reference that points to a plan artifact without embedding the plan bytes inline.                                        | [ADR-0012](../adr/ADR-0012-plan-integrity-ownership.md)                                |
 | Artifact         | A produced or referenced output such as compiled code, manifests, or lineage payloads.                                                | [System Map](./system-map.md)                                                          |
 | StepArtifactRef  | The generic, step-kind-agnostic runtime reference to a content-addressed step artifact, carrying artifact kind, digest, URI and size. | [ADR-0067](../adr/ADR-0067-canonical-artifact-authority-and-compiled-code-hard-cut.md) |
