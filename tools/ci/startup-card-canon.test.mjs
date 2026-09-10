@@ -76,6 +76,7 @@ const activePlanningEntrypoints = [
   'docs/planning/domains/documentation-governance.md',
   'docs/planning/gaps/index.md',
   'docs/planning/proposals/mandatory/frontend-and-ux/index.md',
+  'scripts/sync-docs.cjs',
 ];
 
 test('governance startup card canonization preserves routing semantics and baseline rails', () => {
