@@ -115,7 +115,6 @@ function assertColumnMenuStaysOpenAndReopens(): void {
     .find('[data-slot="graph-node-column-piece"][data-column-name="customer"]')
     .rightclick(20, 10);
   cy.get('[data-slot="graph-node-column-function-menu"]').should('be.visible');
-  cy.get('body').type('{esc}');
 }
 
 describe('Canvas Model output toggle lifecycle', () => {
@@ -148,6 +147,25 @@ describe('Canvas Model output toggle lifecycle', () => {
     expectOutput('order_id', false);
     expectOutput('amount', false);
     assertColumnMenuStaysOpenAndReopens();
+
+    visitCanvas();
+    openModelColumns();
+    expectOutput('customer', true);
+
+    modelCard()
+      .find('[data-slot="graph-node-column-piece"][data-column-name="amount"]')
+      .focus()
+      .trigger('keydown', { key: 'ArrowUp', altKey: true })
+      .trigger('keydown', { key: 'ArrowUp', altKey: true });
+    modelCard()
+      .find('[data-slot="graph-node-column-piece"]')
+      .then(($columns) => {
+        expect([...$columns].map((column) => column.dataset.columnName).slice(0, 3)).to.deep.equal([
+          'amount',
+          'order_id',
+          'customer',
+        ]);
+      });
 
     modelColumnRow('customer').find('[data-slot="graph-node-column-output-state"]').click();
     cy.wrap(null).should(() => {
