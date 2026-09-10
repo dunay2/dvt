@@ -56,9 +56,12 @@ describe('SemanticWorkbenchLab architecture', () => {
     expect(SOURCE).toContain('setSelectedSemanticId');
     expect(SOURCE).toContain('Tooltip');
     expect(SOURCE).toContain('setDvtSubstraitJoinPredicateFields');
+    expect(SOURCE).toContain('addDvtSubstraitJoinPredicateCondition');
     expect(SOURCE).toContain('data-slot="semantic-workbench-left-field-select"');
     expect(SOURCE).toContain('data-slot="semantic-workbench-right-field-select"');
     expect(SOURCE).toContain('Aplicar condición');
+    expect(SOURCE).toContain('data-slot="semantic-workbench-add-join-condition"');
+    expect(SOURCE).toContain('Añadir condición con AND');
     expect(SOURCE).not.toContain('Impacto estimado');
     expect(SOURCE).not.toContain('Editar nodo');
   });

@@ -4,6 +4,7 @@ import type { ConnectedSourceRef } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
+  addDvtSubstraitJoinPredicateCondition,
   appendDvtSubstraitInnerJoinInput,
   applyDvtSubstraitInnerJoinFieldEdit,
   applyDvtSubstraitInnerJoinGroupedRowNumber,
@@ -345,6 +346,66 @@ describe('DVT Substrait INNER JOIN identity', () => {
         joinRelationId,
         leftSourceFieldId: inputFieldId(projection, 0, 'id'),
         rightSourceFieldId: inputFieldId(projection, 0, 'amount'),
+      })
+    ).toBe(draft);
+  });
+
+  it('adds a typed literal condition to the retained relationship predicate', () => {
+    const draft = createDvtSubstraitStringInnerJoinDraft({
+      left: {
+        source: source('source-left', 'public', 'orders'),
+        fields: ['id', 'priority'],
+        fieldTypes: ['string', 'bool'],
+      },
+      right: {
+        source: source('source-right', 'public', 'clients'),
+        fields: ['id', 'active'],
+        fieldTypes: ['string', 'bool'],
+      },
+      leftFieldName: 'id',
+      rightFieldName: 'id',
+      targetNodeId: 'transform-typed-literal-join',
+    });
+    const before = inspectNInput(draft);
+    const joinRelationId = before.joinRelations[0]?.relationId;
+    if (joinRelationId == null) throw new Error('Expected the join relation identity.');
+    const activeFieldId = inputFieldId(before, 1, 'active');
+
+    const withLiteral = addDvtSubstraitJoinPredicateCondition({
+      draft,
+      joinRelationId,
+      condition: {
+        left: { kind: 'field', sourceFieldId: activeFieldId },
+        right: { kind: 'literal', literal: { dataType: 'bool', value: true } },
+      },
+    });
+    const reloaded = decodeDvtSubstraitInnerJoinDocument(
+      encodeDvtSubstraitInnerJoinDocument(withLiteral)
+    );
+    const after = inspectNInput(reloaded);
+
+    expect(after.joins[0]).toEqual({
+      leftSourceFieldId: inputFieldId(before, 0, 'id'),
+      rightSourceFieldId: inputFieldId(before, 1, 'id'),
+      additionalConditions: [
+        {
+          left: { kind: 'field', sourceFieldId: activeFieldId },
+          right: { kind: 'literal', literal: { dataType: 'bool', value: true } },
+        },
+      ],
+    });
+    expect(after.joinRelations[0]?.relationId).toBe(joinRelationId);
+    expect(after.outputs.map((output) => output.fieldId)).toEqual(
+      before.outputs.map((output) => output.fieldId)
+    );
+    expect(
+      addDvtSubstraitJoinPredicateCondition({
+        draft,
+        joinRelationId,
+        condition: {
+          left: { kind: 'field', sourceFieldId: activeFieldId },
+          right: { kind: 'literal', literal: { dataType: 'i64', value: 1n } },
+        },
       })
     ).toBe(draft);
   });

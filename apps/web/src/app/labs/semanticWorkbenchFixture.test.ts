@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  addDvtSubstraitJoinPredicateCondition,
   decodeDvtSubstraitInnerJoinDocument,
   encodeDvtSubstraitInnerJoinDocument,
   inspectDvtSubstraitNInputJoinDraft,
@@ -257,6 +258,43 @@ describe('semanticWorkbenchFixture', () => {
       order_detail_id: 'OD-1001-1',
       order_details_order_id: 'ORD-1001',
     });
+  });
+
+  it('applies a typed literal JOIN condition to the real Transform sample', () => {
+    const fixture = buildSemanticWorkbenchFixture();
+    const authority = readDvtTransformAuthoringAuthority(fixture.transform);
+    if (authority == null) throw new Error('Expected Substrait authority.');
+    const draft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
+    const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+    if (!inspection.ok) throw new Error('Expected an accepted N-input join.');
+    const activeFieldId = inspection.projection.inputs[1]?.fields.find(
+      (field) => field.name === 'active'
+    )?.fieldId;
+    const joinRelationId = inspection.projection.joinRelations[0]?.relationId;
+    if (activeFieldId == null || joinRelationId == null) {
+      throw new Error('Expected the Client active field and first JOIN identity.');
+    }
+    const conditioned = addDvtSubstraitJoinPredicateCondition({
+      draft,
+      joinRelationId,
+      condition: {
+        left: { kind: 'field', sourceFieldId: activeFieldId },
+        right: { kind: 'literal', literal: { dataType: 'bool', value: true } },
+      },
+    });
+    const transform = applyDvtSubstraitSemanticDocument(
+      fixture.transform,
+      encodeDvtSubstraitInnerJoinDocument(conditioned)
+    );
+
+    const sample = fixture.projectTransformSample(transform);
+    expect(sample?.rows).toHaveLength(9);
+    const orderIdIndex = sample?.columns.findIndex((column) => column.name === 'order_id') ?? -1;
+    expect(sample?.rows.map((row) => row.values[orderIdIndex])).not.toContain('ORD-1004');
+    const graph = projectSemanticWorkbenchGraph(transform);
+    expect(graph.nodes.map((node) => node.data.label)).toEqual(
+      expect.arrayContaining(['AND\nAND', 'VALUE\nboolean: true'])
+    );
   });
 
   it('rejects Order Details rows that do not reference an existing order', () => {

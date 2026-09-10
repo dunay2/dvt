@@ -62,6 +62,18 @@ export function pgStringLiteral(value: string): PostgresAstNode {
   return { A_Const: { sval: { sval: value } } };
 }
 
+export function pgBooleanLiteral(value: boolean): PostgresAstNode {
+  return { A_Const: { boolval: { boolval: value } } };
+}
+
+export function pgI64Literal(value: bigint): PostgresAstNode {
+  return { A_Const: { ival: { ival: value } } };
+}
+
+export function pgFp64Literal(value: number): PostgresAstNode {
+  return { A_Const: { fval: { fval: String(value) } } };
+}
+
 export function pgEquals(left: PostgresAstNode, right: PostgresAstNode): PostgresAstNode {
   return {
     A_Expr: {
@@ -72,6 +84,11 @@ export function pgEquals(left: PostgresAstNode, right: PostgresAstNode): Postgre
       location: -1,
     },
   };
+}
+
+export function pgAnd(expressions: readonly PostgresAstNode[]): PostgresAstNode {
+  if (expressions.length < 2) throw new Error('PostgreSQL AND requires at least two expressions.');
+  return { BoolExpr: { boolop: 'AND_EXPR', args: [...expressions], location: -1 } };
 }
 
 export function pgTimestampTzLiteral(value: string): PostgresAstNode {

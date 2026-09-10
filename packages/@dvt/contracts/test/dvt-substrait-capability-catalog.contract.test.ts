@@ -92,6 +92,25 @@ describe('DVT Substrait capability catalog V1', () => {
     });
   });
 
+  it('admits boolean AND for composite INNER JOIN predicates', () => {
+    const conjunction = findCapability(
+      buildDvtSubstraitStandardCapabilityId('scalar-function', {
+        sourceKind: 'simple-extension',
+        urn: 'extension:io.substrait:functions_boolean',
+        name: 'and',
+      })
+    );
+
+    expect(conjunction).toMatchObject({
+      profileStatus: 'supported-profile',
+      admission: {
+        productUseCaseRef: 'dvt:#3087',
+        targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+        visualExposure: { status: 'exposed' },
+      },
+    });
+  });
+
   it('admits only the bounded binary CONCAT invocation for field stacking', () => {
     const concatId = buildDvtSubstraitStandardCapabilityId('scalar-function', {
       sourceKind: 'simple-extension',

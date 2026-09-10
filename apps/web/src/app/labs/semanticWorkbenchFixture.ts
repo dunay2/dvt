@@ -6,6 +6,7 @@ import {
   encodeDvtSubstraitInnerJoinDocument,
   inspectDvtSubstraitNInputJoinDraft,
   type DvtSubstraitJoinDataType,
+  type DvtSubstraitJoinPredicateOperand,
   type DvtSubstraitJoinSource,
 } from '../views/canvas/canvasDvtSubstraitJoinComposition';
 import {
@@ -193,7 +194,11 @@ export function buildSemanticWorkbenchFixture(
       const fieldById = new Map(
         inspection.projection.inputs.flatMap((input, inputIndex) =>
           input.fields.map(
-            (field) => [field.fieldId, { inputIndex, fieldName: field.name }] as const
+            (field) =>
+              [
+                field.fieldId,
+                { inputIndex, fieldName: field.name, dataType: field.dataType },
+              ] as const
           )
         )
       );
@@ -216,11 +221,45 @@ export function buildSemanticWorkbenchFixture(
           return null;
         }
         joinedRows = joinedRows.flatMap((joined) =>
-          rightRows.flatMap((rightRow) =>
-            Object.is(joined.get(left.inputIndex)?.[left.fieldName], rightRow[right.fieldName])
-              ? [new Map(joined).set(rightInputIndex, rightRow)]
-              : []
-          )
+          rightRows.flatMap((rightRow) => {
+            const candidate = new Map(joined).set(rightInputIndex, rightRow);
+            const operandValue = (operand: DvtSubstraitJoinPredicateOperand) => {
+              if (operand.kind === 'literal') return operand.literal;
+              const field = fieldById.get(operand.sourceFieldId);
+              const value =
+                field == null ? undefined : candidate.get(field.inputIndex)?.[field.fieldName];
+              return value === undefined ? null : { dataType: field.dataType, value };
+            };
+            const equalOperands = (
+              leftOperand: DvtSubstraitJoinPredicateOperand,
+              rightOperand: DvtSubstraitJoinPredicateOperand
+            ) => {
+              const leftValue = operandValue(leftOperand);
+              const rightValue = operandValue(rightOperand);
+              if (
+                leftValue == null ||
+                rightValue == null ||
+                leftValue.dataType !== rightValue.dataType
+              ) {
+                return false;
+              }
+              if (leftValue.dataType === 'i64') {
+                return BigInt(leftValue.value) === BigInt(rightValue.value);
+              }
+              if (leftValue.dataType === 'precisionTimestampTz') {
+                return Date.parse(String(leftValue.value)) === Date.parse(String(rightValue.value));
+              }
+              return Object.is(leftValue.value, rightValue.value);
+            };
+            const baseMatches = equalOperands(
+              { kind: 'field', sourceFieldId: predicate.leftSourceFieldId },
+              { kind: 'field', sourceFieldId: predicate.rightSourceFieldId }
+            );
+            const additionalMatches = (predicate.additionalConditions ?? []).every((condition) =>
+              equalOperands(condition.left, condition.right)
+            );
+            return baseMatches && additionalMatches ? [candidate] : [];
+          })
         );
       }
 
