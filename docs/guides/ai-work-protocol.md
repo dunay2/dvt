@@ -33,14 +33,14 @@ planning view is a task authority.
 
 ## Authority Boundary
 
-| Concern | Canonical authority |
-| --- | --- |
-| task identity, priority, assignment, status, blockers, acceptance, closure | GitHub Issues |
-| implementation review, discussion, checks, merge | GitHub pull requests |
-| components, capabilities, relations, ownership | Planning DB |
-| command/query rails, ports, adapters, feature mechanization, architecture evidence | Planning DB |
-| executable product truth | code, contracts, tests, and CI on `main` |
-| durable architectural decisions | accepted ADRs and governed contracts |
+| Concern                                                                            | Canonical authority                      |
+| ---------------------------------------------------------------------------------- | ---------------------------------------- |
+| task identity, priority, assignment, status, blockers, acceptance, closure         | GitHub Issues                            |
+| implementation review, discussion, checks, merge                                   | GitHub pull requests                     |
+| components, capabilities, relations, ownership                                     | Planning DB                              |
+| command/query rails, ports, adapters, feature mechanization, architecture evidence | Planning DB                              |
+| executable product truth                                                           | code, contracts, tests, and CI on `main` |
+| durable architectural decisions                                                    | accepted ADRs and governed contracts     |
 
 Planning DB MUST NOT be used as a task tracker. GitHub issue state MUST NOT be
 projected from Planning DB.
