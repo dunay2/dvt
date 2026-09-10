@@ -959,6 +959,25 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
 
+  packages/@dvt/postgres-projection:
+    dependencies:
+      '@buf/substrait_substrait.bufbuild_es':
+        specifier: 2.14.0-20260816025439-ce0808dab3ac.1
+        version: 2.14.0-20260816025439-ce0808dab3ac.1(@bufbuild/protobuf@2.14.0)
+      '@dvt/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      pgsql-deparser:
+        specifier: 16.1.1
+        version: 16.1.1
+    devDependencies:
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: 3.2.4
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.1.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0(@noble/hashes@2.3.0))(lightningcss@1.32.0)(terser@5.51.2)(tsx@4.21.0)(yaml@2.8.2)
+
   packages/@dvt/run-domain:
     dependencies:
       '@dvt/contracts':
