@@ -147,7 +147,15 @@ test('active planning entrypoints do not reintroduce the retired control tower',
 
   for (const path of activePlanningEntrypoints) {
     const content = readRepoFile(path);
-    assert.doesNotMatch(content, /planning-control-tower\.md/i, `${path} must not link the retired file`);
-    assert.doesNotMatch(content, /Planning Control Tower/i, `${path} must not present the retired authority`);
+    assert.doesNotMatch(
+      content,
+      /planning-control-tower\.md/i,
+      `${path} must not link the retired file`
+    );
+    assert.doesNotMatch(
+      content,
+      /Planning Control Tower/i,
+      `${path} must not present the retired authority`
+    );
   }
 });
