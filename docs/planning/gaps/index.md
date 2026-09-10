@@ -2,7 +2,7 @@
 title: Planning Gaps
 status: Review
 owner: Architecture / Delivery / Docs
-last_reviewed: 2026-09-09
+last_reviewed: 2026-09-10
 planning_type: reference
 ---
 
@@ -24,10 +24,9 @@ current authority reference.
 
 ## Live Planning Anchors
 
-- [Planning Dashboard](../state/planning-dashboard.md)
+- [GitHub Issues](https://github.com/dunay2/dvt/issues)
 - [GitHub MVP Issue Workflow](../state/github-mvp-issue-workflow.md)
 - [Roadmap Of Record](../roadmap/index.md)
-- [Domain Status Board](../state/domain-status-board.md)
 - [System Delivery Status](../../architecture/system-delivery-status.md)
 - [Governance Document And Rule Inventory](../status/governance-document-rule-inventory.md)
 
