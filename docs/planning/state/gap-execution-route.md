@@ -16,10 +16,8 @@ current operational planning path.
 ## Current Routing Surfaces
 
 - [GitHub Issues](https://github.com/dunay2/dvt/issues) for task lifecycle, priority, blockers, and acceptance
-- [Planning Dashboard](./planning-dashboard.md) for human navigation
 - [Roadmap Of Record](../roadmap/index.md) for durable sequencing
 - [Roadmap By Domain](../roadmap/roadmap-by-domain.md) for cross-domain sequencing
-- [Domain Status Board](./domain-status-board.md) for domain-level status
 
 ## Retirement Rule
 
