@@ -2,7 +2,7 @@
 title: Roadmap Of Record
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-09-09
+last_reviewed: 2026-09-10
 ---
 
 # Roadmap Of Record
@@ -28,20 +28,19 @@ for the task/architecture boundary.
 
 ## Canonical Planning Surfaces
 
+- Active task lifecycle: [GitHub Issues](https://github.com/dunay2/dvt/issues).
 - Roadmap of record: this page.
 - Strategic product direction:
   [Strategic Product Roadmap](strategic-product-roadmap.md).
 - Current implementation state:
   [System Delivery Status](../../architecture/system-delivery-status.md).
-- Human planning navigation:
-  [Planning Dashboard](../state/planning-dashboard.md).
 - Delivery procedure:
   [GitHub MVP Issue Workflow](../state/github-mvp-issue-workflow.md).
 - Governance startup router:
   [Governance Document And Rule Inventory](../status/governance-document-rule-inventory.md).
 
-No control tower, lane file, workboard, task row, or generated planning view is a
-planning authority.
+No control tower, dashboard, lane file, workboard, task row, or generated planning
+view is a planning authority.
 
 ## Document Classification
 
@@ -79,8 +78,7 @@ planning authority.
 
 1. [System Delivery Status](../../architecture/system-delivery-status.md) for
    current implementation truth.
-2. [Planning Dashboard](../state/planning-dashboard.md) and GitHub Issues for
-   active work.
+2. [GitHub Issues](https://github.com/dunay2/dvt/issues) for active work.
 3. This roadmap for durable sequencing.
 4. [Strategic Product Roadmap](strategic-product-roadmap.md) for multi-quarter
    direction.
