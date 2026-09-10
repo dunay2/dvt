@@ -44,7 +44,7 @@ describe('SemanticWorkbenchLab architecture', () => {
   });
 
   it('routes Source field selection through the existing Substrait join authority', () => {
-    expect(SOURCE).toContain('onToggleCanvasConnectionColumn: toggleConnectionColumn');
+    expect(SOURCE).toContain('onToggleCanvasColumnOutput: toggleConnectionColumn');
     expect(SOURCE).toContain('setDvtSubstraitJoinConnectionFieldSelected');
     expect(SOURCE).toContain('onEdgeClick={(_, edge) => setSelectedConnectionId(edge.id)}');
     expect(SOURCE).not.toContain('selectedSourceFields:');

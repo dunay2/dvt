@@ -442,7 +442,7 @@ function SemanticWorkbenchLab() {
             onInspectNode: handleInspectNode,
             ...(activeConnection == null
               ? {}
-              : { onToggleCanvasConnectionColumn: toggleConnectionColumn }),
+              : { onToggleCanvasColumnOutput: toggleConnectionColumn }),
             ...(canOpenDataSample
               ? {
                   onOpenSourceDataSample: openSourceDataSample,
