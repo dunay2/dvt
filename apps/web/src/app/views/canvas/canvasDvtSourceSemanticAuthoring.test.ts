@@ -12,7 +12,11 @@ import {
   encodeDvtSubstraitProjectionDocument,
   resolveDvtSubstraitProjectionSource,
 } from './canvasDvtSubstraitProjection';
-import { createDvtSourceSemanticDraft } from './canvasDvtSourceSemanticAuthoring';
+import {
+  applyDvtSourceSemanticDraft,
+  createDvtSourceSemanticDraft,
+  readDvtSourceOutputProjection,
+} from './canvasDvtSourceSemanticAuthoring';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 
 const FIELD_IDS = [
@@ -106,5 +110,64 @@ describe('DVT Source semantic authority', () => {
 
     expect(projected?.metadata?.columns).toEqual([...columns].reverse());
     expect(projected?.metadata?.transformAuthoring).toEqual(divergent.metadata?.transformAuthoring);
+  });
+  it('rebases a field-only projection when an imported Source identity refreshes', () => {
+    const projected = semanticSource();
+    const draft = createDvtSourceSemanticDraft(projected);
+    if (draft == null) throw new Error('Invalid projected Source fixture.');
+    const refreshed: CanonicalNode = {
+      ...source,
+      metadata: {
+        ...source.metadata,
+        schema: 'analytics',
+        tableName: 'orders_v2',
+        connectedSourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'postgres-main',
+            provider: 'postgres',
+          },
+          sourceObjectId: 'analytics.orders_v2',
+        },
+      },
+    };
+    const rebound = readDvtSourceOutputProjection(applyDvtSourceSemanticDraft(refreshed, draft));
+
+    expect(rebound?.source).toMatchObject({ schema: 'analytics', table: 'orders_v2' });
+    expect(rebound?.outputs.map(({ fieldId, name }) => ({ fieldId, name }))).toEqual([
+      { fieldId: FIELD_IDS[0], name: 'order_id' },
+      { fieldId: FIELD_IDS[1], name: 'customer' },
+      { fieldId: FIELD_IDS[2], name: 'amount' },
+    ]);
+  });
+
+  it('rejects a projection whose input types diverge from the physical Source schema', () => {
+    const projectionSource = resolveDvtSubstraitProjectionSource(source);
+    if (projectionSource == null) throw new Error('Invalid Source fixture.');
+    const divergentSource = {
+      ...projectionSource,
+      fields: projectionSource.fields.map((field) =>
+        field.name === 'customer' ? { ...field, dataType: 'integer' } : field
+      ),
+    };
+    const divergent = applyDvtSubstraitSemanticDocument(
+      source,
+      encodeDvtSubstraitProjectionDocument(
+        createDvtSubstraitProjectionDraft({
+          source: divergentSource,
+          targetNodeId: source.id,
+          outputs: divergentSource.fields.map((field, index) => ({
+            fieldId: FIELD_IDS[index]!,
+            name: field.name,
+            sourceFieldName: field.name,
+          })),
+        })
+      )
+    );
+
+    expect(() => readDvtSourceOutputProjection(divergent)).toThrow(
+      'DVT Source semantic authority is not an admitted projection shape.'
+    );
   });
 });

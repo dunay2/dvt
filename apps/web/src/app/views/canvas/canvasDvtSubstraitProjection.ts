@@ -145,6 +145,12 @@ function inspectProjectionDataType(type: Type): string | null {
   return null;
 }
 
+export function canonicalizeDvtSubstraitProjectionDataType(dataType: unknown): string {
+  return (
+    inspectProjectionDataType(createProjectionType(normalizeProjectionDataType(dataType))) ??
+    'unknown'
+  );
+}
 export type DvtSubstraitProjectionField = Readonly<{
   name: string;
   dataType: string;
