@@ -118,3 +118,23 @@ These topics should not be treated as current engine delivery commitments:
 If a second runtime becomes real work again, it needs an explicit ADR-backed
 plan and governing GitHub issue first. Until then, old provider-draft material is
 historical context, not an active phase.
+
+## Decision rules
+
+- If the question is `what is true in code now?`, read
+  [System Delivery Status](../../../system-delivery-status.md).
+- If the question is `what shape is the engine moving toward?`, read
+  [WorkflowEngine target architecture v1](../workflow-engine-target-architecture.v1.md).
+- If the question is `what engine slice should we execute next?`, read this page
+  and then the governing GitHub Issues.
+- If the question is `what unblocks the first governed runtime vertical now?`,
+  trace the remaining `TF-C2` acceptance on top of landed `MW-C1`, `TF-C2-A`,
+  and `TF-C2-B` through their governing GitHub issues and implementation evidence.
+
+## Historical snapshot
+
+The earlier phase ladder is preserved for archive-only context:
+
+- [Engine roadmap phases snapshot (2026-02-11)](../../../../archive/architecture/engine-roadmap-phases-20260211.md)
+
+That archived snapshot is not active planning authority anymore.
