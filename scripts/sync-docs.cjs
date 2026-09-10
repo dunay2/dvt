@@ -246,7 +246,6 @@ function generateAdrLanding(lifecycleAuthority) {
   if (!fs.existsSync(adrDir)) {
     throw new Error('Missing docs/adr directory.');
   }
-
   const entries = fs
     .readdirSync(adrDir, { withFileTypes: true })
     .filter((entry) => entry.isFile())
@@ -1086,8 +1085,7 @@ function renderConceptsIndex(meta, rows) {
     '3. [DVT System Map](system-map.md)',
     '4. [Repository Map](repository-map.md)',
     '5. [Architecture Index](../architecture/index.md)',
-    '6. [Planning Dashboard](../planning/state/planning-dashboard.md)',
-    '7. [Governance Inventory](../planning/status/governance-document-rule-inventory.md)',
+    '6. [Governance Inventory](../planning/status/governance-document-rule-inventory.md)',
     '',
     '## Index',
     '',
