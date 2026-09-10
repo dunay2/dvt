@@ -74,13 +74,14 @@ describe('DVT transform authoring authority', () => {
     );
   });
 
-  it('persists only canonical Substrait metadata and survives the Graph Draft roundtrip', () => {
+  it('persists canonical Substrait authority and column metadata through the Graph Draft roundtrip', () => {
     const semanticDocument = buildSemanticDocument();
     const canonicalNode = applyDvtSubstraitSemanticDocument(
       buildTransformNode({
         sql: 'select stale from raw.orders',
         compiledSql: 'select stale from raw.orders',
         config: { sql: 'select stale from raw.orders', selectedColumns: ['order_id'] },
+        columns: [{ name: 'order_id', type: 'integer' }],
         transformLineageProvenance: { stale: true },
       }),
       semanticDocument
@@ -88,6 +89,7 @@ describe('DVT transform authoring authority', () => {
 
     expect(canonicalNode.metadata).toEqual({
       config: { selectedColumns: ['order_id'] },
+      columns: [{ name: 'order_id', type: 'integer' }],
       transformAuthoring: {
         version: 'v1',
         mode: 'substrait',
@@ -113,14 +115,21 @@ describe('DVT transform authoring authority', () => {
 
   it('persists canonical semantics on a Source without changing its physical identity', () => {
     const semanticDocument = buildSemanticDocument();
-    const source = applyDvtSubstraitSemanticDocument(buildSourceNode(), semanticDocument);
+    const source = applyDvtSubstraitSemanticDocument(
+      buildSourceNode({ columns: [{ name: 'order_id', type: 'integer' }] }),
+      semanticDocument
+    );
 
     expect(source).toMatchObject({
       id: 'source-orders',
       pluginId: 'dvt.warehouse-source',
       kind: 'dvt:source',
       role: 'input',
-      metadata: { schema: 'raw', tableName: 'orders' },
+      metadata: {
+        schema: 'raw',
+        tableName: 'orders',
+        columns: [{ name: 'order_id', type: 'integer' }],
+      },
     });
     expect(readDvtTransformAuthoringAuthority(source)?.semanticDocument).toEqual(semanticDocument);
   });

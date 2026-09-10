@@ -5,7 +5,6 @@ import {
   buildCanvasColumnContextMenuModel,
   type CanvasColumnContextMenuAction,
 } from '../../components/canvas/canvasNodeContextMenuModel';
-import { usePointerGraceDismiss } from '../../components/transientSurface/usePointerGraceDismiss';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -28,7 +27,6 @@ import type { GraphNodeColumnCopy } from './GraphNodeColumnPiece';
 import { graphNodeColumnClasses } from './graphVisualTokens';
 
 type FunctionMenu = NonNullable<GraphNodeColumn['functionMenu']>;
-type PointerMenuSession = Readonly<{ key: number; open: boolean }>;
 
 function actionSlot(action: CanvasColumnContextMenuAction): string | undefined {
   if (action.id === 'invoke-function') return 'graph-node-column-function';
@@ -101,23 +99,16 @@ export function GraphNodeColumnFunctionMenu(props: {
     }
     if (action.id === 'remove-structured-field') props.onStructuredRemove?.();
   };
-  const [pointerSession, setPointerSession] = useState<PointerMenuSession>({ key: 0, open: false });
-  const pointerGraceProps = usePointerGraceDismiss({
-    enabled: pointerSession.open,
-    onDismiss: () => setPointerSession((session) => ({ key: session.key + 1, open: false })),
-  });
+  const [pointerOpen, setPointerOpen] = useState(false);
 
   return (
     <Tooltip>
-      <ContextMenu
-        key={pointerSession.key}
-        onOpenChange={(open) => setPointerSession((session) => ({ ...session, open }))}
-      >
+      <ContextMenu onOpenChange={setPointerOpen}>
         <ContextMenuTrigger asChild>
           <TooltipTrigger asChild>{props.piece}</TooltipTrigger>
         </ContextMenuTrigger>
-        {pointerSession.open ? (
-          <ContextMenuContent data-slot="graph-node-column-function-menu" {...pointerGraceProps}>
+        {pointerOpen ? (
+          <ContextMenuContent data-slot="graph-node-column-function-menu">
             <ContextMenuLabel>{model.label}</ContextMenuLabel>
             <ContextMenuGroup>
               {model.actions.map((action) => (

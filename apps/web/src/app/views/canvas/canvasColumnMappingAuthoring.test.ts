@@ -1,8 +1,14 @@
-import { DVT_TRANSFORM_AUTHORING_MODE, type ConnectedSourceRef } from '@dvt/contracts';
+import {
+  DVT_TRANSFORM_AUTHORING_MODE,
+  WorkspaceGraphAuthoringDraftSchema,
+  type ConnectedSourceRef,
+} from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
+import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftSession } from './canvasDraftSession';
+import { projectCanonicalNodeToAuthoringNode } from './canvasDraftAuthoring';
 import { applyCanvasColumnMapping } from './canvasColumnMappingAuthoring';
 import { automapCanvasColumns } from './canvasColumnAutomap';
 import {
@@ -107,6 +113,164 @@ function readOutputFieldId(node: CanonicalNode, name: string): string {
 }
 
 describe('Canvas column mapping authoring', () => {
+  it('materializes declared outputs before the first exclusion on a flat Model', () => {
+    const columns = [
+      { name: 'order_id', type: 'integer' },
+      { name: 'customer', type: 'text' },
+      { name: 'amount', type: 'numeric' },
+    ];
+    const source = buildNode('source', 'dvt:source', 'input', columns);
+    const model = buildNode('model', 'dvt:transform', 'transform', columns);
+    const initial = buildSession([source, model], [{ sourceId: source.id, targetId: model.id }]);
+
+    const result = setCanvasColumnOutputIncluded({
+      draftSession: initial,
+      canonicalNodesById: new Map([
+        [source.id, source],
+        [model.id, model],
+      ]),
+      targetNodeId: model.id,
+      columnId: 'customer',
+      columnType: 'text',
+      output: false,
+    });
+
+    expect(result.outcome).toBe('applied');
+    if (result.outcome !== 'applied') return;
+    const updated = result.draftSession.localNodeCatalog?.model;
+    if (updated == null) throw new Error('Expected updated Model.');
+    const authority = readDvtTransformAuthoringAuthority(updated);
+    if (authority?.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+      throw new Error('Expected canonical Substrait authority.');
+    }
+    const inspection = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+    );
+    expect(inspection.ok).toBe(true);
+    if (!inspection.ok) return;
+    expect(inspection.projection.outputs.map((output) => output.name)).toEqual([
+      'order_id',
+      'amount',
+    ]);
+    expect(inspection.projection.outputs.map((output) => output.sourceFieldName)).toEqual([
+      'order_id',
+      'amount',
+    ]);
+    for (const output of inspection.projection.outputs) {
+      expect(output.fieldId).toMatch(OPAQUE_FIELD_ID);
+      expect(output.sourceFieldId).toMatch(OPAQUE_FIELD_ID);
+    }
+
+    const draft = WorkspaceGraphAuthoringDraftSchema.parse({
+      canvas: { id: 'canvas-1', kind: 'transformation', title: 'Transformation' },
+      nodeIds: [updated.id],
+      nodePositions: { [updated.id]: { x: 40, y: 80 } },
+      nodes: [projectCanonicalNodeToAuthoringNode(updated)],
+      edges: [],
+    });
+    const reopenedNode = projectWorkspaceGraphAuthoringDraftSemanticGraph(draft).canonicalNodes[0];
+    if (reopenedNode == null) throw new Error('Expected reopened Model.');
+    const reopenedAuthority = readDvtTransformAuthoringAuthority(reopenedNode);
+    if (reopenedAuthority?.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+      throw new Error('Expected reopened canonical Substrait authority.');
+    }
+    const reopenedInspection = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(reopenedAuthority.semanticDocument)
+    );
+    expect(reopenedInspection).toEqual(inspection);
+  });
+
+  it('maps only the selected inherited output on first inclusion', () => {
+    const columns = [
+      { name: 'order_id', type: 'integer' },
+      { name: 'customer', type: 'text' },
+      { name: 'amount', type: 'numeric' },
+    ];
+    const source = buildNode('source', 'dvt:source', 'input', columns);
+    const model = { ...buildNode('model', 'dvt:transform', 'transform'), metadata: {} };
+    const initial = buildSession([source, model], [{ sourceId: source.id, targetId: model.id }]);
+
+    const result = setCanvasColumnOutputIncluded({
+      draftSession: initial,
+      canonicalNodesById: new Map([
+        [source.id, source],
+        [model.id, model],
+      ]),
+      targetNodeId: model.id,
+      columnId: 'customer',
+      columnType: 'text',
+      output: true,
+    });
+
+    expect(result.outcome).toBe('applied');
+    if (result.outcome !== 'applied') return;
+    const updated = result.draftSession.localNodeCatalog?.model;
+    if (updated == null) throw new Error('Expected updated Model.');
+    const authority = readDvtTransformAuthoringAuthority(updated);
+    if (authority?.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+      throw new Error('Expected canonical Substrait authority.');
+    }
+    const inspection = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+    );
+    expect(inspection.ok).toBe(true);
+    if (!inspection.ok) return;
+    expect(inspection.projection.outputs.map((output) => output.name)).toEqual(['customer']);
+    expect(inspection.projection.outputs[0]?.sourceFieldName).toBe('customer');
+    expect(inspection.projection.outputs[0]?.fieldId).toMatch(OPAQUE_FIELD_ID);
+    expect(inspection.projection.outputs[0]?.sourceFieldId).toMatch(OPAQUE_FIELD_ID);
+  });
+
+  it('preserves declared outputs when including one inherited output', () => {
+    const sourceColumns = [
+      { name: 'order_id', type: 'integer' },
+      { name: 'customer', type: 'text' },
+      { name: 'amount', type: 'numeric' },
+    ];
+    const source = buildNode('source', 'dvt:source', 'input', sourceColumns);
+    const model = buildNode('model', 'dvt:transform', 'transform', [
+      { name: 'order_id', type: 'integer' },
+      { name: 'amount', type: 'numeric' },
+    ]);
+    const initial = buildSession([source, model], [{ sourceId: source.id, targetId: model.id }]);
+
+    const result = setCanvasColumnOutputIncluded({
+      draftSession: initial,
+      canonicalNodesById: new Map([
+        [source.id, source],
+        [model.id, model],
+      ]),
+      targetNodeId: model.id,
+      columnId: 'customer',
+      columnType: 'text',
+      output: true,
+    });
+
+    expect(result.outcome).toBe('applied');
+    if (result.outcome !== 'applied') return;
+    const updated = result.draftSession.localNodeCatalog?.model;
+    if (updated == null) throw new Error('Expected updated Model.');
+    const authority = readDvtTransformAuthoringAuthority(updated);
+    if (authority?.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+      throw new Error('Expected canonical Substrait authority.');
+    }
+    const inspection = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+    );
+    expect(inspection.ok).toBe(true);
+    if (!inspection.ok) return;
+    expect(inspection.projection.outputs.map((output) => output.name)).toEqual([
+      'order_id',
+      'amount',
+      'customer',
+    ]);
+    expect(inspection.projection.outputs.map((output) => output.sourceFieldName)).toEqual([
+      'order_id',
+      'amount',
+      'customer',
+    ]);
+  });
+
   it('persists an orders passthrough as canonical Substrait authority', () => {
     const source = buildNode(
       'source-orders',
