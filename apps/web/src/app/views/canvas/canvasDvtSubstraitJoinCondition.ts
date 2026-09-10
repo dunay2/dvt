@@ -175,6 +175,75 @@ export function appendDvtSubstraitJoinComparison<Operand>(args: {
   ];
 }
 
+function countMatchingComparisons<Operand>(args: {
+  conditions: readonly DvtSubstraitJoinCondition<Operand>[];
+  conditionKey: string;
+  operandKey: (operand: Operand) => string;
+}): number {
+  return args.conditions
+    .flatMap(collectDvtSubstraitJoinConditionComparisons)
+    .filter(
+      (condition) => dvtSubstraitJoinConditionKey(condition, args.operandKey) === args.conditionKey
+    ).length;
+}
+
+export function updateDvtSubstraitJoinComparison<Operand>(args: {
+  conditions: readonly DvtSubstraitJoinCondition<Operand>[];
+  conditionKey: string;
+  condition: DvtSubstraitJoinComparisonCondition<Operand>;
+  operandKey: (operand: Operand) => string;
+}): readonly DvtSubstraitJoinCondition<Operand>[] | null {
+  if (countMatchingComparisons(args) !== 1) return null;
+  const update = (
+    current: DvtSubstraitJoinCondition<Operand>
+  ): DvtSubstraitJoinCondition<Operand> => {
+    if (isDvtSubstraitJoinConditionGroup(current)) {
+      return { ...current, conditions: current.conditions.map(update) };
+    }
+    return dvtSubstraitJoinConditionKey(current, args.operandKey) === args.conditionKey
+      ? args.condition
+      : current;
+  };
+  return args.conditions.map(update);
+}
+
+function withCombination<Operand>(
+  condition: DvtSubstraitJoinCondition<Operand>,
+  combination: DvtSubstraitJoinConditionCombination | undefined
+): DvtSubstraitJoinCondition<Operand> {
+  return { ...condition, combination };
+}
+
+export function removeDvtSubstraitJoinComparison<Operand>(args: {
+  conditions: readonly DvtSubstraitJoinCondition<Operand>[];
+  conditionKey: string;
+  operandKey: (operand: Operand) => string;
+}): readonly DvtSubstraitJoinCondition<Operand>[] | null {
+  if (countMatchingComparisons(args) !== 1) return null;
+  const remove = (
+    current: DvtSubstraitJoinCondition<Operand>
+  ): DvtSubstraitJoinCondition<Operand> | null => {
+    if (!isDvtSubstraitJoinConditionGroup(current)) {
+      return dvtSubstraitJoinConditionKey(current, args.operandKey) === args.conditionKey
+        ? null
+        : current;
+    }
+    const conditions = current.conditions.flatMap((condition) => {
+      const next = remove(condition);
+      return next == null ? [] : [next];
+    });
+    if (conditions.length === 0) return null;
+    if (conditions.length === 1) {
+      return withCombination(conditions[0]!, current.combination);
+    }
+    return { ...current, conditions };
+  };
+  return args.conditions.flatMap((condition) => {
+    const next = remove(condition);
+    return next == null ? [] : [next];
+  });
+}
+
 export function reduceDvtSubstraitJoinConditions<Operand, Result>(args: {
   initial: Result;
   conditions: readonly DvtSubstraitJoinCondition<Operand>[];

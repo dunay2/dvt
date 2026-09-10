@@ -8,7 +8,7 @@ import {
   type EdgeTypes,
   type NodeTypes,
 } from '@xyflow/react';
-import { ArrowLeft, Braces, Database, Equal, GitMerge, Hash, Maximize2, Plus } from 'lucide-react';
+import { ArrowLeft, Braces, Database, Equal, GitMerge, Hash, Maximize2 } from 'lucide-react';
 
 import DbtNodeComponent, { type DbtNodeData } from '../components/canvas/DbtNodeComponent';
 import { OperationalDrawerDataTable } from '../components/shell/OperationalDrawerDataTable';
@@ -24,22 +24,18 @@ import { CanvasNodeWorkbenchOverlay } from '../views/canvas/CanvasNodeWorkbenchO
 import type { CanvasInspectorAuthoringContract } from '../views/canvas/canvasInspectorAuthoring.types';
 import {
   DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS,
-  DVT_SUBSTRAIT_JOIN_CONDITION_COMBINATIONS,
   addDvtSubstraitJoinPredicateCondition,
   decodeDvtSubstraitInnerJoinDocument,
   encodeDvtSubstraitInnerJoinDocument,
   inspectDvtSubstraitNInputJoinDraft,
+  removeDvtSubstraitJoinPredicateCondition,
   setDvtSubstraitJoinConnectionFieldSelected,
   setDvtSubstraitJoinPredicateFields,
+  updateDvtSubstraitJoinPredicateCondition,
   type DvtSubstraitInnerJoinDraft,
   type DvtSubstraitJoinComparisonOperator,
-  type DvtSubstraitJoinConditionCombination,
-  type DvtSubstraitJoinDataType,
-  type DvtSubstraitJoinPredicateOperand,
   type DvtSubstraitNInputJoinProjection,
 } from '../views/canvas/canvasDvtSubstraitJoinComposition';
-import { countDvtSubstraitJoinConditionComparisons } from '../views/canvas/canvasDvtSubstraitJoinCondition';
-import { resolveDvtSubstraitJoinUnaryFunctions } from '../views/canvas/canvasDvtSubstraitJoinOperand';
 import {
   applyDvtSubstraitSemanticDocument,
   readDvtTransformAuthoringAuthority,
@@ -51,12 +47,7 @@ import {
   SEMANTIC_WORKBENCH_TRANSFORM,
   buildSemanticWorkbenchFixture,
 } from './semanticWorkbenchFixture';
-import {
-  SemanticWorkbenchJoinOperandEditor,
-  buildSemanticWorkbenchJoinOperand,
-  defaultSemanticWorkbenchJoinLiteralValue,
-  type SemanticWorkbenchJoinOperandDraft,
-} from './SemanticWorkbenchJoinOperandEditor';
+import { SemanticWorkbenchJoinConditionEditor } from './SemanticWorkbenchJoinConditionEditor';
 import { projectSemanticWorkbenchGraph } from './semanticWorkbenchProjection';
 
 const surface = '#040712';
@@ -225,15 +216,9 @@ type PendingJoinPredicate = Readonly<{
   rightSourceFieldId: string;
   operator: DvtSubstraitJoinComparisonOperator;
 }>;
-type PendingJoinCondition = Readonly<{
-  joinRelationId: string;
-  dataType: DvtSubstraitJoinDataType;
-  left: SemanticWorkbenchJoinOperandDraft;
-  right: SemanticWorkbenchJoinOperandDraft;
-  operator: DvtSubstraitJoinComparisonOperator;
-  combination: DvtSubstraitJoinConditionCombination;
-  groupWithPrevious: boolean;
-}>;
+type EditableJoinCondition = Parameters<
+  typeof addDvtSubstraitJoinPredicateCondition
+>[0]['condition'];
 
 function SemanticWorkbenchLab() {
   const [fixture, setFixture] = useState<SemanticWorkbenchFixture>(() =>
@@ -293,9 +278,6 @@ function SemanticWorkbenchLab() {
   const [selectedSourceSampleId, setSelectedSourceSampleId] = useState<string | null>(null);
   const [workbenchRequest, setWorkbenchRequest] = useState<WorkbenchRequest | null>(null);
   const [pendingJoinPredicate, setPendingJoinPredicate] = useState<PendingJoinPredicate | null>(
-    null
-  );
-  const [pendingJoinCondition, setPendingJoinCondition] = useState<PendingJoinCondition | null>(
     null
   );
   const handleInspectNode = useCallback<InspectNode>((nodeId, preferredTabId) => {
@@ -387,28 +369,36 @@ function SemanticWorkbenchLab() {
     [editJoinDraft]
   );
   const addJoinCondition = useCallback(
-    (
-      joinRelationId: string,
-      left: DvtSubstraitJoinPredicateOperand,
-      right: DvtSubstraitJoinPredicateOperand,
-      operator: DvtSubstraitJoinComparisonOperator,
-      combination: DvtSubstraitJoinConditionCombination,
-      groupWithPrevious: boolean
-    ) => {
+    (joinRelationId: string, condition: EditableJoinCondition, groupWithPrevious: boolean) => {
       editJoinDraft((draft) =>
         addDvtSubstraitJoinPredicateCondition({
           draft,
           joinRelationId,
-          condition: {
-            left,
-            right,
-            operator,
-            combination,
-          },
+          condition,
           groupWithPrevious,
         })
       );
-      setPendingJoinCondition(null);
+    },
+    [editJoinDraft]
+  );
+  const updateJoinCondition = useCallback(
+    (joinRelationId: string, conditionKey: string, condition: EditableJoinCondition) => {
+      editJoinDraft((draft) =>
+        updateDvtSubstraitJoinPredicateCondition({
+          draft,
+          joinRelationId,
+          conditionKey,
+          condition,
+        })
+      );
+    },
+    [editJoinDraft]
+  );
+  const removeJoinCondition = useCallback(
+    (joinRelationId: string, conditionKey: string) => {
+      editJoinDraft((draft) =>
+        removeDvtSubstraitJoinPredicateCondition({ draft, joinRelationId, conditionKey })
+      );
     },
     [editJoinDraft]
   );
@@ -525,72 +515,11 @@ function SemanticWorkbenchLab() {
         input.fields.map((field) => [field.fieldId, field.dataType] as const)
       )
     );
-    const conditionOptions = joinProjection.inputs
-      .slice(0, rightInputIndex + 1)
-      .flatMap((input, inputIndex) =>
-        input.fields.map((field) => ({
-          fieldId: field.fieldId,
-          label: `${input.schema}.${input.table}.${field.name}`,
-          dataType: field.dataType,
-          inputIndex,
-        }))
-      );
-    const conditionDataTypes = Array.from(
-      new Set(conditionOptions.map((option) => option.dataType))
-    );
-    const conditionDraft =
-      pendingJoinCondition?.joinRelationId === joinRelationId ? pendingJoinCondition : null;
-    const conditionLeftField = conditionOptions.find(
-      (option) => option.fieldId === conditionDraft?.left.fieldId
-    );
-    const conditionRightField = conditionOptions.find(
-      (option) => option.fieldId === conditionDraft?.right.fieldId
-    );
-    const conditionLeftOptions =
-      conditionDraft == null
-        ? []
-        : conditionOptions.filter(
-            (option) =>
-              option.dataType === conditionDraft.dataType &&
-              (conditionDraft.right.kind !== 'field' ||
-                option.fieldId !== conditionDraft.right.fieldId)
-          );
-    const conditionRightOptions =
-      conditionDraft == null
-        ? []
-        : conditionOptions.filter(
-            (option) =>
-              option.dataType === conditionDraft.dataType &&
-              (conditionDraft.left.kind !== 'field' ||
-                option.fieldId !== conditionDraft.left.fieldId)
-          );
-    const conditionFunctions =
-      conditionDraft == null
-        ? []
-        : resolveDvtSubstraitJoinUnaryFunctions({
-            dataType: conditionDraft.dataType,
-            provider: 'postgres',
-          });
-    const conditionLeftOperand =
-      conditionDraft == null ||
-      (conditionDraft.left.kind === 'field' &&
-        conditionLeftField?.dataType !== conditionDraft.dataType)
-        ? null
-        : buildSemanticWorkbenchJoinOperand({
-            draft: conditionDraft.left,
-            dataType: conditionDraft.dataType,
-          });
-    const conditionRightOperand =
-      conditionDraft == null ||
-      (conditionDraft.right.kind === 'field' &&
-        conditionRightField?.dataType !== conditionDraft.dataType)
-        ? null
-        : buildSemanticWorkbenchJoinOperand({
-            draft: conditionDraft.right,
-            dataType: conditionDraft.dataType,
-          });
     return {
       ...pending,
+      projection: joinProjection,
+      rightInputIndex,
+      additionalConditions: predicate.additionalConditions ?? [],
       leftOptions: optionsFor('left'),
       rightOptions: optionsFor('right'),
       compatible:
@@ -600,19 +529,8 @@ function SemanticWorkbenchLab() {
         pending.leftSourceFieldId !== predicate.leftSourceFieldId ||
         pending.rightSourceFieldId !== predicate.rightSourceFieldId ||
         pending.operator !== (predicate.operator ?? 'equal'),
-      conditionOptions,
-      conditionDataTypes,
-      conditionLeftOptions,
-      conditionRightOptions,
-      conditionFunctions,
-      conditionDraft,
-      conditionLeftOperand,
-      conditionRightOperand,
-      additionalConditionCount: countDvtSubstraitJoinConditionComparisons(
-        predicate.additionalConditions ?? []
-      ),
     };
-  }, [joinProjection, pendingJoinCondition, pendingJoinPredicate, selectedSemantic]);
+  }, [joinProjection, pendingJoinPredicate, selectedSemantic]);
   const semanticNodeTypes = useMemo<NodeTypes>(
     () => ({
       semanticRelation: ({ data }) => {
@@ -1357,297 +1275,29 @@ function SemanticWorkbenchLab() {
                       Selecciona dos campos del mismo tipo.
                     </div>
                   ) : null}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        data-slot="semantic-workbench-add-join-condition"
-                        aria-label="Añadir condición al join"
-                        onClick={() => {
-                          const leftOption = selectedJoinPredicate.conditionOptions[0];
-                          if (leftOption == null) return;
-                          const rightOption = selectedJoinPredicate.conditionOptions.find(
-                            (option) =>
-                              option.inputIndex !== leftOption.inputIndex &&
-                              option.dataType === leftOption.dataType
-                          );
-                          setPendingJoinCondition({
-                            joinRelationId: selectedJoinPredicate.joinRelationId,
-                            dataType: leftOption.dataType,
-                            left: {
-                              kind: 'field',
-                              fieldId: leftOption.fieldId,
-                              rawValue: defaultSemanticWorkbenchJoinLiteralValue(
-                                leftOption.dataType
-                              ),
-                              functionIds: [],
-                            },
-                            right: {
-                              kind: rightOption == null ? 'literal' : 'field',
-                              fieldId: rightOption?.fieldId ?? leftOption.fieldId,
-                              rawValue: defaultSemanticWorkbenchJoinLiteralValue(
-                                leftOption.dataType
-                              ),
-                              functionIds: [],
-                            },
-                            operator: 'equal',
-                            combination: 'and',
-                            groupWithPrevious: false,
-                          });
-                        }}
-                        style={{
-                          display: 'flex',
-                          width: 30,
-                          height: 30,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          marginTop: 10,
-                          marginLeft: 'auto',
-                          border: `1px solid ${border}`,
-                          borderRadius: 7,
-                          background: panel,
-                          color: accent,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        <Plus aria-hidden="true" size={13} />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      Añadir condición al JOIN
-                      {selectedJoinPredicate.additionalConditionCount === 0
-                        ? ''
-                        : ` · ${selectedJoinPredicate.additionalConditionCount} añadidas`}
-                    </TooltipContent>
-                  </Tooltip>
-                  {selectedJoinPredicate.conditionDraft == null ? null : (
-                    <div
-                      data-slot="semantic-workbench-join-condition-editor"
-                      style={{
-                        marginTop: 8,
-                        border: '1px solid #0f766e',
-                        borderRadius: 8,
-                        background: '#071827',
-                        padding: 9,
-                      }}
-                    >
-                      <select
-                        aria-label="Conector de la condición adicional"
-                        value={selectedJoinPredicate.conditionDraft.combination}
-                        style={JOIN_OPERATION_SELECT_STYLE}
-                        onChange={(event) =>
-                          setPendingJoinCondition({
-                            ...selectedJoinPredicate.conditionDraft!,
-                            combination: event.currentTarget
-                              .value as DvtSubstraitJoinConditionCombination,
-                          })
-                        }
-                      >
-                        {DVT_SUBSTRAIT_JOIN_CONDITION_COMBINATIONS.map((combination) => (
-                          <option key={combination} value={combination}>
-                            {combination.toUpperCase()}
-                          </option>
-                        ))}
-                      </select>
-                      <label style={{ display: 'block', marginTop: 8, color: muted, fontSize: 9 }}>
-                        TIPO DE DATO
-                        <select
-                          aria-label="Tipo de dato de la condición adicional"
-                          value={selectedJoinPredicate.conditionDraft.dataType}
-                          style={JOIN_OPERATION_SELECT_STYLE}
-                          onChange={(event) => {
-                            const dataType = event.currentTarget.value as DvtSubstraitJoinDataType;
-                            const options = selectedJoinPredicate.conditionOptions.filter(
-                              (option) => option.dataType === dataType
-                            );
-                            const leftField = options[0];
-                            if (leftField == null) return;
-                            const rightField =
-                              options.find(
-                                (option) => option.inputIndex !== leftField.inputIndex
-                              ) ?? options.find((option) => option.fieldId !== leftField.fieldId);
-                            const current = selectedJoinPredicate.conditionDraft!;
-                            setPendingJoinCondition({
-                              ...current,
-                              dataType,
-                              left: {
-                                ...current.left,
-                                kind:
-                                  rightField == null &&
-                                  current.left.kind === 'literal' &&
-                                  current.right.kind === 'literal'
-                                    ? 'field'
-                                    : current.left.kind,
-                                fieldId: leftField.fieldId,
-                                rawValue: defaultSemanticWorkbenchJoinLiteralValue(dataType),
-                                functionIds: [],
-                              },
-                              right: {
-                                ...current.right,
-                                kind:
-                                  rightField == null && current.left.kind === 'field'
-                                    ? 'literal'
-                                    : current.right.kind,
-                                fieldId: rightField?.fieldId ?? leftField.fieldId,
-                                rawValue: defaultSemanticWorkbenchJoinLiteralValue(dataType),
-                                functionIds: [],
-                              },
-                            });
-                          }}
-                        >
-                          {selectedJoinPredicate.conditionDataTypes.map((dataType) => (
-                            <option key={dataType} value={dataType}>
-                              {dataType}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <SemanticWorkbenchJoinOperandEditor
-                        side="izquierdo"
-                        operand={selectedJoinPredicate.conditionDraft.left}
-                        dataType={selectedJoinPredicate.conditionDraft.dataType}
-                        fields={selectedJoinPredicate.conditionLeftOptions}
-                        functions={selectedJoinPredicate.conditionFunctions}
-                        literalDisabled={
-                          selectedJoinPredicate.conditionDraft.right.kind === 'literal'
-                        }
-                        onChange={(left) =>
-                          setPendingJoinCondition({
-                            ...selectedJoinPredicate.conditionDraft!,
-                            left,
-                          })
-                        }
-                      />
-                      <label style={{ display: 'block', marginTop: 8, color: muted, fontSize: 9 }}>
-                        COMPARACIÓN
-                        <select
-                          aria-label="Comparador de la condición adicional"
-                          value={selectedJoinPredicate.conditionDraft.operator}
-                          style={JOIN_OPERATION_SELECT_STYLE}
-                          onChange={(event) =>
-                            setPendingJoinCondition({
-                              ...selectedJoinPredicate.conditionDraft!,
-                              operator: event.currentTarget
-                                .value as DvtSubstraitJoinComparisonOperator,
-                            })
-                          }
-                        >
-                          {DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS.map((operator) => (
-                            <option key={operator} value={operator}>
-                              {JOIN_COMPARISON_LABEL[operator]}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <SemanticWorkbenchJoinOperandEditor
-                        side="derecho"
-                        operand={selectedJoinPredicate.conditionDraft.right}
-                        dataType={selectedJoinPredicate.conditionDraft.dataType}
-                        fields={selectedJoinPredicate.conditionRightOptions}
-                        functions={selectedJoinPredicate.conditionFunctions}
-                        literalDisabled={
-                          selectedJoinPredicate.conditionDraft.left.kind === 'literal'
-                        }
-                        onChange={(right) =>
-                          setPendingJoinCondition({
-                            ...selectedJoinPredicate.conditionDraft!,
-                            right,
-                          })
-                        }
-                      />
-                      {selectedJoinPredicate.additionalConditionCount === 0 ? null : (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              aria-pressed={selectedJoinPredicate.conditionDraft.groupWithPrevious}
-                              onClick={() =>
-                                setPendingJoinCondition({
-                                  ...selectedJoinPredicate.conditionDraft!,
-                                  groupWithPrevious:
-                                    !selectedJoinPredicate.conditionDraft!.groupWithPrevious,
-                                })
-                              }
-                              style={{
-                                display: 'flex',
-                                width: '100%',
-                                alignItems: 'center',
-                                gap: 6,
-                                marginTop: 8,
-                                border: `1px solid ${
-                                  selectedJoinPredicate.conditionDraft.groupWithPrevious
-                                    ? '#10b981'
-                                    : border
-                                }`,
-                                borderRadius: 6,
-                                background: selectedJoinPredicate.conditionDraft.groupWithPrevious
-                                  ? '#064e3b'
-                                  : panel,
-                                padding: '7px 9px',
-                                color: selectedJoinPredicate.conditionDraft.groupWithPrevious
-                                  ? '#d1fae5'
-                                  : muted,
-                                cursor: 'pointer',
-                                fontSize: 9,
-                              }}
-                            >
-                              <Braces aria-hidden="true" size={12} />
-                              Agrupar con la condición anterior
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            Crea un grupo entre paréntesis con la condición anterior.
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                      <button
-                        type="button"
-                        disabled={
-                          selectedJoinPredicate.conditionLeftOperand == null ||
-                          selectedJoinPredicate.conditionRightOperand == null
-                        }
-                        title="Añadir la comparación con el conector seleccionado."
-                        onClick={() => {
-                          const left = selectedJoinPredicate.conditionLeftOperand;
-                          const right = selectedJoinPredicate.conditionRightOperand;
-                          if (left == null || right == null) return;
-                          addJoinCondition(
-                            selectedJoinPredicate.joinRelationId,
-                            left,
-                            right,
-                            selectedJoinPredicate.conditionDraft!.operator,
-                            selectedJoinPredicate.conditionDraft!.combination,
-                            selectedJoinPredicate.conditionDraft!.groupWithPrevious
-                          );
-                        }}
-                        style={{
-                          width: '100%',
-                          marginTop: 7,
-                          border: '1px solid #0f766e',
-                          borderRadius: 6,
-                          background:
-                            selectedJoinPredicate.conditionRightOperand == null
-                              ? '#111827'
-                              : '#064e3b',
-                          padding: '8px 9px',
-                          color:
-                            selectedJoinPredicate.conditionRightOperand == null
-                              ? '#64748b'
-                              : '#d1fae5',
-                          cursor:
-                            selectedJoinPredicate.conditionRightOperand == null
-                              ? 'not-allowed'
-                              : 'pointer',
-                          fontSize: 9,
-                          fontWeight: 700,
-                        }}
-                      >
-                        {selectedJoinPredicate.conditionDraft.groupWithPrevious
-                          ? `Añadir dentro de (…) con ${selectedJoinPredicate.conditionDraft.combination.toUpperCase()}`
-                          : `Añadir con ${selectedJoinPredicate.conditionDraft.combination.toUpperCase()}`}
-                      </button>
-                    </div>
-                  )}
+                  <SemanticWorkbenchJoinConditionEditor
+                    key={selectedJoinPredicate.joinRelationId}
+                    projection={selectedJoinPredicate.projection}
+                    rightInputIndex={selectedJoinPredicate.rightInputIndex}
+                    conditions={selectedJoinPredicate.additionalConditions}
+                    onAdd={(condition, groupWithPrevious) =>
+                      addJoinCondition(
+                        selectedJoinPredicate.joinRelationId,
+                        condition,
+                        groupWithPrevious
+                      )
+                    }
+                    onUpdate={(conditionKey, condition) =>
+                      updateJoinCondition(
+                        selectedJoinPredicate.joinRelationId,
+                        conditionKey,
+                        condition
+                      )
+                    }
+                    onRemove={(conditionKey) =>
+                      removeJoinCondition(selectedJoinPredicate.joinRelationId, conditionKey)
+                    }
+                  />
                 </div>
               )}
 

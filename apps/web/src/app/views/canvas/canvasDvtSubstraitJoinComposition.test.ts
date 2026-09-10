@@ -19,15 +19,19 @@ import {
   inspectDvtSubstraitNInputJoinDraft,
   removeDvtSubstraitInnerJoinGroupedRowNumber,
   removeDvtSubstraitInnerJoinGrouping,
+  removeDvtSubstraitJoinPredicateCondition,
   renameDvtSubstraitInnerJoinCountOutput,
   renameDvtSubstraitInnerJoinGroupedRowNumberOutput,
   resolveDvtSubstraitNInputJoinEntry,
   setDvtSubstraitJoinPredicateFields,
+  updateDvtSubstraitJoinPredicateCondition,
   type DvtSubstraitInnerJoinDraft,
   type DvtSubstraitJoinInput,
   type DvtSubstraitJoinSource,
   type DvtSubstraitNInputJoinProjection,
 } from './canvasDvtSubstraitJoinComposition';
+import { dvtSubstraitJoinConditionKey } from './canvasDvtSubstraitJoinCondition';
+import { dvtSubstraitJoinOperandKey } from './canvasDvtSubstraitJoinOperand';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { resolveDvtSubstraitColumnFunctions } from './canvasDvtSubstraitProjection';
 
@@ -567,6 +571,109 @@ describe('DVT Substrait INNER JOIN identity', () => {
         ],
       },
     ]);
+  });
+
+  it('updates and removes one grouped JOIN comparison without changing relation or output identity', () => {
+    const draft = createDvtSubstraitStringInnerJoinDraft({
+      left: {
+        source: source('source-left', 'public', 'orders'),
+        fields: ['id', 'country'],
+      },
+      right: {
+        source: source('source-right', 'public', 'clients'),
+        fields: ['id', 'country', 'active'],
+        fieldTypes: ['string', 'string', 'bool'],
+      },
+      leftFieldName: 'id',
+      rightFieldName: 'id',
+      targetNodeId: 'transform-edit-grouped-join',
+    });
+    const before = inspectNInput(draft);
+    const joinRelationId = before.joinRelations[0]?.relationId;
+    if (joinRelationId == null) throw new Error('Expected the join relation identity.');
+    const countryFieldId = inputFieldId(before, 1, 'country');
+    const activeFieldId = inputFieldId(before, 1, 'active');
+    const withCountry = addDvtSubstraitJoinPredicateCondition({
+      draft,
+      joinRelationId,
+      condition: {
+        left: { kind: 'field', sourceFieldId: countryFieldId },
+        right: { kind: 'literal', literal: { dataType: 'string', value: 'ES' } },
+      },
+    });
+    const grouped = addDvtSubstraitJoinPredicateCondition({
+      draft: withCountry,
+      joinRelationId,
+      groupWithPrevious: true,
+      condition: {
+        left: { kind: 'field', sourceFieldId: activeFieldId },
+        right: { kind: 'literal', literal: { dataType: 'bool', value: false } },
+        combination: 'or',
+      },
+    });
+    const groupedProjection = inspectNInput(grouped);
+    const group = groupedProjection.joins[0]?.additionalConditions?.[0];
+    if (group == null || group.kind !== 'group') throw new Error('Expected grouped conditions.');
+    const [country, active] = group.conditions;
+    if (country == null || country.kind === 'group' || active == null || active.kind === 'group') {
+      throw new Error('Expected two comparison conditions.');
+    }
+    const conditionKey = (condition: typeof country): string =>
+      dvtSubstraitJoinConditionKey(condition, (operand) =>
+        dvtSubstraitJoinOperandKey(operand, (field) => field.sourceFieldId)
+      );
+
+    const updatedCountry = updateDvtSubstraitJoinPredicateCondition({
+      draft: grouped,
+      joinRelationId,
+      conditionKey: conditionKey(country),
+      condition: {
+        ...country,
+        right: { kind: 'literal', literal: { dataType: 'string', value: 'PT' } },
+      },
+    });
+    const updatedActive = updateDvtSubstraitJoinPredicateCondition({
+      draft: updatedCountry,
+      joinRelationId,
+      conditionKey: conditionKey(active),
+      condition: { ...active, combination: 'and' },
+    });
+    const updatedProjection = inspectNInput(updatedActive);
+    const updatedGroup = updatedProjection.joins[0]?.additionalConditions?.[0];
+    if (updatedGroup == null || updatedGroup.kind !== 'group') {
+      throw new Error('Expected the group to remain after editing.');
+    }
+    const updatedActiveCondition = updatedGroup.conditions[1];
+    if (updatedActiveCondition == null || updatedActiveCondition.kind === 'group') {
+      throw new Error('Expected the updated active condition.');
+    }
+
+    const removed = removeDvtSubstraitJoinPredicateCondition({
+      draft: updatedActive,
+      joinRelationId,
+      conditionKey: conditionKey(updatedActiveCondition),
+    });
+    const after = inspectNInput(
+      decodeDvtSubstraitInnerJoinDocument(encodeDvtSubstraitInnerJoinDocument(removed))
+    );
+
+    expect(after.joins[0]?.additionalConditions).toEqual([
+      {
+        left: { kind: 'field', sourceFieldId: countryFieldId },
+        right: { kind: 'literal', literal: { dataType: 'string', value: 'PT' } },
+      },
+    ]);
+    expect(after.joinRelations).toEqual(before.joinRelations);
+    expect(after.outputs.map((output) => output.fieldId)).toEqual(
+      before.outputs.map((output) => output.fieldId)
+    );
+    expect(
+      removeDvtSubstraitJoinPredicateCondition({
+        draft: removed,
+        joinRelationId,
+        conditionKey: 'missing-condition',
+      })
+    ).toBe(removed);
   });
 
   it('preserves an N-input output FieldId through rename and reorder', () => {

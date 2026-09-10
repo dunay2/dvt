@@ -3,6 +3,10 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const SOURCE = readFileSync(join(import.meta.dirname, 'SemanticWorkbenchLab.tsx'), 'utf8');
+const JOIN_CONDITION_EDITOR = readFileSync(
+  join(import.meta.dirname, 'SemanticWorkbenchJoinConditionEditor.tsx'),
+  'utf8'
+);
 
 describe('SemanticWorkbenchLab architecture', () => {
   it('delegates independent card movement to the production DVT viewport model', () => {
@@ -57,23 +61,29 @@ describe('SemanticWorkbenchLab architecture', () => {
     expect(SOURCE).toContain('Tooltip');
     expect(SOURCE).toContain('setDvtSubstraitJoinPredicateFields');
     expect(SOURCE).toContain('addDvtSubstraitJoinPredicateCondition');
+    expect(SOURCE).toContain('updateDvtSubstraitJoinPredicateCondition');
+    expect(SOURCE).toContain('removeDvtSubstraitJoinPredicateCondition');
     expect(SOURCE).toContain('data-slot="semantic-workbench-left-field-select"');
     expect(SOURCE).toContain('data-slot="semantic-workbench-right-field-select"');
     expect(SOURCE).toContain('Aplicar condición');
-    expect(SOURCE).toContain('data-slot="semantic-workbench-add-join-condition"');
+    expect(JOIN_CONDITION_EDITOR).toContain('label="Añadir condición"');
     expect(SOURCE).toContain("detailLines.join(' · ')");
     expect(SOURCE).toContain('selectedSemantic?.data.joinOperand');
-    expect(SOURCE).toContain('Conector de la condición adicional');
-    expect(SOURCE).toContain('Comparador de la condición adicional');
+    expect(JOIN_CONDITION_EDITOR).toContain('Conector de la condición adicional');
+    expect(JOIN_CONDITION_EDITOR).toContain('Comparador de la condición adicional');
     expect(SOURCE).toContain('DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS');
     expect(SOURCE).not.toContain('Impacto estimado');
     expect(SOURCE).not.toContain('Editar nodo');
   });
 
   it('uses one symmetric operand editor for both sides of an additional JOIN condition', () => {
-    expect(SOURCE.match(/<SemanticWorkbenchJoinOperandEditor/g)).toHaveLength(2);
-    expect(SOURCE).toContain('conditionDraft.left');
-    expect(SOURCE).toContain('conditionDraft.right');
+    expect(SOURCE).toContain('<SemanticWorkbenchJoinConditionEditor');
+    expect(SOURCE).not.toContain('<SemanticWorkbenchJoinOperandEditor');
+    expect(JOIN_CONDITION_EDITOR.match(/<SemanticWorkbenchJoinOperandEditor/g)).toHaveLength(2);
+    expect(JOIN_CONDITION_EDITOR).toContain('conditionDraft.left');
+    expect(JOIN_CONDITION_EDITOR).toContain('conditionDraft.right');
+    expect(JOIN_CONDITION_EDITOR).toContain('Editar condición');
+    expect(JOIN_CONDITION_EDITOR).toContain('Eliminar condición');
     expect(SOURCE).not.toContain('rightSourceFieldId: string | null;');
   });
 });

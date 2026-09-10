@@ -83,6 +83,8 @@ import {
   isDvtSubstraitJoinConditionGroup,
   mapDvtSubstraitJoinConditionOperands,
   reduceDvtSubstraitJoinConditions,
+  removeDvtSubstraitJoinComparison,
+  updateDvtSubstraitJoinComparison,
   type DvtSubstraitJoinComparisonCondition,
   type DvtSubstraitJoinComparisonOperator,
   type DvtSubstraitJoinCondition,
@@ -2160,37 +2162,46 @@ export function addDvtSubstraitJoinPredicateCondition(args: {
   condition: DvtSubstraitJoinComparisonCondition<DvtSubstraitJoinPredicateOperand>;
   groupWithPrevious?: boolean;
 }): DvtSubstraitInnerJoinDraft {
+  return editDvtSubstraitJoinPredicateConditions({
+    draft: args.draft,
+    joinRelationId: args.joinRelationId,
+    edit: (conditions) =>
+      appendDvtSubstraitJoinComparison({
+        conditions,
+        condition: args.condition,
+        groupWithPrevious: args.groupWithPrevious,
+      }),
+  });
+}
+
+function editDvtSubstraitJoinPredicateConditions(args: {
+  draft: DvtSubstraitInnerJoinDraft;
+  joinRelationId: string;
+  edit: (
+    conditions: readonly DvtSubstraitJoinPredicateCondition[]
+  ) => readonly DvtSubstraitJoinPredicateCondition[] | null;
+}): DvtSubstraitInnerJoinDraft {
   const inspection = inspectDvtSubstraitNInputJoinDraft(args.draft);
   if (!inspection.ok) return args.draft;
   const { projection } = inspection;
   const stageIndex = projection.joinRelations.findIndex(
     (relation) => relation.relationId === args.joinRelationId
   );
-  const predicates = buildPredicatesFromProjection(projection);
-  const predicate = predicates?.[stageIndex];
-  if (stageIndex < 0 || predicates == null || predicate == null) return args.draft;
-
-  const convertOperand = (
-    operand: DvtSubstraitJoinPredicateOperand
-  ): JoinBuildPredicateOperand | null => {
-    return mapDvtSubstraitJoinOperandFields(operand, (field) => {
-      const locator = locatorForFieldId(projection, field.sourceFieldId);
-      return locator == null ? null : { kind: 'field', locator };
-    });
-  };
-  const left = convertOperand(args.condition.left);
-  const right = convertOperand(args.condition.right);
-  if (left == null || right == null) return args.draft;
-  const additionalConditions = appendDvtSubstraitJoinComparison({
-    conditions: predicate.additionalConditions ?? [],
-    condition: { ...args.condition, left, right },
-    groupWithPrevious: args.groupWithPrevious,
-  });
+  const predicate = projection.joins[stageIndex];
+  if (stageIndex < 0 || predicate == null) return args.draft;
+  const additionalConditions = args.edit(predicate.additionalConditions ?? []);
   if (additionalConditions == null) return args.draft;
-  predicates[stageIndex] = {
-    ...predicate,
-    additionalConditions,
-  };
+  const { additionalConditions: _current, ...predicateWithoutConditions } = predicate;
+  const joins = projection.joins.map((current, index) =>
+    index === stageIndex
+      ? {
+          ...predicateWithoutConditions,
+          ...(additionalConditions.length === 0 ? {} : { additionalConditions }),
+        }
+      : current
+  );
+  const predicates = buildPredicatesFromProjection({ ...projection, joins });
+  if (predicates == null) return args.draft;
   try {
     const edited = createDvtSubstraitNInputJoinDraft({
       inputs: buildInputsFromProjection(projection),
@@ -2202,6 +2213,45 @@ export function addDvtSubstraitJoinPredicateCondition(args: {
   } catch {
     return args.draft;
   }
+}
+
+const projectedJoinOperandKey = (operand: DvtSubstraitJoinPredicateOperand) =>
+  dvtSubstraitJoinOperandKey(operand, (field) => field.sourceFieldId);
+
+export function updateDvtSubstraitJoinPredicateCondition(args: {
+  draft: DvtSubstraitInnerJoinDraft;
+  joinRelationId: string;
+  conditionKey: string;
+  condition: DvtSubstraitJoinComparisonCondition<DvtSubstraitJoinPredicateOperand>;
+}): DvtSubstraitInnerJoinDraft {
+  return editDvtSubstraitJoinPredicateConditions({
+    draft: args.draft,
+    joinRelationId: args.joinRelationId,
+    edit: (conditions) =>
+      updateDvtSubstraitJoinComparison({
+        conditions,
+        conditionKey: args.conditionKey,
+        condition: args.condition,
+        operandKey: projectedJoinOperandKey,
+      }),
+  });
+}
+
+export function removeDvtSubstraitJoinPredicateCondition(args: {
+  draft: DvtSubstraitInnerJoinDraft;
+  joinRelationId: string;
+  conditionKey: string;
+}): DvtSubstraitInnerJoinDraft {
+  return editDvtSubstraitJoinPredicateConditions({
+    draft: args.draft,
+    joinRelationId: args.joinRelationId,
+    edit: (conditions) =>
+      removeDvtSubstraitJoinComparison({
+        conditions,
+        conditionKey: args.conditionKey,
+        operandKey: projectedJoinOperandKey,
+      }),
+  });
 }
 
 export function applyDvtSubstraitInnerJoinFieldEdit(
