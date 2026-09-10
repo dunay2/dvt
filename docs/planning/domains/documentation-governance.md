@@ -2,7 +2,7 @@
 title: Domain - Documentation Governance
 status: Review
 owner: Docs / Architecture
-last_reviewed: 2026-04-08
+last_reviewed: 2026-09-10
 planning_type: reference
 ---
 
@@ -15,7 +15,7 @@ gates.
 
 - [Governance Document and Rule Inventory](../status/governance-document-rule-inventory.md)
 - [Roadmap Of Record](../roadmap/index.md)
-- [Planning Control Tower](../state/planning-control-tower.md)
+- [Planning Dashboard](../state/planning-dashboard.md) for human navigation; GitHub Issues owns task lifecycle
 
 ## Active Proposal Set
 
