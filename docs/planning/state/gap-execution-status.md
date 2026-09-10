@@ -16,8 +16,6 @@ an active planning board and it does not carry the current delivery posture.
 ## Use Instead
 
 - [GitHub Issues](https://github.com/dunay2/dvt/issues) for active work, ownership, blockers, and acceptance
-- [Planning Dashboard](./planning-dashboard.md) for human planning navigation
-- [Domain Status Board](./domain-status-board.md) for domain-level priorities
 - [Roadmap Of Record](../roadmap/index.md) for sequencing and roadmap posture
 - [System Delivery Status](../../architecture/system-delivery-status.md) for
   current implementation truth
