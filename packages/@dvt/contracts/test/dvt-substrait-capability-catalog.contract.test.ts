@@ -118,7 +118,31 @@ describe('DVT Substrait capability catalog V1', () => {
       DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.filter(
         (entry) => entry.kind === 'standard' && entry.invocation !== undefined
       )
-    ).toHaveLength(1);
+    ).toHaveLength(2);
+  });
+
+  it('admits the exact UTC year extraction invocation for timestamptz columns', () => {
+    const extractId = buildDvtSubstraitStandardCapabilityId('scalar-function', {
+      sourceKind: 'simple-extension',
+      urn: 'extension:io.substrait:functions_datetime',
+      name: 'extract',
+    });
+
+    expect(findCapability(extractId)).toMatchObject({
+      profileStatus: 'supported-profile',
+      invocation: {
+        signature: 'extract:req_ptstz_str',
+        argumentTypes: ['req', 'ptstz', 'str'],
+        argumentCount: 3,
+        outputType: 'i64',
+        options: [],
+      },
+      admission: {
+        productUseCaseRef: 'dvt:#3101',
+        targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+        visualExposure: { status: 'exposed' },
+      },
+    });
   });
 
   it('rejects malformed or missing bounded CONCAT invocations', () => {

@@ -54,6 +54,7 @@ import {
 import {
   pgColumnRef,
   pgConcatAcceptNulls,
+  pgExtractYearUtc,
   pgCountRows,
   pgFunction,
   pgOrderedRowNumber,
@@ -113,6 +114,9 @@ function buildScalarExpressionPostgresAst(
   if (expression.kind === 'field-reference') {
     return pgColumnRef(expression.sourceFieldName);
   }
+  if (expression.kind === 'timestamp-literal') {
+    return pgTimestampTzLiteral(expression.value);
+  }
   if (
     expression.kind === 'scalar-function' &&
     (expression.functionName === 'trim' ||
@@ -124,6 +128,15 @@ function buildScalarExpressionPostgresAst(
       expression.functionName,
       buildScalarExpressionPostgresAst(expression.arguments[0])
     );
+  }
+  if (
+    expression.kind === 'scalar-function' &&
+    expression.functionName === 'extract' &&
+    expression.arguments.length === 1 &&
+    expression.component === 'YEAR' &&
+    expression.timezone === 'UTC'
+  ) {
+    return pgExtractYearUtc(buildScalarExpressionPostgresAst(expression.arguments[0]));
   }
   if (
     expression.kind === 'scalar-function' &&

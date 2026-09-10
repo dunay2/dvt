@@ -4,6 +4,7 @@ import {
   ExpressionSchema,
   Expression_FieldReferenceSchema,
   Expression_FieldReference_RootReferenceSchema,
+  Expression_LiteralSchema,
   Expression_ReferenceSegmentSchema,
   Expression_ReferenceSegment_StructFieldSchema,
   Expression_ScalarFunctionSchema,
@@ -35,10 +36,13 @@ import {
 import {
   NamedStructSchema,
   TypeSchema,
+  Type_I64Schema,
   Type_Nullability,
+  Type_PrecisionTimestampTZSchema,
   Type_StringSchema,
   Type_StructSchema,
   Type_UnboundSchema,
+  type Type,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import {
   ConnectedSourceRefSchema,
@@ -66,6 +70,80 @@ import {
 } from './canvasDvtSubstraitSemanticDocument';
 
 const ZERO_SHA256 = '0'.repeat(64);
+const STRING_DATA_TYPES = new Set([
+  'text',
+  'string',
+  'varchar',
+  'character varying',
+  'char',
+  'character',
+  'bpchar',
+]);
+const TIMESTAMPTZ_DATA_TYPES = new Set(['timestamp with time zone', 'timestamptz', 'timestamp_tz']);
+const I64_DATA_TYPES = new Set(['bigint', 'int8', 'i64']);
+
+function normalizeProjectionDataType(dataType: unknown): string {
+  return typeof dataType === 'string' ? dataType.trim().toLowerCase().replaceAll(/\s+/g, ' ') : '';
+}
+
+function createProjectionType(dataType: string): Type {
+  const normalized = normalizeProjectionDataType(dataType);
+  if (STRING_DATA_TYPES.has(normalized)) {
+    return create(TypeSchema, {
+      kind: {
+        case: 'string',
+        value: create(Type_StringSchema, { nullability: Type_Nullability.NULLABLE }),
+      },
+    });
+  }
+  if (TIMESTAMPTZ_DATA_TYPES.has(normalized)) {
+    return create(TypeSchema, {
+      kind: {
+        case: 'precisionTimestampTz',
+        value: create(Type_PrecisionTimestampTZSchema, {
+          precision: 6,
+          nullability: Type_Nullability.NULLABLE,
+        }),
+      },
+    });
+  }
+  if (I64_DATA_TYPES.has(normalized)) {
+    return create(TypeSchema, {
+      kind: {
+        case: 'i64',
+        value: create(Type_I64Schema, { nullability: Type_Nullability.NULLABLE }),
+      },
+    });
+  }
+  return create(TypeSchema, { kind: { case: 'unbound', value: create(Type_UnboundSchema) } });
+}
+
+function inspectProjectionDataType(type: Type): string | null {
+  if (type.kind.case === 'unbound') return 'unknown';
+  if (
+    type.kind.case === 'string' &&
+    type.kind.value.typeVariationReference === 0 &&
+    type.kind.value.nullability === Type_Nullability.NULLABLE
+  ) {
+    return 'string';
+  }
+  if (
+    type.kind.case === 'precisionTimestampTz' &&
+    type.kind.value.precision === 6 &&
+    type.kind.value.typeVariationReference === 0 &&
+    type.kind.value.nullability === Type_Nullability.NULLABLE
+  ) {
+    return 'timestamp with time zone';
+  }
+  if (
+    type.kind.case === 'i64' &&
+    type.kind.value.typeVariationReference === 0 &&
+    type.kind.value.nullability === Type_Nullability.NULLABLE
+  ) {
+    return 'bigint';
+  }
+  return null;
+}
 
 export type DvtSubstraitProjectionField = Readonly<{
   name: string;
@@ -89,6 +167,7 @@ type DvtSubstraitProjectionSemanticSource = Readonly<{
 
 export type DvtSubstraitScalarExpression =
   | Readonly<{ kind: 'field-reference'; sourceFieldName: string }>
+  | Readonly<{ kind: 'timestamp-literal'; value: string }>
   | Readonly<{
       kind: 'scalar-function';
       functionName: 'trim' | 'upper' | 'lower';
@@ -99,6 +178,13 @@ export type DvtSubstraitScalarExpression =
       functionName: 'concat';
       arguments: readonly [DvtSubstraitScalarExpression, DvtSubstraitScalarExpression];
       nullHandling: 'ACCEPT_NULLS';
+    }>
+  | Readonly<{
+      kind: 'scalar-function';
+      functionName: 'extract';
+      arguments: readonly [DvtSubstraitScalarExpression];
+      component: 'YEAR';
+      timezone: 'UTC';
     }>;
 
 export type DvtSubstraitProjectionOutput = Readonly<{
@@ -118,8 +204,9 @@ export type DvtSubstraitProjectionOutput = Readonly<{
 export type DvtSubstraitColumnFunction = Readonly<{
   capabilityId: string;
   name: string;
-  category: 'text';
+  category: 'text' | 'date-time';
   argumentCount: number;
+  expressionTemplate?: string;
 }>;
 
 export type DvtSubstraitProjectionDraft = Readonly<{
@@ -153,46 +240,60 @@ export function resolveDvtSubstraitColumnFunctions(args: {
   dataTypes?: readonly string[];
   provider: string;
 }): readonly DvtSubstraitColumnFunction[] {
-  const stringTypes = new Set([
-    'text',
-    'string',
-    'varchar',
-    'character varying',
-    'char',
-    'character',
-    'bpchar',
-  ]);
   const normalizedTypes = (args.dataTypes ?? (args.dataType == null ? [] : [args.dataType])).map(
-    (dataType) => dataType.trim().toLowerCase().replaceAll(/\s+/g, ' ')
+    normalizeProjectionDataType
   );
-  if (
-    args.provider !== 'postgres' ||
-    normalizedTypes.length === 0 ||
-    normalizedTypes.some((dataType) => !stringTypes.has(dataType))
-  ) {
-    return [];
-  }
-  return DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.flatMap((entry) => {
-    if (
-      entry.kind !== 'standard' ||
-      entry.category !== 'scalar-function' ||
-      entry.profileStatus !== 'supported-profile' ||
-      entry.identity.sourceKind !== 'simple-extension' ||
-      entry.identity.urn !== 'extension:io.substrait:functions_string'
-    )
-      return [];
-    const argumentCount = entry.invocation?.argumentCount ?? 1;
-    return argumentCount === normalizedTypes.length
-      ? [
+  if (args.provider !== 'postgres' || normalizedTypes.length === 0) return [];
+  const stringOperands = normalizedTypes.every((dataType) => STRING_DATA_TYPES.has(dataType));
+  const timestampOperand =
+    normalizedTypes.length === 1 && TIMESTAMPTZ_DATA_TYPES.has(normalizedTypes[0]!);
+
+  return DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.flatMap<DvtSubstraitColumnFunction>(
+    (entry) => {
+      if (
+        entry.kind !== 'standard' ||
+        entry.category !== 'scalar-function' ||
+        entry.profileStatus !== 'supported-profile' ||
+        entry.identity.sourceKind !== 'simple-extension'
+      ) {
+        return [];
+      }
+      if (stringOperands && entry.identity.urn === 'extension:io.substrait:functions_string') {
+        const argumentCount = entry.invocation?.argumentCount ?? 1;
+        return argumentCount === normalizedTypes.length
+          ? [
+              {
+                capabilityId: entry.entryId,
+                name: entry.identity.name,
+                category: 'text' as const,
+                argumentCount,
+              },
+            ]
+          : [];
+      }
+      if (
+        timestampOperand &&
+        entry.identity.urn === 'extension:io.substrait:functions_datetime' &&
+        entry.identity.name === 'extract' &&
+        entry.invocation?.signature === 'extract:req_ptstz_str' &&
+        entry.invocation.argumentTypes.join('_') === 'req_ptstz_str' &&
+        entry.invocation.argumentCount === 3 &&
+        entry.invocation.outputType === 'i64' &&
+        entry.invocation.options.length === 0
+      ) {
+        return [
           {
             capabilityId: entry.entryId,
-            name: entry.identity.name,
-            category: 'text' as const,
-            argumentCount,
+            name: 'extract year (UTC)',
+            category: 'date-time' as const,
+            argumentCount: 1,
+            expressionTemplate: "EXTRACT(YEAR FROM {column} AT TIME ZONE 'UTC')",
           },
-        ]
-      : [];
-  });
+        ];
+      }
+      return [];
+    }
+  );
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -318,29 +419,7 @@ export function createDvtSubstraitProjectionDraft(args: {
     throw new Error('Substrait projection output identities must be unique.');
   }
 
-  const stringTypes = new Set([
-    'text',
-    'string',
-    'varchar',
-    'character varying',
-    'char',
-    'character',
-    'bpchar',
-  ]);
-  const sourceTypes = args.source.fields.map((field) => {
-    const normalized =
-      typeof field.dataType === 'string'
-        ? field.dataType.trim().toLowerCase().replaceAll(/\s+/g, ' ')
-        : '';
-    return create(TypeSchema, {
-      kind: stringTypes.has(normalized)
-        ? {
-            case: 'string',
-            value: create(Type_StringSchema, { nullability: Type_Nullability.NULLABLE }),
-          }
-        : { case: 'unbound', value: create(Type_UnboundSchema) },
-    });
-  });
+  const sourceTypes = args.source.fields.map((field) => createProjectionType(field.dataType));
 
   const read = create(RelSchema, {
     relType: {
@@ -724,15 +803,6 @@ function inspectChainedDvtSubstraitProjectionDraft(
     if (validationRoot?.case !== 'root' || validationProject?.case !== 'project') {
       return { ok: false };
     }
-    const stringTypes = new Set([
-      'text',
-      'string',
-      'varchar',
-      'character varying',
-      'char',
-      'character',
-      'bpchar',
-    ]);
     validationProject.value.input = create(RelSchema, {
       relType: {
         case: 'read',
@@ -742,16 +812,7 @@ function inspectChainedDvtSubstraitProjectionDraft(
             names: inputFields.map((field) => field.displayName!),
             struct: create(Type_StructSchema, {
               types: upstreamInspection.projection.outputs.map((output) =>
-                create(TypeSchema, {
-                  kind: stringTypes.has(output.dataType.trim().toLowerCase())
-                    ? {
-                        case: 'string',
-                        value: create(Type_StringSchema, {
-                          nullability: Type_Nullability.NULLABLE,
-                        }),
-                      }
-                    : { case: 'unbound', value: create(Type_UnboundSchema) },
-                })
+                createProjectionType(output.dataType)
               ),
               nullability: Type_Nullability.REQUIRED,
             }),
@@ -911,13 +972,7 @@ export function inspectDvtSubstraitProjectionDraft(
     baseSchema.names.length !== sourceFields.length ||
     sourceTypes.length !== sourceFields.length ||
     baseSchema.names.some((name, ordinal) => name !== sourceFields[ordinal]?.displayName) ||
-    sourceTypes.some(
-      (type) =>
-        type.kind.case !== 'unbound' &&
-        (type.kind.case !== 'string' ||
-          type.kind.value.typeVariationReference !== 0 ||
-          type.kind.value.nullability !== Type_Nullability.NULLABLE)
-    )
+    sourceTypes.some((type) => inspectProjectionDataType(type) == null)
   ) {
     return { ok: false };
   }
@@ -942,6 +997,7 @@ export function inspectDvtSubstraitProjectionDraft(
   const usedFunctionAnchors = new Set<number>();
   type InspectedScalar =
     | Readonly<{ kind: 'field-reference'; sourceOrdinal: number }>
+    | Readonly<{ kind: 'timestamp-literal'; value: string }>
     | Readonly<{
         kind: 'scalar-function';
         functionName: 'trim' | 'upper' | 'lower';
@@ -952,6 +1008,13 @@ export function inspectDvtSubstraitProjectionDraft(
         functionName: 'concat';
         arguments: readonly [InspectedScalar, InspectedScalar];
         nullHandling: 'ACCEPT_NULLS';
+      }>
+    | Readonly<{
+        kind: 'scalar-function';
+        functionName: 'extract';
+        arguments: readonly [InspectedScalar];
+        component: 'YEAR';
+        timezone: 'UTC';
       }>;
   const inspectScalar = (expression: Expression): InspectedScalar | null => {
     if (expression.rexType.case === 'selection') {
@@ -966,6 +1029,12 @@ export function inspectDvtSubstraitProjectionDraft(
         segment.value.field >= 0 &&
         segment.value.field < sourceFields.length
         ? { kind: 'field-reference', sourceOrdinal: segment.value.field }
+        : null;
+    }
+    if (expression.rexType.case === 'literal') {
+      const calculated = inspectDvtSubstraitCalculatedExpression(draft.plan, expression);
+      return calculated?.calculation.kind === 'timestamp-literal'
+        ? { kind: 'timestamp-literal', value: calculated.calculation.value }
         : null;
     }
     if (expression.rexType.case !== 'scalarFunction') return null;
@@ -991,13 +1060,24 @@ export function inspectDvtSubstraitProjectionDraft(
           declarationValue.name
     );
     const outputType = scalarFunction.outputType?.kind;
+    const temporalExtract =
+      entry?.kind === 'standard' &&
+      entry.identity.sourceKind === 'simple-extension' &&
+      entry.identity.urn === 'extension:io.substrait:functions_datetime' &&
+      entry.identity.name === 'extract' &&
+      entry.invocation?.signature === 'extract:req_ptstz_str';
+    const outputTypeMatches = temporalExtract
+      ? outputType?.case === 'i64' &&
+        outputType.value.typeVariationReference === 0 &&
+        outputType.value.nullability === Type_Nullability.NULLABLE
+      : outputType?.case === 'string' &&
+        outputType.value.typeVariationReference === 0 &&
+        outputType.value.nullability === Type_Nullability.NULLABLE;
     if (
       entry == null ||
       entry.kind !== 'standard' ||
       entry.identity.sourceKind !== 'simple-extension' ||
-      outputType?.case !== 'string' ||
-      outputType.value.typeVariationReference !== 0 ||
-      outputType.value.nullability !== Type_Nullability.NULLABLE
+      !outputTypeMatches
     ) {
       return null;
     }
@@ -1017,6 +1097,31 @@ export function inspectDvtSubstraitProjectionDraft(
       })
     ) {
       return null;
+    }
+    if (temporalExtract) {
+      const component = scalarFunction.arguments[0]?.argType;
+      const input = scalarFunction.arguments[1]?.argType;
+      const timezone = scalarFunction.arguments[2]?.argType;
+      const inspectedInput = input?.case === 'value' ? inspectScalar(input.value) : null;
+      const timezoneLiteral = timezone?.case === 'value' ? timezone.value.rexType : undefined;
+      if (
+        component?.case !== 'enum' ||
+        component.value !== 'YEAR' ||
+        inspectedInput == null ||
+        timezoneLiteral?.case !== 'literal' ||
+        timezoneLiteral.value.literalType.case !== 'string' ||
+        timezoneLiteral.value.literalType.value !== 'UTC'
+      ) {
+        return null;
+      }
+      usedFunctionAnchors.add(scalarFunction.functionReference);
+      return {
+        kind: 'scalar-function',
+        functionName: 'extract',
+        arguments: [inspectedInput],
+        component: 'YEAR',
+        timezone: 'UTC',
+      };
     }
     const arguments_ = scalarFunction.arguments.map((argument) =>
       argument.argType.case === 'value' ? inspectScalar(argument.argType.value) : null
@@ -1051,23 +1156,33 @@ export function inspectDvtSubstraitProjectionDraft(
           kind: 'field-reference',
           sourceFieldName: sourceFields[expression.sourceOrdinal]!.displayName!,
         }
-      : expression.functionName === 'concat'
-        ? {
-            kind: 'scalar-function',
-            functionName: 'concat',
-            arguments: [
-              publicScalar(expression.arguments[0]),
-              publicScalar(expression.arguments[1]),
-            ],
-            nullHandling: expression.nullHandling,
-          }
-        : {
-            kind: 'scalar-function',
-            functionName: expression.functionName,
-            arguments: [publicScalar(expression.arguments[0])],
-          };
+      : expression.kind === 'timestamp-literal'
+        ? { kind: 'timestamp-literal', value: expression.value }
+        : expression.functionName === 'concat'
+          ? {
+              kind: 'scalar-function',
+              functionName: 'concat',
+              arguments: [
+                publicScalar(expression.arguments[0]),
+                publicScalar(expression.arguments[1]),
+              ],
+              nullHandling: expression.nullHandling,
+            }
+          : expression.functionName === 'extract'
+            ? {
+                kind: 'scalar-function',
+                functionName: 'extract',
+                arguments: [publicScalar(expression.arguments[0])],
+                component: expression.component,
+                timezone: expression.timezone,
+              }
+            : {
+                kind: 'scalar-function',
+                functionName: expression.functionName,
+                arguments: [publicScalar(expression.arguments[0])],
+              };
   const scalarOperations = (expression: DvtSubstraitScalarExpression): readonly string[] =>
-    expression.kind === 'field-reference'
+    expression.kind !== 'scalar-function'
       ? []
       : [
           ...expression.arguments.flatMap((argument) => scalarOperations(argument)),
@@ -1079,7 +1194,8 @@ export function inspectDvtSubstraitProjectionDraft(
     if (expression.kind === 'field-reference') {
       return { sourceOrdinal: expression.sourceOrdinal, operations: [] };
     }
-    if (expression.functionName === 'concat') return null;
+    if (expression.kind === 'timestamp-literal') return null;
+    if (expression.functionName === 'concat' || expression.functionName === 'extract') return null;
     const input = legacyLineage(expression.arguments[0]);
     return input == null
       ? null
@@ -1156,15 +1272,18 @@ export function inspectDvtSubstraitProjectionDraft(
       ...lineage,
       dataType:
         scalarExpression != null
-          ? 'string'
+          ? scalarExpression.kind === 'scalar-function' &&
+            scalarExpression.functionName === 'extract'
+            ? 'bigint'
+            : 'string'
           : calculation == null
             ? sourceField == null
               ? 'unknown'
-              : sourceTypes[
+              : (inspectProjectionDataType(
+                  sourceTypes[
                     'sourceOrdinal' in resolvedExpression ? resolvedExpression.sourceOrdinal : -1
-                  ]?.kind.case === 'string'
-                ? 'string'
-                : 'unknown'
+                  ]!
+                ) ?? 'unknown')
             : calculation.kind === 'string-literal'
               ? 'string'
               : calculation.kind === 'timestamp-literal'
@@ -1204,7 +1323,8 @@ export function inspectDvtSubstraitProjectionDraft(
       (entry) =>
         !declaredUrnAnchors.has(entry.extensionUrnAnchor) ||
         (entry.urn !== 'extension:io.substrait:functions_string' &&
-          entry.urn !== 'extension:io.substrait:functions_arithmetic')
+          entry.urn !== 'extension:io.substrait:functions_arithmetic' &&
+          entry.urn !== 'extension:io.substrait:functions_datetime')
     )
   ) {
     return { ok: false };
@@ -1219,14 +1339,14 @@ export function inspectDvtSubstraitProjectionDraft(
         sourceRef: sourceBinding.sourceRef,
         fields: sourceFields.map((field, ordinal) => ({
           name: field.displayName!,
-          dataType: sourceTypes[ordinal]!.kind.case === 'string' ? 'string' : 'unknown',
+          dataType: inspectProjectionDataType(sourceTypes[ordinal]!)!,
         })),
       },
       inputRelationId: sourceBinding.relationId,
       inputFields: sourceFields.map((field, ordinal) => ({
         fieldId: field.fieldId,
         name: field.displayName!,
-        dataType: sourceTypes[ordinal]!.kind.case === 'string' ? 'string' : 'unknown',
+        dataType: inspectProjectionDataType(sourceTypes[ordinal]!)!,
       })),
       targetRelationId: targetBinding.relationId,
       outputs: outputs.filter((output) => output != null),
@@ -1347,6 +1467,10 @@ export function applyDvtSubstraitProjectionFunction(
   }
   const functionIdentity = functionEntry.identity;
   const signature = functionEntry.invocation?.signature ?? `${functionIdentity.name}:str`;
+  const temporalExtract =
+    functionIdentity.urn === 'extension:io.substrait:functions_datetime' &&
+    functionIdentity.name === 'extract' &&
+    signature === 'extract:req_ptstz_str';
   let extensionUrn = plan.extensionUrns.find((entry) => entry.urn === functionIdentity.urn);
   if (extensionUrn == null) {
     extensionUrn = create(SimpleExtensionURNSchema, {
@@ -1391,21 +1515,48 @@ export function applyDvtSubstraitProjectionFunction(
       case: 'scalarFunction',
       value: create(Expression_ScalarFunctionSchema, {
         functionReference: extensionFunction.mappingType.value.functionAnchor,
-        arguments: operandExpressions.map((expression) =>
-          create(FunctionArgumentSchema, { argType: { case: 'value', value: expression! } })
-        ),
+        arguments: temporalExtract
+          ? [
+              create(FunctionArgumentSchema, { argType: { case: 'enum', value: 'YEAR' } }),
+              create(FunctionArgumentSchema, {
+                argType: { case: 'value', value: operandExpressions[0]! },
+              }),
+              create(FunctionArgumentSchema, {
+                argType: {
+                  case: 'value',
+                  value: create(ExpressionSchema, {
+                    rexType: {
+                      case: 'literal',
+                      value: create(Expression_LiteralSchema, {
+                        literalType: { case: 'string', value: 'UTC' },
+                      }),
+                    },
+                  }),
+                },
+              }),
+            ]
+          : operandExpressions.map((expression) =>
+              create(FunctionArgumentSchema, { argType: { case: 'value', value: expression! } })
+            ),
         options: (functionEntry.invocation?.options ?? []).map((option) =>
           create(FunctionOptionSchema, {
             name: option.name,
             preference: [...option.preference],
           })
         ),
-        outputType: create(TypeSchema, {
-          kind: {
-            case: 'string',
-            value: create(Type_StringSchema, { nullability: Type_Nullability.NULLABLE }),
-          },
-        }),
+        outputType: temporalExtract
+          ? create(TypeSchema, {
+              kind: {
+                case: 'i64',
+                value: create(Type_I64Schema, { nullability: Type_Nullability.NULLABLE }),
+              },
+            })
+          : create(TypeSchema, {
+              kind: {
+                case: 'string',
+                value: create(Type_StringSchema, { nullability: Type_Nullability.NULLABLE }),
+              },
+            }),
       }),
     },
   });

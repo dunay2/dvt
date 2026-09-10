@@ -50,6 +50,7 @@ interface SupportedCapabilityGroup {
 
 const LOWER_ID = functionId('scalar-function', 'functions_string', 'lower');
 const CONCAT_ID = functionId('scalar-function', 'functions_string', 'concat');
+const EXTRACT_ID = functionId('scalar-function', 'functions_datetime', 'extract');
 const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
   {
     entryIds: [
@@ -81,6 +82,24 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
         argumentCount: 2,
         outputType: 'str',
         options: [{ name: 'null_handling', preference: ['ACCEPT_NULLS'] }],
+      },
+    },
+  },
+  {
+    entryIds: [
+      EXTRACT_ID,
+      standardId('type', 'substrait.Type', 'kind.precision_timestamp_tz'),
+      standardId('type', 'substrait.Type', 'kind.i64'),
+    ],
+    useCaseRefs: ['dvt:#2935', 'dvt:#3101'],
+    proofRef: 'docs/evidence/ED-20260910-timestamp-column-function.md',
+    invocationByEntryId: {
+      [EXTRACT_ID]: {
+        signature: 'extract:req_ptstz_str',
+        argumentTypes: ['req', 'ptstz', 'str'],
+        argumentCount: 3,
+        outputType: 'i64',
+        options: [],
       },
     },
   },

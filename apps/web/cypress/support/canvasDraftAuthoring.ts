@@ -48,6 +48,7 @@ export type StubCanvasDraftReadOptions = {
   columnMappingDisconnected?: boolean;
   columnMappingSecondSource?: boolean;
   columnMappingNotNullCustomer?: boolean;
+  columnMappingTemporal?: boolean;
   sourceInspectorOrdering?: boolean;
   substraitInnerJoin?: boolean;
   substraitNInputJoin?: boolean;
@@ -81,6 +82,7 @@ export function buildCanvasAuthoringDraft({
   columnMappingDisconnected = false,
   columnMappingSecondSource = false,
   columnMappingNotNullCustomer = false,
+  columnMappingTemporal = false,
   sourceInspectorOrdering = false,
   substraitInnerJoin = false,
   substraitNInputJoin = false,
@@ -710,7 +712,7 @@ export function buildCanvasAuthoringDraft({
       },
       {
         name: 'created_at',
-        type: 'timestamp',
+        type: columnMappingTemporal ? 'timestamp with time zone' : 'timestamp',
         ...(sourceInspectorOrdering ? { nullable: false } : {}),
       },
       {

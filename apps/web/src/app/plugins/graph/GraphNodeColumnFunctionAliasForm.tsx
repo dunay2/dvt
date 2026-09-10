@@ -27,8 +27,8 @@ export function GraphNodeColumnFunctionAliasForm(props: {
   return (
     <Popover
       open
-      onOpenChange={(open) => {
-        if (!open) props.onCancel();
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) props.onCancel();
       }}
     >
       <PopoverAnchor asChild>
