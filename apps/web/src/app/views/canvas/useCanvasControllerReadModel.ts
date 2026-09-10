@@ -23,6 +23,7 @@ import {
 import { projectCanvasNodeAccessibleHealth } from './canvasNodeMapper';
 import { projectCanvasColumnFunctionMenus } from './canvasColumnFunctionMenuProjection';
 import { isDbtCompatibleModel } from './canvasDbtAuthoringModel';
+import { isDvtSourceOutputProjectionNode } from './canvasDvtSourceSemanticAuthoring';
 
 function isInteractiveColumn(value: unknown): value is GraphNodeColumn {
   if (
@@ -83,11 +84,15 @@ function projectInteractiveColumns(
       id: interactiveId,
       type: functionProjection?.dataType ?? column.type,
       ...(functionProjection == null ? {} : { functionMenu: functionProjection.menu }),
-      sourceHandleId: createCanvasColumnHandleId({
-        direction: 'source',
-        nodeId: node.id,
-        columnId: interactiveId,
-      }),
+      ...(node.data.role === 'input' && column.output === false
+        ? {}
+        : {
+            sourceHandleId: createCanvasColumnHandleId({
+              direction: 'source',
+              nodeId: node.id,
+              columnId: interactiveId,
+            }),
+          }),
       targetHandleId: createCanvasColumnHandleId({
         direction: 'target',
         nodeId: node.id,
@@ -295,6 +300,8 @@ export function useCanvasControllerReadModel({
           canonicalNode?.role !== 'transform' || canAuthorCanvasColumnMappings(canonicalNode);
         const canAuthorDbtModelColumns =
           canonicalNode != null && isDbtCompatibleModel(canonicalNode);
+        const canProjectSourceOutputs =
+          canonicalNode != null && isDvtSourceOutputProjectionNode(canonicalNode);
         const hasReadOnlyColumnLineage =
           canonicalNode?.role === 'transform' &&
           !canAuthorColumnMappings &&
@@ -358,11 +365,15 @@ export function useCanvasControllerReadModel({
           onToggleCanvasColumnOutput:
             (canAuthorColumnMappings && (hasEditableProjection || hasMaterializableMappingInput)) ||
             hasStructuredProjection ||
-            canAuthorDbtModelColumns
+            canAuthorDbtModelColumns ||
+            canProjectSourceOutputs
               ? node.data.onToggleCanvasColumnOutput
               : undefined,
           onReorderCanvasColumnOutput:
-            hasEditableProjection || hasStructuredProjection || canAuthorDbtModelColumns
+            hasEditableProjection ||
+            hasStructuredProjection ||
+            canAuthorDbtModelColumns ||
+            canProjectSourceOutputs
               ? node.data.onReorderCanvasColumnOutput
               : undefined,
           onAutomapColumns: canAuthorColumnMappings ? node.data.onAutomapColumns : undefined,

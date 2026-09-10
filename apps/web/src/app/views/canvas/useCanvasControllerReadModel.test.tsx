@@ -1045,7 +1045,12 @@ describe('useCanvasControllerReadModel', () => {
       expect(
         (sourceData.columns as ReadonlyArray<{ functionMenu?: unknown }>)[0]?.functionMenu
       ).toBeUndefined();
-      expect(sourceData.onReorderCanvasColumnOutput).toBeUndefined();
+      expect(sourceData.onToggleCanvasColumnOutput).toEqual(
+        args.graphHandlers.handleToggleCanvasColumnOutput
+      );
+      expect(sourceData.onReorderCanvasColumnOutput).toEqual(
+        args.graphHandlers.handleReorderCanvasColumnOutput
+      );
       expect(state?.edgesWithImpact).toEqual([]);
       expect((state?.nodesWithImpact[1]?.data as ReadModelNodeData).columnPortDirections).toEqual([
         'target',
