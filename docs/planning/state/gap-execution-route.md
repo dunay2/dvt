@@ -2,7 +2,7 @@
 title: Legacy Gap Program Route
 status: Historical
 owner: Architecture / Delivery / Docs
-last_reviewed: 2026-04-02
+last_reviewed: 2026-09-10
 planning_type: reference
 ---
 
@@ -15,13 +15,13 @@ current operational planning path.
 
 ## Current Routing Surfaces
 
-- [Planning Control Tower](./planning-control-tower.md)
-- [Roadmap Of Record](../roadmap/index.md)
-- [Roadmap By Domain](../roadmap/roadmap-by-domain.md)
-- [Review Remediation Roadmap 2026-04-02](../roadmap/review-remediation-roadmap-20260402.md)
-- [Domain Status Board](./domain-status-board.md)
+- [GitHub Issues](https://github.com/dunay2/dvt/issues) for task lifecycle, priority, blockers, and acceptance
+- [Planning Dashboard](./planning-dashboard.md) for human navigation
+- [Roadmap Of Record](../roadmap/index.md) for durable sequencing
+- [Roadmap By Domain](../roadmap/roadmap-by-domain.md) for cross-domain sequencing
+- [Domain Status Board](./domain-status-board.md) for domain-level status
 
 ## Retirement Rule
 
-Do not use this page to plan current work. Express new sequencing, blockers, or
-parallelism in the active roadmap, sprint boards, and planning DB task rows.
+Do not use this page to plan current work. Express task state and blockers in the
+governing GitHub issue; use Planning DB only for architecture and mechanization.
