@@ -15,7 +15,7 @@ gates.
 
 - [Governance Document and Rule Inventory](../status/governance-document-rule-inventory.md)
 - [Roadmap Of Record](../roadmap/index.md)
-- [Planning Dashboard](../state/planning-dashboard.md) for human navigation; GitHub Issues owns task lifecycle
+- [GitHub Issues](https://github.com/dunay2/dvt/issues) for task lifecycle
 
 ## Active Proposal Set
 
