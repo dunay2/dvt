@@ -54,6 +54,7 @@ import {
 import {
   pgColumnRef,
   pgConcatAcceptNulls,
+  pgExtractYearUtc,
   pgCountRows,
   pgFunction,
   pgOrderedRowNumber,
@@ -124,6 +125,15 @@ function buildScalarExpressionPostgresAst(
       expression.functionName,
       buildScalarExpressionPostgresAst(expression.arguments[0])
     );
+  }
+  if (
+    expression.kind === 'scalar-function' &&
+    expression.functionName === 'extract' &&
+    expression.arguments.length === 1 &&
+    expression.component === 'YEAR' &&
+    expression.timezone === 'UTC'
+  ) {
+    return pgExtractYearUtc(buildScalarExpressionPostgresAst(expression.arguments[0]));
   }
   if (
     expression.kind === 'scalar-function' &&

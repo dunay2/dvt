@@ -1,0 +1,25 @@
+---
+id: R-20260910-TIMESTAMP-FUNCTION-DRIFT
+title: Timestamp derivation could drift by target timezone or invocation shape
+status: Open
+date: 2026-09-10
+owners:
+  - web
+  - packages/@dvt/contracts
+severity: Medium
+probability: Low
+---
+mitigation:
+  summary: >
+    The catalog admits only Substrait v0.101.0 extract:req_ptstz_str with YEAR and UTC. Canvas
+    persists the enum, field and timezone literal in the canonical plan, re-inspects the exact
+    shape, and PostgreSQL renders that shape through the governed AST with an integral result.
+    Unsupported provider, type, signature, arguments, alias or FieldId fails closed.
+  evidence:
+    - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
+    - docs/evidence/ED-20260910-timestamp-column-function.md
+    - packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts
+    - apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresProjection.test.ts
+    - apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts
+  follow_up:
+    - Every additional temporal component or timezone requires its own governed invocation proof.

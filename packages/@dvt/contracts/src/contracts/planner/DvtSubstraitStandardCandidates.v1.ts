@@ -103,6 +103,7 @@ export const DVT_SUBSTRAIT_STANDARD_CANDIDATES_V1: readonly DvtSubstraitStandard
   ...['trim', 'upper', 'lower', 'concat', 'concat_ws'].map((name) =>
     extensionCandidate('scalar-function', 'functions_string', name)
   ),
+  extensionCandidate('scalar-function', 'functions_datetime', 'extract'),
   ...['coalesce', 'equal', 'not_equal', 'gt', 'gte', 'lt', 'lte', 'is_null', 'is_not_null'].map(
     (name) => extensionCandidate('scalar-function', 'functions_comparison', name)
   ),

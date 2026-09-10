@@ -25,12 +25,7 @@ export function GraphNodeColumnFunctionAliasForm(props: {
     (alias !== alias.trim() || !PostgresIdentifierV1Schema.safeParse(alias).success);
 
   return (
-    <Popover
-      open
-      onOpenChange={(open) => {
-        if (!open) props.onCancel();
-      }}
-    >
+    <Popover open>
       <PopoverAnchor asChild>
         <span className={graphNodeColumnClasses.functionAliasAnchor} />
       </PopoverAnchor>
