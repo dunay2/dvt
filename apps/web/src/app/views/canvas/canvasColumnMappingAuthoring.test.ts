@@ -983,4 +983,327 @@ describe('Canvas column mapping authoring', () => {
       'output:amount',
     ]);
   });
+  it('persists a Source output subset and restores physical order without changing surviving ids', () => {
+    const columns = [
+      { name: 'order_id', type: 'integer' },
+      { name: 'customer', type: 'text' },
+      { name: 'amount', type: 'numeric' },
+    ];
+    const source = buildNode('source', 'dvt:source', 'input', columns);
+    const canonicalNodesById = new Map([[source.id, source]]);
+    const initial = buildSession([source], []);
+
+    const excluded = setCanvasColumnOutputIncluded({
+      draftSession: initial,
+      canonicalNodesById,
+      targetNodeId: source.id,
+      columnId: 'customer',
+      columnType: 'text',
+      output: false,
+    });
+
+    expect(excluded.outcome).toBe('applied');
+    if (excluded.outcome !== 'applied') return;
+    const updated = excluded.draftSession.localNodeCatalog?.source;
+    if (updated == null) throw new Error('Expected updated Source.');
+    const authority = readDvtTransformAuthoringAuthority(updated);
+    if (authority?.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+      throw new Error('Expected Source projection authority.');
+    }
+    const inspection = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+    );
+    expect(inspection.ok).toBe(true);
+    if (!inspection.ok) return;
+    expect(inspection.projection.outputs.map((output) => output.name)).toEqual([
+      'order_id',
+      'amount',
+    ]);
+    const survivingIds = new Map(
+      inspection.projection.outputs.map((output) => [output.name, output.fieldId])
+    );
+
+    const restored = setCanvasColumnOutputIncluded({
+      draftSession: excluded.draftSession,
+      canonicalNodesById,
+      targetNodeId: source.id,
+      columnId: 'customer',
+      columnType: 'text',
+      output: true,
+    });
+
+    expect(restored.outcome).toBe('applied');
+    if (restored.outcome !== 'applied') return;
+    const restoredNode = restored.draftSession.localNodeCatalog?.source;
+    if (restoredNode == null) throw new Error('Expected restored Source.');
+    const restoredAuthority = readDvtTransformAuthoringAuthority(restoredNode);
+    if (restoredAuthority?.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+      throw new Error('Expected restored Source projection authority.');
+    }
+    const restoredInspection = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(restoredAuthority.semanticDocument)
+    );
+    expect(restoredInspection.ok).toBe(true);
+    if (!restoredInspection.ok) return;
+    expect(restoredInspection.projection.outputs.map((output) => output.name)).toEqual([
+      'order_id',
+      'customer',
+      'amount',
+    ]);
+    expect(
+      restoredInspection.projection.outputs.find((output) => output.name === 'order_id')?.fieldId
+    ).toBe(survivingIds.get('order_id'));
+    expect(
+      restoredInspection.projection.outputs.find((output) => output.name === 'amount')?.fieldId
+    ).toBe(survivingIds.get('amount'));
+  });
+
+  it('rejects a Source exclusion required by a connected Transform', () => {
+    const columns = [
+      { name: 'order_id', type: 'integer' },
+      { name: 'customer', type: 'text' },
+    ];
+    const source = buildNode('source', 'dvt:source', 'input', columns);
+    const model = buildNode('model', 'dvt:transform', 'transform');
+    const canonicalNodesById = new Map([
+      [source.id, source],
+      [model.id, model],
+    ]);
+    const initial = buildSession([source, model], [{ sourceId: source.id, targetId: model.id }]);
+    const mapped = applyCanvasColumnMapping({
+      draftSession: initial,
+      canonicalNodesById,
+      source: { nodeId: source.id, columnId: 'customer' },
+      target: { nodeId: model.id, columnName: 'customer', dataType: 'text' },
+    });
+    expect(mapped.outcome).toBe('applied');
+    if (mapped.outcome !== 'applied') return;
+
+    const rejected = setCanvasColumnOutputIncluded({
+      draftSession: mapped.draftSession,
+      canonicalNodesById,
+      targetNodeId: source.id,
+      columnId: 'customer',
+      columnType: 'text',
+      output: false,
+    });
+
+    expect(rejected).toEqual({ outcome: 'rejected', reason: 'source_output_required' });
+    expect(
+      mapped.draftSession.localNodeCatalog?.source?.metadata?.transformAuthoring
+    ).toBeUndefined();
+  });
+
+  it('allows a connected Source exclusion when the Transform does not consume the field', () => {
+    const columns = [
+      { name: 'order_id', type: 'integer' },
+      { name: 'customer', type: 'text' },
+    ];
+    const source = buildNode('source', 'dvt:source', 'input', columns);
+    const model = buildNode('model', 'dvt:transform', 'transform');
+    const canonicalNodesById = new Map([
+      [source.id, source],
+      [model.id, model],
+    ]);
+    const initial = buildSession([source, model], [{ sourceId: source.id, targetId: model.id }]);
+    const mapped = applyCanvasColumnMapping({
+      draftSession: initial,
+      canonicalNodesById,
+      source: { nodeId: source.id, columnId: 'order_id' },
+      target: { nodeId: model.id, columnName: 'order_id', dataType: 'integer' },
+    });
+    expect(mapped.outcome).toBe('applied');
+    if (mapped.outcome !== 'applied') return;
+
+    const excluded = setCanvasColumnOutputIncluded({
+      draftSession: mapped.draftSession,
+      canonicalNodesById,
+      targetNodeId: source.id,
+      columnId: 'customer',
+      columnType: 'text',
+      output: false,
+    });
+
+    expect(excluded.outcome).toBe('applied');
+  });
+
+  it('reorders Source outputs without changing its physical schema', () => {
+    const columns = [
+      { name: 'order_id', type: 'integer' },
+      { name: 'customer', type: 'text' },
+      { name: 'amount', type: 'numeric' },
+    ];
+    const source = buildNode('source', 'dvt:source', 'input', columns);
+    const canonicalNodesById = new Map([[source.id, source]]);
+    const reordered = reorderCanvasColumnOutput({
+      draftSession: buildSession([source], []),
+      canonicalNodesById,
+      targetNodeId: source.id,
+      columnId: 'amount',
+      targetColumnId: 'order_id',
+      placement: 'before',
+    });
+
+    expect(reordered.outcome).toBe('applied');
+    if (reordered.outcome !== 'applied') return;
+    const updated = reordered.draftSession.localNodeCatalog?.source;
+    if (updated == null) throw new Error('Expected reordered Source.');
+    expect(updated.metadata?.columns).toEqual(columns);
+    const authority = readDvtTransformAuthoringAuthority(updated);
+    if (authority?.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+      throw new Error('Expected Source projection authority.');
+    }
+    const inspection = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+    );
+    expect(inspection.ok).toBe(true);
+    if (!inspection.ok) return;
+    expect(inspection.projection.outputs.map((output) => output.name)).toEqual([
+      'amount',
+      'order_id',
+      'customer',
+    ]);
+  });
+
+  it('keeps the final Source output selected and writes no authority', () => {
+    const source = buildNode('source', 'dvt:source', 'input', [
+      { name: 'order_id', type: 'integer' },
+    ]);
+    const initial = buildSession([source], []);
+    const rejected = setCanvasColumnOutputIncluded({
+      draftSession: initial,
+      canonicalNodesById: new Map([[source.id, source]]),
+      targetNodeId: source.id,
+      columnId: 'order_id',
+      columnType: 'integer',
+      output: false,
+    });
+
+    expect(rejected).toEqual({ outcome: 'rejected', reason: 'source_output_last_field' });
+    expect(initial.localNodeCatalog?.source?.metadata?.transformAuthoring).toBeUndefined();
+  });
+  it('reactivates an inactive Source output at its staged visual position', () => {
+    const columns = [
+      { name: 'order_id', type: 'integer' },
+      { name: 'customer', type: 'text' },
+      { name: 'amount', type: 'numeric' },
+    ];
+    const source = buildNode('source', 'dvt:source', 'input', columns);
+    const canonicalNodesById = new Map([[source.id, source]]);
+    const excluded = setCanvasColumnOutputIncluded({
+      draftSession: buildSession([source], []),
+      canonicalNodesById,
+      targetNodeId: source.id,
+      columnId: 'customer',
+      columnType: 'text',
+      output: false,
+    });
+    expect(excluded.outcome).toBe('applied');
+    if (excluded.outcome !== 'applied') return;
+
+    const restored = setCanvasColumnOutputIncluded({
+      draftSession: excluded.draftSession,
+      canonicalNodesById,
+      targetNodeId: source.id,
+      columnId: 'customer',
+      columnType: 'text',
+      output: true,
+      placement: { targetColumnId: 'order_id', placement: 'before' },
+    });
+    expect(restored.outcome).toBe('applied');
+    if (restored.outcome !== 'applied') return;
+    const updated = restored.draftSession.localNodeCatalog?.source;
+    if (updated == null) throw new Error('Expected restored Source.');
+    const authority = readDvtTransformAuthoringAuthority(updated);
+    if (authority?.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+      throw new Error('Expected Source projection authority.');
+    }
+    const inspection = inspectDvtSubstraitProjectionDraft(
+      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+    );
+    expect(inspection.ok).toBe(true);
+    if (!inspection.ok) return;
+    expect(inspection.projection.outputs.map((output) => output.name)).toEqual([
+      'customer',
+      'order_id',
+      'amount',
+    ]);
+  });
+  it('does not treat a same-named field from another Source as a dependency', () => {
+    const sourceA = buildNode('source-a', 'dvt:source', 'input', [
+      { name: 'customer', type: 'text' },
+      { name: 'amount', type: 'numeric' },
+    ]);
+    const sourceB = buildNode('source-b', 'dvt:source', 'input', [
+      { name: 'customer', type: 'text' },
+    ]);
+    const model = buildNode('model', 'dvt:transform', 'transform');
+    const canonicalNodesById = new Map([sourceA, sourceB, model].map((node) => [node.id, node]));
+    const initial = buildSession(
+      [sourceA, sourceB, model],
+      [{ sourceId: sourceB.id, targetId: model.id }]
+    );
+    const mapped = applyCanvasColumnMapping({
+      draftSession: initial,
+      canonicalNodesById,
+      source: { nodeId: sourceB.id, columnId: 'customer' },
+      target: { nodeId: model.id, columnName: 'customer', dataType: 'text' },
+    });
+    expect(mapped.outcome).toBe('applied');
+    if (mapped.outcome !== 'applied') return;
+
+    const excluded = setCanvasColumnOutputIncluded({
+      draftSession: mapped.draftSession,
+      canonicalNodesById,
+      targetNodeId: sourceA.id,
+      columnId: 'customer',
+      columnType: 'text',
+      output: false,
+    });
+
+    expect(excluded.outcome).toBe('applied');
+  });
+  it('allows Source exclusion after the connected Model stops projecting that field', () => {
+    const columns = [
+      { name: 'order_id', type: 'integer' },
+      { name: 'customer', type: 'text' },
+      { name: 'amount', type: 'numeric' },
+    ];
+    const source = buildNode('source', 'dvt:source', 'input', columns);
+    const model = buildNode('model', 'dvt:transform', 'transform');
+    const canonicalNodesById = new Map([source, model].map((node) => [node.id, node]));
+    const mapped = automapCanvasColumns({
+      draftSession: buildSession([source, model], [{ sourceId: source.id, targetId: model.id }]),
+      canonicalNodesById,
+      targetNodeId: model.id,
+      targetColumns: columns,
+    });
+    expect(mapped.outcome).toBe('applied');
+    if (mapped.outcome !== 'applied') return;
+    const mappedModel = mapped.draftSession.localNodeCatalog?.model;
+    if (mappedModel == null) throw new Error('Expected mapped Model.');
+    const customerOutputId = readOutputFieldId(mappedModel, 'customer');
+
+    const modelExcluded = setCanvasColumnOutputIncluded({
+      draftSession: mapped.draftSession,
+      canonicalNodesById,
+      targetNodeId: model.id,
+      columnId: customerOutputId,
+      columnType: 'text',
+      output: false,
+    });
+    expect(modelExcluded.outcome).toBe('applied');
+    if (modelExcluded.outcome !== 'applied') return;
+
+    const sourceExcluded = setCanvasColumnOutputIncluded({
+      draftSession: modelExcluded.draftSession,
+      canonicalNodesById,
+      targetNodeId: source.id,
+      columnId: 'customer',
+      columnType: 'text',
+      output: false,
+    });
+
+    expect(sourceExcluded).toMatchObject({ outcome: 'applied' });
+  });
 });
