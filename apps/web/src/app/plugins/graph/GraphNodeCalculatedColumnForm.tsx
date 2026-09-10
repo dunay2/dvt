@@ -1,6 +1,11 @@
 /** Owned concern: collect one bounded calculated-column request from the card gap. */
+import {
+  DvtStringLiteralV1Schema,
+  DvtTimestampLiteralV1Schema,
+  PostgresIdentifierV1Schema,
+} from '@dvt/contracts';
 import { Plus } from 'lucide-react';
-import { useMemo, useState, type FormEvent, type ReactElement } from 'react';
+import { useId, useMemo, useState, type FormEvent, type ReactElement } from 'react';
 
 import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
 import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
@@ -48,26 +53,57 @@ export function GraphNodeCalculatedColumnForm(props: {
   );
   const compatibleFunctions = functions.filter((item) => item.inputFieldId === inputFieldId);
   const [capabilityId, setCapabilityId] = useState('');
+  const policyErrorId = useId();
   const selectedCapabilityId = compatibleFunctions.some(
     (item) => item.capabilityId === capabilityId
   )
     ? capabilityId
     : (compatibleFunctions[0]?.capabilityId ?? '');
 
+  const aliasValid = alias === alias.trim() && PostgresIdentifierV1Schema.safeParse(alias).success;
+  const valueValid =
+    kind === 'string-literal'
+      ? DvtStringLiteralV1Schema.safeParse(value).success
+      : kind === 'timestamp-literal'
+        ? DvtTimestampLiteralV1Schema.safeParse(value).success
+        : true;
+  const policyError =
+    alias.length > 0 && !aliasValid
+      ? { field: 'alias' as const, message: copy.calculatedColumnIdentifierPolicyError }
+      : kind === 'string-literal' && !valueValid
+        ? { field: 'value' as const, message: copy.calculatedColumnLiteralPolicyError }
+        : kind === 'timestamp-literal' && value.length > 0 && !valueValid
+          ? { field: 'value' as const, message: copy.calculatedColumnTimestampPolicyError }
+          : null;
+  const requiredSelectionPresent =
+    kind === 'field-ref' || kind === 'row-number'
+      ? inputFieldId.length > 0
+      : kind === 'scalar-function'
+        ? inputFieldId.length > 0 && selectedCapabilityId.length > 0
+        : true;
+  const canSubmit = alias.trim().length > 0 && aliasValid && valueValid && requiredSelectionPresent;
+
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const normalizedAlias = alias.trim();
-    if (normalizedAlias.length === 0) return;
+    if (alias.trim().length === 0 || !PostgresIdentifierV1Schema.safeParse(alias).success) {
+      return;
+    }
+    if (kind === 'string-literal' && !DvtStringLiteralV1Schema.safeParse(value).success) {
+      return;
+    }
+    if (kind === 'timestamp-literal' && !DvtTimestampLiteralV1Schema.safeParse(value).success) {
+      return;
+    }
     let identity: GraphNodeCalculatedColumnIdentity | null = null;
     if (kind === 'field-ref' && inputFieldId) {
-      identity = { nodeId: props.nodeId, kind, alias: normalizedAlias, inputFieldId };
+      identity = { nodeId: props.nodeId, kind, alias, inputFieldId };
     } else if (kind === 'string-literal' || kind === 'timestamp-literal') {
-      identity = { nodeId: props.nodeId, kind, alias: normalizedAlias, value };
+      identity = { nodeId: props.nodeId, kind, alias, value };
     } else if (kind === 'scalar-function' && inputFieldId && selectedCapabilityId) {
       identity = {
         nodeId: props.nodeId,
         kind,
-        alias: normalizedAlias,
+        alias,
         inputFieldId,
         capabilityId: selectedCapabilityId,
       };
@@ -75,7 +111,7 @@ export function GraphNodeCalculatedColumnForm(props: {
       identity = {
         nodeId: props.nodeId,
         kind,
-        alias: normalizedAlias,
+        alias,
         orderFieldId: inputFieldId,
       };
     }
@@ -114,7 +150,9 @@ export function GraphNodeCalculatedColumnForm(props: {
             <select
               name="kind"
               value={kind}
-              onChange={(event) => setKind(event.target.value as CalculationKind)}
+              onChange={(event) => {
+                setKind(event.target.value as CalculationKind);
+              }}
               className={graphNodeColumnClasses.addControl}
             >
               {KINDS.map((option) => (
@@ -130,6 +168,8 @@ export function GraphNodeCalculatedColumnForm(props: {
               name="alias"
               required
               value={alias}
+              aria-invalid={policyError?.field === 'alias' ? 'true' : undefined}
+              aria-describedby={policyError?.field === 'alias' ? policyErrorId : undefined}
               onChange={(event) => setAlias(event.target.value)}
               className={graphNodeColumnClasses.addControl}
             />
@@ -141,6 +181,8 @@ export function GraphNodeCalculatedColumnForm(props: {
                 name="value"
                 required={kind === 'timestamp-literal'}
                 value={value}
+                aria-invalid={policyError?.field === 'value' ? 'true' : undefined}
+                aria-describedby={policyError?.field === 'value' ? policyErrorId : undefined}
                 onChange={(event) => setValue(event.target.value)}
                 className={graphNodeColumnClasses.addControl}
               />
@@ -181,6 +223,11 @@ export function GraphNodeCalculatedColumnForm(props: {
               </select>
             </label>
           ) : null}
+          {policyError ? (
+            <p id={policyErrorId} role="alert" className="text-xs text-red-300">
+              {policyError.message}
+            </p>
+          ) : null}
           <div className={graphNodeColumnClasses.addActions}>
             <button
               type="button"
@@ -189,7 +236,11 @@ export function GraphNodeCalculatedColumnForm(props: {
             >
               {copy.calculatedColumnCancelLabel}
             </button>
-            <button type="submit" className={graphNodeColumnClasses.addSubmit}>
+            <button
+              type="submit"
+              disabled={!canSubmit}
+              className={graphNodeColumnClasses.addSubmit}
+            >
               {copy.calculatedColumnSubmitLabel}
             </button>
           </div>

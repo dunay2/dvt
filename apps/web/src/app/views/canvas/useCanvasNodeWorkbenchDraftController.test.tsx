@@ -123,7 +123,7 @@ describe('useCanvasNodeWorkbenchDraftController', () => {
     expect(harness.getController().tagsText).toBe('mart');
   });
 
-  it('keeps tag text and normalized draft tags in one controller transition', async () => {
+  it('keeps tag text and duplicate draft tags in one controller transition', async () => {
     await harness.renderNode(MODEL_NODE);
 
     await act(async () => {
@@ -131,10 +131,10 @@ describe('useCanvasNodeWorkbenchDraftController', () => {
     });
 
     expect(harness.getController().tagsText).toBe('mart, daily, mart, ');
-    expect(harness.getController().draft.tags).toEqual(['mart', 'daily']);
+    expect(harness.getController().draft.tags).toEqual(['mart', 'daily', 'mart']);
   });
 
-  it('caps each edited business tag without preventing additional tags', async () => {
+  it('preserves an oversized business tag so validation can reject it visibly', async () => {
     await harness.renderNode(MODEL_NODE);
     const oversizedTag = 'a'.repeat(40);
 
@@ -142,8 +142,8 @@ describe('useCanvasNodeWorkbenchDraftController', () => {
       harness.getController().onTagsTextChange(`${oversizedTag}, daily`);
     });
 
-    expect(harness.getController().tagsText).toBe(`${'a'.repeat(32)}, daily`);
-    expect(harness.getController().draft.tags).toEqual(['a'.repeat(32), 'daily']);
+    expect(harness.getController().tagsText).toBe(`${oversizedTag}, daily`);
+    expect(harness.getController().draft.tags).toEqual([oversizedTag, 'daily']);
   });
 
   it('keeps semantic authoring tags outside the business-tag editor and preserves them', async () => {
@@ -213,8 +213,8 @@ describe('useCanvasNodeWorkbenchDraftController', () => {
 
     expect(harness.getController().draft).toMatchObject({
       name: 'Orders Mart',
-      description: 'Governed model',
-      tags: ['mart', 'daily'],
+      description: '  Governed model  ',
+      tags: ['mart', 'daily', 'mart'],
       dbt: {
         packageName: 'finance',
         sourceName: 'raw_orders',

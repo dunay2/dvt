@@ -1,0 +1,32 @@
+---
+id: R-20260908-CANVAS-AUTHORING-FIELD-DRIFT
+title: Canvas field budgets can drift between semantic and persistence boundaries
+status: Mitigated
+date: 2026-09-08
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+  - apps/web
+severity: Medium
+probability: Low
+context: >
+  Canvas authoring previously admitted unbounded human text, PostgreSQL identifiers and Substrait
+  values through local validators and unbounded JSONB.
+risk: >
+  A new editable PCV1 field could omit the shared policy, or a direct database writer could bypass
+  the API and persist a value that the product cannot render or publish safely. Existing rows
+  written before the CHECK may be incompatible with the v1 hard cut.
+mitigations:
+  - >
+    Keep limits and units in CanvasAuthoringFieldPolicy.v1 and consume those schemas from draft,
+    Substrait and Web authoring commands.
+  - >
+    Keep route tests proving invalid requests are rejected before authorization and persistence, and
+    PostgreSQL integration tests proving the named CHECK rejects direct invalid writes.
+  - >
+    Keep rejected input visible and block Apply without truncation or fallback.
+  - >
+    Keep the PostgreSQL constraint NOT VALID so migration does not silently rewrite data; contract
+    reads fail closed for incompatible existing rows until an explicit operator cleanup.
+review_after: 2026-12-08
+---

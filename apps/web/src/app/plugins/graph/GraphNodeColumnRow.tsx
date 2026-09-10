@@ -25,7 +25,11 @@ import {
 import { graphNodeColumnClasses } from './graphVisualTokens';
 import type { GraphNodeColumnReorderController } from './useGraphNodeColumnReorder';
 
-type PendingFunctionRequest = Readonly<{ capabilityId: string; functionName: string }>;
+type PendingFunctionRequest = Readonly<{
+  capabilityId: string;
+  functionName: string;
+  expressionLabel: string;
+}>;
 
 export function GraphNodeColumnRow(props: {
   column: GraphNodeColumn;
@@ -108,7 +112,13 @@ export function GraphNodeColumnRow(props: {
                   (item) => item.capabilityId === capabilityId && item.argumentCount === 1
                 );
                 if (selectedFunction != null) {
-                  setPendingFunction({ capabilityId, functionName: selectedFunction.name });
+                  setPendingFunction({
+                    capabilityId,
+                    functionName: selectedFunction.name,
+                    expressionLabel:
+                      selectedFunction.expressionTemplate?.replace('{column}', column.name) ??
+                      [selectedFunction.name.toUpperCase(), '(', column.name, ')'].join(''),
+                  });
                 }
               }
         }
@@ -196,9 +206,7 @@ export function GraphNodeColumnRow(props: {
       {nodeId != null && pendingFunction != null && props.onColumnFunctionApply != null ? (
         <GraphNodeColumnFunctionAliasForm
           functionName={pendingFunction.functionName}
-          expressionLabel={[pendingFunction.functionName.toUpperCase(), '(', column.name, ')'].join(
-            ''
-          )}
+          expressionLabel={pendingFunction.expressionLabel}
           unavailableAliases={props.unavailableAliases}
           copy={copy}
           onCancel={() => setPendingFunction(null)}

@@ -182,6 +182,7 @@ userStories:
   - https://github.com/dunay2/dvt/issues/3046
   - https://github.com/dunay2/dvt/issues/3054
   - https://github.com/dunay2/dvt/issues/3057
+  - https://github.com/dunay2/dvt/issues/3098
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -197,6 +198,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/plugins/contracts/NodeRendering.ts
   - apps/web/src/app/components/canvas/**
   - apps/web/src/app/components/inspector/**
+  - apps/web/src/app/components/transientSurface/**
   - apps/web/src/app/components/SourceImportWizard.test.tsx
   - apps/web/src/app/views/canvas/**
   - apps/web/cypress/e2e/canvas/**
@@ -238,6 +240,7 @@ architectureGuards:
 cypressFlows:
   - apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts
   - apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts
+  - apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts
 completionGate:
   - pnpm docs:feature-mechanization -- --feature CANVAS-STRUCTURED-TRANSFORM-FIELDS-2771
   - pnpm docs:feature-mechanization:implementation -- --feature CANVAS-STRUCTURED-TRANSFORM-FIELDS-2771
@@ -248,8 +251,19 @@ completionGate:
   - pnpm --filter @dvt/web test:architecture:run
   - pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts
   - pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts
+  - pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-model-output-toggle.cy.ts
   - pnpm verify:prepush
 redGreenCycles:
+  - id: persistent-menu-and-first-output-toggle
+    redTest: pnpm --filter @dvt/web exec vitest run src/app/plugins/graph/GraphNodeColumnFunctionMenu.lifecycle.test.tsx src/app/views/canvas/CanvasContextMenuView.lifecycle.test.tsx src/app/views/canvas/canvasColumnMappingAuthoring.test.ts src/app/views/canvas/useCanvasControllerReadModel.test.tsx
+    expectedFailure: Pointer-opened menus dismiss after one second and the first Model output toggle is disabled or mutates sibling outputs.
+    patchSurfaces:
+      - apps/web/src/app/plugins/graph/GraphNodeColumnFunctionMenu.tsx
+      - apps/web/src/app/views/canvas/CanvasContextMenuView.tsx
+      - apps/web/src/app/views/canvas/canvasColumnOutputAuthoring.ts
+      - apps/web/src/app/views/canvas/useCanvasControllerReadModel.ts
+      - apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts
+    greenTest: pnpm --filter @dvt/web exec vitest run src/app/plugins/graph/GraphNodeColumnFunctionMenu.lifecycle.test.tsx src/app/views/canvas/CanvasContextMenuView.lifecycle.test.tsx src/app/views/canvas/canvasColumnMappingAuthoring.test.ts src/app/views/canvas/useCanvasControllerReadModel.test.tsx
   - id: preserve-simple-projection-with-additional-source
     redTest: pnpm --filter @dvt/web test:canvas:run -- canvasNodePresentationProjection.test.ts canvasNodePresentationProjection.outputSelection.test.ts canvasColumnLineageProjection.test.ts useCanvasControllerReadModel.test.tsx
     expectedFailure: Adding an unrelated second Source hides the existing mapped projection even though exactly one incoming Source still matches its persisted identity.
@@ -341,6 +355,16 @@ symbols:
   - { name: stubCanvas, path: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, dddOwner: StructuredFieldBrowserProof, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:e2e:native] }
   - { name: stubColumnMappingCanvas, path: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, dddOwner: StructuredFieldBrowserProof, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [pnpm --filter @dvt/web test:e2e:native] }
   - { name: visitCanvas, path: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, dddOwner: StructuredFieldBrowserProof, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:e2e:native] }
+  - { name: DraftSave, path: apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts, dddOwner: CanvasOutputLifecycleBrowserProof, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Introduce Assertion], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts, unitTests: [pnpm --filter @dvt/web test:e2e:native] }
+  - { name: assertColumnMenuStaysOpenAndReopens, path: apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts, dddOwner: CanvasOutputLifecycleBrowserProof, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts, unitTests: [pnpm --filter @dvt/web test:e2e:native] }
+  - { name: expectOutput, path: apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts, dddOwner: CanvasOutputLifecycleBrowserProof, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts, unitTests: [pnpm --filter @dvt/web test:e2e:native] }
+  - { name: getModelSemanticSaves, path: apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts, dddOwner: CanvasOutputLifecycleBrowserProof, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts, unitTests: [pnpm --filter @dvt/web test:e2e:native] }
+  - { name: modelCard, path: apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts, dddOwner: CanvasOutputLifecycleBrowserProof, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts, unitTests: [pnpm --filter @dvt/web test:e2e:native] }
+  - { name: modelColumnRow, path: apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts, dddOwner: CanvasOutputLifecycleBrowserProof, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts, unitTests: [pnpm --filter @dvt/web test:e2e:native] }
+  - { name: openModelColumns, path: apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts, dddOwner: CanvasOutputLifecycleBrowserProof, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts, unitTests: [pnpm --filter @dvt/web test:e2e:native] }
+  - { name: savedOutputNames, path: apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts, dddOwner: CanvasOutputLifecycleBrowserProof, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts, unitTests: [pnpm --filter @dvt/web test:e2e:native] }
+  - { name: stubConnectedModel, path: apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts, dddOwner: CanvasOutputLifecycleBrowserProof, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts, unitTests: [pnpm --filter @dvt/web test:e2e:native] }
+  - { name: visitCanvas, path: apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts, dddOwner: CanvasOutputLifecycleBrowserProof, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts, unitTests: [pnpm --filter @dvt/web test:e2e:native] }
   - { name: InspectorPresentedColumn, path: apps/web/src/app/components/inspector/structuredColumnPresentation.ts, dddOwner: StructuredFieldInspectorPresentation, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Introduce Value Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:canvas:run] }
   - { name: flattenStructuredColumns, path: apps/web/src/app/components/inspector/structuredColumnPresentation.ts, dddOwner: StructuredFieldInspectorPresentation, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:canvas:run] }
   - { name: GraphNodeColumnDropCompositionFlow, path: apps/web/src/app/plugins/graph/GraphNodeColumnDropCompositionFlow.tsx, dddOwner: CanvasStructuredFieldProposal, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Extract Component], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts, unitTests: [pnpm --filter @dvt/web test:presentation:run] }

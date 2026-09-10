@@ -80,6 +80,9 @@ export function DvtSinkAuthoringSection({
             value={draft.schema}
             disabled={disabled}
             aria-invalid={errors?.schema ? 'true' : undefined}
+            aria-describedby={
+              errors?.schema ? `inspector-dvt-sink-schema-error-${node.id}` : undefined
+            }
             onChange={(event) =>
               onChange((currentDraft) =>
                 currentDraft.dvt?.kind === 'sink'
@@ -92,7 +95,11 @@ export function DvtSinkAuthoringSection({
             }
           />
           {errors?.schema ? (
-            <p className={inspectorVisualClasses.inspectorErrorText}>
+            <p
+              id={`inspector-dvt-sink-schema-error-${node.id}`}
+              className={inspectorVisualClasses.inspectorErrorText}
+              role="alert"
+            >
               {formatCanvasInspectorNodeDraftError(errors.schema, canvasViewCopy)}
             </p>
           ) : null}
@@ -107,6 +114,9 @@ export function DvtSinkAuthoringSection({
             value={draft.table}
             disabled={disabled}
             aria-invalid={errors?.table ? 'true' : undefined}
+            aria-describedby={
+              errors?.table ? `inspector-dvt-sink-table-error-${node.id}` : undefined
+            }
             onChange={(event) =>
               onChange((currentDraft) =>
                 currentDraft.dvt?.kind === 'sink'
@@ -119,7 +129,11 @@ export function DvtSinkAuthoringSection({
             }
           />
           {errors?.table ? (
-            <p className={inspectorVisualClasses.inspectorErrorText}>
+            <p
+              id={`inspector-dvt-sink-table-error-${node.id}`}
+              className={inspectorVisualClasses.inspectorErrorText}
+              role="alert"
+            >
               {formatCanvasInspectorNodeDraftError(errors.table, canvasViewCopy)}
             </p>
           ) : null}
@@ -135,6 +149,11 @@ export function DvtSinkAuthoringSection({
             disabled={disabled}
             className={selectClassName}
             aria-invalid={errors?.materialization ? 'true' : undefined}
+            aria-describedby={
+              errors?.materialization
+                ? `inspector-dvt-sink-materialization-error-${node.id}`
+                : undefined
+            }
             onChange={(event) =>
               onChange((currentDraft) =>
                 currentDraft.dvt?.kind === 'sink'
@@ -153,7 +172,11 @@ export function DvtSinkAuthoringSection({
             ))}
           </select>
           {errors?.materialization ? (
-            <p className={inspectorVisualClasses.inspectorErrorText}>
+            <p
+              id={`inspector-dvt-sink-materialization-error-${node.id}`}
+              className={inspectorVisualClasses.inspectorErrorText}
+              role="alert"
+            >
               {formatCanvasInspectorNodeDraftError(errors.materialization, canvasViewCopy)}
             </p>
           ) : null}
@@ -169,6 +192,9 @@ export function DvtSinkAuthoringSection({
             disabled={disabled}
             className={selectClassName}
             aria-invalid={errors?.writeMode ? 'true' : undefined}
+            aria-describedby={
+              errors?.writeMode ? `inspector-dvt-sink-write-mode-error-${node.id}` : undefined
+            }
             onChange={(event) =>
               onChange((currentDraft) =>
                 currentDraft.dvt?.kind === 'sink'
@@ -187,7 +213,11 @@ export function DvtSinkAuthoringSection({
             ))}
           </select>
           {errors?.writeMode ? (
-            <p className={inspectorVisualClasses.inspectorErrorText}>
+            <p
+              id={`inspector-dvt-sink-write-mode-error-${node.id}`}
+              className={inspectorVisualClasses.inspectorErrorText}
+              role="alert"
+            >
               {formatCanvasInspectorNodeDraftError(errors.writeMode, canvasViewCopy)}
             </p>
           ) : null}

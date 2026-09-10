@@ -42,6 +42,29 @@ describe('Workspace graph semantic document admission', () => {
     ).toBe(true);
   });
 
+  it('preserves the canonicalized Transform authority in the parsed draft', () => {
+    const semanticDocument = buildDvtSubstraitSemanticDocumentFixture();
+    const relations = semanticDocument.sidecar.relations.map((relation, index) =>
+      index === 0 ? { ...relation, displayName: '  customers  ' } : relation
+    );
+
+    const parsed = WorkspaceGraphAuthoringDraftSchema.parse(
+      buildDraft({
+        version: 'v1',
+        mode: 'substrait',
+        semanticDocument: {
+          ...semanticDocument,
+          sidecar: { ...semanticDocument.sidecar, relations },
+        },
+      })
+    );
+
+    const transformAuthoring = parsed.nodes[0]?.metadata?.['transformAuthoring'] as {
+      semanticDocument: { sidecar: { relations: Array<{ displayName?: string }> } };
+    };
+    expect(transformAuthoring.semanticDocument.sidecar.relations[0]?.displayName).toBe('customers');
+  });
+
   it('rejects a corrupted Transform authority before persistence', () => {
     const semanticDocument = buildDvtSubstraitSemanticDocumentFixture();
     const corruptBytes = base64Bytes(semanticDocument.semanticPlan.bytesBase64);

@@ -272,6 +272,13 @@ describe('DVT Substrait INNER JOIN identity', () => {
     const projection = inspectNInput(draft);
     const shipment = outputByName(projection, 'shipment_id');
 
+    const rejected = applyDvtSubstraitInnerJoinFieldEdit(draft, {
+      kind: 'rename',
+      sourceFieldId: shipment.source.fieldId,
+      outputName: 'x'.repeat(64),
+    });
+    expect(rejected).toBe(draft);
+
     const renamed = applyDvtSubstraitInnerJoinFieldEdit(draft, {
       kind: 'rename',
       sourceFieldId: shipment.source.fieldId,

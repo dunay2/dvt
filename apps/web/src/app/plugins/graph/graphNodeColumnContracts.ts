@@ -5,6 +5,7 @@ export type GraphNodeColumnFunction = Readonly<{
   capabilityId: string;
   name: string;
   argumentCount: number;
+  expressionTemplate?: string;
 }>;
 
 export type GraphNodeColumn = Readonly<{

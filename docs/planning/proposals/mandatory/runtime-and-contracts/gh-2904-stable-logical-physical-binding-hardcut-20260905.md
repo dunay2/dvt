@@ -331,7 +331,7 @@ the new command and identity witnesses are green.
       "name": "ConfigureCanvasDvtNode",
       "type": "command",
       "status": "implemented",
-      "dddOwner": "Canvas semantic authoring",
+      "dddOwner": "DvtNodeAuthoringMetadata",
       "negativeTests": [
         "unknown FieldId fails closed",
         "display-name collision cannot resolve an existing output"

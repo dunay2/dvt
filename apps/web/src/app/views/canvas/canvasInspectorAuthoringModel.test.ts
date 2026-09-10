@@ -1,3 +1,4 @@
+import { CANVAS_AUTHORING_FIELD_LIMITS_V1 } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -164,7 +165,7 @@ describe('canvasInspectorAuthoringModel', () => {
     });
   });
 
-  it('normalizes empty descriptions back to undefined', () => {
+  it('normalizes empty descriptions back to undefined without trimming non-empty text', () => {
     expect(
       applyCanvasInspectorNodeDraft(buildNode(), {
         name: 'orders_source',
@@ -172,16 +173,28 @@ describe('canvasInspectorAuthoringModel', () => {
         tags: [],
       }).description
     ).toBeUndefined();
-  });
-
-  it('normalizes tag edits before applying them to the canonical node', () => {
     expect(
       applyCanvasInspectorNodeDraft(buildNode(), {
         name: 'orders_source',
-        description: 'Source table',
-        tags: [' finance ', 'critical', 'finance', ''],
-      }).tags
-    ).toEqual(['finance', 'critical']);
+        description: '  Source table  ',
+        tags: [],
+      }).description
+    ).toBe('  Source table  ');
+  });
+
+  it('preserves normalized duplicate tags so validation can reject them visibly', () => {
+    const draft = {
+      name: 'orders_source',
+      description: 'Source table',
+      tags: [' finance ', 'critical', 'finance', ''],
+    };
+
+    expect(validateCanvasInspectorNodeDraft(draft)).toEqual({ tags: 'node_tags_invalid' });
+    expect(applyCanvasInspectorNodeDraft(buildNode(), draft).tags).toEqual([
+      'finance',
+      'critical',
+      'finance',
+    ]);
   });
 
   it('accepts DBT model metadata without a writable SQL field', () => {
@@ -493,8 +506,8 @@ describe('canvasInspectorAuthoringModel', () => {
     ).toBe(true);
     expect(canonicalizeCanvasInspectorNodeDraft(modelNode, explicitEmptyDraft)).toMatchObject({
       name: 'Orders Model',
-      description: 'Governed model',
-      tags: ['mart', 'daily'],
+      description: '  Governed model  ',
+      tags: ['mart', 'daily', 'mart'],
       dbt: {
         packageName: 'finance',
         sourceName: 'raw_orders',
@@ -779,6 +792,47 @@ describe('canvasInspectorAuthoringModel', () => {
     expect(applied.metadata).toMatchObject({ config: { materialized: 'view' } });
   });
 
+  it('blocks Apply when an output alias duplicates another root output', () => {
+    const source = buildImportedWarehouseSourceNode({
+      connectedSourceRef: {
+        schemaVersion: 'connected-source-ref.v1',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: 'warehouse-main',
+          provider: 'postgres',
+        },
+        sourceObjectId: 'erp.orders',
+      },
+      columns: [
+        { name: 'order_id', type: 'integer', nullable: false },
+        { name: 'customer', type: 'text', nullable: false },
+      ],
+    });
+    const projectionSource = resolveDvtSubstraitProjectionSource(source);
+    if (projectionSource == null) throw new Error('Expected a connected source fixture.');
+    const node = applyDvtSubstraitSemanticDocument(
+      buildDvtNode('dvt:transform'),
+      encodeDvtSubstraitProjectionDocument(
+        createDvtSubstraitProjectionDraft({
+          source: projectionSource,
+          targetNodeId: 'node_transform',
+          outputs: [
+            { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
+            { fieldId: 'output:customer', name: 'customer', sourceFieldName: 'customer' },
+          ],
+        })
+      )
+    );
+    const draft = createCanvasInspectorNodeDraft(node);
+
+    expect(
+      validateCanvasInspectorNodeDraft({
+        ...draft,
+        outputNameDrafts: { 'output:order_id': 'customer' },
+      })
+    ).toEqual({ outputNames: 'dvt_alias_duplicate' });
+  });
+
   it('rejects persisted legacy Source filter authority without changing physical identity', () => {
     const source = buildImportedWarehouseSourceNode({
       connectedSourceRef: {
@@ -847,5 +901,127 @@ describe('canvasInspectorAuthoringModel', () => {
         storageUri: 'object_file_storage_uri_invalid',
       }),
     });
+  });
+
+  it('applies the shared Canvas field policy without truncating invalid drafts', () => {
+    const initial = createCanvasInspectorNodeDraft(buildNode());
+    const base = {
+      ...initial,
+      dvt: {
+        ...initial.dvt!,
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1' as const,
+          connectionId: 'warehouse-main',
+          provider: 'postgres',
+        },
+      },
+    };
+    const limits = CANVAS_AUTHORING_FIELD_LIMITS_V1;
+    expect(
+      validateCanvasInspectorNodeDraft({ ...base, name: '😀'.repeat(limits.humanNameCodePoints) })
+    ).toEqual({});
+    expect(
+      validateCanvasInspectorNodeDraft({
+        ...base,
+        name: 'invalid\0name',
+      })
+    ).toEqual({ name: 'node_name_invalid' });
+    expect(
+      validateCanvasInspectorNodeDraft({
+        ...base,
+        name: '😀'.repeat(limits.humanNameCodePoints + 1),
+      })
+    ).toEqual({ name: 'node_name_too_long' });
+    expect(
+      validateCanvasInspectorNodeDraft({
+        ...base,
+        description: 'invalid\0description',
+      })
+    ).toEqual({ description: 'node_description_invalid' });
+    expect(
+      validateCanvasInspectorNodeDraft({
+        ...base,
+        description: 'x'.repeat(limits.descriptionCodePoints + 1),
+      })
+    ).toEqual({ description: 'node_description_too_long' });
+    expect(
+      validateCanvasInspectorNodeDraft({
+        ...base,
+        tags: ['invalid\0tag'],
+      })
+    ).toEqual({ tags: 'node_tags_invalid' });
+    expect(
+      validateCanvasInspectorNodeDraft({
+        ...base,
+        tags: ['😀'.repeat(limits.tagCodePoints + 1)],
+      })
+    ).toEqual({ tags: 'node_tag_too_long' });
+    expect(
+      validateCanvasInspectorNodeDraft({
+        ...base,
+        tags: ['finance', 'finance'],
+      })
+    ).toEqual({ tags: 'node_tags_invalid' });
+    expect(
+      validateCanvasInspectorNodeDraft({
+        ...base,
+        tags: Array.from({ length: limits.tagsPerNode + 1 }, (_, index) => `tag_${index}`),
+      })
+    ).toEqual({ tags: 'node_tags_invalid' });
+    expect(
+      validateCanvasInspectorNodeDraft({
+        ...base,
+        outputNameDrafts: { output_id: 'invalid\0identifier' },
+      })
+    ).toEqual({ outputNames: 'dvt_identifier_invalid' });
+  });
+
+  it('rejects Source and Sink PostgreSQL identifiers above 63 UTF-8 bytes', () => {
+    const tooLong = 'ñ'.repeat(32);
+    const source = createCanvasInspectorNodeDraft(buildDvtNode('dvt:source'));
+    if (source.dvt?.kind !== 'source') throw new Error('Expected Source draft.');
+    expect(
+      validateCanvasInspectorNodeDraft({
+        ...source,
+        dvt: { ...source.dvt, alias: tooLong },
+      }).dvt
+    ).toMatchObject({ alias: 'dvt_identifier_too_long' });
+
+    const sink = createCanvasInspectorNodeDraft(buildDvtNode('dvt:sink'));
+    if (sink.dvt?.kind !== 'sink') throw new Error('Expected Sink draft.');
+    expect(
+      validateCanvasInspectorNodeDraft({
+        ...sink,
+        dvt: { ...sink.dvt, schema: tooLong, table: tooLong },
+      }).dvt
+    ).toMatchObject({
+      schema: 'dvt_identifier_too_long',
+      table: 'dvt_identifier_too_long',
+    });
+  });
+
+  it('retains and rejects Source identifiers with exterior whitespace', () => {
+    const node = buildDvtNode('dvt:source');
+    const draft = createCanvasInspectorNodeDraft(node);
+    if (draft.dvt?.kind !== 'source') throw new Error('Expected Source draft.');
+
+    const invalidDraft = {
+      ...draft,
+      dvt: {
+        ...draft.dvt,
+        schema: ' Sales ',
+        table: ' Orders 2026 ',
+        alias: ' Order Alias ',
+      },
+    };
+
+    expect(validateCanvasInspectorNodeDraft(invalidDraft).dvt).toEqual({
+      schema: 'dvt_identifier_whitespace',
+      table: 'dvt_identifier_whitespace',
+      alias: 'dvt_identifier_whitespace',
+      connectionRef: 'dvt_connection_required',
+    });
+    expect(invalidDraft.dvt.schema).toBe(' Sales ');
+    expect(applyCanvasInspectorNodeDraft(node, invalidDraft)).toEqual(node);
   });
 });

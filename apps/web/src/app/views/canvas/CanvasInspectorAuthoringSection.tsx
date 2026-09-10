@@ -124,6 +124,7 @@ export function CanvasInspectorAuthoringSection({
                 value={draft.name}
                 disabled={!authoring.canEditNode}
                 aria-invalid={errors.name ? 'true' : undefined}
+                aria-describedby={errors.name ? `inspector-node-name-error-${node.id}` : undefined}
                 onChange={(event) =>
                   setDraft((currentDraft) => ({
                     ...currentDraft,
@@ -133,7 +134,11 @@ export function CanvasInspectorAuthoringSection({
                 onBlur={commitCurrentDbtModelDraft}
               />
               {errors.name ? (
-                <p className={inspectorVisualClasses.inspectorErrorText}>
+                <p
+                  id={`inspector-node-name-error-${node.id}`}
+                  className={inspectorVisualClasses.inspectorErrorText}
+                  role="alert"
+                >
                   {formatCanvasInspectorNodeDraftError(errors.name, canvasViewCopy)}
                 </p>
               ) : null}
@@ -149,9 +154,20 @@ export function CanvasInspectorAuthoringSection({
                 value={tagsText}
                 disabled={!authoring.canEditNode}
                 placeholder={canvasViewCopy.inspectorNodeTagsPlaceholder}
+                aria-invalid={errors.tags ? 'true' : undefined}
+                aria-describedby={errors.tags ? `inspector-node-tags-error-${node.id}` : undefined}
                 onChange={(event) => setTagsText(event.target.value)}
                 onBlur={commitCurrentDbtModelDraft}
               />
+              {errors.tags ? (
+                <p
+                  id={`inspector-node-tags-error-${node.id}`}
+                  className={inspectorVisualClasses.inspectorErrorText}
+                  role="alert"
+                >
+                  {formatCanvasInspectorNodeDraftError(errors.tags, canvasViewCopy)}
+                </p>
+              ) : null}
             </div>
           </>
         ) : null}
@@ -217,6 +233,10 @@ export function CanvasInspectorAuthoringSection({
               name="node-description"
               value={draft.description}
               disabled={!authoring.canEditNode}
+              aria-invalid={errors.description ? 'true' : undefined}
+              aria-describedby={
+                errors.description ? `inspector-node-description-error-${node.id}` : undefined
+              }
               onChange={(event) =>
                 setDraft((currentDraft) => ({
                   ...currentDraft,
@@ -225,6 +245,15 @@ export function CanvasInspectorAuthoringSection({
               }
               onBlur={commitCurrentDbtModelDraft}
             />
+            {errors.description ? (
+              <p
+                id={`inspector-node-description-error-${node.id}`}
+                className={inspectorVisualClasses.inspectorErrorText}
+                role="alert"
+              >
+                {formatCanvasInspectorNodeDraftError(errors.description, canvasViewCopy)}
+              </p>
+            ) : null}
           </div>
         ) : null}
 

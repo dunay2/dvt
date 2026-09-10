@@ -1309,7 +1309,7 @@ can otherwise perform an implicit import when a Markdown snapshot changes.
       "name": "ConfigureCanvasDvtNode",
       "type": "command",
       "status": "implemented",
-      "dddOwner": "DvtSubstraitAuthoringSidecarV1",
+      "dddOwner": "DvtNodeAuthoringMetadata",
       "negativeTests": [
         "Source inspection remains clean without a semantic document",
         "Invalid or duplicate output creation leaves the draft unchanged",

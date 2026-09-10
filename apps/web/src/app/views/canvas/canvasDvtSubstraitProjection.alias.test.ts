@@ -78,6 +78,7 @@ describe('Substrait projection function aliases', () => {
       });
 
     expect(apply('   ')).toBe(draft);
+    expect(apply('customer_clean ')).toBe(draft);
     expect(apply('status')).toBe(draft);
   });
 

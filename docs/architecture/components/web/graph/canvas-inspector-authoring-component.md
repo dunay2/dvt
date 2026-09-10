@@ -2,7 +2,7 @@
 title: Canvas Inspector Authoring Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-09-05
+last_reviewed: 2026-09-08
 planning_type: architecture
 ---
 
@@ -20,6 +20,7 @@ state as semantic truth, or create a second transform authority.
 ## Governing Sources
 
 - [Command/query rail governance](../../../command-query-rail-governance.md)
+- [Workspace graph draft persistence v1](../../../../contracts/planner/workspace-graph-draft-persistence-v1.md)
 - [Canvas Workbench command/query catalog](./canvas-workbench-command-query-catalog.md)
 - [Graph Canvas Runtime Model](./graph-canvas-runtime-model.md)
 - [Semantic Transformation](../../../system/subsystems/semantic-transformation/index.md)
@@ -71,6 +72,9 @@ changes the relation. Those operations require an explicit connected Transform.
 ## Invariants
 
 - Inspector editability comes from `CanvasRuntimePolicy.commands`.
+- Editable names, descriptions, tags, literals, and Source/Sink identifiers consume the
+  contract-owned field budgets from workspace graph draft persistence; controls never invent or
+  silently truncate them.
 - Apply and column gestures mutate the same `CanvasDraftSession` authority.
 - A DVT Transform has zero authority while uninitialized and exactly one canonical Substrait
   semantic document after its first accepted mutation.

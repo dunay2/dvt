@@ -83,6 +83,30 @@ export function pgTimestampTzLiteral(value: string): PostgresAstNode {
   };
 }
 
+export function pgExtractYearUtc(argument: PostgresAstNode): PostgresAstNode {
+  return {
+    TypeCast: {
+      arg: {
+        FuncCall: {
+          funcname: [pgString('date_part')],
+          args: [
+            pgStringLiteral('year'),
+            {
+              FuncCall: {
+                funcname: [pgString('timezone')],
+                args: [pgStringLiteral('UTC'), argument],
+                funcformat: 'COERCE_EXPLICIT_CALL',
+              },
+            },
+          ],
+          funcformat: 'COERCE_EXPLICIT_CALL',
+        },
+      },
+      typeName: { names: [pgString('bigint')], typemod: -1 },
+    },
+  };
+}
+
 export function pgOrderedRowNumber(orderFieldName: string): PostgresAstNode {
   return {
     FuncCall: {

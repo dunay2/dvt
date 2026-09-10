@@ -9,7 +9,7 @@ import { buildCanvasContextMenuModel } from './canvasInteractionCommandSurface';
 import { buildTestNodeKind } from './canvasKindRegistration.testSupport';
 import { CanvasContextMenuView } from './CanvasContextMenuView';
 
-describe('CanvasContextMenuView pointer grace', () => {
+describe('CanvasContextMenuView pointer lifecycle', () => {
   let container: HTMLDivElement;
   let root: Root;
 
@@ -29,7 +29,7 @@ describe('CanvasContextMenuView pointer grace', () => {
     vi.useRealTimers();
   });
 
-  it('dismisses a pointer-opened command surface after the shared grace', () => {
+  it('keeps a pointer-opened command surface until an explicit close gesture', () => {
     const onClose = vi.fn();
     renderMenu({ onClose });
     act(() => {
@@ -48,10 +48,11 @@ describe('CanvasContextMenuView pointer grace', () => {
 
     expect(document.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
     act(() => {
-      vi.advanceTimersByTime(1_000);
+      vi.advanceTimersByTime(3_000);
     });
 
-    expect(onClose).toHaveBeenCalledOnce();
+    expect(document.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   it('keeps the keyboard command surface open without a pointer timeout', () => {

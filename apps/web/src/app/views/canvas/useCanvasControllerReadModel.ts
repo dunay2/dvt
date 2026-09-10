@@ -16,7 +16,10 @@ import {
 import type { InteractiveCanvasColumnLineageEdgeData } from './CanvasColumnLineageEdge';
 import type { CanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
 import type { GraphNodeColumn } from '../../plugins/graph/graphNodeColumnContracts';
-import { canAuthorCanvasColumnMappings } from './canvasColumnProjectionAuthority';
+import {
+  canAuthorCanvasColumnMappings,
+  readCanvasColumnMappingInputFields,
+} from './canvasColumnProjectionAuthority';
 import { projectCanvasNodeAccessibleHealth } from './canvasNodeMapper';
 import { projectCanvasColumnFunctionMenus } from './canvasColumnFunctionMenuProjection';
 import { isDbtCompatibleModel } from './canvasDbtAuthoringModel';
@@ -52,14 +55,27 @@ function projectInteractiveColumns(
 ): GraphNodeColumn[] {
   const columns = readInteractiveColumns(node);
   const presentationTruth = node.data.presentationTruth as CanvasNodePresentationTruth | undefined;
-  return columns.map((column, index) => {
-    const presentationColumn = presentationTruth?.columns.visible[index];
+  const presentationColumns = presentationTruth?.columns.visible ?? [];
+  const presentationColumnsByReference = new Map(
+    presentationColumns.flatMap((column) =>
+      column.reference == null ? [] : [[column.reference, column] as const]
+    )
+  );
+  const presentationColumnsByName = new Map(
+    presentationColumns.map((column) => [column.name, column] as const)
+  );
+  return columns.map((column) => {
+    const presentationColumn =
+      (column.id == null ? undefined : presentationColumnsByReference.get(column.id)) ??
+      presentationColumnsByName.get(column.name);
     const sourceNodeId = presentationColumn?.sourceNodeId;
     const sourceNode = sourceNodeId == null ? undefined : canonicalNodesById.get(sourceNodeId);
     const id =
-      presentationColumn?.provenance === 'declared' || sourceNode?.kind === 'dvt:transform'
-        ? (presentationColumn?.reference ?? column.name)
-        : column.name;
+      presentationColumn == null
+        ? (column.id ?? column.name)
+        : presentationColumn.provenance === 'declared' || sourceNode?.kind === 'dvt:transform'
+          ? (presentationColumn.reference ?? column.id ?? column.name)
+          : column.name;
     const functionProjection = functionMenus?.get(id) ?? functionMenus?.get(column.name);
     const interactiveId = functionProjection?.columnId ?? id;
     return {
@@ -297,6 +313,23 @@ export function useCanvasControllerReadModel({
           canonicalNode.kind === 'dvt:transform' &&
           readInteractiveColumns(node).some((column) => column.children?.length);
         const hasEditableProjection = functionProjection.hasEditableProjection;
+        const hasMaterializableMappingInput =
+          canAuthorColumnMappings &&
+          !hasEditableProjection &&
+          canonicalNode != null &&
+          columnFunctionEdges != null &&
+          columnFunctionEdges.some((edge) => {
+            if (edge.targetId !== canonicalNode.id) return false;
+            const sourceNode = graphModel.canonicalNodesById.get(edge.sourceId);
+            return (
+              sourceNode != null &&
+              readCanvasColumnMappingInputFields({
+                sourceNode,
+                edges: columnFunctionEdges,
+                resolveNode: (nodeId) => graphModel.canonicalNodesById.get(nodeId),
+              }).length > 0
+            );
+          });
         const canApplyStructuredField = hasEditableProjection || hasStructuredProjection;
 
         const projectedNodeData = {
@@ -323,7 +356,9 @@ export function useCanvasControllerReadModel({
             ? node.data.onAddCanvasCalculatedColumn
             : undefined,
           onToggleCanvasColumnOutput:
-            hasEditableProjection || hasStructuredProjection || canAuthorDbtModelColumns
+            (canAuthorColumnMappings && (hasEditableProjection || hasMaterializableMappingInput)) ||
+            hasStructuredProjection ||
+            canAuthorDbtModelColumns
               ? node.data.onToggleCanvasColumnOutput
               : undefined,
           onReorderCanvasColumnOutput:

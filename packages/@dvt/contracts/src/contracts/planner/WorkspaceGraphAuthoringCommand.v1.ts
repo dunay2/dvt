@@ -14,6 +14,7 @@
 import { z } from 'zod';
 
 import {
+  addDvtNodeFieldPolicyIssues,
   WorkspaceGraphAuthoringEdgeSchema,
   WorkspaceGraphAuthoringNodePositionSchema,
   WorkspaceGraphAuthoringNodeSchema,
@@ -33,7 +34,39 @@ export type WorkspaceGraphAuthoringCommandType =
   (typeof WORKSPACE_GRAPH_AUTHORING_COMMAND_TYPE)[keyof typeof WORKSPACE_GRAPH_AUTHORING_COMMAND_TYPE];
 
 const NodeIdSchema = WorkspaceGraphAuthoringNodeSchema.shape.id;
-const NodePatchSchema = WorkspaceGraphAuthoringNodeSchema.omit({ id: true }).partial().strict();
+const { id: _nodeId, ...NodePatchShape } = WorkspaceGraphAuthoringNodeSchema.shape;
+const NodePatchSchema = z
+  .object(NodePatchShape)
+  .partial()
+  .strict()
+  .superRefine((patch, context) => {
+    if (!Object.hasOwn(patch, 'metadata')) return;
+
+    if (patch.pluginId === undefined) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Workspace graph node metadata patches require pluginId.',
+        path: ['pluginId'],
+      });
+    }
+    if (patch.kind === undefined) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Workspace graph node metadata patches require kind.',
+        path: ['kind'],
+      });
+    }
+    if (patch.pluginId === undefined || patch.kind === undefined) return;
+
+    addDvtNodeFieldPolicyIssues(
+      {
+        pluginId: patch.pluginId,
+        kind: patch.kind,
+        metadata: patch.metadata,
+      },
+      context
+    );
+  });
 
 export const WorkspaceGraphAuthoringCommandSchema = z.discriminatedUnion('type', [
   z

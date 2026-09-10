@@ -1,4 +1,5 @@
 import {
+  CANVAS_AUTHORING_FIELD_LIMITS_V1,
   WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
   type WorkspaceGraphDraftAuditRef,
 } from '@dvt/contracts';
@@ -145,6 +146,41 @@ function createApp(options?: {
 }
 
 describe('workspaceGraphDraftRoutes', () => {
+  it('rejects an oversized draft field before authorization or persistence', async () => {
+    const context = createApp();
+    const payload = buildWorkspaceGraphDraftSaveRequest();
+    const firstNode = payload.draft.nodes[0]!;
+
+    try {
+      const response = await context.app.inject({
+        method: 'PUT',
+        url: '/workspace/graph/draft',
+        payload: {
+          ...payload,
+          draft: {
+            ...payload.draft,
+            nodes: [
+              {
+                ...firstNode,
+                name: 'x'.repeat(CANVAS_AUTHORING_FIELD_LIMITS_V1.humanNameCodePoints + 1),
+              },
+              ...payload.draft.nodes.slice(1),
+            ],
+          },
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.json()).toEqual({
+        error: { type: 'bad_request', reason: 'invalid_body', target: 'body' },
+      });
+      expect(context.capabilityService.authorize).not.toHaveBeenCalled();
+      expect(context.saveUseCase.execute).not.toHaveBeenCalled();
+    } finally {
+      await context.app.close();
+    }
+  });
+
   it('stops at the shared authentication boundary', async () => {
     const context = createApp();
     context.authenticator.authenticateBearerToken.mockResolvedValueOnce({

@@ -113,6 +113,38 @@ test('validateFeatureMechanizationManifest accepts a closed mechanical feature c
   assert.deepEqual(result.errors, []);
 });
 
+test('validateFeatureMechanizationManifest accepts an explicit reference to an existing rail authority', () => {
+  const result = validateFeatureMechanizationManifest(
+    {
+      ...validManifest,
+      commandQueryRails: validManifest.commandQueryRails.map((rail) => ({
+        ...rail,
+        referenceOnly: true,
+        authorityRef:
+          'docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md',
+      })),
+    },
+    'plan.md'
+  );
+
+  assert.deepEqual(result.errors, []);
+});
+
+test('validateFeatureMechanizationManifest rejects a rail reference without its authority', () => {
+  const result = validateFeatureMechanizationManifest(
+    {
+      ...validManifest,
+      commandQueryRails: validManifest.commandQueryRails.map((rail) => ({
+        ...rail,
+        referenceOnly: true,
+      })),
+    },
+    'plan.md'
+  );
+
+  assert.match(result.errors.join('\n'), /missing authorityRef/);
+});
+
 test('validateFeatureMechanizationManifest accepts a closed terminal feature without implementation symbols', () => {
   const result = validateFeatureMechanizationManifest(
     {

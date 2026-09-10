@@ -2,7 +2,10 @@ import { Buffer } from 'node:buffer';
 import { randomUUID } from 'node:crypto';
 import process from 'node:process';
 
-import { type DvtSubstraitSemanticDocumentV1 } from '@dvt/contracts';
+import {
+  CANVAS_AUTHORING_FIELD_LIMITS_V1,
+  type DvtSubstraitSemanticDocumentV1,
+} from '@dvt/contracts';
 import { base64Bytes, sha256Hex } from '@dvt/crypto';
 import { Pool } from 'pg';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -124,5 +127,152 @@ describeWithPostgres('workspace graph canonical semantic persistence', () => {
       kind: 'format_error',
       formatError: { reason: 'corrupt_payload' },
     });
+  });
+
+  it('rejects oversized names at the database boundary without rewriting stored drafts', async () => {
+    const save = buildSemanticSaveUseCase(store!);
+    await save.execute({
+      request: buildWorkspaceGraphDraftSaveRequest({
+        draft: buildCanonicalSemanticWorkspaceGraphDraft(),
+      }),
+      decision: writableSemanticDecision(),
+    });
+
+    const oversizedName = 'x'.repeat(CANVAS_AUTHORING_FIELD_LIMITS_V1.humanNameCodePoints + 1);
+    await expect(
+      pool!.query(
+        `UPDATE "${schema}".workspace_graph_drafts
+         SET draft_json = jsonb_set(draft_json, '{nodes,0,name}', to_jsonb($1::text))`,
+        [oversizedName]
+      )
+    ).rejects.toMatchObject({
+      code: '23514',
+      constraint: 'workspace_graph_drafts_field_budget_check',
+    });
+
+    await pool!.query(
+      `ALTER TABLE "${schema}".workspace_graph_drafts
+       DROP CONSTRAINT workspace_graph_drafts_field_budget_check`
+    );
+    await pool!.query(
+      `UPDATE "${schema}".workspace_graph_drafts
+       SET draft_json = jsonb_set(draft_json, '{nodes,0,name}', to_jsonb($1::text))`,
+      [oversizedName]
+    );
+
+    await store!.migrate();
+
+    const loaded = await buildSemanticGetUseCase(store!).execute(writableSemanticDecision());
+    expect(loaded.httpStatus).toBe(422);
+    expect(loaded.response).toMatchObject({
+      kind: 'format_error',
+      formatError: { reason: 'corrupt_payload' },
+    });
+    await expect(
+      pool!.query(`UPDATE "${schema}".workspace_graph_drafts SET revision = 'forged-revision'`)
+    ).rejects.toMatchObject({
+      code: '23514',
+      constraint: 'workspace_graph_drafts_field_budget_check',
+    });
+  });
+  it('enforces canonical post-trim storage and DVT ownership semantics at the database boundary', async () => {
+    const baseDraft = buildCanonicalSemanticWorkspaceGraphDraft();
+    const accepts = async (draft: unknown): Promise<boolean> => {
+      const result = await pool!.query<{ accepted: boolean }>(
+        `SELECT "${schema}".workspace_graph_draft_fields_within_budget($1::jsonb) AS accepted`,
+        [JSON.stringify(draft)]
+      );
+      return result.rows[0]?.accepted ?? false;
+    };
+
+    const unicodeWhitespaceName = {
+      ...baseDraft,
+      canvas: { ...baseDraft.canvas, title: `\u00a0${baseDraft.canvas.title}` },
+    };
+    expect(await accepts(unicodeWhitespaceName)).toBe(false);
+
+    const duplicateTrimmedTags = {
+      ...baseDraft,
+      nodes: baseDraft.nodes.map((node, index) =>
+        index === 0 ? { ...node, tags: ['finance', '\tfinance\t'] } : node
+      ),
+    };
+    expect(await accepts(duplicateTrimmedTags)).toBe(false);
+
+    const exteriorIdentifierWhitespace = {
+      ...baseDraft,
+      nodes: baseDraft.nodes.map((node, index) =>
+        index === 0
+          ? {
+              ...node,
+              pluginId: 'dvt',
+              kind: 'dvt:source',
+              metadata: { config: { schema: 'raw\t', table: 'orders', alias: 'orders' } },
+            }
+          : node
+      ),
+    };
+    expect(await accepts(exteriorIdentifierWhitespace)).toBe(false);
+
+    const warehouseSourceWithInvalidIdentifier = {
+      ...baseDraft,
+      nodes: baseDraft.nodes.map((node, index) =>
+        index === 0
+          ? {
+              ...node,
+              pluginId: 'dvt.warehouse-source',
+              kind: 'dvt:source',
+              metadata: { config: { schema: 'raw\t', table: 'orders', alias: 'orders' } },
+            }
+          : node
+      ),
+    };
+    expect(await accepts(warehouseSourceWithInvalidIdentifier)).toBe(false);
+
+    const dvtSinkWithInvalidEnum = {
+      ...baseDraft,
+      nodes: baseDraft.nodes.map((node, index) =>
+        index === 0
+          ? {
+              ...node,
+              pluginId: 'dvt',
+              kind: 'dvt:sink',
+              metadata: { config: { schema: 'raw', table: 'orders', materialization: 'foreign' } },
+            }
+          : node
+      ),
+    };
+    expect(await accepts(dvtSinkWithInvalidEnum)).toBe(false);
+
+    const save = buildSemanticSaveUseCase(store!);
+    await save.execute({
+      request: buildWorkspaceGraphDraftSaveRequest({ draft: baseDraft }),
+      decision: writableSemanticDecision(),
+    });
+    await expect(
+      pool!.query(`UPDATE "${schema}".workspace_graph_drafts SET draft_json = $1::jsonb`, [
+        JSON.stringify(dvtSinkWithInvalidEnum),
+      ])
+    ).rejects.toMatchObject({
+      code: '23514',
+      constraint: 'workspace_graph_drafts_field_budget_check',
+    });
+
+    const foreignSinkKind = {
+      ...baseDraft,
+      nodes: baseDraft.nodes.map((node, index) =>
+        index === 0
+          ? {
+              ...node,
+              pluginId: 'dvt.warehouse-source',
+              kind: 'dvt:sink',
+              metadata: {
+                config: { materialization: 'foreign', writeMode: 'foreign' },
+              },
+            }
+          : node
+      ),
+    };
+    expect(await accepts(foreignSinkKind)).toBe(true);
   });
 });

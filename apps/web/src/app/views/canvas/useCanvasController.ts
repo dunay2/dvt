@@ -292,6 +292,7 @@ export function useCanvasController() {
     columnLevelLineageEnabled: store.columnLevelLineageEnabled,
   });
   const inspectorCommands = useCanvasInspectorCommands({
+    canonicalNodesById: graphModel.canonicalNodesById,
     inspectorNode,
     setDraftSession,
     workspaceScope,

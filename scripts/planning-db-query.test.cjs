@@ -4719,6 +4719,7 @@ test('readSourceDriftRows queries DB-owned governed source drift findings', asyn
   });
 
   assert.match(captured.sql, /from planning_query_store\.governed_source_drift_query/);
+  assert.match(captured.sql, /source_path !~\* '\^https\?:\/\/'/);
   assert.match(captured.sql, /source_path = \$1/);
   assert.match(captured.sql, /severity = \$2/);
   assert.match(captured.sql, /limit \$3/);

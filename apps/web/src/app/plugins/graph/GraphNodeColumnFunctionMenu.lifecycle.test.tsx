@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { GraphNodeColumnSection } from './GraphNodeColumnSection';
 
-describe('GraphNodeColumnFunctionMenu pointer grace', () => {
+describe('GraphNodeColumnFunctionMenu pointer lifecycle', () => {
   let container: HTMLDivElement;
   let root: Root;
 
@@ -52,7 +52,7 @@ describe('GraphNodeColumnFunctionMenu pointer grace', () => {
     vi.useRealTimers();
   });
 
-  it('times out the pointer menu but leaves the keyboard menu stable', async () => {
+  it('keeps pointer and keyboard menus open until an explicit close gesture', async () => {
     const piece = container.querySelector<HTMLElement>('[data-slot="graph-node-column-piece"]')!;
     act(() => {
       piece.dispatchEvent(
@@ -61,7 +61,12 @@ describe('GraphNodeColumnFunctionMenu pointer grace', () => {
     });
     expect(menu()).not.toBeNull();
 
-    await act(async () => vi.advanceTimersByTimeAsync(1_000));
+    await act(async () => vi.advanceTimersByTimeAsync(3_000));
+    expect(menu()).not.toBeNull();
+
+    act(() => {
+      fireEvent.keyDown(document.body, { key: 'Escape' });
+    });
     expect(menu()).toBeNull();
 
     act(() => {

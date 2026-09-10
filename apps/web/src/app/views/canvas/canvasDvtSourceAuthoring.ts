@@ -1,5 +1,10 @@
 /** Owns DVT source identity, connection authority, validation, and persistence. */
-import { ConnectedSourceRefSchema, ConnectionRefSchema, type ConnectionRef } from '@dvt/contracts';
+import {
+  ConnectedSourceRefSchema,
+  ConnectionRefSchema,
+  PostgresIdentifierV1Schema,
+  type ConnectionRef,
+} from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type {
@@ -115,10 +120,31 @@ export function createDvtSourceAuthoringMetadata(node: CanonicalNode): DvtSource
 export function validateDvtSourceAuthoringMetadata(
   metadata: DvtSourceAuthoringMetadata
 ): DvtNodeAuthoringMetadataErrors {
+  const schema = metadata.schema;
+  const table = metadata.table;
+  const alias = metadata.alias;
   return {
-    ...(metadata.schema.trim() ? {} : { schema: 'dvt_schema_required' as const }),
-    ...(metadata.table.trim() ? {} : { table: 'dvt_table_required' as const }),
-    ...(metadata.alias.trim() ? {} : { alias: 'dvt_alias_required' as const }),
+    ...(schema.trim()
+      ? schema !== schema.trim()
+        ? { schema: 'dvt_identifier_whitespace' as const }
+        : PostgresIdentifierV1Schema.safeParse(schema).success
+          ? {}
+          : { schema: 'dvt_identifier_too_long' as const }
+      : { schema: 'dvt_schema_required' as const }),
+    ...(table.trim()
+      ? table !== table.trim()
+        ? { table: 'dvt_identifier_whitespace' as const }
+        : PostgresIdentifierV1Schema.safeParse(table).success
+          ? {}
+          : { table: 'dvt_identifier_too_long' as const }
+      : { table: 'dvt_table_required' as const }),
+    ...(alias.trim()
+      ? alias !== alias.trim()
+        ? { alias: 'dvt_identifier_whitespace' as const }
+        : PostgresIdentifierV1Schema.safeParse(alias).success
+          ? {}
+          : { alias: 'dvt_identifier_too_long' as const }
+      : { alias: 'dvt_alias_required' as const }),
     ...(metadata.connectionRef ? {} : { connectionRef: 'dvt_connection_required' as const }),
   };
 }
@@ -128,32 +154,48 @@ export function applyDvtSourceAuthoringMetadata(
   metadata: DvtSourceAuthoringMetadata
 ): CanonicalNode {
   const existingConfig = readDvtNodeConfig(node);
-  const table = normalizeDvtIdentifier(metadata.table, 'source_table');
+  const hasImportedConnectionAuthority = ConnectedSourceRefSchema.safeParse(
+    node.metadata?.connectedSourceRef
+  ).success;
+  const { connectionRef: _manualConnectionRef, ...metadataWithoutManualConnection } =
+    node.metadata ?? {};
+  const authorityNode = hasImportedConnectionAuthority
+    ? { ...node, metadata: metadataWithoutManualConnection }
+    : node;
+  const schema = metadata.schema;
+  const table = metadata.table;
+  const alias = metadata.alias;
+  if (
+    schema !== schema.trim() ||
+    !PostgresIdentifierV1Schema.safeParse(schema).success ||
+    table !== table.trim() ||
+    !PostgresIdentifierV1Schema.safeParse(table).success ||
+    alias !== alias.trim() ||
+    !PostgresIdentifierV1Schema.safeParse(alias).success
+  ) {
+    return node;
+  }
   if (node.pluginId === DVT_WAREHOUSE_SOURCE_PLUGIN_ID) {
     const config = Object.fromEntries(
       Object.entries(existingConfig).filter(([key]) => key !== 'schema' && key !== 'table')
     );
-    const importedTable = normalizeDvtIdentifier(
-      readDvtString(node.metadata?.tableName) ?? node.name,
-      'source_table'
-    );
-    const configured = withDvtConfig(node, {
+    const configured = withDvtConfig(authorityNode, {
       ...config,
-      alias: normalizeDvtIdentifier(metadata.alias, importedTable),
+      alias,
     });
     return metadata.semantic == null
       ? configured
       : applyDvtSourceSemanticDraft(configured, metadata.semantic);
   }
   const configured = withDvtConfig(
-    node,
+    authorityNode,
     {
       ...existingConfig,
-      schema: metadata.schema.trim() || DEFAULT_SCHEMA_NAME,
+      schema,
       table,
-      alias: normalizeDvtIdentifier(metadata.alias, table),
+      alias,
     },
-    { connectionRef: metadata.connectionRef }
+    hasImportedConnectionAuthority ? undefined : { connectionRef: metadata.connectionRef }
   );
   return metadata.semantic == null
     ? configured

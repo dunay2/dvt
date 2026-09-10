@@ -37,7 +37,11 @@ function stubCanvas(): void {
     minFrontendVersion: '0.0.1',
     plugins: { dvt: { available: true } },
   });
-  stubStatefulCanvasDraftAuthoring({ canvasKind: 'transformation', columnMapping: true });
+  stubStatefulCanvasDraftAuthoring({
+    canvasKind: 'transformation',
+    columnMapping: true,
+    columnMappingTemporal: true,
+  });
 }
 
 function visitCanvas(): void {
@@ -198,6 +202,59 @@ describe('Canvas structured Transform fields', () => {
           ?.operandFieldIds
       ).to.have.length(2);
     });
+  });
+
+  it('shows and persists the admitted timestamp function from the column menu', () => {
+    cy.viewport(1920, 1080);
+    visitCanvas();
+    expandAndAssignColumns();
+
+    modelCard()
+      .find('[data-slot="graph-node-column-piece"][data-column-name="created_at"]')
+      .rightclick(20, 10);
+    cy.get('[data-slot="graph-node-column-function-menu"]')
+      .should('be.visible')
+      .and('contain.text', 'Date and time functions');
+    cy.contains('[data-slot="graph-node-column-function"]', 'EXTRACT YEAR (UTC)').click();
+    cy.get('[data-slot="graph-node-column-function-expression"]').should(
+      'have.text',
+      "EXTRACT(YEAR FROM created_at AT TIME ZONE 'UTC')"
+    );
+    cy.get('[data-slot="graph-node-column-function-alias-input"]').type('created_year');
+    cy.get('[data-slot="graph-node-column-function-alias-submit"]').click();
+
+    modelCard()
+      .find('[data-slot="graph-node-column-piece"][data-column-name="created_year"]')
+      .should('be.focused');
+    cy.wrap(null, { timeout: 10_000 }).should(() => {
+      const inspection = latestProjection();
+      expect(inspection.ok).to.equal(true);
+      if (!inspection.ok) return;
+      expect(inspection.projection.outputs.map((output) => output.name)).to.include.members([
+        'created_at',
+        'created_year',
+      ]);
+      expect(
+        inspection.projection.outputs.find((output) => output.name === 'created_year')
+      ).to.deep.include({
+        dataType: 'bigint',
+        scalarExpression: {
+          kind: 'scalar-function',
+          functionName: 'extract',
+          arguments: [{ kind: 'field-reference', sourceFieldName: 'created_at' }],
+          component: 'YEAR',
+          timezone: 'UTC',
+        },
+      });
+    });
+
+    visitCanvas();
+    modelCard().find('[data-slot="graph-node-column-toggle"]').click();
+    modelCard().contains('button', 'Show remaining columns').click();
+    modelCard()
+      .find('[data-slot="graph-node-column-piece"][data-column-name="created_year"]')
+      .should('be.visible')
+      .and('contain.text', 'bigint');
   });
 
   it('retains roots, reorders the struct, restores it, and removes the grouping', () => {
