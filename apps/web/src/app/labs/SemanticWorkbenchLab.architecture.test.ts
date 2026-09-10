@@ -69,4 +69,11 @@ describe('SemanticWorkbenchLab architecture', () => {
     expect(SOURCE).not.toContain('Impacto estimado');
     expect(SOURCE).not.toContain('Editar nodo');
   });
+
+  it('uses one symmetric operand editor for both sides of an additional JOIN condition', () => {
+    expect(SOURCE.match(/<SemanticWorkbenchJoinOperandEditor/g)).toHaveLength(2);
+    expect(SOURCE).toContain('conditionDraft.left');
+    expect(SOURCE).toContain('conditionDraft.right');
+    expect(SOURCE).not.toContain('rightSourceFieldId: string | null;');
+  });
 });

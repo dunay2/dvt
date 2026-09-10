@@ -8,17 +8,7 @@ import {
   type EdgeTypes,
   type NodeTypes,
 } from '@xyflow/react';
-import {
-  ArrowLeft,
-  Braces,
-  Database,
-  Equal,
-  GitMerge,
-  Hash,
-  Maximize2,
-  Plus,
-  X,
-} from 'lucide-react';
+import { ArrowLeft, Braces, Database, Equal, GitMerge, Hash, Maximize2, Plus } from 'lucide-react';
 
 import DbtNodeComponent, { type DbtNodeData } from '../components/canvas/DbtNodeComponent';
 import { OperationalDrawerDataTable } from '../components/shell/OperationalDrawerDataTable';
@@ -49,10 +39,7 @@ import {
   type DvtSubstraitNInputJoinProjection,
 } from '../views/canvas/canvasDvtSubstraitJoinComposition';
 import { countDvtSubstraitJoinConditionComparisons } from '../views/canvas/canvasDvtSubstraitJoinCondition';
-import {
-  resolveDvtSubstraitJoinUnaryFunctions,
-  type DvtSubstraitJoinUnaryFunction,
-} from '../views/canvas/canvasDvtSubstraitJoinOperand';
+import { resolveDvtSubstraitJoinUnaryFunctions } from '../views/canvas/canvasDvtSubstraitJoinOperand';
 import {
   applyDvtSubstraitSemanticDocument,
   readDvtTransformAuthoringAuthority,
@@ -64,6 +51,12 @@ import {
   SEMANTIC_WORKBENCH_TRANSFORM,
   buildSemanticWorkbenchFixture,
 } from './semanticWorkbenchFixture';
+import {
+  SemanticWorkbenchJoinOperandEditor,
+  buildSemanticWorkbenchJoinOperand,
+  defaultSemanticWorkbenchJoinLiteralValue,
+  type SemanticWorkbenchJoinOperandDraft,
+} from './SemanticWorkbenchJoinOperandEditor';
 import { projectSemanticWorkbenchGraph } from './semanticWorkbenchProjection';
 
 const surface = '#040712';
@@ -234,125 +227,13 @@ type PendingJoinPredicate = Readonly<{
 }>;
 type PendingJoinCondition = Readonly<{
   joinRelationId: string;
-  leftSourceFieldId: string;
-  rightSourceFieldId: string | null;
-  rawValue: string;
+  dataType: DvtSubstraitJoinDataType;
+  left: SemanticWorkbenchJoinOperandDraft;
+  right: SemanticWorkbenchJoinOperandDraft;
   operator: DvtSubstraitJoinComparisonOperator;
   combination: DvtSubstraitJoinConditionCombination;
   groupWithPrevious: boolean;
-  leftFunctionIds: readonly string[];
-  rightFunctionIds: readonly string[];
 }>;
-
-function wrapJoinOperand(
-  operand: DvtSubstraitJoinPredicateOperand,
-  functionIds: readonly string[]
-): DvtSubstraitJoinPredicateOperand {
-  return functionIds.reduce<DvtSubstraitJoinPredicateOperand>(
-    (input, capabilityId) => ({ kind: 'function', capabilityId, input }),
-    operand
-  );
-}
-
-function JoinOperandFunctionChain(props: {
-  functionIds: readonly string[];
-  functions: readonly DvtSubstraitJoinUnaryFunction[];
-  onChange: (functionIds: readonly string[]) => void;
-}) {
-  const nameById = new Map(
-    props.functions.map((capability) => [capability.capabilityId, capability.name] as const)
-  );
-  return (
-    <div style={{ marginTop: 7 }}>
-      <div style={{ color: muted, fontSize: 8 }}>FUNCIONES · INTERIOR → EXTERIOR</div>
-      {props.functionIds.map((capabilityId, index) => (
-        <div
-          key={`${capabilityId}-${index}`}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginTop: 4,
-            border: '1px solid #155e75',
-            borderRadius: 5,
-            background: '#082f49',
-            padding: '5px 7px',
-            color: '#67e8f9',
-            fontFamily: 'IBM Plex Mono, monospace',
-            fontSize: 8,
-          }}
-        >
-          <span>
-            {index + 1}. {(nameById.get(capabilityId) ?? capabilityId).toUpperCase()}
-          </span>
-          <button
-            type="button"
-            title="Retirar esta función"
-            aria-label={`Retirar función ${index + 1}`}
-            onClick={() => props.onChange(props.functionIds.filter((_, item) => item !== index))}
-            style={{ border: 0, background: 'transparent', padding: 0, color: '#67e8f9' }}
-          >
-            <X aria-hidden="true" size={11} />
-          </button>
-        </div>
-      ))}
-      <select
-        aria-label="Añadir función exterior al operando"
-        value=""
-        disabled={props.functions.length === 0}
-        onChange={(event) => {
-          if (event.currentTarget.value.length === 0) return;
-          props.onChange([...props.functionIds, event.currentTarget.value]);
-        }}
-        style={{ ...JOIN_OPERATION_SELECT_STYLE, marginTop: 5 }}
-      >
-        <option value="">
-          {props.functions.length === 0 ? 'Sin funciones compatibles' : '+ Añadir función exterior'}
-        </option>
-        {props.functions.map((capability) => (
-          <option key={capability.capabilityId} value={capability.capabilityId}>
-            {capability.name.toUpperCase()}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
-
-function parseJoinLiteral(
-  dataType: DvtSubstraitJoinDataType,
-  rawValue: string
-): DvtSubstraitJoinPredicateOperand | null {
-  if (dataType === 'string') {
-    return { kind: 'literal', literal: { dataType: 'string', value: rawValue } };
-  }
-  if (dataType === 'bool') {
-    return rawValue === 'true' || rawValue === 'false'
-      ? { kind: 'literal', literal: { dataType: 'bool', value: rawValue === 'true' } }
-      : null;
-  }
-  if (dataType === 'i64') {
-    return /^-?\d+$/.test(rawValue)
-      ? { kind: 'literal', literal: { dataType: 'i64', value: BigInt(rawValue) } }
-      : null;
-  }
-  if (dataType === 'fp64') {
-    const value = Number(rawValue);
-    return rawValue.trim().length > 0 && Number.isFinite(value)
-      ? { kind: 'literal', literal: { dataType: 'fp64', value } }
-      : null;
-  }
-  const milliseconds = Date.parse(rawValue);
-  return Number.isFinite(milliseconds)
-    ? {
-        kind: 'literal',
-        literal: {
-          dataType: 'precisionTimestampTz',
-          value: new Date(milliseconds).toISOString(),
-        },
-      }
-    : null;
-}
 
 function SemanticWorkbenchLab() {
   const [fixture, setFixture] = useState<SemanticWorkbenchFixture>(() =>
@@ -654,51 +535,60 @@ function SemanticWorkbenchLab() {
           inputIndex,
         }))
       );
+    const conditionDataTypes = Array.from(
+      new Set(conditionOptions.map((option) => option.dataType))
+    );
     const conditionDraft =
       pendingJoinCondition?.joinRelationId === joinRelationId ? pendingJoinCondition : null;
     const conditionLeftField = conditionOptions.find(
-      (option) => option.fieldId === conditionDraft?.leftSourceFieldId
+      (option) => option.fieldId === conditionDraft?.left.fieldId
     );
     const conditionRightField = conditionOptions.find(
-      (option) => option.fieldId === conditionDraft?.rightSourceFieldId
+      (option) => option.fieldId === conditionDraft?.right.fieldId
     );
-    const conditionRightOptions =
-      conditionLeftField == null
+    const conditionLeftOptions =
+      conditionDraft == null
         ? []
         : conditionOptions.filter(
             (option) =>
-              option.fieldId !== conditionLeftField.fieldId &&
-              option.dataType === conditionLeftField.dataType
+              option.dataType === conditionDraft.dataType &&
+              (conditionDraft.right.kind !== 'field' ||
+                option.fieldId !== conditionDraft.right.fieldId)
+          );
+    const conditionRightOptions =
+      conditionDraft == null
+        ? []
+        : conditionOptions.filter(
+            (option) =>
+              option.dataType === conditionDraft.dataType &&
+              (conditionDraft.left.kind !== 'field' ||
+                option.fieldId !== conditionDraft.left.fieldId)
           );
     const conditionFunctions =
-      conditionLeftField == null
+      conditionDraft == null
         ? []
         : resolveDvtSubstraitJoinUnaryFunctions({
-            dataType: conditionLeftField.dataType,
+            dataType: conditionDraft.dataType,
             provider: 'postgres',
           });
     const conditionLeftOperand =
-      conditionLeftField == null || conditionDraft == null
+      conditionDraft == null ||
+      (conditionDraft.left.kind === 'field' &&
+        conditionLeftField?.dataType !== conditionDraft.dataType)
         ? null
-        : wrapJoinOperand(
-            { kind: 'field', sourceFieldId: conditionLeftField.fieldId },
-            conditionDraft.leftFunctionIds
-          );
-    const conditionRightBase =
-      conditionLeftField == null || conditionDraft == null
-        ? null
-        : conditionDraft.rightSourceFieldId == null
-          ? parseJoinLiteral(conditionLeftField.dataType, conditionDraft.rawValue)
-          : conditionRightField?.dataType === conditionLeftField.dataType
-            ? ({
-                kind: 'field',
-                sourceFieldId: conditionDraft.rightSourceFieldId,
-              } satisfies DvtSubstraitJoinPredicateOperand)
-            : null;
+        : buildSemanticWorkbenchJoinOperand({
+            draft: conditionDraft.left,
+            dataType: conditionDraft.dataType,
+          });
     const conditionRightOperand =
-      conditionRightBase == null || conditionDraft == null
+      conditionDraft == null ||
+      (conditionDraft.right.kind === 'field' &&
+        conditionRightField?.dataType !== conditionDraft.dataType)
         ? null
-        : wrapJoinOperand(conditionRightBase, conditionDraft.rightFunctionIds);
+        : buildSemanticWorkbenchJoinOperand({
+            draft: conditionDraft.right,
+            dataType: conditionDraft.dataType,
+          });
     return {
       ...pending,
       leftOptions: optionsFor('left'),
@@ -711,7 +601,8 @@ function SemanticWorkbenchLab() {
         pending.rightSourceFieldId !== predicate.rightSourceFieldId ||
         pending.operator !== (predicate.operator ?? 'equal'),
       conditionOptions,
-      conditionLeftField,
+      conditionDataTypes,
+      conditionLeftOptions,
       conditionRightOptions,
       conditionFunctions,
       conditionDraft,
@@ -1482,14 +1373,26 @@ function SemanticWorkbenchLab() {
                           );
                           setPendingJoinCondition({
                             joinRelationId: selectedJoinPredicate.joinRelationId,
-                            leftSourceFieldId: leftOption.fieldId,
-                            rightSourceFieldId: rightOption?.fieldId ?? null,
-                            rawValue: leftOption.dataType === 'bool' ? 'true' : '',
+                            dataType: leftOption.dataType,
+                            left: {
+                              kind: 'field',
+                              fieldId: leftOption.fieldId,
+                              rawValue: defaultSemanticWorkbenchJoinLiteralValue(
+                                leftOption.dataType
+                              ),
+                              functionIds: [],
+                            },
+                            right: {
+                              kind: rightOption == null ? 'literal' : 'field',
+                              fieldId: rightOption?.fieldId ?? leftOption.fieldId,
+                              rawValue: defaultSemanticWorkbenchJoinLiteralValue(
+                                leftOption.dataType
+                              ),
+                              functionIds: [],
+                            },
                             operator: 'equal',
                             combination: 'and',
                             groupWithPrevious: false,
-                            leftFunctionIds: [],
-                            rightFunctionIds: [],
                           });
                         }}
                         style={{
@@ -1547,63 +1450,71 @@ function SemanticWorkbenchLab() {
                         ))}
                       </select>
                       <label style={{ display: 'block', marginTop: 8, color: muted, fontSize: 9 }}>
-                        OPERANDO IZQUIERDO
+                        TIPO DE DATO
                         <select
-                          aria-label="Operando izquierdo de la condición adicional"
-                          value={selectedJoinPredicate.conditionDraft.leftSourceFieldId}
+                          aria-label="Tipo de dato de la condición adicional"
+                          value={selectedJoinPredicate.conditionDraft.dataType}
+                          style={JOIN_OPERATION_SELECT_STYLE}
                           onChange={(event) => {
-                            const option = selectedJoinPredicate.conditionOptions.find(
-                              (candidate) => candidate.fieldId === event.currentTarget.value
+                            const dataType = event.currentTarget.value as DvtSubstraitJoinDataType;
+                            const options = selectedJoinPredicate.conditionOptions.filter(
+                              (option) => option.dataType === dataType
                             );
-                            if (option == null) return;
-                            const currentRight = selectedJoinPredicate.conditionOptions.find(
-                              (candidate) =>
-                                candidate.fieldId ===
-                                selectedJoinPredicate.conditionDraft!.rightSourceFieldId
-                            );
-                            const nextRight =
-                              currentRight?.dataType === option.dataType
-                                ? currentRight
-                                : selectedJoinPredicate.conditionOptions.find(
-                                    (candidate) =>
-                                      candidate.inputIndex !== option.inputIndex &&
-                                      candidate.dataType === option.dataType
-                                  );
+                            const leftField = options[0];
+                            if (leftField == null) return;
+                            const rightField =
+                              options.find(
+                                (option) => option.inputIndex !== leftField.inputIndex
+                              ) ?? options.find((option) => option.fieldId !== leftField.fieldId);
+                            const current = selectedJoinPredicate.conditionDraft!;
                             setPendingJoinCondition({
-                              ...selectedJoinPredicate.conditionDraft!,
-                              leftSourceFieldId: option.fieldId,
-                              rightSourceFieldId: nextRight?.fieldId ?? null,
-                              rawValue: option.dataType === 'bool' ? 'true' : '',
-                              leftFunctionIds: [],
-                              rightFunctionIds: [],
+                              ...current,
+                              dataType,
+                              left: {
+                                ...current.left,
+                                kind:
+                                  rightField == null &&
+                                  current.left.kind === 'literal' &&
+                                  current.right.kind === 'literal'
+                                    ? 'field'
+                                    : current.left.kind,
+                                fieldId: leftField.fieldId,
+                                rawValue: defaultSemanticWorkbenchJoinLiteralValue(dataType),
+                                functionIds: [],
+                              },
+                              right: {
+                                ...current.right,
+                                kind:
+                                  rightField == null && current.left.kind === 'field'
+                                    ? 'literal'
+                                    : current.right.kind,
+                                fieldId: rightField?.fieldId ?? leftField.fieldId,
+                                rawValue: defaultSemanticWorkbenchJoinLiteralValue(dataType),
+                                functionIds: [],
+                              },
                             });
                           }}
-                          style={{
-                            width: '100%',
-                            marginTop: 5,
-                            border: '1px solid #245f88',
-                            borderRadius: 6,
-                            background: '#05090f',
-                            padding: '8px 9px',
-                            color: accent,
-                            fontFamily: 'IBM Plex Mono, monospace',
-                            fontSize: 9,
-                          }}
                         >
-                          {selectedJoinPredicate.conditionOptions.map((option) => (
-                            <option key={option.fieldId} value={option.fieldId}>
-                              FIELD · {option.label} · {option.dataType}
+                          {selectedJoinPredicate.conditionDataTypes.map((dataType) => (
+                            <option key={dataType} value={dataType}>
+                              {dataType}
                             </option>
                           ))}
                         </select>
                       </label>
-                      <JoinOperandFunctionChain
-                        functionIds={selectedJoinPredicate.conditionDraft.leftFunctionIds}
+                      <SemanticWorkbenchJoinOperandEditor
+                        side="izquierdo"
+                        operand={selectedJoinPredicate.conditionDraft.left}
+                        dataType={selectedJoinPredicate.conditionDraft.dataType}
+                        fields={selectedJoinPredicate.conditionLeftOptions}
                         functions={selectedJoinPredicate.conditionFunctions}
-                        onChange={(leftFunctionIds) =>
+                        literalDisabled={
+                          selectedJoinPredicate.conditionDraft.right.kind === 'literal'
+                        }
+                        onChange={(left) =>
                           setPendingJoinCondition({
                             ...selectedJoinPredicate.conditionDraft!,
-                            leftFunctionIds,
+                            left,
                           })
                         }
                       />
@@ -1628,68 +1539,19 @@ function SemanticWorkbenchLab() {
                           ))}
                         </select>
                       </label>
-                      <label style={{ display: 'block', marginTop: 8, color: muted, fontSize: 9 }}>
-                        OPERANDO DERECHO
-                        <select
-                          aria-label="Operando derecho de la condición adicional"
-                          value={
-                            selectedJoinPredicate.conditionDraft.rightSourceFieldId ?? '__literal__'
-                          }
-                          onChange={(event) =>
-                            setPendingJoinCondition({
-                              ...selectedJoinPredicate.conditionDraft!,
-                              rightSourceFieldId:
-                                event.currentTarget.value === '__literal__'
-                                  ? null
-                                  : event.currentTarget.value,
-                              rightFunctionIds: [],
-                            })
-                          }
-                          style={JOIN_OPERATION_SELECT_STYLE}
-                        >
-                          <option value="__literal__">
-                            VALUE · {selectedJoinPredicate.conditionLeftField?.dataType ?? 'typed'}
-                          </option>
-                          {selectedJoinPredicate.conditionRightOptions.map((option) => (
-                            <option key={option.fieldId} value={option.fieldId}>
-                              FIELD · {option.label} · {option.dataType}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      {selectedJoinPredicate.conditionDraft.rightSourceFieldId == null ? (
-                        <input
-                          aria-label="Valor literal de la condición adicional"
-                          title="Introduce un valor del mismo tipo que el operando izquierdo."
-                          value={selectedJoinPredicate.conditionDraft.rawValue}
-                          onChange={(event) =>
-                            setPendingJoinCondition({
-                              ...selectedJoinPredicate.conditionDraft!,
-                              rawValue: event.currentTarget.value,
-                            })
-                          }
-                          placeholder="Valor literal"
-                          style={{
-                            width: '100%',
-                            boxSizing: 'border-box',
-                            marginTop: 7,
-                            border: '1px solid #245f88',
-                            borderRadius: 6,
-                            background: '#05090f',
-                            padding: '8px 9px',
-                            color: text,
-                            fontFamily: 'IBM Plex Mono, monospace',
-                            fontSize: 9,
-                          }}
-                        />
-                      ) : null}
-                      <JoinOperandFunctionChain
-                        functionIds={selectedJoinPredicate.conditionDraft.rightFunctionIds}
+                      <SemanticWorkbenchJoinOperandEditor
+                        side="derecho"
+                        operand={selectedJoinPredicate.conditionDraft.right}
+                        dataType={selectedJoinPredicate.conditionDraft.dataType}
+                        fields={selectedJoinPredicate.conditionRightOptions}
                         functions={selectedJoinPredicate.conditionFunctions}
-                        onChange={(rightFunctionIds) =>
+                        literalDisabled={
+                          selectedJoinPredicate.conditionDraft.left.kind === 'literal'
+                        }
+                        onChange={(right) =>
                           setPendingJoinCondition({
                             ...selectedJoinPredicate.conditionDraft!,
-                            rightFunctionIds,
+                            right,
                           })
                         }
                       />

@@ -440,7 +440,7 @@ describe('DVT Substrait INNER JOIN identity', () => {
     ).toBe(draft);
   });
 
-  it('round-trips N unary functions around a JOIN operand', () => {
+  it('round-trips a left literal against N unary functions around a field', () => {
     const draft = createDvtSubstraitStringInnerJoinDraft({
       left: {
         source: source('source-left', 'public', 'orders'),
@@ -466,22 +466,22 @@ describe('DVT Substrait INNER JOIN identity', () => {
       provider: 'postgres',
     }).find((capability) => capability.name === 'upper');
     if (trim == null || upper == null) throw new Error('Expected admitted unary functions.');
-    const leftField = { kind: 'field' as const, sourceFieldId: inputFieldId(before, 0, 'id') };
+    const rightField = { kind: 'field' as const, sourceFieldId: inputFieldId(before, 0, 'id') };
 
     const edited = addDvtSubstraitJoinPredicateCondition({
       draft,
       joinRelationId,
       condition: {
-        left: {
+        left: { kind: 'literal', literal: { dataType: 'string', value: 'ORDER-1' } },
+        right: {
           kind: 'function',
           capabilityId: upper.capabilityId,
           input: {
             kind: 'function',
             capabilityId: trim.capabilityId,
-            input: leftField,
+            input: rightField,
           },
         },
-        right: { kind: 'literal', literal: { dataType: 'string', value: 'ORDER-1' } },
       },
     });
     const after = inspectNInput(
@@ -493,12 +493,16 @@ describe('DVT Substrait INNER JOIN identity', () => {
     }
 
     expect(addedCondition.left).toEqual({
+      kind: 'literal',
+      literal: { dataType: 'string', value: 'ORDER-1' },
+    });
+    expect(addedCondition.right).toEqual({
       kind: 'function',
       capabilityId: upper.capabilityId,
       input: {
         kind: 'function',
         capabilityId: trim.capabilityId,
-        input: leftField,
+        input: rightField,
       },
     });
   });
