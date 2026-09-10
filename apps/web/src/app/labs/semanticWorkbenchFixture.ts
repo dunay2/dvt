@@ -10,6 +10,7 @@ import {
   type DvtSubstraitJoinPredicateOperand,
   type DvtSubstraitJoinSource,
 } from '../views/canvas/canvasDvtSubstraitJoinComposition';
+import { resolveDvtSubstraitJoinUnaryFunction } from '../views/canvas/canvasDvtSubstraitJoinOperand';
 import {
   applyDvtSubstraitSemanticDocument,
   readDvtTransformAuthoringAuthority,
@@ -226,6 +227,26 @@ export function buildSemanticWorkbenchFixture(
             const candidate = new Map(joined).set(rightInputIndex, rightRow);
             const operandValue = (operand: DvtSubstraitJoinPredicateOperand) => {
               if (operand.kind === 'literal') return operand.literal;
+              if (operand.kind === 'function') {
+                const input = operandValue(operand.input);
+                if (input?.dataType !== 'string') return null;
+                const capability = resolveDvtSubstraitJoinUnaryFunction({
+                  capabilityId: operand.capabilityId,
+                  inputDataType: input.dataType,
+                });
+                if (capability == null) return null;
+                const value = String(input.value);
+                if (capability.name === 'trim') {
+                  return { dataType: 'string' as const, value: value.trim() };
+                }
+                if (capability.name === 'upper') {
+                  return { dataType: 'string' as const, value: value.toUpperCase() };
+                }
+                if (capability.name === 'lower') {
+                  return { dataType: 'string' as const, value: value.toLowerCase() };
+                }
+                return null;
+              }
               const field = fieldById.get(operand.sourceFieldId);
               if (field == null) return null;
               const value = candidate.get(field.inputIndex)?.[field.fieldName];

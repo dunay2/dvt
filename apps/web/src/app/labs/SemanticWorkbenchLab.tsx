@@ -8,7 +8,17 @@ import {
   type EdgeTypes,
   type NodeTypes,
 } from '@xyflow/react';
-import { ArrowLeft, Braces, Database, Equal, GitMerge, Hash, Maximize2, Plus } from 'lucide-react';
+import {
+  ArrowLeft,
+  Braces,
+  Database,
+  Equal,
+  GitMerge,
+  Hash,
+  Maximize2,
+  Plus,
+  X,
+} from 'lucide-react';
 
 import DbtNodeComponent, { type DbtNodeData } from '../components/canvas/DbtNodeComponent';
 import { OperationalDrawerDataTable } from '../components/shell/OperationalDrawerDataTable';
@@ -38,6 +48,10 @@ import {
   type DvtSubstraitJoinPredicateOperand,
   type DvtSubstraitNInputJoinProjection,
 } from '../views/canvas/canvasDvtSubstraitJoinComposition';
+import {
+  resolveDvtSubstraitJoinUnaryFunctions,
+  type DvtSubstraitJoinUnaryFunction,
+} from '../views/canvas/canvasDvtSubstraitJoinOperand';
 import {
   applyDvtSubstraitSemanticDocument,
   readDvtTransformAuthoringAuthority,
@@ -224,7 +238,84 @@ type PendingJoinCondition = Readonly<{
   rawValue: string;
   operator: DvtSubstraitJoinComparisonOperator;
   combination: DvtSubstraitJoinConditionCombination;
+  leftFunctionIds: readonly string[];
+  rightFunctionIds: readonly string[];
 }>;
+
+function wrapJoinOperand(
+  operand: DvtSubstraitJoinPredicateOperand,
+  functionIds: readonly string[]
+): DvtSubstraitJoinPredicateOperand {
+  return functionIds.reduce<DvtSubstraitJoinPredicateOperand>(
+    (input, capabilityId) => ({ kind: 'function', capabilityId, input }),
+    operand
+  );
+}
+
+function JoinOperandFunctionChain(props: {
+  functionIds: readonly string[];
+  functions: readonly DvtSubstraitJoinUnaryFunction[];
+  onChange: (functionIds: readonly string[]) => void;
+}) {
+  const nameById = new Map(
+    props.functions.map((capability) => [capability.capabilityId, capability.name] as const)
+  );
+  return (
+    <div style={{ marginTop: 7 }}>
+      <div style={{ color: muted, fontSize: 8 }}>FUNCIONES · INTERIOR → EXTERIOR</div>
+      {props.functionIds.map((capabilityId, index) => (
+        <div
+          key={`${capabilityId}-${index}`}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginTop: 4,
+            border: '1px solid #155e75',
+            borderRadius: 5,
+            background: '#082f49',
+            padding: '5px 7px',
+            color: '#67e8f9',
+            fontFamily: 'IBM Plex Mono, monospace',
+            fontSize: 8,
+          }}
+        >
+          <span>
+            {index + 1}. {(nameById.get(capabilityId) ?? capabilityId).toUpperCase()}
+          </span>
+          <button
+            type="button"
+            title="Retirar esta función"
+            aria-label={`Retirar función ${index + 1}`}
+            onClick={() => props.onChange(props.functionIds.filter((_, item) => item !== index))}
+            style={{ border: 0, background: 'transparent', padding: 0, color: '#67e8f9' }}
+          >
+            <X aria-hidden="true" size={11} />
+          </button>
+        </div>
+      ))}
+      <select
+        aria-label="Añadir función exterior al operando"
+        value=""
+        disabled={props.functions.length === 0}
+        onChange={(event) => {
+          if (event.currentTarget.value.length === 0) return;
+          props.onChange([...props.functionIds, event.currentTarget.value]);
+        }}
+        style={{ ...JOIN_OPERATION_SELECT_STYLE, marginTop: 5 }}
+      >
+        <option value="">
+          {props.functions.length === 0 ? 'Sin funciones compatibles' : '+ Añadir función exterior'}
+        </option>
+        {props.functions.map((capability) => (
+          <option key={capability.capabilityId} value={capability.capabilityId}>
+            {capability.name.toUpperCase()}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
 
 function parseJoinLiteral(
   dataType: DvtSubstraitJoinDataType,
@@ -575,7 +666,21 @@ function SemanticWorkbenchLab() {
               option.fieldId !== conditionLeftField.fieldId &&
               option.dataType === conditionLeftField.dataType
           );
-    const conditionRightOperand =
+    const conditionFunctions =
+      conditionLeftField == null
+        ? []
+        : resolveDvtSubstraitJoinUnaryFunctions({
+            dataType: conditionLeftField.dataType,
+            provider: 'postgres',
+          });
+    const conditionLeftOperand =
+      conditionLeftField == null || conditionDraft == null
+        ? null
+        : wrapJoinOperand(
+            { kind: 'field', sourceFieldId: conditionLeftField.fieldId },
+            conditionDraft.leftFunctionIds
+          );
+    const conditionRightBase =
       conditionLeftField == null || conditionDraft == null
         ? null
         : conditionDraft.rightSourceFieldId == null
@@ -586,6 +691,10 @@ function SemanticWorkbenchLab() {
                 sourceFieldId: conditionDraft.rightSourceFieldId,
               } satisfies DvtSubstraitJoinPredicateOperand)
             : null;
+    const conditionRightOperand =
+      conditionRightBase == null || conditionDraft == null
+        ? null
+        : wrapJoinOperand(conditionRightBase, conditionDraft.rightFunctionIds);
     return {
       ...pending,
       leftOptions: optionsFor('left'),
@@ -600,7 +709,9 @@ function SemanticWorkbenchLab() {
       conditionOptions,
       conditionLeftField,
       conditionRightOptions,
+      conditionFunctions,
       conditionDraft,
+      conditionLeftOperand,
       conditionRightOperand,
       additionalConditionCount: predicate.additionalConditions?.length ?? 0,
     };
@@ -1370,6 +1481,8 @@ function SemanticWorkbenchLab() {
                             rawValue: leftOption.dataType === 'bool' ? 'true' : '',
                             operator: 'equal',
                             combination: 'and',
+                            leftFunctionIds: [],
+                            rightFunctionIds: [],
                           });
                         }}
                         style={{
@@ -1454,6 +1567,8 @@ function SemanticWorkbenchLab() {
                               leftSourceFieldId: option.fieldId,
                               rightSourceFieldId: nextRight?.fieldId ?? null,
                               rawValue: option.dataType === 'bool' ? 'true' : '',
+                              leftFunctionIds: [],
+                              rightFunctionIds: [],
                             });
                           }}
                           style={{
@@ -1475,6 +1590,16 @@ function SemanticWorkbenchLab() {
                           ))}
                         </select>
                       </label>
+                      <JoinOperandFunctionChain
+                        functionIds={selectedJoinPredicate.conditionDraft.leftFunctionIds}
+                        functions={selectedJoinPredicate.conditionFunctions}
+                        onChange={(leftFunctionIds) =>
+                          setPendingJoinCondition({
+                            ...selectedJoinPredicate.conditionDraft!,
+                            leftFunctionIds,
+                          })
+                        }
+                      />
                       <label style={{ display: 'block', marginTop: 8, color: muted, fontSize: 9 }}>
                         COMPARACIÓN
                         <select
@@ -1510,6 +1635,7 @@ function SemanticWorkbenchLab() {
                                 event.currentTarget.value === '__literal__'
                                   ? null
                                   : event.currentTarget.value,
+                              rightFunctionIds: [],
                             })
                           }
                           style={JOIN_OPERATION_SELECT_STYLE}
@@ -1550,20 +1676,30 @@ function SemanticWorkbenchLab() {
                           }}
                         />
                       ) : null}
+                      <JoinOperandFunctionChain
+                        functionIds={selectedJoinPredicate.conditionDraft.rightFunctionIds}
+                        functions={selectedJoinPredicate.conditionFunctions}
+                        onChange={(rightFunctionIds) =>
+                          setPendingJoinCondition({
+                            ...selectedJoinPredicate.conditionDraft!,
+                            rightFunctionIds,
+                          })
+                        }
+                      />
                       <button
                         type="button"
-                        disabled={selectedJoinPredicate.conditionRightOperand == null}
+                        disabled={
+                          selectedJoinPredicate.conditionLeftOperand == null ||
+                          selectedJoinPredicate.conditionRightOperand == null
+                        }
                         title="Añadir la comparación con el conector seleccionado."
                         onClick={() => {
+                          const left = selectedJoinPredicate.conditionLeftOperand;
                           const right = selectedJoinPredicate.conditionRightOperand;
-                          if (right == null) return;
+                          if (left == null || right == null) return;
                           addJoinCondition(
                             selectedJoinPredicate.joinRelationId,
-                            {
-                              kind: 'field',
-                              sourceFieldId:
-                                selectedJoinPredicate.conditionDraft!.leftSourceFieldId,
-                            },
+                            left,
                             right,
                             selectedJoinPredicate.conditionDraft!.operator,
                             selectedJoinPredicate.conditionDraft!.combination

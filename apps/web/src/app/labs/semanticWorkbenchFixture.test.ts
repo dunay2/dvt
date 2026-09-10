@@ -12,6 +12,7 @@ import {
   applyDvtSubstraitSemanticDocument,
   readDvtTransformAuthoringAuthority,
 } from '../views/canvas/canvasDvtTransformAuthoringAuthority';
+import { resolveDvtSubstraitJoinUnaryFunctions } from '../views/canvas/canvasDvtSubstraitJoinOperand';
 import clientFixture from './fixtures/client.json';
 import orderDetailsFixture from './fixtures/order-details.json';
 import ordersFixture from './fixtures/orders.json';
@@ -429,6 +430,68 @@ describe('semanticWorkbenchFixture', () => {
     expect(new Set(operands.map((node) => node.position.y)).size).toBe(1);
     expect(rootNode!.position.y).toBeLessThan(comparisons[0]!.position.y);
     expect(comparisons[0]!.position.y).toBeLessThan(operands[0]!.position.y);
+    expect(
+      expressionGraph.edges.every((edge) => {
+        const source = expressionGraph.nodes.find((node) => node.id === edge.source);
+        const target = expressionGraph.nodes.find((node) => node.id === edge.target);
+        return source != null && target != null && source.position.y > target.position.y;
+      })
+    ).toBe(true);
+  });
+
+  it('evaluates and organizes an N-function JOIN operand from the real JSON rows', () => {
+    const normalizedOrders = structuredClone(ordersFixture);
+    normalizedOrders.rows[0]!.country = ' es ';
+    const fixture = buildSemanticWorkbenchFixture({ orders: normalizedOrders });
+    const authority = readDvtTransformAuthoringAuthority(fixture.transform);
+    if (authority == null) throw new Error('Expected Substrait authority.');
+    const draft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
+    const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+    if (!inspection.ok) throw new Error('Expected an accepted N-input join.');
+    const joinRelationId = inspection.projection.joinRelations[0]?.relationId;
+    const countryFieldId = inspection.projection.inputs[0]?.fields.find(
+      (field) => field.name === 'country'
+    )?.fieldId;
+    const functions = resolveDvtSubstraitJoinUnaryFunctions({
+      dataType: 'string',
+      provider: 'postgres',
+    });
+    const trim = functions.find((capability) => capability.name === 'trim');
+    const upper = functions.find((capability) => capability.name === 'upper');
+    if (joinRelationId == null || countryFieldId == null || trim == null || upper == null) {
+      throw new Error('Expected JOIN, country and unary function identities.');
+    }
+
+    const conditioned = addDvtSubstraitJoinPredicateCondition({
+      draft,
+      joinRelationId,
+      condition: {
+        left: {
+          kind: 'function',
+          capabilityId: upper.capabilityId,
+          input: {
+            kind: 'function',
+            capabilityId: trim.capabilityId,
+            input: { kind: 'field', sourceFieldId: countryFieldId },
+          },
+        },
+        right: { kind: 'literal', literal: { dataType: 'string', value: 'ES' } },
+      },
+    });
+    const transform = applyDvtSubstraitSemanticDocument(
+      fixture.transform,
+      encodeDvtSubstraitInnerJoinDocument(conditioned)
+    );
+    const sample = fixture.projectTransformSample(transform);
+    const expressionGraph = projectSemanticWorkbenchGraph(transform, {
+      view: 'join-expression',
+      joinRelationId,
+    });
+
+    expect(sample?.rows).toHaveLength(6);
+    expect(expressionGraph.nodes.map((node) => node.data.label)).toEqual(
+      expect.arrayContaining(['TRIM\ntrim', 'UPPER\nupper'])
+    );
     expect(
       expressionGraph.edges.every((edge) => {
         const source = expressionGraph.nodes.find((node) => node.id === edge.source);

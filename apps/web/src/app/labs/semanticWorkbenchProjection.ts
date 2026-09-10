@@ -193,7 +193,12 @@ function functionNames(plan: Plan): ReadonlyMap<number, string> {
   return new Map(
     plan.extensions.flatMap((entry) =>
       entry.mappingType.case === 'extensionFunction'
-        ? [[entry.mappingType.value.functionAnchor, entry.mappingType.value.name] as const]
+        ? [
+            [
+              entry.mappingType.value.functionAnchor,
+              entry.mappingType.value.name.split(':', 1)[0]!,
+            ] as const,
+          ]
         : []
     )
   );

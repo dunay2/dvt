@@ -873,6 +873,79 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     );
   });
 
+  it('projects nested unary functions in JOIN operands', async () => {
+    const connectionRef = {
+      schemaVersion: 'connection-ref.v1' as const,
+      connectionId: 'warehouse-main',
+      provider: 'postgres' as const,
+    };
+    const draft = createDvtSubstraitStringInnerJoinDraft({
+      left: {
+        source: {
+          schema: 'public',
+          table: 'orders',
+          sourceRef: {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef,
+            sourceObjectId: 'public.orders',
+          },
+        },
+        fields: ['client_id'],
+      },
+      right: {
+        source: {
+          schema: 'public',
+          table: 'clients',
+          sourceRef: {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef,
+            sourceObjectId: 'public.clients',
+          },
+        },
+        fields: ['client_id'],
+      },
+      leftFieldName: 'client_id',
+      rightFieldName: 'client_id',
+      targetNodeId: 'transform-normalized-client-join',
+    });
+    const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+    if (!inspection.ok) throw new Error('Expected admitted INNER JOIN projection.');
+    const joinRelationId = inspection.projection.joinRelations[0]?.relationId;
+    const leftFieldId = inspection.projection.inputs[0]?.fields[0]?.fieldId;
+    const functions = resolveDvtSubstraitColumnFunctions({
+      dataType: 'string',
+      provider: 'postgres',
+    });
+    const trim = functions.find((capability) => capability.name === 'trim');
+    const upper = functions.find((capability) => capability.name === 'upper');
+    if (joinRelationId == null || leftFieldId == null || trim == null || upper == null) {
+      throw new Error('Expected JOIN, field and unary function identities.');
+    }
+    const conditioned = addDvtSubstraitJoinPredicateCondition({
+      draft,
+      joinRelationId,
+      condition: {
+        left: {
+          kind: 'function',
+          capabilityId: upper.capabilityId,
+          input: {
+            kind: 'function',
+            capabilityId: trim.capabilityId,
+            input: { kind: 'field', sourceFieldId: leftFieldId },
+          },
+        },
+        right: { kind: 'literal', literal: { dataType: 'string', value: 'CLIENT-1' } },
+      },
+    });
+
+    const normalized = (await projectDvtSubstraitInnerJoinToPostgresSql(conditioned))
+      .replaceAll(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+
+    expect(normalized).toContain("and upper(trim(left_source.client_id)) = 'client-1'");
+  });
+
   it.each([
     {
       appendedSources: [{ nodeId: 'source-shipments', table: 'shipments', output: 'shipment_id' }],

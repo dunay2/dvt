@@ -29,6 +29,7 @@ import {
   type DvtSubstraitNInputJoinProjection,
 } from './canvasDvtSubstraitJoinComposition';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import { resolveDvtSubstraitColumnFunctions } from './canvasDvtSubstraitProjection';
 
 const OPAQUE_RELATION_ID =
   /^dvt_rel_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -437,6 +438,65 @@ describe('DVT Substrait INNER JOIN identity', () => {
         },
       })
     ).toBe(draft);
+  });
+
+  it('round-trips N unary functions around a JOIN operand', () => {
+    const draft = createDvtSubstraitStringInnerJoinDraft({
+      left: {
+        source: source('source-left', 'public', 'orders'),
+        fields: ['id'],
+      },
+      right: {
+        source: source('source-right', 'public', 'clients'),
+        fields: ['id'],
+      },
+      leftFieldName: 'id',
+      rightFieldName: 'id',
+      targetNodeId: 'transform-function-join',
+    });
+    const before = inspectNInput(draft);
+    const joinRelationId = before.joinRelations[0]?.relationId;
+    if (joinRelationId == null) throw new Error('Expected the join relation identity.');
+    const trim = resolveDvtSubstraitColumnFunctions({
+      dataType: 'string',
+      provider: 'postgres',
+    }).find((capability) => capability.name === 'trim');
+    const upper = resolveDvtSubstraitColumnFunctions({
+      dataType: 'string',
+      provider: 'postgres',
+    }).find((capability) => capability.name === 'upper');
+    if (trim == null || upper == null) throw new Error('Expected admitted unary functions.');
+    const leftField = { kind: 'field' as const, sourceFieldId: inputFieldId(before, 0, 'id') };
+
+    const edited = addDvtSubstraitJoinPredicateCondition({
+      draft,
+      joinRelationId,
+      condition: {
+        left: {
+          kind: 'function',
+          capabilityId: upper.capabilityId,
+          input: {
+            kind: 'function',
+            capabilityId: trim.capabilityId,
+            input: leftField,
+          },
+        },
+        right: { kind: 'literal', literal: { dataType: 'string', value: 'ORDER-1' } },
+      },
+    });
+    const after = inspectNInput(
+      decodeDvtSubstraitInnerJoinDocument(encodeDvtSubstraitInnerJoinDocument(edited))
+    );
+
+    expect(after.joins[0]?.additionalConditions?.[0]?.left).toEqual({
+      kind: 'function',
+      capabilityId: upper.capabilityId,
+      input: {
+        kind: 'function',
+        capabilityId: trim.capabilityId,
+        input: leftField,
+      },
+    });
   });
 
   it('preserves an N-input output FieldId through rename and reorder', () => {

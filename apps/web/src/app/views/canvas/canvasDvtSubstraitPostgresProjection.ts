@@ -42,6 +42,7 @@ import {
   type DvtSubstraitJoinPredicateOperand,
   type DvtSubstraitNInputJoinProjection,
 } from './canvasDvtSubstraitJoinComposition';
+import { resolveDvtSubstraitJoinUnaryFunction } from './canvasDvtSubstraitJoinOperand';
 import {
   inspectDvtSubstraitUnionAllGroupedWindowDraft,
   inspectDvtSubstraitUnionAllGroupingDraft,
@@ -584,6 +585,19 @@ function buildNInputJoinPostgresAst(projection: DvtSubstraitNInputJoinProjection
     if (operand.kind === 'field') {
       const field = requireFieldBinding(operand.sourceFieldId);
       return pgQualifiedColumnRef(field.alias, field.name);
+    }
+    if (operand.kind === 'function') {
+      const capability = resolveDvtSubstraitJoinUnaryFunction({
+        capabilityId: operand.capabilityId,
+        inputDataType: 'string',
+      });
+      if (capability == null) {
+        throw new DvtSubstraitPostgresProjectionError(
+          'unsupported_shape',
+          'The recursive INNER JOIN contains an unsupported operand function.'
+        );
+      }
+      return pgFunction(capability.name, predicateOperand(operand.input));
     }
     const literal = operand.literal;
     if (literal.dataType === 'string') return pgStringLiteral(literal.value);
