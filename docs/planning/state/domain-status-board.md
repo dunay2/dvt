@@ -2,7 +2,7 @@
 title: Domain Status Board
 status: Review
 owner: Product / Architecture / Docs
-last_reviewed: 2026-05-07
+last_reviewed: 2026-09-10
 planning_type: status
 ---
 
@@ -118,14 +118,14 @@ acceptance, and status. This document is a status summary, not a task registry.
 
 ## Canonical Anchors
 
-- [Planning Control Tower](./planning-control-tower.md)
+- [Planning Dashboard](./planning-dashboard.md)
 - [Roadmap Of Record](../roadmap/index.md)
 - [Roadmap By Domain](../roadmap/roadmap-by-domain.md)
 - [System Delivery Status](../../architecture/system-delivery-status.md)
 
 ## Reading Order
 
-1. [Planning Control Tower](./planning-control-tower.md)
+1. [Planning Dashboard](./planning-dashboard.md)
 2. [Roadmap Of Record](../roadmap/index.md)
 3. [Roadmap By Domain](../roadmap/roadmap-by-domain.md)
 4. [Domain Views](../domains/index.md)
