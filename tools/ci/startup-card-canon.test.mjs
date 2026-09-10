@@ -167,7 +167,11 @@ test('active planning entrypoints do not reintroduce retired planning surfaces',
   for (const path of activePlanningEntrypoints) {
     const content = readRepoFile(path);
     for (const retired of retiredPlanningSurfaces) {
-      assert.doesNotMatch(content, retired.linkPattern, `${path} must not link ${retired.path}`);
+      assert.doesNotMatch(
+        content,
+        retired.linkPattern,
+        `${path} must not link ${retired.path}`
+      );
       assert.doesNotMatch(
         content,
         retired.namePattern,
