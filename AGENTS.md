@@ -14,7 +14,7 @@ Before analysis, coding, Git actions, or planning, the agent MUST:
 
 `*** Plan-driven. Outcome-agnostic.***`
 
-4. Immediately after that sentence, name the governing sources being used for
+1. Immediately after that sentence, name the governing sources being used for
    the task.
 
 If the agent has not read the inventory first, it MUST stop and do that before
