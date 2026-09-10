@@ -2,7 +2,7 @@
 title: Legacy Gap Program Status
 status: Historical
 owner: Architecture / Delivery / Docs
-last_reviewed: 2026-04-02
+last_reviewed: 2026-09-10
 planning_type: reference
 ---
 
@@ -15,8 +15,8 @@ an active planning board and it does not carry the current delivery posture.
 
 ## Use Instead
 
-- [Planning Control Tower](./planning-control-tower.md) for active work items,
-  lane routing, and task triage
+- [GitHub Issues](https://github.com/dunay2/dvt/issues) for active work, ownership, blockers, and acceptance
+- [Planning Dashboard](./planning-dashboard.md) for human planning navigation
 - [Domain Status Board](./domain-status-board.md) for domain-level priorities
 - [Roadmap Of Record](../roadmap/index.md) for sequencing and roadmap posture
 - [System Delivery Status](../../architecture/system-delivery-status.md) for
@@ -25,5 +25,5 @@ an active planning board and it does not carry the current delivery posture.
 ## Retirement Rule
 
 Do not reopen `G1` through `G10` as active planning identifiers. If new work is
-needed, express it as a sprint board, review intake item, roadmap slice, or
-lane task ID.
+needed, create or update the governing GitHub issue; Planning DB remains limited
+to architecture and mechanization.

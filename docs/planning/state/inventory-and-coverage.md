@@ -28,9 +28,8 @@ Inventory snapshot to make planning sprawl visible and navigable.
   plus domain pages to avoid browsing by filename alone.
 - Proposals and gaps hold active sequencing; status artifacts hold current truth.
 - Reviews are concentrated and should be consumed through domain mapping.
-- Active execution tracking should be centralized in the planning DB command
-  and query rails described by [Planning Control Tower](./planning-control-tower.md)
-  to avoid dispersed follow-up. Lane YAML is a bootstrap/export snapshot.
+- GitHub Issues owns active task lifecycle, priority, blockers, and acceptance.
+  Planning DB owns architecture and command/query mechanization, not task status.
 
 ## Current Domain Hubs
 
@@ -46,4 +45,4 @@ Inventory snapshot to make planning sprawl visible and navigable.
 - [Roadmap Of Record](../roadmap/index.md)
 - [Roadmap by Domain](../roadmap/roadmap-by-domain.md)
 - [Planning Roadmap Diagrams](../roadmap/diagrams/index.md)
-- [Planning Control Tower](./planning-control-tower.md)
+- [Planning Dashboard](./planning-dashboard.md)

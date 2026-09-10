@@ -2,7 +2,7 @@
 title: Frontend And UX Mandatory Proposal Classification
 status: Active
 owner: Web / Product / Architecture
-last_reviewed: 2026-06-05
+last_reviewed: 2026-09-10
 planning_type: status
 lane: E
 task_id: E-PROP-DISP-1
@@ -25,7 +25,7 @@ link-migration slice.
 ## Governing Sources
 
 - [Governance document and rule inventory](../../../status/governance-document-rule-inventory.md)
-- [Planning control tower](../../../state/planning-control-tower.md)
+- [GitHub MVP issue workflow](../../../state/github-mvp-issue-workflow.md)
 - [Proposal portfolio map](../../portfolio-map-20260403.md)
 - [Frontend mature-system gap status](../../../status/frontend-mature-system-gap-status-20260602.md)
 - [Command and query rail governance](../../../../architecture/command-query-rail-governance.md)
@@ -37,7 +37,7 @@ link-migration slice.
 | --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ----: |
 | [Implemented capabilities](./implemented-capabilities/index.md) | Product-facing capabilities, features, route surfaces, visual-system work, and workflow affordances that have implementation evidence.          |    50 |
 | [Implemented technical](./implemented-technical/index.md)       | Boundary, test-governance, port, API-mode, query, documentation, and mechanical-truth implementation work that is already complete or accepted. |    17 |
-| [Pending work](./pending-work/index.md)                         | Real frontend work that should remain executable Planning DB work, ordered by importance and dependency.                                        |    13 |
+| [Pending work](./pending-work/index.md)                         | Frontend work not yet delivered; executable lifecycle and priority live in GitHub Issues.                                                       |    13 |
 | [Superseded](./superseded/index.md)                             | Plans closed, replaced, or reduced to rationale by later accepted work.                                                                         |    20 |
 | [Archive candidates](./archive-candidates/index.md)             | Drafts or historical story packs that should move to archive only after active references are migrated.                                         |     9 |
 
@@ -50,12 +50,13 @@ Use this order when classifying a proposal:
 2. If it has `mechanizationStatus: closed`, a closeout, or a successor plan
    that owns the behavior, put it in superseded.
 3. If it describes missing product behavior that is still not implemented,
-   create or update a Planning DB task and list it in pending work.
+   create or update the governing GitHub issue and list it in pending work.
 4. If it is a draft story pack or historical design input with active
    references, keep it as an archive candidate until those references move to
-   canonical component, feature, closeout, or task docs.
+   canonical component, feature, closeout, or issue-backed docs.
 5. Do not infer implementation from a proposal title. Use status, feature
-   mechanization, closeout evidence, code/test references, and Planning DB.
+   mechanization, closeout evidence, code/test references, GitHub Issues for task
+   lifecycle, and Planning DB for architecture/mechanization evidence.
 
 ## Immediate Frontend Priority
 

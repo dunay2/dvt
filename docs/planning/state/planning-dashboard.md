@@ -2,7 +2,7 @@
 title: Planning Dashboard
 status: Active
 owner: Product / Architecture / Delivery
-last_reviewed: 2026-07-31
+last_reviewed: 2026-09-09
 planning_type: operational
 ---
 
@@ -18,9 +18,11 @@ inspect queued, active, blocked, and completed product work.
 - Current product implementation truth: code, contracts, tests, and CI on
   `main`.
 
-Local agent lanes, lane YAML, rendered lane pages, workboards, and open-task
-routes are retired. They must not be recreated as a second task authority.
+Local agent lanes, lane YAML, rendered lane pages, workboards, open-task routes,
+and Planning DB task rows are retired. They must not be recreated as a second
+task authority.
 
 See [GitHub MVP Issue Workflow](./github-mvp-issue-workflow.md) for the delivery
-procedure and [Planning Control Tower](./planning-control-tower.md) for the
-authority boundary.
+procedure and
+[ADR-0061](../../adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md)
+for the authority boundary.

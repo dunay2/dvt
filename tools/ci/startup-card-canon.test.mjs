@@ -54,6 +54,39 @@ const requiredRouteBaselines = [
   },
 ];
 
+const activePlanningEntrypoints = [
+  'CLAUDE.md',
+  'README.md',
+  'docs/index.md',
+  'docs/concepts/index.md',
+  'docs/concepts/glossary.md',
+  'docs/concepts/system-map.md',
+  'docs/guides/ai-work-protocol.md',
+  'docs/architecture/reference-architecture.md',
+  'docs/architecture/system/index.md',
+  'docs/architecture/domain-map.md',
+  'docs/architecture/atlas/index.md',
+  'docs/architecture/atlas/README.md',
+  'docs/architecture/components/engine/roadmap/engine-phases.md',
+  'docs/planning/status/governance-document-rule-inventory.md',
+  'docs/planning/status/documentation-information-architecture-current-vs-target-20260407.md',
+  'docs/planning/state/index.md',
+  'docs/planning/state/planning-dashboard.md',
+  'docs/planning/state/gap-execution-route.md',
+  'docs/planning/state/gap-execution-status.md',
+  'docs/planning/state/inventory-and-coverage.md',
+  'docs/planning/roadmap/index.md',
+  'docs/planning/roadmap/roadmap-by-domain.md',
+  'docs/planning/roadmap/diagrams/planning-domain-map.md',
+  'docs/planning/roadmap/diagrams/execution-runtime-architecture-delta.md',
+  'docs/planning/domains/index.md',
+  'docs/planning/domains/documentation-governance.md',
+  'docs/planning/gaps/index.md',
+  'docs/planning/gaps/runtime-architecture-gap-register-20260331.md',
+  'docs/planning/proposals/mandatory/frontend-and-ux/index.md',
+  'scripts/sync-docs.cjs',
+];
+
 test('governance startup card canonization preserves routing semantics and baseline rails', () => {
   assertFilesExist(requiredFiles);
   assertCanonPlan(
@@ -102,5 +135,27 @@ test('governance startup card canonization preserves routing semantics and basel
     'PR reviewer',
   ]) {
     assert.match(userStories, new RegExp(escapeRegExp(persona)));
+  }
+});
+
+test('active planning entrypoints do not reintroduce the retired control tower', () => {
+  assert.throws(
+    () => readRepoFile('docs/planning/state/planning-control-tower.md'),
+    /ENOENT/,
+    'retired planning control tower file must stay deleted'
+  );
+
+  for (const path of activePlanningEntrypoints) {
+    const content = readRepoFile(path);
+    assert.doesNotMatch(
+      content,
+      /planning-control-tower\.md/i,
+      `${path} must not link the retired file`
+    );
+    assert.doesNotMatch(
+      content,
+      /Planning Control Tower/i,
+      `${path} must not present the retired authority`
+    );
   }
 });
