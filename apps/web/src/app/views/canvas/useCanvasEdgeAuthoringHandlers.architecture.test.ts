@@ -10,6 +10,10 @@ const EDGE_COMMAND_RUNNER_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'useCanvasEdgeCommandRunner.ts'
 );
+const COLUMN_OUTPUT_COMMAND_RUNNER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useCanvasColumnOutputCommandRunner.ts'
+);
 
 describe('useCanvasEdgeAuthoringHandlers architecture', () => {
   it('depends on local semantic contracts instead of the parent graph-handlers args', () => {
@@ -26,6 +30,12 @@ describe('useCanvasEdgeAuthoringHandlers architecture', () => {
     expect(EDGE_AUTHORING_HANDLERS_SOURCE).toContain('state.canonicalNodesById');
     expect(EDGE_AUTHORING_HANDLERS_SOURCE).not.toContain('setEdges((existingEdges)');
     expect(EDGE_AUTHORING_HANDLERS_SOURCE).not.toContain('setDraftSession((currentSession)');
+    expect(EDGE_AUTHORING_HANDLERS_SOURCE).toContain('useCanvasColumnOutputCommandRunner');
+    expect(COLUMN_OUTPUT_COMMAND_RUNNER_SOURCE).toContain('latestDraftSessionRef');
+    expect(COLUMN_OUTPUT_COMMAND_RUNNER_SOURCE).toContain('setDraftSession((currentDraftSession)');
+    expect(COLUMN_OUTPUT_COMMAND_RUNNER_SOURCE).toContain('setCanvasColumnOutputIncluded');
+    expect(COLUMN_OUTPUT_COMMAND_RUNNER_SOURCE).toContain('configureDbtModelColumnOutput');
+    expect(COLUMN_OUTPUT_COMMAND_RUNNER_SOURCE).toContain('reorderCanvasStructuredFieldChildren');
     expect(EDGE_COMMAND_RUNNER_SOURCE).toContain('resolveCanvasEdgeCreationTransaction');
     expect(EDGE_COMMAND_RUNNER_SOURCE).toContain('resolveCanvasEdgeReconnectTransaction');
     expect(EDGE_COMMAND_RUNNER_SOURCE).toContain('setEdges(args.transaction.edges)');
