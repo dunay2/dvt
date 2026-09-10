@@ -54,6 +54,21 @@ const requiredRouteBaselines = [
   },
 ];
 
+const activePlanningEntrypoints = [
+  'CLAUDE.md',
+  'README.md',
+  'docs/index.md',
+  'docs/concepts/index.md',
+  'docs/concepts/system-map.md',
+  'docs/guides/ai-work-protocol.md',
+  'docs/planning/status/governance-document-rule-inventory.md',
+  'docs/planning/state/index.md',
+  'docs/planning/state/planning-dashboard.md',
+  'docs/planning/roadmap/index.md',
+  'docs/planning/domains/index.md',
+  'docs/planning/gaps/index.md',
+];
+
 test('governance startup card canonization preserves routing semantics and baseline rails', () => {
   assertFilesExist(requiredFiles);
   assertCanonPlan(
@@ -102,5 +117,19 @@ test('governance startup card canonization preserves routing semantics and basel
     'PR reviewer',
   ]) {
     assert.match(userStories, new RegExp(escapeRegExp(persona)));
+  }
+});
+
+test('active planning entrypoints do not reintroduce the retired control tower', () => {
+  assert.throws(
+    () => readRepoFile('docs/planning/state/planning-control-tower.md'),
+    /ENOENT/,
+    'retired planning control tower file must stay deleted'
+  );
+
+  for (const path of activePlanningEntrypoints) {
+    const content = readRepoFile(path);
+    assert.doesNotMatch(content, /planning-control-tower\.md/i, `${path} must not link the retired file`);
+    assert.doesNotMatch(content, /Planning Control Tower/i, `${path} must not present the retired authority`);
   }
 });
