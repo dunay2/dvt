@@ -487,8 +487,12 @@ describe('DVT Substrait INNER JOIN identity', () => {
     const after = inspectNInput(
       decodeDvtSubstraitInnerJoinDocument(encodeDvtSubstraitInnerJoinDocument(edited))
     );
+    const addedCondition = after.joins[0]?.additionalConditions?.[0];
+    if (addedCondition == null || addedCondition.kind === 'group') {
+      throw new Error('Expected one function comparison.');
+    }
 
-    expect(after.joins[0]?.additionalConditions?.[0]?.left).toEqual({
+    expect(addedCondition.left).toEqual({
       kind: 'function',
       capabilityId: upper.capabilityId,
       input: {
@@ -497,6 +501,68 @@ describe('DVT Substrait INNER JOIN identity', () => {
         input: leftField,
       },
     });
+  });
+
+  it('round-trips A AND (B OR C) as a grouped JOIN condition', () => {
+    const draft = createDvtSubstraitStringInnerJoinDraft({
+      left: {
+        source: source('source-left', 'public', 'orders'),
+        fields: ['id', 'country'],
+      },
+      right: {
+        source: source('source-right', 'public', 'clients'),
+        fields: ['id', 'country', 'active'],
+        fieldTypes: ['string', 'string', 'bool'],
+      },
+      leftFieldName: 'id',
+      rightFieldName: 'id',
+      targetNodeId: 'transform-grouped-join',
+    });
+    const before = inspectNInput(draft);
+    const joinRelationId = before.joinRelations[0]?.relationId;
+    if (joinRelationId == null) throw new Error('Expected the join relation identity.');
+    const countryFieldId = inputFieldId(before, 1, 'country');
+    const activeFieldId = inputFieldId(before, 1, 'active');
+    const withCountry = addDvtSubstraitJoinPredicateCondition({
+      draft,
+      joinRelationId,
+      condition: {
+        left: { kind: 'field', sourceFieldId: countryFieldId },
+        right: { kind: 'literal', literal: { dataType: 'string', value: 'ES' } },
+      },
+    });
+    const grouped = addDvtSubstraitJoinPredicateCondition({
+      draft: withCountry,
+      joinRelationId,
+      groupWithPrevious: true,
+      condition: {
+        left: { kind: 'field', sourceFieldId: activeFieldId },
+        right: { kind: 'literal', literal: { dataType: 'bool', value: false } },
+        combination: 'or',
+      },
+    });
+
+    const after = inspectNInput(
+      decodeDvtSubstraitInnerJoinDocument(encodeDvtSubstraitInnerJoinDocument(grouped))
+    );
+
+    expect(after.joins[0]?.additionalConditions).toEqual([
+      {
+        kind: 'group',
+        combination: 'and',
+        conditions: [
+          {
+            left: { kind: 'field', sourceFieldId: countryFieldId },
+            right: { kind: 'literal', literal: { dataType: 'string', value: 'ES' } },
+          },
+          {
+            left: { kind: 'field', sourceFieldId: activeFieldId },
+            right: { kind: 'literal', literal: { dataType: 'bool', value: false } },
+            combination: 'or',
+          },
+        ],
+      },
+    ]);
   });
 
   it('preserves an N-input output FieldId through rename and reorder', () => {

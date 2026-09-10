@@ -392,7 +392,11 @@ export function projectSemanticWorkbenchGraph(
     return `${prefix}-${sequence}`;
   }
 
-  function describeExpression(expression: Expression, fieldNames: readonly string[]): string {
+  function describeExpression(
+    expression: Expression,
+    fieldNames: readonly string[],
+    nested = false
+  ): string {
     if (expression.rexType.case === 'selection') {
       const ordinal = readDvtSubstraitFieldReferenceOrdinal(expression);
       return ordinal == null ? 'field' : (fieldNames[ordinal] ?? `field[${ordinal}]`);
@@ -405,12 +409,14 @@ export function projectSemanticWorkbenchGraph(
       const operator = operatorLabel(functionName);
       const argumentsList = scalar.arguments.flatMap((argument) =>
         argument.argType.case === 'value'
-          ? [describeExpression(argument.argType.value, fieldNames)]
+          ? [describeExpression(argument.argType.value, fieldNames, true)]
           : []
       );
-      return argumentsList.length === 2
-        ? `${argumentsList[0]} ${operator} ${argumentsList[1]}`
-        : `${operator}(${argumentsList.join(', ')})`;
+      const detail =
+        argumentsList.length === 2
+          ? `${argumentsList[0]} ${operator} ${argumentsList[1]}`
+          : `${operator}(${argumentsList.join(', ')})`;
+      return nested && (functionName === 'and' || functionName === 'or') ? `(${detail})` : detail;
     }
     return expression.rexType.case ?? 'expression';
   }

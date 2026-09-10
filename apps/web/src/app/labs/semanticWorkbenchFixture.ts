@@ -10,6 +10,7 @@ import {
   type DvtSubstraitJoinPredicateOperand,
   type DvtSubstraitJoinSource,
 } from '../views/canvas/canvasDvtSubstraitJoinComposition';
+import { reduceDvtSubstraitJoinConditions } from '../views/canvas/canvasDvtSubstraitJoinCondition';
 import { resolveDvtSubstraitJoinUnaryFunction } from '../views/canvas/canvasDvtSubstraitJoinOperand';
 import {
   applyDvtSubstraitSemanticDocument,
@@ -225,7 +226,9 @@ export function buildSemanticWorkbenchFixture(
         joinedRows = joinedRows.flatMap((joined) =>
           rightRows.flatMap((rightRow) => {
             const candidate = new Map(joined).set(rightInputIndex, rightRow);
-            const operandValue = (operand: DvtSubstraitJoinPredicateOperand) => {
+            const operandValue = (
+              operand: DvtSubstraitJoinPredicateOperand
+            ): Readonly<{ dataType: DvtSubstraitJoinDataType; value: unknown }> | null => {
               if (operand.kind === 'literal') return operand.literal;
               if (operand.kind === 'function') {
                 const input = operandValue(operand.input);
@@ -268,8 +271,8 @@ export function buildSemanticWorkbenchFixture(
               }
               const comparison = (() => {
                 if (leftValue.dataType === 'i64') {
-                  const left = BigInt(leftValue.value);
-                  const right = BigInt(rightValue.value);
+                  const left = BigInt(String(leftValue.value));
+                  const right = BigInt(String(rightValue.value));
                   return left === right ? 0 : left < right ? -1 : 1;
                 }
                 if (leftValue.dataType === 'fp64') {
@@ -296,22 +299,18 @@ export function buildSemanticWorkbenchFixture(
               if (operator === 'lt') return comparison < 0;
               return comparison <= 0;
             };
-            let matches = compareOperands(
-              { kind: 'field', sourceFieldId: predicate.leftSourceFieldId },
-              { kind: 'field', sourceFieldId: predicate.rightSourceFieldId },
-              predicate.operator ?? 'equal'
-            );
-            for (const condition of predicate.additionalConditions ?? []) {
-              const conditionMatches = compareOperands(
-                condition.left,
-                condition.right,
-                condition.operator ?? 'equal'
-              );
-              matches =
-                (condition.combination ?? 'and') === 'and'
-                  ? matches && conditionMatches
-                  : matches || conditionMatches;
-            }
+            const matches = reduceDvtSubstraitJoinConditions({
+              initial: compareOperands(
+                { kind: 'field', sourceFieldId: predicate.leftSourceFieldId },
+                { kind: 'field', sourceFieldId: predicate.rightSourceFieldId },
+                predicate.operator ?? 'equal'
+              ),
+              conditions: predicate.additionalConditions ?? [],
+              comparison: (condition) =>
+                compareOperands(condition.left, condition.right, condition.operator ?? 'equal'),
+              combine: (combination, left, right) =>
+                combination === 'and' ? left && right : left || right,
+            });
             return matches ? [candidate] : [];
           })
         );

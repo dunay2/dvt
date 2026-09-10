@@ -42,6 +42,7 @@ import {
   type DvtSubstraitJoinPredicateOperand,
   type DvtSubstraitNInputJoinProjection,
 } from './canvasDvtSubstraitJoinComposition';
+import { reduceDvtSubstraitJoinConditions } from './canvasDvtSubstraitJoinCondition';
 import { resolveDvtSubstraitJoinUnaryFunction } from './canvasDvtSubstraitJoinOperand';
 import {
   inspectDvtSubstraitUnionAllGroupedWindowDraft,
@@ -629,17 +630,20 @@ function buildNInputJoinPostgresAst(projection: DvtSubstraitNInputJoinProjection
       pgQualifiedColumnRef(left.alias, left.name),
       pgQualifiedColumnRef(right.alias, right.name)
     );
-    for (const condition of predicate.additionalConditions ?? []) {
-      const comparison = pgComparison(
-        POSTGRES_JOIN_COMPARISON[condition.operator ?? 'equal'],
-        predicateOperand(condition.left),
-        predicateOperand(condition.right)
-      );
-      conditionExpression =
-        (condition.combination ?? 'and') === 'and'
-          ? pgAnd([conditionExpression, comparison])
-          : pgOr([conditionExpression, comparison]);
-    }
+    conditionExpression = reduceDvtSubstraitJoinConditions({
+      initial: conditionExpression,
+      conditions: predicate.additionalConditions ?? [],
+      comparison: (condition) =>
+        pgComparison(
+          POSTGRES_JOIN_COMPARISON[condition.operator ?? 'equal'],
+          predicateOperand(condition.left),
+          predicateOperand(condition.right)
+        ),
+      combine: (combination, leftExpression, rightExpression) =>
+        combination === 'and'
+          ? pgAnd([leftExpression, rightExpression])
+          : pgOr([leftExpression, rightExpression]),
+    });
     joinedInputs = {
       JoinExpr: {
         jointype: 'JOIN_INNER',

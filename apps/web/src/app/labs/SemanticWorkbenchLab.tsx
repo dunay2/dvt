@@ -48,6 +48,7 @@ import {
   type DvtSubstraitJoinPredicateOperand,
   type DvtSubstraitNInputJoinProjection,
 } from '../views/canvas/canvasDvtSubstraitJoinComposition';
+import { countDvtSubstraitJoinConditionComparisons } from '../views/canvas/canvasDvtSubstraitJoinCondition';
 import {
   resolveDvtSubstraitJoinUnaryFunctions,
   type DvtSubstraitJoinUnaryFunction,
@@ -238,6 +239,7 @@ type PendingJoinCondition = Readonly<{
   rawValue: string;
   operator: DvtSubstraitJoinComparisonOperator;
   combination: DvtSubstraitJoinConditionCombination;
+  groupWithPrevious: boolean;
   leftFunctionIds: readonly string[];
   rightFunctionIds: readonly string[];
 }>;
@@ -509,7 +511,8 @@ function SemanticWorkbenchLab() {
       left: DvtSubstraitJoinPredicateOperand,
       right: DvtSubstraitJoinPredicateOperand,
       operator: DvtSubstraitJoinComparisonOperator,
-      combination: DvtSubstraitJoinConditionCombination
+      combination: DvtSubstraitJoinConditionCombination,
+      groupWithPrevious: boolean
     ) => {
       editJoinDraft((draft) =>
         addDvtSubstraitJoinPredicateCondition({
@@ -521,6 +524,7 @@ function SemanticWorkbenchLab() {
             operator,
             combination,
           },
+          groupWithPrevious,
         })
       );
       setPendingJoinCondition(null);
@@ -713,7 +717,9 @@ function SemanticWorkbenchLab() {
       conditionDraft,
       conditionLeftOperand,
       conditionRightOperand,
-      additionalConditionCount: predicate.additionalConditions?.length ?? 0,
+      additionalConditionCount: countDvtSubstraitJoinConditionComparisons(
+        predicate.additionalConditions ?? []
+      ),
     };
   }, [joinProjection, pendingJoinCondition, pendingJoinPredicate, selectedSemantic]);
   const semanticNodeTypes = useMemo<NodeTypes>(
@@ -1481,6 +1487,7 @@ function SemanticWorkbenchLab() {
                             rawValue: leftOption.dataType === 'bool' ? 'true' : '',
                             operator: 'equal',
                             combination: 'and',
+                            groupWithPrevious: false,
                             leftFunctionIds: [],
                             rightFunctionIds: [],
                           });
@@ -1686,6 +1693,51 @@ function SemanticWorkbenchLab() {
                           })
                         }
                       />
+                      {selectedJoinPredicate.additionalConditionCount === 0 ? null : (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              aria-pressed={selectedJoinPredicate.conditionDraft.groupWithPrevious}
+                              onClick={() =>
+                                setPendingJoinCondition({
+                                  ...selectedJoinPredicate.conditionDraft!,
+                                  groupWithPrevious:
+                                    !selectedJoinPredicate.conditionDraft!.groupWithPrevious,
+                                })
+                              }
+                              style={{
+                                display: 'flex',
+                                width: '100%',
+                                alignItems: 'center',
+                                gap: 6,
+                                marginTop: 8,
+                                border: `1px solid ${
+                                  selectedJoinPredicate.conditionDraft.groupWithPrevious
+                                    ? '#10b981'
+                                    : border
+                                }`,
+                                borderRadius: 6,
+                                background: selectedJoinPredicate.conditionDraft.groupWithPrevious
+                                  ? '#064e3b'
+                                  : panel,
+                                padding: '7px 9px',
+                                color: selectedJoinPredicate.conditionDraft.groupWithPrevious
+                                  ? '#d1fae5'
+                                  : muted,
+                                cursor: 'pointer',
+                                fontSize: 9,
+                              }}
+                            >
+                              <Braces aria-hidden="true" size={12} />
+                              Agrupar con la condición anterior
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Crea un grupo entre paréntesis con la condición anterior.
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                       <button
                         type="button"
                         disabled={
@@ -1702,7 +1754,8 @@ function SemanticWorkbenchLab() {
                             left,
                             right,
                             selectedJoinPredicate.conditionDraft!.operator,
-                            selectedJoinPredicate.conditionDraft!.combination
+                            selectedJoinPredicate.conditionDraft!.combination,
+                            selectedJoinPredicate.conditionDraft!.groupWithPrevious
                           );
                         }}
                         style={{
@@ -1727,7 +1780,9 @@ function SemanticWorkbenchLab() {
                           fontWeight: 700,
                         }}
                       >
-                        Añadir con {selectedJoinPredicate.conditionDraft.combination.toUpperCase()}
+                        {selectedJoinPredicate.conditionDraft.groupWithPrevious
+                          ? `Añadir dentro de (…) con ${selectedJoinPredicate.conditionDraft.combination.toUpperCase()}`
+                          : `Añadir con ${selectedJoinPredicate.conditionDraft.combination.toUpperCase()}`}
                       </button>
                     </div>
                   )}

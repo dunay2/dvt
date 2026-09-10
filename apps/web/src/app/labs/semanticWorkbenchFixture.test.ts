@@ -439,6 +439,65 @@ describe('semanticWorkbenchFixture', () => {
     ).toBe(true);
   });
 
+  it('evaluates and organizes A AND (B OR C) from the real JSON rows', () => {
+    const fixture = buildSemanticWorkbenchFixture();
+    const authority = readDvtTransformAuthoringAuthority(fixture.transform);
+    if (authority == null) throw new Error('Expected Substrait authority.');
+    const draft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
+    const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+    if (!inspection.ok) throw new Error('Expected an accepted N-input join.');
+    const joinRelationId = inspection.projection.joinRelations[0]?.relationId;
+    const countryFieldId = inspection.projection.inputs[1]?.fields.find(
+      (field) => field.name === 'country'
+    )?.fieldId;
+    const activeFieldId = inspection.projection.inputs[1]?.fields.find(
+      (field) => field.name === 'active'
+    )?.fieldId;
+    if (joinRelationId == null || countryFieldId == null || activeFieldId == null) {
+      throw new Error('Expected JOIN, country and active identities.');
+    }
+    const withCountry = addDvtSubstraitJoinPredicateCondition({
+      draft,
+      joinRelationId,
+      condition: {
+        left: { kind: 'field', sourceFieldId: countryFieldId },
+        right: { kind: 'literal', literal: { dataType: 'string', value: 'ES' } },
+      },
+    });
+    const grouped = addDvtSubstraitJoinPredicateCondition({
+      draft: withCountry,
+      joinRelationId,
+      groupWithPrevious: true,
+      condition: {
+        left: { kind: 'field', sourceFieldId: activeFieldId },
+        right: { kind: 'literal', literal: { dataType: 'bool', value: false } },
+        combination: 'or',
+      },
+    });
+    const transform = applyDvtSubstraitSemanticDocument(
+      fixture.transform,
+      encodeDvtSubstraitInnerJoinDocument(grouped)
+    );
+    const sample = fixture.projectTransformSample(transform);
+    const expressionGraph = projectSemanticWorkbenchGraph(transform, {
+      view: 'join-expression',
+      joinRelationId,
+    });
+    const relationGraph = projectSemanticWorkbenchGraph(transform, { view: 'relations' });
+    const root = expressionGraph.nodes.find((node) => node.data.label === 'AND\nAND');
+    const nestedOr = expressionGraph.nodes.find((node) => node.data.label === 'OR\nOR');
+
+    expect(sample?.rows).toHaveLength(7);
+    expect(root).toBeDefined();
+    expect(nestedOr).toBeDefined();
+    expect(
+      expressionGraph.edges.some((edge) => edge.source === nestedOr?.id && edge.target === root?.id)
+    ).toBe(true);
+    expect(
+      relationGraph.nodes.find((node) => node.id === joinRelationId)?.data.expression
+    ).toContain("AND (raw.client.country = 'ES' OR raw.client.active = boolean: false)");
+  });
+
   it('evaluates and organizes an N-function JOIN operand from the real JSON rows', () => {
     const normalizedOrders = structuredClone(ordersFixture);
     normalizedOrders.rows[0]!.country = ' es ';
