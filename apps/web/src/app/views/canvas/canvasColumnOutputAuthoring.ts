@@ -1,5 +1,6 @@
 /** Owns output inclusion and ordering for canonical Transform projections. */
 import type { CanonicalNode } from '../../types/canonical';
+import { inspectDvtSubstraitFilter, removeDvtSubstraitFilter } from './canvasDvtSubstraitFilter';
 import { automapCanvasColumns } from './canvasColumnAutomap';
 import { resolveCanvasDraftNodes } from './canvasDraftNodeCatalog';
 import {
@@ -21,14 +22,119 @@ import {
 import {
   decodeDvtSubstraitProjectionDocument,
   encodeDvtSubstraitProjectionDocument,
+  inspectDvtSubstraitProjectionDraft,
   reorderDvtSubstraitProjectionOutputs,
+  type DvtSubstraitProjectionOutput,
+  type DvtSubstraitScalarExpression,
 } from './canvasDvtSubstraitProjection';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
+import {
+  isDvtSourceOutputProjectionNode,
+  readDvtSourceOutputProjection,
+  reorderDvtSourceOutputs,
+  setDvtSourceOutputIncluded,
+} from './canvasDvtSourceSemanticAuthoring';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import {
   reorderCanvasStructuredFieldRoots,
   setCanvasStructuredRootOutputIncluded,
 } from './canvasStructuredFieldRootAuthoring';
+
+function scalarExpressionUsesSourceField(
+  expression: DvtSubstraitScalarExpression | undefined,
+  columnName: string
+): boolean {
+  if (expression == null) return false;
+  if (expression.kind === 'field-reference') return expression.sourceFieldName === columnName;
+  if (expression.kind !== 'scalar-function') return false;
+  return expression.arguments.some((argument) =>
+    scalarExpressionUsesSourceField(argument, columnName)
+  );
+}
+
+function projectionOutputUsesSourceField(
+  output: DvtSubstraitProjectionOutput,
+  inputFields: readonly Readonly<{ fieldId: string; name: string }>[],
+  columnName: string
+): boolean {
+  if (output.sourceFieldName === columnName) return true;
+  if (scalarExpressionUsesSourceField(output.scalarExpression, columnName)) return true;
+  if (
+    output.calculation?.kind === 'row-number' &&
+    inputFields[output.calculation.orderSourceOrdinal]?.name === columnName
+  ) {
+    return true;
+  }
+  const inputNameById = new Map(inputFields.map((field) => [field.fieldId, field.name] as const));
+  return (output.operandFieldIds ?? []).some(
+    (fieldId) => inputNameById.get(fieldId) === columnName
+  );
+}
+
+function sourceOutputIsRequired(args: {
+  draftSession: CanvasDraftSession;
+  canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
+  sourceNode: CanonicalNode;
+  columnName: string;
+}): boolean {
+  let sourceProjection;
+  try {
+    sourceProjection = readDvtSourceOutputProjection(args.sourceNode);
+  } catch {
+    return true;
+  }
+  if (sourceProjection == null) return true;
+  const nodes = resolveCanvasDraftNodes(args.draftSession, args.canonicalNodesById);
+  const targetIds = new Set(
+    args.draftSession.workingSet.visibleEdges
+      .filter((edge) => edge.sourceId === args.sourceNode.id)
+      .map((edge) => edge.targetId)
+  );
+
+  for (const targetId of targetIds) {
+    const targetNode = nodes.find((node) => node.id === targetId);
+    if (
+      targetNode == null ||
+      targetNode.pluginId !== 'dvt' ||
+      targetNode.kind !== 'dvt:transform'
+    ) {
+      return true;
+    }
+    try {
+      const authority = readDvtTransformAuthoringAuthority(targetNode);
+      if (authority == null) continue;
+      const draft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
+      const projectionDraft =
+        inspectDvtSubstraitFilter(draft) == null ? draft : removeDvtSubstraitFilter(draft);
+      const inspection = inspectDvtSubstraitProjectionDraft(projectionDraft);
+      if (!inspection.ok) return true;
+      const source = inspection.projection.source;
+      if (
+        source.schema !== sourceProjection.source.schema ||
+        source.table !== sourceProjection.source.table ||
+        source.sourceRef.sourceObjectId !== sourceProjection.source.sourceRef.sourceObjectId ||
+        source.sourceRef.connectionRef.connectionId !==
+          sourceProjection.source.sourceRef.connectionRef.connectionId
+      ) {
+        return true;
+      }
+      if (
+        inspection.projection.outputs.some((output) =>
+          projectionOutputUsesSourceField(
+            output,
+            inspection.projection.inputFields,
+            args.columnName
+          )
+        )
+      ) {
+        return true;
+      }
+    } catch {
+      return true;
+    }
+  }
+  return false;
+}
 
 export function reorderCanvasColumnOutput(args: {
   draftSession: CanvasDraftSession;
@@ -44,6 +150,20 @@ export function reorderCanvasColumnOutput(args: {
     args.targetNodeId
   );
   if (targetNode == null) return { outcome: 'rejected', reason: 'target_node_not_found' };
+  if (isDvtSourceOutputProjectionNode(targetNode)) {
+    const result = reorderDvtSourceOutputs(
+      targetNode,
+      args.columnId,
+      args.targetColumnId,
+      args.placement
+    );
+    return result.outcome === 'rejected'
+      ? { outcome: 'rejected', reason: 'invalid_transform_authority' }
+      : {
+          outcome: 'applied',
+          draftSession: canvasDraftSession.workingSet.upsertNode(args.draftSession, result.node),
+        };
+  }
   const projectionResult = readEditableCanvasProjectionEntry({
     targetNode,
     edges: args.draftSession.workingSet.visibleEdges,
@@ -106,6 +226,38 @@ export function setCanvasColumnOutputIncluded(args: {
     args.targetNodeId
   );
   if (targetNode == null) return { outcome: 'rejected', reason: 'target_node_not_found' };
+  if (isDvtSourceOutputProjectionNode(targetNode)) {
+    if (
+      !args.output &&
+      sourceOutputIsRequired({
+        draftSession: args.draftSession,
+        canonicalNodesById: args.canonicalNodesById,
+        sourceNode: targetNode,
+        columnName: args.columnId,
+      })
+    ) {
+      return { outcome: 'rejected', reason: 'source_output_required' };
+    }
+    const result = setDvtSourceOutputIncluded(
+      targetNode,
+      args.columnId,
+      args.output,
+      args.placement
+    );
+    if (result.outcome === 'rejected') {
+      return {
+        outcome: 'rejected',
+        reason:
+          result.reason === 'last_source_output'
+            ? 'source_output_last_field'
+            : 'invalid_transform_authority',
+      };
+    }
+    return {
+      outcome: 'applied',
+      draftSession: canvasDraftSession.workingSet.upsertNode(args.draftSession, result.node),
+    };
+  }
   const projectionResult = readEditableCanvasProjectionEntry({
     targetNode,
     edges: args.draftSession.workingSet.visibleEdges,

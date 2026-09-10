@@ -5,6 +5,7 @@ import type {
   CanvasColumnMappingTarget,
 } from './canvasColumnMappingModel';
 import { readCanvasNodeColumns } from './canvasColumnMappingModel';
+import { readDvtSourceOutputProjection } from './canvasDvtSourceSemanticAuthoring';
 import {
   applyDvtSubstraitSemanticDocument,
   readDvtTransformAuthoringAuthority,
@@ -47,11 +48,25 @@ export function readCanvasColumnMappingInputFields(args: {
 }): readonly CanvasColumnMappingInputField[] {
   const physicalSource = resolveDvtSubstraitProjectionSource(args.sourceNode);
   if (physicalSource != null) {
-    return physicalSource.fields.map((field) => ({
-      columnId: field.name,
-      name: field.name,
-      dataType: field.dataType,
-    }));
+    try {
+      const sourceProjection = readDvtSourceOutputProjection(args.sourceNode);
+      const projectedFields =
+        sourceProjection == null
+          ? physicalSource.fields
+          : sourceProjection.outputs.flatMap((output) => {
+              const field = physicalSource.fields.find(
+                (candidate) => candidate.name === output.sourceFieldName
+              );
+              return field == null ? [] : [field];
+            });
+      return projectedFields.map((field) => ({
+        columnId: field.name,
+        name: field.name,
+        dataType: field.dataType,
+      }));
+    } catch {
+      return [];
+    }
   }
   if (args.sourceNode.pluginId !== 'dvt' || args.sourceNode.kind !== 'dvt:transform') return [];
   const entry = readEditableCanvasProjectionEntry({

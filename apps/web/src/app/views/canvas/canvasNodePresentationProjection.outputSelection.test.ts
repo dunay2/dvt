@@ -183,4 +183,60 @@ describe('Transform output-selection presentation', () => {
     expect(visibleByName.get('amount')).toMatchObject({ provenance: 'declared' });
     expect(visibleByName.get('status')).toMatchObject({ provenance: 'inherited' });
   });
+  it('keeps every physical Source field visible while downstream nodes receive only its projection', () => {
+    const sourceDraft = createDvtSubstraitProjectionDraft({
+      source: {
+        nodeId: source.id,
+        schema: 'raw',
+        table: 'orders',
+        sourceRef: connectedSourceRef,
+        fields: [
+          { name: 'order_id', dataType: 'integer' },
+          { name: 'customer', dataType: 'text' },
+          { name: 'amount', dataType: 'numeric' },
+        ],
+      },
+      targetNodeId: source.id,
+      outputs: [
+        { fieldId: 'source:amount', name: 'amount', sourceFieldName: 'amount' },
+        { fieldId: 'source:order_id', name: 'order_id', sourceFieldName: 'order_id' },
+      ],
+    });
+    const projectedSource = applyDvtSubstraitSemanticDocument(
+      source,
+      encodeDvtSubstraitProjectionDocument(sourceDraft)
+    );
+    const transform: CanonicalNode = {
+      id: 'transform-projected-source',
+      name: 'Transform projected Source',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+      metadata: {},
+    };
+    const edges = [{ sourceId: projectedSource.id, targetId: transform.id }];
+
+    const sourceTruth = projectCanvasNodePresentationTruth({
+      node: projectedSource,
+      nodes: [projectedSource, transform],
+      edges,
+    });
+    expect(sourceTruth.columns.visible.map(({ name, selected }) => ({ name, selected }))).toEqual([
+      { name: 'amount', selected: true },
+      { name: 'order_id', selected: true },
+      { name: 'customer', selected: false },
+    ]);
+
+    const transformTruth = projectCanvasNodePresentationTruth({
+      node: transform,
+      nodes: [projectedSource, transform],
+      edges,
+    });
+    expect(transformTruth.columns.visible.map((column) => column.name)).toEqual([
+      'amount',
+      'order_id',
+    ]);
+  });
 });

@@ -865,7 +865,10 @@ describe('useCanvasGraphHandlers edge authoring', () => {
       });
     });
     expect(setDraftSession).toHaveBeenCalledOnce();
-    const toggledSession = setDraftSession.mock.calls[0]?.[0] as typeof draftSession;
+    const toggleUpdate = setDraftSession.mock.calls[0]?.[0] as
+      ((currentSession: typeof draftSession) => typeof draftSession) | undefined;
+    if (toggleUpdate == null) throw new Error('Expected serialized output toggle.');
+    const toggledSession = toggleUpdate(draftSession);
     const toggledNode = toggledSession.localNodeCatalog?.[transform.id];
     if (toggledNode == null) throw new Error('Expected updated transform output selection.');
     const toggledAuthority = readDvtTransformAuthoringAuthority(toggledNode)!;
@@ -888,7 +891,10 @@ describe('useCanvasGraphHandlers edge authoring', () => {
         placement: 'before',
       });
     });
-    const reorderedSession = setDraftSession.mock.calls[0]?.[0] as typeof draftSession;
+    const reorderUpdate = setDraftSession.mock.calls[0]?.[0] as
+      ((currentSession: typeof draftSession) => typeof draftSession) | undefined;
+    if (reorderUpdate == null) throw new Error('Expected serialized output reorder.');
+    const reorderedSession = reorderUpdate(toggledSession);
     const reorderedNode = reorderedSession.localNodeCatalog?.[transform.id];
     if (reorderedNode == null) throw new Error('Expected reordered transform outputs.');
     const reorderedAuthority = readDvtTransformAuthoringAuthority(reorderedNode)!;
@@ -900,7 +906,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
       reorderedInspection.ok
         ? reorderedInspection.projection.outputs.map((output) => output.fieldId)
         : []
-    ).toEqual(['output:amount', 'output:order_id', 'output:customer']);
+    ).toEqual(['output:amount', 'output:order_id']);
 
     harness.cleanup();
   });

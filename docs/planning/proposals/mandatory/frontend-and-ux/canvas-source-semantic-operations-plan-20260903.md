@@ -117,11 +117,11 @@ mechanizationStatus: implemented
 noHumanDecisionsRemaining: true
 implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/canvas-source-semantic-operations-plan-20260903.md
 componentGuides: [docs/architecture/components/web/graph/canvas-inspector-authoring-component.md, docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md]
-userStories: [https://github.com/dunay2/dvt/issues/2894]
-governingSources: [AGENTS.md, docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md, docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md, docs/architecture/command-query-rail-governance.md, docs/architecture/fowler-opportunity-planning-governance.md]
+userStories: [https://github.com/dunay2/dvt/issues/2894, https://github.com/dunay2/dvt/issues/3084]
+governingSources: [AGENTS.md, docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md, docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md, docs/architecture/command-query-rail-governance.md, docs/architecture/fowler-opportunity-planning-governance.md, docs/planning/proposals/mandatory/frontend-and-ux/canvas-source-output-projection-plan-20260910.md]
 domainObjects: [DvtSourceAuthoringMetadata, DvtSubstraitTransformAuthoringMetadata, DvtSubstraitSemanticDocumentV1]
 fowlerSignals: [Boundary drift, Hidden authority, Duplicate semantics]
-allowedImplementationSurfaces: [apps/web/src/app/views/canvas/**, apps/web/src/app/plugins/dvt/**, apps/web/cypress/e2e/canvas/**, docs/**]
+allowedImplementationSurfaces: [apps/web/src/app/views/canvas/**, apps/web/src/app/plugins/dvt/**, apps/web/src/app/plugins/graph/graphNodeColumnContracts.ts, apps/web/src/app/plugins/graph/graphNodeColumnContracts.test.ts, apps/web/cypress/e2e/canvas/**, docs/**]
 forbiddenImplementationSurfaces: [packages/@dvt/contracts/**, apps/api/**, packages/@dvt/engine/**, packages/@dvt/adapter-*/**, new commands, stores, registries, recipes, SQL editors, node kinds or runtime steps]
 commandQueryRails:
   - name: ConfigureCanvasDvtNode
@@ -141,7 +141,7 @@ commandQueryRails:
     authorizationScope: Active workspace scope
     negativeTests: [legacy Source FilterRel normalizes without identity loss, malformed authority fails closed]
 architectureGuards: [pnpm docs:feature-mechanization:implementation -- --feature CANVAS-SOURCE-SEMANTIC-OPERATIONS-2894]
-cypressFlows: [apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts]
+cypressFlows: [apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts, apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts]
 completionGate: [pnpm --filter @dvt/web test:canvas:run, pnpm --filter @dvt/web test:presentation:run, pnpm --filter @dvt/web test:architecture:run, pnpm --filter @dvt/web lint, pnpm --filter @dvt/web typecheck, pnpm governance:refresh, pnpm verify:prepush]
 redGreenCycles:
   - id: source-filter-boundary
@@ -159,7 +159,28 @@ redGreenCycles:
     expectedFailure: A Source projects a Transform filter metric.
     patchSurfaces: [apps/web/src/app/plugins/dvt/dvtGraphNodeSemanticMetric.ts]
     greenTest: pnpm --filter @dvt/web test:unit:run -- dvtGraphNodeSemanticMetric.test.ts
+  - id: source-output-authority
+    redTest: apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts
+    expectedFailure: Source cannot persist a selected and ordered output subset.
+    patchSurfaces: [apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts, apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.ts, apps/web/src/app/views/canvas/canvasColumnOutputAuthoring.ts]
+    greenTest: pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasColumnMappingAuthoring.test.ts
+  - id: source-output-presentation
+    redTest: apps/web/src/app/views/canvas/canvasNodePresentationProjection.outputSelection.test.ts
+    expectedFailure: Source selection does not constrain downstream availability while retaining recoverable fields.
+    patchSurfaces: [apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts, apps/web/src/app/views/canvas/canvasNodePresentationProjection.ts, apps/web/src/app/views/canvas/useCanvasControllerReadModel.ts]
+    greenTest: pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasNodePresentationProjection.outputSelection.test.ts
+  - id: source-output-serialization
+    redTest: apps/web/src/app/views/canvas/useCanvasColumnOutputCommandRunner.test.tsx
+    expectedFailure: Consecutive output gestures during autosave overwrite the earlier gesture.
+    patchSurfaces: [apps/web/src/app/views/canvas/useCanvasColumnOutputCommandRunner.ts, apps/web/src/app/views/canvas/useCanvasEdgeAuthoringHandlers.ts]
+    greenTest: pnpm --filter @dvt/web exec vitest run src/app/views/canvas/useCanvasColumnOutputCommandRunner.test.tsx
+  - id: source-output-browser
+    redTest: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts
+    expectedFailure: Browser flow cannot reduce reorder persist and recover Source outputs.
+    patchSurfaces: [apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts]
+    greenTest: node tools/ci/run-web-cypress-native.mjs run --browser chrome --headed --spec cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts
 symbolDefaults: &symbolDefaults { dddOwner: DvtNodeAuthoringMetadata, cqRails: [ConfigureCanvasDvtNode, GetWorkspaceGraphDraft], fowlerSignals: [Boundary drift, Hidden authority], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-SOURCE-SEMANTIC-OPERATIONS-2894, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts }
+sourceOutputSymbolDefaults: &sourceOutputSymbolDefaults { dddOwner: DvtNodeAuthoringMetadata, cqRails: [ConfigureCanvasDvtNode, GetWorkspaceGraphDraft], fowlerSignals: [Boundary drift, Hidden authority], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-SOURCE-SEMANTIC-OPERATIONS-2894, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts }
 symbols:
   - { <<: *symbolDefaults, name: DvtAuthoringFields, path: apps/web/src/app/views/canvas/DvtAuthoringFields.tsx, unitTests: [apps/web/src/app/views/canvas/DvtAuthoringFields.test.tsx] }
   - { <<: *symbolDefaults, name: createDvtSourceSemanticDraft, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts, unitTests: [apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.test.ts] }
@@ -170,4 +191,29 @@ symbols:
   - { <<: *symbolDefaults, name: card, path: apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts, unitTests: [apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts] }
   - { <<: *symbolDefaults, name: latestFilter, path: apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts, unitTests: [apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts] }
   - { <<: *symbolDefaults, name: openColumns, path: apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts, unitTests: [apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts] }
+  - { <<: *sourceOutputSymbolDefaults, name: expectApiCallCount, path: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts] }
+  - { <<: *sourceOutputSymbolDefaults, name: projectionOutputUsesSourceField, path: apps/web/src/app/views/canvas/canvasColumnOutputAuthoring.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts] }
+  - { <<: *sourceOutputSymbolDefaults, name: scalarExpressionUsesSourceField, path: apps/web/src/app/views/canvas/canvasColumnOutputAuthoring.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts] }
+  - { <<: *sourceOutputSymbolDefaults, name: sourceOutputIsRequired, path: apps/web/src/app/views/canvas/canvasColumnOutputAuthoring.ts, unitTests: [apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.test.ts] }
+  - { <<: *sourceOutputSymbolDefaults, name: DvtSourceOutputMutation, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts, unitTests: [apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.test.ts] }
+  - { <<: *sourceOutputSymbolDefaults, name: DvtSourceOutputProjection, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts, unitTests: [apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.test.ts] }
+  - { <<: *sourceOutputSymbolDefaults, name: defaultOutputs, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts, unitTests: [apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.test.ts] }
+  - { <<: *sourceOutputSymbolDefaults, name: isDirectSourceOutput, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts, unitTests: [apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.test.ts] }
+  - { <<: *sourceOutputSymbolDefaults, name: isDvtSourceOutputProjectionNode, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts, unitTests: [apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.test.ts] }
+  - { <<: *sourceOutputSymbolDefaults, name: readDvtSourceOutputProjection, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts, unitTests: [apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.test.ts] }
+  - { <<: *sourceOutputSymbolDefaults, name: rebuildSourceProjection, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts, unitTests: [apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.test.ts] }
+  - { <<: *sourceOutputSymbolDefaults, name: reorderDvtSourceOutputs, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts, unitTests: [apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.test.ts] }
+  - { <<: *sourceOutputSymbolDefaults, name: sameFieldSignature, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts, unitTests: [apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.test.ts] }
+  - { <<: *sourceOutputSymbolDefaults, name: sameSourceIdentity, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts, unitTests: [apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.test.ts] }
+  - { <<: *sourceOutputSymbolDefaults, name: setDvtSourceOutputIncluded, path: apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts, unitTests: [apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.test.ts] }
+  - { <<: *sourceOutputSymbolDefaults, name: canonicalizeDvtSubstraitProjectionDataType, path: apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.ts, unitTests: [apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.test.ts] }
+  - { <<: *sourceOutputSymbolDefaults, name: CanvasColumnOutputCommandRunner, path: apps/web/src/app/views/canvas/useCanvasColumnOutputCommandRunner.ts, unitTests: [apps/web/src/app/views/canvas/useCanvasColumnOutputCommandRunner.test.tsx] }
+  - { <<: *sourceOutputSymbolDefaults, name: CanvasColumnOutputCommandRunnerEffects, path: apps/web/src/app/views/canvas/useCanvasColumnOutputCommandRunner.ts, unitTests: [apps/web/src/app/views/canvas/useCanvasColumnOutputCommandRunner.test.tsx] }
+  - { <<: *sourceOutputSymbolDefaults, name: CanvasColumnOutputCommandRunnerState, path: apps/web/src/app/views/canvas/useCanvasColumnOutputCommandRunner.ts, unitTests: [apps/web/src/app/views/canvas/useCanvasColumnOutputCommandRunner.test.tsx] }
+  - { <<: *sourceOutputSymbolDefaults, name: UseCanvasColumnOutputCommandRunnerArgs, path: apps/web/src/app/views/canvas/useCanvasColumnOutputCommandRunner.ts, unitTests: [apps/web/src/app/views/canvas/useCanvasColumnOutputCommandRunner.test.tsx] }
+  - { <<: *sourceOutputSymbolDefaults, name: applyReorderOutput, path: apps/web/src/app/views/canvas/useCanvasColumnOutputCommandRunner.ts, unitTests: [apps/web/src/app/views/canvas/useCanvasColumnOutputCommandRunner.test.tsx] }
+  - { <<: *sourceOutputSymbolDefaults, name: applyToggleOutput, path: apps/web/src/app/views/canvas/useCanvasColumnOutputCommandRunner.ts, unitTests: [apps/web/src/app/views/canvas/useCanvasColumnOutputCommandRunner.test.tsx] }
+  - { <<: *sourceOutputSymbolDefaults, name: useCanvasColumnOutputCommandRunner, path: apps/web/src/app/views/canvas/useCanvasColumnOutputCommandRunner.ts, unitTests: [apps/web/src/app/views/canvas/useCanvasColumnOutputCommandRunner.test.tsx] }
+  - { <<: *sourceOutputSymbolDefaults, name: useCanvasColumnMappingHandlers, path: apps/web/src/app/views/canvas/useCanvasEdgeAuthoringHandlers.ts, unitTests: [apps/web/src/app/views/canvas/useCanvasGraphHandlers.edgeAuthoring.test.tsx] }
+  - { <<: *sourceOutputSymbolDefaults, name: stubColumnMappingCanvas, path: apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts, unitTests: [apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts] }
 ```

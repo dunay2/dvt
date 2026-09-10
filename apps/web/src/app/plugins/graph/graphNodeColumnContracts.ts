@@ -155,7 +155,8 @@ export function resolveGraphNodeColumnInteractionProps(args: {
           ) => GraphNodeColumnFunctionApplyResult)
         : undefined,
     onColumnOutputToggle:
-      args.nodeRole === 'transform' && typeof data.onToggleCanvasColumnOutput === 'function'
+      (args.nodeRole === 'input' || args.nodeRole === 'transform') &&
+      typeof data.onToggleCanvasColumnOutput === 'function'
         ? (data.onToggleCanvasColumnOutput as (
             identity: GraphNodeColumnOutputToggleIdentity
           ) => GraphNodeColumnFunctionApplyResult)

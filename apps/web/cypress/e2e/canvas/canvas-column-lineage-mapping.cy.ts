@@ -1,14 +1,23 @@
 /** Owned concern: prove the VTX1 column-mapping story through the governed Canvas draft rail. */
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import { connectCanvasNodes } from '../../support/canvasGraphAuthoring';
-import { stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
+import {
+  getE2eApiCalls,
+  installE2eApiFetchStub,
+  stubE2eJsonApi,
+  waitForE2eApiCall,
+} from '../../support/e2eApiStub';
 import {
   E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
 
-function stubColumnMappingCanvas(disconnected = false, secondSource = false): void {
+function stubColumnMappingCanvas(
+  disconnected = false,
+  secondSource = false,
+  notNullCustomer = false
+): void {
   stubShellBootstrapApis({
     scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'],
   });
@@ -26,6 +35,7 @@ function stubColumnMappingCanvas(disconnected = false, secondSource = false): vo
     columnMapping: true,
     columnMappingDisconnected: disconnected,
     columnMappingSecondSource: secondSource,
+    columnMappingNotNullCustomer: notNullCustomer,
   });
 }
 
@@ -52,8 +62,14 @@ function visitColumnMappingCanvas(language: 'en' | 'es' = 'en'): void {
   waitForE2eApiCall('/healthz', 'GET');
   waitForE2eApiCall('/capabilities', 'GET');
   waitForE2eApiCall('/workspace/graph/draft', 'GET');
+  cy.get('.react-flow__node[data-id="source-orders"]', { timeout: 20_000 }).should('be.visible');
 }
 
+function expectApiCallCount(pathname: string, method: string, count: number): void {
+  cy.wrap(null).should(() => {
+    expect(getE2eApiCalls(pathname, method)).to.have.length(count);
+  });
+}
 function canvasNode(nodeId: string): Cypress.Chainable<JQuery<HTMLElement>> {
   return cy.get(`.react-flow__node[data-id="${nodeId}"]`);
 }
@@ -194,6 +210,147 @@ describe('Canvas column lineage mapping', () => {
           'customer',
         ]);
       });
+  });
+  it('persists Source output selection and order while keeping excluded fields recoverable', () => {
+    cy.viewport(1920, 1080);
+    stubColumnMappingCanvas(false, false, true);
+    visitColumnMappingCanvas('en');
+    expectApiCallCount('/workspace/graph/draft', 'GET', 1);
+    expectApiCallCount('/workspace/graph/draft', 'PUT', 0);
+
+    toggleColumns('source-orders');
+    toggleColumns('model-orders');
+    let putCount = 0;
+    let getCount = 0;
+    canvasNode('model-orders').contains('button', 'Map compatible columns').click();
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    cy.wait(750);
+    cy.then(() => {
+      putCount = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+      getCount = getE2eApiCalls('/workspace/graph/draft', 'GET').length;
+      expect(putCount).to.be.greaterThan(0);
+    });
+
+    canvasNode('source-orders')
+      .contains('[data-slot="graph-node-column-row"]', 'customer')
+      .find('[data-slot="graph-node-column-output-state"]')
+      .click();
+    cy.contains(
+      'This field is used by a connected Model. Remove or remap that dependency first.'
+    ).should('be.visible');
+    cy.wait(750);
+    cy.then(() => {
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(putCount);
+    });
+    canvasNode('source-orders')
+      .contains('[data-slot="graph-node-column-row"]', 'customer')
+      .should('contain.text', 'NN')
+      .find('[data-slot="graph-node-column-output-state"]')
+      .should('have.attr', 'aria-pressed', 'true');
+    canvasNode('model-orders')
+      .find('[data-slot="graph-node-column-piece"][data-column-name="customer"]')
+      .should('exist');
+
+    canvasNode('model-orders')
+      .contains('[data-slot="graph-node-column-row"]', 'customer')
+      .find('[data-slot="graph-node-column-output-state"]')
+      .click();
+    canvasNode('model-orders')
+      .contains('[data-slot="graph-node-column-row"]', 'customer')
+      .find('[data-slot="graph-node-column-output-state"]')
+      .should('have.attr', 'aria-pressed', 'false');
+    cy.wrap(null)
+      .should(() => {
+        expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(putCount + 1);
+      })
+      .then(() => {
+        putCount += 1;
+      });
+
+    canvasNode('source-orders')
+      .contains('[data-slot="graph-node-column-row"]', 'customer')
+      .find('[data-slot="graph-node-column-output-state"]')
+      .click();
+    cy.wrap(null)
+      .should(() => {
+        expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(putCount + 1);
+      })
+      .then(() => {
+        putCount += 1;
+      });
+    canvasNode('source-orders')
+      .contains('[data-slot="graph-node-column-row"]', 'customer')
+      .should('contain.text', 'NN')
+      .find('[data-slot="graph-node-column-output-state"]')
+      .should('have.attr', 'aria-pressed', 'false');
+    canvasNode('source-orders')
+      .find('[data-slot="canvas-node-port-handle"][aria-label="Connect customer output"]')
+      .should('not.exist');
+    canvasNode('model-orders')
+      .find('[data-slot="graph-node-column-piece"][data-column-name="customer"]')
+      .should('not.exist');
+
+    canvasNode('source-orders')
+      .find('[data-slot="graph-node-column-piece"][data-column-name="amount"]')
+      .focus()
+      .trigger('keydown', { key: 'ArrowUp', altKey: true })
+      .trigger('keydown', { key: 'ArrowUp', altKey: true });
+    cy.wrap(null)
+      .should(() => {
+        expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(putCount + 1);
+      })
+      .then(() => {
+        putCount += 1;
+      });
+    canvasNode('source-orders')
+      .find('[data-slot="graph-node-column-piece"]')
+      .then(($columns) => {
+        expect([...$columns].map((column) => column.dataset.columnName).slice(0, 2)).to.deep.equal([
+          'amount',
+          'order_id',
+        ]);
+      });
+
+    cy.on('window:before:load', installE2eApiFetchStub);
+    cy.reload();
+    cy.wrap(null).should(() => {
+      expect(getE2eApiCalls('/workspace/graph/draft', 'GET')).to.have.length(getCount * 2);
+    });
+    toggleColumns('source-orders');
+    toggleColumns('model-orders');
+    canvasNode('source-orders').contains('button', 'Show remaining columns (1)').click();
+    canvasNode('source-orders')
+      .find('[data-slot="graph-node-column-piece"]')
+      .then(($columns) => {
+        expect([...$columns].map((column) => column.dataset.columnName).slice(0, 2)).to.deep.equal([
+          'amount',
+          'order_id',
+        ]);
+      });
+    canvasNode('source-orders')
+      .contains('[data-slot="graph-node-column-row"]', 'customer')
+      .should('contain.text', 'NN')
+      .find('[data-slot="graph-node-column-output-state"]')
+      .should('have.attr', 'aria-pressed', 'false');
+    canvasNode('model-orders')
+      .find('[data-slot="graph-node-column-piece"][data-column-name="customer"]')
+      .should('not.exist');
+
+    canvasNode('source-orders')
+      .contains('[data-slot="graph-node-column-row"]', 'customer')
+      .find('[data-slot="graph-node-column-output-state"]')
+      .click();
+    cy.wrap(null)
+      .should(() => {
+        expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(putCount + 1);
+      })
+      .then(() => {
+        putCount += 1;
+      });
+    canvasNode('model-orders').contains('button', 'Show remaining columns (1)').click();
+    canvasNode('model-orders')
+      .find('[data-slot="graph-node-column-piece"][data-column-name="customer"]')
+      .should('exist');
   });
   it('creates deterministic mappings when the stage dependency is connected', () => {
     cy.viewport(1920, 1080);

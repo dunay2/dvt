@@ -37,6 +37,11 @@ import {
 import { projectTransformColumnsInStableOrder } from './canvasTransformColumnOrderProjection';
 import { projectCanvasStructuredFieldOutputs } from './canvasStructuredFieldPresentation';
 import { inspectDvtSubstraitFilter, removeDvtSubstraitFilter } from './canvasDvtSubstraitFilter';
+import {
+  isDvtSourceOutputProjectionNode,
+  readDvtSourceOutputProjection,
+  type DvtSourceOutputProjection,
+} from './canvasDvtSourceSemanticAuthoring';
 
 export function projectCanvasNodePresentationTruth(
   args: Readonly<{
@@ -136,6 +141,7 @@ function projectCanvasNodePresentationTruthInternal(
           },
         };
   let substraitOutputs: readonly DvtSubstraitPresentedOutput[] | null = null;
+  let sourceOutputProjection: DvtSourceOutputProjection | null = null;
   let substraitRejected = false;
   let unresolvedMultiInputProjection = false;
   let canonicalSubstraitCode: Extract<CanvasNodeCodeTruth, { kind: 'canonical' }> | null = null;
@@ -286,6 +292,13 @@ function projectCanvasNodePresentationTruthInternal(
       substraitRejected = declaresSubstraitAuthority;
     }
   }
+  if (isDvtSourceOutputProjectionNode(args.node)) {
+    try {
+      sourceOutputProjection = readDvtSourceOutputProjection(args.node);
+    } catch {
+      substraitRejected = true;
+    }
+  }
   const projectedTruth = buildCanvasNodePresentationTruth({
     ...args,
     node: presentationNode,
@@ -325,11 +338,21 @@ function projectCanvasNodePresentationTruthInternal(
     };
   }
 
+  const hasProjectedSourceInput = args.edges.some((edge) => {
+    if (edge.targetId !== args.node.id) return false;
+    const sourceNode = args.nodes.find((node) => node.id === edge.sourceId);
+    if (sourceNode == null || !isDvtSourceOutputProjectionNode(sourceNode)) return false;
+    try {
+      return readDvtSourceOutputProjection(sourceNode)?.draft != null;
+    } catch {
+      return true;
+    }
+  });
   const shouldProjectUpstreamColumns =
     args.node.role === 'output' ||
     (args.node.role === 'transform' &&
       baseTruth.columns.declared.length === 0 &&
-      baseTruth.columns.inherited.length === 0);
+      (baseTruth.columns.inherited.length === 0 || hasProjectedSourceInput));
   const upstreamNodeIds = shouldProjectUpstreamColumns
     ? new Set(
         args.edges.filter((edge) => edge.targetId === args.node.id).map((edge) => edge.sourceId)
@@ -352,6 +375,7 @@ function projectCanvasNodePresentationTruthInternal(
           ? new Set(upstreamArtifact.artifact.outputColumns)
           : null;
       return upstreamTruth.columns.visible
+        .filter((column) => column.selected !== false)
         .filter((column) => activeColumnNames == null || activeColumnNames.has(column.name))
         .map((column) => ({
           ...column,
@@ -399,6 +423,35 @@ function projectCanvasNodePresentationTruthInternal(
           };
         })()
       : baseTruth;
+
+  if (sourceOutputProjection != null) {
+    const physicalByName = new Map(
+      presentationTruth.columns.visible.map((column) => [column.name, column] as const)
+    );
+    const selectedNames = new Set(
+      sourceOutputProjection.outputs.map((output) => output.sourceFieldName!)
+    );
+    const selected = sourceOutputProjection.outputs.flatMap((output) => {
+      const physical = physicalByName.get(output.sourceFieldName!);
+      return physical == null ? [] : [{ ...physical, selected: true }];
+    });
+    const excluded = presentationTruth.columns.visible
+      .filter((column) => !selectedNames.has(column.name))
+      .map((column) => ({ ...column, selected: false }));
+    const visible = [...selected, ...excluded];
+    return {
+      ...presentationTruth,
+      columns: {
+        declared: visible,
+        inherited: presentationTruth.columns.inherited,
+        visible,
+        declaredCount: visible.length,
+        inheritedCount: presentationTruth.columns.inheritedCount,
+        visibleCount: visible.length,
+        visibleProvenance: visible.length > 0 ? 'declared' : 'none',
+      },
+    };
+  }
 
   if (substraitOutputs != null) {
     const declared = substraitOutputs.map((output) =>

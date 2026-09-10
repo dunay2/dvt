@@ -130,7 +130,9 @@ export function mapCanonicalNodeToCanvasNode({
     ? projectDbtModelColumnStates(canonicalNode, resolvedPresentationTruth.columns.visible)
     : resolvedPresentationTruth.columns.visible.map((column) => ({
         column,
-        output: canonicalNode.kind !== 'dvt:transform' || column.provenance === 'declared',
+        output:
+          column.selected ??
+          (canonicalNode.kind !== 'dvt:transform' || column.provenance === 'declared'),
       }));
   const columns = presentedColumns.map(({ column, output }) =>
     projectGraphNodeColumn(column, output)
@@ -260,7 +262,8 @@ export function mapDroppedCanonicalNodeToCanvasNode(
   const columns = presentationTruth.columns.visible.map((column) =>
     projectGraphNodeColumn(
       column,
-      canonicalNode.kind !== 'dvt:transform' || column.provenance === 'declared'
+      column.selected ??
+        (canonicalNode.kind !== 'dvt:transform' || column.provenance === 'declared')
     )
   );
   const presentationCopy = buildCanvasNodePresentationCopy(copy, locale);
