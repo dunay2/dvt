@@ -109,7 +109,15 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
     proofRef: 'docs/evidence/ED-20260903-source-filter-capability-admission.md',
   },
   {
-    entryIds: [functionId('scalar-function', 'functions_boolean', 'and')],
+    entryIds: [
+      functionId('scalar-function', 'functions_boolean', 'and'),
+      functionId('scalar-function', 'functions_boolean', 'or'),
+      functionId('scalar-function', 'functions_comparison', 'not_equal'),
+      functionId('scalar-function', 'functions_comparison', 'gt'),
+      functionId('scalar-function', 'functions_comparison', 'gte'),
+      functionId('scalar-function', 'functions_comparison', 'lt'),
+      functionId('scalar-function', 'functions_comparison', 'lte'),
+    ],
     useCaseRefs: ['dvt:#3087'],
     proofRef: 'apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.test.ts',
   },

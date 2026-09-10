@@ -92,19 +92,28 @@ describe('DVT Substrait capability catalog V1', () => {
     });
   });
 
-  it('admits boolean AND for composite INNER JOIN predicates', () => {
-    const conjunction = findCapability(
+  it.each([
+    ['functions_boolean', 'and', 'dvt:#3087'],
+    ['functions_boolean', 'or', 'dvt:#3087'],
+    ['functions_comparison', 'equal', 'dvt:#2634'],
+    ['functions_comparison', 'not_equal', 'dvt:#3087'],
+    ['functions_comparison', 'gt', 'dvt:#3087'],
+    ['functions_comparison', 'gte', 'dvt:#3087'],
+    ['functions_comparison', 'lt', 'dvt:#3087'],
+    ['functions_comparison', 'lte', 'dvt:#3087'],
+  ])('admits %s/%s for INNER JOIN predicates', (urnName, functionName, useCaseRef) => {
+    const capability = findCapability(
       buildDvtSubstraitStandardCapabilityId('scalar-function', {
         sourceKind: 'simple-extension',
-        urn: 'extension:io.substrait:functions_boolean',
-        name: 'and',
+        urn: `extension:io.substrait:${urnName}`,
+        name: functionName,
       })
     );
 
-    expect(conjunction).toMatchObject({
+    expect(capability).toMatchObject({
       profileStatus: 'supported-profile',
       admission: {
-        productUseCaseRef: 'dvt:#3087',
+        productUseCaseRef: useCaseRef,
         targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
         visualExposure: { status: 'exposed' },
       },

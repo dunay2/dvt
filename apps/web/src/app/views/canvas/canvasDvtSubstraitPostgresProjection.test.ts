@@ -806,7 +806,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     );
   });
 
-  it('projects a typed literal JOIN condition through the PostgreSQL adapter', async () => {
+  it('projects a typed literal JOIN comparison and OR through the PostgreSQL adapter', async () => {
     const connectionRef = {
       schemaVersion: 'connection-ref.v1' as const,
       connectionId: 'warehouse-main',
@@ -858,6 +858,8 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       condition: {
         left: { kind: 'field', sourceFieldId: activeFieldId },
         right: { kind: 'literal', literal: { dataType: 'bool', value: true } },
+        operator: 'not_equal',
+        combination: 'or',
       },
     });
 
@@ -867,7 +869,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       .toLowerCase();
 
     expect(normalized).toContain(
-      'on left_source.customer_id = right_source.customer_id and right_source.active = true'
+      'on left_source.customer_id = right_source.customer_id or right_source.active <> true'
     );
   });
 

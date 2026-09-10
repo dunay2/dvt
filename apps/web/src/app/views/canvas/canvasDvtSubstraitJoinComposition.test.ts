@@ -282,6 +282,7 @@ describe('DVT Substrait INNER JOIN identity', () => {
       joinRelationId,
       leftSourceFieldId: nextLeftFieldId,
       rightSourceFieldId: nextRightFieldId,
+      operator: 'not_equal',
     });
     const after = inspectNInput(edited);
 
@@ -289,6 +290,7 @@ describe('DVT Substrait INNER JOIN identity', () => {
       {
         leftSourceFieldId: nextLeftFieldId,
         rightSourceFieldId: nextRightFieldId,
+        operator: 'not_equal',
       },
     ]);
     expect(after.joinRelations[0]?.relationId).toBe(joinRelationId);
@@ -350,7 +352,30 @@ describe('DVT Substrait INNER JOIN identity', () => {
     ).toBe(draft);
   });
 
-  it('adds a typed literal condition to the retained relationship predicate', () => {
+  it.each(['gt', 'gte', 'lt', 'lte'] as const)(
+    'round-trips the %s comparison on the retained JOIN predicate',
+    (operator) => {
+      const draft = fixture();
+      const before = inspectNInput(draft);
+      const joinRelationId = before.joinRelations[0]?.relationId;
+      const predicate = before.joins[0];
+      if (joinRelationId == null || predicate == null) {
+        throw new Error('Expected the join relation and predicate.');
+      }
+
+      const edited = setDvtSubstraitJoinPredicateFields({
+        draft,
+        joinRelationId,
+        leftSourceFieldId: predicate.leftSourceFieldId,
+        rightSourceFieldId: predicate.rightSourceFieldId,
+        operator,
+      });
+
+      expect(inspectNInput(edited).joins[0]?.operator).toBe(operator);
+    }
+  );
+
+  it('adds a typed literal comparison with an OR connector to the retained predicate', () => {
     const draft = createDvtSubstraitStringInnerJoinDraft({
       left: {
         source: source('source-left', 'public', 'orders'),
@@ -377,6 +402,8 @@ describe('DVT Substrait INNER JOIN identity', () => {
       condition: {
         left: { kind: 'field', sourceFieldId: activeFieldId },
         right: { kind: 'literal', literal: { dataType: 'bool', value: true } },
+        operator: 'not_equal',
+        combination: 'or',
       },
     });
     const reloaded = decodeDvtSubstraitInnerJoinDocument(
@@ -391,6 +418,8 @@ describe('DVT Substrait INNER JOIN identity', () => {
         {
           left: { kind: 'field', sourceFieldId: activeFieldId },
           right: { kind: 'literal', literal: { dataType: 'bool', value: true } },
+          operator: 'not_equal',
+          combination: 'or',
         },
       ],
     });

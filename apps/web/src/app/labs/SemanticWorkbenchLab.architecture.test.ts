@@ -61,7 +61,10 @@ describe('SemanticWorkbenchLab architecture', () => {
     expect(SOURCE).toContain('data-slot="semantic-workbench-right-field-select"');
     expect(SOURCE).toContain('Aplicar condición');
     expect(SOURCE).toContain('data-slot="semantic-workbench-add-join-condition"');
-    expect(SOURCE).toContain('Añadir condición con AND');
+    expect(SOURCE).toContain("detailLines.join(' · ')");
+    expect(SOURCE).toContain('Conector de la condición adicional');
+    expect(SOURCE).toContain('Comparador de la condición adicional');
+    expect(SOURCE).toContain('DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS');
     expect(SOURCE).not.toContain('Impacto estimado');
     expect(SOURCE).not.toContain('Editar nodo');
   });

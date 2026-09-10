@@ -74,11 +74,17 @@ export function pgFp64Literal(value: number): PostgresAstNode {
   return { A_Const: { fval: { fval: String(value) } } };
 }
 
-export function pgEquals(left: PostgresAstNode, right: PostgresAstNode): PostgresAstNode {
+export type PostgresComparisonOperator = '=' | '<>' | '>' | '>=' | '<' | '<=';
+
+export function pgComparison(
+  operator: PostgresComparisonOperator,
+  left: PostgresAstNode,
+  right: PostgresAstNode
+): PostgresAstNode {
   return {
     A_Expr: {
       kind: 'AEXPR_OP',
-      name: [pgString('=')],
+      name: [pgString(operator)],
       lexpr: left,
       rexpr: right,
       location: -1,
@@ -86,9 +92,18 @@ export function pgEquals(left: PostgresAstNode, right: PostgresAstNode): Postgre
   };
 }
 
+export function pgEquals(left: PostgresAstNode, right: PostgresAstNode): PostgresAstNode {
+  return pgComparison('=', left, right);
+}
+
 export function pgAnd(expressions: readonly PostgresAstNode[]): PostgresAstNode {
   if (expressions.length < 2) throw new Error('PostgreSQL AND requires at least two expressions.');
   return { BoolExpr: { boolop: 'AND_EXPR', args: [...expressions], location: -1 } };
+}
+
+export function pgOr(expressions: readonly PostgresAstNode[]): PostgresAstNode {
+  if (expressions.length < 2) throw new Error('PostgreSQL OR requires at least two expressions.');
+  return { BoolExpr: { boolop: 'OR_EXPR', args: [...expressions], location: -1 } };
 }
 
 export function pgTimestampTzLiteral(value: string): PostgresAstNode {

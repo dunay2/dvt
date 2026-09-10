@@ -38,6 +38,7 @@ import {
   type DvtSubstraitInnerJoinGroupedWindowProjection,
   type DvtSubstraitInnerJoinGroupingProjection,
   type DvtSubstraitInnerJoinProjection,
+  type DvtSubstraitJoinComparisonOperator,
   type DvtSubstraitJoinPredicateOperand,
   type DvtSubstraitNInputJoinProjection,
 } from './canvasDvtSubstraitJoinComposition';
@@ -59,11 +60,12 @@ import {
   pgConcatAcceptNulls,
   pgExtractYearUtc,
   pgCountRows,
-  pgEquals,
+  pgComparison,
   pgFp64Literal,
   pgFunction,
   pgI64Literal,
   pgOrderedRowNumber,
+  pgOr,
   pgQualifiedColumnRef,
   pgRangeVar,
   pgRowNumber,
@@ -71,9 +73,21 @@ import {
   pgString,
   pgStringLiteral,
   pgTimestampTzLiteral,
+  type PostgresComparisonOperator,
   type PostgresAstNode,
 } from './canvasDvtSubstraitPostgresAst';
 import { resolveDvtSubstraitFilterPostgresProjection } from './canvasDvtSubstraitFilterPostgresProjection';
+
+const POSTGRES_JOIN_COMPARISON: Readonly<
+  Record<DvtSubstraitJoinComparisonOperator, PostgresComparisonOperator>
+> = {
+  equal: '=',
+  not_equal: '<>',
+  gt: '>',
+  gte: '>=',
+  lt: '<',
+  lte: '<=',
+};
 
 export type DvtSubstraitPostgresProjectionErrorCode =
   'unsupported_shape' | 'invalid_source_binding' | 'deparse_failed';
@@ -596,15 +610,22 @@ function buildNInputJoinPostgresAst(projection: DvtSubstraitNInputJoinProjection
     const predicate = projection.joins[inputIndex - 1]!;
     const left = requireFieldBinding(predicate.leftSourceFieldId);
     const right = requireFieldBinding(predicate.rightSourceFieldId);
-    const conditions = [
-      pgEquals(
-        pgQualifiedColumnRef(left.alias, left.name),
-        pgQualifiedColumnRef(right.alias, right.name)
-      ),
-      ...(predicate.additionalConditions ?? []).map((condition) =>
-        pgEquals(predicateOperand(condition.left), predicateOperand(condition.right))
-      ),
-    ];
+    let conditionExpression = pgComparison(
+      POSTGRES_JOIN_COMPARISON[predicate.operator ?? 'equal'],
+      pgQualifiedColumnRef(left.alias, left.name),
+      pgQualifiedColumnRef(right.alias, right.name)
+    );
+    for (const condition of predicate.additionalConditions ?? []) {
+      const comparison = pgComparison(
+        POSTGRES_JOIN_COMPARISON[condition.operator ?? 'equal'],
+        predicateOperand(condition.left),
+        predicateOperand(condition.right)
+      );
+      conditionExpression =
+        (condition.combination ?? 'and') === 'and'
+          ? pgAnd([conditionExpression, comparison])
+          : pgOr([conditionExpression, comparison]);
+    }
     joinedInputs = {
       JoinExpr: {
         jointype: 'JOIN_INNER',
@@ -614,7 +635,7 @@ function buildNInputJoinPostgresAst(projection: DvtSubstraitNInputJoinProjection
           table: input.table,
           alias: nInputJoinAlias(inputIndex),
         }),
-        quals: conditions.length === 1 ? conditions[0] : pgAnd(conditions),
+        quals: conditionExpression,
       },
     };
   }

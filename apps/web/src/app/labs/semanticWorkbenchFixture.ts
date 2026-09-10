@@ -5,6 +5,7 @@ import {
   decodeDvtSubstraitInnerJoinDocument,
   encodeDvtSubstraitInnerJoinDocument,
   inspectDvtSubstraitNInputJoinDraft,
+  type DvtSubstraitJoinComparisonOperator,
   type DvtSubstraitJoinDataType,
   type DvtSubstraitJoinPredicateOperand,
   type DvtSubstraitJoinSource,
@@ -226,13 +227,14 @@ export function buildSemanticWorkbenchFixture(
             const operandValue = (operand: DvtSubstraitJoinPredicateOperand) => {
               if (operand.kind === 'literal') return operand.literal;
               const field = fieldById.get(operand.sourceFieldId);
-              const value =
-                field == null ? undefined : candidate.get(field.inputIndex)?.[field.fieldName];
+              if (field == null) return null;
+              const value = candidate.get(field.inputIndex)?.[field.fieldName];
               return value === undefined ? null : { dataType: field.dataType, value };
             };
-            const equalOperands = (
+            const compareOperands = (
               leftOperand: DvtSubstraitJoinPredicateOperand,
-              rightOperand: DvtSubstraitJoinPredicateOperand
+              rightOperand: DvtSubstraitJoinPredicateOperand,
+              operator: DvtSubstraitJoinComparisonOperator
             ) => {
               const leftValue = operandValue(leftOperand);
               const rightValue = operandValue(rightOperand);
@@ -243,22 +245,53 @@ export function buildSemanticWorkbenchFixture(
               ) {
                 return false;
               }
-              if (leftValue.dataType === 'i64') {
-                return BigInt(leftValue.value) === BigInt(rightValue.value);
-              }
-              if (leftValue.dataType === 'precisionTimestampTz') {
-                return Date.parse(String(leftValue.value)) === Date.parse(String(rightValue.value));
-              }
-              return Object.is(leftValue.value, rightValue.value);
+              const comparison = (() => {
+                if (leftValue.dataType === 'i64') {
+                  const left = BigInt(leftValue.value);
+                  const right = BigInt(rightValue.value);
+                  return left === right ? 0 : left < right ? -1 : 1;
+                }
+                if (leftValue.dataType === 'fp64') {
+                  const left = Number(leftValue.value);
+                  const right = Number(rightValue.value);
+                  return left === right ? 0 : left < right ? -1 : 1;
+                }
+                if (leftValue.dataType === 'precisionTimestampTz') {
+                  const left = Date.parse(String(leftValue.value));
+                  const right = Date.parse(String(rightValue.value));
+                  return left === right ? 0 : left < right ? -1 : 1;
+                }
+                if (leftValue.dataType === 'bool') {
+                  return Number(leftValue.value) - Number(rightValue.value);
+                }
+                const left = String(leftValue.value);
+                const right = String(rightValue.value);
+                return left === right ? 0 : left < right ? -1 : 1;
+              })();
+              if (operator === 'equal') return comparison === 0;
+              if (operator === 'not_equal') return comparison !== 0;
+              if (operator === 'gt') return comparison > 0;
+              if (operator === 'gte') return comparison >= 0;
+              if (operator === 'lt') return comparison < 0;
+              return comparison <= 0;
             };
-            const baseMatches = equalOperands(
+            let matches = compareOperands(
               { kind: 'field', sourceFieldId: predicate.leftSourceFieldId },
-              { kind: 'field', sourceFieldId: predicate.rightSourceFieldId }
+              { kind: 'field', sourceFieldId: predicate.rightSourceFieldId },
+              predicate.operator ?? 'equal'
             );
-            const additionalMatches = (predicate.additionalConditions ?? []).every((condition) =>
-              equalOperands(condition.left, condition.right)
-            );
-            return baseMatches && additionalMatches ? [candidate] : [];
+            for (const condition of predicate.additionalConditions ?? []) {
+              const conditionMatches = compareOperands(
+                condition.left,
+                condition.right,
+                condition.operator ?? 'equal'
+              );
+              matches =
+                (condition.combination ?? 'and') === 'and'
+                  ? matches && conditionMatches
+                  : matches || conditionMatches;
+            }
+            return matches ? [candidate] : [];
           })
         );
       }

@@ -19,10 +19,6 @@ export type SemanticWorkbenchNodeData = Readonly<{
   expression?: string;
   inputSummary?: string;
   outputSummary?: string;
-  joinOperand?: Readonly<{
-    joinRelationId: string;
-    operand: 'left' | 'right';
-  }>;
 }>;
 
 type SemanticWorkbenchEdgeData = Readonly<{
@@ -403,14 +399,7 @@ export function projectSemanticWorkbenchGraph(
     return expression.rexType.case ?? 'expression';
   }
 
-  function addExpression(
-    expression: Expression,
-    fieldNames: readonly string[],
-    joinContext?: Readonly<{
-      joinRelationId: string;
-      operand?: 'left' | 'right';
-    }>
-  ): string {
+  function addExpression(expression: Expression, fieldNames: readonly string[]): string {
     expressionCount += 1;
     if (expression.rexType.case === 'selection') {
       const ordinal = readDvtSubstraitFieldReferenceOrdinal(expression);
@@ -426,14 +415,6 @@ export function projectSemanticWorkbenchGraph(
           semanticKind: 'field',
           semanticGroup: 'condition',
           detail: `Campo de entrada: ${label}`,
-          ...(joinContext?.operand == null
-            ? {}
-            : {
-                joinOperand: {
-                  joinRelationId: joinContext.joinRelationId,
-                  operand: joinContext.operand,
-                },
-              }),
         },
         style: FIELD_STYLE,
       });
@@ -476,20 +457,9 @@ export function projectSemanticWorkbenchGraph(
         },
         style: EXPRESSION_STYLE,
       });
-      for (const [argumentIndex, argument] of scalar.arguments.entries()) {
+      for (const argument of scalar.arguments) {
         if (argument.argType.case !== 'value') continue;
-        const argumentId = addExpression(
-          argument.argType.value,
-          fieldNames,
-          joinContext == null
-            ? undefined
-            : {
-                ...joinContext,
-                ...(functionName === 'equal' && scalar.arguments.length === 2
-                  ? { operand: argumentIndex === 0 ? 'left' : 'right' }
-                  : {}),
-              }
-        );
+        const argumentId = addExpression(argument.argType.value, fieldNames);
         edges.push({
           id: nextId('edge'),
           source: argumentId,
@@ -595,10 +565,15 @@ export function projectSemanticWorkbenchGraph(
       sourcePosition: Position.Right,
       targetPosition: Position.Left,
       data: {
-        label: displayName,
+        label:
+          rel.relType.case === 'join' && expression != null
+            ? `${displayName}\n${expression}`
+            : displayName,
         semanticKind: 'relation',
         semanticGroup: rel.relType.case === 'read' ? 'source' : 'transformation',
-        detail: `${displayName.replace('\n', ' · ')} · ${outputFields.length} columnas`,
+        detail: `${[displayName.replaceAll('\n', ' · '), expression]
+          .filter((value) => value != null)
+          .join(' · ')} · ${outputFields.length} columnas`,
         ...(expression == null ? {} : { expression }),
         ...(inputs.length === 0
           ? {}
@@ -623,20 +598,20 @@ export function projectSemanticWorkbenchGraph(
         style: { stroke: '#4f8cff', strokeWidth: 1.5 },
       });
     }
-    for (const ownedExpression of ownedExpressions) {
-      const expressionId = addExpression(
-        ownedExpression,
-        expressionFields,
-        rel.relType.case === 'join' ? { joinRelationId: id } : undefined
-      );
-      edges.push({
-        id: nextId('edge'),
-        source: expressionId,
-        target: id,
-        type: 'smoothstep',
-        data: { semanticEdgeKind: 'expression' },
-        style: { stroke: '#10b981', strokeWidth: 1.4 },
-      });
+    if (rel.relType.case === 'join') {
+      expressionCount += ownedExpressions.length;
+    } else {
+      for (const ownedExpression of ownedExpressions) {
+        const expressionId = addExpression(ownedExpression, expressionFields);
+        edges.push({
+          id: nextId('edge'),
+          source: expressionId,
+          target: id,
+          type: 'smoothstep',
+          data: { semanticEdgeKind: 'expression' },
+          style: { stroke: '#10b981', strokeWidth: 1.4 },
+        });
+      }
     }
     return id;
   }
