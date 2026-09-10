@@ -2,7 +2,7 @@
 title: Reference Architecture
 status: Active
 owner: docs
-last_reviewed: 2026-08-28
+last_reviewed: 2026-09-10
 ---
 
 # Reference Architecture
@@ -262,7 +262,8 @@ open PR discussion.
 - API component: [`docs/architecture/components/api/`](./components/api/index.md)
 - Engine component: [`docs/architecture/components/engine/`](./components/engine/index.md)
 - Web graph architecture: [`docs/architecture/components/web/graph/graph-frontend-architecture.md`](./components/web/graph/graph-frontend-architecture.md)
-- Planning/control authority: [`docs/planning/state/planning-control-tower.md`](../planning/state/planning-control-tower.md)
+- Task lifecycle: GitHub Issues, with [Planning Dashboard](../planning/state/planning-dashboard.md) for human navigation
+- Architecture/mechanization authority: Planning DB, bounded by [ADR-0061](../adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md)
 - ADRs: [`docs/adr/`](../adr/index.md)
 
 ## Source Anchors For This Reconciliation
