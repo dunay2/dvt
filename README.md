@@ -342,7 +342,7 @@ For engine implementation contributions, ensure:
 
 ## Monorepo Structure (pnpm workspaces)
 
-The project is organized as a monorepo using pnpm workspaces). The primary
+The project is organized as a monorepo using pnpm workspaces. The primary
 packages are located under the `packages/` directory:
 
 - `packages/@dvt/contracts` - shared contracts and interfaces (`@dvt/contracts`)
