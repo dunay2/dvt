@@ -97,13 +97,13 @@ flowchart LR
 
 ## Strategic Pillars
 
-| Pillar | Why it matters | Primary durable surfaces | Current posture |
-| --- | --- | --- | --- |
-| Governed design and plan truth | Preview and execution must share stable graph, plan, and provenance semantics. | Planner/contracts domain, Planning DB, Roadmap By Domain | In progress |
-| Truthful admission and runtime execution | Only executable plans may cross protected runtime boundaries and evidence must remain trustworthy. | API/admission + execution-runtime domains, contracts/tests | In progress |
-| Operator product loop | Product value requires a governed `Design -> Plan -> Run -> Result` loop. | Web/product domains + current GitHub issues | In progress |
-| Retention, repeatability, and scale | Proof environments and retained data must be repeatable, bounded, and diagnosable. | Event lifecycle/retention domain + runbooks/evidence | Partial |
-| Enterprise packaging | Enterprise value requires pilot readiness, billing, compliance, and commercial packaging. | Product roadmap + governing issues | Queued |
+| Pillar                                   | Why it matters                                                                                     | Primary durable surfaces                                   | Current posture |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | --------------- |
+| Governed design and plan truth           | Preview and execution must share stable graph, plan, and provenance semantics.                     | Planner/contracts domain, Planning DB, Roadmap By Domain   | In progress     |
+| Truthful admission and runtime execution | Only executable plans may cross protected runtime boundaries and evidence must remain trustworthy. | API/admission + execution-runtime domains, contracts/tests | In progress     |
+| Operator product loop                    | Product value requires a governed `Design -> Plan -> Run -> Result` loop.                          | Web/product domains + current GitHub issues                | In progress     |
+| Retention, repeatability, and scale      | Proof environments and retained data must be repeatable, bounded, and diagnosable.                 | Event lifecycle/retention domain + runbooks/evidence       | Partial         |
+| Enterprise packaging                     | Enterprise value requires pilot readiness, billing, compliance, and commercial packaging.          | Product roadmap + governing issues                         | Queued          |
 
 ## What Is Already Absorbed Into Mainline
 
