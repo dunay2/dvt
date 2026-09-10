@@ -2,7 +2,7 @@
 title: Concepts
 status: Active
 owner: Docs / Architecture
-last_reviewed: 2026-03-08
+last_reviewed: 2026-09-10
 ---
 
 # Concepts
@@ -28,7 +28,8 @@ behavior or engine contracts.
 3. [DVT System Map](system-map.md)
 4. [Repository Map](repository-map.md)
 5. [Architecture Index](../architecture/index.md)
-6. [Planning Control Tower](../planning/state/planning-control-tower.md)
+6. [Planning Dashboard](../planning/state/planning-dashboard.md)
+7. [Governance Inventory](../planning/status/governance-document-rule-inventory.md)
 
 ## Index
 
