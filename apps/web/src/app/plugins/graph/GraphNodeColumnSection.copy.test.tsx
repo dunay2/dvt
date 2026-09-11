@@ -35,7 +35,9 @@ describe('GraphNodeColumnSection disclosure copy', () => {
     const toggle = container.querySelector<HTMLButtonElement>(
       '[data-slot="graph-node-column-toggle"]'
     );
-    act(() => fireEvent.click(toggle!));
+    act(() => {
+      fireEvent.click(toggle!);
+    });
     return container.querySelector<HTMLButtonElement>(
       '[data-slot="graph-node-column-remainder-toggle"]'
     )!;
@@ -50,7 +52,9 @@ describe('GraphNodeColumnSection disclosure copy', () => {
       'Ver columnas restantes (3)'
     );
 
-    act(() => fireEvent.click(remainderToggle));
+    act(() => {
+      fireEvent.click(remainderToggle);
+    });
     expect(remainderToggle.querySelector('span[aria-hidden="true"]')?.textContent).toBe(
       'Ver menos'
     );
@@ -68,7 +72,9 @@ describe('GraphNodeColumnSection disclosure copy', () => {
       'Show remaining columns (3)'
     );
 
-    act(() => fireEvent.click(remainderToggle));
+    act(() => {
+      fireEvent.click(remainderToggle);
+    });
     expect(remainderToggle.querySelector('span[aria-hidden="true"]')?.textContent).toBe(
       'Show less'
     );
