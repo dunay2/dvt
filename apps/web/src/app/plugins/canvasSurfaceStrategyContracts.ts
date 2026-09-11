@@ -41,7 +41,7 @@ export type CanvasNodeWorkbenchSurfacePolicy = {
 
 export type CanvasOperationalDrawerSurfacePolicy = {
   placement: 'bottom-drawer';
-  tabs: readonly ['log', 'problems', 'runs', 'preview', 'data'];
+  tabs: readonly ('log' | 'problems' | 'runs' | 'preview' | 'data' | 'semantic')[];
 };
 
 export type CanvasSurfaceStrategy = Readonly<{

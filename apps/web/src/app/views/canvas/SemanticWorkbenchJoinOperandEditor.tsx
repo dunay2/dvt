@@ -3,8 +3,8 @@ import { X } from 'lucide-react';
 import type {
   DvtSubstraitJoinDataType,
   DvtSubstraitJoinPredicateOperand,
-} from '../views/canvas/canvasDvtSubstraitJoinComposition';
-import type { DvtSubstraitJoinUnaryFunction } from '../views/canvas/canvasDvtSubstraitJoinOperand';
+} from './canvasDvtSubstraitJoinComposition';
+import type { DvtSubstraitJoinUnaryFunction } from './canvasDvtSubstraitJoinOperand';
 
 const selectStyle = {
   width: '100%',

@@ -244,8 +244,11 @@ export function BottomOperationalDrawerBody({
   }
 
   let activeBody = logBody;
+  const contributedBody = contribution.tabs.find((tab) => tab.id === activeTab)?.content;
 
-  if (activeTab === 'problems') {
+  if (contributedBody !== undefined) {
+    activeBody = contributedBody;
+  } else if (activeTab === 'problems') {
     activeBody = <BottomOperationalProblemsPanel contribution={contribution} />;
   } else if (activeTab === 'runs') {
     activeBody = <BottomOperationalRunsPanel contribution={contribution} />;

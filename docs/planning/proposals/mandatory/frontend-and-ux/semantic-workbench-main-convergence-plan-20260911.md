@@ -10,9 +10,10 @@ planning_type: implementation-plan
 
 ## Intent
 
-Issues #3067, #3068, #3069, #3070, #3074, and #3087 converge the experimental Workbench into one
-reviewable product slice. JSON fixtures feed production Canvas cards; source projections stay stable;
-and multi-source joins use the existing typed Substrait authority.
+Issues #3067, #3068, #3069, #3070, #3074, #3087, and #3109 converge the experimental Workbench into
+one reviewable product slice. JSON fixtures feed production Canvas cards; source projections stay
+stable; multi-source joins use the existing typed Substrait authority; and the shared Transform Focus
+panel is opened from the DVT Canvas bottom drawer.
 
 ```mermaid
 flowchart LR
@@ -41,6 +42,7 @@ userStories:
   - https://github.com/dunay2/dvt/issues/3070
   - https://github.com/dunay2/dvt/issues/3074
   - https://github.com/dunay2/dvt/issues/3087
+  - https://github.com/dunay2/dvt/issues/3109
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -97,6 +99,7 @@ architectureGuards:
   - pnpm docs:feature-mechanization:implementation -- --feature GH-3067-SEMANTIC-WORKBENCH-JSON-FIXTURES --feature SEMANTIC-WORKBENCH-MAIN-CONVERGENCE-20260911
 cypressFlows:
   - Manual browser verification of /lab/semantic-workbench
+  - apps/web/src/app/views/canvas/CanvasShell.operationalDrawer.test.tsx
 completionGate:
   - pnpm test:web:semantic-lab
   - pnpm --filter @dvt/contracts test -- dvt-substrait-capability-catalog.contract.test.ts
@@ -125,13 +128,13 @@ symbols:
       - pnpm test:web:semantic-lab
   - <<: *semanticSymbol
     name: projectSemanticWorkbenchGraph
-    path: apps/web/src/app/labs/semanticWorkbenchProjection.ts
+    path: apps/web/src/app/views/canvas/semanticWorkbenchProjection.ts
   - <<: *semanticSymbol
     name: SemanticWorkbenchJoinConditionEditor
-    path: apps/web/src/app/labs/SemanticWorkbenchJoinConditionEditor.tsx
+    path: apps/web/src/app/views/canvas/SemanticWorkbenchJoinConditionEditor.tsx
   - <<: *semanticSymbol
     name: SemanticWorkbenchJoinOperandEditor
-    path: apps/web/src/app/labs/SemanticWorkbenchJoinOperandEditor.tsx
+    path: apps/web/src/app/views/canvas/SemanticWorkbenchJoinOperandEditor.tsx
   - <<: *semanticSymbol
     name: editDvtSubstraitJoinPredicateConditions
     path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
@@ -149,76 +152,76 @@ symbols:
     path: apps/web/src/app/labs/semanticWorkbenchFixture.ts
   - <<: *semanticSymbol
     name: accent
-    path: apps/web/src/app/labs/SemanticWorkbenchJoinConditionEditor.tsx
+    path: apps/web/src/app/views/canvas/SemanticWorkbenchJoinConditionEditor.tsx
   - <<: *semanticSymbol
     name: border
-    path: apps/web/src/app/labs/SemanticWorkbenchJoinConditionEditor.tsx
+    path: apps/web/src/app/views/canvas/SemanticWorkbenchJoinConditionEditor.tsx
   - <<: *semanticSymbol
     name: COMPARISON_LABEL
-    path: apps/web/src/app/labs/SemanticWorkbenchJoinConditionEditor.tsx
+    path: apps/web/src/app/views/canvas/SemanticWorkbenchJoinConditionEditor.tsx
   - <<: *semanticSymbol
     name: ConditionDraft
-    path: apps/web/src/app/labs/SemanticWorkbenchJoinConditionEditor.tsx
+    path: apps/web/src/app/views/canvas/SemanticWorkbenchJoinConditionEditor.tsx
   - <<: *semanticSymbol
     name: ConditionFieldOption
-    path: apps/web/src/app/labs/SemanticWorkbenchJoinConditionEditor.tsx
+    path: apps/web/src/app/views/canvas/SemanticWorkbenchJoinConditionEditor.tsx
   - <<: *semanticSymbol
     name: IconAction
-    path: apps/web/src/app/labs/SemanticWorkbenchJoinConditionEditor.tsx
+    path: apps/web/src/app/views/canvas/SemanticWorkbenchJoinConditionEditor.tsx
   - <<: *semanticSymbol
     name: literalText
-    path: apps/web/src/app/labs/SemanticWorkbenchJoinConditionEditor.tsx
+    path: apps/web/src/app/views/canvas/SemanticWorkbenchJoinConditionEditor.tsx
   - <<: *semanticSymbol
     name: mapDataTypeToFunctionEntries
-    path: apps/web/src/app/labs/SemanticWorkbenchJoinConditionEditor.tsx
+    path: apps/web/src/app/views/canvas/SemanticWorkbenchJoinConditionEditor.tsx
   - <<: *semanticSymbol
     name: muted
-    path: apps/web/src/app/labs/SemanticWorkbenchJoinConditionEditor.tsx
+    path: apps/web/src/app/views/canvas/SemanticWorkbenchJoinConditionEditor.tsx
   - <<: *semanticSymbol
     name: operandDraft
-    path: apps/web/src/app/labs/SemanticWorkbenchJoinConditionEditor.tsx
+    path: apps/web/src/app/views/canvas/SemanticWorkbenchJoinConditionEditor.tsx
   - <<: *semanticSymbol
     name: operandText
-    path: apps/web/src/app/labs/SemanticWorkbenchJoinConditionEditor.tsx
+    path: apps/web/src/app/views/canvas/SemanticWorkbenchJoinConditionEditor.tsx
   - <<: *semanticSymbol
     name: panel
-    path: apps/web/src/app/labs/SemanticWorkbenchJoinConditionEditor.tsx
+    path: apps/web/src/app/views/canvas/SemanticWorkbenchJoinConditionEditor.tsx
   - <<: *semanticSymbol
     name: predicateOperandKey
-    path: apps/web/src/app/labs/SemanticWorkbenchJoinConditionEditor.tsx
+    path: apps/web/src/app/views/canvas/SemanticWorkbenchJoinConditionEditor.tsx
   - <<: *semanticSymbol
     name: projectSemanticWorkbenchJoinConditionRows
-    path: apps/web/src/app/labs/SemanticWorkbenchJoinConditionEditor.tsx
+    path: apps/web/src/app/views/canvas/SemanticWorkbenchJoinConditionEditor.tsx
   - <<: *semanticSymbol
     name: rawLiteralValue
-    path: apps/web/src/app/labs/SemanticWorkbenchJoinConditionEditor.tsx
+    path: apps/web/src/app/views/canvas/SemanticWorkbenchJoinConditionEditor.tsx
   - <<: *semanticSymbol
     name: SELECT_STYLE
-    path: apps/web/src/app/labs/SemanticWorkbenchJoinConditionEditor.tsx
+    path: apps/web/src/app/views/canvas/SemanticWorkbenchJoinConditionEditor.tsx
   - <<: *semanticSymbol
     name: SemanticWorkbenchJoinConditionRow
-    path: apps/web/src/app/labs/SemanticWorkbenchJoinConditionEditor.tsx
+    path: apps/web/src/app/views/canvas/SemanticWorkbenchJoinConditionEditor.tsx
   - <<: *semanticSymbol
     name: buildSemanticWorkbenchJoinOperand
-    path: apps/web/src/app/labs/SemanticWorkbenchJoinOperandEditor.tsx
+    path: apps/web/src/app/views/canvas/SemanticWorkbenchJoinOperandEditor.tsx
   - <<: *semanticSymbol
     name: defaultSemanticWorkbenchJoinLiteralValue
-    path: apps/web/src/app/labs/SemanticWorkbenchJoinOperandEditor.tsx
+    path: apps/web/src/app/views/canvas/SemanticWorkbenchJoinOperandEditor.tsx
   - <<: *semanticSymbol
     name: JoinOperandFunctionChain
-    path: apps/web/src/app/labs/SemanticWorkbenchJoinOperandEditor.tsx
+    path: apps/web/src/app/views/canvas/SemanticWorkbenchJoinOperandEditor.tsx
   - <<: *semanticSymbol
     name: parseJoinLiteral
-    path: apps/web/src/app/labs/SemanticWorkbenchJoinOperandEditor.tsx
+    path: apps/web/src/app/views/canvas/SemanticWorkbenchJoinOperandEditor.tsx
   - <<: *semanticSymbol
     name: selectStyle
-    path: apps/web/src/app/labs/SemanticWorkbenchJoinOperandEditor.tsx
+    path: apps/web/src/app/views/canvas/SemanticWorkbenchJoinOperandEditor.tsx
   - <<: *semanticSymbol
     name: SemanticWorkbenchJoinFieldOption
-    path: apps/web/src/app/labs/SemanticWorkbenchJoinOperandEditor.tsx
+    path: apps/web/src/app/views/canvas/SemanticWorkbenchJoinOperandEditor.tsx
   - <<: *semanticSymbol
     name: SemanticWorkbenchJoinOperandDraft
-    path: apps/web/src/app/labs/SemanticWorkbenchJoinOperandEditor.tsx
+    path: apps/web/src/app/views/canvas/SemanticWorkbenchJoinOperandEditor.tsx
   - <<: *semanticSymbol
     name: accent
     path: apps/web/src/app/labs/SemanticWorkbenchLab.tsx
@@ -299,64 +302,64 @@ symbols:
     path: apps/web/src/app/labs/SemanticWorkbenchLab.tsx
   - <<: *semanticSymbol
     name: EXPRESSION_STYLE
-    path: apps/web/src/app/labs/semanticWorkbenchProjection.ts
+    path: apps/web/src/app/views/canvas/semanticWorkbenchProjection.ts
   - <<: *semanticSymbol
     name: expressionsOwnedByRelation
-    path: apps/web/src/app/labs/semanticWorkbenchProjection.ts
+    path: apps/web/src/app/views/canvas/semanticWorkbenchProjection.ts
   - <<: *semanticSymbol
     name: FIELD_STYLE
-    path: apps/web/src/app/labs/semanticWorkbenchProjection.ts
+    path: apps/web/src/app/views/canvas/semanticWorkbenchProjection.ts
   - <<: *semanticSymbol
     name: functionNames
-    path: apps/web/src/app/labs/semanticWorkbenchProjection.ts
+    path: apps/web/src/app/views/canvas/semanticWorkbenchProjection.ts
   - <<: *semanticSymbol
     name: layoutGraph
-    path: apps/web/src/app/labs/semanticWorkbenchProjection.ts
+    path: apps/web/src/app/views/canvas/semanticWorkbenchProjection.ts
   - <<: *semanticSymbol
     name: LITERAL_STYLE
-    path: apps/web/src/app/labs/semanticWorkbenchProjection.ts
+    path: apps/web/src/app/views/canvas/semanticWorkbenchProjection.ts
   - <<: *semanticSymbol
     name: literalLabel
-    path: apps/web/src/app/labs/semanticWorkbenchProjection.ts
+    path: apps/web/src/app/views/canvas/semanticWorkbenchProjection.ts
   - <<: *semanticSymbol
     name: operatorLabel
-    path: apps/web/src/app/labs/semanticWorkbenchProjection.ts
+    path: apps/web/src/app/views/canvas/semanticWorkbenchProjection.ts
   - <<: *semanticSymbol
     name: RELATION_STYLE
-    path: apps/web/src/app/labs/semanticWorkbenchProjection.ts
+    path: apps/web/src/app/views/canvas/semanticWorkbenchProjection.ts
   - <<: *semanticSymbol
     name: relationAnchor
-    path: apps/web/src/app/labs/semanticWorkbenchProjection.ts
+    path: apps/web/src/app/views/canvas/semanticWorkbenchProjection.ts
   - <<: *semanticSymbol
     name: relationDisplayName
-    path: apps/web/src/app/labs/semanticWorkbenchProjection.ts
+    path: apps/web/src/app/views/canvas/semanticWorkbenchProjection.ts
   - <<: *semanticSymbol
     name: relationFieldNames
-    path: apps/web/src/app/labs/semanticWorkbenchProjection.ts
+    path: apps/web/src/app/views/canvas/semanticWorkbenchProjection.ts
   - <<: *semanticSymbol
     name: relationInputs
-    path: apps/web/src/app/labs/semanticWorkbenchProjection.ts
+    path: apps/web/src/app/views/canvas/semanticWorkbenchProjection.ts
   - <<: *semanticSymbol
     name: relationSourceCount
-    path: apps/web/src/app/labs/semanticWorkbenchProjection.ts
+    path: apps/web/src/app/views/canvas/semanticWorkbenchProjection.ts
   - <<: *semanticSymbol
     name: routeEdgesByTransition
-    path: apps/web/src/app/labs/semanticWorkbenchProjection.ts
+    path: apps/web/src/app/views/canvas/semanticWorkbenchProjection.ts
   - <<: *semanticSymbol
     name: SemanticWorkbenchEdge
-    path: apps/web/src/app/labs/semanticWorkbenchProjection.ts
+    path: apps/web/src/app/views/canvas/semanticWorkbenchProjection.ts
   - <<: *semanticSymbol
     name: SemanticWorkbenchEdgeData
-    path: apps/web/src/app/labs/semanticWorkbenchProjection.ts
+    path: apps/web/src/app/views/canvas/semanticWorkbenchProjection.ts
   - <<: *semanticSymbol
     name: SemanticWorkbenchGraph
-    path: apps/web/src/app/labs/semanticWorkbenchProjection.ts
+    path: apps/web/src/app/views/canvas/semanticWorkbenchProjection.ts
   - <<: *semanticSymbol
     name: SemanticWorkbenchGroup
-    path: apps/web/src/app/labs/semanticWorkbenchProjection.ts
+    path: apps/web/src/app/views/canvas/semanticWorkbenchProjection.ts
   - <<: *semanticSymbol
     name: SemanticWorkbenchNodeData
-    path: apps/web/src/app/labs/semanticWorkbenchProjection.ts
+    path: apps/web/src/app/views/canvas/semanticWorkbenchProjection.ts
   - <<: *semanticSymbol
     name: compactRemainderClassName
     path: apps/web/src/app/plugins/graph/GraphNodeColumnSection.tsx

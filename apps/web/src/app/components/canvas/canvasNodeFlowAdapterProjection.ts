@@ -148,6 +148,10 @@ export function projectCanvasNodeFlowAdapter({
     portTone: NODE_ROLE_PORT_TONES[role],
     canAttachSchema: canMutateNodeCommands && typeof data.onAttachSchemaToNode === 'function',
     openNode: (): void => {
+      if (typeof data.onOpenNode === 'function') {
+        data.onOpenNode(nodeId);
+        return;
+      }
       if (typeof data.onOpenSourceDataSample === 'function') {
         data.onOpenSourceDataSample(nodeId);
         return;

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { resolveDvtSubstraitJoinUnaryFunctions } from '../views/canvas/canvasDvtSubstraitJoinOperand';
-import { buildSemanticWorkbenchJoinOperand } from './SemanticWorkbenchJoinOperandEditor';
+import { buildSemanticWorkbenchJoinOperand } from '../views/canvas/SemanticWorkbenchJoinOperandEditor';
 
 describe('SemanticWorkbenchJoinOperandEditor', () => {
   it('builds the same recursive operand for a literal and N admitted functions', () => {

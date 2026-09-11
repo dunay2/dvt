@@ -16,6 +16,9 @@ export const dvtCanvasSurfaceStrategy: CanvasSurfaceStrategy = {
     openedFrom: ['double-click'],
     sections: ['properties', 'columns', 'inputs-outputs', 'sql', 'sink', 'preview', 'runs'],
   },
-  operationalDrawer: contextualCanvasOperationalDrawerPolicy,
+  operationalDrawer: {
+    ...contextualCanvasOperationalDrawerPolicy,
+    tabs: [...contextualCanvasOperationalDrawerPolicy.tabs, 'semantic'],
+  },
   globalNavigation: contextualCanvasGlobalNavigationPolicy,
 };

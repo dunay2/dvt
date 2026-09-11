@@ -6,6 +6,11 @@ import { getSourceImportContributions, getSourceImportOptions } from '../../plug
 import { ResizablePanelGroup } from '../../components/ui/resizable';
 import { CanvasShellMainPanel } from './CanvasShellMainPanel';
 import { CanvasOperationalDrawerContributionRegistrar } from './CanvasOperationalDrawerContributionRegistrar';
+import {
+  SemanticTransformFocusPanel,
+  canOpenSemanticTransformFocus,
+} from './SemanticTransformFocusPanel';
+import { createCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import { CanvasProjectExplorerDialog } from './CanvasProjectExplorerDialog';
 import { CanvasSettingsDialog } from './CanvasSettingsDialog';
 import { CanvasSourceImportDialogHost } from './CanvasSourceImportDialogHost';
@@ -80,10 +85,47 @@ export default function CanvasShell({
   const [canvasSettingsOpen, setCanvasSettingsOpen] = useState(false);
   const [dbtProjectImportOpen, setDbtProjectImportOpen] = useState(false);
   const [dataSample, setDataSample] = useState<OperationalDrawerDataSample>({ status: 'idle' });
+  const [semanticTransformId, setSemanticTransformId] = useState<string | null>(null);
   const dataSampleRequestIdRef = useRef(0);
   const showBottomDrawer = useUiLayoutStore((state) => state.showBottomDrawer);
   const selectOperationalDrawerTab = useOperationalDrawerContributionStore(
     (state) => state.selectOperationalDrawerTab
+  );
+  const semanticTransformIds = useMemo(
+    () =>
+      new Set(
+        panels.inspectorGraphNodes.filter(canOpenSemanticTransformFocus).map((node) => node.id)
+      ),
+    [panels.inspectorGraphNodes]
+  );
+  const semanticTransform = useMemo(
+    () =>
+      panels.inspectorGraphNodes.find(
+        (node) => node.id === semanticTransformId && semanticTransformIds.has(node.id)
+      ) ?? null,
+    [panels.inspectorGraphNodes, semanticTransformId, semanticTransformIds]
+  );
+  const openSemanticTransform = useCallback(
+    (nodeId: string) => {
+      if (!semanticTransformIds.has(nodeId)) return;
+      setSemanticTransformId(nodeId);
+      selectOperationalDrawerTab('semantic');
+      showBottomDrawer(360);
+      window.requestAnimationFrame(() => {
+        document
+          .querySelector<HTMLButtonElement>(
+            '[data-slot="bottom-operational-drawer-tab"][data-tab="semantic"]'
+          )
+          ?.focus({ preventScroll: true });
+      });
+    },
+    [selectOperationalDrawerTab, semanticTransformIds, showBottomDrawer]
+  );
+  const applySemanticTransform = useCallback(
+    (transform: (typeof panels.inspectorGraphNodes)[number]) => {
+      panels.inspectorAuthoring.onApplyNodeDraft(createCanvasInspectorNodeDraft(transform));
+    },
+    [panels.inspectorAuthoring]
   );
   const workbenchOpenerRef = useRef<WorkbenchOpener | null>(null);
   const contextualWorkbenchId = useCanvasInteractionStore((state) => state.contextualWorkbenchId);
@@ -292,6 +334,7 @@ export default function CanvasShell({
       ...graph,
       nodesWithImpact: graph.nodesWithImpact.map((node) => {
         const data = node.data as DbtNodeData;
+        const canOpenSemantic = semanticTransformIds.has(node.id);
         const workspaceFilePath = resolveWorkspaceFilePath(data);
         const codeTruthKind = data.presentationTruth?.code.kind;
         const canInspectNodeCode =
@@ -340,6 +383,7 @@ export default function CanvasShell({
           sourceDataSampleInteractionLabel: canOpenDataSample
             ? copy.sourceDataSampleInteractionLabel
             : undefined,
+          onOpenNode: canOpenSemantic ? () => openSemanticTransform(node.id) : data.onOpenNode,
         };
 
         return {
@@ -353,7 +397,9 @@ export default function CanvasShell({
       copy.sourceDataSampleInteractionLabel,
       graph,
       openSinkDataSample,
+      openSemanticTransform,
       openSourceDataSample,
+      semanticTransformIds,
       runMaterializationSampleQuery,
       runSnapshot,
       warehouseSourceDataSampleQuery,
@@ -432,6 +478,19 @@ export default function CanvasShell({
           onStartRun={chromeCommands.onRun}
           selectionRecoveryCommands={chromeCommands.executionSelectionRecovery}
           dataSample={dataSample}
+          semanticBody={
+            semanticTransform == null ? (
+              <div className="grid h-full place-items-center p-4 text-sm text-muted-foreground">
+                {copy.operationalDrawerSemanticIdleMessage}
+              </div>
+            ) : (
+              <SemanticTransformFocusPanel
+                transform={semanticTransform}
+                canEdit={panels.inspectorAuthoring.canEditNode}
+                onTransformChange={applySemanticTransform}
+              />
+            )
+          }
         />
       )}
       <CanvasShellMainPanel
