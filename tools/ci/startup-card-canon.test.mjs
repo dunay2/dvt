@@ -3,6 +3,7 @@
  * semantic startup-card component instead of scattered orientation prose.
  */
 import assert from 'node:assert/strict';
+import path from 'node:path';
 import { test } from 'node:test';
 
 import {
@@ -61,7 +62,15 @@ const planningAuthorityFiles = [
   'docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-router-plan-20260402.md',
 ];
 
-const activePlanningEntrypoints = [
+const planningDomainEntrypoints = [
+  'docs/planning/domains/documentation-governance.md',
+  'docs/planning/domains/api-and-admission.md',
+  'docs/planning/domains/execution-runtime.md',
+  'docs/planning/domains/planner-and-contracts.md',
+  'docs/planning/domains/event-lifecycle-and-retention.md',
+];
+
+const baseActivePlanningEntrypoints = [
   'CLAUDE.md',
   'README.md',
   'docs/index.md',
@@ -89,11 +98,7 @@ const activePlanningEntrypoints = [
   'docs/planning/roadmap/diagrams/gap-execution-dependency-graph.md',
   'docs/planning/roadmap/diagrams/gap-execution-parallel-lanes.md',
   'docs/planning/domains/index.md',
-  'docs/planning/domains/documentation-governance.md',
-  'docs/planning/domains/api-and-admission.md',
-  'docs/planning/domains/execution-runtime.md',
-  'docs/planning/domains/planner-and-contracts.md',
-  'docs/planning/domains/event-lifecycle-and-retention.md',
+  ...planningDomainEntrypoints,
   'docs/planning/gaps/index.md',
   'docs/planning/proposals/mandatory/frontend-and-ux/index.md',
   'docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-canon-plan-20260524.md',
@@ -165,31 +170,102 @@ function hasExplicitRetirementOrNonAuthorityAssertion(statement) {
   return explicitRetirementLanguage.test(statement) || explicitNonAuthorityLanguage.test(statement);
 }
 
-function collectWrappedStatement(lines, lineIndex) {
-  const parts = [lines[lineIndex].trim()];
-  let cursor = lineIndex;
-
-  while (
-    cursor + 1 < lines.length &&
-    lines[cursor + 1].trim() !== '' &&
-    !/[.!?]$/u.test(parts.at(-1))
-  ) {
-    cursor += 1;
-    parts.push(lines[cursor].trim());
-  }
-
-  return parts.join(' ');
+function markdownBlockKind(line) {
+  const trimmed = line.trim();
+  if (trimmed === '') return 'blank';
+  if (/^(?:```|~~~)/u.test(trimmed)) return 'fence';
+  if (/^#{1,6}\s/u.test(trimmed)) return 'heading';
+  if (/^(?:[-+*]|\d+[.)])\s+/u.test(trimmed)) return 'list-item';
+  if (/^\|/u.test(trimmed)) return 'table-row';
+  if (/^>/u.test(trimmed)) return 'quote';
+  if (/^(?:-{3,}|\*{3,}|_{3,})$/u.test(trimmed)) return 'thematic-break';
+  return 'paragraph';
 }
 
-function assertNoActiveRetiredReference(path, statement, retired) {
+function collectMarkdownBlock(lines, lineIndex) {
+  const currentKind = markdownBlockKind(lines[lineIndex]);
+  if (!['paragraph', 'list-item'].includes(currentKind)) {
+    return lines[lineIndex].trim();
+  }
+
+  let start = lineIndex;
+  if (currentKind === 'paragraph') {
+    while (start > 0) {
+      const previousKind = markdownBlockKind(lines[start - 1]);
+      if (previousKind === 'paragraph') {
+        start -= 1;
+        continue;
+      }
+      if (previousKind === 'list-item') {
+        start -= 1;
+      }
+      break;
+    }
+  }
+
+  let end = lineIndex;
+  while (end + 1 < lines.length && markdownBlockKind(lines[end + 1]) === 'paragraph') {
+    end += 1;
+  }
+
+  return lines
+    .slice(start, end + 1)
+    .map((line) => line.trim())
+    .join(' ');
+}
+
+function activePlanningSectionLines(content) {
+  const lines = content.split(/\r?\n/u);
+  const sectionStart = lines.findIndex((line) => /^## Active (?:Planning Inputs|Proposal Set)\s*$/u.test(line));
+  if (sectionStart === -1) return [];
+
+  const section = [];
+  for (let index = sectionStart + 1; index < lines.length; index += 1) {
+    if (/^##\s+/u.test(lines[index])) break;
+    section.push(lines[index]);
+  }
+  return section;
+}
+
+function collectLinkedActivePlanningPlans(domainPaths) {
+  const plans = new Set();
+  const markdownLinkPattern = /\[[^\]]+\]\(([^)#]+\.md)(?:#[^)]*)?\)/gu;
+
+  for (const domainPath of domainPaths) {
+    const section = activePlanningSectionLines(readRepoFile(domainPath));
+    for (const line of section) {
+      markdownLinkPattern.lastIndex = 0;
+      for (const match of line.matchAll(markdownLinkPattern)) {
+        const target = match[1];
+        if (/^[a-z]+:/iu.test(target)) continue;
+        const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(domainPath), target));
+        if (!resolved.startsWith('docs/planning/proposals/mandatory/')) continue;
+
+        const proposal = readRepoFile(resolved);
+        if (/^status:\s*(?:Active|Review)\s*$/imu.test(proposal)) {
+          plans.add(resolved);
+        }
+      }
+    }
+  }
+
+  return [...plans].sort((left, right) => left.localeCompare(right));
+}
+
+const linkedActivePlanningPlans = collectLinkedActivePlanningPlans(planningDomainEntrypoints);
+const activePlanningEntrypoints = [
+  ...new Set([...baseActivePlanningEntrypoints, ...linkedActivePlanningPlans]),
+];
+
+function assertNoActiveRetiredReference(pathname, statement, retired) {
   if (retired.pathPattern.test(statement)) {
-    assert.fail(`${path} must not link retired path ${retired.path}: ${statement.trim()}`);
+    assert.fail(`${pathname} must not link retired path ${retired.path}: ${statement.trim()}`);
   }
 
   const referencesRetiredName = retired.namePattern.test(statement);
   if (!referencesRetiredName || hasExplicitRetirementOrNonAuthorityAssertion(statement)) return;
 
-  assert.fail(`${path} must not present retired surface ${retired.path}: ${statement.trim()}`);
+  assert.fail(`${pathname} must not present retired surface ${retired.path}: ${statement.trim()}`);
 }
 
 test('governance startup card canonization preserves routing semantics and baseline rails', () => {
@@ -198,9 +274,9 @@ test('governance startup card canonization preserves routing semantics and basel
     'docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-canon-plan-20260524.md'
   );
 
-  for (const path of requiredFiles) {
+  for (const pathname of requiredFiles) {
     for (const rail of requiredRails) {
-      assertContains(path, rail);
+      assertContains(pathname, rail);
     }
   }
 
@@ -244,12 +320,12 @@ test('governance startup card canonization preserves routing semantics and basel
 });
 
 test('planning startup artifacts preserve GitHub task authority', () => {
-  for (const path of planningAuthorityFiles) {
-    const content = readRepoFile(path);
-    assert.match(content, /GitHub Issues/i, `${path} must name GitHub Issues task authority`);
-    assert.match(content, /Planning DB/i, `${path} must preserve Planning DB architecture scope`);
+  for (const pathname of planningAuthorityFiles) {
+    const content = readRepoFile(pathname);
+    assert.match(content, /GitHub Issues/i, `${pathname} must name GitHub Issues task authority`);
+    assert.match(content, /Planning DB/i, `${pathname} must preserve Planning DB architecture scope`);
     for (const forbidden of forbiddenTaskAuthorityPatterns) {
-      assert.doesNotMatch(content, forbidden, `${path} must not restore retired task authority`);
+      assert.doesNotMatch(content, forbidden, `${pathname} must not restore retired task authority`);
     }
   }
 
@@ -262,9 +338,18 @@ test('planning startup artifacts preserve GitHub task authority', () => {
   );
 });
 
-test('retirement wording never permits links or negated retirement claims', () => {
+test('domain routing expands the guard to linked active planning proposals', () => {
+  assert.ok(
+    linkedActivePlanningPlans.includes(
+      'docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md'
+    ),
+    'execution-runtime must expose TF-C3 to retired-surface validation'
+  );
+});
+
+test('retirement wording never permits links, negated retirement, or Markdown block leakage', () => {
   const retiredDashboard = retiredPlanningSurfaces.find(
-    ({ path }) => path === 'docs/planning/state/planning-dashboard.md'
+    ({ path: retiredPath }) => retiredPath === 'docs/planning/state/planning-dashboard.md'
   );
   assert.ok(retiredDashboard);
 
@@ -287,12 +372,31 @@ test('retirement wording never permits links or negated retirement claims', () =
   assert.doesNotThrow(() =>
     assertNoActiveRetiredReference(
       'fixture.md',
-      collectWrappedStatement(
+      collectMarkdownBlock(
         ['No Planning Dashboard, local workboard, lane file, closeout file, or generated', 'planning view is a task authority.'],
         0
       ),
       retiredDashboard
     )
+  );
+  assert.doesNotThrow(() =>
+    assertNoActiveRetiredReference(
+      'fixture.md',
+      collectMarkdownBlock(
+        ['No retired planning view, including the', 'Planning Dashboard, is a task authority.'],
+        1
+      ),
+      retiredDashboard
+    )
+  );
+  assert.throws(
+    () =>
+      assertNoActiveRetiredReference(
+        'fixture.md',
+        collectMarkdownBlock(['- Planning Dashboard', '- Historical notes were archived.'], 0),
+        retiredDashboard
+      ),
+    /must not present retired surface/
   );
   assert.throws(
     () =>
@@ -305,7 +409,8 @@ test('retirement wording never permits links or negated retirement claims', () =
   );
 
   const retiredRuntimeGap = retiredPlanningSurfaces.find(
-    ({ path }) => path === 'docs/planning/gaps/runtime-architecture-gap-register-20260331.md'
+    ({ path: retiredPath }) =>
+      retiredPath === 'docs/planning/gaps/runtime-architecture-gap-register-20260331.md'
   );
   assert.ok(retiredRuntimeGap);
   assert.throws(
@@ -324,15 +429,15 @@ test('active planning entrypoints do not route through retired planning surfaces
     assert.throws(() => readRepoFile(retired.path), /ENOENT/, `${retired.path} must stay deleted`);
   }
 
-  for (const path of activePlanningEntrypoints) {
-    const lines = readRepoFile(path).split(/\r?\n/);
+  for (const pathname of activePlanningEntrypoints) {
+    const lines = readRepoFile(pathname).split(/\r?\n/);
     for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
       const line = lines[lineIndex];
       for (const retired of retiredPlanningSurfaces) {
         const statement = retired.namePattern.test(line)
-          ? collectWrappedStatement(lines, lineIndex)
+          ? collectMarkdownBlock(lines, lineIndex)
           : line;
-        assertNoActiveRetiredReference(path, statement, retired);
+        assertNoActiveRetiredReference(pathname, statement, retired);
       }
     }
   }
