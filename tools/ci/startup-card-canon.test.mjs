@@ -141,7 +141,11 @@ const retiredPlanningSurfaces = [
 ];
 
 const explicitRetirementLanguage =
-  /\b(?:no|not|never|retired|obsolete|removed|deleted|former|historical|history|replaced|superseded|deprecated|archived)\b/i;
+  /\b(?:retired|obsolete|removed|deleted|former|historical|history|replaced|superseded|deprecated|archived)\b/i;
+const negatedRetirementLanguage =
+  /\b(?:not|never)\s+(?:retired|obsolete|removed|deleted|historical|replaced|superseded|deprecated|archived)\b/i;
+const explicitNonAuthorityLanguage =
+  /(?:\bno\b[^.]{0,160}\bis\s+(?:an?\s+|the\s+)?(?:task\s+)?authority\b|\b(?:is|are)\s+(?:not\s+(?:an?\s+|the\s+)?(?:task\s+)?authority|not\s+authoritative|no\s+longer\s+authoritative)\b)/i;
 
 const forbiddenTaskAuthorityPatterns = [
   /Planning DB owns task lifecycle/i,
@@ -152,13 +156,18 @@ const forbiddenTaskAuthorityPatterns = [
   /planning-control-tower\.md/i,
 ];
 
+function hasExplicitRetirementOrNonAuthorityAssertion(line) {
+  if (negatedRetirementLanguage.test(line)) return false;
+  return explicitRetirementLanguage.test(line) || explicitNonAuthorityLanguage.test(line);
+}
+
 function assertNoActiveRetiredReference(path, line, retired) {
   if (retired.pathPattern.test(line)) {
     assert.fail(`${path} must not link retired path ${retired.path}: ${line.trim()}`);
   }
 
   const referencesRetiredName = retired.namePattern.test(line);
-  if (!referencesRetiredName || explicitRetirementLanguage.test(line)) return;
+  if (!referencesRetiredName || hasExplicitRetirementOrNonAuthorityAssertion(line)) return;
 
   assert.fail(`${path} must not present retired surface ${retired.path}: ${line.trim()}`);
 }
@@ -233,7 +242,7 @@ test('planning startup artifacts preserve GitHub task authority', () => {
   );
 });
 
-test('retirement wording never permits links to retired paths', () => {
+test('retirement wording never permits links or negated retirement claims', () => {
   const retiredDashboard = retiredPlanningSurfaces.find(
     ({ path }) => path === 'docs/planning/state/planning-dashboard.md'
   );
@@ -254,6 +263,22 @@ test('retirement wording never permits links to retired paths', () => {
       'The Planning Dashboard is retired and no longer authoritative.',
       retiredDashboard
     )
+  );
+  assert.doesNotThrow(() =>
+    assertNoActiveRetiredReference(
+      'fixture.md',
+      'No Planning Dashboard is a task authority.',
+      retiredDashboard
+    )
+  );
+  assert.throws(
+    () =>
+      assertNoActiveRetiredReference(
+        'fixture.md',
+        'The Planning Dashboard is not retired and remains the task authority.',
+        retiredDashboard
+      ),
+    /must not present retired surface/
   );
 
   const retiredRuntimeGap = retiredPlanningSurfaces.find(
