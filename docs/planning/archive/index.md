@@ -2,7 +2,7 @@
 title: Planning Archive
 status: Active
 owner: docs
-last_reviewed: 2026-03-27
+last_reviewed: 2026-09-11
 planning_type: index
 ---
 
@@ -60,8 +60,12 @@ Superseded governance and roadmap proposals:
 
 ## Archived Gap Specifications
 
-All gaps G1–G10 closed — see closeouts directory for evidence.
+All gaps G1–G10 closed — see closeouts directory for evidence. The runtime gap
+register dated 2026-03-31 is also retained here as a historical source-first
+snapshot after later code invalidated multiple rows that had been marked
+confirmed.
 
+- [Runtime Architecture Gap Register 2026-03-31](./gaps/runtime-architecture-gap-register-20260331.md)
 - [G3 Task Specification](./gaps/G3-TASK-SPECIFICATION.md)
 - [G4 Task Specification](./gaps/G4-TASK-SPECIFICATION.md)
 - [G4-T3 Sonar Refactor Plan](./gaps/G4-T3-SONAR-REFACTOR-PLAN.md)
