@@ -1,0 +1,100 @@
+{
+  "schemaVersion": "semantic-workbench-dataset.v1",
+  "displayName": "Orders",
+  "schema": "raw",
+  "tableName": "orders",
+  "observedAt": "2026-09-08T00:00:00.000Z",
+  "primaryKey": "order_id",
+  "columns": [
+    { "name": "order_id", "type": "text" },
+    { "name": "client_id", "type": "text" },
+    { "name": "amount", "type": "numeric" },
+    { "name": "discount", "type": "numeric" },
+    { "name": "country", "type": "text" },
+    { "name": "priority", "type": "boolean" },
+    { "name": "status", "type": "text" },
+    { "name": "ordered_at", "type": "timestamp" }
+  ],
+  "rows": [
+    {
+      "order_id": "ORD-1001",
+      "client_id": "CLI-001",
+      "amount": 1250.0,
+      "discount": 0.05,
+      "country": "ES",
+      "priority": true,
+      "status": "paid",
+      "ordered_at": "2026-08-01T09:15:00Z"
+    },
+    {
+      "order_id": "ORD-1002",
+      "client_id": "CLI-002",
+      "amount": 89.9,
+      "discount": 0.0,
+      "country": "PT",
+      "priority": false,
+      "status": "paid",
+      "ordered_at": "2026-08-03T11:40:00Z"
+    },
+    {
+      "order_id": "ORD-1003",
+      "client_id": "CLI-001",
+      "amount": 2400.0,
+      "discount": 0.1,
+      "country": "ES",
+      "priority": true,
+      "status": "shipped",
+      "ordered_at": "2026-08-10T08:05:00Z"
+    },
+    {
+      "order_id": "ORD-1004",
+      "client_id": "CLI-003",
+      "amount": 315.5,
+      "discount": 0.0,
+      "country": "FR",
+      "priority": false,
+      "status": "refunded",
+      "ordered_at": "2026-08-12T16:30:00Z"
+    },
+    {
+      "order_id": "ORD-1005",
+      "client_id": "CLI-004",
+      "amount": 780.0,
+      "discount": 0.15,
+      "country": "ES",
+      "priority": false,
+      "status": "paid",
+      "ordered_at": "2026-08-18T13:20:00Z"
+    },
+    {
+      "order_id": "ORD-1006",
+      "client_id": "CLI-002",
+      "amount": 149.99,
+      "discount": 0.0,
+      "country": "PT",
+      "priority": false,
+      "status": "pending",
+      "ordered_at": "2026-08-25T10:10:00Z"
+    },
+    {
+      "order_id": "ORD-1007",
+      "client_id": "CLI-005",
+      "amount": 5200.0,
+      "discount": 0.08,
+      "country": "DE",
+      "priority": true,
+      "status": "shipped",
+      "ordered_at": "2026-09-02T07:45:00Z"
+    },
+    {
+      "order_id": "ORD-1008",
+      "client_id": "CLI-004",
+      "amount": 42.75,
+      "discount": 0.0,
+      "country": "ES",
+      "priority": false,
+      "status": "cancelled",
+      "ordered_at": "2026-09-05T18:00:00Z"
+    }
+  ]
+}

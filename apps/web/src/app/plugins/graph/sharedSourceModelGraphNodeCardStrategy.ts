@@ -212,7 +212,7 @@ function buildSharedSourceModelCard(
     technicalName: titlePresentation.technicalName,
     subtitle: authorityLabel ?? resolveGraphNodeRelationPath(metadata, data) ?? node.path ?? null,
     path: node.path ?? resolveGraphNodeRelationPath(metadata, data) ?? null,
-    kindLabel: isSource ? (stringValue(data.typeLabel) ?? 'Source') : null,
+    kindLabel: null,
     accentTone: resolveNodeCardAccentTone(node),
     health: resolveNodeCardHealth(
       node,

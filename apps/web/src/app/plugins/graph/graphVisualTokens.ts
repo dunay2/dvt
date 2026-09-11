@@ -48,13 +48,21 @@ export const graphNodeMetricRowClasses = {
   root: {
     body: 'mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-300',
     header:
-      'flex shrink-0 items-center rounded border border-blue-400/40 bg-blue-950/45 px-2 py-1 text-[11px] text-slate-300',
+      'grid w-52 shrink-0 grid-cols-2 divide-x divide-blue-400/25 overflow-hidden rounded border border-blue-400/40 bg-blue-950/45 text-xs text-slate-300',
   },
-  item: 'inline-flex items-center gap-1',
+  item: {
+    body: 'inline-flex items-center gap-1',
+    header: 'min-w-0 px-2 py-1',
+  },
+  headerTrigger:
+    'inline-flex w-full min-w-0 cursor-help items-center justify-center gap-1 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300',
   icon: 'inline-flex size-3.5 shrink-0 text-blue-300',
   iconSvg: 'size-3.5',
-  label: 'text-slate-500',
-  value: 'font-medium text-slate-200',
+  label: {
+    body: 'text-slate-500',
+    header: 'sr-only',
+  },
+  value: 'min-w-0 truncate font-medium text-slate-200',
   interactiveValue: 'nodrag nopan',
   valueTone: {
     neutral: 'text-slate-200',

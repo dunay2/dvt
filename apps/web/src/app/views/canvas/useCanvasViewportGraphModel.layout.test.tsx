@@ -33,9 +33,7 @@ describe('useCanvasViewportGraphModel layout', () => {
           .readState()
           ?.setNodes((nodes) =>
             nodes.map((node) =>
-              node.id === 'source-node'
-                ? { ...node, dragging: false, position: { x: 225, y: 210 } }
-                : node
+              node.id === 'source-node' ? { ...node, position: { x: 225, y: 210 } } : node
             )
           );
         await Promise.resolve();

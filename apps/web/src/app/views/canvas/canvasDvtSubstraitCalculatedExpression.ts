@@ -4,12 +4,6 @@ import {
   AggregateFunction_AggregationInvocation,
   AggregationPhase,
   ExpressionSchema,
-  Expression_FieldReferenceSchema,
-  Expression_FieldReference_RootReferenceSchema,
-  Expression_LiteralSchema,
-  Expression_Literal_PrecisionTimestampSchema,
-  Expression_ReferenceSegmentSchema,
-  Expression_ReferenceSegment_StructFieldSchema,
   Expression_WindowFunctionSchema,
   Expression_WindowFunction_BoundsType,
   SortFieldSchema,
@@ -27,6 +21,7 @@ import {
   ensureDvtSubstraitRowNumberFunction,
   isDvtSubstraitRowNumberFunction,
 } from './canvasDvtSubstraitWindow';
+import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 
 export type DvtSubstraitCalculatedExpression =
   | Readonly<{ kind: 'string-literal'; value: string }>
@@ -53,29 +48,6 @@ function requireCapabilities(entryIds: readonly string[]): void {
   }
 }
 
-function fieldReference(ordinal: number): Expression {
-  return create(ExpressionSchema, {
-    rexType: {
-      case: 'selection',
-      value: create(Expression_FieldReferenceSchema, {
-        referenceType: {
-          case: 'directReference',
-          value: create(Expression_ReferenceSegmentSchema, {
-            referenceType: {
-              case: 'structField',
-              value: create(Expression_ReferenceSegment_StructFieldSchema, { field: ordinal }),
-            },
-          }),
-        },
-        rootType: {
-          case: 'rootReference',
-          value: create(Expression_FieldReference_RootReferenceSchema, {}),
-        },
-      }),
-    },
-  });
-}
-
 export function buildDvtSubstraitCalculatedExpression(
   plan: Plan,
   calculation: DvtSubstraitCalculatedExpression
@@ -92,31 +64,12 @@ export function buildDvtSubstraitCalculatedExpression(
         : []),
   ]);
   if (calculation.kind === 'string-literal') {
-    return create(ExpressionSchema, {
-      rexType: {
-        case: 'literal',
-        value: create(Expression_LiteralSchema, {
-          literalType: { case: 'string', value: calculation.value },
-        }),
-      },
-    });
+    return dvtSubstraitExpression.literal({ dataType: 'string', value: calculation.value });
   }
   if (calculation.kind === 'timestamp-literal') {
-    const milliseconds = Date.parse(calculation.value);
-    if (!Number.isFinite(milliseconds)) throw new Error('Timestamp literal is invalid.');
-    return create(ExpressionSchema, {
-      rexType: {
-        case: 'literal',
-        value: create(Expression_LiteralSchema, {
-          literalType: {
-            case: 'precisionTimestampTz',
-            value: create(Expression_Literal_PrecisionTimestampSchema, {
-              precision: 3,
-              value: BigInt(milliseconds),
-            }),
-          },
-        }),
-      },
+    return dvtSubstraitExpression.literal({
+      dataType: 'precisionTimestampTz',
+      value: calculation.value,
     });
   }
   const functionReference = ensureDvtSubstraitRowNumberFunction(plan);
@@ -130,7 +83,7 @@ export function buildDvtSubstraitCalculatedExpression(
         invocation: AggregateFunction_AggregationInvocation.ALL,
         sorts: [
           create(SortFieldSchema, {
-            expr: fieldReference(calculation.orderSourceOrdinal),
+            expr: dvtSubstraitExpression.field(calculation.orderSourceOrdinal),
             sortKind: { case: 'direction', value: SortField_SortDirection.ASC_NULLS_LAST },
           }),
         ],
@@ -138,20 +91,6 @@ export function buildDvtSubstraitCalculatedExpression(
       }),
     },
   });
-}
-
-function readFieldOrdinal(expression: Expression | undefined): number | null {
-  if (expression?.rexType.case !== 'selection') return null;
-  const reference = expression.rexType.value;
-  const segment =
-    reference.referenceType.case === 'directReference'
-      ? reference.referenceType.value.referenceType
-      : undefined;
-  return reference.rootType.case === 'rootReference' &&
-    segment?.case === 'structField' &&
-    segment.value.child == null
-    ? segment.value.field
-    : null;
 }
 
 export function inspectDvtSubstraitCalculatedExpression(
@@ -162,16 +101,13 @@ export function inspectDvtSubstraitCalculatedExpression(
   functionAnchors: readonly number[];
 }> | null {
   if (expression.rexType.case === 'literal') {
-    const literal = expression.rexType.value.literalType;
-    if (literal.case === 'string') {
+    const literal = dvtSubstraitExpression.literalValue(expression);
+    if (literal?.dataType === 'string') {
       return { calculation: { kind: 'string-literal', value: literal.value }, functionAnchors: [] };
     }
-    if (literal.case === 'precisionTimestampTz' && literal.value.precision === 3) {
+    if (literal?.dataType === 'precisionTimestampTz') {
       return {
-        calculation: {
-          kind: 'timestamp-literal',
-          value: new Date(Number(literal.value.value)).toISOString(),
-        },
+        calculation: { kind: 'timestamp-literal', value: literal.value },
         functionAnchors: [],
       };
     }
@@ -184,7 +120,7 @@ export function inspectDvtSubstraitCalculatedExpression(
     window.sorts.length === 1 &&
     window.sorts[0]?.sortKind.case === 'direction' &&
     window.sorts[0].sortKind.value === SortField_SortDirection.ASC_NULLS_LAST
-      ? readFieldOrdinal(window.sorts[0].expr)
+      ? dvtSubstraitExpression.fieldOrdinal(window.sorts[0].expr)
       : null;
   return orderOrdinal == null || !isDvtSubstraitRowNumberFunction(plan, window)
     ? null

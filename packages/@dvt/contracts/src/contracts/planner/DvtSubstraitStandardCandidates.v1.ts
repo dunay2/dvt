@@ -107,7 +107,7 @@ export const DVT_SUBSTRAIT_STANDARD_CANDIDATES_V1: readonly DvtSubstraitStandard
   ...['coalesce', 'equal', 'not_equal', 'gt', 'gte', 'lt', 'lte', 'is_null', 'is_not_null'].map(
     (name) => extensionCandidate('scalar-function', 'functions_comparison', name)
   ),
-  extensionCandidate('scalar-function', 'functions_boolean', 'and'),
+  ...['and', 'or'].map((name) => extensionCandidate('scalar-function', 'functions_boolean', name)),
   extensionCandidate('aggregate-function', 'functions_aggregate_generic', 'count'),
   extensionCandidate('aggregate-function', 'functions_arithmetic', 'sum'),
   extensionCandidate('aggregate-function', 'functions_arithmetic_decimal', 'sum'),

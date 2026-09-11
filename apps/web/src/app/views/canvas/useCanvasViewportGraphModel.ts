@@ -73,8 +73,6 @@ function projectViewportNodes(args: {
       edges: visibleEdges,
     });
     const fallbackNode = fallbackNodesById?.get(canonicalNode.id);
-    const liveGesturePosition =
-      fallbackNode?.dragging === undefined ? undefined : fallbackNode.position;
 
     const projectedNode = mapCanonicalNodeToCanvasNode({
       canonicalNode: presentedCanonicalNode,
@@ -87,8 +85,7 @@ function projectViewportNodes(args: {
         nodes: visibleCanonicalNodes,
         edges: visibleEdges,
       }),
-      persistedPosition:
-        liveGesturePosition ?? persistedNodePositions[canonicalNode.id] ?? fallbackNode?.position,
+      persistedPosition: fallbackNode?.position ?? persistedNodePositions[canonicalNode.id],
       locale,
     });
     return {
