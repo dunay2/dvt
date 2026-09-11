@@ -1,5 +1,9 @@
 /** Owned concern: derive the bounded protected DVT Preview intent from Canvas state. */
-import { parseExecutionSelection, type ExecutionSelection } from '@dvt/contracts';
+import {
+  isWorkspaceGraphAuthoringEdgeEffectivelyExecutable,
+  parseExecutionSelection,
+  type ExecutionSelection,
+} from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
@@ -106,7 +110,10 @@ export function buildProtectedDvtPreviewProjection(args: {
   const nodes = args.canonicalNodes.filter((node) => workspaceNodeIds.has(node.id));
   const nodesById = new Map(nodes.map((node) => [node.id, node]));
   const edges = args.canonicalEdges.filter(
-    (edge) => workspaceNodeIds.has(edge.sourceId) && workspaceNodeIds.has(edge.targetId)
+    (edge) =>
+      workspaceNodeIds.has(edge.sourceId) &&
+      workspaceNodeIds.has(edge.targetId) &&
+      isWorkspaceGraphAuthoringEdgeEffectivelyExecutable(edge)
   );
   const candidates =
     args.selectionIntent.mode === 'explicit'

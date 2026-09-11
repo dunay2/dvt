@@ -216,6 +216,37 @@ describe('executeCanvasPlanAction protected DVT branch', () => {
     });
     expect(previewPlan).not.toHaveBeenCalled();
   });
+
+  it.each([
+    ['closed execution gate', { executionGate: 'closed' }],
+    ['disabled execution dependency', { executionDependency: false }],
+  ])('ignores an outgoing edge with %s when resolving terminality', (_label, metadata) => {
+    const state = deriveCanvasExecutionState({
+      graphDraftCanvasId: 'canvas-main',
+      canRun: true,
+      executionStrategy: strategy,
+      currentPlan: null,
+      lastPlannedDraftSignature: null,
+      canonicalNodes: [source, transform],
+      canonicalEdges: [
+        lineage,
+        {
+          id: 'transform-disabled-downstream',
+          sourceId: transform.id,
+          targetId: 'outside-selection',
+          relation: 'lineage',
+          metadata,
+        },
+      ],
+      selectionIntent: { mode: 'explicit', nodeIds: [transform.id] },
+      workspaceNodeIds: [source.id, transform.id, 'outside-selection'],
+      latestPreviewOutcome: null,
+    });
+
+    expect(state.canPlanGraph).toBe(true);
+    expect(state.executableGraphFailureMessage).toBeNull();
+  });
+
   it('enables Preview readiness for the exact protected terminal closure', () => {
     const state = deriveCanvasExecutionState({
       graphDraftCanvasId: 'canvas-main',

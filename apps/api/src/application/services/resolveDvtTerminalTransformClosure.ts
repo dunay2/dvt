@@ -53,7 +53,13 @@ export function resolveDvtTerminalTransformClosure(input: {
     throw new Error('Selection must contain exactly one DVT Source and one DVT Transform.');
   }
 
-  if (draft.edges.some((candidate) => candidate.sourceId === transform.id)) {
+  if (
+    draft.edges.some(
+      (candidate) =>
+        candidate.sourceId === transform.id &&
+        isWorkspaceGraphAuthoringEdgeEffectivelyExecutable(candidate)
+    )
+  ) {
     throw new Error('Selected DVT Transform must be terminal in the protected Canvas.');
   }
 
@@ -61,9 +67,10 @@ export function resolveDvtTerminalTransformClosure(input: {
   if (
     edge.sourceId !== source.id ||
     edge.targetId !== transform.id ||
+    edge.relation !== 'lineage' ||
     !isWorkspaceGraphAuthoringEdgeEffectivelyExecutable(edge)
   ) {
-    throw new Error('Selection must contain one effective Source to Transform dependency.');
+    throw new Error('Selection must contain one effective lineage Source to Transform dependency.');
   }
 
   const connectedSource = ConnectedSourceRefSchema.parse(source.metadata?.connectedSourceRef);

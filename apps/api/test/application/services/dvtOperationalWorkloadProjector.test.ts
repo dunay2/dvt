@@ -153,6 +153,44 @@ describe('DvtOperationalWorkloadProjector', () => {
   });
 
   it.each([
+    ['closed execution gate', { executionGate: 'closed' }],
+    ['disabled execution dependency', { executionDependency: false }],
+  ])('ignores an outgoing edge with %s when resolving terminality', (_label, metadata) => {
+    const base = draft();
+    const candidate = input({
+      draft: {
+        ...base,
+        nodeIds: [...base.nodeIds, 'downstream-a'],
+        nodePositions: { ...base.nodePositions, 'downstream-a': { x: 400, y: 0 } },
+        nodes: [
+          ...base.nodes,
+          {
+            id: 'downstream-a',
+            name: 'Downstream',
+            pluginId: 'dvt',
+            kind: 'transform',
+            role: 'transform',
+            status: 'idle',
+            tags: [],
+          },
+        ],
+        edges: [
+          ...base.edges,
+          {
+            id: 'transform-downstream',
+            sourceId: 'transform-a',
+            targetId: 'downstream-a',
+            relation: 'lineage',
+            metadata,
+          },
+        ],
+      },
+    });
+
+    expect(new DvtOperationalWorkloadProjector().project(candidate).ok).toBe(true);
+  });
+
+  it.each([
     [
       'stale semantic projection',
       () =>
@@ -238,6 +276,18 @@ describe('DvtOperationalWorkloadProjector', () => {
             ],
           },
         }),
+    ],
+    [
+      'non-lineage dependency',
+      () => {
+        const base = draft();
+        return input({
+          draft: {
+            ...base,
+            edges: base.edges.map((edge) => ({ ...edge, relation: 'validation' as const })),
+          },
+        });
+      },
     ],
     ['extra selected card', () => input({ selectedNodeIds: ['source-a', 'transform-a', 'other'] })],
   ])('fails closed for %s before Planner admission', (_label, candidate) => {
