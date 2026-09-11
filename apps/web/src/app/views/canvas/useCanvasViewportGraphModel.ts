@@ -1,6 +1,6 @@
 /** Owned concern: project semantic authoring truth into React Flow viewport state only. */
 import { useEdgesState, useNodesState, type Edge, type Node } from '@xyflow/react';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
 import { getPluginPortMap } from '../../plugins/registry';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
@@ -50,6 +50,7 @@ function projectViewportNodes(args: {
   frozenNodeIds: ReadonlySet<string>;
   portCompatibilityByNodeId: ReturnType<typeof buildCanvasConnectionCompatibilityByNodeId>;
   fallbackNodesById?: ViewportNodeById;
+  previousPersistedNodePositions?: PersistedNodePositions;
   locale: string;
 }): Node[] {
   const {
@@ -61,6 +62,7 @@ function projectViewportNodes(args: {
     frozenNodeIds,
     portCompatibilityByNodeId,
     fallbackNodesById,
+    previousPersistedNodePositions,
     locale,
   } = args;
 
@@ -73,8 +75,17 @@ function projectViewportNodes(args: {
       edges: visibleEdges,
     });
     const fallbackNode = fallbackNodesById?.get(canonicalNode.id);
-    const liveGesturePosition =
-      fallbackNode?.dragging === undefined ? undefined : fallbackNode.position;
+    const persistedPosition = persistedNodePositions[canonicalNode.id];
+    const previousPersistedPosition = previousPersistedNodePositions?.[canonicalNode.id];
+    const persistedPositionChanged =
+      previousPersistedPosition?.x !== persistedPosition?.x ||
+      previousPersistedPosition?.y !== persistedPosition?.y;
+    const nextPosition =
+      fallbackNode?.dragging !== undefined
+        ? fallbackNode.position
+        : persistedPositionChanged
+          ? (persistedPosition ?? fallbackNode?.position)
+          : (fallbackNode?.position ?? persistedPosition);
 
     const projectedNode = mapCanonicalNodeToCanvasNode({
       canonicalNode: presentedCanonicalNode,
@@ -87,8 +98,7 @@ function projectViewportNodes(args: {
         nodes: visibleCanonicalNodes,
         edges: visibleEdges,
       }),
-      persistedPosition:
-        liveGesturePosition ?? persistedNodePositions[canonicalNode.id] ?? fallbackNode?.position,
+      persistedPosition: nextPosition,
       locale,
     });
     return {
@@ -331,8 +341,11 @@ export function useCanvasViewportGraphModel({
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const previousPersistedNodePositionsRef = useRef(persistedNodePositions);
 
   useEffect(() => {
+    const previousPersistedNodePositions = previousPersistedNodePositionsRef.current;
+    previousPersistedNodePositionsRef.current = persistedNodePositions;
     setNodes((currentNodes) => {
       const nextNodes = projectViewportNodes({
         visibleNodeIds,
@@ -343,6 +356,7 @@ export function useCanvasViewportGraphModel({
         frozenNodeIds,
         portCompatibilityByNodeId,
         fallbackNodesById: new Map(currentNodes.map((node) => [node.id, node])),
+        previousPersistedNodePositions,
         locale: applicationLanguage,
       });
 
