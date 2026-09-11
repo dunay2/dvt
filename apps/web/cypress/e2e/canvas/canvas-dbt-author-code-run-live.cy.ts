@@ -45,6 +45,10 @@ function replaceInput(name: string, value: string): void {
   cy.get(`input[name="${name}"]`).should('be.enabled').clear().type(value);
 }
 
+function closeNodeWorkbench(): void {
+  cy.get('[data-slot="canvas-node-workbench-close"]').click();
+  cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
+}
 function clickCommandSlotNatively(slot: string): void {
   cy.get(`[data-slot="${slot}"]`)
     .should('be.enabled')
@@ -178,6 +182,7 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     replaceInput('dbt-table', 'payments final');
     clickButtonNatively(canvasViewCopy.inspectorApplyLabel);
     waitForPersistedWarehousePaymentsConfig();
+    closeNodeWorkbench();
 
     openNodeWorkbench('orders_model');
     replaceInput('node-name', 'payments model');
@@ -185,8 +190,7 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     cy.get('select[name="dbt-materialized"]').should('be.enabled').select('table');
     cy.get('select[name="dbt-origin"]').should('be.enabled').select('warehouse_payments');
     clickButtonNatively(canvasViewCopy.inspectorApplyLabel);
-    cy.get('[data-slot="canvas-node-workbench-close"]').click();
-    cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
+    closeNodeWorkbench();
     cy.get('.react-flow__node[data-id="orders_model"]')
       .should('contain.text', 'Payments Model')
       .and('contain.text', 'Code')
@@ -198,6 +202,7 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
       .type(AUTHORED_MODEL_SQL, { parseSpecialCharSequences: false, delay: 0 });
     clickButtonNatively(canvasViewCopy.inspectorApplyLabel);
     waitForPersistedDbtModelConfig();
+    closeNodeWorkbench();
     cy.get('.react-flow__node[data-id="orders_model"]')
       .should('contain.text', 'Payments Model')
       .and('contain.text', 'Code')
