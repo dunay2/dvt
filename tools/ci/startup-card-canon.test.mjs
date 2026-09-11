@@ -71,6 +71,7 @@ const planningDomainEntrypoints = [
 ];
 
 const planningRoadmapEntrypoints = ['docs/planning/roadmap/roadmap-by-domain.md'];
+const historicalEvidencePathPattern = /^docs\/planning\/(?:archive|closeouts)\//u;
 
 const baseActivePlanningEntrypoints = [
   'CLAUDE.md',
@@ -248,7 +249,12 @@ function currentRoadmapSourceLines(content) {
   return currentSources;
 }
 
-function collectMandatoryPlanLinks(entrypointPath, lines, plans) {
+function collectLocalMarkdownLinks(
+  entrypointPath,
+  lines,
+  documents,
+  { mandatoryPlansOnly = false } = {}
+) {
   const markdownLinkPattern = /\[[^\]]+\]\(([^)#]+\.md)(?:#[^)]*)?\)/gu;
 
   for (const line of lines) {
@@ -259,10 +265,13 @@ function collectMandatoryPlanLinks(entrypointPath, lines, plans) {
       const resolved = path.posix.normalize(
         path.posix.join(path.posix.dirname(entrypointPath), target)
       );
-      if (!resolved.startsWith('docs/planning/proposals/mandatory/')) continue;
+      if (!resolved.startsWith('docs/')) continue;
+      if (mandatoryPlansOnly && !resolved.startsWith('docs/planning/proposals/mandatory/')) {
+        continue;
+      }
 
       readRepoFile(resolved);
-      plans.add(resolved);
+      documents.add(resolved);
     }
   }
 }
@@ -270,26 +279,38 @@ function collectMandatoryPlanLinks(entrypointPath, lines, plans) {
 function collectLinkedActivePlanningPlans(domainPaths) {
   const plans = new Set();
   for (const domainPath of domainPaths) {
-    collectMandatoryPlanLinks(domainPath, activePlanningSectionLines(readRepoFile(domainPath)), plans);
+    collectLocalMarkdownLinks(
+      domainPath,
+      activePlanningSectionLines(readRepoFile(domainPath)),
+      plans,
+      { mandatoryPlansOnly: true }
+    );
   }
   return [...plans].sort((left, right) => left.localeCompare(right));
 }
 
-function collectLinkedCurrentRoadmapPlans(roadmapPaths) {
-  const plans = new Set();
+function collectLinkedCurrentRoadmapDocuments(roadmapPaths) {
+  const documents = new Set();
   for (const roadmapPath of roadmapPaths) {
-    collectMandatoryPlanLinks(roadmapPath, currentRoadmapSourceLines(readRepoFile(roadmapPath)), plans);
+    collectLocalMarkdownLinks(
+      roadmapPath,
+      currentRoadmapSourceLines(readRepoFile(roadmapPath)),
+      documents
+    );
   }
-  return [...plans].sort((left, right) => left.localeCompare(right));
+  return [...documents].sort((left, right) => left.localeCompare(right));
 }
 
 const linkedActivePlanningPlans = collectLinkedActivePlanningPlans(planningDomainEntrypoints);
-const linkedCurrentRoadmapPlans = collectLinkedCurrentRoadmapPlans(planningRoadmapEntrypoints);
+const linkedCurrentRoadmapDocuments = collectLinkedCurrentRoadmapDocuments(planningRoadmapEntrypoints);
+const linkedCurrentRoadmapRoutingDocuments = linkedCurrentRoadmapDocuments.filter(
+  (pathname) => !historicalEvidencePathPattern.test(pathname)
+);
 const activePlanningEntrypoints = [
   ...new Set([
     ...baseActivePlanningEntrypoints,
     ...linkedActivePlanningPlans,
-    ...linkedCurrentRoadmapPlans,
+    ...linkedCurrentRoadmapRoutingDocuments,
   ]),
 ];
 
@@ -388,13 +409,31 @@ test('active domain and roadmap routing expand the retired-surface guard', () =>
     'documentation governance active proposal routing must be scanned regardless of destination status'
   );
   assert.ok(
-    linkedCurrentRoadmapPlans.includes(
+    linkedCurrentRoadmapDocuments.includes(
       'docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md'
     ),
-    'roadmap current sources must expose mandatory plans to retired-surface validation'
+    'roadmap current sources must resolve mandatory plans'
   );
   assert.ok(
-    !linkedCurrentRoadmapPlans.includes(
+    linkedCurrentRoadmapRoutingDocuments.includes(
+      'docs/planning/reviews/architecture-and-governance/20260417-dvt-artifacts-review.md'
+    ),
+    'roadmap current reviews must be exposed to retired-surface validation'
+  );
+  assert.ok(
+    linkedCurrentRoadmapDocuments.includes(
+      'docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md'
+    ),
+    'roadmap historical closeout evidence must still resolve as a current source'
+  );
+  assert.ok(
+    !linkedCurrentRoadmapRoutingDocuments.includes(
+      'docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md'
+    ),
+    'historical closeout evidence must not be rewritten as current routing authority'
+  );
+  assert.ok(
+    !linkedCurrentRoadmapDocuments.includes(
       'docs/planning/proposals/mandatory/frontend-and-ux/internal-alpha-product-route-plan-20260505.md'
     ),
     'closed internal-alpha evidence must not return to roadmap current sources'
