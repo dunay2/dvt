@@ -12,8 +12,9 @@ import type {
 } from '../../services/runs/runControlCommandModel';
 import type { OperationalDrawerSelectionRecoveryMessages } from './operationalDrawerSelectionRecoveryMessages';
 import type { SourceDataSample } from '../../ports/workspace';
+import type { ReactNode } from 'react';
 
-export type OperationalDrawerTabId = 'log' | 'problems' | 'runs' | 'preview' | 'data';
+export type OperationalDrawerTabId = 'log' | 'problems' | 'runs' | 'preview' | 'data' | 'semantic';
 
 export type OperationalDrawerDataSample =
   | Readonly<{ status: 'idle' }>
@@ -29,6 +30,7 @@ export type OperationalDrawerTab = Readonly<{
   id: OperationalDrawerTabId;
   label: string;
   count: number | null;
+  content?: ReactNode;
 }>;
 
 export type OperationalDrawerProblem = Readonly<{

@@ -490,6 +490,14 @@ export const canvasViewExecutionCopyByKey = {
     key: 'canvas.operationalDrawer.dataTab',
     fallback: 'Data',
   },
+  operationalDrawerSemanticTab: {
+    key: 'canvas.operationalDrawer.semanticTab',
+    fallback: 'Semantics',
+  },
+  operationalDrawerSemanticIdleMessage: {
+    key: 'canvas.operationalDrawer.semanticIdleMessage',
+    fallback: 'Select a Substrait Transform to inspect its relational flow.',
+  },
   operationalDrawerProblemsAriaLabel: {
     key: 'canvas.operationalDrawer.problemsAriaLabel',
     fallback: 'Canvas problems',

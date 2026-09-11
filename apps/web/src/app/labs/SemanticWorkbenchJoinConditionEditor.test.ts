@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { DvtSubstraitJoinPredicateCondition } from '../views/canvas/canvasDvtSubstraitJoinCondition';
-import { projectSemanticWorkbenchJoinConditionRows } from './SemanticWorkbenchJoinConditionEditor';
+import { projectSemanticWorkbenchJoinConditionRows } from '../views/canvas/SemanticWorkbenchJoinConditionEditor';
 
 describe('SemanticWorkbenchJoinConditionEditor', () => {
   it('projects grouped conditions in deterministic semantic order with explicit parentheses', () => {

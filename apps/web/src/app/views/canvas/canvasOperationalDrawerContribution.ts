@@ -1,4 +1,6 @@
 /** Owned concern: project Canvas execution posture into the bottom operational drawer. */
+import type { ReactNode } from 'react';
+
 import type {
   OperationalDrawerContribution,
   OperationalDrawerDataSample,
@@ -31,6 +33,7 @@ type BuildCanvasOperationalDrawerContributionArgs = Readonly<{
   onPreviewExecutionPlan: () => void;
   onStartRun: () => void;
   dataSample?: OperationalDrawerDataSample;
+  semanticBody?: ReactNode;
 }>;
 
 function buildReadinessProblems({
@@ -85,6 +88,7 @@ export function buildCanvasOperationalDrawerContribution({
   selectionRecoveryCommands = null,
   selectionRecoveryMessages = canvasViewCopy,
   dataSample = { status: 'idle' },
+  semanticBody,
 }: BuildCanvasOperationalDrawerContributionArgs): OperationalDrawerContribution {
   const selectionRecoveryBlocked = selectionRecovery?.status === 'blocked';
   const canPreviewExecutionPlan = canPlan && canPlanGraph && !selectionRecoveryBlocked;
@@ -108,6 +112,7 @@ export function buildCanvasOperationalDrawerContribution({
     runs: copy.operationalDrawerRunsTab,
     preview: copy.operationalDrawerPreviewTab,
     data: dataSample.status === 'idle' ? copy.operationalDrawerDataTab : dataSample.nodeName,
+    semantic: copy.operationalDrawerSemanticTab,
   } satisfies Record<OperationalDrawerTabId, string>;
   const readinessBlockers: readonly PlanRunReadinessBlocker[] =
     planRunReadiness.status === 'ready'
@@ -178,6 +183,7 @@ export function buildCanvasOperationalDrawerContribution({
     tabs: policy.tabs.map((id) => ({
       id,
       label: tabLabels[id],
+      ...(id === 'semantic' && semanticBody !== undefined ? { content: semanticBody } : {}),
       count:
         id === 'problems'
           ? problems.length
