@@ -70,6 +70,8 @@ const planningDomainEntrypoints = [
   'docs/planning/domains/event-lifecycle-and-retention.md',
 ];
 
+const planningRoadmapEntrypoints = ['docs/planning/roadmap/roadmap-by-domain.md'];
+
 const baseActivePlanningEntrypoints = [
   'CLAUDE.md',
   'README.md',
@@ -227,32 +229,68 @@ function activePlanningSectionLines(content) {
   return section;
 }
 
-function collectLinkedActivePlanningPlans(domainPaths) {
-  const plans = new Set();
-  const markdownLinkPattern = /\[[^\]]+\]\(([^)#]+\.md)(?:#[^)]*)?\)/gu;
+function currentRoadmapSourceLines(content) {
+  const lines = content.split(/\r?\n/u);
+  const currentSources = [];
+  let collecting = false;
 
-  for (const domainPath of domainPaths) {
-    const section = activePlanningSectionLines(readRepoFile(domainPath));
-    for (const line of section) {
-      markdownLinkPattern.lastIndex = 0;
-      for (const match of line.matchAll(markdownLinkPattern)) {
-        const target = match[1];
-        if (/^[a-z]+:/iu.test(target)) continue;
-        const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(domainPath), target));
-        if (!resolved.startsWith('docs/planning/proposals/mandatory/')) continue;
-
-        readRepoFile(resolved);
-        plans.add(resolved);
-      }
+  for (const line of lines) {
+    if (/\bCurrent sources:\s*/u.test(line)) {
+      collecting = true;
     }
+    if (collecting && /\bNear-term target:\s*/u.test(line)) {
+      collecting = false;
+      continue;
+    }
+    if (collecting) currentSources.push(line);
   }
 
+  return currentSources;
+}
+
+function collectMandatoryPlanLinks(entrypointPath, lines, plans) {
+  const markdownLinkPattern = /\[[^\]]+\]\(([^)#]+\.md)(?:#[^)]*)?\)/gu;
+
+  for (const line of lines) {
+    markdownLinkPattern.lastIndex = 0;
+    for (const match of line.matchAll(markdownLinkPattern)) {
+      const target = match[1];
+      if (/^[a-z]+:/iu.test(target)) continue;
+      const resolved = path.posix.normalize(
+        path.posix.join(path.posix.dirname(entrypointPath), target)
+      );
+      if (!resolved.startsWith('docs/planning/proposals/mandatory/')) continue;
+
+      readRepoFile(resolved);
+      plans.add(resolved);
+    }
+  }
+}
+
+function collectLinkedActivePlanningPlans(domainPaths) {
+  const plans = new Set();
+  for (const domainPath of domainPaths) {
+    collectMandatoryPlanLinks(domainPath, activePlanningSectionLines(readRepoFile(domainPath)), plans);
+  }
+  return [...plans].sort((left, right) => left.localeCompare(right));
+}
+
+function collectLinkedCurrentRoadmapPlans(roadmapPaths) {
+  const plans = new Set();
+  for (const roadmapPath of roadmapPaths) {
+    collectMandatoryPlanLinks(roadmapPath, currentRoadmapSourceLines(readRepoFile(roadmapPath)), plans);
+  }
   return [...plans].sort((left, right) => left.localeCompare(right));
 }
 
 const linkedActivePlanningPlans = collectLinkedActivePlanningPlans(planningDomainEntrypoints);
+const linkedCurrentRoadmapPlans = collectLinkedCurrentRoadmapPlans(planningRoadmapEntrypoints);
 const activePlanningEntrypoints = [
-  ...new Set([...baseActivePlanningEntrypoints, ...linkedActivePlanningPlans]),
+  ...new Set([
+    ...baseActivePlanningEntrypoints,
+    ...linkedActivePlanningPlans,
+    ...linkedCurrentRoadmapPlans,
+  ]),
 ];
 
 function assertNoActiveRetiredReference(pathname, statement, retired) {
@@ -336,7 +374,7 @@ test('planning startup artifacts preserve GitHub task authority', () => {
   );
 });
 
-test('domain routing expands the guard to every mandatory plan linked from active sections', () => {
+test('active domain and roadmap routing expand the retired-surface guard', () => {
   assert.ok(
     linkedActivePlanningPlans.includes(
       'docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md'
@@ -348,6 +386,18 @@ test('domain routing expands the guard to every mandatory plan linked from activ
       'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md'
     ),
     'documentation governance active proposal routing must be scanned regardless of destination status'
+  );
+  assert.ok(
+    linkedCurrentRoadmapPlans.includes(
+      'docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md'
+    ),
+    'roadmap current sources must expose mandatory plans to retired-surface validation'
+  );
+  assert.ok(
+    !linkedCurrentRoadmapPlans.includes(
+      'docs/planning/proposals/mandatory/frontend-and-ux/internal-alpha-product-route-plan-20260505.md'
+    ),
+    'closed internal-alpha evidence must not return to roadmap current sources'
   );
 });
 
