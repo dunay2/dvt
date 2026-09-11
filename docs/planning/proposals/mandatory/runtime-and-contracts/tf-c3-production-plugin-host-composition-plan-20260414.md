@@ -2,7 +2,7 @@
 title: TF-C3 Production Plugin Host Composition Plan 2026-04-14
 status: Review
 owner: Runtime / Adapters / API / Docs
-last_reviewed: 2026-05-07
+last_reviewed: 2026-09-11
 planning_type: proposal
 lane: C
 task_id: TF-C3
@@ -99,13 +99,8 @@ allowedImplementationSurfaces:
   - docs/planning/closeouts/**
   - docs/planning/roadmap/strategic-product-roadmap.md
   - docs/planning/roadmap/roadmap-by-domain.md
-  - docs/planning/state/domain-status-board.md
   - apps/temporal-worker/package.json
   - apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
-  - docs/planning/state/agent-lane-c.yaml
-  - docs/planning/state/agent-lane-c.md
-  - docs/planning/state/execution-workboard.md
-  - docs/planning/state/open-task-route.md # Task: RUNTIME-PROP-DISP-1
   - docs/.manifest.json
   - docs/planning/status/**
 forbiddenImplementationSurfaces:
@@ -155,7 +150,6 @@ redGreenCycles:
     patchSurfaces:
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md
       - docs/runbooks/temporal-worker-dbt-plugin-runtime-20260414.md
-      - docs/planning/state/agent-lane-c.yaml
     greenTest: pnpm docs:feature-mechanization:implementation
   - id: tf-c3-e-docker-canary
     redTest: pnpm --filter dvt-temporal-worker test -- test/host/runTemporalWorkerHost.test.ts
@@ -196,18 +190,6 @@ symbols:
     unitTests:
       - pnpm docs:gov:links:changed
       - pnpm lint:md:changed
-  - name: LaneCTfC3ERolloutState
-    path: docs/planning/state/agent-lane-c.yaml
-    dddOwner: TfC3RolloutTruth
-    cqRails:
-      - UpdateTfC3RolloutTruth
-    fowlerSignals:
-      - Documentation drift
-    architectureGuard: pnpm docs:feature-mechanization:implementation
-    cypressCoverage: N/A - planning registry only
-    unitTests:
-      - pnpm docs:workboard:check
-      - pnpm verify:prepush
   - name: describeIfPg
     path: apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
     dddOwner: TemporalWorkerOperationalReadModel
