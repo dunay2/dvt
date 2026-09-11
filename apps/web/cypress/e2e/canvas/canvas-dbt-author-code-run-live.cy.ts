@@ -210,8 +210,8 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
 
     clickPreviewExecutionPlanFromOperationalDrawer();
     cy.get('[data-testid="plan-preview-modal"]', { timeout: 30_000 }).should('be.visible');
-    cy.contains('Execution Preview identity').should('be.visible');
-    cy.contains('Persistence evidence').scrollIntoView().should('be.visible');
+    cy.contains(canvasViewCopy.planPreviewIdentityTitle).should('be.visible');
+    cy.contains(canvasViewCopy.planPreviewPersistenceTitle).scrollIntoView().should('be.visible');
     cy.get('body').type('{esc}', { force: true });
     cy.get('[data-testid="plan-preview-modal"]').should('not.exist');
 
@@ -261,7 +261,10 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     openLiveGraphProjectCodeFile(workingTreePath);
     cy.get('[data-slot="canvas-contextual-workbench"]').within(() => {
-      cy.contains('button', 'Save').should('not.exist');
+      cy.get('button').should(($buttons) => {
+        const labels = [...$buttons].map((button) => button.textContent?.trim());
+        expect(labels).not.to.include.members(['Save', 'Guardar']);
+      });
       cy.get('[data-testid="monaco-code-viewer"]')
         .find('.view-lines')
         .should(($lines) => {
