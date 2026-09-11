@@ -54,6 +54,13 @@ const requiredRouteBaselines = [
   },
 ];
 
+const planningAuthorityFiles = [
+  'docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-canon-plan-20260524.md',
+  'docs/architecture/components/ci-governance/governance-startup-card-canon-component.md',
+  'docs/architecture/components/ci-governance/governance-startup-card-canon-user-stories.md',
+  'docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-router-plan-20260402.md',
+];
+
 const activePlanningEntrypoints = [
   'CLAUDE.md',
   'README.md',
@@ -68,6 +75,7 @@ const activePlanningEntrypoints = [
   'docs/architecture/domain-map.md',
   'docs/architecture/atlas/index.md',
   'docs/architecture/atlas/README.md',
+  'docs/architecture/components/ci-governance/governance-startup-card-canon-component.md',
   'docs/architecture/components/ci-governance/governance-startup-card-canon-user-stories.md',
   'docs/architecture/components/engine/roadmap/engine-phases.md',
   'docs/planning/status/governance-document-rule-inventory.md',
@@ -88,6 +96,8 @@ const activePlanningEntrypoints = [
   'docs/planning/domains/event-lifecycle-and-retention.md',
   'docs/planning/gaps/index.md',
   'docs/planning/proposals/mandatory/frontend-and-ux/index.md',
+  'docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-canon-plan-20260524.md',
+  'docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-router-plan-20260402.md',
   'docs/planning/proposals/mandatory/runtime-and-contracts/mw-c1-to-tf-c2-runtime-vertical-sequence-analysis-20260409.md',
   'scripts/sync-docs.cjs',
 ];
@@ -125,13 +135,22 @@ const retiredPlanningSurfaces = [
   },
   {
     path: 'docs/planning/gaps/runtime-architecture-gap-register-20260331.md',
-    pathPattern: /docs\/planning\/gaps\/runtime-architecture-gap-register-20260331\.md/i,
+    pathPattern: /runtime-architecture-gap-register-20260331\.md/i,
     namePattern: /a^/,
   },
 ];
 
 const explicitRetirementLanguage =
   /\b(?:no|not|never|retired|obsolete|removed|deleted|former|historical|history|replaced|superseded|deprecated|archived)\b/i;
+
+const forbiddenTaskAuthorityPatterns = [
+  /Planning DB owns task lifecycle/i,
+  /task lifecycle writes? in\s+Planning DB/i,
+  /planning tasks? routed to Planning DB/i,
+  /Planning DB \+ generated workboard/i,
+  /docs:workboard:generate/i,
+  /planning-control-tower\.md/i,
+];
 
 function assertNoActiveRetiredReference(path, line, retired) {
   if (retired.pathPattern.test(line)) {
@@ -195,6 +214,25 @@ test('governance startup card canonization preserves routing semantics and basel
   }
 });
 
+test('planning startup artifacts preserve GitHub task authority', () => {
+  for (const path of planningAuthorityFiles) {
+    const content = readRepoFile(path);
+    assert.match(content, /GitHub Issues/i, `${path} must name GitHub Issues task authority`);
+    assert.match(content, /Planning DB/i, `${path} must preserve Planning DB architecture scope`);
+    for (const forbidden of forbiddenTaskAuthorityPatterns) {
+      assert.doesNotMatch(content, forbidden, `${path} must not restore retired task authority`);
+    }
+  }
+
+  assert.match(
+    readRepoFile(
+      'docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-router-plan-20260402.md'
+    ),
+    /issue\/PR evidence \+ `pnpm verify:prepush`/,
+    'planning route must preserve the GitHub issue/PR closeout baseline'
+  );
+});
+
 test('retirement wording never permits links to retired paths', () => {
   const retiredDashboard = retiredPlanningSurfaces.find(
     ({ path }) => path === 'docs/planning/state/planning-dashboard.md'
@@ -216,6 +254,20 @@ test('retirement wording never permits links to retired paths', () => {
       'The Planning Dashboard is retired and no longer authoritative.',
       retiredDashboard
     )
+  );
+
+  const retiredRuntimeGap = retiredPlanningSurfaces.find(
+    ({ path }) => path === 'docs/planning/gaps/runtime-architecture-gap-register-20260331.md'
+  );
+  assert.ok(retiredRuntimeGap);
+  assert.throws(
+    () =>
+      assertNoActiveRetiredReference(
+        'docs/planning/gaps/index.md',
+        '[stale register](./runtime-architecture-gap-register-20260331.md)',
+        retiredRuntimeGap
+      ),
+    /must not link retired path/
   );
 });
 
