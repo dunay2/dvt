@@ -87,8 +87,3 @@ navigation. The folder contains additional historical entries.
 - [20260316 G7 Projector Worker Runtime Closeout](./20260316-g7-projector-worker-runtime-closeout.md)
 - [20260316 Docs Governance Tooling Closeout](./20260316-docs-governance-tooling-closeout.md)
 - [20260316 Principal Architecture Review Closeout](./20260316-principal-architecture-review-closeout.md)
-
-## Full Portfolio Views
-
-- [Planning State](../state/index.md)
-- [Planning Inventory and Coverage](../state/inventory-and-coverage.md)
