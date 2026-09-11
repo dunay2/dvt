@@ -2,7 +2,7 @@
 title: Proposal Portfolio Map 2026-04-03
 status: Active
 owner: Product / Architecture / Delivery
-last_reviewed: 2026-04-20
+last_reviewed: 2026-09-11
 planning_type: proposal
 ---
 
@@ -18,7 +18,6 @@ planning_type: proposal
 
 ## Mandatory
 
-- [Governance And Docs](./mandatory/governance-and-docs/proposal-priority-triage-20260402.md)
 - [Doc-Driven Framework And Tooling Plan](./mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md)
 - [System Governance Unit Index Plan](./mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md)
 - [CI retention review canon plan
@@ -118,9 +117,3 @@ planning_type: proposal
 ## Disposable
 
 - [Experiments](./disposable/experiments/tabs-workbench/README.md)
-- [Manifest Artifacts](./disposable/manifests/planner-stage-1-1-canonicalization.manifest.json)
-- [Asset Artifacts](./disposable/assets/RavenPlan.jpg)
-
-## Tradeoffs
-
-- [Proposal Portfolio Tradeoffs](./tradeoffs/proposal-portfolio-tradeoffs-20260403.md)
