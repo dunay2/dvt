@@ -2,7 +2,7 @@
 title: Planning Gaps
 status: Review
 owner: Architecture / Delivery / Docs
-last_reviewed: 2026-09-10
+last_reviewed: 2026-09-11
 planning_type: reference
 ---
 
@@ -10,9 +10,10 @@ planning_type: reference
 
 This section is only for currently open tactical gap registers.
 
-It is a planning reference surface, not a task board. Use it to understand
-explicitly scoped open deltas and validated gap snapshots. Use GitHub Issues for
-current task identity, ownership, blockers, acceptance, and closure.
+It is a planning reference surface, not a task board. Use GitHub Issues for
+current task identity, ownership, blockers, acceptance, and closure. Historical
+gap snapshots belong under `docs/planning/archive/gaps/` and are not active work
+queues.
 
 The legacy `G1` through `G10` execution-gap program is retired and is not part
 of the active planning route. Closed legacy material should not be used as a
@@ -20,7 +21,10 @@ current authority reference.
 
 ## Active Tactical Gap Registers
 
-- [Runtime Architecture Gap Register 2026-03-31](./runtime-architecture-gap-register-20260331.md)
+There are currently no canonical tactical gap registers in this directory.
+Create or update the governing GitHub Issue for executable work; only add a new
+gap register when it represents a distinct, source-verified delta that is not
+already owned by the issue lifecycle.
 
 ## Live Planning Anchors
 
@@ -38,4 +42,5 @@ current authority reference.
   evidence paths.
 - Route current implementation truth through code, contracts, tests, CI, and
   System Delivery Status.
+- Treat archived gap documents as historical evidence, not backlog.
 - Do not create a parallel planning hub from gap documents.
