@@ -145,7 +145,9 @@ const explicitRetirementLanguage =
 const negatedRetirementLanguage =
   /\b(?:not|never)\s+(?:retired|obsolete|removed|deleted|historical|replaced|superseded|deprecated|archived)\b/i;
 const explicitNonAuthorityLanguage =
-  /(?:\bno\b[^.]{0,160}\bis\s+(?:an?\s+|the\s+)?(?:task\s+)?authority\b|\b(?:is|are)\s+(?:not\s+(?:an?\s+|the\s+)?(?:task\s+)?authority|not\s+authoritative|no\s+longer\s+authoritative)\b)/i;
+  /(?:\bno\b[^.]{0,240}\bis\s+(?:an?\s+|the\s+)?(?:task\s+)?authority\b|\b(?:is|are)\s+(?:not\s+(?:an?\s+|the\s+)?(?:task\s+)?authority|not\s+authoritative|no\s+longer\s+authoritative)\b)/i;
+const explicitActiveAuthorityLanguage =
+  /\b(?:remains?|continues?\s+to\s+be|still\s+(?:is\s+)?)\s+(?:active|current|authoritative|the\s+(?:task\s+)?authority)\b/i;
 
 const forbiddenTaskAuthorityPatterns = [
   /Planning DB owns task lifecycle/i,
@@ -156,20 +158,38 @@ const forbiddenTaskAuthorityPatterns = [
   /planning-control-tower\.md/i,
 ];
 
-function hasExplicitRetirementOrNonAuthorityAssertion(line) {
-  if (negatedRetirementLanguage.test(line)) return false;
-  return explicitRetirementLanguage.test(line) || explicitNonAuthorityLanguage.test(line);
+function hasExplicitRetirementOrNonAuthorityAssertion(statement) {
+  if (negatedRetirementLanguage.test(statement) || explicitActiveAuthorityLanguage.test(statement)) {
+    return false;
+  }
+  return explicitRetirementLanguage.test(statement) || explicitNonAuthorityLanguage.test(statement);
 }
 
-function assertNoActiveRetiredReference(path, line, retired) {
-  if (retired.pathPattern.test(line)) {
-    assert.fail(`${path} must not link retired path ${retired.path}: ${line.trim()}`);
+function collectWrappedStatement(lines, lineIndex) {
+  const parts = [lines[lineIndex].trim()];
+  let cursor = lineIndex;
+
+  while (
+    cursor + 1 < lines.length &&
+    lines[cursor + 1].trim() !== '' &&
+    !/[.!?]$/u.test(parts.at(-1))
+  ) {
+    cursor += 1;
+    parts.push(lines[cursor].trim());
   }
 
-  const referencesRetiredName = retired.namePattern.test(line);
-  if (!referencesRetiredName || hasExplicitRetirementOrNonAuthorityAssertion(line)) return;
+  return parts.join(' ');
+}
 
-  assert.fail(`${path} must not present retired surface ${retired.path}: ${line.trim()}`);
+function assertNoActiveRetiredReference(path, statement, retired) {
+  if (retired.pathPattern.test(statement)) {
+    assert.fail(`${path} must not link retired path ${retired.path}: ${statement.trim()}`);
+  }
+
+  const referencesRetiredName = retired.namePattern.test(statement);
+  if (!referencesRetiredName || hasExplicitRetirementOrNonAuthorityAssertion(statement)) return;
+
+  assert.fail(`${path} must not present retired surface ${retired.path}: ${statement.trim()}`);
 }
 
 test('governance startup card canonization preserves routing semantics and baseline rails', () => {
@@ -267,7 +287,10 @@ test('retirement wording never permits links or negated retirement claims', () =
   assert.doesNotThrow(() =>
     assertNoActiveRetiredReference(
       'fixture.md',
-      'No Planning Dashboard is a task authority.',
+      collectWrappedStatement(
+        ['No Planning Dashboard, local workboard, lane file, closeout file, or generated', 'planning view is a task authority.'],
+        0
+      ),
       retiredDashboard
     )
   );
@@ -303,9 +326,13 @@ test('active planning entrypoints do not route through retired planning surfaces
 
   for (const path of activePlanningEntrypoints) {
     const lines = readRepoFile(path).split(/\r?\n/);
-    for (const line of lines) {
+    for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+      const line = lines[lineIndex];
       for (const retired of retiredPlanningSurfaces) {
-        assertNoActiveRetiredReference(path, line, retired);
+        const statement = retired.namePattern.test(line)
+          ? collectWrappedStatement(lines, lineIndex)
+          : line;
+        assertNoActiveRetiredReference(path, statement, retired);
       }
     }
   }
