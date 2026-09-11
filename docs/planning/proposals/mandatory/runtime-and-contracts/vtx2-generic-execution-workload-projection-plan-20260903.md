@@ -66,6 +66,12 @@ Transform connected to one PostgreSQL Source creates and persists one real plan.
 The plan contains one ephemeral output workload. Source cards and Substrait
 operators do not become plan steps.
 
+The shared Canvas resolves Preview authority from the selected closure. An
+admitted DVT semantic closure uses the protected server-owned projection; a
+dbt-compatible closure without that DVT semantic authority keeps the existing
+dbt artifact and generic Planner path. This is one Canvas with two compatible
+authorities, not separate Canvas types.
+
 This slice does not execute SQL or return rows; runtime support belongs to #2723.
 It does not yet lower sinks, publication fan-out, joins, sets or aggregates.
 #2784 remains open until its existing Sink and fan-out acceptance is preserved
@@ -140,7 +146,8 @@ closure; and the artifact identity is verified through CAS.
 - `apps/api/src/application/services/{resolveAuthorizedExecutableSubgraph,resolveAuthorizedPreviewSelection,PreviewPlanUseCase,dvtOperationalSemanticSet,dvtOperationalWorkloadProjector,dvtPostgresTargetProjectionPublisher}.ts`
 - protected-runtime composition and focused API tests
 - `apps/web/src/app/plugins/dvt/dvtContributions.ts`
-- DVT Preview selection projection, Canvas execution state/action and focused tests
+- DVT Preview selection projection, Canvas execution-strategy resolution,
+  Canvas execution state/action and focused tests
 - package manifests, lockfile and governed ARC-2 evidence
 
 Forbidden: Engine, Temporal adapters, runtime worker, dbt artifact semantics,
