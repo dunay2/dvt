@@ -5,27 +5,28 @@ import { useApplicationLanguageStore } from '../../stores/applicationLanguageSto
 import type {
   GraphNodeColumn,
   GraphNodeColumnCompositionFunctionResolver,
+  GraphNodeColumnFunction,
   GraphNodeColumnFunctionApplyIdentity,
   GraphNodeColumnFunctionApplyResult,
   GraphNodeStructuredFieldIdentity,
 } from './graphNodeColumnContracts';
 import { GraphNodeColumnCompositionMenu } from './GraphNodeColumnCompositionMenu';
-import { GraphNodeColumnFunctionAliasForm } from './GraphNodeColumnFunctionAliasForm';
+import { GraphNodeExpressionComposer } from './GraphNodeExpressionComposer';
 import type { GraphNodeColumnCopy } from './GraphNodeColumnPiece';
 import { GraphNodeStructuredFieldForm } from './GraphNodeStructuredFieldForm';
 import { resolveGraphNodeStructuredFieldCopy } from './graphNodeStructuredFieldCopy';
 
-type PendingFunction = Readonly<{
+type PendingExpression = Readonly<{
+  functions: readonly GraphNodeColumnFunction[];
   capabilityId: string;
-  functionName: string;
   operandFieldIds: readonly [string, string];
-  operandNames: readonly [string, string];
 }>;
 
 export function GraphNodeColumnDropCompositionFlow(props: {
   nodeId: string;
   targetColumn: GraphNodeColumn;
   request?: Readonly<{ sourceColumn: GraphNodeColumn; targetColumn: GraphNodeColumn }>;
+  operandCandidates: readonly GraphNodeColumn[];
   unavailableNames: readonly string[];
   copy: GraphNodeColumnCopy;
   onDismiss: () => void;
@@ -38,7 +39,7 @@ export function GraphNodeColumnDropCompositionFlow(props: {
 }): ReactElement | null {
   const language = useApplicationLanguageStore((state) => state.language);
   const structuredCopy = resolveGraphNodeStructuredFieldCopy(language);
-  const [pendingFunction, setPendingFunction] = useState<PendingFunction | null>(null);
+  const [pendingExpression, setPendingExpression] = useState<PendingExpression | null>(null);
   const [structuredChildren, setStructuredChildren] = useState<
     readonly [GraphNodeColumn, GraphNodeColumn] | null
   >(null);
@@ -51,7 +52,11 @@ export function GraphNodeColumnDropCompositionFlow(props: {
             targetType: request.targetColumn.type,
             sourceType: request.sourceColumn.type,
           }) ?? []
-        ).filter((item) => item.argumentCount === 2);
+        ).filter(
+          (item) =>
+            item.minimumArgumentCount <= 2 &&
+            (item.maximumArgumentCount == null || item.maximumArgumentCount >= 2)
+        );
   return (
     <>
       {request == null ? null : (
@@ -67,48 +72,35 @@ export function GraphNodeColumnDropCompositionFlow(props: {
             props.onDismiss();
           }}
           onRequest={(capabilityId) => {
-            const selected = compatibleFunctions.find(
-              (item) => item.capabilityId === capabilityId && item.argumentCount === 2
-            );
+            const selected = compatibleFunctions.find((item) => item.capabilityId === capabilityId);
             const targetFieldId = request.targetColumn.id ?? request.targetColumn.name;
             const sourceFieldId = request.sourceColumn.id ?? request.sourceColumn.name;
             if (selected != null) {
-              setPendingFunction({
+              setPendingExpression({
+                functions: compatibleFunctions,
                 capabilityId,
-                functionName: selected.name,
                 operandFieldIds: [targetFieldId, sourceFieldId],
-                operandNames: [request.targetColumn.name, request.sourceColumn.name],
               });
             }
             props.onDismiss();
           }}
         />
       )}
-      {pendingFunction == null || props.onFunctionApply == null ? null : (
-        <GraphNodeColumnFunctionAliasForm
-          functionName={pendingFunction.functionName}
-          expressionLabel={[
-            pendingFunction.functionName.toUpperCase(),
-            '(',
-            pendingFunction.operandNames.join(', '),
-            ')',
-          ].join('')}
+      {pendingExpression == null || props.onFunctionApply == null ? null : (
+        <GraphNodeExpressionComposer
+          key={pendingExpression.capabilityId + ':' + pendingExpression.operandFieldIds.join(':')}
+          nodeId={props.nodeId}
+          columnId={props.targetColumn.id ?? props.targetColumn.name}
+          functions={pendingExpression.functions}
+          initialCapabilityId={pendingExpression.capabilityId}
+          initialOperandFieldIds={pendingExpression.operandFieldIds}
+          operandCandidates={props.operandCandidates}
+          resolveCompositionFunctions={props.resolveCompositionFunctions}
           unavailableAliases={props.unavailableNames}
           copy={props.copy}
-          onCancel={() => setPendingFunction(null)}
-          onSubmit={(alias) => {
-            const result = props.onFunctionApply?.({
-              nodeId: props.nodeId,
-              columnId: props.targetColumn.id ?? props.targetColumn.name,
-              operandFieldIds: pendingFunction.operandFieldIds,
-              capabilityId: pendingFunction.capabilityId,
-              alias,
-            });
-            if (result?.outcome === 'applied') {
-              props.onFunctionApplied?.(result.createdFieldId);
-              setPendingFunction(null);
-            }
-          }}
+          onCancel={() => setPendingExpression(null)}
+          onApply={props.onFunctionApply}
+          onApplied={props.onFunctionApplied}
         />
       )}
       {structuredChildren == null || props.onStructuredFieldApply == null ? null : (

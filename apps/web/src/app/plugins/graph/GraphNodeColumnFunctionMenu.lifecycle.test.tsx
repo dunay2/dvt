@@ -31,7 +31,14 @@ describe('GraphNodeColumnFunctionMenu pointer lifecycle', () => {
               type: 'text',
               functionMenu: {
                 category: 'text',
-                items: [{ capabilityId: 'capability:trim', name: 'trim', argumentCount: 1 }],
+                items: [
+                  {
+                    capabilityId: 'capability:trim',
+                    name: 'trim',
+                    minimumArgumentCount: 1,
+                    maximumArgumentCount: 1,
+                  },
+                ],
               },
             },
           ]}

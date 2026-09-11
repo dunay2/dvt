@@ -56,7 +56,7 @@ export function GraphNodeColumnFunctionMenu(props: {
     props.menu == null
       ? props.copy.columnActionsLabelTemplate.replace('{column}', props.columnName)
       : props.copy.columnFunctionCategoryLabels[props.menu.category];
-  const unaryItems = (props.menu?.items ?? []).filter((item) => item.argumentCount === 1);
+  const expressionItems = props.menu?.items ?? [];
   const model = buildCanvasColumnContextMenuModel({
     target: {
       kind: 'column',
@@ -68,7 +68,7 @@ export function GraphNodeColumnFunctionMenu(props: {
     functions:
       props.onRequest == null
         ? []
-        : unaryItems.map((item) => ({
+        : expressionItems.map((item) => ({
             id: item.capabilityId,
             label: item.name.toUpperCase(),
           })),

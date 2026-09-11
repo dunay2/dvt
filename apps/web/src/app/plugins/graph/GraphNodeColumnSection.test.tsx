@@ -309,9 +309,24 @@ describe('GraphNodeColumnSection', () => {
               functionMenu: {
                 category: 'text',
                 items: [
-                  { capabilityId: 'capability:trim', name: 'trim', argumentCount: 1 },
-                  { capabilityId: 'capability:upper', name: 'upper', argumentCount: 1 },
-                  { capabilityId: 'capability:concat', name: 'concat', argumentCount: 2 },
+                  {
+                    capabilityId: 'capability:trim',
+                    name: 'trim',
+                    minimumArgumentCount: 1,
+                    maximumArgumentCount: 1,
+                  },
+                  {
+                    capabilityId: 'capability:upper',
+                    name: 'upper',
+                    minimumArgumentCount: 1,
+                    maximumArgumentCount: 1,
+                  },
+                  {
+                    capabilityId: 'capability:concat',
+                    name: 'concat',
+                    minimumArgumentCount: 2,
+                    maximumArgumentCount: 2,
+                  },
                 ],
               },
             },
@@ -343,7 +358,7 @@ describe('GraphNodeColumnSection', () => {
       document.body.querySelector(
         '[data-slot="graph-node-column-function"][data-capability-id="capability:concat"]'
       )
-    ).toBeNull();
+    ).not.toBeNull();
     await act(async () => {
       fireEvent.click(upperItem!);
     });
@@ -363,7 +378,7 @@ describe('GraphNodeColumnSection', () => {
     expect(onColumnFunctionApply).not.toHaveBeenCalled();
     expect(document.body.querySelector('[role="alert"]')).not.toBeNull();
     expect(
-      document.body.querySelector('[data-slot="graph-node-column-function-alias-form"]')
+      document.body.querySelector('[data-slot="graph-node-expression-composer"]')
     ).not.toBeNull();
     await act(async () => {
       fireEvent.change(aliasInput!, { target: { value: 'customer_clean' } });
@@ -400,7 +415,14 @@ describe('GraphNodeColumnSection', () => {
               type: 'text',
               functionMenu: {
                 category: 'text',
-                items: [{ capabilityId: 'capability:upper', name: 'upper', argumentCount: 1 }],
+                items: [
+                  {
+                    capabilityId: 'capability:upper',
+                    name: 'upper',
+                    minimumArgumentCount: 1,
+                    maximumArgumentCount: 1,
+                  },
+                ],
               },
             },
           ]}
@@ -432,7 +454,7 @@ describe('GraphNodeColumnSection', () => {
       );
 
       expect(
-        document.body.querySelector('[data-slot="graph-node-column-function-alias-form"]')
+        document.body.querySelector('[data-slot="graph-node-expression-composer"]')
       ).not.toBeNull();
     };
 
@@ -441,9 +463,7 @@ describe('GraphNodeColumnSection', () => {
       fireEvent.keyDown(document, { key: 'Escape' });
       await Promise.resolve();
     });
-    expect(
-      document.body.querySelector('[data-slot="graph-node-column-function-alias-form"]')
-    ).toBeNull();
+    expect(document.body.querySelector('[data-slot="graph-node-expression-composer"]')).toBeNull();
 
     await openAliasForm();
     await act(async () => {
@@ -451,9 +471,7 @@ describe('GraphNodeColumnSection', () => {
       fireEvent.click(container);
       await Promise.resolve();
     });
-    expect(
-      document.body.querySelector('[data-slot="graph-node-column-function-alias-form"]')
-    ).toBeNull();
+    expect(document.body.querySelector('[data-slot="graph-node-expression-composer"]')).toBeNull();
   });
 
   it('reveals and focuses the created output while retaining a rejected proposal', async () => {
@@ -465,7 +483,14 @@ describe('GraphNodeColumnSection', () => {
           type: 'text',
           functionMenu: {
             category: 'text' as const,
-            items: [{ capabilityId: 'capability:upper', name: 'upper', argumentCount: 1 }],
+            items: [
+              {
+                capabilityId: 'capability:upper',
+                name: 'upper',
+                minimumArgumentCount: 1,
+                maximumArgumentCount: 1,
+              },
+            ],
           },
         },
         ...EIGHT_COLUMNS.slice(1, 6),
@@ -533,7 +558,7 @@ describe('GraphNodeColumnSection', () => {
     expect(aliasInput?.value).toBe('   ');
     expect(aliasInput?.getAttribute('aria-invalid')).toBe('true');
     const aliasAlert = document.body.querySelector<HTMLElement>(
-      '[data-slot="graph-node-column-function-alias-form"] [role="alert"]'
+      '[data-slot="graph-node-expression-composer"] [role="alert"]'
     );
     expect(aliasInput?.getAttribute('aria-describedby')).toBe(aliasAlert?.id);
     expect(aliasAlert?.textContent).toContain('sin espacios exteriores');
@@ -553,7 +578,7 @@ describe('GraphNodeColumnSection', () => {
     });
     expect(aliasInput?.value).toBe('rejected_alias');
     expect(
-      document.body.querySelector('[data-slot="graph-node-column-function-alias-form"]')
+      document.body.querySelector('[data-slot="graph-node-expression-composer"]')
     ).not.toBeNull();
 
     await act(async () => {

@@ -63,6 +63,16 @@ type GraphNodeCardCopy = Readonly<{
   columnFunctionAliasCancelLabel: string;
   columnFunctionAliasConflictLabel: string;
   columnFunctionAliasPolicyErrorLabel: string;
+  expressionComposerTitle: string;
+  expressionComposerFunctionLabel: string;
+  expressionComposerOperandsLabel: string;
+  expressionComposerOperandLabelTemplate: string;
+  expressionComposerAddOperandLabel: string;
+  expressionComposerRemoveOperandLabelTemplate: string;
+  expressionComposerMoveOperandUpLabelTemplate: string;
+  expressionComposerMoveOperandDownLabelTemplate: string;
+  expressionComposerPreviewLabel: string;
+  expressionComposerRejectedLabel: string;
   addCalculatedColumnLabel: string;
   calculatedColumnKindLabel: string;
   calculatedColumnAliasLabel: string;
@@ -171,6 +181,16 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   columnFunctionAliasConflictLabel: 'Another column already uses this output name.',
   columnFunctionAliasPolicyErrorLabel:
     'Use a valid PostgreSQL identifier without outer whitespace and with at most 63 UTF-8 bytes.',
+  expressionComposerTitle: 'Create derived output',
+  expressionComposerFunctionLabel: 'Function',
+  expressionComposerOperandsLabel: 'Ordered operands',
+  expressionComposerOperandLabelTemplate: 'Operand {index}',
+  expressionComposerAddOperandLabel: 'Add operand',
+  expressionComposerRemoveOperandLabelTemplate: 'Remove operand {index}',
+  expressionComposerMoveOperandUpLabelTemplate: 'Move operand {index} up',
+  expressionComposerMoveOperandDownLabelTemplate: 'Move operand {index} down',
+  expressionComposerPreviewLabel: 'Preview',
+  expressionComposerRejectedLabel: 'The output could not be created. Review the expression.',
   addCalculatedColumnLabel: 'Add calculated column',
   calculatedColumnKindLabel: 'Value source',
   calculatedColumnAliasLabel: 'Output name',
@@ -282,6 +302,16 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   columnFunctionAliasConflictLabel: 'Otra columna ya utiliza este nombre de salida.',
   columnFunctionAliasPolicyErrorLabel:
     'Usa un identificador PostgreSQL válido, sin espacios exteriores y con 63 bytes UTF-8 como máximo.',
+  expressionComposerTitle: 'Crear salida derivada',
+  expressionComposerFunctionLabel: 'Función',
+  expressionComposerOperandsLabel: 'Operandos ordenados',
+  expressionComposerOperandLabelTemplate: 'Operando {index}',
+  expressionComposerAddOperandLabel: 'Añadir operando',
+  expressionComposerRemoveOperandLabelTemplate: 'Quitar operando {index}',
+  expressionComposerMoveOperandUpLabelTemplate: 'Subir operando {index}',
+  expressionComposerMoveOperandDownLabelTemplate: 'Bajar operando {index}',
+  expressionComposerPreviewLabel: 'Vista previa',
+  expressionComposerRejectedLabel: 'No se pudo crear la salida. Revisa la expresión.',
   addCalculatedColumnLabel: 'Añadir columna calculada',
   calculatedColumnKindLabel: 'Origen del valor',
   calculatedColumnAliasLabel: 'Nombre de salida',
