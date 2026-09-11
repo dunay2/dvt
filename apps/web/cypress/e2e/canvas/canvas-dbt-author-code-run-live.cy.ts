@@ -176,7 +176,7 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     replaceInput('dbt-source', 'finance warehouse');
     replaceInput('dbt-schema', 'warehouse raw');
     replaceInput('dbt-table', 'payments final');
-    clickButtonNatively('Apply');
+    clickButtonNatively(canvasViewCopy.inspectorApplyLabel);
     waitForPersistedWarehousePaymentsConfig();
 
     openNodeWorkbench('orders_model');
@@ -184,7 +184,7 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     replaceInput('dbt-package', 'finance analytics');
     cy.get('select[name="dbt-materialized"]').should('be.enabled').select('table');
     cy.get('select[name="dbt-origin"]').should('be.enabled').select('warehouse_payments');
-    clickButtonNatively('Apply');
+    clickButtonNatively(canvasViewCopy.inspectorApplyLabel);
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
     cy.get('.react-flow__node[data-id="orders_model"]')
@@ -196,7 +196,7 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     cy.get('textarea[name="dbt-model-sql"]')
       .clear()
       .type(AUTHORED_MODEL_SQL, { parseSpecialCharSequences: false, delay: 0 });
-    clickButtonNatively('Apply');
+    clickButtonNatively(canvasViewCopy.inspectorApplyLabel);
     waitForPersistedDbtModelConfig();
     cy.get('.react-flow__node[data-id="orders_model"]')
       .should('contain.text', 'Payments Model')
