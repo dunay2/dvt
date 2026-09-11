@@ -58,6 +58,10 @@ export type PlanPreviewProvenanceViewModel =
       sqlArtifact?: PlanPreviewArtifactRefViewModel;
     }
   | {
+      kind: 'dvt-protected-workspace-graph';
+      canvasId: string;
+    }
+  | {
       kind: 'dbt-project-files';
       canvasId: string;
       projectRoot: string;

@@ -63,6 +63,7 @@ export type PlanPreviewModalMessages = Readonly<{
   planPreviewAuthorizedScopeLabel: string;
   planPreviewProvenanceTitle: string;
   planPreviewDbtProvenanceCaption: string;
+  planPreviewDvtProvenanceCaption: string;
   planPreviewRepositoryProvenanceCaption: string;
   planPreviewCanvasLabel: string;
   planPreviewProjectRootLabel: string;
@@ -558,7 +559,9 @@ export function PlanPreviewModal({
                 caption={
                   provenance.kind === 'dbt-project-files'
                     ? messages.planPreviewDbtProvenanceCaption
-                    : messages.planPreviewRepositoryProvenanceCaption
+                    : provenance.kind === 'dvt-protected-workspace-graph'
+                      ? messages.planPreviewDvtProvenanceCaption
+                      : messages.planPreviewRepositoryProvenanceCaption
                 }
               >
                 <div className="grid min-w-0 gap-3 md:grid-cols-2">
@@ -585,6 +588,10 @@ export function PlanPreviewModal({
                         </PlanPreviewField>
                       ) : null}
                     </>
+                  ) : provenance.kind === 'dvt-protected-workspace-graph' ? (
+                    <PlanPreviewField label={messages.planPreviewCanvasLabel} long>
+                      {provenance.canvasId}
+                    </PlanPreviewField>
                   ) : (
                     <>
                       {provenance.graphArtifact ? (

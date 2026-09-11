@@ -264,6 +264,10 @@ export const canvasViewExecutionCopyByKey = {
     key: 'canvas.planPreview.dbtProvenanceCaption',
     fallback: 'Authoritative dbt project revision and server-owned execution target.',
   },
+  planPreviewDvtProvenanceCaption: {
+    key: 'canvas.planPreview.dvtProvenanceCaption',
+    fallback: 'Protected Canvas authority used to derive the executable workload.',
+  },
   planPreviewRepositoryProvenanceCaption: {
     key: 'canvas.planPreview.repositoryProvenanceCaption',
     fallback: 'Repository artifacts used to generate the preview.',
