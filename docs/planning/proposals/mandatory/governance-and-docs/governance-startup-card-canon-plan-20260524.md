@@ -2,7 +2,7 @@
 title: Governance Startup Card Canon Plan
 status: Active
 owner: Docs / Architecture / Delivery
-last_reviewed: 2026-05-24
+last_reviewed: 2026-09-11
 planning_type: proposal
 ---
 
@@ -18,23 +18,25 @@ planning_type: proposal
 - `docs/guides/ai-work-protocol.md`
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
+- `docs/planning/state/github-mvp-issue-workflow.md`
 - `docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-router-plan-20260402.md`
-- [Task: GOV-PROP-DISP-1] Planning DB task `GD-MAND-STARTUP-CARD`
 
 ## Fowler Analysis
 
 - Ownership: the router exists, but the owned concern was mostly implicit in
   inventory/protocol prose. Action: name the router component and make startup
   classification the owned concern.
-- Bounded context: documentation governance owns startup reading, while
-  Planning DB owns task lifecycle. Action: keep route classification in docs
-  governance and evidence task closure through Planning DB.
+- Bounded context: documentation governance owns startup reading, GitHub Issues
+  owns executable task lifecycle, and Planning DB owns architecture and
+  mechanization governance. Action: keep route classification in docs
+  governance, task status/evidence/closure in GitHub Issues, and architecture
+  changes on the existing Planning DB rails.
 - Semantic compression: mature systems route by intent before deep reference
   reading. Action: preserve the startup-card table, but govern it as route
   semantics rather than formatting.
-- [Task: GOV-PROP-DISP-1] Fitness function: markdown/link checks cannot detect route drift. Action: add
-  a CI semantic test that checks routes, rails, component guide, stories, and
-  Fowler mailbox.
+- Fitness function: markdown/link checks cannot detect route drift. Action: add
+  a CI semantic test that checks routes, rails, component guide, stories,
+  authority split, and Fowler mailbox.
 - Evolution constraint: future governance additions can overload the startup
   card. Action: require every new route change to update rails, invariants,
   consumers, and validation.
@@ -53,22 +55,24 @@ names, minimum baselines, and escalation rules.
 
 ## Antipatterns Detected
 
-- [Task: GOV-PROP-DISP-1] **God inventory opening**: forcing every task to read the full catalog before
+- **God inventory opening**: forcing every task to read the full catalog before
   routing.
 - **Table as policy**: treating the startup card as presentation rather than a
   semantic classifier.
 - **Shadow startup notes**: allowing local notes or PR text to explain startup
   routing instead of canonical docs.
+- **Parallel task authority**: routing task lifecycle through Planning DB rows,
+  generated workboards, or local lane files instead of GitHub Issues.
 - **Validation by syntax only**: passing markdown checks even if a route loses
   its owner or baseline.
 
 ## Drift And Repetition
 
-- The original router plan, inventory, AI protocol, evidence doc, and generated
-  planning views all discuss the startup card, but only the inventory/protocol
-  are live execution surfaces.
-- `GOV-S1` closed the implementation; `GD-MAND-STARTUP-CARD` exists to reconcile
-  that implemented behavior with current Fowler/rail governance.
+- The original router plan, inventory, AI protocol, evidence docs, and historical
+  generated planning views all discuss the startup card, but only the governed
+  current surfaces may define startup routing.
+- `GOV-S1` closed the original implementation. Historical Planning DB task IDs
+  associated with that work are evidence, not executable task lifecycle.
 - Repetition is useful only when each surface has a role: plan rationale,
   component contract, user scenarios, domain index, and semantic test.
 
@@ -82,6 +86,11 @@ Use an **Intent Router** pattern:
    deep inventory reading is required.
 3. `ValidateGovernanceStartupBaseline` proves the selected closeout baseline
    includes the mandatory validation level.
+
+Task lifecycle, priority, ownership, blockers, acceptance, evidence, and closure
+belong to GitHub Issues. Planning DB remains authoritative for architecture,
+capabilities, relationships, command/query rails, feature mechanization, and
+governed evidence where its rails apply; it is not a task tracker.
 
 ## Command And Query Rail
 
@@ -102,14 +111,16 @@ Use an **Intent Router** pattern:
   `GovernanceStartupBaselinePolicy`. Application port:
   `tools/ci/startup-card-canon.test.mjs`. Adapter surface: CI tools suite,
   feature-mechanization implementation gate, and PR checks. Scope: repository CI
-  and local prepush. Negative tests: baseline omitted, route drift, or missing
-  user stories.
+  and local prepush. Negative tests: baseline omitted, route drift, authority
+  drift, or missing user stories.
 
 ## Component Grouping
 
 - `docs/planning/status/governance-document-rule-inventory.md`: runtime
   startup-card table and canonical route definitions.
 - `docs/guides/ai-work-protocol.md`: procedural consumer of the startup card.
+- `docs/planning/state/github-mvp-issue-workflow.md`: executable task-lifecycle
+  procedure for the planning route.
 - `docs/architecture/components/ci-governance/governance-startup-card-canon-component.md`:
   component API, invariants, transitions, consumers, and diagrams.
 - `docs/architecture/components/ci-governance/governance-startup-card-canon-user-stories.md`:
@@ -120,21 +131,23 @@ Use an **Intent Router** pattern:
 
 ## User Stories
 
-- [Task: GOV-PROP-DISP-1] As a bounded-task contributor, I want to classify the task quickly so I open
+- As a bounded-task contributor, I want to classify the task quickly so I open
   the right governing docs without reading unrelated catalog sections.
 - As a cross-cutting implementer, I want the card to tell me when deep inventory
   reading is required so I do not under-govern risky changes.
-- As a planning operator, I want planning tasks routed to Planning DB and
-  generated workboard validation so task lifecycle changes stay canonical.
+- As a planning operator, I want executable task lifecycle routed through GitHub
+  Issues and architecture/mechanization changes routed through Planning DB so no
+  generated workboard or task row becomes a parallel authority.
 - As a PR reviewer, I want startup routing changes to have semantic tests so
-  route drift is caught before merge.
+  route and authority drift are caught before merge.
 
 ## ADR Decision
 
-No new ADR is required. This slice canonizes an existing governance router and
-does not change a runtime, contract, adapter, or package boundary. If a future
-slice adds a new mandatory startup route or changes the governing hierarchy, an
-ADR may be warranted.
+No new ADR is required. This slice reconciles an existing governance router with
+ADR-0061's already-accepted task/architecture authority boundary and does not
+change a runtime, contract, adapter, or package boundary. If a future slice adds
+a new mandatory startup route or changes the governing hierarchy, an ADR may be
+warranted.
 
 ## Feature Mechanization Manifest
 
@@ -152,6 +165,7 @@ governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
   - docs/guides/ai-work-protocol.md
+  - docs/planning/state/github-mvp-issue-workflow.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
   - docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-router-plan-20260402.md
@@ -169,9 +183,8 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-canon-plan-20260524.md
   - docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-router-plan-20260402.md
   - docs/planning/proposals/portfolio-map-20260403.md
-  - docs/planning/state/agent-lane-a.md
-  - docs/planning/state/execution-workboard.md
-  - docs/planning/state/open-task-route.md # Task: GOV-PROP-DISP-1
+  - docs/planning/roadmap/index.md
+  - docs/planning/state/github-mvp-issue-workflow.md
   - docs/planning/status/**
   - docs/planning/status/governance-document-rule-inventory.md
   - tools/ci/startup-card-canon.test.mjs
@@ -203,6 +216,7 @@ fowlerSignals:
   - God inventory opening
   - Table as policy
   - Shadow startup notes
+  - Parallel task authority
   - Syntax-only validation
 architectureGuards:
   - node --test tools/ci/startup-card-canon.test.mjs
@@ -234,7 +248,7 @@ redGreenCycles:
     greenTest: node --test tools/ci/startup-card-canon.test.mjs
   - id: governance-startup-card-baseline-review
     redTest: node --test tools/ci/startup-card-canon.test.mjs
-    expectedFailure: A route can keep its label while weakening the minimum validation baseline.
+    expectedFailure: A route can keep its label while weakening the minimum validation baseline or changing task authority.
     patchSurfaces:
       - tools/ci/startup-card-canon.test.mjs
       - docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-canon-plan-20260524.md
