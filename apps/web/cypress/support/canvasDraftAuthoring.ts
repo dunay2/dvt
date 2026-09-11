@@ -44,6 +44,7 @@ export type StubCanvasDraftReadOptions = {
   emptyCanvas?: boolean;
   importedWarehouseSource?: boolean;
   authoringGenerated?: boolean;
+  terminalTransformPreview?: boolean;
   columnMapping?: boolean;
   columnMappingDisconnected?: boolean;
   columnMappingSecondSource?: boolean;
@@ -78,6 +79,7 @@ export function buildCanvasAuthoringDraft({
   emptyCanvas = false,
   importedWarehouseSource = false,
   authoringGenerated = false,
+  terminalTransformPreview = false,
   columnMapping = false,
   columnMappingDisconnected = false,
   columnMappingSecondSource = false,
@@ -858,6 +860,7 @@ export function buildCanvasAuthoringDraft({
   }
 
   if (authoringGenerated) {
+    const connectionId = terminalTransformPreview ? 'local-postgres-proof' : 'warehouse-a';
     const semanticDocument = encodeDvtSubstraitProjectionDocument(
       createDvtSubstraitProjectionDraft({
         source: {
@@ -869,7 +872,7 @@ export function buildCanvasAuthoringDraft({
             connectionRef: {
               schemaVersion: 'connection-ref.v1',
               provider: 'postgres',
-              connectionId: 'warehouse-a',
+              connectionId,
             },
             sourceObjectId: 'raw.orders',
           },
@@ -890,13 +893,13 @@ export function buildCanvasAuthoringDraft({
       nodeIds: [
         'source-1',
         'dvt-transform-1',
-        'sink-1',
+        ...(terminalTransformPreview ? [] : ['sink-1']),
         ...(includeLooseNode ? ['orphan-transform-1'] : []),
       ],
       nodePositions: {
         'source-1': { x: 40, y: 140 },
         'dvt-transform-1': { x: 340, y: 140 },
-        'sink-1': { x: 650, y: 140 },
+        ...(terminalTransformPreview ? {} : { 'sink-1': { x: 650, y: 140 } }),
         ...(includeLooseNode
           ? {
               'orphan-transform-1': { x: 340, y: 360 },
@@ -907,7 +910,7 @@ export function buildCanvasAuthoringDraft({
         {
           id: 'source-1',
           name: 'Source 1',
-          pluginId: 'dvt',
+          pluginId: terminalTransformPreview ? 'dvt.warehouse-source' : 'dvt',
           kind: 'dvt:source',
           role: 'input',
           status: 'idle',
@@ -921,7 +924,7 @@ export function buildCanvasAuthoringDraft({
               connectionRef: {
                 schemaVersion: 'connection-ref.v1',
                 provider: 'postgres',
-                connectionId: 'warehouse-a',
+                connectionId,
               },
               sourceObjectId: 'raw.orders',
             },
@@ -941,7 +944,7 @@ export function buildCanvasAuthoringDraft({
           id: 'dvt-transform-1',
           name: 'Transform 1',
           pluginId: 'dvt',
-          kind: 'dvt:transform',
+          kind: terminalTransformPreview ? 'transform' : 'dvt:transform',
           role: 'transform',
           status: 'idle',
           tags: ['authoring'],
@@ -954,26 +957,30 @@ export function buildCanvasAuthoringDraft({
             },
           },
         },
-        {
-          id: 'sink-1',
-          name: 'Sink 1',
-          pluginId: 'dvt',
-          kind: 'dvt:sink',
-          role: 'output',
-          status: 'idle',
-          tags: ['authoring'],
-          metadata: {
-            typeLabel: 'Sink',
-            config: {
-              database: 'legacy_warehouse',
-              schema: 'marts',
-              table: 'orders_daily',
-              materialization: 'table',
-              writeMode: 'replace',
-              partitionStrategy: 'daily_by_order_date',
-            },
-          },
-        },
+        ...(terminalTransformPreview
+          ? []
+          : [
+              {
+                id: 'sink-1',
+                name: 'Sink 1',
+                pluginId: 'dvt',
+                kind: 'dvt:sink',
+                role: 'output' as const,
+                status: 'idle' as const,
+                tags: ['authoring'],
+                metadata: {
+                  typeLabel: 'Sink',
+                  config: {
+                    database: 'legacy_warehouse',
+                    schema: 'marts',
+                    table: 'orders_daily',
+                    materialization: 'table',
+                    writeMode: 'replace',
+                    partitionStrategy: 'daily_by_order_date',
+                  },
+                },
+              },
+            ]),
         ...(includeLooseNode
           ? [
               {
@@ -996,12 +1003,16 @@ export function buildCanvasAuthoringDraft({
           targetId: 'dvt-transform-1',
           relation: 'lineage',
         },
-        {
-          id: 'edge-transform-sink',
-          sourceId: 'dvt-transform-1',
-          targetId: 'sink-1',
-          relation: 'lineage',
-        },
+        ...(terminalTransformPreview
+          ? []
+          : [
+              {
+                id: 'edge-transform-sink',
+                sourceId: 'dvt-transform-1',
+                targetId: 'sink-1',
+                relation: 'lineage' as const,
+              },
+            ]),
       ],
     });
   }
