@@ -38,6 +38,7 @@ function openNodeCodeWorkbench(nodeId: string): void {
     .find('[data-slot="canvas-node-shell"]')
     .dblclick();
   cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
+  cy.get('[data-slot="canvas-node-workbench-tab-code"]').should('be.visible').click();
   cy.get('textarea[name="dbt-model-sql"]').should('be.enabled');
 }
 
