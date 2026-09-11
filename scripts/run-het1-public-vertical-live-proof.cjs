@@ -8,7 +8,7 @@ const { sha256Hex } = require('@dvt/crypto');
 const { allocateFreePort } = require('./run-dev-stack.temporal.cjs');
 
 const MINIO_IMAGE =
-  'minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e';
+  'quay.io/minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e';
 const MINIO_ACCESS_KEY_ID = 'minioadmin';
 const MINIO_SECRET_ACCESS_KEY = 'minioadmin';
 const S3_REGION = 'us-east-1';
