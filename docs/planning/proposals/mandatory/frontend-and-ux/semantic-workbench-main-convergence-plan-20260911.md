@@ -54,7 +54,10 @@ allowedImplementationSurfaces:
   - apps/web/package.json
   - apps/web/src/app/components/canvas/**
   - apps/web/src/app/components/metrics/**
+  - apps/web/src/app/components/shell/**
   - apps/web/src/app/labs/**
+  - apps/web/src/app/plugins/canvasSurfaceStrategyContracts.ts
+  - apps/web/src/app/plugins/dvt/**
   - apps/web/src/app/plugins/graph/**
   - apps/web/src/app/routes.ts
   - apps/web/src/app/views/canvas/**
@@ -135,6 +138,30 @@ symbols:
   - <<: *semanticSymbol
     name: SemanticWorkbenchJoinOperandEditor
     path: apps/web/src/app/views/canvas/SemanticWorkbenchJoinOperandEditor.tsx
+  - <<: *semanticSymbol
+    name: OperationalDrawerTabId
+    path: apps/web/src/app/components/shell/operationalDrawerContributionStore.ts
+  - <<: *semanticSymbol
+    name: COMPARISON_LABEL
+    path: apps/web/src/app/views/canvas/SemanticTransformFocusPanel.tsx
+  - <<: *semanticSymbol
+    name: EditableJoinCondition
+    path: apps/web/src/app/views/canvas/SemanticTransformFocusPanel.tsx
+  - <<: *semanticSymbol
+    name: PendingJoinPredicate
+    path: apps/web/src/app/views/canvas/SemanticTransformFocusPanel.tsx
+  - <<: *semanticSymbol
+    name: SemanticTransformFocusPanel
+    path: apps/web/src/app/views/canvas/SemanticTransformFocusPanel.tsx
+  - <<: *semanticSymbol
+    name: SemanticTransformFocusPanelProps
+    path: apps/web/src/app/views/canvas/SemanticTransformFocusPanel.tsx
+  - <<: *semanticSymbol
+    name: canOpenSemanticTransformFocus
+    path: apps/web/src/app/views/canvas/SemanticTransformFocusPanel.tsx
+  - <<: *semanticSymbol
+    name: semanticNodeTypes
+    path: apps/web/src/app/views/canvas/SemanticTransformFocusPanel.tsx
   - <<: *semanticSymbol
     name: editDvtSubstraitJoinPredicateConditions
     path: apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
