@@ -347,6 +347,11 @@ describe('GraphNodeColumnSection', () => {
     await act(async () => {
       fireEvent.click(upperItem!);
     });
+    await vi.waitFor(() => {
+      expect(
+        document.body.querySelector('[data-slot="graph-node-column-function-alias-form"]')
+      ).not.toBeNull();
+    });
     expect(onColumnFunctionApply).not.toHaveBeenCalled();
     const aliasInput = document.body.querySelector<HTMLInputElement>(
       '[data-slot="graph-node-column-function-alias-input"]'
