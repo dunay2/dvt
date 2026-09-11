@@ -88,6 +88,8 @@ view is a planning authority.
 
 ## Domain And Diagram Navigation
 
+- [Glossary](../../concepts/glossary.md)
+- [Domain Language](../../concepts/domain-language.md)
 - [Planning Domains](../domains/index.md)
 - [Planning State](../state/index.md)
 - [Planning Roadmap Diagrams](./diagrams/index.md)
