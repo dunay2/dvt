@@ -396,6 +396,7 @@ function buildLiveProofCypressNativeInvocation(args) {
       'cypress.config.ts',
       '--browser',
       'chrome',
+      ...(args.headed ? ['--headed'] : []),
       '--spec',
       args.specPath.slice(specPrefix.length),
     ],
@@ -416,6 +417,15 @@ function resolveLiveProofCypressRuntime(sourceEnv = process.env) {
     throw new Error('DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME must be docker or native.');
   }
   return runtime;
+}
+
+function resolveLiveProofCypressHeaded(sourceEnv = process.env) {
+  const headed = readNonEmptyEnv(sourceEnv.DVT_SELECTED_CLOSURE_CYPRESS_HEADED);
+  if (headed === undefined || headed === 'false') return false;
+  if (headed !== 'true') {
+    throw new Error('DVT_SELECTED_CLOSURE_CYPRESS_HEADED must be true or false.');
+  }
+  return true;
 }
 
 function resolveLiveProofWorkspaceFilesRoot(liveProofSchema, sourceEnv = process.env) {
@@ -624,6 +634,10 @@ async function main() {
   const specPath = resolveLiveProofSpecPath();
   const dbtExecutable = resolveLiveProofDbtExecutable();
   const cypressRuntime = resolveLiveProofCypressRuntime();
+  const cypressHeaded = resolveLiveProofCypressHeaded();
+  if (cypressHeaded && cypressRuntime !== 'native') {
+    throw new Error('Headed Chrome requires DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME=native.');
+  }
   const { databaseUrl, shouldBootstrap } = resolveLiveProofDatabaseUrl();
   ensureLocalPostgresReady(shouldBootstrap);
 
@@ -767,6 +781,7 @@ async function main() {
         apiBearerToken: localProtectedRuntimeAuth.webEnv.VITE_API_BEARER_TOKEN,
         workspaceScope: localProtectedRuntimeAuth.workspaceScope,
         specPath,
+        headed: cypressHeaded,
       },
       cypressRuntime
     );
@@ -790,6 +805,7 @@ module.exports = {
   resolveLiveProofDbtExecutable,
   resolveLiveProofDatabaseUrl,
   resolveLiveProofCypressRuntime,
+  resolveLiveProofCypressHeaded,
   resolveLiveProofSpecPath,
   seedSelectedClosureLocalWarehouseProof,
 };
