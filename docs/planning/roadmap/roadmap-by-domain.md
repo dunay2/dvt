@@ -112,12 +112,11 @@ flowchart LR
   [20260425 Canvas graph strategy Fowler hard QA review](../reviews/architecture-and-governance/20260425-canvas-graph-strategy-fowler-hard-qa-review.md),
   [Documentation and UX implementation guide](../../architecture/components/web/ux-implementation-guide.md),
   [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
-  Near-term target: keep the first SQL-first operator loop stable now that
-  authoring, persisted preview-to-run handoff, and snapshot-owned result
-  surfaces are live, while the remaining Lane E work shifts to parent
-  acceptance consolidation, the `TF-E2-L` graph-strategy ownership remediation,
-  the `F-27` internal alpha route gate, and broader workbench and plugin
-  professionalization.
+  Near-term target: keep the canonical Substrait authoring and persisted Canvas
+  semantic-revision path stable while current GitHub Issues own the remaining
+  UI/frontend convergence, especially the one-Canvas/product-vocabulary hard
+  cut (#2902), native Canvas Preview/Run/result integration (#3021), and bounded
+  workbench, expression, and plugin professionalization.
 - `Documentation Governance`
   Current sources: [Governance Inventory](../status/governance-document-rule-inventory.md),
   [Documentation maintenance guide](../../guides/documentation-maintenance-guide-20260407.md),
