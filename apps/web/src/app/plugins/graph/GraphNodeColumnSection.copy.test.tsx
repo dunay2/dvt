@@ -51,7 +51,9 @@ describe('GraphNodeColumnSection disclosure copy', () => {
     );
 
     act(() => fireEvent.click(remainderToggle));
-    expect(remainderToggle.querySelector('span[aria-hidden="true"]')?.textContent).toBe('Ver menos');
+    expect(remainderToggle.querySelector('span[aria-hidden="true"]')?.textContent).toBe(
+      'Ver menos'
+    );
     expect(remainderToggle.querySelector('.sr-only')?.textContent).toBe(
       'Mostrar solo las 5 primeras'
     );
@@ -67,7 +69,9 @@ describe('GraphNodeColumnSection disclosure copy', () => {
     );
 
     act(() => fireEvent.click(remainderToggle));
-    expect(remainderToggle.querySelector('span[aria-hidden="true"]')?.textContent).toBe('Show less');
+    expect(remainderToggle.querySelector('span[aria-hidden="true"]')?.textContent).toBe(
+      'Show less'
+    );
     expect(remainderToggle.querySelector('.sr-only')?.textContent).toBe('Show first 5 columns');
   });
 });
