@@ -70,13 +70,6 @@ forbiddenImplementationSurfaces:
   - apps/api/**
   - packages/@dvt/engine/**
   - packages/@dvt/adapter-*/**
-commandQueryRails:
-  - name: ProjectGraphNodeCardReadModel
-    type: query
-    dddOwner: CanvasGraphPresentation
-  - name: ConfigureCanvasDvtNode
-    type: command
-    dddOwner: DvtNodeAuthoringMetadata
 domainObjects:
   - name: DvtSubstraitJoinCondition
     type: value object
