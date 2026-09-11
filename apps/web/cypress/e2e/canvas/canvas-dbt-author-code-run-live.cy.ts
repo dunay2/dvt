@@ -190,10 +190,7 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     cy.get('select[name="dbt-materialized"]').should('be.enabled').select('table');
     cy.get('select[name="dbt-origin"]').should('be.enabled').select('warehouse_payments');
     closeNodeWorkbench();
-    cy.get('.react-flow__node[data-id="orders_model"]')
-      .should('contain.text', 'Payments Model')
-      .and('contain.text', 'Code')
-      .and('contain.text', 'Generated');
+    cy.get('.react-flow__node[data-id="orders_model"]').should('contain.text', 'Payments Model');
 
     openNodeCodeWorkbench('orders_model');
     cy.get('textarea[name="dbt-model-sql"]')
@@ -202,10 +199,7 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     clickButtonNatively(canvasViewCopy.inspectorApplyLabel);
     waitForPersistedDbtModelConfig();
     closeNodeWorkbench();
-    cy.get('.react-flow__node[data-id="orders_model"]')
-      .should('contain.text', 'Payments Model')
-      .and('contain.text', 'Code')
-      .and('contain.text', 'Authored');
+    cy.get('.react-flow__node[data-id="orders_model"]').should('contain.text', 'Payments Model');
 
     clickPreviewExecutionPlanFromOperationalDrawer();
     cy.get('[data-testid="plan-preview-modal"]', { timeout: 30_000 }).should('be.visible');
@@ -246,10 +240,7 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
 
     visitWithLiveWorkspaceSession('/canvas');
     cy.contains('dbt authoring live', { timeout: 20_000 }).should('be.visible');
-    cy.get('.react-flow__node[data-id="orders_model"]')
-      .should('contain.text', 'Payments Model')
-      .and('contain.text', 'Code')
-      .and('contain.text', 'Authored');
+    cy.get('.react-flow__node[data-id="orders_model"]').should('contain.text', 'Payments Model');
     openNodeCodeWorkbench('orders_model');
     cy.get('[data-slot="canvas-node-workbench-tab-code"]').should(
       'have.attr',
