@@ -383,6 +383,7 @@ export default function CanvasShell({
           sourceDataSampleInteractionLabel: canOpenDataSample
             ? copy.sourceDataSampleInteractionLabel
             : undefined,
+          onSelectNode: canOpenSemantic ? () => openSemanticTransform(node.id) : data.onSelectNode,
           onOpenNode: canOpenSemantic ? () => openSemanticTransform(node.id) : data.onOpenNode,
         };
 

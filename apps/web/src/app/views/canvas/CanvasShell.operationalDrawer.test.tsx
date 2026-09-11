@@ -88,7 +88,7 @@ describe('CanvasShell operational drawer registration', () => {
     expect(onRun).toHaveBeenCalledTimes(1);
   });
 
-  it('opens a real Substrait Transform in the semantic drawer without changing geometry', async () => {
+  it('opens a real Substrait Transform in the semantic drawer on selection without changing geometry', async () => {
     const fixture = buildSemanticWorkbenchFixture();
     const position = { x: 320, y: 140 };
     const onApplyNodeDraft = vi.fn();
@@ -117,10 +117,10 @@ describe('CanvasShell operational drawer registration', () => {
       getCanvasShellState().canvasViewportProps?.nodesWithImpact as
         Array<{ position: { x: number; y: number }; data: Record<string, unknown> }> | undefined
     )?.[0];
-    expect(projectedNode?.data.onOpenNode).toBeTypeOf('function');
 
+    expect(projectedNode?.data.onSelectNode).toBeTypeOf('function');
     act(() => {
-      (projectedNode?.data.onOpenNode as (() => void) | undefined)?.();
+      (projectedNode?.data.onSelectNode as (() => void) | undefined)?.();
     });
 
     expect(useOperationalDrawerContributionStore.getState().activeTab).toBe('semantic');

@@ -147,6 +147,8 @@ export function projectCanvasNodeFlowAdapter({
     shouldShowTargetHandle: kindRegistration.allowsIncoming,
     portTone: NODE_ROLE_PORT_TONES[role],
     canAttachSchema: canMutateNodeCommands && typeof data.onAttachSchemaToNode === 'function',
+    selectNode:
+      typeof data.onSelectNode === 'function' ? () => data.onSelectNode?.(nodeId) : undefined,
     openNode: (): void => {
       if (typeof data.onOpenNode === 'function') {
         data.onOpenNode(nodeId);

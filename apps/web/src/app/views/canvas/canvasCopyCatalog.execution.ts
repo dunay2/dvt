@@ -496,7 +496,7 @@ export const canvasViewExecutionCopyByKey = {
   },
   operationalDrawerSemanticIdleMessage: {
     key: 'canvas.operationalDrawer.semanticIdleMessage',
-    fallback: 'Double-click a Substrait Transform to inspect its relational flow.',
+    fallback: 'Select a Substrait Transform to inspect its relational flow.',
   },
   operationalDrawerProblemsAriaLabel: {
     key: 'canvas.operationalDrawer.problemsAriaLabel',

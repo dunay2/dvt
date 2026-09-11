@@ -82,6 +82,34 @@ describe('CanvasNodeShell', () => {
     expect(openNode).toHaveBeenCalledOnce();
   });
 
+  it('activates the node on a body click without activating embedded controls', () => {
+    const selectNode = vi.fn();
+
+    act(() => {
+      root.render(
+        <CanvasNodeShell
+          contextMenuModel={CONTEXT_MENU_MODEL}
+          shouldShowSourceHandle={false}
+          shouldShowTargetHandle={false}
+          onContextMenuAction={vi.fn()}
+          onSelectNode={selectNode}
+        >
+          <button type="button" {...canvasNodeEmbeddedControlProps}>
+            Inline control
+          </button>
+          <div data-testid="node-body">Orders model</div>
+        </CanvasNodeShell>
+      );
+    });
+
+    act(() => {
+      fireEvent.click(container.querySelector('[data-testid="node-body"]')!);
+      fireEvent.click(container.querySelector('button')!);
+    });
+
+    expect(selectNode).toHaveBeenCalledOnce();
+  });
+
   it('does not enter the node when double-click starts on an embedded node control', () => {
     const openNode = vi.fn();
     const onContextMenuAction = vi.fn();
