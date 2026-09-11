@@ -70,7 +70,9 @@ describe('Canvas DBT model column handlers', () => {
       });
     });
 
-    const updatedSession = setDraftSession.mock.calls[0]?.[0];
+    const sessionUpdate = setDraftSession.mock.calls[0]?.[0];
+    const updatedSession =
+      typeof sessionUpdate === 'function' ? sessionUpdate(draftSession) : sessionUpdate;
     const updatedModel = updatedSession?.localNodeCatalog?.[model.id];
     expect(updatedModel).toBeDefined();
     if (updatedModel == null) {
@@ -112,7 +114,10 @@ describe('Canvas DBT model column handlers', () => {
       });
     });
 
-    const updatedModel = setDraftSession.mock.calls[0]?.[0]?.localNodeCatalog?.[model.id];
+    const sessionUpdate = setDraftSession.mock.calls[0]?.[0];
+    const updatedSession =
+      typeof sessionUpdate === 'function' ? sessionUpdate(draftSession) : sessionUpdate;
+    const updatedModel = updatedSession?.localNodeCatalog?.[model.id];
     expect(updatedModel).toBeDefined();
     if (updatedModel != null) {
       expect(createDbtNodeAuthoringMetadata(updatedModel).projectionColumns).toEqual([
