@@ -35,7 +35,12 @@ export function resolveDvtTerminalTransformClosure(input: {
 
   const selectedNodes = selectExact(draft.nodes, input.selectedNodeIds, 'node');
   const selectedEdges = selectExact(draft.edges, input.selectedEdgeIds, 'edge');
-  const source = selectedNodes.find((node) => node.kind === 'dvt:source' && node.role === 'input');
+  const source = selectedNodes.find(
+    (node) =>
+      (node.pluginId === 'dvt' || node.pluginId === 'dvt.warehouse-source') &&
+      node.kind === 'dvt:source' &&
+      node.role === 'input'
+  );
   const transform = selectedNodes.find(
     (node) => node.pluginId === 'dvt' && node.kind === 'transform' && node.role === 'transform'
   );
@@ -46,6 +51,10 @@ export function resolveDvtTerminalTransformClosure(input: {
     selectedNodes.some((node) => node.id !== source.id && node.id !== transform.id)
   ) {
     throw new Error('Selection must contain exactly one DVT Source and one DVT Transform.');
+  }
+
+  if (draft.edges.some((candidate) => candidate.sourceId === transform.id)) {
+    throw new Error('Selected DVT Transform must be terminal in the protected Canvas.');
   }
 
   const edge = selectedEdges[0]!;

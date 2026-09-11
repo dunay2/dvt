@@ -175,6 +175,54 @@ describe('DvtOperationalWorkloadProjector', () => {
     ],
     ['closed execution gate', () => input({ draft: draft({ executionGate: 'closed' }) })],
     [
+      'non-terminal Transform',
+      () => {
+        const base = draft();
+        return input({
+          draft: {
+            ...base,
+            nodeIds: [...base.nodeIds, 'downstream-a'],
+            nodePositions: { ...base.nodePositions, 'downstream-a': { x: 400, y: 0 } },
+            nodes: [
+              ...base.nodes,
+              {
+                id: 'downstream-a',
+                name: 'Downstream',
+                pluginId: 'dvt',
+                kind: 'transform',
+                role: 'transform',
+                status: 'idle',
+                tags: [],
+              },
+            ],
+            edges: [
+              ...base.edges,
+              {
+                id: 'transform-downstream',
+                sourceId: 'transform-a',
+                targetId: 'downstream-a',
+                relation: 'lineage',
+              },
+            ],
+          },
+        });
+      },
+    ],
+    [
+      'foreign Source plugin',
+      () => {
+        const base = draft();
+        return input({
+          draft: {
+            ...base,
+            nodes: base.nodes.map((node) =>
+              node.id === 'source-a' ? { ...node, pluginId: 'foreign-source' } : node
+            ),
+          },
+        });
+      },
+    ],
+    [
       'reversed dependency',
       () =>
         input({
