@@ -15,6 +15,7 @@ task_id: GH-2784
 - Planning DB architecture designs and the existing `PreviewPlan`, `CompilePlan`
   and `StartRun` command rails
 - `docs/architecture/command-query-rail-governance.md`
+- [Fowler opportunity planning governance](../../../../architecture/fowler-opportunity-planning-governance.md)
 - `docs/architecture/system/subsystems/semantic-transformation/index.md`
 - `docs/architecture/components/planner/execution-selection-component.md`
 - `docs/architecture/components/planner/executable-subgraph-derivation-component.md`
