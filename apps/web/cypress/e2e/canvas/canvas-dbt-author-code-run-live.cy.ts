@@ -241,7 +241,7 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
       });
     });
 
-    cy.contains(/^Run /, { timeout: 20_000 }).should('exist');
+    cy.get('[data-slot="run-detail-tabs"]', { timeout: 20_000 }).should('exist');
 
     const workingTreePath = 'models/payments_model.sql';
 
