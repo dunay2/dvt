@@ -1,0 +1,22 @@
+---
+id: R-20260911-TERMINAL-TRANSFORM-PREVIEW
+title: Persisted terminal Transform Preview may outlive executor capability posture
+status: Open
+date: 2026-09-11
+owners:
+  - apps/api
+  - packages/@dvt/planner
+severity: Medium
+probability: Low
+---
+mitigation:
+  summary: >
+    Preview fails closed with MISSING_CAPABILITY and keeps Start Run disabled. The browser cannot
+    provide SQL, Substrait bytes, workload payloads, or planner graph semantics. The persisted plan
+    and SQL artifact retain exact hashes and protected Canvas provenance.
+  risk: >
+    A persisted INVALID Preview plan cannot silently become executable when #2723 adds the executor;
+    it requires a fresh governed admission decision.
+  follow_up:
+    - Issue #2723 must add the real executor and a fresh-admission lifecycle test before Run is enabled.
+    - Issue #2784 remains open for the wider execution and Sink acceptance.

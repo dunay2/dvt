@@ -81,6 +81,8 @@ export const canvasViewExecutionCopyEs = {
   planPreviewProvenanceTitle: 'Procedencia',
   planPreviewDbtProvenanceCaption:
     'Revisión autoritativa del proyecto dbt y destino de ejecución controlado por el servidor.',
+  planPreviewDvtProvenanceCaption:
+    'Autoridad protegida del Canvas usada para derivar la carga ejecutable.',
   planPreviewRepositoryProvenanceCaption:
     'Artefactos del repositorio usados para generar la vista previa.',
   planPreviewCanvasLabel: 'Canvas',

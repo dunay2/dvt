@@ -1,6 +1,10 @@
 import { z } from 'zod';
 
 import {
+  DVT_POSTGRES_OPERATIONAL_WORKLOAD_REQUIRED_CAPABILITY,
+  DvtOperationalWorkloadContractV1,
+} from '../contracts/planner/DvtOperationalWorkload.v1.js';
+import {
   ACQUIRE_HTTP_JSON_ARTIFACT_REQUIRED_CAPABILITY,
   HttpJsonArtifactStepTypeConfigSchema,
   validateHttpJsonArtifactPlanOwnership,
@@ -39,11 +43,24 @@ export function createBuiltInStepTypeEntries(
   defaultProfile: StepKindExecutionProfile
 ): ReadonlyMap<string, BuiltInStepTypeEntry> {
   const dbtProfile = withRequiredCapability(defaultProfile, DBT_STEP_REQUIRED_CAPABILITY);
+  const dvtOperationalProfile = withRequiredCapability(
+    { supportedAdapters: ['temporal'], requiredCapabilities: [] },
+    DVT_POSTGRES_OPERATIONAL_WORKLOAD_REQUIRED_CAPABILITY
+  );
 
   return new Map([
     [KNOWN_STEP_KINDS.DBT_MODEL, { schema: DbtStepTypeConfigSchema, profile: dbtProfile }],
     [KNOWN_STEP_KINDS.DBT_TEST, { schema: DbtStepTypeConfigSchema, profile: dbtProfile }],
     [KNOWN_STEP_KINDS.DBT_SNAPSHOT, { schema: DbtStepTypeConfigSchema, profile: dbtProfile }],
+    [
+      KNOWN_STEP_KINDS.DVT_POSTGRES_OPERATIONAL_WORKLOAD,
+      {
+        schema: DvtOperationalWorkloadContractV1.schema,
+        profile: dvtOperationalProfile,
+        validateContext: (config, context) =>
+          DvtOperationalWorkloadContractV1.validatePlanOwnership(config, context?.planOwnership),
+      },
+    ],
     [
       KNOWN_STEP_KINDS.ACQUIRE_HTTP_JSON_ARTIFACT,
       {

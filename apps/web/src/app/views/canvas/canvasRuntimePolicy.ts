@@ -51,7 +51,7 @@ export type CanvasRuntimeExecutionPolicy =
       strategy: Extract<
         CanvasExecutionStrategy,
         {
-          kind: 'planner_generic_preview' | 'dbt_project_file_preview';
+          kind: 'planner_generic_preview' | 'dbt_project_file_preview' | 'dvt_protected_preview';
         }
       >;
     }
@@ -142,7 +142,8 @@ function resolveRuntimeExecutionPolicy(
 
   if (
     activeRuntime.executionStrategy.kind === 'planner_generic_preview' ||
-    activeRuntime.executionStrategy.kind === 'dbt_project_file_preview'
+    activeRuntime.executionStrategy.kind === 'dbt_project_file_preview' ||
+    activeRuntime.executionStrategy.kind === 'dvt_protected_preview'
   ) {
     return {
       kind: 'executable',

@@ -10,6 +10,7 @@ import type { SessionContextPort } from '../../ports/sessionContext';
 import type { IWorkspaceFilesQueryPort } from '../../ports/workspace';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { buildCanvasDbtExecutionProjection } from './canvasDbtExecutionProjection';
+import { buildProtectedDvtPreviewProjection } from './canvasDvtPreviewProjection';
 import { buildDbtWorkspaceArtifacts } from './canvasDbtWorkspaceArtifacts';
 import { buildDbtProjectFilePreviewProvenance } from './dbtProjectFileExecutionStrategy';
 import { canvasViewCopy, formatCanvasCopyTemplate } from './copy';
@@ -25,7 +26,7 @@ export type CanvasPlanActionResult =
       writtenArtifactPaths: readonly string[];
     };
 
-function attachDbtSelectionIntentToOutcome(
+function attachSelectionIntentToOutcome(
   outcome: PlanPreviewOutcome,
   selection: {
     readonly selectionMode: 'explicit' | 'workspace';
@@ -101,6 +102,41 @@ export async function executeCanvasPlanAction({
   }
 
   try {
+    if (executionStrategy.kind === 'dvt_protected_preview') {
+      if (graphDraftCanvasId == null) {
+        return {
+          ok: false,
+          message: canvasViewCopy.planGraphAuthorityRefusedMessage,
+        };
+      }
+      const dvtProjection = buildProtectedDvtPreviewProjection({
+        canvasId: graphDraftCanvasId,
+        canonicalNodes,
+        canonicalEdges,
+        selectionIntent,
+        workspaceNodeIds,
+      });
+      if (!dvtProjection.ok) {
+        return { ok: false, message: dvtProjection.message };
+      }
+      const previewOutcome = await plansService.previewPlan({
+        previewProfile: executionStrategy.previewProfile,
+        selection: dvtProjection.selection,
+        context: sessionContext.buildRunContext('preview_context'),
+        provenance: {
+          kind: 'dvt-protected-workspace-graph',
+          canvasId: graphDraftCanvasId,
+        },
+        persist: true,
+      });
+      return {
+        ok: true,
+        draftSignature: dvtProjection.draftSignature,
+        previewOutcome: attachSelectionIntentToOutcome(previewOutcome, dvtProjection),
+        writtenArtifactPaths: [],
+      };
+    }
+
     const plannerProjection = buildCanvasDbtExecutionProjection({
       strategy: executionStrategy,
       canonicalNodes,
@@ -187,7 +223,7 @@ export async function executeCanvasPlanAction({
     return {
       ok: true,
       draftSignature: plannerProjection.draftSignature,
-      previewOutcome: attachDbtSelectionIntentToOutcome(previewOutcome, plannerProjection),
+      previewOutcome: attachSelectionIntentToOutcome(previewOutcome, plannerProjection),
       writtenArtifactPaths,
     };
   } catch (error) {

@@ -187,6 +187,7 @@
   "workspace_observability_otel": ["packages/@dvt/observability-otel/**"],
   "workspace_plan_interpreter": ["packages/@dvt/plan-interpreter/**"],
   "workspace_plan_verifier": ["packages/@dvt/plan-verifier/**"],
+  "workspace_postgres_projection": ["packages/@dvt/postgres-projection/**"],
   "workspace_planner": ["packages/@dvt/planner/**"],
   "workspace_run_domain": ["packages/@dvt/run-domain/**"],
   "workspace_state_store": ["packages/@dvt/state-store/**"],

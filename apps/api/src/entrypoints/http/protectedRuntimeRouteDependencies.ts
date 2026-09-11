@@ -7,6 +7,8 @@ import type { IObservability } from '@dvt/observability';
 
 import { CancelRunUseCase } from '../../application/services/cancelRunUseCase.js';
 import { CompilePlanUseCase } from '../../application/services/CompilePlanUseCase.js';
+import { DvtOperationalWorkloadProjector } from '../../application/services/dvtOperationalWorkloadProjector.js';
+import { DvtPostgresTargetProjectionPublisher } from '../../application/services/dvtPostgresTargetProjectionPublisher.js';
 import { GetCostAttributionSummaryUseCase } from '../../application/services/getCostAttributionSummaryUseCase.js';
 import { GetRunEventsUseCase } from '../../application/services/getRunEventsUseCase.js';
 import { GetRunStatusUseCase } from '../../application/services/getRunStatusUseCase.js';
@@ -15,6 +17,7 @@ import { ListRunsUseCase } from '../../application/services/listRunsUseCase.js';
 import { PreviewPlanUseCase } from '../../application/services/PreviewPlanUseCase.js';
 import { PreviewWarehouseSourceObjectRowsUseCase } from '../../application/services/previewWarehouseSourceObjectRowsUseCase.js';
 import { RecoverRunUseCase } from '../../application/services/recoverRunUseCase.js';
+import { ResolveAuthorizedDvtPreviewSelectionService } from '../../application/services/resolveAuthorizedDvtPreviewSelection.js';
 import { ResolveAuthorizedExecutableSubgraphService } from '../../application/services/resolveAuthorizedExecutableSubgraph.js';
 import { ResolveAuthorizedPreviewSelectionService } from '../../application/services/resolveAuthorizedPreviewSelection.js';
 import { RunStartDispatchResolver } from '../../application/services/runStartDispatchResolver.js';
@@ -95,17 +98,32 @@ export function buildProtectedRuntimeRouteDependencies(
       credentialResolver: protectedModule.postgresCredentialResolver,
     }),
   });
+  const previewGraphDraftResolver = new ResolveAuthorizedExecutableSubgraphService({
+    planner: protectedModule.planner,
+    workspaceGraphDraftStore: protectedModule.workspaceGraphDraftStore,
+  });
+  const cas = protectedModule.contentAddressedArtifactRuntime;
+  const dvtPreviewSelectionResolver =
+    cas === undefined
+      ? undefined
+      : new ResolveAuthorizedDvtPreviewSelectionService({
+          graphDraftResolver: previewGraphDraftResolver,
+          targetProjectionPublisher: new DvtPostgresTargetProjectionPublisher({
+            artifactStore: cas.artifactStore,
+            locateArtifact: cas.locateArtifact,
+          }),
+          workloadProjector: new DvtOperationalWorkloadProjector(),
+        });
+  const previewSelectionResolver = new ResolveAuthorizedPreviewSelectionService({
+    graphDraftResolver: previewGraphDraftResolver,
+    ...(dvtPreviewSelectionResolver === undefined ? {} : { dvtPreviewSelectionResolver }),
+    projectGraph: protectedModule.dbtProjectImport.projectGraphUseCase,
+  });
   const previewPlanUseCase = new PreviewPlanUseCase({
     planner: protectedModule.planner,
     planStore: protectedModule.planStore,
     planValidator: protectedModule.planValidator,
-    previewSelectionResolver: new ResolveAuthorizedPreviewSelectionService({
-      graphDraftResolver: new ResolveAuthorizedExecutableSubgraphService({
-        planner: protectedModule.planner,
-        workspaceGraphDraftStore: protectedModule.workspaceGraphDraftStore,
-      }),
-      projectGraph: protectedModule.dbtProjectImport.projectGraphUseCase,
-    }),
+    previewSelectionResolver,
   });
 
   return {

@@ -60,6 +60,52 @@ export function registerValidationPreviewSuite(): void {
       expect(request.selection).toEqual(selection);
     });
 
+    it('accepts protected DVT Preview without a browser-owned graph source', () => {
+      const request = parsePlanPreviewRequest({
+        previewProfile: 'planner-generic-v1',
+        context,
+        selection,
+        provenance: {
+          kind: 'dvt-protected-workspace-graph',
+          canvasId: 'canvas-orders',
+        },
+        persist: true,
+      });
+
+      expect(request).not.toHaveProperty('graphSource');
+    });
+
+    it.each([
+      {
+        previewProfile: 'planner-generic-v1',
+        context,
+        selection,
+        persist: true,
+      },
+      {
+        previewProfile: 'planner-generic-v1',
+        context,
+        selection,
+        provenance: {
+          kind: 'dbt-project-files',
+          canvasId: 'canvas-orders',
+        },
+        persist: true,
+      },
+      {
+        previewProfile: 'planner-generic-v1',
+        context,
+        selection,
+        graphSource,
+        provenance: {
+          kind: 'dvt-protected-workspace-graph',
+          canvasId: 'canvas-orders',
+        },
+        persist: true,
+      },
+    ])('rejects Preview inputs that cross the graph-authority boundary', (request) => {
+      expect(() => parsePlanPreviewRequest(request)).toThrow(ContractValidationError);
+    });
     it('rejects the retired SQL-first preview profile before compilation', () => {
       expect(PreviewProfileSchema.safeParse('transformation-sql-first-v2').success).toBe(false);
       expect(() =>

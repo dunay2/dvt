@@ -275,4 +275,33 @@ describe('PlanPreviewModal', () => {
     );
     expect(bodyText).not.toContain('vault:dbt/development');
   });
+  it('shows protected DVT Canvas provenance without repository fields', async () => {
+    const plan = {
+      ...mockExecutionPlan,
+      preview: {
+        ...mockExecutionPlan.preview!,
+        provenance: {
+          kind: 'dvt-protected-workspace-graph' as const,
+          canvasId: 'canvas-main',
+        },
+      },
+    } as PlanViewModel;
+
+    await act(async () => {
+      root.render(
+        <PlanPreviewModal
+          open={true}
+          onClose={vi.fn()}
+          plan={plan}
+          outcome={null}
+          messages={PLAN_PREVIEW_MESSAGES}
+          onStartRun={vi.fn()}
+        />
+      );
+    });
+
+    expect(document.body.textContent).toContain('Protected Canvas authority');
+    expect(document.querySelector('[aria-label="Canvas"]')?.textContent).toBe('canvas-main');
+    expect(document.body.textContent).not.toContain('Project root');
+  });
 });

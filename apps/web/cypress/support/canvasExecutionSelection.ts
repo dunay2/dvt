@@ -25,11 +25,10 @@ export function getVisibleCanvasNode(nodeName: string): Cypress.Chainable<JQuery
 }
 
 export function openCanvasNodeOperations(nodeName: string): void {
-  getVisibleCanvasNode(nodeName).find('[data-slot="canvas-node-shell"]').click('center');
   getVisibleCanvasNode(nodeName)
-    .find('[data-slot="graph-node-card-actions"]')
-    .should('be.visible')
-    .click();
+    .find('[data-slot="canvas-node-shell"]')
+    .should('exist')
+    .rightclick('center', { force: true });
   cy.get('[data-slot="canvas-node-context-menu"]').should('be.visible');
 }
 

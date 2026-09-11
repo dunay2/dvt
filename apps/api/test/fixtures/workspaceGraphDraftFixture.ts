@@ -128,7 +128,7 @@ export function buildCanonicalSemanticWorkspaceGraphDraft(): WorkspaceGraphAutho
         ? {
             ...node,
             pluginId: 'dvt',
-            kind: 'dvt:transform',
+            kind: 'transform',
             metadata: {
               transformAuthoring: {
                 version: 'v1',
@@ -139,6 +139,114 @@ export function buildCanonicalSemanticWorkspaceGraphDraft(): WorkspaceGraphAutho
           }
         : node
     ),
+  };
+}
+
+export function buildDvtTerminalTransformPreviewDraft(): WorkspaceGraphAuthoringDraft {
+  const connectionRef = {
+    schemaVersion: 'connection-ref.v1',
+    connectionId: 'local-postgres-proof',
+    provider: 'postgres',
+  } as const;
+  const connectedSourceRef = {
+    schemaVersion: 'connected-source-ref.v1',
+    connectionRef,
+    sourceObjectId: 'raw.orders',
+  } as const;
+  const semanticDocument = {
+    schemaVersion: DVT_SUBSTRAIT_SEMANTIC_DOCUMENT_SCHEMA_VERSION,
+    profile: DVT_SUBSTRAIT_PROFILE_REF_V1,
+    semanticPlan: {
+      encoding: DVT_SUBSTRAIT_PLAN_ENCODING,
+      bytesBase64:
+        'GkUSQwo3OjUKBxIDCgEAKAISKgooCgIoARITCghvcmRlcl9pZBIHCgO6AgAYAjoNCgNyYXcKBm9yZGVycxIIb3JkZXJfaWQyJxBlKiNkdnQtdnR4Mi1jb25uZWN0ZWQtZmllbGQtcHJvamVjdGlvbg==',
+      sha256: '08a7b347a2d2f5cc35301db36e65d8cbe01601f6b4bebe3053110abfffd89b5e',
+    },
+    sidecar: {
+      schemaVersion: DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION,
+      semanticPlanSha256: '08a7b347a2d2f5cc35301db36e65d8cbe01601f6b4bebe3053110abfffd89b5e',
+      relations: [
+        {
+          relationId: 'dvt_rel_01a08eae-fa06-7c41-97fc-a19ddd0226c1',
+          relAnchor: 1,
+          sourceRef: connectedSourceRef,
+          displayName: 'orders',
+        },
+        {
+          relationId: 'dvt_rel_01a08eae-fa06-7c9e-bb75-180ec3ec28f8',
+          relAnchor: 2,
+        },
+      ],
+      fields: [
+        {
+          fieldId: 'dvt_fld_01a08eae-fa06-7583-9bc6-a764e0223536',
+          relationId: 'dvt_rel_01a08eae-fa06-7c41-97fc-a19ddd0226c1',
+          outputOrdinal: 0,
+          displayName: 'order_id',
+        },
+        {
+          fieldId: 'dvt_fld_01a08eae-fa06-7c84-8a9e-2f5b90c1d743',
+          relationId: 'dvt_rel_01a08eae-fa06-7c9e-bb75-180ec3ec28f8',
+          sourceFieldId: 'dvt_fld_01a08eae-fa06-7583-9bc6-a764e0223536',
+          outputOrdinal: 0,
+          displayName: 'order_id',
+        },
+      ],
+    },
+  } satisfies DvtSubstraitSemanticDocumentV1;
+
+  return {
+    canvas: {
+      id: 'dvt-terminal-preview-canvas',
+      kind: 'transformation',
+      title: 'Terminal Transform Preview',
+    },
+    nodeIds: ['source-orders', 'transform-orders'],
+    nodePositions: {
+      'source-orders': { x: 0, y: 0 },
+      'transform-orders': { x: 240, y: 0 },
+    },
+    nodes: [
+      {
+        id: 'source-orders',
+        name: 'Orders',
+        pluginId: 'dvt.warehouse-source',
+        kind: 'dvt:source',
+        role: 'input',
+        status: 'success',
+        tags: ['source'],
+        metadata: {
+          schema: 'raw',
+          tableName: 'orders',
+          connectedSourceRef,
+          columns: [{ name: 'order_id', type: 'integer' }],
+        },
+      },
+      {
+        id: 'transform-orders',
+        name: 'Orders projection',
+        pluginId: 'dvt',
+        kind: 'transform',
+        role: 'transform',
+        status: 'idle',
+        tags: [],
+        metadata: {
+          transformAuthoring: {
+            version: 'v1',
+            mode: 'substrait',
+            semanticDocument,
+          },
+        },
+      },
+    ],
+    edges: [
+      {
+        id: 'source-transform',
+        sourceId: 'source-orders',
+        targetId: 'transform-orders',
+        relation: 'lineage',
+      },
+    ],
   };
 }
 

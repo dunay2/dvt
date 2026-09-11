@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-09-09",
+  "generated": "2026-09-11",
   "repo": {
     "sha": "local"
   },
@@ -1103,7 +1103,7 @@
         "Resolve authority on the server and return a discriminated outcome for the one mutated authority.",
         "Serialize mutations per scoped path and publish writes through atomic replacement.",
         "The client names semantic identities; the server owns source patches.",
-        "Use one discriminated provenance contract for transformation Git artifacts and file-authoritative dbt projects.",
+        "Use one discriminated provenance contract for protected DVT drafts, transformation Git artifacts, and file-authoritative dbt projects.",
         "Validation is read-only; import requires its content-addressed receipt and an unbound Canvas.",
         "Version graph-draft and dbt-project-files authority outside WorkspaceGraphAuthoringDraft.v1.",
         "Visual description edits carry a content-addressed proposal and never expose a generic node update."
@@ -1164,6 +1164,7 @@
         "Attach typed evidence from one admission-group collection.",
         "Bind catalog entries to exact core or official extension identities.",
         "Bind exact pinned Plan bytes to one identity-only DVT sidecar.",
+        "Bind terminal Transform Preview to the exact protected graph, semantic plan, target SQL projection, and governed connection.",
         "Compose one catalog from standard candidates, admissions, and product gaps.",
         "Export the pinned Substrait profile, stable authoring bindings, and single semantic capability catalog through one bounded public contract surface.",
         "Fail closed when persisted bytes are not one decodable Plan at the pinned version.",
@@ -1178,6 +1179,7 @@
         "Validate stable FieldId hierarchy against the current structural binding independently from document transport. FieldId/relationId own logical identity; outputOrdinal is only the current sibling position and must never be used to mint or repair identity."
       ],
       "implemented_by": [
+        "packages/@dvt/contracts/src/contracts/planner/DvtOperationalWorkload.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitAuthoringIdentity.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityAdmission.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts",

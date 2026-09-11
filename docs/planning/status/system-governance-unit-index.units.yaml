@@ -35,6 +35,26 @@ units:
       - docs/planning/status/system-operations-inventory-20260501.md
     fowlerSignals:
       - coverage refinement
+  - id: SYS-ADAPTERS-POSTGRES-PROJECTION
+    name: PostgreSQL semantic projection package
+    parent: SYS-ADAPTERS-ROOT
+    level: source
+    status: review
+    ownedConcern: Project admitted DVT semantics into deterministic PostgreSQL target SQL.
+    publicApi:
+      - packages/@dvt/postgres-projection/src/index.ts
+    owns:
+      - packages/@dvt/postgres-projection/**
+    childrenRequired: false
+    dddOwner: ADP
+    cqRails: PreviewPlan target projection
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/vtx2-generic-execution-workload-projection-plan-20260903.md
+      - docs/evidence/ED-20260911-terminal-transform-preview.md
+    fowlerSignals:
+      - package boundary
+      - deterministic target projection
   - id: SYS-ADAPTERS-TEMPORAL-DBT-PLUGIN
     name: Temporal DBT plugin package
     parent: SYS-ADAPTERS-ROOT

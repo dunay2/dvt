@@ -128,6 +128,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Persisted plan decisions could diverge from the authorized executable graph](R-20260801-PLAN-EXECUTION-DECISIONS.yaml)
 - [Persisted plan record contracts can drift back into dual truth and invalid state acceptance](R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml)
 - [Persisted plans may contain retired SQL-first step kinds](R-20260903-VTX2-RUNTIME-STEP-HARDCUT.yaml)
+- [Persisted terminal Transform Preview may outlive executor capability posture](R-20260911-TERMINAL-TRANSFORM-PREVIEW.yaml)
 - [Persisted Transform metadata may contain corrupt or unsupported Substrait semantics](R-20260903-VTX2-DURABLE-SEMANTIC-DOCUMENT.yaml)
 - [Plan admission matrix can drift during future schema or plan-version changes](R-20260429-PLAN-ADMISSION-DRIFT.yaml)
 - [Plan-store canonical JSON shape may drift from contract schema](R-20260405-PLAN-STORE-CANONICAL-SHAPE-DRIFT.yaml)

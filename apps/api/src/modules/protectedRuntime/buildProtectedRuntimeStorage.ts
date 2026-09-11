@@ -2,11 +2,18 @@
  * Owned concern: assemble the protected-runtime storage and stored-plan
  * dependencies for `apps/api`.
  */
+import path from 'node:path';
+
 import { PostgresCredentialBindingResolver } from '@dvt/adapter-postgres';
 import {
+  createDefaultS3ContentAddressedArtifactStore,
+  encodeS3TenantPathSegment,
+  FileContentAddressedArtifactStore,
+  locateFileContentAddressedArtifact,
   resolveRunExecutionContextArtifactStore as resolveCanonicalRunExecutionContextArtifactStore,
   S3RunExecutionContextReferenceStore,
   type DbtProjectBundleArtifactStore,
+  type IContentAddressedArtifactStore,
 } from '@dvt/artifacts';
 import { asIsoUtcString, createDefaultStepTypeRegistry } from '@dvt/contracts';
 import type { ExecutionPlan } from '@dvt/engine';
@@ -73,6 +80,10 @@ export function buildProtectedRuntimeStorage(deps: BuildProtectedRuntimeStorageD
       ? new S3RunExecutionContextReferenceStore({ bucket: runExecutionContextStore.bucket })
       : undefined;
   const workspaceFilesRoot = resolveWorkspaceFilesRoot(deps.env);
+  const contentAddressedArtifactRuntime = resolveContentAddressedArtifactRuntime(
+    deps.env,
+    workspaceFilesRoot
+  );
   const warehouseConnectionCatalog = new WorkspaceWarehouseConnectionCatalog({
     repository: new LocalWorkspaceMetadataFileRepository({ root: workspaceFilesRoot }),
   });
@@ -99,6 +110,7 @@ export function buildProtectedRuntimeStorage(deps: BuildProtectedRuntimeStorageD
     executablePlanResolver,
     systemClock,
     workspaceFilesRoot,
+    contentAddressedArtifactRuntime,
     warehouseConnectionCatalog,
     postgresCredentialResolver,
     dbtBundleStore,
@@ -137,4 +149,42 @@ function resolveDbtBundleArtifactStore(env: Env) {
   }
 
   return undefined;
+}
+
+export type ContentAddressedArtifactRuntime = {
+  readonly artifactStore: IContentAddressedArtifactStore;
+  readonly locateArtifact: (identity: {
+    readonly tenantId: string;
+    readonly sha256: string;
+  }) => string;
+};
+
+export function resolveContentAddressedArtifactRuntime(
+  env: Env,
+  workspaceFilesRoot: string
+): ContentAddressedArtifactRuntime | undefined {
+  if (env.DVT_CAS_BACKEND === 's3') {
+    const bucket = env.DVT_CAS_S3_BUCKET;
+    if (bucket === undefined) {
+      throw new Error('DVT_CAS_S3_BUCKET is required when DVT_CAS_BACKEND=s3');
+    }
+    return {
+      artifactStore: createDefaultS3ContentAddressedArtifactStore(),
+      locateArtifact: ({ tenantId, sha256 }) =>
+        's3://' + bucket + '/tenants/' + encodeS3TenantPathSegment(tenantId) + '/' + sha256,
+    };
+  }
+
+  if (env.DVT_CAS_BACKEND === undefined && env.NODE_ENV === 'production') {
+    return undefined;
+  }
+
+  const rootPath = path.resolve(
+    env.DVT_CAS_FILE_ROOT ?? path.join(workspaceFilesRoot, '.dvt', 'cas')
+  );
+  return {
+    artifactStore: new FileContentAddressedArtifactStore({ rootPath }),
+    locateArtifact: ({ tenantId, sha256 }) =>
+      locateFileContentAddressedArtifact({ rootPath, tenantId, sha256 }),
+  };
 }

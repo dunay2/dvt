@@ -39,6 +39,12 @@
       "@dvt/planner/*": ["./packages/@dvt/planner/src/*"],
       "@dvt/plan-verifier": ["./packages/@dvt/plan-verifier/src/index.ts"],
       "@dvt/plan-verifier/*": ["./packages/@dvt/plan-verifier/src/*"],
+      "@dvt/postgres-projection": [
+        "./packages/@dvt/postgres-projection/src/index.ts"
+      ],
+      "@dvt/postgres-projection/*": [
+        "./packages/@dvt/postgres-projection/src/*"
+      ],
       "@dvt/plan-interpreter": [
         "./packages/@dvt/plan-interpreter/src/index.ts"
       ],

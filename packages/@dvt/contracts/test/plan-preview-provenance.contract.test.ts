@@ -41,6 +41,21 @@ describe('PlanPreviewProvenance.v1', () => {
     expect(PlanPreviewProvenanceSchema.parse(DBT_PROVENANCE)).toEqual(DBT_PROVENANCE);
   });
 
+  it('accepts protected DVT graph provenance without browser graph semantics', () => {
+    const provenance = {
+      kind: PLAN_PREVIEW_PROVENANCE_KIND.dvtProtectedWorkspaceGraph,
+      canvasId: 'canvas-orders',
+    } as const;
+
+    expect(PlanPreviewProvenanceSchema.parse(provenance)).toEqual(provenance);
+  });
+
+  it.each([
+    { kind: 'dvt-protected-workspace-graph', canvasId: '' },
+    { kind: 'dvt-protected-workspace-graph', canvasId: 'canvas-orders', draftRevision: 'client' },
+  ])('rejects invalid protected DVT graph provenance', (provenance) => {
+    expect(PlanPreviewProvenanceSchema.safeParse(provenance).success).toBe(false);
+  });
   it('accepts transformation provenance only under its explicit discriminator', () => {
     const provenance = {
       kind: PLAN_PREVIEW_PROVENANCE_KIND.transformationGitArtifacts,

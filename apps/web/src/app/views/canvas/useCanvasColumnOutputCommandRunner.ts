@@ -1,5 +1,5 @@
 /** Owned concern: serialize Canvas column-output commands over the latest draft session. */
-import { useCallback, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 
 import type {
@@ -168,5 +168,5 @@ export function useCanvasColumnOutputCommandRunner({
     [canonicalNodesById, runCommand]
   );
 
-  return { toggleOutput, reorderOutput };
+  return useMemo(() => ({ toggleOutput, reorderOutput }), [reorderOutput, toggleOutput]);
 }

@@ -14,6 +14,7 @@ import {
 } from './transformationGraphValidation';
 import { formatTransformationGraphValidationSummary } from './canvasCopyFormatting';
 import { buildCanvasDbtExecutionProjection } from './canvasDbtExecutionProjection';
+import { buildProtectedDvtPreviewProjection } from './canvasDvtPreviewProjection';
 import { isDbtProjectFilePreviewProvenanceCurrent } from './dbtProjectFileExecutionStrategy';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 import type { PlanPreviewOutcome } from '../../ports/plans';
@@ -21,6 +22,7 @@ import { projectCanvasPreviewOutcome } from './canvasPreviewOutcomeProjection';
 import type { ObjectFilePostgresExecutionScope } from './objectFilePostgresAuthoringModel';
 
 type DeriveCanvasExecutionStateArgs = {
+  graphDraftCanvasId?: string | null;
   canRun: boolean;
   executionStrategy: CanvasExecutionStrategy | null;
   currentPlan: PlanViewModel | null;
@@ -64,6 +66,7 @@ function forceReadinessBlocker(
 }
 
 export function deriveCanvasExecutionState({
+  graphDraftCanvasId,
   canRun,
   executionStrategy,
   currentPlan,
@@ -99,13 +102,27 @@ export function deriveCanvasExecutionState({
         executionScope,
       })
     : null;
+  const usesProtectedDvtPreview = executionStrategy?.kind === 'dvt_protected_preview';
+  const dvtPreviewProjection = usesProtectedDvtPreview
+    ? buildProtectedDvtPreviewProjection({
+        canvasId: graphDraftCanvasId ?? null,
+        canonicalNodes,
+        canonicalEdges,
+        selectionIntent,
+        workspaceNodeIds,
+      })
+    : null;
   const activeDraftSignature =
     dbtPlannerProjection?.ok === true
       ? dbtPlannerProjection.draftSignature
-      : transformationValidation.draftSignature;
+      : dvtPreviewProjection?.ok === true
+        ? dvtPreviewProjection.draftSignature
+        : transformationValidation.draftSignature;
   const isExecutableGraphReady = usesDbtPlanner
     ? dbtPlannerProjection?.ok === true
-    : transformationValidation.valid;
+    : usesProtectedDvtPreview
+      ? dvtPreviewProjection?.ok === true
+      : transformationValidation.valid;
   const canPlanGraph =
     executionStrategy != null &&
     executionStrategy.kind !== 'not_executable' &&
@@ -141,10 +158,12 @@ export function deriveCanvasExecutionState({
     !isExecutableGraphReady
       ? dbtPlannerProjection?.ok === false
         ? dbtPlannerProjection.message
-        : formatTransformationGraphValidationSummary(
-            transformationValidation.summaryCode,
-            applicationLanguage
-          )
+        : dvtPreviewProjection?.ok === false
+          ? dvtPreviewProjection.message
+          : formatTransformationGraphValidationSummary(
+              transformationValidation.summaryCode,
+              applicationLanguage
+            )
       : null;
   const planRunReadinessSource = observePlanRunReadiness({
     canRun,

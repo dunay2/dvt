@@ -15,6 +15,7 @@ const {
   resolveLiveProofDbtExecutable,
   resolveLiveProofDatabaseUrl,
   resolveLiveProofCypressRuntime,
+  resolveLiveProofCypressHeaded,
   resolveLiveProofSpecPath,
   seedSelectedClosureLocalWarehouseProof,
 } = require('./run-selected-closure-live-proof.cjs');
@@ -172,6 +173,29 @@ test('buildLiveProofCypressNativeInvocation targets the already running host sta
   );
 });
 
+test('buildLiveProofCypressNativeInvocation opens Chrome only when headed is explicit', () => {
+  const invocation = buildLiveProofCypressNativeInvocation({
+    apiPort: 3300,
+    webPort: 4174,
+    apiBearerToken: 'proof-token',
+    specPath: '/repo/apps/web/cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts',
+    workspaceScope: {
+      tenantId: 'tenant',
+      projectId: 'project',
+      environmentId: 'dev',
+    },
+    headed: true,
+  });
+
+  assert.deepEqual(invocation.args.slice(-5), [
+    '--browser',
+    'chrome',
+    '--headed',
+    '--spec',
+    'cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts',
+  ]);
+});
+
 test('live proof selects Docker by default and native Cypress only when explicitly requested', () => {
   assert.equal(resolveLiveProofCypressRuntime({}), 'docker');
   assert.equal(
@@ -181,6 +205,22 @@ test('live proof selects Docker by default and native Cypress only when explicit
   assert.throws(
     () => resolveLiveProofCypressRuntime({ DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME: 'remote' }),
     /must be docker or native/
+  );
+});
+
+test('live proof keeps Chrome headless unless headed mode is explicit', () => {
+  assert.equal(resolveLiveProofCypressHeaded({}), false);
+  assert.equal(
+    resolveLiveProofCypressHeaded({ DVT_SELECTED_CLOSURE_CYPRESS_HEADED: 'false' }),
+    false
+  );
+  assert.equal(
+    resolveLiveProofCypressHeaded({ DVT_SELECTED_CLOSURE_CYPRESS_HEADED: 'true' }),
+    true
+  );
+  assert.throws(
+    () => resolveLiveProofCypressHeaded({ DVT_SELECTED_CLOSURE_CYPRESS_HEADED: 'yes' }),
+    /must be true or false/
   );
 });
 

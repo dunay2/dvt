@@ -42,6 +42,27 @@ type ExecutableSubgraphResolution =
       readonly rejection: ExecutableSubgraphSelectionRejection;
     };
 
+export type AuthorizedExecutableSubgraphResolution =
+  | {
+      readonly ok: true;
+      readonly value: ExecutableSubgraph & {
+        readonly decisionScopeNodeIds: readonly string[];
+        readonly authorizedDraft: {
+          readonly revision: string;
+          readonly draft: WorkspaceGraphAuthoringDraft;
+        };
+      };
+    }
+  | {
+      readonly ok: false;
+      readonly rejection: ExecutableSubgraphSelectionRejection;
+    };
+
+type ResolveExecutableSubgraphInput = {
+  readonly selection: ExecutionSelection;
+  readonly graphSource?: GenericGraphSourceV1;
+};
+
 export class ResolveAuthorizedExecutableSubgraphService {
   public constructor(
     private readonly deps: {
@@ -51,12 +72,20 @@ export class ResolveAuthorizedExecutableSubgraphService {
   ) {}
 
   public async execute(
-    input: {
-      readonly selection: ExecutionSelection;
-      readonly graphSource?: GenericGraphSourceV1;
-    },
+    input: ResolveExecutableSubgraphInput,
     context: AuthorizedCommandExecutionContext
   ): Promise<ExecutableSubgraphResolution> {
+    const result = await this.executeWithAuthorizedDraft(input, context);
+    if (!result.ok) return result;
+
+    const { authorizedDraft: _authorizedDraft, ...value } = result.value;
+    return { ok: true, value };
+  }
+
+  public async executeWithAuthorizedDraft(
+    input: ResolveExecutableSubgraphInput,
+    context: AuthorizedCommandExecutionContext
+  ): Promise<AuthorizedExecutableSubgraphResolution> {
     const projectId = context.scope.projectId?.value;
     const environmentId = context.scope.environmentId?.value;
     if (projectId === undefined || environmentId === undefined) {
@@ -127,6 +156,10 @@ export class ResolveAuthorizedExecutableSubgraphService {
         decisionScopeNodeIds: draft.nodes
           .map((node) => node.id)
           .sort((left, right) => left.localeCompare(right)),
+        authorizedDraft: {
+          revision: stored.revision,
+          draft,
+        },
       },
     };
   }
@@ -149,7 +182,10 @@ function projectExecutionDependencyDraft(
   };
 }
 
-function reject(cause: string, reason: string): ExecutableSubgraphResolution {
+function reject(
+  cause: string,
+  reason: string
+): Extract<AuthorizedExecutableSubgraphResolution, { readonly ok: false }> {
   return {
     ok: false,
     rejection: {

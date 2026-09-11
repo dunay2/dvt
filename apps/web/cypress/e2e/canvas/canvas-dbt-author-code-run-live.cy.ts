@@ -19,8 +19,8 @@ import {
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
 
-const AUTHORED_MODEL_SQL =
-  "select order_id, amount\nfrom {{ source('finance_warehouse', 'payments_final') }}";
+const GENERATED_ORDER_ID_PROJECTION = 'origin."order_id" as "order_id"';
+const GENERATED_AMOUNT_PROJECTION = 'origin."amount" as "amount"';
 const EXTERNAL_MODEL_SQL = 'select externally_edited_amount from protected_project_code\n';
 
 function openNodeWorkbench(nodeId: string): void {
@@ -38,13 +38,31 @@ function openNodeCodeWorkbench(nodeId: string): void {
     .find('[data-slot="canvas-node-shell"]')
     .dblclick();
   cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
-  cy.get('textarea[name="dbt-model-sql"]').should('be.enabled');
+  cy.get('[data-slot="canvas-node-workbench-tab-code"]').should('be.visible').click();
+  cy.get('[data-testid="monaco-code-viewer"]', { timeout: 30_000 }).should('be.visible');
+  cy.get('[data-testid="monaco-code-editor"]').should('not.exist');
 }
 
 function replaceInput(name: string, value: string): void {
   cy.get(`input[name="${name}"]`).should('be.enabled').clear().type(value);
 }
 
+function closeNodeWorkbench(): void {
+  cy.get('[data-slot="canvas-node-workbench-close"]').click();
+  cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
+}
+
+function expectGeneratedModelSql(): void {
+  cy.get('[data-testid="monaco-code-viewer"]')
+    .find('.view-lines')
+    .invoke('text')
+    .should((renderedCode) => {
+      const normalizedCode = renderedCode.replaceAll('\u00a0', ' ').replace(/\s+/g, ' ');
+      expect(normalizedCode).to.match(/source\(\s*'finance_warehouse'\s*,\s*'payments_final'\s*\)/);
+      expect(normalizedCode).to.contain(GENERATED_ORDER_ID_PROJECTION);
+      expect(normalizedCode).to.contain(GENERATED_AMOUNT_PROJECTION);
+    });
+}
 function clickCommandSlotNatively(slot: string): void {
   cy.get(`[data-slot="${slot}"]`)
     .should('be.enabled')
@@ -102,14 +120,12 @@ function waitForPersistedDbtModelConfig(attempt = 0): Cypress.Chainable<void> {
     const model = nodes?.find((node) => node.id === 'orders_model');
     const metadata = model?.metadata?.dbt as
       { materialized?: string; selectedSourceId?: string; packageName?: string } | undefined;
-    const config = model?.metadata?.config as { sql?: string } | undefined;
 
     if (
       model?.name === 'payments model' &&
       metadata?.materialized === 'table' &&
       metadata.selectedSourceId === 'warehouse_payments' &&
-      metadata.packageName === 'finance analytics' &&
-      config?.sql === AUTHORED_MODEL_SQL
+      metadata.packageName === 'finance analytics'
     ) {
       return;
     }
@@ -122,7 +138,7 @@ function waitForPersistedDbtModelConfig(attempt = 0): Cypress.Chainable<void> {
   });
 }
 
-function openLiveGraphProjectCodeFile(path: string): void {
+function openEditableDbtProjectCodeFile(path: string): void {
   cy.get('[data-slot="shell-workspace-menu-trigger"]', { timeout: 20_000 }).click();
   cy.get('[data-slot="canvas-workspace-open-project-code-command"]')
     .should('be.visible')
@@ -136,11 +152,11 @@ function openLiveGraphProjectCodeFile(path: string): void {
   })
     .should('be.visible')
     .click();
-  cy.get('[data-testid="monaco-code-viewer"]', { timeout: 30_000 }).should('be.visible');
-  cy.get('[data-testid="monaco-code-editor"]').should('not.exist');
+  cy.get('[data-testid="monaco-code-editor"]', { timeout: 30_000 }).should('be.visible');
+  cy.get('[data-testid="monaco-code-viewer"]').should('not.exist');
   cy.get('[data-slot="code-working-tree-status"]')
     .should('be.visible')
-    .and('contain.text', resolveCodeViewCopy().workingTreeGraphOwnedReadOnlyLabel);
+    .and('contain.text', resolveCodeViewCopy().workingTreeSynchronizedLabel);
 }
 
 describe('Canvas dbt authoring Code and Run live protected runtime', () => {
@@ -176,37 +192,28 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     replaceInput('dbt-source', 'finance warehouse');
     replaceInput('dbt-schema', 'warehouse raw');
     replaceInput('dbt-table', 'payments final');
-    clickButtonNatively('Apply');
+    clickButtonNatively(canvasViewCopy.inspectorApplyLabel);
     waitForPersistedWarehousePaymentsConfig();
+    closeNodeWorkbench();
 
     openNodeWorkbench('orders_model');
     replaceInput('node-name', 'payments model');
     replaceInput('dbt-package', 'finance analytics');
     cy.get('select[name="dbt-materialized"]').should('be.enabled').select('table');
     cy.get('select[name="dbt-origin"]').should('be.enabled').select('warehouse_payments');
-    clickButtonNatively('Apply');
-    cy.get('[data-slot="canvas-node-workbench-close"]').click();
-    cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
-    cy.get('.react-flow__node[data-id="orders_model"]')
-      .should('contain.text', 'Payments Model')
-      .and('contain.text', 'Code')
-      .and('contain.text', 'Generated');
+    closeNodeWorkbench();
+    waitForPersistedDbtModelConfig();
+    cy.get('.react-flow__node[data-id="orders_model"]').should('contain.text', 'Payments Model');
 
     openNodeCodeWorkbench('orders_model');
-    cy.get('textarea[name="dbt-model-sql"]')
-      .clear()
-      .type(AUTHORED_MODEL_SQL, { parseSpecialCharSequences: false, delay: 0 });
-    clickButtonNatively('Apply');
-    waitForPersistedDbtModelConfig();
-    cy.get('.react-flow__node[data-id="orders_model"]')
-      .should('contain.text', 'Payments Model')
-      .and('contain.text', 'Code')
-      .and('contain.text', 'Authored');
+    expectGeneratedModelSql();
+    closeNodeWorkbench();
+    cy.get('.react-flow__node[data-id="orders_model"]').should('contain.text', 'Payments Model');
 
     clickPreviewExecutionPlanFromOperationalDrawer();
     cy.get('[data-testid="plan-preview-modal"]', { timeout: 30_000 }).should('be.visible');
-    cy.contains('Execution Preview identity').should('be.visible');
-    cy.contains('Persistence evidence').scrollIntoView().should('be.visible');
+    cy.contains(canvasViewCopy.planPreviewIdentityTitle).should('be.visible');
+    cy.contains(canvasViewCopy.planPreviewPersistenceTitle).scrollIntoView().should('be.visible');
     cy.get('body').type('{esc}', { force: true });
     cy.get('[data-testid="plan-preview-modal"]').should('not.exist');
 
@@ -216,7 +223,8 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
 
       expect(content).to.contain("{{ config(materialized='table') }}");
       expect(content).to.contain("{{ source('finance_warehouse', 'payments_final') }}");
-      expect(content).to.contain('select order_id, amount');
+      expect(content).to.contain(GENERATED_ORDER_ID_PROJECTION);
+      expect(content).to.contain(GENERATED_AMOUNT_PROJECTION);
     });
 
     clickCommandSlotNatively('shell-run-command');
@@ -236,42 +244,43 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
       });
     });
 
-    cy.contains(/^Run /, { timeout: 20_000 }).should('exist');
+    cy.get('[data-slot="run-detail-tabs"]', { timeout: 20_000 }).should('exist');
 
     const workingTreePath = 'models/payments_model.sql';
 
     visitWithLiveWorkspaceSession('/canvas');
     cy.contains('dbt authoring live', { timeout: 20_000 }).should('be.visible');
-    cy.get('.react-flow__node[data-id="orders_model"]')
-      .should('contain.text', 'Payments Model')
-      .and('contain.text', 'Code')
-      .and('contain.text', 'Authored');
+    cy.get('.react-flow__node[data-id="orders_model"]').should('contain.text', 'Payments Model');
     openNodeCodeWorkbench('orders_model');
     cy.get('[data-slot="canvas-node-workbench-tab-code"]').should(
       'have.attr',
       'aria-selected',
       'true'
     );
-    cy.get('textarea[name="dbt-model-sql"]').should('have.value', AUTHORED_MODEL_SQL);
+    expectGeneratedModelSql();
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
-    openLiveGraphProjectCodeFile(workingTreePath);
+    openEditableDbtProjectCodeFile(workingTreePath);
     cy.get('[data-slot="canvas-contextual-workbench"]').within(() => {
-      cy.contains('button', 'Save').should('not.exist');
-      cy.get('[data-testid="monaco-code-viewer"]')
+      cy.get('button').should(($buttons) => {
+        const labels = [...$buttons].map((button) => button.textContent?.trim());
+        expect(labels).not.to.include.members(['Save', 'Guardar']);
+      });
+      cy.get('[data-testid="monaco-code-editor"]')
         .find('.view-lines')
         .should(($lines) => {
           const renderedCode = $lines
             .text()
             .replace(/\u00a0/g, ' ')
             .replace(/\s+/g, ' ');
-          expect(renderedCode).to.contain('select order_id, amount');
+          expect(renderedCode).to.contain(GENERATED_ORDER_ID_PROJECTION);
+          expect(renderedCode).to.contain(GENERATED_AMOUNT_PROJECTION);
         });
     });
     readLiveWorkspaceFile(workingTreePath).then((response) => {
       expect(response.status).to.equal(200);
-      expect(String((response.body as { content?: unknown }).content ?? '')).to.contain(
-        'select order_id, amount'
-      );
+      const content = String((response.body as { content?: unknown }).content ?? '');
+      expect(content).to.contain(GENERATED_ORDER_ID_PROJECTION);
+      expect(content).to.contain(GENERATED_AMOUNT_PROJECTION);
     });
     cy.get('[data-slot="canvas-contextual-workbench-close"]').should('be.visible').click();
     cy.get('[data-slot="canvas-contextual-workbench"]').should('not.exist');

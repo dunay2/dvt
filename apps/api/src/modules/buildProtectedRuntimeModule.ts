@@ -226,6 +226,7 @@ export async function buildProtectedRuntimeModule(
     canvasAuthoringAuthorityPolicy: canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityPolicy,
     dbtProjectImport,
     workspaceFilesRoot: storageRuntime.workspaceFilesRoot,
+    contentAddressedArtifactRuntime: storageRuntime.contentAddressedArtifactRuntime,
     warehouseConnectionCatalog: storageRuntime.warehouseConnectionCatalog,
     postgresCredentialResolver: storageRuntime.postgresCredentialResolver,
     workspaceGraphDraftCapabilityService:

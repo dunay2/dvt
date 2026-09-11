@@ -126,4 +126,40 @@ describe('evaluatePlanRoutePlanSource', () => {
       issue: { type: 'bad_request', reason: 'invalid_plan_source' },
     });
   });
+
+  it('allows protected DVT graphless input only when Preview opts into it', () => {
+    const input = {
+      provenance: {
+        kind: 'dvt-protected-workspace-graph',
+        canvasId: 'canvas-a',
+      },
+    };
+
+    expect(evaluatePlanRoutePlanSource(input)).toEqual({
+      ok: false,
+      issue: { type: 'bad_request', reason: 'invalid_plan_source' },
+    });
+    expect(evaluatePlanRoutePlanSource(input, { allowProtectedDvtGraph: true })).toEqual({
+      ok: true,
+      value: { kind: 'plannerBacked' },
+    });
+  });
+
+  it('rejects planRef combined with protected DVT graph authority', () => {
+    expect(
+      evaluatePlanRoutePlanSource(
+        {
+          planRef: VALID_PLAN_REF,
+          provenance: {
+            kind: 'dvt-protected-workspace-graph',
+            canvasId: 'canvas-a',
+          },
+        },
+        { allowProtectedDvtGraph: true }
+      )
+    ).toEqual({
+      ok: false,
+      issue: { type: 'bad_request', reason: 'conflicting_plan_inputs' },
+    });
+  });
 });

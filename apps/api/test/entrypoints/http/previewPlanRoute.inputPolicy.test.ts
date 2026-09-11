@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { previewPlanRoute } from '../../../src/entrypoints/http/previewPlanRoute.js';
 
@@ -84,6 +84,50 @@ describe('previewPlanRoute input policy', () => {
     expect(deps.planStore.storePlanArtifact).not.toHaveBeenCalled();
   });
 
+  it('accepts protected DVT provenance without browser graph semantics', async () => {
+    const reply = createReply();
+    const rejection = {
+      code: 'REJECTED' as const,
+      cause: 'dvt_preview_target_projection_failed',
+      reason: 'Projection unavailable in this fixture.',
+    };
+    const execute = vi.fn(async () => ({ ok: false as const, rejection }));
+    const deps = createPreviewDeps({
+      previewSelectionResolver: { execute },
+    });
+    const base = buildPreviewBody({
+      selection: { mode: 'upstream', nodeIds: ['transform-a'] },
+      provenance: {
+        kind: 'dvt-protected-workspace-graph',
+        canvasId: 'canvas-a',
+      },
+    });
+    const { graphSource: _graphSource, ...body } = base;
+
+    await previewPlanRoute(
+      createPreviewRequest({ id: 'req-preview-dvt', body }) as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(reply.statusCode).toBe(422);
+    expect(execute).toHaveBeenCalledWith(
+      {
+        selection: { mode: 'upstream', nodeIds: ['transform-a'] },
+        provenance: {
+          kind: 'dvt-protected-workspace-graph',
+          canvasId: 'canvas-a',
+        },
+      },
+      expect.objectContaining({
+        scope: expect.objectContaining({
+          projectId: expect.anything(),
+        }),
+      })
+    );
+    expect(deps.planner.buildPlan).not.toHaveBeenCalled();
+    expect(deps.planStore.storePlanArtifact).not.toHaveBeenCalled();
+  });
   it('returns 400 when previewProfile is missing or padded with whitespace', async () => {
     for (const body of [
       {

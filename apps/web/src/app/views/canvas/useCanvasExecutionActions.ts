@@ -13,6 +13,7 @@ import { useCanvasRunStartHandler } from './useCanvasRunStartHandler';
 import type { PlanPreviewOutcome } from '../../ports/plans';
 import { doesPreviewOutcomeOwnPlan } from './canvasPreviewOutcomeProjection';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { resolveCanvasPreviewExecutionStrategy } from './canvasPreviewExecutionStrategy';
 
 function normalizeExecutionEnvironmentId(
   environmentId: WorkspaceScope['environmentId'] | undefined
@@ -91,9 +92,19 @@ export function useCanvasExecutionActions({
     sessionContext,
     executionEnvironmentId,
   });
+  const resolvedExecutionStrategy = resolveCanvasPreviewExecutionStrategy({
+    graphDraftCanvasId,
+    registeredStrategy: executionStrategy,
+    canonicalNodes,
+    canonicalEdges,
+    selectionIntent,
+    workspaceNodeIds,
+    executionScope: executionSessionContext.getWorkspaceScopeSnapshot(),
+  });
   const executionState = deriveCanvasExecutionState({
+    graphDraftCanvasId,
     canRun,
-    executionStrategy,
+    executionStrategy: resolvedExecutionStrategy,
     currentPlan,
     lastPlannedDraftSignature,
     canonicalNodes,
@@ -132,7 +143,7 @@ export function useCanvasExecutionActions({
     canonicalEdges,
     canonicalNodes,
     plansService,
-    executionStrategy,
+    executionStrategy: resolvedExecutionStrategy,
     selectionIntent,
     sessionContext: executionSessionContext,
     shellFeedback,
@@ -148,7 +159,10 @@ export function useCanvasExecutionActions({
   });
 
   const handleStartRun = useCanvasRunStartHandler({
-    canRun: canRun && executionStrategy != null && executionStrategy.kind !== 'not_executable',
+    canRun:
+      canRun &&
+      resolvedExecutionStrategy != null &&
+      resolvedExecutionStrategy.kind !== 'not_executable',
     bottomDrawerVisible,
     currentPlan,
     executableGraphFailureMessage,

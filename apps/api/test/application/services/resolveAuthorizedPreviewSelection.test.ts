@@ -142,22 +142,76 @@ function buildProjection(overrides: Record<string, unknown> = {}): DbtProjectGra
 
 function buildService(projection = buildProjection()): {
   readonly graphDraftResolver: { readonly execute: ReturnType<typeof vi.fn> };
+  readonly dvtPreview: { readonly execute: ReturnType<typeof vi.fn> };
   readonly projectGraph: { readonly execute: ReturnType<typeof vi.fn> };
   readonly service: ResolveAuthorizedPreviewSelectionService;
 } {
   const graphDraftResolver = { execute: vi.fn() };
+  const dvtPreview = { execute: vi.fn() };
   const projectGraph = { execute: vi.fn(async () => projection) };
   return {
     graphDraftResolver,
+    dvtPreview,
     projectGraph,
     service: new ResolveAuthorizedPreviewSelectionService({
       graphDraftResolver: graphDraftResolver as never,
+      dvtPreviewSelectionResolver: dvtPreview as never,
       projectGraph: projectGraph as never,
     }),
   };
 }
 
 describe('ResolveAuthorizedPreviewSelectionService', () => {
+  it('delegates protected DVT Preview without accepting a browser graph', async () => {
+    const { service, dvtPreview, graphDraftResolver, projectGraph } = buildService();
+    const selection = parseExecutionSelection({ mode: 'upstream', nodeIds: ['transform-a'] });
+    const resolution = {
+      ok: true as const,
+      value: {
+        graphSource: {
+          kind: 'generic-graph-v1' as const,
+          sourceFamily: 'dvt-operational-workloads',
+          sourceVersion: '1.0',
+          nodes: [
+            {
+              nodeId: 'transform-a',
+              stepKind: 'DVT_POSTGRES_OPERATIONAL_WORKLOAD',
+              dependsOn: [],
+            },
+          ],
+        },
+        nodeIds: ['transform-a'],
+        decisionScopeNodeIds: ['transform-a'],
+        requestedRootNodeIds: ['transform-a'],
+      },
+    };
+    dvtPreview.execute.mockResolvedValue(resolution);
+
+    await expect(
+      service.execute(
+        {
+          selection,
+          provenance: {
+            kind: 'dvt-protected-workspace-graph',
+            canvasId: 'canvas-a',
+          },
+        },
+        buildContext()
+      )
+    ).resolves.toEqual(resolution);
+    expect(dvtPreview.execute).toHaveBeenCalledWith(
+      {
+        selection,
+        provenance: {
+          kind: 'dvt-protected-workspace-graph',
+          canvasId: 'canvas-a',
+        },
+      },
+      buildContext()
+    );
+    expect(graphDraftResolver.execute).not.toHaveBeenCalled();
+    expect(projectGraph.execute).not.toHaveBeenCalled();
+  });
   it('re-resolves dbt file Preview from the bound server projection without reading graph draft', async () => {
     const { service, projectGraph, graphDraftResolver } = buildService();
     const selection = parseExecutionSelection({ mode: 'explicit', nodeIds: [MODEL_ID] });
@@ -267,6 +321,7 @@ describe('ResolveAuthorizedPreviewSelectionService', () => {
     const graphDraftResolver = { execute: vi.fn(async () => graphDraftResult) };
     const service = new ResolveAuthorizedPreviewSelectionService({
       graphDraftResolver: graphDraftResolver as never,
+      dvtPreviewSelectionResolver: { execute: vi.fn() } as never,
       projectGraph: { execute: vi.fn() } as never,
     });
     const input = {

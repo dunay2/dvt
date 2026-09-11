@@ -275,6 +275,7 @@ export type CanvasViewCopy = {
   readonly planPreviewAuthorizedScopeLabel: string;
   readonly planPreviewProvenanceTitle: string;
   readonly planPreviewDbtProvenanceCaption: string;
+  readonly planPreviewDvtProvenanceCaption: string;
   readonly planPreviewRepositoryProvenanceCaption: string;
   readonly planPreviewCanvasLabel: string;
   readonly planPreviewProjectRootLabel: string;
