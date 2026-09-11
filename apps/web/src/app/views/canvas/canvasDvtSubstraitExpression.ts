@@ -130,7 +130,11 @@ export const dvtSubstraitExpression = {
     const literalType =
       literal.dataType === 'bool'
         ? ({ case: 'boolean', value: literal.value } as const)
-        : ({ case: literal.dataType, value: literal.value } as const);
+        : literal.dataType === 'string'
+          ? ({ case: 'string', value: literal.value } as const)
+          : literal.dataType === 'i64'
+            ? ({ case: 'i64', value: literal.value } as const)
+            : ({ case: 'fp64', value: literal.value } as const);
     return create(ExpressionSchema, {
       rexType: {
         case: 'literal',

@@ -815,6 +815,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     const draft = createDvtSubstraitStringInnerJoinDraft({
       left: {
         source: {
+          nodeId: 'source-active-customers',
           schema: 'public',
           table: 'customers',
           sourceRef: {
@@ -828,6 +829,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       },
       right: {
         source: {
+          nodeId: 'source-active-orders',
           schema: 'public',
           table: 'orders',
           sourceRef: {
@@ -961,6 +963,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     const draft = createDvtSubstraitStringInnerJoinDraft({
       left: {
         source: {
+          nodeId: 'source-normalized-orders',
           schema: 'public',
           table: 'orders',
           sourceRef: {
@@ -973,6 +976,7 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       },
       right: {
         source: {
+          nodeId: 'source-normalized-clients',
           schema: 'public',
           table: 'clients',
           sourceRef: {
