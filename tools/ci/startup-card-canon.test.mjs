@@ -87,7 +87,6 @@ const activePlanningEntrypoints = [
   'docs/planning/domains/planner-and-contracts.md',
   'docs/planning/domains/event-lifecycle-and-retention.md',
   'docs/planning/gaps/index.md',
-  'docs/planning/gaps/runtime-architecture-gap-register-20260331.md',
   'docs/planning/proposals/mandatory/frontend-and-ux/index.md',
   'docs/planning/proposals/mandatory/runtime-and-contracts/mw-c1-to-tf-c2-runtime-vertical-sequence-analysis-20260409.md',
   'scripts/sync-docs.cjs',
@@ -124,10 +123,15 @@ const retiredPlanningSurfaces = [
     pathPattern: /inventory-and-coverage\.md/i,
     namePattern: /Planning Inventory And Coverage/i,
   },
+  {
+    path: 'docs/planning/gaps/runtime-architecture-gap-register-20260331.md',
+    pathPattern: /docs\/planning\/gaps\/runtime-architecture-gap-register-20260331\.md/i,
+    namePattern: /a^/,
+  },
 ];
 
 const explicitRetirementLanguage =
-  /\b(?:no|not|never|retired|obsolete|removed|deleted|former|historical|history|replaced|superseded|deprecated)\b/i;
+  /\b(?:no|not|never|retired|obsolete|removed|deleted|former|historical|history|replaced|superseded|deprecated|archived)\b/i;
 
 test('governance startup card canonization preserves routing semantics and baseline rails', () => {
   assertFilesExist(requiredFiles);
