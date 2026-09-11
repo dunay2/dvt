@@ -154,7 +154,12 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
       sourcePortCompatibility={data.portCompatibility?.source}
       targetPortCompatibility={data.portCompatibility?.target}
       onContextMenuAction={projection.runAction}
-      onOpenNode={typeof data.onInspectNode === 'function' ? projection.openNode : undefined}
+      onOpenNode={
+        typeof data.onOpenSourceDataSample === 'function' ||
+        typeof data.onInspectNode === 'function'
+          ? projection.openNode
+          : undefined
+      }
       onDragOver={handleSchemaResourceDragOver}
       onDrop={handleSchemaResourceDrop}
     >

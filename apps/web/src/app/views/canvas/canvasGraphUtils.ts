@@ -4,7 +4,16 @@ import type { Edge, Node } from '@xyflow/react';
 type LayoutOptions = Readonly<{
   gridSize?: number;
   snapToGrid?: boolean;
+  nodeSize?: Readonly<{ width: number; height: number }>;
+  rankdir?: 'LR' | 'RL' | 'TB' | 'BT';
+  ranker?: 'network-simplex' | 'tight-tree' | 'longest-path';
+  ranksep?: number;
+  nodesep?: number;
+  marginx?: number;
+  marginy?: number;
 }>;
+
+const DEFAULT_NODE_SIZE = Object.freeze({ width: 200, height: 80 });
 
 function snapCoordinate(value: number, gridSize: number): number {
   return Math.round(value / gridSize) * gridSize;
@@ -25,18 +34,25 @@ function resolveLayoutPosition(
   };
 }
 
-export function getLayoutedElements(nodes: Node[], edges: Edge[], options: LayoutOptions = {}) {
+export function getLayoutedElements<TNode extends Node, TEdge extends Edge>(
+  nodes: TNode[],
+  edges: TEdge[],
+  options: LayoutOptions = {}
+): { nodes: TNode[]; edges: TEdge[] } {
+  const nodeSize = options.nodeSize ?? DEFAULT_NODE_SIZE;
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
   dagreGraph.setGraph({
-    rankdir: 'LR',
-    ranker: 'longest-path',
-    ranksep: 150,
-    nodesep: 100,
+    rankdir: options.rankdir ?? 'LR',
+    ranker: options.ranker ?? 'longest-path',
+    ranksep: options.ranksep ?? 150,
+    nodesep: options.nodesep ?? 100,
+    ...(options.marginx == null ? {} : { marginx: options.marginx }),
+    ...(options.marginy == null ? {} : { marginy: options.marginy }),
   });
 
   nodes.forEach((node) => {
-    dagreGraph.setNode(node.id, { width: 200, height: 80 });
+    dagreGraph.setNode(node.id, { width: nodeSize.width, height: nodeSize.height });
   });
 
   edges.forEach((edge) => {
@@ -45,14 +61,14 @@ export function getLayoutedElements(nodes: Node[], edges: Edge[], options: Layou
 
   dagre.layout(dagreGraph);
 
-  const layoutedNodes = nodes.map((node) => {
-    const nodeWithPosition = dagreGraph.node(node.id);
+  const layoutedNodes: TNode[] = nodes.map((node) => {
+    const nodeWithPosition = dagreGraph.node(node.id) as { x: number; y: number };
     return {
       ...node,
       position: resolveLayoutPosition(
         {
-          x: nodeWithPosition.x - 100,
-          y: nodeWithPosition.y - 40,
+          x: nodeWithPosition.x - nodeSize.width / 2,
+          y: nodeWithPosition.y - nodeSize.height / 2,
         },
         options
       ),

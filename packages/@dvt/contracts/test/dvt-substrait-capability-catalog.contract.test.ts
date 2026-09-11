@@ -92,6 +92,34 @@ describe('DVT Substrait capability catalog V1', () => {
     });
   });
 
+  it.each([
+    ['functions_boolean', 'and', 'dvt:#3087'],
+    ['functions_boolean', 'or', 'dvt:#3087'],
+    ['functions_comparison', 'equal', 'dvt:#2634'],
+    ['functions_comparison', 'not_equal', 'dvt:#3087'],
+    ['functions_comparison', 'gt', 'dvt:#3087'],
+    ['functions_comparison', 'gte', 'dvt:#3087'],
+    ['functions_comparison', 'lt', 'dvt:#3087'],
+    ['functions_comparison', 'lte', 'dvt:#3087'],
+  ])('admits %s/%s for INNER JOIN predicates', (urnName, functionName, useCaseRef) => {
+    const capability = findCapability(
+      buildDvtSubstraitStandardCapabilityId('scalar-function', {
+        sourceKind: 'simple-extension',
+        urn: `extension:io.substrait:${urnName}`,
+        name: functionName,
+      })
+    );
+
+    expect(capability).toMatchObject({
+      profileStatus: 'supported-profile',
+      admission: {
+        productUseCaseRef: useCaseRef,
+        targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+        visualExposure: { status: 'exposed' },
+      },
+    });
+  });
+
   it('admits only the bounded binary CONCAT invocation for field stacking', () => {
     const concatId = buildDvtSubstraitStandardCapabilityId('scalar-function', {
       sourceKind: 'simple-extension',

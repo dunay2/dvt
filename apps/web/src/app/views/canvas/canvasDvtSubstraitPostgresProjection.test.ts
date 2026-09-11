@@ -41,11 +41,13 @@ import {
   resolveDvtSubstraitFilterCapabilities,
 } from './canvasDvtSubstraitFilter';
 import {
+  addDvtSubstraitJoinPredicateCondition,
   applyDvtSubstraitInnerJoinFieldEdit,
   applyDvtSubstraitInnerJoinGroupedRowNumber,
   applyDvtSubstraitInnerJoinGrouping,
   appendDvtSubstraitInnerJoinInput,
   createDvtSubstraitInnerJoinDraft,
+  createDvtSubstraitStringInnerJoinDraft,
   inspectDvtSubstraitNInputJoinDraft,
   type DvtSubstraitInnerJoinDraft,
 } from './canvasDvtSubstraitJoinComposition';
@@ -802,6 +804,229 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     expect(normalized).toMatch(
       /^select left_source\.customer_id as customer_id, left_source\.name as name, right_source\.order_id as order_id from "tenant-data"\."customer-ledger" as left_source join "tenant-data"\."order-ledger" as right_source on left_source\.customer_id = right_source\.customer_id;?$/
     );
+  });
+
+  it('projects a typed literal JOIN comparison and OR through the PostgreSQL adapter', async () => {
+    const connectionRef = {
+      schemaVersion: 'connection-ref.v1' as const,
+      connectionId: 'warehouse-main',
+      provider: 'postgres' as const,
+    };
+    const draft = createDvtSubstraitStringInnerJoinDraft({
+      left: {
+        source: {
+          nodeId: 'source-active-customers',
+          schema: 'public',
+          table: 'customers',
+          sourceRef: {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef,
+            sourceObjectId: 'public.customers',
+          },
+        },
+        fields: ['customer_id', 'name'],
+        fieldTypes: ['string', 'string'],
+      },
+      right: {
+        source: {
+          nodeId: 'source-active-orders',
+          schema: 'public',
+          table: 'orders',
+          sourceRef: {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef,
+            sourceObjectId: 'public.orders',
+          },
+        },
+        fields: ['customer_id', 'active'],
+        fieldTypes: ['string', 'bool'],
+      },
+      leftFieldName: 'customer_id',
+      rightFieldName: 'customer_id',
+      targetNodeId: 'transform-active-customer-orders',
+    });
+    const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+    if (!inspection.ok) throw new Error('Expected admitted INNER JOIN projection.');
+    const relationId = inspection.projection.joinRelations[0]?.relationId;
+    const activeFieldId = inspection.projection.inputs[1]?.fields.find(
+      (field) => field.name === 'active'
+    )?.fieldId;
+    if (relationId == null || activeFieldId == null) {
+      throw new Error('Expected JOIN and active field identities.');
+    }
+    const conditioned = addDvtSubstraitJoinPredicateCondition({
+      draft,
+      joinRelationId: relationId,
+      condition: {
+        left: { kind: 'field', sourceFieldId: activeFieldId },
+        right: { kind: 'literal', literal: { dataType: 'bool', value: true } },
+        operator: 'not_equal',
+        combination: 'or',
+      },
+    });
+
+    const normalized = (await projectDvtSubstraitInnerJoinToPostgresSql(conditioned))
+      .replaceAll(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+
+    expect(normalized).toContain(
+      'on left_source.customer_id = right_source.customer_id or right_source.active <> true'
+    );
+  });
+
+  it('projects grouped JOIN conditions with explicit SQL parentheses', async () => {
+    const connectionRef = {
+      schemaVersion: 'connection-ref.v1' as const,
+      connectionId: 'warehouse-main',
+      provider: 'postgres' as const,
+    };
+    const draft = createDvtSubstraitStringInnerJoinDraft({
+      left: {
+        source: {
+          nodeId: 'source-grouped-customers',
+          schema: 'public',
+          table: 'customers',
+          sourceRef: {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef,
+            sourceObjectId: 'public.customers',
+          },
+        },
+        fields: ['customer_id'],
+      },
+      right: {
+        source: {
+          nodeId: 'source-grouped-orders',
+          schema: 'public',
+          table: 'orders',
+          sourceRef: {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef,
+            sourceObjectId: 'public.orders',
+          },
+        },
+        fields: ['customer_id', 'country', 'active'],
+        fieldTypes: ['string', 'string', 'bool'],
+      },
+      leftFieldName: 'customer_id',
+      rightFieldName: 'customer_id',
+      targetNodeId: 'transform-grouped-customer-orders',
+    });
+    const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+    if (!inspection.ok) throw new Error('Expected admitted INNER JOIN projection.');
+    const joinRelationId = inspection.projection.joinRelations[0]?.relationId;
+    const countryFieldId = inspection.projection.inputs[1]?.fields.find(
+      (field) => field.name === 'country'
+    )?.fieldId;
+    const activeFieldId = inspection.projection.inputs[1]?.fields.find(
+      (field) => field.name === 'active'
+    )?.fieldId;
+    if (joinRelationId == null || countryFieldId == null || activeFieldId == null) {
+      throw new Error('Expected JOIN, country and active identities.');
+    }
+    const withCountry = addDvtSubstraitJoinPredicateCondition({
+      draft,
+      joinRelationId,
+      condition: {
+        left: { kind: 'field', sourceFieldId: countryFieldId },
+        right: { kind: 'literal', literal: { dataType: 'string', value: 'ES' } },
+      },
+    });
+    const grouped = addDvtSubstraitJoinPredicateCondition({
+      draft: withCountry,
+      joinRelationId,
+      groupWithPrevious: true,
+      condition: {
+        left: { kind: 'field', sourceFieldId: activeFieldId },
+        right: { kind: 'literal', literal: { dataType: 'bool', value: false } },
+        combination: 'or',
+      },
+    });
+
+    const normalized = (await projectDvtSubstraitInnerJoinToPostgresSql(grouped))
+      .replaceAll(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+
+    expect(normalized).toContain(
+      "on left_source.customer_id = right_source.customer_id and (right_source.country = 'es' or right_source.active = false)"
+    );
+  });
+
+  it('projects nested unary functions in JOIN operands', async () => {
+    const connectionRef = {
+      schemaVersion: 'connection-ref.v1' as const,
+      connectionId: 'warehouse-main',
+      provider: 'postgres' as const,
+    };
+    const draft = createDvtSubstraitStringInnerJoinDraft({
+      left: {
+        source: {
+          nodeId: 'source-normalized-orders',
+          schema: 'public',
+          table: 'orders',
+          sourceRef: {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef,
+            sourceObjectId: 'public.orders',
+          },
+        },
+        fields: ['client_id'],
+      },
+      right: {
+        source: {
+          nodeId: 'source-normalized-clients',
+          schema: 'public',
+          table: 'clients',
+          sourceRef: {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef,
+            sourceObjectId: 'public.clients',
+          },
+        },
+        fields: ['client_id'],
+      },
+      leftFieldName: 'client_id',
+      rightFieldName: 'client_id',
+      targetNodeId: 'transform-normalized-client-join',
+    });
+    const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+    if (!inspection.ok) throw new Error('Expected admitted INNER JOIN projection.');
+    const joinRelationId = inspection.projection.joinRelations[0]?.relationId;
+    const leftFieldId = inspection.projection.inputs[0]?.fields[0]?.fieldId;
+    const functions = resolveDvtSubstraitColumnFunctions({
+      dataType: 'string',
+      provider: 'postgres',
+    });
+    const trim = functions.find((capability) => capability.name === 'trim');
+    const upper = functions.find((capability) => capability.name === 'upper');
+    if (joinRelationId == null || leftFieldId == null || trim == null || upper == null) {
+      throw new Error('Expected JOIN, field and unary function identities.');
+    }
+    const conditioned = addDvtSubstraitJoinPredicateCondition({
+      draft,
+      joinRelationId,
+      condition: {
+        left: {
+          kind: 'function',
+          capabilityId: upper.capabilityId,
+          input: {
+            kind: 'function',
+            capabilityId: trim.capabilityId,
+            input: { kind: 'field', sourceFieldId: leftFieldId },
+          },
+        },
+        right: { kind: 'literal', literal: { dataType: 'string', value: 'CLIENT-1' } },
+      },
+    });
+
+    const normalized = (await projectDvtSubstraitInnerJoinToPostgresSql(conditioned))
+      .replaceAll(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+
+    expect(normalized).toContain("and upper(trim(left_source.client_id)) = 'client-1'");
   });
 
   it.each([

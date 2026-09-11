@@ -4,6 +4,7 @@ import type { ConnectedSourceRef } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
+  addDvtSubstraitJoinPredicateCondition,
   appendDvtSubstraitInnerJoinInput,
   applyDvtSubstraitInnerJoinFieldEdit,
   applyDvtSubstraitInnerJoinGroupedRowNumber,
@@ -18,15 +19,21 @@ import {
   inspectDvtSubstraitNInputJoinDraft,
   removeDvtSubstraitInnerJoinGroupedRowNumber,
   removeDvtSubstraitInnerJoinGrouping,
+  removeDvtSubstraitJoinPredicateCondition,
   renameDvtSubstraitInnerJoinCountOutput,
   renameDvtSubstraitInnerJoinGroupedRowNumberOutput,
   resolveDvtSubstraitNInputJoinEntry,
+  setDvtSubstraitJoinPredicateFields,
+  updateDvtSubstraitJoinPredicateCondition,
   type DvtSubstraitInnerJoinDraft,
   type DvtSubstraitJoinInput,
   type DvtSubstraitJoinSource,
   type DvtSubstraitNInputJoinProjection,
 } from './canvasDvtSubstraitJoinComposition';
+import { dvtSubstraitJoinConditionKey } from './canvasDvtSubstraitJoinCondition';
+import { dvtSubstraitJoinOperandKey } from './canvasDvtSubstraitJoinOperand';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import { resolveDvtSubstraitColumnFunctions } from './canvasDvtSubstraitProjection';
 
 const OPAQUE_RELATION_ID =
   /^dvt_rel_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -265,6 +272,408 @@ describe('DVT Substrait INNER JOIN identity', () => {
       expect(outputByName(four, name).fieldId).toBe(fieldId);
     }
     expect(outputByName(four, 'payment_id').fieldId).toMatch(OPAQUE_FIELD_ID);
+  });
+
+  it('changes both join predicate operands atomically through retained identities', () => {
+    const draft = fixture();
+    const before = inspectNInput(draft);
+    const joinRelationId = before.joinRelations[0]?.relationId;
+    if (joinRelationId == null) throw new Error('Expected the join relation identity.');
+    const nextLeftFieldId = inputFieldId(before, 0, 'name');
+    const nextRightFieldId = inputFieldId(before, 1, 'order_id');
+
+    const edited = setDvtSubstraitJoinPredicateFields({
+      draft,
+      joinRelationId,
+      leftSourceFieldId: nextLeftFieldId,
+      rightSourceFieldId: nextRightFieldId,
+      operator: 'not_equal',
+    });
+    const after = inspectNInput(edited);
+
+    expect(after.joins).toEqual([
+      {
+        leftSourceFieldId: nextLeftFieldId,
+        rightSourceFieldId: nextRightFieldId,
+        operator: 'not_equal',
+      },
+    ]);
+    expect(after.joinRelations[0]?.relationId).toBe(joinRelationId);
+    expect(after.inputs.map((input) => input.relationId)).toEqual(
+      before.inputs.map((input) => input.relationId)
+    );
+    expect(after.outputs.map((output) => output.fieldId)).toEqual(
+      before.outputs.map((output) => output.fieldId)
+    );
+  });
+
+  it('allows an atomic type transition and rejects invalid predicate pairs', () => {
+    const draft = createDvtSubstraitStringInnerJoinDraft({
+      left: {
+        source: source('source-left', 'public', 'left_table'),
+        fields: ['id', 'amount'],
+        fieldTypes: ['string', 'fp64'],
+      },
+      right: {
+        source: source('source-right', 'public', 'right_table'),
+        fields: ['id', 'amount'],
+        fieldTypes: ['string', 'fp64'],
+      },
+      leftFieldName: 'id',
+      rightFieldName: 'id',
+      targetNodeId: 'transform-typed-join',
+    });
+    const projection = inspectNInput(draft);
+    const joinRelationId = projection.joinRelations[0]?.relationId;
+    if (joinRelationId == null) throw new Error('Expected the join relation identity.');
+
+    const numeric = setDvtSubstraitJoinPredicateFields({
+      draft,
+      joinRelationId,
+      leftSourceFieldId: inputFieldId(projection, 0, 'amount'),
+      rightSourceFieldId: inputFieldId(projection, 1, 'amount'),
+    });
+    expect(inspectNInput(numeric).joins).toEqual([
+      {
+        leftSourceFieldId: inputFieldId(projection, 0, 'amount'),
+        rightSourceFieldId: inputFieldId(projection, 1, 'amount'),
+      },
+    ]);
+    expect(
+      setDvtSubstraitJoinPredicateFields({
+        draft,
+        joinRelationId,
+        leftSourceFieldId: inputFieldId(projection, 0, 'amount'),
+        rightSourceFieldId: inputFieldId(projection, 1, 'id'),
+      })
+    ).toBe(draft);
+    expect(
+      setDvtSubstraitJoinPredicateFields({
+        draft,
+        joinRelationId,
+        leftSourceFieldId: inputFieldId(projection, 0, 'id'),
+        rightSourceFieldId: inputFieldId(projection, 0, 'amount'),
+      })
+    ).toBe(draft);
+  });
+
+  it.each(['gt', 'gte', 'lt', 'lte'] as const)(
+    'round-trips the %s comparison on the retained JOIN predicate',
+    (operator) => {
+      const draft = fixture();
+      const before = inspectNInput(draft);
+      const joinRelationId = before.joinRelations[0]?.relationId;
+      const predicate = before.joins[0];
+      if (joinRelationId == null || predicate == null) {
+        throw new Error('Expected the join relation and predicate.');
+      }
+
+      const edited = setDvtSubstraitJoinPredicateFields({
+        draft,
+        joinRelationId,
+        leftSourceFieldId: predicate.leftSourceFieldId,
+        rightSourceFieldId: predicate.rightSourceFieldId,
+        operator,
+      });
+
+      expect(inspectNInput(edited).joins[0]?.operator).toBe(operator);
+    }
+  );
+
+  it('adds a typed literal comparison with an OR connector to the retained predicate', () => {
+    const draft = createDvtSubstraitStringInnerJoinDraft({
+      left: {
+        source: source('source-left', 'public', 'orders'),
+        fields: ['id', 'priority'],
+        fieldTypes: ['string', 'bool'],
+      },
+      right: {
+        source: source('source-right', 'public', 'clients'),
+        fields: ['id', 'active'],
+        fieldTypes: ['string', 'bool'],
+      },
+      leftFieldName: 'id',
+      rightFieldName: 'id',
+      targetNodeId: 'transform-typed-literal-join',
+    });
+    const before = inspectNInput(draft);
+    const joinRelationId = before.joinRelations[0]?.relationId;
+    if (joinRelationId == null) throw new Error('Expected the join relation identity.');
+    const activeFieldId = inputFieldId(before, 1, 'active');
+
+    const withLiteral = addDvtSubstraitJoinPredicateCondition({
+      draft,
+      joinRelationId,
+      condition: {
+        left: { kind: 'field', sourceFieldId: activeFieldId },
+        right: { kind: 'literal', literal: { dataType: 'bool', value: true } },
+        operator: 'not_equal',
+        combination: 'or',
+      },
+    });
+    const reloaded = decodeDvtSubstraitInnerJoinDocument(
+      encodeDvtSubstraitInnerJoinDocument(withLiteral)
+    );
+    const after = inspectNInput(reloaded);
+
+    expect(after.joins[0]).toEqual({
+      leftSourceFieldId: inputFieldId(before, 0, 'id'),
+      rightSourceFieldId: inputFieldId(before, 1, 'id'),
+      additionalConditions: [
+        {
+          left: { kind: 'field', sourceFieldId: activeFieldId },
+          right: { kind: 'literal', literal: { dataType: 'bool', value: true } },
+          operator: 'not_equal',
+          combination: 'or',
+        },
+      ],
+    });
+    expect(after.joinRelations[0]?.relationId).toBe(joinRelationId);
+    expect(after.outputs.map((output) => output.fieldId)).toEqual(
+      before.outputs.map((output) => output.fieldId)
+    );
+    expect(
+      addDvtSubstraitJoinPredicateCondition({
+        draft,
+        joinRelationId,
+        condition: {
+          left: { kind: 'field', sourceFieldId: activeFieldId },
+          right: { kind: 'literal', literal: { dataType: 'i64', value: 1n } },
+        },
+      })
+    ).toBe(draft);
+  });
+
+  it('round-trips a left literal against N unary functions around a field', () => {
+    const draft = createDvtSubstraitStringInnerJoinDraft({
+      left: {
+        source: source('source-left', 'public', 'orders'),
+        fields: ['id'],
+      },
+      right: {
+        source: source('source-right', 'public', 'clients'),
+        fields: ['id'],
+      },
+      leftFieldName: 'id',
+      rightFieldName: 'id',
+      targetNodeId: 'transform-function-join',
+    });
+    const before = inspectNInput(draft);
+    const joinRelationId = before.joinRelations[0]?.relationId;
+    if (joinRelationId == null) throw new Error('Expected the join relation identity.');
+    const trim = resolveDvtSubstraitColumnFunctions({
+      dataType: 'string',
+      provider: 'postgres',
+    }).find((capability) => capability.name === 'trim');
+    const upper = resolveDvtSubstraitColumnFunctions({
+      dataType: 'string',
+      provider: 'postgres',
+    }).find((capability) => capability.name === 'upper');
+    if (trim == null || upper == null) throw new Error('Expected admitted unary functions.');
+    const rightField = { kind: 'field' as const, sourceFieldId: inputFieldId(before, 0, 'id') };
+
+    const edited = addDvtSubstraitJoinPredicateCondition({
+      draft,
+      joinRelationId,
+      condition: {
+        left: { kind: 'literal', literal: { dataType: 'string', value: 'ORDER-1' } },
+        right: {
+          kind: 'function',
+          capabilityId: upper.capabilityId,
+          input: {
+            kind: 'function',
+            capabilityId: trim.capabilityId,
+            input: rightField,
+          },
+        },
+      },
+    });
+    const after = inspectNInput(
+      decodeDvtSubstraitInnerJoinDocument(encodeDvtSubstraitInnerJoinDocument(edited))
+    );
+    const addedCondition = after.joins[0]?.additionalConditions?.[0];
+    if (addedCondition == null || addedCondition.kind === 'group') {
+      throw new Error('Expected one function comparison.');
+    }
+
+    expect(addedCondition.left).toEqual({
+      kind: 'literal',
+      literal: { dataType: 'string', value: 'ORDER-1' },
+    });
+    expect(addedCondition.right).toEqual({
+      kind: 'function',
+      capabilityId: upper.capabilityId,
+      input: {
+        kind: 'function',
+        capabilityId: trim.capabilityId,
+        input: rightField,
+      },
+    });
+  });
+
+  it('round-trips A AND (B OR C) as a grouped JOIN condition', () => {
+    const draft = createDvtSubstraitStringInnerJoinDraft({
+      left: {
+        source: source('source-left', 'public', 'orders'),
+        fields: ['id', 'country'],
+      },
+      right: {
+        source: source('source-right', 'public', 'clients'),
+        fields: ['id', 'country', 'active'],
+        fieldTypes: ['string', 'string', 'bool'],
+      },
+      leftFieldName: 'id',
+      rightFieldName: 'id',
+      targetNodeId: 'transform-grouped-join',
+    });
+    const before = inspectNInput(draft);
+    const joinRelationId = before.joinRelations[0]?.relationId;
+    if (joinRelationId == null) throw new Error('Expected the join relation identity.');
+    const countryFieldId = inputFieldId(before, 1, 'country');
+    const activeFieldId = inputFieldId(before, 1, 'active');
+    const withCountry = addDvtSubstraitJoinPredicateCondition({
+      draft,
+      joinRelationId,
+      condition: {
+        left: { kind: 'field', sourceFieldId: countryFieldId },
+        right: { kind: 'literal', literal: { dataType: 'string', value: 'ES' } },
+      },
+    });
+    const grouped = addDvtSubstraitJoinPredicateCondition({
+      draft: withCountry,
+      joinRelationId,
+      groupWithPrevious: true,
+      condition: {
+        left: { kind: 'field', sourceFieldId: activeFieldId },
+        right: { kind: 'literal', literal: { dataType: 'bool', value: false } },
+        combination: 'or',
+      },
+    });
+
+    const after = inspectNInput(
+      decodeDvtSubstraitInnerJoinDocument(encodeDvtSubstraitInnerJoinDocument(grouped))
+    );
+
+    expect(after.joins[0]?.additionalConditions).toEqual([
+      {
+        kind: 'group',
+        combination: 'and',
+        conditions: [
+          {
+            left: { kind: 'field', sourceFieldId: countryFieldId },
+            right: { kind: 'literal', literal: { dataType: 'string', value: 'ES' } },
+          },
+          {
+            left: { kind: 'field', sourceFieldId: activeFieldId },
+            right: { kind: 'literal', literal: { dataType: 'bool', value: false } },
+            combination: 'or',
+          },
+        ],
+      },
+    ]);
+  });
+
+  it('updates and removes one grouped JOIN comparison without changing relation or output identity', () => {
+    const draft = createDvtSubstraitStringInnerJoinDraft({
+      left: {
+        source: source('source-left', 'public', 'orders'),
+        fields: ['id', 'country'],
+      },
+      right: {
+        source: source('source-right', 'public', 'clients'),
+        fields: ['id', 'country', 'active'],
+        fieldTypes: ['string', 'string', 'bool'],
+      },
+      leftFieldName: 'id',
+      rightFieldName: 'id',
+      targetNodeId: 'transform-edit-grouped-join',
+    });
+    const before = inspectNInput(draft);
+    const joinRelationId = before.joinRelations[0]?.relationId;
+    if (joinRelationId == null) throw new Error('Expected the join relation identity.');
+    const countryFieldId = inputFieldId(before, 1, 'country');
+    const activeFieldId = inputFieldId(before, 1, 'active');
+    const withCountry = addDvtSubstraitJoinPredicateCondition({
+      draft,
+      joinRelationId,
+      condition: {
+        left: { kind: 'field', sourceFieldId: countryFieldId },
+        right: { kind: 'literal', literal: { dataType: 'string', value: 'ES' } },
+      },
+    });
+    const grouped = addDvtSubstraitJoinPredicateCondition({
+      draft: withCountry,
+      joinRelationId,
+      groupWithPrevious: true,
+      condition: {
+        left: { kind: 'field', sourceFieldId: activeFieldId },
+        right: { kind: 'literal', literal: { dataType: 'bool', value: false } },
+        combination: 'or',
+      },
+    });
+    const groupedProjection = inspectNInput(grouped);
+    const group = groupedProjection.joins[0]?.additionalConditions?.[0];
+    if (group == null || group.kind !== 'group') throw new Error('Expected grouped conditions.');
+    const [country, active] = group.conditions;
+    if (country == null || country.kind === 'group' || active == null || active.kind === 'group') {
+      throw new Error('Expected two comparison conditions.');
+    }
+    const conditionKey = (condition: typeof country): string =>
+      dvtSubstraitJoinConditionKey(condition, (operand) =>
+        dvtSubstraitJoinOperandKey(operand, (field) => field.sourceFieldId)
+      );
+
+    const updatedCountry = updateDvtSubstraitJoinPredicateCondition({
+      draft: grouped,
+      joinRelationId,
+      conditionKey: conditionKey(country),
+      condition: {
+        ...country,
+        right: { kind: 'literal', literal: { dataType: 'string', value: 'PT' } },
+      },
+    });
+    const updatedActive = updateDvtSubstraitJoinPredicateCondition({
+      draft: updatedCountry,
+      joinRelationId,
+      conditionKey: conditionKey(active),
+      condition: { ...active, combination: 'and' },
+    });
+    const updatedProjection = inspectNInput(updatedActive);
+    const updatedGroup = updatedProjection.joins[0]?.additionalConditions?.[0];
+    if (updatedGroup == null || updatedGroup.kind !== 'group') {
+      throw new Error('Expected the group to remain after editing.');
+    }
+    const updatedActiveCondition = updatedGroup.conditions[1];
+    if (updatedActiveCondition == null || updatedActiveCondition.kind === 'group') {
+      throw new Error('Expected the updated active condition.');
+    }
+
+    const removed = removeDvtSubstraitJoinPredicateCondition({
+      draft: updatedActive,
+      joinRelationId,
+      conditionKey: conditionKey(updatedActiveCondition),
+    });
+    const after = inspectNInput(
+      decodeDvtSubstraitInnerJoinDocument(encodeDvtSubstraitInnerJoinDocument(removed))
+    );
+
+    expect(after.joins[0]?.additionalConditions).toEqual([
+      {
+        left: { kind: 'field', sourceFieldId: countryFieldId },
+        right: { kind: 'literal', literal: { dataType: 'string', value: 'PT' } },
+      },
+    ]);
+    expect(after.joinRelations).toEqual(before.joinRelations);
+    expect(after.outputs.map((output) => output.fieldId)).toEqual(
+      before.outputs.map((output) => output.fieldId)
+    );
+    expect(
+      removeDvtSubstraitJoinPredicateCondition({
+        draft: removed,
+        joinRelationId,
+        conditionKey: 'missing-condition',
+      })
+    ).toBe(removed);
   });
 
   it('preserves an N-input output FieldId through rename and reorder', () => {

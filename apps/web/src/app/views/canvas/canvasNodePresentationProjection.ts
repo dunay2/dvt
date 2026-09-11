@@ -321,7 +321,7 @@ function projectCanvasNodePresentationTruthInternal(
   };
 
   if (substraitRejected) {
-    if (unresolvedMultiInputProjection) {
+    if (unresolvedMultiInputProjection || args.node.kind === 'dvt:source') {
       return baseTruth;
     }
     return {

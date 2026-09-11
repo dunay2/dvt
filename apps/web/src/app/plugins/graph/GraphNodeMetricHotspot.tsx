@@ -1,5 +1,5 @@
 /** Owned concern: reveal full graph metric evidence from compact card values. */
-import type { MouseEvent, ReactElement } from 'react';
+import type { MouseEvent, ReactElement, ReactNode } from 'react';
 
 import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
 import {
@@ -15,7 +15,7 @@ export type GraphNodeMetricHotspotProps = Readonly<{
   focusable?: boolean;
   onActivate?: () => void;
   tone?: MetricEvidenceTone;
-  value: string;
+  value: ReactNode;
 }>;
 
 export function resolveGraphNodeMetricEvidenceTone(

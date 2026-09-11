@@ -110,6 +110,19 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
   },
   {
     entryIds: [
+      functionId('scalar-function', 'functions_boolean', 'and'),
+      functionId('scalar-function', 'functions_boolean', 'or'),
+      functionId('scalar-function', 'functions_comparison', 'not_equal'),
+      functionId('scalar-function', 'functions_comparison', 'gt'),
+      functionId('scalar-function', 'functions_comparison', 'gte'),
+      functionId('scalar-function', 'functions_comparison', 'lt'),
+      functionId('scalar-function', 'functions_comparison', 'lte'),
+    ],
+    useCaseRefs: ['dvt:#3087'],
+    proofRef: 'apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.test.ts',
+  },
+  {
+    entryIds: [
       standardId('relation', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_INNER'),
       functionId('scalar-function', 'functions_comparison', 'equal'),
       standardId('type', 'substrait.Type', 'kind.bool'),
@@ -125,6 +138,11 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
     ],
     useCaseRefs: ['dvt:#2641', 'dvt:#2642'],
     proofRef: 'docs/evidence/ED-20260831-vtx2-substrait-grouping.md',
+  },
+  {
+    entryIds: [standardId('type', 'substrait.Type', 'kind.fp64')],
+    useCaseRefs: ['dvt:semantic-workbench-lab'],
+    proofRef: 'apps/web/src/app/labs/semanticWorkbenchFixture.test.ts',
   },
   {
     entryIds: [

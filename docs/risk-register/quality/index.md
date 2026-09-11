@@ -110,6 +110,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Integration-smoke drift from shared schema test state in S08-4](R-20260403-S08-4-CI-REGRESSION-FIX.yaml)
 - [Intent reconciler runtime factory can regain direct assembly ownership](R-20260512-DHM-WS2-RUNTIME-COMPOSITION-ROOT.yaml)
 - [Intent reconciliation outcomes can overreport cancelled workflows](R-20260408-INTENT-RECONCILE-OUTCOME-CLASSIFICATION.yaml)
+- [Join predicates could drift between Canvas, Substrait, samples, and PostgreSQL](R-20260911-SEMANTIC-WORKBENCH-JOIN-DRIFT.yaml)
 - [Legacy ExecutionPlanV2 imports can break after canonical naming retirement](R-20260401-EXECUTIONPLANV2-CANONICAL-NAMING-BREAK.yaml)
 - [Lineage stale-claimer concurrency remains timestamp-fenced without lease tokens](R-20260328-RCB5F2-LINEAGE-CLAIM-RACE.md)
 - [Local dev-stack Temporal bootstrap can drift from production runtime assumptions](R-20260427-DEV-STACK-TEMPORAL-BOOTSTRAP.yaml)

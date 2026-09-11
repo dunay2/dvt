@@ -2,14 +2,6 @@
 import { create, fromBinary, toBinary } from '@bufbuild/protobuf';
 import {
   ExpressionSchema,
-  Expression_FieldReferenceSchema,
-  Expression_FieldReference_RootReferenceSchema,
-  Expression_LiteralSchema,
-  Expression_ReferenceSegmentSchema,
-  Expression_ReferenceSegment_StructFieldSchema,
-  Expression_ScalarFunctionSchema,
-  FunctionArgumentSchema,
-  FunctionOptionSchema,
   ProjectRelSchema,
   ReadRelSchema,
   ReadRel_NamedTableSchema,
@@ -28,11 +20,6 @@ import {
   PlanSchema,
   type Plan,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
-import {
-  SimpleExtensionDeclarationSchema,
-  SimpleExtensionDeclaration_ExtensionFunctionSchema,
-  SimpleExtensionURNSchema,
-} from '@buf/substrait_substrait.bufbuild_es/substrait/extensions/extensions_pb.js';
 import {
   NamedStructSchema,
   TypeSchema,
@@ -60,6 +47,7 @@ import {
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 import {
   inspectDvtSubstraitCalculatedExpression,
   type DvtSubstraitCalculatedExpression,
@@ -1425,29 +1413,8 @@ export function applyDvtSubstraitProjectionFunction(
   const sourceFieldCount = inspection.projection.inputFields.length;
   if (targetMapping == null) return draft;
 
-  const buildFieldReference = (ordinal: number) =>
-    create(ExpressionSchema, {
-      rexType: {
-        case: 'selection',
-        value: create(Expression_FieldReferenceSchema, {
-          referenceType: {
-            case: 'directReference',
-            value: create(Expression_ReferenceSegmentSchema, {
-              referenceType: {
-                case: 'structField',
-                value: create(Expression_ReferenceSegment_StructFieldSchema, { field: ordinal }),
-              },
-            }),
-          },
-          rootType: {
-            case: 'rootReference',
-            value: create(Expression_FieldReference_RootReferenceSchema, {}),
-          },
-        }),
-      },
-    });
   const expressionForMapping = (mapping: number): Expression | undefined => {
-    if (mapping < sourceFieldCount) return buildFieldReference(mapping);
+    if (mapping < sourceFieldCount) return dvtSubstraitExpression.field(mapping);
     const expression = project.expressions[mapping - sourceFieldCount];
     return expression == null
       ? undefined
@@ -1458,6 +1425,9 @@ export function applyDvtSubstraitProjectionFunction(
     return mapping == null ? undefined : expressionForMapping(mapping);
   });
   if (operandExpressions.some((expression) => expression == null)) return draft;
+  const definedOperandExpressions = operandExpressions.filter(
+    (expression): expression is Expression => expression != null
+  );
 
   const functionEntry = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.find(
     (entry) => entry.entryId === capability.capabilityId
@@ -1477,94 +1447,34 @@ export function applyDvtSubstraitProjectionFunction(
     functionIdentity.urn === 'extension:io.substrait:functions_datetime' &&
     functionIdentity.name === 'extract' &&
     signature === 'extract:req_ptstz_str';
-  let extensionUrn = plan.extensionUrns.find((entry) => entry.urn === functionIdentity.urn);
-  if (extensionUrn == null) {
-    extensionUrn = create(SimpleExtensionURNSchema, {
-      extensionUrnAnchor:
-        Math.max(0, ...plan.extensionUrns.map((entry) => entry.extensionUrnAnchor)) + 1,
-      urn: functionIdentity.urn,
-    });
-    plan.extensionUrns.push(extensionUrn);
-  }
-  let extensionFunction = plan.extensions.find(
-    (entry) =>
-      entry.mappingType.case === 'extensionFunction' &&
-      entry.mappingType.value.name === signature &&
-      entry.mappingType.value.extensionUrnReference === extensionUrn.extensionUrnAnchor
-  );
-  if (extensionFunction?.mappingType.case !== 'extensionFunction') {
-    const functionAnchor =
-      Math.max(
-        0,
-        ...plan.extensions.flatMap((entry) =>
-          entry.mappingType.case === 'extensionFunction'
-            ? [entry.mappingType.value.functionAnchor]
-            : []
-        )
-      ) + 1;
-    extensionFunction = create(SimpleExtensionDeclarationSchema, {
-      mappingType: {
-        case: 'extensionFunction',
-        value: create(SimpleExtensionDeclaration_ExtensionFunctionSchema, {
-          extensionUrnReference: extensionUrn.extensionUrnAnchor,
-          functionAnchor,
-          name: signature,
-        }),
-      },
-    });
-    plan.extensions.push(extensionFunction);
-  }
-  if (extensionFunction.mappingType.case !== 'extensionFunction') return draft;
+  const extensionFunction = dvtSubstraitExpression.ensureScalarFunction(plan, {
+    urn: functionIdentity.urn,
+    name: signature,
+  });
 
-  const nextExpression = create(ExpressionSchema, {
-    rexType: {
-      case: 'scalarFunction',
-      value: create(Expression_ScalarFunctionSchema, {
-        functionReference: extensionFunction.mappingType.value.functionAnchor,
-        arguments: temporalExtract
-          ? [
-              create(FunctionArgumentSchema, { argType: { case: 'enum', value: 'YEAR' } }),
-              create(FunctionArgumentSchema, {
-                argType: { case: 'value', value: operandExpressions[0]! },
-              }),
-              create(FunctionArgumentSchema, {
-                argType: {
-                  case: 'value',
-                  value: create(ExpressionSchema, {
-                    rexType: {
-                      case: 'literal',
-                      value: create(Expression_LiteralSchema, {
-                        literalType: { case: 'string', value: 'UTC' },
-                      }),
-                    },
-                  }),
-                },
-              }),
-            ]
-          : operandExpressions.map((expression) =>
-              create(FunctionArgumentSchema, { argType: { case: 'value', value: expression! } })
-            ),
-        options: (functionEntry.invocation?.options ?? []).map((option) =>
-          create(FunctionOptionSchema, {
-            name: option.name,
-            preference: [...option.preference],
-          })
-        ),
-        outputType: temporalExtract
-          ? create(TypeSchema, {
-              kind: {
-                case: 'i64',
-                value: create(Type_I64Schema, { nullability: Type_Nullability.NULLABLE }),
-              },
-            })
-          : create(TypeSchema, {
-              kind: {
-                case: 'string',
-                value: create(Type_StringSchema, { nullability: Type_Nullability.NULLABLE }),
-              },
-            }),
-      }),
-    },
+  const nextExpression = dvtSubstraitExpression.scalarFunction({
+    functionReference: extensionFunction.functionAnchor,
+    arguments: temporalExtract
+      ? [
+          definedOperandExpressions[0]!,
+          dvtSubstraitExpression.literal({ dataType: 'string', value: 'UTC' }),
+        ]
+      : definedOperandExpressions,
+    leadingEnumArguments: temporalExtract ? ['YEAR'] : undefined,
+    options: functionEntry.invocation?.options,
+    outputType: temporalExtract
+      ? create(TypeSchema, {
+          kind: {
+            case: 'i64',
+            value: create(Type_I64Schema, { nullability: Type_Nullability.NULLABLE }),
+          },
+        })
+      : create(TypeSchema, {
+          kind: {
+            case: 'string',
+            value: create(Type_StringSchema, { nullability: Type_Nullability.NULLABLE }),
+          },
+        }),
   });
   const targetExpressionOrdinal = targetMapping - sourceFieldCount;
   const referenceCount = outputMapping.filter((mapping) => mapping === targetMapping).length;
