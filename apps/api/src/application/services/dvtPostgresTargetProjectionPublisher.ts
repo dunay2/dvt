@@ -23,7 +23,8 @@ import {
 const SQL_MEDIA_TYPE = 'application/sql; charset=utf-8';
 
 type ProjectSemanticDocument = (
-  document: DvtSubstraitSemanticDocumentV1
+  document: DvtSubstraitSemanticDocumentV1,
+  nodeBinding: { readonly sourceNodeId: string; readonly targetNodeId: string }
 ) => Promise<ProjectedDvtConnectedFieldSql>;
 
 export type DvtPostgresTargetProjectionPublishInput = {
@@ -55,7 +56,10 @@ export class DvtPostgresTargetProjectionPublisher {
     const closure = resolveDvtTerminalTransformClosure(input);
     const semanticDocument = closure.authority.semanticDocument;
     const project = this.deps.projectSemanticDocument ?? projectCanonicalConnectedFieldDocument;
-    const projected = await project(semanticDocument);
+    const projected = await project(semanticDocument, {
+      sourceNodeId: closure.source.id,
+      targetNodeId: closure.transform.id,
+    });
     if (
       projected.projection.targetNodeId !== closure.transform.id ||
       projected.projection.source.nodeId !== closure.source.id ||
@@ -108,10 +112,14 @@ export class DvtPostgresTargetProjectionPublisher {
 }
 
 function projectCanonicalConnectedFieldDocument(
-  document: DvtSubstraitSemanticDocumentV1
+  document: DvtSubstraitSemanticDocumentV1,
+  nodeBinding: { readonly sourceNodeId: string; readonly targetNodeId: string }
 ): Promise<ProjectedDvtConnectedFieldSql> {
-  return projectDvtConnectedFieldDraftToPostgresSql({
-    plan: decodeDvtSubstraitPlanV1(document),
-    sidecar: document.sidecar,
-  });
+  return projectDvtConnectedFieldDraftToPostgresSql(
+    {
+      plan: decodeDvtSubstraitPlanV1(document),
+      sidecar: document.sidecar,
+    },
+    nodeBinding
+  );
 }

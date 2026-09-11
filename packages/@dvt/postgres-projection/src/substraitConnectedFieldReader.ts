@@ -3,11 +3,16 @@ import type {
   ReadRel,
   RelCommon,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import {
+  Type_Nullability,
+  type Type,
+} from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import type { DvtSubstraitFieldBindingV1 } from '@dvt/contracts';
 
 import { hasExactAdmittedExtensions } from './substraitExtensionReader.js';
 import { readProjectExpression } from './substraitProjectExpressionReader.js';
 import type {
+  DvtConnectedFieldNodeBinding,
   DvtConnectedFieldInspection,
   DvtSubstraitProjectionDraft,
 } from './substraitProjectionReadModel.js';
@@ -18,7 +23,7 @@ const cleanCommon = (common: RelCommon | undefined): boolean =>
 const validRead = (read: ReadRel): boolean =>
   cleanCommon(read.common) &&
   read.common?.emitKind.case === undefined &&
-  read.baseSchema == null &&
+  read.baseSchema != null &&
   read.filter == null &&
   read.bestEffortFilter == null &&
   read.projection == null &&
@@ -31,6 +36,33 @@ const validProject = (project: ProjectRel): boolean =>
   project.common?.emitKind.case === 'emit' &&
   project.advancedExtension == null;
 
+function inspectSourceType(type: Type): string | null {
+  if (type.kind.case === 'unbound') return 'unknown';
+  if (
+    type.kind.case === 'string' &&
+    type.kind.value.typeVariationReference === 0 &&
+    type.kind.value.nullability === Type_Nullability.NULLABLE
+  ) {
+    return 'string';
+  }
+  if (
+    type.kind.case === 'precisionTimestampTz' &&
+    type.kind.value.precision === 6 &&
+    type.kind.value.typeVariationReference === 0 &&
+    type.kind.value.nullability === Type_Nullability.NULLABLE
+  ) {
+    return 'timestamp with time zone';
+  }
+  if (
+    type.kind.case === 'i64' &&
+    type.kind.value.typeVariationReference === 0 &&
+    type.kind.value.nullability === Type_Nullability.NULLABLE
+  ) {
+    return 'bigint';
+  }
+  return null;
+}
+
 const fieldsFor = (
   draft: DvtSubstraitProjectionDraft,
   relationId: string
@@ -41,7 +73,8 @@ const fieldsFor = (
     .sort((left, right) => left.outputOrdinal - right.outputOrdinal);
 
 export function inspectDvtConnectedFieldProjection(
-  draft: DvtSubstraitProjectionDraft
+  draft: DvtSubstraitProjectionDraft,
+  nodeBinding: DvtConnectedFieldNodeBinding
 ): DvtConnectedFieldInspection {
   const version = draft.plan.version;
   if (version?.majorNumber !== 0 || version.minorNumber !== 101 || version.patchNumber !== 0) {
@@ -80,23 +113,27 @@ export function inspectDvtConnectedFieldProjection(
   ) {
     return { ok: false };
   }
-  const sourceMatch = /^relation:(.+)$/.exec(sourceBinding.relationId);
-  const targetMatch = /^relation:(.+):project$/.exec(targetBinding.relationId);
-  if (sourceMatch == null || targetMatch == null) return { ok: false };
-  const sourceNodeId = sourceMatch[1]!;
+  const nodeIdentity = resolveNodeIdentity(nodeBinding);
+  if (nodeIdentity == null) return { ok: false };
+  const { sourceNodeId, targetNodeId } = nodeIdentity;
   const sourceFields = fieldsFor(draft, sourceBinding.relationId);
   const targetFields = fieldsFor(draft, targetBinding.relationId);
+  const baseSchema = readRel.value.baseSchema;
+  const sourceTypes = baseSchema?.struct?.types;
   const mappings = project.common?.emitKind;
   if (
+    baseSchema == null ||
+    sourceTypes == null ||
+    baseSchema.names.length !== sourceFields.length ||
+    sourceTypes.length !== sourceFields.length ||
+    baseSchema.names.some((name, ordinal) => name !== sourceFields[ordinal]?.displayName) ||
+    sourceTypes.some((type) => inspectSourceType(type) == null) ||
     mappings?.case !== 'emit' ||
     sourceFields.length === 0 ||
     targetFields.length !== root.value.names.length ||
     mappings.value.outputMapping.length !== targetFields.length ||
     sourceFields.some(
-      (field, ordinal) =>
-        field.outputOrdinal !== ordinal ||
-        field.displayName == null ||
-        field.fieldId !== `field:${sourceNodeId}:${field.displayName}`
+      (field, ordinal) => field.outputOrdinal !== ordinal || field.displayName == null
     ) ||
     targetFields.some(
       (field, ordinal) =>
@@ -131,6 +168,8 @@ export function inspectDvtConnectedFieldProjection(
       target == null ||
       (calculation == null && source == null) ||
       (source != null && source.displayName == null) ||
+      (calculation == null && target.sourceFieldId !== source?.fieldId) ||
+      (calculation != null && target.sourceFieldId !== undefined) ||
       (calculation?.kind === 'row-number' && calculation.orderSourceOrdinal >= sourceFields.length)
     ) {
       return null;
@@ -166,18 +205,33 @@ export function inspectDvtConnectedFieldProjection(
   return {
     ok: true,
     projection: {
-      targetNodeId: targetMatch[1]!,
+      targetNodeId,
       source: {
         nodeId: sourceNodeId,
         schema,
         table: tableName,
         sourceRef: sourceBinding.sourceRef,
-        fields: sourceFields.map(({ displayName }) => ({
+        fields: sourceFields.map(({ displayName }, ordinal) => ({
           name: displayName!,
-          dataType: 'unknown',
+          dataType: inspectSourceType(sourceTypes[ordinal]!)!,
         })),
       },
       outputs: outputs.filter((output) => output != null),
     },
   };
+}
+
+function resolveNodeIdentity(
+  binding: DvtConnectedFieldNodeBinding
+): DvtConnectedFieldNodeBinding | null {
+  if (
+    binding.sourceNodeId.trim() !== binding.sourceNodeId ||
+    binding.targetNodeId.trim() !== binding.targetNodeId ||
+    binding.sourceNodeId.length === 0 ||
+    binding.targetNodeId.length === 0 ||
+    binding.sourceNodeId === binding.targetNodeId
+  ) {
+    return null;
+  }
+  return binding;
 }

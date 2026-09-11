@@ -33,5 +33,10 @@ export type DvtSubstraitProjectionDraft = Readonly<{
   sidecar: DvtSubstraitAuthoringSidecarV1;
 }>;
 
+export type DvtConnectedFieldNodeBinding = Readonly<{
+  sourceNodeId: string;
+  targetNodeId: string;
+}>;
+
 export type DvtConnectedFieldInspection =
   Readonly<{ ok: true; projection: DvtConnectedFieldProjection }> | Readonly<{ ok: false }>;

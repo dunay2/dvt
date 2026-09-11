@@ -29,6 +29,7 @@ export {
 } from './substraitConnectedFieldProjection.js';
 export type {
   DvtCalculatedExpression,
+  DvtConnectedFieldNodeBinding,
   DvtConnectedFieldInspection,
   DvtConnectedFieldProjection,
   DvtSubstraitProjectionDraft,
