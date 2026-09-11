@@ -74,7 +74,7 @@ authorities, not separate Canvas types.
 
 This slice does not execute SQL or return rows; runtime support belongs to #2723.
 It does not yet lower sinks, publication fan-out, joins, sets or aggregates.
-#2784 remains open until its existing Sink and fan-out acceptance is preserved
+GitHub issue #2784 remains open until its existing Sink and fan-out acceptance is preserved
 through the same rail. Parent #2524 retains broader workload lowering.
 
 ## Command and query rails
@@ -87,7 +87,7 @@ through the same rail. Parent #2524 retains broader workload lowering.
 | Persisted plan execution   | `StartRun` command              | Future consumer; unchanged                  |
 
 `PreviewExecutionPlan` is retired as a transport by #2762 and the accepted
-#2524 topology plan. GitHub #2784 now names `PreviewPlan`; this slice does not
+GitHub issue #2524 topology plan. GitHub #2784 now names `PreviewPlan`; this slice does not
 expand the stale duplicate Planning DB rows for the retired name.
 
 ## Frozen first-slice descriptor
