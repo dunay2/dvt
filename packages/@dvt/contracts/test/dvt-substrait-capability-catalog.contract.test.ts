@@ -132,7 +132,8 @@ describe('DVT Substrait capability catalog V1', () => {
       invocation: {
         signature: 'concat:str',
         argumentTypes: ['str'],
-        argumentCount: 2,
+        minimumArgumentCount: 2,
+        maximumArgumentCount: 2,
         outputType: 'str',
         options: [{ name: 'null_handling', preference: ['ACCEPT_NULLS'] }],
       },
@@ -146,9 +147,33 @@ describe('DVT Substrait capability catalog V1', () => {
       DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.filter(
         (entry) => entry.kind === 'standard' && entry.invocation !== undefined
       )
-    ).toHaveLength(2);
+    ).toHaveLength(3);
   });
 
+  it('admits the official unbounded variadic COALESCE invocation for PostgreSQL text', () => {
+    const coalesceId = buildDvtSubstraitStandardCapabilityId('scalar-function', {
+      sourceKind: 'simple-extension',
+      urn: 'extension:io.substrait:functions_comparison',
+      name: 'coalesce',
+    });
+
+    expect(findCapability(coalesceId)).toMatchObject({
+      profileStatus: 'supported-profile',
+      invocation: {
+        signature: 'coalesce:any1',
+        argumentTypes: ['any1'],
+        minimumArgumentCount: 2,
+        outputType: 'any1',
+        options: [],
+      },
+      admission: {
+        productUseCaseRef: 'dvt:#2935',
+        targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+        visualExposure: { status: 'exposed' },
+      },
+    });
+    expect(findCapability(coalesceId)?.invocation).not.toHaveProperty('maximumArgumentCount');
+  });
   it('admits the exact UTC year extraction invocation for timestamptz columns', () => {
     const extractId = buildDvtSubstraitStandardCapabilityId('scalar-function', {
       sourceKind: 'simple-extension',
@@ -161,7 +186,8 @@ describe('DVT Substrait capability catalog V1', () => {
       invocation: {
         signature: 'extract:req_ptstz_str',
         argumentTypes: ['req', 'ptstz', 'str'],
-        argumentCount: 3,
+        minimumArgumentCount: 3,
+        maximumArgumentCount: 3,
         outputType: 'i64',
         options: [],
       },
@@ -194,7 +220,13 @@ describe('DVT Substrait capability catalog V1', () => {
     expect(
       DvtSubstraitStandardCapabilityV1Schema.safeParse({
         ...concat,
-        invocation: { ...concat.invocation, argumentCount: 1 },
+        invocation: { ...concat.invocation, minimumArgumentCount: 1 },
+      }).success
+    ).toBe(false);
+    expect(
+      DvtSubstraitStandardCapabilityV1Schema.safeParse({
+        ...concat,
+        invocation: { ...concat.invocation, maximumArgumentCount: undefined },
       }).success
     ).toBe(false);
     expect(
@@ -211,6 +243,67 @@ describe('DVT Substrait capability catalog V1', () => {
     ).toBe(false);
   });
 
+  it('rejects the retired exact arity field and malformed variadic COALESCE bounds', () => {
+    const coalesce = findCapability(
+      buildDvtSubstraitStandardCapabilityId('scalar-function', {
+        sourceKind: 'simple-extension',
+        urn: 'extension:io.substrait:functions_comparison',
+        name: 'coalesce',
+      })
+    );
+    if (coalesce?.kind !== 'standard') {
+      throw new Error('Expected the standard COALESCE capability.');
+    }
+
+    expect(
+      DvtSubstraitStandardCapabilityV1Schema.safeParse({
+        ...coalesce,
+        invocation: {
+          signature: 'coalesce:any1',
+          argumentTypes: ['any1'],
+          argumentCount: 2,
+          outputType: 'any1',
+          options: [],
+        },
+      }).success
+    ).toBe(false);
+    const invertedRange = standardEntry('scalar-function', {
+      sourceKind: 'simple-extension',
+      urn: 'extension:io.substrait:functions_string',
+      name: 'upper',
+    });
+    expect(
+      DvtSubstraitStandardCapabilityV1Schema.safeParse({
+        ...invertedRange,
+        invocation: {
+          signature: 'upper:str',
+          argumentTypes: ['str'],
+          minimumArgumentCount: 2,
+          maximumArgumentCount: 1,
+          outputType: 'str',
+          options: [],
+        },
+      }).success
+    ).toBe(false);
+    expect(
+      DvtSubstraitStandardCapabilityV1Schema.safeParse({
+        ...coalesce,
+        invocation: { ...coalesce.invocation, minimumArgumentCount: 1 },
+      }).success
+    ).toBe(false);
+    expect(
+      DvtSubstraitStandardCapabilityV1Schema.safeParse({
+        ...coalesce,
+        invocation: { ...coalesce.invocation, maximumArgumentCount: 2 },
+      }).success
+    ).toBe(false);
+    expect(
+      DvtSubstraitStandardCapabilityV1Schema.safeParse({
+        ...coalesce,
+        invocation: { ...coalesce.invocation, outputType: 'str' },
+      }).success
+    ).toBe(false);
+  });
   it('keeps same-named functions from different upstream families distinct', () => {
     const arithmetic = buildDvtSubstraitStandardCapabilityId('aggregate-function', {
       sourceKind: 'simple-extension',
