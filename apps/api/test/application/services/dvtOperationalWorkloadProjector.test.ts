@@ -8,7 +8,10 @@ import {
 } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
-import { DvtOperationalWorkloadProjector } from '../../../src/application/services/dvtOperationalWorkloadProjector.js';
+import {
+  DvtOperationalWorkloadProjector,
+  type DvtOperationalWorkloadProjectorInput,
+} from '../../../src/application/services/dvtOperationalWorkloadProjector.js';
 import { buildCanonicalSemanticDocument } from '../../fixtures/workspaceGraphDraftFixture.js';
 
 const CONNECTION: ConnectionRef = {
@@ -95,7 +98,9 @@ function draft(edgeMetadata?: Readonly<Record<string, unknown>>): WorkspaceGraph
   };
 }
 
-function input(overrides: Readonly<Record<string, unknown>> = {}) {
+function input(
+  overrides: Partial<DvtOperationalWorkloadProjectorInput> = {}
+): DvtOperationalWorkloadProjectorInput {
   const semantic = semanticDocument();
   return {
     scope: {

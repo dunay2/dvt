@@ -9,7 +9,10 @@ import { sha256Hex } from '@dvt/crypto';
 import type { ProjectedDvtConnectedFieldSql } from '@dvt/postgres-projection';
 import { describe, expect, it, vi } from 'vitest';
 
-import { DvtPostgresTargetProjectionPublisher } from '../../../src/application/services/dvtPostgresTargetProjectionPublisher.js';
+import {
+  DvtPostgresTargetProjectionPublisher,
+  type DvtPostgresTargetProjectionPublishInput,
+} from '../../../src/application/services/dvtPostgresTargetProjectionPublisher.js';
 import { buildCanonicalSemanticDocument } from '../../fixtures/workspaceGraphDraftFixture.js';
 
 const CONNECTION: ConnectionRef = {
@@ -122,7 +125,9 @@ function projected(targetNodeId = 'transform-a'): ProjectedDvtConnectedFieldSql 
   };
 }
 
-function publishInput(overrides: Partial<{ draft: WorkspaceGraphAuthoringDraft }> = {}) {
+function publishInput(
+  overrides: Partial<{ draft: WorkspaceGraphAuthoringDraft }> = {}
+): DvtPostgresTargetProjectionPublishInput {
   return {
     scope: {
       tenantId: 'tenant-a',
