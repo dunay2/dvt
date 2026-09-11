@@ -136,7 +136,7 @@ describe('ResolveAuthorizedExecutableSubgraphService protected topology', () => 
   });
 
   it('accepts the client graph only when its dependencies match the protected selected edges', async () => {
-    const result = await service().execute(
+    const result = await service().executeWithAuthorizedDraft(
       { selection, graphSource: graphSource(['source-node']) },
       context()
     );
@@ -147,6 +147,13 @@ describe('ResolveAuthorizedExecutableSubgraphService protected topology', () => 
         nodeIds: ['source-node', 'transform-node'],
         edgeIds: ['edge-1'],
         decisionScopeNodeIds: ['source-node', 'transform-node'],
+        authorizedDraft: {
+          revision: 'revision-1',
+          draft: {
+            nodeIds: ['source-node', 'transform-node'],
+            edges: [{ id: 'edge-1' }],
+          },
+        },
       },
     });
   });
