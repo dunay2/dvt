@@ -28,6 +28,8 @@ already owned by the issue lifecycle.
 
 ## Live Planning Anchors
 
+- [Glossary](../../concepts/glossary.md)
+- [Domain Language](../../concepts/domain-language.md)
 - [GitHub Issues](https://github.com/dunay2/dvt/issues)
 - [GitHub MVP Issue Workflow](../state/github-mvp-issue-workflow.md)
 - [Roadmap Of Record](../roadmap/index.md)
