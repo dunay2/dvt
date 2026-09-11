@@ -241,10 +241,8 @@ function collectLinkedActivePlanningPlans(domainPaths) {
         const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(domainPath), target));
         if (!resolved.startsWith('docs/planning/proposals/mandatory/')) continue;
 
-        const proposal = readRepoFile(resolved);
-        if (/^status:\s*(?:Active|Review)\s*$/imu.test(proposal)) {
-          plans.add(resolved);
-        }
+        readRepoFile(resolved);
+        plans.add(resolved);
       }
     }
   }
@@ -338,12 +336,18 @@ test('planning startup artifacts preserve GitHub task authority', () => {
   );
 });
 
-test('domain routing expands the guard to linked active planning proposals', () => {
+test('domain routing expands the guard to every mandatory plan linked from active sections', () => {
   assert.ok(
     linkedActivePlanningPlans.includes(
       'docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md'
     ),
     'execution-runtime must expose TF-C3 to retired-surface validation'
+  );
+  assert.ok(
+    linkedActivePlanningPlans.includes(
+      'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md'
+    ),
+    'documentation governance active proposal routing must be scanned regardless of destination status'
   );
 });
 
