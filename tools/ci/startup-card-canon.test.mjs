@@ -73,7 +73,6 @@ const activePlanningEntrypoints = [
   'docs/planning/status/governance-document-rule-inventory.md',
   'docs/planning/status/documentation-information-architecture-current-vs-target-20260407.md',
   'docs/planning/state/index.md',
-  'docs/planning/state/inventory-and-coverage.md',
   'docs/planning/roadmap/index.md',
   'docs/planning/roadmap/roadmap-by-domain.md',
   'docs/planning/roadmap/diagrams/planning-domain-map.md',
@@ -119,6 +118,11 @@ const retiredPlanningSurfaces = [
     path: 'docs/planning/state/gap-execution-status.md',
     pathPattern: /gap-execution-status\.md/i,
     namePattern: /Legacy Gap Program Status/i,
+  },
+  {
+    path: 'docs/planning/state/inventory-and-coverage.md',
+    pathPattern: /inventory-and-coverage\.md/i,
+    namePattern: /Planning Inventory And Coverage/i,
   },
 ];
 
