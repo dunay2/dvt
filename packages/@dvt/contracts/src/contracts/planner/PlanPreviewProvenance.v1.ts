@@ -2,8 +2,8 @@
  * Owned concern: bind persisted plan previews to their authoritative inputs.
  *
  * @baseline ADR-0060: dbt Project Authoring Authority
- * @decision Use one discriminated provenance contract for transformation Git artifacts and file-authoritative dbt projects.
- * @consequence Consumers cannot confuse generated-artifact authority with an analyzed dbt project revision.
+ * @decision Use one discriminated provenance contract for protected DVT drafts, transformation Git artifacts, and file-authoritative dbt projects.
+ * @consequence Consumers cannot confuse server-owned graph truth, generated-artifact authority, or an analyzed dbt project revision.
  * @version 1.0.0
  */
 import { z } from 'zod';
@@ -29,6 +29,7 @@ const CredentialReferenceSchema = z
 export const PLAN_PREVIEW_PROVENANCE_KIND = {
   transformationGitArtifacts: 'transformation-git-artifacts',
   dbtProjectFiles: 'dbt-project-files',
+  dvtProtectedWorkspaceGraph: 'dvt-protected-workspace-graph',
 } as const;
 
 export const GitArtifactRefSchema = z
@@ -69,6 +70,13 @@ const TransformationGitArtifactsProvenanceSchema = z
   })
   .strict();
 
+export const DvtProtectedWorkspaceGraphProvenanceSchema = z
+  .object({
+    kind: z.literal(PLAN_PREVIEW_PROVENANCE_KIND.dvtProtectedWorkspaceGraph),
+    canvasId: NonBlankStringSchema.max(256),
+  })
+  .strict();
+
 const DbtProjectFilesProvenanceSchema = z
   .object({
     kind: z.literal(PLAN_PREVIEW_PROVENANCE_KIND.dbtProjectFiles),
@@ -103,9 +111,15 @@ const DbtProjectFilesProvenanceSchema = z
     }
   });
 
+export const NonDvtPlanPreviewProvenanceSchema = z.discriminatedUnion('kind', [
+  TransformationGitArtifactsProvenanceSchema,
+  DbtProjectFilesProvenanceSchema,
+]);
+
 export const PlanPreviewProvenanceSchema = z.discriminatedUnion('kind', [
   TransformationGitArtifactsProvenanceSchema,
   DbtProjectFilesProvenanceSchema,
+  DvtProtectedWorkspaceGraphProvenanceSchema,
 ]);
 
 export type GitArtifactRef = z.infer<typeof GitArtifactRefSchema>;
@@ -113,5 +127,9 @@ export type DbtExecutionTargetIdentity = z.infer<typeof DbtExecutionTargetIdenti
 export type TransformationGitArtifactsProvenance = z.infer<
   typeof TransformationGitArtifactsProvenanceSchema
 >;
+export type DvtProtectedWorkspaceGraphProvenance = z.infer<
+  typeof DvtProtectedWorkspaceGraphProvenanceSchema
+>;
+export type NonDvtPlanPreviewProvenance = z.infer<typeof NonDvtPlanPreviewProvenanceSchema>;
 export type DbtProjectFilesProvenance = z.infer<typeof DbtProjectFilesProvenanceSchema>;
 export type PlanPreviewProvenance = z.infer<typeof PlanPreviewProvenanceSchema>;

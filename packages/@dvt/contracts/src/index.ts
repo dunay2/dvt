@@ -150,14 +150,18 @@ export type {
 } from './contracts/planner/TransformationFlowPreview.v1.js';
 export {
   DbtExecutionTargetIdentitySchema,
+  DvtProtectedWorkspaceGraphProvenanceSchema,
   GitArtifactRefSchema,
+  NonDvtPlanPreviewProvenanceSchema,
   PLAN_PREVIEW_PROVENANCE_KIND,
   PlanPreviewProvenanceSchema,
 } from './contracts/planner/PlanPreviewProvenance.v1.js';
 export type {
   DbtExecutionTargetIdentity,
   DbtProjectFilesProvenance,
+  DvtProtectedWorkspaceGraphProvenance,
   GitArtifactRef,
+  NonDvtPlanPreviewProvenance,
   PlanPreviewProvenance,
   TransformationGitArtifactsProvenance,
 } from './contracts/planner/PlanPreviewProvenance.v1.js';
