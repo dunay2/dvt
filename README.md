@@ -358,6 +358,8 @@ pnpm install
 
 # Build all packages
 pnpm build
+
+# Test all packages
 pnpm test
 
 # Build/test a specific package
