@@ -19,8 +19,6 @@ import {
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
 
-const AUTHORED_MODEL_SQL =
-  "select order_id, amount\nfrom {{ source('finance_warehouse', 'payments_final') }}";
 const EXTERNAL_MODEL_SQL = 'select externally_edited_amount from protected_project_code\n';
 
 function openNodeWorkbench(nodeId: string): void {
@@ -39,7 +37,8 @@ function openNodeCodeWorkbench(nodeId: string): void {
     .dblclick();
   cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
   cy.get('[data-slot="canvas-node-workbench-tab-code"]').should('be.visible').click();
-  cy.get('textarea[name="dbt-model-sql"]').should('be.enabled');
+  cy.get('[data-testid="monaco-code-viewer"]', { timeout: 30_000 }).should('be.visible');
+  cy.get('[data-testid="monaco-code-editor"]').should('not.exist');
 }
 
 function replaceInput(name: string, value: string): void {
@@ -49,6 +48,17 @@ function replaceInput(name: string, value: string): void {
 function closeNodeWorkbench(): void {
   cy.get('[data-slot="canvas-node-workbench-close"]').click();
   cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
+}
+
+function expectGeneratedModelSql(): void {
+  cy.get('[data-testid="monaco-code-viewer"]')
+    .find('.view-lines')
+    .invoke('text')
+    .should((renderedCode) => {
+      const normalizedCode = renderedCode.replaceAll('\u00a0', ' ').replace(/\s+/g, ' ');
+      expect(normalizedCode).to.match(/source\(\s*'finance_warehouse'\s*,\s*'payments_final'\s*\)/);
+      expect(normalizedCode).to.contain('select order_id, amount');
+    });
 }
 function clickCommandSlotNatively(slot: string): void {
   cy.get(`[data-slot="${slot}"]`)
@@ -107,14 +117,12 @@ function waitForPersistedDbtModelConfig(attempt = 0): Cypress.Chainable<void> {
     const model = nodes?.find((node) => node.id === 'orders_model');
     const metadata = model?.metadata?.dbt as
       { materialized?: string; selectedSourceId?: string; packageName?: string } | undefined;
-    const config = model?.metadata?.config as { sql?: string } | undefined;
 
     if (
       model?.name === 'payments model' &&
       metadata?.materialized === 'table' &&
       metadata.selectedSourceId === 'warehouse_payments' &&
-      metadata.packageName === 'finance analytics' &&
-      config?.sql === AUTHORED_MODEL_SQL
+      metadata.packageName === 'finance analytics'
     ) {
       return;
     }
@@ -191,14 +199,11 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     cy.get('select[name="dbt-materialized"]').should('be.enabled').select('table');
     cy.get('select[name="dbt-origin"]').should('be.enabled').select('warehouse_payments');
     closeNodeWorkbench();
+    waitForPersistedDbtModelConfig();
     cy.get('.react-flow__node[data-id="orders_model"]').should('contain.text', 'Payments Model');
 
     openNodeCodeWorkbench('orders_model');
-    cy.get('textarea[name="dbt-model-sql"]')
-      .clear()
-      .type(AUTHORED_MODEL_SQL, { parseSpecialCharSequences: false, delay: 0 });
-    clickButtonNatively(canvasViewCopy.inspectorApplyLabel);
-    waitForPersistedDbtModelConfig();
+    expectGeneratedModelSql();
     closeNodeWorkbench();
     cy.get('.react-flow__node[data-id="orders_model"]').should('contain.text', 'Payments Model');
 
@@ -248,7 +253,7 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
       'aria-selected',
       'true'
     );
-    cy.get('textarea[name="dbt-model-sql"]').should('have.value', AUTHORED_MODEL_SQL);
+    expectGeneratedModelSql();
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     openLiveGraphProjectCodeFile(workingTreePath);
     cy.get('[data-slot="canvas-contextual-workbench"]').within(() => {
