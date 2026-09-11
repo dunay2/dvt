@@ -14,6 +14,7 @@ import type {
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 
 import type { ProjectDbtGraphFromFilesUseCase } from './projectDbtGraphFromFilesUseCase.js';
+import type { ResolveAuthorizedDvtPreviewSelectionService } from './resolveAuthorizedDvtPreviewSelection.js';
 import type {
   ExecutableSubgraphSelectionRejection,
   ResolveAuthorizedExecutableSubgraphService,
@@ -38,8 +39,12 @@ type PreviewSelectionResolution =
 
 type PreviewSelectionInput = {
   readonly selection: ExecutionSelection;
-  readonly graphSource: GenericGraphSourceV1;
+  readonly graphSource?: GenericGraphSourceV1;
   readonly provenance?: PlanPreviewProvenance;
+};
+
+type ExternalPreviewSelectionInput = PreviewSelectionInput & {
+  readonly graphSource: GenericGraphSourceV1;
 };
 
 const EXECUTABLE_RESOURCE = {
@@ -52,6 +57,10 @@ export class ResolveAuthorizedPreviewSelectionService {
   public constructor(
     private readonly deps: {
       readonly graphDraftResolver: Pick<ResolveAuthorizedExecutableSubgraphService, 'execute'>;
+      readonly dvtPreviewSelectionResolver?: Pick<
+        ResolveAuthorizedDvtPreviewSelectionService,
+        'execute'
+      >;
       readonly projectGraph: Pick<ProjectDbtGraphFromFilesUseCase, 'execute'>;
     }
   ) {}
@@ -60,26 +69,50 @@ export class ResolveAuthorizedPreviewSelectionService {
     input: PreviewSelectionInput,
     context: AuthorizedCommandExecutionContext
   ): Promise<PreviewSelectionResolution> {
-    if (input.provenance?.kind !== 'dbt-project-files') {
-      const graphDraftResult = await this.deps.graphDraftResolver.execute(input, context);
-      return graphDraftResult.ok
-        ? {
-            ok: true,
-            value: {
-              graphSource: input.graphSource,
-              nodeIds: graphDraftResult.value.nodeIds,
-              decisionScopeNodeIds: graphDraftResult.value.decisionScopeNodeIds,
-              requestedRootNodeIds: [...input.selection.nodeIds],
-            },
-          }
-        : graphDraftResult;
+    if (input.provenance?.kind === 'dvt-protected-workspace-graph') {
+      const resolver = this.deps.dvtPreviewSelectionResolver;
+      if (resolver === undefined) {
+        return reject(
+          'dvt_preview_artifact_store_unavailable',
+          'DVT Preview requires a configured content-addressed artifact store.'
+        );
+      }
+      return resolver.execute(
+        { selection: input.selection, provenance: input.provenance },
+        context
+      );
+    }
+    if (input.graphSource === undefined) {
+      return reject(
+        'preview_graph_source_required',
+        'Preview requests outside protected DVT authority require graphSource.'
+      );
     }
 
-    return this.resolveDbtProjectFiles(input, input.provenance, context);
+    const externalInput: ExternalPreviewSelectionInput = {
+      ...input,
+      graphSource: input.graphSource,
+    };
+    if (input.provenance?.kind === 'dbt-project-files') {
+      return this.resolveDbtProjectFiles(externalInput, input.provenance, context);
+    }
+
+    const graphDraftResult = await this.deps.graphDraftResolver.execute(externalInput, context);
+    return graphDraftResult.ok
+      ? {
+          ok: true,
+          value: {
+            graphSource: externalInput.graphSource,
+            nodeIds: graphDraftResult.value.nodeIds,
+            decisionScopeNodeIds: graphDraftResult.value.decisionScopeNodeIds,
+            requestedRootNodeIds: [...input.selection.nodeIds],
+          },
+        }
+      : graphDraftResult;
   }
 
   private async resolveDbtProjectFiles(
-    input: PreviewSelectionInput,
+    input: ExternalPreviewSelectionInput,
     provenance: DbtProjectFilesProvenance,
     context: AuthorizedCommandExecutionContext
   ): Promise<PreviewSelectionResolution> {

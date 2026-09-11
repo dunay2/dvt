@@ -9,6 +9,7 @@ import type {
   IStoredPlanArtifactWriter,
 } from '@dvt/artifacts';
 import type {
+  DvtProtectedWorkspaceGraphProvenance,
   ExecutionPlan,
   ExecutionSelection,
   GenericGraphSourceV1,
@@ -16,7 +17,7 @@ import type {
   PlanRecord,
   PlanRef,
   PlannerSelection,
-  PlanPreviewProvenance,
+  NonDvtPlanPreviewProvenance,
   PlanPreviewSelectionRejection,
 } from '@dvt/contracts';
 
@@ -30,13 +31,21 @@ import {
 } from './StoredPlanAdmissionCoordinator.js';
 import type { StoredPlanExecutabilityValidator } from './StoredPlanExecutabilityValidator.js';
 
-export interface PreviewPlanCommand {
+type PreviewPlanCommandCommon = {
   readonly targetAdapter: string;
-  readonly graphSource: GenericGraphSourceV1;
   readonly selection: ExecutionSelection;
-  readonly provenance?: PlanPreviewProvenance;
   readonly observability?: ExecutionPlan['observability'];
-}
+};
+
+export type PreviewPlanCommand =
+  | (PreviewPlanCommandCommon & {
+      readonly provenance: DvtProtectedWorkspaceGraphProvenance;
+      readonly graphSource?: never;
+    })
+  | (PreviewPlanCommandCommon & {
+      readonly graphSource: GenericGraphSourceV1;
+      readonly provenance?: NonDvtPlanPreviewProvenance;
+    });
 
 export const PREVIEW_PLAN_RESULT_KIND = {
   accepted: 'accepted',
@@ -89,12 +98,16 @@ export class PreviewPlanUseCase {
     command: PreviewPlanCommand,
     context: AuthorizedCommandExecutionContext
   ): Promise<PreviewPlanUseCaseResult> {
+    const selectionInput =
+      command.graphSource === undefined
+        ? { selection: command.selection, provenance: command.provenance }
+        : {
+            selection: command.selection,
+            graphSource: command.graphSource,
+            ...(command.provenance === undefined ? {} : { provenance: command.provenance }),
+          };
     const previewSelection = await this.deps.previewSelectionResolver.execute(
-      {
-        selection: command.selection,
-        graphSource: command.graphSource,
-        ...(command.provenance === undefined ? {} : { provenance: command.provenance }),
-      },
+      selectionInput,
       context
     );
     if (!previewSelection.ok) {
