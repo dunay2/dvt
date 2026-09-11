@@ -225,9 +225,7 @@ orden:
 1. [GitHub Issues](https://github.com/dunay2/dvt/issues) para tareas MVP,
    ownership, prioridad, bloqueos y cierre.
 2. [Roadmap Of Record](docs/planning/roadmap/index.md) para secuencia oficial.
-3. [Review Status Board](docs/planning/reviews/review-status-board.md) para
-   estado de reviews y su enlace con las issues.
-4. [Governance Inventory](docs/planning/status/governance-document-rule-inventory.md)
+3. [Governance Inventory](docs/planning/status/governance-document-rule-inventory.md)
    para localizar la autoridad aplicable antes de cambiar arquitectura o diseño.
 
 Regla practica:
@@ -237,6 +235,8 @@ Regla practica:
 - la BBDD de planning responde las consultas obligatorias de arquitectura,
   diseño, ownership, relaciones y command/query rails.
 - código, contratos, tests y CI en `main` responden "qué está realmente entregado".
+- los review boards archivados conservan evidencia histórica; no son rutas de
+  trabajo actuales.
 
 ### Start Here
 
