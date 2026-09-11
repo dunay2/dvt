@@ -51,7 +51,12 @@ export function GraphNodeCalculatedColumnForm(props: {
       ),
     [props.columns]
   );
-  const compatibleFunctions = functions.filter((item) => item.inputFieldId === inputFieldId);
+  const compatibleFunctions = functions.filter(
+    (item) =>
+      item.inputFieldId === inputFieldId &&
+      item.minimumArgumentCount === 1 &&
+      item.maximumArgumentCount === 1
+  );
   const [capabilityId, setCapabilityId] = useState('');
   const policyErrorId = useId();
   const selectedCapabilityId = compatibleFunctions.some(

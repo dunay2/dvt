@@ -84,7 +84,25 @@ describe('GraphNodeCalculatedColumnForm', () => {
               type: 'text',
               functionMenu: {
                 category: 'text',
-                items: [{ capabilityId: 'trim-capability', name: 'trim', argumentCount: 1 }],
+                items: [
+                  {
+                    capabilityId: 'trim-capability',
+                    name: 'trim',
+                    minimumArgumentCount: 1,
+                    maximumArgumentCount: 1,
+                  },
+                  {
+                    capabilityId: 'concat-capability',
+                    name: 'concat',
+                    minimumArgumentCount: 2,
+                    maximumArgumentCount: 2,
+                  },
+                  {
+                    capabilityId: 'coalesce-capability',
+                    name: 'coalesce',
+                    minimumArgumentCount: 2,
+                  },
+                ],
               },
             },
           ]}
@@ -112,6 +130,7 @@ describe('GraphNodeCalculatedColumnForm', () => {
       fireEvent.input(alias, { target: { value: 'customer_clean' } });
     });
     const functionSelect = form?.elements.namedItem('capabilityId') as HTMLSelectElement;
+    expect([...functionSelect.options].map((option) => option.textContent)).toEqual(['TRIM']);
     act(() => {
       fireEvent.change(functionSelect, { target: { value: 'trim-capability' } });
       fireEvent.submit(form!);
