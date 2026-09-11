@@ -18,7 +18,9 @@ code_refs:
   - apps/api/src/application/services/dvtOperationalWorkloadProjector.ts
   - apps/api/test/integration/dvtProtectedPreview.integration.test.ts
   - apps/web/src/app/views/canvas/canvasDvtPreviewProjection.ts
+  - apps/web/src/app/views/canvas/canvasPreviewExecutionStrategy.ts
   - apps/web/cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts
+  - apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
   - packages/@dvt/contracts/src/contracts/planner/DvtOperationalWorkload.v1.ts
   - packages/@dvt/artifacts/src/contentAddressed/FileContentAddressedArtifactStore.ts
   - packages/@dvt/postgres-projection/src/dvtProjection.ts
@@ -29,7 +31,9 @@ evidence:
     - pnpm --filter @dvt/postgres-projection test
     - pnpm --filter dvt-api exec vitest run test/application/services/dvtOperationalWorkloadProjector.test.ts test/application/services/dvtPostgresTargetProjectionPublisher.test.ts
     - pnpm --filter dvt-api exec vitest run test/integration/dvtProtectedPreview.integration.test.ts
+    - pnpm --filter @dvt/web exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/canvasPreviewExecutionStrategy.test.ts src/app/views/canvas/canvasPlanAction.dvtProtectedPreview.test.ts src/app/views/canvas/useCanvasExecutionActions.dbtPreviewRun.test.tsx
     - node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts
+    - node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
     - pnpm verify:prepush
 ---
 
@@ -49,6 +53,7 @@ The browser sends selection, scope, profile, persistence intent, and protected C
 4. Planner persists exactly one `DVT_POSTGRES_OPERATIONAL_WORKLOAD` step for the terminal Transform. Source and Substrait operators do not become steps.
 5. Preview exposes the persisted plan identity, artifact reference, protected Canvas provenance, and the real missing executor capability. Start Run stays disabled for that invalid plan.
 6. The visible Cypress proof exercises the real HTTP API, PostgreSQL plan store, Planner, and filesystem CAS without browser-authored workload semantics.
+7. The shared Canvas keeps the existing dbt artifact Preview and Run path when the selected closure has no admitted DVT semantics.
 
 ## Deliberate boundary
 
