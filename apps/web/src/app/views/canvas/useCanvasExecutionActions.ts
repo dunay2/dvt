@@ -92,6 +92,7 @@ export function useCanvasExecutionActions({
     executionEnvironmentId,
   });
   const executionState = deriveCanvasExecutionState({
+    graphDraftCanvasId,
     canRun,
     executionStrategy,
     currentPlan,

@@ -299,4 +299,26 @@ describe('resolveCanvasRuntimePolicy', () => {
       canReloadLatestDraft: false,
     });
   });
+  it('admits protected DVT Preview for the transformation Canvas', () => {
+    const policy = resolveCanvasRuntimePolicy({
+      activeRuntime: {
+        kind: 'ready',
+        canvasKind: 'transformation',
+        executionStrategy: {
+          kind: 'dvt_protected_preview',
+          previewProfile: 'planner-generic-v1',
+          sourceFamily: 'dvt',
+        },
+        nodeKinds: DVT_AUTHORING_NODE_KINDS,
+      },
+      canMutateGraph: true,
+      canOpenSourceImport: true,
+      canPlan: true,
+      canRun: true,
+      canReloadLatestDraft: false,
+    });
+
+    expect(policy.execution.kind).toBe('executable');
+    expect(policy.commands.canPlan).toBe(true);
+  });
 });

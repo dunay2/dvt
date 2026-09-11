@@ -14,7 +14,7 @@ describe('resolveCanvasGraphStrategy', () => {
     const registrations = getCanvasRuntimeRegistrations();
 
     expect(registrations.map((registration) => registration.kind)).toEqual(['transformation']);
-    expect(registrations[0]?.executionStrategy.kind).toBe('not_executable');
+    expect(registrations[0]?.executionStrategy.kind).toBe('dvt_protected_preview');
     expect(registrations[0]?.graphStrategy.id).toBe('transformation');
     expect(registrations[0]?.surfaceStrategy.id).toBe('dvt-transformation-contextual-canvas');
   });

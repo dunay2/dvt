@@ -61,7 +61,9 @@ export const dvtContributions: PluginContributions = {
       kind: 'transformation',
       pluginId: DVT_PLUGIN_ID,
       executionStrategy: {
-        kind: 'not_executable',
+        kind: 'dvt_protected_preview',
+        previewProfile: 'planner-generic-v1',
+        sourceFamily: 'dvt',
       },
       graphStrategy: transformationCanvasGraphStrategy,
       surfaceStrategy: dvtCanvasSurfaceStrategy,

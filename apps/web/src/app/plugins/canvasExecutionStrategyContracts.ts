@@ -8,6 +8,11 @@ export type CanvasExecutionStrategy =
       sourceFamily: 'dbt';
     }
   | {
+      kind: 'dvt_protected_preview';
+      previewProfile: 'planner-generic-v1';
+      sourceFamily: 'dvt';
+    }
+  | {
       kind: 'dbt_project_file_preview';
       previewProfile: 'planner-generic-v1';
       sourceFamily: 'dbt';
