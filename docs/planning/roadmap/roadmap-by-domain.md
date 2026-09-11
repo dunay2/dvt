@@ -2,7 +2,7 @@
 title: Roadmap By Domain
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-09-10
+last_reviewed: 2026-09-12
 planning_type: proposal
 ---
 
@@ -110,7 +110,6 @@ flowchart LR
   [UI / Visualization Domain](../../architecture/domain-ui.md),
   [20260417 DVT artifacts review](../reviews/architecture-and-governance/20260417-dvt-artifacts-review.md),
   [20260425 Canvas graph strategy Fowler hard QA review](../reviews/architecture-and-governance/20260425-canvas-graph-strategy-fowler-hard-qa-review.md),
-  [Internal Alpha Product Route Plan 2026-05-05](../proposals/mandatory/frontend-and-ux/internal-alpha-product-route-plan-20260505.md),
   [Documentation and UX implementation guide](../../architecture/components/web/ux-implementation-guide.md),
   [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
   Near-term target: keep the first SQL-first operator loop stable now that
@@ -121,7 +120,6 @@ flowchart LR
   professionalization.
 - `Documentation Governance`
   Current sources: [Governance Inventory](../status/governance-document-rule-inventory.md),
-  [Doc-driven framework and tooling plan 2026-04-04](../proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md),
   [Documentation maintenance guide](../../guides/documentation-maintenance-guide-20260407.md),
   [Documentation information architecture current vs target 2026-04-07](../status/documentation-information-architecture-current-vs-target-20260407.md)
   Near-term target: keep GitHub issue lifecycle, roadmaps, and generated
