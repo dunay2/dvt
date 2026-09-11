@@ -138,7 +138,7 @@ function waitForPersistedDbtModelConfig(attempt = 0): Cypress.Chainable<void> {
   });
 }
 
-function openLiveGraphProjectCodeFile(path: string): void {
+function openEditableDbtProjectCodeFile(path: string): void {
   cy.get('[data-slot="shell-workspace-menu-trigger"]', { timeout: 20_000 }).click();
   cy.get('[data-slot="canvas-workspace-open-project-code-command"]')
     .should('be.visible')
@@ -152,11 +152,11 @@ function openLiveGraphProjectCodeFile(path: string): void {
   })
     .should('be.visible')
     .click();
-  cy.get('[data-testid="monaco-code-viewer"]', { timeout: 30_000 }).should('be.visible');
-  cy.get('[data-testid="monaco-code-editor"]').should('not.exist');
+  cy.get('[data-testid="monaco-code-editor"]', { timeout: 30_000 }).should('be.visible');
+  cy.get('[data-testid="monaco-code-viewer"]').should('not.exist');
   cy.get('[data-slot="code-working-tree-status"]')
     .should('be.visible')
-    .and('contain.text', resolveCodeViewCopy().workingTreeGraphOwnedReadOnlyLabel);
+    .and('contain.text', resolveCodeViewCopy().workingTreeSynchronizedLabel);
 }
 
 describe('Canvas dbt authoring Code and Run live protected runtime', () => {
@@ -259,13 +259,13 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     );
     expectGeneratedModelSql();
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
-    openLiveGraphProjectCodeFile(workingTreePath);
+    openEditableDbtProjectCodeFile(workingTreePath);
     cy.get('[data-slot="canvas-contextual-workbench"]').within(() => {
       cy.get('button').should(($buttons) => {
         const labels = [...$buttons].map((button) => button.textContent?.trim());
         expect(labels).not.to.include.members(['Save', 'Guardar']);
       });
-      cy.get('[data-testid="monaco-code-viewer"]')
+      cy.get('[data-testid="monaco-code-editor"]')
         .find('.view-lines')
         .should(($lines) => {
           const renderedCode = $lines
