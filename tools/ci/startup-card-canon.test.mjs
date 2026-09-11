@@ -170,11 +170,7 @@ test('governance startup card canonization preserves routing semantics and basel
 
 test('active planning entrypoints do not route through retired planning surfaces', () => {
   for (const retired of retiredPlanningSurfaces) {
-    assert.throws(
-      () => readRepoFile(retired.path),
-      /ENOENT/,
-      `${retired.path} must stay deleted`
-    );
+    assert.throws(() => readRepoFile(retired.path), /ENOENT/, `${retired.path} must stay deleted`);
   }
 
   for (const path of activePlanningEntrypoints) {
@@ -184,7 +180,9 @@ test('active planning entrypoints do not route through retired planning surfaces
         const referencesRetiredSurface =
           retired.pathPattern.test(line) || retired.namePattern.test(line);
         if (!referencesRetiredSurface || explicitRetirementLanguage.test(line)) continue;
-        assert.fail(`${path} must not route through retired surface ${retired.path}: ${line.trim()}`);
+        assert.fail(
+          `${path} must not route through retired surface ${retired.path}: ${line.trim()}`
+        );
       }
     }
   }
