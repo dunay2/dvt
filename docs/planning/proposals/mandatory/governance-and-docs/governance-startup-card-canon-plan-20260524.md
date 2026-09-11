@@ -156,6 +156,7 @@ governingSources:
   - docs/architecture/fowler-opportunity-planning-governance.md
   - docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-router-plan-20260402.md
 allowedImplementationSurfaces:
+  - README.md
   - buzon/20260524-codex-fowler-governance-startup-card-canon.md
   - docs/.manifest.json
   - docs/architecture/components/ci-governance/governance-startup-card-canon-component.md
