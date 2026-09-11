@@ -157,6 +157,9 @@ importers:
       '@dvt/planner':
         specifier: workspace:*
         version: link:../../packages/@dvt/planner
+      '@dvt/postgres-projection':
+        specifier: workspace:*
+        version: link:../../packages/@dvt/postgres-projection
       '@dvt/run-domain':
         specifier: workspace:*
         version: link:../../packages/@dvt/run-domain

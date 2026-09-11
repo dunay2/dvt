@@ -34,6 +34,7 @@
     "@dvt/observability-otel": "workspace:*",
     "@dvt/plan-verifier": "workspace:*",
     "@dvt/planner": "workspace:*",
+    "@dvt/postgres-projection": "workspace:*",
     "@dvt/run-domain": "workspace:*",
     "@dvt/temporal-dbt-plugin": "workspace:*",
     "@fastify/cors": "^11.2.0",
