@@ -2,7 +2,7 @@
 title: CI Delivery Governance Consolidated Action Plan
 status: Active
 owner: engineering
-last_reviewed: 2026-05-10
+last_reviewed: 2026-09-11
 planning_type: proposal
 ---
 
@@ -47,10 +47,12 @@ The repository also versions several generated and governance-sensitive
 artifacts:
 
 - docs indexes and navigation surfaces via `pnpm docs:sync`
-- planning lane markdown via `pnpm docs:planning:lanes:generate`
-- workboard views via `pnpm docs:workboard:generate`
 - generated code status via `pnpm docs:status:generate`
 - generated capability coverage via `pnpm docs:capability:generate`
+
+Executable task lifecycle is tracked in GitHub Issues. Retired lane markdown and
+workboard views are historical mechanisms, not current planning authorities or
+required generated outputs.
 
 ## Closed Items Not Reopened
 
@@ -717,8 +719,9 @@ execution route for the verified residual items.
     no hidden debt
   - `docs/guides/ai-work-protocol.md` requires think-first and
     pre-implementation material before config/code changes land
-  - `docs/planning/state/planning-control-tower.md` requires active proposal
-    changes to update the linked lane registry
+  - ADR-0061 and the GitHub MVP issue workflow require executable task lifecycle
+    to stay in GitHub Issues; Planning DB remains the authority for architecture
+    and mechanization records
   - [20260418 RC-C2 turbo build orchestrator closeout](../../../closeouts/20260418-rc-c2-turbo-build-orchestrator-closeout.md)
     explicitly kept Turbo `test`, Turbo `typecheck`, remote cache, and
     TypeScript project references out of scope of that shipped slice
@@ -1009,7 +1012,7 @@ real PR/push gate.
 | Task       | Files / surfaces                                                             | Action                                                                                                                                                                 | Validation                                                                      | Exit criteria                                                            |
 | ---------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
 | `CDG-W4-1` | `tools/ci/*.test.mjs`, workflows                                             | Add `pnpm test:ci-tools` to a required workflow and expand parity coverage to the scope contracts that still matter after Wave 1.                                      | `pnpm test:ci-tools`, workflow run on PR                                        | CI helper logic becomes merge-gated, not advisory.                       |
-| `CDG-W4-2` | docs generators and planning state surfaces                                  | Reduce merge fan-in where practical: split or defer regeneration of broad shared outputs, or formalize a final-branch regeneration rule where splitting is not viable. | `pnpm docs:sync`, `pnpm docs:planning:lanes:generate`, `pnpm docs:ci`           | Shared generated outputs stop behaving like incidental merge traps.      |
+| `CDG-W4-2` | docs generators and shared generated surfaces                                | Reduce merge fan-in where practical: split or defer regeneration of broad shared outputs, or formalize a final-branch regeneration rule where splitting is not viable. | `pnpm docs:sync`, `pnpm docs:status:generate`, `pnpm docs:ci`                   | Shared generated outputs stop behaving like incidental merge traps.      |
 | `CDG-W4-3` | `contracts.yml`, supporting scripts                                          | Remove permissive "pass in stub mode" behavior from critical contract checks and fail closed on invalid repository states.                                             | `pnpm validate:contracts`, `pnpm test:contracts:compile`, `pnpm verify:prepush` | Green CI means the intended invariant was actually checked.              |
 | `CDG-W4-4` | `scripts/docs-quality-check.cjs`, planning status docs, governance inventory | Replace missing-file `continue` behavior in canonical governance checks with explicit fail-closed handling for declared required planning surfaces.                    | `pnpm docs:quality:check`, `pnpm docs:gov`, `pnpm docs:ci`                      | Declared required canonical files are enforced, not skipped.             |
 | `CDG-W4-5` | `scripts/sync-docs.cjs`, planning proposal metadata policy                   | Make generated planning indexes exclude `status: Superseded` (and optionally `status: Archived`) by rule, not by manual deletion only.                                 | `pnpm docs:sync`, `pnpm docs:sync:check`, `pnpm docs:ci`                        | Superseded proposals no longer appear in active planning indexes.        |
