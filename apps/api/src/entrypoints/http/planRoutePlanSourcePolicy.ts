@@ -2,13 +2,13 @@ import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 
 export type PlanRoutePlanSourceDecision =
-  | { readonly kind: 'planRef' }
-  | { readonly kind: 'plannerBacked' };
+  { readonly kind: 'planRef' } | { readonly kind: 'plannerBacked' };
 
 const FORBIDDEN_PLANNER_SOURCE_KEYS = ['manifestRef', 'nodes', 'manifest'] as const;
 
 export function evaluatePlanRoutePlanSource(
-  record: Record<string, unknown>
+  record: Record<string, unknown>,
+  options: { readonly allowProtectedDvtGraph?: boolean } = {}
 ): RouteParseResult<PlanRoutePlanSourceDecision> {
   if (hasForbiddenPlannerSource(record)) {
     return badRequestResult(HTTP_ERROR_REASON.invalidPlanSource);
@@ -16,13 +16,16 @@ export function evaluatePlanRoutePlanSource(
 
   const hasPlanRef = record.planRef !== undefined;
   const hasGraphSource = record.graphSource !== undefined;
-  const hasPlannerBackedFields = hasGraphSource || hasPlannerBackedMetadata(record);
+  const hasProtectedDvtGraph =
+    options.allowProtectedDvtGraph === true && isProtectedDvtGraphProvenance(record.provenance);
+  const hasPlannerBackedFields =
+    hasGraphSource || hasProtectedDvtGraph || hasPlannerBackedMetadata(record);
 
   if (hasPlanRef && hasPlannerBackedFields) {
     return badRequestResult(HTTP_ERROR_REASON.conflictingPlanInputs);
   }
 
-  if (!hasPlanRef && !hasGraphSource) {
+  if (!hasPlanRef && !hasGraphSource && !hasProtectedDvtGraph) {
     return badRequestResult(HTTP_ERROR_REASON.invalidPlanSource);
   }
 
@@ -32,11 +35,18 @@ export function evaluatePlanRoutePlanSource(
 }
 
 function hasPlannerBackedMetadata(record: Record<string, unknown>): boolean {
-  return ['policies', 'environment', 'observability'].some(
-    (key) => record[key] !== undefined
-  );
+  return ['policies', 'environment', 'observability'].some((key) => record[key] !== undefined);
 }
 
 function hasForbiddenPlannerSource(record: Record<string, unknown>): boolean {
   return FORBIDDEN_PLANNER_SOURCE_KEYS.some((key) => record[key] !== undefined);
+}
+
+function isProtectedDvtGraphProvenance(value: unknown): boolean {
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    (value as { readonly kind?: unknown }).kind === 'dvt-protected-workspace-graph'
+  );
 }

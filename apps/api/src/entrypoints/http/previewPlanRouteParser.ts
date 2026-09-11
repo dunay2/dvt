@@ -1,5 +1,6 @@
 import {
   parsePlanPreviewRequest,
+  PreviewProfileSchema,
   toValidationErrorResponse,
   type ExecutionPlan,
   type PlanPreviewProvenance,
@@ -33,7 +34,15 @@ export function parsePreviewPlanBody(body: unknown): RouteParseResult<ParsedPrev
     return badRequestResult(HTTP_ERROR_REASON.invalidBody);
   }
 
-  const sourceDecision = evaluatePlanRoutePlanSource(bodyRecord.value);
+  if (!PreviewProfileSchema.safeParse(bodyRecord.value.previewProfile).success) {
+    return badRequestResult(HTTP_ERROR_REASON.invalidPreviewProfile, {
+      target: 'previewProfile',
+    });
+  }
+
+  const sourceDecision = evaluatePlanRoutePlanSource(bodyRecord.value, {
+    allowProtectedDvtGraph: true,
+  });
   if (!sourceDecision.ok) {
     return sourceDecision;
   }
@@ -53,8 +62,8 @@ export function parsePreviewPlanBody(body: unknown): RouteParseResult<ParsedPrev
     return routeContext;
   }
 
-  const graphSource = toPlanRouteGraphSource(contractRequest.graphSource);
   const observability = buildPreviewObservability(routeContext.value, contractRequest.provenance);
+  const command = buildPreviewPlanCommand(contractRequest, routeContext.value, observability);
 
   return {
     ok: true,
@@ -62,16 +71,36 @@ export function parsePreviewPlanBody(body: unknown): RouteParseResult<ParsedPrev
       routeContext: routeContext.value,
       previewProfile: contractRequest.previewProfile,
       contractRequest,
-      command: {
-        targetAdapter: routeContext.value.targetAdapter,
-        graphSource,
-        selection: contractRequest.selection,
-        ...(contractRequest.provenance === undefined
-          ? {}
-          : { provenance: contractRequest.provenance }),
-        observability,
-      },
+      command,
     },
+  };
+}
+
+function buildPreviewPlanCommand(
+  request: CanonicalPreviewRequest,
+  context: ParsedPlanRouteContext,
+  observability: NonNullable<ExecutionPlan['observability']>
+): PreviewPlanCommand {
+  const common = {
+    targetAdapter: context.targetAdapter,
+    selection: request.selection,
+    observability,
+  };
+
+  if (request.graphSource === undefined) {
+    if (request.provenance?.kind !== 'dvt-protected-workspace-graph') {
+      throw new Error('Validated Preview request is missing its graph authority.');
+    }
+    return {
+      ...common,
+      provenance: request.provenance,
+    };
+  }
+
+  return {
+    ...common,
+    graphSource: toPlanRouteGraphSource(request.graphSource),
+    ...(request.provenance === undefined ? {} : { provenance: request.provenance }),
   };
 }
 
