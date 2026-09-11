@@ -74,7 +74,7 @@ function draft(edgeMetadata?: Readonly<Record<string, unknown>>): WorkspaceGraph
         id: 'transform-a',
         name: 'Orders projection',
         pluginId: 'dvt',
-        kind: 'dvt:transform',
+        kind: 'transform',
         role: 'transform',
         status: 'idle',
         tags: [],

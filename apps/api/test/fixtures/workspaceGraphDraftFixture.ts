@@ -128,7 +128,7 @@ export function buildCanonicalSemanticWorkspaceGraphDraft(): WorkspaceGraphAutho
         ? {
             ...node,
             pluginId: 'dvt',
-            kind: 'dvt:transform',
+            kind: 'transform',
             metadata: {
               transformAuthoring: {
                 version: 'v1',
@@ -226,7 +226,7 @@ export function buildDvtTerminalTransformPreviewDraft(): WorkspaceGraphAuthoring
         id: 'transform-orders',
         name: 'Orders projection',
         pluginId: 'dvt',
-        kind: 'dvt:transform',
+        kind: 'transform',
         role: 'transform',
         status: 'idle',
         tags: [],

@@ -37,7 +37,7 @@ export function resolveDvtTerminalTransformClosure(input: {
   const selectedEdges = selectExact(draft.edges, input.selectedEdgeIds, 'edge');
   const source = selectedNodes.find((node) => node.kind === 'dvt:source' && node.role === 'input');
   const transform = selectedNodes.find(
-    (node) => node.pluginId === 'dvt' && node.kind === 'dvt:transform' && node.role === 'transform'
+    (node) => node.pluginId === 'dvt' && node.kind === 'transform' && node.role === 'transform'
   );
   if (
     source === undefined ||
