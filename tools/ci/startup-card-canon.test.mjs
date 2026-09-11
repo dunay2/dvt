@@ -133,6 +133,17 @@ const retiredPlanningSurfaces = [
 const explicitRetirementLanguage =
   /\b(?:no|not|never|retired|obsolete|removed|deleted|former|historical|history|replaced|superseded|deprecated|archived)\b/i;
 
+function assertNoActiveRetiredReference(path, line, retired) {
+  if (retired.pathPattern.test(line)) {
+    assert.fail(`${path} must not link retired path ${retired.path}: ${line.trim()}`);
+  }
+
+  const referencesRetiredName = retired.namePattern.test(line);
+  if (!referencesRetiredName || explicitRetirementLanguage.test(line)) return;
+
+  assert.fail(`${path} must not present retired surface ${retired.path}: ${line.trim()}`);
+}
+
 test('governance startup card canonization preserves routing semantics and baseline rails', () => {
   assertFilesExist(requiredFiles);
   assertCanonPlan(
@@ -184,6 +195,30 @@ test('governance startup card canonization preserves routing semantics and basel
   }
 });
 
+test('retirement wording never permits links to retired paths', () => {
+  const retiredDashboard = retiredPlanningSurfaces.find(
+    ({ path }) => path === 'docs/planning/state/planning-dashboard.md'
+  );
+  assert.ok(retiredDashboard);
+
+  assert.throws(
+    () =>
+      assertNoActiveRetiredReference(
+        'fixture.md',
+        '[retired Planning Dashboard](../state/planning-dashboard.md)',
+        retiredDashboard
+      ),
+    /must not link retired path/
+  );
+  assert.doesNotThrow(() =>
+    assertNoActiveRetiredReference(
+      'fixture.md',
+      'The Planning Dashboard is retired and no longer authoritative.',
+      retiredDashboard
+    )
+  );
+});
+
 test('active planning entrypoints do not route through retired planning surfaces', () => {
   for (const retired of retiredPlanningSurfaces) {
     assert.throws(() => readRepoFile(retired.path), /ENOENT/, `${retired.path} must stay deleted`);
@@ -193,12 +228,7 @@ test('active planning entrypoints do not route through retired planning surfaces
     const lines = readRepoFile(path).split(/\r?\n/);
     for (const line of lines) {
       for (const retired of retiredPlanningSurfaces) {
-        const referencesRetiredSurface =
-          retired.pathPattern.test(line) || retired.namePattern.test(line);
-        if (!referencesRetiredSurface || explicitRetirementLanguage.test(line)) continue;
-        assert.fail(
-          `${path} must not route through retired surface ${retired.path}: ${line.trim()}`
-        );
+        assertNoActiveRetiredReference(path, line, retired);
       }
     }
   }
