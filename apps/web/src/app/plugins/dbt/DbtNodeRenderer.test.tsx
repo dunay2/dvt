@@ -290,7 +290,7 @@ describe('DBT runtime contributions', () => {
       document.querySelector(
         '[data-slot="graph-node-metric-hotspot"][aria-label="Mat.: incremental"]'
       )?.textContent
-    ).toBe('incremental');
+    ).toBe('Mat.incremental');
     expect(
       document.querySelector('[data-slot="graph-node-summary-icon"]')?.getAttribute('data-icon')
     ).toBe('refresh');
