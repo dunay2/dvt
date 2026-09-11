@@ -3,6 +3,8 @@
  * protected graph, semantic, PostgreSQL projection, and connection identities.
  *
  * @baseline ADR-0064: Substrait semantic reference and bounded logical profile
+ * @decision Bind terminal Transform Preview to the exact protected graph, semantic plan, target SQL projection, and governed connection.
+ * @consequence Preview cannot detach generated SQL from its authorized semantic provenance.
  * @version 1.0.0
  */
 import { z } from 'zod';
