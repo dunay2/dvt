@@ -480,7 +480,6 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
             dataType={conditionDraft.dataType}
             fields={fieldOptions('left')}
             functions={functions}
-            literalDisabled={conditionDraft.right.kind === 'literal'}
             onChange={(left) => setConditionDraft({ ...conditionDraft, left })}
           />
           <label style={{ display: 'block', marginTop: 8, color: muted, fontSize: 9 }}>
@@ -509,7 +508,6 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
             dataType={conditionDraft.dataType}
             fields={fieldOptions('right')}
             functions={functions}
-            literalDisabled={conditionDraft.left.kind === 'literal'}
             onChange={(right) => setConditionDraft({ ...conditionDraft, right })}
           />
           {conditionDraft.conditionKey != null || props.conditions.length === 0 ? null : (

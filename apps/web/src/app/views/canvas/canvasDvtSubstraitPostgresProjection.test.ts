@@ -875,6 +875,59 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     );
   });
 
+  it('projects a constant literal comparison through the PostgreSQL adapter', async () => {
+    const draft = createDvtSubstraitInnerJoinDraft({
+      left: {
+        nodeId: 'source-customers',
+        schema: 'public',
+        table: 'customers',
+        sourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'warehouse-main',
+            provider: 'postgres',
+          },
+          sourceObjectId: 'public.customers',
+        },
+      },
+      right: {
+        nodeId: 'source-orders',
+        schema: 'public',
+        table: 'orders',
+        sourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'warehouse-main',
+            provider: 'postgres',
+          },
+          sourceObjectId: 'public.orders',
+        },
+      },
+      targetNodeId: 'transform-constant-condition',
+    });
+    const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
+    if (!inspection.ok) throw new Error('Expected admitted INNER JOIN projection.');
+    const relationId = inspection.projection.joinRelations[0]?.relationId;
+    if (relationId == null) throw new Error('Expected JOIN relation identity.');
+    const conditioned = addDvtSubstraitJoinPredicateCondition({
+      draft,
+      joinRelationId: relationId,
+      condition: {
+        left: { kind: 'literal', literal: { dataType: 'i64', value: 1n } },
+        right: { kind: 'literal', literal: { dataType: 'i64', value: 1n } },
+      },
+    });
+
+    const normalized = (await projectDvtSubstraitInnerJoinToPostgresSql(conditioned))
+      .replaceAll(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+
+    expect(normalized).toContain('on left_source.customer_id = right_source.customer_id and 1 = 1');
+  });
+
   it('projects grouped JOIN conditions with explicit SQL parentheses', async () => {
     const connectionRef = {
       schemaVersion: 'connection-ref.v1' as const,
