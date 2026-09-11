@@ -1,0 +1,24 @@
+---
+id: R-20260911-SEMANTIC-WORKBENCH-JOIN-DRIFT
+title: Join predicates could drift between Canvas, Substrait, samples, and PostgreSQL
+status: Open
+date: 2026-09-11
+owners:
+  - web
+  - packages/@dvt/contracts
+severity: Medium
+probability: Low
+---
+mitigation:
+  summary: >
+    One typed Substrait expression remains authoritative for editor projection, deterministic graph
+    layout, sample rows, and PostgreSQL rendering. Unsupported operands, capability identities,
+    condition groups, source fields, and data types fail closed.
+  evidence:
+    - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
+    - docs/evidence/ED-20260911-semantic-workbench-join-composition.md
+    - apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.test.ts
+    - apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresProjection.test.ts
+  follow_up:
+    - Each newly admitted operator or function needs contract, inspection, mutation, and
+      target-rendering proof.
