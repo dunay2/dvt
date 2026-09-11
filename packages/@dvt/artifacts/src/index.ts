@@ -4,6 +4,12 @@
 // Governing: ADR-0034, ADR-0043.
 //
 
+export {
+  encodeFileTenantPathSegment,
+  FileContentAddressedArtifactStore,
+  locateFileContentAddressedArtifact,
+  type FileContentAddressedArtifactStoreOptions,
+} from './contentAddressed/FileContentAddressedArtifactStore.js';
 export type {
   IContentAddressedArtifactStore,
   PublishContentAddressedArtifactInput,
