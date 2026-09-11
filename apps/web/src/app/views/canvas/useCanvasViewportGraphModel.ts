@@ -1,6 +1,6 @@
 /** Owned concern: project semantic authoring truth into React Flow viewport state only. */
 import { useEdgesState, useNodesState, type Edge, type Node } from '@xyflow/react';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
 import { getPluginPortMap } from '../../plugins/registry';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
@@ -32,6 +32,13 @@ type VisibleViewportEdge = UseCanvasViewportGraphModelArgs['visibleEdges'][numbe
 type PersistedNodePositions = UseCanvasViewportGraphModelArgs['persistedNodePositions'];
 type ViewportNodeById = ReadonlyMap<string, Node>;
 
+function nodePositionChanged(
+  previous: { x: number; y: number } | undefined,
+  current: { x: number; y: number } | undefined
+): boolean {
+  return previous?.x !== current?.x || previous?.y !== current?.y;
+}
+
 function resolveVisibleCanonicalNodes(
   visibleNodeIds: readonly string[],
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>
@@ -50,6 +57,7 @@ function projectViewportNodes(args: {
   frozenNodeIds: ReadonlySet<string>;
   portCompatibilityByNodeId: ReturnType<typeof buildCanvasConnectionCompatibilityByNodeId>;
   fallbackNodesById?: ViewportNodeById;
+  previousPersistedNodePositions?: PersistedNodePositions;
   locale: string;
 }): Node[] {
   const {
@@ -61,6 +69,7 @@ function projectViewportNodes(args: {
     frozenNodeIds,
     portCompatibilityByNodeId,
     fallbackNodesById,
+    previousPersistedNodePositions,
     locale,
   } = args;
 
@@ -73,8 +82,14 @@ function projectViewportNodes(args: {
       edges: visibleEdges,
     });
     const fallbackNode = fallbackNodesById?.get(canonicalNode.id);
-    const liveGesturePosition =
-      fallbackNode?.dragging === undefined ? undefined : fallbackNode.position;
+    const persistedPosition = persistedNodePositions[canonicalNode.id];
+    const previousPersistedPosition = previousPersistedNodePositions?.[canonicalNode.id];
+    const nextPosition =
+      fallbackNode?.dragging !== undefined
+        ? fallbackNode.position
+        : nodePositionChanged(previousPersistedPosition, persistedPosition)
+          ? (persistedPosition ?? fallbackNode?.position)
+          : (fallbackNode?.position ?? persistedPosition);
 
     const projectedNode = mapCanonicalNodeToCanvasNode({
       canonicalNode: presentedCanonicalNode,
@@ -87,8 +102,7 @@ function projectViewportNodes(args: {
         nodes: visibleCanonicalNodes,
         edges: visibleEdges,
       }),
-      persistedPosition:
-        liveGesturePosition ?? persistedNodePositions[canonicalNode.id] ?? fallbackNode?.position,
+      persistedPosition: nextPosition,
       locale,
     });
     return {
@@ -331,8 +345,11 @@ export function useCanvasViewportGraphModel({
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const previousPersistedNodePositionsRef = useRef(persistedNodePositions);
 
   useEffect(() => {
+    const previousPersistedNodePositions = previousPersistedNodePositionsRef.current;
+    previousPersistedNodePositionsRef.current = persistedNodePositions;
     setNodes((currentNodes) => {
       const nextNodes = projectViewportNodes({
         visibleNodeIds,
@@ -343,6 +360,7 @@ export function useCanvasViewportGraphModel({
         frozenNodeIds,
         portCompatibilityByNodeId,
         fallbackNodesById: new Map(currentNodes.map((node) => [node.id, node])),
+        previousPersistedNodePositions,
         locale: applicationLanguage,
       });
 
