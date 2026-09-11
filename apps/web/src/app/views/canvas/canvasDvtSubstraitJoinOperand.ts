@@ -45,7 +45,9 @@ export function resolveDvtSubstraitJoinUnaryFunctions(args: {
   provider: string;
 }): readonly DvtSubstraitJoinUnaryFunction[] {
   return resolveDvtSubstraitColumnFunctions(args).flatMap((capability) =>
-    capability.category === 'text' && capability.argumentCount === 1
+    capability.category === 'text' &&
+    capability.minimumArgumentCount === 1 &&
+    capability.maximumArgumentCount === 1
       ? [{ ...capability, inputDataType: 'string' as const, outputDataType: 'string' as const }]
       : []
   );

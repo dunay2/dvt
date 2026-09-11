@@ -39,6 +39,19 @@ export function pgFunction(name: string, argument: PostgresAstNode): PostgresAst
   };
 }
 
+export function pgCoalesce(arguments_: readonly PostgresAstNode[]): PostgresAstNode {
+  if (arguments_.length < 2) {
+    throw new Error('PostgreSQL COALESCE requires at least two expressions.');
+  }
+  return {
+    FuncCall: {
+      funcname: [pgString('coalesce')],
+      args: [...arguments_],
+      funcformat: 'COERCE_EXPLICIT_CALL',
+    },
+  };
+}
+
 export function pgConcatAcceptNulls(
   left: PostgresAstNode,
   right: PostgresAstNode

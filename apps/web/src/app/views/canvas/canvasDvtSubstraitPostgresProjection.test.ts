@@ -200,6 +200,43 @@ function connectedNamesProjectionDraft(): DvtSubstraitProjectionDraft {
   });
 }
 
+function connectedFallbackNamesProjectionDraft(): DvtSubstraitProjectionDraft {
+  return createDvtSubstraitProjectionDraft({
+    source: {
+      nodeId: 'source-fallback-names',
+      schema: 'raw',
+      table: 'fallback_names',
+      sourceRef: {
+        schemaVersion: 'connected-source-ref.v1',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: 'warehouse-main',
+          provider: 'postgres',
+        },
+        sourceObjectId: 'raw.fallback_names',
+      },
+      fields: [
+        { name: 'primary_name', dataType: 'text' },
+        { name: 'fallback_name', dataType: 'text' },
+        { name: 'last_resort_name', dataType: 'text' },
+      ],
+    },
+    targetNodeId: 'transform-fallback-names',
+    outputs: [
+      { fieldId: 'output:primary_name', name: 'primary_name', sourceFieldName: 'primary_name' },
+      {
+        fieldId: 'output:fallback_name',
+        name: 'fallback_name',
+        sourceFieldName: 'fallback_name',
+      },
+      {
+        fieldId: 'output:last_resort_name',
+        name: 'last_resort_name',
+        sourceFieldName: 'last_resort_name',
+      },
+    ],
+  });
+}
 describe('VTX2 Substrait -> PostgreSQL projection', () => {
   it('renders the accepted typed pilot recipe through the PostgreSQL deparser', async () => {
     const sql = await projectDvtSubstraitPilotToPostgresSql(completedPilotDraft());
@@ -272,6 +309,58 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
     expect(sql).not.toContain('concat(');
   });
 
+  it('projects ordered variadic COALESCE operands through the governed PostgreSQL AST', async () => {
+    const functions = resolveDvtSubstraitColumnFunctions({
+      dataType: 'text',
+      provider: 'postgres',
+      resolution: 'proposal',
+    });
+    const upper = functions.find((candidate) => candidate.name === 'upper');
+    const coalesce = functions.find((candidate) => candidate.name === 'coalesce');
+    if (upper == null || coalesce == null) {
+      throw new Error('Expected admitted UPPER and COALESCE capabilities.');
+    }
+
+    const normalized = createDvtSubstraitProjectionOutput(
+      connectedFallbackNamesProjectionDraft(),
+      {
+        alias: 'last_resort_normalized',
+        expression: {
+          kind: 'scalar-function',
+          operandFieldIds: ['output:last_resort_name'],
+          capabilityId: upper.capabilityId,
+        },
+      },
+      { inputDataTypes: ['text'], provider: 'postgres' }
+    );
+    if (normalized.outcome !== 'applied') throw new Error('Expected UPPER output creation.');
+    const result = createDvtSubstraitProjectionOutput(
+      normalized.draft,
+      {
+        alias: 'display_name',
+        expression: {
+          kind: 'scalar-function',
+          operandFieldIds: [
+            'output:primary_name',
+            'output:fallback_name',
+            normalized.createdFieldId,
+          ],
+          capabilityId: coalesce.capabilityId,
+        },
+      },
+      { inputDataTypes: ['text', 'text', 'text'], provider: 'postgres' }
+    );
+    if (result.outcome !== 'applied') throw new Error('Expected COALESCE output creation.');
+
+    const sql = (await projectDvtSubstraitProjectionToPostgresSql(result.draft))
+      .replaceAll(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+
+    expect(sql).toContain(
+      'coalesce(primary_name, fallback_name, upper(last_resort_name)) as display_name'
+    );
+  });
   it('rejects false caller type claims against canonical Substrait source types', () => {
     const concat = resolveDvtSubstraitColumnFunctions({
       dataTypes: ['text', 'text'],
@@ -456,7 +545,11 @@ describe('VTX2 Substrait -> PostgreSQL projection', () => {
       provider: 'postgres',
     });
     const extractYearUtc = functions.find((item) => item.name === 'extract year (UTC)');
-    expect(extractYearUtc).toMatchObject({ category: 'date-time', argumentCount: 1 });
+    expect(extractYearUtc).toMatchObject({
+      category: 'date-time',
+      minimumArgumentCount: 1,
+      maximumArgumentCount: 1,
+    });
     if (extractYearUtc == null) throw new Error('Expected admitted UTC year extraction.');
 
     const base = connectedEventsProjectionDraft();

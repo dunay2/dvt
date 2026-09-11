@@ -59,6 +59,7 @@ import {
   pgAnd,
   pgBooleanLiteral,
   pgColumnRef,
+  pgCoalesce,
   pgConcatAcceptNulls,
   pgExtractYearUtc,
   pgCountRows,
@@ -159,6 +160,13 @@ function buildScalarExpressionPostgresAst(
     expression.timezone === 'UTC'
   ) {
     return pgExtractYearUtc(buildScalarExpressionPostgresAst(expression.arguments[0]));
+  }
+  if (
+    expression.kind === 'scalar-function' &&
+    expression.functionName === 'coalesce' &&
+    expression.arguments.length >= 2
+  ) {
+    return pgCoalesce(expression.arguments.map(buildScalarExpressionPostgresAst));
   }
   if (
     expression.kind === 'scalar-function' &&
