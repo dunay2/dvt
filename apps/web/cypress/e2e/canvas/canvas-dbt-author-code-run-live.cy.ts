@@ -19,6 +19,8 @@ import {
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
 
+const GENERATED_ORDER_ID_PROJECTION = 'origin."order_id" as "order_id"';
+const GENERATED_AMOUNT_PROJECTION = 'origin."amount" as "amount"';
 const EXTERNAL_MODEL_SQL = 'select externally_edited_amount from protected_project_code\n';
 
 function openNodeWorkbench(nodeId: string): void {
@@ -57,7 +59,8 @@ function expectGeneratedModelSql(): void {
     .should((renderedCode) => {
       const normalizedCode = renderedCode.replaceAll('\u00a0', ' ').replace(/\s+/g, ' ');
       expect(normalizedCode).to.match(/source\(\s*'finance_warehouse'\s*,\s*'payments_final'\s*\)/);
-      expect(normalizedCode).to.contain('select order_id, amount');
+      expect(normalizedCode).to.contain(GENERATED_ORDER_ID_PROJECTION);
+      expect(normalizedCode).to.contain(GENERATED_AMOUNT_PROJECTION);
     });
 }
 function clickCommandSlotNatively(slot: string): void {
@@ -220,7 +223,8 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
 
       expect(content).to.contain("{{ config(materialized='table') }}");
       expect(content).to.contain("{{ source('finance_warehouse', 'payments_final') }}");
-      expect(content).to.contain('select order_id, amount');
+      expect(content).to.contain(GENERATED_ORDER_ID_PROJECTION);
+      expect(content).to.contain(GENERATED_AMOUNT_PROJECTION);
     });
 
     clickCommandSlotNatively('shell-run-command');
@@ -268,14 +272,15 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
             .text()
             .replace(/\u00a0/g, ' ')
             .replace(/\s+/g, ' ');
-          expect(renderedCode).to.contain('select order_id, amount');
+          expect(renderedCode).to.contain(GENERATED_ORDER_ID_PROJECTION);
+          expect(renderedCode).to.contain(GENERATED_AMOUNT_PROJECTION);
         });
     });
     readLiveWorkspaceFile(workingTreePath).then((response) => {
       expect(response.status).to.equal(200);
-      expect(String((response.body as { content?: unknown }).content ?? '')).to.contain(
-        'select order_id, amount'
-      );
+      const content = String((response.body as { content?: unknown }).content ?? '');
+      expect(content).to.contain(GENERATED_ORDER_ID_PROJECTION);
+      expect(content).to.contain(GENERATED_AMOUNT_PROJECTION);
     });
     cy.get('[data-slot="canvas-contextual-workbench-close"]').should('be.visible').click();
     cy.get('[data-slot="canvas-contextual-workbench"]').should('not.exist');

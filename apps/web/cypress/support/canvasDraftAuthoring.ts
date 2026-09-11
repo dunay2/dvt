@@ -640,6 +640,10 @@ export function buildCanvasAuthoringDraft({
           tags: ['source'],
           metadata: {
             sourceMetricEvidence: sourceMetricEvidence(9_600),
+            columns: [
+              { name: 'order_id', type: 'integer', nullable: false, primaryKey: true },
+              { name: 'amount', type: 'numeric', nullable: false },
+            ],
             dbt: {
               packageName: 'analytics',
               sourceName: 'warehouse',
