@@ -189,7 +189,6 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     replaceInput('dbt-package', 'finance analytics');
     cy.get('select[name="dbt-materialized"]').should('be.enabled').select('table');
     cy.get('select[name="dbt-origin"]').should('be.enabled').select('warehouse_payments');
-    clickButtonNatively(canvasViewCopy.inspectorApplyLabel);
     closeNodeWorkbench();
     cy.get('.react-flow__node[data-id="orders_model"]')
       .should('contain.text', 'Payments Model')
