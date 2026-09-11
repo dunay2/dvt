@@ -32,13 +32,6 @@ type VisibleViewportEdge = UseCanvasViewportGraphModelArgs['visibleEdges'][numbe
 type PersistedNodePositions = UseCanvasViewportGraphModelArgs['persistedNodePositions'];
 type ViewportNodeById = ReadonlyMap<string, Node>;
 
-function nodePositionChanged(
-  previous: { x: number; y: number } | undefined,
-  current: { x: number; y: number } | undefined
-): boolean {
-  return previous?.x !== current?.x || previous?.y !== current?.y;
-}
-
 function resolveVisibleCanonicalNodes(
   visibleNodeIds: readonly string[],
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>
@@ -84,10 +77,13 @@ function projectViewportNodes(args: {
     const fallbackNode = fallbackNodesById?.get(canonicalNode.id);
     const persistedPosition = persistedNodePositions[canonicalNode.id];
     const previousPersistedPosition = previousPersistedNodePositions?.[canonicalNode.id];
+    const persistedPositionChanged =
+      previousPersistedPosition?.x !== persistedPosition?.x ||
+      previousPersistedPosition?.y !== persistedPosition?.y;
     const nextPosition =
       fallbackNode?.dragging !== undefined
         ? fallbackNode.position
-        : nodePositionChanged(previousPersistedPosition, persistedPosition)
+        : persistedPositionChanged
           ? (persistedPosition ?? fallbackNode?.position)
           : (fallbackNode?.position ?? persistedPosition);
 
