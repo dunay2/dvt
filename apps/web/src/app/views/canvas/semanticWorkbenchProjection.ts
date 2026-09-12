@@ -3,12 +3,12 @@ import type { Expression, Rel } from '@buf/substrait_substrait.bufbuild_es/subst
 import type { Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import type { CSSProperties } from 'react';
 
-import type { CanonicalNode } from '../types/canonical';
-import { readDvtSubstraitFieldReferenceOrdinal } from '../views/canvas/canvasDvtSubstraitAggregation';
-import { DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS } from '../views/canvas/canvasDvtSubstraitJoinComposition';
-import { decodeDvtSubstraitSemanticDocument } from '../views/canvas/canvasDvtSubstraitSemanticDocument';
-import { readDvtTransformAuthoringAuthority } from '../views/canvas/canvasDvtTransformAuthoringAuthority';
-import { getLayoutedElements } from '../views/canvas/canvasGraphUtils';
+import type { CanonicalNode } from '../../types/canonical';
+import { readDvtSubstraitFieldReferenceOrdinal } from './canvasDvtSubstraitAggregation';
+import { DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS } from './canvasDvtSubstraitJoinComposition';
+import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import { getLayoutedElements } from './canvasGraphUtils';
 
 export type SemanticWorkbenchGroup = 'source' | 'condition' | 'transformation';
 

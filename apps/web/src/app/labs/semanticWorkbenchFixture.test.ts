@@ -23,7 +23,7 @@ import {
   buildSemanticWorkbenchFixture,
 } from './semanticWorkbenchFixture';
 import { loadSemanticWorkbenchDataset } from './semanticWorkbenchDataset';
-import { projectSemanticWorkbenchGraph } from './semanticWorkbenchProjection';
+import { projectSemanticWorkbenchGraph } from '../views/canvas/semanticWorkbenchProjection';
 
 describe('semanticWorkbenchFixture', () => {
   it('derives all three canonical source cards from the JSON dataset schemas', () => {

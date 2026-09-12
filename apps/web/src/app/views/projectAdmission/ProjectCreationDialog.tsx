@@ -1,4 +1,5 @@
 /** Owned concern: present governed project creation as an accessible modal surface. */
+import { FolderPlus } from 'lucide-react';
 import type { RefObject } from 'react';
 
 import { useWorkspaceScopeSelection } from '../../services/AppServicesContext';
@@ -51,7 +52,7 @@ export function ProjectCreationDialog({
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent
-        className="max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto border-(--border-default) bg-(--surface-panel) p-0 text-(--text-default) sm:max-w-md"
+        className="max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto border-(--border-default) bg-(--surface-panel) p-0 text-(--text-default) sm:max-w-lg"
         closeLabel={copy.closeProjectDialogLabel}
         data-slot="project-creation-dialog"
         onCloseAutoFocus={(event) => {
@@ -59,11 +60,22 @@ export function ProjectCreationDialog({
           returnFocusRef?.current?.focus();
         }}
       >
-        <DialogHeader className="border-b border-(--border-muted) px-6 py-5 pr-14">
-          <DialogTitle>{copy.newProjectDialogTitle}</DialogTitle>
-          <DialogDescription className="sr-only">
-            {copy.newProjectDialogDescription}
-          </DialogDescription>
+        <DialogHeader className="flex-row items-start gap-3 border-b border-(--border-muted) px-6 py-5 pr-14 text-left">
+          <span
+            aria-hidden="true"
+            className="flex size-9 shrink-0 items-center justify-center rounded-md border border-(--border-default) bg-(--surface-elevated) text-primary"
+            data-slot="project-creation-icon"
+          >
+            <FolderPlus className="size-5" />
+          </span>
+          <div className="grid min-w-0 gap-1">
+            <DialogTitle className="leading-6 text-(--text-strong)">
+              {copy.newProjectDialogTitle}
+            </DialogTitle>
+            <DialogDescription className="leading-5 text-(--text-muted)">
+              {copy.newProjectDialogDescription}
+            </DialogDescription>
+          </div>
         </DialogHeader>
         <ProjectCreationForm
           autoFocusProjectName
@@ -84,6 +96,7 @@ export function ProjectCreationDialog({
             </DialogFooter>
           )}
           showCatalogStatus
+          showProjectNameHelp
           showTitle={false}
         />
       </DialogContent>

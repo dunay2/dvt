@@ -29,6 +29,7 @@ type CanvasNodeShellProps = Readonly<{
   sourcePortCompatibility?: CanvasNodePortCompatibilityView;
   targetPortCompatibility?: CanvasNodePortCompatibilityView;
   onContextMenuAction: (actionId: CanvasNodeContextMenuActionId) => void;
+  onSelectNode?: () => void;
   onOpenNode?: () => void;
   onDragOver?: DragEventHandler<HTMLDivElement>;
   onDrop?: DragEventHandler<HTMLDivElement>;
@@ -46,10 +47,19 @@ export function CanvasNodeShell({
   sourcePortCompatibility,
   targetPortCompatibility,
   onContextMenuAction,
+  onSelectNode,
   onOpenNode,
   onDragOver,
   onDrop,
 }: CanvasNodeShellProps): JSX.Element {
+  const handleClick = (event: ReactMouseEvent<HTMLDivElement>): void => {
+    if (isCanvasNodeEmbeddedControlTarget(event.target)) {
+      return;
+    }
+
+    onSelectNode?.();
+  };
+
   const handleDoubleClick = (event: ReactMouseEvent<HTMLDivElement>): void => {
     if (isCanvasNodeEmbeddedControlTarget(event.target)) {
       return;
@@ -74,6 +84,7 @@ export function CanvasNodeShell({
         <div
           data-slot="canvas-node-shell"
           className={cn(styles.root, 'relative')}
+          onClick={handleClick}
           onDoubleClick={handleDoubleClick}
           onContextMenu={handleContextMenu}
           onDragOver={onDragOver}

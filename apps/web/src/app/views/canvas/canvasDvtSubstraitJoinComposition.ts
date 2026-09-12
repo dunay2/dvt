@@ -1083,11 +1083,6 @@ function createDvtSubstraitNInputJoinDraft(args: {
       }
       for (const comparison of collectDvtSubstraitJoinConditionComparisons(condition)) {
         const operands = [comparison.left, comparison.right] as const;
-        if (
-          operands.every((operand) => collectDvtSubstraitJoinOperandFields(operand).length === 0)
-        ) {
-          throw new Error('VTX2 INNER JOIN additional condition must reference an input field.');
-        }
         const operandTypes = operands.map((operand) =>
           resolveDvtSubstraitJoinOperandDataType(operand, (field) => {
             const origin = requireOrigin(field.locator);
@@ -1797,9 +1792,6 @@ function inspectNInputJoinStructure(
         );
       for (const comparison of collectDvtSubstraitJoinConditionComparisons(converted)) {
         if (
-          [comparison.left, comparison.right].every(
-            (operand) => collectDvtSubstraitJoinOperandFields(operand).length === 0
-          ) ||
           operandType(comparison.left) == null ||
           operandType(comparison.left) !== operandType(comparison.right)
         ) {

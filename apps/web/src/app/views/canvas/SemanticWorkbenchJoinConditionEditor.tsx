@@ -1,11 +1,11 @@
 import { Braces, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useMemo, useState, type ReactNode } from 'react';
 
-import { Tooltip, TooltipContent, TooltipTrigger } from '../components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
 import type {
   DvtSubstraitJoinDataType,
   DvtSubstraitNInputJoinProjection,
-} from '../views/canvas/canvasDvtSubstraitJoinComposition';
+} from './canvasDvtSubstraitJoinComposition';
 import {
   DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS,
   DVT_SUBSTRAIT_JOIN_CONDITION_COMBINATIONS,
@@ -15,13 +15,13 @@ import {
   type DvtSubstraitJoinComparisonOperator,
   type DvtSubstraitJoinConditionCombination,
   type DvtSubstraitJoinPredicateCondition,
-} from '../views/canvas/canvasDvtSubstraitJoinCondition';
+} from './canvasDvtSubstraitJoinCondition';
 import {
   dvtSubstraitJoinOperandKey,
   resolveDvtSubstraitJoinOperandDataType,
   resolveDvtSubstraitJoinUnaryFunctions,
   type DvtSubstraitJoinPredicateOperand,
-} from '../views/canvas/canvasDvtSubstraitJoinOperand';
+} from './canvasDvtSubstraitJoinOperand';
 import {
   SemanticWorkbenchJoinOperandEditor,
   buildSemanticWorkbenchJoinOperand,
@@ -480,7 +480,6 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
             dataType={conditionDraft.dataType}
             fields={fieldOptions('left')}
             functions={functions}
-            literalDisabled={conditionDraft.right.kind === 'literal'}
             onChange={(left) => setConditionDraft({ ...conditionDraft, left })}
           />
           <label style={{ display: 'block', marginTop: 8, color: muted, fontSize: 9 }}>
@@ -509,7 +508,6 @@ export function SemanticWorkbenchJoinConditionEditor(props: {
             dataType={conditionDraft.dataType}
             fields={fieldOptions('right')}
             functions={functions}
-            literalDisabled={conditionDraft.left.kind === 'literal'}
             onChange={(right) => setConditionDraft({ ...conditionDraft, right })}
           />
           {conditionDraft.conditionKey != null || props.conditions.length === 0 ? null : (

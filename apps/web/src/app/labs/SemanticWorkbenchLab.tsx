@@ -1,18 +1,8 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import {
-  Background,
-  Handle,
-  Position,
-  ReactFlow,
-  useNodesState,
-  type EdgeTypes,
-  type NodeTypes,
-} from '@xyflow/react';
-import { ArrowLeft, Braces, Database, Equal, GitMerge, Hash, Maximize2 } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
+import { Background, ReactFlow, type EdgeTypes, type NodeTypes } from '@xyflow/react';
 
 import DbtNodeComponent, { type DbtNodeData } from '../components/canvas/DbtNodeComponent';
 import { OperationalDrawerDataTable } from '../components/shell/OperationalDrawerDataTable';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../components/ui/tooltip';
 import { dvtCanvasSurfaceStrategy } from '../plugins/dvt/dvtCanvasSurfaceStrategy';
 import type {
   GraphNodeColumn,
@@ -21,19 +11,13 @@ import type {
 import { getRegisteredPluginIds } from '../plugins/registry';
 import { CanvasDependencyEdge } from '../views/canvas/CanvasDependencyEdge';
 import { CanvasNodeWorkbenchOverlay } from '../views/canvas/CanvasNodeWorkbenchOverlay';
+import { SemanticTransformFocusPanel } from '../views/canvas/SemanticTransformFocusPanel';
 import type { CanvasInspectorAuthoringContract } from '../views/canvas/canvasInspectorAuthoring.types';
 import {
-  DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS,
-  addDvtSubstraitJoinPredicateCondition,
   decodeDvtSubstraitInnerJoinDocument,
   encodeDvtSubstraitInnerJoinDocument,
   inspectDvtSubstraitNInputJoinDraft,
-  removeDvtSubstraitJoinPredicateCondition,
   setDvtSubstraitJoinConnectionFieldSelected,
-  setDvtSubstraitJoinPredicateFields,
-  updateDvtSubstraitJoinPredicateCondition,
-  type DvtSubstraitInnerJoinDraft,
-  type DvtSubstraitJoinComparisonOperator,
   type DvtSubstraitNInputJoinProjection,
 } from '../views/canvas/canvasDvtSubstraitJoinComposition';
 import {
@@ -47,8 +31,6 @@ import {
   SEMANTIC_WORKBENCH_TRANSFORM,
   buildSemanticWorkbenchFixture,
 } from './semanticWorkbenchFixture';
-import { SemanticWorkbenchJoinConditionEditor } from './SemanticWorkbenchJoinConditionEditor';
-import { projectSemanticWorkbenchGraph } from './semanticWorkbenchProjection';
 
 const surface = '#040712';
 const panel = '#09111f';
@@ -56,27 +38,6 @@ const border = '#263b5c';
 const text = '#e2e8f0';
 const muted = '#94a3b8';
 const accent = '#7dd3fc';
-const JOIN_COMPARISON_LABEL: Readonly<Record<DvtSubstraitJoinComparisonOperator, string>> = {
-  equal: '=',
-  not_equal: '!=',
-  gt: '>',
-  gte: '>=',
-  lt: '<',
-  lte: '<=',
-};
-const JOIN_OPERATION_SELECT_STYLE = {
-  width: '100%',
-  boxSizing: 'border-box',
-  marginTop: 7,
-  border: '1px solid #0f766e',
-  borderRadius: 6,
-  background: '#05090f',
-  padding: '8px 9px',
-  color: '#34d399',
-  fontFamily: 'IBM Plex Mono, monospace',
-  fontSize: 9,
-} as const;
-
 const DVT_NODE_TYPES: NodeTypes = { dbtNode: DbtNodeComponent };
 const DVT_EDGE_TYPES: EdgeTypes = { dependency: CanvasDependencyEdge };
 const SEMANTIC_WORKBENCH_NODE_IDS = new Set([
@@ -210,21 +171,10 @@ type WorkbenchRequest = Readonly<{
   preferredTabId: 'general' | 'inputs-outputs' | 'tests' | 'code' | null;
   requestId: number;
 }>;
-type PendingJoinPredicate = Readonly<{
-  joinRelationId: string;
-  leftSourceFieldId: string;
-  rightSourceFieldId: string;
-  operator: DvtSubstraitJoinComparisonOperator;
-}>;
-type EditableJoinCondition = Parameters<
-  typeof addDvtSubstraitJoinPredicateCondition
->[0]['condition'];
-
 function SemanticWorkbenchLab() {
   const [fixture, setFixture] = useState<SemanticWorkbenchFixture>(() =>
     buildSemanticWorkbenchFixture()
   );
-  const [expandedJoinRelationId, setExpandedJoinRelationId] = useState<string | null>(null);
   const canonicalNodes = useMemo(
     () => [...fixture.sources, fixture.transform],
     [fixture.sources, fixture.transform]
@@ -238,20 +188,6 @@ function SemanticWorkbenchLab() {
     [canvasProjection, canonicalNodes]
   );
   const canvasProcess = useCanvasViewportGraphModel(liveCanvasProjection);
-  const semanticAuthorityGraph = useMemo(
-    () => projectSemanticWorkbenchGraph(fixture.transform),
-    [fixture.transform]
-  );
-  const semanticGraph = useMemo(
-    () =>
-      projectSemanticWorkbenchGraph(
-        fixture.transform,
-        expandedJoinRelationId == null
-          ? { view: 'relations' }
-          : { view: 'join-expression', joinRelationId: expandedJoinRelationId }
-      ),
-    [expandedJoinRelationId, fixture.transform]
-  );
   const joinProjection = useMemo(
     () => inspectSemanticWorkbenchJoin(fixture.transform),
     [fixture.transform]
@@ -271,15 +207,11 @@ function SemanticWorkbenchLab() {
         };
   }, [fixture]);
   const [selectedCanvasId, setSelectedCanvasId] = useState(SEMANTIC_WORKBENCH_TRANSFORM.id);
-  const [selectedSemanticId, setSelectedSemanticId] = useState(semanticAuthorityGraph.relationId);
   const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(
     SEMANTIC_WORKBENCH_EDGE[0]?.id ?? null
   );
   const [selectedSourceSampleId, setSelectedSourceSampleId] = useState<string | null>(null);
   const [workbenchRequest, setWorkbenchRequest] = useState<WorkbenchRequest | null>(null);
-  const [pendingJoinPredicate, setPendingJoinPredicate] = useState<PendingJoinPredicate | null>(
-    null
-  );
   const handleInspectNode = useCallback<InspectNode>((nodeId, preferredTabId) => {
     if (!SEMANTIC_WORKBENCH_NODE_IDS.has(nodeId)) return;
     setSelectedCanvasId(nodeId);
@@ -325,82 +257,8 @@ function SemanticWorkbenchLab() {
           ),
         };
       });
-      setPendingJoinPredicate(null);
     },
     [selectedConnectionId]
-  );
-  const editJoinDraft = useCallback(
-    (edit: (draft: DvtSubstraitInnerJoinDraft) => DvtSubstraitInnerJoinDraft) => {
-      setFixture((current) => {
-        const authority = readDvtTransformAuthoringAuthority(current.transform);
-        if (authority == null) return current;
-        const currentDraft = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
-        const nextDraft = edit(currentDraft);
-        if (nextDraft === currentDraft) return current;
-        return {
-          ...current,
-          transform: applyDvtSubstraitSemanticDocument(
-            current.transform,
-            encodeDvtSubstraitInnerJoinDocument(nextDraft)
-          ),
-        };
-      });
-    },
-    []
-  );
-  const applyJoinPredicateFields = useCallback(
-    (
-      joinRelationId: string,
-      leftSourceFieldId: string,
-      rightSourceFieldId: string,
-      operator: DvtSubstraitJoinComparisonOperator
-    ) => {
-      editJoinDraft((draft) =>
-        setDvtSubstraitJoinPredicateFields({
-          draft,
-          joinRelationId,
-          leftSourceFieldId,
-          rightSourceFieldId,
-          operator,
-        })
-      );
-      setPendingJoinPredicate(null);
-    },
-    [editJoinDraft]
-  );
-  const addJoinCondition = useCallback(
-    (joinRelationId: string, condition: EditableJoinCondition, groupWithPrevious: boolean) => {
-      editJoinDraft((draft) =>
-        addDvtSubstraitJoinPredicateCondition({
-          draft,
-          joinRelationId,
-          condition,
-          groupWithPrevious,
-        })
-      );
-    },
-    [editJoinDraft]
-  );
-  const updateJoinCondition = useCallback(
-    (joinRelationId: string, conditionKey: string, condition: EditableJoinCondition) => {
-      editJoinDraft((draft) =>
-        updateDvtSubstraitJoinPredicateCondition({
-          draft,
-          joinRelationId,
-          conditionKey,
-          condition,
-        })
-      );
-    },
-    [editJoinDraft]
-  );
-  const removeJoinCondition = useCallback(
-    (joinRelationId: string, conditionKey: string) => {
-      editJoinDraft((draft) =>
-        removeDvtSubstraitJoinPredicateCondition({ draft, joinRelationId, conditionKey })
-      );
-    },
-    [editJoinDraft]
   );
   const canvasNodes = useMemo(
     () =>
@@ -460,284 +318,6 @@ function SemanticWorkbenchLab() {
       : (SEMANTIC_WORKBENCH_SOURCE_SAMPLES.find(
           ({ nodeId }) => nodeId === selectedSourceSampleId
         ) ?? null);
-  const selectedSemantic =
-    semanticAuthorityGraph.nodes.find((node) => node.id === selectedSemanticId) ??
-    semanticAuthorityGraph.nodes.find((node) => node.data.semanticKind !== 'group') ??
-    null;
-  const selectedJoinPredicate = useMemo(() => {
-    const joinOperand = selectedSemantic?.data.joinOperand;
-    if (joinProjection == null) return null;
-    const joinRelationId =
-      joinOperand?.joinRelationId ??
-      (selectedSemantic?.data.semanticKind === 'relation' &&
-      joinProjection.joinRelations.some((relation) => relation.relationId === selectedSemantic.id)
-        ? selectedSemantic.id
-        : null);
-    if (joinRelationId == null) return null;
-    const stageIndex = joinProjection.joinRelations.findIndex(
-      (relation) => relation.relationId === joinRelationId
-    );
-    const predicate = joinProjection.joins[stageIndex];
-    if (stageIndex < 0 || predicate == null) return null;
-    const rightInputIndex = stageIndex + 1;
-    const selectedOutputFieldIds = new Set(
-      joinProjection.outputs.map((output) => output.source.fieldId)
-    );
-    const optionsFor = (operand: 'left' | 'right') =>
-      joinProjection.inputs.flatMap((input, inputIndex) =>
-        (operand === 'left' ? inputIndex < rightInputIndex : inputIndex === rightInputIndex)
-          ? input.fields.flatMap((field) =>
-              selectedOutputFieldIds.has(field.fieldId) ||
-              field.fieldId === predicate.leftSourceFieldId ||
-              field.fieldId === predicate.rightSourceFieldId
-                ? [
-                    {
-                      fieldId: field.fieldId,
-                      label: `${input.schema}.${input.table}.${field.name}`,
-                      dataType: field.dataType,
-                    },
-                  ]
-                : []
-            )
-          : []
-      );
-    const pending =
-      pendingJoinPredicate?.joinRelationId === joinRelationId
-        ? pendingJoinPredicate
-        : {
-            joinRelationId,
-            leftSourceFieldId: predicate.leftSourceFieldId,
-            rightSourceFieldId: predicate.rightSourceFieldId,
-            operator: predicate.operator ?? 'equal',
-          };
-    const fieldTypeById = new Map(
-      joinProjection.inputs.flatMap((input) =>
-        input.fields.map((field) => [field.fieldId, field.dataType] as const)
-      )
-    );
-    return {
-      ...pending,
-      projection: joinProjection,
-      rightInputIndex,
-      additionalConditions: predicate.additionalConditions ?? [],
-      leftOptions: optionsFor('left'),
-      rightOptions: optionsFor('right'),
-      compatible:
-        fieldTypeById.get(pending.leftSourceFieldId) ===
-        fieldTypeById.get(pending.rightSourceFieldId),
-      dirty:
-        pending.leftSourceFieldId !== predicate.leftSourceFieldId ||
-        pending.rightSourceFieldId !== predicate.rightSourceFieldId ||
-        pending.operator !== (predicate.operator ?? 'equal'),
-    };
-  }, [joinProjection, pendingJoinPredicate, selectedSemantic]);
-  const semanticNodeTypes = useMemo<NodeTypes>(
-    () => ({
-      semanticRelation: ({ data }) => {
-        const relationKind = data.relationKind;
-        const handleStyle = {
-          width: 10,
-          height: 10,
-          border: '2px solid #22d3ee',
-          background: '#071827',
-        };
-        const portLabelStyle = {
-          position: 'absolute' as const,
-          zIndex: 2,
-          color: '#67e8f9',
-          fontFamily: 'IBM Plex Mono, monospace',
-          fontSize: 8,
-          fontWeight: 700,
-          pointerEvents: 'none' as const,
-        };
-
-        return (
-          <div
-            data-slot="semantic-workbench-relation-node"
-            style={{ position: 'relative', minHeight: relationKind === 'join' ? 76 : 56 }}
-          >
-            {relationKind === 'join' ? (
-              <>
-                <Handle
-                  id="left"
-                  type="target"
-                  position={Position.Left}
-                  isConnectable={false}
-                  style={{ ...handleStyle, top: '32%' }}
-                />
-                <span style={{ ...portLabelStyle, top: '21%', left: 5 }}>L</span>
-                <Handle
-                  id="right"
-                  type="target"
-                  position={Position.Left}
-                  isConnectable={false}
-                  style={{ ...handleStyle, top: '70%' }}
-                />
-                <span style={{ ...portLabelStyle, top: '59%', left: 5 }}>R</span>
-              </>
-            ) : relationKind === 'read' ? null : (
-              <Handle
-                id="in"
-                type="target"
-                position={Position.Left}
-                isConnectable={false}
-                style={handleStyle}
-              />
-            )}
-            {data.label as ReactNode}
-            <Handle
-              id="out"
-              type="source"
-              position={Position.Right}
-              isConnectable={false}
-              style={handleStyle}
-            />
-            {relationKind === 'join' ? (
-              <span
-                style={{
-                  ...portLabelStyle,
-                  top: '43%',
-                  right: 7,
-                  transform: 'translateY(-50%)',
-                }}
-              >
-                OUT
-              </span>
-            ) : null}
-          </div>
-        );
-      },
-    }),
-    []
-  );
-  const projectedSemanticNodes = useMemo(
-    () =>
-      semanticGraph.nodes.map((node) => {
-        if (node.data.semanticKind === 'group') {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              label: <span data-slot="semantic-workbench-group-label">{node.data.label}</span>,
-            },
-          };
-        }
-
-        const [title, ...detailLines] = node.data.label.split('\n');
-        const subtitle = detailLines.join(' · ');
-        const Icon =
-          node.data.semanticKind === 'field'
-            ? Hash
-            : node.data.semanticKind === 'expression'
-              ? Equal
-              : node.data.semanticKind === 'literal'
-                ? Braces
-                : title === 'SOURCE'
-                  ? Database
-                  : GitMerge;
-        const iconColor =
-          node.data.semanticKind === 'field'
-            ? '#7dd3fc'
-            : node.data.semanticKind === 'expression'
-              ? '#34d399'
-              : title === 'SOURCE'
-                ? '#60a5fa'
-                : '#22d3ee';
-
-        return {
-          ...node,
-          selected: node.id === selectedSemanticId,
-          data: {
-            ...node.data,
-            label: (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span
-                    data-slot="semantic-workbench-node"
-                    tabIndex={0}
-                    style={{
-                      display: 'flex',
-                      minWidth: 0,
-                      alignItems: 'center',
-                      gap: 9,
-                      padding: '9px 10px',
-                      textAlign: 'left',
-                    }}
-                  >
-                    <span
-                      aria-hidden="true"
-                      style={{
-                        display: 'grid',
-                        width: 28,
-                        height: 28,
-                        flex: '0 0 28px',
-                        placeItems: 'center',
-                        border: `1px solid ${iconColor}`,
-                        borderRadius: 6,
-                        color: iconColor,
-                        background: `${iconColor}14`,
-                      }}
-                    >
-                      <Icon size={15} strokeWidth={1.8} />
-                    </span>
-                    <span style={{ minWidth: 0 }}>
-                      <span
-                        style={{
-                          display: 'block',
-                          color: iconColor,
-                          fontSize: 9,
-                          fontWeight: 750,
-                          letterSpacing: '0.06em',
-                        }}
-                      >
-                        {title}
-                      </span>
-                      <span
-                        style={{
-                          display: 'block',
-                          overflow: node.data.relationKind === 'join' ? 'visible' : 'hidden',
-                          color: text,
-                          fontFamily: 'IBM Plex Mono, monospace',
-                          fontSize: 10,
-                          lineHeight: 1.35,
-                          textOverflow: node.data.relationKind === 'join' ? 'clip' : 'ellipsis',
-                          whiteSpace: node.data.relationKind === 'join' ? 'normal' : 'nowrap',
-                        }}
-                      >
-                        {subtitle}
-                      </span>
-                    </span>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="top" sideOffset={6}>
-                  {node.data.detail}
-                </TooltipContent>
-              </Tooltip>
-            ),
-          },
-        };
-      }),
-    [semanticGraph.nodes, selectedSemanticId]
-  );
-  const [semanticNodes, setSemanticNodes, onSemanticNodesChange] =
-    useNodesState(projectedSemanticNodes);
-  useEffect(() => {
-    setSemanticNodes((current) => {
-      if (expandedJoinRelationId != null) return projectedSemanticNodes;
-      const positionsById = new Map(current.map((node) => [node.id, node.position] as const));
-      return projectedSemanticNodes.map((node) => ({
-        ...node,
-        position: positionsById.get(node.id) ?? node.position,
-      }));
-    });
-  }, [expandedJoinRelationId, projectedSemanticNodes, setSemanticNodes]);
-  const semanticSourceCount = semanticAuthorityGraph.nodes.filter(
-    (node) => node.data.relationKind === 'read'
-  ).length;
-  const semanticJoinCount = semanticAuthorityGraph.nodes.filter(
-    (node) => node.data.relationKind === 'join'
-  ).length;
-
   const selectedCanvasNode =
     canonicalNodes.find((node) => node.id === selectedCanvasId) ?? fixture.transform;
   const selectedConnection = fixture.edges.find((edge) => edge.id === selectedConnectionId) ?? null;
@@ -895,58 +475,25 @@ function SemanticWorkbenchLab() {
         </div>
       </section>
 
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 18,
-          padding: '0 18px',
-          background: '#07101e',
-          borderBottom: `1px solid ${border}`,
-        }}
-      >
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: accent }}>
-          TRANSFORM FOCUS · {fixture.transform.name}
-        </div>
-        <div style={{ color: muted, fontSize: 10, fontFamily: 'IBM Plex Mono, monospace' }}>
-          {expandedJoinRelationId == null
-            ? 'relational projection · expressions on demand'
-            : 'selected JOIN · semantic expression detail'}
-        </div>
-      </div>
-
-      <section
-        style={{
-          minHeight: 0,
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1fr) 320px',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        {selectedSourceSample == null ? null : (
-          <div
+      <div style={{ gridRow: '3 / 5', minHeight: 0, overflow: 'hidden' }}>
+        {selectedSourceSample == null ? (
+          <SemanticTransformFocusPanel
+            transform={fixture.transform}
+            canEdit
+            onTransformChange={(transform) => setFixture((current) => ({ ...current, transform }))}
+          />
+        ) : (
+          <section
             data-slot="semantic-workbench-source-sample"
             style={{
-              position: 'absolute',
-              inset: 0,
-              zIndex: 6,
+              height: '100%',
               minWidth: 0,
               overflow: 'auto',
               background: '#05090f',
               padding: 18,
             }}
           >
-            <div
-              style={{
-                marginBottom: 14,
-                color: accent,
-                fontSize: 11,
-                fontWeight: 700,
-                letterSpacing: '0.06em',
-              }}
-            >
+            <div style={{ marginBottom: 14, color: accent, fontSize: 11, fontWeight: 700 }}>
               {selectedSourceSample.nodeId === fixture.transform.id
                 ? 'TRANSFORM OUTPUT'
                 : 'SOURCE DATA'}{' '}
@@ -958,467 +505,17 @@ function SemanticWorkbenchLab() {
             <OperationalDrawerDataTable
               key={selectedSourceSample.nodeId}
               caption={
-                selectedSourceSample.nodeId === fixture.transform.id
-                  ? `Output sample from ${selectedSourceSample.nodeName}`
-                  : `Data sample from ${selectedSourceSample.nodeName}`
+                (selectedSourceSample.nodeId === fixture.transform.id
+                  ? 'Output sample from '
+                  : 'Data sample from ') + selectedSourceSample.nodeName
               }
               columns={selectedSourceSample.columns}
               rows={selectedSourceSample.rows}
               nullValueLabel="NULL"
             />
-          </div>
+          </section>
         )}
-        <div style={{ minWidth: 0, minHeight: 0, position: 'relative' }}>
-          <ReactFlow
-            nodes={semanticNodes}
-            edges={semanticGraph.edges}
-            nodeTypes={semanticNodeTypes}
-            fitView
-            fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
-            minZoom={0.25}
-            maxZoom={1.6}
-            nodesDraggable={expandedJoinRelationId == null}
-            nodesConnectable={false}
-            elementsSelectable={expandedJoinRelationId == null}
-            onNodesChange={onSemanticNodesChange}
-            onNodeClick={(_, node) => {
-              if (expandedJoinRelationId == null && node.data.semanticKind !== 'group') {
-                setSelectedSemanticId(node.id);
-              }
-            }}
-            onNodeDoubleClick={(_, node) => {
-              if (node.data.relationKind !== 'join') return;
-              setSelectedSemanticId(node.id);
-              setExpandedJoinRelationId(node.id);
-            }}
-            proOptions={{ hideAttribution: true }}
-          >
-            <Background color="#182844" gap={24} size={1} />
-          </ReactFlow>
-
-          <div
-            style={{
-              position: 'absolute',
-              top: 14,
-              left: 16,
-              zIndex: 4,
-              border: `1px solid ${border}`,
-              borderRadius: 8,
-              background: 'rgba(7, 16, 30, 0.94)',
-              padding: '8px 11px',
-              color: muted,
-              fontSize: 10,
-              fontFamily: 'IBM Plex Mono, monospace',
-              pointerEvents: 'auto',
-            }}
-          >
-            {expandedJoinRelationId == null ? (
-              <>
-                Relational flow · {semanticSourceCount} sources · {semanticJoinCount} joins
-              </>
-            ) : (
-              <button
-                type="button"
-                aria-label="Volver al flujo relacional"
-                onClick={() => setExpandedJoinRelationId(null)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  border: 0,
-                  background: 'transparent',
-                  padding: 0,
-                  color: '#34d399',
-                  cursor: 'pointer',
-                  font: 'inherit',
-                }}
-              >
-                <ArrowLeft aria-hidden="true" size={12} />
-                JOIN expression · {semanticGraph.expressionCount} nodes
-              </button>
-            )}
-          </div>
-        </div>
-
-        <aside
-          data-slot="semantic-workbench-inspector"
-          style={{
-            minHeight: 0,
-            overflow: 'auto',
-            borderLeft: `1px solid ${border}`,
-            background: '#05090f',
-            padding: 16,
-          }}
-        >
-          <div style={{ color: accent, fontSize: 10, fontWeight: 700, letterSpacing: '0.07em' }}>
-            RESUMEN
-          </div>
-          {selectedSemantic == null ? (
-            <p style={{ marginTop: 16, color: muted, fontSize: 11, lineHeight: 1.55 }}>
-              Selecciona una relación, campo o expresión.
-            </p>
-          ) : (
-            <div style={{ marginTop: 16 }}>
-              <div
-                style={{
-                  color: text,
-                  fontSize: 15,
-                  fontWeight: 700,
-                }}
-              >
-                {selectedSemantic.data.label.split('\n')[0]}
-              </div>
-              <div
-                style={{
-                  marginTop: 3,
-                  color: muted,
-                  fontFamily: 'IBM Plex Mono, monospace',
-                  fontSize: 10,
-                }}
-              >
-                {selectedSemantic.data.label.split('\n').slice(1).join(' · ')}
-              </div>
-
-              {selectedJoinPredicate == null ? null : (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      data-slot="semantic-workbench-expand-expression"
-                      aria-label={
-                        expandedJoinRelationId === selectedJoinPredicate.joinRelationId
-                          ? 'Volver al flujo relacional'
-                          : 'Expandir la expresión del join'
-                      }
-                      aria-pressed={expandedJoinRelationId === selectedJoinPredicate.joinRelationId}
-                      onClick={() =>
-                        setExpandedJoinRelationId((current) =>
-                          current === selectedJoinPredicate.joinRelationId
-                            ? null
-                            : selectedJoinPredicate.joinRelationId
-                        )
-                      }
-                      style={{
-                        display: 'flex',
-                        width: '100%',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 7,
-                        marginTop: 12,
-                        border: `1px solid ${border}`,
-                        borderRadius: 7,
-                        background:
-                          expandedJoinRelationId === selectedJoinPredicate.joinRelationId
-                            ? '#063c35'
-                            : panel,
-                        padding: '8px 10px',
-                        color:
-                          expandedJoinRelationId === selectedJoinPredicate.joinRelationId
-                            ? '#6ee7b7'
-                            : accent,
-                        cursor: 'pointer',
-                        fontSize: 10,
-                        fontWeight: 700,
-                      }}
-                    >
-                      {expandedJoinRelationId === selectedJoinPredicate.joinRelationId ? (
-                        <ArrowLeft aria-hidden="true" size={13} />
-                      ) : (
-                        <Maximize2 aria-hidden="true" size={13} />
-                      )}
-                      {expandedJoinRelationId === selectedJoinPredicate.joinRelationId
-                        ? 'Volver al flujo relacional'
-                        : 'Expand expression'}
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {expandedJoinRelationId === selectedJoinPredicate.joinRelationId
-                      ? 'Ocultar el AST y volver a las relaciones.'
-                      : 'Mostrar sólo el árbol Substrait de este JOIN.'}
-                  </TooltipContent>
-                </Tooltip>
-              )}
-
-              {selectedJoinPredicate == null ? null : (
-                <div style={{ marginTop: 18 }}>
-                  <div style={{ color: muted, fontSize: 9, fontWeight: 700 }}>
-                    CONDICIÓN DEL JOIN
-                  </div>
-                  <label style={{ display: 'block', marginTop: 9, color: muted, fontSize: 9 }}>
-                    CAMPO IZQUIERDO
-                    <select
-                      data-slot="semantic-workbench-left-field-select"
-                      aria-label="Cambiar campo izquierdo del join"
-                      title="Campos habilitados en la conexión superior izquierda."
-                      value={selectedJoinPredicate.leftSourceFieldId}
-                      onChange={(event) =>
-                        setPendingJoinPredicate({
-                          joinRelationId: selectedJoinPredicate.joinRelationId,
-                          leftSourceFieldId: event.currentTarget.value,
-                          rightSourceFieldId: selectedJoinPredicate.rightSourceFieldId,
-                          operator: selectedJoinPredicate.operator,
-                        })
-                      }
-                      style={{
-                        width: '100%',
-                        marginTop: 6,
-                        border: '1px solid #245f88',
-                        borderRadius: 7,
-                        background: '#071827',
-                        padding: '9px 10px',
-                        color: accent,
-                        fontFamily: 'IBM Plex Mono, monospace',
-                        fontSize: 10,
-                      }}
-                    >
-                      {selectedJoinPredicate.leftOptions.map((option) => (
-                        <option key={option.fieldId} value={option.fieldId}>
-                          {option.label} · {option.dataType}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <select
-                    aria-label="Comparador de la condición principal"
-                    title="Operador aplicado entre los dos campos del JOIN."
-                    value={selectedJoinPredicate.operator}
-                    style={JOIN_OPERATION_SELECT_STYLE}
-                    onChange={(event) =>
-                      setPendingJoinPredicate({
-                        ...selectedJoinPredicate,
-                        operator: event.currentTarget.value as DvtSubstraitJoinComparisonOperator,
-                      })
-                    }
-                  >
-                    {DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS.map((operator) => (
-                      <option key={operator} value={operator}>
-                        {JOIN_COMPARISON_LABEL[operator]}
-                      </option>
-                    ))}
-                  </select>
-                  <label style={{ display: 'block', marginTop: 8, color: muted, fontSize: 9 }}>
-                    CAMPO DERECHO
-                    <select
-                      data-slot="semantic-workbench-right-field-select"
-                      aria-label="Cambiar campo derecho del join"
-                      title="Campos habilitados en la conexión superior derecha."
-                      value={selectedJoinPredicate.rightSourceFieldId}
-                      onChange={(event) =>
-                        setPendingJoinPredicate({
-                          joinRelationId: selectedJoinPredicate.joinRelationId,
-                          leftSourceFieldId: selectedJoinPredicate.leftSourceFieldId,
-                          rightSourceFieldId: event.currentTarget.value,
-                          operator: selectedJoinPredicate.operator,
-                        })
-                      }
-                      style={{
-                        width: '100%',
-                        marginTop: 6,
-                        border: '1px solid #245f88',
-                        borderRadius: 7,
-                        background: '#071827',
-                        padding: '9px 10px',
-                        color: accent,
-                        fontFamily: 'IBM Plex Mono, monospace',
-                        fontSize: 10,
-                      }}
-                    >
-                      {selectedJoinPredicate.rightOptions.map((option) => (
-                        <option key={option.fieldId} value={option.fieldId}>
-                          {option.label} · {option.dataType}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <button
-                    type="button"
-                    disabled={!selectedJoinPredicate.compatible || !selectedJoinPredicate.dirty}
-                    title={
-                      selectedJoinPredicate.compatible
-                        ? 'Aplicar ambos campos a la condición.'
-                        : 'Los dos campos deben tener el mismo tipo.'
-                    }
-                    onClick={() =>
-                      applyJoinPredicateFields(
-                        selectedJoinPredicate.joinRelationId,
-                        selectedJoinPredicate.leftSourceFieldId,
-                        selectedJoinPredicate.rightSourceFieldId,
-                        selectedJoinPredicate.operator
-                      )
-                    }
-                    style={{
-                      width: '100%',
-                      marginTop: 12,
-                      border: '1px solid #2563eb',
-                      borderRadius: 7,
-                      background:
-                        selectedJoinPredicate.compatible && selectedJoinPredicate.dirty
-                          ? '#12356b'
-                          : '#111827',
-                      padding: '9px 10px',
-                      color:
-                        selectedJoinPredicate.compatible && selectedJoinPredicate.dirty
-                          ? '#dbeafe'
-                          : '#64748b',
-                      cursor:
-                        selectedJoinPredicate.compatible && selectedJoinPredicate.dirty
-                          ? 'pointer'
-                          : 'not-allowed',
-                      fontSize: 10,
-                      fontWeight: 700,
-                    }}
-                  >
-                    Aplicar condición
-                  </button>
-                  {!selectedJoinPredicate.compatible ? (
-                    <div style={{ marginTop: 7, color: '#fbbf24', fontSize: 9 }}>
-                      Selecciona dos campos del mismo tipo.
-                    </div>
-                  ) : null}
-                  <SemanticWorkbenchJoinConditionEditor
-                    key={selectedJoinPredicate.joinRelationId}
-                    projection={selectedJoinPredicate.projection}
-                    rightInputIndex={selectedJoinPredicate.rightInputIndex}
-                    conditions={selectedJoinPredicate.additionalConditions}
-                    onAdd={(condition, groupWithPrevious) =>
-                      addJoinCondition(
-                        selectedJoinPredicate.joinRelationId,
-                        condition,
-                        groupWithPrevious
-                      )
-                    }
-                    onUpdate={(conditionKey, condition) =>
-                      updateJoinCondition(
-                        selectedJoinPredicate.joinRelationId,
-                        conditionKey,
-                        condition
-                      )
-                    }
-                    onRemove={(conditionKey) =>
-                      removeJoinCondition(selectedJoinPredicate.joinRelationId, conditionKey)
-                    }
-                  />
-                </div>
-              )}
-
-              {selectedSemantic.data.expression == null ? null : (
-                <div
-                  style={{
-                    marginTop: 18,
-                    border: '1px solid #245f88',
-                    borderRadius: 8,
-                    background: '#071827',
-                    padding: '10px 11px',
-                  }}
-                >
-                  <div style={{ color: muted, fontSize: 9, fontWeight: 700 }}>EXPRESIÓN</div>
-                  <div
-                    style={{
-                      marginTop: 6,
-                      color: accent,
-                      fontFamily: 'IBM Plex Mono, monospace',
-                      fontSize: 11,
-                    }}
-                  >
-                    {selectedSemantic.data.expression}
-                  </div>
-                </div>
-              )}
-
-              {selectedSemantic.data.detail === selectedSemantic.data.expression ? null : (
-                <p style={{ margin: '16px 0 0', color: muted, fontSize: 11, lineHeight: 1.55 }}>
-                  {selectedSemantic.data.detail}
-                </p>
-              )}
-
-              {selectedSemantic.data.inputSummary == null &&
-              selectedSemantic.data.outputSummary == null ? null : (
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                    gap: 8,
-                    marginTop: 16,
-                  }}
-                >
-                  {selectedSemantic.data.inputSummary == null ? null : (
-                    <div
-                      style={{
-                        border: `1px solid ${border}`,
-                        borderRadius: 8,
-                        background: panel,
-                        padding: 10,
-                      }}
-                    >
-                      <div style={{ color: muted, fontSize: 9 }}>ENTRADAS</div>
-                      <div style={{ marginTop: 5, color: text, fontSize: 12, fontWeight: 650 }}>
-                        {selectedSemantic.data.inputSummary}
-                      </div>
-                    </div>
-                  )}
-                  {selectedSemantic.data.outputSummary == null ? null : (
-                    <div
-                      style={{
-                        border: `1px solid ${border}`,
-                        borderRadius: 8,
-                        background: panel,
-                        padding: 10,
-                      }}
-                    >
-                      <div style={{ color: muted, fontSize: 9 }}>SALIDAS</div>
-                      <div style={{ marginTop: 5, color: text, fontSize: 12, fontWeight: 650 }}>
-                        {selectedSemantic.data.outputSummary}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div
-                style={{
-                  marginTop: 16,
-                  border: '1px solid #6d4b9e',
-                  borderRadius: 8,
-                  background: '#171026',
-                  padding: '10px 11px',
-                  color: '#c4b5fd',
-                  fontSize: 10,
-                  lineHeight: 1.45,
-                }}
-              >
-                {selectedJoinPredicate == null
-                  ? 'Proyección semántica de solo lectura.'
-                  : 'El cambio actualiza la autoridad Substrait y recalcula la muestra del Transform.'}
-              </div>
-
-              <div
-                style={{
-                  marginTop: 12,
-                  color: muted,
-                  fontFamily: 'IBM Plex Mono, monospace',
-                  fontSize: 9,
-                }}
-              >
-                {selectedSemantic.id}
-              </div>
-            </div>
-          )}
-
-          <div
-            style={{
-              marginTop: 24,
-              paddingTop: 14,
-              borderTop: `1px solid ${border}`,
-              color: muted,
-              fontSize: 10,
-              lineHeight: 1.55,
-            }}
-          >
-            El nivel superior es el Canvas DVT. Este grafo solo proyecta la semántica interna del
-            Transform seleccionado.
-          </div>
-        </aside>
-      </section>
+      </div>
 
       <CanvasNodeWorkbenchOverlay
         layout={workbenchLayout}

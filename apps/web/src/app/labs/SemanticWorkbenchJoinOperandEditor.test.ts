@@ -1,9 +1,37 @@
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { resolveDvtSubstraitJoinUnaryFunctions } from '../views/canvas/canvasDvtSubstraitJoinOperand';
-import { buildSemanticWorkbenchJoinOperand } from './SemanticWorkbenchJoinOperandEditor';
+import {
+  SemanticWorkbenchJoinOperandEditor,
+  buildSemanticWorkbenchJoinOperand,
+} from '../views/canvas/SemanticWorkbenchJoinOperandEditor';
 
 describe('SemanticWorkbenchJoinOperandEditor', () => {
+  it('keeps VALUE selectable when the other operand is already a literal', () => {
+    const props = {
+      side: 'derecho' as const,
+      operand: {
+        kind: 'field' as const,
+        fieldId: 'field-order-id',
+        rawValue: '',
+        functionIds: [],
+      },
+      dataType: 'i64' as const,
+      fields: [
+        { fieldId: 'field-order-id', label: 'raw.orders.order_id', dataType: 'i64' as const },
+      ],
+      functions: [],
+      literalDisabled: true,
+      onChange: () => undefined,
+    };
+
+    expect(
+      renderToStaticMarkup(createElement(SemanticWorkbenchJoinOperandEditor, props))
+    ).toContain('<option value="literal">VALUE</option>');
+  });
+
   it('builds the same recursive operand for a literal and N admitted functions', () => {
     const functions = resolveDvtSubstraitJoinUnaryFunctions({
       dataType: 'string',

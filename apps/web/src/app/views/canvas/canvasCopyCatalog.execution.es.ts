@@ -147,6 +147,9 @@ export const canvasViewExecutionCopyEs = {
   operationalDrawerRunsTab: 'Ejecuciones',
   operationalDrawerPreviewTab: 'Vista previa',
   operationalDrawerDataTab: 'Datos',
+  operationalDrawerSemanticTab: 'Semántica',
+  operationalDrawerSemanticIdleMessage:
+    'Selecciona un Transform Substrait para analizar su flujo relacional.',
   operationalDrawerProblemsAriaLabel: 'Problemas del Canvas',
   operationalDrawerNoProblemsMessage: 'No hay problemas actuales en el Canvas.',
   operationalDrawerRunsAriaLabel: 'Ejecuciones del Canvas',

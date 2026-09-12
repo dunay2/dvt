@@ -66,6 +66,8 @@ export interface DbtNodeData extends Record<string, unknown> {
     nodeId: string,
     preferredTabId?: 'general' | 'inputs-outputs' | 'tests' | 'code' | null
   ) => void;
+  onOpenNode?: (nodeId: string) => void;
+  onSelectNode?: (nodeId: string) => void;
   onOpenSourceDataSample?: (nodeId: string) => void;
   sourceDataSampleInteractionLabel?: string;
   canOpenNodeCode?: boolean;
@@ -154,7 +156,9 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
       sourcePortCompatibility={data.portCompatibility?.source}
       targetPortCompatibility={data.portCompatibility?.target}
       onContextMenuAction={projection.runAction}
+      onSelectNode={projection.selectNode}
       onOpenNode={
+        typeof data.onOpenNode === 'function' ||
         typeof data.onOpenSourceDataSample === 'function' ||
         typeof data.onInspectNode === 'function'
           ? projection.openNode

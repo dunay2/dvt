@@ -3,8 +3,8 @@ import { X } from 'lucide-react';
 import type {
   DvtSubstraitJoinDataType,
   DvtSubstraitJoinPredicateOperand,
-} from '../views/canvas/canvasDvtSubstraitJoinComposition';
-import type { DvtSubstraitJoinUnaryFunction } from '../views/canvas/canvasDvtSubstraitJoinOperand';
+} from './canvasDvtSubstraitJoinComposition';
+import type { DvtSubstraitJoinUnaryFunction } from './canvasDvtSubstraitJoinOperand';
 
 const selectStyle = {
   width: '100%',
@@ -159,7 +159,6 @@ export function SemanticWorkbenchJoinOperandEditor(props: {
   dataType: DvtSubstraitJoinDataType;
   fields: readonly SemanticWorkbenchJoinFieldOption[];
   functions: readonly DvtSubstraitJoinUnaryFunction[];
-  literalDisabled: boolean;
   onChange: (operand: SemanticWorkbenchJoinOperandDraft) => void;
 }) {
   return (
@@ -191,17 +190,7 @@ export function SemanticWorkbenchJoinOperandEditor(props: {
           style={selectStyle}
         >
           <option value="field">FIELD</option>
-          <option
-            value="literal"
-            disabled={props.literalDisabled}
-            title={
-              props.literalDisabled
-                ? 'Una condición de JOIN debe conservar al menos un campo.'
-                : undefined
-            }
-          >
-            VALUE
-          </option>
+          <option value="literal">VALUE</option>
         </select>
         {props.operand.kind === 'field' ? (
           <select

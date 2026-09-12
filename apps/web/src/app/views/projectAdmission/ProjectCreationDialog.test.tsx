@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { fireEvent } from '@testing-library/dom';
+import { fireEvent, getByRole } from '@testing-library/dom';
 import React, { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -97,19 +97,36 @@ describe('ProjectCreationDialog', () => {
     const dialog = document.body.querySelector('[role="dialog"]');
     const descriptionId = dialog?.getAttribute('aria-describedby');
     const description = descriptionId ? document.getElementById(descriptionId) : null;
-    expect(description?.textContent).toBe(
-      'Elige una organización autorizada y asigna al proyecto un nombre reconocible.'
-    );
-    expect(description?.classList.contains('sr-only')).toBe(true);
+    expect(description?.textContent).toBe('Empieza desde cero con un proyecto vacío y gobernado.');
+    expect(description?.classList.contains('sr-only')).toBe(false);
     const dialogContent = document.body.querySelector('[data-slot="project-creation-dialog"]');
     const dialogHeader = dialogContent?.querySelector('[data-slot="dialog-header"]');
     const formBody = dialogContent?.querySelector('[data-slot="project-creation-fields"]');
     const dialogFooter = dialogContent?.querySelector('[data-slot="dialog-footer"]');
+    const projectIcon = dialogHeader?.querySelector('[data-slot="project-creation-icon"]');
+    const projectNameInput = dialogContent?.querySelector<HTMLInputElement>(
+      'input[name="projectName"]'
+    );
+    const projectNameHelpId = projectNameInput?.getAttribute('aria-describedby');
+    const projectNameHelp = projectNameHelpId ? document.getElementById(projectNameHelpId) : null;
+    const submitButton = dialogContent?.querySelector<HTMLButtonElement>('button[type="submit"]');
     expect(dialogContent?.classList).toContain('gap-0');
     expect(dialogContent?.classList).toContain('p-0');
+    expect(dialogContent?.classList).toContain('sm:max-w-lg');
     expect(dialogHeader?.classList).toContain('py-5');
+    expect(dialogHeader?.classList).toContain('flex-row');
+    expect(dialogHeader?.classList).toContain('gap-3');
+    expect(projectIcon?.getAttribute('aria-hidden')).toBe('true');
     expect(formBody?.classList).toContain('gap-4');
     expect(formBody?.classList).toContain('py-5');
+    expect(projectNameHelp?.textContent).toBe('Usa un nombre claro y reconocible.');
+    expect(projectNameHelp?.getAttribute('data-slot')).toBe('project-name-help');
+    expect(getByRole(document.body, 'textbox', { name: 'Nombre del proyecto' })).toBe(
+      projectNameInput
+    );
+    expect(projectNameInput?.closest('label')).toBeNull();
+    expect(submitButton?.classList).toContain('disabled:bg-(--surface-elevated)');
+    expect(submitButton?.disabled).toBe(true);
     expect(dialogFooter?.classList).toContain('border-t');
     expect(dialogFooter?.classList).toContain('py-4');
     expect(dialogContent?.querySelector('[data-slot="label"]')).not.toBeNull();
@@ -117,6 +134,10 @@ describe('ProjectCreationDialog', () => {
     expect(dialogContent?.querySelector('[data-slot="button"]')).not.toBeNull();
     expect(dialogFooter?.querySelector('[data-slot="dialog-close"]')).not.toBeNull();
     expect(document.activeElement).toBe(document.body.querySelector('input[name="projectName"]'));
+    expect(document.body.textContent).not.toContain('Start from');
+    expect(document.body.textContent).not.toContain('dbt project');
+    expect(document.body.textContent).not.toContain('Snowflake starter');
+    expect(document.body.textContent).not.toContain('Data pipeline');
 
     await act(async () => {
       fireEvent.input(document.body.querySelector('input[name="projectName"]')!, {
@@ -137,6 +158,37 @@ describe('ProjectCreationDialog', () => {
       expect.objectContaining({ project: expect.objectContaining({ name: 'Ventas' }) })
     );
     expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it('localizes the visible dialog hierarchy in English', async () => {
+    useApplicationLanguageStore.getState().configureApplicationLanguage('en');
+
+    mounted = await withTestQueryClient(
+      <AppServicesProvider overrides={createAppServicesTestOverrides()}>
+        <ProjectCreationDialog
+          activateCreatedProject={vi.fn()}
+          onOpenChange={vi.fn()}
+          open
+          service={buildProjectOnboardingService()}
+        />
+      </AppServicesProvider>
+    );
+
+    await waitForReactQuery(
+      () => document.body.querySelector('input[name="projectName"]') != null,
+      { description: 'English new project dialog form' }
+    );
+
+    const dialog = document.body.querySelector('[role="dialog"]');
+    const descriptionId = dialog?.getAttribute('aria-describedby');
+    const description = descriptionId ? document.getElementById(descriptionId) : null;
+    const input = document.body.querySelector<HTMLInputElement>('input[name="projectName"]');
+    const helpId = input?.getAttribute('aria-describedby');
+    const help = helpId ? document.getElementById(helpId) : null;
+
+    expect(document.body.textContent).toContain('Create a new project');
+    expect(description?.textContent).toBe('Start from scratch with an empty governed project.');
+    expect(help?.textContent).toBe('Use a clear, recognizable name.');
   });
 
   it.each([

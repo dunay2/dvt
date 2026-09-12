@@ -1,6 +1,6 @@
 /** Owned concern: share governed project admission state and creation presentation. */
 import { FolderPlus, LoaderCircle } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 
 import {
   createProjectOnboardingService,
@@ -242,6 +242,7 @@ type ProjectCreationFormProps = Readonly<{
   contentClassName?: string;
   dataSlot?: string;
   showCatalogStatus?: boolean;
+  showProjectNameHelp?: boolean;
   showTitle?: boolean;
   autoFocusProjectName?: boolean;
   leadingAction?: ReactNode;
@@ -259,15 +260,22 @@ export function ProjectCreationForm({
   contentClassName = 'space-y-4',
   dataSlot = 'project-onboarding-form',
   showCatalogStatus = false,
+  showProjectNameHelp = false,
   showTitle = true,
   autoFocusProjectName = false,
   leadingAction,
   renderActions,
 }: ProjectCreationFormProps): JSX.Element {
+  const projectNameHelpId = useId();
+  const projectNameInputId = `${projectNameHelpId}-input`;
   const actions = (
     <>
       {leadingAction}
-      <Button disabled={!controller.canSubmit} type="submit">
+      <Button
+        className="disabled:border disabled:border-(--border-default) disabled:bg-(--surface-elevated) disabled:text-(--text-disabled)"
+        disabled={!controller.canSubmit}
+        type="submit"
+      >
         {controller.submissionState === 'submitting' ? (
           <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
         ) : (
@@ -322,18 +330,29 @@ export function ProjectCreationForm({
                 </select>
               </Label>
             ) : null}
-            <Label className="grid gap-2 text-(--text-default)">
-              <span>{copy.projectNameLabel}</span>
+            <div className="grid gap-2 text-(--text-default)">
+              <Label htmlFor={projectNameInputId}>{copy.projectNameLabel}</Label>
               <Input
+                aria-describedby={showProjectNameHelp ? projectNameHelpId : undefined}
                 autoFocus={autoFocusProjectName}
                 className="bg-(--surface-route) text-(--text-default) placeholder:text-(--text-disabled)"
+                id={projectNameInputId}
                 name="projectName"
                 disabled={controller.submissionState !== 'idle'}
                 onChange={(event) => controller.setProjectName(event.target.value)}
                 placeholder={copy.projectNamePlaceholder}
                 value={controller.projectName}
               />
-            </Label>
+              {showProjectNameHelp ? (
+                <span
+                  className="text-xs leading-5 font-normal text-(--text-muted)"
+                  data-slot="project-name-help"
+                  id={projectNameHelpId}
+                >
+                  {copy.projectNameHelpText}
+                </span>
+              ) : null}
+            </div>
             {!controller.canCreateProject ? (
               <div
                 className="rounded-md border border-amber-500/40 bg-amber-950/30 px-3 py-2 text-sm text-amber-100"

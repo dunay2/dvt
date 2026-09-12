@@ -1,5 +1,5 @@
 /** Owned concern: publish Canvas route posture into the shell operational drawer. */
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, type ReactNode } from 'react';
 
 import type { CanvasOperationalDrawerSurfacePolicy } from '../../plugins/canvasSurfaceStrategyContracts';
 import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
@@ -21,6 +21,7 @@ type CanvasOperationalDrawerContributionRegistrarProps = Readonly<{
   onStartRun: () => void;
   selectionRecoveryCommands: CanvasExecutionSelectionRecoveryCommands | null;
   dataSample: OperationalDrawerDataSample;
+  semanticBody?: ReactNode;
 }>;
 
 export function CanvasOperationalDrawerContributionRegistrar({
@@ -32,6 +33,7 @@ export function CanvasOperationalDrawerContributionRegistrar({
   chromeState,
   selectionRecoveryCommands,
   dataSample,
+  semanticBody = null,
 }: CanvasOperationalDrawerContributionRegistrarProps): null {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = useMemo(() => resolveCanvasViewCopy(applicationLanguage), [applicationLanguage]);
@@ -43,15 +45,19 @@ export function CanvasOperationalDrawerContributionRegistrar({
   );
   const latestCommandsRef = useRef({ onPreviewExecutionPlan, onStartRun });
   latestCommandsRef.current = { onPreviewExecutionPlan, onStartRun };
-  const [logTab, problemsTab, runsTab, previewTab, dataTab] = policy.tabs;
+  const policyTabKey = policy.tabs.join('|');
+  const stablePolicy = useMemo<CanvasOperationalDrawerSurfacePolicy>(
+    () => ({
+      placement: policy.placement,
+      tabs: policyTabKey.split('|') as CanvasOperationalDrawerSurfacePolicy['tabs'],
+    }),
+    [policy.placement, policyTabKey]
+  );
   const blockerKey = chromeState.planRunReadiness.blockers.join('|');
   const contribution = useMemo(
     () =>
       buildCanvasOperationalDrawerContribution({
-        policy: {
-          placement: policy.placement,
-          tabs: [logTab, problemsTab, runsTab, previewTab, dataTab],
-        },
+        policy: stablePolicy,
         canPlan: panels.userPermissions.canPlan,
         activeRunId: panels.activeRunId ?? null,
         runControls,
@@ -69,6 +75,7 @@ export function CanvasOperationalDrawerContributionRegistrar({
         selectionRecoveryCommands,
         selectionRecoveryMessages: copy,
         dataSample,
+        semanticBody,
         copy,
         onPreviewExecutionPlan: () => latestCommandsRef.current.onPreviewExecutionPlan(),
         onStartRun: () => latestCommandsRef.current.onStartRun(),
@@ -84,15 +91,11 @@ export function CanvasOperationalDrawerContributionRegistrar({
       chromeState.executionSelectionRecovery,
       copy,
       dataSample,
-      dataTab,
-      logTab,
       panels.activeRunId,
       panels.userPermissions.canPlan,
-      policy.placement,
-      previewTab,
-      problemsTab,
+      stablePolicy,
       runControls,
-      runsTab,
+      semanticBody,
       selectionRecoveryCommands,
     ]
   );

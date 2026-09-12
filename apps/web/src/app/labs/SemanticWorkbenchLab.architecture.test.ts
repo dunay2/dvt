@@ -3,8 +3,12 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const SOURCE = readFileSync(join(import.meta.dirname, 'SemanticWorkbenchLab.tsx'), 'utf8');
+const PANEL = readFileSync(
+  join(import.meta.dirname, '../views/canvas/SemanticTransformFocusPanel.tsx'),
+  'utf8'
+);
 const JOIN_CONDITION_EDITOR = readFileSync(
-  join(import.meta.dirname, 'SemanticWorkbenchJoinConditionEditor.tsx'),
+  join(import.meta.dirname, '../views/canvas/SemanticWorkbenchJoinConditionEditor.tsx'),
   'utf8'
 );
 
@@ -17,9 +21,9 @@ describe('SemanticWorkbenchLab architecture', () => {
   });
 
   it('uses React Flow node state only to preserve movable semantic group geometry', () => {
-    expect(SOURCE).toContain('useNodesState(');
-    expect(SOURCE).toContain('positionsById');
-    expect(SOURCE).toContain('onNodesChange={onSemanticNodesChange}');
+    expect(PANEL).toContain('useNodesState(');
+    expect(PANEL).toContain('const positions = new Map(');
+    expect(PANEL).toContain('onNodesChange={onNodesChange}');
   });
 
   it('reuses the DVT data table and existing source sample callback', () => {
@@ -40,7 +44,8 @@ describe('SemanticWorkbenchLab architecture', () => {
   });
 
   it('keeps semantic and Canvas projections memoized across Workbench state changes', () => {
-    expect(SOURCE).toContain('projectSemanticWorkbenchGraph(fixture.transform)');
+    expect(SOURCE).toContain('<SemanticTransformFocusPanel');
+    expect(PANEL).toContain('projectSemanticWorkbenchGraph(transform)');
     expect(SOURCE).toContain('useState(() => buildCanvasProcess(fixture))');
     expect(SOURCE).toContain('useCanvasViewportGraphModel(liveCanvasProjection)');
     expect(SOURCE).toContain('canonicalNodesById: new Map(');
@@ -55,35 +60,35 @@ describe('SemanticWorkbenchLab architecture', () => {
   });
 
   it('renders grouped Substrait nodes and one factual read-only inspector', () => {
-    expect(SOURCE).toContain('data-slot="semantic-workbench-node"');
-    expect(SOURCE).toContain('data-slot="semantic-workbench-inspector"');
-    expect(SOURCE).toContain('setSelectedSemanticId');
-    expect(SOURCE).toContain('Tooltip');
-    expect(SOURCE).toContain('setDvtSubstraitJoinPredicateFields');
-    expect(SOURCE).toContain('addDvtSubstraitJoinPredicateCondition');
-    expect(SOURCE).toContain('updateDvtSubstraitJoinPredicateCondition');
-    expect(SOURCE).toContain('removeDvtSubstraitJoinPredicateCondition');
-    expect(SOURCE).toContain('data-slot="semantic-workbench-left-field-select"');
-    expect(SOURCE).toContain('data-slot="semantic-workbench-right-field-select"');
-    expect(SOURCE).toContain('Aplicar condición');
+    expect(PANEL).toContain('data-slot="semantic-workbench-node"');
+    expect(PANEL).toContain('data-slot="semantic-workbench-inspector"');
+    expect(PANEL).toContain('setSelectedSemanticId');
+    expect(PANEL).toContain('Tooltip');
+    expect(PANEL).toContain('setDvtSubstraitJoinPredicateFields');
+    expect(PANEL).toContain('addDvtSubstraitJoinPredicateCondition');
+    expect(PANEL).toContain('updateDvtSubstraitJoinPredicateCondition');
+    expect(PANEL).toContain('removeDvtSubstraitJoinPredicateCondition');
+    expect(PANEL).toContain('data-slot="semantic-workbench-left-field-select"');
+    expect(PANEL).toContain('data-slot="semantic-workbench-right-field-select"');
+    expect(PANEL).toContain('Aplicar condición');
     expect(JOIN_CONDITION_EDITOR).toContain('label="Añadir condición"');
-    expect(SOURCE).toContain("detailLines.join(' · ')");
-    expect(SOURCE).toContain('selectedSemantic?.data.joinOperand');
+    expect(PANEL).toContain("details.join(' · ')");
+    expect(PANEL).toContain('selectedSemantic?.data.joinOperand');
     expect(JOIN_CONDITION_EDITOR).toContain('Conector de la condición adicional');
     expect(JOIN_CONDITION_EDITOR).toContain('Comparador de la condición adicional');
-    expect(SOURCE).toContain('DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS');
-    expect(SOURCE).not.toContain('Impacto estimado');
-    expect(SOURCE).not.toContain('Editar nodo');
+    expect(PANEL).toContain('DVT_SUBSTRAIT_JOIN_COMPARISON_OPERATORS');
+    expect(PANEL).not.toContain('Impacto estimado');
+    expect(PANEL).not.toContain('Editar nodo');
   });
 
   it('uses one symmetric operand editor for both sides of an additional JOIN condition', () => {
-    expect(SOURCE).toContain('<SemanticWorkbenchJoinConditionEditor');
-    expect(SOURCE).not.toContain('<SemanticWorkbenchJoinOperandEditor');
+    expect(PANEL).toContain('<SemanticWorkbenchJoinConditionEditor');
+    expect(PANEL).not.toContain('<SemanticWorkbenchJoinOperandEditor');
     expect(JOIN_CONDITION_EDITOR.match(/<SemanticWorkbenchJoinOperandEditor/g)).toHaveLength(2);
     expect(JOIN_CONDITION_EDITOR).toContain('conditionDraft.left');
     expect(JOIN_CONDITION_EDITOR).toContain('conditionDraft.right');
     expect(JOIN_CONDITION_EDITOR).toContain('Editar condición');
     expect(JOIN_CONDITION_EDITOR).toContain('Eliminar condición');
-    expect(SOURCE).not.toContain('rightSourceFieldId: string | null;');
+    expect(PANEL).not.toContain('rightSourceFieldId: string | null;');
   });
 });

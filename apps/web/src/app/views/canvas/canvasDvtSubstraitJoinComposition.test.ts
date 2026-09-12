@@ -444,6 +444,32 @@ describe('DVT Substrait INNER JOIN identity', () => {
     ).toBe(draft);
   });
 
+  it('round-trips a constant literal comparison in the retained JOIN predicate', () => {
+    const draft = fixture();
+    const before = inspectNInput(draft);
+    const joinRelationId = before.joinRelations[0]?.relationId;
+    if (joinRelationId == null) throw new Error('Expected the join relation identity.');
+
+    const edited = addDvtSubstraitJoinPredicateCondition({
+      draft,
+      joinRelationId,
+      condition: {
+        left: { kind: 'literal', literal: { dataType: 'i64', value: 1n } },
+        right: { kind: 'literal', literal: { dataType: 'i64', value: 1n } },
+      },
+    });
+    const reloaded = decodeDvtSubstraitInnerJoinDocument(
+      encodeDvtSubstraitInnerJoinDocument(edited)
+    );
+
+    expect(inspectNInput(reloaded).joins[0]?.additionalConditions).toEqual([
+      {
+        left: { kind: 'literal', literal: { dataType: 'i64', value: 1n } },
+        right: { kind: 'literal', literal: { dataType: 'i64', value: 1n } },
+      },
+    ]);
+  });
+
   it('round-trips a left literal against N unary functions around a field', () => {
     const draft = createDvtSubstraitStringInnerJoinDraft({
       left: {
