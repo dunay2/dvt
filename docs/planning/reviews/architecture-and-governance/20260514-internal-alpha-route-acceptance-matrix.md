@@ -2,7 +2,7 @@
 title: Internal Alpha Route Acceptance Matrix
 status: Review
 owner: Product / Architecture / Frontend / Runtime Safety
-last_reviewed: 2026-05-18
+last_reviewed: 2026-09-12
 planning_type: review
 task_ids:
   - F-27
@@ -14,25 +14,30 @@ task_ids:
 
 This matrix is the route-level F-27 acceptance artifact. It does not replace
 child implementation plans. It records the proof that moved the internal alpha
-route from blocked to review and now to alpha full.
+route from blocked to review and then to accepted alpha full.
 
-Alpha full is blocked while any stage is `Gap`, lacks a fail-closed fixture, or
-lacks a route-stage risk decision. Child slices cannot declare alpha full.
+`F-27` is closed. This matrix is accepted route-proof evidence, not a current
+task queue. Any new executable follow-up starts in GitHub Issues; Planning DB
+remains scoped to architecture and mechanization governance.
+
+The route decision becomes blocked again semantically when a required stage
+loses accepted proof, a fail-closed fixture, or a route-stage risk decision.
+Child slices cannot declare alpha full by implication.
 
 ## Acceptance Matrix
 
 <!-- markdownlint-disable MD060 -->
 
-| Route stage        | Governing rail or owner                                                     | Happy-path fixture                                                                | Fail-closed fixture                                                                                                                          | Evidence source                                                                                               | Risk decision                                                                                                                                     | Alpha exit impact                   |
-| ------------------ | --------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| Startup gate       | `ObserveAppBootstrapRouteReadiness`; Web Shell / App Bootstrap              | User sees route-ready startup after platform readiness settles.                   | Platform unavailable, bootstrap timeout, and route-ready/runtime-not-ready fail closed.                                                      | Accepted startup route-readiness proof.                                                                       | Included: startup ambiguity can block first-use trust. Excluded: public login bootstrap because it is outside protected alpha.                    | Accepted for alpha full.            |
-| Workspace context  | `GetEffectiveWorkspaceContext`; protected runtime workspace context         | Tenant, project, and environment are visible for the active workspace.            | Missing, detached, unauthorized, or assertion-conflicted context fails closed.                                                               | Accepted effective workspace context proof.                                                                   | Included: implicit tenant/project/env state can leak product authority. Excluded: admin provisioning depth.                                       | Accepted for alpha full.            |
-| Canvas workbench   | `GetWorkspaceGraphDraft`; `SaveWorkspaceGraphDraft`; Canvas graph component | Authoritative draft loads, nodes are visible, and drag/save feedback is governed. | Draft load failure, save denial, stale draft, retry exhaustion, and read-only posture are explicit.                                          | Accepted Canvas draft read/save and draft-access browser proof.                                               | Included: local graph state can become product authority. Excluded: advanced authoring workflows beyond alpha read/inspect posture.               | Accepted for alpha full.            |
-| Code workbench     | `ListWorkspaceFiles`; `GetWorkspaceFileContent`; workspace-files child plan | Authorized tree and first-file preview load read-only with freshness metadata.    | Empty workspace, backend unavailable, unauthorized, not-found, traversal, oversize, unsupported file type, and freshness cases are explicit. | Accepted workspace-files query rail plan, API tests, UI proof, browser proof, and filesystem safety evidence. | Included: file reads can bypass authorization or filesystem policy. Excluded: file-write behavior, which requires a separate command rail.        | Accepted for alpha full.            |
-| Plan/run readiness | `ObservePlanRunReadiness`; Runtime admission and plan readiness             | Controls explain ready-to-run posture with stable source-owned reasons.           | Plan integrity, backpressure, capability mismatch, adapter degraded, and authorization denied are distinct.                                  | Accepted `PlanRunReadinessReadModel`, unit, run-start, architecture, and browser proof.                       | Included: generic disabled copy hides platform risk. Excluded: executing real production runs during alpha gate proof.                            | Accepted for alpha full.            |
-| Recovery states    | `MapRouteRecoveryState`; Route recovery vocabulary                          | Equivalent failures use one route-owned recovery vocabulary across stages.        | Unknown, unavailable, unauthorized, stale, and not-found states stay distinguishable.                                                        | Accepted recovery vocabulary guide, architecture guard, and browser fail-closed stage evidence.               | Included: duplicated recovery copy creates stage drift. Excluded: cosmetic copy iteration after source-owned keys exist.                          | Accepted for alpha full.            |
-| Alpha cadence      | F-27 route plan; Product / Architecture                                     | Audience, entry date, duration, exit owner, and extension rule are named.         | Missing exit owner, missing duration, or indefinite extension keeps route blocked.                                                           | Accepted cadence decision in this matrix and F-27 closeout.                                                   | Included: alpha can become an undefined status. Excluded: launch/GTM cadence beyond internal alpha.                                               | Accepted and closed for alpha full. |
-| Risk triage        | `docs/risk-register/**`; F-27 route risk review                             | Included and excluded risks are listed per route stage.                           | Untriaged high-impact route risks keep the route blocked.                                                                                    | Accepted risk register triage in this matrix and F-27 closeout.                                               | Included: route-stage safety, authorization, readiness, and data freshness risks. Excluded: unrelated roadmap or historical risks with rationale. | Accepted and closed for alpha full. |
+| Route stage        | Governing rail or owner                                                              | Happy-path fixture                                                                | Fail-closed fixture                                                                                                                          | Evidence source                                                                                               | Risk decision                                                                                                                                     | Alpha exit impact                   |
+| ------------------ | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| Startup gate       | `ObserveAppBootstrapRouteReadiness`; Web Shell / App Bootstrap                       | User sees route-ready startup after platform readiness settles.                   | Platform unavailable, bootstrap timeout, and route-ready/runtime-not-ready fail closed.                                                      | Accepted startup route-readiness proof.                                                                       | Included: startup ambiguity can block first-use trust. Excluded: public login bootstrap because it is outside protected alpha.                    | Accepted for alpha full.            |
+| Workspace context  | `GetEffectiveWorkspaceContext`; protected runtime workspace context                  | Tenant, project, and environment are visible for the active workspace.            | Missing, detached, unauthorized, or assertion-conflicted context fails closed.                                                               | Accepted effective workspace context proof.                                                                   | Included: implicit tenant/project/env state can leak product authority. Excluded: admin provisioning depth.                                       | Accepted for alpha full.            |
+| Canvas workbench   | `GetWorkspaceGraphDraft`; `SaveWorkspaceGraphDraft`; Canvas graph component          | Authoritative draft loads, nodes are visible, and drag/save feedback is governed. | Draft load failure, save denial, stale draft, retry exhaustion, and read-only posture are explicit.                                          | Accepted Canvas draft read/save and draft-access browser proof.                                               | Included: local graph state can become product authority. Excluded: advanced authoring workflows beyond alpha read/inspect posture.               | Accepted for alpha full.            |
+| Code workbench     | `ListWorkspaceFiles`; `GetWorkspaceFileContent`; workspace-files child plan          | Authorized tree and first-file preview load read-only with freshness metadata.    | Empty workspace, backend unavailable, unauthorized, not-found, traversal, oversize, unsupported file type, and freshness cases are explicit. | Accepted workspace-files query rail plan, API tests, UI proof, browser proof, and filesystem safety evidence. | Included: file reads can bypass authorization or filesystem policy. Excluded: file-write behavior, which requires a separate command rail.        | Accepted for alpha full.            |
+| Plan/run readiness | `ObservePlanRunReadiness`; Runtime admission and plan readiness                      | Controls explain ready-to-run posture with stable source-owned reasons.           | Plan integrity, backpressure, capability mismatch, adapter degraded, and authorization denied are distinct.                                  | Accepted `PlanRunReadinessReadModel`, unit, run-start, architecture, and browser proof.                       | Included: generic disabled copy hides platform risk. Excluded: executing real production runs during alpha gate proof.                            | Accepted for alpha full.            |
+| Recovery states    | `MapRouteRecoveryState`; Route recovery vocabulary                                   | Equivalent failures use one route-owned recovery vocabulary across stages.        | Unknown, unavailable, unauthorized, stale, and not-found states stay distinguishable.                                                        | Accepted recovery vocabulary guide, architecture guard, and browser fail-closed stage evidence.               | Included: duplicated recovery copy creates stage drift. Excluded: cosmetic copy iteration after source-owned keys exist.                          | Accepted for alpha full.            |
+| Alpha cadence      | Accepted F-27 route proof and closeout; Product / Architecture                       | Audience, entry date, duration, exit owner, and extension rule are named.         | Missing exit owner, missing duration, or indefinite extension keeps route blocked.                                                           | Accepted cadence decision in this matrix and F-27 closeout.                                                   | Included: alpha can become an undefined status. Excluded: launch/GTM cadence beyond internal alpha.                                               | Accepted and closed for alpha full. |
+| Risk triage        | `docs/risk-register/**`; accepted F-27 route evidence and closeout                  | Included and excluded risks are listed per route stage.                           | Untriaged high-impact route risks keep the route blocked.                                                                                    | Accepted risk register triage in this matrix and F-27 closeout.                                               | Included: route-stage safety, authorization, readiness, and data freshness risks. Excluded: unrelated roadmap or historical risks with rationale. | Accepted and closed for alpha full. |
 
 <!-- markdownlint-enable MD060 -->
 
@@ -44,6 +49,9 @@ lacks a route-stage risk decision. Child slices cannot declare alpha full.
   proof is not accepted.
 - `accepted`: every stage has accepted proof, risk triage, cadence, ADR-0000
   traceability, and `pnpm verify:prepush` evidence.
+
+These are route-decision semantics. They do not reopen F-27 as executable work;
+any regression requiring remediation is tracked through a current GitHub issue.
 
 ## Alpha Cadence Decision
 
@@ -59,9 +67,10 @@ evaluation window, not a launch status.
 - `extensionRule`: Product / Architecture may approve one extension of up to 5
   business days for named blockers.
 
-Cadence is blocked when any field above is removed, when a route stage lacks
-accepted happy-path or fail-closed proof, or when a blocker is extended without
-an owner and a dated re-review.
+Cadence evidence is invalid when any field above is removed, when a route stage
+lacks accepted happy-path or fail-closed proof, or when a blocker is extended
+without an owner and a dated re-review. The F-27 closeout records that these
+conditions were satisfied for the accepted route decision.
 
 ## Route Risk Triage
 
@@ -78,13 +87,13 @@ route boundary with rationale.
 - `Workspace context`: Included
   [R-20260308-api-auth-runtime-integration-coverage](../../../risk-register/quality/R-20260308-api-auth-runtime-integration-coverage.md)
   because protected route auth can regress without full runtime proof. Excluded
-  admin provisioning depth because F-27 only consumes already-scoped tenant,
-  project, and environment context.
+  admin provisioning depth because the accepted F-27 proof only consumes
+  already-scoped tenant, project, and environment context.
 - `Workspace context`: Included
   [R-20260425-PRODUCTION-TENANT-ISOLATION-BASELINE](../../../risk-register/quality/R-20260425-PRODUCTION-TENANT-ISOLATION-BASELINE.yaml)
   because missing tenant isolation can leak product authority across contexts.
-  Excluded historical gap IDs because active context truth must route through
-  protected runtime rails and Lane C evidence.
+  Excluded historical gap IDs because current context truth must route through
+  protected runtime rails and current evidence.
 - `Canvas workbench`: Included
   [R-20260423-CANVAS-HOST-DRAFT-BOUNDARY](../../../risk-register/quality/R-20260423-CANVAS-HOST-DRAFT-BOUNDARY.yaml)
   because host UX can overclaim persistence beyond the authoritative draft
@@ -93,7 +102,8 @@ route boundary with rationale.
 - `Code workbench`: Included
   [R-20260411-WEB-WORKSPACE-FILE-NOT-FOUND-CONTRACT-GAP](../../../risk-register/quality/R-20260411-WEB-WORKSPACE-FILE-NOT-FOUND-CONTRACT-GAP.yaml)
   because missing-file copy can drift from backend reason vocabulary. Excluded
-  file-write behavior because F-27 has no workspace-file command rail.
+  file-write behavior because the accepted F-27 route proof has no
+  workspace-file command rail.
 - `Plan/run readiness`: Included
   [R-20260424-TEMPORAL-PLAN-REF-CONTRACT](../../../risk-register/quality/R-20260424-TEMPORAL-PLAN-REF-CONTRACT.yaml)
   because runtime execution can regress to unchecked `PlanRef` behavior.
@@ -107,9 +117,9 @@ route boundary with rationale.
   Excluded cosmetic copy iteration once source-owned recovery keys exist and
   stage coverage is proven.
 - `Alpha cadence`: Included undefined cadence because it can turn alpha into an
-  unbounded status; this matrix owns the cadence field contract and blocks
+  unbounded status; this matrix preserves the cadence field contract and blocks
   missing `exitOwner`, `duration`, or `extensionRule`. Excluded launch/GTM
-  cadence because F-27 governs internal alpha only.
+  cadence because the accepted F-27 evidence covers internal alpha only.
 - `Risk triage`: Included untriaged route-stage risk because it can hide
   authorization, readiness, data freshness, or local-authority regressions.
   Excluded risks unrelated to startup, context, Canvas, Code, plan/run
@@ -121,8 +131,8 @@ rationale, alpha-full is accepted with no remaining alpha-full blockers.
 
 ## Route-Level Combined Fixture/Proof
 
-The matrix is not complete with isolated child fixtures only. F-27 now has one
-combined route-level fixture,
+The matrix is not complete with isolated child fixtures only. The accepted F-27
+route proof includes one combined route-level fixture,
 `apps/web/src/app/routes/internalAlphaRouteGate.test.fixtures.ts`, that
 traverses:
 
@@ -149,7 +159,7 @@ least one non-ready recovery state, and the route-level vocabulary must include
 stage vocabulary or one of those recovery states returns the route decision to
 `blocked`.
 
-Startup gate evidence is now accepted for F-27 because it reuses the modern
+Startup gate evidence is accepted for F-27 because it reuses the modern
 `ObserveAppBootstrapRouteReadiness` rail through policy, Root integration, and
 Cypress proof.
 
@@ -175,8 +185,8 @@ Recovery states evidence is accepted for F-27 because it reuses
 architecture guard coverage for every required recovery state, and browser
 fail-closed evidence across startup, Canvas, and Code route stages.
 
-This accepts alpha full because cadence and risk triage are closed with
-resolvable F-27 evidence.
+This accepted proof supports alpha full because cadence and risk triage are
+closed with resolvable F-27 evidence.
 
 ## Route Diagram
 
@@ -210,11 +220,13 @@ all have accepted evidence.
 There are no remaining alpha-full blockers:
 
 - `Alpha cadence`: accepted and closed because the audience, entry date,
-  duration, exit owner, and extension rule are named and governed by F-27.
+  duration, exit owner, and extension rule are recorded by this accepted F-27
+  route evidence and its closeout.
 - `Risk triage`: accepted and closed because included and excluded route-stage
   risks have rationale and the executable route evidence set proves the included
   risks can close for alpha full.
 
-The next executable slice must not move route authority out of F-27. Follow-up
-front-end work should start from the next Lane E task after this gate remains
-green under `pnpm verify:prepush`.
+`F-27` remains the historical accepted route-proof identifier, not an executable
+task authority. Any new frontend work or remediation must start from a current
+GitHub Issue and the owning component/rail; it must not be routed to a next Lane
+E task or reopen F-27 as a backlog.
