@@ -134,9 +134,12 @@ flowchart LR
 non-empty `--authority-ref` only as a pair. Omitting both keeps the normal active
 declaration path; providing either field alone or explicitly setting
 `--reference-only false` fails closed. The planner persists both values in
-`rawRail`, and the effective feature-mechanization state becomes `referenced`
-without changing the rail's declared `status`. The existing effective query
-keeps the referenced feature as evidence while excluding it from canonical
+`rawRail`. Before writing, the command resolves `authorityRef` against the
+active canonical rail with the same source, type, and normalized name; missing,
+mismatched, retired, reference-only, and gap authorities fail closed. The
+effective feature-mechanization state becomes `referenced` without changing the
+rail's declared `status`. The existing effective query keeps the referenced
+feature as evidence while excluding it from canonical
 candidate counts and ranking, so the referenced feature cannot become parallel
 authority or displace the existing authority. Recording the reused rail as an
 active local declaration is rejected because local declarations take precedence
@@ -253,6 +256,15 @@ symbols:
     fowlerSignals: [Fail-closed terminal-state validation]
     architectureGuard: node --test scripts/planning-db-operate.test.cjs
     cypressCoverage: N/A - CLI command validation
+    unitTests:
+      - scripts/planning-db-operate-tests/feature-mechanization.test.cjs
+  - name: assertFeatureMechanizationReferenceAuthority
+    path: scripts/planning-db-operate.cjs
+    dddOwner: FeatureMechanizationLocalRail
+    cqRails: [RecordFeatureMechanizationRail]
+    fowlerSignals: [Fail-closed canonical authority resolution]
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A - Planning DB command boundary
     unitTests:
       - scripts/planning-db-operate-tests/feature-mechanization.test.cjs
   - name: validateComponentReviseCommand
