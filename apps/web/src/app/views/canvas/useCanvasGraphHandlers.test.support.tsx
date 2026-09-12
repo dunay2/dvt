@@ -224,7 +224,6 @@ export function renderGraphHandlersHook({
     setNodes,
     setEdges,
     setDraftSession,
-    runDraftSessionCommand,
     setSelectedNodes,
     setInspectorNode,
     toggleInspectorPanel,

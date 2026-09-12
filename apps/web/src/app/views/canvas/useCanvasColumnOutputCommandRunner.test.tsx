@@ -131,11 +131,13 @@ describe('useCanvasColumnOutputCommandRunner', () => {
       draftRevision: 'rev-1',
       localNodeCatalog: { [source.id]: source, [transform.id]: transform },
     };
-    const runDraftSessionCommand = vi.fn(((command) => {
+    let commandCalls = 0;
+    const runDraftSessionCommand: CanvasDraftSessionCommandRunner = (command) => {
+      commandCalls += 1;
       const result = command(currentSession);
       if (result.outcome === 'applied') currentSession = result.draftSession;
       return result;
-    }) as CanvasDraftSessionCommandRunner);
+    };
 
     function Harness(): null {
       runner = useCanvasColumnOutputCommandRunner({
@@ -163,7 +165,7 @@ describe('useCanvasColumnOutputCommandRunner', () => {
       outcome: 'rejected',
       reason: 'duplicate_alias',
     });
-    expect(runDraftSessionCommand).toHaveBeenCalledTimes(2);
+    expect(commandCalls).toBe(2);
 
     const updated = currentSession.localNodeCatalog?.[transform.id];
     if (updated == null) throw new Error('Expected updated Transform.');
@@ -183,11 +185,13 @@ describe('useCanvasColumnOutputCommandRunner', () => {
   it('serializes Source toggle and reorder while an autosave is in flight', () => {
     let runner!: CanvasColumnOutputCommandRunner;
     let currentSession = buildSavingSession();
-    const runDraftSessionCommand = vi.fn(((command) => {
+    let commandCalls = 0;
+    const runDraftSessionCommand: CanvasDraftSessionCommandRunner = (command) => {
+      commandCalls += 1;
       const result = command(currentSession);
       if (result.outcome === 'applied') currentSession = result.draftSession;
       return result;
-    }) as CanvasDraftSessionCommandRunner);
+    };
 
     function Harness(): null {
       runner = useCanvasColumnOutputCommandRunner({
@@ -225,6 +229,6 @@ describe('useCanvasColumnOutputCommandRunner', () => {
     ).toEqual(['amount', 'order_id']);
     expect(currentSession.syncState).toBe('saving');
     expect(currentSession.savingLocalNodeCatalog).toEqual({ [source.id]: source });
-    expect(runDraftSessionCommand).toHaveBeenCalledTimes(2);
+    expect(commandCalls).toBe(2);
   });
 });

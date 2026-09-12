@@ -130,25 +130,29 @@ describe('useCanvasWorkspaceDraftSession', () => {
 
     await act(async () => root.render(<HookHost />));
     let commandCalls = 0;
-    let result: {
+    const results: Array<{
       outcome: 'applied';
       draftSession: CanvasDraftSession;
       createdFieldId: string;
-    } | null = null;
+    }> = [];
 
     await act(async () => {
       latest.setter?.((current) => ({ ...current, draftRevision: 'autosave-ack' }));
-      result =
-        latest.runCommand?.((current) => {
+      const runCommand = latest.runCommand;
+      if (runCommand == null) throw new Error('Expected the draft-session command runner.');
+      results.push(
+        runCommand((current) => {
           commandCalls += 1;
           return {
             outcome: 'applied' as const,
             draftSession: { ...current, draftRevision: 'authoring-command' },
             createdFieldId: 'field-1',
           };
-        }) ?? null;
+        })
+      );
     });
 
+    const result = results[0];
     expect(commandCalls).toBe(1);
     expect(result).toMatchObject({ outcome: 'applied', createdFieldId: 'field-1' });
     expect(result?.draftSession.draftRevision).toBe('authoring-command');
