@@ -44,7 +44,7 @@ export function GraphNodeColumnCompositionMenu(props: {
         <DropdownMenuGroup>
           <DropdownMenuItem
             data-slot="graph-node-column-composition-structured-field"
-            onSelect={props.onStructuredRequest}
+            onSelect={() => requestAnimationFrame(() => props.onStructuredRequest())}
           >
             {props.structuredFieldLabel}
           </DropdownMenuItem>
@@ -58,7 +58,7 @@ export function GraphNodeColumnCompositionMenu(props: {
                 key={item.capabilityId}
                 data-slot="graph-node-column-composition-function"
                 data-capability-id={item.capabilityId}
-                onSelect={() => props.onRequest(item.capabilityId)}
+                onSelect={() => requestAnimationFrame(() => props.onRequest(item.capabilityId))}
               >
                 {item.name.toUpperCase()}
               </DropdownMenuItem>

@@ -3,6 +3,7 @@ import { PostgresIdentifierV1Schema } from '@dvt/contracts';
 import { ChevronDown, ChevronUp, Plus, X } from 'lucide-react';
 import { useId, useMemo, useState, type FormEvent, type ReactElement } from 'react';
 
+import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
 import { Input } from '../../components/ui/input';
 import { Popover, PopoverAnchor, PopoverContent } from '../../components/ui/popover';
 import type {
@@ -184,15 +185,18 @@ export function GraphNodeExpressionComposer(props: {
   };
 
   return (
-    <Popover open onOpenChange={(open) => !open && props.onCancel()}>
+    <Popover open>
       <PopoverAnchor asChild>
         <span className={graphNodeColumnClasses.expressionComposerAnchor} />
       </PopoverAnchor>
       <PopoverContent
         data-slot="graph-node-expression-composer"
+        {...canvasNodeEmbeddedControlProps}
         side="right"
         align="center"
         className={graphNodeColumnClasses.expressionComposer}
+        onEscapeKeyDown={props.onCancel}
+        onPointerDownOutside={props.onCancel}
       >
         <form onSubmit={submit} className={graphNodeColumnClasses.expressionComposerFields}>
           <h3 className={graphNodeColumnClasses.expressionComposerTitle}>

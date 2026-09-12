@@ -73,6 +73,7 @@ describe('GraphNodeExpressionComposer', () => {
     const alias = composer.querySelector<HTMLInputElement>(
       '[data-slot="graph-node-column-function-alias-input"]'
     )!;
+    expect(composer.getAttribute('data-canvas-node-control')).toBe('');
     expect(document.activeElement).toBe(alias);
     expect(composer.textContent).toContain('COMBINE(a, b)');
 

@@ -108,19 +108,26 @@ export function GraphNodeColumnFunctionMenu(props: {
     if (capabilityId == null) return;
     pendingFunction.current = null;
     event.preventDefault();
-    props.onRequest?.(capabilityId);
+    requestAnimationFrame(() => props.onRequest?.(capabilityId));
   };
 
   return (
     <Tooltip>
-      <ContextMenu onOpenChange={setPointerOpen}>
+      <ContextMenu
+        onOpenChange={(open) => {
+          if (open) setPointerOpen(true);
+        }}
+      >
         <ContextMenuTrigger asChild>
           <TooltipTrigger asChild>{props.piece}</TooltipTrigger>
         </ContextMenuTrigger>
         {pointerOpen ? (
           <ContextMenuContent
             data-slot="graph-node-column-function-menu"
-            onCloseAutoFocus={(event) => applyPendingFunction(pendingPointerFunction, event)}
+            onCloseAutoFocus={(event) => {
+              applyPendingFunction(pendingPointerFunction, event);
+              setPointerOpen(false);
+            }}
           >
             <ContextMenuLabel>{model.label}</ContextMenuLabel>
             <ContextMenuGroup>

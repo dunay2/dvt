@@ -239,8 +239,15 @@ describe('Canvas structured Transform fields', () => {
       'have.text',
       'COALESCE(status, region, customer)'
     );
-    cy.get('[data-slot="graph-node-column-function-alias-input"]').type('resolved_status');
-    cy.get('[data-slot="graph-node-column-function-alias-submit"]').click();
+    cy.get('[data-slot="graph-node-column-function-alias-input"]')
+      .click()
+      .should('be.focused')
+      .type('resolved_status')
+      .should('have.value', 'resolved_status')
+      .and('have.attr', 'aria-invalid', 'false');
+    cy.get('[data-slot="graph-node-column-function-alias-submit"]')
+      .should('not.be.disabled')
+      .click();
 
     cy.wrap(null, { timeout: 10_000 }).should(() => {
       const inspection = latestProjection();

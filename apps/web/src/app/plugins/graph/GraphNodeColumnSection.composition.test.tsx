@@ -175,6 +175,7 @@ describe('GraphNodeColumnSection functional composition', () => {
     expect(functionChoice.dataset.capabilityId).toBe('capability:concat');
     await act(async () => {
       fireEvent.click(functionChoice!);
+      await vi.advanceTimersByTimeAsync(16);
     });
 
     expect(
