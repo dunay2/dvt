@@ -132,7 +132,7 @@ external dbt model, or unresolved FieldId writes nothing.
       "type": "command",
       "status": "implemented",
       "referenceOnly": true,
-      "authorityRef": "docs/planning/proposals/mandatory/frontend-and-ux/vtx2-opaque-authoring-identity-plan-20260906.md",
+      "authorityRef": "docs/planning/proposals/mandatory/frontend-and-ux/vtx2-web-vtx1-authoring-hardcut-plan-20260903.md",
       "dddOwner": "DvtSubstraitAuthoringSidecarV1",
       "negativeTests": [
         "Duplicate alias writes nothing",
