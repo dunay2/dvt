@@ -177,6 +177,7 @@ export function GraphNodeCalculatedColumnForm(props: {
 
   return (
     <Popover
+      modal
       open={open}
       onOpenChange={(nextOpen) => {
         setOpen(nextOpen);

@@ -409,7 +409,6 @@ describe('Canvas structured Transform fields', () => {
       expect(customerChildId).not.to.equal(customerRoot?.fieldId);
     });
 
-    modelCard().contains('button', 'Show remaining columns').click();
     modelCard()
       .find('[data-slot="graph-node-column-piece"][data-column-name="identity"]')
       .rightclick(20, 10);
