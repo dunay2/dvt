@@ -85,7 +85,9 @@ describe('Canvas calculated-column authoring', () => {
       cy.get('select[name="kind"]').should('have.value', 'field-ref');
       cy.get('select[name="inputFieldId"]').select('customer');
       cy.get('input[name="alias"]').type('customer_alias');
-      cy.get('button[type="submit"]').click();
+      cy.get('input[name="alias"]').should('have.value', 'customer_alias');
+      cy.get('select[name="inputFieldId"]').should('not.have.value', '');
+      cy.get('button[type="submit"]').should('be.enabled').click();
     });
 
     cy.wrap(null).should(() => {
@@ -110,9 +112,6 @@ describe('Canvas calculated-column authoring', () => {
       expect(alias).not.to.have.property('operations');
     });
 
-    cy.get('.react-flow__node[data-id="model-orders"]')
-      .contains('button', /Show remaining columns/)
-      .click();
     cy.get('.react-flow__node[data-id="model-orders"]').should('contain.text', 'customer_alias');
 
     visitCanvas();

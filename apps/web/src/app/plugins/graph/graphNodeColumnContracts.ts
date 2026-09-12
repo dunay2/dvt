@@ -1,4 +1,5 @@
 /** Owned concern: define graph-node column presentation and interaction contracts. */
+import type { DvtSubstraitProjectionAuthoringRejection } from '../../views/canvas/canvasDvtSubstraitProjection';
 import type { ActiveColumnPlacement } from './useGraphNodeColumnOrder';
 
 export type GraphNodeColumnFunction = Readonly<{
@@ -66,7 +67,8 @@ export type GraphNodeColumnFunctionApplyIdentity = Readonly<{
   operandFieldIds: readonly [string, ...string[]];
 }>;
 export type GraphNodeColumnFunctionApplyResult =
-  Readonly<{ outcome: 'applied'; createdFieldId: string }> | Readonly<{ outcome: 'rejected' }>;
+  | Readonly<{ outcome: 'applied'; createdFieldId: string }>
+  | Readonly<{ outcome: 'rejected'; reason: DvtSubstraitProjectionAuthoringRejection }>;
 export type GraphNodeStructuredFieldIdentity = Readonly<{
   nodeId: string;
   draggedFieldId: string;
@@ -102,8 +104,12 @@ export type GraphNodeColumnSectionProps = Readonly<{
     identity: GraphNodeColumnFunctionApplyIdentity
   ) => GraphNodeColumnFunctionApplyResult;
   resolveColumnCompositionFunctions?: GraphNodeColumnCompositionFunctionResolver;
-  onStructuredFieldApply?: (identity: GraphNodeStructuredFieldIdentity) => void;
-  onCalculatedColumnAdd?: (identity: GraphNodeCalculatedColumnIdentity) => void;
+  onStructuredFieldApply?: (
+    identity: GraphNodeStructuredFieldIdentity
+  ) => GraphNodeColumnFunctionApplyResult;
+  onCalculatedColumnAdd?: (
+    identity: GraphNodeCalculatedColumnIdentity
+  ) => GraphNodeColumnFunctionApplyResult;
   onColumnOutputToggle?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
   onColumnReorder?: (identity: GraphNodeColumnReorderIdentity) => void;
   onDisclosureChange?: (expanded: boolean) => void;

@@ -50,7 +50,9 @@ export function GraphNodeColumnRow(props: {
   onColumnFunctionApply?: (
     identity: GraphNodeColumnFunctionApplyIdentity
   ) => GraphNodeColumnFunctionApplyResult;
-  onStructuredFieldApply?: (identity: GraphNodeStructuredFieldIdentity) => void;
+  onStructuredFieldApply?: (
+    identity: GraphNodeStructuredFieldIdentity
+  ) => GraphNodeColumnFunctionApplyResult;
   onColumnOutputToggle?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
   onColumnReorder?: (identity: GraphNodeColumnReorderIdentity) => void;
 }): ReactElement {

@@ -506,7 +506,9 @@ describe('GraphNodeColumnSection', () => {
           nodeId="transform-orders"
           columns={columns}
           onColumnFunctionApply={(identity) => {
-            if (identity.alias === 'rejected_alias') return { outcome: 'rejected' };
+            if (identity.alias === 'rejected_alias') {
+              return { outcome: 'rejected', reason: 'duplicate_alias' };
+            }
             const createdFieldId = 'field:derived';
             setColumns((current) => [
               ...current,

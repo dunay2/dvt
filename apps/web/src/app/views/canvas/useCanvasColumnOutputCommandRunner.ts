@@ -1,10 +1,13 @@
 /** Owned concern: serialize Canvas column-output commands over the latest draft session. */
-import { useCallback, useMemo, useRef } from 'react';
-import type { Dispatch, SetStateAction } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import type {
+  GraphNodeCalculatedColumnIdentity,
+  GraphNodeColumnFunctionApplyIdentity,
+  GraphNodeColumnFunctionApplyResult,
   GraphNodeColumnOutputToggleIdentity,
   GraphNodeColumnReorderIdentity,
+  GraphNodeStructuredFieldIdentity,
 } from '../../plugins/graph/graphNodeColumnContracts';
 import type { CanonicalNode } from '../../types/canonical';
 import {
@@ -20,8 +23,14 @@ import {
   configureDbtModelColumnOrder,
   configureDbtModelColumnOutput,
 } from './canvasDbtModelColumnCommand';
+import { applyCanvasCalculatedColumn } from './canvasCalculatedColumnAuthoring';
+import { applyCanvasColumnFunction } from './canvasColumnFunctionAuthoring';
 import type { CanvasDraftSession } from './canvasDraftSession';
-import { reorderCanvasStructuredFieldChildren } from './canvasStructuredFieldAuthoring';
+import type { CanvasDraftSessionCommandRunner } from './useCanvasWorkspaceDraftSession';
+import {
+  applyCanvasStructuredField,
+  reorderCanvasStructuredFieldChildren,
+} from './canvasStructuredFieldAuthoring';
 
 type CanvasColumnOutputCommandRunnerState = {
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
@@ -29,7 +38,7 @@ type CanvasColumnOutputCommandRunnerState = {
 };
 
 type CanvasColumnOutputCommandRunnerEffects = {
-  setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
+  runDraftSessionCommand: CanvasDraftSessionCommandRunner;
 };
 
 type UseCanvasColumnOutputCommandRunnerArgs = {
@@ -40,6 +49,15 @@ type UseCanvasColumnOutputCommandRunnerArgs = {
 export type CanvasColumnOutputCommandRunner = {
   toggleOutput: (identity: GraphNodeColumnOutputToggleIdentity) => CanvasColumnMappingResult;
   reorderOutput: (identity: GraphNodeColumnReorderIdentity) => CanvasColumnMappingResult;
+  applyFunction: (
+    identity: GraphNodeColumnFunctionApplyIdentity
+  ) => GraphNodeColumnFunctionApplyResult;
+  addCalculated: (
+    identity: GraphNodeCalculatedColumnIdentity
+  ) => GraphNodeColumnFunctionApplyResult;
+  applyStructured: (
+    identity: GraphNodeStructuredFieldIdentity
+  ) => GraphNodeColumnFunctionApplyResult;
 };
 
 function applyToggleOutput(
@@ -123,50 +141,80 @@ export function useCanvasColumnOutputCommandRunner({
   state,
   effects,
 }: UseCanvasColumnOutputCommandRunnerArgs): CanvasColumnOutputCommandRunner {
-  const { canonicalNodesById, draftSession } = state;
-  const { setDraftSession } = effects;
-  const latestDraftSessionRef = useRef(draftSession);
-  latestDraftSessionRef.current = draftSession;
-
-  const runCommand = useCallback(
-    (
-      command: (currentDraftSession: CanvasDraftSession) => CanvasColumnMappingResult
-    ): CanvasColumnMappingResult => {
-      const baselineDraftSession = latestDraftSessionRef.current;
-      const result = command(baselineDraftSession);
-      if (result.outcome === 'rejected') {
-        return result;
-      }
-
-      latestDraftSessionRef.current = result.draftSession;
-      setDraftSession((currentDraftSession) => {
-        const applied =
-          currentDraftSession === baselineDraftSession ? result : command(currentDraftSession);
-        const nextDraftSession =
-          applied.outcome === 'applied' ? applied.draftSession : currentDraftSession;
-        latestDraftSessionRef.current = nextDraftSession;
-        return nextDraftSession;
-      });
-      return result;
-    },
-    [setDraftSession]
-  );
-
+  const { canonicalNodesById } = state;
+  const { runDraftSessionCommand } = effects;
   const toggleOutput = useCallback(
     (identity: GraphNodeColumnOutputToggleIdentity) =>
-      runCommand((currentDraftSession) =>
+      runDraftSessionCommand((currentDraftSession) =>
         applyToggleOutput(currentDraftSession, canonicalNodesById, identity)
       ),
-    [canonicalNodesById, runCommand]
+    [canonicalNodesById, runDraftSessionCommand]
   );
 
   const reorderOutput = useCallback(
     (identity: GraphNodeColumnReorderIdentity) =>
-      runCommand((currentDraftSession) =>
+      runDraftSessionCommand((currentDraftSession) =>
         applyReorderOutput(currentDraftSession, canonicalNodesById, identity)
       ),
-    [canonicalNodesById, runCommand]
+    [canonicalNodesById, runDraftSessionCommand]
   );
 
-  return useMemo(() => ({ toggleOutput, reorderOutput }), [reorderOutput, toggleOutput]);
+  const applyFunction = useCallback(
+    (identity: GraphNodeColumnFunctionApplyIdentity): GraphNodeColumnFunctionApplyResult => {
+      const result = runDraftSessionCommand((currentDraftSession) =>
+        applyCanvasColumnFunction({
+          draftSession: currentDraftSession,
+          canonicalNodesById,
+          identity,
+        })
+      );
+      return result.outcome === 'applied'
+        ? { outcome: 'applied', createdFieldId: result.createdFieldId }
+        : result;
+    },
+    [canonicalNodesById, runDraftSessionCommand]
+  );
+
+  const addCalculated = useCallback(
+    (identity: GraphNodeCalculatedColumnIdentity): GraphNodeColumnFunctionApplyResult => {
+      const result = runDraftSessionCommand((currentDraftSession) =>
+        applyCanvasCalculatedColumn({
+          draftSession: currentDraftSession,
+          canonicalNodesById,
+          request: identity,
+        })
+      );
+      return result.outcome === 'applied'
+        ? { outcome: 'applied', createdFieldId: result.createdFieldId }
+        : result;
+    },
+    [canonicalNodesById, runDraftSessionCommand]
+  );
+
+  const applyStructured = useCallback(
+    (identity: GraphNodeStructuredFieldIdentity): GraphNodeColumnFunctionApplyResult => {
+      const result = runDraftSessionCommand((currentDraftSession) =>
+        applyCanvasStructuredField({
+          draftSession: currentDraftSession,
+          canonicalNodesById,
+          request: identity,
+        })
+      );
+      return result.outcome === 'applied'
+        ? { outcome: 'applied', createdFieldId: result.createdFieldId }
+        : result;
+    },
+    [canonicalNodesById, runDraftSessionCommand]
+  );
+
+  return useMemo(
+    () => ({
+      toggleOutput,
+      reorderOutput,
+      applyFunction,
+      addCalculated,
+      applyStructured,
+    }),
+    [addCalculated, applyFunction, applyStructured, reorderOutput, toggleOutput]
+  );
 }

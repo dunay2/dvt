@@ -85,6 +85,7 @@ type GraphNodeCardCopy = Readonly<{
   calculatedColumnIdentifierPolicyError: string;
   calculatedColumnLiteralPolicyError: string;
   calculatedColumnTimestampPolicyError: string;
+  columnAuthoringInvalidReferenceLabel: string;
   calculatedColumnKindLabels: Readonly<
     Record<
       'field-ref' | 'string-literal' | 'timestamp-literal' | 'scalar-function' | 'row-number',
@@ -205,6 +206,8 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   calculatedColumnLiteralPolicyError: 'Text values may contain at most 4096 UTF-8 bytes.',
   calculatedColumnTimestampPolicyError:
     'Use a canonical UTC timestamp such as 2026-09-08T12:00:00.000Z.',
+  columnAuthoringInvalidReferenceLabel:
+    'The selected fields are no longer available. Review the proposal.',
   calculatedColumnKindLabels: {
     'field-ref': 'Alias column',
     'string-literal': 'Text value',
@@ -324,7 +327,9 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   calculatedColumnIdentifierPolicyError:
     'Usa un identificador PostgreSQL válido, sin espacios exteriores y con 63 bytes UTF-8 como máximo.',
   calculatedColumnLiteralPolicyError: 'Los valores de texto admiten 4096 bytes UTF-8 como máximo.',
-  calculatedColumnTimestampPolicyError: 'Usa una fecha UTC canonica como 2026-09-08T12:00:00.000Z.',
+  calculatedColumnTimestampPolicyError: 'Usa una fecha UTC canónica como 2026-09-08T12:00:00.000Z.',
+  columnAuthoringInvalidReferenceLabel:
+    'Los campos seleccionados ya no están disponibles. Revisa la propuesta.',
   calculatedColumnKindLabels: {
     'field-ref': 'Alias de columna',
     'string-literal': 'Valor de texto',

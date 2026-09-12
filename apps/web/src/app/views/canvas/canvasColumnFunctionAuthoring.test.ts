@@ -268,7 +268,7 @@ describe('Canvas column function authoring', () => {
       },
     });
 
-    expect(result).toEqual({ outcome: 'rejected' });
+    expect(result).toEqual({ outcome: 'rejected', reason: 'duplicate_alias' });
     expect(initial.localNodeCatalog?.[transform.id]).toBe(transform);
   });
 
@@ -294,7 +294,7 @@ describe('Canvas column function authoring', () => {
       },
     });
 
-    expect(result).toEqual({ outcome: 'rejected' });
+    expect(result).toEqual({ outcome: 'rejected', reason: 'invalid_target' });
     expect(initial.localNodeCatalog?.[externalModel.id]).toBe(externalModel);
   });
   it('appends one variadic COALESCE output from ordered reusable FieldIds', () => {
@@ -346,7 +346,7 @@ describe('Canvas column function authoring', () => {
           alias: 'preferred_event',
         },
       })
-    ).toEqual({ outcome: 'rejected' });
+    ).toEqual({ outcome: 'rejected', reason: 'unsupported_capability' });
 
     const composed = applyCanvasColumnFunction({
       draftSession: trimmed.draftSession,

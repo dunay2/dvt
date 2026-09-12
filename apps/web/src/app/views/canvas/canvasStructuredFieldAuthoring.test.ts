@@ -127,8 +127,52 @@ describe('ConfigureCanvasDvtNode structured-field command', () => {
     });
     expect(created?.fieldId).toMatch(OPAQUE_FIELD_ID);
     expect(created?.fieldId).not.toContain('identity');
+    expect(result.createdFieldId).toBe(created?.fieldId);
   });
 
+  it('returns the existing parent identity when appending a field', () => {
+    const target = transform();
+    const composed = applyCanvasStructuredField({
+      draftSession: session(target),
+      canonicalNodesById: new Map([[source.id, source]]),
+      request: {
+        nodeId: target.id,
+        draggedFieldId: 'output:customer',
+        targetFieldId: 'output:order_id',
+        parentName: 'identity',
+      },
+    });
+    if (composed.outcome !== 'applied') throw new Error('Expected structured field creation.');
+
+    const appended = applyCanvasStructuredField({
+      draftSession: composed.draftSession,
+      canonicalNodesById: new Map([[source.id, source]]),
+      request: {
+        nodeId: target.id,
+        draggedFieldId: 'output:amount',
+        targetFieldId: composed.createdFieldId,
+        parentName: 'identity',
+      },
+    });
+
+    expect(appended.outcome).toBe('applied');
+    if (appended.outcome !== 'applied') return;
+    expect(appended.createdFieldId).toBe(composed.createdFieldId);
+    const updated = appended.draftSession.localNodeCatalog?.[target.id];
+    if (updated == null) throw new Error('Expected updated Transform.');
+    const authority = readDvtTransformAuthoringAuthority(updated)!;
+    const inspection = inspectDvtSubstraitStructuredFieldDraft(
+      decodeDvtSubstraitStructuredFieldDocument(authority.semanticDocument)
+    );
+    const parent = inspection.ok
+      ? inspection.fields.find((field) => field.fieldId === composed.createdFieldId)
+      : null;
+    expect(parent?.children?.map((field) => field.name)).toEqual([
+      'order_id',
+      'customer',
+      'amount',
+    ]);
+  });
   it('rejects an unsupported node without mutating the session', () => {
     const target = { ...transform(), kind: 'dvt:sink' as const, role: 'output' as const };
     const draftSession = session(target);
@@ -143,7 +187,7 @@ describe('ConfigureCanvasDvtNode structured-field command', () => {
           parentName: 'identity',
         },
       })
-    ).toEqual({ outcome: 'rejected' });
+    ).toEqual({ outcome: 'rejected', reason: 'invalid_target' });
     expect(draftSession.localNodeCatalog?.[target.id]).toBe(target);
   });
 

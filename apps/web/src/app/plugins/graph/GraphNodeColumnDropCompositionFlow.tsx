@@ -35,7 +35,9 @@ export function GraphNodeColumnDropCompositionFlow(props: {
     identity: GraphNodeColumnFunctionApplyIdentity
   ) => GraphNodeColumnFunctionApplyResult;
   onFunctionApplied?: (createdFieldId: string) => void;
-  onStructuredFieldApply?: (identity: GraphNodeStructuredFieldIdentity) => void;
+  onStructuredFieldApply?: (
+    identity: GraphNodeStructuredFieldIdentity
+  ) => GraphNodeColumnFunctionApplyResult;
 }): ReactElement | null {
   const language = useApplicationLanguageStore((state) => state.language);
   const structuredCopy = resolveGraphNodeStructuredFieldCopy(language);
@@ -120,14 +122,17 @@ export function GraphNodeColumnDropCompositionFlow(props: {
             structuredChildren[0].children == null ? undefined : structuredChildren[0].name
           }
           onCancel={() => setStructuredChildren(null)}
-          onApply={(parentName) => {
-            props.onStructuredFieldApply?.({
+          onApply={(parentName) =>
+            props.onStructuredFieldApply!({
               nodeId: props.nodeId,
               draggedFieldId: structuredChildren[1].id ?? structuredChildren[1].name,
               targetFieldId: structuredChildren[0].id ?? structuredChildren[0].name,
               parentName,
-            });
+            })
+          }
+          onApplied={(createdFieldId) => {
             setStructuredChildren(null);
+            props.onFunctionApplied?.(createdFieldId);
           }}
         />
       )}
