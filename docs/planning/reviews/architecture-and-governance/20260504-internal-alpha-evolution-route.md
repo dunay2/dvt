@@ -286,10 +286,10 @@ internal readiness program.
 | Child-slice authority separation        | Workspace-files is a child slice and must not govern route-level alpha critique or gate posture. | Keep route-level alpha surfaces under the internal alpha route plan manifest.                           |
 | Route reorder process is undefined      | Moving plan/run readiness before Code changes the flowchart, gate, dependencies, and tests.      | Keep the route plan change-management section aligned with this review when route order changes.        |
 
-## Open Opportunities
+## Review-Time Opportunities
 
-- Execute the `F-27` internal alpha product route plan before expanding beyond
-  the workspace-files child slice.
+- The review proposed executing the `F-27` internal alpha product route plan
+  before expanding beyond the workspace-files child slice.
 - Route any remaining startup, Canvas, or plan/run readiness gap through its
   owning rail or component guide and a governing GitHub issue.
 - Promote file-read safety threats into tests before calling the Code workbench
