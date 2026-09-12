@@ -1535,6 +1535,10 @@ function operationPayload(command) {
   }
 
   if (command.kind === 'feature_mechanization_rail_record') {
+    const referencePayload =
+      command.referenceOnly === true
+        ? { referenceOnly: true, authorityRef: command.authorityRef }
+        : {};
     return {
       featureId: command.featureId,
       railName: command.railName,
@@ -1547,8 +1551,7 @@ function operationPayload(command) {
       negativeTests: command.negativeTests || [],
       mechanizationStatus: command.mechanizationStatus,
       railStatus: command.railStatus,
-      referenceOnly: command.referenceOnly,
-      authorityRef: command.authorityRef,
+      ...referencePayload,
       implementationRefs: command.implementationRefs || [],
       documentationRefs: command.documentationRefs || [],
       implementationPlan: command.implementationPlan,

@@ -252,6 +252,8 @@ test('feature mechanization rail planner emits a local rail and audit row', () =
   assert.equal(planned.audit.operationType, 'feature_mechanization_rail_record');
   assert.equal(planned.audit.railId, planned.rail.railId);
   assert.equal(planned.audit.resultingRevision, 0);
+  assert.equal(Object.hasOwn(planned.audit.payload, 'referenceOnly'), false);
+  assert.equal(Object.hasOwn(planned.audit.payload, 'authorityRef'), false);
   assert.deepEqual(planned.rail.rawRail, {
     name: 'RecordFeatureMechanizationRail',
     type: 'command',
