@@ -128,6 +128,7 @@ export function GraphNodeColumnSection(props: GraphNodeColumnSectionProps): Reac
               nodeId={nodeId}
               columns={section.columnReorder.orderedColumns}
               onSubmit={onCalculatedColumnAdd}
+              onApplied={section.revealCreatedColumn}
             />
           ) : null}
           {section.remainingColumnCount > 0 ? (

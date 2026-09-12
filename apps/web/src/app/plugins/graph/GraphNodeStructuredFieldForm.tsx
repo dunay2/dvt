@@ -4,6 +4,7 @@ import { useId, useState, type ReactElement } from 'react';
 
 import { Input } from '../../components/ui/input';
 import { Popover, PopoverAnchor, PopoverContent } from '../../components/ui/popover';
+import type { GraphNodeColumnFunctionApplyResult } from './graphNodeColumnContracts';
 import { resolveGraphNodeStructuredFieldCopy } from './graphNodeStructuredFieldCopy';
 
 const classes = {
@@ -24,11 +25,13 @@ export function GraphNodeStructuredFieldForm(props: {
   unavailableNames: readonly string[];
   initialName?: string;
   allowedExistingName?: string;
-  onApply: (name: string) => void;
+  onApply: (name: string) => GraphNodeColumnFunctionApplyResult;
+  onApplied?: (createdFieldId: string) => void;
   onCancel: () => void;
 }): ReactElement {
   const copy = resolveGraphNodeStructuredFieldCopy(props.language);
   const [name, setName] = useState(props.initialName ?? '');
+  const [commandError, setCommandError] = useState<string | null>(null);
   const inputId = useId();
   const errorId = useId();
 
@@ -36,6 +39,7 @@ export function GraphNodeStructuredFieldForm(props: {
   const invalid =
     name.length > 0 &&
     (name !== name.trim() || !PostgresIdentifierV1Schema.safeParse(name).success);
+  const visibleError = conflict ? copy.conflict : invalid ? copy.invalid : commandError;
   return (
     <Popover open onOpenChange={(open) => !open && props.onCancel()}>
       <PopoverAnchor asChild>
@@ -50,7 +54,23 @@ export function GraphNodeStructuredFieldForm(props: {
         <form
           onSubmit={(event) => {
             event.preventDefault();
-            if (name.trim().length > 0 && !conflict && !invalid) props.onApply(name);
+            if (name.trim().length === 0 || conflict || invalid) return;
+            const result = props.onApply(name);
+            if (result.outcome === 'rejected') {
+              setCommandError(
+                result.reason === 'duplicate_alias'
+                  ? copy.conflict
+                  : result.reason === 'invalid_alias'
+                    ? copy.invalid
+                    : result.reason === 'invalid_reference'
+                      ? copy.staleFields
+                      : copy.rejected
+              );
+              document.getElementById(inputId)?.focus();
+              return;
+            }
+            setCommandError(null);
+            props.onApplied?.(result.createdFieldId);
           }}
         >
           <label htmlFor={inputId} className={classes.label}>
@@ -61,18 +81,21 @@ export function GraphNodeStructuredFieldForm(props: {
               value={name}
               autoFocus
               required
-              aria-invalid={conflict || invalid ? 'true' : undefined}
-              aria-describedby={conflict || invalid ? errorId : undefined}
-              onChange={(event) => setName(event.currentTarget.value)}
+              aria-invalid={visibleError ? 'true' : undefined}
+              aria-describedby={visibleError ? errorId : undefined}
+              onChange={(event) => {
+                setName(event.currentTarget.value);
+                setCommandError(null);
+              }}
             />
           </label>
           <div className={classes.preview}>
             <div className={classes.previewLabel}>{copy.preview}</div>
             {name || '…'} → {props.childNames.join(', ')}
           </div>
-          {conflict || invalid ? (
+          {visibleError ? (
             <p id={errorId} role="alert" className={classes.error}>
-              {conflict ? copy.conflict : copy.invalid}
+              {visibleError}
             </p>
           ) : null}
           <div className={classes.actions}>

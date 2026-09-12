@@ -29,7 +29,9 @@ describe('GraphNodeCalculatedColumnForm', () => {
   });
 
   it('creates a direct alias from the default visual operation', () => {
-    const onSubmit = vi.fn();
+    const onSubmit = vi
+      .fn()
+      .mockReturnValue({ outcome: 'applied', createdFieldId: 'created-field' });
     act(() => {
       root.render(
         <GraphNodeCalculatedColumnForm
@@ -72,7 +74,9 @@ describe('GraphNodeCalculatedColumnForm', () => {
   });
 
   it('creates a function output from a keyboard-accessible gap action', () => {
-    const onSubmit = vi.fn();
+    const onSubmit = vi
+      .fn()
+      .mockReturnValue({ outcome: 'applied', createdFieldId: 'created-field' });
     act(() => {
       root.render(
         <GraphNodeCalculatedColumnForm
@@ -146,6 +150,48 @@ describe('GraphNodeCalculatedColumnForm', () => {
     expect(document.querySelector('[data-slot="graph-node-calculated-column-form"]')).toBeNull();
   });
 
+  it('keeps a rejected output proposal visible and focused with its reason', () => {
+    const onSubmit = vi.fn().mockReturnValue({
+      outcome: 'rejected',
+      reason: 'duplicate_alias',
+    });
+    act(() => {
+      root.render(
+        <GraphNodeCalculatedColumnForm
+          nodeId="orders"
+          columns={[{ id: 'output:customer', name: 'customer', type: 'text' }]}
+          onSubmit={onSubmit}
+        />
+      );
+    });
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>(
+          '[data-slot="graph-node-calculated-column-trigger"]'
+        )!
+      );
+    });
+    const surface = document.querySelector<HTMLElement>(
+      '[data-slot="graph-node-calculated-column-form"]'
+    )!;
+    const form = surface.querySelector('form')!;
+    const alias = form.elements.namedItem('alias') as HTMLInputElement;
+    act(() => {
+      fireEvent.input(alias, { target: { value: 'customer' } });
+      fireEvent.submit(form);
+    });
+
+    expect(onSubmit).toHaveBeenCalledOnce();
+    expect(alias.value).toBe('customer');
+    expect(document.activeElement).toBe(alias);
+    expect(alias.getAttribute('aria-invalid')).toBe('true');
+    expect(surface.querySelector('[role="alert"]')?.textContent).toContain(
+      'already uses this output name'
+    );
+    expect(
+      document.querySelector('[data-slot="graph-node-calculated-column-form"]')
+    ).not.toBeNull();
+  });
   it('keeps policy-invalid output data visible and blocks submission', () => {
     const onSubmit = vi.fn();
     act(() => {
