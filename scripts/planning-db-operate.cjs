@@ -436,6 +436,7 @@ const operationHelp = Object.freeze({
       'RecordFeatureMechanizationRail stores a database command/query rail declaration and a valid feature-mechanization manifest projection without editing Markdown manifests.',
       'Explicit replace flags hard-cut inherited implementation refs or architecture guards with audited idempotency.',
       'Requires --ddd-owner, --implementation-plan, --source-ref, --source-content-sha256, governance/doc/surface/validation fields, and at least one --implementation-ref in path#symbol form.',
+      'Referenced rails require the exact pair --reference-only true and --authority-ref <canonical-source>.',
       'RetireFeatureMechanizationRail deletes one stale local rail under exact may-delete design scope, expected revision, and audited provenance.',
     ],
   },
@@ -1546,6 +1547,8 @@ function operationPayload(command) {
       negativeTests: command.negativeTests || [],
       mechanizationStatus: command.mechanizationStatus,
       railStatus: command.railStatus,
+      referenceOnly: command.referenceOnly,
+      authorityRef: command.authorityRef,
       implementationRefs: command.implementationRefs || [],
       documentationRefs: command.documentationRefs || [],
       implementationPlan: command.implementationPlan,
@@ -3193,6 +3196,20 @@ function validateFeatureMechanizationRecordCommand(command) {
     );
   }
 
+  if (command.referenceOnly === false) {
+    throw new Error('RecordFeatureMechanizationRail --reference-only must be true when declared.');
+  }
+  if (command.referenceOnly === true && !command.authorityRef) {
+    throw new Error(
+      'RecordFeatureMechanizationRail --reference-only true requires --authority-ref.'
+    );
+  }
+  if (command.authorityRef && command.referenceOnly !== true) {
+    throw new Error(
+      'RecordFeatureMechanizationRail --authority-ref requires --reference-only true.'
+    );
+  }
+
   const terminalRailStatus =
     command.railStatus === 'retired' || command.railStatus === 'deprecated';
   if (terminalRailStatus && command.mechanizationStatus !== 'closed') {
@@ -3271,6 +3288,8 @@ function parseFeatureMechanizationCommand(action, args) {
       options.mechanizationStatus || 'implemented'
     ),
     railStatus: validateFeatureMechanizationRailStatus(options.railStatus || 'implemented'),
+    referenceOnly: parseBooleanOption(options.referenceOnly, 'reference-only'),
+    authorityRef: normalizeOptionalText(options.authorityRef),
     implementationRefs: normalizeListOption(options.implementationRef),
     documentationRefs: normalizeListOption(options.documentationRef),
     implementationPlan: requireOption(options, 'implementationPlan'),
@@ -5244,6 +5263,10 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
     command.railStatus === 'retired' || command.railStatus === 'deprecated';
   const replaceImplementationRefs = command.replaceImplementationRefs || terminalRailStatus;
   const mergeCommand = { ...command, replaceImplementationRefs };
+  const referenceMetadata =
+    command.referenceOnly === true
+      ? { referenceOnly: true, authorityRef: command.authorityRef }
+      : {};
   const rawRail = mergeFeatureMechanizationValue(previous?.rawRail || {}, {
     name: command.railName,
     type: command.railType,
@@ -5253,6 +5276,7 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
     adapterSurface: command.adapterSurface,
     authorizationScope: command.authorizationScope,
     negativeTests: command.negativeTests,
+    ...referenceMetadata,
   });
   const patchSurfaces =
     command.patchSurfaces.length > 0
@@ -5306,7 +5330,7 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
     normalizedRailName: command.normalizedRailName,
     railType: command.railType,
     dddOwner: command.dddOwner,
-    railStatus: command.railStatus,
+    railStatus: rawRail.referenceOnly === true ? 'referenced' : command.railStatus,
     symbolRefs: retained(mergeUniqueValues(previousSymbolRefs, command.implementationRefs)),
     implementationRefs: retained(
       mergeUniqueValues(previousImplementationRefs, command.implementationRefs)

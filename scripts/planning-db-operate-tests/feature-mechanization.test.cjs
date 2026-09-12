@@ -130,6 +130,52 @@ test('parseArgs builds a feature mechanization rail record command', () => {
   assert.equal(command.expectedRevision, 0);
 });
 
+test('parseArgs builds an explicit referenced feature mechanization rail command', () => {
+  const authorityRef =
+    'docs/planning/proposals/mandatory/frontend-and-ux/vtx2-opaque-authoring-identity-plan-20260906.md';
+  const command = parseArgs(
+    featureMechanizationRecordArgs({
+      extraArgs: ['--reference-only', 'true', '--authority-ref', authorityRef],
+    })
+  );
+
+  assert.equal(command.referenceOnly, true);
+  assert.equal(command.authorityRef, authorityRef);
+});
+
+test('parseArgs rejects incomplete or false feature mechanization rail references', () => {
+  const authorityRef =
+    'docs/planning/proposals/mandatory/frontend-and-ux/vtx2-opaque-authoring-identity-plan-20260906.md';
+
+  assert.throws(
+    () =>
+      parseArgs(
+        featureMechanizationRecordArgs({
+          extraArgs: ['--reference-only', 'true'],
+        })
+      ),
+    /reference-only true requires --authority-ref/
+  );
+  assert.throws(
+    () =>
+      parseArgs(
+        featureMechanizationRecordArgs({
+          extraArgs: ['--authority-ref', authorityRef],
+        })
+      ),
+    /--authority-ref requires --reference-only true/
+  );
+  assert.throws(
+    () =>
+      parseArgs(
+        featureMechanizationRecordArgs({
+          extraArgs: ['--reference-only', 'false'],
+        })
+      ),
+    /reference-only must be true when declared/
+  );
+});
+
 test('parseArgs accepts closed deprecated and retired rails without implementation refs', () => {
   const deprecatedCommand = parseArgs(
     featureMechanizationRecordArgs({
@@ -221,6 +267,41 @@ test('feature mechanization rail planner emits a local rail and audit row', () =
     validateFeatureMechanizationManifest(planned.rail.rawManifest, planned.rail.sourcePath).errors,
     []
   );
+});
+
+test('feature mechanization rail planner preserves a reference without creating authority', () => {
+  const authorityRef =
+    'docs/planning/proposals/mandatory/frontend-and-ux/vtx2-opaque-authoring-identity-plan-20260906.md';
+  const command = parseArgs(
+    featureMechanizationRecordArgs({
+      extraArgs: ['--reference-only', 'true', '--authority-ref', authorityRef],
+    })
+  );
+  const planned = planFeatureMechanizationRailRecordOperation({
+    command,
+    existingRail: null,
+    operationId: 'op-feature-mechanization-reference',
+    now: new Date('2026-09-12T12:00:00.000Z'),
+  });
+
+  assert.equal(planned.rail.railStatus, 'referenced');
+  assert.equal(planned.rail.rawRail.status, 'implemented');
+  assert.equal(planned.rail.rawRail.referenceOnly, true);
+  assert.equal(planned.rail.rawRail.authorityRef, authorityRef);
+  assert.deepEqual(planned.rail.rawManifest.commandQueryRails, [planned.rail.rawRail]);
+  assert.equal(planned.audit.payload.referenceOnly, true);
+  assert.equal(planned.audit.payload.authorityRef, authorityRef);
+
+  const updated = planFeatureMechanizationRailRecordOperation({
+    command: parseArgs(featureMechanizationRecordArgs()),
+    existingRail: planned.rail,
+    operationId: 'op-feature-mechanization-reference-update',
+    now: new Date('2026-09-12T12:01:00.000Z'),
+  });
+
+  assert.equal(updated.rail.railStatus, 'referenced');
+  assert.equal(updated.rail.rawRail.referenceOnly, true);
+  assert.equal(updated.rail.rawRail.authorityRef, authorityRef);
 });
 
 test('feature mechanization rail planner promotes an imported manifest as local revision zero', () => {
