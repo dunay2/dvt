@@ -1,13 +1,15 @@
 ---
 title: GH-2935 card unary derived output hard cut
-status: Approved
+status: Superseded
 owner: Web / Canvas semantic authoring
-last_reviewed: 2026-09-07
+last_reviewed: 2026-09-11
 planning_type: implementation-plan
 task_id: GH-2935
 ---
 
 # GH-2935 card unary derived output hard cut
+
+Superseded by [the expression composer hard cut](./gh-2935-card-expression-composer-plan-20260911.md) after the product decision recorded in #2935 on 2026-09-11.
 
 ## Governing sources
 
