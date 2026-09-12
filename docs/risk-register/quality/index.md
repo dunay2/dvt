@@ -92,6 +92,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Finding identity could drift if canonical input ordering changes](R-20260731-PLAN-ADMISSION-FINDING-IDENTITY.yaml)
 - [Flat utility modules can drift without explicit component APIs and semantic ownership](R-20260421-UTILITY-MODULE-COMPONENTIZATION-DRIFT.yaml)
 - [Frozen custom policy namespace seam may need future reactivation](R-20260513-AR-A4-CUSTOM-POLICY-NAMESPACE-FREEZE.yaml)
+- [Function consumers could misread open Substrait invocation arity](R-20260911-SUBSTRAIT-VARIADIC-ARITY-DRIFT.yaml)
 - [Future adapters may violate the validated providerRef reconciliation contract](R-20260409-PROVIDER-REF-EXACT-MATCH-ADAPTER-CONFORMANCE.yaml)
 - [Future plan schema versions could bypass admission if a new path skips the policy](R-20260513-PLAN-SCHEMA-VERSION-ADMISSION.yaml)
 - [Future recover-run feature could leak back into the generic signal boundary](R-20260408-RECOVER-RUN-BOUNDARY-DRIFT.yaml)
