@@ -108,8 +108,12 @@ export type GraphNodeRendererData = Readonly<{
   onApplyCanvasColumnFunction?: (
     identity: GraphNodeColumnFunctionApplyIdentity
   ) => GraphNodeColumnFunctionApplyResult;
-  onApplyCanvasStructuredField?: (identity: GraphNodeStructuredFieldIdentity) => void;
-  onAddCanvasCalculatedColumn?: (identity: GraphNodeCalculatedColumnIdentity) => void;
+  onApplyCanvasStructuredField?: (
+    identity: GraphNodeStructuredFieldIdentity
+  ) => GraphNodeColumnFunctionApplyResult;
+  onAddCanvasCalculatedColumn?: (
+    identity: GraphNodeCalculatedColumnIdentity
+  ) => GraphNodeColumnFunctionApplyResult;
   onToggleCanvasColumnOutput?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
   onReorderCanvasColumnOutput?: (identity: GraphNodeColumnReorderIdentity) => void;
   onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;

@@ -32,10 +32,7 @@ import {
   type CanvasColumnHandleIdentity,
   type CanvasColumnLineageEdgeData,
 } from './canvasColumnLineageProjection';
-import {
-  useCanvasColumnOutputCommandRunner,
-  type CanvasColumnOutputCommandRunner,
-} from './useCanvasColumnOutputCommandRunner';
+import type { CanvasColumnOutputCommandRunner } from './useCanvasColumnOutputCommandRunner';
 import {
   useCanvasEdgeCommandRunner,
   type CanvasEdgeCommandRunner,
@@ -343,11 +340,10 @@ function useCanvasEdgeReconnectHandler({
   );
 }
 
-export function useCanvasEdgeAuthoringHandlers({
-  state,
-  effects,
-  policy,
-}: UseCanvasEdgeAuthoringHandlersArgs): UseCanvasEdgeAuthoringHandlersResult {
+export function useCanvasEdgeAuthoringHandlers(
+  { state, effects, policy }: UseCanvasEdgeAuthoringHandlersArgs,
+  columnOutputCommandRunner: CanvasColumnOutputCommandRunner
+): UseCanvasEdgeAuthoringHandlersResult {
   const pluginPortMap = useMemo(
     () =>
       resolveVisibleDraftPluginPortMap({
@@ -361,7 +357,6 @@ export function useCanvasEdgeAuthoringHandlers({
     effects,
     pluginPortMap,
   });
-  const columnOutputCommandRunner = useCanvasColumnOutputCommandRunner({ state, effects });
   const columnMappingHandlers = useCanvasColumnMappingHandlers(
     { state, effects, policy },
     columnOutputCommandRunner

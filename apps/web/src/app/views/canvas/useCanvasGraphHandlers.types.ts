@@ -43,8 +43,12 @@ export type UseCanvasGraphHandlersResult = {
   handleApplyCanvasColumnFunction: (
     identity: GraphNodeColumnFunctionApplyIdentity
   ) => GraphNodeColumnFunctionApplyResult;
-  handleApplyCanvasStructuredField: (identity: GraphNodeStructuredFieldIdentity) => void;
-  handleAddCanvasCalculatedColumn: (identity: GraphNodeCalculatedColumnIdentity) => void;
+  handleApplyCanvasStructuredField: (
+    identity: GraphNodeStructuredFieldIdentity
+  ) => GraphNodeColumnFunctionApplyResult;
+  handleAddCanvasCalculatedColumn: (
+    identity: GraphNodeCalculatedColumnIdentity
+  ) => GraphNodeColumnFunctionApplyResult;
   handleToggleCanvasColumnOutput: (identity: {
     nodeId: string;
     columnId: string;

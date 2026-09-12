@@ -66,8 +66,12 @@ export type GraphNodeCardViewProps = Readonly<{
     identity: GraphNodeColumnFunctionApplyIdentity
   ) => GraphNodeColumnFunctionApplyResult;
   resolveColumnCompositionFunctions?: GraphNodeColumnCompositionFunctionResolver;
-  onStructuredFieldApply?: (identity: GraphNodeStructuredFieldIdentity) => void;
-  onCalculatedColumnAdd?: (identity: GraphNodeCalculatedColumnIdentity) => void;
+  onStructuredFieldApply?: (
+    identity: GraphNodeStructuredFieldIdentity
+  ) => GraphNodeColumnFunctionApplyResult;
+  onCalculatedColumnAdd?: (
+    identity: GraphNodeCalculatedColumnIdentity
+  ) => GraphNodeColumnFunctionApplyResult;
   onColumnOutputToggle?: (identity: {
     nodeId: string;
     columnId: string;

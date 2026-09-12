@@ -13,6 +13,7 @@ import { useApplicationLanguageStore } from '../../stores/applicationLanguageSto
 import type {
   GraphNodeCalculatedColumnIdentity,
   GraphNodeColumn,
+  GraphNodeColumnFunctionApplyResult,
 } from './graphNodeColumnContracts';
 import { resolveGraphNodeCardCopy } from './graphNodeCardCopyTokens';
 import { graphNodeColumnClasses } from './graphVisualTokens';
@@ -29,7 +30,7 @@ const KINDS: readonly CalculationKind[] = [
 export function GraphNodeCalculatedColumnForm(props: {
   nodeId: string;
   columns: readonly GraphNodeColumn[];
-  onSubmit: (identity: GraphNodeCalculatedColumnIdentity) => void;
+  onSubmit: (identity: GraphNodeCalculatedColumnIdentity) => GraphNodeColumnFunctionApplyResult;
 }): ReactElement {
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveGraphNodeCardCopy(language);

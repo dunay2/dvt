@@ -35,7 +35,9 @@ export function GraphNodeColumnDropCompositionFlow(props: {
     identity: GraphNodeColumnFunctionApplyIdentity
   ) => GraphNodeColumnFunctionApplyResult;
   onFunctionApplied?: (createdFieldId: string) => void;
-  onStructuredFieldApply?: (identity: GraphNodeStructuredFieldIdentity) => void;
+  onStructuredFieldApply?: (
+    identity: GraphNodeStructuredFieldIdentity
+  ) => GraphNodeColumnFunctionApplyResult;
 }): ReactElement | null {
   const language = useApplicationLanguageStore((state) => state.language);
   const structuredCopy = resolveGraphNodeStructuredFieldCopy(language);
