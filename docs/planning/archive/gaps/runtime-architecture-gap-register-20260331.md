@@ -1,33 +1,37 @@
 ---
 title: Runtime Architecture Gap Register 2026-03-31
-status: Review
+status: Historical
 owner: Runtime / Architecture
-last_reviewed: 2026-09-10
-planning_type: status
+last_reviewed: 2026-09-11
+planning_type: historical
 ---
 
 # Runtime Architecture Gap Register 2026-03-31
 
+> Historical snapshot archived on 2026-09-11. Source-first verification against
+> current `main` showed that multiple rows previously marked as confirmed no
+> longer describe the implemented runtime. Preserve this file as evidence of the
+> 2026-03-31 assessment; do not use it as a backlog or current architecture map.
+
 This register tracks high-impact runtime architecture gaps identified from
 code-level verification on 2026-03-31.
 
-It does not reopen legacy G1-G10 program gaps. It captures current tactical
-gaps for future PR slicing.
+It does not reopen legacy G1-G10 program gaps. It captures the tactical gaps
+recorded by that review.
 
-This document was reviewed on 2026-04-17 to align the folder with current
-planning governance. The validated gap rows below remain the 2026-03-31
-snapshot; live execution truth now belongs to GitHub Issues and the active
-review set.
+The validated gap rows below remain the 2026-03-31 snapshot. Current executable
+truth belongs to code, contracts, tests and CI; current task lifecycle belongs
+to GitHub Issues.
 
-## Current routing
+## Routing recorded by the snapshot
 
-- [GitHub MVP Issue Workflow](../state/github-mvp-issue-workflow.md)
-- [Planning Dashboard](../state/planning-dashboard.md)
-- [Review Status Board](../reviews/review-status-board.md)
-- [Engine boundary current state, target state, and migration review](../reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md)
-- [Contract pack and read boundary reset Fowler review](../reviews/architecture-and-governance/20260410-contract-pack-and-read-boundary-reset-fowler-review.md)
-- [Runtime and shared-kernel risk triage review](../reviews/architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md)
-- [AR-A12-B status model split Fowler review](../reviews/architecture-and-governance/20260411-ar-a12-b-status-model-split-fowler-review.md)
+- [GitHub MVP Issue Workflow](../../state/github-mvp-issue-workflow.md)
+- `docs/planning/state/planning-dashboard.md` (retired)
+- [Historical Review Status Board](../../reviews/review-status-board.md)
+- [Engine boundary current state, target state, and migration review](../../reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md)
+- [Contract pack and read boundary reset Fowler review](../../reviews/architecture-and-governance/20260410-contract-pack-and-read-boundary-reset-fowler-review.md)
+- [Runtime and shared-kernel risk triage review](../../reviews/architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md)
+- [AR-A12-B status model split Fowler review](../../reviews/architecture-and-governance/20260411-ar-a12-b-status-model-split-fowler-review.md)
 
 ## Gap list (validated 2026-03-31)
 
@@ -41,9 +45,9 @@ review set.
 | Typed-error coverage is incomplete (`new Error(...)` in production paths)      | Confirmed                                                                       | multiple runtime files under `apps/api/src`, `packages/@dvt/engine/src`, `packages/@dvt/adapter-postgres/src`                                                                                                           |
 | Freshness provenance not fully exposed (`snapshot` vs `rebuild` vs `provider`) | Confirmed as partial (`snapshotStaleness` is exposed, provenance source is not) | `apps/api/src/application/services/getRunStatusUseCase.ts`, `apps/api/src/application/ports/runtime.ts`, `packages/@dvt/contracts/src/types/contracts.ts`, `packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts` |
 
-## Scope guidance
+## Scope guidance recorded by the snapshot
 
-Prioritize in this order:
+The review prioritized:
 
 1. Extract lifecycle/query/signal concerns from core runtime service.
 2. Introduce explicit error taxonomy migration plan for `new Error(...)` paths.
@@ -52,13 +56,12 @@ Prioritize in this order:
 4. Move start-run collaborator composition to an assembler/factory boundary.
 5. Continue observability consolidation with reusable facades/policies.
 
-## Notes
+## Historical notes
 
-- This register is intended for incremental PR planning, not for one-shot
+- The register was intended for incremental PR planning, not for one-shot
   refactors.
-- Ownership and blockers for executable work belong in the governing GitHub issue;
-  architecture ownership remains in Planning DB and CODEOWNERS where applicable.
+- Ownership and blockers for executable work now belong in the governing GitHub
+  issue; architecture ownership remains in Planning DB and CODEOWNERS where
+  applicable.
 - The malformed embedded second document that previously followed this register
-  was removed during the 2026-04-17 governance refresh. Active architecture
-  review material belongs under `docs/planning/reviews/**`, not inside an
-  active gap register.
+  was removed during the 2026-04-17 governance refresh.

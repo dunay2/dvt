@@ -32,7 +32,6 @@ It does not replace:
 - [StartRun Protocol v1](../contracts/engine/StartRunProtocol.v1.md)
 - [Roadmap By Domain](../../../../planning/roadmap/roadmap-by-domain.md)
 - GitHub MVP issues and their linked pull requests
-- [Planning Dashboard](../../../../planning/state/planning-dashboard.md)
 
 ## Current posture
 

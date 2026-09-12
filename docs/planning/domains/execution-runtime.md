@@ -2,7 +2,7 @@
 title: Domain - Execution Runtime
 status: Review
 owner: Architecture / Engine / Docs
-last_reviewed: 2026-04-14
+last_reviewed: 2026-09-10
 planning_type: reference
 ---
 
@@ -16,7 +16,7 @@ runtime hardening.
 - [Architecture Surface Inventory](../../architecture/architecture-surface-inventory-20260402.md)
 - [System Delivery Status](../../architecture/system-delivery-status.md)
 - [Canonical Doc Code Matrix](../status/canonical-doc-code-matrix.md)
-- [Planning Control Tower](../state/planning-control-tower.md)
+- [Governance Document And Rule Inventory](../status/governance-document-rule-inventory.md)
 
 ## Active Planning Inputs
 

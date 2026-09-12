@@ -222,23 +222,21 @@ pnpm --filter @dvt/adapter-temporal test:integration
 Si necesitas saber rapido que sigue y donde esta el trabajo en curso, usa este
 orden:
 
-1. [Planning Dashboard](docs/planning/state/planning-dashboard.md) para la vista
-   trazable del estado de entrega.
-2. [GitHub Issues](https://github.com/dunay2/dvt/issues) para tareas MVP,
+1. [GitHub Issues](https://github.com/dunay2/dvt/issues) para tareas MVP,
    ownership, prioridad, bloqueos y cierre.
-3. [Roadmap Of Record](docs/planning/roadmap/index.md) para secuencia oficial.
-4. [Review Status Board](docs/planning/reviews/review-status-board.md) para
-   estado de reviews y su enlace con las issues.
-5. [Governance Inventory](docs/planning/status/governance-document-rule-inventory.md)
+2. [Roadmap Of Record](docs/planning/roadmap/index.md) para secuencia oficial.
+3. [Governance Inventory](docs/planning/status/governance-document-rule-inventory.md)
    para localizar la autoridad aplicable antes de cambiar arquitectura o diseño.
 
 Regla practica:
 
-- `planning dashboard` responde "que esta entregado y que evidencia lo prueba".
 - `GitHub Issues` responde "que se esta ejecutando ahora y que sigue".
 - `roadmap` responde "en que orden se entrega".
 - la BBDD de planning responde las consultas obligatorias de arquitectura,
   diseño, ownership, relaciones y command/query rails.
+- código, contratos, tests y CI en `main` responden "qué está realmente entregado".
+- los review boards archivados conservan evidencia histórica; no son rutas de
+  trabajo actuales.
 
 ### Start Here
 
@@ -251,7 +249,7 @@ Regla practica:
   [Shared Package Architecture](docs/architecture/shared/index.md),
   [Contracts](docs/contracts/index.md)
 - **See current state and active work**:
-  [Planning Dashboard](docs/planning/state/planning-dashboard.md),
+  [GitHub Issues](https://github.com/dunay2/dvt/issues),
   [Roadmap Of Record](docs/planning/roadmap/index.md),
   [Planning Gaps](docs/planning/gaps/index.md)
 - **Operate and review risk**:
@@ -294,8 +292,7 @@ documentation evidence before entering the active vocabulary.
   [determinism-tooling.md](docs/architecture/components/engine/dev/determinism-tooling.md)
 - SRE / On-call: [docs/runbooks/index.md](docs/runbooks/index.md) ->
   [incident-response.md](docs/architecture/components/engine/ops/runbooks/incident-response.md)
-- Executive / PM:
-  [planning-dashboard.md](docs/planning/state/planning-dashboard.md) ->
+- Executive / PM: [GitHub Issues](https://github.com/dunay2/dvt/issues) ->
   [Roadmap Of Record](docs/planning/roadmap/index.md)
 
 ---
@@ -423,9 +420,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
 ## Project Status
 
-Use [Planning Dashboard](docs/planning/state/planning-dashboard.md),
-[docs/planning/roadmap/index.md](docs/planning/roadmap/index.md),
-[docs/planning/gaps/index.md](docs/planning/gaps/index.md) as current status and
+Use [GitHub Issues](https://github.com/dunay2/dvt/issues),
+[docs/planning/roadmap/index.md](docs/planning/roadmap/index.md), and
+[docs/planning/gaps/index.md](docs/planning/gaps/index.md) as current task and
 planning entry points. Architecture and design decisions must begin with the
 planning database query rails identified by the
 [governance inventory](docs/planning/status/governance-document-rule-inventory.md).

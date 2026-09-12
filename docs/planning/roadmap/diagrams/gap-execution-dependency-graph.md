@@ -2,7 +2,7 @@
 title: Execution Dependency Graph
 status: Review
 owner: Architecture / Delivery / Docs
-last_reviewed: 2026-04-02
+last_reviewed: 2026-09-10
 planning_type: reference
 ---
 
@@ -29,5 +29,5 @@ flowchart LR
 
 ## Canonical References
 
-- [Planning Control Tower](../../state/planning-control-tower.md)
+- [GitHub MVP Issue Workflow](../../state/github-mvp-issue-workflow.md)
 - [Roadmap By Domain](../roadmap-by-domain.md)

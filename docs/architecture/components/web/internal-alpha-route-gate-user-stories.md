@@ -2,7 +2,7 @@
 title: Internal Alpha Route Gate User Stories
 status: Review
 owner: Product / Architecture / Frontend
-last_reviewed: 2026-05-18
+last_reviewed: 2026-09-12
 planning_type: user-stories
 task_ids:
   - F-27
@@ -12,8 +12,10 @@ task_ids:
 
 ## Scope
 
-These stories cover the route-level F-27 gate. Child slices still own their
-own implementation details and tests.
+These stories preserve the accepted route-level F-27 proof that supported the
+internal-alpha decision. F-27 is closed; these stories are evidence and semantic
+coverage, not a current task queue. Child slices still own their implementation
+details and tests. Any new executable follow-up starts in GitHub Issues.
 
 - `US-F27-001`: as an internal tester, I need startup posture through
   `ObserveAppBootstrapRouteReadiness` with happy and fail-closed evidence.
@@ -34,13 +36,18 @@ own implementation details and tests.
   risks per route stage.
 - `US-F27-009`: as a PR reviewer, I need child-only evidence to be rejected for
   alpha-full claims.
-- `US-F27-010`: as a lane owner, I need `F-27` to remain route authority while
-  child proposals remain stage authorities.
+- `US-F27-010`: as an architecture reviewer, I need `F-27` to remain the closed
+  route-proof identifier while GitHub Issues owns any new executable task
+  lifecycle and child proposals remain stage-specific architecture/evidence
+  owners.
 - `US-F27-011`: as a reviewer, I need one combined route fixture to traverse
   startup, workspace context, Canvas, Code, plan/run readiness, and recovery
   before any alpha-full candidate can move past review.
 
 ## Negative Stories
+
+These negative stories remain regression semantics for the accepted route gate;
+they do not imply that F-27 is still open.
 
 - `US-F27-N-001`: Code workbench proof exists but Canvas lacks proof. Alpha full
   remains blocked.
@@ -73,11 +80,14 @@ own implementation details and tests.
 | Recovery states    | `US-F27-006`     | `US-F27-N-003`    | accepted           |
 | Alpha cadence      | `US-F27-007`     | `US-F27-N-004`    | accepted           |
 | Risk triage        | `US-F27-008`     | `US-F27-N-005`    | accepted           |
-| Route authority    | `US-F27-010`     | `US-F27-N-006`    | active             |
+| Route proof        | `US-F27-010`     | `US-F27-N-006`    | accepted / closed  |
 
 ## Traceability
 
-- Route authority: `F-27`.
+- Closed route-proof identifier: `F-27`.
+- Closure evidence:
+  `docs/planning/closeouts/20260514-f27-alpha-route-acceptance-matrix-closeout.md`.
+- New executable task lifecycle: GitHub Issues.
 - Component guide:
   `docs/architecture/components/web/internal-alpha-route-gate-component.md`.
 - Acceptance matrix:

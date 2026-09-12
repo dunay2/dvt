@@ -2,7 +2,7 @@
 title: Architecture documentation reconciliation canon plan 2026-05-23
 status: Active
 owner: Architecture / Docs / Delivery
-last_reviewed: 2026-05-23
+last_reviewed: 2026-09-11
 planning_type: mandatory
 ---
 
@@ -11,19 +11,21 @@ planning_type: mandatory
 ## Owned Concern
 
 This plan canonizes the 2026-04-02 architecture documentation reconciliation
-proposal into tracked governance work. It defines the classification rail for
-architecture documentation truth, links the proposal to `GD-MAND-ARCH-DOC-RECON`,
-and keeps child remediation tasks in Planning DB instead of leaving a mandatory
-proposal as the execution queue.
+proposal into governed documentation work. It defines the classification rail
+for architecture documentation truth, links the proposal to
+`GD-MAND-ARCH-DOC-RECON`, and keeps executable child remediation lifecycle in
+GitHub Issues while Planning DB remains responsible for architecture and
+mechanization governance.
 
 ## Governing Sources
 
 - `AGENTS.md`
 - `docs/planning/status/governance-document-rule-inventory.md`
+- `docs/planning/state/github-mvp-issue-workflow.md`
 - `docs/guides/ai-work-protocol.md`
+- `docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md`
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
-- `docs/planning/state/planning-control-tower.md`
 - `docs/planning/domains/documentation-governance.md`
 - `docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md`
 - `docs/planning/proposals/portfolio-map-20260403.md`
@@ -34,9 +36,9 @@ proposal as the execution queue.
 
 - The original plan already separates canonical truth, current status,
   supporting diagrams, and historical snapshots.
-- The planning DB now contains child tasks for disposition, generated pages,
-  doc usability, startup card routing, architecture/governance reviews, and
-  planning review canonization.
+- The child work family is governed without making generated Markdown a task
+  tracker: GitHub Issues owns executable lifecycle while Planning DB retains
+  architecture and mechanization records.
 - Documentation governance already has a domain page and maintenance guide, so
   this slice can route work instead of inventing a parallel doc process.
 
@@ -46,8 +48,9 @@ proposal as the execution queue.
   active without a local component guide declaring how to execute it.
 - Parallel truth sources: readers could confuse reference architecture, system
   delivery status, atlas snapshots, execution-model drafts, and domain pages.
-- Hidden child backlog: downstream tasks existed in the workboard but were not
-  tied back to a canon component.
+- Hidden child backlog: downstream work had historically been represented in a
+  workboard instead of being tied back to the current task authority and canon
+  component.
 - Drift by accumulation: architecture docs can be added faster than their
   truth level and maintenance owner are classified.
 
@@ -55,10 +58,11 @@ proposal as the execution queue.
 
 - Group architecture-documentation truth classification under one canon
   component.
-- Keep concrete remediation work in the existing child tasks:
+- Keep concrete remediation work in the existing child work family:
   `GD-DOC-DISPOSITION-CANON`, `GD-MAND-AUTOGEN-PAGES`,
   `GD-MAND-DOC-USABILITY`, `GD-MAND-STARTUP-CARD`,
-  `GD-REV-ARCH-GOV-CANON`, and `GD-REV-PLANNING-CANON`.
+  `GD-REV-ARCH-GOV-CANON`, and `GD-REV-PLANNING-CANON`, with executable task
+  lifecycle routed through GitHub Issues.
 - Keep docs generation and changed-file enforcement under the CI governance
   component family.
 
@@ -68,8 +72,9 @@ proposal as the execution queue.
   classify the truth surface before editing it.
 - Mature repositories separate normative decisions, current implementation
   truth, supporting diagrams, and historical snapshots.
-- Mandatory proposals should close into Planning DB tasks, component guides,
-  and semantic tests before downstream work begins.
+- Mandatory proposals should close into GitHub Issue task ownership, component
+  guides, Planning DB mechanization where applicable, and semantic tests before
+  downstream work begins.
 
 ## Disposition Matrix
 
@@ -85,14 +90,15 @@ proposal as the execution queue.
 | active planning review and sprint-board docs       | child task                                          | `GD-REV-PLANNING-CANON`                         |
 
 No architecture documentation reconciliation proposal remains an orphan
-execution queue after this plan.
+execution queue after this plan. Current task state for any child work is read
+from its GitHub Issue, not from this disposition matrix.
 
 ## Command And Query Rails
 
 - `RecordArchitectureDocumentationReconciliationCanon`: command owned by the
   architecture documentation reconciliation canon aggregate. It records the
-  canonical disposition, owner, child task, and evidence surface for a
-  reconciliation input.
+  canonical disposition, owner, child-task reference, and evidence surface for
+  a reconciliation input; it does not own task status.
 - `ClassifyArchitectureDocumentationDisposition`: query owned by the
   architecture documentation disposition read model. It returns `canonical`,
   `status`, `supporting`, `historical`, `child-task`, or `superseded`, plus the
@@ -109,9 +115,10 @@ execution queue after this plan.
 
 ## ADR Decision
 
-No new ADR is required. ADR-0055 and existing command/query rail governance
-already establish Planning DB as the operational work source and require
-explicit rails before externally observable process changes.
+No new ADR is required. ADR-0061 defines the current task/architecture authority
+boundary: GitHub Issues own executable task lifecycle, while Planning DB and the
+existing command/query rail governance own architecture and mechanization
+records.
 
 ## Feature Mechanization Manifest
 
@@ -128,7 +135,9 @@ userStories:
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
+  - docs/planning/state/github-mvp-issue-workflow.md
   - docs/guides/ai-work-protocol.md
+  - docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
   - docs/planning/domains/documentation-governance.md
@@ -144,9 +153,6 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/index.md
   - docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-canon-plan-20260523.md
   - docs/planning/proposals/portfolio-map-20260403.md
-  - docs/planning/state/agent-lane-a.md
-  - docs/planning/state/execution-workboard.md
-  - docs/planning/state/open-task-route.md
   - docs/planning/status/**
   - tools/ci/architecture-doc-reconciliation-canon.test.mjs
 forbiddenImplementationSurfaces:
