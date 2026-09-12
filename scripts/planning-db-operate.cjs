@@ -5712,6 +5712,32 @@ async function readLocalFeatureMechanizationRail(client, railId, lock = false, i
   return effectiveResult.rows[0] || null;
 }
 
+async function assertFeatureMechanizationReferenceAuthority(client, rail) {
+  if (rail.rawRail.referenceOnly !== true) {
+    return;
+  }
+
+  const result = await client.query(
+    `select rail_id
+     from ${schemaName}.command_query_rail_query
+     where source_path = $1
+       and rail_type = $2
+       and normalized_rail_name = $3
+       and rail_id <> $4
+       and lower(coalesce(rail_status, '')) not in ('deprecated', 'retired')
+       and not is_gap
+       and not (raw_rail @> '{"referenceOnly": true}'::jsonb)
+     limit 1`,
+    [rail.rawRail.authorityRef, rail.railType, rail.normalizedRailName, rail.railId]
+  );
+
+  if (!result.rows[0]) {
+    throw new Error(
+      `FEATURE-MECHANIZATION-REFERENCE-AUTHORITY-NOT-FOUND: ${rail.railType} ${rail.normalizedRailName} at ${rail.rawRail.authorityRef}.`
+    );
+  }
+}
+
 async function readExistingArchitectureDesignOperation(client, idempotencyKey) {
   const result = await client.query(
     `select *
@@ -8075,6 +8101,7 @@ async function applyFeatureMechanizationRailRecordOperation(command, options = {
       now: options.now || new Date(),
     });
 
+    await assertFeatureMechanizationReferenceAuthority(client, planned.rail);
     await writePlannedFeatureMechanizationRailRecordOperation(client, planned);
     await client.query('commit');
     return { idempotent: false, ...planned };
@@ -8496,6 +8523,7 @@ module.exports = {
   assertDbSurfaceIdempotentReplayMatches,
   assertDocsResolutionIdempotentReplayMatches,
   assertFeatureMechanizationRailIdempotentReplayMatches,
+  assertFeatureMechanizationReferenceAuthority,
   assertFowlerAnalysisIdempotentReplayMatches,
   buildDocsResolutionAuditRows,
   buildPlanningDbOperateHelpText,

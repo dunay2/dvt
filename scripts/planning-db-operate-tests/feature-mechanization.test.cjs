@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const {
+  assertFeatureMechanizationReferenceAuthority,
   parseArgs,
   planFeatureMechanizationRailRecordOperation,
   writePlannedFeatureMechanizationRailRecordOperation,
@@ -132,7 +133,7 @@ test('parseArgs builds a feature mechanization rail record command', () => {
 
 test('parseArgs builds an explicit referenced feature mechanization rail command', () => {
   const authorityRef =
-    'docs/planning/proposals/mandatory/frontend-and-ux/vtx2-opaque-authoring-identity-plan-20260906.md';
+    'docs/planning/proposals/mandatory/governance-and-docs/planning-db-operational-integrity-reconciliation-plan-20260830.md';
   const command = parseArgs(
     featureMechanizationRecordArgs({
       extraArgs: ['--reference-only', 'true', '--authority-ref', authorityRef],
@@ -145,7 +146,7 @@ test('parseArgs builds an explicit referenced feature mechanization rail command
 
 test('parseArgs rejects incomplete or false feature mechanization rail references', () => {
   const authorityRef =
-    'docs/planning/proposals/mandatory/frontend-and-ux/vtx2-opaque-authoring-identity-plan-20260906.md';
+    'docs/planning/proposals/mandatory/governance-and-docs/planning-db-operational-integrity-reconciliation-plan-20260830.md';
 
   assert.throws(
     () =>
@@ -273,7 +274,7 @@ test('feature mechanization rail planner emits a local rail and audit row', () =
 
 test('feature mechanization rail planner preserves a reference without creating authority', () => {
   const authorityRef =
-    'docs/planning/proposals/mandatory/frontend-and-ux/vtx2-opaque-authoring-identity-plan-20260906.md';
+    'docs/planning/proposals/mandatory/governance-and-docs/planning-db-operational-integrity-reconciliation-plan-20260830.md';
   const command = parseArgs(
     featureMechanizationRecordArgs({
       extraArgs: ['--reference-only', 'true', '--authority-ref', authorityRef],
@@ -304,6 +305,42 @@ test('feature mechanization rail planner preserves a reference without creating 
   assert.equal(updated.rail.railStatus, 'referenced');
   assert.equal(updated.rail.rawRail.referenceOnly, true);
   assert.equal(updated.rail.rawRail.authorityRef, authorityRef);
+});
+
+test('referenced feature rails require their exact active canonical authority', async () => {
+  const authorityRef =
+    'docs/planning/proposals/mandatory/governance-and-docs/planning-db-operational-integrity-reconciliation-plan-20260830.md';
+  const command = parseArgs(
+    featureMechanizationRecordArgs({
+      extraArgs: ['--reference-only', 'true', '--authority-ref', authorityRef],
+    })
+  );
+  const planned = planFeatureMechanizationRailRecordOperation({
+    command,
+    existingRail: null,
+    operationId: 'op-feature-mechanization-reference-authority',
+    now: new Date('2026-09-12T12:00:00.000Z'),
+  });
+  let queryCount = 0;
+  const client = {
+    async query(sql, params) {
+      queryCount += 1;
+      assert.match(sql, /command_query_rail_query/);
+      assert.deepEqual(params, [
+        authorityRef,
+        'command',
+        'recordfeaturemechanizationrail',
+        planned.rail.railId,
+      ]);
+      return { rows: queryCount === 1 ? [{ rail_id: 'canonical-authority' }] : [] };
+    },
+  };
+
+  await assertFeatureMechanizationReferenceAuthority(client, planned.rail);
+  await assert.rejects(
+    () => assertFeatureMechanizationReferenceAuthority(client, planned.rail),
+    /FEATURE-MECHANIZATION-REFERENCE-AUTHORITY-NOT-FOUND/
+  );
 });
 
 test('feature mechanization rail planner promotes an imported manifest as local revision zero', () => {
