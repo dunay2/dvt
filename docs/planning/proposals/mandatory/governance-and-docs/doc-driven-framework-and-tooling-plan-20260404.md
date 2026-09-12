@@ -564,7 +564,7 @@ symbols:
 - [Planning Control Tower](../../../state/planning-control-tower.md)
 - [Proposal Portfolio Map 2026-04-03](../../portfolio-map-20260403.md)
 - [Architecture Documentation Reconciliation Plan](./architecture-doc-reconciliation-plan-20260402.md)
-- [Generated Planning Surfaces Extraction Plan](./generated-planning-surfaces-extraction-plan-20260403.md)
+- [Generated Planning Surfaces Extraction Plan](../../../archive/proposals/generated-planning-surfaces-extraction-plan-20260403.md)
 - [package.json](../../../../../package.json)
 - [.github/workflows/ci.yml](../../../../../.github/workflows/ci.yml)
 - [.github/workflows/pr-quality-gate.yml](../../../../../.github/workflows/pr-quality-gate.yml)
