@@ -2,7 +2,7 @@
 title: Proposal Portfolio Map 2026-04-03
 status: Active
 owner: Product / Architecture / Delivery
-last_reviewed: 2026-04-20
+last_reviewed: 2026-09-12
 planning_type: proposal
 ---
 
@@ -18,7 +18,6 @@ planning_type: proposal
 
 ## Mandatory
 
-- [Governance And Docs](./mandatory/governance-and-docs/proposal-priority-triage-20260402.md)
 - [Doc-Driven Framework And Tooling Plan](./mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md)
 - [System Governance Unit Index Plan](./mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md)
 - [CI retention review canon plan
@@ -89,7 +88,6 @@ planning_type: proposal
 - [TF-E2-M-C first canvas and first node live proof implementation plan 2026-05-01](./mandatory/frontend-and-ux/tf-e2-m-c-first-canvas-first-node-live-proof-implementation-plan-20260501.md)
 - [DVT+ Web user stories 2026-04-29](./web-user-stories-20260429.md)
 - [Web auth, project onboarding, and actionable product gaps 2026-05-01](./mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md)
-- [Internal Alpha Product Route Plan 2026-05-05](./mandatory/frontend-and-ux/internal-alpha-product-route-plan-20260505.md)
 - [Top menu templates artifact graph flow plan
   2026-05-27](./mandatory/frontend-and-ux/top-menu-templates-artifact-graph-flow-plan-20260527.md)
 - [Canvas workspace explorer console theme modeling plan
@@ -118,9 +116,3 @@ planning_type: proposal
 ## Disposable
 
 - [Experiments](./disposable/experiments/tabs-workbench/README.md)
-- [Manifest Artifacts](./disposable/manifests/planner-stage-1-1-canonicalization.manifest.json)
-- [Asset Artifacts](./disposable/assets/RavenPlan.jpg)
-
-## Tradeoffs
-
-- [Proposal Portfolio Tradeoffs](./tradeoffs/proposal-portfolio-tradeoffs-20260403.md)

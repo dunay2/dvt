@@ -449,6 +449,8 @@ export const PR_QUALITY_SCOPE_PATTERNS = {
     'packages/@dvt/contracts/**',
     'packages/@dvt/temporal-object-file-postgres-plugin/**',
     'scripts/build-workspace-runtime-deps.cjs',
+    'scripts/run-het1-public-vertical-live-proof.cjs',
+    'scripts/run-het2-public-vertical-live-proof.cjs',
     ...ROOT_CONFIG_PATTERNS,
   ],
   adapter_postgres_changed: ADAPTER_POSTGRES_RELEVANT_PATTERNS,
