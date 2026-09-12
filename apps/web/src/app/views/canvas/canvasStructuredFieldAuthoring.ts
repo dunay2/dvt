@@ -120,7 +120,12 @@ export function applyCanvasStructuredField(args: {
       nodeId: args.request.nodeId,
     });
     if (resolved == null) return { outcome: 'rejected', reason: 'invalid_reference' };
-    const createdFieldId = allocateDvtFieldId();
+    const inspection = inspectDvtSubstraitStructuredFieldDraft(resolved.draft);
+    if (!inspection.ok) return { outcome: 'rejected', reason: 'invalid_document' };
+    const existingParent = inspection.fields.find(
+      (field) => field.fieldId === args.request.targetFieldId && field.children != null
+    );
+    const createdFieldId = existingParent?.fieldId ?? allocateDvtFieldId();
     const composed = composeDvtSubstraitProjectionFields(resolved.draft, {
       draggedFieldId: args.request.draggedFieldId,
       targetFieldId: args.request.targetFieldId,

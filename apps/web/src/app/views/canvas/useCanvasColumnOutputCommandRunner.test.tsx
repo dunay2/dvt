@@ -3,10 +3,10 @@
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Dispatch, SetStateAction } from 'react';
 
 import type { CanonicalNode } from '../../types/canonical';
 import { type CanvasDraftSession } from './canvasDraftSession';
+import type { CanvasDraftSessionCommandRunner } from './useCanvasWorkspaceDraftSession';
 import { readDvtSourceOutputProjection } from './canvasDvtSourceSemanticAuthoring';
 import {
   createDvtSubstraitProjectionDraft,
@@ -131,9 +131,11 @@ describe('useCanvasColumnOutputCommandRunner', () => {
       draftRevision: 'rev-1',
       localNodeCatalog: { [source.id]: source, [transform.id]: transform },
     };
-    const setDraftSession = vi.fn<Dispatch<SetStateAction<CanvasDraftSession>>>((action) => {
-      currentSession = typeof action === 'function' ? action(currentSession) : action;
-    });
+    const runDraftSessionCommand = vi.fn(((command) => {
+      const result = command(currentSession);
+      if (result.outcome === 'applied') currentSession = result.draftSession;
+      return result;
+    }) as CanvasDraftSessionCommandRunner);
 
     function Harness(): null {
       runner = useCanvasColumnOutputCommandRunner({
@@ -144,7 +146,7 @@ describe('useCanvasColumnOutputCommandRunner', () => {
           ]),
           draftSession: currentSession,
         },
-        effects: { setDraftSession },
+        effects: { runDraftSessionCommand },
       });
       return null;
     }
@@ -161,7 +163,7 @@ describe('useCanvasColumnOutputCommandRunner', () => {
       outcome: 'rejected',
       reason: 'duplicate_alias',
     });
-    expect(setDraftSession).toHaveBeenCalledTimes(1);
+    expect(runDraftSessionCommand).toHaveBeenCalledTimes(2);
 
     const updated = currentSession.localNodeCatalog?.[transform.id];
     if (updated == null) throw new Error('Expected updated Transform.');
@@ -181,9 +183,11 @@ describe('useCanvasColumnOutputCommandRunner', () => {
   it('serializes Source toggle and reorder while an autosave is in flight', () => {
     let runner!: CanvasColumnOutputCommandRunner;
     let currentSession = buildSavingSession();
-    const setDraftSession = vi.fn<Dispatch<SetStateAction<CanvasDraftSession>>>((action) => {
-      currentSession = typeof action === 'function' ? action(currentSession) : action;
-    });
+    const runDraftSessionCommand = vi.fn(((command) => {
+      const result = command(currentSession);
+      if (result.outcome === 'applied') currentSession = result.draftSession;
+      return result;
+    }) as CanvasDraftSessionCommandRunner);
 
     function Harness(): null {
       runner = useCanvasColumnOutputCommandRunner({
@@ -191,7 +195,7 @@ describe('useCanvasColumnOutputCommandRunner', () => {
           canonicalNodesById: new Map([[source.id, source]]),
           draftSession: currentSession,
         },
-        effects: { setDraftSession },
+        effects: { runDraftSessionCommand },
       });
       return null;
     }
@@ -221,6 +225,6 @@ describe('useCanvasColumnOutputCommandRunner', () => {
     ).toEqual(['amount', 'order_id']);
     expect(currentSession.syncState).toBe('saving');
     expect(currentSession.savingLocalNodeCatalog).toEqual({ [source.id]: source });
-    expect(setDraftSession).toHaveBeenCalledTimes(2);
+    expect(runDraftSessionCommand).toHaveBeenCalledTimes(2);
   });
 });

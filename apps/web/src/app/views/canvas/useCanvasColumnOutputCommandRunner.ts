@@ -1,6 +1,5 @@
 /** Owned concern: serialize Canvas column-output commands over the latest draft session. */
-import { useCallback, useMemo, useRef } from 'react';
-import type { Dispatch, SetStateAction } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import type {
   GraphNodeCalculatedColumnIdentity,
@@ -27,6 +26,7 @@ import {
 import { applyCanvasCalculatedColumn } from './canvasCalculatedColumnAuthoring';
 import { applyCanvasColumnFunction } from './canvasColumnFunctionAuthoring';
 import type { CanvasDraftSession } from './canvasDraftSession';
+import type { CanvasDraftSessionCommandRunner } from './useCanvasWorkspaceDraftSession';
 import {
   applyCanvasStructuredField,
   reorderCanvasStructuredFieldChildren,
@@ -38,7 +38,7 @@ type CanvasColumnOutputCommandRunnerState = {
 };
 
 type CanvasColumnOutputCommandRunnerEffects = {
-  setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
+  runDraftSessionCommand: CanvasDraftSessionCommandRunner;
 };
 
 type UseCanvasColumnOutputCommandRunnerArgs = {
@@ -141,58 +141,27 @@ export function useCanvasColumnOutputCommandRunner({
   state,
   effects,
 }: UseCanvasColumnOutputCommandRunnerArgs): CanvasColumnOutputCommandRunner {
-  const { canonicalNodesById, draftSession } = state;
-  const { setDraftSession } = effects;
-  const latestDraftSessionRef = useRef(draftSession);
-  latestDraftSessionRef.current = draftSession;
-
-  const runCommand = useCallback(
-    <
-      TResult extends
-        | Readonly<{ outcome: 'applied'; draftSession: CanvasDraftSession }>
-        | Readonly<{ outcome: 'rejected' }>,
-    >(
-      command: (currentDraftSession: CanvasDraftSession) => TResult
-    ): TResult => {
-      const baselineDraftSession = latestDraftSessionRef.current;
-      const result = command(baselineDraftSession);
-      if (result.outcome === 'rejected') {
-        return result;
-      }
-
-      latestDraftSessionRef.current = result.draftSession;
-      setDraftSession((currentDraftSession) => {
-        const applied =
-          currentDraftSession === baselineDraftSession ? result : command(currentDraftSession);
-        const nextDraftSession =
-          applied.outcome === 'applied' ? applied.draftSession : currentDraftSession;
-        latestDraftSessionRef.current = nextDraftSession;
-        return nextDraftSession;
-      });
-      return result;
-    },
-    [setDraftSession]
-  );
-
+  const { canonicalNodesById } = state;
+  const { runDraftSessionCommand } = effects;
   const toggleOutput = useCallback(
     (identity: GraphNodeColumnOutputToggleIdentity) =>
-      runCommand((currentDraftSession) =>
+      runDraftSessionCommand((currentDraftSession) =>
         applyToggleOutput(currentDraftSession, canonicalNodesById, identity)
       ),
-    [canonicalNodesById, runCommand]
+    [canonicalNodesById, runDraftSessionCommand]
   );
 
   const reorderOutput = useCallback(
     (identity: GraphNodeColumnReorderIdentity) =>
-      runCommand((currentDraftSession) =>
+      runDraftSessionCommand((currentDraftSession) =>
         applyReorderOutput(currentDraftSession, canonicalNodesById, identity)
       ),
-    [canonicalNodesById, runCommand]
+    [canonicalNodesById, runDraftSessionCommand]
   );
 
   const applyFunction = useCallback(
     (identity: GraphNodeColumnFunctionApplyIdentity): GraphNodeColumnFunctionApplyResult => {
-      const result = runCommand((currentDraftSession) =>
+      const result = runDraftSessionCommand((currentDraftSession) =>
         applyCanvasColumnFunction({
           draftSession: currentDraftSession,
           canonicalNodesById,
@@ -203,12 +172,12 @@ export function useCanvasColumnOutputCommandRunner({
         ? { outcome: 'applied', createdFieldId: result.createdFieldId }
         : result;
     },
-    [canonicalNodesById, runCommand]
+    [canonicalNodesById, runDraftSessionCommand]
   );
 
   const addCalculated = useCallback(
     (identity: GraphNodeCalculatedColumnIdentity): GraphNodeColumnFunctionApplyResult => {
-      const result = runCommand((currentDraftSession) =>
+      const result = runDraftSessionCommand((currentDraftSession) =>
         applyCanvasCalculatedColumn({
           draftSession: currentDraftSession,
           canonicalNodesById,
@@ -219,12 +188,12 @@ export function useCanvasColumnOutputCommandRunner({
         ? { outcome: 'applied', createdFieldId: result.createdFieldId }
         : result;
     },
-    [canonicalNodesById, runCommand]
+    [canonicalNodesById, runDraftSessionCommand]
   );
 
   const applyStructured = useCallback(
     (identity: GraphNodeStructuredFieldIdentity): GraphNodeColumnFunctionApplyResult => {
-      const result = runCommand((currentDraftSession) =>
+      const result = runDraftSessionCommand((currentDraftSession) =>
         applyCanvasStructuredField({
           draftSession: currentDraftSession,
           canonicalNodesById,
@@ -235,7 +204,7 @@ export function useCanvasColumnOutputCommandRunner({
         ? { outcome: 'applied', createdFieldId: result.createdFieldId }
         : result;
     },
-    [canonicalNodesById, runCommand]
+    [canonicalNodesById, runDraftSessionCommand]
   );
 
   return useMemo(

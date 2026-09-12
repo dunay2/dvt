@@ -39,6 +39,7 @@ export function useCanvasGraphHandlers({
   setNodes,
   setEdges,
   setDraftSession,
+  runDraftSessionCommand,
   setSelectedNodes,
   reconcileSelectionAfterNodeRemoval,
   setInspectorNode,
@@ -82,7 +83,7 @@ export function useCanvasGraphHandlers({
 
   const columnCommandRunner = useCanvasColumnOutputCommandRunner({
     state: interactionState,
-    effects: interactionEffects,
+    effects: { runDraftSessionCommand },
   });
   const edgeAuthoringHandlers = useCanvasEdgeAuthoringHandlers(
     canvasGraphHandlerContractBuilders.edgeAuthoring(interactionContracts),

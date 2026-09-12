@@ -113,4 +113,47 @@ describe('useCanvasWorkspaceDraftSession', () => {
 
     act(() => root.unmount());
   });
+  it('runs a command once over the latest acknowledged session', async () => {
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    const latest: {
+      session: CanvasDraftSession | null;
+      setter: Dispatch<SetStateAction<CanvasDraftSession>> | null;
+      runCommand: ReturnType<typeof useCanvasWorkspaceDraftSession>[2] | null;
+    } = { session: null, setter: null, runCommand: null };
+
+    function HookHost(): null {
+      [latest.session, latest.setter, latest.runCommand] =
+        useCanvasWorkspaceDraftSession('tenant::project-a::dev');
+      return null;
+    }
+
+    await act(async () => root.render(<HookHost />));
+    let commandCalls = 0;
+    let result: {
+      outcome: 'applied';
+      draftSession: CanvasDraftSession;
+      createdFieldId: string;
+    } | null = null;
+
+    await act(async () => {
+      latest.setter?.((current) => ({ ...current, draftRevision: 'autosave-ack' }));
+      result =
+        latest.runCommand?.((current) => {
+          commandCalls += 1;
+          return {
+            outcome: 'applied' as const,
+            draftSession: { ...current, draftRevision: 'authoring-command' },
+            createdFieldId: 'field-1',
+          };
+        }) ?? null;
+    });
+
+    expect(commandCalls).toBe(1);
+    expect(result).toMatchObject({ outcome: 'applied', createdFieldId: 'field-1' });
+    expect(result?.draftSession.draftRevision).toBe('authoring-command');
+    expect(latest.session?.draftRevision).toBe('authoring-command');
+
+    act(() => root.unmount());
+  });
 });

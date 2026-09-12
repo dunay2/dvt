@@ -8,6 +8,7 @@ import type {
 } from '../../plugins/graph/graphNodeColumnContracts';
 import type { CanvasColumnLineageEdgeData } from './canvasColumnLineageProjection';
 import type { CanvasEdgeCommandRunner } from './useCanvasEdgeCommandRunner';
+import type { CanvasDraftSessionCommandRunner } from './useCanvasWorkspaceDraftSession';
 import type {
   CanvasAlgebraicCompositionIdentity,
   CanvasAlgebraicCompositionOperation,
@@ -23,7 +24,8 @@ import type {
 export type UseCanvasGraphHandlersParams = CanvasGraphInteractionState &
   CanvasGraphInteractionEffects &
   Omit<CanvasGraphInteractionPolicy, 'gridSize' | 'canvasSnapToGrid'> &
-  Partial<Pick<CanvasGraphInteractionPolicy, 'gridSize' | 'canvasSnapToGrid'>>;
+  Partial<Pick<CanvasGraphInteractionPolicy, 'gridSize' | 'canvasSnapToGrid'>> &
+  Readonly<{ runDraftSessionCommand: CanvasDraftSessionCommandRunner }>;
 
 export type UseCanvasGraphHandlersResult = {
   onConnect: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
