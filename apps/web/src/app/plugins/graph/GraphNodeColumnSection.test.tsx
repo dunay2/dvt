@@ -364,7 +364,7 @@ describe('GraphNodeColumnSection', () => {
     });
     await vi.waitFor(() => {
       expect(
-        document.body.querySelector('[data-slot="graph-node-column-function-alias-form"]')
+        document.body.querySelector('[data-slot="graph-node-expression-composer"]')
       ).not.toBeNull();
     });
     expect(onColumnFunctionApply).not.toHaveBeenCalled();
