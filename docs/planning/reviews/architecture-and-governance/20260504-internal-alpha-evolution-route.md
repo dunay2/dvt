@@ -1,16 +1,23 @@
 ---
 title: Internal Alpha Product Route Review
-status: Review
+status: Accepted
 owner: Product / Architecture
-last_reviewed: 2026-05-05
+last_reviewed: 2026-09-12
 planning_type: review
 ---
 
 # Internal Alpha Product Route Review
 
+## Closure Disposition
+
+`F-27` is closed. This review is retained as the route evidence that led to
+the accepted internal-alpha decision; it is not a current work queue or task
+authority. GitHub Issues owns executable task lifecycle, and Planning DB owns
+architecture and mechanization.
+
 ## Purpose
 
-This review defines the internal alpha product route from first application load
+This review recorded the internal alpha product route from first application load
 to a usable read-only workbench. The Code workbench workspace-files work is a
 child slice of this route, not the route itself.
 
@@ -27,8 +34,9 @@ This document records route intent, route gates, child slices, evidence gaps,
 and product risks. The architecture view records boundary, rail, state,
 evidence, and risk posture. Neither document creates implementation authority by
 itself.
-Route execution authority now starts at `F-27` and the internal alpha product
-route plan, not at the workspace-files child-slice plan.
+At review time, route execution was grouped under `F-27` and the internal alpha
+product route plan. `F-27` is now closed, so neither artifact carries current
+task execution authority.
 
 The governing critique for this revision is that the previous alpha review used
 route language while only proving the Code workbench workspace-files slice. This
@@ -37,16 +45,17 @@ version preserves the slice proof but moves it under a route-level model.
 The 2026-05-05 source-grounded critique pass adds one more constraint: route
 gaps must point at the actual code or planning surface that owns them. A gap is
 not actionable if it only says "needs tests" or "needs a rail" without naming
-the canonical rail catalog, component owner, lane owner, or missing proposal.
+the canonical rail catalog, component owner, governing GitHub issue, or missing
+proposal.
 
 ## Review Authority
 
-| Concern                | Authority                                     | This review may do         | This review must not do         |
-| ---------------------- | --------------------------------------------- | -------------------------- | ------------------------------- |
-| Alpha route            | This document                                 | Name route proof and gaps. | Declare code complete.          |
-| Command/query behavior | C&Q rail catalog and mandatory proposal       | Point to the rails.        | Invent parallel behavior names. |
-| Component design       | Component docs and architecture tests         | Call out ownership gaps.   | Override component APIs.        |
-| Delivery execution     | Lane YAML and feature mechanization manifests | Identify follow-up work.   | Act as a work queue by itself.  |
+| Concern                | Authority                                   | This review may do           | This review must not do         |
+| ---------------------- | ------------------------------------------- | ---------------------------- | ------------------------------- |
+| Alpha route            | This document                               | Name route proof and gaps.   | Declare code complete.          |
+| Command/query behavior | C&Q rail catalog and mandatory proposal     | Point to the rails.          | Invent parallel behavior names. |
+| Component design       | Component docs and architecture tests       | Call out ownership gaps.     | Override component APIs.        |
+| Delivery execution     | GitHub Issues and Planning DB mechanization | Preserve follow-up evidence. | Act as a current work queue.    |
 
 ## Route Definition
 
@@ -281,8 +290,8 @@ internal readiness program.
 
 - Execute the `F-27` internal alpha product route plan before expanding beyond
   the workspace-files child slice.
-- Route startup, canvas, and plan/run readiness gaps through their owning rails
-  or component guides before implementation; route each gap through lane YAML.
+- Route any remaining startup, Canvas, or plan/run readiness gap through its
+  owning rail or component guide and a governing GitHub issue.
 - Promote file-read safety threats into tests before calling the Code workbench
   slice alpha-complete; route the work through the owning proposal.
 - Authored-file size policy is owned by
