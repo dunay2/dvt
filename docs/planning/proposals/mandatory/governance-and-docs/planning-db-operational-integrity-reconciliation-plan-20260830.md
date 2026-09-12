@@ -2,7 +2,7 @@
 title: Planning DB Operational Integrity Reconciliation Plan
 status: Accepted
 owner: Architecture Governance / Planning DB
-last_reviewed: 2026-08-30
+last_reviewed: 2026-09-12
 planning_type: mandatory-proposal
 issue: 2748
 ---
@@ -117,6 +117,36 @@ write path:
 - Queries: `ValidateRailVocabulary`, `CheckPlanningDbComponentIntegrity`, and
   `DetectGovernedSourceDrift` prove the resulting state.
 
+## #3130 referenced rail preservation
+
+```mermaid
+flowchart LR
+  Reference[Reference feature]
+  Command[RecordFeatureMechanizationRail]
+  RawRail[rawRail with referenceOnly and authorityRef]
+  Query[Effective command/query rail query]
+  Authority[Existing canonical authority]
+
+  Reference --> Command --> RawRail --> Query --> Authority
+```
+
+`RecordFeatureMechanizationRail` must accept `--reference-only true` and a
+non-empty `--authority-ref` only as a pair. Omitting both keeps the normal active
+declaration path; providing either field alone or explicitly setting
+`--reference-only false` fails closed. The planner persists both values in
+`rawRail`, and the effective feature-mechanization state becomes `referenced`
+without changing the rail's declared `status`. The existing effective query
+keeps the referenced feature as evidence while excluding it from canonical
+candidate counts and ranking, so the referenced feature cannot become parallel
+authority or displace the existing authority. Recording the reused rail as an
+active local declaration is rejected because local declarations take precedence
+in authority selection.
+
+Negative proof must cover each incomplete or invalid pair and prove that no
+reference metadata is silently dropped. The positive proof must show the pair
+in `rawRail` and `rawManifest`, effective state `referenced`, and unchanged
+canonical authority selection.
+
 ## Feature mechanization
 
 ```feature-mechanization
@@ -208,6 +238,13 @@ redGreenCycles:
       - scripts/planning-db-operate.cjs
       - scripts/planning-db-operate-tests/feature-mechanization.test.cjs
     greenTest: node --test scripts/check-feature-mechanization.test.cjs scripts/planning-db-operate.test.cjs
+  - id: reference-only-feature-rail-authority-preservation
+    redTest: node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs
+    expectedFailure: RecordFeatureMechanizationRail drops referenceOnly and authorityRef, accepts an invalid partial pair, or exposes the reference as active authority.
+    patchSurfaces:
+      - scripts/planning-db-operate.cjs
+      - scripts/planning-db-operate-tests/feature-mechanization.test.cjs
+    greenTest: node --test scripts/planning-db-operate.test.cjs scripts/planning-db-schema.test.cjs
 symbols:
   - name: validateFeatureMechanizationRecordCommand
     path: scripts/planning-db-operate.cjs
